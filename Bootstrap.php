@@ -212,18 +212,25 @@ class Bootstrap {
       $smarty->debugging = true;
     
     $smarty->template_dir = $this->config['templatepath'];
-    $smarty->compile_dir  = $this->config['cachepath'] . 'smarty/';
-    $smarty->plugins_dir  = array( 'plugins', $this->config['templatepath'] . 'plugins/' );
+    $smarty->compile_dir  = $this->config['cachepath'] . 'smarty';
+    $smarty->plugins_dir  = array( 'plugins', $this->config['templatepath'] . 'Plugins' );
     $smarty->assign('bootstrap',        $this );
     
-    $smarty->assign('BASE_URI',         $this->config['baseuri'] );
-    $smarty->assign('STATIC_URI',       $this->config['staticuri'] );
     $smarty->assign('ssl', SSL );
     
-    if ( SSL )
-      $smarty->assign('FULL_URI',       'https://' . $_SERVER['SERVER_NAME'] . $_SERVER['REQUEST_URI'] );
-    else
-      $smarty->assign('FULL_URI',       'http://' . $_SERVER['SERVER_NAME'] . $_SERVER['REQUEST_URI'] );
+    if ( SSL ) {
+      
+      $smarty->assign('BASE_URI',   'https://' . $this->config['baseuri'] );
+      $smarty->assign('STATIC_URI', 'https://' . $this->config['staticuri'] );
+      $smarty->assign('FULL_URI',   'https://' . $_SERVER['SERVER_NAME'] . $_SERVER['REQUEST_URI'] );
+      
+    } else {
+      
+      $smarty->assign('BASE_URI',   'http://' . $this->config['baseuri'] );
+      $smarty->assign('STATIC_URI', 'http://' . $this->config['staticuri'] );
+      $smarty->assign('FULL_URI',   'http://' . $_SERVER['SERVER_NAME'] . $_SERVER['REQUEST_URI'] );
+      
+    }
     
     $smarty->assign('CURRENT_URI',      @$_SERVER['REQUEST_URI'] );
     $smarty->assign('VERSION',          $this->config['version'] );
@@ -330,6 +337,9 @@ class Bootstrap {
     
     $form = new clonefish( $name, $target, $method, $db, $dbtype );
     $form->jspath       = ( ( defined('SSL') and SSL )? 'https://': 'http://' ) . $this->config['staticuri'] . 'js/clonefish.js';
+    $form->multibytesupport = "multibyteutf8";
+    $form->codepage = "utf-8";
+    
     //$form->configfilter = 'formconfigfilter'; // TODO
     //$form->loadConfig( CONFIGPATH . 'formdefault.ini' );
     

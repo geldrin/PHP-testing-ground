@@ -2,15 +2,19 @@
 namespace Visitor\Users;
 
 class Controller extends \Springboard\Controller\Visitor {
-  protected $permissions = array(
+  public $permissions = array(
     'login'  => 'public',
+    'signup' => 'public',
+    'modify' => 'member',
     'index'  => 'public',
   );
-  protected $forms = array(
+  
+  public $forms = array(
     'login' => 'Visitor\\Users\\Form\\Login',
   );
-  protected $paging = array(
-    'index' => 'Visitor\\Users\\Paging',
-  );
+  
+  public function indexAction() {
+    echo 'Nothing here yet';
+  }
   
 }
