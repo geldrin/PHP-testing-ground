@@ -1,16 +1,16 @@
 <?php
 $config = array(
-  'siteid'       => 'springboard',
-  'hashseed'     => 'űö24ik2ö4kőőokasdf>*>bip',
+  'siteid'       => 'teleconnect',
+  'hashseed'     => 'ö923mfk3a,.dműteleconnect',
   'version'      => '_v20120118',
   'charset'      => 'UTF-8',
   //-----
   'docroot'      => BASE_PATH . 'httpdocs/',
-  'baseuri'      => '/', // protocol nelkul, peldaul "dotsamazing.com/"
-  'staticuri'    => '/',
-  'adminuri'     => '/a2143/',
+  'baseuri'      => 'video.teleconnect.hu/', // protocol nelkul, peldaul "dotsamazing.com/"
+  'staticuri'    => 'static.teleconnect.hu/',
+  'adminuri'     => 'video.teleconnect.hu/a2143/',
   'loginuri'     => 'users/login',
-  'cookiedomain' => '.',
+  'cookiedomain' => '.teleconnect.hu',
   //-----
   'logpath'      => BASE_PATH . 'data/logs/',
   'cachepath'    => BASE_PATH . 'data/cache/',
@@ -41,11 +41,11 @@ $config = array(
   'timezone' => 'Europe/Budapest',
   //-----
   'database' => array(
-    'type'     => 'mysql',
-    'host'     => 'localhost',
-    'username' => '',
-    'password' => '',
-    'database' => '',
+    'type'     => 'mysqli',
+    'host'     => '127.0.0.1',
+    'username' => 'teleconnect',
+    'password' => '6NosJir7PWAanzo9hfv7',
+    'database' => 'teleconnect',
     'reconnectonbusy' => true,
     'maxretries' => 30,
   ),
