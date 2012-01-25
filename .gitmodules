@@ -1,0 +1,3 @@
+[submodule "libraries/Springboard"]
+	path = libraries/Springboard
+	url = git@codebasehq.com:dam/springboard/springboard-core.git

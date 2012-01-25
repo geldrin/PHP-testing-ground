@@ -1,0 +1,13 @@
+<phpunit bootstrap="./Bootstrap.php" colors="true">
+    <testsuites>
+        <testsuite name="Autoloader">
+            <file>./Autoloader/AutoloaderTest.php</file>
+        </testsuite>
+        <testsuite name="Application">
+            <file>./Application/RouteTest.php</file>
+        </testsuite>
+        <testsuite name="Controller">
+            <file>./Controller/VisitorControllerTest.php</file>
+        </testsuite>
+    </testsuites>
+</phpunit>

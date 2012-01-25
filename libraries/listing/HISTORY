@@ -1,0 +1,4 @@
+listingdb_adodb.php
+
+  // mssql fix: 
+  // AS hack: http://bugs.php.net/bug.php?id=33060
