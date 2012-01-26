@@ -118,30 +118,30 @@ class Bootstrap {
     if ( $errorhandler ) {
 
       // when adodb errorhandler needed
-      if ( !( @include_once( $this->config['libpath'] . 'adodb.510/adodb-exceptions.inc.php') ) ) {
+      if ( !( @include_once( $this->config['libpath'] . 'adodb.515/adodb-exceptions.inc.php') ) ) {
         // adodb not found under LIBPATH - try include_path location
-        include_once('adodb.510/adodb-exceptions.inc.php');
-        include_once('adodb.510/adodb-errorhandler.inc.php');
-        include_once('adodb.510/adodb.inc.php');
+        include_once('adodb.515/adodb-exceptions.inc.php');
+        include_once('adodb.515/adodb-errorhandler.inc.php');
+        include_once('adodb.515/adodb.inc.php');
       }
       else {
         // adodb found under LIBPATH - continue this way
-        include_once( $this->config['libpath'] . 'adodb.510/adodb-errorhandler.inc.php');
-        include_once( $this->config['libpath'] . 'adodb.510/adodb.inc.php');
+        include_once( $this->config['libpath'] . 'adodb.515/adodb-errorhandler.inc.php');
+        include_once( $this->config['libpath'] . 'adodb.515/adodb.inc.php');
       }
     }
     else {
 
       // adodb errorhandler unnecessary
 
-      if ( !( @include_once( $this->config['libpath'] . 'adodb.510/adodb-exceptions.inc.php') ) ) {
+      if ( !( @include_once( $this->config['libpath'] . 'adodb.515/adodb-exceptions.inc.php') ) ) {
         // adodb not found under LIBPATH - try include_path location
-        include_once('adodb.510/adodb-exceptions.inc.php');
-        include_once('adodb.510/adodb.inc.php');
+        include_once('adodb.515/adodb-exceptions.inc.php');
+        include_once('adodb.515/adodb.inc.php');
       }
       else {
         // adodb found under LIBPATH - continue this way
-        include_once( $this->config['libpath'] . 'adodb.510/adodb.inc.php');
+        include_once( $this->config['libpath'] . 'adodb.515/adodb.inc.php');
       }
     }
 
