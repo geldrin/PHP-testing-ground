@@ -10,7 +10,8 @@ class Controller extends \Springboard\Controller\Visitor {
   );
   
   public $forms = array(
-    'login' => 'Visitor\\Users\\Form\\Login',
+    'login'  => 'Visitor\\Users\\Form\\Login',
+    'signup' => 'Visitor\\Users\\Form\\Signup',
   );
   
   public function indexAction() {

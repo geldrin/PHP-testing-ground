@@ -5,11 +5,12 @@ class Form extends \Springboard\Controller\Admin\Form {
   
   protected function updateAction() {
     
-    $model = $this->bootstrap->getModel( $this->controller->module );
+    $model  = $this->bootstrap->getModel( $this->controller->module );
     $values = $this->form->getElementValues( false );
+    $crypto = $this->bootstrap->getCrypto();
     
     if ( strlen( $values['password'] ) )
-      $values['password'] = $this->application->getHash( $values['password'] );
+      $values['password'] = $crypto->getHash( $values['password'] );
     
     $model->select( $values['id'] );
     $model->updateRow( $values );
@@ -20,9 +21,10 @@ class Form extends \Springboard\Controller\Admin\Form {
   
   protected function insertAction() {
     
-    $model = $this->bootstrap->getModel( $this->controller->module );
+    $model  = $this->bootstrap->getModel( $this->controller->module );
     $values = $this->form->getElementValues( false );
-    $values['password'] = $this->application->getHash( $values['password'] );
+    $crypto = $this->bootstrap->getCrypto();
+    $values['password'] = $crypto->getHash( $values['password'] );
     $model->insert( $values );
     
     $this->controller->redirectToFragment('users/index');

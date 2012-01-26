@@ -24,7 +24,7 @@ $config = Array(
       
     ),
     
-    'target' => Array(
+    'action' => Array(
       'type'  => 'inputHidden',
       'value' => 'submitlogin'
     ),

@@ -13,6 +13,9 @@ $dbvalidation =
     'value' => '0'
   );
 
+include_once( $this->bootstrap->config['libpath'] . 'clonefish/constants.php');
+$language = \Springboard\Language::get();
+
 $config = array(
   
   'fs1' => array(
@@ -21,14 +24,14 @@ $config = array(
     'prefix' => '<span class="legendsubtitle">' . $l('users', 'register_subtitle') . '</span>',
   ),
   
-  'target' => array(
+  'action' => array(
     'type'  => 'inputHidden',
     'value' => 'submitsignup'
   ),
 
   'forward' => array(
     'type'  => 'inputHidden',
-    'value' => ( $this->application->getParam('forward') ?: '' )
+    'value' => ( $this->application->getParameter('forward') ?: '' )
   ),
 
   'email' => array(
@@ -100,7 +103,7 @@ $config = array(
       'straight' => $l('users', 'nameformatstraight'),
       'reverse'  => $l('users', 'nameformatreverse'),
     ),
-    'value'       => LANGUAGE == 'en' ? 'reverse' : 'straight',
+    'value'       => $language == 'en' ? 'reverse' : 'straight',
     'validation'  => array(
       array( 'type' => 'required' ),
     ),
@@ -136,16 +139,16 @@ $config = array(
   ),
   
   'tos' => array(
-    'displayname' => $l('sitewide', 'userstos'),
+    'displayname' => $l('', 'userstos'),
     'type'        => 'inputCheckbox',
     'postfix'     =>
-      '<a href="' . LANGUAGE . '/contents/userstos' .
-      '" id="termsofservice" target="_blank">' . $l('sitewide', 'userstospostfix') . '</a>'
+      '<a href="' . $language . '/contents/userstos' .
+      '" id="termsofservice" target="_blank">' . $l('', 'userstospostfix') . '</a>'
     ,
     'validation'  => array(
       array(
         'type' => 'required',
-        'help' => $l('sitewide', 'userstoshelp'),
+        'help' => $l('', 'userstoshelp'),
       )
     ),
   ),

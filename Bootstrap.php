@@ -431,4 +431,8 @@ class Bootstrap {
     
   }
   
+  public function getCrypto() {
+    return new Springboard\Crypto( $this );
+  }
+  
 }
