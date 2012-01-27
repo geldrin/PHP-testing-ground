@@ -29,6 +29,12 @@ $config = array(
     'username' => '',
     'password' => '',
   ),
+  'mail'         => array(
+    'fromemail' => 'no-reply@teleconnect.hu',
+    'fromname'  => 'Teleconnect',
+    'errorsto'  => '',
+    'type'      => 'text/html; charset="UTF-8"'
+  ),
   //-----
   'defaultlanguage' => 'hu',
   'languages'       => array( 'hu' ),

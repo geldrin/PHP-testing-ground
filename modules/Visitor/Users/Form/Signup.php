@@ -34,10 +34,11 @@ class Signup extends \Visitor\Form {
     $userModel->row['id'] = $crypto->asciiCrypt( $userModel->row['id'] );
     $smarty->assign('values', $userModel->row );
     
+    $queue->embedImages = false;
     $queue->sendHTMLEmail(
       $userModel->row['email'],
       $l('users', 'validationemailsubject'),
-      $smarty->fetch('Emails/Users/Validation.tpl')
+      $smarty->fetch('Visitor/Users/Email/Validation.tpl')
     );
     
     $this->controller->redirectToFragment('contents/needvalidation');

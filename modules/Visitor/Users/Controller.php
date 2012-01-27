@@ -18,4 +18,41 @@ class Controller extends \Springboard\Controller\Visitor {
     echo 'Nothing here yet';
   }
   
+  public function validateAction() {
+    
+    $code = $this->application->getParameter('code');
+    if ( strlen( $code ) < 10 )
+      $this->redirectToFragment('contents/signupvalidationfailed');
+    
+    $crypto         = $this->bootstrap->getCrypto();
+    $validationcode = substr( $code, -10 );
+    $userid         = substr( $code, 0, -10 );
+    $userid         = intval( $crypto->asciiDecrypt( $userid ) );
+    
+    if ( $userid <= 0 )
+      $this->redirectToFragment('contents/signupvalidationfailed');
+    
+    $userModel = $this->bootstrap->getModel('users');
+    $userModel->select( $userid );
+    
+    if ( @$userModel->row['validationcode'] !== $validationcode )
+      $this->redirectToFragment('contents/signupvalidationfailed');
+    
+    $userModel->updateRow( array(
+        'disabled' => 0,
+      )
+    );
+    
+    $userModel->registerForSession();
+    $this->redirectToFragment('contents/signupvalidated');
+    
+  }
+  
+  public function logoutAction() {
+    
+    $user = $this->bootstrap->getUser();
+    $user->destroy();
+    
+  }
+  
 }
