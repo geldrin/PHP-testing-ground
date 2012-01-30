@@ -53,8 +53,8 @@
 
     {/if}
     
-    {if $smarty.session.message and !$skipsessionmessage}
-      {include file="_message.tpl" message=$smarty.session.message}
+    {if $sessionmessage and !$skipsessionmessage}
+      {$sessionmessage}
     {/if}
     
     <div class="body">

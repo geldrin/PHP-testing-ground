@@ -238,6 +238,7 @@ class Bootstrap {
     
     $smarty->assign('language',         Springboard\Language::get() );
     $smarty->assign('sessionid',        session_id() );
+    $smarty->assign('sessionmessage',   $this->getSession('message')->get('message') );
     
     return $this->instances['smarty'] = $smarty;
     

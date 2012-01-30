@@ -31,7 +31,7 @@ class Signup extends \Visitor\Form {
     
     $userModel->insert( $values );
     
-    $userModel->row['id'] = $crypto->asciiCrypt( $userModel->row['id'] );
+    $userModel->row['id'] = $crypto->asciiEncrypt( $userModel->id );
     $smarty->assign('values', $userModel->row );
     
     $queue->embedImages = false;

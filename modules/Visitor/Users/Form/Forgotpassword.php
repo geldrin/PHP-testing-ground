@@ -8,8 +8,9 @@ class Forgotpassword extends \Visitor\Form {
   public function init() {
     
     $user = $this->bootstrap->getUser();
+    
     if ( isset( $user->id ) )
-      $this->controller->redirectToFragment('');
+      $this->controller->redirectToFragment('index');
     
   }
   
@@ -28,6 +29,7 @@ class Forgotpassword extends \Visitor\Form {
     $crypto    = $this->bootstrap->getCrypto();
     $code      = $crypto->randomPassword( 10 );
     $l         = $this->bootstrap->getLocale();
+    $queue     = $this->bootstrap->getMailqueue();
     
     if ( !$userModel->checkEmailAndUpdateValidationCode( $values['email'], $code ) ) {
       
@@ -40,10 +42,11 @@ class Forgotpassword extends \Visitor\Form {
     $userModel->row['id'] = $crypto->asciiEncrypt( $userModel->row['id'] );
     $smarty->assign('values', $userModel->row );
     
-    tools::sendHTMLEmail(
+    $queue->embedImages = false;
+    $queue->sendHTMLEmail(
       $userModel->row['email'],
       $l('users', 'forgotpass_emailsubject'),
-      $smarty->fetch('Visitor/Users/email/Forgotpassword.tpl')
+      $smarty->fetch('Visitor/Users/Email/Forgotpassword.tpl')
     );
     
     $this->controller->redirectToFragment('contents/passwordreminder');

@@ -13,16 +13,17 @@ class Changepassword extends \Visitor\Form {
     
     $user = $this->bootstrap->getUser();
     if ( isset( $user->id ) )
-      $this->controller->redirectToFragment('');
+      $this->controller->redirectToFragment('index');
     
     $code = $this->application->getParameter('code');
-    if ( !strlen( $code ) < 11 )
+    if ( strlen( $code ) < 11 )
       $this->controller->redirectToFragment('contents/badparameter');
     
     $this->crypto         = $this->bootstrap->getCrypto();
     $this->validationcode = substr( $code, -10 );
-    $this->userid         = substr( $code, 0, -10 );
-    $this->userid         = intval( $this->crypto->asciiDecrypt( $this->userid ) );
+    $this->userid         =
+      intval( $this->crypto->asciiDecrypt( substr( $code, 0, -10 ) ) )
+    ;
     
     if ( $this->userid <= 0 )
       $this->controller->redirectToFragment('contents/badparameter');
@@ -44,7 +45,7 @@ class Changepassword extends \Visitor\Form {
     
     if ( !$userModel->checkIDAndValidationCode( $this->userid, $this->validationcode ) ) {
       
-      $this->form->addMessage( l('users', 'changepass_badparameter') );
+      $this->form->addMessage( $l('users', 'changepass_badparameter') );
       $this->form->invalidate();
       return;
       
@@ -63,46 +64,8 @@ class Changepassword extends \Visitor\Form {
       
     }
     
-    $this->redirectToFragmentWithMessage('index', $l('users', 'changepass_changed') );
+    $this->controller->redirectToFragmentWithMessage('index', $l('users', 'changepass_changed') );
     
   }
   
 }
-
-
-
-
-
-
-
-
-
-class formHandler_userschangepassword extends formHandler_help {
-  var $getDatabase = true;
-  var $config      = 'users_changepassword.php';
-  var $template    = 'genericform.tpl';
-  
-  function check() {
-    
-    if ( getuser('id') )
-      tools::go(); // the user is already logged in
-    
-    if ( !isset( $_REQUEST['a'] ) or strlen( @$_REQUEST['b'] ) !== 10 )
-      tools::go(); // invalid parameters
-    
-    $userid = tools::decrypt( $_REQUEST['a'] );
-    if ( !preg_match('/^[0-9]+$/', $userid ) or $userid <= 0 )
-      tools::go(); // invalid 'a' parameter
-    
-    parent::check();
-    
-  }
-  
-  // ----------------------------------------------------------------------------
-  function onComplete() {
-    
-  }
-  
-}
-
-?>

@@ -9,7 +9,6 @@ class Controller extends \Springboard\Controller\Visitor {
   public function indexAction() {
     
     $smarty = $this->bootstrap->getSmarty();
-    
     $this->output( $smarty->fetch('Visitor/Index/index.tpl') );
     
   }

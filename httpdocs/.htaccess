@@ -2,6 +2,10 @@ RewriteEngine On
 
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^([a-z]{2})/users/(changepassword|validate)/(.+)$ index.php?language=$1&module=users&action=$2&code=$3 [L,QSA]
+
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
 RewriteRule ^([a-z]{2})/?$ index.php?language=$1 [L,QSA]
 
 RewriteCond %{REQUEST_FILENAME} !-f
