@@ -4,6 +4,7 @@ $config = array(
   'hashseed'     => 'ö923mfk3a,.dműteleconnect',
   'version'      => '_v20120118',
   'charset'      => 'UTF-8',
+  'cacheseconds' => 3600,
   //-----
   'docroot'      => BASE_PATH . 'httpdocs/',
   'baseuri'      => 'video.teleconnect.hu/', // protocol nelkul, peldaul "dotsamazing.com/"
@@ -54,6 +55,11 @@ $config = array(
     'database' => 'teleconnect',
     'reconnectonbusy' => true,
     'maxretries' => 30,
+  ),
+  //-----
+  'redis' => array(
+    'host' => '127.0.0.1',
+    'port' => 6379,
   ),
 );
 

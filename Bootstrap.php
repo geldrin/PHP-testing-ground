@@ -5,6 +5,8 @@ class Bootstrap {
   protected $instances      = array();
   protected $forms          = array();
   protected $objects        = array();
+  protected $caches         = array();
+  protected $organization;
   
   public $debug             = false;
   public $application;
@@ -351,8 +353,12 @@ class Bootstrap {
   }
   
   public function getSession( $namespace = 'default' ) {
+    
     $this->setupSession();
-    return new Springboard\Session( $this->config['siteid'], $namespace );
+    $this->setupOrganization(); // TODO parentidvel mit kezdjunk
+    $basenamespace = $this->config['siteid'] . $this->organization->id;
+    return new Springboard\Session( $basenamespace, $namespace );
+    
   }
   
   public function getUser() {
@@ -434,6 +440,41 @@ class Bootstrap {
   
   public function getCrypto() {
     return new Springboard\Crypto( $this );
+  }
+  
+  public function getCache( $key, $expireseconds = null, $ignorelanguage = false ) {
+    
+    $language = '';
+    
+    if ( $expireseconds === null )
+      $expireseconds = $this->config['cacheseconds'];
+    
+    if ( !$ignorelanguage )
+      $language = \Springboard\Language::get() . '-';
+    
+    $key = $language . $key;
+    
+    if ( isset( $this->caches[ $key ] ) )
+      return $this->caches[ $key ];
+    else
+      return $this->caches[ $key ] =
+        new Springboard\Cache\Redis( $this, $key, $expireseconds )
+      ;
+    
+  }
+  
+  public function setupOrganization() {
+    
+    if ( $this->organization )
+      return;
+    
+    $this->organization = new Organization( $this );
+    $this->organization->setup();
+    
+  }
+  
+  public function getOrganization() {
+    return $this->organization;
   }
   
 }

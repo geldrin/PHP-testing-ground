@@ -51,3 +51,25 @@ CREATE TABLE `users` (
    UNIQUE INDEX `uq_emailorganizationid` (`email`(50), `organizationid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;
 
+
+CREATE TABLE `organizations` (
+   `id` int(10) unsigned not null auto_increment,
+   `parentid` int(10) unsigned,
+   `addressid` int(10) unsigned,
+   `postaladdressid` int(10) unsigned,
+   `billingaddressid` int(10) unsigned,
+   `nameoriginal` text,
+   `nameenglish` text,
+   `nameshortoriginal` text,
+   `nameshortenglish` text,
+   `url` text,
+   `issubscriber` int(11) not null default '0',
+   `domain` text,
+   `registrationtype` text,
+   `backgroundcolor` text,
+   `logofilename` text,
+   `logofilenameen` text,
+   `disabled` int(11) not null default '0',
+   PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;
+
