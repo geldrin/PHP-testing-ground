@@ -61,6 +61,12 @@ $config = array(
     'host' => '127.0.0.1',
     'port' => 6379,
   ),
+  //----
+  'disable_uploads' => false,
+  'uploadpath' => '',
+  'recordings_seconds_minlength' => 3,
+  'mplayer_identify' => 'mplayer -ao null -vo null -frames 0 -identify %s 2>&1',
+  
 );
 
 $config['phpsettings'] = array(

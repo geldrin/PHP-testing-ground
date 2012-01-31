@@ -29,11 +29,11 @@ class Organization {
     else
       $scheme = 'http://';
     
+    $this->organization = $organization;
+    
     $smarty = $this->bootstrap->getSmarty();
     $smarty->assign('BASE_URI',     $scheme . $host . '/' );
     $smarty->assign('organization', $organization );
-    
-    return $this->organization = $organization;
     
   }
   

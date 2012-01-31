@@ -19,8 +19,8 @@ class Bootstrap {
     
     $this->setupAutoloader();
     $this->setupOutputBuffer();
-    $this->setupLanguage();
     $this->setupDefault();
+    $this->setupLanguage();
     
     $this->setupPHPSettings();
     $this->setupDebug();
@@ -80,7 +80,8 @@ class Bootstrap {
   
   protected function setupLanguage() {
     
-    $this->setupSession();
+    if ( !ISCLI )
+      $this->setupSession();
     
     Springboard\Language::$defaultlanguage = $this->config['defaultlanguage'];
     Springboard\Language::$languages       = $this->config['languages'];
@@ -207,8 +208,8 @@ class Bootstrap {
     if ( !( @include_once( $this->config['libpath'] . 'smarty.2620/Smarty.class.php') ) )
       // smarty not found under LIBPATH - try include_path location
       include_once( 'smarty.2620/Smarty.class.php');
-
-    $smarty = new Smarty();
+    
+    $this->instances['smarty'] = $smarty = new Smarty();
     
     if ( $this->debug )
       $smarty->debugging = true;
@@ -240,9 +241,11 @@ class Bootstrap {
     
     $smarty->assign('language',         Springboard\Language::get() );
     $smarty->assign('sessionid',        session_id() );
-    $smarty->assign('sessionmessage',   $this->getSession('message')->get('message') );
     
-    return $this->instances['smarty'] = $smarty;
+    if ( !ISCLI )
+      $smarty->assign('sessionmessage', $this->getSession('message')->get('message') );
+    
+    return $smarty;
     
   }
   
