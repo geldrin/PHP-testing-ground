@@ -1,7 +1,10 @@
 <?php
 
 define('BASE_PATH',  realpath( dirname( __FILE__ ) . '/..' ) . '/' );
-define('PRODUCTION', @$_ENV['APPLICATION_ENV'] != 'nonprod' );
+if ( isset( $_SERVER['APPLICATION_ENV'] ) and $_SERVER['APPLICATION_ENV'] == 'nonprod' )
+  define('PRODUCTION', false );
+else
+  define('PRODUCTION', true );
 
 include_once( BASE_PATH . 'libraries/Springboard/Application.php');
 $application = new Springboard\Application( $_REQUEST );
