@@ -4,7 +4,7 @@ $config = Array(
   
   'action' => Array(
     'type'  => 'inputHidden',
-    'value' => 'submituploadrecording'
+    'value' => 'submitupload'
   ),
   
   'fs1' => array(
@@ -13,13 +13,8 @@ $config = Array(
     'prefix' => '<span class="legendsubtitle">' . $l('recordings', 'upload_subtitle') . '</span>',
   ),
   
-  'recordingid' => array(
-    'type'  => 'inputHidden',
-    'value' => @$_REQUEST['recordingid'],
-  ),
-  
   'videolanguage' => array(
-    'type'        => 'inputText',
+    'type'        => 'select',
     'displayname' => $l('recordings', 'language'),
   ),
   
@@ -30,44 +25,6 @@ $config = Array(
     'values'      => array(
       '0' => $l('recordings', 'isinterlaced_normal'),
       '1' => $l('recordings', 'isinterlaced_interlaced'),
-    ),
-  ),
-  
-  'customhtml' => array(
-    'type' => 'text',
-    'value' => '
-      <div id="videouploadprogress" style="display:none;">
-        <div class="progresswrap">
-          <div class="progressname">
-          </div>
-          <div class="progressspeed">
-          </div>
-          <div class="clear"></div>
-          <div class="progressbar">
-          </div>
-          <div class="progressstatus">
-          </div>
-          <div class="progresstime">
-          </div>
-        </div>
-      </div>
-      <div id="videobrowsecontainer">
-        <span id="videobrowse">
-        </span>
-      </div>',
-  ),
-  
-  'file' => Array(
-    'type'       => 'inputFile',
-    'validation' => Array(
-      Array(
-        'type'       => 'file', 
-        'extensions' => Array(
-          'wmv', 'avi', 'mov', 'flv', 'mp4', 'asf', 'mp3', 'flac',
-          'ogg', 'wav', 'wma', 'mpg', 'mpeg', 'ogm', 'f4v', 'm4v',
-        ),
-        'required'   => true,
-      ),
     ),
   ),
   
@@ -83,6 +40,48 @@ $config = Array(
         'type' => 'required',
         'help' => $l('', 'recordingstoshelp'),
       )
+    ),
+  ),
+  
+  'customhtml' => array(
+    'type' => 'text',
+    'rowlayout' => '
+      <div class="formrow" id="uploadrow">
+        <span class="label"></span>
+        <div class="element">
+          %element%
+        </div>
+      </div>
+    ',
+    'value' => '
+      <div id="videobrowsecontainer">
+        <span id="videobrowse">' . $l('recordings', 'uploadnoflash') . '</span>
+      </div>
+      <div id="videouploadprogress" style="display:none;">
+        <div class="progresswrap">
+          <div class="progressname"></div>
+          <div class="progressspeed"></div>
+          <div class="clear"></div>
+          <div class="progressbar"></div>
+          <div class="progressstatus"></div>
+          <div class="progresstime"></div>
+        </div>
+      </div>
+    ',
+  ),
+  
+  'file' => Array(
+    'type'       => 'inputFile',
+    'display'    => false,
+    'validation' => Array(
+      Array(
+        'type'       => 'file', 
+        'extensions' => Array(
+          'wmv', 'avi', 'mov', 'flv', 'mp4', 'asf', 'mp3', 'flac',
+          'ogg', 'wav', 'wma', 'mpg', 'mpeg', 'ogm', 'f4v', 'm4v',
+        ),
+        'required'   => false,
+      ),
     ),
   ),
   

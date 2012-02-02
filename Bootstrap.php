@@ -88,7 +88,7 @@ class Bootstrap {
     
   }
   
-  protected function setupSession( $sessionid = null ) {
+  protected function setupSession() {
     
     if ( $this->sessionstarted )
       return;
@@ -96,8 +96,8 @@ class Bootstrap {
     ini_set('session.cookie_domain',    $this->config['cookiedomain'] );
     session_set_cookie_params( 0 , '/', $this->config['cookiedomain'] );
     
-    if ( $sessionid )
-      session_id( $sessionid );
+    if ( isset( $_REQUEST['PHPSESSID'] ) )
+      session_id( $_REQUEST['PHPSESSID'] );
     
     return $this->sessionstarted = session_start();
     

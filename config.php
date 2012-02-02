@@ -5,6 +5,7 @@ $config = array(
   'version'      => '_v20120118',
   'charset'      => 'UTF-8',
   'cacheseconds' => 3600,
+  'errormessage' => 'An unexpected error has occured, our staff has been notified. Sorry for the inconvenience and thanks for your understanding!',
   //-----
   'docroot'      => BASE_PATH . 'httpdocs/',
   'baseuri'      => 'video.teleconnect.hu/', // protocol nelkul, peldaul "dotsamazing.com/"

@@ -102,67 +102,11 @@ $j(document).ready(function() {ldelim}
     </script>
     
     {if strlen( $info )}
-    <p>{$info}</p>
+      <p>{$info}</p>
     {/if}
-    <form enctype="multipart/form-data" id="input" name="input" action="{$language}/recordings/uploadrecording" method="post">
     
-      <input type="hidden" id="target" name="target" value="submituploadrecording"  />
-      <input type="hidden" id="recordid" name="recordid" value="{$record|default:''}" />
-      
-      <fieldset id="fs1">
-        <legend>{l module=recordings key=upload_title}</legend>
-        <span class="legendsubtitle">{l key=upload_subtitle}</span>
-        
-        <div class="formrow">
-          <span class="label"><label for="videolanguage">{l key=language}</label></span>
-          <div class="element">
-            <select  id="videolanguage" name="videolanguage">
-              {foreach from=$languages key=key item=item}
-              <option value="{$key}">{$item}</option>
-              {/foreach}
-            </select>
-            <div id="cf_errorvideolanguage" style="display: none; visibility: hidden; padding: 2px 5px 2px 5px; background-color: #d03030; color: white; clear: both;"></div>
-          </div>
-        </div>
-        
-        <div class="formrow"> 
-          <span class="label">{l key=isinterlaced}</span> 
-          <div class="element">
-            <input id="radio8375" type="radio" name="isinterlaced" checked="checked" value="0"/>&nbsp;<label for="radio8375">{l module=recordings key=isinterlaced_normal}</label>
-            <input id="radio8376" type="radio" name="isinterlaced" value="1"/>&nbsp;<label for="radio8376">{l module=recordings key=isinterlaced_interlaced}</label>
-          </div>
-        </div>
-        
-        <div class="formrow">
-          <span class="label left" style="width: 300px;"><label for="tos">{l module=recordings key=recordingstos}</label></span>
-          <div class="element">
-            <input type="checkbox" name="tos" id="tos" value="1"/>
-            <span class="postfix"><a href="hu/contents/recordingstos" id="termsofservice" target="_blank">{l module=recordings key=recordingstospostfix}</a></span>
-            <div id="cf_errortos" style="display: none; visibility: hidden; padding: 2px 5px 2px 5px; background-color: #d03030; color: white; clear: both;"></div>
-          </div>
-        </div>
-        
-        <div class="formrow" id="uploadrow">
-          <span class="label"></span>
-          <div class="element">
-            <div id="videobrowsecontainer">
-              <span id="videobrowse">{l module=recordings key=uploadnoflash}</span>
-            </div>
-            <div id="videouploadprogress" style="display:none;">
-              <div class="progresswrap">
-                <div class="progressname"></div>
-                <div class="progressspeed"></div>
-                <div class="clear"></div>
-                <div class="progressbar"></div>
-                <div class="progressstatus"></div>
-                <div class="progresstime"></div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </fieldset>
-      <input type="submit" value="OK" class="submitbutton" />
-    </form>
+    {$form}
+    
   </div>
 </div>
 {/box}

@@ -1,22 +1,27 @@
+$j(document).ready(function() {
+  
+  $j('#systemmessageclose a').click( function() {
+    
+    $j('#systemmessage').slideUp(150);
+    return false;
+    
+  });
+  
+  $j('#scriptingcontainer').show();
+  
+});
 
 function setupVideoUpload() {
   
   if ( !swfupload )
     return;
-  else {
-    $j( document.forms.input.file ).remove();
-  }
   
-  $j('#input').submit( function( e ) {
+  $j('#upload').submit( function( e ) {
     
     e.preventDefault();
     
-    if ( $j('#tos').length && !$j('#tos:checked').val() ) {
-      
-      alert( messages.tosaccept );
+    if ( $j('#tos').length && !$j('#tos:checked').val() )
       return false;
-      
-    }
     
     if ( !swfupload.getFile(0) ) { // no files in the queue
       
@@ -28,7 +33,7 @@ function setupVideoUpload() {
     $j('.submitbutton').get(0).disabled = true;
     swfupload.addPostParam('swfupload', '1');
 
-    var form = $j( document.forms.input ).serializeArray();
+    var form = $j( document.forms.upload ).serializeArray();
     for ( var i = 0, j = form.length; i < j; i++ )
       swfupload.addPostParam( form[ i ].name, form[ i ].value );
     

@@ -3,12 +3,13 @@ namespace Visitor\Recordings\Form;
 set_time_limit(0);
 
 class Upload extends \Visitor\Form {
-  var $configfile  = 'Upload.php';
-  var $template    = 'Visitor/Recordings/Upload.tpl';
-  var $swfupload   = false;
-  var $languages   = array();
+  public $configfile   = 'Upload.php';
+  public $template     = 'Visitor/Recordings/Upload.tpl';
+  public $swfupload    = false;
+  public $languages    = array();
+  //public $exportmethod = 'getVars';
   
-  function init() {
+  public function init() {
     
     if ( $this->bootstrap->config['disable_uploads'] )
       $this->controller->redirectToFragment('contents/uploaddisabled');
@@ -41,20 +42,20 @@ class Upload extends \Visitor\Form {
     parent::init();
     
   }
-
-  function values() {
+  
+  public function preSetupForm() {
     
-    $languageModel = $this->bootstrap->getModel('language');
+    $languageModel = $this->bootstrap->getModel('languages');
     $l             = $this->bootstrap->getLocale();
     
     $this->languages = $languageModel->getAssoc('id', 'originalname', false, false, false, 'weight');
-    $this->toSmarty['languages'] = $this->languages;
     $this->toSmarty['title']     = $l('recordings', 'upload_title');
+    $this->toSmarty['languages'] = $this->languages;
+    $this->config['videolanguage']['values'] = $this->languages;
     
   }
-
-  // ----------------------------------------------------------------------------
-  function onComplete() {
+  
+  public function onComplete() {
     
     $l     = $this->bootstrap->getLocale();
     $debug = \Springboard\Debug::getInstance();
@@ -67,7 +68,8 @@ class Upload extends \Visitor\Form {
       if ( $this->swfupload )
         $this->controller->swfuploadMessage( array(
             'error' => 'filetoobig',
-          ), @$_FILES['file']
+          ),
+          $_FILES['file']
         );
       
       $this->form->addMessage( $l('', 'filetoobig') );
@@ -77,6 +79,8 @@ class Upload extends \Visitor\Form {
     }
     
     $recordingModel = $this->bootstrap->getModel('recordings');
+    $user           = $this->bootstrap->getUser();
+    $organization   = $this->bootstrap->getOrganization();
     $values         = $this->form->getElementValues( 0 );
     
     if ( !isset( $this->languages[ $values['videolanguage'] ] ) and $this->swfupload )
@@ -86,55 +90,31 @@ class Upload extends \Visitor\Form {
       );
     elseif ( !isset( $this->languages[ $values['videolanguage'] ] ) ) {
       
-      $this->form->addMessage( $l('video', 'invalidlanguage') );
+      $this->form->addMessage( $l('recordings', 'invalidlanguage') );
       $this->form->invalidate();
       return;
       
     }
     
-    if ( intval( $values['recordingid'] ) > 0 ) {
-
-      $recordingModel->select( intval( $values['recordingid'] ) );
-      if ( !$recordingModel->row ) {
-
-        if ( $this->swfupload )
-          $this->controller->swfuploadMessage( array( 'error' => 'securityerror' ) );
-
-        $this->form->addMessage( $l('video', 'invalidvideo') );
-        $this->form->invalidate();
-        return;
-
-      }
-      else
-        $recordingid = $recordingModel->id;
-
-    }
-    else
-      $recordingid = null;
-    
     try {
       
-      $recordingModel->uploadRecording(
-        @$_FILES['file']['tmp_name'],
-        @$_FILES['file']['name'],
-        $recordingid,
-        $values['videolanguage'],
-        $values['isinterlaced'],
-        $this->swfupload
+      $recordingModel->analyze(
+        $_FILES['file']['tmp_name'],
+        $_FILES['file']['name']
       );
       
-    } catch( InvalidFileTypeException $e ) {
+    } catch( \Model\InvalidFileTypeException $e ) {
       
       $error = 'invalidfiletype';
       $this->form->addMessage( $l('', 'swfupload_invalidfiletype') );
       
-    } catch( InvalidLengthException $e ) {
+    } catch( \Model\InvalidLengthException $e ) {
       
       $error = 'invalidlength';
       $this->form->addMessage( $l('', 'swfupload_invalidlength') );
       $debug->log( false, 'upload.txt', 'uploadcontentrecording failed -- ' . var_export( $e->getMessage(), true ) );
       
-    } catch( InvalidVideoResolutionException $e ) {
+    } catch( \Model\InvalidVideoResolutionException $e ) {
       
       $error = 'filetoobig';
       $this->form->addMessage( $l('', 'filetoobig') );
@@ -145,7 +125,7 @@ class Upload extends \Visitor\Form {
         true
       );
       
-    } catch( Exception $e ) {
+    } catch( \Exception $e ) {
       
       $error = 'failedvalidation';
       $this->form->addMessage( $l('', 'swfupload_failedvalidation') );
@@ -166,15 +146,28 @@ class Upload extends \Visitor\Form {
       
     }
     
+    $recordingModel->insertUploadingRecording(
+      $user->id,
+      $organization->id,
+      $values['videolanguage'],
+      $_FILES['file']['name']
+    );
+    
     try {
       
       $recordingModel->handleFile( $_FILES['file']['tmp_name'] );
-      $recordingModel->markRecordingUploaded();
+      $recordingModel->updateRow( array(
+          'masterstatus' => 'uploaded',
+          'status'       => 'uploaded',
+        )
+      );
       
     } catch( Exception $e ) {
       
-      if ( !$recordingid )
-        $recordingModel->markFailed();
+      $recordingModel->updateRow( array(
+          'masterstatus' => 'failedmovinguploadedfile',
+        )
+      );
       
       if ( $this->swfupload )
         $this->controller->swfuploadMessage( array('error' => 'movefailed'), $_FILES['file'] );

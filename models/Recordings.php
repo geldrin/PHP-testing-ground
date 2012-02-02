@@ -7,18 +7,38 @@ class InvalidVideoResolutionException extends \Exception {}
 
 class Recordings extends \Springboard\Model {
   
+  public function insertUploadingRecording( $userid, $organizationid, $languageid, $title ) {
+    
+    $recording = array(
+      'userid'          => $userid,
+      'organizationid'  => $organizationid,
+      'languageid'      => $languageid,
+      'title'           => $title,
+      'mediatype'       => $this->metadata['mastermediatype'],
+      'status'          => 'uploading',
+      'masterstatus'    => 'uploading',
+      'accesstype'      => 'public',
+      'timestamp'       => date('Y-m-d H:i:s'),
+      'recordedtimestamp' => date('Y-m-d H:i:s'),
+      'metadataupdatedtimestamp' => date('Y-m-d H:i:s'),
+    ) + $this->metadata;
+    
+    return $this->insert( $recording );
+    
+  }
+  
   public function handleFile( $source, $handlefile = 'upload', $postfix = '' ) {
     
     $this->ensureObjectLoaded();
     
     if ( !$this->metadata )
       throw new \Exception('No metadata for the video found, please ->analyize() it beforehand!');
-
+    
     $target =
-      $this->bootstrap->config['uploadpath'] . 'recording_elements/' . $this->row['recordingid'] . '_' .
-      $this->row['id'] . $postfix . '.' . $this->metadata['mastervideoextension']
+      $this->bootstrap->config['uploadpath'] . 'recordings/' . $this->id .
+      $postfix . '.' . $this->metadata['mastervideoextension']
     ;
-
+    
     switch ( $handlefile ) {
       case 'copy':   $ret = @copy( $source, $target ); break;
       case 'upload': $ret = @move_uploaded_file( $source, $target ); break;
@@ -50,7 +70,7 @@ class Recordings extends \Springboard\Model {
     if ( preg_match('/Seek failed/', $output ) )
       throw new InvalidFileTypeException('Got unrecognized file, output was: ' . $output, $return );
     
-    if ( $this->debug )
+    if ( $this->bootstrap->debug )
       var_dump( $output );
     
     preg_match_all('/(ID_.+)=(.*)\n/m', $output, $matches );

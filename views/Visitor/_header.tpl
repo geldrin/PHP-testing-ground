@@ -8,14 +8,6 @@
   <meta name="format-detection" content="telephone=no" />{*} iphone ne vegye a random szamokat telefonszamoknak {/*}
   <base href="http{if $ssl}s{/if}://{$bootstrap->config.baseuri}" /><!--[if IE]></base><![endif]-->
   <title>{if $title}{$title|escape:html|titleescape} | {/if}{l key=sitename}</title>
-
-  <script type="text/javascript">
-  var BASE_URI   = '{$BASE_URI}';
-  var STATIC_URI = '{$STATIC_URI}';
-  var VERSION    = '{$VERSION}';
-  var language   = '{$language}';
-  </script>
-  
   <link rel="StyleSheet" type="text/css" href="{$STATIC_URI}css/style{$VERSION}.css" media="screen"/>
 
   <!--[if lte IE 7]>
@@ -27,11 +19,16 @@
   <![endif]-->
 
   <script type="text/javascript" src="{$STATIC_URI}js/jquery-1.7.1.min{$VERSION}.js"></script>
-  <script type="text/javascript" src="{$STATIC_URI}js/tools{$VERSION}.js"></script>
-  
+  <script type="text/javascript" src="{$STATIC_URI}js/swfobject.full{$VERSION}.js"></script>
   <script type="text/javascript">
   var $j = jQuery.noConflict();
+  var BASE_URI   = '{$BASE_URI}';
+  var STATIC_URI = '{$STATIC_URI}';
+  var VERSION    = '{$VERSION}';
+  var language   = '{$language}';
   </script>
+  <script type="text/javascript" src="{$STATIC_URI}js/tools{$VERSION}.js"></script>
+  
 </head>
 <body>
 {if $browserInfo.obsolete}
@@ -54,7 +51,7 @@
     {/if}
     
     {if $sessionmessage and !$skipsessionmessage}
-      {$sessionmessage}
+      {include file="Visitor/_message.tpl" message=$sessionmessage}
     {/if}
     
     <div class="body">
