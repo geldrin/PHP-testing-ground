@@ -42,12 +42,9 @@
       <div id="headersearchlink"><a href="{$language}/search/all">{l key=search escape=html}</a></div>
     </div>
 
-    {if $hidemenu}
-
-      {include file="_menu.tpl"}
-     
-      {include file="_submenu.tpl"}
-
+    {if !$hidemenu}
+      {include file="Visitor/_menu.tpl"}
+      {include file="Visitor/_submenu.tpl"}
     {/if}
     
     {if $sessionmessage and !$skipsessionmessage}

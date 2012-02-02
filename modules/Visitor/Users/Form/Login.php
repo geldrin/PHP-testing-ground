@@ -35,6 +35,11 @@ class Login extends \Visitor\Form {
       $diagnostics = $this->application->getParameter('diaginfo');
     
     $userModel->updateLastlogin( $diagnostics );
+    $forward = $this->application->getParameter('forward');
+    
+    if ( $forward )
+      $this->controller->redirect( $forward );
+    
     $this->controller->redirectToFragment('');
     
   }

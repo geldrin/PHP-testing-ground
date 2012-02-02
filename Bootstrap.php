@@ -241,9 +241,16 @@ class Bootstrap {
     
     $smarty->assign('language',         Springboard\Language::get() );
     $smarty->assign('sessionid',        session_id() );
+    $smarty->assign('module',           @$_REQUEST['module'] );
     
-    if ( !ISCLI )
+    if ( !ISCLI ) {
+      
       $smarty->assign('sessionmessage', $this->getSession('message')->get('message') );
+      $user = $this->getUser();
+      if ( $user->id )
+        $smarty->assign('member', $user );
+      
+    }
     
     return $smarty;
     

@@ -1,5 +1,6 @@
 nbproject
 nbproject/**
+resources/local/**
 libraries/smarty.2620
 libraries/adodb.510
 surveyor.config
