@@ -52,7 +52,7 @@ $j(document).ready(function() {ldelim}
   prevent_swf_caching: true,
   
   //file_size_limit:        {$file_upload_limit|default:819200}, // 800MB
-  file_size_limit:        "2000MB",
+  file_size_limit:        "10GB",
   file_upload_limit:      0,
   file_types:             "*.wmv;*.avi;*.mov;*.flv;*.mkv;*.asf;*.mp4;*.mp3;*.ogg;*.wav;*.flac;*.wma;*.mpg;*.mpeg;*.ogm;*.f4v;*.m4v;",
   file_types_description: "Video Files",
