@@ -7,7 +7,7 @@ class Form extends \Springboard\Controller\Admin\Form {
     
     $model  = $this->bootstrap->getModel( $this->controller->module );
     $values = $this->form->getElementValues( false );
-    $crypto = $this->bootstrap->getCrypto();
+    $crypto = $this->bootstrap->getEncryption();
     
     if ( strlen( $values['password'] ) )
       $values['password'] = $crypto->getHash( $values['password'] );
@@ -15,7 +15,7 @@ class Form extends \Springboard\Controller\Admin\Form {
     $model->select( $values['id'] );
     $model->updateRow( $values );
     
-    $this->controller->redirectToFragment('users/index');
+    $this->controller->redirect('users/index');
     
   }
   
@@ -23,11 +23,11 @@ class Form extends \Springboard\Controller\Admin\Form {
     
     $model  = $this->bootstrap->getModel( $this->controller->module );
     $values = $this->form->getElementValues( false );
-    $crypto = $this->bootstrap->getCrypto();
+    $crypto = $this->bootstrap->getEncryption();
     $values['password'] = $crypto->getHash( $values['password'] );
     $model->insert( $values );
     
-    $this->controller->redirectToFragment('users/index');
+    $this->controller->redirect('users/index');
     
   }
   

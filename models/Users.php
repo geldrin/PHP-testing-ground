@@ -5,7 +5,7 @@ class Users extends \Springboard\Model {
   
   public function selectAndCheckUserValid( $email, $password ) {
     
-    $crypto = $this->bootstrap->getCrypto();
+    $crypto = $this->bootstrap->getEncryption();
     
     $this->addFilter('email',    $email, false );
     $this->addFilter('password', $crypto->getHash( $password ), false );

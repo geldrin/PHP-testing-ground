@@ -13,26 +13,26 @@ class Changepassword extends \Visitor\Form {
     
     $user = $this->bootstrap->getUser();
     if ( isset( $user->id ) )
-      $this->controller->redirectToFragment('index');
+      $this->controller->redirect('index');
     
     $code = $this->application->getParameter('code');
     if ( strlen( $code ) < 11 )
-      $this->controller->redirectToFragment('contents/badparameter');
+      $this->controller->redirect('contents/badparameter');
     
-    $this->crypto         = $this->bootstrap->getCrypto();
+    $this->crypto         = $this->bootstrap->getEncryption();
     $this->validationcode = substr( $code, -10 );
     $this->userid         =
       intval( $this->crypto->asciiDecrypt( substr( $code, 0, -10 ) ) )
     ;
     
     if ( $this->userid <= 0 )
-      $this->controller->redirectToFragment('contents/badparameter');
+      $this->controller->redirect('contents/badparameter');
     
   }
   
   public function postSetupForm() {
     
-    $l = $this->bootstrap->getLocale();
+    $l = $this->bootstrap->getLocalization();
     $this->toSmarty['title'] = $l('users', 'changepassword_title');
     
   }
@@ -41,7 +41,7 @@ class Changepassword extends \Visitor\Form {
     
     $values    = $this->form->getElementValues( 0 );
     $userModel = $this->bootstrap->getModel('users');
-    $l         = $this->bootstrap->getLocale();
+    $l         = $this->bootstrap->getLocalization();
     
     if ( !$userModel->checkIDAndValidationCode( $this->userid, $this->validationcode ) ) {
       
@@ -64,7 +64,7 @@ class Changepassword extends \Visitor\Form {
       
     }
     
-    $this->controller->redirectToFragmentWithMessage('index', $l('users', 'changepass_changed') );
+    $this->controller->redirectWithMessage('index', $l('users', 'changepass_changed') );
     
   }
   

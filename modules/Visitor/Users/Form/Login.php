@@ -6,21 +6,21 @@ class Login extends \Visitor\Form {
   
   public function postSetupForm() {
     
-    $l = $this->bootstrap->getLocale();
+    $l = $this->bootstrap->getLocalization();
     $this->toSmarty['title'] = $l('users', 'login_title');
     
   }
   
   public function onComplete() {
     
-    $crypto    = $this->bootstrap->getCrypto();
+    $crypto    = $this->bootstrap->getEncryption();
     $values    = $this->form->getElementValues( 0 );
     $smarty    = $this->bootstrap->getSmarty();
     $userModel = $this->bootstrap->getModel('users');
     
     if ( !$userModel->selectAndCheckUserValid( $values['email'], $values['password'] ) ) {
       
-      $l = $this->bootstrap->getLocale();
+      $l = $this->bootstrap->getLocalization();
       $this->form->addMessage( sprintf( $l('users','login_error'), \Springboard\Language::get() . '/users/forgotpassword' ) );
       $this->form->invalidate();
       return;
@@ -40,7 +40,7 @@ class Login extends \Visitor\Form {
     if ( $forward )
       $this->controller->redirect( $forward );
     
-    $this->controller->redirectToFragment('');
+    $this->controller->redirect('index');
     
   }
   

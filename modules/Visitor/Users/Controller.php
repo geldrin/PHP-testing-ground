@@ -29,22 +29,22 @@ class Controller extends \Springboard\Controller\Visitor {
     $code = $this->application->getParameter('code');
     
     if ( strlen( $code ) < 10 )
-      $this->redirectToFragment('contents/signupvalidationfailed');
+      $this->redirect('contents/signupvalidationfailed');
     
-    $crypto         = $this->bootstrap->getCrypto();
+    $crypto         = $this->bootstrap->getEncryption();
     $validationcode = substr( $code, -10 );
     $userid         =
       intval( $crypto->asciiDecrypt( substr( $code, 0, -10 ) ) )
     ;
     
     if ( $userid <= 0 )
-      $this->redirectToFragment('contents/signupvalidationfailed');
+      $this->redirect('contents/signupvalidationfailed');
     
     $userModel = $this->bootstrap->getModel('users');
     $userModel->select( $userid );
     
     if ( @$userModel->row['validationcode'] !== $validationcode )
-      $this->redirectToFragment('contents/signupvalidationfailed');
+      $this->redirect('contents/signupvalidationfailed');
     
     $userModel->updateRow( array(
         'disabled' => 0,
@@ -52,7 +52,7 @@ class Controller extends \Springboard\Controller\Visitor {
     );
     
     $userModel->registerForSession();
-    $this->redirectToFragment('contents/signupvalidated');
+    $this->redirect('contents/signupvalidated');
     
   }
   
@@ -61,7 +61,7 @@ class Controller extends \Springboard\Controller\Visitor {
     $user = $this->bootstrap->getUser();
     $user->destroy();
     
-    $this->redirectToFragmentWithMessage('index', 'loggedout');
+    $this->redirectWithMessage('index', 'loggedout');
     
   }
   

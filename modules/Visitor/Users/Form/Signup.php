@@ -7,7 +7,7 @@ class Signup extends \Visitor\Form {
   
   public function postSetupForm() {
     
-    $l = $this->bootstrap->getLocale();
+    $l = $this->bootstrap->getLocalization();
     $this->toSmarty['title'] = $l('users', 'register_title');
     
   }
@@ -16,10 +16,10 @@ class Signup extends \Visitor\Form {
     
     $values    = $this->form->getElementValues( 0 );
     $userModel = $this->bootstrap->getModel('users');
-    $crypto    = $this->bootstrap->getCrypto();
+    $crypto    = $this->bootstrap->getEncryption();
     $queue     = $this->bootstrap->getMailqueue();
     $smarty    = $this->bootstrap->getSmarty();
-    $l         = $this->bootstrap->getLocale();
+    $l         = $this->bootstrap->getLocalization();
     
     $values['timestamp']      = date('Y-m-d H:i:s');
     $values['lastloggedin']   = $values['timestamp'];
@@ -42,7 +42,7 @@ class Signup extends \Visitor\Form {
       $smarty->fetch('Visitor/Users/Email/Validation.tpl')
     );
     
-    $this->controller->redirectToFragment('contents/needvalidation');
+    $this->controller->redirect('contents/needvalidation');
     
   }
   

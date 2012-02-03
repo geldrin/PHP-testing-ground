@@ -49,7 +49,7 @@ class Form extends \Springboard\Controller\Admin\Form {
         if ( $forward = $this->application->getParameter('forward') )
           $this->controller->redirect( $forward );
         else
-          $this->controller->redirectToFragment('index');
+          $this->controller->redirect('index');
         
       } else {
         

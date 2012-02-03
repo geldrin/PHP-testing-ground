@@ -12,7 +12,7 @@ class Upload extends \Visitor\Form {
   public function init() {
     
     if ( $this->bootstrap->config['disable_uploads'] )
-      $this->controller->redirectToFragment('contents/uploaddisabled');
+      $this->controller->redirect('contents/uploaddisabled');
     
     if ( $this->application->getParameter('swfupload') )
       $this->swfupload = true;
@@ -46,7 +46,7 @@ class Upload extends \Visitor\Form {
   public function preSetupForm() {
     
     $languageModel = $this->bootstrap->getModel('languages');
-    $l             = $this->bootstrap->getLocale();
+    $l             = $this->bootstrap->getLocalization();
     
     $this->languages = $languageModel->getAssoc('id', 'originalname', false, false, false, 'weight');
     $this->toSmarty['title']     = $l('recordings', 'upload_title');
@@ -57,7 +57,7 @@ class Upload extends \Visitor\Form {
   
   public function onComplete() {
     
-    $l     = $this->bootstrap->getLocale();
+    $l     = $this->bootstrap->getLocalization();
     $debug = \Springboard\Debug::getInstance();
     $debug->log( false, 'upload.txt', var_export( $_FILES, true ) . "\n------\n" );
     
@@ -180,7 +180,7 @@ class Upload extends \Visitor\Form {
         )
       );
     else
-      $this->controller->redirectToFragment('contents/uploadsuccessfull');
+      $this->controller->redirect('contents/uploadsuccessfull');
     
   }
   

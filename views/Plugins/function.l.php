@@ -1,7 +1,7 @@
 <?php
 function smarty_function_l( $params, $smarty ) {
   $bootstrap = $smarty->get_template_vars('bootstrap');
-  $l         = $bootstrap->getLocale();
+  $l         = $bootstrap->getLocalization();
   
   if ( !isset( $params['module'] ) )
     $params['module'] = '';

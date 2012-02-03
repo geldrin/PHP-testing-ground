@@ -256,14 +256,12 @@ class Bootstrap {
     
   }
   
-  public function getLocale() {
+  public function getLocalization() {
     
-    if ( isset( $this->instances['locale'] ) )
-      return $this->instances['locale'];
+    if ( isset( $this->instances['localization'] ) )
+      return $this->instances['localization'];
     
-    //$this->setupLanguage(); - mar le kelett hogy fusson
-    $locale = new Springboard\Locale( $this );
-    return $this->instances['locale'] = $locale;
+    return $this->instances['localization'] = new Springboard\Localization( $this );
     
   }
   
@@ -448,8 +446,8 @@ class Bootstrap {
     
   }
   
-  public function getCrypto() {
-    return new Springboard\Crypto( $this );
+  public function getEncryption() {
+    return new Springboard\Encryption( $this );
   }
   
   public function getCache( $key, $expireseconds = null, $ignorelanguage = false ) {
