@@ -155,7 +155,7 @@ body.subdomain #header {
   display: block;
 }
 #header a#logo span {
-  background-image: url(images/header_logo.png);
+  /*background-image: url(images/header_logo.png);*/
 }
 body.subdomain #header a#logo, #header a#logo span {
   width: 500px;
@@ -468,7 +468,7 @@ textarea {
   float: left;
 }
 #footer #footerlogo span {
-  background-image: url(images/footer_logo.png);
+  /*background-image: url(images/footer_logo.png);*/
   background-repeat: no-repeat;
 }
 #footer #contactlink {
@@ -514,14 +514,14 @@ textarea {
   height: 38px;
 }
 #footer #niiflogo span {
-  background-image: url(images/footer_niiflogo.png);
+  /*background-image: url(images/footer_niiflogo.png);*/
 }
 #footer #ujmagyarlogo, #footer #ujmagyarlogo span {
   width: 110px;
   height: 45px;
 }
 #footer #ujmagyarlogo span {
-  background-image: url(images/footer_ujmagyarlogo.png);
+  /*background-image: url(images/footer_ujmagyarlogo.png);*/
 }
 #footer #tamoplogo {
   margin-top: 10px;
@@ -532,7 +532,7 @@ textarea {
   height: 18px;
 }
 #footer #tamoplogo span {
-  background-image: url(images/footer_tamoplogo.png);
+  /*background-image: url(images/footer_tamoplogo.png);*/
 }
 /* footer rightside - links */
 #footer #footerlist {

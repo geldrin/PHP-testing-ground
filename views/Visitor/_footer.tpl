@@ -19,14 +19,11 @@
       </div>
       <div id="footerlist">
         <p>
-          A fejlesztést az Új Magyarország Fejlesztési Terv (ÚMFT) 
-          TÁMOP 4.1.3 program részeként a 
-          <a href="http://www.niif.hu">Nemzeti Információs Infrastruktúra
-          Fejlesztési Intézet (NIIF Intézet)</a> valósítja meg.
+          &nbsp;
         </p>
       </div>
       <ul id="contactlink">
-        {capture assign="contactblock"}admin@videotorium.hu{/capture}
+        {capture assign="contactblock"}admin@teleconnect.hu{/capture}
         <li id="footercontactlink">{$contactblock}</li>
         <li id="footerenablemobile"><a href="{$language}/index/mobile?status=enable&forward={$FULL_URI|escape:url}">{l key=footer_enablemobile}</a></li>
         <li id="footeruserstos"><a href="{$language}/contents/userstos">{l key=footer_userstos}</a></li>
