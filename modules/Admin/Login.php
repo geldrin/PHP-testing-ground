@@ -1,7 +1,7 @@
 <?php
 namespace Admin;
 class Login extends \Springboard\Controller\Admin {
-  protected $permissions = array(
+  public $permissions = array(
     'login'  => 'public',
     'index'  => 'public',
   );

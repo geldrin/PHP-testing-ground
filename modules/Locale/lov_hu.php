@@ -13,4 +13,14 @@ return array(
     'DLA'        => 'DLA',
   ),
   
+  'yes' => array(
+    0 => '',
+    1 => '<font color="green"><b>igen</b></font>',
+  ),
+  
+  'yesno' => array(
+    1 => 'igen',
+    0 => 'nem',
+  ),
+  
 );

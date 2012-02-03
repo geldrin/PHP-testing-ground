@@ -2,7 +2,7 @@
 namespace Admin;
 class Index extends \Springboard\Controller\Admin {
   protected $formactions = array();
-  protected $permissions = array(
+  public $permissions = array(
     'index'  => 'admin',
     'logout' => 'admin',
     'ping'   => 'admin',
