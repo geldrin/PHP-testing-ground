@@ -13,7 +13,7 @@ class Contents extends \Springboard\Model\Multilingual {
         strings as sbody,
         strings as stitle
       WHERE 
-        c.shortname = '" . $content . "' AND
+        c.shortname = " . $this->db->qstr( $content ) . " AND
         sbody.language = '" . $language . "' AND
         stitle.language = '" . $language . "' AND
         c.title_stringid = stitle.translationof AND
