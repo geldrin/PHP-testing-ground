@@ -2,6 +2,11 @@
 
 return array(
   
+  'languages' => array(
+    'hu' => 'magyar',
+    'en' => 'angol',
+  ),
+  
   'title' => array(
     'Dr.'        => 'Dr.',
     'BSc.'       => 'BSc.',
