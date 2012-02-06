@@ -2,7 +2,7 @@
 namespace Visitor\Recordings\Form;
 set_time_limit(0);
 
-class Upload extends \Visitor\Form {
+class Upload extends \Visitor\HelpForm {
   public $configfile   = 'Upload.php';
   public $template     = 'Visitor/Recordings/Upload.tpl';
   public $swfupload    = false;

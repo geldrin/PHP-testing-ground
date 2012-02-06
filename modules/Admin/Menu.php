@@ -26,6 +26,18 @@ class Menu {
       ),
       
       array(
+        'link'   => 'organizations',
+        'icon'   => 'images/sekkyumu/write_document.png',
+        'text'   => 'Intézmények',
+      ),
+      
+      array(
+        'link'   => 'languages',
+        'icon'   => 'images/sekkyumu/write_document.png',
+        'text'   => 'nyelvek',
+      ),
+      
+      array(
         'link'   => 'contents',
         'icon'   => 'images/sekkyumu/write_document.png',
         'text'   => 'tartalmak',
@@ -36,13 +48,7 @@ class Menu {
         'icon'   => 'images/sekkyumu/write_document.png',
         'text'   => 'súgó tartalmak',
       ),
-      
-      array(
-        'link'   => 'languages',
-        'icon'   => 'images/sekkyumu/write_document.png',
-        'text'   => 'nyelvek',
-      ),
-      
+      /*
       array(
         'link'   => 'genres',
         'icon'   => 'images/sekkyumu/write_document.png',
@@ -54,14 +60,11 @@ class Menu {
         'icon'   => 'images/sekkyumu/write_document.png',
         'text'   => 'szerepek',
       ),
-      
-      array(
-        'link'   => 'organizations',
-        'icon'   => 'images/sekkyumu/write_document.png',
-        'text'   => 'Intézmények',
-      ),
-      
+      */
     );
+    
+    foreach( $menu as $key => $value )
+      $menu[ $key ]['text'] = mb_convert_case( $value['text'], MB_CASE_TITLE );
     
     return $menu;
     

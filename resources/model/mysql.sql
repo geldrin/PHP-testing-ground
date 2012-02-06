@@ -200,3 +200,14 @@ CREATE TABLE `contents` (
    UNIQUE KEY `uix_shortname` (`shortname`(80))
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;
 
+
+CREATE TABLE `help_contents` (
+   `id` int(10) unsigned not null auto_increment,
+   `shortname` text not null,
+   `title` text,
+   `title_stringid` int(10) unsigned,
+   `body` text,
+   `body_stringid` int(10) unsigned,
+   PRIMARY KEY (`id`),
+   UNIQUE KEY `uix_shortname` (`shortname`(80))
+) ENGINE=MyISAM DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;

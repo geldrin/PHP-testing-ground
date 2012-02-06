@@ -7,6 +7,22 @@ class InvalidVideoResolutionException extends \Exception {}
 
 class Recordings extends \Springboard\Model {
   
+  public function userHasAccess( $user ) {
+    
+    $this->ensureObjectLoaded();
+    if ( $user->id and $user->id == $this->row['userid'] )
+      return true;
+    
+    if (
+         $user->iseditor and $user->organizationid and
+         $this->row['organizationid'] == $user->organizationid
+       )
+      return true;
+    
+    return false;
+    
+  }
+  
   public function insertUploadingRecording( $userid, $organizationid, $languageid, $title ) {
     
     $recording = array(
