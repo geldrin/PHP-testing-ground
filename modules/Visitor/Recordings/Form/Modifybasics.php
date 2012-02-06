@@ -16,16 +16,16 @@ class Modifybasics extends \Visitor\Recordings\ModifyForm {
     // if the recording has an organization and differs from the users
     // dont update it, otherwise update it, is this necessary even?
     if (
-         $this->recordingModel->row['organizationid'] and
-         $this->recordingModel->row['organizationid'] != $user->organizationid 
+         $this->recordingsModel->row['organizationid'] and
+         $this->recordingsModel->row['organizationid'] != $user->organizationid 
        )
       unset( $values['organizationid'] );
     
-    $this->recordingModel->updateRow( $values );
-    $this->recordingModel->updateFulltextCache();
+    $this->recordingsModel->updateRow( $values );
+    $this->recordingsModel->updateFulltextCache();
     
     $this->controller->redirect(
-      'recordings/modifyclassification/' . $recordingModel->id,
+      'recordings/modifyclassification/' . $this->recordingsModel->id,
       array( 'forward' => $values['forward'] )
     );
     

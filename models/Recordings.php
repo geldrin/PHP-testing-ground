@@ -7,6 +7,18 @@ class InvalidVideoResolutionException extends \Exception {}
 
 class Recordings extends \Springboard\Model {
   
+  public function updateFulltextCache( $updatemetadata = false ) {
+    
+    $this->ensureObjectLoaded();
+    $values = array(); // TODO assembleCaches
+    
+    if ( $updatemetadata )
+      $values['metadataupdatedtimestamp'] = date('Y-m-d H:i:s');
+    
+    $this->updateRow( $values );
+    
+  }
+  
   public function userHasAccess( $user ) {
     
     $this->ensureObjectLoaded();
