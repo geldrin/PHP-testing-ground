@@ -80,7 +80,6 @@ class Upload extends \Visitor\HelpForm {
     
     $recordingModel = $this->bootstrap->getModel('recordings');
     $user           = $this->bootstrap->getUser();
-    $organization   = $this->bootstrap->getOrganization();
     $values         = $this->form->getElementValues( 0 );
     
     if ( !isset( $this->languages[ $values['videolanguage'] ] ) and $this->swfupload )
@@ -148,7 +147,7 @@ class Upload extends \Visitor\HelpForm {
     
     $recordingModel->insertUploadingRecording(
       $user->id,
-      $organization->id,
+      $user->organizationid,
       $values['videolanguage'],
       $_FILES['file']['name']
     );
