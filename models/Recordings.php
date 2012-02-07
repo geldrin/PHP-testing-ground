@@ -224,32 +224,26 @@ class Recordings extends \Springboard\Model {
   }
   
   public function addCategories( $categoryids ) {
-    
-    if ( count( $categoryids ) > 50 )
-      throw new \Exception("Tried inserting more than 50 categories for recording");
-    
-    $values = array();
-    foreach( $categoryids as $categoryid )
-      $values[] = "('" . $categoryid . "', '" . $this->id . "')";
-    
-    $this->db->execute("
-      INSERT INTO recordings_categories (categoryid, recordingid)
-      VALUES " . implode(', ', $values ) . "
-    ");
-    
+    $this->insertMultipleIDs( $categoryids, 'recordings_categories', 'categoryid');
   }
   
   public function addGenres( $genreids ) {
+    $this->insertMultipleIDs( $genreids, 'recordings_genres', 'genreid');
+  }
+  
+  protected function insertMultipleIDs( $ids, $table, $field ) {
     
-    if ( count( $genreids ) > 50 )
-      throw new \Exception("Tried inserting more than 50 genres for recording");
+    $this->ensureID();
+    
+    if ( count( $ids ) > 50 )
+      throw new \Exception("Tried inserting more than 50 items");
     
     $values = array();
-    foreach( $genreids as $genreid )
-      $values[] = "('" . $genreid . "', '" . $this->id . "')";
+    foreach( $ids as $id )
+      $values[] = "('" . $id . "', '" . $this->id . "')";
     
     $this->db->execute("
-      INSERT INTO recordings_genres (genreid, recordingid)
+      INSERT INTO $table ($field, recordingid)
       VALUES " . implode(', ', $values ) . "
     ");
     
