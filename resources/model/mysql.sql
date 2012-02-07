@@ -54,7 +54,7 @@ CREATE TABLE `users` (
 
 CREATE TABLE `organizations` (
    `id` int(10) unsigned not null auto_increment,
-   `parentid` int(10) unsigned,
+   `parentid` int(10) unsigned not null default '0',
    `addressid` int(10) unsigned,
    `postaladdressid` int(10) unsigned,
    `billingaddressid` int(10) unsigned,
@@ -174,7 +174,7 @@ CREATE TABLE `languages` (
    `originalname` text not null,
    `name` text,
    `name_stringid` int(10) unsigned not null,
-   `weight` int(10) unsigned not null default '100',
+   `weight` int(11) not null default '100',
    PRIMARY KEY (`id`),
    UNIQUE KEY (`shortname`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;
@@ -210,4 +210,48 @@ CREATE TABLE `help_contents` (
    `body_stringid` int(10) unsigned,
    PRIMARY KEY (`id`),
    UNIQUE KEY `uix_shortname` (`shortname`(80))
-) ENGINE=MyISAM DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;
+
+
+CREATE TABLE `genres` (
+   `id` int(10) unsigned not null auto_increment,
+   `parentid` int(10) unsigned not null default '0',
+   `organizationid` int(10) unsigned,
+   `name` text,
+   `name_stringid` int(10) unsigned not null,
+   `weight` int(10) unsigned not null default '100',
+   `disabled` int(11) not null default '0',
+   PRIMARY KEY (`id`),
+   KEY `ix_organizationid` (`organizationid`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;
+
+
+CREATE TABLE `categories` (
+   `id` int(10) unsigned not null auto_increment,
+   `parentid` int(10) unsigned not null default '0',
+   `organizationid` int(10) unsigned,
+   `name` text,
+   `name_stringid` int(10) unsigned not null,
+   `weight` int(11) not null default '100',
+   `disabled` int(11) not null default '0',
+   PRIMARY KEY (`id`),
+   KEY `ix_organizationid` (`organizationid`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;
+
+
+CREATE TABLE `recordings_genres` (
+   `id` int(10) unsigned not null auto_increment,
+   `genreid` int(10) unsigned not null,
+   `recordingid` int(10) unsigned not null,
+   PRIMARY KEY (`id`),
+   KEY `ix_recordingid` (`recordingid`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;
+
+
+CREATE TABLE `recordings_categories` (
+   `id` int(10) unsigned not null auto_increment,
+   `categoryid` int(10) unsigned not null,
+   `recordingid` int(10) unsigned not null,
+   PRIMARY KEY (`id`),
+   KEY `ix_recordingid` (`recordingid`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;

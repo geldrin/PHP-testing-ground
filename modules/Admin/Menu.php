@@ -48,13 +48,19 @@ class Menu {
         'icon'   => 'images/sekkyumu/write_document.png',
         'text'   => 'súgó tartalmak',
       ),
-      /*
+      
       array(
         'link'   => 'genres',
         'icon'   => 'images/sekkyumu/write_document.png',
         'text'   => 'műfajok',
       ),
       
+      array(
+        'link'   => 'categories',
+        'icon'   => 'images/sekkyumu/write_document.png',
+        'text'   => 'kategóriák',
+      ),
+      /*
       array(
         'link'   => 'roles',
         'icon'   => 'images/sekkyumu/write_document.png',

@@ -5,12 +5,14 @@ class Controller extends \Springboard\Controller\Visitor {
   public $permissions = array(
     'index'  => 'public',
     'upload' => 'member',
-    'modifybasics' => 'member',
+    'modifybasics'         => 'member',
+    'modifyclassification' => 'member',
   );
   
   public $forms = array(
     'upload' => 'Visitor\\Recordings\\Form\\Upload',
     'modifybasics' => 'Visitor\\Recordings\\Form\\Modifybasics',
+    'modifyclassification' => 'Visitor\\Recordings\\Form\\Modifyclassification',
   );
   
   // TODO override acl handling, swfuploadnal megfelelo uzenetet kuldeni

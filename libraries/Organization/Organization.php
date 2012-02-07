@@ -19,6 +19,7 @@ class Organization {
         throw new Exception('Organization not found!');
       
       $organization = $orgModel->row;
+      $organization['children'] = $orgModel->findChildrenIDs();
       $cache->put( $organization );
       
     } else

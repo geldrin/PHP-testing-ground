@@ -209,4 +209,50 @@ class Recordings extends \Springboard\Model {
     
   }
   
+  public function clearGenres() {
+    $this->db->execute("
+      DELETE FROM recordings_genres
+      WHERE recordingid = '" . $this->id . "'
+    ");
+  }
+  
+  public function clearCategories() {
+    $this->db->execute("
+      DELETE FROM recordings_categories
+      WHERE recordingid = '" . $this->id . "'
+    ");
+  }
+  
+  public function addCategories( $categoryids ) {
+    
+    if ( count( $categoryids ) > 50 )
+      throw new \Exception("Tried inserting more than 50 categories for recording");
+    
+    $values = array();
+    foreach( $categoryids as $categoryid )
+      $values[] = "('" . $categoryid . "', '" . $this->id . "')";
+    
+    $this->db->execute("
+      INSERT INTO recordings_categories (categoryid, recordingid)
+      VALUES " . implode(', ', $values ) . "
+    ");
+    
+  }
+  
+  public function addGenres( $genreids ) {
+    
+    if ( count( $genreids ) > 50 )
+      throw new \Exception("Tried inserting more than 50 genres for recording");
+    
+    $values = array();
+    foreach( $genreids as $genreid )
+      $values[] = "('" . $genreid . "', '" . $this->id . "')";
+    
+    $this->db->execute("
+      INSERT INTO recordings_genres (genreid, recordingid)
+      VALUES " . implode(', ', $values ) . "
+    ");
+    
+  }
+  
 }

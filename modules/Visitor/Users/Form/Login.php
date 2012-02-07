@@ -13,12 +13,25 @@ class Login extends \Visitor\Form {
   
   public function onComplete() {
     
-    $crypto    = $this->bootstrap->getEncryption();
-    $values    = $this->form->getElementValues( 0 );
-    $smarty    = $this->bootstrap->getSmarty();
-    $userModel = $this->bootstrap->getModel('users');
+    $crypto       = $this->bootstrap->getEncryption();
+    $values       = $this->form->getElementValues( 0 );
+    $smarty       = $this->bootstrap->getSmarty();
+    $userModel    = $this->bootstrap->getModel('users');
+    $organization = $this->bootstrap->getOrganization();
     
-    if ( !$userModel->selectAndCheckUserValid( $values['email'], $values['password'] ) ) {
+    $uservalid = $userModel->selectAndCheckUserValid( $values['email'], $values['password'] );
+    $orgvalid  = false;
+    
+    if (
+         $uservalid and
+         (
+           $userModel->row['organizationid'] == $organization->id or
+           in_array( $userModel->row['organizationid'], $organization->children )
+         )
+       )
+      $orgvalid = true;
+    
+    if ( !$uservalid or !$orgvalid ) {
       
       $l = $this->bootstrap->getLocalization();
       $this->form->addMessage( sprintf( $l('users','login_error'), \Springboard\Language::get() . '/users/forgotpassword' ) );
