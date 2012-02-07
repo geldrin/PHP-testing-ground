@@ -11,7 +11,7 @@ class Index extends \Springboard\Controller\Admin {
   public function indexAction() {
     
     $smarty = $this->bootstrap->getSmarty();
-    $menu = $this->prepareMenu( \Admin\Menu::get() );
+    $menu = $this->prepareMenu( \Admin\Menu::get( $this->bootstrap ) );
     $smarty->assign('menu', $menu );
     $this->output( $smarty->fetch('Admin/index.tpl') );
     

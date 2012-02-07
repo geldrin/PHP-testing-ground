@@ -2,7 +2,7 @@
 namespace Admin;
 class Menu {
   
-  public static function get() {
+  public static function get( $bootstrap ) {
     /*
       regi:
       Array(

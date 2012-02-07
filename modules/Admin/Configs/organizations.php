@@ -109,8 +109,8 @@ $config = Array(
     ),
   ),
   
-  'bordercolor' => array(
-    'displayname' => 'Kereső szegély színe',
+  'backgroundcolor' => array(
+    'displayname' => 'Háttér színe',
     'type'        => 'inputText',
     'validation'  => array(
       array(
@@ -120,6 +120,24 @@ $config = Array(
         'required' => false,
       ),
     ),
+  ),
+  
+  'issubscriber' => array(
+    'displayname' => 'Előfizető?',
+    'type'        => 'inputRadio',
+    'values'      => $l->getLov('yesno'),
+  ),
+  
+  'registrationtype' => array(
+    'displayname' => 'Regisztráció típusa',
+    'type'        => 'select',
+    'values'      => $l->getLov('registrationtype'),
+  ),
+  
+  'disabled' => array(
+    'displayname' => 'Kitiltva?',
+    'type'        => 'inputRadio',
+    'values'      => $l->getLov('yesno'),
   ),
   
 );

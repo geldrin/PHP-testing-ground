@@ -28,4 +28,10 @@ return array(
     0 => 'nem',
   ),
   
+  'registrationtype' => array(
+    'open' => 'open',
+    'closed' => 'closed',
+    'restricted' => 'restricted',
+  ),
+  
 );
