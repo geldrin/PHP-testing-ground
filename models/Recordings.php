@@ -240,7 +240,7 @@ class Recordings extends \Springboard\Model {
     
     $values = array();
     foreach( $ids as $id )
-      $values[] = "('" . $id . "', '" . $this->id . "')";
+      $values[] = "('" . intval( $id ) . "', '" . $this->id . "')";
     
     $this->db->execute("
       INSERT INTO $table ($field, recordingid)

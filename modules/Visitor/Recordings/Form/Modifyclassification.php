@@ -11,10 +11,12 @@ class Modifyclassification extends \Visitor\Recordings\ModifyForm {
     $values = $this->form->getElementValues( 0 );
     
     $this->recordingsModel->clearGenres();
-    $this->recordingsModel->addGenres( $values['genres'] );
+    if ( !empty( $values['genres'] ) )
+      $this->recordingsModel->addGenres( $values['genres'] );
     
     $this->recordingsModel->clearCategories();
-    $this->recordingsModel->addCategories( $values['categories'] );
+    if ( !empty( $values['categories'] ) )
+      $this->recordingsModel->addCategories( $values['categories'] );
     
     $this->recordingsModel->updateRow( array(
         'keywords' => $values['keywords'],
