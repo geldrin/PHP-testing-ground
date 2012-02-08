@@ -8,12 +8,14 @@ class Controller extends \Springboard\Controller\Visitor {
     'myrecordings' => 'member',
     'modifybasics'         => 'member',
     'modifyclassification' => 'member',
+    'modifydescription'    => 'member',
   );
   
   public $forms = array(
     'upload' => 'Visitor\\Recordings\\Form\\Upload',
     'modifybasics' => 'Visitor\\Recordings\\Form\\Modifybasics',
     'modifyclassification' => 'Visitor\\Recordings\\Form\\Modifyclassification',
+    'modifydescription' => 'Visitor\\Recordings\\Form\\Modifydescription',
   );
   
   public $paging = array(
