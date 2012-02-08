@@ -18,29 +18,8 @@ while ( ( $data = fgetcsv( $fd, 1000, ';') ) !== false )
     'origparentid'  => $data[2],
   );
 
-$genreModel = $app->bootstrap->getModel('genres');
-$parentid   = '0';
-
-foreach ( $genres as $data ) {
-  
-  if ( empty( $data ) )
-    continue;
-  
-  $strings = array(
-    'name_stringid' => array(
-      'hu' => $data['namehungarian'],
-      'en' => $data['nameenglish']
-    ),
-  );
-  
-  if ( $data['origparentid'] !== '0' )
-    $data['parentid'] = $parentid;
-  else
-    $data['parentid'] = 0;
-  
-  $row = $genreModel->insert( $data, $strings, false );
-  
-  if ( $data['origparentid'] == 0 )
-    $parentid = $row['id'];
-  
-}
+$file = $this->bootstrap->config['datapath'] . 'defaultvalues/genres.php';
+file_put_contents(
+  $file,
+  "<?php\nreturn " . var_export( $genres, true ) . ";\n"
+);

@@ -312,7 +312,7 @@ class listing_tree extends listing {
 
       if ( $this->modify ) 
         $row .= "<td><input type=\"button\" onclick=\"location.href='" . 
-           $this->url . '?target=modify&id=' . 
+           $this->url . '/modify?id=' . 
              $fields[ 'pager_modify_field' ] . 
            "';\" value=\"" . LISTING_BUTTON_MODIFY . "\"></td>";
 
@@ -336,7 +336,7 @@ class listing_tree extends listing {
 
         if ( $disable_delete == 0 )
           $row .= "<td><input type=\"button\" onclick=\"if ( confirm( '" . LISTING_AREYOUSURE . "' ) ) location.href='" . 
-            $this->url . '?target=delete&id=' . 
+            $this->url . '/delete?id=' . 
               $results[ $i ][ 'pager_delete_field' ] . "';\" value=\"".LISTING_BUTTON_DELETE."\"></td>";
         else
           $row .= "<td></td>";

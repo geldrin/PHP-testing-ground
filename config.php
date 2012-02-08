@@ -14,6 +14,7 @@ $config = array(
   'loginuri'     => 'users/login',
   'cookiedomain' => '.teleconnect.hu',
   //-----
+  'datapath'     => BASE_PATH . 'data/',
   'logpath'      => BASE_PATH . 'data/logs/',
   'cachepath'    => BASE_PATH . 'data/cache/',
   'modulepath'   => BASE_PATH . 'modules/',

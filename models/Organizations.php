@@ -43,4 +43,45 @@ class Organizations extends \Springboard\Model {
     
   }
   
+  public function setup() {
+    $this->setupDefaultGenres();
+  }
+  
+  public function setupDefaultGenres() {
+    
+    $this->ensureID();
+    
+    $genres     = include(
+      $this->bootstrap->config['datapath'] . 'defaultvalues/genres.php'
+    );
+    $genreModel = $this->bootstrap->getModel('genres');
+    $parentid   = '0';
+    
+    foreach ( $genres as $data ) {
+      
+      if ( empty( $data ) )
+        continue;
+      
+      $strings = array(
+        'name_stringid' => array(
+          'hu' => $data['namehungarian'],
+          'en' => $data['nameenglish']
+        ),
+      );
+      
+      if ( $data['origparentid'] !== '0' )
+        $data['parentid'] = $parentid;
+      else
+        $data['parentid'] = 0;
+      
+      $data['organizationid'] = $this->id;
+      $row = $genreModel->insert( $data, $strings, false );
+      
+      if ( $data['origparentid'] == 0 )
+        $parentid = $row['id'];
+      
+    }
+    
+  }
+  
 }

@@ -53,7 +53,7 @@ class listing_flat extends listing {
   var $searchconditionlayout  = '<select name="condition">%s</select> ';
   var $searchcontentlayout    = '<input type=text name="value" value="%s"> ';
   var $searchsubmitlayout     = '<input type="submit" value="%s">';
-  var $searchclearsavedlayout = ' <input type="button" onclick="location.href=\'%s?action=clearsession\'" value="%s">';
+  var $searchclearsavedlayout = ' <input type="button" onclick="location.href=\'%s/clearsession\'" value="%s">';
 
   var $searchcondition;
   var $searchfield;
@@ -308,7 +308,7 @@ class listing_flat extends listing {
                 $field['layout'],
                 "<input class=\"modify\" type=\"button\" onclick=\"location.href='" .
                 $this->url . 
-                  '?action=modify&id=' . rawurlencode( $this->results[ $i ][ 'pager_modify_field' ] ) . 
+                  '/modify?id=' . rawurlencode( $this->results[ $i ][ 'pager_modify_field' ] ) . 
                   $propagate .
                 "';\" value=\"" . LISTING_BUTTON_MODIFY . "\">"
               );
@@ -328,7 +328,7 @@ class listing_flat extends listing {
 
             $url = 
               $this->url . 
-              '?action=delete&id=' . rawurlencode( $this->results[ $i ][ 'pager_delete_field' ] );
+              '/delete?id=' . rawurlencode( $this->results[ $i ][ 'pager_delete_field' ] );
 
             if ( $this->deletelink )
               eval( '$url = ' . $this->deletelink . ';' );
@@ -416,7 +416,7 @@ class listing_flat extends listing {
               $this->tdlayout,
               "<center><input class=\"modify\" type=\"button\" onclick=\"location.href='" .
               $this->url . 
-                '?action=modify&id=' . rawurlencode( $this->results[ $i ][ 'pager_modify_field' ] ) . 
+                '/modify?id=' . rawurlencode( $this->results[ $i ][ 'pager_modify_field' ] ) . 
                 $propagate .
               "';\" value=\"" . LISTING_BUTTON_MODIFY . "\"></center>"
             );
@@ -429,7 +429,7 @@ class listing_flat extends listing {
               "<nobr>". 
                 "<input class=\"delete\" type=\"button\" onclick=\"if ( confirm( '" . LISTING_AREYOUSURE . "' ) ) location.href='" . 
                 $this->url . 
-                  '?action=delete&id=' . rawurlencode( $this->results[ $i ][ 'pager_delete_field' ] ) . 
+                  '/delete?id=' . rawurlencode( $this->results[ $i ][ 'pager_delete_field' ] ) . 
                   $propagate .
                 "';\" value=\"" . LISTING_BUTTON_DELETE . "\">" . 
                 "<input class=\"deletecheckbox\" type=\"checkbox\" name=\"ids[]\" value=\"" . htmlspecialchars( $this->results[ $i ][ 'pager_delete_field' ] ) . "\">" .
