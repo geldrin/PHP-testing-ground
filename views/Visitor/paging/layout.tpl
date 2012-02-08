@@ -1,3 +1,5 @@
+{include file="Visitor/_header.tpl" title=$title}
+
 {if count( $insertbeforepager ) }
 
   {foreach from=$insertbeforepager item=insertitem}
@@ -46,3 +48,5 @@
   {/foreach}
 
 {/if}
+
+{include file="Visitor/_footer.tpl"}

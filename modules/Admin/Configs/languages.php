@@ -1,5 +1,5 @@
 <?php
-
+$organization = $this->bootstrap->getOrganization();
 $config = Array(
 
   'action' => Array(
@@ -10,6 +10,11 @@ $config = Array(
   'id' => Array(
     'type'  => 'inputHidden',
     'value' => '0'
+  ),
+
+  'organizationid' => Array(
+    'type'  => 'inputHidden',
+    'value' => $organization->id,
   ),
 
   'shortname' => Array(
@@ -51,7 +56,10 @@ $config = Array(
 $listconfig = Array(
 
   'table'     => 'languages l, strings s',
-  'where'     => 'l.name_stringid = s.translationof AND language = "hu"',
+  'where'     => '
+    l.name_stringid = s.translationof AND
+    s.language = "' . \Springboard\Language::get() . '"
+  ',
   'modify'    => 'l.id',
   'delete'    => 'l.id',
   'order'     => Array( 'l.weight' ),

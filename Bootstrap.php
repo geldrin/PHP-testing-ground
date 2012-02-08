@@ -409,6 +409,7 @@ class Bootstrap {
     $loader       = Springboard\Autoloader::getInstance();
     $class        = $loader->findExistingClass(
       'Admin\\' . $module,
+      'Admin\\Controller',
       'Springboard\\Controller\\Admin'
     );
     
@@ -437,6 +438,7 @@ class Bootstrap {
     $loader       = Springboard\Autoloader::getInstance();
     $class        = $loader->findExistingClass(
       'Admin\\' . ucfirst( $module ) . '\\Form',
+      'Admin\\Form',
       'Springboard\\Controller\\Admin\\Form'
     );
     

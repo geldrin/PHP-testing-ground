@@ -1,5 +1,5 @@
 <?php
-
+$organization = $this->bootstrap->getOrganization();
 $config = Array(
   
   'action' => Array(
@@ -10,6 +10,11 @@ $config = Array(
   'id' => Array(
     'type'  => 'inputHidden',
     'value' => '0'
+  ),
+  
+  'organizationid' => Array(
+    'type'  => 'inputHidden',
+    'value' => $organization->id,
   ),
   
   'name_stringid' => Array(
@@ -68,13 +73,19 @@ $listconfig = Array(
   'treestart'          => '0',
   'treeparent'         => 'parentid',
   'treestartinclusive' => true,
-
-  'deletesql'  => Array( "SELECT count(*) FROM genres WHERE parentid='<PARENTID>'"),
+  
+  'deletesql'  => Array("
+    SELECT count(*)
+    FROM genres
+    WHERE
+      parentid='<PARENTID>' AND organizationid = '" . $organization->id . "'"
+  ),
 
   'type'       => 'tree',
   'modify'     => 'g.id',
   'delete'     => 'g.id',
-
+  'where'      => "organizationid = '" . $organization->id . "'",
+  
   'fields' => Array(
   
     Array(

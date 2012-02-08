@@ -155,13 +155,15 @@ $config = Array(
   ),
 );
 
+$organization = $this->bootstrap->getOrganization();
 $listconfig = Array(
 
   'table'     => 'users',
   'modify'    => 'id',
   'delete'    => 'id',
   'order'     => Array('id DESC' ),
-
+  'where'     => 'organizationid = ' . $organization->id,
+  
   'fields' => Array(
 
     Array(
