@@ -1,5 +1,5 @@
 <?php
-$organization = $this->bootstrap->getOrganization();
+
 $config = Array(
 
   'action' => Array(
@@ -10,11 +10,6 @@ $config = Array(
   'id' => Array(
     'type'  => 'inputHidden',
     'value' => '0'
-  ),
-
-  'organizationid' => Array(
-    'type'  => 'inputHidden',
-    'value' => $organization->id,
   ),
 
   'shortname' => Array(

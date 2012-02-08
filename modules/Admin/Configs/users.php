@@ -4,6 +4,8 @@ $interfacelanguages = array();
 foreach( $this->application->config['languages'] as $language )
   $interfacelanguages[ $language ] = $language;
 
+$organization = $this->bootstrap->getOrganization();
+
 $config = Array(
   
   'target' => Array(
@@ -89,12 +91,9 @@ $config = Array(
       ORDER BY
         IF(LENGTH(nameoriginal), nameoriginal, nameenglish )
     ",
-    'values'      => array(
-      0 => 'none',
-    ),
     'value'       => '0',
     'treeid'      => 'id',
-    'treestart'   => '0',
+    'treestart'   => $organization->id,
     'treeparent'  => 'parentid',
   ),
   
@@ -155,7 +154,6 @@ $config = Array(
   ),
 );
 
-$organization = $this->bootstrap->getOrganization();
 $listconfig = Array(
 
   'table'     => 'users',
