@@ -24,26 +24,37 @@ class Controller extends \Springboard\Controller\Visitor {
     echo 'Nothing here yet';
   }
   
-  public function validateAction() {
-    
-    $code = $this->application->getParameter('code');
+  protected function parseValidationCode( $code ) {
     
     if ( strlen( $code ) < 10 )
-      $this->redirect('contents/signupvalidationfailed');
+      return false;
     
     $crypto         = $this->bootstrap->getEncryption();
     $validationcode = substr( $code, -10 );
-    $userid         =
+    $id             =
       intval( $crypto->asciiDecrypt( substr( $code, 0, -10 ) ) )
     ;
     
-    if ( $userid <= 0 )
+    if ( $id <= 0 )
+      return false;
+    
+    return array(
+      'id'             => $id,
+      'validationcode' => $validationcode,
+    );
+    
+  }
+  
+  public function validateAction() {
+    
+    $code = $this->application->getParameter('code');
+    if ( !( $data = $this->parseValidationCode( $code ) ) )
       $this->redirect('contents/signupvalidationfailed');
     
     $userModel = $this->bootstrap->getModel('users');
-    $userModel->select( $userid );
+    $userModel->select( $data['id'] );
     
-    if ( @$userModel->row['validationcode'] !== $validationcode )
+    if ( !$userModel->row or $userModel->row['validationcode'] !== $data['validationcode'] )
       $this->redirect('contents/signupvalidationfailed');
     
     $userModel->updateRow( array(
@@ -53,6 +64,26 @@ class Controller extends \Springboard\Controller\Visitor {
     
     $userModel->registerForSession();
     $this->redirect('contents/signupvalidated');
+    
+  }
+  
+  public function validateinvitationAction() {
+    
+    $code = $this->application->getParameter('code');
+    if ( !( $data = $this->parseValidationCode( $code ) ) )
+      $this->redirect('contents/invitationvalidationfailed');
+    
+    $invitationModel = $this->bootstrap->getModel('users_invitations');
+    $invitationModel->select( $data['id'] );
+    
+    if ( !$invitationModel->row or $invitationModel->row['validationcode'] !== $data['validationcode'] )
+      $this->redirect('contents/invitationvalidationfailed');
+    
+    $invitationSession = $this->bootstrap->getSession('userinvitation');
+    $invitationSession['invitation'] = $invitationModel->row;
+    
+    // elküldeni regisztrálni
+    $this->redirectToController('contents', 'invitationvalidated');
     
   }
   

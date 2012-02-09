@@ -45,4 +45,13 @@ return array(
     'organizations' => 'intézmények egy csoportja számára',
     'groups'        => 'saját csoportom számára',
   ),
+  
+  'permissions' => array(
+    'isadmin'       => 'isadmin',
+    'iseditor'      => 'iseditor',
+    'isclientadmin' => 'isclientadmin',
+    'isuploader'    => 'isuploader',
+    'isliveadmin'   => 'isliveadmin',
+  ),
+  
 );

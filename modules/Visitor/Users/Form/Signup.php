@@ -20,15 +20,33 @@ class Signup extends \Visitor\Form {
     $queue     = $this->bootstrap->getMailqueue();
     $smarty    = $this->bootstrap->getSmarty();
     $l         = $this->bootstrap->getLocalization();
+    $groupSession = $this->bootstrap->getSession('groupinvitation');
+    $userinvitationSession = $this->bootstrap->getSession('userinvitation');
     
     $values['timestamp']      = date('Y-m-d H:i:s');
     $values['lastloggedin']   = $values['timestamp'];
     $values['browser']        = $_SERVER['HTTP_USER_AGENT'];
-    $values['disabled']       = -1; // until validated the user is banned
+    $values['disabled']       = $userModel::USER_UNVALIDATED;
     $values['validationcode'] = $crypto->randomPassword( 10 );
     $values['password']       = $crypto->getHash( $values['password'] );
     $values['language']       = \Springboard\Language::get();
     $values['organizationid'] = $this->bootstrap->getOrganization()->id;
+    
+    if ( $invitation = $userinvitationSession['invitation'] ) {
+      
+      $invitationModel = $this->bootstrap->getModel('users_invitations');
+      $invitationModel->select( $invitation['id'] );
+      
+      if ( !$invitationModel->row )
+        throw new \Exception('No user invitation found with session data: ' . var_export( $invitation, true ) );
+      
+      foreach( explode('|', $invitation['permissions'] ) as $permission )
+        $values[ $permission ] = 1;
+      
+      $userinvitationSession->clear();
+      $invitationModel->delete( $invitationModel->id );
+      
+    }
     
     $userModel->insert( $values );
     

@@ -2,6 +2,9 @@
 namespace Model;
 
 class Users extends \Springboard\Model {
+  const USER_UNVALIDATED = -2; // disabled mezo lehetseges ertekei
+  const USER_BANNED      = -1;
+  const USER_VALIDATED   = 0;
   
   public function selectAndCheckUserValid( $email, $password ) {
     

@@ -4,6 +4,7 @@ namespace Visitor\Recordings;
 class Controller extends \Springboard\Controller\Visitor {
   public $permissions = array(
     'index'  => 'public',
+    'rate'   => 'member',
     'upload' => 'member',
     'myrecordings' => 'member',
     'modifybasics'         => 'member',
@@ -37,6 +38,44 @@ class Controller extends \Springboard\Controller\Visitor {
   */
   public function indexAction() {
     $this->redirect('recordings/myrecordings');
+  }
+  
+  public function rateAction() {
+    
+    $recordingid = $this->application->getNumericParameter('id');
+    $rating      = $this->application->getNumericParameter('rating');
+    $result      = array('status' => 'error');
+    
+    if ( !$recordingid or $rating < 1 or $rating > 5 ) {
+      
+      $result['reason'] = 'invalidparameters';
+      $this->jsonoutput( $result );
+      
+    }
+    
+    $session = $this->bootstrap->getSession('rating');
+    if ( $session[ $recordingid ] ) {
+      
+      $result['reason'] = 'alreadyvoted';
+      $this->jsonoutput( $result );
+      
+    }
+    
+    $recordingsModel = $this->bootstrap->getModel('recordings');
+    $recordingsModel->id = $recordingid;
+    
+    if ( !$recordingsModel->addRating( $rating ) )
+      $this->jsonoutput( $result );
+    
+    $session[ $recordingid ] = true;
+    $result = array(
+      'status'          => 'success',
+      'rating'          => $recordingsModel->row['rating'],
+      'numberofratings' => $recordingsModel->row['numberofratings'],
+    );
+    
+    $this->jsonoutput( $result );
+    
   }
   
 }

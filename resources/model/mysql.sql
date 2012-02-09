@@ -285,3 +285,22 @@ CREATE TABLE `groups_members` (
    PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
+
+CREATE TABLE `group_invitations` (
+   `id` int(10) unsigned not null auto_increment,
+   `groupid` int(10) unsigned not null,
+   `userid` int(10) unsigned not null,
+   `email` text not null,
+   `validationcode` text not null,
+   PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;
+
+
+CREATE TABLE `users_invitations` (
+   `id` int(10) unsigned not null auto_increment,
+   `permissions` text not null,
+   `userid` int(10) unsigned not null,
+   `email` text not null,
+   `validationcode` text not null,
+   PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;

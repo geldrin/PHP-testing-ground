@@ -276,4 +276,217 @@ class Recordings extends \Springboard\Model {
     $this->insertMultipleIDs( $groupids, 'recordings_access', 'groupid');
   }
   
+  public function isAccessibleByStatus( $user ) {
+    
+    $this->ensureObjectLoaded();
+    $statuses = array(
+      'markedfordeletion' => 'recorddeleted',
+    );
+    
+    if ( in_array( $this->row['status'], $statuses ) )
+      return $statuses[ $this->row['status'] ];
+    
+    if ( $this->row['status'] != 'onstorage' )
+      return 'recordingconverting';
+    
+    if (
+         isset( $user->id ) and
+         (
+           $this->row['userid'] == $user->id or
+           (
+             $user->iseditor and
+             $user->organizationid == $this->row['organizationid']
+           )
+         )
+       )
+      return true;
+    elseif ( !$this->row['ispublished'] )
+      return 'recordingisnotpublished';
+    
+    return true;
+    
+  }
+  
+  public function isAccessibleBySettings( $user ) {
+    
+    $this->ensureObjectLoaded();
+    
+    $timefailed = false;
+    if ( $this->row['visibleuntil'] ) {
+      
+      $visiblefrom  = strtotime( $this->row['visiblefrom'] );
+      $visibleuntil = strtotime( $this->row['visibleuntil'] );
+      $now          = time();
+      
+      if ( $visiblefrom > $now or $visibleuntil < $now )
+        $timefailed = true;
+      
+    }
+    
+    switch( $this->row['accesstype'] ) {
+      
+      case 'public':
+        if ( $timefailed )
+          return 'publicrestricted_timefailed';
+        break;
+      
+      case 'registrations':
+        
+        if ( !isset( $user->id ) )
+          return 'registrationrestricted';
+        elseif ( $timefailed )
+          return 'registrationrestricted_timefailed';
+        
+        break;
+      
+      case 'organizations':
+      case 'groups':
+        
+        if ( $this->row['accesstype'] == 'groups')
+          $error = 'grouprestricted';
+        else
+          $error = 'organizationrestricted';
+        
+        if ( !isset( $user->id ) )
+          return $error;
+        elseif ( $user->id == $this->row['userid'] )
+          return true;
+        elseif ( $user->iseditor and $user->organizationid == $this->row['organizationid'] )
+          return true;
+        
+        $recordingid = "'" . $this->id . "'";
+        $userid      = "'" . $user->id . "'";
+        
+        if ( $this->row['accesstype'] == 'organizations')
+          $sql = "
+            SELECT
+              u.id
+            FROM
+              recordings_access AS ra,
+              users AS u
+            WHERE
+              ra.recordingid = $recordingid AND
+              ra.organizationid > 0 AND
+              u.organizationid = ra.organizationid AND
+              u.id = $userid
+            LIMIT 1
+          ";
+        else
+          $sql = "
+            SELECT
+              gm.userid
+            FROM
+              recordings_access AS ra,
+              groups_members AS gm
+            WHERE
+              ra.recordingid = $recordingid AND
+              ra.groupid > 0 AND
+              gm.groupid = ra.groupid AND
+              gm.userid = $userid
+            LIMIT 1
+          ";
+        
+        $row = $this->db->getRow( $sql );
+        
+        if ( empty( $row ) )
+          return $error;
+        elseif ( $timefailed )
+          return $error . '_timefailed';
+        
+        break;
+      
+      default:
+        throw new Exception('Unknown accesstype ' . $this->row['accesstype'] );
+        break;
+      
+    }
+    
+    return true;
+    
+  }
+  
+  public function getPublicRecordingWhere( $prefix = '' ) {
+    
+    if ( strlen( $prefix ) )
+      $prefix .= '.';
+    
+    return "
+      {$prefix}status = 'onstorage' AND
+      {$prefix}ispublished = 1 AND
+      {$prefix}accesstype = 'public' AND
+      (
+        {$prefix}visiblefrom IS NULL OR
+        {$prefix}visibleuntil IS NULL OR
+        (
+          {$prefix}visiblefrom  <= NOW() AND
+          {$prefix}visibleuntil >= NOW()
+        )
+      )
+    ";
+  }
+  
+  public function addRating( $rating ) {
+    
+    $this->ensureID();
+    
+    $this->db->execute("
+      UPDATE recordings
+      SET
+        numberofratings = numberofratings + 1,
+        numberofratingsthisweek = numberofratingsthisweek + 1,
+        numberofratingsthismonth = numberofratingsthismonth + 1,
+        sumofrating = sumofrating + " . $rating . ",
+        sumofratingthisweek = sumofratingthisweek + " . $rating . ",
+        sumofratingthismonth = sumofratingthismonth + " . $rating . ",
+        rating = sumofrating / numberofratings,
+        ratingthisweek = sumofratingthisweek / numberofratingsthisweek,
+        ratingthismonth = sumofratingthismonth / numberofratingsthismonth
+      WHERE
+        id = '" . $this->id . "'
+    ");
+    
+    if ( $this->db->Affected_Rows() ) {
+      
+      $this->select( $this->id );
+      return true;
+      
+    } else
+      return false;
+    
+  }
+  
+  public function incrementCommentCount() {
+    
+    $this->ensureID();
+    $this->db->execute("
+      UPDATE recordings
+      SET
+        numberofcomments = numberofcomments + 1,
+        numberofcommentsthisweek = numberofcommentsthisweek + 1,
+        numberofcommentsthismonth = numberofcommentsthismonth + 1
+      WHERE
+        id = '" . $this->id . "'
+    ");
+    
+    return (bool)$this->db->Affected_Rows();
+    
+  }
+  
+  public function incrementViews() {
+    
+    $this->ensureID();
+    $this->db->execute("
+      UPDATE recordings
+      SET
+        numberofviews = numberofviews + 1,
+        numberofviewsthisweek = numberofviewsthisweek + 1,
+        numberofviewsthismonth = numberofviewsthismonth + 1
+      WHERE
+        id = '" . $this->id . "'
+    ");
+    
+    return (bool)$this->db->Affected_Rows();
+    
+  }
+  
 }

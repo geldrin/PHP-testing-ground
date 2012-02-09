@@ -245,7 +245,7 @@ class Bootstrap {
     
     if ( !ISCLI ) {
       
-      $smarty->assign('sessionmessage', $this->getSession('message')->get('message') );
+      $smarty->assign('sessionmessage', $this->getSession('message')->offsetGet('message') );
       $user = $this->getUser();
       if ( $user->id )
         $smarty->assign('member', $user );
