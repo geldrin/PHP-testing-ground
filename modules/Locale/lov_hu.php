@@ -28,10 +28,21 @@ return array(
     0 => 'nem',
   ),
   
+  'noyes' => array(
+    0 => 'nem',
+    1 => 'igen',
+  ),
+  
   'registrationtype' => array(
     'open' => 'open',
     'closed' => 'closed',
     'restricted' => 'restricted',
   ),
   
+  'accesstype' => array(
+    'public'        => 'publikus (ajánlott)',
+    'registrations' => 'regisztráció szükséges',
+    'organizations' => 'intézmények egy csoportja számára',
+    'groups'        => 'saját csoportom számára',
+  ),
 );

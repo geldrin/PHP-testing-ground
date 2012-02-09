@@ -210,17 +210,25 @@ class Recordings extends \Springboard\Model {
   }
   
   public function clearGenres() {
+    
+    $this->ensureID();
+    
     $this->db->execute("
       DELETE FROM recordings_genres
       WHERE recordingid = '" . $this->id . "'
     ");
+    
   }
   
   public function clearCategories() {
+    
+    $this->ensureID();
+    
     $this->db->execute("
       DELETE FROM recordings_categories
       WHERE recordingid = '" . $this->id . "'
     ");
+    
   }
   
   public function addCategories( $categoryids ) {
@@ -247,6 +255,25 @@ class Recordings extends \Springboard\Model {
       VALUES " . implode(', ', $values ) . "
     ");
     
+  }
+  
+  public function clearAccess() {
+    
+    $this->ensureID();
+    
+    $this->db->execute("
+      DELETE FROM recordings_access
+      WHERE recordingid = '" . $this->id . "'
+    ");
+    
+  }
+  
+  public function restrictOrganizations( $organizationids ) {
+    $this->insertMultipleIDs( $organizationids, 'recordings_access', 'organizationid');
+  }
+  
+  public function restrictGroups( $groupids ) {
+    $this->insertMultipleIDs( $groupids, 'recordings_access', 'groupid');
   }
   
 }

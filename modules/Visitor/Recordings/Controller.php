@@ -9,6 +9,7 @@ class Controller extends \Springboard\Controller\Visitor {
     'modifybasics'         => 'member',
     'modifyclassification' => 'member',
     'modifydescription'    => 'member',
+    'modifysharing'        => 'member',
   );
   
   public $forms = array(
@@ -16,6 +17,7 @@ class Controller extends \Springboard\Controller\Visitor {
     'modifybasics' => 'Visitor\\Recordings\\Form\\Modifybasics',
     'modifyclassification' => 'Visitor\\Recordings\\Form\\Modifyclassification',
     'modifydescription' => 'Visitor\\Recordings\\Form\\Modifydescription',
+    'modifysharing' => 'Visitor\\Recordings\\Form\\Modifysharing',
   );
   
   public $paging = array(

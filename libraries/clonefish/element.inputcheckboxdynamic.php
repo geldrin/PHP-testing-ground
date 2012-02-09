@@ -31,6 +31,7 @@ class inputCheckboxDynamic extends element {
 
   var $levelprefix = '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;';
   var $levels = Array();
+  var $treestartinclusive = true;
 
   // -------------------------------------------------------------------------
   function inputCheckboxDynamic( $name, $configvalues, &$db, $id ) {
@@ -157,8 +158,16 @@ class inputCheckboxDynamic extends element {
 
   // --------------------------------------------------------------------------
   function buildTree( $parentid, $level ) {
-
-    $sql_where =
+    
+    if (
+         $this->treestartinclusive and
+         $level == 0 and
+         $parentid != 0
+       )
+      $sql_where =
+        $this->treeid . " = " . $this->db->quote( $parentid, 0 ) . " " ;
+    else
+      $sql_where =
         $this->treeparent . " = " . $this->db->quote( $parentid, 0 ) . " " ;
 
     // if ordering is needed, we have to use some replacement stuff

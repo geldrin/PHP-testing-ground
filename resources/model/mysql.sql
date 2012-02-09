@@ -255,3 +255,33 @@ CREATE TABLE `recordings_categories` (
    PRIMARY KEY (`id`),
    KEY `ix_recordingid` (`recordingid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;
+
+
+CREATE TABLE `recordings_access` (
+   `id` int(10) unsigned not null auto_increment,
+   `recordingid` int(10) unsigned not null,
+   `organizationid` int(10) unsigned,
+   `groupid` int(10) unsigned,
+   PRIMARY KEY (`id`),
+   KEY `ix_recordingid` (`recordingid`),
+   KEY `ix_groupid` (`groupid`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
+CREATE TABLE `groups` (
+   `id` int(10) unsigned not null auto_increment,
+   `name` text not null,
+   `userid` int(10) unsigned not null,
+   `timestamp` datetime not null,
+   PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;
+
+
+CREATE TABLE `groups_members` (
+   `id` int(10) unsigned not null auto_increment,
+   `groupid` int(10) unsigned not null,
+   `userid` int(10) unsigned not null,
+   `timestamp` datetime not null,
+   PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
