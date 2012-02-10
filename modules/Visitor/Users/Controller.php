@@ -1,7 +1,7 @@
 <?php
 namespace Visitor\Users;
 
-class Controller extends \Springboard\Controller\Visitor {
+class Controller extends \Visitor\Controller {
   public $permissions = array(
     'login'          => 'public',
     'logout'         => 'public',
@@ -11,6 +11,10 @@ class Controller extends \Springboard\Controller\Visitor {
     'validate'       => 'public',
     'forgotpassword' => 'public',
     'changepassword' => 'public',
+    'invite'         => 'admin',
+    'validateinvite' => 'public',
+    'disable'        => 'admin',
+    'listing'        => 'admin',
   );
   
   public $forms = array(
@@ -18,6 +22,11 @@ class Controller extends \Springboard\Controller\Visitor {
     'signup'         => 'Visitor\\Users\\Form\\Signup',
     'forgotpassword' => 'Visitor\\Users\\Form\\Forgotpassword',
     'changepassword' => 'Visitor\\Users\\Form\\Changepassword',
+    'invite'         => 'Visitor\\Users\\Form\\Invite',
+  );
+  
+  public $paging = array(
+    'listing' => 'Visitor\\Users\\Paging\\Listing',
   );
   
   public function indexAction() {
@@ -63,11 +72,11 @@ class Controller extends \Springboard\Controller\Visitor {
     );
     
     $userModel->registerForSession();
-    $this->redirect('contents/signupvalidated');
+    $this->redirectToController('contents', 'signupvalidated');
     
   }
   
-  public function validateinvitationAction() {
+  public function validateinviteAction() {
     
     $code = $this->application->getParameter('code');
     if ( !( $data = $this->parseValidationCode( $code ) ) )
@@ -93,6 +102,30 @@ class Controller extends \Springboard\Controller\Visitor {
     $user->destroy();
     
     $this->redirectWithMessage('index', 'loggedout');
+    
+  }
+  
+  public function disableAction() {
+    
+    $userid = $this->application->getNumericParameter('id');
+    if ( !$userid )
+      $this->redirect('index');
+    
+    $forward   = $this->application->getParameter('forward', 'users/list');
+    $l         = $this->bootstrap->getLocalization();
+    $user      = $this->bootstrap->getUser();
+    
+    if ( $user->id == $userid )
+      $this->redirectWithMessage( $forward, $l('users', 'cantdisableself') );
+    
+    $userModel = $this->bootstrap->getModel('users');
+    $userModel->select( $userid );
+    $userModel->updateRow( array(
+        'disabled' => $userModel::USER_DISABLED,
+      )
+    );
+    
+    $this->redirectWithMessage( $forward, $l('users', 'userdisabled') );
     
   }
   

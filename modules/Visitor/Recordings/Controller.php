@@ -1,16 +1,16 @@
 <?php
 namespace Visitor\Recordings;
 
-class Controller extends \Springboard\Controller\Visitor {
+class Controller extends \Visitor\Controller {
   public $permissions = array(
     'index'  => 'public',
     'rate'   => 'member',
-    'upload' => 'member',
-    'myrecordings' => 'member',
-    'modifybasics'         => 'member',
-    'modifyclassification' => 'member',
-    'modifydescription'    => 'member',
-    'modifysharing'        => 'member',
+    'upload' => 'uploader',
+    'myrecordings' => 'uploader',
+    'modifybasics'         => 'uploader',
+    'modifyclassification' => 'uploader',
+    'modifydescription'    => 'uploader',
+    'modifysharing'        => 'uploader',
   );
   
   public $forms = array(

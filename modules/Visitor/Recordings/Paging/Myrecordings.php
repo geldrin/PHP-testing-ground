@@ -6,7 +6,7 @@ class Myrecordings extends \Springboard\Controller\Paging {
     'creation'      => 'id',
     'creation_desc' => 'id DESC',
   );
-  protected $template = 'Visitor/Recordings/paging/Myrecordings.tpl';
+  protected $template = 'Visitor/Recordings/Paging/Myrecordings.tpl';
   protected $recordingsModel;
   
   public function init() {

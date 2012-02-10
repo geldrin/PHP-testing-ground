@@ -245,7 +245,7 @@ class Bootstrap {
     
     if ( !ISCLI ) {
       
-      $smarty->assign('sessionmessage', $this->getSession('message')->offsetGet('message') );
+      $smarty->assign('sessionmessage', $this->getSession('message')->get('message') );
       $user = $this->getUser();
       if ( $user->id )
         $smarty->assign('member', $user );
@@ -391,6 +391,7 @@ class Bootstrap {
     $loader       = Springboard\Autoloader::getInstance();
     $class        = $loader->findExistingClass(
       'Visitor\\' . $module . '\\Controller',
+      'Visitor\\Controller',
       'Springboard\\Controller\\Visitor'
     );
     
