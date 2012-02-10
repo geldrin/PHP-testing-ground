@@ -7,3 +7,4 @@ libraries/adodb.510
 surveyor.config
 *.exe
 config_local.php
+httpdocs/flash/**
