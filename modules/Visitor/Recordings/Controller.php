@@ -78,4 +78,29 @@ class Controller extends \Visitor\Controller {
     
   }
   
+  public function detailsAction() {
+    
+    $recordingid = $this->application->getNumericParameter('id');
+    if ( !$recordingid )
+      $this->redirect('index');
+    
+    $recordingModel = $this->bootstrap->getModel('recordings');
+    $recordingModel->select( $recordingid );
+    
+    if ( !$recordingModel->row )
+      $this->redirect('index');
+    
+    $smarty = $this->bootstrap->getSmarty();
+    $user   = $this->bootstrap->getUser();
+    
+    if ( ( $access = $recordingModel->userHasAccess( $user ) ) !== true )
+      $this->redirect('contents/' . $access );
+    
+    // TODO relatedvideos, json generalast smarty pluginba, magat a tomb generalast a modelbe
+    // ugyanez slidokra
+    $smarty->assign('comments', $recordingsModel->getComments( 0, 10 ) );
+    $this->output( $smarty->fetch('Visitor/Recordings/Details.tpl') );
+    
+  }
+  
 }

@@ -22,16 +22,17 @@ class Recordings extends \Springboard\Model {
   public function userHasAccess( $user ) {
     
     $this->ensureObjectLoaded();
-    if ( $user->id and $user->id == $this->row['userid'] )
+    
+    $bystatus   = $this->isAccessibleByStatus( $user );
+    $bysettings = $this->isAccessibleBySettings( $user );
+    
+    if ( $bystatus === true and $bysettings === true )
       return true;
     
-    if (
-         $user->iseditor and $user->organizationid and
-         $this->row['organizationid'] == $user->organizationid
-       )
-      return true;
-    
-    return false;
+    if ( $bystatus !== true )
+      return $bystatus;
+    else
+      return $bysettings;
     
   }
   
