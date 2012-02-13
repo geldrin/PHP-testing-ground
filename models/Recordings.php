@@ -490,4 +490,61 @@ class Recordings extends \Springboard\Model {
     
   }
   
+  public function addComment( $values ) {
+    
+    $this->ensureID();
+    
+    $commentModel = $this->bootstrap->getModel('comments');
+    $commentModel->insert( $values );
+    
+  }
+  
+  public function getComments( $start = 0, $limit = 10 ) {
+    
+    $this->ensureID();
+    
+    $comments = $this->db->getArray("
+      SELECT
+        c.id,
+        c.timestamp,
+        c.text,
+        c.userid,
+        u.nickname
+      FROM
+        comments AS c,
+        users AS u
+      WHERE
+        c.recordingid = '" . $this->id . "' AND
+        c.userid      = u.id AND
+        c.moderated   = '0'
+      ORDER BY
+        c.id DESC
+      LIMIT $start, $limit
+    ");
+    
+    foreach( $comments as $key => $value ) {
+      
+      $comments[ $key ]['nickname'] = htmlspecialchars( $value['nickname'], ENT_QUOTES, 'UTF-8' );
+      $comments[ $key ]['text']     = nl2br( htmlspecialchars( $value['text'], ENT_QUOTES, 'UTF-8' ) );
+      
+    }
+    
+    return $comments;
+    
+  }
+  
+  public function getCommentsCount() {
+    
+    $this->ensureID();
+    
+    return $this->db->getOne("
+      SELECT COUNT(*)
+      FROM comments
+      WHERE
+        moderated   = '0' AND
+        recordingid = '" . $this->id . "'
+    ");
+    
+  }
+  
 }

@@ -4,6 +4,9 @@ namespace Visitor\Recordings;
 class Controller extends \Visitor\Controller {
   public $permissions = array(
     'index'  => 'public',
+    'details' => 'public',
+    'getcomments' => 'public',
+    'newcomment' => 'member',
     'rate'   => 'member',
     'upload' => 'uploader',
     'myrecordings' => 'uploader',
@@ -19,6 +22,7 @@ class Controller extends \Visitor\Controller {
     'modifyclassification' => 'Visitor\\Recordings\\Form\\Modifyclassification',
     'modifydescription' => 'Visitor\\Recordings\\Form\\Modifydescription',
     'modifysharing' => 'Visitor\\Recordings\\Form\\Modifysharing',
+    'newcomment' => 'Visitor\\Recordings\\Form\\Newcomment',
   );
   
   public $paging = array(
@@ -80,26 +84,49 @@ class Controller extends \Visitor\Controller {
   
   public function detailsAction() {
     
-    $recordingid = $this->application->getNumericParameter('id');
-    if ( !$recordingid )
-      $this->redirect('index');
+    $recordingsModel = $this->modelIDCheck('recordings');
     
-    $recordingModel = $this->bootstrap->getModel('recordings');
-    $recordingModel->select( $recordingid );
+    $smarty  = $this->bootstrap->getSmarty();
+    $user    = $this->bootstrap->getUser();
+    $session = $this->bootstrap->getSession('rating');
     
-    if ( !$recordingModel->row )
-      $this->redirect('index');
-    
-    $smarty = $this->bootstrap->getSmarty();
-    $user   = $this->bootstrap->getUser();
-    
-    if ( ( $access = $recordingModel->userHasAccess( $user ) ) !== true )
-      $this->redirect('contents/' . $access );
+    if ( ( $access = $recordingsModel->userHasAccess( $user ) ) !== true )
+      $this->redirectToController('contents', $access );
     
     // TODO relatedvideos, json generalast smarty pluginba, magat a tomb generalast a modelbe
     // ugyanez slidokra
-    $smarty->assign('comments', $recordingsModel->getComments( 0, 10 ) );
+    $smarty->assign('comments',     $recordingsModel->getComments() );
+    $smarty->assign('commentcount', $recordingsModel->getCommentsCount() );
+    
+    $smarty->assign('canrate',  $session[ $recordingsModel->id ] );
     $this->output( $smarty->fetch('Visitor/Recordings/Details.tpl') );
+    
+  }
+  
+  public function getcommentsAction() {
+    
+    $recordingid = $this->application->getNumericParameter('id');
+    $start       = $this->application->getNumericParameter('start');
+    
+    if ( $recordingid <= 0 )
+      $this->redirect('index');
+    
+    if ( $start < 0 )
+      $start = 0;
+    
+    $l               = $this->bootstrap->getLocalization();
+    $recordingsModel = $this->bootstrap->getModel('recordings');
+    $recordingsModel->id = $recordingid;
+    
+    $comments     = $recordingsModel->getComments( $start );
+    $commentcount = $recordingsModel->getCommentsCount();
+    
+    $this->jsonoutput( array(
+        'comments'     => $comments,
+        'nocomments'   => $l('recordings', 'nocomments'),
+        'commentcount' => $commentcount,
+      )
+    );
     
   }
   

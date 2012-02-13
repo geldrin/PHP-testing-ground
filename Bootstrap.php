@@ -1,6 +1,7 @@
 <?php
 
 class Bootstrap {
+  protected static $instance;
   protected $sessionstarted = false;
   protected $instances      = array();
   protected $forms          = array();
@@ -14,6 +15,7 @@ class Bootstrap {
   
   public function __construct( $application ) {
     
+    self::$instance    = $this;
     $this->application = $application;
     $this->config      = $application->config;
     
@@ -26,6 +28,10 @@ class Bootstrap {
     $this->setupDebug();
     
     
+  }
+  
+  public static function getInstance() {
+    return self::$instance;
   }
   
   protected function setupOutputBuffer() {

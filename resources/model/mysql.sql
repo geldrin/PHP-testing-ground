@@ -304,3 +304,15 @@ CREATE TABLE `users_invitations` (
    `validationcode` text not null,
    PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;
+
+
+CREATE TABLE `comments` (
+   `id` int(10) unsigned not null auto_increment,
+   `recordingid` int(10) unsigned not null,
+   `userid` int(10) unsigned not null,
+   `timestamp` datetime not null,
+   `text` text not null,
+   `moderated` int(11) not null default '0',
+   PRIMARY KEY (`id`),
+   KEY `ix_recordingid_moderated` (`recordingid`, `moderated`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;
