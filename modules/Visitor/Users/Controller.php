@@ -33,18 +33,15 @@ class Controller extends \Visitor\Controller {
     echo 'Nothing here yet';
   }
   
-  protected function parseValidationCode( $code ) {
-    
-    if ( strlen( $code ) < 10 )
-      return false;
+  protected function parseValidationCode() {
     
     $crypto         = $this->bootstrap->getEncryption();
-    $validationcode = substr( $code, -10 );
+    $validationcode = $this->application->getParameter('a');
     $id             =
-      intval( $crypto->asciiDecrypt( substr( $code, 0, -10 ) ) )
+      intval( $crypto->asciiDecrypt( $this->application->getParameter('b') ) )
     ;
     
-    if ( $id <= 0 )
+    if ( $id <= 0 or !$validationcode )
       return false;
     
     return array(
@@ -56,7 +53,6 @@ class Controller extends \Visitor\Controller {
   
   public function validateAction() {
     
-    $code = $this->application->getParameter('code');
     if ( !( $data = $this->parseValidationCode( $code ) ) )
       $this->redirect('contents/signupvalidationfailed');
     

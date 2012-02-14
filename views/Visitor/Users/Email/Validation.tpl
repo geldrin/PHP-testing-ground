@@ -3,7 +3,7 @@
 {newsletter}
 <h1>{l module=users key=email_validation_title}</h1>
 <p>
-  {assign var=url value="$BASE_URI$language/users/validate/`$values.id``$values.validationcode`"}
+  {assign var=url value="$BASE_URI$language/users/validate/`$values.id`,`$values.validationcode`"}
   {l module=users key=email_validation_body sprintf=$url}
 </p>
 <p>
