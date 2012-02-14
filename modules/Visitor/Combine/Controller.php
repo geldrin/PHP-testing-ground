@@ -42,6 +42,8 @@ class Controller extends \Visitor\Controller {
     if ( $plaincache->expired() ) {
       
       $content = '';
+      $scheme  = SSL? 'https://': 'http://';
+      
       foreach( $urls as $url ) {
         
         $filecontent = $this->getFile( $url );
@@ -49,11 +51,11 @@ class Controller extends \Visitor\Controller {
           $filecontent =
             str_replace(
               'url(',
-              'url(' . $this->application->config['staticuri'],
+              'url(' . $scheme . $this->application->config['staticuri'],
               $filecontent
             );
         
-        $content .= "\n\n/* file: " . $url . " /*\n\n" . $filecontent . "\n\n";
+        $content .= "\n\n/* file: " . $url . " */\n\n" . $filecontent . "\n\n";
         
       }
       

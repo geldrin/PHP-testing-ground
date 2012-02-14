@@ -1,3 +1,4 @@
+var $j = jQuery.noConflict();
 $j(document).ready(function() {
   
   $j('#systemmessageclose a').click( function() {
