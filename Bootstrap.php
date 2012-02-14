@@ -8,6 +8,7 @@ class Bootstrap {
   protected $objects        = array();
   protected $caches         = array();
   protected $organization;
+  protected $headerssent    = false;
   
   public $debug             = false;
   public $application;
@@ -85,9 +86,6 @@ class Bootstrap {
   }
   
   protected function setupLanguage() {
-    
-    if ( !ISCLI )
-      $this->setupSession();
     
     Springboard\Language::$defaultlanguage = $this->config['defaultlanguage'];
     Springboard\Language::$languages       = $this->config['languages'];
@@ -302,6 +300,9 @@ class Bootstrap {
   
   public function setupHeaders() {
     
+    if ( $this->headerssent )
+      return;
+    
     header("Expires: Mon, 26 Jul 1997 05:00:00 GMT");              // Date in the p
     header("Last-Modified: " . gmdate("D, d M Y H:i:s") . " GMT"); // always modifi
     header("Cache-Control: no-store, no-cache, must-revalidate");  // HTTP/1.1
@@ -311,6 +312,8 @@ class Bootstrap {
     //header('X-UA-Compatible: IE=EmulateIE7');
     header('X-UA-Compatible: chrome=1', false ); // enable chrome frame, one can only dream its installed
     header('P3P: CP="CAO PSA OUR"');
+    
+    $this->headerssent = true;
     
   }
   

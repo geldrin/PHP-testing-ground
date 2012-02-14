@@ -68,7 +68,15 @@ $config = array(
   'uploadpath' => '',
   'recordings_seconds_minlength' => 3,
   'mplayer_identify' => 'mplayer -ao null -vo null -frames 0 -identify %s 2>&1',
-  
+  //----
+  'combine' => array(
+    'css' => true,
+    'js'  => true,
+    'domains' => array(
+      'static.teleconnect.hu',
+      'video.teleconnect.hu',
+    ),
+  ),
 );
 
 $config['phpsettings'] = array(

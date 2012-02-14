@@ -17,7 +17,7 @@
   <!--[if lte IE 6]>
   <link rel="StyleSheet" type="text/css" href="{$STATIC_URI}css/style_ie6{$VERSION}.css" />
   <![endif]-->
-
+  {jscombine}
   <script type="text/javascript" src="{$STATIC_URI}js/jquery-1.7.1.min{$VERSION}.js"></script>
   <script type="text/javascript" src="{$STATIC_URI}js/swfobject.full{$VERSION}.js"></script>
   <script type="text/javascript">
@@ -28,7 +28,7 @@
   var language   = '{$language}';
   </script>
   <script type="text/javascript" src="{$STATIC_URI}js/tools{$VERSION}.js"></script>
-  
+  {/jscombine}
 </head>
 <body>
 {if $browserInfo.obsolete}
