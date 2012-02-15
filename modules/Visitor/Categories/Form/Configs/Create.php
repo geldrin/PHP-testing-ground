@@ -9,8 +9,9 @@ $config = Array(
   ),
   
   'organizationid' => Array(
-    'type'  => 'inputHidden',
-    'value' => $organization->id,
+    'type'     => 'inputHidden',
+    'value'    => $organization->id,
+    'readonly' => true,
   ),
   
   'name_stringid' => Array(
