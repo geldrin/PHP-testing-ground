@@ -144,7 +144,7 @@ $config = Array(
 $listconfig = Array(
   
   'treeid'             => 'id',
-  'treestart'          => $organization->id,
+  'treestart'          => '0',
   'treeparent'         => 'parentid',
   'treestartinclusive' => true,
   
