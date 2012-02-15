@@ -2,7 +2,6 @@
 
 class Bootstrap {
   protected static $instance;
-  protected $sessionstarted = false;
   protected $instances      = array();
   protected $forms          = array();
   protected $objects        = array();
@@ -10,6 +9,7 @@ class Bootstrap {
   protected $organization;
   protected $headerssent    = false;
   
+  public $sessionstarted    = false;
   public $debug             = false;
   public $application;
   public $config            = array();
@@ -92,7 +92,7 @@ class Bootstrap {
     
   }
   
-  protected function setupSession() {
+  public function setupSession() {
     
     if ( $this->sessionstarted )
       return;

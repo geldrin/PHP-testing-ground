@@ -1,11 +1,11 @@
 <?php
-namespace Admin\Organizaitons;
+namespace Admin\Organizations;
 
 class Form extends \Springboard\Controller\Admin\Form {
   
   protected function insertAction() {
     
-    $orgModel  = $this->bootstrap->getModel('organizaitons');
+    $orgModel  = $this->bootstrap->getModel('organizations');
     $values = $this->form->getElementValues( false );
     
     $orgModel->insert( $values );

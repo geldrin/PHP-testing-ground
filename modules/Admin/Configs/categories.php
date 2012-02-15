@@ -1,5 +1,5 @@
 <?php
-$organization = $this->bootstrap->getOrganization();
+
 $config = Array(
   
   'action' => Array(
@@ -13,8 +13,21 @@ $config = Array(
   ),
   
   'organizationid' => Array(
-    'type'  => 'inputHidden',
-    'value' => $organization->id,
+    'displayname' => 'Intézmény',
+    'type'        => 'selectDynamic',
+    'sql'         => "
+      SELECT 
+        id, CONCAT( IF(LENGTH(nameoriginal) > 0, nameoriginal, nameenglish ), ' - ', id )
+      FROM 
+        organizations
+      WHERE
+        %s
+      ORDER BY
+        IF(LENGTH(nameoriginal), nameoriginal, nameenglish )
+    ",
+    'treeid'      => 'id',
+    'treeparent'  => 'parentid',
+    'treestart'   => '0',
   ),
   
   'name_stringid' => Array(
@@ -56,6 +69,7 @@ $config = Array(
 
 );
 
+//TODO listaba organizationoket, rendezni szerintuk
 $listconfig = Array(
 
   'table'      => "
@@ -78,13 +92,12 @@ $listconfig = Array(
     SELECT count(*)
     FROM categories
     WHERE
-      parentid='<PARENTID>' AND organizationid = '" . $organization->id . "'"
+      parentid='<PARENTID>'"
   ),
 
   'type'       => 'tree',
   'modify'     => 'c.id',
   'delete'     => 'c.id',
-  'where'      => "organizationid = '" . $organization->id . "'",
   
   'fields' => Array(
   

@@ -1,5 +1,4 @@
 <?php
-$organization = $this->bootstrap->getOrganization();
 $config = Array(
    
   'action' => Array(
@@ -15,9 +14,7 @@ $config = Array(
   'parentid' => Array(
     'displayname' => 'Szülő intézmény',
     'type'        => 'selectDynamic',
-    'values'      => array(
-      $organization->id => $organization->nameoriginal?: $organization->nameenglish
-    ),
+    'values'      => array( 0 => 'Nincs szülő intézmény' ),
     'sql'         => "
       SELECT 
         id, CONCAT( IF(LENGTH(nameoriginal) > 0, nameoriginal, nameenglish ), ' - ', id )
@@ -30,7 +27,7 @@ $config = Array(
     ",
     'treeid'      => 'id',
     'treeparent'  => 'parentid',
-    'treestart'   => $organization->id,
+    'treestart'   => '0',
   ),
   
   'nameoriginal' => array(
