@@ -1,5 +1,5 @@
 <?php
-namespace Visitor\Categories;
+namespace Visitor\Genres;
 
 class Controller extends \Visitor\Controller {
   public $permissions = array(
@@ -11,22 +11,22 @@ class Controller extends \Visitor\Controller {
   );
   
   public $forms = array(
-    'create' => 'Visitor\\Categories\\Form\\Create',
-    'modify' => 'Visitor\\Categories\\Form\\Modify',
+    'create' => 'Visitor\\Genres\\Form\\Create',
+    'modify' => 'Visitor\\Genres\\Form\\Modify',
   );
   
   public $paging = array(
-    'index'          => 'Visitor\\Categories\\Paging\\Index',
-    'details'        => 'Visitor\\Categories\\Paging\\Details',
+    'index'          => 'Visitor\\Genres\\Paging\\Index',
+    'details'        => 'Visitor\\Genres\\Paging\\Details',
   );
   
   public function deleteAction() {
     
-    $categoryModel = $this->modelOrganizationAndIDCheck('categories');
-    $categoryModel->delete( $categoryModel->id );
+    $genreModel = $this->modelOrganizationAndIDCheck('genres');
+    $genreModel->delete( $genreModel->id );
     
     $this->redirect(
-      $this->application->getParameter('forward', 'categories/index' )
+      $this->application->getParameter('forward', 'genres/index' )
     );
     
   }

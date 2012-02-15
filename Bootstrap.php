@@ -494,7 +494,12 @@ class Bootstrap {
   }
   
   public function getOrganization() {
+    
+    if ( !$this->organization )
+      $this->setupOrganization();
+    
     return $this->organization;
+    
   }
   
 }

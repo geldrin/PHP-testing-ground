@@ -1,5 +1,5 @@
 <?php
-namespace Visitor\Categories\Form;
+namespace Visitor\Genres\Form;
 
 class Modify extends \Visitor\Form {
   public $configfile = 'Modify.php';
@@ -7,24 +7,24 @@ class Modify extends \Visitor\Form {
   public $needdb     = true;
   
   public function init() {
-    $this->categoryModel = $this->controller->modelIDCheck('categories');
-    $this->values        = $this->categoryModel->row;
+    $this->genreModel = $this->controller->modelIDCheck('genres');
+    $this->values     = $this->genreModel->row;
   }
   
   public function postSetupForm() {
     
     $l = $this->bootstrap->getLocalization();
-    $this->toSmarty['title'] = $l('categories', 'create_title');
+    $this->toSmarty['title'] = $l('genres', 'create_title');
     
   }
   
   public function onComplete() {
     
     $values = $this->form->getElementValues( 0 );
-    $this->categoryModel->updateRow( $values );
+    $this->genreModel->updateRow( $values );
     
     $this->redirect(
-      $this->application->getParameter('forward', 'categories/index' )
+      $this->application->getParameter('forward', 'genres/index' )
     );
     
   }
