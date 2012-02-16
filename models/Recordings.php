@@ -36,7 +36,7 @@ class Recordings extends \Springboard\Model {
     
   }
   
-  public function insertUploadingRecording( $userid, $organizationid, $languageid, $title ) {
+  public function insertUploadingRecording( $userid, $organizationid, $languageid, $title, $sourceip ) {
     
     $recording = array(
       'userid'          => $userid,
@@ -47,9 +47,12 @@ class Recordings extends \Springboard\Model {
       'status'          => 'uploading',
       'masterstatus'    => 'uploading',
       'accesstype'      => 'public',
+      'mastersourceip'  => $sourceip,
       'timestamp'       => date('Y-m-d H:i:s'),
       'recordedtimestamp' => date('Y-m-d H:i:s'),
       'metadataupdatedtimestamp' => date('Y-m-d H:i:s'),
+      
+    
     ) + $this->metadata;
     
     return $this->insert( $recording );

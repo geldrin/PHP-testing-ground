@@ -149,7 +149,8 @@ class Upload extends \Visitor\HelpForm {
       $user->id,
       $user->organizationid,
       $values['videolanguage'],
-      $_FILES['file']['name']
+      $_FILES['file']['name'],
+      'stream.teleconnect.hu'
     );
     
     try {
