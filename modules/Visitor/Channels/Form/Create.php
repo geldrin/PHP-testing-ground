@@ -1,0 +1,58 @@
+<?php
+namespace Visitor\Channels\Form;
+
+class Create extends \Visitor\HelpForm {
+  public $configfile = 'Create.php';
+  public $template   = 'Visitor/genericform.tpl';
+  public $needdb     = true;
+  
+  protected $parentchannelModel;
+  
+  public function init() {
+    
+    $parentid = $this->application->getNumericParameter('parent');
+    
+    if ( $parentid ) {
+      
+      $this->parentchannelModel = $this->controller->modelOrganizationAndUserIDCheck(
+        'channels',
+        $parentid
+      );
+      
+      $this->values['ispublic'] = $this->parentchannelModel->row['ispublic'];
+      
+    }
+    
+    parent::init();
+    
+  }
+  
+  public function postSetupForm() {
+    
+    $l = $this->bootstrap->getLocalization();
+    $this->toSmarty['title'] = $l('channels', 'create_title');
+    
+  }
+  
+  public function onComplete() {
+    
+    $values       = $this->form->getElementValues( 0 );
+    $channelModel = $this->bootstrap->getModel('channels');
+    $user         = $this->bootstrap->getUser();
+    
+    $values['userid']         = $user->id;
+    $values['organizationid'] = $user->organizationid;
+    
+    if ( $this->parentchannelModel )
+      $values['parentid']     = $this->parentchannelModel->id;
+    
+    $channelModel->insert( $values );
+    $channelModel->updateIndexFilename();
+    
+    $this->redirect(
+      $this->application->getParameter('forward', 'channels/mychannels')
+    );
+    
+  }
+  
+}
