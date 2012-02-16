@@ -786,4 +786,48 @@ class Channels extends \Springboard\Model {
     
   }
   
+  public function insertIntoFavorites( $recordingid, $user ) {
+    
+    $channelid = $this->cachedGetFavoriteChannelID();
+    return $this->insertIntoChannel( $recordingid, $user, $channelid );
+    
+  }
+  
+  public function insertIntoChannel( $recordingid, $user, $channelid = null ) {
+    
+    if ( $channelid === null ) {
+      
+      $this->ensureID();
+      $channelid = $this->id;
+      
+    }
+    
+    if ( !$user or !isset( $user->id ) )
+      throw new Exception('Invalid user specified');
+    
+    $channelrecordingsModel = $this->bootstrap->getModel('channels_recordings');
+    $channelrecordingsModel->addFilter('userid', $user->id );
+    $channelrecordingsModel->addFilter('channelid', $this->id );
+    $channelrecordingsModel->addFilter('recordingid', $recordingid );
+    
+    $channelrecording = $channelrecordingsModel->getRow();
+    if ( !empty( $channelrecording ) ) // already inserted, nothing to do
+      return false;
+    
+    $channelrecordingsModel->insert( array(
+        'userid'      => $user->id,
+        'channelid'   => $channelid,
+        'recordingid' => $recordingid,
+      )
+    );
+    
+    $channelrecordingsModel->updateRow( array(
+        'weight' => $channelrecordingsModel->id,
+      )
+    );
+    
+    return true;
+    
+  }
+  
 }

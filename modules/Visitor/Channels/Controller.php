@@ -30,6 +30,71 @@ class Controller extends \Visitor\Controller {
   );
   
   public function deleteAction() {
-    // TODO
+    
+    $channelModel = $this->modelOrganizationAndIDCheck('channels');
+    $channelModel->delete( $channelModel->id );
+    
+    $this->redirect(
+      $this->application->getParameter('forward', 'channels/mychannels')
+    );
+    
   }
+  
+  public function addtofavoritesAction() {
+    
+    $user           = $this->bootstrap->getUser();
+    $recordingModel = $this->modelIDCheck('recordings'); // $_GET[id] az a recordingid
+    $channelModel   = $this->bootstrap->getModel('channels');
+    
+    $channelModel->insertIntoFavorites( $recordingModel->id, $user );
+    
+    if ( $this->isAjaxRequest() )
+      $this->jsonoutput( array(
+          'success' => true,
+        )
+      );
+    
+    $this->redirect( $this->application->getParameter('forward') );
+    
+  }
+  
+  public function deletefromfavoritesAction() {
+    
+    // $_GET[id] az a channels_recordings.id
+    $channelrecordingModel = $this->modelUserAndIDCheck('channels_recordings');
+    $channelrecordingModel->delete( $channelrecordingModel->id );
+    
+    $this->redirect( $this->application->getParameter('forward') );
+    
+  }
+  
+  public function addrecordingAction() {
+    
+    $recordingid    = $this->application->getNumericParameter('recordingid');
+    
+    if ( $recordingid <= 0 )
+      $this->redirect('index');
+    
+    $user           = $this->bootstrap->getUser();
+    $channelModel   = $this->modelOrganizationAndUserIDCheck('channels');
+    $recordingModel = $this->bootstrap->getModel('recordings');
+    $recordingModel->addFilter('id', $recordingid );
+    
+    if ( !$recordingModel->getCount() )
+      $this->redirect('index');
+    
+    if ( $channelModel->insertIntoChannel( $recordingid, $user ) ) {
+      
+      $channelModel->updateIndexFilename();
+      $channelModel->updateVideoCounters();
+      
+    }
+    
+    if ( $this->isAjaxRequest() )
+      $this->jsonoutput( array('status' => 'success') );
+    else
+      $this->redirect( $this->application->getParameter('forward') );
+    
+  }
+  
 }

@@ -24,6 +24,7 @@ $config = array(
   //-----
   'logemails'    => array(
     'dev@dotsamazing.com',
+    'hiba@teleconnect.hu',
   ),
   //-----
   'smtp'         => array(
