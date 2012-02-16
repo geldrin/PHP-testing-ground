@@ -22,7 +22,10 @@ class Controller extends \Visitor\Controller {
   
   public function deleteAction() {
     
-    $categoryModel = $this->modelOrganizationAndIDCheck('categories');
+    $categoryModel = $this->modelOrganizationAndIDCheck(
+      'categories',
+      $this->application->getNumericParameter('id')
+    );
     $categoryModel->delete( $categoryModel->id );
     
     $this->redirect(

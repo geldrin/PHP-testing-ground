@@ -316,3 +316,59 @@ CREATE TABLE `comments` (
    PRIMARY KEY (`id`),
    KEY `ix_recordingid_moderated` (`recordingid`, `moderated`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;
+
+
+CREATE TABLE `channels` (
+   `id` int(10) unsigned not null auto_increment,
+   `parentid` int(10) unsigned not null default '0',
+   `userid` int(10) unsigned not null default '0',
+   `channeltypeid` int(10) unsigned not null, -- references channel_types(id),
+   `locationid` int(10) unsigned not null default '0',
+   `starttimestamp` datetime,
+   `endtimestamp` datetime,
+   `title` text,
+   `subtitle` text,
+   `ordinalnumber` text,
+   `description` text,
+   `url` text,
+   `indexphotofilename` text,
+   `ispublic` int(11) not null default '0',
+   `numberofrecordings` int(11) not null default '0',
+   `weight` int(11) not null default '100',
+   `isliveevent` int(11) not null default '0',
+   `livefeedid` int(10) unsigned not null default '0',
+   `organizationid` int(10) unsigned not null,
+   PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;
+
+
+CREATE TABLE channel_types(
+   `id` int(10) unsigned not null auto_increment,
+   `parentid` int(10) unsigned not null default '0',
+   `organizationid` int(10) unsigned,
+   `name` text,
+   `name_stringid` int(10) unsigned,
+   `weight` int(10) unsigned not null default '100',
+   `isfavorite` int(11) not null default '0',
+   `ispersonal` int(11) not null default '0',
+   PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;
+
+
+CREATE TABLE `channels_access` (
+   `id` int(10) unsigned not null auto_increment,
+   `channelid` int(10) unsigned not null,
+   `organizationid` int(10) unsigned not null,
+   `groupid` int(10) unsigned not null,
+   PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;
+
+
+CREATE TABLE `channels_recordings` (
+   `id` int(10) unsigned not null auto_increment,
+   `channelid` int(10) unsigned not null,
+   `recordingid` int(10) unsigned not null,
+   `userid` int(10) unsigned not null,
+   `weight` int(11) not null default '100',
+   PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;

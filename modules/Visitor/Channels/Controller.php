@@ -31,7 +31,10 @@ class Controller extends \Visitor\Controller {
   
   public function deleteAction() {
     
-    $channelModel = $this->modelOrganizationAndIDCheck('channels');
+    $channelModel = $this->modelOrganizationAndIDCheck(
+      'channels',
+      $this->application->getNumericParameter('id')
+    );
     $channelModel->delete( $channelModel->id );
     
     $this->redirect(
@@ -43,7 +46,10 @@ class Controller extends \Visitor\Controller {
   public function addtofavoritesAction() {
     
     $user           = $this->bootstrap->getUser();
-    $recordingModel = $this->modelIDCheck('recordings'); // $_GET[id] az a recordingid
+    $recordingModel = $this->modelIDCheck(
+      'recordings',
+      $this->application->getNumericParameter('id')
+    ); // $_GET[id] az a recordingid
     $channelModel   = $this->bootstrap->getModel('channels');
     
     $channelModel->insertIntoFavorites( $recordingModel->id, $user );
@@ -61,7 +67,10 @@ class Controller extends \Visitor\Controller {
   public function deletefromfavoritesAction() {
     
     // $_GET[id] az a channels_recordings.id
-    $channelrecordingModel = $this->modelUserAndIDCheck('channels_recordings');
+    $channelrecordingModel = $this->modelUserAndIDCheck(
+      'channels_recordings',
+      $this->application->getNumericParameter('id')
+    );
     $channelrecordingModel->delete( $channelrecordingModel->id );
     
     $this->redirect( $this->application->getParameter('forward') );
@@ -76,7 +85,10 @@ class Controller extends \Visitor\Controller {
       $this->redirect('index');
     
     $user           = $this->bootstrap->getUser();
-    $channelModel   = $this->modelOrganizationAndUserIDCheck('channels');
+    $channelModel   = $this->modelOrganizationAndUserIDCheck(
+      'channels',
+      $this->application->getNumericParameter('id')
+    );
     $recordingModel = $this->bootstrap->getModel('recordings');
     $recordingModel->addFilter('id', $recordingid );
     
@@ -94,6 +106,28 @@ class Controller extends \Visitor\Controller {
       $this->jsonoutput( array('status' => 'success') );
     else
       $this->redirect( $this->application->getParameter('forward') );
+    
+  }
+  
+  public function deleterecordingAction() {
+    
+    // $_GET[id] az a channels_recordings.id
+    $channelrecordingModel = $this->modelIDCheck(
+      'channels_recordings',
+      $this->application->getNumericParameter('id')
+    );
+    
+    $channelModel = $this->modelOrganizationAndUserIDCheck(
+      'channels',
+      $channelrecordingModel->row['channelid']
+    );
+    
+    $channelrecordingModel->delete( $channelrecordingModel->id );
+    
+    $channelModel->updateIndexFilename( true );
+    $channelModel->updateVideoCounters();
+    
+    $this->redirect( $this->application->getParameter('forward') );
     
   }
   

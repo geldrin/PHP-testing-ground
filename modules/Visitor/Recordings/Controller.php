@@ -84,7 +84,10 @@ class Controller extends \Visitor\Controller {
   
   public function detailsAction() {
     
-    $recordingsModel = $this->modelIDCheck('recordings');
+    $recordingsModel = $this->modelIDCheck(
+      'recordings',
+      $this->application->getNumericParameter('id')
+    );
     
     $smarty  = $this->bootstrap->getSmarty();
     $user    = $this->bootstrap->getUser();

@@ -114,7 +114,7 @@ class Channels extends \Springboard\Model {
       UPDATE channels
       SET numberofrecordings = 
         (
-          /* az adott csatornahoz rendelt felvetelek szama */
+          -- az adott csatornahoz rendelt felvetelek szama
           SELECT
             COUNT(*)
           FROM
@@ -238,57 +238,6 @@ class Channels extends \Springboard\Model {
     }
     
     return $parents;
-    
-  }
-
-  function findEventParents( $recordingid, $ispublic = null, &$parent = null ) {
-    
-    if ( $recordingid ) {
-      
-      $typeObj    = $this->bootstrap->getModel('channel_types');
-      $channelids = $typeObj->cachedGetIDsByType('event');
-
-      $data = $this->db->getRow("
-        SELECT
-          c.*,
-          s.value AS channeltype
-        FROM
-          channels AS c,
-          channels_recordings AS cr,
-          channel_types AS ct,
-          strings AS s
-        WHERE
-          cr.recordingid = " . $this->db->qstr( $recordingid ) . " AND
-          c.id = cr.channelid AND
-          c.channeltypeid IN('" . implode("', '", $channelids ) . "') AND
-          ct.id = c.channeltypeid AND " .
-          ( $ispublic !== null? "ispublic = $ispublic AND ": '' ) . "
-          s.translationof = ct.name_stringid AND
-          s.language = '". \Springboard\Language::get() . "'
-        ORDER BY
-          c.id DESC -- TODO weight?
-      ");
-
-    }
-
-    if ( $parent )
-      $data = &$parent;
-
-    if ( !empty( $data ) and $data['parentid'] ) {
-
-      $data['parent'] = $this->db->getRow("
-        SELECT *
-        FROM channels
-        WHERE id = '" . $data['parentid'] . "'
-        ORDER BY weight
-      ");
-
-      if ( @$data['parent']['parentid'] )
-        $data['parent'] = $this->findEventParents( false, $ispublic, $data['parent'] );
-      
-    }
-
-    return $data;
     
   }
 
@@ -629,41 +578,12 @@ class Channels extends \Springboard\Model {
     
   }
   
-  function getRecordingsForEvents() {
-    
-    $ret        = array();
-    $channelids = $this->bootstrap->getModel('channel_types')->cachedGetIDsByType('event');
-    $channels   = $this->db->getArray("
-      SELECT
-        c.*,
-        cr.recordingid,
-        s.value AS channeltype
-      FROM
-        channels AS c,
-        channels_recordings AS cr,
-        channel_types AS ct,
-        strings AS s
-      WHERE
-        c.channeltypeid IN('" . implode("', '", $channelids ) . "') AND
-        cr.channelid = c.id AND
-        c.ispublic = '1' AND
-        ct.id = c.channeltypeid AND
-        s.translationof = ct.name_stringid AND s.language = '" . \Springboard\Language::get() . "'
-    ");
-    
-    foreach( $channels as $channel )
-      @$ret[ $channel['recordingid'] ][] = $this->findRoot( $channel );
-    
-    return $ret;
-    
-  }
-  
   function findRoot( $channel ) {
     
     if ( !$channel['parentid'] )
       return $this->channelroots[ $channel['id'] ] = $channel;
     
-    if ( @$this->channelroots[ $channel['id'] ] )
+    if ( isset( $this->channelroots[ $channel['id'] ] ) )
       return $this->channelroots[ $channel['id'] ];
     
     $parent = $this->db->getRow("
@@ -743,57 +663,14 @@ class Channels extends \Springboard\Model {
     
   }
   
-  function futureStreamAvailable() {
-    
-    return !$this->db->getRow("
-      SELECT id
-      FROM channels
-      WHERE
-        ispublic = '1' AND
-        isliveevent = '1' AND
-        starttimestamp >= NOW()
-    ");
-    
-  }
-  
-  function getMaxWeight( $default = 100 ) {
-    
-    $ret = $this->db->getOne("
-      SELECT MAX( weight )
-      FROM channels
-      " . $this->getFilter() . "
-    ");
-    
-    if ( $ret === null )
-      $ret = $default;
-    
-    return $ret;
-    
-  }
-  
-  function getMinWeight( $default = 100 ) {
-    
-    $ret = $this->db->getOne("
-      SELECT MIN( weight )
-      FROM channels
-      " . $this->getFilter() . "
-    ");
-    
-    if ( $ret === null )
-      $ret = $default;
-    
-    return $ret;
-    
-  }
-  
   public function insertIntoFavorites( $recordingid, $user ) {
     
     $channelid = $this->cachedGetFavoriteChannelID();
-    return $this->insertIntoChannel( $recordingid, $user, $channelid );
+    return $this->insertIntoChannel( $recordingid, $user, false, $channelid );
     
   }
   
-  public function insertIntoChannel( $recordingid, $user, $channelid = null ) {
+  public function insertIntoChannel( $recordingid, $user, $adjustweight = false, $channelid = null ) {
     
     if ( $channelid === null ) {
       
@@ -821,12 +698,32 @@ class Channels extends \Springboard\Model {
       )
     );
     
-    $channelrecordingsModel->updateRow( array(
-        'weight' => $channelrecordingsModel->id,
-      )
-    );
+    if ( $adjustweight )
+      $channelrecordingsModel->updateRow( array(
+          'weight' => $channelrecordingsModel->id,
+        )
+      );
     
     return true;
+    
+  }
+  
+  public function getRecordingsIndexphotos() {
+    
+    $this->ensureID();
+    
+    $recordings = $this->db->getArray("
+      SELECT 
+        r.title, 
+        r.indexphotofilename
+      FROM recordings r, channels_recordings cr
+      WHERE 
+        cr.channelid = '" . $this->id . "' AND
+        r.status = 'onstorage' AND
+        cr.recordingid = r.id
+    ");
+    
+    return $recordings;
     
   }
   

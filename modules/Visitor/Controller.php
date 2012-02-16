@@ -13,9 +13,7 @@ class Controller extends \Springboard\Controller\Visitor {
     
   }
   
-  public function modelOrganizationAndIDCheck( $table, $idparam = 'id', $forwardto = 'index' ) {
-    
-    $id = $this->application->getNumericParameter( $idparam );
+  public function modelOrganizationAndIDCheck( $table, $id, $forwardto = 'index' ) {
     
     if ( $id <= 0 )
       $this->redirect( $redirectto );
@@ -37,9 +35,7 @@ class Controller extends \Springboard\Controller\Visitor {
     
   }
   
-  public function modelOrganizationAndUserIDCheck( $table, $idparam =  'id', $forwardto = 'index' ) {
-    
-    $id = $this->application->getNumericParameter( $idparam );
+  public function modelOrganizationAndUserIDCheck( $table, $id, $forwardto = 'index' ) {
     
     $organization = $this->bootstrap->getOrganization();
     $user         = $this->bootstrap->getUser();

@@ -22,7 +22,10 @@ class Controller extends \Visitor\Controller {
   
   public function deleteAction() {
     
-    $genreModel = $this->modelOrganizationAndIDCheck('genres');
+    $genreModel = $this->modelOrganizationAndIDCheck(
+      'genres',
+      $this->application->getNumericParameter('id')
+    );
     $genreModel->delete( $genreModel->id );
     
     $this->redirect(
