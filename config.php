@@ -66,8 +66,9 @@ $config = array(
   ),
   //----
   'disable_uploads' => false,
-  'uploadpath' => '/srv/upload/',
-  'mediapath'  => '/srv/storage/httpdocs/',
+  'uploadpath'    => '/srv/upload/',
+  'mediapath'     => '/srv/storage/httpdocs/',
+  'recordingpath' => '/srv/storage/httpdocs/recordings/',
   'recordings_seconds_minlength' => 3,
   'mplayer_identify' => 'mplayer -ao null -vo null -frames 0 -identify %s 2>&1',
   //----
