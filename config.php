@@ -33,6 +33,7 @@ $config = array(
     'username' => '',
     'password' => '',
   ),
+  //-----
   'mail'         => array(
     'fromemail' => 'no-reply@teleconnect.hu',
     'fromname'  => 'Teleconnect',
@@ -58,6 +59,9 @@ $config = array(
     'database' => 'teleconnect',
     'reconnectonbusy' => true,
     'maxretries' => 30,
+  ),
+  'image' => array(
+    'jpgquality' => 80,
   ),
   //-----
   'redis' => array(
