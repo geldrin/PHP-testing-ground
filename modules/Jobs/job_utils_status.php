@@ -96,25 +96,28 @@ global $app, $jconf, $db;
 
 	// Mobile LQ
 	if ( !empty($mobile_lq) ) {
-		$query .= "videoresmobile = \"" . $mobile_lq['res_x'] . "x" . $mobile_lq['res_y'] . "\"";
+		$query .= "mobilevideoreslq = \"" . $mobile_lq['res_x'] . "x" . $mobile_lq['res_y'] . "\"";
 	} else {
 		// Should never happen
-		$query .= "videoresmobile = videoresmobile";
+		$query .= "mobilevideoreslq = mobilevideoreslq";
 	}
 
 	// Mobile HQ
-/*	if ( !empty($mobile_hq) ) {
-		$query .= ", videoresmobile_hq = \"" . $mobile_hq['res_x'] . "x" . $mobile_hq['res_y'] . "\"";
-	} */
+	if ( !empty($mobile_hq) ) {
+		$query .= ", mobilevideoreshq = \"" . $mobile_hq['res_x'] . "x" . $mobile_hq['res_y'] . "\"";
+	}
 
+	// Video LQ
 	if ( !empty($video_lq) ) {
 		$query .= ", videoreslq = \"" . $video_lq['res_x'] . "x" . $video_lq['res_y'] . "\"";
 	}
 
+	// Video HQ
 	if ( !empty($video_hq) ) {
 		$query .= ", videoreshq = \"" . $video_hq['res_x'] . "x" . $video_hq['res_y'] . "\"";
 	}
 
+// Audio only numberof = 0!!!!
 	if ( !empty($recording['thumbnail_indexphotofilename']) && !empty($recording['thumbnail_numberofindexphotos']) ) {
 		$query .= ", indexphotofilename = \"" . $recording['thumbnail_indexphotofilename'] . "\",\n";
 		$query .= "numberofindexphotos = \"" . $recording['thumbnail_numberofindexphotos'] . "\"\n";

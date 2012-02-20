@@ -33,7 +33,7 @@ if ( iswindows() ) {
 }
 
 // Start an infinite loop - exit if any STOP file appears
-while( !is_file( BASE_PATH . 'data/jobs/job_media_convert.stop' ) and !is_file( BASE_PATH . 'data/jobs/all.stop' ) ) {
+while( !is_file( $app->config['datapath'] . 'jobs/job_media_convert.stop' ) and !is_file( $app->config['datapath'] . 'data/jobs/all.stop' ) ) {
 
 	clearstatcache();
 
@@ -70,8 +70,8 @@ while( !is_file( BASE_PATH . 'data/jobs/job_media_convert.stop' ) and !is_file( 
 		$recording = array();
 		$uploader_user = array();
 
-//update_db_recording_status(1, "reconvert");
-//update_db_masterrecording_status(1, "uploaded");
+update_db_recording_status(3, "uploaded");
+update_db_masterrecording_status(3, "uploaded");
 
 		// Query next job - exit if none
 		if ( !query_nextjob($recording, $uploader_user) ) break;
@@ -105,49 +105,55 @@ while( !is_file( BASE_PATH . 'data/jobs/job_media_convert.stop' ) and !is_file( 
 			break;
 		}
 
-		update_db_recording_status($recording['id'], $jconf['dbstatus_conv_video']);
+//var_dump($recording);
 
-		// Mobile normal quality conversion (Mobile LQ)
-		if ( !convert_video($recording, $jconf['profile_mobile_lq'], $recording_info_mobile_lq) ) {
-			update_db_recording_status($recording['id'], $jconf['dbstatus_conv_video_err']);
-			break;
-		}
+		if ( $recording['mastermediatype'] != "audio" ) {
 
-		// Decide about high quality mobile conversion (Mobile HQ)
-		$res = explode("x", strtolower($recording['mastervideores']), 2);
-		$res_x = $res[0];
-		$res_y = $res[1];
-		$res = explode("x", strtolower($jconf['profile_mobile_lq']['video_bbox']), 2);
-		$bbox_res_x = $res[0];
-		$bbox_res_y = $res[1];
-		// Generate HQ version if original recording does not fit LQ bounding box
-		if ( ( $res_x > $bbox_res_x ) || ( $res_y > $bbox_res_y ) ) {
-			if ( !convert_video($recording, $jconf['profile_mobile_hq'], $recording_info_mobile_hq) ) {
+			update_db_recording_status($recording['id'], $jconf['dbstatus_conv_video']);
+
+			// Mobile normal quality conversion (Mobile LQ)
+			if ( !convert_video($recording, $jconf['profile_mobile_lq'], $recording_info_mobile_lq) ) {
 				update_db_recording_status($recording['id'], $jconf['dbstatus_conv_video_err']);
 				break;
 			}
-		}
 
-		// Normal quality conversion (LQ)
-		if ( !convert_video($recording, $jconf['profile_video_lq'], $recording_info_lq) ) {
-			update_db_recording_status($recording['id'], $jconf['dbstatus_conv_video_err']);
-			break;
-		}
+			// Decide about high quality mobile conversion (Mobile HQ)
+			$res = explode("x", strtolower($recording['mastervideores']), 2);
+			$res_x = $res[0];
+			$res_y = $res[1];
+			$res = explode("x", strtolower($jconf['profile_mobile_lq']['video_bbox']), 2);
+			$bbox_res_x = $res[0];
+			$bbox_res_y = $res[1];
+			// Generate HQ version if original recording does not fit LQ bounding box
+			if ( ( $res_x > $bbox_res_x ) || ( $res_y > $bbox_res_y ) ) {
+				if ( !convert_video($recording, $jconf['profile_mobile_hq'], $recording_info_mobile_hq) ) {
+					update_db_recording_status($recording['id'], $jconf['dbstatus_conv_video_err']);
+					break;
+				}
+			}
 
-		// Decide about high quality conversion (HQ)
-		$res = explode("x", strtolower($recording['mastervideores']), 2);
-		$res_x = $res[0];
-		$res_y = $res[1];
-		$res = explode("x", strtolower($jconf['profile_video_lq']['video_bbox']), 2);
-		$bbox_res_x = $res[0];
-		$bbox_res_y = $res[1];
-		// Generate HQ version if original recording does not fit LQ bounding box
-		if ( ( $res_x > $bbox_res_x ) || ( $res_y > $bbox_res_y ) ) {
-			if ( !convert_video($recording, $jconf['profile_video_hq'], $recording_info_hq) ) {
+			// Normal quality conversion (LQ)
+			if ( !convert_video($recording, $jconf['profile_video_lq'], $recording_info_lq) ) {
 				update_db_recording_status($recording['id'], $jconf['dbstatus_conv_video_err']);
 				break;
 			}
-		}
+
+			// Decide about high quality conversion (HQ)
+			$res = explode("x", strtolower($recording['mastervideores']), 2);
+			$res_x = $res[0];
+			$res_y = $res[1];
+			$res = explode("x", strtolower($jconf['profile_video_lq']['video_bbox']), 2);
+			$bbox_res_x = $res[0];
+			$bbox_res_y = $res[1];
+			// Generate HQ version if original recording does not fit LQ bounding box
+			if ( ( $res_x > $bbox_res_x ) || ( $res_y > $bbox_res_y ) ) {
+				if ( !convert_video($recording, $jconf['profile_video_hq'], $recording_info_hq) ) {
+					update_db_recording_status($recording['id'], $jconf['dbstatus_conv_video_err']);
+					break;
+				}
+			}
+
+		} // End of video conversion
 
 		// Media finalization
 		if ( !copy_media_to_frontend($recording, $recording_info_mobile_lq, $recording_info_mobile_hq, $recording_info_lq, $recording_info_hq) ) {
@@ -175,7 +181,7 @@ while( !is_file( BASE_PATH . 'data/jobs/job_media_convert.stop' ) and !is_file( 
 		$queue = $app->bootstrap->getMailqueue();
 		$queue->sendHTMLEmail($uploader_user['email'], $subject, $smarty->fetch('emails/converter_email.tpl'), $values = array() ); */
 
-//exit;
+exit;
 
 		break;
 	}	// End of while(1)
@@ -237,7 +243,6 @@ global $jconf, $db;
 		( ( status = \"" . $jconf['dbstatus_uploaded']  . "\" AND masterstatus = \"" . $jconf['dbstatus_uploaded'] . "\" ) OR
 		( status = \"" . $jconf['dbstatus_reconvert'] . "\" AND masterstatus = \"" . $jconf['dbstatus_copystorage_ok'] . "\" ) ) AND 
 		( mastersourceip IS NOT NULL OR mastersourceip != '' )
-		AND id = 1
 		ORDER BY
 			conversionpriority,
 			id
@@ -452,7 +457,7 @@ global $app, $jconf;
 	$recording['thumbnail_numberofindexphotos'] = 0;
 
 	if ( $recording['mastermediatype'] == "audio" ) {
-		log_recording_conversion($recording['id'], $jconf['jobid_media_convert'], $jconf['dbstatus_conv_thumbs'], "[OK] Not generating video thumbs for audio only file", "-", "-", 0, FALSE);
+//		log_recording_conversion($recording['id'], $jconf['jobid_media_convert'], $jconf['dbstatus_conv_thumbs'], "[OK] Not generating video thumbs for audio only file", "-", "-", 0, FALSE);
 		return TRUE;
 	}
 
@@ -660,6 +665,7 @@ global $app, $jconf, $global_log;
 	if ( $recording['mastermediatype'] == "audio" ) {
 		$recording['thumbnail_numberofindexphotos'] = 0;
 		$recording['thumbnail_indexphotofilename'] = "images/videothumb_audio_placeholder.png?rid=" . $recording['id'];
+echo "haho\n";
 	}
 
 	$playtime = ceil($recording['masterlength']);
@@ -751,6 +757,10 @@ global $app, $jconf, $global_log;
 	$app->watchdog();
 
 	$recording_info = array();
+
+	if ( $recording['mastermediatype'] == "audio" ) {
+		return TRUE;
+	}
 
 	// Temp directory
 	$temp_directory = $recording['temp_directory'];

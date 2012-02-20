@@ -12,11 +12,12 @@ return array('config_jobs' => array(
 
 	// Node
 	'node'							=> 'stream.teleconnect.hu',
+	'node_role'						=> 'converter',
 
 	// Directories
+	'temp_dir'						=> $this->config['datapath'] . 'temp/',				// Temporary dir for jobs
 	'media_dir'						=> $this->config['datapath'] . 'temp/media/',		// Temporary dir for media conversion
-
-	// Log path
+	'job_dir'						=> $this->config['modulepath'] . 'Jobs/',
 	'log_dir'						=> $this->config['logpath'] . 'jobs/',
 	
 	// Job priority 
@@ -27,6 +28,7 @@ return array('config_jobs' => array(
 
 	// Job identifiers
 	'jobid_media_convert'			=> 'job_media_convert',
+	'jobid_watcher'					=> 'watcher',
 
 	// SSH related settings
 	'ssh_user'						=> 'conv',
