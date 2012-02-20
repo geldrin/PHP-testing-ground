@@ -44,7 +44,7 @@ global $app, $jconf, $debug, $db, $uploader_user;
 	}
 	$msg .= "RECORDING: " . $rec_id . "\n";
 	$msg .= "ACTION: ". $action . "\n";
-	$msg .= "STATUS MESSAGE: " . $status . "\n";
+	$msg .= "STATUS MESSAGE: \n\n" . $status . "\n";
 	if ( !empty($command) && ( $command != "-" ) ) {
 		$msg .= "\nCOMMAND: " . $command . "\n";
 	}
@@ -52,9 +52,7 @@ global $app, $jconf, $debug, $db, $uploader_user;
 		$msg .= "\nDATA: " . $data . "\n";
 	}
 
-//echo $msg . "\n";
-
-$log2mail = false;
+//$log2mail = false;
 	$debug->log($jconf['log_dir'], $jconf['jobid_media_convert'] . ".log", $msg, $log2mail);
 
 	return TRUE;
@@ -80,12 +78,12 @@ function print_audio_info($audio) {
 	if ( isset($audio['audio_srate']) ) $log_msg .= $audio['audio_srate'] . "Hz ";
 	if ( isset($audio['audio_bitrate']) ) $log_msg .= "@ " . $audio['audio_bitrate'] . "Kbps\n";
 
-	if ( isset($audio['source_file']) ) {
+/*	if ( isset($audio['source_file']) ) {
 		$log_msg .= "Source file: " . $audio['source_file'] . "\n";
 	}
 	if ( isset($audio['output_file']) ) {
 		$log_msg .= "Target file: " . $audio['output_file'] . "\n";
-	}
+	} */
 
 	return $log_msg;
 }

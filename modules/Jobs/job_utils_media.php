@@ -65,7 +65,7 @@ global $jconf;
 		$command .= $ffmpeg_video;
 		$command .= " -threads " . $jconf['ffmpeg_threads'] . " -f " . $profile['format'] . " " . $media_info['output_file'] . " 2>&1";
 
-echo $command . "\n";
+//echo $command . "\n";
 
 		$time_start = time();
 		$output = runExternal($command);
