@@ -2,7 +2,11 @@
 // Job configuration file
 
 //define('H264_PROFILE', '-vpre fast -vpre baseline');	// ffmpeg H.264 profile (default (=H.264 Main), baseline, normal, hq, max
-define('H264_PROFILE', '-preset fast -profile baseline');	// for newer ffmpegs (2011: 0.8.2)
+//define('H264_PROFILE', '-preset fast -profile baseline');	// for newer ffmpegs (2011: 0.8.2)
+
+// Profiles: baseline, main, high
+define('H264_PROFILE',				'-preset fast -profile main');
+define('H264_PROFILE_MOBILE',		'-preset fast -profile baseline');
 
 return array('config_jobs' => array(
 
@@ -56,8 +60,6 @@ return array('config_jobs' => array(
 	'ffmpeg_threads'				=> 0,								// Threads to use (0 - automatic)
 	'ffmpeg_async_frames'			=> 10,								// Max. frames to skip when audio and video is out of sync
 	'ffmpeg_h264_passes'			=> 1,								// FFMpeg passes for H.264 (not operational!)
-	'ffmpeg_h264_profile'			=> '-vpre fast -vpre baseline',		// FFMpeg H.264 profile (default (main), baseline, normal, hq, max
-//'ffmpeg_h264_profile'			=> '-preset fast -profile baseline',	// for newer ffmpegs (2011: 0.8.2)
 	'ffmpeg_video_codec'			=> 'h264',
 	'ffmpeg_flags'					=> '-strict experimental',
 	'ffmpeg_audio_codec'			=> 'libfaac',						// Audio codec (libmp3lame or libfaac)
@@ -70,10 +72,6 @@ return array('config_jobs' => array(
 	'thumb_video_numframes'			=> 20,								// Number of video thumbnails generated per recording
 
 	// Constraints
-	
-// Audio specific parameters
-//define('AUDIO_MAX_BANDWIDTH',		192);			// Max. Kbps for audio track
-
 	'video_min_length'				=> 3,			// Min. media length in seconds
 	'video_res_modulo'				=> 8,			// Rescaled video X/Y resolution modulo 0 divider (16 = F4V!)
 	'video_max_bw'					=> 3000000,		// Maximum of video bandwidth (absolute limit)
@@ -101,6 +99,40 @@ return array('config_jobs' => array(
 		'audio_mode'	=> "cbr"
 	),
 
+	// Mobile LQ version
+	'profile_mobile_lq' => array(
+		'name'			=> "Mobile normal quality",
+		'video_codec'	=> "h264",
+		'passes'		=> 1,				// Conversion passes
+		'codec_profile'	=> H264_PROFILE_MOBILE,
+		'format'		=> "mp4",
+		'file_suffix'	=> "_mobile_lq",	// recID_<suffix>.<format>
+		'video_bbox'	=> "480x320",		// Bounding box
+		'video_bpp'		=> 0.078,			// resx * resy * fps * bpp = video codec bandwidth
+		'audio_codec'	=> "libfaac",		// AAC
+		'audio_ch'		=> 1,				// Max. number of audio channels
+		'audio_bw_ch'	=> 64,				// Kbps per audio channel
+		'audio_mode'	=> "cbr"
+	),
+
+	// Mobile HQ version
+// iPad: H.264 up to 720p@30, Main Profile level 3.1 w/ AAC-LC audio up to 160 Kbps per channel, 48kHz, stereo
+// iPad2: H.264 video up to 1080p@30 w/ High Profile level 4.1 + AAC-LC audio up to 160 Kbps, 48kHz, stereo audio in .m4v, .mp4, and .mov file formats;
+	'profile_mobile_hq' => array(
+		'name'			=> "Mobile high quality",
+		'video_codec'	=> "h264",
+		'passes'		=> 1,				// Conversion passes
+		'codec_profile'	=> H264_PROFILE_MOBILE,
+		'format'		=> "mp4",
+		'file_suffix'	=> "_mobile_hq",	// recID_<suffix>.<format>
+		'video_bbox'	=> "1280x720",		// Bounding box
+		'video_bpp'		=> 0.078,			// resx * resy * fps * bpp = video codec bandwidth
+		'audio_codec'	=> "libfaac",		// AAC
+		'audio_ch'		=> 1,				// Max. number of audio channels
+		'audio_bw_ch'	=> 64,				// Kbps per audio channel
+		'audio_mode'	=> "cbr"
+	),
+
 	// Normal quality
 	'profile_video_lq' => array(
 		'name'			=> "Video normal quality",
@@ -108,7 +140,7 @@ return array('config_jobs' => array(
 		'passes'		=> 1,				// Conversion passes
 		'codec_profile'	=> H264_PROFILE,
 		'format'		=> "mp4",
-		'file_suffix'	=> "_video_lq",		// recID_recelemID_<suffix>.<format>
+		'file_suffix'	=> "_video_lq",		// recID_<suffix>.<format>
 		'video_bbox'	=> "640x360",		// Bounding box
 		'video_bpp'		=> 0.1,				// resx * resy * fps * bpp = video codec bandwidth
 		'audio_codec'	=> "libfaac",		// AAC
@@ -124,7 +156,7 @@ return array('config_jobs' => array(
 		'passes'		=> 1,				// Conversion passes
 		'codec_profile'	=> H264_PROFILE,
 		'format'		=> "mp4",
-		'file_suffix'	=> "_video_hq",		// recID_recelemID_<suffix>.<format>
+		'file_suffix'	=> "_video_hq",		// recID_<suffix>.<format>
 		'video_bbox'	=> "1280x720",		// Bounding box
 		'video_bpp'		=> 0.1,				// resx * resy * fps * bpp = video codec bandwidth
 		'audio_codec'	=> "libfaac",		// AAC
@@ -133,9 +165,6 @@ return array('config_jobs' => array(
 		'audio_mode'	=> "cbr"
 	),
 
-// Mobile with no content????
-//define('VIDEO_MB_TARGET_BPP', 		0.078);			// Bits per pixel value for mobile: 480x320@25 -> 300Kbps
-//define('VIDEO_MB_MAX_RESOLUTION',	'480x320');		// 16:9 bounding box for mobile video (iPhone/Android)
 	
 	// Content video profiles
 
@@ -146,7 +175,7 @@ return array('config_jobs' => array(
 		'passes'		=> 1,				// Conversion passes
 		'codec_profile'	=> H264_PROFILE,
 		'format'		=> "mp4",
-		'file_suffix'	=> "_content_lq",	// recID_recelemID_<suffix>.<format>
+		'file_suffix'	=> "_content_lq",	// recID_<suffix>.<format>
 		'video_bbox'	=> "640x480",		// Video bounding box
 		'video_bpp'		=> 0.033,			// resx * resy * fps * bpp = video codec bandwidth
 		'audio_codec'	=> "libfaac",		// AAC
@@ -162,7 +191,7 @@ return array('config_jobs' => array(
 		'passes'		=>	1,				// Conversion passes
 		'codec_profile'	=>	H264_PROFILE,
 		'format'		=>	"mp4",
-		'file_suffix'	=>	"_content_hq",	// recID_recelemID_<suffix>.<format>
+		'file_suffix'	=>	"_content_hq",	// recID_<suffix>.<format>
 		'video_bbox'	=>	"1280x720",		// Video bounding box
 		'video_bpp'		=>	0.020,			// resx * resy * fps * bpp = video codec bandwidth
 		'audio_codec'	=>	"libfaac",		// AAC

@@ -70,7 +70,7 @@ while( !is_file( BASE_PATH . 'data/jobs/job_media_convert.stop' ) and !is_file( 
 		$recording = array();
 		$uploader_user = array();
 
-update_db_recording_status(1, "uploaded");
+update_db_recording_status(2, "uploaded");
 
 		// Query next job - exit if none
 		if ( !query_nextjob($recording, $uploader_user) ) break;
@@ -87,6 +87,7 @@ update_db_recording_status(1, "uploaded");
 		$global_log .= "Media type: " . $recording['mastermediatype'] . "\n\n";
 
 		// Initialize surrogate array
+// ????????????????????
 		$recording['surrogates'] = array();
 
 		// Copy media from front-end server
@@ -101,22 +102,50 @@ update_db_recording_status(1, "uploaded");
 			break;
 		}
 
-		// Content conversion: surrogates depending on profile
+		//// Video conversion section
+		$recording_info_lq = array();
+		$recording_info_hq = array();
+		$recording_info_mobile_lq = array();
+		$recording_info_mobile_hq = array();
 		update_db_recording_status($recording['id'], $jconf['dbstatus_conv_video']);
-		//// Normal quality conversion (LQ)
+
+		// Surrogates depending on profile
+
+		// Mobile normal quality conversion (Mobile LQ)
+		if ( !convert_video($recording, $jconf['profile_mobile_lq'], $recording_info_mobile_lq) ) {
+			update_db_recording_status($recording['id'], $jconf['dbstatus_conv_video_err']);
+			break;
+		}
+
+		// Decide about high quality mobile conversion (Mobile HQ)
+		$res = explode("x", strtolower($recording['mastervideores']), 2);
+		$res_x = $res[0];
+		$res_y = $res[1];
+		$res = explode("x", strtolower($jconf['profile_mobile_lq']['video_bbox']), 2);
+		$bbox_res_x = $res[0];
+		$bbox_res_y = $res[1];
+		// Generate HQ version if original recording does not fit LQ bounding box
+		if ( ( $res_x > $bbox_res_x ) || ( $res_y > $bbox_res_y ) ) {
+			if ( !convert_video($recording, $jconf['profile_mobile_hq'], $recording_info_mobile_hq) ) {
+				update_db_recording_status($recording['id'], $jconf['dbstatus_conv_video_err']);
+				break;
+			}
+		}
+
+		// Normal quality conversion (LQ)
 		if ( !convert_video($recording, $jconf['profile_video_lq'], $recording_info_lq) ) {
 			update_db_recording_status($recording['id'], $jconf['dbstatus_conv_video_err']);
 			break;
 		}
 
-		//// Decide about high quality conversion (HQ)
+		// Decide about high quality conversion (HQ)
 		$res = explode("x", strtolower($recording['mastervideores']), 2);
 		$res_x = $res[0];
 		$res_y = $res[1];
 		$res = explode("x", strtolower($jconf['profile_video_lq']['video_bbox']), 2);
 		$bbox_res_x = $res[0];
 		$bbox_res_y = $res[1];
-		//// Generate HQ version if original recording does not fit LQ bounding box
+		// Generate HQ version if original recording does not fit LQ bounding box
 		if ( ( $res_x > $bbox_res_x ) || ( $res_y > $bbox_res_y ) ) {
 			if ( !convert_video($recording, $jconf['profile_video_hq'], $recording_info_hq) ) {
 				update_db_recording_status($recording['id'], $jconf['dbstatus_conv_video_err']);
@@ -126,7 +155,6 @@ update_db_recording_status(1, "uploaded");
 
 var_dump($recording);
 
-//var_dump($uploader_user);
 
 echo $global_log . "\n";
 
@@ -196,7 +224,7 @@ global $jconf, $db;
 		( ( status = \"" . $jconf['dbstatus_uploaded']  . "\" AND masterstatus = \"" . $jconf['dbstatus_uploaded'] . "\" ) OR
 		( status = \"" . $jconf['dbstatus_reconvert'] . "\" AND masterstatus = \"" . $jconf['dbstatus_copystorage_ok'] . "\" ) ) AND 
 		( mastersourceip IS NOT NULL OR mastersourceip != '' )
-		AND id = 1
+		AND id = 2
 		ORDER BY
 			conversionpriority,
 			id
@@ -702,7 +730,7 @@ global $app, $jconf, $global_log;
 	// Add audio file as a surrogates
 	$recording['surrogates']['audio'] = $audio_info['output_file'];
 
-	$global_log .= "\n\n";
+	$global_log .= "\n";
 
 	$app->watchdog();
 
