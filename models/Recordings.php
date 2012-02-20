@@ -7,15 +7,289 @@ class InvalidVideoResolutionException extends \Exception {}
 
 class Recordings extends \Springboard\Model {
   
+  public function updateMetadataTimestamps( $ids ) {
+    
+    if ( empty( $ids ) )
+      return false;
+    
+    if ( !is_array( $ids ) )
+      $ids = array( $ids );
+    
+    return $this->db->execute("
+      UPDATE recordings
+      SET metadataupdatedtimestamp = '" . date('Y-m-d H:i:s') . "'
+      WHERE id IN('" . implode("', '", $ids ) . "')
+    ");
+    
+  }
+  
   public function updateFulltextCache( $updatemetadata = false ) {
     
     $this->ensureObjectLoaded();
-    $values = array(); // TODO assembleCaches
+    $values = array(
+      'primarymetadatacache' => $this->assemblePrimaryFulltextCache(),
+      'additionalcache'      => $this->assembleAdditionalFulltextCache(),
+    );
     
     if ( $updatemetadata )
       $values['metadataupdatedtimestamp'] = date('Y-m-d H:i:s');
     
     $this->updateRow( $values );
+    
+  }
+  
+  public function assemblePrimaryFulltextCache( $values = array() ) {
+    
+    $this->ensureObjectLoaded();
+    
+    if ( empty( $values ) )
+      $cache = array(
+        @$this->row['titleoriginal'],
+        @$this->row['titleenglish'],
+        @$this->row['subtitleoriginal'],
+        @$this->row['subtitleenglish'],
+        @$this->row['descriptionoriginal'],
+        @$this->row['descriptionenglish'],
+        @$this->row['technicalnote'],
+        @$this->row['keywords'],
+      );
+    else
+      $cache = array(
+        @$values['titleoriginal'],
+        @$values['titleenglish'],
+        @$values['subtitleoriginal'],
+        @$values['subtitleenglish'],
+        @$values['descriptionoriginal'],
+        @$values['descriptionenglish'],
+        @$values['technicalnote'],
+        @$values['keywords'],
+      );
+    
+    $contributors = $this->getContributorsWithRoles();
+    
+    $contributornames = array();
+    
+    if ( !empty( $contributors ) ) {
+      
+      $jobObj = getObject('contributors_jobs');
+      include_once( $this->bootstrap->config['smartypluginpath'] . 'modifier.nameformat.php');
+      include_once( $this->bootstrap->config['smartypluginpath'] . 'modifier.title.php');
+      foreach( $contributors as $contributor ) {
+
+        if ( $contributor['contributorid'] ) {
+          
+          $contributornames[] = $contributor['professionoriginal'];
+          $contributornames[] = $contributor['professionenglish'];
+          $contributornames[] = $contributor['specializationoriginal'];
+          $contributornames[] = $contributor['specializationenglish'];
+          $contributornames[] = \smarty_modifier_nameformat( $contributor );
+          
+          $contributorjobs = $jobObj->getAllJobs( $contributor['contributorid'] );
+          foreach( $contributorjobs as $job ) {
+            
+            $contributornames[] = $job['joboriginal'] . ' ' . $job['jobenglish'];
+            $contributornames[] = $job['nameoriginal'];
+            $contributornames[] = $job['nameenglish'];
+            $contributornames[] = $job['nameshortoriginal'];
+            $contributornames[] = $job['nameshortenglish'];
+            
+          }
+          
+        } else
+          $contributornames[] = \smarty_modifier_title( $contributor, 'name' );
+        
+      }
+      
+    }
+    
+    $contributornames = array_unique( $contributornames );
+    
+    $genres = $this->db->getCol("
+      SELECT s.value
+      FROM
+        genres g,
+        recordings_genres rg,
+        strings s
+      WHERE
+        rg.recordingid = '" . $this->id . "' AND
+        g.id = rg.genreid AND
+        s.translationof = g.name_stringid
+    ");
+    
+    $cache = array_merge( $cache, $contributornames, $genres );
+    
+    return implode( ' ', $cache );
+    
+  }
+  
+  public function getContributorsWithRoles( $wantjobgroups = false ) {
+    
+    $contributors = $this->db->getArray("
+      SELECT
+        cr.id,
+        cr.organizationid,
+        cr.contributorid,
+        cr.jobgroupid,
+        org.nameenglish,
+        org.nameoriginal,
+        org.nameshortenglish,
+        org.nameshortoriginal,
+        org.url,
+        c.id AS contributorid,
+        c.nameprefix,
+        c.namefirst,
+        c.namelast,
+        c.nameformat,
+        c.professionoriginal,
+        c.professionenglish,
+        c.specializationoriginal,
+        c.specializationenglish,
+        c.namealias,
+        s.value AS rolename
+      FROM
+        contributors_roles AS cr
+        LEFT JOIN organizations AS org ON cr.organizationid = org.id
+        LEFT JOIN contributors  AS c   ON cr.contributorid  = c.id,
+        roles AS r,
+        strings AS s
+      WHERE
+        cr.roleid = r.id AND
+        r.name_stringid = s.translationof AND
+        cr.recordingid = '" . $this->id . "' AND
+        s.language = '" . \Springboard\Language::get() . "'
+      ORDER BY
+        cr.weight
+    ");
+    
+    if ( $wantjobgroups ) {
+      
+      $contributorModel = $this->bootstrap->getModel('contributors');
+      
+      foreach( $contributors as $key => $contributor ) {
+        
+        $contributorModel->id = $contributor['contributorid'];
+        $contributors[ $key ]['jobgroups'] = $contributorModel->getJobGroups();
+        
+      }
+      
+    }
+    
+    return $contributors;
+    
+  }
+  
+  public function assembleAdditionalFulltextCache() {
+    
+    $this->ensureID();
+    
+    $slides = $this->db->getCol("
+      SELECT slidecache
+      FROM slides_chapters
+      WHERE
+        recordingid = '" . $this->id . "' AND
+        timing IS NOT NULL
+    ");
+    
+    $cache = implode( ' ', $slides );
+    
+    $documents = $this->db->getCol("
+      SELECT documentcache
+      FROM attached_documents
+      WHERE
+        recordingid = '" . $this->id . "' AND
+        indexingstatus IN('completed', 'completedempty')
+    ");
+    
+    $cache .= implode( ' ', $documents );
+    
+    return $cache;
+    
+  }
+  
+  function updateChannelIndexPhotos() {
+    
+    $this->ensureObjectLoaded();
+    
+    $indexPhotoDone = Array();
+    
+    if (
+         $this->row === null or // toroltek
+         $this->row['status'] != 'onstorage' or // nincs onstorage eleme
+         $this->row['ispublished'] != 1 // nincs metaadata vagy kikapcsolva
+       ) {
+      
+      // indexphoto
+      $rs = $this->db->query("
+        SELECT id
+        FROM channels
+        WHERE
+          indexphotofilename LIKE
+            'recordings/" . \Springboard\Filesystem::getTreeDir( $this->id ) . "/%' OR
+          indexphotofilename LIKE
+            'images/videothumb\_audio\_placeholder.png?rid=" . $this->id . "&reid=%'
+      ");
+      
+      $channel = $this->bootstrap->getModel('channels');
+      
+      foreach( $rs as $fields ) {
+        
+        $channel->select( $fields['id'] );
+        $channel->updateIndexFilename( true );
+        $indexPhotoDone[] = $fields['id'];
+        
+      }
+    }
+    
+    // felvetelszamlalok
+    $rs = $this->db->query("
+      SELECT channelid
+      FROM channels_recordings
+      WHERE recordingid = '" . $this->id . "'
+    ");
+    
+    if ( !isset( $channel ) )
+      $channel = $this->bootstrap->getModel('channels');
+    
+    foreach( $rs as $fields ) {
+      
+      $channel->select( $fields['channelid'] );
+      $channel->updateVideoCounters();
+      // ha az elozo korben meg nem erintettuk a csatornat,
+      // es meg nincs indexkepe, akkor keszitsunk neki
+      if ( 
+           !strlen( $this->row['indexphotofilename'] ) and
+           !in_array( $fields['channelid'], $indexPhotoDone )
+         )
+        $channel->updateIndexFilename();
+      
+    }
+    
+  }
+  
+  public function getIndexPhotoFromChannels( $channelids = array(), $needpublic = null ) {
+    
+    if ( empty( $channelids ) )
+      return '';
+    
+    $where = '';
+    
+    if ( $needpublic )
+      $where = " AND r.accesstype = 'public' ";
+    
+    return $this->db->getOne("
+      SELECT
+        r.indexphotofilename
+      FROM
+        recordings AS r,
+        channels_recordings AS cr
+      WHERE
+        cr.channelid IN ('" . implode("', '", $channelids ) . "') AND
+        r.id = cr.recordingid AND
+        LENGTH( r.indexphotofilename ) > 0
+        $where
+      ORDER BY r.timestamp DESC
+      LIMIT 1
+    ");
     
   }
   
@@ -547,6 +821,212 @@ class Recordings extends \Springboard\Model {
         moderated   = '0' AND
         recordingid = '" . $this->id . "'
     ");
+    
+  }
+  
+  public function getRelatedVideosByKeywords( $limit = NUMBER_OF_RELATED_VIDEOS ){
+    
+    $this->ensureObjectLoaded();
+    if ( !strlen( trim( $this->row['keywords'] ) ) )
+      return array();
+    
+    $keywords    = explode(',', $this->row['keywords'] );
+    $where       = array();
+    
+    foreach( $keywords as $key => $value ) {
+      
+      $keyword = $this->db->qstr( '%' . trim( $value ) . '%' );
+      $where[] = 'r.keywords LIKE ' . $keyword;
+      
+    }
+    
+    $where  = implode(' OR ', $where );
+    $rs = $this->db->query("
+      SELECT
+        r.id,
+        r.titleoriginal,
+        r.titleenglish,
+        r.subtitleoriginal,
+        r.subtitleenglish,
+        r.indexphotofilename,
+        r.masterlength,
+        u.id AS userid,
+        u.nickname,
+        u.nameformat,
+        u.nameprefix,
+        u.namefirst,
+        u.namelast
+      FROM
+        recordings AS r,
+        users AS u
+      WHERE 
+        ( $where ) AND
+        u.id = r.userid AND
+        r.id <> '" . $this->id . "' AND
+        r.status = 'onstorage' AND
+        r.ispublished = '1' AND
+        r.accesstype = 'public' AND
+        (
+          r.visiblefrom IS NULL OR
+          r.visibleuntil IS NULL OR
+          (
+            r.visiblefrom  <= NOW() AND
+            r.visibleuntil >= NOW()
+          )
+        )
+      LIMIT $limit
+    ");
+    
+    $return = array();
+    foreach( $rs as $recording )
+      $return[ $recording['id'] ] = $recording;
+    
+    return $return;
+    
+  }
+  
+  public function getRelatedVideosByChannel( $limit, $channelids = null ) {
+    
+    $this->ensureID();
+    $dontrecurse = true;
+    if ( $channelids === null ) {
+      
+      $dontrecurse = false;
+      $channelids  = $this->db->getCol("
+        SELECT channelid
+        FROM channels_recordings
+        WHERE recordingid = '" . $this->id . "'
+      ");
+      
+    }
+    
+    $rs = $this->db->query("
+      SELECT
+        r.id,
+        r.titleoriginal,
+        r.titleenglish,
+        r.subtitleoriginal,
+        r.subtitleenglish,
+        r.indexphotofilename,
+        r.masterlength,
+        u.id AS userid,
+        u.nickname,
+        u.nameformat,
+        u.nameprefix,
+        u.namefirst,
+        u.namelast
+      FROM
+        recordings AS r,
+        users AS u,
+        channels_recordings AS cr
+      WHERE
+        cr.channelid IN('" . implode("', '", $channelids ) . "') AND
+        r.id = cr.recordingid AND
+        u.id = r.userid AND
+        r.id <> '" . $this->id . "' AND
+        r.status = 'onstorage' AND
+        r.ispublished = '1' AND
+        r.accesstype = 'public' AND
+        (
+          r.visiblefrom IS NULL OR
+          r.visibleuntil IS NULL OR
+          (
+            r.visiblefrom  <= NOW() AND
+            r.visibleuntil >= NOW()
+          )
+        )
+      ORDER BY RAND()
+      LIMIT $limit
+    ");
+    
+    $return = array();
+    foreach( $rs as $recording )
+      $return[ $recording['id'] ] = $recording;
+    
+    if ( count( $return ) < $limit and !$dontrecurse ) {
+      
+      $parentids  = array();
+      $channelObj = getObject('channels');
+      foreach( $channelids as $channelid ) {
+        
+        $parents   = $channelObj->findParents( $channelid );
+        $parents[] = $channelid;
+        $parentids = array_merge( $parentids, $parents );
+        
+      }
+      
+      $parentids = array_unique( $parentids );
+      $return = $return + $this->getRelatedVideosByChannel( $limit - count( $return ), $parentids );
+      
+    }
+    
+    return $return;
+    
+  }
+  
+  public function getRelatedVideosRandom( $limit ) {
+    
+    $this->ensureID();
+    $rs = $this->db->query("
+      SELECT
+        r.id,
+        r.titleoriginal,
+        r.titleenglish,
+        r.subtitleoriginal,
+        r.subtitleenglish,
+        r.indexphotofilename,
+        r.masterlength,
+        u.id AS userid,
+        u.nickname,
+        u.nameformat,
+        u.nameprefix,
+        u.namefirst,
+        u.namelast
+      FROM
+        recordings AS r,
+        users AS u
+      WHERE
+        u.id = r.userid AND
+        r.id != '" . $this->id . "' AND
+        r.status = 'onstorage' AND
+        r.accesstype = 'public' AND
+        r.ispublished = '1' AND
+        (
+          r.visiblefrom IS NULL OR
+          r.visibleuntil IS NULL OR
+          (
+            r.visiblefrom  <= NOW() AND
+            r.visibleuntil >= NOW()
+          )
+        )
+      ORDER BY RAND()
+      LIMIT $limit
+    ");
+    
+    $return = array();
+    foreach( $rs as $recording )
+      $return[ $recording['id'] ] = $recording;
+    
+    return $return;
+    
+  }
+  
+  public function getRelatedVideos() {
+    
+    $this->ensureObjectLoaded();
+    
+    $return = array();
+    
+    if ( count( $return ) < NUMBER_OF_RELATED_VIDEOS )
+      $return = $return + $this->getRelatedVideosByChannel( NUMBER_OF_RELATED_VIDEOS - count( $return ) );
+    
+    if ( count( $return ) < NUMBER_OF_RELATED_VIDEOS )
+      $return = $return + $this->getRelatedVideosByKeywords( NUMBER_OF_RELATED_VIDEOS - count( $return ) );
+    
+    if ( count( $return ) < NUMBER_OF_RELATED_VIDEOS )
+      $return = $return + $this->getRelatedVideosRandom( NUMBER_OF_RELATED_VIDEOS - count( $return ) );
+    
+    return $return;
     
   }
   
