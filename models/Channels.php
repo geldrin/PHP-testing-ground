@@ -5,85 +5,6 @@ class Channels extends \Springboard\Model {
   var $channelroots = array();
   
   /*
-   * A metodus celja az ervenytelen indexphoto filenevet tartalmazo
-   * csatornak ezen mezojenek rendberakasa.
-   * 
-   * Ezt a metodust azutan hivjuk meg, ha toroltunk egy 
-   * recordingot vagy egy recording_elementet,
-   * vagy valtozott egy recording status-a, vagy ispublished flagje.
-   *
-   * Ekkor az ott lefuto folyamatoknak elsokent mar torolniuk kellett
-   * a kozben esetleg ervenytelenne valt recordings.indexphotoid vagy
-   * recording_elements.indexphotoid mezot, illetve valtozhatott a status-a
-   * az adott rekordnak. Ezekben az esetekben a csatorna indexfotoja is 
-   * ervenytelen erteket tarolhat, ezt kell ilyenkor ellenorizni.
-   *
-   * Az ellenorzes egyszeru path egyezesbol indul.
-   *
-   */
-
-  function checkIndexPhotoFilename( $recordingid ) {
-    
-    $recording = $this->bootstrap->getModel('recordings');
-    $recording->select( $recordingid );
-
-    $indexPhotoDone = Array();
-    
-    if (
-         ( $recording->row === null ) || // toroltek
-         ( $recording->row['status'] != 'onstorage' ) || // nincs onstorage eleme
-         ( $recording->row['ispublished'] != 1 ) // nincs metaadata vagy kikapcsolva
-       ) {
-      
-      // indexphoto
-      $rs = $this->db->query("
-        SELECT id
-        FROM channels
-        WHERE
-          indexphotofilename LIKE
-            'recordings/" . \Springboard\Filesystem::getTreeDir( $recordingid ) . "/%' OR
-          indexphotofilename LIKE
-            'images/videothumb\_audio\_placeholder.png?rid=" . $recordingid . "&reid=%'
-      ");
-      
-      $channel = $this->bootstrap->getModel('channels');
-      
-      foreach( $rs as $fields ) {
-        
-        $channel->select( $fields['id'] );
-        $channel->updateIndexFilename( true );
-        $indexPhotoDone[] = $fields['id'];
-        
-      }
-    }
-
-    // felvetelszamlalok
-    $rs = $this->db->query("
-      SELECT channelid
-      FROM channels_recordings
-      WHERE
-        recordingid = '" . $recordingid . "'
-    ");
-    
-    $channel = $this->bootstrap->getModel('channels');
-    
-    foreach( $rs as $fields ) {
-      
-      $channel->select( $fields['channelid'] );
-      $channel->updateVideoCounters();
-      // ha az elozo korben meg nem erintettuk a csatornat,
-      // es meg nincs indexkepe, akkor keszitsunk neki
-      if ( 
-           !strlen( $this->row['indexphotofilename'] ) &&
-           !in_array( $fields['channelid'], $indexPhotoDone ) 
-         )
-        $channel->updateIndexFilename();
-      
-    }
-    
-  }
-  
-  /*
    *
    * A metodust akkor hivjuk meg a checkIndexPhotoFilename-bol, ha egy csatornahoz rendelt 
    * video valamilyen modon torlodott, letiltasra kerult, statusza valtozott.
@@ -152,7 +73,7 @@ class Channels extends \Springboard\Model {
 
   }
 
-  function &findChannelWithoutIndexFilename( $channelid ) {
+  function findChannelWithoutIndexFilename( $channelid ) {
 
     $channel = $this->bootstrap->getModel('channels');
     $channel->select( $channelid );
@@ -337,7 +258,7 @@ class Channels extends \Springboard\Model {
     
     if ( $where )
       $this->addTextFilter( $where );
-
+    
     return
       $this->db->getArray(
         "SELECT
