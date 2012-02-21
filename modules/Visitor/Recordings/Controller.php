@@ -9,6 +9,7 @@ class Controller extends \Visitor\Controller {
     'newcomment' => 'member',
     'rate'   => 'member',
     'upload' => 'uploader',
+    'uploadcontent' => 'uploader',
     'myrecordings' => 'uploader',
     'modifybasics'         => 'uploader',
     'modifyclassification' => 'uploader',
@@ -18,6 +19,7 @@ class Controller extends \Visitor\Controller {
   
   public $forms = array(
     'upload' => 'Visitor\\Recordings\\Form\\Upload',
+    'uploadcontent' => 'Visitor\\Recordings\\Form\\Uploadcontent',
     'modifybasics' => 'Visitor\\Recordings\\Form\\Modifybasics',
     'modifyclassification' => 'Visitor\\Recordings\\Form\\Modifyclassification',
     'modifydescription' => 'Visitor\\Recordings\\Form\\Modifydescription',

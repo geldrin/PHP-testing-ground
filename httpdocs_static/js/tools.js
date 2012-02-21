@@ -17,7 +17,7 @@ function setupVideoUpload() {
   if ( !swfupload )
     return;
   
-  $j('#upload').submit( function( e ) {
+  $j('#upload, #uploadcontent').submit( function( e ) {
     
     e.preventDefault();
     
@@ -33,8 +33,8 @@ function setupVideoUpload() {
     
     $j('.submitbutton').get(0).disabled = true;
     swfupload.addPostParam('swfupload', '1');
-
-    var form = $j( document.forms.upload ).serializeArray();
+    
+    var form = $j(this).serializeArray();
     for ( var i = 0, j = form.length; i < j; i++ )
       swfupload.addPostParam( form[ i ].name, form[ i ].value );
     

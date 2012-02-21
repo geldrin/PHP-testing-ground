@@ -2,12 +2,12 @@
 namespace Visitor\Recordings\Form;
 set_time_limit(0);
 
-class Upload extends \Visitor\HelpForm {
-  public $configfile   = 'Upload.php';
-  public $template     = 'Visitor/Recordings/Upload.tpl';
+class Uploadcontent extends \Visitor\HelpForm {
+  public $configfile   = 'Uploadcontent.php';
+  public $template     = 'Visitor/Recordings/Uploadcontent.tpl';
   public $swfupload    = false;
   public $languages    = array();
-  //public $exportmethod = 'getVars';
+  public $recordingModel;
   
   public function init() {
     
@@ -26,7 +26,21 @@ class Upload extends \Visitor\HelpForm {
         )
       );
     elseif ( !$user->isuploader )
-      $this->controller->redirectToController('contents', 'nopermissionuploader');
+      $this->controller->redirectToController('contents', 'recordingsupload');
+    
+    $this->recordingModel = $this->controller->modelOrganizationAndUserIDCheck(
+      'recordings',
+      $this->application->getNumericParameter('id')
+    );
+    
+    if ( !$this->recordingModel->canUploadContentVideo() ) {
+      
+      if ( $this->swfupload )
+        $this->controller->swfuploadMessage( array( 'error' => 'unknownerror' ) );
+      else
+        $this->redirectToController('contents', 'uploadcontentunavailable');
+      
+    }
     
     parent::init();
     
@@ -38,7 +52,7 @@ class Upload extends \Visitor\HelpForm {
     $l             = $this->bootstrap->getLocalization();
     
     $this->languages = $languageModel->getAssoc('id', 'originalname', false, false, false, 'weight');
-    $this->toSmarty['title']     = $l('recordings', 'upload_title');
+    $this->toSmarty['title']     = $l('recordings', 'uploadcontent_title');
     $this->toSmarty['languages'] = $this->languages;
     $this->config['videolanguage']['values'] = $this->languages;
     
@@ -67,7 +81,7 @@ class Upload extends \Visitor\HelpForm {
       
     }
     
-    $recordingModel = $this->bootstrap->getModel('recordings');
+    $recordingModel = $this->recordingModel;
     $user           = $this->bootstrap->getUser();
     $values         = $this->form->getElementValues( 0 );
     
@@ -134,22 +148,20 @@ class Upload extends \Visitor\HelpForm {
       
     }
     
-    $recordingModel->insertUploadingRecording(
-      $user->id,
-      $user->organizationid,
-      $values['videolanguage'],
-      $_FILES['file']['name'],
+    $recordingModel->addContentRecording(
+      $values['isinterlaced'],
       'stream.teleconnect.hu'
     );
     
     try {
       
-      $recordingModel->handleFile( $_FILES['file']['tmp_name'] );
-      $recordingModel->updateRow( array(
-          'masterstatus' => 'uploaded',
-          'status'       => 'uploaded',
-        )
+      $recordingModel->handleFile(
+        $_FILES['file']['tmp_name'],
+        'upload',
+        '_content'
       );
+      
+      $recordingModel->markContentRecordingUploaded();
       
     } catch( Exception $e ) {
       
@@ -165,11 +177,11 @@ class Upload extends \Visitor\HelpForm {
     
     if ( $this->swfupload )
       $this->controller->swfuploadMessage( array(
-          'url' => $this->controller->getUrlFromFragment('contents/uploadsuccessfull'),
+          'url' => $this->controller->getUrlFromFragment('contents/uploadcontentsuccessfull'),
         )
       );
     else
-      $this->controller->redirect('contents/uploadsuccessfull');
+      $this->controller->redirect('contents/uploadcontentsuccessfull');
     
   }
   

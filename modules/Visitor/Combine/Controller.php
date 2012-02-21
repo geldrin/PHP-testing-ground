@@ -35,7 +35,7 @@ class Controller extends \Visitor\Controller {
     $plaincache      = $this->bootstrap->getCache( $type . 'combine_plain_' . $urlmd5 );
     $compressedcache = $this->bootstrap->getCache( $type . 'combine_gz_' . $urlmd5 );
     
-    if ( $plaincache->expired() ) {
+    if ( $plaincache->expired() or !PRODUCTION ) {
       
       $content = '';
       $scheme  = SSL? 'https://': 'http://';

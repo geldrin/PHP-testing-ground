@@ -25,8 +25,10 @@ class Controller extends \Springboard\Controller\Visitor {
     
     $row = $model->getRow();
     
-    if ( empty( $row ) )
+    if ( empty( $row ) and $forwardto !== false )
       $this->redirect( $redirectto );
+    elseif ( empty( $row ) )
+      return false;
     
     $model->id  = $row['id'];
     $model->row = $row;
@@ -56,8 +58,10 @@ class Controller extends \Springboard\Controller\Visitor {
     
     $row = $model->getRow();
     
-    if ( empty( $row ) )
+    if ( empty( $row ) and $forwardto !== false )
       $this->redirect( $redirectto );
+    elseif ( empty( $row ) )
+      return false;
     
     $model->id  = $row['id'];
     $model->row = $row;

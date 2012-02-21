@@ -1030,6 +1030,75 @@ class Recordings extends \Springboard\Model {
     
   }
   
+  public function canUploadContentVideo() {
+    
+    $this->ensureObjectLoaded();
+    
+    if (
+         (
+           !$this->row['contentstatus'] or
+           $this->row['contentstatus'] == 'markedfordeletion'
+         ) and
+         $this->row['contentmasterstatus'] != 'copyingtostorage'
+       )
+      return true;
+    else
+      return false;
+    
+  }
+  
+  public function addContentRecording( $isinterlaced = 0, $sourceip ) {
+    
+    $this->ensureObjectLoaded();
+    
+    if ( !$this->metadata )
+      throw new Exception('No metadata for the video found, please ->analyize() it beforehand!');
+    
+    if ( $this->metadata['mastermediatype'] == 'audio' )
+      throw new InvalidFileTypeException('The file provided contains only audio, that is not supported');
+    
+    $values = array(
+      'contentstatus'            => 'uploading',
+      'contentvideoisinterlaced' => $isinterlaced,
+      'contentmastersourceip'    => $sourceip,
+    );
+    
+    foreach( $this->metadata as $key => $value ) {
+      
+      $key = str_replace('master', 'contentmaster', $key );
+      $values[ $key ] = $value;
+      
+    }
+    
+    $this->oldcontentstatuses = array(
+      'contentstatus'       => $this->row['contentstatus'],
+      'contentmasterstatus' => $this->row['contentmasterstatus'],
+    );
+    
+    return $this->updateRow( $values );
+    
+  }
+  
+  public function markContentRecordingUploaded() {
+    
+    $this->ensureObjectLoaded();
+    if ( empty( $this->oldcontentstatuses ) )
+      throw new Exception('No oldcontentstatuses found, was there an addContentRecording before this?');
+    
+    // uj feltoltes
+    $contentstatus = array(
+      'contentstatus'       => 'uploaded',
+      'contentmasterstatus' => 'uploaded',
+    );
+    
+    // contentmasterstatus not null -> nem "friss" feltoltes
+    if ( $this->oldcontentstatuses['contentmasterstatus'] )
+      $contentstatus['contentstatus'] = 'reconvert';
+    
+    $this->updateRow( $contentstatus );
+    
+  }
+  
 }
 /*
 
