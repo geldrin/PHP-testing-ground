@@ -117,8 +117,7 @@ global $app, $jconf, $db;
 		$query .= ", videoreshq = \"" . $video_hq['res_x'] . "x" . $video_hq['res_y'] . "\"";
 	}
 
-// Audio only numberof = 0!!!!
-	if ( !empty($recording['thumbnail_indexphotofilename']) && !empty($recording['thumbnail_numberofindexphotos']) ) {
+	if ( !empty($recording['thumbnail_indexphotofilename']) ) {
 		$query .= ", indexphotofilename = \"" . $recording['thumbnail_indexphotofilename'] . "\",\n";
 		$query .= "numberofindexphotos = \"" . $recording['thumbnail_numberofindexphotos'] . "\"\n";
 	}

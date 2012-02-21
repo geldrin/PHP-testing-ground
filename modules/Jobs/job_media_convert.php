@@ -70,8 +70,8 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_media_convert.stop' ) and 
 		$recording = array();
 		$uploader_user = array();
 
-update_db_recording_status(3, "uploaded");
-update_db_masterrecording_status(3, "uploaded");
+//update_db_recording_status(3, "uploaded");
+//update_db_masterrecording_status(3, "uploaded");
 
 		// Query next job - exit if none
 		if ( !query_nextjob($recording, $uploader_user) ) break;
@@ -104,8 +104,6 @@ update_db_masterrecording_status(3, "uploaded");
 			update_db_recording_status($recording['id'], $jconf['dbstatus_conv_audio_err']);
 			break;
 		}
-
-//var_dump($recording);
 
 		if ( $recording['mastermediatype'] != "audio" ) {
 
@@ -180,8 +178,6 @@ update_db_masterrecording_status(3, "uploaded");
 		if ( !empty($recording['mastervideofilename']) ) $subject .= ": " . $recording['mastervideofilename'];
 		$queue = $app->bootstrap->getMailqueue();
 		$queue->sendHTMLEmail($uploader_user['email'], $subject, $smarty->fetch('emails/converter_email.tpl'), $values = array() ); */
-
-exit;
 
 		break;
 	}	// End of while(1)
@@ -665,7 +661,6 @@ global $app, $jconf, $global_log;
 	if ( $recording['mastermediatype'] == "audio" ) {
 		$recording['thumbnail_numberofindexphotos'] = 0;
 		$recording['thumbnail_indexphotofilename'] = "images/videothumb_audio_placeholder.png?rid=" . $recording['id'];
-echo "haho\n";
 	}
 
 	$playtime = ceil($recording['masterlength']);
