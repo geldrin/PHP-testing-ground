@@ -33,7 +33,7 @@ if ( iswindows() ) {
 }
 
 // Start an infinite loop - exit if any STOP file appears
-while( !is_file( $app->config['datapath'] . 'jobs/job_media_convert.stop' ) and !is_file( $app->config['datapath'] . 'data/jobs/all.stop' ) ) {
+while( !is_file( $app->config['datapath'] . 'jobs/job_media_convert.stop' ) and !is_file( $app->config['datapath'] . 'jobs/all.stop' ) ) {
 
 	clearstatcache();
 
