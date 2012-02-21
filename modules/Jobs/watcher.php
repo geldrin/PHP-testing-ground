@@ -61,7 +61,6 @@ $now_minutes = date('i');
 $stop_file = $app->config['datapath'] . 'jobs/all.stop';
 if ( file_exists($stop_file) ) {
 	$msg = "WARNING: jobs are not running. See stop file:\n\n" . $stop_file . "\n\nRemove it to start all jobs. This message is sent once every hour.";
-echo $msg . "\n";
 	// Send mail once every hour to warn admin
 	if ( ( $now_minutes > 0 ) and ( $now_minutes < 6 ) ) {
 		$debug->log($jconf['log_dir'], $jconf['jobid_watcher'] . ".log", $msg, $sendmail = true);
@@ -79,16 +78,13 @@ foreach ( $jobs as $job => $difference ) {
 	if ( file_exists($stop_file) ) {
 		$jobs_isstopped = TRUE;
 		$jobs_stopped .= $stop_file . "\n";
-	break;
-}
-echo "not found!\n";
-
+	}
 }
 
 // Report jobs stopped
 if ( $jobs_isstopped ) {
 	$msg = "WARNING: some jobs may not running. See stop file(s):\n\n" . $jobs_stopped . "\nRemove them to start all jobs. This message is sent once every hour.";
-echo $msg . "\n";
+//echo $msg . "\n";
 	if ( ( $now_minutes > 0 ) and ( $now_minutes < 6 ) ) {
 		$debug->log($jconf['log_dir'], $jconf['jobid_watcher'] . ".log", $msg, $sendmail = true);
 	}
@@ -148,12 +144,11 @@ foreach ( $jobs as $job => $difference ) {
 				$msg .= "OK\n";
 			}
 			$msg .= "COMMAND DURATION: " . ($megallas - $inditas) . "usec\n";
-echo $msg . "\n";
+//echo $msg . "\n";
 
 			$debug->log($jconf['log_dir'], $jconf['jobid_watcher'] . ".log", $msg, $sendmail = true);
 			break;
 		case '1':
-echo "running!\n";
 			// Running: check watchdog time difference (if larger and ffmpeg is not running...)
 			$time = @filemtime( $app->config['datapath'] . 'watchdog/' . $job . '.php.watchdog' );
 			if ( ( ( time() - $time ) >= $difference ) && ( $ffmpeg_running === FALSE ) ) {
