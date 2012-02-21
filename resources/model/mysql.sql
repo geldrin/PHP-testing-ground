@@ -373,3 +373,65 @@ CREATE TABLE `channels_recordings` (
    `weight` int(11) not null default '100',
    PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;
+
+
+CREATE TABLE `contributors_jobs` (
+   `id` int(10) unsigned not null auto_increment,
+   `contributorid` int(10) unsigned not null,
+   `organizationid` int(10) unsigned,
+   `userid` int(10) unsigned,
+   `jobgroupid` int(10) unsigned not null default '1', -- mindenkeppen kell hogy legyen jobgroupid
+   `isaward` int(10) unsigned not null default '0',
+   `joboriginal` text,
+   `jobenglish` text,
+   PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;
+
+
+CREATE TABLE `contributor_images` (
+   `id` int(10) unsigned not null auto_increment,
+   `contributorid` int(10) unsigned not null,
+   `indexphotofilename` text not null,
+   PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;
+
+
+CREATE TABLE `contributors_roles` (
+   `id` int(10) unsigned not null auto_increment,
+   `organizationid` int(10) unsigned, -- references organizations(id),
+   `contributorid` int(10) unsigned, -- references contributors(id),
+   `recordingid` int(10) unsigned not null,
+   `jobgroupid` int(10) unsigned, -- lehet null, mert lehet hogy nincs jobja a usernek
+   `roleid` int(10) unsigned,
+   `weight` int(10) unsigned not null default '100',
+   PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;
+
+
+CREATE TABLE `contributors` (
+   `id` int(10) unsigned not null auto_increment,
+   `createdby` int(10) unsigned not null,
+   `timestamp` datetime not null,
+   `userid` int(10) unsigned,
+   `ownedby` int(10) unsigned,
+   `nameprefix` text,
+   `namefirst` text,
+   `namelast` text not null,
+   `namealias` text,
+   `nameformat` text,
+   `contributorimageid` int(10) unsigned not null default 0,
+   `organizationid` int(10) unsigned,
+   PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;
+
+
+CREATE TABLE `roles` (
+   `id` int(10) unsigned not null auto_increment,
+   `name` text,
+   `name_stringid` int(10) unsigned not null,
+   `weight` int(10) unsigned not null default '100',
+   `ispersonrelated` int default '0',
+   `isorganizationrelated` int default '0',
+   `organizationid` int(10) unsigned not null,
+   PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;
