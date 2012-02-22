@@ -70,21 +70,23 @@ if ( file_exists($stop_file) ) {
 
 $jobs_isstopped = FALSE;
 $jobs_stopped = "";
+$jobs_toskip = array();
 
 // Check job stop files one by one and report if any exists
 foreach ( $jobs as $job => $difference ) {
 	// Check if any stop file is present
+	$jobs_toskip[$job] = FALSE;
 	$stop_file = $app->config['datapath'] . 'jobs/' . $job . '.stop';
 	if ( file_exists($stop_file) ) {
 		$jobs_isstopped = TRUE;
 		$jobs_stopped .= $stop_file . "\n";
+		$jobs_toskip[$job] = TRUE;
 	}
 }
 
 // Report jobs stopped
 if ( $jobs_isstopped ) {
-	$msg = "WARNING: some jobs may not running. See stop file(s):\n\n" . $jobs_stopped . "\nRemove them to start all jobs. This message is sent once every hour.";
-//echo $msg . "\n";
+	$msg = "WARNING: some jobs may not running. See stop file(s):\n\n" . $jobs_stopped . "\nRemove them to restart jobs. This message is sent once every hour.";
 	if ( ( $now_minutes > 0 ) and ( $now_minutes < 6 ) ) {
 		$debug->log($jconf['log_dir'], $jconf['jobid_watcher'] . ".log", $msg, $sendmail = true);
 	}
@@ -99,6 +101,8 @@ exec($cmd, $output, $result);
 if ( $output[0] > 0 ) $ffmpeg_running = TRUE;
 
 foreach ( $jobs as $job => $difference ) {
+
+	if ( $jobs_toskip[$job] == TRUE ) continue;
 
 	$output = array();
 	$grep_target = "php -f " . $jconf['job_dir'];
