@@ -3,14 +3,14 @@ namespace Visitor\Recordings;
 
 class Controller extends \Visitor\Controller {
   public $permissions = array(
-    'index'  => 'public',
-    'details' => 'public',
-    'getcomments' => 'public',
-    'newcomment' => 'member',
-    'rate'   => 'member',
-    'upload' => 'uploader',
-    'uploadcontent' => 'uploader',
-    'myrecordings' => 'uploader',
+    'index'                => 'public',
+    'details'              => 'public',
+    'getcomments'          => 'public',
+    'newcomment'           => 'member',
+    'rate'                 => 'member',
+    'upload'               => 'uploader',
+    'uploadcontent'        => 'uploader',
+    'myrecordings'         => 'uploader',
     'modifybasics'         => 'uploader',
     'modifyclassification' => 'uploader',
     'modifydescription'    => 'uploader',
@@ -18,13 +18,13 @@ class Controller extends \Visitor\Controller {
   );
   
   public $forms = array(
-    'upload' => 'Visitor\\Recordings\\Form\\Upload',
-    'uploadcontent' => 'Visitor\\Recordings\\Form\\Uploadcontent',
-    'modifybasics' => 'Visitor\\Recordings\\Form\\Modifybasics',
+    'upload'               => 'Visitor\\Recordings\\Form\\Upload',
+    'uploadcontent'        => 'Visitor\\Recordings\\Form\\Uploadcontent',
+    'modifybasics'         => 'Visitor\\Recordings\\Form\\Modifybasics',
     'modifyclassification' => 'Visitor\\Recordings\\Form\\Modifyclassification',
-    'modifydescription' => 'Visitor\\Recordings\\Form\\Modifydescription',
-    'modifysharing' => 'Visitor\\Recordings\\Form\\Modifysharing',
-    'newcomment' => 'Visitor\\Recordings\\Form\\Newcomment',
+    'modifydescription'    => 'Visitor\\Recordings\\Form\\Modifydescription',
+    'modifysharing'        => 'Visitor\\Recordings\\Form\\Modifysharing',
+    'newcomment'           => 'Visitor\\Recordings\\Form\\Newcomment',
   );
   
   public $paging = array(

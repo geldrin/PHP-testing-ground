@@ -7,7 +7,10 @@ class Modify extends \Visitor\Form {
   public $needdb     = true;
   
   public function init() {
-    $this->genreModel = $this->controller->modelIDCheck('genres');
+    $this->genreModel = $this->controller->modelIDCheck(
+      'genres',
+      $this->application->getNumericParameter('id')
+    );
     $this->values     = $this->genreModel->row;
   }
   

@@ -7,6 +7,7 @@ class Controller extends \Visitor\Controller {
     'logout'         => 'public',
     'signup'         => 'public',
     'modify'         => 'member',
+    'welcome'        => 'member',
     'index'          => 'public',
     'validate'       => 'public',
     'forgotpassword' => 'public',
@@ -32,6 +33,11 @@ class Controller extends \Visitor\Controller {
   
   public function indexAction() {
     echo 'Nothing here yet';
+  }
+  
+  public function welcomeAction() {
+    $smarty = $this->bootstrap->getSmarty();
+    $this->output( $smarty->fetch('Visitor/Users/Welcome.tpl') );
   }
   
   protected function parseValidationCode() {

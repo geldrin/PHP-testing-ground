@@ -78,10 +78,6 @@ class Recordings extends \Springboard\Model {
 
         if ( $contributor['contributorid'] ) {
           
-          $contributornames[] = $contributor['professionoriginal'];
-          $contributornames[] = $contributor['professionenglish'];
-          $contributornames[] = $contributor['specializationoriginal'];
-          $contributornames[] = $contributor['specializationenglish'];
           $contributornames[] = \smarty_modifier_nameformat( $contributor );
           
           $contributorjobs = $jobObj->getAllJobs( $contributor['contributorid'] );
@@ -140,10 +136,6 @@ class Recordings extends \Springboard\Model {
         c.namefirst,
         c.namelast,
         c.nameformat,
-        c.professionoriginal,
-        c.professionenglish,
-        c.specializationoriginal,
-        c.specializationenglish,
         c.namealias,
         s.value AS rolename
       FROM
@@ -181,7 +173,7 @@ class Recordings extends \Springboard\Model {
   public function assembleAdditionalFulltextCache() {
     
     $this->ensureID();
-    
+    return ''; // TODO
     $slides = $this->db->getCol("
       SELECT slidecache
       FROM slides_chapters

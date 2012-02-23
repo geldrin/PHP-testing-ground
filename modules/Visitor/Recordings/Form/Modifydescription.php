@@ -28,7 +28,7 @@ class Modifydescription extends \Visitor\Recordings\ModifyForm {
     $this->recordingsModel->updateFulltextCache( true );
     
     $this->controller->redirect(
-      'recordings/modifycontributors/' . $this->recordingsModel->id,
+      'recordings/modifysharing/' . $this->recordingsModel->id,
       array( 'forward' => $values['forward'] )
     );
     

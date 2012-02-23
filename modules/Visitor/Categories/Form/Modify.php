@@ -7,7 +7,10 @@ class Modify extends \Visitor\Form {
   public $needdb     = true;
   
   public function init() {
-    $this->categoryModel = $this->controller->modelIDCheck('categories');
+    $this->categoryModel = $this->controller->modelIDCheck(
+      'categories',
+      $this->application->getNumericParameter('id')
+    );
     $this->values        = $this->categoryModel->row;
   }
   
