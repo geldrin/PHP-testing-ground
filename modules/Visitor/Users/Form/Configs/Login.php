@@ -1,6 +1,7 @@
 <?php
 
 $httpInfo =
+  'SERVER_NAME:          ' . @$_SERVER['SERVER_NAME'] . "\n" .
   'REMOTE_ADDR:          ' . @$_SERVER['REMOTE_ADDR'] . "\n" .
   'REMOTE_HOST:          ' . @$_SERVER['REMOTE_HOST'] . "\n" .
   'HTTP_ACCEPT:          ' . @$_SERVER['HTTP_ACCEPT'] . "\n" .
