@@ -60,7 +60,7 @@ class Controller extends \Visitor\Controller {
   
   public function validateAction() {
     
-    if ( !( $data = $this->parseValidationCode( $code ) ) )
+    if ( !( $data = $this->parseValidationCode() ) )
       $this->redirect('contents/signupvalidationfailed');
     
     $userModel = $this->bootstrap->getModel('users');
@@ -81,8 +81,7 @@ class Controller extends \Visitor\Controller {
   
   public function validateinviteAction() {
     
-    $code = $this->application->getParameter('code');
-    if ( !( $data = $this->parseValidationCode( $code ) ) )
+    if ( !( $data = $this->parseValidationCode() ) )
       $this->redirect('contents/invitationvalidationfailed');
     
     $invitationModel = $this->bootstrap->getModel('users_invitations');
