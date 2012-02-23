@@ -23,6 +23,7 @@ class Controller extends \Visitor\Controller {
     'forgotpassword' => 'Visitor\\Users\\Form\\Forgotpassword',
     'changepassword' => 'Visitor\\Users\\Form\\Changepassword',
     'invite'         => 'Visitor\\Users\\Form\\Invite',
+    'modify'         => 'Visitor\\Users\\Form\\Modify',
   );
   
   public $paging = array(
