@@ -21,7 +21,7 @@ class Create extends \Visitor\Form {
     
     $categoryModel->insert( $values );
     
-    $this->redirect(
+    $this->controller->redirect(
       $this->application->getParameter('forward', 'categories/index' )
     );
     

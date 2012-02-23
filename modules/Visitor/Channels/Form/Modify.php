@@ -31,7 +31,7 @@ class Modify extends \Visitor\HelpForm {
     $values = $this->form->getElementValues( 0 );
     $this->channelModel->updateRow( $values );
     
-    $this->redirect(
+    $this->controller->redirect(
       $this->application->getParameter('forward', 'channels/mychannels')
     );
     

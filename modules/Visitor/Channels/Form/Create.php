@@ -49,7 +49,7 @@ class Create extends \Visitor\HelpForm {
     $channelModel->insert( $values );
     $channelModel->updateIndexFilename();
     
-    $this->redirect(
+    $this->controller->redirect(
       $this->application->getParameter('forward', 'channels/mychannels')
     );
     
