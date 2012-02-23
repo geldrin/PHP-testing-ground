@@ -47,11 +47,11 @@ return array(
   ),
   
   'permissions' => array(
-    'isadmin'       => 'isadmin',
-    'iseditor'      => 'iseditor',
-    'isclientadmin' => 'isclientadmin',
-    'isuploader'    => 'isuploader',
-    'isliveadmin'   => 'isliveadmin',
+    'isadmin'       => 'Adminisztrátor',
+    'iseditor'      => 'Szerkesztő',
+    'isclientadmin' => 'Kliens adminisztrátor',
+    'isuploader'    => 'Feltöltő',
+    'isliveadmin'   => 'Live adminisztrátor',
   ),
   
 );

@@ -21,7 +21,7 @@ $config = array(
   
   'email' => array(
     'displayname' => $l('users', 'email'),
-    'postfix'     => $l('users', 'emailpostfix'),
+    //'postfix'     => $l('users', 'emailpostfix'),
     'type'        => 'inputText',
     'validation'  => array(
       array( 'type' => 'required' ),

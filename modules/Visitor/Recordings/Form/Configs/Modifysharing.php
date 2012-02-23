@@ -126,13 +126,6 @@ $config = array(
     ),
   ),
   
-  'ismetadatashareable' => array(
-    'displayname' => $l('recordings', 'ismetadatashareable'),
-    'type'        => 'inputRadio',
-    'value'       => 1,
-    'values'      => $l->getLov('noyes'),
-  ),
-  
   'isdownloadable' => array(
     'displayname' => $l('recordings', 'isdownloadable'),
     'type'        => 'inputRadio',
