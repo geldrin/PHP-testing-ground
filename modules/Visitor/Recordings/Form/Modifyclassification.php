@@ -9,20 +9,20 @@ class Modifyclassification extends \Visitor\Recordings\ModifyForm {
   public function onComplete() {
     
     $values = $this->form->getElementValues( 0 );
-    
+    /*
     $this->recordingsModel->clearGenres();
     if ( !empty( $values['genres'] ) )
       $this->recordingsModel->addGenres( $values['genres'] );
-    
+    */
     $this->recordingsModel->clearCategories();
     if ( !empty( $values['categories'] ) )
       $this->recordingsModel->addCategories( $values['categories'] );
-    
+    /*
     $this->recordingsModel->updateRow( array(
         'keywords' => $values['keywords'],
       )
     );
-    
+    */
     $this->recordingsModel->updateFulltextCache( true );
     
     $this->controller->redirect(

@@ -3,8 +3,8 @@ namespace Visitor\Categories;
 
 class Controller extends \Visitor\Controller {
   public $permissions = array(
-    'index'               => 'public',
     'details'             => 'public',
+    'admin'               => 'admin',
     'create'              => 'admin',
     'modify'              => 'admin',
     'delete'              => 'admin',
@@ -16,7 +16,7 @@ class Controller extends \Visitor\Controller {
   );
   
   public $paging = array(
-    'index'          => 'Visitor\\Categories\\Paging\\Index',
+    'admin'          => 'Visitor\\Categories\\Paging\\Index', // TODO RENAME
     'details'        => 'Visitor\\Categories\\Paging\\Details',
   );
   

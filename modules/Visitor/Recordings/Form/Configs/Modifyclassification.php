@@ -49,7 +49,7 @@ $config = array(
       Array( 'type' => 'required' )
     ),
   ),
-  
+  /*
   'genres[]' => array( // TODO per organization
     'type'        => 'inputCheckboxDynamic',
     'displayname' => $l('recordings', 'genres'),
@@ -87,5 +87,5 @@ $config = array(
     'displayname' => $l('recordings', 'keywords'),
     'postfix'     => '<div class="smallinfo">' . $l('recordings', 'keywordshelp') . '</div>',
   ),
-  
+  */
 );

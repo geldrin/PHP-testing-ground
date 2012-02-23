@@ -100,10 +100,11 @@ class Controller extends \Visitor\Controller {
   
   public function logoutAction() {
     
+    $l    = $this->bootstrap->getLocalization();
     $user = $this->bootstrap->getUser();
     $user->destroy();
     
-    $this->redirectWithMessage('index', 'loggedout');
+    $this->redirectWithMessage('index', $l('users', 'loggedout') );
     
   }
   
