@@ -67,7 +67,7 @@ class Controller extends \Visitor\Controller {
     $userModel->select( $data['id'] );
     
     if ( !$userModel->row or $userModel->row['validationcode'] !== $data['validationcode'] )
-      $this->redirect('contents/signupvalidationfailed');
+      $this->redirectToController('contents', 'signupvalidationfailed');
     
     $userModel->updateRow( array(
         'disabled' => 0,
@@ -88,7 +88,7 @@ class Controller extends \Visitor\Controller {
     $invitationModel->select( $data['id'] );
     
     if ( !$invitationModel->row or $invitationModel->row['validationcode'] !== $data['validationcode'] )
-      $this->redirect('contents/invitationvalidationfailed');
+      $this->redirectToController('contents', 'invitationvalidationfailed');
     
     $invitationSession = $this->bootstrap->getSession('userinvitation');
     $invitationSession['invitation'] = $invitationModel->row;
