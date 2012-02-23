@@ -70,8 +70,8 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_media_convert.stop' ) and 
 		$recording = array();
 		$uploader_user = array();
 
-//update_db_recording_status(3, "uploaded");
-//update_db_masterrecording_status(3, "uploaded");
+//update_db_recording_status(1, "uploaded");
+//update_db_masterrecording_status(1, "uploaded");
 
 		// Query next job - exit if none
 		if ( !query_nextjob($recording, $uploader_user) ) break;
@@ -321,7 +321,7 @@ global $app, $jconf;
 	// Media is too short (fraud check)
 	$playtime = ceil($recording['masterlength']);
 	if ( $playtime < $jconf['video_min_length'] ) {
-		log_recording_conversion($recording['id'], $jconf['jobid_media_convert'], $jconf['dbstatus_init'], "[ERROR] Media length is too short: " . $recording['source_file'], "-", "-", 0, TRUE);
+		log_recording_conversion($recording['id'], $jconf['jobid_media_convert'], $jconf['dbstatus_init'], "[ERROR] Media length is too short: " . $recording['id'] . "." . $recording['mastervideoextension'], "-", "-", 0, TRUE);
 		update_db_recording_status($recording['id'], $jconf['dbstatus_invalidinput']);
 		return FALSE;
 	}
@@ -346,31 +346,14 @@ global $app, $jconf;
 	$recording['source_file'] = $master_filename;
 
 	// SSH check file size before start copying
-	$filesize = 0;
-	$command = $ssh_command . "du -b " . $uploadpath . $base_filename . " 2>&1";
-	exec($command, $output, $result);
-	$output_string = implode("\n", $output);
-	if ( $result != 0 ) {
-		// If file does not exists then error is logged
-		if ( strpos($output_string, "No such file or directory") > 0 ) {
-			log_recording_conversion($recording['id'], $jconf['jobid_media_convert'], $jconf['dbstatus_copyfromfe'], "[ERROR] Input file does not exists at: " . $remote_filename, $command, $output_string, 0, TRUE);
-			update_db_recording_status($recording['id'], $jconf['dbstatus_copyfromfe_err']);
-			return FALSE;
-		} else {
-			// Other error occured, maybe locale, so we set status to "uploaded" to allow other nodes to take over the task
-			log_recording_conversion($recording['id'], $jconf['jobid_media_convert'], $jconf['dbstatus_copyfromfe'], "[ERROR] SSH command failed", $command, $output_string, 0, TRUE);
-			update_db_recording_status($recording['id'], $jconf['dbstatus_copyfromfe_err']);
-			return FALSE;
-		}
-	} else {
-		$tmp = explode(" ", $output_string, 2);
-		$filesize = $tmp[0];
-		if ( $filesize == 0 ) {
-			log_recording_conversion($recording['id'], $jconf['jobid_media_convert'], $jconf['dbstatus_copyfromfe'], "[ERROR] Input file zero length: " . $remote_filename, $command, $output_string, 0, TRUE);
-			update_db_recording_status($recording['id'], $jconf['dbstatus_invalidinput']);
-			return FALSE;
-		}
+	$err = ssh_filesize($recording['mastersourceip'], $uploadpath . $base_filename);
+	if ( !$err['code'] ) {
+		log_recording_conversion($recording['id'], $jconf['jobid_media_convert'], $jconf['dbstatus_copyfromfe'], $err['message'], $err['command'], $err['result'], 0, TRUE);
+		// Set status to "invalidinput"
+		update_db_recording_status($recording['id'], $jconf['dbstatus_invalidinput']);
+		return FALSE;
 	}
+	$filesize = $err['value'];
 
 	// Check available disk space (input media file size * 3 is the minimum)
 	$available_disk = floor(disk_free_space($jconf['media_dir']));
@@ -402,20 +385,14 @@ global $app, $jconf;
 	}
 
 	// SCP copy from remote location
-	$command = "scp -B -i " . $jconf['ssh_key'] . " " . $remote_filename . " " . $master_filename . " 2>&1";
-	$time_start = time();
-	exec($command, $output, $result);
-	$duration = time() - $time_start;
-	$mins_taken = round( $duration / 60, 2);
-	$output_string = implode("\n", $output);
-	if ( $result != 0 ) {
-		log_recording_conversion($recording['id'], $jconf['jobid_media_convert'], $jconf['dbstatus_copyfromfe'], "[ERROR] SCP copy failed from: " . $remote_filename, $command, $output_string, $duration, TRUE);
+	$err = ssh_filecopy_from($recording['mastersourceip'], $uploadpath . $base_filename, $master_filename);
+	if ( !$err['code'] ) {
+		log_recording_conversion($recording['id'], $jconf['jobid_media_convert'], $jconf['dbstatus_copyfromfe'], $err['message'], $err['command'], $err['result'], $err['value'], TRUE);
 		// Set status to "uploaded" to allow other nodes to take over task
-		update_db_recording_status($recording['id'], $jconf['dbstatus_uploaded']);
+		update_db_content_status($recording['id'], $jconf['dbstatus_uploaded']);
 		return FALSE;
-	} else {
-		log_recording_conversion($recording['id'], $jconf['jobid_media_convert'], $jconf['dbstatus_copyfromfe'], "[OK] SCP copy finished (in " . $mins_taken . " mins)", $command, $result, $duration, FALSE);
 	}
+	log_recording_conversion($recording['id'], $jconf['jobid_media_convert'], $jconf['dbstatus_copyfromfe'], $err['message'], $err['command'], $err['result'], $err['value'], FALSE);
 
 	// Update watchdog timer
 	$app->watchdog();
@@ -624,24 +601,14 @@ global $app, $jconf;
 // *************************************************************************
 // *					function convert_audio()						   *
 // *************************************************************************
-// Description: Calculate audio target parameters for HQ and LQ video tracks.
-//	Convert audio only track as mp3.
-//  1. Analyzis of recording element DB fields
-//	2. Calculate HQ/LQ version audio parameters (to be passed to video conversion):
-//      o HQ audio: same quality mp3, stereo downmix (use as audio only version)
-//      o LQ audio: downmix to mono
-//  3. Generate audio only mp3 track:
-//    - mp3 audio track:
-//      o HQ audio: extract the audio track (use as audio only version)
+// Description: Generate audio only mp3 track.
 // INPUTS:
-//	- $temp_directory: temporary directory for converting current media (global variable)
-//	- $master_filename: full path to media file in temp directory to convert (global variable)
 //	- $recording: recording element information
 // OUTPUTS:
 //	- Boolean:
 //	  o FALSE: audio track encoding failed (error cause logged in DB and local files)
 //	  o TRUE: audio track encoding OK
-//	- $audio_hq, $audio_lq: HQ and LQ audio track information array
+//	- $recording: all important info is injected into recording array
 //	- Others:
 //	  o logs in local logfile and SQL DB table recordings_log
 //	  o updated recording_elements status field
@@ -743,149 +710,8 @@ global $app, $jconf, $global_log;
 	return TRUE;
 }
 
-// ----------------------------------------------------------------------------------
-
-function convert_video($recording, $profile, &$recording_info) {
-global $app, $jconf, $global_log;
-
-	// Update watchdog timer
-	$app->watchdog();
-
-	$recording_info = array();
-
-	if ( $recording['mastermediatype'] == "audio" ) {
-		return TRUE;
-	}
-
-	// Temp directory
-	$temp_directory = $recording['temp_directory'];
-
-	// Local master file name
-	$recording_info['input_file'] = $recording['source_file'];
-
-	// Basic video data for preliminary checks
-	$video_in = array();
-	$video_in['playtime'] = floor($recording['masterlength']);
-	$res = explode("x", strtolower($recording['mastervideores']), 2);
-	$video_in['res_x'] = $res[0];
-	$video_in['res_y'] = $res[1];
-	$video_in['bpp'] = $recording['mastervideobitrate'] / ( $video_in['res_x'] * $video_in['res_y'] * $recording['mastervideofps'] );
-	$video_in['interlaced'] = 0;
-	if ( $recording['mastervideoisinterlaced'] > 0 ) $video_in['interlaced'] = 1;
-
-	// Max resolution check (fraud check)
-	$maxres = explode("x", strtolower($jconf['video_max_res']), 2);
-	if ( ( $video_in['res_x'] > $maxres[0] ) || ( $video_in['res_y'] > $maxres[1]) ) {
-		log_recording_conversion($recording['id'], $jconf['jobid_media_convert'], $jconf['dbstatus_conv_video'], "[ERROR] Invalid video resolution: " . $video_in['res_x'] . "x" . $video_in['res_y'] . "\n", "-", "-", 0, TRUE);
-		return FALSE;
-	}
-
-	// FPS check and conversion
-	if ( $recording['mastervideofps'] > $jconf['video_max_fps'] ) {
-		// Log if video FPS is higher than expected (for future finetune of interlace detection algorithm)
-		log_recording_conversion($recording['id'], $jconf['jobid_media_convert'], $jconf['dbstatus_conv_video'], "[WARNING] Video FPS too high: " . $recording['mastervideofps'] . "\n", "-", "-", 0, TRUE);
-	}
-
-	// Calculate audio parameters
-	$audio_bitrate = 0;
-	$audio_sample_rate = 0;
-	if ( $recording['mastermediatype'] != "videoonly" ) {
-
-		// Samplerate settings: check if applies (f4v possible samplerates: 22050Hz, 44100Hz and 48000Hz)
-		if ( ( $recording['masteraudiofreq'] == 22050 ) or ( $recording['masteraudiofreq'] == 44100 ) or ( ( $recording['masteraudiofreq'] == 48000 ) and ( $profile['audio_codec'] == "libfaac" ) ) ) {
-			$audio_sample_rate = $recording['masteraudiofreq'];
-		} else {
-			// Should not occur to have different sample rate from aboves
-			if ( ( $recording['masteraudiofreq'] > 22050 ) && ( $recording['masteraudiofreq'] <= 44100 ) ) {
-				$audio_sample_rate = 44100;
-			} else {
-				if ( $recording['masteraudiofreq'] <= 22050 ) {
-					$audio_sample_rate = 22050;
-				} elseif ( ( $recording['masteraudiofreq'] >= 44100 ) && ( $recording['masteraudiofreq'] < 48000 ) ) {
-					$audio_sample_rate = 44100;
-				} else {
-					// ffmpeg only allows 22050/44100Hz sample rate mp3 with f4v, 48000Hz only possible with AAC
-					if ( $profile['audio_codec'] == "libmp3lame" ) {
-						$audio_sample_rate = 44100;
-					} else {
-						$audio_sample_rate = 48000;
-					}
-				}
-			}
-		}
-
-		// Bitrate settings for audio
-		$audio_bitrate_perchannel = $profile['audio_bw_ch'];
-		if ( $audio_sample_rate <= 22050 ) $audio_bitrate_perchannel = 32;
-		// Calculate number of channels
-		$recording_info['audio_ch'] = $profile['audio_ch'];
-		if ( $recording['masteraudiochannels'] < $profile['audio_ch'] ) {
-			$recording_info['audio_ch'] = $recording['masteraudiochannels'];
-		}
-		$audio_bitrate = $profile['audio_ch'] * $audio_bitrate_perchannel;
-
-		// Set audio information
-		$recording_info['audio_codec'] = $profile['audio_codec'];
-		$recording_info['audio_srate'] = $audio_sample_rate;
-		$recording_info['audio_bitrate'] = $audio_bitrate;
-	}
-
-	// Calculate video parameters
-	//// Basics
-	$recording_info['name'] = $profile['name'];
-	$recording_info['source_file'] = $recording['source_file'];
-	$recording_info['format'] = $profile['format'];
-	$recording_info['video_codec'] = $profile['video_codec'];
-	$recording_info['playtime'] = $video_in['playtime'];
-	$recording_info['fps'] = $recording['mastervideofps'];
-	$recording_info['interlaced'] = $video_in['interlaced'];
-	$recording_info['video_bpp'] = $profile['video_bpp'];
-	//// New resolution/scaler according to profile bounding box
-	$tmp = calculate_video_scaler($video_in['res_x'], $video_in['res_y'], $profile['video_bbox']);
-	$recording_info['scaler'] = $tmp['scaler'];
-	$recording_info['res_x'] = $tmp['x'];
-	$recording_info['res_y'] = $tmp['y'];
-	//// Calculate bitrate and maximize it to avoid too high values
-/*	if ( $video_in['bpp'] < $profile['video_bpp'] ) {
-		$recording_info['video_bpp'] = round($video_in['bpp'], 2);
-	}
-echo "bpp profile: " . $profile['video_bpp'] . " | orig: " . $video_in['bpp'] . " | chosen: " . $recording_info['video_bpp'] . "\n"; */
-	$recording_info['video_bitrate'] = $recording_info['video_bpp'] * $recording_info['res_x'] * $recording_info['res_y'] * $recording_info['fps'];
-	if ( $recording_info['video_bitrate'] > $jconf['video_max_bw'] ) $recording_info['video_bitrate'] = $jconf['video_max_bw'];
-	//// Target filename
-	$extension = $profile['format'];
-	if ( $extension == "flv" ) $extension = "f4v";
-	$recording_info['output_file'] = $temp_directory . $recording['id'] . $profile['file_suffix'] . "." . $extension;
-
-	// Log input and target file details
-	$log_msg = print_recording_info($recording_info);
-	$global_log .= $log_msg. "\n";
-
-	// Update watchdog timer
-	$app->watchdog();
-
-	// Video conversion execution
-	$err = ffmpeg_convert($recording_info, $profile);
-	if ( !$err['code'] ) {
-		$msg = $err['message'] . "\n" . $profile['name'] . " conversion failed.\nSource file: " . $recording_info['input_file'] . "\nDestination file: " . $recording_info['output_file'] . "\n\n" . $log_msg;
-		log_recording_conversion($recording['id'], $jconf['jobid_media_convert'], $jconf['dbstatus_conv_video'], $msg, $err['command'], $err['command_output'], $err['duration'], TRUE);
-		return FALSE;
-	} else {
-		$msg = $err['message'] . "\n" . $profile['name'] . " conversion OK.\nSource file: " . $recording_info['input_file'] . "\nDestination file: " . $recording_info['output_file'] . "\n\n" . $log_msg;
-		log_recording_conversion($recording['id'], $jconf['jobid_media_convert'], $jconf['dbstatus_conv_video'], $msg, $err['command'], $err['command_output'], $err['duration'], FALSE);
-		$global_log .= $profile['name'] . " conversion in " . secs2hms($err['duration']) . " time.\n";
-	}
-
-	// Update watchdog timer
-	$app->watchdog();
-
-	$global_log .= "\n";
-
-	return TRUE;
-}
-
 // *************************************************************************
-// *		     function copy_media_to_frontend()			   *
+// *		     function copy_media_to_frontend()			   			   *
 // *************************************************************************
 // Description: Copy (SCP) media file(s) and video thumbnails back to front-end.
 // INPUTS:
@@ -954,12 +780,13 @@ global $app, $jconf;
 		// Recording directory access
 		$command1 = "chmod -f " . $jconf['directory_access'] . " " . $remote_recording_directory;
 		// Surrogate media file access
-		$command2 = "chmod -f " . $jconf['file_access']      . " " . $remote_recording_directory . "*.*";
+		$command2 = "chmod -f " . $jconf['file_access']      . " " . $remote_recording_directory . "*_video_*.mp4";
+		$command3 = "chmod -f " . $jconf['file_access']      . " " . $remote_recording_directory . "*_mobile_*.mp4";
 		// All directories under this level
-		$command3 = "find " . $remote_recording_directory . "indexpics/ -mount -maxdepth 1 -type d -exec chmod -f " . $jconf['directory_access'] . " {} \\; 2>/dev/null";
+		$command4 = "find " . $remote_recording_directory . "indexpics/ -mount -maxdepth 1 -type d -exec chmod -f " . $jconf['directory_access'] . " {} \\; 2>/dev/null";
 		// All files under this level
-		$command4 = "find " . $remote_recording_directory . "indexpics/ -mount -maxdepth 2 -type f -exec chmod -f " . $jconf['file_access'] . " {} \\; 2>/dev/null";
-		$command = $ssh_command . "\"" . $command1 . " ; " . $command2 . " ; " . $command3 . " ; " . $command4 . "\"";
+		$command5 = "find " . $remote_recording_directory . "indexpics/ -mount -maxdepth 2 -type f -exec chmod -f " . $jconf['file_access'] . " {} \\; 2>/dev/null";
+		$command = $ssh_command . "\"" . $command1 . " ; " . $command2 . " ; " . $command3 . " ; " . $command4 . " ; " . $command5 . "\"";
 		exec($command, $output, $result);
 	}
 

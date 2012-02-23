@@ -136,6 +136,119 @@ global $app, $jconf, $db;
 	return TRUE;
 }
 
+// *************************************************************************
+// *				function update_db_content_status()		   			   *
+// *************************************************************************
+// Description: update database status for content
+// INPUTS:
+//	- AdoDB DB link in $db global variable
+//	- $id: recording ID
+//	- $status: status (see defines)
+// OUTPUTS:
+//	- Boolean:
+//	  o FALSE: failed (error cause logged in DB and local files)
+//	  o TRUE: OK
+function update_db_content_status($id, $status) {
+global $db;
+
+	$query = "
+		UPDATE
+			recordings
+		SET
+			contentstatus = \"" . $status . "\"
+		WHERE
+			id = " . $id;
+
+	try {
+		$rs = $db->Execute($query);
+	} catch (exception $err) {
+		log_recording_conversion($id, $jconf['jobid_content_convert'], "-", "[ERROR] Cannot update content status. SQL query failed.", trim($query), $err, 0, TRUE);
+		return FALSE;
+	}
+
+	return TRUE;
+}
+
+// *************************************************************************
+// *				function update_db_mastercontent_status()	   		   *
+// *************************************************************************
+// Description: update database status for video
+// INPUTS:
+//	- AdoDB DB link in $db global variable
+//	- $id: recording ID
+//	- $status: status (see defines)
+// OUTPUTS:
+//	- Boolean:
+//	  o FALSE: failed (error cause logged in DB and local files)
+//	  o TRUE: OK
+function update_db_mastercontent_status($id, $status) {
+ global $db;
+
+	$query = "
+		UPDATE
+			recordings
+		SET
+			contentmasterstatus = \"" . $status . "\"
+		WHERE
+			id = " . $id;
+
+	try {
+		$rs = $db->Execute($query);
+	} catch (exception $err) {
+		log_recording_conversion($id, $jconf['jobid_content_convert'], "-", "[ERROR] Cannot update master content status. SQL query failed.", trim($query), $err, 0, TRUE);
+		return FALSE;
+	}
+
+	return TRUE;
+}
+
+// *************************************************************************
+// *				function update_db_contentinfo()			   		   *
+// *************************************************************************
+// Description: update recording element with converted media information
+// INPUTS:
+//	- AdoDB DB link in $db global variable
+//	- $id: recording ID
+//	- $content_info_hq, $content_info_lq: HQ and LQ content information
+// OUTPUTS:
+//	- Boolean:
+//	  o FALSE: failed (error cause logged in DB and local files)
+//	  o TRUE: OK
+function update_db_contentinfo($id, $content_info_lq, $content_info_hq) {
+global $jconf, $db;
+
+	$query = "
+		UPDATE
+			recordings
+		SET
+			";
+
+	if ( !empty($content_info_lq) ) {
+		$query .= "contentvideoreslq = \"" . $content_info_lq['res_x'] . "x" . $content_info_lq['res_y']. "\"";
+	} else {
+		// Would be a failure, should never happen
+		$query .= ", contentvideoreslq = NULL";
+	}
+
+	if ( !empty($content_info_hq) ) {
+		$query .= ", contentvideoreshq = \"" . $content_info_hq['res_x'] . "x" . $content_info_hq['res_y']. "\"";
+	} else {
+		$query .= ", contentvideoreshq = NULL";
+	}
+
+	$query .= "
+		WHERE
+			id = " . $id;
+
+	try {
+		$rs = $db->Execute($query);
+	} catch (exception $err) {
+		log_recording_conversion($id, $jconf['jobid_content_convert'], "-", "[ERROR] Cannot update content information. SQL query failed.", trim($query), $err, 0, TRUE);
+		return FALSE;
+	}
+
+	return TRUE;
+}
 
 
 ?>

@@ -46,12 +46,15 @@ file_put_contents($jconf['temp_dir'] . 'processids', $processes);
 
 // Job list and watchdog timeouts
 if ( $jconf['node_role'] == 'converter' ) {
+	// Converter node jobs
 	$jobs = array(
-		$jconf['jobid_media_convert']	=> 15*60,	// 15 minutes (if no watchdog update or ffmpeg is not running)
+		$jconf['jobid_media_convert']	=> 15*60,	// 15 minutes (if no update or ffmpeg is not running)
+		$jconf['jobid_content_convert']	=> 15*60,	// 15 minutes (if no update or ffmpeg is not running)
 	);
 } else {
+	// Front-end jobs
 	$jobs = array(
-	  'haho.php'				=> 60,
+	  'haho.php'						=> 60,
 	);
 }
 

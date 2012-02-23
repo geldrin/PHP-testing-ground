@@ -352,7 +352,6 @@ function getFileList($dir) {
     // open pointer to directory and read list of files
 	$d = @dir($dir);
 	if ( $d === FALSE ) return FALSE;
-// or die("getFileList: Failed opening directory $dir for reading");
 	while ( false !== ($entry = $d->read()) ) {
       // skip hidden files
 		if( $entry[0] == "." ) continue;
@@ -377,5 +376,125 @@ function getFileList($dir) {
     return $retval;
   }
 
-?>
+// -------------------------------------------------------------------------
+// |				    SSH remote file functions						   |
+// -------------------------------------------------------------------------
+function ssh_filesize($server, $file) {
+global $jconf;
 
+	$err = array();
+	$err['value'] = null;
+
+	$ssh_command = "ssh -i " . $jconf['ssh_key'] . " " . $jconf['ssh_user'] . "@" . $server . " ";
+	$remote_filename = $jconf['ssh_user'] . "@" . $server . ":" . $file;
+
+	$filesize = 0;
+	$command = $ssh_command . "du -b " . $file . " 2>&1";
+	exec($command, $output, $result);
+	$err['command'] = $command;
+    $err['result'] = $result;
+	$output_string = implode("\n", $output);
+	if ( $result != 0 ) {
+		// If file does not exists then error is logged
+		if ( strpos($output_string, "No such file or directory") > 0 ) {
+			$err['code'] = FALSE;
+			$err['message'] = "[ERROR] Input file does not exists at: " . $remote_filename;
+			return $err;
+		} else {
+			// Other error occured, maybe locale, so we set status to "uploaded" to allow other nodes to take over the task
+			$err['code'] = FALSE;
+			$err['message'] = "[ERROR] SSH command failed";
+			return $err;
+		}
+	} else {
+		$tmp = preg_split('/\s+/', $output_string);
+		$filesize = $tmp[0];
+		if ( ( $filesize == 0) or (!is_numeric($filesize)) ) {
+			$err['code'] = FALSE;
+			$err['message'] = "[ERROR] Input file zero/invalid length: " . $remote_filename;
+			return $err;
+		}
+	}
+
+	$err['code'] = TRUE;
+	$err['value'] = $filesize;
+
+	return $err;
+}
+
+function ssh_filecopy_from($server, $file, $destination) {
+global $jconf;
+
+	$err = array();
+
+	$command = "scp -B -i " . $jconf['ssh_key'] . " " . $jconf['ssh_user'] . "@" . $server . ":" . $file . " " . $destination . " 2>&1";
+	$time_start = time();
+	exec($command, $output, $result);
+	$duration = time() - $time_start;
+	$mins_taken = round( $duration / 60, 2);
+	$err['command'] = $command;
+    $err['result'] = $result;
+	$output_string = implode("\n", $output);
+	if ( $result != 0 ) {
+		$err['code'] = FALSE;
+		$err['message'] = "[ERROR] SCP copy failed from: " . $remote_filename;
+		return $err;
+	}
+
+	$err['code'] = TRUE;
+	$err['value'] = $duration;
+	$err['message'] = "[OK] SCP copy finished (in " . $mins_taken . " mins)";
+
+	return $err;
+}
+
+function ssh_filerename($server, $from, $to) {
+global $jconf;
+
+	$err = array();
+
+	$ssh_command = "ssh -i " . $jconf['ssh_key'] . " " . $jconf['ssh_user'] . "@" . $server . " ";
+
+	$command = $ssh_command . "mv -f " . $from . " " . $to . " 2>&1";
+	exec($command, $output, $result);
+	$err['command'] = $command;
+    $err['result'] = $result;
+	$output_string = implode("\n", $output);
+	if ( $result != 0 ) {
+		$err['code'] = FALSE;
+		$err['message'] = "[ERROR] SSH file rename failed: " . $from;
+		return $err;
+	}
+
+	$err['code'] = TRUE;
+	$err['message'] = "[OK] SSH file renamed to: " . $to;
+
+	return $err;
+}
+
+function ssh_fileremove($server, $file_toremove) {
+global $jconf;
+
+	$err = array();
+
+	$ssh_command = "ssh -i " . $jconf['ssh_key'] . " " . $jconf['ssh_user'] . "@" . $server . " ";
+
+	$command = $ssh_command . "rm -f " . $file_toremove . " 2>&1";
+	exec($command, $output, $result);
+	$err['command'] = $command;
+    $err['result'] = $result;
+	$output_string = implode("\n", $output);
+	if ( $result != 0 ) {
+		$err['code'] = FALSE;
+		$err['message'] = "[ERROR] SSH file removal failed: " . $from;
+		return $err;
+	}
+
+	$err['code'] = TRUE;
+	$err['message'] = "[OK] SSH file removed: " . $from;
+
+	return $err;
+}
+
+
+?>

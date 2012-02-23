@@ -17,9 +17,10 @@ return array('config_jobs' => array(
 	// Directories
 	'temp_dir'						=> $this->config['datapath'] . 'temp/',				// Temporary dir for jobs
 	'media_dir'						=> $this->config['datapath'] . 'temp/media/',		// Temporary dir for media conversion
+	'content_dir'					=> $this->config['datapath'] . 'temp/content/',		// Temporary dir for content conversion
 	'job_dir'						=> $this->config['modulepath'] . 'Jobs/',
 	'log_dir'						=> $this->config['logpath'] . 'jobs/',
-	
+
 	// Job priority 
 	'nice'							=> 'nice -n 19',
 	
@@ -28,6 +29,7 @@ return array('config_jobs' => array(
 
 	// Job identifiers
 	'jobid_media_convert'			=> 'job_media_convert',
+	'jobid_content_convert'			=> 'job_content_convert',
 	'jobid_watcher'					=> 'watcher',
 
 	// SSH related settings
@@ -56,6 +58,7 @@ return array('config_jobs' => array(
 	'dbstatus_conv_audio_err'		=> 'failedconverting2audio',
 	'dbstatus_conv_video'			=> 'converting3video',
 	'dbstatus_conv_video_err'		=> 'failedconverting3video',
+	'dbstatus_invalidinput'			=> 'invalidinput',
 
 	// FFMpeg related
 	'ffmpeg_loglevel'				=> 0,								// Loglevel
@@ -88,13 +91,14 @@ return array('config_jobs' => array(
 	// Audio only profile
 	'profile_audio' => array(
 		'name'			=> "Audio only version",
+		'type'			=> "audio",
 		'video_codec'	=> null,
-		'passes'		=> null,				// Conversion passes
+		'passes'		=> null,
 		'codec_profile'	=> null,
 		'format'		=> "mp3",
 		'file_suffix'	=> "_audio",		// recID_<suffix>.<format>
-		'video_bbox'	=> null,			// Bounding box
-		'video_bpp'		=> null,			// resx * resy * fps * bpp = video codec bandwidth
+		'video_bbox'	=> null,
+		'video_bpp'		=> null,
 		'audio_codec'	=> "libmp3lame",	// AAC
 		'audio_ch'		=> 2,				// Max. number of audio channels
 		'audio_bw_ch'	=> 64,				// Kbps per audio channel
@@ -104,6 +108,7 @@ return array('config_jobs' => array(
 	// Mobile LQ version
 	'profile_mobile_lq' => array(
 		'name'			=> "Mobile normal quality",
+		'type'			=> "video",
 		'video_codec'	=> "h264",
 		'passes'		=> 1,				// Conversion passes
 		'codec_profile'	=> H264_PROFILE_MOBILE,
@@ -122,6 +127,7 @@ return array('config_jobs' => array(
 // iPad2: H.264 video up to 1080p@30 w/ High Profile level 4.1 + AAC-LC audio up to 160 Kbps, 48kHz, stereo audio in .m4v, .mp4, and .mov file formats;
 	'profile_mobile_hq' => array(
 		'name'			=> "Mobile high quality",
+		'type'			=> "video",
 		'video_codec'	=> "h264",
 		'passes'		=> 1,				// Conversion passes
 		'codec_profile'	=> H264_PROFILE_MOBILE,
@@ -138,6 +144,7 @@ return array('config_jobs' => array(
 	// Normal quality
 	'profile_video_lq' => array(
 		'name'			=> "Video normal quality",
+		'type'			=> "video",
 		'video_codec'	=> "h264",
 		'passes'		=> 1,				// Conversion passes
 		'codec_profile'	=> H264_PROFILE,
@@ -154,6 +161,7 @@ return array('config_jobs' => array(
 	// High quality
 	'profile_video_hq' => array(
 		'name'			=> "Video high quality",
+		'type'			=> "video",
 		'video_codec'	=> "h264",
 		'passes'		=> 1,				// Conversion passes
 		'codec_profile'	=> H264_PROFILE,
@@ -173,6 +181,7 @@ return array('config_jobs' => array(
 	// Normal quality
 	'profile_content_lq' => array(
 		'name'			=> "Content normal quality",
+		'type'			=> "content",
 		'video_codec'	=> "h264",
 		'passes'		=> 1,				// Conversion passes
 		'codec_profile'	=> H264_PROFILE,
@@ -188,18 +197,19 @@ return array('config_jobs' => array(
 
 	// High quality
 	'profile_content_hq' => array(
-		'name'			=>	"Content high quality",
-		'video_codec'	=>	"h264",
-		'passes'		=>	1,				// Conversion passes
-		'codec_profile'	=>	H264_PROFILE,
-		'format'		=>	"mp4",
-		'file_suffix'	=>	"_content_hq",	// recID_<suffix>.<format>
-		'video_bbox'	=>	"1280x720",		// Video bounding box
-		'video_bpp'		=>	0.020,			// resx * resy * fps * bpp = video codec bandwidth
-		'audio_codec'	=>	"libfaac",		// AAC
-		'audio_ch'		=>	2,				// Max. number of audio channels
-		'audio_bw_ch'	=>	64,				// Kbps per audio channel
-		'audio_mode'	=>	"cbr"
+		'name'			=> "Content high quality",
+		'type'			=> "content",
+		'video_codec'	=> "h264",
+		'passes'		=> 1,				// Conversion passes
+		'codec_profile'	=> H264_PROFILE,
+		'format'		=> "mp4",
+		'file_suffix'	=> "_content_hq",	// recID_<suffix>.<format>
+		'video_bbox'	=> "1280x720",		// Video bounding box
+		'video_bpp'		=> 0.020,			// resx * resy * fps * bpp = video codec bandwidth
+		'audio_codec'	=> "libfaac",		// AAC
+		'audio_ch'		=> 2,				// Max. number of audio channels
+		'audio_bw_ch'	=> 64,				// Kbps per audio channel
+		'audio_mode'	=> "cbr"
 	),
 
 ));

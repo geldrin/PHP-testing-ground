@@ -53,7 +53,7 @@ global $app, $jconf, $debug, $db, $uploader_user;
 	}
 
 //$log2mail = false;
-	$debug->log($jconf['log_dir'], $jconf['jobid_media_convert'] . ".log", $msg, $log2mail);
+	$debug->log($jconf['log_dir'], $job . ".log", $msg, $log2mail);
 
 	return TRUE;
 }
