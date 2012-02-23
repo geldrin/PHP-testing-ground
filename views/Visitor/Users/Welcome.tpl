@@ -1,6 +1,7 @@
 {include file="Visitor/_header.tpl"}
 <div id="contentsbody">
   <ul>
+    <li><a href="{$language}/users/logout">Users logout</a></li>
     <li><a href="{$language}/users/listing">Users admin/invitation/disable</a></li>
     <li><a href="{$language}/users/modify">Users modify</a></li>
     <li><a href="{$language}/genres">Genres admin</a></li>

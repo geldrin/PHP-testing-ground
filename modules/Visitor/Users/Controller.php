@@ -43,9 +43,9 @@ class Controller extends \Visitor\Controller {
   protected function parseValidationCode() {
     
     $crypto         = $this->bootstrap->getEncryption();
-    $validationcode = $this->application->getParameter('a');
+    $validationcode = $this->application->getParameter('b');
     $id             =
-      intval( $crypto->asciiDecrypt( $this->application->getParameter('b') ) )
+      intval( $crypto->asciiDecrypt( $this->application->getParameter('a') ) )
     ;
     
     if ( $id <= 0 or !$validationcode )
