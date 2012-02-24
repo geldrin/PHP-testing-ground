@@ -8,7 +8,17 @@ function smarty_function_l( $params, $smarty ) {
   if ( !isset( $params['module'] ) )
     $params['module'] = '';
   
-  $ret = $l( $params['module'], $params['key'] );
+  // {l lov=userstatus key=disabled} -> $lov['userstatus']['disabled']
+  if ( isset( $params['lov'] ) ) {
+    
+    $lov = $l->getLov( $params['lov'] );
+    if ( isset( $params['key'] ) )
+      $ret = $lov[ $params['key'] ];
+    else
+      $ret = $lov;
+    
+  } else
+    $ret = $l( $params['module'], $params['key'] );
   
   if ( isset( $params['assign'] ) ) {
     

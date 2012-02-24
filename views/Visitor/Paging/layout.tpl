@@ -16,7 +16,7 @@
 {/foreach}
 
 {if count( $items )}
-
+<ul{if $listclass} class="{$listclass}"{/if}>
   {foreach name=paging from=$items item=item}
 
     {include file=$template item=$item}
@@ -26,7 +26,7 @@
   {if $lastiteminclude}
     {include file=$lastiteminclude}
   {/if}
-
+</ul>
 {else}
 
   {if $foreachelse}

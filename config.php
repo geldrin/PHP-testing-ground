@@ -84,6 +84,12 @@ $config = array(
       'video.teleconnect.hu',
     ),
   ),
+  //----
+  'videothumbnailresolutions' => array(
+    '4:3'    => '192x144',
+    'wide'   => '300x140',
+    'player' => '400x250',
+  ),
 );
 
 $config['phpsettings'] = array(

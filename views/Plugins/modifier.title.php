@@ -17,7 +17,7 @@ function smarty_modifier_title( $data, $prefix = 'title' ) {
          isset( $data[ $englishkey ] ) and strlen( $data[ $englishkey ] )
        )
      )
-    $title = $data[ $englishkey ];
+    $title = @$data[ $englishkey ];
   
   return $title;
   

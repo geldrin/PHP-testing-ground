@@ -44,23 +44,17 @@ class Recordings extends \Springboard\Model {
     
     if ( empty( $values ) )
       $cache = array(
-        @$this->row['titleoriginal'],
-        @$this->row['titleenglish'],
-        @$this->row['subtitleoriginal'],
-        @$this->row['subtitleenglish'],
-        @$this->row['descriptionoriginal'],
-        @$this->row['descriptionenglish'],
+        @$this->row['title'],
+        @$this->row['subtitle'],
+        @$this->row['description'],
         @$this->row['technicalnote'],
         @$this->row['keywords'],
       );
     else
       $cache = array(
-        @$values['titleoriginal'],
-        @$values['titleenglish'],
-        @$values['subtitleoriginal'],
-        @$values['subtitleenglish'],
-        @$values['descriptionoriginal'],
-        @$values['descriptionenglish'],
+        @$values['title'],
+        @$values['subtitle'],
+        @$values['description'],
         @$values['technicalnote'],
         @$values['keywords'],
       );

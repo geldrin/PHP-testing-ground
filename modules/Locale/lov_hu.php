@@ -54,4 +54,14 @@ return array(
     'isliveadmin'   => 'Live adminisztrátor',
   ),
   
+  'recordingstatus' => array(
+    'uploading'          => 'Feltöltés alatt',
+    'uploaded'           => 'Feltöltve',
+    'onstorage'          => 'Konvertálás kész',
+    'copyingtoconverter' => 'Feldolgozásra várakozás',
+    'markedfordeletion'  => 'Törölve',
+    'unavailable'        => 'Feldolgozás alatt',
+    'reconvert'          => 'Feldolgozás alatt',
+    'failed'             => 'Konvertálás sikertelen',
+  ),
 );
