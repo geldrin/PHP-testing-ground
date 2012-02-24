@@ -3,11 +3,12 @@ namespace Visitor\Categories;
 
 class Controller extends \Visitor\Controller {
   public $permissions = array(
-    'details'             => 'public',
-    'admin'               => 'admin',
-    'create'              => 'admin',
-    'modify'              => 'admin',
-    'delete'              => 'admin',
+    'index'   => 'public',
+    'details' => 'public',
+    'admin'   => 'admin',
+    'create'  => 'admin',
+    'modify'  => 'admin',
+    'delete'  => 'admin',
   );
   
   public $forms = array(
@@ -16,9 +17,20 @@ class Controller extends \Visitor\Controller {
   );
   
   public $paging = array(
-    'admin'          => 'Visitor\\Categories\\Paging\\Index', // TODO RENAME
+    'admin'          => 'Visitor\\Categories\\Paging\\Admin',
     'details'        => 'Visitor\\Categories\\Paging\\Details',
   );
+  
+  public function indexAction() {
+    
+    $smarty        = $this->bootstrap->getSmarty();
+    $organization  = $this->bootstrap->getOrganization();
+    $categoryModel = $this->bootstrap->getModel('categories');
+    
+    $smarty->assign('categories', $categoryModel->cachedGetCategoryTree( $organization->id ) );
+    $this->output( $smarty->fetch('Visitor/Categories/Index.tpl') );
+    
+  }
   
   public function deleteAction() {
     

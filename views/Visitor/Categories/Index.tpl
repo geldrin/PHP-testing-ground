@@ -1,0 +1,29 @@
+{l module=categories key=categories_title assign=title}
+{include file="Visitor/_header.tpl" title=$title}
+<div class="heading categoryheading">
+  <h1>{l module=categories key=categories_title}</h1>
+  <h2>{l module=categories key=categories_subtitle}</h2>
+</div>
+<ul class="categorylist">
+{foreach from=$categories item=category name=category}
+  
+  <li{if $smarty.foreach.category.last} class="last"{/if}>
+    <div class="categoryname">
+      <a href="{$language}/categories/details/{$category.id},{$category.name|filenameize}" title="{$category.name|escape:html}"><h1>{$category.name|escape:html}</h1></a>
+      <div class="numberofrecordings">({$category.numberofrecordings})</div>
+      
+      <a href="{$language}/categories/details/{$category.id},{$category.name|filenameize}" class="categorypic"><img src="{$STATIC_URI}categories/{$category.id}.png" width="140" height="100"/></a>
+    </div>
+    <ul class="subcategorylist">
+      {foreach from=$category.children item=subcategory}
+      {if $subcategory.numberofrecordings}
+        <li>
+          <a href="{$language}/categories/details/{$subcategory.id},{$subcategory.name|filenameize}" title="{$subcategory.name|escape:html}"><h2><span class="subcatname">{$subcategory.name|escape:html}</span> <span>({$subcategory.numberofrecordings})</span></h2></a>
+        </li>
+      {/if}
+      {/foreach}
+    </ul>
+  </li>
+{/foreach}
+</ul>
+{include file="Visitor/_footer.tpl"}

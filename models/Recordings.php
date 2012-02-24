@@ -1085,6 +1085,39 @@ class Recordings extends \Springboard\Model {
     
   }
   
+  public function getCategoryRecordingsCount( $categoryids ) {
+    
+    return $this->db->getOne("
+      SELECT DISTINCT COUNT(r.id)
+      FROM
+        recordings_categories AS rc,
+        recordings AS r
+      WHERE
+        rc.categoryid IN ('" . implode("', '", $categoryids ) . "') AND
+        r.id = rc.recordingid AND
+        " . $this->getPublicRecordingWhere()
+    );
+    
+  }
+  
+  public function getCategoryRecordings( $categoryids, $start = false, $limit = false, $order = false ) {
+    
+    return $this->db->getArray("
+      SELECT DISTINCT
+        r.*
+      FROM
+        recordings_categories AS rc,
+        recordings AS r
+      WHERE
+        rc.categoryid IN ('" . implode("', '", $categoryids ) . "') AND
+        r.id = rc.recordingid AND
+        " . $this->getPublicRecordingWhere() .
+      ( strlen( $order ) ? 'ORDER BY ' . $order : '' ) . " " .
+      ( is_numeric( $start ) ? 'LIMIT ' . $start . ', ' . $limit : "" )
+    );
+    
+  }
+  
 }
 /*
 

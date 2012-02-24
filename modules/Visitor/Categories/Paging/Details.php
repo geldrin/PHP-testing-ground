@@ -2,30 +2,79 @@
 namespace Visitor\Categories\Paging;
 
 class Details extends \Springboard\Controller\Paging {
-  protected $orderkey = 'creation_desc';
-  protected $sort = array(
-    'creation'      => 'id',
-    'creation_desc' => 'id DESC',
+  protected $orderkey = 'timestamp_desc';
+  protected $sort = Array(
+    'timestamp_desc'       => 'r.timestamp DESC',
+    'timestamp'            => 'r.timestamp',
+    'title_desc'           => 'r.titleoriginal DESC',
+    'title'                => 'r.titleoriginal',
+    'views_desc'           => 'r.numberofviews DESC',
+    'views'                => 'r.numberofviews',
+    'viewsthisweek_desc'   => 'r.numberofviewsthisweek DESC',
+    'viewsthisweek'        => 'r.numberofviewsthisweek',
+    'viewsthismonth_desc'  => 'r.numberofviewsthismonth DESC',
+    'viewsthismonth'       => 'r.numberofviewsthismonth',
+    'comments_desc'        => 'r.numberofcomments DESC',
+    'comments'             => 'r.numberofcomments',
+    'rating_desc'          => 'r.rating DESC, r.numberofratings DESC',
+    'rating'               => 'r.rating, r.numberofratings DESC',
+    'ratingthisweek_desc'  => 'r.ratingthisweek DESC, r.numberofratings DESC',
+    'ratingthisweek'       => 'r.ratingthisweek, r.numberofratings DESC',
+    'ratingthismonth_desc' => 'r.ratingthismonth DESC, r.numberofratings DESC',
+    'ratingthismonth'      => 'r.ratingthismonth, r.numberofratings DESC',
   );
+  protected $insertbeforepager = Array( 'Visitor/Categories/Paging/DetailsBeforepager.tpl' );
   protected $template = 'Visitor/Categories/Paging/Details.tpl';
-  protected $categoryModel;
+  protected $categoryids;
+  protected $recordingsModel;
+  protected $toSmarty = Array(
+    'listclass' => 'recordinglist',
+  );
   
   public function init() {
-    $this->foreachelse = 'No categories found';
-    $this->title = 'Categories';
+    
+    $l                 = $this->bootstrap->getLocalization();
+    $this->foreachelse = $l('categories', 'categories_foreachelse');
+    $this->title       = $l('categories', 'categories_title');
+    $organization      = $this->bootstrap->getOrganization();
+    $categoryModel     = $this->controller->modelIDCheck(
+      'categories',
+      $this->application->getNumericParameter('id')
+    );
+    
+    if ( $categoryModel->row['organizationid'] != $organization->id )
+      $this->controller->redirect('index');
+    
+    $this->categoryids = array_merge(
+      array( $categoryModel->id ),
+      $categoryModel->findChildrenIDs()
+    );
+    
+    $this->toSmarty['category'] = $categoryModel->row;
+    
   }
   
   protected function setupCount() {
-    // TODO recording listazas
-    $organization = $this->bootstrap->getOrganization();
-    $this->categoryModel = $this->bootstrap->getModel('categories');
-    $this->categoryModel->addFilter('organizationid', $organization->id );
-    return $this->itemcount = $this->categoryModel->getCount();
+    
+    $this->recordingsModel = $this->bootstrap->getModel('recordings');
+    $this->itemcount =
+      $this->recordingsModel->getCategoryRecordingsCount(
+        $this->categoryids
+      );
     
   }
   
   protected function getItems( $start, $limit, $orderby ) {
-    return $this->categoryModel->getArray( $start, $limit, false, $orderby );
+    
+    $items = $this->recordingsModel->getCategoryRecordings(
+      $this->categoryids,
+      $start,
+      $limit,
+      $orderby
+    );
+    
+    return $items;
+    
   }
   
 }

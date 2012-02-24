@@ -1,13 +1,13 @@
 <?php
 namespace Visitor\Categories\Paging;
 
-class Index extends \Springboard\Controller\Paging {
+class Admin extends \Springboard\Controller\Paging {
   protected $orderkey = 'creation_desc';
   protected $sort = array(
     'creation'      => 'id',
     'creation_desc' => 'id DESC',
   );
-  protected $template = 'Visitor/Categories/Paging/Index.tpl';
+  protected $template = 'Visitor/Categories/Paging/Admin.tpl';
   protected $categoryModel;
   
   public function init() {
