@@ -1,10 +1,12 @@
 {include file="Visitor/_header.tpl"}
-{box class=$boxclass|default:"box_left"}
+
+<div class="form {$formclass|default:"halfbox left"}">
 {$form}
-{/box}
+</div>
+
 {if !empty( $help ) and strpos( $helpclass, 'hidden' ) === false}
-<div class="{$helpclass|default:"help right"}">
-  <h1 class="title">{#help#}</h1>
+<div class="help {$helpclass|default:"halfbox right"}">
+  <h1 class="title">{l key=help}</h1>
   {$help.body}
 </div>
 {/if}

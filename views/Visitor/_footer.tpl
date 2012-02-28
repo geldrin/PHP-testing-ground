@@ -1,57 +1,31 @@
-    </div>{*}body div{/*}
+    </div>
     <div id="footer">
-      
-      <div id="logocontainer">
-        <a href="{$BASE_URI}" id="footerlogo"><span></span>{l key=sitename}</a>
+      <div id="footerlogo">
+        <a href="{$BASE_URI}"><span></span>{l key=sitename}</a>
       </div>
-
-      <div id="copyrightcontainer">
-        <p>
-          {assign var=currentyear value=$smarty.now|date_format:"%Y"}
-          <a href="http://www.niif.hu"><b>{l key=footer_copyright sprintf=$currentyear}</b></a><br/>
-          {l key=footer_allrights}<br />
-        </p>
-      </div>
-      <div id="logos">
-        <a href="http://www.nfu.hu" id="ujmagyarlogo"><span></span>{l key=footer_ujmagyarorszag}</a>
-        <a href="http://www.niif.hu" id="niiflogo"><span></span>{l key=footer_niif}</a>
-        <a href="http://www.nfu.hu" id="tamoplogo"><span></span>{l key=footer_tamop}</a>
-      </div>
-      <div id="footerlist">
-        <p>
-          &nbsp;
-        </p>
-      </div>
-      <ul id="contactlink">
-        {capture assign="contactblock"}admin@teleconnect.hu{/capture}
-        <li id="footercontactlink">{$contactblock}</li>
-        <li id="footerenablemobile"><a href="{$language}/index/mobile?status=enable&forward={$FULL_URI|escape:url}">{l key=footer_enablemobile}</a></li>
-        <li id="footeruserstos"><a href="{$language}/contents/userstos">{l key=footer_userstos}</a></li>
-        <li id="footerrecordingstos"><a href="{$language}/contents/recordingstos">{l key=footer_recordingstos}</a></li>
-      </ul>
-      {if $browserIsMobile}
-        <ul id="mobilefooterlist">
-          <li id="disablemobile">
-            <a href="{$language}/index/mobile?status=disable&forward={$FULL_URI|escape:url}">{l key=footer_disablemobile}</a>
-          </li>
-          <li id="changelanguage">
-            {if $language=='hu'}
-              <a href="{$FULL_URI}">{l key=sitewide_menu_inenglish}</a>
-            {else}
-              <a href="{$FULL_URI}">{l key=sitewide_menu_inhungarian}</a>
-            {/if}
-          </li>
-          <li id="mobilelogin">
-            <a href="{$language}/index/mobile?status=disable&forward={"users/login"|escape:url}">{l key=sitewide_login}</a>
-          </li>
+      <div class="footercontent leftbox">
+        <ul class="footerlinks">
+          <li><a href="#">Home</a></li>
+          <li><a href="#">About</a></li>
+          <li><a href="#">Clients</a></li>
+          <li><a href="#">Contact Us</a></li>
         </ul>
-      {/if}
+        
+        <h4 class="bottom">Lorem ipsum dolor sit amet</h4>
+      </div>
+      <div class="footercontent leftbox">
+        <ul class="footerlinks">
+          <li><a href="#">Home</a></li>
+          <li><a href="#">About</a></li>
+          <li><a href="#">Clients</a></li>
+          <li><a href="#">Contact Us</a></li>
+        </ul>
+        
+        <a href="#" class="bottom">support@example.com</a>
+      </div>
     </div>
   </div>{*}wrap div{/*}
 </div>{*}pagecontainer div{/*}
-
-<div id="footerbg">
-</div>
 
 {if $bootstrap->debug and false}{debug}{/if}
 {if $smarty.const.PRODUCTION}

@@ -1,6 +1,9 @@
 {include file="Visitor/_header.tpl" module="contents"}
-<div id="contentsbody">
-  <h1 class="title">{$content.title}</h1>
-  {$content.body}
+<div class="title">
+  <h1>{$content.title}</h1>
 </div>
+<br/>
+
+{$content.body}
+
 {include file="Visitor/_footer.tpl"}

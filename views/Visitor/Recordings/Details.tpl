@@ -29,7 +29,6 @@
 
 <div id="description">
   
-  {box class="box_right recordingdetails"}
     <ul id="detailmenu">
       <li class="active"><a href="#">{l module=recordings key=details_basics}</a></li>
       <li><a href="#">{l module=recordings key=details_contributors}</a></li>
@@ -87,7 +86,6 @@
       {l key=nocopyright assign=nocopyright}
       <p>{$recording|@title:copyright|escape:html|default:$nocopyright}</p>
     </div>
-  {/box}
   
   <div class="recordingdescription">
     {if $recording|@title:description}

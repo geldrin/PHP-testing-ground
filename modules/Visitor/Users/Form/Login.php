@@ -2,7 +2,7 @@
 namespace Visitor\Users\Form;
 class Login extends \Visitor\Form {
   public $configfile = 'Login.php';
-  public $template = 'Visitor/Users/Login.tpl';
+  public $template = 'Visitor/genericform.tpl';
   
   public function postSetupForm() {
     

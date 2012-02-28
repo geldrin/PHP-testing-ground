@@ -1,9 +1,12 @@
 <?php
 namespace Visitor\Users\Form;
-class Signup extends \Visitor\Form {
+class Signup extends \Visitor\HelpForm {
   public $configfile = 'Signup.php';
-  public $template   = 'Visitor/Users/Login.tpl';
+  public $template   = 'Visitor/genericform.tpl';
   public $needdb     = true;
+  public $toSmarty    = array(
+    'helpclass' => 'rightbox halfbox'
+  );
   
   public function postSetupForm() {
     

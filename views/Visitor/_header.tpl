@@ -6,7 +6,7 @@
   <meta name="author" content="Dots Amazing - www.dotsamazing.com" />
   <meta name="MSSmartTagsPreventParsing" content="true" />
   <meta name="format-detection" content="telephone=no" />{*} iphone ne vegye a random szamokat telefonszamoknak {/*}
-  <base href="http{if $ssl}s{/if}://{$bootstrap->config.baseuri}" /><!--[if IE]></base><![endif]-->
+  <base href="{$BASE_URI}" /><!--[if IE]></base><![endif]-->
   <title>{if $title}{$title|escape:html|titleescape} | {/if}{l key=sitename}</title>
   {csscombine}
   <link rel="StyleSheet" type="text/css" href="{$STATIC_URI}css/style{$VERSION}.css" media="screen"/>
@@ -40,17 +40,28 @@
 <div id="pagecontainer">
   <div id="wrap">
     <div id="header">
-      <a id="logo" href="{$BASE_URI}" title="{l key=sitename escape=html}"><span></span>{l key=sitename escape=html}</a>
-      <div id="headersearchlink"><a href="{$language}/search/all">{l key=search escape=html}</a></div>
-    </div>
-
-    {if !$hidemenu}
+      
+      {include file="Visitor/_login.tpl"}
+      
+      <div id="headerlogo">
+        <a href="{$BASE_URI}" title="{l key=sitename escape=html}"><span></span>{l key=sitename escape=html}</a>
+      </div>
+      
+      <div id="headersearch" class="rightbox">
+        <form action="#" method="get">
+          <input id="headersearchsubmit" type="image"/>
+          <input class="inputtext" type="text" name="q" value="{l key=sitewide_search_input}"/>
+        </form>
+      </div>
+      
       {include file="Visitor/_menu.tpl"}
-      {include file="Visitor/_submenu.tpl"}
-    {/if}
+      
+    </div>
+    
+    {include file="Visitor/_message.tpl" message="Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas."}
     
     {if $sessionmessage and !$skipsessionmessage}
       {include file="Visitor/_message.tpl" message=$sessionmessage}
     {/if}
     
-    <div class="body">
+    <div id="body">

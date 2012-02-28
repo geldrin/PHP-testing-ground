@@ -1,9 +1,9 @@
 {include file="Visitor/_header.tpl"}
-{box}
+
 <script type="text/javascript" src="{$STATIC_URI}js/swfobject.full{$VERSION}.js"></script>
 <script type="text/javascript" src="{$STATIC_URI}js/swfupload220/swfupload{$VERSION}.js"></script>
 
-<div id="videoupload">
+<div id="videoupload" class="leftdoublebox">
   <noscript id="noscriptcontainer">
     <div class="formerrors">
       <br />
@@ -109,9 +109,9 @@ $j(document).ready(function() {ldelim}
     
   </div>
 </div>
-{/box}
+
 {if !empty( $help )}
-<div class="help right small">
+<div class="help rightbox small">
   <h1 class="title">{l key=help}</h1>
   {$help.body}
 </div>
