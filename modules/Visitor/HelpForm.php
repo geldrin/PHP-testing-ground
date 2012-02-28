@@ -5,19 +5,11 @@ class HelpForm extends \Visitor\Form {
   
   public function displayForm() {
     
-    $helpkey = $this->module . '_' . str_replace('submit', '', $this->action );
-    $cache   = $this->bootstrap->getCache( 'help_' . $helpkey );
+    $helpkey   = $this->module . '_' . str_replace('submit', '', $this->action );
+    $helpModel = $this->bootstrap->getModel('help_contents');
+    $helpModel->addFilter('shortname', $helpkey, false, false );
     
-    if ( $cache->expired() or !PRODUCTION ) {
-      
-      $helpModel = $this->bootstrap->getModel('help_contents');
-      $helpModel->addFilter('shortname', $helpkey, false, false );
-      
-      $cache->put( $helpModel->getRow() );
-      
-    }
-    
-    $this->toSmarty['help'] = $cache->get();
+    $this->toSmarty['help'] = $helpModel->getRow();
     
     parent::displayForm();
     
