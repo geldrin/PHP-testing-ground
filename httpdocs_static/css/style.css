@@ -4,6 +4,7 @@ body {
   font-family: "Arial", "sans-serif";
   line-height: 18px;
   font-size: 13px;
+  color: #333;
 }
 h1 {
   font-size: 26px;
@@ -20,16 +21,28 @@ h4 {
 a span {
   cursor: pointer;
 }
+a {
+  color: #1e97d4;
+  text-decoration: none;
+}
+a:hover {
+  text-decoration: underline;
+}
 
 /* main blocks */
 body {
   background-image: url(images/header_bg.png);
   background-repeat: repeat-x;
-  background-color: #f0f0f0;
+  background-color: #ebebeb;
+}
+#pagecontainer {
+  clear: both;
 }
 #wrap {
   width: 950px;
   margin: 0 auto;
+  position: relative;
+  z-index: 2;
 }
 .rightbox {
   float: right;
@@ -76,19 +89,19 @@ body {
 }
 
 /* form */
-fieldset {
+.form fieldset {
   margin: 0;
   padding: 0;
   border: 0;
 }
-fieldset legend {
+.form fieldset legend {
   padding: 5px 0px 5px 0px;
   display: block;
   font-size: 18px;
   font-weight: bold;
   color: black;
 }
-fieldset .legendsubtitle {
+.form fieldset .legendsubtitle {
   margin: 0px 0px 15px 0px;
   display: block;
   border-bottom: 1px solid #cce2f1;
@@ -128,31 +141,54 @@ fieldset .legendsubtitle {
 }
 .element input[type=text], .element input[type=password], .formrow .inputtext {
   width: 260px;
-  padding: 6px 10px 3px 10px;
+  height: 29px;
+  line-height: 29px;
+  padding: 0px 10px 0px 10px;
   float: left;
-  -webkit-border-radius: 5px;
-  -moz-border-radius: 5px;
-  border-radius: 5px;
-  border: 1px solid #1f1f1f;
 }
 textarea {
   font-family: "Arial", "sans-serif";
   width: 260px;
   height: 80px;
   padding: 6px 10px 3px 10px;
-  border: 1px solid #1f1f1f;
   float: left;
   font-size: 13px;
+}
+.inputbackground, .form textarea, .element input[type=text], .element input[type=password], .formrow .inputtext {
+  -moz-box-shadow: 0px 1px 2px rgb(255, 255, 255), inset 0px 1px 4px rgba(000, 000, 000, 0.16);
+  -webkit-box-shadow: 0px 1px 2px rgb(255, 255, 255), inset 0px 1px 4px rgba(000, 000, 000, 0.16);
+  border: 1px solid #999;
+  border-radius: 5px;
   -webkit-border-radius: 5px;
   -moz-border-radius: 5px;
-  border-radius: 5px;
+  outline: none;
 }
-.submitbutton {
+.inputbackground:focus, .form textarea:focus, .element input[type=text]:focus, .element input[type=password]:focus, .formrow .inputtext:focus {
+  border: 1px solid #21abf0;
+}
+.form .submitbutton {
   float: right;
   width: 120px;
   height: 30px;
+  line-height: 15px;
   text-align: center;
   vertical-align: middle;
+  text-shadow: 0px 1px 1px rgba(255, 255, 255, 0.98);
+  background-color: #f5f5f5;
+  background: -moz-linear-gradient(top, #a8a8a8 0%, #bfbfbf 48%, #d9d9d9 52%, #ececec);
+  background: -webkit-gradient( linear, left top, left bottom, from(#a8a8a8), color-stop(0.48, #bfbfbf), color-stop(0.52, #d9d9d9), to(#ececec));
+  -moz-box-shadow: 0px 0px 1px rgba(000,000,000,0.1), inset 0px 0px 2px rgba(255,255,255,1);
+  -webkit-box-shadow: 0px 0px 1px rgba(000,000,000,0.1), inset 0px 0px 2px rgba(255,255,255,1);
+  border: 1px solid #999;
+  border-radius: 5px;
+  -moz-border-radius: 5px;
+  -webkit-border-radius: 5px;
+  background: -moz-linear-gradient(top, #f5f5f5 0%, #efefef 48%, #e5e5e5 52%, #dbdbdb);
+  background: -webkit-gradient(linear, left top, left bottom, from(#f5f5f5), color-stop(0.48, #efefef), color-stop(0.52, #e5e5e5), to(#dbdbdb));
+}
+.form .submitbutton:active {
+  background: -moz-linear-gradient(top, #dbdbdb 0%, #e5e5e5 48%, #efefef 52%, #f5f5f5);
+  background: -webkit-gradient(linear, left top, left bottom, from(#dbdbdb), color-stop(0.48, #e5e5e5), color-stop(0.52, #efefef), to(#f5f5f5));
 }
 
 /* form help */
@@ -281,7 +317,6 @@ textarea {
   -moz-border-radius: 10px;
   font-weight: bold;
   padding: 10px 20px 10px 20px;
-  float: left;
   width: 910px;
   clear: both;
   margin: 0px 0px 20px 0px;
@@ -302,7 +337,6 @@ textarea {
 #header {
   clear: both;
   margin-bottom: 20px;
-  float: left;
   width: 100%;
 }
 #header a {
@@ -325,15 +359,53 @@ textarea {
   background-image: url(images/header_logo.png);
 }
 #headerlogin {
-  margin-top: 20px;
+  margin-top: 15px;
   text-align: right;
 }
 #headerlogin .inputtext {
-  width: 100px;
+  width: 90px;
+  padding: 0px 5px 0px 5px;
   margin: 0px 8px 0px 0px;
+  color: #666;
+  height: 21px;
+  line-height: 21px;
+  font-size: 12px;
+  position: relative;
+  top: 3px;
 }
 #headerlogin .submit {
   width: 70px;
+  /*color: #21abf0;*/
+  color: #333;
+  
+}
+#currentuser {
+  position: relative;
+}
+#currentusername {
+  display: inline-block;
+  height: 28px;
+  line-height: 28px;
+  font-size: 15px;
+  font-weight: bold;
+  color: #fff;
+  margin: 0;
+  padding: 0px 50px 0px 15px;
+  text-shadow: 0px 1px 3px rgba(000, 000, 000, 0.75);
+  text-align: center;
+  vertical-align: middle;
+  background-color: #363636;
+  border: 1px solid #000;
+  border-radius: 5px;
+  -moz-border-radius: 5px;
+  -webkit-border-radius: 5px;
+  background: -moz-linear-gradient(top, rgba(255,255,255,0.16) 0%, rgba(255,255,255,0.10) 50%, rgba(255,255,255,0.03) 55%, rgba(255,255,255,0) );
+  background: -webkit-gradient(linear, left top, left bottom, from( rgba(255,255,255,0.16) ), color-stop(0.50, rgba(255,255,255,0.10) ), color-stop(0.55, rgba(255,255,255,0.03) ), to( rgba(255,255,255,0) ));
+  -moz-box-shadow: 0px 1px 1px rgba(000,000,000, 0.4), inset 0px 1px 1px rgba(255,255,255,0.1);
+  -webkit-box-shadow: 0px 1px 1px rgba(000,000,000, 0.4), inset 0px 1px 1px rgba(255,255,255,0.1);
+}
+#currentusermenu {
+  position: absolute;
 }
 #headermenu ul {
   list-style-type: none;
@@ -356,14 +428,67 @@ textarea {
   font-weight: bold;
   margin-right: 30px;
 }
+#headermenu a:hover {
+  color: #fff;
+  text-decoration: none;
+}
 #headersearch {
   position: relative;
   margin: 20px 0px 0px 20px;
 }
-#headersearch .inputtext {
-  width: 265px;
+#headersearch form {
+  display: inline-block;
+}
+#languageselector {
+  width: 81px;
   height: 26px;
-  padding-left: 35px;
+}
+#header .inputbackground {
+  background-color: #28282b;
+  background-color: rgba(0, 0, 0, 0.3);
+  border-radius: 5px;
+  box-shadow: inset 0 0 7px #000000;
+  -moz-box-shadow: inset 0 0 7px #000000;
+  -webkit-box-shadow: inset 0 0 7px #000000;
+  border: 2px solid #353539;
+  background-clip: padding-box;
+  outline: none;
+}
+#header .inputbackground:focus {
+  border-color: #21abf0;
+}
+#header .submitbutton {
+  height: 25px;
+  line-height: 23px;
+  font-size: 12px;
+  margin: 0;
+  padding: 0px 10px 2px 10px;
+  color: #21abf0;
+  text-shadow: 0px 1px 3px rgba(000, 000, 000, 0.75);
+  text-align: center;
+  vertical-align: middle;
+  background-color: #363636;
+  border: 1px solid #000;
+  border: 1px solid rgba(000, 000, 000, 0.13);
+  border-radius: 5px;
+  -moz-border-radius: 5px;
+  -webkit-border-radius: 5px;
+  background: -moz-linear-gradient(top, #3d3d3d 0%, #313131 47%, #2b2b2b 50%, #2d2d32);
+  background: -webkit-gradient(linear, left top, left bottom, from(#3d3d3d), color-stop(0.47, #313131), color-stop(0.50, #2b2b2b), to(#2d2d32));
+  -moz-box-shadow: 0px 1px 3px rgb(000,000,000), inset 0px 1px 1px rgba(255,255,255,0.53);
+  -webkit-box-shadow: 0px 1px 3px rgb(000,000,000), inset 0px 1px 1px rgba(255,255,255,0.23);
+}
+#header .submitbutton:active {
+  background: -moz-linear-gradient(top, #3d3d3d 0%, #313131 47%, #2b2b2b 50%, #2d2d32);
+  background: -webkit-gradient(linear, left top, left bottom, from(#2d2d32), color-stop(0.47, #2b2b2b), color-stop(0.50, #313131), to(#3d3d3d));
+}
+#headersearch .inputtext {
+  width: 140px;
+  height: 26px;
+  padding: 0px 35px 0px 35px;
+  color: #666;
+  font-size: 13px;
+  line-height: 26px;
 }
 #headersearchsubmit {
   width: 35px;
@@ -371,12 +496,12 @@ textarea {
   position: absolute;
   top: 0px;
   left: 0px;
+  border: 0;
 }
 
 /* body */
 #body {
   clear: both;
-  float: left;
   width: 100%;
 }
 #body div.title {
@@ -386,25 +511,60 @@ textarea {
 }
 
 /* footer */
-#footer {
-  clear: both;
+#footerbg {
   float: left;
   width: 100%;
-  border-top: 1px solid #d8d8d8;
+  min-width: 950px;
+  background-color: #2e2e33;
+  height: 180px;
+  margin-top: -180px;
+  z-index: 1;
+  position: absolute;
+  left: 0;
+}
+#footer {
+  clear: both;
+  height: 155px;
+  width: 100%;
   padding-top: 25px;
-  margin: 20px 0px 20px 0px;
+  margin: 20px 0px 0px 0px;
 }
 #footerlogo {
   float: right;
 }
-#footer .footercontent h4 {
-  margin: 0;
+#footer .footercontent h2 {
+  font-size: 15px;
+  font-weight: normal;
+  margin: 0px 0px 10px 0px;
   padding: 0;
+  color: #cccccc;
+  text-shadow: 0px 1px 0px rgba(000, 000, 000, 0.75);
 }
 #footer .footerlinks {
-  margin: 0px 0px 15px 0px;
+  margin: 0px 0px 8px 0px;
   padding: 0;
   list-style-type: none;
+}
+#footer .footerlinks li {
+  margin-bottom: 2px;
+  font-size: 12px;
+  text-shadow: 0px 1px 0px rgba(000, 000, 000, 0.75);
+}
+#footer .hr {
+  background-color: #171718;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+  width: 100%;
+  height: 1px;
+  clear: both;
+}
+#footer .bottom {
+  color: #666;
+  text-shadow: 0px 1px 0px rgba(000, 000, 000, 0.75);
+  font-size: 12px;
+  margin-top: 8px;
+}
+#footer .bottom a {
+  color: #666;
 }
 
 /* timeline */
@@ -470,7 +630,7 @@ textarea {
   width: 950px;
   text-align: center;
   position: relative;
-  border-bottom: 1px solid #1f1f1f;
+  border-bottom: 1px solid #b1b1b1;
   padding: 6px 0px 8px 0px;
   clear: both;
   z-index: 100;
@@ -487,29 +647,33 @@ textarea {
   padding: 3px 14px 3px 14px;
 }
 .widepager li a:hover {
-  background-color: #1f1f1f;
-  color: white;
+  color: #585858;
   text-decoration: none;
 }
 .currentpage {
-  background-color: #1f1f1f;
-  color: white;
+  color: #585858;
 }
 .widepager .previous {
   position: absolute;
   left: 0px;
-  padding-left: 0;
+  padding-left: 20px;
   margin-right: 30px;
+  background-image: url(images/arrow_left.png);
+  background-repeat: no-repeat;
+  background-position: left 50%;
 }
 .widepager .previous:hover, .widepager .next:hover {
-  background: none;
   text-decoration: underline;
+  color: #1e97d4;
 }
 .widepager .next {
   position: absolute;
   right: 0px;
-  padding-right: 0;
+  padding-right: 20px;
   margin-left: 30px;
+  background-image: url(images/arrow_right.png);
+  background-repeat: no-repeat;
+  background-position: right 50%;
 }
 .recordview .widepager {
   width: 550px;

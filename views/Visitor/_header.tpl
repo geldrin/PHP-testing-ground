@@ -48,10 +48,15 @@
       </div>
       
       <div id="headersearch" class="rightbox">
+        
         <form action="#" method="get">
-          <input id="headersearchsubmit" type="image"/>
-          <input class="inputtext" type="text" name="q" value="{l key=sitewide_search_input}"/>
+          <input id="headersearchsubmit" type="image" src="{$STATIC_URI}images/header_searchimage.png"/>
+          <input class="inputtext inputbackground" type="text" name="q" value="{l key=sitewide_search_input}"/>
         </form>
+        
+        <div id="languageselector" class="inputbackground right">
+          <a href="#" class="hu">HU</a>
+        </div>
       </div>
       
       {include file="Visitor/_menu.tpl"}

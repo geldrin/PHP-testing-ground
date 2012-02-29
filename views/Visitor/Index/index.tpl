@@ -27,7 +27,10 @@
           <li class="last"></li>
         </ul>
       </div>
+      <div class="clear">
+<div class="widepager"><ul><li><a rel="prev" class="previous" id="pgr0" href="hu/featured?order=isfeatured%20DESC%2C%20id%20DESC&amp;direction=&amp;start=0&amp;perpage=10">előző oldal</a></li> <li><a  id="pgr0" href="hu/featured?order=isfeatured%20DESC%2C%20id%20DESC&amp;direction=&amp;start=0&amp;perpage=10">1</a></li>   <li class="currentpage">2</li>   <li><a  id="pgr20" href="hu/featured?order=isfeatured%20DESC%2C%20id%20DESC&amp;direction=&amp;start=20&amp;perpage=10">3</a></li>   <li><a  id="pgr30" href="hu/featured?order=isfeatured%20DESC%2C%20id%20DESC&amp;direction=&amp;start=30&amp;perpage=10">4</a></li>   <li><a  id="pgr40" href="hu/featured?order=isfeatured%20DESC%2C%20id%20DESC&amp;direction=&amp;start=40&amp;perpage=10">5</a></li>   <li><a  id="pgr50" href="hu/featured?order=isfeatured%20DESC%2C%20id%20DESC&amp;direction=&amp;start=50&amp;perpage=10">6</a></li>   <li><a  id="pgr60" href="hu/featured?order=isfeatured%20DESC%2C%20id%20DESC&amp;direction=&amp;start=60&amp;perpage=10">7</a></li>   <li><a  id="pgr80" href="hu/featured?order=isfeatured%20DESC%2C%20id%20DESC&amp;direction=&amp;start=80&amp;perpage=10">...</a></li> <li><form action="hu/featured?order=isfeatured%20DESC%2C%20id%20DESC&amp;direction=&amp;start=0&amp;perpage=10" method="post"><select name="perpage" onchange="this.form.submit();"><option  value="5">5</option><option selected="selected" value="10">10</option><option  value="20">20</option><option  value="50">50</option><option  value="100">100</option></select> tétel/oldal</form></li> <li><a rel="next" class="next" id="pgr20" href="hu/featured?order=isfeatured%20DESC%2C%20id%20DESC&amp;direction=&amp;start=20&amp;perpage=10">következő oldal</a></li></ul></div>
 
+</div>
       <div class="leftdoublebox" style="background-color: #1f1f1f; height: 350px;">
         nagy kép
       </div>
@@ -91,7 +94,7 @@
             </tr>
         </table>
         <div class="clear"></div>
-        
+        <div class="form">
 <form enctype="multipart/form-data" target="_self" name="signup" id="signup" action="/hu/users/signup"  onsubmit="return check_signup();"  method="post"><input type="hidden" id="action" name="action" value="submitsignup"  />
 <input type="hidden" id="forward" name="forward" value=""  />
 <fieldset  id="fs1">
@@ -115,7 +118,7 @@
 </fieldset>
 <input type="submit" value="OK" class="submitbutton" />
 </form>
-
+</div>
       </div>
       <div class="rightbox">
         <h1>Üdvözlünk</h1>

@@ -1,31 +1,38 @@
+      <div class="clear"></div>
     </div>
     <div id="footer">
       <div id="footerlogo">
         <a href="{$BASE_URI}"><span></span>{l key=sitename}</a>
       </div>
       <div class="footercontent leftbox">
+        <h2>További információk</h2>
         <ul class="footerlinks">
           <li><a href="#">Home</a></li>
           <li><a href="#">About</a></li>
           <li><a href="#">Clients</a></li>
           <li><a href="#">Contact Us</a></li>
         </ul>
-        
-        <h4 class="bottom">Lorem ipsum dolor sit amet</h4>
       </div>
       <div class="footercontent leftbox">
+        <h2>Segítség</h2>
         <ul class="footerlinks">
           <li><a href="#">Home</a></li>
           <li><a href="#">About</a></li>
           <li><a href="#">Clients</a></li>
           <li><a href="#">Contact Us</a></li>
         </ul>
-        
-        <a href="#" class="bottom">support@example.com</a>
+      </div>
+      <div class="hr"></div>
+      <div class="leftbox bottom">
+        Company name (c) 2012
+      </div>
+      <div class="leftbox bottom">
+        <a href="#">support@example.com</a>
       </div>
     </div>
   </div>{*}wrap div{/*}
 </div>{*}pagecontainer div{/*}
+<div id="footerbg"></div>
 
 {if $bootstrap->debug and false}{debug}{/if}
 {if $smarty.const.PRODUCTION}
