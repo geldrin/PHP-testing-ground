@@ -31,8 +31,6 @@ a:hover {
 
 /* main blocks */
 body {
-  background-image: url(images/header_bg.png);
-  background-repeat: repeat-x;
   background-color: #ebebeb;
 }
 #pagecontainer {
@@ -155,6 +153,7 @@ textarea {
   font-size: 13px;
 }
 .inputbackground, .form textarea, .element input[type=text], .element input[type=password], .formrow .inputtext {
+  box-shadow: 0px 1px 2px rgb(255, 255, 255), inset 0px 1px 4px rgba(000, 000, 000, 0.16);
   -moz-box-shadow: 0px 1px 2px rgb(255, 255, 255), inset 0px 1px 4px rgba(000, 000, 000, 0.16);
   -webkit-box-shadow: 0px 1px 2px rgb(255, 255, 255), inset 0px 1px 4px rgba(000, 000, 000, 0.16);
   border: 1px solid #999;
@@ -175,20 +174,23 @@ textarea {
   vertical-align: middle;
   text-shadow: 0px 1px 1px rgba(255, 255, 255, 0.98);
   background-color: #f5f5f5;
-  background: -moz-linear-gradient(top, #a8a8a8 0%, #bfbfbf 48%, #d9d9d9 52%, #ececec);
-  background: -webkit-gradient( linear, left top, left bottom, from(#a8a8a8), color-stop(0.48, #bfbfbf), color-stop(0.52, #d9d9d9), to(#ececec));
+  box-shadow: 0px 0px 1px rgba(000,000,000,0.1), inset 0px 0px 2px rgba(255,255,255,1);
   -moz-box-shadow: 0px 0px 1px rgba(000,000,000,0.1), inset 0px 0px 2px rgba(255,255,255,1);
   -webkit-box-shadow: 0px 0px 1px rgba(000,000,000,0.1), inset 0px 0px 2px rgba(255,255,255,1);
   border: 1px solid #999;
   border-radius: 5px;
   -moz-border-radius: 5px;
   -webkit-border-radius: 5px;
+  -pie-background: linear-gradient(top, #f5f5f5 0%, #efefef 48%, #e5e5e5 52%, #dbdbdb);
   background: -moz-linear-gradient(top, #f5f5f5 0%, #efefef 48%, #e5e5e5 52%, #dbdbdb);
   background: -webkit-gradient(linear, left top, left bottom, from(#f5f5f5), color-stop(0.48, #efefef), color-stop(0.52, #e5e5e5), to(#dbdbdb));
+  background: linear-gradient(top, #f5f5f5 0%, #efefef 48%, #e5e5e5 52%, #dbdbdb);
 }
 .form .submitbutton:active {
+  -pie-background: linear-gradient(top, #dbdbdb 0%, #e5e5e5 48%, #efefef 52%, #f5f5f5);
   background: -moz-linear-gradient(top, #dbdbdb 0%, #e5e5e5 48%, #efefef 52%, #f5f5f5);
   background: -webkit-gradient(linear, left top, left bottom, from(#dbdbdb), color-stop(0.48, #e5e5e5), color-stop(0.52, #efefef), to(#f5f5f5));
+  background: linear-gradient(top, #dbdbdb 0%, #e5e5e5 48%, #efefef 52%, #f5f5f5);
 }
 
 /* form help */
@@ -334,10 +336,35 @@ textarea {
 }
 
 /* header */
+#headerbg {
+  float: left;
+  width: 100%;
+  min-width: 950px;
+  background-image: url(images/bg_dotted.png), url(images/header_bg.jpg);
+  background-position: 50% top;
+  /*background-color: #2e2e33;*/
+  height: 109px;
+  margin-bottom: -109px;
+  z-index: 1;
+  position: absolute;
+  left: 0;
+}
 #header {
   clear: both;
   margin-bottom: 20px;
   width: 100%;
+}
+#headertop {
+  width: 100%;
+  height: 58px;
+  border-bottom: 1px solid #1a1a1b;
+  clear: both;
+}
+#headerbottom {
+  width: 100%;
+  height: 48px;
+  border-top: 1px solid #4b4b4f;
+  clear: both;
 }
 #header a {
   color: #21abf0;
@@ -346,6 +373,7 @@ textarea {
 #header a:hover {
   text-decoration: underline;
 }
+/* headerlogo */
 #headerlogo {
   height: 58px;
 }
@@ -358,6 +386,7 @@ textarea {
 #headerlogo a span {
   background-image: url(images/header_logo.png);
 }
+/* headerlogin */
 #headerlogin {
   margin-top: 15px;
   text-align: right;
@@ -375,14 +404,13 @@ textarea {
 }
 #headerlogin .submit {
   width: 70px;
-  /*color: #21abf0;*/
   color: #333;
-  
 }
-#currentuser {
+#currentusercontent {
   position: relative;
+  display: inline-block;
 }
-#currentusername {
+a#currentusername {
   display: inline-block;
   height: 28px;
   line-height: 28px;
@@ -391,7 +419,8 @@ textarea {
   color: #fff;
   margin: 0;
   padding: 0px 50px 0px 15px;
-  text-shadow: 0px 1px 3px rgba(000, 000, 000, 0.75);
+  margin-left: -2px;
+  text-shadow: 0px 1px 3px rgba(000,000,000, 0.75);
   text-align: center;
   vertical-align: middle;
   background-color: #363636;
@@ -399,14 +428,104 @@ textarea {
   border-radius: 5px;
   -moz-border-radius: 5px;
   -webkit-border-radius: 5px;
+  -pie-background: linear-gradient(top, rgba(255,255,255,0.16) 0%, rgba(255,255,255,0.10) 50%, rgba(255,255,255,0.03) 55%, rgba(255,255,255,0) );
   background: -moz-linear-gradient(top, rgba(255,255,255,0.16) 0%, rgba(255,255,255,0.10) 50%, rgba(255,255,255,0.03) 55%, rgba(255,255,255,0) );
   background: -webkit-gradient(linear, left top, left bottom, from( rgba(255,255,255,0.16) ), color-stop(0.50, rgba(255,255,255,0.10) ), color-stop(0.55, rgba(255,255,255,0.03) ), to( rgba(255,255,255,0) ));
+  background: linear-gradient(top, rgba(255,255,255,0.16) 0%, rgba(255,255,255,0.10) 50%, rgba(255,255,255,0.03) 55%, rgba(255,255,255,0) );
+  0.16) ), color-stop(0.50, rgba(255,255,255,0.10) ), color-stop(0.55, rgba(255,255,255,0.03) ), to( rgba(255,255,255,0) ));
+  box-shadow: 0px 1px 1px rgba(000,000,000, 0.4), inset 0px 1px 1px rgba(255,255,255,0.1)
   -moz-box-shadow: 0px 1px 1px rgba(000,000,000, 0.4), inset 0px 1px 1px rgba(255,255,255,0.1);
   -webkit-box-shadow: 0px 1px 1px rgba(000,000,000, 0.4), inset 0px 1px 1px rgba(255,255,255,0.1);
+  position: relative;
+  z-index: 4;
+}
+a#currentusername span {
+  display: inline-block;
+  position: absolute;
+  right: 0px;
+  height: 29px;
+  width: 38px;
+  background-image: url(images/login_arrow.png);
+}
+#currentuser.active #currentusername {
+  -pie-background: linear-gradient(top, rgb(96,96,97) 0%, rgb(68,68,69) 50%, rgb(56,56,57) 55%, rgb(51,51,51) );
+  background: -moz-linear-gradient(top, rgb(96,96,97) 0%, rgb(68,68,69) 50%, rgb(56,56,57) 55%, rgb(51,51,51) );
+  background: -webkit-gradient(linear, left top, left bottom, from( rgb(96,96,97) ), color-stop(0.50, rgb(68,68,69) ), color-stop(0.55, rgb(56,56,57) ), to( rgb(51,51,51) ));
+  background: linear-gradient(top, rgb(96,96,97) 0%, rgb(68,68,69) 50%, rgb(56,56,57) 55%, rgb(51,51,51) );
+  box-shadow: 0px 1px 1px #484848, inset 0px 1px 1px rgba(255,255,255,0.1);
+  -moz-box-shadow: 0px 1px 1px #484848, inset 0px 1px 1px rgba(255,255,255,0.1);
+  -webkit-box-shadow: 0px 1px 1px #484848, inset 0px 1px 1px rgba(255,255,255,0.1);
+}
+#currentuser.active #currentusermenu {
+  display: inline-block;
 }
 #currentusermenu {
+  display: none;
+  margin-top: -5px;
+  padding-top: 10px;
+  text-align: left;
+  width: 100%;
   position: absolute;
+  right: 0px;
+  top: 30px;
+  background-color: #333333;
+  background-color: rgba(51,51,51,0.9);
+  border: 1px solid #666;
+  border: 1px solid rgba(000,000,000,0.5);
+  border-top: 0;
+  border-bottom-left-radius: 5px;
+  border-bottom-right-radius: 5px;
+  -webkit-border-bottom-left-radius: 5px;
+  -webkit-border-bottom-right-radius: 5px;
+  -moz-border-radius-bottom-left: 5px;
+  -moz-border-radius-bottom-right: 5px;
+  z-index: 3;
 }
+#currentusermenu .title {
+  color: #999999;
+  font-size: 10px;
+  font-style: italic;
+  padding-left: 20px;
+}
+#currentusermenu ul {
+  margin: 0;
+  padding: 0;
+  list-style-type: none;
+}
+#currentusermenu .title, #currentusermenu li {
+  margin-bottom: 5px;
+}
+#currentusermenu li:hover {
+  background-color: #666;
+  background-color: rgba(000,000,000,0.5);
+  box-shadow: inset 0px 1px 5px rgba(000,000,000,0.75);
+  -moz-box-shadow: inset 0px 1px 5px rgba(000,000,000,0.75);
+  -webkit-box-shadow: inset 0px 1px 5px rgba(000,000,000,0.75);
+}
+#currentusermenu li a {
+  padding: 2px 0px 3px 20px;
+  color: #cccccc;
+  display: inline-block;
+  width: 100%;
+  box-sizing: border-box;
+  -moz-box-sizing: border-box;
+  -webkit-box-sizing: border-box;
+}
+#currentusermenu li:hover a {
+  color: #fff;
+  text-decoration: none;
+  background-image: url(images/arrow_right_white.png);
+  background-repeat: no-repeat;
+  background-position: 4px 50%;
+}
+#currentusermenu .hr {
+  display: inline-block;
+  width: 100%;
+  height: 1px;
+  background-color: #333;
+  border-bottom: 1px solid #585858;
+}
+/* headermenu */
 #headermenu ul {
   list-style-type: none;
   margin: 0;
@@ -422,8 +541,8 @@ textarea {
 }
 #headermenu a {
   display: inline-block;
-  height: 50px;
-  padding: 20px 10px 0px 10px;
+  height: 38px;
+  padding: 11px 10px 0px 10px;
   font-size: 16px;
   font-weight: bold;
   margin-right: 30px;
@@ -432,9 +551,10 @@ textarea {
   color: #fff;
   text-decoration: none;
 }
+/* headersearch */
 #headersearch {
   position: relative;
-  margin: 20px 0px 0px 20px;
+  margin: 7px 0px 0px 20px;
 }
 #headersearch form {
   display: inline-block;
@@ -473,14 +593,19 @@ textarea {
   border-radius: 5px;
   -moz-border-radius: 5px;
   -webkit-border-radius: 5px;
+  -pie-background: linear-gradient(top, #3d3d3d 0%, #313131 47%, #2b2b2b 50%, #2d2d32);
   background: -moz-linear-gradient(top, #3d3d3d 0%, #313131 47%, #2b2b2b 50%, #2d2d32);
   background: -webkit-gradient(linear, left top, left bottom, from(#3d3d3d), color-stop(0.47, #313131), color-stop(0.50, #2b2b2b), to(#2d2d32));
+  background: linear-gradient(top, #3d3d3d 0%, #313131 47%, #2b2b2b 50%, #2d2d32);
+  box-shadow: 0px 1px 3px rgb(000,000,000), inset 0px 1px 1px rgba(255,255,255,0.53);
   -moz-box-shadow: 0px 1px 3px rgb(000,000,000), inset 0px 1px 1px rgba(255,255,255,0.53);
   -webkit-box-shadow: 0px 1px 3px rgb(000,000,000), inset 0px 1px 1px rgba(255,255,255,0.23);
 }
 #header .submitbutton:active {
+  -pie-background: linear-gradient(top, #3d3d3d 0%, #313131 47%, #2b2b2b 50%, #2d2d32);
   background: -moz-linear-gradient(top, #3d3d3d 0%, #313131 47%, #2b2b2b 50%, #2d2d32);
   background: -webkit-gradient(linear, left top, left bottom, from(#2d2d32), color-stop(0.47, #2b2b2b), color-stop(0.50, #313131), to(#3d3d3d));
+  background: linear-gradient(top, #3d3d3d 0%, #313131 47%, #2b2b2b 50%, #2d2d32);
 }
 #headersearch .inputtext {
   width: 140px;
@@ -515,7 +640,9 @@ textarea {
   float: left;
   width: 100%;
   min-width: 950px;
-  background-color: #2e2e33;
+  background-image: url(images/bg_dotted.png), url(images/footer_bg.jpg);
+  background-position: 50% top;
+  /*background-color: #2e2e33;*/
   height: 180px;
   margin-top: -180px;
   z-index: 1;
@@ -570,10 +697,7 @@ textarea {
 /* timeline */
 .timeline {
   width: 950px;
-  border: 1px solid #1f1f1f;
-  -webkit-border-radius: 5px;
-  -moz-border-radius: 5px;
-  border-radius: 5px;
+  border: 1px solid #21abf0;
   margin-bottom: 20px;
   clear: both;
   height: 40px;
@@ -605,7 +729,7 @@ textarea {
   font-size: 15px;
 }
 .timeline li.active {
-  background-color: #1f1f1f;
+  background-color: #21abf0;
   background-image: url(images/timeline_bg_activeleft.png);
 }
 .timeline li.active a {

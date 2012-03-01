@@ -9,13 +9,13 @@
       
       <div class="timeline">
         <ul>
-          <li class="active">
+          <li>
             <a href="{$language}/recordings/modifybasics/">step1</a>
           </li>
           <li>
             <a href="{$language}/recordings/modifyclassification/">step2</a>
           </li>
-          <li>
+          <li class="active">
             <a href="{$language}/recordings/modifydescription/">step3</a>
           </li>
           <li>

@@ -10,6 +10,10 @@ $j(document).ready(function() {
   
   $j('#scriptingcontainer').show();
   
+  $j('#currentusername').live('click', function( e ) {
+    e.preventDefault();
+    $j('#currentuser').toggleClass('active');
+  });
 });
 
 function setupVideoUpload() {

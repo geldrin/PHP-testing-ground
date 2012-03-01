@@ -12,7 +12,7 @@
   <link rel="StyleSheet" type="text/css" href="{$STATIC_URI}css/style{$VERSION}.css" media="screen"/>
   {/csscombine}
   
-  <!--[if lte IE 7]>
+  <!--[if lte IE 8]>
   <link rel="StyleSheet" type="text/css" href="{$STATIC_URI}css/style_ie{$VERSION}.css" />
   <![endif]-->
   
@@ -36,31 +36,32 @@
 {if $browserInfo.obsolete}
   <a class="openinlayer" target="_blank" href="{$BASE_URI}{$language}/tools/updateyourbrowser" id="browserAlert">{l key=sitewide_updateyourbrowser}</a>
 {/if}
-
+<div id="headerbg"></div>
 <div id="pagecontainer">
   <div id="wrap">
     <div id="header">
-      
-      {include file="Visitor/_login.tpl"}
-      
-      <div id="headerlogo">
-        <a href="{$BASE_URI}" title="{l key=sitename escape=html}"><span></span>{l key=sitename escape=html}</a>
-      </div>
-      
-      <div id="headersearch" class="rightbox">
+      <div id="headertop">
+        {include file="Visitor/_login.tpl"}
         
-        <form action="#" method="get">
-          <input id="headersearchsubmit" type="image" src="{$STATIC_URI}images/header_searchimage.png"/>
-          <input class="inputtext inputbackground" type="text" name="q" value="{l key=sitewide_search_input}"/>
-        </form>
-        
-        <div id="languageselector" class="inputbackground right">
-          <a href="#" class="hu">HU</a>
+        <div id="headerlogo">
+          <a href="{$BASE_URI}" title="{l key=sitename escape=html}"><span></span>{l key=sitename escape=html}</a>
         </div>
       </div>
-      
+      <div id="headerbottom">
+        <div id="headersearch" class="rightbox">
+          
+          <form action="#" method="get">
+            <input id="headersearchsubmit" type="image" src="{$STATIC_URI}images/header_searchimage.png"/>
+            <input class="inputtext inputbackground" type="text" name="q" value="{l key=sitewide_search_input}"/>
+          </form>
+          
+          <div id="languageselector" class="inputbackground right">
+            <a href="#" class="hu">HU</a>
+          </div>
+        </div>
+        
       {include file="Visitor/_menu.tpl"}
-      
+      </div>
     </div>
     
     {include file="Visitor/_message.tpl" message="Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas."}

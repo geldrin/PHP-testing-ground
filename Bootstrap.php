@@ -372,7 +372,7 @@ class Bootstrap {
   public function getSession( $namespace = 'default' ) {
     
     $this->setupSession();
-    $this->setupOrganization(); // TODO parentidvel mit kezdjunk
+    $this->setupOrganization();
     $basenamespace = $this->config['siteid'] . $this->organization->id;
     return new Springboard\Session( $basenamespace, $namespace );
     
