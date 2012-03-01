@@ -56,7 +56,11 @@
           </form>
           
           <div id="languageselector" class="inputbackground right">
-            <a href="#" class="hu">HU</a>
+            <a href="#" class="hu active">HU<span></span></a>
+            <div id="languages">
+              <a href="#" class="en">EN</a>
+              <a href="#" class="de">DE</a>
+            </div>
           </div>
         </div>
         

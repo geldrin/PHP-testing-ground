@@ -14,6 +14,12 @@ $j(document).ready(function() {
     e.preventDefault();
     $j('#currentuser').toggleClass('active');
   });
+  
+  $j('#languageselector a.active').live('click', function( e ) {
+    e.preventDefault();
+    $j('#languageselector').toggleClass('active');
+  });
+  
 });
 
 function setupVideoUpload() {
