@@ -202,6 +202,7 @@ textarea {
 /* form help */
 .help {
   color: #666;
+  margin-top: 10px;
 }
 .help.small {
   width: 305px;
