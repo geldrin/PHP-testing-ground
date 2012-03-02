@@ -10,7 +10,7 @@
           <ul>
             <li><a href="{$language}/users/welcome">{l key=usermenu_users_welcome}</a></li>
             <li><a href="{$language}/users/modify">{l key=usermenu_users_modify}</a></li>
-            <li><a href="{$language}/users/listing">{l key=usermenu_users_listing}</a></li>
+            <li><a href="{$language}/users/admin">{l key=usermenu_users_listing}</a></li>
           </ul>
           <div class="hr"></div>
           <span class="title">{l key=usermenu_recordings_title}</span>
