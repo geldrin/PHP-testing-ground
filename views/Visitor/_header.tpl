@@ -50,9 +50,10 @@
       <div id="headerbottom">
         <div id="headersearch" class="rightbox">
           
-          <form action="#" method="get">
+          <form action="{$language}/search/all" method="get">
+            {l key=sitewide_search_input assign=searchinput}
             <input id="headersearchsubmit" type="image" src="{$STATIC_URI}images/header_searchimage.png"/>
-            <input class="inputtext inputbackground" type="text" name="q" value="{l key=sitewide_search_input}"/>
+            <input class="inputtext inputbackground clearonclick" type="text" name="q" data-origval="{$searchinput|escape:html}" value="{$searchinput|escape:html}"/>
           </form>
           
           <div id="languageselector" class="inputbackground right">
@@ -67,8 +68,6 @@
       {include file="Visitor/_menu.tpl"}
       </div>
     </div>
-    
-    {include file="Visitor/_message.tpl" message="Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas."}
     
     {if $sessionmessage and !$skipsessionmessage}
       {include file="Visitor/_message.tpl" message=$sessionmessage}

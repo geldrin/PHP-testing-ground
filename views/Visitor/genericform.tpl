@@ -1,5 +1,9 @@
 {include file="Visitor/_header.tpl"}
 
+{if $insertbefore}
+  {include file=$insertbefore}
+{/if}
+
 <div class="form {$formclass|default:"halfbox left"}">
 {$form}
 </div>

@@ -3,11 +3,11 @@ namespace Visitor\Genres;
 
 class Controller extends \Visitor\Controller {
   public $permissions = array(
-    'index'               => 'public',
-    'details'             => 'public',
-    'create'              => 'admin',
-    'modify'              => 'admin',
-    'delete'              => 'admin',
+    'details' => 'public',
+    'create'  => 'admin',
+    'modify'  => 'admin',
+    'delete'  => 'admin',
+    'admin'   => 'admin',
   );
   
   public $forms = array(
@@ -16,8 +16,8 @@ class Controller extends \Visitor\Controller {
   );
   
   public $paging = array(
-    'index'          => 'Visitor\\Genres\\Paging\\Index',
-    'details'        => 'Visitor\\Genres\\Paging\\Details',
+    'admin'   => 'Visitor\\Genres\\Paging\\Admin',
+    'details' => 'Visitor\\Genres\\Paging\\Details',
   );
   
   public function deleteAction() {

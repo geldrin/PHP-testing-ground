@@ -3,16 +3,17 @@
       <a href="{$language}/recordings/details/{$item.id},{$item.title|filenameize}"><span class="playpic"></span><img src="{$item|@indexphoto}"/></a>
     </div>
     <div class="recordingcontent">
-      <h1><a href="{$language}/recordings/details/{$item.id},{$item.title|filenameize}">{$item.title|escape:html}</a></h1>
-      {if $item.subtitle}<h2>{$item.subtitle|escape:html}</h2>{/if}
-      
+      <div class="title">
+        <h3><a href="{$language}/recordings/details/{$item.id},{$item.title|filenameize}">{$item.title|escape:html}</a></h3>
+        {if $item.subtitle}<h4>{$item.subtitle|escape:html}</h4>{/if}
+      </div>
       <div class="recordinginfo">
         <ul>
-          <li><span class="bold">{l module=recordings key=recordedtimestamp}:</span> <span>{$item.recordedtimestamp}</span></li>
-          <li><span class="bold">{l module=recordings key=recording_views}:</span> <span>{$item.numberofviews}</span></li>
+          <li><span class="bold">{l module=categories key=recordedtimestamp}:</span> <span>{$item.recordedtimestamp}</span></li>
+          <li><span class="bold">{l module=categories key=recording_views}:</span> <span>{$item.numberofviews}</span></li>
           <li>
             <div class="ratewidget" nojs="1">
-              <div class="bold left">{l module=recordings key=recording_rating}:</div>
+              <div class="bold left">{l module=categories key=recording_rating}:</div>
               <ul>
                 <li{if $item.rating > 0} class="full"{/if}><a><span></span>1</a></li>
                 <li{if $item.rating > 1.5} class="full"{/if}><a><span></span>2</a></li>

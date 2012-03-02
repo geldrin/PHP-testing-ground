@@ -13,6 +13,12 @@ $config = Array(
     'value' => $this->application->getNumericParameter('id'),
   ),
   
+  'fs1' => array(
+    'type'   => 'fieldset',
+    'legend' => $l('genres', 'modify_title'),
+    'prefix' => '<span class="legendsubtitle">' . $l('genres', 'modify_subtitle') . '</span>',
+  ),
+  
   'organizationid' => Array(
     'type'     => 'inputHidden',
     'value'    => $organization->id,

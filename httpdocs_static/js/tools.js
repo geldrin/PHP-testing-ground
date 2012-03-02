@@ -10,14 +10,31 @@ $j(document).ready(function() {
   
   $j('#scriptingcontainer').show();
   
-  $j('#currentusername').live('click', function( e ) {
+  $j('#currentusername').on('click', function( e ) {
     e.preventDefault();
     $j('#currentuser').toggleClass('active');
   });
   
-  $j('#languageselector a.active').live('click', function( e ) {
+  $j('#languageselector a.active').on('click', function( e ) {
     e.preventDefault();
     $j('#languageselector').toggleClass('active');
+  });
+  
+  $j('#headerloginactionlink').on('click', function( e ) {
+    e.preventDefault();
+    $j('#headerloginform, #headerloginactions').toggle();
+  });
+  
+  $j('.clearonclick').on('focusin', function() {
+    
+    if ( $j(this).val() == $j(this).attr('data-origval') )
+      $j(this).val('');
+    
+  }).on('focusout', function() {
+    
+    if ( !$j(this).val() )
+      $j(this).val( $j(this).attr('data-origval') );
+    
   });
   
 });

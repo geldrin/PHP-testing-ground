@@ -1,13 +1,17 @@
 <?php
 namespace Visitor\Users\Paging;
 
-class Listing extends \Springboard\Controller\Paging {
+class Admin extends \Springboard\Controller\Paging {
   protected $orderkey = 'creation_desc';
   protected $sort = array(
     'creation'      => 'id',
     'creation_desc' => 'id DESC',
   );
-  protected $template = 'Visitor/Users/Paging/Listing.tpl';
+  protected $insertbefore = Array( 'Visitor/Users/Paging/AdminBefore.tpl' );
+  protected $template = 'Visitor/Users/Paging/Admin.tpl';
+  protected $toSmarty = Array(
+    'listclass' => 'treeadminlist',
+  );
   protected $usersModel;
   
   public function init() {

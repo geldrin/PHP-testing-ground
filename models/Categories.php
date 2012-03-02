@@ -11,10 +11,10 @@ class Categories extends \Springboard\Model\Multilingual {
     
     $currentlevel++;
     $this->clearFilter();
-    $this->addFilter('parentid',       $parentid );
-    $this->addFilter('organizationid', $organizationid );
+    $this->addFilter('parentid',       $parentid, true, true, 'parentid' );
+    $this->addFilter('organizationid', $organizationid, true, true, 'organizationid' );
     
-    $items = $this->getArray();
+    $items = $this->getArray( false, false, false, 'weight, s1.value');
     
     foreach( $items as $key => $value )
       $items[ $key ]['children'] = $this->getCategoryTree(

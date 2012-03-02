@@ -6,13 +6,13 @@
 <div class="sorter">
   <ul>
     <li>
-      <h2><a href="{$language}/{$module}/details/{$category.id},{$category.name|filenameize}?order=timestamp">{l module=categories key=timestamp assign=timestamp}{$timestamp|sortarrows:null:timestamp:$order}</a></h2>
+      <h3><a href="{$language}/{$module}/details/{$category.id},{$category.name|filenameize}?order=timestamp">{l module=categories key=timestamp assign=timestamp}{$timestamp|sortarrows:null:timestamp:$order}</a></h3>
       <ul>
         <li><a href="{$language}/{$module}/details/{$category.id},{$category.name|filenameize}?order=timestamp_desc">{l module=categories key=timestamp_desc assign=timestamp_desc}{$timestamp_desc|sortarrows:null:timestamp_desc:$order}</a></li>
       </ul>
     </li>
     <li>
-      <h2><a href="{$language}/{$module}/details/{$category.id},{$category.name|filenameize}?order=views">{l module=categories key=views assign=views}{$views|sortarrows:null:views:$order}</a></h2>
+      <h3><a href="{$language}/{$module}/details/{$category.id},{$category.name|filenameize}?order=views">{l module=categories key=views assign=views}{$views|sortarrows:null:views:$order}</a></h3>
       <ul>
         <li>
           <a href="{$language}/{$module}/details/{$category.id},{$category.name|filenameize}?order=views_desc">
@@ -42,10 +42,7 @@
       </ul>
     </li>
     <li>
-      <h2>
-        <a href="{$language}/{$module}/details/{$category.id},{$category.name|filenameize}?order=comments">
-          {l module=categories key=comments assign=comments}{$comments|sortarrows:null:comments:$order}</a>
-      </h2>
+      <h3><a href="{$language}/{$module}/details/{$category.id},{$category.name|filenameize}?order=comments">{l module=categories key=comments assign=comments}{$comments|sortarrows:null:comments:$order}</a></h3>
       <ul>
         <li>
           <a href="{$language}/{$module}/details/{$category.id},{$category.name|filenameize}?order=comments_desc">
@@ -55,10 +52,7 @@
       </ul>
     </li>
     <li>
-      <h2>
-        <a href="{$language}/{$module}/details/{$category.id},{$category.name|filenameize}?order=rating">
-        {l module=categories key=rating assign=rating}{$rating|sortarrows:null:rating:$order}</a>
-      </h2>
+      <h3><a href="{$language}/{$module}/details/{$category.id},{$category.name|filenameize}?order=rating">{l module=categories key=rating assign=rating}{$rating|sortarrows:null:rating:$order}</a></h3>
       <ul>
         <li>
           <a href="{$language}/{$module}/details/{$category.id},{$category.name|filenameize}?order=rating_desc">

@@ -14,6 +14,12 @@ $config = Array(
     'readonly' => true,
   ),
   
+  'fs1' => array(
+    'type'   => 'fieldset',
+    'legend' => $l('genres', 'create_title'),
+    'prefix' => '<span class="legendsubtitle">' . $l('genres', 'create_subtitle') . '</span>',
+  ),
+  
   'name_stringid' => Array(
     'displayname' => $l('genres', 'name'),
     'type'        => 'inputTextMultilanguage',

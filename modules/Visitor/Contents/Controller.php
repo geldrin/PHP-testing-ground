@@ -11,8 +11,12 @@ class Controller extends \Springboard\Controller\Visitor {
     
     $content = $contentsModel->getContent( $this->action, $language );
     
-    if ( empty( $content ) )
+    if ( empty( $content ) ) {
+      
+      $smarty->assign('action',  $this->action );
       $content = $contentsModel->getContent( 'http404', $language );
+      
+    }
     
     if ( !headers_sent() ) {
       

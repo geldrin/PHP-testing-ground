@@ -9,8 +9,8 @@
   
   <li{if $smarty.foreach.category.last} class="last"{/if}>
     <div class="categoryname">
-      <a href="{$language}/categories/details/{$category.id},{$category.name|filenameize}" title="{$category.name|escape:html}"><h1>{$category.name|escape:html}</h1></a>
-      <div class="numberofrecordings">({$category.numberofrecordings})</div>
+      <a href="{$language}/categories/details/{$category.id},{$category.name|filenameize}" title="{$category.name|escape:html}"><h2>{$category.name|escape:html}</h2></a>
+      <div class="numberofrecordings">({$category.numberofrecordings|default:0})</div>
       
       <a href="{$language}/categories/details/{$category.id},{$category.name|filenameize}" class="categorypic"><img src="{$STATIC_URI}categories/{$category.id}.png" width="140" height="100"/></a>
     </div>

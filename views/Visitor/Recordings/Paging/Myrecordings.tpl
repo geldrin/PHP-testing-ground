@@ -1,15 +1,17 @@
-  <li>
+  <li class="listitem">
     <a name="rec{$item.id}"></a>
     <div class="recordingpic">
       <a href="{$language}/recordings/details/{$item.id},{$item.title|filenameize}"><span class="playpic"></span><img src="{$item|@indexphoto}"/></a>
     </div>
     
     <div class="recordingcontent">
-      {if preg_match( '/^onstorage$|^failed.*$/', $item.status )}
-        <a href="{$language}/recordings/delete/{$item.id}?forward={$FULL_URI|escape:url}" title="{l module=recordings key=deleterecording}" class="confirm button buttonsmall right">{l module=recordings key=delete}</a>
-      {/if}
-      <h1><a href="{$language}/recordings/details/{$item.id},{$item.title|filenameize}">{$item.title|escape:html}</a></h1>
-      <h2>{$item.subtitle|escape:html}</h2>
+      <div class="title">
+        {if 0 and preg_match( '/^onstorage$|^failed.*$/', $item.status )}
+          <a href="{$language}/recordings/delete/{$item.id}?forward={$FULL_URI|escape:url}" title="{l module=recordings key=deleterecording}" class="confirm right">{l module=recordings key=delete}</a>
+        {/if}
+        <h3><a href="{$language}/recordings/details/{$item.id},{$item.title|filenameize}">{$item.title|escape:html}</a></h3>
+        {if $item.subtitle|stringempty}<h4>{$item.subtitle|escape:html}</h4>{/if}
+      </div>
       {if !$item.ispublished and $item.status == 'onstorage'}
         <span class="notpublished"><a href="{$language}/recordings/modifysharing/{$item.id}?forward={$FULL_URI|escape:url}">{l module=recordings key=notpublished_warning}</a></span>
       {/if}
@@ -24,7 +26,7 @@
           </li>
           <li><span class="bold">{l module=recordings key=recording_views}:</span> <span>{$item.numberofviews}</span></li>
           <li>
-            <div class="ratewidget" nojs="1">
+            <div class="ratewidget" data-nojs="1">
               <div class="bold left">{l module=recordings key=recording_rating}:</div>
               <ul>
                 <li{if $item.rating > 0} class="full"{/if}><a><span></span>1</a></li>
@@ -50,16 +52,18 @@
           {/if}
         </ul>
       </div>
-      {else}
-      <div class="clear"></div>
       {/if}
       {if $item.contentstatus}
-        <br/>
-        <span class="bold">{l module=recordings key=contentrecording_status}:</span>
-        <span class="status-{$item.status}">{l lov=recordingstatus key=$item.contentstatus}</span>
-        {if $item.contentstatus == 'onstorage' or preg_match( '/^onstorage$|^failed.*$/', $item.contentstatus )}
-          <a href="{$language}/recordings/deletecontent/{$item.id}?forward={$FULL_URI|escape:url}" class="confirm delete">{l module=recordings key=deletecontent}</a>
-        {/if}
+        <div class="recordinginfo recordingcontentinfo">
+          <ul>
+            <li><span class="bold">{l module=recordings key=contentrecording_status}:</span>
+            <span class="status-{$item.status}">{l lov=recordingstatus key=$item.contentstatus}</span>
+            {if $item.contentstatus == 'onstorage' or preg_match( '/^onstorage$|^failed.*$/', $item.contentstatus )}
+              <a href="{$language}/recordings/deletecontent/{$item.id}?forward={$FULL_URI|escape:url}" class="confirm delete">{l module=recordings key=deletecontent}</a>
+            {/if}
+            </li>
+          </ul>
+        </div>
       {/if}
       <div class="clear"></div>
     </div>

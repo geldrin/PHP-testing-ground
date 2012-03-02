@@ -15,7 +15,7 @@ class Controller extends \Visitor\Controller {
     'invite'         => 'admin',
     'validateinvite' => 'public',
     'disable'        => 'admin',
-    'listing'        => 'admin',
+    'admin'          => 'admin',
   );
   
   public $forms = array(
@@ -28,7 +28,7 @@ class Controller extends \Visitor\Controller {
   );
   
   public $paging = array(
-    'listing' => 'Visitor\\Users\\Paging\\Listing',
+    'admin' => 'Visitor\\Users\\Paging\\Admin',
   );
   
   public function indexAction() {

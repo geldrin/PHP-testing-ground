@@ -7,8 +7,11 @@ class Admin extends \Springboard\Controller\Paging {
     'creation'      => 'id',
     'creation_desc' => 'id DESC',
   );
+  protected $insertbefore = Array( 'Visitor/Categories/Paging/AdminBefore.tpl' );
   protected $template = 'Visitor/Categories/Paging/Admin.tpl';
-  protected $categoryModel;
+  protected $toSmarty = Array(
+    'listclass' => 'treeadminlist',
+  );
   
   public function init() {
     $this->foreachelse = 'No categories found';
@@ -16,16 +19,16 @@ class Admin extends \Springboard\Controller\Paging {
   }
   
   protected function setupCount() {
-    // TODO tree listaban a kategoriak
-    $organization = $this->bootstrap->getOrganization();
-    $this->categoryModel = $this->bootstrap->getModel('categories');
-    $this->categoryModel->addFilter('organizationid', $organization->id );
-    return $this->itemcount = $this->categoryModel->getCount();
+    
+    return $this->itemcount = 1;
     
   }
   
   protected function getItems( $start, $limit, $orderby ) {
-    return $this->categoryModel->getArray( $start, $limit, false, $orderby );
+    $organization = $this->bootstrap->getOrganization();
+    $categoryModel = $this->bootstrap->getModel('categories');
+    $items = $categoryModel->getCategoryTree( $organization->id, 0, 8 );
+    return $items;
   }
   
 }

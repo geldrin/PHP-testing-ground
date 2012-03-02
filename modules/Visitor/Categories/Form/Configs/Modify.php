@@ -19,6 +19,12 @@ $config = Array(
     'readonly' => true,
   ),
   
+  'fs1' => array(
+    'type'   => 'fieldset',
+    'legend' => $l('categories', 'modify_title'),
+    'prefix' => '<span class="legendsubtitle">' . $l('categories', 'modify_subtitle') . '</span>',
+  ),
+  
   'name_stringid' => Array(
     'displayname' => $l('categories', 'name'),
     'type'        => 'inputTextMultilanguage',

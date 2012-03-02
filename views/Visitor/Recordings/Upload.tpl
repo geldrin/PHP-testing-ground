@@ -3,7 +3,7 @@
 <script type="text/javascript" src="{$STATIC_URI}js/swfobject.full{$VERSION}.js"></script>
 <script type="text/javascript" src="{$STATIC_URI}js/swfupload220/swfupload{$VERSION}.js"></script>
 
-<div id="videoupload" class="leftdoublebox">
+<div id="videoupload" class="leftdoublebox form">
   <noscript id="noscriptcontainer">
     <div class="formerrors">
       <br />

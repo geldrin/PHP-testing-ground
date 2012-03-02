@@ -4,7 +4,7 @@
 </div>
 
 {if !$nosearch}
-<div id="myrecordingsquicksearch">
+<div id="myrecordingsquicksearch" class="form">
   <form method="GET" action="{$language}/recordings/myrecordings">
     <input type="hidden" name="order" value="{$order|escape:html}"/>
     <input type="hidden" name="start" value="0"/>
@@ -41,7 +41,7 @@
       </div>
     </div>
     <div class="submitwrap">
-      <input type="submit" value="{l module=recordings key=myrecordings_filter}"/>
+      <input class="submitbutton" type="submit" value="{l module=recordings key=myrecordings_filter}"/>
     </div>
   </form>
 </div>
@@ -51,13 +51,13 @@
 <div class="sorter">
   <ul>
     <li>
-      <h2><a href="{$language}/{$module}/myrecordings?order=timestamp&start={$smarty.get.start|escape:uri}&perpage={$smarty.get.perpage|escape:uri}&myrecordingsq={$smarty.get.myrecordingsq|escape:uri}&status={$smarty.get.status|escape:uri}&publishstatus={$smarty.get.publishstatus|escape:uri}&publicstatus={$smarty.get.publicstatus|escape:uri}">{l module=recordings key=myrecordings_timestamp assign=timestamp}{$timestamp|sortarrows:null:timestamp:$order}</a></h2>
+      <h3><a href="{$language}/{$module}/myrecordings?order=timestamp&start={$smarty.get.start|escape:uri}&perpage={$smarty.get.perpage|escape:uri}&myrecordingsq={$smarty.get.myrecordingsq|escape:uri}&status={$smarty.get.status|escape:uri}&publishstatus={$smarty.get.publishstatus|escape:uri}&publicstatus={$smarty.get.publicstatus|escape:uri}">{l module=recordings key=myrecordings_timestamp assign=timestamp}{$timestamp|sortarrows:null:timestamp:$order}</a></h3>
       <ul>
         <li><a href="{$language}/{$module}/myrecordings?order=timestamp_desc&start={$smarty.get.start|escape:uri}&perpage={$smarty.get.perpage|escape:uri}&myrecordingsq={$smarty.get.myrecordingsq|escape:uri}&status={$smarty.get.status|escape:uri}&publishstatus={$smarty.get.publishstatus|escape:uri}&publicstatus={$smarty.get.publicstatus|escape:uri}">{l module=recordings key=myrecordings_timestamp_desc assign=timestamp_desc}{$timestamp_desc|sortarrows:null:timestamp_desc:$order}</a></li>
       </ul>
     </li>
     <li>
-      <h2><a href="{$language}/{$module}/myrecordings?order=recordedtimestamp&&start={$smarty.get.start|escape:uri}&perpage={$smarty.get.perpage|escape:uri}&myrecordingsq={$smarty.get.myrecordingsq|escape:uri}&status={$smarty.get.status|escape:uri}&publishstatus={$smarty.get.publishstatus|escape:uri}&publicstatus={$smarty.get.publicstatus|escape:uri}">{l module=recordings key=myrecordings_recordedtimestamp assign=recordedtimestamp}{$recordedtimestamp|sortarrows:null:recordedtimestamp:$order}</a></h2>
+      <h3><a href="{$language}/{$module}/myrecordings?order=recordedtimestamp&&start={$smarty.get.start|escape:uri}&perpage={$smarty.get.perpage|escape:uri}&myrecordingsq={$smarty.get.myrecordingsq|escape:uri}&status={$smarty.get.status|escape:uri}&publishstatus={$smarty.get.publishstatus|escape:uri}&publicstatus={$smarty.get.publicstatus|escape:uri}">{l module=recordings key=myrecordings_recordedtimestamp assign=recordedtimestamp}{$recordedtimestamp|sortarrows:null:recordedtimestamp:$order}</a></h3>
       <ul>
         <li>
           <a href="{$language}/{$module}/myrecordings?order=recordedtimestamp_desc&&start={$smarty.get.start|escape:uri}&perpage={$smarty.get.perpage|escape:uri}&myrecordingsq={$smarty.get.myrecordingsq|escape:uri}&status={$smarty.get.status|escape:uri}&publishstatus={$smarty.get.publishstatus|escape:uri}&publicstatus={$smarty.get.publicstatus|escape:uri}">
