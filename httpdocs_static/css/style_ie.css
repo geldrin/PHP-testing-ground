@@ -1,0 +1,11 @@
+.submitbutton, a#currentusername {
+  behaviour: url(css/PIE.htc);
+}
+#headerbg {
+  background-image: url(../images/header_bg_allinone.jpg);
+  
+}
+#footerbg {
+  background-image: url(../images/footer_bg_allinone.jpg);
+  
+}
