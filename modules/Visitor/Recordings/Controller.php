@@ -93,17 +93,19 @@ class Controller extends \Visitor\Controller {
     
     $smarty  = $this->bootstrap->getSmarty();
     $user    = $this->bootstrap->getUser();
-    $session = $this->bootstrap->getSession('rating');
+    $rating  = $this->bootstrap->getSession('rating');
     
     if ( ( $access = $recordingsModel->userHasAccess( $user ) ) !== true )
       $this->redirectToController('contents', $access );
     
     // TODO relatedvideos, json generalast smarty pluginba, magat a tomb generalast a modelbe
     // ugyanez slidokra
+    $smarty->assign('recording',    $recordingsModel->row );
+    $smarty->assign('flashdata',    $recordingsModel->getFlashData() );
     $smarty->assign('comments',     $recordingsModel->getComments() );
     $smarty->assign('commentcount', $recordingsModel->getCommentsCount() );
+    $smarty->assign('canrate',      $rating[ $recordingsModel->id ] );
     
-    $smarty->assign('canrate',  $session[ $recordingsModel->id ] );
     $this->output( $smarty->fetch('Visitor/Recordings/Details.tpl') );
     
   }

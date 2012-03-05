@@ -414,3 +414,13 @@ function formatBytes( baseNumber ) {
 function formatPercent( baseNumber ) {
   return baseNumber.toFixed(2) + " %";
 }
+
+// FLASHDEFAULTS
+var flashdefaults = {
+  params: {
+    quality: "high",
+    bgcolor: "#000",
+    allowscriptaccess: "sameDomain",
+    allowfullscreen: "true"
+  }
+}

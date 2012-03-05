@@ -6,7 +6,10 @@ class Newcomment extends \Visitor\Form {
   public $recordingsModel;
   
   public function init() {
-    $this->recordingsModel = $this->controller->modelIDCheck('recordings');
+    $this->recordingsModel = $this->controller->modelIDCheck(
+      'recordings',
+      $this->application->getNumericParameter('id')
+    );
   }
   
   public function onComplete() {

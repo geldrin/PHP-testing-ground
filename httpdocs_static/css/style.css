@@ -622,6 +622,19 @@ a#currentusername span {
 #headersearch form {
   display: inline-block;
 }
+#headersearcharrow {
+  display: inline-block;
+  position: absolute;
+  top: 6px;
+  left: 185px;
+  width: 25px;
+  height: 18px;
+  border-left: 1px solid #010101;
+  background-image: url(images/arrow_down.png);
+  background-repeat: no-repeat;
+  background-position: 5px 4px;
+}
+
 #languageselector {
   width: 81px;
   height: 26px;
@@ -1248,4 +1261,9 @@ a#currentusername span {
 .treeadminlist.children h3 {
   font-weight: normal;
   font-size: 13px;
+}
+
+#playercontainer {
+  width: 950px;
+  height: 530px;
 }

@@ -1118,6 +1118,127 @@ class Recordings extends \Springboard\Model {
     
   }
   
+  public function getFlashData() {
+    
+    $this->ensureObjectLoaded();
+    $scheme  = ( SSL? 'https://': 'http://' );
+    $baseuri = $scheme . $this->bootstrap->config['baseuri'];
+    $recordingbaseuri = $baseuri . \Springboard\Language::get() . '/recordings/';
+    
+    $data = array(
+      'language'  => \Springboard\Language::get(),
+      'media'     => array(
+        'servers'       => array(
+          $this->bootstrap->config['wowza']['rtmpurl'],
+          $this->bootstrap->config['wowza']['rtmpturl'],
+        ),
+      ),
+      'share'     => array(
+        'recordingURL'  =>
+          $recordingbaseuri . 'details/' . $this->id . ',' .
+          \Springboard\Filesystem::filenameize( $this->row['title'] )
+        ,
+        'quickEmbed'    => $baseuri . 'embed/' . $this->id . '.js',
+      ),
+      'track'     => array(
+        'firstPlay'     => $recordingbaseuri . 'track/' . $this->id,
+      ),
+      'recording' => array(
+        'page'          => $baseuri,
+        'duration'      => $this->row['masterlength'],
+        'title'         => $this->row['title'],
+        'subtitle'      => (string)$this->row['subtitle'],
+        'description'   => (string)$this->row['description'],
+        'image'         =>
+          $scheme . $this->bootstrap->config['staticuri'] .
+          'files/recordings/' . \Springboard\Filesystem::getTreeDir( $this->id ) .
+          '/' . $this->row['indexphotofilename']
+        ,
+      ),
+    );
+    
+    $data['media']['streams'] = array(
+      $this->getMediaUrl('default', false ),
+    );
+    
+    if ( $this->row['videoreshq'] )
+      $data['media']['streams'][] = $this->getMediaUrl('default', true );
+    
+    if ( $this->row['contentstatus'] == 'onstorage' ) {
+      
+      $data['media']['secondaryStreams'] = array(
+        $this->getMediaUrl('content', false ),
+      );
+      
+      if ( $this->row['contentvideoreshq'] )
+        $data['media']['secondaryStreams'][] = $this->getMediaUrl('content', true );
+      
+    }
+    
+    return $data;
+    
+  }
+  
+  public function getMediaUrl( $type, $highquality ) {
+    
+    $this->ensureObjectLoaded();
+    
+    $config    = $this->bootstrap->config;
+    $extension = 'mp4';
+    $postfix   = '';
+    $host      = '';
+    $isaudio   = $this->row['mastermediatype'] == 'audio';
+    
+    if ( $highquality and !$isaudio )
+      $postfix = '_hq';
+    
+    if ( $isaudio )
+      $extension = 'mp3';
+    
+    switch( $type ) {
+      
+      case 'mobilehttp':
+        //http://stream.videotorium.hu:1935/vtorium/_definst_/mp4:671/2671/2671_2608_mobile.mp4/playlist.m3u8
+        $host = $config['wowza']['httpurl'];
+        
+        if ( $isaudio )
+          $sprintfterm = '%3$s:%s/%s.%s/playlist.m3u8';
+        else
+          $sprintfterm = '%3$s:%s/%s_mobile' . $postfix . '.%s/playlist.m3u8';
+        
+        break;
+      
+      case 'mobilertsp':
+        //rtsp://stream.videotorium.hu:1935/vtorium/_definst_/mp4:671/2671/2671_2608_mobile.mp4
+        $host = $config['wowza']['rtspurl'];
+        
+        if ( $isaudio )
+          $sprintfterm = '%3$s:%s/%s.%s';
+        else
+          $sprintfterm = '%3$s:%s/%s_mobile' . $postfix . '.%s';
+        
+        break;
+      
+      case 'content':
+        
+        $sprintfterm = '%s/%s_content' . $postfix . '.%s';
+        break;
+      
+      default:
+        
+        $sprintfterm = '%s/%s' . $postfix . '.%s';
+        break;
+      
+    }
+    
+    return $host . sprintf( $sprintfterm,
+      \Springboard\Filesystem::getTreeDir( $this->id ),
+      $this->id,
+      $extension
+    );
+    
+  }
+  
 }
 /*
 

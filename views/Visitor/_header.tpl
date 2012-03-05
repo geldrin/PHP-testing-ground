@@ -54,6 +54,7 @@
             {l key=sitewide_search_input assign=searchinput}
             <input id="headersearchsubmit" type="image" src="{$STATIC_URI}images/header_searchimage.png"/>
             <input class="inputtext inputbackground clearonclick" type="text" name="q" data-origval="{$searchinput|escape:html}" value="{$searchinput|escape:html}"/>
+            <a href="#" id="headersearcharrow"></a>
           </form>
           
           <div id="languageselector" class="inputbackground right">
@@ -65,7 +66,7 @@
           </div>
         </div>
         
-      {include file="Visitor/_menu.tpl"}
+        {include file="Visitor/_menu.tpl"}
       </div>
     </div>
     

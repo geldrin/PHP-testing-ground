@@ -1,13 +1,13 @@
-{include file="Visitor/_header.tpl" title=$recording|@title}
+{include file="Visitor/_header.tpl" title=$recording.title}
 <div class="heading recording">
   {if !$recording.ispublished}
     <center><a href="{$language}/recordings/modifysharing/{$recording.id}">{l module=recordings key=notpublished_warning}</a></center>
     <br/>
   {/if}
-  <h1>{$recording|@title|escape:html}</h1>
+  <h1>{$recording.title|escape:html}</h1>
   
-  {if strlen( $recording.subtitleoriginal ) or strlen( $recording.subtitleenglish )}
-    <h2>{$recording|@title:subtitle|escape:html}</h2>
+  {if $recording.subtitle|stringempty}
+    <h2>{$recording.subtitle|escape:html}</h2>
   {/if}
   
   <div class="ratewidget"{if $canrate} nojs="1"{/if}>
@@ -24,11 +24,14 @@
 </div>
 
 <div class="player">
-  <div id="playercontainer{if $wantaudioplayer}audio{/if}">{l module=recordings key=noflash}</div>
+<script type="text/javascript">
+swfobject.embedSWF('flash/TCPlayer{$VERSION}.swf', 'playercontainer{if $recording.mediatype == 'audio'}audio{if isset( $flashdata.subtitle_files )}subtitle{/if}{/if}', '950', '{if $recording.mediatype == 'audio' and isset( $flashdata.subtitle_files )}140{elseif $recording.mediatype == 'audio'}60{else}530{/if}', '11.1.0', 'flash/swfobject/expressInstall.swf', {$flashdata|@jsonescape}, flashdefaults.params );
+</script>
+  <div id="playercontainer{if $recording.mediatype == 'audio'}audio{/if}">{l module=recordings key=noflash}</div>
 </div>
 
 <div id="description">
-  
+  {*}
     <ul id="detailmenu">
       <li class="active"><a href="#">{l module=recordings key=details_basics}</a></li>
       <li><a href="#">{l module=recordings key=details_contributors}</a></li>
@@ -86,14 +89,14 @@
       {l key=nocopyright assign=nocopyright}
       <p>{$recording|@title:copyright|escape:html|default:$nocopyright}</p>
     </div>
-  
+  {/*}
   <div class="recordingdescription">
-    {if $recording|@title:description}
+    {if $recording.description|stringempty}
     <h1>{l module=recordings key=description}</h1>
-    <p>{$recording|@title:description|escape:html}</p>
+    <p>{$recording.description|escape:html}</p>
     {/if}
 </div>
-
+{*}
 <div id="comments">
   <div class="wrap">
     <div id="hider"><a href="#"><span></span>Hide/Show</a></div>
@@ -126,14 +129,6 @@
       <h1>{l module=recordings key=yourcomment}</h1>
         <div class="wrap">
           <textarea name="text" id="text" class="textarea"></textarea>
-          <div id="comment-tips">
-            <h2>{l module=recordings key=commenttips}</h2>
-            <ul>
-              <li>{l module=recordings key=commenttip1}</li>
-              <li>{l module=recordings key=commenttip2}</li>
-              <li>{l module=recordings key=commenttip3}</li>
-            </ul>
-          </div>
         </div>
       <input type="submit" value="{l module=recordings key=sendcomment}" class="left button"/>
     </form>
@@ -144,5 +139,5 @@
   </div>
 {/if}
 </div>
-
+{/*}
 {include file="Visitor/_footer.tpl"}

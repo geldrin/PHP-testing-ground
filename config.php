@@ -90,6 +90,12 @@ $config = array(
     'wide'   => '300x140',
     'player' => '400x250',
   ),
+  //----
+  'wowza' => array(
+    'httpurl'  => 'http://stream.teleconnect.hu:1935/tc/_definst_/',
+    'rtmpurl'  => 'rtmp://stream.teleconnect.hu:1935/tc/_definst_/',
+    'rtmpturl' => 'rtmpt://stream.teleconnect.hu:80/tc/_definst_/',
+  ),
 );
 
 $config['phpsettings'] = array(
