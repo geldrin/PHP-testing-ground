@@ -470,6 +470,7 @@ textarea {
 a#currentusername {
   display: inline-block;
   height: 28px;
+  min-width: 70px;
   line-height: 28px;
   font-size: 15px;
   font-weight: bold;
