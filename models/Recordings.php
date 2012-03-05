@@ -1121,8 +1121,9 @@ class Recordings extends \Springboard\Model {
   public function getFlashData() {
     
     $this->ensureObjectLoaded();
-    $scheme  = ( SSL? 'https://': 'http://' );
-    $baseuri = $scheme . $this->bootstrap->config['baseuri'];
+    include_once( $this->bootstrap->config['templatepath'] . 'Plugins/modifier.indexphoto.php' );
+    
+    $baseuri          = ( SSL? 'https://': 'http://' ) . $this->bootstrap->config['baseuri'];
     $recordingbaseuri = $baseuri . \Springboard\Language::get() . '/recordings/';
     
     $data = array(
@@ -1149,26 +1150,18 @@ class Recordings extends \Springboard\Model {
         'title'         => $this->row['title'],
         'subtitle'      => (string)$this->row['subtitle'],
         'description'   => (string)$this->row['description'],
-        'image'         =>
-          $scheme . $this->bootstrap->config['staticuri'] .
-          'files/recordings/' . \Springboard\Filesystem::getTreeDir( $this->id ) .
-          '/' . $this->row['indexphotofilename']
-        ,
+        'image'         => \smarty_modifier_indexphoto( $this->row, 'player' ),
       ),
     );
     
-    $data['media']['streams'] = array(
-      $this->getMediaUrl('default', false ),
-    );
+    $data['media']['streams'] = array( $this->getMediaUrl('default', false ) );
     
     if ( $this->row['videoreshq'] )
       $data['media']['streams'][] = $this->getMediaUrl('default', true );
     
     if ( $this->row['contentstatus'] == 'onstorage' ) {
       
-      $data['media']['secondaryStreams'] = array(
-        $this->getMediaUrl('content', false ),
-      );
+      $data['media']['secondaryStreams'] = array( $this->getMediaUrl('content', false ) );
       
       if ( $this->row['contentvideoreshq'] )
         $data['media']['secondaryStreams'][] = $this->getMediaUrl('content', true );
