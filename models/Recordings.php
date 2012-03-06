@@ -1127,44 +1127,30 @@ class Recordings extends \Springboard\Model {
     $recordingbaseuri = $baseuri . \Springboard\Language::get() . '/recordings/';
     
     $data = array(
-      'language'  => \Springboard\Language::get(),
-      'media'     => array(
-        'servers'       => array(
-          $this->bootstrap->config['wowza']['rtmpurl'],
-          $this->bootstrap->config['wowza']['rtmpturl'],
-        ),
+      'language'              => \Springboard\Language::get(),
+      'media_servers'         => array(
+        $this->bootstrap->config['wowza']['rtmpurl'],
+        $this->bootstrap->config['wowza']['rtmpturl'],
       ),
-      'share'     => array(
-        'recordingURL'  =>
-          $recordingbaseuri . 'details/' . $this->id . ',' .
-          \Springboard\Filesystem::filenameize( $this->row['title'] )
-        ,
-        'quickEmbed'    => $baseuri . 'embed/' . $this->id . '.js',
-      ),
-      'track'     => array(
-        'firstPlay'     => $recordingbaseuri . 'track/' . $this->id,
-      ),
-      'recording' => array(
-        'page'          => $baseuri,
-        'duration'      => $this->row['masterlength'],
-        'title'         => $this->row['title'],
-        'subtitle'      => (string)$this->row['subtitle'],
-        'description'   => (string)$this->row['description'],
-        'image'         => \smarty_modifier_indexphoto( $this->row, 'player' ),
-      ),
+      'track_firstPlay'       => $recordingbaseuri . 'track/' . $this->id,
+      'recording_duration'    => $this->row['masterlength'],
+      'recording_title'       => $this->row['title'],
+      'recording_subtitle'    => (string)$this->row['subtitle'],
+      'recording_description' => (string)$this->row['description'],
+      'recording_image'       => \smarty_modifier_indexphoto( $this->row, 'player' ),
     );
     
-    $data['media']['streams'] = array( $this->getMediaUrl('default', false ) );
+    $data['media_streams'] = array( $this->getMediaUrl('default', false ) );
     
     if ( $this->row['videoreshq'] )
-      $data['media']['streams'][] = $this->getMediaUrl('default', true );
+      $data['media_streams'][] = $this->getMediaUrl('default', true );
     
     if ( $this->row['contentstatus'] == 'onstorage' ) {
       
-      $data['media']['secondaryStreams'] = array( $this->getMediaUrl('content', false ) );
+      $data['media_secondaryStreams'] = array( $this->getMediaUrl('content', false ) );
       
       if ( $this->row['contentvideoreshq'] )
-        $data['media']['secondaryStreams'][] = $this->getMediaUrl('content', true );
+        $data['media_secondaryStreams'][] = $this->getMediaUrl('content', true );
       
     }
     
