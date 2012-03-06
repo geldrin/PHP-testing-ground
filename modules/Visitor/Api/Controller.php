@@ -7,7 +7,6 @@ class Controller extends \Springboard\Controller\Visitor {
   public $layers  = array( 'model', 'controller' );
   public $layer;
   public $module;
-  public $data;
   
   /*
   /api?format=json&layer=model&module=recordings&method=getRow&id=12
@@ -38,7 +37,7 @@ class Controller extends \Springboard\Controller\Visitor {
   
   public function getModule() {
     
-    $module = $this->application->getParameter('apimodule');
+    $module = $this->application->getParameter('_module');
     $ret    = null;
     
     if ( $module and $this->layer == 'model' ) {

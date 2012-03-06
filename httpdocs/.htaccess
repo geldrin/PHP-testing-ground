@@ -6,6 +6,11 @@ RewriteRule ^([a-z]{2})/users/(changepassword|validate.*)/(.+),(.+)$ index.php?l
 
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{QUERY_STRING} ^(.*)module(.*)$
+RewriteRule ^([a-z]{2})/api/?$ index.php?language=$1&module=api&%1_module%2
+
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
 RewriteRule ^([a-z]{2})/?$ index.php?language=$1 [L,QSA]
 
 RewriteCond %{REQUEST_FILENAME} !-f
