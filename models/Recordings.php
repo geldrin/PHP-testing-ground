@@ -1210,12 +1210,12 @@ class Recordings extends \Springboard\Model {
       
       case 'content':
         
-        $sprintfterm = '%s/%s_content' . $postfix . '.%s';
+        $sprintfterm = '%3$s:%s/%s_content' . $postfix . '.%s';
         break;
       
       default:
         
-        $sprintfterm = '%s/%s_video' . $postfix . '.%s';
+        $sprintfterm = '%3$s:%s/%s_video' . $postfix . '.%s';
         break;
       
     }
