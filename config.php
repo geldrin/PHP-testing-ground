@@ -88,7 +88,7 @@ $config = array(
   'videothumbnailresolutions' => array(
     '4:3'    => '192x144',
     'wide'   => '300x140',
-    'player' => '400x250',
+    'player' => '600x250',
   ),
   //----
   'wowza' => array(
