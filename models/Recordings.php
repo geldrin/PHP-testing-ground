@@ -1178,37 +1178,33 @@ class Recordings extends \Springboard\Model {
     
     $config    = $this->bootstrap->config;
     $extension = 'mp4';
-    $postfix   = '';
+    $postfix   = '_lq';
     $host      = '';
     $isaudio   = $this->row['mastermediatype'] == 'audio';
     
     if ( $highquality and !$isaudio )
       $postfix = '_hq';
     
-    if ( $isaudio )
+    if ( $isaudio ) {
+      
+      $postfix   = '';
       $extension = 'mp3';
+      
+    }
     
     switch( $type ) {
       
       case 'mobilehttp':
         //http://stream.videotorium.hu:1935/vtorium/_definst_/mp4:671/2671/2671_2608_mobile.mp4/playlist.m3u8
-        $host = $config['wowza']['httpurl'];
-        
-        if ( $isaudio )
-          $sprintfterm = '%3$s:%s/%s.%s/playlist.m3u8';
-        else
-          $sprintfterm = '%3$s:%s/%s_mobile' . $postfix . '.%s/playlist.m3u8';
+        $host        = $config['wowza']['httpurl'];
+        $sprintfterm = '%3$s:%s/%s_mobile' . $postfix . '.%s/playlist.m3u8';
         
         break;
       
       case 'mobilertsp':
         //rtsp://stream.videotorium.hu:1935/vtorium/_definst_/mp4:671/2671/2671_2608_mobile.mp4
-        $host = $config['wowza']['rtspurl'];
-        
-        if ( $isaudio )
-          $sprintfterm = '%3$s:%s/%s.%s';
-        else
-          $sprintfterm = '%3$s:%s/%s_mobile' . $postfix . '.%s';
+        $host        = $config['wowza']['rtspurl'];
+        $sprintfterm = '%3$s:%s/%s_mobile' . $postfix . '.%s';
         
         break;
       
@@ -1219,7 +1215,7 @@ class Recordings extends \Springboard\Model {
       
       default:
         
-        $sprintfterm = '%s/%s' . $postfix . '.%s';
+        $sprintfterm = '%s/%s_video' . $postfix . '.%s';
         break;
       
     }
