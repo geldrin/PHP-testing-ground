@@ -6,6 +6,13 @@ class InvalidLengthException extends \Exception {}
 class InvalidVideoResolutionException extends \Exception {}
 
 class Recordings extends \Springboard\Model {
+  public $apisignature = array(
+    'getRow' => array(
+      'where' => array(
+        'type' => 'string'
+      ),
+    ),
+  );
   
   public function updateMetadataTimestamps( $ids ) {
     
