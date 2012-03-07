@@ -21,13 +21,22 @@ class Controller extends \Visitor\Controller {
     'details'        => 'Visitor\\Categories\\Paging\\Details',
   );
   
+  public $apisignature = array(
+    'index' => array(
+    ),
+  );
+  
   public function indexAction() {
     
     $smarty        = $this->bootstrap->getSmarty();
     $organization  = $this->bootstrap->getOrganization();
     $categoryModel = $this->bootstrap->getModel('categories');
+    $categories    = $categoryModel->cachedGetCategoryTree( $organization->id );
     
-    $smarty->assign('categories', $categoryModel->cachedGetCategoryTree( $organization->id ) );
+    if ( $this->application->getParameter('module') == 'api' )
+      return $categories;
+    
+    $smarty->assign('categories', $categories );
     $this->output( $smarty->fetch('Visitor/Categories/Index.tpl') );
     
   }

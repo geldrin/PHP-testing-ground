@@ -1,13 +1,13 @@
 <?php
 
-function smarty_modifier_jsonescape( $data, $encodescalar = false ) {
+function smarty_modifier_jsonescape( $data, $encodenonscalar = false ) {
   
-  if ( $encodescalar ) {
+  if ( $encodenonscalar ) {
     
     foreach( $data as $key => $value ) {
       
       if ( is_array( $value ) )
-        $data[ $key ] = smarty_modifier_jsonescape( $value, $encodescalar );
+        $data[ $key ] = smarty_modifier_jsonescape( $value, $encodenonscalar );
       
     }
     

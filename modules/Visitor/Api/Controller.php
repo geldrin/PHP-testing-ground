@@ -46,6 +46,13 @@ class Controller extends \Springboard\Controller\Visitor {
       if ( !isset( $ret->apisignature ) )
         $ret = null;
       
+    } elseif ( $module and $this->layer == 'controller' ) {
+      
+      $ret = $this->bootstrap->getController( $module );
+      
+      if ( !isset( $ret->apisignature ) )
+        $ret = null;
+      
     }
     
     if ( !$ret or !$module )
@@ -72,6 +79,9 @@ class Controller extends \Springboard\Controller\Visitor {
       $parameters[]    = $this->$validatormethod( $parameter, $validator );
       
     }
+    
+    if ( $this->layer == 'controller' )
+      $method .= 'Action';
     
     $data = call_user_func_array( array( $this->module, $method ), $parameters );
     $this->display( $data );
