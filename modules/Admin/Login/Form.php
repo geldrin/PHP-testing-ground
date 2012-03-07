@@ -53,7 +53,8 @@ class Form extends \Springboard\Controller\Admin\Form {
         
       } else {
         
-        $this->form->addMessage('Access Denied');
+        $l = $this->bootstrap->getLocalization();
+        $this->form->addMessage( $l('admin', 'login_failed') );
         $this->form->invalidate();
         
       }

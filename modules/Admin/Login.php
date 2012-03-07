@@ -15,6 +15,7 @@ class Login extends \Springboard\Controller\Admin {
       $this->form->route();
     } catch( \Springboard\Exception\NotFound $e ) {
       // TODO 404
+      echo $e->getMessage();
     }
     
   }

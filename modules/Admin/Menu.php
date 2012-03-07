@@ -18,13 +18,13 @@ class Menu {
         'icon'   => 'images/sekkyumu/run.png',
         'text'   => 'Felhasználók',
       ),
-      
+      /*
       array(
         'link'   => 'recordings',
         'icon'   => 'images/sekkyumu/write_document.png',
         'text'   => 'felvételek',
       ),
-      
+      */
       array(
         'link'   => 'organizations',
         'icon'   => 'images/sekkyumu/write_document.png',
