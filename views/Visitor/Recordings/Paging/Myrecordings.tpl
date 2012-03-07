@@ -43,9 +43,9 @@
       <div class="recordingactions">
         <ul>
           <li><a href="{$language}/recordings/modifybasics/{$item.id}?forward={$FULL_URI|escape:url}">{l module=recordings key=editrecording}</a></li>
+          <li><a href="{$language}/recordings/uploadsubtitle/{$item.id}?forward={$FULL_URI|escape:url}">{l module=recordings key=uploadsubtitle}</a></li>
           {*}
           <li><a href="{$language}/recordings/uploadattachment?recordingid={$item.id}&forward={$FULL_URI|escape:url}">{l module=recordings key=manageattachments}</a></li>
-          <li><a href="{$language}/recordings/uploadsubtitle?recordingid={$item.id}&forward={$FULL_URI|escape:url}">{l module=recordings key=managesubtitles}</a></li>
           {/*}
           {if $item.canuploadcontentvideo}
             <li><a href="{$language}/recordings/uploadcontent/{$item.id}?forward={$FULL_URI|escape:url}">{l module=recordings key=uploadcontentvideo}</a></li>
@@ -65,6 +65,18 @@
           </ul>
         </div>
       {/if}
+      
+      {if !empty( $item.subtitlefiles )}
+        <div class="subtitles">
+          <h3>{l module=recordings key=subtitles}</h3>
+          <ul>
+            {foreach from=$item.subtitlefiles item=subtitle}
+              <li>{$subtitle.language} - <a href="{$language}/recordings/deletesubtitle/{$subtitle.id}?forward={$FULL_URI|escape:url}" class="confirm delete">{l module=recordings key=deletesubtitle}</a></li>
+            {/foreach}
+          </ul>
+        </div>
+      {/if}
+      
       <div class="clear"></div>
     </div>
   </li>

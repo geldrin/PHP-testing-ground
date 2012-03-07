@@ -1,26 +1,28 @@
 {include file="Visitor/_header.tpl" title=$recording.title}
-<div class="heading recording">
+<div class="title recording">
   {if !$recording.ispublished}
     <center><a href="{$language}/recordings/modifysharing/{$recording.id}">{l module=recordings key=notpublished_warning}</a></center>
     <br/>
   {/if}
+  
+  <div class="ratewidget right"{if $canrate} nojs="1"{/if}>
+    <span class="spinner"></span>
+    <h2><span class="count">{$recording.numberofratings}</span> {l module=recordings key=ratewidgetheading}</h2>
+    <ul>
+      <li{if $recording.rating > 0} class="full"{/if}><a href="{$language}/recordings/rate/{$recording.id}?rating=1"><span></span>1</a></li>
+      <li{if $recording.rating > 1.5} class="full"{/if}><a href="{$language}/recordings/rate/{$recording.id}?rating=2"><span></span>2</a></li>
+      <li{if $recording.rating > 2.5} class="full"{/if}><a href="{$language}/recordings/rate/{$recording.id}?rating=3"><span></span>3</a></li>
+      <li{if $recording.rating > 3.5} class="full"{/if}><a href="{$language}/recordings/rate/{$recording.id}?rating=4"><span></span>4</a></li>
+      <li{if $recording.rating > 4.5} class="full"{/if}><a href="{$language}/recordings/rate/{$recording.id}?rating=5"><span></span>5</a></li>
+    </ul>
+  </div>
+  
   <h1>{$recording.title|escape:html}</h1>
   
   {if $recording.subtitle|stringempty}
     <h2>{$recording.subtitle|escape:html}</h2>
   {/if}
   
-  <div class="ratewidget"{if $canrate} nojs="1"{/if}>
-    <span class="spinner"></span>
-    <h2><span class="count">{$recording.numberofratings}</span> {l module=recordings key=ratewidgetheading}</h2>
-    <ul>
-      <li{if $recording.rating > 0} class="full"{/if}><a href="{$language}/recordings/rate?recordid={$recording.id}&rating=1"><span></span>1</a></li>
-      <li{if $recording.rating > 1.5} class="full"{/if}><a href="{$language}/recordings/rate?recordid={$recording.id}&rating=2"><span></span>2</a></li>
-      <li{if $recording.rating > 2.5} class="full"{/if}><a href="{$language}/recordings/rate?recordid={$recording.id}&rating=3"><span></span>3</a></li>
-      <li{if $recording.rating > 3.5} class="full"{/if}><a href="{$language}/recordings/rate?recordid={$recording.id}&rating=4"><span></span>4</a></li>
-      <li{if $recording.rating > 4.5} class="full"{/if}><a href="{$language}/recordings/rate?recordid={$recording.id}&rating=5"><span></span>5</a></li>
-    </ul>
-  </div>
 </div>
 
 <div class="player">
@@ -31,70 +33,49 @@ swfobject.embedSWF('flash/TCPlayer{$VERSION}.swf', 'playercontainer{if $recordin
 </div>
 
 <div id="description">
-  {*}
-    <ul id="detailmenu">
-      <li class="active"><a href="#">{l module=recordings key=details_basics}</a></li>
-      <li><a href="#">{l module=recordings key=details_contributors}</a></li>
-      <li><a href="#">{l module=recordings key=details_attachments}</a></li>
-      <li class="last"><a href="#">{l module=recordings key=details_copyright}</a></li>
-    </ul>
-    <div class="basics left">
-      <div class="wrap left">
-        <ul>
-          <li>
-            <h2>{l module=recordings key=uploader}:</h2>
-            {$author.nickname|escape:html}
-          </li>
-          <li>
-            <h2>{l module=recordings key=details_recordedtimestamp}:</h2>
-            {l key=smarty_dateformat_long assign=dateformat_long}
-            {$recording.recordedtimestamp|date_format:$dateformat_long}
-            {if $recording.masterlength}<h2>{l module=recordings key=recordlength}:</h2>
-            {$recording.masterlength|timeformat}
-            {/if}
-          </li>
-          <li>
-            <h2>{l module=recordings key=details_uploadtimestamp}:</h2>
-            {$recording.timestamp|date_format:$dateformat_long}
-          </li>
-        </ul>
-      </div>
-      <div class="wrap right">
-        <ul>
-          {if $recording.keywords}
-          <li>
-            <h2>{l module=recordings key=keywords}:</h2>
-            {$recording.keywords|escape:html}
-          </li>
-          {/if}
-        </ul>
-      </div>
-    </div>
-    <div class="attachments">
-      <div class="wrap">
-        <ul>
-        {foreach from=$attachments item=attachment}
-          <li{if $smarty.foreach.attachments.last} class="last"{/if}>
-            <a href="{$attachmenturl}{$attachment.id}.{$attachment.masterextension|escape:url}/{$attachment.masterfilename|escape:url}">
-              {$attachment|@title|escape:html} ({$attachment.masterextension|truncate:7|escape:html})
-            </a>
-          </li>
-        {foreachelse}
-          <li>{l module=recordings key=noattachments}</li>
-        {/foreach}
-        </ul>
-      </div>
-    </div>
-    <div class="copyright">
-      {l key=nocopyright assign=nocopyright}
-      <p>{$recording|@title:copyright|escape:html|default:$nocopyright}</p>
-    </div>
-  {/*}
+  
+  {if $recording.description|stringempty}
   <div class="recordingdescription">
-    {if $recording.description|stringempty}
-    <h1>{l module=recordings key=description}</h1>
+    <h3>{l module=recordings key=description}:</h3>
     <p>{$recording.description|escape:html}</p>
-    {/if}
+  </div>
+  {/if}
+  
+  <div class="recordinguploader">
+    <h3>{l module=recordings key=uploader}:</h3>
+    <p>{$author.nickname|escape:html}</p>
+  </div>
+  <div class="">
+    <h3>{l module=recordings key=details_recordedtimestamp}:</h3>
+    {l key=smarty_dateformat_long assign=dateformat_long}
+    <p>{$recording.recordedtimestamp|date_format:$dateformat_long}</p>
+  </div>
+  
+  {if $recording.masterlength}
+  <div class="">
+    <h3>{l module=recordings key=recordlength}:</h3>
+    <p>{$recording.masterlength|timeformat}</p>
+  </div>
+  {/if}
+  
+  <div class="recoredinguploadtimestamp">
+    <h3>{l module=recordings key=details_uploadtimestamp}:</h3>
+    <p>{$recording.timestamp|date_format:$dateformat_long}</p>
+  </div>
+  
+  {if $recording.keywords|stringempty}
+  <div class="recordingkeywords">
+    <h3>{l module=recordings key=keywords}:</h3>
+    <p>{$recording.keywords|escape:html}</p>
+  </div>
+  {/if}
+  
+  <div class="copyright">
+    {l module=recordings key=nocopyright assign=nocopyright}
+    <h3>{l module=recordings key=details_copyright}:</h3>
+    <p>{$recording.copyright|escape:html|default:$nocopyright}</p>
+  </div>
+  
 </div>
 {*}
 <div id="comments">

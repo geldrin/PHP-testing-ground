@@ -35,7 +35,7 @@ $config = array(
     ),
   ),
   
-  'descriptionoriginal' => array(
+  'description' => array(
     'displayname' => $l('recordings', 'descriptionoriginal'),
     'type'        => 'textarea',
     'validation'  => array(
@@ -47,32 +47,8 @@ $config = array(
     ),
   ),
   
-  'descriptionenglish' => array(
-    'displayname' => $l('recordings', 'descriptionenglish'),
-    'type'        => 'textarea',
-    'validation'  => array(
-      array(
-        'type' => 'string',
-        'minimum'  => 4,
-        'required' => false,
-      ),
-    ),
-  ),
-  
-  'copyrightoriginal' => array(
+  'copyright' => array(
     'displayname' => $l('recordings', 'copyrightoriginal'),
-    'type'        => 'textarea',
-    'validation'  => array(
-      array(
-        'type' => 'string',
-        'minimum'  => 4,
-        'required' => false,
-      ),
-    ),
-  ),
-  
-  'copyrightenglish' => array(
-    'displayname' => $l('recordings', 'copyrightenglish'),
     'type'        => 'textarea',
     'validation'  => array(
       array(

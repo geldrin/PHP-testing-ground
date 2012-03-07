@@ -82,6 +82,9 @@ define('CF_STR_CAPTCHA_ERROR',     "The characters in the '%s' field didn't matc
 // validation.email.php
 define('CF_STR_EMAIL_VALIDATION_FAILED', "The e-mail address in the '%s' field has problems: %s" );
 
+// validation.subtitle.php
+define('CF_STR_SUBTITLE_INVALID',                         "The '%s' file is an invalid subtitle file.");
+
 // general form configuration/runtime errors
 define('CF_ERR_MISSING_SLASHES_ADDED_PARAMETER', 'CLONEFISH: specify the "slashes added" parameter for %s');
 define('CF_ERR_CONFIG_TYPE_MISSING',                      'CLONEFISH: "%s" input: "type" setting is missing from the configuration array' );

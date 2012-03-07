@@ -435,3 +435,13 @@ CREATE TABLE `roles` (
    `organizationid` int(10) unsigned not null,
    PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;
+
+
+CREATE TABLE `subtitles` (
+   `id` int(10) unsigned not null auto_increment,
+   `recordingid` int(10) unsigned not null,
+   `languageid` int(10) unsigned not null,
+   `subtitle` longtext not null,
+   PRIMARY KEY (`id`),
+   KEY `ix_recordingid` (`recordingid`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;

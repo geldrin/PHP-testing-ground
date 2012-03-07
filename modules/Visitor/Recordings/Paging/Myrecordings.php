@@ -64,7 +64,7 @@ class Myrecordings extends \Springboard\Controller\Paging {
       $items[ $key ]['canuploadcontentvideo'] =
         $this->recordingsModel->canUploadContentVideo()
       ;
-      
+      $items[ $key ]['subtitlefiles'] = $this->recordingsModel->getSubtitleLanguages();
       // TODO attachments
       
     }

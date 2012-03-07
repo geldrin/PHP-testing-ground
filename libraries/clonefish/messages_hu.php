@@ -77,6 +77,9 @@ define('CF_STR_DATABASE_INPUT_INVALID',  "A(z) '%s' mezõ tartalma nem megfelel�
 // validation.captcha.php, validation.recaptcha.php
 define('CF_STR_CAPTCHA_ERROR',     "A karakterek a(z) '%s' mezõben nem egyeztek meg a képen olvasható karakterekkel");
 
+// validation.subtitle.php
+define('CF_STR_SUBTITLE_INVALID',                         "A(z) '%s' állomány nem megfelelő formátumú felirat.");
+
 // general form configuration/runtime errors
 
 define('CF_ERR_MISSING_SLASHES_ADDED_PARAMETER', 'CLONEFISH: hiányzik a "slashes added" paraméter: %s');

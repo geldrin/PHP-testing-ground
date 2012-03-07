@@ -8,14 +8,15 @@ class Modifydescription extends \Visitor\Recordings\ModifyForm {
   function postSetupForm() {
     
     // $this->recordingsModel a parent class ->check() metodusabol
+    
     $languageModel = $this->bootstrap->getModel('languages');
     $languageModel->addFilter('id', $this->recordingsModel->row['languageid'], true, false );
     $language = $languageModel->getOne('name');
     
-    $elem = $this->form->getElementByName('descriptionoriginal');
+    $elem = $this->form->getElementByName('description');
     $elem->displayname = sprintf( $elem->displayname, $language );
     
-    $elem = $this->form->getElementByName('copyrightoriginal');
+    $elem = $this->form->getElementByName('copyright');
     $elem->displayname = sprintf( $elem->displayname, $language );
     
   }

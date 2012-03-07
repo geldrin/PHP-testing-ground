@@ -11,11 +11,11 @@ h1 {
   font-weight: normal;
 }
 h2 {
-  font-size: 18px;
+  font-size: 16px;
   font-weight: normal;
 }
 h3 {
-  font-size: 16px;
+  font-size: 15px;
   font-weight: normal;
 }
 h4 {
@@ -720,6 +720,12 @@ a#currentusername span {
 #body div.title a {
   display: block;
 }
+#body div.title.recording {
+  padding-top: 0px;
+}
+#body div.title.recording h2 {
+  font-size: 13px;
+}
 
 /* footer */
 #footerbg {
@@ -1179,6 +1185,11 @@ a#currentusername span {
 }
 
 /* ratewidget */
+.ratewidget h2 {
+  display: inline-block;
+  padding: 0;
+  margin: 0;
+}
 .ratewidget ul, .ratewidget li {
   display: inline-block;
   margin: 0;

@@ -10,16 +10,19 @@ class Controller extends \Visitor\Controller {
     'rate'                 => 'member',
     'upload'               => 'uploader',
     'uploadcontent'        => 'uploader',
+    'uploadsubtitle'       => 'uploader',
     'myrecordings'         => 'uploader',
     'modifybasics'         => 'uploader',
     'modifyclassification' => 'uploader',
     'modifydescription'    => 'uploader',
     'modifysharing'        => 'uploader',
+    'deletesubtitle'       => 'uploader',
   );
   
   public $forms = array(
     'upload'               => 'Visitor\\Recordings\\Form\\Upload',
     'uploadcontent'        => 'Visitor\\Recordings\\Form\\Uploadcontent',
+    'uploadsubtitle'       => 'Visitor\\Recordings\\Form\\Uploadsubtitle',
     'modifybasics'         => 'Visitor\\Recordings\\Form\\Modifybasics',
     'modifyclassification' => 'Visitor\\Recordings\\Form\\Modifyclassification',
     'modifydescription'    => 'Visitor\\Recordings\\Form\\Modifydescription',
@@ -104,6 +107,7 @@ class Controller extends \Visitor\Controller {
     $smarty->assign('flashdata',    $recordingsModel->getFlashData() );
     $smarty->assign('comments',     $recordingsModel->getComments() );
     $smarty->assign('commentcount', $recordingsModel->getCommentsCount() );
+    $smarty->assign('author',       $recordingsModel->getAuthor() );
     $smarty->assign('canrate',      $rating[ $recordingsModel->id ] );
     
     $this->output( $smarty->fetch('Visitor/Recordings/Details.tpl') );
@@ -133,6 +137,25 @@ class Controller extends \Visitor\Controller {
         'nocomments'   => $l('recordings', 'nocomments'),
         'commentcount' => $commentcount,
       )
+    );
+    
+  }
+  
+  public function deletesubtitleAction() {
+    
+    $subtitleModel   = $this->modelIDCheck(
+      'subtitles',
+      $this->application->getNumericParameter('id')
+    );
+    
+    $recordingsModel = $this->modelOrganizationAndUserIDCheck(
+      'recordings',
+      $subtitleModel->row['recordingid']
+    );
+    
+    $subtitleModel->delete( $subtitleModel->id );
+    $this->redirect(
+      $this->application->getParameter('forward', 'recordings/myrecordings')
     );
     
   }

@@ -1221,6 +1221,35 @@ class Recordings extends \Springboard\Model {
     
   }
   
+  public function getAuthor() {
+    
+    $this->ensureObjectLoaded();
+    return $this->db->getRow("
+      SELECT nickname
+      FROM users
+      WHERE id = '" . $this->row['userid'] . "'
+      LIMIT 1
+    ");
+    
+  }
+  
+  public function getSubtitleLanguages() {
+    
+    return $this->db->getArray("
+      SELECT
+        st.id,
+        s.value AS language
+      FROM
+        subtitles AS st,
+        strings AS s
+      WHERE
+        st.recordingid = '" . $this->id . "' AND
+        s.translationof = st.languageid AND
+        s.language = '" . \Springboard\Language::get() . "'
+    ");
+    
+  }
+  
 }
 /*
 
