@@ -7,6 +7,7 @@ class Controller extends \Springboard\Controller\Visitor {
   public $layers  = array( 'model', 'controller' );
   public $layer;
   public $module;
+  public $data;
   
   /*
   /api?format=json&layer=model&module=recordings&method=getRow&id=12
@@ -14,11 +15,28 @@ class Controller extends \Springboard\Controller\Visitor {
   */
   public function route() {
     
-    $this->format = $this->validateParameter('format', $this->formats );
-    $this->layer  = $this->validateParameter('layer', $this->layers );
-    $this->module = $this->getModule();
+    $result = array(
+      'result' => 'OK'
+    );
     
-    $this->callMethod();
+    try {
+      
+      $this->format = $this->validateParameter('format', $this->formats );
+      $this->layer  = $this->validateParameter('layer', $this->layers );
+      $this->module = $this->getModule();
+      
+      $this->callMethod();
+      $result['data'] = $this->data;
+      
+    } catch( \Exception $e ) {
+      
+      $result['result'] = 'ERR';
+      $result['reason'] = $e->getMessage();
+      
+    }
+    
+    if ( $this->format == 'json' )
+      $this->jsonoutput( $result );
     
   }
   
@@ -83,9 +101,7 @@ class Controller extends \Springboard\Controller\Visitor {
     if ( $this->layer == 'controller' )
       $method .= 'Action';
     
-    $data = call_user_func_array( array( $this->module, $method ), $parameters );
-    $this->display( $data );
-    
+    return $this->data = call_user_func_array( array( $this->module, $method ), $parameters );
   }
   
   public function idValidator( $parameter, $configuration ) {
@@ -113,16 +129,6 @@ class Controller extends \Springboard\Controller\Visitor {
       throw new \Exception('Empty parameter: ' . $parameter );
     
     return $value;
-    
-  }
-  
-  public function display( $data ) {
-    
-    if ( $this->format == 'json' )
-      $this->jsonoutput( $data );
-    
-    echo "<pre>";
-    var_dump( $data );
     
   }
   
