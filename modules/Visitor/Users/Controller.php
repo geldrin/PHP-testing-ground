@@ -143,8 +143,8 @@ class Controller extends \Visitor\Controller {
     
   }
   
+  // pure api hivas, nem erheto el apin kivulrol (mert nincs a permission tombbe)
   public function authenticateAction() {
-    
     return (bool)rand(0, 1);
   }
   

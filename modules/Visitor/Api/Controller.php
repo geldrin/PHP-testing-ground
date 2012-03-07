@@ -31,7 +31,7 @@ class Controller extends \Springboard\Controller\Visitor {
     } catch( \Exception $e ) {
       
       $result['result'] = 'ERR';
-      $result['reason'] = $e->getMessage();
+      $result['data']   = $e->getMessage();
       
     }
     
@@ -102,6 +102,7 @@ class Controller extends \Springboard\Controller\Visitor {
       $method .= 'Action';
     
     return $this->data = call_user_func_array( array( $this->module, $method ), $parameters );
+    
   }
   
   public function idValidator( $parameter, $configuration ) {
