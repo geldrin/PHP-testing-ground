@@ -1161,6 +1161,21 @@ class Recordings extends \Springboard\Model {
       
     }
     
+    $subtitles = $this->getSubtitleLanguages();
+    
+    if ( !empty( $subtitles ) ) {
+      
+      $data['subtitle_files'] = array();
+      foreach( $subtitles as $subtitle ) {
+        
+        $data['subtitle_files'][ $subtitle['languagecode'] ] =
+          $recordingbaseuri . 'getsubtitle/' . $subtitle['id']
+        ;
+        
+      }
+      
+    }
+    
     return $data;
     
   }
@@ -1238,14 +1253,17 @@ class Recordings extends \Springboard\Model {
     return $this->db->getArray("
       SELECT
         st.id,
-        s.value AS language
+        s.value AS language,
+        l.shortname AS languagecode
       FROM
         subtitles AS st,
-        strings AS s
+        strings AS s,
+        languages AS l
       WHERE
         st.recordingid = '" . $this->id . "' AND
         s.translationof = st.languageid AND
-        s.language = '" . \Springboard\Language::get() . "'
+        s.language = '" . \Springboard\Language::get() . "' AND
+        l.id = st.languageid
     ");
     
   }

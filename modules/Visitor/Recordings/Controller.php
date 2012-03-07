@@ -6,6 +6,7 @@ class Controller extends \Visitor\Controller {
     'index'                => 'public',
     'details'              => 'public',
     'getcomments'          => 'public',
+    'getsubtitle'          => 'public',
     'newcomment'           => 'member',
     'rate'                 => 'member',
     'upload'               => 'uploader',
@@ -157,6 +158,26 @@ class Controller extends \Visitor\Controller {
     $this->redirect(
       $this->application->getParameter('forward', 'recordings/myrecordings')
     );
+    
+  }
+  
+  public function getsubtitleAction() {
+    
+    header('Content-Type: text/plain; charset=UTF-8');
+    $subtitleid = $this->application->getNumericParameter('id');
+    $cache      = $this->bootstrap->getCache('subtitle_' . $subtitleid, null, true );
+    
+    if ( $cache->expired() ) {
+      
+      $subtitleModel = $this->modelIDCheck('subtitles', $subtitleid );
+      $subtitle      = $subtitleModel->row['subtitle'];
+      $cache->put( $subtitle );
+      unset( $subtitleModel );
+      
+    } else
+      $subtitle = $cache->get();
+    
+    $this->output( $subtitle );
     
   }
   
