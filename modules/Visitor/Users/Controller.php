@@ -31,6 +31,17 @@ class Controller extends \Visitor\Controller {
     'admin' => 'Visitor\\Users\\Paging\\Admin',
   );
   
+  public $apisignature = array(
+    'authenticate' => array(
+      'email' => array(
+        'type' => 'string'
+      ),
+      'password' => array(
+        'type' => 'string'
+      ),
+    ),
+  );
+  
   public function indexAction() {
     echo 'Nothing here yet';
   }
@@ -130,6 +141,11 @@ class Controller extends \Visitor\Controller {
     
     $this->redirectWithMessage( $forward, $l('users', 'userdisabled') );
     
+  }
+  
+  public function authenticateAction() {
+    
+    return (bool)rand(0, 1);
   }
   
 }
