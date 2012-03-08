@@ -151,8 +151,12 @@ class Controller extends \Visitor\Controller {
     $userModel = $this->bootstrap->getModel('users');
     $uservalid = $userModel->selectAndCheckUserValid( $email, $password );
     
-    if ( $uservalid )
+    if ( $uservalid ) {
+      
       $userModel->registerForSession();
+      $userModel->updateLastlogin();
+      
+    }
     
     return $uservalid;
     

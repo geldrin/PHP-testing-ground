@@ -32,6 +32,15 @@ class Controller extends \Springboard\Controller\Visitor {
       
       $result['result'] = 'ERR';
       $result['data']   = $e->getMessage();
+      $debug            = \Springboard\Debug::getInstance();
+      
+      $message =
+        "API exception caught: " . $e->getMessage() . " --- '" . get_class( $e ) . "'\n" .
+        "  Backtrace:\n" . \Springboard\Debug::formatBacktrace( $e->getTrace() ) .
+        "\n  Info:\n" . \Springboard\Debug::getRequestInformation( 2 )
+      ;
+      
+      $debug->log( false, 'api.txt', $message, true );
       
     }
     
