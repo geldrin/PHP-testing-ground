@@ -7,6 +7,10 @@ return array(
     'en' => 'angol',
   ),
   
+  'headerlanguages' => array(
+    'hu' => 'HU',
+  ),
+  
   'title' => array(
     'Dr.'        => 'Dr.',
     'BSc.'       => 'BSc.',

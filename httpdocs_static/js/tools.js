@@ -25,6 +25,10 @@ $j(document).ready(function() {
     $j('#headerloginform, #headerloginactions').toggle();
   });
   
+  $j('#headersearcharrow').on('click', function( e ) {
+    e.preventDefault();
+  });
+  
   $j('.clearonclick').on('focusin', function() {
     
     if ( $j(this).val() == $j(this).attr('data-origval') )

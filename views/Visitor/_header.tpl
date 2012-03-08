@@ -58,10 +58,18 @@
           </form>
           
           <div id="languageselector" class="inputbackground right">
-            <a href="#" class="hu active">HU<span></span></a>
+            {foreach from=$bootstrap->config.languages item=item}
+              {if $item == $language}
+                <a href="{$FULL_URI|changelanguage:$language}" class="{$language} active">{l lov=headerlanguages key=$language}<span></span></a>
+              {/if}
+            {/foreach}
+            
             <div id="languages">
-              <a href="#" class="en">EN</a>
-              <a href="#" class="de">DE</a>
+              {foreach from=$bootstrap->config.languages item=item}
+                {if $item != $language}
+                  <a href="{$FULL_URI|changelanguage:$item}" class="{$item}">{l lov=headerlanguages key=$item}</a>
+                {/if}
+              {/foreach}
             </div>
           </div>
         </div>
