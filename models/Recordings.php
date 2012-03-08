@@ -1223,7 +1223,11 @@ class Recordings extends \Springboard\Model {
       
       default:
         
-        $sprintfterm = '%3$s:%s/%s_video' . $postfix . '.%s';
+        if ( $isaudio )
+          $sprintfterm = '%3$s:%s/%s_audio.%s';
+        else
+          $sprintfterm = '%3$s:%s/%s_video' . $postfix . '.%s';
+        
         break;
       
     }
