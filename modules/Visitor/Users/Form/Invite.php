@@ -47,7 +47,7 @@ class Invite extends \Visitor\Form {
       $smarty->fetch('Visitor/Users/Email/Invitation.tpl')
     );
     
-    $this->controller->redirectWithMessage('users/listing', $l('users', 'user_invited') );
+    $this->controller->redirectWithMessage('users/admin', $l('users', 'user_invited') );
     
   }
   

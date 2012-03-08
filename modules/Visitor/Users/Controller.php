@@ -125,7 +125,7 @@ class Controller extends \Visitor\Controller {
     if ( !$userid )
       $this->redirect('index');
     
-    $forward   = $this->application->getParameter('forward', 'users/list');
+    $forward   = $this->application->getParameter('forward', 'users/admin');
     $l         = $this->bootstrap->getLocalization();
     $user      = $this->bootstrap->getUser();
     
