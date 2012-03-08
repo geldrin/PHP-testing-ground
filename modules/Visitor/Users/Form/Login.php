@@ -19,7 +19,7 @@ class Login extends \Visitor\Form {
     $userModel    = $this->bootstrap->getModel('users');
     $organization = $this->bootstrap->getOrganization();
     
-    $uservalid = $userModel->selectAndCheckUserValid( $values['email'], $values['password'] );
+    $uservalid = $userModel->selectAndCheckUserValid( $organization->id, $values['email'], $values['password'] );
     $orgvalid  = false;
     
     if (

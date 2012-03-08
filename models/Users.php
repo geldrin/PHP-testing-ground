@@ -7,13 +7,15 @@ class Users extends \Springboard\Model {
   const USER_VALIDATED   = 0;
   const USER_DISABLED    = 1;
   
-  public function selectAndCheckUserValid( $email, $password ) {
+  public function selectAndCheckUserValid( $organizationid, $email, $password ) {
     
     $crypto = $this->bootstrap->getEncryption();
+    $this->clearFilter();
     
-    $this->addFilter('email',    $email, false );
-    $this->addFilter('password', $crypto->getHash( $password ), false );
-    $this->addFilter('disabled', 0 );
+    $this->addFilter('organizationid', $organizationid );
+    $this->addFilter('email',          $email, false );
+    $this->addFilter('password',       $crypto->getHash( $password ), false );
+    $this->addFilter('disabled',       0 );
     
     $user = $this->getRow();
     if ( empty( $user ) ) {
