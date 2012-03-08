@@ -97,8 +97,14 @@ class Bootstrap {
     if ( $this->sessionstarted )
       return;
     
-    ini_set('session.cookie_domain',    $this->config['cookiedomain'] );
-    session_set_cookie_params( 0 , '/', $this->config['cookiedomain'] );
+    $cookiedomain = $this->config['cookiedomain'];
+    // egy dinamikus cookie domain a host alapjan amibe a static. aldomain
+    // nem tartozik bele
+    if ( isset( $_SERVER['SERVER_NAME'] ) )
+      $cookiedomain = '.' . str_replace( 'static.', '', $_SERVER['SERVER_NAME'] );
+    
+    ini_set('session.cookie_domain',    $cookiedomain );
+    session_set_cookie_params( 0 , '/', $cookiedomain );
     
     if ( isset( $_REQUEST['PHPSESSID'] ) )
       session_id( $_REQUEST['PHPSESSID'] );
@@ -372,8 +378,7 @@ class Bootstrap {
   public function getSession( $namespace = 'default' ) {
     
     $this->setupSession();
-    $this->setupOrganization();
-    $basenamespace = $this->config['siteid'] . $this->organization->id;
+    $basenamespace = $this->config['siteid'];
     return new Springboard\Session( $basenamespace, $namespace );
     
   }
