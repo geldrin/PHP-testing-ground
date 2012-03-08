@@ -32,12 +32,12 @@ $config = Array(
   
   'forward' => Array(
     'type'  => 'inputHidden',
-    'value' => ( isset( $_REQUEST['forward'] ) ? $_REQUEST['forward'] : '' )
+    'value' => $this->application->getParameter('forward'),
   ),
   
   'welcome' => Array(
     'type'  => 'inputHidden',
-    'value' => ( isset( $_REQUEST['welcome'] ) ? $_REQUEST['welcome'] : '' )
+    'value' => $this->application->getParameter('welcome'),
   ),
   
   'email' => Array(

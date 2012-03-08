@@ -33,7 +33,8 @@
     <div id="headerloginform" class="hidden">
       {l key=youremail assign=youremail}
       <form action="{$language}/users/login" method="post">
-        <input type="hidden" name="action" value="submitlogin">
+        <input type="hidden" name="action" value="submitlogin"/>
+        <input type="hidden" name="forward" value="{$FULL_URI|escape:html}"/>
         <input class="inputtext inputbackground clearonclick" type="text" name="email" data-origval="{$youremail|escape:html}" value="{$youremail|escape:html}"/>
         <input class="inputtext inputbackground clearonclick" type="password" name="password" data-origval="******" value="******"/>
         <input class="submitbutton" type="submit" value="login"/>
