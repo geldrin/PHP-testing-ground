@@ -8,7 +8,7 @@ $j(document).ready(function() {
     
   });
   
-  runIfExists('#currentuser', setupCurrentUser );
+  runIfExists('#headerlogin', setupHeaderLogin );
   runIfExists('#headersearch', setupHeaderSearch );
   
   $j('#scriptingcontainer').show();
@@ -69,7 +69,7 @@ function setupHeaderSearch() {
   
 }
 
-function setupCurrentUser() {
+function setupHeaderLogin() {
   
   $j('#headerloginactionlink').on('click', function( e ) {
     e.preventDefault();
