@@ -60,7 +60,7 @@ if ( $jconf['node_role'] == 'converter' ) {
 
 $now_minutes = date('i');
 
-// Check if any stop file is present
+// Check if all.stop file is present blocking all the jobs
 $stop_file = $app->config['datapath'] . 'jobs/all.stop';
 if ( file_exists($stop_file) ) {
 	$msg = "WARNING: jobs are not running. See stop file:\n\n" . $stop_file . "\n\nRemove it to start all jobs. This message is sent once every hour.";
@@ -151,7 +151,6 @@ foreach ( $jobs as $job => $difference ) {
 				$msg .= "OK\n";
 			}
 			$msg .= "COMMAND DURATION: " . ($megallas - $inditas) . "usec\n";
-//echo $msg . "\n";
 
 			$debug->log($jconf['log_dir'], $jconf['jobid_watcher'] . ".log", $msg, $sendmail = true);
 			break;

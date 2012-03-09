@@ -70,8 +70,8 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_media_convert.stop' ) and 
 		$recording = array();
 		$uploader_user = array();
 
-//update_db_recording_status(1, "uploaded");
-//update_db_masterrecording_status(1, "uploaded");
+//update_db_recording_status(1, "reconvert");
+//update_db_masterrecording_status(1, "onstorage");
 
 		// Query next job - exit if none
 		if ( !query_nextjob($recording, $uploader_user) ) break;
@@ -458,21 +458,21 @@ global $app, $jconf;
 	}
 
 	// Wide frames
-	$err = create_remove_directory($thumb_output_dir . $jconf['thumb_video_resw'] . "/");
+	$err = create_remove_directory($thumb_output_dir . $jconf['thumb_video_medium'] . "/");
 	if ( !$err['code'] ) {
 		log_recording_conversion($recording['id'], $jconf['jobid_media_convert'], $jconf['dbstatus_conv_thumbs'], $err['message'], $err['command'], $err['result'], 0, TRUE);
 		return FALSE;
 	}
 
 	// 4:3 frames
-	$err = create_remove_directory($thumb_output_dir . $jconf['thumb_video_res43'] . "/");
+	$err = create_remove_directory($thumb_output_dir . $jconf['thumb_video_small'] . "/");
 	if ( !$err['code'] ) {
 		log_recording_conversion($recording['id'], $jconf['jobid_media_convert'], $jconf['dbstatus_conv_thumbs'], $err['message'], $err['command'], $err['result'], 0, TRUE);
 		return FALSE;
 	}
 
 	// High resolution wide frame
-	$err = create_remove_directory($thumb_output_dir . $jconf['thumb_video_resw_high'] . "/");
+	$err = create_remove_directory($thumb_output_dir . $jconf['thumb_video_large'] . "/");
 	if ( !$err['code'] ) {
 		log_recording_conversion($recording['id'], $jconf['jobid_media_convert'], $jconf['dbstatus_conv_thumbs'], $err['message'], $err['command'], $err['result'], 0, TRUE);
 		return FALSE;
@@ -488,14 +488,13 @@ global $app, $jconf;
 		$vthumbs_maxframes = floor($playtime);
 	}
 
-//	log_recording_conversion($recording['id'], $jconf['jobid_media_convert'], $jconf['dbstatus_conv_thumbs'], "[INFO] Video thumbnail generation summary:\nStep: " . $thumb_steps . " sec\nNumber of thumbs: " . $vthumbs_maxframes . "\nResolutions: " . $jconf['thumb_video_resw'] . ", " . $jconf['thumb_video_res43'] . ", " . $jconf['thumb_video_resw_high'], "-", "-", 0, FALSE);
-	$log_msg = "[INFO] Video thumbnail generation summary:\nStep: " . $thumb_steps . " sec\nNumber of thumbs: " . $vthumbs_maxframes . "\nResolutions: " . $jconf['thumb_video_resw'] . ", " . $jconf['thumb_video_res43'] . ", " . $jconf['thumb_video_resw_high'];
+	$log_msg = "[INFO] Video thumbnail generation summary:\nStep: " . $thumb_steps . " sec\nNumber of thumbs: " . $vthumbs_maxframes . "\nResolutions: " . $jconf['thumb_video_medium'] . ", " . $jconf['thumb_video_small'] . ", " . $jconf['thumb_video_large'];
 	$time_start = time();
 
 	// Thumbnail generation under ./indexpics by each recording element
-	$res_wide   = explode("x", $jconf['thumb_video_resw'], 2);
-	$res_43     = explode("x", $jconf['thumb_video_res43'], 2);
-	$res_high	= explode("x", $jconf['thumb_video_resw_high'], 2);
+	$res_wide   = explode("x", $jconf['thumb_video_medium'], 2);
+	$res_43     = explode("x", $jconf['thumb_video_small'], 2);
+	$res_high	= explode("x", $jconf['thumb_video_large'], 2);
 	$filename_prefix = $recording['id'] . "_";
 	$frame_number = 0;
 	$iserror = FALSE;
@@ -510,9 +509,9 @@ global $app, $jconf;
 		// Set filenames
 		$filename_basename = $filename_prefix . sprintf("%d", $frame_number + 1) . ".jpg";
 		$orig_thumb_filename = $thumb_output_dir . "original/" . $filename_basename;
-		$filename_wide = $thumb_output_dir . $jconf['thumb_video_resw'] . "/" . $filename_basename;
-		$filename_43 = $thumb_output_dir . $jconf['thumb_video_res43'] . "/" . $filename_basename;
-		$filename_highres = $thumb_output_dir . $jconf['thumb_video_resw_high'] . "/" . $filename_basename;
+		$filename_wide = $thumb_output_dir . $jconf['thumb_video_medium'] . "/" . $filename_basename;
+		$filename_43 = $thumb_output_dir . $jconf['thumb_video_small'] . "/" . $filename_basename;
+		$filename_highres = $thumb_output_dir . $jconf['thumb_video_large'] . "/" . $filename_basename;
 
 //		$command  = CONVERSION_NICE . " ffmpeg -y -v " . FFMPEG_LOGLEVEL . " -ss " . $position_sec . " -i " . $master_filename . " " . $deinterlace . " -an ";
 //		$command .= " -vframes 1 -r 1 -vcodec mjpeg -f mjpeg " . $orig_thumb_filename ." 2>&1";
@@ -567,7 +566,7 @@ global $app, $jconf;
 					// Select thumbnails with highest filesize (best automatic selection is supposed)
 					if ( filesize($filename_43) > $recording['thumbnail_size'] ) {
 						$recording['thumbnail_size'] = filesize($filename_43);
-						$recording['thumbnail_indexphotofilename'] = "recordings/" . ( $recording['id'] % 1000 ) . "/" . $recording['id'] . "/indexpics/" . $jconf['thumb_video_res43'] . "/" . $filename_basename;
+						$recording['thumbnail_indexphotofilename'] = "recordings/" . ( $recording['id'] % 1000 ) . "/" . $recording['id'] . "/indexpics/" . $jconf['thumb_video_small'] . "/" . $filename_basename;
 					}
 				}
 
@@ -759,8 +758,9 @@ global $app, $jconf;
 	$media_regex = ".*" . $recording['id'] . "_\(audio\.mp3\|video_lq\.mp4\|video_hq\.mp4\|mobile_lq\.mp4\|mobile_hq\.mp4\)";
 	$command1 = "find " . $remote_recording_directory . " -mount -maxdepth 1 -type f -regex '" . $media_regex . "' -exec rm -f {} \\; 2>/dev/null";
 	// Indexpic: all recording related .jpg thumbnails and full sized .png images
-	$indexpics_regex = ".*" . $recording['id'] . ".*\(\.jpg\|\.png\)";
-	$command2 = "find " . $remote_recording_directory . "indexpics/" . " -mount -maxdepth 2 -type f -regex '" . $indexpics_regex . "' -exec rm -f {} \\; 2>/dev/null";
+//	$indexpics_regex = ".*" . $recording['id'] . ".*\(\.jpg\|\.png\)";
+//	$command2 = "find " . $remote_recording_directory . "indexpics/" . " -mount -maxdepth 2 -type f -regex '" . $indexpics_regex . "' -exec rm -f {} \\; 2>/dev/null";
+	$command2 = "find " . $remote_recording_directory . "indexpics/" . " -mount -mindepth 1 -maxdepth 1 -type d -exec rm -r -f {} \\; 2>/dev/null";
 	$command = $ssh_command . "\"" . $command1 . " ; " . $command2 . "\"";
 	exec($command, $output, $result);
 
@@ -811,7 +811,13 @@ global $app, $jconf;
 	update_db_recording_status($recording['id'], $jconf['dbstatus_copystorage_ok']);
 	update_db_masterrecording_status($recording['id'], $jconf['dbstatus_copystorage_ok']);
 
-// Remove master from upload area if not reconvert!
+	// Remove master from upload area if not reconvert!
+	if ( $recording['conversion_type'] != $jconf['dbstatus_reconvert'] ) {
+		$uploadpath = $app->config['uploadpath'] . "recordings/";
+		$base_filename = $recording['id'] . "." . $recording['mastervideoextension'];
+		$err = ssh_fileremove($recording['mastersourceip'], $uploadpath . $base_filename);
+		if ( !$err['code'] ) log_recording_conversion($recording['id'], $jconf['jobid_media_convert'], $jconf['dbstatus_copystorage'], $err['message'], $err['command'], $err['result'], 0, TRUE);
+	}
 
 	// Remove temporary directory, no failure if not successful
 	$err = remove_file_ifexists($recording['temp_directory']);

@@ -454,7 +454,13 @@ global $app, $jconf;
 	update_db_content_status($recording['id'], $jconf['dbstatus_copystorage_ok']);
 	update_db_mastercontent_status($recording['id'], $jconf['dbstatus_copystorage_ok']);
 
-// Remove master from upload area if not reconvert!
+	// Remove master from upload area if not reconvert!
+	if ( $recording['conversion_type'] != $jconf['dbstatus_reconvert'] ) {
+		$uploadpath = $app->config['uploadpath'] . "recordings/";
+		$base_filename = $recording['id'] . "_content." . $recording['contentmastervideoextension'];
+		$err = ssh_fileremove($recording['contentmastersourceip'], $uploadpath . $base_filename);
+		if ( !$err['code'] ) log_recording_conversion($recording['id'], $jconf['jobid_content_convert'], $jconf['dbstatus_copystorage'], $err['message'], $err['command'], $err['result'], 0, TRUE);
+	}
 
 	// Remove temporary directory, no failure if not successful
 	$err = remove_file_ifexists($recording['temp_directory']);
