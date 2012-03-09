@@ -1115,8 +1115,8 @@ a#currentusername span {
   margin-bottom: -44px;
   margin-right: -85px;
   position: relative;
-  top: 95px;
-  left: 105px;
+  top: 60px;
+  left: 100px;
   background-image: url(images/playbutton.png);
   display: inline;
 }

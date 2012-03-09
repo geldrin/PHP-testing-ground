@@ -326,12 +326,21 @@ class Recordings extends \Springboard\Model {
     
   }
   
-  public function handleFile( $source, $handlefile = 'upload', $postfix = '' ) {
+  public function handleFile( $source, $handlefile = 'upload', $postfix = null ) {
     
     $this->ensureObjectLoaded();
     
     if ( !$this->metadata )
       throw new \Exception('No metadata for the video found, please ->analyize() it beforehand!');
+    
+    if ( $postfix === null ) {
+      
+      if ( $this->metadata['mastermediatype'] == 'audio' )
+        $postfix = '_audio';
+      else
+        $postfix = '_video';
+      
+    }
     
     $target =
       $this->bootstrap->config['uploadpath'] . 'recordings/' . $this->id .
