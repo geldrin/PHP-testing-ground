@@ -42,7 +42,7 @@ $config = array(
   ),
   //-----
   'defaultlanguage' => 'hu',
-  'languages'       => array( 'hu' ),
+  'languages'       => array( 'hu', 'en' ),
   'locales'         => array( // setlocale-hez
     'hu' => array(
       'hu_HU.UTF-8',

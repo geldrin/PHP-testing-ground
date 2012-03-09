@@ -9,6 +9,7 @@ return array(
   
   'headerlanguages' => array(
     'hu' => 'HU',
+    'en' => 'EN',
   ),
   
   'title' => array(
