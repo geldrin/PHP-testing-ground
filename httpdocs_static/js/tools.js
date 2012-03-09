@@ -8,26 +8,10 @@ $j(document).ready(function() {
     
   });
   
+  runIfExists('#currentuser', setupCurrentUser );
+  runIfExists('#headersearch', setupHeaderSearch );
+  
   $j('#scriptingcontainer').show();
-  
-  $j('#currentusername').on('click', function( e ) {
-    e.preventDefault();
-    $j('#currentuser').toggleClass('active');
-  });
-  
-  $j('#languageselector a.active').on('click', function( e ) {
-    e.preventDefault();
-    $j('#languageselector').toggleClass('active');
-  });
-  
-  $j('#headerloginactionlink').on('click', function( e ) {
-    e.preventDefault();
-    $j('#headerloginform, #headerloginactions').toggle();
-  });
-  
-  $j('#headersearcharrow').on('click', function( e ) {
-    e.preventDefault();
-  });
   
   $j('.clearonclick').on('focusin', function() {
     
@@ -42,6 +26,85 @@ $j(document).ready(function() {
   });
   
 });
+
+function runIfExists( selector, func ) {
+  
+  if ( $j( selector ).length > 0 )
+    func();
+  
+}
+
+function setupHeaderSearch() {
+  
+  $j('#headersearcharrow').on('click', function( e ) {
+    e.preventDefault();
+  });
+  
+  $j('#languageselector a.active').on('click', function( e ) {
+    e.preventDefault();
+    $j('#languageselector').toggleClass('active');
+  });
+  
+  var languageselectortimeout;
+  var clearLanguageSelector = function() {
+    
+    if ( languageselectortimeout ) {
+      
+      clearTimeout( languageselectortimeout );
+      languageselectortimeout = null;
+      
+    }
+    
+  };
+  
+  $j('#languageselector').on('mouseenter', clearLanguageSelector );
+  $j('#languageselector').on('mouseleave', function() {
+    
+    clearLanguageSelector();
+    languageselectortimeout = setTimeout( function() {
+      $j('#languageselector').toggleClass('active', false );
+    }, 1750 );
+    
+  });
+  
+}
+
+function setupCurrentUser() {
+  
+  $j('#headerloginactionlink').on('click', function( e ) {
+    e.preventDefault();
+    $j('#headerloginform, #headerloginactions').toggle();
+  });
+  
+  $j('#currentusername').on('click', function( e ) {
+    e.preventDefault();
+    $j('#currentuser').toggleClass('active');
+  });
+  
+  var currentusertimeout;
+  var clearCurrentUser = function() {
+    
+    if ( currentusertimeout ) {
+      
+      clearTimeout( currentusertimeout );
+      currentusertimeout = null;
+      
+    }
+    
+  };
+  
+  $j('#currentusername, #currentusercontent').on('mouseenter', clearCurrentUser );
+  
+  $j('#currentusercontent').on('mouseleave', function() {
+    
+    clearCurrentUser();
+    currentusertimeout = setTimeout( function() {
+      $j('#currentuser').toggleClass('active', false );
+    }, 1750 );
+    
+  });
+  
+}
 
 function setupVideoUpload() {
   
