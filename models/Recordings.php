@@ -339,9 +339,9 @@ class Recordings extends \Springboard\Model {
     ;
     
     switch ( $handlefile ) {
-      case 'copy':   $ret = @copy( $source, $target ); break;
-      case 'upload': $ret = @move_uploaded_file( $source, $target ); break;
-      case 'rename': $ret = @rename( $source, $target ); break;
+      case 'copy':   $ret = copy( $source, $target ); break;
+      case 'upload': $ret = move_uploaded_file( $source, $target ); break;
+      case 'rename': $ret = rename( $source, $target ); break;
       default: throw new \Exception('unsupported operation: ' . $handlefile ); break;
     }
     
