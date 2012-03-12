@@ -177,8 +177,8 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_media_convert.stop' ) and 
 		}
 		if ( !empty($recording['mastervideofilename']) ) $subject .= ": " . $recording['mastervideofilename'];
 		$queue = $app->bootstrap->getMailqueue();
-//$uploader_user['email']
-//		$queue->sendHTMLEmail("hiba@teleconnect.hu", $subject, $smarty->fetch('Visitor/Recordings/Email/job_media_converter.tpl') );
+		$queue->embedImages = FALSE;
+		$queue->sendHTMLEmail($uploader_user['email'], $subject, $smarty->fetch('Visitor/Recordings/Email/job_media_converter.tpl') );
 
 		break;
 	}	// End of while(1)
