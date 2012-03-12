@@ -1,7 +1,7 @@
 <?php
 
 define('BASE_PATH',  realpath( dirname( __FILE__ ) . '/..' ) . '/' );
-if ( isset( $_SERVER['APPLICATION_ENV'] ) and $_SERVER['APPLICATION_ENV'] == 'nonprod' )
+if ( isset( $_SERVER['APPLICATION_ENV'] ) and $_SERVER['APPLICATION_ENV'] == 'developer' )
   define('PRODUCTION', false );
 else
   define('PRODUCTION', true );
