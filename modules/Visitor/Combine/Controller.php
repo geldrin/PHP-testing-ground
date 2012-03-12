@@ -11,6 +11,7 @@ class Controller extends \Visitor\Controller {
   public function init() {
     header("Expires: " . gmdate("M d Y H:i:s", strtotime( "+1 day" ) ) . ' GMT' );
     header("Last-Modified: " . gmdate("M d Y H:i:s") . ' GMT' );
+    parent::init();
   }
   
   public function indexAction() {
