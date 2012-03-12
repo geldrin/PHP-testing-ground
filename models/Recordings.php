@@ -1281,18 +1281,18 @@ class Recordings extends \Springboard\Model {
     
   }
   
+  public function markAsDeleted() {
+    
+    $this->ensureObjectLoaded();
+    
+    $this->updateRow( array(
+        'status' => 'markedfordeletion',
+      )
+    );
+    // TODO delete minden ami ezzel kapcsolatos
+    $this->updateChannelIndexPhotos();
+    return true;
+    
+  }
+  
 }
-/*
-
-NEM
-/api/json/model/recordings/getRow/12
-/api/json/model/recordings/upload/title/filepath
-/api/json/control/recordings/listing/0/50/timestamp_desc
-
-
-IGEN
-/api?format=json&layer=model&module=recordings&method=getRow&id=12
-/api?format=json&layer=model&module=recordings&method=upload&title=title&filepath=filepath
-
-
-*/

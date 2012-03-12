@@ -6,8 +6,8 @@
     
     <div class="recordingcontent">
       <div class="title">
-        {if 0 and preg_match( '/^onstorage$|^failed.*$/', $item.status )}
-          <a href="{$language}/recordings/delete/{$item.id}?forward={$FULL_URI|escape:url}" title="{l module=recordings key=deleterecording}" class="confirm right">{l module=recordings key=delete}</a>
+        {if preg_match( '/^onstorage$|^failed.*$/', $item.status )}
+          <a href="{$language}/recordings/delete/{$item.id}?forward={$FULL_URI|escape:url}" title="{l module=recordings key=deleterecording}" class="confirm right">{l key=delete}</a>
         {/if}
         <h3><a href="{$language}/recordings/details/{$item.id},{$item.title|filenameize}">{$item.title|escape:html}</a></h3>
         {if $item.subtitle|stringempty}<h4>{$item.subtitle|escape:html}</h4>{/if}

@@ -18,6 +18,7 @@ class Controller extends \Visitor\Controller {
     'modifydescription'    => 'uploader',
     'modifysharing'        => 'uploader',
     'deletesubtitle'       => 'uploader',
+    'delete'               => 'uploader',
   );
   
   public $forms = array(
@@ -178,6 +179,22 @@ class Controller extends \Visitor\Controller {
       $subtitle = $cache->get();
     
     $this->output( $subtitle );
+    
+  }
+  
+  public function deleteAction() {
+    
+    $recordingModel = $this->modelOrganizationAndUserIDCheck(
+      'recordings',
+      $this->application->getNumericParameter('id')
+    );
+    
+    if ( preg_match( '/^onstorage$|^failed.*$/', $recordingModel->row['status'] ) )
+      $recordingModel->markAsDeleted();
+    
+    $this->redirect(
+      $this->application->getParameter('forward', 'recordings/myrecordings')
+    );
     
   }
   
