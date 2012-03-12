@@ -86,6 +86,18 @@ global $jconf;
 		$err['message'] = "[OK] ffmpeg conversion OK (in " . $mins_taken . " mins)";
 	}
 
+/*
+‘-pass n’
+
+Select the pass number (1 or 2). It is used to do two-pass video encoding. The statistics of the video are recorded in the first pass into a log file (see also the option -passlogfile), and in the second pass that log file is used to generate the video at the exact requested bitrate. On pass 1, you may just deactivate audio and set output to null, examples for Windows and Unix:  	ffmpeg -i foo.mov -c:v libxvid -pass 1 -an -f rawvideo -y NUL
+ffmpeg -i foo.mov -c:v libxvid -pass 1 -an -f rawvideo -y /dev/null
+
+ ‘-passlogfile prefix (global)’
+
+Set two-pass log file name prefix to prefix, the default file name prefix is “ffmpeg2pass”. The complete file name will be ‘PREFIX-N.log’, where N is a number specific to the output stream
+
+*/
+
 	return $err;
 
 }

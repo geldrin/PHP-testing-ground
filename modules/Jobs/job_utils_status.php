@@ -30,9 +30,9 @@ global $app, $jconf, $db;
 		return FALSE;
 	}
 
-//	$recordingObj = $app->bootstrap->getModel('recordings');
-//	$recordingObj->select($rec_id);
-//	$recordingObj->updateChannelIndexPhotos();
+	$recordingObj = $app->bootstrap->getModel('recordings');
+	$recordingObj->select($rec_id);
+	$recordingObj->updateChannelIndexPhotos();
 
 	return TRUE;
 }
