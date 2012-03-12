@@ -47,7 +47,7 @@ class Controller extends \Visitor\Controller {
           $filecontent =
             str_replace(
               'url(',
-              'url(' . $scheme . $this->application->config['staticuri'],
+              'url(' . $scheme . 'static.' . $this->organization['domain'] . '/',
               $filecontent
             );
         

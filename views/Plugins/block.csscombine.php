@@ -3,8 +3,10 @@
 function smarty_block_csscombine( $params, $content, $smarty ) {
   
   $bootstrap = $smarty->get_template_vars('bootstrap');
+  $organization = $smarty->get_template_vars('organization');
+  $language  = $smarty->get_template_vars('language');
   $scheme    = SSL? 'https://': 'http://';
-  $staticuri = $scheme . $bootstrap->config['staticuri'];
+  $staticuri = $scheme . 'static.' . $organization['domain'] . '/';
   
   if ( !$bootstrap->config['combine']['css'] )
     return $content;
@@ -22,7 +24,7 @@ function smarty_block_csscombine( $params, $content, $smarty ) {
     
     $content .=
       '<link rel="StyleSheet" type="text/css" href="' .
-        $scheme . $bootstrap->config['baseuri'] . \Springboard\Language::get() .
+        $scheme . $organization['domain'] . '/' . \Springboard\Language::get() .
         '/combine/css?url[]=' . implode( '&url[]=', $out ) .
       '" />'
     ;
