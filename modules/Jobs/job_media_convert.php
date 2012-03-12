@@ -331,7 +331,9 @@ global $app, $jconf;
 	// Set upload path to default upload area
 	$uploadpath = $app->config['uploadpath'] . "recordings/";
 	// Media path and filename
-	$base_filename = $recording['id'] . "." . $recording['mastervideoextension'];
+	$suffix = "video";
+	if ( $recording['mastermediatype'] == "audio" ) $suffix = "audio";
+	$base_filename = $recording['id'] . "_" . $suffix . "." . $recording['mastervideoextension'];
 	// Check reconvert state. In case of reconvert, we copy from recordings area
 	$recording['conversion_type'] = "convert";
 	if ( ( ( $recording['status'] == $jconf['dbstatus_reconvert'] ) && ( $recording['masterstatus'] == $jconf['dbstatus_copystorage_ok'] ) ) || ( $recording['masterstatus'] == $jconf['dbstatus_copystorage_ok'] ) ) {
@@ -814,7 +816,9 @@ global $app, $jconf;
 	// Remove master from upload area if not reconvert!
 	if ( $recording['conversion_type'] != $jconf['dbstatus_reconvert'] ) {
 		$uploadpath = $app->config['uploadpath'] . "recordings/";
-		$base_filename = $recording['id'] . "." . $recording['mastervideoextension'];
+		$suffix = "video";
+		if ( $recording['mastermediatype'] == "audio" ) $suffix = "audio";
+		$base_filename = $recording['id'] . "_" . $suffix . "." . $recording['mastervideoextension'];
 		$err = ssh_fileremove($recording['mastersourceip'], $uploadpath . $base_filename);
 		if ( !$err['code'] ) log_recording_conversion($recording['id'], $jconf['jobid_media_convert'], $jconf['dbstatus_copystorage'], $err['message'], $err['command'], $err['result'], 0, TRUE);
 	}
