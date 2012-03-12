@@ -9,7 +9,8 @@
       </div>
       <div class="recordinginfo">
         <ul>
-          <li><span class="bold">{l module=categories key=recordedtimestamp}:</span> <span>{$item.recordedtimestamp}</span></li>
+          {l key=smarty_dateformat_long assign=dateformat_long}
+          <li><span class="bold">{l module=categories key=recordedtimestamp}:</span> <span>{$item.recordedtimestamp|date_format:$dateformat_long}</span></li>
           <li><span class="bold">{l module=categories key=recording_views}:</span> <span>{$item.numberofviews}</span></li>
           <li>
             <div class="ratewidget" nojs="1">

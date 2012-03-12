@@ -219,15 +219,16 @@ class Bootstrap {
       // smarty not found under LIBPATH - try include_path location
       include_once( 'smarty.2620/Smarty.class.php');
     
-    $this->instances['smarty'] = $smarty = new Smarty();
+    $this->instances['smarty'] = $smarty = new \Smarty();
     
     if ( $this->debug )
       $smarty->debugging = true;
     
+    $smarty->_config[0]['vars'] = new \Springboard\SmartyLocalization( $this );
     $smarty->template_dir = $this->config['templatepath'];
     $smarty->compile_dir  = $this->config['cachepath'] . 'smarty';
     $smarty->plugins_dir  = array( 'plugins', $this->config['templatepath'] . 'Plugins' );
-    $smarty->assign('bootstrap',        $this );
+    $smarty->assign('bootstrap',    $this );
     
     $smarty->assign('ssl', SSL );
     

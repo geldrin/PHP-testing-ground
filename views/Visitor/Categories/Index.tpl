@@ -1,9 +1,9 @@
-{l module=categories key=categories_title assign=title}
-{include file="Visitor/_header.tpl" title=$title}
+{include file="Visitor/_header.tpl" title=#categories__categories_title#}
 <div class="heading categoryheading">
-  <h1>{l module=categories key=categories_title}</h1>
-  <h2>{l module=categories key=categories_subtitle}</h2>
+  <h1>{#categories__categories_title#}</h1>
+  <h2>{#categories__categories_subtitle#}</h2>
 </div>
+
 <ul class="categorylist">
 {foreach from=$categories item=category name=category}
   
