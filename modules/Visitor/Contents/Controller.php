@@ -1,7 +1,7 @@
 <?php
 namespace Visitor\Contents;
 
-class Controller extends \Springboard\Controller\Visitor {
+class Controller extends \Visitor\Controller {
   
   public function route() {
     // TODO caching?

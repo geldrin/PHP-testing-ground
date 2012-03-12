@@ -1,7 +1,7 @@
 <?php
 namespace Visitor\Index;
 
-class Controller extends \Springboard\Controller\Visitor {
+class Controller extends \Visitor\Controller {
   public $permissions = array(
     'index'  => 'public',
   );

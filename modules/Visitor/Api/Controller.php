@@ -1,7 +1,7 @@
 <?php
 namespace Visitor\Api;
 
-class Controller extends \Springboard\Controller\Visitor {
+class Controller extends \Visitor\Controller {
   public $formats = array('json');
   public $format  = 'json';
   public $layers  = array( 'model', 'controller' );
