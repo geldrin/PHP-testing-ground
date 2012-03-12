@@ -242,7 +242,9 @@ class Bootstrap {
       
       $smarty->assign('BASE_URI',   'http://' . $this->config['baseuri'] );
       $smarty->assign('STATIC_URI', 'http://' . $this->config['staticuri'] );
-      $smarty->assign('FULL_URI',   'http://' . $_SERVER['SERVER_NAME'] . $_SERVER['REQUEST_URI'] );
+      
+      if ( !ISCLI )
+        $smarty->assign('FULL_URI',   'http://' . $_SERVER['SERVER_NAME'] . $_SERVER['REQUEST_URI'] );
       
     }
     
