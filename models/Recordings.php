@@ -1165,8 +1165,16 @@ class Recordings extends \Springboard\Model {
       
       $data['media_secondaryStreams'] = array( $this->getMediaUrl('content', false ) );
       
-      if ( $this->row['contentvideoreshq'] )
+      if ( $this->row['contentvideoreshq'] ) {
+        
         $data['media_secondaryStreams'][] = $this->getMediaUrl('content', true );
+        
+        // ha van HQ content, de nincs HQ "default" verzio akkor ketszer
+        // kell szerepeljen a default verzio
+        if ( count( $data['media_streams'] ) == 1 )
+          $data['media_streams'][] = reset( $data['media_streams'] );
+        
+      }
       
     }
     
