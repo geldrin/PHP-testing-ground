@@ -75,6 +75,8 @@ $config = array(
 );
 
 $haveindexphotos = false;
+$scheme          = SSL? 'https://': 'http://';
+
 for ( $i = 1; $i <= $this->recordingsModel->row['numberofindexphotos']; $i++ ) {
 
   $haveindexphotos = true;
@@ -85,7 +87,7 @@ for ( $i = 1; $i <= $this->recordingsModel->row['numberofindexphotos']; $i++ ) {
   );
 
   $config['indexphotofilename']['values'][ $filename ] = 
-    '<img src="' . $this->bootstrap->config['staticuri'] . 'files/' . $filename . '" />';
+    '<img src="' . $scheme . $this->bootstrap->config['staticuri'] . 'files/' . $filename . '" />';
   ;
   
 }
