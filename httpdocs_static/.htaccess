@@ -2,6 +2,10 @@
 # ExpiresDefault "access plus 1 month"
 # FileETag MTime
 
+<IfModule mod_xsendfile.c>
+XSendFile on
+</IfModule>
+
 RewriteEngine On
 # verziokezeles
 RewriteCond %{REQUEST_FILENAME} !-d
