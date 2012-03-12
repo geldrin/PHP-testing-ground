@@ -166,7 +166,7 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_media_convert.stop' ) and 
 		log_recording_conversion($recording['id'], $jconf['jobid_media_convert'], "-", "[OK] Successful media conversion in " . $hms . " time.\n\nConversion summary:\n\n" . $global_log, "-", "-", $conversion_duration, TRUE);
 
 		// Send e-mail to user about successful conversion
-/*		$smarty = getSmarty();
+		$smarty = $app->bootstrap->getSmarty();
 		$smarty->assign('filename', $recording['mastervideofilename']);
 		$smarty->assign('language', $uploader_user['language']);
 		$smarty->assign('recid', $recording['id']);
@@ -177,7 +177,8 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_media_convert.stop' ) and 
 		}
 		if ( !empty($recording['mastervideofilename']) ) $subject .= ": " . $recording['mastervideofilename'];
 		$queue = $app->bootstrap->getMailqueue();
-		$queue->sendHTMLEmail($uploader_user['email'], $subject, $smarty->fetch('emails/converter_email.tpl'), $values = array() ); */
+//$uploader_user['email']
+//		$queue->sendHTMLEmail("hiba@teleconnect.hu", $subject, $smarty->fetch('Visitor/Recordings/Email/job_media_converter.tpl') );
 
 		break;
 	}	// End of while(1)
