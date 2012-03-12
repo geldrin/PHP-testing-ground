@@ -12,7 +12,7 @@
       <a href="{$language}/categories/details/{$category.id},{$category.name|filenameize}" title="{$category.name|escape:html}"><h2>{$category.name|escape:html}</h2></a>
       <div class="numberofrecordings">({$category.numberofrecordings|default:0})</div>
       
-      <a href="{$language}/categories/details/{$category.id},{$category.name|filenameize}" class="categorypic"><img src="{$STATIC_URI}categories/{$category.id}.png" width="140" height="100"/></a>
+      <a href="{$language}/categories/details/{$category.id},{$category.name|filenameize}" class="categorypic"><img src="{$organization|@uri:static}categories/{$category.id}.png" width="140" height="100"/></a>
     </div>
     <ul class="subcategorylist">
       {foreach from=$category.children item=subcategory}

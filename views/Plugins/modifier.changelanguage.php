@@ -1,7 +1,10 @@
 <?php
+include_once('modifier.uri.php');
+
 function smarty_modifier_changelanguage( $url, $language ) {
   
-  $baseuri = \Bootstrap::getInstance()->getSmarty()->get_template_vars('BASE_URI');
+  $organization = \Bootstrap::getInstance()->getSmarty()->get_template_vars('organization');
+  $baseuri      = smarty_modifier_uri( $organization, 'base' );
   
   if ( strlen( $url ) < strlen( $baseuri ) )
     return $url . "/$language/";

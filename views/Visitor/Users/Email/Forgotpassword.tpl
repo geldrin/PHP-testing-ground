@@ -3,6 +3,7 @@
 {newsletter}
 <h1>{l module=users key=email_changepassword_title}</h1>
 <p>
+  {assign var=BASE_URI value=$organization|@uri:base}
   {assign var=url value="$BASE_URI$language/users/changepassword/`$values.id`,`$values.validationcode`"}
   {l module=users key=email_changepassword_body sprintf=$url}
 </p>

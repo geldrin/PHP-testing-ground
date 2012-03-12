@@ -2,7 +2,7 @@
     </div>
     <div id="footer">
       <div id="footerlogo">
-        <a href="{$BASE_URI}"><span></span>{l key=sitename}</a>
+        <a href="{$organization|@uri:base}"><span></span>{l key=sitename}</a>
       </div>
       <div class="footercontent leftbox">
         <h2>További információk</h2>

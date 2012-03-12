@@ -1,7 +1,7 @@
 {include file="Visitor/_header.tpl"}
 
-<script type="text/javascript" src="{$STATIC_URI}js/swfobject.full{$VERSION}.js"></script>
-<script type="text/javascript" src="{$STATIC_URI}js/swfupload220/swfupload{$VERSION}.js"></script>
+<script type="text/javascript" src="{$organization|@uri:static}js/swfobject.full{$VERSION}.js"></script>
+<script type="text/javascript" src="{$organization|@uri:static}js/swfupload220/swfupload{$VERSION}.js"></script>
 
 <div id="videoupload" class="leftdoublebox form">
   <noscript id="noscriptcontainer">
@@ -72,7 +72,7 @@ $j(document).ready(function() {ldelim}
   swfupload_load_failed_handler: swfuploadFallback,
   
   // Flash Settings
-  flash_url:        "{$BASE_URI}swf/swfupload.swf",
+  flash_url:        "{$organization|@uri:base}swf/swfupload.swf",
   
   button_placeholder_id:    "videobrowse",
   button_image_url:         STATIC_URI + "images/swfupload_button.png",
