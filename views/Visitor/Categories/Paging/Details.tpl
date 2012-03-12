@@ -1,4 +1,4 @@
-  <li>
+  <li class="listitem">
     <div class="recordingpic">
       <a href="{$language}/recordings/details/{$item.id},{$item.title|filenameize}"><span class="playpic"></span><img src="{$item|@indexphoto}"/></a>
     </div>
