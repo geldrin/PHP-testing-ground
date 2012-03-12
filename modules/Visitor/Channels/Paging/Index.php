@@ -17,10 +17,9 @@ class Index extends \Springboard\Controller\Paging {
   
   protected function setupCount() {
     // TODO channels listazas
-    $organization = $this->bootstrap->getOrganization();
     $this->channelModel = $this->bootstrap->getModel('channels');
     $this->channelModel->addFilter('parentid', 0 );
-    $this->channelModel->addFilter('organizationid', $organization->id );
+    $this->channelModel->addFilter('organizationid', $this->controller->organization['id'] );
     return $this->itemcount = $this->channelModel->getCount();
     
   }

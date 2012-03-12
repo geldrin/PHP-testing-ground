@@ -21,9 +21,8 @@ class Admin extends \Springboard\Controller\Paging {
   
   protected function setupCount() {
     
-    $organization = $this->bootstrap->getOrganization();
     $this->usersModel = $this->bootstrap->getModel('users');
-    $this->usersModel->addFilter('organizationid', $organization->id );
+    $this->usersModel->addFilter('organizationid', $this->controller->organization['id'] );
     return $this->itemcount = $this->usersModel->getCount();
     
   }

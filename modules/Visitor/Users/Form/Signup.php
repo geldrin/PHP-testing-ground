@@ -33,7 +33,7 @@ class Signup extends \Visitor\HelpForm {
     $values['validationcode'] = $crypto->randomPassword( 10 );
     $values['password']       = $crypto->getHash( $values['password'] );
     $values['language']       = \Springboard\Language::get();
-    $values['organizationid'] = $this->bootstrap->getOrganization()->id;
+    $values['organizationid'] = $this->controller->organization['id'];
     
     if ( $invitation = $userinvitationSession['invitation'] ) {
       

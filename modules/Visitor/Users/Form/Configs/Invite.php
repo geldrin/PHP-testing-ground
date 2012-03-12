@@ -1,9 +1,5 @@
 <?php
-$organization = $this->bootstrap->getOrganization();
-$organizationids = array_merge(
-  array($organization->id ),
-  $organization->children
-);
+$organizationid = $this->controller->organization['id'];
 
 include_once( $this->bootstrap->config['libpath'] . 'clonefish/constants.php');
 $config = array(
@@ -33,7 +29,7 @@ $config = array(
            FROM users " .
           "WHERE " .
             "email = <FORM.email> AND " .
-            "organizationid IN('" . implode("', '", $organizationids ) . "')",
+            "organizationid = '" . $organizationid . "'",
         'field' => 'counter',
         'value' => '0'
       )

@@ -1,6 +1,6 @@
 <?php
 
-$organization = $this->bootstrap->getOrganization();
+$organizationid = $this->controller->organization['id'];
 $config = Array(
   
   'action' => Array(
@@ -15,7 +15,7 @@ $config = Array(
   
   'organizationid' => Array(
     'type'     => 'inputHidden',
-    'value'    => $organization->id,
+    'value'    => $organizationid,
     'readonly' => true,
   ),
   
@@ -45,7 +45,7 @@ $config = Array(
       WHERE 
         c.name_stringid = s.translationof AND
         s.language = 'hu' AND
-        c.organizationid = '" . $organization->id . "' AND
+        c.organizationid = '" . $organizationid . "' AND
         %s
     ",
     'treeid'      => 'id',

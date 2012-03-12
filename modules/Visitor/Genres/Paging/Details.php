@@ -17,9 +17,8 @@ class Details extends \Springboard\Controller\Paging {
   
   protected function setupCount() {
     // TODO recording listazas
-    $organization = $this->bootstrap->getOrganization();
     $this->genreModel = $this->bootstrap->getModel('genres');
-    $this->genreModel->addFilter('organizationid', $organization->id );
+    $this->genreModel->addFilter('organizationid', $this->controller->organization['id'] );
     return $this->itemcount = $this->genreModel->getCount();
     
   }

@@ -23,9 +23,8 @@ class Admin extends \Springboard\Controller\Paging {
   }
   
   protected function getItems( $start, $limit, $orderby ) {
-    $organization = $this->bootstrap->getOrganization();
     $genreModel = $this->bootstrap->getModel('genres');
-    $genreModel->addFilter('organizationid', $organization->id );
+    $genreModel->addFilter('organizationid', $this->controller->organization['id'] );
     $genreModel->addFilter('parentid', '0', true, true, 'treearray');
     return $genreModel->getTreeArray();
   }

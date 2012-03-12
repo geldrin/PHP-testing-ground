@@ -1,6 +1,6 @@
 <?php
 $user = $this->bootstrap->getUser();
-$organization = $this->bootstrap->getOrganization();
+$organizationid = $this->controller->organization['id'];
 
 $config = array(
 
@@ -63,7 +63,7 @@ $config = array(
       '</div>' . "\r\n"
     ,
     'treeid'      => 'id',
-    'treestart'   => $organization->id,
+    'treestart'   => $organizationid,
     'treestartinclusive' => true,
     'treeparent'  => 'parentid',
     'valuesql'    => "SELECT organizationid FROM recordings_access WHERE recordingid = " . $this->application->getNumericParameter('id'),

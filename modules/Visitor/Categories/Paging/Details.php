@@ -36,13 +36,13 @@ class Details extends \Springboard\Controller\Paging {
     $l                 = $this->bootstrap->getLocalization();
     $this->foreachelse = $l('categories', 'categories_foreachelse');
     $this->title       = $l('categories', 'categories_title');
-    $organization      = $this->bootstrap->getOrganization();
+    $organization      = $this->controller->organization;
     $categoryModel     = $this->controller->modelIDCheck(
       'categories',
       $this->application->getNumericParameter('id')
     );
     
-    if ( $categoryModel->row['organizationid'] != $organization->id )
+    if ( $categoryModel->row['organizationid'] != $organization['id'] )
       $this->controller->redirect('index');
     
     $this->categoryids = array_merge(

@@ -25,9 +25,8 @@ class Admin extends \Springboard\Controller\Paging {
   }
   
   protected function getItems( $start, $limit, $orderby ) {
-    $organization = $this->bootstrap->getOrganization();
     $categoryModel = $this->bootstrap->getModel('categories');
-    $items = $categoryModel->getCategoryTree( $organization->id, 0, 8 );
+    $items = $categoryModel->getCategoryTree( $this->controller->organization['id'], 0, 8 );
     return $items;
   }
   

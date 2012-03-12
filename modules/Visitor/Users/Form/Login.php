@@ -13,22 +13,16 @@ class Login extends \Visitor\Form {
   
   public function onComplete() {
     
-    $crypto       = $this->bootstrap->getEncryption();
-    $values       = $this->form->getElementValues( 0 );
-    $smarty       = $this->bootstrap->getSmarty();
-    $userModel    = $this->bootstrap->getModel('users');
-    $organization = $this->bootstrap->getOrganization();
+    $crypto         = $this->bootstrap->getEncryption();
+    $values         = $this->form->getElementValues( 0 );
+    $smarty         = $this->bootstrap->getSmarty();
+    $userModel      = $this->bootstrap->getModel('users');
+    $organizationid = $this->controller->organization['id'];
     
-    $uservalid = $userModel->selectAndCheckUserValid( $organization->id, $values['email'], $values['password'] );
+    $uservalid = $userModel->selectAndCheckUserValid( $organizationid, $values['email'], $values['password'] );
     $orgvalid  = false;
     
-    if (
-         $uservalid and
-         (
-           $userModel->row['organizationid'] == $organization->id or
-           in_array( $userModel->row['organizationid'], $organization->children )
-         )
-       )
+    if ( $uservalid and $userModel->row['organizationid'] == $organizationid )
       $orgvalid = true;
     
     if ( !$uservalid or !$orgvalid ) {

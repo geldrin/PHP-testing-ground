@@ -149,8 +149,7 @@ class Controller extends \Visitor\Controller {
     $email        = $this->application->getParameter('email');
     $password     = $this->application->getParameter('password');
     $userModel    = $this->bootstrap->getModel('users');
-    $organization = $this->bootstrap->getOrganization();
-    $uservalid    = $userModel->selectAndCheckUserValid( $organization->id, $email, $password );
+    $uservalid    = $userModel->selectAndCheckUserValid( $this->organization['id'], $email, $password );
     
     if ( $uservalid ) {
       

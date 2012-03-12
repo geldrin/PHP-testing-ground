@@ -12,6 +12,7 @@ class Modify extends \Visitor\Form {
       $this->application->getNumericParameter('id')
     );
     $this->values        = $this->categoryModel->row;
+    parent::init();
   }
   
   public function postSetupForm() {

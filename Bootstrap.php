@@ -6,7 +6,6 @@ class Bootstrap {
   protected $forms          = array();
   protected $objects        = array();
   protected $caches         = array();
-  protected $organization;
   protected $headerssent    = false;
   
   public $sessionstarted    = false;
@@ -488,25 +487,6 @@ class Bootstrap {
       return $this->caches[ $key ] =
         new Springboard\Cache\Redis( $this, $key, $expireseconds )
       ;
-    
-  }
-  
-  public function setupOrganization() {
-    
-    if ( $this->organization )
-      return;
-    
-    $this->organization = new Organization( $this );
-    $this->organization->setup();
-    
-  }
-  
-  public function getOrganization() {
-    
-    if ( !$this->organization )
-      $this->setupOrganization();
-    
-    return $this->organization;
     
   }
   

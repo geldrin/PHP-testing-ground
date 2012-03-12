@@ -29,9 +29,8 @@ class Controller extends \Visitor\Controller {
   public function indexAction() {
     
     $smarty        = $this->bootstrap->getSmarty();
-    $organization  = $this->bootstrap->getOrganization();
     $categoryModel = $this->bootstrap->getModel('categories');
-    $categories    = $categoryModel->cachedGetCategoryTree( $organization->id );
+    $categories    = $categoryModel->cachedGetCategoryTree( $this->organization['id'] );
     
     if ( $this->application->getParameter('module') == 'api' )
       return $categories;

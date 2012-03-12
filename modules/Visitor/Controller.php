@@ -2,6 +2,36 @@
 namespace Visitor;
 
 class Controller extends \Springboard\Controller\Visitor {
+  public $organization;
+  
+  public function init() {
+    $this->setupOrganization();
+    parent::init();
+  }
+  
+  public function setupOrganization() {
+    
+    $host = $_SERVER['SERVER_NAME'];
+    
+    $cache = $this->bootstrap->getCache( 'organizations-' . $host, null, true );
+    if ( $cache->expired() ) {
+      
+      $orgModel = $this->bootstrap->getModel('organizations');
+      if ( !$orgModel->checkDomain( $host ) )
+        throw new Exception('Organization not found!');
+      
+      $organization = $orgModel->row;
+      $cache->put( $organization );
+      
+    } else
+      $organization = $cache->get();
+    
+    $this->organization = $organization;
+    
+    $smarty = $this->bootstrap->getSmarty();
+    $smarty->assign('organization', $organization );
+    
+  }
   
   public function handleAccessFailure( $permission ) {
     
@@ -18,10 +48,9 @@ class Controller extends \Springboard\Controller\Visitor {
     if ( $id <= 0 )
       $this->redirect( $redirectto );
     
-    $organization = $this->bootstrap->getOrganization();
     $model        = $this->bootstrap->getModel( $table );
     $model->addFilter('id', $id );
-    $model->addFilter('organizationid', $organization->id );
+    $model->addFilter('organizationid', $this->organization['id'] );
     
     $row = $model->getRow();
     
@@ -39,7 +68,6 @@ class Controller extends \Springboard\Controller\Visitor {
   
   public function modelOrganizationAndUserIDCheck( $table, $id, $forwardto = 'index' ) {
     
-    $organization = $this->bootstrap->getOrganization();
     $user         = $this->bootstrap->getUser();
     
     if ( $id <= 0 or !isset( $user->id ) )
