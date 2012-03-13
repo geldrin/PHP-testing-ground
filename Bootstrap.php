@@ -337,7 +337,7 @@ class Bootstrap {
   
   public function setupHeaders() {
     
-    if ( $this->headerssent )
+    if ( $this->headerssent or headers_sent() )
       return;
     
     header("Expires: Mon, 26 Jul 1997 05:00:00 GMT");              // Date in the p

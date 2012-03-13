@@ -235,6 +235,7 @@ CREATE TABLE `categories` (
    `name_stringid` int(10) unsigned not null,
    `weight` int(11) not null default '100',
    `disabled` int(11) not null default '0',
+   `numberofrecordings` int(11) not null default '0',
    PRIMARY KEY (`id`),
    KEY `ix_organizationid` (`organizationid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;

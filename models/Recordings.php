@@ -259,6 +259,31 @@ class Recordings extends \Springboard\Model {
     
   }
   
+  public function updateCategoryCounters( $categoryids = null ) {
+    
+    if ( $categoryids === null ) {
+      
+      $this->ensureID();
+      
+      $categoryids = $this->db->getCol("
+        SELECT categoryid
+        FROM recordings_categories
+        WHERE recordingid = '" . $this->id . "'
+      ");
+      
+    }
+    
+    $category = $this->bootstrap->getModel('categories');
+    
+    foreach( $categoryids as $categoryid ) {
+      
+      $category->select( $categoryid );
+      $category->updateVideoCounters();
+      
+    }
+    
+  }
+  
   public function getIndexPhotoFromChannels( $channelids = array(), $needpublic = null ) {
     
     if ( empty( $channelids ) )
@@ -504,15 +529,24 @@ class Recordings extends \Springboard\Model {
     
     $this->ensureID();
     
+    $categoryids = $this->db->getCol("
+      SELECT categoryid
+      FROM recordings_categories
+      WHERE recordingid = '" . $this->id . "'
+    ");
+    
     $this->db->execute("
       DELETE FROM recordings_categories
       WHERE recordingid = '" . $this->id . "'
     ");
     
+    $this->updateCategoryCounters( $categoryids );
+    
   }
   
   public function addCategories( $categoryids ) {
     $this->insertMultipleIDs( $categoryids, 'recordings_categories', 'categoryid');
+    $this->updateCategoryCounters();
   }
   
   public function addGenres( $genreids ) {
