@@ -35,7 +35,7 @@
 <div id="footerbg"></div>
 
 {if $bootstrap->debug and false}{debug}{/if}
-{if $boostrap->production}
+{if $bootstrap->production}
 {literal}
 <script type="text/javascript">
 
