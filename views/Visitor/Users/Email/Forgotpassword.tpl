@@ -5,10 +5,10 @@
 <p>
   {assign var=BASE_URI value=$organization|@uri:base}
   {assign var=url value="$BASE_URI$language/users/changepassword/`$values.id`,`$values.validationcode`"}
-  {l module=users key=email_changepassword_body sprintf=$url}
+  {#users__email_changepassword_body|sprintf:$url}
 </p>
 <p>
-{#users__email_linkinfo#}<br/>
+{#email_linkinfo#}<br/>
 {$url}
 </p>
 <br/>

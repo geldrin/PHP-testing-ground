@@ -56,7 +56,6 @@ class Signup extends \Visitor\HelpForm {
     $userModel->row['id'] = $crypto->asciiEncrypt( $userModel->id );
     $smarty->assign('values', $userModel->row );
     
-    $queue->embedImages = false;
     $queue->sendHTMLEmail(
       $userModel->row['email'],
       $l('users', 'validationemailsubject'),

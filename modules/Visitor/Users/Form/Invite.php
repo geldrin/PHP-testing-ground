@@ -40,7 +40,6 @@ class Invite extends \Visitor\Form {
     $invModel->row['id'] = $crypto->asciiEncrypt( $invModel->row['id'] );
     $smarty->assign('values', $invModel->row );
     
-    $queue->embedImages = false;
     $queue->sendHTMLEmail(
       $values['email'],
       $l('users', 'invitationmailsubject'),

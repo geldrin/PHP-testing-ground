@@ -4,12 +4,12 @@
   </tr>
   <tr>
     <td width="600" height="50" align="center" valign="center" style="width: 600px; text-align:center; color: #333333;">
-      <span style="font-size: 13px;"><center>&copy; 2011 NIIF Intézet, <a href="{$organization|@uri:static}" style="color: #0070bb;">www.niif.hu</a></center></span>
+      <span style="font-size: 13px;"><center>&copy; teleconnect, <a href="{$organization|@uri:base}" style="color: #1e97d4;">{$organization|@uri:base:''}</a></center></span>
     </td>
   </tr>
   <tr>
-    <td width="600" height="30" style="width: 600px; height: 30px; padding: 0; margin: 0;background-color: #fff; color: #333333; font-family: 'Helvetica', 'Arial', 'sans-serif'; font-size: 13px;" bgcolor="#fff" align="center">
-      <a href="http://videotorium.hu"><img hspace="0" vspace="0" border="0" src="{$organization|@uri:static}images/email_footer.png" style="border: 0; margin: 0; display: block;" alt="{#newsletter_enablepictures#}" /></a>
+    <td width="600" height="30" style="width: 600px; height: 30px; padding: 0; margin: 0;background-color: #fff; color: #333333; font-family: 'Arial', 'sans-serif'; font-size: 13px;" bgcolor="#fff" align="center">
+      <a href="{$organization|@uri:base}"><img hspace="0" vspace="0" border="0" src="{$organization|@uri:static}images/email_footer.png" style="border: 0; margin: 0; display: block;" alt="{#newsletter_enablepictures#}" /></a>
     </td>
   </tr>
 </table>

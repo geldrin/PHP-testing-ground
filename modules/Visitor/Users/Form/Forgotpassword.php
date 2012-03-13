@@ -42,7 +42,6 @@ class Forgotpassword extends \Visitor\Form {
     $userModel->row['id'] = $crypto->asciiEncrypt( $userModel->row['id'] );
     $smarty->assign('values', $userModel->row );
     
-    $queue->embedImages = false;
     $queue->sendHTMLEmail(
       $userModel->row['email'],
       $l('users', 'forgotpass_emailsubject'),

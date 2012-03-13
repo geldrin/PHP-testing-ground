@@ -5,7 +5,7 @@ function smarty_block_newsletter( $params, $content, &$smarty ) {
   if ( !$content )
     return;
   
-  $astyle   = 'color: #0070bb;';
+  $astyle   = 'color: #1e97d4;';
   $h1style  = 'font-size: 20px; margin: 0 0 10px 0; padding: 0; font-weight: bold;';
   $h2style  = 'font-size: 17px; margin: 0 0 10px 0; padding: 0; font-weight: bold;';
   $h3style  = 'font-size: 15px; margin: 0 0 10px 0; padding: 0; font-weight: bold;';
