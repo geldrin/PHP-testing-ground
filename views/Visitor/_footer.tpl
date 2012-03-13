@@ -35,7 +35,7 @@
 <div id="footerbg"></div>
 
 {if $bootstrap->debug and false}{debug}{/if}
-{if $smarty.const.PRODUCTION}
+{if $boostrap->production}
 {literal}
 <script type="text/javascript">
 

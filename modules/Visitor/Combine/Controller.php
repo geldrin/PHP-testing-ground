@@ -36,7 +36,7 @@ class Controller extends \Visitor\Controller {
     $plaincache      = $this->bootstrap->getCache( $type . 'combine_plain_' . $urlmd5 );
     $compressedcache = $this->bootstrap->getCache( $type . 'combine_gz_' . $urlmd5 );
     
-    if ( $plaincache->expired() or !PRODUCTION ) {
+    if ( $plaincache->expired() or !$this->bootstrap->production ) {
       
       $content = '';
       $scheme  = SSL? 'https://': 'http://';
@@ -137,11 +137,11 @@ class Controller extends \Visitor\Controller {
     }
     else {
       
-      $path      = BASE_PATH . 'httpdocs_static/' .
+      $path      = $this->bootstrap->basepath . 'httpdocs_static/' .
         preg_replace( '/\_v\d+/', '', $filename )
       ;
       $dir       = realpath( pathinfo( $path, PATHINFO_DIRNAME ) );
-      $compareto = BASE_PATH . 'httpdocs_static/';
+      $compareto = $this->bootstrap->basepath . 'httpdocs_static/';
       
       if ( DIRECTORY_SEPARATOR == '\\' )
         // PHP_OS = Windows, WINNT, WIN32, ...

@@ -12,12 +12,16 @@ class Bootstrap {
   public $debug             = false;
   public $application;
   public $config            = array();
+  public $basepath;
+  public $production;
   
   public function __construct( $application ) {
     
     self::$instance    = $this;
     $this->application = $application;
     $this->config      = $application->config;
+    $this->basepath    = $application->basepath;
+    $this->production  = $application->production;
     
     $this->setupAutoloader();
     $this->setupOutputBuffer();
@@ -355,9 +359,9 @@ class Bootstrap {
     if ( isset( $this->instances['debug'] ) )
       return $this->instances['debug'];
     
-    if ( !PRODUCTION and isset( $_REQUEST['d'] ) )
+    if ( !$this->production and isset( $_REQUEST['d'] ) )
       $this->debug = true;
-    elseif( PRODUCTION and @$_REQUEST['d'] == 'damdebug' . $this->config['siteid'] )
+    elseif( $this->production and @$_REQUEST['d'] == 'damdebug' . $this->config['siteid'] )
       $this->debug = true;
     
     error_reporting( E_ALL );

@@ -7,7 +7,7 @@ else
   define('PRODUCTION', true );
 
 include_once( BASE_PATH . 'libraries/Springboard/Application.php');
-$application = new Springboard\Application( $_REQUEST );
+$application = new Springboard\Application( BASE_PATH, PRODUCTION, $_REQUEST );
 $application->loadConfig('config.php');
 
 if ( !PRODUCTION )
