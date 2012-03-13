@@ -5,6 +5,11 @@ class Form extends \Springboard\Controller\Form {
   
   public function postGetForm() {
     
+    $this->form->jspath =
+      ( ( defined('SSL') and SSL )? 'https://': 'http://' ) . 'static.' .
+      $this->controller->organization['domain'] . 'js/clonefish.js'
+    ;
+    
     $this->form->layout = 'rowbyrow';
     $this->form->formopenlayout =
       '<form enctype="multipart/form-data" target="%target%" name="%name%" ' .

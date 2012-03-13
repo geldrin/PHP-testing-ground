@@ -198,8 +198,33 @@ class Bootstrap {
       }
       
     } catch ( Exception $e ) {
-      // TODO
-      throw $e;
+      
+      $queue = $this->getMailQueue( true );
+      $queue->instant = 1;
+      
+      foreach ( $this->config['logemails'] as $email )
+        $queue->put(
+          $email,
+          $email,
+          '[' . $this->config['siteid'] . '] DB error: ' . $e->getMessage(),
+          $e->getMessage(),
+          false,
+          'text/plain'
+        );
+      
+      if ( !ISCLI ) {
+        
+        $smarty = $this->getSmarty();
+
+        $smarty->assign('error',      $e->getMessage() );
+        $smarty->assign('BASE_URI',   $this->config['baseuri'] );
+        $smarty->assign('STATIC_URI', $this->config['staticuri'] );
+        $smarty->display('errorpage.tpl');
+        die();
+        
+      } else
+        throw $e; // rethrow, commonerrorhandler megjeleniti szepen
+      
     }
     
     $db->query("SET NAMES " . str_replace( '-', '', $this->config['charset'] ) );
