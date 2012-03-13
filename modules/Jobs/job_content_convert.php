@@ -16,7 +16,7 @@ include_once('job_utils_media.php');
 set_time_limit(0);
 
 // Init
-$app = new Springboard\Application\Cli();
+$app = new Springboard\Application\Cli(BASE_PATH, PRODUCTION);
 
 // Load jobs configuration file
 $app->loadConfig('modules/Jobs/config_jobs.php');
