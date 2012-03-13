@@ -7,7 +7,7 @@ class Form extends \Springboard\Controller\Form {
     
     $this->form->jspath =
       ( ( defined('SSL') and SSL )? 'https://': 'http://' ) . 'static.' .
-      $this->controller->organization['domain'] . 'js/clonefish.js'
+      $this->controller->organization['domain'] . '/js/clonefish.js'
     ;
     
     $this->form->layout = 'rowbyrow';

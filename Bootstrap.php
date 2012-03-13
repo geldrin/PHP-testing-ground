@@ -112,6 +112,8 @@ class Bootstrap {
     if ( isset( $_REQUEST['PHPSESSID'] ) )
       session_id( $_REQUEST['PHPSESSID'] );
     
+    $smarty = $this->getSmarty();
+    $smarty->assign('sessionid', session_id() );
     return $this->sessionstarted = session_start();
     
   }
@@ -281,7 +283,6 @@ class Bootstrap {
     $smarty->assign('REQUEST_URI',      @$_SERVER['REQUEST_URI'] );
     
     $smarty->assign('language',         Springboard\Language::get() );
-    $smarty->assign('sessionid',        session_id() );
     $smarty->assign('module',           @$_REQUEST['module'] );
     
     if ( !ISCLI ) {

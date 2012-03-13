@@ -7,7 +7,6 @@ class Upload extends \Visitor\HelpForm {
   public $template     = 'Visitor/Recordings/Upload.tpl';
   public $swfupload    = false;
   public $languages    = array();
-  //public $exportmethod = 'getVars';
   
   public function init() {
     
