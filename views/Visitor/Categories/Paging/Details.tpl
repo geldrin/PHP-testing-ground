@@ -9,12 +9,11 @@
       </div>
       <div class="recordinginfo">
         <ul>
-          {l key=smarty_dateformat_long assign=dateformat_long}
-          <li><span class="bold">{l module=categories key=recordedtimestamp}:</span> <span>{$item.recordedtimestamp|date_format:$dateformat_long}</span></li>
-          <li><span class="bold">{l module=categories key=recording_views}:</span> <span>{$item.numberofviews}</span></li>
+          <li><span class="bold">{#categories__recordedtimestamp#}:</span> <span>{$item.recordedtimestamp|date_format:#smarty_dateformat_long#}</span></li>
+          <li><span class="bold">{#categories__recording_views#}:</span> <span>{$item.numberofviews}</span></li>
           <li>
             <div class="ratewidget" nojs="1">
-              <div class="bold left">{l module=categories key=recording_rating}:</div>
+              <div class="bold left">{#categories__recording_rating#}:</div>
               <ul>
                 <li{if $item.rating > 0} class="full"{/if}><a><span></span>1</a></li>
                 <li{if $item.rating > 1.5} class="full"{/if}><a><span></span>2</a></li>
@@ -30,7 +29,7 @@
       {if $item|@userHasAccess}
       <div class="recordingactions">
         <ul>
-          <li><a href="{$language}/recordings/modifybasics/{$item.id}">{l module=recordings key=editrecording}</a></li>
+          <li><a href="{$language}/recordings/modifybasics/{$item.id}">{#recordings__editrecording#}</a></li>
         </ul>
       </div>
       {/if}

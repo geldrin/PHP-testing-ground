@@ -9,7 +9,7 @@
   </tr>
   <tr>
     <td width="600" height="30" style="width: 600px; height: 30px; padding: 0; margin: 0;background-color: #fff; color: #333333; font-family: 'Helvetica', 'Arial', 'sans-serif'; font-size: 13px;" bgcolor="#fff" align="center">
-      <a href="http://videotorium.hu"><img hspace="0" vspace="0" border="0" src="{$organization|@uri:static}images/email_footer.png" style="border: 0; margin: 0; display: block;" alt="{l key=newsletter_enablepictures}" /></a>
+      <a href="http://videotorium.hu"><img hspace="0" vspace="0" border="0" src="{$organization|@uri:static}images/email_footer.png" style="border: 0; margin: 0; display: block;" alt="{#newsletter_enablepictures#}" /></a>
     </td>
   </tr>
 </table>

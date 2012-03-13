@@ -1,4 +1,4 @@
 {if $smarty.foreach.paging.first}
-  <a href="{$language}/genres/create">{l module=genres key=create}</a><br/>
+  <a href="{$language}/genres/create">{#genres__create#}</a><br/>
 {/if}
-{$item.name} - <a href="{$language}/genres/modify/{$item.id}">{l module=genres key=modify}</a><br/>
+{$item.name} - <a href="{$language}/genres/modify/{$item.id}">{#genres__modify#}</a><br/>

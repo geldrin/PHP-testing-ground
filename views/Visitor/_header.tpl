@@ -7,7 +7,7 @@
   <meta name="MSSmartTagsPreventParsing" content="true" />
   <meta name="format-detection" content="telephone=no" />{*} iphone ne vegye a random szamokat telefonszamoknak {/*}
   <base href="{$organization|@uri:base}" /><!--[if IE]></base><![endif]-->
-  <title>{if $title}{$title|escape:html|titleescape} | {/if}{l key=sitename}</title>
+  <title>{if $title}{$title|escape:html|titleescape} | {/if}{#sitename#}</title>
   {csscombine}
   <link rel="StyleSheet" type="text/css" href="{$organization|@uri:static}css/style{$VERSION}.css" media="screen"/>
   {/csscombine}
@@ -34,7 +34,7 @@
 </head>
 <body>
 {if $browserInfo.obsolete}
-  <a class="openinlayer" target="_blank" href="{$organization|@uri:base}{$language}/tools/updateyourbrowser" id="browserAlert">{l key=sitewide_updateyourbrowser}</a>
+  <a class="openinlayer" target="_blank" href="{$organization|@uri:base}{$language}/tools/updateyourbrowser" id="browserAlert">{#sitewide_updateyourbrowser#}</a>
 {/if}
 <div id="headerbg"></div>
 <div id="pagecontainer">
@@ -44,16 +44,15 @@
         {include file="Visitor/_login.tpl"}
         
         <div id="headerlogo">
-          <a href="{$organization|@uri:base}" title="{l key=sitename escape=html}"><span></span>{l key=sitename escape=html}</a>
+          <a href="{$organization|@uri:base}" title="{#sitename#}"><span></span>{#sitename#}</a>
         </div>
       </div>
       <div id="headerbottom">
         <div id="headersearch" class="rightbox">
           
           <form action="{$language}/search/all" method="get">
-            {l key=sitewide_search_input assign=searchinput}
             <input id="headersearchsubmit" type="image" src="{$organization|@uri:static}images/header_searchimage.png"/>
-            <input class="inputtext inputbackground clearonclick" type="text" name="q" data-origval="{$searchinput|escape:html}" value="{$searchinput|escape:html}"/>
+            <input class="inputtext inputbackground clearonclick" type="text" name="q" data-origval="{#sitewide_search_input#|escape:html}" value="{#sitewide_search_input#|escape:html}"/>
             <a href="#" id="headersearcharrow"></a>
           </form>
           

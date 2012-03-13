@@ -8,7 +8,7 @@
     <div class="formerrors">
       <br />
       <ul>
-        <li>{l key=sitewide_jsrequired}</li>
+        <li>{#sitewide_jsrequired#}</li>
       </ul>
       <br />
     </div>
@@ -18,30 +18,30 @@
   <div id="scriptingcontainer" style="display:none;">
     <script type="text/javascript">
 var messages = new Object();
-messages.pending            = '{l key=swfupload_pending}';
-messages.toomanyfiles       = '{l key=swfupload_toomanyfiles}';
-messages.uploadlimit        = '{l key=swfupload_uploadlimit}';
-messages.filetoobig         = '{l key=swfupload_filetoobig}';
-messages.zerobytefile       = '{l key=swfupload_zerobytefile}';
-messages.invalidfiletype    = '{l key=swfupload_invalidfiletype}';
-messages.unknownerror       = '{l key=swfupload_unknownerror}';
-messages.uploading          = '{l key=swfupload_uploading}';
-messages.uploaded           = '{l key=swfupload_uploaded}';
-messages.uploaderror        = '{l key=swfupload_uploaderror}';
-messages.uploaderrorverbose = '{l key=swfupload_uploaderrorverbose}';
-messages.membersonly        = '{l key=swfupload_membersonly}';
-messages.configerror        = '{l key=swfupload_configerror}';
-messages.uploadfailed       = '{l key=swfupload_uploadfailed}';
-messages.serverioerror      = '{l key=swfupload_serverioerror}';
-messages.securityerror      = '{l key=swfupload_securityerror}';
-messages.filenotfound       = '{l key=swfupload_filenotfound}';
-messages.failedvalidation   = '{l key=swfupload_failedvalidation}';
-messages.cancelled          = '{l key=swfupload_cancelled}';
-messages.stopped            = '{l key=swfupload_stopped}';
-messages.accessdenied       = '{l key=swfupload_accessdenied}';
-messages.movefailed         = '{l key=swfupload_serverioerror}';
-messages.invalidlength      = '{l key=swfupload_invalidlength}';
-messages.tosaccept          = '{l module=recordings key=recordingstoshelp}';
+messages.pending            = '{#swfupload_pending#}';
+messages.toomanyfiles       = '{#swfupload_toomanyfiles#}';
+messages.uploadlimit        = '{#swfupload_uploadlimit#}';
+messages.filetoobig         = '{#swfupload_filetoobig#}';
+messages.zerobytefile       = '{#swfupload_zerobytefile#}';
+messages.invalidfiletype    = '{#swfupload_invalidfiletype#}';
+messages.unknownerror       = '{#swfupload_unknownerror#}';
+messages.uploading          = '{#swfupload_uploading#}';
+messages.uploaded           = '{#swfupload_uploaded#}';
+messages.uploaderror        = '{#swfupload_uploaderror#}';
+messages.uploaderrorverbose = '{#swfupload_uploaderrorverbose#}';
+messages.membersonly        = '{#swfupload_membersonly#}';
+messages.configerror        = '{#swfupload_configerror#}';
+messages.uploadfailed       = '{#swfupload_uploadfailed#}';
+messages.serverioerror      = '{#swfupload_serverioerror#}';
+messages.securityerror      = '{#swfupload_securityerror#}';
+messages.filenotfound       = '{#swfupload_filenotfound#}';
+messages.failedvalidation   = '{#swfupload_failedvalidation#}';
+messages.cancelled          = '{#swfupload_cancelled#}';
+messages.stopped            = '{#swfupload_stopped#}';
+messages.accessdenied       = '{#swfupload_accessdenied#}';
+messages.movefailed         = '{#swfupload_serverioerror#}';
+messages.invalidlength      = '{#swfupload_invalidlength#}';
+messages.tosaccept          = '{#recordings__recordingstoshelp#}';
 
 $j(document).ready(function() {ldelim}
   
@@ -78,7 +78,7 @@ $j(document).ready(function() {ldelim}
   button_image_url:         STATIC_URI + "images/swfupload_button.png",
   button_width:             "59",
   button_height:            "30",
-  button_text:              '<span class="swfuploadbutton">{l module=recordings key=upload_browse}</span>',
+  button_text:              '<span class="swfuploadbutton">{#recordings__upload_browse#}</span>',
   button_text_left_padding: {if $language == 'hu'}4{else}6{/if},
   button_text_top_padding:  4,
   button_text_style:        '.swfuploadbutton {ldelim} color: #ffffff; font-family: Helvetica, Arial, _sans; font-size: 13px; font-weight: normal; letter-spacing: 0.5px; {rdelim}',
@@ -112,7 +112,7 @@ $j(document).ready(function() {ldelim}
 
 {if !empty( $help )}
 <div class="help rightbox small">
-  <h1 class="title">{l key=help}</h1>
+  <h1 class="title">{#help#}</h1>
   {$help.body}
 </div>
 {/if}

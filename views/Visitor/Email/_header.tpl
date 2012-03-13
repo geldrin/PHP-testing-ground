@@ -10,7 +10,7 @@ a:hover {ldelim} color: #0070bb; text-decoration: underline; {rdelim}
 <table cellpadding="0" cellspacing="0" width="600" align="center" border="0" bgcolor="#ffffff" style="border: 0;border-collapse: separate;width: 600px;background-color: white; border-spacing: 0; color: #333333; font-family: 'Helvetica', 'Arial', 'sans-serif'; background-repeat: no-repeat;">
   <tr>
     <td width="600" height="89" style="width: 600px; height: 89px; padding: 0; margin: 0;background-color: #fff; color: #333333; font-family: 'Helvetica', 'Arial', 'sans-serif'; font-size: 13px;" bgcolor="#fff" align="center">
-      <a href="http://videotorium.hu"><img hspace="0" vspace="0" border="0" src="{$organization|@uri:static}images/email_header.png" style="border: 0; margin: 0; display: block; width: 600px; height: 89px;" alt="{l key=email_enablepictures}" width="600" height="89"/></a>
+      <a href="http://videotorium.hu"><img hspace="0" vspace="0" border="0" src="{$organization|@uri:static}images/email_header.png" style="border: 0; margin: 0; display: block; width: 600px; height: 89px;" alt="{#email_enablepictures#}" width="600" height="89"/></a>
     </td>
   </tr>
   <tr>
