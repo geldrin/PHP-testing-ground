@@ -64,7 +64,8 @@ $config = array(
     'jpgquality' => 80,
   ),
   //-----
-  'redis' => array(
+  'cache' => array(
+    'type' => 'file',
     'host' => '127.0.0.1',
     'port' => 6379,
   ),

@@ -483,10 +483,33 @@ class Bootstrap {
     
     if ( isset( $this->caches[ $key ] ) )
       return $this->caches[ $key ];
-    else
+    else {
+      
+      switch( $this->config['cache']['type'] ) {
+        
+        case 'file':
+          $class = '\\Springboard\\Cache\\File';
+          break;
+        
+        case 'redis':
+          $class = '\\Springboard\\Cache\\Redis';
+          break;
+        
+        case 'memcache':
+          $class = '\\Springboard\\Cache\\Memcached';
+          break;
+        
+        default:
+          throw new \Exception('No such cache type known');
+          break;
+        
+      }
+      
       return $this->caches[ $key ] =
-        new Springboard\Cache\Redis( $this, $key, $expireseconds )
+        new $class( $this, $key, $expireseconds )
       ;
+      
+    }
     
   }
   
