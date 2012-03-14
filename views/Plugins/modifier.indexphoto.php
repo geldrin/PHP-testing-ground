@@ -10,7 +10,7 @@ function smarty_modifier_indexphoto( $data, $type = '' ) {
   }
   
   $bootstrap = \Bootstrap::getInstance();
-  $staticuri = ( SSL? 'https://': 'http://' ) . $bootstrap->config['staticuri'];
+  $staticuri = $bootstrap->getSmarty()->get_template_vars('STATIC_URI');
   
   switch( $type ) {
     

@@ -26,10 +26,18 @@ class Controller extends \Springboard\Controller\Visitor {
     } else
       $organization = $cache->get();
     
-    $this->organization = $organization;
+    $scheme    = SSL? 'https://': 'http://';
+    $baseuri   = $scheme . $organization['domain'] . '/';
+    $staticuri = $scheme . 'static.' . $organization['domain'] . '/';
+    
+    $organization['baseuri']   = $baseuri;
+    $organization['staticuri'] = $staticuri;
+    $this->organization        = $organization;
     
     $smarty = $this->bootstrap->getSmarty();
     $smarty->assign('organization', $organization );
+    $smarty->assign('BASE_URI',     $baseuri );
+    $smarty->assign('STATIC_URI',   $staticuri );
     
   }
   

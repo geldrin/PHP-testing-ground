@@ -39,7 +39,6 @@ class Controller extends \Visitor\Controller {
     if ( $plaincache->expired() or !$this->bootstrap->production ) {
       
       $content = '';
-      $scheme  = SSL? 'https://': 'http://';
       
       foreach( $urls as $url ) {
         
@@ -48,7 +47,7 @@ class Controller extends \Visitor\Controller {
           $filecontent =
             str_replace(
               'url(',
-              'url(' . $scheme . 'static.' . $this->organization['domain'] . '/',
+              'url(' . $this->organization['staticuri'],
               $filecontent
             );
         

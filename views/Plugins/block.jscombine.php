@@ -2,11 +2,10 @@
 
 function smarty_block_jscombine( $params, $content, &$smarty ) {
   
-  $bootstrap    = $smarty->get_template_vars('bootstrap');
-  $organization = $smarty->get_template_vars('organization');
-  $language     = $smarty->get_template_vars('language');
-  $scheme       = SSL? 'https://': 'http://';
-  $staticuri    = $scheme . 'static.' . $organization['domain'] . '/';
+  $bootstrap = $smarty->get_template_vars('bootstrap');
+  $language  = $smarty->get_template_vars('language');
+  $baseuri   = $smarty->get_template_vars('BASE_URI');
+  $staticuri = $smarty->get_template_vars('STATIC_URI');
   
   if ( !$bootstrap->config['combine']['js'] )
     return $content;
@@ -29,7 +28,7 @@ function smarty_block_jscombine( $params, $content, &$smarty ) {
     
     $content .=
       '<script type="text/javascript" src="' .
-        $scheme . $organization['domain'] . '/' . $language .
+        $baseuri . $language .
         '/combine/js?url[]=' . implode( '&url[]=', $out ) .
       '"></script>'
     ;

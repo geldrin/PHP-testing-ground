@@ -104,6 +104,7 @@ $config = array(
 );
 
 $recordings = $this->channelModel->getRecordingsIndexphotos();
+$staticuri  = $this->controller->organization['staticuri'] . 'files/';
 
 foreach ( $recordings as $recording ) {
 
@@ -111,7 +112,7 @@ foreach ( $recordings as $recording ) {
     '<img ' .
     'title="' .
     htmlspecialchars( $recording['title'], ENT_QUOTES, $this->application->config['charset'] ) . '" ' .
-    'src="' . $this->application->config['staticuri'] . 'files/' . $recording['indexphotofilename'] . '" />';
+    'src="' . $staticuri . $recording['indexphotofilename'] . '" />';
   ;
   
 }
