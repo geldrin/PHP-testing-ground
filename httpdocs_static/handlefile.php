@@ -215,10 +215,11 @@ function checkAccess( $recordingid ) {
       
       if ( $access[ $recordingsModel->id ] === true )
         $result = true;
+      else
+        $result = false;
       
-    }
-    
-    $result = false;
+    } else
+      $result = false;
     
   } else
     $result = $_SESSION['teleconnect']['recordingaccess'][ $recordingid ] === true;
