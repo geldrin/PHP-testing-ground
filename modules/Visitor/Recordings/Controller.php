@@ -99,12 +99,14 @@ class Controller extends \Visitor\Controller {
     $smarty  = $this->bootstrap->getSmarty();
     $user    = $this->bootstrap->getUser();
     $rating  = $this->bootstrap->getSession('rating');
+    $access  = $this->bootstrap->getSession('recordingaccess');
     
-    if ( ( $access = $recordingsModel->userHasAccess( $user ) ) !== true )
-      $this->redirectToController('contents', $access );
+    $access[ $recordingsModel->id ] = $recordingsModel->userHasAccess( $user );
     
-    // TODO relatedvideos, json generalast smarty pluginba, magat a tomb generalast a modelbe
-    // ugyanez slidokra
+    if ( $access[ $recordingsModel->id ] !== true )
+      $this->redirectToController('contents', $access[ $recordingsModel->id ] );
+    
+    // TODO relatedvideos
     $smarty->assign('recording',    $recordingsModel->row );
     $smarty->assign('flashdata',    $recordingsModel->getFlashData() );
     $smarty->assign('comments',     $recordingsModel->getComments() );

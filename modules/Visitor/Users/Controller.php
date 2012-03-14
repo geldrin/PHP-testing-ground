@@ -74,6 +74,7 @@ class Controller extends \Visitor\Controller {
     if ( !( $data = $this->parseValidationCode() ) )
       $this->redirect('contents/signupvalidationfailed');
     
+    $access    = $this->bootstrap->getSession('recordingaccess');
     $userModel = $this->bootstrap->getModel('users');
     $userModel->select( $data['id'] );
     
@@ -86,6 +87,8 @@ class Controller extends \Visitor\Controller {
     );
     
     $userModel->registerForSession();
+    $access->clear();
+    
     $this->redirectToController('contents', 'signupvalidated');
     
   }
@@ -114,7 +117,7 @@ class Controller extends \Visitor\Controller {
     $l    = $this->bootstrap->getLocalization();
     $user = $this->bootstrap->getUser();
     $user->destroy();
-    
+    session_destroy();
     $this->redirectWithMessage('index', $l('users', 'loggedout') );
     
   }

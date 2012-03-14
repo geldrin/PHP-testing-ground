@@ -18,6 +18,7 @@ class Login extends \Visitor\Form {
     $smarty         = $this->bootstrap->getSmarty();
     $userModel      = $this->bootstrap->getModel('users');
     $organizationid = $this->controller->organization['id'];
+    $access         = $this->bootstrap->getSession('recordingaccess');
     
     $uservalid = $userModel->selectAndCheckUserValid( $organizationid, $values['email'], $values['password'] );
     $orgvalid  = false;
@@ -34,6 +35,7 @@ class Login extends \Visitor\Form {
       
     }
     
+    $access->clear();
     $userModel->registerForSession();
     $this->toSmarty['member'] = $userModel->row;
     

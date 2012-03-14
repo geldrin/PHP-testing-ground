@@ -40,13 +40,10 @@ if (
 
     case 'recordings':
       
-      if ( @$_GET['secretparam'] == 'verysecret1' )
-        exitWithContentHeaders( $_GET['file'] );
-      
       if ( preg_match('/^\d+\/(\d+)\/.*$/', $parts[1], $results ) ) {
         
         $result = checkAccess( $results[1] );
-
+        
         if ( $result )
           exitWithContentHeaders( $_GET['file'] );
 
@@ -107,8 +104,8 @@ if (
 }
 
 // vegso fallback: nem kapott hozzaferest
-header("HTTP/1.1 404 Not Found");
-header("Status: 404 Not Found"); // FastCGI alternative
+headerOutput("HTTP/1.1 404 Not Found");
+headerOutput("Status: 404 Not Found"); // FastCGI alternative
 exitWithContentHeaders( '/var/www/video.teleconnect.hu/httpdocs_static/images/accessdenied.png', '' );
 
 function exitWithContentHeaders( $file, $prefix = PATH_PREFIX ) {
@@ -189,12 +186,42 @@ function checkAccess( $recordingid ) {
   
   session_start();
 
-  if ( DEBUG || !isset( $_SESSION['teleconnect']['recordingAccess'][ $recordingid ] ) ) {
+  if ( DEBUG or !isset( $_SESSION['teleconnect']['recordingaccess'][ $recordingid ] ) ) {
     
-    // TODO
-    $result = true;
+    define('BASE_PATH',  realpath( dirname( __FILE__ ) . '/..' ) . '/' );
+    if ( isset( $_SERVER['APPLICATION_ENV'] ) and $_SERVER['APPLICATION_ENV'] == 'developer' )
+      define('PRODUCTION', false );
+    else
+      define('PRODUCTION', true );
     
-  }
+    include_once( BASE_PATH . 'libraries/Springboard/Application.php');
+    $application = new Springboard\Application( BASE_PATH, PRODUCTION, $_REQUEST );
+    $application->loadConfig('config.php');
+
+    if ( !PRODUCTION )
+      $application->loadConfig('config_local.php');
+
+    $application->bootstrap();
+    $application->bootstrap->sessionstarted = true;
+    $user            = $application->bootstrap->getUser();
+    $recordingsModel = $application->bootstrap->getModel('recordings');
+    $access          = $application->bootstrap->getSession('recordingaccess');
+    
+    $recordingsModel->select( $recordingid );
+    
+    if ( $recordingsModel->row ) {
+      
+      $access[ $recordingsModel->id ] = $recordingsModel->userHasAccess( $user );
+      
+      if ( $access[ $recordingsModel->id ] === true )
+        $result = true;
+      
+    }
+    
+    $result = false;
+    
+  } else
+    $result = $_SESSION['teleconnect']['recordingaccess'][ $recordingid ] === true;
   
   // - ne lockoljuk a sessiont arra az idore sem, mig az allomany
   //   eleri a bongeszot, mivel parhuzamos szalaknak szukseguk

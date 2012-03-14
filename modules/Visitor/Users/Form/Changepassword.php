@@ -42,6 +42,7 @@ class Changepassword extends \Visitor\Form {
     $values    = $this->form->getElementValues( 0 );
     $userModel = $this->bootstrap->getModel('users');
     $l         = $this->bootstrap->getLocalization();
+    $access    = $this->bootstrap->getSession('recordingaccess');
     
     if ( !$userModel->checkIDAndValidationCode( $this->userid, $this->validationcode ) ) {
       
@@ -61,6 +62,7 @@ class Changepassword extends \Visitor\Form {
       
       $userModel->registerForSession();
       $userModel->updateLastLogin();
+      $access->clear();
       
     }
     
