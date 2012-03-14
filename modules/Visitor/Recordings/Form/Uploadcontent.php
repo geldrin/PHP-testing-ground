@@ -17,15 +17,15 @@ class Uploadcontent extends \Visitor\HelpForm {
     if ( $this->application->getParameter('swfupload') )
       $this->swfupload = true;
     
-    $user = $this->bootstrap->getUser();
+    $user = $this->bootstrap->getSession('user');
     
-    if ( $this->swfupload and !$user->isuploader )
+    if ( $this->swfupload and !$user['isuploader'] )
       $this->controller->swfuploadMessage( array(
           'error' => 'membersonly',
           'url'   => $this->controller->getUrlFromFragment('index'),
         )
       );
-    elseif ( !$user->isuploader )
+    elseif ( !$user['isuploader'] )
       $this->controller->redirectToController('contents', 'recordingsupload');
     
     $this->recordingModel = $this->controller->modelOrganizationAndUserIDCheck(
@@ -82,7 +82,7 @@ class Uploadcontent extends \Visitor\HelpForm {
     }
     
     $recordingModel = $this->recordingModel;
-    $user           = $this->bootstrap->getUser();
+    $user           = $this->bootstrap->getSession('user');
     $values         = $this->form->getElementValues( 0 );
     
     if ( !isset( $this->languages[ $values['videolanguage'] ] ) and $this->swfupload )

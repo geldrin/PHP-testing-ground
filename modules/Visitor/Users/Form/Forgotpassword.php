@@ -7,9 +7,9 @@ class Forgotpassword extends \Visitor\Form {
   
   public function init() {
     
-    $user = $this->bootstrap->getUser();
+    $user = $this->bootstrap->getSession('user');
     
-    if ( isset( $user->id ) )
+    if ( isset( $user['id'] ) )
       $this->controller->redirect('index');
     
   }

@@ -16,15 +16,15 @@ class Upload extends \Visitor\HelpForm {
     if ( $this->application->getParameter('swfupload') )
       $this->swfupload = true;
     
-    $user = $this->bootstrap->getUser();
+    $user = $this->bootstrap->getSession('user');
     
-    if ( $this->swfupload and !$user->isuploader )
+    if ( $this->swfupload and !$user['isuploader'] )
       $this->controller->swfuploadMessage( array(
           'error' => 'membersonly',
           'url'   => $this->controller->getUrlFromFragment('index'),
         )
       );
-    elseif ( !$user->isuploader )
+    elseif ( !$user['isuploader'] )
       $this->controller->redirectToController('contents', 'nopermissionuploader');
     
     parent::init();
@@ -67,7 +67,7 @@ class Upload extends \Visitor\HelpForm {
     }
     
     $recordingModel = $this->bootstrap->getModel('recordings');
-    $user           = $this->bootstrap->getUser();
+    $user           = $this->bootstrap->getSession('user');
     $values         = $this->form->getElementValues( 0 );
     
     if ( !isset( $this->languages[ $values['videolanguage'] ] ) and $this->swfupload )
@@ -134,8 +134,8 @@ class Upload extends \Visitor\HelpForm {
     }
     
     $recordingModel->insertUploadingRecording(
-      $user->id,
-      $user->organizationid,
+      $user['id'],
+      $user['organizationid'],
       $values['videolanguage'],
       $_FILES['file']['name'],
       'stream.teleconnect.hu'

@@ -14,12 +14,12 @@ class Newcomment extends \Visitor\Form {
   
   public function onComplete() {
     
-    $values    = $this->form->getElementValues( 0 );
-    $l         = $this->bootstrap->getLocalization();
-    $user      = $this->getUser();
+    $values = $this->form->getElementValues( 0 );
+    $l      = $this->bootstrap->getLocalization();
+    $user   = $this->bootstrap->getSession('user');
     
     $values['timestamp'] = date('Y-m-d H:i:s');
-    $values['userid']    = $user->id;
+    $values['userid']    = $user['id'];
     
     $this->recordingsModel->addComment( $values );
     $this->recordingsModel->updateCommentCount();

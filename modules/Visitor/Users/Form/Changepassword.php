@@ -11,8 +11,8 @@ class Changepassword extends \Visitor\Form {
   
   public function init() {
     
-    $user = $this->bootstrap->getUser();
-    if ( isset( $user->id ) )
+    $user = $this->bootstrap->getSession('user');
+    if ( isset( $user['id'] ) )
       $this->controller->redirect('index');
     
     $code = $this->application->getParameter('code');

@@ -16,7 +16,7 @@ class Users extends \Springboard\Controller\Admin {
     if ( $userid <= 0 )
       $this->redirect('users');
     
-    $user      = $this->bootstrap->getUser();
+    $user      = $this->bootstrap->getSession('user');
     $userModel = $this->bootstrap->getModel('users');
     $userModel->select( $userid );
     

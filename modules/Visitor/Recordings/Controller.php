@@ -98,7 +98,7 @@ class Controller extends \Visitor\Controller {
     );
     
     $smarty  = $this->bootstrap->getSmarty();
-    $user    = $this->bootstrap->getUser();
+    $user    = $this->bootstrap->getSession('user');
     $rating  = $this->bootstrap->getSession('rating');
     $access  = $this->bootstrap->getSession('recordingaccess');
     

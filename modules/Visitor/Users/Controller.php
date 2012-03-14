@@ -115,8 +115,8 @@ class Controller extends \Visitor\Controller {
   public function logoutAction() {
     
     $l    = $this->bootstrap->getLocalization();
-    $user = $this->bootstrap->getUser();
-    $user->destroy();
+    $user = $this->bootstrap->getSession('user');
+    $user->clear();
     session_destroy();
     $this->redirectWithMessage('index', $l('users', 'loggedout') );
     
@@ -130,9 +130,9 @@ class Controller extends \Visitor\Controller {
     
     $forward   = $this->application->getParameter('forward', 'users/admin');
     $l         = $this->bootstrap->getLocalization();
-    $user      = $this->bootstrap->getUser();
+    $user      = $this->bootstrap->getSession('user');
     
-    if ( $user->id == $userid )
+    if ( $user['id'] == $userid )
       $this->redirectWithMessage( $forward, $l('users', 'cantdisableself') );
     
     $userModel = $this->bootstrap->getModel('users');

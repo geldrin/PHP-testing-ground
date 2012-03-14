@@ -10,7 +10,6 @@ class ModifyForm extends \Visitor\HelpForm {
   public function init() {
     
     $recordingsModel = $this->bootstrap->getModel('recordings');
-    $user            = $this->bootstrap->getUser();
     $recordingid     = $this->application->getNumericParameter('id');
     
     $recordingsModel->select( $recordingid );

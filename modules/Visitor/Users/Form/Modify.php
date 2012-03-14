@@ -10,8 +10,8 @@ class Modify extends \Visitor\HelpForm {
   public function init() {
     
     parent::init();
-    $this->user      = $this->bootstrap->getUser();
-    $this->userModel = $this->controller->modelIDCheck('users', $this->user->id );
+    $this->user      = $this->bootstrap->getSession('user');
+    $this->userModel = $this->controller->modelIDCheck('users', $this->user['id'] );
     $this->values    = $this->userModel->row;
     unset( $this->values['password'] );
     

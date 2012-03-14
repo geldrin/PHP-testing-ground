@@ -76,21 +76,21 @@ class Controller extends \Springboard\Controller\Visitor {
   
   public function modelOrganizationAndUserIDCheck( $table, $id, $forwardto = 'index' ) {
     
-    $user         = $this->bootstrap->getUser();
+    $user = $this->bootstrap->getSession('user');
     
-    if ( $id <= 0 or !isset( $user->id ) )
+    if ( $id <= 0 or !isset( $user['id'] ) )
       $this->redirect( $redirectto );
     
     $model = $this->bootstrap->getModel( $table );
     $model->addFilter('id', $id );
     
-    if ( $user->iseditor )
+    if ( $user['iseditor'] )
       $model->addTextFilter("
-        userid = '" . $user->id . "' OR
-        organizationid = '" . $user->organizationid . "'
+        userid = '" . $user['id'] . "' OR
+        organizationid = '" . $user['organizationid'] . "'
       ");
     else
-      $model->addFilter('userid', $user->id );
+      $model->addFilter('userid', $user['id'] );
     
     $row = $model->getRow();
     

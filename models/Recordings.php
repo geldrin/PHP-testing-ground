@@ -604,12 +604,12 @@ class Recordings extends \Springboard\Model {
       return 'recordingconverting';
     
     if (
-         isset( $user->id ) and
+         isset( $user['id'] ) and
          (
-           $this->row['userid'] == $user->id or
+           $this->row['userid'] == $user['id'] or
            (
-             $user->iseditor and
-             $user->organizationid == $this->row['organizationid']
+             $user['iseditor'] and
+             $user['organizationid'] == $this->row['organizationid']
            )
          )
        )
@@ -646,7 +646,7 @@ class Recordings extends \Springboard\Model {
       
       case 'registrations':
         
-        if ( !isset( $user->id ) )
+        if ( !isset( $user['id'] ) )
           return 'registrationrestricted';
         elseif ( $timefailed )
           return 'registrationrestricted_timefailed';
@@ -661,15 +661,15 @@ class Recordings extends \Springboard\Model {
         else
           $error = 'organizationrestricted';
         
-        if ( !isset( $user->id ) )
+        if ( !isset( $user['id'] ) )
           return $error;
-        elseif ( $user->id == $this->row['userid'] )
+        elseif ( $user['id'] == $this->row['userid'] )
           return true;
-        elseif ( $user->iseditor and $user->organizationid == $this->row['organizationid'] )
+        elseif ( $user['iseditor'] and $user['organizationid'] == $this->row['organizationid'] )
           return true;
         
         $recordingid = "'" . $this->id . "'";
-        $userid      = "'" . $user->id . "'";
+        $userid      = "'" . $user['id'] . "'";
         
         if ( $this->row['accesstype'] == 'organizations')
           $sql = "

@@ -20,10 +20,10 @@ class Invite extends \Visitor\Form {
     $queue     = $this->bootstrap->getMailqueue();
     $l         = $this->bootstrap->getLocalization();
     $smarty    = $this->bootstrap->getSmarty();
-    $user      = $this->bootstrap->getUser();
+    $user      = $this->bootstrap->getSession('user');
     /*
     // folosleges feltakaritas?
-    $invModel->addFilter('userid', $user->id );
+    $invModel->addFilter('userid', $user['id'] );
     $invModel->addFilter('email', $values['email'], false, false );
     $invitations = $invModel->getArray();
     
@@ -33,7 +33,7 @@ class Invite extends \Visitor\Form {
     */
     $values['permissions']    = implode('|', $values['permissions'] );
     $values['validationcode'] = $crypto->randomPassword( 10 );
-    $values['userid']         = $user->id;
+    $values['userid']         = $user['id'];
     
     $invModel->insert( $values );
     

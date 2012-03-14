@@ -26,15 +26,15 @@ class Myrecordings extends \Springboard\Controller\Paging {
   protected function setupCount() {
     
     $this->recordingsModel = $this->bootstrap->getModel('recordings');
-    $user  = $this->bootstrap->getUser();
+    $user  = $this->bootstrap->getSession('user');
     
-    if ( $user->iseditor )
+    if ( $user['iseditor'] )
       $this->recordingsModel->addTextFilter("
-        organizationid = '" . $user->organizationid . "' OR
-        userid = '" . $user->id . "'
+        organizationid = '" . $user['organizationid'] . "' OR
+        userid = '" . $user['id'] . "'
       ");
     else
-      $this->recordingsModel->addFilter('userid', $user->id );
+      $this->recordingsModel->addFilter('userid', $user['id'] );
     
     $this->recordingsModel->addTextFilter("status <> 'markedfordeletion'");
     

@@ -600,11 +600,11 @@ class Channels extends \Springboard\Model {
       
     }
     
-    if ( !$user or !isset( $user->id ) )
+    if ( !$user or !isset( $user['id'] ) )
       throw new Exception('Invalid user specified');
     
     $channelrecordingsModel = $this->bootstrap->getModel('channels_recordings');
-    $channelrecordingsModel->addFilter('userid', $user->id );
+    $channelrecordingsModel->addFilter('userid', $user['id'] );
     $channelrecordingsModel->addFilter('channelid', $this->id );
     $channelrecordingsModel->addFilter('recordingid', $recordingid );
     
@@ -613,7 +613,7 @@ class Channels extends \Springboard\Model {
       return false;
     
     $channelrecordingsModel->insert( array(
-        'userid'      => $user->id,
+        'userid'      => $user['id'],
         'channelid'   => $channelid,
         'recordingid' => $recordingid,
       )

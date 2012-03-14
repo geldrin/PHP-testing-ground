@@ -290,8 +290,8 @@ class Bootstrap {
     if ( !ISCLI ) {
       
       $smarty->assign('sessionmessage', $this->getSession('message')->get('message') );
-      $user = $this->getUser();
-      if ( $user->id )
+      $user = $this->getSession('user');
+      if ( $user['id'] )
         $smarty->assign('member', $user );
       
     }
@@ -414,15 +414,6 @@ class Bootstrap {
     $this->setupSession();
     $basenamespace = $this->config['siteid'];
     return new Springboard\Session( $basenamespace, $namespace );
-    
-  }
-  
-  public function getUser() {
-    
-    if ( isset( $this->instances['user'] ) )
-      return $this->instances['user'];
-    
-    return $this->instances['user'] = new Springboard\User( $this );
     
   }
   

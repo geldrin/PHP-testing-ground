@@ -1,10 +1,10 @@
 
 <div id="headerlogin" class="rightbox">
   {if $member}
-    {*}<a href="{$language}/users/welcome" title="{l key=sitewide_myprofile}">{l key=sitewide_welcome} {$member->nickname|escape:html}!</a>{/*}
+    {*}<a href="{$language}/users/welcome" title="{l key=sitewide_myprofile}">{l key=sitewide_welcome} {$member.nickname|escape:html}!</a>{/*}
     <div id="currentuser">
       <div id="currentusercontent">
-        <a id="currentusername" href="#">{$member->nickname|escape:html}<span></span></a>
+        <a id="currentusername" href="#">{$member.nickname|escape:html}<span></span></a>
         <div id="currentusermenu">
           <span class="title">{l key=usermenu_users_title}</span>
           <ul>

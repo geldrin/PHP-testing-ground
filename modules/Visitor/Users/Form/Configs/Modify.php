@@ -26,7 +26,7 @@ $config = array(
           FROM users
           WHERE
             nickname = <FORM.nickname> AND
-            id <> " . $this->user->id . "
+            id <> " . $this->user['id'] . "
         ",
         'field' => 'counter',
         'value' => '0'

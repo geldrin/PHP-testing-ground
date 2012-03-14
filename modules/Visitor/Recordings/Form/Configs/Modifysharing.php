@@ -1,5 +1,5 @@
 <?php
-$user = $this->bootstrap->getUser();
+$user           = $this->bootstrap->getSession('user');
 $organizationid = $this->controller->organization['id'];
 
 $config = array(
@@ -78,7 +78,7 @@ $config = array(
       FROM
         groups, groups_members
       WHERE
-        groups_members.userid = '" . $user->id . "' AND
+        groups_members.userid = '" . $user['id'] . "' AND
         groups.id = groups_members.groupid
       ORDER BY groups.name DESC",
     'valuesql'    => "SELECT groupid FROM recordings_access WHERE recordingid = " . $this->application->getNumericParameter('id'),

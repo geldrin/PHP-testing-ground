@@ -45,7 +45,7 @@ class Controller extends \Visitor\Controller {
   
   public function addtofavoritesAction() {
     
-    $user           = $this->bootstrap->getUser();
+    $user           = $this->bootstrap->getSession('user');
     $recordingModel = $this->modelIDCheck(
       'recordings',
       $this->application->getNumericParameter('id')
@@ -84,7 +84,7 @@ class Controller extends \Visitor\Controller {
     if ( $recordingid <= 0 )
       $this->redirect('index');
     
-    $user           = $this->bootstrap->getUser();
+    $user           = $this->bootstrap->getSession('user');
     $channelModel   = $this->modelOrganizationAndUserIDCheck(
       'channels',
       $this->application->getNumericParameter('id')

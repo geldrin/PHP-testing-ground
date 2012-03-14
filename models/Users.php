@@ -32,7 +32,7 @@ class Users extends \Springboard\Model {
   
   public function registerForSession() {
     
-    $user = $this->bootstrap->getUser();
+    $user = $this->bootstrap->getSession('user');
     $user->setArray( $this->row );
     
   }

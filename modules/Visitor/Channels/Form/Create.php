@@ -38,10 +38,10 @@ class Create extends \Visitor\HelpForm {
     
     $values       = $this->form->getElementValues( 0 );
     $channelModel = $this->bootstrap->getModel('channels');
-    $user         = $this->bootstrap->getUser();
+    $user         = $this->bootstrap->getSession('user');
     
-    $values['userid']         = $user->id;
-    $values['organizationid'] = $user->organizationid;
+    $values['userid']         = $user['id'];
+    $values['organizationid'] = $user['organizationid'];
     
     if ( $this->parentchannelModel )
       $values['parentid']     = $this->parentchannelModel->id;
