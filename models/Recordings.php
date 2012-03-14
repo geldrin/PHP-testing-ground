@@ -1333,6 +1333,7 @@ class Recordings extends \Springboard\Model {
     );
     // TODO delete minden ami ezzel kapcsolatos
     $this->updateChannelIndexPhotos();
+    $this->updateCategoryCounters();
     return true;
     
   }

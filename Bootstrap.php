@@ -95,7 +95,7 @@ class Bootstrap {
     
   }
   
-  public function setupSession() {
+  public function setupSession( $allowoverride = false ) {
     
     if ( $this->sessionstarted )
       return;
@@ -109,7 +109,7 @@ class Bootstrap {
     ini_set('session.cookie_domain',    $cookiedomain );
     session_set_cookie_params( 0 , '/', $cookiedomain );
     
-    if ( isset( $_REQUEST['PHPSESSID'] ) )
+    if ( $allowoverride and isset( $_REQUEST['PHPSESSID'] ) )
       session_id( $_REQUEST['PHPSESSID'] );
     
     $this->sessionstarted = session_start();

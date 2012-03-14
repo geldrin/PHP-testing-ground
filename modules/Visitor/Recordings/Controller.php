@@ -36,17 +36,18 @@ class Controller extends \Visitor\Controller {
     'myrecordings' => 'Visitor\\Recordings\\Paging\\Myrecordings',
   );
   
-  // TODO override acl handling, swfuploadnal megfelelo uzenetet kuldeni
-  /*
   
-    if ( $this->swfupload and !$user->id )
-      $this->controller->swfuploadMessage( array(
-          'error' => 'membersonly',
-          'url'   => sprintf( tools::$membersonly_login_url, rawurlencode( @$_SERVER['REQUEST_URI'] ) ),
-        )
-      );
+  public function init() {
     
-  */
+    $action = str_replace('submit', '', $this->action );
+    
+    if ( $action == 'upload' or $action == 'uploadcontent' )
+      $this->bootstrap->setupSession( true );
+    
+    parent::init();
+    
+  }
+  
   public function indexAction() {
     $this->redirect('recordings/myrecordings');
   }
