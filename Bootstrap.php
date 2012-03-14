@@ -112,9 +112,11 @@ class Bootstrap {
     if ( isset( $_REQUEST['PHPSESSID'] ) )
       session_id( $_REQUEST['PHPSESSID'] );
     
+    $this->sessionstarted = session_start();
+    
     $smarty = $this->getSmarty();
     $smarty->assign('sessionid', session_id() );
-    return $this->sessionstarted = session_start();
+    return $this->sessionstarted;
     
   }
   

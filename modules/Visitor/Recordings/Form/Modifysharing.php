@@ -45,6 +45,7 @@ class Modifysharing extends \Visitor\Recordings\ModifyForm {
     
     $this->recordingsModel->updateRow( $values );
     $this->recordingsModel->updateFulltextCache( true );
+    $this->recordingsModel->updateCategoryCounters();
     
     $this->controller->redirect(
       'recordings/myrecordings',
