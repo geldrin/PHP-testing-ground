@@ -189,7 +189,7 @@ function checkAccess( $recordingid ) {
   if ( DEBUG or !isset( $_SESSION['teleconnect']['recordingaccess'][ $recordingid ] ) ) {
     
     define('BASE_PATH',  realpath( dirname( __FILE__ ) . '/..' ) . '/' );
-    if ( isset( $_SERVER['APPLICATION_ENV'] ) and $_SERVER['APPLICATION_ENV'] == 'developer' )
+    if ( strpos( BASE_PATH, 'dev.') !== false )
       define('PRODUCTION', false );
     else
       define('PRODUCTION', true );
