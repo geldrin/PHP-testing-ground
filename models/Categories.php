@@ -8,27 +8,22 @@ class Categories extends \Springboard\Model\Multilingual {
     
     $this->ensureObjectLoaded();
     
-    /* leszarmazott kategoriak szamlaloi */
-    $counter = $this->db->getOne("
-      SELECT SUM( numberofrecordings )
-      FROM categories
-      WHERE parentid = '" . $this->id . "'
-    ");
-    
-    if ( !is_numeric( $counter ) )
-      $counter = 0;
+    $childrenids   = $this->cachedFindChildrenIDs( $this->id );
+    $childrenids[] = $this->id;
     
     $this->db->query("
       UPDATE categories
       SET numberofrecordings = 
         (
           -- az adott kategoriahoz rendelt felvetelek szama
-          SELECT COUNT(*)
-          FROM recordings r, recordings_categories rc
+          SELECT
+            COUNT( distinct r.id )
+          FROM
+            recordings r, recordings_categories rc
           WHERE
             r.id = rc.recordingid AND
-            rc.categoryid = '" . $this->id . "' AND
-            ( r.status = 'onstorage' OR r.status = 'live' ) AND
+            rc.categoryid IN('" . implode("', '", $childrenids ) . "') AND
+            r.status = 'onstorage' AND
             r.ispublished = 1 AND
             r.accesstype = 'public' AND
             (
@@ -39,7 +34,7 @@ class Categories extends \Springboard\Model\Multilingual {
                 r.visibleuntil >= NOW()
               )
             )
-        ) + " . $counter . "
+        )
       WHERE
         id = '" . $this->id . "'
     ");
