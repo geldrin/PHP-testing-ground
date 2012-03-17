@@ -22,7 +22,7 @@ class Modify extends \Visitor\HelpForm {
   public function postSetupForm() {
     
     $l = $this->bootstrap->getLocalization();
-    $this->toSmarty['title'] = $l('channels', 'modify_title');
+    $this->controller->toSmarty['title'] = $l('channels', 'modify_title');
     
   }
   

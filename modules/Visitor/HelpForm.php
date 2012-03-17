@@ -9,7 +9,7 @@ class HelpForm extends \Visitor\Form {
     $helpModel = $this->bootstrap->getModel('help_contents');
     $helpModel->addFilter('shortname', $helpkey, false, false );
     
-    $this->toSmarty['help'] = $helpModel->getRow();
+    $this->controller->toSmarty['help'] = $helpModel->getRow();
     
     parent::displayForm();
     

@@ -47,8 +47,7 @@ class Controller extends \Visitor\Controller {
   }
   
   public function welcomeAction() {
-    $smarty = $this->bootstrap->getSmarty();
-    $this->output( $smarty->fetch('Visitor/Users/Welcome.tpl') );
+    $this->smartyoutput('Visitor/Users/Welcome.tpl');
   }
   
   protected function parseValidationCode() {

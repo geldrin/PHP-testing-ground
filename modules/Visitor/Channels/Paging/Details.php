@@ -24,8 +24,12 @@ class Details extends \Springboard\Controller\Paging {
   protected $channelModel;
   
   public function init() {
-    $this->foreachelse = 'No channels found';
-    $this->title = 'Channels';
+    
+    $l                 = $this->bootstrap->getLocalization();
+    $this->foreachelse = $l('channels', 'details_foreachelse');
+    $this->title       = $l('channels', 'details_title');
+    parent::init();
+    
   }
   
   protected function setupCount() {

@@ -9,7 +9,7 @@ class Create extends \Visitor\Form {
   public function postSetupForm() {
     
     $l = $this->bootstrap->getLocalization();
-    $this->toSmarty['title'] = $l('genres', 'create_title');
+    $this->controller->toSmarty['title'] = $l('genres', 'create_title');
     
   }
   
@@ -17,8 +17,6 @@ class Create extends \Visitor\Form {
     
     $values     = $this->form->getElementValues( 0 );
     $genreModel = $this->bootstrap->getModel('genres');
-    $smarty     = $this->bootstrap->getSmarty();
-    $l          = $this->bootstrap->getLocalization();
     
     $genreModel->insert( $values );
     

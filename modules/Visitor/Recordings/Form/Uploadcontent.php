@@ -52,8 +52,8 @@ class Uploadcontent extends \Visitor\HelpForm {
     $l             = $this->bootstrap->getLocalization();
     
     $this->languages = $languageModel->getAssoc('id', 'originalname', false, false, false, 'weight');
-    $this->toSmarty['title']     = $l('recordings', 'uploadcontent_title');
-    $this->toSmarty['languages'] = $this->languages;
+    $this->controller->toSmarty['title']     = $l('recordings', 'uploadcontent_title');
+    $this->controller->toSmarty['languages'] = $this->languages;
     $this->config['videolanguage']['values'] = $this->languages;
     
   }

@@ -4,14 +4,16 @@ class Signup extends \Visitor\HelpForm {
   public $configfile = 'Signup.php';
   public $template   = 'Visitor/genericform.tpl';
   public $needdb     = true;
-  public $toSmarty    = array(
-    'helpclass' => 'rightbox halfbox'
-  );
+  
+  public function init() {
+    $this->controller->toSmarty['helpclass'] = 'rightbox halfbox';
+    parent::init();
+  }
   
   public function postSetupForm() {
     
     $l = $this->bootstrap->getLocalization();
-    $this->toSmarty['title'] = $l('users', 'register_title');
+    $this->controller->toSmarty['title'] = $l('users', 'register_title');
     
   }
   
@@ -21,7 +23,6 @@ class Signup extends \Visitor\HelpForm {
     $userModel = $this->bootstrap->getModel('users');
     $crypto    = $this->bootstrap->getEncryption();
     $queue     = $this->bootstrap->getMailqueue();
-    $smarty    = $this->bootstrap->getSmarty();
     $l         = $this->bootstrap->getLocalization();
     $groupSession = $this->bootstrap->getSession('groupinvitation');
     $userinvitationSession = $this->bootstrap->getSession('userinvitation');
@@ -54,12 +55,12 @@ class Signup extends \Visitor\HelpForm {
     $userModel->insert( $values );
     
     $userModel->row['id'] = $crypto->asciiEncrypt( $userModel->id );
-    $smarty->assign('values', $userModel->row );
+    $this->controller->toSmarty['values'] = $userModel->row;
     
     $queue->sendHTMLEmail(
       $userModel->row['email'],
       $l('users', 'validationemailsubject'),
-      $smarty->fetch('Visitor/Users/Email/Validation.tpl')
+      $this->controller->fetchSmarty('Visitor/Users/Email/Validation.tpl')
     );
     
     $this->controller->redirect('contents/needvalidation');

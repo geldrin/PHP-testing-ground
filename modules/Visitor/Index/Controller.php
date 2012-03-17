@@ -7,10 +7,7 @@ class Controller extends \Visitor\Controller {
   );
   
   public function indexAction() {
-    
-    $smarty = $this->bootstrap->getSmarty();
-    $this->output( $smarty->fetch('Visitor/Index/index.tpl') );
-    
+    $this->smartyoutput('Visitor/Index/index.tpl');
   }
   
 }

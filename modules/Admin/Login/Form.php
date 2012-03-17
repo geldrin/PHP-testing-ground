@@ -29,10 +29,9 @@ class Form extends \Springboard\Controller\Admin\Form {
   }
   
   protected function indexAction() {
-    $smarty = $this->bootstrap->getSmarty();
-    $smarty->assign('bareheading', true );
-    $smarty->assign('form', $this->form->getHTML() );
-    $this->output( $smarty->fetch('Admin/login.tpl') );
+    $this->controller->toSmarty['bareheading'] = true;
+    $this->controller->toSmarty['form']        = $this->form->getHTML();
+    $this->smartyoutput('Admin/login.tpl');
   }
   
   protected function loginAction() {
@@ -61,9 +60,8 @@ class Form extends \Springboard\Controller\Admin\Form {
       
     }
     
-    $smarty = $this->bootstrap->getSmarty();
-    $smarty->assign('form', $this->form->getHTML() );
-    $this->output( $smarty->fetch('Admin/login.tpl') );
+    $this->controller->toSmarty['form'] = $this->form->getHTML();
+    $this->smartyoutput('Admin/login.tpl');
     
   }
   

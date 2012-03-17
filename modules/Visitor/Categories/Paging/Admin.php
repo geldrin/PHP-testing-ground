@@ -9,19 +9,19 @@ class Admin extends \Springboard\Controller\Paging {
   );
   protected $insertbefore = Array( 'Visitor/Categories/Paging/AdminBefore.tpl' );
   protected $template = 'Visitor/Categories/Paging/Admin.tpl';
-  protected $toSmarty = Array(
-    'listclass' => 'treeadminlist',
-  );
   
   public function init() {
-    $this->foreachelse = 'No categories found';
-    $this->title = 'Categories';
+    
+    $l                 = $this->bootstrap->getLocalization();
+    $this->foreachelse = $l('categories', 'admin_foreachelse');
+    $this->title       = $l('categories', 'admin_title');
+    $this->controller->toSmarty['listclass'] = 'treeadminlist';
+    parent::init();
+    
   }
   
   protected function setupCount() {
-    
     return $this->itemcount = 1;
-    
   }
   
   protected function getItems( $start, $limit, $orderby ) {

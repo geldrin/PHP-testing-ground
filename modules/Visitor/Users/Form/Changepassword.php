@@ -33,7 +33,7 @@ class Changepassword extends \Visitor\Form {
   public function postSetupForm() {
     
     $l = $this->bootstrap->getLocalization();
-    $this->toSmarty['title'] = $l('users', 'changepassword_title');
+    $this->controller->toSmarty['title'] = $l('users', 'changepassword_title');
     
   }
   

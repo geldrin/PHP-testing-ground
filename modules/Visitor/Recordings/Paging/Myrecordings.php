@@ -11,15 +11,14 @@ class Myrecordings extends \Springboard\Controller\Paging {
   protected $insertbeforepager = Array( 'Visitor/Recordings/Paging/MyrecordingsBeforepager.tpl' );
   protected $template = 'Visitor/Recordings/Paging/Myrecordings.tpl';
   protected $recordingsModel;
-  protected $toSmarty = Array(
-    'listclass' => 'recordinglist',
-  );
   
   public function init() {
     
     $l                 = $this->bootstrap->getLocalization();
     $this->foreachelse = $l('', 'foreachelse');
     $this->title       = $l('recordings', 'myrecordings_title');
+    $this->controller->toSmarty['listclass'] = 'recordinglist';
+    parent::init();
     
   }
   
@@ -55,7 +54,7 @@ class Myrecordings extends \Springboard\Controller\Paging {
     $items = $this->recordingsModel->getArray( $start, $limit, false, $orderby );
     
     if ( empty( $this->passparams ) and empty( $items ) )
-      $this->toSmarty['nosearch'] = true;
+      $this->controller->toSmarty['nosearch'] = true;
     
     foreach( $items as $key => $item ) {
       

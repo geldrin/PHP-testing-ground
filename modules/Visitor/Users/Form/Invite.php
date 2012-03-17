@@ -8,7 +8,7 @@ class Invite extends \Visitor\Form {
   public function postSetupForm() {
     
     $l = $this->bootstrap->getLocalization();
-    $this->toSmarty['title'] = $l('users', 'invite_title');
+    $this->controller->toSmarty['title'] = $l('users', 'invite_title');
     
   }
   
@@ -19,7 +19,6 @@ class Invite extends \Visitor\Form {
     $crypto    = $this->bootstrap->getEncryption();
     $queue     = $this->bootstrap->getMailqueue();
     $l         = $this->bootstrap->getLocalization();
-    $smarty    = $this->bootstrap->getSmarty();
     $user      = $this->bootstrap->getSession('user');
     /*
     // folosleges feltakaritas?
@@ -38,12 +37,12 @@ class Invite extends \Visitor\Form {
     $invModel->insert( $values );
     
     $invModel->row['id'] = $crypto->asciiEncrypt( $invModel->row['id'] );
-    $smarty->assign('values', $invModel->row );
+    $this->controller->toSmarty['values'] = $invModel->row;
     
     $queue->sendHTMLEmail(
       $values['email'],
       $l('users', 'invitationmailsubject'),
-      $smarty->fetch('Visitor/Users/Email/Invitation.tpl')
+      $this->controller->fetchSmarty('Visitor/Users/Email/Invitation.tpl')
     );
     
     $this->controller->redirectWithMessage('users/admin', $l('users', 'user_invited') );

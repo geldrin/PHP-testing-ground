@@ -7,7 +7,7 @@ class Login extends \Visitor\Form {
   public function postSetupForm() {
     
     $l = $this->bootstrap->getLocalization();
-    $this->toSmarty['title'] = $l('users', 'login_title');
+    $this->controller->toSmarty['title'] = $l('users', 'login_title');
     
   }
   
@@ -15,7 +15,6 @@ class Login extends \Visitor\Form {
     
     $crypto         = $this->bootstrap->getEncryption();
     $values         = $this->form->getElementValues( 0 );
-    $smarty         = $this->bootstrap->getSmarty();
     $userModel      = $this->bootstrap->getModel('users');
     $organizationid = $this->controller->organization['id'];
     $access         = $this->bootstrap->getSession('recordingaccess');
@@ -37,7 +36,7 @@ class Login extends \Visitor\Form {
     
     $access->clear();
     $userModel->registerForSession();
-    $this->toSmarty['member'] = $userModel->row;
+    $this->controller->toSmarty['member'] = $userModel->row;
     
     $diagnostics = '(diag information was not posted)';
     if ( $this->application->getParameter('diaginfo') )

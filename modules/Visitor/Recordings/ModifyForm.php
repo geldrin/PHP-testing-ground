@@ -3,9 +3,6 @@ namespace Visitor\Recordings;
 
 class ModifyForm extends \Visitor\HelpForm {
   public $recordingsModel;
-  public $toSmarty = array(
-    'insertbefore' => 'Visitor/Recordings/ModifyTimeline.tpl',
-  );
   
   public function init() {
     
@@ -16,10 +13,10 @@ class ModifyForm extends \Visitor\HelpForm {
     if ( !$recordingsModel->row )
       $this->controller->redirect('index');
     
-    $this->recordingsModel       = $recordingsModel;
-    $this->values                = $recordingsModel->row;
-    $this->toSmarty['recording'] = $recordingsModel->row;
-    $this->toSmarty['step']      =
+    $this->recordingsModel                   = $recordingsModel;
+    $this->values                            = $recordingsModel->row;
+    $this->controller->toSmarty['recording'] = $recordingsModel->row;
+    $this->controller->toSmarty['step']      =
       strtolower(
         str_replace(
           'Visitor\\Recordings\\Form\\',
@@ -28,6 +25,9 @@ class ModifyForm extends \Visitor\HelpForm {
         )
       )
     ;
+    
+    $this->controller->toSmarty['insertbefore'] = 'Visitor/Recordings/ModifyTimeline.tpl';
+    parent::init();
     
   }
   

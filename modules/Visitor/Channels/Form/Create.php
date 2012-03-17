@@ -30,7 +30,7 @@ class Create extends \Visitor\HelpForm {
   public function postSetupForm() {
     
     $l = $this->bootstrap->getLocalization();
-    $this->toSmarty['title'] = $l('channels', 'create_title');
+    $this->controller->toSmarty['title'] = $l('channels', 'create_title');
     
   }
   

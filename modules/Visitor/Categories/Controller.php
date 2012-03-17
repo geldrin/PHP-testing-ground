@@ -28,15 +28,14 @@ class Controller extends \Visitor\Controller {
   
   public function indexAction() {
     
-    $smarty        = $this->bootstrap->getSmarty();
     $categoryModel = $this->bootstrap->getModel('categories');
     $categories    = $categoryModel->cachedGetCategoryTree( $this->organization['id'] );
     
     if ( $this->application->getParameter('module') == 'api' )
       return $categories;
     
-    $smarty->assign('categories', $categories );
-    $this->output( $smarty->fetch('Visitor/Categories/Index.tpl') );
+    $this->toSmarty['categories'] = $categories;
+    $this->smartyoutput('Visitor/Categories/Index.tpl');
     
   }
   

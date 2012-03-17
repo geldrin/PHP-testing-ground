@@ -11,8 +11,9 @@ class Details extends \Springboard\Controller\Paging {
   protected $genreModel;
   
   public function init() {
-    $this->foreachelse = 'No genres found';
-    $this->title = 'Genres';
+    $l                 = $this->bootstrap->getLocalization();
+    $this->foreachelse = $l('genres', 'details_foreachelse');
+    $this->title       = $l('genres', 'details_title');
   }
   
   protected function setupCount() {

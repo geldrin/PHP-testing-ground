@@ -6,14 +6,13 @@ class Controller extends \Visitor\Controller {
   public function route() {
     // TODO caching?
     $contentsModel = $this->bootstrap->getModel('contents');
-    $smarty        = $this->bootstrap->getSmarty();
     $language      = \Springboard\Language::get();
     
     $content = $contentsModel->getContent( $this->action, $language );
     
     if ( empty( $content ) ) {
       
-      $smarty->assign('action',  $this->action );
+      $this->toSmarty['missingcontent'] = $this->action;
       $content = $contentsModel->getContent( 'http404', $language );
       
     }
@@ -32,8 +31,8 @@ class Controller extends \Visitor\Controller {
       
     }
     
-    $smarty->assign('content', $content );
-    $this->output( $smarty->fetch('Visitor/contents.tpl') );
+    $this->toSmarty['content'] = $content;
+    $this->smartyoutput('Visitor/contents.tpl');
     
   }
   

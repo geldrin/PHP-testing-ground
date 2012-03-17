@@ -18,7 +18,7 @@ class Modify extends \Visitor\Form {
   public function postSetupForm() {
     
     $l = $this->bootstrap->getLocalization();
-    $this->toSmarty['title'] = $l('categories', 'create_title');
+    $this->controller->toSmarty['title'] = $l('categories', 'create_title');
     
   }
   

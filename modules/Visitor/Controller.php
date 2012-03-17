@@ -30,14 +30,11 @@ class Controller extends \Springboard\Controller\Visitor {
     $baseuri   = $scheme . $organization['domain'] . '/';
     $staticuri = $scheme . 'static.' . $organization['domain'] . '/';
     
-    $organization['baseuri']   = $baseuri;
-    $organization['staticuri'] = $staticuri;
-    $this->organization        = $organization;
+    $this->toSmarty['organization'] = $this->organization        = $organization;
+    $this->toSmarty['BASE_URI']     = $organization['baseuri']   = $baseuri;
+    $this->toSmarty['STATIC_URI']   = $organization['staticuri'] = $staticuri;
     
-    $smarty = $this->bootstrap->getSmarty();
-    $smarty->assign('organization', $organization );
-    $smarty->assign('BASE_URI',     $baseuri );
-    $smarty->assign('STATIC_URI',   $staticuri );
+    $this->organization = $organization;
     
   }
   

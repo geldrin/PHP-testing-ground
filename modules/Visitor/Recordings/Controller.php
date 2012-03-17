@@ -97,7 +97,6 @@ class Controller extends \Visitor\Controller {
       $this->application->getNumericParameter('id')
     );
     
-    $smarty  = $this->bootstrap->getSmarty();
     $user    = $this->bootstrap->getSession('user');
     $rating  = $this->bootstrap->getSession('rating');
     $access  = $this->bootstrap->getSession('recordingaccess');
@@ -108,14 +107,14 @@ class Controller extends \Visitor\Controller {
       $this->redirectToController('contents', $access[ $recordingsModel->id ] );
     
     // TODO relatedvideos
-    $smarty->assign('recording',    $recordingsModel->row );
-    $smarty->assign('flashdata',    $recordingsModel->getFlashData() );
-    $smarty->assign('comments',     $recordingsModel->getComments() );
-    $smarty->assign('commentcount', $recordingsModel->getCommentsCount() );
-    $smarty->assign('author',       $recordingsModel->getAuthor() );
-    $smarty->assign('canrate',      $rating[ $recordingsModel->id ] );
+    $this->toSmarty['recording']    = $recordingsModel->row;
+    $this->toSmarty['flashdata']    = $recordingsModel->getFlashData();
+    $this->toSmarty['comments']     = $recordingsModel->getComments();
+    $this->toSmarty['commentcount'] = $recordingsModel->getCommentsCount();
+    $this->toSmarty['author']       = $recordingsModel->getAuthor();
+    $this->toSmarty['canrate']      = $rating[ $recordingsModel->id ];
     
-    $this->output( $smarty->fetch('Visitor/Recordings/Details.tpl') );
+    $this->smartyoutput('Visitor/Recordings/Details.tpl');
     
   }
   

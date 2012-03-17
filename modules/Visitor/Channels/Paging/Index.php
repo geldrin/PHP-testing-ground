@@ -11,8 +11,12 @@ class Index extends \Springboard\Controller\Paging {
   protected $channelModel;
   
   public function init() {
-    $this->foreachelse = 'No channels found';
-    $this->title = 'Channels';
+    
+    $l                 = $this->bootstrap->getLocalization();
+    $this->foreachelse = $l('channels', 'foreachelse');
+    $this->title       = $l('channels', 'title');
+    parent::init();
+    
   }
   
   protected function setupCount() {

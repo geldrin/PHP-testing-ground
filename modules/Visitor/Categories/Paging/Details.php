@@ -27,9 +27,6 @@ class Details extends \Springboard\Controller\Paging {
   protected $template = 'Visitor/Categories/Paging/Details.tpl';
   protected $categoryids;
   protected $recordingsModel;
-  protected $toSmarty = Array(
-    'listclass' => 'recordinglist',
-  );
   
   public function init() {
     
@@ -50,7 +47,9 @@ class Details extends \Springboard\Controller\Paging {
       $categoryModel->findChildrenIDs()
     );
     
-    $this->toSmarty['category'] = $categoryModel->row;
+    $this->controller->toSmarty['category']  = $categoryModel->row;
+    $this->controller->toSmarty['listclass'] = 'recordinglist';
+    parent::init();
     
   }
   

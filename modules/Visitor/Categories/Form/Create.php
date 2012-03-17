@@ -8,7 +8,7 @@ class Create extends \Visitor\Form {
   public function postSetupForm() {
     
     $l = $this->bootstrap->getLocalization();
-    $this->toSmarty['title'] = $l('categories', 'create_title');
+    $this->controller->toSmarty['title'] = $l('categories', 'create_title');
     
   }
   
@@ -16,8 +16,6 @@ class Create extends \Visitor\Form {
     
     $values        = $this->form->getElementValues( 0 );
     $categoryModel = $this->bootstrap->getModel('categories');
-    $smarty        = $this->bootstrap->getSmarty();
-    $l             = $this->bootstrap->getLocalization();
     
     $categoryModel->insert( $values );
     

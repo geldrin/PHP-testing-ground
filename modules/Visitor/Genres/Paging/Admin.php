@@ -9,13 +9,15 @@ class Admin extends \Springboard\Controller\Paging {
   );
   protected $insertbefore = Array( 'Visitor/Genres/Paging/AdminBefore.tpl' );
   protected $template = 'Visitor/Genres/Paging/Admin.tpl';
-  protected $toSmarty = Array(
-    'listclass' => 'treeadminlist',
-  );
   
   public function init() {
-    $this->foreachelse = 'No genres found';
-    $this->title = 'Genres';
+    
+    $l                 = $this->bootstrap->getLocalization();
+    $this->foreachelse = $l('genres', 'admin_foreachelse');
+    $this->title       = $l('genres', 'admin_title');
+    $this->controller->toSmarty['listclass'] = 'treeadminlist';
+    parent::init();
+    
   }
   
   protected function setupCount() {
