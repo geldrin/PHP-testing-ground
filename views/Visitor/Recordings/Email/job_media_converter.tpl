@@ -2,7 +2,7 @@
 
 {newsletter}
 
-<h1>{#email_conversiondone_title#}</h1>
+<h1>{#recordings__email_conversiondone_title#}</h1>
 <p>
   {assign var=BASE_URI value=$organization|@uri:base}
   {assign var=playurl value="$BASE_URI$language/recordings/details/$recid"}

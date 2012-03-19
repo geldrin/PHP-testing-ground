@@ -486,12 +486,12 @@ global $jconf;
 	$output_string = implode("\n", $output);
 	if ( $result != 0 ) {
 		$err['code'] = FALSE;
-		$err['message'] = "[ERROR] SSH file removal failed: " . $from;
+		$err['message'] = "[ERROR] SSH file removal failed: " . $file_toremove;
 		return $err;
 	}
 
 	$err['code'] = TRUE;
-	$err['message'] = "[OK] SSH file removed: " . $from;
+	$err['message'] = "[OK] SSH file removed: " . $file_toremove;
 
 	return $err;
 }
