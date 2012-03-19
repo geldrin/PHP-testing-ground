@@ -31,7 +31,7 @@ class Form extends \Springboard\Controller\Admin\Form {
   protected function indexAction() {
     $this->controller->toSmarty['bareheading'] = true;
     $this->controller->toSmarty['form']        = $this->form->getHTML();
-    $this->smartyoutput('Admin/login.tpl');
+    $this->controller->smartyoutput('Admin/login.tpl');
   }
   
   protected function loginAction() {
@@ -61,7 +61,7 @@ class Form extends \Springboard\Controller\Admin\Form {
     }
     
     $this->controller->toSmarty['form'] = $this->form->getHTML();
-    $this->smartyoutput('Admin/login.tpl');
+    $this->controller->smartyoutput('Admin/login.tpl');
     
   }
   
