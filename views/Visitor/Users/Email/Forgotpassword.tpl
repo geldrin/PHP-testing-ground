@@ -5,7 +5,7 @@
 <p>
   {assign var=BASE_URI value=$organization|@uri:base}
   {assign var=url value="$BASE_URI$language/users/changepassword/`$values.id`,`$values.validationcode`"}
-  {#users__email_changepassword_body|sprintf:$url}
+  {#users__email_changepassword_body#|sprintf:$url}
 </p>
 <p>
 {#email_linkinfo#}<br/>
