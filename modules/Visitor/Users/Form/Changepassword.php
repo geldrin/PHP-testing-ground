@@ -12,21 +12,25 @@ class Changepassword extends \Visitor\Form {
   public function init() {
     
     $user = $this->bootstrap->getSession('user');
-    if ( isset( $user['id'] ) )
+    if ( $user['id'] )
       $this->controller->redirect('index');
     
-    $code = $this->application->getParameter('code');
-    if ( strlen( $code ) < 11 )
+    $userModel = $this->bootstrap->getModel('users');
+    $data      = $userModel->parseValidationCode(
+      $this->application->getParameter('a'),
+      $this->application->getParameter('b')
+    );
+    
+    if ( !$data )
       $this->controller->redirect('contents/badparameter');
     
-    $this->crypto         = $this->bootstrap->getEncryption();
-    $this->validationcode = substr( $code, -10 );
-    $this->userid         =
-      intval( $this->crypto->asciiDecrypt( substr( $code, 0, -10 ) ) )
-    ;
+    $this->userid         = $data['id'];
+    $this->validationcode = $data['validationcode'];
     
     if ( $this->userid <= 0 )
       $this->controller->redirect('contents/badparameter');
+    
+    parent::init();
     
   }
   

@@ -50,31 +50,18 @@ class Controller extends \Visitor\Controller {
     $this->smartyoutput('Visitor/Users/Welcome.tpl');
   }
   
-  protected function parseValidationCode() {
-    
-    $crypto         = $this->bootstrap->getEncryption();
-    $validationcode = $this->application->getParameter('b');
-    $id             =
-      intval( $crypto->asciiDecrypt( $this->application->getParameter('a') ) )
-    ;
-    
-    if ( $id <= 0 or !$validationcode )
-      return false;
-    
-    return array(
-      'id'             => $id,
-      'validationcode' => $validationcode,
-    );
-    
-  }
-  
   public function validateAction() {
-    
-    if ( !( $data = $this->parseValidationCode() ) )
-      $this->redirect('contents/signupvalidationfailed');
     
     $access    = $this->bootstrap->getSession('recordingaccess');
     $userModel = $this->bootstrap->getModel('users');
+    $data      = $userModel->parseValidationCode(
+      $this->application->getParameter('a'),
+      $this->application->getParameter('b')
+    );
+    
+    if ( !$data )
+      $this->redirect('contents/signupvalidationfailed');
+    
     $userModel->select( $data['id'] );
     
     if ( !$userModel->row or $userModel->row['validationcode'] !== $data['validationcode'] )
@@ -94,7 +81,13 @@ class Controller extends \Visitor\Controller {
   
   public function validateinviteAction() {
     
-    if ( !( $data = $this->parseValidationCode() ) )
+    $userModel = $this->bootstrap->getModel('users');
+    $data      = $userModel->parseValidationCode(
+      $this->application->getParameter('a'),
+      $this->application->getParameter('b')
+    );
+    
+    if ( !$data )
       $this->redirect('contents/invitationvalidationfailed');
     
     $invitationModel = $this->bootstrap->getModel('users_invitations');
