@@ -10,6 +10,7 @@ $j(document).ready(function() {
   
   runIfExists('#headerlogin', setupHeaderLogin );
   runIfExists('#headersearch', setupHeaderSearch );
+  runIfExists('.ratewidget', setupRateWidget );
   
   $j('#scriptingcontainer').show();
   
@@ -101,6 +102,102 @@ function setupHeaderLogin() {
     currentusertimeout = setTimeout( function() {
       $j('#currentuser').toggleClass('active', false );
     }, 1750 );
+    
+  });
+  
+}
+
+function setupRateWidget() {
+  
+  $j('.ratewidget').each( function() {
+    
+    $j(this).find('li a').click( function(e) {
+      e.preventDefault();
+    });
+    
+    if ( $j(this).attr('nojs') == '1' )
+      return;
+    
+    $j(this).find('li').each( function() {
+      $j(this).data('hasfull', $j(this).hasClass('full') );
+    });
+    
+    var resettimer,
+        savedthis   = $j(this),
+        resetwidget = function() {
+      
+      savedthis.find('li').each( function() {
+        
+        if ( $j(this).data('hasfull') )
+          $j(this).addClass('full');
+        else
+          $j(this).removeClass('full');
+        
+      });
+      
+      resettimer = false;
+      
+    };
+    
+    $j(this).find('li').mouseenter( function() {
+      
+      $j(this).prevAll().addClass('full');
+      $j(this).addClass('full');
+      $j(this).nextAll().removeClass('full');
+      
+    });
+    
+    $j(this).find('ul').mouseleave( function() {
+      
+      if ( resettimer )
+        clearTimeout( resettimer );
+      
+      resettimer = setTimeout( resetwidget, 1500 );
+      
+    });
+    
+    $j(this).find('li a').click( function(e) {
+      
+      e.preventDefault();
+      
+      $j.ajax({
+        url: $j(this).attr('href'),
+        method: 'GET',
+        dataType: 'json',
+        beforeSend: function() {
+          savedthis.find('.spinner').show();
+          savedthis.find('ul').fadeTo( 200, 0.3 );
+        },
+        success: function( data ) {
+          
+          if ( !data || typeof data != 'object' )
+            return;
+          
+          if ( data.notloggedin )
+            return wantAjaxLogin( true );
+          
+          var index = Math.round( parseFloat( data.rating, 10 ) ) - 1;
+          
+          if ( index < 0 )
+            index = 0;
+          
+          savedthis.find('li').eq( index ).data('hasfull', true ).prevAll().data('hasfull', true );
+          savedthis.find('.count').text( data.numberofratings );
+          
+          savedthis.find('li a').removeAttr('href').unbind('click');
+          savedthis.find('li').unbind('mouseenter mouseleave');
+          resetwidget();
+          
+        },
+        complete: function() {
+          savedthis.find('.spinner').hide();
+          savedthis.find('ul').fadeTo( 200, 1 );
+        }
+      });
+      
+      return false;
+      
+    });
     
   });
   
