@@ -112,11 +112,7 @@ class Bootstrap {
     if ( $allowoverride and isset( $_REQUEST['PHPSESSID'] ) )
       session_id( $_REQUEST['PHPSESSID'] );
     
-    $this->sessionstarted = session_start();
-    
-    $smarty = $this->getSmarty();
-    $smarty->assign('sessionid', session_id() );
-    return $this->sessionstarted;
+    return $this->sessionstarted = session_start();
     
   }
   
@@ -295,6 +291,9 @@ class Bootstrap {
         $smarty->assign('member', $user );
       
     }
+    
+    if ( $this->sessionstarted )
+      $smarty->assign('sessionid', session_id() );
     
     return $smarty;
     
