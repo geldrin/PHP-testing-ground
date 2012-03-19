@@ -47,6 +47,7 @@ class Changepassword extends \Visitor\Form {
     $userModel = $this->bootstrap->getModel('users');
     $l         = $this->bootstrap->getLocalization();
     $access    = $this->bootstrap->getSession('recordingaccess');
+    $crypto    = $this->bootstrap->getEncryption();
     
     if ( !$userModel->checkIDAndValidationCode( $this->userid, $this->validationcode ) ) {
       
@@ -57,7 +58,7 @@ class Changepassword extends \Visitor\Form {
     }
     
     $userModel->updateRow( array(
-        'password'       => $this->crypto->getHash( $values['password'] ),
+        'password'       => $crypto->getHash( $values['password'] ),
         'validationcode' => 'validated',
       )
     );
