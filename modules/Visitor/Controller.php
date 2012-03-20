@@ -48,7 +48,7 @@ class Controller extends \Springboard\Controller\Visitor {
     
   }
   
-  public function modelOrganizationAndIDCheck( $table, $id, $forwardto = 'index' ) {
+  public function modelOrganizationAndIDCheck( $table, $id, $redirectto = 'index' ) {
     
     if ( $id <= 0 )
       $this->redirect( $redirectto );
@@ -59,7 +59,7 @@ class Controller extends \Springboard\Controller\Visitor {
     
     $row = $model->getRow();
     
-    if ( empty( $row ) and $forwardto !== false )
+    if ( empty( $row ) and $redirectto !== false )
       $this->redirect( $redirectto );
     elseif ( empty( $row ) )
       return false;
@@ -71,7 +71,7 @@ class Controller extends \Springboard\Controller\Visitor {
     
   }
   
-  public function modelOrganizationAndUserIDCheck( $table, $id, $forwardto = 'index' ) {
+  public function modelOrganizationAndUserIDCheck( $table, $id, $redirectto = 'index' ) {
     
     $user = $this->bootstrap->getSession('user');
     
@@ -91,7 +91,7 @@ class Controller extends \Springboard\Controller\Visitor {
     
     $row = $model->getRow();
     
-    if ( empty( $row ) and $forwardto !== false )
+    if ( empty( $row ) and $redirectto !== false )
       $this->redirect( $redirectto );
     elseif ( empty( $row ) )
       return false;
