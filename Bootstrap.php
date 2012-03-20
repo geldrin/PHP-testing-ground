@@ -247,12 +247,12 @@ class Bootstrap {
       // smarty not found under LIBPATH - try include_path location
       include_once( 'smarty.2620/Smarty.class.php');
     
-    $this->instances['smarty'] = $smarty = new \Smarty();
+    $this->instances['smarty'] = $smarty = new Smarty();
     
     if ( $this->debug )
       $smarty->debugging = true;
     
-    $smarty->_config[0]['vars'] = new \Springboard\SmartyLocalization( $this );
+    $smarty->_config[0]['vars'] = new Springboard\SmartyLocalization( $this );
     $smarty->template_dir = $this->config['templatepath'];
     $smarty->compile_dir  = $this->config['cachepath'] . 'smarty';
     $smarty->plugins_dir  = array( 'plugins', $this->config['templatepath'] . 'Plugins' );
@@ -381,7 +381,7 @@ class Bootstrap {
       return $this->forms[ $name ];
     
     if ( $this->debug )
-      \Springboard\Debug::d(__METHOD__);
+      Springboard\Debug::d(__METHOD__);
     
     if ( !class_exists('clonefish', false ) ) {
       
@@ -423,7 +423,7 @@ class Bootstrap {
   public function getController( $module ) {
     
     if ( $this->debug )
-      \Springboard\Debug::d(__METHOD__);
+      Springboard\Debug::d(__METHOD__);
     
     $module       = ucfirst( $module );
     $loader       = Springboard\Autoloader::getInstance();
@@ -442,7 +442,7 @@ class Bootstrap {
   public function getAdminController( $module ) {
     
     if ( $this->debug )
-      \Springboard\Debug::d(__METHOD__);
+      Springboard\Debug::d(__METHOD__);
     
     $module       = ucfirst( $module );
     $loader       = Springboard\Autoloader::getInstance();
@@ -461,7 +461,7 @@ class Bootstrap {
   public function getFormController( $module, $target ) {
     
     if ( $this->debug )
-      \Springboard\Debug::d(__METHOD__);
+      Springboard\Debug::d(__METHOD__);
     
     // Visitor\Users\Form\Register
     $class = 'Visitor\\' . ucfirst( $module ) . '\\Form\\' . ucfirst( $target );
@@ -472,7 +472,7 @@ class Bootstrap {
   public function getAdminFormController( $module, $controller ) {
     
     if ( $this->debug )
-      \Springboard\Debug::d(__METHOD__);
+      Springboard\Debug::d(__METHOD__);
     
     $loader       = Springboard\Autoloader::getInstance();
     $class        = $loader->findExistingClass(
@@ -499,7 +499,7 @@ class Bootstrap {
       $expireseconds = $this->config['cacheseconds'];
     
     if ( !$ignorelanguage )
-      $language = \Springboard\Language::get() . '-';
+      $language = Springboard\Language::get() . '-';
     
     $key = $language . $key;
     
@@ -510,19 +510,19 @@ class Bootstrap {
       switch( $this->config['cache']['type'] ) {
         
         case 'file':
-          $class = '\\Springboard\\Cache\\File';
+          $class = 'Springboard\\Cache\\File';
           break;
         
         case 'redis':
-          $class = '\\Springboard\\Cache\\Redis';
+          $class = 'Springboard\\Cache\\Redis';
           break;
         
         case 'memcache':
-          $class = '\\Springboard\\Cache\\Memcached';
+          $class = 'Springboard\\Cache\\Memcached';
           break;
         
         default:
-          throw new \Exception('No such cache type known');
+          throw new Exception('No such cache type known');
           break;
         
       }
