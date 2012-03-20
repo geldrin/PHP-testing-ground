@@ -1195,6 +1195,12 @@ class Recordings extends \Springboard\Model {
     if ( $this->row['videoreshq'] )
       $data['media_streams'][] = $this->getMediaUrl('default', true );
     
+    if ( $this->row['offsetstart'] )
+      $data['timeline_virtualStart'] = $this->row['offsetstart'];
+    
+    if ( $this->row['offsetend'] )
+      $data['timeline_virtualEnd'] = $this->row['offsetend'];
+    
     if ( $this->row['contentstatus'] == 'onstorage' ) {
       
       $data['media_secondaryStreams'] = array( $this->getMediaUrl('content', false ) );
@@ -1209,6 +1215,12 @@ class Recordings extends \Springboard\Model {
           $data['media_streams'][] = reset( $data['media_streams'] );
         
       }
+      
+      if ( $this->row['contentoffsetstart'] )
+        $data['timeline_contentVirtualStart'] = $this->row['contentoffsetstart'];
+      
+      if ( $this->row['contentoffsetend'] )
+        $data['timeline_contentVirtualEnd'] = $this->row['contentoffsetend'];
       
     }
     
