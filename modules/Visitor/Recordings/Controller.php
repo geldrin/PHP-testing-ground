@@ -203,7 +203,7 @@ class Controller extends \Visitor\Controller {
   
   public function trackAction() {
     
-    $views          = $this->getSession('views');
+    $views          = $this->bootstrap->getSession('views');
     $recordingModel = $this->modelIDCheck(
       'recordings',
       $this->application->getNumericParameter('id')
