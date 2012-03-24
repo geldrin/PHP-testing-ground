@@ -3,6 +3,13 @@ namespace Admin\Users;
 
 class Form extends \Springboard\Controller\Admin\Form {
   
+  public function postSetupForm( $action = null ) {
+    
+    if ( $action == 'modify' )
+      $this->form->setValue('password', '', false );
+    
+  }
+  
   protected function updateAction() {
     
     $model  = $this->bootstrap->getModel( $this->controller->module );
