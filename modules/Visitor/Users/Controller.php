@@ -54,18 +54,13 @@ class Controller extends \Visitor\Controller {
     
     $access    = $this->bootstrap->getSession('recordingaccess');
     $userModel = $this->bootstrap->getModel('users');
-    $data      = $userModel->parseValidationCode(
+    $uservalid = $userModel->checkIDAndValidationCode(
       $this->application->getParameter('a'),
       $this->application->getParameter('b')
     );
     
-    if ( !$data )
+    if ( !$uservalid )
       $this->redirect('contents/signupvalidationfailed');
-    
-    $userModel->select( $data['id'] );
-    
-    if ( !$userModel->row or $userModel->row['validationcode'] !== $data['validationcode'] )
-      $this->redirectToController('contents', 'signupvalidationfailed');
     
     $userModel->updateRow( array(
         'disabled' => 0,
@@ -81,19 +76,17 @@ class Controller extends \Visitor\Controller {
   
   public function validateinviteAction() {
     
-    $userModel = $this->bootstrap->getModel('users');
-    $data      = $userModel->parseValidationCode(
-      $this->application->getParameter('a'),
-      $this->application->getParameter('b')
-    );
+    $crypt = $this->bootstrap->getEncryption();
+    $id    = intval( $crypt->asciiDecrypt( $this->application->getParameter('a') ) );
+    $validationcode = $this->application->getParameter('b');
     
-    if ( !$data )
+    if ( $id <= 0 or !$validationcode )
       $this->redirect('contents/invitationvalidationfailed');
     
     $invitationModel = $this->bootstrap->getModel('users_invitations');
-    $invitationModel->select( $data['id'] );
+    $invitationModel->select( $id );
     
-    if ( !$invitationModel->row or $invitationModel->row['validationcode'] !== $data['validationcode'] )
+    if ( !$invitationModel->row or $invitationModel->row['validationcode'] !== $validationcode )
       $this->redirectToController('contents', 'invitationvalidationfailed');
     
     $invitationSession = $this->bootstrap->getSession('userinvitation');

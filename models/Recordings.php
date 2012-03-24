@@ -14,6 +14,38 @@ class Recordings extends \Springboard\Model {
     ),
   );
   
+  public function resetViewCounters( $type ) {
+    
+    $this->ensureID();
+    
+    if ( $type != 'week' and $type != 'month' )
+      throw new \Exception('Invalid type passed, expecting "week" or "month"');
+    
+    $this->db->execute("
+      UPDATE recordings
+      SET
+        numberofviewsthis" . $type . " = 0
+      WHERE id = '" . $this->id . "'
+      LIMIT 1
+    ");
+    
+  }
+  
+  public function incrementViewCounters() {
+    
+    $this->ensureID();
+    $this->db->execute("
+      UPDATE recordings
+      SET
+        numberofviews = numberofviews + 1,
+        numberofviewsthisweek = numberofviewsthisweek + 1,
+        numberofviewsthismonth = numberofviewsthismonth + 1
+      WHERE id = '" . $this->id . "'
+      LIMIT 1
+    ");
+    
+  }
+  
   public function updateMetadataTimestamps( $ids ) {
     
     if ( empty( $ids ) )

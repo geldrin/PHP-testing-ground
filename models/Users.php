@@ -7,21 +7,6 @@ class Users extends \Springboard\Model {
   const USER_VALIDATED   = 0;
   const USER_DISABLED    = 1;
   
-  public function parseValidationCode( $id, $validationcode ) {
-    
-    $crypto = $this->bootstrap->getEncryption();
-    $id     = intval( $crypto->asciiDecrypt( $id ) );
-    
-    if ( $id <= 0 or !$validationcode )
-      return false;
-    
-    return array(
-      'id'             => $id,
-      'validationcode' => $validationcode,
-    );
-    
-  }
-  
   public function selectAndCheckUserValid( $organizationid, $email, $password, $isadmin = null ) {
     
     $crypto = $this->bootstrap->getEncryption();
@@ -97,6 +82,12 @@ class Users extends \Springboard\Model {
   }
   
   public function checkIDAndValidationCode( $id, $code ) {
+    
+    $crypt = $this->bootstrap->getEncryption();
+    $id    = intval( $crypt->asciiDecrypt( $id ) );
+    
+    if ( $id <= 0 or !$code )
+      return false;
     
     $this->select( $id );
     

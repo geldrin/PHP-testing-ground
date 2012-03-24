@@ -12,10 +12,15 @@ $config = Array(
     'type'  => 'inputHidden',
     'value' => 'submitchangepassword'
   ),
-
-  'code' => Array(
+  
+  'a' => Array(
     'type'  => 'inputHidden',
-    'value' => $this->application->getParameter('code'),
+    'value' => $this->application->getParameter('a'),
+  ),
+  
+  'b' => Array(
+    'type'  => 'inputHidden',
+    'value' => $this->application->getParameter('b'),
   ),
   
   'password' => Array(

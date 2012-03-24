@@ -5,9 +5,7 @@ class Changepassword extends \Visitor\Form {
   public $template   = 'Visitor/genericform.tpl';
   public $needdb     = true;
   
-  protected $validationcode;
-  protected $userid;
-  protected $crypto;
+  protected $userModel;
   
   public function init() {
     
@@ -15,19 +13,13 @@ class Changepassword extends \Visitor\Form {
     if ( $user['id'] )
       $this->controller->redirect('index');
     
-    $userModel = $this->bootstrap->getModel('users');
-    $data      = $userModel->parseValidationCode(
+    $this->userModel = $this->bootstrap->getModel('users');
+    $uservalid = $this->userModel->checkIDAndValidationCode(
       $this->application->getParameter('a'),
       $this->application->getParameter('b')
     );
     
-    if ( !$data )
-      $this->controller->redirect('contents/badparameter');
-    
-    $this->userid         = $data['id'];
-    $this->validationcode = $data['validationcode'];
-    
-    if ( $this->userid <= 0 )
+    if ( !$uservalid )
       $this->controller->redirect('contents/badparameter');
     
     parent::init();
@@ -44,29 +36,20 @@ class Changepassword extends \Visitor\Form {
   public function onComplete() {
     
     $values    = $this->form->getElementValues( 0 );
-    $userModel = $this->bootstrap->getModel('users');
     $l         = $this->bootstrap->getLocalization();
     $access    = $this->bootstrap->getSession('recordingaccess');
     $crypto    = $this->bootstrap->getEncryption();
     
-    if ( !$userModel->checkIDAndValidationCode( $this->userid, $this->validationcode ) ) {
-      
-      $this->form->addMessage( $l('users', 'changepass_badparameter') );
-      $this->form->invalidate();
-      return;
-      
-    }
-    
-    $userModel->updateRow( array(
+    $this->userModel->updateRow( array(
         'password'       => $crypto->getHash( $values['password'] ),
         'validationcode' => 'validated',
       )
     );
     
-    if ( $userModel->row['disabled'] == 0 ) {
+    if ( $this->userModel->row['disabled'] == \Models\Users::USER_VALIDATED ) {
       
-      $userModel->registerForSession();
-      $userModel->updateLastLogin();
+      $this->userModel->registerForSession();
+      $this->userModel->updateLastLogin();
       $access->clear();
       
     }

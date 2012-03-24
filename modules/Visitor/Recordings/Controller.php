@@ -9,6 +9,7 @@ class Controller extends \Visitor\Controller {
     'getsubtitle'          => 'public',
     'newcomment'           => 'member',
     'rate'                 => 'member',
+    'track'                => 'public',
     'upload'               => 'uploader',
     'uploadcontent'        => 'uploader',
     'uploadsubtitle'       => 'uploader',
@@ -197,6 +198,23 @@ class Controller extends \Visitor\Controller {
     $this->redirect(
       $this->application->getParameter('forward', 'recordings/myrecordings')
     );
+    
+  }
+  
+  public function trackAction() {
+    
+    $views          = $this->getSession('views');
+    $recordingModel = $this->modelIDCheck(
+      'recordings',
+      $this->application->getNumericParameter('id')
+    );
+    
+    if ( !$views[ $recordingModel->id ] ) {
+      
+      $recordingModel->incrementViewCounters();
+      $views[ $recordingModel->id ] = true;
+      
+    }
     
   }
   
