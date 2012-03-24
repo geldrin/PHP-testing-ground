@@ -152,6 +152,14 @@ $config = Array(
   ),
 );
 
+if ( $this->action == 'new' or $this->action == 'insert' ) {
+  
+  $config['password']['validation'] = array(
+    array( 'type' => 'required' )
+  );
+  
+}
+
 $listconfig = Array(
 
   'table'     => 'users',
