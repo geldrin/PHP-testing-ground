@@ -41,9 +41,9 @@ class Form extends \Springboard\Controller\Admin\Form {
       $values = $this->form->getElementValues(false);
       $users  = $this->bootstrap->getModel('users');
       
-      if ( $users->selectAndCheckUserValid( $values['email'], $values['password'] ) ) {
+      if ( $users->selectAndCheckUserValid( null, $values['email'], $values['password'], true ) ) {
         
-        $users->registerForSession();
+        $users->registerForSession('adminuser');
         
         if ( $forward = $this->application->getParameter('forward') )
           $this->controller->redirect( $forward );

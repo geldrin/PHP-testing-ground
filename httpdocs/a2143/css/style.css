@@ -539,46 +539,6 @@ div#listcontainer .listing td .small {
   font-weight: bold;
 }
 
-/* smspricing */
-.smspricingcontainer {
-  margin: 0 !important;
-}
-div#listcontainer .smspricing {
-  background-color: #fff;
-}
-div#listcontainer .smspricing tr.nohover td { 
-  background-image: none;
-  background-color: #fff;
-}
-div#listcontainer .smspricing tr.nohover:HOVER td { 
-  background-image: none;
-  background-color: #fff;
-}
-div#listcontainer .smspricing tr td {
-  border: 0;
-}
-#smspricing .formrow {
-  float: left;
-  margin-right: 15px;
-}
-
-#smspricing #timestampfrom, #smspricing #timestampuntil {
-  width: 130px;
-}
-#smspricing #smsfrom, #smspricing #smsuntil {
-  width: 80px;
-}
-
-#smspricing #purchaseprice, #smspricing #priceeur, #smspricing #pricehuf {
-  width: 50px;
-}
-#smspricing #priceeur, #smspricing #pricehuf {
-  margin-right: 5px;
-}
-#smspricing #networkprefix {
-  width: 50px;
-}
-
 #success {
   padding-left: 40px;
   font-size: 16px;
@@ -589,162 +549,21 @@ span.info {
   font-size: 12px;
 }
 
-tr.green {
-  color: green;
-  font-weight: normal;
-}
-
-tr.blue {
-  color: blue;
-  font-weight: normal;
-}
-
-.smsqueue div#listcontainer .listing td {
-  padding-left: 5px;
-  padding-right: 5px;
-}
-
-#smscmatrix table {
-  border-collapse: collapse;
-  border-spacing: 0;
-}
-#smscmatrix tr.odd {
-  background-color: #dfdfdf;
-}
-#smscmatrix td.prefix {
-  vertical-align: middle;
-  text-align: center;
-}
-#smscmatrix .cf_error {
-  display: none;
-  visibility: hidden;
-  padding: 2px 5px 2px 5px;
-  background-color: #d03030;
-  color: white;
-}
-#smscmatrix table input, #smscmatrix table select, #smscmatrix table * {
-  font-size: 10px;
-}
-#smscmatrix .pricingcell input[type=text] {
-  text-align: right;
-  width: 40px;
-}
-#smscmatrix .purchaseprice, #smscmatrix .purchasecurrency {
-  background-color: #f8eda2;
-}
-#smscmatrix .price {
-  background-color: #a2f8c1;
-}
 .w200 {
   width: 200px;
 }
+
 .w30 {
   width: 30px;
 }
+
 .rightalign {
   text-align: right;
 }
-table.smscbalance {
-  border: 1px solid #c0c0c0;
-  margin: 0;
-  padding: 0;
-  float: left;
-  width: 850px;
-}
-table.smscbalance th, td {
-  padding: 2px;
-}
-table.userbalance {
-  margin-left: 10px;
-}
-tr.sum td {
-  border-top: 1px solid #1f1f1f;
-}
-span.route {
-  font-size: 10px;
-}
-td.padding {
-  padding-left: 5px;
-  padding-right: 5px;
-}
 
-#graphcontainer {
-  position: relative;
+form fieldset input[type=text], form fieldset textarea {
+  width: 500px;
 }
-#graphcontainer #spinner {
-  position: absolute;
-  left: 49.8%;
-  top: 242px;
-  z-index: 1;
-  display: none;
-}
-#graph {
-  position: relative;
-  width: 900px;
-  height: 500px;
-  background-color: #fff;
-  margin: 0 auto;
-  margin-top: 20px;
-  margin-bottom: 100px;
-  left: -20px;
-}
-#graphs .formrow, #graphs .element {
-  display: inline;
-}
-#graphs .formrow {
-  margin-right: 5px;
-}
-
-#usersonline {
-  float: left;
-  width: 144px;
-  font-size: 10px;
-  border: 1px solid #c0c0c0;
-  border-left: 0px;
-  padding-left: 5px;
-}
-#usersonline ul {
-  list-style-type: none;
-  margin: 0;
-  padding: 0;
-}
-#usersonline li {
-  border-bottom: 1px solid #aaa;
-  margin-bottom: 2px;
-}
-#usersonline li:nth-last-child(1) {
-  margin-bottom: 0px;
-  border-bottom: 0;
-}
-
-#phonenumberresults {
-  
-}
-#phonenumberresults .heading {
-  background-color: #444;
-  color: #fff;
-}
-#phonenumberresults .heading th {
-  padding: 3px 0px 3px 5px;
-}
-#phonenumberresults .heading th.source {
-  width: 10%;
-}
-#phonenumberresults .heading th.name {
-  width: 20%;
-}
-#phonenumberresults .heading th.data {
-  width: 70%;
-}
-#phonenumberresults td {
-  padding: 3px 0px 3px 5px;
-}
-#phonenumberresults tr:hover td {
-  background-color: #B3DF87;
-}
-#phonenumberresults tr.even {
-  background-color: #ccc;
-}
-#phonenumberresults .notfound {
-  color: #888;
+form fieldset select[multiple=multiple] {
+  height: 200px;
 }

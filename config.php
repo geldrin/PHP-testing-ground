@@ -22,6 +22,11 @@ $config = array(
   'templatepath' => $this->basepath . 'views/',
   'modelpath'    => $this->basepath . 'models/',
   //-----
+  'destroysession' => array(
+    'onuserlogout'  => true,
+    'onadminlogout' => true,
+  ),
+  //-----
   'logemails'    => array(
     'dev@dotsamazing.com',
     'hiba@teleconnect.hu',

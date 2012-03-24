@@ -22,15 +22,20 @@ class Users extends \Springboard\Model {
     
   }
   
-  public function selectAndCheckUserValid( $organizationid, $email, $password ) {
+  public function selectAndCheckUserValid( $organizationid, $email, $password, $isadmin = null ) {
     
     $crypto = $this->bootstrap->getEncryption();
     $this->clearFilter();
     
-    $this->addFilter('organizationid', $organizationid );
-    $this->addFilter('email',          $email, false );
-    $this->addFilter('password',       $crypto->getHash( $password ), false );
-    $this->addFilter('disabled',       0 );
+    if ( $organizationid !== null )
+      $this->addFilter('organizationid', $organizationid );
+    
+    if ( $isadmin )
+      $this->addFilter('isadmin', 1 );
+    
+    $this->addFilter('email',    $email, false );
+    $this->addFilter('password', $crypto->getHash( $password ), false );
+    $this->addFilter('disabled', self::USER_VALIDATED );
     
     $user = $this->getRow();
     if ( empty( $user ) ) {
@@ -45,10 +50,11 @@ class Users extends \Springboard\Model {
     
   }
   
-  public function registerForSession() {
+  public function registerForSession( $sessionkey = 'user' ) {
     
-    $user = $this->bootstrap->getSession('user');
+    $user = $this->bootstrap->getSession( $sessionkey );
     $user->setArray( $this->row );
+    return $user;
     
   }
   
@@ -71,7 +77,7 @@ class Users extends \Springboard\Model {
   public function checkEmailAndUpdateValidationCode( $email, $code ) {
     
     $this->addFilter('email', $email, false, false);
-    $this->addFilter('disabled', 0 );
+    $this->addFilter('disabled', self::USER_VALIDATED );
     
     $user = $this->getRow();
     

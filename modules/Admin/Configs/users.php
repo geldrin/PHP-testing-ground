@@ -172,7 +172,7 @@ $listconfig = Array(
       'phptrigger' => '
          "<VALUE><br />" .
          "<a target=\"_blank\" " . 
-           "href=\"users?target=loginas&id=" . $fields["id"] . "\">".
+           "href=\"users/loginas/?id=" . $fields["id"] . "\">".
          "<img style=\"vertical-align: middle; margin: 5px 0px; width: 18px\" " . 
            "src=\"images/sekkyumu/user.png\">Belépés</a>"
        ',
