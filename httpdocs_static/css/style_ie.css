@@ -1,5 +1,5 @@
-.submitbutton, a#currentusername {
-  behaviour: url(css/PIE.htc);
+.submitbutton, a#currentusername, #header .inputbackground {
+  behavior: url(/css/PIE.htc);
 }
 #headerbg {
   background-image: url(../images/header_bg_allinone.jpg);
