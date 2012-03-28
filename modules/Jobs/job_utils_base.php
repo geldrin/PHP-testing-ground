@@ -437,7 +437,7 @@ global $jconf;
 	$output_string = implode("\n", $output);
 	if ( $result != 0 ) {
 		$err['code'] = FALSE;
-		$err['message'] = "[ERROR] SCP copy failed from: " . $remote_filename;
+		$err['message'] = "[ERROR] SCP copy failed from: " . $file;
 		return $err;
 	}
 
@@ -495,6 +495,51 @@ global $jconf;
 
 	return $err;
 }
+
+function ssh_filecopy($server, $file_src, $file_dst) {
+global $jconf;
+
+	// SSH check file size before start copying
+	$err = ssh_filesize($server, $file_src);
+	if ( !$err['code'] ) {
+		return $err;
+	}
+	$filesize = $err['value'];
+
+	$err = array();
+
+	// Check available disk space (input media file size * 5 is the minimum)
+	$available_disk = floor(disk_free_space($jconf['media_dir']));
+	if ( $available_disk < $filesize * 5 ) {
+		$err['command'] = "php: disk_free_space(" . $jconf['media_dir'] . ")";
+		$err['result'] = $available_disk;
+		$err['code'] = FALSE;
+		$err['message'] = "[ERROR] Not enough free space to start conversion (available: " . ceil($available_disk / 1024 / 1024) . "Mb, filesize: " . ceil($filesize / 1024 / 1024) . ")";
+		return $err;
+	}
+
+	$command = "scp -B -i " . $jconf['ssh_key'] . " " . $jconf['ssh_user'] . "@" . $server . ":" . $file_src . " " . $file_dst . " 2>&1";
+	$time_start = time();
+	exec($command, $output, $result);
+	$duration = time() - $time_start;
+	$mins_taken = round( $duration / 60, 2);
+	$err['command'] = $command;
+    $err['result'] = $result;
+	$output_string = implode("\n", $output);
+	if ( $result != 0 ) {
+		$err['code'] = FALSE;
+		$err['message'] = "[ERROR] SCP copy failed from: " . $file_src;
+		return $err;
+	}
+
+	$err['code'] = TRUE;
+	$err['value'] = $duration;
+	$err['message'] = "[OK] SCP copy finished (in " . $mins_taken . " mins)";
+
+	return $err;
+}
+
+
 
 
 ?>

@@ -199,10 +199,30 @@ global $jconf, $db;
 			contentmasterstatus,
 			contentstatus,
 			conversionpriority,
-			contentmastersourceip
+			contentmastersourceip,
+			mastervideofilename,
+			mastervideoextension,
+			mastermediatype,
+			mastervideocontainerformat,
+			mastervideofps,
+			masterlength,
+			mastervideocodec,
+			mastervideores,
+			mastervideobitrate,
+			mastervideoisinterlaced,
+			masteraudiocodec,
+			masteraudiochannels,
+			masteraudioquality,
+			masteraudiofreq,
+			masteraudiobitrate,
+			masteraudiobitratemode,
+			status,
+			masterstatus,
+			mastersourceip
 		FROM
 			recordings
 		WHERE
+			( masterstatus = \"" . $jconf['dbstatus_copystorage_ok'] . "\" AND ( mastersourceip IS NOT NULL OR mastersourceip != '' ) ) AND
 			( ( contentmasterstatus = \"" . $jconf['dbstatus_uploaded'] . "\" AND contentstatus = \"" . $jconf['dbstatus_uploaded'] . "\" ) OR
 			( contentmasterstatus = \"" . $jconf['dbstatus_copystorage_ok'] . "\" AND contentstatus = \"" . $jconf['dbstatus_reconvert']  . "\" ) ) AND
 			( contentmastersourceip IS NOT NULL OR contentmastersourceip != '' )
@@ -308,12 +328,16 @@ global $app, $jconf;
 
 	$remote_filename = $jconf['ssh_user'] . "@" . $recording['contentmastersourceip'] . ":" . $uploadpath . $base_filename;
 	$master_filename = $jconf['content_dir'] . $recording['id'] . "/master/" . $base_filename;
+	$media_filename = $jconf['content_dir'] . $recording['id'] . "/" . $recording['id'] . "_video_lq.mp4";
+	$remote_media_filename = $app->config['recordingpath'] . ( $recording['id'] % 1000 ) . "/" . $recording['id'] . "/" . $recording['id'] . "_video_lq.mp4";
 
 	$recording['remote_filename'] = $remote_filename;
 	$recording['source_file'] = $master_filename;
+	$recording['source_media_file'] = $media_filename;
+	$recording['remote_media_file'] = $remote_media_filename;
 
 	// SSH check file size before start copying
-	$err = ssh_filesize($recording['contentmastersourceip'], $uploadpath . $base_filename);
+/*	$err = ssh_filesize($recording['contentmastersourceip'], $uploadpath . $base_filename);
 	if ( !$err['code'] ) {
 		log_recording_conversion($recording['id'], $jconf['jobid_content_convert'], $jconf['dbstatus_copyfromfe'], $err['message'], $err['command'], $err['result'], 0, TRUE);
 		// Set status to "invalidinput"
@@ -329,7 +353,7 @@ global $app, $jconf;
 		// Set status to "uploaded" to allow other nodes to take over task
 		update_db_content_status($recording['id'], $jconf['dbstatus_uploaded']);
 		return FALSE;
-	}
+	} */
 
 	// Prepare temporary conversion directory, remove any existing content
 	$temp_directory = $jconf['content_dir'] . $recording['id'] . "/";
@@ -351,8 +375,18 @@ global $app, $jconf;
 		return FALSE;
 	}
 
-	// SCP copy from remote location
-	$err = ssh_filecopy_from($recording['contentmastersourceip'], $uploadpath . $base_filename, $master_filename);
+	// SCP copy content from remote location
+	$err = ssh_filecopy($recording['contentmastersourceip'], $uploadpath . $base_filename, $master_filename);
+	if ( !$err['code'] ) {
+		log_recording_conversion($recording['id'], $jconf['jobid_content_convert'], $jconf['dbstatus_copyfromfe'], $err['message'], $err['command'], $err['result'], $err['value'], TRUE);
+		// Set status to "uploaded" to allow other nodes to take over task
+		update_db_content_status($recording['id'], $jconf['dbstatus_uploaded']);
+		return FALSE;
+	}
+	log_recording_conversion($recording['id'], $jconf['jobid_content_convert'], $jconf['dbstatus_copyfromfe'], $err['message'], $err['command'], $err['result'], $err['value'], FALSE);
+
+	// SCP copy media from remote location (for mobile encoding)
+	$err = ssh_filecopy($recording['mastersourceip'], $remote_media_filename, $media_filename);
 	if ( !$err['code'] ) {
 		log_recording_conversion($recording['id'], $jconf['jobid_content_convert'], $jconf['dbstatus_copyfromfe'], $err['message'], $err['command'], $err['result'], $err['value'], TRUE);
 		// Set status to "uploaded" to allow other nodes to take over task
@@ -465,6 +499,11 @@ global $app, $jconf;
 	// Remove temporary directory, no failure if not successful
 	$err = remove_file_ifexists($recording['temp_directory']);
 	if ( !$err['code'] ) log_recording_conversion($recording['id'], $jconf['jobid_content_convert'], $jconf['dbstatus_copystorage'], $err['message'], $err['command'], $err['result'], 0, TRUE);
+
+	// Remove media file used for mobile conversion
+	$err = remove_file_ifexists($recording['source_media_file']);
+	if ( !$err['code'] ) log_recording_conversion($recording['id'], $jconf['jobid_content_convert'], $jconf['dbstatus_copystorage'], $err['message'], $err['command'], $err['result'], 0, TRUE);
+
 
 	return TRUE;
 }

@@ -232,6 +232,8 @@ global $jconf, $db;
 			masteraudiobitratemode,
 			status,
 			masterstatus,
+			contentstatus,
+			contentmasterstatus,
 			conversionpriority,
 			mastersourceip
 		FROM
@@ -342,6 +344,8 @@ global $app, $jconf;
 		$recording['conversion_type'] = $jconf['dbstatus_reconvert'];
 	}
 
+// !!! if reconvert and content is there, then mobile version reconversion needed with content - set mobilestatus field
+
 	$remote_filename = $jconf['ssh_user'] . "@" . $recording['mastersourceip'] . ":" . $uploadpath . $base_filename;
 	$master_filename = $jconf['media_dir'] . $recording['id'] . "/master/" . $base_filename;
 
@@ -349,7 +353,7 @@ global $app, $jconf;
 	$recording['source_file'] = $master_filename;
 
 	// SSH check file size before start copying
-	$err = ssh_filesize($recording['mastersourceip'], $uploadpath . $base_filename);
+/*	$err = ssh_filesize($recording['mastersourceip'], $uploadpath . $base_filename);
 	if ( !$err['code'] ) {
 		log_recording_conversion($recording['id'], $jconf['jobid_media_convert'], $jconf['dbstatus_copyfromfe'], $err['message'], $err['command'], $err['result'], 0, TRUE);
 		// Set status to "invalidinput"
@@ -366,6 +370,7 @@ global $app, $jconf;
 		update_db_recording_status($recording['id'], $jconf['dbstatus_uploaded']);
 		return FALSE;
 	}
+*/
 
 	// Prepare temporary conversion directory, remove any existing content
 	$temp_directory = $jconf['media_dir'] . $recording['id'] . "/";
@@ -388,7 +393,7 @@ global $app, $jconf;
 	}
 
 	// SCP copy from remote location
-	$err = ssh_filecopy_from($recording['mastersourceip'], $uploadpath . $base_filename, $master_filename);
+	$err = ssh_filecopy($recording['mastersourceip'], $uploadpath . $base_filename, $master_filename);
 	if ( !$err['code'] ) {
 		log_recording_conversion($recording['id'], $jconf['jobid_media_convert'], $jconf['dbstatus_copyfromfe'], $err['message'], $err['command'], $err['result'], $err['value'], TRUE);
 		// Set status to "uploaded" to allow other nodes to take over task
