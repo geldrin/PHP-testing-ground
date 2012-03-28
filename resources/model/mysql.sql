@@ -105,6 +105,7 @@ CREATE TABLE `recordings` (
    `contentoffsetend` int(11),
    `masterstatus` text,
    `contentstatus` text,
+   `mobilestatus` text,
    `contentmasterstatus` text,
    `mastersourceip` text,
    `contentmastersourceip` text,
