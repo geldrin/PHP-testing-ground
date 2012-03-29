@@ -15,7 +15,7 @@
 <p>
 {#recordings__email_conversion_signature#}
 <a href="mailto:support@teleconnect.hu">support@teleconnect.hu</a><br /><br />
-<a style="font-size: 15px;" href="http://video.teleconnect.hu/" target="_blank">http://video.teleconnect.hu/</a>
+<a href="http://video.teleconnect.hu/" target="_blank">http://video.teleconnect.hu/</a>
 </p>
 
 {/newsletter}
