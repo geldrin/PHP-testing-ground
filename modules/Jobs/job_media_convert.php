@@ -362,26 +362,6 @@ global $app, $jconf;
 	$recording['remote_filename'] = $remote_filename;
 	$recording['source_file'] = $master_filename;
 
-	// SSH check file size before start copying
-/*	$err = ssh_filesize($recording['mastersourceip'], $uploadpath . $base_filename);
-	if ( !$err['code'] ) {
-		log_recording_conversion($recording['id'], $jconf['jobid_media_convert'], $jconf['dbstatus_copyfromfe'], $err['message'], $err['command'], $err['result'], 0, TRUE);
-		// Set status to "invalidinput"
-		update_db_recording_status($recording['id'], $jconf['dbstatus_invalidinput']);
-		return FALSE;
-	}
-	$filesize = $err['value'];
-
-	// Check available disk space (input media file size * 3 is the minimum)
-	$available_disk = floor(disk_free_space($jconf['media_dir']));
-	if ( $available_disk < $filesize * 3 ) {
-		log_recording_conversion($recording['id'], $jconf['jobid_media_convert'], $jconf['dbstatus_copyfromfe'], "[ERROR] No enough local disk space available (needed = " . ceil(($filesize * 2) / 1024 / 1024) . "Mb, avail = " . ceil($available_disk / 1024 / 1024) . "Mb)", "php: disk_free_space(\"" . $jconf['media_dir'] . "\")", "-", 0, TRUE);
-		// Set status to "uploaded" to allow other nodes to take over task
-		update_db_recording_status($recording['id'], $jconf['dbstatus_uploaded']);
-		return FALSE;
-	}
-*/
-
 	// Prepare temporary conversion directory, remove any existing content
 	$temp_directory = $jconf['media_dir'] . $recording['id'] . "/";
 	$recording['temp_directory'] = $temp_directory;
