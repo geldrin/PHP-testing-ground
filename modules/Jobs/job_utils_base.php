@@ -33,58 +33,63 @@ function iswindows() {
 // Author:
 //	Written by dk@brightbyte.de
 //	Source: http://www.php.net/manual/en/function.shell-exec.php#52826
-function runExternal( $cmd ) {
+function runExternal($cmd) {
 
-  $descriptorspec = array(
-    0 => array("pipe", "r"),  // stdin is a pipe that the child will read from
-    1 => array("pipe", "w"),  // stdout is a pipe that the child will write to
-    2 => array("pipe", "w")   // stderr is a file to write to
-  );
+	$descriptorspec = array(
+		0 => array("pipe", "r"),  // stdin is a pipe that the child will read from
+		1 => array("pipe", "w"),  // stdout is a pipe that the child will write to
+		2 => array("pipe", "w")   // stderr is a file to write to
+	);
 
-  $pipes = array();
-  $process = proc_open($cmd, $descriptorspec, $pipes);
+	$pipes = array();
+	$process = proc_open($cmd, $descriptorspec, $pipes);
 
-  $output = "";
+	$output = "";
 
-  if (!is_resource($process)) return false;
+	if (!is_resource($process)) return false;
 
-  // close child's input imidiately
-  fclose($pipes[0]);
+	// close child's input imidiately
+	fclose($pipes[0]);
 
-  stream_set_blocking($pipes[1],false);
-  stream_set_blocking($pipes[2],false);
+	stream_set_blocking($pipes[1], false);
+	stream_set_blocking($pipes[2], false);
 
-  $todo= array($pipes[1],$pipes[2]);
+	$todo = array($pipes[1], $pipes[2]);
 
-  while( true ) {
-    $read = array();
-    if( !feof($pipes[1]) ) $read[]= $pipes[1];
-    if( !feof($pipes[2]) ) $read[]= $pipes[2];
+	while( true ) {
 
-    if (!$read) break;
+		$read = array();
+		if( !feof($pipes[1]) ) $read[]= $pipes[1];
+		if( !feof($pipes[2]) ) $read[]= $pipes[2];
 
-    $write = NULL;
-    $ex = NULL;
-    $ready = stream_select($read, $write, $ex, 2);
+		if (!$read) break;
 
-    if ($ready === false) {
-		break; // should never happen - something died
-    }
+		$write = NULL;
+		$ex = NULL;
+		$ready = stream_select($read, $write, $ex, 2);
 
-    foreach ($read as $r) {
-	$s = fread($r, 1024);
-	$output .= $s;
-    }
-  }
+		if ( $ready === FALSE ) {
+			break; // should never happen - something died
+		}
 
-  fclose($pipes[1]);
-  fclose($pipes[2]);
+		foreach ($read as $r) {
+			$s = fread($r, 1024);
+			$output .= $s;
+		}
+	}
 
-  $return_array = array();
-  $return_array['code'] = proc_close($process);
-  $return_array['cmd_output'] = $output;
+	fclose($pipes[1]);
+	fclose($pipes[2]);
 
-  return $return_array;
+	$return_array = array();
+
+	// Get process PID
+	$tmp = proc_get_status($process);
+	$return_array['pid'] = $tmp['pid'];
+	$return_array['code'] = proc_close($process);
+	$return_array['cmd_output'] = $output;
+
+	return $return_array;
 }
 
 // *************************************************************************
