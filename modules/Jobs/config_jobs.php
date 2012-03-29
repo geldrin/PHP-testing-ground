@@ -25,7 +25,7 @@ return array('config_jobs' => array(
 	'nice'							=> 'nice -n 19',
 	
 	// Sleep duration - number of seconds to sleep after an operation
-	'sleep_media'					=> 60,
+	'sleep_media'					=> 20,
 
 	// Job identifiers
 	'jobid_media_convert'			=> 'job_media_convert',
