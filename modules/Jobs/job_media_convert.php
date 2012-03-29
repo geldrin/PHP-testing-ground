@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 // Media conversion job v0 @ 2012/02/??
 
 define('BASE_PATH',	realpath( __DIR__ . '/../..' ) . '/' );
@@ -166,19 +166,28 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_media_convert.stop' ) and 
 		log_recording_conversion($recording['id'], $jconf['jobid_media_convert'], "-", "[OK] Successful media conversion in " . $hms . " time.\n\nConversion summary:\n\n" . $global_log, "-", "-", $conversion_duration, TRUE);
 
 		// Send e-mail to user about successful conversion
-/*		$smarty = $app->bootstrap->getSmarty();
+		$smarty = $app->bootstrap->getSmarty();
+		$organization = $app->bootstrap->getModel('organizations');
+		$organization->select( $uploader_user['organizationid'] );
+		$smarty->assign('organization', $organization->row );
 		$smarty->assign('filename', $recording['mastervideofilename']);
 		$smarty->assign('language', $uploader_user['language']);
 		$smarty->assign('recid', $recording['id']);
 		if ( $uploader_user['language'] == "hu" ) {
-			$subject = "Video konverzi� k�sz";
+			$subject = "Videó konverzió kész";
 		} else {
 			$subject = "Video conversion ready";
 		}
 		if ( !empty($recording['mastervideofilename']) ) $subject .= ": " . $recording['mastervideofilename'];
 		$queue = $app->bootstrap->getMailqueue();
-		$queue->embedImages = FALSE;
-		$queue->sendHTMLEmail($uploader_user['email'], $subject, $smarty->fetch('Visitor/Recordings/Email/job_media_converter.tpl') ); */
+//		$queue->embedImages = FALSE;
+
+		try {
+			$body = $smarty->fetch('Visitor/Recordings/Email/job_media_converter.tpl');
+			$queue->sendHTMLEmail($uploader_user['email'], $subject, $body);
+		} catch (exception $err) {
+			log_recording_conversion($recording['id'], $jconf['jobid_media_convert'], "-", "[ERROR] Cannot send mail to user: " . $uploader_user['email'], trim($body), $err, 0, TRUE);
+		}
 
 		break;
 	}	// End of while(1)
@@ -266,7 +275,8 @@ global $jconf, $db;
 			a.userid,
 			b.nickname,
 			b.email,
-			b.language
+			b.language,
+			b.organizationid
 		FROM
 			recordings as a,
 			users as b
