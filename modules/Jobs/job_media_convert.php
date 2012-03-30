@@ -70,8 +70,8 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_media_convert.stop' ) and 
 		$recording = array();
 		$uploader_user = array();
 
-//update_db_recording_status(1, "reconvert");
-//update_db_masterrecording_status(1, "onstorage");
+//update_db_recording_status(12, "reconvert");
+//update_db_masterrecording_status(12, "onstorage");
 
 		// Query next job - exit if none
 		if ( !query_nextjob($recording, $uploader_user) ) break;
@@ -104,7 +104,6 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_media_convert.stop' ) and 
 			update_db_recording_status($recording['id'], $jconf['dbstatus_conv_audio_err']);
 			break;
 		}
-
 		if ( $recording['mastermediatype'] != "audio" ) {
 
 			update_db_recording_status($recording['id'], $jconf['dbstatus_conv_video']);
@@ -180,7 +179,6 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_media_convert.stop' ) and 
 		}
 		if ( !empty($recording['mastervideofilename']) ) $subject .= ": " . $recording['mastervideofilename'];
 		$queue = $app->bootstrap->getMailqueue();
-//		$queue->embedImages = FALSE;
 
 		try {
 			$body = $smarty->fetch('Visitor/Recordings/Email/job_media_converter.tpl');
@@ -428,7 +426,6 @@ global $app, $jconf;
 	$recording['thumbnail_numberofindexphotos'] = 0;
 
 	if ( $recording['mastermediatype'] == "audio" ) {
-//		log_recording_conversion($recording['id'], $jconf['jobid_media_convert'], $jconf['dbstatus_conv_thumbs'], "[OK] Not generating video thumbs for audio only file", "-", "-", 0, FALSE);
 		return TRUE;
 	}
 
@@ -515,10 +512,19 @@ global $app, $jconf;
 //		$command .= " -vframes 1 -r 1 -vcodec mjpeg -f mjpeg " . $orig_thumb_filename ." 2>&1";
 		$command  = $jconf['nice'] . " ffmpegthumbnailer -i " . $recording['source_file'] . " -o " . $orig_thumb_filename . " -s0 -q8 -t" . secs2hms($position_sec);
 
+		clearstatcache();
+
 		$output = runExternal($command);
 		$output_string = $output['cmd_output'];
 		$result = $output['code'];
+		// ffmpegthumbnailer (ffmpeg) returns -1 on success (?)
+		if ( $result < 0 ) $result = 0;
 
+/*echo "res: $result\n";
+echo "fname: $orig_thumb_filename\n";
+if ( file_exists($orig_thumb_filename) ) { echo "TRUE\n"; } else { echo "FALSE\n"; }
+echo "fsize: " . filesize($orig_thumb_filename) . "\n";
+*/
 		if ( ( $result != 0 ) || !file_exists($orig_thumb_filename) || ( filesize($orig_thumb_filename) < 1 ) ) {
 			// If ffmpeg error, we log messages to an array and jump to first frame
 			$errors['messages'] .= "[ERROR] ffmpeg failed (frame: " . $i . ", position: " . $position_sec . "sec).\n";

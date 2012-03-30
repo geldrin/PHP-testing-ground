@@ -36,7 +36,7 @@ global $jconf;
 	} else {
 
 		// Video bitrate
-		$ffmpeg_bw = " -b " . 10 * ceil($media_info['video_bitrate'] / 10000) . "k";
+		$ffmpeg_bw = " -b:v " . 10 * ceil($media_info['video_bitrate'] / 10000) . "k";
 
 		// Resize
 		$resize = " -s " . $media_info['res_x'] . "x" . $media_info['res_y'];
@@ -65,8 +65,6 @@ global $jconf;
 		$command .= $ffmpeg_video;
 		$command .= " -threads " . $jconf['ffmpeg_threads'] . " -f " . $profile['format'] . " " . $media_info['output_file'] . " 2>&1";
 
-//echo $command . "\n";
-
 		$time_start = time();
 		$output = runExternal($command);
 		$err['duration'] = time() - $time_start;
@@ -74,6 +72,9 @@ global $jconf;
 		$err['command'] = $command;
 		$err['command_output'] = $output['cmd_output'];
 		$err['result'] = $output['code'];
+		// ffmpeg returns -1 (?)
+//echo "errcode: " . $err['result'] . "\n";
+		if ( $err['result'] < 0 ) $err['result'] = 0;
 
 		// ffmpeg terminated with error
 		if ( $err['result'] != 0 ) {

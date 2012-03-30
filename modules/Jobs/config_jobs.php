@@ -5,13 +5,16 @@
 //define('H264_PROFILE', '-preset fast -profile baseline');	// for newer ffmpegs (2011: 0.8.2)
 
 // Profiles: baseline, main, high
-define('H264_PROFILE',				'-preset fast -profile main');
-define('H264_PROFILE_MOBILE',		'-preset fast -profile baseline');
+// Worked on Debian stable stream.teleconnect.hu
+//define('H264_PROFILE',			'-preset fast -profile main');
+//define('H264_PROFILE_MOBILE',		'-preset fast -profile baseline');
+define('H264_PROFILE',				'-preset fast -vpre main');
+define('H264_PROFILE_MOBILE',		'-preset fast -vpre baseline');
 
 return array('config_jobs' => array(
 
 	// Node
-	'node'							=> 'stream.teleconnect.hu',
+	'node'							=> 'conv-1.teleconnect.hu',
 	'node_role'						=> 'converter',
 
 	// Directories
@@ -119,7 +122,10 @@ return array('config_jobs' => array(
 		'audio_codec'	=> "libfaac",		// AAC
 		'audio_ch'		=> 1,				// Max. number of audio channels
 		'audio_bw_ch'	=> 64,				// Kbps per audio channel
-		'audio_mode'	=> "cbr"
+		'audio_mode'	=> "cbr",
+		'pip_wcontent'	=> "enabled",
+		'pip_posx'		=> "left",			// left or right
+		'pip_posy'		=> "up"				// up or down
 	),
 
 	// Mobile HQ version
@@ -138,7 +144,10 @@ return array('config_jobs' => array(
 		'audio_codec'	=> "libfaac",		// AAC
 		'audio_ch'		=> 1,				// Max. number of audio channels
 		'audio_bw_ch'	=> 64,				// Kbps per audio channel
-		'audio_mode'	=> "cbr"
+		'audio_mode'	=> "cbr",
+		'pip_wcontent'	=> "enabled",
+		'pip_posx'		=> "left",			// left or right
+		'pip_posy'		=> "up"				// up or down
 	),
 
 	// Normal quality
