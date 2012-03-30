@@ -72,7 +72,7 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_content_convert.stop' ) an
 
 //update_db_content_status(1, "uploaded");
 //update_db_mastercontent_status(1, "uploaded");
-//update_db_content_status(1, "reconvert");
+update_db_content_status(1, "reconvert");
 //update_db_mastercontent_status(1, "onstorage");
 
 		// Query next job - exit if none
@@ -89,10 +89,15 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_content_convert.stop' ) an
 		$global_log .= "Media length: " . secs2hms( $recording['contentmasterlength'] ) . "\n";
 		$global_log .= "Media type: " . $recording['contentmastermediatype'] . "\n\n";
 
+echo "copying...\n";
+
 		// Copy media from front-end server
 		if ( !copy_content_to_converter($recording) ) break;
 
+echo "copied...\n";
+
 		//// Media conversion
+		$content_info_mobile = array();
 		$content_info_lq = array();
 		$content_info_hq = array();
 
@@ -121,57 +126,9 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_content_convert.stop' ) an
 		}
 */
 
-$profile = $jconf['profile_mobile_lq'];
-
-$smarty = $app->bootstrap->getSmarty();
-$smarty->assign('content_file', $recording['source_file']);
-$smarty->assign('video_file', $recording['source_media_file']);
-
-$delay = 0;
-$fps = $recording['contentmasterfps'];
-// Content resolution
-$tmp = explode("x", $recording['contentmastervideores'], 2);
-$c_resx = $tmp[0];
-$c_resy = $tmp[1];
-$c_resnew = calculate_video_scaler($c_resx, $c_resy, $profile['video_bbox']);
-$l_width = $c_resnew['x'];
-$l_height = $c_resnew['y'];
-// Media resolution
-$tmp = explode("x", $recording['mastervideores'], 2);
-$s_width = $jconf['video_res_modulo'] * floor(($tmp[0] * $profile['pip_resize']) / $jconf['video_res_modulo']);
-$s_height = $jconf['video_res_modulo'] * floor(($tmp[1] * $profile['pip_resize']) / $jconf['video_res_modulo']);
-// Video bandwidth
-$video_bw = $profile['video_bpp'] * $fps * $l_width * $l_height;
-$output_file = $recording['temp_directory'] . $recording['id'] . $profile['file_suffix'] . "." . $profile['format'];
-
-$audio_ch = $profile['audio_ch'];
-$audio_bw = $profile['audio_ch'] * $profile['audio_bw_ch'];
-$audio_sr = $recording['contentmasteraudiofreq'];
-
-// Generate black!
-$background = "file:///home/conv/vlc/black.png";
-$h264_profile = "baseline";
-
-$smarty->assign('fps', $fps);
-$smarty->assign('delay', $delay);
-$smarty->assign('audio_bw', $audio_bw);
-$smarty->assign('audio_ch', $audio_ch);
-$smarty->assign('audio_sr', $audio_sr);
-$smarty->assign('video_bw', $video_bw);
-$smarty->assign('l_width', $l_width);
-$smarty->assign('l_height', $l_height);
-$smarty->assign('s_width', $s_width);
-$smarty->assign('s_height', $s_height);
-$smarty->assign('output_file', $output_file);
-$smarty->assign('background', $background);
-$smarty->assign('h264_profile', $h264_profile);
-
-//$smarty->assign('language', "hu");
-//$smarty->assign('recid', 1234);
-$cfg_file = $smarty->fetch('Jobs/vlc_video.tpl');
-
-echo $cfg_file . "\n";
-
+if ( !convert_mobile($recording, $jconf['profile_mobile_lq'], $content_info_mobile) ) {
+	echo "Nem nyert\n";
+}
 
 
 exit;
@@ -217,6 +174,113 @@ exit;
 }	// End of outer while
 
 exit;
+
+function calculate_mobile_pip($mastervideores, $contentmastervideores, &$recording_info, $profile) {
+global $jconf;
+
+	// Content resolution
+	$tmp = explode("x", $contentmastervideores, 2);
+	$c_resx = $tmp[0];
+	$c_resy = $tmp[1];
+	$c_resnew = calculate_video_scaler($c_resx, $c_resy, $profile['video_bbox']);
+	$recording_info['scaler'] = $c_resnew['scaler'];
+	$recording_info['res_x'] = $c_resnew['x'];
+	$recording_info['res_y'] = $c_resnew['y'];
+
+	// Media resolution
+	$tmp = explode("x", $mastervideores, 2);
+	$recording_info['pip_res_x'] = $jconf['video_res_modulo'] * floor(($tmp[0] * $profile['pip_resize']) / $jconf['video_res_modulo']);
+	$recording_info['pip_res_y'] = $jconf['video_res_modulo'] * floor(($tmp[1] * $profile['pip_resize']) / $jconf['video_res_modulo']);
+
+	// Calculate PiP position
+	if ( $profile['pip_posx'] == "left" ) $recording_info['pip_x'] = 0 + $profile['pip_align'];
+	if ( $profile['pip_posx'] == "right" ) $recording_info['pip_x'] = $recording_info['res_x'] - $recording_info['pip_res_x'] - $profile['pip_align'];
+	if ( $profile['pip_posy'] == "up" ) $recording_info['pip_y'] = 0 + $profile['pip_align'];
+	if ( $profile['pip_posy'] == "down" ) $recording_info['pip_y'] = $recording_info['res_y'] - $recording_info['pip_res_y'] - $profile['pip_align'];
+
+	return TRUE;
+}
+
+function convert_mobile($recording, $profile, &$recording_info) {
+global $jconf, $app, $db;
+
+	// Setup smarty for VideoLAN VLM config template
+	$smarty = $app->bootstrap->getSmarty();
+
+	// Input and output files
+	$recording_info['input_file'] = $recording['source_file'];
+	$smarty->assign('content_file', "file://" . $recording_info['input_file']);
+	$recording_info['input_media_file'] = $recording['source_media_file'];
+	$smarty->assign('video_file', "file://" . $recording_info['input_media_file']);
+	$recording_info['output_file'] = $recording['temp_directory'] . $recording['id'] . $profile['file_suffix'] . "." . $profile['format'];
+	$smarty->assign('output_file', $recording_info['output_file']);
+
+	// Basic configuration
+	$h264_profile = "baseline";
+	$smarty->assign('h264_profile', $h264_profile);
+	//// Should be calculated from trim/offset values!!!
+	$delay = 0;
+	$smarty->assign('delay', $delay);
+
+	// Audio configuration
+	$recording_info['audio_codec'] = $profile['audio_codec'];
+	$audio_bitrate_perchannel = $profile['audio_bw_ch'];
+	if ( $recording['contentmasteraudiofreq'] <= 22050 ) $audio_bitrate_perchannel = 32;
+	$recording_info['audio_ch'] = $profile['audio_ch'];
+	if ( $recording['masteraudiochannels'] < $profile['audio_ch'] ) {
+		$recording_info['audio_ch'] = $recording['masteraudiochannels'];
+	}
+	$recording_info['audio_bitrate'] = $profile['audio_ch'] * $audio_bitrate_perchannel;
+	$recording_info['audio_srate'] = $recording['contentmasteraudiofreq'];
+	//// Add to template
+	$smarty->assign('audio_ch', $recording_info['audio_ch']);
+	$smarty->assign('audio_bw', $recording_info['audio_bitrate']);
+	$smarty->assign('audio_sr', $recording_info['audio_srate']);
+
+	// Video configuration
+	$recording_info['fps'] = $recording['contentmastervideofps'];
+	$recording_info['video_bpp'] = $profile['video_bpp'];
+	//// Calculate PiP coordinates
+	calculate_mobile_pip($recording['mastervideores'], $recording['contentmastervideores'], $recording_info, $profile);
+	//// Video bandwidth
+	$recording_info['video_bitrate'] = $profile['video_bpp'] * $recording_info['fps'] * $recording_info['res_x'] * $recording_info['res_y'];
+	//// Add to template
+	$smarty->assign('fps', $recording_info['fps']);
+	$smarty->assign('video_bw', $recording_info['video_bitrate']);
+	$smarty->assign('content_x', $recording_info['res_x']);
+	$smarty->assign('content_y', $recording_info['res_y']);
+	$smarty->assign('media_x', $recording_info['pip_res_x']);
+	$smarty->assign('media_y', $recording_info['pip_res_y']);
+
+	// Generate black background PNG
+	$recording_info['pip_background'] = $recording['temp_directory'] . "black.png";
+	$command = "convert -size " . $recording_info['res_x'] . "x" . $recording_info['res_y'] . " xc:black " . $recording_info['pip_background'];
+	exec($command, $output, $result);
+	$output_string = implode("\n", $output);
+	if ( $result != 0 ) {
+		log_recording_conversion($recording['id'], $jconf['jobid_content_convert'], $jconf['dbstatus_conv'], "[ERROR] Failed creating background image (iMagick)", $command, $output_string, 0, TRUE);
+		return FALSE;
+	}
+	$smarty->assign('background', "file://" . $recording_info['pip_background']);
+
+	$vlc_cfg = $smarty->fetch('Jobs/vlc_video.tpl');
+	$recording_info['vlc_config_file'] = $recording['temp_directory'] . "pip.cfg";
+
+echo $vlc_cfg . "\n";
+	$err = string_to_file($recording_info['vlc_config_file'], $vlc_cfg); 
+	if ( !$err['code'] ) {
+		log_recording_conversion($recording['id'], $jconf['jobid_content_convert'], $jconf['dbstatus_conv'], "[ERROR] Failed creating VideoLAN config file", $err['message'], $err['command'], $err['result'], TRUE);
+		return FALSE;
+	}
+
+	$command = "cvlc -I dummy --stop-time=10 --mosaic-width=" . $recording_info['res_x'] . " --mosaic-height=" . $recording_info['res_y'] . " --mosaic-keep-aspect-ratio --mosaic-keep-picture --mosaic-xoffset=0 --mosaic-yoffset=0 --mosaic-position=2 --mosaic-offsets=\"0,0," . $recording_info['pip_x'] . "," . $recording_info['pip_y'] . "\" --mosaic-order=\"1,2\" --vlm-conf video_ok.cfg";
+
+echo $command . "\n";
+
+var_dump($recording_info);
+
+	return TRUE;
+}
 
 
 // *************************************************************************

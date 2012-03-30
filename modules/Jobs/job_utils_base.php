@@ -544,7 +544,34 @@ global $jconf;
 	return $err;
 }
 
+function string_to_file($file, $str) {
 
+	$err['command'] = "php: remove_file_ifexists()";
+
+	$e = remove_file_ifexists($file);
+	if ( $e['code'] == FALSE ) {
+		$err['code'] == FALSE;
+		$err['message'] = $e['message'];
+		return $err;
+	}
+
+	$err['command'] = "php: fwrite()";
+
+echo $file . "\n";
+
+	$fh = fopen($file, 'w');
+	$res = fwrite($fh, $str);
+	$err['result'] = $res;
+	if ( $res === FALSE ) {
+		$err['code'] = FALSE;
+		$err['message'] = "[ERROR] Cannot write file " . $file;
+		return $err;
+	}
+	fclose($fh);
+
+	$err['code'] = TRUE;
+	return $err;
+}
 
 
 ?>
