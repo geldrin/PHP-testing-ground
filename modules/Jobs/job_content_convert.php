@@ -98,6 +98,7 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_content_convert.stop' ) an
 
 		update_db_content_status($recording['id'], $jconf['dbstatus_conv_video']);
 
+/*
 		// Normal quality conversion (LQ)
 		if ( !convert_video($recording, $jconf['profile_content_lq'], $content_info_lq) ) {
 			update_db_content_status($recording['id'], $jconf['dbstatus_conv_video_err']);
@@ -118,6 +119,50 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_content_convert.stop' ) an
 				break;
 			}
 		}
+*/
+
+$smarty = $app->bootstrap->getSmarty();
+$smarty->assign('content_file', $recording['source_file']);
+$smarty->assign('video_file', $recording['source_media_file']);
+
+$fps = 30;
+$delay = 0;
+$l_width = 640;
+$l_height = 512;
+$s_width = 128;
+$s_height = 72;
+$video_bw = 800;
+$profile = $jconf['profile_mobile_lq'];
+$output_file = $recording['temp_directory'] . $recording['id'] . $profile['file_suffix'] . "." . $profile['format'];
+$audio_bw = 128;
+$audio_ch = 2;
+$audio_sr = 44100;
+$background = "file:///home/conv/vlc/black.png";
+$h264_profile = "baseline";
+
+$smarty->assign('fps', $fps);
+$smarty->assign('delay', $delay);
+$smarty->assign('audio_bw', $audio_bw);
+$smarty->assign('audio_ch', $audio_ch);
+$smarty->assign('audio_sr', $audio_sr);
+$smarty->assign('video_bw', $video_bw);
+$smarty->assign('l_width', $l_width);
+$smarty->assign('l_height', $l_height);
+$smarty->assign('s_width', $s_width);
+$smarty->assign('s_height', $s_height);
+$smarty->assign('output_file', $output_file);
+$smarty->assign('background', $background);
+$smarty->assign('h264_profile', $h264_profile);
+
+//$smarty->assign('language', "hu");
+//$smarty->assign('recid', 1234);
+$cfg_file = $smarty->fetch('Jobs/vlc_video.tpl');
+
+echo $cfg_file . "\n";
+
+
+
+exit;
 
 		// Media finalization
 		if ( !copy_content_to_frontend($recording, $content_info_lq, $content_info_hq) ) {
