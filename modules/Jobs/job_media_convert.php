@@ -520,11 +520,6 @@ global $app, $jconf;
 		// ffmpegthumbnailer (ffmpeg) returns -1 on success (?)
 		if ( $result < 0 ) $result = 0;
 
-/*echo "res: $result\n";
-echo "fname: $orig_thumb_filename\n";
-if ( file_exists($orig_thumb_filename) ) { echo "TRUE\n"; } else { echo "FALSE\n"; }
-echo "fsize: " . filesize($orig_thumb_filename) . "\n";
-*/
 		if ( ( $result != 0 ) || !file_exists($orig_thumb_filename) || ( filesize($orig_thumb_filename) < 1 ) ) {
 			// If ffmpeg error, we log messages to an array and jump to first frame
 			$errors['messages'] .= "[ERROR] ffmpeg failed (frame: " . $i . ", position: " . $position_sec . "sec).\n";
