@@ -68,6 +68,34 @@ function is_process_running($PID) {
 	return(count($ProcessState) >= 2);
 }
 
+function is_process_closedfile($file, $PID) {
+
+	$err['command'] = "-";
+	$err['command_output'] = "-";
+	$err['result'] = 0;
+
+	if ( !file_exists($file) ) {
+		$err['code'] = FALSE;
+        $err['message'] = "[ERROR] File does not exist: " . $file;
+		return $err;
+	}
+
+	$command = "lsof -t " . $file;
+	$lsof = `$command`;
+	$err['command'] = $command;
+	$err['command_output'] = trim($lsof);
+	$PID_working = (int)trim($lsof);
+	if ( !is_numeric($PID_working) ) {
+		$err['code'] = FALSE;
+        $err['message'] = "[ERROR] Unspecified command output: " . $command;
+		return $err;
+	}
+
+	$err['code'] = TRUE;
+	
+	return $err;
+}
+
 define('BASE_PATH',	realpath( __DIR__ . '/../..' ) . '/' );
 define('PRODUCTION', false );
 define('DEBUG', false );
