@@ -121,22 +121,34 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_content_convert.stop' ) an
 		}
 */
 
+$profile = $jconf['profile_mobile_lq'];
+
 $smarty = $app->bootstrap->getSmarty();
 $smarty->assign('content_file', $recording['source_file']);
 $smarty->assign('video_file', $recording['source_media_file']);
 
-$fps = 30;
 $delay = 0;
-$l_width = 640;
-$l_height = 512;
-$s_width = 128;
-$s_height = 72;
-$video_bw = 800;
-$profile = $jconf['profile_mobile_lq'];
+$fps = $recording['contentmasterfps'];
+// Content resolution
+$tmp = explode("x", $recording['contentmastervideores'], 2);
+$c_resx = $tmp[0];
+$c_resy = $tmp[1];
+$c_resnew = calculate_video_scaler($c_resx, $c_resy, $profile['video_bbox']);
+$l_width = $c_resnew['x'];
+$l_height = $c_resnew['y'];
+// Media resolution
+$tmp = explode("x", $recording['mastervideores'], 2);
+$s_width = $jconf['video_res_modulo'] * floor(($tmp[0] * $profile['pip_resize']) / $jconf['video_res_modulo']);
+$s_height = $jconf['video_res_modulo'] * floor(($tmp[1] * $profile['pip_resize']) / $jconf['video_res_modulo']);
+// Video bandwidth
+$video_bw = $profile['video_bpp'] * $fps * $l_width * $l_height;
 $output_file = $recording['temp_directory'] . $recording['id'] . $profile['file_suffix'] . "." . $profile['format'];
-$audio_bw = 128;
-$audio_ch = 2;
-$audio_sr = 44100;
+
+$audio_ch = $profile['audio_ch'];
+$audio_bw = $profile['audio_ch'] * $profile['audio_bw_ch'];
+$audio_sr = $recording['contentmasteraudiofreq'];
+
+// Generate black!
 $background = "file:///home/conv/vlc/black.png";
 $h264_profile = "baseline";
 

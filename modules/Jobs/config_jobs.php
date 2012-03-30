@@ -124,8 +124,10 @@ return array('config_jobs' => array(
 		'audio_bw_ch'	=> 64,				// Kbps per audio channel
 		'audio_mode'	=> "cbr",
 		'pip_wcontent'	=> "enabled",
-		'pip_posx'		=> "left",			// left or right
-		'pip_posy'		=> "up"				// up or down
+		'pip_posx'		=> "left",			// Left or right
+		'pip_posy'		=> "up",			// Up or down
+		'pip_align'		=> "10",			// Align from sides
+		'pip_resize'	=> "0.1"			// % of original master media as PiP small
 	),
 
 	// Mobile HQ version
@@ -147,7 +149,9 @@ return array('config_jobs' => array(
 		'audio_mode'	=> "cbr",
 		'pip_wcontent'	=> "enabled",
 		'pip_posx'		=> "left",			// left or right
-		'pip_posy'		=> "up"				// up or down
+		'pip_posy'		=> "up",			// up or down
+		'pip_align'		=> "10",			// Align from sides
+		'pip_resize'	=> "0.1"			// % of original master media as PiP small
 	),
 
 	// Normal quality
