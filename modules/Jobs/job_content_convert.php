@@ -1,6 +1,133 @@
 <?php
 // Content conversion job v0 @ 2012/02/??
 
+function runExternal_vlc($cmd, $output_file) {
+
+	$descriptorspec = array(
+		0 => array("pipe", "r"),  // stdin is a pipe that the child will read from
+		1 => array("pipe", "w"),  // stdout is a pipe that the child will write to
+		2 => array("pipe", "w")   // stderr is a file to write to
+	);
+
+	$pipes = array();
+	$process = proc_open($cmd, $descriptorspec, $pipes);
+
+	$output = "VLC started: " . date("Y-m-d H:i:s") . "\n";
+
+	if (!is_resource($process)) return false;
+
+	// close child's input imidiately
+	fclose($pipes[0]);
+
+	stream_set_blocking($pipes[1], false);
+	stream_set_blocking($pipes[2], false);
+
+	$return_array = array();
+
+	// Get process ID (proc_get_status() gives wrong PID)
+	$ps = `ps -C vlc -o pid=`;
+	$PID = (int)trim($ps);
+	if ( !is_numeric($PID) ) $PID = -1;
+	$return_array['pid'] = $PID;
+
+	$todo = array($pipes[1], $pipes[2]);
+
+	while( true ) {
+
+		$read = array();
+		if( !feof($pipes[1]) ) $read[]= $pipes[1];
+		if( !feof($pipes[2]) ) $read[]= $pipes[2];
+
+		if (!$read) break;
+
+		$write = NULL;
+		$ex = NULL;
+		$ready = stream_select($read, $write, $ex, 2);
+
+		if ( $ready === FALSE ) {
+			break; // should never happen - something died
+		}
+
+		foreach ($read as $r) {
+			$s = fread($r, 1024);
+			$tmp = trim($s);
+			if ( !empty($tmp) ) {
+				$output .= $tmp;
+				$end_str = stripos($tmp, "kb/s:" );
+
+//echo $date . " " . $tmp . "\n";
+
+				$err = is_process_closedfile($output_file, $PID);
+
+				if ( ( $end_str !== FALSE ) and ( $err['code'] == TRUE ) ) {
+
+					if ( !posix_kill($PID, SIGQUIT) ) {
+						echo "ERROR: notkilled: $PID\n";
+					}
+				}
+
+				break;
+
+			}
+
+		}
+	}
+
+	fclose($pipes[1]);
+	fclose($pipes[2]);
+
+	$return_array['code'] = proc_close($process);
+	$return_array['cmd_output'] = $output;
+
+//echo $output . "\n";
+
+	return $return_array;
+}
+
+function is_process_running($PID) {
+
+	exec("ps $PID", $ProcessState);
+	return(count($ProcessState) >= 2);
+}
+
+function is_process_closedfile($file, $PID) {
+
+	$err['command'] = "-";
+	$err['command_output'] = "-";
+	$err['result'] = 0;
+
+	if ( !file_exists($file) ) {
+		$err['code'] = FALSE;
+        $err['message'] = "[ERROR] File does not exist: " . $file;
+		return $err;
+	}
+
+	$command = "lsof -t " . $file;
+	$lsof = `$command`;
+	$err['command'] = $command;
+	$lsof_output = trim($lsof);
+	$err['command_output'] = $lsof_output;
+	if ( empty($lsof_output) ) {
+		$err['code'] = TRUE;
+		return $err;
+	} else {
+		$err['code'] = FALSE;
+        $err['message'] = "[ERROR] Unexpected command output from: " . $command;
+		return $err;
+	}
+
+	// Check if PID is provided
+	$PID_working = (int)$lsof_output;
+	if ( is_numeric($PID_working) ) {
+		$err['code'] = FALSE;
+        $err['message'] = "[MSG] File is opened by process " . $PID_working;
+		return $err;
+	}
+
+	return $err;
+}
+
+
 define('BASE_PATH',	realpath( __DIR__ . '/../..' ) . '/' );
 define('PRODUCTION', false );
 define('DEBUG', false );
@@ -126,7 +253,7 @@ echo "copied...\n";
 		}
 */
 
-if ( !convert_mobile($recording, $jconf['profile_mobile_lq'], $content_info_mobile) ) {
+if ( !convert_mobile($recording, $jconf['profile_mobile_hq'], $content_info_mobile) ) {
 	echo "Nem nyert\n";
 }
 
@@ -246,11 +373,14 @@ global $jconf, $app, $db;
 	$recording_info['video_bitrate'] = $profile['video_bpp'] * $recording_info['fps'] * $recording_info['res_x'] * $recording_info['res_y'];
 	//// Add to template
 	$smarty->assign('fps', $recording_info['fps']);
-	$smarty->assign('video_bw', $recording_info['video_bitrate']);
+
+	$smarty->assign('video_bw', ceil($recording_info['video_bitrate'] / 1000));
 	$smarty->assign('content_x', $recording_info['res_x']);
 	$smarty->assign('content_y', $recording_info['res_y']);
 	$smarty->assign('media_x', $recording_info['pip_res_x']);
 	$smarty->assign('media_y', $recording_info['pip_res_y']);
+
+var_dump($recording_info);
 
 	// Generate black background PNG
 	$recording_info['pip_background'] = $recording['temp_directory'] . "black.png";
@@ -266,16 +396,19 @@ global $jconf, $app, $db;
 	$vlc_cfg = $smarty->fetch('Jobs/vlc_video.tpl');
 	$recording_info['vlc_config_file'] = $recording['temp_directory'] . "pip.cfg";
 
-echo $vlc_cfg . "\n";
 	$err = string_to_file($recording_info['vlc_config_file'], $vlc_cfg); 
 	if ( !$err['code'] ) {
 		log_recording_conversion($recording['id'], $jconf['jobid_content_convert'], $jconf['dbstatus_conv'], "[ERROR] Failed creating VideoLAN config file", $err['message'], $err['command'], $err['result'], TRUE);
 		return FALSE;
 	}
 
-	$command = "cvlc -I dummy --stop-time=10 --mosaic-width=" . $recording_info['res_x'] . " --mosaic-height=" . $recording_info['res_y'] . " --mosaic-keep-aspect-ratio --mosaic-keep-picture --mosaic-xoffset=0 --mosaic-yoffset=0 --mosaic-position=2 --mosaic-offsets=\"0,0," . $recording_info['pip_x'] . "," . $recording_info['pip_y'] . "\" --mosaic-order=\"1,2\" --vlm-conf video_ok.cfg";
+	$command = "cvlc -I dummy --stop-time=10 --mosaic-width=" . $recording_info['res_x'] . " --mosaic-height=" . $recording_info['res_y'] . " --mosaic-keep-aspect-ratio --mosaic-keep-picture --mosaic-xoffset=0 --mosaic-yoffset=0 --mosaic-position=2 --mosaic-offsets=\"0,0," . $recording_info['pip_x'] . "," . $recording_info['pip_y'] . "\" --mosaic-order=\"1,2\" --vlm-conf " . $recording_info['vlc_config_file'];
 
 echo $command . "\n";
+
+$err = runExternal_vlc($command, $recording_info['output_file']);
+
+var_dump($err);
 
 var_dump($recording_info);
 
