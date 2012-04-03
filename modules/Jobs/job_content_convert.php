@@ -224,6 +224,8 @@ echo "copied...\n";
 			break;
 		}
 
+exit;
+
 		// Decide about high quality mobile conversion (mobile HQ)
 		$res = explode("x", strtolower($recording['contentmastervideores']), 2);
 		$res_x = $res[0];
@@ -377,7 +379,7 @@ global $jconf, $app, $db, $global_log;
 	$target_length = ceil(max($recording['masterlength'], $recording['contentmasterlength']) + 1);
 	$target_length = 10;
 
-	$command = "cvlc -I dummy --stop-time=" . $target_length . " --mosaic-width=" . $recording_info['res_x'] . " --mosaic-height=" . $recording_info['res_y'] . " --mosaic-keep-aspect-ratio --mosaic-keep-picture --mosaic-xoffset=0 --mosaic-yoffset=0 --mosaic-position=2 --mosaic-offsets=\"0,0," . $recording_info['pip_x'] . "," . $recording_info['pip_y'] . "\" --mosaic-order=\"1,2\" --vlm-conf " . $recording_info['vlc_config_file'];
+	$command = "cvlc -I dummy -v --stop-time=" . $target_length . " --mosaic-width=" . $recording_info['res_x'] . " --mosaic-height=" . $recording_info['res_y'] . " --mosaic-keep-aspect-ratio --mosaic-keep-picture --mosaic-xoffset=0 --mosaic-yoffset=0 --mosaic-position=2 --mosaic-offsets=\"0,0," . $recording_info['pip_x'] . "," . $recording_info['pip_y'] . "\" --mosaic-order=\"1,2\" --vlm-conf " . $recording_info['vlc_config_file'];
 
 echo $command . "\n\n";
 
