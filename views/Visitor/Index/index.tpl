@@ -4,7 +4,7 @@
   <div id="indexcontainer">
     <div class="leftdoublebox">
       {assign var=recording value=$recordings[0]}
-      <a class="imageinfo wlarge" href="{$language}/recordings/details/{$recording.id},{$recording.title|filenameize}">
+      <a class="imageinfo wlarge" href="{$language}/recordings/details/{$recording.id},{$recording.title|filenameize}" title="{$recording.title|escape:html}">
         <img src="{$recording|@indexphoto:player}"/>
         <div class="playpic"></div>
         <div class="imageinfowrap">
@@ -21,7 +21,7 @@
     <div class="rightbox">
       {if isset( $recordings[1] )}
         {assign var=recording value=$recordings[1]}
-        <a class="imageinfo wwide first" href="{$language}/recordings/details/{$recording.id},{$recording.title|filenameize}">
+        <a class="imageinfo wwide first" href="{$language}/recordings/details/{$recording.id},{$recording.title|filenameize}" title="{$recording.title|escape:html}">
           <img src="{$recording|@indexphoto:wide}"/>
           <div class="imageinfowrap">
             <div class="avatar"><img src="{$STATIC_URI}images/avatar_placeholder.png"/></div>
@@ -34,7 +34,7 @@
       {/if}
       {if isset( $recordings[2] )}
         {assign var=recording value=$recordings[2]}
-        <a class="imageinfo wwide" href="{$language}/recordings/details/{$recording.id},{$recording.title|filenameize}">
+        <a class="imageinfo wwide" href="{$language}/recordings/details/{$recording.id},{$recording.title|filenameize}" title="{$recording.title|escape:html}">
           <img src="{$recording|@indexphoto:wide}"/>
           <div class="imageinfowrap">
             <div class="avatar"><img src="{$STATIC_URI}images/avatar_placeholder.png"/></div>
