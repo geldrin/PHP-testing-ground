@@ -18,7 +18,7 @@ class Controller extends \Springboard\Controller\Visitor {
       
       $orgModel = $this->bootstrap->getModel('organizations');
       if ( !$orgModel->checkDomain( $host ) )
-        throw new Exception('Organization not found!');
+        throw new \Exception('Organization not found!');
       
       $organization = $orgModel->row;
       $cache->put( $organization );
