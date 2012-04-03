@@ -82,11 +82,8 @@ function runExternal_vlc($cmd, $output_file) {
 		$return_array['code'] = TRUE;
 	}
 
-echo "err: " . $return_array['code'] . "\n";
 	$return_array['command_output'] = $output;
 	$return_array['command'] = $cmd;
-
-//echo $output . "\n";
 
 	return $return_array;
 }
@@ -378,6 +375,7 @@ global $jconf, $app, $db, $global_log;
 
 	// VideoLAN max media length to calculate
 	$target_length = ceil(max($recording['masterlength'], $recording['contentmasterlength']) + 1);
+	$target_length = 10;
 
 	$command = "cvlc -I dummy --stop-time=" . $target_length . " --mosaic-width=" . $recording_info['res_x'] . " --mosaic-height=" . $recording_info['res_y'] . " --mosaic-keep-aspect-ratio --mosaic-keep-picture --mosaic-xoffset=0 --mosaic-yoffset=0 --mosaic-position=2 --mosaic-offsets=\"0,0," . $recording_info['pip_x'] . "," . $recording_info['pip_y'] . "\" --mosaic-order=\"1,2\" --vlm-conf " . $recording_info['vlc_config_file'];
 
@@ -392,14 +390,6 @@ echo $command . "\n\n";
 
 var_dump($recording_info);
 
-	// Remove VideoLAN config file
-	$err = remove_file_ifexists($recording_info['vlc_config_file']);
-	if ( !$err['code'] ) log_recording_conversion($recording['id'], $jconf['jobid_content_convert'], $jconf['dbstatus_conv_video'], $err['message'], $err['command'], $err['result'], 0, TRUE);
-
-	// Remove blank background image
-	$err = remove_file_ifexists($recording_info['pip_background']);
-	if ( !$err['code'] ) log_recording_conversion($recording['id'], $jconf['jobid_content_convert'], $jconf['dbstatus_conv_video'], $err['message'], $err['command'], $err['result'], 0, TRUE);
-
 	// Update watchdog timer
 	$app->watchdog();
 
@@ -413,6 +403,14 @@ var_dump($recording_info);
 	} else {
 		log_recording_conversion($recording['id'], $jconf['jobid_content_convert'], $jconf['dbstatus_conv_video'], "[OK] VideoLAN conversion ended", $err['command'] . "\n\nVLM config file:\n\n" . $vlc_cfg, $err['command_output'], $duration, FALSE);
 	}
+
+	// Remove VideoLAN config file
+	$err = remove_file_ifexists($recording_info['vlc_config_file']);
+	if ( !$err['code'] ) log_recording_conversion($recording['id'], $jconf['jobid_content_convert'], $jconf['dbstatus_conv_video'], $err['message'], $err['command'], $err['result'], 0, TRUE);
+
+	// Remove blank background image
+	$err = remove_file_ifexists($recording_info['pip_background']);
+	if ( !$err['code'] ) log_recording_conversion($recording['id'], $jconf['jobid_content_convert'], $jconf['dbstatus_conv_video'], $err['message'], $err['command'], $err['result'], 0, TRUE);
 
 	return TRUE;
 }
