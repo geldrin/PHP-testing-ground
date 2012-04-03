@@ -1344,6 +1344,7 @@ a#currentusername span {
 .imageinfo .imageinfowrap {
   height: 67px;
   width: 100%;
+  overflow: hidden;
   display: block;
   position: absolute;
   bottom: 0px;

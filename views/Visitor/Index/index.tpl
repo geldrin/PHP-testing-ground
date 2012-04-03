@@ -26,7 +26,7 @@
           <div class="imageinfowrap">
             <div class="avatar"><img src="{$STATIC_URI}images/avatar_placeholder.png"/></div>
             <div class="content">
-              <h1>Vestibulum tortor quam, feugiat vitae, ultricies eget, tempor sit amet, ante</h1>
+              <h1>{$recording.title|mb_truncate:23|escape:html}</h1>
               <h2>{$recording.nickname|mb_truncate:90|escape:html}</h2>
             </div>
           </div>
@@ -39,7 +39,7 @@
           <div class="imageinfowrap">
             <div class="avatar"><img src="{$STATIC_URI}images/avatar_placeholder.png"/></div>
             <div class="content">
-              <h1>{$recording.title|mb_truncate:60|escape:html}</h1>
+              <h1>{$recording.title|mb_truncate:23|escape:html}</h1>
               <h2>{$recording.nickname|mb_truncate:90|escape:html}</h2>
             </div>
           </div>
