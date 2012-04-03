@@ -1309,6 +1309,9 @@ a#currentusername span {
 }
 /* indexnews */
 .indexnews h2 {
+  overflow: hidden;
+}
+.indexnews h2 a {
   font-weight: bold;
   font-size: 15px;
   color: #333;

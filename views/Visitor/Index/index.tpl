@@ -63,7 +63,7 @@
         {assign var=lead value=$item.leadenglish}
       {/if}
       <div class="newsitem{if $smarty.foreach.news.last} last{/if}">
-        <h2>{$title|escape:html}<span class="subtitle">{$item.starts|date_format:#smarty_dateformat_long#}</span></h2>
+        <h2 class="nobr"><a href="{$language}/organizations/newsdetails/{$item.id},{$title|filenameize}">{$title|mb_truncate:65|escape:html}</a><span class="subtitle">{$item.starts|date_format:#smarty_dateformat_long#}</span></h2>
         <p>{$lead|escape:html|nl2br}</p>
         <a href="{$language}/organizations/newsdetails/{$item.id},{$title|filenameize}" class="more">{#index__more#}</a>
       </div>
