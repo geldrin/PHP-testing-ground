@@ -751,7 +751,7 @@ class Recordings extends \Springboard\Model {
     
   }
   
-  public function getPublicRecordingWhere( $prefix = '' ) {
+  public static function getPublicRecordingWhere( $prefix = '' ) {
     
     if ( strlen( $prefix ) )
       $prefix .= '.';
@@ -931,17 +931,7 @@ class Recordings extends \Springboard\Model {
         ( $where ) AND
         u.id = r.userid AND
         r.id <> '" . $this->id . "' AND
-        r.status = 'onstorage' AND
-        r.ispublished = '1' AND
-        r.accesstype = 'public' AND
-        (
-          r.visiblefrom IS NULL OR
-          r.visibleuntil IS NULL OR
-          (
-            r.visiblefrom  <= NOW() AND
-            r.visibleuntil >= NOW()
-          )
-        )
+        " . self::getPublicRecordingWhere('r') . "
       LIMIT $limit
     ");
     
@@ -992,17 +982,7 @@ class Recordings extends \Springboard\Model {
         r.id = cr.recordingid AND
         u.id = r.userid AND
         r.id <> '" . $this->id . "' AND
-        r.status = 'onstorage' AND
-        r.ispublished = '1' AND
-        r.accesstype = 'public' AND
-        (
-          r.visiblefrom IS NULL OR
-          r.visibleuntil IS NULL OR
-          (
-            r.visiblefrom  <= NOW() AND
-            r.visibleuntil >= NOW()
-          )
-        )
+        " . self::getPublicRecordingWhere('r') . "
       ORDER BY RAND()
       LIMIT $limit
     ");
@@ -1055,18 +1035,8 @@ class Recordings extends \Springboard\Model {
         users AS u
       WHERE
         u.id = r.userid AND
-        r.id != '" . $this->id . "' AND
-        r.status = 'onstorage' AND
-        r.accesstype = 'public' AND
-        r.ispublished = '1' AND
-        (
-          r.visiblefrom IS NULL OR
-          r.visibleuntil IS NULL OR
-          (
-            r.visiblefrom  <= NOW() AND
-            r.visibleuntil >= NOW()
-          )
-        )
+        r.id <> '" . $this->id . "' AND
+        " . self::getPublicRecordingWhere('r') . "
       ORDER BY RAND()
       LIMIT $limit
     ");
@@ -1177,7 +1147,7 @@ class Recordings extends \Springboard\Model {
       WHERE
         rc.categoryid IN ('" . implode("', '", $categoryids ) . "') AND
         r.id = rc.recordingid AND
-        " . $this->getPublicRecordingWhere()
+        " . self::getPublicRecordingWhere()
     );
     
   }
@@ -1193,7 +1163,7 @@ class Recordings extends \Springboard\Model {
       WHERE
         rc.categoryid IN ('" . implode("', '", $categoryids ) . "') AND
         r.id = rc.recordingid AND
-        " . $this->getPublicRecordingWhere() .
+        " . self::getPublicRecordingWhere() .
       ( strlen( $order ) ? 'ORDER BY ' . $order : '' ) . " " .
       ( is_numeric( $start ) ? 'LIMIT ' . $start . ', ' . $limit : "" )
     );
@@ -1379,6 +1349,29 @@ class Recordings extends \Springboard\Model {
     $this->updateChannelIndexPhotos();
     $this->updateCategoryCounters();
     return true;
+    
+  }
+  
+  public function getRandomRecordings( $count, $organizationid ) {
+    
+    // TODO isfeatured uncomment, users avatar
+    return $this->db->getArray("
+      SELECT
+        u.nickname,
+        r.id,
+        r.title,
+        r.indexphotofilename
+      FROM
+        recordings AS r,
+        users AS u
+      WHERE
+        -- r.isfeatured = '1' AND
+        u.id = r.userid AND
+        r.organizationid = '" . $organizationid . "' AND
+        " . self::getPublicRecordingWhere('r') . "
+      ORDER BY RAND()
+      LIMIT $count
+    ");
     
   }
   
