@@ -1335,7 +1335,7 @@ a#currentusername span {
 }
 .indexnews .newsitem.last {
   border-bottom: 0px;
-  box-shadow: 0;
+  box-shadow: none;
 }
 
 /* imageinfo */
