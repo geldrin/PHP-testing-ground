@@ -1,5 +1,5 @@
 <?php
-// Content conversion job v0 @ 2012/02/??
+// Content conversion job v0.9 @ 2012/04/04
 
 function runExternal_vlc($cmd, $output_file) {
 
@@ -55,8 +55,7 @@ function runExternal_vlc($cmd, $output_file) {
 				$output .= $tmp;
 				$end_str = stripos($tmp, "kb/s:" );
 
-//echo $date . " " . $tmp . "\n";
-
+// Rearrange this!!!
 				$err = is_process_closedfile($output_file, $PID);
 
 				if ( ( $end_str !== FALSE ) and ( $err['code'] == TRUE ) ) {
@@ -77,54 +76,19 @@ function runExternal_vlc($cmd, $output_file) {
 	fclose($pipes[2]);
 
 	$return_array['code'] = proc_close($process);
-	$return_array['cmd_output'] = $output;
+	if ( $return_array['code'] != 0 ) {
+		$return_array['code'] = FALSE;
+	} else {
+		$return_array['code'] = TRUE;
+	}
+
+echo "err: " . $return_array['code'] . "\n";
+	$return_array['command_output'] = $output;
+	$return_array['command'] = $cmd;
 
 //echo $output . "\n";
 
 	return $return_array;
-}
-
-function is_process_running($PID) {
-
-	exec("ps $PID", $ProcessState);
-	return(count($ProcessState) >= 2);
-}
-
-function is_process_closedfile($file, $PID) {
-
-	$err['command'] = "-";
-	$err['command_output'] = "-";
-	$err['result'] = 0;
-
-	if ( !file_exists($file) ) {
-		$err['code'] = FALSE;
-        $err['message'] = "[ERROR] File does not exist: " . $file;
-		return $err;
-	}
-
-	$command = "lsof -t " . $file;
-	$lsof = `$command`;
-	$err['command'] = $command;
-	$lsof_output = trim($lsof);
-	$err['command_output'] = $lsof_output;
-	if ( empty($lsof_output) ) {
-		$err['code'] = TRUE;
-		return $err;
-	} else {
-		$err['code'] = FALSE;
-        $err['message'] = "[ERROR] Unexpected command output from: " . $command;
-		return $err;
-	}
-
-	// Check if PID is provided
-	$PID_working = (int)$lsof_output;
-	if ( is_numeric($PID_working) ) {
-		$err['code'] = FALSE;
-        $err['message'] = "[MSG] File is opened by process " . $PID_working;
-		return $err;
-	}
-
-	return $err;
 }
 
 
@@ -224,9 +188,10 @@ echo "copying...\n";
 echo "copied...\n";
 
 		//// Media conversion
-		$content_info_mobile = array();
 		$content_info_lq = array();
 		$content_info_hq = array();
+		$content_info_mobile_lq = array();
+		$content_info_mobile_hq = array();
 
 		update_db_content_status($recording['id'], $jconf['dbstatus_conv_video']);
 
@@ -253,10 +218,29 @@ echo "copied...\n";
 		}
 */
 
-if ( !convert_mobile($recording, $jconf['profile_mobile_hq'], $content_info_mobile) ) {
-	echo "Nem nyert\n";
-}
+		//// Mobile picture in picture conversion
+// No break if mobile conversion is not successful?
 
+		// Normal quality mobile conversion (mobile LQ)
+		if ( !convert_mobile($recording, $jconf['profile_mobile_lq'], $content_info_mobile_lq) ) {
+			update_db_mobile_status($recording['id'], $jconf['dbstatus_conv_video_err']);
+			break;
+		}
+
+		// Decide about high quality mobile conversion (mobile HQ)
+		$res = explode("x", strtolower($recording['contentmastervideores']), 2);
+		$res_x = $res[0];
+		$res_y = $res[1];
+		$res = explode("x", strtolower($jconf['profile_mobile_lq']['video_bbox']), 2);
+		$bbox_res_x = $res[0];
+		$bbox_res_y = $res[1];
+		// Generate HQ version if original recording does not fit LQ bounding box
+		if ( ( $res_x > $bbox_res_x ) || ( $res_y > $bbox_res_y ) ) {
+		if ( !convert_mobile($recording, $jconf['profile_mobile_hq'], $content_info_mobile_hq) ) {
+				update_db_mobile_status($recording['id'], $jconf['dbstatus_conv_video_err']);
+				break;
+			}
+		}
 
 exit;
 
@@ -302,34 +286,11 @@ exit;
 
 exit;
 
-function calculate_mobile_pip($mastervideores, $contentmastervideores, &$recording_info, $profile) {
-global $jconf;
-
-	// Content resolution
-	$tmp = explode("x", $contentmastervideores, 2);
-	$c_resx = $tmp[0];
-	$c_resy = $tmp[1];
-	$c_resnew = calculate_video_scaler($c_resx, $c_resy, $profile['video_bbox']);
-	$recording_info['scaler'] = $c_resnew['scaler'];
-	$recording_info['res_x'] = $c_resnew['x'];
-	$recording_info['res_y'] = $c_resnew['y'];
-
-	// Media resolution
-	$tmp = explode("x", $mastervideores, 2);
-	$recording_info['pip_res_x'] = $jconf['video_res_modulo'] * floor(($tmp[0] * $profile['pip_resize']) / $jconf['video_res_modulo']);
-	$recording_info['pip_res_y'] = $jconf['video_res_modulo'] * floor(($tmp[1] * $profile['pip_resize']) / $jconf['video_res_modulo']);
-
-	// Calculate PiP position
-	if ( $profile['pip_posx'] == "left" ) $recording_info['pip_x'] = 0 + $profile['pip_align'];
-	if ( $profile['pip_posx'] == "right" ) $recording_info['pip_x'] = $recording_info['res_x'] - $recording_info['pip_res_x'] - $profile['pip_align'];
-	if ( $profile['pip_posy'] == "up" ) $recording_info['pip_y'] = 0 + $profile['pip_align'];
-	if ( $profile['pip_posy'] == "down" ) $recording_info['pip_y'] = $recording_info['res_y'] - $recording_info['pip_res_y'] - $profile['pip_align'];
-
-	return TRUE;
-}
-
 function convert_mobile($recording, $profile, &$recording_info) {
-global $jconf, $app, $db;
+global $jconf, $app, $db, $global_log;
+
+	// Update watchdog timer
+	$app->watchdog();
 
 	// Setup smarty for VideoLAN VLM config template
 	$smarty = $app->bootstrap->getSmarty();
@@ -345,7 +306,8 @@ global $jconf, $app, $db;
 	// Basic configuration
 	$h264_profile = "baseline";
 	$smarty->assign('h264_profile', $h264_profile);
-	//// Should be calculated from trim/offset values!!!
+
+	//// Delay: should be calculated from trim/offset values!!!
 	$delay = 0;
 	$smarty->assign('delay', $delay);
 
@@ -380,7 +342,7 @@ global $jconf, $app, $db;
 	$smarty->assign('media_x', $recording_info['pip_res_x']);
 	$smarty->assign('media_y', $recording_info['pip_res_y']);
 
-var_dump($recording_info);
+//var_dump($recording_info);
 
 	// Generate black background PNG
 	$recording_info['pip_background'] = $recording['temp_directory'] . "black.png";
@@ -388,29 +350,69 @@ var_dump($recording_info);
 	exec($command, $output, $result);
 	$output_string = implode("\n", $output);
 	if ( $result != 0 ) {
-		log_recording_conversion($recording['id'], $jconf['jobid_content_convert'], $jconf['dbstatus_conv'], "[ERROR] Failed creating background image (iMagick)", $command, $output_string, 0, TRUE);
+		log_recording_conversion($recording['id'], $jconf['jobid_content_convert'], $jconf['dbstatus_conv_video'], "[ERROR] Failed creating background image (iMagick)", $command, $output_string, 0, TRUE);
 		return FALSE;
 	}
 	$smarty->assign('background', "file://" . $recording_info['pip_background']);
 
-	$vlc_cfg = $smarty->fetch('Jobs/vlc_video.tpl');
+	if ( $recording['mastermediatype'] == "audio" ) {
+		$vlc_template = "Jobs/vlc_audio.tpl";
+		$vlc_cfg = $smarty->fetch($vlc_template);
+	} else {
+		$vlc_template = "Jobs/vlc_video.tpl";
+		$vlc_cfg = $smarty->fetch($vlc_template);
+	}
+
+	$recording_info['vlc_template'] = $vlc_template;
 	$recording_info['vlc_config_file'] = $recording['temp_directory'] . "pip.cfg";
 
 	$err = string_to_file($recording_info['vlc_config_file'], $vlc_cfg); 
 	if ( !$err['code'] ) {
-		log_recording_conversion($recording['id'], $jconf['jobid_content_convert'], $jconf['dbstatus_conv'], "[ERROR] Failed creating VideoLAN config file", $err['message'], $err['command'], $err['result'], TRUE);
+		log_recording_conversion($recording['id'], $jconf['jobid_content_convert'], $jconf['dbstatus_conv_video'], "[ERROR] Failed creating VideoLAN config file", $err['message'], $err['command'], $err['result'], TRUE);
 		return FALSE;
 	}
 
-	$command = "cvlc -I dummy --stop-time=10 --mosaic-width=" . $recording_info['res_x'] . " --mosaic-height=" . $recording_info['res_y'] . " --mosaic-keep-aspect-ratio --mosaic-keep-picture --mosaic-xoffset=0 --mosaic-yoffset=0 --mosaic-position=2 --mosaic-offsets=\"0,0," . $recording_info['pip_x'] . "," . $recording_info['pip_y'] . "\" --mosaic-order=\"1,2\" --vlm-conf " . $recording_info['vlc_config_file'];
+	// Log media info
+	$log_msg = print_recording_info($recording_info);
+	$global_log .= $log_msg. "\n";
 
-echo $command . "\n";
+	// VideoLAN max media length to calculate
+	$target_length = ceil(max($recording['masterlength'], $recording['contentmasterlength']) + 1);
 
-$err = runExternal_vlc($command, $recording_info['output_file']);
+	$command = "cvlc -I dummy --stop-time=" . $target_length . " --mosaic-width=" . $recording_info['res_x'] . " --mosaic-height=" . $recording_info['res_y'] . " --mosaic-keep-aspect-ratio --mosaic-keep-picture --mosaic-xoffset=0 --mosaic-yoffset=0 --mosaic-position=2 --mosaic-offsets=\"0,0," . $recording_info['pip_x'] . "," . $recording_info['pip_y'] . "\" --mosaic-order=\"1,2\" --vlm-conf " . $recording_info['vlc_config_file'];
 
-var_dump($err);
+echo $command . "\n\n";
+
+// !!!!!!!!!!!!!!!!!!
+
+	$time_start = time();
+	$err = runExternal_vlc($jconf['nice'] . " " . $command, $recording_info['output_file']);
+	$duration = time() - $time_start;
+	$mins_taken = round($duration / 60, 2);
 
 var_dump($recording_info);
+
+	// Remove VideoLAN config file
+	$err = remove_file_ifexists($recording_info['vlc_config_file']);
+	if ( !$err['code'] ) log_recording_conversion($recording['id'], $jconf['jobid_content_convert'], $jconf['dbstatus_conv_video'], $err['message'], $err['command'], $err['result'], 0, TRUE);
+
+	// Remove blank background image
+	$err = remove_file_ifexists($recording_info['pip_background']);
+	if ( !$err['code'] ) log_recording_conversion($recording['id'], $jconf['jobid_content_convert'], $jconf['dbstatus_conv_video'], $err['message'], $err['command'], $err['result'], 0, TRUE);
+
+	// Update watchdog timer
+	$app->watchdog();
+
+	// Error handling
+	if ( !$err['code'] ) {
+		log_recording_conversion($recording['id'], $jconf['jobid_content_convert'], $jconf['dbstatus_conv_video'], "[ERROR] VideoLAN conversion failed", $err['command'] . "\n\nVLM config file:\n\n" . $vlc_cfg, $err['command_output'], $duration, TRUE);
+		// Remove broken output file
+		$err = remove_file_ifexists($recording_info['output_file']);
+		if ( !$err['code'] ) log_recording_conversion($recording['id'], $jconf['jobid_content_convert'], $jconf['dbstatus_conv_video'], $err['message'], $err['command'], $err['result'], 0, TRUE);
+		return FALSE;
+	} else {
+		log_recording_conversion($recording['id'], $jconf['jobid_content_convert'], $jconf['dbstatus_conv_video'], "[OK] VideoLAN conversion ended", $err['command'] . "\n\nVLM config file:\n\n" . $vlc_cfg, $err['command_output'], $duration, FALSE);
+	}
 
 	return TRUE;
 }

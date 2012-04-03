@@ -1,7 +1,6 @@
 ## VideoLAN VLM config file
 # TARGET: picture-in-picture content + video conversion
 
-## Delete all inputs/commands
 del all
 
 ## Background video (large)

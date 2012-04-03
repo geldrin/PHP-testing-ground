@@ -573,5 +573,73 @@ echo $file . "\n";
 	return $err;
 }
 
+// -------------------------------------------------------------------------
+// |				    Process handling related functions				   |
+// -------------------------------------------------------------------------
+
+// *************************************************************************
+// *					function is_process_running()	  				   *
+// *************************************************************************
+// Description: is a specific process running?
+// INPUTS:
+//	- $PID: process ID
+// OUTPUTS:
+//  - boolean: true/false
+function is_process_running($PID) {
+
+	exec("ps $PID", $ProcessState);
+	return(count($ProcessState) >= 2);
+}
+
+// *************************************************************************
+// *					function is_process_closedfile()				   *
+// *************************************************************************
+// Description: is a specific process closed a file?
+// INPUTS:
+//	- $file: file
+//	- $PID: process ID
+// OUTPUTS:
+//  - $err array:
+//	  o 'code': boolean TRUE/FALSE (operation status)
+//	  o 'command': executed command
+//	  o 'result': 0
+//	  o 'message': textual message offered for logging
+function is_process_closedfile($file, $PID) {
+
+	$err['command'] = "-";
+	$err['command_output'] = "-";
+	$err['result'] = 0;
+
+	if ( !file_exists($file) ) {
+		$err['code'] = FALSE;
+        $err['message'] = "[ERROR] File does not exist: " . $file;
+		return $err;
+	}
+
+	$command = "lsof -t " . $file;
+	$lsof = `$command`;
+	$err['command'] = $command;
+	$lsof_output = trim($lsof);
+	$err['command_output'] = $lsof_output;
+	if ( empty($lsof_output) ) {
+		$err['code'] = TRUE;
+		return $err;
+	} else {
+		$err['code'] = FALSE;
+        $err['message'] = "[ERROR] Unexpected command output from: " . $command;
+		return $err;
+	}
+
+	// Check if PID is provided
+	$PID_working = (int)$lsof_output;
+	if ( is_numeric($PID_working) ) {
+		$err['code'] = FALSE;
+        $err['message'] = "[MSG] File is opened by process " . $PID_working;
+		return $err;
+	}
+
+	return $err;
+}
+
 
 ?>

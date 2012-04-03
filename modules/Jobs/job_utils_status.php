@@ -170,6 +170,40 @@ global $db;
 }
 
 // *************************************************************************
+// *				function update_db_mobile_status()		   			   *
+// *************************************************************************
+// Description: update database status for mobile version
+// INPUTS:
+//	- global/$db: AdoDB DB resource
+//	- $id: recording ID
+//	- $status: status (see defines)
+// OUTPUTS:
+//	- Boolean:
+//	  o FALSE: failed (error cause logged in DB and local files)
+//	  o TRUE: OK
+function update_db_mobile_status($id, $status) {
+global $db;
+
+	$query = "
+		UPDATE
+			recordings
+		SET
+			mobilestatus = \"" . $status . "\"
+		WHERE
+			id = " . $id;
+
+	try {
+		$rs = $db->Execute($query);
+	} catch (exception $err) {
+		log_recording_conversion($id, $jconf['jobid_content_convert'], "-", "[ERROR] Cannot update mobile status. SQL query failed.", trim($query), $err, 0, TRUE);
+		return FALSE;
+	}
+
+	return TRUE;
+}
+
+
+// *************************************************************************
 // *				function update_db_mastercontent_status()	   		   *
 // *************************************************************************
 // Description: update database status for video

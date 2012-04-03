@@ -151,6 +151,46 @@ global $jconf;
 }
 
 // *************************************************************************
+// *					function calculate_mobile_pip()					   *
+// *************************************************************************
+// Description: calculate mobile picture-in-picture resolution values
+// INPUTS:
+//	- $mastervideores: media resolution
+//	- $contentmastervideores: content resolution
+//	- $recording_info: recording info array 
+//	- $profile: conversion profile 
+// OUTPUTS:
+//	- Boolean:
+//	  o FALSE: encoding failed (error cause logged in DB and local files)
+//	  o TRUE: encoding OK
+//	- $recording_info: info updated
+function calculate_mobile_pip($mastervideores, $contentmastervideores, &$recording_info, $profile) {
+global $jconf;
+
+	// Content resolution
+	$tmp = explode("x", $contentmastervideores, 2);
+	$c_resx = $tmp[0];
+	$c_resy = $tmp[1];
+	$c_resnew = calculate_video_scaler($c_resx, $c_resy, $profile['video_bbox']);
+	$recording_info['scaler'] = $c_resnew['scaler'];
+	$recording_info['res_x'] = $c_resnew['x'];
+	$recording_info['res_y'] = $c_resnew['y'];
+
+	// Media resolution
+	$tmp = explode("x", $contentmastervideores, 2);
+	$recording_info['pip_res_x'] = $jconf['video_res_modulo'] * floor(($tmp[0] * $profile['pip_resize']) / $jconf['video_res_modulo']);
+	$recording_info['pip_res_y'] = $jconf['video_res_modulo'] * floor(($tmp[1] * $profile['pip_resize']) / $jconf['video_res_modulo']);
+
+	// Calculate PiP position
+	if ( $profile['pip_posx'] == "left" ) $recording_info['pip_x'] = 0 + $profile['pip_align'];
+	if ( $profile['pip_posx'] == "right" ) $recording_info['pip_x'] = $recording_info['res_x'] - $recording_info['pip_res_x'] - $profile['pip_align'];
+	if ( $profile['pip_posy'] == "up" ) $recording_info['pip_y'] = 0 + $profile['pip_align'];
+	if ( $profile['pip_posy'] == "down" ) $recording_info['pip_y'] = $recording_info['res_y'] - $recording_info['pip_res_y'] - $profile['pip_align'];
+
+	return TRUE;
+}
+
+// *************************************************************************
 // *					function convert_video()						   *
 // *************************************************************************
 // Description: Generate video file based on profile
@@ -158,8 +198,8 @@ global $jconf;
 //	- $recording: recording element information
 // OUTPUTS:
 //	- Boolean:
-//	  o FALSE: audio track encoding failed (error cause logged in DB and local files)
-//	  o TRUE: audio track encoding OK
+//	  o FALSE: encoding failed (error cause logged in DB and local files)
+//	  o TRUE: encoding OK
 //	- $recording: all important info is injected into recording array
 //	- $profile: encoding profile, see config_jobs.php
 //	- $recording_info: info on encoded media
@@ -308,6 +348,5 @@ echo "bpp profile: " . $profile['video_bpp'] . " | orig: " . $video_in['bpp'] . 
 
 	return TRUE;
 }
-
 
 ?>
