@@ -8,6 +8,7 @@
     {*}<li><a href="{$language}/channels">Channels admin</a></li>{/*}
     <li><a href="{$language}/categories/admin">Categories admin</a></li>
     <li><a href="{$language}/recordings/myrecordings">My recordings</a></li>
+    <li><a href="{$language}/organizations/createnews">Create news</a></li>
     {*}<li><a href="{$language}/"></a></li>{/*}
   </ul>
 </div>
