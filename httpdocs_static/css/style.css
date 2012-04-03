@@ -1307,6 +1307,33 @@ a#currentusername span {
   -webkit-box-shadow: 0 1px 3px rgba(000, 000, 000, 0.5);
   box-shadow: 0 1px 3px rgba(000, 000, 000, 0.5);
 }
+/* indexnews */
+.indexnews h2 {
+  font-weight: bold;
+  font-size: 15px;
+  color: #333;
+}
+.indexnews h2 .subtitle {
+  color: #999;
+  font-size: 12px;
+  font-weight: normal;
+  margin-left: 15px;
+}
+.indexnews .more {
+  padding-right: 15px;
+  background-image: url(images/arrow_right.png);
+  background-repeat: no-repeat;
+  background-position: right 4px;
+}
+.indexnews .newsitem {
+  border-bottom: 1px solid #d0d0d0;
+  box-shadow: 0 1px 1px #fff;
+  padding-bottom: 10px;
+}
+.indexnews .newsitem.last {
+  border-bottom: 0px;
+  box-shadow: 0;
+}
 
 /* imageinfo */
 .wlarge {

@@ -1352,7 +1352,7 @@ class Recordings extends \Springboard\Model {
     
   }
   
-  public function getRandomRecordings( $count, $organizationid ) {
+  public function getRandomRecordings( $limit, $organizationid ) {
     
     // TODO isfeatured uncomment, users avatar
     return $this->db->getArray("
@@ -1370,7 +1370,7 @@ class Recordings extends \Springboard\Model {
         r.organizationid = '" . $organizationid . "' AND
         " . self::getPublicRecordingWhere('r') . "
       ORDER BY RAND()
-      LIMIT $count
+      LIMIT $limit
     ");
     
   }
