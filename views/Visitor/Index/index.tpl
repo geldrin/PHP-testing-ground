@@ -54,20 +54,22 @@
     <div class="title">
       <h1>{#index__news#}</h1>
     </div>
+    <ul class="newslist">
     {foreach from=$news item=item name=news}
       {if $language == 'hu'}
-        {assign var=title value=$item.titlehungarian}
-        {assign var=lead value=$item.leadhungarian}
+        {assign var=title value=$item.titlehungarian|default:$item.titleenglish}
+        {assign var=lead value=$item.leadhungarian|default:$item.leadenglish}
       {else}
-        {assign var=title value=$item.titleenglish}
-        {assign var=lead value=$item.leadenglish}
+        {assign var=title value=$item.titleenglish|default:$item.titlehungarian}
+        {assign var=lead value=$item.leadenglish|default:$item.leadhungarian}
       {/if}
-      <div class="newsitem{if $smarty.foreach.news.last} last{/if}">
+      <li class="listingitem{if $smarty.foreach.news.last} last{/if}">
         <h2 class="nobr"><a href="{$language}/organizations/newsdetails/{$item.id},{$title|filenameize}">{$title|mb_truncate:65|escape:html}</a><span class="subtitle">{$item.starts|date_format:#smarty_dateformat_long#}</span></h2>
         <p>{$lead|escape:html|nl2br}</p>
         <a href="{$language}/organizations/newsdetails/{$item.id},{$title|filenameize}" class="more">{#index__more#}</a>
-      </div>
+      </li>
     {/foreach}
+    </ul>
   {/if}
 </div>
 

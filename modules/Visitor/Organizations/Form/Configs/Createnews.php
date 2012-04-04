@@ -13,6 +13,11 @@ $config = Array(
     'value' => 'submitcreatenews'
   ),
   
+  'forward' => Array(
+    'type'  => 'inputHidden',
+    'value' => $this->application->getParameter('forward'),
+  ),
+  
   'fs1' => array(
     'type'   => 'fieldset',
     'legend' => $l('organizations', 'createnews_title'),

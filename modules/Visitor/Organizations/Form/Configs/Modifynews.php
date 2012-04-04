@@ -18,6 +18,11 @@ $config = Array(
     'value' => $this->application->getNumericParameter('id'),
   ),
   
+  'forward' => Array(
+    'type'  => 'inputHidden',
+    'value' => $this->application->getParameter('forward'),
+  ),
+  
   'fs1' => array(
     'type'   => 'fieldset',
     'legend' => $l('organizations', 'modifynews_title'),

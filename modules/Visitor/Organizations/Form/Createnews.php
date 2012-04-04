@@ -23,7 +23,7 @@ class Createnews extends \Visitor\Form {
     $newsModel->insert( $values );
     
     $this->controller->redirect(
-      $this->application->getParameter('forward', 'organizations/index' )
+      $this->application->getParameter('forward', 'organizations/listnews' )
     );
     
   }

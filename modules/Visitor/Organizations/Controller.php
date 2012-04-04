@@ -5,6 +5,7 @@ class Controller extends \Visitor\Controller {
   public $permissions = array(
     'index'             => 'public',
     'newsdetails'       => 'public',
+    'listnews'          => 'public',
     'createnews'        => 'editor',
     'modifynews'        => 'editor',
     'modifydescription' => 'editor',
@@ -14,6 +15,10 @@ class Controller extends \Visitor\Controller {
     'createnews'        => 'Visitor\\Organizations\\Form\\Createnews',
     'modifynews'        => 'Visitor\\Organizations\\Form\\Modifynews',
     'modifydescription' => 'Visitor\\Organizations\\Form\\Modifydescription',
+  );
+  
+  public $paging = array(
+    'listnews'          => 'Visitor\\Organizations\\Paging\\Listnews',
   );
   
   public function newsdetailsAction() {

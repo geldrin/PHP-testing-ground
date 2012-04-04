@@ -38,7 +38,7 @@ class Modifynews extends \Visitor\Form {
     $this->newsModel->updateRow( $values );
     
     $this->controller->redirect(
-      $this->application->getParameter('forward', 'organizations/index' )
+      $this->application->getParameter('forward', 'organizations/listnews' )
     );
     
   }
