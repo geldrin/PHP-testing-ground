@@ -22,7 +22,7 @@ setup bg option image-width={$content_x}
 setup bg option image-height={$content_y}
 setup bg option image-fps={$fps}.0
 setup bg option image-duration=-1
-setup bg output #transcode{ldelim}sfilter=mosaic{ldelim}delay={$delay}{rdelim},vcodec=h264{ldelim}profile={$h264_profile}{rdelim},width={$content_x},height={$content_y},vb={$video_bw},acodec=mp3,ab={$audio_bw},channels={$audio_ch},samplerate={$audio_sr},scale=1{rdelim}:bridge-in{ldelim}delay={$delay},id-offset=100{rdelim}:standard{ldelim}access=file,mux=mp4,dst={$output_file}{rdelim}
+setup bg output #transcode{ldelim}sfilter=mosaic{ldelim}delay={$delay}{rdelim},venc=x264{ldelim}profile={$h264_profile}{rdelim},width={$content_x},height={$content_y},vb={$video_bw},acodec=mp3,ab={$audio_bw},channels={$audio_ch},samplerate={$audio_sr},scale=1{rdelim}:bridge-in{ldelim}delay={$delay},id-offset=100{rdelim}:standard{ldelim}access=file,mux=mp4,dst={$output_file}{rdelim}
 
 ## Play inputs and background
 control channel1 play

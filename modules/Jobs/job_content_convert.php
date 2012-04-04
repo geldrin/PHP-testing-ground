@@ -1,93 +1,5 @@
-<?php
+﻿<?php
 // Content conversion job v0.9 @ 2012/04/04
-
-function runExternal_vlc($cmd, $output_file) {
-
-	$descriptorspec = array(
-		0 => array("pipe", "r"),  // stdin is a pipe that the child will read from
-		1 => array("pipe", "w"),  // stdout is a pipe that the child will write to
-		2 => array("pipe", "w")   // stderr is a file to write to
-	);
-
-	$pipes = array();
-	$process = proc_open($cmd, $descriptorspec, $pipes);
-
-	$output = "VLC started: " . date("Y-m-d H:i:s") . "\n";
-
-	if (!is_resource($process)) return false;
-
-	// close child's input imidiately
-	fclose($pipes[0]);
-
-	stream_set_blocking($pipes[1], false);
-	stream_set_blocking($pipes[2], false);
-
-	$return_array = array();
-
-	// Get process ID (proc_get_status() gives wrong PID)
-	$ps = `ps -C vlc -o pid=`;
-	$PID = (int)trim($ps);
-	if ( !is_numeric($PID) ) $PID = -1;
-	$return_array['pid'] = $PID;
-
-	$todo = array($pipes[1], $pipes[2]);
-
-	while( true ) {
-
-		$read = array();
-		if( !feof($pipes[1]) ) $read[]= $pipes[1];
-		if( !feof($pipes[2]) ) $read[]= $pipes[2];
-
-		if (!$read) break;
-
-		$write = NULL;
-		$ex = NULL;
-		$ready = stream_select($read, $write, $ex, 2);
-
-		if ( $ready === FALSE ) {
-			break; // should never happen - something died
-		}
-
-		foreach ($read as $r) {
-			$s = fread($r, 1024);
-			$tmp = trim($s);
-			if ( !empty($tmp) ) {
-				$output .= $tmp;
-				$end_str = stripos($tmp, "kb/s:" );
-
-// Rearrange this!!!
-				$err = is_process_closedfile($output_file, $PID);
-
-				if ( ( $end_str !== FALSE ) and ( $err['code'] == TRUE ) ) {
-
-					if ( !posix_kill($PID, SIGQUIT) ) {
-						echo "ERROR: notkilled: $PID\n";
-					}
-				}
-
-				break;
-
-			}
-
-		}
-	}
-
-	fclose($pipes[1]);
-	fclose($pipes[2]);
-
-	$return_array['code'] = proc_close($process);
-	if ( $return_array['code'] != 0 ) {
-		$return_array['code'] = FALSE;
-	} else {
-		$return_array['code'] = TRUE;
-	}
-
-	$return_array['command_output'] = $output;
-	$return_array['command'] = $cmd;
-
-	return $return_array;
-}
-
 
 define('BASE_PATH',	realpath( __DIR__ . '/../..' ) . '/' );
 define('PRODUCTION', false );
@@ -160,7 +72,7 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_content_convert.stop' ) an
 
 //update_db_content_status(1, "uploaded");
 //update_db_mastercontent_status(1, "uploaded");
-update_db_content_status(1, "reconvert");
+//update_db_content_status(1, "reconvert");
 //update_db_mastercontent_status(1, "onstorage");
 
 		// Query next job - exit if none
@@ -173,16 +85,33 @@ update_db_content_status(1, "reconvert");
 		// Start log entry
 		log_recording_conversion($recording['id'], $jconf['jobid_content_convert'], $jconf['dbstatus_init'], "START PROCESSING: " . $recording['id'] . "_content." . $recording['contentmastervideoextension'], "-", "-", 0, FALSE);
 		$global_log .= "Source front-end: " . $recording['contentmastersourceip'] . "\n";
-		$global_log .= "Original filename: " . $recording['contentmastervideofilename'] . "\n";
+		$global_log .= "Original filename: " . $recording['contentmastervideofilename'] . " and " . $recording['mastervideofilename'] . "\n";
 		$global_log .= "Media length: " . secs2hms( $recording['contentmasterlength'] ) . "\n";
 		$global_log .= "Media type: " . $recording['contentmastermediatype'] . "\n\n";
 
-echo "copying...\n";
+		// Save original status fields for restoration on converter node problem (storage space)
+		$recording['contentstatus_original'] = $recording['contentstatus']; 
+		$recording['mobilestatus_original'] = $recording['mobilestatus'];
+
+		//// Decide what to convert
+		// Content status is uploaded or reconvert: convert all versions by default
+		// Mobile status is reconvert: convert only mobile version (imlicated by media reconversion)
+		$recording['is_content_convert'] = TRUE;
+		$recording['is_content_reconvert'] = FALSE;
+		// Master/content(s) are onstorage, mobile status is reconvert: convert only mobile versions
+		if ( ( $recording['contentmasterstatus'] == $jconf['dbstatus_copystorage_ok'] ) and ( $recording['contentstatus'] == $jconf['dbstatus_copystorage_ok'] ) and ( $recording['mobilestatus'] == $jconf['dbstatus_reconvert'] ) ) {
+			$recording['is_content_convert'] = FALSE;
+		}
+		// Master is onstorage and normal reconvert is needed: convert all versions
+		if ( ( $recording['contentmasterstatus'] == $jconf['dbstatus_copystorage_ok'] ) and ( $recording['contentstatus'] == $jconf['dbstatus_reconvert'] ) ) {
+			$recording['is_content_reconvert'] = TRUE;
+		}
 
 		// Copy media from front-end server
 		if ( !copy_content_to_converter($recording) ) break;
 
-echo "copied...\n";
+		if ( $recording['is_content_convert'] ) update_db_content_status($recording['id'], $jconf['dbstatus_copyfromfe_ok']);
+		update_db_mobile_status($recording['id'], $jconf['dbstatus_copyfromfe_ok']);
 
 		//// Media conversion
 		$content_info_lq = array();
@@ -190,41 +119,45 @@ echo "copied...\n";
 		$content_info_mobile_lq = array();
 		$content_info_mobile_hq = array();
 
-		update_db_content_status($recording['id'], $jconf['dbstatus_conv_video']);
+		// Are we converting content LQ/HQ versions? (not if mobile reconvert is happening)
+		if ( $recording['is_content_convert'] ) {
 
-/*
-		// Normal quality conversion (LQ)
-		if ( !convert_video($recording, $jconf['profile_content_lq'], $content_info_lq) ) {
-			update_db_content_status($recording['id'], $jconf['dbstatus_conv_video_err']);
-			break;
-		}
+			// Status: converting
+			update_db_content_status($recording['id'], $jconf['dbstatus_conv_video']);
 
-		// Decide about high quality conversion (HQ)
-		$res = explode("x", strtolower($recording['contentmastervideores']), 2);
-		$res_x = $res[0];
-		$res_y = $res[1];
-		$res = explode("x", strtolower($jconf['profile_content_lq']['video_bbox']), 2);
-		$bbox_res_x = $res[0];
-		$bbox_res_y = $res[1];
-		// Generate HQ version if original recording does not fit LQ bounding box
-		if ( ( $res_x > $bbox_res_x ) || ( $res_y > $bbox_res_y ) ) {
-		if ( !convert_video($recording, $jconf['profile_content_hq'], $content_info_hq) ) {
+			// Normal quality conversion (LQ)
+			if ( !convert_video($recording, $jconf['profile_content_lq'], $content_info_lq) ) {
 				update_db_content_status($recording['id'], $jconf['dbstatus_conv_video_err']);
 				break;
 			}
+
+			// Decide about high quality conversion (HQ)
+			$res = explode("x", strtolower($recording['contentmastervideores']), 2);
+			$res_x = $res[0];
+			$res_y = $res[1];
+			$res = explode("x", strtolower($jconf['profile_content_lq']['video_bbox']), 2);
+			$bbox_res_x = $res[0];
+			$bbox_res_y = $res[1];
+			// Generate HQ version if original recording does not fit LQ bounding box
+			if ( ( $res_x > $bbox_res_x ) || ( $res_y > $bbox_res_y ) ) {
+			if ( !convert_video($recording, $jconf['profile_content_hq'], $content_info_hq) ) {
+					update_db_content_status($recording['id'], $jconf['dbstatus_conv_video_err']);
+					break;
+				}
+			}
+
 		}
-*/
 
 		//// Mobile picture in picture conversion
-// No break if mobile conversion is not successful?
+
+		// Status: converting
+		update_db_mobile_status($recording['id'], $jconf['dbstatus_conv_video']);
 
 		// Normal quality mobile conversion (mobile LQ)
 		if ( !convert_mobile($recording, $jconf['profile_mobile_lq'], $content_info_mobile_lq) ) {
 			update_db_mobile_status($recording['id'], $jconf['dbstatus_conv_video_err']);
 			break;
 		}
-
-exit;
 
 		// Decide about high quality mobile conversion (mobile HQ)
 		$res = explode("x", strtolower($recording['contentmastervideores']), 2);
@@ -241,33 +174,44 @@ exit;
 			}
 		}
 
-exit;
-
 		// Media finalization
-		if ( !copy_content_to_frontend($recording, $content_info_lq, $content_info_hq) ) {
-			update_db_content_status($recording['id'], $jconf['dbstatus_copystorage_err']);
+		if ( !copy_content_to_frontend($recording, $content_info_lq, $content_info_hq, $content_info_mobile_lq, $content_info_mobile_hq) ) {
+			if ( $recording['is_content_convert'] ) update_db_content_status($recording['id'], $jconf['dbstatus_copystorage_err']);
+			update_db_mobile_status($recording['id'], $jconf['dbstatus_copystorage_err']);
 			break;
 		}
 
 		//// End of media conversion
-		$global_log .= "URL: http://video.teleconnect.hu/hu/recordings/details/" . $recording['id'] . "\n\n";
+		$global_log .= "URL: http://" . $app->config['baseuri'] . "/" . $uploader_user['language'] . "/recordings/details/" . $recording['id'] . "\n\n";
 		$conversion_duration = time() - $total_duration;
 		$hms = secs2hms($conversion_duration);
 		log_recording_conversion($recording['id'], $jconf['jobid_content_convert'], "-", "[OK] Successful content conversion in " . $hms . " time.\n\nConversion summary:\n\n" . $global_log, "-", "-", $conversion_duration, TRUE);
 
 		// Send e-mail to user about successful conversion
-/*		$smarty = getSmarty();
-		$smarty->assign('filename', $recording['mastervideofilename']);
+		$smarty = $app->bootstrap->getSmarty();
+		$organization = $app->bootstrap->getModel('organizations');
+		$organization->select( $uploader_user['organizationid'] );
+		$smarty->assign('organization', $organization->row );
+		$smarty->assign('filename', $recording['contentmastervideofilename']);
 		$smarty->assign('language', $uploader_user['language']);
 		$smarty->assign('recid', $recording['id']);
 		if ( $uploader_user['language'] == "hu" ) {
-			$subject = "Video konverzi� k�sz";
+			$subject = "Tartalom és mobil konverzió kész";
 		} else {
-			$subject = "Video conversion ready";
+			$subject = "Content and mobile conversion ready";
 		}
-		if ( !empty($recording['mastervideofilename']) ) $subject .= ": " . $recording['mastervideofilename'];
+		if ( !empty($recording['contentmastervideofilename']) ) $subject .= ": " . $recording['contentmastervideofilename'];
 		$queue = $app->bootstrap->getMailqueue();
-		$queue->sendHTMLEmail($uploader_user['email'], $subject, $smarty->fetch('emails/converter_email.tpl'), $values = array() ); */
+
+		try {
+			$body = $smarty->fetch('Visitor/Recordings/Email/job_content_converter.tpl');
+//			$queue->sendHTMLEmail("andras.kovacs@teleconnect.hu", $subject, $body);
+			$queue->sendHTMLEmail($uploader_user['email'], $subject, $body);
+		} catch (exception $err) {
+			log_recording_conversion($recording['id'], $jconf['jobid_media_convert'], "-", "[ERROR] Cannot send mail to user: " . $uploader_user['email'], trim($body), $err, 0, TRUE);
+		}
+
+//exit;
 
 		break;
 	}	// End of while(1)
@@ -288,11 +232,16 @@ exit;
 function convert_mobile($recording, $profile, &$recording_info) {
 global $jconf, $app, $db, $global_log;
 
+	clearstatcache();
+
 	// Update watchdog timer
 	$app->watchdog();
 
 	// Setup smarty for VideoLAN VLM config template
 	$smarty = $app->bootstrap->getSmarty();
+
+	// Profile name
+	$recording_info['name'] = $profile['name'];
 
 	// Input and output files
 	$recording_info['input_file'] = $recording['source_file'];
@@ -303,7 +252,7 @@ global $jconf, $app, $db, $global_log;
 	$smarty->assign('output_file', $recording_info['output_file']);
 
 	// Basic configuration
-	$h264_profile = "baseline";
+	$h264_profile = $profile['pip_codec_profile'];
 	$smarty->assign('h264_profile', $h264_profile);
 
 	//// Delay: should be calculated from trim/offset values!!!
@@ -354,6 +303,7 @@ global $jconf, $app, $db, $global_log;
 	}
 	$smarty->assign('background', "file://" . $recording_info['pip_background']);
 
+	// Generate VideoLAN config file based on template
 	if ( $recording['mastermediatype'] == "audio" ) {
 		$vlc_template = "Jobs/vlc_audio.tpl";
 		$vlc_cfg = $smarty->fetch($vlc_template);
@@ -361,6 +311,7 @@ global $jconf, $app, $db, $global_log;
 		$vlc_template = "Jobs/vlc_video.tpl";
 		$vlc_cfg = $smarty->fetch($vlc_template);
 	}
+	$vlc_cfg .= "\n";
 
 	$recording_info['vlc_template'] = $vlc_template;
 	$recording_info['vlc_config_file'] = $recording['temp_directory'] . "pip.cfg";
@@ -377,20 +328,17 @@ global $jconf, $app, $db, $global_log;
 
 	// VideoLAN max media length to calculate
 	$target_length = ceil(max($recording['masterlength'], $recording['contentmasterlength']) + 1);
-	$target_length = 10;
+//	$target_length = 10;
 
-	$command = "cvlc -I dummy -v --stop-time=" . $target_length . " --mosaic-width=" . $recording_info['res_x'] . " --mosaic-height=" . $recording_info['res_y'] . " --mosaic-keep-aspect-ratio --mosaic-keep-picture --mosaic-xoffset=0 --mosaic-yoffset=0 --mosaic-position=2 --mosaic-offsets=\"0,0," . $recording_info['pip_x'] . "," . $recording_info['pip_y'] . "\" --mosaic-order=\"1,2\" --vlm-conf " . $recording_info['vlc_config_file'];
-
-echo $command . "\n\n";
-
-// !!!!!!!!!!!!!!!!!!
+	$command = "cvlc -I dummy --stop-time=" . $target_length . " --mosaic-width=" . $recording_info['res_x'] . " --mosaic-height=" . $recording_info['res_y'] . " --mosaic-keep-aspect-ratio --mosaic-keep-picture --mosaic-xoffset=0 --mosaic-yoffset=0 --mosaic-position=2 --mosaic-offsets=\"0,0," . $recording_info['pip_x'] . "," . $recording_info['pip_y'] . "\" --mosaic-order=\"1,2\" --vlm-conf " . $recording_info['vlc_config_file'];
 
 	$time_start = time();
 	$err = runExternal_vlc($jconf['nice'] . " " . $command, $recording_info['output_file']);
 	$duration = time() - $time_start;
 	$mins_taken = round($duration / 60, 2);
 
-var_dump($recording_info);
+//var_dump($err);
+//var_dump($recording_info);
 
 	// Update watchdog timer
 	$app->watchdog();
@@ -474,14 +422,16 @@ global $jconf, $db;
 			masteraudiobitratemode,
 			status,
 			masterstatus,
+			mobilestatus,
 			mastersourceip
 		FROM
 			recordings
 		WHERE
-			( masterstatus = \"" . $jconf['dbstatus_copystorage_ok'] . "\" AND ( mastersourceip IS NOT NULL OR mastersourceip != '' ) ) AND
-			( ( contentmasterstatus = \"" . $jconf['dbstatus_uploaded'] . "\" AND contentstatus = \"" . $jconf['dbstatus_uploaded'] . "\" ) OR
-			( contentmasterstatus = \"" . $jconf['dbstatus_copystorage_ok'] . "\" AND contentstatus = \"" . $jconf['dbstatus_reconvert']  . "\" ) ) AND
-			( contentmastersourceip IS NOT NULL OR contentmastersourceip != '' )
+			( status = \"" . $jconf['dbstatus_copystorage_ok'] . "\" AND ( mastersourceip IS NOT NULL OR mastersourceip != '' ) ) AND
+			( contentmastersourceip IS NOT NULL OR contentmastersourceip != '' ) AND (
+			( contentmasterstatus = \"" . $jconf['dbstatus_uploaded'] . "\" AND contentstatus = \"" . $jconf['dbstatus_uploaded'] . "\" ) OR
+			( contentmasterstatus = \"" . $jconf['dbstatus_copystorage_ok'] . "\" AND contentstatus = \"" . $jconf['dbstatus_reconvert']  . "\" ) OR
+			( contentmasterstatus = \"" . $jconf['dbstatus_copystorage_ok'] . "\" AND mobilestatus = \"" . $jconf['dbstatus_reconvert']  . "\" ) )
 		ORDER BY
 			conversionpriority,
 			id
@@ -506,7 +456,8 @@ global $jconf, $db;
 			a.userid,
 			b.nickname,
 			b.email,
-			b.language
+			b.language,
+			b.organizationid
 		FROM
 			recordings as a,
 			users as b
@@ -553,19 +504,15 @@ global $app, $jconf;
 	$app->watchdog();
 
 	// Update media status
-	update_db_content_status($recording['id'], $jconf['dbstatus_copyfromfe']);
-
-	if ( !isset($recording['contentmastersourceip']) ) {
-		log_recording_conversion($recording['id'], $jconf['jobid_content_convert'], $jconf['copyfromfe'], "[ERROR] Source IP is empty, cannot identify front-end server.", "-", "-", 0, TRUE);
-		update_db_content_status($recording['id'], $jconf['dbstatus_copyfromfe_err']);
-		return FALSE;
-	}
+	if ( $recording['is_content_convert'] ) update_db_content_status($recording['id'], $jconf['dbstatus_copyfromfe']);
+	update_db_mobile_status($recording['id'], $jconf['dbstatus_copyfromfe']);
 
 	// Media is too short (fraud check)
 	$playtime = ceil($recording['contentmasterlength']);
 	if ( $playtime < $jconf['video_min_length'] ) {
 		log_recording_conversion($recording['id'], $jconf['jobid_content_convert'], $jconf['dbstatus_init'], "[ERROR] Content length is too short: " . $recording['id'] . "_content." . $recording['contentmastervideoextension'], "-", "-", 0, TRUE);
-		update_db_content_status($recording['id'], $jconf['dbstatus_invalidinput']);
+		if ( $recording['is_content_convert'] ) update_db_content_status($recording['id'], $jconf['dbstatus_invalidinput']);
+		update_db_mobile_status($recording['id'], $jconf['dbstatus_invalidinput']);
 		return FALSE;
 	}
 
@@ -576,10 +523,8 @@ global $app, $jconf;
 	// Media path and filename
 	$base_filename = $recording['id'] . "_content." . $recording['contentmastervideoextension'];
 	// Check reconvert state. In case of reconvert, we copy from recordings area
-	$recording['conversion_type'] = "convert";
 	if ( ( ( $recording['contentstatus'] == $jconf['dbstatus_reconvert'] ) && ( $recording['contentmasterstatus'] == $jconf['dbstatus_copystorage_ok'] ) ) || ( $recording['contentmasterstatus'] == $jconf['dbstatus_copystorage_ok'] ) ) {
 		$uploadpath = $app->config['recordingpath'] . ( $recording['id'] % 1000 ) . "/" . $recording['id'] . "/master/";
-		$recording['conversion_type'] = $jconf['dbstatus_reconvert'];
 	}
 
 	$remote_filename = $jconf['ssh_user'] . "@" . $recording['contentmastersourceip'] . ":" . $uploadpath . $base_filename;
@@ -592,33 +537,15 @@ global $app, $jconf;
 	$recording['source_media_file'] = $media_filename;
 	$recording['remote_media_file'] = $remote_media_filename;
 
-	// SSH check file size before start copying
-/*	$err = ssh_filesize($recording['contentmastersourceip'], $uploadpath . $base_filename);
-	if ( !$err['code'] ) {
-		log_recording_conversion($recording['id'], $jconf['jobid_content_convert'], $jconf['dbstatus_copyfromfe'], $err['message'], $err['command'], $err['result'], 0, TRUE);
-		// Set status to "invalidinput"
-		update_db_content_status($recording['id'], $jconf['dbstatus_invalidinput']);
-		return FALSE;
-	}
-	$filesize = $err['value'];
-
-	// Check available disk space (input media file size * 3 is the minimum)
-	$available_disk = floor(disk_free_space($jconf['content_dir']));
-	if ( $available_disk < $filesize * 3 ) {
-		log_recording_conversion($recording['id'], $jconf['jobid_content_convert'], $jconf['dbstatus_copyfromfe'], "[ERROR] No enough local disk space available (needed = " . ceil(($filesize * 2) / 1024 / 1024) . "Mb, avail = " . ceil($available_disk / 1024 / 1024) . "Mb)", "php: disk_free_space(\"" . $jconf['content_dir'] . "\")", "-", 0, TRUE);
-		// Set status to "uploaded" to allow other nodes to take over task
-		update_db_content_status($recording['id'], $jconf['dbstatus_uploaded']);
-		return FALSE;
-	} */
-
 	// Prepare temporary conversion directory, remove any existing content
 	$temp_directory = $jconf['content_dir'] . $recording['id'] . "/";
 	$recording['temp_directory'] = $temp_directory;
 	$err = create_directory($temp_directory);
 	if ( !$err['code'] ) {
 		log_recording_conversion($recording['id'], $jconf['jobid_content_convert'], $jconf['dbstatus_copyfromfe'], $err['message'], $err['command'], $err['result'], 0, TRUE);
-		// Set status to "uploaded" to allow other nodes to take over task
-		update_db_content_status($recording['id'], $jconf['dbstatus_uploaded']);
+		// Restore original status to allow other nodes to take over
+		if ( $recording['is_content_convert'] ) update_db_content_status($recording['id'], $recording['contentstatus_original']);
+		update_db_mobile_status($recording['id'], $jconf['dbstatus_invalidinput'], $recording['mobilestatus_original']);
 		return FALSE;
 	}
 
@@ -626,8 +553,9 @@ global $app, $jconf;
 	$err = create_directory($temp_directory . "master/");
 	if ( !$err['code'] ) {
 		log_recording_conversion($recording['id'], $jconf['jobid_content_convert'], $jconf['dbstatus_copyfromfe'], $err['message'], $err['command'], $err['result'], 0, TRUE);
-		// Set status to "uploaded" to allow other nodes to take over task
-		update_db_content_status($recording['id'], $jconf['dbstatus_uploaded']);
+		// Restore original status to allow other nodes to take over
+		if ( $recording['is_content_convert'] ) update_db_content_status($recording['id'], $recording['contentstatus_original']);
+		update_db_mobile_status($recording['id'], $jconf['dbstatus_invalidinput'], $recording['mobilestatus_original']);
 		return FALSE;
 	}
 
@@ -635,8 +563,9 @@ global $app, $jconf;
 	$err = ssh_filecopy($recording['contentmastersourceip'], $uploadpath . $base_filename, $master_filename);
 	if ( !$err['code'] ) {
 		log_recording_conversion($recording['id'], $jconf['jobid_content_convert'], $jconf['dbstatus_copyfromfe'], $err['message'], $err['command'], $err['result'], $err['value'], TRUE);
-		// Set status to "uploaded" to allow other nodes to take over task
-		update_db_content_status($recording['id'], $jconf['dbstatus_uploaded']);
+		// Restore original status to allow other nodes to take over
+		if ( $recording['is_content_convert'] ) update_db_content_status($recording['id'], $recording['contentstatus_original']);
+		update_db_mobile_status($recording['id'], $jconf['dbstatus_invalidinput'], $recording['mobilestatus_original']);
 		return FALSE;
 	}
 	log_recording_conversion($recording['id'], $jconf['jobid_content_convert'], $jconf['dbstatus_copyfromfe'], $err['message'], $err['command'], $err['result'], $err['value'], FALSE);
@@ -645,8 +574,9 @@ global $app, $jconf;
 	$err = ssh_filecopy($recording['mastersourceip'], $remote_media_filename, $media_filename);
 	if ( !$err['code'] ) {
 		log_recording_conversion($recording['id'], $jconf['jobid_content_convert'], $jconf['dbstatus_copyfromfe'], $err['message'], $err['command'], $err['result'], $err['value'], TRUE);
-		// Set status to "uploaded" to allow other nodes to take over task
-		update_db_content_status($recording['id'], $jconf['dbstatus_uploaded']);
+		// Restore original status to allow other nodes to take over
+		if ( $recording['is_content_convert'] ) update_db_content_status($recording['id'], $recording['contentstatus_original']);
+		update_db_mobile_status($recording['id'], $jconf['dbstatus_invalidinput'], $recording['mobilestatus_original']);
 		return FALSE;
 	}
 	log_recording_conversion($recording['id'], $jconf['jobid_content_convert'], $jconf['dbstatus_copyfromfe'], $err['message'], $err['command'], $err['result'], $err['value'], FALSE);
@@ -671,22 +601,26 @@ global $app, $jconf;
 //	- Others:
 //	  o Media file(s)
 //	  o Log entries (file and database)
-function copy_content_to_frontend($recording, $recording_info_lq, $recording_info_hq) {
+function copy_content_to_frontend($recording, $recording_info_lq, $recording_info_hq, $recording_info_mobile_lq, $recording_info_mobile_hq) {
 global $app, $jconf;
 
-	update_db_content_status($recording['id'], $jconf['dbstatus_copystorage']);
+	if ( $recording['is_content_convert'] ) update_db_content_status($recording['id'], $jconf['dbstatus_copystorage']);
+	update_db_mobile_status($recording['id'], $jconf['dbstatus_copystorage']);
 
 	// Reconvert: remove master file (do not copy back as already in place)
-	if ( $recording['conversion_type'] == $jconf['dbstatus_reconvert'] ) {
+	if ( $recording['is_content_reconvert'] ) {
 		$err = remove_file_ifexists($recording['source_file']);
 		if ( !$err['code'] ) log_recording_conversion($recording['id'], $jconf['jobid_content_convert'], $jconf['dbstatus_copystorage'], $err['message'], $err['command'], $err['result'], 0, TRUE);
 	}
 
-	// SSH command templates
+	// Remove media file used for mobile conversion (do not copy back as already in place)
+	$err = remove_file_ifexists($recording['source_media_file']);
+	if ( !$err['code'] ) log_recording_conversion($recording['id'], $jconf['jobid_content_convert'], $jconf['dbstatus_copystorage'], $err['message'], $err['command'], $err['result'], 0, TRUE);
+
+	//// SSH command templates
 	$ssh_command = "ssh -i " . $jconf['ssh_key'] . " " . $jconf['ssh_user'] . "@" . $recording['contentmastersourceip'] . " ";
 	$scp_command = "scp -B -r -i " . $jconf['ssh_key'] . " ";
 	$remote_recording_directory = $app->config['recordingpath'] . ( $recording['id'] % 1000 ) . "/" . $recording['id'] . "/";
-
 	// Target path for SCP command
 	$remote_path = $jconf['ssh_user'] . "@" . $recording['contentmastersourceip'] . ":" . $app->config['recordingpath'] . ( $recording['id'] % 1000 ) . "/";
 
@@ -701,18 +635,26 @@ global $app, $jconf;
 
 	//// Remove all previous files from recording directory (from previous conversions)
 	// Content files: LQ and HQ (_content_lq.mp4 and _content_hq.mp4)
-	$media_regex = ".*" . $recording['id'] . "_\(content_lq\.mp4\|content_hq\.mp4\)";
+	// Mobile files: LQ and HQ (_mobile_lq.mp4 and _mobile_hq.mp4)
+	if ( $recording['is_content_convert'] ) {
+		$media_regex = ".*" . $recording['id'] . "_\(content_lq\.mp4\|content_hq\.mp4\|mobile_lq\.mp4\|mobile_hq\.mp4\)";
+	} else {
+		// No content reconvert: remove only mobile versions
+		$media_regex = ".*" . $recording['id'] . "_\(mobile_lq\.mp4\|mobile_hq\.mp4\)";
+	}
 	$command1 = "find " . $remote_recording_directory . " -mount -maxdepth 1 -type f -regex '" . $media_regex . "' -exec rm -f {} \\; 2>/dev/null";
 	$command = $ssh_command . " " . $command1;
 	exec($command, $output, $result);
 
-	// Master file exists: move (only file with matching name, if extension is different then no change)
-	$master_file_torename = $remote_recording_directory . "/master/" . $recording['id'] . "_content." . $recording['contentmastervideoextension'];
-	$err = ssh_filesize($recording['contentmastersourceip'], $master_file_torename);
-	if ( ( $err['code'] ) and ( $err['value'] > 0 ) ) {
-		$master_file_newname = $remote_recording_directory . "/master/" . $recording['id'] . "_content_" . date("YmdHis") . "." . $recording['contentmastervideoextension'];
-//echo "van! " . $master_file_torename . " " . $master_file_newname . "\n";
-		$err = ssh_filerename($recording['contentmastersourceip'], $master_file_torename, $master_file_newname);
+	//// Master file exists: move (only file with matching name, if extension is different then no change)
+	// Content reconvert: do not touch remote master file
+	if ( !$recording['is_content_reconvert'] ) {
+		$master_file_torename = $remote_recording_directory . "/master/" . $recording['id'] . "_content." . $recording['contentmastervideoextension'];
+		$err = ssh_filesize($recording['contentmastersourceip'], $master_file_torename);
+		if ( ( $err['code'] ) and ( $err['value'] > 0 ) ) {
+			$master_file_newname = $remote_recording_directory . "/master/" . $recording['id'] . "_content_" . date("YmdHis") . "." . $recording['contentmastervideoextension'];
+			$err = ssh_filerename($recording['contentmastersourceip'], $master_file_torename, $master_file_newname);
+		}
 	}
 
 	// SCP copy from local temp to remote location
@@ -728,24 +670,29 @@ global $app, $jconf;
 	}
 	log_recording_conversion($recording['id'], $jconf['jobid_content_convert'], $jconf['dbstatus_copystorage'], "[OK] SCP copy finished (in " . $mins_taken . " mins)", $command, $result, $duration, FALSE);
 
-	// Set file and directory access rights of content files
-	$command = $ssh_command . " chmod -f " . $jconf['file_access'] . " " . $remote_recording_directory . "*_content_*.mp4";
+	// Set file and directory access rights of content and mobile files
+	if ( $recording['is_content_convert'] ) {
+		$command = $ssh_command . " chmod -f " . $jconf['file_access'] . " " . $remote_recording_directory . "*_content_*.mp4";
+		exec($command, $output, $result);
+	}
+	$command = $ssh_command . " chmod -f " . $jconf['file_access'] . " " . $remote_recording_directory . "*_mobile_*.mp4";
 	exec($command, $output, $result);
 
 	// Update database (status and media information)
 	// Video media: set MOBILE, LQ and HQ resolution and thumbnail data
-	$err = update_db_contentinfo($recording['id'], $recording_info_lq, $recording_info_hq);
+	$err = update_db_contentinfo($recording['id'], $recording_info_lq, $recording_info_hq, $recording_info_mobile_lq, $recording_info_mobile_hq);
 	if ( !$err ) {
 		log_recording_conversion($recording['id'], $jconf['jobid_content_convert'], $jconf['dbstatus_copystorage'], "[ERROR] Content video info final DB update failed", "-", $err, 0, TRUE);
 		return FALSE;
 	}
 
 	// Update recording status
-	update_db_content_status($recording['id'], $jconf['dbstatus_copystorage_ok']);
-	update_db_mastercontent_status($recording['id'], $jconf['dbstatus_copystorage_ok']);
+	if ( $recording['is_content_convert'] ) update_db_content_status($recording['id'], $jconf['dbstatus_copystorage_ok']);
+	update_db_mobile_status($recording['id'], $jconf['dbstatus_copystorage_ok']);
 
-	// Remove master from upload area if not reconvert!
-	if ( $recording['conversion_type'] != $jconf['dbstatus_reconvert'] ) {
+	// Update master status and remove from upload area if not reconvert!
+	if ( !$recording['is_content_reconvert'] ) {
+		update_db_mastercontent_status($recording['id'], $jconf['dbstatus_copystorage_ok']);
 		$uploadpath = $app->config['uploadpath'] . "recordings/";
 		$base_filename = $recording['id'] . "_content." . $recording['contentmastervideoextension'];
 		$err = ssh_fileremove($recording['contentmastersourceip'], $uploadpath . $base_filename);
@@ -753,13 +700,8 @@ global $app, $jconf;
 	}
 
 	// Remove temporary directory, no failure if not successful
-	$err = remove_file_ifexists($recording['temp_directory']);
-	if ( !$err['code'] ) log_recording_conversion($recording['id'], $jconf['jobid_content_convert'], $jconf['dbstatus_copystorage'], $err['message'], $err['command'], $err['result'], 0, TRUE);
-
-	// Remove media file used for mobile conversion
-	$err = remove_file_ifexists($recording['source_media_file']);
-	if ( !$err['code'] ) log_recording_conversion($recording['id'], $jconf['jobid_content_convert'], $jconf['dbstatus_copystorage'], $err['message'], $err['command'], $err['result'], 0, TRUE);
-
+//	$err = remove_file_ifexists($recording['temp_directory']);
+//	if ( !$err['code'] ) log_recording_conversion($recording['id'], $jconf['jobid_content_convert'], $jconf['dbstatus_copystorage'], $err['message'], $err['command'], $err['result'], 0, TRUE);
 
 	return TRUE;
 }

@@ -44,7 +44,7 @@ global $app, $jconf, $debug, $db, $uploader_user;
 	}
 	$msg .= "RECORDING: " . $rec_id . "\n";
 	$msg .= "ACTION: ". $action . "\n";
-	$msg .= "STATUS MESSAGE: \n\n" . $status . "\n";
+	$msg .= "STATUS MESSAGE: " . $status . "\n";
 	if ( !empty($command) && ( $command != "-" ) ) {
 		$msg .= "\nCOMMAND: " . $command . "\n";
 	}
@@ -52,7 +52,6 @@ global $app, $jconf, $debug, $db, $uploader_user;
 		$msg .= "\nDATA: " . $data . "\n";
 	}
 
-//$log2mail = false;
 	$debug->log($jconf['log_dir'], $job . ".log", $msg, $log2mail);
 
 	return TRUE;
@@ -110,8 +109,8 @@ function print_recording_info($recording) {
 	if ( isset($recording['scaler']) ) $log_msg .= "Resolution scaler: " . $recording['scaler'] . "\n";
 	if ( isset($recording['video_bpp']) ) $log_msg .= "BPP: " . $recording['video_bpp'] . "\n";
 	if ( isset($recording['interlaced']) ) $log_msg .= "Interlaced: " . (($recording['interlaced'] == 1)?"yes":"no") . "\n";
-	if ( isset($recording['pip_res_x']) and isset($recording['pip_res_y']) ) $log_msg .= "PiP res: . " . $recording['pip_res_x'] . "x" . $recording['pip_res_y'] . "\n";
-	if ( isset($recording['pip_x']) and isset($recording['pip_y']) ) $log_msg .= "PiP pos: . " . $recording['pip_x'] . "x" . $recording['pip_y'] . "\n";
+	if ( isset($recording['pip_res_x']) and isset($recording['pip_res_y']) ) $log_msg .= "PiP res: " . $recording['pip_res_x'] . "x" . $recording['pip_res_y'] . "\n";
+	if ( isset($recording['pip_x']) and isset($recording['pip_y']) ) $log_msg .= "PiP pos: " . $recording['pip_x'] . "x" . $recording['pip_y'] . "\n";
 	if ( isset($recording['audio_codec']) ) $log_msg .= "Audio codec: " . $recording['audio_codec'] . "\n";
 	$log_msg .= "Audio quality: ";
 	if ( isset($recording['audio_ch']) ) $log_msg .= $recording['audio_ch'] . "ch ";

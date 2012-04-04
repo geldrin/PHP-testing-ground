@@ -93,99 +93,101 @@ return array('config_jobs' => array(
 
 	// Audio only profile
 	'profile_audio' => array(
-		'name'			=> "Audio only version",
-		'type'			=> "audio",
-		'video_codec'	=> null,
-		'passes'		=> null,
-		'codec_profile'	=> null,
-		'format'		=> "mp3",
-		'file_suffix'	=> "_audio",		// recID_<suffix>.<format>
-		'video_bbox'	=> null,
-		'video_bpp'		=> null,
-		'audio_codec'	=> "libmp3lame",	// AAC
-		'audio_ch'		=> 2,				// Max. number of audio channels
-		'audio_bw_ch'	=> 64,				// Kbps per audio channel
-		'audio_mode'	=> "cbr"
+		'name'				=> "Audio only version",
+		'type'				=> "audio",
+		'video_codec'		=> null,
+		'passes'			=> null,
+		'codec_profile'		=> null,
+		'format'			=> "mp3",
+		'file_suffix'		=> "_audio",		// recID_<suffix>.<format>
+		'video_bbox'		=> null,
+		'video_bpp'			=> null,
+		'audio_codec'		=> "libmp3lame",	// AAC
+		'audio_ch'			=> 2,				// Max. number of audio channels
+		'audio_bw_ch'		=> 64,				// Kbps per audio channel
+		'audio_mode'		=> "cbr"
 	),
 
 	// Mobile LQ version
 	'profile_mobile_lq' => array(
-		'name'			=> "Mobile normal quality",
-		'type'			=> "video",
-		'video_codec'	=> "h264",
-		'passes'		=> 1,				// Conversion passes
-		'codec_profile'	=> H264_PROFILE_MOBILE,
-		'format'		=> "mp4",
-		'file_suffix'	=> "_mobile_lq",	// recID_<suffix>.<format>
-		'video_bbox'	=> "480x320",		// Bounding box
-		'video_bpp'		=> 0.078,			// resx * resy * fps * bpp = video codec bandwidth
-		'audio_codec'	=> "libfaac",		// AAC
-		'audio_ch'		=> 1,				// Max. number of audio channels
-		'audio_bw_ch'	=> 64,				// Kbps per audio channel
-		'audio_mode'	=> "cbr",
-		'pip_wcontent'	=> "enabled",
-		'pip_posx'		=> "left",			// Left or right
-		'pip_posy'		=> "up",			// Up or down
-		'pip_align'		=> "10",			// Align from sides
-		'pip_resize'	=> "0.1"			// % of original master media as PiP small
+		'name'				=> "Mobile normal quality",
+		'type'				=> "video",
+		'video_codec'		=> "h264",
+		'passes'			=> 1,				// Conversion passes
+		'codec_profile'		=> H264_PROFILE_MOBILE,
+		'format'			=> "mp4",
+		'file_suffix'		=> "_mobile_lq",	// recID_<suffix>.<format>
+		'video_bbox'		=> "480x320",		// Bounding box
+		'video_bpp'			=> 0.078,			// resx * resy * fps * bpp = video codec bandwidth
+		'audio_codec'		=> "libfaac",		// AAC
+		'audio_ch'			=> 1,				// Max. number of audio channels
+		'audio_bw_ch'		=> 64,				// Kbps per audio channel
+		'audio_mode'		=> "cbr",
+		'pip_wcontent'		=> "enabled",
+		'pip_codec_profile'	=> "baseline",		// H.264 profile for VideoLAN encoding
+		'pip_posx'			=> "left",			// Left or right
+		'pip_posy'			=> "up",			// Up or down
+		'pip_align'			=> "10",			// Align from sides
+		'pip_resize'		=> "0.1"			// % of original master media as PiP small
 	),
 
 	// Mobile HQ version
 // iPad: H.264 up to 720p@30, Main Profile level 3.1 w/ AAC-LC audio up to 160 Kbps per channel, 48kHz, stereo
 // iPad2: H.264 video up to 1080p@30 w/ High Profile level 4.1 + AAC-LC audio up to 160 Kbps, 48kHz, stereo audio in .m4v, .mp4, and .mov file formats;
 	'profile_mobile_hq' => array(
-		'name'			=> "Mobile high quality",
-		'type'			=> "video",
-		'video_codec'	=> "h264",
-		'passes'		=> 1,				// Conversion passes
-		'codec_profile'	=> H264_PROFILE_MOBILE,
-		'format'		=> "mp4",
-		'file_suffix'	=> "_mobile_hq",	// recID_<suffix>.<format>
-		'video_bbox'	=> "1280x720",		// Bounding box
-		'video_bpp'		=> 0.078,			// resx * resy * fps * bpp = video codec bandwidth
-		'audio_codec'	=> "libfaac",		// AAC
-		'audio_ch'		=> 1,				// Max. number of audio channels
-		'audio_bw_ch'	=> 64,				// Kbps per audio channel
-		'audio_mode'	=> "cbr",
-		'pip_wcontent'	=> "enabled",
-		'pip_posx'		=> "left",			// left or right
-		'pip_posy'		=> "up",			// up or down
-		'pip_align'		=> "10",			// Align from sides
-		'pip_resize'	=> "0.1"			// % of original master media as PiP small
+		'name'				=> "Mobile high quality",
+		'type'				=> "video",
+		'video_codec'		=> "h264",
+		'passes'			=> 1,				// Conversion passes
+		'codec_profile'		=> H264_PROFILE_MOBILE,
+		'format'			=> "mp4",
+		'file_suffix'		=> "_mobile_hq",	// recID_<suffix>.<format>
+		'video_bbox'		=> "1280x720",		// Bounding box
+		'video_bpp'			=> 0.078,			// resx * resy * fps * bpp = video codec bandwidth
+		'audio_codec'		=> "libfaac",		// AAC
+		'audio_ch'			=> 1,				// Max. number of audio channels
+		'audio_bw_ch'		=> 64,				// Kbps per audio channel
+		'audio_mode'		=> "cbr",
+		'pip_wcontent'		=> "enabled",
+		'pip_codec_profile'	=> "baseline",		// H.264 profile for VideoLAN encoding
+		'pip_posx'			=> "left",			// left or right
+		'pip_posy'			=> "up",			// up or down
+		'pip_align'			=> "10",			// Align from sides
+		'pip_resize'		=> "0.1"			// % of original master media as PiP small
 	),
 
 	// Normal quality
 	'profile_video_lq' => array(
-		'name'			=> "Video normal quality",
-		'type'			=> "video",
-		'video_codec'	=> "h264",
-		'passes'		=> 1,				// Conversion passes
-		'codec_profile'	=> H264_PROFILE,
-		'format'		=> "mp4",
-		'file_suffix'	=> "_video_lq",		// recID_<suffix>.<format>
-		'video_bbox'	=> "640x360",		// Bounding box
-		'video_bpp'		=> 0.1,				// resx * resy * fps * bpp = video codec bandwidth
-		'audio_codec'	=> "libfaac",		// AAC
-		'audio_ch'		=> 1,				// Max. number of audio channels
-		'audio_bw_ch'	=> 64,				// Kbps per audio channel
-		'audio_mode'	=> "cbr"
+		'name'				=> "Video normal quality",
+		'type'				=> "video",
+		'video_codec'		=> "h264",
+		'passes'			=> 1,				// Conversion passes
+		'codec_profile'		=> H264_PROFILE,
+		'format'			=> "mp4",
+		'file_suffix'		=> "_video_lq",		// recID_<suffix>.<format>
+		'video_bbox'		=> "640x360",		// Bounding box
+		'video_bpp'			=> 0.1,				// resx * resy * fps * bpp = video codec bandwidth
+		'audio_codec'		=> "libfaac",		// AAC
+		'audio_ch'			=> 1,				// Max. number of audio channels
+		'audio_bw_ch'		=> 64,				// Kbps per audio channel
+		'audio_mode'		=> "cbr"
 	),
 
 	// High quality
 	'profile_video_hq' => array(
-		'name'			=> "Video high quality",
-		'type'			=> "video",
-		'video_codec'	=> "h264",
-		'passes'		=> 1,				// Conversion passes
-		'codec_profile'	=> H264_PROFILE,
-		'format'		=> "mp4",
-		'file_suffix'	=> "_video_hq",		// recID_<suffix>.<format>
-		'video_bbox'	=> "1280x720",		// Bounding box
-		'video_bpp'		=> 0.1,				// resx * resy * fps * bpp = video codec bandwidth
-		'audio_codec'	=> "libfaac",		// AAC
-		'audio_ch'		=> 2,				// Max. number of audio channels
-		'audio_bw_ch'	=> 64,				// Kbps per audio channel
-		'audio_mode'	=> "cbr"
+		'name'				=> "Video high quality",
+		'type'				=> "video",
+		'video_codec'		=> "h264",
+		'passes'			=> 1,				// Conversion passes
+		'codec_profile'		=> H264_PROFILE,
+		'format'			=> "mp4",
+		'file_suffix'		=> "_video_hq",		// recID_<suffix>.<format>
+		'video_bbox'		=> "1280x720",		// Bounding box
+		'video_bpp'			=> 0.1,				// resx * resy * fps * bpp = video codec bandwidth
+		'audio_codec'		=> "libfaac",		// AAC
+		'audio_ch'			=> 2,				// Max. number of audio channels
+		'audio_bw_ch'		=> 64,				// Kbps per audio channel
+		'audio_mode'		=> "cbr"
 	),
 
 	
@@ -193,36 +195,36 @@ return array('config_jobs' => array(
 
 	// Normal quality
 	'profile_content_lq' => array(
-		'name'			=> "Content normal quality",
-		'type'			=> "content",
-		'video_codec'	=> "h264",
-		'passes'		=> 1,				// Conversion passes
-		'codec_profile'	=> H264_PROFILE,
-		'format'		=> "mp4",
-		'file_suffix'	=> "_content_lq",	// recID_<suffix>.<format>
-		'video_bbox'	=> "640x480",		// Video bounding box
-		'video_bpp'		=> 0.033,			// resx * resy * fps * bpp = video codec bandwidth
-		'audio_codec'	=> "libfaac",		// AAC
-		'audio_ch'		=> 1,				// Max. number of audio channels
-		'audio_bw_ch'	=> 64,				// Kbps per audio channel
-		'audio_mode'	=> "cbr"
+		'name'				=> "Content normal quality",
+		'type'				=> "content",
+		'video_codec'		=> "h264",
+		'passes'			=> 1,				// Conversion passes
+		'codec_profile'		=> H264_PROFILE,
+		'format'			=> "mp4",
+		'file_suffix'		=> "_content_lq",	// recID_<suffix>.<format>
+		'video_bbox'		=> "640x480",		// Video bounding box
+		'video_bpp'			=> 0.033,			// resx * resy * fps * bpp = video codec bandwidth
+		'audio_codec'		=> "libfaac",		// AAC
+		'audio_ch'			=> 1,				// Max. number of audio channels
+		'audio_bw_ch'		=> 64,				// Kbps per audio channel
+		'audio_mode'		=> "cbr"
 	),
 
 	// High quality
 	'profile_content_hq' => array(
-		'name'			=> "Content high quality",
-		'type'			=> "content",
-		'video_codec'	=> "h264",
-		'passes'		=> 1,				// Conversion passes
-		'codec_profile'	=> H264_PROFILE,
-		'format'		=> "mp4",
-		'file_suffix'	=> "_content_hq",	// recID_<suffix>.<format>
-		'video_bbox'	=> "1280x720",		// Video bounding box
-		'video_bpp'		=> 0.020,			// resx * resy * fps * bpp = video codec bandwidth
-		'audio_codec'	=> "libfaac",		// AAC
-		'audio_ch'		=> 2,				// Max. number of audio channels
-		'audio_bw_ch'	=> 64,				// Kbps per audio channel
-		'audio_mode'	=> "cbr"
+		'name'				=> "Content high quality",
+		'type'				=> "content",
+		'video_codec'		=> "h264",
+		'passes'			=> 1,				// Conversion passes
+		'codec_profile'		=> H264_PROFILE,
+		'format'			=> "mp4",
+		'file_suffix'		=> "_content_hq",	// recID_<suffix>.<format>
+		'video_bbox'		=> "1280x720",		// Video bounding box
+		'video_bpp'			=> 0.020,			// resx * resy * fps * bpp = video codec bandwidth
+		'audio_codec'		=> "libfaac",		// AAC
+		'audio_ch'			=> 2,				// Max. number of audio channels
+		'audio_bw_ch'		=> 64,				// Kbps per audio channel
+		'audio_mode'		=> "cbr"
 	),
 
 ));

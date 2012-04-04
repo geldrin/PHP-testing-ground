@@ -248,8 +248,10 @@ function update_db_mastercontent_status($id, $status) {
 //	- Boolean:
 //	  o FALSE: failed (error cause logged in DB and local files)
 //	  o TRUE: OK
-function update_db_contentinfo($id, $content_info_lq, $content_info_hq) {
+function update_db_contentinfo($id, $content_info_lq, $content_info_hq, $mobile_info_lq, $mobile_info_hq) {
 global $jconf, $db;
+
+	$is_update = FALSE;
 
 	$query = "
 		UPDATE
@@ -257,28 +259,44 @@ global $jconf, $db;
 		SET
 			";
 
+	// Content LQ
 	if ( !empty($content_info_lq) ) {
 		$query .= "contentvideoreslq = \"" . $content_info_lq['res_x'] . "x" . $content_info_lq['res_y']. "\"";
-	} else {
-		// Would be a failure, should never happen
-		$query .= ", contentvideoreslq = NULL";
+		$is_update = TRUE;
 	}
 
+	// Content HQ
 	if ( !empty($content_info_hq) ) {
-		$query .= ", contentvideoreshq = \"" . $content_info_hq['res_x'] . "x" . $content_info_hq['res_y']. "\"";
-	} else {
-		$query .= ", contentvideoreshq = NULL";
+		if ( $is_update ) $query .= ", ";
+		$query .= "contentvideoreshq = \"" . $content_info_hq['res_x'] . "x" . $content_info_hq['res_y']. "\"";
+		$is_update = TRUE;
+	}
+
+	// Mobile LQ
+	if ( !empty($mobile_info_lq) ) {
+		if ( $is_update ) $query .= ", ";
+		$query .= "mobilevideoreslq = \"" . $mobile_info_lq['res_x'] . "x" . $mobile_info_lq['res_y']. "\"";
+		$is_update = TRUE;
+	}
+
+	// Mobile HQ
+	if ( !empty($mobile_info_hq) ) {
+		if ( $is_update ) $query .= ", ";
+		$query .= "mobilevideoreshq = \"" . $mobile_info_hq['res_x'] . "x" . $mobile_info_hq['res_y']. "\"";
+		$is_update = TRUE;
 	}
 
 	$query .= "
 		WHERE
 			id = " . $id;
 
-	try {
-		$rs = $db->Execute($query);
-	} catch (exception $err) {
-		log_recording_conversion($id, $jconf['jobid_content_convert'], "-", "[ERROR] Cannot update content information. SQL query failed.", trim($query), $err, 0, TRUE);
-		return FALSE;
+	if ( $is_update ) {
+		try {
+			$rs = $db->Execute($query);
+		} catch (exception $err) {
+			log_recording_conversion($id, $jconf['jobid_content_convert'], "-", "[ERROR] Cannot update content information. SQL query failed.", trim($query), $err, 0, TRUE);
+			return FALSE;
+		}
 	}
 
 	return TRUE;

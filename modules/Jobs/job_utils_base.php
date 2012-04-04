@@ -92,6 +92,94 @@ function runExternal($cmd) {
 	return $return_array;
 }
 
+function runExternal_vlc($cmd, $output_file) {
+
+	$descriptorspec = array(
+		0 => array("pipe", "r"),  // stdin is a pipe that the child will read from
+		1 => array("pipe", "w"),  // stdout is a pipe that the child will write to
+		2 => array("pipe", "w")   // stderr is a file to write to
+	);
+
+	$pipes = array();
+	$process = proc_open($cmd, $descriptorspec, $pipes);
+
+	$output = "VLC started: " . date("Y-m-d H:i:s") . "\n";
+
+	if (!is_resource($process)) return false;
+
+	// close child's input imidiately
+	fclose($pipes[0]);
+
+	stream_set_blocking($pipes[1], false);
+	stream_set_blocking($pipes[2], false);
+
+	$return_array = array();
+
+	// Get process ID (proc_get_status() gives wrong PID)
+	$ps = `ps -C vlc -o pid=`;
+	$PID = (int)trim($ps);
+	if ( !is_numeric($PID) ) $PID = -1;
+	$return_array['pid'] = $PID;
+
+	$todo = array($pipes[1], $pipes[2]);
+
+	while( true ) {
+
+		$read = array();
+		if( !feof($pipes[1]) ) $read[]= $pipes[1];
+		if( !feof($pipes[2]) ) $read[]= $pipes[2];
+
+		if (!$read) break;
+
+		$write = NULL;
+		$ex = NULL;
+		$ready = stream_select($read, $write, $ex, 2);
+
+		if ( $ready === FALSE ) {
+			break; // should never happen - something died
+		}
+
+		foreach ($read as $r) {
+			$s = fread($r, 1024);
+			$tmp = trim($s);
+			if ( !empty($tmp) ) {
+				$output .= $tmp;
+				$end_str = stripos($tmp, "kb/s:" );
+
+// Rearrange this!!!
+				$err = is_process_closedfile($output_file, $PID);
+
+				if ( ( $end_str !== FALSE ) and ( $err['code'] == TRUE ) ) {
+
+					if ( !posix_kill($PID, SIGQUIT) ) {
+						$output .= "\nERROR: notkilled: $PID\n";
+					}
+				}
+
+				break;
+
+			}
+
+		}
+	}
+
+	fclose($pipes[1]);
+	fclose($pipes[2]);
+
+	$return_array['code'] = proc_close($process);
+	if ( $return_array['code'] != 0 ) {
+		$return_array['code'] = FALSE;
+	} else {
+		$return_array['code'] = TRUE;
+	}
+
+	$return_array['command_output'] = $output;
+	$return_array['command'] = $cmd;
+
+	return $return_array;
+}
+
+
 // *************************************************************************
 // *						Timestamp conversion						   *
 // *************************************************************************
@@ -556,8 +644,6 @@ function string_to_file($file, $str) {
 	}
 
 	$err['command'] = "php: fwrite()";
-
-echo $file . "\n";
 
 	$fh = fopen($file, 'w');
 	$res = fwrite($fh, $str);
