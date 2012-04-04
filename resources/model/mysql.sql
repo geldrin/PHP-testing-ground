@@ -74,6 +74,26 @@ CREATE TABLE `organizations` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;
 
 
+CREATE TABLE `organizations_news` (
+  `id` int(10) unsigned not null auto_increment,
+  `organizationid` int(10) unsigned not null default '0',
+  `titlehungarian` text,
+  `titleenglish` text,
+  `leadhungarian` text,
+  `leadenglish` text,
+  `bodyhungarian` text,
+  `bodyenglish` text,
+  `starts` datetime,
+  `ends` datetime,
+  `timestamp` datetime not null,
+  `weight` int(11) default '100',
+  `disabled` int(11) not null default '0',
+  PRIMARY KEY (`id`),
+  KEY `organizationid` (`organizationid`),
+  KEY `starts-ends` (`starts`, `ends`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;
+
+
 CREATE TABLE `recordings` (
    `id` int(10) unsigned not null auto_increment,
    `userid` int(10) unsigned not null,
