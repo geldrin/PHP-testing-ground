@@ -1,8 +1,9 @@
 
 <div id="headerlogin" class="rightbox">
   {if $member}
-    {*}<a href="{$language}/users/welcome" title="{l key=sitewide_myprofile}">{l key=sitewide_welcome} {$member.nickname|escape:html}!</a>{/*}
-    <div id="currentuser">
+    
+    <div id="currentuser" class="active">
+      <div class="avatar"><img src="{$member|@avatarphoto}"/></div>
       <div id="currentusercontent">
         <a id="currentusername" href="#">{$member.nickname|escape:html}<span></span></a>
         <div id="currentusermenu">

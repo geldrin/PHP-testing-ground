@@ -447,10 +447,23 @@ textarea {
 #headerlogo a span {
   background-image: url(images/header_logo.png);
 }
+
+/* avatar */
+.avatar img {
+  -moz-box-shadow: 0 1px 3px rgba(000, 000, 000, 0.75), inset 0 1px rgba(255, 255, 255, 0.48);
+  -webkit-box-shadow: 0 1px 3px rgba(000, 000, 000, 0.75), inset 0 1px rgba(255, 255, 255, 0.48);
+  box-shadow: 0 1px 3px rgba(000, 000, 000, 0.75), inset 0 1px rgba(255, 255, 255, 0.48);
+  -moz-border-radius: 5px;
+  -webkit-border-radius: 5px;
+  border-radius: 5px;
+  width: 36px;
+  height: 36px;
+}
 /* headerlogin */
 #headerlogin {
-  margin-top: 15px;
+  margin-top: 5px;
   text-align: right;
+  width: auto;
 }
 #headerloginactions {
   color: #999;
@@ -466,21 +479,37 @@ textarea {
   position: relative;
   top: 3px;
 }
+#currentuser {
+  white-space: nowrap;
+  padding: 5px 5px 0px 5px;
+  margin-right: -5px;
+}
+#currentuser .avatar {
+  display: inline-block;
+  margin-right: 8px;
+}
+#currentuser.active {
+  background-color: #333333;
+  background-color: rgba(51,51,51,0.9);
+  border: 1px solid #1f1f1f;
+  border: 0px solid rgba(000,000,000,0.5);
+}
 #currentusercontent {
   position: relative;
+  top: -15px;
+  margin-bottom: -15px;
   display: inline-block;
 }
 a#currentusername {
   display: inline-block;
   height: 28px;
-  min-width: 70px;
+  width: 110px;
   line-height: 28px;
   font-size: 15px;
   font-weight: bold;
   color: #fff;
-  margin: 0;
+  margin: 1px;
   padding: 0px 50px 0px 15px;
-  margin-left: -2px;
   text-shadow: 0px 1px 3px rgba(000,000,000, 0.75);
   text-align: center;
   vertical-align: middle;
@@ -513,11 +542,9 @@ a#currentusername span {
   background-image: url(images/login_arrow.png);
 }
 #currentuser.active #currentusername {
-  -pie-background: linear-gradient(top, rgb(96,96,97) 0%, rgb(68,68,69) 50%, rgb(56,56,57) 55%, rgb(51,51,51) );
-  background: -o-linear-gradient(top, rgb(96,96,97) 0%, rgb(68,68,69) 50%, rgb(56,56,57) 55%, rgb(51,51,51) );
-  background: -moz-linear-gradient(top, rgb(96,96,97) 0%, rgb(68,68,69) 50%, rgb(56,56,57) 55%, rgb(51,51,51) );
-  background: -webkit-gradient(linear, left top, left bottom, from( rgb(96,96,97) ), color-stop(0.50, rgb(68,68,69) ), color-stop(0.55, rgb(56,56,57) ), to( rgb(51,51,51) ));
-  background: linear-gradient(top, rgb(96,96,97) 0%, rgb(68,68,69) 50%, rgb(56,56,57) 55%, rgb(51,51,51) );
+  margin: 0;
+  background: #232323;
+  border: 2px solid #21abf0;
   box-shadow: 0px 1px 1px #484848, inset 0px 1px 1px rgba(255,255,255,0.1);
   -moz-box-shadow: 0px 1px 1px #484848, inset 0px 1px 1px rgba(255,255,255,0.1);
   -webkit-box-shadow: 0px 1px 1px #484848, inset 0px 1px 1px rgba(255,255,255,0.1);
@@ -527,7 +554,7 @@ a#currentusername span {
 }
 #currentusermenu {
   display: none;
-  margin-top: -5px;
+  margin-top: 1px;
   padding-top: 10px;
   text-align: left;
   width: 100%;
@@ -1362,11 +1389,6 @@ a#currentusername span {
 .imageinfo:hover {
   text-decoration: none;
 }
-.imageinfo img {
-  -moz-border-radius: 5px;
-  -webkit-border-radius: 5px;
-  border-radius: 5px;
-}
 .imageinfo .playpic {
   width: 122px;
   height: 88px;
@@ -1399,11 +1421,6 @@ a#currentusername span {
   height: 52px;
   width: 58px;
   padding: 15px 0px 0px 12px;
-}
-.imageinfo .imageinfowrap .avatar img {
-  -moz-box-shadow: 0 1px 3px rgba(000, 000, 000, 0.75), inset 0 1px rgba(255, 255, 255, 0.48);
-  -webkit-box-shadow: 0 1px 3px rgba(000, 000, 000, 0.75), inset 0 1px rgba(255, 255, 255, 0.48);
-  box-shadow: 0 1px 3px rgba(000, 000, 000, 0.75), inset 0 1px rgba(255, 255, 255, 0.48);
 }
 .imageinfo .imageinfowrap .content h1, .imageinfo .imageinfowrap .content h2 {
   text-shadow: 0px 1px 3px rgba(000, 000, 000, 0.75);
