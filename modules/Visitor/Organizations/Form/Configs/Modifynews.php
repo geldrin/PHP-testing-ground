@@ -74,8 +74,8 @@ $config = Array(
     'type'        => 'tinyMCEMultiLanguage2',
     'languages'   => $this->controller->organization['languages'],
     'jspath'      => $this->controller->toSmarty['BASE_URI'] . 'js/tiny_mce/tiny_mce.js',
-    'width'       => 380,
-    'height'      => 150,
+    'width'       => 450,
+    'height'      => 500,
     'config'      => $tinymceconfig,
     'validation'  => Array(
     )
