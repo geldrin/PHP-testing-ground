@@ -57,16 +57,16 @@
           </form>
           
           <div id="languageselector" class="inputbackground right">
-            {foreach from=$bootstrap->config.languages item=item}
-              {if $item == $language}
+            {foreach from=$organization.languages key=languageid item=item}
+              {if $languageid == $language}
                 <a href="{$FULL_URI|changelanguage:$language}" class="{$language} active">{l lov=headerlanguages key=$language}<span></span></a>
               {/if}
             {/foreach}
             
             <div id="languages">
-              {foreach from=$bootstrap->config.languages item=item}
-                {if $item != $language}
-                  <a href="{$FULL_URI|changelanguage:$item}" class="{$item}">{l lov=headerlanguages key=$item}</a>
+              {foreach from=$organization.languages key=languageid item=item}
+                {if $languageid != $language}
+                  <a href="{$FULL_URI|changelanguage:$languageid}" class="{$languageid}">{l lov=headerlanguages key=$languageid}</a>
                 {/if}
               {/foreach}
             </div>
