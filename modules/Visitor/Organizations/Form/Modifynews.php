@@ -13,7 +13,7 @@ class Modifynews extends \Visitor\Form {
     $user            = $this->bootstrap->getSession('user');
     
     if (
-         !$user['iseditor'] or
+         !$user['isnewseditor'] or
          $this->controller->organization['id'] != $user['organizationid']
        )
       $this->controller->redirect('index');

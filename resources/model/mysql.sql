@@ -37,6 +37,7 @@ CREATE TABLE `users` (
    `isadmin` int(10) unsigned not null default '0',
    `isclientadmin` int(10) unsigned not null default '0',
    `iseditor` int(10) unsigned not null default '0',
+   `isnewseditor` int(10) unsigned not null default '0',
    `isuploader` int(10) unsigned not null default '0',
    `isliveadmin` int(10) unsigned not null default '0',
    `timestamp` datetime not null,

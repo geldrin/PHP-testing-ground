@@ -10,6 +10,7 @@
     <li><a href="{$language}/recordings/myrecordings">My recordings</a></li>
     <li><a href="{$language}/organizations/createnews">Create news</a></li>
     <li><a href="{$language}/organizations/listnews">News admin</a></li>
+    <li><a href="{$language}/organizations/modifyintroduction">Organization introduction</a></li>
     {*}<li><a href="{$language}/"></a></li>{/*}
   </ul>
 </div>

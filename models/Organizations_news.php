@@ -25,7 +25,7 @@ class Organizations_news extends \Springboard\Model\Multilingual {
     if ( !$language )
       $language = \Springboard\Language::get();
     
-    if ( $user['id'] and $user['iseditor'] and $user['organizationid'] == $organizationid )
+    if ( $user['isnewseditor'] and $user['organizationid'] == $organizationid )
       $where = "orgn.id = '" . $id . "'";
     else
       $where = "

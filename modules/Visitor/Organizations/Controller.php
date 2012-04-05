@@ -6,15 +6,15 @@ class Controller extends \Visitor\Controller {
     'index'             => 'public',
     'newsdetails'       => 'public',
     'listnews'          => 'public',
-    'createnews'        => 'editor',
-    'modifynews'        => 'editor',
-    'modifydescription' => 'editor',
+    'createnews'        => 'newseditor',
+    'modifynews'        => 'newseditor',
+    'modifyintroduction' => 'clientadmin',
   );
   
   public $forms = array(
     'createnews'        => 'Visitor\\Organizations\\Form\\Createnews',
     'modifynews'        => 'Visitor\\Organizations\\Form\\Modifynews',
-    'modifydescription' => 'Visitor\\Organizations\\Form\\Modifydescription',
+    'modifyintroduction' => 'Visitor\\Organizations\\Form\\Modifyintroduction',
   );
   
   public $paging = array(

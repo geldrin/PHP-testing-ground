@@ -18,6 +18,8 @@ class Form extends \Springboard\Controller\Admin\Form {
     
     if ( strlen( $values['password'] ) )
       $values['password'] = $crypto->getHash( $values['password'] );
+    else
+      unset( $values['password'] );
     
     $model->select( $values['id'] );
     $model->updateRow( $values );

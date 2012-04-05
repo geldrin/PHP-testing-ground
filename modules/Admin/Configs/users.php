@@ -81,13 +81,15 @@ $config = Array(
     'type'        => 'selectDynamic',
     'sql'         => "
       SELECT 
-        id, CONCAT( IF(LENGTH(nameoriginal) > 0, nameoriginal, nameenglish ), ' - ', id )
+        o.id, CONCAT( s.value, ' - ', o.id )
       FROM 
-        organizations
+        organizations AS o,
+        strings AS s
       WHERE
+        s.translationof = o.name_stringid AND
+        s.language = 'hu' AND
         %s
-      ORDER BY
-        IF(LENGTH(nameoriginal), nameoriginal, nameenglish )
+      ORDER BY s.value
     ",
     'value'       => '0',
     'treeid'      => 'id',
@@ -128,19 +130,37 @@ $config = Array(
   ),
   
   'isadmin' => array(
-    'displayname' => 'Admin?',
+    'displayname' => 'Adminsztrátor?',
+    'type'        => 'inputRadio',
+    'values'      => $l->getLov('yesno'),
+  ),
+  
+  'isclientadmin' => array(
+    'displayname' => 'Ügyfél adminsztrátor?',
+    'type'        => 'inputRadio',
+    'values'      => $l->getLov('yesno'),
+  ),
+  
+  'isliveadmin' => array(
+    'displayname' => 'Élő közvetítés szerkesztő?',
     'type'        => 'inputRadio',
     'values'      => $l->getLov('yesno'),
   ),
   
   'iseditor' => array(
-    'displayname' => 'Editor?',
+    'displayname' => 'Szerkesztő?',
+    'type'        => 'inputRadio',
+    'values'      => $l->getLov('yesno'),
+  ),
+  
+  'isnewseditor' => array(
+    'displayname' => 'Hírszerkesztő?',
     'type'        => 'inputRadio',
     'values'      => $l->getLov('yesno'),
   ),
   
   'isuploader' => array(
-    'displayname' => 'Uploader?',
+    'displayname' => 'Feltöltő?',
     'type'        => 'inputRadio',
     'values'      => $l->getLov('yesno'),
   ),
@@ -199,8 +219,26 @@ $listconfig = Array(
     ),
 
     Array(
+      'field' => 'isnewseditor',
+      'displayname' => 'newsedit',
+      'lov' => $l->getLov('yes'),
+    ),
+
+    Array(
+      'field' => 'isliveadmin',
+      'displayname' => 'liveadmin',
+      'lov' => $l->getLov('yes'),
+    ),
+
+    Array(
       'field' => 'isadmin',
       'displayname' => 'admin',
+      'lov' => $l->getLov('yes'),
+    ),
+
+    Array(
+      'field' => 'isclientadmin',
+      'displayname' => 'clientadmin',
       'lov' => $l->getLov('yes'),
     ),
 
