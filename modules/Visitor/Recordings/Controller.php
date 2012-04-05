@@ -20,6 +20,7 @@ class Controller extends \Visitor\Controller {
     'modifysharing'        => 'uploader',
     'deletesubtitle'       => 'uploader',
     'delete'               => 'uploader',
+    'checkstreamaccess'    => 'public',
   );
   
   public $forms = array(
@@ -218,4 +219,17 @@ class Controller extends \Visitor\Controller {
     
   }
   
+  public function checkstreamaccessAction() {
+    
+    echo
+      '<?xml version="1.0"?>
+      <result>
+        <success>1</success>
+      </result>'
+    ;
+    
+    die();
+    
+  }
+
 }
