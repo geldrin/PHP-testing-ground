@@ -12,10 +12,10 @@ class Controller extends \Visitor\Controller {
     'validate'       => 'public',
     'forgotpassword' => 'public',
     'changepassword' => 'public',
-    'invite'         => 'admin',
+    'invite'         => 'clientadmin',
     'validateinvite' => 'public',
-    'disable'        => 'admin',
-    'admin'          => 'admin',
+    'disable'        => 'clientadmin',
+    'admin'          => 'clientadmin',
   );
   
   public $forms = array(
