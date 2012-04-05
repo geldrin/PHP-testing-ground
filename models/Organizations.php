@@ -1,7 +1,8 @@
 <?php
 namespace Model;
 
-class Organizations extends \Springboard\Model {
+class Organizations extends \Springboard\Model\Multilingual {
+  public $multistringfields = array( 'name', 'nameshort', 'introduction', );
   
   public function checkDomain( $domain ) {
     

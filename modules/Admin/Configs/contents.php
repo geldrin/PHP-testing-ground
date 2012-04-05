@@ -29,12 +29,13 @@ $config = Array(
     )
   ),
 
-  'body_stringid' => Array( // TODO tinymce config
+  'body_stringid' => Array(
     'displayname' => 'Szöveg',
     'type'        => 'tinymceMultiLanguage',
     'languages'   => $l->getLov('languages'),
     'value'       => 0,
     'width'       => 950,
+    'config'      => $l->getLov('tinymceadmin'),
     'validation'  => Array(
     )
   ),

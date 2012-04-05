@@ -16,72 +16,60 @@ $config = Array(
     'type'        => 'selectDynamic',
     'values'      => array( 0 => 'Nincs szülő intézmény' ),
     'sql'         => "
-      SELECT 
-        id, CONCAT( IF(LENGTH(nameoriginal) > 0, nameoriginal, nameenglish ), ' - ', id )
-      FROM 
-        organizations
+      SELECT
+        o.id, CONCAT( s.value, ' - ', o.id )
+      FROM
+        organizations AS o,
+        strings AS s
       WHERE
+        s.translationof = o.name_stringid AND
+        s.language = 'hu' AND
         %s
-      ORDER BY
-        IF(LENGTH(nameoriginal), nameoriginal, nameenglish )
+      ORDER BY s.value
     ",
     'treeid'      => 'id',
     'treeparent'  => 'parentid',
     'treestart'   => '0',
   ),
   
-  'nameoriginal' => array(
-    'displayname' => 'Eredeti név',
-    'type'        => 'inputText',
+  'languages[]' => array(
+    'displayname' => 'Támogatott nyelvek',
+    'type'        => 'select',
+    'html'        => 'multiple="multiple"',
+    'values'      => $l->getLov('languages'),
+    'value'       => array_keys( $l->getLov('languages') ),
     'validation'  => array(
-      array( 'type' => 'required' ),
-      array(
-        'type' => 'string',
-        'minimum' => 2,
-        'maximum' => 512,
-      ),
     ),
   ),
   
-  'nameshortoriginal' => array(
-    'displayname' => 'Rövid eredeti név',
-    'type'        => 'inputText',
+  'name_stringid' => array(
+    'displayname' => 'Név',
+    'type'        => 'inputTextMultiLanguage',
+    'languages'   => $l->getLov('languages'),
     'validation'  => array(
-      array( 'type' => 'required' ),
-      array(
-        'type' => 'string',
-        'minimum' => 2,
-        'maximum' => 512,
-      ),
     ),
+  ),
+  
+  'nameshort_stringid' => array(
+    'displayname' => 'Rövid név',
+    'type'        => 'inputTextMultiLanguage',
+    'languages'   => $l->getLov('languages'),
+    'validation'  => array(
+    ),
+  ),
+  
+  'introduction_stringid' => Array(
+    'displayname' => 'Üdvözlő szöveg',
+    'type'        => 'tinymceMultiLanguage',
+    'languages'   => $l->getLov('languages'),
+    'value'       => 0,
+    'width'       => 305,
+    'height'      => 500,
+    'config'      => $l->getLov('tinymceadmin'),
+    'validation'  => Array(
+    )
   ),
 
-  'nameenglish' => array(
-    'displayname' => 'Angol név',
-    'type'        => 'inputText',
-    'validation'  => array(
-      array(
-        'type' => 'string',
-        'minimum'  => 2,
-        'maximum'  => 512,
-        'required' => false,
-      ),
-    ),
-  ),
-  
-  'nameshortenglish' => array(
-    'displayname' => 'Rövid angol név',
-    'type'        => 'inputText',
-    'validation'  => array(
-      array(
-        'type' => 'string',
-        'minimum'  => 2,
-        'maximum'  => 512,
-        'required' => false,
-      ),
-    ),
-  ),
-  
   'url' => array(
     'displayname' => 'URL',
     'type'        => 'inputText',
@@ -143,20 +131,26 @@ $config = Array(
 
 $listconfig = Array(
   
-  'treeid'             => 'id',
+  'treeid'             => 'o.id',
   'treestart'          => '0',
-  'treeparent'         => 'parentid',
+  'treeparent'         => 'o.parentid',
   'treestartinclusive' => true,
   
   'type'      => 'tree',
-  'table'     => 'organizations',
-  'order'     => Array( 'id DESC' ),
-  'modify'    => 'id',
+  'table'     => '
+    organizations AS o
+    LEFT JOIN strings AS sname
+      ON ( sname.translationof = o.name_stringid AND sname.language = "hu" )
+    LEFT JOIN strings AS sshort
+      ON ( sshort.translationof = o.nameshort_stringid AND sshort.language = "hu" )
+  ',
+  'order'     => Array( 'o.id DESC' ),
+  'modify'    => 'o.id',
   
   'fields' => Array(
     
     Array(
-      'field' => 'id',
+      'field' => 'o.id',
       'displayname' => 'ID',
     ),
     
@@ -166,12 +160,12 @@ $listconfig = Array(
     ),
 
     Array(
-      'field' => 'nameoriginal',
+      'field' => 'sname.value',
       'displayname' => 'Eredeti név',
     ),
     
     Array(
-      'field' => 'nameshortoriginal',
+      'field' => 'sshort.value',
       'displayname' => 'Rövid név',
     ),
 

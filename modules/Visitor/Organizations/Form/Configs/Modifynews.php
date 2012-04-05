@@ -53,48 +53,26 @@ $config = Array(
     ),
   ),
   
-  'titlehungarian' => Array(
-    'displayname' => $l('organizations', 'news_titlehungarian'),
-    'type'        => 'inputText',
+  'title_stringid' => Array(
+    'displayname' => $l('organizations', 'news_title'),
+    'type'        => 'inputTextMultiLanguage2',
+    'languages'   => $this->controller->organization['languages'],
     'validation'  => Array(
     )
   ),
   
-  'titleenglish' => Array(
-    'displayname' => $l('organizations', 'news_titleenglish'),
-    'type'        => 'inputText',
+  'lead_stringid' => Array(
+    'displayname' => $l('organizations', 'news_lead'),
+    'type'        => 'textareaMultiLanguage2',
+    'languages'   => $this->controller->organization['languages'],
     'validation'  => Array(
     )
   ),
   
-  'leadhungarian' => Array(
-    'displayname' => $l('organizations', 'news_leadhungarian'),
-    'type'        => 'textarea',
-    'validation'  => Array(
-    )
-  ),
-  
-  'leadenglish' => Array(
-    'displayname' => $l('organizations', 'news_leadenglish'),
-    'type'        => 'textarea',
-    'validation'  => Array(
-    )
-  ),
-  
-  'bodyhungarian' => Array(
-    'displayname' => $l('organizations', 'news_bodyhungarian'),
-    'type'        => 'tinyMCE',
-    'jspath'      => $this->controller->toSmarty['BASE_URI'] . 'js/tiny_mce/tiny_mce.js',
-    'width'       => 380,
-    'height'      => 150,
-    'config'      => $tinymceconfig,
-    'validation'  => Array(
-    )
-  ),
-  
-  'bodyenglish' => Array(
-    'displayname' => $l('organizations', 'news_bodyenglish'),
-    'type'        => 'tinyMCE',
+  'body_stringid' => Array(
+    'displayname' => $l('organizations', 'news_body'),
+    'type'        => 'tinyMCEMultiLanguage2',
+    'languages'   => $this->controller->organization['languages'],
     'jspath'      => $this->controller->toSmarty['BASE_URI'] . 'js/tiny_mce/tiny_mce.js',
     'width'       => 380,
     'height'      => 150,

@@ -13,7 +13,7 @@ class Controller extends \Springboard\Controller\Visitor {
     
     $host = $_SERVER['SERVER_NAME'];
     
-    $cache = $this->bootstrap->getCache( 'organizations-' . $host, null, true );
+    $cache = $this->bootstrap->getCache( 'organizations-' . $host, null );
     if ( $cache->expired() ) {
       
       $orgModel = $this->bootstrap->getModel('organizations');
@@ -21,6 +21,14 @@ class Controller extends \Springboard\Controller\Visitor {
         throw new \Exception('Organization not found!');
       
       $organization = $orgModel->row;
+      $l            = $this->bootstrap->getLocalization();
+      $languages    = $l->getLov('languages');
+      $languagekeys = explode(',', $organization['languages'] );
+      $organization['languages'] = array();
+      
+      foreach( $languagekeys as $language )
+        $organization['languages'][ $language ] = $languages[ $language ];
+      
       $cache->put( $organization );
       
     } else
