@@ -4,10 +4,10 @@ namespace Visitor\Genres;
 class Controller extends \Visitor\Controller {
   public $permissions = array(
     'details' => 'public',
-    'create'  => 'admin',
-    'modify'  => 'admin',
-    'delete'  => 'admin',
-    'admin'   => 'admin',
+    'create'  => 'clientadmin',
+    'modify'  => 'clientadmin',
+    'delete'  => 'clientadmin',
+    'admin'   => 'clientadmin',
   );
   
   public $forms = array(

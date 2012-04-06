@@ -467,6 +467,10 @@ textarea {
 }
 #headerloginactions {
   color: #999;
+  margin-top: 10px;
+}
+#headerloginform {
+  margin-top: 10px;
 }
 #headerlogin .inputtext {
   width: 90px;
@@ -481,18 +485,13 @@ textarea {
 }
 #currentuser {
   white-space: nowrap;
-  padding: 5px 5px 0px 5px;
-  margin-right: -5px;
+  padding: 5px 0px 0px 5px;
 }
 #currentuser .avatar {
   display: inline-block;
   margin-right: 8px;
-}
-#currentuser.active {
-  background-color: #333333;
-  background-color: rgba(51,51,51,0.9);
-  border: 1px solid #1f1f1f;
-  border: 0px solid rgba(000,000,000,0.5);
+  position: relative;
+  z-index: 500;
 }
 #currentusercontent {
   position: relative;
@@ -526,7 +525,7 @@ a#currentusername {
   0.16) ), color-stop(0.50, rgba(255,255,255,0.10) ), color-stop(0.55, rgba(255,255,255,0.03) ), to( rgba(255,255,255,0) ));
   -moz-box-shadow: 0px 1px 1px rgba(000,000,000, 0.4), inset 0px 1px 1px rgba(255,255,255,0.1);
   -webkit-box-shadow: 0px 1px 1px rgba(000,000,000, 0.4), inset 0px 1px 1px rgba(255,255,255,0.1);
-  box-shadow: 0px 1px 1px rgba(000,000,000, 0.4), inset 0px 1px 1px rgba(255,255,255,0.1)
+  box-shadow: 0px 1px 1px rgba(000,000,000, 0.4), inset 0px 1px 1px rgba(255,255,255,0.1);
   position: relative;
   z-index: 500;
 }
@@ -550,35 +549,57 @@ a#currentusername span {
   -webkit-box-shadow: 0px 1px 1px #484848, inset 0px 1px 1px rgba(255,255,255,0.1);
 }
 #currentuser.active #currentusermenu {
-  display: inline-block;
+  display: block;
 }
 #currentusermenu {
   display: none;
   margin-top: 1px;
-  padding-top: 10px;
   text-align: left;
-  width: 100%;
+  width: auto;
   overflow: hidden;
   position: absolute;
-  right: 0px;
-  top: 30px;
+  right: -5px;
+  top: -8px;
   background-color: #333333;
   background-color: rgba(51,51,51,0.9);
   border: 1px solid #1f1f1f;
   border: 1px solid rgba(000,000,000,0.5);
-  -webkit-border-bottom-left-radius: 5px;
-  -webkit-border-bottom-right-radius: 5px;
-  -moz-border-radius-bottom-left: 5px;
-  -moz-border-radius-bottom-right: 5px;
-  border-top: 0;
-  border-bottom-left-radius: 5px;
-  border-bottom-right-radius: 5px;
+  -moz-border-radius: 5px;
+  -webkit-border-radius: 5px;
+  border-radius: 5px;
   z-index: 499;
 }
+#currentusermenu .column {
+  float: left;
+  padding-top: 15px;
+  width: 240px;
+  height: 100%;
+  vertical-align: top;
+  border-right: 1px solid #333;
+  -moz-box-shadow: 1px 0px 1px #585858;
+  -webkit-box-shadow: 1px 0px 1px #585858;
+  box-shadow: 1px 0px 1px #585858;
+  overflow: hidden;
+}
+#currentusermenu .column.last {
+  padding: 0;
+  border: 0;
+  box-shadow: none;
+}
+#currentusermenu .column.last .placeholder {
+  width: 240px;
+  height: 45px;
+  border-bottom: 1px solid #333;
+  -moz-box-shadow: 0px 1px 1px #585858;
+  -webkit-box-shadow: 0px 1px 1px #585858;
+  box-shadow: 0px 1px 1px #585858;
+  margin-bottom: 5px;
+}
 #currentusermenu .title {
-  color: #999999;
-  font-size: 10px;
+  color: #999;
+  font-size: 11px;
   font-style: italic;
+  font-weight: bold;
   padding-left: 20px;
 }
 #currentusermenu ul {
@@ -589,21 +610,28 @@ a#currentusername span {
 #currentusermenu .title, #currentusermenu li {
   margin-bottom: 5px;
 }
+#currentusermenu li {
+  margin-left: 1px;
+}
+#currentusermenu .column.first li {
+  margin-left: 0px;
+}
 #currentusermenu li:hover {
   background-color: #666;
   background-color: rgba(000,000,000,0.5);
-  box-shadow: inset 0px 1px 5px rgba(000,000,000,0.75);
   -moz-box-shadow: inset 0px 1px 5px rgba(000,000,000,0.75);
   -webkit-box-shadow: inset 0px 1px 5px rgba(000,000,000,0.75);
+  box-shadow: inset 0px 1px 5px rgba(000,000,000,0.75);
 }
 #currentusermenu li a {
   padding: 2px 0px 3px 20px;
-  color: #cccccc;
+  color: #ccc;
+  font-weight: bold;
   display: inline-block;
   width: 100%;
-  box-sizing: border-box;
   -moz-box-sizing: border-box;
   -webkit-box-sizing: border-box;
+  box-sizing: border-box;
 }
 #currentusermenu li:hover a {
   color: #fff;
@@ -618,6 +646,7 @@ a#currentusername span {
   height: 1px;
   background-color: #333;
   border-bottom: 1px solid #585858;
+  margin-bottom: 5px;
 }
 /* headermenu */
 #headermenu ul {

@@ -5,10 +5,10 @@ class Controller extends \Visitor\Controller {
   public $permissions = array(
     'index'   => 'public',
     'details' => 'public',
-    'admin'   => 'admin',
-    'create'  => 'admin',
-    'modify'  => 'admin',
-    'delete'  => 'admin',
+    'admin'   => 'clientadmin',
+    'create'  => 'clientadmin',
+    'modify'  => 'clientadmin',
+    'delete'  => 'clientadmin',
   );
   
   public $forms = array(

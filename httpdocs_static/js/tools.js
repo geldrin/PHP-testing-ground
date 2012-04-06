@@ -82,6 +82,12 @@ function setupHeaderLogin() {
     $j('#currentuser').toggleClass('active');
   });
   
+  var fixCurrentUserMenu = function() {
+    $j('#currentusermenu').css({ height: $j('#currentusermenu').height() + 'px' });
+  };
+  
+  runIfExists('#currentusermenu', fixCurrentUserMenu );
+  
   var currentusertimeout;
   var clearCurrentUser = function() {
     
