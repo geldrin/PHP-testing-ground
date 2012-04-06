@@ -19,13 +19,12 @@ class Controller extends \Springboard\Controller\Visitor {
       $orgModel = $this->bootstrap->getModel('organizations');
       if ( !$orgModel->checkDomain( $host ) ) {
         
-        \Springboard\Debug::getInstance()->log(
-          false, false,
-          'Organization not found for host: ' . var_export( $host, true ),
-          true
-        );
+        $fallbackurl = @$this->bootstrap->config['organizationfallbackurl'];
         
-        $this->redirect( $this->bootstrap->config['organizationfallbackurl'] );
+        if ( !$fallbackurl )
+          die();
+        else
+          $this->redirect( $fallbackurl );
         
       }
       

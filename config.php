@@ -103,6 +103,8 @@ $config = array(
     'rtmpturl' => 'rtmpt://stream.teleconnect.hu:80/vod/',
   ),
   //----
+  // lehet ures is ha nem akarjuk redirectelni a usert, ilyenkor
+  // siman die()-ol az applikacio
   'organizationfallbackurl' => 'http://video.teleconnect.hu',
 );
 
