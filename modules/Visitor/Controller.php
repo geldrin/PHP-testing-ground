@@ -17,8 +17,17 @@ class Controller extends \Springboard\Controller\Visitor {
     if ( $cache->expired() ) {
       
       $orgModel = $this->bootstrap->getModel('organizations');
-      if ( !$orgModel->checkDomain( $host ) )
-        throw new \Exception('Organization not found!');
+      if ( !$orgModel->checkDomain( $host ) ) {
+        
+        \Springboard\Debug::getInstance()->log(
+          false, false,
+          'Organization not found for host: ' . var_export( $host, true ),
+          true
+        );
+        
+        $this->redirect( $this->bootstrap->config['organizationfallbackurl'] );
+        
+      }
       
       $organization = $orgModel->row;
       $l            = $this->bootstrap->getLocalization();

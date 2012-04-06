@@ -102,6 +102,8 @@ $config = array(
     'rtmpurl'  => 'rtmp://stream.teleconnect.hu:1935/vod/',
     'rtmpturl' => 'rtmpt://stream.teleconnect.hu:80/vod/',
   ),
+  //----
+  'organizationfallbackurl' => 'http://video.teleconnect.hu',
 );
 
 $config['phpsettings'] = array(
