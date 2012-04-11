@@ -38,6 +38,29 @@ class Controller extends \Visitor\Controller {
     'myrecordings' => 'Visitor\\Recordings\\Paging\\Myrecordings',
   );
   
+  public $apisignature = array(
+    'modifyrecording' => array(
+      'id' => array(
+        'type' => 'id',
+      ),
+    ),
+    'apiupload' => array(
+      'file' => array(
+        'type' => 'file',
+      ),
+      'language' => array(
+        'type' => 'string',
+      ),
+    ),
+    'apiuploadcontent' => array(
+      'id' => array(
+        'type' => 'id',
+      ),
+      'file' => array(
+        'type' => 'file',
+      ),
+    ),
+  );
   
   public function init() {
     
@@ -231,5 +254,132 @@ class Controller extends \Visitor\Controller {
     die();
     
   }
-
+  
+  public function modifyrecordingAction( $id ) {
+    
+    $recordingModel = $this->modelUserAndIDCheck('recordings', $id, false );
+    
+    if ( !$recordingModel )
+      return false;
+    
+    $values = $this->application->getParameters();
+    unset( // TODO inkabb whitelistet mint blacklistet
+      $values['id'],
+      $values['format'],
+      $values['layer'],
+      $values['method'],
+      $values['module'],
+      $values['language'],
+      $values['_module']
+    );
+    
+    $recordingModel->updateRow( $values );
+    return $recordingModel->row;
+    
+  }
+  
+  public function apiuploadAction( $file, $language ) {
+    
+    set_time_limit(0);
+    $recordingModel = $this->bootstrap->getModel('recordings');
+    $languageModel  = $this->bootstrap->getModel('languages');
+    $user           = $this->bootstrap->getSession('user');
+    
+    $languageModel->addFilter('shortname', $language, false, false );
+    $values         = array(
+      'userid'     => $user['id'],
+      'languageid' => $languageModel->getOne('id'),
+    );
+    
+    if ( !$values['languageid'] )
+      throw new \Exception('Invalid language: ' . $language );
+    
+    // throws exception, nothing done to the DB yet
+    $recordingModel->analyze(
+      $file['tmp_name'],
+      $file['name']
+    );
+    
+    $recordingModel->insertUploadingRecording(
+      $user['id'],
+      $user['organizationid'],
+      $values['languageid'],
+      $file['name'],
+      'stream.teleconnect.hu'
+    );
+    
+    try {
+      
+      $recordingModel->handleFile( $file['tmp_name'] );
+      $recordingModel->updateRow( array(
+          'masterstatus' => 'uploaded',
+          'status'       => 'uploaded',
+        )
+      );
+      
+    } catch( Exception $e ) {
+      
+      $recordingModel->updateRow( array(
+          'masterstatus' => 'failedmovinguploadedfile',
+        )
+      );
+      
+      // rethrow
+      throw $e;
+      
+    }
+    
+    return $recordingModel->row;
+    
+  }
+  
+  public function apiuploadcontentAction( $recordingid, $file ) {
+    
+    set_time_limit(0);
+    $recordingModel = $this->modelOrganizationAndUserIDCheck(
+      'recordings',
+      $recordingid
+    );
+    
+    if ( !$recordingModel->canUploadContentVideo() )
+      throw new \Exception(
+        'Uploading a content video is denied at this point: ' .
+        var_export( $recordingModel->row, true )
+      );
+    
+    $recordingModel->analyze(
+      $file['tmp_name'],
+      $file['name']
+    );
+    
+    $recordingModel->addContentRecording(
+      0, // TODO interlaced?
+      'stream.teleconnect.hu'
+    );
+    
+    try {
+      
+      $recordingModel->handleFile(
+        $file['tmp_name'],
+        'upload',
+        '_content'
+      );
+      
+      $recordingModel->markContentRecordingUploaded();
+      
+    } catch( Exception $e ) {
+      
+      $recordingModel->updateRow( array(
+          'contentstatus' => 'failedmovinguploadedfile',
+        )
+      );
+      
+      throw $e;
+      
+    }
+    
+    return $recordingModel->row;
+    
+  }
+  
 }

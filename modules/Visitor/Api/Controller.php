@@ -142,4 +142,15 @@ class Controller extends \Visitor\Controller {
     
   }
   
+  public function fileValidator( $parameter, $configuration ) {
+    
+    if ( !isset( $_FILES[ $parameter ] ) or $_FILES[ $parameter ]['error'] != 0 )
+      throw new \Exception(
+        'Upload failed. Information: ' . var_export( $_FILES[ $parameter ], true )
+      );
+    
+    return $_FILES[ $parameter ];
+    
+  }
+  
 }

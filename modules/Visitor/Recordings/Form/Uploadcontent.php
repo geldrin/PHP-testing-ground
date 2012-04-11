@@ -166,7 +166,7 @@ class Uploadcontent extends \Visitor\HelpForm {
     } catch( Exception $e ) {
       
       $recordingModel->updateRow( array(
-          'masterstatus' => 'failedmovinguploadedfile',
+          'contentstatus' => 'failedmovinguploadedfile',
         )
       );
       

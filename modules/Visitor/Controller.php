@@ -66,10 +66,16 @@ class Controller extends \Springboard\Controller\Visitor {
   
   public function modelOrganizationAndIDCheck( $table, $id, $redirectto = 'index' ) {
     
-    if ( $id <= 0 )
-      $this->redirect( $redirectto );
+    if ( $id <= 0 ) {
+      
+      if ( $redirectto !== false )
+        $this->redirect( $redirectto );
+      else
+        return false;
+      
+    }
     
-    $model        = $this->bootstrap->getModel( $table );
+    $model = $this->bootstrap->getModel( $table );
     $model->addFilter('id', $id );
     $model->addFilter('organizationid', $this->organization['id'] );
     
@@ -91,8 +97,14 @@ class Controller extends \Springboard\Controller\Visitor {
     
     $user = $this->bootstrap->getSession('user');
     
-    if ( $id <= 0 or !isset( $user['id'] ) )
-      $this->redirect( $redirectto );
+    if ( $id <= 0 or !isset( $user['id'] ) ) {
+      
+      if ( $redirectto !== false )
+        $this->redirect( $redirectto );
+      else
+        return false;
+      
+    }
     
     $model = $this->bootstrap->getModel( $table );
     $model->addFilter('id', $id );
