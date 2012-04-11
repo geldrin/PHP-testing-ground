@@ -102,9 +102,9 @@ class Recordings extends \Springboard\Model {
     
     $contributornames = array();
     
-    if ( !empty( $contributors ) ) {
+    if ( false and !empty( $contributors ) ) {
       
-      $jobObj = getObject('contributors_jobs');
+      $jobModel = $this->bootstrap->getModel('contributors_jobs');
       include_once( $this->bootstrap->config['smartypluginpath'] . 'modifier.nameformat.php');
       include_once( $this->bootstrap->config['smartypluginpath'] . 'modifier.title.php');
       foreach( $contributors as $contributor ) {
@@ -113,14 +113,12 @@ class Recordings extends \Springboard\Model {
           
           $contributornames[] = \smarty_modifier_nameformat( $contributor );
           
-          $contributorjobs = $jobObj->getAllJobs( $contributor['contributorid'] );
+          $contributorjobs = $jobModel->getAllJobs( $contributor['contributorid'] );
           foreach( $contributorjobs as $job ) {
             
             $contributornames[] = $job['joboriginal'] . ' ' . $job['jobenglish'];
-            $contributornames[] = $job['nameoriginal'];
-            $contributornames[] = $job['nameenglish'];
-            $contributornames[] = $job['nameshortoriginal'];
-            $contributornames[] = $job['nameshortenglish'];
+            $contributornames[] = $job['organizationname'];
+            $contributornames[] = $job['organizationnameshort'];
             
           }
           
@@ -151,7 +149,10 @@ class Recordings extends \Springboard\Model {
     
   }
   
-  public function getContributorsWithRoles( $wantjobgroups = false ) {
+  public function getContributorsWithRoles( $wantjobgroups = false, $language = null ) {
+    
+    if ( !$language )
+      $language = \Springboard\Language::get();
     
     $contributors = $this->db->getArray("
       SELECT
@@ -159,10 +160,8 @@ class Recordings extends \Springboard\Model {
         cr.organizationid,
         cr.contributorid,
         cr.jobgroupid,
-        org.nameenglish,
-        org.nameoriginal,
-        org.nameshortenglish,
-        org.nameshortoriginal,
+        sorgname.value AS organizationname,
+        sorgnameshort.value AS organizationnameshort,
         org.url,
         c.id AS contributorid,
         c.nameprefix,
@@ -174,14 +173,20 @@ class Recordings extends \Springboard\Model {
       FROM
         contributors_roles AS cr
         LEFT JOIN organizations AS org ON cr.organizationid = org.id
-        LEFT JOIN contributors  AS c   ON cr.contributorid  = c.id,
+        LEFT JOIN strings AS sorgname ON
+          org.name_stringid = sorgname.translationof AND
+          sorgname.language = '$language'
+        LEFT JOIN strings AS sorgnameshort ON
+          org.nameshort_stringid = sorgnameshort.translationof AND
+          sorgnameshort.language = '$language'
+        LEFT JOIN contributors  AS c ON cr.contributorid  = c.id,
         roles AS r,
         strings AS s
       WHERE
         cr.roleid = r.id AND
         r.name_stringid = s.translationof AND
         cr.recordingid = '" . $this->id . "' AND
-        s.language = '" . \Springboard\Language::get() . "'
+        s.language = '$language'
       ORDER BY
         cr.weight
     ");

@@ -39,20 +39,18 @@ $config = array(
     'html'        => '',
     'sql'         => "
       SELECT
-        id, " .
-        ( \Springboard\Language::get() == 'en' ?
-          "IF(LENGTH(nameshortenglish), CONCAT( nameenglish,  ' (', nameshortenglish,  ')' ), nameenglish  )" :
-          "IF(LENGTH(nameshortoriginal),CONCAT( nameoriginal, ' (', nameshortoriginal, ')' ), nameoriginal )"
-        ) . "
-      FROM organizations
-      WHERE %s
-      ORDER BY
-      " .
-      (
-        \Springboard\Language::get() == 'en' ?
-        "IF(LENGTH(nameenglish)=0,nameshortenglish,nameenglish)" :
-        "IF(LENGTH(nameoriginal)=0,nameshortoriginal,nameoriginal)"
-      ) . "
+        o.id AS `o.id`, CONCAT( sname.value, ' (', snameshort.value,  ')' ) AS name
+      FROM
+        organizations AS o,
+        strings AS sname,
+        strings AS snameshort
+      WHERE
+        sname.translationof = o.name_stringid AND
+        sname.language = '" . \Springboard\Language::get() . "' AND
+        snameshort.translationof = o.nameshort_stringid AND
+        snameshort.language = '" . \Springboard\Language::get() . "' AND
+        %s
+      ORDER BY sname.value
     ",
     'prefix'      => '<div class="formoverflowframe" id="organizationscontainer">',
     'postfix'     => '</div>',
@@ -62,7 +60,7 @@ $config = array(
         '<span title="%valuehtmlescape%">%label%</span>'.
       '</div>' . "\r\n"
     ,
-    'treeid'      => 'id',
+    'treeid'      => 'o.id',
     'treestart'   => $organizationid,
     'treestartinclusive' => true,
     'treeparent'  => 'parentid',
