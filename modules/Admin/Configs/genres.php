@@ -16,14 +16,16 @@ $config = Array(
     'displayname' => 'Intézmény',
     'type'        => 'selectDynamic',
     'sql'         => "
-      SELECT 
-        id, CONCAT( IF(LENGTH(nameoriginal) > 0, nameoriginal, nameenglish ), ' - ', id )
-      FROM 
-        organizations
+      SELECT
+        o.id, CONCAT( s.value, ' - ', o.id )
+      FROM
+        organizations AS o,
+        strings AS s
       WHERE
+        s.translationof = o.name_stringid AND
+        s.language = 'hu' AND
         %s
-      ORDER BY
-        IF(LENGTH(nameoriginal), nameoriginal, nameenglish )
+      ORDER BY s.value
     ",
     'treeid'      => 'id',
     'treeparent'  => 'parentid',
