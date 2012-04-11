@@ -45,7 +45,12 @@ class Organizations extends \Springboard\Model\Multilingual {
   }
   
   public function setup() {
+    
+    $this->ensureObjectLoaded();
+    $this->updateRow( array('organizationid' => $this->id ) );
+    
     $this->setupDefaultGenres();
+    
   }
   
   public function setupDefaultGenres() {

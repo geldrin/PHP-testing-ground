@@ -56,6 +56,7 @@ CREATE TABLE `users` (
 CREATE TABLE `organizations` (
    `id` int(10) unsigned not null auto_increment,
    `parentid` int(10) unsigned not null default '0',
+   `organizationid` int(10) unsigned,
    `addressid` int(10) unsigned,
    `postaladdressid` int(10) unsigned,
    `billingaddressid` int(10) unsigned,

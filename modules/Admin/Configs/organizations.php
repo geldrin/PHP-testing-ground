@@ -10,7 +10,7 @@ $config = Array(
     'type'  => 'inputHidden',
     'value' => '0'
   ),
-  
+  // TODO organizationid - amihez tartoznak az intezmenyek
   'parentid' => Array(
     'displayname' => 'Szülő intézmény',
     'type'        => 'selectDynamic',
