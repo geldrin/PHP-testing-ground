@@ -21,11 +21,33 @@ class Controller extends \Visitor\Controller {
     
     try {
       
+      $email    = $this->application->getParameter('email');
+      $password = $this->application->getParameter('password');
+      $module   = $this->application->getParameter('_module');
+      $method   = $this->application->getParameter('method');
+      
+      if ( $module != 'users' and $method != 'authenticate' ) {
+        
+        $loggedin = call_user_func_array( array(
+            $this->bootstrap->getController('users'),
+            'authenticateAction'
+          ),
+          array(
+            $email,
+            $password
+          )
+        );
+        
+        if ( !$loggedin )
+          throw new \Exception('Invalid user!');
+        
+      }
+      
       $this->format = $this->validateParameter('format', $this->formats );
       $this->layer  = $this->validateParameter('layer', $this->layers );
       $this->module = $this->getModule();
-      
       $this->callMethod();
+      
       $result['data'] = $this->data;
       
     } catch( \Exception $e ) {
