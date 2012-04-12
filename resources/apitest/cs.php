@@ -117,7 +117,7 @@ class Api {
     
     $parameters = array('id' => $this->recordingid );
     $options    = array(
-      CURLOPT_URL        => $this->getURL('controller', 'recordings', 'modifyrecording', $parameters ),
+      CURLOPT_URL        => $this->getURL('controller', 'recordings', 'apiuploadcontent', $parameters ),
       CURLOPT_POST       => true,
       CURLOPT_POSTFIELDS => array(
         'file' => '@' . $file

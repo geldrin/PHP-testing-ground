@@ -260,7 +260,7 @@ class Controller extends \Visitor\Controller {
     $recordingModel = $this->modelUserAndIDCheck('recordings', $id, false );
     
     if ( !$recordingModel )
-      return false;
+      throw new \Exception('No recording found with that ID');
     
     $values = $this->application->getParameters();
     unset( // TODO inkabb whitelistet mint blacklistet
@@ -338,8 +338,12 @@ class Controller extends \Visitor\Controller {
     set_time_limit(0);
     $recordingModel = $this->modelOrganizationAndUserIDCheck(
       'recordings',
-      $recordingid
+      $recordingid,
+      false
     );
+    
+    if ( !$recordingModel )
+      throw new \Exception('No recording found with that ID');
     
     if ( !$recordingModel->canUploadContentVideo() )
       throw new \Exception(
