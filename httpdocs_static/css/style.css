@@ -1411,6 +1411,8 @@ a#currentusername span {
 .imageinfo {
   position: relative;
   display: block;
+}
+.imageinfo, .imageinfo img {
   -moz-border-radius: 5px;
   -webkit-border-radius: 5px;
   border-radius: 5px;
