@@ -1380,4 +1380,132 @@ class Recordings extends \Springboard\Model {
     
   }
   
+  public function getSearchAllCount( $organizationid, $searchterm ) {
+    
+    $searchterm  = str_replace( ' ', '%', $searchterm );
+    $searchterm  = $this->db->qstr( '%' . $searchterm . '%' );
+    
+    $query   = "
+      SELECT
+      (
+        SELECT
+          COUNT(*)
+        FROM channels
+        WHERE
+          ispublic = 1 AND 
+          numberofrecordings > 0 AND
+          (
+            title         LIKE $searchterm OR
+            subtitle      LIKE $searchterm OR
+            ordinalnumber LIKE $searchterm OR
+            description   LIKE $searchterm OR
+            url           LIKE $searchterm
+          ) AND
+          isliveevent = 0 AND
+          organizationid = '$organizationid'
+      )
+      +
+      (
+        SELECT
+          COUNT(*)
+        FROM recordings
+        WHERE
+          " . self::getPublicRecordingWhere() . " AND
+          (
+            primarymetadatacache LIKE $searchterm OR
+            additionalcache LIKE $searchterm
+          ) AND
+          organizationid = '$organizationid'
+      ) AS count
+    ";
+    
+    return $this->db->getOne( $query );
+    
+  }
+  
+  public function getSearchAllArray( $organizationid, $searchterm, $start, $limit, $order ) {
+    
+    $searchterm  = str_replace( ' ', '%', $searchterm );
+    $searchterm  = $this->db->qstr( '%' . $searchterm . '%' );
+    
+    $query   = "
+      (
+        SELECT
+          'channel' AS type,
+          (
+            2 +
+            IF( title LIKE $searchterm, 2, 0 ) +
+            IF( subtitle LIKE $searchterm, 1, 0 ) +
+            IF( description LIKE $searchterm, 1, 0 )
+          ) AS relevancy,
+          id,
+          parentid,
+          userid,
+          title,
+          subtitle,
+          description,
+          url,
+          indexphotofilename,
+          channeltypeid,
+          starttimestamp AS recordedtimestamp,
+          '0' AS numberofviews,
+          '0' AS rating,
+          numberofrecordings
+        FROM channels
+        WHERE
+          ispublic = 1 AND 
+          numberofrecordings > 0 AND
+          (
+            title         LIKE $searchterm OR
+            subtitle      LIKE $searchterm OR
+            ordinalnumber LIKE $searchterm OR
+            description   LIKE $searchterm OR
+            url           LIKE $searchterm
+          ) AND
+          isliveevent = 0 AND
+          organizationid = '$organizationid'
+      )
+      UNION ALL
+      (
+        SELECT
+          'recording' AS type,
+          (
+            1 +
+            IF( title LIKE $searchterm, 2, 0 ) +
+            IF( subtitle LIKE $searchterm, 1, 0 ) +
+            IF( description LIKE $searchterm, 1, 0 ) +
+            IF( primarymetadatacache LIKE $searchterm, 1, 0 )
+          ) AS relevancy,
+          id,
+          '1' AS parentid,
+          userid,
+          title,
+          subtitle,
+          description,
+          '' AS url,
+          indexphotofilename,
+          '0' AS channeltypeid,
+          recordedtimestamp,
+          numberofviews,
+          rating,
+          '0' AS numberofrecordings
+        FROM recordings
+        WHERE
+          " . self::getPublicRecordingWhere() . " AND
+          (
+            primarymetadatacache LIKE $searchterm OR
+            additionalcache LIKE $searchterm
+          ) AND
+          organizationid = '$organizationid'
+      )
+      ORDER BY $order
+    ";
+    
+    if ( $start !== null )
+      $query .= 'LIMIT ' . $start . ', ' . $limit;
+    
+    return $this->db->getArray( $query );
+    
+  }
+  
 }
