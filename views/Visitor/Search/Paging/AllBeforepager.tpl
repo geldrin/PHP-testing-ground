@@ -3,26 +3,22 @@
 </div>
 
 {if !empty( $items )}
+{capture assign=url}{$language}/search/all?q={$smarty.request.q|escape:url}&order=%s{/capture}
 <div class="sorter">
-{*}
   <ul>
     <li>
-      <h3><a href="{$language}/{$module}/myrecordings?order=timestamp&start={$smarty.get.start|escape:uri}&perpage={$smarty.get.perpage|escape:uri}&myrecordingsq={$smarty.get.myrecordingsq|escape:uri}&status={$smarty.get.status|escape:uri}&publishstatus={$smarty.get.publishstatus|escape:uri}&publicstatus={$smarty.get.publicstatus|escape:uri}">{#recordings__myrecordings_timestamp#|sortarrows:null:timestamp:$order}</a></h3>
-      <ul>
-        <li><a href="{$language}/{$module}/myrecordings?order=timestamp_desc&start={$smarty.get.start|escape:uri}&perpage={$smarty.get.perpage|escape:uri}&myrecordingsq={$smarty.get.myrecordingsq|escape:uri}&status={$smarty.get.status|escape:uri}&publishstatus={$smarty.get.publishstatus|escape:uri}&publicstatus={$smarty.get.publicstatus|escape:uri}">{#recordings__myrecordings_timestamp_desc#|sortarrows:null:timestamp_desc:$order}</a></li>
-      </ul>
+      <h3><a href="{$url|sprintf:relevancy}">{#search__all_relevancy#|sortarrows:null:relevancy:$order}</a></h3>
     </li>
     <li>
-      <h3><a href="{$language}/{$module}/myrecordings?order=recordedtimestamp&&start={$smarty.get.start|escape:uri}&perpage={$smarty.get.perpage|escape:uri}&myrecordingsq={$smarty.get.myrecordingsq|escape:uri}&status={$smarty.get.status|escape:uri}&publishstatus={$smarty.get.publishstatus|escape:uri}&publicstatus={$smarty.get.publicstatus|escape:uri}">{#recordings__myrecordings_recordedtimestamp#|sortarrows:null:recordedtimestamp:$order}</a></h3>
+      <h3><a href="{$url|sprintf:recordedtimestamp}">{#search__recordedtimestamp#|sortarrows:null:recordedtimestamp:$order}</a></h3>
       <ul>
         <li>
-          <a href="{$language}/{$module}/myrecordings?order=recordedtimestamp_desc&&start={$smarty.get.start|escape:uri}&perpage={$smarty.get.perpage|escape:uri}&myrecordingsq={$smarty.get.myrecordingsq|escape:uri}&status={$smarty.get.status|escape:uri}&publishstatus={$smarty.get.publishstatus|escape:uri}&publicstatus={$smarty.get.publicstatus|escape:uri}">
-            {#recordings__myrecordings_recordedtimestamp_desc#|sortarrows:null:recordedtimestamp_desc:$order}
+          <a href="{$url|sprintf:recordedtimestamp_desc}">
+            {#search__recordedtimestamp_desc#|sortarrows:null:recordedtimestamp_desc:$order}
           </a>
         </li>
       </ul>
     </li>
   </ul>
-{/*}
 </div>
 {/if}

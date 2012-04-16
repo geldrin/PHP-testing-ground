@@ -121,7 +121,7 @@ function setupRateWidget() {
       e.preventDefault();
     });
     
-    if ( $j(this).attr('nojs') == '1' )
+    if ( $j(this).attr('data-nojs') == '1' )
       return;
     
     $j(this).find('li').each( function() {

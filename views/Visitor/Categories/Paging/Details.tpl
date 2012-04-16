@@ -9,11 +9,11 @@
       </div>
       <div class="recordinginfo">
         <ul>
-          <li><span class="bold">{#categories__recordedtimestamp#}:</span> <span>{$item.recordedtimestamp|date_format:#smarty_dateformat_long#}</span></li>
-          <li><span class="bold">{#categories__recording_views#}:</span> <span>{$item.numberofviews}</span></li>
+          <li><span class="bold">{#recordings__details_recordedtimestamp#}:</span> <span>{$item.recordedtimestamp|date_format:#smarty_dateformat_long#}</span></li>
+          <li><span class="bold">{#recordings__recording_views#}:</span> <span>{$item.numberofviews}</span></li>
           <li>
-            <div class="ratewidget" nojs="1">
-              <div class="bold left">{#categories__recording_rating#}:</div>
+            <div class="ratewidget" data-nojs="1">
+              <div class="bold left">{#recordings__recording_rating#}:</div>
               <ul>
                 <li{if $item.rating > 0} class="full"{/if}><a><span></span>1</a></li>
                 <li{if $item.rating > 1.5} class="full"{/if}><a><span></span>2</a></li>

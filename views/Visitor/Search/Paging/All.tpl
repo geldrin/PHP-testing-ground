@@ -1,3 +1,6 @@
+{if $item.type == 'channel'}
+TODO
+{else}
   <li class="listitem">
     <a name="rec{$item.id}"></a>
     <div class="recordingpic">
@@ -17,15 +20,7 @@
       {/if}
       <div class="recordinginfo">
         <ul>
-          <li><span class="bold">{#recordings__recording_status#}:</span>
-          {if !$item.ispublished and $item.status == 'onstorage'}
-            {#recordings__waitingforpublish#}&nbsp;(<span class="status-{$item.status}">{l lov=recordingstatus key=$item.status}</span>)
-          {elseif preg_match( '/^converting/', $item.status )}
-            <span class="status-{$item.status}">{l lov=recordingstatus key=unavailable}</span>
-          {else}
-            <span class="status-{$item.status}">{l lov=recordingstatus key=$item.status}</span>
-          {/if}
-          </li>
+          <li><span class="bold">{#recordings__details_recordedtimestamp#}:</span> <span>{$item.recordedtimestamp|date_format:#smarty_dateformat_long#}</span></li>
           <li><span class="bold">{#recordings__recording_views#}:</span> <span>{$item.numberofviews}</span></li>
           <li>
             <div class="ratewidget" data-nojs="1">
@@ -87,3 +82,4 @@
       <div class="clear"></div>
     </div>
   </li>
+{/if}
