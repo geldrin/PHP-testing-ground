@@ -476,3 +476,33 @@ CREATE TABLE `subtitles` (
    PRIMARY KEY (`id`),
    KEY `ix_recordingid` (`recordingid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;
+
+
+CREATE TABLE `livefeeds` (
+   `id` int(10) unsigned not null auto_increment,
+   `userid` int(10) unsigned not null,
+   `channelid` int(10) unsigned, /* live channel id - az az elo channel (isliveevent=1), ami alatti esemenyek ezt a feedet hasznalhatjak */
+   `name` text,
+   `isexternal` int(11) not null default '0',
+   `slideonright` int(11) not null default '0',
+   `numberofstreams` int(11) not null default '1',
+   PRIMARY KEY (`id`),
+   KEY `channelid` (`channelid`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;
+
+
+CREATE TABLE `livefeed_streams` (
+   `id` int(10) unsigned not null auto_increment,
+   `livefeedid` int(10) unsigned not null,
+   `name` text not null,
+   `streamurl` text not null, /* streaming szerver URL */
+   `keycode` text not null,
+   `aspectratio` text,
+   `contentstreamurl` text,
+   `contentkeycode` text,
+   `contentaspectratio` text,
+   `feedtype` text not null, /* flash/windowsmedia/quicktime/real? */
+   `timestamp` datetime not null,
+   PRIMARY KEY (`id`),
+   KEY `livefeedid` (`livefeedid`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;
