@@ -1,3 +1,4 @@
+{assign var=views value=$item.numberofviews|numberformat}
   <li class="listitem">
     <a name="rec{$item.id}"></a>
     <div class="recordingpic">
@@ -17,7 +18,7 @@
       {/if}
       <div class="recordinginfo">
         <ul>
-          <li><span class="bold">{#recordings__recording_status#}:</span>
+          <li class="status"><span class="bold">{#recordings__recording_status#}:</span>
           {if !$item.ispublished and $item.status == 'onstorage'}
             {#recordings__waitingforpublish#}&nbsp;(<span class="status-{$item.status}">{l lov=recordingstatus key=$item.status}</span>)
           {elseif preg_match( '/^converting/', $item.status )}
@@ -26,21 +27,18 @@
             <span class="status-{$item.status}">{l lov=recordingstatus key=$item.status}</span>
           {/if}
           </li>
-          <li><span class="bold">{#recordings__recording_views#}:</span> <span>{$item.numberofviews}</span></li>
-          <li>
-            <div class="ratewidget" data-nojs="1">
-              <div class="bold left">{#recordings__recording_rating#}:</div>
-              <ul>
-                <li{if $item.rating > 0} class="full"{/if}><a><span></span>1</a></li>
-                <li{if $item.rating > 1.5} class="full"{/if}><a><span></span>2</a></li>
-                <li{if $item.rating > 2.5} class="full"{/if}><a><span></span>3</a></li>
-                <li{if $item.rating > 3.5} class="full"{/if}><a><span></span>4</a></li>
-                <li{if $item.rating > 4.5} class="full"{/if}><a><span></span>5</a></li>
-              </ul>
-            </div>
+          <li class="timestamp"><span></span>{$item.recordedtimestamp|date_format:#smarty_dateformat_long#}</li>
+          <li class="views">{#recordings__recording_views#|sprintf:$views}</li>
+          <li class="rating last">
+            <div{if $item.rating > 0} class="full"{/if}><span></span>1</div>
+            <div{if $item.rating > 1.5} class="full"{/if}><span></span>2</div>
+            <div{if $item.rating > 2.5} class="full"{/if}><span></span>3</div>
+            <div{if $item.rating > 3.5} class="full"{/if}><span></span>4</div>
+            <div{if $item.rating > 4.5} class="full"{/if}><span></span>5</div>
           </li>
         </ul>
       </div>
+      
       {if $item.status == 'onstorage'}
       <div class="recordingactions">
         <ul>
@@ -58,7 +56,7 @@
       {if $item.contentstatus}
         <div class="recordinginfo recordingcontentinfo">
           <ul>
-            <li><span class="bold">{#recordings__contentrecording_status#}:</span>
+            <li class="last"><span class="bold">{#recordings__contentrecording_status#}:</span>
             {if preg_match( '/^converting/', $item.contentstatus )}
               {l lov=recordingstatus key=unavailable assign=contentstatus}
             {else}
