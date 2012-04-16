@@ -20,15 +20,27 @@ class All extends \Springboard\Controller\Paging {
     $this->controller->toSmarty['listclass'] = 'recordinglist';
     parent::init();
     
-    $this->searchterm =
-      mb_strlen( $this->application->getParameter('q') ) >= 3
-        ? $this->application->getParameter('q')
-        : null
-    ;
+    $this->searchterm = $this->application->getParameter('q');
+    
+    if ( mb_strlen( $this->searchterm ) < 3 )
+      $this->searchterm = null;
+    
+    $this->controller->toSmarty['searchterm'] = $this->searchterm;
+    
+    if ( !$this->searchterm )
+     $this->foreachelse = $l('search', 'search_minimum_3chars');
     
   }
   
+  protected function setupPager() {
+    parent::setupPager();
+    $this->pager->pass('q', $this->searchterm );
+  }
+  
   protected function setupCount() {
+    
+    if ( !$this->searchterm )
+      return $this->itemcount = 0;
     
     $this->recordingsModel = $this->bootstrap->getModel('recordings');
     
@@ -40,6 +52,9 @@ class All extends \Springboard\Controller\Paging {
   }
   
   protected function getItems( $start, $limit, $orderby ) {
+    
+    if ( !$this->searchterm )
+      return array();
     
     $items = $this->recordingsModel->getSearchAllArray(
       $this->controller->organization['id'],
