@@ -26,7 +26,7 @@ class Uploadcontent extends \Visitor\HelpForm {
         )
       );
     elseif ( !$user['isuploader'] )
-      $this->controller->redirectToController('contents', 'recordingsupload');
+      $this->controller->redirectToController('contents', 'nopermissionuploader');
     
     $this->recordingModel = $this->controller->modelOrganizationAndUserIDCheck(
       'recordings',
