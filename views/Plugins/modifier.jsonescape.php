@@ -6,8 +6,9 @@ function smarty_modifier_jsonescape( $data, $encodenonscalar = false ) {
     
     foreach( $data as $key => $value ) {
       
+      // nem rekurzivan encodoljuk a nonscalar dolgokat
       if ( is_array( $value ) )
-        $data[ $key ] = smarty_modifier_jsonescape( $value, $encodenonscalar );
+        $data[ $key ] = smarty_modifier_jsonescape( $value, false );
       
     }
     
