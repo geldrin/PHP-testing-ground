@@ -758,9 +758,6 @@ class Recordings extends \Springboard\Model {
   
   public static function getPublicRecordingWhere( $prefix = '' ) {
     
-    if ( strlen( $prefix ) )
-      $prefix .= '.';
-    
     return "
       {$prefix}status = 'onstorage' AND
       {$prefix}ispublished = 1 AND
@@ -917,10 +914,8 @@ class Recordings extends \Springboard\Model {
     $rs = $this->db->query("
       SELECT
         r.id,
-        r.titleoriginal,
-        r.titleenglish,
-        r.subtitleoriginal,
-        r.subtitleenglish,
+        r.title,
+        r.subtitle,
         r.indexphotofilename,
         r.masterlength,
         u.id AS userid,
@@ -936,7 +931,7 @@ class Recordings extends \Springboard\Model {
         ( $where ) AND
         u.id = r.userid AND
         r.id <> '" . $this->id . "' AND
-        " . self::getPublicRecordingWhere('r') . "
+        " . self::getPublicRecordingWhere('r.') . "
       LIMIT $limit
     ");
     
@@ -966,10 +961,8 @@ class Recordings extends \Springboard\Model {
     $rs = $this->db->query("
       SELECT
         r.id,
-        r.titleoriginal,
-        r.titleenglish,
-        r.subtitleoriginal,
-        r.subtitleenglish,
+        r.title,
+        r.subtitle,
         r.indexphotofilename,
         r.masterlength,
         u.id AS userid,
@@ -987,7 +980,7 @@ class Recordings extends \Springboard\Model {
         r.id = cr.recordingid AND
         u.id = r.userid AND
         r.id <> '" . $this->id . "' AND
-        " . self::getPublicRecordingWhere('r') . "
+        " . self::getPublicRecordingWhere('r.') . "
       ORDER BY RAND()
       LIMIT $limit
     ");
@@ -998,11 +991,11 @@ class Recordings extends \Springboard\Model {
     
     if ( count( $return ) < $limit and !$dontrecurse ) {
       
-      $parentids  = array();
-      $channelObj = getObject('channels');
+      $parentids    = array();
+      $channelModel = $this->bootstrap->getModel('channels');
       foreach( $channelids as $channelid ) {
         
-        $parents   = $channelObj->findParents( $channelid );
+        $parents   = $channelModel->findParents( $channelid );
         $parents[] = $channelid;
         $parentids = array_merge( $parentids, $parents );
         
@@ -1023,10 +1016,8 @@ class Recordings extends \Springboard\Model {
     $rs = $this->db->query("
       SELECT
         r.id,
-        r.titleoriginal,
-        r.titleenglish,
-        r.subtitleoriginal,
-        r.subtitleenglish,
+        r.title,
+        r.subtitle,
         r.indexphotofilename,
         r.masterlength,
         u.id AS userid,
@@ -1041,7 +1032,7 @@ class Recordings extends \Springboard\Model {
       WHERE
         u.id = r.userid AND
         r.id <> '" . $this->id . "' AND
-        " . self::getPublicRecordingWhere('r') . "
+        " . self::getPublicRecordingWhere('r.') . "
       ORDER BY RAND()
       LIMIT $limit
     ");
@@ -1054,20 +1045,20 @@ class Recordings extends \Springboard\Model {
     
   }
   
-  public function getRelatedVideos() {
+  public function getRelatedVideos( $count ) {
     
     $this->ensureObjectLoaded();
     
     $return = array();
     
-    if ( count( $return ) < NUMBER_OF_RELATED_VIDEOS )
-      $return = $return + $this->getRelatedVideosByChannel( NUMBER_OF_RELATED_VIDEOS - count( $return ) );
+    if ( count( $return ) < $count )
+      $return = $return + $this->getRelatedVideosByChannel( $count - count( $return ) );
     
-    if ( count( $return ) < NUMBER_OF_RELATED_VIDEOS )
-      $return = $return + $this->getRelatedVideosByKeywords( NUMBER_OF_RELATED_VIDEOS - count( $return ) );
+    if ( count( $return ) < $count )
+      $return = $return + $this->getRelatedVideosByKeywords( $count - count( $return ) );
     
-    if ( count( $return ) < NUMBER_OF_RELATED_VIDEOS )
-      $return = $return + $this->getRelatedVideosRandom( NUMBER_OF_RELATED_VIDEOS - count( $return ) );
+    if ( count( $return ) < $count )
+      $return = $return + $this->getRelatedVideosRandom( $count - count( $return ) );
     
     return $return;
     
@@ -1246,6 +1237,22 @@ class Recordings extends \Springboard\Model {
       
     }
     
+    $relatedvideos = $this->getRelatedVideos( $this->bootstrap->config['relatedrecordingcount'] );
+    $data['recommendatory_string'] = array();
+    foreach( $relatedvideos as $video ) {
+      
+      $data['recommendatory_string'][] = array(
+        'title'       => $video['title'],
+        'subtitle'    => $video['subtitle'],
+        'image'       => \smarty_modifier_indexphoto( $video, 'player' ),
+        'url'         =>
+          $recordingbaseuri . 'details/' . $video['id'] . ',' .
+          \Springboard\Filesystem::filenameize( $video['title'] )
+        ,
+      );
+      
+    }
+    
     return $data;
     
   }
@@ -1373,7 +1380,7 @@ class Recordings extends \Springboard\Model {
         -- r.isfeatured = '1' AND
         u.id = r.userid AND
         r.organizationid = '" . $organizationid . "' AND
-        " . self::getPublicRecordingWhere('r') . "
+        " . self::getPublicRecordingWhere('r.') . "
       ORDER BY RAND()
       LIMIT $limit
     ");
