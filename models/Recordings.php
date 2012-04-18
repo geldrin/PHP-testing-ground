@@ -667,7 +667,7 @@ class Recordings extends \Springboard\Model {
       
       $visiblefrom  = strtotime( $this->row['visiblefrom'] );
       $visibleuntil = strtotime( $this->row['visibleuntil'] );
-      $now          = time();
+      $now          = strtotime( date('Y-m-d', time() ) );
       
       if ( $visiblefrom > $now or $visibleuntil < $now )
         $timefailed = true;
@@ -766,8 +766,8 @@ class Recordings extends \Springboard\Model {
         {$prefix}visiblefrom IS NULL OR
         {$prefix}visibleuntil IS NULL OR
         (
-          {$prefix}visiblefrom  <= NOW() AND
-          {$prefix}visibleuntil >= NOW()
+          {$prefix}visiblefrom  <= CURRENT_DATE() AND
+          {$prefix}visibleuntil >= CURRENT_DATE()
         )
       )
     ";
