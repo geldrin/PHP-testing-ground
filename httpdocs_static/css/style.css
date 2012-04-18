@@ -172,7 +172,8 @@ textarea {
 .inputbackground:focus, .form textarea:focus, .form input[type=text]:focus, .form input[type=password]:focus, .form .inputtext:focus {
   border: 1px solid #21abf0;
 }
-.form .submitbutton {
+.form .submitbutton, .submitbutton {
+  display: inline-block;
   float: right;
   width: 120px;
   height: 30px;
@@ -194,12 +195,23 @@ textarea {
   background: -webkit-gradient(linear, left top, left bottom, from(#f5f5f5), color-stop(0.48, #efefef), color-stop(0.52, #e5e5e5), to(#dbdbdb));
   background: linear-gradient(top, #f5f5f5 0%, #efefef 48%, #e5e5e5 52%, #dbdbdb);
 }
-.form .submitbutton:active {
+.form .submitbutton:active, .submitbutton:active {
   -pie-background: linear-gradient(top, #dbdbdb 0%, #e5e5e5 48%, #efefef 52%, #f5f5f5);
   background: -o-linear-gradient(top, #dbdbdb 0%, #e5e5e5 48%, #efefef 52%, #f5f5f5);
   background: -moz-linear-gradient(top, #dbdbdb 0%, #e5e5e5 48%, #efefef 52%, #f5f5f5);
   background: -webkit-gradient(linear, left top, left bottom, from(#dbdbdb), color-stop(0.48, #e5e5e5), color-stop(0.52, #efefef), to(#f5f5f5));
   background: linear-gradient(top, #dbdbdb 0%, #e5e5e5 48%, #efefef 52%, #f5f5f5);
+}
+a.submitbutton {
+  width: auto;
+  padding: 6px 10px 5px 10px;
+  height: 17px;
+  color: #5a5a5a;
+  font-weight: bold;
+  text-decoration: none;
+}
+a.submitbutton:hover {
+  text-decoration: none;
 }
 
 /* form help */
@@ -920,10 +932,12 @@ a#currentusername span {
 }
 .widepager li {
   float: none;
-  display: inline;
+  display: inline-block;
 }
 .widepager li a, .widepager .currentpage {
+  display: inline-block;
   padding: 3px 14px 3px 14px;
+  font-weight: bold;
 }
 .widepager li a:hover {
   color: #585858;
@@ -935,6 +949,7 @@ a#currentusername span {
 .widepager .previous {
   position: absolute;
   left: 0px;
+  top: 6px;
   padding-left: 20px;
   margin-right: 30px;
   background-image: url(images/arrow_left.png);
@@ -948,6 +963,7 @@ a#currentusername span {
 .widepager .next {
   position: absolute;
   right: 0px;
+  top: 6px;
   padding-right: 20px;
   margin-left: 30px;
   background-image: url(images/arrow_right.png);
