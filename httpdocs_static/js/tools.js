@@ -591,6 +591,7 @@ var flashdefaults = {
     quality: "high",
     bgcolor: "#000",
     allowscriptaccess: "sameDomain",
-    allowfullscreen: "true"
+    allowfullscreen: "true",
+    wmode: 'opaque'
   }
 }
