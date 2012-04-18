@@ -30,8 +30,8 @@ class Categories extends \Springboard\Model\Multilingual {
               r.visiblefrom IS NULL OR
               r.visibleuntil IS NULL OR
               (
-                r.visiblefrom  <= NOW() AND
-                r.visibleuntil >= NOW()
+                r.visiblefrom  <= CURRENT_DATE() AND
+                r.visibleuntil >= CURRENT_DATE()
               )
             )
         )

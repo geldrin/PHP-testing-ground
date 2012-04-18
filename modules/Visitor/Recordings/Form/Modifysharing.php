@@ -6,6 +6,15 @@ class Modifysharing extends \Visitor\Recordings\ModifyForm {
   public $template     = 'Visitor/genericform.tpl';
   public $needdb       = true;
   
+  public function init() {
+    
+    parent::init();
+    
+    if ( $this->recordingsModel->row['visiblefrom'] )
+      $this->values['wanttimelimit'] = 1;
+    
+  }
+  
   public function onComplete() {
     
     $values = $this->form->getElementValues( 0 );
