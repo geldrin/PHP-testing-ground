@@ -76,4 +76,11 @@ class Details extends \Springboard\Controller\Paging {
     
   }
   
+  protected function getUrl() {
+    return
+      $this->controller->getUrlFromFragment( $this->module . '/' . $this->action ) .
+      '/' . $this->application->getNumericParameter('id')
+    ;
+  }
+  
 }
