@@ -1,6 +1,6 @@
 <?php
 
-function smarty_modifier_indexphoto( $data, $type = '' ) {
+function smarty_modifier_indexphoto( $data, $type = '', $staticuri = null ) {
 
   if ( substr( @$data['indexphotofilename'], 0, 39 ) == 'images/videothumb_audio_placeholder.png' ) {
     
@@ -10,7 +10,8 @@ function smarty_modifier_indexphoto( $data, $type = '' ) {
   }
   
   $bootstrap = \Bootstrap::getInstance();
-  $staticuri = $bootstrap->getSmarty()->get_template_vars('STATIC_URI');
+  if ( !$staticuri )
+    $staticuri = $bootstrap->getSmarty()->get_template_vars('STATIC_URI');
   
   switch( $type ) {
     

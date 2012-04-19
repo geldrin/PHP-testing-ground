@@ -133,12 +133,8 @@ class Controller extends \Visitor\Controller {
     
     // TODO relatedvideos
     
-    // sync organization to smarty
-    $smarty = $this->bootstrap->getSmarty();
-    $smarty->assign( $this->toSmarty );
-    
     $this->toSmarty['recording']    = $recordingsModel->row;
-    $this->toSmarty['flashdata']    = $recordingsModel->getFlashData();
+    $this->toSmarty['flashdata']    = $recordingsModel->getFlashData( $this->toSmarty );
     $this->toSmarty['comments']     = $recordingsModel->getComments();
     $this->toSmarty['commentcount'] = $recordingsModel->getCommentsCount();
     $this->toSmarty['author']       = $recordingsModel->getAuthor();

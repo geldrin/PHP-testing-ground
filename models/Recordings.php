@@ -1166,13 +1166,12 @@ class Recordings extends \Springboard\Model {
     
   }
   
-  public function getFlashData() {
+  public function getFlashData( $info ) {
     
     $this->ensureObjectLoaded();
     include_once( $this->bootstrap->config['templatepath'] . 'Plugins/modifier.indexphoto.php' );
     
-    $baseuri          = ( SSL? 'https://': 'http://' ) . $this->bootstrap->config['baseuri'];
-    $recordingbaseuri = $baseuri . \Springboard\Language::get() . '/recordings/';
+    $recordingbaseuri = $info['BASE_URI'] . \Springboard\Language::get() . '/recordings/';
     
     $data = array(
       'language'              => \Springboard\Language::get(),
@@ -1185,7 +1184,7 @@ class Recordings extends \Springboard\Model {
       'recording_title'       => $this->row['title'],
       'recording_subtitle'    => (string)$this->row['subtitle'],
       'recording_description' => (string)$this->row['description'],
-      'recording_image'       => \smarty_modifier_indexphoto( $this->row, 'player' ),
+      'recording_image'       => \smarty_modifier_indexphoto( $this->row, 'player', $info['STATIC_URI'] ),
     );
     
     $data['media_streams'] = array( $this->getMediaUrl('default', false ) );
@@ -1244,7 +1243,7 @@ class Recordings extends \Springboard\Model {
       $data['recommendatory_string'][] = array(
         'title'       => $video['title'],
         'subtitle'    => $video['subtitle'],
-        'image'       => \smarty_modifier_indexphoto( $video, 'player' ),
+        'image'       => \smarty_modifier_indexphoto( $video, 'wide', $info['STATIC_URI'] ),
         'url'         =>
           $recordingbaseuri . 'details/' . $video['id'] . ',' .
           \Springboard\Filesystem::filenameize( $video['title'] )
