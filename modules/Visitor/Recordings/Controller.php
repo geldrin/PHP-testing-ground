@@ -132,6 +132,11 @@ class Controller extends \Visitor\Controller {
       $this->redirectToController('contents', $access[ $recordingsModel->id ] );
     
     // TODO relatedvideos
+    
+    // sync organization to smarty
+    $smarty = $this->bootstrap->getSmarty();
+    $smarty->assign( $this->toSmarty );
+    
     $this->toSmarty['recording']    = $recordingsModel->row;
     $this->toSmarty['flashdata']    = $recordingsModel->getFlashData();
     $this->toSmarty['comments']     = $recordingsModel->getComments();
