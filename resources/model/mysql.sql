@@ -111,7 +111,7 @@ CREATE TABLE `recordings` (
    `technicalnote` text,
    `keywords` text,
    `copyright` text,
-   `slideonright` int(11) not null default '0',
+   `slideonright` int(11) not null default '1',
    `timestamp` datetime not null,
    `recordedtimestamp` datetime not null,
    `metadataupdatedtimestamp` datetime not null,
