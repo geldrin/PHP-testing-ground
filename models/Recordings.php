@@ -1186,7 +1186,7 @@ class Recordings extends \Springboard\Model {
       'recording_subtitle'    => (string)$this->row['subtitle'],
       'recording_description' => (string)$this->row['description'],
       'recording_image'       => \smarty_modifier_indexphoto( $this->row, 'player', $info['STATIC_URI'] ),
-      'layout_videoOrientation' => $this->row['slideonright']? 'left': 'right';
+      'layout_videoOrientation' => $this->row['slideonright']? 'left': 'right',
     );
     
     $data['media_streams'] = array( $this->getMediaUrl('default', false, $domain ) );
