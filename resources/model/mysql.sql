@@ -263,6 +263,7 @@ CREATE TABLE `categories` (
    `organizationid` int(10) unsigned,
    `name` text,
    `name_stringid` int(10) unsigned not null,
+   `iconfilename` text,
    `weight` int(11) not null default '100',
    `disabled` int(11) not null default '0',
    `numberofrecordings` int(11) not null default '0',
