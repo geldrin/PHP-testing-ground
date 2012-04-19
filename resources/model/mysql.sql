@@ -70,6 +70,7 @@ CREATE TABLE `organizations` (
    `url` text,
    `issubscriber` int(11) not null default '0',
    `domain` text,
+   `supportemail` text,
    `registrationtype` text,
    `backgroundcolor` text,
    `logofilename` text,
