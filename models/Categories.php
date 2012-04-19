@@ -61,8 +61,8 @@ class Categories extends \Springboard\Model\Multilingual {
     
     $currentlevel++;
     $this->clearFilter();
-    $this->addFilter('parentid',       $parentid, true, true, 'parentid' );
-    $this->addFilter('organizationid', $organizationid, true, true, 'organizationid' );
+    $this->addFilter('parentid',       $parentid );
+    $this->addFilter('organizationid', $organizationid );
     
     $items = $this->getArray( false, false, false, 'weight, s1.value');
     

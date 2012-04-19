@@ -16,11 +16,11 @@
     </div>
     <ul class="subcategorylist">
       {foreach from=$category.children item=subcategory}
-      {if $subcategory.numberofrecordings}
+      
         <li>
           <a href="{$language}/categories/details/{$subcategory.id},{$subcategory.name|filenameize}" title="{$subcategory.name|escape:html}"><h2><span class="subcatname">{$subcategory.name|escape:html}</span> <span>({$subcategory.numberofrecordings})</span></h2></a>
         </li>
-      {/if}
+      
       {/foreach}
     </ul>
   </li>
