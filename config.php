@@ -99,9 +99,9 @@ $config = array(
   ),
   //----
   'wowza' => array(
-    'httpurl'  => 'http://stream.teleconnect.hu:1935/vod/',
-    'rtmpurl'  => 'rtmp://stream.teleconnect.hu:1935/vod/',
-    'rtmpturl' => 'rtmpt://stream.teleconnect.hu:80/vod/',
+    'httpurl'  => 'http://stream.%s:1935/vod/',
+    'rtmpurl'  => 'rtmp://stream.%s:1935/vod/',
+    'rtmpturl' => 'rtmpt://stream.%s:80/vod/',
   ),
   //----
   // lehet ures is ha nem akarjuk redirectelni a usert, ilyenkor

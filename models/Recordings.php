@@ -1166,18 +1166,19 @@ class Recordings extends \Springboard\Model {
     
   }
   
-  public function getFlashData( $info ) {
+  public function getFlashData( $info, $sessionid ) {
     
     $this->ensureObjectLoaded();
     include_once( $this->bootstrap->config['templatepath'] . 'Plugins/modifier.indexphoto.php' );
     
     $recordingbaseuri = $info['BASE_URI'] . \Springboard\Language::get() . '/recordings/';
+    $domain           = $info['organization']['domain'];
     
     $data = array(
       'language'              => \Springboard\Language::get(),
       'media_servers'         => array(
-        $this->bootstrap->config['wowza']['rtmpurl'],
-        $this->bootstrap->config['wowza']['rtmpturl'],
+        $this->getWowzaUrl( 'rtmpurl', $domain, true, $sessionid ),
+        $this->getWowzaUrl( 'rtmpturl', $domain, true, $sessionid ),
       ),
       'track_firstPlay'       => $recordingbaseuri . 'track/' . $this->id,
       'recording_duration'    => $this->row['masterlength'],
@@ -1187,10 +1188,10 @@ class Recordings extends \Springboard\Model {
       'recording_image'       => \smarty_modifier_indexphoto( $this->row, 'player', $info['STATIC_URI'] ),
     );
     
-    $data['media_streams'] = array( $this->getMediaUrl('default', false ) );
+    $data['media_streams'] = array( $this->getMediaUrl('default', false, $domain ) );
     
     if ( $this->row['videoreshq'] )
-      $data['media_streams'][] = $this->getMediaUrl('default', true );
+      $data['media_streams'][] = $this->getMediaUrl('default', true, $domain );
     
     if ( $this->row['offsetstart'] )
       $data['timeline_virtualStart'] = $this->row['offsetstart'];
@@ -1200,11 +1201,11 @@ class Recordings extends \Springboard\Model {
     
     if ( $this->row['contentstatus'] == 'onstorage' ) {
       
-      $data['media_secondaryStreams'] = array( $this->getMediaUrl('content', false ) );
+      $data['media_secondaryStreams'] = array( $this->getMediaUrl('content', false, $domain ) );
       
       if ( $this->row['contentvideoreshq'] ) {
         
-        $data['media_secondaryStreams'][] = $this->getMediaUrl('content', true );
+        $data['media_secondaryStreams'][] = $this->getMediaUrl('content', true, $domain );
         
         // ha van HQ content, de nincs HQ "default" verzio akkor ketszer
         // kell szerepeljen a default verzio
@@ -1256,11 +1257,26 @@ class Recordings extends \Springboard\Model {
     
   }
   
-  public function getMediaUrl( $type, $highquality ) {
+  protected function getWowzaUrl( $type, $domain, $needextraparam = false, $sessionid = null ) {
+    
+    $config = $this->bootstrap->config['wowza'];
+    $url   = sprintf( $config[ $type ], $domain );
+    
+    if ( !$needextraparam )
+      return $url;
+    else {
+      
+      $this->ensureID();
+      return $url . '?sessionid=' . $sessionid . '_' . $this->id;
+      
+    }
+    
+  }
+  
+  public function getMediaUrl( $type, $highquality, $domain ) {
     
     $this->ensureObjectLoaded();
     
-    $config    = $this->bootstrap->config;
     $extension = 'mp4';
     $postfix   = '_lq';
     $host      = '';
@@ -1280,14 +1296,14 @@ class Recordings extends \Springboard\Model {
       
       case 'mobilehttp':
         //http://stream.videotorium.hu:1935/vtorium/_definst_/mp4:671/2671/2671_2608_mobile.mp4/playlist.m3u8
-        $host        = $config['wowza']['httpurl'];
+        $host        = $this->getWowzaUrl( 'httpurl', $domain );
         $sprintfterm = '%3$s:%s/%s_mobile' . $postfix . '.%s/playlist.m3u8';
         
         break;
       
       case 'mobilertsp':
         //rtsp://stream.videotorium.hu:1935/vtorium/_definst_/mp4:671/2671/2671_2608_mobile.mp4
-        $host        = $config['wowza']['rtspurl'];
+        $host        = $this->getWowzaUrl( 'rtspurl', $domain );
         $sprintfterm = '%3$s:%s/%s_mobile' . $postfix . '.%s';
         
         break;

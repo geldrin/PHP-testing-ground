@@ -134,7 +134,7 @@ class Controller extends \Visitor\Controller {
     // TODO relatedvideos
     
     $this->toSmarty['recording']    = $recordingsModel->row;
-    $this->toSmarty['flashdata']    = $recordingsModel->getFlashData( $this->toSmarty );
+    $this->toSmarty['flashdata']    = $recordingsModel->getFlashData( $this->toSmarty, session_id() );
     $this->toSmarty['comments']     = $recordingsModel->getComments();
     $this->toSmarty['commentcount'] = $recordingsModel->getCommentsCount();
     $this->toSmarty['author']       = $recordingsModel->getAuthor();
@@ -245,10 +245,41 @@ class Controller extends \Visitor\Controller {
   
   public function checkstreamaccessAction() {
     
+    $param = $this->application->getParameter('sessionid');
+    
+    $pos         = strrpos( $param, '_' );
+    $sessionid   = substr( $param, 0, $pos );
+    $recordingid = intval( substr( $param, $pos + 1 ) );
+    $result      = '0';
+    
+    if ( preg_match('/^[a-z0-9]{32}$/', $sessionid ) and $recordingid ) {
+      
+      $this->bootstrap->setupSession( true, $sessionid );
+      $access = $this->bootstrap->getSession('recordingaccess');
+      
+      if ( $access[ $recordingid ] !== true ) {
+        
+        $user = $this->bootstrap->getSession('user');
+        $recordingsModel = $this->modelIDCheck('recordings', $recordingid, false );
+        
+        if ( $recordingsModel ) {
+          
+          $access[ $recordingid ] = $recordingsModel->userHasAccess( $user );
+          
+          if ( $access[ $recordingid ] === true )
+            $result = '1';
+          
+        }
+        
+      } else
+        $result = '1';
+      
+    }
+    
     echo
       '<?xml version="1.0"?>
       <result>
-        <success>1</success>
+        <success>' . $result . '</success>
       </result>'
     ;
     
