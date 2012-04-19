@@ -28,7 +28,7 @@ class Modify extends \Visitor\Form {
     $this->categoryModel->updateRow( $values );
     
     $this->controller->redirect(
-      $this->application->getParameter('forward', 'categories/index' )
+      $this->application->getParameter('forward', 'categories/admin' )
     );
     
   }

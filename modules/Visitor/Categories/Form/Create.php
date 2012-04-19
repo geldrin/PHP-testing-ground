@@ -20,7 +20,7 @@ class Create extends \Visitor\Form {
     $categoryModel->insert( $values );
     
     $this->controller->redirect(
-      $this->application->getParameter('forward', 'categories/index' )
+      $this->application->getParameter('forward', 'categories/admin' )
     );
     
   }
