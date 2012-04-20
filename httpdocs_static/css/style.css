@@ -118,45 +118,44 @@ body {
   white-space: nowrap;
   overflow: auto;
 }
-.formrow {
-  clear: both;
-  margin-bottom: 10px;
-  float: left;
+.formtable {
+  border-collapse: collapse;
   width: 100%;
 }
-.formrow .element {
-  vertical-align: middle;
-  float: right;
+.formtable td {
+  padding: 5px 5px 10px 5px;
 }
-.formrow .error {
+.formtable td.labelcolumn {
+  min-width: 150px;
+}
+.formtable td.elementcolumn {
+  vertical-align: middle;
+}
+.form .error {
   padding: 5px;
-  float: left;
   margin-top: 10px;
   display: none;
 }
-.formrow .error span {
-  float: left;
+.form .error span {
   margin-right: .3em;
 }
-.formrow .error p {
+.form .error p {
   margin-bottom: 0;
 }
 .selectmultiple {
   width: 260px;
 }
-.element input[type=text], .element input[type=password], .formrow .inputtext {
+.elementcolumn input[type=text], .elementcolumn input[type=password], .form .inputtext {
   width: 260px;
   height: 29px;
   line-height: 29px;
   padding: 0px 10px 0px 10px;
-  float: left;
 }
 textarea {
   font-family: "Arial", "sans-serif";
   width: 260px;
   height: 80px;
   padding: 6px 10px 3px 10px;
-  float: left;
   font-size: 13px;
 }
 .inputbackground, .form textarea, .form input[type=text], .form input[type=password], .form .inputtext {
@@ -172,8 +171,10 @@ textarea {
 .inputbackground:focus, .form textarea:focus, .form input[type=text]:focus, .form input[type=password]:focus, .form .inputtext:focus {
   border: 1px solid #21abf0;
 }
+.form tr.buttonrow td {
+  text-align: right;
+}
 .form .submitbutton {
-  float: right;
   width: 120px;
 }
 .form .submitbutton, .submitbutton {
@@ -214,6 +215,14 @@ a.submitbutton {
 }
 a.submitbutton:hover {
   text-decoration: none;
+}
+.smallinfo {
+  background-image: url(images/help.png);
+  background-repeat: no-repeat;
+  background-position: 0px 7px;
+  font-size: 11px;
+  padding: 6px 0px 0px 20px;
+  clear: both;
 }
 
 /* form help */

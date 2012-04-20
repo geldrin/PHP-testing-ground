@@ -246,7 +246,7 @@ class Controller extends \Visitor\Controller {
   public function checkstreamaccessAction() {
     
     $param = $this->application->getParameter('sessionid');
-    
+    \Springboard\Debug::getInstance()->log( false, false, var_export( $_SERVER, true ) );
     $pos         = strrpos( $param, '_' );
     $sessionid   = substr( $param, 0, $pos );
     $recordingid = intval( substr( $param, $pos + 1 ) );
