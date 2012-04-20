@@ -995,8 +995,9 @@ a#currentusername span {
   padding: 0;
   list-style-type: none;
 }
-.categorylist, .categorylist li {
-  float: left;
+.categorylist li {
+  display: inline-block;
+  vertical-align: top;
 }
 .categorylist li {
   width: 140px;
@@ -1012,8 +1013,7 @@ a#currentusername span {
 }
 .categorylist .categoryname h1 {
   margin: 0;
-  display: block;
-  float: left;
+  display: inline-block;
 }
 .categorylist .categoryname .numberofrecordings {
   text-align: right;
@@ -1023,6 +1023,9 @@ a#currentusername span {
 }
 .categorylist h2 {
   margin-bottom: 10px;
+}
+.categorylist .subcategorylist {
+  padding: 0px 0px 0px 20px;
 }
 
 /* myrecordings search */
