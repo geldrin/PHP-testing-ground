@@ -1,7 +1,7 @@
 <?php
 namespace Visitor\Organizations\Paging;
 
-class Listnews extends \Springboard\Controller\Paging {
+class Listnews extends \Visitor\Paging {
   protected $orderkey = 'starts_desc';
   protected $sort = array(
     'starts'      => 'weight, starts',

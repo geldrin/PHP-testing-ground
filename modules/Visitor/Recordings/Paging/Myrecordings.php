@@ -1,6 +1,6 @@
 <?php
 namespace Visitor\Recordings\Paging;
-class Myrecordings extends \Springboard\Controller\Paging {
+class Myrecordings extends \Visitor\Paging {
   protected $orderkey = 'timestamp_desc';
   protected $sort = array(
     'timestamp_desc'         => 'timestamp DESC',

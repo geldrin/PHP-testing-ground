@@ -1,7 +1,7 @@
 <?php
 namespace Visitor\Categories\Paging;
 
-class Details extends \Springboard\Controller\Paging {
+class Details extends \Visitor\Paging {
   protected $orderkey = 'timestamp_desc';
   protected $sort = Array(
     'timestamp_desc'       => 'r.timestamp DESC',

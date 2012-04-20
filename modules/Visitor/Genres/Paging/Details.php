@@ -1,7 +1,7 @@
 <?php
 namespace Visitor\Genres\Paging;
 
-class Details extends \Springboard\Controller\Paging {
+class Details extends \Visitor\Paging {
   protected $orderkey = 'creation_desc';
   protected $sort = array(
     'creation'      => 'id',

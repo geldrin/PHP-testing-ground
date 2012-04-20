@@ -1,7 +1,7 @@
 <?php
 namespace Visitor\Channels\Paging;
 
-class Details extends \Springboard\Controller\Paging {
+class Details extends \Visitor\Paging {
   protected $orderkey = 'recordedtime';
   protected $sort            = Array(
     //'recordedtime'      => 'c.weight, recordedtimestamp',

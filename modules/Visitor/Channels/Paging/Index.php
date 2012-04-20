@@ -1,7 +1,7 @@
 <?php
 namespace Visitor\Channels\Paging;
 
-class Index extends \Springboard\Controller\Paging {
+class Index extends \Visitor\Paging {
   protected $orderkey = 'creation_desc';
   protected $sort = array(
     'creation'      => 'id',

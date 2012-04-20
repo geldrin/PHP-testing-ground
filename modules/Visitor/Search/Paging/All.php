@@ -1,6 +1,6 @@
 <?php
 namespace Visitor\Search\Paging;
-class All extends \Springboard\Controller\Paging {
+class All extends \Visitor\Paging {
   protected $orderkey = 'relevancy';
   protected $sort = array(
     'relevancy'              => 'relevancy DESC',

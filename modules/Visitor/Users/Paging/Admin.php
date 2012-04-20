@@ -1,7 +1,7 @@
 <?php
 namespace Visitor\Users\Paging;
 
-class Admin extends \Springboard\Controller\Paging {
+class Admin extends \Visitor\Paging {
   public $toSmarty = Array(
     'listclass' => 'treeadminlist',
   );
