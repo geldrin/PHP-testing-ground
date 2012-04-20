@@ -206,7 +206,8 @@ class Controller extends \Visitor\Controller {
     } else
       $subtitle = $cache->get();
     
-    $this->output( $subtitle );
+    $this->sendheaders = false;
+    $this->output( $subtitle, true, true );
     
   }
   
