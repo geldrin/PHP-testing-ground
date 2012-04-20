@@ -27,7 +27,7 @@
         Company name (c) 2012
       </div>
       <div class="leftbox bottom">
-        <a href="#">support@example.com</a>
+        <a href="mailto:{$supportemail|escape:html}">{$supportemail|escape:html}</a>
       </div>
     </div>
   </div>{*}wrap div{/*}

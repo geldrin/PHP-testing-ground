@@ -1,4 +1,5 @@
 <?php
+include_once( $this->bootstrap->config['libpath'] . 'clonefish/constants.php');
 $config = Array(
    
   'action' => Array(
@@ -69,7 +70,7 @@ $config = Array(
     'validation'  => Array(
     )
   ),
-
+  
   'url' => array(
     'displayname' => 'URL',
     'type'        => 'inputText',
@@ -91,6 +92,19 @@ $config = Array(
         'type' => 'string',
         'minimum'  => 2,
         'maximum'  => 512,
+        'required' => false,
+      ),
+    ),
+  ),
+  
+  'supportemail' => array(
+    'displayname' => 'Support e-mail cím',
+    'type'        => 'inputText',
+    'validation'  => array(
+      array(
+        'type'     => 'string',
+        'regexp'   => CF_EMAIL,
+        'help'     => $l('users', 'emailhelp'),
         'required' => false,
       ),
     ),

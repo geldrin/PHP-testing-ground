@@ -40,7 +40,7 @@ $config = array(
   ),
   //-----
   'mail'         => array(
-    'fromemail' => 'no-reply@teleconnect.hu',
+    'fromemail' => 'support@teleconnect.hu',
     'fromname'  => 'Teleconnect',
     'errorsto'  => '',
     'type'      => 'text/html; charset="UTF-8"'
