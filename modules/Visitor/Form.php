@@ -6,13 +6,7 @@ class Form extends \Springboard\Controller\Form {
   public function postGetForm() {
     
     $this->form->jspath =
-      $this->controller->organization['staticuri'] . 'js/clonefish.js'
-    ;
-    
-    $this->form->layout = 'rowbyrow';
-    $this->form->formopenlayout =
-      '<form enctype="multipart/form-data" target="%target%" name="%name%" ' .
-      'id="%name%" action="%action%" %onsubmit% method="%method%">'
+      $this->controller->toSmarty['STATIC_URI'] . 'js/clonefish.js'
     ;
     
     $this->form->messagecontainerlayout =
@@ -20,17 +14,21 @@ class Form extends \Springboard\Controller\Form {
     ;
     
     $this->form->messageprefix = '';
-    
-    $this->form->layouts['rowbyrow']['button'] =
-      '<input type="submit" value="%s" class="submitbutton" />'
+    $this->form->layouts['tabular']['element'] =
+      '<tr %errorstyle%>' .
+        '<td class="labelcolumn">' .
+          '<label for="%id%">%displayname%</label>' .
+        '</td>' .
+        '<td class="elementcolumn">%prefix%%element%%postfix%%errordiv%</td>' .
+      '</tr>'
     ;
     
-    $this->form->layouts['rowbyrow']['element'] =
-      '<div class="formrow">' .
-        '<span class="label"><label for="%id%">%displayname%</label></span>' .
-        '<div class="element">%prefix%%element%' .
-        '<span class="postfix">%postfix%</span>%errordiv%</div>' .
-      '</div>'
+    $this->form->layouts['tabular']['buttonrow'] =
+      '<tr class="buttonrow"><td colspan="2">%s</td></tr>'
+    ;
+    
+    $this->form->layouts['tabular']['button'] =
+      '<input type="submit" value="%s" class="submitbutton" />'
     ;
     
     $this->form->layouts['rowbyrow']['errordiv'] =

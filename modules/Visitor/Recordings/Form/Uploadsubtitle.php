@@ -1,7 +1,7 @@
 <?php
 namespace Visitor\Recordings\Form;
 
-class Uploadsubtitle extends \Visitor\Recordings\ModifyForm {
+class Uploadsubtitle extends \Visitor\HelpForm {
   public $configfile   = 'Uploadsubtitle.php';
   public $template     = 'Visitor/genericform.tpl';
   
