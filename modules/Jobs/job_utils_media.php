@@ -177,15 +177,27 @@ global $jconf;
 	$recording_info['res_y'] = $c_resnew['y'];
 
 	// Media resolution
-	$tmp = explode("x", $contentmastervideores, 2);
-	$recording_info['pip_res_x'] = $jconf['video_res_modulo'] * floor(($tmp[0] * $profile['pip_resize']) / $jconf['video_res_modulo']);
-	$recording_info['pip_res_y'] = $jconf['video_res_modulo'] * floor(($tmp[1] * $profile['pip_resize']) / $jconf['video_res_modulo']);
+//	$tmp = explode("x", $contentmastervideores, 2);
+//	$recording_info['pip_res_x'] = $jconf['video_res_modulo'] * floor(($tmp[0] * $profile['pip_resize']) / $jconf['video_res_modulo']);
+//	$recording_info['pip_res_y'] = $jconf['video_res_modulo'] * floor(($tmp[1] * $profile['pip_resize']) / $jconf['video_res_modulo']);
+	$tmp = explode("x", $mastervideores, 2);
+	$resx = $tmp[0];
+	$resy = $tmp[1];
+	$scaler_pip = $resy / $resx;
+	$recording_info['pip_res_x'] = $jconf['video_res_modulo'] * floor(($recording_info['res_x'] * $profile['pip_resize']) / $jconf['video_res_modulo']);
+	$recording_info['pip_res_y'] = $jconf['video_res_modulo'] * floor(($recording_info['pip_res_x'] * $scaler_pip) / $jconf['video_res_modulo']);
 
 	// Calculate PiP position
-	if ( $profile['pip_posx'] == "left" ) $recording_info['pip_x'] = 0 + $profile['pip_align'];
-	if ( $profile['pip_posx'] == "right" ) $recording_info['pip_x'] = $recording_info['res_x'] - $recording_info['pip_res_x'] - $profile['pip_align'];
-	if ( $profile['pip_posy'] == "up" ) $recording_info['pip_y'] = 0 + $profile['pip_align'];
-	if ( $profile['pip_posy'] == "down" ) $recording_info['pip_y'] = $recording_info['res_y'] - $recording_info['pip_res_y'] - $profile['pip_align'];
+	$pip_align = ceil($recording_info['res_x'] * $profile['pip_align']);
+	if ( $profile['pip_posx'] == "left" ) $recording_info['pip_x'] = 0 + $pip_align;
+	if ( $profile['pip_posx'] == "right" ) $recording_info['pip_x'] = $recording_info['res_x'] - $recording_info['pip_res_x'] - $pip_align;
+	if ( $profile['pip_posy'] == "up" ) $recording_info['pip_y'] = 0 + $pip_align;
+	if ( $profile['pip_posy'] == "down" ) $recording_info['pip_y'] = $recording_info['res_y'] - $recording_info['pip_res_y'] - $pip_align;
+
+//	if ( $profile['pip_posx'] == "left" ) $recording_info['pip_x'] = 0 + $profile['pip_align'];
+//	if ( $profile['pip_posx'] == "right" ) $recording_info['pip_x'] = $recording_info['res_x'] - $recording_info['pip_res_x'] - $profile['pip_align'];
+//	if ( $profile['pip_posy'] == "up" ) $recording_info['pip_y'] = 0 + $profile['pip_align'];
+//	if ( $profile['pip_posy'] == "down" ) $recording_info['pip_y'] = $recording_info['res_y'] - $recording_info['pip_res_y'] - $profile['pip_align'];
 
 	return TRUE;
 }

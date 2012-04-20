@@ -127,8 +127,8 @@ return array('config_jobs' => array(
 		'pip_codec_profile'	=> "baseline",		// H.264 profile for VideoLAN encoding
 		'pip_posx'			=> "left",			// Left or right
 		'pip_posy'			=> "up",			// Up or down
-		'pip_align'			=> "10",			// Align from sides
-		'pip_resize'		=> "0.1"			// % of original master media as PiP small
+		'pip_align'			=> "0.03",			// 2% alignment from sides
+		'pip_resize'		=> "0.2"			// 10 * % of original master media as PiP small
 	),
 
 	// Mobile HQ version
@@ -152,8 +152,8 @@ return array('config_jobs' => array(
 		'pip_codec_profile'	=> "baseline",		// H.264 profile for VideoLAN encoding
 		'pip_posx'			=> "left",			// left or right
 		'pip_posy'			=> "up",			// up or down
-		'pip_align'			=> "10",			// Align from sides
-		'pip_resize'		=> "0.1"			// % of original master media as PiP small
+		'pip_align'			=> "0.03",			// 2% alignment from sides
+		'pip_resize'		=> "0.2"			// 10% of original master media as PiP small
 	),
 
 	// Normal quality
