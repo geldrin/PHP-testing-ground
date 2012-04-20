@@ -66,6 +66,14 @@ $config = array(
   'indexphotofilename' => Array(
     'type' => 'inputradio',
     'displayname' => $l('recordings', 'modifyindexphoto_select'),
+    'rowlayout'   => '
+      <tr>
+        <td class="elementcolumn" colspan="2">
+          %displayname%<br/><br/>
+          %element%
+        </td
+      </tr>
+    ',
     'itemlayout' => '<div class="changeindexphotoitem">%radio% %label%</div>',
     'validation' => Array(
       Array( 'type' => 'required' )

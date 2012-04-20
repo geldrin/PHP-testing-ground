@@ -36,12 +36,11 @@ $config = Array(
   'customhtml' => array(
     'type' => 'text',
     'rowlayout' => '
-      <div class="formrow" id="uploadrow">
-        <span class="label"></span>
-        <div class="element">
+      <tr id="uploadrow">
+        <td class="elementcolumn" colspan="2">
           %element%
-        </div>
-      </div>
+        </td
+      </tr>
     ',
     'value' => '
       <div id="videobrowsecontainer">

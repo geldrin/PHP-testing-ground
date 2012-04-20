@@ -14,6 +14,10 @@ class Form extends \Springboard\Controller\Form {
     ;
     
     $this->form->messageprefix = '';
+    $this->form->layouts['tabular']['container']  =
+      "<table cellpadding=\"0\" cellspacing=\"0\" class=\"formtable\">\n%s\n</table>\n"
+    ;
+    
     $this->form->layouts['tabular']['element'] =
       '<tr %errorstyle%>' .
         '<td class="labelcolumn">' .

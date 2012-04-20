@@ -5,6 +5,11 @@ class Modifybasics extends \Visitor\Recordings\ModifyForm {
   public $configfile   = 'Modifybasics.php';
   public $template     = 'Visitor/genericform.tpl';
   
+  public function init() {
+    $this->controller->toSmarty['formclass'] = 'leftdoublebox';
+    parent::init();
+  }
+  
   public function onComplete() {
     
     $values = $this->form->getElementValues( 0 );

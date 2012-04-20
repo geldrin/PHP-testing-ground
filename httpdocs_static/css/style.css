@@ -121,6 +121,7 @@ body {
 .formtable {
   border-collapse: collapse;
   width: 100%;
+  border: 0;
 }
 .formtable td {
   padding: 5px 5px 10px 5px;
@@ -247,6 +248,9 @@ a.submitbutton:hover {
 #uploadrow .element {
   float: left;
   width: 580px;
+}
+.changeindexphotoitem {
+  display: inline-block;
 }
 
 /* swfupload */
