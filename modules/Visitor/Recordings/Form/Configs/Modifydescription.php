@@ -36,7 +36,7 @@ $config = array(
   ),
   
   'description' => array(
-    'displayname' => $l('recordings', 'descriptionoriginal'),
+    'displayname' => $l('recordings', 'description'),
     'type'        => 'textarea',
     'validation'  => array(
       array(
@@ -48,7 +48,7 @@ $config = array(
   ),
   
   'copyright' => array(
-    'displayname' => $l('recordings', 'copyrightoriginal'),
+    'displayname' => $l('recordings', 'copyright'),
     'type'        => 'textarea',
     'validation'  => array(
       array(

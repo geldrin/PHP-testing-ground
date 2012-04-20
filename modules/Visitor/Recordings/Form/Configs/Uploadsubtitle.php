@@ -29,7 +29,7 @@ $config = Array(
   
   'subtitle' => Array(
     'type'        => 'inputFile',
-    'displayname' => $l('recordings', 'subtitle'),
+    'displayname' => $l('recordings', 'subtitle_file'),
     'binaryvalue' => true,
     'validation'  => Array(
       Array(

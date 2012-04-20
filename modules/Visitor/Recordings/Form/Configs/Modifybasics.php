@@ -29,7 +29,7 @@ $config = array(
   ),
   
   'title' => array(
-    'displayname' => $l('recordings', 'titleoriginal'),
+    'displayname' => $l('recordings', 'title'),
     'type'        => 'inputText',
     'validation'  => array(
       array(
@@ -41,7 +41,7 @@ $config = array(
   ),
   
   'subtitle' => array(
-    'displayname' => $l('recordings', 'subtitleoriginal'),
+    'displayname' => $l('recordings', 'subtitle'),
     'type'        => 'inputText',
     'validation'  => array(
       array(

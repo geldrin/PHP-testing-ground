@@ -114,9 +114,9 @@ body {
 }
 .formoverflowframe {
   clear: both;
-  height: 200px;
+  max-height: 200px;
   white-space: nowrap;
-  overflow: scroll;
+  overflow: auto;
 }
 .formrow {
   clear: both;
@@ -172,10 +172,12 @@ textarea {
 .inputbackground:focus, .form textarea:focus, .form input[type=text]:focus, .form input[type=password]:focus, .form .inputtext:focus {
   border: 1px solid #21abf0;
 }
-.form .submitbutton, .submitbutton {
-  display: inline-block;
+.form .submitbutton {
   float: right;
   width: 120px;
+}
+.form .submitbutton, .submitbutton {
+  display: inline-block;
   height: 30px;
   line-height: 15px;
   text-align: center;
