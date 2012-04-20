@@ -1,9 +1,14 @@
 <?php
 namespace Visitor\Recordings\Form;
 
-class Uploadsubtitle extends \Visitor\HelpForm {
+class Uploadsubtitle extends \Visitor\ModifyForm {
   public $configfile   = 'Uploadsubtitle.php';
   public $template     = 'Visitor/genericform.tpl';
+  
+  public function init() {
+    parent::init();
+    unset( $this->controller->toSmarty['insertbefore'] );
+  }
   
   public function onComplete() {
     
