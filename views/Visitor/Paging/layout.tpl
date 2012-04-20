@@ -41,6 +41,10 @@
   {include file=$insertitem}
 {/foreach}
 
+{if $pager}
+  {$pager}
+{/if}
+
 {if count( $insertafterpager ) }
 
   {foreach from=$insertafterpager item=insertitem}
