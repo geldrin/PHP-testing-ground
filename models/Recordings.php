@@ -1193,6 +1193,9 @@ class Recordings extends \Springboard\Model {
     if ( !$this->row['slideonright'] )
       $data['layout_videoOrientation'] = 'right';
     
+    if ( $data['language'] != 'en' )
+      $data['locale'] = $info['STATIC_URI'] . 'js/flash_locale_' . $data['language'] . '.json';
+    
     $data['media_streams'] = array( $this->getMediaUrl('default', false, $domain ) );
     
     if ( $this->row['videoreshq'] )
