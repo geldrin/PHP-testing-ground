@@ -94,8 +94,8 @@
     }
   },
   "controller": {
-    "exitFullscreen": "Kilépés a teljes képernyős nézetből",
-    "goFullscreen": "Teljes képernyős nézet",
+    "exitFullscreen": "Kilépés a teljes képernyős nézetből (ESC)",
+    "goFullscreen": "Teljes képernyős nézet (F11)",
     "hiQuality": "Magas minőség",
     "changeHiQuality": "Váltás magas minőségre",
     "loQuality": "Normál minőség",
