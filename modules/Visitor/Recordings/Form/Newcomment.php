@@ -24,6 +24,7 @@ class Newcomment extends \Visitor\Form {
     
     $values['timestamp'] = date('Y-m-d H:i:s');
     $values['userid']    = $user['id'];
+    $values['ipaddress'] = $_SERVER['REMOTE_ADDR'];
     
     $this->recordingsModel->addComment( $values );
     $this->recordingsModel->updateCommentCount();

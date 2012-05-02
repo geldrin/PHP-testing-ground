@@ -346,6 +346,7 @@ CREATE TABLE `comments` (
    `userid` int(10) unsigned not null,
    `timestamp` datetime not null,
    `text` text not null,
+   `ipaddress` text,
    `moderated` int(11) not null default '0',
    PRIMARY KEY (`id`),
    KEY `ix_recordingid_moderated` (`recordingid`, `moderated`)
