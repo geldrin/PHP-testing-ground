@@ -7,7 +7,7 @@ class Listnews extends \Visitor\Paging {
     'starts'      => 'weight, starts',
     'starts_desc' => 'weight, starts DESC',
   );
-  protected $insertbefore = Array( 'Visitor/Organizations/Paging/ListnewsBefore.tpl' );
+  protected $insertbeforepager = Array( 'Visitor/Organizations/Paging/ListnewsBeforepager.tpl' );
   protected $template = 'Visitor/Organizations/Paging/Listnews.tpl';
   protected $newsModel;
   

@@ -7,7 +7,7 @@ class Admin extends \Visitor\Paging {
     'creation'      => 'id',
     'creation_desc' => 'id DESC',
   );
-  protected $insertbefore = Array( 'Visitor/Genres/Paging/AdminBefore.tpl' );
+  protected $insertbeforepager = Array( 'Visitor/Genres/Paging/AdminBeforepager.tpl' );
   protected $template = 'Visitor/Genres/Paging/Admin.tpl';
   
   public function init() {

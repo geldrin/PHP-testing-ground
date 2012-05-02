@@ -52,14 +52,16 @@
 
 <div class="sort">
   <div class="item">
-    <a href="{$url|replace:'%s':timestamp}">{#recordings__myrecordings_timestamp#|sortarrows:null:timestamp:$order}</a>
+    <a class="title" href="{$url|replace:'%s':timestamp}">{#recordings__myrecordings_timestamp#|activesortarrow:timestamp:$order}</a>
     <ul>
+      <li><a href="{$url|replace:'%s':timestamp}">{#recordings__myrecordings_timestamp#|sortarrows:null:timestamp:$order}</a></li>
       <li><a href="{$url|replace:'%s':timestamp_desc}">{#recordings__myrecordings_timestamp_desc#|sortarrows:null:timestamp_desc:$order}</a></li>
     </ul>
   </div>
   <div class="item">
-    <a href="{$url|replace:'%s':recordedtimestamp}">{#recordings__myrecordings_recordedtimestamp#|sortarrows:null:recordedtimestamp:$order}</a>
+    <a class="title" href="{$url|replace:'%s':recordedtimestamp}">{#recordings__myrecordings_recordedtimestamp#|activesortarrow:recordedtimestamp:$order}</a>
     <ul>
+      <li><a href="{$url|replace:'%s':recordedtimestamp}">{#recordings__myrecordings_recordedtimestamp#|sortarrows:null:recordedtimestamp:$order}</a></li>
       <li>
         <a href="{$url|replace:'%s':recordedtimestamp_desc}">{#recordings__myrecordings_recordedtimestamp_desc#|sortarrows:null:recordedtimestamp_desc:$order}</a>
       </li>
