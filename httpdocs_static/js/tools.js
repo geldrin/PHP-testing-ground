@@ -256,6 +256,8 @@ function onUploadStart( file ) {
 
   $j('.progresswrap').removeClass('red blue').addClass('green');
   $j('.progressstatus').text( messages.uploading ); // global object for localized strings
+  $j('tr.buttonrow').hide();
+  
   try {
     $j( document ).trigger('uploadstart.swfupload', [ file ] );
   } catch ( e ) {
@@ -296,6 +298,8 @@ function onUploadError( file, code, message ) {
   $j('.progressstatus').text( messages.uploaderror );
   
   swfupload.setButtonDisabled( false );
+  $j('tr.buttonrow').show();
+  $j('#videobrowsecontainer').css({ position: 'static', top: '0px'});
   
   /*
   switch (errorCode) {
@@ -435,6 +439,7 @@ function onFileQueueError( file, error, message ) {
   }
   
   swfupload.setButtonDisabled( false );
+  $j('#videobrowsecontainer').css({ position: 'static', top: '0px'});
   $j( document ).trigger('filequeueerror.swfupload', [ file, error, message ] );
   
 }
@@ -444,6 +449,7 @@ function onFileQueueSuccess( file ) {
   $j('#videouploadprogress').show();
   $j('.progresswrap').removeClass('red blue').addClass('green');
   $j('.progressname').text( file.name );
+  $j('#videobrowsecontainer').css({ position: 'absolute', top: '-9999px'});
   
   try {
     $j( document ).trigger('filequeuesuccess.swfupload', [ file ] );

@@ -75,13 +75,13 @@ $j(document).ready(function() {ldelim}
   flash_url:        "{$organization|@uri:base}swf/swfupload.swf",
   
   button_placeholder_id:    "videobrowse",
-  button_image_url:         STATIC_URI + "images/swfupload_button.png",
+  button_image_url:         STATIC_URI + "images/swfupload_button.png?v1",
   button_width:             "59",
   button_height:            "30",
   button_text:              '<span class="swfuploadbutton">{#recordings__upload_browse#}</span>',
   button_text_left_padding: {if $language == 'hu'}4{else}6{/if},
   button_text_top_padding:  4,
-  button_text_style:        '.swfuploadbutton {ldelim} color: #ffffff; font-family: Helvetica, Arial, _sans; font-size: 13px; font-weight: normal; letter-spacing: 0.5px; {rdelim}',
+  button_text_style:        '.swfuploadbutton {ldelim} color: #000000; font-family: Helvetica, Arial, _sans; font-size: 13px; font-weight: normal; letter-spacing: 0.5px; {rdelim}',
   button_action:            SWFUpload.BUTTON_ACTION.SELECT_FILE{*}, // single select
   
   // Debug Settings
