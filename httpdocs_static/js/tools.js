@@ -279,30 +279,6 @@ function getProgress() {
   
 }
 
-function onUploadProgress( file, uploaded, total ) {
-  
-  try {
-    
-    trackSpeed( file, uploaded );
-    var percent = Math.ceil( ( uploaded / total ) * 100);
-    $j('.progressbar').width( percent + '%');
-    
-  } catch ( e ) {}
-  
-  var stats = speedhistory[ file.id ];
-  $j('.progressspeed').text( formatBPS( stats.averagespeed || 0 ) );
-  $j('.progresstime').text( formatTime( stats.timeremaining ) || '' );
-  
-  if ( uploaded === total ) {
-    
-    $j('.progresstime').text('');
-    $j('.progresswrap').removeClass('red green').addClass('blue');
-    $j('.progressstatus').html( messages.uploaded +  );
-    
-  }
-  
-}
-
 // "copied" from swfupload.speed plugin
 var speedhistory = {};
 function trackSpeed( uploaded ) {
