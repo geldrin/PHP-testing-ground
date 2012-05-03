@@ -94,6 +94,12 @@ body {
 }
 
 /* form */
+.formerrors ul {
+  padding-left: 0px;
+  margin: 10px 0 15px 0;
+  font-weight: bold;
+  color: red;
+}
 .form fieldset {
   margin: 0;
   padding: 0;
