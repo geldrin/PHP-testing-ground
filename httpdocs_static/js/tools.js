@@ -11,6 +11,7 @@ $j(document).ready(function() {
   runIfExists('#headerlogin', setupHeaderLogin );
   runIfExists('#headersearch', setupHeaderSearch );
   runIfExists('.ratewidget', setupRateWidget );
+  runIfExists('#uploadrow', setupUpload );
   
   $j('#scriptingcontainer').show();
   
@@ -209,62 +210,73 @@ function setupRateWidget() {
   
 }
 
-function setupVideoUpload() {
+function setupUpload() {
   
-  if ( !swfupload )
-    return;
+  $j('#upload, #uploadcontent').each( function() {
+    
+    $j(this).attr('onsubmit', null );
+    
+  });
   
   $j('#upload, #uploadcontent').submit( function( e ) {
     
-    e.preventDefault();
-    
-    if ( $j('#tos').length && !$j('#tos:checked').val() )
+    if ( $j(this).attr('id') == 'upload' && !check_upload() )
+      return false;
+    else if ( $j(this).attr('id') == 'uploadcontent' && !check_uploadcontent() )
       return false;
     
-    if ( !swfupload.getFile(0) ) { // no files in the queue
-      
-      alert( messages.filenotfound );
-      return false;
-      
-    }
+    var filename = $j('#file').val().match(/.*[\\/](.+)$/);
+    if ( filename )
+      filename = filename[1];
     
-    $j('.submitbutton').get(0).disabled = true;
-    swfupload.addPostParam('swfupload', '1');
+    $j('#uploadrow').show();
+    $j('.progresswrap').removeClass('red blue').addClass('green');
+    $j('.progressname').text( filename );
+    $j('.progressstatus').text( $j('.progressstatus').text() + ' <img src="' + STATIC_URI + 'images/spinner.gif"/>' );
+    $j('tr.buttonrow').hide();
     
-    var form = $j(this).serializeArray();
-    for ( var i = 0, j = form.length; i < j; i++ )
-      swfupload.addPostParam( form[ i ].name, form[ i ].value );
-    
-    swfupload.startUpload();
-    
-    return false;
+    setTimeout( function() {
+      $j('#uploadframe').attr('src', BASE_URI + language + '/recordings/progress' );
+    })
     
   });
   
 }
 
-function swfuploadFallback() {
-  
-  $j('.submitbutton').hide();
-  try {
-    swfupload.destroy();
-  } catch( e ) {}
-
+function setupUploadIframe() {
+  getProgress();
 }
 
-function onUploadStart( file ) {
-
-  $j('.progresswrap').removeClass('red blue').addClass('green');
-  $j('.progressstatus').text( messages.uploading ); // global object for localized strings
-  $j('tr.buttonrow').hide();
+function getProgress() {
   
-  try {
-    $j( document ).trigger('uploadstart.swfupload', [ file ] );
-  } catch ( e ) {
-    return false;
-  }
+  var jq = $j;
   
-  return true; // returning false will cancel the upload
+  if ( window.parent )
+    jq = window.parent['$j'];
+  
+  $j.ajax({
+    url: BASE_URI + language + '/recordings/getprogress',
+    type: 'GET',
+    data: { uploadid: jq('#uploadid').val() },
+    dataType: 'json',
+    timeout: 2000,
+    cache: false,
+    success: function( data ) {
+      
+      if ( data.status == 'OK' ) {
+        
+        trackSpeed( data.data.current );
+        var percent = Math.ceil( ( data.data.current / data.data.total ) * 100);
+        jq('.progressbar').width( percent + '%');
+        
+        setTimeout( getProgress, 1000 );
+        
+      } else
+        alert( data.message );
+      
+    }
+  });
+  
 }
 
 function onUploadProgress( file, uploaded, total ) {
@@ -285,202 +297,17 @@ function onUploadProgress( file, uploaded, total ) {
     
     $j('.progresstime').text('');
     $j('.progresswrap').removeClass('red green').addClass('blue');
-    $j('.progressstatus').html( messages.uploaded + ' <img src="' + STATIC_URI + 'images/spinner.gif"/>' );
+    $j('.progressstatus').html( messages.uploaded +  );
     
   }
   
-}
-
-function onUploadError( file, code, message ) {
-  
-  $j('.progressbar').width('0px');
-  $j('.progresswrap').removeClass('blue green').addClass('red');
-  $j('.progressstatus').text( messages.uploaderror );
-  
-  swfupload.setButtonDisabled( false );
-  $j('tr.buttonrow').show();
-  $j('#videobrowsecontainer').css({ position: 'static', top: '0px'});
-  
-  /*
-  switch (errorCode) {
-    case SWFUpload.UPLOAD_ERROR.MISSING_UPLOAD_URL:
-      alert("There was a configuration error.  You will not be able to upload a resume at this time.");
-      this.debug("Error Code: No backend file, File name: " + file.name + ", Message: " + message);
-      return;
-    case SWFUpload.UPLOAD_ERROR.UPLOAD_LIMIT_EXCEEDED:
-      alert("You may only upload 1 file.");
-      this.debug("Error Code: Upload Limit Exceeded, File name: " + file.name + ", File size: " + file.size + ", Message: " + message);
-      return;
-    case SWFUpload.UPLOAD_ERROR.FILE_CANCELLED:
-    case SWFUpload.UPLOAD_ERROR.UPLOAD_STOPPED:
-      break;
-    default:
-      alert("An error occurred in the upload. Try again later.");
-      this.debug("Error Code: " + errorCode + ", File name: " + file.name + ", File size: " + file.size + ", Message: " + message);
-      return;
-  }
-
-  switch (errorCode) {
-    case SWFUpload.UPLOAD_ERROR.HTTP_ERROR:
-      progress.setStatus("Upload Error");
-      this.debug("Error Code: HTTP Error, File name: " + file.name + ", Message: " + message);
-      break;
-    case SWFUpload.UPLOAD_ERROR.UPLOAD_FAILED:
-      progress.setStatus("Upload Failed.");
-      this.debug("Error Code: Upload Failed, File name: " + file.name + ", File size: " + file.size + ", Message: " + message);
-      break;
-    case SWFUpload.UPLOAD_ERROR.IO_ERROR:
-      progress.setStatus("Server (IO) Error");
-      this.debug("Error Code: IO Error, File name: " + file.name + ", Message: " + message);
-      break;
-    case SWFUpload.UPLOAD_ERROR.SECURITY_ERROR:
-      progress.setStatus("Security Error");
-      this.debug("Error Code: Security Error, File name: " + file.name + ", Message: " + message);
-      break;
-    case SWFUpload.UPLOAD_ERROR.FILE_CANCELLED:
-      progress.setStatus("Upload Cancelled");
-      this.debug("Error Code: Upload Cancelled, File name: " + file.name + ", Message: " + message);
-      break;
-    case SWFUpload.UPLOAD_ERROR.UPLOAD_STOPPED:
-      progress.setStatus("Upload Stopped");
-      this.debug("Error Code: Upload Stopped, File name: " + file.name + ", Message: " + message);
-      break;
-  }
-  } catch (ex) {}
-  */
-
-}
-
-function onUploadSuccess( file, data ) {
-  
-  try {
-    if ( typeof JSON === "object" && JSON.parse )
-      var data = JSON.parse( data );
-    else
-      eval('var data = ' + data );
-  } catch( e ) {}
-  
-  if ( !data || typeof( data ) !== 'object' )
-    data = {};
-  
-  $j( document ).trigger('uploadsuccess.swfupload', [ file, data ] );
-  if ( !data.error && data.url )
-    return location.href = data.url;
-  
-  if ( messages[ data.error ] )
-    var message = messages[ data.error ];
-  else
-    var message = messages.unknownerror + ' \n' + dump( data );
-  
-  $j('.progresswrap').removeClass('blue green').addClass('red');
-  $j('.progressstatus').text( message );
-  alert( message );
-  
-  if ( data.url )
-    return location.href = data.url;
-  
-}
-
-function dump( arr ) {
-  
-  var dumped_text = '';
-  
-  if( typeof( arr ) == 'object' ) {
-    
-    for( var item in arr ) {
-      
-      var value = arr[ item ];
-
-      if( typeof( value ) == 'object' ) {
-        
-        dumped_text += ' "' + item + '" => {';
-        dumped_text += dump( value );
-        dumped_text += '}';
-        
-      } else {
-        
-        dumped_text += ' "' + item + '" => \"' + value + '\",';
-        
-      }
-      
-    }
-    
-  } else {
-    
-    dumped_text = arr + ' ('+ typeof( arr ) + ')';
-    
-  }
-  
-  return dumped_text;
-  
-}
-
-function onUploadComplete( file ) {
-  
-  $j( document ).trigger('uploadcomplete.swfupload', [ file ] );
-  // need to pass the user to the next screen where he/she can edit the info about the video
-}
-
-function onFileQueueError( file, error, message ) {
-  var errors = SWFUpload.QUEUE_ERROR;
-  
-  switch ( error ) {
-    case errors.QUEUE_LIMIT_EXCEEDED:
-      break;
-    case errors.FILE_EXCEEDS_SIZE_LIMIT:
-      alert( messages.filetoobig );
-      break;
-    case errors.ZERO_BYTE_FILE:
-      alert( messages.zerobytefile );
-      break;
-    case errors.INVALID_FILETYPE: // users can circumvent the filetype restriction
-      alert( messages.invalidfiletype );
-      break;
-  }
-  
-  swfupload.setButtonDisabled( false );
-  $j('#videobrowsecontainer').css({ position: 'static', top: '0px'});
-  $j( document ).trigger('filequeueerror.swfupload', [ file, error, message ] );
-  
-}
-
-function onFileQueueSuccess( file ) {
-
-  $j('#videouploadprogress').show();
-  $j('.progresswrap').removeClass('red blue').addClass('green');
-  $j('.progressname').text( file.name );
-  $j('#videobrowsecontainer').css({ position: 'absolute', top: '-9999px'});
-  
-  try {
-    $j( document ).trigger('filequeuesuccess.swfupload', [ file ] );
-  } 
-  catch ( e ) {
-    return false;
-  }
-
-  //$j('#videobrowsecontainer').hide(); // hide flash container, if hidden swfupload fails, so dont hide it
-  swfupload.setButtonDisabled( true ); // disable the flash button and ignore clicks
-
-  return true;
-}
-
-function onFileDialogStart() {
-  $j( document ).trigger('filedialogstart.swfupload');
-}
-
-function onFileDialogComplete() {
-  $j( document ).trigger('filedialogcomplete.swfupload');
 }
 
 // "copied" from swfupload.speed plugin
 var speedhistory = {};
-function trackSpeed( file, uploaded ) {
-  var history = speedhistory[ file.id ],
+function trackSpeed( uploaded ) {
+  var history = speedhistory,
       time = (new Date()).getTime();
-  
-  if ( !history )
-    speedhistory[ file.id ] = {};
-  
   
   if ( !history.starttime ) {
     

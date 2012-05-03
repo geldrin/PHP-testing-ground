@@ -21,6 +21,8 @@ class Controller extends \Visitor\Controller {
     'deletesubtitle'       => 'uploader',
     'delete'               => 'uploader',
     'checkstreamaccess'    => 'public',
+    'progress'             => 'member',
+    'getprogress'          => 'member',
   );
   
   public $forms = array(
@@ -416,6 +418,39 @@ class Controller extends \Visitor\Controller {
     }
     
     return $recordingModel->row;
+    
+  }
+  
+  public function progressAction() {
+    $this->smartyOutput('Visitor/Recordings/Progress.tpl');
+  }
+  
+  public function getprogressAction() {
+    
+    $l        = $this->bootstrap->getLocalization();
+    $uploadid = $this->application->getParameter('uploadid');
+    $data     = array('status' => 'OK');
+    
+    if ( !$uploadid ) {
+      
+      $data['status']  = 'ERR';
+      $data['message'] = $l('recordings', 'upload_noid');
+      $this->jsonOutput( $data );
+      
+    }
+    
+    $status = apc_fetch( 'upload_' . $uploadid );
+    
+    if ( !$status ) {
+      
+      $data['status']  = 'ERR';
+      $data['message'] = $l('recordings', 'upload_idnotfound');
+      $this->jsonOutput( $data );
+      
+    }
+    
+    $data['data'] = $status;
+    $this->jsonOutput( $data );
     
   }
   
