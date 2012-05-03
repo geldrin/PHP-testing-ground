@@ -268,8 +268,8 @@ function getProgress() {
           trackSpeed( data.data.current, data.data.total );
           var percent = Math.ceil( ( data.data.current / data.data.total ) * 100);
           jq('.progressbar').width( percent + '%');
-          jq('.progressspeed').text( formatBPS( history.averagespeed || 0 ) );
-          jq('.progresstime').text( formatTime( history.timeremaining ) || '' );
+          jq('.progressspeed').text( formatBPS( speedhistory.averagespeed || 0 ) );
+          jq('.progresstime').text( formatTime( speedhistory.timeremaining ) || '' );
           
         }
         
@@ -284,7 +284,7 @@ function getProgress() {
 }
 
 // "copied" from swfupload.speed plugin
-var history = {};
+var speedhistory = {};
 function trackSpeed( uploaded, total ) {
   
   if ( uploaded == 0 )
@@ -292,32 +292,32 @@ function trackSpeed( uploaded, total ) {
   
   var time = (new Date()).getTime();
   
-  if ( !history.starttime ) {
+  if ( !speedhistory.starttime ) {
     
-    history.starttime     = time;
-    history.lasttime      = time;
-    history.currentspeed  = 0;
-    history.averagespeed  = 0;
-    history.timeremaining = 0;
-    history.percent       = uploaded / total * 100;
-    history.uploaded      = uploaded;
+    speedhistory.starttime     = time;
+    speedhistory.lasttime      = time;
+    speedhistory.currentspeed  = 0;
+    speedhistory.averagespeed  = 0;
+    speedhistory.timeremaining = 0;
+    speedhistory.percent       = uploaded / total * 100;
+    speedhistory.uploaded      = uploaded;
     
   }
   
-  var deltatime = time - history.lasttime;
-  var deltabytes = uploaded - history.uploaded;
+  var deltatime = time - speedhistory.lasttime;
+  var deltabytes = uploaded - speedhistory.uploaded;
   
   if ( deltabytes === 0 || deltatime === 0 )
     return;
   
-  history.lasttime = time;
-  history.uploaded = uploaded;
+  speedhistory.lasttime = time;
+  speedhistory.uploaded = uploaded;
   
-  history.currentspeed = ( deltabytes * 8 ) / ( deltatime / 1000 );
-  history.averagespeed = ( uploaded * 8 ) / ( ( time - history.starttime ) / 1000 );
+  speedhistory.currentspeed = ( deltabytes * 8 ) / ( deltatime / 1000 );
+  speedhistory.averagespeed = ( uploaded * 8 ) / ( ( time - speedhistory.starttime ) / 1000 );
   
-  history.timeremaining = ( total - uploaded ) * 8 / history.averagespeed;
-  history.percent = uploaded / total * 100;
+  speedhistory.timeremaining = ( total - uploaded ) * 8 / speedhistory.averagespeed;
+  speedhistory.percent = uploaded / total * 100;
   
 }
 
