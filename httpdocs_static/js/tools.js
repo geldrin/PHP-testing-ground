@@ -265,7 +265,7 @@ function getProgress() {
       
       if ( data.status == 'OK' ) {
         
-        trackSpeed( data.data.current );
+        trackSpeed( data.data.current, data.data.total );
         var percent = Math.ceil( ( data.data.current / data.data.total ) * 100);
         jq('.progressbar').width( percent + '%');
         
@@ -280,14 +280,13 @@ function getProgress() {
 }
 
 // "copied" from swfupload.speed plugin
-var speedhistory = {};
-function trackSpeed( uploaded ) {
+var history = {};
+function trackSpeed( uploaded, total ) {
   
   if ( uploaded == 0 )
     return;
   
-  var history = speedhistory,
-      time = (new Date()).getTime();
+  var time = (new Date()).getTime();
   
   if ( !history.starttime ) {
     
@@ -296,7 +295,7 @@ function trackSpeed( uploaded ) {
     history.currentspeed  = 0;
     history.averagespeed  = 0;
     history.timeremaining = 0;
-    history.percent       = uploaded / file.size * 100;
+    history.percent       = uploaded / total * 100;
     history.uploaded      = uploaded;
     
   }
@@ -314,7 +313,7 @@ function trackSpeed( uploaded ) {
   history.averagespeed = ( uploaded * 8 ) / ( ( time - history.starttime ) / 1000 );
   
   history.timeremaining = ( file.size - uploaded ) * 8 / history.averagespeed;
-  history.percent = uploaded / file.size * 100;
+  history.percent = uploaded / total * 100;
   
 }
 
