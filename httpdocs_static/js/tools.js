@@ -230,14 +230,12 @@ function setupUpload() {
       filename = filename[1];
     
     $j('#uploadrow').show();
-    $j('.progresswrap').removeClass('red blue').addClass('green');
     $j('.progressname').text( filename );
-    $j('.progressstatus').html( $j('.progressstatus').text() + ' <img src="' + STATIC_URI + 'images/spinner.gif"/>' );
     $j('tr.buttonrow').hide();
     
     setTimeout( function() {
       $j('#uploadframe').attr('src', BASE_URI + language + '/recordings/progress' );
-    })
+    }, 1000 );
     
   });
   
@@ -268,7 +266,8 @@ function getProgress() {
         trackSpeed( data.data.current, data.data.total );
         var percent = Math.ceil( ( data.data.current / data.data.total ) * 100);
         jq('.progressbar').width( percent + '%');
-        
+        jq('.progressspeed').text( formatBPS( history.averagespeed || 0 ) );
+        jq('.progresstime').text( formatTime( history.timeremaining ) || '' );
         setTimeout( getProgress, 1000 );
         
       } else
@@ -312,7 +311,7 @@ function trackSpeed( uploaded, total ) {
   history.currentspeed = ( deltabytes * 8 ) / ( deltatime / 1000 );
   history.averagespeed = ( uploaded * 8 ) / ( ( time - history.starttime ) / 1000 );
   
-  history.timeremaining = ( file.size - uploaded ) * 8 / history.averagespeed;
+  history.timeremaining = ( total - uploaded ) * 8 / history.averagespeed;
   history.percent = uploaded / total * 100;
   
 }

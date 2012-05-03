@@ -77,12 +77,15 @@ $config = Array(
     ',
     'value' => '
       <div id="videouploadprogress">
-        <div class="progresswrap">
+        <div class="progresswrap green">
           <div class="progressname"></div>
           <div class="progressspeed"></div>
           <div class="clear"></div>
           <div class="progressbar"></div>
-          <div class="progressstatus">' . $l('', 'swfupload_uploading') . '</div>
+          <div class="progressstatus">' .
+            $l('', 'swfupload_uploading') .
+            ' <img src="' . $this->controller->toSmarty['STATIC_URI'] . 'images/spinner.gif"/>' .
+          '</div>
           <div class="progresstime"></div>
         </div>
       </div>
