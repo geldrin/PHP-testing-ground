@@ -232,7 +232,7 @@ function setupUpload() {
     $j('#uploadrow').show();
     $j('.progresswrap').removeClass('red blue').addClass('green');
     $j('.progressname').text( filename );
-    $j('.progressstatus').text( $j('.progressstatus').text() + ' <img src="' + STATIC_URI + 'images/spinner.gif"/>' );
+    $j('.progressstatus').html( $j('.progressstatus').text() + ' <img src="' + STATIC_URI + 'images/spinner.gif"/>' );
     $j('tr.buttonrow').hide();
     
     setTimeout( function() {
@@ -282,6 +282,10 @@ function getProgress() {
 // "copied" from swfupload.speed plugin
 var speedhistory = {};
 function trackSpeed( uploaded ) {
+  
+  if ( uploaded == 0 )
+    return;
+  
   var history = speedhistory,
       time = (new Date()).getTime();
   
