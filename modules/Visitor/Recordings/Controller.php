@@ -441,14 +441,6 @@ class Controller extends \Visitor\Controller {
     
     $status = apc_fetch( 'upload_' . $uploadid );
     
-    if ( !$status ) {
-      
-      $data['status']  = 'ERR';
-      $data['message'] = $l('recordings', 'upload_idnotfound');
-      $this->jsonOutput( $data );
-      
-    }
-    
     $data['data'] = $status;
     $this->jsonOutput( $data );
     

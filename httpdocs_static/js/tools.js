@@ -263,11 +263,16 @@ function getProgress() {
       
       if ( data.status == 'OK' ) {
         
-        trackSpeed( data.data.current, data.data.total );
-        var percent = Math.ceil( ( data.data.current / data.data.total ) * 100);
-        jq('.progressbar').width( percent + '%');
-        jq('.progressspeed').text( formatBPS( history.averagespeed || 0 ) );
-        jq('.progresstime').text( formatTime( history.timeremaining ) || '' );
+        if ( data.data ) {
+          
+          trackSpeed( data.data.current, data.data.total );
+          var percent = Math.ceil( ( data.data.current / data.data.total ) * 100);
+          jq('.progressbar').width( percent + '%');
+          jq('.progressspeed').text( formatBPS( history.averagespeed || 0 ) );
+          jq('.progresstime').text( formatTime( history.timeremaining ) || '' );
+          
+        }
+        
         setTimeout( getProgress, 1000 );
         
       } else
