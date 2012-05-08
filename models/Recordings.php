@@ -761,7 +761,7 @@ class Recordings extends \Springboard\Model {
     return "
       {$prefix}status      = 'onstorage' AND
       {$prefix}ispublished = '1' AND
-      {$recprefix}accesstype  = 'public' AND
+      {$prefix}accesstype  = 'public' AND
       (
         {$prefix}visiblefrom  IS NULL OR
         {$prefix}visibleuntil IS NULL OR
