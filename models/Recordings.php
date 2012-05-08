@@ -759,18 +759,92 @@ class Recordings extends \Springboard\Model {
   public static function getPublicRecordingWhere( $prefix = '' ) {
     
     return "
-      {$prefix}status = 'onstorage' AND
-      {$prefix}ispublished = 1 AND
-      {$prefix}accesstype = 'public' AND
+      {$prefix}status      = 'onstorage' AND
+      {$prefix}ispublished = '1' AND
+      {$recprefix}accesstype  = 'public' AND
       (
-        {$prefix}visiblefrom IS NULL OR
+        {$prefix}visiblefrom  IS NULL OR
         {$prefix}visibleuntil IS NULL OR
         (
           {$prefix}visiblefrom  <= CURRENT_DATE() AND
           {$prefix}visibleuntil >= CURRENT_DATE()
         )
+      ) 
+    ";
+    
+  }
+  
+  public static function getUnionSelect( $user, $select = 'r.*', $from = 'recordings AS r', $where = null ) {
+    
+    if ( !isset( $user['id'] ) ) {
+      
+      $publicwhere = self::getPublicRecordingWhere('r.');
+      if ( $where )
+        $publicwhere = ' AND ' . $publicwhere;
+      
+      return "
+        SELECT $select
+        FROM $from
+        WHERE $where $publicwhere
+      ";
+      
+    }
+    
+    $generalwhere = "
+      r.status      = 'onstorage' AND
+      r.ispublished = '1' AND
+      (
+        r.visiblefrom  IS NULL OR
+        r.visibleuntil IS NULL OR
+        (
+          r.visiblefrom  <= CURRENT_DATE() AND
+          r.visibleuntil >= CURRENT_DATE()
+        )
       )
     ";
+    
+    if ( $where )
+      $generalwhere = ' AND ' . $generalwhere;
+    
+    $sql = "
+      (
+        SELECT $select
+        FROM $from
+        WHERE
+          $where
+          $generalwhere AND
+          r.accesstype IN('public', 'registrations')
+      ) UNION DISTINCT (
+        SELECT $select
+        FROM
+          $from,
+          recordings_access AS ra,
+          groups_members AS gm
+        WHERE
+          $where
+          $generalwhere AND
+          r.accesstype   = 'groups' AND
+          ra.recordingid = r.id AND
+          ra.groupid     = gm.groupid AND
+          gm.userid      = '" . $user['id'] . "'
+      ) UNION DISTINCT (
+        SELECT $select
+        FROM
+          $from,
+          recordings_access AS ra,
+          users AS u
+        WHERE
+          $where
+          $generalwhere AND
+          r.accesstype      = 'organizations' AND
+          ra.recordingid    = r.id AND
+          ra.organizationid = u.organizationid AND
+          u.id              = '" . $user['id'] . "'
+      )
+    ";
+    
+    return $sql;
+    
   }
   
   public function addRating( $rating ) {
@@ -1133,33 +1207,50 @@ class Recordings extends \Springboard\Model {
     
   }
   
-  public function getCategoryRecordingsCount( $categoryids ) {
+  public function getCategoryRecordingsCount( $user, $categoryids ) {
+    
+    $from = "
+      recordings_categories AS rc,
+      recordings AS r"
+    ;
+    
+    $where =
+      "rc.categoryid IN ('" . implode("', '", $categoryids ) . "') AND
+      r.id = rc.recordingid"
+    ;
+    
+    if ( !isset( $user['id'] ) ) 
+      return $this->db->getOne("
+        SELECT DISTINCT COUNT(r.id)
+        FROM $from
+        WHERE
+          $where AND
+          " . self::getPublicRecordingWhere('r.')
+    );
     
     return $this->db->getOne("
-      SELECT DISTINCT COUNT(r.id)
-      FROM
-        recordings_categories AS rc,
-        recordings AS r
-      WHERE
-        rc.categoryid IN ('" . implode("', '", $categoryids ) . "') AND
-        r.id = rc.recordingid AND
-        " . self::getPublicRecordingWhere()
-    );
+      SELECT COUNT(*)
+      FROM (
+        " . self::getUnionSelect( $user, 'r.*', $from, $where ) . "
+      ) AS count
+    ");
     
   }
   
-  public function getCategoryRecordings( $categoryids, $start = false, $limit = false, $order = false ) {
+  public function getCategoryRecordings( $user, $categoryids, $start = false, $limit = false, $order = false ) {
+    
+    $from = "
+      recordings_categories AS rc,
+      recordings AS r"
+    ;
+    
+    $where =
+      "rc.categoryid IN ('" . implode("', '", $categoryids ) . "') AND
+      r.id = rc.recordingid"
+    ;
     
     return $this->db->getArray("
-      SELECT DISTINCT
-        r.*
-      FROM
-        recordings_categories AS rc,
-        recordings AS r
-      WHERE
-        rc.categoryid IN ('" . implode("', '", $categoryids ) . "') AND
-        r.id = rc.recordingid AND
-        " . self::getPublicRecordingWhere() .
+      " . self::getUnionSelect( $user, 'r.*', $from, $where ) .
       ( strlen( $order ) ? 'ORDER BY ' . $order : '' ) . " " .
       ( is_numeric( $start ) ? 'LIMIT ' . $start . ', ' . $limit : "" )
     );
