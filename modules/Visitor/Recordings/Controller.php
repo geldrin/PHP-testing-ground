@@ -248,28 +248,34 @@ class Controller extends \Visitor\Controller {
   
   public function checkstreamaccessAction() {
     
-    $param = $this->application->getParameter('sessionid');
     \Springboard\Debug::getInstance()->log( false, false, var_export( $_SERVER, true ) );
-    $pos         = strrpos( $param, '_' );
-    $sessionid   = substr( $param, 0, $pos );
-    $recordingid = intval( substr( $param, $pos + 1 ) );
-    $result      = '0';
+    $param   = $this->application->getParameter('sessionid');
+    $result  = '0';
+    $matched =
+      preg_match(
+        '/(?P<domain>[a-z\.]+)_' .
+        '(?P<sessionid>[a-z0-9]{32})_' .
+        '(?P<recordingid>\d+)/',
+        $param,
+        $matches
+      )
+    ;
     
-    if ( preg_match('/^[a-z0-9]{32}$/', $sessionid ) and $recordingid ) {
+    if ( $matched ) {
       
-      $this->bootstrap->setupSession( true, $sessionid );
+      $this->bootstrap->setupSession( true, $matches['sessionid'], $matches['domain'] );
       $access = $this->bootstrap->getSession('recordingaccess');
       
-      if ( $access[ $recordingid ] !== true ) {
+      if ( $access[ $matches['recordingid'] ] !== true ) {
         
         $user = $this->bootstrap->getSession('user');
-        $recordingsModel = $this->modelIDCheck('recordings', $recordingid, false );
+        $recordingsModel = $this->modelIDCheck('recordings', $matches['recordingid'], false );
         
         if ( $recordingsModel ) {
           
-          $access[ $recordingid ] = $recordingsModel->userHasAccess( $user );
+          $access[ $matches['recordingid'] ] = $recordingsModel->userHasAccess( $user );
           
-          if ( $access[ $recordingid ] === true )
+          if ( $access[ $matches['recordingid'] ] === true )
             $result = '1';
           
         }

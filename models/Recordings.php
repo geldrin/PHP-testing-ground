@@ -1267,15 +1267,14 @@ class Recordings extends \Springboard\Model {
   
   protected function getWowzaUrl( $type, $domain, $needextraparam = false, $sessionid = null ) {
     
-    $config = $this->bootstrap->config['wowza'];
-    $url   = sprintf( $config[ $type ], $domain );
+    $url = $this->bootstrap->config['wowza'][ $type ];
     
     if ( !$needextraparam )
       return $url;
     else {
       
       $this->ensureID();
-      return $url . '?sessionid=' . $sessionid . '_' . $this->id;
+      return $url . '?sessionid=' . $domain . '_' . $sessionid . '_' . $this->id;
       
     }
     

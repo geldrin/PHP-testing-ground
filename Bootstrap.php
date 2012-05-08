@@ -95,7 +95,7 @@ class Bootstrap {
     
   }
   
-  public function setupSession( $allowoverride = false, $sessionid = null ) {
+  public function setupSession( $allowoverride = false, $sessionid = null, $domain = null ) {
     
     if ( $this->sessionstarted )
       return;
@@ -103,8 +103,10 @@ class Bootstrap {
     $cookiedomain = $this->config['cookiedomain'];
     // egy dinamikus cookie domain a host alapjan amibe a static. aldomain
     // nem tartozik bele
-    if ( isset( $_SERVER['SERVER_NAME'] ) )
+    if ( isset( $_SERVER['SERVER_NAME'] ) and $domain === null )
       $cookiedomain = '.' . str_replace( 'static.', '', $_SERVER['SERVER_NAME'] );
+    elseif ( $domain !== null )
+      $cookiedomain = '.' . $domain;
     
     ini_set('session.cookie_domain',    $cookiedomain );
     session_set_cookie_params( 0 , '/', $cookiedomain );
