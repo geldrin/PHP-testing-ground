@@ -11,10 +11,12 @@ class All extends \Visitor\Paging {
   protected $insertbeforepager = Array( 'Visitor/Search/Paging/AllBeforepager.tpl' );
   protected $template = 'Visitor/Search/Paging/All.tpl';
   protected $recordingsModel;
+  protected $user;
   
   public function init() {
     
     $l                 = $this->bootstrap->getLocalization();
+    $this->user        = $this->bootstrap->getSession('user');
     $this->foreachelse = $l('', 'foreachelse');
     $this->title       = $l('search', 'all_title');
     $this->controller->toSmarty['listclass'] = 'recordinglist';
@@ -45,6 +47,7 @@ class All extends \Visitor\Paging {
     $this->recordingsModel = $this->bootstrap->getModel('recordings');
     
     return $this->itemcount = $this->recordingsModel->getSearchAllCount(
+      $this->user,
       $this->controller->organization['id'],
       $this->searchterm
     );
@@ -57,6 +60,7 @@ class All extends \Visitor\Paging {
       return array();
     
     $items = $this->recordingsModel->getSearchAllArray(
+      $this->user,
       $this->controller->organization['id'],
       $this->searchterm,
       $start, $limit, $orderby

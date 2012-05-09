@@ -783,9 +783,11 @@ class Recordings extends \Springboard\Model {
         $publicwhere = ' AND ' . $publicwhere;
       
       return "
-        SELECT $select
-        FROM $from
-        WHERE $where $publicwhere
+        (
+          SELECT $select
+          FROM $from
+          WHERE $where $publicwhere
+        )
       ";
       
     }
@@ -1500,10 +1502,17 @@ class Recordings extends \Springboard\Model {
     
   }
   
-  public function getSearchAllCount( $organizationid, $searchterm ) {
+  public function getSearchAllCount( $user, $organizationid, $searchterm ) {
     
     $searchterm  = str_replace( ' ', '%', $searchterm );
     $searchterm  = $this->db->qstr( '%' . $searchterm . '%' );
+    $where   = "
+      (
+        r.primarymetadatacache LIKE $searchterm OR
+        r.additionalcache LIKE $searchterm
+      ) AND
+      r.organizationid = '$organizationid'
+    ";
     
     $query   = "
       SELECT
@@ -1526,16 +1535,10 @@ class Recordings extends \Springboard\Model {
       )
       +
       (
-        SELECT
-          COUNT(*)
-        FROM recordings
-        WHERE
-          " . self::getPublicRecordingWhere() . " AND
-          (
-            primarymetadatacache LIKE $searchterm OR
-            additionalcache LIKE $searchterm
-          ) AND
-          organizationid = '$organizationid'
+        SELECT COUNT(*) FROM
+        (
+          " . self::getUnionSelect( $user, 'r.id', 'recordings AS r', $where ) . "
+        ) AS subcount
       ) AS count
     ";
     
@@ -1543,10 +1546,41 @@ class Recordings extends \Springboard\Model {
     
   }
   
-  public function getSearchAllArray( $organizationid, $searchterm, $start, $limit, $order ) {
+  public function getSearchAllArray( $user, $organizationid, $searchterm, $start, $limit, $order ) {
     
     $searchterm  = str_replace( ' ', '%', $searchterm );
     $searchterm  = $this->db->qstr( '%' . $searchterm . '%' );
+    $select = "
+      'recording' AS type,
+      (
+        1 +
+        IF( r.title LIKE $searchterm, 2, 0 ) +
+        IF( r.subtitle LIKE $searchterm, 1, 0 ) +
+        IF( r.description LIKE $searchterm, 1, 0 ) +
+        IF( r.primarymetadatacache LIKE $searchterm, 1, 0 )
+      ) AS relevancy,
+      r.id,
+      '1' AS parentid,
+      r.userid,
+      r.organizationid,
+      r.title,
+      r.subtitle,
+      r.description,
+      '' AS url,
+      r.indexphotofilename,
+      '0' AS channeltypeid,
+      r.recordedtimestamp,
+      r.numberofviews,
+      r.rating,
+      '0' AS numberofrecordings
+    ";
+    $where  = "
+      (
+        r.primarymetadatacache LIKE $searchterm OR
+        r.additionalcache LIKE $searchterm
+      ) AND
+      r.organizationid = '$organizationid'
+    ";
     
     $query   = "
       (
@@ -1585,41 +1619,8 @@ class Recordings extends \Springboard\Model {
           ) AND
           isliveevent = 0 AND
           organizationid = '$organizationid'
-      )
-      UNION ALL
-      (
-        SELECT
-          'recording' AS type,
-          (
-            1 +
-            IF( title LIKE $searchterm, 2, 0 ) +
-            IF( subtitle LIKE $searchterm, 1, 0 ) +
-            IF( description LIKE $searchterm, 1, 0 ) +
-            IF( primarymetadatacache LIKE $searchterm, 1, 0 )
-          ) AS relevancy,
-          id,
-          '1' AS parentid,
-          userid,
-          organizationid,
-          title,
-          subtitle,
-          description,
-          '' AS url,
-          indexphotofilename,
-          '0' AS channeltypeid,
-          recordedtimestamp,
-          numberofviews,
-          rating,
-          '0' AS numberofrecordings
-        FROM recordings
-        WHERE
-          " . self::getPublicRecordingWhere() . " AND
-          (
-            primarymetadatacache LIKE $searchterm OR
-            additionalcache LIKE $searchterm
-          ) AND
-          organizationid = '$organizationid'
-      )
+      ) UNION ALL
+      " . self::getUnionSelect( $user, $select, 'recordings AS r', $where ) . "
       ORDER BY $order
     ";
     
