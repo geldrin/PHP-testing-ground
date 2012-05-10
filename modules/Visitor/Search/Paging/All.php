@@ -1,9 +1,9 @@
 <?php
 namespace Visitor\Search\Paging;
 class All extends \Visitor\Paging {
-  protected $orderkey = 'relevancy';
+  protected $orderkey = 'relevancy_desc';
   protected $sort = array(
-    'relevancy'              => 'relevancy DESC',
+    'relevancy_desc'         => 'relevancy DESC',
     'recordedtimestamp_desc' => 'recordedtimestamp DESC',
     'recordedtimestamp'      => 'recordedtimestamp',
   );
