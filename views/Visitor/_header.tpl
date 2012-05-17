@@ -33,6 +33,10 @@
   var STATIC_URI = '{$STATIC_URI}';
   var VERSION    = '{$VERSION}';
   var language   = '{$language}';
+  var BROWSER    = {ldelim}
+    mobile: {if $browser.mobile}true{else}false{/if},
+    obsolete: {if $browser.obsolete}true{else}false{/if} 
+  {rdelim};
   </script>
   
 </head>

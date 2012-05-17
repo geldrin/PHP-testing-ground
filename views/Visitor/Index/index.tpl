@@ -46,6 +46,7 @@
         </a>
       {/if}
     </div>
+    <div class="clear"></div>
   </div>
 {/if}
 
