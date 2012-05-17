@@ -11,7 +11,7 @@
     <div class="categoryname">
       <h2><a href="{$language}/categories/details/{$category.id},{$category.name|filenameize}" title="{$category.name|escape:html}">{$category.name|escape:html}</a></h2>
       <div class="numberofrecordings">({$category.numberofrecordings|default:0})</div>
-      <a href="{$language}/categories/details/{$category.id},{$category.name|filenameize}" class="categorypic"><img src="{$organization|@uri:static}categories/1.png" width="140" height="100"/></a>
+      <a href="{$language}/categories/details/{$category.id},{$category.name|filenameize}" class="categorypic"><img src="{$STATIC_URI}categories/1.png" width="140" height="100"/></a>
     </div>
     <ul class="subcategorylist">
       {foreach from=$category.children item=subcategory}

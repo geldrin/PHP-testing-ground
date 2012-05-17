@@ -6,16 +6,16 @@
   <meta name="author" content="Dots Amazing - www.dotsamazing.com" />
   <meta name="MSSmartTagsPreventParsing" content="true" />
   <meta name="format-detection" content="telephone=no" />{*} iphone ne vegye a random szamokat telefonszamoknak {/*}
-  <base href="{$organization|@uri:base}" /><!--[if IE]></base><![endif]-->
+  <base href="{$BASE_URI}" /><!--[if IE]></base><![endif]-->
   <title>{#sitename#}</title>
   {jscombine}
-  <script type="text/javascript" src="{$organization|@uri:static}js/jquery-1.7.1.min{$VERSION}.js"></script>
-  <script type="text/javascript" src="{$organization|@uri:static}js/swfobject.full{$VERSION}.js"></script>
-  <script type="text/javascript" src="{$organization|@uri:static}js/tools{$VERSION}.js"></script>
+  <script type="text/javascript" src="{$STATIC_URI}js/jquery-1.7.1.min{$VERSION}.js"></script>
+  <script type="text/javascript" src="{$STATIC_URI}js/swfobject.full{$VERSION}.js"></script>
+  <script type="text/javascript" src="{$STATIC_URI}js/tools{$VERSION}.js"></script>
   {/jscombine}
   <script type="text/javascript">
-  var BASE_URI   = '{$organization|@uri:base}';
-  var STATIC_URI = '{$organization|@uri:static}';
+  var BASE_URI   = '{$BASE_URI}';
+  var STATIC_URI = '{$STATIC_URI}';
   var VERSION    = '{$VERSION}';
   var language   = '{$language}';
   </script>
