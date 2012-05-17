@@ -294,6 +294,11 @@ class Bootstrap {
     
     if ( !ISCLI ) {
       
+      $info = $this->getSession('browser');
+      if ( !count( $info ) )
+        $info->setArray( Springboard\Browser::getInfo() );
+      
+      $smarty->assign('browser', $info );
       $smarty->assign('sessionmessage', $this->getSession('message')->get('message') );
       $user = $this->getSession('user');
       if ( $user['id'] )

@@ -33,7 +33,7 @@
   
 </head>
 <body>
-{if $browserInfo.obsolete}
+{if $browser.obsolete}
   <a class="openinlayer" target="_blank" href="{$organization|@uri:base}{$language}/tools/updateyourbrowser" id="browserAlert">{#sitewide_updateyourbrowser#}</a>
 {/if}
 <div id="headerbg"></div>
