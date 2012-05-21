@@ -16,44 +16,37 @@
     width: auto;
   }
   
-  /*
   #indexcontainer {
     float: none;
-    width: 100%;
-  }
-  #indexcontainer .wlarge, #indexcontainer .wwide, #indexcontainer .leftdoublebox {
-    width: auto;
-    height: auto;
-  }
-  #indexcontainer .wlarge .imageinfowrap {
-    height: 19.25287356321839%;
-  }
-  #indexcontainer .wwide .imageinfowrap {
-    height: 39.88095238095238%;
+    width: 924px;
   }
   #indexcontainer img {
     width: 100%;
   }
+  #indexcontainer .avatar img {
+    width: auto;
+  }
   #indexcontainer .playpic {
-    width: 19.7411003236246%;
-    height: 25.28735632183908%;
     -webkit-background-size: 100% auto;
     background-size: 100% auto;
     background-repeat: no-repeat;
     background-position: center center;
-    margin: -25.28735632183908% 0px 0px -19.7411003236246%;
   }
-  #indexcontainer .avatar {
-    display: none;
+  #indexcontainer .leftdoublebox {
+    width: 592px;
+    height: 333px;
   }
-  #indexcontainer .content {
-    padding-left: 1%;
+  #indexcontainer .rightbox {
+    width: 293px;
   }
-  #indexcontainer .rightbox .imageinfo.first {
-    margin-bottom: 3.160919540229885%;
+  #indexcontainer .wlarge {
+    width: 592px;
+    height: 333px;
   }
-  */
-  
+  #indexcontainer .wwide {
+    width: 288px;
+    height: 161px;
+  }
   
   /* recordinglist auto-size */
   .recordinglist, .recordinglist .listitem {
@@ -194,6 +187,29 @@
   #footer .footerlinks li {
     display: inline;
   }
+  
+  #indexcontainer {
+    width: 640px;
+  }
+  #indexcontainer .avatar {
+    display: none;
+  }
+  #indexcontainer .leftdoublebox {
+    width: 419px;
+    height: 236px;
+  }
+  #indexcontainer .rightbox {
+    width: 205px;
+  }
+  #indexcontainer .wlarge {
+    width: 419px;
+    height: 236px;
+  }
+  #indexcontainer .wwide {
+    width: 200px;
+    height: 112px;
+  }
+  
 }
 @media all and (max-width: 460px) {
   
@@ -218,6 +234,18 @@
     font-size: 12px;
     margin-right: 15px;
     padding: 3px 5px 2px 5px;
+  }
+  
+  #indexcontainer {
+    width: 440px;
+    height: 246px;
+  }
+  #indexcontainer .rightbox {
+    display: none;
+  }
+  #indexcontainer .wlarge {
+    width: 437px;
+    height: 246px;
   }
   
 }
