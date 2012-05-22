@@ -73,6 +73,9 @@ function setupHeaderSearch() {
 
 function setupHeaderLogin() {
   
+  if ( BROWSER.mobile )
+    return;
+  
   $j('#headerloginactionlink').on('click', function( e ) {
     e.preventDefault();
     $j('#headerloginform, #headerloginactions').toggle();

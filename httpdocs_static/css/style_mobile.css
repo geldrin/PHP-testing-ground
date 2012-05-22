@@ -5,6 +5,16 @@
   #headerbg, #footerbg {
     min-width: 0px;
   }
+  #headersearchlink {
+    display: block;
+    text-align: right;
+  }
+  #headersearch form {
+    display: none;
+  }
+  #languageselector {
+    display: none;
+  }
   #wrap {
     width: auto;
     padding: 0px 10px 0px 10px;
@@ -16,6 +26,7 @@
     width: auto;
   }
   
+  /* index contaner */
   #indexcontainer {
     float: none;
     width: 924px;
@@ -35,9 +46,11 @@
   #indexcontainer .leftdoublebox {
     width: 592px;
     height: 333px;
+    float: left;
   }
   #indexcontainer .rightbox {
     width: 293px;
+    float: right;
   }
   #indexcontainer .wlarge {
     width: 592px;
@@ -108,6 +121,16 @@
   select {
     width: 100%;
   }
+  .form.search {
+    margin-bottom: 10px;
+  }
+  .form.search .inputtext {
+    width: 200px;
+  }
+  .form.search .submitbutton {
+    vertical-align: top;
+    margin-top: 1px;
+  }
 }
 
 @media all and (max-width: 944px) {
@@ -149,8 +172,8 @@
   #headerbg {
     height: 76px;
   }
-  #headerlogin, #headersearch {
-    display: none;
+  #headersearch.rightbox {
+    width: auto;
   }
   #headerlogo a, #headerlogo a span {
     width: 126px;
@@ -189,35 +212,54 @@
   }
   
   #indexcontainer {
-    width: 640px;
+    width: 100%;
   }
   #indexcontainer .avatar {
     display: none;
   }
+  #indexcontainer .content {
+    padding-left: 10px;
+  }
   #indexcontainer .leftdoublebox {
-    width: 419px;
-    height: 236px;
+    width: 100%;
+    height: auto;
+    float: none;
+    margin-bottom: 10px;
   }
   #indexcontainer .rightbox {
-    width: 205px;
+    width: 100%;
+    float: none;
   }
   #indexcontainer .wlarge {
-    width: 419px;
-    height: 236px;
+    width: 100%;
+    height: auto;
   }
   #indexcontainer .wwide {
-    width: 200px;
-    height: 112px;
+    width: 100%;
+    height: auto;
   }
   
+  .leftdoublebox, .rightbox, .halfbox {
+    float: none;
+    width: auto;
+  }
+  .rightbox {
+    margin: 0;
+  }
+  #header .rightbox {
+    float: right;
+  }
 }
 @media all and (max-width: 460px) {
   
   #headerbg {
     height: 55px;
   }
-  #headerlogin, #headersearch {
-    display: none;
+  #headerloginactions, #headersearch {
+    margin-top: 2px;
+  }
+  #headersearchlink, #headerloginactions, #headerloginactions a {
+    font-size: 12px;
   }
   #headerlogo a, #headerlogo a span {
     width: 90px;
@@ -235,17 +277,11 @@
     margin-right: 15px;
     padding: 3px 5px 2px 5px;
   }
-  
-  #indexcontainer {
-    width: 440px;
-    height: 246px;
+  #headermenu li.active a {
+    -webkit-background-size: 8px auto;
+    background-size: 8px auto;
   }
-  #indexcontainer .rightbox {
-    display: none;
+  .form.search .submitbutton {
+    width: 70px;
   }
-  #indexcontainer .wlarge {
-    width: 437px;
-    height: 246px;
-  }
-  
 }

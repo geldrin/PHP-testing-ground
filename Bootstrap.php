@@ -14,6 +14,7 @@ class Bootstrap {
   public $config            = array();
   public $basepath;
   public $production;
+  public $overridedisablegzip = null;
   
   public function __construct( $application ) {
     
@@ -297,6 +298,9 @@ class Bootstrap {
       $info = $this->getSession('browser');
       if ( !count( $info ) )
         $info->setArray( Springboard\Browser::getInfo() );
+      
+      if ( $info['mobile'] and $info['mobiledevice'] == 'android' )
+        $this->overridedisablegzip = true;
       
       $smarty->assign('browser', $info );
       $smarty->assign('sessionmessage', $this->getSession('message')->get('message') );

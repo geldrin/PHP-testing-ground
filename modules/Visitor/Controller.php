@@ -134,4 +134,13 @@ class Controller extends \Springboard\Controller\Visitor {
     
   }
   
+  public function output( $string, $disablegzip = false, $disablekill = false ) {
+    
+    if ( $this->bootstrap->overridedisablegzip !== null )
+      $disablegzip = $this->bootstrap->overridedisablegzip;
+    
+    parent::output( $string, $disablegzip, $disablekill );
+    
+  }
+  
 }

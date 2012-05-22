@@ -63,7 +63,7 @@
             <input class="inputtext inputbackground clearonclick" type="text" name="q" data-origval="{#sitewide_search_input#|escape:html}" value="{$smarty.request.q|default:#sitewide_search_input#|escape:html}"/>
             <a href="#" id="headersearcharrow"></a>
           </form>
-          
+          <div id="headersearchlink"><a href="{$language}/search/all">{#sitewide_search#}</a></div>
           <div id="languageselector" class="inputbackground right">
             {foreach from=$organization.languages key=languageid item=item}
               {if $languageid == $language}
