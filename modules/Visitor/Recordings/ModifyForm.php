@@ -25,7 +25,7 @@ class ModifyForm extends \Visitor\HelpForm {
         )
       )
     ;
-    
+    $this->controller->toSmarty['formclass']    = 'leftdoublebox';
     $this->controller->toSmarty['insertbefore'] = 'Visitor/Recordings/ModifyTimeline.tpl';
     parent::init();
     

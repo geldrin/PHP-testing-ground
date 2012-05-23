@@ -1,6 +1,3 @@
-<div class="title">
-  <h1>{$recording.title|escape:html}</h1>
-</div>
 
 <div class="timeline">
   <ul>
@@ -20,6 +17,9 @@
     <li{if $step == 'modifysharing'} class="active"{/if}>
       <a href="{$language}/recordings/modifysharing/{$recording.id}?forward={$smarty.request.forward|escape:url}">{#recordings__timeline_modifysharing#}</a>
     </li>
-    <li class="last"></li>
   </ul>
+</div>
+
+<div class="title">
+  <h1>{$recording.title|escape:html}</h1>
 </div>

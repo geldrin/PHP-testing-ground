@@ -223,6 +223,11 @@ a.submitbutton {
 a.submitbutton:hover {
   text-decoration: none;
 }
+.form.leftdoublebox .selectmultiple,
+.form.leftdoublebox .elementcolumn input[type=text], .elementcolumn input[type=password], .form .inputtext,
+.form.leftdoublebox textarea { /*+165*/
+  width: 425px;
+}
 
 .smallinfo {
   background-image: url(images/help.png);
@@ -483,7 +488,7 @@ a.submitbutton:hover {
 }
 
 /* avatar */
-.avatar img {
+.imageinfo .avatar img, #headertop .avatar img {
   -moz-box-shadow: 0 1px 3px rgba(000, 000, 000, 0.75), inset 0 1px rgba(255, 255, 255, 0.48);
   -webkit-box-shadow: 0 1px 3px rgba(000, 000, 000, 0.75), inset 0 1px rgba(255, 255, 255, 0.48);
   box-shadow: 0 1px 3px rgba(000, 000, 000, 0.75), inset 0 1px rgba(255, 255, 255, 0.48);
@@ -885,55 +890,72 @@ a#currentusername span {
 /* timeline */
 .timeline {
   width: 950px;
-  border: 1px solid #21abf0;
+  border: 1px solid #bdcad1;
   margin-bottom: 20px;
   clear: both;
   height: 40px;
   text-align: center;
+  -moz-border-radius: 5px;
+  -webkit-border-radius: 5px;
+  border-radius: 5px;
+  -moz-box-shadow: 0px 1px 1px 0px #fff, inset 0px 1px 1px rgba(000,000,000,0.3);
+  -webkit-box-shadow: 0px 1px 1px 0px #fff, inset 0px 1px 1px rgba(000,000,000,0.3);
+  box-shadow: 0px 1px 1px 0px #fff;
+  
 }
 .timeline ul {
   height: 40px;
-  margin: 0px 0px 0px 100px;
+  margin: 0;
   padding: 0;
   list-style-type: none;
 }
 .timeline li {
+  width: 20%;
   margin: 0;
   padding: 0;
   float: left;
   height: 40px;
   display: inline-block;
-  background-image: url(images/timeline_bg_inactiveright.png);
+  text-align: center;
   background-repeat: no-repeat;
   background-position: 0px 0px;
 }
 .timeline li a {
-  padding: 12px 10px 10px 60px;
-  display: inline-block;
-  background-image: url(images/timeline_ok.png);
-  background-repeat: no-repeat;
-  background-position: 33px 12px;
+  padding: 12px 10px 10px 10px;
+  display: block;
+  background: #cad8df;
   font-weight: bold;
   font-size: 15px;
+  color: #648190;
+  text-shadow: 0px 1px 0px #fff;
 }
-.timeline li.active {
-  background-color: #21abf0;
-  background-image: url(images/timeline_bg_activeleft.png);
+.timeline li:nth-child(n+2) a {
+  background: url(images/timeline_bg_inactiveright.png) left no-repeat, #cad8df;
 }
 .timeline li.active a {
-  background-image: url(images/timeline_x_active.png);
+  color: #29617e;
+  -pie-background: url(images/timeline_bg_activeleft.png) left no-repeat, linear-gradient(left, #b4d2e1, #78c2e7);
+  background: url(images/timeline_bg_activeleft.png) left no-repeat, -moz-linear-gradient(left, #b4d2e1, #78c2e7);
+  background: url(images/timeline_bg_activeleft.png) left no-repeat, -o-linear-gradientleftt, #b4d2e1, #78c2e7);
+  background: url(images/timeline_bg_activeleft.png) left no-repeat, -webkit-linear-gradient(left, #b4d2e1, #78c2e7);
+  background: url(images/timeline_bg_activeleft.png) left no-repeat, linear-gradient(left, #b4d2e1, #78c2e7);
+}
+.timeline li:nth-child(1).active a {
+  -pie-background: linear-gradient(left, #b4d2e1, #78c2e7);
+  background: -moz-linear-gradient(left, #b4d2e1, #78c2e7);
+  background: -o-linear-gradientleftt, #b4d2e1, #78c2e7);
+  background: -webkit-linear-gradient(left, #b4d2e1, #78c2e7);
+  background: linear-gradient(left, #b4d2e1, #78c2e7);
 }
 .timeline li.active + li {
   background-image: url(images/timeline_bg_activeright.png);
 }
 .timeline li.active + li a, .timeline li.active + li + li a, .timeline li.active + li + li + li a, .timeline li.active + li + li + li + li a {
-  background-image: url(images/timeline_x.png);
+  background-color: transparent;
+  color: #666;
 }
 .timeline li.last {
   width: 20px;
-}
-.timeline li.active a {
-  color: #fff;
 }
 
 /* pager */
@@ -1296,48 +1318,6 @@ a#currentusername span {
   padding-right: 3px;
 }
 
-/* ratewidget */
-.ratewidget h2 {
-  display: inline-block;
-  padding: 0;
-  margin: 0;
-}
-.ratewidget ul, .ratewidget li {
-  display: inline-block;
-  margin: 0;
-  padding: 0;
-}
-.recordinglist .ratewidget li {
-  margin: 0;
-  padding: 0;
-}
-.ratewidget ul {
-  margin-left: 5px !important;
-  list-style-type: none;
-}
-.ratewidget a, .ratewidget a span, .recordinglist .recordinginfo .rating div, .recordinglist .recordinginfo .rating span {
-  display: inline-block;
-  width: 16px;
-  height: 16px;
-  overflow: hidden;
-}
-.ratewidget a span, .recordinglist .recordinginfo .rating span {
-  background-image: url(images/star_empty.png);
-}
-.ratewidget li.full span, .recordinglist .recordinginfo .rating .full span {
-  background-image: url(images/star_full.png);
-}
-.ratewidget .spinner {
-  display: inline-block;
-  width: 16px;
-  height: 16px;
-  background-image: url(images/spinner.gif);
-  margin-right: 5px;
-  position: relative;
-  top: 3px;
-  display: none;
-}
-
 /* treeadminlist */
 .treeadminlist {
   margin: 10px 0px 10px 0px;
@@ -1521,4 +1501,79 @@ a#currentusername span {
   color: #ccc;
   font-weight: normal;
   margin: 0;
+}
+
+/* recording metadata */
+#metadata {
+  margin-top: 20px;
+}
+#metadata h3, #metadatatable .labelcolumn {
+  font-size: 12px;
+  font-weight: bold;
+  padding: 0;
+  margin: 0;
+}
+#metadata .ratewidget h3 {
+  margin: 0 0 0 1px;
+}
+.recordinginfo .rating {
+  margin-top: -2px;
+}
+#metadatatable .labelcolumn {
+  padding-right: 30px;
+}
+/* uploader */
+#metadata .recordinguploader {
+  display: inline-block;
+  border: 1px solid #aeaeae;
+  -webkit-border-radius: 5px;
+  -moz-border-radius: 5px;
+  border-radius: 5px;
+  padding: 0;
+  height: 50px;
+}
+#metadata .recordinguploader .avatar {
+  display: inline-block;
+  margin: 6px 10px 0px 8px;
+}
+#metadata .recordinguploader .content {
+  display: inline-block;
+  vertical-align: top;
+  margin: 6px 20px 0px 0px;
+}
+#metadata .recordinguploader .uploader {
+  font-size: 17px;
+  font-weight: bold;
+}
+/* rate widget */
+#metadata .ratewidget ul, .ratewidget li {
+  display: inline-block;
+  margin: 0;
+  padding: 0;
+}
+.ratewidget ul {
+  margin-left: 5px;
+  list-style-type: none;
+}
+.ratewidget a, .ratewidget a span, .recordinglist .recordinginfo .rating div, .recordinglist .recordinginfo .rating span {
+  display: inline-block;
+  width: 21px;
+  height: 20px;
+  overflow: hidden;
+}
+.ratewidget a span, .recordinglist .recordinginfo .rating span {
+  background-image: url(images/star_empty.png);
+}
+.ratewidget li.full span, .recordinglist .recordinginfo .rating .full span {
+  background-image: url(images/star_full.png);
+}
+.ratewidget .spinner {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  background-image: url(images/spinner.gif);
+  margin-right: 5px;
+  position: relative;
+  top: 3px;
+  display: none;
 }
