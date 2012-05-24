@@ -12,6 +12,7 @@ $j(document).ready(function() {
   runIfExists('#headersearch', setupHeaderSearch );
   runIfExists('.ratewidget', setupRateWidget );
   runIfExists('#uploadrow', setupUpload );
+  runIfExists('#infotoggle', setupInfoToggle );
   
   $j('#scriptingcontainer').show();
   
@@ -33,6 +34,26 @@ function runIfExists( selector, func ) {
   
   if ( $j( selector ).length > 0 )
     func();
+  
+}
+
+function setupInfoToggle() {
+  
+  $j('#infotoggle a').click( function(e) {
+    e.preventDefault();
+    if ( $j('#metadatatable').is(':visible') ) {
+      
+      $j('#metadatatable').hide();
+      $j(this).text( $j(this).attr('data-show') );
+      
+    } else {
+      
+      $j('#metadatatable').show();
+      $j(this).text( $j(this).attr('data-hide') );
+      
+    }
+    
+  });
   
 }
 

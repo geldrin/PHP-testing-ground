@@ -133,14 +133,15 @@ class Controller extends \Visitor\Controller {
     if ( $access[ $recordingsModel->id ] !== true )
       $this->redirectToController('contents', $access[ $recordingsModel->id ] );
     
-    // TODO relatedvideos
-    
-    $this->toSmarty['recording']    = $recordingsModel->row;
-    $this->toSmarty['flashdata']    = $recordingsModel->getFlashData( $this->toSmarty, session_id() );
-    $this->toSmarty['comments']     = $recordingsModel->getComments();
-    $this->toSmarty['commentcount'] = $recordingsModel->getCommentsCount();
-    $this->toSmarty['author']       = $recordingsModel->getAuthor();
-    $this->toSmarty['canrate']      = $rating[ $recordingsModel->id ];
+    $this->toSmarty['recording']     = $recordingsModel->row;
+    $this->toSmarty['flashdata']     = $recordingsModel->getFlashData( $this->toSmarty, session_id() );
+    $this->toSmarty['comments']      = $recordingsModel->getComments();
+    $this->toSmarty['commentcount']  = $recordingsModel->getCommentsCount();
+    $this->toSmarty['author']        = $recordingsModel->getAuthor();
+    $this->toSmarty['canrate']       = $rating[ $recordingsModel->id ];
+    $this->toSmarty['relatedvideos'] = $recordingsModel->getRelatedVideos(
+      $this->application->config['relatedrecordingcount']
+    );
     
     $this->smartyoutput('Visitor/Recordings/Details.tpl');
     

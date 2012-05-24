@@ -1,6 +1,6 @@
 <?php
 
-function smarty_modifier_timeformat( $seconds, $playertimestamp = false ) {
+function smarty_modifier_timeformat( $seconds, $type = 'full' ) {
   
   $ret = '';
   $l   = \Bootstrap::getInstance()->getLocalization();
@@ -22,8 +22,20 @@ function smarty_modifier_timeformat( $seconds, $playertimestamp = false ) {
   if ( $seconds > 0 or ( !strlen( $ret ) and $seconds == 0 ) )
     $ret .= $seconds . $l('', 'time_second_short'). ' ';
   
-  if ( $playertimestamp )
+  if ( $type == 'player' ) // timestamp usable by the flash player
     return $hours .'h' . $minutes . 'm' . $seconds . 's';
+  elseif ( $type == 'minimal' ) {
+    
+    $ret = array();
+    if ( $hours )
+      $ret[] = sprintf('%02d', $hours );
+    
+    $ret[] = sprintf('%02d', $minutes );
+    $ret[] = sprintf('%02d', $seconds );
+    
+    return implode(':', $ret );
+    
+  }
   
   return trim( $ret );
   

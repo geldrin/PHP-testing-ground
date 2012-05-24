@@ -224,7 +224,7 @@ a.submitbutton:hover {
   text-decoration: none;
 }
 .form.leftdoublebox .selectmultiple,
-.form.leftdoublebox .elementcolumn input[type=text], .elementcolumn input[type=password], .form .inputtext,
+.form.leftdoublebox .elementcolumn input[type=text], .form.leftdoublebox .elementcolumn input[type=password], .form.leftdoublebox .inputtext,
 .form.leftdoublebox textarea { /*+165*/
   width: 425px;
 }
@@ -1505,7 +1505,9 @@ a#currentusername span {
 
 /* recording metadata */
 #metadata {
-  margin-top: 20px;
+  margin: 20px 20px 0px 0px;
+  float: left;
+  width: 590px;
 }
 #metadata h3, #metadatatable .labelcolumn {
   font-size: 12px;
@@ -1519,8 +1521,188 @@ a#currentusername span {
 .recordinginfo .rating {
   margin-top: -2px;
 }
+#metadatatable {
+  display: none;
+}
 #metadatatable .labelcolumn {
   padding-right: 30px;
+}
+#metadata #infotoggle {
+  position: relative;
+  text-align: center;
+}
+#metadata #infotoggle div {
+  position: absolute;
+  z-index: -10;
+  bottom: 18px;
+  height: 40px;
+}
+#metadata #infotoggle .leftside {
+  background: -webkit-radial-gradient(bottom right, circle, rgba(0, 0, 0, 0.08), transparent 40px, transparent 100%);
+  background: -o-linear-gradient(bottom left, circle, rgba(0, 0, 0, 0.08), transparent 40px, transparent 100%);
+  background: -moz-radial-gradient(bottom left, circle, rgba(0, 0, 0, 0.08), transparent 40px, transparent 100%);
+  background: radial-gradient(bottom left, circle, rgba(0, 0, 0, 0.08), transparent 40px, transparent 100%);
+  width: 80px;
+  left: 0px;
+}
+#metadata #infotoggle .center {
+  background: -moz-linear-gradient(bottom, rgba(0, 0, 0, 0.12), rgba(0, 0, 0, 0.08) 1px, rgba(0, 0, 0, 0.08) 1px, transparent 40px, transparent 100%);
+  background: -o-linear-gradient(bottom, rgba(0, 0, 0, 0.12), rgba(0, 0, 0, 0.08) 1px, rgba(0, 0, 0, 0.08) 1px, transparent 40px, transparent 100%);
+  background: -webkit-linear-gradient(bottom,rgba(0, 0, 0, 0.12), rgba(0, 0, 0, 0.08) 1px, rgba(0, 0, 0, 0.08) 1px, transparent 40px, transparent 100%);
+  background: linear-gradient(bottom,rgba(0, 0, 0, 0.12), rgba(0, 0, 0, 0.08) 1px, rgba(0, 0, 0, 0.08) 1px, transparent 40px, transparent 100%);
+  top: -40px;
+  margin: 0px 80px 0px 80px;
+  width: 430px;
+}
+#metadata #infotoggle .rightside {
+  background: -webkit-radial-gradient(bottom left, circle, rgba(0, 0, 0, 0.08), transparent 40px, transparent 100%);
+  background: -moz-radial-gradient(bottom left, circle, rgba(0, 0, 0, 0.08), transparent 40px, transparent 100%);
+  background: -o-radial-gradient(bottom left, circle, rgba(0, 0, 0, 0.08), transparent 40px, transparent 100%);
+  background: radial-gradient(bottom left, circle, rgba(0, 0, 0, 0.08), transparent 40px, transparent 100%);
+  width: 80px;
+  right: 0px;
+}
+/* recommendatory */
+#recommendatory {
+  width: 340px;
+  float: right;
+}
+#recommendatory ul {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+}
+#recommendatory li {
+  display: inline-block;
+  width: 340px;
+  height: 95px;
+  margin-bottom: 15px;
+}
+#recommendatory li .recordingpic {
+  display: inline-block;
+  margin-right: 10px;
+  position: relative;
+}
+#recommendatory li .recordingpic .length {
+  position: absolute;
+  top: 66px;
+  right: 6px;
+  background-color: #333;
+  background-color: rgba(000, 000, 000, 0.6);
+  height: 18px;
+  color: #fff;
+  font-size: 12px;
+  padding: 2px 5px 2px 5px;
+}
+#recommendatory li .content {
+  display: inline-block;
+  vertical-align: top;
+  width: 170px;
+  height: 92px;
+  padding: 3px 5px 0px 0px;
+}
+#recommendatory li .content h3 {
+  font-size: 15px;
+  font-weight: bold;
+  display: inline-block;
+  overflow: hidden;
+  width: 100%;
+  max-height: 55px;
+  padding: 0;
+  margin: 0;
+}
+#recommendatory li .content h4 {
+  font-size: 12px;
+  padding: 0;
+  margin: 0;
+  display: inline-block;
+  width: 100%;
+  height: 18px;
+  overflow: hidden;
+}
+#recommendatory li .content .views {
+  font-size: 12px;
+  color: #333;
+}
+#recommendatory li .content .subtitle {
+  font-size: 10px;
+  height: 18px;
+  overflow: hidden;
+}
+#recommendatory li .content .author {
+  font-weight: bold;
+  margin-top: 10px;
+  height: 18px;
+  overflow: hidden;
+}
+
+.recommendatory ul {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+}
+.recommendatory li {
+  display: inline-block;
+  width: 470px;
+  height: 95px;
+  margin-bottom: 15px;
+}
+.recommendatory li .recordingpic {
+  display: inline-block;
+  margin-right: 10px;
+  position: relative;
+}
+.recommendatory li .recordingpic .length {
+  position: absolute;
+  background-color: #333;
+  background-color: rgba(000, 000, 000, 0.6);
+  height: 18px;
+  color: #fff;
+  font-size: 12px;
+  padding: 2px 5px 2px 5px;
+  top: 66px;
+  right: 6px;
+}
+.recommendatory li .content {
+  display: inline-block;
+  vertical-align: top;
+  width: 291px;
+  height: 92px;
+  padding: 3px 5px 0px 0px;
+}
+.recommendatory li .content h3 {
+  font-size: 15px;
+  font-weight: bold;
+  max-height: 36px;
+  padding: 0;
+  margin: 0;
+  display: inline-block;
+  overflow: hidden;
+  width: 100%;
+}
+.recommendatory li .content h4 {
+  font-size: 12px;
+  padding: 0;
+  margin: 0;
+  display: inline-block;
+  width: 100%;
+  height: 18px;
+  overflow: hidden;
+}
+.recommendatory li .content .subtitle {
+  font-size: 10px;
+  height: 18px;
+  overflow: hidden;
+}
+.recommendatory li .content .author {
+  font-weight: bold;
+  margin-top: 5px;
+  height: 18px;
+  overflow: hidden;
+}
+.recommendatory li .content .views {
+  font-size: 12px;
+  color: #333;
 }
 /* uploader */
 #metadata .recordinguploader {

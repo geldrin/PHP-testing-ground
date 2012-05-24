@@ -20,13 +20,36 @@ swfobject.embedSWF('flash/TCPlayer{$VERSION}.swf', 'playercontainer{if $recordin
   <div id="playercontainer{if $recording.mediatype == 'audio'}audio{/if}">{#recordings__noflash#}</div>
 </div>
 
-<div id="recommendatory" class="rightbox">
+{if false and !empty( $relatedvideos )}
+<div class="recommendatory">
   <div class="title">
     <h2>{#recordings__relatedvideos#}</h2>
   </div>
+  
+  <ul>
+    {foreach from=$relatedvideos item=item}
+      <li>
+        <div class="recordingpic">
+          <a href="{$language}/recordings/details/{$item.id},{$item.title|filenameize}">
+            <div class="length">{$item.masterlength|timeformat:minimal}</div>
+            <img src="{$item|@indexphoto}" width="150" height="94"/>
+          </a>
+        </div>
+        <div class="content">
+          <h3><a href="{$language}/recordings/details/{$item.id},{$item.title|filenameize}">{$item.title|mb_wordwrap:13|escape:html}</a></h3>
+          {if $item.subtitle|stringempty}
+            <h4>{$item.subtitle|mb_wordwrap:20|escape:html}</h4>
+          {/if}
+          <div class="author">{$item.nickname|mb_wordwrap:20|escape:html}</div>
+          {assign var=views value=$item.numberofviews|numberformat}
+          <div class="views">{#recordings__recording_views#|sprintf:$views}</div>
+        </div>
+      </li>
+    {/foreach}
+  </ul>
 </div>
-
-<div id="metadata" class="leftdoublebox">
+{/if}
+<div id="metadata">
   {assign var=numberofratings value=$recording.numberofratings|numberformat}
   <div class="ratewidget right"{if $canrate} nojs="1"{/if} title="{#recordings__ratewidgetheading#|sprintf:$numberofratings}">
     <span class="spinner"></span>
@@ -80,7 +103,12 @@ swfobject.embedSWF('flash/TCPlayer{$VERSION}.swf', 'playercontainer{if $recordin
       </tr>
     {/if}
   </table>
-  <a class="hidedetails" href="#">{#recordings__hidedetails#}</a>
+  <div id="infotoggle">
+    <div class="leftside"></div>
+    <div class="rightside"></div>
+    <div class="center"></div>
+    <a href="#" data-show="{#recordings__showdetails#|escape:html}" data-hide="{#recordings__hidedetails#|escape:html}">{#recordings__showdetails#}</a>
+  </div>
 </div>
 <div class="clear"></div>
 
@@ -94,13 +122,17 @@ swfobject.embedSWF('flash/TCPlayer{$VERSION}.swf', 'playercontainer{if $recordin
     {foreach from=$relatedvideos item=item}
       <li>
         <div class="recordingpic">
-          <a href="#">
-            <div class="length">{$item.masterlength|timeformat}</div>
-            <img src="{$item|@indexphoto}" width="150" height="94"/>
+          <a href="{$language}/recordings/details/{$item.id},{$item.title|filenameize}">
+            <div class="length">{$item.masterlength|timeformat:minimal}</div>
+            <img src="{$item|@indexphoto}" width="159" height="94"/>
           </a>
         </div>
         <div class="content">
-          <h3><a href="{$language}/recordings/details/{$item.id},{$item|@title|filenameize}">{$item|@title|mb_wordwrap:30|escape:html}</a></h3>
+          <h3><a href="{$language}/recordings/details/{$item.id},{$item.title|filenameize}">{$item.title|mb_wordwrap:22|escape:html}</a></h3>
+          {if $item.subtitle|stringempty}
+            <h4>{$item.subtitle|mb_truncate:27|escape:html}</h4>
+          {/if}
+          <div class="author">{$item.nickname|mb_wordwrap:20|escape:html}</div>
           {assign var=views value=$item.numberofviews|numberformat}
           <div class="views">{#recordings__recording_views#|sprintf:$views}</div>
         </div>
