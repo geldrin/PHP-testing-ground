@@ -84,6 +84,10 @@ swfobject.embedSWF('flash/TCPlayer{$VERSION}.swf', 'playercontainer{if $recordin
   </div>
   
   <table id="metadatatable">
+  <tr>
+      <td class="labelcolumn">{#recordings__metadata_views#}:</td>
+      <td>{$recording.numberofviews|numberformat}</td>
+    </tr>
     <tr>
       <td class="labelcolumn">{#recordings__recordlength#}:</td>
       <td>{$recording.masterlength|timeformat}</td>

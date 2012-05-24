@@ -166,9 +166,9 @@ textarea {
   font-size: 13px;
 }
 .inputbackground, .form textarea, .form input[type=text], .form input[type=password], .form .inputtext {
-  box-shadow: 0px 1px 2px rgb(255, 255, 255), inset 0px 1px 4px rgba(000, 000, 000, 0.16);
-  -moz-box-shadow: 0px 1px 2px rgb(255, 255, 255), inset 0px 1px 4px rgba(000, 000, 000, 0.16);
-  -webkit-box-shadow: 0px 1px 2px rgb(255, 255, 255), inset 0px 1px 4px rgba(000, 000, 000, 0.16);
+  box-shadow: 0px 1px 2px rgb(255, 255, 255), inset 0px 1px 4px rgba(0, 0, 0, 0.16);
+  -moz-box-shadow: 0px 1px 2px rgb(255, 255, 255), inset 0px 1px 4px rgba(0, 0, 0, 0.16);
+  -webkit-box-shadow: 0px 1px 2px rgb(255, 255, 255), inset 0px 1px 4px rgba(0, 0, 0, 0.16);
   border: 1px solid #999;
   -webkit-border-radius: 5px;
   -moz-border-radius: 5px;
@@ -192,9 +192,9 @@ textarea {
   vertical-align: middle;
   text-shadow: 0px 1px 1px rgba(255, 255, 255, 0.98);
   background-color: #f5f5f5;
-  box-shadow: 0px 0px 1px rgba(000,000,000,0.1), inset 0px 0px 2px rgba(255,255,255,1);
-  -moz-box-shadow: 0px 0px 1px rgba(000,000,000,0.1), inset 0px 0px 2px rgba(255,255,255,1);
-  -webkit-box-shadow: 0px 0px 1px rgba(000,000,000,0.1), inset 0px 0px 2px rgba(255,255,255,1);
+  box-shadow: 0px 0px 1px rgba(0, 0, 0, 0.1), inset 0px 0px 2px rgba(255, 255, 255, 1);
+  -moz-box-shadow: 0px 0px 1px rgba(0, 0, 0, 0.1), inset 0px 0px 2px rgba(255, 255, 255, 1);
+  -webkit-box-shadow: 0px 0px 1px rgba(0, 0, 0, 0.1), inset 0px 0px 2px rgba(255, 255, 255, 1);
   border: 1px solid #999;
   border-radius: 5px;
   -moz-border-radius: 5px;
@@ -448,12 +448,12 @@ a.submitbutton:hover {
   margin: 0px 0px 0px 3px;
   padding: 0px 10px 2px 10px;
   color: #21abf0;
-  text-shadow: 0px 1px 3px rgba(000, 000, 000, 0.75);
+  text-shadow: 0px 1px 3px rgba(0, 0, 0, 0.75);
   text-align: center;
   vertical-align: middle;
   background-color: #363636;
   border: 1px solid #000;
-  border: 1px solid rgba(000, 000, 000, 0.13);
+  border: 1px solid rgba(0, 0, 0, 0.13);
   border-radius: 5px;
   -moz-border-radius: 5px;
   -webkit-border-radius: 5px;
@@ -462,9 +462,9 @@ a.submitbutton:hover {
   background: -moz-linear-gradient(top, #3d3d3d 0%, #313131 47%, #2b2b2b 50%, #2d2d32);
   background: -webkit-gradient(linear, left top, left bottom, from(#3d3d3d), color-stop(0.47, #313131), color-stop(0.50, #2b2b2b), to(#2d2d32));
   background: linear-gradient(top, #3d3d3d 0%, #313131 47%, #2b2b2b 50%, #2d2d32);
-  box-shadow: 0px 1px 3px rgb(000,000,000), inset 0px 1px 1px rgba(255,255,255,0.53);
-  -moz-box-shadow: 0px 1px 3px rgb(000,000,000), inset 0px 1px 1px rgba(255,255,255,0.53);
-  -webkit-box-shadow: 0px 1px 3px rgb(000,000,000), inset 0px 1px 1px rgba(255,255,255,0.23);
+  box-shadow: 0px 1px 3px rgb(0, 0, 0), inset 0px 1px 1px rgba(255, 255, 255, 0.53);
+  -moz-box-shadow: 0px 1px 3px rgb(0, 0, 0), inset 0px 1px 1px rgba(255, 255, 255, 0.53);
+  -webkit-box-shadow: 0px 1px 3px rgb(0, 0, 0), inset 0px 1px 1px rgba(255, 255, 255, 0.23);
 }
 #header .submitbutton:active {
   -pie-background: linear-gradient(top, #3d3d3d 0%, #313131 47%, #2b2b2b 50%, #2d2d32);
@@ -489,9 +489,9 @@ a.submitbutton:hover {
 
 /* avatar */
 .imageinfo .avatar img, #headertop .avatar img {
-  -moz-box-shadow: 0 1px 3px rgba(000, 000, 000, 0.75), inset 0 1px rgba(255, 255, 255, 0.48);
-  -webkit-box-shadow: 0 1px 3px rgba(000, 000, 000, 0.75), inset 0 1px rgba(255, 255, 255, 0.48);
-  box-shadow: 0 1px 3px rgba(000, 000, 000, 0.75), inset 0 1px rgba(255, 255, 255, 0.48);
+  -moz-box-shadow: 0 1px 3px rgba(0, 0, 0, 0.75), inset 0 1px rgba(255, 255, 255, 0.48);
+  -webkit-box-shadow: 0 1px 3px rgba(0, 0, 0, 0.75), inset 0 1px rgba(255, 255, 255, 0.48);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.75), inset 0 1px rgba(255, 255, 255, 0.48);
   -moz-border-radius: 5px;
   -webkit-border-radius: 5px;
   border-radius: 5px;
@@ -548,7 +548,7 @@ a#currentusername {
   color: #fff;
   margin: 1px;
   padding: 0px 50px 0px 15px;
-  text-shadow: 0px 1px 3px rgba(000,000,000, 0.75);
+  text-shadow: 0px 1px 3px rgba(0, 0, 0, 0.75);
   text-align: center;
   vertical-align: middle;
   background-color: #363636;
@@ -557,14 +557,14 @@ a#currentusername {
   -webkit-border-radius: 5px;
   border-radius: 5px;
   -pie-background: linear-gradient(top, rgb(96,96,97) 0%, rgb(68,68,69) 50%, rgb(56,56,57) 55%, rgb(51,51,51) );
-  background: -moz-linear-gradient(top, rgba(255,255,255,0.16) 0%, rgba(255,255,255,0.10) 50%, rgba(255,255,255,0.03) 55%, rgba(255,255,255,0) );
-  background: -o-linear-gradient(top, rgba(255,255,255,0.16) 0%, rgba(255,255,255,0.10) 50%, rgba(255,255,255,0.03) 55%, rgba(255,255,255,0) );
-  background: -webkit-gradient(linear, left top, left bottom, from( rgba(255,255,255,0.16) ), color-stop(0.50, rgba(255,255,255,0.10) ), color-stop(0.55, rgba(255,255,255,0.03) ), to( rgba(255,255,255,0) ));
-  background: linear-gradient(top, rgba(255,255,255,0.16) 0%, rgba(255,255,255,0.10) 50%, rgba(255,255,255,0.03) 55%, rgba(255,255,255,0) );
-  0.16) ), color-stop(0.50, rgba(255,255,255,0.10) ), color-stop(0.55, rgba(255,255,255,0.03) ), to( rgba(255,255,255,0) ));
-  -moz-box-shadow: 0px 1px 1px rgba(000,000,000, 0.4), inset 0px 1px 1px rgba(255,255,255,0.1);
-  -webkit-box-shadow: 0px 1px 1px rgba(000,000,000, 0.4), inset 0px 1px 1px rgba(255,255,255,0.1);
-  box-shadow: 0px 1px 1px rgba(000,000,000, 0.4), inset 0px 1px 1px rgba(255,255,255,0.1);
+  background: -moz-linear-gradient(top, rgba(255, 255, 255, 0.16) 0%, rgba(255, 255, 255, 0.10) 50%, rgba(255, 255, 255, 0.03) 55%, rgba(255, 255, 255, 0) );
+  background: -o-linear-gradient(top, rgba(255, 255, 255, 0.16) 0%, rgba(255, 255, 255, 0.10) 50%, rgba(255, 255, 255, 0.03) 55%, rgba(255, 255, 255, 0) );
+  background: -webkit-gradient(linear, left top, left bottom, from( rgba(255, 255, 255, 0.16) ), color-stop(0.50, rgba(255, 255, 255, 0.10) ), color-stop(0.55, rgba(255, 255, 255, 0.03) ), to( rgba(255, 255, 255, 0) ));
+  background: linear-gradient(top, rgba(255, 255, 255, 0.16) 0%, rgba(255, 255, 255, 0.10) 50%, rgba(255, 255, 255, 0.03) 55%, rgba(255, 255, 255, 0) );
+  0.16) ), color-stop(0.50, rgba(255, 255, 255, 0.10) ), color-stop(0.55, rgba(255, 255, 255, 0.03) ), to( rgba(255, 255, 255, 0) ));
+  -moz-box-shadow: 0px 1px 1px rgba(0, 0, 0, 0.4), inset 0px 1px 1px rgba(255, 255, 255, 0.1);
+  -webkit-box-shadow: 0px 1px 1px rgba(0, 0, 0, 0.4), inset 0px 1px 1px rgba(255, 255, 255, 0.1);
+  box-shadow: 0px 1px 1px rgba(0, 0, 0, 0.4), inset 0px 1px 1px rgba(255, 255, 255, 0.1);
   position: relative;
   z-index: 500;
 }
@@ -583,9 +583,9 @@ a#currentusername span {
   margin: 0;
   background: #232323;
   border: 2px solid #21abf0;
-  box-shadow: 0px 1px 1px #484848, inset 0px 1px 1px rgba(255,255,255,0.1);
-  -moz-box-shadow: 0px 1px 1px #484848, inset 0px 1px 1px rgba(255,255,255,0.1);
-  -webkit-box-shadow: 0px 1px 1px #484848, inset 0px 1px 1px rgba(255,255,255,0.1);
+  box-shadow: 0px 1px 1px #484848, inset 0px 1px 1px rgba(255, 255, 255, 0.1);
+  -moz-box-shadow: 0px 1px 1px #484848, inset 0px 1px 1px rgba(255, 255, 255, 0.1);
+  -webkit-box-shadow: 0px 1px 1px #484848, inset 0px 1px 1px rgba(255, 255, 255, 0.1);
 }
 #currentuser.active #currentusermenu {
   display: block;
@@ -602,7 +602,7 @@ a#currentusername span {
   background-color: #333333;
   background-color: rgba(51,51,51,0.9);
   border: 1px solid #1f1f1f;
-  border: 1px solid rgba(000,000,000,0.5);
+  border: 1px solid rgba(0, 0, 0, 0.5);
   -moz-border-radius: 5px;
   -webkit-border-radius: 5px;
   border-radius: 5px;
@@ -657,10 +657,10 @@ a#currentusername span {
 }
 #currentusermenu li:hover {
   background-color: #666;
-  background-color: rgba(000,000,000,0.5);
-  -moz-box-shadow: inset 0px 1px 5px rgba(000,000,000,0.75);
-  -webkit-box-shadow: inset 0px 1px 5px rgba(000,000,000,0.75);
-  box-shadow: inset 0px 1px 5px rgba(000,000,000,0.75);
+  background-color: rgba(0, 0, 0, 0.5);
+  -moz-box-shadow: inset 0px 1px 5px rgba(0, 0, 0, 0.75);
+  -webkit-box-shadow: inset 0px 1px 5px rgba(0, 0, 0, 0.75);
+  box-shadow: inset 0px 1px 5px rgba(0, 0, 0, 0.75);
 }
 #currentusermenu li a {
   padding: 2px 0px 3px 20px;
@@ -858,7 +858,7 @@ a#currentusername span {
   margin: 0px 0px 10px 0px;
   padding: 0;
   color: #cccccc;
-  text-shadow: 0px 1px 0px rgba(000, 000, 000, 0.75);
+  text-shadow: 0px 1px 0px rgba(0, 0, 0, 0.75);
 }
 #footer .footerlinks {
   margin: 0px 0px 8px 0px;
@@ -868,7 +868,7 @@ a#currentusername span {
 #footer .footerlinks li {
   margin-bottom: 2px;
   font-size: 12px;
-  text-shadow: 0px 1px 0px rgba(000, 000, 000, 0.75);
+  text-shadow: 0px 1px 0px rgba(0, 0, 0, 0.75);
 }
 #footer .hr {
   background-color: #171718;
@@ -879,7 +879,7 @@ a#currentusername span {
 }
 #footer .bottom {
   color: #666;
-  text-shadow: 0px 1px 0px rgba(000, 000, 000, 0.75);
+  text-shadow: 0px 1px 0px rgba(0, 0, 0, 0.75);
   font-size: 12px;
   margin-top: 8px;
 }
@@ -898,8 +898,8 @@ a#currentusername span {
   -moz-border-radius: 5px;
   -webkit-border-radius: 5px;
   border-radius: 5px;
-  -moz-box-shadow: 0px 1px 1px 0px #fff, inset 0px 1px 1px rgba(000,000,000,0.3);
-  -webkit-box-shadow: 0px 1px 1px 0px #fff, inset 0px 1px 1px rgba(000,000,000,0.3);
+  -moz-box-shadow: 0px 1px 1px 0px #fff, inset 0px 1px 1px rgba(0, 0, 0, 0.3);
+  -webkit-box-shadow: 0px 1px 1px 0px #fff, inset 0px 1px 1px rgba(0, 0, 0, 0.3);
   box-shadow: 0px 1px 1px 0px #fff;
   
 }
@@ -1119,9 +1119,9 @@ a#currentusername span {
   -moz-border-radius: 5px;
   -webkit-border-radius: 5px;
   border-radius: 5px;
-  -moz-box-shadow: 0px 1px 3px 0px rgba(000,000,000,0.15), inset 0px 0px 2px rgba(255,255,255,1);
-  -webkit-box-shadow: 0px 1px 3px 0px rgba(000,000,000,0.15), inset 0px 0px 2px rgba(255,255,255,1);
-  box-shadow: 0px 1px 3px 0px rgba(000,000,000,0.15), inset 0px 0px 2px rgba(255,255,255,1);
+  -moz-box-shadow: 0px 1px 3px 0px rgba(0, 0, 0, 0.15), inset 0px 0px 2px rgba(255, 255, 255, 1);
+  -webkit-box-shadow: 0px 1px 3px 0px rgba(0, 0, 0, 0.15), inset 0px 0px 2px rgba(255, 255, 255, 1);
+  box-shadow: 0px 1px 3px 0px rgba(0, 0, 0, 0.15), inset 0px 0px 2px rgba(255, 255, 255, 1);
   -pie-background: linear-gradient(top, #f5f5f5 0%, #efefef 48%, #e5e5e5 52%, #dbdbdb);
   background: -moz-linear-gradient(top, #f5f5f5 0%, #efefef 48%, #e5e5e5 52%, #dbdbdb);
   background: -o-linear-gradient(top, #f5f5f5 0%, #efefef 48%, #e5e5e5 52%, #dbdbdb);
@@ -1378,9 +1378,9 @@ a#currentusername span {
   float: left;
   padding: 5px 4px 5px 6px;
   margin: 0px -4px 0px -6px;
-  -moz-box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.3), inset 0 1px 3px rgba(000, 000, 000, 0.41);
-  -webkit-box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.3), inset 0 1px 3px rgba(000, 000, 000, 0.41);
-  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.3), inset 0 1px 3px rgba(000, 000, 000, 0.41);
+  -moz-box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.3), inset 0 1px 3px rgba(0, 0, 0, 0.41);
+  -webkit-box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.3), inset 0 1px 3px rgba(0, 0, 0, 0.41);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.3), inset 0 1px 3px rgba(0, 0, 0, 0.41);
   -moz-border-radius: 10px;
   -webkit-border-radius: 10px;
   border-radius: 10px;
@@ -1392,9 +1392,9 @@ a#currentusername span {
   margin-bottom: 11px;
 }
 #indexcontainer .rightbox .imageinfo {
-  -moz-box-shadow: 0 1px 3px rgba(000, 000, 000, 0.5);
-  -webkit-box-shadow: 0 1px 3px rgba(000, 000, 000, 0.5);
-  box-shadow: 0 1px 3px rgba(000, 000, 000, 0.5);
+  -moz-box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+  -webkit-box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
 }
 /* newslist */
 .newslist {
@@ -1470,7 +1470,7 @@ a#currentusername span {
   position: absolute;
   bottom: 0px;
   left: 0px;
-  background-color: rgba(000, 000, 000, 0.4);
+  background-color: rgba(0, 0, 0, 0.4);
   -moz-border-bottom-left-radius: 5px;
   -moz-border-radius-bottomleft: 5px;
   -webkit-border-bottom-left-radius: 5px;
@@ -1487,7 +1487,7 @@ a#currentusername span {
   padding: 15px 0px 0px 12px;
 }
 .imageinfo .imageinfowrap .content h1, .imageinfo .imageinfowrap .content h2 {
-  text-shadow: 0px 1px 3px rgba(000, 000, 000, 0.75);
+  text-shadow: 0px 1px 3px rgba(0, 0, 0, 0.75);
   white-space: nowrap;
 }
 .imageinfo .imageinfowrap .content h1 {
@@ -1531,6 +1531,9 @@ a#currentusername span {
   position: relative;
   text-align: center;
 }
+#metadata #infotoggle a {
+  font-weight: bold;
+}
 #metadata #infotoggle div {
   position: absolute;
   z-index: -10;
@@ -1567,6 +1570,11 @@ a#currentusername span {
   width: 340px;
   float: right;
 }
+#recommendatory h2 {
+  color: #333;
+  font-size: 18px;
+  font-weight: bold;
+}
 #recommendatory ul {
   list-style-type: none;
   margin: 0;
@@ -1588,7 +1596,7 @@ a#currentusername span {
   top: 66px;
   right: 6px;
   background-color: #333;
-  background-color: rgba(000, 000, 000, 0.6);
+  background-color: rgba(0, 0, 0, 0.6);
   height: 18px;
   color: #fff;
   font-size: 12px;
@@ -1635,7 +1643,11 @@ a#currentusername span {
   height: 18px;
   overflow: hidden;
 }
-
+.recommendatory h2 {
+  color: #333;
+  font-size: 18px;
+  font-weight: bold;
+}
 .recommendatory ul {
   list-style-type: none;
   margin: 0;
@@ -1655,7 +1667,7 @@ a#currentusername span {
 .recommendatory li .recordingpic .length {
   position: absolute;
   background-color: #333;
-  background-color: rgba(000, 000, 000, 0.6);
+  background-color: rgba(0, 0, 0, 0.6);
   height: 18px;
   color: #fff;
   font-size: 12px;
@@ -1704,7 +1716,7 @@ a#currentusername span {
   font-size: 12px;
   color: #333;
 }
-/* uploader */
+/* recordinguploader */
 #metadata .recordinguploader {
   display: inline-block;
   border: 1px solid #aeaeae;
@@ -1713,6 +1725,9 @@ a#currentusername span {
   border-radius: 5px;
   padding: 0;
   height: 50px;
+  -moz-box-shadow: 0px 1px 1px 0px #fff, inset 0px 1px 1px #fff;
+  -webkit-box-shadow: 0px 1px 1px 0px #fff, inset 0px 1px 1px #fff;
+  box-shadow: 0px 1px 1px 0px #fff, inset 0px 1px 1px #fff;
 }
 #metadata .recordinguploader .avatar {
   display: inline-block;
