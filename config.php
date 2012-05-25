@@ -57,8 +57,8 @@ $config = array(
   'timezone' => 'Europe/Budapest',
   //-----
   'database' => array(
-    'type'     => 'mysqli',
-    'host'     => '127.0.0.1',
+    'type'     => 'mysql',
+    'host'     => 'localhost',
     'username' => 'videosquare',
     'password' => '6NosJir7PWAanzo9hfv7',
     'database' => 'videosquare',
