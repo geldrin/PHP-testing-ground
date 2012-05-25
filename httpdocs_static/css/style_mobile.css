@@ -1,3 +1,10 @@
+#player {
+  text-align: center;
+}
+#headerlogout {
+  display: none;
+}
+
 @media all and (max-width: 950px) {
   body {
     -webkit-text-size-adjust: none;
@@ -11,6 +18,12 @@
   }
   #headersearch form, #currentuser {
     display: none;
+  }
+  #headerlogin {
+    margin-top: 10px;
+  }
+  #headerlogout {
+    display: inline;
   }
   #languageselector {
     display: none;
@@ -59,6 +72,39 @@
   #indexcontainer .wwide {
     width: 288px;
     height: 161px;
+  }
+  
+  /* recording details */
+  #metadata {
+    width: 100%;
+    float: none;
+  }
+  #metadata #infotoggle .center {
+    width: 100%;
+    margin: 0;
+  }
+  #metadata #infotoggle .leftside, #metadata #infotoggle .rightside {
+    display: none;
+  }
+  #recommendatory li, .recommendatory li {
+    width: 100%;
+    height: auto;
+  }
+  .recommendatory li .recordingpic {
+    width: 30%;
+    margin-right: 1%;
+  }
+  .recommendatory li .recordingpic .length {
+    top: auto;
+    bottom: 5px;
+  }
+  .recommendatory li .recordingpic img {
+    width: 100%;
+    height: auto;
+  }
+  .recommendatory li .content {
+    width: 65%;
+    height: auto;
   }
   
   /* recordinglist auto-size */
@@ -249,6 +295,9 @@
   #header .rightbox {
     float: right;
   }
+  #pagebg {
+    top: 76px;
+  }
 }
 @media all and (max-width: 460px) {
   
@@ -283,5 +332,8 @@
   }
   .form.search .submitbutton {
     width: 70px;
+  }
+  #pagebg {
+    top: 55px;
   }
 }

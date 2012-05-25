@@ -1,6 +1,9 @@
 
 <div id="headerlogin" class="rightbox">
   {if $member}
+    {if $browser.mobile}
+      <a href="{$language}/users/logout" id="headerlogout">{#usermenu_users_logout#}</a>
+    {/if}
     {if $member.isnewseditor or $member.isclientadmin or $member.isuploader or $member.isliveadmin}
       {assign var=columncount value=3}
     {else}
