@@ -1,7 +1,11 @@
 #player {
   text-align: center;
 }
-#headerlogout {
+#headerloginactions {
+  color: #999;
+  margin-top: 10px;
+}
+#currentuser {
   display: none;
 }
 
@@ -16,14 +20,11 @@
     display: block;
     text-align: right;
   }
-  #headersearch form, #currentuser {
+  #headersearch form {
     display: none;
   }
   #headerlogin {
     margin-top: 10px;
-  }
-  #headerlogout {
-    display: inline;
   }
   #languageselector {
     display: none;
@@ -214,7 +215,9 @@
   .sort .item {
     display: block;
   }
-  
+  #headerlogin {
+    margin-top: 5px;
+  }
   #headerbg {
     height: 76px;
   }

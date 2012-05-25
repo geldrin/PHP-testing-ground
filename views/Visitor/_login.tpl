@@ -2,7 +2,9 @@
 <div id="headerlogin" class="rightbox">
   {if $member}
     {if $browser.mobile}
-      <a href="{$language}/users/logout" id="headerlogout">{#usermenu_users_logout#}</a>
+      <div id="headerloginactions">
+        <a href="{$language}/users/logout">{#usermenu_users_logout#}</a>
+      </div>
     {/if}
     {if $member.isnewseditor or $member.isclientadmin or $member.isuploader or $member.isliveadmin}
       {assign var=columncount value=3}
@@ -102,9 +104,11 @@
       </div>
     </div>
   {else}
-    <div id="headerloginactions">
-      {#headerloginactions#|sprintf:"`$language`/users/login":"`$language`/users/signup"}
-    </div>
+    {if $browser.mobile}
+      <div id="headerloginactions">
+        {#headerloginactions#|sprintf:"`$language`/users/login":"`$language`/users/signup"}
+      </div>
+    {/if}
     <div id="headerloginform" class="hidden">
       <form action="{$language}/users/login" method="post">
         <input type="hidden" name="action" value="submitlogin"/>
