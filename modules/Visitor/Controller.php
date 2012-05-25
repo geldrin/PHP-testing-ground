@@ -46,6 +46,9 @@ class Controller extends \Springboard\Controller\Visitor {
     $baseuri   = $scheme . $organization['domain'] . '/';
     $staticuri = $scheme . 'static.' . $organization['domain'] . '/';
     
+    $this->application->config['combine']['domains'][] = $organization['domain'];
+    $this->application->config['combine']['domains'][] = 'static.' . $organization['domain'];
+    
     $this->toSmarty['supportemail'] = $this->bootstrap->config['mail']['fromemail'] =
       $this->application->config['mail']['fromemail'] = $organization['supportemail']
     ;

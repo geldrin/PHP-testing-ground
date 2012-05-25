@@ -8,11 +8,11 @@ $config = array(
   'errormessage' => 'An unexpected error has occured, our staff has been notified. Sorry for the inconvenience and thanks for your understanding!',
   //-----
   'docroot'      => $this->basepath . 'httpdocs/',
-  'baseuri'      => 'video.teleconnect.hu/', // protocol nelkul, peldaul "dotsamazing.com/"
-  'staticuri'    => 'static.teleconnect.hu/',
-  'adminuri'     => 'video.teleconnect.hu/a2143/',
+  'baseuri'      => 'videosquare.eu/', // protocol nelkul, peldaul "dotsamazing.com/"
+  'staticuri'    => 'static.videosquare.eu/',
+  'adminuri'     => 'videosquare.eu/a2143/',
   'loginuri'     => 'users/login',
-  'cookiedomain' => '.teleconnect.hu',
+  'cookiedomain' => '.videosquare.eu',
   //-----
   'datapath'     => $this->basepath . 'data/',
   'logpath'      => $this->basepath . 'data/logs/',
@@ -29,7 +29,7 @@ $config = array(
   //-----
   'logemails'    => array(
     'dev@dotsamazing.com',
-    'hiba@teleconnect.hu',
+    'hiba@videosquare.eu',
   ),
   //-----
   'smtp'         => array(
@@ -40,8 +40,8 @@ $config = array(
   ),
   //-----
   'mail'         => array(
-    'fromemail' => 'support@teleconnect.hu',
-    'fromname'  => 'Teleconnect',
+    'fromemail' => 'support@videosquare.eu',
+    'fromname'  => 'Videosquare',
     'errorsto'  => '',
     'type'      => 'text/html; charset="UTF-8"'
   ),
@@ -59,9 +59,9 @@ $config = array(
   'database' => array(
     'type'     => 'mysqli',
     'host'     => '127.0.0.1',
-    'username' => 'teleconnect',
+    'username' => 'videosquare',
     'password' => '6NosJir7PWAanzo9hfv7',
-    'database' => 'teleconnect',
+    'database' => 'videosquare',
     'reconnectonbusy' => true,
     'maxretries' => 30,
   ),
@@ -87,8 +87,8 @@ $config = array(
     'css' => true,
     'js'  => true,
     'domains' => array(
-      'static.teleconnect.hu',
-      'video.teleconnect.hu',
+      'static.videosquare.eu',
+      'videosquare.eu',
     ),
   ),
   //----
@@ -99,15 +99,15 @@ $config = array(
   ),
   //----
   'wowza' => array(
-    'httpurl'  => 'http://stream.teleconnect.hu:1935/vod/',
-    'rtmpurl'  => 'rtmp://stream.teleconnect.hu:1935/vod/',
-    'rtmpturl' => 'rtmpt://stream.teleconnect.hu:80/vod/',
-    'rtspurl'  => 'rtsp://stream.teleconnect.hu/vod/',
+    'httpurl'  => 'http://stream.videosquare.eu:1935/vod/',
+    'rtmpurl'  => 'rtmp://stream.videosquare.eu:1935/vod/',
+    'rtmpturl' => 'rtmpt://stream.videosquare.eu:80/vod/',
+    'rtspurl'  => 'rtsp://stream.videosquare.eu/vod/',
   ),
   //----
   // lehet ures is ha nem akarjuk redirectelni a usert, ilyenkor
   // siman die()-ol az applikacio
-  'organizationfallbackurl' => 'http://video.teleconnect.hu',
+  'organizationfallbackurl' => 'http://videosquare.eu',
 );
 
 $config['phpsettings'] = array(
