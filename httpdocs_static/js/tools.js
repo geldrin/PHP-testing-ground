@@ -13,7 +13,7 @@ $j(document).ready(function() {
   runIfExists('.ratewidget', setupRateWidget );
   runIfExists('#uploadrow', setupUpload );
   runIfExists('#infotoggle', setupInfoToggle );
-  
+  runIfExists('#player', setupPlayer );
   $j('#scriptingcontainer').show();
   
   $j('.clearonclick').on('focusin', function() {
@@ -34,6 +34,17 @@ function runIfExists( selector, func ) {
   
   if ( $j( selector ).length > 0 )
     func();
+  
+}
+
+function setupPlayer() {
+  
+  var playerbgheight =
+    ( $j('#player').offset().top - $j('#pagebg').offset().top ) +
+    $j('#player').height() + 10
+  ;
+  
+  $j('#pagebg').css('height', playerbgheight + 'px');
   
 }
 
@@ -429,7 +440,7 @@ function formatPercent( baseNumber ) {
 var flashdefaults = {
   params: {
     quality: "high",
-    bgcolor: "#000",
+    bgcolor: "#050505",
     allowscriptaccess: "sameDomain",
     allowfullscreen: "true",
     wmode: 'opaque'

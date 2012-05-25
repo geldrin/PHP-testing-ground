@@ -1,4 +1,14 @@
-{include file="Visitor/_header.tpl" title=$recording.title}
+{if $recording.mediatype == 'audio' and isset( $flashdata.subtitle_files )}
+{assign var=flashheight value=140}
+{assign var=pagebgclass value=mediumheight}
+{elseif $recording.mediatype == 'audio'}
+{assign var=flashheight value=60}
+{assign var=pagebgclass value=minheight}
+{else}
+{assign var=flashheight value=530}
+{assign var=pagebgclass value=fullheight}
+{/if}
+{include file="Visitor/_header.tpl" title=$recording.title pagebgclass=$pagebgclass}
 <div class="title recording">
   {if !$recording.ispublished}
     <center><a href="{$language}/recordings/modifysharing/{$recording.id}">{#recordings__notpublished_warning#}</a></center>
@@ -13,11 +23,27 @@
   
 </div>
 
-<div class="player">
-<script type="text/javascript">
-swfobject.embedSWF('flash/TCPlayer{$VERSION}.swf', 'playercontainer{if $recording.mediatype == 'audio'}audio{if isset( $flashdata.subtitle_files )}subtitle{/if}{/if}', '950', '{if $recording.mediatype == 'audio' and isset( $flashdata.subtitle_files )}140{elseif $recording.mediatype == 'audio'}60{else}530{/if}', '11.1.0', 'flash/swfobject/expressInstall.swf', {$flashdata|@jsonescape:true}, flashdefaults.params );
-</script>
-  <div id="playercontainer{if $recording.mediatype == 'audio'}audio{/if}">{#recordings__noflash#}</div>
+<div id="player">
+  
+  {if $browser.mobile}
+    {if $browser.mobiledevice == 'iphone'}
+      <div id="mobileplayercontainer">
+        <video x-webkit-airplay="allow" controls="controls" alt="{$recording.title|escape:html}" width="192" height="144" poster="{$recording|@indexphoto}" src="{$mobilehttpurl}">
+          <a href="{$mobilertspurl}"><img src="{$recording|@indexphoto}" width="220" height="130"/></a>
+        </video>
+      </div>
+    {else}
+      <div id="mobileplayercontainer">
+        <a href="{if $recording.mediatype == 'audio'}{$audiofileurl}{else}{$mobilertspurl}{/if}"><img src="{$recording|@indexphoto}" width="220" height="130"/></a>
+      </div>
+    {/if}
+    <br/>
+  {else}
+    <div id="playercontainer{if $recording.mediatype == 'audio'}audio{/if}">{#recordings__noflash#}</div>
+  {/if}
+  <script type="text/javascript">
+    swfobject.embedSWF('flash/TCPlayer{$VERSION}.swf', 'playercontainer{if $recording.mediatype == 'audio'}audio{if isset( $flashdata.subtitle_files )}subtitle{/if}{/if}', '950', '{$flashheight}', '11.1.0', 'flash/swfobject/expressInstall.swf', {$flashdata|@jsonescape:true}, flashdefaults.params );
+  </script>
 </div>
 
 {if false and !empty( $relatedvideos )}
@@ -84,7 +110,13 @@ swfobject.embedSWF('flash/TCPlayer{$VERSION}.swf', 'playercontainer{if $recordin
   </div>
   
   <table id="metadatatable">
-  <tr>
+    {if $recording.keywords|stringempty}
+      <tr>
+        <td class="labelcolumn">{#recordings__keywords#}:</td>
+        <td>{$recording.keywords|escape:html}</td>
+      </tr>
+    {/if}
+    <tr>
       <td class="labelcolumn">{#recordings__metadata_views#}:</td>
       <td>{$recording.numberofviews|numberformat}</td>
     </tr>
@@ -100,12 +132,6 @@ swfobject.embedSWF('flash/TCPlayer{$VERSION}.swf', 'playercontainer{if $recordin
       <td class="labelcolumn">{#recordings__details_uploadtimestamp#}:</td>
       <td>{$recording.timestamp|date_format:#smarty_dateformat_long#}</td>
     </tr>
-    {if $recording.keywords|stringempty}
-      <tr>
-        <td class="labelcolumn">{#recordings__keywords#}:</td>
-        <td>{$recording.keywords|escape:html}</td>
-      </tr>
-    {/if}
   </table>
   <div id="infotoggle">
     <div class="leftside"></div>

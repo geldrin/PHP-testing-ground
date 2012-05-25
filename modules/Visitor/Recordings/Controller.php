@@ -142,6 +142,25 @@ class Controller extends \Visitor\Controller {
     $this->toSmarty['relatedvideos'] = $recordingsModel->getRelatedVideos(
       $this->application->config['relatedrecordingcount']
     );
+    $this->toSmarty['mobilehttpurl'] = $recordingsModel->getMediaUrl(
+      'mobilehttp',
+      false, // non-hq
+      $this->toSmarty['organization']['domain'],
+      session_id()
+    );
+    $this->toSmarty['mobilertspurl'] = $recordingsModel->getMediaUrl(
+      'mobilertsp',
+      false, // non-hq
+      $this->toSmarty['organization']['domain'],
+      session_id()
+    );
+    $this->toSmarty['audiofileurl']  = $recordingsModel->getMediaUrl(
+      'direct',
+      false, // non-hq
+      $this->toSmarty['organization']['domain'],
+      session_id(),
+      $this->toSmarty['STATIC_URI']
+    );
     
     $this->smartyoutput('Visitor/Recordings/Details.tpl');
     

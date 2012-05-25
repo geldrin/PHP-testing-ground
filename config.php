@@ -102,6 +102,7 @@ $config = array(
     'httpurl'  => 'http://stream.teleconnect.hu:1935/vod/',
     'rtmpurl'  => 'rtmp://stream.teleconnect.hu:1935/vod/',
     'rtmpturl' => 'rtmpt://stream.teleconnect.hu:80/vod/',
+    'rtspurl'  => 'rtsp://stream.teleconnect.hu/vod/',
   ),
   //----
   // lehet ures is ha nem akarjuk redirectelni a usert, ilyenkor

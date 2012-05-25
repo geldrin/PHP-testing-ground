@@ -701,6 +701,9 @@ a#currentusername span {
   background-repeat: no-repeat;
   background-position: 50% bottom;
 }
+#headermenu.black li.active a {
+  background-image: url(images/header_menu_arrow_black.png);
+}
 #headermenu a {
   display: inline-block;
   height: 38px;
@@ -823,6 +826,8 @@ a#currentusername span {
 }
 #body div.title.recording {
   padding-top: 0px;
+  color: #999;
+  border: 0;
 }
 #body div.title.recording h2 {
   font-size: 13px;
@@ -1504,6 +1509,14 @@ a#currentusername span {
 }
 
 /* recording metadata */
+#pagebg {
+  position: absolute;
+  z-index: 1;
+  top: 108px;
+  width: 100%;
+  height: 590px;
+  background-color: #050505;
+}
 #metadata {
   margin: 20px 20px 0px 0px;
   float: left;
@@ -1542,16 +1555,16 @@ a#currentusername span {
 }
 #metadata #infotoggle .leftside {
   background: -webkit-radial-gradient(bottom right, circle, rgba(0, 0, 0, 0.08), transparent 40px, transparent 100%);
-  background: -o-linear-gradient(bottom left, circle, rgba(0, 0, 0, 0.08), transparent 40px, transparent 100%);
-  background: -moz-radial-gradient(bottom left, circle, rgba(0, 0, 0, 0.08), transparent 40px, transparent 100%);
-  background: radial-gradient(bottom left, circle, rgba(0, 0, 0, 0.08), transparent 40px, transparent 100%);
+  background: -moz-radial-gradient(bottom right, circle, rgba(0, 0, 0, 0.08), transparent 40px, transparent 100%);
+  background: -o-radial-gradient(bottom right, circle, rgba(0, 0, 0, 0.08), transparent 40px, transparent 100%);
+  background: radial-gradient(bottom right, circle, rgba(0, 0, 0, 0.08), transparent 40px, transparent 100%);
   width: 80px;
   left: 0px;
 }
 #metadata #infotoggle .center {
+  background: -webkit-linear-gradient(bottom,rgba(0, 0, 0, 0.12), rgba(0, 0, 0, 0.08) 1px, rgba(0, 0, 0, 0.08) 1px, transparent 40px, transparent 100%);
   background: -moz-linear-gradient(bottom, rgba(0, 0, 0, 0.12), rgba(0, 0, 0, 0.08) 1px, rgba(0, 0, 0, 0.08) 1px, transparent 40px, transparent 100%);
   background: -o-linear-gradient(bottom, rgba(0, 0, 0, 0.12), rgba(0, 0, 0, 0.08) 1px, rgba(0, 0, 0, 0.08) 1px, transparent 40px, transparent 100%);
-  background: -webkit-linear-gradient(bottom,rgba(0, 0, 0, 0.12), rgba(0, 0, 0, 0.08) 1px, rgba(0, 0, 0, 0.08) 1px, transparent 40px, transparent 100%);
   background: linear-gradient(bottom,rgba(0, 0, 0, 0.12), rgba(0, 0, 0, 0.08) 1px, rgba(0, 0, 0, 0.08) 1px, transparent 40px, transparent 100%);
   top: -40px;
   margin: 0px 80px 0px 80px;

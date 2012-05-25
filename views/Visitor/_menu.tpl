@@ -1,4 +1,4 @@
-<div id="headermenu">
+<div id="headermenu"{if $pagebgclass} class="black"{/if}>
   <nav>
     <ul>
       <li class="{if $module == 'index'}active {/if}first"><a href="{$BASE_URI}">{#sitewide_home#}</a></li>

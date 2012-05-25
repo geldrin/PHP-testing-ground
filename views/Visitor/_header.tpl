@@ -45,6 +45,9 @@
   <a class="openinlayer" target="_blank" href="{$BASE_URI}{$language}/tools/updateyourbrowser" id="browserAlert">{#sitewide_updateyourbrowser#}</a>
 {/if}
 <div id="headerbg"></div>
+{if $pagebgclass}
+  <div id="pagebg" class="{$pagebgclass}"></div>
+{/if}
 <div id="pagecontainer">
   <div id="wrap">
     <div id="header">

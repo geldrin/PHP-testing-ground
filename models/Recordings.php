@@ -1273,8 +1273,8 @@ class Recordings extends \Springboard\Model {
     $data = array(
       'language'              => \Springboard\Language::get(),
       'media_servers'         => array(
-        $this->getWowzaUrl( 'rtmpurl', $domain, true, $sessionid ),
-        $this->getWowzaUrl( 'rtmpturl', $domain, true, $sessionid ),
+        $this->getWowzaUrl( 'rtmpurl', true, $domain, $sessionid ),
+        $this->getWowzaUrl( 'rtmpturl', true, $domain, $sessionid ),
       ),
       'track_firstPlay'       => $recordingbaseuri . 'track/' . $this->id,
       'recording_duration'    => $this->row['masterlength'],
@@ -1361,7 +1361,7 @@ class Recordings extends \Springboard\Model {
     
   }
   
-  protected function getWowzaUrl( $type, $domain, $needextraparam = false, $sessionid = null ) {
+  protected function getWowzaUrl( $type, $needextraparam = false, $domain = null, $sessionid = null ) {
     
     $url = $this->bootstrap->config['wowza'][ $type ];
     
@@ -1376,13 +1376,12 @@ class Recordings extends \Springboard\Model {
     
   }
   
-  public function getMediaUrl( $type, $highquality, $domain ) {
+  public function getMediaUrl( $type, $highquality, $domain = null, $sessionid = null, $host = '' ) {
     
     $this->ensureObjectLoaded();
     
     $extension = 'mp4';
     $postfix   = '_lq';
-    $host      = '';
     $isaudio   = $this->row['mastermediatype'] == 'audio';
     
     if ( $highquality and !$isaudio )
@@ -1399,15 +1398,30 @@ class Recordings extends \Springboard\Model {
       
       case 'mobilehttp':
         //http://stream.videotorium.hu:1935/vtorium/_definst_/mp4:671/2671/2671_2608_mobile.mp4/playlist.m3u8
-        $host        = $this->getWowzaUrl( 'httpurl', $domain );
-        $sprintfterm = '%3$s:%s/%s_mobile' . $postfix . '.%s/playlist.m3u8';
+        $host        = $this->getWowzaUrl('httpurl');
+        $sprintfterm =
+          '%3$s:%s/%s_mobile' . $postfix . '.%s/playlist.m3u8?sessionid=' .
+          $domain . '_' . $sessionid . '_' . $this->id
+        ;
         
         break;
       
       case 'mobilertsp':
         //rtsp://stream.videotorium.hu:1935/vtorium/_definst_/mp4:671/2671/2671_2608_mobile.mp4
-        $host        = $this->getWowzaUrl( 'rtspurl', $domain );
-        $sprintfterm = '%3$s:%s/%s_mobile' . $postfix . '.%s';
+        $host        = $this->getWowzaUrl('rtspurl');
+        $sprintfterm =
+          '%3$s:%s/%s_mobile' . $postfix . '.%s?sessionid=' .
+          $domain . '_' . $sessionid . '_' . $this->id
+        ;
+        
+        break;
+      
+      case 'direct':
+        
+        if ( $isaudio )
+          $sprintfterm = 'files/recordings/%s/%s_audio.%s';
+        else
+          $sprintfterm = 'files/recordings/%s/%s_video' . $postfix . '.%s';
         
         break;
       

@@ -9,7 +9,7 @@
     display: block;
     text-align: right;
   }
-  #headersearch form {
+  #headersearch form, #currentuser {
     display: none;
   }
   #languageselector {
