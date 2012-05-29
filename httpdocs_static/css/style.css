@@ -504,6 +504,10 @@ a.submitbutton:hover {
   text-align: right;
   width: auto;
 }
+#headerloginactions {
+  color: #999;
+  margin-top: 10px;
+}
 #headerloginform {
   margin-top: 10px;
 }

@@ -1,10 +1,6 @@
 #player {
   text-align: center;
 }
-#headerloginactions {
-  color: #999;
-  margin-top: 10px;
-}
 #currentuser {
   display: none;
 }
