@@ -14,6 +14,8 @@ $j(document).ready(function() {
   runIfExists('#uploadrow', setupUpload );
   runIfExists('#infotoggle', setupInfoToggle );
   runIfExists('#player', setupPlayer );
+  runIfExists('.sort', setupSort );
+  
   $j('#scriptingcontainer').show();
   
   $j('.clearonclick').on('focusin', function() {
@@ -34,6 +36,35 @@ function runIfExists( selector, func ) {
   
   if ( $j( selector ).length > 0 )
     func();
+  
+}
+
+function setupSort() {
+  
+  var sorttimeout;
+  var removeHover = function() {
+    $j('.sort .item').removeClass('hover');
+    sorttimeout = null;
+  };
+  
+  $j('.sort .item').on('mouseleave',  removeHover );
+  $j('.sort .item').on('click', function( e ) {
+    e.preventDefault();
+    $j('.sort .item').removeClass('hover');
+    $j(this).addClass('hover');
+    
+    if ( $j(this).css('display') == 'block' ) {
+      
+      $j(this).children('ul').width( $j(this).children('.title').outerWidth()  );
+      
+    }
+    
+    if ( sorttimeout )
+      clearTimeout( sorttimeout );
+    
+    sorttimeout = setTimeout( removeHover, 30 * 1000 );
+    
+  });
   
 }
 
