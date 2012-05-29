@@ -825,6 +825,10 @@ a#currentusername span {
   margin-bottom: 10px;
   padding: 10px 0px 0px 0px;
 }
+#body div.title h1 {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 #body div.title a {
   display: block;
 }

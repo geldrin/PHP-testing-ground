@@ -59,6 +59,9 @@ function setupSort() {
   $j('.sort .item').on('mouseleave',  removeHover );
   $j('.sort .item').on('mouseenter',  function() { fixupList( $j(this) ); });
   $j('.sort .item').on('click', function( e ) {
+    if ( !$j(e.target).hasClass('title') )
+      return;
+    
     e.preventDefault();
     var abort = false;
     
