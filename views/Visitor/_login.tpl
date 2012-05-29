@@ -104,11 +104,9 @@
       </div>
     </div>
   {else}
-    {if $browser.mobile}
-      <div id="headerloginactions">
-        {#headerloginactions#|sprintf:"`$language`/users/login":"`$language`/users/signup"}
-      </div>
-    {/if}
+    <div id="headerloginactions">
+      {#headerloginactions#|sprintf:"`$language`/users/login":"`$language`/users/signup"}
+    </div>
     <div id="headerloginform" class="hidden">
       <form action="{$language}/users/login" method="post">
         <input type="hidden" name="action" value="submitlogin"/>
