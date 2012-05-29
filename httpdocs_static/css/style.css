@@ -1214,6 +1214,9 @@ a#currentusername span {
 }
 .recordinglist .title h3 a {
   color: #000;
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .recordinglist .title h4 {
   margin: 0;
@@ -1222,6 +1225,8 @@ a#currentusername span {
   font-weight: normal;
   font-size: 13px;
   font-style: italic;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .recordinglist .recordingpic {
   float: left;

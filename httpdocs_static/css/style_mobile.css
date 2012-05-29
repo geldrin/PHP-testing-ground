@@ -220,15 +220,15 @@
     background-color: #F5F5F5;
     width: 100%;
     border: 1px solid #999;
+    border-top: 0px;
+    border-bottom-left-radius: 5px;
+    border-bottom-right-radius: 5px;
   }
   .sort .item.hover {
     overflow: visible;
   }
   .sort .item.hover ul {
     display: block;
-    border-top: 0px;
-    border-bottom-left-radius: 5px;
-    border-bottom-right-radius: 5px;
   }
   #headerlogin {
     margin-top: 5px;

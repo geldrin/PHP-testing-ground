@@ -46,18 +46,32 @@ function setupSort() {
     $j('.sort .item').removeClass('hover');
     sorttimeout = null;
   };
-  
-  $j('.sort .item').on('mouseleave',  removeHover );
-  $j('.sort .item').on('click', function( e ) {
-    e.preventDefault();
-    $j('.sort .item').removeClass('hover');
-    $j(this).addClass('hover');
+  var fixupList = function( self ) {
     
-    if ( $j(this).css('display') == 'block' ) {
+    if ( self.css('display') == 'block' ) {
       
-      $j(this).children('ul').width( $j(this).children('.title').outerWidth()  );
+      self.children('ul').width( self.children('.title').outerWidth()  );
       
     }
+    
+  };
+  
+  $j('.sort .item').on('mouseleave',  removeHover );
+  $j('.sort .item').on('mouseenter',  function() { fixupList( $j(this) ); });
+  $j('.sort .item').on('click', function( e ) {
+    e.preventDefault();
+    var abort = false;
+    
+    if ( $j(this).hasClass('hover') )
+      abort = true;
+    
+    $j('.sort .item').removeClass('hover');
+    if ( abort )
+      return;
+    
+    $j(this).addClass('hover');
+    
+    fixupList( $j(this) );
     
     if ( sorttimeout )
       clearTimeout( sorttimeout );
