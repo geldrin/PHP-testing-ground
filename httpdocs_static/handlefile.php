@@ -1,7 +1,8 @@
 <?php
-
-define('PATH_PREFIX',  '/srv/storage/httpdocs/');
-//define('PATH_PREFIX',  '/home/sztanpet/teleconnect/httpdocs_static/files/');
+if ( isset( $_SERVER['APPLICATION_ENV'] ) and $_SERVER['APPLICATION_ENV'] == 'developer' )
+  define('PATH_PREFIX',  '/srv/storage/dev.videosquare.eu/httpdocs/');
+else
+  define('PATH_PREFIX',  '/srv/storage/videosquare.eu/httpdocs/');
 
 // ------------------------------------------------------------
 if (
@@ -106,7 +107,7 @@ if (
 // vegso fallback: nem kapott hozzaferest
 headerOutput("HTTP/1.1 404 Not Found");
 headerOutput("Status: 404 Not Found"); // FastCGI alternative
-exitWithContentHeaders( '/var/www/video.teleconnect.hu/httpdocs_static/images/accessdenied.png', '' );
+exitWithContentHeaders( '/var/www/videosquare.eu/httpdocs_static/images/accessdenied.png', '' );
 
 function exitWithContentHeaders( $file, $prefix = PATH_PREFIX ) {
   
