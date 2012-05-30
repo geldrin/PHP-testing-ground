@@ -76,9 +76,9 @@ $config = array(
   ),
   //----
   'disable_uploads' => false,
-  'uploadpath'    => '/srv/upload/',
-  'mediapath'     => '/srv/storage/httpdocs/',
-  'recordingpath' => '/srv/storage/httpdocs/recordings/',
+  'uploadpath'    => '/srv/upload/videosquare.eu/',
+  'mediapath'     => '/srv/storage/videosquare.eu/httpdocs/',
+  'recordingpath' => '/srv/storage/videosquare.eu/httpdocs/recordings/',
   'recordings_seconds_minlength' => 3,
   'relatedrecordingcount' => 6,
   'mplayer_identify' => 'mplayer -ao null -vo null -frames 0 -identify %s 2>&1',

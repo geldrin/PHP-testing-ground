@@ -1566,6 +1566,7 @@ a#currentusername span {
 }
 #metadata #infotoggle a {
   font-weight: bold;
+  display: block;
 }
 #metadata #infotoggle div {
   position: absolute;
