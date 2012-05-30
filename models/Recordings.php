@@ -932,7 +932,11 @@ class Recordings extends \Springboard\Model {
         c.timestamp,
         c.text,
         c.userid,
-        u.nickname
+        u.nickname,
+        u.nameformat,
+        u.nameprefix,
+        u.namefirst,
+        u.namelast
       FROM
         comments AS c,
         users AS u
@@ -946,7 +950,7 @@ class Recordings extends \Springboard\Model {
     ");
     
     foreach( $comments as $key => $value ) {
-      
+      // TODO user name format
       $comments[ $key ]['nickname'] = htmlspecialchars( $value['nickname'], ENT_QUOTES, 'UTF-8' );
       $comments[ $key ]['text']     = nl2br( htmlspecialchars( $value['text'], ENT_QUOTES, 'UTF-8' ) );
       
@@ -1494,23 +1498,32 @@ class Recordings extends \Springboard\Model {
     
   }
   
-  public function getRandomRecordings( $limit, $organizationid ) {
+  public function getRandomRecordings( $limit, $organizationid, $user ) {
     
     // TODO isfeatured uncomment, users avatar
-    return $this->db->getArray("
-      SELECT
-        u.nickname,
-        r.id,
-        r.title,
-        r.indexphotofilename
-      FROM
-        recordings AS r,
-        users AS u
-      WHERE
-        -- r.isfeatured = '1' AND
-        u.id = r.userid AND
-        r.organizationid = '" . $organizationid . "' AND
-        " . self::getPublicRecordingWhere('r.') . "
+    $select = "
+      us.nickname,
+      us.nameformat,
+      us.nameprefix,
+      us.namefirst,
+      us.namelast,
+      r.id,
+      r.title,
+      r.indexphotofilename
+    ";
+    
+    $tables = "
+      recordings AS r,
+      users AS us
+    ";
+    
+    $where = "
+      us.id = r.userid AND
+      r.organizationid = '" . $organizationid . "'
+    ";
+    
+    return $this->db->getArray(
+      self::getUnionSelect( $user, $select, $tables, $where ) . "
       ORDER BY RAND()
       LIMIT $limit
     ");

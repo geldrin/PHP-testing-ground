@@ -17,7 +17,15 @@ $config = array(
     'displayname' => $l('users', 'username'),
     'type'        => 'inputText',
     'validation'  => array(
-      array( 'type' => 'required' ),
+      array(
+        'type'      => 'string',
+        'required'  => true,
+        'minimum'   => 4,
+        'maximum'   => 20,
+        'help'      => $l('users', 'usernamehelp'),
+        'jsregexp'  => '/^[a-zA-ZáéíóúöüőűÁÉÍÓÚÖÜŐŰ0-9.-][a-zA-ZáéíóúöüőűÁÉÍÓÚÖÜŐŰ0-9 .-]{2,20}[a-zA-ZáéíóúöüőűÁÉÍÓÚÖÜŐŰ0-9.-]$/',
+        'phpregexp' => '/^[a-zA-ZáéíóúöüőűÁÉÍÓÚÖÜŐŰ0-9.-][a-zA-ZáéíóúöüőűÁÉÍÓÚÖÜŐŰ0-9 .-]{2,20}[a-zA-ZáéíóúöüőűÁÉÍÓÚÖÜŐŰ0-9.-]$/ui'
+      ),
       array(
         'type' => 'database',
         'help' => $l('users','usernameregistered'),
@@ -26,7 +34,8 @@ $config = array(
           FROM users
           WHERE
             nickname = <FORM.nickname> AND
-            id <> " . $this->user['id'] . "
+            id <> " . $this->user['id'] . " AND
+            organizationid = '" . $this->controller->organization['id'] . "'
         ",
         'field' => 'counter',
         'value' => '0'

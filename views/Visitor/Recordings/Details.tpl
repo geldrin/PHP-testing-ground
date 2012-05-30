@@ -66,7 +66,7 @@
           {if $item.subtitle|stringempty}
             <h4>{$item.subtitle|mb_wordwrap:20|escape:html}</h4>
           {/if}
-          <div class="author">{$item.nickname|mb_wordwrap:20|escape:html}</div>
+          <div class="author">{$item|@nickformat|mb_wordwrap:20|escape:html}</div>
           {assign var=views value=$item.numberofviews|numberformat}
           <div class="views">{#recordings__recording_views#|sprintf:$views}</div>
         </div>
@@ -95,7 +95,7 @@
     </div>
     <div class="content">
       <h3>{#recordings__uploader#}:</h3>
-      <div class="uploader">{$author.nickname|mb_truncate:50|escape:html}</div>
+      <div class="uploader">{$author|@nickformat|mb_truncate:50|escape:html}</div>
     </div>
   </div>
   
@@ -162,7 +162,7 @@
           {if $item.subtitle|stringempty}
             <h4>{$item.subtitle|mb_truncate:27|escape:html}</h4>
           {/if}
-          <div class="author">{$item.nickname|mb_wordwrap:20|escape:html}</div>
+          <div class="author">{$item|@nickformat|mb_wordwrap:20|escape:html}</div>
           {assign var=views value=$item.numberofviews|numberformat}
           <div class="views">{#recordings__recording_views#|sprintf:$views}</div>
         </div>
@@ -182,7 +182,7 @@
         <ul>
           {foreach from=$comments item=comment name=comment}
           <li{if $smarty.foreach.comment.last} class="last"{/if}>
-            <h2><a href="#">{$comment.nickname|escape:html}</a> ({$comment.timestamp})</h2>
+            <h2><a href="#">{$comment|@nickformat|escape:html}</a> ({$comment.timestamp})</h2>
             <p>{$comment.text}</p>
           </li>
           {foreachelse}

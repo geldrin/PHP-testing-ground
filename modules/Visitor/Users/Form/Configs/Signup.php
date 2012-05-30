@@ -1,18 +1,5 @@
 <?php
 
-$dbvalidation =
-  array(
-    'type' => 'database',
-    'help' => $l('users','emailregisteredhelp'),
-    'sql' => 
-      "SELECT count(*) as counter 
-       FROM users " .
-      "WHERE " .
-        "email = <FORM.email>",
-    'field' => 'counter',
-    'value' => '0'
-  );
-
 include_once( $this->bootstrap->config['libpath'] . 'clonefish/constants.php');
 $language = \Springboard\Language::get();
 
@@ -39,11 +26,23 @@ $config = array(
     'type'        => 'inputText',
     'validation'  => array(
       array(
-        'type' => 'string',
+        'type'   => 'string',
         'regexp' => CF_EMAIL,
-        'help' => $l('users', 'emailhelp')
+        'help'   => $l('users', 'emailhelp')
       ),
-      $dbvalidation
+      array(
+        'type' => 'database',
+        'help' => $l('users','emailregisteredhelp'),
+        'sql'  =>  "
+          SELECT count(*) as counter 
+          FROM users
+          WHERE
+            email = <FORM.email> AND
+            organizationid = '" . $this->controller->organization['id'] . "'
+        ",
+        'field' => 'counter',
+        'value' => '0'
+      ),
     ),
   ),
 
@@ -113,14 +112,24 @@ $config = array(
     'displayname' => $l('users', 'username'),
     'type'        => 'inputText',
     'validation'  => array(
-      array( 'type' => 'required' ),
+      array(
+        'type'      => 'string',
+        'required'  => true,
+        'minimum'   => 4,
+        'maximum'   => 20,
+        'help'      => $l('users', 'usernamehelp'),
+        'jsregexp'  => '/^[a-zA-ZáéíóúöüőűÁÉÍÓÚÖÜŐŰ0-9.-][a-zA-ZáéíóúöüőűÁÉÍÓÚÖÜŐŰ0-9 .-]{2,20}[a-zA-ZáéíóúöüőűÁÉÍÓÚÖÜŐŰ0-9.-]$/',
+        'phpregexp' => '/^[a-zA-ZáéíóúöüőűÁÉÍÓÚÖÜŐŰ0-9.-][a-zA-ZáéíóúöüőűÁÉÍÓÚÖÜŐŰ0-9 .-]{2,20}[a-zA-ZáéíóúöüőűÁÉÍÓÚÖÜŐŰ0-9.-]$/ui'
+      ),
       array(
         'type' => 'database',
         'help' => $l('users','usernameregistered'),
         'sql'  => "
           SELECT count(*) as counter
           FROM users
-          WHERE nickname = <FORM.nickname>
+          WHERE
+            nickname = <FORM.nickname> AND
+            organizationid = '" . $this->controller->organization['id'] . "'
         ",
         'field' => 'counter',
         'value' => '0'
