@@ -150,7 +150,7 @@ class Uploadcontent extends \Visitor\HelpForm {
     
     $recordingModel->addContentRecording(
       $values['isinterlaced'],
-      'stream.teleconnect.hu'
+      'stream.videosquare.eu'
     );
     
     try {

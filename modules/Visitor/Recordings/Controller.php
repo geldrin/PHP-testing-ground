@@ -366,7 +366,7 @@ class Controller extends \Visitor\Controller {
       $user['organizationid'],
       $values['languageid'],
       $file['name'],
-      'stream.teleconnect.hu'
+      'stream.videosquare.eu'
     );
     
     try {
@@ -419,7 +419,7 @@ class Controller extends \Visitor\Controller {
     
     $recordingModel->addContentRecording(
       0, // TODO interlaced?
-      'stream.teleconnect.hu'
+      'stream.videosquare.eu'
     );
     
     try {
