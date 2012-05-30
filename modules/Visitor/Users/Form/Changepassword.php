@@ -46,7 +46,7 @@ class Changepassword extends \Visitor\Form {
       )
     );
     
-    if ( $this->userModel->row['disabled'] == \Models\Users::USER_VALIDATED ) {
+    if ( $this->userModel->row['disabled'] == \Model\Users::USER_VALIDATED ) {
       
       $this->userModel->registerForSession();
       $this->userModel->updateLastLogin();
