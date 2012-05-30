@@ -571,6 +571,8 @@ a#currentusername {
   box-shadow: 0px 1px 1px rgba(0, 0, 0, 0.4), inset 0px 1px 1px rgba(255, 255, 255, 0.1);
   position: relative;
   z-index: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 a#currentusername:hover {
   text-decoration: none;

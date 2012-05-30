@@ -50,11 +50,11 @@ $config = array(
     'displayname' => $l('users', 'password'),
     'type'        => 'inputPassword',
     'validation' => array(
-      array( 'type' => 'required' ),
       array(
-        'type' => 'string',
-        'minimum' => 4,
-        'maximum' => 512,
+        'type'     => 'string',
+        'minimum'  => 4,
+        'maximum'  => 512,
+        'required' => true,
       )
     )
   ),

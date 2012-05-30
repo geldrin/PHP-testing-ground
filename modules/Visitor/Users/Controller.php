@@ -12,6 +12,7 @@ class Controller extends \Visitor\Controller {
     'validate'       => 'public',
     'forgotpassword' => 'public',
     'changepassword' => 'public',
+    'resend'         => 'public',
     'invite'         => 'clientadmin',
     'validateinvite' => 'public',
     'disable'        => 'clientadmin',
@@ -25,6 +26,7 @@ class Controller extends \Visitor\Controller {
     'changepassword' => 'Visitor\\Users\\Form\\Changepassword',
     'invite'         => 'Visitor\\Users\\Form\\Invite',
     'modify'         => 'Visitor\\Users\\Form\\Modify',
+    'resend'         => 'Visitor\\Users\\Form\\Resend',
   );
   
   public $paging = array(

@@ -27,8 +27,15 @@ class Login extends \Visitor\Form {
     
     if ( !$uservalid or !$orgvalid ) {
       
-      $l = $this->bootstrap->getLocalization();
-      $this->form->addMessage( sprintf( $l('users','login_error'), \Springboard\Language::get() . '/users/forgotpassword' ) );
+      $l            = $this->bootstrap->getLocalization();
+      $lang         = \Springboard\Language::get();
+      $encodedemail = rawurlencode( $values['email'] );
+      $message      = sprintf(
+        $l('users','login_error'),
+        $lang . '/users/forgotpassword?email=' . $encodedemail,
+        $lang . '/users/resend?email=' . $encodedemail
+      );
+      $this->form->addMessage( $message );
       $this->form->invalidate();
       return;
       

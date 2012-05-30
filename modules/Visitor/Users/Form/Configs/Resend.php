@@ -2,50 +2,44 @@
 
 include_once( $this->bootstrap->config['libpath'] . 'clonefish/constants.php');
 
-$config = array(
-  
-  'action' => array(
-    'type'  => 'inputHidden',
-    'value' => 'submitinvite'
-  ),
+$config = Array(
   
   'fs1' => array(
     'type'   => 'fieldset',
-    'legend' => $l('users', 'invite_title'),
-    'prefix' => '<span class="legendsubtitle">' . $l('users', 'invite_subtitle') . '</span>',
+    'legend' => $l('users', 'resend_title'),
+    'prefix' => '<span class="legendsubtitle">' . $l('users', 'resend_subtitle') . '</span>',
+  ),
+  
+  'action' => Array(
+    'type'  => 'inputHidden',
+    'value' => 'submitresend'
   ),
   
   'email' => Array(
     'displayname' => $l('users', 'email'),
     'type'        => 'inputText',
+    'value'       => $this->application->getParameter('email'),
     'validation'  => Array(
       Array(
         'type'   => 'string',
         'regexp' => CF_EMAIL,
-        'help'   => $l('users', 'emailhelp')
+        'help'   => $l('users', 'emailhelp'),
       ),
       Array(
         'type'   => 'database',
-        'help' => $l('users','emailregisteredhelp'),
+        'help'   => $l('users', 'resendhelp'),
         'sql'    => "
           SELECT count(*) as counter
           FROM users
           WHERE
             email = <FORM.email> AND
+            disabled = '" . \Model\Users::USER_UNVALIDATED . "' AND
             organizationid = '" . $this->controller->organization['id'] . "'
         ",
         'field' => 'counter',
-        'value' => '0'
+        'value' => '1'
       )
     )
-  ),
-  
-  'permissions[]' => array(
-    'displayname' => $l('users', 'permissions'),
-    'type'        => 'inputCheckboxDynamic',
-    'values'      => $l->getLov('permissions'),
-    'validation' => array(
-    ),
   ),
   
 );

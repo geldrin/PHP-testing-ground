@@ -67,6 +67,19 @@ $config = array(
     ),
   ),
   
+  'nameformat' => array(
+    'displayname' => $l('users', 'nameformat'),
+    'type'        => 'select',
+    'values'      => array(
+      'straight' => $l('users', 'nameformatstraight'),
+      'reverse'  => $l('users', 'nameformatreverse'),
+    ),
+    'value'       => \Springboard\Language::get() == 'en' ? 'reverse' : 'straight',
+    'validation'  => array(
+      array( 'type' => 'required' ),
+    ),
+  ),
+  
   'newsletter' => array(
     'displayname' => $l('users', 'newsletter'),
     'type'        => 'inputCheckbox',
