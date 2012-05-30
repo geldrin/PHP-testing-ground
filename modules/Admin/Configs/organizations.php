@@ -123,6 +123,12 @@ $config = Array(
     ),
   ),
   
+  'fullnames' => array(
+    'displayname' => 'Feltöltő teljes nevének kiírása?',
+    'type'        => 'inputRadio',
+    'values'      => $l->getLov('yesno'),
+  ),
+  
   'issubscriber' => array(
     'displayname' => 'Előfizető?',
     'type'        => 'inputRadio',

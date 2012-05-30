@@ -35,6 +35,54 @@ class Users extends \Springboard\Model {
     
   }
   
+  public function selectAndCheckAPIUserValid( $organizationid, $email, $password, $currentip ) {
+    
+    $uservalid = $this->selectAndCheckUserValid( $organizationid, $email, $password );
+    
+    if ( !$uservalid )
+      return false;
+    
+    if ( !$this->row['isapienabled'] )
+      return false;
+    
+    if ( $this->row['apiaddresses'] and $currentip ) {
+      
+      $found       = false;
+      $addresses = explode(',', $this->row['apiaddresses'] );
+      
+      foreach ( $addresses as $ip ) {
+        
+        $ip = trim( $ip );
+        if ( !$ip )
+          continue;
+        
+        // ha csillaggal vegzodik akkor range match
+        if ( substr( $ip, -1, 1 ) == '*' and $ip != '*' ) {
+          
+          if ( strpos( $currentip, substr( $ip, 0, -1 ) ) === 0 ) {
+            
+            $found = true;
+            break;
+            
+          }
+          
+        } elseif ( $ip == $currentip or $ip == '*' ) {
+          
+          $found = true;
+          break;
+          
+        }
+        
+      }
+      
+      return $found;
+      
+    }
+    
+    return true;
+    
+  }
+  
   public function registerForSession( $sessionkey = 'user' ) {
     
     $user = $this->bootstrap->getSession( $sessionkey );

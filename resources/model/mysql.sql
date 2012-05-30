@@ -48,6 +48,8 @@ CREATE TABLE `users` (
    `browser` text not null,
    `validationcode` text not null,
    `disabled` int(11) not null default '0',
+   `isapienabled` int(11) not null default '0',
+   `apiaddresses` text,
    PRIMARY KEY (`id`),
    UNIQUE INDEX `uq_emailorganizationid` (`email`(50), `organizationid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;
@@ -76,6 +78,7 @@ CREATE TABLE `organizations` (
    `logofilename` text,
    `logofilenameen` text,
    `disabled` int(11) not null default '0',
+   `fullnames` int(11) not null default '0',
    PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;
 

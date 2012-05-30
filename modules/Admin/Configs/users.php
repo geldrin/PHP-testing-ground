@@ -165,6 +165,33 @@ $config = Array(
     'values'      => $l->getLov('yesno'),
   ),
   
+  'isapienabled' => array(
+    'displayname' => 'API használatának engedélyezése?',
+    'type'        => 'inputRadio',
+    'values'      => $l->getLov('yesno'),
+  ),
+  
+  'apiaddresses' => Array(
+    'displayname' => 'API hozzáférésére jogosult IP címek',
+    'html'        => 'style="width: 400px"',
+    'postfix'     => '
+    <br /><br />
+    <div class="info">
+      Több IP cím is megadható veszzővel (,) elválasztva. <br/>
+      Tartományok megadásához használjon csillagot. <br/>
+      Például: 192.168.* vagy 10.0.1.*
+    </div>',
+    'type'        => 'inputText',
+    'validation'  => Array(
+      array(
+        'type'     => 'string',
+        'required' => false,
+        'regexp'   => '/^[0-9\.,\*]+$/',
+        'help'     => 'Csak számok, pontok, csillagok és vesszők használhatóak.'
+      ),
+    )
+  ),
+  
   'disabled' => array(
     'displayname' => 'Banned?',
     'type'        => 'inputRadio',
@@ -239,6 +266,12 @@ $listconfig = Array(
     Array(
       'field' => 'isclientadmin',
       'displayname' => 'clientadmin',
+      'lov' => $l->getLov('yes'),
+    ),
+
+    Array(
+      'field' => 'isapienabled',
+      'displayname' => 'api',
       'lov' => $l->getLov('yes'),
     ),
 
