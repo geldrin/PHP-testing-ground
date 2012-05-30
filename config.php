@@ -99,10 +99,10 @@ $config = array(
   ),
   //----
   'wowza' => array(
-    'httpurl'  => 'http://stream.videosquare.eu:1935/vod/',
-    'rtmpurl'  => 'rtmp://stream.videosquare.eu:1935/vod/',
-    'rtmpturl' => 'rtmpt://stream.videosquare.eu:80/vod/',
-    'rtspurl'  => 'rtsp://stream.videosquare.eu/vod/',
+    'httpurl'  => 'http://stream.videosquare.eu:1935/vsq/',
+    'rtmpurl'  => 'rtmp://stream.videosquare.eu:1935/vsq/',
+    'rtmpturl' => 'rtmpt://stream.videosquare.eu:80/vsq/',
+    'rtspurl'  => 'rtsp://stream.videosquare.eu/vsq/',
   ),
   //----
   // lehet ures is ha nem akarjuk redirectelni a usert, ilyenkor
