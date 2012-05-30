@@ -58,7 +58,7 @@ $config = array(
   //-----
   'database' => array(
     'type'     => 'mysql',
-    'host'     => 'stream.teleconnect.hu',
+    'host'     => 'localhost',
     'username' => 'videosquare',
     'password' => '6NosJir7PWAanzo9hfv7',
     'database' => 'videosquare',
