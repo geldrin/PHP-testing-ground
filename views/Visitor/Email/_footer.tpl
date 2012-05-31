@@ -4,7 +4,7 @@
   </tr>
   <tr>
     <td width="600" height="50" align="center" valign="center" style="width: 600px; text-align:center; color: #333333;">
-      <span style="font-size: 13px;"><center>&copy; Teleconnect, <a href="{$organization|@uri:base}" style="color: #1e97d4;">{$organization|@uri:base:''}</a></center></span>
+      <span style="font-size: 13px;"><center>&copy; Videosquare, <a href="{$organization|@uri:base}" style="color: #1e97d4;">{$organization|@uri:base:''}</a></center></span>
     </td>
   </tr>
   <tr>
