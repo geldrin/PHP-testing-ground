@@ -385,7 +385,7 @@ global $app, $jconf;
 	if ( !$err['code'] ) {
 		log_recording_conversion($recording['id'], $jconf['jobid_media_convert'], $jconf['dbstatus_copyfromfe'], $err['message'], $err['command'], $err['result'], $err['value'], TRUE);
 		// Set status to "uploaded" to allow other nodes to take over task
-		update_db_content_status($recording['id'], $jconf['dbstatus_uploaded']);
+		update_db_recording_status($recording['id'], $jconf['dbstatus_uploaded']);
 		return FALSE;
 	}
 	log_recording_conversion($recording['id'], $jconf['jobid_media_convert'], $jconf['dbstatus_copyfromfe'], $err['message'], $err['command'], $err['result'], $err['value'], FALSE);

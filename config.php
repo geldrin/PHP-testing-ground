@@ -40,7 +40,7 @@ $config = array(
   ),
   //-----
   'mail'         => array(
-    'fromemail' => 'support@videosquare.eu',
+    'fromemail' => 'support@teleconnect.hu',
     'fromname'  => 'Videosquare',
     'errorsto'  => '',
     'type'      => 'text/html; charset="UTF-8"'
