@@ -29,7 +29,7 @@ $config = array(
   //-----
   'logemails'    => array(
     'dev@dotsamazing.com',
-    'hiba@videosquare.eu',
+    'hiba@teleconnect.hu',
   ),
   //-----
   'smtp'         => array(
