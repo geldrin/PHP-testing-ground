@@ -107,7 +107,7 @@ $config = array(
   //----
   // lehet ures is ha nem akarjuk redirectelni a usert, ilyenkor
   // siman die()-ol az applikacio
-  'organizationfallbackurl' => 'http://www.videosquare.eu',
+  'organizationfallbackurl' => 'http://videosquare.eu',
 );
 
 $config['phpsettings'] = array(
