@@ -109,6 +109,8 @@ class Bootstrap {
     elseif ( $domain !== null )
       $cookiedomain = '.' . $domain;
     
+    $this->config['cookiedomain'] = $cookiedomain;
+    
     ini_set('session.cookie_domain',    $cookiedomain );
     session_set_cookie_params( 0 , '/', $cookiedomain );
     
@@ -429,7 +431,7 @@ class Bootstrap {
   public function getSession( $namespace = 'default' ) {
     
     $this->setupSession();
-    $basenamespace = $this->config['siteid'];
+    $basenamespace = $this->config['siteid'] . $this->config['cookiedomain'];
     return new Springboard\Session( $basenamespace, $namespace );
     
   }

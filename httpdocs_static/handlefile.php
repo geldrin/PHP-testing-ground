@@ -177,17 +177,18 @@ function filenameize( $filename ) {
 function checkAccess( $recordingid ) {
   
   // - session_start (meg kell kapnunk a cookie aldomainkent)
-  $cookiedomain = '.teleconnect.hu';
+  $cookiedomain = '.videosquare.eu';
   
   if ( isset( $_SERVER['SERVER_NAME'] ) )
     $cookiedomain = '.' . str_replace( 'static.', '', $_SERVER['SERVER_NAME'] );
   
   ini_set('session.cookie_domain',    $cookiedomain );
   session_set_cookie_params( 0 , '/', $cookiedomain );
+  $sessionkey = 'teleconnect' . $cookiedomain;
   
   session_start();
-
-  if ( DEBUG or !isset( $_SESSION['teleconnect']['recordingaccess'][ $recordingid ] ) ) {
+  
+  if ( DEBUG or !isset( $_SESSION[ $sessionkey ]['recordingaccess'][ $recordingid ] ) ) {
     
     define('BASE_PATH',  realpath( dirname( __FILE__ ) . '/..' ) . '/' );
     if ( strpos( BASE_PATH, 'dev.') !== false )
@@ -204,6 +205,7 @@ function checkAccess( $recordingid ) {
 
     $application->bootstrap();
     $application->bootstrap->sessionstarted = true;
+    $application->bootstrap->config['cookiedomain'] = $cookiedomain;
     $user            = $application->bootstrap->getSession('user');
     $recordingsModel = $application->bootstrap->getModel('recordings');
     $access          = $application->bootstrap->getSession('recordingaccess');
@@ -223,7 +225,7 @@ function checkAccess( $recordingid ) {
       $result = false;
     
   } else
-    $result = $_SESSION['teleconnect']['recordingaccess'][ $recordingid ] === true;
+    $result = $_SESSION[ $sessionkey ]['recordingaccess'][ $recordingid ] === true;
   
   // - ne lockoljuk a sessiont arra az idore sem, mig az allomany
   //   eleri a bongeszot, mivel parhuzamos szalaknak szukseguk
