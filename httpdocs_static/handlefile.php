@@ -205,6 +205,7 @@ function checkAccess( $recordingid ) {
 
     $application->bootstrap();
     $application->bootstrap->sessionstarted = true;
+    $application->bootstrap->config['cookiedomain'] = $cookiedomain;
     $user            = $application->bootstrap->getSession('user');
     $recordingsModel = $application->bootstrap->getModel('recordings');
     $access          = $application->bootstrap->getSession('recordingaccess');
