@@ -23,6 +23,8 @@
             {#recordings__waitingforpublish#}&nbsp;(<span class="status-{$item.status}">{l lov=recordingstatus key=$item.status}</span>)
           {elseif preg_match( '/^converting/', $item.status )}
             <span class="status-{$item.status}">{l lov=recordingstatus key=unavailable}</span>
+          {elseif preg_match( '/^failed.*$/', $item.status )}
+            <span class="status-failed">{l lov=recordingstatus key=failed}</span>
           {else}
             <span class="status-{$item.status}">{l lov=recordingstatus key=$item.status}</span>
           {/if}
