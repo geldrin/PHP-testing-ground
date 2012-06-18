@@ -1,15 +1,15 @@
 <?php
 // Job configuration file
 
-//define('H264_PROFILE', '-vpre fast -vpre baseline');	// ffmpeg H.264 profile (default (=H.264 Main), baseline, normal, hq, max
-//define('H264_PROFILE', '-preset fast -profile baseline');	// for newer ffmpegs (2011: 0.8.2)
-
 // Profiles: baseline, main, high
 // Worked on Debian stable stream.teleconnect.hu
 //define('H264_PROFILE',			'-preset fast -profile main');
 //define('H264_PROFILE_MOBILE',		'-preset fast -profile baseline');
-define('H264_PROFILE',				'-preset fast -vpre main');
-define('H264_PROFILE_MOBILE',		'-preset fast -vpre baseline');
+// Worked on testing Debian until 05/2012
+//define('H264_PROFILE',				'-preset fast -vpre main');
+//define('H264_PROFILE_MOBILE',		'-preset fast -vpre baseline');
+define('H264_PROFILE',				'-profile:v main -preset:v fast');
+define('H264_PROFILE_MOBILE',		'-profile:v baseline -preset:v fast');
 
 return array('config_jobs' => array(
 
@@ -190,7 +190,6 @@ return array('config_jobs' => array(
 		'audio_mode'		=> "cbr"
 	),
 
-	
 	// Content video profiles
 
 	// Normal quality

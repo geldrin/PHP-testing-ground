@@ -28,7 +28,7 @@ global $jconf;
 	if ( empty($profile['audio_codec']) || empty($profile['audio_ch']) || empty($media_info['audio_bitrate']) || empty($media_info['audio_srate']) ) {
 		$ffmpeg_audio = " -an ";
 	} else {
-		$ffmpeg_audio = "-async " . $jconf['ffmpeg_async_frames'] . " -acodec " . $profile['audio_codec'] . " -ac " . $profile['audio_ch'] . " -ab " . $media_info['audio_bitrate'] . "k -ar " . $media_info['audio_srate'] . " ";
+		$ffmpeg_audio = "-async " . $jconf['ffmpeg_async_frames'] . " -c:a " . $profile['audio_codec'] . " -ac " . $profile['audio_ch'] . " -b:a " . $media_info['audio_bitrate'] . "k -ar " . $media_info['audio_srate'] . " ";
 	}
 
 	if ( empty($profile['video_codec']) || empty($media_info['res_x']) || empty($media_info['res_y']) || empty($media_info['video_bitrate']) ) {
@@ -53,7 +53,7 @@ global $jconf;
 			$deint = " -deinterlace";
 		}
 
-		$ffmpeg_video = "-vcodec libx264 " . $profile['codec_profile'] . $resize . $deint . $fps . $ffmpeg_bw;
+		$ffmpeg_video = "-c:v libx264 " . $profile['codec_profile'] . $resize . $deint . $fps . $ffmpeg_bw;
 
 	}
 
