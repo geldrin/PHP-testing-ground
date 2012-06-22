@@ -77,7 +77,7 @@
 {/if}
 <div id="metadata">
   {assign var=numberofratings value=$recording.numberofratings|numberformat}
-  <div class="ratewidget right"{if $canrate} nojs="1"{/if} title="{#recordings__ratewidgetheading#|sprintf:$numberofratings}">
+  <div class="ratewidget right" data-canrate="{$canrate}" title="{#recordings__ratewidgetheading#|sprintf:$numberofratings}">
     <span class="spinner"></span>
     <h3>{#recordings__recording_rating#}:</h3>
     <ul>
@@ -95,7 +95,7 @@
     </div>
     <div class="content">
       <h3>{#recordings__uploader#}:</h3>
-      <div class="uploader">{$author|@nickformat|mb_truncate:50|escape:html}</div>
+      <div class="uploader">{$author|@nickformat|mb_wordwrap:20|escape:html}</div>
     </div>
   </div>
   
@@ -160,7 +160,7 @@
         <div class="content">
           <h3><a href="{$language}/recordings/details/{$item.id},{$item.title|filenameize}">{$item.title|mb_wordwrap:22|escape:html}</a></h3>
           {if $item.subtitle|stringempty}
-            <h4>{$item.subtitle|mb_truncate:27|escape:html}</h4>
+            <h4>{$item.subtitle|mb_wordwrap:27|escape:html}</h4>
           {/if}
           <div class="author">{$item|@nickformat|mb_wordwrap:20|escape:html}</div>
           {assign var=views value=$item.numberofviews|numberformat}

@@ -58,7 +58,7 @@
     <ul class="newslist">
     {foreach from=$news item=item name=news}
       <li class="listingitem{if $smarty.foreach.news.last} last{/if}">
-        <h2 class="nobr ellipsize"><a href="{$language}/organizations/newsdetails/{$item.id},{$item.title|filenameize}">{$item.title|mb_truncate:65|escape:html}</a><span class="subtitle">{$item.starts|date_format:#smarty_dateformat_long#}</span></h2>
+        <h2><a href="{$language}/organizations/newsdetails/{$item.id},{$item.title|filenameize}">{$item.title|mb_wordwrap:55|escape:html}</a><span class="subtitle">{$item.starts|date_format:#smarty_dateformat_long#}</span></h2>
         <p>{$item.lead|escape:html|nl2br}</p>
         <a href="{$language}/organizations/newsdetails/{$item.id},{$item.title|filenameize}" class="more">{#index__more#}</a>
       </li>

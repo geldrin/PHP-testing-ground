@@ -205,7 +205,7 @@ function setupRateWidget() {
       e.preventDefault();
     });
     
-    if ( $j(this).attr('data-nojs') == '1' )
+    if ( $j(this).attr('data-canrate') != '1' )
       return;
     
     $j(this).find('li').each( function() {
@@ -234,6 +234,13 @@ function setupRateWidget() {
       $j(this).prevAll().addClass('full');
       $j(this).addClass('full');
       $j(this).nextAll().removeClass('full');
+      
+      if ( resettimer ) {
+        
+        clearTimeout( resettimer );
+        resettimer = null;
+        
+      }
       
     });
     

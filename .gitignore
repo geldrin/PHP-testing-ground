@@ -1,5 +1,5 @@
 nbproject
-nbproject/**
+*.sublime-*
 resources/local/**
 modules/Visitor/Test/**
 libraries/smarty.2620
