@@ -34,17 +34,31 @@ class Controller extends \Visitor\Controller {
   );
   
   public $paging = array(
-    'index' => 'Visitor\\Live\\Paging\\Index',
-    //'' => 'Visitor\\Live\\Paging\\',
+    'index'   => 'Visitor\\Live\\Paging\\Index',
+    'details' => 'Visitor\\Live\\Paging\\Details',
   );
   
-  public function indexAction() {
-    $this->redirect('recordings/myrecordings');
-  }
-  
-  public function detailsAction() {
+  public function viewAction() {
     
-    $this->smartyoutput('Visitor/Recordings/Live.tpl');
+    $feedModel = $this->modelIDCheck(
+      'livefeeds',
+      $this->application->getNumericParameter('id')
+    );
+    
+    $streamid = $this->application->getNumericParameter('streamid');
+    
+    $streams = $feedModel->getStreams();
+    if ( $streamid and isset( $streams[ $streamid ] ) )
+      $currentstream = $streams[ $streamid ];
+    else
+      $currentstream = reset( $streams );
+    
+    $this->toSmarty['streams']       = $streams;
+    $this->toSmarty['feed']          = $feedModel->row;
+    $this->toSmarty['currentstream'] = $currentstream;
+    $this->toSmarty['liveurl']       = $this->bootstrap->config['wowza']['liveurl'];
+    
+    $this->smartyoutput('Visitor/Live/View.tpl');
     
   }
   

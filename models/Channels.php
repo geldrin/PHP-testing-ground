@@ -667,4 +667,50 @@ class Channels extends \Springboard\Model {
     
   }
   
+  // TODO szukites channeltype es ev alapjan
+  public function getLiveCount() {
+    
+    return $this->db->getOne("
+      SELECT COUNT(*)
+      FROM channels
+      WHERE
+        isliveevent = '1' AND
+        parentid    = '0' AND
+        endtimestamp >= NOW()
+      LIMIT 1
+    ");
+    
+  }
+  
+  public function getLiveArray( $start, $limit, $orderby ) {
+    
+    $sql = "
+      SELECT *
+      FROM channels
+      WHERE
+        isliveevent = '1' AND
+        parentid    = '0' AND
+        endtimestamp >= NOW()
+      ORDER BY $orderby
+      LIMIT $start, $limit
+    ";
+    
+    return $this->db->getArray( $sql );
+    
+  }
+  
+  public function getLiveRecordingCount() {
+    
+    $this->ensureObjectLoaded();
+    return 0; // TODO
+    
+  }
+  
+  public function getLiveRecordingArray( $start, $limit, $orderby ) {
+    
+    $this->ensureObjectLoaded();
+    return array(); // TODO
+    
+  }
+  
 }

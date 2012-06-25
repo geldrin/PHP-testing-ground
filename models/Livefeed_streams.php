@@ -3,20 +3,6 @@ namespace Model;
 
 class Livefeed_streams extends \Springboard\Model {
   
-  public function getStreamsForFeed( $feedid ) {
-    
-    $ret = array();
-    $this->clearFilter();
-    $this->addFilter('livefeedid', $feedid );
-    $streams = $this->getArray();
-    
-    foreach( $streams as $stream )
-      $ret[ $stream['id'] ] = $stream;
-    
-    return $ret;
-    
-  }
-  
   public function checkUniqueKeycode( $keycode, $existingkeycode = null ) {
     
     $found = $this->db->getOne("
