@@ -530,7 +530,14 @@ class Channels extends \Springboard\Model {
     
   }
   
-  function findRootID( $parentid, $ispublic = null ) {
+  function findRootID( $parentid = null, $ispublic = null ) {
+    
+    if ( !$parentid ) {
+      
+      $this->ensureID();
+      $parentid = $this->id;
+      
+    }
     
     $sql = "
       SELECT id, parentid
@@ -645,6 +652,18 @@ class Channels extends \Springboard\Model {
     ");
     
     return $recordings;
+    
+  }
+  
+  public function getLiveFeedCountForChannel() {
+    
+    $this->ensureID();
+    return $this->db->getOne("
+      SELECT COUNT(*)
+      FROM livefeeds
+      WHERE channelid = '" . $this->id . "'
+      LIMIT 1
+    ");
     
   }
   

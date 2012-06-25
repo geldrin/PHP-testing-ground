@@ -111,4 +111,23 @@ return array(
     'reconvert'          => 'Feldolgozás alatt',
     'failed'             => 'Konvertálás sikertelen',
   ),
+  
+  'aspectratios' => array(
+    '4:3'  => '4:3',
+    '5:4'  => '5:4',
+    '16:9' => '16:9',
+  ),
+  
+  'feedtypes' => array(
+    'flash'        => 'Adobe Flash',
+    'windowsmedia' => 'Windows Media',
+    'quicktime'    => 'Quicktime',
+    'real'         => 'Real Media',
+  ),
+  
+  'numberofstreams' => array(
+    '1' => 'egy videófolyam (stream) használata',
+    '2' => 'két videófolyam (stream) egyidejű használata (pl. előadó és fóliák párhuzamos közvetítéséhez)',
+  ),
+  
 );

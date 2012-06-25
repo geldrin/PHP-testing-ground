@@ -103,6 +103,7 @@ $config = array(
     'rtmpurl'  => 'rtmp://stream.videosquare.eu:1935/vsq/',
     'rtmpturl' => 'rtmpt://stream.videosquare.eu:80/vsq/',
     'rtspurl'  => 'rtsp://stream.videosquare.eu/vsq/',
+    'liveingressurl' => 'rtmp://stream.videosquare.eu:1935/vsq/',
   ),
   //----
   // lehet ures is ha nem akarjuk redirectelni a usert, ilyenkor
