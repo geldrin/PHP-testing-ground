@@ -84,8 +84,8 @@ $config = array(
   'mplayer_identify' => 'mplayer -ao null -vo null -frames 0 -identify %s 2>&1',
   //----
   'combine' => array(
-    'css' => true,
-    'js'  => true,
+    'css'     => true,
+    'js'      => true,
     'domains' => array(
       'static.videosquare.eu',
       'videosquare.eu',
@@ -99,12 +99,12 @@ $config = array(
   ),
   //----
   'wowza' => array(
-    'httpurl'  => 'http://stream.videosquare.eu:1935/vsq/',
-    'rtmpurl'  => 'rtmp://stream.videosquare.eu:1935/vsq/',
-    'rtmpturl' => 'rtmpt://stream.videosquare.eu:80/vsq/',
-    'rtspurl'  => 'rtsp://stream.videosquare.eu/vsq/',
-    'liveingressurl' => 'rtmp://stream.videosquare.eu:1935/vsq/',
-    'liveurl'  => 'rtmpt://stream.videosquare.eu:80/vsq/',
+    'httpurl'        => 'http://stream.videosquare.eu:1935/vsq/',
+    'rtmpurl'        => 'rtmp://stream.videosquare.eu:1935/vsq/',
+    'rtmpturl'       => 'rtmpt://stream.videosquare.eu:80/vsq/',
+    'rtspurl'        => 'rtsp://stream.videosquare.eu/vsq/',
+    'liveingressurl' => 'rtmp://stream.videosquare.eu:1935/vsqlive/',
+    'liveurl'        => 'rtmpt://stream.videosquare.eu:80/vsqlive/',
   ),
   //----
   // lehet ures is ha nem akarjuk redirectelni a usert, ilyenkor

@@ -5,12 +5,31 @@
   {include file="Visitor/_header.tpl" title=$rootchannel.title islive=true}
 {/if}
 
-{if $currentstream.feedtype == 'flash'}
-  {include file="Visitor/Live/Embeds/Flash.tpl" aspectratio=$currentstream.aspectratio url=$currentstream.streamurl keycode=$currentstream.keycode htmlid="stream" external=$feed.isexternal }
-{/if}
+{assign var=type value=$currentstream.feedtype|ucfirst}
+{assign var=embedfile value="Visitor/Live/Embeds/$type.tpl"}
+{capture assign=main}
+  {if $currentstream.feedtype == 'flash'}
+    <script type="text/javascript">
+      swfobject.embedSWF('flash/TCPlayer{$VERSION}.swf', 'playercontainer', '950', '530', '11.1.0', 'flash/swfobject/expressInstall.swf', {$flashdata|@jsonescape:true}, flashdefaults.params );
+    </script>
+    <div id="playercontainer">{#recordings__noflash#}</div>
+  {else}
+    {include file=$embedfile aspectratio=$currentstream.aspectratio url=$currentstream.streamurl keycode=$currentstream.keycode htmlid="stream" external=$feed.isexternal }
+  {/if}
+{/capture}
 
-{if $feed.numberofstreams == 2}
-  {include file="Visitor/Live/Embeds/Flash.tpl" aspectratio=$currentstream.contentaspectratio url=$currentstream.contentstreamurl keycode=$currentstream.contentkeycode htmlid="contentstream" external=$feed.isexternal }
+{capture assign=content}
+  {if $feed.numberofstreams == 2 and $currentstream.feedtype != 'flash'}
+    {include file=$embedfile aspectratio=$currentstream.contentaspectratio url=$currentstream.contentstreamurl keycode=$currentstream.contentkeycode htmlid="contentstream" external=$feed.isexternal }
+  {/if}
+{/capture}
+
+{if $feed.slideonright}
+  {$main}
+  {$content}
+{else}
+  {$content}
+  {$main}
 {/if}
 
 <div class="clear"></div><br/>

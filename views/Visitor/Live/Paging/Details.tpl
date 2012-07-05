@@ -15,7 +15,7 @@
         
       </h1>
       {if $item.subtitle}<h2>{$item.subtitle|escape:html}</h2>{/if}
-      <p>{#starttimestamp#}: {$item.recordedtimestamp}</p>
+      <p>{#recordings__starttimestamp#}: {$item.recordedtimestamp}</p>
       {if $item.description}<p>{$item.description|mb_truncate:100|escape:html}</p>{/if}
       
       <div class="clear"></div>

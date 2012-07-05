@@ -17,11 +17,14 @@ class Details extends \Visitor\Paging {
     $l                 = $this->bootstrap->getLocalization();
     $this->foreachelse = $l('live','live_foreachelse');
     $this->title       = $l('','sitewide_live');
-    $this->controller->toSmarty['listclass'] = 'recordinglist';
     $this->channelModel = $this->controller->modelIDCheck(
       'channels',
       $this->application->getNumericParameter('id')
     );
+    
+    $this->controller->toSmarty['listclass'] = 'recordinglist';
+    $this->controller->toSmarty['feeds']     = $this->channelModel->getFeeds();
+    $this->controller->toSmarty['channel']   = $this->channelModel->row;
     
     parent::init();
     

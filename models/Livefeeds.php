@@ -131,6 +131,7 @@ class Livefeeds extends \Springboard\Model {
       SELECT
         id AS streamid,
         id,
+        name,
         streamurl,
         keycode,
         aspectratio,

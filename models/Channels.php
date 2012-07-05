@@ -321,8 +321,12 @@ class Channels extends \Springboard\Model {
     if ( $where )
       $this->addTextFilter( $where );
     
-    $ret = $this->db->getOne(
-      'SELECT count(*) FROM channels AS c, channel_types AS ct ' . $this->getFilter()
+    $ret = $this->db->getOne("
+      SELECT COUNT(*)
+      FROM
+        channels AS c,
+        channel_types AS ct " .
+      $this->getFilter()
     );
     
     $this->clearFilter('channeltype'); // pop the c.channeltypeid = ct.id
@@ -701,15 +705,49 @@ class Channels extends \Springboard\Model {
   
   public function getLiveRecordingCount() {
     
+    // TODO
     $this->ensureObjectLoaded();
-    return 0; // TODO
+    return $this->db->getOne("
+      SELECT DISTINCT COUNT(r.id)
+      FROM
+        channels_recordings AS cr,
+        recordings AS r
+      WHERE
+        cr.channelid IN('" . $this->id . "') AND
+        r.id          = cr.recordingid AND
+        r.ispublished = '1' AND
+        r.mediatype   = 'live'
+    ");
     
   }
   
   public function getLiveRecordingArray( $start, $limit, $orderby ) {
     
+    // TODO
     $this->ensureObjectLoaded();
-    return array(); // TODO
+    return $this->db->getArray("
+      SELECT DISTINCT r.*
+      FROM
+        channels_recordings AS cr,
+        recordings AS r
+      WHERE
+        cr.channelid IN('" . $this->id . "') AND
+        r.id          = cr.recordingid AND
+        r.ispublished = '1' AND
+        r.mediatype   = 'live'
+    ");
+    
+  }
+  
+  public function getFeeds() {
+    
+    $this->ensureObjectLoaded();
+    return $this->db->getArray("
+      SELECT *
+      FROM livefeeds
+      WHERE channelid IN('" . $this->id . "')
+      ORDER BY name
+    ");
     
   }
   
