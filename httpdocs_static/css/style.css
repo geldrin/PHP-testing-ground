@@ -1883,3 +1883,17 @@ a#currentusername span {
   color: #666;
   font-style: italic;
 }
+#streams {
+  float: right;
+}
+#streams span {
+  float: left;
+  margin-right: 5px;
+}
+#streams div {
+  float: left;
+  max-width: 470px;
+}
+#body #streams a {
+  display: inline-block;
+}
