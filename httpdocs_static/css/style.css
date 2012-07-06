@@ -1885,6 +1885,7 @@ a#currentusername span {
 }
 #streams {
   float: right;
+  margin-top: 10px;
 }
 #streams span {
   float: left;
