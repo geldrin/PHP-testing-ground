@@ -45,8 +45,9 @@ class Controller extends \Visitor\Controller {
       $this->application->getNumericParameter('id')
     );
     
-    $streamid  = $this->application->getNumericParameter('streamid');
-    $streams   = $feedModel->getStreams();
+    $channelModel = $this->modelIDCheck('channels', $feedModel->row['channelid'] );
+    $streamid     = $this->application->getNumericParameter('streamid');
+    $streams      = $feedModel->getStreams();
     
     if ( $streamid and isset( $streams[ $streamid ] ) )
       $currentstream = $streams[ $streamid ];
@@ -83,6 +84,7 @@ class Controller extends \Visitor\Controller {
       
     }
     
+    $this->toSmarty['channel']       = $channelModel->row;
     $this->toSmarty['streams']       = $streams;
     $this->toSmarty['feed']          = $feedModel->row;
     $this->toSmarty['currentstream'] = $currentstream;

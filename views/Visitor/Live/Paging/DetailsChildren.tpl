@@ -1,8 +1,8 @@
-<h2>
-  <a href="{$language}/live/details/{$child.id},{$child.name|filenameize}"{if $child.id == $channel.id} class="active"{/if}>{$child.name|escape:html}</a>
-</h2>
+<h3>
+  <a href="{$language}/live/details/{$child.id},{$child.title|filenameize}"{if $child.id == $channel.id} class="active"{/if}>{$child.title|escape:html}</a>
+</h3>
 {if $child.subtitle}
-  <h3>{$child.subtitle|escape:html}</h3>
+  <div class="subtitle">{$child.subtitle|escape:html}</div>
 {/if}
 
 {if !empty( $child.children )}

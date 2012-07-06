@@ -5,6 +5,11 @@
   {include file="Visitor/_header.tpl" title=$rootchannel.title islive=true}
 {/if}
 
+<div class="title">
+  <h1>{$channel.title|escape:html}</h1>
+  {if $channel.subtitle|stringempty}<h2>{$channel.subtitle|escape:html}</h2>{/if}
+</div>
+
 {assign var=type value=$currentstream.feedtype|ucfirst}
 {assign var=embedfile value="Visitor/Live/Embeds/$type.tpl"}
 {capture assign=main}

@@ -199,6 +199,7 @@ CREATE TABLE `recordings` (
    `contentmasteraudiobitrate` int(10) unsigned default null,
    `contentvideoreslq` text,
    `contentvideoreshq` text,
+   `livefeedid` int(10) unsigned default null,
    PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;
 

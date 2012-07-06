@@ -1809,3 +1809,77 @@ a#currentusername span {
   top: 3px;
   display: none;
 }
+
+/* temp live channellist */
+.channellist {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+}
+.channellist h2, .channellist h3 {
+  overflow: hidden;
+  margin: 0;
+}
+.channellist .listingitem h2 a {
+  font-weight: bold;
+  font-size: 18px;
+}
+.channellist .listingitem h3 {
+  color: #999;
+  font-size: 12px;
+  font-weight: normal;
+}
+.channellist .listingitem {
+  border-bottom: 1px solid #d0d0d0;
+  box-shadow: 0 1px 1px #fff;
+  padding-bottom: 10px;
+}
+.channellist .listingitem.last {
+  border-bottom: 0px;
+  box-shadow: none;
+}
+.treeview {
+  float: left;
+  width: 380px;
+  margin-right: 20px;
+}
+.channelrecordings {
+  float: right;
+  width: 550px;
+}
+.channelrecordings .recordinglist {
+  width: 550px;
+}
+.channelrecordings .listitem {
+  width: 550px;
+}
+.channelrecordings .recordingcontent {
+  margin-left: 0px;
+  width: 550px;
+}
+.livefeed {
+  display: inline-block;
+  float: right;
+  padding: 3px 6px 3px 32px;
+  text-transform: uppercase;
+  font-weight: bold;
+  font-size: 14px;
+  background-color: #d0d0ff;
+  min-height: 18px;
+  min-width: 1px;
+  background-image: url(images/camera.gif);
+  background-repeat: no-repeat;
+  background-position: 8px 3px;
+}
+.events .eventfeeds h2 {
+  font-weight: bold;
+  padding-bottom: 5px;
+  margin: 0;
+}
+.events .channeltree h3, .events .eventfeeds h3 {
+  margin: 5px 0 0 0;
+}
+.events .channeltree .subtitle {
+  color: #666;
+  font-style: italic;
+}

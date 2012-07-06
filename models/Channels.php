@@ -272,7 +272,7 @@ class Channels extends \Springboard\Model {
     
   }
   
-  function getSingleChannelTree( $rootid, $orderby = 'c.weight, c.nameoriginal, c.nameenglish', $parentid = 0, $ispublic = null ) {
+  function getSingleChannelTree( $rootid, $orderby = 'c.weight, c.title', $parentid = 0, $ispublic = null ) {
     
     if ( $rootid )
       $this->addFilter('c.id', $rootid, true, false, 'rootid');
@@ -335,7 +335,7 @@ class Channels extends \Springboard\Model {
     
   }
   
-  function getChannelTree( $start = false, $limit = false, $where = false, $orderby = 'c.weight, c.nameoriginal, c.nameenglish', $parentid = 0 ) {
+  function getChannelTree( $start = false, $limit = false, $where = false, $orderby = 'c.weight, c.title', $parentid = 0 ) {
     
     if ( $parentid !== null )
       $this->addFilter('c.parentid', $parentid, true, false, 'parentid');
@@ -742,8 +742,16 @@ class Channels extends \Springboard\Model {
   public function getFeeds() {
     
     $this->ensureObjectLoaded();
-    return $this->db->getArray("
-      SELECT *
+    return $this->db->getAssoc("
+      SELECT
+        id AS arraykey,
+        id,
+        userid,
+        channelid,
+        name,
+        isexternal,
+        slideonright,
+        numberofstreams
       FROM livefeeds
       WHERE channelid IN('" . $this->id . "')
       ORDER BY name
