@@ -57,11 +57,11 @@ class Controller extends \Visitor\Controller {
     if ( $currentstream['feedtype'] == 'flash' ) {
       
       $flashdata = array(
-        'language'           => \Springboard\Language::get(),
-        'media_servers'      => array( $currentstream['streamurl'] ),
-        'media_streams'      => array( $currentstream['keycode'] ),
-        'recording_title'    => $feedModel->row['name'],
-        'recording_duration' => '9999',
+        'language'        => \Springboard\Language::get(),
+        'media_servers'   => array( $currentstream['streamurl'] ),
+        'media_streams'   => array( $currentstream['keycode'] ),
+        'recording_title' => $feedModel->row['name'],
+        'recording_type'  => 'live',
       );
       
       if ( $feedModel->row['numberofstreams'] == 2 ) {
