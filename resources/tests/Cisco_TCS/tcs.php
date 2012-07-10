@@ -4,6 +4,135 @@ include("SOAP/Client.php");
 
 set_time_limit(0);
 
+function tcs_get_stream_url($conf_info) {
+
+    $is_flashver = false;
+
+    $HasWatchableMovie = $conf_info->GetConferenceResult->HasWatchableMovie;
+    if ( $HasWatchableMovie ) {
+	$WatchableMovie = $conf_info->GetConferenceResult->WatchableMovies->ArrayOfWatchableMovie->WatchableMovie;
+
+	$num = count($WatchableMovie);
+
+	if ( $num <= 1 ) {
+	    if ( ( $WatchableMovie->Format == "Flash" ) and ( $WatchableMovie->Quality == "Large" ) ) {
+		$conf_url = $WatchableMovie->MainURL;
+		$is_flashver = true;
+	    }
+	} else {
+	    for ( $i = 0; $i < $num; $i++) {
+		if ( ( $WatchableMovie[$i]->Format == "Flash" ) and ( $WatchableMovie[$i]->Quality == "Large" ) ) {
+		    $conf_url = $WatchableMovie[$i]->MainURL;
+		    $is_flashver = true;
+		    break;
+		}
+	    }
+	}
+
+	if ( $is_flashver ) {
+	    echo "Streaming URL: " . $conf_url . "\n";
+	} else {
+	    echo "ERROR: Streaming URL not found.\n";
+	    $conf_url = false;
+	}
+    }
+
+    return $conf_url;
+}
+
+function tcs_get_conference_info($conf_id) {
+ global $client;
+
+    echo "GET INFO: " . $conf_id . "\n";
+    $conf = array(
+	'ConferenceID'	=> $conf_id
+    );
+    $result = $client->GetConference($conf);
+
+    var_dump($result);
+
+    tcs_get_stream_url($result);
+
+    return $result;
+}
+
+function tcs_dial($conf_id, $conf_dial) {
+ global $client;
+
+// Parameters:
+//  Number (the number to dial - string)
+//  Bitrate (the desired bandwidth - string). Must be: 64, 128, 192, 256, 384, 512, 768, 1024, 1280, 1536, 1920 and 2048 kbps (as well as 2560, 3072 and 4000 kbps for Content Servers equipped with the Premium Resolution option).
+//  ConferenceID (ConferenceID to be used for this call - string)
+//  Alias (alias to use – specifies call settings - string)
+//  CallType (protocol for the call – optional (“sip”, “h323”) – string). If CallType is equal to sip then the address to call will be prefixed with sip:, otherwise H.323 is assumed.
+//  SetMetadata (inherit conference metadata from the alias – boolean)
+//  PIN (MCU conference PIN if required – string)
+
+    $conf = array(
+	'ConferenceID'	=> $conf_id,
+	'Number'		=> $conf_dial,
+	'CallType'		=> 'h323',		// or: 'sip'
+	'Alias'		=> '84100',
+	'Bitrate'		=> 2048,
+	'SetMetadata'	=> false
+    );
+
+    $result = $client->Dial($conf);
+
+    //var_dump($result);
+
+    $err = $result->DialResult->Error;
+    $err_code = $result->DialResult->ErrorCode;
+
+    return $result;
+}
+
+function tcs_reserve_conf_id() {
+ global $client;
+
+// Parameters:
+//  owner (username of the owner - string)
+//  password (password for the conference - string). Set password as an empty string for no conference password, this field is limited to 20 characters.
+//  startDateTime (start date of the recording using GNU date formats - string). Setting the startDateTime to 0 means that the call will begin immediately.
+//  duration (duration of call in seconds - integer). Setting a 0 duration will make the length of the call unlimited.
+//  title (the title that will appear in the Content Library - string)
+//  groupId (the GUID of the conference’s group, if it is recurring - string). The groupId field needs to be either unset, empty string, or a well formed GUID.
+//  isRecurring (indicates whether the conference is recurring - bool)
+
+    $conf = array(
+	'owner'		=> 'admin',
+	'password'		=> '',
+	'startDateTime'	=> 0,
+	'duration'		=> 0,
+	'title'		=> 'Ez a címem',
+	'groupID'		=> '',
+	'isRecurring'	=> false
+    );
+
+    $result = $client->RequestConferenceID($conf);
+
+    $conf_id = $result->RequestConferenceIDResult;
+
+    return $conf_id;
+}
+
+function tcs_disconnect($conf_id) {
+ global $client;
+
+    $conf = array(
+	'ConferenceID'	=> $conf_id
+    );
+
+    $result = $client->DisconnectCall($conf);
+
+//var_dump($result);
+
+    $err = $result->DisconnectCallResult->Error;
+    $err_code = $result->DisconnectCallResult->ErrorCode;
+
+    return $result;
+}
+
 $server = "tcs.streamnet.hu";
 $user = "admin";
 $password = "BoRoKaBoGYo1980";
@@ -22,149 +151,41 @@ $soapOptions = array(
 $client = new SoapClient($wsdl, $soapOptions);
 
 // 1. Reserve a ConferenceID
-
-echo "RESERVE ID\n";
-
-// Parameters:
-//  owner (username of the owner - string)
-//  password (password for the conference - string). Set password as an empty string for no conference password, this field is limited to 20 characters.
-//  startDateTime (start date of the recording using GNU date formats - string). Setting the startDateTime to 0 means that the call will begin immediately.
-//  duration (duration of call in seconds - integer). Setting a 0 duration will make the length of the call unlimited.
-//  title (the title that will appear in the Content Library - string)
-//  groupId (the GUID of the conference’s group, if it is recurring - string). The groupId field needs to be either unset, empty string, or a well formed GUID.
-//  isRecurring (indicates whether the conference is recurring - bool)
-
-$conf = array(
-    'owner'		=> 'admin',
-    'password'		=> '',
-    'startDateTime'	=> 0,
-    'duration'		=> 0,
-    'title'		=> 'Ez a címem',
-    'groupID'		=> '',
-    'isRecurring'	=> false
-);
-
-$result = $client->RequestConferenceID($conf);
-
-$conf_id = $result->RequestConferenceIDResult;
-
-echo "\tconferenceID: " . $conf_id . "\n";
-
-unset($conf);
+$conf_id = tcs_reserve_conf_id();
+echo "Reserved ConferenceID: " . $conf_id . "\n";
 
 // 2. Dial
-
 $conf_dial = '81999@teleconnect.hu';
-
 echo "DIAL: " . $conf_id . " (h323: " . $conf_dial . ")\n";
-
-// Parameters:
-//  Number (the number to dial - string)
-//  Bitrate (the desired bandwidth - string). Must be: 64, 128, 192, 256, 384, 512, 768, 1024, 1280, 1536, 1920 and 2048 kbps (as well as 2560, 3072 and 4000 kbps for Content Servers equipped with the Premium Resolution option).
-//  ConferenceID (ConferenceID to be used for this call - string)
-//  Alias (alias to use – specifies call settings - string)
-//  CallType (protocol for the call – optional (“sip”, “h323”) – string). If CallType is equal to sip then the address to call will be prefixed with sip:, otherwise H.323 is assumed.
-//  SetMetadata (inherit conference metadata from the alias – boolean)
-//  PIN (MCU conference PIN if required – string)
-
-$conf = array(
-    'ConferenceID'	=> $conf_id,
-    'Number'		=> $conf_dial,
-    'CallType'		=> 'h323',		// or: 'sip'
-    'Alias'		=> '84100',
-    'Bitrate'		=> 2048,
-    'SetMetadata'	=> false
-);
-
-$result = $client->Dial($conf);
-
-//var_dump($result);
-
-$err = $result->DialResult->Error;
-$err_code = $result->DialResult->ErrorCode;
-
-unset($conf);
+$res = tcs_dial($conf_id, $conf_dial);
 
 sleep(20);
 
 // 3. Get recording information (live)
+//$conf_id = 'BFDB17B1-CED8-4226-9040-BA4AFD2C8A09';
+tcs_get_conference_info($conf_id);
 
-echo "GET INFO: " . $conf_id . "\n";
-
-$conf = array(
-    'ConferenceID'	=> $conf_id
-);
-
-$result = $client->GetConference($conf);
-
-var_dump($result);
-
-$HasWatchableMovie = $result->GetConferenceResult->HasWatchableMovie;
-
-if ( $HasWatchableMovie ) {
-
-    $WatchableMovie = $result->GetConferenceResult->WatchableMovies->ArrayOfWatchableMovie->WatchableMovie;
-
-    $conf_live_url = $WatchableMovie->MainURL;
-
-    echo "Live RTMP URL: " . $conf_live_url . "\n";
-
-}
-
-exit;
-
-sleep(10);
+sleep(30);
 
 // 4. Disconnect live recording
 
 echo "DISCONNECT: " . $conf_id . "\n";
 
-$conf = array(
-    'ConferenceID'	=> $conf_id
-);
-
-$result = $client->DisconnectCall($conf);
-
-//var_dump($result);
-
-$err = $result->DisconnectCallResult->Error;
-$err_code = $result->DisconnectCallResult->ErrorCode;
-
-unset($conf);
+$res = tcs_disconnect($conf_id);
 
 sleep(30);
 
 // 5. Get recording information (on demand)
 
-$conf = array(
+/*$conf = array(
     'ConferenceID'	=> $conf_id
 );
 
-$result = $client->GetConference($conf);
+$result = $client->GetConference($conf); */
 
-var_dump($result);
+tcs_get_conference_info($conf_id);
 
-$HasWatchableMovie = $result->GetConferenceResult->HasWatchableMovie;
-
-if ( $HasWatchableMovie ) {
-
-    $WatchableMovie = $result->GetConferenceResult->WatchableMovies->ArrayOfWatchableMovie->WatchableMovie;
-
-    $num = count($WatchableMovie);
-
-    if ( $num <= 1 ) {
-	$conf_vod_url = $WatchableMovie->MainURL;
-    } else {
-	for ( $i = 0; $i < $num; $i++) {
-	    if ( $WatchableMovie[$i]->Format == "Flash" ) {
-		$conf_vod_url = $WatchableMovie[$i]->MainURL;
-		break;
-	    }
-	}
-    }
-
-    echo "VoD Flash URL: " . $conf_vod_url . "\n";
-}
+//var_dump($res);
 
 exit;
 
