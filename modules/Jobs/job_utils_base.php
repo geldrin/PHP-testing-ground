@@ -144,23 +144,22 @@ function runExternal_vlc($cmd, $output_file) {
 			$tmp = trim($s);
 			if ( !empty($tmp) ) {
 				$output .= $tmp;
-				$end_str = stripos($tmp, "kb/s:" );
+//				$end_str = stripos($tmp, "kb/s:" );
+			}
 
 // Rearrange this!!!
-				$err = is_process_closedfile($output_file, $PID);
+			// If vlc closed output file, then we send SIGQUIT to it
+			$err = is_process_closedfile($output_file, $PID);
+			if ( $err['code'] == TRUE ) {
+//				if ( ( $end_str !== FALSE ) and ( $err['code'] == TRUE ) ) {
 
-				if ( ( $end_str !== FALSE ) and ( $err['code'] == TRUE ) ) {
-
-					if ( !posix_kill($PID, SIGQUIT) ) {
-						$output .= "\nERROR: notkilled: $PID\n";
-					}
-				}
+				if ( !posix_kill($PID, SIGQUIT) ) $output .= "\nERROR: not killed: $PID\n";
 
 				break;
-
 			}
 
 		}
+
 	}
 
 	fclose($pipes[1]);
