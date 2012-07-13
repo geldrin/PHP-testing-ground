@@ -34,7 +34,7 @@
       </div>
     {else}
       <div id="mobileplayercontainer">
-        <a href="{if $recording.mediatype == 'audio'}{$audiofileurl}{else}{$mobilertspurl}{/if}"><img src="{$recording|@indexphoto}" width="220" height="130"/></a>
+        <a href="{if $recording.mediatype == 'audio'}{$audiofileurl}{else}{$mobilehttpurl}{/if}"><img src="{$recording|@indexphoto}" width="220" height="130"/></a>
       </div>
     {/if}
     <br/>
