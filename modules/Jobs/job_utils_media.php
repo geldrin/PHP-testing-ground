@@ -1,6 +1,64 @@
 <?php
 
 // *************************************************************************
+// *				function ffmpeg_qt-faststart()		   				   *
+// *************************************************************************
+// Description: convert metadata for safer player compatibility
+function ffmpeg_qtfaststart($input_file) {
+ global $jconf;
+
+	$err = array();
+
+	$temp_file = $jconf['media_dir'] . rand(10000, 99999) . ".mp4";
+
+	if ( file_exists($temp_file) ) {
+		$err['code'] = FALSE;
+		$err['message'] = "[ERROR] qt-faststart metadata conversion FAILED. Temp file " . $temp_file . " already exists.";
+		return $err;
+	}
+
+	// Call qt-faststart
+	$command = "qt-faststart " . $input_file . " " . $temp_file;
+//echo $command . "\n";
+	$time_start = time();
+	$output = runExternal($command);
+	$err['duration'] = time() - $time_start;
+	$mins_taken = round( $err['duration'] / 60, 2);
+
+	$err['command'] = $command;
+	$err['command_output'] = $output['cmd_output'];
+	$err['result'] = $output['code'];
+
+	if ( $err['result'] != 0 ) {
+		$err['code'] = FALSE;
+		$err['message'] = "[ERROR] qt-faststart metadata conversion FAILED.";
+		return $err;
+	}
+
+	// Remove original file
+	if ( !unlink($input_file) ) {
+		$err['code'] = FALSE;
+		$err['message'] = "[ERROR] Cannot remove file: " . $input_file;
+		unlink($temp_file);
+		return $err;
+	}
+
+	// Rename temp file to original file's name
+	if ( !rename($temp_file, $input_file) ) {
+		$err['code'] = FALSE;
+		$err['message'] = "[ERROR] Cannot rename temp file: " . $temp_file . " to " . $input_file;
+		return $err;
+	}
+
+	$err['code'] = TRUE;
+	$err['message'] = "[OK] qt-faststart conversion OK (in " . $mins_taken . " mins)";
+
+//print_r($err);
+
+	return $err;
+}
+
+// *************************************************************************
 // *				function ffmpeg_convert()		   					   *
 // *************************************************************************
 // Description: Convert video track using ffmpeg.
@@ -194,11 +252,6 @@ global $jconf;
 	if ( $profile['pip_posy'] == "up" ) $recording_info['pip_y'] = 0 + $pip_align;
 	if ( $profile['pip_posy'] == "down" ) $recording_info['pip_y'] = $recording_info['res_y'] - $recording_info['pip_res_y'] - $pip_align;
 
-//	if ( $profile['pip_posx'] == "left" ) $recording_info['pip_x'] = 0 + $profile['pip_align'];
-//	if ( $profile['pip_posx'] == "right" ) $recording_info['pip_x'] = $recording_info['res_x'] - $recording_info['pip_res_x'] - $profile['pip_align'];
-//	if ( $profile['pip_posy'] == "up" ) $recording_info['pip_y'] = 0 + $profile['pip_align'];
-//	if ( $profile['pip_posy'] == "down" ) $recording_info['pip_y'] = $recording_info['res_y'] - $recording_info['pip_res_y'] - $profile['pip_align'];
-
 	return TRUE;
 }
 
@@ -352,6 +405,16 @@ echo "bpp profile: " . $profile['video_bpp'] . " | orig: " . $video_in['bpp'] . 
 		log_recording_conversion($recording['id'], $jconf['jobid_media_convert'], $jconf['dbstatus_conv_video'], $msg, $err['command'], $err['command_output'], $err['duration'], FALSE);
 		$global_log .= $profile['name'] . " conversion in " . secs2hms($err['duration']) . " time.\n";
 	}
+
+	$err = ffmpeg_qtfaststart($recording_info['output_file']);
+	if ( !$err['code'] ) {
+		log_recording_conversion($recording['id'], $jconf['jobid_media_convert'], $jconf['dbstatus_conv_video'], $err['message'] . "\nSource file: " . $recording_info['output_file'] . "\nDestination file: " . $recording_info['output_file'], $err['command'], $err['command_output'], $err['duration'], TRUE);
+		return FALSE;
+	}
+/* else {
+		log_recording_conversion($recording['id'], $jconf['jobid_media_convert'], $jconf['dbstatus_conv_video'], $err['message'] . "\nSource file: " . $recording_info['output_file'] . "\nDestination file: " . $recording_info['output_file'], $err['command'], $err['command_output'], $err['duration'], FALSE);
+	}
+*/
 
 	// Update watchdog timer
 	$app->watchdog();
