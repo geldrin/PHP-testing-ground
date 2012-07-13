@@ -29,9 +29,12 @@ function ffmpeg_qtfaststart($input_file) {
 	$err['command_output'] = $output['cmd_output'];
 	$err['result'] = $output['code'];
 
+//var_dump($err['result']);
+
 	if ( $err['result'] != 0 ) {
 		$err['code'] = FALSE;
 		$err['message'] = "[ERROR] qt-faststart metadata conversion FAILED.";
+//echo "ERR0\n";
 		return $err;
 	}
 
@@ -40,6 +43,7 @@ function ffmpeg_qtfaststart($input_file) {
 		$err['code'] = FALSE;
 		$err['message'] = "[ERROR] Cannot remove file: " . $input_file;
 		unlink($temp_file);
+//echo "ERR1\n";
 		return $err;
 	}
 
@@ -47,6 +51,7 @@ function ffmpeg_qtfaststart($input_file) {
 	if ( !rename($temp_file, $input_file) ) {
 		$err['code'] = FALSE;
 		$err['message'] = "[ERROR] Cannot rename temp file: " . $temp_file . " to " . $input_file;
+//echo "ERR2\n";
 		return $err;
 	}
 
