@@ -99,10 +99,10 @@ $config = array(
   ),
   //----
   'wowza' => array(
-    'httpurl'        => 'http://stream.videosquare.eu:1935/vsq/',
+    'httpurl'        => 'http://stream.videosquare.eu/vsq/_definst_/',
     'rtmpurl'        => 'rtmp://stream.videosquare.eu:1935/vsq/',
     'rtmpturl'       => 'rtmpt://stream.videosquare.eu:80/vsq/',
-    'rtspurl'        => 'rtsp://stream.videosquare.eu/vsq/',
+    'rtspurl'        => 'rtsp://stream.videosquare.eu/vsq/_definst_/',
     'liveingressurl' => 'rtmp://stream.videosquare.eu:1935/vsqlive/',
     'liveurl'        => 'rtmpt://stream.videosquare.eu:80/vsqlive/',
   ),

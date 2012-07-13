@@ -29,7 +29,7 @@
     {if $browser.mobiledevice == 'iphone'}
       <div id="mobileplayercontainer">
         <video x-webkit-airplay="allow" controls="controls" alt="{$recording.title|escape:html}" width="192" height="144" poster="{$recording|@indexphoto}" src="{$mobilehttpurl}">
-          <a href="{$mobilertspurl}"><img src="{$recording|@indexphoto}" width="220" height="130"/></a>
+          <a href="{$mobilehttpurl}"><img src="{$recording|@indexphoto}" width="220" height="130"/></a>
         </video>
       </div>
     {else}
