@@ -145,7 +145,7 @@ return array('config_jobs' => array(
 		'video_bbox'		=> "1280x720",		// Bounding box
 		'video_bpp'			=> 0.078,			// resx * resy * fps * bpp = video codec bandwidth
 		'audio_codec'		=> "libfaac",		// AAC
-		'audio_ch'			=> 1,				// Max. number of audio channels
+		'audio_ch'			=> 2,				// Max. number of audio channels
 		'audio_bw_ch'		=> 64,				// Kbps per audio channel
 		'audio_mode'		=> "cbr",
 		'pip_wcontent'		=> "enabled",
