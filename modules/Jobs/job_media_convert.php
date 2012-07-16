@@ -108,25 +108,35 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_media_convert.stop' ) and 
 
 			update_db_recording_status($recording['id'], $jconf['dbstatus_conv_video']);
 
-			// Mobile normal quality conversion (Mobile LQ)
-			if ( !convert_video($recording, $jconf['profile_mobile_lq'], $recording_info_mobile_lq) ) {
-				update_db_recording_status($recording['id'], $jconf['dbstatus_conv_video_err']);
-				break;
+			// If content is present, then we skip mobile conversion
+			$recording['is_mobile_convert'] = TRUE;
+			if ( !empty($recording['contentstatus']) ) {
+				$recording['is_mobile_convert'] = FALSE;
 			}
 
-			// Decide about high quality mobile conversion (Mobile HQ)
-			$res = explode("x", strtolower($recording['mastervideores']), 2);
-			$res_x = $res[0];
-			$res_y = $res[1];
-			$res = explode("x", strtolower($jconf['profile_mobile_lq']['video_bbox']), 2);
-			$bbox_res_x = $res[0];
-			$bbox_res_y = $res[1];
-			// Generate HQ version if original recording does not fit LQ bounding box
-			if ( ( $res_x > $bbox_res_x ) || ( $res_y > $bbox_res_y ) ) {
-				if ( !convert_video($recording, $jconf['profile_mobile_hq'], $recording_info_mobile_hq) ) {
+			if ( $recording['is_mobile_convert'] ) {
+
+				// Mobile normal quality conversion (Mobile LQ)
+				if ( !convert_video($recording, $jconf['profile_mobile_lq'], $recording_info_mobile_lq) ) {
 					update_db_recording_status($recording['id'], $jconf['dbstatus_conv_video_err']);
 					break;
 				}
+
+				// Decide about high quality mobile conversion (Mobile HQ)
+				$res = explode("x", strtolower($recording['mastervideores']), 2);
+				$res_x = $res[0];
+				$res_y = $res[1];
+				$res = explode("x", strtolower($jconf['profile_mobile_lq']['video_bbox']), 2);
+				$bbox_res_x = $res[0];
+				$bbox_res_y = $res[1];
+				// Generate HQ version if original recording does not fit LQ bounding box
+				if ( ( $res_x > $bbox_res_x ) || ( $res_y > $bbox_res_y ) ) {
+					if ( !convert_video($recording, $jconf['profile_mobile_hq'], $recording_info_mobile_hq) ) {
+						update_db_recording_status($recording['id'], $jconf['dbstatus_conv_video_err']);
+						break;
+					}
+				}
+
 			}
 
 			// Normal quality conversion (LQ)
@@ -754,7 +764,11 @@ global $app, $jconf;
 
 	//// Remove all previous files from recording directory (from previous conversions)
 	// Media files: audio only version (_audio.mp3), LQ and HQ (_video_lq.mp4 and _video_hq.mp4) and mobile (_mobile_lq.mp4 and _mobile_hq.mp4) versions
-	$media_regex = ".*" . $recording['id'] . "_\(audio\.mp3\|video_lq\.mp4\|video_hq\.mp4\|mobile_lq\.mp4\|mobile_hq\.mp4\)";
+	$media_regex = ".*" . $recording['id'] . "_\(audio\.mp3\|video_lq\.mp4\|video_hq\.mp4\)";
+	if ( $recording['is_mobile_convert'] ) {
+		// Remove mobile version if converted
+		$media_regex = ".*" . $recording['id'] . "_\(audio\.mp3\|video_lq\.mp4\|video_hq\.mp4\|mobile_lq\.mp4\|mobile_hq\.mp4\)";
+	}
 	$command1 = "find " . $remote_recording_directory . " -mount -maxdepth 1 -type f -regex '" . $media_regex . "' -exec rm -f {} \\; 2>/dev/null";
 	// Indexpic: all recording related .jpg thumbnails and full sized .png images
 //	$indexpics_regex = ".*" . $recording['id'] . ".*\(\.jpg\|\.png\)";
@@ -809,6 +823,13 @@ global $app, $jconf;
 	// Update recording status
 	update_db_recording_status($recording['id'], $jconf['dbstatus_copystorage_ok']);
 	update_db_masterrecording_status($recording['id'], $jconf['dbstatus_copystorage_ok']);
+	// If mobile version was converted, then set status
+	if ( $recording['is_mobile_convert'] ) {
+		update_db_mobile_status($recording['id'], $jconf['dbstatus_copystorage_ok']);
+	} else {
+		// If not, set "reconvert" for content converter
+		update_db_mobile_status($recording['id'], $jconf['dbstatus_reconvert']);
+	}
 
 	// Remove master from upload area if not reconvert!
 	if ( $recording['conversion_type'] != $jconf['dbstatus_reconvert'] ) {

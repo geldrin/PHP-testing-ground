@@ -95,7 +95,7 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_content_convert.stop' ) an
 
 		//// Decide what to convert
 		// Content status is uploaded or reconvert: convert all versions by default
-		// Mobile status is reconvert: convert only mobile version (imlicated by media reconversion)
+		// Mobile status is reconvert: convert only mobile version (implicated by media reconversion)
 		$recording['is_content_convert'] = TRUE;
 		$recording['is_content_reconvert'] = FALSE;
 		// Master/content(s) are onstorage, mobile status is reconvert: convert only mobile versions
@@ -205,13 +205,10 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_content_convert.stop' ) an
 
 		try {
 			$body = $smarty->fetch('Visitor/Recordings/Email/job_content_converter.tpl');
-//			$queue->sendHTMLEmail("andras.kovacs@teleconnect.hu", $subject, $body);
 			$queue->sendHTMLEmail($uploader_user['email'], $subject, $body);
 		} catch (exception $err) {
 			log_recording_conversion($recording['id'], $jconf['jobid_media_convert'], "-", "[ERROR] Cannot send mail to user: " . $uploader_user['email'], trim($body), $err, 0, TRUE);
 		}
-
-//exit;
 
 		break;
 	}	// End of while(1)
@@ -275,7 +272,8 @@ global $jconf, $app, $db, $global_log;
 	$smarty->assign('audio_sr', $recording_info['audio_srate']);
 
 	// Video configuration
-	$recording_info['fps'] = $recording['contentmastervideofps'];
+//	$recording_info['fps'] = $recording['contentmastervideofps'];
+	$recording_info['fps'] = max($recording['mastervideofps'], $recording['contentmastervideofps']);
 	$recording_info['video_bpp'] = $profile['video_bpp'];
 	//// Calculate PiP coordinates
 	calculate_mobile_pip($recording['mastervideores'], $recording['contentmastervideores'], $recording_info, $profile);
@@ -705,7 +703,5 @@ global $app, $jconf;
 
 	return TRUE;
 }
-
-
 
 ?>

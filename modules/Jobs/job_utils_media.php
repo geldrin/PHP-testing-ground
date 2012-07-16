@@ -29,9 +29,16 @@ function ffmpeg_qtfaststart($input_file) {
 	$err['command_output'] = $output['cmd_output'];
 	$err['result'] = $output['code'];
 
-	if ( $err['result'] != 0 ) {
+//var_dump($err['result']);
+
+	$filesize_diff = abs(filesize($temp_file) - filesize($input_file));
+// Wrong error codes from qt-faststart?
+//	if ( $err['result'] != 0 ) {
+// If no result file or result file's size is very different
+	if ( !file_exists($temp_file) or ( $filesize_diff > ( 0.05 * filesize($input_file) ) ) ) {
+		// Conversion failed, but use unconverted media file instead???
 		$err['code'] = FALSE;
-		$err['message'] = "[ERROR] qt-faststart metadata conversion FAILED.";
+		$err['message'] = "[ERROR] qt-faststart metadata conversion FAILED. ERR code = " . $err['result'];
 		return $err;
 	}
 
@@ -51,7 +58,7 @@ function ffmpeg_qtfaststart($input_file) {
 	}
 
 	$err['code'] = TRUE;
-	$err['message'] = "[OK] qt-faststart conversion OK (in " . $mins_taken . " mins)";
+	$err['message'] = "[OK] qt-faststart conversion OK (in " . $mins_taken . " mins). ERR code = " . $err['result'];
 
 //print_r($err);
 
@@ -411,10 +418,8 @@ echo "bpp profile: " . $profile['video_bpp'] . " | orig: " . $video_in['bpp'] . 
 		log_recording_conversion($recording['id'], $jconf['jobid_media_convert'], $jconf['dbstatus_conv_video'], $err['message'] . "\nSource file: " . $recording_info['output_file'] . "\nDestination file: " . $recording_info['output_file'], $err['command'], $err['command_output'], $err['duration'], TRUE);
 		return FALSE;
 	}
-/* else {
-		log_recording_conversion($recording['id'], $jconf['jobid_media_convert'], $jconf['dbstatus_conv_video'], $err['message'] . "\nSource file: " . $recording_info['output_file'] . "\nDestination file: " . $recording_info['output_file'], $err['command'], $err['command_output'], $err['duration'], FALSE);
-	}
-*/
+
+	$global_log .= "\nqt-faststart result: " . $err['message'] . "\n";
 
 	// Update watchdog timer
 	$app->watchdog();
