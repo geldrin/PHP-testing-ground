@@ -95,7 +95,7 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_content_convert.stop' ) an
 
 		//// Decide what to convert
 		// Content status is uploaded or reconvert: convert all versions by default
-		// Mobile status is reconvert: convert only mobile version (imlicated by media reconversion)
+		// Mobile status is reconvert: convert only mobile version (implicated by media reconversion)
 		$recording['is_content_convert'] = TRUE;
 		$recording['is_content_reconvert'] = FALSE;
 		// Master/content(s) are onstorage, mobile status is reconvert: convert only mobile versions
@@ -705,7 +705,5 @@ global $app, $jconf;
 
 	return TRUE;
 }
-
-
 
 ?>

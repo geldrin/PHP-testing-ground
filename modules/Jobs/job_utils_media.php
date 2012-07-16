@@ -419,6 +419,8 @@ echo "bpp profile: " . $profile['video_bpp'] . " | orig: " . $video_in['bpp'] . 
 		return FALSE;
 	}
 
+	$global_log .= "\nqt-faststart result: " . $err['message'] . "\n";
+
 	// Update watchdog timer
 	$app->watchdog();
 
