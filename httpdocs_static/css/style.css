@@ -480,12 +480,13 @@ a.submitbutton:hover {
 /* headerlogo */
 #headerlogo {
   height: 58px;
+  padding-left: 13px;
 }
 #headerlogo a, #headerlogo a span {
   display: inline-block;
-  width:  180px;
+  width:  150px;
   overflow: hidden;
-  height: 43px;
+  height: 55px;
 }
 #headerlogo a span {
   background-image: url(images/header_logo.png);
