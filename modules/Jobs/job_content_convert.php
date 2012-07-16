@@ -205,13 +205,10 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_content_convert.stop' ) an
 
 		try {
 			$body = $smarty->fetch('Visitor/Recordings/Email/job_content_converter.tpl');
-//			$queue->sendHTMLEmail("andras.kovacs@teleconnect.hu", $subject, $body);
 			$queue->sendHTMLEmail($uploader_user['email'], $subject, $body);
 		} catch (exception $err) {
 			log_recording_conversion($recording['id'], $jconf['jobid_media_convert'], "-", "[ERROR] Cannot send mail to user: " . $uploader_user['email'], trim($body), $err, 0, TRUE);
 		}
-
-//exit;
 
 		break;
 	}	// End of while(1)
@@ -275,7 +272,8 @@ global $jconf, $app, $db, $global_log;
 	$smarty->assign('audio_sr', $recording_info['audio_srate']);
 
 	// Video configuration
-	$recording_info['fps'] = $recording['contentmastervideofps'];
+//	$recording_info['fps'] = $recording['contentmastervideofps'];
+	$recording_info['fps'] = max($recording['mastervideofps'], $recording['contentmastervideofps']);
 	$recording_info['video_bpp'] = $profile['video_bpp'];
 	//// Calculate PiP coordinates
 	calculate_mobile_pip($recording['mastervideores'], $recording['contentmastervideores'], $recording_info, $profile);
