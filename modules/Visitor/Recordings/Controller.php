@@ -142,15 +142,28 @@ class Controller extends \Visitor\Controller {
     $this->toSmarty['relatedvideos'] = $recordingsModel->getRelatedVideos(
       $this->application->config['relatedrecordingcount']
     );
+    
+    $mobilehq = false;
+    if ( $recordingsModel->row['mobilevideoreshq'] ) {
+      
+      $browserinfo = $this->bootstrap->getSession('browser');
+      if ( !count( $browserinfo ) )
+        $browserinfo->setArray( \Springboard\Browser::getInfo() );
+      
+      if ( $browserinfo['mobile'] and \Springboard\Browser::isIPad() )
+        $mobilehq = true;
+      
+    }
+    
     $this->toSmarty['mobilehttpurl'] = $recordingsModel->getMediaUrl(
       'mobilehttp',
-      false, // non-hq
+      $mobilehq,
       $this->toSmarty['organization']['domain'],
       session_id()
     );
     $this->toSmarty['mobilertspurl'] = $recordingsModel->getMediaUrl(
       'mobilertsp',
-      false, // non-hq
+      $mobilehq,
       $this->toSmarty['organization']['domain'],
       session_id()
     );
