@@ -502,13 +502,11 @@ CREATE TABLE `livefeed_streams` (
    `id` int(10) unsigned not null auto_increment,
    `livefeedid` int(10) unsigned not null,
    `name` text not null,
-   `streamurl` text not null, /* streaming szerver URL */
    `keycode` text not null,
    `aspectratio` text,
-   `contentstreamurl` text,
    `contentkeycode` text,
    `contentaspectratio` text,
-   `feedtype` text not null, /* flash/windowsmedia/quicktime/real? */
+   `feedtype` text not null, /* normal/mobile */
    `timestamp` datetime not null,
    PRIMARY KEY (`id`),
    KEY `livefeedid` (`livefeedid`)

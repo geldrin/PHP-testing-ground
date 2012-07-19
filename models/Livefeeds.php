@@ -123,82 +123,77 @@ class Livefeeds extends \Springboard\Model {
     
   }
   
-  public function getStreams() {
+  protected function getFeedTypeWhere( $prefix = '', $onlymobile = null ) {
+    
+    $where = '';
+    if ( $onlymobile !== null ) {
+      
+      if ( $onlymobile )
+        $where = " AND {$prefix}feedtype = 'mobile' ";
+      else
+        $where = " AND {$prefix}feedtype <> 'mobile' ";
+    }
+    
+    return $where;
+    
+  }
+  
+  public function getStreams( $onlymobile = null ) {
     
     $this->ensureID();
-    
+    $where = $this->getFeedTypeWhere( '', $onlymobile );
     return $this->db->getAssoc("
       SELECT
         id AS streamid,
         id,
         name,
-        streamurl,
         keycode,
         aspectratio,
-        contentstreamurl,
         contentkeycode,
         contentaspectratio,
         feedtype,
         timestamp
       FROM livefeed_streams
-      WHERE livefeedid = '" . $this-> id . "'
+      WHERE livefeedid = '" . $this-> id . "' $where
     ");
     
   }
   
-  public function getStreamUrls( $streamid ) {
+  protected function getAuthorizeSessionid( $domain, $sessionid, $streamcode ) {
     
-    $this->ensureObjectLoaded();
+    if ( !$domain or !$sessionid )
+      return '';
     
-    $ret = array();
-    $data = $this->db->getRow("
-      SELECT
-        id,
-        streamurl,
-        keycode,
-        contentstreamurl,
-        contentkeycode,
-        feedtype
-      FROM livefeed_streams
-      WHERE
-        livefeedid = '" . $this->id . "' AND
-        id         = '" . $streamid . "'
-    ");
-    
-    $ret['media_streams'] = array( $stream['streamurl'] . $stream['keycode'] );
-    
-    if ( $this->row['numberofstreams'] == 2 )
-      $ret['media_secondaryStreams'] = array( $stream['contentstreamurl'] . $stream['contentkeycode'] );
-    
-    return $ret;
+    return '?sessionid=' . $domain . '_' . $sessionid . '_' . $streamcode;
     
   }
   
-  public function getFlashData( $streamid, $info, $sessionid ) {
+  public function getMediaUrl( $type, $streamcode, $domain = null, $sessionid = null ) {
     
-    $this->ensureObjectLoaded();
+    switch( $type ) {
+      
+      case 'livehttp':
+        //http://stream.videosquare.eu/devvsqlive/123456/playlist.m3u8
+        $sprintfterm =
+          '%s/playlist.m3u8' .
+          $this->getAuthorizeSessionid( $domain, $sessionid, $streamcode )
+        ;
+        
+        break;
+      
+      case 'livertsp':
+        //rtsp://stream.videosquare.eu/devvsqlive/123456
+        $sprintfterm =
+          '%s' .
+          $this->getAuthorizeSessionid( $domain, $sessionid, $streamcode )
+        ;
+        
+        break;
+      
+    }
     
-    $recordingbaseuri = $info['BASE_URI'] . \Springboard\Language::get() . '/live/view/' . $this->id;
-    $domain           = $info['organization']['domain'];
-    
-    $data = array(
-      'language'              => \Springboard\Language::get(),
-      'media_servers'         => array(
-        $this->bootstrap->config['wowza']['liveurl'],
-      ),
-      'recording_title'       => '', // TODO
-    );
-    
-    // default bal oldalon van a video, csak akkor allitsuk be ha kell
-    if ( !$this->row['slideonright'] )
-      $data['layout_videoOrientation'] = 'right';
-    
-    if ( $data['language'] != 'en' )
-      $data['locale'] = $info['STATIC_URI'] . 'js/flash_locale_' . $data['language'] . '.json';
-    
-    $data = $data + $this->getStreamUrls();
-    
-    return $data;
+    $host = $this->bootstrap->config['wowza'][ $type . 'url' ];
+    return $host . sprintf( $sprintfterm, $streamcode );
     
   }
   

@@ -47,18 +47,23 @@ class Controller extends \Visitor\Controller {
     
     $channelModel = $this->modelIDCheck('channels', $feedModel->row['channelid'] );
     $streamid     = $this->application->getNumericParameter('streamid');
-    $streams      = $feedModel->getStreams();
+    $browserinfo  = $this->bootstrap->getSession('browser');
+    
+    if ( !count( $browserinfo ) )
+      $browserinfo->setArray( \Springboard\Browser::getInfo() );
+    
+    $streams      = $feedModel->getStreams( $browserinfo['mobile'] );
     
     if ( $streamid and isset( $streams[ $streamid ] ) )
       $currentstream = $streams[ $streamid ];
     else
       $currentstream = reset( $streams );
     
-    if ( $currentstream['feedtype'] == 'flash' ) {
+    if ( $currentstream['feedtype'] == 'normal' ) {
       
       $flashdata = array(
         'language'        => \Springboard\Language::get(),
-        'media_servers'   => array( $currentstream['streamurl'] ),
+        'media_servers'   => array( $this->bootstrap->config['wowza']['liveingressurl'] ),
         'media_streams'   => array( $currentstream['keycode'] ),
         'recording_title' => $feedModel->row['name'],
         'recording_type'  => 'live',
@@ -66,7 +71,7 @@ class Controller extends \Visitor\Controller {
       
       if ( $feedModel->row['numberofstreams'] == 2 ) {
         
-        $flashdata['media_secondaryServers'] = array( $currentstream['contentstreamurl'] );
+        $flashdata['media_secondaryServers'] = array( $this->bootstrap->config['wowza']['liveingressurl'] );
         $flashdata['media_secondaryStreams'] = array( $currentstream['contentkeycode'] );
         
       }
@@ -81,6 +86,21 @@ class Controller extends \Visitor\Controller {
         ;
       
       $this->toSmarty['flashdata'] = $flashdata;
+      
+    } else {
+      
+      $this->toSmarty['livehttpurl'] = $feedModel->getMediaUrl(
+        'livehttp',
+        $currentstream['keycode'],
+        $this->toSmarty['organization']['domain'],
+        session_id()
+      );
+      $this->toSmarty['livertspurl'] = $feedModel->getMediaUrl(
+        'livertsp',
+        $currentstream['keycode'],
+        $this->toSmarty['organization']['domain'],
+        session_id()
+      );
       
     }
     

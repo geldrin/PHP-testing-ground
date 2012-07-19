@@ -31,31 +31,25 @@
   {/*}
 </div>
 
-{assign var=type value=$currentstream.feedtype|ucfirst}
-{assign var=embedfile value="Visitor/Live/Embeds/$type.tpl"}
-{capture assign=main}
-  {if $currentstream.feedtype == 'flash'}
-    <script type="text/javascript">
-      swfobject.embedSWF('flash/TCPlayer{$VERSION}.swf', 'playercontainer', '950', '530', '11.1.0', 'flash/swfobject/expressInstall.swf', {$flashdata|@jsonescape:true}, flashdefaults.params );
-    </script>
-    <div id="playercontainer">{#recordings__noflash#}</div>
-  {else}
-    {include file=$embedfile aspectratio=$currentstream.aspectratio url=$currentstream.streamurl keycode=$currentstream.keycode htmlid="stream" external=$feed.isexternal }
-  {/if}
-{/capture}
-
-{capture assign=content}
-  {if $feed.numberofstreams == 2 and $currentstream.feedtype != 'flash'}
-    {include file=$embedfile aspectratio=$currentstream.contentaspectratio url=$currentstream.contentstreamurl keycode=$currentstream.contentkeycode htmlid="contentstream" external=$feed.isexternal }
-  {/if}
-{/capture}
-
-{if $feed.slideonright}
-  {$main}
-  {$content}
+{if $currentstream.feedtype == 'normal'}
+  <script type="text/javascript">
+    swfobject.embedSWF('flash/TCPlayer{$VERSION}.swf', 'playercontainer', '950', '530', '11.1.0', 'flash/swfobject/expressInstall.swf', {$flashdata|@jsonescape:true}, flashdefaults.params );
+  </script>
+  <div id="playercontainer">{#recordings__noflash#}</div>
 {else}
-  {$content}
-  {$main}
+  <center>
+    {if $browser.mobiledevice == 'iphone'}
+      <div id="mobileplayercontainer">
+        <video x-webkit-airplay="allow" controls="controls" alt="{$channel.title|escape:html}" width="192" height="144" poster="{$STATIC_URI}images/videothumb_player_placeholder.png" src="{$mobilehttpurl}">
+          <a href="{$mobilehttpurl}"><img src="{$STATIC_URI}images/videothumb_player_placeholder.png" width="220" height="130"/></a>
+        </video>
+      </div>
+    {else}
+      <div id="mobileplayercontainer">
+        <a href="{$mobilertspurl}"><img src="{$STATIC_URI}images/videothumb_player_placeholder.png" width="220" height="130"/></a>
+      </div>
+    {/if}
+  </center>
 {/if}
 
 <div class="clear"></div><br/>
