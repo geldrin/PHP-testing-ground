@@ -520,7 +520,7 @@ a.submitbutton:hover {
   width: 90px;
   padding: 0px 5px 0px 5px;
   margin: 0px 8px 0px 0px;
-  color: #666;
+  color: #aaa;
   height: 21px;
   line-height: 21px;
   font-size: 12px;
@@ -804,9 +804,13 @@ a#currentusername span {
   width: 140px;
   height: 26px;
   padding: 0px 35px 0px 35px;
-  color: #666;
+  color: #888;
   font-size: 13px;
   line-height: 26px;
+}
+#headersearch .inputtext:hover,  
+#headersearch .inputtext:focus {
+  color: #ccc;
 }
 #headersearchsubmit {
   width: 35px;
