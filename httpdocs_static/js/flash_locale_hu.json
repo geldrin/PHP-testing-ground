@@ -104,5 +104,9 @@
     "playing": "A média lejátszása elindult.",
     "pause": "Megállítás",
     "paused": "A média lejátszása leállt."
+  },
+  "error": {
+    "streamNotFound": "A felvétel jelenleg nem elérhető.",
+    "liveStreamNotFound": "Az élő közvetítés jelenleg nem elérhető."
   }
 }
