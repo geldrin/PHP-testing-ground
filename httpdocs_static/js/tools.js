@@ -12,6 +12,7 @@ $j(document).ready(function() {
   runIfExists('#headersearch', setupHeaderSearch );
   runIfExists('.ratewidget', setupRateWidget );
   runIfExists('#uploadrow', setupUpload );
+  runIfExists('.categoryiconitem', setupCategoryIconSelector );
   runIfExists('#infotoggle', setupInfoToggle );
   runIfExists('#player', setupPlayer );
   runIfExists('.sort', setupSort );
@@ -83,6 +84,26 @@ function setupSort() {
     
   });
   
+}
+
+function setupCategoryIconSelector() {
+
+  $j('.categoryiconitem input[type=radio]:checked')
+      .parents('.categoryiconitem')
+      .children('label').children('img')
+      .addClass('selected')
+  ;
+
+  $j('.categoryiconitem img').click( function(e) {
+    e.preventDefault();
+    $j('.categoryiconitem img.selected').removeClass('selected');
+    $j( this ).addClass('selected')
+      .parents('.categoryiconitem')
+      .children('input[type=radio]')
+      .attr('checked','checked')
+    ;
+  });
+
 }
 
 function setupPlayer() {

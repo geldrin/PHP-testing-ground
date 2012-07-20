@@ -24,8 +24,6 @@ $config = Array(
     'displayname' => $l('categories', 'name'),
     'type'        => 'inputTextMultilanguage',
     'languages'   => $l->getLov('languages'),
-    'validation'  => Array(
-    )
   ),
   
   'parentid' => Array(
@@ -49,6 +47,16 @@ $config = Array(
     'value'       => $this->application->getNumericParameter('parentid'),
   ),
 
+  'iconfilename' => Array(
+    'type' => 'inputradio',
+    'displayname' => $l('categories', 'icon'),
+    'itemlayout' => '<div class="categoryiconitem">%radio% %label%</div>',
+    'postfix' => '<div class="clear"></div>', // form alert miatt
+    'validation' => Array(
+      Array( 'type' => 'required' )
+    )
+  ),
+  
   'weight' => Array(
     'displayname' => $l('', 'weight'),
     'type'        => 'inputText',
@@ -59,3 +67,20 @@ $config = Array(
   ),
 
 );
+
+$uri     = ( SSL ? 'https://' : 'http://' ) . $this->application->config['staticuri'] . 'images/categories/';
+$dirName = $this->application->config['categoryiconpath'];
+
+$dir = opendir( $dirName );
+
+while ( $filename = readdir( $dir ) ) {
+
+  if ( !preg_match( '/^\./', $filename ) && !is_dir( $dirName . $filename ) ) {
+
+    $config['iconfilename']['values'][ $filename ] = 
+      '<img src="' . $uri . $filename . '" />';
+    ;
+    
+  }
+
+}
