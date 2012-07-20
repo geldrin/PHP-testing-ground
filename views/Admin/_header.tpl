@@ -7,7 +7,7 @@
   <meta http-equiv="imagetoolbar" content="no" />
   <meta name="MSSmartTagsPreventParsing" content="true" />
   <title>Springboard CMS - {$bootstrap->config.siteid}</title>
-  <base href="http{if $ssl}s{/if}://{$bootstrap->config.adminuri}" /><!--[if IE]></base><![endif]-->
+  <base href="{$bootstrap->adminuri}" /><!--[if IE]></base><![endif]-->
   
   <link rel="stylesheet" type="text/css" href="js/fancybox/jquery.fancybox-1.3.0.css" media="screen">
   <script type="text/javascript" src="js/jquery-1.5.js"></script>
@@ -21,7 +21,7 @@
   <script type="text/javascript" src="js/tools.js"></script>
   <script type="text/javascript">
     var autoSaveFolder = "admin";
-    var BASE_URI = "http{if $https}s{/if}://{$bootstrap->config.baseuri}";
+    var BASE_URI = "{$bootstrap->baseuri}";
     var language = "{$language}";
   </script>
   <link rel="StyleSheet" type="text/css" href="css/style{$VERSION}.css" media="screen"/>

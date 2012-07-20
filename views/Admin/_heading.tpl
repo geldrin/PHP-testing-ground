@@ -24,7 +24,7 @@
         </a>
       </div>
       <div class="control">
-        <a href="http{if $smarty.const.SSL}s{/if}://{$bootstrap->config.adminuri}index/logout"><img src="images/podcast.png"/><br/>
+        <a href="{$bootstrap->adminuri}index/logout"><img src="images/podcast.png"/><br/>
           kilépés
         </a>
       </div>

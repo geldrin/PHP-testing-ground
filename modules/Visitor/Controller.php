@@ -42,9 +42,8 @@ class Controller extends \Springboard\Controller\Visitor {
     } else
       $organization = $cache->get();
     
-    $scheme    = SSL? 'https://': 'http://';
-    $baseuri   = $scheme . $organization['domain'] . '/';
-    $staticuri = $scheme . 'static.' . $organization['domain'] . '/';
+    $baseuri   = $this->bootstrap->scheme . $organization['domain'] . '/';
+    $staticuri = $this->bootstrap->scheme . 'static.' . $organization['domain'] . '/';
     
     $this->application->config['combine']['domains'][] = $organization['domain'];
     $this->application->config['combine']['domains'][] = 'static.' . $organization['domain'];

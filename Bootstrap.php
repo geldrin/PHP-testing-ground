@@ -63,6 +63,11 @@ class Bootstrap {
       $ssl = true;
     
     define('SSL', $ssl );
+    $this->ssl       = $ssl;
+    $this->scheme    = $ssl? 'https://': 'http://';
+    $this->baseuri   = $this->scheme . $this->config['baseuri'];
+    $this->staticuri = $this->scheme . $this->config['staticuri'];
+    $this->adminuri  = $this->scheme . $this->config['adminuri'];
     
     date_default_timezone_set( $this->config['timezone'] );
     
