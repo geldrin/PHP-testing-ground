@@ -28,13 +28,13 @@
   {if $browser.mobile}
     {if $browser.mobiledevice == 'iphone'}
       <div id="mobileplayercontainer">
-        <video x-webkit-airplay="allow" controls="controls" alt="{$recording.title|escape:html}" width="192" height="144" poster="{$recording|@indexphoto}" src="{$mobilehttpurl}">
-          <a href="{$mobilehttpurl}"><img src="{$recording|@indexphoto}" width="220" height="130"/></a>
+        <video x-webkit-airplay="allow" controls="controls" alt="{$recording.title|escape:html}" width="280" height="190" poster="{$recording|@indexphoto}" src="{$mobilehttpurl}">
+          <a href="{$mobilehttpurl}"><img src="{$recording|@indexphoto}" width="280" height="190"/></a>
         </video>
       </div>
     {else}
       <div id="mobileplayercontainer">
-        <a href="{if $recording.mediatype == 'audio'}{$audiofileurl}{else}{$mobilertspurl}{/if}"><img src="{$recording|@indexphoto}" width="220" height="130"/></a>
+        <a href="{if $recording.mediatype == 'audio'}{$audiofileurl}{else}{$mobilertspurl}{/if}"><img src="{$recording|@indexphoto}" width="280" height="190"/></a>
       </div>
     {/if}
     {if $recording.mobilevideoreshq}
