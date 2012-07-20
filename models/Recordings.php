@@ -1665,4 +1665,15 @@ class Recordings extends \Springboard\Model {
     
   }
   
+  public function hasSubtitle() {
+    
+    $this->ensureID();
+    return $this->db->getOne("
+      SELECT COUNT(*)
+      FROM subtitles
+      WHERE recordingid = '" . $this->id . "'
+    ");
+    
+  }
+  
 }

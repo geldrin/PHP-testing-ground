@@ -23,6 +23,7 @@ class Controller extends \Visitor\Controller {
     'checkstreamaccess'    => 'public',
     'progress'             => 'member',
     'getprogress'          => 'member',
+    'embed'                => 'public',
   );
   
   public $forms = array(
@@ -490,6 +491,38 @@ class Controller extends \Visitor\Controller {
     
     $data['data'] = $status;
     $this->jsonOutput( $data );
+    
+  }
+  
+  public function embedAction() {
+    
+    $recordingsModel = $this->modelIDCheck(
+      'recordings',
+      $this->application->getNumericParameter('id')
+    );
+    
+    $user    = $this->bootstrap->getSession('user');
+    $access  = $this->bootstrap->getSession('recordingaccess');
+    
+    $access[ $recordingsModel->id ] = $recordingsModel->userHasAccess( $user );
+    
+    if ( $access[ $recordingsModel->id ] !== true )
+      $this->redirectToController('contents', $access[ $recordingsModel->id ] );
+    
+    if ( $recordingsModel->row['mastermediatype'] == 'audio' and $recordingsModel->hasSubtitle() )
+      $height = '120';
+    elseif ( $recordingsModel->row['mastermediatype'] == 'audio' )
+      $height = '60';
+    else
+      $height = '385';
+    
+    $this->toSmarty['width']       = '480';
+    $this->toSmarty['height']      = $height;
+    $this->toSmarty['containerid'] = 'vsq_' . rand();
+    $this->toSmarty['recording']   = $recordingsModel->row;
+    $this->toSmarty['flashdata']   = $recordingsModel->getFlashData( $this->toSmarty, session_id() );
+    
+    $this->smartyoutput('Visitor/Recordings/Embed.tpl');
     
   }
   
