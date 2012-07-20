@@ -15,7 +15,7 @@ class Details extends \Visitor\Paging {
   public function init() {
     
     $l                 = $this->bootstrap->getLocalization();
-    $this->foreachelse = $l('live','live_foreachelse');
+    $this->foreachelse = '';
     $this->title       = $l('','sitewide_live');
     $this->channelModel = $this->controller->modelIDCheck(
       'channels',
@@ -49,15 +49,13 @@ class Details extends \Visitor\Paging {
   
   protected function setupCount() {
     
-    return $this->itemcount = $this->channelModel->getLiveRecordingCount();
+    return $this->itemcount = 0;
     
   }
   
   protected function getItems( $start, $limit, $orderby ) {
     
-    $items = $this->channelModel->getLiveRecordingArray( $start, $limit, $orderby );
-    
-    return $items;
+    return array();
     
   }
   
