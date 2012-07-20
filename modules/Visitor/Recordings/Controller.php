@@ -152,6 +152,17 @@ class Controller extends \Visitor\Controller {
       
     }
     
+    $quality = $this->application->getParameter('quality');
+    if ( $quality and in_array( $quality, array('lq', 'hq') ) ) {
+      
+      if ( $quality == 'hq' and $recordingsModel->row['mobilevideoreshq'] )
+        $mobilehq = true;
+      elseif ( $quality == 'lq' )
+        $mobilehq = false;
+      
+    }
+    
+    $this->toSmarty['mobilehq']      = $mobilehq;
     $this->toSmarty['mobilehttpurl'] = $recordingsModel->getMediaUrl(
       'mobilehttp',
       $mobilehq,

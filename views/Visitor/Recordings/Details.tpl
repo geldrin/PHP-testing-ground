@@ -37,6 +37,11 @@
         <a href="{if $recording.mediatype == 'audio'}{$audiofileurl}{else}{$mobilertspurl}{/if}"><img src="{$recording|@indexphoto}" width="220" height="130"/></a>
       </div>
     {/if}
+    {if $recording.mobilevideoreshq}
+      <div id="qualitychooser">
+        <a href="{$language}/recordings/details/{$recording.id},{$recording.title|filenameize}?quality={if $mobilehq}lq{else}hq{/if}">{if $mobilehq}{#recordings__lowquality#}{else}{#recordings__highquality#}{/if}</a>
+      </div>
+    {/if}
     <br/>
   {else}
     <div id="playercontainer{if $recording.mediatype == 'audio'}audio{/if}">{#recordings__noflash#}</div>
