@@ -339,8 +339,8 @@
   #headermenu a {
     height: 19px;
     font-size: 12px;
-    margin-right: 15px;
-    padding: 3px 5px 2px 5px;
+    margin-right: 0px;
+    padding: 3px 3px 2px 3px;
   }
   #headermenu li.active a {
     -webkit-background-size: 8px auto;
