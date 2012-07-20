@@ -75,11 +75,12 @@ $config = array(
     'port' => 6379,
   ),
   //----
-  'disable_uploads' => false,
-  'uploadpath'    => '/srv/upload/videosquare.eu/',
-  'mediapath'     => '/srv/storage/videosquare.eu/',
-  'recordingpath' => '/srv/storage/videosquare.eu/recordings/',
+  'disable_uploads'  => false,
+  'uploadpath'       => '/srv/upload/videosquare.eu/',
+  'mediapath'        => '/srv/storage/videosquare.eu/',
+  'recordingpath'    => '/srv/storage/videosquare.eu/recordings/',
   'recordings_seconds_minlength' => 3,
+  'categoryiconpath' => $this->basepath . 'httpdocs_static/images/categories/',
   'relatedrecordingcount' => 6,
   'mplayer_identify' => 'mplayer -ao null -vo null -frames 0 -identify %s 2>&1',
   //----
