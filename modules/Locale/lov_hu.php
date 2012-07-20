@@ -123,4 +123,10 @@ return array(
     '2' => 'két videófolyam (stream) egyidejű használata (pl. előadó és fóliák párhuzamos közvetítéséhez)',
   ),
   
+  'feedtypes' => array(  
+    'normal'        => 'Normál',
+    'mobile'        => 'Mobil',
+    'normal/mobile' => 'Normál/mobil',
+  ),
+  
 );

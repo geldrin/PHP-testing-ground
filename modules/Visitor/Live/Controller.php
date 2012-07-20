@@ -59,50 +59,44 @@ class Controller extends \Visitor\Controller {
     else
       $currentstream = reset( $streams );
     
-    if ( $currentstream['feedtype'] == 'normal' ) {
+    $flashdata = array(
+      'language'        => \Springboard\Language::get(),
+      'media_servers'   => array( $this->bootstrap->config['wowza']['liveingressurl'] ),
+      'media_streams'   => array( $currentstream['keycode'] ),
+      'recording_title' => $feedModel->row['name'],
+      'recording_type'  => 'live',
+    );
+    
+    if ( $feedModel->row['numberofstreams'] == 2 ) {
       
-      $flashdata = array(
-        'language'        => \Springboard\Language::get(),
-        'media_servers'   => array( $this->bootstrap->config['wowza']['liveingressurl'] ),
-        'media_streams'   => array( $currentstream['keycode'] ),
-        'recording_title' => $feedModel->row['name'],
-        'recording_type'  => 'live',
-      );
-      
-      if ( $feedModel->row['numberofstreams'] == 2 ) {
-        
-        $flashdata['media_secondaryServers'] = array( $this->bootstrap->config['wowza']['liveingressurl'] );
-        $flashdata['media_secondaryStreams'] = array( $currentstream['contentkeycode'] );
-        
-      }
-      
-      if ( !$feedModel->row['slideonright'] )
-        $flashdata['layout_videoOrientation'] = 'right';
-      
-      if ( $flashdata['language'] != 'en' )
-        $flashdata['locale'] =
-          $this->toSmarty['STATIC_URI'] .
-          'js/flash_locale_' . $flashdata['language'] . '.json'
-        ;
-      
-      $this->toSmarty['flashdata'] = $flashdata;
-      
-    } else {
-      
-      $this->toSmarty['livehttpurl'] = $feedModel->getMediaUrl(
-        'livehttp',
-        $currentstream['keycode'],
-        $this->toSmarty['organization']['domain'],
-        session_id()
-      );
-      $this->toSmarty['livertspurl'] = $feedModel->getMediaUrl(
-        'livertsp',
-        $currentstream['keycode'],
-        $this->toSmarty['organization']['domain'],
-        session_id()
-      );
+      $flashdata['media_secondaryServers'] = array( $this->bootstrap->config['wowza']['liveingressurl'] );
+      $flashdata['media_secondaryStreams'] = array( $currentstream['contentkeycode'] );
       
     }
+    
+    if ( !$feedModel->row['slideonright'] )
+      $flashdata['layout_videoOrientation'] = 'right';
+    
+    if ( $flashdata['language'] != 'en' )
+      $flashdata['locale'] =
+        $this->toSmarty['STATIC_URI'] .
+        'js/flash_locale_' . $flashdata['language'] . '.json'
+      ;
+    
+    $this->toSmarty['flashdata'] = $flashdata;
+    
+    $this->toSmarty['livehttpurl'] = $feedModel->getMediaUrl(
+      'livehttp',
+      $currentstream['keycode'],
+      $this->toSmarty['organization']['domain'],
+      session_id()
+    );
+    $this->toSmarty['livertspurl'] = $feedModel->getMediaUrl(
+      'livertsp',
+      $currentstream['keycode'],
+      $this->toSmarty['organization']['domain'],
+      session_id()
+    );
     
     $this->toSmarty['channel']       = $channelModel->row;
     $this->toSmarty['streams']       = $streams;

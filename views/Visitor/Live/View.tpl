@@ -31,12 +31,12 @@
   {/*}
 </div>
 
-{if $currentstream.feedtype == 'normal'}
+{if !$browser.mobile and ( $currentstream.feedtype == 'normal' or $currentstream.feedtype == 'normal/mobile' )}
   <script type="text/javascript">
     swfobject.embedSWF('flash/TCPlayer{$VERSION}.swf', 'playercontainer', '950', '530', '11.1.0', 'flash/swfobject/expressInstall.swf', {$flashdata|@jsonescape:true}, flashdefaults.params );
   </script>
   <div id="playercontainer">{#recordings__noflash#}</div>
-{else}
+{elseif $browser.mobile and ( $currentstream.feedtype == 'mobile' or $currentstream.feedtype == 'normal/mobile' )}
   <center>
     {if $browser.mobiledevice == 'iphone'}
       <div id="mobileplayercontainer">

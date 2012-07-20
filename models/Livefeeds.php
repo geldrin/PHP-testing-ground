@@ -129,13 +129,14 @@ class Livefeeds extends \Springboard\Model {
     if ( $onlymobile !== null ) {
       
       if ( $onlymobile )
-        $where = " AND {$prefix}feedtype = 'mobile' ";
+        $where = " AND {$prefix}feedtype IN('mobile', 'normal/mobile') ";
       else
-        $where = " AND {$prefix}feedtype <> 'mobile' ";
+        $where = " AND {$prefix}feedtype IN('normal', 'normal/mobile') ";
+      
     }
     
     return $where;
-    
+  
   }
   
   public function getStreams( $onlymobile = null ) {
