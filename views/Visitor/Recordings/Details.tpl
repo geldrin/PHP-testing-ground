@@ -139,10 +139,35 @@
     </tr>
   </table>
   <div id="infotoggle">
+    <ul>
+      <li id="embedlink"><a href="#" title="{#recordings__embed#}"><span></span>{#recordings__embed#}</a></li>
+    </ul>
     <div class="leftside"></div>
     <div class="rightside"></div>
     <div class="center"></div>
-    <a href="#" data-show="{#recordings__showdetails#|escape:html}" data-hide="{#recordings__hidedetails#|escape:html}">{#recordings__showdetails#}</a>
+    <a id="detaillink" href="#" data-show="{#recordings__showdetails#|escape:html}" data-hide="{#recordings__hidedetails#|escape:html}">{#recordings__showdetails#}</a>
+  </div>
+  
+  <div id="embed">
+    {capture assign=embed}
+      <iframe width="480" height="{$height}" src="{$BASE_URI}{$language}/recordings/embed/{$recording.id}" frameborder="0" allowfullscreen="allowfullscreen"></iframe>
+    {/capture}
+    <label for="embedcode">{#recordings__embedcode#}:</label>
+    <textarea id="embedcode">{$embed|trim|escape:html}</textarea>
+    <div class="settings">{#recordings__embedsettings#}:</div>
+    <div class="settingrow">
+      <label for="embedautoplay">{#recordings__embedautoplay#}:</label>
+      <input type="radio" name="embedautoplay" id="embedautoplay_no" checked="checked" value="0"/>
+      <label for="embedautoplay_no">{#no#}</label>
+      <input type="radio" name="embedautoplay" id="embedautoplay_yes" value="1"/>
+      <label for="embedautoplay_yes">{#yes#}</label>
+    </div>
+    <div class="settingrow">
+      <label for="embedstart">{#recordings__embedstart#}:</label>
+      <input type="text" value="00" maxlength="2" id="embedstart_h" class="inputtext"/> {#recordings__embedhour#}
+      <input type="text" value="00" maxlength="2" id="embedstart_m" class="inputtext"/> {#recordings__embedmin#}
+      <input type="text" value="00" maxlength="2" id="embedstart_s" class="inputtext"/> {#recordings__embedsec#}
+    </div>
   </div>
 </div>
 <div class="clear"></div>

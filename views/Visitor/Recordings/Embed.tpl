@@ -10,30 +10,85 @@
 
   <style type="text/css">
   {literal}
-  body { padding: 0; margin: 0; }
+  body {
+    padding: 0;
+    margin: 0;
+    font-family: "Arial", "sans-serif";
+    line-height: 18px;
+    font-size: 13px;
+  }
+  
+  #qualitychooser a {
+    outline: 0;
+    width: {/literal}{$width-20}{literal}px;
+    text-align: center;
+    display: inline-block;
+    color: #7F8890;
+    font-weight: bold;
+    text-shadow: 1px 1px #1f272b;
+    -webkit-border-radius: 6px;
+    -moz-border-radius: 6px;
+    border-radius: 6px;
+    background: #232B30;
+    -pie-background: linear-gradient(top, #3D4850 3%, #313d45 4%, #232B30 100%);
+    background: -webkit-gradient(linear, left top, left bottom, color-stop(3%,#3D4850), color-stop(4%,#313d45), color-stop(100%,#232B30));
+    background: -moz-linear-gradient(top, #3D4850 3%, #313d45 4%, #232B30 100%);
+    background: linear-gradient(top, #3D4850 3%, #313d45 4%, #232B30 100%);
+    box-shadow: 1px 1px 1px rgba(0,0,0,0.2);
+    -moz-box-shadow: 1px 1px 1px rgba(0,0,0,0.2);
+    -webkit-box-shadow: 1px 1px 1px rgba(0,0,0,0.2);
+    text-decoration: none;
+    padding: 3px 10px;
+    margin: 3px 0;
+  }
   {/literal}
   </style>
 
 </head>
 <body>
 
-<script type="text/javascript">
-(function() {ldelim}
-  
-{include_php file="file:`$smarty.const.BASE_PATH`httpdocs_static/js/swfobject.full.js"}
+{if $browser.mobile}
+  {if $recording.mobilevideoreshq}
+    {assign var=height value=$height-30}
+  {/if}
+  {if $browser.mobiledevice == 'iphone'}
+    <div id="mobileplayercontainer">
+      <video x-webkit-airplay="allow" controls="controls" alt="{$recording.title|escape:html}" width="{$width}" height="{$height}" poster="{$recording|@indexphoto}" src="{$mobilehttpurl}">
+        <a href="{$mobilehttpurl}"><img src="{$recording|@indexphoto}" width="280" height="190"/></a>
+      </video>
+    </div>
+  {else}
+    <div id="mobileplayercontainer">
+      <a href="{if $recording.mediatype == 'audio'}{$audiofileurl}{else}{$mobilertspurl}{/if}"><img src="{$recording|@indexphoto}" width="{$width}" height="{$height}"/></a>
+    </div>
+  {/if}
+  {if $recording.mobilevideoreshq}
+    <div id="qualitychooser">
+      <a href="{$FULL_URI}{if $FULL_URI|strpos:'?'}&{else}?{/if}quality={if $mobilehq}lq{else}hq{/if}">{if $mobilehq}{#recordings__lowquality#}{else}{#recordings__highquality#}{/if}</a>
+    </div>
+  {/if}
 
-var params = {ldelim}
-  quality: "high",
-  bgcolor: "#050505",
-  allowscriptaccess: "sameDomain",
-  allowfullscreen: "true",
-  wmode: 'opaque'
-{rdelim};
+{else}
 
-document.write('<div id="{$containerid}"></div>');
-swfobject.embedSWF('flash/TCSharedPlayer{$VERSION}.swf', '{$containerid}', '{$width}', '{$height}', '11.1.0', 'flash/swfobject/expressInstall.swf', {$flashdata|@jsonescape:true}, params );
+  <script type="text/javascript">
+  (function() {ldelim}
+    
+  {include_php file="file:`$smarty.const.BASE_PATH`httpdocs_static/js/swfobject.full.js"}
 
-{rdelim})();
-</script>
+  var params = {ldelim}
+    quality: "high",
+    bgcolor: "#050505",
+    allowscriptaccess: "sameDomain",
+    allowfullscreen: "true",
+    wmode: 'opaque'
+  {rdelim};
+
+  document.write('<div id="{$containerid}"></div>');
+  swfobject.embedSWF('flash/TCSharedPlayer{$VERSION}.swf', '{$containerid}', '{$width}', '{$height}', '11.1.0', 'flash/swfobject/expressInstall.swf', {$flashdata|@jsonescape:true}, params );
+
+  {rdelim})();
+  </script>
+
+{/if}
 
 </body>

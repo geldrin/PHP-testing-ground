@@ -134,6 +134,7 @@ class Controller extends \Visitor\Controller {
     if ( $access[ $recordingsModel->id ] !== true )
       $this->redirectToController('contents', $access[ $recordingsModel->id ] );
     
+    $this->toSmarty['height']        = $this->getPlayerHeight( $recordingsModel );
     $this->toSmarty['recording']     = $recordingsModel->row;
     $this->toSmarty['flashdata']     = $recordingsModel->getFlashData( $this->toSmarty, session_id() );
     $this->toSmarty['comments']      = $recordingsModel->getComments();
@@ -494,6 +495,19 @@ class Controller extends \Visitor\Controller {
     
   }
   
+  protected function getPlayerHeight( $recordingsModel ) {
+    
+    if ( $recordingsModel->row['mastermediatype'] == 'audio' and $recordingsModel->hasSubtitle() )
+      $height = '120';
+    elseif ( $recordingsModel->row['mastermediatype'] == 'audio' )
+      $height = '60';
+    else
+      $height = '385';
+    
+    return $height;
+    
+  }
+  
   public function embedAction() {
     
     $recordingsModel = $this->modelIDCheck(
@@ -509,18 +523,60 @@ class Controller extends \Visitor\Controller {
     if ( $access[ $recordingsModel->id ] !== true )
       $this->redirectToController('contents', $access[ $recordingsModel->id ] );
     
-    if ( $recordingsModel->row['mastermediatype'] == 'audio' and $recordingsModel->hasSubtitle() )
-      $height = '120';
-    elseif ( $recordingsModel->row['mastermediatype'] == 'audio' )
-      $height = '60';
-    else
-      $height = '385';
+    $mobilehq = false;
+    if ( $recordingsModel->row['mobilevideoreshq'] ) {
+      
+      $browserinfo = \Springboard\Browser::getInfo();
+      if ( $browserinfo['mobile'] and \Springboard\Browser::isIPad() )
+        $mobilehq = true;
+      
+    }
+    
+    $quality = $this->application->getParameter('quality');
+    if ( $quality and in_array( $quality, array('lq', 'hq') ) ) {
+      
+      if ( $quality == 'hq' and $recordingsModel->row['mobilevideoreshq'] )
+        $mobilehq = true;
+      elseif ( $quality == 'lq' )
+        $mobilehq = false;
+      
+    }
+    
+    $this->toSmarty['mobilehq']      = $mobilehq;
+    $this->toSmarty['mobilehttpurl'] = $recordingsModel->getMediaUrl(
+      'mobilehttp',
+      $mobilehq,
+      $this->toSmarty['organization']['domain'],
+      session_id()
+    );
+    $this->toSmarty['mobilertspurl'] = $recordingsModel->getMediaUrl(
+      'mobilertsp',
+      $mobilehq,
+      $this->toSmarty['organization']['domain'],
+      session_id()
+    );
+    $this->toSmarty['audiofileurl']  = $recordingsModel->getMediaUrl(
+      'direct',
+      false, // non-hq
+      $this->toSmarty['organization']['domain'],
+      session_id(),
+      $this->toSmarty['STATIC_URI']
+    );
+    
+    $flashdata = $recordingsModel->getFlashData( $this->toSmarty, session_id() );
+    $autoplay  = $this->application->getParameter('autoplay');
+    $start     = $this->application->getParameter('start');
+    if ( preg_match( '/^\d{1,2}h\d{1,2}m\d{1,2}s$/', $start ) )
+      $flashdata['timeline_startPosition'] = $start;
+    
+    if ( $autoplay )
+      $flashdata['timeline_autoPlay'] = true;
     
     $this->toSmarty['width']       = '480';
-    $this->toSmarty['height']      = $height;
+    $this->toSmarty['height']      = $this->getPlayerHeight( $recordingsModel );
     $this->toSmarty['containerid'] = 'vsq_' . rand();
     $this->toSmarty['recording']   = $recordingsModel->row;
-    $this->toSmarty['flashdata']   = $recordingsModel->getFlashData( $this->toSmarty, session_id() );
+    $this->toSmarty['flashdata']   = $flashdata;
     
     $this->smartyoutput('Visitor/Recordings/Embed.tpl');
     

@@ -16,6 +16,7 @@ $j(document).ready(function() {
   runIfExists('#infotoggle', setupInfoToggle );
   runIfExists('#player', setupPlayer );
   runIfExists('.sort', setupSort );
+  runIfExists('#embedlink', setupEmbed );
   
   $j('#scriptingcontainer').show();
   
@@ -119,7 +120,7 @@ function setupPlayer() {
 
 function setupInfoToggle() {
   
-  $j('#infotoggle a').click( function(e) {
+  $j('#detaillink').click( function(e) {
     e.preventDefault();
     if ( $j('#metadatatable').is(':visible') ) {
       
@@ -316,6 +317,60 @@ function setupRateWidget() {
       return false;
       
     });
+    
+  });
+  
+}
+
+function setupEmbed() {
+  
+  var embedcode = $j('#embedcode').val();
+  var url       = embedcode.match(/src="(.*?)"/)[1];
+  
+  $j('#embedlink').click(function(e) {
+    e.preventDefault();
+    
+    $j('#embed').toggle();
+  });
+  
+  $j('#embed input').bind('change keyup blur', function( e ) {
+    
+    var id = $j(this).attr('id');
+    
+    if ( id.match('^embedstart_([hms])$') ) {
+      
+      var value = $j(this).val().replace( /[^\d]/g, '' );
+      if ( value.length > 2 )
+        value = value.substr( 1, 2 );
+      if ( id.match('^embed_start_([ms])$') && value > 59 )
+        value = 59;
+      
+      $j(this).val( value );
+      
+    }
+    
+    var params = [];
+    var start  =
+      $j('#embedstart_h').val() + 'h' +
+      $j('#embedstart_m').val() + 'm' +
+      $j('#embedstart_s').val() + 's'
+    ;
+    
+    if ( start != '00h00m00s' )
+      params.push('start=' + start );
+    
+    if ( $j('#embedautoplay_yes:checked').length != 0 )
+      params.push('autoplay=yes');
+    
+    if ( params.length == 0 ) {
+      
+      $j('#embedcode').val( $j('#embedcode').val().replace(/src="(.*?)"/, 'src="' + url + '"') )
+      return;
+      
+    }
+    
+    var newurl = url + '?' + params.join('&');
+    $j('#embedcode').val( $j('#embedcode').val().replace(/src="(.*?)"/, 'src="' + newurl + '"') )
     
   });
   

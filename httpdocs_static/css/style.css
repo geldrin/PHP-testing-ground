@@ -1570,6 +1570,25 @@ a#currentusername span {
   position: relative;
   text-align: center;
 }
+#metadata #infotoggle ul {
+  position: absolute;
+  margin: 0;
+  padding: 0;
+  bottom: 25px;
+  right: 0px;
+}
+#metadata #infotoggle li {
+  display: inline-block;
+}
+#metadata #infotoggle ul a, #metadata #infotoggle ul a span {
+  display: block;
+  overflow: hidden;
+  width: 45px;
+  height: 31px;
+}
+#metadata #infotoggle li#embedlink a span {
+  background-image: url(images/icon_player_embed.png);
+}
 #metadata #infotoggle a {
   font-weight: bold;
   display: block;
@@ -1906,9 +1925,9 @@ a#currentusername span {
   color: #7F8890;
   font-weight: bold;
   text-shadow: 1px 1px #1f272b;
-  border-radius: 6px;
-  -moz-border-radius: 6px;
   -webkit-border-radius: 6px;
+  -moz-border-radius: 6px;
+  border-radius: 6px;
   background: #232B30;
   -pie-background: linear-gradient(top, #3D4850 3%, #313d45 4%, #232B30 100%);
   background: -webkit-gradient(linear, left top, left bottom, color-stop(3%,#3D4850), color-stop(4%,#313d45), color-stop(100%,#232B30));
@@ -1952,8 +1971,8 @@ a#currentusername span {
   width: 35px;
   padding: 3px;
   border: 1px solid transparent;
-  border-radius: 3px;
   -moz-border-radius: 3px;
+  border-radius: 3px;
   cursor: pointer;
 } 
 
@@ -1976,4 +1995,36 @@ a#currentusername span {
 .categoryiconitem img.selected {
   background-color: white; 
   border: 1px solid #a0a0a0;
+}
+
+/* embed */
+#embed {
+  display: none;
+  margin: 20px 0;
+  padding: 10px;
+  background: #fff;
+  -webkit-border-radius: 5px;
+  -moz-border-radius: 5px;
+  border-radius: 5px;
+}
+#embed .settings {
+  font-weight: bold;
+  margin-bottom: 5px;
+}
+#embed textarea {
+  width: 550px;
+  height: 54px;
+  padding: 7px 10px;
+  -webkit-border-radius: 5px;
+  -moz-border-radius: 5px;
+  border-radius: 5px;
+  margin: 10px 0;
+}
+#embed .inputtext {
+  padding: 2px;
+  width: 20px;
+  text-align: right;
+}
+#embed .settingrow {
+  margin: 10px 0 10px 15px;
 }
