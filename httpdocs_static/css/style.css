@@ -2002,7 +2002,7 @@ a#currentusername span {
   display: none;
   margin: 20px 0;
   padding: 10px;
-  background: #fff;
+  background: #ddd;
   -webkit-border-radius: 5px;
   -moz-border-radius: 5px;
   border-radius: 5px;
@@ -2019,6 +2019,8 @@ a#currentusername span {
   -moz-border-radius: 5px;
   border-radius: 5px;
   margin: 10px 0;
+  border: 1px solid #d0d0d0;
+  background-color: #f7f7f7;
 }
 #embed .inputtext {
   padding: 2px;
