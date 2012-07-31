@@ -302,9 +302,7 @@ class Bootstrap {
     
     if ( !ISCLI ) {
       
-      $info = $this->getSession('browser');
-      if ( !count( $info ) )
-        $info->setArray( Springboard\Browser::getInfo() );
+      $info = $this->getBrowserInfo();;
       
       if ( $info['mobile'] and $info['mobiledevice'] == 'android' )
         $this->overridedisablegzip = true;
@@ -321,6 +319,16 @@ class Bootstrap {
       $smarty->assign('sessionid', session_id() );
     
     return $smarty;
+    
+  }
+  
+  public function getBrowserInfo() {
+    
+    $info = $this->getSession('browser');
+    if ( !count( $info ) )
+      $info->setArray( Springboard\Browser::getInfo() );
+    
+    return $info;
     
   }
   

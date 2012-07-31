@@ -148,8 +148,8 @@ class Controller extends \Visitor\Controller {
     $mobilehq = false;
     if ( $recordingsModel->row['mobilevideoreshq'] ) {
       
-      $browserinfo = \Springboard\Browser::getInfo();
-      if ( $browserinfo['mobile'] and \Springboard\Browser::isIPad() )
+      $browserinfo = $this->bootstrap->getBrowserInfo();
+      if ( $browserinfo['tablet'] )
         $mobilehq = true;
       
     }
@@ -526,8 +526,8 @@ class Controller extends \Visitor\Controller {
     $mobilehq = false;
     if ( $recordingsModel->row['mobilevideoreshq'] ) {
       
-      $browserinfo = \Springboard\Browser::getInfo();
-      if ( $browserinfo['mobile'] and \Springboard\Browser::isIPad() )
+      $browserinfo = $this->bootstrap->getBrowserInfo();
+      if ( $browserinfo['tablet'] )
         $mobilehq = true;
       
     }
