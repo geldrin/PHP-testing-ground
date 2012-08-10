@@ -32,7 +32,6 @@ class Bootstrap {
     $this->setupPHPSettings();
     $this->setupDebug();
     
-    
   }
   
   public static function getInstance() {

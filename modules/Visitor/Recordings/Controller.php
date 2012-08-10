@@ -515,12 +515,15 @@ class Controller extends \Visitor\Controller {
       $this->application->getNumericParameter('id')
     );
     
-    $user    = $this->bootstrap->getSession('user');
-    $access  = $this->bootstrap->getSession('recordingaccess');
+    $user     = $this->bootstrap->getSession('user');
+    $access   = $this->bootstrap->getSession('recordingaccess');
+    $needauth = false;
     
     $access[ $recordingsModel->id ] = $recordingsModel->userHasAccess( $user );
     
-    if ( $access[ $recordingsModel->id ] !== true )
+    if ( $access[ $recordingsModel->id ] === 'registrationrestricted' )
+      $needauth = true;
+    elseif ( $access[ $recordingsModel->id ] !== true )
       $this->redirectToController('contents', $access[ $recordingsModel->id ] );
     
     $mobilehq = false;
@@ -571,6 +574,13 @@ class Controller extends \Visitor\Controller {
     
     if ( $autoplay )
       $flashdata['timeline_autoPlay'] = true;
+    
+    if ( $needauth ) {
+      
+      $flashdata['authorization_need']    = true;
+      $flashdata['authorization_gateway'] = $this->bootstrap->baseuri . 'hu/api';
+      
+    }
     
     $this->toSmarty['width']       = '480';
     $this->toSmarty['height']      = $this->getPlayerHeight( $recordingsModel );
