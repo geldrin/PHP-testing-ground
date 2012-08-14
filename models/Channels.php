@@ -759,4 +759,25 @@ class Channels extends \Springboard\Model {
     
   }
   
+  public function getTreeArray( $order = null, $parentid = 0 ) {
+    
+    if ( !$order )
+      $order = 'weight, title';
+    
+    $this->addFilter('parentid', $parentid, true, true, 'treearray' );
+    
+    $items = $this->db->getArray("
+      SELECT *
+      FROM channels
+      " . $this->getFilter() . "
+      ORDER BY $order
+    ");
+    
+    foreach( $items as $key => $value )
+      $items[ $key ]['children'] = $this->getTreeArray( $order, $value['id'] );
+    
+    return $items;
+    
+  }
+  
 }

@@ -91,7 +91,7 @@ function setupCategoryIconSelector() {
 
   $j('.categoryiconitem input[type=radio]:checked')
       .parents('.categoryiconitem')
-      .children('label').children('img')
+      .find('label img')
       .addClass('selected')
   ;
 

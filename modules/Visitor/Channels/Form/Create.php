@@ -23,6 +23,7 @@ class Create extends \Visitor\HelpForm {
       
     }
     
+    $this->controller->toSmarty['formclass'] = 'leftdoublebox';
     parent::init();
     
   }

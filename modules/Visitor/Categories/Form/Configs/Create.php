@@ -46,7 +46,7 @@ $config = Array(
     'treestart'   => '0',
     'value'       => $this->application->getNumericParameter('parentid'),
   ),
-
+  
   'iconfilename' => Array(
     'type' => 'inputradio',
     'displayname' => $l('categories', 'icon'),
@@ -65,22 +65,20 @@ $config = Array(
       Array( 'type' => 'number' )
     )
   ),
-
+  
 );
 
-$uri     = ( SSL ? 'https://' : 'http://' ) . $this->application->config['staticuri'] . 'images/categories/';
-$dirName = $this->application->config['categoryiconpath'];
+$uri     = $this->bootstrap->staticuri . 'images/categories/';
+$files   = scandir( $this->bootstrap->config['categoryiconpath'] );
 
-$dir = opendir( $dirName );
-
-while ( $filename = readdir( $dir ) ) {
-
-  if ( !preg_match( '/^\./', $filename ) && !is_dir( $dirName . $filename ) ) {
-
-    $config['iconfilename']['values'][ $filename ] = 
+foreach( $files as $filename ) {
+  
+  if ( preg_match( '/\.png$/i', $filename ) ) {
+    
+    $config['iconfilename']['values'][ $filename ] =
       '<img src="' . $uri . $filename . '" />';
     ;
     
   }
-
+  
 }

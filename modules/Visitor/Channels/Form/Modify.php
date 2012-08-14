@@ -6,6 +6,7 @@ class Modify extends \Visitor\HelpForm {
   public $template   = 'Visitor/genericform.tpl';
   public $needdb     = true;
   
+  protected $parentchannelModel;
   protected $channelModel;
   
   public function init() {
@@ -16,6 +17,19 @@ class Modify extends \Visitor\HelpForm {
     );
     
     $this->values = $this->channelModel->row;
+    
+    if ( $this->channelModel->row['parentid'] ) {
+      
+      $this->parentchannelModel = $this->controller->modelOrganizationAndUserIDCheck(
+        'channels',
+        $this->channelModel->row['parentid']
+      );
+      
+      $this->values['ispublic'] = $this->parentchannelModel->row['ispublic'];
+      
+    }
+    
+    $this->controller->toSmarty['formclass'] = 'leftdoublebox';
     
   }
   
