@@ -24,6 +24,7 @@ class Index extends \Visitor\Paging {
   protected function setupCount() {
     $this->channelModel = $this->bootstrap->getModel('channels');
     $this->channelModel->addFilter('parentid', 0 );
+    $this->channelModel->addFilter('isliveevent', 0 );
     $this->channelModel->addFilter('ispublic', 1 );
     $this->channelModel->addFilter('organizationid', $this->controller->organization['id'] );
     return $this->itemcount = $this->channelModel->getCount();
