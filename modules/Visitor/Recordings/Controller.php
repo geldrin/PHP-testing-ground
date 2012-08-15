@@ -24,6 +24,7 @@ class Controller extends \Visitor\Controller {
     'progress'             => 'member',
     'getprogress'          => 'member',
     'embed'                => 'public',
+    'featured'             => 'public',
   );
   
   public $forms = array(
@@ -39,6 +40,7 @@ class Controller extends \Visitor\Controller {
   
   public $paging = array(
     'myrecordings' => 'Visitor\\Recordings\\Paging\\Myrecordings',
+    'featured'     => 'Visitor\\Recordings\\Paging\\Featured',
   );
   
   public $apisignature = array(

@@ -1729,4 +1729,46 @@ class Recordings extends \Springboard\Model {
     
   }
   
+  public function getRecordingsCount( $where ) {
+    
+    return $this->db->getOne("
+      SELECT COUNT(*)
+      FROM recordings AS r
+      WHERE
+        ( $where ) AND
+        " . self::getPublicRecordingWhere('r.') . "
+      LIMIT 1
+    ");
+    
+  }
+  
+  public function getRecordingsWithUsers( $start, $limit, $where, $orderby ){
+    
+    return $this->db->getArray("
+      SELECT
+        r.id,
+        r.title,
+        r.subtitle,
+        r.indexphotofilename,
+        r.masterlength,
+        r.numberofviews,
+        u.id AS userid,
+        u.nickname,
+        u.nameformat,
+        u.nameprefix,
+        u.namefirst,
+        u.namelast
+      FROM
+        recordings AS r,
+        users AS u
+      WHERE 
+        ( $where ) AND
+        u.id = r.userid AND
+        " . self::getPublicRecordingWhere('r.') . "
+      ORDER BY $orderby
+      LIMIT $start, $limit
+    ");
+    
+  }
+  
 }

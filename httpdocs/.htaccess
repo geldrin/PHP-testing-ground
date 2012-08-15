@@ -40,6 +40,10 @@ RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteRule ^([a-z]{2})/([a-zA-Z0-9_\-]+)/([a-zA-Z0-9_\-]+)/([0-9]+) index.php?language=$1&module=$2&action=$3&id=$4 [L,QSA]
 
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^([a-z]{2})/([a-zA-Z0-9_\-]+)/([a-zA-Z0-9_\-]+)/([a-zA-Z0-9_\-]+) index.php?language=$1&module=$2&action=$3&subaction=$4 [L,QSA]
+
 # versioning
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteCond %{REQUEST_FILENAME} !-f
