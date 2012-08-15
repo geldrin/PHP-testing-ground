@@ -5,12 +5,13 @@
     <li><a href="{$language}/users/admin">Users admin/invitation/disable</a></li>
     <li><a href="{$language}/users/modify">Users modify</a></li>
     <li><a href="{$language}/genres/admin">Genres admin</a></li>
-    {*}<li><a href="{$language}/channels">Channels admin</a></li>{/*}
     <li><a href="{$language}/categories/admin">Categories admin</a></li>
     <li><a href="{$language}/recordings/myrecordings">My recordings</a></li>
     <li><a href="{$language}/organizations/createnews">Create news</a></li>
     <li><a href="{$language}/organizations/listnews">News admin</a></li>
     <li><a href="{$language}/organizations/modifyintroduction">Organization introduction</a></li>
+    <li><a href="{$language}/channels/mychannels">My channels</a></li>
+    <li><a href="{$language}/channels/create">Channels create</a></li>
     {*}<li><a href="{$language}/"></a></li>{/*}
   </ul>
 </div>

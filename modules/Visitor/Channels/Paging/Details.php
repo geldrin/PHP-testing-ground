@@ -2,47 +2,93 @@
 namespace Visitor\Channels\Paging;
 
 class Details extends \Visitor\Paging {
-  protected $orderkey = 'recordedtime';
-  protected $sort            = Array(
-    //'recordedtime'      => 'c.weight, recordedtimestamp',
-    'recordedtime'      => 'id',
-    'recordedtime_desc' => 'c.weight, recordedtimestamp DESC',
-    'createtime_desc'   => 'id DESC',
-    'createtime'        => 'id',
-    'name_desc'         => 'name DESC',
-    'name'              => 'name',
-    'weighted'          => 'c.weight, cr.weight', // nincsen felulet sima channeleket rendezni, igy nem ez a default
-    'weighted_desc'     => 'c.weight, cr.weight DESC',
+  protected $orderkey = 'timestamp_desc';
+  protected $sort     = Array(
+    'timestamp_desc'       => 'timestamp DESC',
+    'timestamp'            => 'timestamp',
+    'title_desc'           => 'titleoriginal DESC',
+    'title'                => 'titleoriginal',
+    'views_desc'           => 'numberofviews DESC',
+    'views'                => 'numberofviews',
+    'viewsthisweek_desc'   => 'numberofviewsthisweek DESC',
+    'viewsthisweek'        => 'numberofviewsthisweek',
+    'viewsthismonth_desc'  => 'numberofviewsthismonth DESC',
+    'viewsthismonth'       => 'numberofviewsthismonth',
+    'comments_desc'        => 'numberofcomments DESC',
+    'comments'             => 'numberofcomments',
+    'rating_desc'          => 'rating DESC, numberofratings DESC',
+    'rating'               => 'rating, numberofratings DESC',
+    'ratingthisweek_desc'  => 'ratingthisweek DESC, numberofratings DESC',
+    'ratingthisweek'       => 'ratingthisweek, numberofratings DESC',
+    'ratingthismonth_desc' => 'ratingthismonth DESC, numberofratings DESC',
+    'ratingthismonth'      => 'ratingthismonth, numberofratings DESC',
   );
-  protected $template = 'Visitor/Channels/Paging/Details.tpl';
-  //protected $insertbeforepager = Array( 'Visitor/Channels/Paging/DetailsBeforepager.tpl' );
+  protected $template = 'Visitor/recordinglistitem.tpl';
+  protected $insertbeforepager = Array( 'Visitor/Channels/Paging/DetailsBeforepager.tpl' );
   //protected $insertafterpager  = Array( 'Visitor/Channels/Paging/DetailsAfterpager.tpl' );
-  protected $toSmarty = Array(
-    'listclass' => 'recordinglist',
-  );
-  
+  protected $channelids;
+  protected $recordingsModel;
   protected $channelModel;
+  protected $user;
+  
   
   public function init() {
     
-    $l                 = $this->bootstrap->getLocalization();
-    $this->foreachelse = $l('channels', 'details_foreachelse');
-    $this->title       = $l('channels', 'details_title');
+    $l                  = $this->bootstrap->getLocalization();
+    $this->user         = $this->bootstrap->getSession('user');
+    $this->foreachelse  = $l('channels', 'listrecordings_foreachelse');
+    $organization       = $this->controller->organization;
+    $this->channelModel = $this->controller->modelIDCheck(
+      'channels',
+      $this->application->getNumericParameter('id')
+    );
+    
+    if ( $this->channelModel->row['organizationid'] != $organization['id'] )
+      $this->controller->redirect('index');
+    
+    $this->channelids = array_merge(
+      array( $this->channelModel->id ),
+      $this->channelModel->findChildrenIDs()
+    );
+    
+    $this->title                             = $this->channelModel->row['title'];
+    $this->controller->toSmarty['listclass'] = 'recordinglist';
+    $this->controller->toSmarty['channel']   = $this->channelModel->row;
     parent::init();
     
   }
   
   protected function setupCount() {
-    // TODO channels recordings listazas
-    $this->channelModel = $this->bootstrap->getModel('channels');
-    $this->channelModel->addFilter('parentid', 0 );
-    $this->channelModel->addFilter('organizationid', $this->controller->organization['id'] );
-    return $this->itemcount = $this->channelModel->getCount();
+    
+    $this->recordingsModel = $this->bootstrap->getModel('recordings');
+    $this->itemcount =
+      $this->recordingsModel->getChannelRecordingsCount(
+        $this->user,
+        $this->channelids
+      );
     
   }
   
   protected function getItems( $start, $limit, $orderby ) {
-    return $this->channelModel->getArray( $start, $limit, false, $orderby );
+    
+    $items = $this->recordingsModel->getChannelRecordings(
+      $this->user,
+      $this->channelids,
+      $start,
+      $limit,
+      $orderby
+    );
+    
+    return $items;
+    
+  }
+  
+  protected function getUrl() {
+    return
+      $this->controller->getUrlFromFragment( $this->module . '/' . $this->action ) .
+      '/' . $this->channelModel->id . ',' .
+      \Springboard\Filesystem::filenameize( $this->channelModel->row['title'] )
+    ;
   }
   
 }

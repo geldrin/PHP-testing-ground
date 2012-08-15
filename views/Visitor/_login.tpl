@@ -11,7 +11,7 @@
     {else}
       {assign var=columncount value=2}
     {/if}
-    {assign var=columncount value=2}
+    
     <div id="currentuser">
       <div class="avatar"><img src="{$member|@avatarphoto}"/></div>
       <div id="currentusercontent">
@@ -53,30 +53,31 @@
               {/*}
             </div>
           {/if}
-          {*}
+          
           <div class="column{if $columncount == 2} first{/if}">
-            
+            {*}
             <div class="title">{#usermenu_events_title#}</div>
             <ul>
               <li><a href="{$language}/events/myevents">{#usermenu_events_myevents#}</a></li>
               <li><a href="{$language}/events/create">{#usermenu_events_create#}</a></li>
             </ul>
             <div class="hr"></div>
-            
+            {/*}
             <div class="title">{#usermenu_channels_title#}</div>
             <ul>
-              <li><a href="#{$language}/channels/mychannels">{#usermenu_channels_mychannels#}</a></li>
-              <li><a href="#{$language}/channels/create">{#usermenu_channels_create#}</a></li>
+              <li><a href="{$language}/channels/mychannels">{#usermenu_channels_mychannels#}</a></li>
+              <li><a href="{$language}/channels/create">{#usermenu_channels_create#}</a></li>
             </ul>
             <div class="hr"></div>
-            
+            {*}
             <div class="title">{#usermenu_groups_title#}</div>
             <ul>
               <li><a href="{$language}/groups/mygroups">{#usermenu_groups_mygroups#}</a></li>
               <li><a href="{$language}/groups/create">{#usermenu_groups_create#}</a></li>
             </ul>
+            {/*}
           </div>
-          {/*}
+          
           <div class="column last">
             <div class="placeholder"></div>
             <div class="title">{#usermenu_users_title#}</div>

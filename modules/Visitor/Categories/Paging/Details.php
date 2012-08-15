@@ -3,7 +3,7 @@ namespace Visitor\Categories\Paging;
 
 class Details extends \Visitor\Paging {
   protected $orderkey = 'timestamp_desc';
-  protected $sort = Array(
+  protected $sort     = Array(
     'timestamp_desc'       => 'timestamp DESC',
     'timestamp'            => 'timestamp',
     'title_desc'           => 'titleoriginal DESC',
@@ -24,32 +24,33 @@ class Details extends \Visitor\Paging {
     'ratingthismonth'      => 'ratingthismonth, numberofratings DESC',
   );
   protected $insertbeforepager = Array( 'Visitor/Categories/Paging/DetailsBeforepager.tpl' );
-  protected $template = 'Visitor/Categories/Paging/Details.tpl';
+  protected $template = 'Visitor/recordinglistitem.tpl';
   protected $categoryids;
   protected $recordingsModel;
+  protected $categoryModel;
   protected $user;
   
   public function init() {
     
-    $l                 = $this->bootstrap->getLocalization();
-    $this->user        = $this->bootstrap->getSession('user');
-    $this->foreachelse = $l('categories', 'categories_foreachelse');
-    $this->title       = $l('categories', 'categories_title');
-    $organization      = $this->controller->organization;
-    $categoryModel     = $this->controller->modelIDCheck(
+    $l                   = $this->bootstrap->getLocalization();
+    $this->user          = $this->bootstrap->getSession('user');
+    $this->foreachelse   = $l('categories', 'categories_foreachelse');
+    $this->title         = $l('categories', 'categories_title');
+    $organization        = $this->controller->organization;
+    $this->categoryModel = $this->controller->modelIDCheck(
       'categories',
       $this->application->getNumericParameter('id')
     );
     
-    if ( $categoryModel->row['organizationid'] != $organization['id'] )
+    if ( $this->categoryModel->row['organizationid'] != $organization['id'] )
       $this->controller->redirect('index');
     
     $this->categoryids = array_merge(
-      array( $categoryModel->id ),
-      $categoryModel->findChildrenIDs()
+      array( $this->categoryModel->id ),
+      $this->categoryModel->findChildrenIDs()
     );
     
-    $this->controller->toSmarty['category']  = $categoryModel->row;
+    $this->controller->toSmarty['category']  = $this->categoryModel->row;
     $this->controller->toSmarty['listclass'] = 'recordinglist';
     parent::init();
     
@@ -83,7 +84,8 @@ class Details extends \Visitor\Paging {
   protected function getUrl() {
     return
       $this->controller->getUrlFromFragment( $this->module . '/' . $this->action ) .
-      '/' . $this->application->getNumericParameter('id')
+      '/' . $this->application->getNumericParameter('id') . ',' .
+      \Springboard\Filesystem::filenameize( $this->categoryModel->row['name'] )
     ;
   }
   

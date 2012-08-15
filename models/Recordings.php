@@ -794,7 +794,10 @@ class Recordings extends \Springboard\Model {
     
     $generalwhere = "
       r.status      = 'onstorage' AND
-      r.ispublished = '1' AND
+      (
+        r.ispublished = '1' OR
+        r.userid = '" . $user['id'] . "'
+      ) AND
       (
         r.visiblefrom  IS NULL OR
         r.visibleuntil IS NULL OR
@@ -1256,6 +1259,56 @@ class Recordings extends \Springboard\Model {
     $where =
       "rc.categoryid IN ('" . implode("', '", $categoryids ) . "') AND
       r.id = rc.recordingid"
+    ;
+    
+    return $this->db->getArray("
+      " . self::getUnionSelect( $user, 'r.*', $from, $where ) .
+      ( strlen( $order ) ? 'ORDER BY ' . $order : '' ) . " " .
+      ( is_numeric( $start ) ? 'LIMIT ' . $start . ', ' . $limit : "" )
+    );
+    
+  }
+  
+  public function getChannelRecordingsCount( $user, $channelids ) {
+    
+    $from = "
+      channels_recordings AS cr,
+      recordings AS r"
+    ;
+    
+    $where =
+      "cr.channelid IN ('" . implode("', '", $channelids ) . "') AND
+      r.id = cr.recordingid"
+    ;
+    
+    if ( !isset( $user['id'] ) ) 
+      return $this->db->getOne("
+        SELECT DISTINCT COUNT(r.id)
+        FROM $from
+        WHERE
+          $where AND
+          " . self::getPublicRecordingWhere('r.')
+    );
+    
+    return $this->db->getOne("
+      SELECT COUNT(*)
+      FROM (
+        " . self::getUnionSelect( $user, 'r.*', $from, $where ) . "
+      ) AS count
+    ");
+    
+  }
+  
+  public function getChannelRecordings( $user, $channelids, $start = false, $limit = false, $order = false ) {
+    
+    $from = "
+      channels_recordings AS cr,
+      recordings AS r"
+    ;
+    
+    $where =
+      "cr.channelid IN ('" . implode("', '", $channelids ) . "') AND
+      r.id = cr.recordingid"
     ;
     
     return $this->db->getArray("

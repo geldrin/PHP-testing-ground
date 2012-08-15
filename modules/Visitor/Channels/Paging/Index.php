@@ -7,7 +7,8 @@ class Index extends \Visitor\Paging {
     'creation'      => 'id',
     'creation_desc' => 'id DESC',
   );
-  protected $template = 'Visitor/Channels/Paging/Index.tpl';
+  protected $template          = 'Visitor/Channels/Paging/Index.tpl';
+  protected $insertbeforepager = Array( 'Visitor/Channels/Paging/IndexBeforepager.tpl' );
   protected $channelModel;
   
   public function init() {
@@ -15,14 +16,15 @@ class Index extends \Visitor\Paging {
     $l                 = $this->bootstrap->getLocalization();
     $this->foreachelse = $l('channels', 'foreachelse');
     $this->title       = $l('channels', 'title');
+    $this->controller->toSmarty['listclass'] = 'recordinglist';
     parent::init();
     
   }
   
   protected function setupCount() {
-    // TODO channels listazas
     $this->channelModel = $this->bootstrap->getModel('channels');
     $this->channelModel->addFilter('parentid', 0 );
+    $this->channelModel->addFilter('ispublic', 1 );
     $this->channelModel->addFilter('organizationid', $this->controller->organization['id'] );
     return $this->itemcount = $this->channelModel->getCount();
     
