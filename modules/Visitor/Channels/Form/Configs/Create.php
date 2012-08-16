@@ -64,8 +64,8 @@ $config = array(
       FROM channel_types AS ct, strings AS s
       WHERE
         s.translationof = ct.name_stringid AND
-        s.language = '" . \Springboard\Language::get() . "' AND
-        ct.isfavorite = 0 AND
+        s.language      = '" . \Springboard\Language::get() . "' AND
+        ct.isfavorite   = 0 AND
         %s
       ORDER BY ct.weight
     ",
@@ -80,7 +80,23 @@ $config = array(
       ),
     ),
   ),
-  
+  /*
+  'parentid' => Array(
+    'displayname' => $l('channels', 'parentid'),
+    'type'        => 'selectDynamic',
+    'values'      => Array( 0 => $l('channels', 'noparent') ),
+    'sql'         => "
+      SELECT id, title
+      FROM channels
+      WHERE 
+        organizationid = '" . $organizationid . "' AND
+        %s
+    ",
+    'treeid'      => 'id',
+    'treeparent'  => 'parentid',
+    'treestart'   => '0',
+  ),
+  */
   'ispublic' => array(
     'displayname' => $l('channels', 'ispublic'),
     'type'        => 'inputCheckbox',

@@ -46,9 +46,7 @@
       <ul>
         <li><a href="{$language}/recordings/modifybasics/{$item.id}?forward={$FULL_URI|escape:url}">{#recordings__editrecording#}</a></li>
         <li><a href="{$language}/recordings/uploadsubtitle/{$item.id}?forward={$FULL_URI|escape:url}">{#recordings__uploadsubtitle#}</a></li>
-        {*}
-        <li><a href="{$language}/recordings/uploadattachment?recordingid={$item.id}&forward={$FULL_URI|escape:url}">{#recordings__manageattachments#}</a></li>
-        {/*}
+        <li><a href="{$language}/recordings/uploadattachment?recordingid={$item.id}&forward={$FULL_URI|escape:url}">{#recordings__uploadattachment#}</a></li>
         {if $item.canuploadcontentvideo}
           <li><a href="{$language}/recordings/uploadcontent/{$item.id}?forward={$FULL_URI|escape:url}">{#recordings__uploadcontentvideo#}</a></li>
         {/if}

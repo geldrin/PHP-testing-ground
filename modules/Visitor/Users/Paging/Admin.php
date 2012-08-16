@@ -17,8 +17,9 @@ class Admin extends \Visitor\Paging {
   protected $usersModel;
   
   public function init() {
-    $this->foreachelse = 'No users found';
-    $this->title = 'Users';
+    $l                 = $this->bootstrap->getLocalization();
+    $this->foreachelse = $l('users', 'foreachelse' );
+    $this->title       = $l('users', 'admin_title');
   }
   
   protected function setupCount() {

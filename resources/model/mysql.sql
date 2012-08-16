@@ -511,3 +511,17 @@ CREATE TABLE `livefeed_streams` (
    PRIMARY KEY (`id`),
    KEY `livefeedid` (`livefeedid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;
+
+
+CREATE TABLE `attached_documents` (
+   `id` int(10) unsigned not null auto_increment,
+   `timestamp` datetime not null,
+   `title` text,
+   `masterfilename` text not null,
+   `masterextension` text,
+   `status` text not null,
+   `sourceip` text not null,
+   `recordingid` int(10) unsigned,
+   PRIMARY KEY (`id`),
+   KEY `status-recordingid` (`status`(20), `recordingid`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;
