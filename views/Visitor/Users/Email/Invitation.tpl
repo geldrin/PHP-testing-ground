@@ -3,9 +3,9 @@
 {newsletter}
 <h1>{#users__email_invitation_title#}</h1>
 <p>
-  {assign var=BASE_URI value=$organization|@uri:base}
   {assign var=url value="$BASE_URI$language/users/validateinvite/`$values.id`,`$values.validationcode`"}
-  {#users__email_invitation_body#|sprintf:$url}
+  {assign var=inviter value=$user|@nickformat|escape:html}
+  {#users__email_invitation_body#|sprintf:$inviter:$url}
 </p>
 <p>
 {#email_linkinfo#}<br/>

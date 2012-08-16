@@ -20,16 +20,7 @@ class Invite extends \Visitor\Form {
     $queue     = $this->bootstrap->getMailqueue();
     $l         = $this->bootstrap->getLocalization();
     $user      = $this->bootstrap->getSession('user');
-    /*
-    // folosleges feltakaritas?
-    $invModel->addFilter('userid', $user['id'] );
-    $invModel->addFilter('email', $values['email'], false, false );
-    $invitations = $invModel->getArray();
     
-    if ( !empty( $invitations ) )
-      foreach( $invitations as $invitation )
-        $invModel->delete( $invitation['id'] );
-    */
     $values['permissions']    = implode('|', $values['permissions'] );
     $values['validationcode'] = $crypto->randomPassword( 10 );
     $values['userid']         = $user['id'];
@@ -38,6 +29,7 @@ class Invite extends \Visitor\Form {
     
     $invModel->row['id'] = $crypto->asciiEncrypt( $invModel->row['id'] );
     $this->controller->toSmarty['values'] = $invModel->row;
+    $this->controller->toSmarty['user']   = $user;
     
     $queue->sendHTMLEmail(
       $values['email'],
