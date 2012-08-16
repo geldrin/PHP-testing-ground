@@ -19,6 +19,7 @@ class Controller extends \Visitor\Controller {
     'modifyclassification' => 'uploader',
     'modifydescription'    => 'uploader',
     'modifysharing'        => 'uploader',
+    'deleteattachment'     => 'uploader',
     'deletesubtitle'       => 'uploader',
     'delete'               => 'uploader',
     'checkstreamaccess'    => 'public',
@@ -144,6 +145,7 @@ class Controller extends \Visitor\Controller {
     $this->toSmarty['comments']      = $recordingsModel->getComments();
     $this->toSmarty['commentcount']  = $recordingsModel->getCommentsCount();
     $this->toSmarty['author']        = $recordingsModel->getAuthor();
+    $this->toSmarty['attachments']   = $recordingsModel->getAttachments();
     $this->toSmarty['canrate']       = ( $user['id'] and $rating[ $recordingsModel->id ] );
     $this->toSmarty['relatedvideos'] = $recordingsModel->getRelatedVideos(
       $this->application->config['relatedrecordingcount']
@@ -216,6 +218,29 @@ class Controller extends \Visitor\Controller {
         'nocomments'   => $l('recordings', 'nocomments'),
         'commentcount' => $commentcount,
       )
+    );
+    
+  }
+  
+  public function deleteattachmentAction() {
+    
+    $attachmentModel = $this->modelIDCheck(
+      'attached_documents',
+      $this->application->getNumericParameter('id')
+    );
+    
+    $recordingsModel = $this->modelOrganizationAndUserIDCheck(
+      'recordings',
+      $attachmentModel->row['recordingid']
+    );
+    
+    $attachmentModel->updateRow( array(
+        'status' => 'markedfordeletion',
+      )
+    );
+    
+    $this->redirect(
+      $this->application->getParameter('forward', 'recordings/myrecordings')
     );
     
   }

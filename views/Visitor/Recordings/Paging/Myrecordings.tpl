@@ -82,6 +82,17 @@
       </div>
     {/if}
     
+    {if !empty( $item.attachments )}
+      <div class="attachments">
+        <h3>{#recordings__attachments#}</h3>
+        <ul>
+          {foreach from=$item.attachments item=attachment}
+            <li><a href="{$attachment|@attachmenturl:$item:$STATIC_URI}">{$attachment.title|escape:html}</a> - <a href="{$language}/recordings/deleteattachment/{$attachment.id}?forward={$FULL_URI|escape:url}" class="confirm delete">{#recordings__deleteattachment#}</a></li>
+          {/foreach}
+        </ul>
+      </div>
+    {/if}
+    
     <div class="clear"></div>
   </div>
 </li>

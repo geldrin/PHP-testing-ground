@@ -1771,4 +1771,28 @@ class Recordings extends \Springboard\Model {
     
   }
   
+  public function getAttachments( $publiconly = true ) {
+    
+    $this->ensureObjectLoaded();
+    $where = array(
+      "recordingid = '" . $this->id . "'",
+      "status <> 'markedfordeletion'",
+    );
+    
+    if ( $publiconly ) {
+      
+      $where[] = "status = 'onstorage'";
+      
+    }
+    
+    $where = implode(' AND ', $where );
+    return $this->db->getArray("
+      SELECT *
+      FROM attached_documents
+      WHERE $where
+      ORDER BY title
+    ");
+    
+  }
+  
 }

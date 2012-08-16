@@ -4,7 +4,10 @@ namespace Visitor\Contents;
 class Controller extends \Visitor\Controller {
   
   public function route() {
-    // TODO caching?
+    
+    if ( $this->action == 'language' )
+      return $this->languageAction();
+    
     $contentsModel = $this->bootstrap->getModel('contents');
     $language      = \Springboard\Language::get();
     
@@ -32,7 +35,22 @@ class Controller extends \Visitor\Controller {
     }
     
     $this->toSmarty['content'] = $content;
-    $this->smartyoutput('Visitor/contents.tpl');
+    $this->smartyoutput('Visitor/Contents/Contents.tpl');
+    
+  }
+  
+  public function languageAction() {
+    
+    $l                          = $this->bootstrap->getLocalization();
+    $this->toSmarty['language'] = json_encode( $l->get('contents'), JSON_HEX_TAG );
+    $output                     = $this->fetchSmarty('Visitor/Contents/Language.tpl');
+    
+    header('Content-Type: application/json; charset=UTF-8');
+    $this->output(
+      $output,
+      false,
+      true // preserve message
+    );
     
   }
   

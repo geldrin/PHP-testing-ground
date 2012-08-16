@@ -17,6 +17,7 @@ $j(document).ready(function() {
   runIfExists('#player', setupPlayer );
   runIfExists('.sort', setupSort );
   runIfExists('#embedlink', setupEmbed );
+  runIfExists('.confirm', setupConfirm );
   
   $j('#scriptingcontainer').show();
   
@@ -36,8 +37,24 @@ $j(document).ready(function() {
 
 function runIfExists( selector, func ) {
   
-  if ( $j( selector ).length > 0 )
-    func();
+  var elems = $j( selector );
+  if ( elems.length > 0 )
+    func( elems );
+  
+}
+
+function setupConfirm( elems ) {
+  
+  elems.click( function(e) {
+    
+    var confirmquestion = $j(this).attr('data-confirm');
+    if ( !confirmquestion )
+      confirmquestion = l.areyousure;
+    
+    if ( !confirm( confirmquestion ) )
+      e.preventDefault();
+    
+  });
   
 }
 

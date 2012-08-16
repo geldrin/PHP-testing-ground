@@ -64,7 +64,7 @@ class Myrecordings extends \Visitor\Paging {
         $this->recordingsModel->canUploadContentVideo()
       ;
       $items[ $key ]['subtitlefiles'] = $this->recordingsModel->getSubtitleLanguages();
-      // TODO attachments
+      $items[ $key ]['attachments']   = $this->recordingsModel->getAttachments( false );
       
     }
     

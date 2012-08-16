@@ -26,6 +26,7 @@
   {jscombine}
   <script type="text/javascript" src="{$STATIC_URI}js/jquery-1.7.1.min{$VERSION}.js"></script>
   <script type="text/javascript" src="{$STATIC_URI}js/swfobject.full{$VERSION}.js"></script>
+  <script type="text/javascript" src="{$BASE_URI}{$language}/contents/language"></script>
   <script type="text/javascript" src="{$STATIC_URI}js/tools{$VERSION}.js"></script>
   {/jscombine}
   <script type="text/javascript">
