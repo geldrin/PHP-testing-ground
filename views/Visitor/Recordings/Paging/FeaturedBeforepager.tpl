@@ -3,12 +3,12 @@
 </div>
 
 <ul class="featuredlist">
-  <li{if $type == 'featured'} class="active"{/if}><a href="{$language}/{$module}/featured">{#recordings__featured#}</a></li>
-  <li{if $type == 'newest'} class="active"{/if}><a href="{$language}/{$module}/featured/newest">{#recordings__featured_newest#}</a></li>
-  <li{if $type == 'mostviewed'} class="active"{/if}><a href="{$language}/{$module}/featured/mostviewed">{#recordings__featured_mostviewed#}</a></li>
-  <li{if $type == 'highestrated'} class="active"{/if}><a href="{$language}/{$module}/featured/highestrated">{#recordings__featured_highestrated#}</a></li>
+  <li{if $type == 'featured'} class="active"{/if}><a href="{$language}/recordings/featured">{#recordings__featured_featured#}</a></li>
+  <li{if $type == 'newest'} class="active"{/if}><a href="{$language}/recordings/featured/newest">{#recordings__featured_newest#}</a></li>
+  <li{if $type == 'mostviewed'} class="active"{/if}><a href="{$language}/recordings/featured/mostviewed">{#recordings__featured_mostviewed#}</a></li>
+  <li{if $type == 'highestrated'} class="active"{/if}><a href="{$language}/recordings/featured/highestrated">{#recordings__featured_highestrated#}</a></li>
 </ul>
-{capture assign=url}{$language}/{$module}/featured/_TYPE_?order=%s&start={$smarty.get.start|escape:uri}&perpage={$smarty.get.perpage|escape:uri}{/capture}
+{capture assign=url}{$language}/recordings/featured/_TYPE_?order=%s&start={$smarty.get.start|escape:uri}&perpage={$smarty.get.perpage|escape:uri}{/capture}
 
 {if $type == 'mostviewed' or $type == 'highestrated'}
   <div class="sort">

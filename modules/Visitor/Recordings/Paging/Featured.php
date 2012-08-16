@@ -56,6 +56,7 @@ class Featured extends \Visitor\Paging {
     $this->title = $l('recordings', 'featured_' . $this->type );
     $this->controller->toSmarty['listclass'] = 'recordinglist';
     $this->controller->toSmarty['type']      = $this->type;
+    $this->controller->toSmarty['module']    = 'featured';
     parent::init();
     
   }
