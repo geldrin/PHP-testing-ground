@@ -1,5 +1,5 @@
 <?php
-
+$organizationid = $this->controller->organization['id'];
 $config = array(
   
   'action' => array(
@@ -23,7 +23,7 @@ $config = array(
     'prefix' => '<span class="legendsubtitle">' . $l('recordings', 'classification_subtitle') . '</span>',
   ),
   
-  'categories[]' => array( // TODO per organization
+  'categories[]' => array(
     'type'        => 'inputCheckboxDynamic',
     'displayname' => $l('recordings', 'categories'),
     'sql'         => "
@@ -32,8 +32,9 @@ $config = array(
       FROM 
         categories AS c, strings s 
       WHERE
-        c.name_stringid = s.translationof AND 
-        s.language = '" . \Springboard\Language::get() . "' AND
+        c.name_stringid  = s.translationof AND 
+        s.language       = '" . \Springboard\Language::get() . "' AND
+        c.organizationid = '$organizationid' AND
         %s
       ORDER BY c.weight, name
     ",
@@ -49,8 +50,8 @@ $config = array(
       Array( 'type' => 'required' )
     ),
   ),
-  /*
-  'genres[]' => array( // TODO per organization
+  
+  'genres[]' => array(
     'type'        => 'inputCheckboxDynamic',
     'displayname' => $l('recordings', 'genres'),
     'sql'         => "
@@ -59,8 +60,9 @@ $config = array(
       FROM 
         genres AS g, strings s 
       WHERE
-        g.name_stringid = s.translationof AND 
-        s.language = '" . \Springboard\Language::get() . "' AND
+        g.name_stringid  = s.translationof AND 
+        s.language       = '" . \Springboard\Language::get() . "' AND
+        g.organizationid = '$organizationid' AND
         %s
       ORDER BY g.weight, name
     ",
@@ -87,5 +89,5 @@ $config = array(
     'displayname' => $l('recordings', 'keywords'),
     'postfix'     => '<div class="smallinfo">' . $l('recordings', 'keywordshelp') . '</div>',
   ),
-  */
+  
 );
