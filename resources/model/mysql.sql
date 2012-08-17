@@ -517,6 +517,7 @@ CREATE TABLE `livefeed_streams` (
 CREATE TABLE `attached_documents` (
    `id` int(10) unsigned not null auto_increment,
    `recordingid` int(10) unsigned,
+   `userid` int(10) unsigned not null,
    `timestamp` datetime not null,
    `title` text,
    `masterfilename` text not null,

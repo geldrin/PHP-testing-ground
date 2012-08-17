@@ -51,6 +51,7 @@ class Uploadattachment extends \Visitor\HelpForm {
     $values['status']          = 'uploading';
     $values['sourceip']        = 'stream.videosquare.eu';
     $values['recordingid']     = $this->recordingModel->id;
+    $values['userid']          = $user['id'];
     
     $attachmentModel->insert( $values );
     $destination =
