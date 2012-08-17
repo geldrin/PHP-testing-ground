@@ -42,16 +42,16 @@
     </div>
     
     {if $item.status == 'onstorage'}
-    <div class="recordingactions">
-      <ul>
-        <li><a href="{$language}/recordings/modifybasics/{$item.id}?forward={$FULL_URI|escape:url}">{#recordings__editrecording#}</a></li>
-        <li><a href="{$language}/recordings/uploadsubtitle/{$item.id}?forward={$FULL_URI|escape:url}">{#recordings__uploadsubtitle#}</a></li>
-        <li><a href="{$language}/recordings/uploadattachment?recordingid={$item.id}&forward={$FULL_URI|escape:url}">{#recordings__uploadattachment#}</a></li>
-        {if $item.canuploadcontentvideo}
-          <li><a href="{$language}/recordings/uploadcontent/{$item.id}?forward={$FULL_URI|escape:url}">{#recordings__uploadcontentvideo#}</a></li>
-        {/if}
-      </ul>
-    </div>
+      <div class="recordingactions">
+        <ul>
+          <li><a href="{$language}/recordings/modifybasics/{$item.id}?forward={$FULL_URI|escape:url}">{#recordings__editrecording#}</a></li>
+          <li><a href="{$language}/recordings/uploadsubtitle/{$item.id}?forward={$FULL_URI|escape:url}">{#recordings__uploadsubtitle#}</a></li>
+          <li><a href="{$language}/recordings/uploadattachment/{$item.id}?forward={$FULL_URI|escape:url}">{#recordings__manageattachments#}</a></li>
+          {if $item.canuploadcontentvideo}
+            <li><a href="{$language}/recordings/uploadcontent/{$item.id}?forward={$FULL_URI|escape:url}">{#recordings__uploadcontentvideo#}</a></li>
+          {/if}
+        </ul>
+      </div>
     {/if}
     {if $item.contentstatus}
       <div class="recordinginfo recordingcontentinfo">
@@ -77,17 +77,6 @@
         <ul>
           {foreach from=$item.subtitlefiles item=subtitle}
             <li>{$subtitle.language} - <a href="{$language}/recordings/deletesubtitle/{$subtitle.id}?forward={$FULL_URI|escape:url}" class="confirm delete">{#recordings__deletesubtitle#}</a></li>
-          {/foreach}
-        </ul>
-      </div>
-    {/if}
-    
-    {if !empty( $item.attachments )}
-      <div class="attachments">
-        <h3>{#recordings__attachments#}</h3>
-        <ul>
-          {foreach from=$item.attachments item=attachment}
-            <li><a href="{$attachment|@attachmenturl:$item:$STATIC_URI}">{$attachment.title|escape:html}</a> - <a href="{$language}/recordings/deleteattachment/{$attachment.id}?forward={$FULL_URI|escape:url}" class="confirm delete">{#recordings__deleteattachment#}</a></li>
           {/foreach}
         </ul>
       </div>

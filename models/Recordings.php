@@ -1782,6 +1782,7 @@ class Recordings extends \Springboard\Model {
     if ( $publiconly ) {
       
       $where[] = "status = 'onstorage'";
+      $where[] = "isdownloadable = '1'";
       
     }
     

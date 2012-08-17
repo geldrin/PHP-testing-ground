@@ -19,6 +19,7 @@ class Controller extends \Visitor\Controller {
     'modifyclassification' => 'uploader',
     'modifydescription'    => 'uploader',
     'modifysharing'        => 'uploader',
+    'modifyattachment'     => 'uploader',
     'deleteattachment'     => 'uploader',
     'deletesubtitle'       => 'uploader',
     'delete'               => 'uploader',
@@ -39,6 +40,7 @@ class Controller extends \Visitor\Controller {
     'modifydescription'    => 'Visitor\\Recordings\\Form\\Modifydescription',
     'modifysharing'        => 'Visitor\\Recordings\\Form\\Modifysharing',
     'newcomment'           => 'Visitor\\Recordings\\Form\\Newcomment',
+    'modifyattachment'     => 'Visitor\\Recordings\\Form\\Modifyattachment',
   );
   
   public $paging = array(

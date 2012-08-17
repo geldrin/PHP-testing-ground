@@ -45,7 +45,7 @@ class Controller extends \Visitor\Controller {
     $this->toSmarty['language'] = json_encode( $l->get('contents'), JSON_HEX_TAG );
     $output                     = $this->fetchSmarty('Visitor/Contents/Language.tpl');
     
-    header('Content-Type: application/json; charset=UTF-8');
+    header('Content-Type: application/javascript; charset=UTF-8');
     $this->output(
       $output,
       false,
