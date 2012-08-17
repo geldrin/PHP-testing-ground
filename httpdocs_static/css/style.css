@@ -1623,6 +1623,10 @@ a#currentusername span {
   width: 80px;
   right: 0px;
 }
+#metadata .attachments ul {
+  margin: 0;
+  padding-left: 20px;
+}
 /* recommendatory */
 #recommendatory {
   width: 340px;

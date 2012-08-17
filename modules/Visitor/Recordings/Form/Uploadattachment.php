@@ -11,20 +11,22 @@ class Uploadattachment extends \Visitor\HelpForm {
     
     $this->recordingModel = $this->controller->modelOrganizationAndUserIDCheck(
       'recordings',
-      $this->application->getNumericParameter('recordingid')
+      $this->application->getNumericParameter('id')
     );
     
-    parent::init();
-    
-  }
-  
-  public function preSetupForm() {
-    
-    $this->config['fs1']['prefix'] =
-      sprintf( $this->config['fs1']['prefix'],
-        htmlspecialchars( $this->recordingModel->row['title'], ENT_QUOTES, 'UTF-8', true )
+    $back =
+      $this->application->getParameter(
+        'forward',
+        $this->controller->getUrlFromFragment('recordings/myrecordings')
       )
     ;
+    $this->controller->toSmarty['back']         = $back;
+    $this->controller->toSmarty['insertbefore'] = 'Visitor/Recordings/Uploadattachment.tpl';
+    $this->controller->toSmarty['recording']    = $this->recordingModel->row;
+    $this->controller->toSmarty['attachments']  =
+      $this->recordingModel->getAttachments( false )
+    ;
+    parent::init();
     
   }
   
@@ -48,6 +50,7 @@ class Uploadattachment extends \Visitor\HelpForm {
     $values['timestamp']       = date('Y-m-d H:i:s');
     $values['status']          = 'uploading';
     $values['sourceip']        = 'stream.videosquare.eu';
+    $values['recordingid']     = $this->recordingModel->id;
     
     $attachmentModel->insert( $values );
     $destination =
@@ -58,7 +61,7 @@ class Uploadattachment extends \Visitor\HelpForm {
     if ( !move_uploaded_file( $_FILES['file']['tmp_name'],  $destination ) ) {
       
       $attachmentModel->updateRow( array(
-          'status' => 'movefailed',
+          'status' => 'failedmove',
         )
       );
       
@@ -71,12 +74,12 @@ class Uploadattachment extends \Visitor\HelpForm {
           'status' => 'uploaded',
         )
       );
-    
+    /*
     $this->controller->redirectWithMessage(
       $this->application->getParameter('forward', 'recordings/myrecordings'),
       $l('recordings', 'attachment_success')
     );
-    
+    */
   }
   
 }

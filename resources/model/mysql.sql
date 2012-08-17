@@ -516,13 +516,14 @@ CREATE TABLE `livefeed_streams` (
 
 CREATE TABLE `attached_documents` (
    `id` int(10) unsigned not null auto_increment,
+   `recordingid` int(10) unsigned,
    `timestamp` datetime not null,
    `title` text,
    `masterfilename` text not null,
    `masterextension` text,
    `status` text not null,
    `sourceip` text not null,
-   `recordingid` int(10) unsigned,
+   `isdownloadable` int(10) unsigned not null default '0',
    PRIMARY KEY (`id`),
    KEY `status-recordingid` (`status`(20), `recordingid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;

@@ -138,6 +138,7 @@
       <td>{$recording.timestamp|date_format:#smarty_dateformat_long#}</td>
     </tr>
   </table>
+  
   <div id="infotoggle">
     <ul>
       <li id="embedlink"><a href="#" title="{#recordings__embed#}"><span></span>{#recordings__embed#}</a></li>
@@ -169,6 +170,19 @@
       <input type="text" value="00" maxlength="2" id="embedstart_s" class="inputtext"/> {#recordings__embedsec#}
     </div>
   </div>
+  
+  
+  {if !empty( $attachments )}
+    <div class="attachments">
+      <h3>{#recordings__manageattachments_title#}</h3>
+      <ul>
+        {foreach from=$attachments item=attachment}
+          <li><a href="{$attachment|@attachmenturl:$recording:$STATIC_URI}">{$attachment.title|escape:html}</a></li>
+        {/foreach}
+      </ul>
+    </div>
+  {/if}
+  
 </div>
 <div class="clear"></div>
 

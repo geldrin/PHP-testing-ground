@@ -15,7 +15,6 @@ $config = Array(
   'fs1' => array(
     'type'   => 'fieldset',
     'legend' => $l('recordings', 'uploadattachment_title'),
-    'prefix' => '<span class="legendsubtitle">%s</span>',
   ),
   
   'recordingid' => array(
@@ -28,6 +27,13 @@ $config = Array(
     'displayname' => $l('recordings', 'attachment_title'),
     'validation'  => array(
     ),
+  ),
+  
+  'isdownloadable' => array(
+    'type'        => 'inputRadio',
+    'displayname' => $l('recordings', 'isdownloadable'),
+    'values'      => $l->getLov('noyes'),
+    'value'       => '1',
   ),
   
   'file' => Array(
