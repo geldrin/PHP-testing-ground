@@ -413,19 +413,6 @@ CREATE TABLE `channels_recordings` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;
 
 
-CREATE TABLE `contributors_jobs` (
-   `id` int(10) unsigned not null auto_increment,
-   `contributorid` int(10) unsigned not null,
-   `organizationid` int(10) unsigned,
-   `userid` int(10) unsigned,
-   `jobgroupid` int(10) unsigned not null default '1', -- mindenkeppen kell hogy legyen jobgroupid
-   `isaward` int(10) unsigned not null default '0',
-   `joboriginal` text,
-   `jobenglish` text,
-   PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;
-
-
 CREATE TABLE `contributor_images` (
    `id` int(10) unsigned not null auto_increment,
    `contributorid` int(10) unsigned not null,
@@ -439,7 +426,6 @@ CREATE TABLE `contributors_roles` (
    `organizationid` int(10) unsigned, -- references organizations(id),
    `contributorid` int(10) unsigned, -- references contributors(id),
    `recordingid` int(10) unsigned not null,
-   `jobgroupid` int(10) unsigned, -- lehet null, mert lehet hogy nincs jobja a usernek
    `roleid` int(10) unsigned,
    `weight` int(10) unsigned not null default '100',
    PRIMARY KEY (`id`)
@@ -514,6 +500,7 @@ CREATE TABLE `livefeed_streams` (
    KEY `livefeedid` (`livefeedid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;
 
+
 CREATE TABLE `attached_documents` (
    `id` int(10) unsigned not null auto_increment,
    `recordingid` int(10) unsigned,
@@ -529,10 +516,11 @@ CREATE TABLE `attached_documents` (
    KEY `status-recordingid` (`status`(20), `recordingid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;
 
+
 CREATE TABLE `recording_links` (
-   `id` int(11) not null auto_increment,
+   `id` int(10) unsigned not null auto_increment,
    `timestamp` datetime default null,
-   `organizationid` int(11),
+   `organizationid` int(10) unsigned,
    `name` text not null,
    `calltype` text not null,
    `number` text not null,
