@@ -29,10 +29,13 @@ return array('config_jobs' => array(
 	
 	// Sleep duration - number of seconds to sleep after an operation
 	'sleep_media'					=> 20,
+	'sleep_vcr'						=> 20,
+	'sleep_vcr_wait'				=> 20,
 
 	// Job identifiers
 	'jobid_media_convert'			=> 'job_media_convert',
 	'jobid_content_convert'			=> 'job_content_convert',
+	'jobid_vcr_control'				=> 'job_vcr_control',
 	'jobid_watcher'					=> 'watcher',
 
 	// SSH related settings
@@ -62,6 +65,21 @@ return array('config_jobs' => array(
 	'dbstatus_conv_video'			=> 'converting3video',
 	'dbstatus_conv_video_err'		=> 'failedconverting3video',
 	'dbstatus_invalidinput'			=> 'invalidinput',
+	// VCR related
+	'dbstatus_vcr_start'			=> 'start',
+	'dbstatus_vcr_starting'			=> 'starting',
+	'dbstatus_vcr_recording'		=> 'recording',
+	'dbstatus_vcr_disc'				=> 'disconnect',
+	'dbstatus_vcr_discing'			=> 'disconnecting',
+	'dbstatus_vcr_upload'			=> 'upload',
+	'dbstatus_vcr_ready'			=> 'ready',
+	'dbstatus_vcr_starting_err'		=> 'startingerror',
+	'dbstatus_vcr_discing_err'		=> 'disconnectingerror',
+
+	// VCR options
+	'vcr_server'					=> 'tcs.streamnet.hu',
+	'vcr_user'						=> 'admin',
+	'vcr_password'					=> 'BoRoKaBoGYo1980',
 
 	// FFMpeg related
 	'ffmpeg_loglevel'				=> 0,								// Loglevel
@@ -71,7 +89,6 @@ return array('config_jobs' => array(
 	'ffmpeg_video_codec'			=> 'h264',
 	'ffmpeg_flags'					=> '-strict experimental',
 	'ffmpeg_audio_codec'			=> 'libfaac',						// Audio codec (libmp3lame or libfaac)
-
 
 	// Thumbnails
 	'thumb_video_small'				=> '220x130',						// Resolution of normal video thumbnails
