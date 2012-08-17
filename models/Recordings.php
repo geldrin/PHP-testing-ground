@@ -1434,7 +1434,22 @@ class Recordings extends \Springboard\Model {
   }
   
   protected function getAuthorizeSessionid( $domain, $sessionid ) {
-    return '?sessionid=' . $domain . '_' . $sessionid . '_' . $this->id;
+    
+    $user = $this->bootstrap->getSession('user');
+    if ( isset( $user['id'] ) )
+      return sprintf('?sessionid=%s_%s_%s&uid=%s',
+        $domain,
+        $sessionid,
+        $this->id,
+        $user['id']
+      );
+    else
+      return sprintf('?sessionid=%s_%s_%s',
+        $domain,
+        $sessionid,
+        $this->id
+      );
+    
   }
   
   public function getMediaUrl( $type, $highquality, $domain = null, $sessionid = null, $host = '' ) {
