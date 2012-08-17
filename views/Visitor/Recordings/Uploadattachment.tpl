@@ -6,7 +6,7 @@
 <ul>
   {foreach from=$attachments item=attachment}
     <li>
-      {if $attachment.status == 'onstorage'}<a href="{$attachment|@attachmenturl:$recording:$STATIC_URI}">{/if}{$attachment.title|escape:html}{if $attachment.status == 'onstorage'}</a>{/if}
+      {if $attachment.status == 'onstorage'}<a href="{$attachment|@attachmenturl:$recording:$STATIC_URI}">{/if}{$attachment.title|escape:html}{if $attachment.masterextension} ({$attachment.masterextension|escape:html}){/if}{if $attachment.status == 'onstorage'}</a>{/if}
       - <span class="bold"><a href="{$language}/recordings/modifyattachment/{$attachment.id}?forward={$FULL_URI|escape:url}">{#modify#}</a></span>
       {if preg_match( '/^onstorage$|^failed.*$/', $attachment.status )}
         - <span class="bold"><a href="{$language}/recordings/deleteattachment/{$attachment.id}?forward={$FULL_URI|escape:url}" class="confirm delete">{#delete#}</a></span>
