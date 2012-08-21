@@ -18,6 +18,7 @@ class Controller extends \Visitor\Controller {
     'modifybasics'         => 'uploader',
     'modifyclassification' => 'uploader',
     'modifydescription'    => 'uploader',
+    'modifycontributors'   => 'uploader',
     'modifysharing'        => 'uploader',
     'modifyattachment'     => 'uploader',
     'deleteattachment'     => 'uploader',
@@ -28,6 +29,9 @@ class Controller extends \Visitor\Controller {
     'getprogress'          => 'member',
     'embed'                => 'public',
     'featured'             => 'public',
+    'searchcontributor'    => 'uploader',
+    'newcontributor'       => 'uploader',
+    'linkcontributor'      => 'uploader',
   );
   
   public $forms = array(
@@ -38,9 +42,12 @@ class Controller extends \Visitor\Controller {
     'modifybasics'         => 'Visitor\\Recordings\\Form\\Modifybasics',
     'modifyclassification' => 'Visitor\\Recordings\\Form\\Modifyclassification',
     'modifydescription'    => 'Visitor\\Recordings\\Form\\Modifydescription',
+    'modifycontributors'   => 'Visitor\\Recordings\\Form\\Modifycontributors',
     'modifysharing'        => 'Visitor\\Recordings\\Form\\Modifysharing',
     'newcomment'           => 'Visitor\\Recordings\\Form\\Newcomment',
     'modifyattachment'     => 'Visitor\\Recordings\\Form\\Modifyattachment',
+    'newcontributor'       => 'Visitor\\Recordings\\Form\\Newcontributor',
+    'linkcontributor'      => 'Visitor\\Recordings\\Form\\Linkcontributor',
   );
   
   public $paging = array(

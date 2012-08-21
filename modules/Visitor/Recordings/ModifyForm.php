@@ -6,12 +6,10 @@ class ModifyForm extends \Visitor\HelpForm {
   
   public function init() {
     
-    $recordingsModel = $this->bootstrap->getModel('recordings');
-    $recordingid     = $this->application->getNumericParameter('id');
-    
-    $recordingsModel->select( $recordingid );
-    if ( !$recordingsModel->row )
-      $this->controller->redirect('index');
+    $recordingsModel = $this->controller->modelOrganizationAndUserIDCheck(
+      'recordings',
+      $this->application->getNumericParameter('id')
+    );
     
     $this->recordingsModel                   = $recordingsModel;
     $this->values                            = $recordingsModel->row;
@@ -26,6 +24,7 @@ class ModifyForm extends \Visitor\HelpForm {
       )
     ;
     $this->controller->toSmarty['formclass']    = 'leftdoublebox';
+    $this->controller->toSmarty['helpclass']    = 'small right';
     $this->controller->toSmarty['insertbefore'] = 'Visitor/Recordings/ModifyTimeline.tpl';
     parent::init();
     

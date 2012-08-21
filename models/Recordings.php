@@ -98,34 +98,14 @@ class Recordings extends \Springboard\Model {
         @$values['keywords'],
       );
     
-    $contributors = $this->getContributorsWithRoles();
-    
+    $contributors     = $this->getContributorsWithRoles();
     $contributornames = array();
     
-    if ( false and !empty( $contributors ) ) {
+    if ( !empty( $contributors ) ) {
       
-      $jobModel = $this->bootstrap->getModel('contributors_jobs');
       include_once( $this->bootstrap->config['smartypluginpath'] . 'modifier.nameformat.php');
-      include_once( $this->bootstrap->config['smartypluginpath'] . 'modifier.title.php');
-      foreach( $contributors as $contributor ) {
-
-        if ( $contributor['contributorid'] ) {
-          
-          $contributornames[] = \smarty_modifier_nameformat( $contributor );
-          
-          $contributorjobs = $jobModel->getAllJobs( $contributor['contributorid'] );
-          foreach( $contributorjobs as $job ) {
-            
-            $contributornames[] = $job['joboriginal'] . ' ' . $job['jobenglish'];
-            $contributornames[] = $job['organizationname'];
-            $contributornames[] = $job['organizationnameshort'];
-            
-          }
-          
-        } else
-          $contributornames[] = \smarty_modifier_title( $contributor, 'name' );
-        
-      }
+      foreach( $contributors as $contributor )
+        $contributornames[] = \smarty_modifier_nameformat( $contributor );
       
     }
     
@@ -159,7 +139,6 @@ class Recordings extends \Springboard\Model {
         cr.id,
         cr.organizationid,
         cr.contributorid,
-        cr.jobgroupid,
         sorgname.value AS organizationname,
         sorgnameshort.value AS organizationnameshort,
         org.url,
@@ -183,10 +162,10 @@ class Recordings extends \Springboard\Model {
         roles AS r,
         strings AS s
       WHERE
-        cr.roleid = r.id AND
+        cr.roleid       = r.id AND
         r.name_stringid = s.translationof AND
-        cr.recordingid = '" . $this->id . "' AND
-        s.language = '$language'
+        cr.recordingid  = '" . $this->id . "' AND
+        s.language      = '$language'
       ORDER BY
         cr.weight
     ");
@@ -1807,6 +1786,16 @@ class Recordings extends \Springboard\Model {
       FROM attached_documents
       WHERE $where
       ORDER BY title
+    ");
+    
+  }
+  
+  public function linkContributor( $data ) {
+    
+    $this->ensureID();
+    $this->db->query("
+      INSERT INTO contributors_roles (organizationid, contributorid, recordingid )
+      VALUES ('" . $data['organizationid'] . "', '" . $data['contributorid'] . "', '" . $this->id . "')
     ");
     
   }

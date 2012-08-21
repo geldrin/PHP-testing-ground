@@ -1,15 +1,13 @@
 {include file="Visitor/_header.tpl"}
 
-{if $insertbefore}
-  {include file=$insertbefore}
-{/if}
+{include file=Visitor/Recordings/ModifyTimeline.tpl}
 
-<div class="form {$formclass|default:"halfbox left"}">
+<div class="form leftdoublebox">
 {$form}
 </div>
 
 {if !empty( $help ) and strpos( $helpclass, 'hidden' ) === false}
-<div class="help {$helpclass|default:"halfbox right"}">
+<div class="help small right">
   <h1 class="title">{#help#}</h1>
   {$help.body}
 </div>

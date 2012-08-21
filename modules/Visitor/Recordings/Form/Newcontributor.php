@@ -1,9 +1,14 @@
 <?php
 namespace Visitor\Recordings\Form;
 
-class Modifydescription extends \Visitor\Recordings\ModifyForm {
-  public $configfile   = 'Modifydescription.php';
+class Newcontributor extends \Visitor\Recordings\ModifyForm {
+  public $configfile   = 'Newcontributor.php';
   public $template     = 'Visitor/genericform.tpl';
+  
+  public function init() {
+    $this->controller->toSmarty['formclass'] = 'leftdoublebox';
+    parent::init();
+  }
   
   public function onComplete() {
     
@@ -13,7 +18,7 @@ class Modifydescription extends \Visitor\Recordings\ModifyForm {
     $this->recordingsModel->updateFulltextCache( true );
     
     $this->controller->redirect(
-      'recordings/modifycontributors/' . $this->recordingsModel->id,
+      'recordings/modifyclassification/' . $this->recordingsModel->id,
       array( 'forward' => $values['forward'] )
     );
     
