@@ -42,7 +42,7 @@
                 </ul>
                 <div class="hr"></div>
               {/if}
-              {*}
+              
               {if $member.isliveadmin}
                 <div class="title">{#usermenu_live_title#}</div>
                 <ul>
@@ -50,7 +50,7 @@
                   <li><a href="{$language}/live/create">{#usermenu_live_create#}</a></li>
                 </ul>
               {/if}
-              {/*}
+              
             </div>
           {/if}
           

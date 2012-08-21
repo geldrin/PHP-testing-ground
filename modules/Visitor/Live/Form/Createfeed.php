@@ -1,0 +1,50 @@
+<?php
+namespace Visitor\Live\Form;
+
+class Createfeed extends \Visitor\HelpForm {
+  public $configfile = 'Createfeed.php';
+  public $template   = 'Visitor/genericform.tpl';
+  public $needdb     = true;
+  
+  protected $channelModel;
+  
+  public function init() {
+    
+    $this->channelModel = $this->controller->modelOrganizationAndUserIDCheck(
+      'channels',
+      $this->application->getNumericParameter('id')
+    );
+    
+    parent::init();
+    
+  }
+  
+  public function postSetupForm() {
+    
+    $l = $this->bootstrap->getLocalization();
+    $this->controller->toSmarty['title'] = $l('live', 'createfeed_title');
+    
+  }
+  
+  public function onComplete() {
+    
+    $values    = $this->form->getElementValues( 0 );
+    $user      = $this->bootstrap->getSession('user');
+    $feedModel = $this->bootstrap->getModel('livefeeds');
+    
+    $values['channelid']      = $this->channelModel->id;
+    $values['userid']         = $user['id'];
+    unset( $values['id'] );
+    
+    $feedModel->insert( $values );
+    
+    $this->controller->redirect(
+      $this->application->getParameter(
+        'forward',
+        'live/createstream/' . $feedModel->id
+      )
+    );
+    
+  }
+  
+}
