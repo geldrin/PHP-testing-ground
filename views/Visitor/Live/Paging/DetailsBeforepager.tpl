@@ -1,6 +1,11 @@
 <div class="title">
   <h1>{$channel.title|escape:html}</h1>
-  {if $channel.subtitle}<h2>{$channel.subtitle|escape:html}</h2>{/if}
+  {if $member.id or $channel.subtitle}
+    <h2>
+      {if $channel|@userHasAccess}<div class="actions"><a href="{$language}/live/modify/{$channel.id}">{#modify#}</a> | <a href="{$language}/live/managefeeds/{$channel.id}">{#live__managefeeds#}</a></div>{/if}
+      {if $channel.subtitle}{$channel.subtitle|escape:html}{/if}
+    </h2>
+  {/if}
 </div>
 
 <div class="events">

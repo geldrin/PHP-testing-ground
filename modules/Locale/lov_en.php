@@ -69,4 +69,22 @@ return array(
     'reconvert'          => 'Converting',
     'failed'             => 'Conversion failed',
   ),
+  
+  'aspectratios' => array(
+    '4:3'  => '4:3',
+    '5:4'  => '5:4',
+    '16:9' => '16:9',
+  ),
+  
+  'numberofstreams' => array(
+    '1' => 'Use one stream',
+    '2' => 'Use two streams at the same time (for broadcasting the presenter and slides simultaneously)',
+  ),
+  
+  'feedtypes' => array(  
+    'normal'        => 'Normal',
+    'mobile'        => 'Mobile',
+    'normal/mobile' => 'Normal/mobile',
+  ),
+  
 );

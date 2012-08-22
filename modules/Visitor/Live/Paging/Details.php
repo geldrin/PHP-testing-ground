@@ -14,13 +14,18 @@ class Details extends \Visitor\Paging {
   
   public function init() {
     
-    $l                 = $this->bootstrap->getLocalization();
-    $this->foreachelse = '';
-    $this->title       = $l('','sitewide_live');
+    $l                  = $this->bootstrap->getLocalization();
+    $user               = $this->bootstrap->getSession('user');
+    $this->foreachelse  = '';
+    $this->title        = $l('','sitewide_live');
     $this->channelModel = $this->controller->modelIDCheck(
       'channels',
       $this->application->getNumericParameter('id')
     );
+    $accessible         = $this->channelModel->isAccessible( $user );
+    
+    if ( $accessible !== true )
+      $this->controller->redirectToController('contents', $accessible );
     
     $this->channelModel->clearFilter();
     $rootid = $this->channelModel->id;

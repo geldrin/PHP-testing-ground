@@ -842,6 +842,12 @@ a#currentusername span {
 #body div.title.recording h2 {
   font-size: 13px;
 }
+#body div.title .actions {
+  float: right;
+}
+#body div.title .actions a {
+  display: inline-block;
+}
 
 /* footer */
 #footerbg {

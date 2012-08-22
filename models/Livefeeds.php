@@ -3,14 +3,7 @@ namespace Model;
 
 class Livefeeds extends \Springboard\Model {
   
-  // --------------------------------------------------------------------------
-  public function &delete( $id, $magic_quotes_gpc = 0 ) {
-    
-    // TODO mitortenik a recordingokkal?
-    $this->db->execute("
-      DELETE FROM recordings
-      WHERE livefeedid = " . $this->db->qstr( $id ) . "
-    ");
+  public function delete( $id, $magic_quotes_gpc = 0 ) {
     
     $this->db->execute("
       DELETE FROM livefeed_streams
@@ -18,28 +11,6 @@ class Livefeeds extends \Springboard\Model {
     ");
     
     return parent::delete( $id, $magic_quotes_gpc );
-
-  }
-  
-  public function getFeedsForChannel( $channelid ) {
-    
-    $streamObj = getObject('livefeed_streams');
-    $this->clearFilter();
-    $this->addFilter('channelid', $channelid );
-    $feeds = $this->getArray();
-    $ret   = array();
-    
-    foreach( $feeds as $key => $feed ) {
-      
-      $streamObj->clearFilter();
-      $streamObj->addFilter('livefeedid', $feed['id'] );
-      
-      $feeds[ $key ]['streams'] = $streamObj->getArray();
-      $ret[ $feed['id'] ] = $feeds[ $key ];
-      
-    }
-    
-    return $ret;
     
   }
   

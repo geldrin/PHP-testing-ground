@@ -377,6 +377,7 @@ CREATE TABLE `channels` (
    `isliveevent` int(11) not null default '0',
    `livefeedid` int(10) unsigned not null default '0',
    `organizationid` int(10) unsigned not null,
+   `accesstype` text not null,
    PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;
 
@@ -496,6 +497,7 @@ CREATE TABLE `livefeed_streams` (
    `status` text,
    `recordinglinkid` int(11) default null,
    `timestamp` datetime not null,
+   `accesstype` text not null,
    PRIMARY KEY (`id`),
    KEY `livefeedid` (`livefeedid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;

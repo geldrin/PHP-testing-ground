@@ -10,8 +10,10 @@ class Controller extends \Visitor\Controller {
     'modify'               => 'liveadmin',
     'createfeed'           => 'liveadmin',
     'modifyfeed'           => 'liveadmin',
+    'deletefeed'           => 'liveadmin',
     'createstream'         => 'liveadmin',
     'modifystream'         => 'liveadmin',
+    'deletestream'         => 'liveadmin',
     'managefeeds'          => 'liveadmin',
   );
   
@@ -95,12 +97,73 @@ class Controller extends \Visitor\Controller {
     $this->toSmarty['currentstream'] = $currentstream;
     $this->toSmarty['liveurl']       = $this->bootstrap->config['wowza']['liveurl'];
     
-    $this->smartyoutput('Visitor/Live/View.tpl');
+    $this->smartyOutput('Visitor/Live/View.tpl');
     
   }
   
-  public function managefeeds() {
-    // TODO
+  public function managefeedsAction() {
+    
+    $channelModel = $this->modelOrganizationAndUserIDCheck(
+      'channels',
+      $this->application->getNumericParameter('id')
+    );
+    $helpModel    = $this->bootstrap->getModel('help_contents');
+    $helpModel->addFilter('shortname', 'live_managefeeds', false, false );
+    
+    $this->toSmarty['help']    = $helpModel->getRow();
+    $this->toSmarty['feeds']   = $channelModel->getFeedsWithStreams();
+    $this->toSmarty['channel'] = $channelModel->row;
+    $this->smartyOutput('Visitor/Live/Managefeeds.tpl');
+    
+  }
+  
+  public function deletefeedAction() {
+    
+    $feedModel    = $this->modelIDCheck(
+      'livefeeds',
+      $this->application->getNumericParameter('id')
+    );
+    
+    $channelModel = $this->modelOrganizationAndUserIDCheck(
+      'channels',
+      $feedModel->row['channelid']
+    );
+    
+    $feedModel->delete( $feedModel->id );
+    $this->redirect(
+      $this->application->getParameter(
+        'forward',
+        'live/managefeeds/' . $channelModel->id
+      )
+    );
+    
+  }
+  
+  public function deletestreamAction() {
+    
+    $streamModel   = $this->modelIDCheck(
+      'livefeed_streams',
+      $this->application->getNumericParameter('id')
+    );
+    
+    $feedModel    = $this->modelIDCheck(
+      'livefeeds',
+      $streamModel->row['livefeedid']
+    );
+    
+    $channelModel = $this->modelOrganizationAndUserIDCheck(
+      'channels',
+      $feedModel->row['channelid']
+    );
+    
+    $streamModel->delete( $streamModel->id );
+    $this->redirect(
+      $this->application->getParameter(
+        'forward',
+        'live/managefeeds/' . $channelModel->id
+      )
+    );
+    
   }
   
 }

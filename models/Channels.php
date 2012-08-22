@@ -201,7 +201,7 @@ class Channels extends \Springboard\Model {
 
   }
 
-  function &delete( $id, $magic_quotes_gpc = 0 ) {
+  function delete( $id, $magic_quotes_gpc = 0 ) {
     
     if ( !@$this->row['id'] != $id )
       $this->select( $id );
@@ -759,6 +759,21 @@ class Channels extends \Springboard\Model {
     
   }
   
+  public function getFeedsWithStreams() {
+    
+    $streamObj = $this->bootstrap->getModel('livefeed_streams');
+    $feeds = $this->getFeeds();
+    foreach ( $feeds as $key => $feed ) {
+      
+      $streamObj->clearFilter();
+      $streamObj->addFilter('livefeedid', $feed['id'] );
+      $feeds[ $key ]['streams'] = $streamObj->getArray();
+      
+    }
+    
+    return $feeds;
+    
+  }
   public function getTreeArray( $order = null, $parentid = 0 ) {
     
     if ( !$order )
@@ -777,6 +792,66 @@ class Channels extends \Springboard\Model {
       $items[ $key ]['children'] = $this->getTreeArray( $order, $value['id'] );
     
     return $items;
+    
+  }
+  
+  public function isAccessible( $user ) {
+    
+    $this->ensureObjectLoaded();
+    
+    $channel = $this->row;
+    if ( $channel['parentid'] != 0 )
+      $channel = $this->findRoot( $channel );
+    
+    if (
+         isset( $user['id'] ) and
+         (
+           $channel['userid'] == $user['id'] or
+           (
+             $user['iseditor'] and
+             $user['organizationid'] == $channel['organizationid']
+           )
+         )
+       )
+      return true;
+    
+    switch( $channel['accesstype'] ) {
+      
+      case 'public':
+        break;
+      
+      case 'registrations':
+        
+        if ( !isset( $user['id'] ) )
+          return 'registrationrestricted';
+        
+        break;
+      
+      case 'organizations':
+      case 'groups':
+        
+        if ( $channel['accesstype'] == 'groups')
+          $error = 'grouprestricted';
+        else
+          $error = 'organizationrestricted';
+        
+        if ( !isset( $user['id'] ) )
+          return $error;
+        elseif ( $user['id'] == $channel['userid'] )
+          return true;
+        elseif ( $user['iseditor'] and $user['organizationid'] == $channel['organizationid'] )
+          return true;
+        
+        // TODO organization/group check
+        break;
+      
+      default:
+        throw new Exception('Unknown accesstype ' . $channel['accesstype'] );
+        break;
+      
+    }
+    
+    return true;
     
   }
   

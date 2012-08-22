@@ -1,8 +1,8 @@
 <?php
 namespace Visitor\Live\Form;
 
-class Modify extends \Visitor\HelpForm {
-  public $configfile = 'Modify.php';
+class Modifyfeed extends \Visitor\HelpForm {
+  public $configfile = 'Modifyfeed.php';
   public $template   = 'Visitor/genericform.tpl';
   public $needdb     = true;
   
@@ -26,12 +26,10 @@ class Modify extends \Visitor\HelpForm {
     
     $this->values = $this->feedModel->row;
     
-  }
-  
-  public function postSetupForm() {
-    
     $l = $this->bootstrap->getLocalization();
     $this->controller->toSmarty['title'] = $l('live', 'modifyfeed_title');
+    
+    parent::init();
     
   }
   
