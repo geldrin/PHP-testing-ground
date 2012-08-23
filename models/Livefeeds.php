@@ -169,4 +169,158 @@ class Livefeeds extends \Springboard\Model {
     
   }
   
+  public function isAccessible( $user ) {
+    
+    $this->ensureObjectLoaded();
+    
+    if (
+         isset( $user['id'] ) and
+         (
+           $this->row['userid'] == $user['id'] or
+           (
+             $user['iseditor'] and
+             $user['organizationid'] == $this->row['organizationid']
+           )
+         )
+       )
+      return true;
+    
+    switch( $this->row['accesstype'] ) {
+      
+      case 'public':
+        break;
+      
+      case 'registrations':
+        
+        if ( !isset( $user['id'] ) )
+          return 'registrationrestricted';
+        
+        break;
+      
+      case 'organizations':
+      case 'groups':
+        
+        if ( $this->row['accesstype'] == 'groups')
+          $error = 'grouprestricted';
+        else
+          $error = 'organizationrestricted';
+        
+        if ( !isset( $user['id'] ) )
+          return $error;
+        elseif ( $user['id'] == $this->row['userid'] )
+          return true;
+        elseif ( $user['iseditor'] and $user['organizationid'] == $this->row['organizationid'] )
+          return true;
+        
+        $feedid = "'" . $this->row['id'] . "'";
+        $userid = "'" . $user['id'] . "'";
+        
+        if ( $this->row['accesstype'] == 'organizations')
+          $sql = "
+            SELECT
+              u.id
+            FROM
+              channels_access AS ca,
+              users AS u
+            WHERE
+              ca.channelid     = $feedid AND
+              u.organizationid = ca.organizationid AND
+              u.id             = $userid
+            LIMIT 1
+          ";
+        else
+          $sql = "
+            SELECT
+              gm.userid
+            FROM
+              channels_access AS ca,
+              groups_members AS gm
+            WHERE
+              ca.channelid = $feedid AND
+              gm.groupid   = ca.groupid AND
+              gm.userid    = $userid
+            LIMIT 1
+          ";
+        
+        $row = $this->db->getRow( $sql );
+        
+        if ( empty( $row ) )
+          return $error;
+        elseif ( $timefailed )
+          return $error . '_timefailed';
+        
+        break;
+      
+      default:
+        throw new \Exception('Unknown accesstype ' . $this->row['accesstype'] );
+        break;
+      
+    }
+    
+    return true;
+    
+  }
+  
+  public function clearAccess() {
+    
+    $this->ensureID();
+    
+    $this->db->execute("
+      DELETE FROM access
+      WHERE livefeedid = '" . $this->id . "'
+    ");
+    
+  }
+  
+  protected function insertMultipleIDs( $ids, $table, $field ) {
+    
+    $this->ensureID();
+    
+    $values = array();
+    foreach( $ids as $id )
+      $values[] = "('" . intval( $id ) . "', '" . $this->id . "')";
+    
+    $this->db->execute("
+      INSERT INTO $table ($field, livefeedid)
+      VALUES " . implode(', ', $values ) . "
+    ");
+    
+  }
+  
+  public function restrictOrganizations( $organizationids ) {
+    $this->insertMultipleIDs( $organizationids, 'access', 'organizationid');
+  }
+  
+  public function restrictGroups( $groupids ) {
+    $this->insertMultipleIDs( $groupids, 'access', 'groupid');
+  }
+  
+  public function cloneChannelAccess() {
+    
+    $this->ensureObjectLoaded();
+    if ( !$this->row['channelid'] )
+      throw new \Exception('Channelid is not set: ' . var_export( $this->row, true ) );
+    
+    $accessModel   = $this->bootstrap->getModel('access');
+    $channelModel  = $this->bootstrap->getModel('channels');
+    $rootchannelid = $channelModel->findRootID( $this->row['channelid'] );
+    if ( !$rootchannelid )
+      $rootchannelid = $this->row['channelid'];
+    
+    $accesses = $this->db->getArray("
+      SELECT *
+      FROM access
+      WHERE channelid = '$rootchannelid'
+    ");
+    
+    foreach( $accesses as $access ) {
+      
+      unset( $access['channelid'] );
+      $access['livefeedid'] = $this->id;
+      $accessModel->insert( $access );
+      
+    }
+    
+  }
+  
 }

@@ -43,6 +43,37 @@ class Modify extends \Visitor\HelpForm {
   public function onComplete() {
     
     $values = $this->form->getElementValues( 0 );
+    
+    $this->channelModel->clearAccess();
+    
+    switch( $values['accesstype'] ) {
+      
+      case 'public':
+      case 'registrations':
+        break;
+      
+      case 'organizations':
+        
+        if ( !empty( $values['organizations'] ) )
+          $this->channelModel->restrictOrganizations( $values['organizations'] );
+        
+        break;
+      
+      case 'groups':
+        
+        if ( !empty( $values['groups'] ) )
+          $this->channelModel->restrictGroups( $values['groups'] );
+        
+        break;
+      
+      default:
+        throw new \Exception('Unhandled accesstype');
+        break;
+      
+    }
+    
+    unset( $values['organizations'], $values['groups'] );
+    
     $this->channelModel->updateRow( $values );
     
     $this->controller->redirect(

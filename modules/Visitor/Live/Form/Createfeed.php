@@ -15,6 +15,7 @@ class Createfeed extends \Visitor\HelpForm {
       $this->application->getNumericParameter('id')
     );
     
+    $this->controller->toSmarty['formclass'] = 'leftdoublebox';
     parent::init();
     
   }
@@ -37,6 +38,32 @@ class Createfeed extends \Visitor\HelpForm {
     unset( $values['id'] );
     
     $feedModel->insert( $values );
+    
+    switch( $values['accesstype'] ) {
+      
+      case 'public':
+      case 'registrations':
+        break;
+      
+      case 'organizations':
+        
+        if ( !empty( $values['organizations'] ) )
+          $feedModel->restrictOrganizations( $values['organizations'] );
+        
+        break;
+      
+      case 'groups':
+        
+        if ( !empty( $values['groups'] ) )
+          $feedModel->restrictGroups( $values['groups'] );
+        
+        break;
+      
+      default:
+        throw new \Exception('Unhandled accesstype');
+        break;
+      
+    }
     
     $this->controller->redirect(
       $this->application->getParameter(

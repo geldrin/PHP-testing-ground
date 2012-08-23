@@ -573,9 +573,6 @@ class Recordings extends \Springboard\Model {
     
     $this->ensureID();
     
-    if ( count( $ids ) > 50 )
-      throw new \Exception("Tried inserting more than 50 items");
-    
     $values = array();
     foreach( $ids as $id )
       $values[] = "('" . intval( $id ) . "', '" . $this->id . "')";
@@ -592,18 +589,18 @@ class Recordings extends \Springboard\Model {
     $this->ensureID();
     
     $this->db->execute("
-      DELETE FROM recordings_access
+      DELETE FROM access
       WHERE recordingid = '" . $this->id . "'
     ");
     
   }
   
   public function restrictOrganizations( $organizationids ) {
-    $this->insertMultipleIDs( $organizationids, 'recordings_access', 'organizationid');
+    $this->insertMultipleIDs( $organizationids, 'access', 'organizationid');
   }
   
   public function restrictGroups( $groupids ) {
-    $this->insertMultipleIDs( $groupids, 'recordings_access', 'groupid');
+    $this->insertMultipleIDs( $groupids, 'access', 'groupid');
   }
   
   public function isAccessibleByStatus( $user ) {
@@ -692,13 +689,12 @@ class Recordings extends \Springboard\Model {
             SELECT
               u.id
             FROM
-              recordings_access AS ra,
+              access AS a,
               users AS u
             WHERE
-              ra.recordingid = $recordingid AND
-              ra.organizationid > 0 AND
-              u.organizationid = ra.organizationid AND
-              u.id = $userid
+              a.recordingid    = $recordingid AND
+              u.organizationid = a.organizationid AND
+              u.id             = $userid
             LIMIT 1
           ";
         else
@@ -706,13 +702,12 @@ class Recordings extends \Springboard\Model {
             SELECT
               gm.userid
             FROM
-              recordings_access AS ra,
+              access AS a,
               groups_members AS gm
             WHERE
-              ra.recordingid = $recordingid AND
-              ra.groupid > 0 AND
-              gm.groupid = ra.groupid AND
-              gm.userid = $userid
+              a.recordingid = $recordingid AND
+              gm.groupid    = a.groupid AND
+              gm.userid     = $userid
             LIMIT 1
           ";
         
@@ -726,7 +721,7 @@ class Recordings extends \Springboard\Model {
         break;
       
       default:
-        throw new Exception('Unknown accesstype ' . $this->row['accesstype'] );
+        throw new \Exception('Unknown accesstype ' . $this->row['accesstype'] );
         break;
       
     }
@@ -802,28 +797,28 @@ class Recordings extends \Springboard\Model {
         SELECT $select
         FROM
           $from,
-          recordings_access AS ra,
+          access AS a,
           groups_members AS gm
         WHERE
           $where
           $generalwhere AND
-          r.accesstype   = 'groups' AND
-          ra.recordingid = r.id AND
-          ra.groupid     = gm.groupid AND
-          gm.userid      = '" . $user['id'] . "'
+          r.accesstype  = 'groups' AND
+          a.recordingid = r.id AND
+          a.groupid     = gm.groupid AND
+          gm.userid     = '" . $user['id'] . "'
       ) UNION DISTINCT (
         SELECT $select
         FROM
           $from,
-          recordings_access AS ra,
+          access AS a,
           users AS u
         WHERE
           $where
           $generalwhere AND
-          r.accesstype      = 'organizations' AND
-          ra.recordingid    = r.id AND
-          ra.organizationid = u.organizationid AND
-          u.id              = '" . $user['id'] . "'
+          r.accesstype     = 'organizations' AND
+          a.recordingid    = r.id AND
+          a.organizationid = u.organizationid AND
+          u.id             = '" . $user['id'] . "'
       )
     ";
     

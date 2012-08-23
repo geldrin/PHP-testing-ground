@@ -28,7 +28,7 @@ class Modifysharing extends \Visitor\Recordings\ModifyForm {
       
       case 'public':
       case 'registrations':
-        // kiuritettuk mar elobb a recordings_access-t az adott recordinghoz
+        // kiuritettuk mar elobb az `access`-t az adott recordinghoz
         // itt nincs tobb dolgunk
         break;
       
