@@ -5,7 +5,7 @@ define('BASE_PATH',	realpath( __DIR__ . '/../..' ) . '/' );
 define('PRODUCTION', false );
 define('DEBUG', false );
 
-include("SOAP/Client.php");
+@include("SOAP/Client.php");
 
 include_once( BASE_PATH . 'libraries/Springboard/Application/Cli.php');
 
@@ -68,8 +68,17 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_vcr_control.stop' ) and !i
 		$vcr = array();
 		$vcr_user = array();
 
+// !!! 
+update_db_stream_status(4, $jconf['dbstatus_vcr_start']);
+update_db_vcr_reclink_status(2, $jconf['dbstatus_vcr_ready']);
+// !!!
+
 		// Query next job - exit if none
 		if ( !query_vcrnew($vcr, $vcr_user) ) break;
+
+		// Starting recording
+		update_db_stream_status($vcr['id'], $jconf['dbstatus_vcr_starting']);
+
 // TODO: start, disconnect
 // TODO: status and stream update fuctions
 
@@ -78,11 +87,11 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_vcr_control.stop' ) and !i
 		$global_log .= "Stream: " . $vcr['name'] . " (ID = " . $vcr['id'] . ")\n";
 		$global_log .= "User: " . $vcr_user['nickname'] . " (" . $vcr_user['email'] . ")\n";
 		$global_log .= "Recording link: " . $vcr['reclink_name'] . " (ID = " . $vcr['reclink_id'] . ")\n";
-		$global_log .= " Call: " . $vcr['calltype'] . ":" . $vcr['number'] . " @ " . $vcr['bitrate'] . "KBps\n";
-		$global_log .= " Profile: " . $vcr['alias'] . "\n\n";
+		$global_log .= "Call: " . $vcr['calltype'] . ":" . $vcr['number'] . " @ " . $vcr['bitrate'] . "KBps\n";
+		$global_log .= "Recording profile: " . $vcr['alias'] . "\n\n";
 
 		// Start log entry
-		log_recording_conversion($vcr['id'], $myjobid, $jconf['dbstatus_init'], "START Videoconference recording:\n\n" . $global_log, "-", "-", 0, FALSE);
+		log_recording_conversion($vcr['id'], $myjobid, $jconf['dbstatus_init'], "START Videoconference recording:\n" . $global_log, "-", "-", 0, FALSE);
 
 // ------------------------------------------------------------------------------------
 
@@ -95,7 +104,13 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_vcr_control.stop' ) and !i
 		);
 
 		// TCS: establish SOAP connection
-		$soap_rs = new SoapClient($vcr_wsdl, $soapOptions);
+		try {
+			$soap_rs = new SoapClient($vcr_wsdl, $soapOptions);
+		} catch (exception $err) {
+			log_recording_conversion(0, $jconf['jobid_vcr_control'], $jconf['dbstatus_init'], "[ERROR] Cannot connect to SOAP client. Please check.", print_r($soapOptions), $err, 0, TRUE);
+			$sleep_length = 15 * 60;
+			break;
+		}
 
 //$result = $soap_rs->GetStatus();
 //var_dump($result);
@@ -108,8 +123,10 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_vcr_control.stop' ) and !i
 		// TCS: dial recording link to start recording session
 		$err = tcs_dial($vcr);
 		if ( $err['code'] ) {
-			$global_log .= "VCR call information:\n\n" . $err['message'] . "\n\n";
-			log_recording_conversion($vcr['id'], $myjobid, $jconf['dbstatus_init'], "[OK] VCR call established. Call info:\n\n" . $err['message'], "-", "-", 0, FALSE);
+			$global_log .= $err['message'] . "\n\n";
+			log_recording_conversion($vcr['id'], $myjobid, $jconf['dbstatus_init'], $err['message'], "-", "-", 0, FALSE);
+			update_db_vcr_reclink_status($vcr['reclink_id'], $jconf['dbstatus_vcr_recording']);
+			update_db_stream_status($vcr['id'], $jconf['dbstatus_vcr_recording']);
 		} else {
 			log_recording_conversion($vcr['id'], $myjobid, $jconf['dbstatus_init'], "[ERROR] VCR call cannot be established. Info:\n\n" . $err['message'], "-", "-", 0, TRUE);
 			break;
@@ -117,11 +134,22 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_vcr_control.stop' ) and !i
 
 sleep(10);
 
+// Nehany percenkent chekkolni?
 	$err = tcs_getconfinfo($vcr);
 
-sleep(20);
+sleep(60);
 
-	$err = tcs_disconnect($vcr);
+		$err = tcs_disconnect($vcr);
+		if ( $err['code'] ) {
+			$global_log .= "VCR call disconnected:\n\n" . $err['message'] . "\n\n";
+			log_recording_conversion($vcr['id'], $myjobid, $jconf['dbstatus_init'], "[OK] VCR call disconnected. Call info:\n\n" . $err['message'], "-", "-", 0, FALSE);
+			update_db_vcr_reclink_status($vcr['reclink_id'], $jconf['dbstatus_vcr_ready']);
+			update_db_stream_status($vcr['id'], $jconf['dbstatus_vcr_upload']);
+		} else {
+			log_recording_conversion($vcr['id'], $myjobid, $jconf['dbstatus_init'], "[ERROR] VCR call cannot be disconnected. Info:\n\n" . $err['message'], "-", "-", 0, TRUE);
+			break;
+		}
+
 
 echo $global_log;
 
@@ -191,6 +219,7 @@ global $jconf, $db;
 		ORDER BY
 			id
 		LIMIT 1";
+// LIMIT 1???? Mi van ha tobb stream tartozik egy felvetelhez? TODO
 
 	try {
 		$rs = $db->Execute($query);
@@ -262,6 +291,8 @@ global $soap_rs;
 echo "RESERVE:\n";
 var_dump($result);
 
+// ERROR?
+
     return $conf_id;
 }
 
@@ -318,13 +349,22 @@ echo "alszunk(2)\n";
 echo "STAT: " . $err_ci['message'] . "\n";
 
 		// Exit loop if call established
-		if ( $err_ci['code'] ) {
-			break;
+//		if ( $err_ci['code'] ) {
+//			break;
+//		}
+
+		// Call established, exit from loop
+		if ( $err_ci['result'] == "IN_CALL" ) {
+			$err['code'] = TRUE;
+			$err['result'] = $err_ci['result'];
+			$err['message'] = "[OK] VCR call established.";
+			return $err;
 		}
 
 		// Something unexpected
-		if ( $err_ci['message'] == "NOT_IN_CALL" ) {
+		if ( $err_ci['result'] == "NOT_IN_CALL" ) {
 			$err['code'] = FALSE;
+			$err['result'] = $err_ci['result'];
 			$err['message'] = "[ERROR] VCR call init returned an error. Call state: " . $err_ci['message'];
 			return $err;
 		}
@@ -332,7 +372,8 @@ echo "STAT: " . $err_ci['message'] . "\n";
 		// Check 25 seconds of timeout
 		if ( $i > 5 ) {
 			$err['code'] = FALSE;
-			$err['message'] = "[ERROR] VCR call cannot be established in " . $i*5 . " seconds. Call state:\n\n" . $err_ci['message'];
+			$err['result'] = $err_ci['result'];
+			$err['message'] = "[ERROR] VCR call cannot be established in " . $i * 5 . " seconds. Call state:\n\n" . $err_ci['message'];
 			break;
 		}
 
@@ -362,7 +403,7 @@ global $soap_rs, $jconf;
 
 	$result = $soap_rs->GetCallInfo($conf);
 	$callinfo = $result->GetCallInfoResult;
-	$err['message'] = $callinfo->CallState;
+	$err['result'] = $callinfo->CallState;
 
 //NOT_IN_CALL
 //IN_CALL
@@ -375,24 +416,28 @@ var_dump($result);
 	// Unknown conference ID, fatal error
 	if ( $callinfo->CallState == "NOT_IN_CALL" ) {
 		$err['code'] = FALSE;
+		$err['message'] = "[ERROR] VCR not in call.";
 		return $err;
 	}
 
 	// Dialing in progress
 	if ( $callinfo->CallState == "INITIALISING_CALL" ) {
-		$err['code'] = FALSE;
+		$err['code'] = TRUE;
+		$err['message'] = "[ERROR] VCR is establishing a call.";
 		return $err;
 	}
 
 	// Disconnect in progress
 	if ( $callinfo->CallState == "ENDING_CALL" ) {
-		$err['code'] = FALSE;
+		$err['code'] = TRUE;
+		$err['message'] = "[ERROR] VCR is disconnecting a call.";
 		return $err;
 	}
 
 	// Undefined error
 	if ( $callinfo->CallState != "IN_CALL" ) {
 		$err['code'] = FALSE;
+		$err['message'] = "[ERROR] VCR call is in undefined state.";
 		log_recording_conversion(0, $jconf['jobid_vcr_control'], $jconf['dbstatus_init'], "[ERROR] Undefined error in setting up call.", $err['command'], $err['message'], 0, TRUE);
 		return $err;
 	}
@@ -408,12 +453,14 @@ var_dump($result);
 	if ( ( $callinfo->MediaState != "RECORDING" ) and ( $callinfo->WriterStatus != "OK" ) ) {
 		// WriterStatus == FAILED? (tele a HDD?) Mas hiba?
 		$err['code'] = FALSE;
-		log_recording_conversion(0, $jconf['jobid_vcr_control'], $jconf['dbstatus_init'], "[ERROR] Undefined error in recording. Call info:\n\n" . $callinfo_log, $err['command'], $err['message'], 0, TRUE);
+		$err['message'] = "[ERROR] Undefined error in recording. Call info:\n\n" . $callinfo_log;
+		log_recording_conversion(0, $jconf['jobid_vcr_control'], $jconf['dbstatus_init'], $err['message'], $err['command'], $err['message'], 0, TRUE);
 		return $err;
 	}
 
 	$err['code'] = TRUE;
 	$err['message'] = "[OK] VCS call established. Call info:\n\n" . $callinfo_log;
+
 	return $err;
 }
 
@@ -525,13 +572,14 @@ global $soap_rs;
 
     if ( $result->DisconnectCallResult->Error != 0 ) {
 		$err['code'] = FALSE;
-		$err['message'] = "[ERROR] VCR is unable to disconnect call for " . $vcr['conf_id'] . ". Error code: " . $result->DisconnectCallResult->ErrorCode;
+		$err['message'] = "[ERROR] VCR is unable to disconnect call for conference " . $vcr['conf_id'] . ". Error code: " . $result->DisconnectCallResult->ErrorCode;
 		return $err;
 	}
 
 	$err['code'] = TRUE;
 	$err['message'] = "[OK] VCR call " . $vcr['conf_id'] . " disconnected.";
-    return $err;
+
+	return $err;
 }
 
 ?>

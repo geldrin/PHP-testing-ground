@@ -302,5 +302,48 @@ global $jconf, $db;
 	return TRUE;
 }
 
+// VCR: update recording link
+function update_db_vcr_reclink_status($id, $status) {
+ global $db;
+
+	$query = "
+		UPDATE
+			recording_links
+		SET
+			status = \"" . $status . "\"
+		WHERE
+			id = " . $id;
+
+	try {
+		$rs = $db->Execute($query);
+	} catch (exception $err) {
+		log_recording_conversion($id, $jconf['jobid_vcr_control'], "-", "[ERROR] Cannot update VCR recording link status. SQL query failed.", trim($query), $err, 0, TRUE);
+		return FALSE;
+	}
+
+	return TRUE;
+}
+
+// VCR: update recording link
+function update_db_stream_status($id, $status) {
+ global $db;
+
+	$query = "
+		UPDATE
+			livefeed_streams
+		SET
+			status = \"" . $status . "\"
+		WHERE
+			id = " . $id;
+
+	try {
+		$rs = $db->Execute($query);
+	} catch (exception $err) {
+		log_recording_conversion($id, $jconf['jobid_vcr_control'], "-", "[ERROR] Cannot update live stream status. SQL query failed.", trim($query), $err, 0, TRUE);
+		return FALSE;
+	}
+
+	return TRUE;
+}
 
 ?>
