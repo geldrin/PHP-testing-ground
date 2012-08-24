@@ -7,6 +7,7 @@ class Modify extends \Visitor\HelpForm {
   public $needdb     = true;
   
   protected $channelModel;
+  protected $parentchannelModel;
   
   public function init() {
     
@@ -19,6 +20,8 @@ class Modify extends \Visitor\HelpForm {
       $this->controller->redirect();
     
     $this->values = $this->channelModel->row;
+    $this->controller->toSmarty['formclass'] = 'leftdoublebox';
+    parent::init();
     
   }
   
@@ -38,6 +41,36 @@ class Modify extends \Visitor\HelpForm {
     
     if ( @$values['endtimestamp'] )
       $values['endtimestamp'] .= ' 20:00:00';
+    
+    $this->channelModel->clearAccess();
+    
+    switch( $values['accesstype'] ) {
+      
+      case 'public':
+      case 'registrations':
+        // kiuritettuk mar elobb az `access`-t az adott recordinghoz
+        // itt nincs tobb dolgunk
+        break;
+      
+      case 'organizations':
+        
+        if ( !empty( $values['organizations'] ) )
+          $this->channelModel->restrictOrganizations( $values['organizations'] );
+        
+        break;
+      
+      case 'groups':
+        
+        if ( !empty( $values['groups'] ) )
+          $this->channelModel->restrictGroups( $values['groups'] );
+        
+        break;
+      
+      default:
+        throw new \Exception('Unhandled accesstype');
+        break;
+      
+    }
     
     $this->channelModel->updateRow( $values );
     

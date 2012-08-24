@@ -48,6 +48,33 @@ class Create extends \Visitor\HelpForm {
       $values['parentid']     = $this->parentchannelModel->id;
     
     $channelModel->insert( $values );
+    
+    switch( $values['accesstype'] ) {
+      
+      case 'public':
+      case 'registrations':
+        break;
+      
+      case 'organizations':
+        
+        if ( !empty( $values['organizations'] ) )
+          $channelModel->restrictOrganizations( $values['organizations'] );
+        
+        break;
+      
+      case 'groups':
+        
+        if ( !empty( $values['groups'] ) )
+          $channelModel->restrictGroups( $values['groups'] );
+        
+        break;
+      
+      default:
+        throw new \Exception('Unhandled accesstype');
+        break;
+      
+    }
+    
     $channelModel->updateIndexFilename();
     
     $this->controller->redirect(

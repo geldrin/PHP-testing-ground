@@ -27,7 +27,8 @@ class Modifyfeed extends \Visitor\HelpForm {
     $this->values = $this->feedModel->row;
     
     $l = $this->bootstrap->getLocalization();
-    $this->controller->toSmarty['title'] = $l('live', 'modifyfeed_title');
+    $this->controller->toSmarty['title']     = $l('live', 'modifyfeed_title');
+    $this->controller->toSmarty['formclass'] = 'leftdoublebox';
     
     parent::init();
     
@@ -36,6 +37,36 @@ class Modifyfeed extends \Visitor\HelpForm {
   public function onComplete() {
     
     $values = $this->form->getElementValues( 0 );
+    
+    $this->feedModel->clearAccess();
+    
+    switch( $values['accesstype'] ) {
+      
+      case 'public':
+      case 'registrations':
+        break;
+      
+      case 'organizations':
+        
+        if ( !empty( $values['organizations'] ) )
+          $this->feedModel->restrictOrganizations( $values['organizations'] );
+        
+        break;
+      
+      case 'groups':
+        
+        if ( !empty( $values['groups'] ) )
+          $this->feedModel->restrictGroups( $values['groups'] );
+        
+        break;
+      
+      default:
+        throw new \Exception('Unhandled accesstype');
+        break;
+      
+    }
+    
+    unset( $values['organizations'], $values['groups'] );
     
     $this->feedModel->updateRow( $values );
     

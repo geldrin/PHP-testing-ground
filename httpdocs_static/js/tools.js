@@ -18,6 +18,7 @@ $j(document).ready(function() {
   runIfExists('.sort', setupSort );
   runIfExists('#embedlink', setupEmbed );
   runIfExists('.confirm', setupConfirm );
+  runIfExists('input[name=accesstype]', setupAccesstype );
   
   $j('#scriptingcontainer').show();
   
@@ -390,6 +391,33 @@ function setupEmbed() {
     $j('#embedcode').val( $j('#embedcode').val().replace(/src="(.*?)"/, 'src="' + newurl + '"') )
     
   });
+  
+}
+
+function setupAccesstype( elem ) {
+  
+  elem.change(function() {
+    
+    var elemvalue = elem.filter(':checked').val();
+    switch( elemvalue ) {
+      case 'public':
+      case 'registrations':
+        $j('#organizationscontainer, #groupscontainer').parents('tr').hide();
+        break;
+      
+      case 'organizations':
+        $j('#organizationscontainer').parents('tr').show();
+        $j('#groupscontainer').parents('tr').hide();
+        break;
+      
+      case 'groups':
+        $j('#organizationscontainer').parents('tr').hide();
+        $j('#groupscontainer').parents('tr').show();
+        break;
+      
+    }
+    
+  }).change();
   
 }
 

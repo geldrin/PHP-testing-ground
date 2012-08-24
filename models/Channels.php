@@ -122,8 +122,8 @@ class Channels extends \Springboard\Model {
       ORDER BY weight
     ";
     
-    if ( $ispublic !== null )
-      $sql .= " AND ispublic = '" . (int)$ispublic . "'";
+    if ( $ispublic )
+      $sql .= " AND accesstype = 'public'";
     
     $children = $this->db->getCol( $sql );
     
@@ -193,7 +193,7 @@ class Channels extends \Springboard\Model {
     // a children csatornak felol keresunk egyetlen videot
     $indexphotofilename = $this->bootstrap->getModel('recordings')->getIndexPhotoFromChannels( 
       array_merge( array( $parentid ), $children ),
-      $parent->row['ispublic']
+      $parent->row['accesstype'] == 'public'
     );
 
     $parent->row['indexphotofilename'] = $indexphotofilename;
@@ -210,48 +210,23 @@ class Channels extends \Springboard\Model {
     $childrenids[] = $id;
     
     $this->db->execute("
-      DELETE FROM
-        channels_contributors
-      WHERE
-        channelid IN('" . implode("', '", $childrenids ) . "')
+      DELETE FROM channels_contributors
+      WHERE channelid IN('" . implode("', '", $childrenids ) . "')
     ");
     
     $this->db->execute("
-      DELETE FROM
-        channels_recordings
-      WHERE
-        channelid IN('" . implode("', '", $childrenids ) . "')
+      DELETE FROM channels_recordings
+      WHERE channelid IN('" . implode("', '", $childrenids ) . "')
     ");
     
     $this->updateVideoCounters();
     $ret = $this->db->execute("
-      DELETE FROM
-        channels
-      WHERE
-        id IN('" . implode("', '", $childrenids ) . "')
+      DELETE FROM channels
+      WHERE id IN('" . implode("', '", $childrenids ) . "')
     ");
     
     return $ret;
     
-  }
-  
-  function update( &$rs, $values ) {
-
-    if ( isset( $values['ispublic'] ) and @$this->row['ispublic'] != $values['ispublic'] ) {
-      
-      $children   = $this->findChildrenIDs();
-      $children[] = $this->id;
-      
-      $this->db->execute("
-        UPDATE channels
-        SET ispublic = '" . $values['ispublic'] . "'
-        WHERE id IN('" . implode("', '", $children ) . "')
-      ");
-      
-    }
-    
-    return parent::update( $rs, $values );
-
   }
   
   function getArray( $start = false, $limit = false, $where = false, $orderby = false ) {
@@ -280,8 +255,8 @@ class Channels extends \Springboard\Model {
     if ( $parentid !== null )
       $this->addFilter('c.parentid', $parentid, true, false, 'parentid');
     
-    if ( $ispublic !== null )
-      $this->addFilter('c.ispublic', (int)$ispublic, true, false, 'ispublic');
+    if ( $ispublic )
+      $this->addFilter('c.accesstype', 'public', false, false, 'ispublic');
     
     $this->addTextFilter('c.channeltypeid = ct.id', 'channeltype');
     
@@ -492,7 +467,7 @@ class Channels extends \Springboard\Model {
         ct.isevent = 0 AND
         ( 
           ct.ispersonal = 0 OR
-          ( ct.ispersonal = 1 AND c.ispublic = 1 )
+          ( ct.ispersonal = 1 AND c.accesstype = 'public' )
         ) AND
         c.starttimestamp IS NOT NULL AND
         c.parentid = 0 AND
@@ -520,10 +495,11 @@ class Channels extends \Springboard\Model {
         strings AS s,
         channel_types AS ct
       WHERE
-        ct.id = c.channeltypeid AND
-        c.ispublic = '1' AND
-        s.translationof = ct.name_stringid AND s.language = '" . \Springboard\Language::get() . "' AND
-        c.id = '" . $channel['parentid'] . "'
+        ct.id           = c.channeltypeid AND
+        c.accesstype    = 'public' AND
+        s.translationof = ct.name_stringid AND
+        s.language      = '" . \Springboard\Language::get() . "' AND
+        c.id            = '" . $channel['parentid'] . "'
     ");
     
     if ( empty( $parent ) )
@@ -545,14 +521,12 @@ class Channels extends \Springboard\Model {
     
     $sql = "
       SELECT id, parentid
-      FROM
-        channels AS c
-      WHERE
-        c.id = '" . $parentid . "'
+      FROM channels
+      WHERE id = '" . $parentid . "'
     ";
     
-    if ( $ispublic !== null )
-      $sql .= " AND ispublic = '" . (int)$ispublic . "'";
+    if ( $ispublic )
+      $sql .= " AND accesstype = 'public'";
     
     $parent = $this->db->getRow( $sql );
     
@@ -587,10 +561,10 @@ class Channels extends \Springboard\Model {
         channel_types AS ct,
         strings AS s
       WHERE
-        c.id = '" . $channelid . "' AND
-        ct.id = c.channeltypeid AND
+        c.id            = '" . $channelid . "' AND
+        ct.id           = c.channeltypeid AND
         s.translationof = ct.name_stringid AND
-        s.language = '" . \Springboard\Language::get() . "'
+        s.language      = '" . \Springboard\Language::get() . "'
     ");
     
   }
@@ -842,17 +816,86 @@ class Channels extends \Springboard\Model {
         elseif ( $user['iseditor'] and $user['organizationid'] == $channel['organizationid'] )
           return true;
         
-        // TODO organization/group check
+        $channelid = "'" . $channel['id'] . "'";
+        $userid    = "'" . $user['id'] . "'";
+        
+        if ( $this->row['accesstype'] == 'organizations')
+          $sql = "
+            SELECT u.id
+            FROM
+              channels_access AS ca,
+              users AS u
+            WHERE
+              ca.channelid     = $channelid AND
+              u.organizationid = ca.organizationid AND
+              u.id             = $userid
+            LIMIT 1
+          ";
+        else
+          $sql = "
+            SELECT
+              gm.userid
+            FROM
+              channels_access AS ca,
+              groups_members AS gm
+            WHERE
+              ca.channelid = $channelid AND
+              gm.groupid   = ca.groupid AND
+              gm.userid    = $userid
+            LIMIT 1
+          ";
+        
+        $row = $this->db->getRow( $sql );
+        
+        if ( empty( $row ) )
+          return $error;
+        elseif ( $timefailed )
+          return $error . '_timefailed';
+        
         break;
       
       default:
-        throw new Exception('Unknown accesstype ' . $channel['accesstype'] );
+        throw new \Exception('Unknown accesstype ' . $channel['accesstype'] );
         break;
       
     }
     
     return true;
     
+  }
+  
+  public function clearAccess() {
+    
+    $this->ensureID();
+    
+    $this->db->execute("
+      DELETE FROM access
+      WHERE channelid = '" . $this->id . "'
+    ");
+    
+  }
+  
+  protected function insertMultipleIDs( $ids, $table, $field ) {
+    
+    $this->ensureID();
+    
+    $values = array();
+    foreach( $ids as $id )
+      $values[] = "('" . intval( $id ) . "', '" . $this->id . "')";
+    
+    $this->db->execute("
+      INSERT INTO $table ($field, channelid)
+      VALUES " . implode(', ', $values ) . "
+    ");
+    
+  }
+  
+  public function restrictOrganizations( $organizationids ) {
+    $this->insertMultipleIDs( $organizationids, 'access', 'organizationid');
+  }
+  
+  public function restrictGroups( $groupids ) {
+    $this->insertMultipleIDs( $groupids, 'access', 'groupid');
   }
   
 }

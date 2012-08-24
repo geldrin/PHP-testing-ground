@@ -64,7 +64,7 @@ $config = array(
     'treestart'   => $organizationid,
     'treestartinclusive' => true,
     'treeparent'  => 'parentid',
-    'valuesql'    => "SELECT organizationid FROM recordings_access WHERE recordingid = " . $this->application->getNumericParameter('id'),
+    'valuesql'    => "SELECT organizationid FROM access WHERE recordingid = " . $this->application->getNumericParameter('id'),
   ),
   
   'groups[]' => array(
@@ -79,7 +79,7 @@ $config = array(
         groups_members.userid = '" . $user['id'] . "' AND
         groups.id = groups_members.groupid
       ORDER BY groups.name DESC",
-    'valuesql'    => "SELECT groupid FROM recordings_access WHERE recordingid = " . $this->application->getNumericParameter('id'),
+    'valuesql'    => "SELECT groupid FROM access WHERE recordingid = " . $this->application->getNumericParameter('id'),
     'validation'  => array(
       array(
         'type' => 'required',

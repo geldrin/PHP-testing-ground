@@ -28,6 +28,16 @@ $config['indexphotofilename'] = Array(
     Array( 'type' => 'required' )
   )
 );
+$config['organizations[]']['valuesql'] = "
+  SELECT organizationid
+  FROM access
+  WHERE channelid = " . $this->application->getNumericParameter('id')
+;
+$config['groups[]']['valuesql']        = "
+  SELECT groupid
+  FROM access
+  WHERE channelid = " . $this->application->getNumericParameter('id')
+;
 
 $recordings = $this->channelModel->getRecordingsIndexphotos();
 $img        = '<img title="%s" src="' . $this->bootstrap->staticuri . 'files/%s"/>';

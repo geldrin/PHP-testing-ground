@@ -38,6 +38,12 @@ class Controller extends \Visitor\Controller {
       $this->application->getNumericParameter('id')
     );
     
+    $user       = $this->bootstrap->getSession('users');
+    $accessible = $feedModel->isAccessible( $user );
+    
+    if ( $accessible !== true )
+      $this->redirectToController('contents', $accessible );
+    
     $channelModel = $this->modelIDCheck('channels', $feedModel->row['channelid'] );
     $streamid     = $this->application->getNumericParameter('streamid');
     $browserinfo  = $this->bootstrap->getSession('browser');

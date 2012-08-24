@@ -21,6 +21,7 @@ class Create extends \Visitor\HelpForm {
       
     }
     
+    $this->controller->toSmarty['formclass'] = 'leftdoublebox';
     parent::init();
     
   }
@@ -50,18 +51,39 @@ class Create extends \Visitor\HelpForm {
     if ( @$values['endtimestamp'] )
       $values['endtimestamp'] .= ' 20:00:00';
     
-    if ( $this->parentchannelModel ) {
-      
+    if ( $this->parentchannelModel )
       $values['parentid']     = $this->parentchannelModel->id;
-      $rootid                 = $this->parentchannelModel->findRootID();
-      
-    }
     
     $channelModel->insert( $values );
     $channelModel->updateIndexFilename();
     
-    if ( !isset( $rootid ) )
-      $rootid = $channelModel->id;
+    switch( $values['accesstype'] ) {
+      
+      case 'public':
+      case 'registrations':
+        // kiuritettuk mar elobb az `access`-t az adott recordinghoz
+        // itt nincs tobb dolgunk
+        break;
+      
+      case 'organizations':
+        
+        if ( !empty( $values['organizations'] ) )
+          $channelModel->restrictOrganizations( $values['organizations'] );
+        
+        break;
+      
+      case 'groups':
+        
+        if ( !empty( $values['groups'] ) )
+          $channelModel->restrictGroups( $values['groups'] );
+        
+        break;
+      
+      default:
+        throw new \Exception('Unhandled accesstype');
+        break;
+      
+    }
     
     if ( !$channelModel->getLiveFeedCountForChannel() )
       $url = 'live/createfeed/' . $channelModel->id;

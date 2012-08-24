@@ -295,17 +295,6 @@ CREATE TABLE `recordings_categories` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;
 
 
-CREATE TABLE `recordings_access` (
-   `id` int(10) unsigned not null auto_increment,
-   `recordingid` int(10) unsigned not null,
-   `organizationid` int(10) unsigned,
-   `groupid` int(10) unsigned,
-   PRIMARY KEY (`id`),
-   KEY `ix_recordingid` (`recordingid`),
-   KEY `ix_groupid` (`groupid`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
-
 CREATE TABLE `groups` (
    `id` int(10) unsigned not null auto_increment,
    `name` text not null,
@@ -395,15 +384,6 @@ CREATE TABLE channel_types(
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;
 
 
-CREATE TABLE `channels_access` (
-   `id` int(10) unsigned not null auto_increment,
-   `channelid` int(10) unsigned not null,
-   `organizationid` int(10) unsigned not null,
-   `groupid` int(10) unsigned not null,
-   PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;
-
-
 CREATE TABLE `channels_recordings` (
    `id` int(10) unsigned not null auto_increment,
    `channelid` int(10) unsigned not null,
@@ -480,6 +460,7 @@ CREATE TABLE `livefeeds` (
    `isexternal` int(11) not null default '0',
    `slideonright` int(11) not null default '0',
    `numberofstreams` int(11) not null default '1',
+   `accesstype` text not null,
    PRIMARY KEY (`id`),
    KEY `channelid` (`channelid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;
@@ -497,7 +478,6 @@ CREATE TABLE `livefeed_streams` (
    `status` text,
    `recordinglinkid` int(11) default null,
    `timestamp` datetime not null,
-   `accesstype` text not null,
    PRIMARY KEY (`id`),
    KEY `livefeedid` (`livefeedid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;
@@ -533,3 +513,18 @@ CREATE TABLE `recording_links` (
    `disabled` int(11) not null default '0',
    PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1
+
+
+CREATE TABLE `access` (
+   `id` int(10) unsigned not null auto_increment,
+   `recordingid` int(10) unsigned,
+   `livefeedid` int(10) unsigned,
+   `channelid` int(10) unsigned,
+   `organizationid` int(10) unsigned,
+   `groupid` int(10) unsigned,
+   PRIMARY KEY (`id`),
+   KEY `ix_recordingid` (`recordingid`),
+   KEY `ix_livefeedid` (`livefeedid`),
+   KEY `ix_channelid` (`channelid`),
+   KEY `ix_groupid` (`groupid`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;
