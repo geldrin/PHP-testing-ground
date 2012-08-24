@@ -346,4 +346,26 @@ function update_db_stream_status($id, $status) {
 	return TRUE;
 }
 
+function update_db_stream_params($id, $keycode, $aspectratio) {
+ global $db;
+
+	$query = "
+		UPDATE
+			livefeed_streams
+		SET
+			keycode = " . $keycode . ",
+			aspectratio = \"" . $aspectratio . "\"
+		WHERE
+			id = " . $id;
+
+	try {
+		$rs = $db->Execute($query);
+	} catch (exception $err) {
+		log_recording_conversion($id, $jconf['jobid_vcr_control'], "-", "[ERROR] ????. SQL query failed.", trim($query), $err, 0, TRUE);
+		return FALSE;
+	}
+
+	return TRUE;
+}
+
 ?>
