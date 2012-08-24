@@ -304,7 +304,7 @@ global $jconf, $db;
 
 // VCR: update recording link
 function update_db_vcr_reclink_status($id, $status) {
- global $db;
+global $db, $jconf;
 
 	$query = "
 		UPDATE
@@ -326,7 +326,7 @@ function update_db_vcr_reclink_status($id, $status) {
 
 // VCR: update recording link
 function update_db_stream_status($id, $status) {
- global $db;
+global $db, $jconf;
 
 	$query = "
 		UPDATE
@@ -347,25 +347,49 @@ function update_db_stream_status($id, $status) {
 }
 
 function update_db_stream_params($id, $keycode, $aspectratio) {
- global $db;
+global $db, $jconf;
 
+	// Update stream parameters
 	$query = "
 		UPDATE
 			livefeed_streams
 		SET
-			keycode = " . $keycode . ",
-			aspectratio = \"" . $aspectratio . "\"
+			keycode = '" . $keycode . "',
+			aspectratio = '" . $aspectratio . "'
 		WHERE
 			id = " . $id;
 
 	try {
 		$rs = $db->Execute($query);
 	} catch (exception $err) {
-		log_recording_conversion($id, $jconf['jobid_vcr_control'], "-", "[ERROR] ????. SQL query failed.", trim($query), $err, 0, TRUE);
+		log_recording_conversion($id, $jconf['jobid_vcr_control'], "-", "[ERROR] VCR live stream parameters cannot be updated. SQL query failed.", trim($query), $err, 0, TRUE);
 		return FALSE;
 	}
 
 	return TRUE;
 }
+
+function update_db_vcr_reclink_params($id, $conf_id) {
+global $db, $jconf;
+
+	// Update stream parameters
+	$query = "
+		UPDATE
+			recording_links
+		SET
+			conferenceid = '" . $conf_id . "'
+		WHERE
+			id = " . $id;
+
+	try {
+		$rs = $db->Execute($query);
+	} catch (exception $err) {
+		log_recording_conversion($id, $jconf['jobid_vcr_control'], "-", "[ERROR] VCR recording link parameters cannot be updated. SQL query failed.", trim($query), $err, 0, TRUE);
+		return FALSE;
+	}
+
+	return TRUE;
+}
+
 
 ?>

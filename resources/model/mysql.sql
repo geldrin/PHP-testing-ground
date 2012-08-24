@@ -511,7 +511,7 @@ CREATE TABLE `recording_links` (
    `alias` text not null,
    `aliassecure` text not null,
    `status` text not null,
-   `conference_id` text,
+   `conferenceid` text,
    `disabled` int(11) not null default '0',
    PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1

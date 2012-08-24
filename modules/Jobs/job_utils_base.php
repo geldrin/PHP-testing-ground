@@ -2,6 +2,22 @@
 // Basic functions
 
 // *************************************************************************
+// *						function GCD()			   			   *
+// *************************************************************************
+// Description: find greatest common divisor
+// Source: http://blog.ifwebstudio.com/php/calculate-image-aspect-ratio-in-php/
+function GCD($a, $b) {  
+
+	while ($b != 0) {
+		$remainder = $a % $b;  
+		$a = $b;  
+		$b = $remainder;  
+	}
+
+	return abs($a);
+}
+
+// *************************************************************************
 // *						function iswindows()			   			   *
 // *************************************************************************
 // Description: determine OS to support multiplatform operation
