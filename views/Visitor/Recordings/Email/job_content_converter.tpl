@@ -14,8 +14,8 @@
 
 <p>
 {#recordings__email_conversion_signature#}
-<a href="mailto:support@teleconnect.hu">support@teleconnect.hu</a><br /><br />
-<a href="http://video.teleconnect.hu/" target="_blank">http://video.teleconnect.hu/</a>
+<a href="mailto:{$supportemail}">{$supportemail}</a><br /><br />
+<a href="http://{$domain}/" target="_blank">http://{$domain}/</a>
 </p>
 
 {/newsletter}

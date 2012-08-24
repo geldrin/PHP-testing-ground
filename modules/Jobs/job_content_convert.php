@@ -195,6 +195,8 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_content_convert.stop' ) an
 		$smarty->assign('filename', $recording['contentmastervideofilename']);
 		$smarty->assign('language', $uploader_user['language']);
 		$smarty->assign('recid', $recording['id']);
+		$smarty->assign('supportemail', $uploader_user['supportemail']);
+		$smarty->assign('domain', $uploader_user['domain']);
 		if ( $uploader_user['language'] == "hu" ) {
 			$subject = "Tartalom és mobil konverzió kész";
 		} else {
@@ -455,13 +457,18 @@ global $jconf, $db;
 			b.nickname,
 			b.email,
 			b.language,
-			b.organizationid
+			b.organizationid,
+			c.domain,
+			c.supportemail
 		FROM
 			recordings as a,
-			users as b
+			users as b,
+			organizations as c
 		WHERE
 			a.userid = b.id AND
-			a.id = " . $recording['id'];
+			a.id = " . $recording['id'] . " AND
+			b.organizationid = c.id
+	";
 
 	try {
 		$rs2 = $db->Execute($query);
