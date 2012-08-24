@@ -112,44 +112,55 @@ update_db_vcr_reclink_status(2, $jconf['dbstatus_vcr_ready']);
 			break;
 		}
 
+		// Start recording: a recording needs to be started
+		if ( $vcr['status'] == $jconf['dbstatus_vcr_start'] ) {
+//$jconf['dbstatus_vcr_disc']
+
+
 //$result = $soap_rs->GetStatus();
 //var_dump($result);
 
-		// TCS: reserve ConferenceID
-		$vcr['conf_id'] = tcs_reserve_conf_id($vcr);
+			// TCS: reserve ConferenceID
+			$vcr['conf_id'] = tcs_reserve_conf_id($vcr);
 
 //var_dump($vcr);
 
-		// TCS: dial recording link to start recording session
-		$err = tcs_dial($vcr);
-		if ( $err['code'] ) {
-			$global_log .= $err['message'] . "\n\n";
-			log_recording_conversion($vcr['id'], $myjobid, $jconf['dbstatus_init'], $err['message'], "-", "-", 0, FALSE);
-			update_db_vcr_reclink_status($vcr['reclink_id'], $jconf['dbstatus_vcr_recording']);
-			update_db_stream_status($vcr['id'], $jconf['dbstatus_vcr_recording']);
-		} else {
-			log_recording_conversion($vcr['id'], $myjobid, $jconf['dbstatus_init'], "[ERROR] VCR call cannot be established. Info:\n\n" . $err['message'], "-", "-", 0, TRUE);
-			break;
-		}
+			// TCS: dial recording link to start recording session
+			$err = tcs_dial($vcr);
+			if ( $err['code'] ) {
+				$global_log .= $err['message'] . "\n\n";
+				log_recording_conversion($vcr['id'], $myjobid, $jconf['dbstatus_init'], $err['message'], "-", "-", 0, FALSE);
+				update_db_vcr_reclink_status($vcr['reclink_id'], $jconf['dbstatus_vcr_recording']);
+				update_db_stream_status($vcr['id'], $jconf['dbstatus_vcr_recording']);
+			} else {
+				log_recording_conversion($vcr['id'], $myjobid, $jconf['dbstatus_init'], "[ERROR] VCR call cannot be established. Info:\n\n" . $err['message'], "-", "-", 0, TRUE);
+				break;
+			}
 
 sleep(10);
 
 // Nehany percenkent chekkolni?
-	$err = tcs_getconfinfo($vcr);
+$err = tcs_getconfinfo($vcr);
 
-sleep(60);
+//sleep(60);
 
-		$err = tcs_disconnect($vcr);
-		if ( $err['code'] ) {
-			$global_log .= "VCR call disconnected:\n\n" . $err['message'] . "\n\n";
-			log_recording_conversion($vcr['id'], $myjobid, $jconf['dbstatus_init'], "[OK] VCR call disconnected. Call info:\n\n" . $err['message'], "-", "-", 0, FALSE);
-			update_db_vcr_reclink_status($vcr['reclink_id'], $jconf['dbstatus_vcr_ready']);
-			update_db_stream_status($vcr['id'], $jconf['dbstatus_vcr_upload']);
-		} else {
-			log_recording_conversion($vcr['id'], $myjobid, $jconf['dbstatus_init'], "[ERROR] VCR call cannot be disconnected. Info:\n\n" . $err['message'], "-", "-", 0, TRUE);
-			break;
 		}
 
+		// Disconnect: a recording needs to be stopped
+		if ( $vcr['status'] == $jconf['dbstatus_vcr_disc'] ) {
+
+			$err = tcs_disconnect($vcr);
+			if ( $err['code'] ) {
+				$global_log .= "VCR call disconnected:\n\n" . $err['message'] . "\n\n";
+				log_recording_conversion($vcr['id'], $myjobid, $jconf['dbstatus_init'], "[OK] VCR call disconnected. Call info:\n\n" . $err['message'], "-", "-", 0, FALSE);
+				update_db_vcr_reclink_status($vcr['reclink_id'], $jconf['dbstatus_vcr_ready']);
+				update_db_stream_status($vcr['id'], $jconf['dbstatus_vcr_upload']);
+			} else {
+				log_recording_conversion($vcr['id'], $myjobid, $jconf['dbstatus_init'], "[ERROR] VCR call cannot be disconnected. Info:\n\n" . $err['message'], "-", "-", 0, TRUE);
+				break;
+			}
+
+		}
 
 echo $global_log;
 
@@ -211,7 +222,7 @@ global $jconf, $db;
 			recording_links as b,
 			livefeeds as c
 		WHERE
-			a.status = '" . $jconf['dbstatus_vcr_start'] . "' AND
+			( a.status = '" . $jconf['dbstatus_vcr_start'] . "' OR a.status = '" . $jconf['dbstatus_vcr_disc'] . "') AND
 			a.recordinglinkid = b.id AND
 			b.disabled = 0 AND
 			b.status = '" . $jconf['dbstatus_vcr_ready'] . "' AND

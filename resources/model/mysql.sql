@@ -507,9 +507,11 @@ CREATE TABLE `recording_links` (
    `calltype` text not null,
    `number` text not null,
    `password` text,
-   `bitrate` int(11) not null,
+   `bitrate` int(11) not null comment 'Values: 64, 128, 192, 256, 384, 512, 768, 1024, 1280, 1536, 1920 and 2048 kbps (as well as 2560, 3072 and 4000 kbps for Content Servers equipped with the Premium Resolution option)',
    `alias` text not null,
+   `aliassecure` text not null,
    `status` text not null,
+   `conference_id` text,
    `disabled` int(11) not null default '0',
    PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1
