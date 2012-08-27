@@ -463,6 +463,7 @@ CREATE TABLE `livefeeds` (
    `slideonright` int(11) not null default '0',
    `numberofstreams` int(11) not null default '1',
    `accesstype` text not null,
+   `issecurestreamingforced` int(11) not null default '0',
    PRIMARY KEY (`id`),
    KEY `channelid` (`channelid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;
