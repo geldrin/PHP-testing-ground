@@ -79,6 +79,10 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_vcr_control.stop' ) and !i
 		// Query next job - exit if none
 		if ( !query_vcrnew($vcr, $vcr_user) ) break;
 
+		// Alias: choose normal or secure
+		$vcr['aliasused'] = $vcr['alias'];
+		if ( $vcr['issecurestreamingforced'] == 1 ) $vcr['aliasused'] = $vcr['aliassecure'];
+
 		// Starting recording
 		update_db_stream_status($vcr['id'], $jconf['dbstatus_vcr_starting']);
 
@@ -88,10 +92,12 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_vcr_control.stop' ) and !i
 		$global_log .= "User: " . $vcr_user['nickname'] . " (" . $vcr_user['email'] . ")\n";
 		$global_log .= "Recording link: " . $vcr['reclink_name'] . " (ID = " . $vcr['reclink_id'] . ")\n";
 		$global_log .= "Call: " . $vcr['calltype'] . ":" . $vcr['number'] . " @ " . $vcr['bitrate'] . "KBps\n";
-		$global_log .= "Recording profile: " . $vcr['alias'] . "\n\n";
+		$global_log .= "Recording profile: " . $vcr['aliasused'] . "\n\n";
 
 		// Start log entry
 		log_recording_conversion($vcr['id'], $myjobid, $jconf['dbstatus_init'], "START Videoconference recording:\n\n" . $global_log, "-", "-", 0, FALSE);
+
+		$app->watchdog();
 
 		// TCS: SOAP connection to Cisco TCS
 		$soapOptions = array(
@@ -114,6 +120,8 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_vcr_control.stop' ) and !i
 //$result = $soap_rs->GetStatus();
 //var_dump($result);
 // Get system status / health? Stop if not enough capacity?
+
+		$app->watchdog();
 
 		// START RECORDING: a recording needs to be started
 		if ( $vcr['status'] == $jconf['dbstatus_vcr_start'] ) {
@@ -155,6 +163,8 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_vcr_control.stop' ) and !i
 			$total_duration = time() - $start_time;
 			$hms = secs2hms($total_duration);
 			log_recording_conversion($vcr['id'], $myjobid, $jconf['dbstatus_vcr_recording'], "-", "[OK] Successful recording initiation in " . $hms . " time.\n\nSummary:\n\n" . $global_log, "-", "-", $total_duration, TRUE);
+
+			$app->watchdog();
 		}
 
 // status == 'recording'
@@ -180,6 +190,8 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_vcr_control.stop' ) and !i
 			$total_duration = time() - $start_time;
 			$hms = secs2hms($total_duration);
 			log_recording_conversion($vcr['id'], $myjobid, $jconf['dbstatus_vcr_ready'], "-", "[OK] Successfuly disconnected recording in " . $hms . " time.\n\nSummary:\n\n" . $global_log, "-", "-", $total_duration, TRUE);
+
+			$app->watchdog();
 		}
 
 //echo $global_log;
@@ -237,7 +249,8 @@ global $jconf, $db;
 			c.id as feed_id,
 			c.userid,
 			c.channelid,
-			c.name as feed_name
+			c.name as feed_name,
+			c.issecurestreamingforced
 		FROM
 			livefeed_streams as a,
 			recording_links as b,
@@ -346,7 +359,7 @@ global $soap_rs, $jconf;
 		'ConferenceID'		=> $vcr['conf_id'],
 		'Number'			=> $vcr['number'],
 		'CallType'			=> $vcr['calltype'],
-		'Alias'				=> $vcr['alias'],
+		'Alias'				=> $vcr['aliasused'],
 		'Bitrate'			=> $vcr['bitrate'],
 		'SetMetadata'		=> false
 	);
