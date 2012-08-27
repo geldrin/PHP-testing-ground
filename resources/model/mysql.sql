@@ -71,6 +71,8 @@ CREATE TABLE `organizations` (
    `introduction_stringid` int(10) unsigned,
    `url` text,
    `issubscriber` int(11) not null default '0',
+   `isvcrenabled` int(11) not null default '0',
+   `issecurestreamingenabled` int(11) not null default '0',
    `domain` text,
    `supportemail` text,
    `registrationtype` text,
