@@ -14,6 +14,47 @@ class Recordings extends \Springboard\Model {
     ),
   );
   
+  public function resetStats() {
+    
+    $fields        = array();
+    $elementfields = array();
+    
+    if ( date('N') === '1' ) { // ISO-8601 numeric representation of the day of the week (added   PHP 5.1.0)
+      
+      $fields[] = 'numberofcommentsthisweek';
+      $fields[] = 'numberofviewsthisweek';
+      
+      $fields[] = 'ratingthisweek';
+      $fields[] = 'sumofratingthisweek';
+      $fields[] = 'numberofratingsthisweek';
+      
+    }
+    
+    if ( date('j') === '1' ) { // Day of the month without leading zeros
+      
+      $fields[] = 'numberofcommentsthismonth';
+      $fields[] = 'numberofviewsthismonth';
+      
+      $fields[] = 'ratingthismonth';
+      $fields[] = 'sumofratingthismonth';
+      $fields[] = 'numberofratingsthismonth';
+      
+    }
+    
+    $sql = implode( " = '0', ", $fields );
+    
+    if ( !strlen( $sql ) )
+      return false;
+    
+    $sql .= " = '0' ";
+    $sql = "UPDATE recordings SET $sql";
+    
+    $this->db->execute($sql);
+    
+    return true;
+    
+  }
+  
   public function resetViewCounters( $type ) {
     
     $this->ensureID();
