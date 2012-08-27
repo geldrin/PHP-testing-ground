@@ -169,6 +169,7 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_vcr_control.stop' ) and !i
 				$global_log .= "VCR call disconnected:\n\n" . $err['message'] . "\n\n";
 				log_recording_conversion($vcr['id'], $myjobid, $jconf['dbstatus_init'], "[OK] VCR call disconnected. Call info:\n\n" . $err['message'], "-", "-", 0, FALSE);
 				update_db_vcr_reclink_status($vcr['reclink_id'], $jconf['dbstatus_vcr_ready']);
+				update_db_vcr_reclink_params($vcr['reclink_id'], null);
 				update_db_stream_status($vcr['id'], $jconf['dbstatus_vcr_upload']);
 			} else {
 				log_recording_conversion($vcr['id'], $myjobid, $jconf['dbstatus_vcr_discing'], "[ERROR] VCR call cannot be disconnected. Check recording link! Info:\n\n" . $err['message'], "-", "-", 0, TRUE);

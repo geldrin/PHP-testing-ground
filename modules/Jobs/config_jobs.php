@@ -36,6 +36,7 @@ return array('config_jobs' => array(
 	'jobid_media_convert'			=> 'job_media_convert',
 	'jobid_content_convert'			=> 'job_content_convert',
 	'jobid_vcr_control'				=> 'job_vcr_control',
+	'jobid_maintenance'				=> 'job_maintenance',
 	'jobid_watcher'					=> 'watcher',
 
 	// SSH related settings
