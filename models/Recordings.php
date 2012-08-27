@@ -1400,6 +1400,24 @@ class Recordings extends \Springboard\Model {
     
     $subtitles = $this->getSubtitleLanguages();
     
+    if ( count( $subtitles ) == 1 )
+      $defaultsubtitle = $subtitles[0]['languagecode'];
+    else
+      $defaultsubtitle = $this->getDefaultSubtitleLanguage();
+    
+    $autoshowsubtitle = true;
+    if (
+         ( $data['language'] == 'hu' and $defaultsubtitle == 'hun' ) or
+         ( $data['language'] == 'en' and $defaultsubtitle == 'eng' )
+       )
+      $autoshowsubtitle = false;
+    
+    if ( $autoshowsubtitle )
+      $data['subtitle_autoShow'] = true;
+    
+    if ( $defaultsubtitle )
+      $data['subtitle_default'] = $defaultsubtitle;
+    
     if ( !empty( $subtitles ) ) {
       
       $data['subtitle_files'] = array();
@@ -1554,6 +1572,7 @@ class Recordings extends \Springboard\Model {
   
   public function getSubtitleLanguages() {
     
+    $this->ensureID();
     return $this->db->getArray("
       SELECT
         st.id,
@@ -1564,10 +1583,27 @@ class Recordings extends \Springboard\Model {
         strings AS s,
         languages AS l
       WHERE
-        st.recordingid = '" . $this->id . "' AND
+        st.recordingid  = '" . $this->id . "' AND
         s.translationof = st.languageid AND
-        s.language = '" . \Springboard\Language::get() . "' AND
-        l.id = st.languageid
+        s.language      = '" . \Springboard\Language::get() . "' AND
+        l.id            = st.languageid
+    ");
+    
+  }
+  
+  public function getDefaultSubtitleLanguage() {
+    
+    $this->ensureID();
+    return $this->db->getOne("
+      SELECT l.shortname AS languagecode
+      FROM
+        subtitles AS st,
+        languages AS l
+      WHERE
+        st.recordingid = '" . $this->id . "' AND
+        l.id           = st.languageid AND
+        st.isdefault   = '0'
+      LIMIT 1
     ");
     
   }
@@ -1832,6 +1868,17 @@ class Recordings extends \Springboard\Model {
     $this->db->query("
       INSERT INTO contributors_roles (organizationid, contributorid, recordingid )
       VALUES ('" . $data['organizationid'] . "', '" . $data['contributorid'] . "', '" . $this->id . "')
+    ");
+    
+  }
+  
+  public function clearDefaultSubtitle() {
+    
+    $this->ensureID();
+    $this->db->query("
+      UPDATE subtitles
+      SET isdefault = '0'
+      WHERE recordingid = '" . $this->id . "'
     ");
     
   }

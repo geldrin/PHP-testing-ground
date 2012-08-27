@@ -44,5 +44,12 @@ $config = Array(
       ),
     ),
   ),
-
+  
+  'isdefault' => array(
+    'type'        => 'inputRadio',
+    'displayname' => $l('recordings', 'subtitle_isdefault'),
+    'values'      => $l->getLov('noyes'),
+    'value'       => 0,
+  ),
+  
 );

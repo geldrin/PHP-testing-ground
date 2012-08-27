@@ -449,6 +449,7 @@ CREATE TABLE `subtitles` (
    `recordingid` int(10) unsigned not null,
    `languageid` int(10) unsigned not null,
    `subtitle` longtext not null,
+   `isdefault` int default '0',
    PRIMARY KEY (`id`),
    KEY `ix_recordingid` (`recordingid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;

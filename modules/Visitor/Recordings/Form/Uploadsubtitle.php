@@ -17,6 +17,9 @@ class Uploadsubtitle extends \Visitor\Recordings\ModifyForm {
     $values        = $this->form->getElementValues( 0 );
     $values['recordingid'] = $this->recordingsModel->id;
     
+    if ( $values['isdefault'] )
+      $this->recordingsModel->clearDefaultSubtitle();
+    
     $subtitleModel->insert( $values );
     
     $this->controller->redirectWithMessage(
