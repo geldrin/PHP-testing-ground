@@ -46,12 +46,11 @@ try {
 	exit;
 }
 
-//$err = mailqueue_cleanup();
+$err = mailqueue_cleanup();
 
 $err = statscounter_reset();
 
-//$err = db_maintenance();
-
+$err = db_maintenance();
 
 $db->close();
 
@@ -92,9 +91,8 @@ global $db, $jconf;
 function statscounter_reset() {
 global $app;
 
-//	$recordingModel = $app->bootstrap->getModel('recordings');
-// resetStats() - NOT YET IMPLEMENTED
-//	$recordingModel->resetStats();
+	$recordingModel = $app->bootstrap->getModel('recordings');
+	$recordingModel->resetStats();
 
 	return TRUE;
 }
