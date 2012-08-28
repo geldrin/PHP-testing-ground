@@ -14,7 +14,7 @@ define('H264_PROFILE_MOBILE',		'-profile:v baseline -preset:v fast');
 return array('config_jobs' => array(
 
 	// Node
-	'node'							=> 'conv-1.teleconnect.hu',
+	'node'							=> 'conv-1.videosquare.eu',
 	'node_role'						=> 'converter',
 
 	// Directories
@@ -29,6 +29,7 @@ return array('config_jobs' => array(
 	
 	// Sleep duration - number of seconds to sleep after an operation
 	'sleep_media'					=> 20,
+	'sleep_short'					=> 20,
 	'sleep_vcr'						=> 20,
 	'sleep_vcr_wait'				=> 20,
 
@@ -37,6 +38,7 @@ return array('config_jobs' => array(
 	'jobid_content_convert'			=> 'job_content_convert',
 	'jobid_vcr_control'				=> 'job_vcr_control',
 	'jobid_maintenance'				=> 'job_maintenance',
+	'jobid_upload_finalize'			=> 'job_upload_finalize',
 	'jobid_watcher'					=> 'watcher',
 
 	// SSH related settings

@@ -391,5 +391,26 @@ global $db, $jconf;
 	return TRUE;
 }
 
+function update_db_attachment_status($id, $status) {
+global $jconf, $db;
+
+	$query = "
+		UPDATE
+			attached_documents
+		SET
+			status = '" . $status . "'
+		WHERE
+			id = " . $id;
+
+	try {
+		$rs = $db->Execute($query);
+	} catch (exception $err) {
+		log_document_conversion($id, 0, $jconf['jobid_upload_finalize'], "-", "[ERROR] Cannot update document status. SQL query failed.", trim($query), $err, 0, TRUE);
+		return FALSE;
+	}
+
+	return TRUE;
+}
+
 
 ?>

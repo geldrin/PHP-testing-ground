@@ -534,3 +534,17 @@ CREATE TABLE `access` (
    KEY `ix_channelid` (`channelid`),
    KEY `ix_groupid` (`groupid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;
+
+CREATE TABLE `document_logs` (
+   `id` int(10) unsigned not null auto_increment,
+   `timestamp` datetime not null,
+   `node` text not null,
+   `attacheddocumentid` int(10) unsigned default null,
+   `recordingid` int(10) unsigned default null,
+   `job` text not null,
+   `action` text not null,
+   `status` text not null,
+   `command` text not null,
+   `data` text not null,
+   PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;

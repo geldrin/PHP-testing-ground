@@ -122,7 +122,45 @@ function print_recording_info($recording) {
 	return $log_msg;
 }
 
+function log_document_conversion($doc_id, $rec_id, $job, $action, $status, $command, $data, $duration, $log2mail) {
+global $app, $jconf, $debug, $db, $uploader_user;
 
+	$values = Array(
+		'timestamp'					=> date("Y-m-d H:i:s"),
+		'node'						=> $jconf['node'],
+		'attacheddocumentid'		=> $doc_id,
+		'recordingid'				=> $rec_id,
+		'job'						=> $job,
+		'action'					=> $action,
+		'status'					=> $status,
+		'command'					=> $command,
+		'data'						=> mb_convert_encoding($data, 'utf-8'),
+		'duration'					=> $duration
+	);
+
+	$document_logs = $app->bootstrap->getModel('document_logs');
+	$document_logs->insert($values);
+
+	$msg = "";
+	$msg .= "NODE: " . $jconf['node'] . "\n";
+	$msg .= "JOB: " . $job . "\n";
+	if ( !empty($uploader_user['email']) && !empty($uploader_user['nickname']) && !empty($uploader_user['userid']) ) {
+		$msg .= "UPLOADER: " . $uploader_user['email'] . " (nick: " . $uploader_user['nickname'] . ", id: " . $uploader_user['userid'] . ")\n";
+	}
+	$msg .= "DOCUMENT: " . $doc_id . " (RECORDING: " . $rec_id . ")\n";
+	$msg .= "ACTION: ". $action . "\n";
+	$msg .= "STATUS MESSAGE: " . $status . "\n";
+	if ( !empty($command) && ( $command != "-" ) ) {
+		$msg .= "\nCOMMAND: " . $command . "\n";
+	}
+	if ( !empty($data) && ( $data != "-" ) ) {
+		$msg .= "\nDATA: " . $data . "\n";
+	}
+
+	$debug->log($jconf['log_dir'], $job . ".log", $msg, $log2mail);
+
+	return TRUE;
+}
 
 
 ?>
