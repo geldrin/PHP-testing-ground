@@ -100,14 +100,31 @@ $config = array(
   ),
   //----
   'wowza' => array(
-    'httpurl'        => 'http://stream.videosquare.eu/vsq/_definst_/',
-    'rtmpurl'        => 'rtmp://stream.videosquare.eu:1935/vsq/',
-    'rtmpturl'       => 'rtmpt://stream.videosquare.eu:80/vsq/',
-    'rtspurl'        => 'rtsp://stream.videosquare.eu/vsq/_definst_/',
-    'liveingressurl' => 'rtmp://stream.videosquare.eu:1935/vsqlive/',
-    'liveurl'        => 'rtmpt://stream.videosquare.eu:80/vsqlive/',
-    'livehttpurl'    => 'http://stream.videosquare.eu/vsqlive/',
-    'livertspurl'    => 'rtsp://stream.videosquare.eu/vsqlive/',
+    
+    'httpurl'           => 'http://stream.videosquare.eu/vsq/_definst_/',
+    'sechttpurl'        => 'http://stream.videosquare.eu/vsqsec/_definst_/',
+    
+    'rtmpurl'           => 'rtmp://stream.videosquare.eu:1935/vsq/',
+    'secrtmpurl'        => 'rtmp://stream.videosquare.eu:1935/vsqsec/',
+    
+    'rtmpturl'          => 'rtmpt://stream.videosquare.eu:80/vsq/',
+    'secrtmpturl'       => 'rtmpt://stream.videosquare.eu:80/vsqsec/',
+    
+    'rtspurl'           => 'rtsp://stream.videosquare.eu/vsq/_definst_/',
+    'secrtspurl'        => 'rtsp://stream.videosquare.eu/vsqsec/_definst_/',
+    
+    'liveingressurl'    => 'rtmp://stream.videosquare.eu:1935/vsqlive/',
+    'secliveingressurl' => 'rtmp://stream.videosquare.eu:1935/vsqlivesec/',
+    
+    'liveurl'           => 'rtmpt://stream.videosquare.eu:80/vsqlive/',
+    'secliveurl'        => 'rtmpt://stream.videosquare.eu:80/vsqlivesec/',
+    
+    'livehttpurl'       => 'http://stream.videosquare.eu/vsqlive/',
+    'seclivehttpurl'    => 'http://stream.videosquare.eu/vsqlivesec/',
+    
+    'livertspurl'       => 'rtsp://stream.videosquare.eu/vsqlive/',
+    'seclivertspurl'    => 'rtsp://stream.videosquare.eu/vsqlivesec/',
+    
   ),
   //----
   // lehet ures is ha nem akarjuk redirectelni a usert, ilyenkor

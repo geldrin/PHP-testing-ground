@@ -114,7 +114,9 @@ global $db, $jconf;
 			group_invitations,
 			recordings_access,
 			recordings_genres,
-			mailqueue
+			mailqueue,
+			access,
+			subtitles
 		");
 	} catch( exception $err ) {
 		$debug->log($jconf['log_dir'], $jconf['jobid_maintenance'] . ".log", "[ERROR] SQL query failed. Query:\n\n" . trim($query), $sendmail = true);

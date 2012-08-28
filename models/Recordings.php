@@ -373,7 +373,7 @@ class Recordings extends \Springboard\Model {
     $this->ensureObjectLoaded();
     
     if ( $secure !== null and $this->row['issecurestreamingforced'] != $secure )
-      return 'secureresctricted';
+      return 'securerestricted';
     
     $bystatus   = $this->isAccessibleByStatus( $user );
     $bysettings = $this->isAccessibleBySettings( $user );
@@ -1344,12 +1344,13 @@ class Recordings extends \Springboard\Model {
     
     $recordingbaseuri = $info['BASE_URI'] . \Springboard\Language::get() . '/recordings/';
     $domain           = $info['organization']['domain'];
+    $typeprefix       = ( $this->row['issecurestreamingforced'] )? 'sec': '';
     
     $data = array(
       'language'              => \Springboard\Language::get(),
       'media_servers'         => array(
-        $this->getWowzaUrl( 'rtmpurl', true, $domain, $sessionid ),
-        $this->getWowzaUrl( 'rtmpturl', true, $domain, $sessionid ),
+        $this->getWowzaUrl( $typeprefix . 'rtmpurl', true, $domain, $sessionid ),
+        $this->getWowzaUrl( $typeprefix . 'rtmpturl', true, $domain, $sessionid ),
       ),
       'track_firstPlay'       => $recordingbaseuri . 'track/' . $this->id,
       'media_length'          => $this->row['masterlength'],
@@ -1493,12 +1494,16 @@ class Recordings extends \Springboard\Model {
     
     $this->ensureObjectLoaded();
     
-    $extension = 'mp4';
-    $postfix   = '_lq';
-    $isaudio   = $this->row['mastermediatype'] == 'audio';
+    $typeprefix = '';
+    $extension  = 'mp4';
+    $postfix    = '_lq';
+    $isaudio    = $this->row['mastermediatype'] == 'audio';
     
     if ( $highquality and !$isaudio )
       $postfix = '_hq';
+    
+    if ( $this->row['issecurestreamingforced'] )
+      $typeprefix = 'sec';
     
     if ( $isaudio ) {
       
@@ -1511,7 +1516,7 @@ class Recordings extends \Springboard\Model {
       
       case 'mobilehttp':
         //http://stream.videotorium.hu:1935/vtorium/_definst_/mp4:671/2671/2671_2608_mobile.mp4/playlist.m3u8
-        $host        = $this->getWowzaUrl('httpurl');
+        $host        = $this->getWowzaUrl( $typeprefix . 'httpurl');
         $sprintfterm =
           '%3$s:%s/%s_mobile' . $postfix . '.%s/playlist.m3u8' .
           $this->getAuthorizeSessionid( $domain, $sessionid )
@@ -1521,7 +1526,7 @@ class Recordings extends \Springboard\Model {
       
       case 'mobilertsp':
         //rtsp://stream.videotorium.hu:1935/vtorium/_definst_/mp4:671/2671/2671_2608_mobile.mp4
-        $host        = $this->getWowzaUrl('rtspurl');
+        $host        = $this->getWowzaUrl( $typeprefix . 'rtspurl');
         $sprintfterm =
           '%3$s:%s/%s_mobile' . $postfix . '.%s' .
           $this->getAuthorizeSessionid( $domain, $sessionid )
