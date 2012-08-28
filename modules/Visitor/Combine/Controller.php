@@ -4,6 +4,7 @@ namespace Visitor\Combine;
 class Controller extends \Visitor\Controller {
   public $sendheaders = false;
   public $permissions = array(
+    'index'       => 'public',
     'js'          => 'public',
     'css'         => 'public',
   );

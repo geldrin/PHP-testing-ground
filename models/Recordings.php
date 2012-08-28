@@ -368,9 +368,12 @@ class Recordings extends \Springboard\Model {
     
   }
   
-  public function userHasAccess( $user ) {
+  public function userHasAccess( $user, $secure = null ) {
     
     $this->ensureObjectLoaded();
+    
+    if ( $secure !== null and $this->row['issecurestreamingforced'] != $secure )
+      return 'secureresctricted';
     
     $bystatus   = $this->isAccessibleByStatus( $user );
     $bysettings = $this->isAccessibleBySettings( $user );
@@ -1349,7 +1352,7 @@ class Recordings extends \Springboard\Model {
         $this->getWowzaUrl( 'rtmpturl', true, $domain, $sessionid ),
       ),
       'track_firstPlay'       => $recordingbaseuri . 'track/' . $this->id,
-      'recording_duration'    => $this->row['masterlength'],
+      'media_length'          => $this->row['masterlength'],
       'recording_title'       => $this->row['title'],
       'recording_subtitle'    => (string)$this->row['subtitle'],
       'recording_description' => (string)$this->row['description'],
@@ -1377,6 +1380,7 @@ class Recordings extends \Springboard\Model {
     
     if ( $this->row['contentstatus'] == 'onstorage' ) {
       
+      $data['content_length']         = $this->row['contentmasterlength'];
       $data['media_secondaryStreams'] = array( $this->getMediaUrl('content', false, $domain ) );
       
       if ( $this->row['contentvideoreshq'] ) {

@@ -25,6 +25,7 @@ class Controller extends \Visitor\Controller {
     'deletesubtitle'       => 'uploader',
     'delete'               => 'uploader',
     'checkstreamaccess'    => 'public',
+    'securecheckstreamaccess' => 'public',
     'progress'             => 'member',
     'getprogress'          => 'member',
     'embed'                => 'public',
@@ -139,14 +140,15 @@ class Controller extends \Visitor\Controller {
       $this->application->getNumericParameter('id')
     );
     
-    $user    = $this->bootstrap->getSession('user');
-    $rating  = $this->bootstrap->getSession('rating');
-    $access  = $this->bootstrap->getSession('recordingaccess');
+    $user      = $this->bootstrap->getSession('user');
+    $rating    = $this->bootstrap->getSession('rating');
+    $access    = $this->bootstrap->getSession('recordingaccess');
+    $accesskey = $recordingsModel->id . '-' . (int)$recordingsModel->row['issecurestreamingforced'];
     
-    $access[ $recordingsModel->id ] = $recordingsModel->userHasAccess( $user );
+    $access[ $accesskey ] = $recordingsModel->userHasAccess( $user );
     
-    if ( $access[ $recordingsModel->id ] !== true )
-      $this->redirectToController('contents', $access[ $recordingsModel->id ] );
+    if ( $access[ $accesskey ] !== true )
+      $this->redirectToController('contents', $access[ $accesskey ] );
     
     $this->toSmarty['height']        = $this->getPlayerHeight( $recordingsModel );
     $this->toSmarty['recording']     = $recordingsModel->row;
@@ -327,9 +329,9 @@ class Controller extends \Visitor\Controller {
     
   }
   
-  public function checkstreamaccessAction() {
+  public function checkstreamaccessAction( $secure = false ) {
     
-    \Springboard\Debug::getInstance()->log( false, false, var_export( $_SERVER, true ) );
+    \Springboard\Debug::getInstance()->log( false, false, "SECURE: $secure\n" . var_export( $_SERVER, true ) );
     $param   = $this->application->getParameter('sessionid');
     $result  = '0';
     $matched =
@@ -345,18 +347,19 @@ class Controller extends \Visitor\Controller {
     if ( $matched ) {
       
       $this->bootstrap->setupSession( true, $matches['sessionid'], $matches['domain'] );
-      $access = $this->bootstrap->getSession('recordingaccess');
+      $access    = $this->bootstrap->getSession('recordingaccess');
+      $accesskey = $matches['recordingid'] . '-' . (int)$secure;
       
-      if ( $access[ $matches['recordingid'] ] !== true ) {
+      if ( $access[ $accesskey ] !== true ) {
         
-        $user = $this->bootstrap->getSession('user');
+        $user            = $this->bootstrap->getSession('user');
         $recordingsModel = $this->modelIDCheck('recordings', $matches['recordingid'], false );
         
         if ( $recordingsModel ) {
           
-          $access[ $matches['recordingid'] ] = $recordingsModel->userHasAccess( $user );
+          $access[ $accesskey ] = $recordingsModel->userHasAccess( $user, $secure );
           
-          if ( $access[ $matches['recordingid'] ] === true )
+          if ( $access[ $accesskey ] === true )
             $result = '1';
           
         }
@@ -375,6 +378,10 @@ class Controller extends \Visitor\Controller {
     
     die();
     
+  }
+  
+  public function securecheckstreamaccessAction() {
+    return $this->checkstreamaccessAction( true );
   }
   
   public function modifyrecordingAction( $id ) {
@@ -553,16 +560,17 @@ class Controller extends \Visitor\Controller {
       $this->application->getNumericParameter('id')
     );
     
-    $user     = $this->bootstrap->getSession('user');
-    $access   = $this->bootstrap->getSession('recordingaccess');
-    $needauth = false;
+    $user      = $this->bootstrap->getSession('user');
+    $access    = $this->bootstrap->getSession('recordingaccess');
+    $accesskey = $recordingsModel->id . '-' . (int)$recordingsModel->row['issecurestreamingforced'];
+    $needauth  = false;
     
-    $access[ $recordingsModel->id ] = $recordingsModel->userHasAccess( $user );
+    $access[ $accesskey ] = $recordingsModel->userHasAccess( $user );
     
-    if ( $access[ $recordingsModel->id ] === 'registrationrestricted' )
+    if ( $access[ $accesskey ] === 'registrationrestricted' )
       $needauth = true;
-    elseif ( $access[ $recordingsModel->id ] !== true )
-      $this->redirectToController('contents', $access[ $recordingsModel->id ] );
+    elseif ( $access[ $accesskey ] !== true )
+      $this->redirectToController('contents', $access[ $accesskey ] );
     
     $mobilehq = false;
     if ( $recordingsModel->row['mobilevideoreshq'] ) {
