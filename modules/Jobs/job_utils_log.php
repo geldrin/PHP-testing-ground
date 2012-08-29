@@ -23,7 +23,7 @@ global $app, $jconf, $debug, $db, $uploader_user;
 
 	$values = Array(
 		'timestamp'					=> date("Y-m-d H:i:s"),
-		'node'						=> $jconf['node'],
+		'node'						=> $app->config['node_sourceip'],
 		'recordingid'				=> $rec_id,
 		'job'						=> $job,
 		'action'					=> $action,
@@ -37,7 +37,7 @@ global $app, $jconf, $debug, $db, $uploader_user;
 	$recording_logs->insert($values);
 
 	$msg = "";
-	$msg .= "NODE: " . $jconf['node'] . "\n";
+	$msg .= "NODE: " . $app->config['node_sourceip'] . "\n";
 	$msg .= "JOB: " . $job . "\n";
 	if ( !empty($uploader_user['email']) && !empty($uploader_user['nickname']) && !empty($uploader_user['userid']) ) {
 		$msg .= "UPLOADER: " . $uploader_user['email'] . " (nick: " . $uploader_user['nickname'] . ", id: " . $uploader_user['userid'] . ")\n";
@@ -127,7 +127,7 @@ global $app, $jconf, $debug, $db, $uploader_user;
 
 	$values = Array(
 		'timestamp'					=> date("Y-m-d H:i:s"),
-		'node'						=> $jconf['node'],
+		'node'						=> $app->config['node_sourceip'],
 		'attacheddocumentid'		=> $doc_id,
 		'recordingid'				=> $rec_id,
 		'job'						=> $job,
@@ -142,7 +142,7 @@ global $app, $jconf, $debug, $db, $uploader_user;
 	$document_logs->insert($values);
 
 	$msg = "";
-	$msg .= "NODE: " . $jconf['node'] . "\n";
+	$msg .= "NODE: " . $app->config['node_sourceip'] . "\n";
 	$msg .= "JOB: " . $job . "\n";
 	if ( !empty($uploader_user['email']) && !empty($uploader_user['nickname']) && !empty($uploader_user['userid']) ) {
 		$msg .= "UPLOADER: " . $uploader_user['email'] . " (nick: " . $uploader_user['nickname'] . ", id: " . $uploader_user['userid'] . ")\n";
@@ -161,6 +161,5 @@ global $app, $jconf, $debug, $db, $uploader_user;
 
 	return TRUE;
 }
-
 
 ?>

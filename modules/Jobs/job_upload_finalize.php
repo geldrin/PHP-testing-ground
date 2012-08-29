@@ -120,10 +120,9 @@ exit;
 //	  o TRUE: job is available for conversion
 //	- $recording: recording_element DB record returned in global $recording variable
 function query_docnew(&$docs) {
-global $jconf, $db;
+global $jconf, $db, $app;
 
-	$node = $jconf['node'];
-	$node = "stream.videosquare.eu";
+	$node = $app->config['node_sourceip'];
 
 	$query = "
 		SELECT

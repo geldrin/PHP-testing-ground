@@ -45,7 +45,7 @@ $processes = `ps uax | egrep "job_|watcher" | grep -v "grep" 2>&1`;
 file_put_contents($jconf['temp_dir'] . 'processids', $processes);
 
 // Job list and watchdog timeouts
-if ( $jconf['node_role'] == 'converter' ) {
+if ( $app->config['node_role'] == 'converter' ) {
 	// Converter node jobs
 	$jobs = array(
 		$jconf['jobid_media_convert']	=> 15*60,	// 15 minutes (if no update or ffmpeg is not running)
