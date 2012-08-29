@@ -54,6 +54,8 @@ class Createchat extends \Visitor\HelpForm {
       
     }
     
+    parent::displayForm( $submitted );
+    
   }
   
 }

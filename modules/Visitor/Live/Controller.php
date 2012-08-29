@@ -184,7 +184,7 @@ class Controller extends \Visitor\Controller {
     if ( !$livefeedid or $livefeedid < 0 )
       $this->jsonOutput( array('status' => 'error') );
     
-    $cache = $this->getChatCache( $livefeedid )->expire();
+    $cache = $this->getChatCache( $livefeedid );
     
     if ( $cache->expired() ) {
         
@@ -202,7 +202,7 @@ class Controller extends \Visitor\Controller {
       if ( count( $chat ) )
         $data['lastmodified'] = $chat[ count( $chat ) - 1]['timestamp'];
       
-      $this->toSmarty['lastmodified'] = $lastmodified;
+      $this->toSmarty['lastmodified'] = $data['lastmodified'];
       $this->toSmarty['chat']         = $chat;
       $data['html']                   = $this->fetchSmarty('Visitor/Live/Chat.tpl');
       
