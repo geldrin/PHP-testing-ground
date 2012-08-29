@@ -56,32 +56,42 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_upload_finalize.stop' ) an
 		}
 
 		// Initialize log for closing message and total duration timer
-		$global_log = "";
+		$global_log = "Moving document(s) to storage:\n\n";
 		$start_time = time();
 
 		$doc = array();
 		$docs = array();
+
+update_db_attachment_status(1, $jconf['dbstatus_uploaded']);
+update_db_attachment_status(2, $jconf['dbstatus_uploaded']);
 
 		// Query next job - exit if none
 		if ( !query_docnew($docs) ) break;
 
 		while ( !$docs->EOF ) {
 
-		// Start global log
-//		$global_log .= "Live feed: " . $vcr['feed_name'] . " (ID = " . $vcr['feed_id'] . ")\n";
-
 			$doc = array();
 			$doc = $docs->fields;
 
 var_dump($doc);
 
-			if ( !move_file_to_storage($doc) ) {
+			$global_log .= "ID: " . $doc['id'] . " (RECORDING ID: " . $doc['recordingid'] . ")\n";
+			$global_log .= "User: " . $doc['email'] . " (domain: " . $doc['domain'] . ")\n";
+
+			$err = move_file_to_storage($doc);
+			if ( !$err ) {
 				update_db_attachment_status($doc['id'], $jconf['dbstatus_copyfromfe_err']);
+			} else {
+				update_db_attachment_status($doc['id'], $jconf['dbstatus_copystorage_ok']);
 			}
 
 			$app->watchdog();
 			$docs->MoveNext();
 		}
+
+		$duration = time() - $start_time;
+		$hms = secs2hms($duration);
+		log_document_conversion(0, 0, $jconf['jobid_upload_finalize'], "-", "Document finalize finished in " . $hms . " time.\n\nSummary:\n\n" . $global_log, "-", "-", $duration, TRUE);
 
 echo $global_log;
 exit;
@@ -117,25 +127,34 @@ exit;
 function query_docnew(&$docs) {
 global $jconf, $db;
 
-  $query = "
-    SELECT
-		a.id,
-		a.recordingid,
-		a.userid,
-		a.title,
-		a.masterfilename,
-		a.masterextension,
-		a.status,
-		a.sourceip,
-		b.email
-	FROM
-		attached_documents as a,
-		users as b
-	WHERE
-		status = \"" . $jconf['dbstatus_uploaded'] . "\" AND
-		a.userid = b.id
+	$node = $jconf['node'];
+	$node = "stream.videosquare.eu";
+
+	$query = "
+		SELECT
+			a.id,
+			a.recordingid,
+			a.userid,
+			a.title,
+			a.masterfilename,
+			a.masterextension,
+			a.status,
+			a.sourceip,
+			b.email,
+			c.id as organizationid,
+			c.domain
+		FROM
+			attached_documents as a,
+			users as b,
+			organizations as c
+		WHERE
+			status = \"" . $jconf['dbstatus_uploaded'] . "\" AND
+			a.sourceip = '" . $node . "' AND
+			a.userid = b.id AND
+			b.organizationid = c.id
 	";
-//		a.sourceip = '" . $jconf['node'] . "' AND
+
+echo $query . "\n";
 
 	try {
 		$docs = $db->Execute($query);
@@ -153,42 +172,56 @@ global $jconf, $db;
 }
 
 function move_file_to_storage(&$doc) {
-global $jconf, $app;
+global $jconf, $app, $global_log;
 
 	update_db_attachment_status($doc['id'], $jconf['dbstatus_copyfromfe']);
 
-	// Uploaded documents directory
+	// Uploaded document
 	$uploadpath = $app->config['uploadpath'] . "attachments/";
 	$base_filename = $doc['id'] . "." . $doc['masterextension'];
 	$fname = $uploadpath . $base_filename;
+	$doc['path_source'] = $fname;
 
+	// Target file
+	$targetpath = $app->config['recordingpath'] . ( $doc['recordingid'] % 1000 ) . "/" . $doc['recordingid'] . "/attachments/";
+	$fname_target = $targetpath . $base_filename;
+	$doc['path_target'] = $fname_target;
+
+	// Log file path information
+	$global_log .= "Source path: " . $doc['path_source'] . "\n";
+	$global_log .= "Target path: " . $doc['path_target'] . "\n";
+
+	// Check source file and its filesize
 	$filesize = filesize($fname);
 	if ( !file_exists($fname) or $filesize <= 0 ) {
-		log_document_conversion($doc['id'], $doc['recordingid'], $jconf['jobid_upload_finalize'], $jconf['dbstatus_copyfromfe'], "ERROR: Uploaded file does not exist or filesize invalid.", "-", "-", 0, TRUE);
+		$msg = "[ERROR] Uploaded file does not exist or filesize invalid.";
+		$global_log .= $msg . "\n\n";
+		log_document_conversion($doc['id'], $doc['recordingid'], $jconf['jobid_upload_finalize'], $jconf['dbstatus_copyfromfe'], $msg, "-", "-", 0, TRUE);
 		return FALSE;
 	}
 
-	// Target directory
-	$targetpath = $app->config['recordingpath'] . ( $doc['recordingid'] % 1000 ) . "/" . $doc['recordingid'] . "/attachments/";
-	$fname_target = $targetpath . $base_name;
-
-echo "t: " . $targetpath . "\n";
-
-	$available_disk = floor(disk_free_space($targetpath));
+	// Check available disk space
+	$available_disk = floor(disk_free_space($app->config['recordingpath']));
 	if ( $available_disk < $filesize * 10 ) {
-		log_document_conversion($doc['id'], $doc['recordingid'], $jconf['jobid_upload_finalize'], $jconf['dbstatus_copyfromfe'], "ERROR: No space on target device. Only " . ( round($available_disk / 1024 / 1024, 2) ) . " MB left.", "-", "-", 0, TRUE);
+		$msg = "[ERROR] No space on target device. Only " . ( round($available_disk / 1024 / 1024, 2) ) . " MB left.";
+		$global_log .= $msg . "\n\n";
+		log_document_conversion($doc['id'], $doc['recordingid'], $jconf['jobid_upload_finalize'], $jconf['dbstatus_copyfromfe'], $msg, "-", "-", 0, TRUE);
 		return FALSE;
 	}
 
-echo "fs = " . $filesize . "\n";
-echo "ad = " . $available_disk . "\n";
-
-exit;
+	// Check if target file exists
+	if ( file_exists($fname_target) ) {
+		$msg = "[ERROR] Target file " . $fname_target . " already exists.";
+		$global_log .= $msg . "\n\n";		
+		log_document_conversion($doc['id'], $doc['recordingid'], $jconf['jobid_upload_finalize'], $jconf['dbstatus_copyfromfe'], $msg, "-", "-", 0, TRUE);
+		return FALSE;
+	}
 
 	// Prepare attachments directory on storage
 	if ( !file_exists($targetpath) ) {
-		$err = create_directory($targetpath . "attachments/");
+		$err = create_directory($targetpath);
 		if ( !$err['code'] ) {
+			$global_log .= $err['message'];
 			log_document_conversion($doc['id'], $doc['recordingid'], $jconf['jobid_upload_finalize'], $jconf['dbstatus_copyfromfe'], $err['message'], $err['command'], $err['result'], 0, TRUE);
 			return FALSE;
 		}
@@ -199,21 +232,18 @@ exit;
 	$duration = time() - $time_start;
 	$mins_taken = round( $duration / 60, 2);
 	if ( !$err ) {
-		log_document_conversion($doc['id'], $doc['recordingid'], $jconf['jobid_upload_finalize'], "-", "[ERROR] Cannot copy attachment file to storage", "php: copy(\"" . $fname . "\",\"" . $fname_target . "\")", $err, $duration, TRUE);
+		$msg = "[ERROR] Cannot move document file to storage";
+		$global_log .= $msg . "\n\n";		
+		log_document_conversion($doc['id'], $doc['recordingid'], $jconf['jobid_upload_finalize'], $jconf['dbstatus_copyfromfe'], $msg, "php: move(\"" . $fname . "\",\"" . $fname_target . "\")", $err, $duration, TRUE);
 		return FALSE;
 	}
-	chmod($fname_target, 0664);
-
-	// Remove original attachment file from front-end location
-/*	$err = remove_file_ifexists($fname);
-	if ( !$err['code'] ) {
-		log_document_conversion($doc['id'], $doc['recordingid'], $jconf['jobid_upload_finalize'], "-", "[ERROR] Cannot remove attachment file from upload area.\n\n" . $err['message'], $err['command'], $err['result'], 0, TRUE);
-	} else {
-		log_document_conversion($doc['id'], $doc['recordingid'], $jconf['jobid_upload_finalize'], "-", "[OK] Attachment file moved to storage (in " . $mins_taken . " mins)", "php: copy(\"" . $fname . "\",\"" . $fname_target . "\")", $err, $duration, FALSE);
+	if ( !chmod($fname_target, 0664) ) {
+		$msg = "[ERROR] Cannot stat document file on storage";
+		$global_log .= $msg . "\n";
+		log_document_conversion($doc['id'], $doc['recordingid'], $jconf['jobid_upload_finalize'], $jconf['dbstatus_copyfromfe'], $msg, "php: chmod(\"" . $fname . "\",\"" . $fname_target . "\")", $err, 0, TRUE);
 	}
-*/
 
-	update_db_attachment_status($doc['id'], $jconf['dbstatus_copyfromfe_ok']);
+	$global_log .= "Status: [OK] Document moved in " . $duration . " seconds.\n\n";
 
 	return TRUE;
 }
