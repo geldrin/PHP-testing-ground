@@ -138,7 +138,7 @@ class Upload extends \Visitor\HelpForm {
       $user['organizationid'],
       $values['videolanguage'],
       $_FILES['file']['name'],
-      'stream.videosquare.eu'
+      $this->bootstrap->config['node_sourceip']
     );
     
     try {

@@ -9,9 +9,7 @@ else
 include_once( BASE_PATH . 'libraries/Springboard/Application.php');
 $application = new Springboard\Application( BASE_PATH, PRODUCTION, $_REQUEST );
 $application->loadConfig('config.php');
-
-if ( !PRODUCTION )
-  $application->loadConfig('config_local.php');
+$application->loadConfig('config_local.php');
 
 $application->bootstrap();
 $application->route();

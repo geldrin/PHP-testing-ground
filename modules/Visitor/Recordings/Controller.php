@@ -434,7 +434,7 @@ class Controller extends \Visitor\Controller {
       $user['organizationid'],
       $values['languageid'],
       $file['name'],
-      'stream.videosquare.eu'
+      $this->bootstrap->config['node_sourceip']
     );
     
     try {
@@ -487,7 +487,7 @@ class Controller extends \Visitor\Controller {
     
     $recordingModel->addContentRecording(
       0, // TODO interlaced?
-      'stream.videosquare.eu'
+      $this->bootstrap->config['node_sourceip']
     );
     
     try {

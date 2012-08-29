@@ -323,4 +323,30 @@ class Livefeeds extends \Springboard\Model {
     
   }
   
+  public function getChat( $start, $limit, $moderated = 0 ) {
+    
+    $this->ensureID();
+    
+    $where = array(
+      "lc.livefeedid = '" . $this->id . "'",
+      "lc.userid     = u.id",
+    );
+    
+    if ( $moderated !== 0 )
+      $where[] = "lc.moderated = '$moderated'";
+    
+    return $this->db->getArray("
+      SELECT
+        lc.*,
+        u.nickname
+      FROM
+        livefeed_chat AS lc,
+        users AS u
+      WHERE " . implode(' AND ', $where ) . "
+      ORDER BY lc.id ASC
+      LIMIT $start, $limit
+    ");
+    
+  }
+  
 }

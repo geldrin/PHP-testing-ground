@@ -548,3 +548,16 @@ CREATE TABLE `document_logs` (
    `data` text not null,
    PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;
+
+
+CREATE TABLE `livefeed_chat` (
+   `id` int(10) unsigned not null auto_increment,
+   `livefeedid` int(10) unsigned not null,
+   `userid` int(10) unsigned not null,
+   `timestamp` datetime not null,
+   `text` text not null,
+   `ipaddress` text,
+   `moderated` int(11) not null default '0',
+   PRIMARY KEY (`id`),
+   KEY `ix_livefeedid_moderated` (`livefeedid`, `moderated`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;

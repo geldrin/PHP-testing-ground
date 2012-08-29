@@ -6,6 +6,9 @@ class Controller extends \Visitor\Controller {
     'index'                => 'public',
     'details'              => 'public',
     'view'                 => 'public',
+    'getchat'              => 'public',
+    'createchat'           => 'member',
+    'moderatechat'         => 'liveadmin',
     'create'               => 'liveadmin',
     'modify'               => 'liveadmin',
     'createfeed'           => 'liveadmin',
@@ -24,6 +27,7 @@ class Controller extends \Visitor\Controller {
     'modifyfeed'           => 'Visitor\\Live\\Form\\Modifyfeed',
     'createstream'         => 'Visitor\\Live\\Form\\Createstream',
     'modifystream'         => 'Visitor\\Live\\Form\\Modifystream',
+    'createchat'           => 'Visitor\\Live\\Form\\Createchat',
   );
   
   public $paging = array(
@@ -169,6 +173,76 @@ class Controller extends \Visitor\Controller {
         'live/managefeeds/' . $channelModel->id
       )
     );
+    
+  }
+  
+  public function getchatAction( $livefeedid = null ) {
+    
+    if ( !$livefeedid )
+      $livefeedid = $this->application->getNumericParameter('id');
+    
+    if ( !$livefeedid or $livefeedid < 0 )
+      $this->jsonOutput( array('status' => 'error') );
+    
+    $cache = $this->getChatCache( $livefeedid )->expire();
+    
+    if ( $cache->expired() ) {
+        
+      $feedModel = $this->modelIDCheck( 'livefeeds', $livefeedid );
+      $start     = $this->application->getNumericParameter('start', 0);
+      if ( $start < 0 )
+        $start   = 0;
+      
+      $limit = 200;
+      $chat  = $feedModel->getChat( $start, $limit );
+      $data  = array(
+        'lastmodified' => 0,
+      );
+      
+      if ( count( $chat ) )
+        $data['lastmodified'] = $chat[ count( $chat ) - 1]['timestamp'];
+      
+      $this->toSmarty['lastmodified'] = $lastmodified;
+      $this->toSmarty['chat']         = $chat;
+      $data['html']                   = $this->fetchSmarty('Visitor/Live/Chat.tpl');
+      
+      $cache->put( $data );
+      
+    } else
+      $data = $cache->get();
+    
+    $this->jsonOutput( array(
+        'status'       => 'success',
+        'lastmodified' => $data['lastmodified'],
+        'html'         => $data['html'],
+      )
+    );
+    
+  }
+  
+  public function getChatCache( $livefeedid ) {
+    return $this->bootstrap->getCache('livefeed_chat-' . $livefeedid );
+  }
+  
+  public function moderatechatAction() {
+    
+    $chatModel = $this->modelIDCheck(
+      'livefeed_chat',
+      $this->application->getNumericParameter('id')
+    );
+    
+    $feedModel = $this->modelOrganizationAndUserIDCheck(
+      'livefeeds',
+      $chatModel->row['livefeedid']
+    );
+    
+    $chatModel->updateRow( array(
+        'moderated' => 1
+      )
+    );
+    
+    $this->getChatCache( $feedModel->id )->expire();
+    return $this->getchatAction( $feedModel->id );
     
   }
   

@@ -49,7 +49,7 @@ class Uploadattachment extends \Visitor\HelpForm {
     $values['masterextension'] = \Springboard\Filesystem::getExtension( $_FILES['file']['name'] );
     $values['timestamp']       = date('Y-m-d H:i:s');
     $values['status']          = 'uploading';
-    $values['sourceip']        = 'stream.videosquare.eu';
+    $values['sourceip']        = $this->bootstrap->config['node_sourceip'];
     $values['recordingid']     = $this->recordingModel->id;
     $values['userid']          = $user['id'];
     

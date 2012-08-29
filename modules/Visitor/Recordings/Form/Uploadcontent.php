@@ -150,7 +150,7 @@ class Uploadcontent extends \Visitor\HelpForm {
     
     $recordingModel->addContentRecording(
       $values['isinterlaced'],
-      'stream.videosquare.eu'
+      $this->bootstrap->config['node_sourceip']
     );
     
     try {
