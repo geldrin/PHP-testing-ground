@@ -62,8 +62,8 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_upload_finalize.stop' ) an
 		$doc = array();
 		$docs = array();
 
-update_db_attachment_status(1, $jconf['dbstatus_uploaded']);
-update_db_attachment_status(2, $jconf['dbstatus_uploaded']);
+//update_db_attachment_status(1, $jconf['dbstatus_uploaded']);
+//update_db_attachment_status(2, $jconf['dbstatus_uploaded']);
 
 		// Query next job - exit if none
 		if ( !query_docnew($docs) ) break;
@@ -72,8 +72,6 @@ update_db_attachment_status(2, $jconf['dbstatus_uploaded']);
 
 			$doc = array();
 			$doc = $docs->fields;
-
-var_dump($doc);
 
 			$global_log .= "ID: " . $doc['id'] . " (RECORDING ID: " . $doc['recordingid'] . ")\n";
 			$global_log .= "User: " . $doc['email'] . " (domain: " . $doc['domain'] . ")\n";
@@ -92,9 +90,6 @@ var_dump($doc);
 		$duration = time() - $start_time;
 		$hms = secs2hms($duration);
 		log_document_conversion(0, 0, $jconf['jobid_upload_finalize'], "-", "Document finalize finished in " . $hms . " time.\n\nSummary:\n\n" . $global_log, "-", "-", $duration, TRUE);
-
-echo $global_log;
-exit;
 
 		break;
 	}	// End of while(1)
@@ -154,8 +149,6 @@ global $jconf, $db;
 			b.organizationid = c.id
 	";
 
-echo $query . "\n";
-
 	try {
 		$docs = $db->Execute($query);
 	} catch (exception $err) {
@@ -192,9 +185,17 @@ global $jconf, $app, $global_log;
 	$global_log .= "Target path: " . $doc['path_target'] . "\n";
 
 	// Check source file and its filesize
+	if ( !file_exists($fname) ) {
+		$msg = "[ERROR] Uploaded file does not exist.";
+		$global_log .= $msg . "\n\n";
+		log_document_conversion($doc['id'], $doc['recordingid'], $jconf['jobid_upload_finalize'], $jconf['dbstatus_copyfromfe'], $msg, "-", "-", 0, TRUE);
+		return FALSE;
+	}
+
+	// Check filesize
 	$filesize = filesize($fname);
-	if ( !file_exists($fname) or $filesize <= 0 ) {
-		$msg = "[ERROR] Uploaded file does not exist or filesize invalid.";
+	if ( $filesize <= 0 ) {
+		$msg = "[ERROR] Uploaded file has invalid size (" . $filesize . ").";
 		$global_log .= $msg . "\n\n";
 		log_document_conversion($doc['id'], $doc['recordingid'], $jconf['jobid_upload_finalize'], $jconf['dbstatus_copyfromfe'], $msg, "-", "-", 0, TRUE);
 		return FALSE;
@@ -241,6 +242,14 @@ global $jconf, $app, $global_log;
 		$msg = "[ERROR] Cannot stat document file on storage";
 		$global_log .= $msg . "\n";
 		log_document_conversion($doc['id'], $doc['recordingid'], $jconf['jobid_upload_finalize'], $jconf['dbstatus_copyfromfe'], $msg, "php: chmod(\"" . $fname . "\",\"" . $fname_target . "\")", $err, 0, TRUE);
+	}
+
+	// Remove original file from front-end location
+	$err = remove_file_ifexists($fname);
+	if ( !$err['code'] ) {
+		$msg = "[ERROR] Cannot remove attachment file from upload area.";
+		$global_log .= $msg . "\n";
+		log_document_conversion($doc['id'], $doc['recordingid'], $jconf['jobid_upload_finalize'], $jconf['dbstatus_copyfromfe'], $msg . $err['message'], $err['command'], $err['result'], 0, TRUE);
 	}
 
 	$global_log .= "Status: [OK] Document moved in " . $duration . " seconds.\n\n";

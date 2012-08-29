@@ -55,7 +55,7 @@ if ( $jconf['node_role'] == 'converter' ) {
 } else {
 	// Front-end jobs
 	$jobs = array(
-	  'haho.php'						=> 60,
+		$jconf['jobid_upload_finalize']	=> 60
 	);
 }
 
