@@ -54,6 +54,25 @@
 
 <div class="clear"></div><br/>
 
+<script type="text/javascript">
+ var chatpollurl = '{$language}/live/getchat/{$feed.id}';
+</script>
+
+<div id="chat">
+  
+  CHAT
+  <div id="chatcontainer">
+    {include file=Visitor/Live/Chat.tpl}
+  </div>
+  
+  <form enctype="multipart/form-data" id="live_createchat" name="live_createchat" action="{$language}/live/createchat/{$feed.id}" method="post">
+    <input type="hidden" id="action" name="action" value="submitcreatechat"/>
+    <label for="text">Üzenet</label>
+    <input type="text" name="text" id="text" value=""/>
+    <input type="submit" value="{#submit#}"/>
+  </form>
+
+</div>
 {if $smarty.request.chromeless}
   {include file="Visitor/_footer_nolayout.tpl"}
 {else}

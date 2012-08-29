@@ -323,7 +323,7 @@ class Livefeeds extends \Springboard\Model {
     
   }
   
-  public function getChat( $start, $limit, $moderated = 0 ) {
+  public function getChat( $start = 0, $limit = 200, $moderated = 0 ) {
     
     $this->ensureID();
     

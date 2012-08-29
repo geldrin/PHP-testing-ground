@@ -622,3 +622,101 @@ var flashdefaults = {
     wmode: 'opaque'
   }
 }
+
+function setupLiveChat() {
+  
+  var chat = new livechat('#chatcontainer', chatpollurl );
+  
+}
+
+var livechat = function( container, pollurl ) {
+  
+  var self       = this;
+  self.container = $j( container );
+  self.pollurl   = pollurl;
+  
+  $j('a.moderate').live('click', function(e) {
+    e.preventDefault();
+    self.onModerate( $j(this) );
+  });
+  $j('#live_createchat').submit(function(e) {
+    e.preventDefault();
+    self.onSubmit();
+  });
+  
+};
+livechat.prototype.beforeSend = function() {
+  $j('#spinner').show();
+};
+livechat.prototype.onComplete = function() {
+  $j('#spinner').hide();
+};
+livechat.prototype.poll = function() {
+  
+  if ( !this.pollOptions ) {
+    
+    this.pollOptions = {
+      success   : $j.proxy( function( data ) {
+        this.onPoll( data );
+        this.poll();
+      }, this ),
+      dataType  : 'json',
+      type      : 'GET',
+      url       : this.pollurl
+    };
+    
+    this.timeout = $j.proxy( function() {
+      $j.ajax( this.pollOptions );
+    }, this );
+    
+  }
+  
+  setTimeout( this.timeout, this.polltime );
+  
+};
+livechat.prototype.onPoll = function( data ) {
+  
+  if ( typeof( data) != 'object' || data.status != 'success' )
+    return;
+  
+  this.container.html( data.html );
+  
+};
+livechat.prototype.onModerate = function( elem ) {
+  
+  if ( !this.moderateOptions )
+    this.moderateOptions = {
+      beforeSend: this.beforeSend,
+      complete  : this.onComplete,
+      success   : this.onPoll,
+      dataType  : 'json',
+      type      : 'GET',
+      url       : elem.attr('href')
+    };
+  
+  $j.ajax( this.moderateOptions );
+  
+};
+livechat.prototype.onSubmit = function() {
+  
+  if ( !this.submitOptions )
+    this.submitOptions = {
+      data      : $j('#live_createchat').serializeArray(),
+      beforeSend: this.beforeSend,
+      complete  : this.onComplete,
+      success   : $j.proxy( function( data ) {
+        
+        this.onPoll( data );
+        
+        if ( typeof( data ) == 'object' && data.status == 'success' )
+          $j('#text').val('');
+        
+      }, this ),
+      dataType  : 'json',
+      type      : 'POST',
+      url       : $j('#live_createchat').attr('action')
+    };
+  
+  $j.ajax( this.submitOptions );
+  
+};

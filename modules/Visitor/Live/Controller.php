@@ -101,6 +101,15 @@ class Controller extends \Visitor\Controller {
       session_id()
     );
     
+    if ( !$this->acl ) {
+      
+      $this->acl = $this->bootstrap->getAcl();
+      $this->acl->usersessionkey = $this->usersessionkey;
+      
+    }
+    
+    $this->toSmarty['liveadmin']     = $this->acl->hasPermission('liveadmin');
+    $this->toSmarty['chatitems']     = $feedModel->getChat();
     $this->toSmarty['channel']       = $channelModel->row;
     $this->toSmarty['streams']       = $streams;
     $this->toSmarty['feed']          = $feedModel->row;
@@ -186,35 +195,38 @@ class Controller extends \Visitor\Controller {
     
     $cache = $this->getChatCache( $livefeedid );
     
-    if ( $cache->expired() ) {
+    if ( $cache->expired() or !$this->application->production ) {
         
       $feedModel = $this->modelIDCheck( 'livefeeds', $livefeedid );
-      $start     = $this->application->getNumericParameter('start', 0);
-      if ( $start < 0 )
-        $start   = 0;
       
-      $limit = 200;
-      $chat  = $feedModel->getChat( $start, $limit );
       $data  = array(
         'lastmodified' => 0,
+        'chat'         => $feedModel->getChat( $start ),
       );
       
       if ( count( $chat ) )
-        $data['lastmodified'] = $chat[ count( $chat ) - 1]['timestamp'];
-      
-      $this->toSmarty['lastmodified'] = $data['lastmodified'];
-      $this->toSmarty['chat']         = $chat;
-      $data['html']                   = $this->fetchSmarty('Visitor/Live/Chat.tpl');
+        $data['lastmodified'] = $data['chat'][ count( $data['chat'] ) - 1]['timestamp'];
       
       $cache->put( $data );
       
     } else
       $data = $cache->get();
     
+    if ( !$this->acl ) {
+      
+      $this->acl = $this->bootstrap->getAcl();
+      $this->acl->usersessionkey = $this->usersessionkey;
+      
+    }
+    
+    $this->toSmarty['liveadmin']    = $this->acl->hasPermission('liveadmin');
+    $this->toSmarty['lastmodified'] = $data['lastmodified'];
+    $this->toSmarty['chatitems']    = $data['chat'];
+    
     $this->jsonOutput( array(
         'status'       => 'success',
         'lastmodified' => $data['lastmodified'],
-        'html'         => $data['html'],
+        'html'         => $this->fetchSmarty('Visitor/Live/Chat.tpl'),
       )
     );
     

@@ -31,6 +31,7 @@ class Createchat extends \Visitor\HelpForm {
     $values['timestamp']  = date('Y-m-d H:i:s');
     $values['moderated']  = 0;
     $values['livefeedid'] = $this->feedModel->id;
+    $values['ipaddress']  = $_SERVER['REMOTE_ADDR'];
     
     $chatModel = $this->bootstrap->getModel('livefeed_chat');
     $chatModel->insert( $values );
