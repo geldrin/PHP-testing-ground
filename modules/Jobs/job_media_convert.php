@@ -778,8 +778,6 @@ global $app, $jconf;
 	}
 	$command1 = "find " . $remote_recording_directory . " -mount -maxdepth 1 -type f -regex '" . $media_regex . "' -exec rm -f {} \\; 2>/dev/null";
 	// Indexpic: all recording related .jpg thumbnails and full sized .png images
-//	$indexpics_regex = ".*" . $recording['id'] . ".*\(\.jpg\|\.png\)";
-//	$command2 = "find " . $remote_recording_directory . "indexpics/" . " -mount -maxdepth 2 -type f -regex '" . $indexpics_regex . "' -exec rm -f {} \\; 2>/dev/null";
 	$command2 = "find " . $remote_recording_directory . "indexpics/" . " -mount -mindepth 1 -maxdepth 1 -type d -exec rm -r -f {} \\; 2>/dev/null";
 	$command = $ssh_command . "\"" . $command1 . " ; " . $command2 . "\"";
 	exec($command, $output, $result);
@@ -797,17 +795,26 @@ global $app, $jconf;
 	} else {
 		log_recording_conversion($recording['id'], $jconf['jobid_media_convert'], $jconf['dbstatus_copystorage'], "[OK] SCP copy finished (in " . $mins_taken . " mins)", $command, $result, $duration, FALSE);
 		//// Set file and directory access rights
-		// Recording directory access
-		$command1 = "chmod -f " . $jconf['directory_access'] . " " . $remote_recording_directory;
-		// Surrogate media file access
-		$command2 = "chmod -f " . $jconf['file_access']      . " " . $remote_recording_directory . "*_video_*.mp4";
-		$command3 = "chmod -f " . $jconf['file_access']      . " " . $remote_recording_directory . "*_mobile_*.mp4";
-		// All directories under this level
-		$command4 = "find " . $remote_recording_directory . "indexpics/ -mount -maxdepth 1 -type d -exec chmod -f " . $jconf['directory_access'] . " {} \\; 2>/dev/null";
-		// All files under this level
-		$command5 = "find " . $remote_recording_directory . "indexpics/ -mount -maxdepth 2 -type f -exec chmod -f " . $jconf['file_access'] . " {} \\; 2>/dev/null";
-		$command = $ssh_command . "\"" . $command1 . " ; " . $command2 . " ; " . $command3 . " ; " . $command4 . " ; " . $command5 . "\"";
+		$command = "";
+		// Recording directory and surrogate media file access
+		if ( $recording['conversion_type'] != $jconf['dbstatus_reconvert'] ) {
+			$command .= "chmod -f " . $jconf['directory_access'] . " " . $remote_recording_directory . " ; ";
+			$command .= "chmod -f " . $jconf['file_access']      . " " . $remote_recording_directory . "/master/*_video.* ; ";
+		}
+//		$command .= "chmod -f " . $jconf['file_access']      . " " . $remote_recording_directory . "*_audio.mp3 ; ";
+//		$command .= "chmod -f " . $jconf['file_access']      . " " . $remote_recording_directory . "*_video_*.mp4 ; ";
+//		$command .= "chmod -f " . $jconf['file_access']      . " " . $remote_recording_directory . "*_mobile_*.mp4 ; ";
+		$command .= "find " . $remote_recording_directory . " -mount -maxdepth 1 -type f -regex '" . $media_regex . "' -exec chmod -f " . $jconf['file_access'] . " {} \\; 2>/dev/null ; ";
+		// Index pics: all directories and files under this level
+		$command .= "find " . $remote_recording_directory . "indexpics/ -mount -maxdepth 1 -type d -exec chmod -f " . $jconf['directory_access'] . " {} \\; 2>/dev/null ; ";
+		$command .= "find " . $remote_recording_directory . "indexpics/ -mount -maxdepth 2 -type f -exec chmod -f " . $jconf['file_access'] . " {} \\; 2>/dev/null ; ";
+		$command = $ssh_command . "\"" . $command . "\"";
 		exec($command, $output, $result);
+		$output_string = implode("\n", $output);
+		if ( $result != 0 ) {
+			log_recording_conversion($recording['id'], $jconf['jobid_media_convert'], $jconf['dbstatus_copystorage'], "[WARNING] Cannot stat media files.", $command, $output_string, 0, TRUE);
+			return FALSE;
+		}
 	}
 
 	// Update database (status and media information)

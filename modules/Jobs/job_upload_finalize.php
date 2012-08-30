@@ -237,6 +237,7 @@ global $jconf, $app, $global_log;
 		log_document_conversion($doc['id'], $doc['recordingid'], $jconf['jobid_upload_finalize'], $jconf['dbstatus_copyfromfe'], $msg, "php: move(\"" . $fname . "\",\"" . $fname_target . "\")", $err, $duration, TRUE);
 		return FALSE;
 	}
+// conv:conv owner force?
 	if ( !chmod($fname_target, 0664) ) {
 		$msg = "[ERROR] Cannot stat document file on storage";
 		$global_log .= $msg . "\n";
