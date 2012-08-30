@@ -35,6 +35,7 @@ class Createfeed extends \Visitor\HelpForm {
     
     $values['channelid']      = $this->channelModel->id;
     $values['userid']         = $user['id'];
+    $values['organizationid'] = $this->controller->organization['id'];
     unset( $values['id'] );
     
     $feedModel->insert( $values );

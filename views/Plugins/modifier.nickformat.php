@@ -9,7 +9,7 @@ function smarty_modifier_nickformat( $name ) {
   $smarty       = \Bootstrap::getInstance()->getSmarty();
   $organization = $smarty->get_template_vars('organization');
   
-  if ( !@$organization['fullnames'] ) // TODO delete @
+  if ( !$organization['fullnames'] )
     return $name['nickname'];
   else
     return smarty_modifier_nameformat( $name );

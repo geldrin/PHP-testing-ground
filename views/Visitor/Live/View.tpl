@@ -55,24 +55,29 @@
 <div class="clear"></div><br/>
 
 <script type="text/javascript">
- var chatpollurl = '{$language}/live/getchat/{$feed.id}';
+ var chatpollurl  = '{$language}/live/getchat/{$feed.id}';
+ var chatpolltime = {$chatpolltime};
 </script>
 
 <div id="chat">
-  
-  CHAT
-  <div id="chatcontainer">
-    {include file=Visitor/Live/Chat.tpl}
+  <div class="title">
+    {#live__chat_title#}
   </div>
   
-  <form enctype="multipart/form-data" id="live_createchat" name="live_createchat" action="{$language}/live/createchat/{$feed.id}" method="post">
-    <input type="hidden" id="action" name="action" value="submitcreatechat"/>
-    <label for="text">Üzenet</label>
-    <input type="text" name="text" id="text" value=""/>
-    <input type="submit" value="{#submit#}"/>
-  </form>
-
+  <div id="chatcontainer" data-lastmodified="{$lastmodified}">
+    {$chat}
+  </div>
+  {if $member.id}
+    <form enctype="multipart/form-data" id="live_createchat" name="live_createchat" action="{$language}/live/createchat/{$feed.id}" method="post">
+      <input type="hidden" id="action" name="action" value="submitcreatechat"/>
+      <label for="text">{#live__chat_message#}:</label>
+      <input type="text" name="text" id="text" value=""/>
+      <input type="submit" value="{#live__chat_submit#}"/>
+    </form>
+  {/if}
+  <br/>
 </div>
+
 {if $smarty.request.chromeless}
   {include file="Visitor/_footer_nolayout.tpl"}
 {else}

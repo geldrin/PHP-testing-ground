@@ -36,7 +36,7 @@ class Createchat extends \Visitor\HelpForm {
     $chatModel = $this->bootstrap->getModel('livefeed_chat');
     $chatModel->insert( $values );
     
-    $this->controller->getChatCache( $values['livefeedid'] )->expire();
+    $this->controller->expireChatCache( $values['livefeedid'] );
     return $this->controller->getchatAction( $values['livefeedid'] );
     
   }
