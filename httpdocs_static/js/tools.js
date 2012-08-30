@@ -626,16 +626,16 @@ var flashdefaults = {
 
 function setupLiveChat() {
   
-  chat = new livechat('#chatcontainer', chatpollurl );
+  var chat = new livechat('#chatcontainer', chatpollurl, chatpolltime );
   
 }
 
-var livechat = function( container, pollurl ) {
+var livechat = function( container, pollurl, polltime ) {
   
   var self       = this;
   self.container = $j( container );
   self.pollurl   = pollurl;
-  self.polltime  = 1000;
+  self.polltime  = polltime;
   
   self.container.scrollTop( self.container.get(0).scrollHeight );
   $j('a.moderate').live('click', function(e) {
@@ -694,6 +694,7 @@ livechat.prototype.onPoll = function( data ) {
   if ( data.status != 'success' )
     return;
   
+  this.polltime = data.polltime;
   this.container.attr('data-lastmodified', data.lastmodified );
   this.container.html( data.html );
   this.container.scrollTop( this.container.get(0).scrollHeight );

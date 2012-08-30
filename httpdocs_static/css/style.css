@@ -2064,12 +2064,12 @@ a#currentusername span {
 #chatlist li {
   padding: 5px 10px 5px 5px;
 }
-#chatlist li:hover {
+#chatlist li.self {
   background-color: #f7f7f7;
 }
 #chatlist .content {
   padding: 0px 5px 0px 10px;
-  display: inline-block;
+  display: inline;
 }
 #chat #text {
   width: 50%;

@@ -1,6 +1,6 @@
 <ul id="chatlist">
   {foreach from=$chatitems item=chat}
-    <li>
+    <li{if $member.id and $member.id == $chat.userid} class="self"{/if}>
       {if $liveadmin and !$chat.moderated}
         <div class="actions">
           <a href="{$language}/live/moderatechat/{$chat.id}" class="moderate">{#live__moderate#}</a>

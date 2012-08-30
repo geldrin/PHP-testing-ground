@@ -55,7 +55,8 @@
 <div class="clear"></div><br/>
 
 <script type="text/javascript">
- var chatpollurl = '{$language}/live/getchat/{$feed.id}';
+ var chatpollurl  = '{$language}/live/getchat/{$feed.id}';
+ var chatpolltime = {$chatpolltime};
 </script>
 
 <div id="chat">

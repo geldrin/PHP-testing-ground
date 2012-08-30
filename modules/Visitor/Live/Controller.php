@@ -117,6 +117,7 @@ class Controller extends \Visitor\Controller {
     $this->toSmarty['feed']          = $feedModel->row;
     $this->toSmarty['currentstream'] = $currentstream;
     $this->toSmarty['liveurl']       = $this->bootstrap->config['wowza']['liveurl'];
+    $this->toSmarty['chatpolltime']  = $this->bootstrap->config['chatpolltimems'];
     
     $this->smartyOutput('Visitor/Live/View.tpl');
     
@@ -231,6 +232,7 @@ class Controller extends \Visitor\Controller {
         'status'       => 'success',
         'lastmodified' => $lastmodified,
         'html'         => $html,
+        'polltime'     => $this->bootstrap->config['chatpolltimems'],
       )
     );
     
