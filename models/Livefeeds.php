@@ -338,7 +338,11 @@ class Livefeeds extends \Springboard\Model {
     return $this->db->getArray("
       SELECT
         lc.*,
-        u.nickname
+        u.nickname,
+        u.nameformat,
+        u.nameprefix,
+        u.namefirst,
+        u.namelast
       FROM
         livefeed_chat AS lc,
         users AS u

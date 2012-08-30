@@ -2037,3 +2037,40 @@ a#currentusername span {
 #embed .settingrow {
   margin: 10px 0 10px 15px;
 }
+
+/* chat */
+#chat .title {
+  font-size: 14px;
+  font-weight: bold;
+}
+#chatcontainer {
+  height: 250px;
+  width: 100%;
+  overflow: scroll;
+  overflow-x: hidden;
+}
+#chatcontainer .name {
+  font-weight: bold;
+  display: inline-block;
+}
+#chatcontainer .actions {
+  float: right;
+}
+#chatlist {
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+}
+#chatlist li {
+  padding: 5px 10px 5px 5px;
+}
+#chatlist li:hover {
+  background-color: #f7f7f7;
+}
+#chatlist .content {
+  padding: 0px 5px 0px 10px;
+  display: inline-block;
+}
+#chat #text {
+  width: 50%;
+}

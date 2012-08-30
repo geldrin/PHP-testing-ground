@@ -19,6 +19,7 @@ $j(document).ready(function() {
   runIfExists('#embedlink', setupEmbed );
   runIfExists('.confirm', setupConfirm );
   runIfExists('input[name=accesstype]', setupAccesstype );
+  runIfExists('#chat', setupLiveChat );
   
   $j('#scriptingcontainer').show();
   
@@ -625,7 +626,7 @@ var flashdefaults = {
 
 function setupLiveChat() {
   
-  var chat = new livechat('#chatcontainer', chatpollurl );
+  chat = new livechat('#chatcontainer', chatpollurl );
   
 }
 
@@ -634,7 +635,9 @@ var livechat = function( container, pollurl ) {
   var self       = this;
   self.container = $j( container );
   self.pollurl   = pollurl;
+  self.polltime  = 1000;
   
+  self.container.scrollTop( self.container.get(0).scrollHeight );
   $j('a.moderate').live('click', function(e) {
     e.preventDefault();
     self.onModerate( $j(this) );
@@ -643,6 +646,11 @@ var livechat = function( container, pollurl ) {
     e.preventDefault();
     self.onSubmit();
   });
+  
+  self.beforeSend = $j.proxy( self.beforeSend, self );
+  self.onComplete = $j.proxy( self.onComplete, self );
+  self.onPoll     = $j.proxy( self.onPoll, self );
+  self.poll();
   
 };
 livechat.prototype.beforeSend = function() {
@@ -666,6 +674,7 @@ livechat.prototype.poll = function() {
     };
     
     this.timeout = $j.proxy( function() {
+      this.pollOptions.data = 'lastmodified=' + this.container.attr('data-lastmodified');
       $j.ajax( this.pollOptions );
     }, this );
     
@@ -676,10 +685,18 @@ livechat.prototype.poll = function() {
 };
 livechat.prototype.onPoll = function( data ) {
   
-  if ( typeof( data) != 'object' || data.status != 'success' )
+  if ( data === null || typeof( data ) != 'object' )
     return;
   
+  if ( data.status == 'error' && data.error )
+    alert( data.error );
+  
+  if ( data.status != 'success' )
+    return;
+  
+  this.container.attr('data-lastmodified', data.lastmodified );
   this.container.html( data.html );
+  this.container.scrollTop( this.container.get(0).scrollHeight );
   
 };
 livechat.prototype.onModerate = function( elem ) {
@@ -690,10 +707,10 @@ livechat.prototype.onModerate = function( elem ) {
       complete  : this.onComplete,
       success   : this.onPoll,
       dataType  : 'json',
-      type      : 'GET',
-      url       : elem.attr('href')
+      type      : 'GET'
     };
   
+  this.moderateOptions.url = elem.attr('href');
   $j.ajax( this.moderateOptions );
   
 };
@@ -701,7 +718,6 @@ livechat.prototype.onSubmit = function() {
   
   if ( !this.submitOptions )
     this.submitOptions = {
-      data      : $j('#live_createchat').serializeArray(),
       beforeSend: this.beforeSend,
       complete  : this.onComplete,
       success   : $j.proxy( function( data ) {
@@ -717,6 +733,22 @@ livechat.prototype.onSubmit = function() {
       url       : $j('#live_createchat').attr('action')
     };
   
+  if ( !this.messageValid() )
+    return;
+  
+  this.submitOptions.data = $j('#live_createchat').serializeArray();
   $j.ajax( this.submitOptions );
+  
+};
+livechat.prototype.messageValid = function() {
+  
+  var text = $j('#chat #text').val();
+  
+  if ( text.length < 2 || text.length > 512 ) {
+    alert( l.livechat_text_help );
+    return false;
+  }
+  
+  return true;
   
 };

@@ -458,6 +458,7 @@ CREATE TABLE `subtitles` (
 CREATE TABLE `livefeeds` (
    `id` int(10) unsigned not null auto_increment,
    `userid` int(10) unsigned not null,
+   `organizationid` int(10) unsigned not null,
    `channelid` int(10) unsigned, /* live channel id - az az elo channel (isliveevent=1), ami alatti esemenyek ezt a feedet hasznalhatjak */
    `name` text,
    `isexternal` int(11) not null default '0',
@@ -534,6 +535,7 @@ CREATE TABLE `access` (
    KEY `ix_channelid` (`channelid`),
    KEY `ix_groupid` (`groupid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;
+
 
 CREATE TABLE `document_logs` (
    `id` int(10) unsigned not null auto_increment,

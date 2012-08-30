@@ -110,6 +110,8 @@ class Controller extends \Visitor\Controller {
     
     $this->toSmarty['liveadmin']     = $this->acl->hasPermission('liveadmin');
     $this->toSmarty['chatitems']     = $feedModel->getChat();
+    $this->toSmarty['chat']          = $this->fetchSmarty('Visitor/Live/Chat.tpl');
+    $this->toSmarty['lastmodified']  = md5( $this->toSmarty['chat'] );
     $this->toSmarty['channel']       = $channelModel->row;
     $this->toSmarty['streams']       = $streams;
     $this->toSmarty['feed']          = $feedModel->row;
@@ -193,25 +195,6 @@ class Controller extends \Visitor\Controller {
     if ( !$livefeedid or $livefeedid < 0 )
       $this->jsonOutput( array('status' => 'error') );
     
-    $cache = $this->getChatCache( $livefeedid );
-    
-    if ( $cache->expired() or !$this->application->production ) {
-        
-      $feedModel = $this->modelIDCheck( 'livefeeds', $livefeedid );
-      
-      $data  = array(
-        'lastmodified' => 0,
-        'chat'         => $feedModel->getChat( $start ),
-      );
-      
-      if ( count( $chat ) )
-        $data['lastmodified'] = $data['chat'][ count( $data['chat'] ) - 1]['timestamp'];
-      
-      $cache->put( $data );
-      
-    } else
-      $data = $cache->get();
-    
     if ( !$this->acl ) {
       
       $this->acl = $this->bootstrap->getAcl();
@@ -219,21 +202,51 @@ class Controller extends \Visitor\Controller {
       
     }
     
-    $this->toSmarty['liveadmin']    = $this->acl->hasPermission('liveadmin');
-    $this->toSmarty['lastmodified'] = $data['lastmodified'];
-    $this->toSmarty['chatitems']    = $data['chat'];
+    $liveadmin = $this->acl->hasPermission('liveadmin');
+    $cache     = $this->getChatCache( $livefeedid, $liveadmin );
+    
+    if ( $cache->expired() or !$this->application->production ) {
+        
+      $feedModel = $this->modelIDCheck( 'livefeeds', $livefeedid );
+      $chat      = $feedModel->getChat();
+      
+      $this->toSmarty['liveadmin'] = $liveadmin;
+      $this->toSmarty['chatitems'] = $chat;
+      $html                        = $this->fetchSmarty('Visitor/Live/Chat.tpl');
+      
+      $cache->put( $html );
+      
+    } else
+      $html = $cache->get();
+    
+    $lastmodified = md5( $html );
+    if ( $this->application->getParameter('lastmodified') == $lastmodified ) {
+      
+      header('HTTP/1.1 204 No Content');
+      die();
+      
+    }
     
     $this->jsonOutput( array(
         'status'       => 'success',
-        'lastmodified' => $data['lastmodified'],
-        'html'         => $this->fetchSmarty('Visitor/Live/Chat.tpl'),
+        'lastmodified' => $lastmodified,
+        'html'         => $html,
       )
     );
     
   }
   
-  public function getChatCache( $livefeedid ) {
-    return $this->bootstrap->getCache('livefeed_chat-' . $livefeedid );
+  public function expireChatCache( $livefeedid ) {
+    $this->getChatCache( $livefeedid, 0 )->expire();
+    $this->getChatCache( $livefeedid, 1 )->expire();
+  }
+  
+  public function getChatCache( $livefeedid, $liveadmin ) {
+    
+    return $this->bootstrap->getCache(
+      sprintf('livefeed_chat-%d-%d', $livefeedid, (int)$liveadmin )
+    );
+    
   }
   
   public function moderatechatAction() {
@@ -253,7 +266,7 @@ class Controller extends \Visitor\Controller {
       )
     );
     
-    $this->getChatCache( $feedModel->id )->expire();
+    $this->expireChatCache( $feedModel->id );
     return $this->getchatAction( $feedModel->id );
     
   }
