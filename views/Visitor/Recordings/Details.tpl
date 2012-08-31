@@ -171,7 +171,6 @@
     </div>
   </div>
   
-  
   {if !empty( $attachments )}
     <div class="attachments">
       <h3>{#recordings__manageattachments_title#}</h3>
@@ -183,6 +182,13 @@
     </div>
   {/if}
   
+  
+  <div class="addthis_toolbox addthis_default_style ">
+  <a class="addthis_button_facebook_like" fb:like:layout="button_count"></a>
+  <a class="addthis_button_tweet"></a>
+  </div>
+  <script type="text/javascript" src="http://s7.addthis.com/js/250/addthis_widget.js#pubid=xa-5040d6f2431c6c52"></script>
+
 </div>
 <div class="clear"></div>
 
