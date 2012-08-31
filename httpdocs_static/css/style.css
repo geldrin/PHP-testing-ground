@@ -2074,3 +2074,12 @@ a#currentusername span {
 #chat #text {
   width: 50%;
 }
+#spinnercontainer {
+  width: 16px;
+  height: 20px;
+  vertical-align: middle;
+  display: inline-block;
+}
+#spinner {
+  display: none;
+}

@@ -323,7 +323,7 @@ class Livefeeds extends \Springboard\Model {
     
   }
   
-  public function getChat( $start = 0, $limit = 200, $moderated = 0 ) {
+  public function getChat( $excludemoderated = null ) {
     
     $this->ensureID();
     
@@ -332,8 +332,8 @@ class Livefeeds extends \Springboard\Model {
       "lc.userid     = u.id",
     );
     
-    if ( $moderated !== 0 )
-      $where[] = "lc.moderated = '$moderated'";
+    if ( $excludemoderated !== null )
+      $where[] = "lc.moderated <> '$excludemoderated'";
     
     return $this->db->getArray("
       SELECT
@@ -348,7 +348,7 @@ class Livefeeds extends \Springboard\Model {
         users AS u
       WHERE " . implode(' AND ', $where ) . "
       ORDER BY lc.id ASC
-      LIMIT $start, $limit
+      LIMIT 0, 200
     ");
     
   }

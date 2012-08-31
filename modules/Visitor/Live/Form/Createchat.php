@@ -29,7 +29,7 @@ class Createchat extends \Visitor\HelpForm {
     
     $values['userid']     = $this->user['id'];
     $values['timestamp']  = date('Y-m-d H:i:s');
-    $values['moderated']  = 0;
+    $values['moderated']  = $this->feedModel->row['defaultmoderation'];
     $values['livefeedid'] = $this->feedModel->id;
     $values['ipaddress']  = $_SERVER['REMOTE_ADDR'];
     

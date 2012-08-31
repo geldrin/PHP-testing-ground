@@ -73,6 +73,7 @@
       <label for="text">{#live__chat_message#}:</label>
       <input type="text" name="text" id="text" value=""/>
       <input type="submit" value="{#live__chat_submit#}"/>
+      <div id="spinnercontainer"><img src="{$STATIC_URI}images/spinner.gif" width="16" height="16" id="spinner"/></div>
     </form>
   {/if}
   <br/>

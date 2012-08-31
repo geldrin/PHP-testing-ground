@@ -116,4 +116,11 @@ $config = array(
     ),
   ),
   
+  'defaultmoderation' => array(
+    'displayname' => $l('live', 'defaultmoderation'),
+    'type'        => 'select',
+    'values'      => $l->getLov('defaultmoderation'),
+    'value'       => 0,
+  ),
+  
 );

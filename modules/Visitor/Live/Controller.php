@@ -109,7 +109,8 @@ class Controller extends \Visitor\Controller {
     }
     
     $this->toSmarty['liveadmin']     = $this->acl->hasPermission('liveadmin');
-    $this->toSmarty['chatitems']     = $feedModel->getChat();
+    // ha liveadmin akkor kiirjuk a moderalasra varo commenteket
+    $this->toSmarty['chatitems']     = $feedModel->getChat( $this->toSmarty['liveadmin']? null: -1 );
     $this->toSmarty['chat']          = $this->fetchSmarty('Visitor/Live/Chat.tpl');
     $this->toSmarty['lastmodified']  = md5( $this->toSmarty['chat'] );
     $this->toSmarty['channel']       = $channelModel->row;
@@ -208,20 +209,20 @@ class Controller extends \Visitor\Controller {
     
     if ( $cache->expired() or !$this->application->production ) {
         
-      $feedModel = $this->modelIDCheck( 'livefeeds', $livefeedid );
-      $chat      = $feedModel->getChat();
+      $feedModel        = $this->modelIDCheck( 'livefeeds', $livefeedid );
+      $excludemoderated = $liveadmin? null: -1; // ha liveadmin akkor kiirjuk a moderalasra varo commenteket
+      $chat             = $feedModel->getChat( $excludemoderated );
       
       $this->toSmarty['liveadmin'] = $liveadmin;
       $this->toSmarty['chatitems'] = $chat;
-      $html                        = $this->fetchSmarty('Visitor/Live/Chat.tpl');
-      
-      $cache->put( $html );
+      $data                        = array('html' => $this->fetchSmarty('Visitor/Live/Chat.tpl') );
+      $data['lastmodified']        = md5( $data['html'] );
+      $cache->put( $data );
       
     } else
-      $html = $cache->get();
+      $data = $cache->get();
     
-    $lastmodified = md5( $html );
-    if ( $this->application->getParameter('lastmodified') == $lastmodified ) {
+    if ( $this->application->getParameter('lastmodified') == $data['lastmodified'] ) {
       
       header('HTTP/1.1 204 No Content');
       die();
@@ -230,8 +231,8 @@ class Controller extends \Visitor\Controller {
     
     $this->jsonOutput( array(
         'status'       => 'success',
-        'lastmodified' => $lastmodified,
-        'html'         => $html,
+        'lastmodified' => $data['lastmodified'],
+        'html'         => $data['html'],
         'polltime'     => $this->bootstrap->config['chatpolltimems'],
       )
     );
@@ -253,6 +254,11 @@ class Controller extends \Visitor\Controller {
   
   public function moderatechatAction() {
     
+    $moderated = $this->application->getNumericParameter('moderate');
+    
+    if ( $moderated != 0 and $moderated != 1 )
+      $this->redirect('');
+    
     $chatModel = $this->modelIDCheck(
       'livefeed_chat',
       $this->application->getNumericParameter('id')
@@ -264,7 +270,7 @@ class Controller extends \Visitor\Controller {
     );
     
     $chatModel->updateRow( array(
-        'moderated' => 1
+        'moderated' => $moderated,
       )
     );
     
