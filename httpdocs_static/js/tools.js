@@ -691,7 +691,7 @@ livechat.prototype.onPoll = function( data ) {
   if ( data.status == 'error' && data.error )
     alert( data.error );
   
-  if ( data.status != 'success' )
+  if ( data.status != 'success' || this.container.attr('data-lastmodified') == data.lastmodified )
     return;
   
   this.polltime = data.polltime;

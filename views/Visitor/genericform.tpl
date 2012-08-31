@@ -1,4 +1,9 @@
-{include file="Visitor/_header.tpl"}
+{if $smarty.request.chromeless}
+  {include file="Visitor/_header_nolayout.tpl" bodyclass=liveiframe}
+  {assign var=linksinnewwindow value=' target="_blank"'}
+{else}
+  {include file="Visitor/_header.tpl"}
+{/if}
 
 {if $insertbefore}
   {include file=$insertbefore}
@@ -14,4 +19,9 @@
   {$help.body}
 </div>
 {/if}
-{include file="Visitor/_footer.tpl"}
+
+{if $smarty.request.chromeless}
+  {include file="Visitor/_footer_nolayout.tpl"}
+{else}
+  {include file="Visitor/_footer.tpl"}
+{/if}

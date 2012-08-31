@@ -101,18 +101,35 @@ class Controller extends \Visitor\Controller {
       session_id()
     );
     
-    if ( !$this->acl ) {
+    $chromeless  = $this->application->getParameter('chromeless');
+    $displaychat = true;
+    
+    if ( $chromeless ) {
       
-      $this->acl = $this->bootstrap->getAcl();
-      $this->acl->usersessionkey = $this->usersessionkey;
+      $displaychat = $this->application->getParameter('chat', 1 );
+      if ( $displaychat == 'false' )
+        $displaychat = false;
       
     }
     
-    $this->toSmarty['liveadmin']     = $this->acl->hasPermission('liveadmin');
-    // ha liveadmin akkor kiirjuk a moderalasra varo commenteket
-    $this->toSmarty['chatitems']     = $feedModel->getChat( $this->toSmarty['liveadmin']? null: -1 );
-    $this->toSmarty['chat']          = $this->fetchSmarty('Visitor/Live/Chat.tpl');
-    $this->toSmarty['lastmodified']  = md5( $this->toSmarty['chat'] );
+    if ( $displaychat ) {
+      
+      if ( !$this->acl ) {
+        
+        $this->acl = $this->bootstrap->getAcl();
+        $this->acl->usersessionkey = $this->usersessionkey;
+        
+      }
+      
+      $this->toSmarty['liveadmin']     = $this->acl->hasPermission('liveadmin');
+      // ha liveadmin akkor kiirjuk a moderalasra varo commenteket
+      $this->toSmarty['chatitems']     = $feedModel->getChat( $this->toSmarty['liveadmin']? null: -1 );
+      $this->toSmarty['chat']          = $this->fetchSmarty('Visitor/Live/Chat.tpl');
+      $this->toSmarty['lastmodified']  = md5( $this->toSmarty['chat'] );
+      
+    }
+    
+    $this->toSmarty['displaychat']   = $displaychat;
     $this->toSmarty['channel']       = $channelModel->row;
     $this->toSmarty['streams']       = $streams;
     $this->toSmarty['feed']          = $feedModel->row;
