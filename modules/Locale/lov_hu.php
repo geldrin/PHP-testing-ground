@@ -89,7 +89,7 @@ return array(
   'accesstype' => array(
     'public'        => 'publikus (ajánlott)',
     'registrations' => 'regisztráció szükséges',
-    'departments'   => 'Szervezeti egységek egy csoportja számára',
+    'departments'   => 'szervezeti egységek egy csoportja számára',
     'groups'        => 'saját csoportom számára',
   ),
   
