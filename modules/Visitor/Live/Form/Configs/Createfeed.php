@@ -1,6 +1,5 @@
 <?php
-$user           = $this->bootstrap->getSession('user');
-$organizationid = $this->controller->organization['id'];
+$user = $this->bootstrap->getSession('user');
 
 $config = array(
 
@@ -57,26 +56,17 @@ $config = array(
     'values'      => $l->getLov('accesstype'),
   ),
   
-  'organizations[]' => array(
-    'displayname' => $l('recordings', 'organizations'),
+  'departments[]' => array(
+    'displayname' => $l('recordings', 'departments'),
     'type'        => 'inputCheckboxDynamic',
     'html'        => '',
     'sql'         => "
-      SELECT
-        o.id AS `o.id`, CONCAT( sname.value, ' (', snameshort.value,  ')' ) AS name
-      FROM
-        organizations AS o,
-        strings AS sname,
-        strings AS snameshort
-      WHERE
-        sname.translationof      = o.name_stringid AND
-        sname.language           = '" . \Springboard\Language::get() . "' AND
-        snameshort.translationof = o.nameshort_stringid AND
-        snameshort.language      = '" . \Springboard\Language::get() . "' AND
-        %s
-      ORDER BY sname.value
+      SELECT id, name
+      FROM departments
+      WHERE %s
+      ORDER BY weight, name
     ",
-    'prefix'      => '<div class="formoverflowframe" id="organizationscontainer">',
+    'prefix'      => '<div class="formoverflowframe" id="departmentscontainer">',
     'postfix'     => '</div>',
     'itemlayout'  =>
       '<div class="cbxdynamiclevel%level%">'.
@@ -84,8 +74,8 @@ $config = array(
         '<span title="%valuehtmlescape%">%label%</span>'.
       '</div>' . "\r\n"
     ,
-    'treeid'      => 'o.id',
-    'treestart'   => $organizationid,
+    'treeid'      => 'id',
+    'treestart'   => $user['departmentid'],
     'treestartinclusive' => true,
     'treeparent'  => 'parentid',
   ),
@@ -118,11 +108,10 @@ $config = array(
     ),
   ),
   
-  'defaultmoderation' => array(
-    'displayname' => $l('live', 'defaultmoderation'),
+  'moderationtype' => array(
+    'displayname' => $l('live', 'moderationtype'),
     'type'        => 'select',
-    'values'      => $l->getLov('defaultmoderation'),
-    'value'       => 0,
+    'values'      => $l->getLov('moderationtype'),
   ),
   
 );

@@ -129,9 +129,10 @@ return array(
     'normal/mobile' => 'Normál/mobil',
   ),
   
-  'defaultmoderation' => array(
-    '0'  => 'Útólagos moderálás',
-    '-1' => 'Megjelenés előtt moderált hozzászólások',
+  'moderationtype' => array(
+    'postmoderation' => 'Útólagos moderálás',
+    'premoderation'  => 'Megjelenés előtt moderált hozzászólások',
+    'nochat'         => 'Hozzászólások letiltva',
   ),
   
 );

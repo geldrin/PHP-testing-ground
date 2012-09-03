@@ -19,6 +19,9 @@ class Createchat extends \Visitor\HelpForm {
     if ( $access !== true )
       $this->jsonOutput( array('status' => 'error', 'error' => $access ) );
     
+    if ( $this->feedModel->row['moderationtype'] == 'nochat' )
+      $this->jsonOutput( array('status' => 'error', 'error' => 'nochat' ) );
+    
     parent::init();
     
   }
@@ -27,9 +30,13 @@ class Createchat extends \Visitor\HelpForm {
     
     $values = $this->form->getElementValues( 0 );
     
+    if ( $this->feedModel->row['moderationtype'] == 'premoderation' )
+      $values['moderated'] = -1;
+    else
+      $values['moderated'] = 0;
+    
     $values['userid']     = $this->user['id'];
     $values['timestamp']  = date('Y-m-d H:i:s');
-    $values['moderated']  = $this->feedModel->row['defaultmoderation'];
     $values['livefeedid'] = $this->feedModel->id;
     $values['ipaddress']  = $_SERVER['REMOTE_ADDR'];
     

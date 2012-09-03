@@ -112,6 +112,9 @@ class Controller extends \Visitor\Controller {
       
     }
     
+    if ( $feedModel->row['moderationtype'] == 'nochat' )
+      $displaychat = false;
+    
     if ( $displaychat ) {
       
       if ( !$this->acl ) {

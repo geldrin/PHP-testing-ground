@@ -87,9 +87,10 @@ return array(
     'normal/mobile' => 'Normal/mobile',
   ),
   
-  'defaultmoderation' => array(
-    '0'  => 'After-the-fact moderation',
-    '-1' => 'Moderated before appearing',
+  'moderationtype' => array(
+    'postmoderation' => 'After-the-fact moderation',
+    'premoderation'  => 'Moderated before appearing',
+    'nochat'         => 'Chat disabled',
   ),
   
 );

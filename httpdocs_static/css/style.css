@@ -2067,6 +2067,9 @@ a#currentusername span {
 #chatlist li.self {
   background-color: #f7f7f7;
 }
+#chatlist li.waitingforapproval {
+  background-color: #FDFFC3;
+}
 #chatlist .content {
   padding: 0px 5px 0px 10px;
   display: inline;

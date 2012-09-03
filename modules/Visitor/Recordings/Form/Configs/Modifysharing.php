@@ -1,5 +1,5 @@
 <?php
-$user           = $this->bootstrap->getSession('user');
+$user = $this->bootstrap->getSession('user');
 
 $config = array(
 

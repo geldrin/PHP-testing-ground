@@ -112,7 +112,6 @@ global $db, $jconf;
 			groups,
 			groups_members,
 			group_invitations,
-			recordings_access,
 			recordings_genres,
 			mailqueue,
 			access,

@@ -483,7 +483,7 @@ CREATE TABLE `livefeed_streams` (
    `feedtype` text not null, /* normal/mobile */
    `status` text,
    `recordinglinkid` int(11) default null,
-   `defaultmoderation` int(11) default '0',
+   `moderationtype` text,
    `timestamp` datetime not null,
    PRIMARY KEY (`id`),
    KEY `livefeedid` (`livefeedid`)

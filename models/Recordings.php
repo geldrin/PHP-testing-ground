@@ -207,8 +207,7 @@ class Recordings extends \Springboard\Model {
         r.name_stringid = s.translationof AND
         cr.recordingid  = '" . $this->id . "' AND
         s.language      = '$language'
-      ORDER BY
-        cr.weight
+      ORDER BY cr.weight
     ");
     
     if ( $wantjobgroups ) {
@@ -859,10 +858,10 @@ class Recordings extends \Springboard\Model {
         WHERE
           $where
           $generalwhere AND
-          r.accesstype     = 'organizations' AND
-          a.recordingid    = r.id AND
-          a.organizationid = u.organizationid AND
-          u.id             = '" . $user['id'] . "'
+          r.accesstype   = 'departments' AND
+          a.recordingid  = r.id AND
+          a.departmentid = u.departmentid AND
+          u.id           = '" . $user['id'] . "'
       )
     ";
     

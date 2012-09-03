@@ -46,10 +46,10 @@ class Createfeed extends \Visitor\HelpForm {
       case 'registrations':
         break;
       
-      case 'organizations':
+      case 'departments':
         
-        if ( !empty( $values['organizations'] ) )
-          $feedModel->restrictOrganizations( $values['organizations'] );
+        if ( !empty( $values['departments'] ) )
+          $feedModel->restrictDepartments( $values['departments'] );
         
         break;
       

@@ -197,13 +197,13 @@ class Livefeeds extends \Springboard\Model {
         
         break;
       
-      case 'organizations':
+      case 'departments':
       case 'groups':
         
         if ( $this->row['accesstype'] == 'groups')
           $error = 'grouprestricted';
         else
-          $error = 'organizationrestricted';
+          $error = 'departmentrestricted';
         
         if ( !isset( $user['id'] ) )
           return $error;
@@ -215,17 +215,17 @@ class Livefeeds extends \Springboard\Model {
         $feedid = "'" . $this->row['id'] . "'";
         $userid = "'" . $user['id'] . "'";
         
-        if ( $this->row['accesstype'] == 'organizations')
+        if ( $this->row['accesstype'] == 'departments')
           $sql = "
             SELECT
               u.id
             FROM
-              channels_access AS ca,
+              access AS a,
               users AS u
             WHERE
-              ca.channelid     = $feedid AND
-              u.organizationid = ca.organizationid AND
-              u.id             = $userid
+              a.livefeedid   = $feedid AND
+              u.departmentid = a.departmentid AND
+              u.id           = $userid
             LIMIT 1
           ";
         else
@@ -233,11 +233,11 @@ class Livefeeds extends \Springboard\Model {
             SELECT
               gm.userid
             FROM
-              channels_access AS ca,
+              access AS a,
               groups_members AS gm
             WHERE
-              ca.channelid = $feedid AND
-              gm.groupid   = ca.groupid AND
+              a.livefeedid = $feedid AND
+              gm.groupid   = a.groupid AND
               gm.userid    = $userid
             LIMIT 1
           ";
@@ -287,8 +287,8 @@ class Livefeeds extends \Springboard\Model {
     
   }
   
-  public function restrictOrganizations( $organizationids ) {
-    $this->insertMultipleIDs( $organizationids, 'access', 'organizationid');
+  public function restrictDepartments( $departmentids ) {
+    $this->insertMultipleIDs( $departmentids, 'access', 'departmentid');
   }
   
   public function restrictGroups( $groupids ) {

@@ -6,8 +6,8 @@ $config['fs1']['legend']               = $l('live', 'modifyfeed_title');
 $config['fs1']['prefix']               =
   '<span class="legendsubtitle">' . $l('live', 'modifyfeed_subtitle') . '</span>'
 ;
-$config['organizations[]']['valuesql'] = "
-  SELECT organizationid
+$config['departments[]']['valuesql'] = "
+  SELECT departmentid
   FROM access
   WHERE livefeedid = " . $this->application->getNumericParameter('id')
 ;

@@ -46,10 +46,10 @@ class Modifyfeed extends \Visitor\HelpForm {
       case 'registrations':
         break;
       
-      case 'organizations':
+      case 'departments':
         
-        if ( !empty( $values['organizations'] ) )
-          $this->feedModel->restrictOrganizations( $values['organizations'] );
+        if ( !empty( $values['departments'] ) )
+          $this->feedModel->restrictDepartments( $values['departments'] );
         
         break;
       
@@ -66,7 +66,7 @@ class Modifyfeed extends \Visitor\HelpForm {
       
     }
     
-    unset( $values['organizations'], $values['groups'] );
+    unset( $values['departments'], $values['groups'] );
     
     $this->feedModel->updateRow( $values );
     
