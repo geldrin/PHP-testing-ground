@@ -92,6 +92,8 @@ $config = array(
   
   'groups[]' => array(
     'displayname' => $l('recordings', 'groups'),
+    'prefix'      => '<div id="groupscontainer">',
+    'postfix'     => '</div>',
     'type'        => 'inputCheckboxDynamic',
     'sql'         => "
       SELECT g.id, g.name
