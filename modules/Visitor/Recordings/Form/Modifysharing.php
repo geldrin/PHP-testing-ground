@@ -32,10 +32,10 @@ class Modifysharing extends \Visitor\Recordings\ModifyForm {
         // itt nincs tobb dolgunk
         break;
       
-      case 'organizations':
+      case 'departments':
         
-        if ( !empty( $values['organizations'] ) )
-          $this->recordingsModel->restrictOrganizations( $values['organizations'] );
+        if ( !empty( $values['departments'] ) )
+          $this->recordingsModel->restrictDepartments( $values['departments'] );
         
         break;
       
@@ -52,6 +52,7 @@ class Modifysharing extends \Visitor\Recordings\ModifyForm {
       
     }
     
+    unset( $values['departments'], $values['groups'] );
     $this->recordingsModel->updateRow( $values );
     $this->recordingsModel->updateFulltextCache( true );
     $this->recordingsModel->updateCategoryCounters();

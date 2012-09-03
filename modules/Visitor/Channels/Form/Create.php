@@ -55,10 +55,10 @@ class Create extends \Visitor\HelpForm {
       case 'registrations':
         break;
       
-      case 'organizations':
+      case 'departments':
         
-        if ( !empty( $values['organizations'] ) )
-          $channelModel->restrictOrganizations( $values['organizations'] );
+        if ( !empty( $values['departments'] ) )
+          $channelModel->restrictDepartments( $values['departments'] );
         
         break;
       

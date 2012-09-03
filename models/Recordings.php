@@ -639,8 +639,8 @@ class Recordings extends \Springboard\Model {
     
   }
   
-  public function restrictOrganizations( $organizationids ) {
-    $this->insertMultipleIDs( $organizationids, 'access', 'organizationid');
+  public function restrictDepartments( $departmentids ) {
+    $this->insertMultipleIDs( $departmentids, 'access', 'departmentid');
   }
   
   public function restrictGroups( $groupids ) {
@@ -710,13 +710,13 @@ class Recordings extends \Springboard\Model {
         
         break;
       
-      case 'organizations':
+      case 'departments':
       case 'groups':
         
         if ( $this->row['accesstype'] == 'groups')
           $error = 'grouprestricted';
         else
-          $error = 'organizationrestricted';
+          $error = 'departmentrestricted';
         
         if ( !isset( $user['id'] ) )
           return $error;
@@ -728,7 +728,7 @@ class Recordings extends \Springboard\Model {
         $recordingid = "'" . $this->id . "'";
         $userid      = "'" . $user['id'] . "'";
         
-        if ( $this->row['accesstype'] == 'organizations')
+        if ( $this->row['accesstype'] == 'departments')
           $sql = "
             SELECT
               u.id
@@ -736,9 +736,9 @@ class Recordings extends \Springboard\Model {
               access AS a,
               users AS u
             WHERE
-              a.recordingid    = $recordingid AND
-              u.organizationid = a.organizationid AND
-              u.id             = $userid
+              a.recordingid  = $recordingid AND
+              u.departmentid = a.departmentid AND
+              u.id           = $userid
             LIMIT 1
           ";
         else

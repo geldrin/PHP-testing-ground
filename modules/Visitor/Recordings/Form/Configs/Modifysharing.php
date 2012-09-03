@@ -1,6 +1,5 @@
 <?php
 $user           = $this->bootstrap->getSession('user');
-$organizationid = $this->controller->organization['id'];
 
 $config = array(
 
@@ -33,26 +32,17 @@ $config = array(
     'values'      => $l->getLov('accesstype'),
   ),
   
-  'organizations[]' => array(
-    'displayname' => $l('recordings', 'organizations'),
+  'departments[]' => array(
+    'displayname' => $l('recordings', 'departments'),
     'type'        => 'inputCheckboxDynamic',
     'html'        => '',
     'sql'         => "
-      SELECT
-        o.id AS `o.id`, CONCAT( sname.value, ' (', snameshort.value,  ')' ) AS name
-      FROM
-        organizations AS o,
-        strings AS sname,
-        strings AS snameshort
-      WHERE
-        sname.translationof = o.name_stringid AND
-        sname.language = '" . \Springboard\Language::get() . "' AND
-        snameshort.translationof = o.nameshort_stringid AND
-        snameshort.language = '" . \Springboard\Language::get() . "' AND
-        %s
-      ORDER BY sname.value
+      SELECT id, name
+      FROM departments
+      WHERE %s
+      ORDER BY weight, name
     ",
-    'prefix'      => '<div class="formoverflowframe" id="organizationscontainer">',
+    'prefix'      => '<div class="formoverflowframe" id="departmentscontainer">',
     'postfix'     => '</div>',
     'itemlayout'  =>
       '<div class="cbxdynamiclevel%level%">'.
@@ -60,11 +50,11 @@ $config = array(
         '<span title="%valuehtmlescape%">%label%</span>'.
       '</div>' . "\r\n"
     ,
-    'treeid'      => 'o.id',
-    'treestart'   => $organizationid,
+    'treeid'      => 'id',
+    'treestart'   => $user['departmentid'],
     'treestartinclusive' => true,
     'treeparent'  => 'parentid',
-    'valuesql'    => "SELECT organizationid FROM access WHERE recordingid = " . $this->application->getNumericParameter('id'),
+    'valuesql'    => "SELECT departmentid FROM access WHERE recordingid = " . $this->application->getNumericParameter('id'),
   ),
   
   'groups[]' => array(

@@ -28,8 +28,8 @@ $config['indexphotofilename'] = Array(
     Array( 'type' => 'required' )
   )
 );
-$config['organizations[]']['valuesql'] = "
-  SELECT organizationid
+$config['departments[]']['valuesql'] = "
+  SELECT departmentid
   FROM access
   WHERE channelid = " . $this->application->getNumericParameter('id')
 ;

@@ -34,6 +34,7 @@ CREATE TABLE `users` (
    `namelast` text not null,
    `nameformat` text,
    `organizationid` int(10) unsigned not null default '0',
+   `departmentid` int(10) unsigned not null default '0',
    `isadmin` int(10) unsigned not null default '0',
    `isclientadmin` int(10) unsigned not null default '0',
    `iseditor` int(10) unsigned not null default '0',
@@ -528,13 +529,14 @@ CREATE TABLE `access` (
    `recordingid` int(10) unsigned,
    `livefeedid` int(10) unsigned,
    `channelid` int(10) unsigned,
-   `organizationid` int(10) unsigned,
+   `departmentid` int(10) unsigned,
    `groupid` int(10) unsigned,
    PRIMARY KEY (`id`),
    KEY `ix_recordingid` (`recordingid`),
    KEY `ix_livefeedid` (`livefeedid`),
    KEY `ix_channelid` (`channelid`),
-   KEY `ix_groupid` (`groupid`)
+   KEY `ix_groupid` (`groupid`),
+   KEY `ix_departmentid` (`departmentid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;
 
 
@@ -563,4 +565,15 @@ CREATE TABLE `livefeed_chat` (
    `moderated` int(11) not null default '0',
    PRIMARY KEY (`id`),
    KEY `ix_livefeedid_moderated` (`livefeedid`, `moderated`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;
+
+
+CREATE TABLE `departments` (
+   `id` int(10) unsigned not null auto_increment,
+   `parentid` int(10) unsigned not null default '0',
+   `organizationid` int(10) unsigned,
+   `name` text,
+   `nameshort` text,
+   `weight` int(10) unsigned not null default '100',
+   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;

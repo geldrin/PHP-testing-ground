@@ -47,7 +47,7 @@ return array(
   'accesstype' => array(
     'public'        => 'public (recommended)',
     'registrations' => 'requires registration',
-    'organizations' => 'group of organizations',
+    'departments'   => 'group of departments',
     'groups'        => 'own defined group',
   ),
   

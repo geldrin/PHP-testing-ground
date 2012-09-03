@@ -52,10 +52,10 @@ class Modify extends \Visitor\HelpForm {
       case 'registrations':
         break;
       
-      case 'organizations':
+      case 'departments':
         
-        if ( !empty( $values['organizations'] ) )
-          $this->channelModel->restrictOrganizations( $values['organizations'] );
+        if ( !empty( $values['departments'] ) )
+          $this->channelModel->restrictDepartments( $values['departments'] );
         
         break;
       
@@ -72,7 +72,7 @@ class Modify extends \Visitor\HelpForm {
       
     }
     
-    unset( $values['organizations'], $values['groups'] );
+    unset( $values['departments'], $values['groups'] );
     
     $this->channelModel->updateRow( $values );
     

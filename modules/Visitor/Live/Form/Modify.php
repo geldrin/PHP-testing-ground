@@ -52,10 +52,10 @@ class Modify extends \Visitor\HelpForm {
         // itt nincs tobb dolgunk
         break;
       
-      case 'organizations':
+      case 'departments':
         
-        if ( !empty( $values['organizations'] ) )
-          $this->channelModel->restrictOrganizations( $values['organizations'] );
+        if ( !empty( $values['departments'] ) )
+          $this->channelModel->restrictDepartments( $values['departments'] );
         
         break;
       

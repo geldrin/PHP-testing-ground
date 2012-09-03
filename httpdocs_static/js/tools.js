@@ -403,16 +403,16 @@ function setupAccesstype( elem ) {
     switch( elemvalue ) {
       case 'public':
       case 'registrations':
-        $j('#organizationscontainer, #groupscontainer').parents('tr').hide();
+        $j('#departmentscontainer, #groupscontainer').parents('tr').hide();
         break;
       
-      case 'organizations':
-        $j('#organizationscontainer').parents('tr').show();
+      case 'departments':
+        $j('#departmentscontainer').parents('tr').show();
         $j('#groupscontainer').parents('tr').hide();
         break;
       
       case 'groups':
-        $j('#organizationscontainer').parents('tr').hide();
+        $j('#departmentscontainer').parents('tr').hide();
         $j('#groupscontainer').parents('tr').show();
         break;
       
