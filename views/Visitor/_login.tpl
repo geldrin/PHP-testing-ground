@@ -95,6 +95,10 @@
                 <li><a href="{$language}/categories/admin">{#usermenu_categories_admin#}</a></li>
               </ul>
               <div class="hr"></div>
+              <ul>
+                <li><a href="{$language}/departments/admin">{#usermenu_departments_admin#}</a></li>
+              </ul>
+              <div class="hr"></div>
             {/if}
             <div class="hr"></div>
             <ul>

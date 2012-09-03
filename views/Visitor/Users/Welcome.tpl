@@ -13,6 +13,7 @@
     <li><a href="{$language}/channels/mychannels">My channels</a></li>
     <li><a href="{$language}/channels/create">Channels create</a></li>
     <li><a href="{$language}/recordings/featured">Featured recordings</a></li>
+    <li><a href="{$language}/departments/admin">Department admin</a></li>
     {*}<li><a href="{$language}/"></a></li>{/*}
   </ul>
 </div>
