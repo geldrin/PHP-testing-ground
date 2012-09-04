@@ -235,18 +235,25 @@ class Controller extends \Visitor\Controller {
     );
     
     $user      = $this->bootstrap->getSession('user');
-    $rating    = $this->bootstrap->getSession('rating');
     $access    = $this->bootstrap->getSession('recordingaccess');
     $accesskey = $recordingsModel->id . '-' . (int)$recordingsModel->row['issecurestreamingforced'];
+    $needauth  = false;
     
     $access[ $accesskey ] = $recordingsModel->userHasAccess( $user );
     
-    if ( $access[ $accesskey ] !== true )
-      $this->redirectToController('contents', $access[ $accesskey ] );
+    if ( $access[ $accesskey ] === 'registrationrestricted' )
+      $needauth = true;
     
-    $this->jsonOutput(
-      $recordingsModel->getFlashData( $this->toSmarty, session_id() )
-    );
+    $flashdata = $recordingsModel->getFlashData( $this->toSmarty, session_id() );
+    
+    if ( $needauth ) {
+      
+      $flashdata['authorization_need']    = true;
+      $flashdata['authorization_gateway'] = $this->bootstrap->baseuri . 'hu/api';
+      
+    }
+    
+    $this->jsonOutput( $flashdata );
     
   }
   
