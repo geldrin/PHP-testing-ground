@@ -1457,59 +1457,38 @@ class Recordings extends \Springboard\Model {
   
   public function getStructuredFlashData( $info, $sessionid ) {
     
-    $data      = $this->getFlashData( $info, $sessionid );
-    $flashdata = array(
-      'language' => $data['language'],
-      'media'    => array(
-        'servers' => $data['media_servers'],
-        'streams' => $data['media_streams'],
-      ),
-      'recording' => array(
-        'duration'    => $data['media_length'],
-        'image'       => $data['recording_image'],
-        'title'       => $data['recording_title'],
-        'subtitle'    => $data['recording_subtitle'],
-        'description' => $data['recording_description'],
-      ),
-      'recommendatory' => $data['recommendatory_string'],
-      'track'          => array(
-        'firstPlay' => $data['track_firstPlay'],
-      ),
+    $flashdata = $this->transformFlashData(
+      $this->getFlashData( $info, $sessionid )
     );
     
-    if ( isset( $data['media_secondaryStreams'] ) )
-      $flashdata['media']['secondaryStreams'] = $data['media_secondaryStreams'];
+    $flashdata['recommendatory']        = $flashdata['recommendatory']['string'];
+    $flashdata['recording']['duration'] = $flashdata['media']['length'];
+    unset( $flashdata['media']['length'] );
     
-    if ( isset( $data['layout_videoOrientation'] ) )
-      $flashdata['layout']['videoOrientation'] = $data['layout_videoOrientation'];
+    return $flashdata;
     
-    if ( isset( $data['timeline_virtualStart'] ) )
-      $flashdata['timeline']['virtualStart'] = $data['timeline_virtualStart'];
+  }
+  
+  protected function transformFlashData( $data ) {
     
-    if ( isset( $data['timeline_virtualEnd'] ) )
-      $flashdata['timeline']['virtualEnd'] = $data['timeline_virtualEnd'];
-    
-    if ( isset( $data['content_length'] ) ) {
+    $flashdata = array();
+    foreach( $data as $key => $value ) {
       
-      $flashdata['content']['duration'] = $data['content_length'];
+      $key = explode('_', $key );
+      if ( is_array( $value ) )
+        $value = $this->transformFlashData( $value );
       
-      if ( isset( $data['timeline_contentVirtualStart'] ) )
-        $flashdata['timeline'][''] = $data['timeline_contentVirtualStart'];
-      
-      if ( isset( $data['timeline_contentVirtualEnd'] ) )
-        $flashdata['timeline']['contentVirtualEnd'] = $data['timeline_contentVirtualEnd'];
-      
-    }
-    
-    if ( isset( $data['subtitle_files'] ) ) {
-      
-      $flashdata['subtitles']['files'] = $data['subtitle_files'];
-      
-      if ( isset( $data['subtitle_autoShow'] ) )
-        $flashdata['subtitles']['autoShow'] = $data['subtitle_autoShow'];
-      
-      if ( isset( $data['subtitle_default'] ) )
-        $flashdata['subtitles']['default'] = $data['subtitle_default'];
+      if ( count( $key ) == 1 )
+        $flashdata[ $key[0] ] = $value;
+      elseif ( count( $key ) == 2 ) {
+        
+        if ( !isset( $flashdata[ $key[0] ] ) )
+          $flashdata[ $key[0] ] = array();
+        
+        $flashdata[ $key[0] ][ $key[1] ] = $value;
+        
+      } else
+        throw new \Exception('key with more then two underscores!');
       
     }
     
