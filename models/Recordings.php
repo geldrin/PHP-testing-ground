@@ -1455,6 +1455,68 @@ class Recordings extends \Springboard\Model {
     
   }
   
+  public function getStructuredFlashData( $info, $sessionid ) {
+    
+    $data      = $this->getFlashData( $info, $sessionid );
+    $flashdata = array(
+      'language' => $data['language'],
+      'media'    => array(
+        'servers' => $data['media_servers'],
+        'streams' => $data['media_streams'],
+      ),
+      'recording' => array(
+        'duration'    => $data['media_length'],
+        'image'       => $data['recording_image'],
+        'title'       => $data['recording_title'],
+        'subtitle'    => $data['recording_subtitle'],
+        'description' => $data['recording_description'],
+      ),
+      'recommendatory' => $data['recommendatory_string'],
+      'track'          => array(
+        'firstPlay' => $data['track_firstPlay'],
+      ),
+    );
+    
+    if ( isset( $data['media_secondaryStreams'] ) )
+      $flashdata['media']['secondaryStreams'] = $data['media_secondaryStreams'];
+    
+    if ( isset( $data['layout_videoOrientation'] ) )
+      $flashdata['layout']['videoOrientation'] = $data['layout_videoOrientation'];
+    
+    if ( isset( $data['timeline_virtualStart'] ) )
+      $flashdata['timeline']['virtualStart'] = $data['timeline_virtualStart'];
+    
+    if ( isset( $data['timeline_virtualEnd'] ) )
+      $flashdata['timeline']['virtualEnd'] = $data['timeline_virtualEnd'];
+    
+    if ( isset( $data['content_length'] ) ) {
+      
+      $flashdata['content']['duration'] = $data['content_length'];
+      
+      if ( isset( $data['timeline_contentVirtualStart'] ) )
+        $flashdata['timeline'][''] = $data['timeline_contentVirtualStart'];
+      
+      if ( isset( $data['timeline_contentVirtualEnd'] ) )
+        $flashdata['timeline']['contentVirtualEnd'] = $data['timeline_contentVirtualEnd'];
+      
+    }
+    
+    if ( isset( $data['subtitle_files'] ) ) {
+      
+      $flashdata['subtitles']['files'] = $data['subtitle_files'];
+      
+      if ( isset( $data['subtitle_autoShow'] ) )
+        $flashdata['subtitles']['autoShow'] = $data['subtitle_autoShow'];
+      
+      if ( isset( $data['subtitle_default'] ) )
+        $flashdata['subtitles']['default'] = $data['subtitle_default'];
+      
+    }
+    
+    return $flashdata;
+    
+  }
+  
   protected function getWowzaUrl( $type, $needextraparam = false, $domain = null, $sessionid = null ) {
     
     $url = $this->bootstrap->config['wowza'][ $type ];

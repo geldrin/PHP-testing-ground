@@ -244,21 +244,23 @@ class Controller extends \Visitor\Controller {
     if ( $access[ $accesskey ] === 'registrationrestricted' )
       $needauth = true;
     
-    $flashdata = $recordingsModel->getFlashData( $this->toSmarty, session_id() );
+    $flashdata = $recordingsModel->getStructuredFlashData( $this->toSmarty, session_id() );
     
     if ( $needauth ) {
       
-      $flashdata['authorization_need']    = true;
-      $flashdata['authorization_gateway'] = $this->bootstrap->baseuri . 'hu/api';
+      $flashdata['authorization']            = array();
+      $flashdata['authorization']['need']    = true;
+      $flashdata['authorization']['gateway'] = $this->bootstrap->baseuri . 'hu/api';
       
     }
     
-    $flashdata['share_quickEmbed']   =
+    $flashdata['share']                 = array();
+    $flashdata['share']['quickEmbed']   =
       '<iframe width="480" height="303" src="' .
       $this->bootstrap->baseuri . \Springboard\Language::get() . '/recordings/embed/' .
       $recordingsModel->id . '" frameborder="0" allowfullscreen="allowfullscreen"></iframe>'
     ;
-    $flashdata['share_recordingURL'] =
+    $flashdata['share']['recordingURL'] =
       $this->bootstrap->baseuri . \Springboard\Language::get() . '/recordings/details/' .
       $recordingsModel->id . ',' . \Springboard\Filesystem::filenameize( $recordingsModel->row['title'] )
     ;
