@@ -8,6 +8,7 @@
   <meta name="format-detection" content="telephone=no" />{*} iphone ne vegye a random szamokat telefonszamoknak {/*}
   <base href="{$BASE_URI}" /><!--[if IE]></base><![endif]-->
   <title>{if $title}{$title|escape:html|titleescape} | {/if}{#sitename#}</title>
+  {include file="Visitor/_opengraph.tpl"}
   {csscombine}
   <link rel="StyleSheet" type="text/css" href="{$STATIC_URI}css/style{$VERSION}.css" media="screen"/>
   {if $browser.mobile}

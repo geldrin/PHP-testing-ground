@@ -182,12 +182,16 @@
     </div>
   {/if}
   
-  
-  <div class="addthis_toolbox addthis_default_style ">
-  <a class="addthis_button_facebook_like" fb:like:layout="button_count"></a>
-  <a class="addthis_button_tweet"></a>
+  <br/>
+  <div class="addthis_toolbox addthis_default_style addthis_32x32_style">
+    <a class="addthis_button_preferred_1"></a>
+    <a class="addthis_button_preferred_2"></a>
+    <a class="addthis_button_preferred_3"></a>
+    <a class="addthis_button_preferred_4"></a>
+    <a class="addthis_button_compact"></a>
+    <a class="addthis_counter addthis_bubble_style"></a>
   </div>
-  <script type="text/javascript" src="http://s7.addthis.com/js/250/addthis_widget.js#pubid=xa-5040d6f2431c6c52"></script>
+  <script type="text/javascript" src="http://s7.addthis.com/js/250/addthis_widget.js#pubid=xa-5045da4260dfe0a6"></script>
 
 </div>
 <div class="clear"></div>

@@ -5,6 +5,7 @@ class Controller extends \Visitor\Controller {
   public $permissions = array(
     'index'                => 'public',
     'details'              => 'public',
+    'getplayerconfig'      => 'public',
     'getcomments'          => 'public',
     'getsubtitle'          => 'public',
     'newcomment'           => 'member',
@@ -150,6 +151,11 @@ class Controller extends \Visitor\Controller {
     if ( $access[ $accesskey ] !== true )
       $this->redirectToController('contents', $access[ $accesskey ] );
     
+    include_once(
+      $this->bootstrap->config['templatepath'] .
+      'Plugins/modifier.indexphoto.php'
+    );
+    
     $this->toSmarty['height']        = $this->getPlayerHeight( $recordingsModel );
     $this->toSmarty['recording']     = $recordingsModel->row;
     $this->toSmarty['flashdata']     = $recordingsModel->getFlashData( $this->toSmarty, session_id() );
@@ -161,7 +167,22 @@ class Controller extends \Visitor\Controller {
     $this->toSmarty['relatedvideos'] = $recordingsModel->getRelatedVideos(
       $this->application->config['relatedrecordingcount']
     );
-    
+    $this->toSmarty['opengraph']     = array(
+      'type'        => 'video',
+      'image'       => smarty_modifier_indexphoto( $recordingsModel->row, 'player' ),
+      'description' => $recordingsModel->row['description'],
+      'title'       => $recordingsModel->row['title'],
+      'subtitle'    => $recordingsModel->row['subtitle'],
+      'width'       => 398,
+      'height'      => 303,
+      'video'       =>
+        $this->toSmarty['BASE_URI'] . 'flash/TCSharedPlayer.swf?media_json=' .
+        rawurlencode(
+          $this->toSmarty['BASE_URI'] . \Springboard\Language::get() .
+          '/recordings/getplayerconfig/' . $recordingsModel->id
+        )
+      ,
+    );
     $mobilehq = false;
     if ( $recordingsModel->row['mobilevideoreshq'] ) {
       
@@ -203,6 +224,29 @@ class Controller extends \Visitor\Controller {
     );
     
     $this->smartyoutput('Visitor/Recordings/Details.tpl');
+    
+  }
+  
+  public function getplayerconfigAction() {
+    
+    $recordingsModel = $this->modelIDCheck(
+      'recordings',
+      $this->application->getNumericParameter('id')
+    );
+    
+    $user      = $this->bootstrap->getSession('user');
+    $rating    = $this->bootstrap->getSession('rating');
+    $access    = $this->bootstrap->getSession('recordingaccess');
+    $accesskey = $recordingsModel->id . '-' . (int)$recordingsModel->row['issecurestreamingforced'];
+    
+    $access[ $accesskey ] = $recordingsModel->userHasAccess( $user );
+    
+    if ( $access[ $accesskey ] !== true )
+      $this->redirectToController('contents', $access[ $accesskey ] );
+    
+    $this->jsonOutput(
+      $recordingsModel->getFlashData( $this->toSmarty, session_id() )
+    );
     
   }
   
