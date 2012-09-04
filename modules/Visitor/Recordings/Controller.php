@@ -253,6 +253,16 @@ class Controller extends \Visitor\Controller {
       
     }
     
+    $flashdata['share_quickEmbed']   =
+      '<iframe width="480" height="303" src="' .
+      $this->bootstrap->baseuri . \Springboard\Language::get() . '/recordings/embed/' .
+      $recordingsModel->id . '" frameborder="0" allowfullscreen="allowfullscreen"></iframe>'
+    ;
+    $flashdata['share_recordingURL'] =
+      $this->bootstrap->baseuri . \Springboard\Language::get() . '/recordings/details/' .
+      $recordingsModel->id . ',' . \Springboard\Filesystem::filenameize( $recordingsModel->row['title'] )
+    ;
+    
     $this->jsonOutput( $flashdata );
     
   }
