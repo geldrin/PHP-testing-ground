@@ -67,10 +67,10 @@ $config = array(
     ),
   ),
   
-  'feedtype' => array(
-    'displayname' => $l('live', 'streamfeedtype'),
+  'streamtype' => array(
+    'displayname' => $l('live', 'streamtype'),
     'type'        => 'select',
-    'values'      => $l->getLov('feedtypes'),
+    'values'      => $l->getLov('streamtypes'),
     'value'       => '',
     'html'        => 'data-isexternal="' . $this->feedModel->row['isexternal'] . '"',
   ),

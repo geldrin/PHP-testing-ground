@@ -742,6 +742,14 @@ class Channels extends \Springboard\Model {
       $streamObj->clearFilter();
       $streamObj->addFilter('livefeedid', $feed['id'] );
       $feeds[ $key ]['streams'] = $streamObj->getArray();
+      $feeds[ $key ]['status']  = null;
+      
+      foreach( $feeds[ $key ]['streams'] as $stream ) {
+        
+        if ( $stream['status'] )
+          $feeds[ $key ]['status'] = $stream['status'];
+        
+      }
       
     }
     

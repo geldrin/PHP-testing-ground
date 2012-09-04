@@ -2,7 +2,7 @@
 $user = $this->bootstrap->getSession('user');
 
 $config = array(
-
+  
   'action' => array(
     'type'  => 'inputHidden',
     'value' => 'submitcreatefeed'
@@ -31,7 +31,7 @@ $config = array(
       ),
     ),
   ),
-
+  
   'isexternal' => array(
     'displayname' => $l('live', 'external'),
     'type'        => 'inputRadio',
@@ -47,71 +47,55 @@ $config = array(
     'divider'     => '<br/>',
     'divide'      => 1,
   ),
+);
+
+if ( $this->controller->organization['isvcrenabled'] ) {
   
-  'accesstype' => array(
-    'displayname' => $l('recordings', 'accesstype'),
-    'itemlayout'  => '%radio% %label% <br/>',
+  $config['feedtype'] = array(
     'type'        => 'inputRadio',
-    'value'       => 'public',
-    'values'      => $l->getLov('accesstype'),
-  ),
+    'displayname' => $l('live', 'feedtype'),
+    'values'      => $l->getLov('feedtype'),
+    'value'       => 'live',
+  );
   
-  'departments[]' => array(
-    'displayname' => $l('recordings', 'departments'),
-    'type'        => 'inputCheckboxDynamic',
-    'html'        => '',
+  $config['recordinglinkid'] = array(
+    'type'        => 'selectDynamic',
+    'displayname' => $l('live', 'recordinglinkid'),
+    'values'      => array('' => ''),
     'sql'         => "
       SELECT id, name
-      FROM departments
-      WHERE %s
-      ORDER BY weight, name
-    ",
-    'prefix'      => '<div class="formoverflowframe" id="departmentscontainer">',
-    'postfix'     => '</div>',
-    'itemlayout'  =>
-      '<div class="cbxdynamiclevel%level%">'.
-        '<span class="indent">%indent%</span> %checkbox% '.
-        '<span title="%valuehtmlescape%">%label%</span>'.
-      '</div>' . "\r\n"
-    ,
-    'treeid'      => 'id',
-    'treestart'   => $user['departmentid'],
-    'treestartinclusive' => true,
-    'treeparent'  => 'parentid',
-  ),
-  
-  'groups[]' => array(
-    'displayname' => $l('recordings', 'groups'),
-    'prefix'      => '<div id="groupscontainer">',
-    'postfix'     => '</div>',
-    'type'        => 'inputCheckboxDynamic',
-    'sql'         => "
-      SELECT g.id, g.name
-      FROM
-        groups AS g,
-        groups_members AS gm
+      FROM recording_links
       WHERE
-        gm.userid = '" . $user['id'] . "' AND
-        g.id      = gm.groupid
-      ORDER BY g.name DESC",
-    'validation'  => array(
-      array(
-        'type' => 'required',
-        'help' => $l('recordings', 'groupshelp'),
-        'anddepend' => Array(
-          Array(
-            'js'  => '<FORM.accesstype> == "groups"',
-            'php' => '<FORM.accesstype> == "groups"',
-          )
-        ),
-      ),
-    ),
-  ),
+        organizationid = '" . $this->controller->organization['id'] . "' AND
+        disabled       = '0'
+      ORDER BY name
+    ",
+  );
   
-  'moderationtype' => array(
-    'displayname' => $l('live', 'moderationtype'),
-    'type'        => 'select',
-    'values'      => $l->getLov('moderationtype'),
-  ),
-  
+} else
+  $config['feedtype'] = array(
+    'type'     => 'inputHidden',
+    'value'    => 'live',
+    'readonly' => true,
+  );
+
+if ( $this->controller->organization['issecurestreamingenabled'] )
+  $config['issecurestreamingforced'] = array(
+    'type'        => 'inputRadio',
+    'displayname' => $l('live', 'issecurestreamingforced'),
+    'values'      => $l->getLov('encryption'),
+  );
+else
+  $config['issecurestreamingforced'] = array(
+    'type'     => 'inputHidden',
+    'value'    => '0',
+    'readonly' => true,
+  );
+
+include( $this->bootstrap->config['modulepath'] . 'Visitor/Form/Configs/Accesstype.php');
+
+$config['moderationtype'] = array(
+  'displayname' => $l('live', 'moderationtype'),
+  'type'        => 'select',
+  'values'      => $l->getLov('moderationtype'),
 );

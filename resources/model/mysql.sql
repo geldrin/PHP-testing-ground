@@ -461,12 +461,14 @@ CREATE TABLE `livefeeds` (
    `userid` int(10) unsigned not null,
    `organizationid` int(10) unsigned not null,
    `channelid` int(10) unsigned, /* live channel id - az az elo channel (isliveevent=1), ami alatti esemenyek ezt a feedet hasznalhatjak */
+   `recordinglinkid` int(10) unsigned,
    `name` text,
    `isexternal` int(11) not null default '0',
    `slideonright` int(11) not null default '0',
    `numberofstreams` int(11) not null default '1',
    `accesstype` text not null,
    `issecurestreamingforced` int(11) not null default '0',
+   `feedtype` text,
    PRIMARY KEY (`id`),
    KEY `channelid` (`channelid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;
@@ -480,7 +482,7 @@ CREATE TABLE `livefeed_streams` (
    `aspectratio` text,
    `contentkeycode` text,
    `contentaspectratio` text,
-   `feedtype` text not null, /* normal/mobile */
+   `streamtype` text not null, /* normal/mobile */
    `status` text,
    `recordinglinkid` int(11) default null,
    `moderationtype` text,

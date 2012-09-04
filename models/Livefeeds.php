@@ -94,15 +94,15 @@ class Livefeeds extends \Springboard\Model {
     
   }
   
-  protected function getFeedTypeWhere( $prefix = '', $onlymobile = null ) {
+  protected function getStreamTypeWhere( $prefix = '', $onlymobile = null ) {
     
     $where = '';
     if ( $onlymobile !== null ) {
       
       if ( $onlymobile )
-        $where = " AND {$prefix}feedtype IN('mobile', 'normal/mobile') ";
+        $where = " AND {$prefix}streamtype IN('mobile', 'normal/mobile') ";
       else
-        $where = " AND {$prefix}feedtype IN('normal', 'normal/mobile') ";
+        $where = " AND {$prefix}streamtype IN('normal', 'normal/mobile') ";
       
     }
     
@@ -113,20 +113,22 @@ class Livefeeds extends \Springboard\Model {
   public function getStreams( $onlymobile = null ) {
     
     $this->ensureID();
-    $where = $this->getFeedTypeWhere( '', $onlymobile );
+    $where = $this->getStreamTypeWhere( '', $onlymobile );
     return $this->db->getAssoc("
       SELECT
         id AS streamid,
         id,
         name,
+        status,
         keycode,
         aspectratio,
         contentkeycode,
+        recordinglinkid,
         contentaspectratio,
-        feedtype,
+        streamtype,
         timestamp
       FROM livefeed_streams
-      WHERE livefeedid = '" . $this-> id . "' $where
+      WHERE livefeedid = '" . $this->id . "' $where
     ");
     
   }

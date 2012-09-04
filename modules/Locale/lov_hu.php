@@ -123,7 +123,7 @@ return array(
     '2' => 'két videófolyam (stream) egyidejű használata (pl. előadó és fóliák párhuzamos közvetítéséhez)',
   ),
   
-  'feedtypes' => array(  
+  'streamtypes' => array(  
     'normal'        => 'Normál',
     'mobile'        => 'Mobil',
     'normal/mobile' => 'Normál/mobil',
@@ -133,6 +133,16 @@ return array(
     'postmoderation' => 'Útólagos moderálás',
     'premoderation'  => 'Megjelenés előtt moderált hozzászólások',
     'nochat'         => 'Hozzászólások letiltva',
+  ),
+  
+  'feedtype' => array(
+    'live' => 'Élő felvétel',
+    'vcr'  => 'Videókonferencia felvétele',
+  ),
+  
+  'encryption' => array(
+    0 => 'Titkosítás nélküli adatfolyam',
+    1 => 'Titkosítás (nagyobb erőforrásigény)',
   ),
   
 );

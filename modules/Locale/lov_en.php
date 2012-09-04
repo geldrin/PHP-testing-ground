@@ -81,7 +81,7 @@ return array(
     '2' => 'Use two streams at the same time (for broadcasting the presenter and slides simultaneously)',
   ),
   
-  'feedtypes' => array(  
+  'streamtypes' => array(  
     'normal'        => 'Normal',
     'mobile'        => 'Mobile',
     'normal/mobile' => 'Normal/mobile',
@@ -91,6 +91,16 @@ return array(
     'postmoderation' => 'After-the-fact moderation',
     'premoderation'  => 'Moderated before appearing',
     'nochat'         => 'Chat disabled',
+  ),
+  
+  'feedtype' => array(
+    'live' => 'Live recording',
+    'vcr'  => 'Record video conference',
+  ),
+  
+  'encryption' => array(
+    0 => 'No encryption',
+    1 => 'Encrypt (resource intensive)',
   ),
   
 );

@@ -1,6 +1,5 @@
 <?php
-$user = $this->bootstrap->getSession('user');
-
+$user   = $this->bootstrap->getSession('user');
 $config = array(
 
   'action' => array(
@@ -24,68 +23,11 @@ $config = array(
     'prefix' => '<span class="legendsubtitle">' . $l('recordings', 'sharing_subtitle') . '</span>',
   ),
   
-  'accesstype' => array(
-    'displayname' => $l('recordings', 'accesstype'),
-    'itemlayout'  => '%radio% %label% <br/>',
-    'type'        => 'inputRadio',
-    'value'       => 'public',
-    'values'      => $l->getLov('accesstype'),
-  ),
-  
-  'departments[]' => array(
-    'displayname' => $l('recordings', 'departments'),
-    'type'        => 'inputCheckboxDynamic',
-    'html'        => '',
-    'sql'         => "
-      SELECT id, name
-      FROM departments
-      WHERE %s
-      ORDER BY weight, name
-    ",
-    'prefix'      => '<div class="formoverflowframe" id="departmentscontainer">',
-    'postfix'     => '</div>',
-    'itemlayout'  =>
-      '<div class="cbxdynamiclevel%level%">'.
-        '<span class="indent">%indent%</span> %checkbox% '.
-        '<span title="%valuehtmlescape%">%label%</span>'.
-      '</div>' . "\r\n"
-    ,
-    'treeid'      => 'id',
-    'treestart'   => $user['departmentid'],
-    'treestartinclusive' => true,
-    'treeparent'  => 'parentid',
-    'valuesql'    => "SELECT departmentid FROM access WHERE recordingid = " . $this->application->getNumericParameter('id'),
-  ),
-  
-  'groups[]' => array(
-    'displayname' => $l('recordings', 'groups'),
-    'prefix'      => '<div id="groupscontainer">',
-    'postfix'     => '</div>',
-    'type'        => 'inputCheckboxDynamic',
-    'sql'         => "
-      SELECT
-        groups.id, groups.name
-      FROM
-        groups, groups_members
-      WHERE
-        groups_members.userid = '" . $user['id'] . "' AND
-        groups.id = groups_members.groupid
-      ORDER BY groups.name DESC",
-    'valuesql'    => "SELECT groupid FROM access WHERE recordingid = " . $this->application->getNumericParameter('id'),
-    'validation'  => array(
-      array(
-        'type' => 'required',
-        'help' => $l('recordings', 'groupshelp'),
-        'anddepend' => Array(
-          Array(
-            'js'  => '<FORM.accesstype> == "groups"',
-            'php' => '<FORM.accesstype> == "groups"',
-          )
-        ),
-      ),
-    ),
-  ),
-  
+);
+
+include( $this->bootstrap->config['modulepath'] . 'Visitor/Form/Configs/Accesstype.php');
+
+$config = array_merge( $config, array(
   'wanttimelimit' => array(
     'displayname' => $l('recordings', 'wanttimelimit'),
     'type'        => 'inputRadio',
@@ -148,4 +90,4 @@ $config = array(
     ),
   ),
   
-);
+));
