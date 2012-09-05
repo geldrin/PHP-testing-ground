@@ -20,6 +20,7 @@ $j(document).ready(function() {
   runIfExists('.confirm', setupConfirm );
   runIfExists('input[name=accesstype]', setupAccesstype );
   runIfExists('#chat', setupLiveChat );
+  runIfExists('input[name=feedtype]', setupFeed );
   
   $j('#scriptingcontainer').show();
   
@@ -57,6 +58,19 @@ function setupConfirm( elems ) {
       e.preventDefault();
     
   });
+  
+}
+
+function setupFeed( elems ) {
+  
+  elems.change(function() {
+    
+    if ( elems.filter(':checked').val() == 'vcr' )
+      $j('#recordinglinkid').parents('tr').show();
+    else
+      $j('#recordinglinkid').parents('tr').hide();
+    
+  }).change();
   
 }
 

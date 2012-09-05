@@ -6,12 +6,8 @@
 <br/>
 <table id="feeds">
   <tr>
-    <th class="left">
-      {#live__feed#}
-    </th>
-    <th>
-      {#live__streams#}
-    </th>
+    <th>{#live__feed#}</th>
+    <th>{#live__streams#}</th>
   </tr>
   {foreach from=$feeds item=feed}
   <tr>
@@ -19,7 +15,7 @@
       <a href="{$language}/live/view/{$feed.id},{$feed.name|filenameize}" class="left"><b>{$feed.name|escape:html}</b></a>
       <a href="{$language}/live/view/{$feed.id},{$feed.name|filenameize}" class="livefeed" title="{if $feed.status == 'live'}{#live__feedislive#}{else}{#live__feedistesting#}{/if}">{if $feed.status == 'live'}{#live__feedislive#}{else}{#live__feedistesting#}{/if}</a>
       <div class="clear"></div>
-      {if !$feed.status}
+      {if $feed.feedtype == 'vcr' and $feed.streams[0].status == null}
         <a href="{$language}/live/modifyfeed/{$feed.id}">{#live__live_edit#}</a> |
         <a href="{$language}/live/deletefeed/{$feed.id}" class="confirm" question="{#sitewide_areyousure#|escape:html}">{#live__live_delete#}</a>
       {/if}
@@ -28,24 +24,29 @@
       <table class="stream">
       {foreach from=$feed.streams item=stream}
         <tr>
-          <td class="streamname">
-            <a href="{$language}/live/view/{$feed.id},{$stream.id},{$feed.name|filenameize}"><b>{$stream.name|escape:html}</b></a>
-          </td>
-          <td class="streamactions">
+          {if $feed.feedtype != 'vcr'}
+            <td class="streamname">
+              <a href="{$language}/live/view/{$feed.id},{$stream.id},{$feed.name|filenameize}"><b>{$stream.name|escape:html}</b></a>
+            </td>
+          {/if}
+          <td class="streamactions"{if $feed.feedtype == 'vcr'} colspan="2"{/if}>
             <span class="nobr">
               {if $feed.feedtype == 'vcr'}
-                {if !preg_match('^error.*', $stream.status )}
+                {if !preg_match('/^failed.*/', $stream.status )}
                   {if !$stream.status}
                     <a href="{$language}/live/togglestream/{$stream.id}?start=1">{#live__startrecord#}</a>
                   {elseif $stream.status == 'recording'}
                     <a href="{$language}/live/togglestream/{$stream.id}?start=0">{#live__stoprecord#}</a>
+                  {else}
+                    {#live__pendingrecord#}
                   {/if}
                 {else}
                   {#live__streamerror#|sprintf:$stream.status}
                 {/if}
+              {else}
+                <a href="{$language}/live/modifystream/{$stream.id}">{#live__live_edit#}</a> |
+                <a href="{$language}/live/deletestream/{$stream.id}" class="confirm" question="{#sitewide_areyousure#|escape:html}">{#live__live_delete#}</a>
               {/if}
-              <a href="{$language}/live/modifystream/{$stream.id}">{#live__live_edit#}</a> |
-              <a href="{$language}/live/deletestream/{$stream.id}" class="confirm" question="{#sitewide_areyousure#|escape:html}">{#live__live_delete#}</a>
             </span>
           </td>
           <td>&nbsp;</td>
@@ -57,11 +58,13 @@
           </td>
         </tr>
       {/foreach}
+      {if $feed.feedtype != 'vcr'}
         <tr>
           <td rowspan="3">
             <a href="{$language}/live/createstream/{$feed.id}"><b>+</b> {#live__addstream#}</a>
           </td>
         </tr>
+      {/if}
       </table>
     </td>
   </tr>

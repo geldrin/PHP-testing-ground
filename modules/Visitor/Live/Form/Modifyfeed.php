@@ -70,6 +70,27 @@ class Modifyfeed extends \Visitor\HelpForm {
     
     $this->feedModel->updateRow( $values );
     
+    if ( $values['feedtype'] == 'vcr' ) {
+      
+      $streamModel = $this->bootstrap->getModel('livefeed_streams');
+      $streamModel->addFilter('livefeedid', $this->feedModel->id );
+      $stream           = $streamModel->getRow();
+      
+      if ( $stream['status'] != null )
+        $this->redirectToController('contents', 'live_reclinkid_invalidstatus');
+      
+      $streamModel->id  = $stream['id'];
+      $streamModel->row = $stream;
+      
+      $streamModel->updateRow( array(
+          'recordinglinkid' => $values['recordinglinkid'],
+        )
+      );
+      
+      $this->controller->redirect('live/managefeeds/' . $this->channelModel->id );
+      
+    }
+    
     $this->controller->redirect(
       $this->application->getParameter(
         'forward',

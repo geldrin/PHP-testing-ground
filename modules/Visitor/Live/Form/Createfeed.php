@@ -66,6 +66,22 @@ class Createfeed extends \Visitor\HelpForm {
       
     }
     
+    if ( $values['feedtype'] == 'vcr' ) {
+      
+      $streamModel = $this->bootstrap->getModel('livefeed_streams');
+      $streamModel->insert( array(
+          'livefeedid'      => $feedModel->id,
+          'recordinglinkid' => $values['recordinglinkid'],
+          'name'            => 'VCR stream',
+          'streamtype'      => 'normal/mobile',
+          'timestamp'       => date('Y-m-d H:i:s'),
+        )
+      );
+      
+      $this->controller->redirect('live/managefeeds/' . $this->channelModel->id );
+      
+    }
+    
     $this->controller->redirect(
       $this->application->getParameter(
         'forward',
