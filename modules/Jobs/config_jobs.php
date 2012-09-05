@@ -76,8 +76,10 @@ return array('config_jobs' => array(
 	'dbstatus_vcr_discing'			=> 'disconnecting',
 	'dbstatus_vcr_upload'			=> 'upload',
 	'dbstatus_vcr_ready'			=> 'ready',
-	'dbstatus_vcr_starting_err'		=> 'startingerror',
-	'dbstatus_vcr_discing_err'		=> 'disconnectingerror',
+	'dbstatus_vcr_starting_err'		=> 'failedstarting',
+	'dbstatus_vcr_discing_err'		=> 'faileddisconnecting',
+	'dbstatus_vcr_upload_err'		=> 'faileduploading',
+	'dbstatus_vcr_recording_err'	=> 'failedrecording',
 
 	// VCR options
 	'vcr_server'					=> 'tcs.streamnet.hu',
