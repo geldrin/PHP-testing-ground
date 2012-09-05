@@ -6,6 +6,14 @@ $config['accesstype'] = array(
   'type'        => 'inputRadio',
   'value'       => 'public',
   'values'      => $l->getLov('accesstype'),
+  'rowlayout'   => '
+    <tr %errorstyle%>
+      <td class="labelcolumn" style="width: 170px;">
+        <label for="%id%">%displayname%</label>
+      </td>
+      <td class="elementcolumn">%prefix%%element%%postfix%%errordiv%</td>
+    </tr>
+  ',
 );
 
 $config['departments[]'] = array(
