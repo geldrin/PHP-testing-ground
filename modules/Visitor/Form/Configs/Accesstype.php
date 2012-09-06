@@ -1,4 +1,6 @@
 <?php
+if ( !isset( $user ) )
+  $user = $this->bootstrap->getSession('user');
 
 $config['accesstype'] = array(
   'displayname' => $l('recordings', 'accesstype'),
