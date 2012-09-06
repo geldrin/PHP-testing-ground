@@ -97,6 +97,27 @@ $config = Array(
     'treeparent'  => 'parentid',
   ),
   
+  'departmentid' => array(
+    'displayname' => 'Szervezeti egység',
+    'type'        => 'inputHidden',
+    'sql'         => "
+      SELECT d.id, d.name
+      FROM
+        departments AS d,
+        users AS u
+      WHERE
+        u.id = '" . $this->application->getNumericParameter('id') . "' AND
+        d.organizationid = u.organizationid AND
+        %s
+      ORDER BY weight, name
+    ",
+    'value'       => '0',
+    'values'      => array( 0 => ''),
+    'treeid'      => 'id',
+    'treestart'   => '0',
+    'treeparent'  => 'parentid',
+  ),
+  
   'browser' => array(
     'displayname' => 'Browser',
     'type'        => 'textarea',
@@ -204,6 +225,10 @@ if ( $this->action == 'new' or $this->action == 'insert' ) {
   $config['password']['validation'] = array(
     array( 'type' => 'required' )
   );
+  
+} else {
+  
+  $config['departmentid']['type'] = 'selectDynamic';
   
 }
 
