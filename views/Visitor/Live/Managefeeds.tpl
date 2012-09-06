@@ -15,7 +15,7 @@
       <a href="{$language}/live/view/{$feed.id},{$feed.name|filenameize}" class="left"><b>{$feed.name|escape:html}</b></a>
       <a href="{$language}/live/view/{$feed.id},{$feed.name|filenameize}" class="livefeed" title="{if $feed.status == 'live'}{#live__feedislive#}{else}{#live__feedistesting#}{/if}">{if $feed.status == 'live'}{#live__feedislive#}{else}{#live__feedistesting#}{/if}</a>
       <div class="clear"></div>
-      {if $feed.feedtype == 'vcr' and $feed.streams[0].status == null}
+      {if $feed.feedtype != 'vcr' or ( $feed.feedtype == 'vcr' and $feed.streams[0].status == null ) }
         <a href="{$language}/live/modifyfeed/{$feed.id}">{#live__live_edit#}</a> |
         <a href="{$language}/live/deletefeed/{$feed.id}" class="confirm" question="{#sitewide_areyousure#|escape:html}">{#live__live_delete#}</a>
       {/if}
@@ -36,9 +36,10 @@
                   {if !$stream.status}
                     <a href="{$language}/live/togglestream/{$stream.id}?start=1">{#live__startrecord#}</a>
                   {elseif $stream.status == 'recording'}
+                    {$l->getLov('streamstatus', $language, $stream.status)}
                     <a href="{$language}/live/togglestream/{$stream.id}?start=0">{#live__stoprecord#}</a>
                   {else}
-                    {#live__pendingrecord#}
+                    {$l->getLov('streamstatus', $language, $stream.status)}
                   {/if}
                 {else}
                   {#live__streamerror#|sprintf:$stream.status}

@@ -298,6 +298,7 @@ class Bootstrap {
     $smarty->assign('language',         Springboard\Language::get() );
     $smarty->assign('module',           @$_REQUEST['module'] );
     $smarty->assign('supportemail',     $this->config['mail']['fromemail'] );
+    $smarty->assign('l',                $this->getLocalization() );
     
     if ( !ISCLI ) {
       

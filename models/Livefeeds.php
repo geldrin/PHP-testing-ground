@@ -133,6 +133,61 @@ class Livefeeds extends \Springboard\Model {
     
   }
   
+  public function deleteStreams() {
+    
+    $this->ensureID();
+    $this->db->execute("
+      DELETE FROM livefeed_streams
+      WHERE livefeedid = '" . $this->id . "'
+    ");
+    
+  }
+  public function getVCRReclinkID() {
+    
+    $this->ensureID();
+    return $this->db->getOne("
+      SELECT recordinglinkid
+      FROM livefeed_streams
+      WHERE livefeedid = '" . $this->id . "'
+      LIMIT 1
+    ");
+    
+  }
+  
+  public function createVCRStream( $recordinglinkid ) {
+    
+    $this->ensureID();
+    $streamModel = $this->bootstrap->getModel('livefeed_streams');
+    $streamModel->insert( array(
+        'livefeedid'      => $this->id,
+        'recordinglinkid' => $recordinglinkid,
+        'name'            => 'VCR stream',
+        'streamtype'      => 'normal/mobile',
+        'timestamp'       => date('Y-m-d H:i:s'),
+      )
+    );
+    
+    return $streamModel->id;
+    
+  }
+  
+  public function modifyVCRStream( $recordinglinkid ) {
+    
+    $this->ensureID();
+    $recordinglinkid = $this->db->qstr( $recordinglinkid );
+    $this->db->execute("
+      UPDATE livefeed_streams
+      SET recordinglinkid = $recordinglinkid
+      WHERE
+        livefeedid = '" . $this->id . "' AND
+        status IS NULL
+      LIMIT 1
+    ");
+    
+    return $this->db->Affected_Rows();
+    
+  }
+  
   protected function getAuthorizeSessionid( $domain, $sessionid, $streamcode ) {
     
     if ( !$domain or !$sessionid )

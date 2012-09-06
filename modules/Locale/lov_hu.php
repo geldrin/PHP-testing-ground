@@ -145,4 +145,14 @@ return array(
     1 => 'Titkosítás (nagyobb erőforrásigény)',
   ),
   
+  'streamstatus' => array(
+    'start'         => 'Felvétel indítása folyamatban...',
+    'starting'      => 'Felvétel indítása folyamatban...',
+    'recording'     => 'Felvétel folyamatban...',
+    'disconnect'    => 'Felvétel lebontása...',
+    'disconnecting' => 'Felvétel lebontása...',
+    'upload'        => 'Felvétel feldolgozása folyamatban...',
+    'ready'         => 'Felvétel feldolgozása folyamatban...',
+  ),
+  
 );

@@ -103,4 +103,14 @@ return array(
     1 => 'Encrypt (resource intensive)',
   ),
   
+  'streamstatus' => array(
+    'start'         => 'Recording starting...',
+    'starting'      => 'Recording starting...',
+    'recording'     => 'Recording in progress...',
+    'disconnect'    => 'Recording stopping...',
+    'disconnecting' => 'Recording stopping...',
+    'upload'        => 'Recording processing...',
+    'ready'         => 'Recording processing...',
+  ),
+  
 );

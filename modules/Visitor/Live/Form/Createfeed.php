@@ -15,15 +15,10 @@ class Createfeed extends \Visitor\HelpForm {
       $this->application->getNumericParameter('id')
     );
     
-    $this->controller->toSmarty['formclass'] = 'leftdoublebox';
-    parent::init();
-    
-  }
-  
-  public function postSetupForm() {
-    
     $l = $this->bootstrap->getLocalization();
     $this->controller->toSmarty['title'] = $l('live', 'createfeed_title');
+    $this->controller->toSmarty['formclass'] = 'leftdoublebox';
+    parent::init();
     
   }
   
@@ -68,16 +63,7 @@ class Createfeed extends \Visitor\HelpForm {
     
     if ( $values['feedtype'] == 'vcr' ) {
       
-      $streamModel = $this->bootstrap->getModel('livefeed_streams');
-      $streamModel->insert( array(
-          'livefeedid'      => $feedModel->id,
-          'recordinglinkid' => $values['recordinglinkid'],
-          'name'            => 'VCR stream',
-          'streamtype'      => 'normal/mobile',
-          'timestamp'       => date('Y-m-d H:i:s'),
-        )
-      );
-      
+      $feedModel->createVCRStream( $values['recordinglinkid'] );
       $this->controller->redirect('live/managefeeds/' . $this->channelModel->id );
       
     }
