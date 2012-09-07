@@ -438,13 +438,13 @@ function setupAccesstype( elem ) {
 
 function setupUpload() {
   
-  $j('#upload, #uploadcontent').each( function() {
+  $j('#recordings_upload, #recordings_uploadcontent').each( function() {
     
     $j(this).attr('onsubmit', null );
     
   });
   
-  $j('#upload, #uploadcontent').submit( function( e ) {
+  $j('#recordings_upload, #recordings_uploadcontent').submit( function( e ) {
     
     if ( $j(this).attr('id') == 'upload' && !check_upload() )
       return false;
