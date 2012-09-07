@@ -522,7 +522,7 @@ CREATE TABLE `recording_links` (
    `conferenceid` text,
    `disabled` int(11) not null default '0',
    PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;
 
 
 CREATE TABLE `access` (

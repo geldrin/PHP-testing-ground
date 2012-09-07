@@ -8,6 +8,12 @@ class Modifycontributors extends \Visitor\Recordings\ModifyForm {
   public function init() {
     
     parent::init();
+    
+    $this->controller->redirect(
+      'recordings/modifysharing/' . $this->recordingsModel->id,
+      array( 'forward' => $this->application->getParameter('forward') )
+    );
+    
     $this->controller->toSmarty['contributors'] = $this->contributors =
       $this->recordingsModel->getContributorsWithRoles()
     ;

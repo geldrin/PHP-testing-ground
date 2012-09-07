@@ -446,9 +446,9 @@ function setupUpload() {
   
   $j('#recordings_upload, #recordings_uploadcontent').submit( function( e ) {
     
-    if ( $j(this).attr('id') == 'upload' && !check_upload() )
+    if ( $j(this).attr('id') == 'upload' && !check_recordings_upload() )
       return false;
-    else if ( $j(this).attr('id') == 'uploadcontent' && !check_uploadcontent() )
+    else if ( $j(this).attr('id') == 'uploadcontent' && !check_recordings_uploadcontent() )
       return false;
     
     var filename = $j('#file').val().match(/.*[\\/](.+)$/);
