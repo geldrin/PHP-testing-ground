@@ -21,6 +21,7 @@ $j(document).ready(function() {
   runIfExists('input[name=accesstype]', setupAccesstype );
   runIfExists('#chat', setupLiveChat );
   runIfExists('input[name=feedtype]', setupFeed );
+  runIfExists('.liveembed', setupLiveEmbed );
   
   $j('#scriptingcontainer').show();
   
@@ -56,6 +57,20 @@ function setupConfirm( elems ) {
     
     if ( !confirm( confirmquestion ) )
       e.preventDefault();
+    
+  });
+  
+}
+
+function setupLiveEmbed( elems ) {
+  
+  elems.click(function( e ) {
+    
+    e.preventDefault();
+    
+    var wrap = $j(this).next('.liveembedwrap')
+    wrap.width( $j(this).parents('td').width() + 'px' );
+    wrap.toggle();
     
   });
   

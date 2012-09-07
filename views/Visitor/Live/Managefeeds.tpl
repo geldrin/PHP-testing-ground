@@ -19,6 +19,17 @@
         <a href="{$language}/live/modifyfeed/{$feed.id}">{#live__live_edit#}</a> |
         <a href="{$language}/live/deletefeed/{$feed.id}" class="confirm" question="{#sitewide_areyousure#|escape:html}">{#live__live_delete#}</a>
       {/if}
+      {if !empty( $feed.streams )}
+        {if $feed.feedtype != 'vcr' or ( $feed.feedtype == 'vcr' and $feed.streams[0].status == null ) }|{/if}
+        <a href="#" class="liveembed">{#live__embed#}</a>
+        <div class="liveembedwrap">
+          <span>{#live__embed_info#}</span>
+          {capture assign=liveembed}
+            <iframe width="950" height="980" src="{$BASE_URI}{$language}/live/view/{$feed.id},{$feed.name|filenameize}?chromeless=true" frameborder="0" allowfullscreen="allowfullscreen"></iframe>
+          {/capture}
+          <textarea onclick="this.select();">{$liveembed|trim|escape:html}</textarea>
+        </div>
+      {/if}
    </td>
     <td>
       <table class="stream">

@@ -2104,3 +2104,9 @@ a#currentusername span {
   margin-left: 10px;
   color: #1E97D4;
 }
+#feeds .liveembedwrap {
+  display: none;
+}
+#feeds .liveembedwrap textarea {
+  width: 90%;
+}
