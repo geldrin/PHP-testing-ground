@@ -121,7 +121,7 @@ foreach ( $jobs as $job => $difference ) {
 
 	$body  = "";
 	$body .= "SITE: " . $app->config['baseuri'] . "\n";
-	$body .= "NODE: " . $jconf['node'] . "\n";
+	$body .= "NODE: " . $app->config['node_sourceip'] . "\n";
 	$body .= "NODE UPTIME: " . $uptime . "\n";
 	$body .= "JOB: " . $job . ".php\n";
 	$body .= "WATCHER PROCESSID: " . PROCESSID . "\n";
