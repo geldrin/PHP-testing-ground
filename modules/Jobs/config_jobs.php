@@ -67,7 +67,7 @@ return array('config_jobs' => array(
 	'dbstatus_conv_audio_err'		=> 'failedconverting2audio',
 	'dbstatus_conv_video'			=> 'converting3video',
 	'dbstatus_conv_video_err'		=> 'failedconverting3video',
-	'dbstatus_invalidinput'			=> 'invalidinput',
+	'dbstatus_invalidinput'			=> 'failedinput',
 	// VCR related
 	'dbstatus_vcr_start'			=> 'start',
 	'dbstatus_vcr_starting'			=> 'starting',
