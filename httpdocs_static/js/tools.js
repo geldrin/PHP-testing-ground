@@ -72,6 +72,35 @@ function setupLiveEmbed( elems ) {
     wrap.width( $j(this).parents('td').width() + 'px' );
     wrap.toggle();
     
+    return false;
+    
+  });
+  
+  var updateIframeSrc = function( elem, needchat, needfullplayer ) {
+    
+    var root = elem.parents('.liveembedwrap');
+    var url  = root.prev().attr('data-embedurl');
+    var txt  = root.find('textarea').val();
+    
+    if ( needchat == '1' )
+      url += '&chat=1';
+    
+    if ( needfullplayer == '0' )
+      url += '&fullplayer=0';
+    
+    root.find('textarea').val(
+      txt.replace(/src="(.*?)"/, 'src="' + url + '"')
+    );
+    
+  };
+  
+  $j('input[name=chat], input[name=fullplayer]').change(function() {
+    
+    var chat       = $j('input[name=chat]:checked').val();
+    var fullplayer = $j('input[name=fullplayer]:checked').val();
+    
+    updateIframeSrc( $j(this), chat, fullplayer );
+    
   });
   
 }

@@ -2089,6 +2089,15 @@ a#currentusername span {
 }
 
 /* feeds */
+#feeds .label {
+  font-weight: bold;
+}
+#feeds .option {
+  margin: 3px 0px 3px 0px;
+}
+#feeds .option input {
+  margin-left: 5px;
+}
 #feeds th {
   text-align: left;
   padding-left: 5px;

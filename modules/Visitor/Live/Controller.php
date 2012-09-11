@@ -52,6 +52,9 @@ class Controller extends \Visitor\Controller {
     $channelModel = $this->modelIDCheck('channels', $feedModel->row['channelid'] );
     $streamid     = $this->application->getNumericParameter('streamid');
     $browserinfo  = $this->bootstrap->getSession('browser');
+    $fullplayer   = $this->application->getParameter('player', true );
+    $chromeless   = $this->application->getParameter('chromeless');
+    $displaychat  = true;
     
     if ( !count( $browserinfo ) )
       $browserinfo->setArray( \Springboard\Browser::getInfo() );
@@ -71,10 +74,11 @@ class Controller extends \Visitor\Controller {
       'recording_type'  => 'live',
     );
     
-    if ( $feedModel->row['numberofstreams'] == 2 ) {
+    if ( $feedModel->row['numberofstreams'] == 2 and ( !$chromeless or $fullplayer ) ) {
       
       $flashdata['media_secondaryServers'] = array( $this->bootstrap->config['wowza']['liveingressurl'] );
       $flashdata['media_secondaryStreams'] = array( $currentstream['contentkeycode'] );
+      $this->toSmarty['doublewidth']       = true;
       
     }
     
@@ -101,9 +105,6 @@ class Controller extends \Visitor\Controller {
       $this->toSmarty['organization']['domain'],
       session_id()
     );
-    
-    $chromeless  = $this->application->getParameter('chromeless');
-    $displaychat = true;
     
     if ( $chromeless ) {
       
