@@ -109,6 +109,7 @@ return array(
     'markedfordeletion'  => 'Törölve',
     'unavailable'        => 'Feldolgozás alatt',
     'reconvert'          => 'Feldolgozás alatt',
+    'copyingfromfrontend'=> 'Feldolgozás alatt',
     'failed'             => 'Konvertálás sikertelen',
   ),
   

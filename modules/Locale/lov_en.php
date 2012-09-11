@@ -67,6 +67,7 @@ return array(
     'markedfordeletion'  => 'Marked for deletion',
     'unavailable'        => 'Converting',
     'reconvert'          => 'Converting',
+    'copyingfromfrontend'=> 'Converting',
     'failed'             => 'Conversion failed',
   ),
   
