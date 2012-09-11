@@ -13,6 +13,12 @@ $config = Array(
     'prefix' => '<span class="legendsubtitle">' . $l('recordings', 'uploadcontent_subtitle') . '</span>',
   ),
   
+  // APC uploadprogress-hez a suffix
+  'uploadid' => Array(
+    'type'  => 'inputHidden',
+    'value' => session_id() . mt_rand(),
+  ),
+  
   'id' => array(
     'type'  => 'inputHidden',
     'value' => $this->application->getNumericParameter('id'),
