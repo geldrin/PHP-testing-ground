@@ -1,5 +1,4 @@
 <?php
-$user = $this->bootstrap->getSession('user');
 
 $config = array(
   
@@ -70,6 +69,19 @@ if ( $this->controller->organization['isvcrenabled'] ) {
         disabled       = '0'
       ORDER BY name
     ",
+    'validation' => array(
+      array(
+        'type'      => 'string',
+        'minimum'   => 1,
+        'help'      => $l('live', 'recordinglinkid_help'),
+        'anddepend' => array(
+          array(
+            'js'  => '<FORM.feedtype> == "vcr"',
+            'php' => '<FORM.feedtype> == "vcr"',
+          ),
+        ),
+      ),
+    ),
   );
   
 } else
@@ -84,6 +96,9 @@ if ( $this->controller->organization['issecurestreamingenabled'] )
     'type'        => 'inputRadio',
     'displayname' => $l('live', 'issecurestreamingforced'),
     'values'      => $l->getLov('encryption'),
+    'validation'  => array(
+      array('type' => 'required'),
+    ),
   );
 else
   $config['issecurestreamingforced'] = array(

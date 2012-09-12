@@ -38,14 +38,10 @@ class Createstream extends \Visitor\HelpForm {
     
     $values = $this->form->getElementValues( 0 );
     
-    $values['livefeedid'] = $this->feedModel->id;
-    $values['timestamp']  = date('Y-m-d H:i:s');
-    $values['keycode']    = $this->streamModel->generateUniqueKeycode();
-    
-    if ( $this->feedModel->row['numberofstreams'] == 2 )
-      $values['contentkeycode'] =
-        $this->streamModel->generateUniqueKeycode()
-      ;
+    $values['livefeedid']     = $this->feedModel->id;
+    $values['timestamp']      = date('Y-m-d H:i:s');
+    $values['keycode']        = $this->streamModel->generateUniqueKeycode();
+    $values['contentkeycode'] = $this->streamModel->generateUniqueKeycode();
     
     unset( $values['id'] );
     $this->streamModel->insert( $values );

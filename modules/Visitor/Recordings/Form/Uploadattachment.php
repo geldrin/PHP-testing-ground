@@ -75,12 +75,11 @@ class Uploadattachment extends \Visitor\HelpForm {
           'status' => 'uploaded',
         )
       );
-    /*
-    $this->controller->redirectWithMessage(
-      $this->application->getParameter('forward', 'recordings/myrecordings'),
-      $l('recordings', 'attachment_success')
-    );
-    */
+    
+    $this->controller->toSmarty['attachments']  =
+      $this->recordingModel->getAttachments( false )
+    ;
+    
   }
   
 }

@@ -5,26 +5,37 @@
         <a href="{$BASE_URI}"><span></span>{#sitename#}</a>
       </div>
       <div class="footercontent leftbox">
-        <h2>További információk</h2>
+        <h2>{#footer_otherinfo#}</h2>
         <ul class="footerlinks">
-          <li><a href="#">Home</a></li>
-          <li><a href="#">About</a></li>
-          <li><a href="#">Clients</a></li>
-          <li><a href="#">Contact Us</a></li>
+          <li><a href="#">{#footer_home#}</a></li>
+          <li><a href="#">{#footer_about#}</a></li>
+          <li><a href="#">{#footer_contactus#}</a></li>
         </ul>
       </div>
       <div class="footercontent leftbox">
-        <h2>Segítség</h2>
+        <h2>&nbsp;</h2>
         <ul class="footerlinks">
-          <li><a href="#">Home</a></li>
-          <li><a href="#">About</a></li>
-          <li><a href="#">Clients</a></li>
-          <li><a href="#">Contact Us</a></li>
+          <li><a href="#">{#footer_categories#}</a></li>
+          <li><a href="#">{#footer_live#}</a></li>
+          <li><a href="#">{#footer_channels#}</a></li>
+          <li><a href="#">{#footer_featured#}</a></li>
         </ul>
       </div>
+      {if false and $member.id}
+        <div class="footercontent leftbox">
+          <h2>&nbsp;</h2>
+          <ul class="footerlinks">
+            <li><a href="#">{#footer_mysettings#}</a></li>
+            <li><a href="#">{#footer_newseditor#}</a></li>
+            <li><a href="#">{#footer_upload#}</a></li>
+            <li><a href="#">{#footer_myrecordings#}</a></li>
+          </ul>
+        </div>
+      {/if}
       <div class="hr"></div>
       <div class="leftbox bottom">
-        Company name (c) 2012
+        {assign var=year value=$smarty.now|date_format:'%Y'}
+        {#footer_copyright#|sprintf:$year}
       </div>
       <div class="leftbox bottom">
         <a href="mailto:{$supportemail|escape:html}">{$supportemail|escape:html}</a>

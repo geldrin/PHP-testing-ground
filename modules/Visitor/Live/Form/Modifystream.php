@@ -48,13 +48,8 @@ class Modifystream extends \Visitor\HelpForm {
     if ( !$this->streamModel->row['keycode'] )
       $values['keycode'] = $this->streamModel->generateUniqueKeycode();
     
-    if (
-         $this->feedModel->row['numberofstreams'] == 2 and
-         !$this->streamModel->row['contentkeycode']
-       )
-      $values['contentkeycode'] =
-        $this->streamModel->generateUniqueKeycode()
-      ;
+    if ( !$this->streamModel->row['contentkeycode'] )
+      $values['contentkeycode'] = $this->streamModel->generateUniqueKeycode();
     
     $this->streamModel->updateRow( $values );
     

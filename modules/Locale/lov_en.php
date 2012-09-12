@@ -60,14 +60,23 @@ return array(
   ),
   
   'recordingstatus' => array(
-    'uploading'          => 'Uploading',
-    'uploaded'           => 'Uploaded',
-    'onstorage'          => 'Converted',
-    'copyingtoconverter' => 'Converting',
-    'markedfordeletion'  => 'Marked for deletion',
-    'unavailable'        => 'Converting',
-    'reconvert'          => 'Converting',
-    'failed'             => 'Conversion failed',
+    'uploading'             => 'Uploading',
+    'uploaded'              => 'Uploaded',
+    'onstorage'             => 'Converted',
+    'copyingtoconverter'    => 'Converting',
+    'markedfordeletion'     => 'Marked for deletion',
+    'unavailable'           => 'Converting',
+    'reconvert'             => 'Converting',
+    'init'                  => 'Converting',
+    'reconvert'             => 'Converting',
+    'copyingfromfrontend'   => 'Converting',
+    'copiedfromfrontend'    => 'Converting',
+    'copyingtostorage'      => 'Converting',
+    'converting'            => 'Converting',
+    'converting1thumbnails' => 'Converting',
+    'converting2audio'      => 'Converting',
+    'converting3video'      => 'Converting',
+    'failed'                => 'Conversion failed',
   ),
   
   'aspectratios' => array(
@@ -101,6 +110,16 @@ return array(
   'encryption' => array(
     0 => 'No encryption',
     1 => 'Encrypt (resource intensive)',
+  ),
+  
+  'streamstatus' => array(
+    'start'         => 'Recording starting...',
+    'starting'      => 'Recording starting...',
+    'recording'     => 'Recording in progress...',
+    'disconnect'    => 'Recording stopping...',
+    'disconnecting' => 'Recording stopping...',
+    'upload'        => 'Recording processing...',
+    'ready'         => 'Recording processing...',
   ),
   
 );

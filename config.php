@@ -2,7 +2,7 @@
 $config = array(
   'siteid'       => 'teleconnect',
   'hashseed'     => 'ö923mfk3a,.dműteleconnect',
-  'version'      => '_v20120725',
+  'version'      => '_v20120911',
   'charset'      => 'UTF-8',
   'cacheseconds' => 3600,
   'errormessage' => 'An unexpected error has occured, our staff has been notified. Sorry for the inconvenience and thanks for your understanding!',
@@ -52,6 +52,10 @@ $config = array(
     'hu' => array(
       'hu_HU.UTF-8',
       'Hungarian_Hungary.1250',
+    ),
+    'en' => array(
+      'en_US.UTF-8',
+      'us'
     ),
   ),
   'timezone' => 'Europe/Budapest',

@@ -1,5 +1,5 @@
 <?php
-$user   = $this->bootstrap->getSession('user');
+
 $config = array(
 
   'action' => array(
@@ -91,3 +91,19 @@ $config = array_merge( $config, array(
   ),
   
 ));
+
+if ( $this->controller->organization['issecurestreamingenabled'] )
+  $config['issecurestreamingforced'] = array(
+    'type'        => 'inputRadio',
+    'displayname' => $l('live', 'issecurestreamingforced'),
+    'values'      => $l->getLov('encryption'),
+    'validation'  => array(
+      array('type' => 'required'),
+    ),
+  );
+else
+  $config['issecurestreamingforced'] = array(
+    'type'     => 'inputHidden',
+    'value'    => '0',
+    'readonly' => true,
+  );

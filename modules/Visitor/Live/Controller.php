@@ -18,6 +18,7 @@ class Controller extends \Visitor\Controller {
     'modifystream'         => 'liveadmin',
     'deletestream'         => 'liveadmin',
     'managefeeds'          => 'liveadmin',
+    'togglestream'         => 'liveadmin',
   );
   
   public $forms = array(
@@ -51,6 +52,9 @@ class Controller extends \Visitor\Controller {
     $channelModel = $this->modelIDCheck('channels', $feedModel->row['channelid'] );
     $streamid     = $this->application->getNumericParameter('streamid');
     $browserinfo  = $this->bootstrap->getSession('browser');
+    $fullplayer   = $this->application->getParameter('player', true );
+    $chromeless   = $this->application->getParameter('chromeless');
+    $displaychat  = true;
     
     if ( !count( $browserinfo ) )
       $browserinfo->setArray( \Springboard\Browser::getInfo() );
@@ -70,10 +74,11 @@ class Controller extends \Visitor\Controller {
       'recording_type'  => 'live',
     );
     
-    if ( $feedModel->row['numberofstreams'] == 2 ) {
+    if ( $feedModel->row['numberofstreams'] == 2 and ( !$chromeless or $fullplayer ) ) {
       
       $flashdata['media_secondaryServers'] = array( $this->bootstrap->config['wowza']['liveingressurl'] );
       $flashdata['media_secondaryStreams'] = array( $currentstream['contentkeycode'] );
+      $this->toSmarty['doublewidth']       = true;
       
     }
     
@@ -100,9 +105,6 @@ class Controller extends \Visitor\Controller {
       $this->toSmarty['organization']['domain'],
       session_id()
     );
-    
-    $chromeless  = $this->application->getParameter('chromeless');
-    $displaychat = true;
     
     if ( $chromeless ) {
       
@@ -200,6 +202,54 @@ class Controller extends \Visitor\Controller {
     );
     
     $streamModel->delete( $streamModel->id );
+    $this->redirect(
+      $this->application->getParameter(
+        'forward',
+        'live/managefeeds/' . $channelModel->id
+      )
+    );
+    
+  }
+  
+  public function togglestreamAction() {
+    
+    $streamModel   = $this->modelIDCheck(
+      'livefeed_streams',
+      $this->application->getNumericParameter('id')
+    );
+    
+    $feedModel    = $this->modelIDCheck(
+      'livefeeds',
+      $streamModel->row['livefeedid']
+    );
+    
+    $channelModel = $this->modelOrganizationAndUserIDCheck(
+      'channels',
+      $feedModel->row['channelid']
+    );
+    
+    if ( $this->application->getNumericParameter('start') == '1' ) {
+      
+      if ( $streamModel->row['status'] != null )
+        $this->redirectToController('contents', 'livestream_invalidtransition_start');
+      
+      $status = 'start';
+      
+    } elseif ( $this->application->getNumericParameter('start') == '0' ) {
+      
+      if ( $streamModel->row['status'] != 'recording' )
+        $this->redirectToController('contents', 'livestream_invalidtransition_stop');
+      
+      $status = 'disconnect';
+      
+    } else
+      throw new \Exception('Invalid start argument');
+    
+    $streamModel->updateRow( array(
+        'status' => $status,
+      )
+    );
+    
     $this->redirect(
       $this->application->getParameter(
         'forward',

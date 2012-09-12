@@ -59,14 +59,16 @@ if ( $app->config['node_role'] == 'converter' ) {
 	);
 }
 
-$now_minutes = date('i');
-
+// Send alert of stopped jobs between 06:00:00 - 06:05:00
+$alert_time_start = 6 * 3600 + 0 * 60 + 0;
+$alert_time_end = 6 * 3600 + 5 * 60 + 0;
+$now_time = date('G') * 3600 + date('i') * 60 + date('s');
 // Check if all.stop file is present blocking all the jobs
 $stop_file = $app->config['datapath'] . 'jobs/all.stop';
 if ( file_exists($stop_file) ) {
 	$msg = "WARNING: jobs are not running. See stop file:\n\n" . $stop_file . "\n\nRemove it to start all jobs. This message is sent once every hour.";
 	// Send mail once every hour to warn admin
-	if ( ( $now_minutes > 0 ) and ( $now_minutes < 6 ) ) {
+	if ( ( $now_time > $alert_time_start ) and ( $now_time < $alert_time_end ) ) {
 		$debug->log($jconf['log_dir'], $jconf['jobid_watcher'] . ".log", $msg, $sendmail = true);
 	}
 	exit;
@@ -121,7 +123,7 @@ foreach ( $jobs as $job => $difference ) {
 
 	$body  = "";
 	$body .= "SITE: " . $app->config['baseuri'] . "\n";
-	$body .= "NODE: " . $jconf['node'] . "\n";
+	$body .= "NODE: " . $app->config['node_sourceip'] . "\n";
 	$body .= "NODE UPTIME: " . $uptime . "\n";
 	$body .= "JOB: " . $job . ".php\n";
 	$body .= "WATCHER PROCESSID: " . PROCESSID . "\n";

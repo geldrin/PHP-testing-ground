@@ -725,7 +725,8 @@ class Channels extends \Springboard\Model {
         name,
         isexternal,
         slideonright,
-        numberofstreams
+        numberofstreams,
+        feedtype
       FROM livefeeds
       WHERE channelid IN('" . $this->id . "')
       ORDER BY name
@@ -736,26 +737,20 @@ class Channels extends \Springboard\Model {
   public function getFeedsWithStreams() {
     
     $streamObj = $this->bootstrap->getModel('livefeed_streams');
-    $feeds = $this->getFeeds();
+    $feeds     = $this->getFeeds();
+    
     foreach ( $feeds as $key => $feed ) {
       
       $streamObj->clearFilter();
       $streamObj->addFilter('livefeedid', $feed['id'] );
       $feeds[ $key ]['streams'] = $streamObj->getArray();
-      $feeds[ $key ]['status']  = null;
-      
-      foreach( $feeds[ $key ]['streams'] as $stream ) {
-        
-        if ( $stream['status'] )
-          $feeds[ $key ]['status'] = $stream['status'];
-        
-      }
       
     }
     
     return $feeds;
     
   }
+  
   public function getTreeArray( $order = null, $parentid = 0 ) {
     
     if ( !$order )

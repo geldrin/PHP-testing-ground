@@ -135,6 +135,18 @@ $config = Array(
     'values'      => $l->getLov('yesno'),
   ),
   
+  'isvcrenabled' => array(
+    'displayname' => 'VCR funkcionalitás?',
+    'type'        => 'inputRadio',
+    'values'      => $l->getLov('yesno'),
+  ),
+  
+  'issecurestreamingenabled' => array(
+    'displayname' => 'Biztonságos streamelés?',
+    'type'        => 'inputRadio',
+    'values'      => $l->getLov('yesno'),
+  ),
+  
   'registrationtype' => array(
     'displayname' => 'Regisztráció típusa',
     'type'        => 'select',
@@ -170,26 +182,43 @@ $listconfig = Array(
   'fields' => Array(
     
     Array(
-      'field' => 'o.id',
+      'field'       => 'o.id',
       'displayname' => 'ID',
     ),
     
     Array(
-      'field' => 'domain',
+      'field'       => 'domain',
       'displayname' => 'Domain',
     ),
-
+    
     Array(
-      'field' => 'sname.value',
+      'field'       => 'sname.value',
       'displayname' => 'Eredeti név',
     ),
     
     Array(
-      'field' => 'sshort.value',
+      'field'       => 'sshort.value',
       'displayname' => 'Rövid név',
     ),
-
-
+    
+    Array(
+      'field'       => 'issubscriber',
+      'displayname' => $config['issubscriber']['displayname'],
+      'lov'         => $l->getLov('yes')
+    ),
+    
+    Array(
+      'field'       => 'isvcrenabled',
+      'displayname' => $config['isvcrenabled']['displayname'],
+      'lov'         => $l->getLov('yes')
+    ),
+    
+    Array(
+      'field'       => 'issecurestreamingenabled',
+      'displayname' => $config['issecurestreamingenabled']['displayname'],
+      'lov'         => $l->getLov('yes')
+    ),
+    
   ),
-
+  
 );

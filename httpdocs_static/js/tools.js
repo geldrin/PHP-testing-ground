@@ -20,6 +20,8 @@ $j(document).ready(function() {
   runIfExists('.confirm', setupConfirm );
   runIfExists('input[name=accesstype]', setupAccesstype );
   runIfExists('#chat', setupLiveChat );
+  runIfExists('input[name=feedtype]', setupFeed );
+  runIfExists('.liveembed', setupLiveEmbed );
   
   $j('#scriptingcontainer').show();
   
@@ -57,6 +59,61 @@ function setupConfirm( elems ) {
       e.preventDefault();
     
   });
+  
+}
+
+function setupLiveEmbed( elems ) {
+  
+  elems.click(function( e ) {
+    
+    e.preventDefault();
+    
+    var wrap = $j(this).next('.liveembedwrap')
+    wrap.width( $j(this).parents('td').width() + 'px' );
+    wrap.toggle();
+    
+  });
+  
+  var updateIframeSrc = function( elem, needchat, needfullplayer ) {
+    
+    var root = elem.parents('.liveembedwrap');
+    var url  = root.prev().attr('data-embedurl');
+    var txt  = root.find('textarea').val();
+    
+    if ( needchat == '0' )
+      url += '&chat=0';
+    
+    if ( needfullplayer == '0' )
+      url += '&fullplayer=0';
+    
+    root.find('textarea').val(
+      txt.replace(/src="(.*?)"/, 'src="' + url + '"')
+    );
+    
+  };
+  
+  $j('.chat, .fullplayer').change(function() {
+    
+    var root       = $j(this).parents('.liveembedwrap');
+    var chat       = root.find('.chat:checked').val();
+    var fullplayer = root.find('.fullplayer:checked').val();
+    
+    updateIframeSrc( $j(this), chat, fullplayer );
+    
+  }).change();
+  
+}
+
+function setupFeed( elems ) {
+  
+  elems.change(function() {
+    
+    if ( elems.filter(':checked').val() == 'vcr' )
+      $j('#recordinglinkid').parents('tr').show();
+    else
+      $j('#recordinglinkid').parents('tr').hide();
+    
+  }).change();
   
 }
 
@@ -424,17 +481,17 @@ function setupAccesstype( elem ) {
 
 function setupUpload() {
   
-  $j('#upload, #uploadcontent').each( function() {
+  $j('#recordings_upload, #recordings_uploadcontent').each( function() {
     
     $j(this).attr('onsubmit', null );
     
   });
   
-  $j('#upload, #uploadcontent').submit( function( e ) {
+  $j('#recordings_upload, #recordings_uploadcontent').submit( function( e ) {
     
-    if ( $j(this).attr('id') == 'upload' && !check_upload() )
+    if ( $j(this).attr('id') == 'upload' && !check_recordings_upload() )
       return false;
-    else if ( $j(this).attr('id') == 'uploadcontent' && !check_uploadcontent() )
+    else if ( $j(this).attr('id') == 'uploadcontent' && !check_recordings_uploadcontent() )
       return false;
     
     var filename = $j('#file').val().match(/.*[\\/](.+)$/);

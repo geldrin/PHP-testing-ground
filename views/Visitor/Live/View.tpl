@@ -2,10 +2,10 @@
   {include file="Visitor/_header_nolayout.tpl" title=$rootchannel.title islive=true bodyclass=liveiframe}
   {assign var=linksinnewwindow value=' target="_blank"'}
 {else}
-  {include file="Visitor/_header.tpl" title=$rootchannel.title islive=true}
+  {include file="Visitor/_header.tpl" title=$rootchannel.title islive=true pagebgclass=fullheight}
 {/if}
 
-<div class="title">
+<div class="title recording">
   {if count( $streams ) > 1}
     <div id="streams">
       <span>{#live__recordings_streams#}:</span>
@@ -31,6 +31,7 @@
   {/*}
 </div>
 
+<div id="player">
 {if !$browser.mobile and ( $currentstream.streamtype == 'normal' or $currentstream.streamtype == 'normal/mobile' )}
   <script type="text/javascript">
     swfobject.embedSWF('flash/TCPlayer.swf?v={$VERSION}', 'playercontainer', '950', '530', '11.1.0', 'flash/swfobject/expressInstall.swf', {$flashdata|@jsonescape:true}, flashdefaults.params );
@@ -51,6 +52,7 @@
     {/if}
   </center>
 {/if}
+</div>
 
 {if $displaychat}
   

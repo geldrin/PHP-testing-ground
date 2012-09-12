@@ -16,3 +16,12 @@ $config['groups[]']['valuesql']        = "
   FROM access
   WHERE livefeedid = " . $this->application->getNumericParameter('id')
 ;
+
+if ( $this->feedModel->row['feedtype'] == 'live' )
+  $config['feedtype']['validation'] = array(
+    array(
+      'type' => 'custom',
+      'php'  => 'true',
+      'js'   => ' confirm(' . json_encode( $l('live', 'feedtypechange') ) . ')',
+    ),
+  );

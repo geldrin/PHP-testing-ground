@@ -461,7 +461,6 @@ CREATE TABLE `livefeeds` (
    `userid` int(10) unsigned not null,
    `organizationid` int(10) unsigned not null,
    `channelid` int(10) unsigned, /* live channel id - az az elo channel (isliveevent=1), ami alatti esemenyek ezt a feedet hasznalhatjak */
-   `recordinglinkid` int(10) unsigned,
    `name` text,
    `isexternal` int(11) not null default '0',
    `slideonright` int(11) not null default '0',
@@ -523,7 +522,7 @@ CREATE TABLE `recording_links` (
    `conferenceid` text,
    `disabled` int(11) not null default '0',
    PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;
 
 
 CREATE TABLE `access` (

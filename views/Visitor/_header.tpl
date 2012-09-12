@@ -9,6 +9,7 @@
   <base href="{$BASE_URI}" /><!--[if IE]></base><![endif]-->
   <title>{if $title}{$title|escape:html|titleescape} | {/if}{#sitename#}</title>
   {include file="Visitor/_opengraph.tpl"}
+  <link rel="icon" type="image/png" href="{$STATIC_URI}images/favicon.png"/>
   {csscombine}
   <link rel="StyleSheet" type="text/css" href="{$STATIC_URI}css/style{$VERSION}.css" media="screen"/>
   {if $browser.mobile}

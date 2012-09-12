@@ -15,15 +15,10 @@ class Createfeed extends \Visitor\HelpForm {
       $this->application->getNumericParameter('id')
     );
     
-    $this->controller->toSmarty['formclass'] = 'leftdoublebox';
-    parent::init();
-    
-  }
-  
-  public function postSetupForm() {
-    
     $l = $this->bootstrap->getLocalization();
     $this->controller->toSmarty['title'] = $l('live', 'createfeed_title');
+    $this->controller->toSmarty['formclass'] = 'leftdoublebox';
+    parent::init();
     
   }
   
@@ -63,6 +58,13 @@ class Createfeed extends \Visitor\HelpForm {
       default:
         throw new \Exception('Unhandled accesstype');
         break;
+      
+    }
+    
+    if ( $values['feedtype'] == 'vcr' ) {
+      
+      $feedModel->createVCRStream( $values['recordinglinkid'] );
+      $this->controller->redirect('live/managefeeds/' . $this->channelModel->id );
       
     }
     

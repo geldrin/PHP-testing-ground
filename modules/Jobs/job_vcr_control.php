@@ -71,7 +71,7 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_vcr_control.stop' ) and !i
 // !!! set start values from DB
 // START
 //update_db_stream_status(4, $jconf['dbstatus_vcr_start']);
-//update_db_vcr_reclink_status(2, $jconf['dbstatus_vcr_ready']);
+//update_db_vcr_reclink_status(1, $jconf['dbstatus_vcr_ready']);
 // STOP
 //update_db_stream_status(4, $jconf['dbstatus_vcr_disc']);
 // !!!
@@ -82,9 +82,6 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_vcr_control.stop' ) and !i
 		// Alias: choose normal or secure
 		$vcr['aliasused'] = $vcr['alias'];
 		if ( $vcr['issecurestreamingforced'] == 1 ) $vcr['aliasused'] = $vcr['aliassecure'];
-
-		// Starting recording
-		update_db_stream_status($vcr['id'], $jconf['dbstatus_vcr_starting']);
 
 		// Start global log
 		$global_log .= "Live feed: " . $vcr['feed_name'] . " (ID = " . $vcr['feed_id'] . ")\n";
@@ -116,15 +113,37 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_vcr_control.stop' ) and !i
 			break;
 		}
 
-// Others TCS functions:
-//$result = $soap_rs->GetStatus();
-//var_dump($result);
-// Get system status / health? Stop if not enough capacity?
+		// System health: check
+		$err = TCS_GetSystemHealth();
+		if ( !$err['code'] ) {
+			log_recording_conversion(0, $jconf['jobid_vcr_control'], $jconf['dbstatus_init'], "[ERROR] VCR system health problems.\n\n" . print_r($err['message'], TRUE), "-", "-", 0, TRUE);
+			break;
+		}
+
+		// TODO: error handling, DB logging
+		$err = TCS_GetSystemInformation();
 
 		$app->watchdog();
 
-		// START RECORDING: a recording needs to be started
-		if ( $vcr['status'] == $jconf['dbstatus_vcr_start'] ) {
+//echo "stat: " . $vcr['status'] . "\n";
+//echo "rlstat: " . $vcr['reclink_status'] . "\n";
+
+		// START RECORDING: a recording needs to be started, recording link is available
+		if ( ( $vcr['status'] == $jconf['dbstatus_vcr_start'] ) and ( $vcr['reclink_status'] == $jconf['dbstatus_vcr_ready'] ) ) {
+
+			// TCS: Check system capacity
+			$err = TCS_GetCallCapacity();
+			if ( $err['data']['maxcalls'] == $err['data']['currentcalls'] ) {
+				log_recording_conversion(0, $jconf['jobid_vcr_control'], $jconf['dbstatus_init'], "[ERROR] VCR call capacity reached. Cannot start a new recording.", "-", "-", 0, TRUE);
+				break;
+			}
+			if ( $err['data']['maxlivecalls'] == $err['data']['currentlivecalls'] ) {
+				log_recording_conversion(0, $jconf['jobid_vcr_control'], $jconf['dbstatus_init'], "[ERROR] VCR live call capacity reached. Cannot start a new recording.", "-", "-", 0, TRUE);
+				break;
+			}
+
+			// Starting recording
+			update_db_stream_status($vcr['id'], $jconf['dbstatus_vcr_starting']);
 
 			// TCS: reserve ConferenceID
 			$vcr['conf_id'] = tcs_reserve_conf_id($vcr);
@@ -167,11 +186,36 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_vcr_control.stop' ) and !i
 			$app->watchdog();
 		}
 
-// status == 'recording'
-// Nehany percenkent chekkolni a futo felveteleket? Jelezni ha hiba van es megszakadt?
+		// Recording: check ongoing recording status
+		if ( ( $vcr['status'] == $jconf['dbstatus_vcr_recording'] ) and ( $vcr['reclink_status'] == $jconf['dbstatus_vcr_recording'] ) ) {
+
+			$err = tcs_callinfo($vcr);
+			if ( !$err ) {
+
+				if ( $err['data']['callstate'] != "IN_CALL" ) {
+					log_recording_conversion($vcr['id'], $myjobid, $jconf['dbstatus_vcr_recording'], "[ERROR] VCR call was disconnected unexpectedly. Info:\n\n" . $err['message'], "-", var_dump($err['data']), 0, TRUE);
+					// Indicate error on stream
+					update_db_stream_status($vcr['id'], $jconf['dbstatus_vcr_recording_err']);
+					// Permanent error on recording link?
+					update_db_vcr_reclink_status($vcr['reclink_id'], $jconf['dbstatus_vcr_recording_err']);
+					break;
+				}
+
+				if ( ( $err['data']['mediastate'] != "RECORDING" ) and ( $err['data']['writerstatus'] != "OK" ) ) {
+					log_recording_conversion($vcr['id'], $myjobid, $jconf['dbstatus_vcr_recording'], "[ERROR] Unexpected VCR recording error. Info:\n\n" . $err['message'], "-", var_dump($err['data']), 0, TRUE);
+					// Indicate error on stream
+					update_db_stream_status($vcr['id'], $jconf['dbstatus_vcr_recording_err']);
+					// Permanent error on recording link?
+					update_db_vcr_reclink_status($vcr['reclink_id'], $jconf['dbstatus_vcr_recording_err']);
+					break;
+				}
+			}
+
+			$app->watchdog();
+		}
 
 		// Disconnect: a recording needs to be stopped
-		if ( $vcr['status'] == $jconf['dbstatus_vcr_disc'] ) {
+		if ( ( $vcr['status'] == $jconf['dbstatus_vcr_disc'] ) and ( $vcr['reclink_status'] == $jconf['dbstatus_vcr_recording'] ) ) {
 
 			// TCS: disconnect call
 			$err = tcs_disconnect($vcr);
@@ -193,9 +237,6 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_vcr_control.stop' ) and !i
 
 			$app->watchdog();
 		}
-
-//echo $global_log;
-//exit;
 
 		break;
 	}	// End of while(1)
@@ -257,7 +298,8 @@ global $jconf, $db;
 			livefeeds as c
 		WHERE
 			( ( a.status = '" . $jconf['dbstatus_vcr_start'] . "' AND b.status = '" . $jconf['dbstatus_vcr_ready'] . "') OR
-			  ( a.status = '" . $jconf['dbstatus_vcr_disc'] . "' AND b.status = '" . $jconf['dbstatus_vcr_recording'] . "') ) AND
+			  ( a.status = '" . $jconf['dbstatus_vcr_disc'] . "' AND b.status = '" . $jconf['dbstatus_vcr_recording'] . "') OR
+			  ( a.status = '" . $jconf['dbstatus_vcr_recording'] . "' AND b.status = '" . $jconf['dbstatus_vcr_recording'] . "') ) AND
 			a.recordinglinkid = b.id AND
 			b.disabled = 0 AND
 			a.livefeedid = c.id
@@ -436,6 +478,9 @@ global $soap_rs, $jconf;
 	$result = $soap_rs->GetCallInfo($conf);
 	$callinfo = $result->GetCallInfoResult;
 	$err['result'] = $callinfo->CallState;
+	$err['data']['callstate'] = $callinfo->CallState;
+	$err['data']['mediastate'] = $callinfo->MediaState;
+	$err['data']['writerstatus'] = $callinfo->WriterStatus;
 
 //echo "GETINGCALLINFO...\n";
 //var_dump($result);
@@ -482,7 +527,6 @@ global $soap_rs, $jconf;
 		// WriterStatus == FAILED? (tele a HDD?) Mas hiba?
 		$err['code'] = FALSE;
 		$err['message'] = "[ERROR] Undefined error in recording. Call info:\n\n" . $callinfo_log;
-		log_recording_conversion(0, $jconf['jobid_vcr_control'], $jconf['dbstatus_init'], $err['message'], $err['command'], $err['message'], 0, TRUE);
 		return $err;
 	}
 
@@ -495,8 +539,6 @@ global $soap_rs, $jconf;
 function tcs_getconfinfo(&$vcr) {
 global $soap_rs;
 
-//echo "GET INFO\n";
-
 	$err = array();
 
 	$conf = array(
@@ -506,7 +548,8 @@ global $soap_rs;
 	$err['command'] = "GetConference():\n\n" . print_r($conf, TRUE);
 	$result = $soap_rs->GetConference($conf);
 
-//var_dump($result);
+echo "GET INFO\n";
+var_dump($result);
 
 	$err_su = tcs_getstreamparams($result);
 	if ( $err_su['code'] ) {
@@ -626,5 +669,115 @@ global $soap_rs;
 
 	return $err;
 }
+
+function TCS_GetSystemHealth() {
+global $soap_rs;
+
+	$err = array();
+
+	$result = $soap_rs->GetSystemHealth();
+
+//var_dump($result);
+
+	$syshealth = $result->GetSystemHealthResult;
+
+	$err['code'] = TRUE;
+	$err['message'] = "";
+
+	if ( !$syshealth->EngineOK ) {
+		$err['code'] = FALSE;
+		$err['message'] .= "VCR engine error. Check system!\n";
+	}
+
+	if ( !$syshealth->LibraryOK ) {
+		$err['code'] = FALSE;
+		$err['message'] .= "VCR library error. Check system!\n";
+	}
+
+	if ( !$syshealth->DatabaseOK ) {
+		$err['code'] = FALSE;
+		$err['message'] .= "VCR database error. Check system!\n";
+	}
+
+	return $err;
+}
+
+function TCS_GetSystemInformation() {
+global $soap_rs;
+
+	$err = array();
+
+	$result = $soap_rs->GetSystemInformation();
+
+//var_dump($result);
+
+/*
+  ["GetSystemInformationResult"]=>
+  object(stdClass)#6 (15) {
+    ["ProductID"]=>
+    string(23) "TANDBERG Content Server"
+    ["VersionMajor"]=>
+    int(5)
+    ["VersionMinor"]=>
+    int(3)
+    ["ReleaseType"]=>
+    string(0) ""
+    ["ReleaseNumber"]=>
+    int(0)
+    ["BuildNumber"]=>
+    int(3316)
+    ["IPAddress"]=>
+    string(13) "91.120.59.239"
+    ["SerialNumber"]=>
+    string(8) "49A21925"
+    ["MaxCallOptions"]=>
+    int(5)
+    ["MaxLiveCallOptions"]=>
+    int(2)
+    ["EngineOK"]=>
+    bool(true)
+*/
+
+	return $err;
+}
+
+function TCS_GetCallCapacity() {
+global $soap_rs;
+
+	$err = array();
+
+	$result = $soap_rs->GetCallCapacity();
+
+	$err['code'] = TRUE;
+
+	$err['data']['maxcalls'] = $result->GetCallCapacityResult->MaxCalls;
+	$err['data']['currentcalls'] = $result->GetCallCapacityResult->CurrentCalls;
+	$err['data']['maxlivecalls'] = $result->GetCallCapacityResult->MaxLiveCalls;
+	$err['data']['currentlivecalls'] = $result->GetCallCapacityResult->CurrentLiveCalls;
+
+//var_dump($result);
+
+/*
+
+  ["GetCallCapacityResult"]=>
+  object(stdClass)#6 (9) {
+    ["MaxCalls"]=>
+    int(5)
+    ["CurrentCalls"]=>
+    int(1)
+    ["MaxLiveCalls"]=>
+    int(2)
+    ["CurrentLiveCalls"]=>
+    int(1)
+    ["CurrentPlaybackCalls"]=>
+    int(0)
+  }
+}
+
+*/
+
+	return $err;
+}
+
 
 ?>

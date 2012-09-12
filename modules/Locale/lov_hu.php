@@ -102,14 +102,22 @@ return array(
   ),
   
   'recordingstatus' => array(
-    'uploading'          => 'Feltöltés alatt',
-    'uploaded'           => 'Feltöltve',
-    'onstorage'          => 'Konvertálás kész',
-    'copyingtoconverter' => 'Feldolgozásra várakozás',
-    'markedfordeletion'  => 'Törölve',
-    'unavailable'        => 'Feldolgozás alatt',
-    'reconvert'          => 'Feldolgozás alatt',
-    'failed'             => 'Konvertálás sikertelen',
+    'uploading'             => 'Feltöltés alatt',
+    'uploaded'              => 'Feltöltve',
+    'onstorage'             => 'Konvertálás kész',
+    'copyingtoconverter'    => 'Feldolgozásra várakozás',
+    'markedfordeletion'     => 'Törölve',
+    'unavailable'           => 'Feldolgozás alatt',
+    'init'                  => 'Feldolgozás alatt',
+    'reconvert'             => 'Feldolgozás alatt',
+    'copyingfromfrontend'   => 'Feldolgozás alatt',
+    'copiedfromfrontend'    => 'Feldolgozás alatt',
+    'copyingtostorage'      => 'Feldolgozás alatt',
+    'converting'            => 'Feldolgozás alatt',
+    'converting1thumbnails' => 'Feldolgozás alatt',
+    'converting2audio'      => 'Feldolgozás alatt',
+    'converting3video'      => 'Feldolgozás alatt',
+    'failed'                => 'Konvertálás sikertelen',
   ),
   
   'aspectratios' => array(
@@ -143,6 +151,16 @@ return array(
   'encryption' => array(
     0 => 'Titkosítás nélküli adatfolyam',
     1 => 'Titkosítás (nagyobb erőforrásigény)',
+  ),
+  
+  'streamstatus' => array(
+    'start'         => 'Felvétel indítása folyamatban...',
+    'starting'      => 'Felvétel indítása folyamatban...',
+    'recording'     => 'Felvétel folyamatban...',
+    'disconnect'    => 'Felvétel lebontása...',
+    'disconnecting' => 'Felvétel lebontása...',
+    'upload'        => 'Felvétel feldolgozása folyamatban...',
+    'ready'         => 'Felvétel feldolgozása folyamatban...',
   ),
   
 );
