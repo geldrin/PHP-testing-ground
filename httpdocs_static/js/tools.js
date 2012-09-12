@@ -677,7 +677,7 @@ var flashdefaults = {
     bgcolor: "#050505",
     allowscriptaccess: "sameDomain",
     allowfullscreen: "true",
-    wmode: 'transparent'
+    wmode: 'opaque'
   }
 }
 
