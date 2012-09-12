@@ -26,8 +26,8 @@ class Bootstrap {
     
     $this->setupAutoloader();
     $this->setupOutputBuffer();
-    $this->setupDefault();
     $this->setupLanguage();
+    $this->setupDefault();
     
     $this->setupPHPSettings();
     $this->setupDebug();
@@ -73,7 +73,12 @@ class Bootstrap {
     mb_internal_encoding( $this->config['charset'] );
     mb_regex_encoding( $this->config['charset'] );
     
-    setlocale( LC_ALL, $this->config['locales'][ Springboard\Language::get() ] );
+    $language = Springboard\Language::get();
+    if ( isset( $this->config['locales'][ $language ] ) )
+      setlocale( LC_ALL, $this->config['locales'][ $language ] );
+    else
+      setlocale( LC_ALL, $this->config['locales'][ $this->config['defaultlanguage'] ] );
+    
     setlocale( LC_NUMERIC, 'C', 'english' );
     
   }
@@ -97,6 +102,7 @@ class Bootstrap {
     
     Springboard\Language::$defaultlanguage = $this->config['defaultlanguage'];
     Springboard\Language::$languages       = $this->config['languages'];
+    Springboard\Language::$storage         = 'cookie';
     
   }
   

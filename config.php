@@ -53,6 +53,10 @@ $config = array(
       'hu_HU.UTF-8',
       'Hungarian_Hungary.1250',
     ),
+    'en' => array(
+      'en_US.UTF-8',
+      'us'
+    ),
   ),
   'timezone' => 'Europe/Budapest',
   //-----
