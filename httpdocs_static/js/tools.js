@@ -72,8 +72,6 @@ function setupLiveEmbed( elems ) {
     wrap.width( $j(this).parents('td').width() + 'px' );
     wrap.toggle();
     
-    return false;
-    
   });
   
   var updateIframeSrc = function( elem, needchat, needfullplayer ) {
@@ -82,8 +80,8 @@ function setupLiveEmbed( elems ) {
     var url  = root.prev().attr('data-embedurl');
     var txt  = root.find('textarea').val();
     
-    if ( needchat == '1' )
-      url += '&chat=1';
+    if ( needchat == '0' )
+      url += '&chat=0';
     
     if ( needfullplayer == '0' )
       url += '&fullplayer=0';
@@ -94,14 +92,15 @@ function setupLiveEmbed( elems ) {
     
   };
   
-  $j('input[name=chat], input[name=fullplayer]').change(function() {
+  $j('.chat, .fullplayer').change(function() {
     
-    var chat       = $j('input[name=chat]:checked').val();
-    var fullplayer = $j('input[name=fullplayer]:checked').val();
+    var root       = $j(this).parents('.liveembedwrap');
+    var chat       = root.find('.chat:checked').val();
+    var fullplayer = root.find('.fullplayer:checked').val();
     
     updateIframeSrc( $j(this), chat, fullplayer );
     
-  });
+  }).change();
   
 }
 

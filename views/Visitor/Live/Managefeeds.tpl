@@ -26,17 +26,17 @@
           <span class="label">{#live__embed_info#}</span>
           <div class="option">
             <label for="chat" class="label">{#live__chat#}:</label>
-            <input type="radio" name="chat" id="chat_no" value="0"/>
-            <label for="chat_no">{#live__chat_no#}</label>
-            <input type="radio" name="chat" id="chat_yes" checked="checked" value="1"/>
-            <label for="chat_yes">{#live__chat_yes#}</label>
+            <input type="radio" class="chat" name="chat_{$feed.id}" id="chat_no_{$feed.id}" value="0"/>
+            <label for="chat_no_{$feed.id}">{#live__chat_no#}</label>
+            <input type="radio" class="chat" name="chat_{$feed.id}" id="chat_yes_{$feed.id}" checked="checked" value="1"/>
+            <label for="chat_yes_{$feed.id}">{#live__chat_yes#}</label>
           </div>
           <div class="option">
             <label for="fullplayer" class="label">{#live__fullplayer#}:</label><br/>
-            <input type="radio" name="fullplayer" id="fullplayer_yes" value="1" checked="checked"/>
-            <label for="fullplayer_yes">{#live__fullplayer_yes#}</label><br/>
-            <input type="radio" name="fullplayer" id="fullplayer_no" value="0"/>
-            <label for="fullplayer_no">{#live__fullplayer_no#}</label>
+            <input type="radio" class="fullplayer" name="fullplayer_{$feed.id}" id="fullplayer_yes_{$feed.id}" value="1" checked="checked"/>
+            <label for="fullplayer_yes_{$feed.id}">{#live__fullplayer_yes#}</label><br/>
+            <input type="radio" class="fullplayer" name="fullplayer_{$feed.id}" id="fullplayer_no_{$feed.id}" value="0"/>
+            <label for="fullplayer_no_{$feed.id}">{#live__fullplayer_no#}</label>
           </div>
           {capture assign=liveembed}
             <iframe width="950" height="980" src="{$BASE_URI}{$language}/live/view/{$feed.id},{$feed.name|filenameize}?chromeless=true" frameborder="0" allowfullscreen="allowfullscreen"></iframe>
