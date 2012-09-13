@@ -874,6 +874,9 @@ a#currentusername span {
 #footerlogo {
   float: right;
 }
+#footer .leftbox {
+  width: 230px;
+}
 #footer .footercontent h2 {
   font-size: 15px;
   font-weight: normal;
@@ -881,6 +884,10 @@ a#currentusername span {
   padding: 0;
   color: #cccccc;
   text-shadow: 0px 1px 0px rgba(0, 0, 0, 0.75);
+}
+#footer .footercontent p {
+  color: #858585;
+  font-size: 12px;
 }
 #footer .footerlinks {
   margin: 0px 0px 8px 0px;
