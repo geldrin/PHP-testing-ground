@@ -104,6 +104,9 @@ class Bootstrap {
     Springboard\Language::$languages       = $this->config['languages'];
     Springboard\Language::$storage         = 'cookie';
     
+    if ( get_class( $this->application ) == 'Springboard\Application\Admin' )
+      Springboard\Language::$languages = array('hu');
+    
   }
   
   public function setupSession( $allowoverride = false, $sessionid = null, $domain = null ) {
