@@ -32,9 +32,15 @@ class Modifyintroduction extends \Visitor\Form {
     $values = $this->form->getElementValues( 0 );
     $this->organizationModel->updateRow( $values );
     
-    $this->bootstrap->getCache(
-      'organizations-' . $this->controller->organization['domain']
-    )->expire();
+    foreach( $this->bootstrap->config['languages'] as $language ) {
+      
+      $this->bootstrap->getCache(
+        $language . '-organizations-' . $this->controller->organization['domain'],
+        null,
+        true
+      )->expire();
+      
+    }
     
     $this->controller->redirect(
       $this->application->getParameter('forward', 'index' )
