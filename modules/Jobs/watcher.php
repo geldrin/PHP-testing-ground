@@ -93,6 +93,7 @@ foreach ( $jobs as $job => $difference ) {
 // Report jobs stopped
 if ( $jobs_isstopped ) {
 	$msg = "WARNING: some jobs may not running. See stop file(s):\n\n" . $jobs_stopped . "\nRemove them to restart jobs. This message is sent once every hour.";
+	$now_minutes = date('i');
 	if ( ( $now_minutes > 0 ) and ( $now_minutes < 6 ) ) {
 		$debug->log($jconf['log_dir'], $jconf['jobid_watcher'] . ".log", $msg, $sendmail = true);
 	}
