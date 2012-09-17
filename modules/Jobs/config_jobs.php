@@ -2,7 +2,7 @@
 // Job configuration file
 
 // Profiles: baseline, main, high
-// Worked on Debian stable stream.teleconnect.hu
+// Worked on Debian stable stream.videosquare.eu
 //define('H264_PROFILE',			'-preset fast -profile main');
 //define('H264_PROFILE_MOBILE',		'-preset fast -profile baseline');
 // Worked on testing Debian until 05/2012
