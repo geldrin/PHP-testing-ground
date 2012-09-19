@@ -43,7 +43,7 @@ print_r($_SERVER['argv']);
 // Handle command line arguments
 if ( $argc >= 2 ) {
 	$desc_filename = trim($argv[1]);
-	$media_dir = trim($argv[2]);
+//	$media_dir = trim($argv[2]);
 } else {
 	echo "ERROR: parameters are missing\nUSAGE: php -f ./archive_cut.php [descriptor file] [media files directory]\n";
 	exit -1;
@@ -219,10 +219,10 @@ while( !feof($fh) ) {
 				exit -1;
 			}
 
-			$media_cuts[$rec_id]['cut_start'] = $cut_start;
-			$media_cuts[$rec_id]['cut_end'] = $cut_end;
-			$media_cuts[$rec_id]['cut_starttime'] = $cut_startsec;
-			$media_cuts[$rec_id]['cut_endtime'] = $cut_endsec;
+			$media_cuts[$rec_id]['cut_media_start'] = $cut_start;
+			$media_cuts[$rec_id]['cut_media_end'] = $cut_end;
+			$media_cuts[$rec_id]['cut_media_startsec'] = $cut_startsec;
+			$media_cuts[$rec_id]['cut_media_endsec'] = $cut_endsec;
 
 			$rec_id++;
 		} else {
@@ -256,7 +256,15 @@ if ( empty($content_startdatetime) ) {
 	exit -1;
 }
 
-var_dump($media_cuts);
+// Calculate media and content offset
+$media_content_offset = $content_starttimesec - $media_starttimesec;
+echo "Media-content offset: " . $media_content_offset . "\n";
+
+// content: 4 sec-cel később indult
+// media: vágjuk (manuális értékekkel): 01:00:00 - 01:05:05
+// content: 4 sec-cel korábban vágunk
+
+//var_dump($media_cuts);
 
 // Cut media slices
 $cut_path = $media_filename . "_" . date("Y-m-d_His");
@@ -267,10 +275,10 @@ if ( file_exists($cut_path) ) {
 	exit -1;
 }
 
-//if ( !mkdir($cut_path) ) {
-//	echo "ERROR: cannot create directory " . $cut_path . "\n";
-//	exit -1;
-//}
+if ( !mkdir($cut_path) ) {
+	echo "ERROR: cannot create directory " . $cut_path . "\n";
+	exit -1;
+}
 
 $temp_filename = $cut_path . "/temp.mp4";
 
@@ -283,12 +291,20 @@ foreach($media_cuts as $key => $value) {
 	  unlink($temp_filename);
 	}
 
-	echo "key = " . $key . "\n";
-	echo "s: " . $media_cuts[$key]['cut_starttime'] . "\n";
-	echo "e: " . $media_cuts[$key]['cut_endtime'] . "\n";
+	$media_cuts[$key]['cut_content_start'] = secs2hms($media_cuts[$key]['cut_media_startsec'] - $media_content_offset);
+	$media_cuts[$key]['cut_content_end'] = secs2hms($media_cuts[$key]['cut_media_endsec'] - $media_content_offset);
+	$media_cuts[$key]['cut_content_startsec'] = $media_cuts[$key]['cut_media_startsec'] - $media_content_offset;
+	$media_cuts[$key]['cut_content_endsec'] = $media_cuts[$key]['cut_media_endsec'] - $media_content_offset;
 
-	$cut_duration = $media_cuts[$key]['cut_endtime'] - $media_cuts[$key]['cut_starttime'];
-	$command_cut = "ffmpeg -y -v 0 -i " . $media_filename . " -ss " . secs2hms($media_cuts[$key]['cut_starttime']) . ".0 -t " . $cut_duration . " ";
+//	echo "key = " . $key . "\n";
+//	echo "s: " . $media_cuts[$key]['cut_starttime'] . "\n";
+//	echo "e: " . $media_cuts[$key]['cut_endtime'] . "\n";
+
+var_dump($media_cuts[$key]);
+
+	// Cutting media segment
+	$cut_duration = $media_cuts[$key]['cut_media_endsec'] - $media_cuts[$key]['cut_media_startsec'];
+	$command_cut = "ffmpeg -y -v 0 -i " . $media_filename . " -ss " . secs2hms($media_cuts[$key]['cut_media_startsec']) . ".0 -t " . $cut_duration . " ";
 	$target_filename = $cut_path . "/" . $key . "." . $media_type;
 	if ( $media_type == "mp4" ) {
 		$command = $command_cut . "-acodec copy -vcodec copy -async 25 -f mp4 " . $target_filename;
@@ -297,21 +313,23 @@ foreach($media_cuts as $key => $value) {
 	}
 
 echo $command . "\n";
-exit;
 
-/*
-		$time_start = time();
-		exec($command, $output, $result);
-		$duration = time() - $time_start;
-		$mins_taken = round( $duration / 60, 2);
-		$output_string = implode("\n", $output);
-		if ( $result != 0 ) {
-			echo "ERROR: ffmpeg returned an error\n";
-			exit -1;
-		}
+	$time_start = time();
+	$output = runExternal($command);
+	$output_string = $output['cmd_output'];
+	$result = $output['code'];
+//	exec($command, $output, $result);
+	$duration = time() - $time_start;
+	$mins_taken = round( $duration / 60, 2);
+//	$output_string = implode("\n", $output);
+	if ( $result != 0 ) {
+		echo "ERROR: ffmpeg returned an error\n";
+		exit -1;
+	}
 
-		echo "Successful conversion in " . $mins_taken . " mins. File saved to: " . $temp_filename . "\n";
+	echo "Successful media cut in " . $mins_taken . " mins. File saved to: " . $temp_filename . "\n";
 
+	if ( $media_type == "f4v" ) {
 		// Yamdi: index f4v file
 		echo "Indexing " . $temp_filename . " to " . $target_filename . "\n";
 		$command = "yamdi -i " . $temp_filename . " -o " . $target_filename;
@@ -324,12 +342,50 @@ exit;
 			echo "ERROR: yamdi returned an error\n";
 			exit -1;
 		}
-
 	}
 
 	// Remove remaining temp file
 	if ( file_exists($temp_filename) ) {
 	  unlink($temp_filename);
+	}
+
+	// Cutting content segment
+	$cut_duration = $media_cuts[$key]['cut_content_endsec'] - $media_cuts[$key]['cut_content_startsec'];
+	$command_cut = "ffmpeg -y -v 0 -i " . $content_filename . " -ss " . secs2hms($media_cuts[$key]['cut_content_startsec']) . ".0 -t " . $cut_duration . " ";
+	$target_filename = $cut_path . "/" . $key . "_content." . $content_type;
+	if ( $content_type == "mp4" ) {
+		$command = $command_cut . "-acodec copy -vcodec copy -async 25 -f mp4 " . $target_filename;
+	} else {
+		$command = $command_cut . "-acodec copy -vcodec copy -async 25 -f flv " . $temp_filename;
+	}
+
+echo $command . "\n";
+
+/*	$time_start = time();
+	exec($command, $output, $result);
+	$duration = time() - $time_start;
+	$mins_taken = round( $duration / 60, 2);
+	$output_string = implode("\n", $output);
+	if ( $result != 0 ) {
+		echo "ERROR: ffmpeg returned an error\n";
+		exit -1;
+	}
+
+	echo "Successful content cut in " . $mins_taken . " mins. File saved to: " . $temp_filename . "\n";
+
+	if ( $content_type == "f4v" ) {
+		// Yamdi: index f4v file
+		echo "Indexing " . $temp_filename . " to " . $target_filename . "\n";
+		$command = "yamdi -i " . $temp_filename . " -o " . $target_filename;
+		$time_start = time();
+		exec($command, $output, $result);
+		$duration = time() - $time_start;
+		$mins_taken = round( $duration / 60, 2);
+		$output_string = implode("\n", $output);
+		if ( $result != 0 ) {
+			echo "ERROR: yamdi returned an error\n";
+			exit -1;
+		}
 	}
 */
 
