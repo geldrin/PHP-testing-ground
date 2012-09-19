@@ -1698,7 +1698,7 @@ class Recordings extends \Springboard\Model {
     
     return $this->db->getArray(
       self::getUnionSelect( $user, $select, $tables, $where ) . "
-      ORDER BY RAND()
+      ORDER BY id = 17 DESC, RAND()
       LIMIT $limit
     ");
     
