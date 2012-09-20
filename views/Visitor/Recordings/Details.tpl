@@ -141,6 +141,9 @@
   
   <div id="infotoggle">
     <ul>
+      {if $member.id}
+        <li id="channellink"><a href="#" title="{#recordings__addtochannel#}"><span></span>{#recordings__addtochannel#}</a></li>
+      {/if}
       <li id="embedlink"><a href="#" title="{#recordings__embed#}"><span></span>{#recordings__embed#}</a></li>
     </ul>
     <div class="leftside"></div>
@@ -181,6 +184,14 @@
       </ul>
     </div>
   {/if}
+  <br/>
+  
+  <div id="channels">
+    <h3>{#recordings__addtochannel_title#}</h3>
+    <ul>
+      {include file=Visitor/Recordings/Details_channels.tpl level=1}
+    </ul>
+  </div>
   
   <br/>
   <div class="addthis_toolbox addthis_default_style addthis_32x32_style">

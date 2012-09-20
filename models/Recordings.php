@@ -1336,6 +1336,74 @@ class Recordings extends \Springboard\Model {
     
   }
   
+  public function getChannelsForUser( $user, $channeltype = null ) {
+    
+    $this->ensureID();
+    $channelModel = $this->bootstrap->getModel('channels');
+    $where        = array();
+    
+    if ( $user['id'] )
+      $where[] = "c.userid = '" . $user['id'] . "'";
+    
+    if ( $user['isclientadmin'] )
+      $where[] = "c.organizationid = '" . $user['organizationid'] . "'";
+    
+    $where = implode(" OR ", $where );
+    
+    if ( $channeltype ) {
+      
+      $typeids = $channelModel->cachedGetIDsByType( $channeltype );
+      
+      if ( !empty( $typeids ) ) {
+        
+        if ( $where )
+          $where = "( $where ) AND ";
+        
+        $where .= " c.channeltypeid IN('" . implode("', '", $typeids ) . "')";
+        
+      }
+      
+    }
+    
+    $channels = $channelModel->getChannelTree(
+      false,
+      false,
+      $where
+    );
+    
+    $activechannelids = $this->db->getCol("
+      SELECT channelid
+      FROM channels_recordings
+      WHERE
+        userid      = '" . $user['id'] . "' AND
+        recordingid = '" . $this->id . "'
+    ");
+    
+    $channels = $this->markChannelsActive( $channels, $activechannelids );
+    return $channels;
+    
+  }
+  
+  protected function markChannelsActive( &$channels, &$activechannelids ) {
+    
+    if ( empty( $activechannelids ) )
+      return $channels;
+    
+    foreach( $channels as $key => $channel ) {
+      
+      $channels[ $key ]['active'] = in_array( $channel['id'], $activechannelids );
+      
+      if ( !empty( $channel['children'] ) )
+        $channels[ $key ]['children'] =
+          $this->markChannelsActive( $channel['children'], $activechannelids );
+        ;
+      
+    }
+    
+    return $channels;
+    
+  }
+  
   public function getFlashData( $info, $sessionid ) {
     
     $this->ensureObjectLoaded();

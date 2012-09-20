@@ -236,7 +236,7 @@ a.submitbutton:hover {
 .smallinfo {
   background-image: url(images/help.png);
   background-repeat: no-repeat;
-  background-position: 0px 7px;
+  background-position: 0px 5px;
   font-size: 11px;
   padding: 6px 0px 0px 20px;
   clear: both;
@@ -1638,6 +1638,66 @@ a#currentusername span {
 #metadata .attachments ul {
   margin: 0;
   padding-left: 20px;
+}
+/* metadata channels */
+#metadata #channels {
+  background-color: #ddd;
+  -moz-border-radius: 5px;
+  -webkit-border-radius: 5px;
+  border-radius: 5px;
+  padding: 15px 0px 15px 0px;
+  position: relative;
+}
+#metadata #channels h3 {
+  margin: 0px 0px 10px 30px;
+}
+#metadata #channels ul {
+  margin: 0;
+  padding: 0;
+  list-style-type: none;
+}
+#metadata #channels .actions {
+  float: right;
+}
+#metadata #channels .added {
+  position: absolute;
+  left: 5px;
+  width: 16px;
+  height: 16px;
+  background-image: url(images/icons/checkmark.png);
+}
+#metadata #channels .channelname {
+  height: 22px;
+  line-height: 22px;
+  font-size: 12px;
+  padding-right: 15px;
+}
+#metadata #channels .channelname:hover {
+  background-color: #fbfbfa;
+}
+#metadata #channels .channelname.level1 {
+  padding-left: 30px;
+}
+#metadata #channels .channelname.level2 {
+  padding-left: 45px;
+}
+#metadata #channels .channelname.level3 {
+  padding-left: 60px;
+}
+#metadata #channels .channelname.level4 {
+  padding-left: 75px;
+}
+#metadata #channels .channelname.level6 {
+  padding-left: 90px;
+}
+#metadata #channels .channelname.level7 {
+  padding-left: 105px;
+}
+#metadata #channels .channelname.level8 {
+  padding-left: 120px;
+}
+#metadata #channels .channelname.level9 {
+  padding-left: 135px;
 }
 /* recommendatory */
 #recommendatory {

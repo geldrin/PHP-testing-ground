@@ -156,6 +156,9 @@ class Controller extends \Visitor\Controller {
       'Plugins/modifier.indexphoto.php'
     );
     
+    if ( $user['id'] )
+      $this->toSmarty['channels'] = $recordingsModel->getChannelsForUser( $user );
+    
     $this->toSmarty['height']        = $this->getPlayerHeight( $recordingsModel );
     $this->toSmarty['recording']     = $recordingsModel->row;
     $this->toSmarty['flashdata']     = $recordingsModel->getFlashData( $this->toSmarty, session_id() );
