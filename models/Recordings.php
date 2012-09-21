@@ -2000,4 +2000,41 @@ class Recordings extends \Springboard\Model {
     
   }
   
+  public function addToChannel( $channelid, $user ) {
+    
+    $this->ensureID();
+    $existingid = $this->db->getOne("
+      SELECT id
+      FROM channels_recordings
+      WHERE
+        channelid   = '$channelid' AND
+        recordingid = '" . $this->id . "' AND
+        userid      = '" . $user['id'] . "'
+    ");
+    
+    if ( $existingid )
+      return false;
+    else
+      $this->db->query("
+        INSERT INTO channels_recordings (channelid, recordingid, userid)
+        VALUES ('$channelid', '" . $this->id . "', '" . $user['id'] . "')
+      ");
+    
+    return true;
+    
+  }
+  
+  public function removeFromChannel( $channelid, $user ) {
+    
+    $this->ensureID();
+    $this->db->query("
+      DELETE FROM channels_recordings
+      WHERE
+        channelid   = '$channelid' AND
+        recordingid = '" . $this->id . "' AND
+        userid      = '" . $user['id'] . "'
+    ");
+    
+  }
+  
 }

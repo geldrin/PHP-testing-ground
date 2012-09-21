@@ -34,6 +34,8 @@ class Controller extends \Visitor\Controller {
     'searchcontributor'    => 'uploader',
     'newcontributor'       => 'uploader',
     'linkcontributor'      => 'uploader',
+    'addtochannel'         => 'member',
+    'removefromchannel'    => 'member',
   );
   
   public $forms = array(
@@ -701,6 +703,56 @@ class Controller extends \Visitor\Controller {
     $this->toSmarty['flashdata']   = $flashdata;
     
     $this->smartyoutput('Visitor/Recordings/Embed.tpl');
+    
+  }
+  
+  public function addtochannelAction() {
+    
+    $user            = $this->bootstrap->getSession('user');
+    $recordingsModel = $this->modelOrganizationAndUserIDCheck(
+      'recordings',
+      $this->application->getNumericParameter('id')
+    );
+    $channelsModel   = $this->modelOrganizationAndUserIDCheck(
+      'channels',
+      $this->application->getNumericParameter('channel')
+    );
+    
+    $recordingsModel->addToChannel( $channelsModel->id, $user );
+    
+    $this->toSmarty['level']     = 1;
+    $this->toSmarty['recording'] = $recordingsModel->row;
+    $this->toSmarty['channels']  = $recordingsModel->getChannelsForUser( $user );
+    $this->jsonOutput( array(
+        'status' => 'success',
+        'html'   => $this->fetchSmarty('Visitor/Recordings/Details_channels.tpl'),
+      )
+    );
+    
+  }
+  
+  public function removefromchannelAction() {
+    
+    $user            = $this->bootstrap->getSession('user');
+    $recordingsModel = $this->modelOrganizationAndUserIDCheck(
+      'recordings',
+      $this->application->getNumericParameter('id')
+    );
+    $channelsModel   = $this->modelOrganizationAndUserIDCheck(
+      'channels',
+      $this->application->getNumericParameter('channel')
+    );
+    
+    $recordingsModel->removeFromChannel( $channelsModel->id, $user );
+    
+    $this->toSmarty['level']     = 1;
+    $this->toSmarty['recording'] = $recordingsModel->row;
+    $this->toSmarty['channels']  = $recordingsModel->getChannelsForUser( $user );
+    $this->jsonOutput( array(
+        'status' => 'success',
+        'html'   => $this->fetchSmarty('Visitor/Recordings/Details_channels.tpl'),
+      )
+    );
     
   }
   

@@ -21,6 +21,7 @@ $j(document).ready(function() {
   runIfExists('input[name=accesstype]', setupAccesstype );
   runIfExists('#chat', setupLiveChat );
   runIfExists('input[name=feedtype]', setupFeed );
+  runIfExists('#metadata #channels', setupChannels );
   runIfExists('.liveembed', setupLiveEmbed );
   
   $j('#scriptingcontainer').show();
@@ -57,6 +58,61 @@ function setupConfirm( elems ) {
     
     if ( !confirm( confirmquestion ) )
       e.preventDefault();
+    
+  });
+  
+}
+
+function setupChannels() {
+  
+  var fixmargins = function() {
+    
+    $j('#channels li li .channelname').each(function() {
+      
+      var level = $j(this).attr('class').match(/level(\d+)/)[1];
+      //var parents = $j(this).parentsUntil('.level2').filter('li');
+      var margin  = 30 + ( 15 * ( level - 1 ) );
+      $j(this).css('paddingLeft', margin + 'px' );
+      
+    });
+    
+  };
+  
+  $j('#channellink').click(function(e) {
+    e.preventDefault();
+    
+    $j(this).toggleClass('active');
+    $j('#channels').toggle();
+  });
+  
+  fixmargins();
+  
+  $j('#channels .actions a').live('click', function(e) {
+    
+    e.preventDefault();
+    
+    if ( $j(this).hasClass('loading') )
+      return;
+    
+    $j.ajax({
+      type: 'GET',
+      url: $j(this).attr('href'),
+      dataType: 'json',
+      success: function(data) {
+        
+        if ( typeof( data ) != 'object' || data.status != 'success' || !data.html )
+          return;
+        
+        $j('#channelslist').html( data.html );
+        fixmargins();
+        
+      },
+      complete: function() {
+        $j(this).removeClass('loading');
+      }
+    })
+    
+    $j(this).addClass('loading');
     
   });
   
@@ -406,6 +462,7 @@ function setupEmbed() {
   $j('#embedlink').click(function(e) {
     e.preventDefault();
     
+    $j(this).toggleClass('active');
     $j('#embed').toggle();
   });
   

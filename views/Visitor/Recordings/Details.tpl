@@ -185,13 +185,14 @@
     </div>
   {/if}
   <br/>
-  
-  <div id="channels">
-    <h3>{#recordings__addtochannel_title#}</h3>
-    <ul>
-      {include file=Visitor/Recordings/Details_channels.tpl level=1}
-    </ul>
-  </div>
+  {if $member.id}
+    <div id="channels">
+      <h3>{#recordings__addtochannel_title#}</h3>
+      <ul id="channelslist">
+        {include file=Visitor/Recordings/Details_channels.tpl level=1}
+      </ul>
+    </div>
+  {/if}
   
   <br/>
   <div class="addthis_toolbox addthis_default_style addthis_32x32_style">
