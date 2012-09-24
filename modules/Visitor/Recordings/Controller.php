@@ -168,7 +168,7 @@ class Controller extends \Visitor\Controller {
     $this->toSmarty['commentcount']  = $recordingsModel->getCommentsCount();
     $this->toSmarty['author']        = $recordingsModel->getAuthor();
     $this->toSmarty['attachments']   = $recordingsModel->getAttachments();
-    $this->toSmarty['canrate']       = ( $user['id'] and $rating[ $recordingsModel->id ] );
+    $this->toSmarty['canrate']       = ( $user['id'] and !$rating[ $recordingsModel->id ] );
     $this->toSmarty['relatedvideos'] = $recordingsModel->getRelatedVideos(
       $this->application->config['relatedrecordingcount']
     );
