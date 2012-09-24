@@ -81,6 +81,22 @@ class Controller extends \Visitor\Controller {
         'type' => 'file',
       ),
     ),
+    'addtochannel' => array(
+      'recordingid' => array(
+        'type' => 'id',
+      ),
+      'channelid' => array(
+        'type' => 'id',
+      ),
+    ),
+    'removefromchannel' => array(
+      'recordingid' => array(
+        'type' => 'id',
+      ),
+      'channelid' => array(
+        'type' => 'id',
+      ),
+    ),
   );
   
   public function init() {
@@ -706,53 +722,82 @@ class Controller extends \Visitor\Controller {
     
   }
   
-  public function addtochannelAction() {
+  public function addtochannelAction( $recordingid = null, $channelid = null ) {
+    
+    if ( $recordingid and $channelid )
+      $api = true;
+    else {
+      
+      $recordingid = $this->application->getNumericParameter('id');
+      $channelid   = $this->application->getNumericParameter('channel');
+      $api         = false;
+      
+    }
     
     $user            = $this->bootstrap->getSession('user');
-    $recordingsModel = $this->modelOrganizationAndUserIDCheck(
-      'recordings',
-      $this->application->getNumericParameter('id')
-    );
-    $channelsModel   = $this->modelOrganizationAndUserIDCheck(
-      'channels',
-      $this->application->getNumericParameter('channel')
-    );
+    $recordingsModel = $this->checkOrganizationAndUseridWithApi( $api, 'recordings', $recordingid );
+    $channelsModel   = $this->checkOrganizationAndUseridWithApi( $api, 'channels', $channelid );
     
     $recordingsModel->addToChannel( $channelsModel->id, $user );
     
     $this->toSmarty['level']     = 1;
     $this->toSmarty['recording'] = $recordingsModel->row;
     $this->toSmarty['channels']  = $recordingsModel->getChannelsForUser( $user );
-    $this->jsonOutput( array(
-        'status' => 'success',
-        'html'   => $this->fetchSmarty('Visitor/Recordings/Details_channels.tpl'),
-      )
-    );
+    
+    if ( !$api )
+      $this->jsonOutput( array(
+          'status' => 'success',
+          'html'   => $this->fetchSmarty('Visitor/Recordings/Details_channels.tpl'),
+        )
+      );
+    else
+      return true;
     
   }
   
-  public function removefromchannelAction() {
+  public function removefromchannelAction( $recordingid = null, $channelid = null ) {
+    
+    if ( $recordingid and $channelid )
+      $api = true;
+    else {
+      
+      $recordingid = $this->application->getNumericParameter('id');
+      $channelid   = $this->application->getNumericParameter('channel');
+      $api         = false;
+      
+    }
     
     $user            = $this->bootstrap->getSession('user');
-    $recordingsModel = $this->modelOrganizationAndUserIDCheck(
-      'recordings',
-      $this->application->getNumericParameter('id')
-    );
-    $channelsModel   = $this->modelOrganizationAndUserIDCheck(
-      'channels',
-      $this->application->getNumericParameter('channel')
-    );
+    $recordingsModel = $this->checkOrganizationAndUseridWithApi( $api, 'recordings', $recordingid );
+    $channelsModel   = $this->checkOrganizationAndUseridWithApi( $api, 'channels', $channelid );
     
     $recordingsModel->removeFromChannel( $channelsModel->id, $user );
     
     $this->toSmarty['level']     = 1;
     $this->toSmarty['recording'] = $recordingsModel->row;
     $this->toSmarty['channels']  = $recordingsModel->getChannelsForUser( $user );
-    $this->jsonOutput( array(
-        'status' => 'success',
-        'html'   => $this->fetchSmarty('Visitor/Recordings/Details_channels.tpl'),
-      )
-    );
+    
+    if ( !$api )
+      $this->jsonOutput( array(
+          'status' => 'success',
+          'html'   => $this->fetchSmarty('Visitor/Recordings/Details_channels.tpl'),
+        )
+      );
+    else
+      return true;
+    
+  }
+  
+  protected function checkOrganizationAndUseridWithApi( $api, $table, $id ) {
+    
+    $model = $this->modelOrganizationAndUserIDCheck( $table, $id, false );
+    
+    if ( $api and !$model )
+      throw new \Exception('No record found with that ID in table: ' . $table );
+    elseif ( !$model )
+      $this->redirect('');
+    else
+      return $model;
     
   }
   
