@@ -4,6 +4,18 @@ define('BASE_PATH',	realpath( __DIR__ . '/../..' ) . '/' );
 define('PRODUCTION', false );
 define('DEBUG', false );
 
+$ischeckonly = FALSE;
+
+$media_profile = array(
+	vcodec	=>	"x264",
+	width	=>	1280,
+	height	=>	720,
+	vbps	=>	2000,
+	acodec	=>	"aac",
+	ach		=>	1,
+	abps	=>	64
+);
+
 include_once( BASE_PATH . 'libraries/Springboard/Application/Cli.php');
 
 // Utils
@@ -70,6 +82,7 @@ echo "Descriptor file: " . $desc_filename . "\n";
 echo "Parsing descriptor file:\n";
 
 $rec_id = 1;
+$suffix = "";
 
 $fh = fopen($desc_filename, "r");
 while( !feof($fh) ) {
@@ -87,17 +100,18 @@ while( !feof($fh) ) {
 	// media_filename variable found
 	if ( preg_match('/^[\s]*media_filename[\s]*=/', $oneline) ) {
 		$tmp = explode("=", $oneline, 2);
-		$media_filename = trim($tmp[1]);
+		$media_filename = realpath(trim($tmp[1]));
 
 		// Invalid input filename
-		if ( !preg_match('/^[a-zA-Z0-9\-\_\.]*\Z/', $media_filename) ) {
-			echo "ERROR (line " . $descriptor_line . "): invalid media filename \"" . $media_filename . "\"\n";
+		if ( $media_filename === FALSE ) {
+			echo "ERROR (line " . $desc_line . "): invalid media filename \"" . $media_filename . "\"\n";
 			exit -1;
 		}
 
 		// Check if media file exists
 		if ( !is_readable($media_filename) ) {
 			echo "ERROR (line " . $desc_line . "): media file \"" . $media_filename . "\" does not exist\n";
+			exit -1;
 		} else {
 			$path_parts = pathinfo($media_filename);
 			$media_type = $path_parts['extension'];
@@ -137,10 +151,10 @@ while( !feof($fh) ) {
 	// content_filename variable found
 	if ( preg_match('/^[\s]*content_filename[\s]*=/', $oneline) ) {
 		$tmp = explode("=", $oneline, 2);
-		$content_filename = trim($tmp[1]);
+		$content_filename = realpath(trim($tmp[1]));
 
 		// Invalid input filename
-		if ( !preg_match('/^[a-zA-Z0-9\-\_\.]*\Z/', $content_filename) ) {
+		if ( $content_filename === FALSE ) {
 			echo "ERROR (line " . $desc_line . "): invalid content filename \"" . $content_filename . "\"\n";
 			exit -1;
 		}
@@ -148,6 +162,7 @@ while( !feof($fh) ) {
 		// Check if media file exists
 		if ( !is_readable($content_filename) ) {
 			echo "ERROR (line " . $desc_line . "): content file \"" . $content_filename . "\" does not exist\n";
+			exit -1;
 		} else {
 			$path_parts = pathinfo($content_filename);
 			$content_type = $path_parts['extension'];
@@ -184,15 +199,30 @@ while( !feof($fh) ) {
 		continue;
 	} // End of media start date/time check
 
+	// Suffix
+	if ( preg_match('/^[\s]*suffix[\s]*=/', $oneline) ) {
+		$tmp = explode("=", $oneline, 2);
+		$suffix = $tmp[1];
+//echo "Suffix=" . $suffix . "\n";
+	}
+
 	// Read cut start and end times
 	if ( preg_match('/^[\s]*cut:media[\s]*[,][\s]*[0-1][0-9]:[0-5][0-9]:[0-5][0-9][\s]*[,][\s]*[0-1][0-9]:[0-5][0-9]:[0-5][0-9][\s]*/', $oneline) ) {
 		echo "OK: " . $oneline . "\n";
 
-		$tmp = explode(",", $oneline,3);
+		$iscontent = TRUE;
+		$tmp = explode(",", $oneline, 4);
 
 		// Event date and time
 		$cut_start = trim($tmp[1]);
 		$cut_end = trim($tmp[2]);
+
+		// Check no content flag
+		if ( isset($tmp[3]) ) {
+			if ( trim($tmp[3]) == "nop" ) {
+				$iscontent = FALSE;
+			}
+		}
 
 		// Process media cut times
 		if ( empty($media_cuts[$rec_id]) ) {
@@ -223,6 +253,8 @@ while( !feof($fh) ) {
 			$media_cuts[$rec_id]['cut_media_end'] = $cut_end;
 			$media_cuts[$rec_id]['cut_media_startsec'] = $cut_startsec;
 			$media_cuts[$rec_id]['cut_media_endsec'] = $cut_endsec;
+
+			$media_cuts[$rec_id]['iscontent'] = $iscontent;
 
 			$rec_id++;
 		} else {
@@ -260,12 +292,6 @@ if ( empty($content_startdatetime) ) {
 $media_content_offset = $content_starttimesec - $media_starttimesec;
 echo "Media-content offset: " . $media_content_offset . "\n";
 
-// content: 4 sec-cel később indult
-// media: vágjuk (manuális értékekkel): 01:00:00 - 01:05:05
-// content: 4 sec-cel korábban vágunk
-
-//var_dump($media_cuts);
-
 // Cut media slices
 $cut_path = $media_filename . "_" . date("Y-m-d_His");
 echo "Media directory: " . $cut_path . "\n";
@@ -275,15 +301,16 @@ if ( file_exists($cut_path) ) {
 	exit -1;
 }
 
-if ( !mkdir($cut_path) ) {
-	echo "ERROR: cannot create directory " . $cut_path . "\n";
-	exit -1;
+if ( !$ischeckonly ) {
+	if ( !mkdir($cut_path) ) {
+		echo "ERROR: cannot create directory " . $cut_path . "\n";
+		exit -1;
+	}
 }
 
 $temp_filename = $cut_path . "/temp.mp4";
 
 // Go through list of cuts and call ffmpeg to do the job
-$command_template = "ffmpeg -y -i " . $media_filename . " -v 0 ";
 foreach($media_cuts as $key => $value) {
 
 	// Remove temp file if exists
@@ -300,12 +327,13 @@ foreach($media_cuts as $key => $value) {
 //	echo "s: " . $media_cuts[$key]['cut_starttime'] . "\n";
 //	echo "e: " . $media_cuts[$key]['cut_endtime'] . "\n";
 
-var_dump($media_cuts[$key]);
+//var_dump($media_cuts[$key]);
 
 	// Cutting media segment
 	$cut_duration = $media_cuts[$key]['cut_media_endsec'] - $media_cuts[$key]['cut_media_startsec'];
-	$command_cut = "ffmpeg -y -v 0 -i " . $media_filename . " -ss " . secs2hms($media_cuts[$key]['cut_media_startsec']) . ".0 -t " . $cut_duration . " ";
-	$target_filename = $cut_path . "/" . $key . "." . $media_type;
+//	$command_cut = "ffmpeg -y -v 0 -i " . $media_filename . " -ss " . secs2hms($media_cuts[$key]['cut_media_startsec']) . ".0 -t " . $cut_duration . " ";
+	$command_cut = "ffmpeg -y -i " . $media_filename . " -ss " . secs2hms($media_cuts[$key]['cut_media_startsec']) . ".0 -t " . $cut_duration . " ";
+	$target_filename = $cut_path . "/" . $key . "_" . $suffix . "." . $media_type;
 	if ( $media_type == "mp4" ) {
 		$command = $command_cut . "-acodec copy -vcodec copy -async 25 -f mp4 " . $target_filename;
 	} else {
@@ -314,80 +342,109 @@ var_dump($media_cuts[$key]);
 
 echo $command . "\n";
 
-	$time_start = time();
-	$output = runExternal($command);
-	$output_string = $output['cmd_output'];
-	$result = $output['code'];
-//	exec($command, $output, $result);
-	$duration = time() - $time_start;
-	$mins_taken = round( $duration / 60, 2);
-//	$output_string = implode("\n", $output);
-	if ( $result != 0 ) {
-		echo "ERROR: ffmpeg returned an error\n";
-		exit -1;
-	}
+	if ( !$ischeckonly ) {
 
-	echo "Successful media cut in " . $mins_taken . " mins. File saved to: " . $temp_filename . "\n";
-
-	if ( $media_type == "f4v" ) {
-		// Yamdi: index f4v file
-		echo "Indexing " . $temp_filename . " to " . $target_filename . "\n";
-		$command = "yamdi -i " . $temp_filename . " -o " . $target_filename;
 		$time_start = time();
-		exec($command, $output, $result);
+		$output = runExternal($command);
+		$output_string = $output['cmd_output'];
+		$result = $output['code'];
 		$duration = time() - $time_start;
 		$mins_taken = round( $duration / 60, 2);
-		$output_string = implode("\n", $output);
+echo "err = " . $result . "\n";
 		if ( $result != 0 ) {
-			echo "ERROR: yamdi returned an error\n";
-			exit -1;
+			echo "ERROR: ffmpeg returned an error\n";
+echo "FFMPEG:\n" . $output_string . "\n";
+//			exit -1;
 		}
-	}
 
-	// Remove remaining temp file
-	if ( file_exists($temp_filename) ) {
-	  unlink($temp_filename);
-	}
+		echo "Successful media cut in " . $mins_taken . " mins.\n";
 
-	// Cutting content segment
-	$cut_duration = $media_cuts[$key]['cut_content_endsec'] - $media_cuts[$key]['cut_content_startsec'];
-	$command_cut = "ffmpeg -y -v 0 -i " . $content_filename . " -ss " . secs2hms($media_cuts[$key]['cut_content_startsec']) . ".0 -t " . $cut_duration . " ";
-	$target_filename = $cut_path . "/" . $key . "_content." . $content_type;
-	if ( $content_type == "mp4" ) {
-		$command = $command_cut . "-acodec copy -vcodec copy -async 25 -f mp4 " . $target_filename;
-	} else {
-		$command = $command_cut . "-acodec copy -vcodec copy -async 25 -f flv " . $temp_filename;
-	}
-
-echo $command . "\n";
-
-/*	$time_start = time();
-	exec($command, $output, $result);
-	$duration = time() - $time_start;
-	$mins_taken = round( $duration / 60, 2);
-	$output_string = implode("\n", $output);
-	if ( $result != 0 ) {
-		echo "ERROR: ffmpeg returned an error\n";
-		exit -1;
-	}
-
-	echo "Successful content cut in " . $mins_taken . " mins. File saved to: " . $temp_filename . "\n";
-
-	if ( $content_type == "f4v" ) {
-		// Yamdi: index f4v file
-		echo "Indexing " . $temp_filename . " to " . $target_filename . "\n";
-		$command = "yamdi -i " . $temp_filename . " -o " . $target_filename;
-		$time_start = time();
-		exec($command, $output, $result);
-		$duration = time() - $time_start;
-		$mins_taken = round( $duration / 60, 2);
-		$output_string = implode("\n", $output);
-		if ( $result != 0 ) {
-			echo "ERROR: yamdi returned an error\n";
-			exit -1;
+		if ( $media_type == "f4v" ) {
+			// Yamdi: index f4v file
+			echo "Indexing " . $temp_filename . " to " . $target_filename . "\n";
+			$command = "yamdi -i " . $temp_filename . " -o " . $target_filename;
+			$time_start = time();
+			exec($command, $output, $result);
+			$duration = time() - $time_start;
+			$mins_taken = round( $duration / 60, 2);
+			$output_string = implode("\n", $output);
+			if ( $result != 0 ) {
+				echo "ERROR: yamdi returned an error\n";
+				exit -1;
+			}
 		}
+
+		// Remove temp file
+		if ( file_exists($temp_filename) ) {
+		  unlink($temp_filename);
+		}
+
 	}
-*/
+
+//HandBrakeCLI -i ringier_1nap_1_3.m4v --start-at duration:100 --stop-at duration:200 -o aaa.mp4
+// Media:   h264 (Main), yuv420p, 1280x720 [SAR 1:1 DAR 16:9], 1993 kb/s, 24.92 fps, 25 tbr, 2500 tbn, 50 tbc
+// Content: h264 (Main), yuv420p, 1280x720 [SAR 1:1 DAR 16:9], 794 kb/s, 29.83 fps, 30 tbr, 3k tbn, 60 tbc
+/*-i ~/Desktop/my_original_file.wmv
+-o ~/Desktop/my_new_file.mp4
+--encoder x264
+--vb 2000
+--ab 64
+--two-pass
+--optimize */
+
+	if ( $media_cuts[$key]['iscontent'] ) {
+
+		// Cutting content segment
+		$cut_duration = $media_cuts[$key]['cut_content_endsec'] - $media_cuts[$key]['cut_content_startsec'];
+//		$command_cut = "ffmpeg -y -v 0 -i " . $content_filename . " -ss " . secs2hms($media_cuts[$key]['cut_content_startsec']) . ".0 -t " . $cut_duration . " ";
+		$command_cut = "ffmpeg -y -i " . $content_filename . " -ss " . secs2hms($media_cuts[$key]['cut_content_startsec']) . ".0 -t " . $cut_duration . " ";
+		$target_filename = $cut_path . "/" . $key . "_" . $suffix . "_content." . $content_type;
+		if ( $content_type == "mp4" ) {
+			$command = $command_cut . "-acodec copy -vcodec copy -async 25 -f mp4 " . $target_filename;
+		} else {
+			$command = $command_cut . "-acodec copy -vcodec copy -async 25 -f flv " . $temp_filename;
+		}
+
+	echo $command . "\n";
+
+		if ( !$ischeckonly ) {
+
+			$time_start = time();
+			exec($command, $output, $result);
+			$duration = time() - $time_start;
+			$mins_taken = round( $duration / 60, 2);
+			$output_string = implode("\n", $output);
+echo "err = " . $result . "\n";
+			if ( $result != 0 ) {
+				echo "ERROR: ffmpeg returned an error\n";
+echo "FFMPEG:\n" . $output_string . "\n";
+//				exit -1;
+			}
+
+			echo "Successful content cut in " . $mins_taken . " mins.\n";
+
+			if ( $content_type == "f4v" ) {
+				// Yamdi: index f4v file
+				echo "Indexing " . $temp_filename . " to " . $target_filename . "\n";
+				$command = "yamdi -i " . $temp_filename . " -o " . $target_filename;
+				$time_start = time();
+				exec($command, $output, $result);
+				$duration = time() - $time_start;
+				$mins_taken = round( $duration / 60, 2);
+				$output_string = implode("\n", $output);
+				if ( $result != 0 ) {
+					echo "ERROR: yamdi returned an error\n";
+					exit -1;
+				}
+			}
+
+			// Remove temp file
+			if ( file_exists($temp_filename) ) {
+			  unlink($temp_filename);
+			}
+		}
+
+	}
 
 }
 
