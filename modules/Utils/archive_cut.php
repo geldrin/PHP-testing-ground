@@ -6,19 +6,7 @@ define('DEBUG', false );
 
 $ischeckonly = FALSE;
 
-$media_profile = array(
-	vcodec	=>	"x264",
-	width	=>	1280,
-	height	=>	720,
-	vbps	=>	2000,
-	acodec	=>	"aac",
-	ach		=>	1,
-	abps	=>	64
-);
-
 include_once( BASE_PATH . 'libraries/Springboard/Application/Cli.php');
-
-// Utils
 include_once( BASE_PATH . 'modules/Jobs/job_utils_base.php');
 
 // Check operating system - exit if Windows
@@ -47,15 +35,12 @@ $jconf = $app->config['config_jobs'];
 $debug = Springboard\Debug::getInstance();
 $debug->log($jconf['log_dir'], $myjobid . ".log", "Archive cut job started", $sendmail = false);
 
-//echo BASE_PATH . 'Jobs/config_jobs.php' . "\n";
-
-echo "argc: " . $argc . "\n";
-print_r($_SERVER['argv']);
+//echo "argc: " . $argc . "\n";
+//print_r($_SERVER['argv']);
 
 // Handle command line arguments
 if ( $argc >= 2 ) {
-	$desc_filename = trim($argv[1]);
-//	$media_dir = trim($argv[2]);
+	$desc_filename = realpath(trim($argv[1]));
 } else {
 	echo "ERROR: parameters are missing\nUSAGE: php -f ./archive_cut.php [descriptor file] [media files directory]\n";
 	exit -1;
@@ -84,18 +69,29 @@ echo "Parsing descriptor file:\n";
 $rec_id = 1;
 $suffix = "";
 
+$path_parts = pathinfo($desc_filename);
+$desc_filename_new = $path_parts['filename'] . "_updated." . $path_parts['extension'];
+echo "new desc fname: " . $desc_filename_new . "\n";
+
 $fh = fopen($desc_filename, "r");
+$fhn = fopen($desc_filename_new, "w");
 while( !feof($fh) ) {
 
 	// Read one line from descriptor file
 	$oneline = fgets($fh);
+	$oneline = trim($oneline);
+	$newline = $oneline;
 	$desc_line++;
 
-	$oneline = trim($oneline);
-
 	// Skip empty and comment lines
-	if ( empty($oneline) ) continue;
-	if ( preg_match('/^[\s]*#/', $oneline) ) continue;
+	if ( empty($oneline) ) {
+		fwrite($fhn, $newline . "\n");
+		continue;
+	}
+	if ( preg_match('/^[\s]*#/', $oneline) ) {
+		fwrite($fhn, $newline . "\n");
+		continue;
+	}
 
 	// media_filename variable found
 	if ( preg_match('/^[\s]*media_filename[\s]*=/', $oneline) ) {
@@ -104,13 +100,13 @@ while( !feof($fh) ) {
 
 		// Invalid input filename
 		if ( $media_filename === FALSE ) {
-			echo "ERROR (line " . $desc_line . "): invalid media filename \"" . $media_filename . "\"\n";
+			echo "ERROR (line " . $desc_line . "): media does not exist \"" . trim($tmp[1]) . "\"\n";
 			exit -1;
 		}
 
-		// Check if media file exists
+		// Check if media file exists and readable
 		if ( !is_readable($media_filename) ) {
-			echo "ERROR (line " . $desc_line . "): media file \"" . $media_filename . "\" does not exist\n";
+			echo "ERROR (line " . $desc_line . "): media file \"" . $media_filename . "\" does not exist or not readable\n";
 			exit -1;
 		} else {
 			$path_parts = pathinfo($media_filename);
@@ -127,6 +123,8 @@ while( !feof($fh) ) {
 			}
 			echo "Media file found: " . $media_filename . "\n";
 		}
+
+		fwrite($fhn, $newline . "\n");
 		continue;
 
 	} // End of media filename check
@@ -145,6 +143,7 @@ while( !feof($fh) ) {
 			$media_starttime = trim($tmp[1]);
 			$media_starttimesec = hms2secs($media_starttime);
 		}
+		fwrite($fhn, $newline . "\n");
 		continue;
 	} // End of media start date/time check
 
@@ -178,8 +177,9 @@ while( !feof($fh) ) {
 			}
 			echo "Content file found: " . $content_filename . "\n";
 		}
-		continue;
 
+		fwrite($fhn, $newline . "\n");
+		continue;
 	} // End of media filename check
 
 	// content_starttime variable found
@@ -196,6 +196,8 @@ while( !feof($fh) ) {
 			$content_starttime = trim($tmp[1]);
 			$content_starttimesec = hms2secs($content_starttime);
 		}
+
+		fwrite($fhn, $newline . "\n");
 		continue;
 	} // End of media start date/time check
 
@@ -203,7 +205,16 @@ while( !feof($fh) ) {
 	if ( preg_match('/^[\s]*suffix[\s]*=/', $oneline) ) {
 		$tmp = explode("=", $oneline, 2);
 		$suffix = $tmp[1];
-//echo "Suffix=" . $suffix . "\n";
+		fwrite($fhn, $newline . "\n");
+		continue;
+	}
+
+	// Destination path
+	if ( preg_match('/^[\s]*dstpath[\s]*=/', $oneline) ) {
+		$tmp = explode("=", $oneline, 2);
+		$dstpath = $tmp[1];
+		fwrite($fhn, $newline . "\n");
+		continue;
 	}
 
 	// Read cut start and end times
@@ -211,7 +222,7 @@ while( !feof($fh) ) {
 		echo "OK: " . $oneline . "\n";
 
 		$iscontent = TRUE;
-		$tmp = explode(",", $oneline, 4);
+		$tmp = explode(",", $oneline, 5);
 
 		// Event date and time
 		$cut_start = trim($tmp[1]);
@@ -222,10 +233,22 @@ while( !feof($fh) ) {
 			if ( trim($tmp[3]) == "nop" ) {
 				$iscontent = FALSE;
 			}
+			if ( trim($tmp[3]) == "pres" ) {
+				$iscontent = TRUE;
+			}
+		} else {
+			$newline .= ",pres";
+		}
+
+		if ( !isset($tmp[4]) ) {
+			$newline .= "," . $rec_id;
+			$alloc_id = $rec_id;
+		} else {
+			$alloc_id = trim($tmp[4]);
 		}
 
 		// Process media cut times
-		if ( empty($media_cuts[$rec_id]) ) {
+		if ( empty($media_cuts[$alloc_id]) ) {
 
 			// Does cut values exists?
 			if ( empty($cut_start) or empty ($cut_end) ) {
@@ -249,14 +272,17 @@ while( !feof($fh) ) {
 				exit -1;
 			}
 
-			$media_cuts[$rec_id]['cut_media_start'] = $cut_start;
-			$media_cuts[$rec_id]['cut_media_end'] = $cut_end;
-			$media_cuts[$rec_id]['cut_media_startsec'] = $cut_startsec;
-			$media_cuts[$rec_id]['cut_media_endsec'] = $cut_endsec;
+			$media_cuts[$alloc_id]['cut_media_start'] = $cut_start;
+			$media_cuts[$alloc_id]['cut_media_end'] = $cut_end;
+			$media_cuts[$alloc_id]['cut_media_startsec'] = $cut_startsec;
+			$media_cuts[$alloc_id]['cut_media_endsec'] = $cut_endsec;
 
-			$media_cuts[$rec_id]['iscontent'] = $iscontent;
+			$media_cuts[$alloc_id]['iscontent'] = $iscontent;
 
-			$rec_id++;
+			if ( $alloc_id == $rec_id ) $rec_id++;
+
+			fwrite($fhn, $newline . "\n");
+			continue;
 		} else {
 			echo "ERROR (line " . $desc_line . "): duplicate recording ID in descriptor file (id = " . $rec_id . ")\n";
 			exit -1;
@@ -267,8 +293,16 @@ while( !feof($fh) ) {
 }
 
 fclose($fh);
+fclose($fhn);
+
+if ( !rename($desc_filename_new, $dstpath . $desc_filename_new) ) {
+	echo "ERROR: cannot move descriptor file " . $desc_filename_new . ".temp to " . $dstpath . $desc_filename_new . "\n";
+	exit -1;
+}
 
 echo "Descriptor file check finished" . (($warnings > 0)?(" (WARNINGS: " . $warnings . ")\n\n"):"\n\n");
+
+exit;
 
 // Are media and content file and start date/time specified?
 if ( empty($media_filename) ) {
@@ -293,7 +327,7 @@ $media_content_offset = $content_starttimesec - $media_starttimesec;
 echo "Media-content offset: " . $media_content_offset . "\n";
 
 // Cut media slices
-$cut_path = $media_filename . "_" . date("Y-m-d_His");
+$cut_path = $dstpath . $media_filename . "_" . date("Y-m-d_His");
 echo "Media directory: " . $cut_path . "\n";
 
 if ( file_exists($cut_path) ) {
@@ -315,7 +349,7 @@ foreach($media_cuts as $key => $value) {
 
 	// Remove temp file if exists
 	if ( file_exists($temp_filename) ) {
-	  unlink($temp_filename);
+		unlink($temp_filename);
 	}
 
 	$media_cuts[$key]['cut_content_start'] = secs2hms($media_cuts[$key]['cut_media_startsec'] - $media_content_offset);
@@ -332,13 +366,14 @@ foreach($media_cuts as $key => $value) {
 	// Cutting media segment
 	$cut_duration = $media_cuts[$key]['cut_media_endsec'] - $media_cuts[$key]['cut_media_startsec'];
 //	$command_cut = "ffmpeg -y -v 0 -i " . $media_filename . " -ss " . secs2hms($media_cuts[$key]['cut_media_startsec']) . ".0 -t " . $cut_duration . " ";
-	$command_cut = "ffmpeg -y -i " . $media_filename . " -ss " . secs2hms($media_cuts[$key]['cut_media_startsec']) . ".0 -t " . $cut_duration . " ";
+//	$command_cut = "ffmpeg -y -i " . $media_filename . " -ss " . secs2hms($media_cuts[$key]['cut_media_startsec']) . ".0 -t " . $cut_duration . " ";
 	$target_filename = $cut_path . "/" . $key . "_" . $suffix . "." . $media_type;
-	if ( $media_type == "mp4" ) {
+$command_cut = "HandBrakeCLI -i " . $media_filename . " -o " . $target_filename . " --vb 2000 --start-at duration:" . $media_cuts[$key]['cut_media_startsec'] . " --stop-at duration:" . $cut_duration . " -f mp4";
+/*	if ( $media_type == "mp4" ) {
 		$command = $command_cut . "-acodec copy -vcodec copy -async 25 -f mp4 " . $target_filename;
 	} else {
 		$command = $command_cut . "-acodec copy -vcodec copy -async 25 -f flv " . $temp_filename;
-	}
+	} */
 
 echo $command . "\n";
 
@@ -381,7 +416,7 @@ echo "FFMPEG:\n" . $output_string . "\n";
 
 	}
 
-//HandBrakeCLI -i ringier_1nap_1_3.m4v --start-at duration:100 --stop-at duration:200 -o aaa.mp4
+// HandBrakeCLI -i ${file} -o ${file}_conv.mp4 --vb 2000 --start-at duration:100 --stop-at duration:200 -f mp4
 // Media:   h264 (Main), yuv420p, 1280x720 [SAR 1:1 DAR 16:9], 1993 kb/s, 24.92 fps, 25 tbr, 2500 tbn, 50 tbc
 // Content: h264 (Main), yuv420p, 1280x720 [SAR 1:1 DAR 16:9], 794 kb/s, 29.83 fps, 30 tbr, 3k tbn, 60 tbc
 /*-i ~/Desktop/my_original_file.wmv
@@ -397,13 +432,14 @@ echo "FFMPEG:\n" . $output_string . "\n";
 		// Cutting content segment
 		$cut_duration = $media_cuts[$key]['cut_content_endsec'] - $media_cuts[$key]['cut_content_startsec'];
 //		$command_cut = "ffmpeg -y -v 0 -i " . $content_filename . " -ss " . secs2hms($media_cuts[$key]['cut_content_startsec']) . ".0 -t " . $cut_duration . " ";
-		$command_cut = "ffmpeg -y -i " . $content_filename . " -ss " . secs2hms($media_cuts[$key]['cut_content_startsec']) . ".0 -t " . $cut_duration . " ";
+//		$command_cut = "ffmpeg -y -i " . $content_filename . " -ss " . secs2hms($media_cuts[$key]['cut_content_startsec']) . ".0 -t " . $cut_duration . " ";
 		$target_filename = $cut_path . "/" . $key . "_" . $suffix . "_content." . $content_type;
-		if ( $content_type == "mp4" ) {
+$command_cut = "HandBrakeCLI -i " . $content_filename . " -o " . $target_filename . " --vb 800 --start-at duration:" . $media_cuts[$key]['cut_content_startsec'] . " --stop-at duration:" . $cut_duration . " -f mp4";
+/*		if ( $content_type == "mp4" ) {
 			$command = $command_cut . "-acodec copy -vcodec copy -async 25 -f mp4 " . $target_filename;
 		} else {
 			$command = $command_cut . "-acodec copy -vcodec copy -async 25 -f flv " . $temp_filename;
-		}
+		} */
 
 	echo $command . "\n";
 
