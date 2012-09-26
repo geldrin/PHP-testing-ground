@@ -93,14 +93,30 @@ while( !feof($fh) ) {
 		continue;
 	}
 
+	// Source path
+	if ( preg_match('/^[\s]*srcpath[\s]*=/', $oneline) ) {
+		$tmp = explode("=", $oneline, 2);
+		$srcpath = $tmp[1];
+		fwrite($fhn, $newline . "\n");
+		continue;
+	}
+
+	// Destination path
+	if ( preg_match('/^[\s]*dstpath[\s]*=/', $oneline) ) {
+		$tmp = explode("=", $oneline, 2);
+		$dstpath = $tmp[1];
+		fwrite($fhn, $newline . "\n");
+		continue;
+	}
+
 	// media_filename variable found
 	if ( preg_match('/^[\s]*media_filename[\s]*=/', $oneline) ) {
 		$tmp = explode("=", $oneline, 2);
-		$media_filename = realpath(trim($tmp[1]));
+		$media_filename = realpath($srcpath . trim($tmp[1]));
 
 		// Invalid input filename
 		if ( $media_filename === FALSE ) {
-			echo "ERROR (line " . $desc_line . "): media does not exist \"" . trim($tmp[1]) . "\"\n";
+			echo "ERROR (line " . $desc_line . "): media does not exist \"" . $srcpath . trim($tmp[1]) . "\"\n";
 			exit -1;
 		}
 
@@ -150,11 +166,11 @@ while( !feof($fh) ) {
 	// content_filename variable found
 	if ( preg_match('/^[\s]*content_filename[\s]*=/', $oneline) ) {
 		$tmp = explode("=", $oneline, 2);
-		$content_filename = realpath(trim($tmp[1]));
+		$content_filename = realpath($srcpath . trim($tmp[1]));
 
 		// Invalid input filename
 		if ( $content_filename === FALSE ) {
-			echo "ERROR (line " . $desc_line . "): invalid content filename \"" . $content_filename . "\"\n";
+			echo "ERROR (line " . $desc_line . "): invalid content filename \"" . $srcpath . trim($tmp[1]) . "\"\n";
 			exit -1;
 		}
 
@@ -205,14 +221,6 @@ while( !feof($fh) ) {
 	if ( preg_match('/^[\s]*suffix[\s]*=/', $oneline) ) {
 		$tmp = explode("=", $oneline, 2);
 		$suffix = $tmp[1];
-		fwrite($fhn, $newline . "\n");
-		continue;
-	}
-
-	// Destination path
-	if ( preg_match('/^[\s]*dstpath[\s]*=/', $oneline) ) {
-		$tmp = explode("=", $oneline, 2);
-		$dstpath = $tmp[1];
 		fwrite($fhn, $newline . "\n");
 		continue;
 	}
@@ -302,8 +310,6 @@ if ( !rename($desc_filename_new, $dstpath . $desc_filename_new) ) {
 
 echo "Descriptor file check finished" . (($warnings > 0)?(" (WARNINGS: " . $warnings . ")\n\n"):"\n\n");
 
-exit;
-
 // Are media and content file and start date/time specified?
 if ( empty($media_filename) ) {
 	echo "ERROR: no media file defined\n";
@@ -327,8 +333,10 @@ $media_content_offset = $content_starttimesec - $media_starttimesec;
 echo "Media-content offset: " . $media_content_offset . "\n";
 
 // Cut media slices
-$cut_path = $dstpath . $media_filename . "_" . date("Y-m-d_His");
+$path = pathinfo($media_filename);
+$cut_path = $dstpath . $path['filename'] . "." . $path['extension'] . "_" . date("Y-m-d_His");
 echo "Media directory: " . $cut_path . "\n";
+$temp_filename = $cut_path . "/temp.mp4";
 
 if ( file_exists($cut_path) ) {
 	echo "ERROR: path " . $cut_path . " exists\n";
@@ -341,8 +349,6 @@ if ( !$ischeckonly ) {
 		exit -1;
 	}
 }
-
-$temp_filename = $cut_path . "/temp.mp4";
 
 // Go through list of cuts and call ffmpeg to do the job
 foreach($media_cuts as $key => $value) {
@@ -368,28 +374,27 @@ foreach($media_cuts as $key => $value) {
 //	$command_cut = "ffmpeg -y -v 0 -i " . $media_filename . " -ss " . secs2hms($media_cuts[$key]['cut_media_startsec']) . ".0 -t " . $cut_duration . " ";
 //	$command_cut = "ffmpeg -y -i " . $media_filename . " -ss " . secs2hms($media_cuts[$key]['cut_media_startsec']) . ".0 -t " . $cut_duration . " ";
 	$target_filename = $cut_path . "/" . $key . "_" . $suffix . "." . $media_type;
-$command_cut = "HandBrakeCLI -i " . $media_filename . " -o " . $target_filename . " --vb 2000 --start-at duration:" . $media_cuts[$key]['cut_media_startsec'] . " --stop-at duration:" . $cut_duration . " -f mp4";
+$command_cut = "HandBrakeCLI -v 0 --no-dvdnav --optimize -i " . $media_filename . " -o " . $target_filename . " --vb 2000 --start-at duration:" . $media_cuts[$key]['cut_media_startsec'] . " --stop-at duration:" . $cut_duration . " -f mp4";
 /*	if ( $media_type == "mp4" ) {
 		$command = $command_cut . "-acodec copy -vcodec copy -async 25 -f mp4 " . $target_filename;
 	} else {
 		$command = $command_cut . "-acodec copy -vcodec copy -async 25 -f flv " . $temp_filename;
 	} */
 
-echo $command . "\n";
+echo $command_cut . "\n";
 
 	if ( !$ischeckonly ) {
 
 		$time_start = time();
-		$output = runExternal($command);
+		$output = runExternal($command_cut);
 		$output_string = $output['cmd_output'];
 		$result = $output['code'];
 		$duration = time() - $time_start;
 		$mins_taken = round( $duration / 60, 2);
-echo "err = " . $result . "\n";
-		if ( $result != 0 ) {
-			echo "ERROR: ffmpeg returned an error\n";
-echo "FFMPEG:\n" . $output_string . "\n";
-//			exit -1;
+		if ( $result == 0 ) {
+			echo "ERROR: HandBrake returned an error (" . $result . ")\n";
+			echo "OUTPUT:\n" . $output_string . "\n";
+			exit -1;
 		}
 
 		echo "Successful media cut in " . $mins_taken . " mins.\n";
@@ -416,16 +421,8 @@ echo "FFMPEG:\n" . $output_string . "\n";
 
 	}
 
-// HandBrakeCLI -i ${file} -o ${file}_conv.mp4 --vb 2000 --start-at duration:100 --stop-at duration:200 -f mp4
 // Media:   h264 (Main), yuv420p, 1280x720 [SAR 1:1 DAR 16:9], 1993 kb/s, 24.92 fps, 25 tbr, 2500 tbn, 50 tbc
 // Content: h264 (Main), yuv420p, 1280x720 [SAR 1:1 DAR 16:9], 794 kb/s, 29.83 fps, 30 tbr, 3k tbn, 60 tbc
-/*-i ~/Desktop/my_original_file.wmv
--o ~/Desktop/my_new_file.mp4
---encoder x264
---vb 2000
---ab 64
---two-pass
---optimize */
 
 	if ( $media_cuts[$key]['iscontent'] ) {
 
@@ -434,27 +431,27 @@ echo "FFMPEG:\n" . $output_string . "\n";
 //		$command_cut = "ffmpeg -y -v 0 -i " . $content_filename . " -ss " . secs2hms($media_cuts[$key]['cut_content_startsec']) . ".0 -t " . $cut_duration . " ";
 //		$command_cut = "ffmpeg -y -i " . $content_filename . " -ss " . secs2hms($media_cuts[$key]['cut_content_startsec']) . ".0 -t " . $cut_duration . " ";
 		$target_filename = $cut_path . "/" . $key . "_" . $suffix . "_content." . $content_type;
-$command_cut = "HandBrakeCLI -i " . $content_filename . " -o " . $target_filename . " --vb 800 --start-at duration:" . $media_cuts[$key]['cut_content_startsec'] . " --stop-at duration:" . $cut_duration . " -f mp4";
+$command_cut = "HandBrakeCLI -v 0 --no-dvdnav --optimize -i " . $content_filename . " -o " . $target_filename . " --vb 800 --start-at duration:" . $media_cuts[$key]['cut_content_startsec'] . " --stop-at duration:" . $cut_duration . " -f mp4";
 /*		if ( $content_type == "mp4" ) {
 			$command = $command_cut . "-acodec copy -vcodec copy -async 25 -f mp4 " . $target_filename;
 		} else {
 			$command = $command_cut . "-acodec copy -vcodec copy -async 25 -f flv " . $temp_filename;
 		} */
 
-	echo $command . "\n";
+	echo $command_cut . "\n";
 
 		if ( !$ischeckonly ) {
 
 			$time_start = time();
-			exec($command, $output, $result);
+			$output = runExternal($command_cut);
+//			exec($command_cut, $output, $result);
 			$duration = time() - $time_start;
 			$mins_taken = round( $duration / 60, 2);
 			$output_string = implode("\n", $output);
-echo "err = " . $result . "\n";
-			if ( $result != 0 ) {
-				echo "ERROR: ffmpeg returned an error\n";
-echo "FFMPEG:\n" . $output_string . "\n";
-//				exit -1;
+			if ( $result == 0 ) {
+				echo "ERROR: HandBrake returned an error (" . $result . ")\n";
+				echo "OUTPUT:\n" . $output_string . "\n";
+				exit -1;
 			}
 
 			echo "Successful content cut in " . $mins_taken . " mins.\n";
@@ -479,6 +476,8 @@ echo "FFMPEG:\n" . $output_string . "\n";
 			  unlink($temp_filename);
 			}
 		}
+
+exit;
 
 	}
 
