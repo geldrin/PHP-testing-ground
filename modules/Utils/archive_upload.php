@@ -4,11 +4,15 @@ define('BASE_PATH',	realpath( __DIR__ . '/../..' ) . '/' );
 define('PRODUCTION', false );
 define('DEBUG', false );
 
-$ischeckonly = TRUE;
+$ischeckonly = FALSE;
+
+// Set manually
+$slideonright = 1;
 
 include_once( BASE_PATH . 'libraries/Springboard/Application/Cli.php');
 include_once( BASE_PATH . 'modules/Jobs/job_utils_base.php');
 include_once( BASE_PATH . 'modules/Jobs/job_utils_media.php');
+include_once( BASE_PATH . 'modules/Utils/curl_api.php');
 
 // Check operating system - exit if Windows
 if ( iswindows() ) {
@@ -71,6 +75,9 @@ echo "Parsing descriptor file:\n";
 
 $rec_id = 1;
 $suffix = "";
+
+// Open API
+$api = new Api('support@videosquare.eu', 'MekkElek123');
 
 $fh = fopen($desc_filename, "r");
 while( !feof($fh) ) {
@@ -151,7 +158,7 @@ while( !feof($fh) ) {
 
 		$tmp = explode("=", $oneline, 2);
 		$media_dir = realpath(trim($tmp[1]));
-echo "media dir: " . $media_dir . "\n";
+//echo "media dir: " . $media_dir . "\n";
 		if ( !file_exists($media_dir) ) {
 			echo "ERROR: cannot find media directory\n";
 			exit -1;
@@ -201,9 +208,6 @@ echo "media dir: " . $media_dir . "\n";
 
 		echo "Media file found: " . $video_filename . "\n";
 
-		// Calculate recording time
-		$rec_time = $media_startdate . " " . secs2hms($media_starttimesec + hms2secs($cut_start));
-		echo "Recording time: " . $rec_time . "\n";
 
 		if ( $iscontent ) {
 			$content_filename = $media_dir . "/" . $fname_id . "_" . $suffix . "_content.mp4";
@@ -212,6 +216,45 @@ echo "media dir: " . $media_dir . "\n";
 				exit -1;
 			}
 			echo "Content file found: " . $content_filename . "\n";
+		}
+
+		// Assemble metadata
+		$language = "hun";
+		// Titles? Subtitles?
+		$metadata = array(
+			'title'					=> 'Reklamfeszt teszt',
+			'subtitle'				=> 'Alcím',
+			'recordedtimestamp'		=> $media_startdate . " " . secs2hms($media_starttimesec + hms2secs($cut_start)),
+			'description'			=> 'Leírás',
+			'copyright'				=> 'Copyright',
+			'slideonright'			=> $slideonright,
+			'accesstype'			=> 'public',
+			'ispublished'			=> 0,
+			'isdownloadable'		=> 0,
+			'isaudiodownloadable'	=> 0,
+			'isembedable'			=> 1,
+			'conversionpriority'	=> 200
+		);
+
+var_dump($metadata);
+
+		if ( !$ischeckonly ) {
+
+			echo "Uploading media: " . $video_filename . " ...\n";
+
+			$recording = $api->upload($video_filename, $language);
+
+			if ( $recording and isset( $recording['data']['id'] ) ) {
+			  
+				$recordingid = $recording['data']['id'];
+				$api->modify( $recordingid, $metadata);
+
+				echo "Uploading content: " . $content_filename . " ...\n";
+
+				$api->uploadContent( $recordingid, $content_filename);
+
+			}
+
 		}
 
 	}

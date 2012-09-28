@@ -72,11 +72,11 @@ class Api {
     $json = curl_exec( $this->curl );
     $data = json_decode( $json, true );
     
-    echo "\n\n\n-----UPLOAD-----\n";
-    var_dump( $data, $options, $json, curl_error( $this->curl ) );
-    echo "------------------------\n";
-    
-    return $data;
+	echo "\n\n\n-----UPLOAD-----\n";
+	var_dump( $data, $options, $json, curl_error( $this->curl ) );
+	echo "------------------------\n";
+
+	return $data;
     
   }
   
@@ -129,18 +129,4 @@ class Api {
   
 }
 
-$api       = new Api('info@dotsamazing.com', 'asdasd');
-$recording = $api->upload('/home/sztanpet/teleconnect/resources/local/video.flv', 'hun');
-
-if ( $recording and isset( $recording['data']['id'] ) ) {
-  
-  $recordingid = $recording['data']['id'];
-  $api->modify( $recordingid, array(
-      'title' => 'API CS TESZT',
-      'subtitle' => 'Subtitle is van',
-    )
-  );
-  
-  $api->uploadContent( $recordingid, '/home/sztanpet/teleconnect/resources/local/video.flv');
-  
-}
+?>
