@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 // VCR control job 2012/08/17
 
 define('BASE_PATH',	realpath( __DIR__ . '/../..' ) . '/' );

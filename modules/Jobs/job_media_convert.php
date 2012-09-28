@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 // Media conversion job v0 @ 2012/02/??
 
 define('BASE_PATH',	realpath( __DIR__ . '/../..' ) . '/' );

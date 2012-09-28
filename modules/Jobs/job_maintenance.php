@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 // Job: maintenance 2012/08/28
 
 define('BASE_PATH',	realpath( __DIR__ . '/../..' ) . '/' );

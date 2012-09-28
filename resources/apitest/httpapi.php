@@ -1,7 +1,8 @@
 <?php
 
 class Api {
-  public $apiurl = 'http://dev.videosquare.eu/hu/api';
+//  public $apiurl = 'http://dev.videosquare.eu/hu/api';
+  public $apiurl = 'http://videosquare.eu/hu/api';
   
   protected $curl;
   protected $email;

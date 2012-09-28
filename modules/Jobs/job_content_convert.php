@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 // Content conversion job v0.9 @ 2012/04/04
 
 define('BASE_PATH',	realpath( __DIR__ . '/../..' ) . '/' );

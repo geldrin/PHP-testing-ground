@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 // Document finalize job
 
 define('BASE_PATH',	realpath( __DIR__ . '/../..' ) . '/' );

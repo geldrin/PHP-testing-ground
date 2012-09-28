@@ -153,14 +153,14 @@ global $jconf;
 	}
 
 /*
-ë-pass ní
+‚Äò-pass n‚Äô
 
 Select the pass number (1 or 2). It is used to do two-pass video encoding. The statistics of the video are recorded in the first pass into a log file (see also the option -passlogfile), and in the second pass that log file is used to generate the video at the exact requested bitrate. On pass 1, you may just deactivate audio and set output to null, examples for Windows and Unix:  	ffmpeg -i foo.mov -c:v libxvid -pass 1 -an -f rawvideo -y NUL
 ffmpeg -i foo.mov -c:v libxvid -pass 1 -an -f rawvideo -y /dev/null
 
- ë-passlogfile prefix (global)í
+ ‚Äò-passlogfile prefix (global)‚Äô
 
-Set two-pass log file name prefix to prefix, the default file name prefix is ìffmpeg2passî. The complete file name will be ëPREFIX-N.logí, where N is a number specific to the output stream
+Set two-pass log file name prefix to prefix, the default file name prefix is ‚Äúffmpeg2pass‚Äù. The complete file name will be ‚ÄòPREFIX-N.log‚Äô, where N is a number specific to the output stream
 
 */
 

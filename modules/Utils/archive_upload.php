@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 
 define('BASE_PATH',	realpath( __DIR__ . '/../..' ) . '/' );
 define('PRODUCTION', false );
@@ -13,10 +13,37 @@ $ischeckonly = TRUE;
 // Metropol: ?
 $slideonright = 1;
 
+/*
+4,Reklámfeszt 2012
+5,Piackutatók a fogyasztási trendekről (PPT)
+6,"Made in Hungary" (MRSZ)
+7,Hot Marketing Club Meetup (MRSZ)
+8,Reklám, vagy amit nem akartok (MRSZ)
+9,Zenei csatornák
+10,Hír-név-más konferencia (MPRSZ)
+11,Egyéb
+12,Elég a sopánkodásból!
+13,Reklámaréna (MRSZ)
+14,Reklámpszichológia (MRSZ)
+15,Az egészség reklámja
+16,Sport és média szekció (MRSZ)
+17,E-kereskedelem és kommunikáció
+18,HR konferencia (MRSZ, Smartstuff)
+19,Digital Signage délelőtt (MRSZ)
+20,IAB digitális délután
+21,Vigyázunk a gyerekekre?
+22,NEW Business Konferencia
+24,Védett ötletek
+25,A visszatérő vásárló a jó vásárló
+26,Reklámipar workshop
+*/
+
+$channel = 5;
+
 include_once( BASE_PATH . 'libraries/Springboard/Application/Cli.php');
 include_once( BASE_PATH . 'modules/Jobs/job_utils_base.php');
 include_once( BASE_PATH . 'modules/Jobs/job_utils_media.php');
-include_once( BASE_PATH . 'modules/Utils/curl_api.php');
+include_once( BASE_PATH . 'resources/apitest/httpapi.php');
 
 // Check operating system - exit if Windows
 if ( iswindows() ) {
@@ -231,7 +258,7 @@ while( !feof($fh) ) {
 			'title'					=> $title,
 //			'subtitle'				=> $subtitle,
 			'recordedtimestamp'		=> $media_startdate . " " . secs2hms($media_starttimesec + hms2secs($cut_start)),
-			'description'			=> 'Leírás',
+//			'description'			=> 'Leírás',
 			'copyright'				=> 'Minden jog fenntartva. A felvétel egészének vagy bármely részének újrafelhasználása kizárólag a szerző(k) engedélyével lehetséges.',
 			'slideonright'			=> $slideonright,
 			'accesstype'			=> 'public',
@@ -242,7 +269,10 @@ while( !feof($fh) ) {
 			'conversionpriority'	=> 200
 		);
 
-//var_dump($metadata);
+var_dump($metadata);
+
+//$api->removeRecordingFromChannel( 61, 1 );
+//$api->addRecordingToChannel( 61, 1 );
 
 		if ( !$ischeckonly ) {
 
@@ -254,6 +284,8 @@ while( !feof($fh) ) {
 			  
 				$recordingid = $recording['data']['id'];
 				$api->modify( $recordingid, $metadata);
+
+				$api->addRecordingToChannel( $recordingid, $channel );
 
 				echo "Uploading content: " . $content_filename . " ...\n";
 
