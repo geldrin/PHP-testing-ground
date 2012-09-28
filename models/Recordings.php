@@ -303,10 +303,11 @@ class Recordings extends \Springboard\Model {
       
       $channel->select( $fields['channelid'] );
       $channel->updateVideoCounters();
+
       // ha az elozo korben meg nem erintettuk a csatornat,
       // es meg nincs indexkepe, akkor keszitsunk neki
       if ( 
-           !strlen( $this->row['indexphotofilename'] ) and
+           !strlen( $channel->row['indexphotofilename'] ) and
            !in_array( $fields['channelid'], $indexPhotoDone )
          )
         $channel->updateIndexFilename();
