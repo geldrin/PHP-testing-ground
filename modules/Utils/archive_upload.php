@@ -4,9 +4,13 @@ define('BASE_PATH',	realpath( __DIR__ . '/../..' ) . '/' );
 define('PRODUCTION', false );
 define('DEBUG', false );
 
-$ischeckonly = FALSE;
+$ischeckonly = TRUE;
 
 // Set manually
+// Ringier: 1
+// Richter: 1
+// Simple: 0
+// Metropol: ?
 $slideonright = 1;
 
 include_once( BASE_PATH . 'libraries/Springboard/Application/Cli.php');
@@ -79,6 +83,8 @@ $suffix = "";
 // Open API
 $api = new Api('support@videosquare.eu', 'MekkElek123');
 
+$last_comment = "";
+
 $fh = fopen($desc_filename, "r");
 while( !feof($fh) ) {
 
@@ -92,6 +98,7 @@ while( !feof($fh) ) {
 		continue;
 	}
 	if ( preg_match('/^[\s]*#/', $oneline) ) {
+		$last_comment = $oneline;
 		continue;
 	}
 
@@ -158,7 +165,6 @@ while( !feof($fh) ) {
 
 		$tmp = explode("=", $oneline, 2);
 		$media_dir = realpath(trim($tmp[1]));
-//echo "media dir: " . $media_dir . "\n";
 		if ( !file_exists($media_dir) ) {
 			echo "ERROR: cannot find media directory\n";
 			exit -1;
@@ -208,7 +214,6 @@ while( !feof($fh) ) {
 
 		echo "Media file found: " . $video_filename . "\n";
 
-
 		if ( $iscontent ) {
 			$content_filename = $media_dir . "/" . $fname_id . "_" . $suffix . "_content.mp4";
 			if ( !file_exists($content_filename) ) {
@@ -221,12 +226,13 @@ while( !feof($fh) ) {
 		// Assemble metadata
 		$language = "hun";
 		// Titles? Subtitles?
+		$title = $last_comment;
 		$metadata = array(
-			'title'					=> 'Reklamfeszt teszt',
-			'subtitle'				=> 'Alcím',
+			'title'					=> $title,
+//			'subtitle'				=> $subtitle,
 			'recordedtimestamp'		=> $media_startdate . " " . secs2hms($media_starttimesec + hms2secs($cut_start)),
 			'description'			=> 'Leírás',
-			'copyright'				=> 'Copyright',
+			'copyright'				=> 'Minden jog fenntartva. A felvétel egészének vagy bármely részének újrafelhasználása kizárólag a szerző(k) engedélyével lehetséges.',
 			'slideonright'			=> $slideonright,
 			'accesstype'			=> 'public',
 			'ispublished'			=> 0,
@@ -236,7 +242,7 @@ while( !feof($fh) ) {
 			'conversionpriority'	=> 200
 		);
 
-var_dump($metadata);
+//var_dump($metadata);
 
 		if ( !$ischeckonly ) {
 
@@ -262,7 +268,6 @@ var_dump($metadata);
 }
 
 fclose($fh);
-
 
 exit;
 
