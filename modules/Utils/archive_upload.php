@@ -4,7 +4,7 @@ define('BASE_PATH',	realpath( __DIR__ . '/../..' ) . '/' );
 define('PRODUCTION', false );
 define('DEBUG', false );
 
-$ischeckonly = TRUE;
+$ischeckonly = FALSE;
 
 // Set manually
 // Ringier: 1
@@ -33,12 +33,13 @@ $slideonright = 1;
 20,IAB digitális délután
 21,Vigyázunk a gyerekekre?
 22,NEW Business Konferencia
+23,Cannes Lions
 24,Védett ötletek
 25,A visszatérő vásárló a jó vásárló
 26,Reklámipar workshop
 */
 
-$channel = 5;
+$channel = 23;
 
 include_once( BASE_PATH . 'libraries/Springboard/Application/Cli.php');
 include_once( BASE_PATH . 'modules/Jobs/job_utils_base.php');
@@ -276,20 +277,26 @@ var_dump($metadata);
 
 		if ( !$ischeckonly ) {
 
+//$api->modifyRecording(30, $metadata);
+
 			echo "Uploading media: " . $video_filename . " ...\n";
 
-			$recording = $api->upload($video_filename, $language);
+			$recording = $api->uploadRecording($video_filename, $language);
 
 			if ( $recording and isset( $recording['data']['id'] ) ) {
 			  
 				$recordingid = $recording['data']['id'];
-				$api->modify( $recordingid, $metadata);
+				$api->modifyRecording( $recordingid, $metadata);
 
 				$api->addRecordingToChannel( $recordingid, $channel );
 
-				echo "Uploading content: " . $content_filename . " ...\n";
+				if ( $iscontent ) {
 
-				$api->uploadContent( $recordingid, $content_filename);
+					echo "Uploading content: " . $content_filename . " ...\n";
+
+					$api->uploadContent( $recordingid, $content_filename);
+
+				}
 
 			}
 
