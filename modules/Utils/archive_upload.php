@@ -4,7 +4,7 @@ define('BASE_PATH',	realpath( __DIR__ . '/../..' ) . '/' );
 define('PRODUCTION', false );
 define('DEBUG', false );
 
-$ischeckonly = FALSE;
+$ischeckonly = TRUE;
 
 include_once( BASE_PATH . 'libraries/Springboard/Application/Cli.php');
 include_once( BASE_PATH . 'modules/Jobs/job_utils_base.php');
@@ -146,14 +146,24 @@ while( !feof($fh) ) {
 		continue;
 	}
 
+	// media_filename variable found
+	if ( preg_match('/^[\s]*media_filename[\s]*=/', $oneline) ) {
+
+		$tmp = explode("=", $oneline, 2);
+		$media_dir = realpath(trim($tmp[1]));
+echo "media dir: " . $media_dir . "\n";
+		if ( !file_exists($media_dir) ) {
+			echo "ERROR: cannot find media directory\n";
+			exit -1;
+		}
+	}
+
 	// Read cut start and end times
 	if ( preg_match('/^[\s]*cut:media[\s]*[,][\s]*[0-1][0-9]:[0-5][0-9]:[0-5][0-9][\s]*[,][\s]*[0-1][0-9]:[0-5][0-9]:[0-5][0-9][\s]*/', $oneline) ) {
 		echo "OK: " . $oneline . "\n";
 
 		$iscontent = TRUE;
 		$tmp = explode(",", $oneline, 5);
-
-//		$video_fname = $
 
 		// Event date and time
 		$cut_start = trim($tmp[1]);
@@ -183,7 +193,7 @@ while( !feof($fh) ) {
 		unset($content_filename);
 
 		$fname_id = trim($tmp[4]);
-		$video_filename = $fname_id . "_" . $suffix . ".mp4";
+		$video_filename = $media_dir . "/" . $fname_id . "_" . $suffix . ".mp4";
 		if ( !file_exists($video_filename) ) {
 			echo "ERROR: cannot find video file " . $video_filename . "\n";
 			exit -1;
@@ -196,7 +206,7 @@ while( !feof($fh) ) {
 		echo "Recording time: " . $rec_time . "\n";
 
 		if ( $iscontent ) {
-			$content_filename = $fname_id . "_" . $suffix . "_content.mp4";
+			$content_filename = $media_dir . "/" . $fname_id . "_" . $suffix . "_content.mp4";
 			if ( !file_exists($content_filename) ) {
 				echo "ERROR: cannot find content file " . $content_filename . "\n";
 				exit -1;

@@ -397,7 +397,8 @@ foreach($media_cuts as $key => $value) {
 	$target_filename = $cut_path . "/" . $key . "_" . $suffix . "." . $media_type;
 	$cut_duration = $media_cuts[$key]['cut_media_endsec'] - $media_cuts[$key]['cut_media_startsec'];
 //	$command_cut = "ffmpeg -y -v 0 -i " . $media_filename . " -ss " . secs2hms($media_cuts[$key]['cut_media_startsec']) . ".0 -t " . $cut_duration . " ";
-$command_cut = "ffmpeg -y -v 0 -strict experimental -i " . $media_filename . " -ss " . secs2hms($media_cuts[$key]['cut_media_startsec']) . ".0 -t " . $cut_duration . " -async 10 -c:a copy -c:v libx264 -profile:v main -preset:v slow -s 1280x720 -r 25 -b:v 2000k -threads 0 -f mp4 " . $target_filename;
+// slow/fast
+$command_cut = "ffmpeg -y -v 0 -strict experimental -i " . $media_filename . " -ss " . secs2hms($media_cuts[$key]['cut_media_startsec']) . ".0 -t " . $cut_duration . " -async 10 -c:a copy -c:v libx264 -profile:v main -preset:v fast -s 1280x720 -r 25 -b:v 2000k -threads 0 -f mp4 " . $target_filename;
 //$command_cut = "HandBrakeCLI -v 0 --no-dvdnav --optimize -i " . $media_filename . " -o " . $target_filename . " --vb 2000 --start-at duration:" . $media_cuts[$key]['cut_media_startsec'] . " --stop-at duration:" . $cut_duration . " -f mp4";
 /*	if ( $media_type == "mp4" ) {
 		$command = $command_cut . "-acodec copy -vcodec copy -async 25 -f mp4 " . $target_filename;
