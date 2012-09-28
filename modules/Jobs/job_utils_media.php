@@ -382,11 +382,6 @@ global $app, $jconf, $global_log;
 	$recording_info['scaler'] = $tmp['scaler'];
 	$recording_info['res_x'] = $tmp['x'];
 	$recording_info['res_y'] = $tmp['y'];
-	//// Calculate bitrate and maximize it to avoid too high values
-/*	if ( $video_in['bpp'] < $profile['video_bpp'] ) {
-		$recording_info['video_bpp'] = round($video_in['bpp'], 2);
-	}
-echo "bpp profile: " . $profile['video_bpp'] . " | orig: " . $video_in['bpp'] . " | chosen: " . $recording_info['video_bpp'] . "\n"; */
 	$recording_info['video_bitrate'] = $recording_info['video_bpp'] * $recording_info['res_x'] * $recording_info['res_y'] * $recording_info['fps'];
 	if ( $recording_info['video_bitrate'] > $jconf['video_max_bw'] ) $recording_info['video_bitrate'] = $jconf['video_max_bw'];
 	//// Target filename

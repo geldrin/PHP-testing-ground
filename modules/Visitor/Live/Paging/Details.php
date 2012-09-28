@@ -22,10 +22,6 @@ class Details extends \Visitor\Paging {
       'channels',
       $this->application->getNumericParameter('id')
     );
-    $accessible         = $this->channelModel->isAccessible( $user );
-    
-    if ( $accessible !== true )
-      $this->controller->redirectToController('contents', $accessible );
     
     $this->channelModel->clearFilter();
     $rootid = $this->channelModel->id;

@@ -3,7 +3,7 @@
 {if !empty( $recordings )}
   <div id="indexcontainer">
     <div class="leftdoublebox">
-      {assign var=recording value=$recordings[0]}
+      {assign var=recording value=$featuredrecording}
       <a class="imageinfo wlarge" href="{$language}/recordings/details/{$recording.id},{$recording.title|filenameize}" title="{$recording.title|escape:html}">
         <img src="{$recording|@indexphoto:player}"/>
         <div class="playpic"></div>

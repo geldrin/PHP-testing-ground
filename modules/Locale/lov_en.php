@@ -7,6 +7,27 @@ return array(
     'en' => 'english',
   ),
   
+  'tinymcevisitor' => array(
+    'language' => \Springboard\Language::get(),
+    'theme' => "advanced",
+    'theme_advanced_buttons1' => "bold,italic,separator,link,unlink,separator,bullist,outdent,indent,separator,undo,redo",
+    'theme_advanced_buttons2' => "",
+    'theme_advanced_buttons3' => "",
+    'theme_advanced_toolbar_location' => "top",
+    'theme_advanced_toolbar_align' => "left",
+    'theme_advanced_statusbar_location' => "none",
+    'plugins' => "tabfocus,paste,safari",
+    'paste_auto_cleanup_on_paste' => true,
+    'tab_focus' => ":prev,:next",
+    'verify_html' => true, // szurjuk a htmlt
+    'button_tile_map' => true, // nehany doctypeon nem jelennek meg az ikonok, ha eztortenik akkor ezt false-ra
+    'gecko_spellcheck' => true,
+    //content_css url-t form configbol
+    'relative_urls' => false, // atirja az urleket relativera (ha in-site link), akar jo otlet is lehet
+    'entity_encoding' => 'raw',
+    'extended_valid_elements' => 'b/strong,i/em', // strongot <b>re, em-et <i>re
+  ),
+  
   'headerlanguages' => array(
     'hu' => 'HU',
     'en' => 'EN',

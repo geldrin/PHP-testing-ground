@@ -80,27 +80,17 @@ $config = array(
       ),
     ),
   ),
-  /*
-  'parentid' => Array(
-    'displayname' => $l('channels', 'parentid'),
-    'type'        => 'selectDynamic',
-    'values'      => Array( 0 => $l('channels', 'noparent') ),
-    'sql'         => "
-      SELECT id, title
-      FROM channels
-      WHERE 
-        organizationid = '" . $organizationid . "' AND
-        %s
-    ",
-    'treeid'      => 'id',
-    'treeparent'  => 'parentid',
-    'treestart'   => '0',
+  
+  'ispublic' => array(
+    'displayname' => $l('channels', 'ispublic'),
+    'type'        => 'inputRadio',
+    'values'      => $l->getLov('yesno'),
+    'value'       => 0,
+    'validation'  => array(
+    ),
   ),
-  */
   
 );
-
-include( $this->bootstrap->config['modulepath'] . 'Visitor/Form/Configs/Accesstype.php');
 
 if (
      $this->parentchannelModel and $this->parentchannelModel->id and

@@ -44,36 +44,6 @@ class Modify extends \Visitor\HelpForm {
     
     $values = $this->form->getElementValues( 0 );
     
-    $this->channelModel->clearAccess();
-    
-    switch( $values['accesstype'] ) {
-      
-      case 'public':
-      case 'registrations':
-        break;
-      
-      case 'departments':
-        
-        if ( !empty( $values['departments'] ) )
-          $this->channelModel->restrictDepartments( $values['departments'] );
-        
-        break;
-      
-      case 'groups':
-        
-        if ( !empty( $values['groups'] ) )
-          $this->channelModel->restrictGroups( $values['groups'] );
-        
-        break;
-      
-      default:
-        throw new \Exception('Unhandled accesstype');
-        break;
-      
-    }
-    
-    unset( $values['departments'], $values['groups'] );
-    
     $this->channelModel->updateRow( $values );
     
     $this->controller->redirect(

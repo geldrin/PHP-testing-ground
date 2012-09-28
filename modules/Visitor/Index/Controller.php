@@ -23,6 +23,8 @@ class Controller extends \Visitor\Controller {
       $this->organization['id']
     );
     
+    $recordings = $recordingsModel->getRecordingsWithUsers(0, 1, 'r.id = "17"', 'id DESC');
+    $this->toSmarty['featuredrecording'] = $recordings[0];
     $this->smartyoutput('Visitor/Index/index.tpl');
     
   }

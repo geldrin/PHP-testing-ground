@@ -141,6 +141,9 @@
   
   <div id="infotoggle">
     <ul>
+      {if $member.id}
+        <li id="channellink"><a href="#" title="{#recordings__addtochannel#}"><span></span>{#recordings__addtochannel#}</a></li>
+      {/if}
       <li id="embedlink"><a href="#" title="{#recordings__embed#}"><span></span>{#recordings__embed#}</a></li>
     </ul>
     <div class="leftside"></div>
@@ -178,6 +181,15 @@
         {foreach from=$attachments item=attachment}
           <li><a href="{$attachment|@attachmenturl:$recording:$STATIC_URI}">{$attachment.title|escape:html}</a></li>
         {/foreach}
+      </ul>
+    </div>
+  {/if}
+  <br/>
+  {if $member.id}
+    <div id="channels">
+      <h3>{#recordings__addtochannel_title#}</h3>
+      <ul id="channelslist">
+        {include file=Visitor/Recordings/Details_channels.tpl level=1}
       </ul>
     </div>
   {/if}

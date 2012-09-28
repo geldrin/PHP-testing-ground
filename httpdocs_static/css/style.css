@@ -236,7 +236,7 @@ a.submitbutton:hover {
 .smallinfo {
   background-image: url(images/help.png);
   background-repeat: no-repeat;
-  background-position: 0px 7px;
+  background-position: 0px 5px;
   font-size: 11px;
   padding: 6px 0px 0px 20px;
   clear: both;
@@ -874,6 +874,9 @@ a#currentusername span {
 #footerlogo {
   float: right;
 }
+#footer .leftbox {
+  width: 230px;
+}
 #footer .footercontent h2 {
   font-size: 15px;
   font-weight: normal;
@@ -881,6 +884,10 @@ a#currentusername span {
   padding: 0;
   color: #cccccc;
   text-shadow: 0px 1px 0px rgba(0, 0, 0, 0.75);
+}
+#footer .footercontent p {
+  color: #858585;
+  font-size: 12px;
 }
 #footer .footerlinks {
   margin: 0px 0px 8px 0px;
@@ -1593,6 +1600,15 @@ a#currentusername span {
 #metadata #infotoggle li#embedlink a span {
   background-image: url(images/icon_player_embed.png);
 }
+#metadata #infotoggle li#embedlink a:hover span, #metadata #infotoggle li#embedlink.active a span {
+  background-image: url(images/icon_player_embed_hover.png);
+}
+#metadata #infotoggle li#channellink a span {
+  background-image: url(images/icon_addtochannel.png);
+}
+#metadata #infotoggle li#channellink a:hover span, #metadata #infotoggle li#channellink.active a span {
+  background-image: url(images/icon_addtochannel_hover.png);
+}
 #metadata #infotoggle a {
   font-weight: bold;
   display: block;
@@ -1631,6 +1647,69 @@ a#currentusername span {
 #metadata .attachments ul {
   margin: 0;
   padding-left: 20px;
+}
+/* metadata channels */
+#metadata #channels {
+  background-color: #ddd;
+  -moz-border-radius: 5px;
+  -webkit-border-radius: 5px;
+  border-radius: 5px;
+  padding: 15px 0px 15px 0px;
+  position: relative;
+  display: none;
+}
+#metadata #channels h3 {
+  margin: 0px 0px 10px 30px;
+  text-shadow: 0px 1px 0px #fff;
+}
+#metadata #channels ul {
+  margin: 0;
+  padding: 0;
+  list-style-type: none;
+}
+#metadata #channels .actions {
+  float: right;
+  position: relative;
+  z-index: 1;
+}
+#metadata #channels .added {
+  position: absolute;
+  left: 5px;
+  width: 16px;
+  height: 16px;
+  background-image: url(images/icons/checkmark.png);
+}
+#metadata #channels .channelname {
+  height: 22px;
+  line-height: 22px;
+  font-size: 12px;
+  padding-right: 15px;
+  white-space: nowrap;
+  overflow: hidden;
+}
+#metadata #channels .channelname:hover {
+  background-color: #fbfbfa;
+}
+#metadata #channels .channelname.level1 {
+  padding-left: 30px;
+}
+#metadata #channels .addtochannel, #metadata #channels .removefromchannel, #metadata #channels .loading {
+  display: inline-block;
+  overflow: hidden;
+  width: 16px;
+  height: 22px;
+  margin-right: 20px;
+  background-repeat: no-repeat;
+  background-position: 0px 3px;
+}
+#metadata #channels .addtochannel {
+  background-image: url(images/icons/plus.png);
+}
+#metadata #channels .removefromchannel {
+  background-image: url(images/icons/minus.png);
+}
+#metadata #channels .loading {
+  background-image: url(images/spinner.gif);
 }
 /* recommendatory */
 #recommendatory {

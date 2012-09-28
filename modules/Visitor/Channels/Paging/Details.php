@@ -2,10 +2,10 @@
 namespace Visitor\Channels\Paging;
 
 class Details extends \Visitor\Paging {
-  protected $orderkey = 'timestamp_desc';
+  protected $orderkey = 'timestamp';
   protected $sort     = Array(
-    'timestamp_desc'       => 'timestamp DESC',
-    'timestamp'            => 'timestamp',
+    'timestamp_desc'       => 'recordedtimestamp DESC',
+    'timestamp'            => 'recordedtimestamp',
     'title_desc'           => 'titleoriginal DESC',
     'title'                => 'titleoriginal',
     'views_desc'           => 'numberofviews DESC',

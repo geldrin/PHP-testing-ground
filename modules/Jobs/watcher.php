@@ -66,7 +66,7 @@ $now_time = date('G') * 3600 + date('i') * 60 + date('s');
 // Check if all.stop file is present blocking all the jobs
 $stop_file = $app->config['datapath'] . 'jobs/all.stop';
 if ( file_exists($stop_file) ) {
-	$msg = "WARNING: jobs are not running. See stop file:\n\n" . $stop_file . "\n\nRemove it to start all jobs. This message is sent once every hour.";
+	$msg = "WARNING: jobs are not running. See stop file:\n\n" . $stop_file . "\n\nRemove it to start all jobs. This message is sent once every day.";
 	// Send mail once every hour to warn admin
 	if ( ( $now_time > $alert_time_start ) and ( $now_time < $alert_time_end ) ) {
 		$debug->log($jconf['log_dir'], $jconf['jobid_watcher'] . ".log", $msg, $sendmail = true);
@@ -93,7 +93,7 @@ foreach ( $jobs as $job => $difference ) {
 // Report jobs stopped
 if ( $jobs_isstopped ) {
 	$msg = "WARNING: some jobs may not running. See stop file(s):\n\n" . $jobs_stopped . "\nRemove them to restart jobs. This message is sent once every hour.";
-	if ( ( $now_minutes > 0 ) and ( $now_minutes < 6 ) ) {
+	if ( ( $now_time > $alert_time_start ) and ( $now_time < $alert_time_end ) ) {
 		$debug->log($jconf['log_dir'], $jconf['jobid_watcher'] . ".log", $msg, $sendmail = true);
 	}
 }

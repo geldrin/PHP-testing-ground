@@ -6,7 +6,8 @@ class Create extends \Visitor\HelpForm {
   public $template   = 'Visitor/genericform.tpl';
   public $needdb     = true;
   
-  protected $parentchannelModel;
+  public $parentchannelModel;
+  public $channelroot;
   
   public function init() {
     
@@ -44,37 +45,16 @@ class Create extends \Visitor\HelpForm {
     $values['userid']         = $user['id'];
     $values['organizationid'] = $user['organizationid'];
     
-    if ( $this->parentchannelModel )
+    if ( $this->parentchannelModel ) {
+      
       $values['parentid']     = $this->parentchannelModel->id;
-    
-    $channelModel->insert( $values );
-    
-    switch( $values['accesstype'] ) {
       
-      case 'public':
-      case 'registrations':
-        break;
-      
-      case 'departments':
-        
-        if ( !empty( $values['departments'] ) )
-          $channelModel->restrictDepartments( $values['departments'] );
-        
-        break;
-      
-      case 'groups':
-        
-        if ( !empty( $values['groups'] ) )
-          $channelModel->restrictGroups( $values['groups'] );
-        
-        break;
-      
-      default:
-        throw new \Exception('Unhandled accesstype');
-        break;
+      if ( !$this->parentchannelModel->row['ispublic'] )
+        $values['ispublic'] = $this->parentchannelModel->row['ispublic'];
       
     }
     
+    $channelModel->insert( $values );
     $channelModel->updateIndexFilename();
     
     $this->controller->redirect(

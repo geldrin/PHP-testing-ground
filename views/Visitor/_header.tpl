@@ -21,7 +21,9 @@
   <!--[if lte IE 8]>
   <link rel="StyleSheet" type="text/css" href="{$STATIC_URI}css/style_ie{$VERSION}.css" />
   <![endif]-->
-  
+  <!--[if lte IE 7]>
+  <link rel="StyleSheet" type="text/css" href="{$STATIC_URI}css/style_ie7{$VERSION}.css" />
+  <![endif]-->
   <!--[if lte IE 6]>
   <link rel="StyleSheet" type="text/css" href="{$STATIC_URI}css/style_ie6{$VERSION}.css" />
   <![endif]-->

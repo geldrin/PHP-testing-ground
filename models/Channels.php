@@ -123,7 +123,7 @@ class Channels extends \Springboard\Model {
     ";
     
     if ( $ispublic )
-      $sql .= " AND accesstype = 'public'";
+      $sql .= " AND ispublic = '1'";
     
     $children = $this->db->getCol( $sql );
     
@@ -193,7 +193,7 @@ class Channels extends \Springboard\Model {
     // a children csatornak felol keresunk egyetlen videot
     $indexphotofilename = $this->bootstrap->getModel('recordings')->getIndexPhotoFromChannels( 
       array_merge( array( $parentid ), $children ),
-      $parent->row['accesstype'] == 'public'
+      $parent->row['ispublic']
     );
 
     $parent->row['indexphotofilename'] = $indexphotofilename;
@@ -208,11 +208,6 @@ class Channels extends \Springboard\Model {
     
     $childrenids   = $this->findChildrenIDs( $id );
     $childrenids[] = $id;
-    
-    $this->db->execute("
-      DELETE FROM channels_contributors
-      WHERE channelid IN('" . implode("', '", $childrenids ) . "')
-    ");
     
     $this->db->execute("
       DELETE FROM channels_recordings
@@ -256,7 +251,7 @@ class Channels extends \Springboard\Model {
       $this->addFilter('c.parentid', $parentid, true, false, 'parentid');
     
     if ( $ispublic )
-      $this->addFilter('c.accesstype', 'public', false, false, 'ispublic');
+      $this->addFilter('c.ispublic = 1', 'public', false, false, 'ispublic');
     
     $this->addTextFilter('c.channeltypeid = ct.id', 'channeltype');
     
@@ -319,7 +314,7 @@ class Channels extends \Springboard\Model {
     
     $channels = $this->getChannelArray( $start, $limit, $where, $orderby );
     foreach( $channels as $key => $channel )
-      $channels[ $key ]['children'] = $this->getChannelTree( false, false, false, $orderby, $channel['id'] );
+      $channels[ $key ]['children'] = $this->getChannelTree( false, false, $where, $orderby, $channel['id'] );
     
     return $channels;
     
@@ -467,7 +462,7 @@ class Channels extends \Springboard\Model {
         ct.isevent = 0 AND
         ( 
           ct.ispersonal = 0 OR
-          ( ct.ispersonal = 1 AND c.accesstype = 'public' )
+          ( ct.ispersonal = 1 AND c.ispublic = 1 )
         ) AND
         c.starttimestamp IS NOT NULL AND
         c.parentid = 0 AND
@@ -496,7 +491,7 @@ class Channels extends \Springboard\Model {
         channel_types AS ct
       WHERE
         ct.id           = c.channeltypeid AND
-        c.accesstype    = 'public' AND
+        c.ispublic      = '1' AND
         s.translationof = ct.name_stringid AND
         s.language      = '" . \Springboard\Language::get() . "' AND
         c.id            = '" . $channel['parentid'] . "'
@@ -526,7 +521,7 @@ class Channels extends \Springboard\Model {
     ";
     
     if ( $ispublic )
-      $sql .= " AND accesstype = 'public'";
+      $sql .= " AND ispublic = 1";
     
     $parent = $this->db->getRow( $sql );
     

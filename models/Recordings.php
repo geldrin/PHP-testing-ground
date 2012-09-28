@@ -1336,6 +1336,74 @@ class Recordings extends \Springboard\Model {
     
   }
   
+  public function getChannelsForUser( $user, $channeltype = null ) {
+    
+    $this->ensureID();
+    $channelModel = $this->bootstrap->getModel('channels');
+    $where        = array();
+    
+    if ( $user['id'] )
+      $where[] = "c.userid = '" . $user['id'] . "'";
+    
+    if ( $user['isclientadmin'] )
+      $where[] = "c.organizationid = '" . $user['organizationid'] . "'";
+    
+    $where = implode(" OR ", $where );
+    
+    if ( $channeltype ) {
+      
+      $typeids = $channelModel->cachedGetIDsByType( $channeltype );
+      
+      if ( !empty( $typeids ) ) {
+        
+        if ( $where )
+          $where = "( $where ) AND ";
+        
+        $where .= " c.channeltypeid IN('" . implode("', '", $typeids ) . "')";
+        
+      }
+      
+    }
+    
+    $channels = $channelModel->getChannelTree(
+      false,
+      false,
+      $where
+    );
+    
+    $activechannelids = $this->db->getCol("
+      SELECT channelid
+      FROM channels_recordings
+      WHERE
+        userid      = '" . $user['id'] . "' AND
+        recordingid = '" . $this->id . "'
+    ");
+    
+    $channels = $this->markChannelsActive( $channels, $activechannelids );
+    return $channels;
+    
+  }
+  
+  protected function markChannelsActive( &$channels, &$activechannelids ) {
+    
+    if ( empty( $activechannelids ) )
+      return $channels;
+    
+    foreach( $channels as $key => $channel ) {
+      
+      $channels[ $key ]['active'] = in_array( $channel['id'], $activechannelids );
+      
+      if ( !empty( $channel['children'] ) )
+        $channels[ $key ]['children'] =
+          $this->markChannelsActive( $channel['children'], $activechannelids );
+        ;
+      
+    }
+    
+    return $channels;
+    
+  }
+  
   public function getFlashData( $info, $sessionid ) {
     
     $this->ensureObjectLoaded();
@@ -1928,6 +1996,43 @@ class Recordings extends \Springboard\Model {
       UPDATE subtitles
       SET isdefault = '0'
       WHERE recordingid = '" . $this->id . "'
+    ");
+    
+  }
+  
+  public function addToChannel( $channelid, $user ) {
+    
+    $this->ensureID();
+    $existingid = $this->db->getOne("
+      SELECT id
+      FROM channels_recordings
+      WHERE
+        channelid   = '$channelid' AND
+        recordingid = '" . $this->id . "' AND
+        userid      = '" . $user['id'] . "'
+    ");
+    
+    if ( $existingid )
+      return false;
+    else
+      $this->db->query("
+        INSERT INTO channels_recordings (channelid, recordingid, userid)
+        VALUES ('$channelid', '" . $this->id . "', '" . $user['id'] . "')
+      ");
+    
+    return true;
+    
+  }
+  
+  public function removeFromChannel( $channelid, $user ) {
+    
+    $this->ensureID();
+    $this->db->query("
+      DELETE FROM channels_recordings
+      WHERE
+        channelid   = '$channelid' AND
+        recordingid = '" . $this->id . "' AND
+        userid      = '" . $user['id'] . "'
     ");
     
   }
