@@ -54,7 +54,7 @@ class Api {
     
   }
   
-  public function upload( $file, $language ) {
+  public function uploadRecording( $file, $language ) {
     
     if ( !is_readable( $file ) )
       throw new Exception('Unreadable file: ' . $file );
@@ -68,19 +68,11 @@ class Api {
       ),
     );
     
-    $this->initCurl( $options );
-    $json = curl_exec( $this->curl );
-    $data = json_decode( $json, true );
-    
-    echo "\n\n\n-----UPLOAD-----\n";
-    var_dump( $data, $options, $json, curl_error( $this->curl ) );
-    echo "------------------------\n";
-    
-    return $data;
+    return $this->executeCall( $options, "UPLOAD" );
     
   }
   
-  public function modify( $id, $values ) {
+  public function modifyRecording( $id, $values ) {
     
     if ( empty( $values ) or !is_array( $values ) )
       throw new Exception('Nothing to modify');
@@ -93,13 +85,35 @@ class Api {
       CURLOPT_POSTFIELDS => $values,
     );
     
-    $this->initCurl( $options );
-    $json = curl_exec( $this->curl );
-    $data = json_decode( $json, true );
+    return $this->executeCall( $options, "MODIFY" );
     
-    echo "\n\n\n-----MODIFY-----\n";
-    var_dump( $data, $options, $json, curl_error( $this->curl ) );
-    echo "------------------------\n";
+  }
+  
+  public function addRecordingToChannel( $recordingid, $channelid ) {
+
+    return $this->recordingChannelOperation( 'addtochannel', $recordingid, $channelid );
+
+  }
+
+  public function removeRecordingFromChannel( $recordingid, $channelid ) {
+
+    return $this->recordingChannelOperation( 'removefromchannel', $recordingid, $channelid );  
+
+  }
+
+  private function recordingChannelOperation( $action, $recordingid, $channelid ) {
+
+    $parameters = array(
+      'recordingid' => $recordingid,
+      'channelid'   => $channelid
+    );
+    $options    = array(
+      CURLOPT_URL        => $this->getURL('controller', 'recordings', $action, $parameters ),
+      CURLOPT_POST       => true,
+      CURLOPT_POSTFIELDS => $values,
+    );
+    
+    return $this->executeCall( $options, strtoupper( $action ) );
     
   }
   
@@ -116,31 +130,42 @@ class Api {
         'file' => '@' . $file
       ),
     );
+
+    return $this->executeCall( $options, "UPLOAD" );
     
+  }
+
+  private function executeCall( $options, $action ) {
+
     $this->initCurl( $options );
     $json = curl_exec( $this->curl );
     $data = json_decode( $json, true );
     
-    echo "\n\n\n-----UPLOADCONTENT-----\n";
+    echo "\n\n\n-----" . $action . "-----\n";
     var_dump( $data, $options, $json, curl_error( $this->curl ) );
     echo "------------------------\n";
+
+    return $data;
     
   }
   
 }
 
 $api       = new Api('info@dotsamazing.com', 'asdasd');
-$recording = $api->upload('/home/sztanpet/teleconnect/resources/local/video.flv', 'hun');
+$recording = $api->uploadRecording('/home/sztanpet/teleconnect/resources/local/video.flv', 'hun');
 
 if ( $recording and isset( $recording['data']['id'] ) ) {
   
   $recordingid = $recording['data']['id'];
-  $api->modify( $recordingid, array(
+  $api->modifyRecording( $recordingid, array(
       'title' => 'API CS TESZT',
       'subtitle' => 'Subtitle is van',
     )
   );
   
   $api->uploadContent( $recordingid, '/home/sztanpet/teleconnect/resources/local/video.flv');
+
+  // $api->addRecordingToChannel( $recordingid, 123 );
+  // $api->removeRecordingFromChannel( $recordingid, 123 );
   
 }
