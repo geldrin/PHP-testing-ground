@@ -2019,7 +2019,10 @@ class Recordings extends \Springboard\Model {
         INSERT INTO channels_recordings (channelid, recordingid, userid)
         VALUES ('$channelid', '" . $this->id . "', '" . $user['id'] . "')
       ");
-    
+      
+    $this->updateChannelIndexPhotos();
+    $this->updateCategoryCounters();
+
     return true;
     
   }
@@ -2034,6 +2037,8 @@ class Recordings extends \Springboard\Model {
         recordingid = '" . $this->id . "' AND
         userid      = '" . $user['id'] . "'
     ");
+    $this->updateChannelIndexPhotos();
+    $this->updateCategoryCounters();
     
   }
   
