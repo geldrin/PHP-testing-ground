@@ -793,7 +793,7 @@ class Controller extends \Visitor\Controller {
     $model = $this->modelOrganizationAndUserIDCheck( $table, $id, false );
     
     if ( $api and !$model )
-      throw new \Exception('No record found with that ID in table: ' . $table );
+      throw new \Exception('No record found, ID#' . $id . ', table: ' . $table );
     elseif ( !$model )
       $this->redirect('');
     else
