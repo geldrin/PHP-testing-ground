@@ -140,7 +140,8 @@ return array('config_jobs' => array(
 		'format'			=> "mp4",
 		'file_suffix'		=> "_mobile_lq",	// recID_<suffix>.<format>
 		'video_bbox'		=> "480x320",		// Bounding box
-		'video_bpp'			=> 0.078,			// resx * resy * fps * bpp = video codec bandwidth
+		'video_bpp'			=> 0.06,			// resx * resy * fps * bpp = video codec bandwidth
+//		'video_bpp'			=> 0.078,			// resx * resy * fps * bpp = video codec bandwidth
 		'audio_codec'		=> "libfaac",		// AAC
 		'audio_ch'			=> 1,				// Max. number of audio channels
 		'audio_bw_ch'		=> 64,				// Kbps per audio channel
@@ -165,7 +166,8 @@ return array('config_jobs' => array(
 		'format'			=> "mp4",
 		'file_suffix'		=> "_mobile_hq",	// recID_<suffix>.<format>
 		'video_bbox'		=> "1280x720",		// Bounding box
-		'video_bpp'			=> 0.078,			// resx * resy * fps * bpp = video codec bandwidth
+//		'video_bpp'			=> 0.078,			// resx * resy * fps * bpp = video codec bandwidth
+		'video_bpp'			=> 0.04,			// resx * resy * fps * bpp = video codec bandwidth
 		'audio_codec'		=> "libfaac",		// AAC
 		'audio_ch'			=> 2,				// Max. number of audio channels
 		'audio_bw_ch'		=> 64,				// Kbps per audio channel
@@ -188,7 +190,8 @@ return array('config_jobs' => array(
 		'format'			=> "mp4",
 		'file_suffix'		=> "_video_lq",		// recID_<suffix>.<format>
 		'video_bbox'		=> "640x360",		// Bounding box
-		'video_bpp'			=> 0.1,				// resx * resy * fps * bpp = video codec bandwidth
+		'video_bpp'			=> 0.086,			// resx * resy * fps * bpp = video codec bandwidth
+//		'video_bpp'			=> 0.1,				// resx * resy * fps * bpp = video codec bandwidth
 		'audio_codec'		=> "libfaac",		// AAC
 		'audio_ch'			=> 1,				// Max. number of audio channels
 		'audio_bw_ch'		=> 64,				// Kbps per audio channel
@@ -205,7 +208,8 @@ return array('config_jobs' => array(
 		'format'			=> "mp4",
 		'file_suffix'		=> "_video_hq",		// recID_<suffix>.<format>
 		'video_bbox'		=> "1280x720",		// Bounding box
-		'video_bpp'			=> 0.1,				// resx * resy * fps * bpp = video codec bandwidth
+		'video_bpp'			=> 0.05,			// resx * resy * fps * bpp = video codec bandwidth
+//		'video_bpp'			=> 0.1,				// resx * resy * fps * bpp = video codec bandwidth
 		'audio_codec'		=> "libfaac",		// AAC
 		'audio_ch'			=> 2,				// Max. number of audio channels
 		'audio_bw_ch'		=> 64,				// Kbps per audio channel
