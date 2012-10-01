@@ -4,7 +4,7 @@ define('BASE_PATH',	realpath( __DIR__ . '/../..' ) . '/' );
 define('PRODUCTION', false );
 define('DEBUG', false );
 
-$ischeckonly = FALSE;
+$ischeckonly = TRUE;
 
 // Set manually
 // Ringier: 1
@@ -39,7 +39,7 @@ $slideonright = 1;
 26,Reklámipar workshop
 */
 
-$channel = 23;
+$channel = 11;
 
 include_once( BASE_PATH . 'libraries/Springboard/Application/Cli.php');
 include_once( BASE_PATH . 'modules/Jobs/job_utils_base.php');
