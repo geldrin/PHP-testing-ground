@@ -1946,6 +1946,10 @@ a#currentusername span {
   font-size: 14px;
   margin: 4px 0;
 }
+.treeview h2 a.active {
+  font-weight: bold;
+  text-decoration: underline;
+}
 .treeview .children {
   padding-left: 20px;
 }
