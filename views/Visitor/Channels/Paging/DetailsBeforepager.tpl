@@ -51,6 +51,10 @@
     {if !empty( $channeltree[0].children ) or $channel|@userHasAccess}
       
       {foreach from=$channeltree item=item}
+        <div id="channelinfo">
+          {$item.channeltype}
+        </div>
+        
         <div class="channeltree">
           <div class="children">
             {foreach from=$item.children item=child}

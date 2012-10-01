@@ -1953,6 +1953,9 @@ a#currentusername span {
 .treeview .children {
   padding-left: 20px;
 }
+#channelinfo {
+  margin-bottom: 10px;
+}
 .channelrecordings {
   float: right;
   width: 550px;
