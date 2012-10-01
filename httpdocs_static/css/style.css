@@ -1049,7 +1049,7 @@ a#currentusername span {
   background-repeat: no-repeat;
   background-position: right 50%;
 }
-.recordview .widepager {
+.channelrecordings .widepager {
   width: 550px;
 }
 
@@ -1941,6 +1941,13 @@ a#currentusername span {
   width: 380px;
   margin-right: 20px;
 }
+.treeview h2 {
+  font-size: 14px;
+  margin: 4px 0;
+}
+.treeview .children {
+  padding-left: 20px;
+}
 .channelrecordings {
   float: right;
   width: 550px;
@@ -1952,8 +1959,8 @@ a#currentusername span {
   width: 550px;
 }
 .channelrecordings .recordingcontent {
-  margin-left: 0px;
-  width: 550px;
+  margin-left: 20px;
+  width: 338px;
 }
 .livefeed {
   display: inline-block;

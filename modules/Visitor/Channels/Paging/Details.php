@@ -25,12 +25,12 @@ class Details extends \Visitor\Paging {
   );
   protected $template = 'Visitor/recordinglistitem.tpl';
   protected $insertbeforepager = Array( 'Visitor/Channels/Paging/DetailsBeforepager.tpl' );
-  //protected $insertafterpager  = Array( 'Visitor/Channels/Paging/DetailsAfterpager.tpl' );
+  protected $insertafterpager  = Array( 'Visitor/Channels/Paging/DetailsAfterpager.tpl' );
   protected $channelids;
   protected $recordingsModel;
   protected $channelModel;
   protected $user;
-  
+  protected $perpageselector = false;
   
   public function init() {
     
@@ -51,9 +51,18 @@ class Details extends \Visitor\Paging {
       $this->channelModel->findChildrenIDs()
     );
     
-    $this->title                             = $this->channelModel->row['title'];
-    $this->controller->toSmarty['listclass'] = 'recordinglist';
-    $this->controller->toSmarty['channel']   = $this->channelModel->row;
+    $this->channelModel->clearFilter();
+    $rootid = $this->channelModel->id;
+    if ( $this->channelModel->row['parentid'] )
+      $rootid = $this->channelModel->findRootID( $this->channelModel->row['parentid'], 'c.weight, c.title', 0, true );;
+    
+    $channeltree = $this->channelModel->getSingleChannelTree( $rootid );
+    
+    $this->title                               = $this->channelModel->row['title'];
+    $this->controller->toSmarty['listclass']   = 'recordinglist';
+    $this->controller->toSmarty['channel']     = $this->channelModel->row;
+    $this->controller->toSmarty['channeltree'] = $channeltree;
+    
     parent::init();
     
   }
@@ -89,6 +98,13 @@ class Details extends \Visitor\Paging {
       '/' . $this->channelModel->id . ',' .
       \Springboard\Filesystem::filenameize( $this->channelModel->row['title'] )
     ;
+  }
+  
+  protected function setupPager() {
+    parent::setupPager();
+    
+    $this->pager->pagestoshow = 5;
+    
   }
   
 }

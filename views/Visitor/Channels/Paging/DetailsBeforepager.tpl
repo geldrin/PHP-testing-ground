@@ -1,5 +1,6 @@
 <div class="heading categories">
-  <h1>{$channel.title|escape:html}</h1>
+  <h1>{$channeltree[0].title|escape:html}</h1>
+  {if $channeltree[0].subtitle}<h2>{$channeltree[0].subtitle|escape:html}</h2>{/if}
 </div>
 {capture assign=url}{$language}/{$module}/details/{$channel.id},{$channel.title|filenameize}?order=%s{/capture}
 
@@ -41,3 +42,27 @@
     </ul>
   </div>
 </div>
+
+<br/>
+
+<div class="events">
+  <div class="treeview">
+    
+    {if !empty( $channeltree[0].children ) or $channel|@userHasAccess}
+      
+      {foreach from=$channeltree item=item}
+        <div class="channeltree">
+          <div class="children">
+            {foreach from=$item.children item=child}
+              {include file="Visitor/Channels/Paging/DetailsChildren.tpl" child=$child}
+            {/foreach}
+          </div>
+          <div class="clear"></div><br/>
+        </div>
+      {/foreach}
+      
+    {/if}
+    
+  </div>
+  
+  <div class="channelrecordings">
