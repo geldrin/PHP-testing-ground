@@ -30,7 +30,7 @@
     {if !empty( $item.presenters )}
       <div class="presenterswrap">
         <div class="label">{#recordings__presenters#}:</div>
-        <div class="presenters">{$item.presenters|@presenterformat}</div>
+        <div class="presenters">{$item.presenters|@contributorformat|escape:html}</div>
       </div>
     {/if}
     

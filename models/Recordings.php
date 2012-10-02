@@ -1337,7 +1337,7 @@ class Recordings extends \Springboard\Model {
     
   }
   
-  public function addPresenters() {
+  public function addPresenters( $withjobs = true ) {
     
     $this->ensureObjectLoaded();
     $this->row['presenters'] = $this->db->getArray("
@@ -1345,7 +1345,8 @@ class Recordings extends \Springboard\Model {
         c.*,
         cr.roleid,
         cr.recordingid,
-        cr.contributorid
+        cr.contributorid,
+        cr.jobgroupid
       FROM
         contributors AS c,
         contributors_roles AS cr
@@ -1356,11 +1357,14 @@ class Recordings extends \Springboard\Model {
       ORDER BY cr.weight
     ");
     
+    if ( $withjobs )
+      $this->row['presenters'] = $this->addJobsToContributors( $this->row['presenters'] );
+    
     return $this->row;
     
   }
   
-  public function addPresentersToArray( &$array ) {
+  public function addPresentersToArray( &$array, $withjobs = true ) {
     
     $recordings = array();
     foreach( $array as $recording ) {
@@ -1373,12 +1377,13 @@ class Recordings extends \Springboard\Model {
     if ( empty( $recordings ) )
       return $array;
     
-    $rs = $this->db->query("
+    $contributors = $this->db->getArray("
       SELECT
         c.*,
         cr.roleid,
         cr.recordingid,
-        cr.contributorid
+        cr.contributorid,
+        cr.jobgroupid
       FROM
         contributors AS c,
         contributors_roles AS cr
@@ -1389,7 +1394,11 @@ class Recordings extends \Springboard\Model {
       ORDER BY cr.weight
     ");
     
-    foreach( $rs as $contributor ) {
+    if ( $withjobs )
+      $contributors = $this->addJobsToContributors( $contributors );
+    
+    
+    foreach( $contributors as $contributor ) {
       
       if ( !isset( $recordings[ $contributor['recordingid'] ]['presenters'] ) )
         $recordings[ $contributor['recordingid'] ]['presenters'] = array();
@@ -1399,6 +1408,29 @@ class Recordings extends \Springboard\Model {
     }
     
     return $recordings;
+    
+  }
+  
+  public function addJobsToContributors( &$contributors ) {
+    
+    foreach( $contributors as $key => $contributor ) {
+      
+      $contributors[ $key ]['jobs'] = $this->db->getArray("
+        SELECT
+          cj.*,
+          org.name,
+          org.nameshort,
+          org.url
+        FROM contributors_jobs AS cj
+        LEFT JOIN organizations AS org ON cj.organizationid = org.id
+        WHERE
+          cj.jobgroupid    = '" . $contributor['jobgroupid'] . "' AND
+          cj.contributorid = '" . $contributor['contributorid'] . "'
+      ");
+      
+      return $contributors;
+      
+    }
     
   }
   
