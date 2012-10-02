@@ -1049,7 +1049,7 @@ a#currentusername span {
   background-repeat: no-repeat;
   background-position: right 50%;
 }
-.recordview .widepager {
+.channelrecordings .widepager {
   width: 550px;
 }
 
@@ -1352,6 +1352,12 @@ a#currentusername span {
 .recordinglist .recordingslides span {
   padding-right: 3px;
 }
+.recordinglist .presenterswrap {
+  margin-top: 10px;
+}
+.recordinglist .presenterswrap .label {
+  font-weight: bold;
+}
 
 /* treeadminlist */
 .treeadminlist {
@@ -1580,6 +1586,7 @@ a#currentusername span {
 #metadata #infotoggle {
   position: relative;
   text-align: center;
+  margin-top: 40px;
 }
 #metadata #infotoggle ul {
   position: absolute;
@@ -1941,6 +1948,20 @@ a#currentusername span {
   width: 380px;
   margin-right: 20px;
 }
+.treeview h2 {
+  font-size: 14px;
+  margin: 4px 0;
+}
+.treeview h2 a.active {
+  font-weight: bold;
+  text-decoration: underline;
+}
+.treeview .children {
+  padding-left: 20px;
+}
+#channelinfo {
+  margin-bottom: 10px;
+}
 .channelrecordings {
   float: right;
   width: 550px;
@@ -1952,8 +1973,8 @@ a#currentusername span {
   width: 550px;
 }
 .channelrecordings .recordingcontent {
-  margin-left: 0px;
-  width: 550px;
+  margin-left: 20px;
+  width: 338px;
 }
 .livefeed {
   display: inline-block;

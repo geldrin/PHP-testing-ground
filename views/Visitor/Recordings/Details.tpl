@@ -115,6 +115,12 @@
   </div>
   
   <table id="metadatatable">
+    {if !empty( $recording.presenters )}
+      <tr>
+        <td class="labelcolumn">{#recordings__presenters#}:</td>
+        <td>{$recording.presenters|@contributorformat|escape:html}</td>
+      </tr>
+    {/if}
     {if $recording.keywords|stringempty}
       <tr>
         <td class="labelcolumn">{#recordings__keywords#}:</td>

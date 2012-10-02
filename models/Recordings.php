@@ -1337,6 +1337,102 @@ class Recordings extends \Springboard\Model {
     
   }
   
+  public function addPresenters( $withjobs = true ) {
+    
+    $this->ensureObjectLoaded();
+    $this->row['presenters'] = $this->db->getArray("
+      SELECT
+        c.*,
+        cr.roleid,
+        cr.recordingid,
+        cr.contributorid,
+        cr.jobgroupid
+      FROM
+        contributors AS c,
+        contributors_roles AS cr
+      WHERE
+        c.id = cr.contributorid AND
+        cr.recordingid = '" . $this->id . "' AND
+        cr.roleid IN('" . implode("', '", $this->bootstrap->config['presenterroleids'] ) . "')
+      ORDER BY cr.weight
+    ");
+    
+    if ( $withjobs )
+      $this->row['presenters'] = $this->addJobsToContributors( $this->row['presenters'] );
+    
+    return $this->row;
+    
+  }
+  
+  public function addPresentersToArray( &$array, $withjobs = true ) {
+    
+    $recordings = array();
+    foreach( $array as $recording ) {
+      
+      if ( isset( $recording['id'] ) )
+        $recordings[ $recording['id'] ] = $recording;
+      
+    }
+    
+    if ( empty( $recordings ) )
+      return $array;
+    
+    $contributors = $this->db->getArray("
+      SELECT
+        c.*,
+        cr.roleid,
+        cr.recordingid,
+        cr.contributorid,
+        cr.jobgroupid
+      FROM
+        contributors AS c,
+        contributors_roles AS cr
+      WHERE
+        c.id = cr.contributorid AND
+        cr.recordingid IN('" . implode("', '", array_keys( $recordings ) ) . "') AND
+        cr.roleid IN('" . implode("', '", $this->bootstrap->config['presenterroleids'] ) . "')
+      ORDER BY cr.weight
+    ");
+    
+    if ( $withjobs )
+      $contributors = $this->addJobsToContributors( $contributors );
+    
+    foreach( $contributors as $contributor ) {
+      
+      if ( !isset( $recordings[ $contributor['recordingid'] ]['presenters'] ) )
+        $recordings[ $contributor['recordingid'] ]['presenters'] = array();
+      
+      $recordings[ $contributor['recordingid'] ]['presenters'][] = $contributor;
+      
+    }
+    
+    return $recordings;
+    
+  }
+  
+  public function addJobsToContributors( &$contributors ) {
+    
+    foreach( $contributors as $key => $contributor ) {
+      
+      $contributors[ $key ]['jobs'] = $this->db->getArray("
+        SELECT
+          cj.*,
+          org.name,
+          org.nameshort,
+          org.url
+        FROM contributors_jobs AS cj
+        LEFT JOIN organizations AS org ON cj.organizationid = org.id
+        WHERE
+          cj.jobgroupid    = '" . $contributor['jobgroupid'] . "' AND
+          cj.contributorid = '" . $contributor['contributorid'] . "'
+      ");
+      
+    }
+    
+    return $contributors;
+    
+  }
+  
   public function getChannelsForUser( $user, $channeltype = null ) {
     
     $this->ensureID();

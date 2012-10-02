@@ -178,7 +178,7 @@ class Controller extends \Visitor\Controller {
       $this->toSmarty['channels'] = $recordingsModel->getChannelsForUser( $user );
     
     $this->toSmarty['height']        = $this->getPlayerHeight( $recordingsModel );
-    $this->toSmarty['recording']     = $recordingsModel->row;
+    $this->toSmarty['recording']     = $recordingsModel->addPresenters();
     $this->toSmarty['flashdata']     = $recordingsModel->getFlashData( $this->toSmarty, session_id() );
     $this->toSmarty['comments']      = $recordingsModel->getComments();
     $this->toSmarty['commentcount']  = $recordingsModel->getCommentsCount();

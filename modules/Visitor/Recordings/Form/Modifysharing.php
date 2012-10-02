@@ -56,6 +56,7 @@ class Modifysharing extends \Visitor\Recordings\ModifyForm {
     $this->recordingsModel->updateRow( $values );
     $this->recordingsModel->updateFulltextCache( true );
     $this->recordingsModel->updateCategoryCounters();
+    $this->recordingsModel->updateChannelIndexPhotos(); // a channel szamlalok miatt
     
     $this->controller->redirect(
       'recordings/myrecordings',
