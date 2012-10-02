@@ -1397,7 +1397,6 @@ class Recordings extends \Springboard\Model {
     if ( $withjobs )
       $contributors = $this->addJobsToContributors( $contributors );
     
-    
     foreach( $contributors as $contributor ) {
       
       if ( !isset( $recordings[ $contributor['recordingid'] ]['presenters'] ) )
@@ -1428,9 +1427,9 @@ class Recordings extends \Springboard\Model {
           cj.contributorid = '" . $contributor['contributorid'] . "'
       ");
       
-      return $contributors;
-      
     }
+    
+    return $contributors;
     
   }
   
