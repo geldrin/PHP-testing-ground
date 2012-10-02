@@ -1337,6 +1337,29 @@ class Recordings extends \Springboard\Model {
     
   }
   
+  public function addPresenters() {
+    
+    $this->ensureObjectLoaded();
+    $this->row['presenters'] = $this->db->getArray("
+      SELECT
+        c.*,
+        cr.roleid,
+        cr.recordingid,
+        cr.contributorid
+      FROM
+        contributors AS c,
+        contributors_roles AS cr
+      WHERE
+        c.id = cr.contributorid AND
+        cr.recordingid = '" . $this->id . "' AND
+        cr.roleid IN('" . implode("', '", $this->bootstrap->config['presenterroleids'] ) . "')
+      ORDER BY cr.weight
+    ");
+    
+    return $this->row;
+    
+  }
+  
   public function addPresentersToArray( &$array ) {
     
     $recordings = array();
