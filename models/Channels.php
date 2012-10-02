@@ -14,8 +14,8 @@ class Channels extends \Springboard\Model {
    *
    */
   
-  function updateVideoCounters() {
-  
+  public function updateVideoCounters() {
+    
     $this->ensureObjectLoaded();
     
     /* leszarmazott csatornak szamlaloi */
