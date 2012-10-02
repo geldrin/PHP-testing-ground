@@ -111,6 +111,9 @@ $suffix = "";
 // Open API
 $api = new Api('support@videosquare.eu', 'MekkElek123');
 
+//$api->addRecordingToChannel( 24, 5 );
+//$api->removeRecordingFromChannel( 24, 6 );
+
 $last_comment = "";
 
 $fh = fopen($desc_filename, "r");
