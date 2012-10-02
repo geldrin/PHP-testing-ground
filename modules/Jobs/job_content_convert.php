@@ -154,7 +154,7 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_content_convert.stop' ) an
 		update_db_mobile_status($recording['id'], $jconf['dbstatus_conv_video']);
 
 		// Normal quality mobile conversion (mobile LQ)
-		if ( !convert_mobile($recording, $jconf['profile_mobile_lq'], $content_info_mobile_lq) ) {
+/*		if ( !convert_mobile($recording, $jconf['profile_mobile_lq'], $content_info_mobile_lq) ) {
 			update_db_mobile_status($recording['id'], $jconf['dbstatus_conv_video_err']);
 			break;
 		}
@@ -173,6 +173,11 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_content_convert.stop' ) an
 				break;
 			}
 		}
+*/
+
+// !!!!!!!!! kivenni !!!!!
+update_db_mobile_status($recording['id'], "reconvert");
+// !!!!!!!!!!!!
 
 		// Media finalization
 		if ( !copy_content_to_frontend($recording, $content_info_lq, $content_info_hq, $content_info_mobile_lq, $content_info_mobile_hq) ) {
@@ -430,12 +435,15 @@ global $jconf, $db;
 			( status = \"" . $jconf['dbstatus_copystorage_ok'] . "\" AND ( mastersourceip IS NOT NULL OR mastersourceip != '' ) ) AND
 			( contentmastersourceip IS NOT NULL OR contentmastersourceip != '' ) AND (
 			( contentmasterstatus = \"" . $jconf['dbstatus_uploaded'] . "\" AND contentstatus = \"" . $jconf['dbstatus_uploaded'] . "\" ) OR
-			( contentmasterstatus = \"" . $jconf['dbstatus_copystorage_ok'] . "\" AND contentstatus = \"" . $jconf['dbstatus_reconvert']  . "\" ) OR
-			( contentmasterstatus = \"" . $jconf['dbstatus_copystorage_ok'] . "\" AND mobilestatus = \"" . $jconf['dbstatus_reconvert']  . "\" ) )
+			( contentmasterstatus = \"" . $jconf['dbstatus_copystorage_ok'] . "\" AND contentstatus = \"" . $jconf['dbstatus_reconvert']  . "\" )
+			)
 		ORDER BY
 			conversionpriority,
 			id
 		LIMIT 1";
+
+// OR
+//			( contentmasterstatus = \"" . $jconf['dbstatus_copystorage_ok'] . "\" AND mobilestatus = \"" . $jconf['dbstatus_reconvert']  . "\" )
 
 	try {
 		$rs = $db->Execute($query);
