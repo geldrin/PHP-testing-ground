@@ -175,16 +175,16 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_content_convert.stop' ) an
 		}
 */
 
-// !!!!!!!!! kivenni !!!!!
-update_db_mobile_status($recording['id'], "reconvert");
-// !!!!!!!!!!!!
-
 		// Media finalization
 		if ( !copy_content_to_frontend($recording, $content_info_lq, $content_info_hq, $content_info_mobile_lq, $content_info_mobile_hq) ) {
 			if ( $recording['is_content_convert'] ) update_db_content_status($recording['id'], $jconf['dbstatus_copystorage_err']);
 			update_db_mobile_status($recording['id'], $jconf['dbstatus_copystorage_err']);
 			break;
 		}
+
+// !!!!!!!!! kivenni !!!!!
+update_db_mobile_status($recording['id'], "reconvert");
+// !!!!!!!!!!!!
 
 		//// End of media conversion
 		$global_log .= "URL: http://" . $app->config['baseuri'] . "/" . $uploader_user['language'] . "/recordings/details/" . $recording['id'] . "\n\n";
