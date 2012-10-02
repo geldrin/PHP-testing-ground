@@ -1337,6 +1337,48 @@ class Recordings extends \Springboard\Model {
     
   }
   
+  public function addPresentersToArray( &$array ) {
+    
+    $recordings = array();
+    foreach( $array as $recording ) {
+      
+      if ( isset( $recording['id'] ) )
+        $recordings[ $recording['id'] ] = $recording;
+      
+    }
+    
+    if ( empty( $recordings ) )
+      return $array;
+    
+    $rs = $this->db->query("
+      SELECT
+        c.*,
+        cr.roleid,
+        cr.recordingid,
+        cr.contributorid
+      FROM
+        contributors AS c,
+        contributors_roles AS cr
+      WHERE
+        c.id = cr.contributorid AND
+        cr.recordingid IN('" . implode("', '", array_keys( $recordings ) ) . "') AND
+        cr.roleid IN('" . implode("', '", $this->bootstrap->config['presenterroleids'] ) . "')
+      ORDER BY cr.weight
+    ");
+    
+    foreach( $rs as $contributor ) {
+      
+      if ( !isset( $recordings[ $contributor['recordingid'] ]['presenters'] ) )
+        $recordings[ $contributor['recordingid'] ]['presenters'] = array();
+      
+      $recordings[ $contributor['recordingid'] ]['presenters'][] = $contributor;
+      
+    }
+    
+    return $recordings;
+    
+  }
+  
   public function getChannelsForUser( $user, $channeltype = null ) {
     
     $this->ensureID();

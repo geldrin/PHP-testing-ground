@@ -135,6 +135,11 @@ $config = array(
   // siman die()-ol az applikacio
   'organizationfallbackurl' => 'http://videosquare.eu',
   'chatpolltimems'          => 1000,
+  //----
+  'presenterroleids' => array(
+    1,
+  ),
+  
 );
 
 $config['phpsettings'] = array(

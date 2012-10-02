@@ -1352,6 +1352,12 @@ a#currentusername span {
 .recordinglist .recordingslides span {
   padding-right: 3px;
 }
+.recordinglist .presenterswrap {
+  margin-top: 10px;
+}
+.recordinglist .presenterswrap .label {
+  font-weight: bold;
+}
 
 /* treeadminlist */
 .treeadminlist {

@@ -26,6 +26,14 @@
         </li>
       </ul>
     </div>
+    
+    {if !empty( $item.presenters )}
+      <div class="presenterswrap">
+        <div class="label">{#recordings__presenters#}:</div>
+        <div class="presenters">{$item.presenters|@presenterformat}</div>
+      </div>
+    {/if}
+    
     {if $item|@userHasAccess}
     <div class="recordingactions">
       <ul>
