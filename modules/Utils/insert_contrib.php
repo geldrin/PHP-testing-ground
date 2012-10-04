@@ -9,15 +9,41 @@ include_once( BASE_PATH . 'libraries/Springboard/Application/Cli.php');
 
 set_time_limit(0);
 
+$iscommit = FALSE;
+
 // Init
 $app = new Springboard\Application\Cli(BASE_PATH, PRODUCTION);
 
+// Roles
+// 1 = Előadó
+// 2 = Műsorvezető
+// 3 = Moderátor
+
 $authors = array(
 	// Vezetéknév, keresztnév, nénsorrend, pozíció, cég, recordingid, role
-	array("Vörös", "Csilla", "straight", "ügyvezető", "Nielsen", 21, 1),
-	array("Szabó", "Gábor", "straight", "esztergályos", "Munkakerülő Kft.", 22, 1),
-	array("Szabó", "Gábor", "straight", "kukta", "Kolbi Kft.", 11, 1),
-	array("Veres", "Csilla", "straight", "mutyi", "Baki Kft.", 11, 1),
+/*	array("Vörös", "Csilla", "straight", "ügyvezető", "Nielsen", 21, 1),
+	array("Hann", "Endre", "straight", "ügyvezető igazgató", "Medián", 22, 1),
+	array("Závecz", "Tibor", "straight", "véleménykutatási igazgató", "Ipsos", 23, 1),
+	array("Kozák", "Ákos", "straight", "ügyvezető igazgató", "GfK", 24, 1),
+	array("Gajdos", "Tamás", "straight", "műsorvezető", null, 25, 2),
+	array("dr. László", "Géza", "straight", "igazgató", "MagyarBrands", 25, 1),
+	array("dr. Serényi", "János", "straight", null, null, 26, 1),
+	array("Forgács", "Péter", "straight", null, null, 26, 1),
+	array("Kollár", "Csaba", "straight", "ügyfélkapcsolati igazgató", "Popart Reklámügynökség Kft.", 27, 1),
+	array("Szántó", "Balázs", "straight", "ügyvezető partner", "Noguchi", 28, 1), 
+	array("Gajdos", "Tamás", "straight", "műsorvezető", null, 29, 2),
+	array("Ludvig", "Klára", "straight", "ügyvezető", "Jókenyér Pékség", 29, 1),
+	array("Mészáros", "Gábor", "straight", null, "chokoMe Csokoládémanufaktúra", 29, 1),
+	array("Schweickhardt", "András", "straight", "ügyvezető", "Prima Maroni Kft.", 29, 1),
+	array("Neumann", "Péter", "straight", "társtulajdonos", "Kristálytorony", 29, 1),
+	array("Hinora", "Bálint", "straight", null, "Hinora Marketing Group", 30, 1),
+	array("Gajdos", "Tamás", "straight", "műsorvezető", null, 31, 2),
+	array("Végvári", "Imre", "straight", "Networks képzés témavezető", "Kürt Akadémia", 32, 1),
+	array("Kaizer", "Gábor", "straight", "társalapító", "ReVISION", 33, 1),
+	array("Dr. Kádas", "Péter", "straight", "társalapító", "BrandVocat", 34, 1),
+	array("Galiba", "Péter", "straight", null, "EPAM Systems", 35, 1),
+	array("Guy", "Loury", "reverse", "társalapító", "CreativeSelector", 36, 1),
+	array("Turcsán", "Tamás", "reverse", "alapító", "indulj.be", 37, 1), */
 );
 
 // Establish database connection
@@ -54,7 +80,7 @@ foreach($authors as $key => $value) {
 exit;
 
 function insert_string_dbl($string_hu, $string_en) {
-global $db; 
+global $db, $iscommit; 
 
 	// Insert HU string
 	$query = "
@@ -108,7 +134,7 @@ global $db;
 }
 
 function insert_cont($c_name1, $c_name2, $nameformat, $id_org, $c_job, $c_role, $rec_id) {
-global $db;
+global $db, $iscommit;
 
 	if ( $nameformat == "straight" ) {
 		$c_first = $c_name2;
@@ -119,18 +145,6 @@ global $db;
 	}
 
 	// check if cont exists
-/*	$query = "
-		SELECT
-			id,
-			namefirst,
-			namelast
-		FROM
-			contributors
-		WHERE
-			namefirst LIKE '%" . $c_first . "%' AND
-			namelast LIKE '%" . $c_last . "%'
-	"; */
-
 	$query = "
 		SELECT
 			a.id,
@@ -170,6 +184,7 @@ global $db;
 		exit -1;
 	}
 
+	// Contributor exists?
 	if ( $rs->RecordCount() >= 1 ) {
 		echo "ERROR: már létezik a szerző? Válassz szerzőt, job és organization kombinációt az adatbázisból!\n";
 
@@ -248,7 +263,6 @@ echo $query . "\n";
 	}
 
 	// Cannot find any record or (i) is chosen
-
 	$date = date("Y-m-d H:i:s");
 
 	// insert contributor
@@ -257,7 +271,7 @@ echo $query . "\n";
 			contributors (timestamp, namefirst, namelast, nameformat, organizationid, createdby)
 		VALUES('" . $date . "', '" . $c_first . "', '" . $c_last . "', '" . $nameformat . "', 2, 14)";
 
-echo $query . "\n";
+//echo $query . "\n";
 
 	try {
 		$rs = $db->Execute($query);
@@ -268,23 +282,33 @@ echo $query . "\n";
 
 	$id_cont = $db->Insert_ID();
 
-	// add job group
-	$query = "
-		INSERT INTO
-			contributors_jobs (contributorid, organizationid, userid, jobgroupid, joboriginal)
-		VALUES(" . $id_cont . ", " . $id_org . ", 14, 1, '" . $c_job . "')
-	";
-
-echo $query . "\n";
-
-	try {
-		$rs = $db->Execute($query);
-	} catch (exception $err) {
-		echo "[ERROR] SQL query failed.\n", trim($query), $err . "\n";
-		exit -1;
+	if ( empty($id_org) ) $id_org = "null";
+	if ( empty($c_job) ) {
+		$c_job = "null";
+	} else {
+		$c_job = "'" . $c_job . "'";
 	}
 
-	$id_jobid = $db->Insert_ID();
+	if ( ( $id_org != "null" ) or ( $c_job != "null" ) ) {
+
+		// add job group
+		$query = "
+			INSERT INTO
+				contributors_jobs (contributorid, organizationid, userid, jobgroupid, joboriginal)
+			VALUES(" . $id_cont . ", " . $id_org . ", 14, 1, " . $c_job . ")
+		";
+
+		if ( !$iscommit ) echo $query . "\n";
+
+		try {
+			$rs = $db->Execute($query);
+		} catch (exception $err) {
+			echo "[ERROR] SQL query failed.\n", trim($query), $err . "\n";
+			exit -1;
+		}
+
+//		$id_jobid = $db->Insert_ID();
+	}
 
 	// add job group to recording
 	$query = "
@@ -293,7 +317,7 @@ echo $query . "\n";
 		VALUES(" . $id_org . ", " . $id_cont . ", " . $rec_id . ", 1, " . $c_role . ")
 	";
 
-echo $query . "\n";
+	if ( !$iscommit ) echo $query . "\n";
 
 	try {
 		$rs = $db->Execute($query);
@@ -306,7 +330,7 @@ echo $query . "\n";
 }
 
 function insert_org($name) {
-global $db;
+global $db, $iscommit;
 
 	$recording = array();
 
@@ -320,6 +344,8 @@ global $db;
 		WHERE
 			name LIKE '%" . $name . "%'
 	";
+
+	if ( !$iscommit ) echo $query . "\n";
 
 	try {
 		$rs = $db->Execute($query);
@@ -363,7 +389,7 @@ global $db;
 			organizations (name, name_stringid, nameshort_stringid, introduction_stringid, languages)
 		VALUES('" . $name . "', " . $id_org_name . ", " . $id_org_short . ", " . $id_org_intro . " , 'hu,en')";
 
-//echo $query . "\n";
+	if ( !$iscommit ) echo $query . "\n";
 
 	try {
 		$rs = $db->Execute($query);
@@ -373,20 +399,9 @@ global $db;
 	}
 
 	$id_org = $db->Insert_ID();
-echo "idorg = " . $id_org . "\n";
+//echo "idorg = " . $id_org . "\n";
 
 	return $id_org;
-}
-
-function inKey($vals) { 
-
-	$inKey = ""; 
-	while( !in_array($inKey, $vals)) {
-//		$inKey = trim(`read -s -n1 valu;echo \$valu`); 
-		$inKey = trim(`read -s -n1 valu;echo \$valu`); 
-echo "ret: " . $inKey . "\n";
-	} 
-	return $inKey; 
 }
 
 function read_key($vals) {
