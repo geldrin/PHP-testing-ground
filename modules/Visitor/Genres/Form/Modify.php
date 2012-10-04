@@ -27,7 +27,7 @@ class Modify extends \Visitor\Form {
     $this->genreModel->updateRow( $values );
     
     $this->controller->redirect(
-      $this->application->getParameter('forward', 'genres/index' )
+      $this->application->getParameter('forward', 'genres/admin' )
     );
     
   }

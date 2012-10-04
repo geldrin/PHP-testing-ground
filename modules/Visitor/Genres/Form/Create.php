@@ -21,7 +21,7 @@ class Create extends \Visitor\Form {
     $genreModel->insert( $values );
     
     $this->controller->redirect(
-      $this->application->getParameter('forward', 'genres/index' )
+      $this->application->getParameter('forward', 'genres/admin' )
     );
     
   }
