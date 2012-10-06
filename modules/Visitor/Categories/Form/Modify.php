@@ -26,6 +26,10 @@ class Modify extends \Visitor\Form {
     
     $values = $this->form->getElementValues( 0 );
     $this->categoryModel->updateRow( $values );
+    $this->categoryModel->expireCache(
+      'GetCategoryTree',
+      $this->controller->organization['id']
+    );
     
     $this->controller->redirect(
       $this->application->getParameter('forward', 'categories/admin' )

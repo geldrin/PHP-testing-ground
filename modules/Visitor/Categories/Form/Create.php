@@ -18,6 +18,7 @@ class Create extends \Visitor\Form {
     $categoryModel = $this->bootstrap->getModel('categories');
     
     $categoryModel->insert( $values );
+    $categoryModel->expireCache('GetCategoryTree', $this->controller->organization['id'] );
     
     $this->controller->redirect(
       $this->application->getParameter('forward', 'categories/admin' )
