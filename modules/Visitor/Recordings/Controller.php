@@ -159,12 +159,13 @@ class Controller extends \Visitor\Controller {
       $this->application->getNumericParameter('id')
     );
     
-    $user      = $this->bootstrap->getSession('user');
-    $rating    = $this->bootstrap->getSession('rating');
-    $access    = $this->bootstrap->getSession('recordingaccess');
-    $accesskey = $recordingsModel->id . '-' . (int)$recordingsModel->row['issecurestreamingforced'];
+    $browserinfo = $this->bootstrap->getBrowserInfo();
+    $user        = $this->bootstrap->getSession('user');
+    $rating      = $this->bootstrap->getSession('rating');
+    $access      = $this->bootstrap->getSession('recordingaccess');
+    $accesskey   = $recordingsModel->id . '-' . (int)$recordingsModel->row['issecurestreamingforced'];
     
-    $access[ $accesskey ] = $recordingsModel->userHasAccess( $user );
+    $access[ $accesskey ] = $recordingsModel->userHasAccess( $user, null, $browserinfo['mobile'] );
     
     if ( $access[ $accesskey ] !== true )
       $this->redirectToController('contents', $access[ $accesskey ] );
@@ -205,13 +206,8 @@ class Controller extends \Visitor\Controller {
       ,
     );
     $mobilehq = false;
-    if ( $recordingsModel->row['mobilevideoreshq'] ) {
-      
-      $browserinfo = $this->bootstrap->getBrowserInfo();
-      if ( $browserinfo['tablet'] )
-        $mobilehq = true;
-      
-    }
+    if ( $recordingsModel->row['mobilevideoreshq'] and $browserinfo['tablet'] )
+      $mobilehq = true;
     
     $quality = $this->application->getParameter('quality');
     if ( $quality and in_array( $quality, array('lq', 'hq') ) ) {

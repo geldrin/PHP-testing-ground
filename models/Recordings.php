@@ -368,14 +368,14 @@ class Recordings extends \Springboard\Model {
     
   }
   
-  public function userHasAccess( $user, $secure = null ) {
+  public function userHasAccess( $user, $secure = null, $mobile = false ) {
     
     $this->ensureObjectLoaded();
     
     if ( $secure !== null and $this->row['issecurestreamingforced'] != $secure )
       return 'securerestricted';
     
-    $bystatus   = $this->isAccessibleByStatus( $user );
+    $bystatus   = $this->isAccessibleByStatus( $user, $mobile );
     $bysettings = $this->isAccessibleBySettings( $user );
     
     if ( $bystatus === true and $bysettings === true )
@@ -647,7 +647,7 @@ class Recordings extends \Springboard\Model {
     $this->insertMultipleIDs( $groupids, 'access', 'groupid');
   }
   
-  public function isAccessibleByStatus( $user ) {
+  public function isAccessibleByStatus( $user, $mobile = false ) {
     
     $this->ensureObjectLoaded();
     $statuses = array(
@@ -657,8 +657,11 @@ class Recordings extends \Springboard\Model {
     if ( in_array( $this->row['status'], $statuses ) )
       return $statuses[ $this->row['status'] ];
     
-    if ( $this->row['status'] != 'onstorage' )
-      return 'recordingconverting';
+    if (
+         ( !$mobile and $this->row['status'] != 'onstorage' ) or
+         ( $mobile and $this->row['mobilestatus'] != 'onstorage' )
+       )
+      return $mobile? 'mobileunavailable': 'recordingconverting';
     
     if (
          isset( $user['id'] ) and
