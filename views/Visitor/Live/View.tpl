@@ -41,13 +41,13 @@
   <center>
     {if $browser.mobiledevice == 'iphone'}
       <div id="mobileplayercontainer">
-        <video x-webkit-airplay="allow" controls="controls" alt="{$channel.title|escape:html}" width="192" height="144" poster="{$STATIC_URI}images/videothumb_player_placeholder.png" src="{$livehttpurl}">
-          <a href="{$livehttpurl}"><img src="{$STATIC_URI}images/videothumb_player_placeholder.png" width="220" height="130"/></a>
+        <video x-webkit-airplay="allow" controls="controls" alt="{$channel.title|escape:html}" width="192" height="144" poster="{$STATIC_URI}images/live_player_placeholder_small.png" src="{$livehttpurl}">
+          <a href="{$livehttpurl}"><img src="{$STATIC_URI}images/live_player_placeholder_small.png" width="220" height="130"/></a>
         </video>
       </div>
     {else}
       <div id="mobileplayercontainer">
-        <a href="{$livertspurl}"><img src="{$STATIC_URI}images/videothumb_player_placeholder.png" width="220" height="130"/></a>
+        <a href="{$livertspurl}"><img src="{$STATIC_URI}images/live_player_placeholder_small.png" width="220" height="130"/></a>
       </div>
     {/if}
   </center>
