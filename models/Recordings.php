@@ -144,7 +144,7 @@ class Recordings extends \Springboard\Model {
     
     if ( !empty( $contributors ) ) {
       
-      include_once( $this->bootstrap->config['smartypluginpath'] . 'modifier.nameformat.php');
+      include_once( $this->bootstrap->config['templatepath'] . 'Plugins/modifier.nameformat.php');
       foreach( $contributors as $contributor )
         $contributornames[] = \smarty_modifier_nameformat( $contributor );
       
