@@ -66,6 +66,8 @@ class All extends \Visitor\Paging {
       $start, $limit, $orderby
     );
     
+    $items = $this->recordingsModel->addPresentersToArray( $items );
+    
     return $items;
     
   }

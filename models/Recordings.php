@@ -1370,10 +1370,13 @@ class Recordings extends \Springboard\Model {
   public function addPresentersToArray( &$array, $withjobs = true ) {
     
     $recordings = array();
-    foreach( $array as $recording ) {
+    foreach( $array as $key => $recording ) {
+      
+      if ( isset( $recording['type'] ) and $recording['type'] != 'recording' )
+        continue;
       
       if ( isset( $recording['id'] ) )
-        $recordings[ $recording['id'] ] = $recording;
+        $recordings[ $recording['id'] ] = $key;
       
     }
     
@@ -1402,14 +1405,15 @@ class Recordings extends \Springboard\Model {
     
     foreach( $contributors as $contributor ) {
       
-      if ( !isset( $recordings[ $contributor['recordingid'] ]['presenters'] ) )
-        $recordings[ $contributor['recordingid'] ]['presenters'] = array();
+      $key = $recordings[ $contributor['recordingid'] ];
+      if ( !isset( $recordings[ $key ]['presenters'] ) )
+        $array[ $key ]['presenters'] = array();
       
-      $recordings[ $contributor['recordingid'] ]['presenters'][] = $contributor;
+      $array[ $key ]['presenters'][] = $contributor;
       
     }
     
-    return $recordings;
+    return $array;
     
   }
   
