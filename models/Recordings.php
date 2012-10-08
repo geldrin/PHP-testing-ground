@@ -1571,26 +1571,15 @@ class Recordings extends \Springboard\Model {
     }
     
     $subtitles = $this->getSubtitleLanguages();
-    
-    if ( count( $subtitles ) == 1 )
-      $defaultsubtitle = $subtitles[0]['languagecode'];
-    else
-      $defaultsubtitle = $this->getDefaultSubtitleLanguage();
-    
-    $autoshowsubtitle = true;
-    if (
-         ( $data['language'] == 'hu' and $defaultsubtitle == 'hun' ) or
-         ( $data['language'] == 'en' and $defaultsubtitle == 'eng' )
-       )
-      $autoshowsubtitle = false;
-    
-    if ( $autoshowsubtitle )
-      $data['subtitle_autoShow'] = true;
-    
-    if ( $defaultsubtitle )
-      $data['subtitle_default'] = $defaultsubtitle;
-    
     if ( !empty( $subtitles ) ) {
+      
+      $defaultsubtitle = $this->getDefaultSubtitleLanguage();
+      if ( $defaultsubtitle ) {
+        
+        $data['subtitle_autoShow'] = true;
+        $data['subtitle_default']  = $defaultsubtitle;
+        
+      }
       
       $data['subtitle_files'] = array();
       foreach( $subtitles as $subtitle ) {
@@ -1801,9 +1790,10 @@ class Recordings extends \Springboard\Model {
         languages AS l
       WHERE
         st.recordingid  = '" . $this->id . "' AND
-        s.translationof = st.languageid AND
+        s.translationof = l.name_stringid AND
         s.language      = '" . \Springboard\Language::get() . "' AND
         l.id            = st.languageid
+      GROUP BY st.languageid
     ");
     
   }
@@ -1819,7 +1809,8 @@ class Recordings extends \Springboard\Model {
       WHERE
         st.recordingid = '" . $this->id . "' AND
         l.id           = st.languageid AND
-        st.isdefault   = '0'
+        st.isdefault   = '1'
+      GROUP BY st.languageid
       LIMIT 1
     ");
     
@@ -2096,6 +2087,22 @@ class Recordings extends \Springboard\Model {
       UPDATE subtitles
       SET isdefault = '0'
       WHERE recordingid = '" . $this->id . "'
+    ");
+    
+  }
+  
+  public function clearSubtitleWithLanguage( $languageid ) {
+    
+    $languageid = intval( $languageid );
+    if ( !$languageid )
+      throw new \Exception("Invalid languageid passed!");
+    
+    $this->ensureID();
+    $this->db->query("
+      DELETE FROM subtitles
+      WHERE
+        recordingid = '" . $this->id . "' AND
+        languageid  = '" . $languageid . "'
     ");
     
   }

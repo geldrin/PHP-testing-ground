@@ -20,6 +20,8 @@ class Uploadsubtitle extends \Visitor\Recordings\ModifyForm {
     if ( $values['isdefault'] )
       $this->recordingsModel->clearDefaultSubtitle();
     
+    // egy nyelvhez mindig csak egy felirat tartozhat
+    $this->recordingsModel->clearSubtitleWithLanguage( $values['languageid'] );
     $subtitleModel->insert( $values );
     
     $this->controller->redirectWithMessage(
