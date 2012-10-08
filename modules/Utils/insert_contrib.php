@@ -294,6 +294,42 @@ $authors = array(
 
 */
 
+	array("Hermann", "Irén", "straight", null, "Figyelő", 170, 3),
+	array("Horváth", "János", "straight", null, null, 170, 1),
+	array("Mark", "M. West", "reverse", "European operations director", "The Communicorp Group", 170, 1),
+	array("Simó", "György", "straight", null, null, 170, 1),
+	array("Hermann", "Irén", "straight", null, "Figyelő", 171, 3),
+	array("Megyeri", "András", "straight", null, "TV2", 171, 1),
+	array("Vándor", "Ágnes", "straight", null, "Proffesional Publishing", 171, 1),
+	array("Steff", "József", "straight", null, "Sanoma Media", 171, 1),
+
+	array("Kalmár", "Tibor", "straight", null, "RTL Klub", 172, 3),
+	array("Pécsi", "Ferenc", "straight", null, "Médiablog", 172, 1),
+	array("Szabó", "Zoltán", "straight", null, "Index", 172, 1),
+	array("Dobó", "Mátyás (Doransky)", "straight", null, "Peer", 172, 1),
+
+	array("Kalmár", "Tibor", "straight", null, "RTL Klub", 173, 3),
+	array("Margaret Ann", "Dowling", "reverse", null, "Marquard Media", 173, 1),
+	array("Kovalcsik", "Ildikó Lilu", "straight", null, "RTL Klub", 173, 1),
+	array("Sabján", "Johanna", "straight", null, "Cosmopolitan", 173, 1),
+	array("Rubin", "Kata", "straight", null, "Red Lemon", 173, 1),
+
+	array("Szilágyi", "Miklós", "straight", null, "Vezetői Coaching", 174, 1),
+	array("Kiss", "Ottó", "straight", null, "Braining", 174, 1),
+	array("Braskó", "Csaba", "straight", null, "Szemléletfejlesztés.hu", 174, 1),
+	array("Dobay", "Róbert", "straight", null, "Menedzsmentor", 174, 1),
+
+	array("Rényi", "Ádám", "straight", null, null, 176, 3),
+	array("Lakatos", "Zsófia", "straight", null, null, 176, 1),
+	array("Rubin", "Kata", "straight", null, "Red Lemon", 176, 1),
+	array("Ábrahám", "Gergely", "straight", null, null, 176, 1),
+	array("Hampuk", "Richárd", "straight", null, "Person", 176, 1),
+
+	array("Rényi", "Ádám", "straight", null, null, 177, 3),
+	array("Szabó", "Zoltán", "straight", null, "Index", 177, 1),
+	array("Csuday", "Gábor", "straight", null, "Kreatív", 177, 1),
+	array("Simon", "Krisztián", "straight", null, "Marketing és Média", 177, 1),
+
 );
 
 // Establish database connection
