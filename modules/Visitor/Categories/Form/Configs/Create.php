@@ -26,6 +26,12 @@ $config = Array(
     'languages'   => $l->getLov('languages'),
   ),
   
+  'namehyphenated_stringid' => Array(
+    'displayname' => $l('categories', 'namehyphenated'),
+    'type'        => 'inputTextMultilanguage',
+    'languages'   => $l->getLov('languages'),
+  ),
+  
   'parentid' => Array(
     'displayname' => $l('categories', 'parentid'),
     'type'        => 'selectDynamic',

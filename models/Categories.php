@@ -2,7 +2,7 @@
 namespace Model;
 
 class Categories extends \Springboard\Model\Multilingual {
-  public $multistringfields = array( 'name' );
+  public $multistringfields = array( 'name', 'namehyphenated' );
   
   public function updateVideoCounters() {
     

@@ -9,7 +9,7 @@
   
   <li{if $smarty.foreach.category.last} class="last"{/if}>
     <div class="categoryname">
-      <h2><a href="{$language}/categories/details/{$category.id},{$category.name|filenameize}" title="{$category.name|escape:html}">{$category.name|escape:html}</a></h2>
+      <h2><a href="{$language}/categories/details/{$category.id},{$category.name|filenameize}" title="{$category.name|escape:html}">{$category.namehyphenated|default:$category.name|escape:html}</a></h2>
       <div class="numberofrecordings">({$category.numberofrecordings|default:0})</div>
       <a href="{$language}/categories/details/{$category.id},{$category.name|filenameize}" class="categorypic"><img src="{$STATIC_URI}images/categories/114/{$category.iconfilename}" /></a>
     </div>
@@ -17,7 +17,7 @@
       {foreach from=$category.children item=subcategory}
       
         <li>
-          <h3><a href="{$language}/categories/details/{$subcategory.id},{$subcategory.name|filenameize}" title="{$subcategory.name|escape:html}"><span class="subcatname">{$subcategory.name|escape:html}</span> <span>({$subcategory.numberofrecordings})</span></a></h3>
+          <h3><a href="{$language}/categories/details/{$subcategory.id},{$subcategory.name|filenameize}" title="{$subcategory.name|escape:html}"><span class="subcatname">{$subcategory.namehyphenated|default:$subcategory.name|escape:html}</span> <span>({$subcategory.numberofrecordings})</span></a></h3>
         </li>
       
       {/foreach}

@@ -39,6 +39,14 @@ $config = Array(
     'validation'  => Array(
     )
   ),
+  
+  'namehyphenated_stringid' => Array(
+    'displayname' => 'Kategória neve kötőjelekkel',
+    'type'        => 'inputTextMultilanguage',
+    'languages'   => $l->getLov('languages'),
+    'validation'  => Array(
+    )
+  ),
 
   'parentid' => Array(
 

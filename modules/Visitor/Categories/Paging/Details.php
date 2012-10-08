@@ -77,6 +77,8 @@ class Details extends \Visitor\Paging {
       $orderby
     );
     
+    $items = $this->recordingsModel->addPresentersToArray( $items );
+    
     return $items;
     
   }

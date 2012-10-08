@@ -1,5 +1,5 @@
 {if $item.type == 'channel'}
-TODO
+{*}TODO{/*}
 {else}
   {include file=Visitor/recordinglistitem.tpl item=$item}
 {/if}

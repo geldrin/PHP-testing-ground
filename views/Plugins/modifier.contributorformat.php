@@ -24,11 +24,21 @@ function smarty_modifier_contributorformat( $presenters, $withjobs = true ) {
           $jobname = $job['joboriginal'];
         
         if ( strlen( trim( $job['nameshort'] ) ) )
-          $jobname .= ' - ' . $job['nameshort'];
+          $joborganization = $job['nameshort'];
         elseif( strlen( trim( $job['name'] ) ) )
-          $jobname .= ' - ' . $job['name'];
+          $joborganization = $job['name'];
+        else
+          $joborganization = '';
         
-        $jobs[] = $jobname;
+        $jobname         = trim( $jobname );
+        $joborganization = trim( $joborganization );
+        
+        if ( strlen( $jobname ) and strlen( $joborganization ) )
+          $jobs[] = $jobname . ' - ' . $joborganization;
+        elseif( strlen( $jobname ) )
+          $jobs[] = $jobname;
+        elseif ( strlen( $joborganization ) )
+          $jobs[] = $joborganization;
         
       }
       
