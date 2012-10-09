@@ -6,7 +6,7 @@
         <a href="{$language}/users/logout">{#usermenu_users_logout#}</a>
       </div>
     {/if}
-    {if $member.isnewseditor or $member.isclientadmin or $member.isuploader or $member.isliveadmin}
+    {if $member.isnewseditor or $member.isclientadmin or $member.isuploader or ( $organization.islivestreamingenabled and $member.isliveadmin )}
       {assign var=columncount value=3}
     {else}
       {assign var=columncount value=2}
@@ -17,7 +17,7 @@
       <div id="currentusercontent">
         <a id="currentusername" href="#">{$member.namefirst|escape:html}<span></span></a>
         <div id="currentusermenu" style="width: {$columncount*241}px">
-          {if $member.isnewseditor or $member.isclientadmin or $member.isuploader or $member.isliveadmin}
+          {if $member.isnewseditor or $member.isclientadmin or $member.isuploader or ( $organization.islivestreamingenabled and $member.isliveadmin )}
             <div class="column first">
               {if $member.isnewseditor or $member.isclientadmin}
                 <div class="title">{#usermenu_organizations_title#}</div>
@@ -43,7 +43,7 @@
                 <div class="hr"></div>
               {/if}
               
-              {if $member.isliveadmin}
+              {if $organization.islivestreamingenabled and $member.isliveadmin}
                 <div class="title">{#usermenu_live_title#}</div>
                 <ul>
                   <li><a href="{$language}/live">{#usermenu_live_list#}</a></li>

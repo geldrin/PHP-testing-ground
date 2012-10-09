@@ -36,6 +36,18 @@ class Controller extends \Visitor\Controller {
     'details' => 'Visitor\\Live\\Paging\\Details',
   );
   
+  public function init() {
+    
+    parent::init();
+    if ( !$this->organization['islivestreamingenabled'] ) {
+      
+      header('HTTP/1.0 403 Forbidden');
+      $this->redirectToController('contents', 'nopermissionlivestreaming');
+      
+    }
+    
+  }
+  
   public function viewAction() {
     
     $feedModel = $this->modelIDCheck(

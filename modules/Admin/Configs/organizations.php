@@ -147,6 +147,12 @@ $config = Array(
     'values'      => $l->getLov('yesno'),
   ),
   
+  'islivestreamingenabled' => array(
+    'displayname' => 'Élő közvetítés?',
+    'type'        => 'inputRadio',
+    'values'      => $l->getLov('yesno'),
+  ),
+  
   'registrationtype' => array(
     'displayname' => 'Regisztráció típusa',
     'type'        => 'select',

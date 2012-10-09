@@ -74,6 +74,7 @@ CREATE TABLE `organizations` (
    `issubscriber` int(11) not null default '0',
    `isvcrenabled` int(11) not null default '0',
    `issecurestreamingenabled` int(11) not null default '0',
+   `islivestreamingenabled` int(11) not null default '0',
    `domain` text,
    `supportemail` text,
    `registrationtype` text,
