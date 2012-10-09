@@ -23,6 +23,8 @@ class Controller extends \Visitor\Controller {
       $this->organization['id']
     );
     
+    $recordingsModel->addPresentersToArray( $this->toSmarty['recordings'] );
+    
     $this->smartyoutput('Visitor/Index/index.tpl');
     
   }
