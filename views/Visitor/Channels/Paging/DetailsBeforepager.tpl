@@ -6,6 +6,11 @@
 
 <div class="sort">
   <div class="item">
+    <a class="title" href="{$url|activesortlink:channels:$order}">{#channels__channels#|activesortarrow:channels:$order}</a>
+    <ul>
+      <li><a href="{$url|replace:'%s':channels}">{#channels__channels#|sortarrows:null:channels:$order}</a></li>
+  </div>
+  <div class="item">
     <a class="title" href="{$url|activesortlink:timestamp:$order}">{#categories__timestamp#|activesortarrow:timestamp:$order}</a>
     <ul>
       <li><a href="{$url|replace:'%s':timestamp}">{#categories__timestamp#|sortarrows:null:timestamp:$order}</a></li>

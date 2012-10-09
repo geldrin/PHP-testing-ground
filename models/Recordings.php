@@ -1322,18 +1322,28 @@ class Recordings extends \Springboard\Model {
   
   public function getChannelRecordings( $user, $channelids, $start = false, $limit = false, $order = false ) {
     
+    $select = "
+      r.*,
+      c.title AS channeltitle,
+      c.id AS channelid,
+      c.weight AS channelweight,
+      cr.weight AS channelrecordingweight
+    ";
+    
     $from = "
+      channels AS c,
       channels_recordings AS cr,
       recordings AS r"
     ;
     
     $where =
       "cr.channelid IN ('" . implode("', '", $channelids ) . "') AND
+      c.id = cr.channelid AND
       r.id = cr.recordingid"
     ;
     
     return $this->db->getArray("
-      " . self::getUnionSelect( $user, 'r.*', $from, $where ) .
+      " . self::getUnionSelect( $user, $select, $from, $where ) .
       ( strlen( $order ) ? 'ORDER BY ' . $order : '' ) . " " .
       ( is_numeric( $start ) ? 'LIMIT ' . $start . ', ' . $limit : "" )
     );

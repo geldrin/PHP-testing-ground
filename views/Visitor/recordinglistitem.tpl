@@ -1,5 +1,27 @@
 {assign var=views value=$item.numberofviews|numberformat}
 <li class="listitem">
+  {if $order == 'channels' and $havemultiplechannels and $currentchannelid != $item.channelid}
+    {php}
+    // mert file szintuek a fileban {assign}-olt valtozok, nekunk meg globalis kell
+    $item = $this->get_template_vars('item');
+    
+    if (
+         !isset( $GLOBALS['currentchannelid'] ) or
+         $GLOBALS['currentchannelid'] != $item['channelid']
+       ) {
+      
+      $this->assign('printchanneltitle', true );
+      $GLOBALS['currentchannelid'] = $item['channelid'];
+      
+    }
+    {/php}
+    
+    {if $printchanneltitle}
+      <div class="channeltitle">
+        <a href="{$language}/channels/details/{$item.channelid},{$item.channeltitle|filenameize}">{$item.channeltitle|escape:html}</a>
+      </div>
+    {/if}
+  {/if}
   <a name="rec{$item.id}"></a>
   <div class="recordingpic">
     <a href="{$language}/recordings/details/{$item.id},{$item.title|filenameize}"><span class="playpic"></span><img src="{$item|@indexphoto}"/></a>

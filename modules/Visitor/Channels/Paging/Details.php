@@ -2,8 +2,9 @@
 namespace Visitor\Channels\Paging;
 
 class Details extends \Visitor\Paging {
-  protected $orderkey = 'timestamp';
+  protected $orderkey = 'channels';
   protected $sort     = Array(
+    'channels'             => 'channelweight, channelid, channelrecordingweight, recordedtimestamp',
     'timestamp_desc'       => 'recordedtimestamp DESC',
     'timestamp'            => 'recordedtimestamp',
     'title_desc'           => 'titleoriginal DESC',
@@ -62,6 +63,7 @@ class Details extends \Visitor\Paging {
     $this->controller->toSmarty['listclass']   = 'recordinglist';
     $this->controller->toSmarty['channel']     = $this->channelModel->row;
     $this->controller->toSmarty['channeltree'] = $channeltree;
+    $this->controller->toSmarty['havemultiplechannels'] = count( $this->channelids ) > 1;
     
     parent::init();
     
