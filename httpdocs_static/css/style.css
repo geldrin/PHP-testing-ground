@@ -1804,7 +1804,6 @@ a#currentusername span {
 .recommendatory li {
   display: inline-block;
   width: 470px;
-  height: 95px;
   margin-bottom: 15px;
 }
 .recommendatory li .recordingpic {
@@ -1827,13 +1826,11 @@ a#currentusername span {
   display: inline-block;
   vertical-align: top;
   width: 291px;
-  height: 92px;
   padding: 3px 5px 0px 0px;
 }
 .recommendatory li .content h3 {
   font-size: 15px;
   font-weight: bold;
-  max-height: 36px;
   padding: 0;
   margin: 0;
   display: inline-block;
@@ -1845,12 +1842,10 @@ a#currentusername span {
   margin: 0;
   display: inline-block;
   width: 100%;
-  height: 18px;
 }
 .recommendatory li .content .author {
   font-weight: bold;
   margin-top: 5px;
-  height: 18px;
 }
 .recommendatory li .content .views {
   font-size: 12px;
