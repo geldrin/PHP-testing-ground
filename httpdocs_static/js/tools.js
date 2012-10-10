@@ -21,7 +21,7 @@ $j(document).ready(function() {
   runIfExists('input[name=accesstype]', setupAccesstype );
   runIfExists('#chat', setupLiveChat );
   runIfExists('input[name=feedtype]', setupFeed );
-  runIfExists('#metadata #channels', setupChannels );
+  runIfExists('#channels', setupChannels );
   runIfExists('.liveembed', setupLiveEmbed );
   
   $j('#scriptingcontainer').show();

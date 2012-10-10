@@ -90,4 +90,18 @@ $config = array(
     'postfix'     => '<div class="smallinfo">' . $l('recordings', 'keywordshelp') . '</div>',
   ),
   
+  'channels' => array(
+    'type'      => 'text',
+    'rowlayout' => '<tr><td colspan="2">%element%</td></tr>',
+    'value'     => '
+    <div id="channels">
+      <h3>' . $l('recordings', 'addtochannel_title') . '</h3>
+      <ul id="channelslist">
+        ' . $this->controller->fetchSmarty('Visitor/Recordings/Details_channels.tpl') . '
+      </ul>
+    </div>
+    ',
+  ),
+  
 );
+

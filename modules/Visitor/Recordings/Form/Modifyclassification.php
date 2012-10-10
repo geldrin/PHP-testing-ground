@@ -6,6 +6,17 @@ class Modifyclassification extends \Visitor\Recordings\ModifyForm {
   public $template     = 'Visitor/genericform.tpl';
   public $needdb       = true;
   
+  public function init() {
+    
+    parent::init();
+    $user = $this->bootstrap->getSession('user');
+    $this->controller->toSmarty['level']    = 1;
+    $this->controller->toSmarty['channels'] =
+      $this->recordingsModel->getChannelsForUser( $user )
+    ;
+    
+  }
+  
   public function onComplete() {
     
     $values = $this->form->getElementValues( 0 );

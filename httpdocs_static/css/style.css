@@ -1661,37 +1661,41 @@ a#currentusername span {
   padding-left: 20px;
 }
 /* metadata channels */
-#metadata #channels {
+#channels {
   background-color: #ddd;
   -moz-border-radius: 5px;
   -webkit-border-radius: 5px;
   border-radius: 5px;
   padding: 15px 0px 15px 0px;
   position: relative;
+}
+#metadata #channel {
   display: none;
 }
-#metadata #channels h3 {
+#channels h3 {
+  font-size: 12px;
+  font-weight: bold;
   margin: 0px 0px 10px 30px;
   text-shadow: 0px 1px 0px #fff;
 }
-#metadata #channels ul {
+#channels ul {
   margin: 0;
   padding: 0;
   list-style-type: none;
 }
-#metadata #channels .actions {
+#channels .actions {
   float: right;
   position: relative;
   z-index: 1;
 }
-#metadata #channels .added {
+#channels .added {
   position: absolute;
   left: 5px;
   width: 16px;
   height: 16px;
   background-image: url(images/icons/checkmark.png);
 }
-#metadata #channels .channelname {
+#channels .channelname {
   height: 22px;
   line-height: 22px;
   font-size: 12px;
@@ -1699,13 +1703,13 @@ a#currentusername span {
   white-space: nowrap;
   overflow: hidden;
 }
-#metadata #channels .channelname:hover {
+#channels .channelname:hover {
   background-color: #fbfbfa;
 }
-#metadata #channels .channelname.level1 {
+#channels .channelname.level1 {
   padding-left: 30px;
 }
-#metadata #channels .addtochannel, #metadata #channels .removefromchannel, #metadata #channels .loading {
+#channels .addtochannel, #channels .removefromchannel, #channels .loading {
   display: inline-block;
   overflow: hidden;
   width: 16px;
@@ -1714,13 +1718,13 @@ a#currentusername span {
   background-repeat: no-repeat;
   background-position: 0px 3px;
 }
-#metadata #channels .addtochannel {
+#channels .addtochannel {
   background-image: url(images/icons/plus.png);
 }
-#metadata #channels .removefromchannel {
+#channels .removefromchannel {
   background-image: url(images/icons/minus.png);
 }
-#metadata #channels .loading {
+#channels .loading {
   background-image: url(images/spinner.gif);
 }
 /* recommendatory */
