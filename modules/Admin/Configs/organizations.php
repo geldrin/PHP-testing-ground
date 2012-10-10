@@ -127,30 +127,35 @@ $config = Array(
     'displayname' => 'Feltöltő teljes nevének kiírása?',
     'type'        => 'inputRadio',
     'values'      => $l->getLov('yesno'),
+    'value'       => 0,
   ),
   
   'issubscriber' => array(
     'displayname' => 'Előfizető?',
     'type'        => 'inputRadio',
     'values'      => $l->getLov('yesno'),
+    'value'       => 0,
   ),
   
   'isvcrenabled' => array(
     'displayname' => 'VCR funkcionalitás?',
     'type'        => 'inputRadio',
     'values'      => $l->getLov('yesno'),
+    'value'       => 0,
   ),
   
   'issecurestreamingenabled' => array(
     'displayname' => 'Biztonságos streamelés?',
     'type'        => 'inputRadio',
     'values'      => $l->getLov('yesno'),
+    'value'       => 0,
   ),
   
   'islivestreamingenabled' => array(
     'displayname' => 'Élő közvetítés?',
     'type'        => 'inputRadio',
     'values'      => $l->getLov('yesno'),
+    'value'       => 0,
   ),
   
   'registrationtype' => array(
@@ -163,6 +168,7 @@ $config = Array(
     'displayname' => 'Kitiltva?',
     'type'        => 'inputRadio',
     'values'      => $l->getLov('yesno'),
+    'value'       => 0,
   ),
   
 );
