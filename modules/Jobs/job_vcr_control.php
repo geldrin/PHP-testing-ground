@@ -61,13 +61,6 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_vcr_control.stop' ) and !i
 			break;
 		}
 
-		// Initialize log for closing message and total duration timer
-		$global_log = "";
-		$start_time = time();
-
-		$vcr = array();
-		$vcr_user = array();
-
 // !!! set start values from DB
 // START
 //update_db_stream_status(4, $jconf['dbstatus_vcr_start']);
@@ -76,12 +69,21 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_vcr_control.stop' ) and !i
 //update_db_stream_status(4, $jconf['dbstatus_vcr_disc']);
 // !!!
 
+		// Initialize log for closing message and total duration timer
+		$global_log = "";
+		$start_time = time();
+
+		$vcr = array();
+		$vcr_user = array();
+
 		// Query next job - exit if none
 		if ( !query_vcrnew($vcr, $vcr_user) ) break;
 
 		// Alias: choose normal or secure
 		$vcr['aliasused'] = $vcr['alias'];
 		if ( $vcr['issecurestreamingforced'] == 1 ) $vcr['aliasused'] = $vcr['aliassecure'];
+
+//var_dump($vcr);
 
 		// Start global log
 		$global_log .= "Live feed: " . $vcr['feed_name'] . " (ID = " . $vcr['feed_id'] . ")\n";
@@ -134,11 +136,11 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_vcr_control.stop' ) and !i
 			// TCS: Check system capacity
 			$err = TCS_GetCallCapacity();
 			if ( $err['data']['maxcalls'] == $err['data']['currentcalls'] ) {
-				log_recording_conversion(0, $jconf['jobid_vcr_control'], $jconf['dbstatus_init'], "[ERROR] VCR call capacity reached. Cannot start a new recording.", "-", "-", 0, TRUE);
+				log_recording_conversion(0, $jconf['jobid_vcr_control'], $jconf['dbstatus_init'], "[ERROR] VCR call capacity reached. Cannot start a new recording. Info:\n\n" . $err['message'], "-", "-", 0, TRUE);
 				break;
 			}
 			if ( $err['data']['maxlivecalls'] == $err['data']['currentlivecalls'] ) {
-				log_recording_conversion(0, $jconf['jobid_vcr_control'], $jconf['dbstatus_init'], "[ERROR] VCR live call capacity reached. Cannot start a new recording.", "-", "-", 0, TRUE);
+				log_recording_conversion(0, $jconf['jobid_vcr_control'], $jconf['dbstatus_init'], "[ERROR] VCR live call capacity reached. Cannot start a new recording. Info:\n\n" . $err['message'], "-", "-", 0, TRUE);
 				break;
 			}
 
@@ -168,6 +170,7 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_vcr_control.stop' ) and !i
 			$err = tcs_getconfinfo($vcr);
 			if ( $err['code'] ) {
 				// Update: RTMP URL, aspect ratio, conference ID
+// if rtmp URL is there and valid!
 				update_db_stream_params($vcr['id'], $vcr['rtmp_streamid'], $vcr['aspectratio'], $vcr['conf_id']);
 				// Update: recording link with TCS conference ID
 				update_db_vcr_reclink_params($vcr['reclink_id'], $vcr['conf_id']);
@@ -177,6 +180,8 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_vcr_control.stop' ) and !i
 				log_recording_conversion($vcr['id'], $myjobid, $jconf['dbstatus_vcr_recording'], "[ERROR] VCR call info is not available. Info:\n\n" . $err['message'], "-", "-", 0, TRUE);
 				break;
 			}
+
+exit;
 
 			// Summary log entry and mail
 			$total_duration = time() - $start_time;
@@ -229,6 +234,12 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_vcr_control.stop' ) and !i
 				log_recording_conversion($vcr['id'], $myjobid, $jconf['dbstatus_vcr_discing'], "[ERROR] VCR call cannot be disconnected. Check recording link! Info:\n\n" . $err['message'], "-", "-", 0, TRUE);
 				break;
 			}
+
+sleep(30);
+
+			$err = tcs_getconfinfo($vcr);
+// get and check download url. download mp4 with wget?????
+exit;
 
 			// Summary log entry and mail
 			$total_duration = time() - $start_time;
@@ -409,8 +420,8 @@ global $soap_rs, $jconf;
 	$err['command'] = "Dial():\n\n" . print_r($conf, TRUE);
 	$result = $soap_rs->Dial($conf);
 
-//echo "DIALING...\n";
-//var_dump($result);
+echo "DIALING...\n";
+var_dump($result);
 
 	if ( $result->DialResult->ErrorCode != 0 ) {
 		$err['code'] = FALSE;
@@ -482,8 +493,8 @@ global $soap_rs, $jconf;
 	$err['data']['mediastate'] = $callinfo->MediaState;
 	$err['data']['writerstatus'] = $callinfo->WriterStatus;
 
-//echo "GETINGCALLINFO...\n";
-//var_dump($result);
+echo "GETINGCALLINFO...\n";
+var_dump($result);
 
 	// Unknown conference ID, fatal error
 	if ( $callinfo->CallState == "NOT_IN_CALL" ) {
@@ -561,7 +572,7 @@ var_dump($result);
 		$vcr['aspectratio'] = $x . ":" . $y;
 
 		// Return stream paramters
-		$vcr['rtmp_url'] = $err_su['data']['rtmp_url'];
+		$vcr['mainurl'] = $err_su['data']['mainurl'];
 		$vcr['rtmp_server'] = $err_su['data']['rtmp_server'];
 		$vcr['rtmp_streamid'] = $err_su['data']['rtmp_streamid'];
 		$vcr['width'] = $err_su['data']['width'];
@@ -600,7 +611,7 @@ function tcs_getstreamparams($conf_info) {
 // Large?
 		if ( $num == 1 ) {
 			if ( ( $WatchableMovie->Format == "Flash" ) and ( $WatchableMovie->Quality == "Large" ) ) {
-				$err['data']['rtmp_url'] = $WatchableMovie->MainURL;
+				$err['data']['mainurl'] = $WatchableMovie->MainURL;
 				$err['data']['format'] = "flash";
 				$err['data']['quality'] = "large";
 				$err['data']['bitrate'] = $WatchableMovie->TotalBandwidth;
@@ -613,7 +624,7 @@ function tcs_getstreamparams($conf_info) {
 		if ( $num > 1 ) {
 			for ( $i = 0; $i < $num; $i++) {
 				if ( ( $WatchableMovie[$i]->Format == "Flash" ) and ( $WatchableMovie[$i]->Quality == "Large" ) ) {
-					$err['data']['rtmp_url'] = $WatchableMovie[$i]->MainURL;
+					$err['data']['mainurl'] = $WatchableMovie[$i]->MainURL;
 					$err['data']['format'] = "flash";
 					$err['data']['quality'] = "large";
 					$err['data']['bitrate'] = $WatchableMovie[$i]->TotalBandwidth;
@@ -625,15 +636,22 @@ function tcs_getstreamparams($conf_info) {
 			}
 		}
 
-
 	}
 
-	// Get Wowza stream ID
-	$tmp = explode("mp4:", $err['data']['rtmp_url'], 2);
-	$err['data']['rtmp_server'] = $tmp[0];
-	$err['data']['rtmp_streamid'] = $tmp[1];
-
 	if ( $is_flashver ) {
+
+		// Check if live or recording for download
+		if ( strpos($err['data']['mainurl'], "rtmp") === FALSE ) {
+			$err['data']['download_url'] = $err['data']['mainurl'];
+			$err['data']['rtmp_server'] = "";
+			$err['data']['rtmp_streamid'] = "";
+		} else {
+			// Get Wowza RTMP stream ID
+			$tmp = explode("mp4:", $err['data']['mainurl'], 2);
+			$err['data']['rtmp_server'] = $tmp[0];
+			$err['data']['rtmp_streamid'] = $tmp[1];
+		}
+
 		$err['code'] = TRUE;
 		$err['message'] = "[OK] VCR streaming URL is available.";
 	} else {
@@ -656,7 +674,8 @@ global $soap_rs;
 	$err['command'] = "DisconnectCall():\n\n" . print_r($conf, TRUE);
 	$result = $soap_rs->DisconnectCall($conf);
 
-//	var_dump($result);
+echo "DISCONNECT:\n";
+var_dump($result);
 
     if ( $result->DisconnectCallResult->Error != 0 ) {
 		$err['code'] = FALSE;
@@ -755,26 +774,14 @@ global $soap_rs;
 	$err['data']['maxlivecalls'] = $result->GetCallCapacityResult->MaxLiveCalls;
 	$err['data']['currentlivecalls'] = $result->GetCallCapacityResult->CurrentLiveCalls;
 
-//var_dump($result);
+	$err['message']  = "";
+	$err['message'] .= "Max calls: " . $err['data']['maxcalls'] . "\n";
+	$err['message'] .= "Current calls: " . $err['data']['currentcalls'] . "\n";
+	$err['message'] .= "Max live calls: " . $err['data']['maxlivecalls'] . "\n";
+	$err['message'] .= "Current live calls: " . $err['data']['currentlivecalls'];
 
-/*
-
-  ["GetCallCapacityResult"]=>
-  object(stdClass)#6 (9) {
-    ["MaxCalls"]=>
-    int(5)
-    ["CurrentCalls"]=>
-    int(1)
-    ["MaxLiveCalls"]=>
-    int(2)
-    ["CurrentLiveCalls"]=>
-    int(1)
-    ["CurrentPlaybackCalls"]=>
-    int(0)
-  }
-}
-
-*/
+var_dump($result);
+echo $err['message'] . "\n";
 
 	return $err;
 }
