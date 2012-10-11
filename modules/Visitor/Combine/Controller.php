@@ -84,7 +84,7 @@ class Controller extends \Visitor\Controller {
     
     $encoding = strpos( $encodingheader, 'gzip' );
     
-    if ( $encoding )
+    if ( $encoding !== false )
       $data = $compressedcache->get();
     else
       $data = $plaincache->get();
@@ -100,7 +100,7 @@ class Controller extends \Visitor\Controller {
       
       header("ETag: \"" . $data['contenthash'] . "\"");
       
-      if ( $encoding ) {
+      if ( $encoding !== false ) {
         
         // Vary: alert proxies that a cached response should be sent only 
         // to clients that send the appropriate Accept-Encoding request header
