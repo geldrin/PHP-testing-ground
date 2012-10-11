@@ -30,10 +30,10 @@ class Controller extends \Visitor\Controller {
   protected function serveCache( $type ) {
     
     $urls = $this->application->getParameter('url', array() );
-    if ( empty( $urls ) )
+    if ( !is_array( $urls ) or empty( $urls ) )
       $this->redirect('index');
     
-    $urlmd5          = md5( implode('&', $urls ) );
+    $urlmd5          = md5( $this->bootstrap->scheme . implode('&', $urls ) );
     $plaincache      = $this->bootstrap->getCache( $type . 'combine_plain_' . $urlmd5 );
     $compressedcache = $this->bootstrap->getCache( $type . 'combine_gz_' . $urlmd5 );
     

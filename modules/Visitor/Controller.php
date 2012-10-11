@@ -147,4 +147,15 @@ class Controller extends \Springboard\Controller\Visitor {
     
   }
   
+  protected function getBaseURI( $withschema = true ) {
+    
+    $url = $this->organization['domain'] . '/';
+    
+    if ( $withschema )
+      $url = $this->bootstrap->scheme . $url;
+    
+    return $url;
+    
+  }
+  
 }
