@@ -24,10 +24,6 @@ $app->loadConfig('modules/Jobs/config_jobs.php');
 $jconf = $app->config['config_jobs'];
 $myjobid = $jconf['jobid_vcr_control'];
 
-// SOAP related URLs
-$vcr_wsdl = "http://" . $jconf['vcr_server'] . "/tcs/Helium.wsdl";
-$vcr_api_url = "http://" . $jconf['vcr_server'] . "/tcs/SoapServer.php";
-
 // Log related init
 $debug = Springboard\Debug::getInstance();
 $debug->log($jconf['log_dir'], $myjobid . ".log", "VCR control job started", $sendmail = false);
@@ -63,10 +59,10 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_vcr_control.stop' ) and !i
 
 // !!! set start values from DB
 // START
-//update_db_stream_status(4, $jconf['dbstatus_vcr_start']);
+//update_db_stream_status(5, $jconf['dbstatus_vcr_start']);
 //update_db_vcr_reclink_status(1, $jconf['dbstatus_vcr_ready']);
 // STOP
-//update_db_stream_status(4, $jconf['dbstatus_vcr_disc']);
+//update_db_stream_status(5, $jconf['dbstatus_vcr_disc']);
 // !!!
 
 		// Initialize log for closing message and total duration timer
@@ -98,24 +94,15 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_vcr_control.stop' ) and !i
 
 		$app->watchdog();
 
-		// TCS: SOAP connection to Cisco TCS
-		$soapOptions = array(
-			'location'                  => $vcr_api_url,
-			'authentication'            => SOAP_AUTHENTICATION_DIGEST,
-			'login'                     => $jconf['vcr_user'],
-			'password'                  => $jconf['vcr_password'],
-			'connection_timeout'        => 10
-		);
-
-		try {
-			$soap_rs = new SoapClient($vcr_wsdl, $soapOptions);
-		} catch (exception $err) {
-			log_recording_conversion(0, $jconf['jobid_vcr_control'], $jconf['dbstatus_init'], "[ERROR] Cannot connect to SOAP client. Please check.", print_r($soapOptions, TRUE), $err, 0, TRUE);
+		// Connect to Cisco TCS
+		$soap_rs = TCS_Connect();
+		if ( $soap_rs === FALSE ) {
 			$sleep_length = 15 * 60;
 			break;
 		}
 
 		// System health: check
+		$err = array();
 		$err = TCS_GetSystemHealth();
 		if ( !$err['code'] ) {
 			log_recording_conversion(0, $jconf['jobid_vcr_control'], $jconf['dbstatus_init'], "[ERROR] VCR system health problems.\n\n" . print_r($err['message'], TRUE), "-", "-", 0, TRUE);
@@ -123,6 +110,7 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_vcr_control.stop' ) and !i
 		}
 
 		// TODO: error handling, DB logging
+		$err = array();
 		$err = TCS_GetSystemInformation();
 
 		$app->watchdog();
@@ -134,6 +122,7 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_vcr_control.stop' ) and !i
 		if ( ( $vcr['status'] == $jconf['dbstatus_vcr_start'] ) and ( $vcr['reclink_status'] == $jconf['dbstatus_vcr_ready'] ) ) {
 
 			// TCS: Check system capacity
+			$err = array();
 			$err = TCS_GetCallCapacity();
 			if ( $err['data']['maxcalls'] == $err['data']['currentcalls'] ) {
 				log_recording_conversion(0, $jconf['jobid_vcr_control'], $jconf['dbstatus_init'], "[ERROR] VCR call capacity reached. Cannot start a new recording. Info:\n\n" . $err['message'], "-", "-", 0, TRUE);
@@ -148,11 +137,12 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_vcr_control.stop' ) and !i
 			update_db_stream_status($vcr['id'], $jconf['dbstatus_vcr_starting']);
 
 			// TCS: reserve ConferenceID
-			$vcr['conf_id'] = tcs_reserve_conf_id($vcr);
+			$vcr['conf_id'] = TCS_ReserveConfId($vcr);
 // Err handling?
 
 			// TCS: dial recording link to start recording session
-			$err = tcs_dial($vcr);
+			$err = array();
+			$err = TCS_Dial($vcr);
 			if ( $err['code'] ) {
 				$global_log .= $err['message'];
 				log_recording_conversion($vcr['id'], $myjobid, $jconf['dbstatus_vcr_recording'], $err['message'], "-", "-", 0, FALSE);
@@ -167,10 +157,15 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_vcr_control.stop' ) and !i
 			sleep(10);
 
 			// Get conference info
-			$err = tcs_getconfinfo($vcr);
+			$err = array();
+			$err = TCS_GetConfInfo($vcr);
 			if ( $err['code'] ) {
 				// Update: RTMP URL, aspect ratio, conference ID
-// if rtmp URL is there and valid!
+				// If RTMP URL is not available
+				if ( empty($vcr['rtmp_streamid']) ) {
+					log_recording_conversion($vcr['id'], $myjobid, $jconf['dbstatus_vcr_recording'], "[ERROR] VCR live stream RTMP URL is not available. Info:\n\n" . $err['message'], "-", "-", 0, TRUE);
+					break;
+				}
 				update_db_stream_params($vcr['id'], $vcr['rtmp_streamid'], $vcr['aspectratio'], $vcr['conf_id']);
 				// Update: recording link with TCS conference ID
 				update_db_vcr_reclink_params($vcr['reclink_id'], $vcr['conf_id']);
@@ -181,8 +176,6 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_vcr_control.stop' ) and !i
 				break;
 			}
 
-exit;
-
 			// Summary log entry and mail
 			$total_duration = time() - $start_time;
 			$hms = secs2hms($total_duration);
@@ -191,14 +184,15 @@ exit;
 			$app->watchdog();
 		}
 
-		// Recording: check ongoing recording status
+		// ONGOING RECORDING: check ongoing recording status
 		if ( ( $vcr['status'] == $jconf['dbstatus_vcr_recording'] ) and ( $vcr['reclink_status'] == $jconf['dbstatus_vcr_recording'] ) ) {
 
-			$err = tcs_callinfo($vcr);
+			$err = array();
+			$err = TCS_CallInfo($vcr);
 			if ( !$err ) {
 
 				if ( $err['data']['callstate'] != "IN_CALL" ) {
-					log_recording_conversion($vcr['id'], $myjobid, $jconf['dbstatus_vcr_recording'], "[ERROR] VCR call was disconnected unexpectedly. Info:\n\n" . $err['message'], "-", var_dump($err['data']), 0, TRUE);
+					log_recording_conversion($vcr['id'], $myjobid, $jconf['dbstatus_vcr_recording'], "[ERROR] VCR call was disconnected unexpectedly. Info:\n\n" . $err['message'], "-", print_r($err['data'], TRUE), 0, TRUE);
 					// Indicate error on stream
 					update_db_stream_status($vcr['id'], $jconf['dbstatus_vcr_recording_err']);
 					// Permanent error on recording link?
@@ -207,7 +201,7 @@ exit;
 				}
 
 				if ( ( $err['data']['mediastate'] != "RECORDING" ) and ( $err['data']['writerstatus'] != "OK" ) ) {
-					log_recording_conversion($vcr['id'], $myjobid, $jconf['dbstatus_vcr_recording'], "[ERROR] Unexpected VCR recording error. Info:\n\n" . $err['message'], "-", var_dump($err['data']), 0, TRUE);
+					log_recording_conversion($vcr['id'], $myjobid, $jconf['dbstatus_vcr_recording'], "[ERROR] Unexpected VCR recording error. Info:\n\n" . $err['message'], "-", print_r($err['data'], TRUE), 0, TRUE);
 					// Indicate error on stream
 					update_db_stream_status($vcr['id'], $jconf['dbstatus_vcr_recording_err']);
 					// Permanent error on recording link?
@@ -219,11 +213,12 @@ exit;
 			$app->watchdog();
 		}
 
-		// Disconnect: a recording needs to be stopped
+		// DISCONNECT: a recording needs to be stopped
 		if ( ( $vcr['status'] == $jconf['dbstatus_vcr_disc'] ) and ( $vcr['reclink_status'] == $jconf['dbstatus_vcr_recording'] ) ) {
 
 			// TCS: disconnect call
-			$err = tcs_disconnect($vcr);
+			$err = array();
+			$err = TCS_Disconnect($vcr);
 			if ( $err['code'] ) {
 				$global_log .= "VCR call disconnected:\n\n" . $err['message'] . "\n\n";
 				log_recording_conversion($vcr['id'], $myjobid, $jconf['dbstatus_init'], "[OK] VCR call disconnected. Call info:\n\n" . $err['message'], "-", "-", 0, FALSE);
@@ -235,12 +230,6 @@ exit;
 				break;
 			}
 
-sleep(30);
-
-			$err = tcs_getconfinfo($vcr);
-// get and check download url. download mp4 with wget?????
-exit;
-
 			// Summary log entry and mail
 			$total_duration = time() - $start_time;
 			$hms = secs2hms($total_duration);
@@ -251,6 +240,36 @@ exit;
 
 		break;
 	}	// End of while(1)
+
+	// UPLOAD: a finnished recording needs to be uploaded
+	$err = array();
+	$vcr_upload = array();
+	$vcr_user = array();
+
+	if ( query_vcrupload($vcr_upload, $vcr_user) ) {
+
+//	var_dump($vcr_upload);
+
+		if ( $vcr_upload['status'] == $jconf['dbstatus_vcr_upload'] ) {
+
+		// Connect to Cisco TCS
+		$soap_rs = TCS_Connect();
+		if ( $soap_rs === FALSE ) {
+			$sleep_length = 15 * 60;
+			break;
+		}
+
+		$err = TCS_GetConfInfo($vcr_upload);
+//echo "UPLOAD\n";
+// get and check download url. download mp4 with wget?????
+
+//var_dump($err);
+
+//exit;
+
+		}
+
+	}
 
 	// Close DB connection if open
 	if ( $db_close ) {
@@ -264,6 +283,32 @@ exit;
 }	// End of outer while
 
 exit;
+
+function TCS_Connect() {
+global $jconf;
+
+	// SOAP related URLs
+	$vcr_wsdl = "http://" . $jconf['vcr_server'] . "/tcs/Helium.wsdl";
+	$vcr_api_url = "http://" . $jconf['vcr_server'] . "/tcs/SoapServer.php";
+
+	// TCS: SOAP connection to Cisco TCS
+	$soapOptions = array(
+		'location'                  => $vcr_api_url,
+		'authentication'            => SOAP_AUTHENTICATION_DIGEST,
+		'login'                     => $jconf['vcr_user'],
+		'password'                  => $jconf['vcr_password'],
+		'connection_timeout'        => 10
+	);
+
+	try {
+		$soap_rs = new SoapClient($vcr_wsdl, $soapOptions);
+	} catch (exception $err) {
+		log_recording_conversion(0, $jconf['jobid_vcr_control'], $jconf['dbstatus_init'], "[ERROR] Cannot connect to SOAP client. Please check.", print_r($soapOptions, TRUE), $err, 0, TRUE);
+		return FALSE;
+	}
+
+	return $soap_rs;
+}
 
 
 // *************************************************************************
@@ -317,7 +362,7 @@ global $jconf, $db;
 		ORDER BY
 			id
 		LIMIT 1";
-// LIMIT 1???? Mi van ha tobb stream tartozik egy felvetelhez? TODO
+// LIMIT 1???? Mi lesz ha tobb stream tartozik egy felvetelhez? TODO
 
 	try {
 		$rs = $db->Execute($query);
@@ -362,7 +407,78 @@ global $jconf, $db;
 	return TRUE;
 }
 
-function tcs_reserve_conf_id($vcr) {
+// Query VCR recording to upload
+function query_vcrupload(&$vcr_upload, &$vcr_user) {
+global $jconf, $db;
+
+	$query = "
+		SELECT
+			a.id,
+			a.livefeedid,
+			a.name,
+			a.status,
+			a.vcrconferenceid as conf_id,
+			a.recordinglinkid,
+			b.id as feed_id,
+			b.userid,
+			b.channelid,
+			b.name as feed_name
+		FROM
+			livefeed_streams as a,
+			livefeeds as b
+		WHERE
+			a.status = '" . $jconf['dbstatus_vcr_upload'] . "' AND
+			a.livefeedid = b.id
+		ORDER BY
+			id
+		LIMIT 1";
+
+//echo $query . "\n";
+
+	try {
+		$rs = $db->Execute($query);
+	} catch (exception $err) {
+		log_recording_conversion(0, $jconf['jobid_vcr_control'], $jconf['dbstatus_init'], "[ERROR] Cannot query next VCR recording to upload. SQL query failed.", trim($query), $err, 0, TRUE);
+		return FALSE;
+	}
+
+	// Check if pending job exsits
+	if ( $rs->RecordCount() < 1 ) {
+		return FALSE;
+	}
+
+	$vcr_upload = $rs->fields;
+
+	$query = "
+		SELECT
+			id,
+			nickname,
+			email,
+			language,
+			organizationid
+		FROM
+			users
+		WHERE
+			id = " . $vcr_upload['userid'];
+
+	try {
+		$rs2 = $db->Execute($query);
+	} catch (exception $err) {
+		log_recording_conversion(0, $jconf['jobid_vcr_control'], $jconf['dbstatus_init'], "[ERROR] Cannot query user to VCR. SQL query failed.", trim($query), $err, 0, TRUE);
+		return FALSE;
+	}
+
+	// Check if user exsits to media
+	if ( $rs2->RecordCount() < 1 ) {
+		return FALSE;
+	}
+
+	$vcr_user = $rs2->fields;
+
+	return TRUE;
+}
+
+function TCS_ReserveConfId($vcr) {
 global $soap_rs;
 
 // Parameters:
@@ -391,7 +507,7 @@ global $soap_rs;
     return $conf_id;
 }
 
-function tcs_dial($vcr) {
+function TCS_Dial($vcr) {
 global $soap_rs, $jconf;
 
 	$err = array();
@@ -420,8 +536,8 @@ global $soap_rs, $jconf;
 	$err['command'] = "Dial():\n\n" . print_r($conf, TRUE);
 	$result = $soap_rs->Dial($conf);
 
-echo "DIALING...\n";
-var_dump($result);
+//echo "DIALING...\n";
+//var_dump($result);
 
 	if ( $result->DialResult->ErrorCode != 0 ) {
 		$err['code'] = FALSE;
@@ -440,7 +556,7 @@ var_dump($result);
 	while ( $err_ci['message'] != "IN_CALL" ) {
 
 		// Get call status
-		$err_ci = tcs_callinfo($vcr);
+		$err_ci = TCS_CallInfo($vcr);
 
 		// Call established, exit from loop
 		if ( $err_ci['result'] == "IN_CALL" ) {
@@ -475,7 +591,7 @@ var_dump($result);
 	return $err;
 }
 
-function tcs_callinfo($vcr) {
+function TCS_CallInfo($vcr) {
 global $soap_rs, $jconf;
 
 	$err = array();
@@ -493,8 +609,8 @@ global $soap_rs, $jconf;
 	$err['data']['mediastate'] = $callinfo->MediaState;
 	$err['data']['writerstatus'] = $callinfo->WriterStatus;
 
-echo "GETINGCALLINFO...\n";
-var_dump($result);
+//echo "GETINGCALLINFO...\n";
+//var_dump($result);
 
 	// Unknown conference ID, fatal error
 	if ( $callinfo->CallState == "NOT_IN_CALL" ) {
@@ -547,7 +663,7 @@ var_dump($result);
 	return $err;
 }
 
-function tcs_getconfinfo(&$vcr) {
+function TCS_GetConfInfo(&$vcr) {
 global $soap_rs;
 
 	$err = array();
@@ -559,10 +675,10 @@ global $soap_rs;
 	$err['command'] = "GetConference():\n\n" . print_r($conf, TRUE);
 	$result = $soap_rs->GetConference($conf);
 
-echo "GET INFO\n";
-var_dump($result);
+//echo "GET INFO\n";
+//var_dump($result);
 
-	$err_su = tcs_getstreamparams($result);
+	$err_su = TCS_GetStreamParams($result);
 	if ( $err_su['code'] ) {
 
 		// Calculate aspect ratio
@@ -589,7 +705,7 @@ var_dump($result);
 }
 
 // Get RTMP URL
-function tcs_getstreamparams($conf_info) {
+function TCS_GetStreamParams($conf_info) {
 
 	$err = array();
 
@@ -662,7 +778,7 @@ function tcs_getstreamparams($conf_info) {
 	return $err;
 }
 
-function tcs_disconnect($vcr) {
+function TCS_Disconnect($vcr) {
 global $soap_rs;
 
 	$err = array();
@@ -674,8 +790,8 @@ global $soap_rs;
 	$err['command'] = "DisconnectCall():\n\n" . print_r($conf, TRUE);
 	$result = $soap_rs->DisconnectCall($conf);
 
-echo "DISCONNECT:\n";
-var_dump($result);
+//echo "DISCONNECT:\n";
+//var_dump($result);
 
     if ( $result->DisconnectCallResult->Error != 0 ) {
 		$err['code'] = FALSE;
@@ -780,8 +896,8 @@ global $soap_rs;
 	$err['message'] .= "Max live calls: " . $err['data']['maxlivecalls'] . "\n";
 	$err['message'] .= "Current live calls: " . $err['data']['currentlivecalls'];
 
-var_dump($result);
-echo $err['message'] . "\n";
+//var_dump($result);
+//echo $err['message'] . "\n";
 
 	return $err;
 }

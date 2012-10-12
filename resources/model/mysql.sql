@@ -487,6 +487,7 @@ CREATE TABLE `livefeed_streams` (
    `streamtype` text not null, /* normal/mobile */
    `status` text,
    `recordinglinkid` int(11) default null,
+   `vcrconferenceid` text,
    `moderationtype` text,
    `timestamp` datetime not null,
    PRIMARY KEY (`id`),

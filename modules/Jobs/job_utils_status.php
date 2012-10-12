@@ -346,8 +346,10 @@ global $db, $jconf;
 	return TRUE;
 }
 
-function update_db_stream_params($id, $keycode, $aspectratio) {
+function update_db_stream_params($id, $keycode, $aspectratio, $conferenceid) {
 global $db, $jconf;
+
+	if ( empty($conferenceid) ) $conferenceid = "NULL";
 
 	// Update stream parameters
 	$query = "
@@ -355,7 +357,8 @@ global $db, $jconf;
 			livefeed_streams
 		SET
 			keycode = '" . $keycode . "',
-			aspectratio = '" . $aspectratio . "'
+			aspectratio = '" . $aspectratio . "',
+			vcrconferenceid = '" . $conferenceid . "'
 		WHERE
 			id = " . $id;
 
