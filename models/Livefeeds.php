@@ -159,11 +159,12 @@ class Livefeeds extends \Springboard\Model {
     $this->ensureID();
     $streamModel = $this->bootstrap->getModel('livefeed_streams');
     $streamModel->insert( array(
-        'livefeedid'      => $this->id,
-        'recordinglinkid' => $recordinglinkid,
-        'name'            => 'VCR stream',
-        'streamtype'      => 'normal/mobile',
-        'timestamp'       => date('Y-m-d H:i:s'),
+        'livefeedid'          => $this->id,
+        'recordinglinkid'     => $recordinglinkid,
+        'name'                => 'VCR stream',
+        'quality'             => 1,
+        'isdesktopcompatible' => 1,
+        'timestamp'           => date('Y-m-d H:i:s'),
       )
     );
     
