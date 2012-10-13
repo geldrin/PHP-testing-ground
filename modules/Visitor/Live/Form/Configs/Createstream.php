@@ -31,54 +31,22 @@ $config = array(
     ),
   ),
   
-  'keycode' => array(
-    'displayname' => $l('live', 'keycode'),
-    'postfix'     => '<div class="smallinfo">' . $l('live', 'keycode_postfix') . '</div>',
-    'type'        => 'inputText',
-    'value'       => $this->streamModel->generateUniqueKeycode(),
-    'validation'  => array(
-    ),
-  ),
-  
-  'aspectratio' => array(
-    'displayname' => $l('live', 'streamaspectratio'),
+  'quality' => array(
+    'displayname' => $l('live', 'quality'),
     'type'        => 'inputRadio',
-    'values'      => $l->getLov('aspectratios'),
-    'value'       => '16:9',
-    'validation'  => array(
-    ),
+    'values'      => $l->getLov('quality'),
+    'value'       => 0,
   ),
   
-  'contentkeycode' => array(
-    'displayname' => $l('live', 'contentkeycode'),
-    'postfix'     => '<div class="smallinfo">' . $l('live', 'keycode_postfix') . '</div>',
-    'type'        => 'inputText',
-    'value'       => $this->streamModel->generateUniqueKeycode(),
-    'validation'  => array(
-    ),
-  ),
-  
-  'contentaspectratio' => array(
-    'displayname' => $l('live', 'contentaspectratio'),
-    'type'        => 'inputRadio',
-    'values'      => $l->getLov('aspectratios'),
-    'value'       => '16:9',
-    'validation'  => array(
-    ),
-  ),
-  
-  'streamtype' => array(
-    'displayname' => $l('live', 'streamtype'),
-    'type'        => 'select',
-    'values'      => $l->getLov('streamtypes'),
-    'value'       => '',
-    'html'        => 'data-isexternal="' . $this->feedModel->row['isexternal'] . '"',
+  'compatibility[]' => array(
+    'displayname' => $l('live', 'compatibility'),
+    'type'        => 'inputCheckboxDynamic',
+    'values'      => $l->getLov('live_compatibility'),
+    'html'        => 'class="livecompatibility"',
+    'postfix'     =>
+      '<div class="smallinfo desktop hidden">' . $l('live', 'compatibility_desktop') . '</div>' .
+      '<div class="smallinfo mobile hidden">' . $l('live', 'compatibility_mobile') . '</div>'
+    ,
   ),
   
 );
-
-if ( !$this->feedModel->row['isexternal'] )
-  unset( $config['keycode'], $config['contentkeycode'] );
-
-if ( $this->feedModel->row['numberofstreams'] == 1 )
-  unset( $config['contenturl'], $config['contentkeycode'] );

@@ -31,6 +31,7 @@ class Createstream extends \Visitor\HelpForm {
     
     $l = $this->bootstrap->getLocalization();
     $this->controller->toSmarty['title'] = $l('live', 'createstream_title');
+    $this->controller->toSmarty['sessionmessage'] = $l('live', 'create_notice');
     
   }
   

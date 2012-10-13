@@ -106,15 +106,9 @@ return array(
     '16:9' => '16:9',
   ),
   
-  'numberofstreams' => array(
-    '1' => 'Use one stream',
-    '2' => 'Use two streams at the same time (for broadcasting the presenter and slides simultaneously)',
-  ),
-  
-  'streamtypes' => array(  
-    'normal'        => 'Normal',
-    'mobile'        => 'Mobile',
-    'normal/mobile' => 'Normal/mobile',
+  'hascontent' => array(
+    '0' => 'Use one stream',
+    '1' => 'Use two streams at the same time (for broadcasting the presenter and slides simultaneously)',
   ),
   
   'moderationtype' => array(
@@ -141,6 +135,17 @@ return array(
     'disconnecting' => 'Recording stopping...',
     'upload'        => 'Recording processing...',
     'ready'         => 'Recording processing...',
+  ),
+  
+  'quality' => array(
+    0 => 'Normal',
+    1 => 'HD',
+  ),
+  
+  'live_compatibility' => array(
+    'isdesktopcompatible' => 'Desktop',
+    'isandroidcompatible' => 'Android',
+    'isioscompatible'     => 'iOS',
   ),
   
 );

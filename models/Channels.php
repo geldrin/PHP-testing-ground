@@ -641,29 +641,31 @@ class Channels extends \Springboard\Model {
   }
   
   // TODO szukites channeltype es ev alapjan
-  public function getLiveCount() {
+  public function getLiveCount( $organizationid ) {
     
     return $this->db->getOne("
       SELECT COUNT(*)
       FROM channels
       WHERE
-        isliveevent = '1' AND
-        parentid    = '0' AND
-        endtimestamp >= NOW()
+        isliveevent    = '1' AND
+        parentid       = '0' AND
+        endtimestamp   >= NOW() AND
+        organizationid = '$organizationid'
       LIMIT 1
     ");
     
   }
   
-  public function getLiveArray( $start, $limit, $orderby ) {
+  public function getLiveArray( $organizationid, $start, $limit, $orderby ) {
     
     $sql = "
       SELECT *
       FROM channels
       WHERE
-        isliveevent = '1' AND
-        parentid    = '0' AND
-        endtimestamp >= NOW()
+        isliveevent    = '1' AND
+        parentid       = '0' AND
+        endtimestamp   >= NOW() AND
+        organizationid = '$organizationid'
       ORDER BY $orderby
       LIMIT $start, $limit
     ";
@@ -718,9 +720,8 @@ class Channels extends \Springboard\Model {
         userid,
         channelid,
         name,
-        isexternal,
         slideonright,
-        numberofstreams,
+        hascontent,
         feedtype
       FROM livefeeds
       WHERE channelid IN('" . $this->id . "')

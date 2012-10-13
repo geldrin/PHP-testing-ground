@@ -94,26 +94,25 @@ class Livefeeds extends \Springboard\Model {
     
   }
   
-  protected function getStreamTypeWhere( $prefix = '', $onlymobile = null ) {
+  protected function getBrowserCompatibleWhere( $prefix = '', $browser ) {
     
-    $where = '';
-    if ( $onlymobile !== null ) {
-      
-      if ( $onlymobile )
-        $where = " AND {$prefix}streamtype IN('mobile', 'normal/mobile') ";
-      else
-        $where = " AND {$prefix}streamtype IN('normal', 'normal/mobile') ";
-      
-    }
+    if ( !$browser or !$browser['mobile'] )
+      return " AND {$prefix}isdesktopcompatible <> '0' ";
     
-    return $where;
-  
+    if ( $browser['mobiledevice'] != 'android' and $browser['mobiledevice'] != 'iphone' )
+      return '';
+    
+    if ( $browser['mobiledevice'] == 'android' )
+      return " AND {$prefix}isandroidcompatible <> '0' ";
+    elseif ( $browser['mobiledevice'] == 'iphone' )
+      return " AND {$prefix}isioscompatible <> '0' ";
+    
   }
   
-  public function getStreams( $onlymobile = null ) {
+  public function getStreams( $browser = null ) {
     
     $this->ensureID();
-    $where = $this->getStreamTypeWhere( '', $onlymobile );
+    $where = $this->getBrowserCompatibleWhere( '', $browser );
     return $this->db->getAssoc("
       SELECT
         id AS streamid,
@@ -125,7 +124,10 @@ class Livefeeds extends \Springboard\Model {
         contentkeycode,
         recordinglinkid,
         contentaspectratio,
-        streamtype,
+        quality,
+        isdesktopcompatible,
+        isandroidcompatible,
+        isioscompatible,
         timestamp
       FROM livefeed_streams
       WHERE livefeedid = '" . $this->id . "' $where

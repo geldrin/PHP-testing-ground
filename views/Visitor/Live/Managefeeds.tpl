@@ -54,6 +54,12 @@
               <a href="{$language}/live/view/{$feed.id},{$stream.id},{$feed.name|filenameize}"><b>{$stream.name|escape:html}</b></a>
             </td>
           {/if}
+          <td class="streamquality">{$l->getLov('quality', $language, $stream.quality)}</td>
+          <td class="streamcompatibility nobr">
+            {if $stream.isdesktopcompatible}<img src="{$STATIC_URI}images/icons/desktop.png" title="Desktop" alt="Desktop"/>{/if}
+            {if $stream.isioscompatible}<img src="{$STATIC_URI}images/icons/ios.png" title="iOS" alt="iOS"/>{/if}
+            {if $stream.isandroidcompatible}<img src="{$STATIC_URI}images/icons/android.png" title="Android" alt="Android"/>{/if}
+          </td>
           <td class="streamactions"{if $feed.feedtype == 'vcr'} colspan="2"{/if}>
             <span class="nobr">
               {if $feed.feedtype == 'vcr'}
@@ -75,7 +81,6 @@
               {/if}
             </span>
           </td>
-          <td>&nbsp;</td>
         </tr>
       {foreachelse}
         <tr>

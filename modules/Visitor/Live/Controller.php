@@ -86,7 +86,7 @@ class Controller extends \Visitor\Controller {
       'recording_type'  => 'live',
     );
     
-    if ( $feedModel->row['numberofstreams'] == 2 and ( !$chromeless or $fullplayer ) ) {
+    if ( $feedModel->row['hascontent'] and ( !$chromeless or $fullplayer ) ) {
       
       $flashdata['media_secondaryServers'] = array( $this->bootstrap->config['wowza']['liveingressurl'] );
       $flashdata['media_secondaryStreams'] = array( $currentstream['contentkeycode'] );

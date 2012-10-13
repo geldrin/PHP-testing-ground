@@ -23,6 +23,7 @@ $j(document).ready(function() {
   runIfExists('input[name=feedtype]', setupFeed );
   runIfExists('#channels', setupChannels );
   runIfExists('.liveembed', setupLiveEmbed );
+  runIfExists('.livecompatibility', setupLiveCompatibility );
   
   $j('#scriptingcontainer').show();
   
@@ -60,6 +61,37 @@ function setupConfirm( elems ) {
       e.preventDefault();
     
   });
+  
+}
+
+function setupLiveCompatibility( elems ) {
+  
+  elems.change(function() {
+    
+    var checkedelems = elems.filter(':checked');
+    var mobilefound  = false;
+    var desktopfound = false;
+    
+    $j.each(checkedelems, function() {
+      
+      if ( $j(this).val() == 'isdesktopcompatible' )
+        desktopfound = true;
+      else
+        mobilefound = true;
+      
+    })
+    
+    if ( desktopfound && !mobilefound )
+      $j('.smallinfo.desktop').show();
+    else
+      $j('.smallinfo.desktop').hide();
+    
+    if ( mobilefound )
+      $j('.smallinfo.mobile').show();
+    else
+      $j('.smallinfo.mobile').hide();
+    
+  }).change();
   
 }
 

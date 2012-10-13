@@ -465,9 +465,8 @@ CREATE TABLE `livefeeds` (
    `organizationid` int(10) unsigned not null,
    `channelid` int(10) unsigned, /* live channel id - az az elo channel (isliveevent=1), ami alatti esemenyek ezt a feedet hasznalhatjak */
    `name` text,
-   `isexternal` int(11) not null default '0',
    `slideonright` int(11) not null default '0',
-   `numberofstreams` int(11) not null default '1',
+   `hascontent` int(11) not null default '0',
    `accesstype` text not null,
    `issecurestreamingforced` int(11) not null default '0',
    `feedtype` text,
@@ -484,7 +483,10 @@ CREATE TABLE `livefeed_streams` (
    `aspectratio` text,
    `contentkeycode` text,
    `contentaspectratio` text,
-   `streamtype` text not null, /* normal/mobile */
+   `isdesktopcompatible` int(11) not null default '0',
+   `isandroidcompatible` int(11) not null default '0',
+   `isioscompatible` int(11) not null default '0',
+   `quality` int(11) not null default '0',
    `status` text,
    `recordinglinkid` int(11) default null,
    `vcrconferenceid` text,

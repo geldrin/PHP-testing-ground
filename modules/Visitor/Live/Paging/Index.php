@@ -25,15 +25,19 @@ class Index extends \Visitor\Paging {
   protected function setupCount() {
     
     $this->channelModel = $this->bootstrap->getModel('channels');
-    $user  = $this->bootstrap->getSession('user');
     
-    return $this->itemcount = $this->channelModel->getLiveCount();
+    return $this->itemcount = $this->channelModel->getLiveCount(
+      $this->controller->organization['id']
+    );
     
   }
   
   protected function getItems( $start, $limit, $orderby ) {
     
-    $items = $this->channelModel->getLiveArray( $start, $limit, $orderby );
+    $items = $this->channelModel->getLiveArray(
+      $this->controller->organization['id'],
+      $start, $limit, $orderby
+    );
     
     return $items;
     

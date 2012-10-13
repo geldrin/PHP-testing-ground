@@ -31,17 +31,10 @@ $config = array(
     ),
   ),
   
-  'isexternal' => array(
-    'displayname' => $l('live', 'external'),
+  'hascontent' => array(
+    'displayname' => $l('live', 'hascontent'),
     'type'        => 'inputRadio',
-    'values'      => $l->getLov('yesno'),
-    'value'       => 0,
-  ),
-  
-  'numberofstreams' => array(
-    'displayname' => $l('live', 'numberofstreams'),
-    'type'        => 'inputRadio',
-    'values'      => $l->getLov('numberofstreams'),
+    'values'      => $l->getLov('hascontent'),
     'value'       => 1,
     'divider'     => '<br/>',
     'divide'      => 1,

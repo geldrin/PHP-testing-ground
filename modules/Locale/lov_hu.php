@@ -126,15 +126,9 @@ return array(
     '16:9' => '16:9',
   ),
   
-  'numberofstreams' => array(
-    '1' => 'egy videófolyam (stream) használata',
-    '2' => 'két videófolyam (stream) egyidejű használata (pl. előadó és fóliák párhuzamos közvetítéséhez)',
-  ),
-  
-  'streamtypes' => array(  
-    'normal'        => 'Normál',
-    'mobile'        => 'Mobil',
-    'normal/mobile' => 'Normál/mobil',
+  'hascontent' => array(
+    '0' => 'egy videófolyam (stream) használata',
+    '1' => 'két videófolyam (stream) egyidejű használata (pl. előadó és fóliák párhuzamos közvetítéséhez)',
   ),
   
   'moderationtype' => array(
@@ -161,6 +155,17 @@ return array(
     'disconnecting' => 'Felvétel lebontása...',
     'upload'        => 'Felvétel feldolgozása folyamatban...',
     'ready'         => 'Felvétel feldolgozása folyamatban...',
+  ),
+  
+  'quality' => array(
+    0 => 'Normál',
+    1 => 'HD',
+  ),
+  
+  'live_compatibility' => array(
+    'isdesktopcompatible' => 'Desktop',
+    'isandroidcompatible' => 'Android',
+    'isioscompatible'     => 'iOS',
   ),
   
 );

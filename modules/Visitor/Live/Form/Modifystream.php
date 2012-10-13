@@ -30,13 +30,17 @@ class Modifystream extends \Visitor\HelpForm {
     if ( !$this->channelModel->row['isliveevent'] )
       $this->controller->redirect();
     
-    $this->values = $this->feedModel->row;
+    $l            = $this->bootstrap->getLocalization();
+    $this->values = $this->streamModel->row;
+    $this->values['compatibility'] = array();
     
-  }
-  
-  public function postSetupForm() {
+    foreach( $l->getLov('live_compatibility') as $key => $value ) {
+      
+      if ( $this->streamModel->row[ $key ] )
+        $this->values['compatibility'][] = $key;
+      
+    }
     
-    $l = $this->bootstrap->getLocalization();
     $this->controller->toSmarty['title'] = $l('live', 'modifystream_title');
     
   }
