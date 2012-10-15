@@ -155,4 +155,15 @@ class Users extends \Springboard\Model {
     
   }
   
+  public function getGroupCount() {
+    
+    $this->ensureID();
+    return $this->db->getOne("
+      SELECT COUNT(*)
+      FROM groups_members
+      WHERE userid = '" . $this->id . "'
+    ");
+    
+  }
+  
 }

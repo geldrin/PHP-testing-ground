@@ -2,12 +2,23 @@
 if ( !isset( $user ) )
   $user = $this->bootstrap->getSession('user');
 
+if ( !isset( $userModel ) ) {
+  
+  $userModel = $this->bootstrap->getModel('users');
+  $userModel->select( $user['id'] );
+  
+}
+
+$accesstypes = $l->getLov('accesstype');
+if ( $userModel->getGroupCount() == 0 )
+  unset( $accesstypes['groups'] );
+
 $config['accesstype'] = array(
   'displayname' => $l('recordings', 'accesstype'),
   'itemlayout'  => '%radio% %label% <br/>',
   'type'        => 'inputRadio',
   'value'       => 'public',
-  'values'      => $l->getLov('accesstype'),
+  'values'      => $accesstypes,
   'rowlayout'   => '
     <tr %errorstyle%>
       <td class="labelcolumn" style="width: 170px;">
