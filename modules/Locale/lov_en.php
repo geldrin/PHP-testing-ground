@@ -100,12 +100,6 @@ return array(
     'failed'                => 'Conversion failed',
   ),
   
-  'aspectratios' => array(
-    '4:3'  => '4:3',
-    '5:4'  => '5:4',
-    '16:9' => '16:9',
-  ),
-  
   'hascontent' => array(
     '0' => 'Use one stream',
     '1' => 'Use two streams at the same time (for broadcasting the presenter and slides simultaneously)',
