@@ -57,7 +57,7 @@ class Controller extends \Visitor\Controller {
       $this->application->getNumericParameter('id')
     );
     
-    $user      = $this->bootstrap->getSession('users');
+    $user      = $this->bootstrap->getSession('user');
     $access    = $this->bootstrap->getSession('liveaccess');
     $accesskey = $feedModel->id . '-0'; // TODO secure
     
