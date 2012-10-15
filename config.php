@@ -29,7 +29,7 @@ $config = array(
   //-----
   'logemails'    => array(
     'dev@dotsamazing.com',
-    'hiba@teleconnect.hu',
+    'hiba@videosquare.eu',
   ),
   //-----
   'smtp'         => array(
@@ -40,7 +40,7 @@ $config = array(
   ),
   //-----
   'mail'         => array(
-    'fromemail' => 'support@teleconnect.hu',
+    'fromemail' => 'support@videosquare.eu',
     'fromname'  => 'Videosquare',
     'errorsto'  => '',
     'type'      => 'text/html; charset="UTF-8"'
