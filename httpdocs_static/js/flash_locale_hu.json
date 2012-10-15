@@ -35,6 +35,8 @@
     "volumeChange": "Hangerő"
   },
   "common": {
+    "connecting": "Kapcsolodás",
+    "seeking": "Keresés",
     "buffering": "Bufferelés"
   },
   "subtitle": {
@@ -106,6 +108,17 @@
     "paused": "A média lejátszása leállt."
   },
   "error": {
+    "connection_failed": "Kapcsolodás sikertelen.",
+    "async_error": "ASync Error: An exception is thrown from native asynchronous code",
+    "security_error": "Security error",
+    "io_error": "IO Error: An error causes a send or load operation to fail.",
+    "connection_rejected": "A kapcsolodás visszautasítva engedély megtagadása miatt.",
+    "connection_closed": "A kapcsolat sikeresen bezárult.",
+    "application_shutdown": "The specified application is shutting down.",
+    "idle_timeout": "Idle timeout.",
+    "invalid_app": "The application name specified during connect is invalid.",
+    "stream_not_found": "Stream not found!",
+    "play_failed": "An error has occurred in playback for a reason other than those listed elsewhere in this table, such as the subscriber not having read access.",
     "streamNotFound": "A felvétel jelenleg nem elérhető.",
     "liveStreamNotFound": "Az élő közvetítés jelenleg nem elérhető."
   }
