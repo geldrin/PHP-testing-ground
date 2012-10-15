@@ -670,6 +670,10 @@ class Recordings extends \Springboard\Model {
            (
              $user['iseditor'] and
              $user['organizationid'] == $this->row['organizationid']
+           ) or
+           (
+             $user['isclientadmin'] and
+             $user['organizationid'] == $this->row['organizationid']
            )
          )
        )
