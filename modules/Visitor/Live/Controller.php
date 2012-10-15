@@ -242,7 +242,7 @@ class Controller extends \Visitor\Controller {
     
     if ( $this->application->getNumericParameter('start') == '1' ) {
       
-      if ( $streamModel->row['status'] != null and $streamModel->row['status'] != 'upload' )
+      if ( $streamModel->row['status'] != null )
         $this->redirectToController('contents', 'livestream_invalidtransition_start');
       
       $status = 'start';
