@@ -22,6 +22,6 @@ if ( $this->feedModel->row['feedtype'] == 'live' )
     array(
       'type' => 'custom',
       'php'  => 'true',
-      'js'   => ' confirm(' . json_encode( $l('live', 'feedtypechange') ) . ')',
+      'js'   => '(<FORM.feedtype> != "live")? confirm(' . json_encode( $l('live', 'feedtypechange') ) . '): true',
     ),
   );
