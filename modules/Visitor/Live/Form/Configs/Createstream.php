@@ -47,6 +47,11 @@ $config = array(
       '<div class="smallinfo desktop hidden">' . $l('live', 'compatibility_desktop') . '</div>' .
       '<div class="smallinfo mobile hidden">' . $l('live', 'compatibility_mobile') . '</div>'
     ,
+    'validation'  => array(
+      array(
+        'type' => 'required',
+      ),
+    ),
   ),
   
 );
