@@ -411,7 +411,8 @@ class Controller extends \Visitor\Controller {
       } else
         $result = '1';
       
-    }
+    } else
+      $result = '1'; // TODO ha nincs sessionid akkor haljunk el
     
     echo
       '<?xml version="1.0"?>
