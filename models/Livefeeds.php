@@ -109,10 +109,9 @@ class Livefeeds extends \Springboard\Model {
     
   }
   
-  public function getStreams( $browser = null ) {
+  public function getStreams() {
     
     $this->ensureID();
-    $where = $this->getBrowserCompatibleWhere( '', $browser );
     return $this->db->getAssoc("
       SELECT
         id AS streamid,
@@ -128,8 +127,79 @@ class Livefeeds extends \Springboard\Model {
         isioscompatible,
         timestamp
       FROM livefeed_streams
-      WHERE livefeedid = '" . $this->id . "' $where
+      WHERE livefeedid = '" . $this->id . "'
     ");
+    
+  }
+  
+  public function getStreamsForBrowser( $browser, $defaultstreamid = null ) {
+    
+    $streams         = $this->getStreams();
+    $narrowedstreams = array();
+    $unknown         =
+      $browser['mobiledevice'] != 'iphone' and
+      $browser['mobiledevice'] != 'android'
+    ;
+    
+    foreach( $streams as $stream ) {
+      
+      if (
+           ( !$browser['mobile'] and $stream['isdesktopcompatible'] ) or
+           ( $browser['mobiledevice'] == 'iphone' and $stream['isioscompatible'] ) or
+           ( $browser['mobiledevice'] == 'android' and $stream['isandroidcompatible'] ) or
+           $unknown
+         )
+        $narrowedstreams[ $stream['id'] ] = $stream;
+      
+    }
+    
+    if ( !$defaultstreamid )
+      $defaultstream = reset( $narrowedstreams );
+    elseif ( $defaultstreamid and !isset( $narrowedstreams[ $defaultstreamid ] ) )
+      return false;
+    else
+      $defaultstream = $narrowedstreams[ $defaultstreamid ];
+    
+    if ( // ha nem mobil vagy nem ismert mobil device, de a stream desktop kompat
+         ( !$browser['mobile'] and $defaultstream['isdesktopcompatible'] ) or
+         ( $defaultstream['isdesktopcompatible'] and $unknown )
+       )
+      $streamtype = 'desktop';
+    elseif ( // ha mobil es android, vagy mobil es ismeretlen de a stream android kompat
+            (
+              $browser['mobile'] and
+              $browser['mobiledevice'] == 'android' and
+              $defaultstream['isandroidcompatible']
+            ) or
+            ( $defaultstream['isandroidcompatible'] and $unknown )
+           )
+      $streamtype = 'android';
+    elseif ( // ha mobil es ios, vagy mobil es ismeretlen de a stream ios kompat
+            (
+              $browser['mobile'] and
+              $browser['mobiledevice'] == 'iphone' and
+              $defaultstream['isioscompatible']
+            ) or
+            ( $defaultstream['isioscompatible'] and $unknown )
+           )
+      $streamtype = 'ios';
+    elseif ( $defaultstream['isdesktopcompatible'] ) // peldaul ha ismert mobile device de nem kompatibilis a stream akkor ez a fallback sorrend
+      $streamtype = 'desktop';
+    elseif ( $defaultstream['isandroidcompatible'] )
+      $streamtype = 'android';
+    elseif ( $defaultstream['isioscompatible'] )
+      $streamtype = 'ios';
+    else
+      throw new \Exception(
+        "Unhandled stream type: mobile device: " . $browser['mobiledevice'] .
+        " defaultstream: " . var_export( $defaultstream, true )
+      );
+    
+    return array(
+      'streams'       => $narrowedstreams,
+      'defaultstream' => $defaultstream,
+      'streamtype'    => $streamtype,
+    );
     
   }
   

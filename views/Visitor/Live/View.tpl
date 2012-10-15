@@ -32,20 +32,20 @@
 </div>
 
 <div id="player">
-{if !$browser.mobile and $currentstream.isdesktopcompatible}
+{if $streamtype == 'desktop'}
   <script type="text/javascript">
     swfobject.embedSWF('flash/TCPlayer.swf?v={$VERSION}', 'playercontainer', '950', '530', '11.1.0', 'flash/swfobject/expressInstall.swf', {$flashdata|@jsonescape:true}, flashdefaults.params );
   </script>
   <div id="playercontainer">{#recordings__noflash#}</div>
-{elseif $browser.mobile and ( $currentstream.isandroidcompatible or $currentstream.isioscompatible )}
+{else}
   <center>
-    {if $browser.mobiledevice == 'iphone' and $currentstream.isioscompatible}
+    {if $streamtype == 'ios'}
       <div id="mobileplayercontainer">
         <video x-webkit-airplay="allow" controls="controls" alt="{$channel.title|escape:html}" width="192" height="144" poster="{$STATIC_URI}images/live_player_placeholder_small.png" src="{$livehttpurl}">
           <a href="{$livehttpurl}"><img src="{$STATIC_URI}images/live_player_placeholder_small.png" width="220" height="130"/></a>
         </video>
       </div>
-    {elseif $currentstream.isandroidcompatible}
+    {elseif $streamtype == 'android'}
       <div id="mobileplayercontainer">
         <a href="{$livertspurl}"><img src="{$STATIC_URI}images/live_player_placeholder_small.png" width="220" height="130"/></a>
       </div>

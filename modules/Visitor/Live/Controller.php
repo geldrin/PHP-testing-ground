@@ -71,12 +71,14 @@ class Controller extends \Visitor\Controller {
     if ( !count( $browserinfo ) )
       $browserinfo->setArray( \Springboard\Browser::getInfo() );
     
-    $streams      = $feedModel->getStreams( $browserinfo['mobile'] );
+    $streams      = $feedModel->getStreamsForBrowser( $browserinfo, $streamid );
     
-    if ( $streamid and isset( $streams[ $streamid ] ) )
-      $currentstream = $streams[ $streamid ];
-    else
-      $currentstream = reset( $streams );
+    if ( !$streams )
+      $this->redirectToController('contents', 'http404');
+    
+    $currentstream = $streams['defaultstream'];
+    $streamtype    = $streams['streamtype'];
+    $streams       = $streams['streams'];
     
     $flashdata = array(
       'language'        => \Springboard\Language::get(),
@@ -146,6 +148,7 @@ class Controller extends \Visitor\Controller {
       
     }
     
+    $this->toSmarty['streamtype']    = $streamtype;
     $this->toSmarty['displaychat']   = $displaychat;
     $this->toSmarty['channel']       = $channelModel->row;
     $this->toSmarty['streams']       = $streams;

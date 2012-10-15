@@ -38,11 +38,24 @@ class Createstream extends \Visitor\HelpForm {
   public function onComplete() {
     
     $values = $this->form->getElementValues( 0 );
+    $l      = $this->bootstrap->getLocalization();
     
     $values['livefeedid']     = $this->feedModel->id;
     $values['timestamp']      = date('Y-m-d H:i:s');
     $values['keycode']        = $this->streamModel->generateUniqueKeycode();
     $values['contentkeycode'] = $this->streamModel->generateUniqueKeycode();
+    
+    if ( !isset( $values['compatibility'] ) or !is_array( $values['compatibility'] ) )
+      $values['compatibility'] = array();
+    
+    foreach( $l->getLov('live_compatibility') as $key => $value ) {
+      
+      if ( in_array( $key, $values['compatibility'] ) )
+        $values[ $key ] = 1;
+      else
+        $values[ $key ] = 0;
+      
+    }
     
     unset( $values['id'] );
     $this->streamModel->insert( $values );
