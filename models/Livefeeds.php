@@ -297,9 +297,10 @@ class Livefeeds extends \Springboard\Model {
     
   }
   
-  public function isAccessible( $user ) {
+  public function isAccessible( $user, $secure = null ) {
     
     $this->ensureObjectLoaded();
+    // TODO secure
     
     if (
          isset( $user['id'] ) and
@@ -478,6 +479,25 @@ class Livefeeds extends \Springboard\Model {
       ORDER BY lc.id ASC
       LIMIT 0, 200
     ");
+    
+  }
+  
+  public function getAuthorizeSessionidParam( $domain, $sessionid ) {
+    
+    $user = $this->bootstrap->getSession('user');
+    if ( isset( $user['id'] ) )
+      return sprintf('?sessionid=%s_%s_%s&uid=%s',
+        $domain,
+        $sessionid,
+        $this->id,
+        $user['id']
+      );
+    else
+      return sprintf('?sessionid=%s_%s_%s',
+        $domain,
+        $sessionid,
+        $this->id
+      );
     
   }
   

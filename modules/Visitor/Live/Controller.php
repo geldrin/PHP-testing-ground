@@ -19,6 +19,8 @@ class Controller extends \Visitor\Controller {
     'deletestream'         => 'liveadmin',
     'managefeeds'          => 'liveadmin',
     'togglestream'         => 'liveadmin',
+    'checkstreamaccess'    => 'public',
+    'securecheckstreamaccess' => 'public',
   );
   
   public $forms = array(
@@ -55,11 +57,14 @@ class Controller extends \Visitor\Controller {
       $this->application->getNumericParameter('id')
     );
     
-    $user       = $this->bootstrap->getSession('users');
-    $accessible = $feedModel->isAccessible( $user );
+    $user      = $this->bootstrap->getSession('users');
+    $access    = $this->bootstrap->getSession('liveaccess');
+    $accesskey = $feedModel->id . '-0'; // TODO secure
     
-    if ( $accessible !== true )
-      $this->redirectToController('contents', $accessible );
+    $access[ $accesskey ] = $feedModel->isAccessible( $user );
+    
+    if ( $access[ $accesskey ] !== true )
+      $this->redirectToController('contents', $access[ $accesskey ] );
     
     $channelModel = $this->modelIDCheck('channels', $feedModel->row['channelid'] );
     $streamid     = $this->application->getNumericParameter('streamid');
@@ -79,10 +84,14 @@ class Controller extends \Visitor\Controller {
     $currentstream = $streams['defaultstream'];
     $streamtype    = $streams['streamtype'];
     $streams       = $streams['streams'];
+    $authorizecode = $feedModel->getAuthorizeSessionidParam(
+      $this->organization['domain'],
+      session_id()
+    );
     
     $flashdata = array(
       'language'        => \Springboard\Language::get(),
-      'media_servers'   => array( $this->bootstrap->config['wowza']['liveingressurl'] ),
+      'media_servers'   => array( $this->bootstrap->config['wowza']['liveingressurl'] . $authorizecode ),
       'media_streams'   => array( $currentstream['keycode'] ),
       'recording_title' => $feedModel->row['name'],
       'recording_type'  => 'live',
@@ -90,7 +99,7 @@ class Controller extends \Visitor\Controller {
     
     if ( $feedModel->row['hascontent'] and ( !$chromeless or $fullplayer ) ) {
       
-      $flashdata['media_secondaryServers'] = array( $this->bootstrap->config['wowza']['liveingressurl'] );
+      $flashdata['media_secondaryServers'] = array( $this->bootstrap->config['wowza']['liveingressurl'] . $authorizecode );
       $flashdata['media_secondaryStreams'] = array( $currentstream['contentkeycode'] );
       $this->toSmarty['doublewidth']       = true;
       
@@ -362,6 +371,61 @@ class Controller extends \Visitor\Controller {
     $this->expireChatCache( $feedModel->id );
     return $this->getchatAction( $feedModel->id );
     
+  }
+  
+  public function checkstreamaccessAction( $secure = false ) {
+    
+    \Springboard\Debug::getInstance()->log( false, false, "SECURE: $secure\n" . var_export( $_SERVER, true ) );
+    $param   = $this->application->getParameter('sessionid');
+    $result  = '0';
+    $matched =
+      preg_match(
+        '/(?P<domain>[a-z\.]+)_' .
+        '(?P<sessionid>[a-z0-9]{32})_' .
+        '(?P<feedid>\d+)/',
+        $param,
+        $matches
+      )
+    ;
+    
+    if ( $matched ) {
+      
+      $this->bootstrap->setupSession( true, $matches['sessionid'], $matches['domain'] );
+      $access    = $this->bootstrap->getSession('liveaccess');
+      $accesskey = $matches['feedid'] . '-' . (int)$secure;
+      
+      if ( $access[ $accesskey ] !== true ) {
+        
+        $user      = $this->bootstrap->getSession('user');
+        $feedModel = $this->modelIDCheck('livefeeds', $matches['feedid'], false );
+        
+        if ( $feedModel ) {
+          
+          $access[ $accesskey ] = $feedModel->isAccessible( $user, $secure );
+          
+          if ( $access[ $accesskey ] === true )
+            $result = '1';
+          
+        }
+        
+      } else
+        $result = '1';
+      
+    }
+    
+    echo
+      '<?xml version="1.0"?>
+      <result>
+        <success>' . $result . '</success>
+      </result>'
+    ;
+    
+    die();
+    
+  }
+  
+  public function securecheckstreamaccessAction() {
+    return $this->checkstreamaccessAction( true );
   }
   
 }
