@@ -76,10 +76,25 @@
                   {#live__streamerror#|sprintf:$stream.status}
                 {/if}
               {else}
+                <a href="#" class="streambroadcastlink">{#live__streambroadcastlink#}</a> |
                 <a href="{$language}/live/modifystream/{$stream.id}">{#live__live_edit#}</a> |
                 <a href="{$language}/live/deletestream/{$stream.id}" class="confirm" question="{#sitewide_areyousure#|escape:html}">{#live__live_delete#}</a>
               {/if}
             </span>
+          </td>
+        </tr>
+        <tr class="streambroadcastwrap form">
+          <td colspan="4" class="elementcolumn">
+            <div class="broadcastlink">
+              <label for="broadcastlink-{$stream.id}">{#live__streambroadcastlink#}:</label>
+              <input id="broadcastlink-{$stream.id}" type="text" value="{$bootstrap->config.wowza.liveingressurl|escape:html}{$stream.keycode|escape:html}"/>
+            </div>
+            {if $feed.hascontent}
+              <div class="broadcastlink">
+                <label for="broadcastlink-{$stream.id}-2">{#live__secondarystreambroadcastlink#}:</label>
+                <input id="broadcastlink-{$stream.id}-2" type="text" value="{$bootstrap->config.wowza.liveingressurl|escape:html}{$stream.contentkeycode|escape:html}"/>
+              </div>
+            {/if}
           </td>
         </tr>
       {foreachelse}

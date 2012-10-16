@@ -40,6 +40,9 @@ img {
 body {
   background-color: #ebebeb;
 }
+label {
+  cursor: pointer;
+}
 #pagecontainer {
   clear: both;
 }
@@ -2214,6 +2217,9 @@ a#currentusername span {
   margin: 0px;
   vertical-align: top;
 }
+#feeds .stream {
+  min-width: 500px;
+}
 #feeds .stream td {
   padding: 0;
 }
@@ -2232,4 +2238,15 @@ a#currentusername span {
 }
 #feeds td.streamcompatibility {
   padding: 0 5px 0 0;
+}
+#feeds tr.streambroadcastwrap {
+  text-align: right;
+  display: none;
+}
+#feeds tr.streambroadcastwrap .broadcastlink {
+  margin: 3px 0;
+}
+#feeds tr.streambroadcastwrap input {
+  margin-left: 5px;
+  width: 300px;
 }

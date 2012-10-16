@@ -9,9 +9,19 @@ if ( !isset( $userModel ) ) {
   
 }
 
+if ( !isset( $departmentModel ) ) {
+  
+  $departmentModel = $this->bootstrap->getModel('departments');
+  $departmentModel->addFilter('organizationid', $this->controller->organization['id'] );
+  
+}
+
 $accesstypes = $l->getLov('accesstype');
 if ( $userModel->getGroupCount() == 0 )
   unset( $accesstypes['groups'] );
+
+if ( $departmentModel->getCount() == 0 )
+  unset( $accesstypes['departments'] );
 
 $config['accesstype'] = array(
   'displayname' => $l('recordings', 'accesstype'),

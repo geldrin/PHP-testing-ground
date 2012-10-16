@@ -30,8 +30,9 @@ class Createstream extends \Visitor\HelpForm {
   public function postSetupForm() {
     
     $l = $this->bootstrap->getLocalization();
-    $this->controller->toSmarty['title'] = $l('live', 'createstream_title');
+    $this->controller->toSmarty['title']          = $l('live', 'createstream_title');
     $this->controller->toSmarty['sessionmessage'] = $l('live', 'create_notice');
+    $this->controller->toSmarty['formclass']      = 'leftdoublebox';
     
   }
   

@@ -41,7 +41,8 @@ class Modifystream extends \Visitor\HelpForm {
       
     }
     
-    $this->controller->toSmarty['title'] = $l('live', 'modifystream_title');
+    $this->controller->toSmarty['title']     = $l('live', 'modifystream_title');
+    $this->controller->toSmarty['formclass'] = 'leftdoublebox';
     
   }
   

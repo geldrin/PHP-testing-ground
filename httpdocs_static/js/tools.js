@@ -24,6 +24,7 @@ $j(document).ready(function() {
   runIfExists('#channels', setupChannels );
   runIfExists('.liveembed', setupLiveEmbed );
   runIfExists('.livecompatibility', setupLiveCompatibility );
+  runIfExists('.streambroadcastlink', setupBroadcastLink );
   
   $j('#scriptingcontainer').show();
   
@@ -59,6 +60,17 @@ function setupConfirm( elems ) {
     
     if ( !confirm( confirmquestion ) )
       e.preventDefault();
+    
+  });
+  
+}
+
+function setupBroadcastLink( elems ) {
+  
+  elems.click( function( e ) {
+    e.preventDefault();
+    
+    $j(this).parents('tr').next('.streambroadcastwrap').toggle();
     
   });
   
