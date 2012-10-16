@@ -1538,7 +1538,7 @@ class Recordings extends \Springboard\Model {
         $this->getWowzaUrl( $typeprefix . 'rtmpturl', true, $domain, $sessionid ),
       ),
       'track_firstPlay'       => $recordingbaseuri . 'track/' . $this->id,
-      'media_length'          => $this->row['masterlength'],
+      //'media_length'          => $this->row['masterlength'],
       'recording_title'       => $this->row['title'],
       'recording_subtitle'    => (string)$this->row['subtitle'],
       'recording_description' => (string)$this->row['description'],
@@ -1566,7 +1566,7 @@ class Recordings extends \Springboard\Model {
     
     if ( $this->row['contentstatus'] == 'onstorage' ) {
       
-      $data['content_length']         = $this->row['contentmasterlength'];
+      //$data['content_length']         = $this->row['contentmasterlength'];
       $data['media_secondaryStreams'] = array( $this->getMediaUrl('content', false, $domain ) );
       
       if ( $this->row['contentvideoreshq'] ) {
