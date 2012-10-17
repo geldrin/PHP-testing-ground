@@ -38,14 +38,10 @@ class Contributors extends \Springboard\Model {
       SELECT
         cj.id,
         cj.jobgroupid,
-        cj.isaward,
-        cj.joboriginal,
-        cj.jobenglish,
+        cj.job,
         cj.userid,
-        org.nameenglish,
-        org.nameoriginal,
-        org.nameshortenglish,
-        org.nameshortoriginal
+        org.name,
+        org.nameshort
       FROM
         contributors_jobs AS cj
         LEFT JOIN organizations AS org ON cj.organizationid = org.id
@@ -64,12 +60,9 @@ class Contributors extends \Springboard\Model {
       SELECT
         cj.id,
         cj.jobgroupid,
-        cj.joboriginal,
-        cj.jobenglish,
-        org.nameoriginal,
-        org.nameshortoriginal,
-        org.nameenglish,
-        org.nameshortenglish,
+        cj.job,
+        org.name,
+        org.nameshort,
         org.url
       FROM
         contributors_jobs AS cj
@@ -98,12 +91,12 @@ class Contributors extends \Springboard\Model {
   
   public function getJobLine( $job ) {
     
-    $orgname = $this->getJobField( 'name', $job );
+    $orgname = trim( $job['name'] );
     
     if ( !$orgname )
-      $orgname = $this->getJobField( 'nameshort', $job );
+      $orgname = trim( $job['nameshort'] );
     
-    $jobname = $this->getJobField( 'job', $job );
+    $jobname = trim( $job['job'] );
     
     if ( $orgname and $jobname )
       return $orgname . ' - ' . $jobname;
@@ -113,22 +106,6 @@ class Contributors extends \Springboard\Model {
       return $orgname;
     else
       return '';
-    
-  }
-  
-  public function getJobField( $field, $job ) {
-    
-    $fieldenglish  = $field . 'english';
-    $fieldoriginal = $field . 'original';
-    
-    if ( \Springboard\Language::get() == 'en' and @$job[ $fieldenglish ] )
-      return $job[ $fieldenglish ];
-    elseif ( @$job[ $fieldoriginal ] )
-      return $job[ $fieldoriginal ];
-    elseif ( @$job[ $fieldenglish ] )
-      return $job[ $fieldenglish ];
-    else
-      return false;
     
   }
   
@@ -147,10 +124,8 @@ class Contributors extends \Springboard\Model {
         $array[ $key ]['jobs'] = $this->db->getArray("
           SELECT
             cj.*,
-            org.nameenglish,
-            org.nameoriginal,
-            org.nameshortenglish,
-            org.nameshortoriginal,
+            org.name,
+            org.nameshort,
             org.url
           FROM
             contributors_jobs AS cj

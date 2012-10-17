@@ -18,11 +18,6 @@ function smarty_modifier_contributorformat( $presenters, $withjobs = true ) {
       $jobs = array();
       foreach( $presenter['jobs'] as $job ) {
         
-        if ( $language == 'en' and strlen( trim( $job['jobenglish'] ) ) )
-          $jobname = $job['jobenglish'];
-        else
-          $jobname = $job['joboriginal'];
-        
         if ( strlen( trim( $job['nameshort'] ) ) )
           $joborganization = $job['nameshort'];
         elseif( strlen( trim( $job['name'] ) ) )
@@ -30,7 +25,7 @@ function smarty_modifier_contributorformat( $presenters, $withjobs = true ) {
         else
           $joborganization = '';
         
-        $jobname         = trim( $jobname );
+        $jobname         = trim( $job['job'] );
         $joborganization = trim( $joborganization );
         
         if ( strlen( $jobname ) and strlen( $joborganization ) )

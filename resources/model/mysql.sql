@@ -419,6 +419,17 @@ CREATE TABLE `contributors_roles` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;
 
 
+CREATE TABLE `contributors_jobs` (
+   `id` int(10) unsigned not null auto_increment,
+   `contributorid` int(10) unsigned not null,
+   `organizationid` int(10) unsigned,
+   `userid` int(10) unsigned,
+   `jobgroupid` int(10) unsigned not null default '1', -- mindenkeppen kell hogy legyen jobgroupid
+   `job` text,
+   PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;
+
+
 CREATE TABLE `contributors` (
    `id` int(10) unsigned not null auto_increment,
    `createdby` int(10) unsigned not null,
