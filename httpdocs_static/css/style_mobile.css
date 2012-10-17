@@ -32,7 +32,7 @@
   #wrap #body, #footer, #myrecordingsquicksearch {
     width: 100%;
   }
-  .widepager, .help.fullwidth {
+  .widepager, .help.fullwidth, .channelrecordings, .channelrecordings .widepager, .channelrecordings .recordinglist {
     width: auto;
   }
   
