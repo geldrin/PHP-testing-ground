@@ -55,14 +55,23 @@ class Api {
     
   }
   
-  public function uploadRecording( $file, $language ) {
+  public function uploadRecording( $file, $language, $userid = null ) {
     
     if ( !is_readable( $file ) )
       throw new Exception('Unreadable file: ' . $file );
     
     $parameters = array('language' => $language );
+    $method     = 'apiupload';
+    
+    if ( $userid ) {
+      
+      $parameters['userid'] = $userid;
+      $method              .= 'asuser';
+      
+    }
+    
     $options    = array(
-      CURLOPT_URL        => $this->getURL('controller', 'recordings', 'apiupload', $parameters ),
+      CURLOPT_URL        => $this->getURL('controller', 'recordings', $method, $parameters ),
       CURLOPT_POST       => true,
       CURLOPT_POSTFIELDS => array(
         'file' => '@' . $file,
@@ -118,14 +127,23 @@ class Api {
     
   }
   
-  public function uploadContent( $id, $file ) {
+  public function uploadContent( $id, $file, $userid = null ) {
     
     if ( !is_readable( $file ) )
       throw new Exception('Unreadable file: ' . $file );
     
     $parameters = array('id' => $id );
+    $method     = 'apiuploadcontent';
+    
+    if ( $userid ) {
+      
+      $parameters['userid'] = $userid;
+      $method              .= 'asuser';
+      
+    }
+    
     $options    = array(
-      CURLOPT_URL        => $this->getURL('controller', 'recordings', 'apiuploadcontent', $parameters ),
+      CURLOPT_URL        => $this->getURL('controller', 'recordings', $method, $parameters ),
       CURLOPT_POST       => true,
       CURLOPT_POSTFIELDS => array(
         'file' => '@' . $file

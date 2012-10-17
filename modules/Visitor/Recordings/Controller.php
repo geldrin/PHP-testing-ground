@@ -97,6 +97,38 @@ class Controller extends \Visitor\Controller {
         'type' => 'id',
       ),
     ),
+    'apiuploadasuser' => array(
+      'file' => array(
+        'type' => 'file',
+      ),
+      'language' => array(
+        'type' => 'string',
+      ),
+      'userid' => array(
+        'type'      => 'id',
+        'setasuser' => true,
+      ),
+      'user' => array(
+        'type'       => 'user',
+        'permission' => 'admin',
+      ),
+    ),
+    'apiuploadcontentasuser' => array(
+      'id' => array(
+        'type' => 'id',
+      ),
+      'file' => array(
+        'type' => 'file',
+      ),
+      'userid' => array(
+        'type'      => 'id',
+        'setasuser' => true,
+      ),
+      'user' => array(
+        'type'       => 'user',
+        'permission' => 'admin',
+      ),
+    ),
   );
   
   public function init() {
@@ -795,6 +827,14 @@ class Controller extends \Visitor\Controller {
     else
       return $model;
     
+  }
+  
+  public function apiuploadasuserAction( $file, $language, $userid ) {
+    return $this->apiuploadAction( $file, $language );
+  }
+  
+  public function apiuploadcontentasuserAction( $recordingid, $file, $userid ) {
+    return $this->apiuploadcontentasuserAction( $recordingid, $file );
   }
   
 }

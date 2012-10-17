@@ -138,10 +138,22 @@ class Controller extends \Visitor\Controller {
   
   public function idValidator( $parameter, $configuration ) {
     
-    $id = $this->application->getNumericParameter( $parameter );
+    $id            = $this->application->getNumericParameter( $parameter );
+    $defaults      = array('required' => true, 'setasuser' => false);
+    $configuration = array_merge( $defaults, $configuration );
     
-    if ( $id <= 0 )
+    if ( $id <= 0 and $configuration['required'] )
       throw new \Exception('Invalid parameter: ' . $parameter );
+    
+    if ( $configuration['setasuser'] ) {
+      
+      $userModel = $this->modelIDCheck('users', $id, false );
+      if ( !$userModel )
+        throw new \Exception('No user found with id: ' . $id );
+      
+      $userModel->registerForSession();
+      
+    }
     
     return $id;
     
@@ -168,10 +180,30 @@ class Controller extends \Visitor\Controller {
     
     if ( !isset( $_FILES[ $parameter ] ) or $_FILES[ $parameter ]['error'] != 0 )
       throw new \Exception(
-        'Upload failed. Information: ' . var_export( $_FILES[ $parameter ], true )
+        'Upload failed. Information: ' . var_export( @$_FILES[ $parameter ], true )
       );
     
     return $_FILES[ $parameter ];
+    
+  }
+  
+  public function userValidator( $parameter, $configuration ) {
+    
+    if ( !isset( $configuration['permission'] ) )
+      throw new \Exception('Undefined permission for user validation!');
+    
+    if ( $configuration['permission'] == 'public' )
+      return true;
+    
+    $user = $this->bootstrap->getSession('user');
+    
+    if ( $configuration['permission'] == 'member' and $user['id'] )
+      return $user;
+    
+    if ( !$user['is' . strtolower( $configuration['permission'] ) ] )
+      throw new \Exception('Access denied, not enough permission');
+    
+    return $user;
     
   }
   
