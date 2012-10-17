@@ -234,85 +234,90 @@ if ( $this->action == 'new' or $this->action == 'insert' ) {
 
 $listconfig = Array(
 
-  'table'     => 'users',
-  'modify'    => 'id',
-  'delete'    => 'id',
-  'order'     => Array('id DESC' ),
+  'table'     => 'users AS u LEFT JOIN organizations AS o ON o.id = u.organizationid',
+  'modify'    => 'u.id',
+  'delete'    => 'u.id',
+  'order'     => Array('u.id DESC' ),
   
   'fields' => Array(
 
     Array(
       'displayname' => $l('admin', 'id'),
-      'field' => 'id',
+      'field' => 'u.id',
     ),
 
     Array(
-      'field' => 'email',
+      'field' => 'u.email',
       'displayname' => 'E-mail',
       'phptrigger' => '
          "<VALUE><br />" .
          "<a target=\"_blank\" " . 
-           "href=\"users/loginas/?id=" . $fields["id"] . "\">".
+           "href=\"users/loginas/?id=" . $fields["u.id"] . "\">".
          "<img style=\"vertical-align: middle; margin: 5px 0px; width: 18px\" " . 
            "src=\"images/sekkyumu/user.png\">Belépés</a>"
        ',
     ),
 
     Array(
-      'field' => 'isuploader',
+      'field' => 'o.domain',
+      'displayname' => 'Domain',
+    ),
+
+    Array(
+      'field' => 'u.isuploader',
       'displayname' => 'upload',
       'lov' => $l->getLov('yes'),
     ),
 
     Array(
-      'field' => 'iseditor',
+      'field' => 'u.iseditor',
       'displayname' => 'edit',
       'lov' => $l->getLov('yes'),
     ),
 
     Array(
-      'field' => 'isnewseditor',
+      'field' => 'u.isnewseditor',
       'displayname' => 'newsedit',
       'lov' => $l->getLov('yes'),
     ),
 
     Array(
-      'field' => 'isliveadmin',
+      'field' => 'u.isliveadmin',
       'displayname' => 'liveadmin',
       'lov' => $l->getLov('yes'),
     ),
 
     Array(
-      'field' => 'isadmin',
+      'field' => 'u.isadmin',
       'displayname' => 'admin',
       'lov' => $l->getLov('yes'),
     ),
 
     Array(
-      'field' => 'isclientadmin',
+      'field' => 'u.isclientadmin',
       'displayname' => 'clientadmin',
       'lov' => $l->getLov('yes'),
     ),
 
     Array(
-      'field' => 'isapienabled',
+      'field' => 'u.isapienabled',
       'displayname' => 'api',
       'lov' => $l->getLov('yes'),
     ),
 
     Array(
-      'field' => 'timestamp',
+      'field' => 'u.timestamp',
       'displayname' => 'Regisztrált',
     ),
 
     Array(
-      'field' => 'browser',
+      'field' => 'u.browser',
       'displayname' => 'Diagnosztika',
       'layout' => '<td><pre style="width: 300px; overflow-x: scroll; font-size: 10px">%s</pre></td>',
     ),
 
     Array(
-      'field' => 'lastloggedin',
+      'field' => 'u.lastloggedin',
       'displayname' => 'Utolsó belépés',
     ),
 
