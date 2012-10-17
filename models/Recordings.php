@@ -1637,8 +1637,8 @@ class Recordings extends \Springboard\Model {
     );
     
     $flashdata['recommendatory']        = $flashdata['recommendatory']['string'];
-    $flashdata['recording']['duration'] = $flashdata['media']['length'];
-    unset( $flashdata['media']['length'] );
+    //$flashdata['recording']['duration'] = $flashdata['media']['length'];
+    //unset( $flashdata['media']['length'] );
     
     return $flashdata;
     
