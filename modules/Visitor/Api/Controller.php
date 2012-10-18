@@ -139,21 +139,11 @@ class Controller extends \Visitor\Controller {
   public function idValidator( $parameter, $configuration ) {
     
     $id            = $this->application->getNumericParameter( $parameter );
-    $defaults      = array('required' => true, 'setasuser' => false);
+    $defaults      = array('required' => true );
     $configuration = array_merge( $defaults, $configuration );
     
     if ( $id <= 0 and $configuration['required'] )
       throw new \Exception('Invalid parameter: ' . $parameter );
-    
-    if ( $configuration['setasuser'] ) {
-      
-      $userModel = $this->modelIDCheck('users', $id, false );
-      if ( !$userModel )
-        throw new \Exception('No user found with id: ' . $id );
-      
-      $userModel->registerForSession();
-      
-    }
     
     return $id;
     
@@ -202,6 +192,20 @@ class Controller extends \Visitor\Controller {
     
     if ( !$user['is' . strtolower( $configuration['permission'] ) ] )
       throw new \Exception('Access denied, not enough permission');
+    
+    if ( isset( $configuration['impersonatefromparameter'] ) ) {
+      
+      $id        = $this->application->getNumericParameter(
+        $configuration['impersonatefromparameter']
+      );
+      $userModel = $this->modelIDCheck('users', $id, false );
+      
+      if ( !$userModel )
+        throw new \Exception('No user found with id: ' . $id );
+      
+      $userModel->registerForSession();
+      
+    }
     
     return $user;
     

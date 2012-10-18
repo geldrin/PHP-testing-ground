@@ -105,12 +105,12 @@ class Controller extends \Visitor\Controller {
         'type' => 'string',
       ),
       'userid' => array(
-        'type'      => 'id',
-        'setasuser' => true,
+        'type' => 'id',
       ),
       'user' => array(
-        'type'       => 'user',
-        'permission' => 'admin',
+        'type'                     => 'user',
+        'permission'               => 'admin',
+        'impersonatefromparameter' => 'userid',
       ),
     ),
     'apiuploadcontentasuser' => array(
@@ -121,12 +121,12 @@ class Controller extends \Visitor\Controller {
         'type' => 'file',
       ),
       'userid' => array(
-        'type'      => 'id',
-        'setasuser' => true,
+        'type' => 'id',
       ),
       'user' => array(
-        'type'       => 'user',
-        'permission' => 'admin',
+        'type'                     => 'user',
+        'permission'               => 'admin',
+        'impersonatefromparameter' => 'userid',
       ),
     ),
   );
