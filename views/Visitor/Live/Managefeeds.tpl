@@ -6,46 +6,28 @@
 <br/>
 <table id="feeds">
   <tr>
+    <th></th>
     <th>{#live__feed#}</th>
     <th>{#live__streams#}</th>
   </tr>
   {foreach from=$feeds item=feed}
   <tr>
+    <td class="livefeedrow">
+      <a href="{$language}/live/view/{$feed.id},{$feed.name|filenameize}" class="livefeed" title="{if $feed.status == 'live'}{#live__feedislive#}{else}{#live__feedistesting#}{/if}"></a>
+    </td>
     <td class="feed">
       <a href="{$language}/live/view/{$feed.id},{$feed.name|filenameize}" class="left"><b>{$feed.name|escape:html}</b></a>
-      <a href="{$language}/live/view/{$feed.id},{$feed.name|filenameize}" class="livefeed" title="{if $feed.status == 'live'}{#live__feedislive#}{else}{#live__feedistesting#}{/if}">{if $feed.status == 'live'}{#live__feedislive#}{else}{#live__feedistesting#}{/if}</a>
-      <div class="clear"></div>
+      <br/>
       {if $feed.feedtype != 'vcr' or ( $feed.feedtype == 'vcr' and $feed.streams[0].status == null ) }
         <a href="{$language}/live/modifyfeed/{$feed.id}">{#live__live_edit#}</a> |
         <a href="{$language}/live/deletefeed/{$feed.id}" class="confirm" question="{#sitewide_areyousure#|escape:html}">{#live__live_delete#}</a>
       {/if}
       {if !empty( $feed.streams )}
         {if $feed.feedtype != 'vcr' or ( $feed.feedtype == 'vcr' and $feed.streams[0].status == null ) }|{/if}
-        <a href="#" class="liveembed" data-embedurl="{$BASE_URI}{$language}/live/view/{$feed.id},{$feed.name|filenameize}?chromeless=true">{#live__embed#}</a>
-        <div class="liveembedwrap">
-          <span class="label">{#live__embed_info#}</span>
-          <div class="option">
-            <label for="chat" class="label">{#live__chat#}:</label>
-            <input type="radio" class="chat" name="chat_{$feed.id}" id="chat_no_{$feed.id}" value="0"/>
-            <label for="chat_no_{$feed.id}">{#live__chat_no#}</label>
-            <input type="radio" class="chat" name="chat_{$feed.id}" id="chat_yes_{$feed.id}" checked="checked" value="1"/>
-            <label for="chat_yes_{$feed.id}">{#live__chat_yes#}</label>
-          </div>
-          <div class="option">
-            <label for="fullplayer" class="label">{#live__fullplayer#}:</label><br/>
-            <input type="radio" class="fullplayer" name="fullplayer_{$feed.id}" id="fullplayer_yes_{$feed.id}" value="1" checked="checked"/>
-            <label for="fullplayer_yes_{$feed.id}">{#live__fullplayer_yes#}</label><br/>
-            <input type="radio" class="fullplayer" name="fullplayer_{$feed.id}" id="fullplayer_no_{$feed.id}" value="0"/>
-            <label for="fullplayer_no_{$feed.id}">{#live__fullplayer_no#}</label>
-          </div>
-          {capture assign=liveembed}
-            <iframe width="950" height="980" src="{$BASE_URI}{$language}/live/view/{$feed.id},{$feed.name|filenameize}?chromeless=true" frameborder="0" allowfullscreen="allowfullscreen"></iframe>
-          {/capture}
-          <textarea onclick="this.select();">{$liveembed|trim|escape:html}</textarea>
-        </div>
+        <a href="#" class="liveembed">{#live__embed#}</a>
       {/if}
    </td>
-    <td>
+    <td class="streamcolumn">
       <table class="stream">
       {foreach from=$feed.streams item=stream}
         <tr>
@@ -114,6 +96,33 @@
       </table>
     </td>
   </tr>
+  {if !empty( $feed.streams )}
+  <tr class="liveembedrow">
+    <td colspan="3">
+      <div class="liveembedwrap" data-embedurl="{$BASE_URI}{$language}/live/view/{$feed.id},{$feed.name|filenameize}?chromeless=true">
+        <span class="label">{#live__embed_info#}</span>
+        <div class="option">
+          <label for="chat" class="label">{#live__chat#}:</label>
+          <input type="radio" class="chat" name="chat_{$feed.id}" id="chat_no_{$feed.id}" value="0"/>
+          <label for="chat_no_{$feed.id}">{#live__chat_no#}</label>
+          <input type="radio" class="chat" name="chat_{$feed.id}" id="chat_yes_{$feed.id}" checked="checked" value="1"/>
+          <label for="chat_yes_{$feed.id}">{#live__chat_yes#}</label>
+        </div>
+        <div class="option">
+          <label for="fullplayer" class="label">{#live__fullplayer#}:</label><br/>
+          <input type="radio" class="fullplayer" name="fullplayer_{$feed.id}" id="fullplayer_yes_{$feed.id}" value="1" checked="checked"/>
+          <label for="fullplayer_yes_{$feed.id}">{#live__fullplayer_yes#}</label><br/>
+          <input type="radio" class="fullplayer" name="fullplayer_{$feed.id}" id="fullplayer_no_{$feed.id}" value="0"/>
+          <label for="fullplayer_no_{$feed.id}">{#live__fullplayer_no#}</label>
+        </div>
+        {capture assign=liveembed}
+          <iframe width="950" height="980" src="{$BASE_URI}{$language}/live/view/{$feed.id},{$feed.name|filenameize}?chromeless=true" frameborder="0" allowfullscreen="allowfullscreen"></iframe>
+        {/capture}
+        <textarea onclick="this.select();">{$liveembed|trim|escape:html}</textarea>
+      </div>
+    </td>
+  </tr>
+  {/if}
   {foreachelse}
   <tr>
     <td colspan="2">{#live__nofeeds#}</td>

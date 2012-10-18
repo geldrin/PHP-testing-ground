@@ -70,7 +70,9 @@ function setupBroadcastLink( elems ) {
   elems.click( function( e ) {
     e.preventDefault();
     
-    $j(this).parents('tr').next('.streambroadcastwrap').toggle();
+    var wrap = $j(this).parents('tr').next('.streambroadcastwrap');
+    $j('.streambroadcastwrap').not( wrap ).hide();
+    wrap.toggle();
     
   });
   
@@ -168,16 +170,16 @@ function setupLiveEmbed( elems ) {
     
     e.preventDefault();
     
-    var wrap = $j(this).next('.liveembedwrap')
-    wrap.width( $j(this).parents('td').width() + 'px' );
-    wrap.toggle();
+    var row = $j(this).parents('tr').next('.liveembedrow');
+    $j('.liveembedrow').not( row ).hide();
+    row.toggle();
     
   });
   
   var updateIframeSrc = function( elem, needchat, needfullplayer ) {
     
     var root = elem.parents('.liveembedwrap');
-    var url  = root.prev().attr('data-embedurl');
+    var url  = root.attr('data-embedurl');
     var txt  = root.find('textarea').val();
     
     if ( needchat == '0' )
@@ -228,7 +230,7 @@ function setupSort() {
     
     if ( self.css('display') == 'block' ) {
       
-      self.children('ul').width( self.children('.title').outerWidth()  );
+      self.children('ul').width( self.children('.title').outerWidth() );
       
     }
     
@@ -364,37 +366,24 @@ function setupHeaderLogin() {
   
   $j('#currentusername').on('click', function( e ) {
     e.preventDefault();
+    e.stopImmediatePropagation();
+    
     $j('#currentuser').toggleClass('active');
+    
   });
   
-  var fixCurrentUserMenu = function() {
-    $j('#currentusermenu').css({ height: $j('#currentusermenu').height() + 'px' });
+  $j('body').click( function(e) {
+    
+    if ( $j('#currentuser').find( e.target ).length == 0 )
+      $j('#currentuser').removeClass('active');
+    
+  });
+  
+  var fixCurrentUserMenu = function( elem ) {
+    elem.css({ height: elem.height() + 'px' });
   };
   
   runIfExists('#currentusermenu', fixCurrentUserMenu );
-  
-  var currentusertimeout;
-  var clearCurrentUser = function() {
-    
-    if ( currentusertimeout ) {
-      
-      clearTimeout( currentusertimeout );
-      currentusertimeout = null;
-      
-    }
-    
-  };
-  
-  $j('#currentusername, #currentusercontent').on('mouseenter', clearCurrentUser );
-  
-  $j('#currentusercontent').on('mouseleave', function() {
-    
-    clearCurrentUser();
-    currentusertimeout = setTimeout( function() {
-      $j('#currentuser').toggleClass('active', false );
-    }, 1750 );
-    
-  });
   
 }
 

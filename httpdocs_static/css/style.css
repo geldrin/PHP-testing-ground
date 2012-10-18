@@ -2217,8 +2217,23 @@ a#currentusername span {
   margin: 0px;
   vertical-align: top;
 }
+#feeds td.feed {
+  width: 350px;
+  padding: 25px 5px;
+}
+#feeds td.streamcolumn {
+  padding: 22px 5px;
+}
+#feeds td.livefeedrow {
+  padding: 25px 0 0 0;
+  width: 30px;
+}
+#feeds .livefeedrow .livefeed {
+  padding: 0 6px 0 22px;
+  margin: 0;
+}
 #feeds .stream {
-  min-width: 500px;
+  min-width: 570px;
 }
 #feeds .stream td {
   padding: 0;
@@ -2227,16 +2242,24 @@ a#currentusername span {
   margin-left: 10px;
   color: #1E97D4;
 }
-#feeds .liveembedwrap {
+#feeds .liveembedrow {
   display: none;
 }
+#feeds .liveembedrow td {
+  padding: 0px 5px 10px 5px;
+}
 #feeds .liveembedwrap textarea {
-  width: 90%;
+  margin: 5px 0px;
+  width: 100%;
+}
+#feeds td.streamname {
+  width: 200px;
 }
 #feeds td.streamquality {
   padding: 0 5px;
 }
 #feeds td.streamcompatibility {
+  width: 85px;
   padding: 0 5px 0 0;
 }
 #feeds tr.streambroadcastwrap {
