@@ -63,7 +63,7 @@ class Controller extends \Visitor\Controller {
     
     $output = $this->fetchSmarty('Visitor/Organizations/Newsrss.tpl');
     $cache->put( $output );
-    $this->output( $output );
+    $this->output( $output, true );
     
   }
   
