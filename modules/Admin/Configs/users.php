@@ -217,6 +217,7 @@ $config = Array(
     'displayname' => 'Banned?',
     'type'        => 'inputRadio',
     'values'      => $l->getLov('yesno'),
+    'value'       => 0,
   ),
 );
 

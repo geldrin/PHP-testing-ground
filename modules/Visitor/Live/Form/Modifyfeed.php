@@ -1,7 +1,7 @@
 <?php
 namespace Visitor\Live\Form;
 
-class Modifyfeed extends Createfeed {
+class Modifyfeed extends \Visitor\HelpForm {
   public $configfile = 'Modifyfeed.php';
   public $template   = 'Visitor/genericform.tpl';
   public $needdb     = true;

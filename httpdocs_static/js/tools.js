@@ -285,6 +285,9 @@ function setupCategoryIconSelector() {
 
 function setupPlayer() {
   
+  if ( $j('#pagebg').length == 0 )
+    return; // embedded
+  
   var playerbgheight =
     ( $j('#player').offset().top - $j('#pagebg').offset().top ) +
     $j('#player').height() + 10
