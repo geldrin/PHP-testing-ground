@@ -48,11 +48,12 @@ class Controller extends \Visitor\Controller {
     $cache = $this->bootstrap->getCache( 'rss_news_' . $this->organization['id'] );
     if ( !$cache->expired() and PRODUCTION ) {
       
-      $this->output( $cache->get() );
+      $this->output( $cache->get(), true );
       return;
       
     }
     
+    $this->bootstrap->setupSession();
     $l         = $this->bootstrap->getLocalization();
     $newsModel = $this->bootstrap->getModel('organizations_news');
     $items     = $newsModel->getRecentNews( 10, $this->organization['id'] );
