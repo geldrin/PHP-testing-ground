@@ -22,8 +22,11 @@ class Login extends \Visitor\Form {
     $uservalid = $userModel->selectAndCheckUserValid( $organizationid, $values['email'], $values['password'] );
     $orgvalid  = false;
     
-    if ( $uservalid and $userModel->row['organizationid'] == $organizationid )
+    if ( $uservalid and ( $userModel->row['organizationid'] == $organizationid or $userModel->row['isadmin'] ) )
       $orgvalid = true;
+    
+    if ( $userModel->row['isadmin'] )
+      $userModel->row['organizationid'] = $organizationid; // a registerforsession miatt
     
     if ( !$uservalid or !$orgvalid ) {
       
