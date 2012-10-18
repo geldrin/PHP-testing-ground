@@ -43,7 +43,7 @@
     obsolete: {if $browser.obsolete}true{else}false{/if} 
   {rdelim};
   </script>
-  
+  <link rel="alternate" type="application/rss+xml" title="{#rss_news#|sprintf:$organization.name|escape:html}" href="{$language}/organizations/newsrss" />
 </head>
 <body>
 {if $browser.obsolete}
