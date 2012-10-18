@@ -10,19 +10,31 @@ class Users extends \Springboard\Model {
   public function selectAndCheckUserValid( $organizationid, $email, $password, $isadmin = null ) {
     
     $crypto = $this->bootstrap->getEncryption();
-    $this->clearFilter();
+    $where  = array(
+      'email    = ' . $this->db->qstr( $email ),
+      'password = ' . $this->db->qstr( $crypto->getHash( $password ) ),
+      'disabled = ' . $this->db->qstr( self::USER_VALIDATED ),
+    );
+    
+    $adminwhere = implode(" AND ", $where ) . ' AND isadmin = 1';
     
     if ( $organizationid !== null )
-      $this->addFilter('organizationid', $organizationid );
+      $where[] = 'organizationid = ' . $this->db->qstr( $organizationid );
     
     if ( $isadmin )
-      $this->addFilter('isadmin', 1 );
+      $where[] = 'isadmin = 1';
     
-    $this->addFilter('email',    $email, false );
-    $this->addFilter('password', $crypto->getHash( $password ), false );
-    $this->addFilter('disabled', self::USER_VALIDATED );
+    $where = implode(" AND ", $where );
+    $user  = $this->db->getRow("
+      SELECT *
+      FROM users
+      WHERE
+        ( $where ) OR
+        ( $adminwhere )
+      ORDER BY id
+      LIMIT 1
+    ");
     
-    $user = $this->getRow();
     if ( empty( $user ) ) {
       return false;
     } else {
