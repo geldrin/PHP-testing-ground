@@ -46,7 +46,7 @@ $config['departments[]'] = array(
   'sql'         => "
     SELECT id, name
     FROM departments
-    WHERE %s
+    WHERE %s AND organizationid = '" . $this->controller->organization['id'] . "'
     ORDER BY weight, name
   ",
   'prefix'      => '<div class="formoverflowframe" id="departmentscontainer">',
