@@ -47,6 +47,9 @@ class Details extends \Visitor\Paging {
     if ( $this->channelModel->row['organizationid'] != $organization['id'] )
       $this->controller->redirect('index');
     
+    if ( $this->channelModel->isAccessible( $this->user ) !== true )
+      $this->controller->redirectToController('contents', 'nopermission');
+    
     $this->channelids = array_merge(
       array( $this->channelModel->id ),
       $this->channelModel->findChildrenIDs()

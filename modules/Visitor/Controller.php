@@ -116,7 +116,7 @@ class Controller extends \Springboard\Controller\Visitor {
     $model = $this->bootstrap->getModel( $table );
     $model->addFilter('id', $id );
     
-    if ( $user['iseditor'] )
+    if ( $user['iseditor'] or $user['isclientadmin'] )
       $model->addTextFilter("
         userid = '" . $user['id'] . "' OR
         organizationid = '" . $user['organizationid'] . "'

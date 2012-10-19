@@ -5,6 +5,7 @@ class Modify extends \Visitor\HelpForm {
   public $configfile = 'Modify.php';
   public $template   = 'Visitor/genericform.tpl';
   public $needdb     = true;
+  public $channelroot;
   
   protected $parentchannelModel;
   protected $channelModel;
@@ -25,7 +26,8 @@ class Modify extends \Visitor\HelpForm {
         $this->channelModel->row['parentid']
       );
       
-      $this->values['ispublic'] = $this->parentchannelModel->row['ispublic'];
+      $this->channelroot = $this->parentchannelModel->findRoot( $this->parentchannelModel->row );
+      $this->values['ispublic'] = $this->channelroot['ispublic'];
       
     }
     
@@ -43,6 +45,8 @@ class Modify extends \Visitor\HelpForm {
   public function onComplete() {
     
     $values = $this->form->getElementValues( 0 );
+    if ( !$this->channelModel->row['parentid'] )
+      $this->channelModel->updateChildrenPublic( $values['ispublic'] );
     
     $this->channelModel->updateRow( $values );
     

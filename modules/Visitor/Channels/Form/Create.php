@@ -20,7 +20,8 @@ class Create extends \Visitor\HelpForm {
         $parentid
       );
       
-      $this->values['ispublic'] = $this->parentchannelModel->row['ispublic'];
+      $this->channelroot = $this->parentchannelModel->findRoot( $this->parentchannelModel->row );
+      $this->values['ispublic'] = $this->channelroot['ispublic'];
       
     }
     
@@ -47,10 +48,8 @@ class Create extends \Visitor\HelpForm {
     
     if ( $this->parentchannelModel ) {
       
-      $values['parentid']     = $this->parentchannelModel->id;
-      
-      if ( !$this->parentchannelModel->row['ispublic'] )
-        $values['ispublic'] = $this->parentchannelModel->row['ispublic'];
+      $values['parentid'] = $this->parentchannelModel->id;
+      $values['ispublic'] = $this->channelroot['ispublic'];
       
     }
     

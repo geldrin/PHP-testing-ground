@@ -781,7 +781,7 @@ class Channels extends \Springboard\Model {
          (
            $channel['userid'] == $user['id'] or
            (
-             $user['iseditor'] and
+             ( $user['iseditor'] or $user['isclientadmin'] ) and
              $user['organizationid'] == $channel['organizationid']
            )
          )
@@ -789,6 +789,15 @@ class Channels extends \Springboard\Model {
       return true;
     
     switch( $channel['accesstype'] ) {
+      
+      case '':
+        
+        // idaig nem jutunk el ha a user hozzafer a csatornahoz, nem kell nezni
+        // ha nem publikus
+        if ( $channel['ispublic'] )
+          return true;
+        
+        break;
       
       case 'public':
         break;
@@ -895,6 +904,18 @@ class Channels extends \Springboard\Model {
   
   public function restrictGroups( $groupids ) {
     $this->insertMultipleIDs( $groupids, 'access', 'groupid');
+  }
+  
+  public function updateChildrenPublic( $ispublic ) {
+    
+    $this->ensureObjectLoaded();
+    $childrenids = array_merge( array( $this->id ), $this->findChildrenIDs() );
+    $this->db->execute("
+      UPDATE channels
+      SET ispublic = " . $this->db->qstr( $ispublic ) . "
+      WHERE id IN('" . implode("', '", $childrenids ) . "')
+    ");
+    
   }
   
 }
