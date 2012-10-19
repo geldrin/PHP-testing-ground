@@ -21,6 +21,7 @@ return array('config_jobs' => array(
 	'temp_dir'						=> $this->config['datapath'] . 'temp/',				// Temporary dir for jobs
 	'media_dir'						=> $this->config['datapath'] . 'temp/media/',		// Temporary dir for media conversion
 	'content_dir'					=> $this->config['datapath'] . 'temp/content/',		// Temporary dir for content conversion
+	'vcr_dir'						=> $this->config['datapath'] . 'temp/vcr/',			// Temporary dir for VCR download/upload
 	'job_dir'						=> $this->config['modulepath'] . 'Jobs/',
 	'log_dir'						=> $this->config['logpath'] . 'jobs/',
 
@@ -75,6 +76,7 @@ return array('config_jobs' => array(
 	'dbstatus_vcr_disc'				=> 'disconnect',
 	'dbstatus_vcr_discing'			=> 'disconnecting',
 	'dbstatus_vcr_upload'			=> 'upload',
+	'dbstatus_vcr_uploading'		=> 'uploading',
 	'dbstatus_vcr_ready'			=> 'ready',
 	'dbstatus_vcr_starting_err'		=> 'failedstarting',
 	'dbstatus_vcr_discing_err'		=> 'faileddisconnecting',
@@ -85,6 +87,10 @@ return array('config_jobs' => array(
 	'vcr_server'					=> 'tcs.streamnet.hu',
 	'vcr_user'						=> 'admin',
 	'vcr_password'					=> 'BoRoKaBoGYo1980',
+
+	// API authentication data
+	'api_user'						=> 'support@videosquare.eu',
+	'api_password'					=> 'MekkElek123',
 
 	// FFMpeg related
 	'ffmpeg_loglevel'				=> 0,								// Loglevel

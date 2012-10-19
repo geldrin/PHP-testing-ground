@@ -65,7 +65,11 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_media_convert.stop' ) and 
 
 		// Temporary directory cleanup and log result
 		$err = tempdir_cleanup($jconf['media_dir']);
-		if ( !$err['code'] ) log_recording_conversion(0, $jconf['jobid_media_convert'], "-", $err['message'], $err['command'], $err['result'], 0, TRUE);
+		if ( !$err['code'] ) {
+			log_recording_conversion(0, $jconf['jobid_media_convert'], "-", $err['message'], $err['command'], $err['result'], 0, TRUE);
+			$converter_sleep_length = 15 * 60;
+			break;
+		}
 
 		$recording = array();
 		$uploader_user = array();

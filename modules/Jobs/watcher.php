@@ -50,7 +50,7 @@ if ( $app->config['node_role'] == 'converter' ) {
 	$jobs = array(
 		$jconf['jobid_media_convert']	=> 15*60,	// 15 minutes (if no update or ffmpeg is not running)
 		$jconf['jobid_content_convert']	=> 60*60,	// 15 minutes (if no update or ffmpeg is not running)
-//		$jconf['jobid_vcr_control']		=> 15*60
+		$jconf['jobid_vcr_control']		=> 15*60
 	);
 } else {
 	// Front-end jobs

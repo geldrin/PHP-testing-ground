@@ -8,6 +8,7 @@ define('DEBUG', false );
 @include("SOAP/Client.php");
 
 include_once( BASE_PATH . 'libraries/Springboard/Application/Cli.php');
+include_once( BASE_PATH . 'resources/apitest/httpapi.php');
 
 // Utils
 include_once('job_utils_base.php');
@@ -39,25 +40,28 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_vcr_control.stop' ) and !i
 
 	clearstatcache();
 
+	$app->watchdog();
+
+	$db_close = FALSE;
+	$tcs_isconnected = FALSE;
+	$sleep_length = $jconf['sleep_vcr'];
+
+	// Establish database connection
+	try {
+		$db = $app->bootstrap->getAdoDB();
+	} catch (exception $err) {
+		// Send mail alert, sleep for 15 minutes
+		$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] No connection to DB (getAdoDB() failed). Error message:\n" . $err, $sendmail = true);
+		// Sleep 15 mins then resume
+		$sleep_length = 15 * 60;
+		sleep( $sleep_length );
+		continue;
+	}
+
+	// VCR: start, maintain and stop recording
     while ( 1 ) {
 
-		$app->watchdog();
-	
-		$db_close = FALSE;
-		$sleep_length = $jconf['sleep_vcr'];
-
-		// Establish database connection
-		try {
-			$db = $app->bootstrap->getAdoDB();
-		} catch (exception $err) {
-			// Send mail alert, sleep for 15 minutes
-			$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] No connection to DB (getAdoDB() failed). Error message:\n" . $err, $sendmail = true);
-			// Sleep 15 mins then resume
-			$sleep_length = 15 * 60;
-			break;
-		}
-
-// !!! set start values from DB
+// !!! TEST ONLY: set start values from DB
 // START
 //update_db_stream_status(5, $jconf['dbstatus_vcr_start']);
 //update_db_vcr_reclink_status(1, $jconf['dbstatus_vcr_ready']);
@@ -73,7 +77,7 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_vcr_control.stop' ) and !i
 		$vcr_user = array();
 
 		// Query next job - exit if none
-		if ( !query_vcrnew($vcr, $vcr_user) ) break;
+		if ( !query_vcrrecording($vcr, $vcr_user) ) break;
 
 		// Alias: choose normal or secure
 		$vcr['aliasused'] = $vcr['alias'];
@@ -89,17 +93,16 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_vcr_control.stop' ) and !i
 		$global_log .= "Call: " . $vcr['calltype'] . ":" . $vcr['number'] . " @ " . $vcr['bitrate'] . "KBps\n";
 		$global_log .= "Recording profile: " . $vcr['aliasused'] . "\n\n";
 
-		// Start log entry
-		log_recording_conversion($vcr['id'], $myjobid, $jconf['dbstatus_init'], "START Videoconference recording:\n\n" . $global_log, "-", "-", 0, FALSE);
-
 		$app->watchdog();
 
 		// Connect to Cisco TCS
+		$tcs_isconnected = FALSE;
 		$soap_rs = TCS_Connect();
 		if ( $soap_rs === FALSE ) {
 			$sleep_length = 15 * 60;
 			break;
-		}
+		} 
+		$tcs_isconnected = TRUE;
 
 		// System health: check
 		$err = array();
@@ -114,9 +117,6 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_vcr_control.stop' ) and !i
 		$err = TCS_GetSystemInformation();
 
 		$app->watchdog();
-
-//echo "stat: " . $vcr['status'] . "\n";
-//echo "rlstat: " . $vcr['reclink_status'] . "\n";
 
 		// START RECORDING: a recording needs to be started, recording link is available
 		if ( ( $vcr['status'] == $jconf['dbstatus_vcr_start'] ) and ( $vcr['reclink_status'] == $jconf['dbstatus_vcr_ready'] ) ) {
@@ -179,7 +179,7 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_vcr_control.stop' ) and !i
 			// Summary log entry and mail
 			$total_duration = time() - $start_time;
 			$hms = secs2hms($total_duration);
-			log_recording_conversion($vcr['id'], $myjobid, $jconf['dbstatus_vcr_recording'], "-", "[OK] Successful recording initiation in " . $hms . " time.\n\nSummary:\n\n" . $global_log, "-", "-", $total_duration, TRUE);
+			log_recording_conversion($vcr['id'], $myjobid, $jconf['dbstatus_vcr_recording'], "[OK] Successful recording initiation in " . $hms . " time.\n\nSummary:\n\n" . $global_log, "-", "-", "-", $total_duration, TRUE);
 
 			$app->watchdog();
 		}
@@ -230,10 +230,12 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_vcr_control.stop' ) and !i
 				break;
 			}
 
+			sleep(30);
+
 			// Summary log entry and mail
 			$total_duration = time() - $start_time;
 			$hms = secs2hms($total_duration);
-			log_recording_conversion($vcr['id'], $myjobid, $jconf['dbstatus_vcr_ready'], "-", "[OK] Successfuly disconnected recording in " . $hms . " time.\n\nSummary:\n\n" . $global_log, "-", "-", $total_duration, TRUE);
+			log_recording_conversion($vcr['id'], $myjobid, $jconf['dbstatus_vcr_ready'], "[OK] Successfuly disconnected recording in " . $hms . " time.\n\nSummary:\n\n" . $global_log, "-", "-", "-", $total_duration, TRUE);
 
 			$app->watchdog();
 		}
@@ -241,33 +243,164 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_vcr_control.stop' ) and !i
 		break;
 	}	// End of while(1)
 
-	// UPLOAD: a finnished recording needs to be uploaded
-	$err = array();
-	$vcr_upload = array();
-	$vcr_user = array();
 
-	if ( query_vcrupload($vcr_upload, $vcr_user) ) {
+	// VCR UPLOAD: a finnished recording needs to be uploaded
+	while (1) {
 
-//	var_dump($vcr_upload);
+		$app->watchdog();
 
-		if ( $vcr_upload['status'] == $jconf['dbstatus_vcr_upload'] ) {
+		$err = array();
+		$vcr_upload = array();
+		$vcr_user = array();
 
-		// Connect to Cisco TCS
-		$soap_rs = TCS_Connect();
-		if ( $soap_rs === FALSE ) {
-			$sleep_length = 15 * 60;
+		if ( !query_vcrupload($vcr_upload, $vcr_user) ) break;
+
+//echo "UPLOAD:\n";
+
+		// Temporary directory check
+		if ( !is_writable($jconf['vcr_dir']) ) {
+			log_recording_conversion($vcr_upload['id'], $myjobid, $jconf['dbstatus_vcr_upload'], "[FATAL ERROR] Temp directory " . $jconf['vcr_dir'] . " is not writable. Storage error???\n", "-", "-", "-", 0, TRUE);
 			break;
 		}
 
-		$err = TCS_GetConfInfo($vcr_upload);
-//echo "UPLOAD\n";
-// get and check download url. download mp4 with wget?????
+		// Connect to Cisco TCS if connection is not yet established
+		if ( $tcs_isconnected === FALSE ) {
+			$soap_rs = TCS_Connect();
+			if ( $soap_rs === FALSE ) {
+				$sleep_length = 15 * 60;
+				break;
+			}
+			$tcs_isconnected = TRUE;
+		}
 
-//var_dump($err);
+		// Get TCS recording information for download URL
+		$err = TCS_GetConfInfo($vcr_upload);
+//var_dump($vcr_upload);
+		if ( !$err['code'] ) {
+			echo "WARNING: recording is not yet available for download? Try how many times?\n";
+			break;
+		}
+
+		$app->watchdog();
+
+		// VCR DOWNLOAD: use wget to download MP4 file
+		if ( !empty($vcr_upload['download_url']) ) {
+
+			// Update stream status
+			update_db_stream_status($vcr_upload['id'], $jconf['dbstatus_vcr_uploading']);
+
+			// Get MP4 filename from URL
+			$tmp = parse_url($vcr_upload['download_url']);
+			$tmp2 = pathinfo($tmp['path']);
+			$filename = $tmp2['basename'];
+
+			// Temporary directory
+			$temp_directory = $jconf['vcr_dir'];
+
+			// Download with wget
+			$command = "wget -nv -P " . $temp_directory . " " . $vcr_upload['download_url'] . " 2>&1";
+			$time_start = time();
+			exec($command, $output, $result);
+			$output_string = implode("\n", $output);
+			$duration = time() - $time_start;
+			$mins_taken = round( $duration / 60, 2);
+			if ( $result != 0 ) {
+				log_recording_conversion($vcr_upload['id'], $myjobid, $jconf['dbstatus_vcr_upload'], "[ERROR] VCR download failed. URL:\n\n" . $vcr_upload['download_url'], $command, $output_string, $duration, TRUE);
+				update_db_stream_status($vcr_upload['id'], $jconf['dbstatus_vcr_upload_err']);
+				break;
+			}
+			log_recording_conversion($vcr_upload['id'], $myjobid, $jconf['dbstatus_vcr_upload'], "[OK] VCR recording download finished (in " . $mins_taken . " mins). URL:\n\n" . $vcr_upload['download_url'], $command, $output_string, $duration, FALSE);
+	
+			$media_filename = $temp_directory . $filename;
+			if ( !file_exists($media_filename) ) {
+				log_recording_conversion($vcr_upload['id'], $jconf['jobid_vcr_control'], $jconf['dbstatus_vcr_upload'], "[ERROR] Cannot find downloaded VCR recording. File:\n\n" . $media_filename, "-", "-", 0, TRUE);
+				update_db_stream_status($vcr_upload['id'], $jconf['dbstatus_vcr_upload_err']);
+				break;
+			}
+
+			$app->watchdog();
+
+		} else {
+			// VCR download URL is not yet available (we are just after disconnect)
+			// Stream status: revert to "upload" (try later)
+			update_db_stream_status($vcr_upload['id'], $jconf['dbstatus_vcr_upload']);
+			log_recording_conversion($vcr_upload['id'], $jconf['jobid_vcr_control'], $jconf['dbstatus_vcr_upload'], "[WARNING] Cannot find VCR download URL. Will be trying later. Info:\n\n" . $print_r($vcr_upload, TRUE), "-", "-", 0, TRUE);
+			break;
+		}
+
+		// API: initialize an API connection
+		try {
+			$api = new Api($jconf['api_user'], $jconf['api_password']);
+		} catch (exception $err) {
+			// Stream status: revert to "upload" (try later)
+			update_db_stream_status($vcr_upload['id'], $jconf['dbstatus_vcr_upload']);
+			log_recording_conversion($vcr_upload['id'], $jconf['jobid_vcr_control'], $jconf['dbstatus_vcr_upload'], "[ERROR] Cannot connect to Videosquare API. Will be trying later. User: " .  $jconf['api_user'], "-", $err, 0, TRUE);
+			break;
+		}
+
+		// API: update API URL according to site
+		$api->apiurl = "http://" . $app->config['baseuri'] . "hu/api";
+
+		// API: upload recording with specific metadata
+		$language = "hun";
+		$metadata = array(
+			'title'					=> $vcr_upload['feed_name'],
+			'subtitle'				=> $vcr_upload['datetime'],
+			'recordedtimestamp'		=> $vcr_upload['datetime'],
+			'accesstype'			=> 'public',	// örökölje a csatornáét?
+			'ispublished'			=> 0,
+			'isdownloadable'		=> 0,
+			'isaudiodownloadable'	=> 0,
+			'isembedable'			=> 1,
+			'conversionpriority'	=> 100
+		);
+
+		// API: add recording to repository
+		try {
+			$recording = $api->uploadRecording($media_filename, $language, $vcr_upload['userid']);
+		} catch (exception $err) {
+			// API: cannot add recording. We log error and will try later.
+			// Stream status: revert to "upload" (try later)
+			update_db_stream_status($vcr_upload['id'], $jconf['dbstatus_vcr_upload']);
+			log_recording_conversion($vcr_upload['id'], $jconf['jobid_vcr_control'], $jconf['dbstatus_vcr_upload'], "[ERROR] Cannot add recording to Videosquare. Info:\n\nFilename: " . $media_filename . "\n\nMetadata:\n" . print_r($metadata, TRUE), "-", "-", 0, TRUE);
+			break;
+		}
+
+		$app->watchdog();
+
+		if ( $recording and isset( $recording['data']['id'] ) ) {
+			$recordingid = $recording['data']['id'];
+			// API: add metadata
+			try {
+				$api->modifyRecording( $recordingid, $metadata);
+			} catch (exception $err) {
+				// API: cannot add metadata. We log error, but upload is successful
+				log_recording_conversion($vcr_upload['id'], $jconf['jobid_vcr_control'], $jconf['dbstatus_vcr_upload'], "[WARNING] Cannot add metadata to recording. Info:\n\nFilename: " . $media_filename . "\n\nMetadata:\n" . print_r($metadata, TRUE), "-", $err, 0, TRUE);
+			}
+		} else {
+			// Stream status: revert to "upload" (try later)
+			update_db_stream_status($vcr_upload['id'], $jconf['dbstatus_vcr_upload']);
+			log_recording_conversion($vcr_upload['id'], $jconf['jobid_vcr_control'], $jconf['dbstatus_vcr_upload'], "[ERROR] Cannot find recording ID in array returned by API. Info:\n\nFilename: " . $media_filename . "\n\nRecording array:\n\n" . print_r($recording, TRUE) . "\n\nMetadata:\n" . print_r($metadata, TRUE), "-", "-", 0, TRUE);
+		}
+
+		// Stream status: revert to "ready" (next recording is possible)
+		update_db_stream_status($vcr_upload['id'], $jconf['dbstatus_vcr_ready']);
+		log_recording_conversion($vcr_upload['id'], $jconf['jobid_vcr_control'], $jconf['dbstatus_vcr_upload'], "[OK] VCR recording added. Info:\n\nFilename: " . $media_filename . "\n\nMetadata:\n" . print_r($metadata, TRUE), "-", "-", 0, TRUE);
+
+// TODO:
+// - channel kreálás a live alapján?
+// channel add példa:
+//$api->addRecordingToChannel( $channelid, 1 );
+// Sikeres feltöltéskor felvétel törlése a TCS-ről? (javasolt egy hosszabb tesztidőszak után bevezetni)
+
+		// Temporary directory cleanup
+		$err = tempdir_cleanup($jconf['vcr_dir']);
+		if ( !$err['code'] ) {
+			log_recording_conversion($vcr_upload['id'], $myjobid, $jconf['dbstatus_vcr_upload'], $err['message'], $err['command'], $err['result'], 0, TRUE);
+			break;
+		}
 
 //exit;
-
-		}
 
 	}
 
@@ -322,7 +455,7 @@ global $jconf;
 //	  o FALSE: no pending job for conversion
 //	  o TRUE: job is available for conversion
 //	- $recording: recording_element DB record returned in global $recording variable
-function query_vcrnew(&$vcr, &$vcr_user) {
+function query_vcrrecording(&$vcr, &$vcr_user) {
 global $jconf, $db;
 
 	$query = "
@@ -691,6 +824,12 @@ global $soap_rs;
 		$vcr['mainurl'] = $err_su['data']['mainurl'];
 		$vcr['rtmp_server'] = $err_su['data']['rtmp_server'];
 		$vcr['rtmp_streamid'] = $err_su['data']['rtmp_streamid'];
+		if ( !empty($err_su['data']['download_url']) ) $vcr['download_url'] = $err_su['data']['download_url'];
+		if ( !empty($err_su['data']['datetime']) ) {
+			$vcr['datetime'] = $err_su['data']['datetime'];
+		} else {
+			$vcr['datetime'] = date("Y-m-d H:i:s");
+		}
 		$vcr['width'] = $err_su['data']['width'];
 		$vcr['height'] = $err_su['data']['height'];
 	} else {
@@ -710,6 +849,11 @@ function TCS_GetStreamParams($conf_info) {
 	$err = array();
 
 	$is_flashver = FALSE;
+
+	// Get recording date and time
+	if ( !empty($conf_info->GetConferenceResult->DateTime) ) {
+		$err['data']['datetime'] = date('Y-m-d H:i:s', $conf_info->GetConferenceResult->DateTime);
+	}
 
 	$HasWatchableMovie = $conf_info->GetConferenceResult->HasWatchableMovie;
 	if ( $HasWatchableMovie ) {
@@ -755,7 +899,6 @@ function TCS_GetStreamParams($conf_info) {
 	}
 
 	if ( $is_flashver ) {
-
 		// Check if live or recording for download
 		if ( strpos($err['data']['mainurl'], "rtmp") === FALSE ) {
 			$err['data']['download_url'] = $err['data']['mainurl'];

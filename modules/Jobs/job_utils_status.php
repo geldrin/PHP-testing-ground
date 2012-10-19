@@ -357,10 +357,11 @@ global $db, $jconf;
 			livefeed_streams
 		SET
 			keycode = '" . $keycode . "',
-			aspectratio = '" . $aspectratio . "',
 			vcrconferenceid = '" . $conferenceid . "'
 		WHERE
 			id = " . $id;
+
+//aspectratio = '" . $aspectratio . "',
 
 	try {
 		$rs = $db->Execute($query);
