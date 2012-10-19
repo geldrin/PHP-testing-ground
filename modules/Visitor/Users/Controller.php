@@ -41,6 +41,14 @@ class Controller extends \Visitor\Controller {
       'password' => array(
         'type' => 'string'
       ),
+      'recordingid' => array(
+        'type'     => 'id',
+        'required' => false,
+      ),
+      'feedid' => array(
+        'type'     => 'id',
+        'required' => false,
+      ),
     ),
   );
   
@@ -134,7 +142,7 @@ class Controller extends \Visitor\Controller {
   }
   
   // pure api hivas, nem erheto el apin kivulrol (mert nincs a permission tombbe)
-  public function authenticateAction( $email, $password ) {
+  public function authenticateAction( $email, $password, $recordingid, $feedid ) {
     
     $userModel = $this->bootstrap->getModel('users');
     $uservalid = $userModel->selectAndCheckUserValid(
@@ -143,14 +151,43 @@ class Controller extends \Visitor\Controller {
       $password
     );
     
-    if ( $uservalid ) {
+    if ( !$uservalid )
+      throw new \Exception("Access denied!");
+    
+    $userModel->registerForSession();
+    $userModel->updateLastlogin();
+    
+    if ( $recordingid ) {
       
-      $userModel->registerForSession();
-      $userModel->updateLastlogin();
+      $recordingsModel = $this->modelIDCheck( 'recordings', $recordingid, false );
+      
+      if ( !$recordingsModel )
+        throw new \Exception("No such recording found");
+      
+      $user            = $this->bootstrap->getSession('user');
+      $access          = $recordingsModel->userHasAccess( $user );
+      $l               = $this->bootstrap->getLocalization();
+      
+      if ( $access !== true )
+        throw new \Exception( $l('recordings', 'nopermission') );
+      
+    } elseif ( $feedid ) {
+      
+      $feedModel = $this->modelIDCheck( 'livefeeds', $feedid );
+      
+      if ( !$feedModel )
+        throw new \Exception("No such feed found");
+      
+      $user      = $this->bootstrap->getSession('user');
+      $access    = $feedModel->isAccessible( $user );
+      $l         = $this->bootstrap->getLocalization();
+      
+      if ( $access !== true )
+        throw new \Exception( $l('recordings', 'nopermission') );
       
     }
     
-    return $uservalid;
+    return true;
     
   }
   

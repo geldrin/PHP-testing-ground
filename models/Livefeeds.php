@@ -509,7 +509,7 @@ class Livefeeds extends \Springboard\Model {
     
   }
   
-  public function canDeleteFeed( $feed = null ) {
+  public function canDeleteFeed( $feed = null, $streams = null ) {
     
     if ( !$feed ) {
       
@@ -521,7 +521,12 @@ class Livefeeds extends \Springboard\Model {
     if ( $feed['feedtype'] != 'vcr' )
       return true;
     
-    $streams = $this->getStreams( $feed['id'] );
+    if ( !$streams )
+      $streams = $this->getStreams( $feed['id'] );
+    
+    if ( count( $streams ) != 1 )
+      throw new \Exception("VCR Helyszinhez tobb mint egy stream tartozik! " . var_export( $streams, true ) );
+    
     $stream  = reset( $streams );
     
     if ( $stream['status'] and $stream['status'] != 'ready' )

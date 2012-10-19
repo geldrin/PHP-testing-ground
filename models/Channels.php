@@ -741,7 +741,7 @@ class Channels extends \Springboard\Model {
       $streamObj->clearFilter();
       $streamObj->addFilter('livefeedid', $feed['id'] );
       $feeds[ $key ]['streams']   = $streamObj->getArray();
-      $feeds[ $key ]['candelete'] = $feedModel->canDeleteFeed( $feed );
+      $feeds[ $key ]['candelete'] = $feedModel->canDeleteFeed( $feed, $feeds[ $key ]['streams'] );
       
     }
     

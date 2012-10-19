@@ -42,7 +42,7 @@
             {if $stream.isioscompatible}<img src="{$STATIC_URI}images/icons/ios.png" title="iOS" alt="iOS"/>{/if}
             {if $stream.isandroidcompatible}<img src="{$STATIC_URI}images/icons/android.png" title="Android" alt="Android"/>{/if}
           </td>
-          <td class="streamactions"{if $feed.feedtype == 'vcr'} colspan="2"{/if}>
+          <td class="streamactions">
             <span class="nobr">
               {if $feed.feedtype == 'vcr'}
                 {if !preg_match('/^failed.*/', $stream.status )}

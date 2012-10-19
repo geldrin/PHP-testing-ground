@@ -746,7 +746,15 @@ class Controller extends \Visitor\Controller {
       
       $flashdata['authorization_need']    = true;
       $flashdata['authorization_gateway'] =
-        $this->bootstrap->baseuri . 'hu/api'
+        $this->bootstrap->baseuri . 'hu/api?' .
+        http_build_query( array(
+            'format'      => 'json',
+            'layer'       => 'controller',
+            'module'      => 'users',
+            'method'      => 'authenticate',
+            'recordingid' => $recordingsModel->id,
+          )
+        )
       ;
       
     }
