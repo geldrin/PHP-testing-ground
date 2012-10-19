@@ -50,6 +50,7 @@ class Organizations extends \Springboard\Model\Multilingual {
     $this->updateRow( array('organizationid' => $this->id ) );
     
     $this->setupDefaultGenres();
+    $this->setupDefaultChanneltypes();
     
   }
   
@@ -85,6 +86,37 @@ class Organizations extends \Springboard\Model\Multilingual {
       
       if ( $data['origparentid'] == 0 )
         $parentid = $row['id'];
+      
+    }
+    
+  }
+  
+  public function setupDefaultChanneltypes() {
+    
+    $this->ensureID();
+    
+    $channeltypes = include(
+      $this->bootstrap->config['datapath'] . 'defaultvalues/channeltypes.php'
+    );
+    $typeModel = $this->bootstrap->getModel('channel_types');
+    
+    foreach ( $channeltypes as $data ) {
+      
+      if ( empty( $data ) )
+        continue;
+      
+      $strings = array(
+        'name_stringid' => array(
+          'hu' => $data['namehungarian'],
+          'en' => $data['nameenglish']
+        ),
+      );
+      
+      if ( !$data['weight'] )
+        $data['weight'] = 100;
+      
+      $data['organizationid'] = $this->id;
+      $row = $typeModel->insert( $data, $strings, false );
       
     }
     

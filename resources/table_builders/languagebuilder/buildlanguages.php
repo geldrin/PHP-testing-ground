@@ -4,7 +4,7 @@ define('PRODUCTION', 0 );
 //define('DEBUG', true );
 include_once( BASE_PATH . 'libraries/Springboard/Application/Cli.php');
 
-$app = new Springboard\Application\Cli();
+$app = new Springboard\Application\Cli( BASE_PATH, PRODUCTION );
 
 $langfd = fopen('lang.csv', 'r');
 $languages = array();

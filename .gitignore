@@ -8,3 +8,4 @@ surveyor.config
 *.exe
 config_local.php
 httpdocs/flash/**
+data/defaultvalues/**
