@@ -46,7 +46,7 @@
             <span class="nobr">
               {if $feed.feedtype == 'vcr'}
                 {if !preg_match('/^failed.*/', $stream.status )}
-                  {if !$stream.status}
+                  {if $stream.status == 'ready'}
                     <a href="{$language}/live/togglestream/{$stream.id}?start=1" class="submitbutton">{#live__startrecord#}</a>
                   {elseif $stream.status == 'recording'}
                     {$l->getLov('streamstatus', $language, $stream.status)}

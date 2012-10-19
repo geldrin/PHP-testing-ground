@@ -137,11 +137,10 @@ class Controller extends \Visitor\Controller {
   public function authenticateAction( $email, $password ) {
     
     $userModel = $this->bootstrap->getModel('users');
-    $uservalid = $userModel->selectAndCheckAPIUserValid(
+    $uservalid = $userModel->selectAndCheckUserValid(
       $this->organization['id'],
       $email,
-      $password,
-      $_SERVER['REMOTE_ADDR']
+      $password
     );
     
     if ( $uservalid ) {
