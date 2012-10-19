@@ -18,12 +18,12 @@
     <td class="feed">
       <a href="{$language}/live/view/{$feed.id},{$feed.name|filenameize}" class="left"><b>{$feed.name|escape:html}</b></a>
       <br/>
-      {if $feed.feedtype != 'vcr' or ( $feed.feedtype == 'vcr' and $feed.streams[0].status == null ) }
+      {if $feed.feedtype != 'vcr' or $feed.candelete}
         <a href="{$language}/live/modifyfeed/{$feed.id}">{#live__live_edit#}</a> |
         <a href="{$language}/live/deletefeed/{$feed.id}" class="confirm" question="{#sitewide_areyousure#|escape:html}">{#live__live_delete#}</a>
       {/if}
       {if !empty( $feed.streams )}
-        {if $feed.feedtype != 'vcr' or ( $feed.feedtype == 'vcr' and $feed.streams[0].status == null ) }|{/if}
+        {if $feed.candelete }|{/if}
         <a href="#" class="liveembed">{#live__embed#}</a>
       {/if}
    </td>
@@ -31,11 +31,11 @@
       <table class="stream">
       {foreach from=$feed.streams item=stream}
         <tr>
-          {if $feed.feedtype != 'vcr'}
-            <td class="streamname">
+          <td class="streamname">
+            {if $feed.feedtype != 'vcr'}
               <a href="{$language}/live/view/{$feed.id},{$stream.id},{$feed.name|filenameize}"><b>{$stream.name|escape:html}</b></a>
-            </td>
-          {/if}
+            {/if}
+          </td>
           <td class="streamquality">{$l->getLov('quality', $language, $stream.quality)}</td>
           <td class="streamcompatibility nobr">
             {if $stream.isdesktopcompatible}<img src="{$STATIC_URI}images/icons/desktop.png" title="Desktop" alt="Desktop"/>{/if}
@@ -52,7 +52,8 @@
                     {$l->getLov('streamstatus', $language, $stream.status)}
                     <a href="{$language}/live/togglestream/{$stream.id}?start=0" class="submitbutton">{#live__stoprecord#}</a>
                   {else}
-                    {$l->getLov('streamstatus', $language, $stream.status)}
+                    {assign var=streamstatus value=$stream.status|default:''}
+                    {$l->getLov('streamstatus', $language, $streamstatus)}
                   {/if}
                 {else}
                   {#live__streamerror#|sprintf:$stream.status}

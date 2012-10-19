@@ -17,7 +17,8 @@ $config['groups[]']['valuesql']        = "
   WHERE livefeedid = " . $this->application->getNumericParameter('id')
 ;
 
-if ( $this->feedModel->row['feedtype'] == 'live' )
+if ( $this->feedModel->row['feedtype'] == 'live' ) {
+  
   $config['feedtype']['validation'] = array(
     array(
       'type' => 'custom',
@@ -25,3 +26,14 @@ if ( $this->feedModel->row['feedtype'] == 'live' )
       'js'   => '(<FORM.feedtype> != "live")? confirm(' . json_encode( $l('live', 'feedtypechange') ) . '): true',
     ),
   );
+  
+} elseif ( $this->feedModel->row['feedtype'] == 'vcr' ) {
+  
+  if ( !$this->feedModel->canDeleteFeed() )
+    unset(
+      $config['hascontent'],
+      $config['feedtype'], // nem változtatható
+      $config['recordinglinkid']['validation'][0]['anddepend']
+    );
+  
+}

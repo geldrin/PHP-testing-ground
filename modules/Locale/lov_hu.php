@@ -149,6 +149,7 @@ return array(
     'disconnecting' => 'Felvétel lebontása...',
     'upload'        => 'Felvétel feldolgozása folyamatban...',
     'ready'         => 'Felvétel feldolgozása folyamatban...',
+    ''              => '',
   ),
   
   'quality' => array(

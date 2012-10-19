@@ -43,7 +43,7 @@ class Modifyfeed extends \Visitor\HelpForm {
     $values       = $this->form->getElementValues( 0 );
     $createstream = false;
     
-    if ( $this->feedModel->row['feedtype'] != $values['feedtype'] ) {
+    if ( isset( $values['feedtype'] ) and $this->feedModel->row['feedtype'] != $values['feedtype'] ) {
       
       // minden streamet torlunk, valtozott a feedtype
       $this->feedModel->deleteStreams();
@@ -53,7 +53,8 @@ class Modifyfeed extends \Visitor\HelpForm {
       } else
         $createstream = true; // es ha elo streamre valtotta at akkor elkuldjuk streamet csinalni
       
-    }
+    } elseif ( !isset( $values['feedtype'] ) )
+      $createstream = false;
     
     $this->feedModel->clearAccess();
     
@@ -87,7 +88,7 @@ class Modifyfeed extends \Visitor\HelpForm {
     
     $this->feedModel->updateRow( $values );
     
-    if ( $values['feedtype'] == 'vcr' ) {
+    if ( $this->feedModel->row['feedtype'] == 'vcr' ) {
       
       if (
            $this->streamreclinkid != $values['recordinglinkid'] and

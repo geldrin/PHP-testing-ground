@@ -228,6 +228,9 @@ class Controller extends \Visitor\Controller {
       $feedModel->row['channelid']
     );
     
+    if ( $feedModel->row['feedtype'] == 'vcr' and !$feedModel->canDeleteFeed() )
+      throw new \Exception("VCR helszín törles nem lehetséges!");
+    
     $feedModel->delete( $feedModel->id );
     $this->redirect(
       $this->application->getParameter(

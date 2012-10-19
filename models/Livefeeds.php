@@ -109,9 +109,15 @@ class Livefeeds extends \Springboard\Model {
     
   }
   
-  public function getStreams() {
+  public function getStreams( $feedid = null ) {
     
-    $this->ensureID();
+    if ( !$feedid ) {
+      
+      $this->ensureID();
+      $feedid = $this->id;
+      
+    }
+    
     return $this->db->getAssoc("
       SELECT
         id AS streamid,
@@ -127,7 +133,7 @@ class Livefeeds extends \Springboard\Model {
         isioscompatible,
         timestamp
       FROM livefeed_streams
-      WHERE livefeedid = '" . $this->id . "'
+      WHERE livefeedid = '" . $feedid . "'
     ");
     
   }
@@ -500,6 +506,28 @@ class Livefeeds extends \Springboard\Model {
         $sessionid,
         $this->id
       );
+    
+  }
+  
+  public function canDeleteFeed( $feed = null ) {
+    
+    if ( !$feed ) {
+      
+      $this->ensureObjectLoaded();
+      $feed = $this->row;
+      
+    }
+    
+    if ( $feed['feedtype'] != 'vcr' )
+      return true;
+    
+    $streams = $this->getStreams( $feed['id'] );
+    $stream  = reset( $streams );
+    
+    if ( $stream['status'] and $stream['status'] != 'ready' )
+      return false;
+    else
+      return true;
     
   }
   

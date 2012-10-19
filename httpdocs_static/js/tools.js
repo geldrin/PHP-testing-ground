@@ -210,10 +210,17 @@ function setupFeed( elems ) {
   
   elems.change(function() {
     
-    if ( elems.filter(':checked').val() == 'vcr' )
+    if ( elems.filter(':checked').val() == 'vcr' ) {
+      
+      $j('input[name=hascontent]').parents('tr').hide();
       $j('#recordinglinkid').parents('tr').show();
-    else
+      
+    } else {
+      
+      $j('input[name=hascontent]').parents('tr').show();
       $j('#recordinglinkid').parents('tr').hide();
+      
+    }
     
   }).change();
   

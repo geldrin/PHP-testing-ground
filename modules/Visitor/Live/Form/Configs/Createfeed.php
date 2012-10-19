@@ -89,6 +89,7 @@ if ( $this->controller->organization['issecurestreamingenabled'] )
     'type'        => 'inputRadio',
     'displayname' => $l('live', 'issecurestreamingforced'),
     'values'      => $l->getLov('encryption'),
+    'value'       => 0,
     'validation'  => array(
       array('type' => 'required'),
     ),

@@ -129,6 +129,7 @@ return array(
     'disconnecting' => 'Recording stopping...',
     'upload'        => 'Recording processing...',
     'ready'         => 'Recording processing...',
+    ''              => '',
   ),
   
   'quality' => array(
