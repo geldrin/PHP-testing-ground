@@ -672,17 +672,26 @@ class Controller extends \Visitor\Controller {
       $this->application->getNumericParameter('id')
     );
     
-    $user      = $this->bootstrap->getSession('user');
-    $access    = $this->bootstrap->getSession('recordingaccess');
-    $accesskey = $recordingsModel->id . '-' . (int)$recordingsModel->row['issecurestreamingforced'];
-    $needauth  = false;
+    $user         = $this->bootstrap->getSession('user');
+    $access       = $this->bootstrap->getSession('recordingaccess');
+    $accesskey    = $recordingsModel->id . '-' . (int)$recordingsModel->row['issecurestreamingforced'];
+    $needauth     = false;
+    $nopermission = false;
+    $l            = $this->bootstrap->getLocalization();
     
     $access[ $accesskey ] = $recordingsModel->userHasAccess( $user );
     
-    if ( $access[ $accesskey ] === 'registrationrestricted' )
+    if (
+         in_array( $access[ $accesskey ], array(
+             'registrationrestricted',
+             'grouprestricted',
+             'departmentrestricted',
+           ), true // strict = true
+         )
+       )
       $needauth = true;
     elseif ( $access[ $accesskey ] !== true )
-      $this->redirectToController('contents', $access[ $accesskey ] );
+      $nopermission = true;
     
     $mobilehq = false;
     if ( $recordingsModel->row['mobilevideoreshq'] ) {
@@ -736,7 +745,17 @@ class Controller extends \Visitor\Controller {
     if ( $needauth ) {
       
       $flashdata['authorization_need']    = true;
-      $flashdata['authorization_gateway'] = $this->bootstrap->baseuri . 'hu/api';
+      $flashdata['authorization_gateway'] =
+        $this->bootstrap->baseuri . 'hu/api'
+      ;
+      
+    }
+    
+    if ( $nopermission ) {
+      
+      $flashdata['authorization_need']      = true;
+      $flashdata['authorization_loginForm'] = false;
+      $flashdata['authorization_message']   = $l('recordings', 'nopermission');
       
     }
     

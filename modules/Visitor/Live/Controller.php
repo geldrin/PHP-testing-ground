@@ -63,15 +63,28 @@ class Controller extends \Visitor\Controller {
     
     $access[ $accesskey ] = $feedModel->isAccessible( $user );
     
-    if ( $access[ $accesskey ] !== true )
-      $this->redirectToController('contents', $access[ $accesskey ] );
-    
     $channelModel = $this->modelIDCheck('channels', $feedModel->row['channelid'] );
     $streamid     = $this->application->getNumericParameter('streamid');
     $browserinfo  = $this->bootstrap->getSession('browser');
     $fullplayer   = $this->application->getParameter('player', true );
     $chromeless   = $this->application->getParameter('chromeless');
     $displaychat  = true;
+    $needauth     = false;
+    $nopermission = false;
+    
+    if (
+         $chromeless and in_array( $access[ $accesskey ], array(
+             'registrationrestricted',
+             'grouprestricted',
+             'departmentrestricted',
+           ), true // strict = true
+         )
+       )
+      $needauth = true;
+    elseif ( $chromeless and $access[ $accesskey ] !== true )
+      $nopermission = true;
+    elseif ( $access[ $accesskey ] !== true )
+      $this->redirectToController('contents', $access[ $accesskey ] );
     
     if ( !count( $browserinfo ) )
       $browserinfo->setArray( \Springboard\Browser::getInfo() );
@@ -113,6 +126,23 @@ class Controller extends \Visitor\Controller {
         $this->toSmarty['STATIC_URI'] .
         'js/flash_locale_' . $flashdata['language'] . '.json'
       ;
+    
+    if ( $needauth ) {
+      
+      $flashdata['authorization_need']    = true;
+      $flashdata['authorization_gateway'] =
+        $this->bootstrap->baseuri . 'hu/api'
+      ;
+      
+    }
+    
+    if ( $nopermission ) {
+      
+      $flashdata['authorization_need']      = true;
+      $flashdata['authorization_loginForm'] = false;
+      $flashdata['authorization_message']   = $l('recordings', 'nopermission');
+      
+    }
     
     $this->toSmarty['flashdata'] = $flashdata;
     
