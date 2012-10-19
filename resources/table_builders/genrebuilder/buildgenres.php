@@ -4,7 +4,7 @@ define('PRODUCTION', 0 );
 //define('DEBUG', true );
 include_once( BASE_PATH . 'libraries/Springboard/Application/Cli.php');
 
-$app = new Springboard\Application\Cli();
+$app = new Springboard\Application\Cli( BASE_PATH, PRODUCTION );
 $fd  = fopen('genres.csv', 'r');
 
 $genres = array();
@@ -18,7 +18,7 @@ while ( ( $data = fgetcsv( $fd, 1000, ';') ) !== false )
     'origparentid'  => $data[2],
   );
 
-$file = $this->bootstrap->config['datapath'] . 'defaultvalues/genres.php';
+$file = $app->bootstrap->config['datapath'] . 'defaultvalues/genres.php';
 file_put_contents(
   $file,
   "<?php\nreturn " . var_export( $genres, true ) . ";\n"

@@ -93,8 +93,7 @@ $config = array(
 );
 
 if (
-     $this->parentchannelModel and $this->parentchannelModel->id and
-     !$this->parentchannelModel->row['ispublic']
+     $this->parentchannelModel and $this->parentchannelModel->id
    ) {
   
   $config['ispublic']['html']    = 'disabled="disabled"';

@@ -3,6 +3,10 @@
 include('httpapi.php');
 
 $api       = new Api('info@dotsamazing.com', 'asdasd');
+
+// ha kell a var_dump kijelzes, akkor ezzel bekapcsolhato:
+// $api->debug = true;
+
 $recording = $api->uploadRecording('/home/sztanpet/teleconnect/resources/local/video.flv', 'hun');
 
 if ( $recording and isset( $recording['data']['id'] ) ) {
