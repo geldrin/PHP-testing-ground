@@ -3,6 +3,7 @@
 class Api {
 //  public $apiurl = 'http://dev.videosquare.eu/hu/api';
   public $apiurl = 'http://videosquare.eu/hu/api';
+  public $debug = false;
   
   protected $curl;
   protected $email;
@@ -158,14 +159,27 @@ class Api {
 
     $this->initCurl( $options );
     $json = curl_exec( $this->curl );
-    $data = json_decode( $json, true );
-    
-    echo "\n\n\n-----" . $action . "-----\n";
-    var_dump( $data, $options, $json, curl_error( $this->curl ) );
-    echo "------------------------\n";
 
-    return $data;
-    
+    if ( $json === false )
+
+      throw new Exception(
+        'videosquare HTTP API call CURL error: ' . curl_error( $this->curl )
+      );
+
+    else {
+
+      $data = json_decode( $json, true );
+
+      if ( $this->debug ) {
+        echo "\n\n\n-----" . $action . "-----\n";
+        var_dump( $data, $options, $json, curl_error( $this->curl ) );
+        echo "------------------------\n";
+      }
+
+      return $data;
+
+    }
+
   }
   
 }
