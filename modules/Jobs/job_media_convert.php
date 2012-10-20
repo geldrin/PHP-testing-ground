@@ -74,7 +74,7 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_media_convert.stop' ) and 
 		$recording = array();
 		$uploader_user = array();
 
-//update_db_recording_status(12, "reconvert");
+//update_db_recording_status(173, "reconvert");
 //update_db_masterrecording_status(12, "onstorage");
 
 		// Query next job - exit if none
@@ -494,6 +494,8 @@ global $app, $jconf;
 		return FALSE;
 	}
 
+//echo "playtime = " . secs2hms($playtime) . "\n";
+
 	// Calculate thumbnail step
 	$vthumbs_maxframes = $jconf['thumb_video_numframes'];
 	if ( floor($playtime) < $vthumbs_maxframes ) $vthumbs_maxframes = floor($playtime);
@@ -531,7 +533,8 @@ global $app, $jconf;
 
 //		$command  = CONVERSION_NICE . " ffmpeg -y -v " . FFMPEG_LOGLEVEL . " -ss " . $position_sec . " -i " . $master_filename . " " . $deinterlace . " -an ";
 //		$command .= " -vframes 1 -r 1 -vcodec mjpeg -f mjpeg " . $orig_thumb_filename ." 2>&1";
-		$command  = $jconf['nice'] . " ffmpegthumbnailer -i " . $recording['source_file'] . " -o " . $orig_thumb_filename . " -s0 -q8 -t" . secs2hms($position_sec);
+		$command  = $jconf['nice'] . " ffmpegthumbnailer -i " . $recording['source_file'] . " -o " . $orig_thumb_filename . " -s0 -q8 -t" . secs2hms($position_sec) . " 2>&1";
+//echo $command . "\n";
 
 		clearstatcache();
 
@@ -539,13 +542,21 @@ global $app, $jconf;
 		$output_string = $output['cmd_output'];
 		$result = $output['code'];
 		// ffmpegthumbnailer (ffmpeg) returns -1 on success (?)
+//echo "ffmpegthumb: " . $result . "\n";
+//echo "olen = " . strlen($output_string) . "\n";
 		if ( $result < 0 ) $result = 0;
 
 		if ( ( $result != 0 ) || !file_exists($orig_thumb_filename) || ( filesize($orig_thumb_filename) < 1 ) ) {
 			// If ffmpeg error, we log messages to an array and jump to first frame
 			$errors['messages'] .= "[ERROR] ffmpeg failed (frame: " . $i . ", position: " . $position_sec . "sec).\n";
 			$errors['commands'] .= "Frame " . $i . " command:\n" . $command . "\n\n";
-			$errors['data'] .= "Frame " . $i . " output: " . $output_string . "\n\n";
+			if ( strlen($output_string) > 500 ) {
+				$output_len = strlen($output_string);
+				$output_normalized = substr($output_string, 0, 250) . "\n...\n" . substr($output_string, $output_len - 250, $output_len);
+			} else {
+				$output_normalized = $output_string;
+			}
+			$errors['data'] .= "Frame " . $i . " output: " . $output_normalized . "\n\n";
 			$iserror = TRUE;
 			continue;
 		}
@@ -600,6 +611,8 @@ global $app, $jconf;
 	}	// for loop
 
 	$recording['thumbnail_numberofindexphotos'] = $frame_number;
+
+	if ( $recording['thumbnail_numberofindexphotos'] == 0 ) $recording['thumbnail_indexphotofilename'] = "images/videothumb_audio_placeholder.png?rid=" . $recording['id'];
 
 	$duration = time() - $time_start;
 	$mins_taken = round( $duration / 60, 2);
