@@ -142,7 +142,10 @@ class Controller extends \Visitor\Controller {
   }
   
   // pure api hivas, nem erheto el apin kivulrol (mert nincs a permission tombbe)
-  public function authenticateAction( $email, $password, $recordingid, $feedid ) {
+  public function authenticateAction( $email, $password, $recordingid = null, $feedid = null ) {
+    
+    if ( !$email or !$password )
+      return false;
     
     $userModel = $this->bootstrap->getModel('users');
     $uservalid = $userModel->selectAndCheckUserValid(
