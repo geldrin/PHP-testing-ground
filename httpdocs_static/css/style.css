@@ -2224,6 +2224,9 @@ a#currentusername span {
 #feeds td.streamcolumn {
   padding: 22px 5px;
 }
+#feeds td.streamactions {
+  width: 200px;
+}
 #feeds td.livefeedrow {
   padding: 25px 0 0 0;
   width: 30px;

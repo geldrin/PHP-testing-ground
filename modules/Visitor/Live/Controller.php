@@ -19,6 +19,7 @@ class Controller extends \Visitor\Controller {
     'deletestream'         => 'liveadmin',
     'managefeeds'          => 'liveadmin',
     'togglestream'         => 'liveadmin',
+    'getstreamstatus'      => 'liveadmin',
     'checkstreamaccess'    => 'public',
     'securecheckstreamaccess' => 'public',
   );
@@ -468,6 +469,32 @@ class Controller extends \Visitor\Controller {
   
   public function securecheckstreamaccessAction() {
     return $this->checkstreamaccessAction( true );
+  }
+  
+  public function getstreamstatusAction() {
+    
+    $streamModel = $this->bootstrap->getModel('livefeed_streams');
+    $statuses    = $streamModel->getStatusForIDs(
+      $this->application->getParameter('id')
+    );
+    
+    $data = array();
+    foreach( $statuses as $key => $value ) {
+      
+      $this->toSmarty['stream'] = $data[ $key ] = $value;
+      $data[ $key ]['html']     =
+        $this->fetchSmarty('Visitor/Live/Managefeeds_streamaction.tpl')
+      ;
+      
+    }
+    
+    $this->jsonOutput( array(
+        'status'     => 'success',
+        'data'       => $data,
+        'polltimems' => 5000,
+      )
+    );
+    
   }
   
 }

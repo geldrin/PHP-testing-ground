@@ -25,6 +25,7 @@ $j(document).ready(function() {
   runIfExists('.liveembed', setupLiveEmbed );
   runIfExists('.livecompatibility', setupLiveCompatibility );
   runIfExists('.streambroadcastlink', setupBroadcastLink );
+  runIfExists('#feeds .needpoll', setupStreamPoll );
   
   $j('#scriptingcontainer').show();
   
@@ -62,6 +63,57 @@ function setupConfirm( elems ) {
       e.preventDefault();
     
   });
+  
+}
+
+function setupStreamPoll( elems ) {
+  
+  var polldata = {id: []};
+  var pollurl  = language + '/live/getstreamstatus';
+  elems.each(function() {
+    
+    var id = $j(this).attr('data-streamid');
+    if ( id )
+      polldata.id.push( id );
+    
+  });
+  
+  var updateStatuses = function( data ) {
+    
+    if ( !data || data.status != 'success' )
+      return;
+    
+    for (var i = data.data.length - 1; i >= 0; i--) {
+      
+      var stream = data.data[i];
+      var elem   = $j('#stream' + stream.id );
+      
+      if ( elem.attr('data-streamstatus') == stream.status )
+        continue;
+      
+      elem.attr('data-streamstatus', stream.status );
+      elem.html( stream.html );
+      
+    };
+    
+    setTimeout( poll, data.polltimems || 5000 );
+    
+  };
+  
+  var poll = function() {
+    
+    $j.ajax({
+      cache   : false,
+      data    : polldata,
+      dataType: 'json',
+      success : updateStatuses,
+      type    : 'GET',
+      url     : pollurl
+    });
+    
+  };
+  
+  poll();
   
 }
 
