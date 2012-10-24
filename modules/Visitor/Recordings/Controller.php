@@ -745,7 +745,7 @@ class Controller extends \Visitor\Controller {
     if ( $needauth ) {
       
       $flashdata['authorization_need']    = true;
-      $flashdata['authorization_gateway'] =
+      $flashdata['authorization_gateway'] = rawurlencode(
         $this->bootstrap->baseuri . 'hu/api?' .
         http_build_query( array(
             'format'      => 'json',
@@ -755,7 +755,7 @@ class Controller extends \Visitor\Controller {
             'recordingid' => $recordingsModel->id,
           )
         )
-      ;
+      );
       
     }
     

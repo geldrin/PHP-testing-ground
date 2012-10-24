@@ -147,6 +147,7 @@ class Controller extends \Visitor\Controller {
     if ( !$email or !$password )
       return false;
     
+    $l         = $this->bootstrap->getLocalization();
     $userModel = $this->bootstrap->getModel('users');
     $uservalid = $userModel->selectAndCheckUserValid(
       $this->organization['id'],
@@ -155,7 +156,7 @@ class Controller extends \Visitor\Controller {
     );
     
     if ( !$uservalid )
-      throw new \Exception("Access denied!");
+      throw new \Exception( $l('users', 'accessdenied') );
     
     $userModel->registerForSession();
     $userModel->updateLastlogin();
@@ -165,11 +166,10 @@ class Controller extends \Visitor\Controller {
       $recordingsModel = $this->modelIDCheck( 'recordings', $recordingid, false );
       
       if ( !$recordingsModel )
-        throw new \Exception("No such recording found");
+        throw new \Exception( $l('recordings', 'norecording') );
       
       $user            = $this->bootstrap->getSession('user');
       $access          = $recordingsModel->userHasAccess( $user );
-      $l               = $this->bootstrap->getLocalization();
       
       if ( $access !== true )
         throw new \Exception( $l('recordings', 'nopermission') );
@@ -179,11 +179,10 @@ class Controller extends \Visitor\Controller {
       $feedModel = $this->modelIDCheck( 'livefeeds', $feedid );
       
       if ( !$feedModel )
-        throw new \Exception("No such feed found");
+        throw new \Exception( $l('live', 'nofeed') );
       
       $user      = $this->bootstrap->getSession('user');
       $access    = $feedModel->isAccessible( $user );
-      $l         = $this->bootstrap->getLocalization();
       
       if ( $access !== true )
         throw new \Exception( $l('recordings', 'nopermission') );
