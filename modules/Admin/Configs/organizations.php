@@ -9,9 +9,9 @@ $config = Array(
 
   'id' => Array(
     'type'  => 'inputHidden',
-    'value' => '0'
+    'value' => '0',
   ),
-  // TODO organizationid - amihez tartoznak az intezmenyek
+  
   'parentid' => Array(
     'displayname' => 'Szülő intézmény',
     'type'        => 'selectDynamic',
@@ -93,6 +93,13 @@ $config = Array(
         'minimum'  => 2,
         'maximum'  => 512,
         'required' => false,
+      ),
+    ),
+    'handlers' => array(
+      'clearcache' => array(
+        array(
+          'key' => 'organizations-%domain%',
+        ),
       ),
     ),
   ),

@@ -24,7 +24,7 @@ class Form extends \Springboard\Controller\Admin\Form {
     
     $model->select( $values['id'] );
     $model->updateRow( $values );
-    
+    $this->runHandlers( $model );
     $this->controller->redirect('organizations/index');
     
   }
@@ -40,6 +40,7 @@ class Form extends \Springboard\Controller\Admin\Form {
     if ( $values['parentid'] == 0 )
       $orgModel->setup();
     
+    $this->runHandlers( $orgModel );
     $this->controller->redirect('organizations/index');
     
   }
