@@ -451,7 +451,7 @@ class Recordings extends \Springboard\Model {
     $duration = strval( $duration );
     if (
          !preg_match(
-           '/^(?:(?<hour>\d+)h)? ?(?:(?<min>\d+)mn)? ?(?:(?<sec>\d+)s)? ?(?:(?<milisec>\d+)ms)?$/U',
+           '/^(?:(?<hour>\d+)h)? ?(?:(?<min>\d+)mn)? ?(?:(?<sec>\d+)s)? ?(?:(?<milisec>\d+)ms)?$/',
            $duration,
            $matches
          )
@@ -512,7 +512,7 @@ class Recordings extends \Springboard\Model {
     $audio   = current( $xml->xpath('File/track[@type="Audio"][1]') );
     
     if ( !$general or ( !$video and !$audio ) )
-      throw new InvalidFileTypeException('Unrecognized file, output: ' . $output );
+      throw new InvalidFileTypeException('Unrecognized file, output was: ' . $output );
     
     if ( $video and $audio )
       $mediatype = 'video';
@@ -531,7 +531,7 @@ class Recordings extends \Springboard\Model {
     $videodar          = null;
     $videobitrate      = null;
     $videobitratemode  = null;
-    $videoisinterlaced = null;
+    $videoisinterlaced = null; // nem adunk neki erteket sose, torolni kene?
     $videolength       = null;
     $audiocodec        = null;
     $audiochannels     = null;
