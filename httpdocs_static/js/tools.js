@@ -833,6 +833,26 @@ var flashdefaults = {
   }
 }
 
+function onLiveFlashLogin() {
+  
+  $j.ajax({
+    cache   : false,
+    dataType: 'json',
+    success : function( data ) {
+      
+      if ( !data || data.status != 'success' )
+        return;
+      
+      $j('#chatinputcontainer').html( data.html );
+      
+      
+    },
+    type    : 'GET',
+    url     : chatloginurl
+  });
+  
+}
+
 function setupLiveChat() {
   
   var chat = new livechat('#chatcontainer', chatpollurl, chatpolltime );
@@ -851,7 +871,7 @@ var livechat = function( container, pollurl, polltime ) {
     e.preventDefault();
     self.onModerate( $j(this) );
   });
-  $j('#live_createchat').submit(function(e) {
+  $j('#live_createchat').live('submit', function(e) {
     e.preventDefault();
     self.onSubmit();
   });

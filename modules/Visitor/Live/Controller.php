@@ -7,6 +7,7 @@ class Controller extends \Visitor\Controller {
     'details'              => 'public',
     'view'                 => 'public',
     'getchat'              => 'public',
+    'refreshchatinput'     => 'public',
     'createchat'           => 'member',
     'moderatechat'         => 'liveadmin',
     'create'               => 'liveadmin',
@@ -153,8 +154,10 @@ class Controller extends \Visitor\Controller {
       
     }
     
-    $this->toSmarty['flashdata'] = $flashdata;
+    if ( $chromeless and $displaychat )
+      $flashdata['authorization_callback'] = 'onLiveFlashLogin';
     
+    $this->toSmarty['flashdata']   = $flashdata;
     $this->toSmarty['livehttpurl'] = $feedModel->getMediaUrl(
       'livehttp',
       $currentstream['keycode'],
@@ -492,6 +495,23 @@ class Controller extends \Visitor\Controller {
         'status'     => 'success',
         'data'       => $data,
         'polltimems' => 5000,
+      )
+    );
+    
+  }
+  
+  public function refreshchatinputAction() {
+    
+    $feedModel = $this->modelIDCheck(
+      'livefeeds',
+      $this->application->getNumericParameter('id')
+    );
+    
+    $this->toSmarty['feed']       = $feedModel->row;
+    $this->toSmarty['chromeless'] = true;
+    $this->jsonOutput( array(
+        'status' => 'success',
+        'html'   => $this->fetchSmarty('Visitor/Live/Chatinput.tpl'),
       )
     );
     
