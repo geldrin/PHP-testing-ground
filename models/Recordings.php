@@ -445,7 +445,50 @@ class Recordings extends \Springboard\Model {
     return $ret;
     
   }
-
+  
+  protected function mediainfoDurationToSeconds( $duration ) {
+    
+    $duration = strval( $duration );
+    if (
+         !preg_match(
+           '/^(?:(?<hour>\d+)h)? ?(?:(?<min>\d+)mn)? ?(?:(?<sec>\d+)s)? ?(?:(?<milisec>\d+)ms)?$/U',
+           $duration,
+           $matches
+         )
+       )
+      throw new \Exception("Unable to parse mediainfo duration!");
+    
+    $ret = 0;
+    if ( isset( $matches['hour'] ) )
+      $ret += $matches['hour'] * 60 * 60;
+    
+    if ( isset( $matches['min'] ) )
+      $ret += $matches['min'] * 60;
+    
+    if ( isset( $matches['sec'] ) )
+      $ret += $matches['sec'];
+    
+    if ( isset( $matches['milisec'] ) )
+      $ret += $matches['milisec'] / 1000;
+    
+    return $ret;
+    
+  }
+  
+  protected function getMediainfoNumericValue( $elem, $isfloat = false, $scale = 1 ) {
+    
+    $elem = strval( $elem );
+    if ( !$elem )
+      return null;
+    
+    $elem = str_replace( ' ', '', $elem );
+    if ( $isfloat )
+      return floatval( $elem ) * $scale;
+    else
+      return intval( $elem ) * $scale;
+    
+  }
+  
   public function analyze( $filename, $originalfilename = null ) {
     
     $config = $this->bootstrap->config;
@@ -453,102 +496,115 @@ class Recordings extends \Springboard\Model {
     if ( !$originalfilename )
       $originalfilename = $filename;
     
-    $cmd = sprintf( $config['mplayer_identify'], escapeshellarg( $filename ) );
+    $cmd = sprintf( $config['mediainfo_identify'], escapeshellarg( $filename ) );
     exec( $cmd, $output, $return );
     $output = implode("\n", $output );
     
     if ( $return )
-      throw new \Exception('MPlayer returned non-zero exit code, output was: ' . $output, $return );
-    
-    if ( preg_match('/Seek failed/', $output ) )
-      throw new InvalidFileTypeException('Got unrecognized file, output was: ' . $output, $return );
+      throw new \Exception('Mediainfo returned non-zero exit code, output was: ' . $output, $return );
     
     if ( $this->bootstrap->debug )
       var_dump( $output );
     
-    preg_match_all('/(ID_.+)=(.*)\n/m', $output, $matches );
+    $xml     = new \SimpleXMLElement( $output );
+    $general = current( $xml->xpath('File/track[@type="General"][1]') );
+    $video   = current( $xml->xpath('File/track[@type="Video"][1]') );
+    $audio   = current( $xml->xpath('File/track[@type="Audio"][1]') );
     
-    $data = array();
-    foreach( $matches[1] as $key => $value )
-      $data[ $value ] = $matches[2][ $key ];
+    if ( !$general or ( !$video and !$audio ) )
+      throw new InvalidFileTypeException('Unrecognized file, output: ' . $output );
     
-    if ( isset( $data['ID_VIDEO_ID'] ) and !isset( $data['ID_AUDIO_ID'] ) and !isset( $data['ID_AUDIO_CODEC'] ) )
-      $mediatype = 'videoonly';
-    elseif ( isset( $data['ID_VIDEO_ID'] ) )
+    if ( $video and $audio )
       $mediatype = 'video';
-    else
+    elseif ( !$video and $audio )
       $mediatype = 'audio';
-    
-    if ( ( $pos = strrpos( $originalfilename, '.') ) !== false ) {
-      
-      $extension      = substr( $originalfilename, $pos + 1 );
-      $videocontainer = $extension;
-      
-    } else {
-      
-      $videocontainer = @$data['ID_AUDIO_CODEC'];
-      $extension      = null;
-      
-    }
-    
-    $videofps       = ( @$data['ID_VIDEO_FPS'] > 60? 25: @$data['ID_VIDEO_FPS'] );
-    $videocodec     = @$data['ID_VIDEO_FORMAT'];
-    $videobitrate   = @$data['ID_VIDEO_BITRATE'];
-
-    // 2Mbps video bitrate is assumed when mplayer gives 0
-    if ( $mediatype != "audio" and !$videobitrate )
-      $videobitrate = 2000000;
-    
-    $videores = null;
-    if ( @$data['ID_VIDEO_WIDTH'] ) {
-      
-      $videowidth  = $data['ID_VIDEO_WIDTH'];
-      $videoheight = $data['ID_VIDEO_HEIGHT'];
-      
-    } elseif ( @$data['ID_CLIP_INFO_NAME1'] == 'width' and @$data['ID_CLIP_INFO_NAME2'] == 'height' ) {
-      
-      $videowidth  = $data['ID_CLIP_INFO_VALUE1'];
-      $videoheight = $data['ID_CLIP_INFO_VALUE2'];
-      
-    }
-    
-    if ( isset( $videowidth ) and strlen( $videowidth ) and strlen( $videoheight ) ) {
-      
-      $videores = $videowidth . 'x' . $videoheight;
-      
-      if ( $videowidth > 1920 or $videoheight > 1080 )
-        throw new InvalidVideoResolutionException('Video bigger than 1920x1080');
-      
-    }
-    
-    if ( ( $key = array_search('duration', $matches[2] ) ) ) // no ID_LENGTH for flv-s, get it from the metadata
-      $videolength = $matches[2][ $key + 1 ]; // "ID_CLIP_INFO_NAME0 + 1 == ID_CLIP_INFO_VALUE0
-    elseif ( @$data['ID_LENGTH'] )
-      $videolength = $data['ID_LENGTH'];
+    elseif ( $video and !$audio )
+      $mediatype = 'videoonly';
     else
-      throw new InvalidLengthException('Length not found for the media, output was ' . $output );
+      throw new \Exception("Cannot happen wtf, output was: " . $output );
+    
+    $extension         = \Springboard\Filesystem::getExtension( $originalfilename )?: null;
+    $videocontainer    = $general->Format?: $extension;
+    $videofps          = null;
+    $videocodec        = null;
+    $videores          = null;
+    $videodar          = null;
+    $videobitrate      = null;
+    $videobitratemode  = null;
+    $videoisinterlaced = null;
+    $videolength       = null;
+    $audiocodec        = null;
+    $audiochannels     = null;
+    $audiomode         = null;
+    $audioquality      = null;
+    $audiofreq         = null;
+    $audiobitrate      = null;
+    
+    if ( $general->Duration )
+      $videolength = $this->mediainfoDurationToSeconds( $general->Duration );
     
     if ( $videolength <= $config['recordings_seconds_minlength'] )
       throw new InvalidLengthException('Recording length was less than ' . $config['recordings_seconds_minlength'] );
     
-    $audiofreq     = @$data['ID_AUDIO_RATE'];
-    $audiobitrate  = @$data['ID_AUDIO_BITRATE'];
-    $audiochannels = @$data['ID_AUDIO_NCH'];
-    $audiocodec    = @$data['ID_AUDIO_CODEC'];
-
-    // 128Kbps audio bitrate is assumed when mplayer gives 0
-    if ( $audiobitrate == 0 )
-      $audiobitrate = 128000;
-
-    if ( $audiocodec ) {
+    if ( $video ) {
       
-      $audiomode    = 'vbr';
-      $audioquality = 'lossy';
+      if ( $video->Duration )
+        $videolength = $this->mediainfoDurationToSeconds( $video->Duration );
+      else
+        throw new InvalidLengthException('Length not found for the media, output was ' . $output );
       
-    } else {
+      $videofps       = $this->getMediainfoNumericValue( $video->Frame_rate, true );
+      $videobitrate   = $this->getMediainfoNumericValue( $video->Bit_rate, false, 1000 );
+      $videocodec     = $video->Format;
+      if ( $video->Format_Info )
+        $videocodec  .= ' (' . $video->Format_Info . ')';
+      if ( $video->Format_profile )
+        $videocodec  .= ' / ' . $video->Format_profile;
       
-      $audiomode    = null;
-      $audioquality = null;
+      if ( $video->Bit_rate_mode == 'Constant' )
+        $videobitratemode = 'cbr';
+      else
+        $videobitratemode = 'vbr';
+      
+      if ( $video->Width and $video->Height ) {
+        
+        $videores = sprintf(
+          '%sx%s',
+          $this->getMediainfoNumericValue( $video->Width ),
+          $this->getMediainfoNumericValue( $video->Height )
+        );
+        
+        if ( $video->Display_aspect_ratio )
+          $videodar = $video->Display_aspect_ratio;
+        
+      }
+      
+    }
+    
+    if ( $audio ) {
+      
+      $audiocodec    = $audio->Format;
+      if ( $audio->Format_Info )
+        $audiocodec .= ' ( ' . $audio->Format_Info . ' ) ';
+      if ( $audio->Format_profile )
+        $audiocodec .= ' / ' . $audio->Format_profile;
+      
+      $audiofreq     = $this->getMediainfoNumericValue( $audio->Sampling_rate, false, 1000 );
+      $audiobitrate  = $this->getMediainfoNumericValue( $audio->Bit_rate, false, 1000 );
+      $audiochannels = $this->getMediainfoNumericValue( $audio->Channel_s_ );
+      
+      if ( $audio->Bit_rate_mode == 'Constant' )
+        $audiomode   = 'cbr';
+      elseif ( $audio->Bit_rate_mode == 'Variable' )
+        $audiomode   = 'vbr';
+      
+      if ( $audio->Compression_mode == 'Lossy' )
+        $audioquality = 'lossy';
+      elseif ( $audio->Compression_mode == 'Lossless' )
+        $audioquality = 'lossless';
+      
+      if ( !$videolength )
+        $videolength = $this->mediainfoDurationToSeconds( $audio->Duration );
       
     }
     
@@ -556,12 +612,15 @@ class Recordings extends \Springboard\Model {
       'mastermediatype'            => $mediatype,
       'mastervideoextension'       => $extension,
       'mastervideocontainerformat' => $videocontainer,
-      'mastervideofilename'        => basename( $originalfilename ),
+      'mastervideofilename'        => basename($originalfilename),
       'mastervideofps'             => $videofps,
       'mastervideocodec'           => $videocodec,
       'mastervideores'             => $videores,
+      'mastervideodar'             => $videodar,
       'mastervideobitrate'         => $videobitrate,
-      'masterlength'               => floor( $videolength ),
+      'mastervideobitratemode'     => $videobitratemode,
+      'mastervideoisinterlaced'    => $videoisinterlaced,
+      'masterlength'               => $videolength,
       'masteraudiocodec'           => $audiocodec,
       'masteraudiochannels'        => $audiochannels,
       'masteraudiobitratemode'     => $audiomode,
@@ -569,6 +628,9 @@ class Recordings extends \Springboard\Model {
       'masteraudiofreq'            => $audiofreq,
       'masteraudiobitrate'         => $audiobitrate,
     );
+    
+    foreach( $info as $key => $value )
+      $info[ $key ] = $value? strval( $value ): $value;
     
     return $this->metadata = $info;
     
