@@ -445,7 +445,7 @@ class Recordings extends \Springboard\Model {
     return $ret;
     
   }
-  
+
   public function analyze( $filename, $originalfilename = null ) {
     
     $config = $this->bootstrap->config;

@@ -173,6 +173,7 @@ CREATE TABLE `recordings` (
    `masterlength` float unsigned default null,
    `mastervideocodec` text,
    `mastervideores` text,
+   `mastervideodar` text,
    `mastervideobitrate` int(10) unsigned default null,
    `masteraudiocodec` text,
    `masteraudiochannels` text,
