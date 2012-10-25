@@ -29,16 +29,6 @@ $config = Array(
     'displayname' => $l('recordings', 'language'),
   ),
   
-  'isinterlaced' => array(
-    'type'        => 'inputRadio',
-    'displayname' => $l('recordings', 'isinterlaced'),
-    'value'       => '0',
-    'values'      => array(
-      '0' => $l('recordings', 'isinterlaced_normal'),
-      '1' => $l('recordings', 'isinterlaced_interlaced'),
-    ),
-  ),
-  
   'file' => Array(
     'type'        => 'inputFile',
     'displayname' => $l('recordings', 'file'),
