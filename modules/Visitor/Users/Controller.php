@@ -168,10 +168,18 @@ class Controller extends \Visitor\Controller {
       if ( !$recordingsModel )
         throw new \Exception( $l('recordings', 'norecording') );
       
+      $browserinfo     = $this->bootstrap->getBrowserInfo();
       $user            = $this->bootstrap->getSession('user');
-      $access          = $recordingsModel->userHasAccess( $user );
-      
-      if ( $access !== true )
+      $access          = $this->bootstrap->getSession('recordingaccess');
+      $accesskey       =
+        $recordingsModel->id . '-' .
+        (int)$recordingsModel->row['issecurestreamingforced']
+      ;
+      $access[ $accesskey ] =
+        $recordingsModel->userHasAccess( $user, null, $browserinfo['mobile'] )
+      ;
+    
+      if ( $access[ $accesskey ] !== true )
         throw new \Exception( $l('recordings', 'nopermission') );
       
     } elseif ( $feedid ) {
@@ -182,9 +190,12 @@ class Controller extends \Visitor\Controller {
         throw new \Exception( $l('live', 'nofeed') );
       
       $user      = $this->bootstrap->getSession('user');
-      $access    = $feedModel->isAccessible( $user );
+      $access    = $this->bootstrap->getSession('liveaccess');
+      $accesskey = $feedModel->id . '-0'; // TODO secure
       
-      if ( $access !== true )
+      $access[ $accesskey ] = $feedModel->isAccessible( $user );
+      
+      if ( $access[ $accesskey ] !== true )
         throw new \Exception( $l('recordings', 'nopermission') );
       
     }

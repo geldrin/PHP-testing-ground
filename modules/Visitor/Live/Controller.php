@@ -194,7 +194,13 @@ class Controller extends \Visitor\Controller {
       $this->toSmarty['liveadmin']     = $this->acl->hasPermission('liveadmin');
       // ha liveadmin akkor kiirjuk a moderalasra varo commenteket
       $this->toSmarty['chatitems']     = $feedModel->getChat( $this->toSmarty['liveadmin']? null: -1 );
-      $this->toSmarty['chat']          = $this->fetchSmarty('Visitor/Live/Chat.tpl');
+      
+      if ( $access[ $accesskey ] !== true ) {
+        $l                             = $this->bootstrap->getLocalization();
+        $this->toSmarty['chat']        = $l('live', 'chatnopermission');
+      } else
+        $this->toSmarty['chat']        = $this->fetchSmarty('Visitor/Live/Chat.tpl');
+      
       $this->toSmarty['lastmodified']  = md5( $this->toSmarty['chat'] );
       
     }
@@ -336,30 +342,44 @@ class Controller extends \Visitor\Controller {
     if ( !$livefeedid or $livefeedid < 0 )
       $this->jsonOutput( array('status' => 'error') );
     
-    if ( !$this->acl ) {
+    $access = $this->bootstrap->getSession('liveaccess');
+    
+    if ( $access[ $livefeedid . '-0' ] !== true ) { // TODO secure
       
-      $this->acl = $this->bootstrap->getAcl();
-      $this->acl->usersessionkey = $this->usersessionkey;
+      $l    = $this->bootstrap->getLocalization();
+      $data = array(
+        'html' => $l('live', 'chatnopermission'),
+      );
+      $data['lastmodified'] = md5( $data['html'] );
+      
+    } else {
+      
+      if ( !$this->acl ) {
+        
+        $this->acl = $this->bootstrap->getAcl();
+        $this->acl->usersessionkey = $this->usersessionkey;
+        
+      }
+      
+      $liveadmin = $this->acl->hasPermission('liveadmin');
+      $cache     = $this->getChatCache( $livefeedid, $liveadmin );
+      
+      if ( $cache->expired() or !$this->application->production ) {
+        
+        $feedModel        = $this->modelIDCheck( 'livefeeds', $livefeedid );
+        $excludemoderated = $liveadmin? null: -1; // ha liveadmin akkor kiirjuk a moderalasra varo commenteket
+        $chat             = $feedModel->getChat( $excludemoderated );
+        
+        $this->toSmarty['liveadmin'] = $liveadmin;
+        $this->toSmarty['chatitems'] = $chat;
+        $data                        = array('html' => $this->fetchSmarty('Visitor/Live/Chat.tpl') );
+        $data['lastmodified']        = md5( $data['html'] );
+        $cache->put( $data );
+        
+      } else
+        $data = $cache->get();
       
     }
-    
-    $liveadmin = $this->acl->hasPermission('liveadmin');
-    $cache     = $this->getChatCache( $livefeedid, $liveadmin );
-    
-    if ( $cache->expired() or !$this->application->production ) {
-        
-      $feedModel        = $this->modelIDCheck( 'livefeeds', $livefeedid );
-      $excludemoderated = $liveadmin? null: -1; // ha liveadmin akkor kiirjuk a moderalasra varo commenteket
-      $chat             = $feedModel->getChat( $excludemoderated );
-      
-      $this->toSmarty['liveadmin'] = $liveadmin;
-      $this->toSmarty['chatitems'] = $chat;
-      $data                        = array('html' => $this->fetchSmarty('Visitor/Live/Chat.tpl') );
-      $data['lastmodified']        = md5( $data['html'] );
-      $cache->put( $data );
-      
-    } else
-      $data = $cache->get();
     
     if ( $this->application->getParameter('lastmodified') == $data['lastmodified'] ) {
       
