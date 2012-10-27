@@ -165,6 +165,13 @@ $config = Array(
     'value'       => 0,
   ),
   
+  'issessionvalidationenabled' => array(
+    'displayname' => 'Felhasználók IP címének és böngésző azonosítójának ellenőrzése?',
+    'type'        => 'inputRadio',
+    'values'      => $l->getLov('yesno'),
+    'value'       => 0,
+  ),
+  
   'registrationtype' => array(
     'displayname' => 'Regisztráció típusa',
     'type'        => 'select',

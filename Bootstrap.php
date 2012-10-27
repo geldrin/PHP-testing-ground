@@ -15,6 +15,7 @@ class Bootstrap {
   public $basepath;
   public $production;
   public $overridedisablegzip = null;
+  public $validatesession = null;
   
   public function __construct( $application ) {
     
@@ -136,7 +137,24 @@ class Bootstrap {
       
     }
     
-    return $this->sessionstarted = session_start();
+    $this->sessionstarted = session_start();
+    if ( $this->validatesession and $this->sessionstarted ) {
+      
+      $sessionhijack = $this->getSession('antisessionhijack');
+      $token         = \Springboard\Session::getAntiHijackToken();
+      if ( !isset( $sessionhijack['token'] ) )
+        $sessionhijack['token'] = $token;
+      elseif ( $sessionhijack['token'] != $token ) {
+        
+        // "destroy"
+        foreach( $_SESSION as $key => $value )
+          unset( $_SESSION[ $key ] );
+        
+      }
+      
+    }
+    
+    return $this->sessionstarted;
     
   }
   

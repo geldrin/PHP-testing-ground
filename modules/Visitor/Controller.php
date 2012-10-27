@@ -51,11 +51,12 @@ class Controller extends \Springboard\Controller\Visitor {
     $this->toSmarty['supportemail'] = $this->bootstrap->config['mail']['fromemail'] =
       $this->application->config['mail']['fromemail'] = $organization['supportemail']
     ;
-    $this->toSmarty['organization'] = $this->organization        = $organization;
-    $this->bootstrap->baseuri       =
-    $this->toSmarty['BASE_URI']     = $organization['baseuri']   = $baseuri;
-    $this->bootstrap->staticuri     =
-    $this->toSmarty['STATIC_URI']   = $organization['staticuri'] = $staticuri;
+    $this->toSmarty['organization']   = $this->organization        = $organization;
+    $this->bootstrap->baseuri         =
+    $this->toSmarty['BASE_URI']       = $organization['baseuri']   = $baseuri;
+    $this->bootstrap->staticuri       =
+    $this->toSmarty['STATIC_URI']     = $organization['staticuri'] = $staticuri;
+    $this->bootstrap->validatesession = (bool)$organization['issessionvalidationenabled'];
     
     $this->organization = $organization;
     
