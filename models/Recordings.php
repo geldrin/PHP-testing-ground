@@ -525,6 +525,7 @@ class Recordings extends \Springboard\Model {
     
     $extension         = \Springboard\Filesystem::getExtension( $originalfilename )?: null;
     $videocontainer    = $general->Format?: $extension;
+    $videostreamid     = null;
     $videofps          = null;
     $videocodec        = null;
     $videores          = null;
@@ -533,6 +534,7 @@ class Recordings extends \Springboard\Model {
     $videobitratemode  = null;
     $videoisinterlaced = null; // nem adunk neki erteket sose, torolni kene?
     $videolength       = null;
+    $audiostreamid     = null;
     $audiocodec        = null;
     $audiochannels     = null;
     $audiomode         = null;
@@ -553,8 +555,8 @@ class Recordings extends \Springboard\Model {
       else
         throw new InvalidLengthException('Length not found for the media, output was ' . $output );
       
+      $videostreamid  = $this->getMediainfoNumericValue( $video->ID );
       $videofps       = $this->getMediainfoNumericValue( $video->Frame_rate, true );
-      $videobitrate   = $this->getMediainfoNumericValue( $video->Bit_rate, false, 1000 );
       $videocodec     = $video->Format;
       if ( $video->Format_Info )
         $videocodec  .= ' (' . $video->Format_Info . ')';
@@ -577,6 +579,17 @@ class Recordings extends \Springboard\Model {
         if ( $video->Display_aspect_ratio )
           $videodar = $video->Display_aspect_ratio;
         
+        $videobitrate = $video->Bit_rate ?: $general->Overall_bit_rate;
+        
+        if ( $videobitrate and stripos( $videobitrate, 'kbps' ) !== false )
+          $scale = 1000;
+        elseif ( $videobitrate and $stripos( $videobitrate, 'mbps' ) !== false )
+          $scale = 1000000;
+        else
+          $scale = 1;
+        
+        $videobitrate = $this->getMediainfoNumericValue( $videobitrate, false, $scale );
+        
       }
       
     }
@@ -589,6 +602,7 @@ class Recordings extends \Springboard\Model {
       if ( $audio->Format_profile )
         $audiocodec .= ' / ' . $audio->Format_profile;
       
+      $audiostreamid = $this->getMediainfoNumericValue( $audio->ID );
       $audiofreq     = $this->getMediainfoNumericValue( $audio->Sampling_rate, false, 1000 );
       $audiobitrate  = $this->getMediainfoNumericValue( $audio->Bit_rate, false, 1000 );
       $audiochannels = $this->getMediainfoNumericValue( $audio->Channel_s_ );
@@ -610,6 +624,7 @@ class Recordings extends \Springboard\Model {
     
     $info = array(
       'mastermediatype'            => $mediatype,
+      'mastervideostreamselected'  => $videostreamid,
       'mastervideoextension'       => $extension,
       'mastervideocontainerformat' => $videocontainer,
       'mastervideofilename'        => basename($originalfilename),
@@ -621,6 +636,7 @@ class Recordings extends \Springboard\Model {
       'mastervideobitratemode'     => $videobitratemode,
       'mastervideoisinterlaced'    => $videoisinterlaced,
       'masterlength'               => $videolength,
+      'masteraudiostreamselected'  => $audiostreamid,
       'masteraudiocodec'           => $audiocodec,
       'masteraudiochannels'        => $audiochannels,
       'masteraudiobitratemode'     => $audiomode,
@@ -630,7 +646,7 @@ class Recordings extends \Springboard\Model {
     );
     
     foreach( $info as $key => $value )
-      $info[ $key ] = $value? strval( $value ): $value;
+      $info[ $key ] = gettype( $value ) == 'object' ? strval( $value ): $value;
     
     return $this->metadata = $info;
     
