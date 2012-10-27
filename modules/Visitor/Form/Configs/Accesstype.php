@@ -50,7 +50,11 @@ $config['departments[]'] = array(
     ORDER BY weight, name
   ",
   'prefix'      => '<div class="formoverflowframe" id="departmentscontainer">',
-  'postfix'     => '</div>',
+  'postfix'     =>
+    '</div><div class="smallinfo">' .
+      $l('recordings', 'accesstype_departments_postfix') .
+    '</div>'
+  ,
   'itemlayout'  =>
     '<div class="cbxdynamiclevel%level%">'.
       '<span class="indent">%indent%</span> %checkbox% '.
