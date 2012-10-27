@@ -191,13 +191,14 @@ class Controller extends \Visitor\Controller {
         
       }
       
+      $this->toSmarty['needauth']      = $needauth;
       $this->toSmarty['liveadmin']     = $this->acl->hasPermission('liveadmin');
       // ha liveadmin akkor kiirjuk a moderalasra varo commenteket
       $this->toSmarty['chatitems']     = $feedModel->getChat( $this->toSmarty['liveadmin']? null: -1 );
       
       if ( $access[ $accesskey ] !== true ) {
         $l                             = $this->bootstrap->getLocalization();
-        $this->toSmarty['chat']        = $l('live', 'chatnopermission');
+        $this->toSmarty['chat']        = '&nbsp;';
       } else
         $this->toSmarty['chat']        = $this->fetchSmarty('Visitor/Live/Chat.tpl');
       
@@ -347,9 +348,7 @@ class Controller extends \Visitor\Controller {
     if ( $access[ $livefeedid . '-0' ] !== true ) { // TODO secure
       
       $l    = $this->bootstrap->getLocalization();
-      $data = array(
-        'html' => $l('live', 'chatnopermission'),
-      );
+      $data = array( 'html' => '&nbsp;' );
       $data['lastmodified'] = md5( $data['html'] );
       
     } else {
@@ -526,6 +525,9 @@ class Controller extends \Visitor\Controller {
       'livefeeds',
       $this->application->getNumericParameter('id')
     );
+    
+    if ( $feedModel->row['accesstype'] != 'registrations' )
+      $this->toSmarty['needauth'] = true;
     
     $this->toSmarty['feed']       = $feedModel->row;
     $this->toSmarty['chromeless'] = true;

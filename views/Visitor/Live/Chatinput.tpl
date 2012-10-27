@@ -8,6 +8,6 @@
   </form>
 {elseif $smarty.request.chromeless or $chromeless}
   <br/>
-  <a href="{$language}/users/login?chromeless=true&force=1&forward={$FULL_URI|escape:url}">{#live__logintochat#}</a>
+  <a href="{$language}/users/login?chromeless=true&force=1&forward={$FULL_URI|escape:url}">{if $needauth}{#live__chatneedauth#}{else}{#live__logintochat#}{/if}</a>
   <br/>
 {/if}

@@ -168,7 +168,6 @@ function setupChannels() {
     $j('#channels li li .channelname').each(function() {
       
       var level = $j(this).attr('class').match(/level(\d+)/)[1];
-      //var parents = $j(this).parentsUntil('.level2').filter('li');
       var margin  = 30 + ( 15 * ( level - 1 ) );
       $j(this).css('paddingLeft', margin + 'px' );
       
@@ -866,6 +865,9 @@ var livechat = function( container, pollurl, polltime ) {
   self.pollurl   = pollurl;
   self.polltime  = polltime;
   
+  if ( self.container.find('#chatlist').length == 0 )
+    self.container.hide();
+  
   self.container.scrollTop( self.container.get(0).scrollHeight );
   $j('a.moderate').live('click', function(e) {
     e.preventDefault();
@@ -927,6 +929,11 @@ livechat.prototype.onPoll = function( data ) {
   this.container.attr('data-lastmodified', data.lastmodified );
   this.container.html( data.html );
   this.container.scrollTop( this.container.get(0).scrollHeight );
+  
+  if ( this.container.find('#chatlist').length == 0 )
+    this.container.hide();
+  else
+    this.container.show();
   
 };
 livechat.prototype.onModerate = function( elem ) {
