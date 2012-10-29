@@ -481,7 +481,7 @@ class Recordings extends \Springboard\Model {
     if ( !$elem )
       return null;
     
-    $elem = str_replace( ' ', '', $elem );
+    $elem = str_replace( array(' ', '.'), '', $elem );
     if ( $isfloat )
       return floatval( $elem ) * $scale;
     else
