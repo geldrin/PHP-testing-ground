@@ -277,24 +277,33 @@ global $jconf, $app, $db, $global_log;
 	$smarty->assign('audio_bw', $recording_info['audio_bitrate']);
 	$smarty->assign('audio_sr', $recording_info['audio_srate']);
 
-	// Video configuration
-//	$recording_info['fps'] = $recording['contentmastervideofps'];
-	$recording_info['fps'] = max($recording['mastervideofps'], $recording['contentmastervideofps']);
-	$recording_info['video_bpp'] = $profile['video_bpp'];
-	//// Calculate PiP coordinates
+	//// Video configuration
+	// FPS: calculate max FPS, then check with profile settings
+	$recording_info['fps'] = round(max($recording['mastervideofps'], $recording['contentmastervideofps']));
+	if ( $recording_info['fps'] > $profile['video_maxfps'] ){
+		switch ($recording_info['fps']) {
+			case 60:
+				$recording_info['fps'] = 30;
+				break;
+			case 50:
+				$recording_info['fps'] = 25;
+				break;
+			default:
+				log_recording_conversion($recording['id'], $jconf['jobid_content_convert'], $jconf['dbstatus_conv_video'], "WARNING: Strange video FPS? Will not apply video_maxfps profile value. Info:\n\nInput FPS: " . $recording_info['fps'] . "\nProfile limit: " . $profile['video_maxfps'], "-", "-", 0, TRUE);
+		}
+	}
+	// Calculate PiP coordinates
 	calculate_mobile_pip($recording['mastervideores'], $recording['contentmastervideores'], $recording_info, $profile);
-	//// Video bandwidth
+	// Video bandwidth
+	$recording_info['video_bpp'] = $profile['video_bpp'];
 	$recording_info['video_bitrate'] = $profile['video_bpp'] * $recording_info['fps'] * $recording_info['res_x'] * $recording_info['res_y'];
 	//// Add to template
 	$smarty->assign('fps', $recording_info['fps']);
-
 	$smarty->assign('video_bw', ceil($recording_info['video_bitrate'] / 1000));
 	$smarty->assign('content_x', $recording_info['res_x']);
 	$smarty->assign('content_y', $recording_info['res_y']);
 	$smarty->assign('media_x', $recording_info['pip_res_x']);
 	$smarty->assign('media_y', $recording_info['pip_res_y']);
-
-//var_dump($recording_info);
 
 	// Generate black background PNG
 	$recording_info['pip_background'] = $recording['temp_directory'] . "black.png";

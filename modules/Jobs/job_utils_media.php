@@ -374,9 +374,31 @@ global $app, $jconf, $global_log;
 	$recording_info['format'] = $profile['format'];
 	$recording_info['video_codec'] = $profile['video_codec'];
 	$recording_info['playtime'] = $video_in['playtime'];
-	$recording_info['fps'] = $recording[$c_idx . 'mastervideofps'];
+	$recording_info['fps'] = round($recording[$c_idx . 'mastervideofps']);
 	$recording_info['interlaced'] = $video_in['interlaced'];
+	//// BPP value check and update: use input BPP if lower than profile BPP
 	$recording_info['video_bpp'] = $profile['video_bpp'];
+	if ( $video_in['bpp'] < $recording_info['video_bpp'] ) $recording_info['video_bpp'] = $video_in['bpp'];
+	//// FPS: check if we exceed profile limit
+	if ( $recording_info['fps'] > $profile['video_maxfps'] ){
+		switch ($recording_info['fps']) {
+			case 60:
+				$recording_info['fps'] = 30;
+				break;
+			case 50:
+				$recording_info['fps'] = 25;
+				break;
+			default:
+				log_recording_conversion($recording['id'], $jconf['jobid_media_convert'], $jconf['dbstatus_conv_video'], "WARNING: Strange video FPS? Will not apply video_maxfps profile value. Info:\n\nInput FPS: " . $recording_info['fps'] . "\nProfile limit: " . $profile['video_maxfps'], "-", "-", 0, TRUE);
+		}
+	}
+	//// Display Aspect Ratio (DAR): check and update if not square pixel
+/*
+1. Calculate normal AR: resX/resY
+2. Calculate DAR AR: M:N -> M/N
+3. if ( normal AR != DAR AR ) then change target resolution?
+TODO: run CLI tests
+*/
 	//// New resolution/scaler according to profile bounding box
 	$tmp = calculate_video_scaler($video_in['res_x'], $video_in['res_y'], $profile['video_bbox']);
 	$recording_info['scaler'] = $tmp['scaler'];

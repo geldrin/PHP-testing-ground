@@ -146,6 +146,7 @@ return array('config_jobs' => array(
 		'format'			=> "mp4",
 		'file_suffix'		=> "_mobile_lq",	// recID_<suffix>.<format>
 		'video_bbox'		=> "480x320",		// Bounding box
+		'video_maxfps'		=> 30,				// Max FPS
 		'video_bpp'			=> 0.06,			// resx * resy * fps * bpp = video codec bandwidth
 //		'video_bpp'			=> 0.078,			// resx * resy * fps * bpp = video codec bandwidth
 		'audio_codec'		=> "libfaac",		// AAC
@@ -172,6 +173,7 @@ return array('config_jobs' => array(
 		'format'			=> "mp4",
 		'file_suffix'		=> "_mobile_hq",	// recID_<suffix>.<format>
 		'video_bbox'		=> "1280x720",		// Bounding box
+		'video_maxfps'		=> 30,				// Max FPS
 //		'video_bpp'			=> 0.078,			// resx * resy * fps * bpp = video codec bandwidth
 		'video_bpp'			=> 0.045,			// resx * resy * fps * bpp = video codec bandwidth
 		'audio_codec'		=> "libfaac",		// AAC
@@ -196,6 +198,7 @@ return array('config_jobs' => array(
 		'format'			=> "mp4",
 		'file_suffix'		=> "_video_lq",		// recID_<suffix>.<format>
 		'video_bbox'		=> "640x360",		// Bounding box
+		'video_maxfps'		=> 60,				// Max FPS
 		'video_bpp'			=> 0.09,			// resx * resy * fps * bpp = video codec bandwidth
 //		'video_bpp'			=> 0.1,				// resx * resy * fps * bpp = video codec bandwidth
 		'audio_codec'		=> "libfaac",		// AAC
@@ -214,6 +217,7 @@ return array('config_jobs' => array(
 		'format'			=> "mp4",
 		'file_suffix'		=> "_video_hq",		// recID_<suffix>.<format>
 		'video_bbox'		=> "1280x720",		// Bounding box
+		'video_maxfps'		=> 60,				// Max FPS
 		'video_bpp'			=> 0.05,			// resx * resy * fps * bpp = video codec bandwidth
 //		'video_bpp'			=> 0.1,				// resx * resy * fps * bpp = video codec bandwidth
 		'audio_codec'		=> "libfaac",		// AAC
@@ -234,6 +238,7 @@ return array('config_jobs' => array(
 		'format'			=> "mp4",
 		'file_suffix'		=> "_content_lq",	// recID_<suffix>.<format>
 		'video_bbox'		=> "640x480",		// Video bounding box
+		'video_maxfps'		=> 60,				// Max FPS
 		'video_bpp'			=> 0.033,			// resx * resy * fps * bpp = video codec bandwidth
 		'audio_codec'		=> "libfaac",		// AAC
 		'audio_ch'			=> 1,				// Max. number of audio channels
@@ -251,6 +256,7 @@ return array('config_jobs' => array(
 		'format'			=> "mp4",
 		'file_suffix'		=> "_content_hq",	// recID_<suffix>.<format>
 		'video_bbox'		=> "1280x720",		// Video bounding box
+		'video_maxfps'		=> 60,				// Max FPS
 		'video_bpp'			=> 0.020,			// resx * resy * fps * bpp = video codec bandwidth
 		'audio_codec'		=> "libfaac",		// AAC
 		'audio_ch'			=> 2,				// Max. number of audio channels
