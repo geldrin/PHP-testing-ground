@@ -562,7 +562,8 @@ function setupEmbed() {
   
   $j('#embed input').bind('change keyup blur', function( e ) {
     
-    var id = $j(this).attr('id');
+    var id   = $j(this).attr('id');
+    var code = $j('#embedcode').val();
     
     if ( id.match('^embedstart_([hms])$') ) {
       
@@ -589,15 +590,28 @@ function setupEmbed() {
     if ( $j('#embedautoplay_yes:checked').length != 0 )
       params.push('autoplay=yes');
     
+    if ( $j('#embedfullscale_yes:checked').length != 0 ) {
+      
+      params.push('fullscale=yes');
+      code = code.replace(/width=".*?"/, 'width="950"');
+      code = code.replace(/height=".*?"/, 'height="' + $j('#embedcode').attr('data-fullscaleheight') + '"' );
+      
+    } else {
+      
+      code = code.replace(/width=".*?"/, 'width="480"');
+      code = code.replace(/height=".*?"/, 'height="' + $j('#embedcode').attr('data-normalheight') + '"' );
+      
+    }
+    
     if ( params.length == 0 ) {
       
-      $j('#embedcode').val( $j('#embedcode').val().replace(/src="(.*?)"/, 'src="' + url + '"') )
+      $j('#embedcode').val( code.replace(/src="(.*?)"/, 'src="' + url + '"') )
       return;
       
     }
     
     var newurl = url + '?' + params.join('&');
-    $j('#embedcode').val( $j('#embedcode').val().replace(/src="(.*?)"/, 'src="' + newurl + '"') )
+    $j('#embedcode').val( code.replace(/src="(.*?)"/, 'src="' + newurl + '"') )
     
   });
   

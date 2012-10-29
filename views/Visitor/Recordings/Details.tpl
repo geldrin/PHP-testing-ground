@@ -163,7 +163,7 @@
       <iframe width="480" height="{$height}" src="{$BASE_URI}{$language}/recordings/embed/{$recording.id}" frameborder="0" allowfullscreen="allowfullscreen"></iframe>
     {/capture}
     <label for="embedcode">{#recordings__embedcode#}:</label>
-    <textarea id="embedcode">{$embed|trim|escape:html}</textarea>
+    <textarea id="embedcode" data-fullscaleheight="{$flashheight}" data-normalheight="{$height}">{$embed|trim|escape:html}</textarea>
     <div class="settings">{#recordings__embedsettings#}:</div>
     <div class="settingrow">
       <label for="embedautoplay">{#recordings__embedautoplay#}:</label>
@@ -171,6 +171,13 @@
       <label for="embedautoplay_no">{#no#}</label>
       <input type="radio" name="embedautoplay" id="embedautoplay_yes" value="1"/>
       <label for="embedautoplay_yes">{#yes#}</label>
+    </div>
+    <div class="settingrow">
+      <label for="embedfullscale">{#recordings__embedfullscale#}:</label>
+      <input type="radio" name="embedfullscale" id="embedfullscale_no" checked="checked" value="0"/>
+      <label for="embedfullscale_no">{#no#}</label>
+      <input type="radio" name="embedfullscale" id="embedfullscale_yes" value="1"/>
+      <label for="embedfullscale_yes">{#yes#}</label>
     </div>
     <div class="settingrow">
       <label for="embedstart">{#recordings__embedstart#}:</label>

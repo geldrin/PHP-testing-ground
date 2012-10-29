@@ -1642,7 +1642,7 @@ class Recordings extends \Springboard\Model {
     if ( $this->row['offsetend'] )
       $data['timeline_virtualEnd'] = $this->row['offsetend'];
     
-    if ( $this->row['contentstatus'] == 'onstorage' ) {
+    if ( $this->row['contentstatus'] == 'onstorage' and !isset( $info['skipcontent'] ) ) {
       
       //$data['content_length']         = $this->row['contentmasterlength'];
       $data['media_secondaryStreams'] = array( $this->getMediaUrl('content', false, $domain ) );

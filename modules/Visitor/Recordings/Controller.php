@@ -652,7 +652,14 @@ class Controller extends \Visitor\Controller {
     
   }
   
-  protected function getPlayerHeight( $recordingsModel ) {
+  protected function getPlayerHeight( $recordingsModel, $fullscale = false ) {
+    
+    if ( $fullscale and $recordingsModel->row['mastermediatype'] == 'audio' and $recordingsModel->hasSubtitle() )
+      return '140';
+    elseif ( $fullscale and $recordingsModel->row['mastermediatype'] == 'audio' )
+      return '60';
+    elseif ( $fullscale )
+      return '530';
     
     if ( $recordingsModel->row['mastermediatype'] == 'audio' and $recordingsModel->hasSubtitle() )
       $height = '120';
@@ -733,9 +740,15 @@ class Controller extends \Visitor\Controller {
       $this->toSmarty['STATIC_URI']
     );
     
-    $flashdata = $recordingsModel->getFlashData( $this->toSmarty, session_id() );
     $autoplay  = $this->application->getParameter('autoplay');
     $start     = $this->application->getParameter('start');
+    $fullscale = $this->application->getParameter('fullscale');
+    
+    if ( !$fullscale )
+      $this->toSmarty['skipcontent'] = true;
+    
+    $flashdata = $recordingsModel->getFlashData( $this->toSmarty, session_id() );
+    
     if ( preg_match( '/^\d{1,2}h\d{1,2}m\d{1,2}s$/', $start ) )
       $flashdata['timeline_startPosition'] = $start;
     
@@ -767,8 +780,12 @@ class Controller extends \Visitor\Controller {
       
     }
     
-    $this->toSmarty['width']       = '480';
-    $this->toSmarty['height']      = $this->getPlayerHeight( $recordingsModel );
+    if ( $fullscale )
+      $this->toSmarty['width']     = '950';
+    else
+      $this->toSmarty['width']     = '480';
+    
+    $this->toSmarty['height']      = $this->getPlayerHeight( $recordingsModel, $fullscale );
     $this->toSmarty['containerid'] = 'vsq_' . rand();
     $this->toSmarty['recording']   = $recordingsModel->row;
     $this->toSmarty['flashdata']   = $flashdata;
