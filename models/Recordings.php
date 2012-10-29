@@ -481,7 +481,7 @@ class Recordings extends \Springboard\Model {
     if ( !$elem )
       return null;
     
-    $elem = str_replace( array(' ', '.'), '', $elem );
+    $elem = str_replace( ' ', '', $elem );
     if ( $isfloat )
       return floatval( $elem ) * $scale;
     else
@@ -603,7 +603,7 @@ class Recordings extends \Springboard\Model {
         $audiocodec .= ' / ' . $audio->Format_profile;
       
       $audiostreamid = $this->getMediainfoNumericValue( $audio->ID );
-      $audiofreq     = $this->getMediainfoNumericValue( $audio->Sampling_rate, false, 1000 );
+      $audiofreq     = $this->getMediainfoNumericValue( $audio->Sampling_rate, true, 1000 );
       $audiobitrate  = $this->getMediainfoNumericValue( $audio->Bit_rate, false, 1000 );
       $audiochannels = $this->getMediainfoNumericValue( $audio->Channel_s_ );
       
