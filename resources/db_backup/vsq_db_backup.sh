@@ -23,10 +23,6 @@ do
 
 	# mysqldump
 	filename=${db_backup[${i}]}_${date}.sql
-	/usr/bin/mysqldump -u ${mysql_user} -p"${mysql_pwd}" ${db_backup[${i}]} > /tmp/${filename}
-
-	# targz dump file
-	cd /tmp
-	tar -cvzf ${directory}/${filename}.tar.gz ${filename} 2> /dev/null
+	/usr/bin/mysqldump -u ${mysql_user} -p"${mysql_pwd}" ${db_backup[${i}]} | gzip -9 > ${directory}/${filename}.gz
 
 done
