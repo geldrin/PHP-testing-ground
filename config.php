@@ -79,8 +79,13 @@ $config = array(
     'port' => 6379,
   ),
   //----
+  'allowedextensions' => array(
+    'wmv', 'avi', 'mov', 'flv', 'mp4', 'asf', 'mp3', 'flac',
+    'ogg', 'wav', 'wma', 'mpg', 'mpeg', 'ogm', 'f4v', 'm4v', 'mkv',
+  ),
   'disable_uploads'  => false,
   'uploadpath'       => '/srv/upload/videosquare.eu/',
+  'chunkpath'        => '/srv/upload/videosquare.eu/recordings_chunks/',
   'mediapath'        => '/srv/storage/videosquare.eu/',
   'recordingpath'    => '/srv/storage/videosquare.eu/recordings/',
   'recordings_seconds_minlength' => 3,

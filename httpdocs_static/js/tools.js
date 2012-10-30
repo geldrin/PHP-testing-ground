@@ -11,7 +11,7 @@ $j(document).ready(function() {
   runIfExists('#headerlogin', setupHeaderLogin );
   runIfExists('#headersearch', setupHeaderSearch );
   runIfExists('.ratewidget', setupRateWidget );
-  runIfExists('#uploadrow', setupUpload );
+  runIfExists('#uploadrow', setupVideoUpload );
   runIfExists('.categoryiconitem', setupCategoryIconSelector );
   runIfExists('#infotoggle', setupInfoToggle );
   runIfExists('#player', setupPlayer );
@@ -644,87 +644,268 @@ function setupAccesstype( elem ) {
   
 }
 
-function setupUpload() {
+function recordingUpload( options ) {
   
-  $j('#recordings_upload, #recordings_uploadcontent').each( function() {
-    
-    $j(this).attr('onsubmit', null );
-    
+  var mimetypes = [];
+  var filetypes = allowedfiletypes.split(',');
+  for (var i = filetypes.length - 1; i >= 0; i--) {
+    mimetypes.push( '.' + filetypes[i] );
+  };
+  
+  if ( $j.browser.opera ) {
+    mimetypes.unshift('audio/*');
+    mimetypes.unshift('video/*');
+  }
+  
+  options = $j.extend({
+    runtimes: 'html5,flash',
+    flash_swf_url: 'swf/plupload.flash.swf',
+    container: 'uploadrow',
+    browse_button: 'uploadbrowse',
+    max_file_size: '10gb',
+    url: uploadchunkurl,
+    chunk_size: '10mb',
+    multipart_params: {},
+    headers: {'X-Requested-With': 'XMLHttpRequest'},
+    filters: [
+      {
+        title: "Media files",
+        extensions: allowedfiletypes
+      }
+    ],
+    multiplefilesallowed: true,
+    mimetypes: mimetypes
+  }, options || {});
+  
+  this.speeddata = {};
+  this.uploader  = new plupload.Uploader( options );
+  this.uploader.bind('Init', this.init );
+  this.uploader.bind('QueueChanged', this.onQueueChanged );
+  this.uploader.bind('FilesAdded', this.onFilesAdded );
+  this.uploader.bind('FilesRemoved', this.onFilesRemoved );
+  this.uploader.bind('BeforeUpload', this.beforeUpload );
+  this.uploader.bind('UploadProgress', this.onProgress );
+  this.uploader.bind('Error', this.onError );
+  this.uploader.bind('UploadComplete', this.onComplete );
+  this.uploader.bind('StateChanged', this.onStateChange );
+  this.uploader.init();
+  this.uploader.privdata = {
+    'progresshtml': '<div class="progresswrap green hover">' + $j.trim( $j('.progresswrap').html() ) + '</div>',
+    'base': this
+  };
+  this.track = $j.proxy( this.trackSpeed, this );
+  
+  $j('.progresswrap').remove();
+  var self = this;
+  
+  $j('#uploadbrowse').click(function(e) {
+    e.preventDefault();
+    self.uploader.trigger('SelectFiles');
   });
   
-  $j('#recordings_upload, #recordings_uploadcontent').submit( function( e ) {
+  $j('.uploadremove').live('click', function(e) {
+    e.preventDefault();
     
-    if ( $j(this).attr('id') == 'upload' && !check_recordings_upload() )
-      return false;
-    else if ( $j(this).attr('id') == 'uploadcontent' && !check_recordings_uploadcontent() )
-      return false;
+    if ( self.uploader.state != plupload.STOPPED )
+      return;
     
-    var filename = $j('#file').val().match(/.*[\\/](.+)$/);
-    if ( filename )
-      filename = filename[1];
+    var fileid = $j(this).parents('.progresswrap').attr('data-id');
+    var file   = self.uploader.getFile( fileid );
     
-    $j('#uploadrow').show();
-    $j('.progressname').text( filename );
-    $j('tr.buttonrow').hide();
-    
-    setTimeout( function() {
-      $j('#uploadframe').attr('src', BASE_URI + language + '/recordings/progress' );
-    }, 1000 );
-    
+    self.uploader.removeFile( file );
   });
   
+  $j('#uploadtoggle').attr('data-startupload', $j('#uploadtoggle').text() );
+  $j('#uploadtoggle').click(function(e) {
+    e.preventDefault();
+    
+    if ( self.uploader.state == plupload.STARTED )
+      self.uploader.stop();
+    else if ( self.uploader.state == plupload.STOPPED )
+      $j('#uploadrow').parents('form').submit();
+    
+  });
 }
-
-function setupUploadIframe() {
-  getProgress();
-}
-
-function getProgress() {
+recordingUpload.prototype.init = function( uploader, params ) {
   
-  var jq = $j;
+  if ( params.runtime != 'html5' ) {
+    $j('#bigfilewarning').show();
+  }
   
-  if ( window.parent )
-    jq = window.parent['$j'];
+};
+recordingUpload.prototype.onStateChange = function( uploader ) {
+  uploader.privdata.base.speeddata = {};
+  
+  if ( uploader.state == plupload.STOPPED ) {
+    
+    $j('.progresswrap').addClass('hover');
+    $j('#uploadtoggle').removeClass('start').addClass('stop');
+    $j('#uploadtoggle span').text( $j('#uploadtoggle').attr('data-startupload') );
+    $j('.progresstime, .progressspeed').hide();
+    $j('.progressspeed').text('');
+    $j('.progresstime').text('');
+    $j('.progresswrap.green .progressstatus').hide();
+    
+  } else if ( uploader.state == plupload.STARTED ) {
+    
+    $j('.progresswrap').removeClass('hover');
+    $j('#uploadtoggle').removeClass('stop').addClass('start');
+    $j('#uploadtoggle span').text( $j('#uploadtoggle').attr('data-stopupload') );
+    $j('.progressstatus, .progresstime, .progressspeed').show();
+    
+    var serializedform = $j('#uploadrow').parents('form').serializeArray();
+    var params         = { swfupload: 1 };
+    
+    for ( var i = 0, j = serializedform.length; i < j; i++ ) {
+      
+      var option = serializedform[i];
+      if ( option.name == 'target' && uploader.settings.chunk_size )
+        continue;
+      
+      params[ option.name ] = option.value;
+      
+    }
+    
+    uploader.settings.multipart_params = params;
+    
+  }
+  
+};
+recordingUpload.prototype.onQueueChanged = function( uploader ) {
+  
+  if ( !uploader.settings.multiplefilesallowed && uploader.files.length > 1 ) {
+    
+    uploader.removeFile( uploader.files[ uploader.files.length - 1 ] );
+    
+  }
+  
+};
+recordingUpload.prototype.onFilesAdded = function( uploader, files ) {
+  
+  for( var i = 0, j = files.length; i < j; i++ ) {
+    
+    var file = files[i];
+    var id   = 'progress_' + file.id;
+    
+    $j( uploader.privdata.progresshtml ).attr('id', id ).attr('data-id', file.id ).appendTo('#uploadprogress');
+    $j('#' + id + ' .progressname').text( file.name );
+    
+  }
+  
+};
+recordingUpload.prototype.onFilesRemoved = function( uploader, files ) {
+  
+  // cant stop an upload mid-upload (on some backends) without stopping the whole queue, and there is a separate button for that
+  if ( uploader.state != plupload.STOPPED )
+    return;
+  
+  for( var i = 0, j = files.length; i < j; i++ ) {
+    
+    $j('#progress_' + files[i].id ).remove();
+    
+  }
+  
+};
+recordingUpload.prototype.beforeUpload = function( uploader, file ) {
+  
+  if ( !uploader.settings.chunk_size )
+    return;
   
   $j.ajax({
-    url: BASE_URI + language + '/recordings/getprogress',
-    type: 'GET',
-    data: { uploadid: jq('#uploadid').val() },
+    url: checkresumeurl,
+    type: 'POST',
     dataType: 'json',
-    timeout: 2000,
+    async: false,
     cache: false,
-    success: function( data ) {
+    data: {
+      name: file.name,
+      size: file.size
+    },
+    success: function(data) {
       
-      if ( data.status == 'OK' ) {
-        
-        if ( data.data ) {
-          
-          trackSpeed( data.data.current, data.data.total );
-          var percent = Math.ceil( ( data.data.current / data.data.total ) * 100);
-          jq('.progressbar').width( percent + '%');
-          jq('.progressspeed').text( formatBPS( speedhistory.averagespeed || 0 ) );
-          jq('.progresstime').text( formatTime( speedhistory.timeremaining ) || '' );
-          
-        }
-        
-        setTimeout( getProgress, 1000 );
-        
-      } else
-        alert( data.message );
+      if ( typeof( data ) != 'object' || data.status != 'success' )
+        return;
+      
+      file.startFromChunk = data.startfromchunk;
       
     }
   });
   
-}
-
-// "copied" from swfupload.speed plugin
-var speedhistory = {};
-function trackSpeed( uploaded, total ) {
+};
+recordingUpload.prototype.onProgress = function( uploader, file, response ) {
   
-  if ( uploaded == 0 )
+  var id          = 'progress_' + file.id;
+  var base        = uploader.privdata.base;
+  var speed       = base.track( file );
+  var uploadspeed = plupload.formatSize( speed.averagespeed || 0 );
+  
+  if ( uploadspeed != 'N/A' )
+    uploadspeed += '/s';
+  
+  $j('#' + id + ' .progressbar').css('width', ( speed.percent.toFixed(2) ) + '%');
+  $j('#' + id + ' .progressspeed').text( uploadspeed );
+  $j('#' + id + ' .progresstime').text( base.formatTime( speed.timeremaining || 0 ) );
+  
+  if ( !response ) // if true, the file has uploaded
     return;
   
-  var time = (new Date()).getTime();
+  try {
+    var data = $j.parseJSON( response.response ) || {};
+  } catch(e) {
+    var data = {};
+  }
+  
+  if ( data.status == 'success' ) {
+    
+    $j('#' + id).removeClass('green').addClass('blue');
+    $j('#' + id + ' .progressstatus').text( l['upload_uploaded'] );
+    uploader.privdata.gotourl = data.url;
+    
+  } else {
+    
+    $j('#' + id).removeClass('green').addClass('red');
+    if ( data.error )
+      $j('#' + id + ' .progressstatus').text( l[ data.error ] );
+    
+  }
+  
+};
+recordingUpload.prototype.onError = function( uploader, error ) {
+  
+  switch ( error.code ) {
+    
+    case plupload.FILE_EXTENSION_ERROR:
+      $j('#progress_' + error.file.id ).remove();
+      alert( l.upload_invalidfiletype + '\n' + error.file.name );
+      break;
+    
+    case plupload.INIT_ERROR:
+      alert( l.upload_flasherror );
+      break;
+    
+    case plupload.HTTP_ERROR:
+      alert( l.upload_serverioerror );
+      break;
+    
+    default:
+      alert( l.upload_unknownerror + ': ' + error.code );
+      break;
+    
+  }
+  
+};
+recordingUpload.prototype.onComplete = function( uploader, files ) {
+  
+  if ( uploader.privdata.gotourl )
+    location.href = uploader.privdata.gotourl;
+  
+};
+recordingUpload.prototype.trackSpeed = function( file ) {
+  var id           = file.id,
+      uploaded     = file.loaded,
+      total        = file.size,
+      time         = (new Date()).getTime(),
+      speedhistory = this.speeddata[id] || {};
   
   if ( !speedhistory.starttime ) {
     
@@ -733,106 +914,98 @@ function trackSpeed( uploaded, total ) {
     speedhistory.currentspeed  = 0;
     speedhistory.averagespeed  = 0;
     speedhistory.timeremaining = 0;
-    speedhistory.percent       = uploaded / total * 100;
     speedhistory.uploaded      = uploaded;
+    speedhistory.percent       = uploaded / total * 100;
+    this.speeddata[id]         = speedhistory;
     
   }
   
-  var deltatime = time - speedhistory.lasttime;
-  var deltabytes = uploaded - speedhistory.uploaded;
+  var deltatime  = time - speedhistory.lasttime,
+      deltabytes = uploaded - speedhistory.uploaded;
   
   if ( deltabytes === 0 || deltatime === 0 )
-    return;
+    return speedhistory;
   
-  speedhistory.lasttime = time;
-  speedhistory.uploaded = uploaded;
+  speedhistory.lasttime      = time;
+  speedhistory.uploaded      = uploaded;
+  speedhistory.currentspeed  = Math.round( deltabytes / ( deltatime / 1000 ) );
+  speedhistory.averagespeed  = Math.round( uploaded / ( ( time - speedhistory.starttime ) / 1000 ) );
+  speedhistory.timeremaining = Math.round( ( total - uploaded ) / speedhistory.averagespeed );
+  speedhistory.percent       = uploaded / total * 100;
+  return speedhistory;
   
-  speedhistory.currentspeed = ( deltabytes * 8 ) / ( deltatime / 1000 );
-  speedhistory.averagespeed = ( uploaded * 8 ) / ( ( time - speedhistory.starttime ) / 1000 );
+};
+recordingUpload.prototype.formatTime = function( seconds ) {
   
-  speedhistory.timeremaining = ( total - uploaded ) * 8 / speedhistory.averagespeed;
-  speedhistory.percent = uploaded / total * 100;
-  
-}
-
-function formatUnits( baseNumber, unitDivisors, unitLabels, singleFractional ) {
-  var i, j, unit, unitDivisor, unitLabel;
-
-  if ( baseNumber === 0 ) {
-    return "0 " + unitLabels[ unitLabels.length - 1 ];
+  var ret  = [];
+  var days = Math.floor( seconds / 86400 );
+  if ( days > 0 ) {
+    
+    ret.push( days + 'd');
+    seconds -= days * 86400;
+    
   }
   
-  if ( singleFractional ) {
-    unit = baseNumber;
-    unitLabel = unitLabels.length >= unitDivisors.length ? unitLabels[ unitDivisors.length - 1 ] : "";
+  var hours = Math.floor( seconds / 3600 );
+  if ( hours > 0 ) {
     
-    for (i = 0, j = unitDivisors.length; i < j; i++) {
+    ret.push( hours + 'h');
+    seconds -= hours * 3600;
+    
+  }
+  
+  var minutes = Math.floor( seconds / 60 );
+  if ( minutes > 0 ) {
+    
+    ret.push( minutes + 'm');
+    seconds -= minutes * 60;
+    
+  }
+  
+  if ( ret.length == 0 )
+    ret.push( seconds + 's');
+  
+  return ret.join(" ");
+  
+};
+
+function setupVideoUpload() {
+  
+  $j('#file').parents('tr').hide();
+  var uploader = new recordingUpload({
+    multiplefilesallowed: $j('#uploadrow').attr('data-multiplefiles') != '0',
+    drop_element: 'recordingupload'
+  });
+  
+  if ( uploader.uploader.features.dragdrop ) {
+    
+    $j('#draganddropavailable').show();
+    
+  }
+  
+  $j('#uploadrow').parents('form').submit( function( e ) {
+    
+    e.preventDefault();
+    
+    if ( $j('#tos').length && !$j('#tos:checked').val() ) {
       
-      if ( baseNumber >= unitDivisors[ i ] ) {
-        
-        unit = ( baseNumber / unitDivisors[ i ] ).toFixed(2);
-        unitLabel = unitLabels.length >= i ? " " + unitLabels[i] : "";
-        break;
-        
-      }
+      alert( l.tosaccept );
+      return false;
       
     }
     
-    return unit + unitLabel;
-    
-  } else {
-    var formattedStrings = [];
-    var remainder = baseNumber;
-    
-    for (i = 0, j = unitDivisors.length; i < j; i++) {
+    if ( uploader.uploader.files.length == 0 ) { // no files in the queue
       
-      unitDivisor = unitDivisors[ i ];
-      unitLabel = unitLabels.length > i ? " " + unitLabels[ i ] : "";
-      
-      unit = remainder / unitDivisor;
-      if ( i < unitDivisors.length -1 )
-        unit = Math.floor( unit );
-      else
-        unit = unit.toFixed(2);
-      
-      if (unit > 0) {
-        
-        remainder = remainder % unitDivisor;
-        
-        formattedStrings.push( unit + unitLabel );
-        
-      }
+      alert( l.upload_nofilesfound );
+      return false;
       
     }
     
-    return formattedStrings.join(" ");
-  }
+    uploader.uploader.start();
+    return false;
+    
+  });
   
-}
-
-function formatBPS( baseNumber ) {
-  var bpsUnits = [1073741824, 1048576, 1024, 1], bpsUnitLabels = ["Gbps", "Mbps", "Kbps", "bps"];
-  
-  return formatUnits( baseNumber, bpsUnits, bpsUnitLabels, true);
-  
-}
-
-function formatTime( baseNumber ) {
-  var timeUnits = [86400, 3600, 60, 1], timeUnitLabels = ["d", "h", "m", "s"];
-  
-  return formatUnits( baseNumber, timeUnits, timeUnitLabels, false);
-  
-}
-
-function formatBytes( baseNumber ) {
-  var sizeUnits = [1073741824, 1048576, 1024, 1], sizeUnitLabels = ["GB", "MB", "KB", "bytes"];
-  
-  return formatUnits( baseNumber, sizeUnits, sizeUnitLabels, true);
-  
-}
-
-function formatPercent( baseNumber ) {
-  return baseNumber.toFixed(2) + " %";
 }
 
 // FLASHDEFAULTS

@@ -7,12 +7,6 @@ $config = Array(
     'value' => 'submitupload'
   ),
   
-  // APC uploadprogress-hez a suffix
-  'uploadid' => Array(
-    'type'  => 'inputHidden',
-    'value' => session_id() . mt_rand(),
-  ),
-  
   'fs1' => array(
     'type'   => 'fieldset',
     'legend' => $l('recordings', 'upload_title'),
@@ -40,17 +34,13 @@ $config = Array(
   ),
   
   'file' => Array(
-    'type'        => 'inputFile',
-    'displayname' => $l('recordings', 'file'),
-    'validation'  => Array(
+    'type'       => 'inputFile',
+    'validation' => Array(
       Array(
-        'type'       => 'file',
+        'type'       => 'file', 
+        'extensions' => $this->bootstrap->config['allowedextensions'],
         'required'   => true,
         'help'       => $l('recordings', 'file_help'),
-        'extensions' => Array(
-          'wmv', 'avi', 'mov', 'flv', 'mp4', 'asf', 'mp3', 'flac',
-          'ogg', 'wav', 'wma', 'mpg', 'mpeg', 'ogm', 'f4v', 'm4v',
-        ),
       ),
     ),
   ),
@@ -58,27 +48,32 @@ $config = Array(
   'customhtml' => array(
     'type' => 'text',
     'rowlayout' => '
-      <tr id="uploadrow" style="display:none;">
-        <td class="elementcolumn" colspan="2">
-          <iframe id="uploadframe" name="uploadframe" frameborder="0" border="0" src="" scrolling="no" scrollbar="no" width="0" height="0"></iframe>
+      <td colspan="2" id="uploadrow" class="formrow">
+        <span class="label"></span>
+        <div class="element">
           %element%
-        </td
-      </tr>
+        </div>
+      </td>
     ',
     'value' => '
-      <div id="videouploadprogress">
-        <div class="progresswrap green">
-          <div class="progressname ellipsize"></div>
+      <div id="draganddropavailable"><span class="ui-icon ui-icon-info"></span>' . $l('recordings', 'draganddropavailable') . '</div>
+      <div id="bigfilewarning"><span class="ui-icon ui-icon-alert"></span>' . $l('recordings', 'bigfilewarning') . '</div>
+      <div id="uploadbrowsecontainer">
+        <a href="#" id="uploadtoggle" class="submitbutton right" data-stopupload="' . $l('recordings', 'stopupload') . '">' . $l('recordings', 'startupload') . '</a>
+        <a href="#" id="uploadbrowse" class="submitbutton">' . $l('recordings', 'addfiles') . '</a>
+      </div>
+      <div id="uploadprogress">
+        <div class="progresswrap green hover" style="display: none;">
+          <div class="uploadactions">
+            <div class="uploadremove"></div>
+          </div>
+          <div class="progressname"></div>
           <div class="progressspeed"></div>
           <div class="clear"></div>
           <div class="progressbar"></div>
-          <div class="progressstatus">' .
-            $l('', 'swfupload_uploading') .
-            ' <img src="' . $this->controller->toSmarty['STATIC_URI'] . 'images/spinner.gif"/>' .
-          '</div>
-          <div class="progresstime"></div>
+          <div class="progressstatus"><img src="' . $this->controller->toSmarty['STATIC_URI'] . 'images/spinner.gif"/>' . $l('contents', 'upload_uploading') . '</div>
+          <div class="progresstime" title="' . $l('recordings', 'estimatedtime') . '"></div>
         </div>
-      </div>
     ',
   ),
   

@@ -36,6 +36,8 @@ class Controller extends \Visitor\Controller {
     'linkcontributor'      => 'uploader',
     'addtochannel'         => 'member',
     'removefromchannel'    => 'member',
+    'checkfileresume'      => 'uploader',
+    'uploadchunk'          => 'uploader',
   );
   
   public $forms = array(
@@ -155,7 +157,7 @@ class Controller extends \Visitor\Controller {
     if ( !$recordingid or $rating < 1 or $rating > 5 ) {
       
       $result['reason'] = 'invalidparameters';
-      $this->jsonoutput( $result );
+      $this->jsonOutput( $result );
       
     }
     
@@ -163,7 +165,7 @@ class Controller extends \Visitor\Controller {
     if ( $session[ $recordingid ] ) {
       
       $result['reason'] = 'alreadyvoted';
-      $this->jsonoutput( $result );
+      $this->jsonOutput( $result );
       
     }
     
@@ -171,7 +173,7 @@ class Controller extends \Visitor\Controller {
     $recordingsModel->id = $recordingid;
     
     if ( !$recordingsModel->addRating( $rating ) )
-      $this->jsonoutput( $result );
+      $this->jsonOutput( $result );
     
     $session[ $recordingid ] = true;
     $result = array(
@@ -180,7 +182,7 @@ class Controller extends \Visitor\Controller {
       'numberofratings' => $recordingsModel->row['numberofratings'],
     );
     
-    $this->jsonoutput( $result );
+    $this->jsonOutput( $result );
     
   }
   
@@ -336,7 +338,7 @@ class Controller extends \Visitor\Controller {
     $comments     = $recordingsModel->getComments( $start );
     $commentcount = $recordingsModel->getCommentsCount();
     
-    $this->jsonoutput( array(
+    $this->jsonOutput( array(
         'comments'     => $comments,
         'nocomments'   => $l('recordings', 'nocomments'),
         'commentcount' => $commentcount,
@@ -879,6 +881,312 @@ class Controller extends \Visitor\Controller {
   
   public function apiuploadcontentasuserAction( $recordingid, $file, $userid ) {
     return $this->apiuploadcontentasuserAction( $recordingid, $file );
+  }
+  
+  public function checkfileresumeAction() {
+    
+    $filename  = trim( $this->application->getParameter('name') );
+    $filesize  = $this->application->getNumericParameter('size');
+    $user      = $this->bootstrap->getSession('user');
+    
+    if ( !$filename or !$filesize )
+      jsonOutput( array('status' => 'error') );
+    
+    $uploadModel = $this->bootstrap->getModel('uploads');
+    $info        = $uploadModel->getFileResumeInfo( $filename, $filesize, $user['id'] );
+    
+    if ( empty( $info ) )
+      $startfromchunk = 0;
+    else
+      $startfromchunk = $info['currentchunk'] + 1;
+    
+    $this->jsonOutput( array(
+        'status'         => 'success',
+        'startfromchunk' => $startfromchunk,
+      )
+    );
+    
+  }
+
+  public function uploadchunkAction() {
+    
+    if ( $this->bootstrap->config['disable_uploads'] )
+      $this->jsonOutput( array('status' => 'error', 'error'  => 'upload_unknownerror') );
+    
+    if (
+         !isset( $_REQUEST['name'] ) or
+         (
+           isset( $_REQUEST['chunks'] ) and
+           !intval( $_REQUEST['chunks'] )
+         )
+       ) {
+      
+      $this->chunkResponseAndLog( array(
+          'status' => 'error',
+          'error'  => 'upload_uploaderror',
+        ), 'Parameter validation failed: ' . var_export( $_REQUEST, true )
+      );
+      
+    }
+    
+    if ( !isset( $_FILES['file'] ) ) {
+      
+      $data = file_get_contents("php://input");
+      if ( strlen( $data ) != $_SERVER['CONTENT_LENGTH'] )
+        $this->chunkResponseAndLog( array(
+            'status' => 'error',
+            'error'  => 'upload_uploaderror',
+          ), 'Data length was not the same as the content_length!'
+        );
+      
+      $file = array(
+        'tmp_name' => tempnam( null, 'uploadchunk_'),
+      );
+      
+      if ( !file_put_contents( $file['tmp_name'], $data ) )
+        $this->jsonOutput( array(
+            'status' => 'error',
+            'error'  => 'upload_uploaderror',
+          )
+        );
+      
+      unset( $data );
+      
+    } elseif ( $_FILES['file']['error'] != 0 )
+      $this->chunkResponseAndLog( array(
+          'status' => 'error',
+          'error'  => 'upload_uploaderror',
+        ), 'Upload error: $_FILES: ' . var_export( $_FILES, true )
+      );
+    else
+      $file = $_FILES['file'];
+    
+    $filename    = trim( $_REQUEST['name'] );
+    $chunk       = intval( @$_REQUEST['chunk'] );
+    $chunks      = intval( @$_REQUEST['chunks'] );
+    $filesize    = (float)@$_REQUEST['size'];
+    $uploadModel = $this->bootstrap->getModel('uploads');
+    $user        = $this->bootstrap->getSession('user');
+    $info        = $uploadModel->getFileResumeInfo( $filename, $filesize, $user['id'] );
+    $iscontent   = intval( @$_REQUEST['iscontent'] );
+    
+    if ( !$chunks ) // not mandatory
+      $chunks = 1;
+    
+    if (
+         !empty( $info ) and
+         $info['chunkcount'] == $chunks and // sanity checks
+         $chunk == ( $info['currentchunk'] + 1 )
+       ) {
+      
+      $sleptfor = 0;
+      while ( $info['status'] == 'handlechunk' and $sleptfor < 30 ) {
+        
+        sleep(1);
+        $info = $uploadModel->getFileResumeInfo( $filename, $filesize, getuser('id') );
+        $sleptfor++;
+        
+      }
+      
+      if ( $info['status'] == 'handlechunk' ) {
+        
+        header('HTTP/1.1 500 Internal Server Error');
+        $this->chunkResponseAndLog( array(
+            'status' => 'error',
+            'error'  => 'upload_unknownerror',
+          ), 'After 30 seconds, upload is in status=handlechunk! info: ' . var_export( $info , true ),
+          true
+        );
+        
+      }
+      
+      $uploadModel->id  = $info['id'];
+      $uploadModel->row = $info;
+      $uploadModel->handleChunk( $file['tmp_name'] );
+      
+    } elseif ( $chunk == 0 ) {
+      
+      $uploadModel->insert( array(
+          'filename'     => $filename,
+          'currentchunk' => $chunk,
+          'chunkcount'   => $chunks,
+          'size'         => $filesize,
+          'userid'       => getuser('id'),
+          'status'       => 'handlechunk',
+          'timestamp'    => date('Y-m-d H:i:s'),
+        )
+      );
+      
+      $uploadModel->handleChunk( $file['tmp_name'] );
+      $uploadModel->updateRow( array(
+          'status' => 'uploading',
+        )
+      );
+      
+      @unlink( $file['tmp_name'] );
+      $info = $uploadModel->row;
+      
+    } else {
+      
+      // a chunk nem vart sorrendben erkezett, nem tudunk vele kezdeni semmit
+      $this->jsonOutput( array(
+          'status' => 'error',
+          'error'  => 'upload_unknownerror',
+        )
+      );
+      
+    }
+    
+    // chunk count is 0 based
+    if ( $chunk + 1 == $chunks ) {
+      
+      $filepath = $uploadModel->getChunkPath();
+      $uploadModel->updateRow( array(
+          'currentchunk' => $chunk,
+          'status'       => 'completed',
+        )
+      );
+      @unlink( $file['tmp_name'] );
+      $interlaced = intval( @$_REQUEST['isinterlaced'] );
+      try {
+        
+        if ( $iscontent ) {
+          
+          $recordingid    = intval( @$_REQUEST['recordingid'] );
+          $recordingModel = $this->modelOrganizationAndUserIDCheck(
+            'recordings',
+            $recordingid,
+            false
+          );
+          
+          if ( !$recordingModel )
+            $this->chunkResponseAndLog( array(
+                'error' => 'upload_membersonly',
+              )
+            );
+          
+          $recordingModel->analyze(
+            $filepath,
+            $info['filename']
+          );
+          
+          $recordingModel->addContentRecording(
+            null,
+            $this->bootstrap->config['node_sourceip']
+          );
+          
+          $recordingModel->handleFile(
+            $filepath,
+            'rename',
+            '_content'
+          );
+          
+          $recordingModel->markContentRecordingUploaded();
+        
+        } else {
+          
+          $recordingModel = $this->bootstrap->getModel('recordings');
+          $languageModel  = $this->bootstrap->getModel('languages');
+          $languages      = $languageModel->getAssoc('id', 'originalname', false, false, false, 'weight');
+          $language       = intval( @$_REQUEST['videolanguage'] );
+          
+          if ( !isset( $languages[ $language ] ) )
+            $this->jsonOutput( array('status' => 'error', 'error' => 'upload_securityerror') );
+          
+          $recordingModel->analyze(
+            $filepath,
+            $info['filename']
+          );
+          
+          $recordingModel->insertUploadingRecording(
+            $user['id'],
+            $user['organizationid'],
+            $language,
+            $info['filename'],
+            $this->bootstrap->config['node_sourceip']
+          );
+          
+          $recordingModel->handleFile( $filepath, 'rename' );
+          $recordingModel->updateRow( array(
+              'masterstatus' => 'uploaded',
+              'status'       => 'uploaded',
+            )
+          );
+          
+        }
+        
+      } catch( InvalidFileTypeException $e ) {
+        $error   = 'upload_invalidfiletype';
+        $message = $e->getMessage();
+      } catch( InvalidLengthException $e ) {
+        $error   = 'upload_invalidlength';
+        $message = $e->getMessage();
+      } catch( InvalidVideoResolutionException $e ) {
+        $error   = 'upload_recordingtoobig';
+        $message = $e->getMessage();
+      } catch( InvalidException $e ) {
+        $error   = 'upload_failedvalidation';
+        $message = $e->getMessage();
+      } catch( Exception $e ) {
+        $error   = 'upload_unkownerror';
+        $message = $e->getMessage();
+      }
+      
+      if ( isset( $error ) )
+        $this->chunkResponseAndLog( array(
+            'status' => 'error',
+            'error' => $error
+          ),
+          "Recording upload (iscontent: $iscontent) failed with exception message: $message \n\n" .
+          'Metadata: ' . var_export( @$recordingModel->metadata, true )
+        );
+      
+      if ( $iscontent )
+        $url = $this->getUrlFromFragment('contents/uploadcontentsuccessfull');
+      else
+        $url = $this->getUrlFromFragment('contents/uploadsuccessfull');
+      
+      $this->jsonOutput( array(
+          'status' => 'success',
+          'url'    => $url,
+        )
+      );
+      
+    } else {
+      
+      $uploadModel->updateRow( array(
+          'status'       => 'uploading',
+          'currentchunk' => $chunk,
+        )
+      );
+      @unlink( $file['tmp_name'] );
+      
+      $this->jsonOutput( array(
+          'status' => 'continue',
+        )
+      );
+      
+    }
+    
+    $this->jsonOutput( array(
+        'status' => 'continue',
+      )
+    );
+    
+  }
+  
+  protected function chunkResponseAndLog( $response, $log = false, $shouldemail = false ) {
+    
+    if ( $log ) {
+      
+      $log  .= "\n" . var_export( $_SERVER, true );
+      $debug = \Springboard\Debug::getInstance();
+      $debug->log( false, 'chunkupload.txt', $log, $shouldemail );
+      
+    }
+    
+    $this->jsonOutput( $response, true );
+    
   }
   
 }

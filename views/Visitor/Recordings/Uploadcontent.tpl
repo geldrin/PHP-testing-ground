@@ -1,4 +1,12 @@
 {include file="Visitor/_header.tpl"}
+<script type="text/javascript" src="{$STATIC_URI}js/plupload/plupload{$VERSION}.js"></script>
+<script type="text/javascript" src="{$STATIC_URI}js/plupload/plupload.html5{$VERSION}.js"></script>
+<script type="text/javascript" src="{$STATIC_URI}js/plupload/plupload.flash{$VERSION}.js"></script>
+<script type="text/javascript">
+  var uploadurl      = "{$BASE_URI}{$language}/recordings/uploadcontent";
+  var uploadchunkurl = "{$BASE_URI}{$language}/recordings/uploadchunk";
+  var checkresumeurl = "{$BASE_URI}{$language}/recordings/checkfileresume";
+</script>
 
 <div id="videoupload" class="leftdoublebox form">
   <noscript id="noscriptcontainer">

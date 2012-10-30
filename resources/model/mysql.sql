@@ -600,3 +600,18 @@ CREATE TABLE `departments` (
    `weight` int(10) unsigned not null default '100',
    PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;
+
+
+CREATE TABLE uploads(
+   `id` int(10) unsigned not null auto_increment,
+   `userid` int(10) unsigned not null,
+   `filename` text,
+   `size` bigint(20) unsigned,
+   `chunkcount` int(10) unsigned,
+   `currentchunk` int(10) unsigned,
+   `status` text,
+   `timestamp` datetime not null,
+   PRIMARY KEY (`id`),
+   KEY `ix_userid_filename` (`userid`, `filename`(50)),
+   KEY `ix_status` (`status`(15)),
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;

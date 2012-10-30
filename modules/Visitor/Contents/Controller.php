@@ -41,9 +41,17 @@ class Controller extends \Visitor\Controller {
   
   public function languageAction() {
     
-    $l                          = $this->bootstrap->getLocalization();
-    $this->toSmarty['language'] = json_encode( $l->get('contents'), JSON_HEX_TAG );
-    $output                     = $this->fetchSmarty('Visitor/Contents/Language.tpl');
+    $l = $this->bootstrap->getLocalization();
+    
+    $this->toSmarty['language']         =
+      json_encode( $l->get('contents'), JSON_HEX_TAG )
+    ;
+    $this->toSmarty['allowedfiletypes'] = implode(
+      ',',
+      $this->bootstrap->config['allowedextensions']
+    );
+    
+    $output = $this->fetchSmarty('Visitor/Contents/Language.tpl');
     
     header('Content-Type: application/javascript; charset=UTF-8');
     $this->output(
