@@ -43,6 +43,12 @@ class Upload extends \Visitor\HelpForm {
     
   }
   
+  public function postGetForm() {
+    $this->form->js       = false;
+    $this->form->nosubmit = true;
+    return parent::postGetForm();
+  }
+  
   public function onComplete() {
     
     $l     = $this->bootstrap->getLocalization();

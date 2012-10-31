@@ -267,21 +267,51 @@ a.submitbutton:hover {
 }
 
 /* record upload form */
-#uploadrow .element {
-  float: left;
-  width: 580px;
+#uploadrow .submitbutton {
+  width: auto;
+  padding: 0px 15px;
+  font-weight: normal;
+  line-height: 30px;
+  color: #000;
 }
 .changeindexphotoitem {
   display: inline-block;
 }
 
-/* swfupload */
+/* upload */
+#uploadprogress {
+  margin: 10px 0 0 0;
+}
+#bigfilewarning, #draganddropavailable {
+  position: relative;
+  border: 1px solid #FCEFA1;
+  background-color: #FBF9EE;
+  margin: 0 0 10px 0;
+  line-height: 20px;
+  display: none;
+  padding: 0 10px 0 25px;
+}
+#draganddropavailable {
+  border: solid 1px #CEE2F2;
+  background-color: #F0F5FF;
+}
+#bigfilewarning span, #draganddropavailable span {
+  display: inline-block;
+  zoom: 1;
+  *display: inline;
+  margin: 0px 5px 0 5px;
+  position: absolute;
+  left: 0px;
+  top: 3px;
+}
 .progresswrap {
-  width: 570px;
+  width: 605px;
   overflow: hidden;
   padding: 4px;
   border: solid 1px #E8E8E8;
   background-color: #F7F7F7;
+  margin: 0 0 10px 0;
+  position: relative;
 }
 .red /* Error */ {
   border: solid 1px #B50000;
@@ -300,7 +330,7 @@ a.submitbutton:hover {
   font-weight: bold;
   color: #555555;
   float: left;
-  width: 220px;
+  width: 500px;
   height: 14px;
   text-align: left;
   white-space: nowrap;
@@ -316,6 +346,7 @@ a.submitbutton:hover {
   float: right;
   white-space: nowrap;
   overflow: hidden;
+  display: none;
 }
 .progressbar {
   font-size: 0px;
@@ -336,19 +367,44 @@ a.submitbutton:hover {
 }
 .progressstatus {
   margin-top: 2px;
-  width: 200px;
+  width: 350px;
   font-size: 7pt;
   font-family: Verdana;
   text-align: left;
   float: left;
+  display: none;
+}
+.progressstatus img {
+  position: relative;
+  top: 4px;
+  margin-right: 5px;
 }
 .progresstime {
   font-size: 7pt;
   font-family: Verdana;
   margin-top: 2px;
-  width: 150px;
+  width: 90px;
   float: right;
   text-align: right;
+  display: none;
+}
+.uploadactions {
+  position: absolute;
+  right: 0px;
+  display: none;
+}
+.progresswrap.hover:hover .uploadactions {
+  display: block;
+}
+.uploadactions div {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  margin: 0px 1px;
+  cursor: pointer;
+}
+.uploadremove {
+  background-image: url(images/cross.png);
 }
 
 /* browser alert bar */
