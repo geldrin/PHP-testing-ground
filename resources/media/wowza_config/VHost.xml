@@ -52,11 +52,13 @@
 			<!-- 443 with SSL -->
 			<HostPort>
 				<ProcessorCount>4</ProcessorCount>
-				<IpAddress>*</IpAddress>
+				<IpAddress>91.120.59.230</IpAddress>
 				<Port>443</Port>
 				<SSLConfig>
-					<KeyStorePath>${com.wowza.wms.context.VHostConfigHome}/conf/ssl.stream.videosquare.eu.cert</KeyStorePath>
-					<KeyStorePassword>kakukk123</KeyStorePassword>
+<!--					<KeyStorePath>${com.wowza.wms.context.VHostConfigHome}/conf/ssl.stream.videosquare.eu.cert</KeyStorePath>
+					<KeyStorePassword>kakukk123</KeyStorePassword> -->
+					<KeyStorePath>/home/conv/temp/ssl.stream.videosquare.eu.cert</KeyStorePath>
+					<KeyStorePassword>kiskakukk123</KeyStorePassword>
 					<KeyStoreType>JKS</KeyStoreType>
 					<SSLProtocol>TLS</SSLProtocol>
 					<Algorithm>SunX509</Algorithm>

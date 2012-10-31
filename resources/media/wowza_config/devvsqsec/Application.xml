@@ -192,10 +192,10 @@
 			</Property>
 -->
 			<!-- CONNECT HANDLER CONFIG -->
-			<Property>
+<!--			<Property>
 				<Name>URLPlayHandler</Name>
-				<Value>http://dev.videosquare.eu/hu/recordings/checkstreamaccess</Value>
-			</Property>
+				<Value>http://dev.videosquare.eu/hu/recordings/securecheckstreamaccess</Value>
+			</Property> -->
 			<Property>
 				<Name>PlayIP</Name>
 				<Value>On</Value>

@@ -42,5 +42,18 @@
 		</StartupStream>
 		-->
 
+<!--		<StartupStream>
+			<Application>devvsqlive/_definst_</Application>
+			<MediaCasterType>rtp</MediaCasterType>
+			<StreamName>123452</StreamName>
+		</StartupStream> -->
+
+<!--		<StartupStream>
+			<Application>devvsqlive/_definst_</Application>
+			<MediaCasterType>rtp</MediaCasterType>
+			<StreamName>123456</StreamName>
+		</StartupStream> -->
+
+
 	</StartupStreams>
 </Root>

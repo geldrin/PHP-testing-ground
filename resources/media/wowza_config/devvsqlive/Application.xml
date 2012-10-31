@@ -173,6 +173,11 @@
 				<Description>ModuleRTMPAuthenticate</Description>
 				<Class>com.wowza.wms.plugin.security.ModuleRTMPAuthenticate</Class>
 			</Module>
+			<Module>
+			<Name>MyFirstModule</Name>
+				<Description>MyCompany MyFirstModule</Description>
+				<Class>com.mycompany.wms.module.MyFirstModule</Class>
+			</Module>
 		</Modules>
 		<!-- Properties defined here will be added to the IApplication.getProperties() and IApplicationInstance.getProperties() collections -->
 		<Properties>
@@ -184,6 +189,23 @@
 			<Property>
 				<Name>rtmpEncoderAuthenticateFile</Name>
 				<Value>${com.wowza.wms.context.VHostConfigHome}/conf/${com.wowza.wms.context.Application}/publish.password</Value>
+			</Property>
+			<!-- CONNECT HANDLER CONFIG -->
+			<Property>
+				<Name>URLPlayHandler</Name>
+				<Value>http://dev.videosquare.eu/hu/live/checkstreamaccess</Value>
+			</Property>
+			<Property>
+				<Name>PlayIP</Name>
+				<Value>On</Value>
+			</Property>
+			<Property>
+				<Name>PlaySuccess</Name>
+				<Value>1</Value>
+			</Property>
+			<Property>
+				<Name>PlayURLParams</Name>
+				<Value>sessionid</Value>
 			</Property>
 		</Properties>
 	</Application>

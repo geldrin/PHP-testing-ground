@@ -202,7 +202,7 @@
 			<Property>
 				<Name>PlayURLParams</Name>
 				<Value>sessionid</Value>
-      		</Property>
+			</Property>
 		</Properties>
 	</Application>
 </Root>
