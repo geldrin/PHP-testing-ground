@@ -89,12 +89,16 @@ class Upload extends \Visitor\HelpForm {
       
     }
     
+    $info = array(
+      'filepath' => $_FILES['file']['tmp_name'],
+      'filename' => $_FILES['file']['name'],
+      'language' => $values['videolanguage'],
+      'user'     => $user,
+    );
+    
     try {
       
-      $recordingModel->analyze(
-        $_FILES['file']['tmp_name'],
-        $_FILES['file']['name']
-      );
+      $recordingModel->upload( $info );
       
     } catch( \Model\InvalidFileTypeException $e ) {
       
@@ -118,6 +122,15 @@ class Upload extends \Visitor\HelpForm {
         true
       );
       
+    } catch( \Model\HandleFileException $e ) {
+      
+      $error = 'movefailed';
+      $this->form->addMessage( );
+      $debug->log( false, 'upload.txt',
+        'Handlefile exception! -- ' .
+        var_export( $e->getMessage(), true )
+      );
+      
     } catch( \Exception $e ) {
       
       $error = 'failedvalidation';
@@ -136,35 +149,6 @@ class Upload extends \Visitor\HelpForm {
       
       $this->form->invalidate();
       return;
-      
-    }
-    
-    $recordingModel->insertUploadingRecording(
-      $user['id'],
-      $user['organizationid'],
-      $values['videolanguage'],
-      $_FILES['file']['name'],
-      $this->bootstrap->config['node_sourceip']
-    );
-    
-    try {
-      
-      $recordingModel->handleFile( $_FILES['file']['tmp_name'] );
-      $recordingModel->updateRow( array(
-          'masterstatus' => 'uploaded',
-          'status'       => 'uploaded',
-        )
-      );
-      
-    } catch( Exception $e ) {
-      
-      $recordingModel->updateRow( array(
-          'masterstatus' => 'failedmovinguploadedfile',
-        )
-      );
-      
-      if ( $this->swfupload )
-        $this->controller->swfuploadMessage( array('error' => 'movefailed'), $_FILES['file'] );
       
     }
     

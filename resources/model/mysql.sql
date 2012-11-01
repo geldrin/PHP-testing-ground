@@ -613,5 +613,5 @@ CREATE TABLE uploads(
    `timestamp` datetime not null,
    PRIMARY KEY (`id`),
    KEY `ix_userid_filename` (`userid`, `filename`(50)),
-   KEY `ix_status` (`status`(15)),
+   KEY `ix_status` (`status`(15))
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;

@@ -48,14 +48,15 @@ class Uploadcontent extends \Visitor\HelpForm {
   
   public function preSetupForm() {
     
-    $languageModel = $this->bootstrap->getModel('languages');
-    $l             = $this->bootstrap->getLocalization();
-    
-    $this->languages = $languageModel->getAssoc('id', 'originalname', false, false, false, 'weight');
+    $l = $this->bootstrap->getLocalization();
     $this->controller->toSmarty['title']     = $l('recordings', 'uploadcontent_title');
-    $this->controller->toSmarty['languages'] = $this->languages;
-    $this->config['videolanguage']['values'] = $this->languages;
     
+  }
+  
+  public function postGetForm() {
+    $this->form->js       = false;
+    $this->form->nosubmit = true;
+    return parent::postGetForm();
   }
   
   public function onComplete() {
@@ -81,9 +82,14 @@ class Uploadcontent extends \Visitor\HelpForm {
       
     }
     
-    $recordingModel = $this->recordingModel;
-    $user           = $this->bootstrap->getSession('user');
-    $values         = $this->form->getElementValues( 0 );
+    $user   = $this->bootstrap->getSession('user');
+    $values = $this->form->getElementValues( 0 );
+    $info   = array(
+      'iscontent'  => true,
+      'filepath'   => $_FILES['file']['tmp_name'],
+      'filename'   => $_FILES['file']['name'],
+      'handlefile' => 'upload',
+    );
     
     if ( !isset( $this->languages[ $values['videolanguage'] ] ) and $this->swfupload )
       $this->controller->swfuploadMessage( array(
@@ -100,10 +106,7 @@ class Uploadcontent extends \Visitor\HelpForm {
     
     try {
       
-      $recordingModel->analyze(
-        $_FILES['file']['tmp_name'],
-        $_FILES['file']['name']
-      );
+      $this->recordingModel->upload( $info );
       
     } catch( \Model\InvalidFileTypeException $e ) {
       
@@ -123,8 +126,17 @@ class Uploadcontent extends \Visitor\HelpForm {
       $debug->log( false, 'upload.txt',
         'Video from user ' . getuser('email') . ' ' .
         'exceeded size constraints, metadata was ' .
-        var_export( $recordingModel->metadata ),
+        var_export( $this->recordingModel->metadata ),
         true
+      );
+      
+    } catch( \Model\HandleFileException $e ) {
+      
+      $error = 'movefailed';
+      $this->form->addMessage( );
+      $debug->log( false, 'upload.txt',
+        'Handlefile exception for content! -- ' .
+        var_export( $e->getMessage(), true )
       );
       
     } catch( \Exception $e ) {
@@ -145,33 +157,6 @@ class Uploadcontent extends \Visitor\HelpForm {
       
       $this->form->invalidate();
       return;
-      
-    }
-    
-    $recordingModel->addContentRecording(
-      null,
-      $this->bootstrap->config['node_sourceip']
-    );
-    
-    try {
-      
-      $recordingModel->handleFile(
-        $_FILES['file']['tmp_name'],
-        'upload',
-        '_content'
-      );
-      
-      $recordingModel->markContentRecordingUploaded();
-      
-    } catch( Exception $e ) {
-      
-      $recordingModel->updateRow( array(
-          'contentstatus' => 'failedmovinguploadedfile',
-        )
-      );
-      
-      if ( $this->swfupload )
-        $this->controller->swfuploadMessage( array('error' => 'movefailed'), $_FILES['file'] );
       
     }
     

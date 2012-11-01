@@ -537,40 +537,14 @@ class Controller extends \Visitor\Controller {
     if ( !$values['languageid'] )
       throw new \Exception('Invalid language: ' . $language );
     
-    // throws exception, nothing done to the DB yet
-    $recordingModel->analyze(
-      $file['tmp_name'],
-      $file['name']
+    $info = array(
+      'filepath' => $file['tmp_name'],
+      'filename' => $file['name'],
+      'user'     => $user,
+      'language' => $values['languageid'],
     );
     
-    $recordingModel->insertUploadingRecording(
-      $user['id'],
-      $user['organizationid'],
-      $values['languageid'],
-      $file['name'],
-      $this->bootstrap->config['node_sourceip']
-    );
-    
-    try {
-      
-      $recordingModel->handleFile( $file['tmp_name'] );
-      $recordingModel->updateRow( array(
-          'masterstatus' => 'uploaded',
-          'status'       => 'uploaded',
-        )
-      );
-      
-    } catch( Exception $e ) {
-      
-      $recordingModel->updateRow( array(
-          'masterstatus' => 'failedmovinguploadedfile',
-        )
-      );
-      
-      // rethrow
-      throw $e;
-      
-    }
+    $recordingModel->upload( $info );
     
     return $recordingModel->row;
     
@@ -588,42 +562,13 @@ class Controller extends \Visitor\Controller {
     if ( !$recordingModel )
       throw new \Exception('No recording found with that ID');
     
-    if ( !$recordingModel->canUploadContentVideo() )
-      throw new \Exception(
-        'Uploading a content video is denied at this point: ' .
-        var_export( $recordingModel->row, true )
-      );
-    
-    $recordingModel->analyze(
-      $file['tmp_name'],
-      $file['name']
+    $info = array(
+      'iscontent' => true,
+      'filepath'  => $file['tmp_name'],
+      'filename'  => $file['name'],
     );
     
-    $recordingModel->addContentRecording(
-      0, // TODO interlaced?
-      $this->bootstrap->config['node_sourceip']
-    );
-    
-    try {
-      
-      $recordingModel->handleFile(
-        $file['tmp_name'],
-        'upload',
-        '_content'
-      );
-      
-      $recordingModel->markContentRecordingUploaded();
-      
-    } catch( Exception $e ) {
-      
-      $recordingModel->updateRow( array(
-          'contentstatus' => 'failedmovinguploadedfile',
-        )
-      );
-      
-      throw $e;
-      
-    }
+    $recordingModel->upload( $info );
     
     return $recordingModel->row;
     
@@ -886,7 +831,7 @@ class Controller extends \Visitor\Controller {
   public function checkfileresumeAction() {
     
     $filename  = trim( $this->application->getParameter('name') );
-    $filesize  = $this->application->getNumericParameter('size');
+    $filesize  = floatval( @$_REQUEST['size'] );
     $user      = $this->bootstrap->getSession('user');
     
     if ( !$filename or !$filesize )
@@ -962,15 +907,15 @@ class Controller extends \Visitor\Controller {
       $file = $_FILES['file'];
     
     $filename    = trim( $_REQUEST['name'] );
-    $chunk       = intval( @$_REQUEST['chunk'] );
-    $chunks      = intval( @$_REQUEST['chunks'] );
-    $filesize    = (float)@$_REQUEST['size'];
+    $chunk       = $this->application->getNumericParameter('chunk');
+    $chunks      = $this->application->getNumericParameter('chunks');
+    $filesize    = $this->application->getNumericParameter('size', null, true ); // float hogy beleferjen nagy szam
     $uploadModel = $this->bootstrap->getModel('uploads');
     $user        = $this->bootstrap->getSession('user');
+    $iscontent   = (bool)$this->application->getNumericParameter('iscontent');
     $info        = $uploadModel->getFileResumeInfo( $filename, $filesize, $user['id'] );
-    $iscontent   = intval( @$_REQUEST['iscontent'] );
     
-    if ( !$chunks ) // not mandatory
+    if ( !$chunks ) // nem kotelezo, nem lesz megadva ha a file merete kisebb mint a chunk merete
       $chunks = 1;
     
     if (
@@ -983,7 +928,7 @@ class Controller extends \Visitor\Controller {
       while ( $info['status'] == 'handlechunk' and $sleptfor < 30 ) {
         
         sleep(1);
-        $info = $uploadModel->getFileResumeInfo( $filename, $filesize, getuser('id') );
+        $info = $uploadModel->getFileResumeInfo( $filename, $filesize, $user['id'] );
         $sleptfor++;
         
       }
@@ -1011,7 +956,7 @@ class Controller extends \Visitor\Controller {
           'currentchunk' => $chunk,
           'chunkcount'   => $chunks,
           'size'         => $filesize,
-          'userid'       => getuser('id'),
+          'userid'       => $user['id'],
           'status'       => 'handlechunk',
           'timestamp'    => date('Y-m-d H:i:s'),
         )
@@ -1047,15 +992,21 @@ class Controller extends \Visitor\Controller {
         )
       );
       @unlink( $file['tmp_name'] );
-      $interlaced = intval( @$_REQUEST['isinterlaced'] );
+      $info = array(
+        'iscontent'  => $iscontent,
+        'handlefile' => 'rename',
+        'filepath'   => $filepath,
+        'filename'   => $info['filename'],
+        'user'       => $user,
+      );
+      
       try {
         
-        if ( $iscontent ) {
+        if ( $info['iscontent'] ) {
           
-          $recordingid    = intval( @$_REQUEST['recordingid'] );
           $recordingModel = $this->modelOrganizationAndUserIDCheck(
             'recordings',
-            $recordingid,
+            $this->application->getNumericParameter('id'), // recordingid
             false
           );
           
@@ -1065,24 +1016,6 @@ class Controller extends \Visitor\Controller {
               )
             );
           
-          $recordingModel->analyze(
-            $filepath,
-            $info['filename']
-          );
-          
-          $recordingModel->addContentRecording(
-            null,
-            $this->bootstrap->config['node_sourceip']
-          );
-          
-          $recordingModel->handleFile(
-            $filepath,
-            'rename',
-            '_content'
-          );
-          
-          $recordingModel->markContentRecordingUploaded();
-        
         } else {
           
           $recordingModel = $this->bootstrap->getModel('recordings');
@@ -1093,41 +1026,25 @@ class Controller extends \Visitor\Controller {
           if ( !isset( $languages[ $language ] ) )
             $this->jsonOutput( array('status' => 'error', 'error' => 'upload_securityerror') );
           
-          $recordingModel->analyze(
-            $filepath,
-            $info['filename']
-          );
-          
-          $recordingModel->insertUploadingRecording(
-            $user['id'],
-            $user['organizationid'],
-            $language,
-            $info['filename'],
-            $this->bootstrap->config['node_sourceip']
-          );
-          
-          $recordingModel->handleFile( $filepath, 'rename' );
-          $recordingModel->updateRow( array(
-              'masterstatus' => 'uploaded',
-              'status'       => 'uploaded',
-            )
-          );
+          $info['language'] = $language;
           
         }
         
-      } catch( InvalidFileTypeException $e ) {
+        $recordingModel->upload( $info );
+        
+      } catch( \Model\InvalidFileTypeException $e ) {
         $error   = 'upload_invalidfiletype';
         $message = $e->getMessage();
-      } catch( InvalidLengthException $e ) {
+      } catch( \Model\InvalidLengthException $e ) {
         $error   = 'upload_invalidlength';
         $message = $e->getMessage();
-      } catch( InvalidVideoResolutionException $e ) {
+      } catch( \Model\InvalidVideoResolutionException $e ) {
         $error   = 'upload_recordingtoobig';
         $message = $e->getMessage();
-      } catch( InvalidException $e ) {
+      } catch( \Model\InvalidException $e ) {
         $error   = 'upload_failedvalidation';
         $message = $e->getMessage();
-      } catch( Exception $e ) {
+      } catch( \Exception $e ) {
         $error   = 'upload_unkownerror';
         $message = $e->getMessage();
       }
@@ -1135,7 +1052,7 @@ class Controller extends \Visitor\Controller {
       if ( isset( $error ) )
         $this->chunkResponseAndLog( array(
             'status' => 'error',
-            'error' => $error
+            'error'  => $error
           ),
           "Recording upload (iscontent: $iscontent) failed with exception message: $message \n\n" .
           'Metadata: ' . var_export( @$recordingModel->metadata, true )

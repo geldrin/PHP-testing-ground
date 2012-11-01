@@ -4,6 +4,7 @@ namespace Model;
 class InvalidFileTypeException extends \Exception {}
 class InvalidLengthException extends \Exception {}
 class InvalidVideoResolutionException extends \Exception {}
+class HandleFileException extends \Exception {}
 
 class Recordings extends \Springboard\Model {
   public $apisignature = array(
@@ -416,7 +417,7 @@ class Recordings extends \Springboard\Model {
     $this->ensureObjectLoaded();
     
     if ( !$this->metadata )
-      throw new \Exception('No metadata for the video found, please ->analyize() it beforehand!');
+      throw new HandleFileException('No metadata for the video found, please ->analyize() it beforehand!');
     
     if ( $postfix === null ) {
       
@@ -436,13 +437,88 @@ class Recordings extends \Springboard\Model {
       case 'copy':   $ret = copy( $source, $target ); break;
       case 'upload': $ret = move_uploaded_file( $source, $target ); break;
       case 'rename': $ret = rename( $source, $target ); break;
-      default: throw new \Exception('unsupported operation: ' . $handlefile ); break;
+      default: throw new HandleFileException('unsupported operation: ' . $handlefile ); break;
     }
     
     if ( !$ret )
-      throw new \Exception( $handlefile . ' failed from ' . $source . ' to ' . $target );
+      throw new HandleFileException( $handlefile . ' failed from ' . $source . ' to ' . $target );
     
     return $ret;
+    
+  }
+  
+  public function upload( &$info ) {
+    
+    if ( !isset( $info['filepath'] ) or !isset( $info['filename'] ) )
+      throw new \Exception("No filepath and filename passed!");
+    
+    $iscontent = ( isset( $info['iscontent'] ) and $info['iscontent'] );
+    $postfix   = $iscontent? '_content': null;
+    
+    if ( $iscontent ) {
+      
+      $this->ensureObjectLoaded();
+      $statusfield = 'contentstatus';
+      
+      if ( !$this->canUploadContentVideo() )
+        throw new \Exception(
+          'Uploading a content video is denied at this point: ' .
+          var_export( $this->row, true )
+        );
+      
+      $this->analyze( $info['filepath'], $info['filename'] );
+      $this->addContentRecording(
+        null,
+        $this->bootstrap->config['node_sourceip']
+      );
+      
+    } else {
+      
+      if ( !isset( $info['user'] ) or !$info['user']['id'] or !isset( $info['language'] ) )
+        throw new \Exception('No language or user passed!');
+      
+      $statusfield = 'masterstatus';
+      $this->analyze( $info['filepath'], $info['filename'] );
+      $this->insertUploadingRecording(
+        $info['user']['id'],
+        $info['user']['organizationid'],
+        $info['language'],
+        $info['filename'],
+        $this->bootstrap->config['node_sourceip']
+      );
+      
+    }
+  
+    try {
+      
+      $this->handleFile( $info['filepath'], $info['handlefile'], $postfix );
+      
+    } catch( \Exception $e ) {
+      
+      $this->updateRow( array(
+          $statusfield => 'failedmovinguploadedfile',
+        )
+      );
+      
+      throw $e;
+      
+    }
+    
+    if ( $iscontent ) {
+      
+      $this->markContentRecordingUploaded();
+      
+    } else {
+      
+      $this->updateRow( array(
+          'masterstatus' => 'uploaded',
+          'status'       => 'uploaded',
+        )
+      );
+      
+    }
+    
+    return true;
     
   }
   

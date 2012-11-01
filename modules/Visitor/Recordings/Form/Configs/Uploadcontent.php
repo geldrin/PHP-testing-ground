@@ -18,9 +18,9 @@ $config = Array(
     'value' => $this->application->getNumericParameter('id'),
   ),
   
-  'videolanguage' => array(
-    'type'        => 'select',
-    'displayname' => $l('recordings', 'language'),
+  'iscontent' => array(
+    'type'        => 'inputHidden',
+    'value'       => '1',
   ),
   
   'file' => Array(
@@ -50,7 +50,7 @@ $config = Array(
       <div id="bigfilewarning"><span class="ui-icon ui-icon-alert"></span>' . $l('recordings', 'bigfilewarning') . '</div>
       <div id="uploadbrowsecontainer">
         <a href="#" id="uploadtoggle" class="submitbutton right" data-stopupload="' . $l('recordings', 'stopupload') . '">' . $l('recordings', 'startupload') . '</a>
-        <a href="#" id="uploadbrowse" class="submitbutton">' . $l('recordings', 'addfiles') . '</a>
+        <a href="#" id="uploadbrowse" class="submitbutton">' . $l('recordings', 'addfile') . '</a>
       </div>
       <div id="uploadprogress">
         <div class="progresswrap green hover" style="display: none;">

@@ -759,7 +759,7 @@ recordingUpload.prototype.onStateChange = function( uploader ) {
     for ( var i = 0, j = serializedform.length; i < j; i++ ) {
       
       var option = serializedform[i];
-      if ( option.name == 'target' && uploader.settings.chunk_size )
+      if ( option.name == 'action' && uploader.settings.chunk_size )
         continue;
       
       params[ option.name ] = option.value;
@@ -974,7 +974,7 @@ function setupVideoUpload() {
   $j('#file').parents('tr').hide();
   var uploader = new recordingUpload({
     multiplefilesallowed: $j('#uploadrow').attr('data-multiplefiles') != '0',
-    drop_element: 'recordingupload'
+    drop_element: 'videoupload'
   });
   
   if ( uploader.uploader.features.dragdrop ) {

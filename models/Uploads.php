@@ -6,9 +6,9 @@ class Uploads extends \Springboard\Model {
   public function getFileResumeInfo( $filename, $filesize, $userid ) {
     
     $this->clearFilter();
-    $this->addFilter('userid', $userid );
-    $this->addFilter('filename', $filename );
-    $this->addFilter('size', $filesize );
+    $this->addFilter('userid',   $userid );
+    $this->addFilter('filename', $filename, false, false );
+    $this->addFilter('size',     $filesize );
     $this->addTextFilter("status IN('uploading', 'handlechunk')");
     
     return $this->getRow( false, 'id DESC');
@@ -44,7 +44,7 @@ class Uploads extends \Springboard\Model {
       
     } else {
       
-      if ( !$this->append( $dest, $chunkpath ) )
+      if ( !$this->append( $chunkpath, $dest ) )
         return false;
       
     }
@@ -77,14 +77,19 @@ class Uploads extends \Springboard\Model {
       $data    = fread( $whathandle, 524288 ); // 0.5 mbyte
       $written = 0;
       $len     = strlen( $data );
+      $loops   = 0;
       
-      while ( $written != $len ) {
+      while ( $written != $len and $loops <= 10 ) {
         
+        $loops++;
         $written += fwrite( $wherehandle, $data );
         if ( $written != $len )
           $data   = substr( $data, $written );
         
       }
+      
+      if ( $loops > 10 )
+        throw new \Exception('It took more than 10 loops to append the file!');
       
     }
     

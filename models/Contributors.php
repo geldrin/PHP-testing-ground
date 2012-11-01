@@ -3,10 +3,10 @@ namespace Model;
 
 class Contributors extends \Springboard\Model {
   
-  public function update( &$rs, $values ) {
+  public function update( &$rs, $values, $keepresultset = false ) {
     
     $this->updateRecordingsMetadataTimestamp();
-    return parent::update( $rs, $values );
+    return parent::update( $rs, $values, $keepresultset );
     
   }
   
