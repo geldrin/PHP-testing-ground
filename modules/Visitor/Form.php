@@ -2,6 +2,7 @@
 namespace Visitor;
 
 class Form extends \Springboard\Controller\Form {
+  public $xsrfprotect = true;
   
   public function postGetForm() {
     

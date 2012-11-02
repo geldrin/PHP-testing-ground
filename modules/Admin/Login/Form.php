@@ -65,4 +65,21 @@ class Form extends \Springboard\Controller\Admin\Form {
     
   }
   
+  protected function handleXSRFIndex() {
+    
+    switch( $this->action ) {
+      
+      case 'login':
+        $this->submitted = true; // FALLTHROUGH
+      case 'index':
+        $action = 'login';
+        break;
+      
+    }
+    
+    $index  = sprintf('admin_%s_%s', $this->module, $action );
+    return $index;
+    
+  }
+  
 }

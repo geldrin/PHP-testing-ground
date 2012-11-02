@@ -4,7 +4,7 @@ set_time_limit(0);
 
 class Uploadcontent extends \Visitor\HelpForm {
   public $configfile   = 'Uploadcontent.php';
-  public $template     = 'Visitor/Recordings/Uploadcontent.tpl';
+  public $template     = 'Visitor/Recordings/Upload.tpl';
   public $swfupload    = false;
   public $languages    = array();
   public $recordingModel;
@@ -50,6 +50,9 @@ class Uploadcontent extends \Visitor\HelpForm {
     
     $l = $this->bootstrap->getLocalization();
     $this->controller->toSmarty['title']     = $l('recordings', 'uploadcontent_title');
+    $this->controller->toSmarty['uploadurl'] =
+      $this->controller->getUrlFromFragment('recordings/uploadcontent' )
+    ;
     
   }
   

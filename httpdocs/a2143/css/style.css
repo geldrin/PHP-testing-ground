@@ -567,3 +567,9 @@ form fieldset input[type=text], form fieldset textarea {
 form fieldset select[multiple=multiple] {
   height: 200px;
 }
+form input[type=text].localefield, form textarea.localefield {
+  width: 700px;
+}
+form textarea.localefield {
+  height: 80px;
+}

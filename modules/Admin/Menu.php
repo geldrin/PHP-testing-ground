@@ -60,6 +60,13 @@ class Menu {
         'icon'   => 'images/sekkyumu/write_document.png',
         'text'   => 'kategóriák',
       ),
+      
+      array(
+        'link'   => 'localization',
+        'icon'   => 'images/sekkyumu/write_document.png',
+        'text'   => 'fordítás',
+      ),
+      
       /*
       array(
         'link'   => 'roles',

@@ -40,6 +40,9 @@ class Upload extends \Visitor\HelpForm {
     $this->controller->toSmarty['title']     = $l('recordings', 'upload_title');
     $this->controller->toSmarty['languages'] = $this->languages;
     $this->config['videolanguage']['values'] = $this->languages;
+    $this->controller->toSmarty['uploadurl'] =
+      $this->controller->getUrlFromFragment('recordings/upload' )
+    ;
     
   }
   

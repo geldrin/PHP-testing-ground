@@ -831,7 +831,7 @@ class Controller extends \Visitor\Controller {
   public function checkfileresumeAction() {
     
     $filename  = trim( $this->application->getParameter('name') );
-    $filesize  = floatval( @$_REQUEST['size'] );
+    $filesize  = $this->application->getNumericParameter('size', null, true );
     $user      = $this->bootstrap->getSession('user');
     
     if ( !$filename or !$filesize )
@@ -906,7 +906,7 @@ class Controller extends \Visitor\Controller {
     else
       $file = $_FILES['file'];
     
-    $filename    = trim( $_REQUEST['name'] );
+    $filename    = trim( $this->application->getParameter('name') );
     $chunk       = $this->application->getNumericParameter('chunk');
     $chunks      = $this->application->getNumericParameter('chunks');
     $filesize    = $this->application->getNumericParameter('size', null, true ); // float hogy beleferjen nagy szam
@@ -1021,7 +1021,7 @@ class Controller extends \Visitor\Controller {
           $recordingModel = $this->bootstrap->getModel('recordings');
           $languageModel  = $this->bootstrap->getModel('languages');
           $languages      = $languageModel->getAssoc('id', 'originalname', false, false, false, 'weight');
-          $language       = intval( @$_REQUEST['videolanguage'] );
+          $language       = $this->application->getNumericParameter('videolanguage');
           
           if ( !isset( $languages[ $language ] ) )
             $this->jsonOutput( array('status' => 'error', 'error' => 'upload_securityerror') );
