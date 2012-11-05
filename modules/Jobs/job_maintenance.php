@@ -46,11 +46,15 @@ try {
 	exit;
 }
 
+/*
+
 $err = mailqueue_cleanup();
 
 $err = statscounter_reset();
 
-$err = db_maintenance();
+$err = db_maintenance(); */
+
+$err = uploads_maintenance();
 
 $db->close();
 
@@ -125,5 +129,54 @@ global $db, $jconf;
 	return TRUE;
 }
 
+function uploads_maintenance() {
+
+	$files = array();
+
+	// One week
+	$date_old = date("Y-m-d H:i:00", time() - (60 * 60 * 24 * 7));
+
+	try {
+		$files = $db->Execute("
+			SELECT
+				id,
+				userid,
+				filename,
+				size,
+				chunkcount,
+				currentchunk,
+				status,
+				timestamp
+			FROM
+				uploads
+			WHERE
+				status NOT IN ('completed', 'deleted') AND
+				timestamp < '" . $date_old . "'
+		");
+	} catch( exception $err ) {
+		$debug->log($jconf['log_dir'], $jconf['jobid_maintenance'] . ".log", "[ERROR] SQL query failed. Query:\n\n" . trim($query), $sendmail = true);
+		return FALSE;
+	}
+
+	// Remove old files
+	while ( !$files->EOF ) {
+
+		$file = array();
+		$file = $files->fields;
+
+		$path_parts = pathinfo($file['filename']);
+		$filename = $file['id'] . $path_parts['extension'];
+
+		if ( !file_exist($filename) ) {
+
+			echo "NEM\n";
+		}
+
+		$files->MoveNext();
+	}
+
+	return TRUE;
+
+}
 
 ?>
