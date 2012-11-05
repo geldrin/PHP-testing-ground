@@ -130,11 +130,15 @@ global $db, $jconf;
 }
 
 function uploads_maintenance() {
+global $db, $app, $jconf;
+
+	$chunkpath = $app->config['chunkpath'];
 
 	$files = array();
 
 	// One week
-	$date_old = date("Y-m-d H:i:00", time() - (60 * 60 * 24 * 7));
+//	$date_old = date("Y-m-d H:i:00", time() - (60 * 60 * 24 * 7));
+	$date_old = date("Y-m-d H:i:00");
 
 	try {
 		$files = $db->Execute("
@@ -157,6 +161,8 @@ function uploads_maintenance() {
 		$debug->log($jconf['log_dir'], $jconf['jobid_maintenance'] . ".log", "[ERROR] SQL query failed. Query:\n\n" . trim($query), $sendmail = true);
 		return FALSE;
 	}
+	
+
 
 	// Remove old files
 	while ( !$files->EOF ) {
@@ -165,11 +171,17 @@ function uploads_maintenance() {
 		$file = $files->fields;
 
 		$path_parts = pathinfo($file['filename']);
-		$filename = $file['id'] . $path_parts['extension'];
+		$filename = $chunkpath . $file['id'] . "." . $path_parts['extension'];
 
-		if ( !file_exist($filename) ) {
+echo $filename . "\n";
 
-			echo "NEM\n";
+		if ( file_exists($filename) ) {
+			echo "LÉTEZIK\n";
+			// Remove file, update status
+		} else {
+		    // File does not exist
+		    $debug->log($jconf['log_dir'], $jconf['jobid_maintenance'] . ".log", "[ERROR] Uploaded file chunks not found. File: " . $filename . "\n\n" . print_r($file, TRUE), $sendmail = true);
+		    return FALSE;
 		}
 
 		$files->MoveNext();
