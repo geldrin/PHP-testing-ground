@@ -153,7 +153,7 @@ class Livefeeds extends \Springboard\Model {
            ( !$browser['mobile'] and $stream['isdesktopcompatible'] ) or
            ( $browser['mobiledevice'] == 'iphone' and $stream['isioscompatible'] ) or
            ( $browser['mobiledevice'] == 'android' and $stream['isandroidcompatible'] ) or
-           $unknown
+           ( $browser['mobile'] and $unknown )
          )
         $narrowedstreams[ $stream['id'] ] = $stream;
       
@@ -168,7 +168,7 @@ class Livefeeds extends \Springboard\Model {
     
     if ( // ha nem mobil vagy nem ismert mobil device, de a stream desktop kompat
          ( !$browser['mobile'] and $defaultstream['isdesktopcompatible'] ) or
-         ( $defaultstream['isdesktopcompatible'] and $unknown )
+         ( $browser['mobile'] and $defaultstream['isdesktopcompatible'] and $unknown )
        )
       $streamtype = 'desktop';
     elseif ( // ha mobil es android, vagy mobil es ismeretlen de a stream android kompat
@@ -177,7 +177,7 @@ class Livefeeds extends \Springboard\Model {
               $browser['mobiledevice'] == 'android' and
               $defaultstream['isandroidcompatible']
             ) or
-            ( $defaultstream['isandroidcompatible'] and $unknown )
+            ( $browser['mobile'] and $defaultstream['isandroidcompatible'] and $unknown )
            )
       $streamtype = 'android';
     elseif ( // ha mobil es ios, vagy mobil es ismeretlen de a stream ios kompat
@@ -186,7 +186,7 @@ class Livefeeds extends \Springboard\Model {
               $browser['mobiledevice'] == 'iphone' and
               $defaultstream['isioscompatible']
             ) or
-            ( $defaultstream['isioscompatible'] and $unknown )
+            ( $browser['mobile'] and $defaultstream['isioscompatible'] and $unknown )
            )
       $streamtype = 'ios';
     elseif ( $defaultstream['isdesktopcompatible'] ) // peldaul ha ismert mobile device de nem kompatibilis a stream akkor ez a fallback sorrend
