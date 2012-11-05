@@ -46,15 +46,19 @@ try {
 	exit;
 }
 
-/*
 
+// Mailqueue maintenance
 $err = mailqueue_cleanup();
 
+// Stats counter reset (daily, monthly)
 $err = statscounter_reset();
 
-$err = db_maintenance(); */
+// DB: run optimize table
+$err = db_maintenance();
 
+// Upload chunks maintenance
 $err = uploads_maintenance();
+
 
 $db->close();
 
@@ -137,8 +141,8 @@ global $db, $app, $jconf;
 	$files = array();
 
 	// One week
-//	$date_old = date("Y-m-d H:i:00", time() - (60 * 60 * 24 * 7));
-	$date_old = date("Y-m-d H:i:00");
+	$date_old = date("Y-m-d H:i:00", time() - (60 * 60 * 24 * 7));
+//	$date_old = date("Y-m-d H:i:00");
 
 	try {
 		$files = $db->Execute("
@@ -157,14 +161,13 @@ global $db, $app, $jconf;
 				status NOT IN ('completed', 'deleted') AND
 				timestamp < '" . $date_old . "'
 		");
-	} catch( exception $err ) {
+	} catch(exception $err) {
 		$debug->log($jconf['log_dir'], $jconf['jobid_maintenance'] . ".log", "[ERROR] SQL query failed. Query:\n\n" . trim($query), $sendmail = true);
 		return FALSE;
 	}
 	
 
-
-	// Remove old files
+	// Remove file chunks older than a week
 	while ( !$files->EOF ) {
 
 		$file = array();
@@ -173,15 +176,32 @@ global $db, $app, $jconf;
 		$path_parts = pathinfo($file['filename']);
 		$filename = $chunkpath . $file['id'] . "." . $path_parts['extension'];
 
-echo $filename . "\n";
-
 		if ( file_exists($filename) ) {
-			echo "LÉTEZIK\n";
-			// Remove file, update status
+			// Remove file
+			if ( unlink($filename) ) {
+				// Update chunk status
+				$query = "
+					UPDATE
+						uploads
+					SET
+						status = 'deleted'
+					WHERE
+						id = " . $file['id'];
+				try {
+					$db->Execute($query);
+				} catch(exception $err) {
+					$debug->log($jconf['log_dir'], $jconf['jobid_maintenance'] . ".log", "[ERROR] SQL query failed. Query:\n\n" . trim($query), $sendmail = true);
+					return FALSE;
+				}
+			} else {
+				// File does not exist
+				$debug->log($jconf['log_dir'], $jconf['jobid_maintenance'] . ".log", "[ERROR] Uploaded file chunk cannot be deleted. File: " . $filename . "\n\n" . print_r($file, TRUE), $sendmail = true);
+				continue;
+			}
 		} else {
 		    // File does not exist
-		    $debug->log($jconf['log_dir'], $jconf['jobid_maintenance'] . ".log", "[ERROR] Uploaded file chunks not found. File: " . $filename . "\n\n" . print_r($file, TRUE), $sendmail = true);
-		    return FALSE;
+		    $debug->log($jconf['log_dir'], $jconf['jobid_maintenance'] . ".log", "[ERROR] Uploaded chunk not found. File: " . $filename . "\n\n" . print_r($file, TRUE), $sendmail = true);
+		    continue;
 		}
 
 		$files->MoveNext();
