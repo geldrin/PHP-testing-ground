@@ -99,8 +99,8 @@ $config['slideonright'] = array(
   'value'       => 1,
   'itemlayout'  => '%radio% %label%<br />',
   'values'      => array(
-    0 => $l('recordings', 'slideleft'),
-    1 => $l('recordings', 'slideright'),
+    0 => $l('live', 'slideleft'),
+    1 => $l('live', 'slideright'),
   ),
 );
 
