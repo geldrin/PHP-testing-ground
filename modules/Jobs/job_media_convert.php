@@ -108,6 +108,9 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_media_convert.stop' ) and 
 			update_db_recording_status($recording['id'], $jconf['dbstatus_conv_audio_err']);
 			break;
 		}
+
+		$app->watchdog();
+
 		if ( $recording['mastermediatype'] != "audio" ) {
 
 			update_db_recording_status($recording['id'], $jconf['dbstatus_conv_video']);
@@ -761,6 +764,8 @@ global $app, $jconf, $global_log;
 function copy_media_to_frontend($recording, $recording_info_mobile_lq, $recording_info_mobile_hq, $recording_info_lq, $recording_info_hq) {
 global $app, $jconf;
 
+	$app->watchdog();
+
 	update_db_recording_status($recording['id'], $jconf['dbstatus_copystorage']);
 
 	// Reconvert: remove master file (do not copy back as already in place)
@@ -875,6 +880,8 @@ global $app, $jconf;
 	// Remove temporary directory, no failure if not successful
 	$err = remove_file_ifexists($recording['temp_directory']);
 	if ( !$err['code'] ) log_recording_conversion($recording['id'], $jconf['jobid_media_convert'], $jconf['dbstatus_copystorage'], $err['message'], $err['command'], $err['result'], 0, TRUE);
+
+	$app->watchdog();
 
 	return TRUE;
 }

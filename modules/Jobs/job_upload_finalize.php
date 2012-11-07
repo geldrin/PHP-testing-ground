@@ -238,11 +238,23 @@ global $jconf, $app, $global_log;
 		return FALSE;
 	}
 // conv:conv owner force?
-	if ( !chmod($fname_target, 0664) ) {
+	// File access user/group: conv:conv | File access rights: 664
+	$command = "";
+	$command .= "chmod -f " . $jconf['file_access']	. " " . $fname_target . " ; ";
+	$command .= "chown -f " . $jconf['file_owner']	. " " . $fname_target . " ; ";
+	exec($command, $output, $result);
+	$output_string = implode("\n", $output);
+	if ( $result != 0 ) {
+		$msg = "[ERROR] Cannot stat document file on storage. Failed command:\n\n" . $command;
+		$global_log .= $msg . "\n";
+		log_document_conversion($doc['id'], $doc['recordingid'], $jconf['jobid_upload_finalize'], $jconf['dbstatus_copyfromfe'], $msg, $command, $output_string, 0, TRUE);
+	}
+
+/*	if ( !chmod($fname_target, 0664) ) {
 		$msg = "[ERROR] Cannot stat document file on storage";
 		$global_log .= $msg . "\n";
 		log_document_conversion($doc['id'], $doc['recordingid'], $jconf['jobid_upload_finalize'], $jconf['dbstatus_copyfromfe'], $msg, "php: chmod(\"" . $fname . "\",\"" . $fname_target . "\")", $err, 0, TRUE);
-	}
+	} */
 
 	// Remove original file from front-end location
 	$err = remove_file_ifexists($fname);

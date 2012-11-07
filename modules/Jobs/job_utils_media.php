@@ -430,6 +430,8 @@ TODO: run CLI tests
 		$global_log .= $profile['name'] . " conversion in " . secs2hms($err['duration']) . " time.\n";
 	}
 
+	$app->watchdog();
+
 	$err = ffmpeg_qtfaststart($recording_info['output_file']);
 	if ( !$err['code'] ) {
 		log_recording_conversion($recording['id'], $jconf['jobid_media_convert'], $jconf['dbstatus_conv_video'], $err['message'] . "\nSource file: " . $recording_info['output_file'] . "\nDestination file: " . $recording_info['output_file'], $err['command'], $err['command_output'], $err['duration'], TRUE);
