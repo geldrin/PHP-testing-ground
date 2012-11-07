@@ -100,11 +100,6 @@ return array(
     'failed'                => 'Conversion failed',
   ),
   
-  'hascontent' => array(
-    '0' => 'Use one stream',
-    '1' => 'Use two streams at the same time (for broadcasting the presenter and slides simultaneously)',
-  ),
-  
   'moderationtype' => array(
     'postmoderation' => 'Post moderation',
     'premoderation'  => 'Explicit moderation',

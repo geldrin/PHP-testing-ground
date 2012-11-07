@@ -721,7 +721,6 @@ class Channels extends \Springboard\Model {
         channelid,
         name,
         slideonright,
-        hascontent,
         feedtype
       FROM livefeeds
       WHERE channelid IN('" . $this->id . "')

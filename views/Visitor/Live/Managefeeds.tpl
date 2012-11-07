@@ -60,7 +60,7 @@
               <label for="broadcastlink-{$stream.id}">{#live__streambroadcastlink#}:</label>
               <input id="broadcastlink-{$stream.id}" type="text" value="{$bootstrap->config.wowza.liveingressurl|escape:html}{$stream.keycode|escape:html}"/>
             </div>
-            {if $feed.hascontent}
+            {if $stream.isdesktopcompatible}
               <div class="broadcastlink">
                 <label for="broadcastlink-{$stream.id}-2">{#live__secondarystreambroadcastlink#}:</label>
                 <input id="broadcastlink-{$stream.id}-2" type="text" value="{$bootstrap->config.wowza.liveingressurl|escape:html}{$stream.contentkeycode|escape:html}"/>

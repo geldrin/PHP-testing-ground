@@ -484,7 +484,6 @@ CREATE TABLE `livefeeds` (
    `channelid` int(10) unsigned, /* live channel id - az az elo channel (isliveevent=1), ami alatti esemenyek ezt a feedet hasznalhatjak */
    `name` text,
    `slideonright` int(11) not null default '0',
-   `hascontent` int(11) not null default '0',
    `accesstype` text not null,
    `issecurestreamingforced` int(11) not null default '0',
    `feedtype` text,

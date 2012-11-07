@@ -31,14 +31,6 @@ $config = array(
     ),
   ),
   
-  'hascontent' => array(
-    'displayname' => $l('live', 'hascontent'),
-    'type'        => 'inputRadio',
-    'values'      => $l->getLov('hascontent'),
-    'value'       => 1,
-    'divider'     => '<br/>',
-    'divide'      => 1,
-  ),
 );
 
 if ( $this->controller->organization['isvcrenabled'] ) {

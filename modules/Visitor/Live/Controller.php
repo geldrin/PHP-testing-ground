@@ -110,15 +110,12 @@ class Controller extends \Visitor\Controller {
       'media_streams'   => array( $currentstream['keycode'] ),
       'recording_title' => $feedModel->row['name'],
       'recording_type'  => 'live',
+      'media_secondaryServers' => array( $this->bootstrap->config['wowza']['liveingressurl'] . $authorizecode ),
+      'media_secondaryStreams' => array( $currentstream['contentkeycode'] ),
     );
     
-    if ( $feedModel->row['hascontent'] and ( !$chromeless or $fullplayer ) ) {
-      
-      $flashdata['media_secondaryServers'] = array( $this->bootstrap->config['wowza']['liveingressurl'] . $authorizecode );
-      $flashdata['media_secondaryStreams'] = array( $currentstream['contentkeycode'] );
-      $this->toSmarty['doublewidth']       = true;
-      
-    }
+    if ( !$chromeless or $fullplayer )
+      $this->toSmarty['doublewidth'] = true;
     
     if ( !$feedModel->row['slideonright'] )
       $flashdata['layout_videoOrientation'] = 'right';

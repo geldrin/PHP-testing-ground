@@ -120,11 +120,6 @@ return array(
     'failed'                => 'Konvertálás sikertelen',
   ),
   
-  'hascontent' => array(
-    '0' => 'egy videófolyam (stream) használata',
-    '1' => 'két videófolyam (stream) egyidejű használata (pl. előadó és fóliák párhuzamos közvetítéséhez)',
-  ),
-  
   'moderationtype' => array(
     'postmoderation' => 'Utólagos moderálás',
     'premoderation'  => 'Megjelenés előtt moderált hozzászólások',

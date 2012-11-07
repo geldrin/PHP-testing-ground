@@ -31,7 +31,6 @@ if ( $this->feedModel->row['feedtype'] == 'live' ) {
   
   if ( !$this->feedModel->canDeleteFeed() )
     unset(
-      $config['hascontent'],
       $config['feedtype'], // nem változtatható
       $config['recordinglinkid']['validation'][0]['anddepend']
     );
