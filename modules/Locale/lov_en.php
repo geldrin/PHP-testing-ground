@@ -69,7 +69,7 @@ return array(
     'public'        => 'public (recommended)',
     'registrations' => 'requires registration',
     'departments'   => 'group of departments',
-    'groups'        => 'own defined group',
+    'groups'        => 'own group',
   ),
   
   'permissions' => array(
@@ -106,27 +106,27 @@ return array(
   ),
   
   'moderationtype' => array(
-    'postmoderation' => 'After-the-fact moderation',
-    'premoderation'  => 'Moderated before appearing',
+    'postmoderation' => 'Post moderation',
+    'premoderation'  => 'Explicit moderation',
     'nochat'         => 'Chat disabled',
   ),
   
   'feedtype' => array(
     'live' => 'Live recording',
-    'vcr'  => 'Record video conference',
+    'vcr'  => 'Record videoconference',
   ),
   
   'encryption' => array(
-    0 => 'No encryption',
-    1 => 'Encrypt (resource intensive)',
+    0 => 'Unencrypted streaming',
+    1 => 'Encrypted streaming',
   ),
   
   'streamstatus' => array(
-    'start'         => 'Recording starting...',
-    'starting'      => 'Recording starting...',
+    'start'         => 'Recording initiation...',
+    'starting'      => 'Recording initiation...',
     'recording'     => 'Recording in progress...',
-    'disconnect'    => 'Recording stopping...',
-    'disconnecting' => 'Recording stopping...',
+    'disconnect'    => 'Recording termination...',
+    'disconnecting' => 'Recording termination...',
     'upload'        => 'Recording processing...',
     'ready'         => 'Recording processing...',
     ''              => '',

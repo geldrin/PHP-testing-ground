@@ -105,7 +105,7 @@ return array(
     'uploading'             => 'Feltöltés alatt',
     'uploaded'              => 'Feltöltve',
     'onstorage'             => 'Konvertálás kész',
-    'copyingtoconverter'    => 'Feldolgozásra várakozás',
+    'copyingtoconverter'    => 'Feldolgozásra vár',
     'markedfordeletion'     => 'Törölve',
     'unavailable'           => 'Feldolgozás alatt',
     'init'                  => 'Feldolgozás alatt',
@@ -126,7 +126,7 @@ return array(
   ),
   
   'moderationtype' => array(
-    'postmoderation' => 'Útólagos moderálás',
+    'postmoderation' => 'Utólagos moderálás',
     'premoderation'  => 'Megjelenés előtt moderált hozzászólások',
     'nochat'         => 'Hozzászólások letiltva',
   ),
@@ -137,16 +137,16 @@ return array(
   ),
   
   'encryption' => array(
-    0 => 'Titkosítás nélküli adatfolyam',
-    1 => 'Titkosítás (nagyobb erőforrásigény)',
+    0 => 'Nincs titkosítás',
+    1 => 'Titkosított streaming',
   ),
   
   'streamstatus' => array(
     'start'         => 'Felvétel indítása folyamatban...',
     'starting'      => 'Felvétel indítása folyamatban...',
     'recording'     => 'Felvétel folyamatban...',
-    'disconnect'    => 'Felvétel lebontása...',
-    'disconnecting' => 'Felvétel lebontása...',
+    'disconnect'    => 'Felvétel befejezése...',
+    'disconnecting' => 'Felvétel befejezése...',
     'upload'        => 'Felvétel feldolgozása folyamatban...',
     'ready'         => 'Felvétel feldolgozása folyamatban...',
     ''              => '',
