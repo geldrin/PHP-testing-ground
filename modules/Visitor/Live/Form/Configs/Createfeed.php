@@ -93,6 +93,17 @@ else
     'readonly' => true,
   );
 
+$config['slideonright'] = array(
+  'displayname' => $l('live', 'slideonright'),
+  'type'        => 'inputRadio',
+  'value'       => 1,
+  'itemlayout'  => '%radio% %label%<br />',
+  'values'      => array(
+    0 => $l('recordings', 'slideleft'),
+    1 => $l('recordings', 'slideright'),
+  ),
+);
+
 include( $this->bootstrap->config['modulepath'] . 'Visitor/Form/Configs/Accesstype.php');
 
 $config['moderationtype'] = array(
