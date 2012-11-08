@@ -1,32 +1,32 @@
 {include file="Visitor/_header.tpl"}
 <div id="contentsbody">
-<h1>Üdvözöljük XYZ!</h1>
+<h1>ÃœdvÃ¶zÃ¶ljÃ¼k XYZ!</h1>
 
-<h2>Saját oldalaim</h2>
+<h2>SajÃ¡t oldalaim</h2>
 
   <ul>
     <li><a href="{$language}/users/modify">Adataim</a></li>
-    <li><a href="{$language}/users/logout">Kilépés</a></li>
+    <li><a href="{$language}/users/logout">KilÃ©pÃ©s</a></li>
   </ul>
 
 <h2>Tartalom</h2>
   <ul>
-    <li><a href="{$language}/recordings/myrecordings">Felvételeim</a></li>
-    <li><a href="{$language}/channels/mychannels">Csatornáim</a></li>
-    <li><a href="{$language}/channels/create">Csatorna létrehozása</a></li>
-    <li><a href="{$language}/recordings/featured">Ajánló</a></li>
+    <li><a href="{$language}/recordings/myrecordings">FelvÃ©teleim</a></li>
+    <li><a href="{$language}/channels/mychannels">CsatornÃ¡im</a></li>
+    <li><a href="{$language}/channels/create">Csatorna lÃ©trehozÃ¡sa</a></li>
+    <li><a href="{$language}/recordings/featured">AjÃ¡nlÃ³</a></li>
 
   </ul>
 
-<h2>Adminisztrátori funkciók</h2>
+<h2>AdminisztrÃ¡tori funkciÃ³k</h2>
   <ul>
-    <li><a href="{$language}/users/admin">Felhasználók kezelése</a></li>
-    <li><a href="{$language}/genres/admin">Mûfajok szerkesztése</a></li>
-    <li><a href="{$language}/categories/admin">Kategóriák szerkesztése</a></li>
-    <li><a href="{$language}/organizations/createnews">Hír hozzáadása</a></li>
-    <li><a href="{$language}/organizations/listnews">Hírszerkesztõ</a></li>
-    <li><a href="{$language}/organizations/modifyintroduction">Szervezet bemutatása</a></li>
-    <li><a href="{$language}/departments/admin">Szervezeti egységek szerkesztése</a></li>
+    <li><a href="{$language}/users/admin">FelhasznÃ¡lÃ³k kezelÃ©se</a></li>
+    <li><a href="{$language}/genres/admin">MÅ±fajok szerkesztÃ©se</a></li>
+    <li><a href="{$language}/categories/admin">KategÃ³riÃ¡k szerkesztÃ©se</a></li>
+    <li><a href="{$language}/organizations/createnews">HÃ­r hozzÃ¡adÃ¡sa</a></li>
+    <li><a href="{$language}/organizations/listnews">HÃ­rszerkesztÅ‘</a></li>
+    <li><a href="{$language}/organizations/modifyintroduction">Szervezet bemutatÃ¡sa</a></li>
+    <li><a href="{$language}/departments/admin">Szervezeti egysÃ©gek szerkesztÃ©se</a></li>
     {*}<li><a href="{$language}/"></a></li>{/*}
   </ul>
 
