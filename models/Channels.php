@@ -884,16 +884,19 @@ class Channels extends \Springboard\Model {
     
   }
   
-  protected function insertMultipleIDs( $ids, $table, $field ) {
+  protected function insertMultipleIDs( $ids, $table, $field, $secondvalue = null, $secondfield = 'channelid' ) {
     
     $this->ensureID();
     
+    if ( $secondvalue == null )
+      $secondvalue = $this->id;
+    
     $values = array();
     foreach( $ids as $id )
-      $values[] = "('" . intval( $id ) . "', '" . $this->id . "')";
+      $values[] = "('" . intval( $id ) . "', '" . $secondvalue . "')";
     
     $this->db->execute("
-      INSERT INTO $table ($field, channelid)
+      INSERT INTO $table ($field, $secondfield)
       VALUES " . implode(', ', $values ) . "
     ");
     
@@ -916,6 +919,75 @@ class Channels extends \Springboard\Model {
       SET ispublic = " . $this->db->qstr( $ispublic ) . "
       WHERE id IN('" . implode("', '", $childrenids ) . "')
     ");
+    
+  }
+  
+  public function syncAccessWithFeeds( $livefeedids = null ) {
+    
+    $this->ensureObjectLoaded();
+    if ( $this->row['parentid'] )
+      throw new \Exception('Parentid nem nulla!');
+    
+    if ( $livefeedids === null )
+      $livefeedids = $this->db->getCol("
+        SELECT id
+        FROM livefeeds
+        WHERE channelid = '" . $this->id . "'
+      ");
+    
+    if ( empty( $livefeedids ) )
+      return;
+    
+    $this->db->execute("
+      DELETE FROM access
+      WHERE livefeedid IN('" . implode("', '", $livefeedids ) . "')
+    ");
+    
+    $this->db->execute("
+      UPDATE livefeeds
+      SET accesstype = '" . $this->row['accesstype'] . "'
+      WHERE id IN('" . implode("', '", $livefeedids ) . "')
+    ");
+    
+    switch ( $this->row['accesstype'] ) {
+      
+      case 'departments':
+        
+        $ids = $this->db->getCol("
+          SELECT departmentid
+          FROM access
+          WHERE channelid = '" . $this->id . "'
+        ");
+        
+        if ( empty( $ids ) )
+          return true;
+        
+        foreach( $livefeedids as $livefeedid )
+          $this->insertMultipleIDs( $ids, 'access', 'departmentid', $livefeedid, 'livefeedid' );
+        
+        break;
+      
+      case 'groups':
+        
+        $ids = $this->db->getCol("
+          SELECT groupid
+          FROM access
+          WHERE channelid = '" . $this->id . "'
+        ");
+        
+        if ( empty( $ids ) )
+          return true;
+        
+        foreach( $livefeedids as $livefeedid )
+          $this->insertMultipleIDs( $ids, 'access', 'groupid', $livefeedid, 'livefeedid' );
+        
+        break;
+      
+      default:
+        return true;
+        break;
+      
+    }
     
   }
   

@@ -14,6 +14,29 @@ class Createfeed extends \Visitor\HelpForm {
       'channels',
       $this->application->getNumericParameter('id')
     );
+    $this->values['accesstype'] = $this->channelModel->row['accesstype'];
+    
+    switch( $this->channelModel->row['accesstype'] ) {
+      
+      case 'departments':
+        
+        $this->values['departments'] = $this->channelModel->db->getCol("
+          SELECT departmentid
+          FROM access
+          WHERE channelid = '" . $this->channelModel->id . "'
+        ");
+        break;
+      
+      case 'groups':
+        
+        $this->values['groups'] = $this->channelModel->db->getCol("
+          SELECT groupid
+          FROM access
+          WHERE channelid = '" . $this->channelModel->id . "'
+        ");
+        break;
+      
+    }
     
     $l = $this->bootstrap->getLocalization();
     $this->controller->toSmarty['title'] = $l('live', 'createfeed_title');

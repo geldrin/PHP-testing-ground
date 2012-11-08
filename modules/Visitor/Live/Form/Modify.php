@@ -73,6 +73,7 @@ class Modify extends \Visitor\HelpForm {
     }
     
     $this->channelModel->updateRow( $values );
+    $this->channelModel->syncAccessWithFeeds();
     
     $this->controller->redirect(
       $this->application->getParameter(
