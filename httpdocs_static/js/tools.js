@@ -972,7 +972,7 @@ function setupVideoUpload() {
   $j('#file').parents('tr').hide();
   var uploader = new recordingUpload({
     multiplefilesallowed: $j('#uploadrow').attr('data-multiplefiles') != '0',
-    drop_element: 'videoupload'
+    drop_element: 'pagecontainer'
   });
   
   if ( uploader.uploader.features.dragdrop ) {

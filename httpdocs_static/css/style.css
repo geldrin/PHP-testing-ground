@@ -289,7 +289,7 @@ a.submitbutton:hover {
   margin: 0 0 10px 0;
   line-height: 20px;
   display: none;
-  padding: 0 10px 0 25px;
+  padding: 5px 10px 5px 25px;
 }
 #draganddropavailable {
   border: solid 1px #CEE2F2;
@@ -302,7 +302,17 @@ a.submitbutton:hover {
   margin: 0px 5px 0 5px;
   position: absolute;
   left: 0px;
-  top: 3px;
+  top: 7px;
+}
+.icon-info, .icon-alert {
+  width: 16px;
+  height: 16px;
+}
+.icon-info {
+  background-image: url(images/icons/info.png);
+}
+.icon-alert {
+  background-image: url(images/icons/alert.png);
 }
 .progresswrap {
   width: 605px;

@@ -56,8 +56,8 @@ $config = Array(
       </td>
     ',
     'value' => '
-      <div id="draganddropavailable"><span class="ui-icon ui-icon-info"></span>' . $l('recordings', 'draganddropavailable') . '</div>
-      <div id="bigfilewarning"><span class="ui-icon ui-icon-alert"></span>' . $l('recordings', 'bigfilewarning') . '</div>
+      <div id="draganddropavailable"><span class="icon-info"></span>' . $l('recordings', 'draganddropavailable') . '</div>
+      <div id="bigfilewarning"><span class="icon-alert"></span>' . $l('recordings', 'bigfilewarning') . '</div>
       <div id="uploadbrowsecontainer">
         <a href="#" id="uploadtoggle" class="submitbutton right" data-stopupload="' . $l('recordings', 'stopupload') . '">' . $l('recordings', 'startupload') . '</a>
         <a href="#" id="uploadbrowse" class="submitbutton">' . $l('recordings', 'addfiles') . '</a>
