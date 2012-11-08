@@ -303,15 +303,19 @@ class Controller extends \Visitor\Controller {
     
     if ( $this->application->getNumericParameter('start') == '1' ) {
       
-      if ( $streamModel->row['status'] != 'ready' )
+      if ( $streamModel->row['status'] != 'ready' ) {
+        \Springboard\Debug::getInstance()->log( false, false, 'Stream nem tudott indulni: ' . var_export( $stream, true ), true );
         $this->redirectToController('contents', 'livestream_invalidtransition_start');
+      }
       
       $status = 'start';
       
     } elseif ( $this->application->getNumericParameter('start') == '0' ) {
       
-      if ( $streamModel->row['status'] != 'recording' )
+      if ( $streamModel->row['status'] != 'recording' ) {
+        \Springboard\Debug::getInstance()->log( false, false, 'Stream nem tudott leallni: ' . var_export( $stream, true ), true );
         $this->redirectToController('contents', 'livestream_invalidtransition_stop');
+      }
       
       $status = 'disconnect';
       
