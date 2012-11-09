@@ -144,29 +144,30 @@ global $db, $app, $jconf;
 	$date_old = date("Y-m-d H:i:00", time() - (60 * 60 * 24 * 7));
 //	$date_old = date("Y-m-d H:i:00");
 
+	$query = "
+		SELECT
+			id,
+			userid,
+			filename,
+			size,
+			chunkcount,
+			currentchunk,
+			status,
+			timestamp
+		FROM
+			uploads
+		WHERE
+			( status NOT IN ('completed', 'deleted') AND
+			timestamp < '" . $date_old . "' ) OR
+			status = '" . $jconf['dbstatus_markedfordeletion'] . "'";
+
 	try {
-		$files = $db->Execute("
-			SELECT
-				id,
-				userid,
-				filename,
-				size,
-				chunkcount,
-				currentchunk,
-				status,
-				timestamp
-			FROM
-				uploads
-			WHERE
-				status NOT IN ('completed', 'deleted') AND
-				timestamp < '" . $date_old . "'
-		");
+		$files = $db->Execute($query);
 	} catch(exception $err) {
 		$debug->log($jconf['log_dir'], $jconf['jobid_maintenance'] . ".log", "[ERROR] SQL query failed. Query:\n\n" . trim($query), $sendmail = true);
 		return FALSE;
 	}
 	
-
 	// Remove file chunks older than a week
 	while ( !$files->EOF ) {
 
