@@ -138,7 +138,6 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_vcr_control.stop' ) and !i
 
 			// TCS: reserve ConferenceID
 			$vcr['conf_id'] = TCS_ReserveConfId($vcr);
-// Err handling?
 
 			// TCS: dial recording link to start recording session
 			$err = array();
@@ -153,26 +152,47 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_vcr_control.stop' ) and !i
 				break;
 			}
 
-			// Wait for TCS 5 sec countdown
-			sleep(10);
+			// Get live streaming URL for recording started. Try 3x times, then exit with error.
+			$is_streamready = FALSE;
+			$num_trials = 3;
+			while ( ( $is_streamready === FALSE ) and ( $num_trials > 0 ) ) {
 
-			// Get conference info
-			$err = array();
-			$err = TCS_GetConfInfo($vcr);
-			if ( $err['code'] ) {
-				// Update: RTMP URL, aspect ratio, conference ID
-				// If RTMP URL is not available
-				if ( empty($vcr['rtmp_streamid']) ) {
-					log_recording_conversion($vcr['id'], $myjobid, $jconf['dbstatus_vcr_recording'], "[ERROR] VCR live stream RTMP URL is not available. Info:\n\n" . $err['message'], "-", "-", 0, TRUE);
-					break;
+//echo "Trying... " . $num_trials . "\n";
+
+				// Wait for TCS 5 sec countdown
+				sleep(10);
+
+				// Get conference info
+				$err = array();
+				$err = TCS_GetConfInfo($vcr);
+
+//var_dump($vcr);
+
+				if ( $err['code'] and !empty($vcr['rtmp_streamid']) ) {
+
+					// Update feed: stream ID, aspect ratio, conference ID
+					update_db_stream_params($vcr['id'], $vcr['rtmp_streamid'], $vcr['aspectratio'], $vcr['conf_id']);
+					// Update recording link: recording link with TCS conference ID
+					update_db_vcr_reclink_params($vcr['reclink_id'], $vcr['conf_id']);
+					// Update stream status: playable
+					update_db_stream_status($vcr['id'], $jconf['dbstatus_vcr_recording']);
+
+					// We have live streaming URL
+					$is_streamready = TRUE;
 				}
-				update_db_stream_params($vcr['id'], $vcr['rtmp_streamid'], $vcr['aspectratio'], $vcr['conf_id']);
-				// Update: recording link with TCS conference ID
-				update_db_vcr_reclink_params($vcr['reclink_id'], $vcr['conf_id']);
-				// Stream: playable
-				update_db_stream_status($vcr['id'], $jconf['dbstatus_vcr_recording']);
-			} else {
-				log_recording_conversion($vcr['id'], $myjobid, $jconf['dbstatus_vcr_recording'], "[ERROR] VCR call info is not available. Info:\n\n" . $err['message'], "-", "-", 0, TRUE);
+// else {
+//echo "Not yet. 10sec.\n";
+//				}
+
+				$num_trials--;
+			}
+
+			// Live streaming URL error: cannot determine stream URL
+			if ( !$is_streamready ) {
+				log_recording_conversion($vcr['id'], $myjobid, $jconf['dbstatus_vcr_recording'], "[ERROR] VCR call info is not available, cannot determine live streaming URL. TCS cannot send stream to Wowza? Tried 3x times for 30 seconds. Info:\n\n" . print_r($vcr, TRUE), "-", "-", 0, TRUE);
+				// Update stream status: disconnect (call is connected, but live streaming URL was not provided)
+				update_db_stream_status($vcr['id'], $jconf['dbstatus_vcr_disc']);
+				// Skip uploading this very short recording???
 				break;
 			}
 
@@ -192,7 +212,7 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_vcr_control.stop' ) and !i
 			if ( !$err ) {
 
 				if ( $err['data']['callstate'] != "IN_CALL" ) {
-					log_recording_conversion($vcr['id'], $myjobid, $jconf['dbstatus_vcr_recording'], "[ERROR] VCR call was disconnected unexpectedly. Info:\n\n" . $err['message'], "-", print_r($err['data'], TRUE), 0, TRUE);
+					log_recording_conversion($vcr['id'], $myjobid, $jconf['dbstatus_vcr_recording'], "[ERROR] VCR call was disconnected unexpectedly. Info:\n\n" . $err['message'] . "\n\nDump:\n\n" . print_r($vcr, TRUE), "-", print_r($err['data'], TRUE), 0, TRUE);
 					// Indicate error on stream
 					update_db_stream_status($vcr['id'], $jconf['dbstatus_vcr_recording_err']);
 					// Permanent error on recording link?
@@ -201,7 +221,7 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_vcr_control.stop' ) and !i
 				}
 
 				if ( ( $err['data']['mediastate'] != "RECORDING" ) and ( $err['data']['writerstatus'] != "OK" ) ) {
-					log_recording_conversion($vcr['id'], $myjobid, $jconf['dbstatus_vcr_recording'], "[ERROR] Unexpected VCR recording error. Info:\n\n" . $err['message'], "-", print_r($err['data'], TRUE), 0, TRUE);
+					log_recording_conversion($vcr['id'], $myjobid, $jconf['dbstatus_vcr_recording'], "[ERROR] Unexpected VCR recording error. Info:\n\n" . $err['message'] . "\n\nDump:\n\n" . print_r($vcr, TRUE), "-", print_r($err['data'], TRUE), 0, TRUE);
 					// Indicate error on stream
 					update_db_stream_status($vcr['id'], $jconf['dbstatus_vcr_recording_err']);
 					// Permanent error on recording link?
@@ -226,7 +246,7 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_vcr_control.stop' ) and !i
 				update_db_vcr_reclink_params($vcr['reclink_id'], null);
 				update_db_stream_status($vcr['id'], $jconf['dbstatus_vcr_upload']);
 			} else {
-				log_recording_conversion($vcr['id'], $myjobid, $jconf['dbstatus_vcr_discing'], "[ERROR] VCR call cannot be disconnected. Check recording link! Info:\n\n" . $err['message'], "-", "-", 0, TRUE);
+				log_recording_conversion($vcr['id'], $myjobid, $jconf['dbstatus_vcr_discing'], "[ERROR] VCR call cannot be disconnected. Check recording link! Info:\n\n" . $err['message'] . "\n\nDump:\n\n" . print_r($vcr, TRUE), "-", "-", 0, TRUE);
 				break;
 			}
 
