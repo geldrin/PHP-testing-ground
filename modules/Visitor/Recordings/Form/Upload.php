@@ -93,10 +93,11 @@ class Upload extends \Visitor\HelpForm {
     }
     
     $info = array(
-      'filepath' => $_FILES['file']['tmp_name'],
-      'filename' => $_FILES['file']['name'],
-      'language' => $values['videolanguage'],
-      'user'     => $user,
+      'filepath'   => $_FILES['file']['tmp_name'],
+      'filename'   => $_FILES['file']['name'],
+      'language'   => $values['videolanguage'],
+      'user'       => $user,
+      'handlefile' => 'upload',
     );
     
     try {

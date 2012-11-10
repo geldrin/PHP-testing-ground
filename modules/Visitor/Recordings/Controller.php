@@ -538,10 +538,11 @@ class Controller extends \Visitor\Controller {
       throw new \Exception('Invalid language: ' . $language );
     
     $info = array(
-      'filepath' => $file['tmp_name'],
-      'filename' => $file['name'],
-      'user'     => $user,
-      'language' => $values['languageid'],
+      'filepath'   => $file['tmp_name'],
+      'filename'   => $file['name'],
+      'user'       => $user,
+      'language'   => $values['languageid'],
+      'handlefile' => 'upload',
     );
     
     $recordingModel->upload( $info );
@@ -563,9 +564,10 @@ class Controller extends \Visitor\Controller {
       throw new \Exception('No recording found with that ID');
     
     $info = array(
-      'iscontent' => true,
-      'filepath'  => $file['tmp_name'],
-      'filename'  => $file['name'],
+      'iscontent'  => true,
+      'filepath'   => $file['tmp_name'],
+      'filename'   => $file['name'],
+      'handlefile' => 'upload',
     );
     
     $recordingModel->upload( $info );
