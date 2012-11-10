@@ -23,6 +23,21 @@ $config = Array(
     'value'       => '1',
   ),
   
+  'tos' => array(
+    'displayname' => $l('', 'recordingstos'),
+    'type'        => 'inputCheckbox',
+    'postfix'     =>
+      '<a href="' . \Springboard\Language::get() . '/contents/recordingstos' .
+      '" id="termsofservice" target="_blank">' . $l('', 'recordingstospostfix') . '</a>'
+    ,
+    'validation'  => array(
+      array(
+        'type' => 'required',
+        'help' => $l('', 'recordingstoshelp'),
+      )
+    ),
+  ),
+  
   'file' => Array(
     'type'       => 'inputFile',
     'validation' => Array(
