@@ -839,13 +839,19 @@ class Controller extends \Visitor\Controller {
     if ( !$filename or !$filesize )
       jsonOutput( array('status' => 'error') );
     
+    $info        = array(
+      'filename'  => $filename,
+      'filesize'  => $filesize,
+      'iscontent' => $this->application->getNumericParameter('iscontent', 0 ),
+      'userid'    => $user['id'],
+    );
     $uploadModel = $this->bootstrap->getModel('uploads');
-    $info        = $uploadModel->getFileResumeInfo( $filename, $filesize, $user['id'] );
+    $data        = $uploadModel->getFileResumeInfo( $info );
     
-    if ( empty( $info ) )
+    if ( empty( $data ) )
       $startfromchunk = 0;
     else
-      $startfromchunk = $info['currentchunk'] + 1;
+      $startfromchunk = $data['currentchunk'] + 1;
     
     $this->jsonOutput( array(
         'status'         => 'success',
@@ -915,7 +921,13 @@ class Controller extends \Visitor\Controller {
     $uploadModel = $this->bootstrap->getModel('uploads');
     $user        = $this->bootstrap->getSession('user');
     $iscontent   = (bool)$this->application->getNumericParameter('iscontent');
-    $info        = $uploadModel->getFileResumeInfo( $filename, $filesize, $user['id'] );
+    $chunkinfo   = array(
+      'filename'  => $filename,
+      'filesize'  => $filesize,
+      'iscontent' => $iscontent,
+      'userid'    => $user['id'],
+    );
+    $info        = $uploadModel->getFileResumeInfo( $chunkinfo );
     
     if ( !$chunks ) // nem kotelezo, nem lesz megadva ha a file merete kisebb mint a chunk merete
       $chunks = 1;
@@ -930,7 +942,7 @@ class Controller extends \Visitor\Controller {
       while ( $info['status'] == 'handlechunk' and $sleptfor < 30 ) {
         
         sleep(1);
-        $info = $uploadModel->getFileResumeInfo( $filename, $filesize, $user['id'] );
+        $info = $uploadModel->getFileResumeInfo( $chunkinfo );
         $sleptfor++;
         
       }
@@ -954,6 +966,8 @@ class Controller extends \Visitor\Controller {
     } elseif ( $chunk == 0 ) {
       
       $uploadModel->insert( array(
+          'recordingid'  => $this->application->getNumericParameter('id', 0 ),
+          'iscontent'    => (int)$iscontent,
           'filename'     => $filename,
           'currentchunk' => $chunk,
           'chunkcount'   => $chunks,

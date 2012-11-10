@@ -3,14 +3,21 @@ namespace Model;
 
 class Uploads extends \Springboard\Model {
   
-  public function getFileResumeInfo( $filename, $filesize, $userid ) {
+  public function getFileResumeInfo( $info ) {
     
     $this->clearFilter();
-    $this->addFilter('userid',   $userid );
-    $this->addFilter('filename', $filename, false, false );
-    $this->addFilter('size',     $filesize );
-    $this->addTextFilter("status IN('uploading', 'handlechunk')");
+    $this->addFilter('userid',    $info['userid'] );
+    $this->addFilter('filename',  $info['filename'], false, false );
+    $this->addFilter('size',      $info['filesize'] );
+    $this->addFilter('iscontent', $info['iscontent'] );
     
+    /*
+      ha handlechunk akkor meg nem nyulhatunk hozza kulonosebben
+      de a controller varni fog ra egy ideig hogy atmenjen handlechunk-ba
+      ha handlechunk akkor epp masolodik/appendelodik a feltoltott chunk a
+      "main" chunkhoz, az uploading allapot a "normalis" allapot
+    */
+    $this->addTextFilter("status IN('uploading', 'handlechunk')");
     return $this->getRow( false, 'id DESC');
     
   }
