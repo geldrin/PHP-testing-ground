@@ -2011,8 +2011,6 @@ a#currentusername span {
   font-weight: normal;
 }
 .channellist .listingitem {
-  border-bottom: 1px solid #d0d0d0;
-  box-shadow: 0 1px 1px #fff;
   padding-bottom: 10px;
 }
 .channellist .listingitem.last {
