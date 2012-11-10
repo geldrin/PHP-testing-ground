@@ -42,18 +42,17 @@
 		</StartupStream>
 		-->
 
-<!--		<StartupStream>
+		<StartupStream>
 			<Application>devvsqlive/_definst_</Application>
 			<MediaCasterType>rtp</MediaCasterType>
-			<StreamName>123452</StreamName>
-		</StartupStream> -->
+			<StreamName>461272.stream</StreamName>
+		</StartupStream>
 
-<!--		<StartupStream>
+		<StartupStream>
 			<Application>devvsqlive/_definst_</Application>
 			<MediaCasterType>rtp</MediaCasterType>
-			<StreamName>123456</StreamName>
-		</StartupStream> -->
-
+			<StreamName>549088.stream</StreamName>
+		</StartupStream>
 
 	</StartupStreams>
 </Root>

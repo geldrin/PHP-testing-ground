@@ -178,6 +178,11 @@
 				<Description>MyCompany MyFirstModule</Description>
 				<Class>com.mycompany.wms.module.MyFirstModule</Class>
 			</Module>
+			<Module>
+				<Name>ModuleLiveStreamRecord</Name>
+				<Description>ModuleLiveStreamRecord</Description>
+				<Class>com.wowza.wms.plugin.livestreamrecord.ModuleLiveStreamRecord</Class>
+			</Module>
 		</Modules>
 		<!-- Properties defined here will be added to the IApplication.getProperties() and IApplicationInstance.getProperties() collections -->
 		<Properties>
@@ -191,10 +196,10 @@
 				<Value>${com.wowza.wms.context.VHostConfigHome}/conf/${com.wowza.wms.context.Application}/publish.password</Value>
 			</Property>
 			<!-- CONNECT HANDLER CONFIG -->
-			<Property>
+<!--			<Property>
 				<Name>URLPlayHandler</Name>
 				<Value>http://dev.videosquare.eu/hu/live/checkstreamaccess</Value>
-			</Property>
+			</Property> -->
 			<Property>
 				<Name>PlayIP</Name>
 				<Value>On</Value>

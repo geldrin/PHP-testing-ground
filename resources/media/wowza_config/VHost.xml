@@ -52,13 +52,22 @@
 			<!-- 443 with SSL -->
 			<HostPort>
 				<ProcessorCount>4</ProcessorCount>
-				<IpAddress>91.120.59.230</IpAddress>
+<!--				<IpAddress>91.120.59.230</IpAddress> -->
+				<IpAddress>stream.videosquare.eu</IpAddress>
 				<Port>443</Port>
+<!--			Working self signed example -->	
+<!--				<SSLConfig>
+					<KeyStorePath>${com.wowza.wms.context.VHostConfigHome}/conf/ssl.stream.videosquare.eu.cert</KeyStorePath>
+					<KeyStorePassword>kakukk123</KeyStorePassword>
+					<KeyStoreType>JKS</KeyStoreType>
+					<SSLProtocol>TLS</SSLProtocol>
+					<Algorithm>SunX509</Algorithm>
+					<CipherSuites></CipherSuites>
+					<Protocols></Protocols>
+				</SSLConfig> -->
 				<SSLConfig>
-<!--					<KeyStorePath>${com.wowza.wms.context.VHostConfigHome}/conf/ssl.stream.videosquare.eu.cert</KeyStorePath>
-					<KeyStorePassword>kakukk123</KeyStorePassword> -->
-					<KeyStorePath>/home/conv/temp/ssl.stream.videosquare.eu.cert</KeyStorePath>
-					<KeyStorePassword>kiskakukk123</KeyStorePassword>
+					<KeyStorePath>/usr/local/WowzaMediaServer/conf/keystore.ImportKey</KeyStorePath>
+					<KeyStorePassword>importkey</KeyStorePassword>
 					<KeyStoreType>JKS</KeyStoreType>
 					<SSLProtocol>TLS</SSLProtocol>
 					<Algorithm>SunX509</Algorithm>
@@ -140,6 +149,13 @@
 						<BaseClass>com.wowza.wms.http.HTTPProviderMediaList</BaseClass>
 						<RequestFilters>medialist*</RequestFilters>
 						<AuthenticationMethod>admin-digest</AuthenticationMethod>
+					</HTTPProvider>
+					<HTTPProvider>
+						<BaseClass>com.wowza.wms.plugin.livestreamrecord.HTTPLiveStreamRecord</BaseClass>
+						<RequestFilters>livestreamrecord*</RequestFilters>
+						<AuthenticationMethod>none</AuthenticationMethod>
+<!--						<AuthenticationMethod>admin-digest</AuthenticationMethod> -->
+<!-- http://username:password@[wowza-address]:1935/livestreamrecord?app=live&streamname=myStream&action=startRecording -->
 					</HTTPProvider>
 					<HTTPProvider>
 						<BaseClass>com.wowza.wms.http.HTTPServerVersion</BaseClass>
