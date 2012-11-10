@@ -81,7 +81,7 @@ $config = array(
   //----
   'allowedextensions' => array(
     'wmv', 'avi', 'mov', 'flv', 'mp4', 'asf', 'mp3', 'flac',
-    'ogg', 'wav', 'wma', 'mpg', 'mpeg', 'ogm', 'f4v', 'm4v', 'mkv',
+    'ogg', 'wav', 'wma', 'mpg', 'mpeg', 'ogm', 'f4v', 'm4v', 'mkv', 'm2v',
   ),
   'disable_uploads'  => false,
   'uploadpath'       => '/srv/upload/videosquare.eu/',
