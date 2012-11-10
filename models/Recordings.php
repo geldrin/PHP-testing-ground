@@ -449,7 +449,7 @@ class Recordings extends \Springboard\Model {
   
   public function upload( &$info ) {
     
-    if ( !isset( $info['filepath'] ) or !isset( $info['filename'] ) )
+    if ( !isset( $info['filepath'] ) or !isset( $info['filename'] ) or !isset( $info['handlefile'] ) )
       throw new \Exception("No filepath and filename passed!");
     
     $iscontent = ( isset( $info['iscontent'] ) and $info['iscontent'] );
