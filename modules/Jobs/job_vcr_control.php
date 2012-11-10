@@ -76,15 +76,12 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_vcr_control.stop' ) and !i
 		$vcr = array();
 		$vcr_user = array();
 
-echo "query rec\n";
 		// Query next job - exit if none
 		if ( !query_vcrrecording($vcr, $vcr_user) ) break;
 
 		// Alias: choose normal or secure
 		$vcr['aliasused'] = $vcr['alias'];
 		if ( $vcr['issecurestreamingforced'] == 1 ) $vcr['aliasused'] = $vcr['aliassecure'];
-
-//var_dump($vcr);
 
 		// Start global log
 		$global_log .= "Live feed: " . $vcr['feed_name'] . " (ID = " . $vcr['feed_id'] . ")\n";
@@ -138,7 +135,13 @@ echo "query rec\n";
 			update_db_stream_status($vcr['id'], $jconf['dbstatus_vcr_starting']);
 
 			// TCS: reserve ConferenceID
-			$vcr['conf_id'] = TCS_ReserveConfId($vcr);
+			$err = array();
+			$err = TCS_ReserveConfId($vcr);
+			if ( !$err['code'] ) {
+				$global_log .= $err['message'];
+				log_recording_conversion($vcr['id'], $myjobid, $jconf['dbstatus_vcr_recording'], "[ERROR] VCR cannot reserve Conference ID. More info:\n\n" . $err['message'], "-", "-", 0, TRUE);
+			}
+			$vcr['conf_id'] = $err['data']['conf_id'];
 
 			// TCS: dial recording link to start recording session
 			$err = array();
@@ -268,8 +271,6 @@ echo "query rec\n";
 
 		if ( !query_vcrupload($vcr_upload, $vcr_user) ) break;
 
-echo "UPLOAD:\n";
-
 		// Temporary directory check
 		if ( !is_writable($jconf['vcr_dir']) ) {
 			log_recording_conversion($vcr_upload['id'], $myjobid, $jconf['dbstatus_vcr_upload'], "[FATAL ERROR] Temp directory " . $jconf['vcr_dir'] . " is not writable. Storage error???\n", "-", "-", "-", 0, TRUE);
@@ -298,8 +299,6 @@ echo "UPLOAD:\n";
 				break;
 			}
 		}
-
-//var_dump($vcr_upload);
 
 		$app->watchdog();
 
@@ -376,10 +375,6 @@ echo "UPLOAD:\n";
 			'conversionpriority'	=> 100
 		);
 
-var_dump($metadata);
-
-echo "medfilename: " . $media_filename . "\n";
-
 		// API: add recording to repository
 		try {
 			$recording = $api->uploadRecording($media_filename, $language, $vcr_upload['userid']);
@@ -392,9 +387,6 @@ echo "medfilename: " . $media_filename . "\n";
 		}
 
 		$app->watchdog();
-
-echo "recording:\n";
-var_dump($recording);
 
 		// Metadata: add
 		if ( $recording and isset( $recording['data']['id'] ) ) {
@@ -431,8 +423,6 @@ var_dump($recording);
 			log_recording_conversion($vcr_upload['id'], $myjobid, $jconf['dbstatus_vcr_upload'], $err['message'], $err['command'], $err['result'], 0, TRUE);
 			break;
 		}
-
-exit;
 
 	}
 
@@ -644,7 +634,9 @@ global $jconf, $db;
 }
 
 function TCS_ReserveConfId($vcr) {
-global $soap_rs;
+global $soap_rs, $jconf;
+
+	$err = array();
 
 // Parameters:
 //  password (password for the conference - string). Set password as an empty string for no conference password, this field is limited to 20 characters.
@@ -664,12 +656,19 @@ global $soap_rs;
 		'isRecurring'		=> false
     );
 
-    $result = $soap_rs->RequestConferenceID($conf);
-    $conf_id = $result->RequestConferenceIDResult;
+	$err['command'] = "RequestConferenceID():\n\n" . print_r($conf, TRUE);
+	try {
+		$result = $soap_rs->RequestConferenceID($conf);
+	} catch (exception $error) {
+		$err['code'] = FALSE;
+		$err['message'] = "[ERROR] TCS API Exception. VCR info:\n\n" . print_r($vcr, TRUE) . "\n\nException:\n\n" . $error->getMessage();
+		log_recording_conversion($vcr['id'], $jconf['jobid_vcr_control'], "-", $err['message'], $err['command'], "-", 0, TRUE);
+		return $err;
+	}
 
-// ERROR?
-
-    return $conf_id;
+	$err['code'] = TRUE;
+    $err['data']['conf_id'] = $result->RequestConferenceIDResult;
+    return $err;
 }
 
 function TCS_Dial($vcr) {
@@ -699,7 +698,14 @@ global $soap_rs, $jconf;
 	);
 
 	$err['command'] = "Dial():\n\n" . print_r($conf, TRUE);
-	$result = $soap_rs->Dial($conf);
+	try {
+		$result = $soap_rs->Dial($conf);
+	} catch (exception $error) {
+		$err['code'] = FALSE;
+		$err['message'] = "[ERROR] TCS API Exception. VCR info:\n\n" . print_r($vcr, TRUE) . "\n\nException:\n\n" . $error->getMessage();
+		log_recording_conversion($vcr['id'], $jconf['jobid_vcr_control'], "-", $err['message'], $err['command'], "-", 0, TRUE);
+		return $err;
+	}
 
 //echo "DIALING...\n";
 //var_dump($result);
@@ -766,8 +772,15 @@ global $soap_rs, $jconf;
 	);
 
 	$err['command'] = "GetCallInfo():\n\n" . print_r($conf, TRUE);
+	try {
+		$result = $soap_rs->GetCallInfo($conf);
+	} catch (exception $error) {
+		$err['code'] = FALSE;
+		$err['message'] = "[ERROR] TCS API Exception. VCR info:\n\n" . print_r($vcr, TRUE) . "\n\nException:\n\n" . $error->getMessage();
+		log_recording_conversion($vcr['id'], $jconf['jobid_vcr_control'], "-", $err['message'], $err['command'], "-", 0, TRUE);
+		return $err;
+	}
 
-	$result = $soap_rs->GetCallInfo($conf);
 	$callinfo = $result->GetCallInfoResult;
 	$err['result'] = $callinfo->CallState;
 	$err['data']['callstate'] = $callinfo->CallState;
@@ -829,7 +842,7 @@ global $soap_rs, $jconf;
 }
 
 function TCS_GetConfInfo(&$vcr) {
-global $soap_rs;
+global $soap_rs, $jconf;
 
 	$err = array();
 	$err['code_num'] = 0;
@@ -841,15 +854,16 @@ global $soap_rs;
 	$err['command'] = "GetConference():\n\n" . print_r($conf, TRUE);
 	try {
 		$result = $soap_rs->GetConference($conf);
-	} catch(exception $error) {
+	} catch (exception $error) {
 		$err['code'] = FALSE;
 		$err['code_num'] = -2;
-		$err['message'] = "[ERROR] TCS cannot find conference ID: " . $vcr['conf_id'];
+		$err['message'] = "[ERROR] TCS API Exception. VCR info:\n\n" . print_r($vcr, TRUE) . "\n\nException:\n\n" . $error->getMessage();
+		log_recording_conversion($vcr['id'], $jconf['jobid_vcr_control'], "-", $err['message'], $err['command'], "-", 0, TRUE);
 		return $err;
 	}
 
-echo "GET INFO\n";
-var_dump($result);
+//echo "GET INFO\n";
+//var_dump($result);
 
 	$err_su = TCS_GetStreamParams($result);
 	if ( $err_su['code'] ) {
@@ -963,7 +977,7 @@ function TCS_GetStreamParams($conf_info) {
 }
 
 function TCS_Disconnect($vcr) {
-global $soap_rs;
+global $soap_rs, $jconf;
 
 	$err = array();
 
@@ -972,7 +986,14 @@ global $soap_rs;
 	);
 
 	$err['command'] = "DisconnectCall():\n\n" . print_r($conf, TRUE);
-	$result = $soap_rs->DisconnectCall($conf);
+	try {
+		$result = $soap_rs->DisconnectCall($conf);
+	} catch (exception $error) {
+		$err['code'] = FALSE;
+		$err['message'] = "[ERROR] TCS API Exception. VCR info:\n\n" . print_r($vcr, TRUE) . "\n\nException:\n\n" . $error->getMessage();
+		log_recording_conversion($vcr['id'], $jconf['jobid_vcr_control'], "-", $err['message'], $err['command'], "-", 0, TRUE);
+		return $err;
+	}
 
 //echo "DISCONNECT:\n";
 //var_dump($result);
@@ -990,11 +1011,19 @@ global $soap_rs;
 }
 
 function TCS_GetSystemHealth() {
-global $soap_rs;
+global $soap_rs, $jconf;
 
 	$err = array();
 
-	$result = $soap_rs->GetSystemHealth();
+	$err['command'] = "GetSystemHealth()";
+	try {
+		$result = $soap_rs->GetSystemHealth();
+	} catch (exception $error) {
+		$err['code'] = FALSE;
+		$err['message'] = "[ERROR] TCS API Exception. Exception:\n\n" . $error->getMessage();
+		log_recording_conversion(0, $jconf['jobid_vcr_control'], "-", $err['message'], $err['command'], "-", 0, TRUE);
+		return $err;
+	}
 
 //var_dump($result);
 
@@ -1022,11 +1051,21 @@ global $soap_rs;
 }
 
 function TCS_GetSystemInformation() {
-global $soap_rs;
+global $soap_rs, $jconf;
 
 	$err = array();
 
-	$result = $soap_rs->GetSystemInformation();
+	$err['command'] = "GetSystemInformation()";
+	try {
+		$result = $soap_rs->GetSystemInformation();
+	} catch (exception $error) {
+		$err['code'] = FALSE;
+		$err['message'] = "[ERROR] TCS API Exception. Exception:\n\n" . $error->getMessage();
+		log_recording_conversion(0, $jconf['jobid_vcr_control'], "-", $err['message'], $err['command'], "-", 0, TRUE);
+		return $err;
+	}
+
+	$err['code'] = TRUE;
 
 //var_dump($result);
 
@@ -1061,11 +1100,19 @@ global $soap_rs;
 }
 
 function TCS_GetCallCapacity() {
-global $soap_rs;
+global $soap_rs, $jconf;
 
 	$err = array();
 
-	$result = $soap_rs->GetCallCapacity();
+	$err['command'] = "GetCallCapacity()";
+	try {
+		$result = $soap_rs->GetCallCapacity();
+	} catch (exception $error) {
+		$err['code'] = FALSE;
+		$err['message'] = "[ERROR] TCS API Exception. Exception:\n\n" . $error->getMessage();
+		log_recording_conversion(0, $jconf['jobid_vcr_control'], "-", $err['message'], $err['command'], "-", 0, TRUE);
+		return $err;
+	}
 
 	$err['code'] = TRUE;
 
@@ -1079,9 +1126,6 @@ global $soap_rs;
 	$err['message'] .= "Current calls: " . $err['data']['currentcalls'] . "\n";
 	$err['message'] .= "Max live calls: " . $err['data']['maxlivecalls'] . "\n";
 	$err['message'] .= "Current live calls: " . $err['data']['currentlivecalls'];
-
-//var_dump($result);
-//echo $err['message'] . "\n";
 
 	return $err;
 }
