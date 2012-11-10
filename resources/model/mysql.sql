@@ -604,6 +604,8 @@ CREATE TABLE `departments` (
 CREATE TABLE uploads(
    `id` int(10) unsigned not null auto_increment,
    `userid` int(10) unsigned not null,
+   `recordingid` int(10) unsigned not null default '0',
+   `iscontent` int(11) not null default '0',
    `filename` text,
    `size` bigint(20) unsigned,
    `chunkcount` int(10) unsigned,
