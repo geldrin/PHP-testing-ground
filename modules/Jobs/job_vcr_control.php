@@ -76,6 +76,7 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_vcr_control.stop' ) and !i
 		$vcr = array();
 		$vcr_user = array();
 
+echo "query rec\n";
 		// Query next job - exit if none
 		if ( !query_vcrrecording($vcr, $vcr_user) ) break;
 
@@ -157,16 +158,12 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_vcr_control.stop' ) and !i
 			$num_trials = 3;
 			while ( ( $is_streamready === FALSE ) and ( $num_trials > 0 ) ) {
 
-//echo "Trying... " . $num_trials . "\n";
-
 				// Wait for TCS 5 sec countdown
 				sleep(10);
 
 				// Get conference info
 				$err = array();
 				$err = TCS_GetConfInfo($vcr);
-
-//var_dump($vcr);
 
 				if ( $err['code'] and !empty($vcr['rtmp_streamid']) ) {
 
@@ -180,9 +177,6 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_vcr_control.stop' ) and !i
 					// We have live streaming URL
 					$is_streamready = TRUE;
 				}
-// else {
-//echo "Not yet. 10sec.\n";
-//				}
 
 				$num_trials--;
 			}
@@ -263,7 +257,6 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_vcr_control.stop' ) and !i
 		break;
 	}	// End of while(1)
 
-
 	// VCR UPLOAD: a finnished recording needs to be uploaded
 	while (1) {
 
@@ -275,7 +268,7 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_vcr_control.stop' ) and !i
 
 		if ( !query_vcrupload($vcr_upload, $vcr_user) ) break;
 
-//echo "UPLOAD:\n";
+echo "UPLOAD:\n";
 
 		// Temporary directory check
 		if ( !is_writable($jconf['vcr_dir']) ) {
@@ -295,11 +288,18 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_vcr_control.stop' ) and !i
 
 		// Get TCS recording information for download URL
 		$err = TCS_GetConfInfo($vcr_upload);
-//var_dump($vcr_upload);
 		if ( !$err['code'] ) {
-			echo "WARNING: recording is not yet available for download? Try how many times?\n";
-			break;
+			if ( $err['code_num'] == -1 ) {
+				echo "WARNING: recording is not yet available for download? Try how many times?\n";
+			}
+			if ( $err['code_num'] == -2 ) {
+				log_recording_conversion($vcr_upload['id'], $myjobid, $jconf['dbstatus_vcr_upload'], "[ERROR] VCR download failed. Did not find TCS Conference ID (" . $vcr_upload['conf_id'] . ").", "-", "VCR info:\n\n" . print_r($vcr_upload, TRUE), 0, TRUE);
+				update_db_stream_status($vcr_upload['id'], $jconf['dbstatus_vcr_upload_err']);
+				break;
+			}
 		}
+
+//var_dump($vcr_upload);
 
 		$app->watchdog();
 
@@ -325,18 +325,19 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_vcr_control.stop' ) and !i
 			$duration = time() - $time_start;
 			$mins_taken = round( $duration / 60, 2);
 			if ( $result != 0 ) {
-				log_recording_conversion($vcr_upload['id'], $myjobid, $jconf['dbstatus_vcr_upload'], "[ERROR] VCR download failed. URL:\n\n" . $vcr_upload['download_url'], $command, $output_string, $duration, TRUE);
+				log_recording_conversion($vcr_upload['id'], $myjobid, $jconf['dbstatus_vcr_upload'], "[ERROR] VCR download failed. URL:\n\n" . $vcr_upload['download_url'] . "\n\nInfo:\n\n" . print_r($vcr_upload, TRUE), $command, $output_string, $duration, TRUE);
 				update_db_stream_status($vcr_upload['id'], $jconf['dbstatus_vcr_upload_err']);
 				break;
 			}
-			log_recording_conversion($vcr_upload['id'], $myjobid, $jconf['dbstatus_vcr_upload'], "[OK] VCR recording download finished (in " . $mins_taken . " mins). URL:\n\n" . $vcr_upload['download_url'], $command, $output_string, $duration, FALSE);
 	
 			$media_filename = $temp_directory . $filename;
 			if ( !file_exists($media_filename) ) {
-				log_recording_conversion($vcr_upload['id'], $jconf['jobid_vcr_control'], $jconf['dbstatus_vcr_upload'], "[ERROR] Cannot find downloaded VCR recording. File:\n\n" . $media_filename, "-", "-", 0, TRUE);
+				log_recording_conversion($vcr_upload['id'], $jconf['jobid_vcr_control'], $jconf['dbstatus_vcr_upload'], "[ERROR] Cannot find downloaded VCR recording. File:\n\n" . $media_filename . "\n\nInfo:\n\n" . print_r($vcr_upload, TRUE), "-", "-", 0, TRUE);
 				update_db_stream_status($vcr_upload['id'], $jconf['dbstatus_vcr_upload_err']);
 				break;
 			}
+
+			log_recording_conversion($vcr_upload['id'], $myjobid, $jconf['dbstatus_vcr_upload'], "[OK] VCR recording download finished (in " . $mins_taken . " mins). URL:\n\n" . $vcr_upload['download_url'], $command, $output_string, $duration, FALSE);
 
 			$app->watchdog();
 
@@ -375,6 +376,10 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_vcr_control.stop' ) and !i
 			'conversionpriority'	=> 100
 		);
 
+var_dump($metadata);
+
+echo "medfilename: " . $media_filename . "\n";
+
 		// API: add recording to repository
 		try {
 			$recording = $api->uploadRecording($media_filename, $language, $vcr_upload['userid']);
@@ -388,24 +393,31 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_vcr_control.stop' ) and !i
 
 		$app->watchdog();
 
+echo "recording:\n";
+var_dump($recording);
+
+		// Metadata: add
 		if ( $recording and isset( $recording['data']['id'] ) ) {
 			$recordingid = $recording['data']['id'];
 			// API: add metadata
 			try {
-				$api->modifyRecording( $recordingid, $metadata);
+				$api->modifyRecording($recordingid, $metadata);
 			} catch (exception $err) {
 				// API: cannot add metadata. We log error, but upload is successful
 				log_recording_conversion($vcr_upload['id'], $jconf['jobid_vcr_control'], $jconf['dbstatus_vcr_upload'], "[WARNING] Cannot add metadata to recording. Info:\n\nFilename: " . $media_filename . "\n\nMetadata:\n" . print_r($metadata, TRUE), "-", $err, 0, TRUE);
 			}
+
+			// Stream status: revert to "ready" (next recording is possible)
+			update_db_stream_status($vcr_upload['id'], $jconf['dbstatus_vcr_ready']);
+			log_recording_conversion($vcr_upload['id'], $jconf['jobid_vcr_control'], $jconf['dbstatus_vcr_upload'], "[OK] VCR recording added. Info:\n\nFilename: " . $media_filename . "\n\nMetadata:\n" . print_r($metadata, TRUE), "-", "-", 0, TRUE);
+
 		} else {
 			// Stream status: revert to "upload" (try later)
-			update_db_stream_status($vcr_upload['id'], $jconf['dbstatus_vcr_upload']);
-			log_recording_conversion($vcr_upload['id'], $jconf['jobid_vcr_control'], $jconf['dbstatus_vcr_upload'], "[ERROR] Cannot find recording ID in array returned by API. Info:\n\nFilename: " . $media_filename . "\n\nRecording array:\n\n" . print_r($recording, TRUE) . "\n\nMetadata:\n" . print_r($metadata, TRUE), "-", "-", 0, TRUE);
+			update_db_stream_status($vcr_upload['id'], $jconf['dbstatus_vcr_ready']);
+			log_recording_conversion($vcr_upload['id'], $jconf['jobid_vcr_control'], $jconf['dbstatus_vcr_upload'], "[ERROR] Cannot find recording ID in array returned by API. Recording might be added, but metadata did not. Info:\n\nFilename: " . $media_filename . "\n\nRecording array:\n\n" . print_r($recording, TRUE) . "\n\nMetadata:\n" . print_r($metadata, TRUE), "-", "-", 0, TRUE);
+			break;
 		}
 
-		// Stream status: revert to "ready" (next recording is possible)
-		update_db_stream_status($vcr_upload['id'], $jconf['dbstatus_vcr_ready']);
-		log_recording_conversion($vcr_upload['id'], $jconf['jobid_vcr_control'], $jconf['dbstatus_vcr_upload'], "[OK] VCR recording added. Info:\n\nFilename: " . $media_filename . "\n\nMetadata:\n" . print_r($metadata, TRUE), "-", "-", 0, TRUE);
 
 // TODO:
 // - channel kreálás a live alapján?
@@ -420,7 +432,7 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_vcr_control.stop' ) and !i
 			break;
 		}
 
-//exit;
+exit;
 
 	}
 
@@ -820,16 +832,24 @@ function TCS_GetConfInfo(&$vcr) {
 global $soap_rs;
 
 	$err = array();
+	$err['code_num'] = 0;
 
 	$conf = array(
 		'ConferenceID'  => $vcr['conf_id']
 	);
 
 	$err['command'] = "GetConference():\n\n" . print_r($conf, TRUE);
-	$result = $soap_rs->GetConference($conf);
+	try {
+		$result = $soap_rs->GetConference($conf);
+	} catch(exception $error) {
+		$err['code'] = FALSE;
+		$err['code_num'] = -2;
+		$err['message'] = "[ERROR] TCS cannot find conference ID: " . $vcr['conf_id'];
+		return $err;
+	}
 
-//echo "GET INFO\n";
-//var_dump($result);
+echo "GET INFO\n";
+var_dump($result);
 
 	$err_su = TCS_GetStreamParams($result);
 	if ( $err_su['code'] ) {
@@ -854,6 +874,7 @@ global $soap_rs;
 		$vcr['height'] = $err_su['data']['height'];
 	} else {
 		$err['code'] = FALSE;
+		$err['code_num'] = -1;
 		$err['message'] = $err_su['message'];
 		return $err;
 	}
@@ -918,7 +939,7 @@ function TCS_GetStreamParams($conf_info) {
 
 	}
 
-	if ( $is_flashver ) {
+	if ( $is_flashver and ( $err['data']['width'] > 0 ) and ( $err['data']['height'] > 0 ) ) {
 		// Check if live or recording for download
 		if ( strpos($err['data']['mainurl'], "rtmp") === FALSE ) {
 			$err['data']['download_url'] = $err['data']['mainurl'];
