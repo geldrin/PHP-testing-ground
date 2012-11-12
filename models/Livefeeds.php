@@ -313,6 +313,8 @@ class Livefeeds extends \Springboard\Model {
     
     $this->ensureObjectLoaded();
     // TODO secure
+    if ( $secure )
+      return true;
     
     if (
          isset( $user['id'] ) and
