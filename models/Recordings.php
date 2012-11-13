@@ -1543,6 +1543,8 @@ class Recordings extends \Springboard\Model {
       if ( isset( $recording['type'] ) and $recording['type'] != 'recording' )
         continue;
       
+      // store the index of the recordings in an array keyed by the recordingid
+      // so as not to re-index the array
       if ( isset( $recording['id'] ) )
         $recordings[ $recording['id'] ] = $key;
       
@@ -1574,7 +1576,7 @@ class Recordings extends \Springboard\Model {
     foreach( $contributors as $contributor ) {
       
       $key = $recordings[ $contributor['recordingid'] ];
-      if ( !isset( $recordings[ $key ]['presenters'] ) )
+      if ( !isset( $array[ $key ]['presenters'] ) )
         $array[ $key ]['presenters'] = array();
       
       $array[ $key ]['presenters'][] = $contributor;
