@@ -329,7 +329,7 @@ $authors = array(
 	array("Szalay", "Ferenc", "straight", "elnök", "Magyar Kosárlabdázók Országos Szövetsége", 180, 1),
 	array("Nagy", "József", "straight", "főosztályvezető", "Nemzeti Adó- és Vámhivatal", 180, 1),
 	array("Nagy", "József", "straight", "ügyvezető elnök", "Pénzügyőr Sportegyesület", 180, 1),
-	array("Sipos", "Jenő", "straight", "pénzügyőr ezredes", null, 180, 1),
+	array("Sipos", "Jenő", "straight", "pénzügyőr ezredes", "Nemzeti Adó- és Vámhivatal", 180, 1),
 	array("Sipos", "Jenő", "straight", "kommunikációs főosztályvezető-helyettes", "Nemzeti Adó- és Vámhivatal", 180, 1),
 );
 
@@ -441,7 +441,7 @@ global $db, $iscommit;
 			b.contributorid,
 			b.organizationid,
 			b.jobgroupid,
-			b.joboriginal,
+			b.job,
 			c.id as orgid,
 			c.name as orgname
 		FROM
@@ -488,7 +488,7 @@ global $db, $iscommit;
 			array_push($vals['cont'], $cont['id']);
 			array_push($vals['jobgrp'], $cont['jobgroupid']);
 			array_push($vals['org'], $cont['organizationid']);
-			echo "(" . $q . ") " . $cont['id'] . ", " . $cont['namelast'] . " " . $cont['namefirst'] . ", jobgrpid = " . $cont['jobgroupid'] . ", job = " . $cont['joboriginal'] . ", orgid = " . $cont['organizationid'] . ", org: " . $cont['orgname'] . "\n";
+			echo "(" . $q . ") " . $cont['id'] . ", " . $cont['namelast'] . " " . $cont['namefirst'] . ", jobgrpid = " . $cont['jobgroupid'] . ", job = " . $cont['job'] . ", orgid = " . $cont['organizationid'] . ", org: " . $cont['orgname'] . "\n";
 			$q++;
 			$rs->MoveNext();
 		}
@@ -580,7 +580,7 @@ echo $query . "\n";
 		// add job group
 		$query = "
 			INSERT INTO
-				contributors_jobs (contributorid, organizationid, userid, jobgroupid, joboriginal)
+				contributors_jobs (contributorid, organizationid, userid, jobgroupid, job)
 			VALUES(" . $id_cont . ", " . $id_org . ", 14, 1, " . $c_job . ")
 		";
 
