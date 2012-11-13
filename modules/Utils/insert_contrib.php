@@ -9,7 +9,7 @@ include_once( BASE_PATH . 'libraries/Springboard/Application/Cli.php');
 
 set_time_limit(0);
 
-$iscommit = FALSE;
+$iscommit = TRUE;
 
 // Init
 $app = new Springboard\Application\Cli(BASE_PATH, PRODUCTION);
@@ -324,6 +324,13 @@ $authors = array(
 
 */
 
+	array("Szalay", "Ferenc", "straight", "polgármester", "Szolnok", 180, 1),
+	array("Szalay", "Ferenc", "straight", "elnök", "Magyar Országgyűlés Sport és Turisztikai Bizottság", 180, 1),
+	array("Szalay", "Ferenc", "straight", "elnök", "Magyar Kosárlabdázók Országos Szövetsége", 180, 1),
+	array("Nagy", "József", "straight", "főosztályvezető", "Nemzeti Adó- és Vámhivatal", 180, 1),
+	array("Nagy", "József", "straight", "ügyvezető elnök", "Pénzügyőr Sportegyesület", 180, 1),
+	array("Sipos", "Jenő", "straight", "pénzügyőr ezredes", null, 180, 1),
+	array("Sipos", "Jenő", "straight", "kommunikációs főosztályvezető-helyettes", "Nemzeti Adó- és Vámhivatal", 180, 1),
 );
 
 // Establish database connection
