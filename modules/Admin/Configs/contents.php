@@ -16,7 +16,18 @@ $config = Array(
     'displayname' => 'Rövid azonosító',
     'type'        => 'inputText',
     'validation'  => Array(
-      Array( 'type' => 'required' )
+      Array( 'type' => 'required' ),
+      Array(
+        'type'  => 'database',
+        'field' => 'counter',
+        'value' => 0,
+        'help'  => 'Már létezik tartalom ezzel az azonosítóval!',
+        'sql'   => "
+          SELECT COUNT(*) AS counter
+          FROM contents
+          WHERE shortname = <FORM.shortname>
+        ",
+      ),
     )
   ),
 
