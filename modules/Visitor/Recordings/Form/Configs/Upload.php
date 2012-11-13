@@ -7,6 +7,11 @@ $config = Array(
     'value' => 'submitupload'
   ),
   
+  'channelid' => Array(
+    'type'  => 'inputHidden',
+    'value' => $this->application->getNumericParameter('channelid'),
+  ),
+  
   'fs1' => array(
     'type'   => 'fieldset',
     'legend' => $l('recordings', 'upload_title'),

@@ -143,6 +143,28 @@ class Upload extends \Visitor\HelpForm {
       
     }
     
+    $channelid = $this->application->getNumericParameter('channelid');
+    if ( $channelid ) {
+      
+      $channelModel = $this->modelOrganizationAndUserIDCheck(
+        'channels',
+        $channelid,
+        false
+      );
+      
+      if ( !$channelModel ) {
+        
+        $error = 'invalidchannel';
+        $this->form->addMessage( $l('recordings', 'invalidchannel') );
+        
+      } else {
+        
+        $channelModel->insertIntoChannel( $recordingModel->id, $user );
+        
+      }
+      
+    }
+    
     if ( isset( $error ) ) {
       
       if ( $this->swfupload )

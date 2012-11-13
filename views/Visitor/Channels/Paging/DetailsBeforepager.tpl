@@ -1,6 +1,19 @@
-<div class="heading categories">
+<div class="heading categories title">
+  {if !$channeltree[0].subtitle and $member.id and $member.isuploader and $canaddrecording}
+  <div class="actions">
+    <a href="{$language}/recordings/upload?channelid={$channel.id}">{#channels__addrecording#}</a>
+  </div>
+  {/if}
   <h1>{$channeltree[0].title|escape:html}</h1>
-  {if $channeltree[0].subtitle}<h2>{$channeltree[0].subtitle|escape:html}</h2>{/if}
+  
+  {if $channeltree[0].subtitle}
+    {if $member.id and $member.isuploader and $canaddrecording}
+    <div class="actions">
+      <a href="{$language}/recordings/upload?channelid={$channel.id}">{#channels__addrecording#}</a>
+    </div>
+    {/if}
+    <h2>{$channeltree[0].subtitle|escape:html}</h2>
+  {/if}
 </div>
 {capture assign=url}{$language}/{$module}/details/{$channel.id},{$channel.title|filenameize}?order=%s{/capture}
 

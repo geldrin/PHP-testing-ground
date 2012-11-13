@@ -769,7 +769,7 @@ class Channels extends \Springboard\Model {
     
   }
   
-  public function isAccessible( $user ) {
+  public function isAccessible( $user, $skipaccesstypecheck = false ) {
     
     $this->ensureObjectLoaded();
     
@@ -782,12 +782,15 @@ class Channels extends \Springboard\Model {
          (
            $channel['userid'] == $user['id'] or
            (
-             ( $user['iseditor'] or $user['isclientadmin'] ) and
+             ( $user['isclientadmin'] ) and
              $user['organizationid'] == $channel['organizationid']
            )
          )
        )
       return true;
+    
+    if ( $skipaccesstypecheck )
+      return false;
     
     switch( $channel['accesstype'] ) {
       

@@ -1048,6 +1048,28 @@ class Controller extends \Visitor\Controller {
         
         $recordingModel->upload( $info );
         
+        $channelid = $this->application->getNumericParameter('channelid');
+        if ( !$info['iscontent'] and $channelid ) {
+          
+          $channelModel = $this->modelOrganizationAndUserIDCheck(
+            'channels',
+            $channelid,
+            false
+          );
+          
+          if ( !$channelModel ) {
+            
+            $error = 'upload_invalidchannel';
+            $message( $l('recordings', 'invalidchannel') );
+            
+          } else {
+            
+            $channelModel->insertIntoChannel( $recordingModel->id, $user );
+            
+          }
+          
+        }
+        
       } catch( \Model\InvalidFileTypeException $e ) {
         $error   = 'upload_invalidfiletype';
         $message = $e->getMessage();

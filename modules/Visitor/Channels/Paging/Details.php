@@ -67,7 +67,7 @@ class Details extends \Visitor\Paging {
     $this->controller->toSmarty['channel']     = $this->channelModel->row;
     $this->controller->toSmarty['channeltree'] = $channeltree;
     $this->controller->toSmarty['havemultiplechannels'] = count( $this->channelids ) > 1;
-    
+    $this->controller->toSmarty['canaddrecording'] = $this->channelModel->isAccessible( $this->user, true );
     parent::init();
     
   }
