@@ -55,34 +55,8 @@ class Modifyfeed extends \Visitor\HelpForm {
       
     } elseif ( !isset( $values['feedtype'] ) )
       $createstream = false;
-    
-    $this->feedModel->clearAccess();
-    
-    switch( $values['accesstype'] ) {
       
-      case 'public':
-      case 'registrations':
-        break;
-      
-      case 'departments':
-        
-        if ( !empty( $values['departments'] ) )
-          $this->feedModel->restrictDepartments( $values['departments'] );
-        
-        break;
-      
-      case 'groups':
-        
-        if ( !empty( $values['groups'] ) )
-          $this->feedModel->restrictGroups( $values['groups'] );
-        
-        break;
-      
-      default:
-        throw new \Exception('Unhandled accesstype');
-        break;
-      
-    }
+    $this->handleAccesstypeForModel( $this->feedModel, $values );
     
     unset( $values['departments'], $values['groups'] );
     

@@ -57,32 +57,7 @@ class Createfeed extends \Visitor\HelpForm {
     unset( $values['id'] );
     
     $feedModel->insert( $values );
-    
-    switch( $values['accesstype'] ) {
-      
-      case 'public':
-      case 'registrations':
-        break;
-      
-      case 'departments':
-        
-        if ( !empty( $values['departments'] ) )
-          $feedModel->restrictDepartments( $values['departments'] );
-        
-        break;
-      
-      case 'groups':
-        
-        if ( !empty( $values['groups'] ) )
-          $feedModel->restrictGroups( $values['groups'] );
-        
-        break;
-      
-      default:
-        throw new \Exception('Unhandled accesstype');
-        break;
-      
-    }
+    $this->handleAccesstypeForModel( $feedModel, $values, false );
     
     if ( $values['feedtype'] == 'vcr' ) {
       

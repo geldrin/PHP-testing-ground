@@ -22,35 +22,7 @@ class Modifysharing extends \Visitor\Recordings\ModifyForm {
     if ( !$values['wanttimelimit'] )
       $values['visibleuntil'] = $values['visiblefrom'] = null;
     
-    $this->recordingsModel->clearAccess();
-    
-    switch( $values['accesstype'] ) {
-      
-      case 'public':
-      case 'registrations':
-        // kiuritettuk mar elobb az `access`-t az adott recordinghoz
-        // itt nincs tobb dolgunk
-        break;
-      
-      case 'departments':
-        
-        if ( !empty( $values['departments'] ) )
-          $this->recordingsModel->restrictDepartments( $values['departments'] );
-        
-        break;
-      
-      case 'groups':
-        
-        if ( !empty( $values['groups'] ) )
-          $this->recordingsModel->restrictGroups( $values['groups'] );
-        
-        break;
-      
-      default:
-        throw new \Exception('Unhandled accesstype');
-        break;
-      
-    }
+    $this->handleAccesstypeForModel( $this->recordingsModel, $values );
     
     unset( $values['departments'], $values['groups'] );
     $this->recordingsModel->updateRow( $values );

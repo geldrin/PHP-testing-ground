@@ -44,4 +44,37 @@ class Form extends \Springboard\Controller\Form {
     
   }
   
+  public function handleAccesstypeForModel( $model, &$values, $shouldclear = true ) {
+    
+    $model->clearAccess();
+    switch( $values['accesstype'] ) {
+      
+      case 'public':
+      case 'registrations':
+        // kiuritettuk mar elobb az `access`-t az adott recordinghoz
+        // itt nincs tobb dolgunk
+        break;
+      
+      case 'departments':
+        
+        if ( isset( $_REQUEST['departments'] ) and !empty( $values['departments'] ) )
+          $model->restrictDepartments( $values['departments'] );
+        
+        break;
+      
+      case 'groups':
+        
+        if ( isset( $_REQUEST['groups'] ) and !empty( $values['groups'] ) )
+          $model->restrictGroups( $values['groups'] );
+        
+        break;
+      
+      default:
+        throw new \Exception('Unhandled accesstype');
+        break;
+      
+    }
+    
+  }
+  
 }

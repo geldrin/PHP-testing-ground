@@ -57,33 +57,7 @@ class Create extends \Visitor\HelpForm {
     $channelModel->insert( $values );
     $channelModel->updateIndexFilename();
     
-    switch( $values['accesstype'] ) {
-      
-      case 'public':
-      case 'registrations':
-        // kiuritettuk mar elobb az `access`-t az adott recordinghoz
-        // itt nincs tobb dolgunk
-        break;
-      
-      case 'departments':
-        
-        if ( !empty( $values['departments'] ) )
-          $channelModel->restrictDepartments( $values['departments'] );
-        
-        break;
-      
-      case 'groups':
-        
-        if ( !empty( $values['groups'] ) )
-          $channelModel->restrictGroups( $values['groups'] );
-        
-        break;
-      
-      default:
-        throw new \Exception('Unhandled accesstype');
-        break;
-      
-    }
+    $this->handleAccesstypeForModel( $channelModel, $values, false );
     
     if ( !$channelModel->getLiveFeedCountForChannel() )
       $url = 'live/createfeed/' . $channelModel->id;

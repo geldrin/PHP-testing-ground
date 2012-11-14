@@ -34,7 +34,8 @@ class Modify extends \Visitor\HelpForm {
   
   public function onComplete() {
     
-    $values = $this->form->getElementValues( 0 );
+    $values        = $this->form->getElementValues( 0 );
+    $oldaccesstype = $this->channelModel->row['accesstype'];
     
     if ( @$values['starttimestamp'] )
       $values['starttimestamp'] .= ' 08:00:00';
@@ -42,37 +43,7 @@ class Modify extends \Visitor\HelpForm {
     if ( @$values['endtimestamp'] )
       $values['endtimestamp'] .= ' 20:00:00';
     
-    $this->channelModel->clearAccess();
-    
-    switch( $values['accesstype'] ) {
-      
-      case 'public':
-      case 'registrations':
-        // kiuritettuk mar elobb az `access`-t az adott recordinghoz
-        // itt nincs tobb dolgunk
-        break;
-      
-      case 'departments':
-        
-        if ( !empty( $values['departments'] ) )
-          $this->channelModel->restrictDepartments( $values['departments'] );
-        
-        break;
-      
-      case 'groups':
-        
-        if ( !empty( $values['groups'] ) )
-          $this->channelModel->restrictGroups( $values['groups'] );
-        
-        break;
-      
-      default:
-        throw new \Exception('Unhandled accesstype');
-        break;
-      
-    }
-    
-    $oldaccesstype = $this->channelModel->row['accesstype'];
+    $this->handleAccesstypeForModel( $this->channelModel, $values );
     $this->channelModel->updateRow( $values );
     
     if ( $oldaccesstype != $values['accesstype'] )
