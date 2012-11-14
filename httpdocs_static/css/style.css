@@ -1435,6 +1435,9 @@ a#currentusername span {
 .recordinglist .presenterswrap .label {
   font-weight: bold;
 }
+.recordinglist .presenters {
+  padding-left: 10px;
+}
 
 /* treeadminlist */
 .treeadminlist {
