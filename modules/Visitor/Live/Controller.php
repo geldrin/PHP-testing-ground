@@ -453,6 +453,14 @@ class Controller extends \Visitor\Controller {
       )
     ;
     
+    $ips = gethostbynamel('tcs.streamnet.hu');
+    if ( $ips and in_array( $_SERVER['REMOTE_ADDR'], $ips ) ) {
+      
+      $result  = '1';
+      $matched = false;
+      
+    }
+    
     if ( $matched ) {
       
       $this->bootstrap->setupSession( true, $matches['sessionid'], $matches['domain'] );
