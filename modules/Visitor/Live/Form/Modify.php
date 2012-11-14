@@ -72,8 +72,11 @@ class Modify extends \Visitor\HelpForm {
       
     }
     
+    $oldaccesstype = $this->channelModel->row['accesstype'];
     $this->channelModel->updateRow( $values );
-    $this->channelModel->syncAccessWithFeeds();
+    
+    if ( $oldaccesstype != $values['accesstype'] )
+      $this->channelModel->syncAccessWithFeeds();
     
     $this->controller->redirect(
       $this->application->getParameter(

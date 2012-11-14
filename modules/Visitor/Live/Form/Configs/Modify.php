@@ -53,3 +53,16 @@ if ( $this->channelModel->row['parentid'] ) {
   }
   
 }
+
+$config['accesstype']['validation'] = array(
+  array(
+    'type' => 'custom',
+    'php'  => 'true',
+    'help' => '',
+    'js'   =>
+      '(<FORM.accesstype> != "' . $this->channelModel->row['accesstype'] . '")' .
+      '? confirm(' . json_encode( $l('live', 'accesstypechange') ) . '): true'
+    ,
+  ),
+);
+
