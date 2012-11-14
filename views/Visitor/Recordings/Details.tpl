@@ -120,7 +120,7 @@
         <td class="labelcolumn">{#recordings__presenters#}:</td>
         <td>
           {foreach from=$recording.presenters item=presenter name=presenter}
-            {$presenter|@nameformat:true|escape:html}
+            <b>{$presenter|@nameformat:true|escape:html}</b>
             {foreach from=$presenter.jobs item=job name=job}
               {capture assign=joborganization}
                 {if strlen( trim( $job.nameshort ) )}
@@ -132,14 +132,14 @@
               
               {capture assign=jobcapture}
                 {if strlen( trim( $job.job ) ) and strlen( trim( $joborganization ) )}
-                  {$job.job|escape:html} - {$joborganization|trim|escape:html}
+                  {$job.job|escape:html}, {$joborganization|trim|escape:html}
                 {else}
                   {$job.job|escape:html}{$joborganization|trim|escape:html}
                 {/if}
               {/capture}
               
               {if strlen( trim( $jobcapture ) )}
-                {if $smarty.foreach.job.first}({/if}{$jobcapture|trim}{if !$smarty.foreach.job.last},{/if}{if $smarty.foreach.job.last}){/if}
+                {if $smarty.foreach.job.first}({/if}{$jobcapture|trim}{if !$smarty.foreach.job.last} -{/if}{if $smarty.foreach.job.last}){/if}
               {/if}
             {/foreach}
             {if !$smarty.foreach.presenter.last}<br/>{/if}
