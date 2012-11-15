@@ -40,6 +40,7 @@
   var language   = '{$language}';
   var BROWSER    = {ldelim}
     mobile: {if $browser.mobile}true{else}false{/if},
+    tablet: {if $browser.tablet}true{else}false{/if},
     obsolete: {if $browser.obsolete}true{else}false{/if} 
   {rdelim};
   </script>

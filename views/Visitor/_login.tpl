@@ -1,7 +1,7 @@
 
 <div id="headerlogin" class="rightbox">
   {if $member}
-    {if $browser.mobile}
+    {if $browser.mobile and !$browser.tablet}
       <div id="headerloginactions">
         <a href="{$language}/users/logout">{#usermenu_users_logout#}</a>
       </div>
