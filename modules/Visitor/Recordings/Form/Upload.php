@@ -7,6 +7,7 @@ class Upload extends \Visitor\HelpForm {
   public $template     = 'Visitor/Recordings/Upload.tpl';
   public $swfupload    = false;
   public $languages    = array();
+  public $uploads      = array();
   
   public function init() {
     
@@ -27,6 +28,8 @@ class Upload extends \Visitor\HelpForm {
     elseif ( !$user['isuploader'] )
       $this->controller->redirectToController('contents', 'nopermissionuploader');
     
+    $uploadModel   = $this->bootstrap->getModel('uploads');
+    $this->uploads = $uploadModel->getUploads( $user );
     parent::init();
     
   }

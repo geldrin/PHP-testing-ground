@@ -83,3 +83,5 @@ $config = Array(
   ),
   
 );
+
+include( $this->bootstrap->config['modulepath'] . 'Visitor/Recordings/Availableuploads.php' );

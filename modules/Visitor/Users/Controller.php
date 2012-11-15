@@ -57,7 +57,19 @@ class Controller extends \Visitor\Controller {
   }
   
   public function welcomeAction() {
+    
+    $l           = $this->bootstrap->getLocalization();
+    $uploadModel = $this->bootstrap->getModel('uploads');
+    $uploads     = $uploadModel->getUploads( $this->bootstrap->getSession('user') );
+    
+    if ( !empty( $uploads ) )
+      $this->toSmarty['sessionmessage'] = sprintf(
+        $l('recordings', 'continueupload'),
+        \Springboard\Language::get() . '/recordings/upload'
+      );
+    
     $this->smartyoutput('Visitor/Users/Welcome.tpl');
+    
   }
   
   public function validateAction() {

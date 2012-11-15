@@ -7,6 +7,7 @@ class Uploadcontent extends \Visitor\HelpForm {
   public $template     = 'Visitor/Recordings/Upload.tpl';
   public $swfupload    = false;
   public $languages    = array();
+  public $uploads      = array();
   public $recordingModel;
   
   public function init() {
@@ -42,6 +43,8 @@ class Uploadcontent extends \Visitor\HelpForm {
       
     }
     
+    $uploadModel   = $this->bootstrap->getModel('uploads');
+    $this->uploads = $uploadModel->getUploads( $user, true );
     parent::init();
     
   }

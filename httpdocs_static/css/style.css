@@ -460,6 +460,9 @@ a.submitbutton:hover {
   height: 14px;
   background-image: url(images/cross.png);
 }
+#systemmessage a {
+  color: #fff;
+}
 
 /* header */
 #headerbg {
@@ -1736,7 +1739,7 @@ a#currentusername span {
   padding-left: 20px;
 }
 /* metadata channels */
-#channels {
+#channels, #availableuploads {
   background-color: #ddd;
   -moz-border-radius: 5px;
   -webkit-border-radius: 5px;
@@ -1747,13 +1750,13 @@ a#currentusername span {
 #metadata #channel {
   display: none;
 }
-#channels h3 {
+#channels h3, #availableuploads h3 {
   font-size: 12px;
   font-weight: bold;
   margin: 0px 0px 10px 30px;
   text-shadow: 0px 1px 0px #fff;
 }
-#channels ul {
+#channels ul, #availableuploads ul {
   margin: 0;
   padding: 0;
   list-style-type: none;
@@ -1770,7 +1773,7 @@ a#currentusername span {
   height: 16px;
   background-image: url(images/icons/checkmark.png);
 }
-#channels .channelname {
+#channels .channelname, #availableuploads li {
   height: 22px;
   line-height: 22px;
   font-size: 12px;
@@ -1778,13 +1781,13 @@ a#currentusername span {
   white-space: nowrap;
   overflow: hidden;
 }
-#channels .channelname:hover {
+#channels .channelname:hover, #availableuploads li:hover {
   background-color: #fbfbfa;
 }
 #channels .channelname.level1 {
   padding-left: 30px;
 }
-#channels .addtochannel, #channels .removefromchannel, #channels .loading {
+#channels .addtochannel, #channels .removefromchannel, #channels .loading, #availableuploads .cancelupload, #availableuploads .cancelupload span {
   display: inline-block;
   overflow: hidden;
   width: 16px;
@@ -1796,11 +1799,21 @@ a#currentusername span {
 #channels .addtochannel {
   background-image: url(images/icons/plus.png);
 }
-#channels .removefromchannel {
+#channels .removefromchannel, #availableuploads .cancelupload {
   background-image: url(images/icons/minus.png);
 }
 #channels .loading {
   background-image: url(images/spinner.gif);
+}
+#availableuploads ul {
+  padding: 0;
+  margin-bottom: 0;
+}
+#availableuploads .filename {
+  padding-left: 30px;
+}
+#availableuploads .actions {
+  float: right;
 }
 /* recommendatory */
 #recommendatory {

@@ -816,8 +816,9 @@ recordingUpload.prototype.beforeUpload = function( uploader, file ) {
     async: false,
     cache: false,
     data: {
-      name: file.name,
-      size: file.size
+      name     : file.name,
+      size     : file.size,
+      iscontent: $j('#iscontent').val()
     },
     success: function(data) {
       

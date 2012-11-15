@@ -38,6 +38,7 @@ class Controller extends \Visitor\Controller {
     'removefromchannel'    => 'member',
     'checkfileresume'      => 'uploader',
     'uploadchunk'          => 'uploader',
+    'cancelupload'         => 'uploader',
   );
   
   public $forms = array(
@@ -1141,6 +1142,27 @@ class Controller extends \Visitor\Controller {
     }
     
     $this->jsonOutput( $response, true );
+    
+  }
+  
+  public function canceluploadAction() {
+    
+    $uploadModel = $this->modelUserAndIDCheck(
+      'uploads',
+      $this->application->getNumericParameter('id')
+    );
+    
+    if ( $uploadModel->row['status'] != 'uploading' )
+      $this->jsonOutput( array('status' => 'error', 'message' => 'Wrong status') );
+    
+    $uploadModel->updateRow( array(
+        'status' => 'markedfordeletion',
+      )
+    );
+    
+    $this->redirect(
+      $this->application->getParameter('forward')
+    );
     
   }
   
