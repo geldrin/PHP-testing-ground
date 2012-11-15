@@ -109,9 +109,7 @@ class Uploads extends \Springboard\Model {
   
   public function getUploads( $user, $iscontent = false ) {
     
-    if ( $iscontent )
-      $this->addFilter('iscontent', 1 );
-    
+    $this->addFilter('iscontent', $iscontent? 1: 0 );
     $this->addFilter('userid', $user['id'] );
     $this->addTextFilter("status IN('uploading', 'handlechunk')");
     return $this->getArray( false, false, false, 'id DESC');
