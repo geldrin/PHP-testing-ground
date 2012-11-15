@@ -5,6 +5,7 @@
     "security_error":"Biztonsági hiba",
     "io_error":"IO Hiba: Nem lehetett betölteni vagy elküldeni a műveletet.",
     "connection_rejected":"A kapcsolat-kérelem nem rendelkezik az alkalmazáshoz szükséges jogosultságokkal.",
+    "secure_connection_rejected":"A biztonságos kapcsolatot nem sikerült felépíteni.",
     "connection_closed":"A kapcsolat sikeresen lezárva.",
     "application_shutdown":"A megadott alkalmazás leállítása folyamatban.",
     "idle_timeout":"Időtúllépés.",
