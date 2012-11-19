@@ -17,6 +17,7 @@ class Controller extends \Visitor\Controller {
     'validateinvite' => 'public',
     'disable'        => 'clientadmin',
     'admin'          => 'clientadmin',
+    'edit'           => 'clientadmin',
   );
   
   public $forms = array(
@@ -27,6 +28,7 @@ class Controller extends \Visitor\Controller {
     'invite'         => 'Visitor\\Users\\Form\\Invite',
     'modify'         => 'Visitor\\Users\\Form\\Modify',
     'resend'         => 'Visitor\\Users\\Form\\Resend',
+    'edit'           => 'Visitor\\Users\\Form\\Edit',
   );
   
   public $paging = array(
