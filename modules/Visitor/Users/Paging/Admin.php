@@ -2,10 +2,10 @@
 namespace Visitor\Users\Paging;
 
 class Admin extends \Visitor\Paging {
-  protected $orderkey = 'nickname';
+  protected $orderkey = 'email';
   protected $sort = array(
-    'nickname'      => 'nickname',
-    'nickname_desc' => 'nickname DESC',
+    'email'         => 'email',
+    'email_desc'    => 'email DESC',
     'creation'      => 'id',
     'creation_desc' => 'id DESC',
   );
