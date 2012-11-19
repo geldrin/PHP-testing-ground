@@ -699,6 +699,13 @@ class Controller extends \Visitor\Controller {
     
     $flashdata = $recordingsModel->getFlashData( $this->toSmarty, session_id() );
     
+    $flashdata['layout_logo'] = $this->toSmarty['STATIC_URI'] . 'images/header_logo.png';
+    $flashdata['layout_logoDestination'] =
+      $this->toSmarty['BASE_URI'] . \Springboard\Language::get() .
+      '/recordings/details/' . $recordingsModel->id . ',' .
+      \Springboard\Filesystem::filenameize( $recordingsModel->row['title'] )
+    ;
+    
     if ( preg_match( '/^\d{1,2}h\d{1,2}m\d{1,2}s$/', $start ) )
       $flashdata['timeline_startPosition'] = $start;
     
