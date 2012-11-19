@@ -294,11 +294,11 @@ function setupFeed( elems ) {
     
     if ( elems.filter(':checked').val() == 'vcr' ) {
       
-      $j('#recordinglinkid').parents('tr').show();
+      $j('#recordinglinkid, input[name=needrecording]').parents('tr').show();
       
     } else {
       
-      $j('#recordinglinkid').parents('tr').hide();
+      $j('#recordinglinkid, input[name=needrecording]').parents('tr').hide();
       
     }
     

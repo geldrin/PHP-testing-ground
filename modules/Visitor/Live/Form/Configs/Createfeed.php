@@ -69,6 +69,13 @@ if ( $this->controller->organization['isvcrenabled'] ) {
     ),
   );
   
+  $config['needrecording'] = array(
+    'displayname' => $l('live', 'needrecording'),
+    'type'        => 'inputRadio',
+    'values'      => $l->getLov('yesno'),
+    'value'       => 1,
+  );
+  
 } else
   $config['feedtype'] = array(
     'type'     => 'inputHidden',

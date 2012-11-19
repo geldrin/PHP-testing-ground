@@ -486,6 +486,7 @@ CREATE TABLE `livefeeds` (
    `slideonright` int(11) not null default '0',
    `accesstype` text not null,
    `issecurestreamingforced` int(11) not null default '0',
+   `needrecording` int(11) not null default '1',
    `feedtype` text,
    PRIMARY KEY (`id`),
    KEY `channelid` (`channelid`)
