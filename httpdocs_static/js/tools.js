@@ -69,7 +69,7 @@ function setupConfirm( elems ) {
 
 function setupCurrentUser( elem ) {
   
-  if ( !BROWSER.mobile || !BROWSER.tablet )
+  if ( BROWSER.mobile && !BROWSER.tablet )
     return;
   
   elem.show();
