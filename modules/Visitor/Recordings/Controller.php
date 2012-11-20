@@ -693,8 +693,9 @@ class Controller extends \Visitor\Controller {
     $autoplay  = $this->application->getParameter('autoplay');
     $start     = $this->application->getParameter('start');
     $fullscale = $this->application->getParameter('fullscale');
+    $skipcontent = $this->application->getParameter('skipcontent');
     
-    if ( !$fullscale )
+    if ( $skipcontent )
       $this->toSmarty['skipcontent'] = true;
     
     $flashdata = $recordingsModel->getFlashData( $this->toSmarty, session_id() );
