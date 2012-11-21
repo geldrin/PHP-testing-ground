@@ -172,6 +172,9 @@ class Controller extends \Visitor\Controller {
     if ( !$uservalid )
       throw new \Exception( $l('users', 'accessdenied') );
     
+    if ( $userModel->row['isadmin'] )
+      $userModel->row['organizationid'] = $this->controller->organization['id']; // a registerforsession miatt
+    
     $userModel->registerForSession();
     $userModel->updateLastlogin();
     
