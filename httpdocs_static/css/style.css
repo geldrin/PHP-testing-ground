@@ -1491,11 +1491,6 @@ a#currentusername span {
   font-size: 13px;
 }
 
-#playercontainer {
-  width: 950px;
-  height: 530px;
-}
-
 /* indexcontainer */
 #indexcontainer {
   background-color: rgba(255, 255, 255, 0.2);
@@ -2356,4 +2351,8 @@ a#currentusername span {
 #feeds tr.streambroadcastwrap input {
   margin-left: 5px;
   width: 300px;
+}
+
+.liveiframe #wrap {
+  width: 100%;
 }

@@ -263,16 +263,33 @@ function setupLiveEmbed( elems ) {
     var root = elem.parents('.liveembedwrap');
     var url  = root.attr('data-embedurl');
     var txt  = root.find('textarea').val();
+    var addextraheight = true;
+    var width  = 950;
+    var height = 980;
     
-    if ( needchat == '0' )
-      url += '&chat=0';
+    if ( needchat == '0' ) {
+      
+      url += '&chat=false';
+      addextraheight = false;
+      
+    }
     
-    if ( needfullplayer == '0' )
-      url += '&fullplayer=0';
+    if ( needfullplayer == '0' ) {
+      
+      url   += '&fullplayer=false';
+      width  = 480;
+      height = 860;
+      
+    }
     
-    root.find('textarea').val(
-      txt.replace(/src="(.*?)"/, 'src="' + url + '"')
-    );
+    if ( !addextraheight )
+      height -= 330;
+    
+    txt = txt.replace(/src="(.*?)"/, 'src="' + url + '"');
+    txt = txt.replace(/width=".*?"/, 'width="' + width + '"');
+    txt = txt.replace(/height=".*?"/, 'height="' + height + '"' );
+    
+    root.find('textarea').val( txt );
     
   };
   

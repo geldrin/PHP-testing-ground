@@ -34,9 +34,9 @@
 <div id="player">
 {if $streamtype == 'desktop'}
   <script type="text/javascript">
-    swfobject.embedSWF('flash/TCPlayer.swf?v={$VERSION}', 'playercontainer', '950', '530', '11.1.0', 'flash/swfobject/expressInstall.swf', {$flashdata|@jsonescape:true}, flashdefaults.params );
+    swfobject.embedSWF('flash/TCPlayer.swf?v={$VERSION}', 'playercontainer', '{$playerwidth}', '{$playerheight}', '11.1.0', 'flash/swfobject/expressInstall.swf', {$flashdata|@jsonescape:true}, flashdefaults.params );
   </script>
-  <div id="playercontainer">{#recordings__noflash#}</div>
+  <div id="playercontainer" style="width: {$playerwidth}px; height: {$playerheight}px">{#recordings__noflash#}</div>
 {else}
   <center>
     {if $streamtype == 'ios'}

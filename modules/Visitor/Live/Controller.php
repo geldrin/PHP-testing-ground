@@ -68,11 +68,11 @@ class Controller extends \Visitor\Controller {
     $channelModel = $this->modelIDCheck('channels', $feedModel->row['channelid'] );
     $streamid     = $this->application->getNumericParameter('streamid');
     $browserinfo  = $this->bootstrap->getSession('browser');
-    $fullplayer   = $this->application->getParameter('player', true );
     $chromeless   = $this->application->getParameter('chromeless');
     $displaychat  = true;
     $needauth     = false;
     $nopermission = false;
+    $fullplayer   = true;
     
     if (
          $chromeless and in_array( $access[ $accesskey ], array(
@@ -91,7 +91,7 @@ class Controller extends \Visitor\Controller {
     if ( !count( $browserinfo ) )
       $browserinfo->setArray( \Springboard\Browser::getInfo() );
     
-    $streams      = $feedModel->getStreamsForBrowser( $browserinfo, $streamid );
+    $streams = $feedModel->getStreamsForBrowser( $browserinfo, $streamid );
     
     if ( !$streams )
       $this->redirectToController('contents', 'http404');
@@ -114,8 +114,29 @@ class Controller extends \Visitor\Controller {
       'media_secondaryStreams' => array( $currentstream['contentkeycode'] ),
     );
     
-    if ( !$chromeless or $fullplayer )
-      $this->toSmarty['doublewidth'] = true;
+    $this->toSmarty['playerwidth']  = 950;
+    $this->toSmarty['playerheight'] = 530;
+    
+    if ( $feedModel->row['moderationtype'] == 'nochat' )
+      $displaychat = false;
+    
+    if ( $chromeless ) {
+      
+      $fullplayer  = $this->application->getParameter('fullplayer');
+      $displaychat = $this->application->getParameter('chat', 1 );
+      
+      if ( $displaychat == 'false' )
+        $displaychat = false;
+      
+      if ( $fullplayer == 'false' ) {
+        
+        $fullplayer = false;
+        $this->toSmarty['playerwidth']  = 480;
+        $this->toSmarty['playerheight'] = 385;
+        
+      }
+      
+    }
     
     if ( !$feedModel->row['slideonright'] )
       $flashdata['layout_videoOrientation'] = 'right';
@@ -167,17 +188,6 @@ class Controller extends \Visitor\Controller {
       $this->toSmarty['organization']['domain'],
       session_id()
     );
-    
-    if ( $chromeless ) {
-      
-      $displaychat = $this->application->getParameter('chat', 1 );
-      if ( $displaychat == 'false' )
-        $displaychat = false;
-      
-    }
-    
-    if ( $feedModel->row['moderationtype'] == 'nochat' )
-      $displaychat = false;
     
     if ( $displaychat ) {
       
