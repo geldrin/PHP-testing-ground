@@ -173,7 +173,7 @@ class Controller extends \Visitor\Controller {
       throw new \Exception( $l('users', 'accessdenied') );
     
     if ( $userModel->row['isadmin'] )
-      $userModel->row['organizationid'] = $this->controller->organization['id']; // a registerforsession miatt
+      $userModel->row['organizationid'] = $this->organization['id']; // a registerforsession miatt
     
     $userModel->registerForSession();
     $userModel->updateLastlogin();
