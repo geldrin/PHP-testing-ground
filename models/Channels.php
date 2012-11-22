@@ -721,7 +721,8 @@ class Channels extends \Springboard\Model {
         channelid,
         name,
         slideonright,
-        feedtype
+        feedtype,
+        moderationtype
       FROM livefeeds
       WHERE channelid IN('" . $this->id . "')
       ORDER BY name

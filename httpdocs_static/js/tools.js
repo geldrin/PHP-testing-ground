@@ -299,6 +299,9 @@ function setupLiveEmbed( elems ) {
     var chat       = root.find('.chat:checked').val();
     var fullplayer = root.find('.fullplayer:checked').val();
     
+    if ( !root.find('.chat').length )
+      chat = 0;
+    
     updateIframeSrc( $j(this), chat, fullplayer );
     
   }).change();

@@ -122,10 +122,10 @@ class Controller extends \Visitor\Controller {
     
     if ( $chromeless ) {
       
-      $fullplayer  = $this->application->getParameter('fullplayer');
-      $displaychat = $this->application->getParameter('chat', 1 );
+      $fullplayer = $this->application->getParameter('fullplayer');
+      $chat       = $this->application->getParameter('chat');
       
-      if ( $displaychat == 'false' )
+      if ( $chat == 'false' )
         $displaychat = false;
       
       if ( $fullplayer == 'false' ) {
