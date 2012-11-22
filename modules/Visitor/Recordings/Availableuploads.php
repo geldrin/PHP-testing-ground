@@ -46,22 +46,6 @@ if ( !empty( $this->uploads ) ) {
     '<ul><li>' . implode( $html, '</li><li>' ) . '</li></ul>'
   ;
   
-  $index = 0;
-  foreach( $config as $k => $v ) {
-    
-    $index++;
-    
-    if ( $k == 'fs1' )
-      break;
-    
-  }
-  
-  $tmp =
-    array_slice( $config, 0, $index, true ) +
-    $availableuploads +
-    array_slice( $config, $index, count( $config ) - 1, true )
-  ;
-  
-  $config = $tmp;
+  $config = \Springboard\Tools::insertAfterKey( $config, $availableuploads, 'fs1' );
   
 }

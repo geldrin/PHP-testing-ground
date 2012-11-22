@@ -84,4 +84,27 @@ $config = Array(
   
 );
 
+if ( $this->user['iseditor'] or $this->user['isadmin'] or $this->user['isclientadmin'] ) {
+  
+  $introoutro = array(
+    'isintrooutro' => array(
+      'displayname' => $l('recordings', 'isintrooutro'),
+      'type'        => 'inputRadio',
+      'values'      => $l->getLov('noyes'),
+      'value'       => 0,
+    )
+  );
+  
+  $config = \Springboard\Tools::insertAfterKey( $config, $introoutro, 'file' );
+  
+} else {
+  
+  $config['isintrooutro'] = array(
+    'type'     => 'inputHidden',
+    'value'    => 0,
+    'readonly' => true,
+  );
+  
+}
+
 include( $this->bootstrap->config['modulepath'] . 'Visitor/Recordings/Availableuploads.php' );

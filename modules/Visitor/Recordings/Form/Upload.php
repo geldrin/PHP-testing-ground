@@ -8,6 +8,7 @@ class Upload extends \Visitor\HelpForm {
   public $swfupload    = false;
   public $languages    = array();
   public $uploads      = array();
+  public $user;
   
   public function init() {
     
@@ -17,19 +18,19 @@ class Upload extends \Visitor\HelpForm {
     if ( $this->application->getParameter('swfupload') )
       $this->swfupload = true;
     
-    $user = $this->bootstrap->getSession('user');
+    $this->user = $this->bootstrap->getSession('user');
     
-    if ( $this->swfupload and !$user['isuploader'] )
+    if ( $this->swfupload and !$this->user['isuploader'] )
       $this->controller->swfuploadMessage( array(
           'error' => 'membersonly',
           'url'   => $this->controller->getUrlFromFragment('index'),
         )
       );
-    elseif ( !$user['isuploader'] )
+    elseif ( !$this->user['isuploader'] )
       $this->controller->redirectToController('contents', 'nopermissionuploader');
     
     $uploadModel   = $this->bootstrap->getModel('uploads');
-    $this->uploads = $uploadModel->getUploads( $user );
+    $this->uploads = $uploadModel->getUploads( $this->user );
     parent::init();
     
   }
@@ -79,7 +80,6 @@ class Upload extends \Visitor\HelpForm {
     }
     
     $recordingModel = $this->bootstrap->getModel('recordings');
-    $user           = $this->bootstrap->getSession('user');
     $values         = $this->form->getElementValues( 0 );
     
     if ( !isset( $this->languages[ $values['videolanguage'] ] ) and $this->swfupload )
@@ -99,8 +99,9 @@ class Upload extends \Visitor\HelpForm {
       'filepath'   => $_FILES['file']['tmp_name'],
       'filename'   => $_FILES['file']['name'],
       'language'   => $values['videolanguage'],
-      'user'       => $user,
+      'user'       => $this->user,
       'handlefile' => 'upload',
+      'isintrooutro' => $values['isintrooutro'],
     );
     
     try {
@@ -123,7 +124,7 @@ class Upload extends \Visitor\HelpForm {
       $error = 'filetoobig';
       $this->form->addMessage( $l('', 'filetoobig') );
       $debug->log( false, 'upload.txt',
-        'Video from user ' . getuser('email') . ' ' .
+        'Video from user ' . $this->user['email'] . ' ' .
         'exceeded size constraints, metadata was ' .
         var_export( $recordingModel->metadata ),
         true
@@ -162,7 +163,7 @@ class Upload extends \Visitor\HelpForm {
         
       } else {
         
-        $channelModel->insertIntoChannel( $recordingModel->id, $user );
+        $channelModel->insertIntoChannel( $recordingModel->id, $this->user );
         
       }
       

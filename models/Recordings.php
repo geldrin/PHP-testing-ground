@@ -389,7 +389,7 @@ class Recordings extends \Springboard\Model {
     
   }
   
-  public function insertUploadingRecording( $userid, $organizationid, $languageid, $title, $sourceip ) {
+  public function insertUploadingRecording( $userid, $organizationid, $languageid, $title, $sourceip, $isintrooutro = 0 ) {
     
     $recording = array(
       'userid'          => $userid,
@@ -401,6 +401,7 @@ class Recordings extends \Springboard\Model {
       'masterstatus'    => 'uploading',
       'accesstype'      => 'public',
       'mastersourceip'  => $sourceip,
+      'isintrooutro'    => $isintrooutro,
       'timestamp'       => date('Y-m-d H:i:s'),
       'recordedtimestamp' => date('Y-m-d H:i:s'),
       'metadataupdatedtimestamp' => date('Y-m-d H:i:s'),
@@ -477,6 +478,17 @@ class Recordings extends \Springboard\Model {
       if ( !isset( $info['user'] ) or !$info['user']['id'] or !isset( $info['language'] ) )
         throw new \Exception('No language or user passed!');
       
+      $isintrooutro = 0;
+      if (
+           isset( $info['isintrooutro'] ) and
+           $info['isintrooutro'] and
+           (
+             $info['user']['iseditor'] or $info['user']['isadmin'] or
+             $info['user']['isclientadmin']
+           )
+         )
+        $isintrooutro = 1;
+      
       $statusfield = 'masterstatus';
       $this->analyze( $info['filepath'], $info['filename'] );
       $this->insertUploadingRecording(
@@ -484,7 +496,8 @@ class Recordings extends \Springboard\Model {
         $info['user']['organizationid'],
         $info['language'],
         $info['filename'],
-        $this->bootstrap->config['node_sourceip']
+        $this->bootstrap->config['node_sourceip'],
+        $isintrooutro
       );
       
     }
@@ -2320,6 +2333,31 @@ class Recordings extends \Springboard\Model {
     ");
     $this->updateChannelIndexPhotos();
     $this->updateCategoryCounters();
+    
+  }
+  
+  public function getIntroOutroCount( $organizationid ) {
+    
+    return $this->db->getOne("
+      SELECT COUNT(*)
+      FROM recordings
+      WHERE " . self::getPublicRecordingWhere('') . " AND
+        isintrooutro   = '1' AND
+        organizationid = '$organizationid'
+    ");
+    
+  }
+  
+  public function getIntroOutroAssoc( $organizationid ) {
+    
+    return $this->db->getAssoc("
+      SELECT id, title
+      FROM recordings
+      WHERE " . self::getPublicRecordingWhere('') . " AND
+        isintrooutro   = '1' AND
+        organizationid = '$organizationid'
+      ORDER BY title
+    ");
     
   }
   

@@ -931,6 +931,7 @@ class Controller extends \Visitor\Controller {
     $uploadModel = $this->bootstrap->getModel('uploads');
     $user        = $this->bootstrap->getSession('user');
     $iscontent   = (bool)$this->application->getNumericParameter('iscontent');
+    $isintrooutro= (bool)$this->application->getNumericParameter('isintrooutro');
     $chunkinfo   = array(
       'filename'  => $filename,
       'filesize'  => $filesize,
@@ -1024,6 +1025,7 @@ class Controller extends \Visitor\Controller {
         'filepath'   => $filepath,
         'filename'   => $info['filename'],
         'user'       => $user,
+        'isintrooutro' => $isintrooutro,
       );
       
       try {

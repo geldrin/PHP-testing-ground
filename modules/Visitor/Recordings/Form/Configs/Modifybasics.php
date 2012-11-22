@@ -82,6 +82,25 @@ $config = array(
   
 );
 
+if ( $this->recordingsModel->getIntroOutroCount( $this->controller->organization['id'] ) ) {
+  
+  $recordings = $this->recordingsModel->getIntroOutroAssoc( $this->controller->organization['id'] );
+  $introoutro = array(
+    'introrecordingid' => array(
+      'displayname' => $l('recordings', 'introrecordingid'),
+      'type'        => 'select',
+      'values'      => array_merge( array('' => ''), $recordings ),
+    ),
+    'outrorecordingid' => array(
+      'displayname' => $l('recordings', 'outrorecordingid'),
+      'type'        => 'select',
+      'values'      => array_merge( array('' => ''), $recordings ),
+    ),
+  );
+  $config = \Springboard\Tools::insertAfterKey( $config, $introoutro, 'slideonright' );
+  
+}
+
 $haveindexphotos = false;
 $staticuri       = $this->controller->organization['staticuri'] . 'files/';
 
