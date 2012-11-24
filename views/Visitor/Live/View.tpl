@@ -11,10 +11,11 @@
       <span>{#live__recordings_streams#}:</span>
       <div>
         {foreach from=$streams item=stream name=streams}
+          
           {if $currentstream.id == $stream.id}
             <b title="{$stream.name|escape:html}">{$stream.name|mb_truncate:30|escape:html}</b>
           {else}
-            <a title="{$stream.name|escape:html}" href="{$language}/live/view/{$feed.id},{$stream.id},{$feed.name|filenameize}">{$stream.name|mb_truncate:30|escape:html}</a>
+            <a title="{$stream.name|escape:html}" href="{$language}/live/view/{$feed.id},{$stream.id},{$feed.name|filenameize}{$urlparams}">{$stream.name|mb_truncate:30|escape:html}</a>
           {/if}
           {if !$smarty.foreach.streams.last} | {/if}
         {/foreach}

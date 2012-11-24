@@ -73,6 +73,7 @@ class Controller extends \Visitor\Controller {
     $needauth     = false;
     $nopermission = false;
     $fullplayer   = true;
+    $urlparams    = array();
     
     if (
          $chromeless and in_array( $access[ $accesskey ], array(
@@ -125,11 +126,17 @@ class Controller extends \Visitor\Controller {
       $fullplayer = $this->application->getParameter('fullplayer');
       $chat       = $this->application->getParameter('chat');
       
-      if ( $chat == 'false' )
+      $urlparams['chromeless'] = 'true';
+      if ( $chat == 'false' ) {
+        
         $displaychat = false;
+        $urlparams['chat'] = 'false';
+        
+      }
       
       if ( $fullplayer == 'false' ) {
         
+        $urlparams['fullplayer'] = 'false';
         $fullplayer = false;
         $this->toSmarty['playerwidth']  = 480;
         $this->toSmarty['playerheight'] = 385;
@@ -221,6 +228,9 @@ class Controller extends \Visitor\Controller {
     $this->toSmarty['currentstream'] = $currentstream;
     $this->toSmarty['liveurl']       = $this->bootstrap->config['wowza']['liveurl'];
     $this->toSmarty['chatpolltime']  = $this->bootstrap->config['chatpolltimems'];
+    
+    if ( !empty( $urlparams ) )
+      $this->toSmarty['urlparams'] = '?' . http_build_query( $urlparams );
     
     $this->smartyOutput('Visitor/Live/View.tpl');
     

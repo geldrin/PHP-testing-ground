@@ -1697,16 +1697,6 @@ class Recordings extends \Springboard\Model {
     
   }
   
-  public function getFieldForID( $id, $field ) {
-    
-    return $this->db->getOne("
-      SELECT $field
-      FROM recordings
-      WHERE id = '$id'
-    ");
-    
-  }
-  
   public function getFlashData( $info, $sessionid ) {
     
     $this->ensureObjectLoaded();
@@ -1742,31 +1732,7 @@ class Recordings extends \Springboard\Model {
     if ( $this->row['videoreshq'] )
       $data['media_streams'][] = $this->getMediaUrl('default', true, $domain );
     
-    if ( $this->row['introrecordingid'] ) {
-      
-      $data['intro_streams'] = array(
-        $this->getMediaUrl('default', false, $domain, null, '', $this->row['introrecordingid'] )
-      );
-      
-      if ( $this->getFieldForID( $this->row['introrecordingid'], 'videoreshq') )
-        $data['intro_streams'][] =
-          $this->getMediaUrl('default', true, $domain, null, '', $this->row['introrecordingid'] )
-        ;
-      
-    }
-    
-    if ( $this->row['outrorecordingid'] ) {
-      
-      $data['outro_streams'] = array(
-        $this->getMediaUrl('default', false, $domain, null, '', $this->row['outrorecordingid'] )
-      );
-      
-      if ( $this->getFieldForID( $this->row['outrorecordingid'], 'videoreshq') )
-        $data['outro_streams'][] =
-          $this->getMediaUrl('default', true, $domain, null, '', $this->row['outrorecordingid'] )
-        ;
-      
-    }
+    $data = $data + $this->getIntroOutroFlashdata( $domain );
     
     if ( $this->row['offsetstart'] )
       $data['timeline_virtualStart'] = $this->row['offsetstart'];
@@ -1833,6 +1799,59 @@ class Recordings extends \Springboard\Model {
           \Springboard\Filesystem::filenameize( $video['title'] )
         ,
       );
+      
+    }
+    
+    return $data;
+    
+  }
+  
+  public function getIntroOutroFlashdata( $domain ) {
+    
+    $this->ensureObjectLoaded();
+    if ( !$this->row['introrecordingid'] and !$this->row['outrorecordingid'] )
+      return array();
+    
+    $ids     = array();
+    $data    = array();
+    $introid = 0;
+    $outroid = 0;
+    
+    if ( $this->row['introrecordingid'] ) {
+      
+      $ids[]   = $this->row['introrecordingid'];
+      $introid = $this->row['introrecordingid'];
+      
+    }
+    
+    if ( $this->row['outrorecordingid'] ) {
+      
+      $ids[]   = $this->row['outrorecordingid'];
+      $outroid = $this->row['outrorecordingid'];
+      
+    }
+    
+    $highres = $this->db->getAssoc("
+      SELECT id, videoreshq
+      FROM recordings
+      WHERE id IN('" . implode("', '", $ids ) . "')
+    ");
+    
+    foreach( $ids as $id ) {
+      
+      if ( $introid == $id )
+        $key = 'intro_streams';
+      else
+        $key = 'outro_streams';
+      
+      $data[ $key ] = array(
+        $this->getMediaUrl('default', false, $domain, null, '', $id )
+      );
+      
+      if ( isset( $highres[ $id ] ) )
+        $data[ $key ][] =
+          $this->getMediaUrl('default', true, $domain, null, '', $id )
+        ;
       
     }
     
