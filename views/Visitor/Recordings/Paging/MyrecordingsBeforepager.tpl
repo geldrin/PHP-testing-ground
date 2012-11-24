@@ -39,6 +39,16 @@
           <option value="private"{if $smarty.get.publicstatus == "private"} selected="selected"{/if}>{#recordings__myrecordings_publicstatus_private#}</option>
         </select>
       </div>
+      {if false and ( $member.isadmin or $member.iseditor or $member.isclientadmin )}
+        <div class="elem">
+          <label for="isintrooutro">{#recordings__myrecordings_isintrooutro#}:</label>
+          <select name="isintrooutro" id="isintrooutro">
+            <option value=""{if !in_array( $smarty.get.isintrooutro, array('yes', 'no') )} selected="selected"{/if}></option>
+            <option value="yes"{if $smarty.get.isintrooutro == "yes"} selected="selected"{/if}>{#recordings__myrecordings_isintrooutro_yes#}</option>
+            <option value="no"{if $smarty.get.isintrooutro == "no"} selected="selected"{/if}>{#recordings__myrecordings_isintrooutro_no#}</option>
+          </select>
+        </div>
+      {/if}
     </div>
     <div class="submitwrap">
       <input class="submitbutton" type="submit" value="{#recordings__myrecordings_filter#}"/>

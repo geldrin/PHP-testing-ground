@@ -90,7 +90,7 @@ if ( $this->user['iseditor'] or $this->user['isadmin'] or $this->user['isclienta
     'isintrooutro' => array(
       'displayname' => $l('recordings', 'isintrooutro'),
       'type'        => 'inputRadio',
-      'values'      => $l->getLov('noyes'),
+      'values'      => $l->getLov('isintrooutro'),
       'value'       => 0,
     )
   );

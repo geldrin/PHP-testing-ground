@@ -58,6 +58,9 @@ class Myrecordings extends \Visitor\Paging {
     
     foreach( $items as $key => $item ) {
       
+      if ( $item['isintrooutro'] )
+        continue;
+      
       $this->recordingsModel->id  = $item['id'];
       $this->recordingsModel->row = $item;
       $items[ $key ]['canuploadcontentvideo'] =
@@ -150,6 +153,19 @@ class Myrecordings extends \Visitor\Paging {
       ";
       
       $where[] = "primarymetadatacache LIKE $searchterm";
+      
+    }
+    
+    $introoutro = $this->application->getParameter('isintrooutro');
+    
+    if ( $introoutro and in_array( $introoutro, array('yes', 'no') ) ) {
+      
+      if ( $introoutro == 'yes' )
+        $where[] = "isintrooutro = '1'";
+      else
+        $where[] = "isintrooutro = '0'";
+      
+      $this->passparams['isintrooutro'] = $introoutro;
       
     }
     

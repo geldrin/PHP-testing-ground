@@ -17,10 +17,15 @@ class Modifybasics extends \Visitor\Recordings\ModifyForm {
     $this->recordingsModel->updateRow( $values );
     $this->recordingsModel->updateFulltextCache( true );
     
-    $this->controller->redirect(
-      'recordings/modifyclassification/' . $this->recordingsModel->id,
-      array( 'forward' => $values['forward'] )
-    );
+    if ( $this->recordingsModel->row['isintrooutro'] )
+      $this->controller->redirect(
+        $this->application->getParameter('forward', 'recordings/myrecordings' )
+      );
+    else
+      $this->controller->redirect(
+        'recordings/modifyclassification/' . $this->recordingsModel->id,
+        array( 'forward' => $values['forward'] )
+      );
     
   }
   

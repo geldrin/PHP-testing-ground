@@ -405,9 +405,13 @@ class Recordings extends \Springboard\Model {
       'timestamp'       => date('Y-m-d H:i:s'),
       'recordedtimestamp' => date('Y-m-d H:i:s'),
       'metadataupdatedtimestamp' => date('Y-m-d H:i:s'),
-      
-    
     ) + $this->metadata;
+    
+    if ( $isintrooutro ) {
+      
+      $recording['ispublished'] = 1;
+      
+    }
     
     return $this->insert( $recording );
     
@@ -948,12 +952,13 @@ class Recordings extends \Springboard\Model {
     
   }
   
-  public static function getPublicRecordingWhere( $prefix = '' ) {
+  public static function getPublicRecordingWhere( $prefix = '', $isintrooutro = '0' ) {
     
     return "
-      {$prefix}status      = 'onstorage' AND
-      {$prefix}ispublished = '1' AND
-      {$prefix}accesstype  = 'public' AND
+      {$prefix}status       = 'onstorage' AND
+      {$prefix}ispublished  = '1' AND
+      {$prefix}isintrooutro = '$isintrooutro' AND
+      {$prefix}accesstype   = 'public' AND
       (
         {$prefix}visiblefrom  IS NULL OR
         {$prefix}visibleuntil IS NULL OR
@@ -966,11 +971,11 @@ class Recordings extends \Springboard\Model {
     
   }
   
-  public static function getUnionSelect( $user, $select = 'r.*', $from = 'recordings AS r', $where = null ) {
+  public static function getUnionSelect( $user, $select = 'r.*', $from = 'recordings AS r', $where = null, $isintrooutro = '0' ) {
     
     if ( !isset( $user['id'] ) ) {
       
-      $publicwhere = self::getPublicRecordingWhere('r.');
+      $publicwhere = self::getPublicRecordingWhere('r.', $isintrooutro );
       if ( $where )
         $publicwhere = ' AND ' . $publicwhere;
       
@@ -985,7 +990,8 @@ class Recordings extends \Springboard\Model {
     }
     
     $generalwhere = "
-      r.status      = 'onstorage' AND
+      r.status       = 'onstorage' AND
+      r.isintrooutro = '$isintrooutro' AND
       (
         r.ispublished = '1' OR
         r.userid = '" . $user['id'] . "'
@@ -1691,6 +1697,16 @@ class Recordings extends \Springboard\Model {
     
   }
   
+  public function getFieldForID( $id, $field ) {
+    
+    return $this->db->getOne("
+      SELECT $field
+      FROM recordings
+      WHERE id = '$id'
+    ");
+    
+  }
+  
   public function getFlashData( $info, $sessionid ) {
     
     $this->ensureObjectLoaded();
@@ -1712,7 +1728,6 @@ class Recordings extends \Springboard\Model {
       'recording_subtitle'    => (string)$this->row['subtitle'],
       'recording_description' => (string)$this->row['description'],
       'recording_image'       => \smarty_modifier_indexphoto( $this->row, 'player', $info['STATIC_URI'] ),
-      
     );
     
     // default bal oldalon van a video, csak akkor allitsuk be ha kell
@@ -1726,6 +1741,32 @@ class Recordings extends \Springboard\Model {
     
     if ( $this->row['videoreshq'] )
       $data['media_streams'][] = $this->getMediaUrl('default', true, $domain );
+    
+    if ( $this->row['introrecordingid'] ) {
+      
+      $data['intro_streams'] = array(
+        $this->getMediaUrl('default', false, $domain, null, '', $this->row['introrecordingid'] )
+      );
+      
+      if ( $this->getFieldForID( $this->row['introrecordingid'], 'videoreshq') )
+        $data['intro_streams'][] =
+          $this->getMediaUrl('default', true, $domain, null, '', $this->row['introrecordingid'] )
+        ;
+      
+    }
+    
+    if ( $this->row['outrorecordingid'] ) {
+      
+      $data['outro_streams'] = array(
+        $this->getMediaUrl('default', false, $domain, null, '', $this->row['outrorecordingid'] )
+      );
+      
+      if ( $this->getFieldForID( $this->row['outrorecordingid'], 'videoreshq') )
+        $data['outro_streams'][] =
+          $this->getMediaUrl('default', true, $domain, null, '', $this->row['outrorecordingid'] )
+        ;
+      
+    }
     
     if ( $this->row['offsetstart'] )
       $data['timeline_virtualStart'] = $this->row['offsetstart'];
@@ -1805,9 +1846,7 @@ class Recordings extends \Springboard\Model {
       $this->getFlashData( $info, $sessionid )
     );
     
-    $flashdata['recommendatory']        = $flashdata['recommendatory']['string'];
-    //$flashdata['recording']['duration'] = $flashdata['media']['length'];
-    //unset( $flashdata['media']['length'] );
+    $flashdata['recommendatory'] = $flashdata['recommendatory']['string'];
     
     return $flashdata;
     
@@ -1874,7 +1913,7 @@ class Recordings extends \Springboard\Model {
     
   }
   
-  public function getMediaUrl( $type, $highquality, $domain = null, $sessionid = null, $host = '' ) {
+  public function getMediaUrl( $type, $highquality, $domain = null, $sessionid = null, $host = '', $id = null ) {
     
     $this->ensureObjectLoaded();
     
@@ -1943,9 +1982,12 @@ class Recordings extends \Springboard\Model {
       
     }
     
+    if ( $id === null )
+      $id = $this->id;
+    
     return $host . sprintf( $sprintfterm,
-      \Springboard\Filesystem::getTreeDir( $this->id ),
-      $this->id,
+      \Springboard\Filesystem::getTreeDir( $id ),
+      $id,
       $extension
     );
     
@@ -2341,8 +2383,7 @@ class Recordings extends \Springboard\Model {
     return $this->db->getOne("
       SELECT COUNT(*)
       FROM recordings
-      WHERE " . self::getPublicRecordingWhere('') . " AND
-        isintrooutro   = '1' AND
+      WHERE " . self::getPublicRecordingWhere('', '1') . " AND
         organizationid = '$organizationid'
     ");
     
@@ -2353,8 +2394,7 @@ class Recordings extends \Springboard\Model {
     return $this->db->getAssoc("
       SELECT id, title
       FROM recordings
-      WHERE " . self::getPublicRecordingWhere('') . " AND
-        isintrooutro   = '1' AND
+      WHERE " . self::getPublicRecordingWhere('', '1') . " AND
         organizationid = '$organizationid'
       ORDER BY title
     ");

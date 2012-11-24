@@ -158,4 +158,9 @@ return array(
     'isioscompatible'     => 'iOS',
   ),
   
+  'isintrooutro' => array(
+    0 => 'normál felvétel',
+    1 => 'bevezető (intro) vagy záró (outro) célú rövid felvétel',
+  ),
+  
 );

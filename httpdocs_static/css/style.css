@@ -1278,6 +1278,11 @@ a#currentusername span {
   text-decoration: none;
 }
 
+.recordingpic img {
+  width: 192px;
+  height: 113px;
+}
+
 /* recordinglist */
 .recordinglist {
   width: 950px;

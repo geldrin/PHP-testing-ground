@@ -31,8 +31,7 @@ class Modifysharing extends \Visitor\Recordings\ModifyForm {
     $this->recordingsModel->updateChannelIndexPhotos(); // a channel szamlalok miatt
     
     $this->controller->redirect(
-      'recordings/myrecordings',
-      array( 'forward' => $values['forward'] )
+      $this->application->getParameter('forward', 'recordings/myrecordings')
     );
     
   }

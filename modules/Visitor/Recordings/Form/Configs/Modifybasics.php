@@ -82,42 +82,57 @@ $config = array(
   
 );
 
-if ( $this->recordingsModel->getIntroOutroCount( $this->controller->organization['id'] ) ) {
+if ( !$this->recordingsModel->row['isintrooutro'] ) {
   
-  $recordings = $this->recordingsModel->getIntroOutroAssoc( $this->controller->organization['id'] );
-  $introoutro = array(
-    'introrecordingid' => array(
-      'displayname' => $l('recordings', 'introrecordingid'),
-      'type'        => 'select',
-      'values'      => array_merge( array('' => ''), $recordings ),
-    ),
-    'outrorecordingid' => array(
-      'displayname' => $l('recordings', 'outrorecordingid'),
-      'type'        => 'select',
-      'values'      => array_merge( array('' => ''), $recordings ),
-    ),
+  $haveindexphotos = false;
+  $staticuri       = $this->controller->organization['staticuri'] . 'files/';
+  
+  for ( $i = 1; $i <= $this->recordingsModel->row['numberofindexphotos']; $i++ ) {
+    
+    $haveindexphotos = true;
+    $filename = preg_replace(
+      '/_\d+\.jpg$/',
+      '_' . $i . '.jpg',
+      $this->recordingsModel->row['indexphotofilename']
+    );
+    
+    $config['indexphotofilename']['values'][ $filename ] = 
+      '<img src="' . $staticuri . $filename . '" />';
+    ;
+    
+  }
+  
+  if ( !$haveindexphotos )
+    unset( $config['indexphotofilename'] );
+  
+  if ( $this->recordingsModel->getIntroOutroCount( $this->controller->organization['id'] ) ) {
+    
+    $recordings =
+      array('' => '') +
+      $this->recordingsModel->getIntroOutroAssoc( $this->controller->organization['id'] )
+    ;
+    
+    $introoutro = array(
+      'introrecordingid' => array(
+        'displayname' => $l('recordings', 'introrecordingid'),
+        'type'        => 'select',
+        'values'      => $recordings,
+      ),
+      'outrorecordingid' => array(
+        'displayname' => $l('recordings', 'outrorecordingid'),
+        'type'        => 'select',
+        'values'      => $recordings,
+      ),
+    );
+    
+    $config = \Springboard\Tools::insertAfterKey( $config, $introoutro, 'slideonright' );
+    
+  }
+  
+} else
+  unset(
+    $config['languageid'],
+    $config['subtitle'],
+    $config['slideonright'],
+    $config['indexphotofilename']
   );
-  $config = \Springboard\Tools::insertAfterKey( $config, $introoutro, 'slideonright' );
-  
-}
-
-$haveindexphotos = false;
-$staticuri       = $this->controller->organization['staticuri'] . 'files/';
-
-for ( $i = 1; $i <= $this->recordingsModel->row['numberofindexphotos']; $i++ ) {
-
-  $haveindexphotos = true;
-  $filename = preg_replace(
-    '/_\d+\.jpg$/',
-    '_' . $i . '.jpg',
-    $this->recordingsModel->row['indexphotofilename']
-  );
-
-  $config['indexphotofilename']['values'][ $filename ] = 
-    '<img src="' . $staticuri . $filename . '" />';
-  ;
-  
-}
-
-if ( !$haveindexphotos )
-  unset( $config['indexphotofilename'] );

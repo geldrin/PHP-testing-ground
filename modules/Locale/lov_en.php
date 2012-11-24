@@ -138,4 +138,9 @@ return array(
     'isioscompatible'     => 'iOS',
   ),
   
+  'isintrooutro' => array(
+    0 => 'normal recording',
+    1 => 'intro our outro recording',
+  ),
+  
 );
