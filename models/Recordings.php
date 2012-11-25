@@ -1848,7 +1848,7 @@ class Recordings extends \Springboard\Model {
         $this->getMediaUrl('default', false, $domain, null, '', $id )
       );
       
-      if ( isset( $highres[ $id ] ) )
+      if ( isset( $highres[ $id ] ) and $highres[ $id ] )
         $data[ $key ][] =
           $this->getMediaUrl('default', true, $domain, null, '', $id )
         ;
