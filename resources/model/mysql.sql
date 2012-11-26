@@ -51,6 +51,8 @@ CREATE TABLE `users` (
    `disabled` int(11) not null default '0',
    `isapienabled` int(11) not null default '0',
    `apiaddresses` text,
+   `avatarfilename` text,
+   `avatarstatus` text,
    PRIMARY KEY (`id`),
    UNIQUE INDEX `uq_emailorganizationid` (`email`(50), `organizationid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;

@@ -28,6 +28,26 @@ class Modify extends \Visitor\HelpForm {
     else
       $values['password'] = $crypt->getHash( $values['password'] );
     
+    if (
+         isset( $_FILES['avatarfilename'] ) and
+         $_FILES['avatarfilename']['error'] == 0 and
+         $this->userModel->canUploadAvatar()
+       ) {
+      
+      $values['avatarfilename'] = $_FILES['avatarfilename']['name'];
+      $dest =
+        $this->bootstrap->config['useravatarpath'] .
+        $this->userModel->id . '.' .
+        \Springboard\Filesystem::getExtension( $values['avatarfilename'] )
+      ;
+      
+      if ( !move_uploaded_file( $_FILES['avatarfilename']['tmp_name'], $dest ) )
+        throw new \Exception("Failed moving avatarfile: " . var_export( $_FILES, true ) );
+      
+      $values['avatarstatus'] = 'uploaded';
+      
+    }
+    
     $this->userModel->updateRow( $values );
     $this->userModel->registerForSession();
     

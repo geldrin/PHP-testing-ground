@@ -127,4 +127,20 @@ $config = array(
     )
   ),
   
+  'avatarfilename' => Array(
+    'displayname' => $l('users', 'avatarfilename'),
+    'type'        => 'inputFile',
+    'validation'  => Array(
+      array(
+        'type'             => 'file',
+        'required'         => true,
+        'help'             => $l('users', 'avatarfilename_help'),
+        'imagecreatecheck' => true,
+        'types'            => Array('gif', 'jpg', 'png', 'bmp'),
+      )
+    )
+  ),
 );
+
+if ( !$this->userModel->canUploadAvatar() )
+  unset( $config['avatarfilename'] );

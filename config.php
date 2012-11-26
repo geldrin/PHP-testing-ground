@@ -88,6 +88,7 @@ $config = array(
   'chunkpath'        => '/srv/upload/videosquare.eu/recordings_chunks/',
   'mediapath'        => '/srv/storage/videosquare.eu/',
   'recordingpath'    => '/srv/storage/videosquare.eu/recordings/',
+  'useravatarpath'   => '/srv/storage/videosquare.eu/useravatars/',
   'recordings_seconds_minlength' => 3,
   'categoryiconpath' => $this->basepath . 'httpdocs_static/images/categories/',
   'relatedrecordingcount' => 6,

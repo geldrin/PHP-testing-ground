@@ -178,4 +178,23 @@ class Users extends \Springboard\Model {
     
   }
   
+  public function canUploadAvatar( $status = null ) {
+    
+    if ( $status === null ) {
+      
+      $this->ensureObjectLoaded();
+      $status = $this->row['avatarstatus'];
+      
+    }
+    
+    if (
+         in_array( $status, array( '', 'markedfordeletion', 'deleted', 'onstorage') ) or
+         preg_match( '/^failed/', $status )
+       )
+      return true;
+    
+    return false;
+    
+  }
+  
 }
