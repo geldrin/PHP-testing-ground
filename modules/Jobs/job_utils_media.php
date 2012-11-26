@@ -137,11 +137,10 @@ global $jconf;
 		$err['command'] = $command;
 		$err['command_output'] = $output['cmd_output'];
 		$err['result'] = $output['code'];
-var_dump($err);
 		if ( $err['result'] < 0 ) $err['result'] = 0;
 
-		// ffmpeg terminated with error
-		if ( $err['result'] != 0 ) {
+		// ffmpeg terminated with error or filesize suspiciously small
+		if ( ( $err['result'] != 0 ) or ( filesize($media_info['output_file']) < 1000 ) ) {
 			$err['code'] = FALSE;
 			$err['message'] = "[ERROR] ffmpeg conversion FAILED";
 			return $err;
