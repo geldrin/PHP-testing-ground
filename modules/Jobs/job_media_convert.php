@@ -376,8 +376,6 @@ global $app, $jconf;
 		$recording['conversion_type'] = $jconf['dbstatus_reconvert'];
 	}
 
-// !!! if reconvert and content is there, then mobile version reconversion needed with content - set mobilestatus field
-
 	$remote_filename = $jconf['ssh_user'] . "@" . $recording['mastersourceip'] . ":" . $uploadpath . $base_filename;
 	$master_filename = $jconf['media_dir'] . $recording['id'] . "/master/" . $base_filename;
 
