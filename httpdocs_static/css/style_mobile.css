@@ -285,6 +285,7 @@
   }
   #headerlogo {
     padding-top: 3px;
+    padding-left: 0px;
     height: 38px;
   }
   #headerlogo a span {
@@ -352,6 +353,9 @@
   }
   #headerbottom {
     height: 24px;
+  }
+  #headermenu .first, #headermenu a span {
+    display: none;
   }
   #headermenu a {
     height: 19px;

@@ -1356,6 +1356,7 @@ a#currentusername span {
   left: 100px;
   background-image: url(images/playbutton.png);
   display: inline;
+  background-repeat: no-repeat;
 }
 #relatedvideos a .playpic {
   top: 93px;
