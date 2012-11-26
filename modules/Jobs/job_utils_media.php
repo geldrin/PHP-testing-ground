@@ -137,8 +137,7 @@ global $jconf;
 		$err['command'] = $command;
 		$err['command_output'] = $output['cmd_output'];
 		$err['result'] = $output['code'];
-		// ffmpeg returns -1 (?)
-//echo "errcode: " . $err['result'] . "\n";
+var_dump($err);
 		if ( $err['result'] < 0 ) $err['result'] = 0;
 
 		// ffmpeg terminated with error
@@ -435,7 +434,7 @@ TODO: run CLI tests
 	$err = ffmpeg_qtfaststart($recording_info['output_file']);
 	if ( !$err['code'] ) {
 		log_recording_conversion($recording['id'], $jconf['jobid_media_convert'], $jconf['dbstatus_conv_video'], $err['message'] . "\nSource file: " . $recording_info['output_file'] . "\nDestination file: " . $recording_info['output_file'], $err['command'], $err['command_output'], $err['duration'], TRUE);
-		return FALSE;
+//		return FALSE;
 	}
 
 	$global_log .= "\nqt-faststart result: " . $err['message'] . "\n";
