@@ -65,6 +65,8 @@
           <li class="last"><span class="bold">{#recordings__contentrecording_status#}:</span>
           {if preg_match( '/^converting/', $item.contentstatus )}
             {l lov=recordingstatus key=unavailable assign=contentstatus}
+          {elseif preg_match( '/^failed.*$/', $item.contentstatus )}
+            {l lov=recordingstatus key=failed assign=contentstatus}
           {else}
             {l lov=recordingstatus key=$item.contentstatus assign=contentstatus}
           {/if}
