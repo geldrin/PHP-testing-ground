@@ -4,6 +4,8 @@ namespace Visitor;
 class Form extends \Springboard\Controller\Form {
   public $xsrfprotect = false;
   
+  public function redirectToMainDomain() {}
+  
   public function postGetForm() {
     
     $this->form->jspath =

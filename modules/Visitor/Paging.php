@@ -2,6 +2,8 @@
 namespace Visitor;
 abstract class Paging extends \Springboard\Controller\Paging {
   
+  public function redirectToMainDomain() {}
+  
   protected function setupPager() {
     
     parent::setupPager();
