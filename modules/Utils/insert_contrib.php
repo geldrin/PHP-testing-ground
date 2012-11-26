@@ -321,9 +321,6 @@ $authors = array(
 	array("Szabó", "Zoltán", "straight", null, "Index", 177, 1),
 	array("Csuday", "Gábor", "straight", null, "Kreatív", 177, 1),
 	array("Simon", "Krisztián", "straight", null, "Marketing és Média", 177, 1),
-
-*/
-
 	array("Szalay", "Ferenc", "straight", "polgármester", "Szolnok", 180, 1),
 	array("Szalay", "Ferenc", "straight", "elnök", "Magyar Országgyűlés Sport és Turisztikai Bizottság", 180, 1),
 	array("Szalay", "Ferenc", "straight", "elnök", "Magyar Kosárlabdázók Országos Szövetsége", 180, 1),
@@ -331,6 +328,12 @@ $authors = array(
 	array("Nagy", "József", "straight", "ügyvezető elnök", "Pénzügyőr Sportegyesület", 180, 1),
 	array("Sipos", "Jenő", "straight", "pénzügyőr ezredes", "Nemzeti Adó- és Vámhivatal", 180, 1),
 	array("Sipos", "Jenő", "straight", "kommunikációs főosztályvezető-helyettes", "Nemzeti Adó- és Vámhivatal", 180, 1),
+
+*/
+
+	array("Zsoldos", "István", "straight", "chief economist", "MOL Group", 181, 1),
+	array("Zsoldos", "István", "straight", "chief economist", "MOL Group", 182, 1),
+
 );
 
 // Establish database connection
