@@ -9,6 +9,8 @@ class Controller extends \Springboard\Controller\Visitor {
     parent::init();
   }
   
+  public function redirectToMainDomain() {}
+  
   public function setupOrganization() {
     
     $host = $_SERVER['SERVER_NAME'];
