@@ -2101,19 +2101,11 @@ a#currentusername span {
   color: #666;
   font-style: italic;
 }
-#streams {
+#quality {
   float: right;
-  margin-top: 10px;
+  margin-bottom: 10px;
 }
-#streams span {
-  float: left;
-  margin-right: 5px;
-}
-#streams div {
-  float: left;
-  max-width: 470px;
-}
-#body #streams a {
+#body #quality a {
   display: inline-block;
 }
 
@@ -2359,6 +2351,12 @@ a#currentusername span {
   width: 300px;
 }
 
+.liveiframe {
+  background-color: #fff;
+}
 .liveiframe #wrap {
   width: 100%;
+}
+.liveiframe #player {
+  display: inline-block;
 }

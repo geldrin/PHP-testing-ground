@@ -1,4 +1,4 @@
-{if $smarty.request.chromeless}
+{if $chromeless}
   {include file="Visitor/_header_nolayout.tpl" title=$rootchannel.title islive=true bodyclass=liveiframe}
   {assign var=linksinnewwindow value=' target="_blank"'}
 {else}
@@ -6,32 +6,26 @@
 {/if}
 
 <div class="title recording">
+  <h1>{$channel.title|escape:html}</h1>
   {if count( $streams ) > 1}
-    <div id="streams">
-      <span>{#live__recordings_streams#}:</span>
-      <div>
-        {foreach from=$streams item=stream name=streams}
-          
-          {if $currentstream.id == $stream.id}
-            <b title="{$stream.name|escape:html}">{$stream.name|mb_truncate:30|escape:html}</b>
-          {else}
-            <a title="{$stream.name|escape:html}" href="{$language}/live/view/{$feed.id},{$stream.id},{$feed.name|filenameize}{$urlparams}">{$stream.name|mb_truncate:30|escape:html}</a>
-          {/if}
-          {if !$smarty.foreach.streams.last} | {/if}
-        {/foreach}
-      </div>
+    <div id="quality">
+      {#live__quality#}:
+      {foreach from=$streams item=stream name=streams}
+        {if $currentstream.id == $stream.id}
+          <b title="{$stream.name|escape:html}">{$stream.name|mb_truncate:30|escape:html}</b>
+        {else}
+          <a title="{$stream.name|escape:html}" href="{$language}/live/view/{$feed.id},{$stream.id},{$feed.name|filenameize}{$urlparams}">{$stream.name|mb_truncate:30|escape:html}</a>
+        {/if}
+        {if !$smarty.foreach.streams.last} | {/if}
+      {/foreach}
     </div>
   {/if}
-  <h1>{$channel.title|escape:html}</h1>
   {if $channel.subtitle|stringempty}<h2>{$channel.subtitle|escape:html}</h2>{/if}
-  {*}
-    {if $rootchannel.ordinalnumber}{#live__ordinalnumber#}: {$rootchannel.ordinalnumber|escape:html}<br/>{/if}
-    {$rootchannel.channeltype}{if $rootchannel.starttimestamp}, {"%Y. %B %e"|shortdate:$rootchannel.starttimestamp:$rootchannel.endtimestamp}{/if}
-    {if $rootchannel.url}<br/><a href="{$rootchannel.url|escape:html}">{$rootchannel.url|truncate:50|escape:html}</a>{/if}
-    {if $rootchannel.description}<br/><p>{$rootchannel.description|escape:html}</p>{/if}
-  {/*}
 </div>
-
+<div class="clear"></div>
+{if $chromeless}
+<center>
+{/if}
 <div id="player">
 {if $streamtype == 'desktop'}
   <script type="text/javascript">
@@ -54,7 +48,9 @@
   </center>
 {/if}
 </div>
-
+{if $chromeless}
+</center>
+{/if}
 {if $displaychat}
   
   <div class="clear"></div><br/>

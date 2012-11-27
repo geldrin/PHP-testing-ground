@@ -228,6 +228,7 @@ class Controller extends \Visitor\Controller {
       
     }
     
+    $this->toSmarty['chromeless']    = $chromeless;
     $this->toSmarty['streamtype']    = $streamtype;
     $this->toSmarty['displaychat']   = $displaychat;
     $this->toSmarty['channel']       = $channelModel->row;
