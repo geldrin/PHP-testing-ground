@@ -95,9 +95,11 @@
   </div>
   
   <div class="recordinguploader">
-    <div class="avatar">
-      <img src="{$STATIC_URI}images/avatar_placeholder.png" width="36" height="36"/>
-    </div>
+    {if $author.avatarstatus == 'onstorage'}
+      <div class="avatar">
+        <img src="{$author|@avatarphoto}" width="36" height="36"/>
+      </div>
+    {/if}
     <div class="content">
       <h3>{#recordings__uploader#}:</h3>
       <div class="uploader">{$author|@nickformat|mb_wordwrap:20|escape:html}</div>

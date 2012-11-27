@@ -612,6 +612,8 @@ a.submitbutton:hover {
   margin-right: 8px;
   position: relative;
   z-index: 500;
+  width: 36px;
+  height: 36px;
 }
 #currentusercontent {
   position: relative;
@@ -1611,6 +1613,9 @@ a#currentusername span {
   width: 58px;
   padding: 15px 0px 0px 12px;
 }
+.imageinfo .imageinfowrap .content {
+  padding-left: 10px;
+}
 .imageinfo .imageinfowrap .content h1, .imageinfo .imageinfowrap .content h2 {
   text-shadow: 0px 1px 3px rgba(0, 0, 0, 0.75);
   white-space: nowrap;
@@ -1964,12 +1969,18 @@ a#currentusername span {
 }
 #metadata .recordinguploader .avatar {
   display: inline-block;
-  margin: 6px 10px 0px 8px;
+  margin: 6px 0px 0px 8px;
+}
+#metadata .recordinguploader .avatar img {
+  -moz-border-radius: 5px;
+  -webkit-border-radius: 5px;
+  border-radius: 5px;
 }
 #metadata .recordinguploader .content {
   display: inline-block;
   vertical-align: top;
   margin: 6px 20px 0px 0px;
+  padding-left: 10px;
 }
 #metadata .recordinguploader .uploader {
   font-size: 17px;

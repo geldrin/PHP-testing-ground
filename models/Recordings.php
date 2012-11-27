@@ -2016,7 +2016,14 @@ class Recordings extends \Springboard\Model {
     
     $this->ensureObjectLoaded();
     return $this->db->getRow("
-      SELECT nickname
+      SELECT
+        id,
+        nameprefix,
+        namefirst,
+        namelast,
+        nameformat,
+        nickname,
+        avatarstatus
       FROM users
       WHERE id = '" . $this->row['userid'] . "'
       LIMIT 1
@@ -2081,13 +2088,15 @@ class Recordings extends \Springboard\Model {
   
   public function getRandomRecordings( $limit, $organizationid, $user ) {
     
-    // TODO isfeatured uncomment, users avatar
+    // TODO isfeatured uncomment
     $select = "
       us.nickname,
       us.nameformat,
       us.nameprefix,
       us.namefirst,
       us.namelast,
+      us.avatarstatus,
+      us.id AS userid,
       r.id,
       r.title,
       r.indexphotofilename
