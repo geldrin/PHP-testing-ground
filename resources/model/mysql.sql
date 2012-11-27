@@ -567,6 +567,19 @@ CREATE TABLE `access` (
    KEY `ix_departmentid` (`departmentid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;
 
+CREATE TABLE `recording_logs` (
+  `id` int(10) unsigned not null auto_increment,
+  `timestamp` datetime not null,
+  `node` text not null,
+  `recordingid` int(10) unsigned default null,
+  `job` text not null,
+  `action` text not null,
+  `status` text not null,
+  `command` text,
+  `data` text,
+  `duration` int(10) unsigned default null,
+  PRIMARY KEY (`id`)
+) ENGINE=MyISAM  DEFAULT CHARSET=utf8 AUTO_INCREMENT=3082 ;
 
 CREATE TABLE `document_logs` (
    `id` int(10) unsigned not null auto_increment,
@@ -579,9 +592,9 @@ CREATE TABLE `document_logs` (
    `status` text not null,
    `command` text not null,
    `data` text not null,
+   `duration` int(10) unsigned default null,
    PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;
-
 
 CREATE TABLE `livefeed_chat` (
    `id` int(10) unsigned not null auto_increment,
