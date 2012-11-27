@@ -65,7 +65,7 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_upload_finalize.stop' ) an
 //update_db_attachment_status(2, $jconf['dbstatus_uploaded']);
 
 		// Attached documents: query pending uploads
-/*		$docs = array();
+		$docs = array();
 		if ( query_docnew($docs) ) {
 
 			while ( !$docs->EOF ) {
@@ -94,7 +94,7 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_upload_finalize.stop' ) an
 				update_db_attachment_status($doc['id'], $jconf['dbstatus_copyfromfe']);
 
 				// Move file to storage
-				$err = move_uploaded_file_to_storage($fname, $fname_target);
+				$err = move_uploaded_file_to_storage($fname, $fname_target, FALSE);
 				if ( !$err ) {
 					update_db_attachment_status($doc['id'], $jconf['dbstatus_copyfromfe_err']);
 					$global_log .= $err['message'] . "\n\n";
@@ -113,7 +113,6 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_upload_finalize.stop' ) an
 			log_document_conversion(0, 0, $jconf['jobid_upload_finalize'], "-", "Document finalize finished in " . $hms . " time.\n\nSummary:\n\n" . $global_log, "-", "-", $duration, TRUE);
 
 		} // End of attached document finalize
-*/
 
 		// User avatars: handle uploaded avatars
 		$global_log = "Moving avatars to storage:\n\n";
@@ -130,15 +129,14 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_upload_finalize.stop' ) an
 				$global_log .= "User: " . $avatar['email'] . " (domain: " . $avatar['domain'] . ")\n";
 
 				// Uploaded document
-				$uploadpath = $app->config['uploadpath'] . "useravatars/";
-				$tmp = explode(".", $avatar['avatarfilename'], 2);
-				$extension = $tmp[1];
+				$uploadpath = $app->config['useravatarpath'];
+				$extension = \Springboard\Filesystem::getExtension( $avatar['avatarfilename'] );
 				$base_filename = $avatar['userid'] . "." . $extension;
 				$fname = $uploadpath . $base_filename;
 				$avatar['path_source'] = $fname;
 
 				// Target file
-				$targetpath = $app->config['useravatarpath'] . ( $avatar['userid'] % 1000 ) . "/" . $avatar['userid'] . "/avatar/";
+				$targetpath = $app->config['mediapath'] . "users/" . ( $avatar['userid'] % 1000 ) . "/" . $avatar['userid'] . "/avatar/";
 				$fname_target = $targetpath . $base_filename;
 				$avatar['path_target'] = $fname_target;
 
@@ -146,31 +144,26 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_upload_finalize.stop' ) an
 				$global_log .= "Source path: " . $avatar['path_source'] . "\n";
 				$global_log .= "Target path: " . $avatar['path_target'] . "\n";
 
-var_dump($avatar);
-
-exit;
-
-// status = dbstatus_copyfromfe
+				// Status = copying
+				update_db_avatar_status($avatar['userid'], $jconf['dbstatus_copyfromfe']);
 
 				// Move file to storage
-				$err = move_uploaded_file_to_storage($avatar['path_source'], $avatar['path_target']);
+				$err = move_uploaded_file_to_storage($avatar['path_source'], $avatar['path_target'], TRUE);
 				if ( !$err ) {
-// status = dbstatus_copyfromfe_err
+					// Status = error
 					$global_log .= $err['message'] . "\n\n";
-					log_document_conversion($doc['id'], $doc['recordingid'], $jconf['jobid_upload_finalize'], $jconf['dbstatus_copyfromfe'], $err['message'], $err['command'], $err['result'], $err['duration'], TRUE);
+					update_db_avatar_status($avatar['userid'], $jconf['dbstatus_copyfromfe_err']);
+					log_document_conversion(0, 0, $jconf['jobid_upload_finalize'], $jconf['dbstatus_copyfromfe'], $err['message'], $err['command'], $err['result'], $err['duration'], TRUE);
 				} else {
-// status = dbstatus_copystorage_ok
-					$global_log .= "Status: [OK] Document moved in " . $err['duration'] . " seconds.\n\n";
+					// Status = OK
+					update_db_avatar_status($avatar['userid'], $jconf['dbstatus_copystorage_ok']);
+					try {
+						\Springboard\Image::resizeAndCropImage($avatar['path_target'], 36, 36, 'middle');
+					} catch (exception $err) {
+						log_document_conversion(0, 0, $jconf['jobid_upload_finalize'], $jconf['dbstatus_copyfromfe'], $err['message'], $err['command'], $err['result'], $err['duration'], TRUE);
+					}
+					$global_log .= "Status: [OK] Avatar moved and resized in " . $err['duration'] . " seconds.\n\n";
 				}
-
-
-/*
-try {
-	\Springboard\Image::resizeAndCropImage($fname_target, 36, 36, 'middle');
-} catch (exception $err) {
-	$err['message'] = "[ERROR] File " . $fname_target . " resizeAndCropImage() failed to 36x36.\n";
-}
-*/
 
 				$app->watchdog();
 				$avatars->MoveNext();
@@ -300,98 +293,6 @@ global $jconf, $db, $app;
 	}
 
 	return TRUE;
-}
-
-function move_uploaded_file_to_storage($fname, $fname_target) {
-global $jconf;
-
-	$err = array();
-	$err['code'] = FALSE;
-	$err['result'] = 0;
-	$err['duration'] = 0;
-	$err['message'] = "-";
-	$err['command'] = "-";
-
-	// Check source file and its filesize
-	if ( !file_exists($fname) ) {
-		$err['message'] = "[ERROR] Uploaded file does not exist.";
-		$err['code'] = FALSE;
-		return $err;
-	}
-
-	// Check filesize
-	$filesize = filesize($fname);
-	if ( $filesize <= 0 ) {
-		$err['message'] = "[ERROR] Uploaded file has invalid size (" . $filesize . ").";
-		$err['code'] = FALSE;
-		return $err;
-	}
-
-	// Check available disk space
-	$available_disk = floor(disk_free_space($app->config['recordingpath']));
-	if ( $available_disk < $filesize * 10 ) {
-		$err['message'] = "[ERROR] No space on target device. Only " . ( round($available_disk / 1024 / 1024, 2) ) . " MB left.";
-		$err['code'] = FALSE;
-		return $err;
-	}
-
-	// Check if target file exists
-	if ( file_exists($fname_target) ) {
-		$err['message'] = "[ERROR] Target file " . $fname_target . " already exists.";
-		$err['code'] = FALSE;
-		return $err;
-	}
-
-	$path_parts = pathinfo($fname_target);
-	$targetpath = $path_parts['dirname'] . "/";
-
-	// Prepare target directory on storage
-	if ( !file_exists($targetpath) ) {
-		$err_tmp = create_directory($targetpath);
-		if ( !$err_tmp['code'] ) {
-			$err['message'] = $err_tmp['message'];
-			$err['command'] = $err_tmp['command'];
-			$err['result'] = $err_tmp['result'];
-			$err['code'] = FALSE;
-			return $err;
-		}
-	}
-
-	// Copy file
-	$time_start = time();
-	$err_tmp = copy($fname, $fname_target);
-	$err['duration'] = time() - $time_start;
-	if ( !$err_tmp ) {
-		$err['message'] = "[ERROR] Cannot copy file to storage.";
-		$err['command'] = "php: move(\"" . $fname . "\",\"" . $fname_target . "\")";
-		$err['result'] = $err_tmp;
-		$err['code'] = FALSE;
-		return $err;
-	}
-
-	// File access. Set user/group to "conv:conv" and file access rights to "664"
-	$command = "";
-	$command .= "chmod -f " . $jconf['file_access']	. " " . $fname_target . " ; ";
-	$command .= "chown -f " . $jconf['file_owner']	. " " . $fname_target . " ; ";
-	exec($command, $output, $result);
-	$output_string = implode("\n", $output);
-	if ( $result != 0 ) {
-		$err['message'] = "[ERROR] Cannot stat file on storage. Failed command:\n\n" . $command;
-		$err['command'] = $command;
-		$err['result'] = $result;
-	}
-
-	// Remove original file from front-end location
-	$err_tmp = remove_file_ifexists($fname);
-	if ( !$err_tmp['code'] ) {
-		$err['message'] = $err_tmp['message'];
-		$err['command'] = $err_tmp['command'];
-		$err['result'] = $err_tmp['result'];
-	}
-
-	$err['code'] = TRUE;
-
-	return $err;
 }
 
 ?>

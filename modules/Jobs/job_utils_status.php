@@ -416,5 +416,26 @@ global $jconf, $db;
 	return TRUE;
 }
 
+function update_db_avatar_status($userid, $status) {
+global $jconf, $db;
+
+	$query = "
+		UPDATE
+			users
+		SET
+			avatarstatus = '" . $status . "'
+		WHERE
+			id = " . $userid;
+
+	try {
+		$rs = $db->Execute($query);
+	} catch (exception $err) {
+		log_document_conversion(0, 0, $jconf['jobid_upload_finalize'], "-", "[ERROR] Cannot update document status. SQL query failed.", trim($query), $err, 0, TRUE);
+		return FALSE;
+	}
+
+	return TRUE;
+}
+
 
 ?>

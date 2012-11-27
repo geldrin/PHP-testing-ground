@@ -316,8 +316,10 @@ function create_directory($directory) {
     $err['message'] = "[OK] Directory exists";
     return $err;
   } else {
-    // If not exists, then create the directory
-    $result = mkdir($directory);
+    // If not exists, then create the directory (recursive, creates nested directories)
+	$oldumask = umask(0); 
+    $result = mkdir($directory, 0775, TRUE);
+	umask($oldumask);
     $err['command'] = "php: mkdir(\"" . $directory . "\")";
     $err['result'] = $result;
     if ( !$result ) {
@@ -385,6 +387,114 @@ function create_remove_directory($directory) {
   }
 
   return $err;
+}
+
+// *************************************************************************
+// *				function move_uploaded_file_to_storage()			   *
+// *************************************************************************
+// Description: move file from upload area to storage
+function move_uploaded_file_to_storage($fname, $fname_target, $isoverwrite) {
+ global $jconf, $app;
+
+	$err = array();
+	$err['code'] = FALSE;
+	$err['result'] = 0;
+	$err['duration'] = 0;
+	$err['message'] = "-";
+	$err['command'] = "-";
+
+	// Check source file and its filesize
+	if ( !file_exists($fname) ) {
+		$err['message'] = "[ERROR] Uploaded file does not exist.";
+		$err['code'] = FALSE;
+		return $err;
+	}
+
+	// Check filesize
+	$filesize = filesize($fname);
+	if ( $filesize <= 0 ) {
+		$err['message'] = "[ERROR] Uploaded file has invalid size (" . $filesize . ").";
+		$err['code'] = FALSE;
+		return $err;
+	}
+
+	// Check available disk space
+	$available_disk = floor(disk_free_space($app->config['recordingpath']));
+	if ( $available_disk < $filesize * 10 ) {
+		$err['message'] = "[ERROR] No space on target device. Only " . ( round($available_disk / 1024 / 1024, 2) ) . " MB left.";
+		$err['code'] = FALSE;
+		return $err;
+	}
+
+	// Check if target file exists
+	if ( file_exists($fname_target) ) {
+		// Overwrite? NO
+		if ( !$isoverwrite ) {
+			$err['message'] = "[ERROR] Target file " . $fname_target . " already exists.";
+			$err['code'] = FALSE;
+			return $err;
+		} else {
+			// Remove file if exists
+			$err_tmp = remove_file_ifexists($fname_target);
+			if ( !$err_tmp['code'] ) {
+				$err['message'] = $err_tmp['message'];
+				$err['command'] = $err_tmp['command'];
+				$err['result'] = $err_tmp['result'];
+				$err['code'] = FALSE;
+				return $err;
+			}
+		}
+	} else {
+		// File does not exist. Prepare target directory on storage
+		$path_parts = pathinfo($fname_target);
+		$targetpath = $path_parts['dirname'] . "/";
+		if ( !file_exists($targetpath) ) {
+			$err_tmp = create_directory($targetpath);
+			if ( !$err_tmp['code'] ) {
+				$err['message'] = $err_tmp['message'];
+				$err['command'] = $err_tmp['command'];
+				$err['result'] = $err_tmp['result'];
+				$err['code'] = FALSE;
+				return $err;
+			}
+		}
+	}
+
+	// Copy file
+	$time_start = time();
+	$err_tmp = copy($fname, $fname_target);
+	$err['duration'] = time() - $time_start;
+	if ( !$err_tmp ) {
+		$err['message'] = "[ERROR] Cannot copy file to storage.";
+		$err['command'] = "php: move(\"" . $fname . "\",\"" . $fname_target . "\")";
+		$err['result'] = $err_tmp;
+		$err['code'] = FALSE;
+		return $err;
+	}
+
+	// File access. Set user/group to "conv:conv" and file access rights to "664"
+	$command = "";
+	$command .= "chmod -f " . $jconf['file_access']	. " " . $fname_target . " ; ";
+	$command .= "chown -f " . $jconf['file_owner']	. " " . $fname_target . " ; ";
+	exec($command, $output, $result);
+	$output_string = implode("\n", $output);
+	if ( $result != 0 ) {
+		$err['message'] = "[ERROR] Cannot stat file on storage. Failed command:\n\n" . $command;
+		$err['command'] = $command;
+		$err['result'] = $result;
+	}
+
+	// Remove original file from front-end location
+	$err_tmp = remove_file_ifexists($fname);
+	if ( !$err_tmp['code'] ) {
+		$err['message'] = $err_tmp['message'];
+		$err['command'] = $err_tmp['command'];
+		$err['result'] = $err_tmp['result'];
+	}
+
+	$err['code'] = TRUE;
+
+	return $err;
 }
 
 // *************************************************************************
