@@ -169,8 +169,17 @@ class Controller extends \Visitor\Controller {
       $password
     );
     
-    if ( !$uservalid )
-      throw new \Exception( $l('users', 'accessdenied') );
+    if ( !$uservalid ) {
+      
+      $message = sprintf(
+        $l('users', 'accessdenied'),
+        $this->bootstrap->baseuri . \Springboard\Language::get() .
+        '/users/forgotpassword?email=' . rawurlencode( $email )
+      );
+      
+      throw new \Exception( $message );
+      
+    }
     
     if ( $userModel->row['isadmin'] )
       $userModel->row['organizationid'] = $this->organization['id']; // a registerforsession miatt
