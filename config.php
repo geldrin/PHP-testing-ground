@@ -41,7 +41,7 @@ $config = array(
   //-----
   'mail'         => array(
     'fromemail' => 'support@videosquare.eu',
-    'fromname'  => 'Videosquare DEV',
+    'fromname'  => 'Videosquare',
     'errorsto'  => '',
     'type'      => 'text/html; charset="UTF-8"'
   ),
