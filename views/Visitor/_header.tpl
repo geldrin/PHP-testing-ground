@@ -7,7 +7,7 @@
   <meta name="MSSmartTagsPreventParsing" content="true" />
   <meta name="format-detection" content="telephone=no" />{*} iphone ne vegye a random szamokat telefonszamoknak {/*}
   <base href="{$BASE_URI}" /><!--[if IE]></base><![endif]-->
-  <title>{if $title}{$title|escape:html|titleescape} | {/if}{#sitename#}</title>
+  <title>{if $title}{$title|strip_tags|escape:html|titleescape} | {/if}{#sitename#}</title>
   {include file="Visitor/_opengraph.tpl"}
   <link rel="icon" type="image/png" href="{$STATIC_URI}images/favicon.png"/>
   {csscombine}
