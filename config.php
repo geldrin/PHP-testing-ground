@@ -89,10 +89,7 @@ $config = array(
   'useravatarpath'   => '/srv/upload/videosquare.eu/useravatars/',
   'mediapath'        => '/srv/storage/videosquare.eu/',
   'recordingpath'    => '/srv/storage/videosquare.eu/recordings/',
-<<<<<<< HEAD
   'useravatarpath'   => '/srv/storage/videosquare.eu/users/',
-=======
->>>>>>> a5a262b5fb9d7ce5a98b4dc8e0d45cedc1795fa5
   'recordings_seconds_minlength' => 3,
   'categoryiconpath' => $this->basepath . 'httpdocs_static/images/categories/',
   'relatedrecordingcount' => 6,
