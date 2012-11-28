@@ -12,7 +12,7 @@ function smarty_modifier_avatarphoto( $data ) {
     
     $avatar =
       'files/users/' .
-      \Springboard\Filesystem::getTreeDir( $id ) . '/' .
+      \Springboard\Filesystem::getTreeDir( $id ) . '/avatar/' .
       $id . '.jpg'
     ;
     
