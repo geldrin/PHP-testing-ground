@@ -236,6 +236,34 @@ class Livefeeds extends \Springboard\Model {
     
   }
   
+  public function getFlashData( $info ) {
+    
+    $authorizecode = $this->getAuthorizeSessionidParam(
+      $info['domain'],
+      $info['sessionid']
+    );
+    
+    $flashdata = array(
+      'language'               => \Springboard\Language::get(),
+      'media_servers'          => array( // TODO secure
+        $this->bootstrap->config['wowza']['liveingressurl'] . $authorizecode,
+        $this->bootstrap->config['wowza']['liveurl'] . $authorizecode,
+      ),
+      'media_streams'          => array( $info['stream']['keycode'] ),
+      'recording_title'        => $this->row['name'],
+      'recording_type'         => 'live',
+      'media_secondaryStreams' => array( $info['stream']['contentkeycode'] ),
+    );
+    
+    $flashdata['media_secondaryServers'] = $flashdata['media_servers'];
+    
+    if ( !$this->row['slideonright'] )
+      $flashdata['layout_videoOrientation'] = 'right';
+    
+    return $flashdata;
+    
+  }
+  
   public function deleteStreams() {
     
     $this->ensureID();
@@ -245,6 +273,7 @@ class Livefeeds extends \Springboard\Model {
     ");
     
   }
+  
   public function getVCRReclinkID() {
     
     $this->ensureID();

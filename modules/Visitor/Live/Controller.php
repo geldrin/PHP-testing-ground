@@ -100,24 +100,12 @@ class Controller extends \Visitor\Controller {
     $currentstream = $streams['defaultstream'];
     $streamtype    = $streams['streamtype'];
     $streams       = $streams['streams'];
-    $authorizecode = $feedModel->getAuthorizeSessionidParam(
-      $this->organization['domain'],
-      session_id()
+    $flashdata     = $feedModel->getFlashData( array(
+        'sessionid' => session_id(),
+        'domain'    => $this->organizaiton['domain'],
+        'stream'    => $currentstream,
+      )
     );
-    
-    $flashdata = array(
-      'language'        => \Springboard\Language::get(),
-      'media_servers'   => array( // TODO secure
-        $this->bootstrap->config['wowza']['liveingressurl'] . $authorizecode,
-        $this->bootstrap->config['wowza']['liveurl'] . $authorizecode,
-      ),
-      'media_streams'   => array( $currentstream['keycode'] ),
-      'recording_title' => $feedModel->row['name'],
-      'recording_type'  => 'live',
-      'media_secondaryStreams' => array( $currentstream['contentkeycode'] ),
-    );
-    
-    $flashdata['media_secondaryServers'] = $flashdata['media_servers'];
     
     $this->toSmarty['playerwidth']  = 950;
     $this->toSmarty['playerheight'] = 530;
@@ -156,9 +144,6 @@ class Controller extends \Visitor\Controller {
       }
       
     }
-    
-    if ( !$feedModel->row['slideonright'] )
-      $flashdata['layout_videoOrientation'] = 'right';
     
     if ( $flashdata['language'] != 'en' )
       $flashdata['locale'] =
