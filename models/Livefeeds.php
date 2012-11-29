@@ -165,9 +165,30 @@ class Livefeeds extends \Springboard\Model {
       
     }
     
-    if ( !$defaultstreamid )
+    if ( !$defaultstreamid ) {
+      
       $defaultstream = reset( $narrowedstreams );
-    elseif ( $defaultstreamid and !isset( $narrowedstreams[ $defaultstreamid ] ) )
+      if ( $browser['mobile'] and $browser['tablet'] ) { // hq stream default ha tablet
+        
+        foreach( $narrowedstreams as $stream ) {
+          
+          if (
+               (
+                 ( $browser['mobiledevice'] == 'iphone' and $stream['isioscompatible'] ) or
+                 ( $browser['mobiledevice'] == 'android' and $stream['isandroidcompatible'] )
+               ) and $stream['quality']
+             ) {
+            
+            $defaultstream = $stream;
+            break;
+            
+          }
+          
+        }
+        
+      }
+      
+    } elseif ( $defaultstreamid and !isset( $narrowedstreams[ $defaultstreamid ] ) )
       return false;
     else
       $defaultstream = $narrowedstreams[ $defaultstreamid ];
