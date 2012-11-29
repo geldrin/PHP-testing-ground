@@ -114,9 +114,10 @@ class Controller extends \Visitor\Controller {
       'media_streams'   => array( $currentstream['keycode'] ),
       'recording_title' => $feedModel->row['name'],
       'recording_type'  => 'live',
-      'media_secondaryServers' => array( $this->bootstrap->config['wowza']['liveingressurl'] . $authorizecode ),
       'media_secondaryStreams' => array( $currentstream['contentkeycode'] ),
     );
+    
+    $flashdata['media_secondaryServers'] = $flashdata['media_servers'];
     
     $this->toSmarty['playerwidth']  = 950;
     $this->toSmarty['playerheight'] = 530;
