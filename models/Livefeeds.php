@@ -276,7 +276,7 @@ class Livefeeds extends \Springboard\Model {
     if ( !$domain or !$sessionid )
       return '';
     
-    return '?sessionid=' . $domain . '_' . $sessionid . '_' . $streamcode;
+    return '?sessionid=' . $domain . '_' . $sessionid . '_' . $this->id;
     
   }
   
