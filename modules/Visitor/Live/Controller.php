@@ -486,8 +486,9 @@ class Controller extends \Visitor\Controller {
       )
     ;
     
+    $ip  = $this->application->getParameter('IP');
     $ips = gethostbynamel('tcs.streamnet.hu');
-    if ( $ips and in_array( $_SERVER['REMOTE_ADDR'], $ips ) ) {
+    if ( $ip and $ips and in_array( $ip, $ips ) ) {
       
       $result  = '1';
       $matched = false;
