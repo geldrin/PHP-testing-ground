@@ -46,7 +46,7 @@
 
 </head>
 <body>
-
+<center>
 {if $browser.mobile}
   {if $recording.mobilevideoreshq}
     {assign var=height value=$height-30}
@@ -90,5 +90,5 @@
   </script>
 
 {/if}
-
+</center>
 </body>
