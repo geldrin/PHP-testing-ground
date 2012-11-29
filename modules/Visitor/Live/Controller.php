@@ -107,7 +107,10 @@ class Controller extends \Visitor\Controller {
     
     $flashdata = array(
       'language'        => \Springboard\Language::get(),
-      'media_servers'   => array( $this->bootstrap->config['wowza']['liveingressurl'] . $authorizecode ),
+      'media_servers'   => array( // TODO secure
+        $this->bootstrap->config['wowza']['liveingressurl'] . $authorizecode,
+        $this->bootstrap->config['wowza']['liveurl'] . $authorizecode,
+      ),
       'media_streams'   => array( $currentstream['keycode'] ),
       'recording_title' => $feedModel->row['name'],
       'recording_type'  => 'live',
