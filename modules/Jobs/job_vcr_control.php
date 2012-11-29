@@ -241,7 +241,11 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_vcr_control.stop' ) and !i
 				log_recording_conversion($vcr['id'], $myjobid, $jconf['dbstatus_init'], "[OK] VCR call disconnected. Call info:\n\n" . $err['message'], "-", "-", 0, FALSE);
 				update_db_vcr_reclink_status($vcr['reclink_id'], $jconf['dbstatus_vcr_ready']);
 				update_db_vcr_reclink_params($vcr['reclink_id'], null);
-				update_db_stream_status($vcr['id'], $jconf['dbstatus_vcr_upload']);
+				if ( $vcr['needrecording'] == 1 ) {
+					update_db_stream_status($vcr['id'], $jconf['dbstatus_vcr_upload']);
+				} else {
+					update_db_stream_status($vcr['id'], $jconf['dbstatus_vcr_ready']);
+				}
 			} else {
 				log_recording_conversion($vcr['id'], $myjobid, $jconf['dbstatus_vcr_discing'], "[ERROR] VCR call cannot be disconnected. Check recording link! Info:\n\n" . $err['message'] . "\n\nDump:\n\n" . print_r($vcr, TRUE), "-", "-", 0, TRUE);
 				break;
@@ -577,13 +581,15 @@ global $jconf, $db;
 			b.id as feed_id,
 			b.userid,
 			b.channelid,
-			b.name as feed_name
+			b.name as feed_name,
+			b.needrecording
 		FROM
 			livefeed_streams as a,
 			livefeeds as b
 		WHERE
 			a.status = '" . $jconf['dbstatus_vcr_upload'] . "' AND
-			a.livefeedid = b.id
+			a.livefeedid = b.id AND
+			b.needrecording = 1
 		ORDER BY
 			id
 		LIMIT 1";
