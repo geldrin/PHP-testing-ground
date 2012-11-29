@@ -1704,21 +1704,25 @@ class Recordings extends \Springboard\Model {
     
     $recordingbaseuri = $info['BASE_URI'] . \Springboard\Language::get() . '/recordings/';
     $domain           = $info['organization']['domain'];
-    $typeprefix       = ( $this->row['issecurestreamingforced'] )? 'sec': '';
     
     $data = array(
       'language'              => \Springboard\Language::get(),
-      'media_servers'         => array(
-        $this->getWowzaUrl( $typeprefix . 'rtmpurl', true, $domain, $sessionid ),
-        $this->getWowzaUrl( $typeprefix . 'rtmpturl', true, $domain, $sessionid ),
-      ),
+      'media_servers'         => array(),
       'track_firstPlay'       => $recordingbaseuri . 'track/' . $this->id,
-      //'media_length'          => $this->row['masterlength'],
       'recording_title'       => $this->row['title'],
       'recording_subtitle'    => (string)$this->row['subtitle'],
       'recording_description' => (string)$this->row['description'],
       'recording_image'       => \smarty_modifier_indexphoto( $this->row, 'player', $info['STATIC_URI'] ),
     );
+    
+    if ( $this->row['issecurestreamingforced'] ) {
+      $data['media_servers'][] = $this->getWowzaUrl( 'secrtmpsurl', true, $domain, $sessionid );
+      $data['media_servers'][] = $this->getWowzaUrl( 'secrtmpurl',  true, $domain, $sessionid );
+      $data['media_servers'][] = $this->getWowzaUrl( 'secrtmpturl', true, $domain, $sessionid );
+    } else {
+      $data['media_servers'][] = $this->getWowzaUrl( 'rtmpurl',  true, $domain, $sessionid );
+      $data['media_servers'][] = $this->getWowzaUrl( 'rtmpturl', true, $domain, $sessionid );
+    }
     
     // default bal oldalon van a video, csak akkor allitsuk be ha kell
     if ( !$this->row['slideonright'] )
@@ -1742,7 +1746,6 @@ class Recordings extends \Springboard\Model {
     
     if ( $this->row['contentstatus'] == 'onstorage' and !isset( $info['skipcontent'] ) ) {
       
-      //$data['content_length']         = $this->row['contentmasterlength'];
       $data['media_secondaryStreams'] = array( $this->getMediaUrl('content', false, $domain ) );
       
       if ( $this->row['contentvideoreshq'] ) {

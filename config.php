@@ -116,6 +116,7 @@ $config = array(
     'sechttpurl'        => 'http://stream.videosquare.eu/vsq/_definst_/',
     
     'rtmpurl'           => 'rtmp://stream.videosquare.eu:1935/vsq/',
+    'secrtmpsurl'       => 'rtmps://stream.videosquare.eu:1935/vsqsec/',
     'secrtmpurl'        => 'rtmpe://stream.videosquare.eu:1935/vsqsec/',
     
     'rtmpturl'          => 'rtmpt://stream.videosquare.eu:80/vsq/',
