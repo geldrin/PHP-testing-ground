@@ -14,7 +14,7 @@ set_time_limit(0);
 $app = new Springboard\Application\Cli(BASE_PATH, PRODUCTION);
 
 // Users base data
-$user_num = 10;
+$user_num = 40;
 $user_nameprefix = "felh";
 $user_namesuffix_length = 4;
 $user_nametermination = "conforg.hu";
@@ -107,9 +107,11 @@ try {
 
 // Open CSV file for user data
 $out_file = "vsq_users.csv";
-if ( !is_writable($out_file) ) {
-	echo "[ERROR]: Cannot write output file\n";
-	exit -1;
+if ( file_exists($out_file) ) {
+	if ( !is_writable($out_file) ) {
+		echo "[ERROR]: Cannot write output file\n";
+		exit -1;
+	}
 }
 $fh = fopen($out_file, 'a');
 $data_write = "# User data added: " . date("Y-m-d H:i:s") . " * COMMITTED: " . ($iscommit?"YES":"NO") . "\n";
