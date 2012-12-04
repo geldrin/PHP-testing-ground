@@ -174,7 +174,7 @@
 				<Class>com.wowza.wms.plugin.security.ModuleRTMPAuthenticate</Class>
 			</Module>
 			<Module>
-			<Name>MyFirstModule</Name>
+				<Name>MyFirstModule</Name>
 				<Description>MyCompany MyFirstModule</Description>
 				<Class>com.mycompany.wms.module.MyFirstModule</Class>
 			</Module>
@@ -196,10 +196,10 @@
 				<Value>${com.wowza.wms.context.VHostConfigHome}/conf/${com.wowza.wms.context.Application}/publish.password</Value>
 			</Property>
 			<!-- CONNECT HANDLER CONFIG -->
-<!--			<Property>
+			<Property>
 				<Name>URLPlayHandler</Name>
 				<Value>http://dev.videosquare.eu/hu/live/checkstreamaccess</Value>
-			</Property> -->
+			</Property>
 			<Property>
 				<Name>PlayIP</Name>
 				<Value>On</Value>

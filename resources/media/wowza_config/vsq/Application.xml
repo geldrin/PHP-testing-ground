@@ -180,13 +180,11 @@
 				<Name>seekTarget</Name>
 				<Value>enhanced</Value>
 			</Property>
-<!--
-			<Property>
+<!--		<Property>
 				<Name>URLHandlerDebug</Name>
 				<Value>On</Value>
 			</Property>
--->
-			<!-- CONNECT HANDLER CONFIG -->
+-->			<!-- CONNECT HANDLER CONFIG -->
 			<Property>
 				<Name>URLPlayHandler</Name>
 				<Value>http://videosquare.eu/hu/recordings/checkstreamaccess</Value>
