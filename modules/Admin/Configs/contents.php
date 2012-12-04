@@ -53,6 +53,10 @@ $config = Array(
 
 );
 
+$action = $this->application->getParameter('action');
+if ( $action == 'modify' or $action == 'update' )
+  unset( $config['shortname']['validation'][1] );
+
 $listconfig = Array(
 
   'table'     => 'contents c, strings s',
