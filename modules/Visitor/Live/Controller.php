@@ -102,7 +102,7 @@ class Controller extends \Visitor\Controller {
     $streams       = $streams['streams'];
     $flashdata     = $feedModel->getFlashData( array(
         'sessionid' => session_id(),
-        'domain'    => $this->organizaiton['domain'],
+        'domain'    => $this->organization['domain'],
         'stream'    => $currentstream,
       )
     );
