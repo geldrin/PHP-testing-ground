@@ -30,7 +30,10 @@ class Myrecordings extends \Visitor\Paging {
     if ( $user['iseditor'] )
       $this->recordingsModel->addTextFilter("
         organizationid = '" . $user['organizationid'] . "' OR
-        userid = '" . $user['id'] . "'
+        (
+          userid = '" . $user['id'] . "' AND
+          organizationid = '" . $user['organizationid'] . "'
+        )
       ");
     else
       $this->recordingsModel->addFilter('userid', $user['id'] );
