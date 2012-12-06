@@ -159,8 +159,8 @@ return array(
   ),
   
   'isintrooutro' => array(
-    0 => 'normál felvétel',
-    1 => 'bevezető (intro) vagy záró (outro) célú rövid felvétel',
+    0 => 'felvétel',
+    1 => 'intro/outro',
   ),
   
 );

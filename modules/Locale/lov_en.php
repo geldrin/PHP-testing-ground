@@ -139,8 +139,8 @@ return array(
   ),
   
   'isintrooutro' => array(
-    0 => 'normal recording',
-    1 => 'intro our outro recording',
+    0 => 'recording',
+    1 => 'intro/outro',
   ),
   
 );
