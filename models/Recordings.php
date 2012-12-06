@@ -1175,14 +1175,16 @@ class Recordings extends \Springboard\Model {
     
   }
   
-  public function getRelatedVideosByKeywords( $limit = NUMBER_OF_RELATED_VIDEOS ){
+  public function getRelatedVideosByKeywords( $limit = NUMBER_OF_RELATED_VIDEOS, $organizationid ){
     
     $this->ensureObjectLoaded();
     if ( !strlen( trim( $this->row['keywords'] ) ) )
       return array();
     
     $keywords    = explode(',', $this->row['keywords'] );
-    $where       = array();
+    $where       = array(
+      'r.organizationid = ' . $this->db->qstr( $organizationid ),
+    );
     
     foreach( $keywords as $key => $value ) {
       
@@ -1225,7 +1227,7 @@ class Recordings extends \Springboard\Model {
     
   }
   
-  public function getRelatedVideosByChannel( $limit, $channelids = null ) {
+  public function getRelatedVideosByChannel( $limit, $organizationid, $channelids = null ) {
     
     $this->ensureID();
     $dontrecurse = true;
@@ -1263,6 +1265,7 @@ class Recordings extends \Springboard\Model {
         r.id = cr.recordingid AND
         u.id = r.userid AND
         r.id <> '" . $this->id . "' AND
+        r.organizationid = '$organizationid' AND
         " . self::getPublicRecordingWhere('r.') . "
       ORDER BY RAND()
       LIMIT $limit
@@ -1285,7 +1288,7 @@ class Recordings extends \Springboard\Model {
       }
       
       $parentids = array_unique( $parentids );
-      $return = $return + $this->getRelatedVideosByChannel( $limit - count( $return ), $parentids );
+      $return = $return + $this->getRelatedVideosByChannel( $limit - count( $return ), $organizationid, $parentids );
       
     }
     
@@ -1293,7 +1296,7 @@ class Recordings extends \Springboard\Model {
     
   }
   
-  public function getRelatedVideosRandom( $limit ) {
+  public function getRelatedVideosRandom( $limit, $organizationid ) {
     
     $this->ensureID();
     $rs = $this->db->query("
@@ -1316,6 +1319,7 @@ class Recordings extends \Springboard\Model {
       WHERE
         u.id = r.userid AND
         r.id <> '" . $this->id . "' AND
+        r.organizationid = '$organizationid' AND
         " . self::getPublicRecordingWhere('r.') . "
       ORDER BY RAND()
       LIMIT $limit
@@ -1329,20 +1333,20 @@ class Recordings extends \Springboard\Model {
     
   }
   
-  public function getRelatedVideos( $count ) {
+  public function getRelatedVideos( $count, $organizationid ) {
     
     $this->ensureObjectLoaded();
     
     $return = array();
     
     if ( count( $return ) < $count )
-      $return = $return + $this->getRelatedVideosByChannel( $count - count( $return ) );
+      $return = $return + $this->getRelatedVideosByChannel( $count - count( $return ), $organizationid );
     
     if ( count( $return ) < $count )
-      $return = $return + $this->getRelatedVideosByKeywords( $count - count( $return ) );
+      $return = $return + $this->getRelatedVideosByKeywords( $count - count( $return ), $organizationid );
     
     if ( count( $return ) < $count )
-      $return = $return + $this->getRelatedVideosRandom( $count - count( $return ) );
+      $return = $return + $this->getRelatedVideosRandom( $count - count( $return ), $organizationid );
     
     return $return;
     
@@ -1789,7 +1793,10 @@ class Recordings extends \Springboard\Model {
       
     }
     
-    $relatedvideos = $this->getRelatedVideos( $this->bootstrap->config['relatedrecordingcount'] );
+    $relatedvideos = $this->getRelatedVideos(
+      $this->bootstrap->config['relatedrecordingcount'],
+      $info['organization']['id']
+    );
     $data['recommendatory_string'] = array();
     foreach( $relatedvideos as $video ) {
       
