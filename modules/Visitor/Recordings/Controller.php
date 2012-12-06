@@ -222,7 +222,8 @@ class Controller extends \Visitor\Controller {
     $this->toSmarty['attachments']   = $recordingsModel->getAttachments();
     $this->toSmarty['canrate']       = ( $user['id'] and !$rating[ $recordingsModel->id ] );
     $this->toSmarty['relatedvideos'] = $recordingsModel->getRelatedVideos(
-      $this->application->config['relatedrecordingcount']
+      $this->application->config['relatedrecordingcount'],
+      $this->organization['id']
     );
     $this->toSmarty['opengraph']     = array(
       'type'        => 'video',
