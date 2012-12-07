@@ -250,6 +250,7 @@ global $jconf, $db;
 			mastervideores,
 			mastervideobitrate,
 			mastervideoisinterlaced,
+			mastervideodar,
 			masteraudiocodec,
 			masteraudiochannels,
 			masteraudioquality,

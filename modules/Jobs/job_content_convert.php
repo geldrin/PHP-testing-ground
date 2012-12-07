@@ -407,6 +407,7 @@ global $jconf, $db;
 			contentmastervideores,
 			contentmastervideofps,
 			contentmastervideobitrate,
+			contentmastervideodar,
 			contentmasteraudiocodec,
 			contentmasteraudiobitratemode,
 			contentmasteraudiochannels,

@@ -105,8 +105,15 @@ function print_recording_info($recording) {
 	$log_msg .= "Video quality: ";
 	if ( isset($recording['res_x']) && isset($recording['res_y']) ) $log_msg .= $recording['res_x'] . "x" . $recording['res_y'];
 	if ( isset($recording['fps']) ) $log_msg .= "@" . $recording['fps'] . "fps\n";
-	if ( isset($recording['video_bitrate']) ) $log_msg .= "Video bitrate: " . ceil( $recording['video_bitrate'] / 1000 ) . "Kbps\n";
+
+	// Aspect ratios
+	if ( isset($recording['SAR']) ) $log_msg .= "SAR: " . round( $recording['SAR'], 5 ) . "\n";
+	if ( isset($recording['DAR']) ) $log_msg .= "DAR: " . round( $recording['DAR'], 5 ) . "\n";
+	if ( isset($recording['PAR']) ) $log_msg .= "PAR: " . round( $recording['PAR'], 5 ) . "\n";
+	if ( isset($recording['res_x_dar']) && isset($recording['res_y_dar']) ) $log_msg .= "DAR resolution: " . $recording['res_x_dar'] . "x" . $recording['res_y_dar'] . "\n";
 	if ( isset($recording['scaler']) ) $log_msg .= "Resolution scaler: " . $recording['scaler'] . "\n";
+
+	if ( isset($recording['video_bitrate']) ) $log_msg .= "Video bitrate: " . ceil( $recording['video_bitrate'] / 1000 ) . "Kbps\n";
 	if ( isset($recording['video_bpp']) ) $log_msg .= "BPP: " . $recording['video_bpp'] . "\n";
 	if ( isset($recording['interlaced']) ) $log_msg .= "Interlaced: " . (($recording['interlaced'] == 1)?"yes":"no") . "\n";
 	if ( isset($recording['pip_res_x']) and isset($recording['pip_res_y']) ) $log_msg .= "PiP res: " . $recording['pip_res_x'] . "x" . $recording['pip_res_y'] . "\n";

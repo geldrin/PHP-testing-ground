@@ -390,15 +390,35 @@ global $app, $jconf, $global_log;
 				log_recording_conversion($recording['id'], $jconf['jobid_media_convert'], $jconf['dbstatus_conv_video'], "WARNING: Strange video FPS? Will not apply video_maxfps profile value. Info:\n\nInput FPS: " . $recording_info['fps'] . "\nProfile limit: " . $profile['video_maxfps'], "-", "-", 0, TRUE);
 		}
 	}
+
 	//// Display Aspect Ratio (DAR): check and update if not square pixel
-/*
-1. Calculate normal AR: resX/resY
-2. Calculate DAR AR: M:N -> M/N
-3. if ( normal AR != DAR AR ) then change target resolution?
-TODO: run CLI tests
+	$recording_info['res_x_dar'] = $video_in['res_x'];
+	$recording_info['res_y_dar'] = $video_in['res_y'];
+/*	if ( !empty($recording[$c_idx . 'mastervideodar'] ) ) {
+		// Display Aspect Ratio: M:N
+		$tmp = explode(":", $recording[$c_idx . 'mastervideodar'], 2);
+		if ( !empty($tmp[0]) and !empty($tmp[1]) ) {
+			$DAR_M = $tmp[0];
+			$DAR_N = $tmp[1];
+			// Pixel Aspect Ratio: square pixel?
+			$PAR = ( $video_in['res_y'] * $DAR_M ) / ( $video_in['res_x'] * $DAR_N );
+			if ( $PAR != 1 ) {
+				// No square pixel, add ARs to logs
+				// SAR: Source Aspect Ratio = Width/Height
+				$recording_info['SAR'] = $video_in['res_x'] / $video_in['res_y'];
+				// PAR
+				$recording_info['PAR'] = $PAR;
+				// DAR
+				$recording_info['DAR'] = $DAR_M / $DAR_N;
+				// Y: keep fixed, X: recalculate
+				$recording_info['res_x_dar'] = $recording_info['res_y_dar'] * $recording_info['DAR'];
+			}
+		}
+	}
 */
+
 	//// New resolution/scaler according to profile bounding box
-	$tmp = calculate_video_scaler($video_in['res_x'], $video_in['res_y'], $profile['video_bbox']);
+	$tmp = calculate_video_scaler($recording_info['res_x_dar'], $recording_info['res_y_dar'], $profile['video_bbox']);
 	$recording_info['scaler'] = $tmp['scaler'];
 	$recording_info['res_x'] = $tmp['x'];
 	$recording_info['res_y'] = $tmp['y'];
