@@ -535,7 +535,7 @@ global $app, $jconf;
 
 //		$command  = CONVERSION_NICE . " ffmpeg -y -v " . FFMPEG_LOGLEVEL . " -ss " . $position_sec . " -i " . $master_filename . " " . $deinterlace . " -an ";
 //		$command .= " -vframes 1 -r 1 -vcodec mjpeg -f mjpeg " . $orig_thumb_filename ." 2>&1";
-		$command  = $jconf['nice'] . " ffmpegthumbnailer -i " . $recording['source_file'] . " -o " . $orig_thumb_filename . " -s0 -q8 -t" . secs2hms($position_sec) . " 2>&1";
+		$command  = $jconf['nice'] . " " . $jconf['ffmpegthumbnailer'] . " -i " . $recording['source_file'] . " -o " . $orig_thumb_filename . " -s0 -q8 -t" . secs2hms($position_sec) . " 2>&1";
 //echo $command . "\n";
 
 		clearstatcache();
