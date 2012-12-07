@@ -676,7 +676,7 @@ class Recordings extends \Springboard\Model {
         
         if ( $videobitrate and stripos( $videobitrate, 'kbps' ) !== false )
           $scale = 1000;
-        elseif ( $videobitrate and $stripos( $videobitrate, 'mbps' ) !== false )
+        elseif ( $videobitrate and stripos( $videobitrate, 'mbps' ) !== false )
           $scale = 1000000;
         else
           $scale = 1;
