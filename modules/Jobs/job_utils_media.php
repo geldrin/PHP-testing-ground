@@ -106,6 +106,12 @@ global $jconf;
 		// Resize
 		$resize = " -s " . $media_info['res_x'] . "x" . $media_info['res_y'];
 
+		// Display Aspect Ratio should be updated (changed by conversion)
+		$aspect = "";
+		if ( !empty($media_info['DAR_MN']) ) {
+			$aspect = " -aspect " . $media_info['DAR_MN'];
+		}
+
 		// FPS
 		$fps = "";
 		if ( ( $media_info['fps'] > 0 ) || ( !empty($media_info['fps'] ) ) ) {
@@ -118,7 +124,7 @@ global $jconf;
 			$deint = " -deinterlace";
 		}
 
-		$ffmpeg_video = "-c:v libx264 " . $profile['codec_profile'] . $resize . $deint . $fps . $ffmpeg_bw;
+		$ffmpeg_video = "-c:v libx264 " . $profile['codec_profile'] . $resize . $aspect . $deint . $fps . $ffmpeg_bw;
 
 	}
 
@@ -394,7 +400,7 @@ global $app, $jconf, $global_log;
 	//// Display Aspect Ratio (DAR): check and update if not square pixel
 	$recording_info['res_x_dar'] = $video_in['res_x'];
 	$recording_info['res_y_dar'] = $video_in['res_y'];
-/*	if ( !empty($recording[$c_idx . 'mastervideodar'] ) ) {
+	if ( !empty($recording[$c_idx . 'mastervideodar'] ) ) {
 		// Display Aspect Ratio: M:N
 		$tmp = explode(":", $recording[$c_idx . 'mastervideodar'], 2);
 		if ( !empty($tmp[0]) and !empty($tmp[1]) ) {
@@ -410,12 +416,12 @@ global $app, $jconf, $global_log;
 				$recording_info['PAR'] = $PAR;
 				// DAR
 				$recording_info['DAR'] = $DAR_M / $DAR_N;
+				$recording_info['DAR_MN'] = $recording[$c_idx . 'mastervideodar'];
 				// Y: keep fixed, X: recalculate
 				$recording_info['res_x_dar'] = $recording_info['res_y_dar'] * $recording_info['DAR'];
 			}
 		}
 	}
-*/
 
 	//// New resolution/scaler according to profile bounding box
 	$tmp = calculate_video_scaler($recording_info['res_x_dar'], $recording_info['res_y_dar'], $profile['video_bbox']);
