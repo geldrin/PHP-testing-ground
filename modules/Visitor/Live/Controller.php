@@ -117,12 +117,13 @@ class Controller extends \Visitor\Controller {
       
       $flashdata['layout_logo'] = $this->toSmarty['STATIC_URI'] . 'images/player_overlay_logo.png';
       $flashdata['layout_logoOrientation'] = 'TR';
+      /*
       $flashdata['layout_logoDestination'] =
         $this->toSmarty['BASE_URI'] . \Springboard\Language::get() .
         '/live/view/' . $feedModel->id . ',' . $currentstream['id'] . ',' .
         \Springboard\Filesystem::filenameize( $feedModel->row['name'] )
       ;
-      
+      */
       $fullplayer = $this->application->getParameter('fullplayer');
       $chat       = $this->application->getParameter('chat');
       
