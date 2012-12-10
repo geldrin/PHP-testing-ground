@@ -201,17 +201,12 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_vcr_control.stop' ) and !i
 			$app->watchdog();
 		}
 
-echo "check now?\n";
-var_dump($vcr);
-
 		// ONGOING RECORDING: check ongoing recording status
 		if ( ( $vcr['status'] == $jconf['dbstatus_vcr_recording'] ) and ( $vcr['reclink_status'] == $jconf['dbstatus_vcr_recording'] ) ) {
 
-echo "---------------------------------\n";
-
 			$err = array();
 			$err = TCS_CallInfo($vcr);
-			if ( !$err ) {
+			if ( !$err['code'] ) {
 
 				if ( $err['data']['callstate'] != "IN_CALL" ) {
 					log_recording_conversion($vcr['id'], $myjobid, $jconf['dbstatus_vcr_recording'], "[ERROR] VCR call was disconnected unexpectedly. Info:\n\n" . $err['message'] . "\n\nDump:\n\n" . print_r($vcr, TRUE), "-", print_r($err['data'], TRUE), 0, TRUE);
@@ -511,7 +506,8 @@ global $jconf, $db;
 			c.userid,
 			c.channelid,
 			c.name as feed_name,
-			c.issecurestreamingforced
+			c.issecurestreamingforced,
+			c.needrecording
 		FROM
 			livefeed_streams as a,
 			recording_links as b,
@@ -528,7 +524,7 @@ global $jconf, $db;
 		LIMIT 1";
 // LIMIT 1???? Mi lesz ha tobb stream tartozik egy felvetelhez? TODO
 
-echo $query . "\n";
+//echo $query . "\n";
 
 	try {
 		$rs = $db->Execute($query);

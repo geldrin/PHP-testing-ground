@@ -38,6 +38,8 @@ global $app, $jconf, $debug, $db, $uploader_user;
 
 	$msg = "";
 	$msg .= "NODE: " . $app->config['node_sourceip'] . "\n";
+	$msg .= "SITE: " . $app->config['baseuri'] . "\n";
+
 	$msg .= "JOB: " . $job . "\n";
 	if ( !empty($uploader_user['email']) && !empty($uploader_user['nickname']) && !empty($uploader_user['userid']) ) {
 		$msg .= "UPLOADER: " . $uploader_user['email'] . " (nick: " . $uploader_user['nickname'] . ", id: " . $uploader_user['userid'] . ")\n";
@@ -150,6 +152,8 @@ global $app, $jconf, $debug, $db, $uploader_user;
 
 	$msg = "";
 	$msg .= "NODE: " . $app->config['node_sourceip'] . "\n";
+	$msg .= "SITE: " . $app->config['baseuri'] . "\n";
+
 	$msg .= "JOB: " . $job . "\n";
 	if ( !empty($uploader_user['email']) && !empty($uploader_user['nickname']) && !empty($uploader_user['userid']) ) {
 		$msg .= "UPLOADER: " . $uploader_user['email'] . " (nick: " . $uploader_user['nickname'] . ", id: " . $uploader_user['userid'] . ")\n";
