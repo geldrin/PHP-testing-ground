@@ -201,8 +201,13 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_vcr_control.stop' ) and !i
 			$app->watchdog();
 		}
 
+echo "check now?\n";
+var_dump($vcr);
+
 		// ONGOING RECORDING: check ongoing recording status
 		if ( ( $vcr['status'] == $jconf['dbstatus_vcr_recording'] ) and ( $vcr['reclink_status'] == $jconf['dbstatus_vcr_recording'] ) ) {
+
+echo "---------------------------------\n";
 
 			$err = array();
 			$err = TCS_CallInfo($vcr);
@@ -522,6 +527,8 @@ global $jconf, $db;
 			id
 		LIMIT 1";
 // LIMIT 1???? Mi lesz ha tobb stream tartozik egy felvetelhez? TODO
+
+echo $query . "\n";
 
 	try {
 		$rs = $db->Execute($query);
