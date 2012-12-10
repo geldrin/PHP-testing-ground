@@ -294,6 +294,7 @@ class Livefeeds extends \Springboard\Model {
         'livefeedid'          => $this->id,
         'recordinglinkid'     => $recordinglinkid,
         'name'                => 'VCR stream',
+        'status'              => 'ready',
         'quality'             => 1,
         'isdesktopcompatible' => 1,
         'timestamp'           => date('Y-m-d H:i:s'),
