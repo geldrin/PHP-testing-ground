@@ -11,6 +11,11 @@
     <th>{#live__streams#}</th>
   </tr>
   {foreach from=$feeds item=feed}
+    {if $feed.issecurestreamingforced}
+      {assign var=ingressurl value=$bootstrap->config.wowza.secliveingressurl}
+    {else}
+      {assign var=ingressurl value=$bootstrap->config.wowza.liveingressurl}
+    {/if}
   <tr>
     <td class="livefeedrow">
       <a href="{$language}/live/view/{$feed.id},{$feed.name|filenameize}" class="livefeed" title="{if $feed.status == 'live'}{#live__feedislive#}{else}{#live__feedistesting#}{/if}"></a>
@@ -58,12 +63,12 @@
           <td colspan="4" class="elementcolumn">
             <div class="broadcastlink">
               <label for="broadcastlink-{$stream.id}">{#live__streambroadcastlink#}:</label>
-              <input id="broadcastlink-{$stream.id}" type="text" value="{$bootstrap->config.wowza.liveingressurl|escape:html}{$stream.keycode|escape:html}"/>
+              <input id="broadcastlink-{$stream.id}" type="text" value="{$ingressurl|escape:html}{$stream.keycode|escape:html}"/>
             </div>
             {if $stream.isdesktopcompatible}
               <div class="broadcastlink">
                 <label for="broadcastlink-{$stream.id}-2">{#live__secondarystreambroadcastlink#}:</label>
-                <input id="broadcastlink-{$stream.id}-2" type="text" value="{$bootstrap->config.wowza.liveingressurl|escape:html}{$stream.contentkeycode|escape:html}"/>
+                <input id="broadcastlink-{$stream.id}-2" type="text" value="{$ingressurl|escape:html}{$stream.contentkeycode|escape:html}"/>
               </div>
             {/if}
           </td>

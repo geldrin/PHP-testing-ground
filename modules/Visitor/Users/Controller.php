@@ -217,7 +217,7 @@ class Controller extends \Visitor\Controller {
       
       $user      = $this->bootstrap->getSession('user');
       $access    = $this->bootstrap->getSession('liveaccess');
-      $accesskey = $feedModel->id . '-0'; // TODO secure
+      $accesskey = $feedModel->id . '-' . ( $feedModel->row['issecurestreamingforced']? '1': '0');
       
       $access[ $accesskey ] = $feedModel->isAccessible( $user );
       

@@ -61,7 +61,7 @@ class Controller extends \Visitor\Controller {
     
     $user      = $this->bootstrap->getSession('user');
     $access    = $this->bootstrap->getSession('liveaccess');
-    $accesskey = $feedModel->id . '-0'; // TODO secure
+    $accesskey = $feedModel->id . '-' . ( $feedModel->row['issecurestreamingforced']? '1': '0');
     
     $access[ $accesskey ] = $feedModel->isAccessible( $user );
     
@@ -365,13 +365,7 @@ class Controller extends \Visitor\Controller {
     
     $access = $this->bootstrap->getSession('liveaccess');
     
-    if ( $access[ $livefeedid . '-0' ] !== true ) { // TODO secure
-      
-      $l    = $this->bootstrap->getLocalization();
-      $data = array( 'html' => '&nbsp;' );
-      $data['lastmodified'] = md5( $data['html'] );
-      
-    } else {
+    if ( $access[ $livefeedid . '-0' ] === true or $access[ $livefeedid . '-1' ] === true ) {
       
       if ( !$this->acl ) {
         
@@ -397,6 +391,11 @@ class Controller extends \Visitor\Controller {
         
       } else
         $data = $cache->get();
+      
+    } else {
+      
+      $data = array( 'html' => '&nbsp;' );
+      $data['lastmodified'] = md5( $data['html'] );
       
     }
     
@@ -459,7 +458,7 @@ class Controller extends \Visitor\Controller {
   
   public function checkstreamaccessAction( $secure = false ) {
     
-    \Springboard\Debug::getInstance()->log( false, false, "SECURE: $secure\n" . var_export( $_SERVER, true ) );
+    \Springboard\Debug::getInstance()->log( false, false, "LIVESECURE: $secure\n" . var_export( $_SERVER, true ) );
     $param   = $this->application->getParameter('sessionid');
     $result  = '0';
     $matched =

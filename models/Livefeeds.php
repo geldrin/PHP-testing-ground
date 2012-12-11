@@ -243,11 +243,12 @@ class Livefeeds extends \Springboard\Model {
       $info['sessionid']
     );
     
+    $prefix    = $this->row['issecurestreamingforced']? 'sec': '';
     $flashdata = array(
       'language'               => \Springboard\Language::get(),
-      'media_servers'          => array( // TODO secure
-        $this->bootstrap->config['wowza']['liveingressurl'] . $authorizecode,
-        $this->bootstrap->config['wowza']['liveurl'] . $authorizecode,
+      'media_servers'          => array(
+        $this->bootstrap->config['wowza'][ $prefix . 'liveingressurl'] . $authorizecode,
+        $this->bootstrap->config['wowza'][ $prefix . 'liveurl'] . $authorizecode,
       ),
       'media_streams'          => array( $info['stream']['keycode'] ),
       'recording_title'        => $this->row['name'],
@@ -363,9 +364,6 @@ class Livefeeds extends \Springboard\Model {
   public function isAccessible( $user, $secure = null ) {
     
     $this->ensureObjectLoaded();
-    // TODO secure
-    if ( $secure )
-      return true;
     
     if (
          isset( $user['id'] ) and

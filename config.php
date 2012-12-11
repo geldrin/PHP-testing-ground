@@ -123,19 +123,19 @@ $config = array(
     'secrtmpturl'       => 'rtmpte://stream.videosquare.eu:80/vsqsec/',
     
     'rtspurl'           => 'rtsp://stream.videosquare.eu/vsq/_definst_/',
-    'secrtspurl'        => 'rtsp://stream.videosquare.eu/vsq/_definst_/',
+    'secrtspurl'        => 'rtsp://stream.videosquare.eu/vsqsec/_definst_/',
     
     'liveingressurl'    => 'rtmp://stream.videosquare.eu:1935/vsqlive/',
-    'secliveingressurl' => 'rtmp://stream.videosquare.eu:1935/vsqlive/',
+    'secliveingressurl' => 'rtmp://stream.videosquare.eu:1935/vsqlivesec/',
     
     'liveurl'           => 'rtmpt://stream.videosquare.eu:80/vsqlive/',
     'secliveurl'        => 'rtmpte://stream.videosquare.eu:80/vsqlivesec/',
     
     'livehttpurl'       => 'http://stream.videosquare.eu/vsqlive/',
-    'seclivehttpurl'    => 'http://stream.videosquare.eu/vsqlive/',
+    'seclivehttpurl'    => 'http://stream.videosquare.eu/vsqlivesec/',
     
     'livertspurl'       => 'rtsp://stream.videosquare.eu/vsqlive/',
-    'seclivertspurl'    => 'rtsp://stream.videosquare.eu/vsqlive/',
+    'seclivertspurl'    => 'rtsp://stream.videosquare.eu/vsqlivesec/',
     
   ),
   //----
