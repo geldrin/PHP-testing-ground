@@ -187,6 +187,9 @@
     margin-right: 2px;
     padding: 11px 2px 0px 10px;
   }
+  #headermenu .first {
+    display: none;
+  }
   
   .categorylist .categoryname .categorypic img {
     width: 98px;
@@ -356,7 +359,7 @@
   #headerbottom {
     height: 24px;
   }
-  #headermenu .first, #headermenu a span {
+  #headermenu a span {
     display: none;
   }
   #headermenu a {
