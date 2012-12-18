@@ -989,23 +989,16 @@ class Recordings extends \Springboard\Model {
       
     }
     
-    $userwhere = '';
+    $isadmin = false;
     if ( $user['isadmin'] or $user['isclientadmin'] or $user['iseditor'] )
-      $userwhere = "
-        OR
-        (
-          r.ispublished = '1'
-        )
-      ";
+      $isadmin = true;
     
     $generalwhere = "
       r.status       = 'onstorage' AND
       r.isintrooutro = '$isintrooutro' AND
       (
-        (
-          r.ispublished = '1' OR
-          r.userid = '" . $user['id'] . "'
-        ) $userwhere
+        r.ispublished = '1'" . ( $isadmin? '': " OR
+        r.userid = '" . $user['id'] . "'" ) . "
       ) AND
       (
         r.visiblefrom  IS NULL OR
@@ -1026,8 +1019,8 @@ class Recordings extends \Springboard\Model {
         FROM $from
         WHERE
           $where
-          $generalwhere AND
-          r.accesstype IN('public', 'registrations')
+          $generalwhere " . ( $isadmin? '': " AND
+          r.accesstype IN('public', 'registrations')" ) . "
       ) UNION DISTINCT (
         SELECT $select
         FROM
