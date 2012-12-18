@@ -31,6 +31,8 @@ class Mychannels extends \Visitor\Paging {
     $channelModel->addFilter('parentid', '0', true, true, 'treearray');
     $channelModel->addFilter('isliveevent', 0 );
     $channelModel->addFilter('userid', $user['id'] );
+    /*if ( !$user['isadmin'] and !$user['iseditor'] and !$user['isclientadmin'] )
+      $channelModel->addFilter('userid', $user['id'] );*/
     
     return $channelModel->getTreeArray();
   }

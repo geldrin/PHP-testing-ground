@@ -989,12 +989,23 @@ class Recordings extends \Springboard\Model {
       
     }
     
+    $userwhere = '';
+    if ( $user['isadmin'] or $user['isclientadmin'] or $user['iseditor'] )
+      $userwhere = "
+        OR
+        (
+          r.ispublished = '1'
+        )
+      ";
+    
     $generalwhere = "
       r.status       = 'onstorage' AND
       r.isintrooutro = '$isintrooutro' AND
       (
-        r.ispublished = '1' OR
-        r.userid = '" . $user['id'] . "'
+        (
+          r.ispublished = '1' OR
+          r.userid = '" . $user['id'] . "'
+        ) $userwhere
       ) AND
       (
         r.visiblefrom  IS NULL OR
