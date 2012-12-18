@@ -108,7 +108,6 @@ if ( !$this->recordingsModel->row['isintrooutro'] ) {
   if ( $this->recordingsModel->getIntroOutroCount( $this->controller->organization['id'] ) ) {
     
     $recordings =
-      array('' => '') +
       $this->recordingsModel->getIntroOutroAssoc( $this->controller->organization['id'] )
     ;
     
@@ -116,12 +115,12 @@ if ( !$this->recordingsModel->row['isintrooutro'] ) {
       'introrecordingid' => array(
         'displayname' => $l('recordings', 'introrecordingid'),
         'type'        => 'select',
-        'values'      => $recordings,
+        'values'      => array('' => $l('recordings', 'nointro') ) + $recordings,
       ),
       'outrorecordingid' => array(
         'displayname' => $l('recordings', 'outrorecordingid'),
         'type'        => 'select',
-        'values'      => $recordings,
+        'values'      => array('' => $l('recordings', 'nooutro') ) + $recordings,
       ),
     );
     
