@@ -165,6 +165,14 @@ class Livefeeds extends \Springboard\Model {
       
     }
     
+    // nem talaltunk streamet ami raillik a browserre igy minden stream lehetseges, a default az elso lesz
+    if ( empty( $narrowedstreams ) ) {
+      
+      foreach( $streams as $stream )
+        $narrowedstreams[ $stream['id'] ] = $stream;
+      
+    }
+    
     if ( !$defaultstreamid ) {
       
       $defaultstream = reset( $narrowedstreams );
