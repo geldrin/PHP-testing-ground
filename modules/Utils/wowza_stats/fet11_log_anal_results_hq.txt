@@ -1,0 +1,32 @@
+
+
+Log analization started: 2011-05-10 18:05:23
+Log files processed:
+ wowzamediaserver_access.log.2011-05-04
+ wowzamediaserver_access.log.2011-05-05
+ wowzamediaserver_access.log.2011-05-06
+
+Viewers:
+ 79.120.137.42
+ 193.6.222.12 (sulaco.ki.iif.hu)
+ 88.183.57.173 (vau06-5-88-183-57-173.fbx.proxad.net)
+ 158.169.9.14 (pslux.ec.europa.eu)
+ 128.178.22.128 (cnbipc4.epfl.ch)
+ 128.178.22.133 (cnbipc8.epfl.ch)
+ 83.59.46.198 (198.Red-83-59-46.dynamicIP.rima-tde.net)
+ 193.6.179.24 (sipos.atomki.hu)
+ 195.111.1.196 (fwk.analogic.sztaki.hu)
+ 193.224.49.22 (BKTFW22.usn.hu)
+ 109.61.60.154 (109-61-60-154.adsl-pool.dravanet.hu)
+ 84.3.68.101 (54034465.catv.pool.telekom.hu)
+ 195.111.2.2 (nat.sztaki.hu)
+ 146.48.86.51 (mac-salerno.isti.cnr.it)
+ 193.6.222.82 (dormac.ki.iif.hu)
+ 86.101.37.55 (catv-86-101-37-55.catv.broadband.hu)
+ 158.169.131.14 (psbru.ec.europa.eu)
+ 94.34.4.208 (dynamic-adsl-94-34-4-208.clienti.tiscali.it)
+ 81.174.56.202 (81-174-56-202.staticnet.ngi.it)
+ 93.40.164.85 (93-40-164-85.ip39.fastwebnet.it)
+ 93.56.54.22
+
+Viewers: 21
