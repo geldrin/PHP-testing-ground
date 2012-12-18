@@ -49,7 +49,7 @@ class Create extends \Visitor\HelpForm {
       $values['starttimestamp'] .= ' 08:00:00';
     
     if ( @$values['endtimestamp'] )
-      $values['endtimestamp'] .= ' 20:00:00';
+      $values['endtimestamp'] .= ' 23:59:59';
     
     if ( $this->parentchannelModel )
       $values['parentid']     = $this->parentchannelModel->id;
