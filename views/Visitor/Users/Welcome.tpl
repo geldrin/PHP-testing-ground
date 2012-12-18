@@ -13,7 +13,7 @@
 <ul>
   <li><a href="{$language}/recordings/myrecordings">Felvételeim</a></li>
   <li><a href="{$language}/channels/mychannels">Csatornáim</a></li>
-  <li><a href="{$language}/channels/create">Csatorna létrehozása</a></li>
+  {if $member.isuploader}<li><a href="{$language}/channels/create">Csatorna létrehozása</a></li>{/if}
   <li><a href="{$language}/recordings/featured">Ajánló</a></li>
 </ul>
 

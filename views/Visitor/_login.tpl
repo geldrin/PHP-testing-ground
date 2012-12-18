@@ -66,7 +66,7 @@
             <div class="title">{#usermenu_channels_title#}</div>
             <ul>
               <li><a href="{$language}/channels/mychannels">{#usermenu_channels_mychannels#}</a></li>
-              <li><a href="{$language}/channels/create">{#usermenu_channels_create#}</a></li>
+              {if $member.isuploader}<li><a href="{$language}/channels/create">{#usermenu_channels_create#}</a></li>{/if}
             </ul>
             <div class="hr"></div>
             {*}
