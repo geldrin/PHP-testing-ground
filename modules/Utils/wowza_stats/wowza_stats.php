@@ -16,6 +16,7 @@ echo "Wowza log analizer v0.1 - STARTING...\n";
 
 // User settings
 $live_channelid = 29;
+$ip_encoder = "89.133.214.122";
 
 // **********************************
 
@@ -37,18 +38,23 @@ try {
 // Query channel information
 $query = "
 	SELECT
-		id,
-		title,
-		starttimestamp,
-		endtimestamp,
-		userid,
-		organizationid
+		a.id,
+		a.title,
+		a.starttimestamp,
+		a.endtimestamp,
+		a.userid,
+		a.organizationid,
+		b.name,
+		b.url,
+		b.domain
 	FROM
-		channels
+		channels as a,
+		organizations as b
 	WHERE
-		id = " . $live_channelid;
+		a.id = " . $live_channelid . " AND
+		b.id = a.organizationid";
 
-echo $query . "\n";
+//echo $query . "\n";
 
 try {
 	$event = $db->Execute($query);
@@ -66,41 +72,48 @@ if ( $event->RecordCount() < 1 ) {
 $event_info = array();
 $event_info = $event->fields;
 
-var_dump($event_info);
+//var_dump($event_info);
 
-exit;
+// Wowza app: vsqlive or devvsqlive if dev site is used
+$isdev = FALSE;
+$wowza_app = "vsqlive";
+if ( $app->config['baseuri'] != "videosquare.eu/" ) {
+	$isdev = TRUE;
+	$wowza_app = "devvsqlive";
+}
 
+// Streams: query locations and streams for live channels
 $live_streams = array();
-
-if ( !query_livefeeds($live_channelid, $live_feeds) ) {
+if ( !query_livefeeds($event_info['id'], $live_streams) ) {
 	echo "[ERROR] Cannot find live event.\n";
 	exit -1;
 }
 
-$stream = array();
-$stream = $live_feeds->fields;
+// Stream information transformation to array
+$location_info = array();
+$locationid_prev = -1;
+while ( !$live_streams->EOF ) {
+	$stream = array();
+	$stream = $live_streams->fields;
 
+	$locationid = $stream['locationid'];
+	if ( empty($location_info[$locationid]) ) $location_info[$locationid] = array();
 
-$stats_intro  = "Videosquare live statistics report\n\n";
-$stats_intro .= "Event: " . $live_streams;
+	$tmp = array(
+		'streamid'			=> $stream['streamid'],
+		'streamname'		=> $stream['streamname'],
+		'keycode'			=> $stream['keycode'],
+		'contentkeycode'	=> $stream['contentkeycode'],
+		'locationname'		=> $stream['locationname']
+	);
+	array_push($location_info[$locationid], $tmp);
 
-exit;
+	$live_streams->MoveNext();
+}
 
-// feedid, contentid, app, description for logging
-$feeds = array(
-	1 => array(
-			'videoid'	=> '148820',
-			'contentid'	=> '133253',
-			'app'		=> 'vsqlive',
-			'desc'		=> 'Normal stream'
-		),
-	2 => array(
-			'videoid'	=> '668018',
-			'contentid'	=> '890250',
-			'app'		=> 'vsqlive',
-			'desc'		=> 'HD stream'
-		)
-);
+//var_dump($location_info);
+
+// Start log analyzing
 
 // Get current directory
 $directory = realpath('.') . "/";
@@ -198,61 +211,174 @@ http://conforg.videosquare.eu/flash/TCPlayer.swf?v=_v20121211       WIN 11,5,31,
 */
 
 		// Math log entries: YYYY-MM-DD HH:MM:SS
-		if ( preg_match('/^[\s]*[0-9]{4}-[0-1][0-9]-[0-3][0-9][\s]+[0-2][0-9]:[0-5][0-9]:[0-5][0-9][\s]+[A-Z]+[\s]+play/', $oneline) ) {
+		if ( preg_match('/^[\s]*[0-9]{4}-[0-1][0-9]-[0-3][0-9][\s]+[0-2][0-9]:[0-5][0-9]:[0-5][0-9][\s]+[A-Z]+[\s]+(play|destroy)/', $oneline) ) {
 
 			$log_line = preg_split('/\t+/', $oneline);
 
 			$log_feedid = trim($log_line[27]);
+			if ( empty($log_feedid) ) continue;
+//echo "logfeedid: " . $log_feedid . "\n";
 
-			//10: x-app = wowza application and feedid match
-			if ( ( trim($log_line[10]) == $feeds[$feed]['app'] ) && ( $feeds[$feed]['videoid'] == $log_feedid ) ) {
+			//10: x-app = match wowza application
+			if ( trim($log_line[10]) != $wowza_app ) continue;
 
-				$cip = trim($log_line[16]);
+//var_dump($log_line);
 
-echo $log_line[37] . "\n";
+			// Find Wowza stream ID in location information array
+			foreach ($location_info as $key => $value) {
+				$locationid = $key;
+				foreach ($location_info[$locationid] as $skey => $svalue) {
+					$streamid = $skey;
+//var_dump($location_info[$locationid][$streamid]);
+					// Check if this stream record matches Wowza stream ID
+					$tmp = array_search($log_feedid, $location_info[$locationid][$streamid]);
+					if ( $tmp !== FALSE ) {
+						// We have a match, add this data to overall statistics
+						if ( $tmp == "keycode" ) {
+//echo "found!\n";
 
-exit;
+							// x-event: play or destroy (calculate duration when destroy occurs)
+							$isdestroy = FALSE;
+							if ( trim($log_line[3]) == "destroy" ) $isdestroy = TRUE;
 
-				if ( empty($viewers[$cip]) ) {
-					$viewers[$cip]['hostname'] = gethostbyaddr($cip);
-//					$viewers[$cip]['hostname'] = $cip;
-					$viewers[$cip]['protocol'] = trim($log_line[17]);
+							// Client IP
+							$cip = trim($log_line[16]);
+							// Client session and parameters
+							$csession = trim($log_line[37]);
 
-					$hostname = $viewers[$cip]['hostname'];
-					if ( $cip == $hostname ) {
-						echo $cip . "\n";
-					} else {
-						echo $cip . " (" . $hostname . ")\n";
+							$tmp = explode("&", $csession);
+
+							// Find Vsq user ID
+							$uid_found = FALSE;
+							$uid = 0;
+							for ( $i = 0; $i < count($tmp); $i++) {
+								if ( stripos($tmp[$i], "uid=") !== FALSE ) {
+									$tmp2 = explode("=", $tmp[$i], 2);
+									$uid = $tmp2[1];
+									$uid_found = TRUE;
+								}
+							}
+
+/*if ( !$uid_found ) {
+	echo $cip . " : " . $log_line[3] . " : " . $uid . " : " . $log_line[12] . "\n";
+} */
+
+							// User ID: store Vsq user ID and add data. If no user ID is given, then use ID = 0 for storing all client IPs
+							if ( empty($viewers[$cip]) ) {
+								$viewers[$cip]['connections'] = 1;
+								// Encoder: flag if matches encoder IP
+								$viewers[$cip]['encoder'] = 0;
+								if ( $cip == $ip_encoder ) $viewers[$cip]['encoder'] = 1;
+
+								// User ID: update if exists
+								if ( empty($viewers[$cip]['uid']) ) $viewers[$cip]['uid'] = 0;
+								if ( $uid > 0 ) $viewers[$cip]['uid'] = $uid;
+
+								$viewers[$cip]['hostname'] = gethostbyaddr($cip);
+								$viewers[$cip]['protocol'] = trim($log_line[17]);
+								$viewers[$cip]['streams'] = array();
+								$keycode = $location_info[$locationid][$streamid]['keycode'];
+								$viewers[$cip]['streams'][$keycode]['locationid'] = $locationid;
+								$viewers[$cip]['streams'][$keycode]['streamid'] = $streamid;
+								if ( $isdestroy) $viewers[$cip]['streams'][$keycode]['duration'] = trim($log_line[12]);
+
+/*								$hostname = $viewers[$cip]['hostname'];
+								if ( $cip == $hostname ) {
+									echo $cip . "\n";
+								} else {
+									echo $cip . " (" . $hostname . ")\n";
+								} */
+							} else {
+								$viewers[$cip]['connections']++;
+
+								// User ID: update if exists
+								if ( empty($viewers[$cip]['uid']) ) $viewers[$cip]['uid'] = 0;
+								if ( $uid > 0 ) $viewers[$cip]['uid'] = $uid;
+
+								$keycode = $location_info[$locationid][$streamid]['keycode'];
+								if ( empty($viewers[$cip]['streams'][$keycode]) ) {
+									$viewers[$cip]['streams'][$keycode]['duration'] = 0;
+									$viewers[$cip]['streams'][$keycode]['locationid'] = $locationid;
+									$viewers[$cip]['streams'][$keycode]['streamid'] = $streamid;
+								}
+								if ( $isdestroy) {
+									if ( empty($viewers[$cip]['streams'][$keycode]['duration']) ) $viewers[$cip]['streams'][$keycode]['duration'] = 0;
+									$viewers[$cip]['streams'][$keycode]['duration'] += trim($log_line[12]);
+								}
+							}
+
+						} // keycode
 					}
-
-				}
-
-				$wowza_url = trim($log_line[33]);
-
-			}
-
+				} // foreach
+			} // foreach
 		}
 
-//if ( $line > 200 ) exit;
+//if ( $line > 1000 ) break;
 
 	}
 
 	fclose($fh);
-
 }
 
-$msg  = "\n\nLog analization started: " . date("Y-m-d H:i:s") . "\n";
-$msg .= "Log files processed:\n";
+//var_dump($viewers);
+
+$msg  = "# Videosquare live statistics report\n\n";
+$msg .= "# Log analization started: " . date("Y-m-d H:i:s") . "\n";
+$msg .= "# Log files processed:\n";
 
 for ( $i = 0; $i < count($log_files); $i++ ) {
-	$msg .= " " . $log_files[$i] . "\n";
+	$msg .= "#\t" . $log_files[$i] . "\n";
 }
 
-$msg .= "\nViewers:\n";
+$msg .= "# Event: " . $event_info['title'] . "\n";
+$msg .= "# Start date: " . $event_info['starttimestamp'] . "\n";
+$msg .= "# End date: " . $event_info['endtimestamp'] . "\n";
+$msg .= "# Customer: " . $event_info['name'] . " - " . $event_info['url'] . "\n";
+$msg .= "# Domain: " . $event_info['domain'] . "\n\n";
+
+$msg .= "\nViewers:\n\n";
+
+$msg .= "userID,username,IP address,hostname,Number of connections,Stream1,Stream1 time,Stream2,Stream2 time\n";
 
 $number_of_viewers = 0;
-foreach($viewers as $key => $value) {
+foreach($viewers as $cip => $client) {
 
+//echo $cip . "\n";
+
+	$user = array();
+	$uid = $viewers[$cip]['uid'];
+	if ( $uid > 0 ) {
+		if ( !query_user($uid, $user) ) {
+			echo "[ERROR] Cannot find user. UID = " . $uid . "\n";
+			exit -1;
+		}
+	}
+
+	$encoder_str = "";
+	if ( $viewers[$cip]['encoder'] ) $encoder_str = "(*)";
+
+
+	$tmp = $uid . "," . (empty($user['email'])?"-":$user['email']) . $encoder_str . "," . $cip . "," . $client['hostname'] . "," . $client['connections'];
+
+	// Stream statistics: get per stream statistics
+	foreach ($client['streams'] as $keycode => $keycode_data ) {
+		$loc_id = $keycode_data['locationid'];
+		$streamid = $keycode_data['streamid'];
+		$loc_name = $location_info[$loc_id][$streamid]['locationname'];
+		$stream_name = $location_info[$loc_id][$streamid]['streamname'];
+		$tmp .= "," . $stream_name . "," . secs2hms($keycode_data['duration']);
+	}
+
+	$tmp .= "\n";
+
+	echo $tmp;
+
+	$msg .= $tmp;
+
+	$number_of_viewers++;
+}
+
+/*
 	$cip = $key;
 	$hostname = $viewers[$cip]['hostname'];
 
@@ -261,9 +387,7 @@ foreach($viewers as $key => $value) {
 	} else {
 		$msg .= " " . $cip . " (" . $hostname . ")\n";
 	}
-
-	$number_of_viewers++;
-}
+*/
 
 $msg .= "\nViewers: " . $number_of_viewers . "\n";
 
@@ -271,7 +395,7 @@ $msg .= "\nViewers: " . $number_of_viewers . "\n";
 $result_file = "log_anal_results.txt";
 $fh = fopen($result_file, "w");
 
-if (fwrite($fh, $msg) === FALSE) {
+if ( fwrite($fh, $msg) === FALSE ) {
 	echo "Cannot write to file (" . $result_file . "\n";
 	exit;
 }
@@ -290,32 +414,23 @@ global $db, $app;
 	$query = "
 		SELECT
 			a.channelid,
-			c.title,
-			c.starttimestamp,
-			c.endtimestamp,
+			a.userid,
 			a.id as locationid,
 			a.name as locationname,
 			b.id as streamid,
 			b.name as streamname,
 			b.keycode,
-			b.contentkeycode,
-			a.userid,
-			a.organizationid
+			b.contentkeycode
 		FROM
 			livefeeds as a,
-			livefeed_streams as b,
-			channels as c
+			livefeed_streams as b
 		WHERE
 			a.channelid = " . $live_channelid . " AND
-			a.id = b.livefeedid AND
-			a.channelid = c.id
+			a.id = b.livefeedid
 		ORDER BY
-			a.id
+			a.id,
+			b.id
 	";
-
-echo $query . "\n";
-
-exit;
 
 	try {
 		$live_streams = $db->Execute($query);
@@ -332,5 +447,34 @@ exit;
 	return TRUE;
 }
 
+function query_user($uid, &$user) {
+global $db, $app;
+
+	$query = "
+		SELECT
+			id,
+			nickname,
+			email
+		FROM
+			users
+		WHERE
+			id = " . $uid;
+
+	try {
+		$tmp = $db->Execute($query);
+	} catch (exception $err) {
+		echo "[ERROR] Cannot query users. SQL query failed.\n\n" . trim($query) . "\n";
+		return FALSE;
+	}
+
+	// Check if user returned
+	if ( $tmp->RecordCount() < 1 ) {
+		return FALSE;
+	}
+
+	$user = $tmp->fields;
+
+	return TRUE;
+}
 
 ?>
