@@ -91,7 +91,6 @@ if ( !query_livefeeds($event_info['id'], $live_streams) ) {
 
 // Stream information transformation to array
 $location_info = array();
-$locationid_prev = -1;
 while ( !$live_streams->EOF ) {
 	$stream = array();
 	$stream = $live_streams->fields;
@@ -100,6 +99,7 @@ while ( !$live_streams->EOF ) {
 	if ( empty($location_info[$locationid]) ) $location_info[$locationid] = array();
 
 	$tmp = array(
+		'locationid'		=> $stream['locationid'],
 		'streamid'			=> $stream['streamid'],
 		'streamname'		=> $stream['streamname'],
 		'keycode'			=> $stream['keycode'],
@@ -259,9 +259,10 @@ http://conforg.videosquare.eu/flash/TCPlayer.swf?v=_v20121211       WIN 11,5,31,
 								}
 							}
 
-/*if ( !$uid_found ) {
-	echo $cip . " : " . $log_line[3] . " : " . $uid . " : " . $log_line[12] . "\n";
-} */
+//if ( $cip = "89.134.91.121" ) {
+////	echo $cip . " : " . $log_line[3] . " : " . $uid . " : " . $log_line[12] . "\n";
+//	echo $cip . " : x-event = " . $log_line[3] . " : x-duration = " . $log_line[12] . " : c-client-id = " . $log_line[20] . "\n";
+//}
 
 							// User ID: store Vsq user ID and add data. If no user ID is given, then use ID = 0 for storing all client IPs
 							if ( empty($viewers[$cip]) ) {
@@ -320,7 +321,7 @@ http://conforg.videosquare.eu/flash/TCPlayer.swf?v=_v20121211       WIN 11,5,31,
 	fclose($fh);
 }
 
-//var_dump($viewers);
+var_dump($viewers);
 
 $msg  = "# Videosquare live statistics report\n\n";
 $msg .= "# Log analization started: " . date("Y-m-d H:i:s") . "\n";
@@ -334,16 +335,27 @@ $msg .= "# Event: " . $event_info['title'] . "\n";
 $msg .= "# Start date: " . $event_info['starttimestamp'] . "\n";
 $msg .= "# End date: " . $event_info['endtimestamp'] . "\n";
 $msg .= "# Customer: " . $event_info['name'] . " - " . $event_info['url'] . "\n";
-$msg .= "# Domain: " . $event_info['domain'] . "\n\n";
+$msg .= "# Domain: " . $event_info['domain'] . "\n#\n";
+$msg .= "# Locations:\n";
 
-$msg .= "\nViewers:\n\n";
+$tmp = "userID,username,IP address,hostname,Connections";
 
-$msg .= "userID,username,IP address,hostname,Number of connections,Stream1,Stream1 time,Stream2,Stream2 time\n";
+// Columns: build location/stream name order guide array
+$columns_num = 0;
+$column_guide = array();
+foreach ($location_info as $loc_id => $streams ) {
+	foreach ($streams as $str_id => $stream ) {
+		$tmp .= "," . $location_info[$loc_id][$str_id]['locationname'] . "/" . $location_info[$loc_id][$str_id]['streamname'];
+		$msg .= "#\t" . $location_info[$loc_id][$str_id]['locationname'] . "/" . $location_info[$loc_id][$str_id]['streamname'] . ": " . $location_info[$loc_id][$str_id]['keycode'] . "/" . $location_info[$loc_id][$str_id]['contentkeycode'] . "\n";
+		$column_guide[$loc_id][$str_id] = $columns_num;
+		$columns_num++;
+	}
+}
+$tmp .= ",Summary\n";
+$msg .= $tmp;
 
 $number_of_viewers = 0;
 foreach($viewers as $cip => $client) {
-
-//echo $cip . "\n";
 
 	$user = array();
 	$uid = $viewers[$cip]['uid'];
@@ -361,15 +373,26 @@ foreach($viewers as $cip => $client) {
 	$tmp = $uid . "," . (empty($user['email'])?"-":$user['email']) . $encoder_str . "," . $cip . "," . $client['hostname'] . "," . $client['connections'];
 
 	// Stream statistics: get per stream statistics
+	$columns = array();
+	$duration_full = 0;
 	foreach ($client['streams'] as $keycode => $keycode_data ) {
 		$loc_id = $keycode_data['locationid'];
-		$streamid = $keycode_data['streamid'];
-		$loc_name = $location_info[$loc_id][$streamid]['locationname'];
-		$stream_name = $location_info[$loc_id][$streamid]['streamname'];
-		$tmp .= "," . $stream_name . "," . secs2hms($keycode_data['duration']);
+		$str_id = $keycode_data['streamid'];
+		$num = $column_guide[$loc_id][$str_id];
+		$columns[$num] = secs2hms($keycode_data['duration']);
+		$duration_full += $keycode_data['duration'];
 	}
 
-	$tmp .= "\n";
+	// Serialize column value
+	for ( $i = 0; $i < $columns_num; $i++ ) {
+		if ( !empty($columns[$i]) ) {
+			$tmp .= "," . $columns[$i];
+		} else {
+			$tmp .= ",-";
+		}
+	}
+
+	$tmp .= "," . secs2hms($duration_full) . "\n";
 
 	echo $tmp;
 
@@ -378,18 +401,7 @@ foreach($viewers as $cip => $client) {
 	$number_of_viewers++;
 }
 
-/*
-	$cip = $key;
-	$hostname = $viewers[$cip]['hostname'];
-
-	if ( $cip == $hostname ) {
-		$msg .= " " . $cip . "\n";
-	} else {
-		$msg .= " " . $cip . " (" . $hostname . ")\n";
-	}
-*/
-
-$msg .= "\nViewers: " . $number_of_viewers . "\n";
+$msg .= "\nViewers from unique IP: " . $number_of_viewers . "\n";
 
 // Open log file
 $result_file = "log_anal_results.txt";
@@ -402,7 +414,7 @@ if ( fwrite($fh, $msg) === FALSE ) {
 
 fclose($fh);
 
-echo "Number of viewers: " . $number_of_viewers . "\n";
+echo "Viewers from unique IP: " . $number_of_viewers . "\n";
 
 //print_r($viewers);
 
