@@ -1,23 +1,106 @@
 #!/usr/bin/php
 <?php
 
-include( '/home/conv/dev.videotorium/job_utils.php' );
+define('BASE_PATH',	realpath( __DIR__ . '/../../..' ) . '/' );
+define('PRODUCTION', false );
+define('DEBUG', false );
+
+include_once( BASE_PATH . 'libraries/Springboard/Application/Cli.php');
+include_once( BASE_PATH . 'modules/Jobs/job_utils_base.php' );
+
+set_time_limit(0);
 
 date_default_timezone_set("Europe/Budapest");
 
-echo "Videotorium Wowza live log analizer v0.01 - STARTING...\n";
+echo "Wowza log analizer v0.1 - STARTING...\n";
 
-//echo "argc: " . $argc . "\n";
-//print_r($_SERVER['argv']);
+// User settings
+$live_channelid = 29;
 
-// Handle command line arguments
-if ( $argc >= 2 ) {
-// 943614
-	$feedid = trim($argv[1]);
-} else {
-	echo "ERROR: parameters are missing\nUSAGE: wowza_feedid\n";
+// **********************************
+
+// Init
+$app = new Springboard\Application\Cli(BASE_PATH, PRODUCTION);
+
+// Load jobs configuration file
+$app->loadConfig('modules/Jobs/config_jobs.php');
+$jconf = $app->config['config_jobs'];
+
+// Establish database connection
+try {
+	$db = $app->bootstrap->getAdoDB();
+} catch (exception $err) {
+	echo "[ERROR] No connection to DB (getAdoDB() failed). Error message:\n" . $err . "\n";
 	exit -1;
 }
+
+// Query channel information
+$query = "
+	SELECT
+		id,
+		title,
+		starttimestamp,
+		endtimestamp,
+		userid,
+		organizationid
+	FROM
+		channels
+	WHERE
+		id = " . $live_channelid;
+
+echo $query . "\n";
+
+try {
+	$event = $db->Execute($query);
+} catch (exception $err) {
+	echo "[ERROR] Cannot query live channel. SQL query failed.\n\n" . trim($query) . "\n";
+	exit -1;
+}
+
+// Check if one record found
+if ( $event->RecordCount() < 1 ) {
+	echo "[ERROR] Cannot find live channel. ID = " . $live_channelid . "\n";
+	exit -1;
+}
+
+$event_info = array();
+$event_info = $event->fields;
+
+var_dump($event_info);
+
+exit;
+
+$live_streams = array();
+
+if ( !query_livefeeds($live_channelid, $live_feeds) ) {
+	echo "[ERROR] Cannot find live event.\n";
+	exit -1;
+}
+
+$stream = array();
+$stream = $live_feeds->fields;
+
+
+$stats_intro  = "Videosquare live statistics report\n\n";
+$stats_intro .= "Event: " . $live_streams;
+
+exit;
+
+// feedid, contentid, app, description for logging
+$feeds = array(
+	1 => array(
+			'videoid'	=> '148820',
+			'contentid'	=> '133253',
+			'app'		=> 'vsqlive',
+			'desc'		=> 'Normal stream'
+		),
+	2 => array(
+			'videoid'	=> '668018',
+			'contentid'	=> '890250',
+			'app'		=> 'vsqlive',
+			'desc'		=> 'HD stream'
+		)
+);
 
 // Get current directory
 $directory = realpath('.') . "/";
@@ -26,6 +109,9 @@ $log_files = dirList($directory, ".log");
 sort($log_files, SORT_STRING);
 
 $viewers = array();
+
+// Actual feed to be analyzed
+$feed = 1;
 
 for ( $i = 0; $i < count($log_files); $i++ ) {
 
@@ -111,19 +197,22 @@ http://conforg.videosquare.eu/flash/TCPlayer.swf?v=_v20121211       WIN 11,5,31,
 - - - - rtmp://stream.videosquare.eu:1935/vsqlive//148820 rtmp://stream.videosquare.eu:1935/vsqlive//148820 - rtmp://stream.videosquare.eu:1935/vsqlive/ sessionid=conforg.videosquare.eu_k0nu829dc8viv2q57n5iskvmiqeqhh9c_4
 */
 
-		// Math log entries
-		if ( preg_match('/^[\s]*[0-9]{4}-[0-1][0-9]-[0-3][0-9][\s]+[0-2][0-9]:[0-5][0-9]:[0-5][0-9][\s]+[A-Z]{4}[\s]+play/', $oneline) ) {
+		// Math log entries: YYYY-MM-DD HH:MM:SS
+		if ( preg_match('/^[\s]*[0-9]{4}-[0-1][0-9]-[0-3][0-9][\s]+[0-2][0-9]:[0-5][0-9]:[0-5][0-9][\s]+[A-Z]+[\s]+play/', $oneline) ) {
 
 			$log_line = preg_split('/\t+/', $oneline);
 
-//echo $oneline . "\n";
-
 			$log_feedid = trim($log_line[27]);
 
-			//10: x-app = "live" and feedid match
-			if ( ( trim($log_line[10]) == "live" ) && ( $feedid == $log_feedid ) ) {
+			//10: x-app = wowza application and feedid match
+			if ( ( trim($log_line[10]) == $feeds[$feed]['app'] ) && ( $feeds[$feed]['videoid'] == $log_feedid ) ) {
 
 				$cip = trim($log_line[16]);
+
+echo $log_line[37] . "\n";
+
+exit;
+
 				if ( empty($viewers[$cip]) ) {
 					$viewers[$cip]['hostname'] = gethostbyaddr($cip);
 //					$viewers[$cip]['hostname'] = $cip;
@@ -194,5 +283,54 @@ echo "Number of viewers: " . $number_of_viewers . "\n";
 //print_r($viewers);
 
 exit;
+
+function query_livefeeds($live_channelid, &$live_streams) {
+global $db, $app;
+
+	$query = "
+		SELECT
+			a.channelid,
+			c.title,
+			c.starttimestamp,
+			c.endtimestamp,
+			a.id as locationid,
+			a.name as locationname,
+			b.id as streamid,
+			b.name as streamname,
+			b.keycode,
+			b.contentkeycode,
+			a.userid,
+			a.organizationid
+		FROM
+			livefeeds as a,
+			livefeed_streams as b,
+			channels as c
+		WHERE
+			a.channelid = " . $live_channelid . " AND
+			a.id = b.livefeedid AND
+			a.channelid = c.id
+		ORDER BY
+			a.id
+	";
+
+echo $query . "\n";
+
+exit;
+
+	try {
+		$live_streams = $db->Execute($query);
+	} catch (exception $err) {
+		echo "[ERROR] Cannot query live feeds and streams. SQL query failed.\n\n" . trim($query) . "\n";
+		return FALSE;
+	}
+
+	// Check if pending job exsits
+	if ( $live_streams->RecordCount() < 1 ) {
+		return FALSE;
+	}
+
+	return TRUE;
+}
+
 
 ?>

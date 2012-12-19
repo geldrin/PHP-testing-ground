@@ -340,7 +340,6 @@ $authors = array(
 try {
 	$db = $app->bootstrap->getAdoDB();
 } catch (exception $err) {
-	// Send mail alert, sleep for 15 minutes
 	echo "[ERROR] No connection to DB (getAdoDB() failed). Error message:\n" . $err . "\n";
 	exit -1;
 }
