@@ -104,6 +104,7 @@ class Controller extends \Visitor\Controller {
         'sessionid' => session_id(),
         'domain'    => $this->organization['domain'],
         'stream'    => $currentstream,
+        'user'      => $user,
       )
     );
     
