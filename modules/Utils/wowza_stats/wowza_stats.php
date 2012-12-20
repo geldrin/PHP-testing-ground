@@ -16,7 +16,6 @@ echo "Wowza log analizer v0.1 - STARTING...\n";
 
 // User settings
 $live_channelid = 29;
-$ip_encoder = "89.133.214.122";
 
 // **********************************
 
@@ -163,88 +162,88 @@ for ( $i = 0; $i < count($log_files); $i++ ) {
 			break;
 		}
 /*
-#Fields:
-#  0: date
-#  1: time
-#  2: tz
-#  3: x-event
-#  4: x-category
-#  5: x-severity
-2012-12-14 09:29:39 CET play stream INFO
-#  6: x-status
-#  7: x-ctx
-#  8: x-comment
-#  9: x-vhost
-# 10: x-app
-# 11: x-appinst
-200 148820 - _defaultVHost_ vsqlive _definst_
-# 12: x-duration
-# 13: s-ip
-# 14: s-port
-# 15: s-uri
-# 16: c-ip
-# 17: c-proto
-0.762  91.120.59.230 1935 rtmp://stream.videosquare.eu:1935/vsqlive/?sessionid=conforg.videosquare.eu_k0nu829dc8viv2q57n5iskvmiqeqhh9c_4 89.132.168.224 rtmp
-# 18: c-referrer
-# 19: c-user-agent
-# 20: c-client-id
-# 21: cs-bytes
-# 22: sc-bytes
-http://conforg.videosquare.eu/flash/TCPlayer.swf?v=_v20121211       WIN 11,5,31,5 1010351969 3760
-# 23: x-stream-id
-# 24: x-spos
-# 25: cs-stream-bytes
-# 26: sc-stream-bytes
-# 27: x-sname
-# 28: x-sname-query
-3455    1   0   0   0 148820 -
-# 29: x-file-name
-# 30: x-file-ext
-# 31: x-file-size
-# 32: x-file-length
-# 33: x-suri
-# 34: x-suri-stem
-# 35: x-suri-query
-# 36: cs-uri-stem
-# 37: cs-uri-query
-- - - - rtmp://stream.videosquare.eu:1935/vsqlive//148820 rtmp://stream.videosquare.eu:1935/vsqlive//148820 - rtmp://stream.videosquare.eu:1935/vsqlive/ sessionid=conforg.videosquare.eu_k0nu829dc8viv2q57n5iskvmiqeqhh9c_4
+#Wowza log example:
+#  0: date | 2012-12-14
+#  1: time | 09:29:39
+#  2: tz | CET
+#  3: x-event | play
+#  4: x-category | stream
+#  5: x-severity | INFO
+#  6: x-status | 200
+#  7: x-ctx | 148820
+#  8: x-comment | - 
+#  9: x-vhost | _defaultVHost_
+# 10: x-app | vsqlive
+# 11: x-appinst | _definst
+# 12: x-duration | 0.762
+# 13: s-ip | 91.120.59.230
+# 14: s-port | 1935
+# 15: s-uri | rtmp://stream.videosquare.eu:1935/vsqlive/?sessionid=conforg.videosquare.eu_k0nu829dc8viv2q57n5iskvmiqeqhh9c_4
+# 16: c-ip | 89.132.168.224
+# 17: c-proto | rtmp
+# 18: c-referrer | http://conforg.videosquare.eu/flash/TCPlayer.swf?v=_v20121211
+# 19: c-user-agent | WIN 11,5,31,5
+# 20: c-client-id | 1010351969
+# 21: cs-bytes | 3760
+# 22: sc-bytes | 3455
+# 23: x-stream-id | 1
+# 24: x-spos | 0
+# 25: cs-stream-bytes | 0
+# 26: sc-stream-bytes | 0
+# 27: x-sname | 148820
+# 28: x-sname-query | -
+# 29: x-file-name | -
+# 30: x-file-ext | -
+# 31: x-file-size | - 
+# 32: x-file-length | -
+# 33: x-suri | rtmp://stream.videosquare.eu:1935/vsqlive//148820
+# 34: x-suri-stem | rtmp://stream.videosquare.eu:1935/vsqlive//148820
+# 35: x-suri-query | -
+# 36: cs-uri-stem | rtmp://stream.videosquare.eu:1935/vsqlive/
+# 37: cs-uri-query | sessionid=conforg.videosquare.eu_k0nu829dc8viv2q57n5iskvmiqeqhh9c_4
+*/
+
+// DEBUG
+/*$tmp = preg_split('/\t+/', $oneline);
+$cid = "708560470";
+//if ( ( trim($tmp[16]) == "89.133.214.122" ) and ( trim($tmp[20]) == $cid ) ) {
+if ( ( trim($tmp[16]) == "89.133.214.122" ) ) {
+	echo trim($tmp[16]) . " : x-event = " . trim($tmp[3]) . " : status = " . trim($tmp[6]) . " : x-duration = " . trim($tmp[12]) . " : c-client-id = " . trim($tmp[20]) . "\n";
+}
 */
 
 		// Math log entries: YYYY-MM-DD HH:MM:SS
-		if ( preg_match('/^[\s]*[0-9]{4}-[0-1][0-9]-[0-3][0-9][\s]+[0-2][0-9]:[0-5][0-9]:[0-5][0-9][\s]+[A-Z]+[\s]+(play|destroy)/', $oneline) ) {
+		if ( preg_match('/^[\s]*[0-9]{4}-[0-1][0-9]-[0-3][0-9][\s]+[0-2][0-9]:[0-5][0-9]:[0-5][0-9][\s]+[A-Z]+[\s]+(play|destroy|publish)/', $oneline) ) {
 
 			$log_line = preg_split('/\t+/', $oneline);
 
 			$log_feedid = trim($log_line[27]);
 			if ( empty($log_feedid) ) continue;
-//echo "logfeedid: " . $log_feedid . "\n";
 
 			//10: x-app = match wowza application
 			if ( trim($log_line[10]) != $wowza_app ) continue;
-
-//var_dump($log_line);
 
 			// Find Wowza stream ID in location information array
 			foreach ($location_info as $key => $value) {
 				$locationid = $key;
 				foreach ($location_info[$locationid] as $skey => $svalue) {
 					$streamid = $skey;
-//var_dump($location_info[$locationid][$streamid]);
 					// Check if this stream record matches Wowza stream ID
 					$tmp = array_search($log_feedid, $location_info[$locationid][$streamid]);
 					if ( $tmp !== FALSE ) {
 						// We have a match, add this data to overall statistics
 						if ( $tmp == "keycode" ) {
-//echo "found!\n";
 
 							// x-event: play or destroy (calculate duration when destroy occurs)
-							$isdestroy = FALSE;
-							if ( trim($log_line[3]) == "destroy" ) $isdestroy = TRUE;
-
+							$x_event = trim($log_line[3]);
 							// Client IP
 							$cip = trim($log_line[16]);
 							// Client session and parameters
 							$csession = trim($log_line[37]);
+							// Client ID
+							$clientid = trim($log_line[20]);
+							// Wowza stream ID
+							$keycode = $location_info[$locationid][$streamid]['keycode'];
 
 							$tmp = explode("&", $csession);
 
@@ -259,36 +258,37 @@ http://conforg.videosquare.eu/flash/TCPlayer.swf?v=_v20121211       WIN 11,5,31,
 								}
 							}
 
-//if ( $cip = "89.134.91.121" ) {
-////	echo $cip . " : " . $log_line[3] . " : " . $uid . " : " . $log_line[12] . "\n";
-//	echo $cip . " : x-event = " . $log_line[3] . " : x-duration = " . $log_line[12] . " : c-client-id = " . $log_line[20] . "\n";
-//}
+							$duration = trim($log_line[12]);
+							// Skip this entry if too short
+							if ( $duration < 0 ) continue;
 
 							// User ID: store Vsq user ID and add data. If no user ID is given, then use ID = 0 for storing all client IPs
 							if ( empty($viewers[$cip]) ) {
 								$viewers[$cip]['connections'] = 1;
 								// Encoder: flag if matches encoder IP
 								$viewers[$cip]['encoder'] = 0;
-								if ( $cip == $ip_encoder ) $viewers[$cip]['encoder'] = 1;
+								if ( $x_event == "publish" ) $viewers[$cip]['encoder'] = 1;
 
 								// User ID: update if exists
 								if ( empty($viewers[$cip]['uid']) ) $viewers[$cip]['uid'] = 0;
 								if ( $uid > 0 ) $viewers[$cip]['uid'] = $uid;
 
+								// Client ID and user ID
+								$viewers[$cip]['clients'] = array();
+								$viewers[$cip]['clients'][$clientid]['uid'] = $uid;
+								$viewers[$cip]['clients'][$clientid]['play'] = FALSE;
+								if ( ( $x_event == "play" ) or ( $x_event == "publish" ) ) $viewers[$cip]['clients'][$clientid]['play'] = TRUE;
+
+								// Host name and protocol
 								$viewers[$cip]['hostname'] = gethostbyaddr($cip);
 								$viewers[$cip]['protocol'] = trim($log_line[17]);
+
+								// Streams
 								$viewers[$cip]['streams'] = array();
-								$keycode = $location_info[$locationid][$streamid]['keycode'];
 								$viewers[$cip]['streams'][$keycode]['locationid'] = $locationid;
 								$viewers[$cip]['streams'][$keycode]['streamid'] = $streamid;
-								if ( $isdestroy) $viewers[$cip]['streams'][$keycode]['duration'] = trim($log_line[12]);
+								if ( $x_event == "destroy" ) $viewers[$cip]['streams'][$keycode]['duration'] = $duration;
 
-/*								$hostname = $viewers[$cip]['hostname'];
-								if ( $cip == $hostname ) {
-									echo $cip . "\n";
-								} else {
-									echo $cip . " (" . $hostname . ")\n";
-								} */
 							} else {
 								$viewers[$cip]['connections']++;
 
@@ -296,15 +296,26 @@ http://conforg.videosquare.eu/flash/TCPlayer.swf?v=_v20121211       WIN 11,5,31,
 								if ( empty($viewers[$cip]['uid']) ) $viewers[$cip]['uid'] = 0;
 								if ( $uid > 0 ) $viewers[$cip]['uid'] = $uid;
 
+								// Client ID
+								if ( empty($viewers[$cip]['clients'][$clientid]) ) {
+									$viewers[$cip]['clients'][$clientid]['uid'] = $uid;
+									$viewers[$cip]['clients'][$clientid]['play'] = FALSE;
+									if ( ( $x_event == "play" ) or ( $x_event == "publish" ) ) $viewers[$cip]['clients'][$clientid]['play'] = TRUE;
+								}
+
 								$keycode = $location_info[$locationid][$streamid]['keycode'];
 								if ( empty($viewers[$cip]['streams'][$keycode]) ) {
 									$viewers[$cip]['streams'][$keycode]['duration'] = 0;
 									$viewers[$cip]['streams'][$keycode]['locationid'] = $locationid;
 									$viewers[$cip]['streams'][$keycode]['streamid'] = $streamid;
 								}
-								if ( $isdestroy) {
+								if ( $x_event == "destroy" ) {
 									if ( empty($viewers[$cip]['streams'][$keycode]['duration']) ) $viewers[$cip]['streams'][$keycode]['duration'] = 0;
-									$viewers[$cip]['streams'][$keycode]['duration'] += trim($log_line[12]);
+									// Duration: was there play event? If not, skip duration
+									if ( $viewers[$cip]['clients'][$clientid]['play'] ) {
+										$viewers[$cip]['streams'][$keycode]['duration'] += $duration;
+										$viewers[$cip]['clients'][$clientid]['play'] = FALSE;
+									}
 								}
 							}
 
