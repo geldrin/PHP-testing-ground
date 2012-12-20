@@ -863,8 +863,6 @@ class Channels extends \Springboard\Model {
         
         if ( empty( $row ) )
           return $error;
-        elseif ( $timefailed )
-          return $error . '_timefailed';
         
         break;
       
