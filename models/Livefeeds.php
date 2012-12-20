@@ -248,7 +248,8 @@ class Livefeeds extends \Springboard\Model {
     
     $authorizecode = $this->getAuthorizeSessionidParam(
       $info['domain'],
-      $info['sessionid']
+      $info['sessionid'],
+      $info['user']
     );
     
     $prefix    = $this->row['issecurestreamingforced']? 'sec': '';
@@ -555,10 +556,12 @@ class Livefeeds extends \Springboard\Model {
     
   }
   
-  public function getAuthorizeSessionidParam( $domain, $sessionid ) {
+  public function getAuthorizeSessionidParam( $domain, $sessionid, $user = null ) {
     
-    $user = $this->bootstrap->getSession('user');
-    if ( isset( $user['id'] ) )
+    if ( !$user === null )
+      $user = $this->bootstrap->getSession('user');
+    
+    if ( $user['id'] )
       return sprintf('?sessionid=%s_%s_%s&uid=%s',
         $domain,
         $sessionid,
