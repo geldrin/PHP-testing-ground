@@ -1186,9 +1186,7 @@ class Recordings extends \Springboard\Model {
       return array();
     
     $keywords    = explode(',', $this->row['keywords'] );
-    $where       = array(
-      'r.organizationid = ' . $this->db->qstr( $organizationid ),
-    );
+    $where       = array();
     
     foreach( $keywords as $key => $value ) {
       
@@ -1219,6 +1217,7 @@ class Recordings extends \Springboard\Model {
         ( $where ) AND
         u.id = r.userid AND
         r.id <> '" . $this->id . "' AND
+        r.organizationid = '$organizationid' AND
         " . self::getPublicRecordingWhere('r.') . "
       LIMIT $limit
     ");
