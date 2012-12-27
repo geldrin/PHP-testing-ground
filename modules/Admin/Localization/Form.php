@@ -102,6 +102,9 @@ class Form extends \Springboard\Controller\Admin\Form {
     $languages    = $this->bootstrap->config['languages']; // to type less
     $data         = array();
     
+    if ( $module == 'Sitewide' )
+      $localepath = '%1$sLocale/%3$s.ini';
+    
     // make sure we have a file for every language and its writable
     foreach( $languages as $language ) {
       
@@ -219,12 +222,19 @@ class Form extends \Springboard\Controller\Admin\Form {
     foreach( $data as $k => $v )
       $blob .= sprintf("%s=\"%s\"\n", $k, $v );
     
-    $file = sprintf(
-      "%sVisitor/%s/Locale/%s.ini",
-      $this->bootstrap->config['modulepath'],
-      $module,
-      $language
-    );
+    if ( $module != 'Sitewide' )
+      $file = sprintf(
+        "%sVisitor/%s/Locale/%s.ini",
+        $this->bootstrap->config['modulepath'],
+        $module,
+        $language
+      );
+    else
+      $file = sprintf(
+        "%sLocale/%s.ini",
+        $this->bootstrap->config['modulepath'],
+        $language
+      );
     
     return file_put_contents( $file, $blob );
     

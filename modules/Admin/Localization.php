@@ -26,7 +26,7 @@ class Localization extends \Springboard\Controller\Admin {
       $this->bootstrap->config['modulepath'] . 'Visitor/*/Locale/*.ini'
     );
     $modpath = preg_quote( $this->bootstrap->config['modulepath'] . 'Visitor/', '#' );
-    $modules = array();
+    $modules = array( 'Sitewide' ); // sitewide default
     
     foreach( $iterator as $path => $v ) {
       
