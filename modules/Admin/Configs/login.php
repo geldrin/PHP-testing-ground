@@ -8,7 +8,7 @@ $config = Array(
   ),
 
   'email' => Array(
-    'displayname' => 'E-Mail',
+    'displayname' => 'E-mail',
     'type'        => 'inputText',
     'validation'  => Array(
       Array( 'type' => 'required' )
