@@ -2262,6 +2262,208 @@ class Recordings extends \Springboard\Model {
     
   }
   
+  public function getSearchAdvancedWhere( $organizationid, $search ) {
+    
+    if ( $this->searchadvancedwhere )
+      return $this->searchadvancedwhere;
+    
+    $where = array();
+    if ( $search['wholeword'] ) {
+      
+      $term  = preg_quote( $search['q'] );
+      $trans = array(
+        'a' => '[aá]',
+        'á' => '[aá]',
+        'Á' => '[AÁ]',
+        'A' => '[AÁ]',
+        'e' => '[eé]',
+        'é' => '[eé]',
+        'E' => '[EÉ]',
+        'É' => '[EÉ]',
+        'i' => '[ií]',
+        'í' => '[ií]',
+        'I' => '[IÍ]',
+        'Í' => '[IÍ]',
+        'o' => '[oóöő]',
+        'ó' => '[oóöő]',
+        'ö' => '[oóöő]',
+        'ő' => '[oóöő]',
+        'O' => '[OÓÖŐ]',
+        'Ó' => '[OÓÖŐ]',
+        'Ö' => '[OÓÖŐ]',
+        'Ő' => '[OÓÖŐ]',
+        'u' => '[uúüű]',
+        'ú' => '[uúüű]',
+        'ü' => '[uúüű]',
+        'Ű' => '[uúüű]',
+        'U' => '[UÚÜŰ]',
+        'Ú' => '[UÚÜŰ]',
+        'Ü' => '[UÚÜŰ]',
+        'Ű' => '[UÚÜŰ]',
+      );
+      $term = strtr( $term, $trans );
+      $term = "REGEXP " . $this->db->qstr( '[[:<:]]' . $term . '[[:>:]]' );
+      
+    } else {
+      
+      $term = str_replace( ' ', '%', $values['q'] );
+      $term = 'LIKE ' . $this->db->qstr( '%' . $term . '%' );
+      
+    }
+    
+    $where[] = "
+      (
+         r.title       $term OR
+         r.subtitle    $term OR
+         r.description $term
+      )
+    ";
+    
+    if ( strlen( $search['uploaddatefrom'] ) )
+      $where[] = "r.timestamp >= " . $this->db->qstr( $search['uploaddatefrom'] );
+    
+    if ( strlen( $search['uploaddateto'] ) )
+      $where[] = "r.timestamp <= " . $this->db->qstr( $search['uploaddateto'] );
+    
+    if ( strlen( $search['createdatefrom'] ) )
+      $where[] = "r.recordedtimestamp >= " . $this->db->qstr( $search['createdatefrom'] );
+    
+    if ( strlen( $search['createdateto'] ) )
+      $where[] = "r.recordedtimestamp <= " . $this->db->qstr( $search['createdateto'] );
+    
+    if ( intval( $search['languages'] ) ) {
+      
+      $languageid = $this->db->qstr( intval( $search['languages'] ) );
+      $where[]    = "r.languageid = $languageid";
+      
+    }
+    
+    if ( strlen( $search['contributorname'] ) ) {
+      
+      $contributorname = $this->db->qstr( '%' . $search['contributorname'] . '%' );
+      if ( strlen( $search['contributorjob'] ) ) {
+        
+        $contributorjob = $this->db->qstr( '%' . $search['contributorjob'] . '%' );
+        $contributorids = $this->db->getCol("
+          SELECT DISTINCT c.id
+          FROM
+            contributors AS c,
+            contributors_jobs AS cj
+          WHERE
+            (
+              IF( c.nameformat = 'straight',
+                CONCAT_WS(' ', c.nameprefix, c.namelast, c.namefirst ),
+                CONCAT_WS(' ', c.nameprefix, c.namefirst, c.namelast )
+              ) LIKE $contributorname
+            ) AND
+            (
+              cj.joboriginal LIKE $contributorjob OR
+              cj.jobenglish  LIKE $contributorjob
+            ) AND
+            c.id = cj.contributorid AND
+            c.organizationid = '$organizationid'
+        ");
+        
+      } else
+        $contributorids = $this->db->getCol("
+          SELECT id
+          FROM contributors
+          WHERE
+            IF( nameformat = 'straight',
+                CONCAT_WS(' ', nameprefix, namelast, namefirst ),
+                CONCAT_WS(' ', nameprefix, namefirst, namelast )
+            ) LIKE $contributorname AND
+            organizationid = '$organizationid'
+        ");
+      
+    } else
+      $contributorids = array();
+    
+    if ( !empty( $contributorids ) ) {
+      
+      $recordingids = $db->getCol("
+        SELECT DISTINCT recordingid
+        FROM contributors_roles
+        WHERE
+          contributorid IN ('" . implode("', '", $contributorids ) . "')
+      ");
+      
+      if ( !empty( $recordingids ) )
+        $where[] = "r.id IN('" . implode("', '", $recordingids ) . "')";
+      
+    }
+    
+    $where = implode(' AND ', $where );
+    return $this->searchadvancedwhere = array(
+      'term'  => $term,
+      'where' => $where,
+    );
+    
+  }
+  
+  public function getSearchAdvancedCount( $user, $organizationid, $search ) {
+    
+    $where  = $this->getSearchAdvancedWhere( $organizationid, $search );
+    
+    $where['where'] .= "
+      AND
+      r.organizationid = '$organizationid'
+    ";
+    
+    $query = "(
+        SELECT COUNT(*) FROM
+        (
+          " . self::getUnionSelect( $user, 'r.id', 'recordings AS r', $where['where'] ) . "
+        ) AS subcount
+      ) AS count
+    ";
+    
+    return $this->db->getOne( $query );
+    
+  }
+  
+  public function getSearchAdvancedArray( $user, $organizationid, $search, $start, $limit, $order ) {
+    
+    $select = "
+      'recording' AS type,
+      (
+        1 +
+        IF( r.title " . $where['term'] . ", 2, 0 ) +
+        IF( r.subtitle " . $where['term'] . ", 1, 0 ) +
+        IF( r.description " . $where['term'] . ", 1, 0 )
+      ) AS relevancy,
+      r.id,
+      '1' AS parentid,
+      r.userid,
+      r.organizationid,
+      r.title,
+      r.subtitle,
+      r.description,
+      '' AS url,
+      r.indexphotofilename,
+      '0' AS channeltypeid,
+      r.recordedtimestamp,
+      r.numberofviews,
+      r.rating,
+      '0' AS numberofrecordings
+    ";
+    
+    $where['where'] .= "
+      AND
+      r.organizationid = '$organizationid'
+    ";
+    
+    $query = self::getUnionSelect( $user, $select, 'recordings AS r', $where['where'] ) . "
+      ORDER BY $order
+    ";
+    
+    if ( $start !== null )
+      $query .= 'LIMIT ' . $start . ', ' . $limit;
+    
+    return $this->db->getArray( $query );
+    
+  }
+  
   public function hasSubtitle() {
     
     $this->ensureID();

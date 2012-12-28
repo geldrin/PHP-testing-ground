@@ -143,4 +143,9 @@ return array(
     1 => 'intro/outro',
   ),
   
+  'search_wholeword' => array(
+    0 => 'any word',
+    1 => 'whole word',
+  ),
+  
 );

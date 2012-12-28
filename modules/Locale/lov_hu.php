@@ -163,4 +163,9 @@ return array(
     1 => 'intro/outro',
   ),
   
+  'search_wholeword' => array(
+    0 => 'bármelyik szóra',
+    1 => 'pontos kifejezésre',
+  ),
+  
 );
