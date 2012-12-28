@@ -14,13 +14,13 @@ set_time_limit(0);
 $app = new Springboard\Application\Cli(BASE_PATH, PRODUCTION);
 
 // Users base data
-$user_num = 40;
+$user_num = 50;
 $user_nameprefix = "felh";
 $user_namesuffix_length = 4;
 $user_nametermination = "conforg.hu";
 $pass_length = 8;
 $org_id = 200;
-$org_dep_id = 3;
+$org_dep_id = 5;
 
 $iscommit = FALSE;
 
