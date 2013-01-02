@@ -226,7 +226,9 @@ class Controller extends \Visitor\Controller {
       
     }
     
-    return true;
+    return array(
+      'userid' => $userModel->id,
+    );
     
   }
   
