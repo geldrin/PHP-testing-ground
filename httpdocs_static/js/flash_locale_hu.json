@@ -30,7 +30,8 @@
   "login": {
     "title": "Bejelentkezés",
     "description": "A felvétel megtekintéséhez belépés szükséges,\nkérjük adja meg adatait!",
-    "email": "Felhasználói név:",
+    "username": "E-mail cím:",
+    "email": "E-mail cím:",
     "password": "Jelszó:",
     "login": "Bejelentkezés",
     "serverPending": "Az adatok elküldése folyamatban...",
