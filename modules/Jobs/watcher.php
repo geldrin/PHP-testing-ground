@@ -100,12 +100,13 @@ if ( $jobs_isstopped ) {
 
 // Is ffmpeg running?
 $conversion_running = FALSE;
-$output = array();
 // ffmpeg: check if running
+$output = array();
 $cmd = 'ps uax | grep "ffmpeg" | grep -v "grep" | wc -l 2>&1';
 exec($cmd, $output, $result);
 if ( $output[0] > 0 ) $conversion_running = TRUE;
 // vlc: check if running
+$output = array();
 $cmd = 'ps uax | grep "cvlc" | grep -v "grep" | wc -l 2>&1';
 exec($cmd, $output, $result);
 if ( $output[0] > 0 ) $conversion_running = TRUE;
