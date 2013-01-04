@@ -29,11 +29,16 @@ $ischeckonly = FALSE;
 
 // Shall we reencode or cut by keyframes. Keyframe based cut can lead to corrupt files!
 $reencode = TRUE;
+// SHOULD BE DETECTED WITH MEDIAINFO
 // Video: needed?
 $rendervideo = TRUE;
-$media_bw = 1500;
+$media_res = "1280x720";
+$media_fps = 25;
+$media_bw = 2000;
 // Content: needed?
 $rendercontent = TRUE;
+$content_res = "1024x768";
+$content_fps = 25;
 $content_bw = 800;
 
 // Some basic settings
@@ -41,9 +46,9 @@ date_default_timezone_set("Europe/Budapest");
 set_time_limit(0);
 clearstatcache();
 
-$ffmpeg_path = "D:/ffmpeg-20120927/bin/ffmpeg.exe ";
+$ffmpeg_path = "E:/VSQ/ffmpeg-20120927/bin/ffmpeg.exe ";
+$mediainfo_path = "E:/VSQ/mediainfo-0.7.61/MediaInfo.exe";
 $handbrake_path = "\"C:/Program Files/HandBrake/HandBrakeCLI.exe\" ";
-
 
 // Welcome
 echo "Videosquare archive creator v0 - STARTING...\n";
@@ -406,22 +411,16 @@ foreach($media_cuts as $key => $value) {
 
 		$target_filename = $cut_path . "/" . $key . "_" . $suffix . "." . $media_type;
 		$cut_duration = $media_cuts[$key]['cut_media_endsec'] - $media_cuts[$key]['cut_media_startsec'];
-//	$command_cut = "ffmpeg -y -v 0 -i " . $media_filename . " -ss " . secs2hms($media_cuts[$key]['cut_media_startsec']) . ".0 -t " . $cut_duration . " ";
-// slow/fast
 		if ( $reencode ) {
-			$command_cut = $ffmpeg_path . "-y -v 0 -strict experimental -i " . $media_filename . " -ss " . secs2hms($media_cuts[$key]['cut_media_startsec']) . ".0 -t " . $cut_duration . " -async 10 -c:a copy -c:v libx264 -profile:v main -preset:v slow -s 1280x720 -r 25 -b:v " . $media_bw . "k -threads 0 -f mp4 " . $target_filename;
+			// slow!
+			$command_cut = $ffmpeg_path . "-y -v 0 -strict experimental -i " . $media_filename . " -ss " . secs2hms($media_cuts[$key]['cut_media_startsec']) . ".0 -t " . $cut_duration . " -async 10 -c:a copy -c:v libx264 -profile:v main -preset:v slow -s " . $media_res . " -r " . $media_fps . " -b:v " . $media_bw . "k -threads 0 -f mp4 " . $target_filename;
 			//		$command_cut = $handbrake_path . "-v 0 --no-dvdnav --optimize -i " . $media_filename . " -o " . $target_filename . " --vb 2000 --start-at duration:" . $media_cuts[$key]['cut_media_startsec'] . " --stop-at duration:" . $cut_duration . " -f mp4";
 		} else {
 			$command_cut = $ffmpeg_path . "-y -v 0 -i " . $media_filename . " -ss " . secs2hms($media_cuts[$key]['cut_media_startsec']) . ".0 -t " . $cut_duration . " -acodec copy -vcodec copy -async 10 -f mp4 " . $target_filename;
 		}
-		/*	if ( $media_type == "mp4" ) {
-		$command = $command_cut . "-acodec copy -vcodec copy -async 25 -f mp4 " . $target_filename;
-	} else {
-		$command = $command_cut . "-acodec copy -vcodec copy -async 25 -f flv " . $temp_filename;
-	} */
 
-	echo $command_cut . "\n";
-	echo "Cut: " . secs2hms($media_cuts[$key]['cut_media_startsec']) . " - " . secs2hms($media_cuts[$key]['cut_media_endsec']) . "\n";
+		echo $command_cut . "\n";
+		echo "Cut: " . secs2hms($media_cuts[$key]['cut_media_startsec']) . " - " . secs2hms($media_cuts[$key]['cut_media_endsec']) . "\n";
 
 		if ( !$ischeckonly ) {
 
@@ -430,7 +429,6 @@ foreach($media_cuts as $key => $value) {
 			$duration = time() - $time_start;
 			$mins_taken = round( $duration / 60, 2);
 			$output_string = implode("\n", $output);
-	//echo "res = " . $result. "\n";
 			if ( $result != 0 ) {
 				echo "ERROR: conversion returned an error (" . $result . ")\n";
 				echo "OUTPUT:\n" . $output_string . "\n";
@@ -439,7 +437,7 @@ foreach($media_cuts as $key => $value) {
 
 			echo "Successful media cut in " . $mins_taken . " mins.\n";
 
-			if ( $media_type == "f4v" ) {
+/*			if ( $media_type == "f4v" ) {
 				// Yamdi: index f4v file
 				echo "Indexing " . $temp_filename . " to " . $target_filename . "\n";
 				$command = "yamdi -i " . $temp_filename . " -o " . $target_filename;
@@ -453,6 +451,7 @@ foreach($media_cuts as $key => $value) {
 					exit -1;
 				}
 			}
+*/
 
 			// Remove temp file
 			if ( file_exists($temp_filename) ) {
@@ -462,31 +461,21 @@ foreach($media_cuts as $key => $value) {
 		}
 	}
 		
-// Media:   h264 (Main), yuv420p, 1280x720 [SAR 1:1 DAR 16:9], 1993 kb/s, 24.92 fps, 25 tbr, 2500 tbn, 50 tbc
-// Content: h264 (Main), yuv420p, 1280x720 [SAR 1:1 DAR 16:9], 794 kb/s, 29.83 fps, 30 tbr, 3k tbn, 60 tbc
-
 	// Cut content
 	if ( $media_cuts[$key]['iscontent'] and ( $rendercontent == TRUE ) ) {
 	
-	// Cutting content segment
+		// Cutting content segment
 		$target_filename = $cut_path . "/" . $key . "_" . $suffix . "_content." . $content_type;
 		$cut_duration = $media_cuts[$key]['cut_content_endsec'] - $media_cuts[$key]['cut_content_startsec'];
-//		$command_cut = "ffmpeg -y -v 0 -i " . $content_filename . " -ss " . secs2hms($media_cuts[$key]['cut_content_startsec']) . ".0 -t " . $cut_duration . " ";
 		if ( $reencode ) {
-			$command_cut = $ffmpeg_path . "-y -v 0 -strict experimental -i " . $content_filename . " -ss " . secs2hms($media_cuts[$key]['cut_content_startsec']) . ".0 -t " . $cut_duration . " -async 10 -an -c:v libx264 -profile:v main -preset:v fast -s 1280x720 -r 30 -b:v " . $content_bw . "k -threads 0 -f mp4 " . $target_filename;
+			$command_cut = $ffmpeg_path . "-y -v 0 -strict experimental -i " . $content_filename . " -ss " . secs2hms($media_cuts[$key]['cut_content_startsec']) . ".0 -t " . $cut_duration . " -async 10 -an -c:v libx264 -profile:v main -preset:v fast -s " . $content_res . " -r " . $content_fps . " -b:v " . $content_bw . "k -threads 0 -f mp4 " . $target_filename;
 			//$command_cut = "HandBrakeCLI -v 0 --no-dvdnav --optimize -i " . $content_filename . " -o " . $target_filename . " --vb 800 --start-at duration:" . $media_cuts[$key]['cut_content_startsec'] . " --stop-at duration:" . $cut_duration . " -f mp4";
 		} else {
 			$command_cut = $ffmpeg_path . "-y -v 0 -i " . $content_filename . " -ss " . secs2hms($media_cuts[$key]['cut_content_startsec']) . ".0 -t " . $cut_duration . " -acodec copy -vcodec copy -async 10 -f mp4 " . $target_filename;
 		}
 
-/*		if ( $content_type == "mp4" ) {
-			$command = $command_cut . "-acodec copy -vcodec copy -async 25 -f mp4 " . $target_filename;
-		} else {
-			$command = $command_cut . "-acodec copy -vcodec copy -async 25 -f flv " . $temp_filename;
-		} */
-
-	echo $command_cut . "\n";
-	echo "Cut: " . secs2hms($media_cuts[$key]['cut_content_startsec']) . " - " . secs2hms($media_cuts[$key]['cut_content_endsec']) . "\n";
+		echo $command_cut . "\n";
+		echo "Cut: " . secs2hms($media_cuts[$key]['cut_content_startsec']) . " - " . secs2hms($media_cuts[$key]['cut_content_endsec']) . "\n";
 
 		if ( !$ischeckonly ) {
 
@@ -495,7 +484,6 @@ foreach($media_cuts as $key => $value) {
 			$duration = time() - $time_start;
 			$mins_taken = round( $duration / 60, 2);
 			$output_string = implode("\n", $output);
-echo "res = " . $result. "\n";
 			if ( $result != 0 ) {
 				echo "ERROR: conversion returned an error (" . $result . ")\n";
 				echo "OUTPUT:\n" . $output_string . "\n";
@@ -504,7 +492,7 @@ echo "res = " . $result. "\n";
 			
 			echo "Successful content cut in " . $mins_taken . " mins.\n";
 
-			if ( $content_type == "f4v" ) {
+/*			if ( $content_type == "f4v" ) {
 				// Yamdi: index f4v file
 				echo "Indexing " . $temp_filename . " to " . $target_filename . "\n";
 				$command = "yamdi -i " . $temp_filename . " -o " . $target_filename;
@@ -519,7 +507,7 @@ echo "res = " . $result. "\n";
 					exit -1;
 				}
 			}
-
+*/
 			// Remove temp file
 			if ( file_exists($temp_filename) ) {
 			  unlink($temp_filename);

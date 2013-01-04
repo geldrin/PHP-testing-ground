@@ -5,14 +5,8 @@ include_once( 'httpapi.php');
 
 $ischeckonly = FALSE;
 
-// Set manually
-// Ringier: 1
-// Richter: 1
-// Simple: 0
-// Metropol: nincs slide
+$channel = 29;
 $slideonright = 1;
-
-$channel = 28;
 
 /*
 4,Reklámfeszt 2012
