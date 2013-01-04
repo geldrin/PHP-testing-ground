@@ -99,21 +99,18 @@ class Advanced extends \Visitor\Paging {
     ;
     
     $form->messageprefix = '';
+    $form->submit        = $l('search', 'submit');
+    
     $form->layouts['tabular']['container']  =
-      "<table cellpadding=\"0\" cellspacing=\"0\" class=\"formtable\">\n%s\n</table>\n"
+      "<table cellpadding=\"0\" cellspacing=\"0\" class=\"searchtable\">\n%s\n</table>\n"
     ;
     
     $form->layouts['tabular']['element'] =
-      '<tr %errorstyle%>' .
-        '<td class="labelcolumn">' .
-          '<label for="%id%">%displayname%</label>' .
-        '</td>' .
-        '<td class="elementcolumn">%prefix%%element%%postfix%%errordiv%</td>' .
-      '</tr>'
+      '<div class="element">%prefix%%element%%postfix%%errordiv%</div>'
     ;
     
     $form->layouts['tabular']['buttonrow'] =
-      '<tr class="buttonrow"><td colspan="2">%s</td></tr>'
+      '<tr class="buttonrow"><td colspan="3">%s</td></tr>'
     ;
     
     $form->layouts['tabular']['button'] =

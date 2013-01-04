@@ -2373,3 +2373,43 @@ a#currentusername span {
 .liveiframe #player {
   display: inline-block;
 }
+
+.searchtable {
+}
+.searchtable td {
+  vertical-align: top;
+}
+.searchtable td.middle {
+  text-align: center;
+  width: 320px;
+}
+.searchtable tr.buttonrow td {
+  text-align: center;
+}
+.searchtable .buttonrow .submitbutton {
+  width: 120px;
+}
+.searchtable select.inputbackground {
+  padding-right: 0px;
+  width: 283px;
+}
+.searchtable .wholewordcontainer {
+  font-size: 11px;
+  border-bottom: 1px solid #a0a0a0;
+  border-left: 1px solid #a0a0a0;
+  border-right: 1px solid #a0a0a0;
+  border-bottom-left-radius: 4px;
+  border-bottom-right-radius: 4px;
+  padding: 0 4px 0 4px;
+  width: 221px;
+  background-color: #e0e0e0;
+  color: #808080;
+  margin: 0px auto 10px auto;
+}
+.searchtable .margin {
+  margin: 0 0 2px 0;
+  height: 27px;
+}
+.form .searchtable .inputbackground {
+  box-shadow: none;
+}
