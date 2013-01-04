@@ -78,14 +78,37 @@ function setupCurrentUser( elem ) {
     e.preventDefault();
     e.stopImmediatePropagation();
     
-    $j('#currentuser').toggleClass('active');
+    if ( $j('#currentuser').hasClass('active') ) {
+      
+      var menuevent = $j.Event('menuclose.dam');
+      $j('#currentusername').trigger( menuevent );
+      
+      if ( !menuevent.isDefaultPrevented() )
+        $j('#currentuser').removeClass('active');
+      
+    } else {
+      
+      var menuevent = $j.Event('menuopen.dam');
+      $j('#currentusername').trigger( menuevent );
+      
+      if ( !menuevent.isDefaultPrevented() )
+        $j('#currentuser').addClass('active');
+      
+    }
     
   });
   
   $j('body').click( function(e) {
     
-    if ( $j('#currentuser').find( e.target ).length == 0 )
-      $j('#currentuser').removeClass('active');
+    if ( $j('#currentuser').find( e.target ).length == 0 ) {
+      
+      var menuevent = $j.Event('menuclose.dam');
+      $j('#currentusername').trigger( menuevent );
+      
+      if ( !menuevent.isDefaultPrevented() )
+        $j('#currentuser').removeClass('active');
+      
+    }
     
   });
   
@@ -397,12 +420,49 @@ function setupPlayer() {
   if ( $j('#pagebg').length == 0 )
     return; // embedded
   
-  var playerbgheight =
-    ( $j('#player').offset().top - $j('#pagebg').offset().top ) +
-    $j('#player').height() + 10
-  ;
+  var adjustPageBGHeight = function() {
+    
+    var playerbgheight =
+      ( $j('#player').offset().top - $j('#pagebg').offset().top ) +
+      $j('#player').outerHeight(true) + 10
+    ;
+    
+    $j('#pagebg').css('height', playerbgheight + 'px');
+    
+  };
   
-  $j('#pagebg').css('height', playerbgheight + 'px');
+  adjustPageBGHeight();
+  
+  $j('#currentusername').bind('menuopen.dam menuclose.dam', function(e) {
+    
+    var animationduration = 200;
+    var menu              = $j('#currentusermenu');
+    
+    if ( e.type == 'menuopen' ) {
+      
+      var playertop  = $j('.title.recording').offset().top;
+      var menubottom = menu.offset().top + menu.outerHeight(true);
+      var margintop  = menubottom - playertop + $j('.title.recording').outerHeight(true) + 10;
+      
+      menu.css('opacity', 0);
+      menu.animate({ opacity: 1 }, animationduration );
+      $j('.title.recording').animate({ marginTop: '+' + margintop }, animationduration, adjustPageBGHeight);
+      
+    } else {
+      
+      e.preventDefault();
+      menu.animate({ opacity: 0 }, animationduration );
+      $j('.title.recording').animate({ marginTop: '0' }, animationduration, function() {
+        
+        adjustPageBGHeight();
+        $j('#currentuser').removeClass('active');
+        
+      });
+      
+    }
+    
+    
+  });
   
 }
 

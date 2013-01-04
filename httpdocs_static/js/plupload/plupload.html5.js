@@ -200,7 +200,7 @@
 				// Safari on Windows has problems when selecting multiple files
 				multi_selection: !(plupload.ua.safari && plupload.ua.windows),
 				// WebKit and Gecko 2+ can trigger file dialog progrmmatically
-				triggerDialog: (window.FormData || plupload.ua.webkit) 
+				triggerDialog: !!(window.FormData || plupload.ua.webkit) 
 			};
 		},
 
