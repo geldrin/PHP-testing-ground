@@ -80,7 +80,7 @@
     bgcolor: "#050505",
     allowscriptaccess: "sameDomain",
     allowfullscreen: "true",
-    wmode: 'opaque'
+    wmode: 'direct'
   {rdelim};
 
   document.write('<div id="{$containerid}"></div>');
