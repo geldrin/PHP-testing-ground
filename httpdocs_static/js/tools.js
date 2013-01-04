@@ -1104,7 +1104,7 @@ var flashdefaults = {
     bgcolor: "#050505",
     allowscriptaccess: "sameDomain",
     allowfullscreen: "true",
-    wmode: 'opaque'
+    wmode: 'direct'
   }
 }
 
