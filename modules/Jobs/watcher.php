@@ -98,18 +98,26 @@ if ( $jobs_isstopped ) {
 	}
 }
 
-// Is ffmpeg running?
-$conversion_running = FALSE;
-// ffmpeg: check if running
+//// Is any conversion running?
+$isrunning_mediaconv = FALSE;
+$isrunning_contentconv = FALSE;
+// Media conversion/ffmpeg: check if running
 $output = array();
-$cmd = 'ps uax | grep "ffmpeg" | grep -v "grep" | wc -l 2>&1';
+$check_string = $jconf['media_dir'];
+$cmd = 'ps uax | grep "ffmpeg.*' . $check_string . '" | grep -v "grep" | wc -l 2>&1';
 exec($cmd, $output, $result);
-if ( $output[0] > 0 ) $conversion_running = TRUE;
-// vlc: check if running
+if ( $output[0] > 0 ) $isrunning_mediaconv = TRUE;
+// Content conversion/ffmpeg
+$output = array();
+$check_string = $jconf['content_dir'];
+$cmd = 'ps uax | grep "ffmpeg.*' . $check_string . '" | grep -v "grep" | wc -l 2>&1';
+exec($cmd, $output, $result);
+if ( $output[0] > 0 ) $isrunning_contentconv = TRUE;
+// Content conversion/VLC: check if running
 $output = array();
 $cmd = 'ps uax | grep "cvlc" | grep -v "grep" | wc -l 2>&1';
 exec($cmd, $output, $result);
-if ( $output[0] > 0 ) $conversion_running = TRUE;
+if ( $output[0] > 0 ) $isrunning_contentconv = TRUE;
 
 foreach ( $jobs as $job => $difference ) {
 
@@ -165,11 +173,16 @@ foreach ( $jobs as $job => $difference ) {
 		case '1':
 			// Running: check watchdog time difference (if larger and ffmpeg is not running...)
 			$time = @filemtime( $app->config['datapath'] . 'watchdog/' . $job . '.php.watchdog' );
-			if ( ( ( time() - $time ) >= $difference ) && ( $conversion_running === FALSE ) ) {
+
+			$isrunning = FALSE;
+			if ( stripos($job, "media") !== FALSE ) $isrunning = $isrunning_mediaconv;
+			if ( stripos($job, "content") !== FALSE ) $isrunning = $isrunning_contentconv;
+			if ( ( ( time() - $time ) >= $difference ) && ( $isrunning === FALSE ) ) {
 				$msg  = "Job " . $job . ".php is stalled.\n\nDetailed information:\n\n";
 				$msg .= $body . "\n\n";
 				$debug->log($jconf['log_dir'], $jconf['jobid_watcher'] . ".log", $msg, $sendmail = true);
 			}
+
 			break;
 		default:
 			// Running in more than 1 instances: undefined (send alert)
