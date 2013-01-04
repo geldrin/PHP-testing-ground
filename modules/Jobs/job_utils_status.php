@@ -416,6 +416,28 @@ global $jconf, $db;
 	return TRUE;
 }
 
+function update_db_attachment_indexingstatus($id, $status) {
+global $jconf, $db;
+
+	$query = "
+		UPDATE
+			attached_documents
+		SET
+			indexingstatus = '" . $status . "'
+		WHERE
+			id = " . $id;
+
+	try {
+		$rs = $db->Execute($query);
+	} catch (exception $err) {
+		log_document_conversion($id, 0, $jconf['jobid_document_index'], "-", "[ERROR] Cannot update document indexing status. SQL query failed.", trim($query), $err, 0, TRUE);
+		return FALSE;
+	}
+
+	return TRUE;
+}
+
+
 function update_db_avatar_status($userid, $status) {
 global $jconf, $db;
 
@@ -437,5 +459,40 @@ global $jconf, $db;
 	return TRUE;
 }
 
+// *************************************************************************
+// *			function update_db_attachment_documentcache()	   	   	   *
+// *************************************************************************
+// Description: update document cache
+// INPUTS:
+//	- AdoDB DB link in $db global variable
+//	- $attachment_id: attachment ID
+//	- $rec_id: recording element ID
+//	- $status: status (see defines)
+// OUTPUTS:
+//	- Boolean:
+//	  o FALSE: failed (error cause logged in DB and local files)
+//	  o TRUE: OK
+function update_db_attachment_documentcache($attachment_id, $documentcache) {
+ global $db;
+
+  $documentcache_escaped = $db->qstr($documentcache);
+
+  $query = "
+    UPDATE
+		attached_documents
+    SET
+		documentcache = " . $documentcache_escaped . "
+    WHERE
+		id = " . $attachment_id;
+
+  try {
+    $rs = $db->Execute($query);
+  } catch (exception $err) {
+    log_document_conversion($recording_id, $attachment_id, "-", "-", "[ERROR] Cannot update attachment document cache. SQL query failed.", trim($query), $err, 0, TRUE);
+    return FALSE;
+  }
+
+  return TRUE;
+}
 
 ?>

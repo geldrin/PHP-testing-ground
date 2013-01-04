@@ -16,6 +16,21 @@ function GCD($a, $b) {
 
 	return abs($a);
 }
+// *************************************************************************
+// *				function soffice_isrunning()			   			   *
+// *************************************************************************
+function soffice_isrunning() {
+ global $jconf;
+
+  $command = "ps uax | grep \"^" . $jconf['ssh_user'] . "\" | grep \"soffice.bin\" | grep -v \"grep\"";
+  exec($command, $output, $result);
+  if ( isset($output[0]) ) {
+	return TRUE;
+  }
+
+  return FALSE;
+}
+
 
 // *************************************************************************
 // *						function iswindows()			   			   *

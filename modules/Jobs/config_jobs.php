@@ -21,6 +21,7 @@ return array('config_jobs' => array(
 	'temp_dir'						=> $this->config['datapath'] . 'temp/',				// Temporary dir for jobs
 	'media_dir'						=> $this->config['datapath'] . 'temp/media/',		// Temporary dir for media conversion
 	'content_dir'					=> $this->config['datapath'] . 'temp/content/',		// Temporary dir for content conversion
+	'doc_dir'						=> $this->config['datapath'] . 'temp/doc/',			// Temporary dir for document conversion
 	'vcr_dir'						=> $this->config['datapath'] . 'temp/vcr/',			// Temporary dir for VCR download/upload
 	'job_dir'						=> $this->config['modulepath'] . 'Jobs/',
 	'log_dir'						=> $this->config['logpath'] . 'jobs/',
@@ -37,6 +38,7 @@ return array('config_jobs' => array(
 	// Job identifiers
 	'jobid_media_convert'			=> 'job_media_convert',
 	'jobid_content_convert'			=> 'job_content_convert',
+	'jobid_document_index'			=> 'job_document_index',
 	'jobid_vcr_control'				=> 'job_vcr_control',
 	'jobid_maintenance'				=> 'job_maintenance',
 	'jobid_upload_finalize'			=> 'job_upload_finalize',
@@ -83,6 +85,11 @@ return array('config_jobs' => array(
 	'dbstatus_vcr_discing_err'		=> 'faileddisconnecting',
 	'dbstatus_vcr_upload_err'		=> 'faileduploading',
 	'dbstatus_vcr_recording_err'	=> 'failedrecording',
+	// Document indexing related
+	'dbstatus_indexing'				=> 'indexing',
+	'dbstatus_indexing_err'			=> 'failedindexing',
+	'dbstatus_indexing_empty'		=> 'empty',
+	'dbstatus_indexing_ok'			=> 'completed',
 
 	// VCR options
 	'vcr_server'					=> 'tcs.streamnet.hu',

@@ -527,6 +527,7 @@ CREATE TABLE `attached_documents` (
    `masterfilename` text not null,
    `masterextension` text,
    `status` text not null,
+   `indexingstatus` text,
    `sourceip` text not null,
    `isdownloadable` int(10) unsigned not null default '0',
    PRIMARY KEY (`id`),

@@ -62,6 +62,7 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_media_convert.stop' ) and 
 			$converter_sleep_length = 15 * 60;
 			break;
 		}
+		$db_close = TRUE;
 
 		// Temporary directory cleanup and log result
 		$err = tempdir_cleanup($jconf['media_dir']);

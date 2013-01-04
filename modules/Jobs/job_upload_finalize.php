@@ -56,6 +56,7 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_upload_finalize.stop' ) an
 			$sleep_length = 15 * 60;
 			break;
 		}
+		$db_close = TRUE;
 
 		// Initialize log for closing message and total duration timer
 		$global_log = "Moving document(s) to storage:\n\n";
