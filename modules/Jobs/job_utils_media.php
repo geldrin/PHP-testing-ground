@@ -403,6 +403,7 @@ global $app, $jconf, $global_log;
 	if ( !empty($recording[$c_idx . 'mastervideodar'] ) ) {
 		// Display Aspect Ratio: M:N
 		$tmp = explode(":", $recording[$c_idx . 'mastervideodar'], 2);
+		if ( count($tmp) == 1 ) $tmp[1] = 1;
 		if ( !empty($tmp[0]) and !empty($tmp[1]) ) {
 			$DAR_M = $tmp[0];
 			$DAR_N = $tmp[1];

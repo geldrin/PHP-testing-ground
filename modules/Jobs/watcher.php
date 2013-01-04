@@ -49,7 +49,7 @@ if ( $app->config['node_role'] == 'converter' ) {
 	// Converter node jobs
 	$jobs = array(
 		$jconf['jobid_media_convert']	=> 15*60,	// 15 minutes (if no update or ffmpeg is not running)
-		$jconf['jobid_content_convert']	=> 60*60,	// 15 minutes (if no update or ffmpeg is not running)
+		$jconf['jobid_content_convert']	=> 60*60,	// 15 minutes (if no update or ffmpeg or vlc is not running)
 		$jconf['jobid_vcr_control']		=> 15*60
 	);
 } else {
@@ -99,12 +99,16 @@ if ( $jobs_isstopped ) {
 }
 
 // Is ffmpeg running?
-$ffmpeg_running = FALSE;
+$conversion_running = FALSE;
 $output = array();
+// ffmpeg: check if running
 $cmd = 'ps uax | grep "ffmpeg" | grep -v "grep" | wc -l 2>&1';
 exec($cmd, $output, $result);
-
-if ( $output[0] > 0 ) $ffmpeg_running = TRUE;
+if ( $output[0] > 0 ) $conversion_running = TRUE;
+// vlc: check if running
+$cmd = 'ps uax | grep "cvlc" | grep -v "grep" | wc -l 2>&1';
+exec($cmd, $output, $result);
+if ( $output[0] > 0 ) $conversion_running = TRUE;
 
 foreach ( $jobs as $job => $difference ) {
 
@@ -160,7 +164,7 @@ foreach ( $jobs as $job => $difference ) {
 		case '1':
 			// Running: check watchdog time difference (if larger and ffmpeg is not running...)
 			$time = @filemtime( $app->config['datapath'] . 'watchdog/' . $job . '.php.watchdog' );
-			if ( ( ( time() - $time ) >= $difference ) && ( $ffmpeg_running === FALSE ) ) {
+			if ( ( ( time() - $time ) >= $difference ) && ( $conversion_running === FALSE ) ) {
 				$msg  = "Job " . $job . ".php is stalled.\n\nDetailed information:\n\n";
 				$msg .= $body . "\n\n";
 				$debug->log($jconf['log_dir'], $jconf['jobid_watcher'] . ".log", $msg, $sendmail = true);
