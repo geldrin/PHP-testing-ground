@@ -15,7 +15,7 @@ date_default_timezone_set("Europe/Budapest");
 echo "Wowza log analizer v0.1 - STARTING...\n";
 
 // User settings
-$live_channelid = 29;
+$live_channelid = 2;
 
 // **********************************
 
@@ -287,7 +287,10 @@ if ( ( trim($tmp[16]) == "89.133.214.122" ) ) {
 								$viewers[$cip]['streams'] = array();
 								$viewers[$cip]['streams'][$keycode]['locationid'] = $locationid;
 								$viewers[$cip]['streams'][$keycode]['streamid'] = $streamid;
-								if ( $x_event == "destroy" ) $viewers[$cip]['streams'][$keycode]['duration'] = $duration;
+								$viewers[$cip]['streams'][$keycode]['duration'] = 0;
+								if ( $x_event == "destroy" ) {
+									$viewers[$cip]['streams'][$keycode]['duration'] = $duration;
+								}
 
 							} else {
 								$viewers[$cip]['connections']++;
@@ -332,7 +335,7 @@ if ( ( trim($tmp[16]) == "89.133.214.122" ) ) {
 	fclose($fh);
 }
 
-var_dump($viewers);
+//var_dump($viewers);
 
 $msg  = "# Videosquare live statistics report\n\n";
 $msg .= "# Log analization started: " . date("Y-m-d H:i:s") . "\n";
@@ -347,7 +350,7 @@ $msg .= "# Start date: " . $event_info['starttimestamp'] . "\n";
 $msg .= "# End date: " . $event_info['endtimestamp'] . "\n";
 $msg .= "# Customer: " . $event_info['name'] . " - " . $event_info['url'] . "\n";
 $msg .= "# Domain: " . $event_info['domain'] . "\n#\n";
-$msg .= "# Locations:\n";
+$msg .= "# Locations (location / stream name):\n";
 
 $tmp = "userID,username,IP address,hostname,Connections";
 
@@ -356,8 +359,10 @@ $columns_num = 0;
 $column_guide = array();
 foreach ($location_info as $loc_id => $streams ) {
 	foreach ($streams as $str_id => $stream ) {
-		$tmp .= "," . $location_info[$loc_id][$str_id]['locationname'] . "/" . $location_info[$loc_id][$str_id]['streamname'];
-		$msg .= "#\t" . $location_info[$loc_id][$str_id]['locationname'] . "/" . $location_info[$loc_id][$str_id]['streamname'] . ": " . $location_info[$loc_id][$str_id]['keycode'] . "/" . $location_info[$loc_id][$str_id]['contentkeycode'] . "\n";
+		$tmp .= "," . $location_info[$loc_id][$str_id]['locationname'] . " / " . $location_info[$loc_id][$str_id]['streamname'];
+		$tmp_content = "";
+		if ( !empty($location_info[$loc_id][$str_id]['contentkeycode']) ) $tmp_content = " / " . $location_info[$loc_id][$str_id]['contentkeycode'];
+		$msg .= "#\t" . $location_info[$loc_id][$str_id]['locationname'] . " / " . $location_info[$loc_id][$str_id]['streamname'] . ": " . $location_info[$loc_id][$str_id]['keycode'] . $tmp_content . "\n";
 		$column_guide[$loc_id][$str_id] = $columns_num;
 		$columns_num++;
 	}
@@ -405,7 +410,7 @@ foreach($viewers as $cip => $client) {
 
 	$tmp .= "," . secs2hms($duration_full) . "\n";
 
-	echo $tmp;
+//	echo $tmp;
 
 	$msg .= $tmp;
 
@@ -413,6 +418,8 @@ foreach($viewers as $cip => $client) {
 }
 
 $msg .= "\nViewers from unique IP: " . $number_of_viewers . "\n";
+
+echo $msg . "\n";
 
 // Open log file
 $result_file = "log_anal_results.txt";
@@ -425,9 +432,7 @@ if ( fwrite($fh, $msg) === FALSE ) {
 
 fclose($fh);
 
-echo "Viewers from unique IP: " . $number_of_viewers . "\n";
-
-//print_r($viewers);
+echo "\nLog written to: " . $result_file . "\n";
 
 exit;
 
