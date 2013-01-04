@@ -6,10 +6,13 @@
         <a href="{$language}/users/logout">{#usermenu_users_logout#}</a>
       </div>
     {/if}
-    {if $member.isnewseditor or $member.isclientadmin or $member.isuploader or ( $organization.islivestreamingenabled and $member.isliveadmin )}
-      {assign var=columncount value=3}
-    {else}
-      {assign var=columncount value=2}
+    {assign var=columncount value=2}
+    {if $member.isnewseditor or $member.isclientadmin}
+      {assign var=columncount value=$columncount+1}
+    {/if}
+    
+    {if $member.isuploader or ( $organization.islivestreamingenabled and $member.isliveadmin )}
+      {assign var=columncount value=$columncount+1}
     {/if}
     
     <div id="currentuser">
@@ -33,28 +36,27 @@
                 </ul>
                 <div class="hr"></div>
               {/if}
-              
-              {if $member.isuploader}
-                <div class="title">{#usermenu_recordings_title#}</div>
-                <ul>
-                  <li><a href="{$language}/recordings/myrecordings">{#usermenu_recordings_myrecordings#}</a></li>
-                  <li><a href="{$language}/recordings/upload">{#usermenu_recordings_upload#}</a></li>
-                </ul>
-                <div class="hr"></div>
-              {/if}
-              
-              {if $organization.islivestreamingenabled and $member.isliveadmin}
-                <div class="title">{#usermenu_live_title#}</div>
-                <ul>
-                  <li><a href="{$language}/live">{#usermenu_live_list#}</a></li>
-                  <li><a href="{$language}/live/create">{#usermenu_live_create#}</a></li>
-                </ul>
-              {/if}
-              
             </div>
           {/if}
           
-          <div class="column{if $columncount == 2} first{/if}">
+          <div class="column{if $columncount != 4} first{/if}">
+            {if $member.isclientadmin}
+              <div class="title">{#usermenu_classification_title#}</div>
+              <ul>
+                <li><a href="{$language}/genres/admin">{#usermenu_genres_admin#}</a></li>
+                <li><a href="{$language}/categories/admin">{#usermenu_categories_admin#}</a></li>
+                <li><a href="{$language}/departments/admin">{#usermenu_departments_admin#}</a></li>
+              </ul>
+              <div class="hr"></div>
+            {/if}
+            <div class="title">{#usermenu_channels_title#}</div>
+            <ul>
+              <li><a href="{$language}/channels/mychannels">{#usermenu_channels_mychannels#}</a></li>
+              {if $member.isuploader}<li><a href="{$language}/channels/create">{#usermenu_channels_create#}</a></li>{/if}
+            </ul>
+          </div>
+          
+          <div class="column">
             {*}
             <div class="title">{#usermenu_events_title#}</div>
             <ul>
@@ -62,20 +64,29 @@
               <li><a href="{$language}/events/create">{#usermenu_events_create#}</a></li>
             </ul>
             <div class="hr"></div>
-            {/*}
-            <div class="title">{#usermenu_channels_title#}</div>
-            <ul>
-              <li><a href="{$language}/channels/mychannels">{#usermenu_channels_mychannels#}</a></li>
-              {if $member.isuploader}<li><a href="{$language}/channels/create">{#usermenu_channels_create#}</a></li>{/if}
-            </ul>
-            <div class="hr"></div>
-            {*}
             <div class="title">{#usermenu_groups_title#}</div>
             <ul>
               <li><a href="{$language}/groups/mygroups">{#usermenu_groups_mygroups#}</a></li>
               <li><a href="{$language}/groups/create">{#usermenu_groups_create#}</a></li>
             </ul>
             {/*}
+            
+            {if $member.isuploader}
+              <div class="title">{#usermenu_recordings_title#}</div>
+              <ul>
+                <li><a href="{$language}/recordings/myrecordings">{#usermenu_recordings_myrecordings#}</a></li>
+                <li><a href="{$language}/recordings/upload">{#usermenu_recordings_upload#}</a></li>
+              </ul>
+              <div class="hr"></div>
+            {/if}
+            
+            {if $organization.islivestreamingenabled and $member.isliveadmin}
+              <div class="title">{#usermenu_live_title#}</div>
+              <ul>
+                <li><a href="{$language}/live">{#usermenu_live_list#}</a></li>
+                <li><a href="{$language}/live/create">{#usermenu_live_create#}</a></li>
+              </ul>
+            {/if}
           </div>
           
           <div class="column last">
@@ -84,24 +95,6 @@
             <ul>
               <li><a href="{$language}/users/welcome">{#usermenu_users_welcome#}</a></li>
               <li><a href="{$language}/users/modify">{#usermenu_users_modify#}</a></li>
-            </ul>
-            {if $member.isclientadmin}
-              <div class="hr"></div>
-              <ul>
-                <li><a href="{$language}/genres/admin">{#usermenu_genres_admin#}</a></li>
-              </ul>
-              <div class="hr"></div>
-              <ul>
-                <li><a href="{$language}/categories/admin">{#usermenu_categories_admin#}</a></li>
-              </ul>
-              <div class="hr"></div>
-              <ul>
-                <li><a href="{$language}/departments/admin">{#usermenu_departments_admin#}</a></li>
-              </ul>
-              <div class="hr"></div>
-            {/if}
-            <div class="hr"></div>
-            <ul>
               <li><a href="{$language}/users/logout">{#usermenu_users_logout#}</a></li>
             </ul>
           </div>

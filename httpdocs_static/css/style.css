@@ -692,10 +692,11 @@ a#currentusername span {
   -webkit-border-radius: 5px;
   border-radius: 5px;
   z-index: 499;
+  padding: 0 0 10px 0;
 }
 #currentusermenu .column {
   float: left;
-  padding-top: 15px;
+  padding-top: 7px;
   width: 240px;
   height: 100%;
   vertical-align: top;
@@ -706,7 +707,6 @@ a#currentusername span {
   overflow: hidden;
 }
 #currentusermenu .column.last {
-  padding: 0;
   border: 0;
   box-shadow: none;
 }
@@ -717,7 +717,7 @@ a#currentusername span {
   -moz-box-shadow: 0px 1px 1px #585858;
   -webkit-box-shadow: 0px 1px 1px #585858;
   box-shadow: 0px 1px 1px #585858;
-  margin-bottom: 5px;
+  margin-bottom: 10px;
 }
 #currentusermenu .title {
   color: #999;
@@ -731,11 +731,11 @@ a#currentusername span {
   padding: 0;
   list-style-type: none;
 }
-#currentusermenu .title, #currentusermenu li {
+#currentusermenu .title {
   margin-bottom: 5px;
 }
 #currentusermenu li {
-  margin-left: 1px;
+  margin: 0 0 2px 1px;
 }
 #currentusermenu .column.first li {
   margin-left: 0px;
