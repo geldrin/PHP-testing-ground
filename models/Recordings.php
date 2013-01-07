@@ -15,6 +15,8 @@ class Recordings extends \Springboard\Model {
     ),
   );
   
+  protected $searchadvancedwhere;
+  
   public function resetStats() {
     
     $fields        = array();
@@ -2306,7 +2308,7 @@ class Recordings extends \Springboard\Model {
       
     } else {
       
-      $term = str_replace( ' ', '%', $values['q'] );
+      $term = str_replace( ' ', '%', $search['q'] );
       $term = 'LIKE ' . $this->db->qstr( '%' . $term . '%' );
       
     }
@@ -2357,8 +2359,7 @@ class Recordings extends \Springboard\Model {
               ) LIKE $contributorname
             ) AND
             (
-              cj.joboriginal LIKE $contributorjob OR
-              cj.jobenglish  LIKE $contributorjob
+              cj.job LIKE $contributorjob
             ) AND
             c.id = cj.contributorid AND
             c.organizationid = '$organizationid'
@@ -2415,7 +2416,7 @@ class Recordings extends \Springboard\Model {
         (
           " . self::getUnionSelect( $user, 'r.id', 'recordings AS r', $where['where'] ) . "
         ) AS subcount
-      ) AS count
+      )
     ";
     
     return $this->db->getOne( $query );
@@ -2424,6 +2425,7 @@ class Recordings extends \Springboard\Model {
   
   public function getSearchAdvancedArray( $user, $organizationid, $search, $start, $limit, $order ) {
     
+    $where  = $this->getSearchAdvancedWhere( $organizationid, $search );
     $select = "
       'recording' AS type,
       (

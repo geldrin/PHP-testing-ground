@@ -27,6 +27,7 @@ $j(document).ready(function() {
   runIfExists('.streambroadcastlink', setupBroadcastLink );
   runIfExists('#feeds .needpoll', setupStreamPoll );
   runIfExists('#currentuser', setupCurrentUser );
+  runIfExists('#search_advanced', setupSearch );
   
   $j('#scriptingcontainer').show();
   
@@ -63,6 +64,16 @@ function setupConfirm( elems ) {
     if ( !confirm( confirmquestion ) )
       e.preventDefault();
     
+  });
+  
+}
+
+function setupSearch() {
+  
+  $j('.datepicker').datepicker({
+    dateFormat: 'yy-mm-dd',
+    changeMonth: true,
+    changeYear: true
   });
   
 }

@@ -11,6 +11,7 @@
   {include file="Visitor/_opengraph.tpl"}
   <link rel="icon" type="image/png" href="{$STATIC_URI}images/favicon.png"/>
   {csscombine}
+  <link rel="StyleSheet" type="text/css" href="{$STATIC_URI}css/custom-theme/jquery-ui-1.9.2.custom.min.css" media="screen"/>
   <link rel="StyleSheet" type="text/css" href="{$STATIC_URI}css/style{$VERSION}.css" media="screen"/>
   {if $browser.mobile}
     <meta name="viewport" content="width=device-width, maximum-scale=1.0"/>
@@ -28,7 +29,8 @@
   <link rel="StyleSheet" type="text/css" href="{$STATIC_URI}css/style_ie6{$VERSION}.css" />
   <![endif]-->
   {jscombine}
-  <script type="text/javascript" src="{$STATIC_URI}js/jquery-1.7.1.min.js"></script>
+  <script type="text/javascript" src="{$STATIC_URI}js/jquery-1.8.3.min.js"></script>
+  <script type="text/javascript" src="{$STATIC_URI}js/jquery-ui-1.9.2.custom.min.js"></script>
   <script type="text/javascript" src="{$STATIC_URI}js/swfobject.full.js"></script>
   <script type="text/javascript" src="{$bootstrap->scheme}{$bootstrap->config.baseuri}{$language}/contents/language"></script>
   <script type="text/javascript" src="{$STATIC_URI}js/tools{$VERSION}.js"></script>
