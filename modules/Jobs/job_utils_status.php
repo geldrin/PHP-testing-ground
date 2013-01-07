@@ -473,7 +473,9 @@ global $jconf, $db;
 //	  o FALSE: failed (error cause logged in DB and local files)
 //	  o TRUE: OK
 function update_db_attachment_documentcache($attachment_id, $documentcache) {
- global $db;
+ global $db, $jconf;
+
+//$documentcache = substr($documentcache, 1, 100);
 
   $documentcache_escaped = $db->qstr($documentcache);
 
@@ -485,10 +487,12 @@ function update_db_attachment_documentcache($attachment_id, $documentcache) {
     WHERE
 		id = " . $attachment_id;
 
+echo $query . "\n";
+
   try {
     $rs = $db->Execute($query);
   } catch (exception $err) {
-    log_document_conversion($recording_id, $attachment_id, "-", "-", "[ERROR] Cannot update attachment document cache. SQL query failed.", trim($query), $err, 0, TRUE);
+    log_document_conversion($attachment_id, 0, $jconf['jobid_document_index'], "-", "[ERROR] Cannot update attachment document cache. SQL query failed.", trim(substr($query, 1, 255)), trim(substr($err, 1, 255)), 0, TRUE);
     return FALSE;
   }
 
