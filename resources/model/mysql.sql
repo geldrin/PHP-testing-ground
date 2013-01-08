@@ -528,7 +528,7 @@ CREATE TABLE `attached_documents` (
    `masterextension` text,
    `status` text not null,
    `indexingstatus` text,
-   `documentcache` mediumblob,
+   `documentcache` longtext,
    `sourceip` text not null,
    `isdownloadable` int(10) unsigned not null default '0',
    PRIMARY KEY (`id`),

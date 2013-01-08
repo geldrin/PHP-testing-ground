@@ -1,13 +1,12 @@
 <?php
 
-// Document index module for Videosquare
+// Document indexer job for Videosquare
 // Requirements:
-//	o Linux installation. Do not run on Windows.
+//	o Linux installation.
 //	o OpenOffice 3.0 or later installation:
 //	  - python-openoffice, python-uno, uno-libs3, unoconv packages
-//	  - Recommended to install all possible fonts.
 //	o OpenOffice listener running in background:
-//	  - soffice.bin -headless -accept=\"socket,host=127.0.0.1,port=8100;urp;\" -nofirststartwizard & > /dev/null 2>&1
+//	  - soffice.bin --headless --accept=\"socket,host=127.0.0.1,port=8100;urp;\" --nofirststartwizard & > /dev/null 2>&1
 //	o Others:
 //	  - ghostscript, poppler-utils (pdftotext)
 
@@ -44,7 +43,6 @@ if ( iswindows() ) {
 while( !is_file( $app->config['datapath'] . 'jobs/job_document_index.stop' ) and !is_file( $app->config['datapath'] . 'jobs/all.stop' ) ) {
 
 	clearstatcache();
-echo "outer\n";
     while ( 1 ) {
 
 		$app->watchdog();
@@ -59,7 +57,6 @@ echo "outer\n";
 			$converter_sleep_length = 60 * 60;
 			break;
 		}
-		$db_close = TRUE;
 
 		// Establish database connection
 		try {
@@ -84,16 +81,10 @@ echo "outer\n";
 // Testing!!!
 //update_db_attachment_indexingstatus(13, null);
 // !!!!!!!!!!
-echo "query\n";
 
 		// Query next job
 		$attached_doc = array();
 		if ( !query_nextjob($attached_doc) ) break;
-
-//		if ( $attached_doc === FALSE ) break;
-//		if ( !query_nextjob($recording, $uploader_user) ) break;
-
-echo "process\n";
 
 		// Get indexing start time
 		$total_duration = time();
@@ -277,15 +268,8 @@ echo "process\n";
 
 		log_document_conversion($attached_doc['id'], $attached_doc['rec_id'], $jconf['jobid_document_index'], "-", "[OK] Successful document indexation in " . $hms . " time.\n\n" . $global_log, "-", "-", $indexing_duration, TRUE);
 
-//var_dump($attached_doc);
-
-//echo $global_log . "\n";
-
-//exit;
-
 		break;
     }
-echo "break/sleep\n";
 
     if ( $db_close ) {
 		$db->close();
