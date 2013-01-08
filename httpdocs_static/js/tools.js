@@ -451,13 +451,16 @@ function setupPlayer() {
     
     if ( e.type == 'menuopen' ) {
       
-      var playertop  = $j('.title.recording').offset().top;
+      var playertop  = $j('#player').offset().top;
       var menubottom = menu.offset().top + menu.outerHeight(true);
-      var margintop  = menubottom - playertop + $j('.title.recording').outerHeight(true) + 10;
+      var margintop  = menubottom - playertop + 30; // a +20 a #header margin-bottomja amivel coalescelunk
+      
+      if ( margintop <= 20 )
+        margintop = 0;
       
       menu.css('opacity', 0);
       menu.animate({ opacity: 1 }, animationduration );
-      $j('.title.recording').animate({ marginTop: '+' + margintop }, animationduration, adjustPageBGHeight);
+      $j('.title.recording').animate({ marginTop: margintop }, animationduration, adjustPageBGHeight);
       
     } else {
       
