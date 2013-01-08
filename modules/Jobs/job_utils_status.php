@@ -462,20 +462,19 @@ global $jconf, $db;
 // *************************************************************************
 // *			function update_db_attachment_documentcache()	   	   	   *
 // *************************************************************************
-// Description: update document cache
+// Description: update attached document cache
+// GLOBAL INPUTS:
+//	- $db: AdoDB DB link
+//	- $jconf: job configuration array
 // INPUTS:
-//	- AdoDB DB link in $db global variable
 //	- $attachment_id: attachment ID
-//	- $rec_id: recording element ID
-//	- $status: status (see defines)
+//	- $documentcache: documentcache text (document content)
 // OUTPUTS:
 //	- Boolean:
 //	  o FALSE: failed (error cause logged in DB and local files)
 //	  o TRUE: OK
 function update_db_attachment_documentcache($attachment_id, $documentcache) {
  global $db, $jconf;
-
-//$documentcache = substr($documentcache, 1, 100);
 
   $documentcache_escaped = $db->qstr($documentcache);
 
@@ -486,8 +485,6 @@ function update_db_attachment_documentcache($attachment_id, $documentcache) {
 		documentcache = " . $documentcache_escaped . "
     WHERE
 		id = " . $attachment_id;
-
-echo $query . "\n";
 
   try {
     $rs = $db->Execute($query);

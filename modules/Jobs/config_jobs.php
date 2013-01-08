@@ -32,6 +32,7 @@ return array('config_jobs' => array(
 	// Sleep duration - number of seconds to sleep after an operation
 	'sleep_media'					=> 20,
 	'sleep_short'					=> 20,
+	'sleep_long'					=> 300,
 	'sleep_vcr'						=> 20,
 	'sleep_vcr_wait'				=> 20,
 

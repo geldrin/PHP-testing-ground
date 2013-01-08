@@ -44,7 +44,7 @@ if ( iswindows() ) {
 while( !is_file( $app->config['datapath'] . 'jobs/job_document_index.stop' ) and !is_file( $app->config['datapath'] . 'jobs/all.stop' ) ) {
 
 	clearstatcache();
-
+echo "outer\n";
     while ( 1 ) {
 
 		$app->watchdog();
@@ -59,6 +59,7 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_document_index.stop' ) and
 			$converter_sleep_length = 60 * 60;
 			break;
 		}
+		$db_close = TRUE;
 
 		// Establish database connection
 		try {
@@ -81,12 +82,18 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_document_index.stop' ) and
 		}
 
 // Testing!!!
-update_db_attachment_indexingstatus(3, null);
+//update_db_attachment_indexingstatus(13, null);
 // !!!!!!!!!!
+echo "query\n";
 
 		// Query next job
-		$attached_doc = query_nextjob();
-		if ( $attached_doc === FALSE ) break;
+		$attached_doc = array();
+		if ( !query_nextjob($attached_doc) ) break;
+
+//		if ( $attached_doc === FALSE ) break;
+//		if ( !query_nextjob($recording, $uploader_user) ) break;
+
+echo "process\n";
 
 		// Get indexing start time
 		$total_duration = time();
@@ -201,10 +208,11 @@ update_db_attachment_indexingstatus(3, null);
 			$content_file = $attached_doc['temp_directory'] . $attached_doc['id'] . ".txt";
 
 			// Launch unoconv
-			$command = "unoconv -f txt " . $attached_doc['source_file'];
+			$command = "unoconv -f txt " . $attached_doc['source_file']. " 2>&1";
 			exec($command, $output, $result);
 			$output_string = implode("\n", $output);
-			if ( $result != 0 ) {
+			// unoconv: sometimes it returns "Floating point exception", but result is produced. Maybe output is truncated.
+			if ( ( $result != 0 ) and ( $output_string != "Floating point exception" ) ) {
 				update_db_attachment_indexingstatus($attached_doc['id'], $jconf['dbstatus_indexing_err']);
 				log_document_conversion($attached_doc['id'], $attached_doc['rec_id'], $jconf['jobid_document_index'], $jconf['dbstatus_indexing'], "[ERROR] unoconv conversion error.\n\n" . $output_string, $command, $result, 0, TRUE);
 				break;
@@ -269,14 +277,15 @@ update_db_attachment_indexingstatus(3, null);
 
 		log_document_conversion($attached_doc['id'], $attached_doc['rec_id'], $jconf['jobid_document_index'], "-", "[OK] Successful document indexation in " . $hms . " time.\n\n" . $global_log, "-", "-", $indexing_duration, TRUE);
 
-var_dump($attached_doc);
+//var_dump($attached_doc);
 
-echo $global_log . "\n";
+//echo $global_log . "\n";
 
-exit;
+//exit;
 
 		break;
     }
+echo "break/sleep\n";
 
     if ( $db_close ) {
 		$db->close();
@@ -291,12 +300,13 @@ exit;
 
 // Check file type
 function file_identify($filename) {
+ global $jconf;
 
 	$command = "file -z -b " . $filename;
 	exec($command, $output, $result);
 	$output_string = implode("\n", $output);
 	if ( $result != 0 ) {
-		tools::log(LOGPATH_JOBS, LOG_FILE, "[WARNING] file command output error. Command:\n" . $command . "\nError message:\n" . $output_string, TRUE);
+		$debug->log($jconf['log_dir'], $jconf['jobid_document_index'] . ".log", "[WARNING] file command output error. Command:\n" . $command . "\nError message:\n" . $output_string, $sendmail = TRUE);
 		return FALSE;
 	}
 
@@ -316,7 +326,7 @@ function file_identify($filename) {
 //	  o FALSE: no pending job for conversion
 //	  o TRUE: job is available for conversion
 //	- $slide: slideconversion table DB record returned in global variable
-function query_nextjob() {
+function query_nextjob(&$attached_doc) {
  global $db, $jconf;
 
   $query = "
@@ -352,6 +362,8 @@ echo $query . "\n";
     return FALSE;
   }
 
+echo "recs: " . $rs->RecordCount() . "\n";
+
   // Check if pending job exists
   if ( $rs->RecordCount() < 1 ) {
     return FALSE;
@@ -359,7 +371,7 @@ echo $query . "\n";
 
   $attached_doc = $rs->fields;
 
-  return $attached_doc;
+  return TRUE;
 }
 
 function copy_attacheddoc_to_converter(&$attached_doc) {
