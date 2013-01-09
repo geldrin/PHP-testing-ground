@@ -15,7 +15,7 @@ date_default_timezone_set("Europe/Budapest");
 echo "Wowza log analizer v0.1 - STARTING...\n";
 
 // User settings
-$live_channelid = 32;
+$live_channelid = 29;
 
 // **********************************
 
@@ -52,8 +52,6 @@ $query = "
 	WHERE
 		a.id = " . $live_channelid . " AND
 		b.id = a.organizationid";
-
-//echo $query . "\n";
 
 try {
 	$event = $db->Execute($query);
@@ -109,8 +107,6 @@ while ( !$live_streams->EOF ) {
 
 	$live_streams->MoveNext();
 }
-
-//var_dump($location_info);
 
 // Start log analyzing
 
@@ -286,10 +282,6 @@ if ( ( trim($tmp[16]) == "89.133.214.122" ) ) {
 								$viewers[$cip][$uid]['encoder'] = 0;
 								if ( $x_event == "publish" ) $viewers[$cip][$uid]['encoder'] = 1;
 
-								// User ID: update if exists
-								//if ( empty($viewers[$cip][$uid]['uid']) ) $viewers[$cip][$uid]['uid'] = 0;
-								//if ( $uid > 0 ) $viewers[$cip]['uid'] = $uid;
-
 								// Client ID: track a stream between events "play"/"publish" and "destroy"
 								$viewers[$cip][$uid]['clients'] = array();
 								//$viewers[$cip][$uid]['clients'][$clientid]['uid'] = $uid;
@@ -311,13 +303,8 @@ if ( ( trim($tmp[16]) == "89.133.214.122" ) ) {
 								// Connections
 								if ( ( $x_event == "play" ) or ( $x_event == "publish" ) ) $viewers[$cip][$uid]['connections']++;
 
-								// User ID: update if exists
-								//if ( empty($viewers[$cip]['uid']) ) $viewers[$cip]['uid'] = 0;
-								//if ( $uid > 0 ) $viewers[$cip]['uid'] = $uid;
-
 								// Client ID: track a stream between events "play"/"publish" and "destroy"
 								if ( empty($viewers[$cip][$uid]['clients'][$clientid]) ) {
-									//$viewers[$cip]['clients'][$clientid]['uid'] = $uid;
 									$viewers[$cip][$uid]['clients'][$clientid]['play'] = FALSE;
 									if ( ( $x_event == "play" ) or ( $x_event == "publish" ) ) $viewers[$cip][$uid]['clients'][$clientid]['play'] = TRUE;
 								}
@@ -350,8 +337,6 @@ if ( ( trim($tmp[16]) == "89.133.214.122" ) ) {
 
 	fclose($fh);
 }
-
-//var_dump($viewers);
 
 $msg  = "# Videosquare live statistics report\n\n";
 $msg .= "# Log analization started: " . date("Y-m-d H:i:s") . "\n";
@@ -392,8 +377,6 @@ foreach ($viewers as $cip => $client_ip) {
 	foreach ($client_ip as $uid => $user_data) {
 
 		$user = array();
-//		$uid = $viewers[$cip]['uid'];
-//		$uid = $viewers[$cip][];
 		if ( $uid > 0 ) {
 			if ( !query_user($uid, $user) ) {
 				echo "[ERROR] Cannot find user. UID = " . $uid . "\n";
@@ -403,10 +386,6 @@ foreach ($viewers as $cip => $client_ip) {
 
 		$encoder_str = "";
 		if ( $viewers[$cip][$uid]['encoder'] ) $encoder_str = "(*)";
-
-//var_dump($viewers[$cip]);
-
-//exit;
 
 		$tmp = $uid . "," . (empty($user['email'])?"-":$user['email']) . $encoder_str . "," . $cip . "," . $viewers[$cip][$uid]['hostname'] . "," . $viewers[$cip][$uid]['connections'];
 
