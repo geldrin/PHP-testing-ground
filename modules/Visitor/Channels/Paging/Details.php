@@ -32,6 +32,7 @@ class Details extends \Visitor\Paging {
   protected $channelModel;
   protected $user;
   protected $perpageselector = false;
+  protected $pagestoshow = 3;
   
   public function init() {
     
@@ -109,9 +110,6 @@ class Details extends \Visitor\Paging {
   
   protected function setupPager() {
     parent::setupPager();
-    
-    $this->pager->pagestoshow = 5;
-    
   }
   
 }
