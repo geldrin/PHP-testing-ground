@@ -31,7 +31,7 @@ $config = Array(
   
   'isdownloadable' => array(
     'type'        => 'inputRadio',
-    'displayname' => $l('recordings', 'isdownloadable'),
+    'displayname' => $l('recordings', 'attachmentisdownloadable'),
     'values'      => $l->getLov('noyes'),
     'value'       => '1',
   ),
