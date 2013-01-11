@@ -19,7 +19,7 @@
       <div class="avatar">{if $member.avatarstatus == 'onstorage'}<img src="{$member|@avatarphoto}" width="36" height="36"/>{/if}</div>
       <div id="currentusercontent">
         <a id="currentusername" href="#">{$member.namefirst|escape:html}<span></span></a>
-        <div id="currentusermenu" style="width: {$columncount*241}px">
+        <div id="currentusermenu" style="width: {$columncount*216-216+241}px">
           {if $member.isnewseditor or $member.isclientadmin or $member.isuploader or ( $organization.islivestreamingenabled and $member.isliveadmin )}
             <div class="column first">
               {if $member.isnewseditor or $member.isclientadmin}

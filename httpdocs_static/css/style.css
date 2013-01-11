@@ -697,7 +697,7 @@ a#currentusername span {
 #currentusermenu .column {
   float: left;
   padding-top: 7px;
-  width: 240px;
+  width: 215px;
   height: 100%;
   vertical-align: top;
   border-right: 1px solid #333;
@@ -707,6 +707,7 @@ a#currentusername span {
   overflow: hidden;
 }
 #currentusermenu .column.last {
+  width: 240px;
   border: 0;
   box-shadow: none;
 }
