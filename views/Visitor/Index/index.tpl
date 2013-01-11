@@ -8,7 +8,6 @@
         <img src="{$recording|@indexphoto:player}"/>
         <div class="playpic"></div>
         <div class="imageinfowrap">
-          {if false or $recording.avatarstatus == 'onstorage'}<div class="avatar"><img src="{$recording|@avatarphoto}" width="36" height="36"/></div>{/if}
           <div class="content">
             <h1>{$recording.title|mb_truncate:60|escape:html}</h1>
             <h2>{$recording.presenters|@contributorformat:false|mb_truncate:60|escape:html}</h2>
@@ -24,7 +23,6 @@
         <a class="imageinfo wwide first" href="{$language}/recordings/details/{$recording.id},{$recording.title|filenameize}" title="{$recording.title|escape:html}">
           <img src="{$recording|@indexphoto:wide}"/>
           <div class="imageinfowrap">
-            {if false or $recording.avatarstatus == 'onstorage'}<div class="avatar"><img src="{$recording|@avatarphoto}" width="36" height="36"/></div>{/if}
             <div class="content">
               <h1>{$recording.title|mb_truncate:23|escape:html}</h1>
               <h2>{$recording.presenters|@contributorformat:false|mb_truncate:60|escape:html}</h2>
@@ -37,7 +35,6 @@
         <a class="imageinfo wwide" href="{$language}/recordings/details/{$recording.id},{$recording.title|filenameize}" title="{$recording.title|escape:html}">
           <img src="{$recording|@indexphoto:wide}"/>
           <div class="imageinfowrap">
-            {if false or $recording.avatarstatus == 'onstorage'}<div class="avatar"><img src="{$recording|@avatarphoto}" width="36" height="36"/></div>{/if}
             <div class="content">
               <h1>{$recording.title|mb_truncate:23|escape:html}</h1>
               <h2>{$recording.presenters|@contributorformat:false|mb_truncate:60|escape:html}</h2>
