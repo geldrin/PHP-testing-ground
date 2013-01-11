@@ -263,6 +263,7 @@ class Livefeeds extends \Springboard\Model {
       'recording_title'        => $this->row['name'],
       'recording_type'         => 'live',
       'media_secondaryStreams' => array( $info['stream']['contentkeycode'] ),
+      'timeline_autoPlay'      => true,
     );
     
     $flashdata['media_secondaryServers'] = $flashdata['media_servers'];
