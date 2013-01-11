@@ -43,6 +43,7 @@ return array('config_jobs' => array(
 	'jobid_vcr_control'				=> 'job_vcr_control',
 	'jobid_maintenance'				=> 'job_maintenance',
 	'jobid_upload_finalize'			=> 'job_upload_finalize',
+	'jobid_integrity_check'			=> 'job_integrity_check',
 	'jobid_watcher'					=> 'watcher',
 
 	// SSH related settings
