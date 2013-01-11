@@ -126,7 +126,8 @@ $config = array(
     'secrtspurl'        => 'rtsp://stream.videosquare.eu/vsqsec/_definst_/',
     
     'liveingressurl'    => 'rtmp://stream.videosquare.eu:1935/vsqlive/',
-    'secliveingressurl' => 'rtmp://stream.videosquare.eu:1935/vsqlivesec/',
+    'secliveingressurl' => 'rtmps://stream.videosquare.eu:1935/vsqlivesec/',
+    'secliveingressurl2' => 'rtmpe://stream.videosquare.eu:1935/vsqlivesec/',
     
     'liveurl'           => 'rtmpt://stream.videosquare.eu:80/vsqlive/',
     'secliveurl'        => 'rtmpte://stream.videosquare.eu:80/vsqlivesec/',
