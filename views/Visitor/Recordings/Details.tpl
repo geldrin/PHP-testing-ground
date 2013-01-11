@@ -16,6 +16,10 @@
   {/if}
   
   <h1>{$recording.title|escape:html}</h1>
+  {if !empty( $recording.presenters )}
+    {include file=Visitor/presenters.tpl presenters=$recording.presenters}
+    <br/>
+  {/if}
   
   {if $recording.subtitle|stringempty}
     <h2>{$recording.subtitle|escape:html}</h2>
