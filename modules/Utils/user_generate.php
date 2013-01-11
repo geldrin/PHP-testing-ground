@@ -20,7 +20,7 @@ $user_namesuffix_length = 4;
 $user_nametermination = "conforg.hu";
 $pass_length = 8;
 $org_id = 200;
-$org_dep_id = 5;
+$org_dep_id = 8;
 
 $iscommit = FALSE;
 
@@ -83,16 +83,37 @@ function generatePassword($length = 8) {
 
 }
 
-echo "VSQ user generator script\n";
-echo " Number of users to generate: " . $user_num . "\n";
-echo " Username prefix: " . $user_nameprefix . "\n";
-echo " Username number length: " . $user_namesuffix_length . "\n";
-echo " Username suffix: " . $user_nametermination . "\n";
-echo " Password length: " . $pass_length . "\n";
-echo " Org ID: " . $org_id . "\n";
-echo " Org department ID: " . $org_dep_id . "\n";
+function query_department($department_id) {
+ global $db;
 
-echo " COMMIT: " . ($iscommit?"YES":"NO, TEST ONLY") . "\n";
+	$query = "
+		SELECT
+			id,
+			name
+		FROM
+			departments
+		WHERE
+			id = " . $department_id;
+
+echo $query . "\n";
+
+	try {
+		$rs = $db->Execute($query);
+	} catch (exception $err) {
+		echo "[ERROR] SQL query failed.\n", trim($query), $err . "\n";
+		exit -1;
+	}
+
+	// User exist in DB, regenerate
+	if ( $rs->RecordCount() < 1 ) {
+		echo "[ERROR] Department id = " . $department_id . " does not exist.\n";
+		exit -1;
+	}
+
+	$department = $rs->fields;
+	
+	return $department['name'];
+}
 
 $users = array();
 
@@ -105,6 +126,22 @@ try {
 	exit -1;
 }
 
+$org_dep_name = query_department($org_dep_id);
+
+echo "-= VIDEOSQUARE User Generator Script =-\n";
+
+$msg  = "# Number of users to generate: " . $user_num . "\n";
+$msg .= "# Username prefix: " . $user_nameprefix . "\n";
+$msg .= "# Username number length: " . $user_namesuffix_length . "\n";
+$msg .= "# Username suffix: " . $user_nametermination . "\n";
+$msg .= "# Password length: " . $pass_length . "\n";
+$msg .= "# Org ID: " . $org_id . "\n";
+$msg .= "# Org department ID: " . $org_dep_id . " (" . $org_dep_name . ")\n";
+
+$msg .= "# COMMIT: " . ($iscommit?"YES":"NO, TEST ONLY") . "\n";
+
+echo $msg;
+
 // Open CSV file for user data
 $out_file = "vsq_users.csv";
 if ( file_exists($out_file) ) {
@@ -114,8 +151,8 @@ if ( file_exists($out_file) ) {
 	}
 }
 $fh = fopen($out_file, 'a');
-$data_write = "# User data added: " . date("Y-m-d H:i:s") . " * COMMITTED: " . ($iscommit?"YES":"NO") . "\n";
-fwrite($fh, $data_write);
+$msg .= "# User data added: " . date("Y-m-d H:i:s") . " * COMMITTED: " . ($iscommit?"YES":"NO") . "\n";
+fwrite($fh, $msg);
 
 $encryption = $app->bootstrap->getEncryption();
 $usersdb = $app->bootstrap->getModel('users');

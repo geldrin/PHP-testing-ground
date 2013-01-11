@@ -15,7 +15,7 @@ date_default_timezone_set("Europe/Budapest");
 echo "Wowza log analizer v0.1 - STARTING...\n";
 
 // User settings
-$live_channelid = 2;
+$live_channelid = 32;
 
 // **********************************
 
@@ -52,8 +52,6 @@ $query = "
 	WHERE
 		a.id = " . $live_channelid . " AND
 		b.id = a.organizationid";
-
-//echo $query . "\n";
 
 try {
 	$event = $db->Execute($query);
@@ -110,8 +108,6 @@ while ( !$live_streams->EOF ) {
 	$live_streams->MoveNext();
 }
 
-//var_dump($location_info);
-
 // Start log analyzing
 
 // Get current directory
@@ -119,6 +115,11 @@ $directory = realpath('.') . "/";
 
 $log_files = dirList($directory, ".log");
 sort($log_files, SORT_STRING);
+
+if ( count($log_files) < 1 ) {
+	echo "[ERROR] Cannot find any .log files\n";
+	exit;
+}
 
 $viewers = array();
 
@@ -263,61 +264,63 @@ if ( ( trim($tmp[16]) == "89.133.214.122" ) ) {
 							if ( $duration < 0 ) continue;
 
 							// User ID: store Vsq user ID and add data. If no user ID is given, then use ID = 0 for storing all client IPs
-							if ( empty($viewers[$cip]) ) {
-								$viewers[$cip]['connections'] = 1;
-								// Encoder: flag if matches encoder IP
-								$viewers[$cip]['encoder'] = 0;
-								if ( $x_event == "publish" ) $viewers[$cip]['encoder'] = 1;
+							if ( empty($viewers[$cip]) ) $viewers[$cip] = array();
 
-								// User ID: update if exists
-								if ( empty($viewers[$cip]['uid']) ) $viewers[$cip]['uid'] = 0;
-								if ( $uid > 0 ) $viewers[$cip]['uid'] = $uid;
+							if ( empty($viewers[$cip][$uid]) ) {
+								$viewers[$cip][$uid] = array();
 
-								// Client ID and user ID
-								$viewers[$cip]['clients'] = array();
-								$viewers[$cip]['clients'][$clientid]['uid'] = $uid;
-								$viewers[$cip]['clients'][$clientid]['play'] = FALSE;
-								if ( ( $x_event == "play" ) or ( $x_event == "publish" ) ) $viewers[$cip]['clients'][$clientid]['play'] = TRUE;
+								// Host name
+								$viewers[$cip][$uid]['hostname'] = gethostbyaddr($cip);
 
-								// Host name and protocol
-								$viewers[$cip]['hostname'] = gethostbyaddr($cip);
-								$viewers[$cip]['protocol'] = trim($log_line[17]);
+								// Protocol
+								$viewers[$cip][$uid]['protocol'] = trim($log_line[17]);
 
-								// Streams
-								$viewers[$cip]['streams'] = array();
-								$viewers[$cip]['streams'][$keycode]['locationid'] = $locationid;
-								$viewers[$cip]['streams'][$keycode]['streamid'] = $streamid;
-								$viewers[$cip]['streams'][$keycode]['duration'] = 0;
+								// Connections
+								$viewers[$cip][$uid]['connections'] = 1;
+
+								// Encoder: flag IP/UID if event "publish" occured
+								$viewers[$cip][$uid]['encoder'] = 0;
+								if ( $x_event == "publish" ) $viewers[$cip][$uid]['encoder'] = 1;
+
+								// Client ID: track a stream between events "play"/"publish" and "destroy"
+								$viewers[$cip][$uid]['clients'] = array();
+								//$viewers[$cip][$uid]['clients'][$clientid]['uid'] = $uid;
+								$viewers[$cip][$uid]['clients'][$clientid]['play'] = FALSE;
+								if ( ( $x_event == "play" ) or ( $x_event == "publish" ) ) $viewers[$cip][$uid]['clients'][$clientid]['play'] = TRUE;
+
+								// Streams: log which streams are viewed
+								$viewers[$cip][$uid]['streams'] = array();
+								$viewers[$cip][$uid]['streams'][$keycode]['locationid'] = $locationid;
+								$viewers[$cip][$uid]['streams'][$keycode]['streamid'] = $streamid;
+								// Duration: add if event is "destroy"
+								$viewers[$cip][$uid]['streams'][$keycode]['duration'] = 0;
 								if ( $x_event == "destroy" ) {
-									$viewers[$cip]['streams'][$keycode]['duration'] = $duration;
+									$viewers[$cip][$uid]['streams'][$keycode]['duration'] = $duration;
 								}
 
 							} else {
-								$viewers[$cip]['connections']++;
 
-								// User ID: update if exists
-								if ( empty($viewers[$cip]['uid']) ) $viewers[$cip]['uid'] = 0;
-								if ( $uid > 0 ) $viewers[$cip]['uid'] = $uid;
+								// Connections
+								if ( ( $x_event == "play" ) or ( $x_event == "publish" ) ) $viewers[$cip][$uid]['connections']++;
 
-								// Client ID
-								if ( empty($viewers[$cip]['clients'][$clientid]) ) {
-									$viewers[$cip]['clients'][$clientid]['uid'] = $uid;
-									$viewers[$cip]['clients'][$clientid]['play'] = FALSE;
-									if ( ( $x_event == "play" ) or ( $x_event == "publish" ) ) $viewers[$cip]['clients'][$clientid]['play'] = TRUE;
+								// Client ID: track a stream between events "play"/"publish" and "destroy"
+								if ( empty($viewers[$cip][$uid]['clients'][$clientid]) ) {
+									$viewers[$cip][$uid]['clients'][$clientid]['play'] = FALSE;
+									if ( ( $x_event == "play" ) or ( $x_event == "publish" ) ) $viewers[$cip][$uid]['clients'][$clientid]['play'] = TRUE;
 								}
 
 								$keycode = $location_info[$locationid][$streamid]['keycode'];
-								if ( empty($viewers[$cip]['streams'][$keycode]) ) {
-									$viewers[$cip]['streams'][$keycode]['duration'] = 0;
-									$viewers[$cip]['streams'][$keycode]['locationid'] = $locationid;
-									$viewers[$cip]['streams'][$keycode]['streamid'] = $streamid;
+								if ( empty($viewers[$cip][$uid]['streams'][$keycode]) ) {
+									$viewers[$cip][$uid]['streams'][$keycode]['duration'] = 0;
+									$viewers[$cip][$uid]['streams'][$keycode]['locationid'] = $locationid;
+									$viewers[$cip][$uid]['streams'][$keycode]['streamid'] = $streamid;
 								}
 								if ( $x_event == "destroy" ) {
-									if ( empty($viewers[$cip]['streams'][$keycode]['duration']) ) $viewers[$cip]['streams'][$keycode]['duration'] = 0;
+									if ( empty($viewers[$cip][$uid]['streams'][$keycode]['duration']) ) $viewers[$cip][$uid]['streams'][$keycode]['duration'] = 0;
 									// Duration: was there play event? If not, skip duration
-									if ( $viewers[$cip]['clients'][$clientid]['play'] ) {
-										$viewers[$cip]['streams'][$keycode]['duration'] += $duration;
-										$viewers[$cip]['clients'][$clientid]['play'] = FALSE;
+									if ( $viewers[$cip][$uid]['clients'][$clientid]['play'] ) {
+										$viewers[$cip][$uid]['streams'][$keycode]['duration'] += $duration;
+										$viewers[$cip][$uid]['clients'][$clientid]['play'] = FALSE;
 									}
 								}
 							}
@@ -335,8 +338,6 @@ if ( ( trim($tmp[16]) == "89.133.214.122" ) ) {
 	fclose($fh);
 }
 
-//var_dump($viewers);
-
 $msg  = "# Videosquare live statistics report\n\n";
 $msg .= "# Log analization started: " . date("Y-m-d H:i:s") . "\n";
 $msg .= "# Log files processed:\n";
@@ -350,9 +351,9 @@ $msg .= "# Start date: " . $event_info['starttimestamp'] . "\n";
 $msg .= "# End date: " . $event_info['endtimestamp'] . "\n";
 $msg .= "# Customer: " . $event_info['name'] . " - " . $event_info['url'] . "\n";
 $msg .= "# Domain: " . $event_info['domain'] . "\n#\n";
-$msg .= "# Locations (location / stream name):\n";
+$msg .= "# Locations (location / stream name): (*) = encoder\n";
 
-$tmp = "userID,username,IP address,hostname,Connections";
+$tmp = "UserID,Username,IP address,Hostname,Connections";
 
 // Columns: build location/stream name order guide array
 $columns_num = 0;
@@ -371,58 +372,60 @@ $tmp .= ",Summary\n";
 $msg .= $tmp;
 
 $number_of_viewers = 0;
-foreach($viewers as $cip => $client) {
+foreach ($viewers as $cip => $client_ip) {
 
-	$user = array();
-	$uid = $viewers[$cip]['uid'];
-	if ( $uid > 0 ) {
-		if ( !query_user($uid, $user) ) {
-			echo "[ERROR] Cannot find user. UID = " . $uid . "\n";
-			exit -1;
+	foreach ($client_ip as $uid => $user_data) {
+
+		$user = array();
+		if ( $uid > 0 ) {
+			if ( !query_user($uid, $user) ) {
+				echo "[ERROR] Cannot find user. UID = " . $uid . "\n";
+				exit -1;
+			}
 		}
-	}
 
-	$encoder_str = "";
-	if ( $viewers[$cip]['encoder'] ) $encoder_str = "(*)";
+		$encoder_str = "";
+		if ( $viewers[$cip][$uid]['encoder'] ) $encoder_str = "(*)";
 
+		$tmp = $uid . "," . (empty($user['email'])?"-":$user['email']) . $encoder_str . "," . $cip . "," . $viewers[$cip][$uid]['hostname'] . "," . $viewers[$cip][$uid]['connections'];
 
-	$tmp = $uid . "," . (empty($user['email'])?"-":$user['email']) . $encoder_str . "," . $cip . "," . $client['hostname'] . "," . $client['connections'];
-
-	// Stream statistics: get per stream statistics
-	$columns = array();
-	$duration_full = 0;
-	foreach ($client['streams'] as $keycode => $keycode_data ) {
-		$loc_id = $keycode_data['locationid'];
-		$str_id = $keycode_data['streamid'];
-		$num = $column_guide[$loc_id][$str_id];
-		$columns[$num] = secs2hms($keycode_data['duration']);
-		$duration_full += $keycode_data['duration'];
-	}
-
-	// Serialize column value
-	for ( $i = 0; $i < $columns_num; $i++ ) {
-		if ( !empty($columns[$i]) ) {
-			$tmp .= "," . $columns[$i];
-		} else {
-			$tmp .= ",-";
+		// Stream statistics: get per stream statistics
+		$columns = array();
+		$duration_full = 0;
+		foreach ($viewers[$cip][$uid]['streams'] as $keycode => $keycode_data ) {
+			$loc_id = $keycode_data['locationid'];
+			$str_id = $keycode_data['streamid'];
+			$num = $column_guide[$loc_id][$str_id];
+			$columns[$num] = secs2hms($keycode_data['duration']);
+			$duration_full += $keycode_data['duration'];
 		}
-	}
 
-	$tmp .= "," . secs2hms($duration_full) . "\n";
+		// Serialize column value
+		for ( $i = 0; $i < $columns_num; $i++ ) {
+			if ( !empty($columns[$i]) ) {
+				$tmp .= "," . $columns[$i];
+			} else {
+				$tmp .= ",-";
+			}
+		}
 
-//	echo $tmp;
+		$tmp .= "," . secs2hms($duration_full) . "\n";
 
-	$msg .= $tmp;
+//		echo $tmp;
 
-	$number_of_viewers++;
-}
+		$msg .= $tmp;
 
-$msg .= "\nViewers from unique IP: " . $number_of_viewers . "\n";
+		$number_of_viewers++;
+	
+	} // Users per IP
+} // IPs
+
+$msg .= "\nViewers: " . $number_of_viewers . "\n";
 
 echo $msg . "\n";
 
 // Open log file
-$result_file = "log_anal_results.txt";
+$result_file = "analytics_" . date("Y-m-d") . ".txt";
 $fh = fopen($result_file, "w");
 
 if ( fwrite($fh, $msg) === FALSE ) {
