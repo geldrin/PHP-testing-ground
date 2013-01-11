@@ -4,6 +4,7 @@ function smarty_modifier_shortdate( $format, $startdate, $enddate = null ) {
   if ( !$startdate )
     return '';
   
+  $smarty = \Bootstrap::getInstance()->getSmarty();
   include_once( SMARTY_DIR . 'plugins/modifier.date_format.php' );
   
   // elfogadja a 0 napos (ismeretlen datumu) esemenyeket is,

@@ -1,5 +1,5 @@
 <div class="title">
-  <h1>{$channel.title|escape:html}</h1>
+  <h1>{$channel.title|escape:html} ({"%Y. %B %e"|shortdate:$channel.starttimestamp:$channel.endtimestamp})</h1>
   {if $member.id or $channel.subtitle}
     <h2>
       {if $channel|@userHasAccess}<div class="actions"><a href="{$language}/live/modify/{$channel.id}">{#modify#}</a> | <a href="{$language}/live/managefeeds/{$channel.id}">{#live__managefeeds#}</a></div>{/if}
