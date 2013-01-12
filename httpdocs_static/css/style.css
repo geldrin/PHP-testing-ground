@@ -1363,8 +1363,9 @@ a#currentusername span {
 }
 .recordinglist .listitem.channel .recordingpic {
   background-image: url(images/channel_bg.png);
-  width: 223px;
-  height: 141px;
+  width: 195px;
+  height: 123px;
+  margin-right: -3px;
 }
 .recordinglist .listitem.channel .recordingpic img {
   position: relative;
@@ -1372,7 +1373,7 @@ a#currentusername span {
   top: 7px;
   border-radius: 0px;
   -moz-border-radius: 5px;
-  width: 200px;
+  width: 172px;
   height: auto;
 }
 #relatedvideos a .playpic {
@@ -1383,9 +1384,6 @@ a#currentusername span {
   float: left;
   margin-left: 20px;
   width: 738px;
-}
-.recordinglist .listitem.channel .recordingcontent {
-  width: 707px;
 }
 .recordinglist .recordinginfo {
   margin-top: 5px;
