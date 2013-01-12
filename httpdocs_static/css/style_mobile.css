@@ -112,11 +112,20 @@
     width: 16.66666%;
     margin-right: 3.333333%;
     position: relative;
-    
+  }
+  .recordinglist .listitem.channel .recordingpic {
+    margin-right: 3.333333%;
+    width: 16.66666%;
+    height: 100%;
+    -webkit-background-size: 99% auto;
   }
   .recordinglist .recordingpic img {
     width: 100%;
     max-width: 192px;
+  }
+  .recordinglist .listitem.channel .recordingpic img {
+    width: 83%;
+    max-width: 172px;
   }
   .recordinglist .recordingpic .playpic {
     -webkit-background-size: 100% auto;
