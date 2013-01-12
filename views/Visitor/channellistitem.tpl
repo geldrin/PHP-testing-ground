@@ -1,5 +1,4 @@
-
-<li class="listitem">
+<li class="listitem channel">
   <div class="recordingpic">
     <a href="{$language}/channels/details/{$item.id},{$item.title|filenameize}"><img src="{$item|@indexphoto}"/></a>
   </div>

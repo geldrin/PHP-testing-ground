@@ -502,10 +502,6 @@ function setupInfoToggle() {
 
 function setupHeaderSearch() {
   
-  $j('#headersearcharrow').on('click', function( e ) {
-    e.preventDefault();
-  });
-  
   $j('#languageselector a.active').on('click', function( e ) {
     e.preventDefault();
     $j('#languageselector').toggleClass('active');

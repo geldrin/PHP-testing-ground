@@ -13,6 +13,13 @@ $config         = array(
         'type'     => 'string',
         'required' => false,
         'minimum'  => 3,
+        'help'     => $l('search', 'q_help'),
+      ),
+      array(
+        'type' => 'custom',
+        'php'  => '<FORM.q> != "' . $l('search', 'q') . '"',
+        'js'   => '<FORM.q> != "' . $l('search', 'q') . '"',
+        'help' => $l('search', 'q_help'),
       ),
     ),
     'rowlayout'   => '

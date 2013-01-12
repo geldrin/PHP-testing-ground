@@ -7,7 +7,7 @@ class Index extends \Visitor\Paging {
     'creation'      => 'id',
     'creation_desc' => 'id DESC',
   );
-  protected $template          = 'Visitor/Channels/Paging/Index.tpl';
+  protected $template          = 'Visitor/channellistitem.tpl';
   protected $insertbeforepager = Array( 'Visitor/Channels/Paging/IndexBeforepager.tpl' );
   protected $channelModel;
   

@@ -72,7 +72,7 @@
           <form action="{$language}/search/all" method="get">
             <input id="headersearchsubmit" type="image" src="{$STATIC_URI}images/header_searchimage.png"/>
             <input class="inputtext inputbackground clearonclick" type="text" name="q" data-origval="{#sitewide_search_input#|escape:html}" value="{$smarty.request.q|default:#sitewide_search_input#|escape:html}"/>
-            <a href="#" id="headersearcharrow"></a>
+            <a href="{$language}/search/advanced" id="headersearcharrow" title="{#sitewide_search_advanced#}"></a>
           </form>
           <div id="headersearchlink"><a href="{$language}/search/all">{#sitewide_search#}</a></div>
           <div id="languageselector" class="inputbackground right">
