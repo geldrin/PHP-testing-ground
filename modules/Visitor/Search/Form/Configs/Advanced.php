@@ -128,6 +128,15 @@ $config         = array(
     'value'       => $l('search', 'contributorjob'),
     'validation'  => array(
     ),
+  ),
+  
+  'contributororganization' => array(
+    'displayname' => $l('search', 'contributorganization'),
+    'type'        => 'inputText',
+    'html'        => 'class="inputtext inputbackground clearonclick margin" data-origval="' . $l('search', 'contributororganization') . '"',
+    'value'       => $l('search', 'contributororganization'),
+    'validation'  => array(
+    ),
     'rowlayout'   => '
           <div class="element">%prefix%%element%%postfix%%errordiv%</div>
         </td>
@@ -141,6 +150,18 @@ $config         = array(
     'html'        => 'class="inputtext inputbackground clearonclick datepicker margin" data-origval="' . $l('search', 'createdatefrom') . '"',
     'value'       => $l('search', 'createdatefrom'),
     'validation'  => array(
+      array(
+        'type'     => 'date',
+        'required' => false,
+        'format'   => 'YYYY-MM-DD',
+        'anddepend' => array(
+          array(
+            'type' => 'custom',
+            'php'  => '<FORM.createdatefrom> != "' . $l('search', 'createdatefrom') . '"',
+            'js'   => '<FORM.createdatefrom> != "' . $l('search', 'createdatefrom') . '"',
+          ),
+        ),
+      ),
     ),
   ),
   
@@ -150,6 +171,18 @@ $config         = array(
     'html'        => 'class="inputtext inputbackground clearonclick datepicker margin" data-origval="' . $l('search', 'createdateto') . '"',
     'value'       => $l('search', 'createdateto'),
     'validation'  => array(
+      array(
+        'type'     => 'date',
+        'required' => false,
+        'format'   => 'YYYY-MM-DD',
+        'anddepend' => array(
+          array(
+            'type' => 'custom',
+            'php'  => '<FORM.createdateto> != "' . $l('search', 'createdateto') . '"',
+            'js'   => '<FORM.createdateto> != "' . $l('search', 'createdateto') . '"',
+          ),
+        ),
+      ),
     ),
   ),
   
@@ -159,6 +192,18 @@ $config         = array(
     'html'        => 'class="inputtext inputbackground clearonclick datepicker margin" data-origval="' . $l('search', 'uploaddatefrom') . '"',
     'value'       => $l('search', 'uploaddatefrom'),
     'validation'  => array(
+      array(
+        'type'     => 'date',
+        'required' => false,
+        'format'   => 'YYYY-MM-DD',
+        'anddepend' => array(
+          array(
+            'type' => 'custom',
+            'php'  => '<FORM.uploaddatefrom> != "' . $l('search', 'uploaddatefrom') . '"',
+            'js'   => '<FORM.uploaddatefrom> != "' . $l('search', 'uploaddatefrom') . '"',
+          ),
+        ),
+      ),
     ),
   ),
   
@@ -168,6 +213,18 @@ $config         = array(
     'html'        => 'class="inputtext inputbackground clearonclick datepicker margin" data-origval="' . $l('search', 'uploaddateto') . '"',
     'value'       => $l('search', 'uploaddateto'),
     'validation'  => array(
+      array(
+        'type'     => 'date',
+        'required' => false,
+        'format'   => 'YYYY-MM-DD',
+        'anddepend' => array(
+          array(
+            'type' => 'custom',
+            'php'  => '<FORM.uploaddateto> != "' . $l('search', 'uploaddateto') . '"',
+            'js'   => '<FORM.uploaddateto> != "' . $l('search', 'uploaddateto') . '"',
+          ),
+        ),
+      ),
     ),
     'rowlayout'   => '
           <div class="element">%prefix%%element%%postfix%%errordiv%</div>

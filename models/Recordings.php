@@ -2380,6 +2380,35 @@ class Recordings extends \Springboard\Model {
     } else
       $contributorids = array();
     
+    if ( strlen( $search['contributororganization'] ) ) {
+      
+      $contributororg  = str_replace( ' ', '%', $search['contributororganization'] );
+      $contributororg  = $this->db->qstr( '%' . $contributororg . '%' );
+      $organizationids = $this->db->getCol("
+        SELECT id
+        FROM organizations
+        WHERE
+          name LIKE $contributororg OR
+          nameshort LIKE $contributororg
+      ");
+      
+      if ( !empty( $organizationids ) ) {
+        
+        $contributorids = $this->db->getCol("
+          SELECT id
+          FROM contributors
+          WHERE
+            organizationid IN('" . implode("', '", $organizationids ) . "') " .
+          ( empty( $contributorids )?
+            '':
+            " AND id IN('" . implode("', '", $contributorids ) . "'"
+          )
+        );
+      
+      }
+      
+    }
+    
     if ( !empty( $contributorids ) ) {
       
       $recordingids = $db->getCol("

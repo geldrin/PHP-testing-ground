@@ -147,6 +147,7 @@ class Advanced extends \Visitor\Paging {
       'createdateto'    => '',
       'contributorname' => '',
       'contributorjob'  => '',
+      'contributororganization' => '',
     );
     
     foreach( $params as $key => $value )
@@ -161,6 +162,7 @@ class Advanced extends \Visitor\Paging {
       'createdateto',
       'contributorname',
       'contributorjob',
+      'contributororganization',
     );
     
     foreach( $params as $key => $value ) {
