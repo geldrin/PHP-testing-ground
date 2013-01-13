@@ -233,7 +233,7 @@ class Recordings extends \Springboard\Model {
   public function assembleAdditionalFulltextCache() {
     
     $this->ensureID();
-    return ''; // TODO
+    /*
     $slides = $this->db->getCol("
       SELECT slidecache
       FROM slides_chapters
@@ -242,8 +242,8 @@ class Recordings extends \Springboard\Model {
         timing IS NOT NULL
     ");
     
-    $cache = implode( ' ', $slides );
-    
+    $cache = implode( ' ', $slides );*/
+    $cache = '';
     $documents = $this->db->getCol("
       SELECT documentcache
       FROM attached_documents
