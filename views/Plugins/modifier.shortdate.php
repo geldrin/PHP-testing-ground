@@ -53,8 +53,10 @@ function smarty_modifier_shortdate( $format, $startdate, $enddate = null ) {
       }
       
       $enddate = implode(' ', $end );
-
-      $out = $startdate . ' - ' . $enddate;
+      if ( count( $end ) == 1 )
+        $out = $startdate . '-' . $enddate;
+      else
+        $out = $startdate . ' - ' . $enddate;
       
       foreach( $start as $key => $value )
         if ( !strlen( $value ) )

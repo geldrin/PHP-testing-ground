@@ -1344,7 +1344,7 @@ a#currentusername span {
   font-style: italic;
 }
 .recordinglist .title .channeltimestamp {
-  margin-top: 5px;
+  margin: 5px 0 0 0;
 }
 .recordinglist .recordingpic {
   float: left;
@@ -2067,6 +2067,9 @@ a#currentusername span {
 .channellist .listingitem.last {
   border-bottom: 0px;
   box-shadow: none;
+}
+.channellist .channeltimestamp {
+  margin: 5px 0 0 0;
 }
 .treeview {
   float: left;

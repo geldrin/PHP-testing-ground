@@ -16,6 +16,9 @@
   {if $channeltree[0].starttimestamp}
     <div class="channeltimestamp">{#channels__timestamp#} {"%Y. %B %e"|shortdate:$channeltree[0].starttimestamp:$channeltree[0].endtimestamp}</div>
   {/if}
+  {if $channeltree[0].description}
+    <p>{$channeltree[0].description|escape:html|nl2br}</p>
+  {/if}
 </div>
 {capture assign=url}{$language}/{$module}/details/{$channel.id},{$channel.title|filenameize}?order=%s{/capture}
 
