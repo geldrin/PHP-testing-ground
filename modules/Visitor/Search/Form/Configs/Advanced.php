@@ -131,7 +131,7 @@ $config         = array(
   ),
   
   'contributororganization' => array(
-    'displayname' => $l('search', 'contributorganization'),
+    'displayname' => $l('search', 'contributororganization'),
     'type'        => 'inputText',
     'html'        => 'class="inputtext inputbackground clearonclick margin" data-origval="' . $l('search', 'contributororganization') . '"',
     'value'       => $l('search', 'contributororganization'),
