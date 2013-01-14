@@ -4,8 +4,7 @@
     <a href="{$language}/recordings/upload?channelid={$channel.id}">{#channels__addrecording#}</a>
   </div>
   {/if}
-  <h1>{$channeltree[0].title|escape:html}{if $channeltree[0].starttimestamp} ({"%Y. %B %e"|shortdate:$channeltree[0].starttimestamp:$channeltree[0].endtimestamp}){/if}</h1>
-  
+  <h1>{$channeltree[0].title|escape:html}</h1>
   {if $channeltree[0].subtitle}
     {if $member.id and $member.isuploader and $canaddrecording}
     <div class="actions">
@@ -13,6 +12,9 @@
     </div>
     {/if}
     <h2>{$channeltree[0].subtitle|escape:html}</h2>
+  {/if}
+  {if $channeltree[0].starttimestamp}
+    <div class="channeltimestamp">{#channels__timestamp#} {"%Y. %B %e"|shortdate:$channeltree[0].starttimestamp:$channeltree[0].endtimestamp}</div>
   {/if}
 </div>
 {capture assign=url}{$language}/{$module}/details/{$channel.id},{$channel.title|filenameize}?order=%s{/capture}

@@ -928,6 +928,9 @@ a#currentusername span {
 #body div.title .actions a {
   display: inline-block;
 }
+.title .channeltimestamp {
+  margin: -5px 0 10px 0;
+}
 
 /* footer */
 #footerbg {
@@ -1339,6 +1342,9 @@ a#currentusername span {
   font-weight: normal;
   font-size: 13px;
   font-style: italic;
+}
+.recordinglist .title .channeltimestamp {
+  margin-top: 5px;
 }
 .recordinglist .recordingpic {
   float: left;
