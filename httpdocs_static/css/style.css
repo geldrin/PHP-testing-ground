@@ -277,6 +277,10 @@ a.submitbutton:hover {
 .changeindexphotoitem {
   display: inline-block;
 }
+.changeindexphotoitem img {
+  width: 220px;
+  height: 130px;
+}
 
 /* upload */
 #uploadprogress {
