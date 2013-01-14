@@ -22,7 +22,7 @@ $app = new Springboard\Application\Cli(BASE_PATH, PRODUCTION);
 $authors = array(
 	// Vezetéknév, keresztnév, nénsorrend, pozíció, cég, recordingid, role
 
-/*	array("Andrási", "Jánosné", "straight", "osztályvezető", "Nemzeti Adó- és Vámhivatal", 188, 1),
+/*	array("Andrási", "Jánosné", "straight", "osztályvezető", "Nemzeti Adó- és Vámhivatal", 67, 1),
 	array("Dr. Futó", "Gábor", "straight", "főtanácsos", "Budapest Főváros Kormányhivatala Nyugdíjbiztosítási Igazgatóság", 189, 1),
 	array("Dr. Kovács", "Ferenc", "straight", "elnökhelyettesi tanácsadó", "Nemzeti Adó- és Vámhivatal", 190, 1),
 	array("Ácsné Molnár", "Judit", "straight", "szakmai főtanácsadó", "Nemzeti Adó- és Vámhivatal", 191, 1),
