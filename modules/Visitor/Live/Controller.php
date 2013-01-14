@@ -118,7 +118,6 @@ class Controller extends \Visitor\Controller {
       
       $flashdata['layout_logo'] = $this->toSmarty['STATIC_URI'] . 'images/player_overlay_logo.png';
       $flashdata['layout_logoOrientation'] = 'TR';
-      $flashdata['timeline_autoPlay'] = false;
       
       /*
       $flashdata['layout_logoDestination'] =
