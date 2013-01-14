@@ -29,7 +29,7 @@
   <link rel="StyleSheet" type="text/css" href="{$STATIC_URI}css/style_ie6{$VERSION}.css" />
   <![endif]-->
   {jscombine}
-  <script type="text/javascript" src="{$STATIC_URI}js/jquery-1.8.3.min.js"></script>
+  <script type="text/javascript" src="{$STATIC_URI}js/jquery.min.js"></script>
   <script type="text/javascript" src="{$STATIC_URI}js/jquery-ui-1.9.2.custom.min.js"></script>
   <script type="text/javascript" src="{$STATIC_URI}js/swfobject.full.js"></script>
   <script type="text/javascript" src="{$bootstrap->scheme}{$bootstrap->config.baseuri}{$language}/contents/language"></script>
