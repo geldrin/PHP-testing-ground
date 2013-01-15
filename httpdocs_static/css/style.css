@@ -1550,6 +1550,15 @@ a#currentusername span {
   -webkit-box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
 }
+#indexcontainer .wwide img {
+  max-width: 300px;
+  max-height: 168px;
+}
+#indexcontainer .wlarge img {
+  max-width: 618px;
+  max-height: 348px;
+}
+
 /* newslist */
 .newslist {
   list-style-type: none;
