@@ -79,7 +79,7 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_document_index.stop' ) and
 		}
 
 // Testing!!!
-//update_db_attachment_indexingstatus(13, null);
+//update_db_attachment_indexingstatus(3, null);
 // !!!!!!!!!!
 
 		// Query next job
@@ -126,6 +126,13 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_document_index.stop' ) and
 		if ( $file_type !== FALSE ) {
 
 			$attached_doc['file_unix_type'] = $file_type;
+			// DB: update document type
+			$update = array(
+				'type'	=> $attached_doc['file_unix_type']
+			);
+			$attDoc = $app->bootstrap->getModel('attached_documents');
+			$attDoc->select($attached_doc['id']);
+			$attDoc->updateRow($update);
 
 			// Text file, XML document, CSV, HTML, DOCX, PPTX, ODT, ODP or other text
 			if ( stripos($file_type, "text") !== FALSE ) {
@@ -337,7 +344,7 @@ function query_nextjob(&$attached_doc) {
 		a.userid = b.id
     LIMIT 1";
 
-echo $query . "\n";
+//echo $query . "\n";
 
   try {
     $rs = $db->Execute($query);
@@ -346,7 +353,7 @@ echo $query . "\n";
     return FALSE;
   }
 
-echo "recs: " . $rs->RecordCount() . "\n";
+//echo "recs: " . $rs->RecordCount() . "\n";
 
   // Check if pending job exists
   if ( $rs->RecordCount() < 1 ) {
