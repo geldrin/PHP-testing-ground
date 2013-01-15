@@ -94,7 +94,6 @@ return array(
   ),
   
   'permissions' => array(
-    'isadmin'       => 'Adminisztrátor',
     'iseditor'      => 'Szerkesztő',
     'isclientadmin' => 'Kliens adminisztrátor',
     'isuploader'    => 'Feltöltő',
