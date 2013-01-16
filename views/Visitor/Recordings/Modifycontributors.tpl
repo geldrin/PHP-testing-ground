@@ -2,8 +2,25 @@
 
 {include file=Visitor/Recordings/ModifyTimeline.tpl}
 
+{if !empty( $contributors )}
+<div id="contributors">
+  <h2>{#recordings__contributors_title#}</h2>
+  <ul>
+    {include file=Visitor/Recordings/Contributors.tpl recordingid=$recordingid contributors=$contributors}
+  </ul>
+</div>
+{/if}
+
 <div class="form leftdoublebox">
 {$form}
+</div>
+
+<div id="autocomplete-listitem" style="display: none;">
+  <div class="wrap">
+    <img src="__IMGSRC__"/>
+    <span class="name">__NAME__</span>
+    <div class="clear"></div>
+  </div>
 </div>
 
 {if !empty( $help ) and strpos( $helpclass, 'hidden' ) === false}

@@ -31,8 +31,6 @@ class Controller extends \Visitor\Controller {
     'getprogress'          => 'member',
     'embed'                => 'public',
     'featured'             => 'public',
-    'searchcontributor'    => 'uploader',
-    'newcontributor'       => 'uploader',
     'linkcontributor'      => 'uploader',
     'addtochannel'         => 'member',
     'removefromchannel'    => 'member',
@@ -53,8 +51,6 @@ class Controller extends \Visitor\Controller {
     'modifysharing'        => 'Visitor\\Recordings\\Form\\Modifysharing',
     'newcomment'           => 'Visitor\\Recordings\\Form\\Newcomment',
     'modifyattachment'     => 'Visitor\\Recordings\\Form\\Modifyattachment',
-    'newcontributor'       => 'Visitor\\Recordings\\Form\\Newcontributor',
-    'linkcontributor'      => 'Visitor\\Recordings\\Form\\Linkcontributor',
   );
   
   public $paging = array(
@@ -1176,6 +1172,61 @@ class Controller extends \Visitor\Controller {
     
     $this->redirect(
       $this->application->getParameter('forward')
+    );
+    
+  }
+  
+  public function linkcontributorAction() {
+    
+    $recordingModel   = $this->modelOrganizationAndUserIDCheck(
+      'recordings',
+      $this->application->getNumericParameter('id')
+    );
+    $contributorModel = $this->modelOrganizationIDCheck(
+      'contributors',
+      $this->application->getNumericParameter('contributorid')
+    );
+    $roleModel = $this->modelOrganizationIDCheck(
+      'roles',
+      $this->application->getNumericParameter('roleid')
+    );
+    
+    $recordingModel->linkContributor( array(
+        'contributorid'  => $contributorModel->id,
+        'organizationid' => $this->organization['id'],
+        'roleid'         => $roleModel->id,
+      )
+    );
+    
+    $this->toSmarty['contributors'] = $recordingsModel->getContributorsWithRoles();
+    $this->toSmarty['recordingid']  = $recordingsModel->id;
+    $this->jsonOutput( array(
+        'status' => 'OK',
+        'html'   => $this->fetchSmarty('Visitor/Recordings/Contributors.tpl'),
+      )
+    );
+    
+  }
+  
+  public function deletecontributorAction() {
+    
+    $contribroleModel = $this->modelOrganizationIDCheck(
+      'contributors_roles',
+      $this->application->getNumericParameter('id')
+    );
+    $recordingModel   = $this->modelOrganizationAndUserIDCheck(
+      'recordings',
+      $contribroleModel->row['recordingid']
+    );
+    
+    $contribroleModel->delete( $contribroleModel->id );
+    
+    $this->toSmarty['contributors'] = $recordingsModel->getContributorsWithRoles();
+    $this->toSmarty['recordingid']  = $recordingsModel->id;
+    $this->jsonOutput( array(
+        'status' => 'OK',
+        'html'   => $this->fetchSmarty('Visitor/Recordings/Contributors.tpl'),
+      )
     );
     
   }

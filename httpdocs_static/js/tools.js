@@ -28,6 +28,7 @@ $j(document).ready(function() {
   runIfExists('#feeds .needpoll', setupStreamPoll );
   runIfExists('#currentuser', setupCurrentUser );
   runIfExists('#search_advanced', setupSearch );
+  runIfExists('#recordings_modifycontributors', setupContributors );
   
   $j('#scriptingcontainer').show();
   
@@ -1275,3 +1276,61 @@ livechat.prototype.messageValid = function() {
   return true;
   
 };
+
+function setupContributors() {
+  
+  var html = $j('#autocomplete-listitem').html();
+  
+  $j('#searchterm').autocomplete({
+    minLength: 2,
+    source: BASE_URI + language + '/contributors/search',
+    
+    select: function( event, ui ) {
+      $j('#searchterm').val( ui.item.label );
+      $j('#contributorid').val( ui.item.value );
+      $j('#contributorname').text( ui.item.label );
+      $j('#contributorrolerow').show();
+      return false;
+    }
+  }).data( "autocomplete" )._renderItem = function( ul, item ) {
+    
+    var itemhtml = html.replace('__IMGSRC__', item.img ).replace('__NAME__', item.label );
+    return $j("<li>")
+      .data( "item.autocomplete", item )
+      .append( "<a>" + itemhtml + "</a>" )
+      .appendTo( ul )
+    ;
+    
+  };
+  
+  $j('#cancelcontributor').click( function(e) {
+    
+    e.preventDefault();
+    $j('#searchterm, #contributorid').val('');
+    $j('#contributorrolerow').hide();
+    
+  });
+  
+  $j('#contributors .delete').live('click', function(e) {
+    
+    e.preventDefault();
+    $j.ajax({
+      //beforeSend:
+      //complete:
+      cache: false,
+      success: function( data ) {
+        
+        if ( !data || data.status != 'OK' )
+          return;
+        
+        $j('#contributors ul').html( data.html );
+        
+      },
+      dataType: 'json',
+      type: 'GET',
+      url: $j(this).attr('href')
+    });
+    
+  });
+  
+}

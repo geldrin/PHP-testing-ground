@@ -2,18 +2,15 @@
 namespace Visitor\Recordings\Form;
 
 class Modifycontributors extends \Visitor\Recordings\ModifyForm {
-  public $configfile   = 'Modifycontributors.php';
-  public $template     = 'Visitor/Recordings/Modifycontributors.tpl';
+  public $configfile = 'Modifycontributors.php';
+  public $template   = 'Visitor/Recordings/Modifycontributors.tpl';
+  public $needdb     = true;
   
   public function init() {
     
     parent::init();
-    
-    $this->controller->redirect(
-      'recordings/modifysharing/' . $this->recordingsModel->id,
-      array( 'forward' => $this->application->getParameter('forward') )
-    );
-    
+    $this->controller->toSmarty['needfancybox'] = true;
+    $this->controller->toSmarty['recordingid']  = $this->recordingsModel->id;
     $this->controller->toSmarty['contributors'] = $this->contributors =
       $this->recordingsModel->getContributorsWithRoles()
     ;
