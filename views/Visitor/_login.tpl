@@ -55,7 +55,7 @@
               {if $member.isuploader}<li><a href="{$language}/channels/create">{#usermenu_channels_create#}</a></li>{/if}
             </ul>
           </div>
-          
+          {if $member.isuploader or ( $organization.islivestreamingenabled and $member.isliveadmin )}
           <div class="column">
             {*}
             <div class="title">{#usermenu_events_title#}</div>
@@ -88,7 +88,7 @@
               </ul>
             {/if}
           </div>
-          
+          {/if}
           <div class="column last">
             <div class="placeholder"></div>
             <div class="title">{#usermenu_users_title#}</div>
