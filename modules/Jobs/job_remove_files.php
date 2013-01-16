@@ -84,9 +84,9 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_remove_files.stop' ) and !
 
 // check + log filesize
 // rm -r $path
+$dir_size = $directory_size($remove_path);
 
-echo $recording['id'] . ", ";
-
+echo $recording['id'] . ": " . $dir_size;
 
 				$app->watchdog();
 				$recordings->MoveNext();
@@ -148,6 +148,7 @@ function query_recordings2remove(&$recordings) {
 		WHERE
 			a.status = \"" . $jconf['dbstatus_markedfordeletion'] . "\" AND
 			a.userid = b.id AND
+a.id = 26 and
 			b.organizationid = c.id
 	";
 

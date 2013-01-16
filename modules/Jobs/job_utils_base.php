@@ -1,5 +1,17 @@
 <?php
-// Basic functions
+// Base functions
+
+function directory_size($path) {
+
+	if ( !is_dir($path) ) return FALSE;
+    $io = popen('/usr/bin/du -sk ' . $path, 'r' );
+    $size = fgets ( $io, 4096);
+    $size = substr($size, 0, strpos( $size, ' ' ));
+    pclose ($io);
+    echo 'Directory: ' . $path . ' => Size: ' . $size;
+
+	return $size;
+}
 
 // *************************************************************************
 // *						function GCD()			   			   *
