@@ -38,7 +38,7 @@ class Myrecordings extends \Visitor\Paging {
     else
       $this->recordingsModel->addFilter('userid', $user['id'] );
     
-    $this->recordingsModel->addTextFilter("status <> 'markedfordeletion'");
+    $this->recordingsModel->addTextFilter("status NOT IN('markedfordeletion', 'deleted')");
     
     $search = $this->handleSearch();
     
