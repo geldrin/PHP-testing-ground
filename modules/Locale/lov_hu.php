@@ -106,6 +106,7 @@ return array(
     'onstorage'             => 'Konvertálás kész',
     'copyingtoconverter'    => 'Feldolgozásra vár',
     'markedfordeletion'     => 'Törölve',
+    'deleted'               => 'Törölve',
     'unavailable'           => 'Feldolgozás alatt',
     'init'                  => 'Feldolgozás alatt',
     'reconvert'             => 'Feldolgozás alatt',

@@ -86,6 +86,7 @@ return array(
     'onstorage'             => 'Converted',
     'copyingtoconverter'    => 'Converting',
     'markedfordeletion'     => 'Marked for deletion',
+    'deleted'               => 'Deleted',
     'unavailable'           => 'Converting',
     'reconvert'             => 'Converting',
     'init'                  => 'Converting',
