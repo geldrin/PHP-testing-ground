@@ -84,7 +84,7 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_remove_files.stop' ) and !
 
 // check + log filesize
 // rm -r $path
-$dir_size = $directory_size($remove_path);
+$dir_size = directory_size($remove_path);
 
 echo $recording['id'] . ": " . $dir_size;
 
