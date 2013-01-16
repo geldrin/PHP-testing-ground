@@ -20,7 +20,7 @@ $user_namesuffix_length = 4;
 $user_nametermination = "conforg.hu";
 $pass_length = 8;
 $org_id = 200;
-$org_dep_id = 8;
+$org_dep_id = 10;
 
 $iscommit = FALSE;
 

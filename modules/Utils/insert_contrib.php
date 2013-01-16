@@ -9,7 +9,7 @@ include_once( BASE_PATH . 'libraries/Springboard/Application/Cli.php');
 
 set_time_limit(0);
 
-$iscommit = FALSE;
+$iscommit = TRUE;
 
 // Init
 $app = new Springboard\Application\Cli(BASE_PATH, PRODUCTION);
@@ -27,6 +27,9 @@ $authors = array(
 	array("Dr. Kovács", "Ferenc", "straight", "elnökhelyettesi tanácsadó", "Nemzeti Adó- és Vámhivatal", 190, 1),
 	array("Ácsné Molnár", "Judit", "straight", "szakmai főtanácsadó", "Nemzeti Adó- és Vámhivatal", 191, 1),
 */
+
+	array("Kelemen", "István", "straight", "vezető tanácsadó", "Green Tax Consulting Kft.", 193, 1),
+	array("Mészáros", "Adrienn", "straight", "százados", "Nemzeti Adó- és Vámhivatal Adóügyi Főosztály", 194, 1),
 
 );
 
