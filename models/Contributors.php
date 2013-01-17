@@ -143,4 +143,26 @@ class Contributors extends \Springboard\Model {
     
   }
   
+  public function search( $term, $organizationid ) {
+    
+    $term    = $this->db->qstr( '%' . $term . '%' );
+    $results = $this->db->getArray("
+      SELECT
+        c.*,
+        ci.indexphotofilename
+      FROM
+        contributors AS c LEFT JOIN contributor_images AS ci ON
+        ci.id = c.contributorimageid
+      WHERE
+        c.organizationid = '$organizationid' AND
+        IF( c.nameformat = 'straight',
+          CONCAT_WS(' ', c.nameprefix, c.namelast, c.namefirst ),
+          CONCAT_WS(' ', c.nameprefix, c.namefirst, c.namelast )) LIKE $term
+      LIMIT 20
+    ");
+    
+    return $results;
+    
+  }
+  
 }

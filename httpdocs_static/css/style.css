@@ -2452,3 +2452,45 @@ a#currentusername span {
 .form .searchtable .inputbackground {
   box-shadow: none;
 }
+
+#recordings_modifycontributors #contributorrolerow {
+  display: none;
+}
+#recordings_modifycontributors #contributorname {
+  margin-right: 5px;
+}
+#recordings_modifycontributors #cancelcontributor {
+  display: block;
+  float: right;
+  margin: 5px 0px 0px 10px;
+}
+#contributors h2 {
+  padding: 5px 0 15px 0;
+  color: #000;
+  font-size: 18px;
+  font-weight: bold;
+  border-bottom: 1px solid #a5a5a5;
+  width: 625px;
+}
+#contributors ul {
+  width: 590px;
+}
+#contributors .actions {
+  float: right;
+  margin: 0 0 0 10px;
+}
+#contributors .actions a {
+  display: inline-block;
+  margin: 0 2px;
+}
+.ui-autocomplete {
+  max-height: 270px;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+.ui-autocomplete .wrap img {
+  float: left;
+  margin-right: 10px;
+}
+.ui-autocomplete .wrap .name {
+}

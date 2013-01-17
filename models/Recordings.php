@@ -2577,8 +2577,8 @@ class Recordings extends \Springboard\Model {
     
     $this->ensureID();
     $this->db->query("
-      INSERT INTO contributors_roles (organizationid, contributorid, recordingid )
-      VALUES ('" . $data['organizationid'] . "', '" . $data['contributorid'] . "', '" . $this->id . "')
+      INSERT INTO contributors_roles (organizationid, contributorid, recordingid, roleid )
+      VALUES ('" . $data['organizationid'] . "', '" . $data['contributorid'] . "', '" . $this->id . "', '" . $data['roleid'] . "')
     ");
     
   }
