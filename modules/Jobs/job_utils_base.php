@@ -3,20 +3,31 @@
 
 function directory_size($path) {
 
-	if ( !is_dir($path) ) return FALSE;
-    $io = popen('/usr/bin/du -sk ' . $path, 'r' );
-    $size = fgets ( $io, 4096);
-echo $size . "\n";
-echo strpos($size, ' ') . "\n";
-    $size = substr($size, 0, strpos($size, ' '));
-    pclose ($io);
-    echo 'Directory: ' . $path . ' => Size: ' . $size;
+	$err['code'] = FALSE;
+	$err['command'] = "/usr/bin/du -sb " . $path;
+	$err['command_output'] = "-";
+	$err['result'] = 0;
+	$err['size'] = 0;
 
-	return $size;
+	if ( !is_dir($path) ) return $err;
+
+	exec($err['command'], $output, $result);
+	$err['command_output'] = implode("\n", $output);
+	$err['result'] = $result;
+	if ( $result != 0 ) return $err;
+
+	$tmp = preg_split('/\s+/', $err['command_output'], 2);
+
+	if ( !is_numeric($tmp[0]) ) return $err;
+	$err['size'] = $tmp[0];
+
+	$err['code'] = TRUE;
+
+	return $err;
 }
 
 // *************************************************************************
-// *						function GCD()			   			   *
+// *						function GCD()			   			   		   *
 // *************************************************************************
 // Description: find greatest common divisor
 // Source: http://blog.ifwebstudio.com/php/calculate-image-aspect-ratio-in-php/
@@ -36,13 +47,13 @@ function GCD($a, $b) {
 function soffice_isrunning() {
  global $jconf;
 
-  $command = "ps uax | grep \"^" . $jconf['ssh_user'] . "\" | grep \"soffice.bin\" | grep -v \"grep\"";
-  exec($command, $output, $result);
-  if ( isset($output[0]) ) {
-	return TRUE;
-  }
+	$command = "ps uax | grep \"^" . $jconf['ssh_user'] . "\" | grep \"soffice.bin\" | grep -v \"grep\"";
+	exec($command, $output, $result);
+	if ( isset($output[0]) ) {
+		return TRUE;
+	}
 
-  return FALSE;
+	return FALSE;
 }
 
 
@@ -57,12 +68,12 @@ function soffice_isrunning() {
 //	  o TRUE: Windows system
 function iswindows() {
 
-  $php_os = PHP_OS;
-  if ( stripos($php_os, "WIN") !== false ) {
-	return TRUE;
-  }
+	$php_os = PHP_OS;
+	if ( stripos($php_os, "WIN") !== false ) {
+		return TRUE;
+	}
 
-  return FALSE;
+	return FALSE;
 }
 
 // *************************************************************************

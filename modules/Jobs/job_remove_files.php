@@ -58,11 +58,8 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_remove_files.stop' ) and !
 		$db_close = TRUE;
 
 		// Initialize log for closing message and total duration timer
-		$global_log = "Removing document(s) from storage:\n\n";
+		$global_log = "Removing recording(s) from storage:\n\n";
 		$start_time = time();
-
-//update_db_attachment_status(1, $jconf['dbstatus_uploaded']);
-//update_db_attachment_status(2, $jconf['dbstatus_uploaded']);
 
 		// Attached documents: query pending uploads
 		$recordings = array();
@@ -82,11 +79,20 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_remove_files.stop' ) and !
 				// Log file path information
 				$global_log .= "Remove: " . $remove_path . "\n";
 
-// check + log filesize
-// rm -r $path
-$dir_size = directory_size($remove_path);
+				$err = array();
+				$err = directory_size($remove_path);
+			
+				$dir_size = 0;
+				if ( $err['code'] === TRUE ) {
+					$dir_size = round($err['size'] / 1024 / 1024, 2);
+					$global_log .= "Recording size: " . $dir_size . "MB\n";
+				}
 
-echo $recording['id'] . ": " . $dir_size;
+// remove_file_ifexists($filename);
+//  $err['code'] = TRUE;
+//  $err['command'] = "-";
+//  $err['command_output'] = "-";
+//  $err['result'] = 0;
 
 				$app->watchdog();
 				$recordings->MoveNext();
@@ -94,8 +100,10 @@ echo $recording['id'] . ": " . $dir_size;
 
 			$duration = time() - $start_time;
 			$hms = secs2hms($duration);
-//			log_document_conversion(0, 0, $jconf['jobid_upload_finalize'], "-", "File remove finished in " . $hms . " time.\n\nSummary:\n\n" . $global_log, "-", "-", $duration, TRUE);
+			$debug->log($jconf['log_dir'], $myjobid . ".log", "File remove finished in " . $hms . " time.\n\nSummary:\n\n" . $global_log, $sendmail = true);
 
+echo $global_log;
+exit;
 		} // End of attached document finalize
 
 		break;
@@ -157,8 +165,8 @@ a.id = 26 and
 	try {
 		$recordings = $db->Execute($query);
 	} catch (exception $err) {
-//!!!!
-//		log_document_conversion(0, 0, $jconf['jobid_file_remove'], $jconf['dbstatus_init'], "[ERROR] Cannot query next file to be removed. SQL query failed.", trim($query), $err, 0, TRUE);
+		$debug->log($jconf['log_dir'], $jconf['jobid_file_remove'] . ".log", "[ERROR] SQL query failed.\n\n" . trim($query), $sendmail = true);
+
 		return FALSE;
 	}
 
