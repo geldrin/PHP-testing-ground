@@ -95,6 +95,8 @@ if ( query_recordings2remove($recordings) ) {
 		// Update status
 		update_db_recording_status($recording['id'], $jconf['dbstatus_deleted']);
 		update_db_masterrecording_status($recording['id'], $jconf['dbstatus_deleted']);
+		update_db_content_status($recording['id'], $jconf['dbstatus_deleted']);
+		update_db_mastercontent_status($recording['id'], $jconf['dbstatus_deleted']);
 
 		$app->watchdog();
 		$recordings->MoveNext();
