@@ -1,20 +1,19 @@
 <?php
 
-// Dataintegrity check job for Videotorium v0.4 @ 2011/07/06
+// Dataintegrity check job for VideoSquare
 //	1. Check contributor images
 //	2. Check recordings: media files, thumbnails
 //	3. Check recording attachments
-//	4. Check slides belonging to a recording
 
 define('BASE_PATH',	realpath( __DIR__ . '/../..' ) . '/' );
-define('PRODUCTION', false );
-define('DEBUG', false );
+define('PRODUCTION', false);
+define('DEBUG', false);
 
-include_once( BASE_PATH . 'libraries/Springboard/Application/Cli.php');
+include_once(BASE_PATH . 'libraries/Springboard/Application/Cli.php');
 
 // Utils
-include_once('job_utils_base.php');
-include_once('job_utils_log.php');
+include_once(BASE_PATH . 'modules/Jobs/job_utils_base.php');
+include_once(BASE_PATH . 'modules/Jobs/job_utils_log.php');
 
 set_time_limit(0);
 
@@ -29,6 +28,7 @@ $myjobid = $jconf['jobid_integrity_check'];
 // Log related init
 $debug = Springboard\Debug::getInstance();
 $debug->log($jconf['log_dir'], $myjobid . ".log", "Data integrity job started", $sendmail = FALSE);
+$num_errors = 0;
 
 // Check operating system - exit if Windows
 if ( iswindows() ) {
@@ -40,56 +40,50 @@ clearstatcache();
 
 // Exit if any STOP file appears
 if ( is_file( $app->config['datapath'] . 'jobs/job_integrity_check.stop' ) or is_file( $app->config['datapath'] . 'jobs/all.stop' ) ) exit;
-
 // Establish database connection
 try {
 	$db = $app->bootstrap->getAdoDB();
 } catch (exception $err) {
 	// Send mail alert, sleep for 15 minutes
-	$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] No connection to DB (getAdoDB() failed). Error message:\n" . $err, $sendmail = true);
-	// Sleep 15 mins then resume
+	$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] No connection to DB (getAdoDB() failed). Error message:\n" . $err, $sendmail = TRUE);
 	exit;
 }
-$db_close = TRUE;
 
-// -------------------------------------------------------------------------------
+$db_close = TRUE;
 
 $log_summary = "";
 
 $time_start = time();
 
 // Check contributor images
+// 			!!	Not yet implemented in Videosquare	!!
 /*if ( check_contributor_images() === FALSE ) {
-	tools::log(LOGPATH_JOBS, LOG_FILE, "[ERROR] Data integrity check interrupted due to error. Manual restart is required.\nCheck log files.", TRUE);
+	$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Data integrity check interrupted due to error. Manual restart is required.\nCheck log files.", $sendmail = FALSE);
 	exit;
 } */
 
 // Check recordings one by one
-
-$recording = array();
+$rec = array();
 $recordings = array();
 
 $query = "
 	SELECT
 		a.id,
 		a.userid,
-		a.mastermediatype,
-		a.mastervideoextension,
 		a.status,
-		a.masterstatus,
-		a.numberofindexphotos,
-		a.videoreslq,
-		a.videoreshq,
-		a.videoresmobile,
-		a.hascontent,
-		a.contentmastermediatype,
-		a.contentmastervideoextension,
 		a.contentstatus,
+		a.masterstatus,
+		a.mobilestatus,
 		a.contentmasterstatus,
-		a.contentvideoreslq,
-		a.contentvideoreshq
-		b.email,
-		a.status
+		a.mastermediatype,
+		a.mastervideores,
+		a.mastervideoextension,
+		a.numberofindexphotos,
+		a.hascontentvideo,
+		a.contentmastermediatype,
+		a.contentmastervideores,
+		a.contentmastervideoextension,
+		b.email
 	FROM
 		recordings as a, users as b
 	WHERE
@@ -97,14 +91,12 @@ $query = "
 		( a.masterstatus = \"" . $jconf['dbstatus_copystorage_ok'] . "\" OR a.masterstatus = \"" . $jconf['dbstatus_markedfordeletion'] . "\" ) AND
 		a.userid = b.id
 	ORDER BY a.id";
-//and a.id = 2972
 
 try {
 	$recordings = $db->Execute($query);
 } catch (exception $err) {
 	$msg = "[ERROR] Data integrity check interrupted due to error. Manual restart is required.\nCheck log files.\n\n";
-// !!!
-//	tools::log(LOGPATH_JOBS, LOG_FILE, $msg . "[ERROR] No connection to DB (getAdoDB() failed). Error message:\n" . $err, TRUE);
+	$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] No connection to DB (getAdoDB() failed). Error message:\n" . $err, $sendmail = TRUE);
 	exit;
 }
 
@@ -113,11 +105,12 @@ $num_onstorage_recs = 0;
 $num_recordings = $recordings->RecordCount();
 
 while ( !$recordings->EOF ) {
+	// Get current field from the query
+	$rec = $recordings->fields;
 
-	$recording = $recordings->fields;
-
-	$rec_id = $recording['id'];
-
+	$rec_id = $rec['id'];
+	
+	// init log string
 	$recording_summary = "";
 
 	$recording_path = $app->config['recordingpath'] . ( $rec_id % 1000 ) . "/" . $rec_id . "/";
@@ -129,148 +122,148 @@ while ( !$recordings->EOF ) {
 		continue;
 	}
 
-	// Check media files
-	unset($media_audio_only);
-	unset($media_f4v_mobile);
-	unset($media_f4v_low);
-	unset($media_f4v_high);
-	if ( $recording_element['mastermediatype'] != "videoonly" ) {
-		$media_audio_only = $recording_path . $rec_id . "_" . $rec_element_id . ".mp3";
-	}
-	if ( $recording_element['mastermediatype'] != "audio" ) {
-		if ( !empty($recording_element['videoresmobile']) ) {
-			$media_f4v_mobile = $recording_path . $rec_id . "_" . $rec_element_id . "_mobile.mp4";
-		}
-		if ( !empty($recording_element['videoreslq']) ) {
-			$media_f4v_low = $recording_path . $rec_id . "_" . $rec_element_id . ".f4v";
-		}
-		if ( !empty($recording_element['videoreshq']) ) {
-			$media_f4v_high = $recording_path . $rec_id . "_" . $rec_element_id . "_hq.f4v";
-		}
-	}
-	$media_master = $recording_path . "master/" . $rec_id . "_" . $rec_element_id . "." . $recording_element['mastervideoextension'];
+	// Check media files	
+	$hq_record_available = FALSE;
+	$hq_content_available = FALSE;
+	$hq_mobile_available = FALSE;
+	
+	// build filenames
+	$record_audio_only = $recording_path . $rec_id . "_audio.mp3";
+	$record_mobile_lq = $recording_path . $rec_id . "_mobile_lq.mp4";
+	$record_mobile_hq = $recording_path . $rec_id . "_mobile_hq.mp4";
+	$record_lq = $recording_path . $rec_id . "_video_lq.mp4";	
+	$record_hq = $recording_path . $rec_id . "_video_hq.mp4";	
+	$content_lq = $recording_path . $rec_id . "_content_lq.mp4";
+	$content_hq = $recording_path . $rec_id . "_content_hq.mp4";
 
+	if ($rec['mastermediatype'] == "audio") {
+		$master_record = $recording_path . "master/" . $rec_id . "_audio." . $rec['mastervideoextension'];
+	} else {
+		$master_record = $recording_path . "master/" . $rec_id . "_video." . $rec['mastervideoextension'];
+	}
+	
 	// Check audio only version
-	if ( !empty($media_audio_only) ) {
-		if ( !file_exists($media_audio_only) ) {
-			$recording_summary .= "ERROR: audio only version does not exist (" . $media_audio_only . ")\n";
-		} elseif ( filesize($media_audio_only) == 0 ) {
-			$recording_summary .= "ERROR: audio only version zero size (" . $media_audio_only . ")\n";
+	if ( $rec['mastermediatype'] != "videoonly" ) {
+		if ( !file_exists($record_audio_only) ) {
+			$recording_summary .= "ERROR: audio only version does not exist (" . $record_audio_only . ")\n";
+		} elseif ( filesize($record_audio_only) == 0 ) {
+			$recording_summary .= "ERROR: audio only version zero size (" . $record_audio_only . ")\n";
 		}
 	}
-
-	// Check mobile quality file
-	if ( !empty($media_f4v_mobile) ) {
-		if ( !file_exists($media_f4v_mobile) ) {
-			$recording_summary .= "ERROR: media file does not exist (" . $media_f4v_mobile . ")\n";
-		} elseif ( filesize($media_f4v_low) == 0 ) {
-			$recording_summary .= "ERROR: media file zero size (" . $media_f4v_mobile . ")\n";
-		}
-	}
-
-	// Check normal quality file
-	if ( !empty($media_f4v_low) ) {
-		if ( !file_exists($media_f4v_low) ) {
-			$recording_summary .= "ERROR: media file does not exist (" . $media_f4v_low . ")\n";
-		} elseif ( filesize($media_f4v_low) == 0 ) {
-			$recording_summary .= "ERROR: media file zero size (" . $media_f4v_low . ")\n";
-		}
-	}
-
-	// Check high quality file
-	if ( !empty($media_f4v_high) ) {
-		if ( !file_exists($media_f4v_high) ) {
-			$recording_summary .= "ERROR: media file does not exist (" . $media_f4v_high . ")\n";
-		} elseif ( filesize($media_f4v_high) == 0 ) {
-			$recording_summary .= "ERROR: media file zero size (" . $media_f4v_high . ")\n";
-		}
-	}
-
+	
 	// Check master media file
-	if ( !file_exists($media_master) ) {
-		$recording_summary .= "ERROR: master media file does not exist (" . $media_master . ")\n";
-	} elseif ( filesize($media_master) == 0 ) {
-		$recording_summary .= "ERROR: master media file zero size (" . $media_master . ")\n";
+	if ( !file_exists($master_record) ) {
+		$recording_summary .= "ERROR: master media file does not exist (" . $master_record . ")\n";
+	} elseif ( filesize($master_record) == 0 ) {
+		$recording_summary .= "ERROR: master media file zero size (" . $master_record . ")\n";
+	} elseif ($rec['mastermediatype'] != "audio") {
+		if (is_res1_gt_res2($rec['mastervideores'], $jconf['profile_video_lq']['video_bbox'])) {
+			$hq_record_available = TRUE;
+		}
+		if (is_res1_gt_res2($rec['mastervideores'], $jconf['profile_mobile_lq']['video_bbox'])) {
+			$hq_mobile_available = TRUE;
+		}
 	}
-
-	// Check video thumbnails
-	if ( check_video_thumbnails($rec_id, $rec_element_id, $recording_element['numberofindexphotos']) === FALSE ) {
-		tools::log(LOGPATH_JOBS, LOG_FILE, "[ERROR] Data integrity check interrupted due to error. Manual restart is required.\nCheck log files.", TRUE);
-		exit;
-	}
-
-	// Check content media files
-	unset($content_mp4_low);
-	unset($content_mp4_high);
-	if ( $recording_element['contentstatus'] == DBSTATUS_COPYSTORAGE_OK ) {
-		if ( !empty($recording_element['contentvideoreslq']) ) {
-			$content_mp4_low = $recording_path . $rec_id . "_" . $rec_element_id . "_content.mp4";
+	
+	if ( $rec['mastermediatype'] != "audio" ) {
+		// Check normal quality file
+		if ( !file_exists($record_lq) ) {
+			$recording_summary .= "ERROR: media file does not exist (" . $record_lq . ")\n";
+		} elseif ( filesize($record_lq) == 0 ) {
+			$recording_summary .= "ERROR: media file zero size (" . $record_lq . ")\n";
 		}
-		if ( !empty($recording_element['contentvideoreshq']) ) {
-			$content_mp4_high = $recording_path . $rec_id . "_" . $rec_element_id . "_content_hq.mp4";
-		}
-
-		// Check low resolution file
-		if ( !empty($content_mp4_low) ) {
-			if ( !file_exists($content_mp4_low) ) {
-				$recording_summary .= "ERROR: content media file does not exist (" . $content_mp4_low . ")\n";
-			} elseif ( filesize($content_mp4_low) == 0 ) {
-				$recording_summary .= "ERROR: content media file zero size (" . $content_mp4_low . ")\n";
-			}
-		}
-
-		// Check high resolution file
-		if ( !empty($content_mp4_high) ) {
-			if ( !file_exists($content_mp4_high) ) {
-				$recording_summary .= "ERROR: content media file does not exist (" . $content_mp4_high . ")\n";
-			} elseif ( filesize($content_mp4_high) == 0 ) {
-				$recording_summary .= "ERROR: content media file zero size (" . $content_mp4_high . ")\n";
+	
+		// Check high quality file
+		if ( $hq_record_available) {
+			if ( !file_exists($record_hq) ) {
+				$recording_summary .= "ERROR: media file does not exist (" . $record_hq . ")\n";
+			} elseif ( filesize($record_hq) == 0 ) {
+				$recording_summary .= "ERROR: media file zero size (" . $record_hq . ")\n";
 			}
 		}
 	}
 
 	// Check content master media file
-	if ( $recording_element['contentmasterstatus'] == DBSTATUS_COPYSTORAGE_OK ) {
-		$content_master = $recording_path . "master/" . $rec_id . "_" . $rec_element_id . "_content." . $recording_element['contentmastervideoextension'];
+	if ( $rec['contentmasterstatus'] == $jconf['dbstatus_copystorage_ok'] ) {	// masterstatus = "onstorage"
+		$content_master = $recording_path . "master/" . $rec_id . "_content." . $rec['contentmastervideoextension'];
 
 		if ( !file_exists($content_master) ) {
 			$recording_summary .= "ERROR: content master media file does not exist (" . $content_master . ")\n";
 		} elseif ( filesize($content_master) == 0 ) {
 			$recording_summary .= "ERROR: content master media file zero size (" . $content_master . ")\n";
+		} else {
+			if(is_res1_gt_res2($rec['contentmastervideores'], $jconf['profile_content_lq']['video_bbox'])) {
+				$hq_content_available = TRUE;
+			}
+		}
+	
+	}
+	
+	if ( $rec['contentstatus'] == $jconf['dbstatus_copystorage_ok'] ) {
+		// Check low resolution file
+		if ( !file_exists($content_lq) ) {
+			$recording_summary .= "ERROR: content media file does not exist (". $content_lq .")\n";
+		} elseif ( filesize($content_lq) == 0 ) {
+			$recording_summary .= "ERROR: content media file zero size (". $content_lq .")\n";
+		}
+
+		// Check high resolution file
+		if ($hq_content_available) {
+			if ( !file_exists($content_hq) ) {
+				$recording_summary .= "ERROR: content media file does not exist (" . $content_hq . ")\n";
+			} elseif ( filesize($content_hq) == 0 ) {
+				$recording_summary .= "ERROR: content media file zero size (" . $content_hq . ")\n";
+			}
 		}
 	}
-
-	// Check all attachments
-	if ( check_attachments($rec_id) === FALSE ) {
-		tools::log(LOGPATH_JOBS, LOG_FILE, "[ERROR] Data integrity check interrupted due to error. Manual restart is required.\nCheck log files.", TRUE);
-		exit;
+	
+	if ($rec['mobilestatus'] == $jconf['dbstatus_copystorage_ok']) {
+		// Check mobile normal quality file
+		if ( !file_exists($record_mobile_lq) ) {
+			$recording_summary .= "ERROR: media file does not exist (" . $record_mobile_lq . ")\n";
+		} elseif ( filesize($record_mobile_lq) == 0 ) {
+			$recording_summary .= "ERROR: media file zero size (" . $record_mobile_lq . ")\n";
+		}
+		// Check mobile high quality file
+		if ($hq_mobile_available) {
+			if ( !file_exists($record_mobile_hq) ) {
+				$recording_summary .= "ERROR: media file does not exist (" . $record_mobile_hq . ")\n";
+			} elseif ( filesize($record_mobile_hq) == 0 ) {
+				$recording_summary .= "ERROR: media file zero size (" . $record_mobile_hq . ")\n";
+			}
+		}
 	}
-
+	
+	// Check video thumbnails
+	check_video_thumbnails($rec_id, $rec['numberofindexphotos']);
+	
+	// Check all attachments
+	check_attachments($rec_id);
+	
 	if ( !empty($recording_summary) ) {
-		$log_summary .= "Recording/element: " . $rec_id . " / " . $rec_element_id . " (user: " . $recording['email'] . ") - " . $recording['status'] . "\n\n";
+		$log_summary .= "Recording: " . $rec_id . " (user: " . $rec['email'] . ") - " . $rec['status'] . "\n\n";
 		$log_summary .= $recording_summary . "\n";
+		$num_errors++;
 	}
 
 	$num_checked_recs++;
 
-	if ( $recording['status'] == "onstorage" ) $num_onstorage_recs++;
+	if ( $rec['status'] == "onstorage" ) $num_onstorage_recs++;
 
 	$recordings->MoveNext();
 }
 
 // Summarize check statistics
-$log_summary .= "Number of recordings: " . $num_recordings . "\n";
+$log_summary .= "\nNumber of recordings: " . $num_recordings . "\n";
 $log_summary .= "Number of checked recordings: " . $num_checked_recs . "\n";
-$log_summary .= "Number of \"onstorage\" recordings: " . $num_onstorage_recs . "\n\n";
+$log_summary .= "Number of \"onstorage\" recordings: " . $num_onstorage_recs . "\n";
+$log_summary .= "Number of faulty recordings: ". $num_errors ."\n\n";
 
 // Calculate check duration
 $duration = time() - $time_start;
 $log_summary .= "Check duration: " . secs2hms($duration) . "\n";
 
-// !!!!
-tools::log(LOGPATH_JOBS, LOG_FILE, "Data integrity check results:\n\n" . $log_summary, TRUE);
-
-//echo $log_summary . "\n";
+$debug->log($jconf['log_dir'], ($myjobid . ".log"), "Data integrity check results:\n\n" . $log_summary, $sendmail = TRUE);
 
 if ( $db_close ) {
 	$db->close();
@@ -278,16 +271,17 @@ if ( $db_close ) {
 
 exit;
 
+//---< Functions >---------------------------------------------------------------------------------
 function check_contributor_images() {
- global $api, $db, $log_summary;
-
-	$contributor_image_path = "/srv/videotorium/httpdocs/contributors/";
+ global $db, $log_summary;
+ 
+	$contributor_image_path = realpath("/srv/storage/videosquare.eu/contributors/");
 
 	$query = "
 		SELECT
 			id,
 			contributorid,
-			filename
+			indexphotofilename
 		FROM contributor_images
 		WHERE 1
 		ORDER BY contributorid, id ASC
@@ -296,10 +290,10 @@ function check_contributor_images() {
 	try {
 		$images = $db->Execute($query);
 	} catch (exception $err) {
-		tools::log(LOGPATH_JOBS, LOG_FILE, "[ERROR] SQL query failed. Query: \n" .  trim($query) . "\n\nError message: \n" . $err, FALSE);
+		$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] SQL query failed. Query: \n" .  trim($query) . "\n\nError message: \n" . $err, $sendmail = TRUE);
 		return FALSE;
 	}
-
+	
 	$num_checked_images = 0;
 	$num_images = $images->RecordCount();
 
@@ -309,13 +303,13 @@ function check_contributor_images() {
 
 		$id = $images->fields['id'];
 		$contributor_id = $images->fields['contributorid'];
-		$filename = $images->fields['filename'];
+		$filename = $images->fields['indexphotofilename'];
 
 		$image_notfin = FALSE;
 		if ( stripos($filename, "recordings/") === FALSE ) {
 			$image_file = $contributor_image_path . ( $contributor_id % 1000 ) . "/" . $contributor_id . "/" . $contributor_id . "_" . $id . ".jpg";
 		} else {
-			$image_file = "/srv/videotorium/httpdocs/" . $filename;
+			$image_file = "/srv/storage/videosquare.eu/contributors/" . $filename;
 			$image_notfin = TRUE;
 		}
 
@@ -344,65 +338,78 @@ function check_contributor_images() {
 
 	return TRUE;
 }
-
-function check_video_thumbnails($rec_id, $rec_element_id, $num_thumbs) {
- global $recording_summary;
-
-/*
-$app->config['config_jobs']['videothumbnailresolutions']['4:3']
-config.php:
-  'videothumbnailresolutions' => array(
-    '4:3'    => '220x130',
-    'wide'   => '300x168',
-    'player' => '618x348',
-  ),
-*/
-
-// + Original thumb check: ./original/
-
-	$thumb_path = RECORDINGPATH . ( $rec_id % 1000 ) . "/" . $rec_id . "/indexpics/";
+function check_video_thumbnails($rec_id, $num_thumbs) {
+	global	$recording_summary;
+	global	$app;
+	
+	$thumb_path = $app->config['recordingpath'] . ( $rec_id % 1000 ) . "/" . $rec_id . "/indexpics/";
+	$num_thumbs_small = 0;
+	$num_thumbs_wide = 0;
+	$num_thumbs_player = 0;
+	$num_thumbs_original = 0;
 
 	for ( $i = 1; $i <= $num_thumbs; $i++) {
 
-		$thumb_filename = $rec_id . "_" . $rec_element_id . "_" . $i . ".jpg";
-
-		$thumb_tocheck = $thumb_path . VIDEO_THUMB_43_RES . "/" . $thumb_filename;
+		$thumb_filename = $rec_id . "_" . $i . ".jpg";
+		
+		// check 4:3[] thumbnails
+		//$thumb_tocheck = $thumb_path . $app->config_jobs['thumb_video_small'|'thumb_video_medium'|'thumb_video_large']
+		$thumb_tocheck = $thumb_path . $app->config['videothumbnailresolutions']['4:3'] . "/" . $thumb_filename;
 		if ( !file_exists($thumb_tocheck) ) {
 			$recording_summary .= "ERROR: thumb does not exist (" . $thumb_tocheck . ")\n";
 		} elseif ( filesize($thumb_tocheck) == 0 ) {
 			$recording_summary .= "ERROR: thumb zero size (" . $thumb_tocheck . ")\n";
+		} else {
+			$num_thumbs_small++;
 		}
-
-		$thumb_tocheck = $thumb_path . VIDEO_THUMB_WIDE_RES . "/" . $thumb_filename;
+		// check 16:9[] thumbnails
+		$thumb_tocheck = $thumb_path . $app->config['videothumbnailresolutions']['wide'] . "/" . $thumb_filename;
 		if ( !file_exists($thumb_tocheck) ) {
 			$recording_summary .= "ERROR: thumb does not exist (" . $thumb_tocheck . ")\n";
 		} elseif ( filesize($thumb_tocheck) == 0 ) {
 			$recording_summary .= "ERROR: thumb zero size (" . $thumb_tocheck . ")\n";
+		} else {
+			$num_thumbs_wide++;
 		}
-
-		$thumb_tocheck = $thumb_path . VIDEO_THUMB_PLAYER_RES . "/" . $thumb_filename;
+		// check normal[] thumbnails
+		$thumb_tocheck = $thumb_path . $app->config['videothumbnailresolutions']['player'] . "/" . $thumb_filename;
 		if ( !file_exists($thumb_tocheck) ) {
 			$recording_summary .= "ERROR: thumb does not exist (" . $thumb_tocheck . ")\n";
 		} elseif ( filesize($thumb_tocheck) == 0 ) {
 			$recording_summary .= "ERROR: thumb zero size (" . $thumb_tocheck . ")\n";
+		} else {
+			$num_thumbs_player++;
 		}
-
+		// check original thumbnails
+		$thumb_tocheck = $thumb_path . "original/" . $thumb_filename;
+		if ( !file_exists($thumb_tocheck) ) {
+			$recording_summary .= "ERROR: thumb does not exist (" . $thumb_tocheck . ")\n";
+		} elseif ( filesize($thumb_tocheck) == 0 ) {
+			$recording_summary .= "ERROR: thumb zero size (" . $thumb_tocheck . ")\n";
+		} else {
+			$num_thumbs_original++;
+		}
 	}
-
+	// check missing thumbnails and report possible errors
+	if ($num_thumbs != ($num_thumbs_small & $num_thumbs_wide & $num_thumbs_player & $num_thumbs_original)) {
+		$recording_summary .= "Found thumbnails:\n\tsmall: " . $num_thumbs_small ."\n\twide: ". $num_thumbs_wide ." \n\tplayer: ". 	$num_thumbs_player ."\n\toriginal: ". $num_thumbs_original ."\n\tnumber of index photos: ". $num_thumbs .".\n";
+		return FALSE;
+	}
 	return TRUE;
 }
 
 function check_attachments($rec_id) {
- global $db, $recording_summary, $attachment_ids;
+	global $db, $recording_summary, $app;
 
 	$attachment_ids = array();
 
-	$attachment_path = RECORDINGPATH . ( $rec_id % 1000 ) . "/" . $rec_id . "/attached_documents/";
+	$attachment_path = $app->config['recordingpath'] . ( $rec_id % 1000 ) . "/" . $rec_id . "/attachments/";
 
 	$query = "
 		SELECT
 			id,
 			recordingid,
+			masterfilename,
 			masterextension,
 			status
 		FROM attached_documents
@@ -415,27 +422,47 @@ function check_attachments($rec_id) {
 	try {
 		$attachments = $db->Execute($query);
 	} catch (exception $err) {
-		tools::log(LOGPATH_JOBS, LOG_FILE, "[ERROR] SQL query failed. Query: \n" .  trim($query) . "\n\nError message: \n" . $err, FALSE);
+		$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] SQL query failed. Query: \n" .  trim($query) . "\n\nError message: \n" . $err, $sendmail = TRUE);
 		return FALSE;
 	}
-
+	$num_attachments = 0;
 	while ( !$attachments->EOF ) {
-
 		$attachment = $attachments->fields;
 		$attachment_file = $attachment_path . $attachment['id'] . "." . $attachment['masterextension'];
-
-		array_push($attachment_ids, $attachment['id']);
-
+		
+		$attachment_ids[] = $attachment['id'];
+		
 		if ( !file_exists($attachment_file) ) {
 			$recording_summary .= "ERROR: attachment file missing (" . $attachment_file . ")\n";
 		} elseif ( filesize($attachment_file) == 0 ) {
 			$recording_summary .= "ERROR: attachment file zero size (" . $attachment_file . ")\n";
+		} else {
+			$num_attachments++;
 		}
 
 		$attachments->MoveNext();
 	}
-
+	
+	if ($num_attachments <> $attachments->RecordCount()) {
+		$recording_summary .= "Found attachments: ". $num_attachments ."/". count($attachment_ids) ." in ". $rec_id ."\n";
+		return FALSE;
+	}
+	
 	return TRUE;
+}
+
+function is_res1_gt_res2($res1, $res2) {
+	$tmp = explode('x', strtolower($res1));
+	$resx1 = $tmp[0] + 0;
+	$resy1 = $tmp[1] + 0;
+	$tmp = explode('x', strtolower($res2));
+	$resx2 = $tmp[0] + 0;
+	$resy2 = $tmp[1] + 0;
+	
+	if (($resx1 > $resx2) && ($resy1 > $resy2))
+		return true;
+	else 
+		return false;
 }
 
 ?>
