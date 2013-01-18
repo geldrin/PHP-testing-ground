@@ -148,8 +148,8 @@ function query_recordings2remove(&$recordings) {
 			organizations as c
 		WHERE
 			a.status = \"" . $jconf['dbstatus_markedfordeletion'] . "\" AND
-			a.mastersourceip = '" . $node . "' AND
 			a.userid = b.id AND
+			a.mastersourceip = '" . $node . "' AND
 			b.organizationid = c.id
 	";
 
