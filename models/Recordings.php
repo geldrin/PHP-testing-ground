@@ -2581,6 +2581,35 @@ class Recordings extends \Springboard\Model {
       VALUES ('" . $data['organizationid'] . "', '" . $data['contributorid'] . "', '" . $this->id . "', '" . $data['roleid'] . "')
     ");
     
+    $insertid = $this->db->Insert_ID();
+    if ( !$insertid )
+      return;
+    
+    $this->db->query("
+      UPDATE contributors_roles
+      SET weight = '$insertid'
+      WHERE id = '$insertid'
+      LIMIT 1
+    ");
+    
+  }
+  
+  public function swapContributors( $what, $where ) {
+    
+    $this->db->query("
+      UPDATE contributors_roles
+      SET weight = '$where'
+      WHERE id = '$what'
+      LIMIT 1;
+    ");
+    
+    $this->db->query("
+      UPDATE contributors_roles
+      SET weight = '$what'
+      WHERE id = '$where'
+      LIMIT 1;
+    ");
+    
   }
   
   public function clearDefaultSubtitle() {

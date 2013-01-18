@@ -25,6 +25,7 @@ class Controller extends \Visitor\Controller {
     'deleteattachment'     => 'uploader',
     'deletesubtitle'       => 'uploader',
     'delete'               => 'uploader',
+    'deletecontributor'    => 'uploader',
     'checkstreamaccess'    => 'public',
     'securecheckstreamaccess' => 'public',
     'progress'             => 'member',
@@ -1178,20 +1179,20 @@ class Controller extends \Visitor\Controller {
   
   public function linkcontributorAction() {
     
-    $recordingModel   = $this->modelOrganizationAndUserIDCheck(
+    $recordingsModel   = $this->modelOrganizationAndUserIDCheck(
       'recordings',
       $this->application->getNumericParameter('id')
     );
-    $contributorModel = $this->modelOrganizationIDCheck(
+    $contributorModel = $this->modelOrganizationAndIDCheck(
       'contributors',
       $this->application->getNumericParameter('contributorid')
     );
-    $roleModel = $this->modelOrganizationIDCheck(
+    $roleModel = $this->modelOrganizationAndIDCheck(
       'roles',
-      $this->application->getNumericParameter('roleid')
+      $this->application->getNumericParameter('contributorrole')
     );
     
-    $recordingModel->linkContributor( array(
+    $recordingsModel->linkContributor( array(
         'contributorid'  => $contributorModel->id,
         'organizationid' => $this->organization['id'],
         'roleid'         => $roleModel->id,
@@ -1210,11 +1211,11 @@ class Controller extends \Visitor\Controller {
   
   public function deletecontributorAction() {
     
-    $contribroleModel = $this->modelOrganizationIDCheck(
+    $contribroleModel = $this->modelIDCheck(
       'contributors_roles',
       $this->application->getNumericParameter('id')
     );
-    $recordingModel   = $this->modelOrganizationAndUserIDCheck(
+    $recordingsModel  = $this->modelOrganizationAndUserIDCheck(
       'recordings',
       $contribroleModel->row['recordingid']
     );

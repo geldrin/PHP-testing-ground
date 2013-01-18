@@ -17,11 +17,27 @@ class Modifycontributors extends \Visitor\Recordings\ModifyForm {
     
   }
   
+  public function postGetForm() {
+    
+    parent::postGetForm();
+    $l = $this->bootstrap->getLocalization();
+    $this->form->submit = $l('recordings', 'forward');
+    $this->form->layouts['tabular']['buttonrow'] =
+      '<tr class="buttonrow">
+        <td colspan="2">
+          <input type="button" value="' . $l('recordings', 'add') . '" class="submitbutton" id="addcontributor"/>
+          %s
+        </td>
+      </tr>
+    ';
+    
+    
+  }
+  
   public function onComplete() {
     
     $values = $this->form->getElementValues( 0 );
     
-    $this->recordingsModel->updateRow( $values );
     $this->recordingsModel->updateFulltextCache( true );
     
     $this->controller->redirect(

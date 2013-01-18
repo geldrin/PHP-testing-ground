@@ -122,4 +122,56 @@ class Organizations extends \Springboard\Model\Multilingual {
     
   }
   
+  public function search( $term, $organizationid ) {
+    
+    $term     = $this->db->qstr( '%' . $term . '%' );
+    $language = \Springboard\Language::get();
+    $results  = $this->db->getArray("
+      SELECT
+        o.*,
+        sname.value AS name,
+        snameshort.value AS nameshort
+      FROM
+        organizations AS o,
+        strings AS sname,
+        strings AS snameshort
+      WHERE
+        o.organizationid         = '$organizationid' AND
+        o.disabled               = '0' AND
+        sname.translationof      = o.name_stringid AND
+        sname.language           = '$language' AND
+        snameshort.translationof = o.nameshort_stringid AND
+        snameshort.language      = '$language' AND
+        (
+          sname.value      LIKE $term OR
+          snameshort.value LIKE $term
+        )
+      LIMIT 20
+    ");
+    
+    return $results;
+    
+  }
+  
+  public function getName( $organization = null ) {
+    
+    if ( !$organization ) {
+      
+      $this->ensureObjectLoaded();
+      $organization = $this->row;
+      
+    }
+    
+    $name = trim( $organization['name'] );
+    $nameshort = trim( $organization['nameshort'] );
+    
+    if ( $name and $nameshort )
+      return $name . ' (' . $nameshort . ')';
+    elseif ( $name )
+      return $name;
+    elseif ( $nameshort )
+      return $nameshort;
+    
+  }
+  
 }

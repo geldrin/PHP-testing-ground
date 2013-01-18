@@ -60,4 +60,36 @@ class Controller extends \Visitor\Controller {
     
   }
   
+  public function searchorganizationAction() {
+    
+    $term   = $this->application->getParameter('term');
+    $output = array(
+      'status' => 'OK',
+      'data'   => array(),
+    );
+    
+    if ( !$term )
+      $this->jsonoutput( $output );
+    
+    $orgModel = $this->bootstrap->getModel('organizations');
+    $results  = $orgModel->search( $term, $this->organization['id'] );
+    
+    if ( empty( $results ) )
+      $this->jsonoutput( $output );
+    
+    foreach( $results as $result ) {
+      
+      $data = array(
+        'value' => $result['id'],
+        'label' => $orgModel->getName( $result ),
+      );
+      
+      $output['data'][] = $data;
+      
+    }
+    
+    $this->jsonoutput( $output['data'] );
+    
+  }
+  
 }

@@ -1,4 +1,4 @@
-{if $smarty.request.chromeless}
+{if $smarty.request.chromeless or $nolayout}
   {include file="Visitor/_header_nolayout.tpl" bodyclass=liveiframe}
   {assign var=linksinnewwindow value=' target="_blank"'}
 {else}
@@ -20,7 +20,7 @@
 </div>
 {/if}
 
-{if $smarty.request.chromeless}
+{if $smarty.request.chromeless or $nolayout}
   {include file="Visitor/_footer_nolayout.tpl"}
 {else}
   {include file="Visitor/_footer.tpl"}

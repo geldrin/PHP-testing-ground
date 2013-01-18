@@ -9,6 +9,10 @@
   <base href="{$BASE_URI}" /><!--[if IE]></base><![endif]-->
   <title>{if $title}{$title|escape:html|titleescape} | {/if}{#sitename#}</title>
   {csscombine}
+  <link rel="StyleSheet" type="text/css" href="{$STATIC_URI}css/custom-theme/jquery-ui-1.9.2.custom.min.css" media="screen"/>
+  {if $needfancybox}
+    <link rel="StyleSheet" type="text/css" href="{$STATIC_URI}js/fancybox/jquery.fancybox-1.3.4.css" media="screen"/>
+  {/if}
   <link rel="StyleSheet" type="text/css" href="{$STATIC_URI}css/style{$VERSION}.css" media="screen"/>
   {if $browser.mobile}
     <meta name="viewport" content="width=device-width, maximum-scale=1.0"/>
@@ -19,14 +23,20 @@
   <!--[if lte IE 8]>
   <link rel="StyleSheet" type="text/css" href="{$STATIC_URI}css/style_ie{$VERSION}.css" />
   <![endif]-->
-  
+  <!--[if lte IE 7]>
+  <link rel="StyleSheet" type="text/css" href="{$STATIC_URI}css/style_ie7{$VERSION}.css" />
+  <![endif]-->
   <!--[if lte IE 6]>
   <link rel="StyleSheet" type="text/css" href="{$STATIC_URI}css/style_ie6{$VERSION}.css" />
   <![endif]-->
   {jscombine}
   <script type="text/javascript" src="{$STATIC_URI}js/jquery.min.js"></script>
-  <script type="text/javascript" src="{$STATIC_URI}js/swfobject.full{$VERSION}.js"></script>
-  <script type="text/javascript" src="{$STATIC_URI}js/tools{$VERSION}.js"></script>
+  <script type="text/javascript" src="{$STATIC_URI}js/jquery-ui-1.9.2.custom.min.js"></script>
+  <script type="text/javascript" src="{$STATIC_URI}js/swfobject.full.js"></script>
+  <script type="text/javascript" src="{$bootstrap->scheme}{$bootstrap->config.baseuri}{$language}/contents/language"></script>
+  {if $needfancybox}
+    <script type="text/javascript" src="{$STATIC_URI}js/fancybox/jquery.fancybox-1.3.4.pack.js"></script>
+  {/if}
   {/jscombine}
   <script type="text/javascript">
   var BASE_URI   = '{$BASE_URI}';
@@ -35,6 +45,7 @@
   var language   = '{$language}';
   var BROWSER    = {ldelim}
     mobile: {if $browser.mobile}true{else}false{/if},
+    tablet: {if $browser.tablet}true{else}false{/if},
     obsolete: {if $browser.obsolete}true{else}false{/if} 
   {rdelim};
   </script>

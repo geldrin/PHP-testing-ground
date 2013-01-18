@@ -2464,6 +2464,9 @@ a#currentusername span {
   float: right;
   margin: 5px 0px 0px 10px;
 }
+#recordings_modifycontributors #addcontributor {
+  display: none;
+}
 #contributors h2 {
   padding: 5px 0 15px 0;
   color: #000;

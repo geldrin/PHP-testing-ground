@@ -1280,6 +1280,10 @@ livechat.prototype.messageValid = function() {
 function setupContributors() {
   
   var html = $j('#autocomplete-listitem').html();
+  var resetcontributor = function() {
+    $j('#searchterm, #contributorid').val('');
+    $j('#contributorrolerow, #addcontributor').hide();
+  };
   
   $j('#searchterm').autocomplete({
     minLength: 2,
@@ -1289,7 +1293,7 @@ function setupContributors() {
       $j('#searchterm').val( ui.item.label );
       $j('#contributorid').val( ui.item.value );
       $j('#contributorname').text( ui.item.label );
-      $j('#contributorrolerow').show();
+      $j('#contributorrolerow, #addcontributor').show();
       return false;
     }
   }).data( "autocomplete" )._renderItem = function( ul, item ) {
@@ -1306,8 +1310,34 @@ function setupContributors() {
   $j('#cancelcontributor').click( function(e) {
     
     e.preventDefault();
-    $j('#searchterm, #contributorid').val('');
-    $j('#contributorrolerow').hide();
+    resetcontributor();
+    
+  });
+  
+  $j('#addcontributor').click( function( e ) {
+    
+    e.preventDefault();
+    var data = $j(this).parents('form').serializeArray();
+    data.shift(); // remove first element, the 'action'
+    
+    $j.ajax({
+      //beforeSend:
+      //complete:
+      cache: false,
+      success: function( data ) {
+        console.log(data);
+        if ( !data || data.status != 'OK' )
+          return;
+        
+        $j('#contributors ul').html( data.html );
+        resetcontributor();
+        
+      },
+      data: data,
+      dataType: 'json',
+      type: 'POST',
+      url: BASE_URI + language + '/recordings/linkcontributor'
+    });
     
   });
   
