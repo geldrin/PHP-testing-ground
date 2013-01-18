@@ -60,6 +60,7 @@ return array('config_jobs' => array(
 	'dbstatus_init'					=> 'init',
 	'dbstatus_uploaded'				=> 'uploaded',
 	'dbstatus_markedfordeletion'	=> 'markedfordeletion',
+	'dbstatus_deleted'				=> 'deleted',
 	'dbstatus_reconvert'			=> 'reconvert',
 	'dbstatus_copyfromfe'			=> 'copyingfromfrontend',
 	'dbstatus_copyfromfe_ok'		=> 'copiedfromfrontend',
