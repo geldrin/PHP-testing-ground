@@ -29,6 +29,7 @@ $j(document).ready(function() {
   runIfExists('#currentuser', setupCurrentUser );
   runIfExists('#search_advanced', setupSearch );
   runIfExists('#recordings_modifycontributors', setupContributors );
+  runIfExists('#contributors_create, #contributors_modify', setupContributorEdit );
   
   $j('#scriptingcontainer').show();
   
@@ -1288,7 +1289,6 @@ function setupContributors() {
   $j('#searchterm').autocomplete({
     minLength: 2,
     source: BASE_URI + language + '/contributors/search',
-    
     select: function( event, ui ) {
       $j('#searchterm').val( ui.item.label );
       $j('#contributorid').val( ui.item.value );
@@ -1306,6 +1306,9 @@ function setupContributors() {
     ;
     
   };
+  $j('#searchterm').bind('autocompletesearch', function() {
+    $j('#createcontributorrow').show();
+  });
   
   $j('#cancelcontributor').click( function(e) {
     
@@ -1325,11 +1328,8 @@ function setupContributors() {
       //complete:
       cache: false,
       success: function( data ) {
-        console.log(data);
-        if ( !data || data.status != 'OK' )
-          return;
         
-        $j('#contributors ul').html( data.html );
+        updateContributorsAndCloseFancybox( data );
         resetcontributor();
         
       },
@@ -1341,24 +1341,89 @@ function setupContributors() {
     
   });
   
-  $j('#contributors .delete').live('click', function(e) {
+  $j('#contributors .delete, #contributors .move').live('click', function(e) {
     
     e.preventDefault();
     $j.ajax({
       //beforeSend:
       //complete:
       cache: false,
-      success: function( data ) {
-        
-        if ( !data || data.status != 'OK' )
-          return;
-        
-        $j('#contributors ul').html( data.html );
-        
-      },
+      success: updateContributorsAndCloseFancybox,
       dataType: 'json',
       type: 'GET',
       url: $j(this).attr('href')
+    });
+    
+  });
+  
+  $j('#createcontributor, #contributors .edit').fancybox({
+    width: 470,
+    height: 500,
+    titleShow: false,
+    type: 'iframe'
+  });
+  
+  window.updateContributorsAndCloseFancybox = function( data ) {
+    
+    $j.fancybox.close();
+    if ( !data || data.status != 'OK' )
+      return;
+    
+    $j('#contributors ul').html( data.html );
+    $j('#contributors').show();
+    
+    $j('#createcontributor, #contributors .edit').fancybox({
+      width: 470,
+      height: 500,
+      titleShow: false,
+      type: 'iframe'
+    });
+    
+  };
+  
+}
+
+function setupContributorEdit( elements ) {
+  
+  if ( !parent )
+    return;
+  
+  if ( $j('#orgid').val() )
+    $j('#selectedorganizationrow').show();
+  
+  $j('#organization').autocomplete({
+    minLength: 2,
+    source: BASE_URI + language + '/contributors/searchorganization',
+    select: function( event, ui ) {
+      $j('#organization').val( ui.item.label );
+      $j('#orgid').val( ui.item.value );
+      $j('#selectedorganization').text( ui.item.label );
+      $j('#selectedorganizationrow').show();
+      return false;
+    }
+  });
+  
+  $j('#clearorganization').click( function( e ) {
+    
+    e.preventDefault();
+    $j('#organization, #orgid').val('');
+    $j('#selectedorganizationrow').hide();
+    
+  });
+  
+  $j( elements ).submit( function( e ) {
+    
+    e.preventDefault();
+    var data = $j(this).serializeArray();
+    $j.ajax({
+      //beforeSend:
+      //complete:
+      cache: false,
+      success: parent.updateContributorsAndCloseFancybox,
+      dataType: 'json',
+      data: data,
+      type: 'POST',
+      url: $j(this).attr('action')
     });
     
   });

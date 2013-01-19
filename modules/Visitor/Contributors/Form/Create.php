@@ -75,20 +75,27 @@ class Create extends \Visitor\Form {
   
   protected function insertOrGetOrganization( $values ) {
     
-    
     if ( !$values['orgid'] and $values['organization'] ) { // insert organization
       
       $orgModel = $this->bootstrap->getModel('organizations');
       $orgModel->insert( array(
-          'organizationid' => $this->controller->organization['id'],
-          'name'           => $values['organization'],
+          'organizationid'     => $this->controller->organization['id'],
+          'name'               => $values['organization'],
+          'nameshort'          => '',
+          'name_stringid'      => 0,
+          'nameshort_stringid' => 0,
         ),
         array(
           'name_stringid' => array(
             'hu' => $values['organization'],
             'en' => $values['organization'],
           ),
-        )
+          'nameshort_stringid' => array(
+            'hu' => '',
+            'en' => '',
+          ),
+        ),
+        false
       );
       
       return $orgModel->id;

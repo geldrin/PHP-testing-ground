@@ -2,14 +2,13 @@
 
 {include file=Visitor/Recordings/ModifyTimeline.tpl}
 
-{if !empty( $contributors )}
-<div id="contributors">
+
+<div id="contributors"{if empty( $contributors )} style="display: none;"{/if}>
   <h2>{#recordings__contributors_title#}</h2>
   <ul>
     {include file=Visitor/Recordings/Contributors.tpl recordingid=$recordingid contributors=$contributors}
   </ul>
 </div>
-{/if}
 
 <div class="form leftdoublebox">
 {$form}

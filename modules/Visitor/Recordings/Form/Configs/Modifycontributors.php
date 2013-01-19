@@ -1,4 +1,5 @@
 <?php
+$language       = \Springboard\Language::get();
 $organizationid = $this->controller->organization['id'];
 $config = array(
   
@@ -66,6 +67,19 @@ $config = array(
       <a id="cancelcontributor" href="#" class="ui-state-default ui-corner-all">
         <span class="ui-icon ui-icon-cancel"></span>
       </a>
+    ',
+  ),
+  
+  'createcontributor' => array(
+    'type' => 'text',
+    'rowlayout' => '
+      <tr id="createcontributorrow">
+        <td class="labelcolumn" colspan="2">
+          <span>' . $l('recordings', 'nocontributorfound') . '</span>
+          <a href="' . $language . '/contributors/create/?recordingid=' . $this->recordingsModel->id . '" ' .
+            'class="submitbutton" id="createcontributor">' . $l('recordings', 'createcontributor') . '</a>
+        </td>
+      </tr>
     ',
   ),
   

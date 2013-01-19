@@ -2594,24 +2594,6 @@ class Recordings extends \Springboard\Model {
     
   }
   
-  public function swapContributors( $what, $where ) {
-    
-    $this->db->query("
-      UPDATE contributors_roles
-      SET weight = '$where'
-      WHERE id = '$what'
-      LIMIT 1;
-    ");
-    
-    $this->db->query("
-      UPDATE contributors_roles
-      SET weight = '$what'
-      WHERE id = '$where'
-      LIMIT 1;
-    ");
-    
-  }
-  
   public function clearDefaultSubtitle() {
     
     $this->ensureID();

@@ -38,7 +38,7 @@ class Modify extends \Visitor\Contributors\Form\Create {
     foreach( $this->contribvalues as $value )
       $this->values[ $value ] = $this->contributorModel->row[ $value ];
     
-    $this->values['contribrole']  = $this->contribroleModel->row['roleid'];
+    $this->values['contributorrole']  = $this->contribroleModel->row['roleid'];
     $this->values['orgid']        = $this->contribroleModel->row['organizationid'];
     
     if ( $this->values['orgid'] ) {
@@ -51,8 +51,6 @@ class Modify extends \Visitor\Contributors\Form\Create {
       $this->values['organization'] = $orgModel->getName();
       
     }
-    
-    $this->controller->toSmarty['nolayout'] = true;
     
   }
   

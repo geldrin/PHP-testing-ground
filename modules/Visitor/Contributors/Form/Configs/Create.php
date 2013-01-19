@@ -65,7 +65,7 @@ $config         = array(
   
   'contributorrole' => array(
     'type'        => 'selectDynamic',
-    'displayname' => $l('recordings', 'contributorrole'),
+    'displayname' => $l('contributors', 'contributorrole'),
     'sql'         => "
       SELECT r.id, s.value AS name
       FROM roles AS r, strings AS s
@@ -81,6 +81,25 @@ $config         = array(
   'organization' => array(
     'type'        => 'inputText',
     'displayname' => $l('contributors', 'organization'),
+  ),
+  
+  'selectedorganization' => array(
+    'type'      => 'text',
+    'value'     => $l('contributors', 'selectedorganization'),
+    'rowlayout' => '
+      <tr id="selectedorganizationrow">
+        <td colspan="2">
+          %prefix%
+          %element%<span id="selectedorganization">' . htmlspecialchars( @$this->values['organization'], ENT_QUOTES, 'UTF-8', true ) . '</span>
+          %postfix%
+        </td>
+      </tr>
+    ',
+    'prefix' => '
+      <a id="clearorganization" href="#" class="ui-state-default ui-corner-all">
+        <span class="ui-icon ui-icon-cancel"></span>
+      </a>
+    ',
   ),
   
 );

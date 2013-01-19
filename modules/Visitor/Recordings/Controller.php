@@ -26,6 +26,7 @@ class Controller extends \Visitor\Controller {
     'deletesubtitle'       => 'uploader',
     'delete'               => 'uploader',
     'deletecontributor'    => 'uploader',
+    'swapcontributor'      => 'uploader',
     'checkstreamaccess'    => 'public',
     'securecheckstreamaccess' => 'public',
     'progress'             => 'member',
@@ -1221,6 +1222,48 @@ class Controller extends \Visitor\Controller {
     );
     
     $contribroleModel->delete( $contribroleModel->id );
+    
+    $this->toSmarty['contributors'] = $recordingsModel->getContributorsWithRoles();
+    $this->toSmarty['recordingid']  = $recordingsModel->id;
+    $this->jsonOutput( array(
+        'status' => 'OK',
+        'html'   => $this->fetchSmarty('Visitor/Recordings/Contributors.tpl'),
+      )
+    );
+    
+  }
+  
+  public function swapcontributorAction() {
+    
+    $whatcontribroleModel = $this->modelIDCheck(
+      'contributors_roles',
+      $this->application->getNumericParameter('what')
+    );
+    $wherecontribroleModel = $this->modelIDCheck(
+      'contributors_roles',
+      $this->application->getNumericParameter('where')
+    );
+    
+    if (
+         $whatcontribroleModel->row['recordingid'] != $wherecontribroleModel->row['recordingid'] or
+         $whatcontribroleModel->row['weight'] == $wherecontribroleModel->row['weight']
+       )
+      $this->redirect();
+    
+    $recordingsModel  = $this->modelOrganizationAndUserIDCheck(
+      'recordings',
+      $whatcontribroleModel->row['recordingid']
+    );
+    
+    $whatweight = $whatcontribroleModel->row['weight'];
+    $whatcontribroleModel->updateRow( array(
+        'weight' => $wherecontribroleModel->row['weight'],
+      )
+    );
+    $wherecontribroleModel->updateRow( array(
+        'weight' => $whatweight,
+      )
+    );
     
     $this->toSmarty['contributors'] = $recordingsModel->getContributorsWithRoles();
     $this->toSmarty['recordingid']  = $recordingsModel->id;

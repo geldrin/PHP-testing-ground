@@ -2413,6 +2413,7 @@ a#currentusername span {
   display: inline-block;
 }
 
+/* advanced search */
 .searchtable {
 }
 .searchtable td {
@@ -2453,6 +2454,7 @@ a#currentusername span {
   box-shadow: none;
 }
 
+/* contributor modify */
 #recordings_modifycontributors #contributorrolerow {
   display: none;
 }
@@ -2467,6 +2469,12 @@ a#currentusername span {
 #recordings_modifycontributors #addcontributor {
   display: none;
 }
+#createcontributorrow, #selectedorganizationrow {
+  display: none;
+}
+#createcontributor {
+  height: 16px;
+}
 #contributors h2 {
   padding: 5px 0 15px 0;
   color: #000;
@@ -2477,6 +2485,14 @@ a#currentusername span {
 }
 #contributors ul {
   width: 590px;
+}
+#contributors li {
+  min-height: 22px;
+}
+#contributors .iconplaceholder {
+  display: inline-block;
+  height: 18px;
+  width: 22px;
 }
 #contributors .actions {
   float: right;
@@ -2496,4 +2512,11 @@ a#currentusername span {
   margin-right: 10px;
 }
 .ui-autocomplete .wrap .name {
+}
+#clearorganization {
+  float: right;
+}
+#selectedorganization {
+  font-weight: bold;
+  display: inline-block;
 }

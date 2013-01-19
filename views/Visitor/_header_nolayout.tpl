@@ -37,6 +37,7 @@
   {if $needfancybox}
     <script type="text/javascript" src="{$STATIC_URI}js/fancybox/jquery.fancybox-1.3.4.pack.js"></script>
   {/if}
+  <script type="text/javascript" src="{$STATIC_URI}js/tools{$VERSION}.js"></script>
   {/jscombine}
   <script type="text/javascript">
   var BASE_URI   = '{$BASE_URI}';

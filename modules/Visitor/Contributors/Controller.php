@@ -7,6 +7,7 @@ class Controller extends \Visitor\Controller {
     'search' => 'uploader',
     'create' => 'uploader',
     'modify' => 'uploader',
+    'searchorganization' => 'uploader',
   );
   
   public $paging = array(
@@ -25,8 +26,6 @@ class Controller extends \Visitor\Controller {
     
     $term   = $this->application->getParameter('term');
     $output = array(
-      'status' => 'OK',
-      'data'   => array(),
     );
     
     if ( !$term )
@@ -52,21 +51,18 @@ class Controller extends \Visitor\Controller {
       else
         $data['img'] .= 'images/avatar_placeholder.png';
       
-      $output['data'][] = $data;
+      $output[] = $data;
       
     }
     
-    $this->jsonoutput( $output['data'] );
+    $this->jsonoutput( $output );
     
   }
   
   public function searchorganizationAction() {
     
     $term   = $this->application->getParameter('term');
-    $output = array(
-      'status' => 'OK',
-      'data'   => array(),
-    );
+    $output = array();
     
     if ( !$term )
       $this->jsonoutput( $output );
@@ -84,11 +80,11 @@ class Controller extends \Visitor\Controller {
         'label' => $orgModel->getName( $result ),
       );
       
-      $output['data'][] = $data;
+      $output[] = $data;
       
     }
     
-    $this->jsonoutput( $output['data'] );
+    $this->jsonoutput( $output );
     
   }
   
