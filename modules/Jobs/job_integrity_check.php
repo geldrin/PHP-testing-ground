@@ -51,11 +51,14 @@ try {
 
 $db_close = TRUE;
 
-$log_summary = "";
+$log_summary  = "NODE: " . $app->config['node_sourceip'] . "\n";
+$log_summary .= "SITE: " . $app->config['baseuri'] . "\n";
+$log_summary .= "JOB: " . $myjobid . "\n\n";
 
 $time_start = time();
 
 // Check contributor images
+// Avatars: TODO
 // 			!!	Not yet implemented in Videosquare	!!
 /*if ( check_contributor_images() === FALSE ) {
 	$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Data integrity check interrupted due to error. Manual restart is required.\nCheck log files.", $sendmail = FALSE);
