@@ -45,7 +45,6 @@ class Create extends \Visitor\Form {
     if ( $values['recordingid'] ) {
       
       $role = array(
-        'organizationid' => $this->insertOrGetOrganization( $values ),
         'contributorid'  => $contributorModel->id,
         'recordingid'    => $this->recordingsModel->id,
         'jobgroupid'     => 1,
@@ -80,19 +79,19 @@ class Create extends \Visitor\Form {
       $orgModel = $this->bootstrap->getModel('organizations');
       $orgModel->insert( array(
           'organizationid'     => $this->controller->organization['id'],
-          'name'               => $values['organization'],
+          'name'               => '',
           'nameshort'          => '',
           'name_stringid'      => 0,
           'nameshort_stringid' => 0,
         ),
         array(
           'name_stringid' => array(
-            'hu' => $values['organization'],
-            'en' => $values['organization'],
+            'hu' => $values['hu_organization'],
+            'en' => $values['en_organization'],
           ),
           'nameshort_stringid' => array(
-            'hu' => '',
-            'en' => '',
+            'hu' => $values['hu_organizationshort'],
+            'en' => $values['en_organizationshort'],
           ),
         ),
         false

@@ -39,18 +39,6 @@ class Modify extends \Visitor\Contributors\Form\Create {
       $this->values[ $value ] = $this->contributorModel->row[ $value ];
     
     $this->values['contributorrole']  = $this->contribroleModel->row['roleid'];
-    $this->values['orgid']        = $this->contribroleModel->row['organizationid'];
-    
-    if ( $this->values['orgid'] ) {
-      
-      $orgModel = $this->controller->modelOrganizationAndIDCheck(
-        'organizations',
-        $this->values['orgid']
-      );
-      
-      $this->values['organization'] = $orgModel->getName();
-      
-    }
     
   }
   
@@ -61,8 +49,7 @@ class Modify extends \Visitor\Contributors\Form\Create {
     $user   = $this->bootstrap->getSession('user');
     
     $role = array(
-      'roleid'         => $values['contributorrole'],
-      'organizationid' => $this->insertOrGetOrganization( $values ),
+      'roleid' => $values['contributorrole'],
     );
     
     $contributor = array();

@@ -1387,7 +1387,7 @@ function setupContributorEdit( elements ) {
   
   if ( !parent )
     return;
-  
+  /*
   if ( $j('#orgid').val() )
     $j('#selectedorganizationrow').show();
   
@@ -1410,7 +1410,7 @@ function setupContributorEdit( elements ) {
     $j('#selectedorganizationrow').hide();
     
   });
-  
+  */
   $j( elements ).submit( function( e ) {
     
     e.preventDefault();

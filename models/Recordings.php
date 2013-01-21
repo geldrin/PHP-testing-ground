@@ -181,11 +181,7 @@ class Recordings extends \Springboard\Model {
     $contributors = $this->db->getArray("
       SELECT
         cr.id,
-        cr.organizationid,
         cr.contributorid,
-        sorgname.value AS organizationname,
-        sorgnameshort.value AS organizationnameshort,
-        org.url,
         c.id AS contributorid,
         c.nameprefix,
         c.namefirst,
@@ -195,13 +191,6 @@ class Recordings extends \Springboard\Model {
         s.value AS rolename
       FROM
         contributors_roles AS cr
-        LEFT JOIN organizations AS org ON cr.organizationid = org.id
-        LEFT JOIN strings AS sorgname ON
-          org.name_stringid = sorgname.translationof AND
-          sorgname.language = '$language'
-        LEFT JOIN strings AS sorgnameshort ON
-          org.nameshort_stringid = sorgnameshort.translationof AND
-          sorgnameshort.language = '$language'
         LEFT JOIN contributors  AS c ON cr.contributorid  = c.id,
         roles AS r,
         strings AS s
@@ -2577,8 +2566,8 @@ class Recordings extends \Springboard\Model {
     
     $this->ensureID();
     $this->db->query("
-      INSERT INTO contributors_roles (organizationid, contributorid, recordingid, roleid )
-      VALUES ('" . $data['organizationid'] . "', '" . $data['contributorid'] . "', '" . $this->id . "', '" . $data['roleid'] . "')
+      INSERT INTO contributors_roles (contributorid, recordingid, roleid )
+      VALUES ('" . $data['contributorid'] . "', '" . $this->id . "', '" . $data['roleid'] . "')
     ");
     
     $insertid = $this->db->Insert_ID();

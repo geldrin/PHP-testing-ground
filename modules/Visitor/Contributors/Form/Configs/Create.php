@@ -77,7 +77,7 @@ $config         = array(
       ORDER BY weight, s.value
     ",
   ),
-  
+  /*
   'organization' => array(
     'type'        => 'inputText',
     'displayname' => $l('contributors', 'organization'),
@@ -101,5 +101,5 @@ $config         = array(
       </a>
     ',
   ),
-  
+  */
 );
