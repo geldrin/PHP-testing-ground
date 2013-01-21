@@ -128,6 +128,7 @@ $config = array(
     'liveingressurl'    => 'rtmp://stream.videosquare.eu:1935/vsqlive/',
     'secliveingressurl' => 'rtmps://stream.videosquare.eu:1935/vsqlivesec/',
     'secliveingressurl2' => 'rtmpe://stream.videosquare.eu:1935/vsqlivesec/',
+    'secliveingressurl3' => 'rtmp://stream.videosquare.eu:1935/vsqlivesec/', // ahova feltöltenek, rtmp szigoruan de sec application
     
     'liveurl'           => 'rtmpt://stream.videosquare.eu:80/vsqlive/',
     'secliveurl'        => 'rtmpte://stream.videosquare.eu:80/vsqlivesec/',
