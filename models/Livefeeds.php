@@ -263,14 +263,14 @@ class Livefeeds extends \Springboard\Model {
     
     if ( $this->row['issecurestreamingforced'] )
       $flashdata['media_servers'] = array(
-        $this->bootstrap->config['wowza']['secliveingressurl'] . $authorizecode,
-        $this->bootstrap->config['wowza']['secliveingressurl2'] . $authorizecode,
-        $this->bootstrap->config['wowza']['secliveurl'] . $authorizecode,
+        rtrim( $this->bootstrap->config['wowza']['secliveingressurl'], '/' ) . $authorizecode,
+        rtrim( $this->bootstrap->config['wowza']['secliveingressurl2'], '/' ) . $authorizecode,
+        rtrim( $this->bootstrap->config['wowza']['secliveurl'], '/' ) . $authorizecode,
       );
     else
       $flashdata['media_servers'] = array(
-        $this->bootstrap->config['wowza']['liveingressurl'] . $authorizecode,
-        $this->bootstrap->config['wowza']['liveurl'] . $authorizecode,
+        rtrim( $this->bootstrap->config['wowza']['liveingressurl'], '/' ) . $authorizecode,
+        rtrim( $this->bootstrap->config['wowza']['liveurl'], '/' ) . $authorizecode,
       );
     
     $flashdata['media_secondaryServers'] = $flashdata['media_servers'];
