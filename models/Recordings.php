@@ -1911,7 +1911,7 @@ class Recordings extends \Springboard\Model {
     else {
       
       $this->ensureID();
-      return $url . $this->getAuthorizeSessionid( $domain, $sessionid );
+      return rtrim( $url, '/' ) . $this->getAuthorizeSessionid( $domain, $sessionid );
       
     }
     
