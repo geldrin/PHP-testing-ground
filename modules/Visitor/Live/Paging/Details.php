@@ -23,6 +23,12 @@ class Details extends \Visitor\Paging {
       $this->application->getNumericParameter('id')
     );
     
+    if ( !$this->channelModel->row['isliveevent'] )
+      $this->controller->redirectWithMessage(
+        'channels/details/' . $this->channelModel->id . ',' . \Springboard\Filesystem::filenameize( $this->channelModel->row['title'] ),
+        $l('live', 'nosuchchannel')
+      );
+    
     $this->channelModel->clearFilter();
     $rootid = $this->channelModel->id;
     if ( $this->channelModel->row['parentid'] )
@@ -43,6 +49,17 @@ class Details extends \Visitor\Paging {
         ( strtotime( $this->channelModel->row['endtimestamp'] ) >= time() )
       )
     ;
+    
+    if ( $this->channelModel->row['endtimestamp'] ) {
+      
+      $endtime = strtotime( $this->channelModel->row['endtimestamp'] );
+      if ( strtotime('+3 days', $endtime ) < time() )
+        $this->controller->redirectWithMessage(
+          'channels/details/' . $this->channelModel->id . ',' . \Springboard\Filesystem::filenameize( $this->channelModel->row['title'] ),
+          $l('live', 'nosuchchannel')
+        );
+      
+    }
     
     parent::init();
     
