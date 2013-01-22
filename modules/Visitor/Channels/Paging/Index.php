@@ -2,10 +2,12 @@
 namespace Visitor\Channels\Paging;
 
 class Index extends \Visitor\Paging {
-  protected $orderkey = 'creation_desc';
+  protected $orderkey = 'starttime_desc';
   protected $sort = array(
-    'creation'      => 'id',
-    'creation_desc' => 'id DESC',
+    'creation'       => 'id',
+    'creation_desc'  => 'id DESC',
+    'starttime'      => 'starttimestamp',
+    'starttime_desc' => 'starttimestamp DESC',
   );
   protected $template          = 'Visitor/channellistitem.tpl';
   protected $insertbeforepager = Array( 'Visitor/Channels/Paging/IndexBeforepager.tpl' );
