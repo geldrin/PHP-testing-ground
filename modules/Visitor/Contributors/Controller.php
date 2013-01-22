@@ -4,10 +4,10 @@ namespace Visitor\Contributors;
 class Controller extends \Visitor\Controller {
   public $permissions = array(
     'index'  => 'public',
-    'search' => 'uploader',
-    'create' => 'uploader',
-    'modify' => 'uploader',
-    'searchorganization' => 'uploader',
+    'search' => 'uploader|clientadmin',
+    'create' => 'uploader|clientadmin',
+    'modify' => 'uploader|clientadmin',
+    'searchorganization' => 'uploader|clientadmin',
   );
   
   public $paging = array(

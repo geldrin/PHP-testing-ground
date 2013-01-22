@@ -891,7 +891,7 @@ class Recordings extends \Springboard\Model {
           return $error;
         elseif ( $user['id'] == $this->row['userid'] )
           return true;
-        elseif ( $user['iseditor'] and $user['organizationid'] == $this->row['organizationid'] )
+        elseif ( ( $user['iseditor'] or $user['isclientadmin'] ) and $user['organizationid'] == $this->row['organizationid'] )
           return true;
         
         $recordingid = "'" . $this->id . "'";

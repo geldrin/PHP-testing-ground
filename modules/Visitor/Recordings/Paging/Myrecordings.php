@@ -27,7 +27,7 @@ class Myrecordings extends \Visitor\Paging {
     $this->recordingsModel = $this->bootstrap->getModel('recordings');
     $user  = $this->bootstrap->getSession('user');
     
-    if ( $user['iseditor'] )
+    if ( $user['iseditor'] or $user['isclientadmin'] )
       $this->recordingsModel->addTextFilter("
         organizationid = '" . $user['organizationid'] . "' OR
         (

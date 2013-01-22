@@ -9,18 +9,18 @@ class Controller extends \Visitor\Controller {
     'getchat'              => 'public',
     'refreshchatinput'     => 'public',
     'createchat'           => 'member',
-    'moderatechat'         => 'liveadmin',
-    'create'               => 'liveadmin',
-    'modify'               => 'liveadmin',
-    'createfeed'           => 'liveadmin',
-    'modifyfeed'           => 'liveadmin',
-    'deletefeed'           => 'liveadmin',
-    'createstream'         => 'liveadmin',
-    'modifystream'         => 'liveadmin',
-    'deletestream'         => 'liveadmin',
-    'managefeeds'          => 'liveadmin',
-    'togglestream'         => 'liveadmin',
-    'getstreamstatus'      => 'liveadmin',
+    'moderatechat'         => 'liveadmin|clientadmin',
+    'create'               => 'liveadmin|clientadmin',
+    'modify'               => 'liveadmin|clientadmin',
+    'createfeed'           => 'liveadmin|clientadmin',
+    'modifyfeed'           => 'liveadmin|clientadmin',
+    'deletefeed'           => 'liveadmin|clientadmin',
+    'createstream'         => 'liveadmin|clientadmin',
+    'modifystream'         => 'liveadmin|clientadmin',
+    'deletestream'         => 'liveadmin|clientadmin',
+    'managefeeds'          => 'liveadmin|clientadmin',
+    'togglestream'         => 'liveadmin|clientadmin',
+    'getstreamstatus'      => 'liveadmin|clientadmin',
     'checkstreamaccess'    => 'public',
     'securecheckstreamaccess' => 'public',
   );
@@ -206,7 +206,7 @@ class Controller extends \Visitor\Controller {
       }
       
       $this->toSmarty['needauth']      = $needauth;
-      $this->toSmarty['liveadmin']     = $this->acl->hasPermission('liveadmin');
+      $this->toSmarty['liveadmin']     = $this->acl->hasPermission('liveadmin|clientadmin');
       // ha liveadmin akkor kiirjuk a moderalasra varo commenteket
       $this->toSmarty['chatitems']     = $feedModel->getChat( $this->toSmarty['liveadmin']? null: -1 );
       
@@ -376,7 +376,7 @@ class Controller extends \Visitor\Controller {
         
       }
       
-      $liveadmin = $this->acl->hasPermission('liveadmin');
+      $liveadmin = $this->acl->hasPermission('liveadmin|clientadmin');
       $cache     = $this->getChatCache( $livefeedid, $liveadmin );
       
       if ( $cache->expired() or !$this->application->production ) {

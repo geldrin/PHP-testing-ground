@@ -15,25 +15,23 @@ class Controller extends \Visitor\Controller {
     'uploadcontent'        => 'uploader',
     'uploadsubtitle'       => 'uploader',
     'uploadattachment'     => 'uploader',
-    'myrecordings'         => 'uploader',
-    'modifybasics'         => 'uploader',
-    'modifyclassification' => 'uploader',
-    'modifydescription'    => 'uploader',
-    'modifycontributors'   => 'uploader',
-    'modifysharing'        => 'uploader',
-    'modifyattachment'     => 'uploader',
-    'deleteattachment'     => 'uploader',
-    'deletesubtitle'       => 'uploader',
-    'delete'               => 'uploader',
-    'deletecontributor'    => 'uploader',
-    'swapcontributor'      => 'uploader',
+    'myrecordings'         => 'uploader|clientadmin',
+    'modifybasics'         => 'uploader|clientadmin',
+    'modifyclassification' => 'uploader|clientadmin',
+    'modifydescription'    => 'uploader|clientadmin',
+    'modifycontributors'   => 'uploader|clientadmin',
+    'modifysharing'        => 'uploader|clientadmin',
+    'modifyattachment'     => 'uploader|clientadmin',
+    'deleteattachment'     => 'uploader|clientadmin',
+    'deletesubtitle'       => 'uploader|clientadmin',
+    'delete'               => 'uploader|clientadmin',
+    'deletecontributor'    => 'uploader|clientadmin',
+    'swapcontributor'      => 'uploader|clientadmin',
     'checkstreamaccess'    => 'public',
     'securecheckstreamaccess' => 'public',
-    'progress'             => 'member',
-    'getprogress'          => 'member',
     'embed'                => 'public',
     'featured'             => 'public',
-    'linkcontributor'      => 'uploader',
+    'linkcontributor'      => 'uploader|clientadmin',
     'addtochannel'         => 'member',
     'removefromchannel'    => 'member',
     'checkfileresume'      => 'uploader',
@@ -573,31 +571,6 @@ class Controller extends \Visitor\Controller {
     $recordingModel->upload( $info );
     
     return $recordingModel->row;
-    
-  }
-  
-  public function progressAction() {
-    $this->smartyOutput('Visitor/Recordings/Progress.tpl');
-  }
-  
-  public function getprogressAction() {
-    
-    $l        = $this->bootstrap->getLocalization();
-    $uploadid = $this->application->getParameter('uploadid');
-    $data     = array('status' => 'OK');
-    
-    if ( !$uploadid ) {
-      
-      $data['status']  = 'ERR';
-      $data['message'] = $l('recordings', 'upload_noid');
-      $this->jsonOutput( $data );
-      
-    }
-    
-    $status = apc_fetch( 'upload_' . $uploadid );
-    
-    $data['data'] = $status;
-    $this->jsonOutput( $data );
     
   }
   
