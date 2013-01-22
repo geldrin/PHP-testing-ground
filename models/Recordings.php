@@ -822,8 +822,15 @@ class Recordings extends \Springboard\Model {
     if (
          ( !$mobile and $this->row['status'] != 'onstorage' ) or
          ( $mobile and $this->row['mobilestatus'] != 'onstorage' )
-       )
-      return $mobile? 'mobileunavailable': 'recordingconverting';
+       ) {
+      
+      $status = $mobile? $this->row['mobilestatus']: $this->row['status'];
+      if ( preg_match( '/^failed.+/i', $status ) )
+        return 'recordingerrorconverting';
+      else
+        return $mobile? 'mobileunavailable': 'recordingconverting';
+      
+    }
     
     if (
          isset( $user['id'] ) and
