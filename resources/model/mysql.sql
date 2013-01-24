@@ -193,7 +193,6 @@ CREATE TABLE `recordings` (
    `videoreshq` text,
    `mobilevideoreslq` text,
    `mobilevideoreshq` text,
-   `hascontentvideo` int(11) default null,
    `contentmastervideoisinterlaced` int default 0,
    `contentmastervideofilename` text,
    `contentmastervideoextension` text,
