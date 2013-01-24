@@ -63,16 +63,20 @@ echo "INTERNAL loop\n";
 		}
 
 		// Establish database connection
-		try {
-			$db = $app->bootstrap->getAdoDB();
-		} catch (exception $err) {
-			// Send mail alert, sleep for 15 minutes
-			$debug->log($jconf['log_dir'], $jconf['jobid_document_index'] . ".log", "[ERROR] No connection to DB (getAdoDB() failed). Error message:\n" . $err, $sendmail = true);
-			// Sleep 15 mins then resume
-			$converter_sleep_length = 15 * 60;
-			break;
+		if ( !$db_close ) {
+			try {
+				$db = $app->bootstrap->getAdoDB();
+			} catch (exception $err) {
+				// Send mail alert, sleep for 15 minutes
+				$debug->log($jconf['log_dir'], $jconf['jobid_document_index'] . ".log", "[ERROR] No connection to DB (getAdoDB() failed). Error message:\n" . $err, $sendmail = true);
+				// Sleep 15 mins then resume
+				$converter_sleep_length = 15 * 60;
+				break;
+			}
+			$db_close = TRUE;
+echo "DB: opened\n";
 		}
-		$db_close = TRUE;
+
 
 // Testing!!!
 //update_db_attachment_indexingstatus(16, null);
@@ -86,6 +90,36 @@ echo "INTERNAL loop\n";
 			$converter_sleep_length = 15 * 60;
 			break;
 		}
+
+// ------------------------------------
+
+echo "BEFORE query next job\n";
+
+  $query = "
+    SELECT
+		count(*)
+	FROM
+		attached_documents as a,
+		users as b
+    WHERE
+		a.status = \"" . $jconf['dbstatus_copystorage_ok'] . "\" AND
+		( a.masterextension IN (\"txt\", \"csv\", \"xml\", \"htm\", \"html\", \"doc\", \"docx\", \"odt\", \"ott\", \"sxw\", \"pdf\", \"ppt\", \"pptx\", \"pps\", \"odp\") ) AND
+		( a.indexingstatus IS NULL OR a.indexingstatus = \"\" ) AND
+		a.userid = b.id
+	";
+
+//echo $query . "\n";
+
+  try {
+    $rs = $db->getOne($query);
+  } catch (exception $err) {
+    return FALSE;
+  }
+
+var_dump($rs);
+
+// -----------------------------------
+
 
 		// Query next job
 		unset($attached_doc);
@@ -275,6 +309,36 @@ echo "START\n";
 			break;
 		}
 
+// ------------------------------------
+
+echo "BEFORE update\n";
+
+  $query = "
+    SELECT
+		count(*)
+	FROM
+		attached_documents as a,
+		users as b
+    WHERE
+		a.status = \"" . $jconf['dbstatus_copystorage_ok'] . "\" AND
+		( a.masterextension IN (\"txt\", \"csv\", \"xml\", \"htm\", \"html\", \"doc\", \"docx\", \"odt\", \"ott\", \"sxw\", \"pdf\", \"ppt\", \"pptx\", \"pps\", \"odp\") ) AND
+		( a.indexingstatus IS NULL OR a.indexingstatus = \"\" ) AND
+		a.userid = b.id
+	";
+
+//echo $query . "\n";
+
+  try {
+    $rs = $db->getOne($query);
+  } catch (exception $err) {
+    return FALSE;
+  }
+
+var_dump($rs);
+
+// -----------------------------------
+
+
 		$tmp = mb_convert_encoding($contents, "UTF-8");
 		$contents = $tmp;
 
@@ -289,13 +353,42 @@ echo "START\n";
 			$recObj->updateFulltextCache();
 			update_db_attachment_indexingstatus($attached_doc['id'], $jconf['dbstatus_indexing_ok']);
 		}
+
+// ------------------------------------
+
+echo "AFTER update\n";
+
+  $query = "
+    SELECT
+		count(*)
+	FROM
+		attached_documents as a,
+		users as b
+    WHERE
+		a.status = \"" . $jconf['dbstatus_copystorage_ok'] . "\" AND
+		( a.masterextension IN (\"txt\", \"csv\", \"xml\", \"htm\", \"html\", \"doc\", \"docx\", \"odt\", \"ott\", \"sxw\", \"pdf\", \"ppt\", \"pptx\", \"pps\", \"odp\") ) AND
+		( a.indexingstatus IS NULL OR a.indexingstatus = \"\" ) AND
+		a.userid = b.id
+	";
+
+//echo $query . "\n";
+
+  try {
+    $rs = $db->getOne($query);
+  } catch (exception $err) {
+    return FALSE;
+  }
+
+var_dump($rs);
+
+// -----------------------------------
 		
 		$indexing_duration = time() - $total_duration;
 		$hms = secs2hms($indexing_duration);
 
 		$global_log .= "Indexed text: " . sprintf("%.2f", $attached_doc['documentcache_size'] / 1024 ) . " Kbyte\n";
 
-		log_document_conversion($attached_doc['id'], $attached_doc['rec_id'], $jconf['jobid_document_index'], "-", "[OK] Successful document indexation in " . $hms . " time.\n\n" . $global_log, "-", "-", $indexing_duration, TRUE);
+//		log_document_conversion($attached_doc['id'], $attached_doc['rec_id'], $jconf['jobid_document_index'], "-", "[OK] Successful document indexation in " . $hms . " time.\n\n" . $global_log, "-", "-", $indexing_duration, TRUE);
 
 echo "end\n";
 
@@ -306,7 +399,7 @@ echo "INTERNAL loop: exit\n";
 
     if ( $db_close ) {
 echo "DB: closed\n";
-		$db->close();
+//		$db->close();
     }
 
     $app->watchdog();
@@ -372,7 +465,7 @@ function query_nextjob(&$attached_doc) {
 		a.userid = b.id
     LIMIT 1";
 
-echo $query . "\n";
+//echo $query . "\n";
 
   try {
     $rs = $db->Execute($query);
@@ -389,6 +482,33 @@ echo "recs: " . $rs->RecordCount() . "\n";
   }
 
   $attached_doc = $rs->fields;
+
+// ------------------------------------
+
+  $query = "
+    SELECT
+		count(*)
+	FROM
+		attached_documents as a,
+		users as b
+    WHERE
+		a.status = \"" . $jconf['dbstatus_copystorage_ok'] . "\" AND
+		( a.masterextension IN (\"txt\", \"csv\", \"xml\", \"htm\", \"html\", \"doc\", \"docx\", \"odt\", \"ott\", \"sxw\", \"pdf\", \"ppt\", \"pptx\", \"pps\", \"odp\") ) AND
+		( a.indexingstatus IS NULL OR a.indexingstatus = \"\" ) AND
+		a.userid = b.id
+	";
+
+//echo $query . "\n";
+
+  try {
+    $rs = $db->getOne($query);
+  } catch (exception $err) {
+    return FALSE;
+  }
+
+var_dump($rs);
+
+//----------------------------------
 
   return TRUE;
 }
