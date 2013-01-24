@@ -42,10 +42,12 @@ if ( iswindows() ) {
 // Start an infinite loop - exit if any STOP file appears
 while( !is_file( $app->config['datapath'] . 'jobs/job_document_index.stop' ) and !is_file( $app->config['datapath'] . 'jobs/all.stop' ) ) {
 
-echo "JOB woke up\n";
+echo "EXTERNAL loop\n";
 
 	clearstatcache();
     while ( 1 ) {
+
+echo "INTERNAL loop\n";
 
 		$app->watchdog();
 	
@@ -72,6 +74,11 @@ echo "JOB woke up\n";
 		}
 		$db_close = TRUE;
 
+// Testing!!!
+//update_db_attachment_indexingstatus(16, null);
+//update_db_attachment_indexingstatus(17, null);
+// !!!!!!!!!!
+
 		// Temporary directory cleanup and log result
 		$err = tempdir_cleanup($jconf['doc_dir']);
 		if ( !$err['code'] ) {
@@ -80,11 +87,8 @@ echo "JOB woke up\n";
 			break;
 		}
 
-// Testing!!!
-//update_db_attachment_indexingstatus(3, null);
-// !!!!!!!!!!
-
 		// Query next job
+		unset($attached_doc);
 		$attached_doc = array();
 		if ( !query_nextjob($attached_doc) ) break;
 
@@ -295,17 +299,20 @@ echo "START\n";
 
 echo "end\n";
 
+echo "INTERNAL loop: exit\n";
+
 		break;
     }
 
     if ( $db_close ) {
+echo "DB: closed\n";
 		$db->close();
     }
 
     $app->watchdog();
 
 echo "sleep now\n";
-	sleep( $converter_sleep_length );	
+	sleep($converter_sleep_length);	
 }
 
 exit;
@@ -339,7 +346,7 @@ function file_identify($filename) {
 //	  o TRUE: job is available for conversion
 //	- $slide: slideconversion table DB record returned in global variable
 function query_nextjob(&$attached_doc) {
- global $db, $jconf;
+ global $db, $app, $jconf;
 
   $query = "
     SELECT
@@ -365,7 +372,7 @@ function query_nextjob(&$attached_doc) {
 		a.userid = b.id
     LIMIT 1";
 
-//echo $query . "\n";
+echo $query . "\n";
 
   try {
     $rs = $db->Execute($query);
@@ -374,7 +381,7 @@ function query_nextjob(&$attached_doc) {
     return FALSE;
   }
 
-//echo "recs: " . $rs->RecordCount() . "\n";
+echo "recs: " . $rs->RecordCount() . "\n";
 
   // Check if pending job exists
   if ( $rs->RecordCount() < 1 ) {
