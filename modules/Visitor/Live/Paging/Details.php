@@ -24,9 +24,8 @@ class Details extends \Visitor\Paging {
     );
     
     if ( !$this->channelModel->row['isliveevent'] )
-      $this->controller->redirectWithMessage(
-        'channels/details/' . $this->channelModel->id . ',' . \Springboard\Filesystem::filenameize( $this->channelModel->row['title'] ),
-        $l('live', 'nosuchchannel')
+      $this->controller->redirect(
+        'channels/details/' . $this->channelModel->id . ',' . \Springboard\Filesystem::filenameize( $this->channelModel->row['title'] )
       );
     
     $this->channelModel->clearFilter();
@@ -54,9 +53,8 @@ class Details extends \Visitor\Paging {
       
       $endtime = strtotime( $this->channelModel->row['endtimestamp'] );
       if ( strtotime('+3 days', $endtime ) < time() )
-        $this->controller->redirectWithMessage(
-          'channels/details/' . $this->channelModel->id . ',' . \Springboard\Filesystem::filenameize( $this->channelModel->row['title'] ),
-          $l('live', 'nosuchchannel')
+        $this->controller->redirect(
+          'channels/details/' . $this->channelModel->id . ',' . \Springboard\Filesystem::filenameize( $this->channelModel->row['title'] )
         );
       
     }
