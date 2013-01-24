@@ -92,11 +92,14 @@ if ( query_recordings2remove($recordings) ) {
 		$err = remove_file_ifexists($remove_path);
 		if ( !$err['code'] ) $debug->log($jconf['log_dir'], $myjobid . ".log", $err['message'] . "\n\nCommand:\n" . $err['command'] . "\n\nOutput:\n" . $err['command_output'], $sendmail = true);
 
-		// Update status
+		// Update status fields
 		update_db_recording_status($recording['id'], $jconf['dbstatus_deleted']);
 		update_db_masterrecording_status($recording['id'], $jconf['dbstatus_deleted']);
-		update_db_content_status($recording['id'], $jconf['dbstatus_deleted']);
-		update_db_mastercontent_status($recording['id'], $jconf['dbstatus_deleted']);
+		update_db_mobile_status($recording['id'], $jconf['dbstatus_deleted']);
+		if ( !empty($recording['contentmasterstatus']) ) {
+			update_db_content_status($recording['id'], $jconf['dbstatus_deleted']);
+			update_db_mastercontent_status($recording['id'], $jconf['dbstatus_deleted']);
+		}
 
 		$app->watchdog();
 		$recordings->MoveNext();
@@ -140,6 +143,9 @@ function query_recordings2remove(&$recordings) {
 			a.id,
 			a.userid,
 			a.status,
+			a.masterstatus,
+			a.contentstatus,
+			a.contentmasterstatus,
 			a.mastersourceip,
 			b.email,
 			c.id as organizationid,
