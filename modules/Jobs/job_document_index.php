@@ -42,6 +42,8 @@ if ( iswindows() ) {
 // Start an infinite loop - exit if any STOP file appears
 while( !is_file( $app->config['datapath'] . 'jobs/job_document_index.stop' ) and !is_file( $app->config['datapath'] . 'jobs/all.stop' ) ) {
 
+echo "JOB woke up\n";
+
 	clearstatcache();
     while ( 1 ) {
 
@@ -85,6 +87,9 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_document_index.stop' ) and
 		// Query next job
 		$attached_doc = array();
 		if ( !query_nextjob($attached_doc) ) break;
+
+var_dump($attached_doc);
+echo "START\n";
 
 		// Get indexing start time
 		$total_duration = time();
@@ -164,6 +169,7 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_document_index.stop' ) and
 		// Document type arrays
 		$types_text = array("txt", "csv", "xml");
 		$types_doc  = array("htm", "html", "doc", "docx", "odt", "ott", "sxw");
+		$types_pres  = array("ppt", "pptx", "pps", "odp");
 		$types_pdf  = array("pdf");
 
 		// Add titles to document cache
@@ -175,13 +181,38 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_document_index.stop' ) and
 			$content_file = $attached_doc['source_file'];
 		}
 
+		// Presentation: convert to PDF before extracting text
+		$is_pres_pdf_source = FALSE;
+		if ( array_search($attached_doc['masterextension'], $types_pres) !== FALSE ) {
+
+			$content_file = $attached_doc['temp_directory'] . $attached_doc['id'] . ".txt";
+			$content_pdf = $attached_doc['temp_directory'] . $attached_doc['id'] . ".pdf";
+
+			// Launch unoconv
+			$command = "unoconv -f pdf " . $attached_doc['source_file']. " 2>&1";
+			exec($command, $output, $result);
+			$output_string = implode("\n", $output);
+			// unoconv: sometimes it returns "Floating point exception", but result is produced. Maybe output is truncated.
+			if ( ( $result != 0 ) and ( $output_string != "Floating point exception" ) ) {
+				update_db_attachment_indexingstatus($attached_doc['id'], $jconf['dbstatus_indexing_err']);
+				log_document_conversion($attached_doc['id'], $attached_doc['rec_id'], $jconf['jobid_document_index'], $jconf['dbstatus_indexing'], "[ERROR] unoconv conversion error.\n\n" . $output_string, $command, $result, 0, TRUE);
+				break;
+			}
+
+			$is_pres_pdf_source = TRUE;
+		}
+
 		// PDF: use pdftotext to extract plain text then check if valid text file
-		if ( ( array_search($attached_doc['masterextension'], $types_pdf) !== FALSE ) AND ( $attached_doc['file_type'] == "pdf" ) ) {
+		if ( ( ( array_search($attached_doc['masterextension'], $types_pdf) !== FALSE ) AND ( $attached_doc['file_type'] == "pdf" ) ) OR ( $is_pres_pdf_source == TRUE ) ) {
+
+			// Presentation: if converted to PDF first, change input file
+			$source_file = $attached_doc['source_file'];
+			if ( $is_pres_pdf_source ) $source_file = $content_pdf;
 
 			$content_file = $attached_doc['temp_directory'] . $attached_doc['id'] . ".txt";
 
 			// Call pdftotext
-			$command = "pdftotext -q -nopgbrk -layout -enc UTF-8 " . $attached_doc['source_file'];
+			$command = "pdftotext -q -nopgbrk -layout -enc UTF-8 " . $source_file;
 			exec($command, $output, $result);
 			$output_string = implode("\n", $output);
 			if ( $result != 0 ) {
@@ -190,14 +221,14 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_document_index.stop' ) and
 				break;
 			}
 
-			// Check output if text: pdftotext can provide crap output (based on PDF character encoding)
-			$file_type = file_identify($content_file);
+			// Check output if text: pdftotext can provide crap output (based on PDF character encoding) - GIVES WRONG OUTPUT SOMETIMES
+/*			$file_type = file_identify($content_file);
 			if ( ( $file_type === FALSE ) OR ( stripos($file_type, "text") === FALSE ) ) {
 				update_db_attachment_indexingstatus($attached_doc['id'], $jconf['dbstatus_indexing_err']);
 				log_document_conversion($attached_doc['id'], $attached_doc['rec_id'], $jconf['jobid_document_index'], $jconf['dbstatus_indexing'], "[WARNING] pdftotext output is not text.\n\n" . $output_string, $command, $result, 0, TRUE);
 				break;
 			}
-
+*/
 		}
 
 		// Other documents: use unoconv to extract text
@@ -243,19 +274,6 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_document_index.stop' ) and
 		$tmp = mb_convert_encoding($contents, "UTF-8");
 		$contents = $tmp;
 
-/*
-		// Change character encoding to UTF-8 if other format is outputed
-		$content_encoding = mb_detect_encoding($contents);
-		if ( $content_encoding != "UTF-8" ) {
-			if ( empty($content_encoding) OR ( $content_encoding === FALSE ) ) {
-				$tmp = mb_convert_encoding($contents, "UTF-8");
-			} else {
-				$tmp = mb_convert_encoding($contents, "UTF-8", $content_encoding);
-			}
-			$contents = $tmp;
-		}
-*/
-
 		// Update document cache and status
 		if ( empty($contents) ) {
 			update_db_attachment_indexingstatus($attached_doc['id'], $jconf['dbstatus_indexing_empty']);
@@ -275,6 +293,8 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_document_index.stop' ) and
 
 		log_document_conversion($attached_doc['id'], $attached_doc['rec_id'], $jconf['jobid_document_index'], "-", "[OK] Successful document indexation in " . $hms . " time.\n\n" . $global_log, "-", "-", $indexing_duration, TRUE);
 
+echo "end\n";
+
 		break;
     }
 
@@ -284,6 +304,7 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_document_index.stop' ) and
 
     $app->watchdog();
 
+echo "sleep now\n";
 	sleep( $converter_sleep_length );	
 }
 
@@ -339,7 +360,7 @@ function query_nextjob(&$attached_doc) {
 		users as b
     WHERE
 		a.status = \"" . $jconf['dbstatus_copystorage_ok'] . "\" AND
-		( a.masterextension IN (\"txt\", \"csv\", \"xml\", \"htm\", \"html\", \"doc\", \"docx\", \"odt\", \"ott\", \"sxw\", \"pdf\") ) AND
+		( a.masterextension IN (\"txt\", \"csv\", \"xml\", \"htm\", \"html\", \"doc\", \"docx\", \"odt\", \"ott\", \"sxw\", \"pdf\", \"ppt\", \"pptx\", \"pps\", \"odp\") ) AND
 		( a.indexingstatus IS NULL OR a.indexingstatus = \"\" ) AND
 		a.userid = b.id
     LIMIT 1";

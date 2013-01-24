@@ -90,15 +90,39 @@ if ( query_recordings2remove($recordings) ) {
 
 		// Remove recording directory
 		$err = remove_file_ifexists($remove_path);
-		if ( !$err['code'] ) $debug->log($jconf['log_dir'], $myjobid . ".log", $err['message'] . "\n\nCommand:\n" . $err['command'] . "\n\nOutput:\n" . $err['command_output'], $sendmail = true);
+		if ( !$err['code'] ) {
+			// Error: we skip this one, admin must check it manually
+			$debug->log($jconf['log_dir'], $myjobid . ".log", $err['message'] . "\n\nCommand:\n" . $err['command'] . "\n\nOutput:\n" . $err['command_output'], $sendmail = TRUE);
+			$recordings->MoveNext();
+			continue;
+		}
 
-		// Update status fields
+		// Update status fields: master, surrogates, content and attached documents
 		update_db_recording_status($recording['id'], $jconf['dbstatus_deleted']);
 		update_db_masterrecording_status($recording['id'], $jconf['dbstatus_deleted']);
 		update_db_mobile_status($recording['id'], $jconf['dbstatus_deleted']);
 		if ( !empty($recording['contentmasterstatus']) ) {
 			update_db_content_status($recording['id'], $jconf['dbstatus_deleted']);
 			update_db_mastercontent_status($recording['id'], $jconf['dbstatus_deleted']);
+		}
+
+		// Update attached documents of removed recording: status, delete document cache
+		$query = "
+			UPDATE
+				attached_documents
+			SET
+				status = \"" . $jconf['dbstatus_deleted'] . "\",
+				indexingstatus = NULL,
+				documentcache = NULL
+			WHERE
+				recordingid = " . $recording['id'];
+
+		try {
+			$rs = $db->Execute($query);
+		} catch (exception $err) {
+			$debug->log($jconf['log_dir'], $jconf['jobid_file_remove'] . ".log", "[ERROR] SQL query failed.\n\n" . trim($query), $sendmail = TRUE);
+			$recordings->MoveNext();
+			continue;
 		}
 
 		$app->watchdog();

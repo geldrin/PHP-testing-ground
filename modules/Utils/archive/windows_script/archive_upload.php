@@ -1,38 +1,13 @@
 <?php
 
-include_once( 'utils.php');
-include_once( 'httpapi.php');
+include_once('utils.php');
+include_once('httpapi.php');
 
 $ischeckonly = FALSE;
 
-$channel = 29;
+// MUST BE CHANGED!
+$channel = 37;
 $slideonright = 1;
-
-/*
-4,Reklámfeszt 2012
-5,Piackutatók a fogyasztási trendekről (PPT)
-6,"Made in Hungary" (MRSZ)
-7,Hot Marketing Club Meetup (MRSZ)
-8,Reklám, vagy amit nem akartok (MRSZ)
-9,Zenei csatornák
-10,Hír-név-más konferencia (MPRSZ)
-11,Egyéb
-12,Elég a sopánkodásból!
-13,Reklámaréna (MRSZ)
-14,Reklámpszichológia (MRSZ)
-15,Az egészség reklámja
-16,Sport és média szekció (MRSZ)
-17,E-kereskedelem és kommunikáció
-18,HR konferencia (MRSZ, Smartstuff)
-19,Digital Signage délelőtt (MRSZ)
-20,IAB digitális délután
-21,Vigyázunk a gyerekekre?
-22,NEW Business Konferencia
-23,Cannes Lions
-24,Védett ötletek
-25,A visszatérő vásárló a jó vásárló
-26,Reklámipar workshop
-*/
 
 // Some basic settings
 date_default_timezone_set("Europe/Budapest");
@@ -40,7 +15,7 @@ set_time_limit(0);
 clearstatcache();
 
 // Welcome
-echo "Videosquare archive uploader v0 - STARTING...\n";
+echo "Videosquare archive uploader v0.1 - STARTING...\n";
 
 //echo "argc: " . $argc . "\n";
 //print_r($_SERVER['argv']);
@@ -54,9 +29,11 @@ if ( $argc >= 2 ) {
 }
 
 if ( !is_readable($desc_filename) ) {
-	echo "ERROR: descriptor file \"" . $desc_filename . "\" does not exist\n";
+	echo "ERROR: descriptor file \"" . trim($argv[1]) . "\" does not exist\n";
 	exit -1;
 }
+
+echo "CHANNEL ID: " . $channel . "!!!\n";
 
 unset($media_filename);
 unset($media_starttime);
@@ -171,7 +148,7 @@ while( !feof($fh) ) {
 
 	// Read cut start and end times
 	if ( preg_match('/^[\s]*cut:media[\s]*[,][\s]*[0-1][0-9]:[0-5][0-9]:[0-5][0-9][\s]*[,][\s]*[0-1][0-9]:[0-5][0-9]:[0-5][0-9][\s]*/', $oneline) ) {
-		echo "OK: " . $oneline . "\n";
+		echo "CUT: " . $oneline . "\n";
 
 		$iscontent = TRUE;
 		$tmp = explode(",", $oneline, 5);
@@ -205,15 +182,12 @@ while( !feof($fh) ) {
 
 		$fname_id = trim($tmp[4]);
 		$video_filename = $media_dir . "/" . $fname_id . "_" . $suffix . ".mp4";
-//!!!!!
-if ( $fname_id == 4 ) $video_filename = $media_dir . "/4_richter_3n_1.wmv";
-//!!!!!
 		if ( !file_exists($video_filename) ) {
 			echo "ERROR: cannot find video file " . $video_filename . "\n";
 			exit -1;
 		}
 
-		echo "Media file found: " . $video_filename . "\n";
+		echo "Media file found:\n" . $video_filename . "\n";
 
 		if ( $iscontent ) {
 			$content_filename = $media_dir . "/" . $fname_id . "_" . $suffix . "_content.mp4";
@@ -221,7 +195,7 @@ if ( $fname_id == 4 ) $video_filename = $media_dir . "/4_richter_3n_1.wmv";
 				echo "ERROR: cannot find content file " . $content_filename . "\n";
 				exit -1;
 			}
-			echo "Content file found: " . $content_filename . "\n";
+			echo "Content file found:\n" . $content_filename . "\n";
 		}
 
 		// Assemble metadata
@@ -244,34 +218,29 @@ if ( $fname_id == 4 ) $video_filename = $media_dir . "/4_richter_3n_1.wmv";
 			'conversionpriority'	=> 200
 		);
 
-var_dump($metadata);
-
-//$api->removeRecordingFromChannel( 61, 1 );
-//$api->addRecordingToChannel( 61, 1 );
+//var_dump($metadata);
 
 		if ( !$ischeckonly ) {
 
-//$api->modifyRecording(30, $metadata);
-
-			echo "Uploading media: " . $video_filename . " ...\n";
+			echo "Uploading media:\n" . $video_filename . " ...\n";
 
 			$time_start = time();
 			$recording = $api->uploadRecording($video_filename, $language);
 			$duration = time() - $time_start;
 			$mins_taken = round( $duration / 60, 2);
 		
-			if ( $recording and isset( $recording['data']['id'] ) ) {
+			if ( $recording and isset( $recording['data']['id'] ) and is_numeric($recording['data']['id']) ) {
 
 				echo "Successful media upload in " . $mins_taken . " mins.\n";
 			
 				$recordingid = $recording['data']['id'];
 				$api->modifyRecording( $recordingid, $metadata);
 
-				$api->addRecordingToChannel( $recordingid, $channel );
+				$api->addRecordingToChannel($recordingid, $channel);
 
 				if ( $iscontent ) {
 
-					echo "Uploading content: " . $content_filename . " ...\n";
+					echo "Uploading content:\n" . $content_filename . " ...\n";
 
 					$time_start = time();	
 					$api->uploadContent( $recordingid, $content_filename);
@@ -283,6 +252,7 @@ var_dump($metadata);
 
 			} else {
 				echo "ERROR: cannot upload media file " . $video_filename . "\n";
+				if ( isset($recording['data']['id']) ) echo "Recording ID returned: " . isset($recording['data']['id']) . "\n";
 				exit -1;
 			}
 

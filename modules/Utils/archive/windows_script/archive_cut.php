@@ -1,6 +1,30 @@
 <?php
 
-include_once( 'utils.php');
+include_once('utils.php');
+
+$ffmpeg_path = "E:/Videosquare/bin/ffmpeg-20130108/bin/ffmpeg.exe ";
+$mediainfo_path = "E:/Videosquare/bin/mediainfo-0.7.61/MediaInfo.exe ";
+$handbrake_path = "\"C:/Program Files/HandBrake/HandBrakeCLI.exe\" ";
+
+// PLEASE SET THESE PARAMETERS!
+// Do we cut or make a test run to check descriptor file?
+$ischeckonly = FALSE;
+
+// Shall we reencode or cut by keyframes. Keyframe based cut can lead to corrupt files!
+$reencode_video = FALSE;
+$reencode_content = TRUE;
+
+// SHOULD BE DETECTED WITH MEDIAINFO
+// Video: needed?
+$rendervideo = TRUE;
+$media_res = "1280x720";
+$media_fps = 25;
+$media_bw = 2000;
+// Content: needed?
+$rendercontent = TRUE;
+$content_res = "1024x768";
+$content_fps = 30;
+$content_bw = 800;
 
 // Descriptor file example
 /*
@@ -23,32 +47,10 @@ cut:media,00:11:07,00:59:05
 
 */
 
-// PLEASE SET THESE PARAMETERS!
-// Do we cut or make a test run to check descriptor file?
-$ischeckonly = FALSE;
-
-// Shall we reencode or cut by keyframes. Keyframe based cut can lead to corrupt files!
-$reencode = TRUE;
-// SHOULD BE DETECTED WITH MEDIAINFO
-// Video: needed?
-$rendervideo = TRUE;
-$media_res = "1280x720";
-$media_fps = 25;
-$media_bw = 2000;
-// Content: needed?
-$rendercontent = TRUE;
-$content_res = "1024x768";
-$content_fps = 25;
-$content_bw = 800;
-
 // Some basic settings
 date_default_timezone_set("Europe/Budapest");
 set_time_limit(0);
 clearstatcache();
-
-$ffmpeg_path = "E:/VSQ/ffmpeg-20120927/bin/ffmpeg.exe ";
-$mediainfo_path = "E:/VSQ/mediainfo-0.7.61/MediaInfo.exe";
-$handbrake_path = "\"C:/Program Files/HandBrake/HandBrakeCLI.exe\" ";
 
 // Welcome
 echo "Videosquare archive creator v0 - STARTING...\n";
@@ -411,7 +413,7 @@ foreach($media_cuts as $key => $value) {
 
 		$target_filename = $cut_path . "/" . $key . "_" . $suffix . "." . $media_type;
 		$cut_duration = $media_cuts[$key]['cut_media_endsec'] - $media_cuts[$key]['cut_media_startsec'];
-		if ( $reencode ) {
+		if ( $reencode_video ) {
 			// slow!
 			$command_cut = $ffmpeg_path . "-y -v 0 -strict experimental -i " . $media_filename . " -ss " . secs2hms($media_cuts[$key]['cut_media_startsec']) . ".0 -t " . $cut_duration . " -async 10 -c:a copy -c:v libx264 -profile:v main -preset:v slow -s " . $media_res . " -r " . $media_fps . " -b:v " . $media_bw . "k -threads 0 -f mp4 " . $target_filename;
 			//		$command_cut = $handbrake_path . "-v 0 --no-dvdnav --optimize -i " . $media_filename . " -o " . $target_filename . " --vb 2000 --start-at duration:" . $media_cuts[$key]['cut_media_startsec'] . " --stop-at duration:" . $cut_duration . " -f mp4";
@@ -467,7 +469,7 @@ foreach($media_cuts as $key => $value) {
 		// Cutting content segment
 		$target_filename = $cut_path . "/" . $key . "_" . $suffix . "_content." . $content_type;
 		$cut_duration = $media_cuts[$key]['cut_content_endsec'] - $media_cuts[$key]['cut_content_startsec'];
-		if ( $reencode ) {
+		if ( $reencode_content ) {
 			$command_cut = $ffmpeg_path . "-y -v 0 -strict experimental -i " . $content_filename . " -ss " . secs2hms($media_cuts[$key]['cut_content_startsec']) . ".0 -t " . $cut_duration . " -async 10 -an -c:v libx264 -profile:v main -preset:v fast -s " . $content_res . " -r " . $content_fps . " -b:v " . $content_bw . "k -threads 0 -f mp4 " . $target_filename;
 			//$command_cut = "HandBrakeCLI -v 0 --no-dvdnav --optimize -i " . $content_filename . " -o " . $target_filename . " --vb 800 --start-at duration:" . $media_cuts[$key]['cut_content_startsec'] . " --stop-at duration:" . $cut_duration . " -f mp4";
 		} else {
