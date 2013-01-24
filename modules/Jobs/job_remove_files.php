@@ -69,6 +69,9 @@ if ( query_recordings2remove($recordings) ) {
 		$recording = array();
 		$recording = $recordings->fields;
 
+var_dump($recording);
+exit;
+
 		$global_log .= "ID: " . $recording['id'] . "\n";
 		$global_log .= "User: " . $recording['email'] . " (domain: " . $recording['domain'] . ")\n";
 
@@ -89,14 +92,14 @@ if ( query_recordings2remove($recordings) ) {
 		}
 
 		// Remove recording directory
-		$err = remove_file_ifexists($remove_path);
+/*		$err = remove_file_ifexists($remove_path);
 		if ( !$err['code'] ) {
 			// Error: we skip this one, admin must check it manually
 			$debug->log($jconf['log_dir'], $myjobid . ".log", $err['message'] . "\n\nCommand:\n" . $err['command'] . "\n\nOutput:\n" . $err['command_output'], $sendmail = TRUE);
 			$recordings->MoveNext();
 			continue;
 		}
-
+*/
 		// Update status fields: master, surrogates, content and attached documents
 		update_db_recording_status($recording['id'], $jconf['dbstatus_deleted']);
 		update_db_masterrecording_status($recording['id'], $jconf['dbstatus_deleted']);
