@@ -82,7 +82,6 @@ $query = "
 		a.mastervideores,
 		a.mastervideoextension,
 		a.numberofindexphotos,
-		a.hascontentvideo,
 		a.contentmastermediatype,
 		a.contentmastervideores,
 		a.contentmastervideoextension,

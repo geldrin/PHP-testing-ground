@@ -397,7 +397,6 @@ global $jconf, $db;
 	$query = "
 		SELECT
 			id,
-			hascontentvideo,
 			contentmastervideoisinterlaced,
 			contentmastervideofilename,
 			contentmastervideoextension,
