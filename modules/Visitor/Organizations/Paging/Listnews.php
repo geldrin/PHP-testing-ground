@@ -10,6 +10,7 @@ class Listnews extends \Visitor\Paging {
   protected $insertbeforepager = Array( 'Visitor/Organizations/Paging/ListnewsBeforepager.tpl' );
   protected $template = 'Visitor/Organizations/Paging/Listnews.tpl';
   protected $newsModel;
+  protected $user;
   
   public function init() {
     
@@ -23,24 +24,23 @@ class Listnews extends \Visitor\Paging {
   
   protected function setupCount() {
     
-    $user = $this->bootstrap->getSession('user');
+    $this->user      = $this->bootstrap->getSession('user');
     $this->newsModel = $this->bootstrap->getModel('organizations_news');
-    $this->newsModel->addFilter('organizationid', $this->controller->organization['id'] );
     
-    if ( !$user['iseditor'] or $user['organizationid'] != $this->controller->organization['id'] ) {
-      
-      $this->newsModel->addFilter('disabled', 0 );
-      $this->newsModel->addTextFilter('starts <= NOW() AND ends >= NOW()');
-      
-    } else
+    if ( $this->user['iseditor'] and $this->user['organizationid'] == $this->controller->organization['id'] )
       $this->controller->toSmarty['canadminister'] = true;
     
-    return $this->itemcount = $this->newsModel->getCount();
+    return $this->itemcount = $this->newsModel->getNewsCount(
+      $this->controller->organization['id'],
+      $this->user
+    );
     
   }
   
   protected function getItems( $start, $limit, $orderby ) {
-    return $this->newsModel->getArray( $start, $limit, false, $orderby );
+    return $this->newsModel->getNewsArray(
+      $start, $limit, $orderby, $this->controller->organization['id'], $this->user
+    );
   }
   
 }
