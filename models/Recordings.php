@@ -813,10 +813,11 @@ class Recordings extends \Springboard\Model {
     
     $this->ensureObjectLoaded();
     $statuses = array(
-      'markedfordeletion' => 'recorddeleted',
+      'deleted'           => 'recordingdeleted',
+      'markedfordeletion' => 'recordingdeleted',
     );
     
-    if ( in_array( $this->row['status'], $statuses ) )
+    if ( in_array( $this->row['status'], array_keys( $statuses ) ) )
       return $statuses[ $this->row['status'] ];
     
     if (
