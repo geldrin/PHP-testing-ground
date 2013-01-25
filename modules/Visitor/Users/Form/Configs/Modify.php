@@ -133,7 +133,7 @@ $config = array(
     'validation'  => Array(
       array(
         'type'             => 'file',
-        'required'         => true,
+        'required'         => false,
         'help'             => $l('users', 'avatarfilename_help'),
         'imagecreatecheck' => true,
         'types'            => Array('gif', 'jpg', 'png', 'bmp'),
