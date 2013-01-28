@@ -14,13 +14,15 @@ set_time_limit(0);
 $app = new Springboard\Application\Cli(BASE_PATH, PRODUCTION);
 
 // Users base data
+// Department ID
+$org_dep_id = 15;
+// Org ID = Conforg
+$org_id = 200;
 $user_num = 50;
 $user_nameprefix = "felh";
 $user_namesuffix_length = 4;
 $user_nametermination = "conforg.hu";
 $pass_length = 8;
-$org_id = 200;
-$org_dep_id = 10;
 
 $iscommit = FALSE;
 
@@ -142,8 +144,8 @@ $msg .= "# COMMIT: " . ($iscommit?"YES":"NO, TEST ONLY") . "\n";
 
 echo $msg;
 
-// Open CSV file for user data
-$out_file = "vsq_users.csv";
+// Open TXT (CSV) file for user data
+$out_file = "vsq_users.txt";
 if ( file_exists($out_file) ) {
 	if ( !is_writable($out_file) ) {
 		echo "[ERROR]: Cannot write output file\n";
