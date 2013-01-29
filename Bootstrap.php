@@ -160,15 +160,20 @@ class Bootstrap {
   
   public function getAdoDB( $errorhandler = true ) {
     
-    if ( isset( $this->instances['adodb'] ) )
+    if ( isset( $this->instances['adodb'] ) and is_resource( $this->instances['adodb']->_connectionID ) )
       return $this->instances['adodb'];
     
-    define('ADODB_OUTP', 'Springboard\\adoDBDebugPrint'); // adodb debug print func( $msg, $newline )
+    if ( !defined('ADODB_OUTP') )
+      define('ADODB_OUTP', 'Springboard\\adoDBDebugPrint'); // adodb debug print func( $msg, $newline )
+    
     if ( !defined('DISABLE_DB_ERRORLOG') ) {
       define('ADODB_ERROR_LOG_DEST', $this->config['logpath'] . date("Y-m-" ) . 'database.txt' );
       define('ADODB_ERROR_LOG_TYPE', 3 /* 0-syslog, 1-email, 2-debugger, 3-file */ );
     }
-    define('ADODB_FORCE_NULLS', 1 );
+    
+    if ( !defined('ADODB_FORCE_NULLS') )
+      define('ADODB_FORCE_NULLS', 1 );
+    
     $GLOBALS['ADODB_CACHE_DIR']  = $this->config['cachepath'];
     $GLOBALS['ADODB_COUNTRECS']  = false;
     $GLOBALS['ADODB_FORCE_TYPE'] = 1; // force null
