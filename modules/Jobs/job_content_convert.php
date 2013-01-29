@@ -223,6 +223,7 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_content_convert.stop' ) an
 	// Close DB connection if open
 	if ( $db_close ) {
 		$db->close();
+		$db_close = FALSE;
 	}
 
 	$app->watchdog();

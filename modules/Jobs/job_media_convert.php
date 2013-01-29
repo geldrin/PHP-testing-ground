@@ -213,6 +213,7 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_media_convert.stop' ) and 
 	// Close DB connection if open
 	if ( $db_close ) {
 		$db->close();
+		$db_close = FALSE;
 	}
 
 	$app->watchdog();

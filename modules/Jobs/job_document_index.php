@@ -42,12 +42,8 @@ if ( iswindows() ) {
 // Start an infinite loop - exit if any STOP file appears
 while( !is_file( $app->config['datapath'] . 'jobs/job_document_index.stop' ) and !is_file( $app->config['datapath'] . 'jobs/all.stop' ) ) {
 
-echo "EXTERNAL loop\n";
-
 	clearstatcache();
     while ( 1 ) {
-
-echo "INTERNAL loop\n";
 
 		$app->watchdog();
 	
@@ -63,19 +59,16 @@ echo "INTERNAL loop\n";
 		}
 
 		// Establish database connection
-		if ( !$db_close ) {
-			try {
-				$db = $app->bootstrap->getAdoDB();
-			} catch (exception $err) {
-				// Send mail alert, sleep for 15 minutes
-				$debug->log($jconf['log_dir'], $jconf['jobid_document_index'] . ".log", "[ERROR] No connection to DB (getAdoDB() failed). Error message:\n" . $err, $sendmail = true);
-				// Sleep 15 mins then resume
-				$converter_sleep_length = 15 * 60;
-				break;
-			}
-			$db_close = TRUE;
-echo "DB: opened\n";
+		try {
+			$db = $app->bootstrap->getAdoDB();
+		} catch (exception $err) {
+			// Send mail alert, sleep for 15 minutes
+			$debug->log($jconf['log_dir'], $jconf['jobid_document_index'] . ".log", "[ERROR] No connection to DB (getAdoDB() failed). Error message:\n" . $err, $sendmail = true);
+			// Sleep 15 mins then resume
+			$converter_sleep_length = 15 * 60;
+			break;
 		}
+		$db_close = TRUE;
 
 // Testing!!!
 //update_db_attachment_indexingstatus(3, null);
@@ -96,7 +89,6 @@ echo "DB: opened\n";
 		if ( !query_nextjob($attached_doc) ) break;
 
 var_dump($attached_doc);
-echo "START\n";
 
 		// Get indexing start time
 		$total_duration = time();
@@ -300,13 +292,10 @@ echo "START\n";
 
 		log_document_conversion($attached_doc['id'], $attached_doc['rec_id'], $jconf['jobid_document_index'], "-", "[OK] Successful document indexation in " . $hms . " time.\n\n" . $global_log, "-", "-", $indexing_duration, TRUE);
 
-echo "INTERNAL loop: exit\n";
-
 		break;
     }
 
     if ( $db_close ) {
-echo "DB: closed\n";
 		$db->close();
 		$db_close = FALSE;
     }
@@ -382,7 +371,7 @@ function query_nextjob(&$attached_doc) {
     return FALSE;
   }
 
-echo "recs: " . $rs->RecordCount() . "\n";
+//echo "recs: " . $rs->RecordCount() . "\n";
 
   // Check if pending job exists
   if ( $rs->RecordCount() < 1 ) {
@@ -390,33 +379,6 @@ echo "recs: " . $rs->RecordCount() . "\n";
   }
 
   $attached_doc = $rs->fields;
-
-// ------------------------------------
-
-  $query = "
-    SELECT
-		count(*)
-	FROM
-		attached_documents as a,
-		users as b
-    WHERE
-		a.status = \"" . $jconf['dbstatus_copystorage_ok'] . "\" AND
-		( a.masterextension IN (\"txt\", \"csv\", \"xml\", \"htm\", \"html\", \"doc\", \"docx\", \"odt\", \"ott\", \"sxw\", \"pdf\", \"ppt\", \"pptx\", \"pps\", \"odp\") ) AND
-		( a.indexingstatus IS NULL OR a.indexingstatus = \"\" ) AND
-		a.userid = b.id
-	";
-
-//echo $query . "\n";
-
-  try {
-    $rs = $db->getOne($query);
-  } catch (exception $err) {
-    return FALSE;
-  }
-
-var_dump($rs);
-
-//----------------------------------
 
   return TRUE;
 }
