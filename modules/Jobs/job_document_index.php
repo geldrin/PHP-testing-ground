@@ -88,7 +88,7 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_document_index.stop' ) and
 		$attached_doc = array();
 		if ( !query_nextjob($attached_doc) ) break;
 
-var_dump($attached_doc);
+//var_dump($attached_doc);
 
 		// Get indexing start time
 		$total_duration = time();
