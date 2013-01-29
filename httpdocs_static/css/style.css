@@ -2057,7 +2057,7 @@ a#currentusername span {
 /* temp live channellist */
 .channellist {
   list-style-type: none;
-  margin: 0;
+  margin: 10px 0 0 0;
   padding: 0;
 }
 .channellist h2, .channellist h3 {
