@@ -166,7 +166,7 @@ class Bootstrap {
     if ( !defined('ADODB_OUTP') )
       define('ADODB_OUTP', 'Springboard\\adoDBDebugPrint'); // adodb debug print func( $msg, $newline )
     
-    if ( !defined('DISABLE_DB_ERRORLOG') ) {
+    if ( !defined('DISABLE_DB_ERRORLOG') and !defined('ADODB_ERROR_LOG_DEST') ) {
       define('ADODB_ERROR_LOG_DEST', $this->config['logpath'] . date("Y-m-" ) . 'database.txt' );
       define('ADODB_ERROR_LOG_TYPE', 3 /* 0-syslog, 1-email, 2-debugger, 3-file */ );
     }
