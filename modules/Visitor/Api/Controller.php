@@ -6,8 +6,8 @@ class ApiException extends \Exception {
   
   public function __construct( $message, $shouldlog = true, $shouldemail = true ) {
     
-    $this->shouldlog   = true;
-    $this->shouldemail = true;
+    $this->shouldlog   = $shouldlog;
+    $this->shouldemail = $shouldemail;
     parent::__construct( $message );
     
   }
