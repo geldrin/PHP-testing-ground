@@ -38,18 +38,22 @@ class Controller extends \Visitor\Controller {
   public $apisignature = array(
     'authenticate' => array(
       'email' => array(
-        'type' => 'string'
+        'type' => 'string',
+        'shouldemail' => false,
       ),
       'password' => array(
-        'type' => 'string'
+        'type' => 'string',
+        'shouldemail' => false,
       ),
       'recordingid' => array(
         'type'     => 'id',
         'required' => false,
+        'shouldemail' => false,
       ),
       'feedid' => array(
         'type'     => 'id',
         'required' => false,
+        'shouldemail' => false,
       ),
     ),
   );
@@ -177,7 +181,7 @@ class Controller extends \Visitor\Controller {
         '/users/forgotpassword?email=' . rawurlencode( $email )
       );
       
-      throw new \Exception( $message );
+      throw new \Visitor\Api\ApiException( $message, true, false );
       
     }
     
@@ -192,7 +196,7 @@ class Controller extends \Visitor\Controller {
       $recordingsModel = $this->modelIDCheck( 'recordings', $recordingid, false );
       
       if ( !$recordingsModel )
-        throw new \Exception( $l('recordings', 'norecording') );
+        throw new \Visitor\Api\ApiException( $l('recordings', 'norecording'), true, false );
       
       $browserinfo     = $this->bootstrap->getBrowserInfo();
       $user            = $this->bootstrap->getSession('user');
@@ -206,14 +210,14 @@ class Controller extends \Visitor\Controller {
       ;
     
       if ( $access[ $accesskey ] !== true )
-        throw new \Exception( $l('recordings', 'nopermission') );
+        throw new \Visitor\Api\ApiException( $l('recordings', 'nopermission'), true, false );
       
     } elseif ( $feedid ) {
       
       $feedModel = $this->modelIDCheck( 'livefeeds', $feedid );
       
       if ( !$feedModel )
-        throw new \Exception( $l('live', 'nofeed') );
+        throw new \Visitor\Api\ApiException( $l('live', 'nofeed'), true, false );
       
       $user      = $this->bootstrap->getSession('user');
       $access    = $this->bootstrap->getSession('liveaccess');
@@ -222,7 +226,7 @@ class Controller extends \Visitor\Controller {
       $access[ $accesskey ] = $feedModel->isAccessible( $user );
       
       if ( $access[ $accesskey ] !== true )
-        throw new \Exception( $l('recordings', 'nopermission') );
+        throw new \Visitor\Api\ApiException( $l('recordings', 'nopermission'), true, false );
       
     }
     
