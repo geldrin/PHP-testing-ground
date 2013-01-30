@@ -39,6 +39,8 @@ if ( iswindows() ) {
 	exit;
 }
 
+$db_close = FALSE;
+
 // Start an infinite loop - exit if any STOP file appears
 while( !is_file( $app->config['datapath'] . 'jobs/job_document_index.stop' ) and !is_file( $app->config['datapath'] . 'jobs/all.stop' ) ) {
 
@@ -47,7 +49,6 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_document_index.stop' ) and
 
 		$app->watchdog();
 	
-		$db_close = FALSE;
 		$converter_sleep_length = $jconf['sleep_media'];
 
 		// Check if temp directory readable/writable
@@ -111,7 +112,7 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_document_index.stop' ) and
 		// Check if OpenOffice listener is running
 		if ( !soffice_isrunning() ) {
 			$debug->log($jconf['log_dir'], $jconf['jobid_document_index'] . ".log", "[ERROR] OpenOffice is not running. Indexing failed.\n", $sendmail = true);
-			$converter_sleep_length = 5*60;
+			$converter_sleep_length = 15 * 60;
 			break;
 		}
 
@@ -266,7 +267,7 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_document_index.stop' ) and
 			fclose($fh);
 		} else {
 			update_db_attachment_indexingstatus($attached_doc['id'], $jconf['dbstatus_indexing_err']);
-			log_document_conversion($attached_doc['id'], $attached_doc['rec_id'], $jconf['jobid_document_index'], $jconf['dbstatus_indexing'], "[ERROR] Indexing output file does not exist or 0 size. File: " . $content_file . "\n", "-", "-", 0, TRUE);
+			log_document_conversion($attached_doc['id'], $attached_doc['rec_id'], $jconf['jobid_document_index'], $jconf['dbstatus_indexing'], "[ERROR] Indexing output file does not exist or zero size. File: " . $content_file . "\n", "-", "-", 0, TRUE);
 			break;
 		}
 
