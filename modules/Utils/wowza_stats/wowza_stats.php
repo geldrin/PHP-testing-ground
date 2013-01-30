@@ -15,7 +15,7 @@ date_default_timezone_set("Europe/Budapest");
 echo "Wowza log analizer v0.1 - STARTING...\n";
 
 // User settings
-$live_channelid = 38;
+$live_channelid = 39;
 
 // **********************************
 
