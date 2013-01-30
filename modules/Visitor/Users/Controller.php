@@ -129,8 +129,18 @@ class Controller extends \Visitor\Controller {
     
     $l    = $this->bootstrap->getLocalization();
     $user = $this->bootstrap->getSession('user');
+   
+    if ( $user['id'] ) {
+      $userModel = $this->bootstrap->getModel('users');
+      $userModel->select( $user['id'] );
+      $userModel->row['sessionlastupdated'] = '';
+      $userModel->row['sessionid']          = '';
+      $userModel->updateRow( $userModel->row );
+    }
+
     $user->clear();
     session_destroy();
+    
     $this->redirectWithMessage('index', $l('users', 'loggedout') );
     
   }
@@ -189,6 +199,7 @@ class Controller extends \Visitor\Controller {
       $userModel->row['organizationid'] = $this->organization['id']; // a registerforsession miatt
     
     $userModel->registerForSession();
+    $userModel->updateSessionInformation();
     $userModel->updateLastlogin();
     
     if ( $recordingid ) {
