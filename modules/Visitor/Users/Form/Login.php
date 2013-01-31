@@ -52,7 +52,8 @@ class Login extends \Visitor\Form {
         case $sessionvalid:
           $message = sprintf(
             $l('users','login_sessionerror'),
-            ceil( $this->bootstrap->config['sessiontimeout'] / 60 )
+            ceil( $this->bootstrap->config['sessiontimeout'] / 60 ),
+            $lang . '/users/resetsession?email=' . $encodedemail
           );
           break;
           

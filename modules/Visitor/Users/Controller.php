@@ -19,6 +19,8 @@ class Controller extends \Visitor\Controller {
     'admin'          => 'clientadmin',
     'edit'           => 'clientadmin',
     'ping'           => 'public',
+    'resetsession'   => 'public',
+    'validateresetsession' => 'public',
   );
   
   public $forms = array(
@@ -30,6 +32,7 @@ class Controller extends \Visitor\Controller {
     'modify'         => 'Visitor\\Users\\Form\\Modify',
     'resend'         => 'Visitor\\Users\\Form\\Resend',
     'edit'           => 'Visitor\\Users\\Form\\Edit',
+    'resetsession'   => 'Visitor\\Users\\Form\\Resetsession',
   );
   
   public $paging = array(
@@ -76,6 +79,23 @@ class Controller extends \Visitor\Controller {
       );
     
     $this->smartyoutput('Visitor/Users/Welcome.tpl');
+    
+  }
+  
+  public function validateresetsessionAction() {
+    
+    $userModel = $this->bootstrap->getModel('users');
+    $uservalid = $userModel->checkIDAndValidationCode(
+      $this->application->getParameter('a'),
+      $this->application->getParameter('b')
+    );
+    
+    if ( !$uservalid )
+      $this->redirect('contents/signupvalidationfailed');
+    
+    $userModel->registerForSession();
+    $userModel->updateSessionInformation();
+    $this->redirectToController('contents', 'sessionreset');
     
   }
   
