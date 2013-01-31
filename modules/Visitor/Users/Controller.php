@@ -18,6 +18,7 @@ class Controller extends \Visitor\Controller {
     'disable'        => 'clientadmin',
     'admin'          => 'clientadmin',
     'edit'           => 'clientadmin',
+    'ping'           => 'public',
   );
   
   public $forms = array(
@@ -139,8 +140,6 @@ class Controller extends \Visitor\Controller {
     }
 
     $user->clear();
-    session_destroy();
-    
     $this->redirectWithMessage('index', $l('users', 'loggedout') );
     
   }
@@ -244,6 +243,33 @@ class Controller extends \Visitor\Controller {
     return array(
       'userid' => $userModel->id,
     );
+    
+  }
+  
+  public function pingAction() {
+    
+    $user = $this->bootstrap->getSession('user');
+    if ( !$user['id'] )
+      $this->jsonOutput( array('status' => 'ERR') );
+    
+    $userModel = $this->bootstrap->getModel('users');
+    $userModel->select( $user['id'] );
+    
+    if ( !$userModel->row )
+      $this->jsonOutput( array('status' => 'ERR') );
+    
+    if ( !$userModel->checkSingleLoginUsers() ) {
+      
+      $user->clear();
+      $l = $this->bootstrap->getLocalization();
+      $this->addMessage( $l('users', 'loggedout_sessionexpired') );
+      $this->jsonOutput( array('status' => 'ERR') );
+      
+    }
+    
+    $userModel->updateSessionInformation();
+    header('HTTP/1.1 204 No Content');
+    die();
     
   }
   

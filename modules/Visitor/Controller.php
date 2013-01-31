@@ -27,15 +27,17 @@ class Controller extends \Springboard\Controller\Visitor {
 
         if ( !$userModel->checkSingleLoginUsers() ) {
           $user->clear();
-          session_destroy();
           $l = $this->bootstrap->getLocalization();
-          $this->redirectWithMessage('users/login', $l('users', 'loggedout_sessionexpired') );
+          $this->redirectWithMessage('users/login', sprintf(
+            $l('users', 'loggedout_sessionexpired'),
+            ceil( $this->bootstrap->config['sessiontimeout'] / 60 )
+          ) );
         }
         else
           $userModel->updateSessionInformation();
 
       }
-              
+
     }
   
   }

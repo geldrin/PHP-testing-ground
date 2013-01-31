@@ -31,6 +31,9 @@ $j(document).ready(function() {
   runIfExists('#recordings_modifycontributors', setupContributors );
   runIfExists('#contributors_create, #contributors_modify', setupContributorEdit );
   
+  if ( needping )
+    setTimeout( setupPing, 1000 * pingsecs );
+  
   $j('#scriptingcontainer').show();
   
   $j('.clearonclick').on('focusin', function() {
@@ -1426,6 +1429,28 @@ function setupContributorEdit( elements ) {
       url: $j(this).attr('action')
     });
     
+  });
+  
+}
+
+function setupPing() {
+  
+  $j.ajax({
+    url: language + '/users/ping',
+    cache: false,
+    dataType: 'json',
+    type: 'GET',
+    success: function( data, status, xhr ) {
+      
+      if ( xhr.status == 204 ) {
+        
+        setTimeout( setupPing, 1000 * pingsecs );
+        return;
+        
+      } else
+        location.href = language + '/users/login';
+      
+    }
   });
   
 }

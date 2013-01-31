@@ -46,17 +46,17 @@ class Login extends \Visitor\Form {
             $l('users','login_error'),
             $lang . '/users/forgotpassword?email=' . $encodedemail,
             $lang . '/users/resend?email=' . $encodedemail
-          );          
+          );
           break;
         
         case $sessionvalid:
           $message = sprintf(
             $l('users','login_sessionerror'),
             ceil( $this->bootstrap->config['sessiontimeout'] / 60 )
-          );          
+          );
           break;
           
-        default: throw new Exception('unhandled switch case'); break;
+        default: throw new \Exception('unhandled switch case'); break;
           
       }
 
