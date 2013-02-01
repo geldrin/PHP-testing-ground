@@ -6,6 +6,7 @@ class Users extends \Springboard\Model {
   const USER_BANNED      = -1;
   const USER_VALIDATED   = 0;
   const USER_DISABLED    = 1;
+  protected $registeredSessionKey;
   
   public function selectAndCheckUserValid( $organizationid, $email, $password, $isadmin = null ) {
     
@@ -99,8 +100,63 @@ class Users extends \Springboard\Model {
     
     $user = $this->bootstrap->getSession( $sessionkey );
     $user->setArray( $this->row );
+    $this->registeredSessionKey = $sessionkey;
     return $user;
     
+  }
+
+  public function updateSessionInformation( $sessionkey = 'user' ) {
+  
+    $this->ensureObjectLoaded();
+    
+    if ( strlen( $this->registeredSessionKey ) )
+      $sessionkey = $this->registeredSessionKey;
+
+    if ( $this->row['issingleloginenforced'] ) {
+      // update user session data when logging in
+      if ( strlen( $sessionkey ) ) {
+        $this->row['sessionid'] = $this->bootstrap->getSession( $this->registeredSessionKey )->getSessionID();
+        $this->row['sessionlastupdated'] = date("Y-m-d H:i:s");
+        $this->updateRow( $this->row );
+      }
+      else
+        throw new \Exception('registeredSessionKey is missing in a Users instance');
+    }
+    
+  }
+  
+  public function checkSingleLoginUsers() {
+
+    $this->ensureObjectLoaded();
+
+    return  
+      !$this->row['issingleloginenforced']
+      ||
+      (
+        $this->row['issingleloginenforced'] &&
+        ( 
+          // a felhasznalo be van lepve, megfelelo a sessionje es
+          // sessiontimeouton belul van
+          ( 
+            $this->row['sessionid'] == 
+            $this->bootstrap->getSession('user')->getSessionID() 
+          ) &&
+          strlen( $this->row['sessionlastupdated'] ) &&
+          (
+            time() - strtotime( $this->row['sessionlastupdated'] ) < 
+            $this->bootstrap->config['sessiontimeout']
+          )
+        )
+        ||
+        (
+          // ha a felhasznalo sessionje mar lejart, ekkor mindegy,
+          // most mi a sessionID-je
+          time() - strtotime( $this->row['sessionlastupdated'] ) >
+          $this->bootstrap->config['sessiontimeout']
+        )
+      )
+    ;
+
   }
   
   public function updateLastLogin( $diagnostics = null ) {
@@ -108,11 +164,12 @@ class Users extends \Springboard\Model {
     $sql = '';
     if ( $diagnostics )
       $sql = ', browser = ' . $this->db->qstr( $diagnostics );
-    
+      
     $this->db->query("
       UPDATE LOW_PRIORITY users 
       SET
-        lastloggedin = NOW() $sql
+        lastloggedin = NOW()
+         $sql
       WHERE 
         id = '" . $this->id . "'"
     );

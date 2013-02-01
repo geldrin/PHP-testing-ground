@@ -29,17 +29,38 @@ class Login extends \Visitor\Form {
     
     if ( $userModel->row['isadmin'] )
       $userModel->row['organizationid'] = $organizationid; // a registerforsession miatt
-    
-    if ( !$uservalid or !$orgvalid ) {
       
+    // single login location check 
+    $sessionvalid = $uservalid && $userModel->checkSingleLoginUsers();
+    
+    if ( !$uservalid or !$orgvalid or !$sessionvalid ) {
+
       $l            = $this->bootstrap->getLocalization();
       $lang         = \Springboard\Language::get();
       $encodedemail = rawurlencode( $values['email'] );
-      $message      = sprintf(
-        $l('users','login_error'),
-        $lang . '/users/forgotpassword?email=' . $encodedemail,
-        $lang . '/users/resend?email=' . $encodedemail
-      );
+      
+      switch ( false ) {
+        case $uservalid:
+        case $orgvalid:
+          $message = sprintf(
+            $l('users','login_error'),
+            $lang . '/users/forgotpassword?email=' . $encodedemail,
+            $lang . '/users/resend?email=' . $encodedemail
+          );
+          break;
+        
+        case $sessionvalid:
+          $message = sprintf(
+            $l('users','login_sessionerror'),
+            ceil( $this->bootstrap->config['sessiontimeout'] / 60 ),
+            $lang . '/users/resetsession?email=' . $encodedemail
+          );
+          break;
+          
+        default: throw new \Exception('unhandled switch case'); break;
+          
+      }
+
       $this->form->addMessage( $message );
       $this->form->invalidate();
       return;
@@ -48,6 +69,7 @@ class Login extends \Visitor\Form {
     
     $access->clear();
     $userModel->registerForSession();
+    $userModel->updateSessionInformation();
     $this->controller->toSmarty['member'] = $userModel->row;
     
     $diagnostics = '(diag information was not posted)';

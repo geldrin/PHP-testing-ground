@@ -149,6 +149,18 @@ $config = array(
   'presenterroleids' => array(
     1,
   ),
+  'sessiontimeout' => 30,
+  'sessionpingseconds' => 15,
+  // Az users.issingleloginenforced=1 tipusu usereknel
+  // annak az idonek a hossza masodpercekben, amig a usert 
+  // belepettnek tekintjuk ujabb oldal letoltese nelkul. Maximum ennyi
+  // ideig nem tud belepni a user megegyszer, ha pl. lezarta a bongeszojet,
+  // es elvesztette a sessionazonositojat.
+  // 
+  // Ha egy felhasznalo elkezd nezni egy kozvetitest, es kozben lejar ez az 
+  // idoablak, akkor masik felhasznalo be tud lepni 
+  // parhuzamosan: ennek elkerulesere ajax "ping" funkcio hasznalhato, ami
+  // hiba eseten akar ki is dobhatja a felhasznalot.
   
 );
 

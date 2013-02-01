@@ -46,6 +46,12 @@
   var STATIC_URI = '{$STATIC_URI}';
   var VERSION    = '{$VERSION}';
   var language   = '{$language}';
+  {if $needping and $member.id and $member.issingleloginenforced}
+  var needping   = true;
+  var pingsecs   = {$bootstrap->config.sessionpingseconds};
+  {else}
+  var needping   = false;
+  {/if}
   var BROWSER    = {ldelim}
     mobile: {if $browser.mobile}true{else}false{/if},
     tablet: {if $browser.tablet}true{else}false{/if},

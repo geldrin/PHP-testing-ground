@@ -18,6 +18,9 @@ class Controller extends \Visitor\Controller {
     'disable'        => 'clientadmin',
     'admin'          => 'clientadmin',
     'edit'           => 'clientadmin',
+    'ping'           => 'public',
+    'resetsession'   => 'public',
+    'validateresetsession' => 'public',
   );
   
   public $forms = array(
@@ -29,6 +32,7 @@ class Controller extends \Visitor\Controller {
     'modify'         => 'Visitor\\Users\\Form\\Modify',
     'resend'         => 'Visitor\\Users\\Form\\Resend',
     'edit'           => 'Visitor\\Users\\Form\\Edit',
+    'resetsession'   => 'Visitor\\Users\\Form\\Resetsession',
   );
   
   public $paging = array(
@@ -75,6 +79,23 @@ class Controller extends \Visitor\Controller {
       );
     
     $this->smartyoutput('Visitor/Users/Welcome.tpl');
+    
+  }
+  
+  public function validateresetsessionAction() {
+    
+    $userModel = $this->bootstrap->getModel('users');
+    $uservalid = $userModel->checkIDAndValidationCode(
+      $this->application->getParameter('a'),
+      $this->application->getParameter('b')
+    );
+    
+    if ( !$uservalid )
+      $this->redirect('contents/signupvalidationfailed');
+    
+    $userModel->registerForSession();
+    $userModel->updateSessionInformation();
+    $this->redirectToController('contents', 'sessionreset');
     
   }
   
@@ -129,8 +150,16 @@ class Controller extends \Visitor\Controller {
     
     $l    = $this->bootstrap->getLocalization();
     $user = $this->bootstrap->getSession('user');
+   
+    if ( $user['id'] ) {
+      $userModel = $this->bootstrap->getModel('users');
+      $userModel->select( $user['id'] );
+      $userModel->row['sessionlastupdated'] = '';
+      $userModel->row['sessionid']          = '';
+      $userModel->updateRow( $userModel->row );
+    }
+
     $user->clear();
-    session_destroy();
     $this->redirectWithMessage('index', $l('users', 'loggedout') );
     
   }
@@ -189,6 +218,7 @@ class Controller extends \Visitor\Controller {
       $userModel->row['organizationid'] = $this->organization['id']; // a registerforsession miatt
     
     $userModel->registerForSession();
+    $userModel->updateSessionInformation();
     $userModel->updateLastlogin();
     
     if ( $recordingid ) {
@@ -233,6 +263,33 @@ class Controller extends \Visitor\Controller {
     return array(
       'userid' => $userModel->id,
     );
+    
+  }
+  
+  public function pingAction() {
+    
+    $user = $this->bootstrap->getSession('user');
+    if ( !$user['id'] )
+      $this->jsonOutput( array('status' => 'ERR') );
+    
+    $userModel = $this->bootstrap->getModel('users');
+    $userModel->select( $user['id'] );
+    
+    if ( !$userModel->row )
+      $this->jsonOutput( array('status' => 'ERR') );
+    
+    if ( !$userModel->checkSingleLoginUsers() ) {
+      
+      $user->clear();
+      $l = $this->bootstrap->getLocalization();
+      $this->addMessage( $l('users', 'loggedout_sessionexpired') );
+      $this->jsonOutput( array('status' => 'ERR') );
+      
+    }
+    
+    $userModel->updateSessionInformation();
+    header('HTTP/1.1 204 No Content');
+    die();
     
   }
   

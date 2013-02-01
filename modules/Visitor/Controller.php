@@ -6,9 +6,42 @@ class Controller extends \Springboard\Controller\Visitor {
   
   public function init() {
     $this->setupOrganization();
+    $this->handleSingleLoginUsers();
     parent::init();
   }
   
+  public function handleSingleLoginUsers() {
+  
+    $user = $this->bootstrap->getSession('user');
+
+    if ( $user['id'] ) {
+
+      // mindig adatbazisbol kerdezzuk le a usert, mivel
+      // elofordulhat, hogy menetkozben akarjuk a usert
+      // kitiltani, az pedig a session alapu ellenorzesnel
+      // nem sikerulne
+      $userModel = $this->bootstrap->getModel('users');
+      $userModel->select( $user['id'] );
+      
+      if ( $userModel->row['issingleloginenforced'] ) {
+
+        if ( !$userModel->checkSingleLoginUsers() ) {
+          $user->clear();
+          $l = $this->bootstrap->getLocalization();
+          $this->redirectWithMessage('users/login', sprintf(
+            $l('users', 'loggedout_sessionexpired'),
+            ceil( $this->bootstrap->config['sessiontimeout'] / 60 )
+          ) );
+        }
+        else
+          $userModel->updateSessionInformation();
+
+      }
+
+    }
+  
+  }
+
   public function redirectToMainDomain() {}
   
   public function setupOrganization() {
