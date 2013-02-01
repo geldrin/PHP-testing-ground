@@ -150,7 +150,7 @@ $config = array(
     1,
   ),
   'sessiontimeout' => 30,
-  'sessionpingseconds' => 15,
+  'sessionpingseconds' => 10,
   // Az users.issingleloginenforced=1 tipusu usereknel
   // annak az idonek a hossza masodpercekben, amig a usert 
   // belepettnek tekintjuk ujabb oldal letoltese nelkul. Maximum ennyi
