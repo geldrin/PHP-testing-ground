@@ -18,6 +18,10 @@ $app = new Springboard\Application\Cli(BASE_PATH, PRODUCTION);
 // 1 = Előadó
 // 2 = Műsorvezető
 // 3 = Moderátor
+// Conforg
+// 4 = Előadó
+// 5 = Műsorvezető
+// 6 = Moderátor
 
 $authors = array(
 	// Vezetéknév, keresztnév, nénsorrend, pozíció, cég, recordingid, role
@@ -28,17 +32,18 @@ $authors = array(
 	array("Ácsné Molnár", "Judit", "straight", "szakmai főtanácsadó", "Nemzeti Adó- és Vámhivatal", 191, 1),
 	array("Kelemen", "István", "straight", "vezető tanácsadó", "Green Tax Consulting Kft.", 193, 1),
 	array("Mészáros", "Adrienn", "straight", "százados", "Nemzeti Adó- és Vámhivatal Adóügyi Főosztály", 194, 1),
-
-
 	array("Vadász", "Iván", "straight", "alelnök", "Magyar Adótanácsadók és Könyvviteli Szolgáltatók Országos Egyesülete", 196, 1),
 	array("Dr. Ditrói-Tóth", "Zsuzsa", "straight", "ügyvéd, adótanácsadó", null, 200, 1),
 	array("Vadász", "Iván", "straight", null, null, 199, 1),
-*/
-
 	array("Dr. Ditrói-Tóth", "Zsuzsa", "straight", null, null, 196, 1),
 	array("Vadász", "Iván", "straight", null, null, 195, 1),
+	array("Vira", "Sándor", "straight", "adószakértő", "Saldo Zrt.", 185, 4),
+	array("Vira", "Sándor", "straight", "adószakértő", "Saldo Zrt.", 186, 4),
 
+*/
 
+//	array("Dr. Nagy-Fribiczer", "Gabriella", "straight", "hivatalos közbeszerzési tanácsadó", "Dr. Kardkovács és Társai Ügyvédi Iroda", 206, 4),
+	array("Dr. Tátrai", "Tünde", "straight", "egyetemi oktató", "Budapesti Corvinus Egyetem", 205, 1),
 
 );
 
@@ -307,8 +312,8 @@ echo $query . "\n";
 	// add job group to recording
 	$query = "
 		INSERT INTO
-			contributors_roles (organizationid, contributorid, recordingid, jobgroupid, roleid)
-		VALUES(" . $id_org . ", " . $id_cont . ", " . $rec_id . ", 1, " . $c_role . ")
+			contributors_roles (contributorid, recordingid, jobgroupid, roleid)
+		VALUES(" . $id_cont . ", " . $rec_id . ", 1, " . $c_role . ")
 	";
 
 	if ( !$iscommit ) echo $query . "\n";
