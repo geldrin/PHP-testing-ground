@@ -2,9 +2,6 @@
 // Job configuration file
 
 // Profiles: baseline, main, high
-// Worked on Debian stable stream.videosquare.eu
-//define('H264_PROFILE',			'-preset fast -profile main');
-//define('H264_PROFILE_MOBILE',		'-preset fast -profile baseline');
 // Worked on testing Debian until 05/2012
 //define('H264_PROFILE',				'-preset fast -vpre main');
 //define('H264_PROFILE_MOBILE',		'-preset fast -vpre baseline');
@@ -25,16 +22,20 @@ return array('config_jobs' => array(
 	'vcr_dir'						=> $this->config['datapath'] . 'temp/vcr/',			// Temporary dir for VCR download/upload
 	'job_dir'						=> $this->config['modulepath'] . 'Jobs/',
 	'log_dir'						=> $this->config['logpath'] . 'jobs/',
+	'wowza_log_dir'					=> '/var/log/wowza/',
 
-	// Job priority 
-	'nice'							=> 'nice -n 19',
+	// Job priorities 
+	'nice'							=> 'nice -n 19',	// General: lowest
+	'nice_high'						=> 'nice -n 10',	// High
+	'nice_moderate'					=> 'nice -n 14',	// Moderate
 	
 	// Sleep duration - number of seconds to sleep after an operation
-	'sleep_media'					=> 20,
-	'sleep_short'					=> 20,
-	'sleep_long'					=> 300,
-	'sleep_vcr'						=> 20,
-	'sleep_vcr_wait'				=> 20,
+	'sleep_media'					=> 60,			// Media conversion
+	'sleep_short'					=> 20,			// Short sleep
+	'sleep_long'					=> 300,			// Long sleep
+	'sleep_vcr'						=> 20,			// VCS job
+	'sleep_vcr_wait'				=> 20,			// VCS job Cisco TCS wait timeout
+	'sleep_doc'						=> 300,			// Document conversion
 
 	// Job identifiers
 	'jobid_media_convert'			=> 'job_media_convert',
@@ -147,7 +148,8 @@ return array('config_jobs' => array(
 		'audio_codec'		=> "libmp3lame",	// AAC
 		'audio_ch'			=> 2,				// Max. number of audio channels
 		'audio_bw_ch'		=> 64,				// Kbps per audio channel
-		'audio_mode'		=> "cbr"
+		'audio_mode'		=> "cbr",
+		'nice'				=> "nice -n 10"		// Priority for this conversion
 	),
 
 	// Mobile LQ version
@@ -162,7 +164,6 @@ return array('config_jobs' => array(
 		'video_bbox'		=> "480x320",		// Bounding box
 		'video_maxfps'		=> 30,				// Max FPS
 		'video_bpp'			=> 0.06,			// resx * resy * fps * bpp = video codec bandwidth
-//		'video_bpp'			=> 0.078,			// resx * resy * fps * bpp = video codec bandwidth
 		'audio_codec'		=> "libfaac",		// AAC
 		'audio_ch'			=> 1,				// Max. number of audio channels
 		'audio_bw_ch'		=> 64,				// Kbps per audio channel
@@ -172,7 +173,8 @@ return array('config_jobs' => array(
 		'pip_posx'			=> "left",			// Left or right
 		'pip_posy'			=> "up",			// Up or down
 		'pip_align'			=> "0.03",			// 2% alignment from sides
-		'pip_resize'		=> "0.2"			// 10 * % of original master media as PiP small
+		'pip_resize'		=> "0.2",			// 10 * % of original master media as PiP small
+		'nice'				=> "nice -n 19"		// Priority for this conversion
 	),
 
 	// Mobile HQ version
@@ -188,7 +190,6 @@ return array('config_jobs' => array(
 		'file_suffix'		=> "_mobile_hq",	// recID_<suffix>.<format>
 		'video_bbox'		=> "1280x720",		// Bounding box
 		'video_maxfps'		=> 30,				// Max FPS
-//		'video_bpp'			=> 0.078,			// resx * resy * fps * bpp = video codec bandwidth
 		'video_bpp'			=> 0.045,			// resx * resy * fps * bpp = video codec bandwidth
 		'audio_codec'		=> "libfaac",		// AAC
 		'audio_ch'			=> 2,				// Max. number of audio channels
@@ -199,7 +200,8 @@ return array('config_jobs' => array(
 		'pip_posx'			=> "left",			// left or right
 		'pip_posy'			=> "up",			// up or down
 		'pip_align'			=> "0.03",			// 2% alignment from sides
-		'pip_resize'		=> "0.2"			// 10% of original master media as PiP small
+		'pip_resize'		=> "0.2",			// 10% of original master media as PiP small
+		'nice'				=> "nice -n 19"		// Priority for this conversion
 	),
 
 	// Normal quality
@@ -214,11 +216,11 @@ return array('config_jobs' => array(
 		'video_bbox'		=> "640x360",		// Bounding box
 		'video_maxfps'		=> 60,				// Max FPS
 		'video_bpp'			=> 0.09,			// resx * resy * fps * bpp = video codec bandwidth
-//		'video_bpp'			=> 0.1,				// resx * resy * fps * bpp = video codec bandwidth
 		'audio_codec'		=> "libfaac",		// AAC
 		'audio_ch'			=> 1,				// Max. number of audio channels
 		'audio_bw_ch'		=> 64,				// Kbps per audio channel
-		'audio_mode'		=> "cbr"
+		'audio_mode'		=> "cbr",
+		'nice'				=> "nice -n 10"		// Priority for this conversion
 	),
 
 	// High quality
@@ -233,11 +235,11 @@ return array('config_jobs' => array(
 		'video_bbox'		=> "1280x720",		// Bounding box
 		'video_maxfps'		=> 60,				// Max FPS
 		'video_bpp'			=> 0.05,			// resx * resy * fps * bpp = video codec bandwidth
-//		'video_bpp'			=> 0.1,				// resx * resy * fps * bpp = video codec bandwidth
 		'audio_codec'		=> "libfaac",		// AAC
 		'audio_ch'			=> 2,				// Max. number of audio channels
 		'audio_bw_ch'		=> 64,				// Kbps per audio channel
-		'audio_mode'		=> "cbr"
+		'audio_mode'		=> "cbr",
+		'nice'				=> "nice -n 10"		// Priority for this conversion
 	),
 
 	// Content video profiles
@@ -257,7 +259,8 @@ return array('config_jobs' => array(
 		'audio_codec'		=> "libfaac",		// AAC
 		'audio_ch'			=> 1,				// Max. number of audio channels
 		'audio_bw_ch'		=> 64,				// Kbps per audio channel
-		'audio_mode'		=> "cbr"
+		'audio_mode'		=> "cbr",
+		'nice'				=> "nice -n 14"		// Priority for this conversion
 	),
 
 	// High quality
@@ -275,7 +278,8 @@ return array('config_jobs' => array(
 		'audio_codec'		=> "libfaac",		// AAC
 		'audio_ch'			=> 2,				// Max. number of audio channels
 		'audio_bw_ch'		=> 64,				// Kbps per audio channel
-		'audio_mode'		=> "cbr"
+		'audio_mode'		=> "cbr",
+		'nice'				=> "nice -n 14"		// Priority for this conversion
 	),
 
 ));

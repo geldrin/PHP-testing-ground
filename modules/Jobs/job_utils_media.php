@@ -60,8 +60,6 @@ function ffmpeg_qtfaststart($input_file) {
 	$err['code'] = TRUE;
 	$err['message'] = "[OK] qt-faststart conversion OK (in " . $mins_taken . " mins). ERR code = " . $err['result'];
 
-//print_r($err);
-
 	return $err;
 }
 
@@ -131,7 +129,7 @@ global $jconf;
 	// 1 pass encoding
 	if ( $profile['passes'] < 2 ) {
 		// Execute ffmpeg command
-		$command  = $jconf['nice'] . " ffmpeg -y -i " . $media_info['source_file'] . " -v " . $jconf['ffmpeg_loglevel'] . " " . $jconf['ffmpeg_flags'] . " ";
+		$command  = $profile['nice'] . " ffmpeg -y -i " . $media_info['source_file'] . " -v " . $jconf['ffmpeg_loglevel'] . " " . $jconf['ffmpeg_flags'] . " ";
 		$command .= $ffmpeg_audio;
 		$command .= $ffmpeg_video;
 		$command .= " -threads " . $jconf['ffmpeg_threads'] . " -f " . $profile['format'] . " " . $media_info['output_file'] . " 2>&1";
