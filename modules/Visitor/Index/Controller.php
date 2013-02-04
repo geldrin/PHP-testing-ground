@@ -26,7 +26,7 @@ class Controller extends \Visitor\Controller {
     $recordingsModel->addPresentersToArray(
       $this->toSmarty['recordings'],
       true,
-      $this->controller->organization['id']
+      $this->organization['id']
     );
     
     $this->smartyoutput('Visitor/Index/index.tpl');
