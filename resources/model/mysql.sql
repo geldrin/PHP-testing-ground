@@ -470,6 +470,7 @@ CREATE TABLE `roles` (
    `weight` int(10) unsigned not null default '100',
    `ispersonrelated` int default '0',
    `isorganizationrelated` int default '0',
+   `ispresenter` int default '0',
    `organizationid` int(10) unsigned not null,
    PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;

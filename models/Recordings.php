@@ -1533,7 +1533,7 @@ class Recordings extends \Springboard\Model {
     
   }
   
-  public function addPresenters( $withjobs = true ) {
+  public function addPresenters( $withjobs = true, $organizationid ) {
     
     $this->ensureObjectLoaded();
     $this->row['presenters'] = $this->db->getArray("
@@ -1549,18 +1549,18 @@ class Recordings extends \Springboard\Model {
       WHERE
         c.id = cr.contributorid AND
         cr.recordingid = '" . $this->id . "' AND
-        cr.roleid IN('" . implode("', '", $this->bootstrap->config['presenterroleids'] ) . "')
+        cr.roleid IN( (SELECT r.id FROM roles AS r WHERE r.organizationid = '$organizationid' AND r.ispresenter = '1') )
       ORDER BY cr.weight
     ");
     
     if ( $withjobs )
-      $this->row['presenters'] = $this->addJobsToContributors( $this->row['presenters'] );
+      $this->row['presenters'] = $this->addJobsToContributors( $this->row['presenters'], $organizationid );
     
     return $this->row;
     
   }
   
-  public function addPresentersToArray( &$array, $withjobs = true ) {
+  public function addPresentersToArray( &$array, $withjobs = true, $organizationid ) {
     
     $recordings = array();
     foreach( $array as $key => $recording ) {
@@ -1591,12 +1591,12 @@ class Recordings extends \Springboard\Model {
       WHERE
         c.id = cr.contributorid AND
         cr.recordingid IN('" . implode("', '", array_keys( $recordings ) ) . "') AND
-        cr.roleid IN('" . implode("', '", $this->bootstrap->config['presenterroleids'] ) . "')
+        cr.roleid IN( (SELECT r.id FROM roles AS r WHERE r.organizationid = '$organizationid' AND r.ispresenter = '1') )
       ORDER BY cr.weight
     ");
     
     if ( $withjobs )
-      $contributors = $this->addJobsToContributors( $contributors );
+      $contributors = $this->addJobsToContributors( $contributors, $organizationid );
     
     foreach( $contributors as $contributor ) {
       
@@ -1612,7 +1612,7 @@ class Recordings extends \Springboard\Model {
     
   }
   
-  public function addJobsToContributors( &$contributors ) {
+  public function addJobsToContributors( &$contributors, $organizationid ) {
     
     foreach( $contributors as $key => $contributor ) {
       

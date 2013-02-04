@@ -94,7 +94,11 @@ class Details extends \Visitor\Paging {
       $orderby
     );
     
-    $items = $this->recordingsModel->addPresentersToArray( $items );
+    $items = $this->recordingsModel->addPresentersToArray(
+      $items,
+      true,
+      $this->controller->organization['id']
+    );
     
     return $items;
     

@@ -146,9 +146,6 @@ $config = array(
   'organizationfallbackurl' => 'http://videosquare.eu',
   'chatpolltimems'          => 1000,
   //----
-  'presenterroleids' => array(
-    1,
-  ),
   'sessiontimeout' => 30,
   'sessionpingseconds' => 10,
   // Az users.issingleloginenforced=1 tipusu usereknel

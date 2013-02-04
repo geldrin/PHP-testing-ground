@@ -71,7 +71,11 @@ class Advanced extends \Visitor\Paging {
       $start, $limit, $orderby
     );
     
-    $items = $this->recordingsModel->addPresentersToArray( $items );
+    $items = $this->recordingsModel->addPresentersToArray(
+      $items,
+      true,
+      $this->controller->organization['id']
+    );
     
     return $items;
     

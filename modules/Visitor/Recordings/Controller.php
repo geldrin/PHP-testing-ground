@@ -211,7 +211,7 @@ class Controller extends \Visitor\Controller {
     
     $this->toSmarty['needping']      = true;
     $this->toSmarty['height']        = $this->getPlayerHeight( $recordingsModel );
-    $this->toSmarty['recording']     = $recordingsModel->addPresenters();
+    $this->toSmarty['recording']     = $recordingsModel->addPresenters( $this->controller->organization['id'] );
     $this->toSmarty['flashdata']     = $recordingsModel->getFlashData( $this->toSmarty, session_id() );
     $this->toSmarty['comments']      = $recordingsModel->getComments();
     $this->toSmarty['commentcount']  = $recordingsModel->getCommentsCount();
