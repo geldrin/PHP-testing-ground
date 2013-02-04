@@ -41,6 +41,9 @@ if (
 
     case 'recordings':
       
+      if ( preg_match('/^\d+\/\d+\/indexpics\/\d+x\d+\/.*$/', $parts[1] ) )
+        exitWithContentHeaders( $_GET['file'] );
+      
       if ( preg_match('/^\d+\/(\d+)\/.*$/', $parts[1], $results ) ) {
         
         $result = checkAccess( $results[1] );
