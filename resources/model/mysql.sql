@@ -387,7 +387,7 @@ CREATE TABLE `channels` (
    `livefeedid` int(10) unsigned not null default '0',
    `organizationid` int(10) unsigned not null,
    `accesstype` text not null,
-   `isdeleted` int(10) unsigned not null default '0',
+   `isdeleted` int(11) not null default '0',
    `livestatsstatus` text,
    PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;

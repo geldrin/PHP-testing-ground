@@ -32,10 +32,63 @@ class Modify extends \Visitor\HelpForm {
     
   }
   
+  protected function needAccessSync( $newvalues ) {
+    
+    $oldvalues = $this->channelModel->row;
+    
+    if ( $oldvalues['accesstype'] != $newvalues['accesstype'] )
+      return true;
+    
+    switch ( $oldvalues['accesstype'] ) {
+      
+      case 'departments':
+      case 'groups':
+        return $this->hasSameAccess( $oldvalues['accesstype'], $newvalues[ $oldvalues['accesstype'] ] );
+        break;
+      
+    }
+    
+    return false;
+    
+  }
+  
+  protected function hasSameAccess( $type, $newaccess ) {
+    
+    $channelid = $this->channelModel->id;
+    $db        = $this->bootstrap->getAdoDB();
+    
+    if ( $type == 'departments' )
+      $column = 'departmentid';
+    elseif ( $type == 'groups' )
+      $column = 'groupid';
+    
+    $existingaccess = $db->getCol("
+      SELECT $column FROM access WHERE channelid = '$channelid'
+    ");
+    
+    if ( count( $existingaccess ) != count( $newaccess ) )
+      return true;
+    
+    $needsync = false;
+    foreach( $existingaccess as $access ) {
+      
+      if ( !in_array( $access, $newaccess ) ) {
+        
+        $needsync = true;
+        break;
+        
+      }
+      
+    }
+    
+    return $needsync;
+    
+  }
+  
   public function onComplete() {
     
-    $values        = $this->form->getElementValues( 0 );
-    $oldaccesstype = $this->channelModel->row['accesstype'];
+    $values   = $this->form->getElementValues( 0 );
+    $needsync = $this->needAccessSync( $values );
     
     if ( @$values['starttimestamp'] )
       $values['starttimestamp'] .= ' 08:00:00';
@@ -46,7 +99,7 @@ class Modify extends \Visitor\HelpForm {
     $this->handleAccesstypeForModel( $this->channelModel, $values );
     $this->channelModel->updateRow( $values );
     
-    if ( $oldaccesstype != $values['accesstype'] )
+    if ( $needsync )
       $this->channelModel->syncAccessWithFeeds();
     
     $this->controller->redirect(

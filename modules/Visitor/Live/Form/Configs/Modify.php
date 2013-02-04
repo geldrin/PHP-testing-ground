@@ -60,7 +60,7 @@ $config['accesstype']['validation'] = array(
     'php'  => 'true',
     'help' => '',
     'js'   =>
-      '(<FORM.accesstype> != "' . $this->channelModel->row['accesstype'] . '")' .
+      'checkAccessChanged()' .
       '? confirm(' . json_encode( $l('live', 'accesstypechange') ) . '): true'
     ,
   ),

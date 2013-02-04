@@ -30,6 +30,7 @@ $j(document).ready(function() {
   runIfExists('#search_advanced', setupSearch );
   runIfExists('#recordings_modifycontributors', setupContributors );
   runIfExists('#contributors_create, #contributors_modify', setupContributorEdit );
+  runIfExists('#live_modify, #live_create', setupLiveAccessCheck );
   
   if ( needping )
     setTimeout( setupPing, 1000 * pingsecs );
@@ -1452,5 +1453,51 @@ function setupPing() {
       
     }
   });
+  
+}
+
+function setupLiveAccessCheck() {
+  
+  var origaccesstype = $j('input[name=accesstype]:checked').val();
+  if ( origaccesstype == 'departments' )
+    var root = $j('#departmentscontainer');
+  else if ( origaccesstype == 'groups' )
+    var root = $j('#groupscontainer');
+  
+  var origaccess = [];
+  root.find('input[type=checkbox]:checked').each(function() {
+    
+    origaccess.push( $j(this).val() );
+    
+  });
+  
+  
+  checkAccessChanged = function() {
+    
+    var newaccesstype = $j('input[name=accesstype]:checked').val();
+    if ( origaccesstype != newaccesstype )
+      return true;
+    
+    var newaccess = [];
+    root.find('input[type=checkbox]:checked').each(function() {
+      newaccess.push( $j(this).val() );
+    });
+    
+    if ( newaccess.length != origaccess.length )
+      return true;
+    
+    origaccess.sort(function(a,b){return a-b});
+    newaccess.sort(function(a,b){return a-b});
+    
+    for (var i = newaccess.length - 1; i >= 0; i--) {
+      
+      if ( origaccess[i] != newaccess[i] )
+        return true;
+      
+    };
+    
+    return false;
+    
+  };
   
 }
