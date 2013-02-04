@@ -9,7 +9,8 @@ function smarty_modifier_userHasAccess( $item, $organizationfield = 'organizatio
     return false;
   
   if (
-     $user['iseditor'] and $user['organizationid'] == $organization['id'] and
+     ( $user['iseditor'] or $user['isclientadmin'] ) and
+     $user['organizationid'] == $organization['id'] and
      @$item[ $organizationfield ] == $user['organizationid']
     )
     return true;
