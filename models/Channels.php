@@ -648,6 +648,7 @@ class Channels extends \Springboard\Model {
       FROM channels
       WHERE
         isliveevent    = '1' AND
+        isdeleted      = '0' AND
         parentid       = '0' AND
         endtimestamp   >= NOW() AND
         organizationid = '$organizationid'
@@ -663,6 +664,7 @@ class Channels extends \Springboard\Model {
       FROM channels
       WHERE
         isliveevent    = '1' AND
+        isdeleted      = '0' AND
         parentid       = '0' AND
         endtimestamp   >= NOW() AND
         organizationid = '$organizationid'
