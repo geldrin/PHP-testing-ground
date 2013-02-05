@@ -4,8 +4,8 @@ namespace Visitor\Recordings\Paging;
 class Featured extends \Visitor\Paging {
   protected $orderkey = 'timestamp_desc';
   protected $sort     = Array(
-    'timestamp_desc'       => 'r.timestamp DESC',
-    'timestamp'            => 'r.timestamp',
+    'timestamp_desc'       => 'timestamp DESC',
+    'timestamp'            => 'timestamp',
     'views_desc'           => 'numberofviews DESC',
     'views'                => 'numberofviews',
     'viewsthisweek_desc'   => 'numberofviewsthisweek DESC',
@@ -24,12 +24,14 @@ class Featured extends \Visitor\Paging {
   protected $recordingsModel;
   protected $filter = '';
   protected $type   = '';
+  protected $user;
   
   public function init() {
     
     $l                 = $this->bootstrap->getLocalization();
     $this->foreachelse = $l('recordings', 'foreachelse');
     $this->filter      = "r.organizationid = '" . $this->controller->organization['id'] . "'";
+    $this->user        = $this->bootstrap->getSession('user');
     
     $this->type = $this->application->getParameter('subaction', 'featured');
     switch( $this->type ) {
@@ -65,14 +67,17 @@ class Featured extends \Visitor\Paging {
     
     $this->recordingsModel = $this->bootstrap->getModel('recordings');
     $this->itemcount =
-      $this->recordingsModel->getRecordingsCount( $this->filter )
+      $this->recordingsModel->getRecordingsCount( $this->filter, $this->user )
     ;
     
   }
   
   protected function getItems( $start, $limit, $orderby ) {
     
-    $items = $this->recordingsModel->getRecordingsWithUsers( $start, $limit, $this->filter, $orderby );
+    $items = $this->recordingsModel->getRecordingsWithUsers(
+      $start, $limit, $this->filter, $orderby,
+      $this->user
+    );
     return $items;
     
   }

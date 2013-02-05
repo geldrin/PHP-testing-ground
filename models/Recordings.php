@@ -970,7 +970,12 @@ class Recordings extends \Springboard\Model {
     
   }
   
-  public static function getUnionSelect( $user, $select = 'r.*', $from = 'recordings AS r', $where = null, $isintrooutro = '0' ) {
+  public static function getUnionSelect( $user, $select = null, $from = null, $where = null, $isintrooutro = '0' ) {
+    
+    if ( $select === null )
+      $select = 'r.*';
+    if ( $from === null )
+      $from = 'recordings AS r';
     
     if ( !isset( $user['id'] ) ) {
       
@@ -2503,45 +2508,52 @@ class Recordings extends \Springboard\Model {
     
   }
   
-  public function getRecordingsCount( $where ) {
+  public function getRecordingsCount( $where, $user ) {
     
     return $this->db->getOne("
       SELECT COUNT(*)
-      FROM recordings AS r
-      WHERE
-        ( $where ) AND
-        " . self::getPublicRecordingWhere('r.') . "
-      LIMIT 1
+      FROM (
+        " . self::getUnionSelect( $user, null, null, $where ) . "
+      ) AS count
     ");
     
   }
   
-  public function getRecordingsWithUsers( $start, $limit, $where, $orderby ){
+  public function getRecordingsWithUsers( $start, $limit, $where, $order, $user ){
+    
+    $select = "
+      r.id,
+      r.title,
+      r.subtitle,
+      r.indexphotofilename,
+      r.masterlength,
+      r.numberofviews,
+      r.timestamp,
+      r.rating,
+      r.numberofratings,
+      usr.id AS userid,
+      usr.nickname,
+      usr.nameformat,
+      usr.nameprefix,
+      usr.namefirst,
+      usr.namelast
+    ";
+    
+    $from = "
+      recordings AS r,
+      users AS usr" // azert nem 'u' mert az unionselectben mar van egy 'u'
+    ;
+    
+    if ( $where )
+      $where = "( $where ) AND usr.id = r.userid";
+    else
+      $where = "usr.id = r.userid";
     
     return $this->db->getArray("
-      SELECT
-        r.id,
-        r.title,
-        r.subtitle,
-        r.indexphotofilename,
-        r.masterlength,
-        r.numberofviews,
-        u.id AS userid,
-        u.nickname,
-        u.nameformat,
-        u.nameprefix,
-        u.namefirst,
-        u.namelast
-      FROM
-        recordings AS r,
-        users AS u
-      WHERE 
-        ( $where ) AND
-        u.id = r.userid AND
-        " . self::getPublicRecordingWhere('r.') . "
-      ORDER BY $orderby
-      LIMIT $start, $limit
-    ");
+      " . self::getUnionSelect( $user, $select, $from, $where ) .
+      ( strlen( $order ) ? 'ORDER BY ' . $order : '' ) . " " .
+      ( is_numeric( $start ) ? 'LIMIT ' . $start . ', ' . $limit : "" )
+    );
     
   }
   
