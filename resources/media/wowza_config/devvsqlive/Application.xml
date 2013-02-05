@@ -173,10 +173,15 @@
 				<Description>ModuleRTMPAuthenticate</Description>
 				<Class>com.wowza.wms.plugin.security.ModuleRTMPAuthenticate</Class>
 			</Module>
-			<Module>
+<!--		<Module>
 				<Name>MyFirstModule</Name>
 				<Description>MyCompany MyFirstModule</Description>
 				<Class>com.mycompany.wms.module.MyFirstModule</Class>
+			</Module> -->
+			<Module>
+				<Name>BonzaWareURLHandler</Name>
+				<Description>BonzaWareURLHandler</Description>
+				<Class>com.bonzaware.free.url.URLNotifications</Class>
 			</Module>
 			<Module>
 				<Name>ModuleLiveStreamRecord</Name>
@@ -193,6 +198,10 @@
 			</Property>
 			<Property>
 				<Name>rtmpEncoderAuthenticateFile</Name>
+				<Value>${com.wowza.wms.context.VHostConfigHome}/conf/${com.wowza.wms.context.Application}/publish.password</Value>
+			</Property>
+			<Property>
+				<Name>rtspEncoderAuthenticateFile</Name>
 				<Value>${com.wowza.wms.context.VHostConfigHome}/conf/${com.wowza.wms.context.Application}/publish.password</Value>
 			</Property>
 			<!-- CONNECT HANDLER CONFIG -->

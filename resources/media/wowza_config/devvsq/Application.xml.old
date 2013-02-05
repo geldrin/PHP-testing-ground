@@ -24,11 +24,11 @@
 			
 		-->
 		<Streams>
-			<StreamType>liverepeater-edge</StreamType>
-			<StorageDir>${com.wowza.wms.context.VHostConfigHome}/content</StorageDir>
+			<StreamType>default</StreamType>
+			<StorageDir>/srv/storage/dev.videosquare.eu/recordings/</StorageDir>
 			<KeyDir>${com.wowza.wms.context.VHostConfigHome}/keys</KeyDir>
 			<!-- LiveStreamPacketizers (separate with commas): cupertinostreamingpacketizer, smoothstreamingpacketizer, sanjosestreamingpacketizer, cupertinostreamingrepeater, smoothstreamingrepeater, sanjosestreamingrepeater, dvrstreamingpacketizer, dvrstreamingrepeater -->
-			<LiveStreamPacketizers>cupertinostreamingrepeater,smoothstreamingrepeater,sanjosestreamingrepeater</LiveStreamPacketizers>
+			<LiveStreamPacketizers></LiveStreamPacketizers>
 			<!-- Properties defined here will override any properties defined in conf/Streams.xml for any streams types loaded by this application -->
 			<Properties>
 			</Properties>
@@ -104,9 +104,9 @@
 			<IdleFrequency>75</IdleFrequency>
 			<RTSPSessionTimeout>90000</RTSPSessionTimeout>
 			<RTSPMaximumPendingWriteBytes>0</RTSPMaximumPendingWriteBytes>
-			<RTSPBindIpAddress></RTSPBindIpAddress>
-			<RTSPConnectionIpAddress>0.0.0.0</RTSPConnectionIpAddress>
-			<RTSPOriginIpAddress>127.0.0.1</RTSPOriginIpAddress>
+			<RTSPBindIpAddress>91.120.59.230</RTSPBindIpAddress>
+			<RTSPConnectionIpAddress>91.120.59.230</RTSPConnectionIpAddress>
+			<RTSPOriginIpAddress>91.120.59.230</RTSPOriginIpAddress>
 			<IncomingDatagramPortRanges>*</IncomingDatagramPortRanges>
 			<!-- Properties defined here will override any properties defined in conf/RTP.xml for any depacketizers loaded by this application -->
 			<Properties>
@@ -144,8 +144,8 @@
 			</Properties>
 		</HTTPStreamer>
 		<Repeater>
-			<OriginURL>rtmp://videocenter.streamnet.hu/rtplive/_definst_/</OriginURL>
-			<QueryString><![CDATA[api_access_token=api00000005569636996444133707452680858525376]]></QueryString>
+			<OriginURL></OriginURL>
+			<QueryString><![CDATA[]]></QueryString>
 		</Repeater> 
 		<Modules>
 			<Module>
@@ -169,21 +169,37 @@
 				<Class>com.wowza.wms.module.ModuleFLVPlayback</Class>
 			</Module>
 			<Module>
-				<Name>ModuleRTMPAuthenticate</Name>
-				<Description>ModuleRTMPAuthenticate</Description>
-				<Class>com.wowza.wms.plugin.security.ModuleRTMPAuthenticate</Class>
+				<Name>MyFirstModule</Name>
+				<Description>MyCompany MyFirstModule</Description>
+				<Class>com.mycompany.wms.module.MyFirstModule</Class>
 			</Module>
 		</Modules>
 		<!-- Properties defined here will be added to the IApplication.getProperties() and IApplicationInstance.getProperties() collections -->
 		<Properties>
 			<Property>
-				<Name>secureTokenSharedSecret</Name>
-				<Value>PdtlF3sFUNGZhOv</Value>
+				<Name>seekTarget</Name>
+				<Value>enhanced</Value>
+			</Property>
+<!--		<Property>
+				<Name>URLHandlerDebug</Name>
+				<Value>On</Value>
+			</Property> -->
+			<!-- CONNECT HANDLER CONFIG -->
+			<Property>
+				<Name>URLPlayHandler</Name>
+				<Value>http://dev.videosquare.eu/hu/recordings/checkstreamaccess</Value>
 			</Property>
 			<Property>
-				<Name>requireSecureConnection</Name>
-				<Value>true</Value>
-				<Type>Boolean</Type>
+				<Name>PlayIP</Name>
+				<Value>On</Value>
+			</Property>
+			<Property>
+				<Name>PlaySuccess</Name>
+				<Value>1</Value>
+			</Property>
+			<Property>
+				<Name>PlayURLParams</Name>
+				<Value>sessionid</Value>
 			</Property>
 		</Properties>
 	</Application>

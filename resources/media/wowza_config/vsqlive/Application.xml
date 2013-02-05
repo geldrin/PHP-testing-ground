@@ -173,10 +173,15 @@
 				<Description>ModuleRTMPAuthenticate</Description>
 				<Class>com.wowza.wms.plugin.security.ModuleRTMPAuthenticate</Class>
 			</Module>
-			<Module>
+<!--			<Module>
 				<Name>MyFirstModule</Name>
 				<Description>Authorization module with HTTP callback.</Description>
 				<Class>com.mycompany.wms.module.MyFirstModule</Class>
+			</Module> -->
+			<Module>
+				<Name>BonzaWareURLHandler</Name>
+				<Description>BonzaWareURLHandler</Description>
+				<Class>com.bonzaware.free.url.URLNotifications</Class>
 			</Module>
 		</Modules>
 		<!-- Properties defined here will be added to the IApplication.getProperties() and IApplicationInstance.getProperties() collections -->
@@ -191,10 +196,10 @@
 				<Value>${com.wowza.wms.context.VHostConfigHome}/conf/${com.wowza.wms.context.Application}/publish.password</Value>
 			</Property>
 			<!-- CONNECT HANDLER CONFIG -->
-<!--			<Property>
+			<Property>
 				<Name>URLPlayHandler</Name>
 				<Value>http://videosquare.eu/hu/live/checkstreamaccess</Value>
-			</Property> -->
+			</Property>
 			<Property>
 				<Name>PlayIP</Name>
 				<Value>On</Value>

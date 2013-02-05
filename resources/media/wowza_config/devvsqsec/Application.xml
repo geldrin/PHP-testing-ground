@@ -168,10 +168,15 @@
 				<Description>FLVPlayback</Description>
 				<Class>com.wowza.wms.module.ModuleFLVPlayback</Class>
 			</Module>
-			<Module>
+<!--			<Module>
 				<Name>MyFirstModule</Name>
-				<Description>MyCompany MyFirstModule</Description>
+				<Description>Authorization HTTP plugin</Description>
 				<Class>com.mycompany.wms.module.MyFirstModule</Class>
+			</Module> -->
+			<Module>
+				<Name>BonzaWareURLHandler</Name>
+				<Description>BonzaWareURLHandler</Description>
+				<Class>com.bonzaware.free.url.URLNotifications</Class>
 			</Module>
 			<Module>
 				<Name>ModuleRequireSecureConnection</Name>
@@ -185,15 +190,11 @@
 				<Name>seekTarget</Name>
 				<Value>enhanced</Value>
 			</Property>
-<!--		<Property>
-				<Name>URLHandlerDebug</Name>
-				<Value>On</Value>
-			</Property>-->
 			<!-- CONNECT HANDLER CONFIG -->
-<!--			<Property>
+			<Property>
 				<Name>URLPlayHandler</Name>
 				<Value>http://dev.videosquare.eu/hu/recordings/securecheckstreamaccess</Value>
-			</Property> -->
+			</Property>
 			<Property>
 				<Name>PlayIP</Name>
 				<Value>On</Value>

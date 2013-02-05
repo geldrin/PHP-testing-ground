@@ -169,9 +169,9 @@
 				<Class>com.wowza.wms.module.ModuleFLVPlayback</Class>
 			</Module>
 			<Module>
-				<Name>MyFirstModule</Name>
-				<Description>MyCompany MyFirstModule</Description>
-				<Class>com.mycompany.wms.module.MyFirstModule</Class>
+				<Name>BonzaWareURLHandler</Name>
+				<Description>BonzaWareURLHandler</Description>
+				<Class>com.bonzaware.free.url.URLNotifications</Class>
 			</Module>
 		</Modules>
 		<!-- Properties defined here will be added to the IApplication.getProperties() and IApplicationInstance.getProperties() collections -->
@@ -180,10 +180,6 @@
 				<Name>seekTarget</Name>
 				<Value>enhanced</Value>
 			</Property>
-<!--		<Property>
-				<Name>URLHandlerDebug</Name>
-				<Value>On</Value>
-			</Property> -->
 			<!-- CONNECT HANDLER CONFIG -->
 			<Property>
 				<Name>URLPlayHandler</Name>
