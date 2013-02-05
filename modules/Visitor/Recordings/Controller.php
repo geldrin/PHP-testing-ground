@@ -644,6 +644,7 @@ class Controller extends \Visitor\Controller {
       
     }
     
+    $this->toSmarty['member']        = $user;
     $this->toSmarty['mobilehq']      = $mobilehq;
     $this->toSmarty['mobilehttpurl'] = $recordingsModel->getMediaUrl(
       'mobilehttp',

@@ -2536,15 +2536,7 @@ class Recordings extends \Springboard\Model {
   public function getRecordingsWithUsers( $start, $limit, $extrawhere, $order, $user, $organizationid ){
     
     $select = "
-      r.id,
-      r.title,
-      r.subtitle,
-      r.indexphotofilename,
-      r.masterlength,
-      r.numberofviews,
-      r.timestamp,
-      r.rating,
-      r.numberofratings,
+      r.*,
       usr.id AS userid,
       usr.nickname,
       usr.nameformat,
