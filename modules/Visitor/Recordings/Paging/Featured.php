@@ -66,9 +66,9 @@ class Featured extends \Visitor\Paging {
   protected function setupCount() {
     
     $this->recordingsModel = $this->bootstrap->getModel('recordings');
-    $this->itemcount =
-      $this->recordingsModel->getRecordingsCount( $this->filter, $this->user )
-    ;
+    $this->itemcount = $this->recordingsModel->getRecordingsCount(
+      $this->filter, $this->user, $this->controller->organization['id']
+    );
     
   }
   
@@ -76,7 +76,7 @@ class Featured extends \Visitor\Paging {
     
     $items = $this->recordingsModel->getRecordingsWithUsers(
       $start, $limit, $this->filter, $orderby,
-      $this->user
+      $this->user, $this->controller->organization['id']
     );
     return $items;
     

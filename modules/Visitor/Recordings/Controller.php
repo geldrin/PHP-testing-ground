@@ -209,6 +209,7 @@ class Controller extends \Visitor\Controller {
     if ( $user['id'] )
       $this->toSmarty['channels'] = $recordingsModel->getChannelsForUser( $user );
     
+    $this->toSmarty['member']        = $user;
     $this->toSmarty['needping']      = true;
     $this->toSmarty['height']        = $this->getPlayerHeight( $recordingsModel );
     $this->toSmarty['recording']     = $recordingsModel->addPresenters( true, $this->organization['id'] );
@@ -220,6 +221,7 @@ class Controller extends \Visitor\Controller {
     $this->toSmarty['canrate']       = ( $user['id'] and !$rating[ $recordingsModel->id ] );
     $this->toSmarty['relatedvideos'] = $recordingsModel->getRelatedVideos(
       $this->application->config['relatedrecordingcount'],
+      $user,
       $this->organization['id']
     );
     $this->toSmarty['opengraph']     = array(

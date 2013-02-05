@@ -1183,58 +1183,65 @@ class Recordings extends \Springboard\Model {
     
   }
   
-  public function getRelatedVideosByKeywords( $limit = NUMBER_OF_RELATED_VIDEOS, $organizationid ){
+  public function getRelatedVideosByKeywords( $limit, $user, $organizationid ){
     
     $this->ensureObjectLoaded();
     if ( !strlen( trim( $this->row['keywords'] ) ) )
       return array();
     
-    $keywords    = explode(',', $this->row['keywords'] );
-    $where       = array();
+    $keywords     = explode(',', $this->row['keywords'] );
+    $keywordwhere = array();
     
     foreach( $keywords as $key => $value ) {
       
-      $keyword = $this->db->qstr( '%' . trim( $value ) . '%' );
-      $where[] = 'r.keywords LIKE ' . $keyword;
+      $value = trim( $value );
+      if ( !$value )
+        continue;
+      
+      $keyword = $this->db->qstr( '%' . $value . '%' );
+      $keywordwhere[] = 'r.keywords LIKE ' . $keyword;
       
     }
     
-    $where  = implode(' OR ', $where );
-    $rs = $this->db->query("
-      SELECT
-        r.id,
-        r.title,
-        r.subtitle,
-        r.indexphotofilename,
-        r.masterlength,
-        r.numberofviews,
-        u.id AS userid,
-        u.nickname,
-        u.nameformat,
-        u.nameprefix,
-        u.namefirst,
-        u.namelast
-      FROM
-        recordings AS r,
-        users AS u
-      WHERE 
-        ( $where ) AND
-        u.id = r.userid AND
-        r.id <> '" . $this->id . "' AND
-        r.organizationid = '$organizationid' AND
-        " . self::getPublicRecordingWhere('r.') . "
+    $select = "
+      r.id AS arraykey,
+      r.id,
+      r.title,
+      r.subtitle,
+      r.indexphotofilename,
+      r.masterlength,
+      r.numberofviews,
+      usr.id AS userid,
+      usr.nickname,
+      usr.nameformat,
+      usr.nameprefix,
+      usr.namefirst,
+      usr.namelast
+    ";
+    
+    $from = "
+      recordings AS r,
+      users AS usr"
+    ;
+    
+    $where = "
+      usr.id = r.userid AND
+      r.id <> '" . $this->id . "' AND
+      r.organizationid = '$organizationid'"
+    ;
+    
+    if ( !empty( $keywordwhere ) )
+      $where .= " AND ( " . implode(' OR ', $keywordwhere ) . " )";
+    
+    return $this->db->getAssoc(
+      self::getUnionSelect( $user, $select, $from, $where ) . "
+      ORDER BY RAND()
       LIMIT $limit
     ");
     
-    $return = array();
-    foreach( $rs as $recording )
-      $return[ $recording['id'] ] = $recording;
-    
-    return $return;
-    
   }
   
-  public function getRelatedVideosByChannel( $limit, $organizationid, $channelids = null ) {
+  public function getRelatedVideosByChannel( $limit, $user, $organizationid, $channelids = null ) {
     
     $this->ensureID();
     $dontrecurse = true;
@@ -1249,38 +1256,41 @@ class Recordings extends \Springboard\Model {
       
     }
     
-    $rs = $this->db->query("
-      SELECT
-        r.id,
-        r.title,
-        r.subtitle,
-        r.indexphotofilename,
-        r.masterlength,
-        r.numberofviews,
-        u.id AS userid,
-        u.nickname,
-        u.nameformat,
-        u.nameprefix,
-        u.namefirst,
-        u.namelast
-      FROM
-        recordings AS r,
-        users AS u,
-        channels_recordings AS cr
-      WHERE
-        cr.channelid IN('" . implode("', '", $channelids ) . "') AND
-        r.id = cr.recordingid AND
-        u.id = r.userid AND
-        r.id <> '" . $this->id . "' AND
-        r.organizationid = '$organizationid' AND
-        " . self::getPublicRecordingWhere('r.') . "
+    $select = "
+      r.id AS arraykey,
+      r.id,
+      r.title,
+      r.subtitle,
+      r.indexphotofilename,
+      r.masterlength,
+      r.numberofviews,
+      usr.id AS userid,
+      usr.nickname,
+      usr.nameformat,
+      usr.nameprefix,
+      usr.namefirst,
+      usr.namelast
+    ";
+    
+    $from = "
+      recordings AS r,
+      users AS usr,
+      channels_recordings AS cr"
+    ;
+    
+    $where = "
+      cr.channelid IN('" . implode("', '", $channelids ) . "') AND
+      r.id = cr.recordingid AND
+      usr.id = r.userid AND
+      r.id <> '" . $this->id . "' AND
+      r.organizationid = '$organizationid'"
+    ;
+    
+    $return = $this->db->getAssoc(
+      self::getUnionSelect( $user, $select, $from, $where ) . "
       ORDER BY RAND()
       LIMIT $limit
     ");
-    
-    $return = array();
-    foreach( $rs as $recording )
-      $return[ $recording['id'] ] = $recording;
     
     if ( count( $return ) < $limit and !$dontrecurse ) {
       
@@ -1295,7 +1305,7 @@ class Recordings extends \Springboard\Model {
       }
       
       $parentids = array_unique( $parentids );
-      $return = $return + $this->getRelatedVideosByChannel( $limit - count( $return ), $organizationid, $parentids );
+      $return = $return + $this->getRelatedVideosByChannel( $limit - count( $return ), $user, $organizationid, $parentids );
       
     }
     
@@ -1303,57 +1313,60 @@ class Recordings extends \Springboard\Model {
     
   }
   
-  public function getRelatedVideosRandom( $limit, $organizationid ) {
+  public function getRelatedVideosRandom( $limit, $user, $organizationid ) {
     
     $this->ensureID();
-    $rs = $this->db->query("
-      SELECT
-        r.id,
-        r.title,
-        r.subtitle,
-        r.indexphotofilename,
-        r.masterlength,
-        r.numberofviews,
-        u.id AS userid,
-        u.nickname,
-        u.nameformat,
-        u.nameprefix,
-        u.namefirst,
-        u.namelast
-      FROM
-        recordings AS r,
-        users AS u
-      WHERE
-        u.id = r.userid AND
-        r.id <> '" . $this->id . "' AND
-        r.organizationid = '$organizationid' AND
-        " . self::getPublicRecordingWhere('r.') . "
+    
+    $select = "
+      r.id AS arraykey,
+      r.id,
+      r.title,
+      r.subtitle,
+      r.indexphotofilename,
+      r.masterlength,
+      r.numberofviews,
+      usr.id AS userid,
+      usr.nickname,
+      usr.nameformat,
+      usr.nameprefix,
+      usr.namefirst,
+      usr.namelast
+    ";
+    
+    $from = "
+      recordings AS r,
+      users AS usr"
+    ;
+    
+    $where = "
+      usr.id = r.userid AND
+      r.id <> '" . $this->id . "' AND
+      r.organizationid = '$organizationid'"
+    ;
+    
+    return $this->db->getAssoc(
+      self::getUnionSelect( $user, $select, $from, $where ) . "
       ORDER BY RAND()
       LIMIT $limit
     ");
     
-    $return = array();
-    foreach( $rs as $recording )
-      $return[ $recording['id'] ] = $recording;
-    
-    return $return;
     
   }
   
-  public function getRelatedVideos( $count, $organizationid ) {
+  public function getRelatedVideos( $count, $user, $organizationid ) {
     
     $this->ensureObjectLoaded();
     
     $return = array();
     
     if ( count( $return ) < $count )
-      $return = $return + $this->getRelatedVideosByChannel( $count - count( $return ), $organizationid );
+      $return = $return + $this->getRelatedVideosByChannel( $count - count( $return ), $user, $organizationid );
     
     if ( count( $return ) < $count )
-      $return = $return + $this->getRelatedVideosByKeywords( $count - count( $return ), $organizationid );
+      $return = $return + $this->getRelatedVideosByKeywords( $count - count( $return ), $user, $organizationid );
     
     if ( count( $return ) < $count )
-      $return = $return + $this->getRelatedVideosRandom( $count - count( $return ), $organizationid );
+      $return = $return + $this->getRelatedVideosRandom( $count - count( $return ), $user, $organizationid );
     
     return $return;
     
@@ -1802,6 +1815,7 @@ class Recordings extends \Springboard\Model {
     
     $relatedvideos = $this->getRelatedVideos(
       $this->bootstrap->config['relatedrecordingcount'],
+      $info['member'],
       $info['organization']['id']
     );
     $data['recommendatory_string'] = array();
@@ -2519,7 +2533,7 @@ class Recordings extends \Springboard\Model {
     
   }
   
-  public function getRecordingsWithUsers( $start, $limit, $where, $order, $user ){
+  public function getRecordingsWithUsers( $start, $limit, $extrawhere, $order, $user, $organizationid ){
     
     $select = "
       r.id,
@@ -2544,10 +2558,13 @@ class Recordings extends \Springboard\Model {
       users AS usr" // azert nem 'u' mert az unionselectben mar van egy 'u'
     ;
     
-    if ( $where )
-      $where = "( $where ) AND usr.id = r.userid";
-    else
-      $where = "usr.id = r.userid";
+    $where = "
+      usr.id = r.userid AND
+      r.organizationid = '$organizationid'
+    ";
+    
+    if ( $extrawhere )
+      $where .= " AND ( $extrawhere )";
     
     return $this->db->getArray("
       " . self::getUnionSelect( $user, $select, $from, $where ) .
