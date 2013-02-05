@@ -1,7 +1,7 @@
 <?php
 
 class Api {
-//  public $apiurl = 'http://dev.videosquare.eu/hu/api';
+  //public $apiurl = 'http://dev.videosquare.eu/hu/api';
   public $apiurl = 'http://videosquare.eu/hu/api';
   public $debug = false;
   
@@ -36,6 +36,24 @@ class Api {
     $opts = $this->options;
     foreach( $options as $key => $value )
       $opts[ $key ] = $value;
+    
+    if ( $this->debug ) {
+      
+      $defines = get_defined_constants();
+      $options = array();
+      foreach( $defines as $key => $value ) {
+        
+        if ( substr( $key, 0, 8 ) != 'CURLOPT_' )
+          continue;
+        
+        if ( isset( $opts[ $value ] ) )
+          $options[ $key ] = $opts[ $value ];
+        
+      }
+      
+      var_dump( $options );
+      
+    }
     
     curl_setopt_array( $this->curl, $opts );
     

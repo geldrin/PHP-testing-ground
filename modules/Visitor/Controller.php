@@ -6,6 +6,25 @@ class Controller extends \Springboard\Controller\Visitor {
   
   public function init() {
     $this->setupOrganization();
+    
+    $skipsinglelogincheck = array(
+      'recordings' => array(
+        'checkstreamaccess',
+        'securecheckstreamaccess',
+      ),
+      'live' => array(
+        'checkstreamaccess',
+        'securecheckstreamaccess',
+      ),
+    );
+    
+    foreach( $skipsinglelogincheck as $module => $actions ) {
+      
+      if ( $this->module == $module and in_array( $this->action, $actions ) )
+        return parent::init();
+      
+    }
+    
     $this->handleSingleLoginUsers();
     parent::init();
   }

@@ -3,11 +3,11 @@
 include('httpapi.php');
 
 $api       = new Api('info@dotsamazing.com', 'asdasd');
-
+$api->apiurl = 'http://teleconnect.home.sztanpet.net/hu/api';
 // ha kell a var_dump kijelzes, akkor ezzel bekapcsolhato:
-// $api->debug = true;
+ $api->debug = true;
 
-$recording = $api->uploadRecording('/home/sztanpet/teleconnect/resources/local/video.flv', 'hun');
+$recording = $api->uploadRecording('/home/sztanpet/teleconnect/resources/local/big.mkv', 'hun');
 
 if ( $recording and isset( $recording['data']['id'] ) ) {
   
@@ -18,7 +18,7 @@ if ( $recording and isset( $recording['data']['id'] ) ) {
     )
   );
   
-  $api->uploadContent( $recordingid, '/home/sztanpet/teleconnect/resources/local/video.flv');
+  $api->uploadContent( $recordingid, '/home/sztanpet/teleconnect/resources/local/big.mkv');
 
   // $api->addRecordingToChannel( $recordingid, 123 );
   // $api->removeRecordingFromChannel( $recordingid, 123 );
