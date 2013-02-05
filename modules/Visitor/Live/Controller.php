@@ -377,22 +377,22 @@ class Controller extends \Visitor\Controller {
       }
       
       $liveadmin = $this->acl->hasPermission('liveadmin|clientadmin');
-      $cache     = $this->getChatCache( $livefeedid, $liveadmin );
+      $cache     = $this->getChatCache( $livefeedid );
       
       if ( $cache->expired() or !$this->application->production ) {
         
-        $feedModel        = $this->modelIDCheck( 'livefeeds', $livefeedid );
-        $excludemoderated = $liveadmin? null: -1; // ha liveadmin akkor kiirjuk a moderalasra varo commenteket
-        $chat             = $feedModel->getChat( $excludemoderated );
+        $feedModel = $this->modelIDCheck( 'livefeeds', $livefeedid );
+        $chat      = $feedModel->getChat();
         
-        $this->toSmarty['liveadmin'] = $liveadmin;
-        $this->toSmarty['chatitems'] = $chat;
-        $data                        = array('html' => $this->fetchSmarty('Visitor/Live/Chat.tpl') );
-        $data['lastmodified']        = md5( $data['html'] );
-        $cache->put( $data );
+        $cache->put( $chat );
         
       } else
-        $data = $cache->get();
+        $chat = $cache->get();
+      
+      $this->toSmarty['liveadmin'] = $liveadmin;
+      $this->toSmarty['chatitems'] = $chat;
+      $data                        = array('html' => $this->fetchSmarty('Visitor/Live/Chat.tpl') );
+      $data['lastmodified']        = md5( $data['html'] );
       
     } else {
       
@@ -419,14 +419,13 @@ class Controller extends \Visitor\Controller {
   }
   
   public function expireChatCache( $livefeedid ) {
-    $this->getChatCache( $livefeedid, 0 )->expire();
-    $this->getChatCache( $livefeedid, 1 )->expire();
+    $this->getChatCache( $livefeedid )->expire();
   }
   
-  public function getChatCache( $livefeedid, $liveadmin ) {
+  public function getChatCache( $livefeedid ) {
     
     return $this->bootstrap->getCache(
-      sprintf('livefeed_chat-%d-%d', $livefeedid, (int)$liveadmin )
+      sprintf('livefeed_chat-%d', $livefeedid )
     );
     
   }
