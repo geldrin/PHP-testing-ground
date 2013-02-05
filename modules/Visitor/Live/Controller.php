@@ -99,11 +99,10 @@ class Controller extends \Visitor\Controller {
     
     $currentstream = $streams['defaultstream'];
     $streamtype    = $streams['streamtype'];
-    $streams       = $streams['streams'];
     $flashdata     = $feedModel->getFlashData( array(
         'sessionid' => session_id(),
         'domain'    => $this->organization['domain'],
-        'stream'    => $currentstream,
+        'streams'   => $streams,
         'user'      => $user,
       )
     );
@@ -224,7 +223,7 @@ class Controller extends \Visitor\Controller {
     $this->toSmarty['streamtype']    = $streamtype;
     $this->toSmarty['displaychat']   = $displaychat;
     $this->toSmarty['channel']       = $channelModel->row;
-    $this->toSmarty['streams']       = $streams;
+    $this->toSmarty['streams']       = $streams['streams'];
     $this->toSmarty['feed']          = $feedModel->row;
     $this->toSmarty['currentstream'] = $currentstream;
     $this->toSmarty['liveurl']       = $this->bootstrap->config['wowza']['liveurl'];

@@ -252,12 +252,30 @@ class Livefeeds extends \Springboard\Model {
       $info['user']
     );
     
+    $streams          = array();
+    $streams[]        = $info['streams']['defaultstream']['keycode'];
+    $contentstreams   = array();
+    $contentstreams[] = $info['streams']['defaultstream']['contentkeycode'];
+    
+    foreach( $info['streams']['streams'] as $stream ) {
+      
+      if (
+           $info['streams']['defaultstream']['id'] == $stream['id'] or
+           $info['streams']['defaultstream']['quality'] == $stream['quality']
+         )
+        continue;
+      
+      $streams[]        = $stream['keycode'];
+      $contentstreams[] = $stream['contentkeycode'];
+      
+    }
+    
     $flashdata = array(
       'language'               => \Springboard\Language::get(),
-      'media_streams'          => array( $info['stream']['keycode'] ),
+      'media_streams'          => $streams,
       'recording_title'        => $this->row['name'],
       'recording_type'         => 'live',
-      'media_secondaryStreams' => array( $info['stream']['contentkeycode'] ),
+      'media_secondaryStreams' => $contentstreams,
       'timeline_autoPlay'      => true,
     );
     
