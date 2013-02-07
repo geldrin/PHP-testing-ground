@@ -296,6 +296,7 @@ class Controller extends \Visitor\Controller {
     if ( $access[ $accesskey ] === 'registrationrestricted' )
       $needauth = true;
     
+    $this->toSmarty['member'] = $user;
     $flashdata = $recordingsModel->getStructuredFlashData( $this->toSmarty, session_id() );
     
     if ( $needauth ) {
