@@ -214,6 +214,18 @@ class Controller extends \Visitor\Controller {
       
     }
     
+    if ( !$userModel->checkSingleLoginUsers() ) {
+      
+      $message = sprintf(
+        $l('users','login_sessionerror'),
+        ceil( $this->bootstrap->config['sessiontimeout'] / 60 ),
+        $lang . '/users/resetsession?email=' . $encodedemail
+      );
+      
+      throw new \Visitor\Api\ApiException( $message, true, false );
+      
+    }
+    
     if ( $userModel->row['isadmin'] )
       $userModel->row['organizationid'] = $this->organization['id']; // a registerforsession miatt
     
