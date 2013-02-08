@@ -219,7 +219,7 @@ class Controller extends \Visitor\Controller {
       $message = sprintf(
         $l('users','login_sessionerror'),
         ceil( $this->bootstrap->config['sessiontimeout'] / 60 ),
-        $lang . '/users/resetsession?email=' . $encodedemail
+        \Springboard\Language::get() . '/users/resetsession?email=' . rawurlencode( $email )
       );
       
       throw new \Visitor\Api\ApiException( $message, true, false );
