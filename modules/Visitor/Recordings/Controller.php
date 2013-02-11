@@ -64,22 +64,6 @@ class Controller extends \Visitor\Controller {
         'type' => 'id',
       ),
     ),
-    'apiupload' => array(
-      'file' => array(
-        'type' => 'file',
-      ),
-      'language' => array(
-        'type' => 'string',
-      ),
-    ),
-    'apiuploadcontent' => array(
-      'id' => array(
-        'type' => 'id',
-      ),
-      'file' => array(
-        'type' => 'file',
-      ),
-    ),
     'addtochannel' => array(
       'recordingid' => array(
         'type' => 'id',
@@ -96,15 +80,20 @@ class Controller extends \Visitor\Controller {
         'type' => 'id',
       ),
     ),
-    'apiuploadasuser' => array(
-      'file' => array(
-        'type' => 'file',
-      ),
-      'language' => array(
+    'checkfileresume' => array(
+      'name' => array(
         'type' => 'string',
       ),
-      'userid' => array(
-        'type' => 'id',
+      'size' => array(
+        'type' => 'string',
+      ),
+    ),
+    'checkfileresumeasuser' => array(
+      'name' => array(
+        'type' => 'string',
+      ),
+      'size' => array(
+        'type' => 'string',
       ),
       'user' => array(
         'type'                     => 'user',
@@ -112,15 +101,20 @@ class Controller extends \Visitor\Controller {
         'impersonatefromparameter' => 'userid',
       ),
     ),
-    'apiuploadcontentasuser' => array(
-      'id' => array(
-        'type' => 'id',
-      ),
+    'uploadchunk' => array(
       'file' => array(
         'type' => 'file',
       ),
-      'userid' => array(
-        'type' => 'id',
+      'language' => array(
+        'type' => 'string',
+      ),
+    ),
+    'uploadchunkasuser' => array(
+      'file' => array(
+        'type' => 'file',
+      ),
+      'language' => array(
+        'type' => 'string',
       ),
       'user' => array(
         'type'                     => 'user',
@@ -523,61 +517,6 @@ class Controller extends \Visitor\Controller {
     
   }
   
-  public function apiuploadAction( $file, $language ) {
-    
-    set_time_limit(0);
-    $recordingModel = $this->bootstrap->getModel('recordings');
-    $languageModel  = $this->bootstrap->getModel('languages');
-    $user           = $this->bootstrap->getSession('user');
-    
-    $languageModel->addFilter('shortname', $language, false, false );
-    $values         = array(
-      'userid'     => $user['id'],
-      'languageid' => $languageModel->getOne('id'),
-    );
-    
-    if ( !$values['languageid'] )
-      throw new \Exception('Invalid language: ' . $language );
-    
-    $info = array(
-      'filepath'   => $file['tmp_name'],
-      'filename'   => $file['name'],
-      'user'       => $user,
-      'language'   => $values['languageid'],
-      'handlefile' => 'upload',
-    );
-    
-    $recordingModel->upload( $info );
-    
-    return $recordingModel->row;
-    
-  }
-  
-  public function apiuploadcontentAction( $recordingid, $file ) {
-    
-    set_time_limit(0);
-    $recordingModel = $this->modelOrganizationAndUserIDCheck(
-      'recordings',
-      $recordingid,
-      false
-    );
-    
-    if ( !$recordingModel )
-      throw new \Exception('No recording found with that ID');
-    
-    $info = array(
-      'iscontent'  => true,
-      'filepath'   => $file['tmp_name'],
-      'filename'   => $file['name'],
-      'handlefile' => 'upload',
-    );
-    
-    $recordingModel->upload( $info );
-    
-    return $recordingModel->row;
-    
-  }
-  
   protected function getPlayerHeight( $recordingsModel, $fullscale = false ) {
     
     if ( $fullscale and $recordingsModel->row['mastermediatype'] == 'audio' and $recordingsModel->hasSubtitle() )
@@ -811,12 +750,8 @@ class Controller extends \Visitor\Controller {
     
   }
   
-  public function apiuploadasuserAction( $file, $language, $userid ) {
-    return $this->apiuploadAction( $file, $language );
-  }
-  
-  public function apiuploadcontentasuserAction( $recordingid, $file, $userid ) {
-    return $this->apiuploadcontentasuserAction( $recordingid, $file );
+  public function checkfileresumeasuserAction( $file, $userid ) {
+    return $this->checkfileresumeAction();
   }
   
   public function checkfileresumeAction() {
@@ -849,7 +784,12 @@ class Controller extends \Visitor\Controller {
     );
     
   }
-
+  
+  
+  public function uploadchunkasuserAction() {
+    return $this->uploadchunkAction();
+  }
+  
   public function uploadchunkAction() {
     
     if ( $this->bootstrap->config['disable_uploads'] )
@@ -1027,8 +967,24 @@ class Controller extends \Visitor\Controller {
           
           $recordingModel = $this->bootstrap->getModel('recordings');
           $languageModel  = $this->bootstrap->getModel('languages');
-          $languages      = $languageModel->getAssoc('id', 'originalname', false, false, false, 'weight');
+          $languages      = $languageModel->getAssoc('id', 'shortname', false, false, false, 'weight');
           $language       = $this->application->getNumericParameter('videolanguage');
+          $textlanguage   = $this->application->getParameter('textlanguage');
+          
+          if ( !$language and $textlanguage ) {
+            
+            foreach( $languages as $id => $lang ) {
+              
+              if ( $lang == $textlanguage ) {
+                
+                $language = $id;
+                break;
+                
+              }
+              
+            }
+            
+          }
           
           if ( !isset( $languages[ $language ] ) )
             $this->jsonOutput( array('status' => 'error', 'error' => 'upload_securityerror') );
@@ -1095,6 +1051,7 @@ class Controller extends \Visitor\Controller {
       $this->jsonOutput( array(
           'status' => 'success',
           'url'    => $url,
+          'id'     => $recordingModel->id,
         )
       );
       

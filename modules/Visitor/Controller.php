@@ -18,6 +18,9 @@ class Controller extends \Springboard\Controller\Visitor {
       ),
     );
     
+    if ( $this->module == 'api' ) // az api ->authenticate mindig kezeli
+      return parent::init();
+    
     foreach( $skipsinglelogincheck as $module => $actions ) {
       
       if ( $this->module == $module and in_array( $this->action, $actions ) )
@@ -27,10 +30,11 @@ class Controller extends \Springboard\Controller\Visitor {
     
     $this->handleSingleLoginUsers();
     parent::init();
+    
   }
   
   public function handleSingleLoginUsers() {
-  
+    
     $user = $this->bootstrap->getSession('user');
 
     if ( $user['id'] ) {

@@ -3,9 +3,9 @@
 include('httpapi.php');
 
 $api       = new Api('info@dotsamazing.com', 'asdasd');
-$api->apiurl = 'http://teleconnect.home.sztanpet.net/hu/api';
+//$api->apiurl = 'http://teleconnect.home.sztanpet.net/hu/api';
 // ha kell a var_dump kijelzes, akkor ezzel bekapcsolhato:
- $api->debug = true;
+//$api->debug = true;
 
 $recording = $api->uploadRecording('/home/sztanpet/teleconnect/resources/local/big.mkv', 'hun');
 
