@@ -449,14 +449,14 @@ class Livefeeds extends \Springboard\Model {
         if ( $this->row['accesstype'] == 'departments')
           $sql = "
             SELECT
-              u.id
+              ud.id
             FROM
               access AS a,
-              users AS u
+              users_departments AS ud
             WHERE
-              a.livefeedid   = $feedid AND
-              u.departmentid = a.departmentid AND
-              u.id           = $userid
+              a.livefeedid    = $feedid AND
+              ud.departmentid = a.departmentid AND
+              ud.userid       = $userid
             LIMIT 1
           ";
         else

@@ -130,4 +130,27 @@ $config = array(
     ),
   ),
   
+  'departments[]' => array(
+    'displayname' => $l('users', 'departments'),
+    'type'        => 'inputCheckboxDynamic',
+    'treeid'      => 'id',
+    'treestart'   => '0',
+    'treeparent'  => 'parentid',
+    'sql'         => "
+      SELECT id, name
+      FROM departments
+      WHERE
+        organizationid = '" . $this->controller->organization['id'] . "' AND
+        %s
+      ORDER BY weight, name
+    ",
+    'valuesql'    => "
+      SELECT departmentid
+      FROM users_departments
+      WHERE userid = '" . $this->userModel->row['id'] . "'
+    ",
+    'validation' => array(
+    ),
+  ),
+  
 );

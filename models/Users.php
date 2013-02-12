@@ -254,4 +254,34 @@ class Users extends \Springboard\Model {
     
   }
   
+  protected function insertMultipleIDs( $ids, $table, $field ) {
+    
+    $this->ensureID();
+    
+    $values = array();
+    foreach( $ids as $id )
+      $values[] = "('" . intval( $id ) . "', '" . $this->id . "')";
+    
+    $this->db->execute("
+      INSERT INTO $table ($field, userid)
+      VALUES " . implode(', ', $values ) . "
+    ");
+    
+  }
+  
+  public function clearDepartments() {
+    
+    $this->ensureID();
+    
+    $this->db->execute("
+      DELETE FROM users_departments
+      WHERE userid = '" . $this->id . "'
+    ");
+    
+  }
+  
+  public function addDepartments( $departmentids ) {
+    $this->insertMultipleIDs( $departmentids, 'users_departments', 'departmentid');
+  }
+  
 }

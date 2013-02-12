@@ -48,6 +48,11 @@ class Edit extends \Visitor\HelpForm {
     else
       $values['password'] = $crypt->getHash( $values['password'] );
     
+    $this->userModel->clearDepartments();
+    if ( isset( $_REQUEST['departments'] ) and !empty( $values['departments'] ) )
+      $this->userModel->addDepartments( $values['departments'] );
+    
+    unset( $values['departments'] );
     $this->userModel->updateRow( $values );
     
     $forward = $this->application->getParameter('forward', 'users/admin');

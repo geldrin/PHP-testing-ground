@@ -62,7 +62,7 @@ $config['departments[]'] = array(
     '</div>' . "\r\n"
   ,
   'treeid'      => 'id',
-  'treestart'   => $user['departmentid'],
+  'treestart'   => 0,
   'treestartinclusive' => true,
   'treeparent'  => 'parentid',
 );

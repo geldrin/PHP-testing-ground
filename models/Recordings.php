@@ -908,14 +908,14 @@ class Recordings extends \Springboard\Model {
         if ( $this->row['accesstype'] == 'departments')
           $sql = "
             SELECT
-              u.id
+              ud.id
             FROM
               access AS a,
-              users AS u
+              users_departments AS ud
             WHERE
-              a.recordingid  = $recordingid AND
-              u.departmentid = a.departmentid AND
-              u.id           = $userid
+              a.recordingid   = $recordingid AND
+              ud.departmentid = a.departmentid AND
+              ud.userid       = $userid
             LIMIT 1
           ";
         else
@@ -1043,14 +1043,14 @@ class Recordings extends \Springboard\Model {
         FROM
           $from,
           access AS a,
-          users AS u
+          users_departments AS ud
         WHERE
           $where
           $generalwhere AND
           r.accesstype   = 'departments' AND
           a.recordingid  = r.id AND
-          a.departmentid = u.departmentid AND
-          u.id           = '" . $user['id'] . "'
+          a.departmentid = ud.departmentid AND
+          ud.userid      = '" . $user['id'] . "'
       )
     ";
     
