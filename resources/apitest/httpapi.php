@@ -120,10 +120,6 @@ class Api {
     
   }
   
-  public function uploadContent( $id, $file, $userid = null ) {
-    return $this->uploadRecording( $file, '', $userid, 1, $id );
-  }
-
   private function executeCall( $options, $action ) {
 
     $this->initCurl( $options );
@@ -149,6 +145,10 @@ class Api {
 
     }
 
+  }
+  
+  public function uploadContent( $id, $file, $userid = null ) {
+    return $this->uploadRecording( $file, '', $userid, 1, $id );
   }
   
   public function uploadRecording( $file, $language, $userid = 0, $iscontent = 0, $recordingid = 0 ) {
@@ -212,6 +212,10 @@ class Api {
       'iscontent' => $iscontent,
       'userid'    => $userid,
     );
+    
+    if ( $parameters['userid'] )
+      $method  .= 'asuser';
+    
     $options    = array(
       CURLOPT_URL        => $this->getURL('controller', 'recordings', $method, $parameters ),
     );
@@ -252,12 +256,8 @@ class Api {
     
     $method     = 'uploadchunk';
     
-    if ( $userid ) {
-      
-      $parameters['userid'] = $userid;
-      $method              .= 'asuser';
-      
-    }
+    if ( $parameters['userid'] )
+      $method  .= 'asuser';
     
     $options    = array(
       CURLOPT_URL        => $this->getURL('controller', 'recordings', $method, $parameters ),
