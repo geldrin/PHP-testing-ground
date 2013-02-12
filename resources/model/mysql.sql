@@ -34,7 +34,6 @@ CREATE TABLE `users` (
    `namelast` text not null,
    `nameformat` text,
    `organizationid` int(10) unsigned not null default '0',
-   `departmentid` int(10) unsigned not null default '0',
    `isadmin` int(10) unsigned not null default '0',
    `isclientadmin` int(10) unsigned not null default '0',
    `iseditor` int(10) unsigned not null default '0',
@@ -348,8 +347,19 @@ CREATE TABLE `users_invitations` (
    `permissions` text not null,
    `userid` int(10) unsigned not null,
    `email` text not null,
+   `departments` text,
    `validationcode` text not null,
    PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;
+
+
+CREATE TABLE `users_departments` (
+   `id` int(10) unsigned not null auto_increment,
+   `userid` int(10) unsigned not null,
+   `departmentid` int(10) unsigned not null,
+   PRIMARY KEY (`id`),
+   KEY `ix_userid` (`userid`),
+   KEY `ix_departmentid` (`departmentid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;
 
 
