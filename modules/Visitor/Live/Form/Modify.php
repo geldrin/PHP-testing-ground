@@ -91,10 +91,10 @@ class Modify extends \Visitor\HelpForm {
     $needsync = $this->needAccessSync( $values );
     
     if ( @$values['starttimestamp'] )
-      $values['starttimestamp'] .= ' 08:00:00';
+      $values['starttimestamp'] .= ' 00:00:00';
     
     if ( @$values['endtimestamp'] )
-      $values['endtimestamp'] .= ' 20:00:00';
+      $values['endtimestamp'] .= ' 23:59:59';
     
     $this->handleAccesstypeForModel( $this->channelModel, $values );
     $this->channelModel->updateRow( $values );
