@@ -15,7 +15,7 @@ date_default_timezone_set("Europe/Budapest");
 echo "Wowza log analizer v0.1 - STARTING...\n";
 
 // User settings
-$live_channelid = 42;
+$live_channelid = 2;
 
 // **********************************
 
@@ -25,6 +25,7 @@ $app = new Springboard\Application\Cli(BASE_PATH, PRODUCTION);
 // Load jobs configuration file
 $app->loadConfig('modules/Jobs/config_jobs.php');
 $jconf = $app->config['config_jobs'];
+$wowza_log_dir = $jconf['wowza_log_dir'];
 
 // Establish database connection
 try {
@@ -66,10 +67,45 @@ if ( $event->RecordCount() < 1 ) {
 	exit -1;
 }
 
+// Event: get start and end dates
 $event_info = array();
 $event_info = $event->fields;
+$tmp = explode(" ", $event_info['starttimestamp'], 2);
+$event_startdate['date'] = trim($tmp[0]);
+$event_startdate['timestamp'] = strtotime($event_startdate['date']);
+$event_startdate['year'] = substr( $event_startdate['date'], 0, 4) + 0;
+$event_startdate['month'] = substr( $event_startdate['date'], 5, 2) + 0;
+$event_startdate['day'] = substr( $event_startdate['date'], 8, 2) + 0;
+$tmp = explode(" ", $event_info['endtimestamp'], 2);
+$event_enddate['date'] = trim($tmp[0]);
+$event_enddate['timestamp'] = strtotime($event_enddate['date']);
+$event_enddate['year'] = substr( $event_enddate['date'], 0, 4) + 0;
+$event_enddate['month'] = substr( $event_enddate['date'], 5, 2) + 0;
+$event_enddate['day'] = substr( $event_enddate['date'], 8, 2) + 0;
 
-//var_dump($event_info);
+var_dump($event_startdate);
+
+var_dump($event_enddate);
+
+// Log files: prepare the list of log files to be checked (one Wowza log file per day)
+$log_files = array();
+$sec_oneday = 3600 * 24;
+
+for ( $timestamp = $event_startdate['timestamp']; $timestamp <= $event_enddate['timestamp']; $timestamp += $sec_oneday ) {
+
+	echo date("Y-m-d", $timestamp) . "\n";
+
+	$log_file = $wowza_log_dir . "access.log." . date("Y-m-d", $timestamp);
+	if ( file_exists($log_file) ) {
+		array_push($log_files, $log_file);
+	} else {
+		echo "ERROR: Wowza log file " . $log_file . " does not exist.\n";
+	}
+}
+
+var_dump($log_files);
+
+exit;
 
 // Wowza app: vsqlive or devvsqlive if dev site is used
 $isdev = FALSE;
@@ -113,6 +149,7 @@ while ( !$live_streams->EOF ) {
 // Get current directory
 $directory = realpath('.') . "/";
 
+$log_files = array();
 $log_files = dirList($directory, ".log");
 sort($log_files, SORT_STRING);
 
