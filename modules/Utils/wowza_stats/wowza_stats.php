@@ -17,6 +17,8 @@ echo "Wowza log analizer v0.1 - STARTING...\n";
 // User settings
 $live_channelid = 43;
 
+$analyze_perconnection = TRUE;
+
 // **********************************
 
 // Init
@@ -83,15 +85,9 @@ $event_info = $event->fields;
 $tmp = explode(" ", $event_info['starttimestamp'], 2);
 $event_startdate['date'] = trim($tmp[0]);
 $event_startdate['timestamp'] = strtotime($event_startdate['date']);
-/*$event_startdate['year'] = substr( $event_startdate['date'], 0, 4) + 0;
-$event_startdate['month'] = substr( $event_startdate['date'], 5, 2) + 0;
-$event_startdate['day'] = substr( $event_startdate['date'], 8, 2) + 0; */
 $tmp = explode(" ", $event_info['endtimestamp'], 2);
 $event_enddate['date'] = trim($tmp[0]);
 $event_enddate['timestamp'] = strtotime($event_enddate['date']);
-/*$event_enddate['year'] = substr( $event_enddate['date'], 0, 4) + 0;
-$event_enddate['month'] = substr( $event_enddate['date'], 5, 2) + 0;
-$event_enddate['day'] = substr( $event_enddate['date'], 8, 2) + 0; */
 
 var_dump($event_startdate);
 
@@ -275,6 +271,9 @@ if ( ( trim($tmp[16]) == "89.133.214.122" ) ) {
 							$clientid = trim($log_line[20]);
 							// Wowza stream ID
 							$keycode = $location_info[$locationid][$streamid]['keycode'];
+							// Date
+							$date = trim($log_line[0]) . " " . trim($log_line[1]);
+							$date_timestamp = strtotime($date);
 
 							$tmp = explode("&", $csession);
 
@@ -296,17 +295,18 @@ if ( ( trim($tmp[16]) == "89.133.214.122" ) ) {
 							// User ID: store Vsq user ID and add data. If no user ID is given, then use ID = 0 for storing all client IPs
 							if ( empty($viewers[$cip]) ) $viewers[$cip] = array();
 
+							// No entry yet: add user ID under the specific IP
 							if ( empty($viewers[$cip][$uid]) ) {
 								$viewers[$cip][$uid] = array();
 
 								// Host name
 								$viewers[$cip][$uid]['hostname'] = gethostbyaddr($cip);
-
-								// Protocol
-								$viewers[$cip][$uid]['protocol'] = trim($log_line[17]);
-
 								// Connections
 								$viewers[$cip][$uid]['connections'] = 1;
+								// User agent
+								$viewers[$cip][$uid]['user_agent'] = trim($log_line[19]);
+								// Protocol
+								$viewers[$cip][$uid]['protocol'] = trim($log_line[17]);
 
 								// Encoder: flag IP/UID if event "publish" occured
 								$viewers[$cip][$uid]['encoder'] = 0;
@@ -314,17 +314,26 @@ if ( ( trim($tmp[16]) == "89.133.214.122" ) ) {
 
 								// Client ID: track a stream between events "play"/"publish" and "destroy"
 								$viewers[$cip][$uid]['clients'] = array();
-								//$viewers[$cip][$uid]['clients'][$clientid]['uid'] = $uid;
+								// PLAY: if play, then record start time and start track this session
 								$viewers[$cip][$uid]['clients'][$clientid]['play'] = FALSE;
-								if ( ( $x_event == "play" ) or ( $x_event == "publish" ) ) $viewers[$cip][$uid]['clients'][$clientid]['play'] = TRUE;
+								if ( ( $x_event == "play" ) or ( $x_event == "publish" ) ) {
+									$viewers[$cip][$uid]['clients'][$clientid]['started_timestamp'] = $date_timestamp;
+									$viewers[$cip][$uid]['clients'][$clientid]['started_datetime'] = $date;
+									$viewers[$cip][$uid]['clients'][$clientid]['play'] = TRUE;
+								}
 
 								// Streams: log which streams are viewed
 								$viewers[$cip][$uid]['streams'] = array();
 								$viewers[$cip][$uid]['streams'][$keycode]['locationid'] = $locationid;
 								$viewers[$cip][$uid]['streams'][$keycode]['streamid'] = $streamid;
+
 								// Duration: add if event is "destroy"
 								$viewers[$cip][$uid]['streams'][$keycode]['duration'] = 0;
+								$viewers[$cip][$uid]['clients'][$clientid]['duration'] = 0;
 								if ( $x_event == "destroy" ) {
+									// Duration per connection
+									$viewers[$cip][$uid]['clients'][$clientid]['duration'] = $duration;
+									// Duration summary
 									$viewers[$cip][$uid]['streams'][$keycode]['duration'] = $duration;
 								}
 
@@ -336,7 +345,11 @@ if ( ( trim($tmp[16]) == "89.133.214.122" ) ) {
 								// Client ID: track a stream between events "play"/"publish" and "destroy"
 								if ( empty($viewers[$cip][$uid]['clients'][$clientid]) ) {
 									$viewers[$cip][$uid]['clients'][$clientid]['play'] = FALSE;
-									if ( ( $x_event == "play" ) or ( $x_event == "publish" ) ) $viewers[$cip][$uid]['clients'][$clientid]['play'] = TRUE;
+									if ( ( $x_event == "play" ) or ( $x_event == "publish" ) ) {
+										$viewers[$cip][$uid]['clients'][$clientid]['play'] = TRUE;
+										$viewers[$cip][$uid]['clients'][$clientid]['started_timestamp'] = $date_timestamp;
+										$viewers[$cip][$uid]['clients'][$clientid]['started_datetime'] = $date;
+									}
 								}
 
 								$keycode = $location_info[$locationid][$streamid]['keycode'];
@@ -350,6 +363,7 @@ if ( ( trim($tmp[16]) == "89.133.214.122" ) ) {
 									// Duration: was there play event? If not, skip duration
 									if ( $viewers[$cip][$uid]['clients'][$clientid]['play'] ) {
 										$viewers[$cip][$uid]['streams'][$keycode]['duration'] += $duration;
+										$viewers[$cip][$uid]['clients'][$clientid]['duration'] = $duration;
 										$viewers[$cip][$uid]['clients'][$clientid]['play'] = FALSE;
 									}
 								}
@@ -367,6 +381,8 @@ if ( ( trim($tmp[16]) == "89.133.214.122" ) ) {
 
 	fclose($fh);
 }
+
+var_dump($viewers);
 
 $msg  = "# Videosquare live statistics report\n\n";
 $msg .= "# Log analization started: " . date("Y-m-d H:i:s") . "\n";
@@ -444,6 +460,20 @@ foreach ($viewers as $cip => $client_ip) {
 //		echo $tmp;
 
 		$msg .= $tmp;
+
+		// CONNECTION: per connection analyzation (if needed)
+		if ( $analyze_perconnection ) {
+
+			foreach ($viewers[$cip][$uid]['clients'] as $clientid => $client_data ) {
+
+				$started_time = date("H:i:s", $client_data['started_timestamp']);
+				$ended_time = date("H:i:s", $client_data['started_timestamp'] + $client_data['duration']);
+				$tmp = ",,,," . $started_time . "," . $ended_time . "\n";
+				
+				$msg .= $tmp;
+
+			}
+		}
 
 		$number_of_viewers++;
 	
