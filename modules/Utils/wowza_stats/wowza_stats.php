@@ -15,7 +15,7 @@ date_default_timezone_set("Europe/Budapest");
 echo "Wowza log analizer v0.1 - STARTING...\n";
 
 // User settings
-$live_channelid = 2;
+$live_channelid = 43;
 
 // **********************************
 
@@ -25,7 +25,16 @@ $app = new Springboard\Application\Cli(BASE_PATH, PRODUCTION);
 // Load jobs configuration file
 $app->loadConfig('modules/Jobs/config_jobs.php');
 $jconf = $app->config['config_jobs'];
+
+// Wowza specific init
 $wowza_log_dir = $jconf['wowza_log_dir'];
+// Wowza app: vsqlive or devvsqlive if dev site is used
+$isdev = FALSE;
+$wowza_app = "vsqlive";
+if ( $app->config['baseuri'] != "videosquare.eu/" ) {
+	$isdev = TRUE;
+	$wowza_app = "devvsqlive";
+}
 
 // Establish database connection
 try {
@@ -52,7 +61,8 @@ $query = "
 		organizations as b
 	WHERE
 		a.id = " . $live_channelid . " AND
-		b.id = a.organizationid";
+		b.id = a.organizationid AND
+		a.isliveevent = 1";
 
 try {
 	$event = $db->Execute($query);
@@ -73,15 +83,15 @@ $event_info = $event->fields;
 $tmp = explode(" ", $event_info['starttimestamp'], 2);
 $event_startdate['date'] = trim($tmp[0]);
 $event_startdate['timestamp'] = strtotime($event_startdate['date']);
-$event_startdate['year'] = substr( $event_startdate['date'], 0, 4) + 0;
+/*$event_startdate['year'] = substr( $event_startdate['date'], 0, 4) + 0;
 $event_startdate['month'] = substr( $event_startdate['date'], 5, 2) + 0;
-$event_startdate['day'] = substr( $event_startdate['date'], 8, 2) + 0;
+$event_startdate['day'] = substr( $event_startdate['date'], 8, 2) + 0; */
 $tmp = explode(" ", $event_info['endtimestamp'], 2);
 $event_enddate['date'] = trim($tmp[0]);
 $event_enddate['timestamp'] = strtotime($event_enddate['date']);
-$event_enddate['year'] = substr( $event_enddate['date'], 0, 4) + 0;
+/*$event_enddate['year'] = substr( $event_enddate['date'], 0, 4) + 0;
 $event_enddate['month'] = substr( $event_enddate['date'], 5, 2) + 0;
-$event_enddate['day'] = substr( $event_enddate['date'], 8, 2) + 0;
+$event_enddate['day'] = substr( $event_enddate['date'], 8, 2) + 0; */
 
 var_dump($event_startdate);
 
@@ -105,26 +115,22 @@ for ( $timestamp = $event_startdate['timestamp']; $timestamp <= $event_enddate['
 
 var_dump($log_files);
 
-exit;
-
-// Wowza app: vsqlive or devvsqlive if dev site is used
-$isdev = FALSE;
-$wowza_app = "vsqlive";
-if ( $app->config['baseuri'] != "videosquare.eu/" ) {
-	$isdev = TRUE;
-	$wowza_app = "devvsqlive";
+if ( count($log_files) < 1 ) {
+	echo "[ERROR] Cannot find any related .log files\n";
+	exit -1;
 }
 
 // Streams: query locations and streams for live channels
 $live_streams = array();
 if ( !query_livefeeds($event_info['id'], $live_streams) ) {
-	echo "[ERROR] Cannot find live event.\n";
+	echo "[ERROR] Cannot find live event ID = " . $event_info['id'] .".\n";
 	exit -1;
 }
 
-// Stream information transformation to array
+// Live feeds: runs through all live feeds
 $location_info = array();
 while ( !$live_streams->EOF ) {
+
 	$stream = array();
 	$stream = $live_streams->fields;
 
@@ -145,19 +151,6 @@ while ( !$live_streams->EOF ) {
 }
 
 // Start log analyzing
-
-// Get current directory
-$directory = realpath('.') . "/";
-
-$log_files = array();
-$log_files = dirList($directory, ".log");
-sort($log_files, SORT_STRING);
-
-if ( count($log_files) < 1 ) {
-	echo "[ERROR] Cannot find any .log files\n";
-	exit;
-}
-
 $viewers = array();
 
 // Actual feed to be analyzed
