@@ -61,8 +61,8 @@ $query = "
 		organizations as b
 	WHERE
 		a.id = " . $live_channelid . " AND
-		b.id = a.organizationid AND
-		a.isliveevent = 1";
+		b.id = a.organizationid";
+//a.isliveevent = 0
 
 try {
 	$event = $db->Execute($query);
