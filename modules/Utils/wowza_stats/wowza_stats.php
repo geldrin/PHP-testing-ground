@@ -89,10 +89,6 @@ $tmp = explode(" ", $event_info['endtimestamp'], 2);
 $event_enddate['date'] = trim($tmp[0]);
 $event_enddate['timestamp'] = strtotime($event_enddate['date']);
 
-var_dump($event_startdate);
-
-var_dump($event_enddate);
-
 // Log files: prepare the list of log files to be checked (one Wowza log file per day)
 $log_files = array();
 $sec_oneday = 3600 * 24;
@@ -109,7 +105,7 @@ for ( $timestamp = $event_startdate['timestamp']; $timestamp <= $event_enddate['
 	}
 }
 
-var_dump($log_files);
+//var_dump($log_files);
 
 if ( count($log_files) < 1 ) {
 	echo "[ERROR] Cannot find any related .log files\n";
@@ -317,9 +313,11 @@ if ( ( trim($tmp[16]) == "89.133.214.122" ) ) {
 								// PLAY: if play, then record start time and start track this session
 								$viewers[$cip][$uid]['clients'][$clientid]['play'] = FALSE;
 								if ( ( $x_event == "play" ) or ( $x_event == "publish" ) ) {
+									$viewers[$cip][$uid]['clients'][$clientid]['play'] = TRUE;
 									$viewers[$cip][$uid]['clients'][$clientid]['started_timestamp'] = $date_timestamp;
 									$viewers[$cip][$uid]['clients'][$clientid]['started_datetime'] = $date;
-									$viewers[$cip][$uid]['clients'][$clientid]['play'] = TRUE;
+									$viewers[$cip][$uid]['clients'][$clientid]['locationid'] = $locationid;
+									$viewers[$cip][$uid]['clients'][$clientid]['streamid'] = $streamid;
 								}
 
 								// Streams: log which streams are viewed
@@ -349,12 +347,18 @@ if ( ( trim($tmp[16]) == "89.133.214.122" ) ) {
 										$viewers[$cip][$uid]['clients'][$clientid]['play'] = TRUE;
 										$viewers[$cip][$uid]['clients'][$clientid]['started_timestamp'] = $date_timestamp;
 										$viewers[$cip][$uid]['clients'][$clientid]['started_datetime'] = $date;
+										$viewers[$cip][$uid]['clients'][$clientid]['locationid'] = $locationid;
+										$viewers[$cip][$uid]['clients'][$clientid]['streamid'] = $streamid;
 									}
 								}
 
 								$keycode = $location_info[$locationid][$streamid]['keycode'];
 								if ( empty($viewers[$cip][$uid]['streams'][$keycode]) ) {
 									$viewers[$cip][$uid]['streams'][$keycode]['duration'] = 0;
+									// !!!!!!!!!!!!!!!!!!
+									if ( $viewers[$cip][$uid]['clients'][$clientid]['locationid'] != $locationid ) echo "loc mismatch\n";
+									if ( $viewers[$cip][$uid]['clients'][$clientid]['streamid'] != $streamid ) echo "stream mismatch\n";
+									// !!!!!!!!!!!!!!!!!!
 									$viewers[$cip][$uid]['streams'][$keycode]['locationid'] = $locationid;
 									$viewers[$cip][$uid]['streams'][$keycode]['streamid'] = $streamid;
 								}
@@ -433,6 +437,7 @@ foreach ($viewers as $cip => $client_ip) {
 		$encoder_str = "";
 		if ( $viewers[$cip][$uid]['encoder'] ) $encoder_str = "(*)";
 
+		// Columns: UserID, Username, IP address, Hostname, Connections, Stream1, Stream2, ..., Summary
 		$tmp = $uid . "," . (empty($user['email'])?"-":$user['email']) . $encoder_str . "," . $cip . "," . $viewers[$cip][$uid]['hostname'] . "," . $viewers[$cip][$uid]['connections'];
 
 		// Stream statistics: get per stream statistics
@@ -468,10 +473,15 @@ foreach ($viewers as $cip => $client_ip) {
 
 				$started_time = date("H:i:s", $client_data['started_timestamp']);
 				$ended_time = date("H:i:s", $client_data['started_timestamp'] + $client_data['duration']);
-				$tmp = ",,,," . $started_time . "," . $ended_time . "\n";
-				
-				$msg .= $tmp;
+				$loc_id = $client_data['locationid'];
+				$str_id = $client_data['streamid'];
+				$num_column = $column_guide[$loc_id][$str_id];
 
+				$tmp = "";
+				for ( $q = 0; $q < ( 5 + $num_column ); $q++ ) $tmp .= ",";
+				$tmp .= $started_time . "-" . $ended_time . "\n";
+
+				$msg .= $tmp;
 			}
 		}
 
