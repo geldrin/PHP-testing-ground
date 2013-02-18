@@ -146,8 +146,8 @@ $config = array(
   'organizationfallbackurl' => 'http://videosquare.eu',
   'chatpolltimems'          => 1000,
   //----
-  'sessiontimeout' => 30,
-  'sessionpingseconds' => 10,
+  'sessiontimeout' => 135,
+  'sessionpingseconds' => 60,
   // Az users.issingleloginenforced=1 tipusu usereknel
   // annak az idonek a hossza masodpercekben, amig a usert 
   // belepettnek tekintjuk ujabb oldal letoltese nelkul. Maximum ennyi
