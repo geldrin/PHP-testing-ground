@@ -1731,6 +1731,7 @@ class Recordings extends \Springboard\Model {
     
     $data = array(
       'language'              => \Springboard\Language::get(),
+      'user_pingURL'          => $info['BASE_URI'] . \Springboard\Language::get() . '/users/ping',
       'media_servers'         => array(),
       'track_firstPlay'       => $recordingbaseuri . 'track/' . $this->id,
       'recording_title'       => $this->row['title'],

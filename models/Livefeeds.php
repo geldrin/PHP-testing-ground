@@ -272,6 +272,7 @@ class Livefeeds extends \Springboard\Model {
     
     $flashdata = array(
       'language'               => \Springboard\Language::get(),
+      'user_pingURL'           => $info['BASE_URI'] . \Springboard\Language::get() . '/users/ping',
       'media_streams'          => $streams,
       'recording_title'        => $this->row['name'],
       'recording_type'         => 'live',

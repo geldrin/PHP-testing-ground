@@ -273,7 +273,9 @@ class Controller extends \Visitor\Controller {
     }
     
     return array(
-      'userid' => $userModel->id,
+      'userid'      => $userModel->id,
+      'needping'    => (bool)$userModel->row['issingleloginenforced'],
+      'pingseconds' => $this->bootstrap->config['sessionpingseconds'],
     );
     
   }
