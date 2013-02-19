@@ -39,7 +39,10 @@ class Controller extends \Visitor\Controller {
       $module   = $this->application->getParameter('_module');
       $method   = $this->application->getParameter('method');
       
-      if ( $module != 'users' and $method != 'authenticate' ) {
+      if (
+           $module != 'users' or
+           ( $module == 'users' and $method != 'authenticate' )
+         ) {
         
         $loggedin = call_user_func_array( array(
             $this->bootstrap->getController('users'),
@@ -59,6 +62,7 @@ class Controller extends \Visitor\Controller {
       $this->format = $this->validateParameter('format', $this->formats );
       $this->layer  = $this->validateParameter('layer', $this->layers );
       $this->module = $this->getModule();
+      
       $this->callMethod();
       
       $result['data'] = $this->data;

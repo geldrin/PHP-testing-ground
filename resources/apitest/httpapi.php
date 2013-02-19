@@ -271,4 +271,20 @@ class Api {
     
   }
   
+  public function setUserField( $userid, $field, $value ) {
+    
+    $parameters = array(
+      'userid' => $userid,
+      'field'  => $field,
+      'value'  => $value,
+    );
+    
+    $options    = array(
+      CURLOPT_URL => $this->getURL('controller', 'users', 'setuserfield', $parameters ),
+    );
+    
+    return $this->executeCall( $options, "SETUSERFIELD" );
+    
+  }
+  
 }
