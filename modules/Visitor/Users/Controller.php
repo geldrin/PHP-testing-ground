@@ -60,6 +60,22 @@ class Controller extends \Visitor\Controller {
         'shouldemail' => false,
       ),
     ),
+    'setuserfield' => array(
+      'userid' => array(
+        'type' => 'id',
+      ),
+      'field' => array(
+        'type' => 'string',
+      ),
+      'value' => array(
+        'type'     => 'string',
+        'required' => false,
+      ),
+      'user' => array(
+        'type'       => 'user',
+        'permission' => 'admin',
+      ),
+    ),
   );
   
   public function indexAction() {
@@ -304,6 +320,26 @@ class Controller extends \Visitor\Controller {
     $userModel->updateSessionInformation();
     header('HTTP/1.1 204 No Content');
     die();
+    
+  }
+  
+  public function setuserfieldAction( $userid, $field, $value ) {
+    
+    $userModel = $this->bootstrap->getModel('users');
+    $userModel->select( $userid );
+    
+    if ( !$userModel->row )
+      throw new \Visitor\Api\ApiException("User with id: $userid not found", true, false );
+    
+    if ( !isset( $userModel->row[ $field ] ) )
+      throw new \Visitor\Api\ApiException("Field: $field not found", true, false );
+    
+    $userModel->updateRow( array(
+        $field => @$_REQUEST['value'],
+      )
+    );
+    
+    return $userModel->row;
     
   }
   
