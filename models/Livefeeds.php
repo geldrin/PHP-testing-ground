@@ -278,9 +278,9 @@ class Livefeeds extends \Springboard\Model {
       'recording_type'         => 'live',
       'media_secondaryStreams' => $contentstreams,
       'timeline_autoPlay'      => true,
-      'checkwatching'          => (bool)$info['user']['ispresencecheckforced'],
-      'checkwatchingtimeinterval' => $info['checkwatchingtimeinterval'],
-      'checkwatchingconfirmationtimeout' => $info['checkwatchingconfirmationtimeout'],
+      'user_checkWatching'     => (bool)$info['user']['ispresencecheckforced'],
+      'user_checkWatchingTimeInterval' => $info['checkwatchingtimeinterval'],
+      'user_checkWatchingConfirmationTimeout' => $info['checkwatchingconfirmationtimeout'],
     );
     
     if ( $this->row['issecurestreamingforced'] )
