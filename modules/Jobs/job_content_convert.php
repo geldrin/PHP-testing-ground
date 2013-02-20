@@ -347,7 +347,7 @@ global $jconf, $app, $db, $global_log;
 	$command = "cvlc -I dummy --stop-time=" . $target_length . " --mosaic-width=" . $recording_info['res_x'] . " --mosaic-height=" . $recording_info['res_y'] . " --mosaic-keep-aspect-ratio --mosaic-keep-picture --mosaic-xoffset=0 --mosaic-yoffset=0 --mosaic-position=2 --mosaic-offsets=\"0,0," . $recording_info['pip_x'] . "," . $recording_info['pip_y'] . "\" --mosaic-order=\"1,2\" --vlm-conf " . $recording_info['vlc_config_file'];
 
 	$time_start = time();
-	$err = runExternal_vlc($jconf['nice'] . " " . $command, $recording_info['output_file']);
+	$err = runExternal_vlc($profile['nice'] . " " . $command, $recording_info['output_file']);
 	$duration = time() - $time_start;
 	$mins_taken = round($duration / 60, 2);
 
