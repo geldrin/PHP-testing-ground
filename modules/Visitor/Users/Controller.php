@@ -292,6 +292,9 @@ class Controller extends \Visitor\Controller {
       'userid'      => $userModel->id,
       'needping'    => (bool)$userModel->row['issingleloginenforced'],
       'pingseconds' => $this->bootstrap->config['sessionpingseconds'],
+      'checkwatching' => (bool)$userModel->row['ispresencecheckforced'],
+      'checkwatchingtimeinterval' => $this->organization['presencechecktimeinterval'],
+      'checkwatchingconfirmationtimeout' => $this->organization['presencecheckconfirmationtime'],
     );
     
   }

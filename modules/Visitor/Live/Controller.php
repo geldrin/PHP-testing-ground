@@ -105,6 +105,8 @@ class Controller extends \Visitor\Controller {
         'domain'    => $this->organization['domain'],
         'streams'   => $streams,
         'user'      => $user,
+        'checkwatchingtimeinterval' => $this->organization['presencechecktimeinterval'],
+        'checkwatchingconfirmationtimeout' => $this->organization['presencecheckconfirmationtime'],
       )
     );
     

@@ -1738,6 +1738,9 @@ class Recordings extends \Springboard\Model {
       'recording_subtitle'    => (string)$this->row['subtitle'],
       'recording_description' => (string)$this->row['description'],
       'recording_image'       => \smarty_modifier_indexphoto( $this->row, 'player', $info['STATIC_URI'] ),
+      'checkwatching'         => (bool)@$info['member']['ispresencecheckforced'],
+      'checkwatchingtimeinterval' => $info['organization']['presencechecktimeinterval'],
+      'checkwatchingconfirmationtimeout' => $info['organization']['presencecheckconfirmationtime'],
     );
     
     if ( $this->row['issecurestreamingforced'] ) {
