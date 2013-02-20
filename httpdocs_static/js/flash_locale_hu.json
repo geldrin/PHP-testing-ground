@@ -12,8 +12,9 @@
     "invalid_app":"A kapcsolatban megadott alkalmazás neve helytelen.",
     "stream_not_found":"Stream nem létezik!",
     "play_failed":"A felvétel lejátszása közben hiba lépett fel, amelynek többféle oka lehet, például az előfizető nem rendelkezik hozzáférési jogosultsággal.",
-    "streamNotFound": "A felvétel jelenleg nem elérhető.",
-    "liveStreamNotFound": "Az élő közvetítés jelenleg nem elérhető."
+    "streamNotFound":"A felvétel jelenleg nem elérhető.",
+    "liveStreamNotFound":"Az élő közvetítés jelenleg nem elérhető.",
+    "anotherComputer":"A felhasználói belépést már egy másik számítógépről használatják."
   },
   "help": {
     "subtitle":"A felvételhez feliratok is tartoznak, az ikonra kattinva választhatja ki a kívánt nyelvet, illetve tesreszabhatja a vizuális megjelenítést.",
@@ -38,6 +39,20 @@
     "serverUnavailable": "A rendszer átmenetileg nem elérhető.",
     "accessDenied":"A hozzáférés megtagadva!"
   },
+  "presenceCheck": {
+	"live": {
+       "title":"Ez a közvetítés az Ön személyes jelenlétét igényli",
+       "description":"Jelenléte megerősítéséhez, kérjük nyugtázza ezt az üzenetet! Amennyiben a jelzett időn belül nem kerül sor a visszajelzésre, a lejátszást megszakítjuk!",
+	   "confirm":"Itt vagyok",
+       "timeoutMessage":"Az élő közvetítés az Ön személyes jelenlétét igényli. A jelenlét ellenőrzése sikertelen volt, ezért a kapcsolatot megszakítottuk. Újrakapcsolódáshoz kattinson a lejátszás ikonra!"
+	},
+	"record": {
+       "title":"Ez a felvétel az Ön személyes jelenlétét igényli",
+       "description":"Jelenléte megerősítéséhez, kérjük nyugtázza ezt az üzenetet! Amennyiben a jelzett időn belül nem kerül sor a visszajelzésre, a lejátszást megszakítjuk!",
+	   "confirm":"Itt vagyok",
+	   "timeoutMessage":"A felvétel az Ön személyes jelenlétét igényli. A jelenlét ellenőrzése sikertelen volt, ezért a kapcsolatot megszakítottuk. Újrakapcsolódáshoz kattinson a lejátszás ikonra!"
+	}
+    },
   "layout": {
     "video": "Csak videó",
     "content": "Csak tartalom",
