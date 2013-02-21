@@ -44,6 +44,7 @@
   var STATIC_URI = '{$STATIC_URI}';
   var VERSION    = '{$VERSION}';
   var language   = '{$language}';
+  var needping   = false;
   var BROWSER    = {ldelim}
     mobile: {if $browser.mobile}true{else}false{/if},
     tablet: {if $browser.tablet}true{else}false{/if},
