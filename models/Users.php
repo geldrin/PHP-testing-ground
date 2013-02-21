@@ -128,19 +128,15 @@ class Users extends \Springboard\Model {
   public function checkSingleLoginUsers() {
 
     $this->ensureObjectLoaded();
-
-    return  
-      !$this->row['issingleloginenforced']
+    $sessionid = $this->bootstrap->getSession('user')->getSessionID();
+    $ret       = !$this->row['issingleloginenforced']
       ||
       (
         $this->row['issingleloginenforced'] &&
         ( 
           // a felhasznalo be van lepve, megfelelo a sessionje es
           // sessiontimeouton belul van
-          ( 
-            $this->row['sessionid'] == 
-            $this->bootstrap->getSession('user')->getSessionID() 
-          ) &&
+          $this->row['sessionid'] == $sessionid &&
           strlen( $this->row['sessionlastupdated'] ) &&
           (
             time() - strtotime( $this->row['sessionlastupdated'] ) < 
@@ -156,6 +152,16 @@ class Users extends \Springboard\Model {
         )
       )
     ;
+    
+    $message = sprintf('SINGLELOGIN VALID: %s - SESSIONID: %s _SERVER: %s',
+      var_export( $ret, true ),
+      var_export( $sessionid, true ),
+      var_export( $_SERVER, true )
+    );
+    
+    \Springboard\Debug::getInstance()->log( false, 'singlelogin.txt', $message );
+    return $ret;
+      
 
   }
   
