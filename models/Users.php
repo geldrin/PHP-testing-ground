@@ -153,8 +153,9 @@ class Users extends \Springboard\Model {
       )
     ;
     
-    $message = sprintf('SINGLELOGIN VALID: %s - SESSIONID: %s _SERVER: %s',
+    $message = sprintf('SINGLELOGIN VALID: %s - DBSESSIONID: %s ACTUALSESSIONID: %s _SERVER: %s',
       var_export( $ret, true ),
+      var_export( $this->row['sessionid'], true ),
       var_export( $sessionid, true ),
       var_export( $_SERVER, true )
     );
