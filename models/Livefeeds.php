@@ -284,7 +284,7 @@ class Livefeeds extends \Springboard\Model {
       'user_checkWatchingConfirmationTimeout' => $info['checkwatchingconfirmationtimeout'],
     );
     
-    if ( $user and $user['id'] and $user['issingleloginenforced'] )
+    if ( $info['user'] and $info['user']['id'] and $info['user']['issingleloginenforced'] )
       $flashdata['user_needPing'] = true;
     
     if ( $this->row['issecurestreamingforced'] )
