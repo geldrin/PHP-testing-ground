@@ -1732,6 +1732,7 @@ class Recordings extends \Springboard\Model {
     $data = array(
       'language'              => \Springboard\Language::get(),
       'user_pingURL'          => $info['BASE_URI'] . \Springboard\Language::get() . '/users/ping',
+      'user_needPing'         => false,
       'media_servers'         => array(),
       'track_firstPlay'       => $recordingbaseuri . 'track/' . $this->id,
       'recording_title'       => $this->row['title'],
@@ -1742,6 +1743,9 @@ class Recordings extends \Springboard\Model {
       'user_checkWatchingTimeInterval' => $info['organization']['presencechecktimeinterval'],
       'user_checkWatchingConfirmationTimeout' => $info['organization']['presencecheckconfirmationtime'],
     );
+    
+    if ( @$info['member'] and $info['member']['issingleloginenforced'] )
+      $data['user_needPing'] = true;
     
     if ( $this->row['issecurestreamingforced'] ) {
       $data['media_servers'][] = $this->getWowzaUrl( 'secrtmpsurl', true, $domain, $sessionid );
