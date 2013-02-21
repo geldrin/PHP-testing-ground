@@ -8,6 +8,9 @@ class Controller extends \Springboard\Controller\Visitor {
     $this->setupOrganization();
     
     $skipsinglelogincheck = array(
+      'users' => array(
+        'ping',
+      ),
       'recordings' => array(
         'checkstreamaccess',
         'securecheckstreamaccess',
