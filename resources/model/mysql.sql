@@ -91,7 +91,7 @@ CREATE TABLE `organizations` (
    `logofilenameen` text,
    `disabled` int(11) not null default '0',
    `fullnames` int(11) not null default '0',
-   `presencechecktimeinterval` int(11) not null default '900',
+   `presencechecktimeinterval` int(11) not null default '1800',
    `presencecheckconfirmationtime` int(11) not null default '600',
    PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;
