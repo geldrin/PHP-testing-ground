@@ -10,16 +10,16 @@ include_once( BASE_PATH . 'libraries/Springboard/Application/Cli.php');
 
 set_time_limit(0);
 
-$iscommit = FALSE;
+$iscommit = TRUE;
 
 // Init
 $app = new Springboard\Application\Cli(BASE_PATH, PRODUCTION);
 
 // Users base data
 // Department ID
-$org_dep_id = 17;
+$org_dep_id = 16;
 // Org ID = Conforg
-$user_num = 50;
+$user_num = 150;
 $org_id = 200;
 $user_nameprefix = "felh";
 $user_namesuffix_length = 4;
