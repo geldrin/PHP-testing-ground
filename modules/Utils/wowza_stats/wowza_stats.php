@@ -15,9 +15,15 @@ date_default_timezone_set("Europe/Budapest");
 echo "Wowza log analizer v0.1 - STARTING...\n";
 
 // User settings
-$live_channelid = 43;
+$live_channelid = 7;
 
 $analyze_perconnection = TRUE;
+
+$debug_client = array(
+	'do'		=> TRUE,
+	'ip'		=> "",
+	'clientid'	=> "1707567022"
+);
 
 // **********************************
 
@@ -143,6 +149,8 @@ while ( !$live_streams->EOF ) {
 	$live_streams->MoveNext();
 }
 
+//var_dump($location_info);
+
 // Start log analyzing
 $viewers = array();
 
@@ -227,14 +235,18 @@ for ( $i = 0; $i < count($log_files); $i++ ) {
 # 37: cs-uri-query | sessionid=conforg.videosquare.eu_k0nu829dc8viv2q57n5iskvmiqeqhh9c_4
 */
 
-// DEBUG
-/*$tmp = preg_split('/\t+/', $oneline);
-$cid = "708560470";
-//if ( ( trim($tmp[16]) == "89.133.214.122" ) and ( trim($tmp[20]) == $cid ) ) {
-if ( ( trim($tmp[16]) == "89.133.214.122" ) ) {
-	echo trim($tmp[16]) . " : x-event = " . trim($tmp[3]) . " : status = " . trim($tmp[6]) . " : x-duration = " . trim($tmp[12]) . " : c-client-id = " . trim($tmp[20]) . "\n";
-}
-*/
+		// DEBUG: debug client by IP or client ID
+		$tmp = preg_split('/\t+/', $oneline);
+		if ( $debug_client['do'] ) {
+
+			if ( trim($tmp[16]) == $debug_client['ip'] ) {
+				echo trim($tmp[16]) . " : x-event = " . trim($tmp[3]) . " : status = " . trim($tmp[6]) . " : x-duration = " . trim($tmp[12]) . " : c-client-id = " . trim($tmp[20]) . "\n";
+			}
+
+			if ( trim($tmp[20]) == $debug_client['clientid'] ) {
+				echo trim($tmp[20]) . " : x-event = " . trim($tmp[3]) . " : status = " . trim($tmp[6]) . " : x-duration = " . trim($tmp[12]) . " : c-client-id = " . trim($tmp[20]) . "\n";
+			}
+		}
 
 		// Math log entries: YYYY-MM-DD HH:MM:SS
 		if ( preg_match('/^[\s]*[0-9]{4}-[0-1][0-9]-[0-3][0-9][\s]+[0-2][0-9]:[0-5][0-9]:[0-5][0-9][\s]+[A-Z]+[\s]+(play|destroy|publish)/', $oneline) ) {
@@ -260,6 +272,10 @@ if ( ( trim($tmp[16]) == "89.133.214.122" ) ) {
 
 							// x-event: play or destroy (calculate duration when destroy occurs)
 							$x_event = trim($log_line[3]);
+
+							// ACTION: jump to next if actions are not relevant
+							if ( ( $x_event != "play" ) or ( $x_event != "publish" ) or ( $x_event != "destroy" ) ) continue; 
+
 							// Client IP
 							$cip = trim($log_line[16]);
 							// Client session and parameters
@@ -393,6 +409,8 @@ if ( ( trim($tmp[16]) == "89.133.214.122" ) ) {
 
 var_dump($viewers);
 
+var_dump($location_info);
+
 $msg  = "# Videosquare live statistics report\n\n";
 $msg .= "# Log analization started: " . date("Y-m-d H:i:s") . "\n";
 $msg .= "# Log files processed:\n";
@@ -410,6 +428,8 @@ $msg .= "# Locations (location / stream name): (*) = encoder\n";
 
 $tmp = "UserID,Username,IP address,Hostname,Connections";
 
+var_dump($location_info);
+
 // Columns: build location/stream name order guide array
 $columns_num = 0;
 $column_guide = array();
@@ -417,7 +437,8 @@ foreach ($location_info as $loc_id => $streams ) {
 	foreach ($streams as $str_id => $stream ) {
 		$tmp .= "," . $location_info[$loc_id][$str_id]['locationname'] . " / " . $location_info[$loc_id][$str_id]['streamname'];
 		$tmp_content = "";
-		$publishedfirst = date("Y-m-d", $location_info[$loc_id][$str_id]['publishedfirst']);
+		$published_first = "-";
+		if ( !empty($location_info[$loc_id][$str_id]['publishedfirst']) ) $published_first = date("Y-m-d", $location_info[$loc_id][$str_id]['publishedfirst']);
 		if ( !empty($location_info[$loc_id][$str_id]['contentkeycode']) ) $tmp_content = " / " . $location_info[$loc_id][$str_id]['contentkeycode'];
 		$msg .= "#\t" . $location_info[$loc_id][$str_id]['locationname'] . " / " . $location_info[$loc_id][$str_id]['streamname'] . ": " . $location_info[$loc_id][$str_id]['keycode'] . $tmp_content . " (started: " . $published_first . ")\n";
 
@@ -477,6 +498,11 @@ foreach ($viewers as $cip => $client_ip) {
 		if ( $analyze_perconnection ) {
 
 			foreach ($viewers[$cip][$uid]['clients'] as $clientid => $client_data ) {
+
+				if ( !isset($client_data['started_timestamp']) ) {
+echo "CID problem: " . $clientid . "\n";
+					continue;
+				}
 
 				$started_time = date("H:i:s", $client_data['started_timestamp']);
 				$ended_time = date("H:i:s", $client_data['started_timestamp'] + $client_data['duration']);
