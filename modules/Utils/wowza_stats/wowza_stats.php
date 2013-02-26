@@ -135,7 +135,8 @@ while ( !$live_streams->EOF ) {
 		'streamname'		=> $stream['streamname'],
 		'keycode'			=> $stream['keycode'],
 		'contentkeycode'	=> $stream['contentkeycode'],
-		'locationname'		=> $stream['locationname']
+		'locationname'		=> $stream['locationname'],
+		'publishedfirst'	=> ""							// First time during that day the stream was published
 	);
 	array_push($location_info[$locationid], $tmp);
 
@@ -270,6 +271,10 @@ if ( ( trim($tmp[16]) == "89.133.214.122" ) ) {
 							// Date
 							$date = trim($log_line[0]) . " " . trim($log_line[1]);
 							$date_timestamp = strtotime($date);
+							// Date of first publish
+							if ( $x_event == "publish" and empty($location_info[$locationid][$streamid]['publishedfirst']) ) {
+								$location_info[$locationid][$streamid]['publishedfirst'] = $date_timestamp;
+							}
 
 							$tmp = explode("&", $csession);
 
@@ -412,8 +417,10 @@ foreach ($location_info as $loc_id => $streams ) {
 	foreach ($streams as $str_id => $stream ) {
 		$tmp .= "," . $location_info[$loc_id][$str_id]['locationname'] . " / " . $location_info[$loc_id][$str_id]['streamname'];
 		$tmp_content = "";
+		$publishedfirst = date("Y-m-d", $location_info[$loc_id][$str_id]['publishedfirst']);
 		if ( !empty($location_info[$loc_id][$str_id]['contentkeycode']) ) $tmp_content = " / " . $location_info[$loc_id][$str_id]['contentkeycode'];
-		$msg .= "#\t" . $location_info[$loc_id][$str_id]['locationname'] . " / " . $location_info[$loc_id][$str_id]['streamname'] . ": " . $location_info[$loc_id][$str_id]['keycode'] . $tmp_content . "\n";
+		$msg .= "#\t" . $location_info[$loc_id][$str_id]['locationname'] . " / " . $location_info[$loc_id][$str_id]['streamname'] . ": " . $location_info[$loc_id][$str_id]['keycode'] . $tmp_content . " (started: " . $published_first . ")\n";
+
 		$column_guide[$loc_id][$str_id] = $columns_num;
 		$columns_num++;
 	}
