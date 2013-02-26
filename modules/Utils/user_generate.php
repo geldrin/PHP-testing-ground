@@ -17,105 +17,16 @@ $app = new Springboard\Application\Cli(BASE_PATH, PRODUCTION);
 
 // Users base data
 // Department ID
-$org_dep_id = 16;
+$org_dep_id = 1;
 // Org ID = Conforg
-$user_num = 150;
-$org_id = 200;
+$user_num = 1;
+$org_id = 1;
 $user_nameprefix = "felh";
 $user_namesuffix_length = 4;
 $user_nametermination = "conforg.hu";
 $pass_length = 8;
-
-function generatePassword($length = 8) {
-
-	// start with a blank password
-	$password = "";
-
-	// define possible characters - any character in this string can be
-	// picked for use in the password, so if you want to put vowels back in
-	// or add special characters such as exclamation marks, this is where
-	// you should do it
-	$possible = "2346789bcdfghjkmnpqrtvwxyzBCDFGHJKLMNPQRTVWXYZ";
-
-	// we refer to the length of $possible a few times, so let's grab it now
-	$maxlength = strlen($possible);
-
-	// check for length overflow and truncate if necessary
-	if ($length > $maxlength) {
-	  $length = $maxlength;
-	}
-
-	// set up a counter for how many characters are in the password so far
-	$i = 0; 
-
-	$is_number = FALSE;
-	$is_low = FALSE;
-	$is_up = FALSE;
-
-	// add random characters to $password until $length is reached
-	while ($i < $length) { 
-
-		// pick a random character from the possible ones
-		$char = substr($possible, mt_rand(0, $maxlength-1), 1);
-
-		// have we already used this character in $password?
-		if (!strstr($password, $char)) { 
-
-			// Is at least one number is included?
-			if ( is_numeric($char) ) {
-				$is_number = TRUE;
-			} else {
-				// At the last char, but not number yet
-				if ( ( $is_number == FALSE ) and ( $i == ($length - 1) ) ) {
-//					echo "\nNo number, add one\n";
-					$char = mt_rand(2,9);
-					$is_number = TRUE;
-				}
-			}
-
-			// no, so it's OK to add it onto the end of whatever we've already got...
-			$password .= $char;
-			// ... and increase the counter by one
-			$i++;
-		}
-
-	}
-
-	return $password;
-
-}
-
-function query_department($department_id) {
- global $db;
-
-	$query = "
-		SELECT
-			id,
-			name
-		FROM
-			departments
-		WHERE
-			id = " . $department_id;
-
-echo $query . "\n";
-
-	try {
-		$rs = $db->Execute($query);
-	} catch (exception $err) {
-		echo "[ERROR] SQL query failed.\n", trim($query), $err . "\n";
-		exit -1;
-	}
-
-	// User exist in DB, regenerate
-	if ( $rs->RecordCount() < 1 ) {
-		echo "[ERROR] Department id = " . $department_id . " does not exist.\n";
-		exit -1;
-	}
-
-	$department = $rs->fields;
-	
-	return $department['name'];
-}
+$issingleloginenforced = 0;
+$ispresencecheckforced = 1;
 
 $users = array();
 
@@ -210,6 +121,8 @@ for ( $i = 1; $i <= $user_num; $i++ ) {
 
 		$date = date("Y-m-d H:i:s");
 
+//'departmentid'		=> $org_dep_id,
+
 		$values = Array(
 			'nickname'			=> $username,
 			'email'				=> $users[$username]['username'],
@@ -217,7 +130,6 @@ for ( $i = 1; $i <= $user_num; $i++ ) {
 			'namelast'			=> $user_nametermination,
 			'nameformat'		=> "straight",
 			'organizationid'	=> $org_id,
-			'departmentid'		=> $org_dep_id,
 			'isadmin'			=> 0,
 			'isclientadmin'		=> 0,
 			'iseditor'			=> 0,
@@ -232,7 +144,9 @@ for ( $i = 1; $i <= $user_num; $i++ ) {
 			'browser'			=> "(diag information was not posted)",
 			'validationcode'	=> "123456",
 			'disabled'			=> 0,
-			'isapienabled'		=> 0
+			'isapienabled'		=> 0,
+			'issingleloginenforced'	=> $issingleloginenforced,
+			'ispresencecheckforced'	=> $ispresencecheckforced
 		);
 
 //var_dump($values);
@@ -249,7 +163,10 @@ for ( $i = 1; $i <= $user_num; $i++ ) {
 				exit -1;
 			}
 
+			$userid = $usersdb->id;
 		}
+
+		$userdepid = insert_users_deps($users[$i], $org_dep_id);
 
 		$data_write = $i . "," . $users[$username]['username'] . "," . $users[$username]['password'] . "\n";
 		fwrite($fh, $data_write);
@@ -262,5 +179,128 @@ for ( $i = 1; $i <= $user_num; $i++ ) {
 echo "Users added: " . $users_added . "\n";
 
 fclose($fh);
+
+exit;
+
+function insert_users_deps($userid, $depid) {
+ global $db, $iscommit; 
+
+	// Insert HU string
+	$query = "
+		INSERT INTO
+			users_departments (userid, departmentid)
+		VALUES(" . $userid . ", " . $depid . ")";
+
+echo $query . "\n";
+
+	$id = 0;
+	if ( $iscommit ) {
+
+		try {
+			$rs = $db->Execute($query);
+		} catch (exception $err) {
+			echo "[ERROR] SQL query failed.\n", trim($query), $err . "\n";
+			exit -1;
+		}
+
+		$id = $db->Insert_ID();
+
+	}
+
+	echo "Users/deps inserted id: " . $id . "\n";
+
+	return $id;
+}
+
+function generatePassword($length = 8) {
+
+	// start with a blank password
+	$password = "";
+
+	// define possible characters - any character in this string can be
+	// picked for use in the password, so if you want to put vowels back in
+	// or add special characters such as exclamation marks, this is where
+	// you should do it
+	$possible = "2346789bcdfghjkmnpqrtvwxyzBCDFGHJKLMNPQRTVWXYZ";
+
+	// we refer to the length of $possible a few times, so let's grab it now
+	$maxlength = strlen($possible);
+
+	// check for length overflow and truncate if necessary
+	if ($length > $maxlength) {
+	  $length = $maxlength;
+	}
+
+	// set up a counter for how many characters are in the password so far
+	$i = 0; 
+
+	$is_number = FALSE;
+	$is_low = FALSE;
+	$is_up = FALSE;
+
+	// add random characters to $password until $length is reached
+	while ($i < $length) { 
+
+		// pick a random character from the possible ones
+		$char = substr($possible, mt_rand(0, $maxlength-1), 1);
+
+		// have we already used this character in $password?
+		if (!strstr($password, $char)) { 
+
+			// Is at least one number is included?
+			if ( is_numeric($char) ) {
+				$is_number = TRUE;
+			} else {
+				// At the last char, but not number yet
+				if ( ( $is_number == FALSE ) and ( $i == ($length - 1) ) ) {
+//					echo "\nNo number, add one\n";
+					$char = mt_rand(2,9);
+					$is_number = TRUE;
+				}
+			}
+
+			// no, so it's OK to add it onto the end of whatever we've already got...
+			$password .= $char;
+			// ... and increase the counter by one
+			$i++;
+		}
+
+	}
+
+	return $password;
+
+}
+
+function query_department($department_id) {
+ global $db;
+
+	$query = "
+		SELECT
+			id,
+			name
+		FROM
+			departments
+		WHERE
+			id = " . $department_id;
+
+echo $query . "\n";
+
+	try {
+		$rs = $db->Execute($query);
+	} catch (exception $err) {
+		echo "[ERROR] SQL query failed.\n", trim($query), $err . "\n";
+		exit -1;
+	}
+
+	// User exist in DB, regenerate
+	if ( $rs->RecordCount() < 1 ) {
+		echo "[ERROR] Department id = " . $department_id . " does not exist.\n";
+		exit -1;
+	}
+
+	$department = $rs->fields;
+	
+	return $department['name'];
+}
 
 ?>
