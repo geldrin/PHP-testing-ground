@@ -16,17 +16,21 @@ $iscommit = TRUE;
 $app = new Springboard\Application\Cli(BASE_PATH, PRODUCTION);
 
 // Users base data
+// Organization ID
+$org_id = 200;
 // Department ID
-$org_dep_id = 1;
-// Org ID = Conforg
+$org_dep_id = 18;
+// How many users?
 $user_num = 1;
-$org_id = 1;
+// User name format and length: prefix + random number @ suffix
 $user_nameprefix = "felh";
 $user_namesuffix_length = 4;
 $user_nametermination = "conforg.hu";
 $pass_length = 8;
-$issingleloginenforced = 0;
-$ispresencecheckforced = 1;
+// Single login: forced?
+$issingleloginenforced = 1;
+// Presence check: forced?
+$ispresencecheckforced = 0;
 
 $users = array();
 
@@ -121,8 +125,6 @@ for ( $i = 1; $i <= $user_num; $i++ ) {
 
 		$date = date("Y-m-d H:i:s");
 
-//'departmentid'		=> $org_dep_id,
-
 		$values = Array(
 			'nickname'			=> $username,
 			'email'				=> $users[$username]['username'],
@@ -153,6 +155,7 @@ for ( $i = 1; $i <= $user_num; $i++ ) {
 
 		echo " Adding user: " . $users[$username]['username'] . "\n";
 
+		$userid = 0;
 		if ( $iscommit ) {
 
 			try {
@@ -164,9 +167,10 @@ for ( $i = 1; $i <= $user_num; $i++ ) {
 			}
 
 			$userid = $usersdb->id;
+
+			$userdepid = insert_users_deps($userid, $org_dep_id);
 		}
 
-		$userdepid = insert_users_deps($users[$i], $org_dep_id);
 
 		$data_write = $i . "," . $users[$username]['username'] . "," . $users[$username]['password'] . "\n";
 		fwrite($fh, $data_write);
@@ -191,7 +195,7 @@ function insert_users_deps($userid, $depid) {
 			users_departments (userid, departmentid)
 		VALUES(" . $userid . ", " . $depid . ")";
 
-echo $query . "\n";
+//echo $query . "\n";
 
 	$id = 0;
 	if ( $iscommit ) {
@@ -206,8 +210,6 @@ echo $query . "\n";
 		$id = $db->Insert_ID();
 
 	}
-
-	echo "Users/deps inserted id: " . $id . "\n";
 
 	return $id;
 }
@@ -283,7 +285,7 @@ function query_department($department_id) {
 		WHERE
 			id = " . $department_id;
 
-echo $query . "\n";
+//echo $query . "\n";
 
 	try {
 		$rs = $db->Execute($query);
