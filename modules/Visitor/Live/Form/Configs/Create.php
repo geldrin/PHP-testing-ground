@@ -79,7 +79,6 @@ $config = array(
     'treeid'      => 'id',
     'treestart'   => '0', // TODO event channel types only
     'treeparent'  => 'ct.parentid',
-    'values' => array(0 => 'TODO'),
     'validation'  => array(
       /* TODO
       array(
