@@ -844,7 +844,7 @@ recordingUpload.prototype.onStateChange = function( uploader ) {
     
     $j('.progresswrap').addClass('hover');
     $j('#uploadtoggle').removeClass('start').addClass('stop');
-    $j('#uploadtoggle span').text( $j('#uploadtoggle').attr('data-startupload') );
+    $j('#uploadtoggle').text( $j('#uploadtoggle').attr('data-startupload') );
     $j('.progresstime, .progressspeed').hide();
     $j('.progressspeed').text('');
     $j('.progresstime').text('');
@@ -854,7 +854,7 @@ recordingUpload.prototype.onStateChange = function( uploader ) {
     
     $j('.progresswrap').removeClass('hover');
     $j('#uploadtoggle').removeClass('stop').addClass('start');
-    $j('#uploadtoggle span').text( $j('#uploadtoggle').attr('data-stopupload') );
+    $j('#uploadtoggle').text( $j('#uploadtoggle').attr('data-stopupload') );
     $j('.progressstatus, .progresstime, .progressspeed').show();
     
     var serializedform = $j('#uploadrow').parents('form').serializeArray();
