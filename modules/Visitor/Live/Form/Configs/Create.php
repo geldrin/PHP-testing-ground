@@ -69,9 +69,10 @@ $config = array(
       SELECT ct.id, s.value
       FROM channel_types AS ct, strings AS s
       WHERE
-        s.translationof = ct.name_stringid AND
-        s.language = '" . \Springboard\Language::get() . "' AND
-        ct.isfavorite = 0 AND
+        s.translationof   = ct.name_stringid AND
+        s.language        = '" . \Springboard\Language::get() . "' AND
+        ct.isfavorite     = 0 AND
+        ct.organizationid = '" . $this->controller->organization['id'] . "' AND
         %s
       ORDER BY ct.weight
     ",
