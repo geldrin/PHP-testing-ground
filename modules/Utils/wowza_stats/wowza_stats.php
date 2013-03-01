@@ -1,6 +1,17 @@
 #!/usr/bin/php
 <?php
 
+// Problems: play vs. start stream ID. Workaround: add duration to stream ID what is started
+/*
+2013-02-26      08:38:00        CET     connect-pending 		session INFO    100     62.165.193.94   		-       _defaultVHost_  vsqlive _definst_       0.01    91.120.59.230   1935    rtmp://stream.videosquare.eu:1935/vsqlive?sessionid=conforg.videosquare.eu_37t4778t3eocjmbvpq96vt57bb7690tp_18&uid=684  62.165.193.94   rtmp    http://conforg.videosquare.eu/flash/TCPlayer.swf?v=_v201302211230       WIN 11,6,602,167        1674790352      3680    3073    -       -       -       -       -       -       -       -       -       -       -       -       -       rtmp://stream.videosquare.eu:1935/vsqlive       sessionid=conforg.videosquare.eu_37t4778t3eocjmbvpq96vt57bb7690tp_18&uid=684
+2013-02-26      08:38:00        CET     connect                 session INFO    200     62.165.193.94   		-       _defaultVHost_  vsqlive _definst_       0.011   91.120.59.230   1935    rtmp://stream.videosquare.eu:1935/vsqlive?sessionid=conforg.videosquare.eu_37t4778t3eocjmbvpq96vt57bb7690tp_18&uid=684  62.165.193.94   rtmp    http://conforg.videosquare.eu/flash/TCPlayer.swf?v=_v201302211230       WIN 11,6,602,167        1674790352      3680    3073    -       -       -       -       -       -       -       -       -       -       -       -       -       rtmp://stream.videosquare.eu:1935/vsqlive       sessionid=conforg.videosquare.eu_37t4778t3eocjmbvpq96vt57bb7690tp_18&uid=684
+2013-02-26      08:38:00        CET     create                  stream  INFO    200     -                       -       _defaultVHost_  vsqlive _definst_       0.0020  91.120.59.230   1935    rtmp://stream.videosquare.eu:1935/vsqlive?sessionid=conforg.videosquare.eu_37t4778t3eocjmbvpq96vt57bb7690tp_18&uid=684  62.165.193.94   rtmp    http://conforg.videosquare.eu/flash/TCPlayer.swf?v=_v201302211230       WIN 11,6,602,167        1674790352      3752    3413    1       0       0       0       -       -       -       -       -       -       rtmp://stream.videosquare.eu:1935/vsqlive       rtmp://stream.videosquare.eu:1935/vsqlive       -       rtmp://stream.videosquare.eu:1935/vsqlive       sessionid=conforg.videosquare.eu_37t4778t3eocjmbvpq96vt57bb7690tp_18&uid=684
+2013-02-26      08:38:01        CET     play                    stream  INFO    200     584368                  -       _defaultVHost_  vsqlive _definst_       0.314   91.120.59.230   1935    rtmp://stream.videosquare.eu:1935/vsqlive?sessionid=conforg.videosquare.eu_37t4778t3eocjmbvpq96vt57bb7690tp_18&uid=684  62.165.193.94   rtmp    http://conforg.videosquare.eu/flash/TCPlayer.swf?v=_v201302211230       WIN 11,6,602,167        1674790352      3802    3455    1       0       0       0       584368  -       -       -       -       -       rtmp://stream.videosquare.eu:1935/vsqlive/584368        rtmp://stream.videosquare.eu:1935/vsqlive/584368        -       rtmp://stream.videosquare.eu:1935/vsqlive       sessionid=conforg.videosquare.eu_37t4778t3eocjmbvpq96vt57bb7690tp_18&uid=684
+2013-02-26      13:26:41        CET     stop                    stream  INFO    200     942418                  -       _defaultVHost_  vsqlive _definst_       17321.127       91.120.59.230   1935    rtmp://stream.videosquare.eu:1935/vsqlive?sessionid=conforg.videosquare.eu_37t4778t3eocjmbvpq96vt57bb7690tp_18&uid=684  62.165.193.94   rtmp    http://conforg.videosquare.eu/flash/TCPlayer.swf?v=_v201302211230       WIN 11,6,602,167        1674790352      13243   2306549537      1       17323727        0       2296831904      942418  -       -       -       -       -       rtmp://stream.videosquare.eu:1935/vsqlive/942418        rtmp://stream.videosquare.eu:1935/vsqlive/942418        -       rtmp://stream.videosquare.eu:1935/vsqlive       sessionid=conforg.videosquare.eu_37t4778t3eocjmbvpq96vt57bb7690tp_18&uid=684
+2013-02-26      13:26:41        CET     destroy                 stream  INFO    200     942418                  -       _defaultVHost_  vsqlive _definst_       17321.128       91.120.59.230   1935    rtmp://stream.videosquare.eu:1935/vsqlive?sessionid=conforg.videosquare.eu_37t4778t3eocjmbvpq96vt57bb7690tp_18&uid=684  62.165.193.94   rtmp    http://conforg.videosquare.eu/flash/TCPlayer.swf?v=_v201302211230       WIN 11,6,602,167        1674790352      13243   2306549537      1       -       0       2296831904      942418  -       -       -       -       -       rtmp://stream.videosquare.eu:1935/vsqlive/942418        rtmp://stream.videosquare.eu:1935/vsqlive/942418        -       rtmp://stream.videosquare.eu:1935/vsqlive       sessionid=conforg.videosquare.eu_37t4778t3eocjmbvpq96vt57bb7690tp_18&uid=684
+2013-02-26      13:26:41        CET     disconnect              session INFO    200     1674790352              -       _defaultVHost_  vsqlive _definst_       17321.183       91.120.59.230   1935    rtmp://stream.videosquare.eu:1935/vsqlive?sessionid=conforg.videosquare.eu_37t4778t3eocjmbvpq96vt57bb7690tp_18&uid=684  62.165.193.94   rtmp    http://conforg.videosquare.eu/flash/TCPlayer.swf?v=_v201302211230       WIN 11,6,602,167        1674790352      13243   2306549537      -       -       -       -       -       -       -       -       -       -       -       -       -       rtmp://stream.videosquare.eu:1935/vsqlive       sessionid=conforg.videosquare.eu_37t4778t3eocjmbvpq96vt57bb7690tp_18&uid=684
+*/
+
 define('BASE_PATH',	realpath( __DIR__ . '/../../..' ) . '/' );
 define('PRODUCTION', false );
 define('DEBUG', false );
@@ -12,17 +23,20 @@ set_time_limit(0);
 
 date_default_timezone_set("Europe/Budapest");
 
-echo "Wowza log analizer v0.2 - STARTING...\n";
+echo "Wowza log analizer v0.3 - STARTING...\n";
 
 // User settings
 $live_channelid = 46;
 
 $analyze_perconnection = TRUE;
 
+// Minimal duration to include a connection
+$min_duration = 3;
+
 $debug_client = array(
 	'do'		=> FALSE,
-	'ip'		=> "",
-	'clientid'	=> "1707567022"
+	'ip'		=> "62.165.193.94",
+	'clientid'	=> ""
 );
 
 // **********************************
@@ -237,17 +251,23 @@ for ( $i = 0; $i < count($log_files); $i++ ) {
 		$tmp = preg_split('/\t+/', $oneline);
 		if ( $debug_client['do'] ) {
 
+			// Skip log line if not matching
+			if ( ( trim($tmp[16]) != $debug_client['ip'] ) and ( trim($tmp[20]) != $debug_client['clientid'] ) ) continue;
+
+			// Date and time
+			$date = trim($tmp[0]) . " " . trim($tmp[1]);
+
 			if ( trim($tmp[16]) == $debug_client['ip'] ) {
-				echo trim($tmp[16]) . " : x-event = " . trim($tmp[3]) . " : status = " . trim($tmp[6]) . " : x-duration = " . trim($tmp[12]) . " : c-client-id = " . trim($tmp[20]) . "\n";
+				echo trim($tmp[16]) . "," . $date . ",x-event = " . trim($tmp[3]) . ",status = " . trim($tmp[6]) . ",x-duration = " . trim($tmp[12]) . ",c-client-id = " . trim($tmp[20]) . ",feedid = " . trim($tmp[27]) . "\n";
 			}
 
 			if ( trim($tmp[20]) == $debug_client['clientid'] ) {
-				echo trim($tmp[20]) . " : x-event = " . trim($tmp[3]) . " : status = " . trim($tmp[6]) . " : x-duration = " . trim($tmp[12]) . " : c-client-id = " . trim($tmp[20]) . "\n";
+				echo trim($tmp[20]) . "," . $date . ",x-event = " . trim($tmp[3]) . ",status = " . trim($tmp[6]) . ",x-duration = " . trim($tmp[12]) . ",c-client-id = " . trim($tmp[20]) . ",feedid = " . trim($tmp[27]) . "\n";
 			}
 		}
 
 		// Math log entries: YYYY-MM-DD HH:MM:SS
-		if ( preg_match('/^[\s]*[0-9]{4}-[0-1][0-9]-[0-3][0-9][\s]+[0-2][0-9]:[0-5][0-9]:[0-5][0-9][\s]+[A-Z]+[\s]+(play|destroy|publish)/', $oneline) ) {
+		if ( preg_match('/^[\s]*[0-9]{4}-[0-1][0-9]-[0-3][0-9][\s]+[0-2][0-9]:[0-5][0-9]:[0-5][0-9][\s]+[A-Z]+[\s]+(play|publish|stop|destroy)/', $oneline) ) {
 
 			$log_line = preg_split('/\t+/', $oneline);
 
@@ -261,7 +281,7 @@ for ( $i = 0; $i < count($log_files); $i++ ) {
 			$x_event = trim($log_line[3]);
 
 			// ACTION: jump to next if actions are not relevant
-			if ( ( $x_event != "play" ) and ( $x_event != "publish" ) and ( $x_event != "destroy" ) ) continue; 
+			if ( ( $x_event != "play" ) and ( $x_event != "stop" ) and ( $x_event != "publish" ) and ( $x_event != "destroy" ) ) continue; 
 
 			// Find Wowza stream ID in location information array
 			$retval = location_info_search_keycode($location_info, $log_feedid);
@@ -310,6 +330,7 @@ for ( $i = 0; $i < count($log_files); $i++ ) {
 			// User ID: store Vsq user ID and add data. If no user ID is given, then use ID = 0 for storing all client IPs
 			if ( empty($viewers[$cip]) ) $viewers[$cip] = array();
 
+
 			// No entry yet: add user ID under the specific IP
 			if ( empty($viewers[$cip][$uid]) ) {
 				$viewers[$cip][$uid] = array();
@@ -329,70 +350,164 @@ for ( $i = 0; $i < count($log_files); $i++ ) {
 
 				// Client ID: track a stream between events "play"/"publish" and "destroy"
 				$viewers[$cip][$uid]['clients'] = array();
-				// PLAY: if play, then record start time and start track this session
-				$viewers[$cip][$uid]['clients'][$clientid]['play'] = FALSE;
-				if ( ( $x_event == "play" ) or ( $x_event == "publish" ) ) {
-					$viewers[$cip][$uid]['clients'][$clientid]['play'] = TRUE;
-					$viewers[$cip][$uid]['clients'][$clientid]['started_timestamp'] = $date_timestamp;
-					$viewers[$cip][$uid]['clients'][$clientid]['started_datetime'] = $date;
-					$viewers[$cip][$uid]['clients'][$clientid]['locationid'] = $locationid;
-					$viewers[$cip][$uid]['clients'][$clientid]['streamid'] = $streamid;
-				}
-
-				// Streams: log which streams are viewed
-				$viewers[$cip][$uid]['streams'] = array();
-				$viewers[$cip][$uid]['streams'][$keycode]['locationid'] = $locationid;
-				$viewers[$cip][$uid]['streams'][$keycode]['streamid'] = $streamid;
-
-				// Duration: add if event is "destroy"
-				$viewers[$cip][$uid]['streams'][$keycode]['duration'] = 0;
-				$viewers[$cip][$uid]['clients'][$clientid]['duration'] = 0;
-				if ( $x_event == "destroy" ) {
-					// Duration per connection
-					$viewers[$cip][$uid]['clients'][$clientid]['duration'] = $duration;
-					// Duration summary
-					$viewers[$cip][$uid]['streams'][$keycode]['duration'] = $duration;
-				}
-
-			} else {
-
-				// Connections
-				if ( ( $x_event == "play" ) or ( $x_event == "publish" ) ) $viewers[$cip][$uid]['connections']++;
-
-				// Client ID: track a stream between events "play"/"publish" and "destroy"
-				if ( empty($viewers[$cip][$uid]['clients'][$clientid]) ) {
-					$viewers[$cip][$uid]['clients'][$clientid]['play'] = FALSE;
-					if ( ( $x_event == "play" ) or ( $x_event == "publish" ) ) {
-						$viewers[$cip][$uid]['clients'][$clientid]['play'] = TRUE;
-						$viewers[$cip][$uid]['clients'][$clientid]['started_timestamp'] = $date_timestamp;
-						$viewers[$cip][$uid]['clients'][$clientid]['started_datetime'] = $date;
-						$viewers[$cip][$uid]['clients'][$clientid]['locationid'] = $locationid;
-						$viewers[$cip][$uid]['clients'][$clientid]['streamid'] = $streamid;
-					}
-				}
-
-//				$keycode = $location_info[$locationid][$streamid]['keycode'];
-				if ( empty($viewers[$cip][$uid]['streams'][$keycode]) ) {
-					$viewers[$cip][$uid]['streams'][$keycode]['duration'] = 0;
-					// !!!!!!!!!!!!!!!!!!
-//					if ( $viewers[$cip][$uid]['clients'][$clientid]['locationid'] != $locationid ) echo "loc mismatch\n";
-//					if ( $viewers[$cip][$uid]['clients'][$clientid]['streamid'] != $streamid ) echo "stream mismatch\n";
-					// !!!!!!!!!!!!!!!!!!
-					$viewers[$cip][$uid]['streams'][$keycode]['locationid'] = $locationid;
-					$viewers[$cip][$uid]['streams'][$keycode]['streamid'] = $streamid;
-				}
-				if ( $x_event == "destroy" ) {
-					if ( empty($viewers[$cip][$uid]['streams'][$keycode]['duration']) ) $viewers[$cip][$uid]['streams'][$keycode]['duration'] = 0;
-					// Duration: was there play event? If not, skip duration
-					if ( $viewers[$cip][$uid]['clients'][$clientid]['play'] ) {
-						$viewers[$cip][$uid]['streams'][$keycode]['duration'] += $duration;
-						$viewers[$cip][$uid]['clients'][$clientid]['duration'] = $duration;
-						$viewers[$cip][$uid]['clients'][$clientid]['play'] = FALSE;
-					}
-				}
 			}
 
-		}
+			// New stream: nothing recorded yet
+			if ( empty($viewers[$cip][$uid]['streams']) ) $viewers[$cip][$uid]['streams'] = array();
+
+			if ( empty($viewers[$cip][$uid]['streams'][$keycode]) ) {
+				$viewers[$cip][$uid]['streams'][$keycode] = array();
+				$viewers[$cip][$uid]['streams'][$keycode]['duration'] = 0;
+				$viewers[$cip][$uid]['streams'][$keycode]['locationid'] = $locationid;
+				$viewers[$cip][$uid]['streams'][$keycode]['streamid'] = $streamid;
+			}
+
+			// New client ID: nothing recorded yet, init data structures
+			if ( empty($viewers[$cip][$uid]['clients'][$clientid]) ) {
+				$viewers[$cip][$uid]['clients'][$clientid] = array();
+				$viewers[$cip][$uid]['clients'][$clientid]['play'] = FALSE;
+				$viewers[$cip][$uid]['clients'][$clientid]['stop'] = FALSE;
+				$viewers[$cip][$uid]['clients'][$clientid]['destroy'] = FALSE;
+				$viewers[$cip][$uid]['clients'][$clientid]['duration'] = 0;
+				$viewers[$cip][$uid]['clients'][$clientid]['playnum'] = 0;		// Playback session counter (play-stop)
+				$viewers[$cip][$uid]['clients'][$clientid]['prevduration'] = 0;	// Previous command duration
+				$viewers[$cip][$uid]['clients'][$clientid]['playsessions'] = array();
+
+			}
+
+			// PLAY: if play, then record start time and start track this session
+			if ( ( $x_event == "play" ) or ( $x_event == "publish" ) ) {
+
+				// PLAY -> PLAY: ?
+				if ( $viewers[$cip][$uid]['clients'][$clientid]['play'] ) {
+					echo "WARNING: PLAY -> PLAY? (clientid = " . $clientid . ")\n";
+					exit -1;
+				}
+
+				if ( $debug_client['do'] ) {
+					if ( ( !$viewers[$cip][$uid]['clients'][$clientid]['stop'] ) and ( !$viewers[$cip][$uid]['clients'][$clientid]['destroy'] ) ) echo $clientid . " PLAY started, dur = " . $duration . "\n";
+					if ( $viewers[$cip][$uid]['clients'][$clientid]['stop'] ) echo $clientid . " STOP -> PLAY, dur = " . $duration . "\n";
+				}
+
+				// Count connections
+				$viewers[$cip][$uid]['connections']++;
+
+				// Update location and stream ID
+				$viewers[$cip][$uid]['clients'][$clientid]['locationid'] = $locationid;
+				$viewers[$cip][$uid]['clients'][$clientid]['streamid'] = $streamid;
+
+				// Set PLAY status, reset the rest
+				$viewers[$cip][$uid]['clients'][$clientid]['play'] = TRUE;
+				$viewers[$cip][$uid]['clients'][$clientid]['stop'] = FALSE;
+				$viewers[$cip][$uid]['clients'][$clientid]['destroy'] = FALSE;
+
+				// Start date and time
+				$playnum = $viewers[$cip][$uid]['clients'][$clientid]['playnum'];
+				$viewers[$cip][$uid]['clients'][$clientid]['playsessions'][$playnum]['startedas'] = $keycode;
+				$viewers[$cip][$uid]['clients'][$clientid]['playsessions'][$playnum]['started_timestamp'] = $date_timestamp;
+				$viewers[$cip][$uid]['clients'][$clientid]['playsessions'][$playnum]['started_datetime'] = $date;
+
+				$viewers[$cip][$uid]['clients'][$clientid]['prevduration'] = $duration;		// Record PLAY command relative time
+			}
+
+			// STOP: 
+			if ( $x_event == "stop" ) {
+
+				// STOP -> STOP: ?
+				if ( $viewers[$cip][$uid]['clients'][$clientid]['stop'] ) {
+					$viewers[$cip][$uid]['clients'][$clientid]['prevduration'] = $duration;
+					continue;
+				}
+
+				// DESTROY -> STOP: ?
+				if ( $viewers[$cip][$uid]['clients'][$clientid]['destroy'] ) {
+					// PLAY -> STOP: set STOP status, reset PLAY and DESTROY
+					$viewers[$cip][$uid]['clients'][$clientid]['play'] = FALSE;
+					$viewers[$cip][$uid]['clients'][$clientid]['stop'] = TRUE;
+					$viewers[$cip][$uid]['clients'][$clientid]['destroy'] = FALSE;
+
+					$viewers[$cip][$uid]['clients'][$clientid]['prevduration'] = $duration;
+					continue;
+				}
+
+				if ( $debug_client['do'] ) {
+					if ( $viewers[$cip][$uid]['clients'][$clientid]['play'] ) echo $clientid . " PLAY -> STOP, dur = " . $duration . "\n";
+					if ( $viewers[$cip][$uid]['clients'][$clientid]['destroy'] ) echo $clientid . " DESTROY -> STOP, dur = " . $duration . "\n";
+				}
+
+				// PLAY -> STOP: set STOP status, reset PLAY and DESTROY
+				$viewers[$cip][$uid]['clients'][$clientid]['play'] = FALSE;
+				$viewers[$cip][$uid]['clients'][$clientid]['stop'] = TRUE;
+				$viewers[$cip][$uid]['clients'][$clientid]['destroy'] = FALSE;
+
+				// End date and time
+				$playnum = $viewers[$cip][$uid]['clients'][$clientid]['playnum'];
+				$viewers[$cip][$uid]['clients'][$clientid]['playsessions'][$playnum]['ended_timestamp'] = $date_timestamp;
+				$viewers[$cip][$uid]['clients'][$clientid]['playsessions'][$playnum]['ended_datetime'] = $date;
+
+				$viewers[$cip][$uid]['clients'][$clientid]['playnum']++;
+
+				// Duration: calculate duration between PLAY and STOP
+				$prevduration = $viewers[$cip][$uid]['clients'][$clientid]['prevduration'];
+				$realduration = $duration - $prevduration;
+				$viewers[$cip][$uid]['clients'][$clientid]['prevduration'] = $duration;		// Record STOP command relative time
+
+				// Duration: add to stream summary
+				$startedas = $viewers[$cip][$uid]['clients'][$clientid]['playsessions'][$playnum]['startedas'];	// Workaround
+				$viewers[$cip][$uid]['streams'][$startedas]['duration'] += $realduration;
+				$viewers[$cip][$uid]['clients'][$clientid]['duration'] += $realduration;
+
+				if ( $debug_client['do'] ) echo "Real duration counted: " . $realduration . "\n";
+
+			} // STOP
+
+			// DESTROY: finishing connection
+			if ( $x_event == "destroy" ) {
+
+				// DESTROY -> DESTROY: ?
+				if ( $viewers[$cip][$uid]['clients'][$clientid]['destroy'] ) {
+					echo "ERROR: DESTROY -> DESTROY (clientid = " . $clientid . ")\n";
+					exit -1;
+				}
+
+				if ( $debug_client['do'] ) {
+					if ( $viewers[$cip][$uid]['clients'][$clientid]['play'] ) echo $clientid . " PLAY -> DESTROY, dur = " . $duration . "\n";
+					if ( $viewers[$cip][$uid]['clients'][$clientid]['stop'] ) echo $clientid . " STOP -> DESTROY, dur = " . $duration . "\n";
+				}
+
+				// PLAY -> DESTROY: end of playback, no STOP issued finishing connection
+				if ( $viewers[$cip][$uid]['clients'][$clientid]['play'] ) {
+
+					// End date and time
+					$playnum = $viewers[$cip][$uid]['clients'][$clientid]['playnum'];
+					$viewers[$cip][$uid]['clients'][$clientid]['playsessions'][$playnum]['ended_timestamp'] = $date_timestamp;
+					$viewers[$cip][$uid]['clients'][$clientid]['playsessions'][$playnum]['ended_datetime'] = $date;
+
+					$viewers[$cip][$uid]['clients'][$clientid]['playnum']++;
+
+					// Duration: calculate duration between PLAY and DESTROY
+					$prevduration = $viewers[$cip][$uid]['clients'][$clientid]['prevduration'];
+					$realduration = $duration - $prevduration;
+					$viewers[$cip][$uid]['clients'][$clientid]['prevduration'] = $duration;		// Record STOP command relative time
+
+					// Duration: add to stream summary
+					$startedas = $viewers[$cip][$uid]['clients'][$clientid]['playsessions'][$playnum]['startedas'];	// Workaround
+					$viewers[$cip][$uid]['streams'][$startedas]['duration'] += $realduration;
+					$viewers[$cip][$uid]['clients'][$clientid]['duration'] += $realduration;
+
+					if ( $debug_client['do'] ) echo "Real duration counted: " . $realduration . "\n";
+				}
+
+				// STOP -> DESTROY: end of a stopped connection - DO NOTHING
+
+				// Set DESTROY status, reset PLAY and STOP
+				$viewers[$cip][$uid]['clients'][$clientid]['play'] = FALSE;
+				$viewers[$cip][$uid]['clients'][$clientid]['stop'] = FALSE;
+				$viewers[$cip][$uid]['clients'][$clientid]['destroy'] = TRUE;
+
+			} // DESTROY
+
+		} // Log line section
 
 	}
 
@@ -402,6 +517,13 @@ for ( $i = 0; $i < count($log_files); $i++ ) {
 //var_dump($viewers);
 
 //var_dump($location_info);
+
+// Debug: print relevant viewer collected data
+if ( $debug_client['do'] ) {
+	$ip = $debug_client['ip'];
+	echo "DEBUG: printing data for requested client\n";
+	var_dump($viewers);
+}
 
 $msg  = "# Videosquare live statistics report\n\n";
 $msg .= "# Log analization started: " . date("Y-m-d H:i:s") . "\n";
@@ -465,9 +587,11 @@ foreach ($viewers as $cip => $client_ip) {
 			$loc_id = $keycode_data['locationid'];
 			$str_id = $keycode_data['streamid'];
 			$num = $column_guide[$loc_id][$str_id];
-			$columns[$num] = secs2hms($keycode_data['duration']);
+			if ( $keycode_data['duration'] > 1 ) $columns[$num] = secs2hms($keycode_data['duration']);
 			$duration_full += $keycode_data['duration'];
 		}
+
+		if ( $duration_full < 1 ) continue;
 
 		// Serialize column value
 		for ( $i = 0; $i < $columns_num; $i++ ) {
@@ -487,21 +611,26 @@ foreach ($viewers as $cip => $client_ip) {
 
 			foreach ($viewers[$cip][$uid]['clients'] as $clientid => $client_data ) {
 
-				if ( !isset($client_data['started_timestamp']) ) {
-					continue;
+				if ( empty($client_data['playsessions']) ) continue;
+
+				foreach ($client_data['playsessions'] as $psessionid => $playsession) {
+
+					$duration = $playsession['ended_timestamp'] - $playsession['started_timestamp'];
+					if ( $duration < $min_duration ) continue;
+
+					$started_time = date("H:i:s", $playsession['started_timestamp']);
+					$ended_time = date("H:i:s", $playsession['ended_timestamp']);
+					$loc_id = $client_data['locationid'];
+					$str_id = $client_data['streamid'];
+					$num_column = $column_guide[$loc_id][$str_id];
+
+					$tmp = $uid . ",1,," . $cip;
+					for ( $q = 0; $q < ( 5 + $num_column - 2 ); $q++ ) $tmp .= ",";
+					$tmp .= $started_time . "-" . $ended_time . "\n";
+
+					$msg .= $tmp;
 				}
 
-				$started_time = date("H:i:s", $client_data['started_timestamp']);
-				$ended_time = date("H:i:s", $client_data['started_timestamp'] + $client_data['duration']);
-				$loc_id = $client_data['locationid'];
-				$str_id = $client_data['streamid'];
-				$num_column = $column_guide[$loc_id][$str_id];
-
-				$tmp = $uid . ",1,," . $cip;
-				for ( $q = 0; $q < ( 5 + $num_column - 2 ); $q++ ) $tmp .= ",";
-				$tmp .= $started_time . "-" . $ended_time . "\n";
-
-				$msg .= $tmp;
 			}
 		}
 
@@ -607,8 +736,6 @@ function location_info_search_keycode($location_info, $keycode) {
 		foreach ($location_info[$locationid] as $skey => $svalue) {
 			$streamid = $skey;
 			if ( $location_info[$locationid][$streamid]['keycode'] == $keycode ) {
-if ( $keycode == "887500" ) echo "content match\n";
-if ( $keycode == "773187" ) echo "content match\n";
 				$retval['locationid'] = $locationid;
 				$retval['streamid'] = $streamid;
 				return $retval;
