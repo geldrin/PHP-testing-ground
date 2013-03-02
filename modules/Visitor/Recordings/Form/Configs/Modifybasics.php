@@ -84,17 +84,10 @@ $config = array(
 
 if ( !$this->recordingsModel->row['isintrooutro'] ) {
   
-  $haveindexphotos = false;
-  $staticuri       = $this->controller->organization['staticuri'] . 'files/';
   
-  for ( $i = 1; $i <= $this->recordingsModel->row['numberofindexphotos']; $i++ ) {
-    
-    $haveindexphotos = true;
-    $filename = preg_replace(
-      '/_\d+\.jpg$/',
-      '_' . $i . '.jpg',
-      $this->recordingsModel->row['indexphotofilename']
-    );
+  $staticuri   = $this->controller->organization['staticuri'] . 'files/';
+  $indexphotos = $this->recordingsModel->getIndexPhotos();
+  foreach( $indexphotos as $filename ) {
     
     $config['indexphotofilename']['values'][ $filename ] = 
       '<img src="' . $staticuri . $filename . '" />';
@@ -102,7 +95,7 @@ if ( !$this->recordingsModel->row['isintrooutro'] ) {
     
   }
   
-  if ( !$haveindexphotos )
+  if ( empty( $indexphotos ) )
     unset( $config['indexphotofilename'] );
   
   if ( $this->recordingsModel->getIntroOutroCount( $this->controller->organization['id'] ) ) {

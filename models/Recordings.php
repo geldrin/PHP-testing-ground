@@ -2712,4 +2712,26 @@ class Recordings extends \Springboard\Model {
     
   }
   
+  public function getIndexPhotos() {
+    
+    $this->ensureObjectLoaded();
+    $indexphotos = array();
+    
+    if ( !$this->row['numberofindexphotos'] )
+      return $indexphotos;
+    
+    for( $i = 1; $i <= $this->row['numberofindexphotos']; $i++ ) {
+      
+      $indexphotos[] = preg_replace(
+        '/_\d+\.jpg$/',
+        '_' . $i . '.jpg',
+        $this->row['indexphotofilename']
+      );
+      
+    }
+    
+    return $indexphotos;
+    
+  }
+  
 }
