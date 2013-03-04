@@ -1,6 +1,9 @@
 <?php
 $organizationid = $this->controller->organization['id'];
 $language       = \Springboard\Language::get();
+if ( !isset( $skipindexphotounset ) )
+  $skipindexphotounset = false; // a modify.php ezzel jelzi hogy ne unsetteljuk
+
 $config         = array(
   
   'action' => array(
@@ -23,6 +26,29 @@ $config         = array(
     'type'   => 'fieldset',
     'legend' => $l('contributors', 'create_title'),
     'prefix' => '<span class="legendsubtitle">' . $l('contributors', 'create_subtitle') . '</span>',
+  ),
+  
+  'indexphotofilename' => Array(
+    'type'        => 'inputradio',
+    'displayname' => $l('contributors', 'indexphoto'),
+    'rowlayout'   => '
+      <tr>
+        <td colspan="2">
+          <a href="#" class="submitbutton" id="showphotos">' . $l('contributors', 'indexphoto_select') . '</a>
+        </td>
+      </tr>
+      <tr>
+        <td class="elementcolumn" colspan="2">
+          <div id="contributorimages">
+            %displayname%<br/><br/>
+            %element%
+          </div>
+        </td
+      </tr>
+    ',
+    'itemlayout' => '<div class="changeindexphotoitem">%radio% %label%</div>',
+    'validation' => Array(
+    )
   ),
   
   'nameprefix' => array(
@@ -103,3 +129,23 @@ $config         = array(
   ),
   */
 );
+
+if ( $this->recordingsModel and !$this->recordingsModel->row['isintrooutro'] ) {
+  
+  $staticuri   = $this->controller->organization['staticuri'] . 'files/';
+  $indexphotos = $this->recordingsModel->getIndexPhotos();
+  foreach( $indexphotos as $filename ) {
+    
+    $config['indexphotofilename']['values'][ $filename ] = 
+      '<img src="' . $staticuri . $filename . '" />';
+    ;
+    
+  }
+  
+  if ( empty( $indexphotos ) and !$skipindexphotounset )
+    unset( $config['indexphotofilename'] );
+  
+} elseif ( !$skipindexphotounset )
+  unset(
+    $config['indexphotofilename']
+  );

@@ -219,7 +219,7 @@ textarea {
   background: -webkit-gradient(linear, left top, left bottom, from(#dbdbdb), color-stop(0.48, #e5e5e5), color-stop(0.52, #efefef), to(#f5f5f5));
   background: linear-gradient(top, #dbdbdb 0%, #e5e5e5 48%, #efefef 52%, #f5f5f5);
 }
-a.submitbutton {
+a.submitbutton, .form a.submitbutton {
   width: auto;
   padding: 6px 10px 5px 10px;
   height: 17px;
@@ -227,7 +227,7 @@ a.submitbutton {
   font-weight: bold;
   text-decoration: none;
 }
-a.submitbutton:hover {
+a.submitbutton:hover, .form a.submitbutton:hover {
   text-decoration: none;
 }
 .form.leftdoublebox .selectmultiple,
@@ -2402,13 +2402,13 @@ a#currentusername span {
   width: 300px;
 }
 
-.liveiframe {
+.liveiframe, .contribiframe {
   background-color: #fff;
 }
-.liveiframe #wrap {
+.liveiframe #wrap, .contribiframe #wrap {
   width: 100%;
 }
-.liveiframe #player {
+.liveiframe #player, .contribiframe #player {
   display: inline-block;
 }
 
@@ -2518,4 +2518,12 @@ a#currentusername span {
 #selectedorganization {
   font-weight: bold;
   display: inline-block;
+}
+#contributorimages {
+  display: none;
+  max-height: 168px;
+  overflow-y: scroll;
+}
+.form.contributor {
+  width: 535px;
 }

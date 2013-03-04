@@ -165,4 +165,56 @@ class Contributors extends \Springboard\Model {
     
   }
   
+  public function insertAndUpdateIndexPhoto( $filename ) {
+    
+    $this->ensureID();
+    $imageModel = $this->bootstrap->getModel('contributor_images');
+    $imageModel->addFilter('contributorid', $this->id );
+    $imageModel->addFilter('indexphotofilename', $filename, false, false );
+    
+    $image = $imageModel->getRow();
+    if ( !empty( $image ) )
+      $imageModel->id = $image['id'];
+    else
+      $imageModel->insert( array(
+          'contributorid'      => $this->id,
+          'indexphotofilename' => $filename,
+        )
+      );
+    
+    $this->updateRow( array(
+        'contributorimageid' => $imageModel->id,
+      )
+    );
+    
+    return $this->row['contributorimageid'];
+    
+  }
+  
+  public function getCurrentIndexPhoto() {
+    
+    $this->ensureObjectLoaded();
+    if ( !$this->row['contributorimageid'] )
+      return '';
+    
+    return $this->db->getOne("
+      SELECT indexphotofilename
+      FROM contributor_images
+      WHERE id = '" . $this->row['contributorimageid'] . "'
+      LIMIT 1
+    ");
+    
+  }
+  
+  public function getIndexPhotos() {
+    
+    $this->ensureID();
+    return $this->db->getArray("
+      SELECT *
+      FROM contributor_images
+      WHERE contributorid = '" . $this->id . "'
+    ");
+    
+  }
+  
 }

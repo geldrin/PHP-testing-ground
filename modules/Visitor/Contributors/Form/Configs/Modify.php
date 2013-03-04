@@ -1,5 +1,5 @@
 <?php
-
+$skipindexphotounset = true;
 include('Create.php');
 include_once( $this->bootstrap->config['templatepath'] . 'Plugins/modifier.nameformat.php');
 $config['action'] = Array(
@@ -22,3 +22,16 @@ $config['crid'] = array(
   'value'    => $this->application->getNumericParameter('crid'),
   'readonly' => true,
 );
+
+$config['indexphotofilename']['value'] = $this->contributorModel->getCurrentIndexPhoto();
+$staticuri = $this->controller->organization['staticuri'] . 'files/';
+foreach( $this->contributorModel->getIndexPhotos() as $photo ) {
+  
+  $config['indexphotofilename']['values'][ $photo['indexphotofilename'] ] =
+    '<img src="' . $staticuri . $photo['indexphotofilename'] . '" />';
+  ;
+  
+}
+
+if ( empty( $config['indexphotofilename']['values'] ) )
+  unset( $config['indexphotofilename'] );

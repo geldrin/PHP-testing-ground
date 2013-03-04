@@ -59,6 +59,9 @@ class Modify extends \Visitor\Contributors\Form\Create {
     $this->contributorModel->updateRow( $contributor );
     $this->contribroleModel->updateRow( $role );
     
+    if ( isset( $values['indexphotofilename'] ) and $values['indexphotofilename'] )
+      $this->contributorModel->insertAndUpdateIndexPhoto( $values['indexphotofilename'] );
+    
     $this->controller->toSmarty['recordingid']  = $this->recordingsModel->id;
     $this->controller->toSmarty['contributors'] =
       $this->recordingsModel->getContributorsWithRoles()

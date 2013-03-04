@@ -1,5 +1,5 @@
 {if $smarty.request.chromeless or $nolayout}
-  {include file="Visitor/_header_nolayout.tpl" bodyclass=liveiframe}
+  {include file="Visitor/_header_nolayout.tpl" bodyclass=$bodyclass|default:liveiframe}
   {assign var=linksinnewwindow value=' target="_blank"'}
 {else}
   {include file="Visitor/_header.tpl"}

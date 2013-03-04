@@ -1361,8 +1361,8 @@ function setupContributors() {
   });
   
   $j('#createcontributor, #contributors .edit').fancybox({
-    width: 470,
-    height: 500,
+    width: 535,
+    height: 560,
     titleShow: false,
     type: 'iframe'
   });
@@ -1377,8 +1377,8 @@ function setupContributors() {
     $j('#contributors').show();
     
     $j('#createcontributor, #contributors .edit').fancybox({
-      width: 470,
-      height: 500,
+      width: 535,
+      height: 560,
       titleShow: false,
       type: 'iframe'
     });
@@ -1415,6 +1415,13 @@ function setupContributorEdit( elements ) {
     
   });
   */
+  $j('#showphotos').click( function(e) {
+    
+    e.preventDefault();
+    $j('#contributorimages').toggle();
+    
+  });
+  
   $j( elements ).submit( function( e ) {
     
     e.preventDefault();

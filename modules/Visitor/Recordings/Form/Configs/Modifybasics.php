@@ -84,7 +84,6 @@ $config = array(
 
 if ( !$this->recordingsModel->row['isintrooutro'] ) {
   
-  
   $staticuri   = $this->controller->organization['staticuri'] . 'files/';
   $indexphotos = $this->recordingsModel->getIndexPhotos();
   foreach( $indexphotos as $filename ) {

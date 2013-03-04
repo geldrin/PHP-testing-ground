@@ -20,7 +20,9 @@ class Create extends \Visitor\Form {
         $recordingid
       );
     
-    $this->controller->toSmarty['nolayout'] = true;
+    $this->controller->toSmarty['nolayout']  = true;
+    $this->controller->toSmarty['bodyclass'] = 'liveiframe contribiframe';
+    $this->controller->toSmarty['formclass'] = 'contributor left';
     
   }
   
@@ -41,6 +43,9 @@ class Create extends \Visitor\Form {
     
     $contributorModel = $this->bootstrap->getModel('contributors');
     $contributorModel->insert( $contributor );
+    
+    if ( isset( $values['indexphotofilename'] ) and $values['indexphotofilename'] )
+      $contributorModel->insertAndUpdateIndexPhoto( $values['indexphotofilename'] );
     
     if ( $values['recordingid'] ) {
       
