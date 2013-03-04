@@ -91,6 +91,12 @@ function iswindows() {
 //	Source: http://www.php.net/manual/en/function.shell-exec.php#52826
 function runExternal($cmd) {
 
+	$return_array = array();
+
+	$return_array['pid'] = 0;
+	$return_array['code'] = 0;
+	$return_array['cmd_output'] = "";
+
 	$descriptorspec = array(
 		0 => array("pipe", "r"),  // stdin is a pipe that the child will read from
 		1 => array("pipe", "w"),  // stdout is a pipe that the child will write to
@@ -102,7 +108,7 @@ function runExternal($cmd) {
 
 	$output = "";
 
-	if (!is_resource($process)) return false;
+	if ( !is_resource($process) ) return $return_array;
 
 	// close child's input imidiately
 	fclose($pipes[0]);
