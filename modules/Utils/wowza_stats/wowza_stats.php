@@ -26,17 +26,18 @@ date_default_timezone_set("Europe/Budapest");
 echo "Wowza log analizer v0.3 - STARTING...\n";
 
 // User settings
-$live_channelid = 46;
+$live_channelid = 48;
 
-$analyze_perconnection = TRUE;
+$analyze_perconnection = FALSE;
 
 // Minimal duration to include a connection
 $min_duration = 3;
 
+// DEBUG: set IP and/or client ID to filter for the specific client
 $debug_client = array(
 	'do'		=> FALSE,
-	'ip'		=> "62.165.193.94",
-	'clientid'	=> ""
+	'ip'		=> "",
+	'clientid'	=> "1122881014"
 );
 
 // **********************************
@@ -378,10 +379,10 @@ for ( $i = 0; $i < count($log_files); $i++ ) {
 			// PLAY: if play, then record start time and start track this session
 			if ( ( $x_event == "play" ) or ( $x_event == "publish" ) ) {
 
-				// PLAY -> PLAY: ?
+				// PLAY -> PLAY: nothing happened (only warning)
 				if ( $viewers[$cip][$uid]['clients'][$clientid]['play'] ) {
 					echo "WARNING: PLAY -> PLAY? (clientid = " . $clientid . ")\n";
-					exit -1;
+					continue;
 				}
 
 				if ( $debug_client['do'] ) {
