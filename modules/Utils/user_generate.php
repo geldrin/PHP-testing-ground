@@ -19,9 +19,9 @@ $app = new Springboard\Application\Cli(BASE_PATH, PRODUCTION);
 // Organization ID
 $org_id = 200;
 // Department ID
-$org_dep_id = 21;
+$org_dep_id = 27;
 // How many users?
-$user_num = 50;
+$user_num = 200;
 // User name format and length: prefix + random number @ suffix
 $user_nameprefix = "felh";
 $user_namesuffix_length = 4;
