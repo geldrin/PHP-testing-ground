@@ -12,6 +12,14 @@
 2013-02-26      13:26:41        CET     disconnect              session INFO    200     1674790352              -       _defaultVHost_  vsqlive _definst_       17321.183       91.120.59.230   1935    rtmp://stream.videosquare.eu:1935/vsqlive?sessionid=conforg.videosquare.eu_37t4778t3eocjmbvpq96vt57bb7690tp_18&uid=684  62.165.193.94   rtmp    http://conforg.videosquare.eu/flash/TCPlayer.swf?v=_v201302211230       WIN 11,6,602,167        1674790352      13243   2306549537      -       -       -       -       -       -       -       -       -       -       -       -       -       rtmp://stream.videosquare.eu:1935/vsqlive       sessionid=conforg.videosquare.eu_37t4778t3eocjmbvpq96vt57bb7690tp_18&uid=684
 */
 
+/*
+On demand reports:
+
+1. Query recordings in given channel, build helper array from recording IDs
+2. 
+
+*/
+
 define('BASE_PATH',	realpath( __DIR__ . '/../../..' ) . '/' );
 define('PRODUCTION', false );
 define('DEBUG', false );
@@ -25,22 +33,35 @@ date_default_timezone_set("Europe/Budapest");
 
 echo "Wowza log analizer v0.3 - STARTING...\n";
 
-// User settings
-$live_channelid = 48;
-
-$analyze_perconnection = FALSE;
-
-// Minimal duration to include a connection
+//// User settings
+// Channel ID: calculate statistics for this channel (live or on demand)
+$channelid = 41;
+// Is stats for live or on demand?
+$islivestats = FALSE;
+// Ondemand stats analyze start and end dates
+$ondemand_startdate = "2013-02-28";
+$ondemand_enddate = "2013-02-28";
+// Analyze per connection: TRUE = track all connections | FALSE = give a summary only
+$analyze_perconnection = TRUE;
+// Minimal duration to include a connection (seconds)
 $min_duration = 3;
 
 // DEBUG: set IP and/or client ID to filter for the specific client
 $debug_client = array(
-	'do'		=> FALSE,
+	'do'		=> TRUE,
 	'ip'		=> "",
-	'clientid'	=> "1122881014"
+	'clientid'	=> "",
+	'streamid'	=> "209/209/209_video_lq.mp4"
 );
 
 // **********************************
+
+// Check input data
+
+if ( !$islivestats and ( ( !check_date_validity($ondemand_startdate) ) or ( !check_date_validity($ondemand_enddate) ) ) ) {
+	echo "ERROR: invalid start/end dates " . $ondemand_startdate . "/" . $ondemand_enddate . "\n";
+	exit -1;
+}
 
 // Init
 $app = new Springboard\Application\Cli(BASE_PATH, PRODUCTION);
@@ -51,13 +72,14 @@ $jconf = $app->config['config_jobs'];
 
 // Wowza specific init
 $wowza_log_dir = $jconf['wowza_log_dir'];
-// Wowza app: vsqlive or devvsqlive if dev site is used
+// Wowza app: vsq or devvsq for on demand, vsqlive or devvsqlive for live analysis
 $isdev = FALSE;
-$wowza_app = "vsqlive";
+$wowza_app = "vsq";
 if ( $app->config['baseuri'] != "videosquare.eu/" ) {
 	$isdev = TRUE;
-	$wowza_app = "devvsqlive";
+	$wowza_app = "devvsq";
 }
+if ( $islivestats ) $wowza_app .= "live";
 
 // Establish database connection
 try {
@@ -83,9 +105,8 @@ $query = "
 		channels as a,
 		organizations as b
 	WHERE
-		a.id = " . $live_channelid . " AND
+		a.id = " . $channelid . " AND
 		b.id = a.organizationid";
-//a.isliveevent = 0
 
 try {
 	$event = $db->Execute($query);
@@ -96,19 +117,30 @@ try {
 
 // Check if one record found
 if ( $event->RecordCount() < 1 ) {
-	echo "[ERROR] Cannot find live channel. ID = " . $live_channelid . "\n";
+	echo "[ERROR] Cannot find live channel. ID = " . $channelid . "\n";
 	exit -1;
 }
 
-// Event: get start and end dates
+// Event: get start and end dates. On demand: user config. Live: channel start and end dates.
 $event_info = array();
 $event_info = $event->fields;
-$tmp = explode(" ", $event_info['starttimestamp'], 2);
-$event_startdate['date'] = trim($tmp[0]);
-$event_startdate['timestamp'] = strtotime($event_startdate['date']);
-$tmp = explode(" ", $event_info['endtimestamp'], 2);
-$event_enddate['date'] = trim($tmp[0]);
-$event_enddate['timestamp'] = strtotime($event_enddate['date']);
+if ( $islivestats ) {
+	$tmp = explode(" ", $event_info['starttimestamp'], 2);
+	$event_startdate['date'] = trim($tmp[0]);
+	$event_startdate['timestamp'] = strtotime($event_startdate['date']);
+	$tmp = explode(" ", $event_info['endtimestamp'], 2);
+	$event_enddate['date'] = trim($tmp[0]);
+	$event_enddate['timestamp'] = strtotime($event_enddate['date']);
+} else {
+	$event_startdate['date'] = $ondemand_startdate;
+	$event_startdate['timestamp'] = strtotime($event_startdate['date']);
+	$event_enddate['date'] = $ondemand_enddate;
+	$event_enddate['timestamp'] = strtotime($event_enddate['date']);
+}
+
+//var_dump($event_startdate);
+//var_dump($event_enddate);
+//var_dump($event_info);
 
 // Log files: prepare the list of log files to be checked (one Wowza log file per day)
 $log_files = array();
@@ -131,38 +163,76 @@ if ( count($log_files) < 1 ) {
 	exit -1;
 }
 
-// Streams: query locations and streams for live channels
-$live_streams = array();
-if ( !query_livefeeds($event_info['id'], $live_streams) ) {
-	echo "[ERROR] Cannot find live event ID = " . $event_info['id'] .".\n";
-	exit -1;
+// Streams: Live: query locations and streams for live channels. On demand: recording list.
+if ( $islivestats ) {
+	$live_streams = array();
+	if ( !query_livefeeds($event_info['id'], $live_streams) ) {
+		echo "[ERROR] Cannot find live event ID = " . $event_info['id'] .".\n";
+		exit -1;
+	}
+} else {
+	$recordings = array();
+	if ( !query_recordings($event_info['id'], $recordings) ) {
+		echo "[ERROR] Cannot find recordings for channel ID = " . $event_info['id'] .".\n";
+		exit -1;
+	}
 }
 
 // Live feeds: runs through all live feeds
-$location_info = array();
-while ( !$live_streams->EOF ) {
+if ( $islivestats ) {
+	$location_info = array();
+	while ( !$live_streams->EOF ) {
 
-	$stream = array();
-	$stream = $live_streams->fields;
+		$stream = array();
+		$stream = $live_streams->fields;
 
-	$locationid = $stream['locationid'];
-	if ( empty($location_info[$locationid]) ) $location_info[$locationid] = array();
+		$locationid = $stream['locationid'];
+		if ( empty($location_info[$locationid]) ) $location_info[$locationid] = array();
 
-	$tmp = array(
-		'locationid'		=> $stream['locationid'],
-		'streamid'			=> $stream['streamid'],
-		'streamname'		=> $stream['streamname'],
-		'keycode'			=> $stream['keycode'],
-		'contentkeycode'	=> $stream['contentkeycode'],
-		'locationname'		=> $stream['locationname'],
-		'publishedfirst'	=> ""							// First time during that day the stream was published
-	);
-	array_push($location_info[$locationid], $tmp);
+		$tmp = array(
+			'locationid'		=> $stream['locationid'],
+			'streamid'			=> $stream['streamid'],
+			'streamname'		=> $stream['streamname'],
+			'keycode'			=> $stream['keycode'],
+			'contentkeycode'	=> $stream['contentkeycode'],
+			'locationname'		=> $stream['locationname'],
+			'publishedfirst'	=> ""							// First time during that day the stream was published
+		);
+		array_push($location_info[$locationid], $tmp);
 
-	$live_streams->MoveNext();
+		$live_streams->MoveNext();
+	}
+} else {
+	$recording_info = array();
+	while ( !$recordings->EOF ) {
+
+		$rec = array();
+		$rec = $recordings->fields;
+
+		// Recording path relative to media directory
+		$rec_path = ( $rec['id'] % 1000 ) . "/" . $rec['id'] . "/" . $rec['id'] . "_";
+
+		// Stream IDs: build array from selected surrogates
+		$streamids = array();
+		array_push($streamids, $rec_path . "video_lq.mp4");
+		array_push($streamids, $rec_path . "video_hq.mp4");
+		array_push($streamids, $rec_path . "mobile_hq.mp4");
+		array_push($streamids, $rec_path . "mobile_hq.mp4");
+
+		$tmp = array(
+			'recordingid'		=> $rec['id'],
+			'title'				=> $rec['title'],
+			'recordedtime'		=> $rec['recordedtimestamp'],
+			'streamids'			=> $streamids,
+		);
+		array_push($recording_info, $tmp);
+
+		$recordings->MoveNext();
+	}
 }
 
 //var_dump($location_info);
+var_dump($recording_info);
 
 // Start log analyzing
 $viewers = array();
@@ -253,22 +323,26 @@ for ( $i = 0; $i < count($log_files); $i++ ) {
 		if ( $debug_client['do'] ) {
 
 			// Skip log line if not matching
-			if ( ( trim($tmp[16]) != $debug_client['ip'] ) and ( trim($tmp[20]) != $debug_client['clientid'] ) ) continue;
+			if ( ( trim($tmp[16]) != $debug_client['ip'] ) and ( trim($tmp[20]) != $debug_client['clientid'] ) and ( trim($tmp[27]) != $debug_client['streamid'] ) ) continue;
 
 			// Date and time
 			$date = trim($tmp[0]) . " " . trim($tmp[1]);
 
 			if ( trim($tmp[16]) == $debug_client['ip'] ) {
-				echo trim($tmp[16]) . "," . $date . ",x-event = " . trim($tmp[3]) . ",status = " . trim($tmp[6]) . ",x-duration = " . trim($tmp[12]) . ",c-client-id = " . trim($tmp[20]) . ",feedid = " . trim($tmp[27]) . "\n";
+				echo trim($tmp[16]) . "," . $date . ",x-event = " . trim($tmp[3]) . ",status = " . trim($tmp[6]) . ",x-duration = " . trim($tmp[12]) . ",x-spos = " . round((trim($tmp[24]) + 0) / 1000, 3) . ",c-client-id = " . trim($tmp[20]) . ",feedid = " . trim($tmp[27]) . "\n";
 			}
 
 			if ( trim($tmp[20]) == $debug_client['clientid'] ) {
-				echo trim($tmp[20]) . "," . $date . ",x-event = " . trim($tmp[3]) . ",status = " . trim($tmp[6]) . ",x-duration = " . trim($tmp[12]) . ",c-client-id = " . trim($tmp[20]) . ",feedid = " . trim($tmp[27]) . "\n";
+				echo trim($tmp[20]) . "," . $date . ",x-event = " . trim($tmp[3]) . ",status = " . trim($tmp[6]) . ",x-duration = " . trim($tmp[12]) . ",x-spos = " . round((trim($tmp[24]) + 0) / 1000, 3) . ",c-client-id = " . trim($tmp[20]) . ",feedid = " . trim($tmp[27]) . "\n";
+			}
+
+			if ( trim($tmp[27]) == $debug_client['streamid'] ) {
+				echo trim($tmp[27]) . "," . $date . ",x-event = " . trim($tmp[3]) . ",status = " . trim($tmp[6]) . ",x-duration = " . trim($tmp[12]) . ",x-spos = " . round((trim($tmp[24]) + 0) / 1000, 3) . ",c-client-id = " . trim($tmp[20]) . ",feedid = " . trim($tmp[27]) . "\n";
 			}
 		}
 
 		// Math log entries: YYYY-MM-DD HH:MM:SS
-		if ( preg_match('/^[\s]*[0-9]{4}-[0-1][0-9]-[0-3][0-9][\s]+[0-2][0-9]:[0-5][0-9]:[0-5][0-9][\s]+[A-Z]+[\s]+(play|publish|stop|destroy)/', $oneline) ) {
+		if ( preg_match('/^[\s]*[0-9]{4}-[0-1][0-9]-[0-3][0-9][\s]+[0-2][0-9]:[0-5][0-9]:[0-5][0-9][\s]+[A-Z]+[\s]+(play|publish|stop|unpause|seek|destroy)/', $oneline) ) {
 
 			$log_line = preg_split('/\t+/', $oneline);
 
@@ -281,13 +355,22 @@ for ( $i = 0; $i < count($log_files); $i++ ) {
 			// x-event: play/publish or destroy (calculate duration when destroy occurs)
 			$x_event = trim($log_line[3]);
 
-			// ACTION: jump to next if actions are not relevant
-			if ( ( $x_event != "play" ) and ( $x_event != "stop" ) and ( $x_event != "publish" ) and ( $x_event != "destroy" ) ) continue; 
+//if ( $x_event == "seek" ) var_dump($log_line);
+//# 24: x-spos | 0 in msecs
 
-			// Find Wowza stream ID in location information array
-			$retval = location_info_search_keycode($location_info, $log_feedid);
-			// Not found: not relevant stream information was found
-			if ( $retval === FALSE ) continue;
+			if ( $islivestats ) {
+				// Find Wowza stream ID in location information array
+				$retval = location_info_search_keycode($location_info, $log_feedid);
+				// Not found: not relevant stream information was found
+				if ( $retval === FALSE ) continue;
+			} else {
+				// Find Wowza stream ID in recording information array
+				$retval = recording_info_search_streamid($recording_info, $log_feedid);
+				// Not found: not relevant stream information was found
+				if ( $retval === FALSE ) continue;
+				// !!!!!!!!!!!!!!!!!!!!
+				continue;
+			}
 
 			// Stream ID match: add this data to overall statistics
 			$locationid = $retval['locationid'];
@@ -515,6 +598,8 @@ for ( $i = 0; $i < count($log_files); $i++ ) {
 	fclose($fh);
 }
 
+exit;
+
 //var_dump($viewers);
 
 //var_dump($location_info);
@@ -645,7 +730,7 @@ $msg .= "\nViewers: " . $number_of_viewers . "\n";
 echo $msg . "\n";
 
 // Open log file
-$result_file = "vsq_stats_ch_" . $live_channelid . "_" . date("Y-m-d", $event_startdate['timestamp']) . ".txt";
+$result_file = "vsq_stats_ch_" . $channelid . "_" . date("Y-m-d", $event_startdate['timestamp']) . ".txt";
 $fh = fopen($result_file, "w");
 
 if ( fwrite($fh, $msg) === FALSE ) {
@@ -659,7 +744,7 @@ echo "\nLog written to: " . $result_file . "\n";
 
 exit;
 
-function query_livefeeds($live_channelid, &$live_streams) {
+function query_livefeeds($channelid, &$live_streams) {
 global $db, $app;
 
 	$query = "
@@ -676,7 +761,7 @@ global $db, $app;
 			livefeeds as a,
 			livefeed_streams as b
 		WHERE
-			a.channelid = " . $live_channelid . " AND
+			a.channelid = " . $channelid . " AND
 			a.id = b.livefeedid
 		ORDER BY
 			a.id,
@@ -692,6 +777,40 @@ global $db, $app;
 
 	// Check if pending job exsits
 	if ( $live_streams->RecordCount() < 1 ) {
+		return FALSE;
+	}
+
+	return TRUE;
+}
+
+function query_recordings($channelid, &$recordings) {
+global $db, $app;
+
+	$query = "
+		SELECT
+			a.id,
+			a.userid,
+			a.title,
+			a.recordedtimestamp
+		FROM
+			recordings as a,
+			channels_recordings as b
+		WHERE
+			b.channelid = " . $channelid . " AND
+			a.id = b.recordingid
+		ORDER BY
+			a.id
+	";
+
+	try {
+		$recordings = $db->Execute($query);
+	} catch (exception $err) {
+		echo "[ERROR] Cannot query recordings for channel. SQL query failed.\n\n" . trim($query) . "\n";
+		return FALSE;
+	}
+
+	// Check if pending job exsits
+	if ( $recordings->RecordCount() < 1 ) {
 		return FALSE;
 	}
 
@@ -745,6 +864,39 @@ function location_info_search_keycode($location_info, $keycode) {
 	}
 
 	return FALSE;
+}
+
+// Search recording_info array for recording ID based on stream ID from Wowza log
+function recording_info_search_streamid($recording_info, $streamid) {
+
+	$retval = array();
+
+	foreach ($recording_info as $key => $value) {
+		$recordingidx = $key;
+		foreach ($recording_info[$recordingidx]['streamids'] as $skey => $svalue) {
+			$streamidx = $skey;
+			if ( $recording_info[$recordingidx]['streamids'][$streamidx] == $streamid ) {
+				$retval['recordingidx'] = $recordingidx;
+				$retval['streamidx'] = $streamidx;
+				return $retval;
+			}
+		}
+	}
+
+	return FALSE;
+}
+
+function check_date_validity($date) {
+
+	$tmp = explode(" ", $date, 2);
+	if ( ( count($tmp) < 1 ) or ( count($tmp) > 2 ) ) return FALSE;
+
+	$tmp2 = explode("-", $tmp[0], 3);
+	if ( count($tmp2) != 3 ) return FALSE;
+
+	$err = checkdate($tmp2[1], $tmp2[2], $tmp2[0]);
+
+	return $err;
 }
 
 ?>
