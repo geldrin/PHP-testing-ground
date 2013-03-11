@@ -35,9 +35,9 @@ echo "Wowza log analizer v0.3 - STARTING...\n";
 
 //// User settings
 // Channel ID: calculate statistics for this channel (live or on demand)
-$channelid = 41;
+$channelid = 50;
 // Is stats for live or on demand?
-$islivestats = FALSE;
+$islivestats = TRUE;
 // Ondemand stats analyze start and end dates
 $ondemand_startdate = "2013-02-28";
 $ondemand_enddate = "2013-02-28";
@@ -48,7 +48,7 @@ $min_duration = 3;
 
 // DEBUG: set IP and/or client ID to filter for the specific client
 $debug_client = array(
-	'do'		=> TRUE,
+	'do'		=> FALSE,
 	'ip'		=> "",
 	'clientid'	=> "",
 	'streamid'	=> "209/209/209_video_lq.mp4"
@@ -232,7 +232,7 @@ if ( $islivestats ) {
 }
 
 //var_dump($location_info);
-var_dump($recording_info);
+//var_dump($recording_info);
 
 // Start log analyzing
 $viewers = array();
@@ -598,7 +598,7 @@ for ( $i = 0; $i < count($log_files); $i++ ) {
 	fclose($fh);
 }
 
-exit;
+//exit;
 
 //var_dump($viewers);
 
