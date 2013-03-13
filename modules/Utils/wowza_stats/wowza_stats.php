@@ -429,9 +429,9 @@ for ( $i = 0; $i < count($log_files); $i++ ) {
 			// Find Vsq user ID
 			$uid_found = FALSE;
 			$uid = 0;
-			for ( $i = 0; $i < count($tmp); $i++) {
-				if ( stripos($tmp[$i], "uid=") !== FALSE ) {
-					$tmp2 = explode("=", $tmp[$i], 2);
+			for ( $q = 0; $q < count($tmp); $q++) {
+				if ( stripos($tmp[$q], "uid=") !== FALSE ) {
+					$tmp2 = explode("=", $tmp[$q], 2);
 					$uid = $tmp2[1];
 					$uid_found = TRUE;
 				}
