@@ -34,10 +34,12 @@ date_default_timezone_set("Europe/Budapest");
 echo "Wowza log analizer v0.3 - STARTING...\n";
 
 //// User settings
-// Channel ID: calculate statistics for this channel (live or on demand)
-$channelid = 50;
+
 // Is stats for live or on demand?
 $islivestats = TRUE;
+
+// Channel ID: calculate statistics for this channel (live or on demand)
+$channelid = 50;
 // Ondemand stats analyze start and end dates
 $ondemand_startdate = "2013-02-28";
 $ondemand_enddate = "2013-02-28";
@@ -45,6 +47,16 @@ $ondemand_enddate = "2013-02-28";
 $analyze_perconnection = TRUE;
 // Minimal duration to include a connection (seconds)
 $min_duration = 3;
+
+// Log files: work *.log files found in working directory
+$islocallogfiles = FALSE;
+// Wowza app: override?
+$overridewowzaapp = FALSE;
+// Wowza application to use if override
+$wowza_app = "live";
+
+// DNS: reverse DNS enable/disable
+$usereversedns = FALSE;
 
 // DEBUG: set IP and/or client ID to filter for the specific client
 $debug_client = array(
@@ -54,7 +66,7 @@ $debug_client = array(
 	'streamid'	=> "209/209/209_video_lq.mp4"
 );
 
-// **********************************
+//// User settings
 
 // Check input data
 
@@ -74,12 +86,14 @@ $jconf = $app->config['config_jobs'];
 $wowza_log_dir = $jconf['wowza_log_dir'];
 // Wowza app: vsq or devvsq for on demand, vsqlive or devvsqlive for live analysis
 $isdev = FALSE;
-$wowza_app = "vsq";
-if ( $app->config['baseuri'] != "videosquare.eu/" ) {
-	$isdev = TRUE;
-	$wowza_app = "devvsq";
+if ( !$overridewowzaapp ) {
+	$wowza_app = "vsq";
+	if ( $app->config['baseuri'] != "videosquare.eu/" ) {
+		$isdev = TRUE;
+		$wowza_app = "devvsq";
+	}
+	if ( $islivestats ) $wowza_app .= "live";
 }
-if ( $islivestats ) $wowza_app .= "live";
 
 // Establish database connection
 try {
@@ -146,14 +160,31 @@ if ( $islivestats ) {
 $log_files = array();
 $sec_oneday = 3600 * 24;
 
-for ( $timestamp = $event_startdate['timestamp']; $timestamp <= $event_enddate['timestamp']; $timestamp += $sec_oneday ) {
+if ( !$islocallogfiles ) {
 
-	$log_file = $wowza_log_dir . "access.log." . date("Y-m-d", $timestamp);
-	if ( file_exists($log_file) ) {
-		array_push($log_files, $log_file);
-	} else {
-		echo "ERROR: Wowza log file " . $log_file . " does not exist.\n";
+	for ( $timestamp = $event_startdate['timestamp']; $timestamp <= $event_enddate['timestamp']; $timestamp += $sec_oneday ) {
+
+		$log_file = $wowza_log_dir . "access.log." . date("Y-m-d", $timestamp);
+		if ( file_exists($log_file) ) {
+			array_push($log_files, $log_file);
+		} else {
+			echo "ERROR: Wowza log file " . $log_file . " does not exist.\n";
+		}
 	}
+
+} else {
+
+	// Get current directory
+	$directory = realpath('.') . "/";
+
+	$log_files = dirList($directory, ".log");
+	sort($log_files, SORT_STRING);
+
+	if ( count($log_files) < 1 ) {
+		echo "[ERROR] Cannot find any .log files in working directory\n";
+		exit;
+	}
+
 }
 
 //var_dump($log_files);
@@ -420,7 +451,11 @@ for ( $i = 0; $i < count($log_files); $i++ ) {
 				$viewers[$cip][$uid] = array();
 
 				// Host name
-				$viewers[$cip][$uid]['hostname'] = gethostbyaddr($cip);
+				if ( $usereversedns ) {
+					$viewers[$cip][$uid]['hostname'] = gethostbyaddr($cip);
+				} else {
+					$viewers[$cip][$uid]['hostname'] = $cip;
+				}
 				// Connections
 				$viewers[$cip][$uid]['connections'] = 1;
 				// User agent
