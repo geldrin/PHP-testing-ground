@@ -3,6 +3,8 @@
 user="admin"
 password="BoRoKaBoGYo1980"
 
+output="/home/akovacs/wowza_stats.txt"
+
 #Usage:
 #
 #[command] -[switch [value]...] [command] [params...]
@@ -35,4 +37,11 @@ password="BoRoKaBoGYo1980"
 
 #java -cp . JMXCommandLine $@
 
-java -cp . JMXCommandLine -user ${user} -pass ${password} getConnectionCounts
+date=`date +"%Y-%m-%d %T"`
+
+stat=`java -cp . JMXCommandLine -user ${user} -pass ${password} getConnectionCounts`
+
+echo ${date}: ${stat}
+
+echo ${date}: ${stat} >> ${output}
+
