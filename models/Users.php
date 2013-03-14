@@ -284,4 +284,8 @@ class Users extends \Springboard\Model {
     $this->insertMultipleIDs( $departmentids, 'users_departments', 'departmentid');
   }
   
+  public function addGroups( $groupids ) {
+    $this->insertMultipleIDs( $groupids, 'groups_members', 'groupid');
+  }
+  
 }

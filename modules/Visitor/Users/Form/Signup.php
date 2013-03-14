@@ -47,12 +47,36 @@ class Signup extends \Visitor\HelpForm {
       foreach( explode('|', $invitation['permissions'] ) as $permission )
         $values[ $permission ] = 1;
       
+      $departments = array();
+      foreach( explode('|', $invitation['departments'] ) as $id ) {
+        
+        $id = intval( $id );
+        if ( $id )
+          $departments[] = $id;
+        
+      }
+      
+      $groups      = array();
+      foreach( explode('|', $invitation['groups'] ) as $id ) {
+        
+        $id = intval( $id );
+        if ( $id )
+          $groups[] = $id;
+        
+      }
+      
       $userinvitationSession->clear();
       $invitationModel->delete( $invitationModel->id );
       
     }
     
     $userModel->insert( $values );
+    
+    if ( isset( $departments ) and !empty( $departments ) )
+      $userModel->addDepartments( $departments );
+    
+    if ( isset( $groups ) and !empty( $groups ) )
+      $userModel->addGroups( $groups );
     
     $userModel->row['id'] = $crypto->asciiEncrypt( $userModel->id );
     $this->controller->toSmarty['values'] = $userModel->row;

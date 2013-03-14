@@ -323,6 +323,7 @@ CREATE TABLE `groups` (
    `id` int(10) unsigned not null auto_increment,
    `name` text not null,
    `userid` int(10) unsigned not null,
+   `organizationid` int(10) unsigned,
    `timestamp` datetime not null,
    PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;
@@ -332,7 +333,6 @@ CREATE TABLE `groups_members` (
    `id` int(10) unsigned not null auto_increment,
    `groupid` int(10) unsigned not null,
    `userid` int(10) unsigned not null,
-   `timestamp` datetime not null,
    PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
@@ -352,7 +352,9 @@ CREATE TABLE `users_invitations` (
    `permissions` text not null,
    `userid` int(10) unsigned not null,
    `email` text not null,
+   `name` text,
    `departments` text,
+   `groups` text,
    `validationcode` text not null,
    PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;
