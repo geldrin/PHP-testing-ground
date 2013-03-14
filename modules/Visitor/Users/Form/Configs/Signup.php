@@ -163,3 +163,10 @@ $config = array(
   ),
   
 );
+
+$userinvitationSession = $this->bootstrap->getSession('userinvitation');
+if ( $userinvitationSession['invitation']['name'] )
+  $config['namefirst']['value'] = $userinvitationSession['invitation']['name'];
+
+if ( $userinvitationSession['invitation']['email'] )
+  $config['email']['value'] = $userinvitationSession['invitation']['email'];
