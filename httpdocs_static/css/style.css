@@ -273,6 +273,7 @@ a.submitbutton:hover, .form a.submitbutton:hover {
   font-weight: normal;
   line-height: 30px;
   color: #000;
+  height: 30px;
 }
 .changeindexphotoitem {
   display: inline-block;
