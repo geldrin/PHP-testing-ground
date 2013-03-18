@@ -1,8 +1,8 @@
 <?php
 if ( isset( $_SERVER['APPLICATION_ENV'] ) and $_SERVER['APPLICATION_ENV'] == 'developer' )
-  define('PATH_PREFIX',  '/srv/storage2/dev.videosquare.eu/');
+  define('PATH_PREFIX',  '/srv/vsq_storage/dev.videosquare.eu/');
 else
-  define('PATH_PREFIX',  '/srv/storage/videosquare.eu/');
+  define('PATH_PREFIX',  '/srv/vsq_storage/videosquare.eu/');
 
 // ------------------------------------------------------------
 if (

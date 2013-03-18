@@ -3,7 +3,7 @@
 user="admin"
 password="BoRoKaBoGYo1980"
 
-output="/home/akovacs/wowza_stats.txt"
+output="/home/conv/wowza_stats.txt"
 
 #Usage:
 #
