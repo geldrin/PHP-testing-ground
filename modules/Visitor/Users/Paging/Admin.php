@@ -27,6 +27,7 @@ class Admin extends \Visitor\Paging {
     
     $this->usersModel = $this->bootstrap->getModel('users');
     $this->usersModel->addFilter('organizationid', $this->controller->organization['id'] );
+    $this->usersModel->addFilter('isadmin', 0 );
     return $this->itemcount = $this->usersModel->getCount();
     
   }
