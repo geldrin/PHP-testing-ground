@@ -688,11 +688,11 @@ global $app, $jconf;
 	log_recording_conversion($recording['id'], $jconf['jobid_content_convert'], $jconf['dbstatus_copystorage'], "[OK] SCP copy finished (in " . $mins_taken . " mins)", $command, $result, $duration, FALSE);
 
 	// Set file and directory access rights of content and mobile files
-	if ( $recording['is_content_convert'] ) {
-		$command = $ssh_command . " chmod -f " . $jconf['file_access'] . " " . $remote_recording_directory . "*_content_*.mp4";
-		exec($command, $output, $result);
-	}
-	$command = $ssh_command . " chmod -f " . $jconf['file_access'] . " " . $remote_recording_directory . "*_mobile_*.mp4";
+	$command = "";
+	if ( $recording['is_content_convert'] ) $command .= " chmod -f " . $jconf['file_access'] . " " . $remote_recording_directory . "*_content_*.mp4 ; ";
+	if ( !$recording['is_content_reconvert'] ) $command .= " chmod -f " . $jconf['file_access'] . " " . $remote_recording_directory . "/master/*_content.* ; ";
+	$command .= " chmod -f " . $jconf['file_access'] . " " . $remote_recording_directory . "*_mobile_*.mp4";
+	$command = $ssh_command . "\"" . $command . "\"";
 	exec($command, $output, $result);
 
 	// Update database (status and media information)
