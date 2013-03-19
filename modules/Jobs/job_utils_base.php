@@ -518,7 +518,7 @@ function move_uploaded_file_to_storage($fname, $fname_target, $isoverwrite) {
 		return $err;
 	}
 
-	// File access. Set user/group to "conv:conv" and file access rights to "664"
+	// File access. Set user/group to "conv:vsq" and file access rights to "664"
 	$command = "";
 	$command .= "chmod -f " . $jconf['file_access']	. " " . $fname_target . " ; ";
 	$command .= "chown -f " . $jconf['file_owner']	. " " . $fname_target . " ; ";

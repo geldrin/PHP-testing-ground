@@ -53,7 +53,7 @@ return array('config_jobs' => array(
 	'ssh_key'						=> '/home/conv/.ssh/id_rsa',
 
 	// File system related settings
-	'file_owner'					=> 'conv:conv',	// conv:conv
+	'file_owner'					=> 'conv:vsq',	// conv:vsq
 	'directory_access'				=> '6775',		// 6775 = drwsrwsr-x
 	'file_access'					=> '664',		// 664  = -rw-rw-r--
 	

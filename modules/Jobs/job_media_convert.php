@@ -818,14 +818,12 @@ global $app, $jconf;
 		log_recording_conversion($recording['id'], $jconf['jobid_media_convert'], $jconf['dbstatus_copystorage'], "[OK] SCP copy finished (in " . $mins_taken . " mins)", $command, $result, $duration, FALSE);
 		//// Set file and directory access rights
 		$command = "";
-		// Recording directory and surrogate media file access
+		// Recording directory and surrogate media file access rights
 		if ( $recording['conversion_type'] != $jconf['dbstatus_reconvert'] ) {
 			$command .= "chmod -f " . $jconf['directory_access'] . " " . $remote_recording_directory . " ; ";
 			$command .= "chmod -f " . $jconf['file_access']      . " " . $remote_recording_directory . "/master/*_video.* ; ";
 		}
-//		$command .= "chmod -f " . $jconf['file_access']      . " " . $remote_recording_directory . "*_audio.mp3 ; ";
-//		$command .= "chmod -f " . $jconf['file_access']      . " " . $remote_recording_directory . "*_video_*.mp4 ; ";
-//		$command .= "chmod -f " . $jconf['file_access']      . " " . $remote_recording_directory . "*_mobile_*.mp4 ; ";
+		// Surrogates
 		$command .= "find " . $remote_recording_directory . " -mount -maxdepth 1 -type f -regex '" . $media_regex . "' -exec chmod -f " . $jconf['file_access'] . " {} \\; 2>/dev/null ; ";
 		// Index pics: all directories and files under this level
 		$command .= "find " . $remote_recording_directory . "indexpics/ -mount -maxdepth 1 -type d -exec chmod -f " . $jconf['directory_access'] . " {} \\; 2>/dev/null ; ";

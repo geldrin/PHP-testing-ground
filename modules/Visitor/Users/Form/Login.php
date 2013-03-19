@@ -79,7 +79,7 @@ class Login extends \Visitor\Form {
     $userModel->updateLastlogin( $diagnostics );
     $forward = $this->application->getParameter('forward');
     
-    if ( $this->application->getNumericParameter('force') and $forward )
+    if ( $forward )
       $this->controller->redirect( $forward );
     else
       $this->controller->redirect('users/welcome', array( 'forward' => $forward ) );
