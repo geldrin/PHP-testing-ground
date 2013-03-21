@@ -2,7 +2,7 @@
 	<VHost>
 		<HostPortList>
 			<HostPort>
-				<ProcessorCount>4</ProcessorCount>
+				<ProcessorCount>16</ProcessorCount>
 				<IpAddress>91.120.59.230</IpAddress>
 				<!-- Separate multiple ports with commas -->
 				<!-- 80: HTTP, RTMPT -->
@@ -195,18 +195,18 @@
 		</HTTPStreamerAdapters>
 
 		<HandlerThreadPool>
-			<PoolSize>120</PoolSize>
+			<PoolSize>480</PoolSize>
 		</HandlerThreadPool>
 		<TransportThreadPool>
-			<PoolSize>80</PoolSize>
+			<PoolSize>320</PoolSize>
 		</TransportThreadPool>
 		<IdleWorkers>
-			<WorkerCount>4</WorkerCount>
+			<WorkerCount>16</WorkerCount>
 			<CheckFrequency>50</CheckFrequency>
 			<MinimumWaitTime>5</MinimumWaitTime>
 		</IdleWorkers>
 		<NetConnections>
-			<ProcessorCount>4</ProcessorCount>
+			<ProcessorCount>16</ProcessorCount>
 			<IdleFrequency>250</IdleFrequency>
 			<SocketConfiguration>
 				<ReuseAddress>true</ReuseAddress>
@@ -253,16 +253,16 @@
 				</Outgoing>
 			</DatagramConfiguration>
 			<UnicastIncoming>
-				<ProcessorCount>2</ProcessorCount>
+				<ProcessorCount>8</ProcessorCount>
 			</UnicastIncoming>
 			<UnicastOutgoing>
-				<ProcessorCount>4</ProcessorCount>
+				<ProcessorCount>16</ProcessorCount>
 			</UnicastOutgoing>
 			<MulticastIncoming>
-				<ProcessorCount>2</ProcessorCount>
+				<ProcessorCount>8</ProcessorCount>
 			</MulticastIncoming>
 			<MulticastOutgoing>
-				<ProcessorCount>2</ProcessorCount>
+				<ProcessorCount>8</ProcessorCount>
 			</MulticastOutgoing>
 		</RTP>
 		<Application>
