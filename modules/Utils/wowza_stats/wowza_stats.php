@@ -1,25 +1,6 @@
 #!/usr/bin/php
 <?php
 
-// Problems: play vs. start stream ID. Workaround: add duration to stream ID what is started
-/*
-2013-02-26      08:38:00        CET     connect-pending 		session INFO    100     62.165.193.94   		-       _defaultVHost_  vsqlive _definst_       0.01    91.120.59.230   1935    rtmp://stream.videosquare.eu:1935/vsqlive?sessionid=conforg.videosquare.eu_37t4778t3eocjmbvpq96vt57bb7690tp_18&uid=684  62.165.193.94   rtmp    http://conforg.videosquare.eu/flash/TCPlayer.swf?v=_v201302211230       WIN 11,6,602,167        1674790352      3680    3073    -       -       -       -       -       -       -       -       -       -       -       -       -       rtmp://stream.videosquare.eu:1935/vsqlive       sessionid=conforg.videosquare.eu_37t4778t3eocjmbvpq96vt57bb7690tp_18&uid=684
-2013-02-26      08:38:00        CET     connect                 session INFO    200     62.165.193.94   		-       _defaultVHost_  vsqlive _definst_       0.011   91.120.59.230   1935    rtmp://stream.videosquare.eu:1935/vsqlive?sessionid=conforg.videosquare.eu_37t4778t3eocjmbvpq96vt57bb7690tp_18&uid=684  62.165.193.94   rtmp    http://conforg.videosquare.eu/flash/TCPlayer.swf?v=_v201302211230       WIN 11,6,602,167        1674790352      3680    3073    -       -       -       -       -       -       -       -       -       -       -       -       -       rtmp://stream.videosquare.eu:1935/vsqlive       sessionid=conforg.videosquare.eu_37t4778t3eocjmbvpq96vt57bb7690tp_18&uid=684
-2013-02-26      08:38:00        CET     create                  stream  INFO    200     -                       -       _defaultVHost_  vsqlive _definst_       0.0020  91.120.59.230   1935    rtmp://stream.videosquare.eu:1935/vsqlive?sessionid=conforg.videosquare.eu_37t4778t3eocjmbvpq96vt57bb7690tp_18&uid=684  62.165.193.94   rtmp    http://conforg.videosquare.eu/flash/TCPlayer.swf?v=_v201302211230       WIN 11,6,602,167        1674790352      3752    3413    1       0       0       0       -       -       -       -       -       -       rtmp://stream.videosquare.eu:1935/vsqlive       rtmp://stream.videosquare.eu:1935/vsqlive       -       rtmp://stream.videosquare.eu:1935/vsqlive       sessionid=conforg.videosquare.eu_37t4778t3eocjmbvpq96vt57bb7690tp_18&uid=684
-2013-02-26      08:38:01        CET     play                    stream  INFO    200     584368                  -       _defaultVHost_  vsqlive _definst_       0.314   91.120.59.230   1935    rtmp://stream.videosquare.eu:1935/vsqlive?sessionid=conforg.videosquare.eu_37t4778t3eocjmbvpq96vt57bb7690tp_18&uid=684  62.165.193.94   rtmp    http://conforg.videosquare.eu/flash/TCPlayer.swf?v=_v201302211230       WIN 11,6,602,167        1674790352      3802    3455    1       0       0       0       584368  -       -       -       -       -       rtmp://stream.videosquare.eu:1935/vsqlive/584368        rtmp://stream.videosquare.eu:1935/vsqlive/584368        -       rtmp://stream.videosquare.eu:1935/vsqlive       sessionid=conforg.videosquare.eu_37t4778t3eocjmbvpq96vt57bb7690tp_18&uid=684
-2013-02-26      13:26:41        CET     stop                    stream  INFO    200     942418                  -       _defaultVHost_  vsqlive _definst_       17321.127       91.120.59.230   1935    rtmp://stream.videosquare.eu:1935/vsqlive?sessionid=conforg.videosquare.eu_37t4778t3eocjmbvpq96vt57bb7690tp_18&uid=684  62.165.193.94   rtmp    http://conforg.videosquare.eu/flash/TCPlayer.swf?v=_v201302211230       WIN 11,6,602,167        1674790352      13243   2306549537      1       17323727        0       2296831904      942418  -       -       -       -       -       rtmp://stream.videosquare.eu:1935/vsqlive/942418        rtmp://stream.videosquare.eu:1935/vsqlive/942418        -       rtmp://stream.videosquare.eu:1935/vsqlive       sessionid=conforg.videosquare.eu_37t4778t3eocjmbvpq96vt57bb7690tp_18&uid=684
-2013-02-26      13:26:41        CET     destroy                 stream  INFO    200     942418                  -       _defaultVHost_  vsqlive _definst_       17321.128       91.120.59.230   1935    rtmp://stream.videosquare.eu:1935/vsqlive?sessionid=conforg.videosquare.eu_37t4778t3eocjmbvpq96vt57bb7690tp_18&uid=684  62.165.193.94   rtmp    http://conforg.videosquare.eu/flash/TCPlayer.swf?v=_v201302211230       WIN 11,6,602,167        1674790352      13243   2306549537      1       -       0       2296831904      942418  -       -       -       -       -       rtmp://stream.videosquare.eu:1935/vsqlive/942418        rtmp://stream.videosquare.eu:1935/vsqlive/942418        -       rtmp://stream.videosquare.eu:1935/vsqlive       sessionid=conforg.videosquare.eu_37t4778t3eocjmbvpq96vt57bb7690tp_18&uid=684
-2013-02-26      13:26:41        CET     disconnect              session INFO    200     1674790352              -       _defaultVHost_  vsqlive _definst_       17321.183       91.120.59.230   1935    rtmp://stream.videosquare.eu:1935/vsqlive?sessionid=conforg.videosquare.eu_37t4778t3eocjmbvpq96vt57bb7690tp_18&uid=684  62.165.193.94   rtmp    http://conforg.videosquare.eu/flash/TCPlayer.swf?v=_v201302211230       WIN 11,6,602,167        1674790352      13243   2306549537      -       -       -       -       -       -       -       -       -       -       -       -       -       rtmp://stream.videosquare.eu:1935/vsqlive       sessionid=conforg.videosquare.eu_37t4778t3eocjmbvpq96vt57bb7690tp_18&uid=684
-*/
-
-/*
-On demand reports:
-
-1. Query recordings in given channel, build helper array from recording IDs
-2. 
-
-*/
-
 define('BASE_PATH',	realpath( __DIR__ . '/../../..' ) . '/' );
 define('PRODUCTION', false );
 define('DEBUG', false );
@@ -31,22 +12,25 @@ set_time_limit(0);
 
 date_default_timezone_set("Europe/Budapest");
 
-echo "Wowza log analizer v0.3 - STARTING...\n";
+echo "Wowza log analizer v0.4 - STARTING...\n";
 
-//// User settings
+// ---------------------------- User settings ----------------------------------------
 
 // Is stats for live or on demand?
 $islivestats = TRUE;
 
 // Channel ID: calculate statistics for this channel (live or on demand)
-$channelid = 50;
+$channelid = 53;
+
+// Analyze per connection: TRUE = track all connections | FALSE = give a summary only
+$analyze_perconnection = TRUE;
+
+// Minimal duration to include a connection (seconds)
+$min_duration = 3;
+
 // Ondemand stats analyze start and end dates
 $ondemand_startdate = "2013-02-28";
 $ondemand_enddate = "2013-02-28";
-// Analyze per connection: TRUE = track all connections | FALSE = give a summary only
-$analyze_perconnection = TRUE;
-// Minimal duration to include a connection (seconds)
-$min_duration = 3;
 
 // Log files: work *.log files found in working directory
 $islocallogfiles = FALSE;
@@ -56,7 +40,41 @@ $overridewowzaapp = FALSE;
 $wowza_app = "live";
 
 // DNS: reverse DNS enable/disable
-$usereversedns = FALSE;
+$usereversedns = TRUE;
+
+// Clean from breakes? (see $event_timings)
+$cleanfrombreaks = TRUE;
+
+// Event timings, indexed by feedid (locations), [0] index applies all locations
+$event_timings = array(
+	0 => array(
+			array(
+				'type'			=> 'EVENT',
+				'starttime'		=> '2013-03-18 10:00:00',	// event start
+				'endtime'		=> '2013-03-18 15:00:00',	// event finish
+				'description'	=> 'ESEMÉNY KEZDETE/VÉGE'
+			),
+			array(
+				'type'			=> 'BREAK',
+				'starttime'		=> '2013-03-18 12:00:00',	// break start
+				'endtime'		=> '2013-03-18 13:00:00',	// break end
+				'description'	=> 'EBÉDSZÜNET'
+			),
+/*			array(
+				'type'			=> 'BREAK',
+				'starttime'		=> '2013-03-18 14:00:00',
+				'endtime'		=> '2013-03-18 14:10:00',
+				'description'	=> 'KÁVÉSZÜNET'
+			),
+			array(
+				'type'			=> 'BREAK',
+				'starttime'		=> '2013-03-18 15:00:00',
+				'endtime'		=> '2013-03-18 15:10:00',
+				'description'	=> 'KÁVÉSZÜNET'
+			)
+*/
+	)
+);
 
 // DEBUG: set IP and/or client ID to filter for the specific client
 $debug_client = array(
@@ -66,7 +84,10 @@ $debug_client = array(
 	'streamid'	=> "209/209/209_video_lq.mp4"
 );
 
-//// User settings
+// Debug: time slice creation based on $event_timings
+$debug_timeslicing = FALSE;
+
+// ---------------------------- User settings ----------------------------------------
 
 // Check input data
 
@@ -678,6 +699,26 @@ foreach ($location_info as $loc_id => $streams ) {
 		$column_guide[$loc_id][$str_id] = $columns_num;
 		$columns_num++;
 	}
+
+	if ( $cleanfrombreaks ) {
+		$msg .= "#  Cleaning applied:\n";
+
+			$event_timing = array();
+			if ( !isset($event_timings[$loc_id]) ) {
+				$event_timing = $event_timings[0];
+			} else {
+				$event_timing = $event_timings[$loc_id];
+			}
+
+//var_dump($event_timing);
+//exit;
+
+			foreach ($event_timing as $key => $value) {
+				$msg .= "#\t" . $event_timing[$key]['description'] . ": " . $event_timing[$key]['starttime'] . " - " . $event_timing[$key]['endtime'] . "\n";
+			}
+
+	}
+
 }
 $tmp .= ",Summary\n";
 $msg .= $tmp;
@@ -739,20 +780,41 @@ foreach ($viewers as $cip => $client_ip) {
 					$duration = $playsession['ended_timestamp'] - $playsession['started_timestamp'];
 					if ( $duration < $min_duration ) continue;
 
-					$started_time = date("H:i:s", $playsession['started_timestamp']);
-					$ended_time = date("H:i:s", $playsession['ended_timestamp']);
 					$loc_id = $client_data['locationid'];
 					$str_id = $client_data['streamid'];
+
+					// Column guide
 					$num_column = $column_guide[$loc_id][$str_id];
 
-					$tmp = $uid . ",1,," . $cip;
-					for ( $q = 0; $q < ( 5 + $num_column - 2 ); $q++ ) $tmp .= ",";
-					$tmp .= $started_time . "-" . $ended_time . "\n";
+					$tmp = "";
+
+					if ( $cleanfrombreaks ) {
+						// Apply event timing (start & end time, breaks)
+						$retval = event_searchtiming($playsession['started_timestamp'], $playsession['ended_timestamp'], $loc_id);
+						if ( $retval === FALSE ) continue;
+						// Add per connection data (slices due to breaks)
+						foreach ($retval as $key => $value) {
+							$started_time = date("H:i:s", $retval[$key]['starttimestamp']);
+							$ended_time = date("H:i:s", $retval[$key]['endtimestamp']);
+							$tmp .= $uid . ",1,," . $cip;
+							for ( $q = 0; $q < ( 5 + $num_column - 2 ); $q++ ) $tmp .= ",";
+							$tmp .= $started_time . "-" . $ended_time . "\n";
+						}
+
+					} else {
+						$started_time = date("H:i:s", $playsession['started_timestamp']);
+						$ended_time = date("H:i:s", $playsession['ended_timestamp']);
+						// Add per connection data to log
+						$tmp .= $uid . ",1,," . $cip;
+						for ( $q = 0; $q < ( 5 + $num_column - 2 ); $q++ ) $tmp .= ",";
+						$tmp .= $started_time . "-" . $ended_time . "\n";
+					}
 
 					$msg .= $tmp;
 				}
 
 			}
+
 		}
 
 		$number_of_viewers++;
@@ -932,6 +994,209 @@ function check_date_validity($date) {
 	$err = checkdate($tmp2[1], $tmp2[2], $tmp2[0]);
 
 	return $err;
+}
+
+function event_searchtiming($starttime, $endtime, $feedid) {
+ global $event_timings, $debug_timeslicing;
+
+	if ( !isset($event_timings[$feedid]) ) $feedid = 0;
+
+	if ( !isset($event_timings[$feedid]) ) {
+		echo "ERROR: default (feedid = 0) event timing data does not exist (" . $feedid . ")\n";
+		exit -1;
+	}
+
+	$event_timing = $event_timings[$feedid];
+
+	// Interval init
+	$start = $starttime;
+	$end = $endtime;
+	// Interval: invalid if started later than ended
+	if ( $start >= $end ) {
+		echo "ERROR: invalid start-end interval " . date("Y-m-d H:i:s", $starttime) . " - " . date("Y-m-d H:i:s", $endtime) . "\n";
+		return FALSE;
+	}
+
+	if ( $debug_timeslicing ) echo "PLAY INTERVAL: " . date("Y-m-d H:i:s", $start) . " - " . date("Y-m-d H:i:s", $end) . "\n";
+
+	// Event start: search for start and end time
+	$event_key = array_search_2dim($event_timing, 'EVENT');
+
+	// Event timing: START time
+	$event_start = strtotime($event_timing[$event_key]['starttime']);
+	if ( $event_start === FALSE ) {
+		echo "ERROR: invalid time format " . $event_timing[$event_key]['starttime'] . "\n";
+		exit -1;
+	}
+	// Event timing: END time
+	$event_end = strtotime($event_timing[$event_key]['endtime']);
+	if ( $event_end === FALSE ) {
+		echo "ERROR: invalid time format " . $event_timing[$event_key]['endtime'] . "\n";
+		exit -1;
+	}
+	// Event time: wrong format
+	if ( $event_start >= $event_end ) {
+		echo "ERROR: invalid start-end interval " . $event_timing[$event_key]['starttime'] . " - " . $event_timing[$event_key]['endtime'] . "\n";
+		exit -1;
+	}
+
+	if ( $debug_timeslicing ) echo "EVENT TIME: " . date("Y-m-d H:i:s", $event_start) . " - " . date("Y-m-d H:i:s", $event_end) . "\n";
+
+	// Basic checks: does interval match event time?
+	if ( $end < $event_start ) {
+		return FALSE;
+	}
+	if ( $start > $event_end ) {
+		return FALSE;
+	}
+
+	// Trim start and end time: according to event start/end
+	if ( $start < $event_start ) {
+		$start = $event_start;
+	}
+	if ( $end > $event_end ) {
+		$end = $event_end;
+	}
+
+	// Init interval array
+	$retval = array();
+
+	// Event breaks: scan through
+	$wasbreaks = FALSE;
+	$slice_start = $start;
+	$slice_end = $end;
+	$round = 1;
+	foreach ($event_timing as $key => $value) {
+
+		if ( $event_timing[$key]['type'] != 'BREAK' ) continue;
+
+		$wasbreaks = TRUE;
+
+		if ( $debug_timeslicing ) echo "HANDLING BREAK: " . $event_timing[$key]['starttime'] . " - " . $event_timing[$key]['endtime'] . "\n";
+		if ( $debug_timeslicing ) echo "\tSlice: " . date("Y-m-d H:i:s", $slice_start) . " - " . date("Y-m-d H:i:s", $slice_end) . "\n";
+
+		// Break timing: START time
+		$break_start = strtotime($event_timing[$key]['starttime']);
+		if ( $break_start === FALSE ) {
+			echo "ERROR: invalid time format " . $event_timing[$key]['starttime'] . "\n";
+			exit -1;
+		}
+		// Break timing: END time
+		$break_end = strtotime($event_timing[$key]['endtime']);
+		if ( $break_end === FALSE ) {
+			echo "ERROR: invalid time format " . $event_timing[$key]['endtime'] . "\n";
+			exit -1;
+		}
+		// Break time: wrong format
+		if ( $break_start >= $break_end ) {
+			echo "ERROR: invalid break start-end interval " . $event_timing[$key]['starttime'] . " - " . $event_timing[$key]['endtime'] . "\n";
+			exit -1;
+		}
+
+		// Interval: included in the break
+		if ( ( $slice_start >= $break_start ) and ( $slice_end <= $break_end ) ) {
+			if ( $debug_timeslicing ) echo "Interval: included in the break. EXIT\n";
+			return FALSE;
+		}
+
+		// Interval: start beyond end of this interval. CONTINUE
+		if ( $slice_start >= $break_end ) {
+			if ( $debug_timeslicing ) echo "Interval: start beyond end if this interval. CONTINUE\n";
+			continue;
+		}
+
+		// Interval: started during this break
+		if ( ( $slice_start >= $break_start ) and ( $slice_start <= $break_end ) ) {
+			$slice_start = $break_end;
+			if ( $debug_timeslicing ) echo "Interval: started during this break. STAY\n";
+		}
+
+		// Interval: ended during this break. FINISH
+		if ( ( $slice_end >= $break_start ) and ( $slice_end <= $break_end ) ) {
+			$slice_end = $break_start;
+			$tmp = event_timing_add_breakpoint($slice_start, $slice_end);
+			array_push($retval, $tmp);
+			if ( $debug_timeslicing ) echo "Interval: ended during this break. FINISH\n";
+			return $retval;
+		}
+
+		// Interval: ended before this break. FINISH
+		if ( $slice_end <= $break_start ) {
+			$tmp = event_timing_add_breakpoint($slice_start, $slice_end);
+			array_push($retval, $tmp);
+			if ( $debug_timeslicing ) echo "Interval: ended before this break. FINISH\n";
+			return $retval;
+		}
+
+		// Interval: break time brokes interval. CONTINUE
+		if ( ( $slice_start < $break_start ) and ( $slice_end > $break_end ) ) {
+			$tmp = event_timing_add_breakpoint($slice_start, $break_start);
+			array_push($retval, $tmp);
+			$slice_start = $break_end;
+			if ( $debug_timeslicing ) echo "Interval: break time brokes interval. CONTINUE\n";
+			continue;
+		}
+
+	}
+
+	// Interval: add last slice if remained
+	if ( ( $slice_start >= $break_end ) and ( $slice_end <= $event_end ) ) {
+		$tmp = event_timing_add_breakpoint($slice_start, $slice_end);
+		array_push($retval, $tmp);
+		if ( $debug_timeslicing ) echo "Interval: add last slice if remained.\n";
+		return $retval;
+	}
+
+	// No breaks were defined (or matched): return incoming slice data
+	if ( empty($retval) ) {
+
+		$duration = $end - $start;
+		if ( $duration <= 0 ) {
+			echo "ERROR: invalid duration from slice \"" . $start . "\"-\"" . $end . "\"!\n";
+			exit -1;
+		}
+		$tmp = array(
+			'starttimestamp'	=> $start,
+			'endtimestamp'		=> $end,
+			'starttime'			=> date("H:i:s", $start),
+			'endtime'			=> date("H:i:s", $end),
+			'duration'			=> $duration
+		);
+		array_push($retval, $tmp);
+	}
+
+	return $retval;
+}
+
+function array_search_2dim($array, $value) {
+
+	foreach ($array as $key => $val) {
+		$ret = array_search($value, $array[$key]);
+		if ( $ret !== FALSE ) return $key;
+	}
+
+	return TRUE;
+}
+
+function event_timing_add_breakpoint($starttime, $endtime) {
+ global $debug_timeslicing;
+
+	$duration = $endtime - $starttime;
+	if ( $duration <= 0 ) {
+		echo "ERROR: invalid duration from slice " . $starttime . " - " . $endtime . "!\n";
+		exit -1;
+	}
+	$tmp = array(
+		'starttimestamp'	=> $starttime,
+		'endtimestamp'		=> $endtime,
+		'starttime'			=> date("H:i:s", $starttime),
+		'endtime'			=> date("H:i:s", $endtime),
+		'duration'			=> $duration
+	);
+
+	if ( $debug_timeslicing ) var_dump($tmp);
+
+	return $tmp;
 }
 
 ?>
