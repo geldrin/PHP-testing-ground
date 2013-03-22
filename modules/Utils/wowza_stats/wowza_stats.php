@@ -1,6 +1,9 @@
 #!/usr/bin/php
 <?php
 
+// TODO:
+// 1. %-os nézettség, cleanfrombreak esetén: hova tegyük? új oszlopba? cleanfrombreakes false akkor?
+
 define('BASE_PATH',	realpath( __DIR__ . '/../../..' ) . '/' );
 define('PRODUCTION', false );
 define('DEBUG', false );
@@ -740,7 +743,7 @@ foreach ($viewers as $cip => $client_ip) {
 		if ( $viewers[$cip][$uid]['encoder'] ) $encoder_str = "(*)";
 
 		// Columns: UserID, Order, Username, IP address, Hostname, Connections, Stream1, Stream2, ..., Summary
-		$tmp = $uid . ",0," . (empty($user['email'])?"-":$user['email']) . $encoder_str . "," . $cip . "," . $viewers[$cip][$uid]['hostname'] . "," . $viewers[$cip][$uid]['connections'];
+		$main_line = $uid . ",0," . (empty($user['email'])?"-":$user['email']) . $encoder_str . "," . $cip . "," . $viewers[$cip][$uid]['hostname'] . "," . $viewers[$cip][$uid]['connections'];
 
 		// Stream statistics: get per stream statistics
 		$columns = array();
@@ -749,27 +752,18 @@ foreach ($viewers as $cip => $client_ip) {
 			$loc_id = $keycode_data['locationid'];
 			$str_id = $keycode_data['streamid'];
 			$num = $column_guide[$loc_id][$str_id];
-			if ( $keycode_data['duration'] > 1 ) $columns[$num] = secs2hms($keycode_data['duration']);
+			if ( $keycode_data['duration'] > 1 ) $columns[$num] = $keycode_data['duration'];
 			$duration_full += $keycode_data['duration'];
 		}
 
 		if ( $duration_full < 1 ) continue;
 
-		// Serialize column value
-		for ( $i = 0; $i < $columns_num; $i++ ) {
-			if ( !empty($columns[$i]) ) {
-				$tmp .= "," . $columns[$i];
-			} else {
-				$tmp .= ",-";
-			}
-		}
-
-		$tmp .= "," . secs2hms($duration_full) . "\n";
-
-		$msg .= $tmp;
-
 		// CONNECTION: per connection analyzation (if needed)
+		$msg_session = "";
 		if ( $analyze_perconnection ) {
+
+			$columns = array();
+			$duration_full = 0;
 
 			foreach ($viewers[$cip][$uid]['clients'] as $clientid => $client_data ) {
 
@@ -780,14 +774,18 @@ foreach ($viewers as $cip => $client_ip) {
 					$duration = $playsession['ended_timestamp'] - $playsession['started_timestamp'];
 					if ( $duration < $min_duration ) continue;
 
+					$duration_full += $duration;
+
 					$loc_id = $client_data['locationid'];
 					$str_id = $client_data['streamid'];
 
 					// Column guide
 					$num_column = $column_guide[$loc_id][$str_id];
+					if ( !isset($columns[$num_column]) ) $columns[$num_column] = 0;
 
 					$tmp = "";
 
+					// Clean from breakes?
 					if ( $cleanfrombreaks ) {
 						// Apply event timing (start & end time, breaks)
 						$retval = event_searchtiming($playsession['started_timestamp'], $playsession['ended_timestamp'], $loc_id);
@@ -799,8 +797,9 @@ foreach ($viewers as $cip => $client_ip) {
 							$tmp .= $uid . ",1,," . $cip;
 							for ( $q = 0; $q < ( 5 + $num_column - 2 ); $q++ ) $tmp .= ",";
 							$tmp .= $started_time . "-" . $ended_time . "\n";
+							// Add duration
+							$columns[$num_column] += $retval[$key]['duration'];
 						}
-
 					} else {
 						$started_time = date("H:i:s", $playsession['started_timestamp']);
 						$ended_time = date("H:i:s", $playsession['ended_timestamp']);
@@ -808,14 +807,34 @@ foreach ($viewers as $cip => $client_ip) {
 						$tmp .= $uid . ",1,," . $cip;
 						for ( $q = 0; $q < ( 5 + $num_column - 2 ); $q++ ) $tmp .= ",";
 						$tmp .= $started_time . "-" . $ended_time . "\n";
+						// Add duration
+						$columns[$num_column] += ( $playsession['ended_timestamp'] - $playsession['started_timestamp'] );
 					}
 
-					$msg .= $tmp;
+					$msg_session .= $tmp;
 				}
 
 			}
 
 		}
+
+		// Serialize column value
+		for ( $i = 0; $i < $columns_num; $i++ ) {
+			if ( !empty($columns[$i]) ) {
+				$main_line .= "," . secs2hms($columns[$i]);
+			} else {
+				$main_line .= ",-";
+			}
+		}
+
+		// Add duration to main line
+		$main_line .= "," . secs2hms($duration_full) . "\n";
+
+		// Add main line to log
+		$msg .= $main_line;
+
+		// Add per session block to log
+		$msg .= $msg_session;
 
 		$number_of_viewers++;
 	
