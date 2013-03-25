@@ -23,17 +23,13 @@ echo "Wowza log analizer v0.4 - STARTING...\n";
 $islivestats = TRUE;
 
 // Channel ID: calculate statistics for this channel (live or on demand)
-$channelid = 53;
+$channelid = 54;
 
 // Analyze per connection: TRUE = track all connections | FALSE = give a summary only
 $analyze_perconnection = TRUE;
 
 // Minimal duration to include a connection (seconds)
 $min_duration = 3;
-
-// Ondemand stats analyze start and end dates
-$ondemand_startdate = "2013-02-28";
-$ondemand_enddate = "2013-02-28";
 
 // Log files: work *.log files found in working directory
 $islocallogfiles = FALSE;
@@ -53,14 +49,14 @@ $event_timings = array(
 	0 => array(
 			array(
 				'type'			=> 'EVENT',
-				'starttime'		=> '2013-03-18 10:00:00',	// event start
-				'endtime'		=> '2013-03-18 15:00:00',	// event finish
+				'starttime'		=> '2013-03-22 10:00:00',	// event start
+				'endtime'		=> '2013-03-22 15:00:00',	// event finish
 				'description'	=> 'ESEMÉNY KEZDETE/VÉGE'
 			),
 			array(
 				'type'			=> 'BREAK',
-				'starttime'		=> '2013-03-18 12:00:00',	// break start
-				'endtime'		=> '2013-03-18 13:00:00',	// break end
+				'starttime'		=> '2013-03-22 12:00:00',	// break start
+				'endtime'		=> '2013-03-22 13:00:00',	// break end
 				'description'	=> 'EBÉDSZÜNET'
 			),
 /*			array(
@@ -89,6 +85,10 @@ $debug_client = array(
 
 // Debug: time slice creation based on $event_timings
 $debug_timeslicing = FALSE;
+
+// Ondemand stats analyze start and end dates
+$ondemand_startdate = "2013-02-28";
+$ondemand_enddate = "2013-02-28";
 
 // ---------------------------- User settings ----------------------------------------
 
@@ -244,6 +244,11 @@ if ( $islivestats ) {
 		$locationid = $stream['locationid'];
 		if ( empty($location_info[$locationid]) ) $location_info[$locationid] = array();
 
+		$event_duration = 0;
+		if ( $cleanfrombreaks ) {
+			$event_duration = event_calculate_duration($event_timings, $locationid);
+		}
+
 		$tmp = array(
 			'locationid'		=> $stream['locationid'],
 			'streamid'			=> $stream['streamid'],
@@ -251,9 +256,11 @@ if ( $islivestats ) {
 			'keycode'			=> $stream['keycode'],
 			'contentkeycode'	=> $stream['contentkeycode'],
 			'locationname'		=> $stream['locationname'],
+			'eventduration'		=> $event_duration,
 			'publishedfirst'	=> ""							// First time during that day the stream was published
 		);
 		array_push($location_info[$locationid], $tmp);
+
 
 		$live_streams->MoveNext();
 	}
@@ -691,13 +698,14 @@ $tmp = "UserID,Order,Username,IP address,Hostname,Connections";
 $columns_num = 0;
 $column_guide = array();
 foreach ($location_info as $loc_id => $streams ) {
+
 	foreach ($streams as $str_id => $stream ) {
-		$tmp .= "," . $location_info[$loc_id][$str_id]['locationname'] . " / " . $location_info[$loc_id][$str_id]['streamname'];
+		$tmp .= "," . $location_info[$loc_id][$str_id]['locationname'] . " / " . $location_info[$loc_id][$str_id]['streamname'] . ",Watched %";
 		$tmp_content = "";
 		$published_first = "-";
 		if ( !empty($location_info[$loc_id][$str_id]['publishedfirst']) ) $published_first = date("Y-m-d H:i:s", $location_info[$loc_id][$str_id]['publishedfirst']);
 		if ( !empty($location_info[$loc_id][$str_id]['contentkeycode']) ) $tmp_content = " / " . $location_info[$loc_id][$str_id]['contentkeycode'];
-		$msg .= "#\t" . $location_info[$loc_id][$str_id]['locationname'] . " / " . $location_info[$loc_id][$str_id]['streamname'] . ": " . $location_info[$loc_id][$str_id]['keycode'] . $tmp_content . " (started: " . $published_first . ")\n";
+		$msg .= "#    " . $location_info[$loc_id][$str_id]['locationname'] . " / " . $location_info[$loc_id][$str_id]['streamname'] . ": " . $location_info[$loc_id][$str_id]['keycode'] . $tmp_content . " (started: " . $published_first . ")\n";
 
 		$column_guide[$loc_id][$str_id] = $columns_num;
 		$columns_num++;
@@ -706,24 +714,24 @@ foreach ($location_info as $loc_id => $streams ) {
 	if ( $cleanfrombreaks ) {
 		$msg .= "#  Cleaning applied:\n";
 
-			$event_timing = array();
-			if ( !isset($event_timings[$loc_id]) ) {
-				$event_timing = $event_timings[0];
-			} else {
-				$event_timing = $event_timings[$loc_id];
-			}
+		$event_timing = array();
+		if ( !isset($event_timings[$loc_id]) ) {
+			$event_timing = $event_timings[0];
+		} else {
+			$event_timing = $event_timings[$loc_id];
+		}
 
 //var_dump($event_timing);
 //exit;
 
-			foreach ($event_timing as $key => $value) {
-				$msg .= "#\t" . $event_timing[$key]['description'] . ": " . $event_timing[$key]['starttime'] . " - " . $event_timing[$key]['endtime'] . "\n";
-			}
+		foreach ($event_timing as $key => $value) {
+			$msg .= "#    " . $event_timing[$key]['description'] . ": " . $event_timing[$key]['starttime'] . " - " . $event_timing[$key]['endtime'] . "\n";
+		}
 
 	}
 
 }
-$tmp .= ",Summary\n";
+$tmp .= ",Summary,All Watched %\n";
 $msg .= $tmp;
 
 $number_of_viewers = 0;
@@ -742,17 +750,19 @@ foreach ($viewers as $cip => $client_ip) {
 		$encoder_str = "";
 		if ( $viewers[$cip][$uid]['encoder'] ) $encoder_str = "(*)";
 
-		// Columns: UserID, Order, Username, IP address, Hostname, Connections, Stream1, Stream2, ..., Summary
+		// Columns: UserID, Order, Username, IP address, Hostname, Connections, Stream1, Stream1 %, Stream2, Stream2 %, ..., Summary
 		$main_line = $uid . ",0," . (empty($user['email'])?"-":$user['email']) . $encoder_str . "," . $cip . "," . $viewers[$cip][$uid]['hostname'] . "," . $viewers[$cip][$uid]['connections'];
 
 		// Stream statistics: get per stream statistics
-		$columns = array();
+		$columns['duration'] = array();
+		$columns['eventduration'] = array();
 		$duration_full = 0;
 		foreach ($viewers[$cip][$uid]['streams'] as $keycode => $keycode_data ) {
 			$loc_id = $keycode_data['locationid'];
 			$str_id = $keycode_data['streamid'];
 			$num = $column_guide[$loc_id][$str_id];
-			if ( $keycode_data['duration'] > 1 ) $columns[$num] = $keycode_data['duration'];
+			$columns['eventduration'][$num] = $location_info[$loc_id][$str_id]['eventduration'];
+			if ( $keycode_data['duration'] > 1 ) $columns['duration'][$num] = $keycode_data['duration'];
 			$duration_full += $keycode_data['duration'];
 		}
 
@@ -762,8 +772,8 @@ foreach ($viewers as $cip => $client_ip) {
 		$msg_session = "";
 		if ( $analyze_perconnection ) {
 
-			$columns = array();
-			$duration_full = 0;
+			$columns['duration'] = array();
+			$columns['eventduration'] = array();
 
 			foreach ($viewers[$cip][$uid]['clients'] as $clientid => $client_data ) {
 
@@ -774,18 +784,17 @@ foreach ($viewers as $cip => $client_ip) {
 					$duration = $playsession['ended_timestamp'] - $playsession['started_timestamp'];
 					if ( $duration < $min_duration ) continue;
 
-					$duration_full += $duration;
-
 					$loc_id = $client_data['locationid'];
 					$str_id = $client_data['streamid'];
 
 					// Column guide
 					$num_column = $column_guide[$loc_id][$str_id];
-					if ( !isset($columns[$num_column]) ) $columns[$num_column] = 0;
+					if ( !isset($columns['duration'][$num_column]) ) $columns['duration'][$num_column] = 0;
+					$columns['eventduration'][$num_column] = $location_info[$loc_id][$str_id]['eventduration'];
 
 					$tmp = "";
 
-					// Clean from breakes?
+					// Clean viewing tfrom breaks?
 					if ( $cleanfrombreaks ) {
 						// Apply event timing (start & end time, breaks)
 						$retval = event_searchtiming($playsession['started_timestamp'], $playsession['ended_timestamp'], $loc_id);
@@ -795,20 +804,20 @@ foreach ($viewers as $cip => $client_ip) {
 							$started_time = date("H:i:s", $retval[$key]['starttimestamp']);
 							$ended_time = date("H:i:s", $retval[$key]['endtimestamp']);
 							$tmp .= $uid . ",1,," . $cip;
-							for ( $q = 0; $q < ( 5 + $num_column - 2 ); $q++ ) $tmp .= ",";
+							for ( $q = 0; $q < ( 5 + $num_column * 2 - 2 ); $q++ ) $tmp .= ",";
 							$tmp .= $started_time . "-" . $ended_time . "\n";
 							// Add duration
-							$columns[$num_column] += $retval[$key]['duration'];
+							$columns['duration'][$num_column] += $retval[$key]['duration'];
 						}
 					} else {
 						$started_time = date("H:i:s", $playsession['started_timestamp']);
 						$ended_time = date("H:i:s", $playsession['ended_timestamp']);
 						// Add per connection data to log
 						$tmp .= $uid . ",1,," . $cip;
-						for ( $q = 0; $q < ( 5 + $num_column - 2 ); $q++ ) $tmp .= ",";
+						for ( $q = 0; $q < ( 5 + $num_column * 2 - 2 ); $q++ ) $tmp .= ",";
 						$tmp .= $started_time . "-" . $ended_time . "\n";
 						// Add duration
-						$columns[$num_column] += ( $playsession['ended_timestamp'] - $playsession['started_timestamp'] );
+						$columns['duration'][$num_column] += ( $playsession['ended_timestamp'] - $playsession['started_timestamp'] );
 					}
 
 					$msg_session .= $tmp;
@@ -819,19 +828,37 @@ foreach ($viewers as $cip => $client_ip) {
 		}
 
 		// Serialize column value
+		$duration_full = 0;
 		for ( $i = 0; $i < $columns_num; $i++ ) {
-			if ( !empty($columns[$i]) ) {
-				$main_line .= "," . secs2hms($columns[$i]);
+			if ( !empty($columns['duration'][$i]) ) {
+//echo $i . ": " . $columns['eventduration'][$i] . "\n";
+				$main_line .= "," . secs2hms($columns['duration'][$i]);
+				if ( $cleanfrombreaks ) {
+					$event_duration = $columns['eventduration'][$i];
+					$watched_percent = ( 100 / $event_duration ) * $columns['duration'][$i];
+//echo "eventdur = " . $event_duration . " | coldur = " . $columns['duration'][$i] . "\n";
+					$duration_full += $columns['duration'][$i];
+					$main_line .= "," . round($watched_percent, 2) . "%";
+				} else {
+					$main_line .= ",-,-";
+				}
 			} else {
-				$main_line .= ",-";
+				$main_line .= ",-,-";
 			}
 		}
 
 		// Add duration to main line
-		$main_line .= "," . secs2hms($duration_full) . "\n";
+		$main_line .= "," . secs2hms($duration_full);
+		if ( $cleanfrombreaks ) {
+//echo "eventdur = " . $event_duration . "\n";
+			$watched_percent = ( 100 / $event_duration ) * $duration_full;
+			$main_line .= "," . round($watched_percent, 2) . "%";
+		} else {
+			$main_line .= ",-";
+		}
 
 		// Add main line to log
-		$msg .= $main_line;
+		$msg .= $main_line . "\n";
 
 		// Add per session block to log
 		$msg .= $msg_session;
@@ -1196,6 +1223,49 @@ function array_search_2dim($array, $value) {
 
 	return TRUE;
 }
+
+function event_calculate_duration($event_timings, $feedid) {
+
+	if ( !isset($event_timings[$feedid]) ) $feedid = 0;
+
+	if ( !isset($event_timings[$feedid]) ) {
+		echo "ERROR: default (feedid = 0) event timing data does not exist (" . $feedid . ")\n";
+		exit -1;
+	}
+
+	$event_timing = $event_timings[$feedid];
+
+	$event_duration = 0;
+	$break_duration = 0;
+	foreach ($event_timing as $key => $val) {
+
+		if ( $event_timing[$key]['type'] == 'EVENT' ) {
+
+			$dur = strtotime($event_timing[$key]['endtime']) - strtotime($event_timing[$key]['starttime']);
+			if ( $dur <= 0 ) {
+				echo "ERROR: event timings are invalid for 'EVENT' type\n";
+				exit -1;
+			}
+			$event_duration += $dur;
+		}
+
+		if ( $event_timing[$key]['type'] == 'BREAK' ) {
+
+			$dur = strtotime($event_timing[$key]['endtime']) - strtotime($event_timing[$key]['starttime']);
+			if ( $dur <= 0 ) {
+				echo "ERROR: event timings are invalid for 'BREAK' type\n";
+				exit -1;
+			}
+			$break_duration += $dur;
+		}
+
+	}
+
+	$event_net_duration = $event_duration - $break_duration;
+
+	return $event_net_duration;
+}
+
 
 function event_timing_add_breakpoint($starttime, $endtime) {
  global $debug_timeslicing;
