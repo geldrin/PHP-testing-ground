@@ -49,29 +49,16 @@ $event_timings = array(
 	0 => array(
 			array(
 				'type'			=> 'EVENT',
-				'starttime'		=> '2013-03-22 10:00:00',	// event start
-				'endtime'		=> '2013-03-22 15:00:00',	// event finish
+				'starttime'		=> '2013-03-22 10:06:07',	// event start
+				'endtime'		=> '2013-03-22 15:00:30',	// event finish
 				'description'	=> 'ESEMÉNY KEZDETE/VÉGE'
 			),
 			array(
 				'type'			=> 'BREAK',
-				'starttime'		=> '2013-03-22 12:00:00',	// break start
-				'endtime'		=> '2013-03-22 13:00:00',	// break end
+				'starttime'		=> '2013-03-22 12:10:00',	// break start
+				'endtime'		=> '2013-03-22 13:00:25',	// break end
 				'description'	=> 'EBÉDSZÜNET'
 			),
-/*			array(
-				'type'			=> 'BREAK',
-				'starttime'		=> '2013-03-18 14:00:00',
-				'endtime'		=> '2013-03-18 14:10:00',
-				'description'	=> 'KÁVÉSZÜNET'
-			),
-			array(
-				'type'			=> 'BREAK',
-				'starttime'		=> '2013-03-18 15:00:00',
-				'endtime'		=> '2013-03-18 15:10:00',
-				'description'	=> 'KÁVÉSZÜNET'
-			)
-*/
 	)
 );
 
