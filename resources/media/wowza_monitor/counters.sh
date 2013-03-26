@@ -4,6 +4,7 @@ user="admin"
 password="BoRoKaBoGYo1980"
 
 output="/home/conv/wowza_stats.txt"
+# Compile: javac JMXCommandLine.java
 
 #Usage:
 #
