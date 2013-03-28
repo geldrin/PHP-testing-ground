@@ -23,7 +23,7 @@ echo "Wowza log analizer v0.4 - STARTING...\n";
 $islivestats = TRUE;
 
 // Channel ID: calculate statistics for this channel (live or on demand)
-$channelid = 54;
+$channelid = 55;
 
 // Analyze per connection: TRUE = track all connections | FALSE = give a summary only
 $analyze_perconnection = TRUE;
@@ -49,14 +49,14 @@ $event_timings = array(
 	0 => array(
 			array(
 				'type'			=> 'EVENT',
-				'starttime'		=> '2013-03-22 10:06:07',	// event start
-				'endtime'		=> '2013-03-22 15:00:30',	// event finish
+				'starttime'		=> '2013-03-26 10:07:04',	// event start
+				'endtime'		=> '2013-03-26 14:48:37',	// event finish
 				'description'	=> 'ESEMÉNY KEZDETE/VÉGE'
 			),
 			array(
 				'type'			=> 'BREAK',
-				'starttime'		=> '2013-03-22 12:10:00',	// break start
-				'endtime'		=> '2013-03-22 13:00:25',	// break end
+				'starttime'		=> '2013-03-26 12:02:04',	// break start
+				'endtime'		=> '2013-03-26 13:00:03',	// break end
 				'description'	=> 'EBÉDSZÜNET'
 			),
 	)
@@ -65,10 +65,13 @@ $event_timings = array(
 // DEBUG: set IP and/or client ID to filter for the specific client
 $debug_client = array(
 	'do'		=> FALSE,
-	'ip'		=> "",
+	'ip'		=> "86.101.114.70",
 	'clientid'	=> "",
 	'streamid'	=> "209/209/209_video_lq.mp4"
 );
+
+// Debug: duration calculation
+$debug_duration = FALSE;
 
 // Debug: time slice creation based on $event_timings
 $debug_timeslicing = FALSE;
@@ -463,7 +466,6 @@ for ( $i = 0; $i < count($log_files); $i++ ) {
 			// User ID: store Vsq user ID and add data. If no user ID is given, then use ID = 0 for storing all client IPs
 			if ( empty($viewers[$cip]) ) $viewers[$cip] = array();
 
-
 			// No entry yet: add user ID under the specific IP
 			if ( empty($viewers[$cip][$uid]) ) {
 				$viewers[$cip][$uid] = array();
@@ -739,11 +741,13 @@ foreach ($viewers as $cip => $client_ip) {
 
 		// Columns: UserID, Order, Username, IP address, Hostname, Connections, Stream1, Stream1 %, Stream2, Stream2 %, ..., Summary
 		$main_line = $uid . ",0," . (empty($user['email'])?"-":$user['email']) . $encoder_str . "," . $cip . "," . $viewers[$cip][$uid]['hostname'] . "," . $viewers[$cip][$uid]['connections'];
+		if ( $debug_duration ) echo $main_line . "\n";
 
 		// Stream statistics: get per stream statistics
 		$columns['duration'] = array();
 		$columns['eventduration'] = array();
 		$duration_full = 0;
+		if ( $debug_duration ) echo "Watched DUR: " . $duration_full . "\n";
 		foreach ($viewers[$cip][$uid]['streams'] as $keycode => $keycode_data ) {
 			$loc_id = $keycode_data['locationid'];
 			$str_id = $keycode_data['streamid'];
@@ -751,14 +755,17 @@ foreach ($viewers as $cip => $client_ip) {
 			$columns['eventduration'][$num] = $location_info[$loc_id][$str_id]['eventduration'];
 			if ( $keycode_data['duration'] > 1 ) $columns['duration'][$num] = $keycode_data['duration'];
 			$duration_full += $keycode_data['duration'];
+			if ( ( $analyze_perconnection == FALSE ) and $debug_duration ) echo "Watched DUR: added " . $keycode_data['duration'] . " secs. Full: " . secs2hms($duration_full) . "\n";
 		}
 
+		if ( $debug_duration ) echo "All per stream DUR: " . secs2hms($duration_full) . "\n";
 		if ( $duration_full < 1 ) continue;
 
 		// CONNECTION: per connection analyzation (if needed)
 		$msg_session = "";
 		if ( $analyze_perconnection ) {
 
+			$duration_full = 0;
 			$columns['duration'] = array();
 			$columns['eventduration'] = array();
 
@@ -774,10 +781,14 @@ foreach ($viewers as $cip => $client_ip) {
 					$loc_id = $client_data['locationid'];
 					$str_id = $client_data['streamid'];
 
+					// Debug: print real play time
+					if ( $debug_duration ) echo "PLAY: " . date("H:i:s", $playsession['started_timestamp']) . " - " . date("H:i:s", $playsession['ended_timestamp']) . "\n";
+
 					// Column guide
 					$num_column = $column_guide[$loc_id][$str_id];
 					if ( !isset($columns['duration'][$num_column]) ) $columns['duration'][$num_column] = 0;
 					$columns['eventduration'][$num_column] = $location_info[$loc_id][$str_id]['eventduration'];
+					if ( $debug_duration ) echo "Watched DUR is: " . $columns['duration'][$num_column] . "\n";
 
 					$tmp = "";
 
@@ -790,11 +801,13 @@ foreach ($viewers as $cip => $client_ip) {
 						foreach ($retval as $key => $value) {
 							$started_time = date("H:i:s", $retval[$key]['starttimestamp']);
 							$ended_time = date("H:i:s", $retval[$key]['endtimestamp']);
+							if ( $debug_duration ) echo "PLAY CLEANED: " . $started_time . " - " . $ended_time . "\n";
 							$tmp .= $uid . ",1,," . $cip;
 							for ( $q = 0; $q < ( 5 + $num_column * 2 - 2 ); $q++ ) $tmp .= ",";
 							$tmp .= $started_time . "-" . $ended_time . "\n";
 							// Add duration
 							$columns['duration'][$num_column] += $retval[$key]['duration'];
+							if ( $debug_duration ) echo "Watched DUR: added " . $retval[$key]['duration'] . " secs. Full: " . secs2hms($columns['duration'][$num_column]) . "\n";
 						}
 					} else {
 						$started_time = date("H:i:s", $playsession['started_timestamp']);
@@ -804,7 +817,9 @@ foreach ($viewers as $cip => $client_ip) {
 						for ( $q = 0; $q < ( 5 + $num_column * 2 - 2 ); $q++ ) $tmp .= ",";
 						$tmp .= $started_time . "-" . $ended_time . "\n";
 						// Add duration
-						$columns['duration'][$num_column] += ( $playsession['ended_timestamp'] - $playsession['started_timestamp'] );
+						$duration_toadd = $playsession['ended_timestamp'] - $playsession['started_timestamp'];
+						$columns['duration'][$num_column] += $duration_toadd;
+						if ( $debug_duration ) echo "Watched DUR: added " . $duration_toadd . " secs. Full: " . secs2hms($columns['duration'][$num_column]) . "\n";
 					}
 
 					$msg_session .= $tmp;
