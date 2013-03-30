@@ -3,11 +3,15 @@
 include_once('utils.php');
 include_once('httpapi.php');
 
-$ischeckonly = FALSE;
+$ischeckonly = TRUE;
 
 // MUST BE CHANGED!
-$channel = 37;
-$slideonright = 1;
+$channel = 54;
+// Videosquare!
+//$organization_id = 2;
+// Conforg
+$organization_id = 200;
+$slideonright = 0;
 
 // Some basic settings
 date_default_timezone_set("Europe/Budapest");
@@ -206,7 +210,6 @@ while( !feof($fh) ) {
 			'title'					=> $title,
 //			'subtitle'				=> $subtitle,
 			'recordedtimestamp'		=> $media_startdate . " " . secs2hms($media_starttimesec + hms2secs($cut_start)),
-//			'description'			=> 'Leírás',
 			'technicalnote'			=> $title,
 			'copyright'				=> 'Minden jog fenntartva. A felvétel egészének vagy bármely részének újrafelhasználása kizárólag a szerző(k) engedélyével lehetséges.',
 			'slideonright'			=> $slideonright,
@@ -215,6 +218,7 @@ while( !feof($fh) ) {
 			'isdownloadable'		=> 0,
 			'isaudiodownloadable'	=> 0,
 			'isembedable'			=> 1,
+			'organizationid'		=> $organization_id,
 			'conversionpriority'	=> 200
 		);
 

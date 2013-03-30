@@ -919,6 +919,9 @@ function TCS_GetStreamParams($conf_info) {
 		$err['data']['datetime'] = date('Y-m-d H:i:s', $conf_info->GetConferenceResult->DateTime);
 	}
 
+	$err['data']['width'] = 0;
+	$err['data']['height'] = 0;
+
 	$HasWatchableMovie = $conf_info->GetConferenceResult->HasWatchableMovie;
 	if ( $HasWatchableMovie ) {
 		$WatchableMovie = $conf_info->GetConferenceResult->WatchableMovies->ArrayOfWatchableMovie->WatchableMovie;
@@ -932,12 +935,13 @@ function TCS_GetStreamParams($conf_info) {
 			return $err;
 		}
 
-// Large?
+		// Quality options: Large, Medium, Small, Audio only (?)
 		if ( $num == 1 ) {
-			if ( ( $WatchableMovie->Format == "Flash" ) and ( $WatchableMovie->Quality == "Large" ) ) {
+//			if ( ( $WatchableMovie->Format == "Flash" ) and ( $WatchableMovie->Quality == "Large" ) ) {
+			if ( $WatchableMovie->Format == "Flash" ) {
 				$err['data']['mainurl'] = $WatchableMovie->MainURL;
 				$err['data']['format'] = "flash";
-				$err['data']['quality'] = "large";
+				$err['data']['quality'] = $WatchableMovie->Quality;
 				$err['data']['bitrate'] = $WatchableMovie->TotalBandwidth;
 				$err['data']['width'] = $WatchableMovie->MainWidth;
 				$err['data']['height'] = $WatchableMovie->MainHeight;
@@ -947,10 +951,13 @@ function TCS_GetStreamParams($conf_info) {
 
 		if ( $num > 1 ) {
 			for ( $i = 0; $i < $num; $i++) {
-				if ( ( $WatchableMovie[$i]->Format == "Flash" ) and ( $WatchableMovie[$i]->Quality == "Large" ) ) {
+//				if ( ( $WatchableMovie[$i]->Format == "Flash" ) and ( $WatchableMovie[$i]->Quality == "Large" ) ) {
+				if ( $WatchableMovie[$i]->Format == "Flash" ) {
+					// If lesser quality that is already identified then jump
+					if ( $WatchableMovie[$i]->MainWidth < $err['data']['width'] ) break;
 					$err['data']['mainurl'] = $WatchableMovie[$i]->MainURL;
 					$err['data']['format'] = "flash";
-					$err['data']['quality'] = "large";
+					$err['data']['quality'] = $WatchableMovie->Quality;
 					$err['data']['bitrate'] = $WatchableMovie[$i]->TotalBandwidth;
 					$err['data']['width'] = $WatchableMovie[$i]->MainWidth;
 					$err['data']['height'] = $WatchableMovie[$i]->MainHeight;

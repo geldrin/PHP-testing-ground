@@ -3,9 +3,6 @@
 user="admin"
 password="BoRoKaBoGYo1980"
 
-output="/home/conv/wowza_stats.txt"
-# Compile: javac JMXCommandLine.java
-
 #Usage:
 #
 #[command] -[switch [value]...] [command] [params...]
@@ -38,11 +35,6 @@ output="/home/conv/wowza_stats.txt"
 
 #java -cp . JMXCommandLine $@
 
-date=`date +"%Y-%m-%d %T"`
-
 stat=`java -cp . JMXCommandLine -user ${user} -pass ${password} getConnectionCounts`
 
-echo ${date}: ${stat}
-
-echo ${date}: ${stat} >> ${output}
-
+echo ${stat}

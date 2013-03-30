@@ -2,8 +2,8 @@
 
 include_once('utils.php');
 
-$ffmpeg_path = "E:/Videosquare/bin/ffmpeg-20130108/bin/ffmpeg.exe ";
-$mediainfo_path = "E:/Videosquare/bin/mediainfo-0.7.61/MediaInfo.exe ";
+$ffmpeg_path = "D:/Videosquare/bin/ffmpeg-20130108/bin/ffmpeg.exe ";
+$mediainfo_path = "D:/Videosquare/bin/mediainfo-0.7.61/MediaInfo.exe ";
 $handbrake_path = "\"C:/Program Files/HandBrake/HandBrakeCLI.exe\" ";
 
 // PLEASE SET THESE PARAMETERS!
@@ -12,14 +12,14 @@ $ischeckonly = FALSE;
 
 // Shall we reencode or cut by keyframes. Keyframe based cut can lead to corrupt files!
 $reencode_video = FALSE;
-$reencode_content = TRUE;
+$reencode_content = FALSE;
 
 // SHOULD BE DETECTED WITH MEDIAINFO
 // Video: needed?
 $rendervideo = TRUE;
 $media_res = "1280x720";
 $media_fps = 25;
-$media_bw = 2000;
+$media_bw = 1500;
 // Content: needed?
 $rendercontent = TRUE;
 $content_res = "1024x768";

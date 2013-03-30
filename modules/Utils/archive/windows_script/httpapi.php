@@ -1,13 +1,14 @@
 <?php
 
 class Api {
-//  public $apiurl = 'http://dev.videosquare.eu/hu/api';
+  //public $apiurl = 'http://dev.videosquare.eu/hu/api';
   public $apiurl = 'http://videosquare.eu/hu/api';
   public $debug = false;
   
   protected $curl;
   protected $email;
   protected $password;
+  protected $chunksize = 10485760; // 10mb
   protected $options = array(
     CURLOPT_FAILONERROR    => true,
     CURLOPT_HEADER         => false,
@@ -37,6 +38,24 @@ class Api {
     foreach( $options as $key => $value )
       $opts[ $key ] = $value;
     
+    if ( $this->debug ) {
+      
+      $defines = get_defined_constants();
+      $options = array();
+      foreach( $defines as $key => $value ) {
+        
+        if ( substr( $key, 0, 8 ) != 'CURLOPT_' )
+          continue;
+        
+        if ( isset( $opts[ $value ] ) )
+          $options[ $key ] = $opts[ $value ];
+        
+      }
+      
+      var_dump( $options );
+      
+    }
+    
     curl_setopt_array( $this->curl, $opts );
     
   }
@@ -53,33 +72,6 @@ class Api {
     );
     
     return $this->apiurl . '?' . http_build_query( array_merge( $params, $parameters ) );
-    
-  }
-  
-  public function uploadRecording( $file, $language, $userid = null ) {
-    
-    if ( !is_readable( $file ) )
-      throw new Exception('Unreadable file: ' . $file );
-    
-    $parameters = array('language' => $language );
-    $method     = 'apiupload';
-    
-    if ( $userid ) {
-      
-      $parameters['userid'] = $userid;
-      $method              .= 'asuser';
-      
-    }
-    
-    $options    = array(
-      CURLOPT_URL        => $this->getURL('controller', 'recordings', $method, $parameters ),
-      CURLOPT_POST       => true,
-      CURLOPT_POSTFIELDS => array(
-        'file' => '@' . $file,
-      ),
-    );
-    
-    return $this->executeCall( $options, "UPLOAD" );
     
   }
   
@@ -128,33 +120,6 @@ class Api {
     
   }
   
-  public function uploadContent( $id, $file, $userid = null ) {
-    
-    if ( !is_readable( $file ) )
-      throw new Exception('Unreadable file: ' . $file );
-    
-    $parameters = array('id' => $id );
-    $method     = 'apiuploadcontent';
-    
-    if ( $userid ) {
-      
-      $parameters['userid'] = $userid;
-      $method              .= 'asuser';
-      
-    }
-    
-    $options    = array(
-      CURLOPT_URL        => $this->getURL('controller', 'recordings', $method, $parameters ),
-      CURLOPT_POST       => true,
-      CURLOPT_POSTFIELDS => array(
-        'file' => '@' . $file
-      ),
-    );
-
-    return $this->executeCall( $options, "UPLOAD" );
-    
-  }
-
   private function executeCall( $options, $action ) {
 
     $this->initCurl( $options );
@@ -180,6 +145,130 @@ class Api {
 
     }
 
+  }
+  
+  public function uploadContent( $id, $file, $userid = null ) {
+    return $this->uploadRecording( $file, '', $userid, 1, $id );
+  }
+  
+  public function uploadRecording( $file, $language, $userid = 0, $iscontent = 0, $recordingid = 0 ) {
+    
+    if ( !isset( $file ) or !is_readable( $file ) )
+      throw new Exception("Unreadable file: " . $file );
+    
+    $filename     = basename( $file );
+    $size         = filesize( $file );
+    $chunkcount   = 1;
+    $currentchunk = 0;
+    $resumeinfo   = $this->getResumeInfo(
+      $filename, $size, $iscontent, $userid
+    );
+    
+    if ( $resumeinfo and $resumeinfo['status'] == 'success' )
+      $currentchunk = $resumeinfo['startfromchunk'];
+    
+    if ( $size > $this->chunksize )
+      $chunkcount = ceil( $size / $this->chunksize );
+    
+    if ( $currentchunk >= $chunkcount )
+      $currentchunk = 0;
+    
+    while( $currentchunk < $chunkcount ) {
+      
+      $tmpfile   = $this->getChunk( $file, $currentchunk );
+      $chunkinfo = $this->uploadChunk( $tmpfile, array(
+          'name'         => $filename,
+          'chunks'       => $chunkcount,
+          'chunk'        => $currentchunk,
+          'iscontent'    => $iscontent,
+          'userid'       => $userid,
+          'size'         => $size,
+          'textlanguage' => $language,
+          'id'           => $recordingid,
+        )
+      );
+      
+      unlink( $tmpfile );
+      if ( !$chunkinfo or !isset( $chunkinfo['status'] ) or $chunkinfo['status'] == 'error' )
+        throw new Exception(
+          "Failed uploading chunk($tmpfile) #$currentchunk out of $chunkcount: " .
+          var_export( $chunkinfo, true )
+        );
+      
+      $currentchunk++;
+      
+    }
+    
+    return array('result' => 'OK', 'data' => array( 'id' => $chunkinfo['id'] ) );
+    
+  }
+  
+  private function getResumeInfo( $filename, $size, $iscontent, $userid ) {
+    
+    $method     = 'checkfileresume';
+    $parameters = array(
+      'name'      => $filename,
+      'size'      => (string)$size,
+      'iscontent' => $iscontent,
+      'userid'    => $userid,
+    );
+    
+    if ( $parameters['userid'] )
+      $method  .= 'asuser';
+    
+    $options    = array(
+      CURLOPT_URL        => $this->getURL('controller', 'recordings', $method, $parameters ),
+    );
+    
+    return $this->executeCall( $options, "RESUMEINFO" );
+    
+  }
+  
+  private function getChunk( $file, $currentchunk ) {
+    
+    $tmpfile    = __DIR__ . '/.currentchunk';
+    if (
+         ( file_exists( $tmpfile ) and !is_writable( $tmpfile ) ) or
+         !is_writable( dirname( $tmpfile ) )
+       )
+      throw new Exception("Temporary file: $tmpfile is not writable!");
+      
+    $tmphandle  = fopen( $tmpfile , 'wb' ); // open for writing only and truncate to zero
+    $filehandle = fopen( $file, 'rb' );
+    $dataread   = 0;
+    $offset     = $currentchunk * $this->chunksize;
+    
+    fseek( $filehandle, $offset );
+    while( $dataread < $this->chunksize and !feof( $filehandle ) ) {
+      
+      $data     = fread( $filehandle, 8192 );
+      $dataread += fwrite( $tmphandle, $data );
+      
+    }
+    
+    fclose( $tmphandle );
+    fclose( $filehandle );
+    return $tmpfile;
+    
+  }
+  
+  private function uploadChunk( $file, $parameters ) {
+    
+    $method     = 'uploadchunk';
+    
+    if ( $parameters['userid'] )
+      $method  .= 'asuser';
+    
+    $options    = array(
+      CURLOPT_URL        => $this->getURL('controller', 'recordings', $method, $parameters ),
+      CURLOPT_POST       => true,
+      CURLOPT_POSTFIELDS => array(
+        'file' => '@' . $file,
+      ),
+    );
+    
+    return $this->executeCall( $options, "UPLOAD" );
+    
   }
   
 }

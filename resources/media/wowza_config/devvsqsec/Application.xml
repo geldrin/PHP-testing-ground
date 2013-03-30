@@ -25,7 +25,7 @@
 		-->
 		<Streams>
 			<StreamType>default</StreamType>
-			<StorageDir>/srv/storage/dev.videosquare.eu/recordings/</StorageDir>
+			<StorageDir>/srv/vsq_storage/dev.videosquare.eu/recordings/</StorageDir>
 			<KeyDir>${com.wowza.wms.context.VHostConfigHome}/keys</KeyDir>
 			<!-- LiveStreamPacketizers (separate with commas): cupertinostreamingpacketizer, smoothstreamingpacketizer, sanjosestreamingpacketizer, cupertinostreamingrepeater, smoothstreamingrepeater, sanjosestreamingrepeater, dvrstreamingpacketizer, dvrstreamingrepeater -->
 			<LiveStreamPacketizers></LiveStreamPacketizers>
