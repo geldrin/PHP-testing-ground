@@ -1660,10 +1660,12 @@ class Recordings extends \Springboard\Model {
     $where        = array();
     
     if ( $user['id'] )
-      $where[] = "c.userid = '" . $user['id'] . "'";
-    
-    if ( $user['isclientadmin'] )
-      $where[] = "c.organizationid = '" . $user['organizationid'] . "'";
+      $where[] = "
+        (
+          c.userid         = '" . $user['id'] . "' AND
+          c.organizationid = '" . $user['organizationid'] . "'
+        )
+      ";
     
     $where = implode(" OR ", $where );
     
