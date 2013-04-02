@@ -62,6 +62,12 @@ class Menu {
       ),
       
       array(
+        'link'   => 'channel_types',
+        'icon'   => 'images/sekkyumu/write_document.png',
+        'text'   => 'csatorna típusok',
+      ),
+      
+      array(
         'link'   => 'localization',
         'icon'   => 'images/sekkyumu/write_document.png',
         'text'   => 'fordítás',
