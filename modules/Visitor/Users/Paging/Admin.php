@@ -13,6 +13,7 @@ class Admin extends \Visitor\Paging {
   protected $template = 'Visitor/Users/Paging/Admin.tpl';
   protected $perpage  = 10;
   protected $usersModel;
+  protected $pagestoshow = 3;
   
   public function init() {
     
