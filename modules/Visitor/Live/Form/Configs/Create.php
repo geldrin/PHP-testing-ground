@@ -98,8 +98,9 @@ $config = array(
     'value'       => date('Y-m-d'),
     'validation'  => array(
       array(
-        'type'   => 'date',
-        'format' => 'YYYY-MM-DD',
+        'type'     => 'date',
+        'format'   => 'YYYY-MM-DD',
+        'lessthan' => 'endtimestamp',
       )
     ),
   ),
@@ -113,8 +114,9 @@ $config = array(
     'value'       => date('Y-m-d', strtotime('+1 day')),
     'validation'  => array(
       array(
-        'type'   => 'date',
-        'format' => 'YYYY-MM-DD',
+        'type'        => 'date',
+        'format'      => 'YYYY-MM-DD',
+        'greaterthan' => 'starttimestamp',
       )
     ),
   ),
