@@ -101,6 +101,7 @@ $config = array(
         'type'     => 'date',
         'format'   => 'YYYY-MM-DD',
         'lessthan' => 'endtimestamp',
+        'help'     => $l('live', 'starttimestamp_help'),
       )
     ),
   ),
@@ -117,6 +118,7 @@ $config = array(
         'type'        => 'date',
         'format'      => 'YYYY-MM-DD',
         'greaterthan' => 'starttimestamp',
+        'help'     => $l('live', 'endtimestamp_help'),
       )
     ),
   ),
