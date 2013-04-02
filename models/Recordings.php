@@ -2668,7 +2668,7 @@ class Recordings extends \Springboard\Model {
         INSERT INTO channels_recordings (channelid, recordingid, userid)
         VALUES ('$channelid', '" . $this->id . "', '" . $user['id'] . "')
       ");
-      
+    
     $this->updateChannelIndexPhotos();
     $this->updateCategoryCounters();
 
