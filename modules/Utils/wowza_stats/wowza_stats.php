@@ -23,7 +23,7 @@ echo "Wowza log analizer v0.4 - STARTING...\n";
 $islivestats = TRUE;
 
 // Channel ID: calculate statistics for this channel (live or on demand)
-$channelid = 55;
+$channelid = 52;
 
 // Analyze per connection: TRUE = track all connections | FALSE = give a summary only
 $analyze_perconnection = TRUE;
@@ -49,15 +49,15 @@ $event_timings = array(
 	0 => array(
 			array(
 				'type'			=> 'EVENT',
-				'starttime'		=> '2013-03-26 10:07:04',	// event start
-				'endtime'		=> '2013-03-26 14:48:37',	// event finish
+				'starttime'		=> '2013-03-27 13:15:15',	// event start
+				'endtime'		=> '2013-03-27 16:44:19',	// event finish
 				'description'	=> 'ESEMÉNY KEZDETE/VÉGE'
 			),
 			array(
 				'type'			=> 'BREAK',
-				'starttime'		=> '2013-03-26 12:02:04',	// break start
-				'endtime'		=> '2013-03-26 13:00:03',	// break end
-				'description'	=> 'EBÉDSZÜNET'
+				'starttime'		=> '2013-03-27 14:51:15',	// break start
+				'endtime'		=> '2013-03-27 15:03:19',	// break end
+				'description'	=> 'KÁVÉSZÜNET'
 			),
 	)
 );
