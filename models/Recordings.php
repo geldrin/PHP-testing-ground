@@ -2435,18 +2435,42 @@ class Recordings extends \Springboard\Model {
       
     }
     
+    $recordingids = array();
     if ( !empty( $contributorids ) ) {
       
-      $recordingids = $db->getCol("
+      $recordingids = $this->db->getCol("
         SELECT DISTINCT recordingid
         FROM contributors_roles
         WHERE
           contributorid IN ('" . implode("', '", $contributorids ) . "')
       ");
       
-      if ( !empty( $recordingids ) )
-        $where[] = "r.id IN('" . implode("', '", $recordingids ) . "')";
+    }
+    
+    if ( $search['category'] ) {
       
+      $recordingids = array_merge( $recordingids, $this->db->getCol("
+        SELECT DISTINCT recordingid
+        FROM recordings_categories
+        WHERE categoryid = '" . intval( $search['category'] ) . "'
+      ") );
+      
+    }
+    
+    if ( $search['department'] ) {
+      
+      $recordingids = array_merge( $recordingids, $this->db->getCol("
+        SELECT DISTINCT recordingid
+        FROM access
+        WHERE departmentid = '" . intval( $search['department'] ) . "'
+      ") );
+      
+    }
+    
+    
+    if ( !empty( $recordingids ) ) {
+      $recordingids = array_unique( $recordingids );
+      $where[] = "r.id IN('" . implode("', '", $recordingids ) . "')";
     }
     
     $where = implode(' AND ', $where );
