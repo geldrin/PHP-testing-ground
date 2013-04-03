@@ -177,6 +177,8 @@ CREATE TABLE `recordings` (
    `numberofratingsthismonth` bigint(20) unsigned not null default '0',
    `ratingthismonth` decimal(3,2) not null default '0',
    `sumofratingthismonth` bigint(20) unsigned not null default '0',
+   `masterdatasize` int default null,
+   `recordingdatasize` int default null,
    `mastervideofilename` text,
    `mastervideoextension` text,
    `mastermediatype` text,
