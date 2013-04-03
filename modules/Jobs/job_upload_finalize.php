@@ -194,8 +194,82 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_upload_finalize.stop' ) an
 
 		} // End of avatar finalize
 
+		// Contributor images: handle selected video index pictures
+		$global_log = "Moving contributor images to storage:\n\n";
+		$start_time = time();
+		$cimages = array();
+		if ( query_contributor_images($cimages) ) {
+
+			while ( !$cimages->EOF ) {
+
+				$cimage = array();
+				$cimage = $cimages->fields;
+
+				$global_log .= "Contributor ID: " . $cimage['contributorid'] . "\n";
+
+				// Source and destination file
+				$source_file = $app->config['mediapath'] . $cimage['indexphotofilename'];
+				$contributor_path = "contributors/" . ( $cimage['contributorid'] % 1000 ) . "/" . $cimage['contributorid'] . "/";
+				$destination_path = $app->config['mediapath'] . $contributor_path;
+				$destination_file = $destination_path . $cimage['id'] . ".jpg";
+
+				// Log file path information
+				$global_log .= "Source file: " . $source_file . "\n";
+				$global_log .= "Target file: " . $destination_file . "\n";
+
+				// Source file: check
+				if ( !file_exists($source_file) ) {
+					$msg = "ERROR: index image not found at " . $source_file;
+					log_document_conversion(0, 0, $jconf['jobid_upload_finalize'], $jconf['dbstatus_cimage'], $msg, "-", 0, 0, TRUE);
+					$global_log .= $msg . "\n\n";
+					continue;
+				}
+
+				// Create destination directory under "contributors"
+				$err = create_directory($destination_path);
+				if ( !$err['code'] ) {
+					$msg = "ERROR: cannot create directory " . $destination_path;
+					log_document_conversion(0, 0, $jconf['jobid_upload_finalize'], $jconf['dbstatus_cimage'], $msg, "-", 0, 0, TRUE);
+					$global_log .= $msg . "\n\n";
+					continue;
+				}
+
+				// Copy file to destination
+				$err = copy($source_file, $destination_file);
+				if ( !$err ) {
+					$msg = $jconf['dbstatus_cimage'], "ERROR: cannot copy " . $source_file . " -> " . $destination_file;
+					log_document_conversion(0, 0, $jconf['jobid_upload_finalize'], $msg, "-", 0, 0, TRUE);
+					$global_log .= $msg . "\n\n";
+					continue;
+				}
+
+				// Update new path in DB
+
+				// Update DB
+				$update = array(
+					'indexphotofilename'	=> $contributor_path . $cimage['id'] . ".jpg";
+				);
+				$cImg = $app->bootstrap->getModel('contributor_images');
+				$cImg->select($cimage['id']);
+				$cImg->updateRow($update);
+
+				$global_log .= "Status: [OK] Image copied.\n\n";
+
+				$app->watchdog();
+				$cimages->MoveNext();
+
+			}
+
+			$duration = time() - $start_time;
+			$hms = secs2hms($duration);
+			log_document_conversion(0, 0, $jconf['jobid_upload_finalize'], "-", "Contributor images finalize finished in " . $hms . " time.\n\nSummary:\n\n" . $global_log, "-", "-", $duration, TRUE);
+
+		} // End of contributor images finalize
+
+echo $global_log . "\n";
+
 		break;
-	}	// End of while(1)
+	} // End of while(1)
 
 	// Close DB connection if open
 	if ( $db_close ) {
@@ -307,6 +381,35 @@ global $jconf, $db, $app;
 
 	// Check if pending job exsits
 	if ( $avatars->RecordCount() < 1 ) {
+		return FALSE;
+	}
+
+	return TRUE;
+}
+
+function query_contributor_images(&$cimages) {
+global $jconf, $db, $app;
+
+	$query = "
+		SELECT
+			id,
+			contributorid,
+			indexphotofilename
+		FROM
+			contributor_images
+		WHERE
+			indexphotofilename LIKE \"%recordings%\"
+	";
+
+	try {
+		$cimages = $db->Execute($query);
+	} catch (exception $err) {
+		log_document_conversion(0, 0, $jconf['jobid_upload_finalize'], $jconf['dbstatus_init'], "[ERROR] Cannot query contributor images. SQL query failed.", trim($query), $err, 0, TRUE);
+		return FALSE;
+	}
+
+	// Check if pending job exsits
+	if ( $cimages->RecordCount() < 1 ) {
 		return FALSE;
 	}
 
