@@ -1,6 +1,7 @@
 <?php
 namespace Visitor;
 abstract class Paging extends \Springboard\Controller\Paging {
+  protected $pagestoshow = 5;
   
   public function redirectToMainDomain() {}
   
