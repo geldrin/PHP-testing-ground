@@ -20,9 +20,8 @@
       <div id="currentusercontent">
         <a id="currentusername" href="#">{$member.namefirst|escape:html}<span></span></a>
         <div id="currentusermenu" style="width: {$columncount*216-216+241}px">
-          {if $member.isnewseditor or $member.isclientadmin or $member.isuploader or ( $organization.islivestreamingenabled and $member.isliveadmin )}
+          {if $member.isnewseditor or $member.isclientadmin}
             <div class="column first">
-              {if $member.isnewseditor or $member.isclientadmin}
                 <div class="title">{#usermenu_organizations_title#}</div>
                 <ul>
                   <li><a href="{$language}/organizations/listnews">{#usermenu_organizations_news#}</a></li>
@@ -32,7 +31,6 @@
                   <li><a href="{$language}/users/massinvite">{#usermenu_organizations_massinvite#}</a></li>
                 </ul>
                 <div class="hr"></div>
-              {/if}
             </div>
           {/if}
           
