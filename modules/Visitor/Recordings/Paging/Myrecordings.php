@@ -11,6 +11,7 @@ class Myrecordings extends \Visitor\Paging {
   protected $insertbeforepager = Array( 'Visitor/Recordings/Paging/MyrecordingsBeforepager.tpl' );
   protected $template = 'Visitor/Recordings/Paging/Myrecordings.tpl';
   protected $recordingsModel;
+  protected $pagestoshow = 3;
   
   public function init() {
     
