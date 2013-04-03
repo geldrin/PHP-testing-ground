@@ -195,7 +195,7 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_upload_finalize.stop' ) an
 		} // End of avatar finalize
 
 		// Contributor images: handle selected video index pictures
-		$global_log = "Moving contributor images to storage:\n\n";
+		$global_log = "Copying contributor images to storage:\n\n";
 		$start_time = time();
 		$cimages = array();
 		if ( query_contributor_images($cimages) ) {
@@ -204,7 +204,6 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_upload_finalize.stop' ) an
 
 				$cimage = array();
 				$cimage = $cimages->fields;
-var_dump($cimage);
 
 				$global_log .= "Contributor ID: " . $cimage['contributorid'] . "\n";
 
