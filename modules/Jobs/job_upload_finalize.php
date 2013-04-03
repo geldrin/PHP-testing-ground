@@ -103,6 +103,23 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_upload_finalize.stop' ) an
 				} else {
 					$global_log .= "Status: [OK] Document moved in " . $err['duration'] . " seconds.\n\n";
 					update_db_attachment_status($doc['id'], $jconf['dbstatus_copystorage_ok']);
+
+					// Update recording size
+					$recording_directory = $app->config['recordingpath'] . ( $doc['recordingid'] % 1000 ) . "/" . $doc['recordingid'] . "/";
+					$err = directory_size($recording_directory . "master/");
+					$master_filesize = 0;
+					if ( $err['code'] ) $master_filesize = $err['value'];
+					$err = directory_size($recording_directory);
+					$recording_filesize = 0;
+					if ( $err['code'] ) $recording_filesize = $err['value'];
+					// Update DB
+					$update = array(
+						'masterdatasize'	=> $master_filesize,
+						'recordingdatasize'	=> $recording_filesize
+					);
+					$recDoc = $app->bootstrap->getModel('recordings');
+					$recDoc->select($doc['recordingid']);
+					$recDoc->updateRow($update);
 				}
 
 				$app->watchdog();
