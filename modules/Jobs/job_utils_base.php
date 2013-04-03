@@ -651,12 +651,16 @@ global $jconf;
 
 	$err = array();
 	$err['value'] = null;
+	$err['code'] = FALSE;
+	$err['command_output'] = "-";
+	$err['result'] = 0;
+	$err['size'] = 0;
 
 	$ssh_command = "ssh -i " . $jconf['ssh_key'] . " " . $jconf['ssh_user'] . "@" . $server . " ";
 	$remote_filename = $jconf['ssh_user'] . "@" . $server . ":" . $file;
 
 	$filesize = 0;
-	$command = $ssh_command . "du -b " . $file . " 2>&1";
+	$command = $ssh_command . "du -sb " . $file . " 2>&1";
 	exec($command, $output, $result);
 	$err['command'] = $command;
     $err['result'] = $result;
@@ -665,7 +669,7 @@ global $jconf;
 		// If file does not exists then error is logged
 		if ( strpos($output_string, "No such file or directory") > 0 ) {
 			$err['code'] = FALSE;
-			$err['message'] = "[ERROR] Input file does not exists at: " . $remote_filename;
+			$err['message'] = "[ERROR] Input file/directory does not exists at: " . $remote_filename;
 			return $err;
 		} else {
 			// Other error occured, maybe locale, so we set status to "uploaded" to allow other nodes to take over the task
@@ -678,7 +682,7 @@ global $jconf;
 		$filesize = $tmp[0];
 		if ( ( $filesize == 0) or (!is_numeric($filesize)) ) {
 			$err['code'] = FALSE;
-			$err['message'] = "[ERROR] Input file zero/invalid length: " . $remote_filename;
+			$err['message'] = "[ERROR] Input file/directory zero/invalid length: " . $remote_filename;
 			return $err;
 		}
 	}

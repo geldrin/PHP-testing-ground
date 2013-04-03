@@ -716,6 +716,22 @@ global $app, $jconf;
 		if ( !$err['code'] ) log_recording_conversion($recording['id'], $jconf['jobid_content_convert'], $jconf['dbstatus_copystorage'], $err['message'], $err['command'], $err['result'], 0, TRUE);
 	}
 
+	// Update recording size
+	$err = ssh_filesize($recording['mastersourceip'], $remote_recording_directory . "master/");
+	$master_filesize = 0;
+	if ( $err['code'] ) $master_filesize = $err['value'];
+	$err = ssh_filesize($recording['mastersourceip'], $remote_recording_directory);
+	$recording_filesize = 0;
+	if ( $err['code'] ) $recording_filesize = $err['value'];
+	// Update DB
+	$update = array(
+		'masterdatasize'	=> $master_filesize,
+		'recordingdatasize'	=> $recording_filesize
+	);
+	$recDoc = $app->bootstrap->getModel('recordings');
+	$recDoc->select($recording['id']);
+	$recDoc->updateRow($update);
+
 	// Remove temporary directory, no failure if not successful
 //	$err = remove_file_ifexists($recording['temp_directory']);
 //	if ( !$err['code'] ) log_recording_conversion($recording['id'], $jconf['jobid_content_convert'], $jconf['dbstatus_copystorage'], $err['message'], $err['command'], $err['result'], 0, TRUE);
