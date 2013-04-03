@@ -204,6 +204,7 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_upload_finalize.stop' ) an
 
 				$cimage = array();
 				$cimage = $cimages->fields;
+var_dump($cimage);
 
 				$global_log .= "Contributor ID: " . $cimage['contributorid'] . "\n";
 
@@ -237,7 +238,7 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_upload_finalize.stop' ) an
 				// Copy file to destination
 				$err = copy($source_file, $destination_file);
 				if ( !$err ) {
-					$msg = $jconf['dbstatus_cimage'], "ERROR: cannot copy " . $source_file . " -> " . $destination_file;
+					$msg = "ERROR: cannot copy " . $source_file . " -> " . $destination_file;
 					log_document_conversion(0, 0, $jconf['jobid_upload_finalize'], $msg, "-", 0, 0, TRUE);
 					$global_log .= $msg . "\n\n";
 					continue;
@@ -247,7 +248,7 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_upload_finalize.stop' ) an
 
 				// Update DB
 				$update = array(
-					'indexphotofilename'	=> $contributor_path . $cimage['id'] . ".jpg";
+					'indexphotofilename'	=> $contributor_path . $cimage['id'] . ".jpg"
 				);
 				$cImg = $app->bootstrap->getModel('contributor_images');
 				$cImg->select($cimage['id']);
@@ -266,7 +267,7 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_upload_finalize.stop' ) an
 
 		} // End of contributor images finalize
 
-echo $global_log . "\n";
+//echo $global_log . "\n";
 
 		break;
 	} // End of while(1)

@@ -3,7 +3,7 @@
 $curl = curl_init();
 
 $action = "STOP";
-$live_stream_id = "102382";
+$live_stream_id = "688004";
 //v: 778203
 //c: 688004
 
