@@ -98,10 +98,10 @@ $config = array(
     'value'       => date('Y-m-d'),
     'validation'  => array(
       array(
-        'type'     => 'date',
-        'format'   => 'YYYY-MM-DD',
-        'lessthan' => 'endtimestamp',
-        'help'     => $l('live', 'starttimestamp_help'),
+        'type'       => 'date',
+        'format'     => 'YYYY-MM-DD',
+        'lesseqthan' => 'endtimestamp',
+        'help'       => $l('live', 'starttimestamp_help'),
       )
     ),
   ),
@@ -115,10 +115,10 @@ $config = array(
     'value'       => date('Y-m-d', strtotime('+1 day')),
     'validation'  => array(
       array(
-        'type'        => 'date',
-        'format'      => 'YYYY-MM-DD',
-        'greaterthan' => 'starttimestamp',
-        'help'     => $l('live', 'endtimestamp_help'),
+        'type'          => 'date',
+        'format'        => 'YYYY-MM-DD',
+        'greatereqthan' => 'starttimestamp',
+        'help'          => $l('live', 'endtimestamp_help'),
       )
     ),
   ),
