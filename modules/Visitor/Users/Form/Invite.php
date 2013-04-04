@@ -25,6 +25,12 @@ class Invite extends \Visitor\Form {
     $values['validationcode'] = $crypto->randomPassword( 10 );
     $values['userid']         = $user['id'];
     
+    if ( !empty( $values['departments'] ) )
+      $values['departments']  = implode('|', $values['departments'] );
+    
+    if ( !empty( $values['groups'] ) )
+      $values['groups']       = implode('|', $values['groups'] );
+    
     $invModel->insert( $values );
     
     $invModel->row['id'] = $crypto->asciiEncrypt( $invModel->row['id'] );
