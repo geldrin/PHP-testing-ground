@@ -1361,7 +1361,7 @@ function setupContributors() {
   });
   
   $j('#createcontributor, #contributors .edit').fancybox({
-    width: 535,
+    width: 555,
     height: 560,
     titleShow: false,
     type: 'iframe'
@@ -1377,7 +1377,7 @@ function setupContributors() {
     $j('#contributors').show();
     
     $j('#createcontributor, #contributors .edit').fancybox({
-      width: 535,
+      width: 555,
       height: 560,
       titleShow: false,
       type: 'iframe'

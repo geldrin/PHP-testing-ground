@@ -47,7 +47,7 @@ class Controller extends \Visitor\Controller {
       );
       
       if ( $result['indexphotofilename'] )
-        $data['img'] .= $result['indexphotofilename']; // TODO
+        $data['img'] .= 'files/' . $result['indexphotofilename'];
       else
         $data['img'] .= 'images/avatar_placeholder.png';
       
