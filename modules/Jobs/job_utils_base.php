@@ -8,6 +8,7 @@ function directory_size($path) {
 	$err['command_output'] = "-";
 	$err['result'] = 0;
 	$err['size'] = 0;
+	$err['value'] = 0;
 
 	if ( !is_dir($path) ) return $err;
 
@@ -19,7 +20,7 @@ function directory_size($path) {
 	$tmp = preg_split('/\s+/', $err['command_output'], 2);
 
 	if ( !is_numeric($tmp[0]) ) return $err;
-	$err['size'] = $tmp[0];
+	$err['value'] = $err['size'] = $tmp[0];
 
 	$err['code'] = TRUE;
 
