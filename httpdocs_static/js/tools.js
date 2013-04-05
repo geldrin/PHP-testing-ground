@@ -8,6 +8,9 @@ $j(document).ready(function() {
     
   });
   
+  $j.datepicker.setDefaults($j.datepicker.regional[ language ]);
+  $j.timepicker.setDefaults($j.timepicker.regional[ language ]);
+  
   runIfExists('#headerlogin', setupHeaderLogin );
   runIfExists('#headersearch', setupHeaderSearch );
   runIfExists('.ratewidget', setupRateWidget );
@@ -31,6 +34,9 @@ $j(document).ready(function() {
   runIfExists('#recordings_modifycontributors', setupContributors );
   runIfExists('#contributors_create, #contributors_modify', setupContributorEdit );
   runIfExists('#live_modify, #live_create', setupLiveAccessCheck );
+  runIfExists('#recordings_modifysharing', setupSharing );
+  runIfExists('#recordings_modifydescription', setupDescription );
+  runIfExists('#live_create, #live_modify', setupLiveCreate );
   
   if ( needping )
     setTimeout( setupPing, 1000 * pingsecs );
@@ -79,7 +85,8 @@ function setupSearch() {
   $j('.datepicker').datepicker({
     dateFormat: 'yy-mm-dd',
     changeMonth: true,
-    changeYear: true
+    changeYear: true,
+    maxDate: new Date()
   });
   
 }
@@ -1472,12 +1479,13 @@ function setupLiveAccessCheck() {
     var root = $j('#groupscontainer');
   
   var origaccess = [];
-  root.find('input[type=checkbox]:checked').each(function() {
-    
-    origaccess.push( $j(this).val() );
-    
-  });
-  
+  if ( root ) {
+    root.find('input[type=checkbox]:checked').each(function() {
+      
+      origaccess.push( $j(this).val() );
+      
+    });
+  }
   
   checkAccessChanged = function() {
     
@@ -1506,5 +1514,59 @@ function setupLiveAccessCheck() {
     return false;
     
   };
+  
+}
+
+function setupDescription() {
+  
+  $j('#recordedtimestamp').datetimepicker({
+    dateFormat : 'yy-mm-dd',
+    changeMonth: true,
+    changeYear : true,
+    timeFormat : 'HH:mm',
+    maxDateTime: new Date()
+  });
+  
+}
+
+function setupSharing() {
+  
+  $j('input[name=wanttimelimit]').change(function(e) {
+    
+    var wanttimelimit = $j('input[name=wanttimelimit]:checked').val() == '1';
+    var parent        = $j('.datepicker').parents('tr');
+    parent.toggle( wanttimelimit )
+    
+  }).change();
+  
+  setupDefaultDatePicker('.datepicker');
+  
+}
+
+function setupDefaultDatePicker( elem ) {
+  
+  var elem    = $j(elem);
+  var options = {
+    dateFormat: 'yy-mm-dd',
+    changeMonth: true,
+    changeYear: true
+  };
+  
+  if ( elem.attr('data-datefrom') )
+    options.minDate = elem.attr('data-datefrom');
+  
+  if ( elem.attr('data-dateuntil') )
+    options.maxDate = elem.attr('data-dateuntil');
+  
+  if ( elem.attr('data-dateyearrange') )
+    options.yearRange = elem.attr('data-dateyearrange');
+  
+  $j(elem).datepicker( options );
+  
+}
+
+function setupLiveCreate() {
+  
+  setupDefaultDatePicker('.datepicker');
   
 }

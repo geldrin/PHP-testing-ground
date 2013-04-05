@@ -13,6 +13,16 @@ class Modifysharing extends \Visitor\Recordings\ModifyForm {
     if ( $this->recordingsModel->row['visiblefrom'] )
       $this->values['wanttimelimit'] = 1;
     
+    if ( $this->values['visiblefrom'] )
+      $this->values['visiblefrom']  = substr( $this->values['visiblefrom'], 0, 10 );
+    else
+      unset( $this->values['visiblefrom'] );
+    
+    if ( $this->values['visibleuntil'] )
+      $this->values['visibleuntil'] = substr( $this->values['visibleuntil'], 0, 10 );
+    else
+      unset( $this->values['visibleuntil'] );
+    
   }
   
   public function onComplete() {

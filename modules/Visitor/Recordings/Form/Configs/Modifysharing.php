@@ -42,24 +42,39 @@ $config = array_merge( $config, array(
   
   'visiblefrom' => array(
     'displayname' => $l('recordings', 'visiblefrom'),
-    'type'        => 'selectDate',
-    'postfix'     => '<div class="datepicker"></div>',
-    'format'      => '%Y-%M-%D',
-    'yearfrom'    => date('Y') + 10, // current year + 10 years
+    'type'        => 'inputText',
+    'html'        =>
+      'class="inputtext inputbackground clearonclick datepicker margin" ' .
+      'data-dateyearrange="' . date('Y') . ':' . ( date('Y') + 10 ) . '"' .
+      'data-datefrom="' . date('Y-m-d') . '"'
+    ,
     'value'       => date('Y-m-d'),
     'validation'  => array(
+      array(
+        'type'       => 'date',
+        'format'     => 'YYYY-MM-DD',
+        'lesseqthan' => 'visibleuntil',
+        'help'       => $l('recordings', 'visiblefrom_help'),
+      )
     ),
   ),
   
   'visibleuntil' => array(
     'displayname' => $l('recordings', 'visibleuntil'),
-    'type'        => 'selectDate',
-    'postfix'     => '<div class="datepicker"></div>',
-    'format'      => '%Y-%M-%D',
-    'yearfrom'    => date('Y') + 10, // current year + 10 years
-    //'yearuntil'   => false, // current year only
+    'type'        => 'inputText',
+    'html'        =>
+      'class="inputtext inputbackground clearonclick datepicker margin" ' .
+      'data-dateyearrange="' . date('Y') . ':' . ( date('Y') + 10 ) . '"' .
+      'data-datefrom="' . date('Y-m-d') . '"'
+    ,
     'value'       => date('Y-m-d', strtotime('+3 months')),
     'validation'  => array(
+      array(
+        'type'          => 'date',
+        'format'        => 'YYYY-MM-DD',
+        'greatereqthan' => 'visiblefrom',
+        'help'          => $l('recordings', 'visibleuntil_help'),
+      )
     ),
   ),
   

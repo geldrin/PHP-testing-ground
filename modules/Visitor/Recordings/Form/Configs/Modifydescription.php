@@ -25,13 +25,18 @@ $config = array(
   
   'recordedtimestamp' => array(
     'displayname' => $l('recordings', 'recordedtimestamp'),
-    'type'        => 'selectDate',
-    'layout'      => '%Y %M %D %h %m %s',
-    'format'      => '%Y-%M-%D %h:%m:%s',
-    'postfix'     => '<div class="datepicker"></div>',
-    'yearfrom'    => false, // current year only
-    //'yearuntil'   => false, // current year only
+    'type'        => 'inputText',
+    'html'        =>
+      'class="inputtext inputbackground clearonclick datetimepicker margin"'
+    ,
     'validation'  => array(
+      array(
+        'type'     => 'date',
+        'required' => true,
+        'format'   => 'YYYY-MM-DD hh:mm',
+        'maximum'  => time(),
+        'help'     => $l('recordings', 'recordedtimestamp_help'),
+      ),
     ),
   ),
   

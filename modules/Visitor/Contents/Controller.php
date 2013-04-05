@@ -43,7 +43,7 @@ class Controller extends \Visitor\Controller {
     
     $l = $this->bootstrap->getLocalization();
     
-    $this->toSmarty['language']         =
+    $this->toSmarty['localization']     =
       json_encode( $l->get('contents'), JSON_HEX_TAG )
     ;
     $this->toSmarty['allowedfiletypes'] = implode(

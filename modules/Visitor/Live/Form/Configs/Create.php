@@ -91,10 +91,12 @@ $config = array(
   
   'starttimestamp' => array(
     'displayname' => $l('live', 'starttimestamp'),
-    'type'        => 'selectDate',
-    'postfix'     => '<div class="datepicker"></div>',
-    'format'      => '%Y-%M-%D',
-    'yearfrom'    => date('Y') + 1,
+    'type'        => 'inputText',
+    'html'        =>
+      'class="inputtext inputbackground clearonclick datepicker margin" ' .
+      'data-dateyearrange="' . date('Y') . ':' . ( date('Y') + 1 ) . '"' .
+      'data-datefrom="' . date('Y-m-d') . '"'
+    ,
     'value'       => date('Y-m-d'),
     'validation'  => array(
       array(
@@ -108,10 +110,12 @@ $config = array(
   
   'endtimestamp' => array(
     'displayname' => $l('live', 'endtimestamp'),
-    'type'        => 'selectDate',
-    'postfix'     => '<div class="datepicker"></div>',
-    'format'      => '%Y-%M-%D',
-    'yearfrom'    => date('Y') + 1,
+    'type'        => 'inputText',
+    'html'        =>
+      'class="inputtext inputbackground clearonclick datepicker margin" ' .
+      'data-dateyearrange="' . date('Y') . ':' . ( date('Y') + 1 ) . '"' .
+      'data-datefrom="' . date('Y-m-d') . '"'
+    ,
     'value'       => date('Y-m-d', strtotime('+1 day')),
     'validation'  => array(
       array(
