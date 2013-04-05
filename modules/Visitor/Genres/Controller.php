@@ -3,7 +3,6 @@ namespace Visitor\Genres;
 
 class Controller extends \Visitor\Controller {
   public $permissions = array(
-    'details' => 'public',
     'create'  => 'clientadmin',
     'modify'  => 'clientadmin',
     'delete'  => 'clientadmin',
@@ -17,7 +16,6 @@ class Controller extends \Visitor\Controller {
   
   public $paging = array(
     'admin'   => 'Visitor\\Genres\\Paging\\Admin',
-    'details' => 'Visitor\\Genres\\Paging\\Details',
   );
   
   public function deleteAction() {

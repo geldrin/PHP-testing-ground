@@ -1,0 +1,1 @@
+<li>userid: {$user.id} - {$item|@nameformat}</li>

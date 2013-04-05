@@ -295,7 +295,7 @@ class Recordings extends \Springboard\Model {
       
       $channel->select( $fields['channelid'] );
       $channel->updateVideoCounters();
-
+      
       // ha az elozo korben meg nem erintettuk a csatornat,
       // es meg nincs indexkepe, akkor keszitsunk neki
       if ( 
@@ -1662,7 +1662,7 @@ class Recordings extends \Springboard\Model {
     if ( !$user['id'] )
       throw new \Exception("No user given");
     
-    if ( !$user['isclientadmin'] and !$user['iseditor'] )
+    if ( !$user['isadmin'] and !$user['isclientadmin'] and !$user['iseditor'] )
       $where[] = "c.userid = '" . $user['id'] . "'"; // csak a sajat csatornait
     
     if ( !empty( $where ) )
@@ -1698,7 +1698,7 @@ class Recordings extends \Springboard\Model {
       FROM channels_recordings
       WHERE
         recordingid = '" . $this->id . "'" . (
-        ( !$user['isclientadmin'] and !$user['iseditor'] )
+        ( !$user['isadmin'] and !$user['isclientadmin'] and !$user['iseditor'] )
         ? " AND userid      = '" . $user['id'] . "'"
         : ""
       )
@@ -2689,7 +2689,7 @@ class Recordings extends \Springboard\Model {
       WHERE
         channelid   = '$channelid' AND
         recordingid = '" . $this->id . "'" . (
-        ( !$user['isclientadmin'] and !$user['iseditor'] )
+        ( !$user['isadmin'] and !$user['isclientadmin'] and !$user['iseditor'] )
         ? " AND userid      = '" . $user['id'] . "'"
         : ""
       )
@@ -2718,7 +2718,7 @@ class Recordings extends \Springboard\Model {
       WHERE
         channelid   = '$channelid' AND
         recordingid = '" . $this->id . "'" . (
-        ( !$user['isclientadmin'] and !$user['iseditor'] )
+        ( !$user['isadmin'] and !$user['isclientadmin'] and !$user['iseditor'] )
         ? " AND userid      = '" . $user['id'] . "'"
         : ""
       )
