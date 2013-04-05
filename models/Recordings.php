@@ -1659,15 +1659,18 @@ class Recordings extends \Springboard\Model {
     $channelModel = $this->bootstrap->getModel('channels');
     $where        = array();
     
-    if ( $user['id'] )
-      $where[] = "
-        (
-          c.userid         = '" . $user['id'] . "' AND
-          c.organizationid = '" . $user['organizationid'] . "'
-        )
-      ";
+    if ( !$user['id'] )
+      throw new \Exception("No user given");
     
-    $where = implode(" OR ", $where );
+    if ( !$user['isclientadmin'] and !$user['iseditor'] )
+      $where[] = "c.userid = '" . $user['id'] . "'"; // csak a sajat csatornait
+    
+    if ( !empty( $where ) )
+      $where  = '( ' . implode(" OR ", $where ) . " ) AND ";
+    else
+      $where  = '';
+    
+    $where .= "c.organizationid = '" . $user['organizationid'] . "'";
     
     if ( $channeltype ) {
       
@@ -1694,9 +1697,12 @@ class Recordings extends \Springboard\Model {
       SELECT channelid
       FROM channels_recordings
       WHERE
-        userid      = '" . $user['id'] . "' AND
-        recordingid = '" . $this->id . "'
-    ");
+        recordingid = '" . $this->id . "'" . (
+        ( !$user['isclientadmin'] and !$user['iseditor'] )
+        ? " AND userid      = '" . $user['id'] . "'"
+        : ""
+      )
+    );
     
     $channels = $this->markChannelsActive( $channels, $activechannelids );
     return $channels;
@@ -2682,9 +2688,12 @@ class Recordings extends \Springboard\Model {
       FROM channels_recordings
       WHERE
         channelid   = '$channelid' AND
-        recordingid = '" . $this->id . "' AND
-        userid      = '" . $user['id'] . "'
-    ");
+        recordingid = '" . $this->id . "'" . (
+        ( !$user['isclientadmin'] and !$user['iseditor'] )
+        ? " AND userid      = '" . $user['id'] . "'"
+        : ""
+      )
+    );
     
     if ( $existingid )
       return false;
@@ -2708,9 +2717,13 @@ class Recordings extends \Springboard\Model {
       DELETE FROM channels_recordings
       WHERE
         channelid   = '$channelid' AND
-        recordingid = '" . $this->id . "' AND
-        userid      = '" . $user['id'] . "'
-    ");
+        recordingid = '" . $this->id . "'" . (
+        ( !$user['isclientadmin'] and !$user['iseditor'] )
+        ? " AND userid      = '" . $user['id'] . "'"
+        : ""
+      )
+    );
+    
     $this->updateChannelIndexPhotos();
     $this->updateCategoryCounters();
     
