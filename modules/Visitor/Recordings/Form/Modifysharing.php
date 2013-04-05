@@ -37,8 +37,8 @@ class Modifysharing extends \Visitor\Recordings\ModifyForm {
     unset( $values['departments'], $values['groups'] );
     $this->recordingsModel->updateRow( $values );
     $this->recordingsModel->updateFulltextCache( true );
-    $this->recordingsModel->updateCategoryCounters();
     $this->recordingsModel->updateChannelIndexPhotos(); // a channel szamlalok miatt
+    $this->recordingsModel->updateCategoryCounters();
     
     $this->controller->redirect(
       $this->application->getParameter('forward', 'recordings/myrecordings')

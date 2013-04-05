@@ -93,6 +93,7 @@ CREATE TABLE `organizations` (
    `fullnames` int(11) not null default '0',
    `presencechecktimeinterval` int(11) not null default '1800',
    `presencecheckconfirmationtime` int(11) not null default '600',
+   `daystoretainrecordings` int(11) not null default '30',
    PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;
 
@@ -206,7 +207,7 @@ CREATE TABLE `recordings` (
    `contentmastervideofilename` text,
    `contentmastervideoextension` text,
    `contentmastermediatype` text,
-   `contentmastervideostreamselected` int default null,
+   `contentmastervideostreamselected` int,
    `contentmastervideocontainerformat` text,
    `contentmasterlength` float unsigned default null,
    `contentmastervideocodec` text,
@@ -224,6 +225,7 @@ CREATE TABLE `recordings` (
    `contentvideoreslq` text,
    `contentvideoreshq` text,
    `livefeedid` int(10) unsigned default null,
+   `deletedtimestamp` datetime,
    PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;
 

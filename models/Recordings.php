@@ -2117,7 +2117,8 @@ class Recordings extends \Springboard\Model {
     $this->ensureObjectLoaded();
     
     $this->updateRow( array(
-        'status' => 'markedfordeletion',
+        'status'           => 'markedfordeletion',
+        'deletedtimestamp' => date('Y-m-d H:i:s'),
       )
     );
     // TODO delete minden ami ezzel kapcsolatos
