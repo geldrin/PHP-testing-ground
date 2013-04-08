@@ -186,7 +186,7 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_vcr_control.stop' ) and !i
 
 			// Live streaming URL error: cannot determine stream URL
 			if ( !$is_streamready ) {
-				log_recording_conversion($vcr['id'], $myjobid, $jconf['dbstatus_vcr_recording'], "[ERROR] VCR call info is not available, cannot determine live streaming URL. TCS cannot send stream to Wowza? Tried 3x times for 30 seconds. Info:\n\n" . print_r($vcr, TRUE), "-", "-", 0, TRUE);
+				log_recording_conversion($vcr['id'], $myjobid, $jconf['dbstatus_vcr_recording'], "[ERROR] This recording has no movies to play. Cannot determine live streaming URL. TCS cannot send stream to Wowza? Tried 3x times for 30 seconds. Info:\n\n" . print_r($vcr, TRUE), "-", "-", 0, TRUE);
 				// Update stream status: disconnect (call is connected, but live streaming URL was not provided)
 				update_db_stream_status($vcr['id'], $jconf['dbstatus_vcr_disc']);
 				// Skip uploading this very short recording???
@@ -295,7 +295,7 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_vcr_control.stop' ) and !i
 		$err = TCS_GetConfInfo($vcr_upload);
 		if ( !$err['code'] ) {
 			if ( $err['code_num'] == -1 ) {
-				echo "WARNING: recording is not yet available for download? Try how many times?\n";
+				log_recording_conversion($vcr_upload['id'], $myjobid, $jconf['dbstatus_vcr_upload'], "WARNING: recording is not yet available for download? Try how many times?\n" . $vcr_upload['conf_id'] . ").", "-", "VCR info:\n\n" . print_r($vcr_upload, TRUE), 0, TRUE);
 			}
 			if ( $err['code_num'] == -2 ) {
 				log_recording_conversion($vcr_upload['id'], $myjobid, $jconf['dbstatus_vcr_upload'], "[ERROR] VCR download failed. Did not find TCS Conference ID (" . $vcr_upload['conf_id'] . ").", "-", "VCR info:\n\n" . print_r($vcr_upload, TRUE), 0, TRUE);
@@ -871,8 +871,8 @@ global $soap_rs, $jconf;
 		return $err;
 	}
 
-//echo "GET INFO\n";
-//var_dump($result);
+/*echo "GET INFO\n";
+var_dump($result); */
 
 	$err_su = TCS_GetStreamParams($result);
 	if ( $err_su['code'] ) {
