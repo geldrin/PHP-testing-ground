@@ -5,6 +5,7 @@
 			<SocketConfiguration>
 				<ReuseAddress>true</ReuseAddress>
 				<ReceiveBufferSize>65536</ReceiveBufferSize>
+				<ReadBufferSize>65536</ReadBufferSize>
 				<SendBufferSize>32768</SendBufferSize>
 				<KeepAlive>true</KeepAlive>
 				<!-- <TrafficClass>0</TrafficClass> -->

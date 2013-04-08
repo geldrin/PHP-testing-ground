@@ -65,8 +65,9 @@
 			<!-- valid ArchiveStrategy values are append, version, delete -->
 			<ArchiveStrategy>append</ArchiveStrategy>
 
-			<!-- If this is a dvrstreamingrepeater, define ChunkOriginURL to point back to origin -->
-			<!-- And define Application/Repeater/OriginURL to point back to the origin -->
+			<!-- If this is a dvrstreamingrepeater, -->
+			<!-- either define the general Application/Repeater/OriginURL below to point back to the origin -->
+			<!-- or define this one (which affects only DVR origin-edge).  e.g. http://localhost/dvrorigin -->
 			<Repeater>
 				<ChunkOriginURL></ChunkOriginURL>
 			</Repeater>
@@ -173,20 +174,10 @@
 				<Description>ModuleRTMPAuthenticate</Description>
 				<Class>com.wowza.wms.plugin.security.ModuleRTMPAuthenticate</Class>
 			</Module>
-<!--		<Module>
-				<Name>MyFirstModule</Name>
-				<Description>MyCompany MyFirstModule</Description>
-				<Class>com.mycompany.wms.module.MyFirstModule</Class>
-			</Module> -->
 			<Module>
 				<Name>BonzaWareURLHandler</Name>
 				<Description>BonzaWareURLHandler</Description>
 				<Class>com.bonzaware.free.url.URLNotifications</Class>
-			</Module>
-			<Module>
-				<Name>ModuleLiveStreamRecord</Name>
-				<Description>ModuleLiveStreamRecord</Description>
-				<Class>com.wowza.wms.plugin.livestreamrecord.ModuleLiveStreamRecord</Class>
 			</Module>
 		</Modules>
 		<!-- Properties defined here will be added to the IApplication.getProperties() and IApplicationInstance.getProperties() collections -->

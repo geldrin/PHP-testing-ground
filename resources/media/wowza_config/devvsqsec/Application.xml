@@ -65,8 +65,9 @@
 			<!-- valid ArchiveStrategy values are append, version, delete -->
 			<ArchiveStrategy>append</ArchiveStrategy>
 
-			<!-- If this is a dvrstreamingrepeater, define ChunkOriginURL to point back to origin -->
-			<!-- And define Application/Repeater/OriginURL to point back to the origin -->
+			<!-- If this is a dvrstreamingrepeater, -->
+			<!-- either define the general Application/Repeater/OriginURL below to point back to the origin -->
+			<!-- or define this one (which affects only DVR origin-edge).  e.g. http://localhost/dvrorigin -->
 			<Repeater>
 				<ChunkOriginURL></ChunkOriginURL>
 			</Repeater>
@@ -168,11 +169,6 @@
 				<Description>FLVPlayback</Description>
 				<Class>com.wowza.wms.module.ModuleFLVPlayback</Class>
 			</Module>
-<!--			<Module>
-				<Name>MyFirstModule</Name>
-				<Description>Authorization HTTP plugin</Description>
-				<Class>com.mycompany.wms.module.MyFirstModule</Class>
-			</Module> -->
 			<Module>
 				<Name>BonzaWareURLHandler</Name>
 				<Description>BonzaWareURLHandler</Description>

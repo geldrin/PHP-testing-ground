@@ -38,7 +38,7 @@
 				</Property>
 				<Property>
 					<Name>behindAudioOff</Name>
-					<Value>6000</Value>
+					<Value>12000</Value>
 					<Type>Integer</Type>
 				</Property>
 			</Properties>

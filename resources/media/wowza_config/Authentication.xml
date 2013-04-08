@@ -13,7 +13,7 @@
 				<Properties>
 					<Property>
 						<Name>passwordFile</Name>
-						<Value>${com.wowza.wms.context.VHostConfigHome}/conf/${com.wowza.wms.context.Application}/publish.password</Value>
+						<Value>${com.wowza.wms.context.VHostConfigHome}/conf/publish.password</Value>
 					</Property>
 					<Property>
 						<Name>realm</Name>
@@ -28,7 +28,7 @@
 				<Properties>
 					<Property>
 						<Name>passwordFile</Name>
-						<Value>${com.wowza.wms.context.VHostConfigHome}/conf/${com.wowza.wms.context.Application}/publish.password</Value>
+						<Value>${com.wowza.wms.context.VHostConfigHome}/conf/publish.password</Value>
 					</Property>
 					<Property>
 						<Name>realm</Name>

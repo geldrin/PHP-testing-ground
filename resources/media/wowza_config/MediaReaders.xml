@@ -222,6 +222,49 @@
 			<Properties>
 			</Properties>
 		</MediaReader>
+		<MediaReader>
+			<Name>ttml</Name>
+			<Description>TTML Reader</Description>
+			<FileExtension>ttml</FileExtension>
+			<ContentType>timedtext</ContentType>
+			<ClassBase>com.wowza.wms.timedtext.ttml.TimedTextReaderTTML</ClassBase>
+			<Properties>
+				<Property>
+					<Name>ttmlMaxFileLength</Name>
+					<Value>1048576</Value>
+					<Type>Long</Type>
+				</Property>
+			</Properties>
+		</MediaReader>
+		<MediaReader>
+			<Name>srt</Name>
+			<Description>SRT Reader</Description>
+			<FileExtension>srt</FileExtension>
+			<ContentType>srt</ContentType>
+			<ClassBase>com.wowza.wms.timedtext.srt.TimedTextReaderSRT</ClassBase>
+			<Properties>
+				<Property>
+					<Name>srtMaxFileLength</Name>
+					<Value>1048576</Value>
+					<Type>Long</Type>
+				</Property>
+			</Properties>
+		</MediaReader>
+		<MediaReader>
+			<Name>scc</Name>
+			<Description>SCC Reader</Description>
+			<FileExtension>scc</FileExtension>
+			<ContentType>scc</ContentType>
+			<ClassBase>com.wowza.wms.timedtext.cea608.TimedTextReaderSCC</ClassBase>
+			<Properties>
+				<Property>
+					<Name>sccMaxFileLength</Name>
+					<Value>1048576</Value>
+					<Type>Long</Type>
+				</Property>
+			</Properties>
+		</MediaReader>
+		
 	</MediaReaders>
 </Root>
 		

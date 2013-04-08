@@ -11,11 +11,13 @@
 				<SocketConfiguration>
 					<ReuseAddress>true</ReuseAddress>
 					<!-- suggested settings for video on demand applications -->
-					<ReceiveBufferSize>24000</ReceiveBufferSize>
+					<ReceiveBufferSize>65000</ReceiveBufferSize>
+					<ReadBufferSize>65000</ReadBufferSize>
 					<SendBufferSize>65000</SendBufferSize>
 					<!-- suggest settings for low latency chat and video recording applications
-					<ReceiveBufferSize>16000</ReceiveBufferSize>
-					<SendBufferSize>16000</SendBufferSize>
+					<ReceiveBufferSize>32000</ReceiveBufferSize>
+					<ReadBufferSize>32000</ReadBufferSize>
+					<SendBufferSize>32000</SendBufferSize>
 					-->
 					<KeepAlive>true</KeepAlive>
 					<!-- <TrafficClass>0</TrafficClass> -->
@@ -38,7 +40,7 @@
 					</HTTPProvider>
 					<HTTPProvider>
 						<BaseClass>com.wowza.wms.http.HTTPProviderMediaList</BaseClass>
-						<RequestFilters>*jwplayer.rss|*medialist.smil|*manifest-rtmp.f4m</RequestFilters>
+						<RequestFilters>*jwplayer.rss|*jwplayer.smil|*medialist.smil|*manifest-rtmp.f4m</RequestFilters>
 						<AuthenticationMethod>none</AuthenticationMethod>
 					</HTTPProvider>
 					<HTTPProvider>
@@ -76,7 +78,8 @@
 				</SSLConfig>
 				<SocketConfiguration>
 					<ReuseAddress>true</ReuseAddress>
-					<ReceiveBufferSize>24000</ReceiveBufferSize>
+					<ReceiveBufferSize>65000</ReceiveBufferSize>
+					<ReadBufferSize>65000</ReadBufferSize>
 					<SendBufferSize>65000</SendBufferSize>
 					<KeepAlive>true</KeepAlive>
 					<AcceptorBackLog>100</AcceptorBackLog>
@@ -95,7 +98,7 @@
 					</HTTPProvider>
 					<HTTPProvider>
 						<BaseClass>com.wowza.wms.http.HTTPProviderMediaList</BaseClass>
-						<RequestFilters>*jwplayer.rss|*medialist.smil|*manifest-rtmp.f4m</RequestFilters>
+						<RequestFilters>*jwplayer.rss|*jwplayer.smil|*medialist.smil|*manifest-rtmp.f4m</RequestFilters>
 						<AuthenticationMethod>none</AuthenticationMethod>
 					</HTTPProvider>
 					<HTTPProvider>
@@ -114,6 +117,7 @@
 				<SocketConfiguration>
 					<ReuseAddress>true</ReuseAddress>
 					<ReceiveBufferSize>16000</ReceiveBufferSize>
+					<ReadBufferSize>16000</ReadBufferSize>
 					<SendBufferSize>16000</SendBufferSize>
 					<KeepAlive>true</KeepAlive>
 					<AcceptorBackLog>100</AcceptorBackLog>
@@ -151,11 +155,11 @@
 						<AuthenticationMethod>admin-digest</AuthenticationMethod>
 					</HTTPProvider>
 					<HTTPProvider>
-						<BaseClass>com.wowza.wms.plugin.livestreamrecord.HTTPLiveStreamRecord</BaseClass>
+<!--						<BaseClass>com.wowza.wms.plugin.livestreamrecord.HTTPLiveStreamRecord</BaseClass> -->
+						<BaseClass>com.wowza.wms.livestreamrecord.http.HTTPLiveStreamRecord</BaseClass>
 						<RequestFilters>livestreamrecord*</RequestFilters>
-						<AuthenticationMethod>none</AuthenticationMethod>
-<!--						<AuthenticationMethod>admin-digest</AuthenticationMethod> -->
-<!-- http://username:password@[wowza-address]:1935/livestreamrecord?app=live&streamname=myStream&action=startRecording -->
+<!--				<AuthenticationMethod>none</AuthenticationMethod> -->
+						<AuthenticationMethod>admin-digest</AuthenticationMethod>
 					</HTTPProvider>
 					<HTTPProvider>
 						<BaseClass>com.wowza.wms.http.HTTPServerVersion</BaseClass>
@@ -211,7 +215,8 @@
 			<SocketConfiguration>
 				<ReuseAddress>true</ReuseAddress>
 				<ReceiveBufferSize>65000</ReceiveBufferSize>
-				<SendBufferSize>24000</SendBufferSize>
+				<ReadBufferSize>65000</ReadBufferSize>
+				<SendBufferSize>65000</SendBufferSize>
 				<KeepAlive>true</KeepAlive>
 				<!-- <TrafficClass>0</TrafficClass> -->
 				<!-- <OobInline>false</OobInline> -->
@@ -233,7 +238,7 @@
 			<DatagramConfiguration>
 				<Incoming>
 					<ReuseAddress>true</ReuseAddress>
-					<ReceiveBufferSize>256000</ReceiveBufferSize>
+					<ReceiveBufferSize>1024000</ReceiveBufferSize>
 					<SendBufferSize>65000</SendBufferSize>
 					<!-- <MulticastBindToAddress>true</MulticastBindToAddress> -->
 					<!-- <MulticastInterfaceAddress>192.168.1.22</MulticastInterfaceAddress> -->
