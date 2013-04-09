@@ -1579,6 +1579,12 @@ function getDefaultDateConfig( elem ) {
     if ( !matches )
       return;
     
+    matches[1] = parseInt( matches[1], 10 );
+    matches[2] = parseInt( matches[2], 10 ) - 1; // YEAY JAVASCRIPT
+    matches[3] = parseInt( matches[3], 10 );
+    matches[4] = parseInt( matches[4], 10 );
+    matches[5] = parseInt( matches[5], 10 );
+    
     return new Date( matches[1], matches[2], matches[3], matches[4], matches[5] );
     
   };
