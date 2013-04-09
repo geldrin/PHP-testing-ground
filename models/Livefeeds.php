@@ -341,6 +341,8 @@ class Livefeeds extends \Springboard\Model {
         'status'              => 'ready',
         'quality'             => 1,
         'isdesktopcompatible' => 1,
+        'isioscompatible'     => 1,
+        'isandroidcompatible' => 1,
         'timestamp'           => date('Y-m-d H:i:s'),
       )
     );
