@@ -1545,11 +1545,24 @@ function setupSharing() {
 
 function setupDefaultDatePicker( elem ) {
   
+  var options = getDefaultDateConfig( elem );
+  $j(elem).datepicker( options );
+  
+}
+function setupDefaultDateTimePicker( elem ) {
+  
+  var options = getDefaultDateConfig( elem );
+  $j(elem).datetimepicker( options );
+  
+}
+function getDefaultDateConfig( elem ) {
+  
   var elem    = $j(elem);
   var options = {
-    dateFormat: 'yy-mm-dd',
+    dateFormat : 'yy-mm-dd',
     changeMonth: true,
-    changeYear: true
+    changeYear : true,
+    timeFormat : 'HH:mm'
   };
   
   if ( elem.attr('data-datefrom') )
@@ -1561,12 +1574,27 @@ function setupDefaultDatePicker( elem ) {
   if ( elem.attr('data-dateyearrange') )
     options.yearRange = elem.attr('data-dateyearrange');
   
-  $j(elem).datepicker( options );
+  var parseToDate = function( str ) {
+    var matches = str.match(/^(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2})$/);
+    if ( !matches )
+      return;
+    
+    return new Date( matches[1], matches[2], matches[3], matches[4], matches[5] );
+    
+  };
+  
+  if ( elem.attr('data-datetimefrom') )
+    options.minDateTime = parseToDate( elem.attr('data-datetimefrom') );
+  
+  if ( elem.attr('data-datetimeuntil') )
+    options.maxDateTime = parseToDate( elem.attr('data-datetimeuntil') );
+  
+  return options;
   
 }
 
 function setupLiveCreate() {
   
-  setupDefaultDatePicker('.datepicker');
+  setupDefaultDateTimePicker('.datetimepicker');
   
 }

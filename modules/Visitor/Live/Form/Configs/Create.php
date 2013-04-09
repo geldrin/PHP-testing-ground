@@ -93,15 +93,15 @@ $config = array(
     'displayname' => $l('live', 'starttimestamp'),
     'type'        => 'inputText',
     'html'        =>
-      'class="inputtext inputbackground clearonclick datepicker margin" ' .
+      'class="inputtext inputbackground clearonclick datetimepicker margin" ' .
       'data-dateyearrange="' . date('Y') . ':' . ( date('Y') + 1 ) . '"' .
-      'data-datefrom="' . date('Y-m-d') . '"'
+      'data-datetimefrom="' . date('Y-m-d 00:00') . '"'
     ,
-    'value'       => date('Y-m-d'),
+    'value'       => date('Y-m-d H:m'),
     'validation'  => array(
       array(
         'type'       => 'date',
-        'format'     => 'YYYY-MM-DD',
+        'format'     => 'YYYY-MM-DD hh:mm',
         'lesseqthan' => 'endtimestamp',
         'help'       => $l('live', 'starttimestamp_help'),
       )
@@ -112,15 +112,15 @@ $config = array(
     'displayname' => $l('live', 'endtimestamp'),
     'type'        => 'inputText',
     'html'        =>
-      'class="inputtext inputbackground clearonclick datepicker margin" ' .
+      'class="inputtext inputbackground clearonclick datetimepicker margin" ' .
       'data-dateyearrange="' . date('Y') . ':' . ( date('Y') + 1 ) . '"' .
-      'data-datefrom="' . date('Y-m-d') . '"'
+      'data-datetimefrom="' . date('Y-m-d 00:00') . '"'
     ,
-    'value'       => date('Y-m-d', strtotime('+1 day')),
+    'value'       => date('Y-m-d H:m', strtotime('+1 day')),
     'validation'  => array(
       array(
         'type'          => 'date',
-        'format'        => 'YYYY-MM-DD',
+        'format'        => 'YYYY-MM-DD hh:mm',
         'greatereqthan' => 'starttimestamp',
         'help'          => $l('live', 'endtimestamp_help'),
       )

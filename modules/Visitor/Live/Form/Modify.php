@@ -20,6 +20,8 @@ class Modify extends \Visitor\HelpForm {
       $this->controller->redirect();
     
     $this->values = $this->channelModel->row;
+    $this->values['starttimestamp'] = substr( $this->values['starttimestamp'], 0, 16 );
+    $this->values['endtimestamp']   = substr( $this->values['endtimestamp'], 0, 16 );
     $this->controller->toSmarty['formclass'] = 'leftdoublebox';
     parent::init();
     
@@ -91,10 +93,10 @@ class Modify extends \Visitor\HelpForm {
     $needsync = $this->needAccessSync( $values );
     
     if ( @$values['starttimestamp'] )
-      $values['starttimestamp'] .= ' 00:00:00';
+      $values['starttimestamp'] .= ':00';
     
     if ( @$values['endtimestamp'] )
-      $values['endtimestamp'] .= ' 23:59:59';
+      $values['endtimestamp'] .= ':59';
     
     $this->handleAccesstypeForModel( $this->channelModel, $values );
     $this->channelModel->updateRow( $values );

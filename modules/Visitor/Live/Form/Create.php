@@ -46,10 +46,10 @@ class Create extends \Visitor\HelpForm {
     $values['organizationid'] = $user['organizationid'];
     
     if ( @$values['starttimestamp'] )
-      $values['starttimestamp'] .= ' 00:00:00';
+      $values['starttimestamp'] .= ':00';
     
     if ( @$values['endtimestamp'] )
-      $values['endtimestamp'] .= ' 23:59:59';
+      $values['endtimestamp'] .= ':59';
     
     if ( $this->parentchannelModel )
       $values['parentid']     = $this->parentchannelModel->id;
