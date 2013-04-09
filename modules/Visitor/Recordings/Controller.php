@@ -25,6 +25,7 @@ class Controller extends \Visitor\Controller {
     'deleteattachment'     => 'uploader|clientadmin',
     'deletesubtitle'       => 'uploader|clientadmin',
     'delete'               => 'uploader|clientadmin',
+    'deletecontent'        => 'uploader|clientadmin',
     'deletecontributor'    => 'uploader|clientadmin',
     'swapcontributor'      => 'uploader|clientadmin',
     'checkstreamaccess'    => 'public',
@@ -415,6 +416,22 @@ class Controller extends \Visitor\Controller {
     
     if ( preg_match( '/^onstorage$|^failed.*$/', $recordingModel->row['status'] ) )
       $recordingModel->markAsDeleted();
+    
+    $this->redirect(
+      $this->application->getParameter('forward', 'recordings/myrecordings')
+    );
+    
+  }
+  
+  public function deletecontentAction() {
+    
+    $recordingModel = $this->modelOrganizationAndUserIDCheck(
+      'recordings',
+      $this->application->getNumericParameter('id')
+    );
+    
+    if ( preg_match( '/^onstorage$|^failed.*$/', $recordingModel->row['contentstatus'] ) )
+      $recordingModel->markContentAsDeleted();
     
     $this->redirect(
       $this->application->getParameter('forward', 'recordings/myrecordings')

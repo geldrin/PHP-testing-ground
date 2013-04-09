@@ -2134,6 +2134,19 @@ class Recordings extends \Springboard\Model {
     
   }
   
+  public function markContentAsDeleted() {
+    
+    $this->ensureObjectLoaded();
+    
+    $this->updateRow( array(
+        'contentstatus'    => 'markedfordeletion',
+      )
+    );
+    
+    return true;
+    
+  }
+  
   public function getRandomRecordings( $limit, $organizationid, $user ) {
     
     // TODO isfeatured uncomment
