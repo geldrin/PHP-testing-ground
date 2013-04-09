@@ -226,6 +226,7 @@ CREATE TABLE `recordings` (
    `contentvideoreshq` text,
    `livefeedid` int(10) unsigned default null,
    `deletedtimestamp` datetime,
+   `contentdeletedtimestamp` datetime,
    PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;
 

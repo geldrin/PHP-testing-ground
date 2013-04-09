@@ -2139,7 +2139,8 @@ class Recordings extends \Springboard\Model {
     $this->ensureObjectLoaded();
     
     $this->updateRow( array(
-        'contentstatus'    => 'markedfordeletion',
+        'contentstatus'           => 'markedfordeletion',
+        'contentdeletedtimestamp' => date('Y-m-d H:i:s'),
       )
     );
     
