@@ -6,22 +6,24 @@ class Invite extends \Visitor\Form {
   public $template   = 'Visitor/genericform.tpl';
   public $needdb     = true;
   
-  public function postSetupForm() {
+  public function init() {
     
     $l = $this->bootstrap->getLocalization();
-    $this->controller->toSmarty['title'] = $l('groups', 'create_title');
+    $this->groupModel = $this->controller->modelOrganizationAndIDCheck(
+      'groups',
+      $this->application->getNumericParameter('id')
+    );
+    $this->controller->toSmarty['title'] = $l('groups', 'invite_title');
     
   }
   
   public function onComplete() {
     
     $values     = $this->form->getElementValues( 0 );
-    $groupModel = $this->bootstrap->getModel('groups');
     $user       = $this->bootstrap->getSession('user');
     
-    $values['timestamp'] = date('Y-m-d H:i:s');
-    $values['userid']    = $user['id'];
-    $groupModel->insert( $values );
+    if ( !empty( $values['users'] ) )
+      $this->groupModel->addUsers( $values['users'] );
     
     $this->controller->redirect(
       $this->application->getParameter('forward', 'groups' )

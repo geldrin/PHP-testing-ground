@@ -22,6 +22,7 @@ class Create extends \Visitor\Form {
     $values['timestamp'] = date('Y-m-d H:i:s');
     $values['userid']    = $user['id'];
     $groupModel->insert( $values );
+    $groupModel->addUsers( array( $user['id'] ) );
     
     $this->controller->redirect(
       $this->application->getParameter('forward', 'groups' )

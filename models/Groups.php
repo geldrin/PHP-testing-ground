@@ -39,7 +39,7 @@ class Groups extends \Springboard\Model {
     
   }
   
-  public function removeUser( $userid ) {
+  public function deleteUser( $userid ) {
     
     $this->ensureID();
     $this->db->query("
@@ -113,6 +113,25 @@ class Groups extends \Springboard\Model {
       WHERE id = '" . $this->id . "'
     ");
     
+  }
+  
+  protected function insertMultipleIDs( $ids, $table, $field ) {
+    
+    $this->ensureID();
+    
+    $values = array();
+    foreach( $ids as $id )
+      $values[] = "('" . intval( $id ) . "', '" . $this->id . "')";
+    
+    $this->db->execute("
+      INSERT INTO $table ($field, groupid)
+      VALUES " . implode(', ', $values ) . "
+    ");
+    
+  }
+  
+  public function addUsers( $userids ) {
+    $this->insertMultipleIDs( $userids, 'groups_members', 'userid');
   }
   
 }
