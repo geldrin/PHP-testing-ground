@@ -25,7 +25,7 @@ class Create extends \Visitor\Form {
     $groupModel->addUsers( array( $user['id'] ) );
     
     $this->controller->redirect(
-      $this->application->getParameter('forward', 'groups' )
+      $this->application->getParameter('forward', 'groups/invite/' . $groupModel->id )
     );
     
   }

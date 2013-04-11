@@ -26,11 +26,20 @@ $config = array(
 );
 
 include( $this->bootstrap->config['modulepath'] . 'Visitor/Form/Configs/Accesstype.php');
-$config['departments[]']['valuesql'] = "
-  SELECT departmentid
-  FROM access
-  WHERE recordingid = '" . $this->recordingsModel->id . "'
-";
+
+if ( isset( $config['departments[]'] ) )
+  $config['departments[]']['valuesql'] = "
+    SELECT departmentid
+    FROM access
+    WHERE recordingid = '" . $this->recordingsModel->id . "'
+  ";
+
+if ( isset( $config['groups[]'] ) )
+  $config['groups[]']['valuesql'] = "
+    SELECT groupid
+    FROM access
+    WHERE recordingid = '" . $this->recordingsModel->id . "'
+  ";
 
 $config = array_merge( $config, array(
   'wanttimelimit' => array(

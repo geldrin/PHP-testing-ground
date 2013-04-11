@@ -951,13 +951,13 @@ class Recordings extends \Springboard\Model {
     
   }
   
-  public static function getPublicRecordingWhere( $prefix = '', $isintrooutro = '0' ) {
+  public static function getPublicRecordingWhere( $prefix = '', $isintrooutro = '0', $accesstype = 'public' ) {
     
     return "
       {$prefix}status       = 'onstorage' AND
       {$prefix}ispublished  = '1' AND
       {$prefix}isintrooutro = '$isintrooutro' AND
-      {$prefix}accesstype   = 'public' AND
+      {$prefix}accesstype   = '$accesstype' AND
       (
         {$prefix}visiblefrom  IS NULL OR
         {$prefix}visibleuntil IS NULL OR
@@ -2785,6 +2785,40 @@ class Recordings extends \Springboard\Model {
     }
     
     return $indexphotos;
+    
+  }
+  
+  public function getGroupRecordingsCount( $groupid ) {
+    
+    return $this->db->getOne("
+      SELECT COUNT(*)
+      FROM
+        access AS a,
+        recordings AS r
+      WHERE
+        a.groupid     = '$groupid' AND
+        r.id          = a.recordingid AND
+        " . self::getPublicRecordingWhere('r.', '0', 'groups')
+    );
+    
+  }
+  
+  public function getGroupRecordings( $groupid, $start = false, $limit = false, $order = false ) {
+    
+    return $this->db->getArray("
+      SELECT
+        r.*,
+        a.id AS accessid
+      FROM
+        access AS a,
+        recordings AS r
+      WHERE
+        a.groupid = '$groupid' AND
+        r.id      = a.recordingid AND
+        " . self::getPublicRecordingWhere('r.', '0', 'groups') . "
+      ORDER BY $order
+      LIMIT $start, $limit
+    ");
     
   }
   

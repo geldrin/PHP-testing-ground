@@ -134,4 +134,30 @@ class Groups extends \Springboard\Model {
     $this->insertMultipleIDs( $userids, 'groups_members', 'userid');
   }
   
+  public function isMember( $user ) {
+    
+    if ( !$user or !$user['id'] )
+      return false;
+    
+    $this->ensureObjectLoaded();
+    if (
+         $this->row['organizationid'] == $user['organizationid'] and
+         (
+           $user['admin'] or $user['isclientadmin'] or $user['iseditor'] or
+           $this->row['userid'] == $user['id']
+         )
+       )
+      return true;
+    
+    return (bool)$this->db->getOne("
+      SELECT COUNT(*)
+      FROM groups_members
+      WHERE
+        groupid = '" . $this->id . "' AND
+        userid  = '" . $user['id'] . "'
+      LIMIT 1
+    ");
+    
+  }
+  
 }

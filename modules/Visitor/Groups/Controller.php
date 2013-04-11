@@ -3,13 +3,14 @@ namespace Visitor\Groups;
 
 class Controller extends \Visitor\Controller {
   public $permissions = array(
-    'index'   => 'member',
-    'details' => 'member',
-    'create'  => 'member',
-    'modify'  => 'member',
-    'delete'  => 'member',
-    'invite'  => 'member',
-    'deleteuser'  => 'member',
+    'index'      => 'member',
+    'details'    => 'member',
+    'create'     => 'member',
+    'modify'     => 'member',
+    'delete'     => 'member',
+    'invite'     => 'member',
+    'deleteuser' => 'member',
+    'recordings' => 'member',
   );
   
   public $forms = array(
@@ -19,8 +20,9 @@ class Controller extends \Visitor\Controller {
   );
   
   public $paging = array(
-    'index'   => 'Visitor\\Groups\\Paging\\Index',
-    'details' => 'Visitor\\Groups\\Paging\\Details',
+    'index'      => 'Visitor\\Groups\\Paging\\Index',
+    'details'    => 'Visitor\\Groups\\Paging\\Details',
+    'recordings' => 'Visitor\\Groups\\Paging\\Recordings',
   );
   
   public function deleteAction() {
