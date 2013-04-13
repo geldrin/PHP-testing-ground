@@ -59,12 +59,13 @@
               <li><a href="{$language}/events/create">{#usermenu_events_create#}</a></li>
             </ul>
             <div class="hr"></div>
+            {/*}
             <div class="title">{#usermenu_groups_title#}</div>
             <ul>
-              <li><a href="{$language}/groups/mygroups">{#usermenu_groups_mygroups#}</a></li>
+              <li><a href="{$language}/groups">{#usermenu_groups_mygroups#}</a></li>
               <li><a href="{$language}/groups/create">{#usermenu_groups_create#}</a></li>
             </ul>
-            {/*}
+            <div class="hr"></div>
             
             {if $member.isuploader or $member.isclientadmin}
               <div class="title">{#usermenu_recordings_title#}</div>
