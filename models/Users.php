@@ -288,4 +288,19 @@ class Users extends \Springboard\Model {
     $this->insertMultipleIDs( $groupids, 'groups_members', 'groupid');
   }
   
+  public function search( $email, $organizationid ) {
+    
+    $email = str_replace( ' ', '%', $email );
+    $email = $this->db->qstr( '%' . $email . '%' );
+    return $this->db->getArray("
+      SELECT *
+      FROM users
+      WHERE
+        organizationid = '$organizationid' AND
+        isadmin        = '0' AND
+        email LIKE $email
+    ");
+    
+  }
+  
 }

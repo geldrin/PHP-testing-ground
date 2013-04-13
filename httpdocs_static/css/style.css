@@ -2507,7 +2507,7 @@ a#currentusername span {
   overflow-y: auto;
   overflow-x: hidden;
 }
-.ui-autocomplete .wrap img {
+.ui-autocomplete .wrap.contributor img {
   float: left;
   margin-right: 10px;
   width: 85px;
@@ -2529,4 +2529,17 @@ a#currentusername span {
 }
 .form.contributor {
   width: 535px;
+}
+
+.ui-autocomplete .wrap.groupsinvite img {
+  width: 50px;
+}
+#groups_invite #emailwrap {
+  position: relative;
+}
+#groups_invite .delete {
+  display: none;
+  position: absolute;
+  right: 11px;
+  top: 8px;
 }

@@ -160,4 +160,29 @@ class Groups extends \Springboard\Model {
     
   }
   
+  public function isValidUser( $userid, $organizationid ) {
+    
+    $userid = intval( $userid );
+    $user   = array(
+      'id'             => $userid,
+      'organizationid' => $organizationid,
+      'admin'          => false,
+      'isclientadmin'  => false,
+      'iseditor'       => false,
+    );
+    
+    if ( $this->isMember( $user ) )
+      return false;
+    
+    return (bool)$this->db->getOne("
+      SELECT COUNT(*)
+      FROM users
+      WHERE
+        organizationid = '$organizationid' AND
+        id             = '$userid'
+      LIMIT 1
+    ");
+    
+  }
+  
 }

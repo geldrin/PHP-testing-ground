@@ -14,14 +14,24 @@ class Invite extends \Visitor\Form {
   
   public function onComplete() {
     
-    $values    = $this->form->getElementValues( 0 );
+    $values = $this->form->getElementValues( 0 );
+    $l      = $this->bootstrap->getLocalization();
+    $this->addInvitation( $values );
+    $this->controller->redirectWithMessage('users/admin', $l('users', 'user_invited') );
+    
+  }
+  
+  public function addInvitation( &$values ) {
+    
     $invModel  = $this->bootstrap->getModel('users_invitations');
     $crypto    = $this->bootstrap->getEncryption();
     $queue     = $this->bootstrap->getMailqueue();
     $l         = $this->bootstrap->getLocalization();
     $user      = $this->bootstrap->getSession('user');
     
-    $values['permissions']    = implode('|', $values['permissions'] );
+    if ( is_array( $values['permissions'] ) )
+      $values['permissions']  = implode('|', $values['permissions'] );
+    
     $values['validationcode'] = $crypto->randomPassword( 10 );
     $values['userid']         = $user['id'];
     
@@ -42,8 +52,6 @@ class Invite extends \Visitor\Form {
       $l('users', 'invitationmailsubject'),
       $this->controller->fetchSmarty('Visitor/Users/Email/Invitation.tpl')
     );
-    
-    $this->controller->redirectWithMessage('users/admin', $l('users', 'user_invited') );
     
   }
   

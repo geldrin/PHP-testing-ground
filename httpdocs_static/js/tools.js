@@ -37,6 +37,7 @@ $j(document).ready(function() {
   runIfExists('#recordings_modifysharing', setupSharing );
   runIfExists('#recordings_modifydescription', setupDescription );
   runIfExists('#live_create, #live_modify', setupLiveCreate );
+  runIfExists('#groups_invite', setupGroupInvitation );
   
   if ( needping )
     setTimeout( setupPing, 1000 * pingsecs );
@@ -1602,5 +1603,38 @@ function getDefaultDateConfig( elem ) {
 function setupLiveCreate() {
   
   setupDefaultDateTimePicker('.datetimepicker');
+  
+}
+
+function setupGroupInvitation() {
+  
+  var html = $j('#autocomplete-listitem').html();
+  $j('#email').autocomplete({
+    minLength: 2,
+    source: BASE_URI + language + '/groups/searchuser',
+    select: function( event, ui ) {
+      $j('#email').val( ui.item.label );
+      $j('#userid').val( ui.item.value );
+      $j('#email').attr('disabled', true );
+      $j('.delete').show();
+      return false;
+    }
+  }).data( "autocomplete" )._renderItem = function( ul, item ) {
+    
+    var itemhtml = html.replace('__IMGSRC__', item.img ).replace('__NAME__', item.label );
+    return $j("<li>")
+      .data( "item.autocomplete", item )
+      .append( "<a>" + itemhtml + "</a>" )
+      .appendTo( ul )
+    ;
+    
+  };
+  
+  $j('.delete').click( function( e ) {
+    e.preventDefault();
+    $j('#userid').val('');
+    $j('#email').attr('disabled', false );
+    $j('.delete').hide();
+  });
   
 }
