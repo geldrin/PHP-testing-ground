@@ -177,7 +177,8 @@
 			<Module>
 				<Name>ModuleRequireSecureConnection</Name>
 				<Description>ModuleRequireSecureConnection</Description>
-				<Class>com.wowza.wms.plugin.security.ModuleRequireSecureConnection</Class>
+<!-- W: 3.1.2	<Class>com.wowza.wms.plugin.security.ModuleRequireSecureConnection</Class> -->
+				<Class>com.wowza.wms.security.ModuleRequireSecureConnection</Class>
 			</Module>
 		</Modules>
 		<!-- Properties defined here will be added to the IApplication.getProperties() and IApplicationInstance.getProperties() collections -->
