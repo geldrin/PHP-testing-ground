@@ -158,7 +158,8 @@ $config = array(
   // idoablak, akkor masik felhasznalo be tud lepni 
   // parhuzamosan: ennek elkerulesere ajax "ping" funkcio hasznalhato, ami
   // hiba eseten akar ki is dobhatja a felhasznalot.
-  
+  'allowedstreamips' => array(
+  ),
 );
 
 $config['phpsettings'] = array(
