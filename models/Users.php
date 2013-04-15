@@ -280,6 +280,17 @@ class Users extends \Springboard\Model {
     
   }
   
+  public function clearGroups() {
+    
+    $this->ensureID();
+    
+    $this->db->execute("
+      DELETE FROM groups_members
+      WHERE userid = '" . $this->id . "'
+    ");
+    
+  }
+  
   public function addDepartments( $departmentids ) {
     $this->insertMultipleIDs( $departmentids, 'users_departments', 'departmentid');
   }

@@ -52,7 +52,11 @@ class Edit extends \Visitor\HelpForm {
     if ( isset( $_REQUEST['departments'] ) and !empty( $values['departments'] ) )
       $this->userModel->addDepartments( $values['departments'] );
     
-    unset( $values['departments'] );
+    $this->userModel->clearGroups();
+    if ( isset( $_REQUEST['groups'] ) and !empty( $values['groups'] ) )
+      $this->userModel->addGroups( $values['groups'] );
+    
+    unset( $values['departments'], $values['groups'] );
     $this->userModel->updateRow( $values );
     
     $forward = $this->application->getParameter('forward', 'users/admin');

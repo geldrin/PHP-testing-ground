@@ -153,4 +153,36 @@ $config = array(
     ),
   ),
   
+  'groups[]' => array(
+    'displayname' => $l('users', 'groups'),
+    'type'        => 'inputCheckboxDynamic',
+    'sql'         => "
+      SELECT id, name
+      FROM groups
+      WHERE
+        organizationid = '" . $this->controller->organization['id'] . "'
+      ORDER BY name DESC
+    ",
+    'valuesql' => "
+      SELECT groupid
+      FROM groups_members
+      WHERE
+        userid = '" . $this->userModel->row['id'] . "'
+    ",
+    'validation'  => array(
+    ),
+  ),
+  
 );
+
+$departmentModel = $this->bootstrap->getModel('departments');
+$departmentModel->addFilter('organizationid', $this->controller->organization['id'] );
+
+if ( $departmentModel->getCount() == 0 )
+  unset( $config['departments[]'] );
+
+$groupModel = $this->bootstrap->getModel('groups');
+$groupModel->addFilter('organizationid', $this->controller->organization['id'] );
+
+if ( $groupModel->getCount() == 0 )
+  unset( $config['groups[]'] );
