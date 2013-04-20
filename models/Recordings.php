@@ -1849,8 +1849,63 @@ class Recordings extends \Springboard\Model {
       
     }
     
+    if ( $this->row['isseekbardisabled'] and @$info['member'] and $info['member']['id'] ) {
+      
+      $options = $this->getSeekbarOptions( $info['member'] );
+      $data['timeline_seekbarDisabled']          = $options['isseekbardisabled'];
+      $data['timeline_lastPositionURL']          = $options['lastpositionurl'];
+      $data['timeline_lastPositionTimeInterval'] = $options['lastpositiontimeinterval'];
+      $data['timeline_lastPlaybackPosition']     = $options['lastplaybackposition'];
+      $data['timeline_seekbarVisible']           = $options['seekbarvisible'];
+      
+    }
+    
     return $data;
     
+  }
+  
+  public function getSeekbarOptions( $user ) {
+    
+    $this->ensureObjectLoaded();
+    
+    if ( !$this->row['isseekbardisabled'] or !$user or !$user['id'] )
+      return array();
+    
+    $options = array(
+      'isseekbardisabled'         => true,
+      'lastpositionurl'           =>
+        $this->bootstrap->baseuri . \Springboard\Language::get() .
+        '/recordings/updateposition/' . $this->id
+      ,
+      'lastpositiontimeinterval'  =>
+        $this->bootstrap->config['recordingpositionupdateseconds']
+      ,
+      'lastplaybackposition'      => (int)$this->db->getOne("
+        SELECT position
+        FROM recording_view_progress
+        WHERE
+          userid      = '" . $user['id'] . "' AND
+          recordingid = '" . $this->id . "'
+        LIMIT 1
+      "),
+      'seekbarvisible'            => (
+        $user['admin'] or
+        $user['isclientadmin'] or
+        $user['iseditor']
+      )
+    );
+    
+    return $options;
+    
+  }
+  
+  public function getHashForFlash( $string ) {
+    return md5( $string . $this->bootstrap->config['flashhashseed'] );
+  }
+  
+  public function checkHashFromFlash( $string, $hash ) {
+    $actualhash = $this->getHashForFlash( $string );
+    return $hash == $actualhash;
   }
   
   public function getIntroOutroFlashdata( $domain ) {
@@ -2820,6 +2875,38 @@ class Recordings extends \Springboard\Model {
       ORDER BY $order
       LIMIT $start, $limit
     ");
+    
+  }
+  
+  public function updateLastPosition( $userid, $lastposition ) {
+    
+    $this->ensureID();
+    
+    $id = $this->db->getOne("
+      SELECT id
+      FROM recording_view_progress
+      WHERE
+        userid      = '$userid' AND
+        recordingid = '" . $this->id . "'
+      LIMIT 1
+    ");
+    
+    $progressModel = $this->bootstrap->getModel('recording_view_progress');
+    $record        = array(
+      'recordingid' => $this->id,
+      'userid'      => $userid,
+      'timestamp'   => date('Y-m-d H:i:s'),
+      'position'    => $lastposition,
+    );
+    
+    if ( !$id )
+      $progressModel->insert( $record );
+    else {
+      
+      $progressModel->id = $id;
+      $progressModel->updateRow( $record );
+      
+    }
     
   }
   

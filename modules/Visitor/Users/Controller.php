@@ -250,6 +250,15 @@ class Controller extends \Visitor\Controller {
     $userModel->updateSessionInformation();
     $userModel->updateLastlogin();
     
+    $output = array(
+      'userid'                           => $userModel->id,
+      'needping'                         => (bool)$userModel->row['issingleloginenforced'],
+      'pingseconds'                      => $this->bootstrap->config['sessionpingseconds'],
+      'checkwatching'                    => (bool)$userModel->row['ispresencecheckforced'],
+      'checkwatchingtimeinterval'        => $this->organization['presencechecktimeinterval'],
+      'checkwatchingconfirmationtimeout' => $this->organization['presencecheckconfirmationtime'],
+    );
+    
     if ( $recordingid ) {
       
       $recordingsModel = $this->modelIDCheck( 'recordings', $recordingid, false );
@@ -267,9 +276,11 @@ class Controller extends \Visitor\Controller {
       $access[ $accesskey ] =
         $recordingsModel->userHasAccess( $user, null, $browserinfo['mobile'] )
       ;
-    
+      
       if ( $access[ $accesskey ] !== true )
         throw new \Visitor\Api\ApiException( $l('recordings', 'nopermission'), true, false );
+      
+      $output = array_merge( $output, $recordingsModel->getSeekbarOptions( $userModel->row ) );
       
     } elseif ( $feedid ) {
       
@@ -289,14 +300,7 @@ class Controller extends \Visitor\Controller {
       
     }
     
-    return array(
-      'userid'      => $userModel->id,
-      'needping'    => (bool)$userModel->row['issingleloginenforced'],
-      'pingseconds' => $this->bootstrap->config['sessionpingseconds'],
-      'checkwatching' => (bool)$userModel->row['ispresencecheckforced'],
-      'checkwatchingtimeinterval' => $this->organization['presencechecktimeinterval'],
-      'checkwatchingconfirmationtimeout' => $this->organization['presencecheckconfirmationtime'],
-    );
+    return $output;
     
   }
   

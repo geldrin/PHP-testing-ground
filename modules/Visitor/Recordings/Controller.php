@@ -38,6 +38,7 @@ class Controller extends \Visitor\Controller {
     'checkfileresume'      => 'uploader',
     'uploadchunk'          => 'uploader',
     'cancelupload'         => 'uploader',
+    'updateposition'       => 'member',
   );
   
   public $forms = array(
@@ -1224,6 +1225,34 @@ class Controller extends \Visitor\Controller {
         'html'   => $this->fetchSmarty('Visitor/Recordings/Contributors.tpl'),
       )
     );
+    
+  }
+  
+  public function updatepositionAction() {
+    
+    $user            = $this->bootstrap->getSession('user');
+    $recordingsModel = $this->modelIDCheck(
+      'recordings',
+      $this->application->getNumericParameter('id'),
+      false
+    );
+    
+    if ( !$user or !$user['id'] )
+      $this->jsonOutput( array('status' => 'ERR', 'reason' => 'nouser') );
+    
+    if ( !$recordingsModel )
+      $this->jsonOutput( array('status' => 'ERR', 'reason' => 'norecording') );
+    
+    // TODO get the json and check it against the hash
+    if ( !$recordingsModel->checkHashFromFlash( $data, $hash ) )
+      $this->jsonOutput( array('status' => 'ERR', 'reason' => 'invalidhash') );
+    
+    $data = json_decode( $data );
+    if ( !$data or !intval( $data['lastposition'] ) )
+      $this->jsonOutput( array('status' => 'ERR', 'reason' => 'invalidjson') );
+    
+    $recordingsModel->updateLastPosition( $user['id'], intval( $data['lastposition'] ) );
+    $this->jsonOutput( array('status' => 'OK') );
     
   }
   

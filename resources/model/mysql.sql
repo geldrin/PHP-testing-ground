@@ -145,6 +145,7 @@ CREATE TABLE `recordings` (
    `isembedable` int(11) not null default '1',
    `isfeatured` int(11) not null default '0',
    `isintrooutro` int(11) not null default '0',
+   `isseekbardisabled` int(11) not null default '0',
    `status` text not null,
    `offsetstart` int(11),
    `offsetend` int(11),
@@ -655,4 +656,15 @@ CREATE TABLE uploads(
    PRIMARY KEY (`id`),
    KEY `ix_userid_filename` (`userid`, `filename`(50)),
    KEY `ix_status` (`status`(15))
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;
+
+
+CREATE TABLE recording_view_progress(
+   `id` int(10) unsigned not null auto_increment,
+   `userid` int(10) unsigned not null,
+   `recordingid` int(10) unsigned not null default '0',
+   `position` int(11) not null,
+   `timestamp` datetime not null,
+   PRIMARY KEY (`id`),
+   KEY `ix_userid_recordingid` (`userid`, `recordingid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;
