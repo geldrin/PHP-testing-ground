@@ -280,7 +280,13 @@ class Controller extends \Visitor\Controller {
       if ( $access[ $accesskey ] !== true )
         throw new \Visitor\Api\ApiException( $l('recordings', 'nopermission'), true, false );
       
-      $output = array_merge( $output, $recordingsModel->getSeekbarOptions( $userModel->row ) );
+      $seekbaroptions = $recordingsModel->getSeekbarOptions( $userModel->row );
+      if ( $seekbaroptions ) {
+        
+        $output['parameters'] = json_encode( $seekbaroptions );
+        $output['hash']       = $recordingsModel->getHashForFlash( $output['parameters'] );
+        
+      }
       
     } elseif ( $feedid ) {
       

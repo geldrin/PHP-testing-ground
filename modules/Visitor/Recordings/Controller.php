@@ -209,7 +209,9 @@ class Controller extends \Visitor\Controller {
     $this->toSmarty['needping']      = true;
     $this->toSmarty['height']        = $this->getPlayerHeight( $recordingsModel );
     $this->toSmarty['recording']     = $recordingsModel->addPresenters( true, $this->organization['id'] );
-    $this->toSmarty['flashdata']     = $recordingsModel->getFlashData( $this->toSmarty, session_id() );
+    $this->toSmarty['flashdata']     = $recordingsModel->getFlashParameters(
+      $recordingsModel->getFlashData( $this->toSmarty, session_id() )
+    );
     $this->toSmarty['comments']      = $recordingsModel->getComments();
     $this->toSmarty['commentcount']  = $recordingsModel->getCommentsCount();
     $this->toSmarty['author']        = $recordingsModel->getAuthor();
@@ -314,7 +316,7 @@ class Controller extends \Visitor\Controller {
       $recordingsModel->id . ',' . \Springboard\Filesystem::filenameize( $recordingsModel->row['title'] )
     ;
     
-    $this->jsonOutput( $flashdata );
+    $this->jsonOutput( $recordingsModel->getFlashParameters( $flashdata ) );
     
   }
   
@@ -683,7 +685,7 @@ class Controller extends \Visitor\Controller {
     $this->toSmarty['height']      = $this->getPlayerHeight( $recordingsModel, $fullscale );
     $this->toSmarty['containerid'] = 'vsq_' . rand();
     $this->toSmarty['recording']   = $recordingsModel->row;
-    $this->toSmarty['flashdata']   = $flashdata;
+    $this->toSmarty['flashdata']   = $recordingsModel->getFlashParameters( $flashdata );
     
     $this->smartyoutput('Visitor/Recordings/Embed.tpl');
     

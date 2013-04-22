@@ -184,7 +184,9 @@ class Controller extends \Visitor\Controller {
     if ( $chromeless and $displaychat )
       $flashdata['authorization_callback'] = 'onLiveFlashLogin';
     
-    $this->toSmarty['flashdata']   = $flashdata;
+    $this->toSmarty['flashdata']   =
+      $this->bootstrap->getModel('recordings')->getFlashParameters( $flashdata )
+    ;
     $this->toSmarty['livehttpurl'] = $feedModel->getMediaUrl(
       'livehttp',
       $currentstream['keycode'],

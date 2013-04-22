@@ -1908,6 +1908,17 @@ class Recordings extends \Springboard\Model {
     return $hash == $actualhash;
   }
   
+  public function getFlashParameters( $parameters ) {
+    
+    $ret = array(
+      'parameters' => json_encode( $parameters ),
+    );
+    
+    $ret['hash'] = $this->getHashForFlash( $ret['parameters'] );
+    return $ret;
+    
+  }
+  
   public function getIntroOutroFlashdata( $domain ) {
     
     $this->ensureObjectLoaded();
