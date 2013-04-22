@@ -185,7 +185,7 @@ class Controller extends \Visitor\Controller {
       $flashdata['authorization_callback'] = 'onLiveFlashLogin';
     
     $this->toSmarty['flashdata']   =
-      $this->bootstrap->getModel('recordings')->getFlashParameters( $flashdata )
+      $this->getFlashParameters( $flashdata )
     ;
     $this->toSmarty['livehttpurl'] = $feedModel->getMediaUrl(
       'livehttp',

@@ -220,4 +220,24 @@ class Controller extends \Springboard\Controller\Visitor {
     
   }
   
+  public function getHashForFlash( $string ) {
+    return md5( $string . $this->bootstrap->config['flashhashseed'] );
+  }
+  
+  public function checkHashFromFlash( $string, $hash ) {
+    $actualhash = $this->getHashForFlash( $string );
+    return $hash == $actualhash;
+  }
+  
+  public function getFlashParameters( $parameters ) {
+    
+    $ret = array(
+      'parameters' => json_encode( $parameters ),
+    );
+    
+    $ret['hash'] = $this->getHashForFlash( $ret['parameters'] );
+    return $ret;
+    
+  }
+  
 }

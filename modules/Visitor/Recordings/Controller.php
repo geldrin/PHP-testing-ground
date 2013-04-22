@@ -209,7 +209,7 @@ class Controller extends \Visitor\Controller {
     $this->toSmarty['needping']      = true;
     $this->toSmarty['height']        = $this->getPlayerHeight( $recordingsModel );
     $this->toSmarty['recording']     = $recordingsModel->addPresenters( true, $this->organization['id'] );
-    $this->toSmarty['flashdata']     = $recordingsModel->getFlashParameters(
+    $this->toSmarty['flashdata']     = $this->getFlashParameters(
       $recordingsModel->getFlashData( $this->toSmarty, session_id() )
     );
     $this->toSmarty['comments']      = $recordingsModel->getComments();
@@ -316,7 +316,7 @@ class Controller extends \Visitor\Controller {
       $recordingsModel->id . ',' . \Springboard\Filesystem::filenameize( $recordingsModel->row['title'] )
     ;
     
-    $this->jsonOutput( $recordingsModel->getFlashParameters( $flashdata ) );
+    $this->jsonOutput( $this->getFlashParameters( $flashdata ) );
     
   }
   
@@ -685,7 +685,7 @@ class Controller extends \Visitor\Controller {
     $this->toSmarty['height']      = $this->getPlayerHeight( $recordingsModel, $fullscale );
     $this->toSmarty['containerid'] = 'vsq_' . rand();
     $this->toSmarty['recording']   = $recordingsModel->row;
-    $this->toSmarty['flashdata']   = $recordingsModel->getFlashParameters( $flashdata );
+    $this->toSmarty['flashdata']   = $this->getFlashParameters( $flashdata );
     
     $this->smartyoutput('Visitor/Recordings/Embed.tpl');
     
@@ -1246,7 +1246,7 @@ class Controller extends \Visitor\Controller {
       $this->jsonOutput( array('status' => 'ERR', 'reason' => 'norecording') );
     
     // TODO get the json and check it against the hash
-    if ( !$recordingsModel->checkHashFromFlash( $data, $hash ) )
+    if ( !$this->checkHashFromFlash( $data, $hash ) )
       $this->jsonOutput( array('status' => 'ERR', 'reason' => 'invalidhash') );
     
     $data = json_decode( $data );
