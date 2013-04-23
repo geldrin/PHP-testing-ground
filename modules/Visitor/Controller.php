@@ -232,7 +232,7 @@ class Controller extends \Springboard\Controller\Visitor {
   public function getFlashParameters( $parameters ) {
     
     $ret = array(
-      'parameters' => json_encode( $parameters ),
+      'parameters' => json_encode( $parameters, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT ),
     );
     
     $ret['hash'] = $this->getHashForFlash( $ret['parameters'] );
