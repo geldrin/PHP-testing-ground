@@ -1245,7 +1245,12 @@ class Controller extends \Visitor\Controller {
     if ( !$recordingsModel )
       $this->jsonOutput( array('status' => 'ERR', 'reason' => 'norecording') );
     
-    // TODO get the json and check it against the hash
+    $data = $this->application->getParameter('parameters');
+    $hash = $this->application->getParameter('hash');
+    
+    if ( !$data or !$hash )
+      $this->jsonOutput( array('status' => 'ERR', 'reason' => 'invalidparameters') );
+    
     if ( !$this->checkHashFromFlash( $data, $hash ) )
       $this->jsonOutput( array('status' => 'ERR', 'reason' => 'invalidhash') );
     
