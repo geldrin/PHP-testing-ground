@@ -34,35 +34,10 @@ class Controller extends \Visitor\Controller {
     
     try {
       
-      $email    = $this->application->getParameter('email');
-      $password = $this->application->getParameter('password');
-      $module   = $this->application->getParameter('_module');
-      $method   = $this->application->getParameter('method');
-      
-      if (
-           $module != 'users' or
-           ( $module == 'users' and $method != 'authenticate' )
-         ) {
-        
-        $loggedin = call_user_func_array( array(
-            $this->bootstrap->getController('users'),
-            'authenticateAction'
-          ),
-          array(
-            $email,
-            $password
-          )
-        );
-        
-        if ( !$loggedin )
-          throw new ApiException('Invalid user!', true, false );
-        
-      }
-      
       $this->format = $this->validateParameter('format', $this->formats );
       $this->layer  = $this->validateParameter('layer', $this->layers );
       $this->module = $this->getModule();
-      
+      $this->tryAuthenticate();
       $this->callMethod();
       
       $result['data'] = $this->data;
@@ -78,9 +53,8 @@ class Controller extends \Visitor\Controller {
       
       if ( $shouldlog ) {
         
-        $debug            = \Springboard\Debug::getInstance();
-        
-        $message =
+        $debug     = \Springboard\Debug::getInstance();
+        $message   =
           "API exception caught: " . $e->getMessage() . " --- '" . get_class( $e ) . "'\n" .
           "  Backtrace:\n" . \Springboard\Debug::formatBacktrace( $e->getTrace() ) .
           "\n  Info:\n" . \Springboard\Debug::getRequestInformation( 2 )
@@ -103,7 +77,7 @@ class Controller extends \Visitor\Controller {
   
   public function validateParameter( $name, $possiblevalues ) {
     
-    $value = $this->application->getParameter( $name );
+    $value = $this->getParameter( $name );
     if ( !in_array( $value, $possiblevalues ) )
       throw new ApiException(
         'Invalid parameter: ' . $name . ', possible values: "' .
@@ -116,9 +90,11 @@ class Controller extends \Visitor\Controller {
     
   }
   
-  public function getModule() {
+  public function getModule( $module = null ) {
     
-    $module = $this->application->getParameter('_module');
+    if ( $module === null )
+      $module = $this->getParameter('_module');
+    
     $ret    = null;
     
     if ( $module and $this->layer == 'model' ) {
@@ -145,7 +121,7 @@ class Controller extends \Visitor\Controller {
   
   public function callMethod() {
     
-    $method = $this->application->getParameter('method');
+    $method = $this->getParameter('method');
     
     if ( !$method )
       throw new ApiException('No method specified', false, false );
@@ -170,7 +146,7 @@ class Controller extends \Visitor\Controller {
   
   public function idValidator( $parameter, $configuration ) {
     
-    $id            = $this->application->getNumericParameter( $parameter );
+    $id            = $this->getNumericParameter( $parameter );
     $defaults      = array(
       'required'    => true,
       'shouldlog'   => true,
@@ -199,7 +175,7 @@ class Controller extends \Visitor\Controller {
     );
     $configuration = array_merge( $defaults, $configuration );
     
-    $value = $this->application->getParameter( $parameter, $configuration['value'] );
+    $value = $this->getParameter( $parameter, $configuration['value'] );
     $value = trim( $value );
     
     if ( !$value and !$configuration['required'] )
@@ -266,7 +242,7 @@ class Controller extends \Visitor\Controller {
     
     if ( isset( $configuration['impersonatefromparameter'] ) ) {
       
-      $id        = $this->application->getNumericParameter(
+      $id        = $this->getNumericParameter(
         $configuration['impersonatefromparameter']
       );
       $userModel = $this->modelIDCheck('users', $id, false );
@@ -283,6 +259,42 @@ class Controller extends \Visitor\Controller {
     }
     
     return $user;
+    
+  }
+  
+  public function getParameter( $key, $defaultvalue = null ) {
+    return $this->application->getParameter( $key, $defaultvalue );
+  }
+  
+  public function getNumericParameter( $key, $defaultvalue = null, $isfloat = false ) {
+    return $this->application->getNumericParameter( $key, $defaultvalue, $isfloat );
+  }
+  
+  public function tryAuthenticate() {
+    
+    $email    = $this->getParameter('email');
+    $password = $this->getParameter('password');
+    $method   = $this->getParameter('method');
+    
+    if (
+         isset( $this->module->apisignature[ $method ] ) and
+         isset( $this->module->apisignature[ $method ]['loginrequired'] ) and
+         !$this->module->apisignature[ $method ]['loginrequired']
+       )
+      return;
+    
+    $loggedin = call_user_func_array( array(
+        $this->bootstrap->getController('users'),
+        'authenticateAction'
+      ),
+      array(
+        $email,
+        $password
+      )
+    );
+    
+    if ( !$loggedin )
+      throw new ApiException('Invalid user!', true, false );
     
   }
   

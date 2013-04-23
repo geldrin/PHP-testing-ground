@@ -43,7 +43,8 @@ class Controller extends \Visitor\Controller {
   
   public $apisignature = array(
     'authenticate' => array(
-      'email' => array(
+      'loginrequired' => false,
+      'email'         => array(
         'type' => 'string',
         'shouldemail' => false,
       ),
