@@ -132,6 +132,9 @@ class Controller extends \Visitor\Controller {
     $parameters = array();
     foreach( $this->module->apisignature[ $method ] as $parameter => $validator ) {
       
+      if ( !is_array( $validator ) )
+        continue;
+      
       $validatormethod = strtolower( $validator['type'] ) . 'Validator';
       $parameters[]    = $this->$validatormethod( $parameter, $validator );
       
