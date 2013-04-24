@@ -117,4 +117,5 @@ $config['moderationtype'] = array(
   'displayname' => $l('live', 'moderationtype'),
   'type'        => 'select',
   'values'      => $l->getLov('moderationtype'),
+  'value'       => 'nochat',
 );
