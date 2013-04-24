@@ -272,9 +272,10 @@ class Livefeeds extends \Springboard\Model {
     
     $flashdata = array(
       'language'               => \Springboard\Language::get(),
-      'user_pingURL'           => $info['BASE_URI'] . \Springboard\Language::get() . '/users/ping',
+      'api_url'                => $info['BASE_URI'] . \Springboard\Language::get() . '/jsonapi',
       'user_needPing'          => false,
       'media_streams'          => $streams,
+      'feed_id'                => $this->id,
       'recording_title'        => $this->row['name'],
       'recording_type'         => 'live',
       'media_secondaryStreams' => $contentstreams,
@@ -284,8 +285,13 @@ class Livefeeds extends \Springboard\Model {
       'user_checkWatchingConfirmationTimeout' => $info['checkwatchingconfirmationtimeout'],
     );
     
-    if ( $info['user'] and $info['user']['id'] and $info['user']['issingleloginenforced'] )
-      $flashdata['user_needPing'] = true;
+    if ( $info['user'] and $info['user']['id'] ) {
+      
+      $flashdata['user_id'] = $info['user']['id'];
+      if ( $info['user']['issingleloginenforced'] )
+        $flashdata['user_needPing'] = true;
+      
+    }
     
     if ( $this->row['issecurestreamingforced'] )
       $flashdata['media_servers'] = array(
