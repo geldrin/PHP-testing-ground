@@ -79,6 +79,9 @@ class Controller extends \Visitor\Controller {
         'permission' => 'admin',
       ),
     ),
+    'ping' => array(
+      'loginrequired' => false,
+    ),
   );
   
   public function indexAction() {
@@ -309,26 +312,25 @@ class Controller extends \Visitor\Controller {
     
     $user = $this->bootstrap->getSession('user');
     if ( !$user['id'] )
-      $this->jsonOutput( array('status' => 'ERR') );
+      return false;
     
     $userModel = $this->bootstrap->getModel('users');
     $userModel->select( $user['id'] );
     
     if ( !$userModel->row )
-      $this->jsonOutput( array('status' => 'ERR') );
+      return false;
     
     if ( !$userModel->checkSingleLoginUsers() ) {
       
       $user->clear();
       $l = $this->bootstrap->getLocalization();
       $this->addMessage( $l('users', 'loggedout_sessionexpired') );
-      $this->jsonOutput( array('status' => 'ERR') );
+      return false;
       
     }
     
     $userModel->updateSessionInformation();
-    header('HTTP/1.1 204 No Content');
-    die();
+    return true;
     
   }
   

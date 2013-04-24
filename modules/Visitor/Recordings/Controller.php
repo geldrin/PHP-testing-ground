@@ -124,6 +124,19 @@ class Controller extends \Visitor\Controller {
         'impersonatefromparameter' => 'userid',
       ),
     ),
+    'track' => array(
+      'recordingid' => array(
+        'type' => 'id',
+      ),
+    ),
+    'updateposition' => array(
+      'recordingid' => array(
+        'type' => 'id',
+      ),
+      'lastposition' => array(
+        'type' => 'id',
+      ),
+    ),
   );
   
   public function init() {
@@ -442,13 +455,17 @@ class Controller extends \Visitor\Controller {
     
   }
   
-  public function trackAction() {
+  public function trackAction( $recordingid ) {
     
     $views          = $this->bootstrap->getSession('views');
     $recordingModel = $this->modelIDCheck(
       'recordings',
-      $this->application->getNumericParameter('id')
+      $recordingid,
+      false
     );
+    
+    if ( !$recordingModel )
+      return false;
     
     if ( !$views[ $recordingModel->id ] ) {
       
@@ -456,6 +473,8 @@ class Controller extends \Visitor\Controller {
       $views[ $recordingModel->id ] = true;
       
     }
+    
+    return true;
     
   }
   
@@ -1230,37 +1249,23 @@ class Controller extends \Visitor\Controller {
     
   }
   
-  public function updatepositionAction() {
+  public function updatepositionAction( $recordingid, $lastposition ) {
     
     $user            = $this->bootstrap->getSession('user');
     $recordingsModel = $this->modelIDCheck(
       'recordings',
-      $this->application->getNumericParameter('id'),
+      $recordingid,
       false
     );
     
     if ( !$user or !$user['id'] )
-      $this->jsonOutput( array('status' => 'ERR', 'reason' => 'nouser') );
+      return 'nouser';
     
     if ( !$recordingsModel )
-      $this->jsonOutput( array('status' => 'ERR', 'reason' => 'norecording') );
+      return 'norecording';
     
-    $data = $this->application->getParameter('parameters');
-    $hash = $this->application->getParameter('hash');
-    
-    if ( !$data or !$hash )
-      $this->jsonOutput( array('status' => 'ERR', 'reason' => 'invalidparameters') );
-    
-    if ( !$this->checkHashFromFlash( $data, $hash ) )
-      $this->jsonOutput( array('status' => 'ERR', 'reason' => 'invalidhash') );
-    
-    $data = json_decode( $data );
-    // TODO recordingid check
-    if ( !$data or !intval( $data['lastposition'] ) )
-      $this->jsonOutput( array('status' => 'ERR', 'reason' => 'invalidjson') );
-    
-    $recordingsModel->updateLastPosition( $user['id'], intval( $data['lastposition'] ) );
-    $this->jsonOutput( array('status' => 'OK') );
+    $recordingsModel->updateLastPosition( $user['id'], $lastposition );
+    return true;
     
   }
   
