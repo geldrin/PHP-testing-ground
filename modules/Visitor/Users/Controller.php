@@ -19,7 +19,6 @@ class Controller extends \Visitor\Controller {
     'disable'        => 'clientadmin',
     'admin'          => 'clientadmin',
     'edit'           => 'clientadmin',
-    'ping'           => 'public',
     'resetsession'   => 'public',
     'validateresetsession' => 'public',
   );

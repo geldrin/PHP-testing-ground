@@ -47,8 +47,10 @@ class Controller extends \Visitor\Api\Controller {
   }
   
   public function getNumericParameter( $key, $defaultvalue = null, $isfloat = false ) {
-    $type = $isfloat? 'floatval': 'intval';
-    return $$type( $this->getParameter( $key, $defaultvalue ) );
+    if ( $isfloat )
+      return floatval( $this->getParameter( $key, $defaultvalue ) );
+    else
+      return intval( $this->getParameter( $key, $defaultvalue ) );
   }
   
   public function tryAuthenticate() {

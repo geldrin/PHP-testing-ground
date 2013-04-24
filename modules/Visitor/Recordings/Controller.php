@@ -10,7 +10,6 @@ class Controller extends \Visitor\Controller {
     'getsubtitle'          => 'public',
     'newcomment'           => 'member',
     'rate'                 => 'member',
-    'track'                => 'public',
     'upload'               => 'uploader',
     'uploadcontent'        => 'uploader',
     'uploadsubtitle'       => 'uploader',
@@ -38,7 +37,6 @@ class Controller extends \Visitor\Controller {
     'checkfileresume'      => 'uploader',
     'uploadchunk'          => 'uploader',
     'cancelupload'         => 'uploader',
-    'updateposition'       => 'member',
   );
   
   public $forms = array(
