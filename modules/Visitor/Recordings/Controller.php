@@ -1244,10 +1244,10 @@ class Controller extends \Visitor\Controller {
     );
     
     if ( !$user or !$user['id'] )
-      return 'nouser';
+      throw new \Visitor\Api\ApiException('User not logged in', false, false );
     
     if ( !$recordingsModel )
-      return 'norecording';
+      throw new \Visitor\Api\ApiException('Recording not found', false, false );
     
     $recordingsModel->updateLastPosition( $user['id'], $lastposition );
     return true;
