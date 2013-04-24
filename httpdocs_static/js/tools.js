@@ -1164,6 +1164,7 @@ var livechat = function( container, pollurl, polltime ) {
   self.container = $j( container );
   self.pollurl   = pollurl;
   self.polltime  = polltime;
+  self.topposition = null;
   
   if ( self.container.find('#chatlist').length == 0 )
     self.container.hide();
@@ -1228,7 +1229,12 @@ livechat.prototype.onPoll = function( data ) {
   this.polltime = data.polltime;
   this.container.attr('data-lastmodified', data.lastmodified );
   this.container.html( data.html );
-  this.container.scrollTop( this.container.get(0).scrollHeight );
+  
+  if ( this.topposition !== null ) {
+    this.container.scrollTop( this.topposition );
+    this.topposition = null;
+  } else
+    this.container.scrollTop( this.container.get(0).scrollHeight );
   
   if ( this.container.find('#chatlist').length == 0 )
     this.container.hide();
@@ -1247,6 +1253,7 @@ livechat.prototype.onModerate = function( elem ) {
       type      : 'GET'
     };
   
+  this.topposition = this.container.get(0).scrollTop;
   this.moderateOptions.url = elem.attr('href');
   $j.ajax( this.moderateOptions );
   
