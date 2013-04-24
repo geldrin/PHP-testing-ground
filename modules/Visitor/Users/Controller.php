@@ -287,7 +287,7 @@ class Controller extends \Visitor\Controller {
       
     } elseif ( $feedid ) {
       
-      $feedModel = $this->modelIDCheck( 'livefeeds', $feedid );
+      $feedModel = $this->modelIDCheck( 'livefeeds', $feedid, false );
       
       if ( !$feedModel )
         throw new \Visitor\Api\ApiException( $l('live', 'nofeed'), true, false );
