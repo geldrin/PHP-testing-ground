@@ -1255,6 +1255,7 @@ class Controller extends \Visitor\Controller {
       $this->jsonOutput( array('status' => 'ERR', 'reason' => 'invalidhash') );
     
     $data = json_decode( $data );
+    // TODO recordingid check
     if ( !$data or !intval( $data['lastposition'] ) )
       $this->jsonOutput( array('status' => 'ERR', 'reason' => 'invalidjson') );
     

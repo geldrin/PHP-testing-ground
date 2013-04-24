@@ -1743,6 +1743,7 @@ class Recordings extends \Springboard\Model {
       'user_needPing'         => false,
       'media_servers'         => array(),
       'track_firstPlay'       => $recordingbaseuri . 'track/' . $this->id,
+      'recording_id'          => $this->id,
       'recording_title'       => $this->row['title'],
       'recording_subtitle'    => (string)$this->row['subtitle'],
       'recording_description' => (string)$this->row['description'],
@@ -1751,6 +1752,9 @@ class Recordings extends \Springboard\Model {
       'user_checkWatchingTimeInterval' => $info['organization']['presencechecktimeinterval'],
       'user_checkWatchingConfirmationTimeout' => $info['organization']['presencecheckconfirmationtime'],
     );
+    
+    if ( @$info['member'] and $info['member']['id'] )
+      $data['user_id'] = $info['member']['id'];
     
     if ( @$info['member'] and $info['member']['issingleloginenforced'] )
       $data['user_needPing'] = true;
