@@ -1739,10 +1739,10 @@ class Recordings extends \Springboard\Model {
     
     $data = array(
       'language'              => \Springboard\Language::get(),
-      'user_pingURL'          => $info['BASE_URI'] . \Springboard\Language::get() . '/users/ping',
+      'api_url'               => $info['BASE_URI'] . \Springboard\Language::get() . '/jsonapi',
       'user_needPing'         => false,
       'media_servers'         => array(),
-      'track_firstPlay'       => $recordingbaseuri . 'track/' . $this->id,
+      'track_firstPlay'       => true,
       'recording_id'          => $this->id,
       'recording_title'       => $this->row['title'],
       'recording_subtitle'    => (string)$this->row['subtitle'],
@@ -1857,7 +1857,6 @@ class Recordings extends \Springboard\Model {
       
       $options = $this->getSeekbarOptions( $info['member'] );
       $data['timeline_seekbarDisabled']          = $options['isseekbardisabled'];
-      $data['timeline_lastPositionURL']          = $options['lastpositionurl'];
       $data['timeline_lastPositionTimeInterval'] = $options['lastpositiontimeinterval'];
       $data['timeline_lastPlaybackPosition']     = $options['lastplaybackposition'];
       $data['timeline_seekbarVisible']           = $options['seekbarvisible'];
@@ -1877,10 +1876,6 @@ class Recordings extends \Springboard\Model {
     
     $options = array(
       'isseekbardisabled'         => true,
-      'lastpositionurl'           =>
-        $this->bootstrap->baseuri . \Springboard\Language::get() .
-        '/recordings/updateposition/' . $this->id
-      ,
       'lastpositiontimeinterval'  =>
         $this->bootstrap->config['recordingpositionupdateseconds']
       ,

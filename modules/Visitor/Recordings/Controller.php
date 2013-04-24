@@ -314,7 +314,6 @@ class Controller extends \Visitor\Controller {
       
       $flashdata['authorization']            = array();
       $flashdata['authorization']['need']    = true;
-      $flashdata['authorization']['gateway'] = $this->bootstrap->baseuri . 'hu/api';
       
     }
     
@@ -671,22 +670,8 @@ class Controller extends \Visitor\Controller {
     if ( $autoplay )
       $flashdata['timeline_autoPlay'] = true;
     
-    if ( $needauth ) {
-      
-      $flashdata['authorization_need']    = true;
-      $flashdata['authorization_gateway'] = rawurlencode(
-        $this->bootstrap->baseuri . 'hu/api?' .
-        http_build_query( array(
-            'format'      => 'json',
-            'layer'       => 'controller',
-            'module'      => 'users',
-            'method'      => 'authenticate',
-            'recordingid' => $recordingsModel->id,
-          )
-        )
-      );
-      
-    }
+    if ( $needauth )
+      $flashdata['authorization_need'] = true;
     
     if ( $nopermission ) {
       
