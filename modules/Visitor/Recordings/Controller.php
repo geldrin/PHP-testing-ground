@@ -123,12 +123,14 @@ class Controller extends \Visitor\Controller {
       ),
     ),
     'track' => array(
-      'recordingid' => array(
+      'loginrequired' => false,
+      'recordingid'   => array(
         'type' => 'id',
       ),
     ),
     'updateposition' => array(
-      'recordingid' => array(
+      'loginrequired' => false,
+      'recordingid'   => array(
         'type' => 'id',
       ),
       'lastposition' => array(
