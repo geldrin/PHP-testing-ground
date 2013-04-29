@@ -2,10 +2,11 @@
 
 $curl = curl_init();
 
-$action = "START";
-$live_stream_id = "433766";
-//v: 730673
-//c: 433766
+$action = "STOP";
+//$live_stream_id = "472718";
+$live_stream_id = "956147";
+//v: 956147
+//c: 472718
 
 $wowza_app = "vsqlive";
 $recording_format = 2; 		// 1 = FLV, 2 = MP4

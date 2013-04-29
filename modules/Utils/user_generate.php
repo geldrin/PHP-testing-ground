@@ -19,7 +19,7 @@ $app = new Springboard\Application\Cli(BASE_PATH, PRODUCTION);
 // Organization ID = Conforg (ID: 200)
 $org_id = 200;
 // Department ID
-$org_dep_id = 31;
+$org_dep_id = 32;
 // How many users?
 $user_num = 50;
 // User name format and length: prefix + random number @ suffix
@@ -69,6 +69,7 @@ if ( file_exists($out_file) ) {
 }
 $fh = fopen($out_file, 'a');
 $msg .= "# User data added: " . date("Y-m-d H:i:s") . " * COMMITTED: " . ($iscommit?"YES":"NO") . "\n";
+$msg .= "No,Username,Password\n";
 fwrite($fh, $msg);
 
 $encryption = $app->bootstrap->getEncryption();
