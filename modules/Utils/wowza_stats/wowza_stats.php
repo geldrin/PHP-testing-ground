@@ -23,7 +23,7 @@ echo "Wowza log analizer v0.4 - STARTING...\n";
 $islivestats = TRUE;
 
 // Channel ID: calculate statistics for this channel (live or on demand)
-$channelid = 60;
+$channelid = 63;
 
 // Analyze per connection: TRUE = track all connections | FALSE = give a summary only
 $analyze_perconnection = TRUE;
@@ -49,25 +49,25 @@ $event_timings = array(
 	0 => array(
 			array(
 				'type'			=> 'EVENT',
-				'starttime'		=> '2013-04-04 10:10:06',	// event start
-				'endtime'		=> '2013-04-04 15:04:35',	// event finish
+				'starttime'		=> '2013-04-17 10:06:26',	// event start
+				'endtime'		=> '2013-04-17 15:07:10',	// event finish
 				'description'	=> 'ESEMÉNY KEZDETE/VÉGE'
 			),
 			array(
 				'type'			=> 'BREAK',
-				'starttime'		=> '2013-04-04 12:24:06',	// break start
-				'endtime'		=> '2013-04-04 13:02:35',	// break end
-				'description'	=> 'KÁVÉSZÜNET'
-			),
+				'starttime'		=> '2013-04-17 12:08:26',	// break start
+				'endtime'		=> '2013-04-17 13:07:10',	// break end
+				'description'	=> 'EBÉDSZÜNET'
+			)
 	)
 );
 
 // DEBUG: set IP and/or client ID to filter for the specific client
 $debug_client = array(
 	'do'		=> FALSE,
-	'ip'		=> "86.101.114.70",
+	'ip'		=> "84.206.45.194",
 	'clientid'	=> "",
-	'streamid'	=> "209/209/209_video_lq.mp4"
+	'streamid'	=> ""
 );
 
 // Debug: duration calculation
