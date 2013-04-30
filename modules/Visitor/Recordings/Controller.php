@@ -134,8 +134,12 @@ class Controller extends \Visitor\Controller {
         'type' => 'id',
       ),
       'lastposition' => array(
-        'type' => 'id',
+        'type'     => 'id',
+        'required' => false,
       ),
+    ),
+    'ping' => array(
+      'loginrequired' => false,
     ),
   );
   
