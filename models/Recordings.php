@@ -1859,7 +1859,9 @@ class Recordings extends \Springboard\Model {
       $data['timeline_seekbarDisabled']          = $options['isseekbardisabled'];
       $data['timeline_lastPositionTimeInterval'] = $options['lastpositiontimeinterval'];
       $data['timeline_lastPlaybackPosition']     = $options['lastplaybackposition'];
-      $data['timeline_seekbarVisible']           = $options['seekbarvisible'];
+      
+      if ( isset( $options['seekbarvisible'] ) )
+        $data['timeline_seekbarVisible']         = $options['seekbarvisible'];
       
     }
     
@@ -1887,12 +1889,14 @@ class Recordings extends \Springboard\Model {
           recordingid = '" . $this->id . "'
         LIMIT 1
       "),
-      'seekbarvisible'            => (
-        $user['admin'] or
-        $user['isclientadmin'] or
-        $user['iseditor']
-      )
     );
+    
+    if (
+         $user['admin'] or
+         $user['isclientadmin'] or
+         $user['iseditor']
+       )
+      $options['seekbarvisible'] = true;
     
     return $options;
     

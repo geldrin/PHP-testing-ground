@@ -138,9 +138,6 @@ class Controller extends \Visitor\Controller {
         'required' => false,
       ),
     ),
-    'ping' => array(
-      'loginrequired' => false,
-    ),
   );
   
   public function init() {
