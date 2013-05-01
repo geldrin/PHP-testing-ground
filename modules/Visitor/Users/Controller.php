@@ -80,6 +80,7 @@ class Controller extends \Visitor\Controller {
     ),
     'ping' => array(
       'loginrequired' => false,
+      'hashrequired'  => false,
     ),
   );
   
