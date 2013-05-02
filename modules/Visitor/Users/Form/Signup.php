@@ -7,7 +7,12 @@ class Signup extends \Visitor\HelpForm {
   
   public function init() {
     
-    if ( $this->controller->organization['registrationtype'] == 'closed' )
+    $userinvitationSession = $this->bootstrap->getSession('userinvitation');
+    
+    if (
+         !count( $userinvitationSession ) and
+         $this->controller->organization['registrationtype'] == 'closed'
+       )
       $this->controller->redirectToController('contents', 'noregistration');
     
     $this->controller->toSmarty['helpclass'] = 'rightbox halfbox';
@@ -28,7 +33,6 @@ class Signup extends \Visitor\HelpForm {
     $crypto    = $this->bootstrap->getEncryption();
     $queue     = $this->bootstrap->getMailqueue();
     $l         = $this->bootstrap->getLocalization();
-    $groupSession = $this->bootstrap->getSession('groupinvitation');
     $userinvitationSession = $this->bootstrap->getSession('userinvitation');
     
     $values['timestamp']      = date('Y-m-d H:i:s');
