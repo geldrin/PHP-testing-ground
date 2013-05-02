@@ -99,7 +99,11 @@
     </div>
   {else}
     <div id="headerloginactions">
-      {#headerloginactions#|sprintf:"`$language`/users/login":"`$language`/users/signup"}
+      {if $organization.registrationtype == 'closed'}
+        {#headerloginactions_closed#|sprintf:"`$language`/users/login"}
+      {else}
+        {#headerloginactions#|sprintf:"`$language`/users/login":"`$language`/users/signup"}
+      {/if}
     </div>
     <div id="headerloginform" class="hidden">
       <form action="{$language}/users/login" method="post">
