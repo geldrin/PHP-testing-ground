@@ -6,6 +6,10 @@ class Signup extends \Visitor\HelpForm {
   public $needdb     = true;
   
   public function init() {
+    
+    if ( $this->controller->organization['registrationtype'] == 'closed' )
+      $this->controller->redirectToController('contents', 'noregistration');
+    
     $this->controller->toSmarty['helpclass'] = 'rightbox halfbox';
     parent::init();
   }
