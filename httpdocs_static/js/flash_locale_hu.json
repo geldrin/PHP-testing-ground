@@ -14,7 +14,7 @@
     "play_failed":"A felvétel lejátszása közben hiba lépett fel, amelynek többféle oka lehet, például az előfizető nem rendelkezik hozzáférési jogosultsággal.",
     "streamNotFound":"A felvétel jelenleg nem elérhető.",
     "liveStreamNotFound":"Az élő közvetítés jelenleg nem elérhető.",
-    "anotherComputer":"A felhasználói belépést már egy másik számítógépről használják."
+    "anotherComputer":"A felhasználói belépést már egy másik számítógépről használják.",
 	"cantPosition":"Ez a rész csak megtekintés után pozícionálható."
   },
   "help": {
@@ -59,7 +59,7 @@
 	   "confirm":"Itt vagyok",
 	   "timeoutMessage":"A felvétel az Ön személyes jelenlétét igényli. A jelenlét ellenőrzése sikertelen volt, ezért a kapcsolat megszakadt. Újrakapcsolódáshoz kattinson a lejátszás ikonra!"
 	}
-    },
+  },
   "layout": {
     "video": "Csak videó",
     "content": "Csak tartalom",
@@ -146,7 +146,7 @@
     "skip": "Léptetés",
     "pause": "Megállítás",
     "playing": "A média lejátszása elindult.",
-    "paused": "A média lejátszása leállt."
+    "paused": "A média lejátszása leállt.",
 	"seek":"Ugrás [TIME]-ra"
   }
 }
