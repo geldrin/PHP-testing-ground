@@ -15,11 +15,18 @@
     "streamNotFound":"A felvétel jelenleg nem elérhető.",
     "liveStreamNotFound":"Az élő közvetítés jelenleg nem elérhető.",
     "anotherComputer":"A felhasználói belépést már egy másik számítógépről használják."
+	"cantPosition":"Ez a rész csak megtekintés után pozícionálható."
   },
   "help": {
     "subtitle":"A felvételhez feliratok is tartoznak, az ikonra kattinva választhatja ki a kívánt nyelvet, illetve tesreszabhatja a vizuális megjelenítést.",
     "layout":"A felvétel elrendezése az ikonra kattintva módosítható!"
   },
+  "continuePlaying": {
+	"title": "Megtekintés folytatása",
+	"message": "Folytatja a felvétel megtekintését? Eddig a teljes felvétel [TIME_PERCENT]-át nézte meg.\nA teljes megtekintendő hossz [TOTAL_TIME].",
+	"startFromBegin": "Kezdés elölről",
+	"continueFromLastPosition": "Folytatás [LAST_TIME]-tól"
+    },
   "recommendatory": {
     "lastPlayed": "Utoljára játszott:",
     "share": "Megosztás",
@@ -42,15 +49,15 @@
   "presenceCheck": {
 	"live": {
        "title":"Ez a közvetítés az Ön személyes jelenlétét igényli",
-       "description":"Jelenléte megerősítéséhez, kérjük nyugtázza ezt az üzenetet! Amennyiben a jelzett időn belül nem kerül sor a visszajelzésre, a lejátszást megszakítjuk!",
+       "description":"Jelenléte megerősítéséhez, kérjük nyugtázza ezt az üzenetet! Amennyiben a jelzett időn belül nem kerül sor a visszajelzésre, a lejátszás megszakad!",
 	   "confirm":"Itt vagyok",
-       "timeoutMessage":"Az élő közvetítés az Ön személyes jelenlétét igényli. A jelenlét ellenőrzése sikertelen volt, ezért a kapcsolatot megszakítottuk. Újrakapcsolódáshoz kattinson a lejátszás ikonra!"
+       "timeoutMessage":"Az élő közvetítés az Ön személyes jelenlétét igényli. A jelenlét ellenőrzése sikertelen volt, ezért a kapcsolat megszakadt. Újrakapcsolódáshoz kattinson a lejátszás ikonra!"
 	},
 	"record": {
        "title":"Ez a felvétel az Ön személyes jelenlétét igényli",
-       "description":"Jelenléte megerősítéséhez, kérjük nyugtázza ezt az üzenetet! Amennyiben a jelzett időn belül nem kerül sor a visszajelzésre, a lejátszást megszakítjuk!",
+       "description":"Jelenléte megerősítéséhez, kérjük nyugtázza ezt az üzenetet! Amennyiben a jelzett időn belül nem kerül sor a visszajelzésre, a lejátszás megszakad!",
 	   "confirm":"Itt vagyok",
-	   "timeoutMessage":"A felvétel az Ön személyes jelenlétét igényli. A jelenlét ellenőrzése sikertelen volt, ezért a kapcsolatot megszakítottuk. Újrakapcsolódáshoz kattinson a lejátszás ikonra!"
+	   "timeoutMessage":"A felvétel az Ön személyes jelenlétét igényli. A jelenlét ellenőrzése sikertelen volt, ezért a kapcsolat megszakadt. Újrakapcsolódáshoz kattinson a lejátszás ikonra!"
 	}
     },
   "layout": {
@@ -140,5 +147,6 @@
     "pause": "Megállítás",
     "playing": "A média lejátszása elindult.",
     "paused": "A média lejátszása leállt."
+	"seek":"Ugrás [TIME]-ra"
   }
 }
