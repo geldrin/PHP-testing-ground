@@ -128,6 +128,10 @@ class Controller extends \Springboard\Controller\Visitor {
     if ( $permission == 'member' )
       return parent::handleAccessFailure( $permission );
     
+    $pos = strpos( $permission, '|' );
+    if ( $pos !== false )
+      $permission = substr( $permission, 0, $pos );
+    
     header('HTTP/1.0 403 Forbidden');
     $this->redirectToController('contents', 'nopermission' . $permission );
     
