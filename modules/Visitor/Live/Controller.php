@@ -156,22 +156,8 @@ class Controller extends \Visitor\Controller {
         'js/flash_locale_' . $flashdata['language'] . '.json'
       ;
     
-    if ( $needauth ) {
-      
+    if ( $needauth )
       $flashdata['authorization_need']    = true;
-      $flashdata['authorization_gateway'] = rawurlencode(
-        $this->bootstrap->baseuri . 'hu/api?' .
-        http_build_query( array(
-            'format' => 'json',
-            'layer'  => 'controller',
-            'module' => 'users',
-            'method' => 'authenticate',
-            'feedid' => $feedModel->id,
-          )
-        )
-      );
-      
-    }
     
     if ( $nopermission ) {
       
@@ -184,7 +170,9 @@ class Controller extends \Visitor\Controller {
     if ( $chromeless and $displaychat )
       $flashdata['authorization_callback'] = 'onLiveFlashLogin';
     
-    $this->toSmarty['flashdata']   = $flashdata;
+    $this->toSmarty['flashdata']   =
+      $this->getFlashParameters( $flashdata )
+    ;
     $this->toSmarty['livehttpurl'] = $feedModel->getMediaUrl(
       'livehttp',
       $currentstream['keycode'],

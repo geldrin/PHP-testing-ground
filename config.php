@@ -145,9 +145,8 @@ $config = array(
   // siman die()-ol az applikacio
   'organizationfallbackurl' => 'http://videosquare.eu',
   'chatpolltimems'          => 1000,
+  
   //----
-  'sessiontimeout' => 135,
-  'sessionpingseconds' => 60,
   // Az users.issingleloginenforced=1 tipusu usereknel
   // annak az idonek a hossza masodpercekben, amig a usert 
   // belepettnek tekintjuk ujabb oldal letoltese nelkul. Maximum ennyi
@@ -158,8 +157,24 @@ $config = array(
   // idoablak, akkor masik felhasznalo be tud lepni 
   // parhuzamosan: ennek elkerulesere ajax "ping" funkcio hasznalhato, ami
   // hiba eseten akar ki is dobhatja a felhasznalot.
+  'sessiontimeout' => 135,
+  'sessionpingseconds' => 60,
+  
+  //----
+  // Az itt felsorolt IP cimeknel nem ellenorizunk semmit, rogton jova
+  // hagyjuk a live/checkstreamaccess hivasnal (lehet ipv4/ipv6, nem szamit)
   'allowedstreamips' => array(
   ),
+  
+  //----
+  // Felvetelhez tartozo utolso megtekintett pozicionak frissitese ennyi
+  // masodpercenkent tortenik
+  'recordingpositionupdateseconds' => 60,
+  
+  //----
+  // A flash altal is hasznalt kozos seed amivel a hasheket hasznaljuk.
+  'flashhashseed' => 'ï!½Õz]Â7}h=ÎádÎ¶WâRì5mÂgà-ôZõ»',
+  
 );
 
 $config['phpsettings'] = array(

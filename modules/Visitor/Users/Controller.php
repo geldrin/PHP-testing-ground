@@ -19,7 +19,6 @@ class Controller extends \Visitor\Controller {
     'disable'        => 'clientadmin',
     'admin'          => 'clientadmin',
     'edit'           => 'clientadmin',
-    'ping'           => 'public',
     'resetsession'   => 'public',
     'validateresetsession' => 'public',
   );
@@ -43,7 +42,8 @@ class Controller extends \Visitor\Controller {
   
   public $apisignature = array(
     'authenticate' => array(
-      'email' => array(
+      'loginrequired' => false,
+      'email'         => array(
         'type' => 'string',
         'shouldemail' => false,
       ),
@@ -77,6 +77,10 @@ class Controller extends \Visitor\Controller {
         'type'       => 'user',
         'permission' => 'admin',
       ),
+    ),
+    'ping' => array(
+      'loginrequired' => false,
+      'hashrequired'  => false,
     ),
   );
   
@@ -250,6 +254,15 @@ class Controller extends \Visitor\Controller {
     $userModel->updateSessionInformation();
     $userModel->updateLastlogin();
     
+    $output = array(
+      'userid'                           => $userModel->id,
+      'needping'                         => (bool)$userModel->row['issingleloginenforced'],
+      'pingseconds'                      => $this->bootstrap->config['sessionpingseconds'],
+      'checkwatching'                    => (bool)$userModel->row['ispresencecheckforced'],
+      'checkwatchingtimeinterval'        => $this->organization['presencechecktimeinterval'],
+      'checkwatchingconfirmationtimeout' => $this->organization['presencecheckconfirmationtime'],
+    );
+    
     if ( $recordingid ) {
       
       $recordingsModel = $this->modelIDCheck( 'recordings', $recordingid, false );
@@ -267,13 +280,15 @@ class Controller extends \Visitor\Controller {
       $access[ $accesskey ] =
         $recordingsModel->userHasAccess( $user, null, $browserinfo['mobile'] )
       ;
-    
+      
       if ( $access[ $accesskey ] !== true )
         throw new \Visitor\Api\ApiException( $l('recordings', 'nopermission'), true, false );
       
+      $output = array_merge( $output, $recordingsModel->getSeekbarOptions( $userModel->row ) );
+      
     } elseif ( $feedid ) {
       
-      $feedModel = $this->modelIDCheck( 'livefeeds', $feedid );
+      $feedModel = $this->modelIDCheck( 'livefeeds', $feedid, false );
       
       if ( !$feedModel )
         throw new \Visitor\Api\ApiException( $l('live', 'nofeed'), true, false );
@@ -289,14 +304,7 @@ class Controller extends \Visitor\Controller {
       
     }
     
-    return array(
-      'userid'      => $userModel->id,
-      'needping'    => (bool)$userModel->row['issingleloginenforced'],
-      'pingseconds' => $this->bootstrap->config['sessionpingseconds'],
-      'checkwatching' => (bool)$userModel->row['ispresencecheckforced'],
-      'checkwatchingtimeinterval' => $this->organization['presencechecktimeinterval'],
-      'checkwatchingconfirmationtimeout' => $this->organization['presencecheckconfirmationtime'],
-    );
+    return $this->getFlashParameters( $output );
     
   }
   
@@ -304,26 +312,25 @@ class Controller extends \Visitor\Controller {
     
     $user = $this->bootstrap->getSession('user');
     if ( !$user['id'] )
-      $this->jsonOutput( array('status' => 'ERR') );
+      return false;
     
     $userModel = $this->bootstrap->getModel('users');
     $userModel->select( $user['id'] );
     
     if ( !$userModel->row )
-      $this->jsonOutput( array('status' => 'ERR') );
+      return false;
     
     if ( !$userModel->checkSingleLoginUsers() ) {
       
       $user->clear();
       $l = $this->bootstrap->getLocalization();
       $this->addMessage( $l('users', 'loggedout_sessionexpired') );
-      $this->jsonOutput( array('status' => 'ERR') );
+      return false;
       
     }
     
     $userModel->updateSessionInformation();
-    header('HTTP/1.1 204 No Content');
-    die();
+    return true;
     
   }
   

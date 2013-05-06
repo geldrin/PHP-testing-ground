@@ -136,3 +136,18 @@ else
     'value'    => '0',
     'readonly' => true,
   );
+
+$config['isseekbardisabled'] = array(
+  'type'        => 'inputRadio',
+  'displayname' => $l('recordings', 'isseekbardisabled'),
+  'values'      => $l->getLov('noyes'),
+  'value'       => 0,
+  'validation'  => array(
+    array(
+      'type' => 'custom',
+      'help' => $l('recordings', 'isseekbardisabled_help'),
+      'js'  => '( <FORM.isseekbardisabled> == 1 && <FORM.accesstype> != "public" ) || <FORM.isseekbardisabled> == 0',
+      'php' => '( <FORM.isseekbardisabled> == 1 && <FORM.accesstype> != "public" ) || <FORM.isseekbardisabled> == 0',
+    ),
+  ),
+);

@@ -1739,10 +1739,11 @@ class Recordings extends \Springboard\Model {
     
     $data = array(
       'language'              => \Springboard\Language::get(),
-      'user_pingURL'          => $info['BASE_URI'] . \Springboard\Language::get() . '/users/ping',
+      'api_url'               => $info['BASE_URI'] . \Springboard\Language::get() . '/jsonapi',
       'user_needPing'         => false,
       'media_servers'         => array(),
-      'track_firstPlay'       => $recordingbaseuri . 'track/' . $this->id,
+      'track_firstPlay'       => true,
+      'recording_id'          => $this->id,
       'recording_title'       => $this->row['title'],
       'recording_subtitle'    => (string)$this->row['subtitle'],
       'recording_description' => (string)$this->row['description'],
@@ -1751,6 +1752,9 @@ class Recordings extends \Springboard\Model {
       'user_checkWatchingTimeInterval' => $info['organization']['presencechecktimeinterval'],
       'user_checkWatchingConfirmationTimeout' => $info['organization']['presencecheckconfirmationtime'],
     );
+    
+    if ( @$info['member'] and $info['member']['id'] )
+      $data['user_id'] = $info['member']['id'];
     
     if ( @$info['member'] and $info['member']['issingleloginenforced'] )
       $data['user_needPing'] = true;
@@ -1849,7 +1853,53 @@ class Recordings extends \Springboard\Model {
       
     }
     
+    if ( $this->row['isseekbardisabled'] and @$info['member'] and $info['member']['id'] ) {
+      
+      $options = $this->getSeekbarOptions( $info['member'] );
+      $data['recording_duration']                = $this->row['masterlength'];
+      $data['timeline_seekbarDisabled']          = $options['isseekbardisabled'];
+      $data['timeline_lastPositionTimeInterval'] = $options['lastpositiontimeinterval'];
+      $data['timeline_lastPlaybackPosition']     = $options['lastplaybackposition'];
+      
+      if ( isset( $options['seekbarvisible'] ) )
+        $data['timeline_seekbarVisible']         = $options['seekbarvisible'];
+      
+    }
+    
     return $data;
+    
+  }
+  
+  public function getSeekbarOptions( $user ) {
+    
+    $this->ensureObjectLoaded();
+    
+    if ( !$this->row['isseekbardisabled'] or !$user or !$user['id'] )
+      return array();
+    
+    $options = array(
+      'isseekbardisabled'         => true,
+      'lastpositiontimeinterval'  =>
+        $this->bootstrap->config['recordingpositionupdateseconds']
+      ,
+      'lastplaybackposition'      => (int)$this->db->getOne("
+        SELECT position
+        FROM recording_view_progress
+        WHERE
+          userid      = '" . $user['id'] . "' AND
+          recordingid = '" . $this->id . "'
+        LIMIT 1
+      "),
+    );
+    
+    if (
+         $user['isadmin'] or
+         $user['isclientadmin'] or
+         $user['iseditor']
+       )
+      $options['seekbarvisible'] = true;
+    
+    return $options;
     
   }
   
@@ -2820,6 +2870,38 @@ class Recordings extends \Springboard\Model {
       ORDER BY $order
       LIMIT $start, $limit
     ");
+    
+  }
+  
+  public function updateLastPosition( $userid, $lastposition ) {
+    
+    $this->ensureID();
+    
+    $id = $this->db->getOne("
+      SELECT id
+      FROM recording_view_progress
+      WHERE
+        userid      = '$userid' AND
+        recordingid = '" . $this->id . "'
+      LIMIT 1
+    ");
+    
+    $progressModel = $this->bootstrap->getModel('recording_view_progress');
+    $record        = array(
+      'recordingid' => $this->id,
+      'userid'      => $userid,
+      'timestamp'   => date('Y-m-d H:i:s'),
+      'position'    => $lastposition,
+    );
+    
+    if ( !$id )
+      $progressModel->insert( $record );
+    else {
+      
+      $progressModel->id = $id;
+      $progressModel->updateRow( $record );
+      
+    }
     
   }
   

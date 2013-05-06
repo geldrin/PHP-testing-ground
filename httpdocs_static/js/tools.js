@@ -1459,13 +1459,16 @@ function setupContributorEdit( elements ) {
 function setupPing() {
   
   $j.ajax({
-    url: language + '/users/ping',
-    cache: false,
+    url     : language + '/jsonapi',
+    cache   : false,
+    type    : 'POST',
     dataType: 'json',
-    type: 'GET',
-    success: function( data, status, xhr ) {
+    data    : {
+      parameters: '{"format":"json","layer":"controller","module":"users","method":"ping"}'
+    },
+    success : function( data, status, xhr ) {
       
-      if ( xhr.status == 204 ) {
+      if ( typeof( data ) == 'object' && data.result == 'OK' && data.data ) {
         
         setTimeout( setupPing, 1000 * pingsecs );
         return;

@@ -65,7 +65,12 @@ class pager {
 
   // options of the perpage select: eg. Array( 10, 20, 30, 50 )
   var $perpageoptions = Array();
-  var $perpagecontainer       = '<form action="%1$s" method="post">%2$s</form>';
+  var $perpageformmethod      = 'post';
+  var $perpagecontainer       =
+    '<form action="%1$s" method="%3$s">
+      %2$s
+    </form>'
+  ;
   var $perpageselectcontainer = '%s items/page';
   var $perpageselect =
     '<select name="perpage" onchange="this.form.submit();">%s</select>';
@@ -238,10 +243,11 @@ class pager {
       $controls['perpage'] = $this->itemLayout( 
         sprintf(
           $this->perpagecontainer,
-          $this->getPagerLink( 0 ),
+          $this->getPagerLink( 0, true ),
           sprintf( $this->perpageselectcontainer,
             sprintf( $this->perpageselect, $options )
-          )
+          ),
+          $this->perpageformmethod
         )
       );
     }
@@ -331,7 +337,7 @@ class pager {
   }
 
   // --------------------------------------------------------------------------
-  function getPagerLink( $start ) {
+  function getPagerLink( $start, $skipperpage = false ) {
 
     $url        = $this->_geturl();
     $linkformat = $this->linkformat;
@@ -341,7 +347,7 @@ class pager {
 
     $link = sprintf( $linkformat, $url, $start );
 
-    if ( $this->perpageselector )
+    if ( !$skipperpage and $this->perpageselector )
       if ( strpos( $link, '?' ) !== false )
         $link .= '&amp;perpage=' . $this->perpage;
       else

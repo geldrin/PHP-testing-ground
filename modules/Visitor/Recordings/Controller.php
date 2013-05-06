@@ -10,7 +10,6 @@ class Controller extends \Visitor\Controller {
     'getsubtitle'          => 'public',
     'newcomment'           => 'member',
     'rate'                 => 'member',
-    'track'                => 'public',
     'upload'               => 'uploader',
     'uploadcontent'        => 'uploader',
     'uploadsubtitle'       => 'uploader',
@@ -123,6 +122,22 @@ class Controller extends \Visitor\Controller {
         'impersonatefromparameter' => 'userid',
       ),
     ),
+    'track' => array(
+      'loginrequired' => false,
+      'recordingid'   => array(
+        'type' => 'id',
+      ),
+    ),
+    'updateposition' => array(
+      'loginrequired' => false,
+      'recordingid'   => array(
+        'type' => 'id',
+      ),
+      'lastposition' => array(
+        'type'     => 'id',
+        'required' => false,
+      ),
+    ),
   );
   
   public function init() {
@@ -208,7 +223,9 @@ class Controller extends \Visitor\Controller {
     $this->toSmarty['needping']      = true;
     $this->toSmarty['height']        = $this->getPlayerHeight( $recordingsModel );
     $this->toSmarty['recording']     = $recordingsModel->addPresenters( true, $this->organization['id'] );
-    $this->toSmarty['flashdata']     = $recordingsModel->getFlashData( $this->toSmarty, session_id() );
+    $this->toSmarty['flashdata']     = $this->getFlashParameters(
+      $recordingsModel->getFlashData( $this->toSmarty, session_id() )
+    );
     $this->toSmarty['comments']      = $recordingsModel->getComments();
     $this->toSmarty['commentcount']  = $recordingsModel->getCommentsCount();
     $this->toSmarty['author']        = $recordingsModel->getAuthor();
@@ -298,7 +315,6 @@ class Controller extends \Visitor\Controller {
       
       $flashdata['authorization']            = array();
       $flashdata['authorization']['need']    = true;
-      $flashdata['authorization']['gateway'] = $this->bootstrap->baseuri . 'hu/api';
       
     }
     
@@ -313,7 +329,7 @@ class Controller extends \Visitor\Controller {
       $recordingsModel->id . ',' . \Springboard\Filesystem::filenameize( $recordingsModel->row['title'] )
     ;
     
-    $this->jsonOutput( $flashdata );
+    $this->jsonOutput( $this->getFlashParameters( $flashdata ) );
     
   }
   
@@ -439,13 +455,17 @@ class Controller extends \Visitor\Controller {
     
   }
   
-  public function trackAction() {
+  public function trackAction( $recordingid ) {
     
     $views          = $this->bootstrap->getSession('views');
     $recordingModel = $this->modelIDCheck(
       'recordings',
-      $this->application->getNumericParameter('id')
+      $recordingid,
+      false
     );
+    
+    if ( !$recordingModel )
+      return false;
     
     if ( !$views[ $recordingModel->id ] ) {
       
@@ -453,6 +473,8 @@ class Controller extends \Visitor\Controller {
       $views[ $recordingModel->id ] = true;
       
     }
+    
+    return true;
     
   }
   
@@ -649,22 +671,8 @@ class Controller extends \Visitor\Controller {
     if ( $autoplay )
       $flashdata['timeline_autoPlay'] = true;
     
-    if ( $needauth ) {
-      
-      $flashdata['authorization_need']    = true;
-      $flashdata['authorization_gateway'] = rawurlencode(
-        $this->bootstrap->baseuri . 'hu/api?' .
-        http_build_query( array(
-            'format'      => 'json',
-            'layer'       => 'controller',
-            'module'      => 'users',
-            'method'      => 'authenticate',
-            'recordingid' => $recordingsModel->id,
-          )
-        )
-      );
-      
-    }
+    if ( $needauth )
+      $flashdata['authorization_need'] = true;
     
     if ( $nopermission ) {
       
@@ -682,7 +690,7 @@ class Controller extends \Visitor\Controller {
     $this->toSmarty['height']      = $this->getPlayerHeight( $recordingsModel, $fullscale );
     $this->toSmarty['containerid'] = 'vsq_' . rand();
     $this->toSmarty['recording']   = $recordingsModel->row;
-    $this->toSmarty['flashdata']   = $flashdata;
+    $this->toSmarty['flashdata']   = $this->getFlashParameters( $flashdata );
     
     $this->smartyoutput('Visitor/Recordings/Embed.tpl');
     
@@ -1224,6 +1232,26 @@ class Controller extends \Visitor\Controller {
         'html'   => $this->fetchSmarty('Visitor/Recordings/Contributors.tpl'),
       )
     );
+    
+  }
+  
+  public function updatepositionAction( $recordingid, $lastposition ) {
+    
+    $user            = $this->bootstrap->getSession('user');
+    $recordingsModel = $this->modelIDCheck(
+      'recordings',
+      $recordingid,
+      false
+    );
+    
+    if ( !$user or !$user['id'] )
+      throw new \Visitor\Api\ApiException('User not logged in', false, false );
+    
+    if ( !$recordingsModel )
+      throw new \Visitor\Api\ApiException('Recording not found', false, false );
+    
+    $recordingsModel->updateLastPosition( $user['id'], $lastposition );
+    return true;
     
   }
   
