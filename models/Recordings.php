@@ -1856,6 +1856,7 @@ class Recordings extends \Springboard\Model {
     if ( $this->row['isseekbardisabled'] and @$info['member'] and $info['member']['id'] ) {
       
       $options = $this->getSeekbarOptions( $info['member'] );
+      $data['recording_duration']                = $this->row['masterlength'];
       $data['timeline_seekbarDisabled']          = $options['isseekbardisabled'];
       $data['timeline_lastPositionTimeInterval'] = $options['lastpositiontimeinterval'];
       $data['timeline_lastPlaybackPosition']     = $options['lastplaybackposition'];
