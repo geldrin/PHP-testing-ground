@@ -143,7 +143,7 @@ class Groups extends \Springboard\Model {
     if (
          $this->row['organizationid'] == $user['organizationid'] and
          (
-           $user['admin'] or $user['isclientadmin'] or $user['iseditor'] or
+           $user['isadmin'] or $user['isclientadmin'] or $user['iseditor'] or
            $this->row['userid'] == $user['id']
          )
        )
@@ -166,7 +166,7 @@ class Groups extends \Springboard\Model {
     $user   = array(
       'id'             => $userid,
       'organizationid' => $organizationid,
-      'admin'          => false,
+      'isadmin'        => false,
       'isclientadmin'  => false,
       'iseditor'       => false,
     );

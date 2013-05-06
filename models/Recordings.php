@@ -1893,7 +1893,7 @@ class Recordings extends \Springboard\Model {
     );
     
     if (
-         $user['admin'] or
+         $user['isadmin'] or
          $user['isclientadmin'] or
          $user['iseditor']
        )
