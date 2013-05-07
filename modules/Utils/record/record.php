@@ -2,8 +2,8 @@
 
 $curl = curl_init();
 
-$action = "START";
-$live_stream_id = "433766";
+$action = "STOP";
+$live_stream_id = "242277";
 //v: 730673
 //c: 433766
 
