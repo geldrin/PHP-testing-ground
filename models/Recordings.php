@@ -162,12 +162,24 @@ class Recordings extends \Springboard\Model {
         recordings_genres rg,
         strings s
       WHERE
-        rg.recordingid = '" . $this->id . "' AND
-        g.id = rg.genreid AND
+        rg.recordingid  = '" . $this->id . "' AND
+        g.id            = rg.genreid AND
         s.translationof = g.name_stringid
     ");
     
-    $cache = array_merge( $cache, $contributornames, $genres );
+    $categories = $this->db->getCol("
+      SELECT s.value
+      FROM
+        categories AS c,
+        recordings_categories AS rc,
+        strings AS s
+      WHERE
+        rc.recordingid  = '" . $this->id . "' AND
+        c.id            = rc.categoryid AND
+        s.translationof = c.name_stringid
+    ");
+    
+    $cache = array_merge( $cache, $contributornames, $genres, $categories );
     
     return implode( ' ', $cache );
     

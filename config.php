@@ -2,7 +2,7 @@
 $config = array(
   'siteid'       => 'teleconnect',
   'hashseed'     => 'ö923mfk3a,.dműteleconnect',
-  'version'      => '_v20130413',
+  'version'      => '_v20130507',
   'charset'      => 'UTF-8',
   'cacheseconds' => 3600,
   'errormessage' => 'An unexpected error has occured, our staff has been notified. Sorry for the inconvenience and thanks for your understanding!',

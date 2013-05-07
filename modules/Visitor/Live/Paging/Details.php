@@ -11,6 +11,7 @@ class Details extends \Visitor\Paging {
   protected $template = 'Visitor/Live/Paging/Details.tpl';
   protected $insertafterpager = Array( 'Visitor/Live/Paging/DetailsAfterpager.tpl' );
   protected $channelModel;
+  protected $perpageselector = false;
   
   public function init() {
     
