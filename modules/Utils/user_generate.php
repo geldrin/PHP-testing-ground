@@ -19,18 +19,19 @@ $app = new Springboard\Application\Cli(BASE_PATH, PRODUCTION);
 // Organization ID = Conforg (ID: 200)
 $org_id = 200;
 // Department ID
-$org_dep_id = 32;
+$org_dep_id = 47;
 // How many users?
-$user_num = 50;
+$user_num = 100;
+// Single login: forced?
+$issingleloginenforced = 1;
+// Presence check: forced?
+$ispresencecheckforced = 1;
+
 // User name format and length: prefix + random number @ suffix
 $user_nameprefix = "felh";
 $user_namesuffix_length = 4;
 $user_nametermination = "conforg.hu";
 $pass_length = 8;
-// Single login: forced?
-$issingleloginenforced = 1;
-// Presence check: forced?
-$ispresencecheckforced = 0;
 
 $users = array();
 
