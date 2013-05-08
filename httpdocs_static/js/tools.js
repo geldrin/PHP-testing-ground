@@ -1198,6 +1198,8 @@ livechat.prototype.poll = function() {
     this.pollOptions = {
       success   : $j.proxy( function( data ) {
         this.onPoll( data );
+      }, this ),
+      complete  : $j.proxy( function( data ) {
         this.poll();
       }, this ),
       dataType  : 'json',
