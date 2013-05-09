@@ -642,7 +642,7 @@ CREATE TABLE `departments` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;
 
 
-CREATE TABLE uploads(
+CREATE TABLE `uploads` (
    `id` int(10) unsigned not null auto_increment,
    `userid` int(10) unsigned not null,
    `recordingid` int(10) unsigned not null default '0',
@@ -659,7 +659,7 @@ CREATE TABLE uploads(
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;
 
 
-CREATE TABLE recording_view_progress(
+CREATE TABLE `recording_view_progress` (
    `id` int(10) unsigned not null auto_increment,
    `userid` int(10) unsigned not null,
    `recordingid` int(10) unsigned not null default '0',
@@ -667,4 +667,32 @@ CREATE TABLE recording_view_progress(
    `timestamp` datetime not null,
    PRIMARY KEY (`id`),
    KEY `ix_userid_recordingid` (`userid`, `recordingid`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;
+
+CREATE TABLE `cdn_client_networks` (
+   `id` int(10) unsigned not null auto_increment,
+   `name` text not null,
+   `ipaddressstart` varchar(255) not null,
+   `ipaddressend` varchar(255) not null,
+   `disabled` int(10) unsigned not null default '0',
+   PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;
+
+CREATE TABLE `cdn_streaming_servers` (
+   `id` int(10) unsigned not null auto_increment,
+   `server` varchar(255) not null comment 'streaming server fqdn',
+   `serverip` varchar(255) default null comment 'streaming server ip',
+   `country` text,
+   `default` int(10) unsigned not null default '0',
+   `servicetype` text not null comment 'live, ondemand, live|ondemand',
+   `priority` int(10) unsigned not null default '100',
+   `disabled` int(10) unsigned not null default '0',
+   PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;
+
+CREATE TABLE `cdn_servers_networks` (
+   `id` int(10) unsigned not null auto_increment,
+   `streamingserverid` int(10) unsigned not null,
+   `clientnetworkid` int(10) unsigned not null,
+   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;
