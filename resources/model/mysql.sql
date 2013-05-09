@@ -672,8 +672,8 @@ CREATE TABLE `recording_view_progress` (
 CREATE TABLE `cdn_client_networks` (
    `id` int(10) unsigned not null auto_increment,
    `name` text not null,
-   `ipaddressstart` varchar(255) not null,
-   `ipaddressend` varchar(255) not null,
+   `ipaddressstart` varchar(64) not null,
+   `ipaddressend` varchar(64) not null,
    `disabled` int(10) unsigned not null default '0',
    PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;
@@ -681,7 +681,7 @@ CREATE TABLE `cdn_client_networks` (
 CREATE TABLE `cdn_streaming_servers` (
    `id` int(10) unsigned not null auto_increment,
    `server` varchar(255) not null comment 'streaming server fqdn',
-   `serverip` varchar(255) default null comment 'streaming server ip',
+   `serverip` varchar(64) default null comment 'streaming server ip',
    `country` text,
    `default` int(10) unsigned not null default '0',
    `servicetype` text not null comment 'live, ondemand, live|ondemand',
