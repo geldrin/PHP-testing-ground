@@ -106,7 +106,7 @@ for ( $i = 1; $i <= $user_num; $i++ ) {
 		try {
 			$rs = $db->Execute($query);
 		} catch (exception $err) {
-			echo "[ERROR] SQL query failed.\n", trim($query), $err . "\n";
+			echo "[ERROR] SQL query failed.\n" . trim($query) . "\n" . $err . "\n";
 			exit -1;
 		}
 
@@ -204,7 +204,7 @@ function insert_users_deps($userid, $depid) {
 		try {
 			$rs = $db->Execute($query);
 		} catch (exception $err) {
-			echo "[ERROR] SQL query failed.\n", trim($query), $err . "\n";
+			echo "[ERROR] SQL query failed.\n" . trim($query) . "\n" . $err . "\n";
 			exit -1;
 		}
 
@@ -291,7 +291,7 @@ function query_department($department_id) {
 	try {
 		$rs = $db->Execute($query);
 	} catch (exception $err) {
-		echo "[ERROR] SQL query failed.\n", trim($query), $err . "\n";
+		echo "[ERROR] SQL query failed.\n" . trim($query) . "\n" . $err . "\n";
 		exit -1;
 	}
 
