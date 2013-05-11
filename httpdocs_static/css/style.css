@@ -2285,6 +2285,9 @@ a#currentusername span {
   overflow: scroll;
   overflow-x: hidden;
 }
+#chatcontainer .timestamp {
+  display: inline-block;
+}
 #chatcontainer .name {
   font-weight: bold;
   display: inline-block;
