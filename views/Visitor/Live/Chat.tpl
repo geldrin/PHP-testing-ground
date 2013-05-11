@@ -14,6 +14,7 @@
             {/if}
           </div>
         {/if}
+        <div class="timestamp">{$chat.timestamp|substr:0:16}</div>
         <div class="name">{$chat|@nickformat|escape:html}:</div><div class="content">{if $chat.moderated < 0 and ( $liveadmin or $chat.userid == $member.id )}{#live__chat_waitingforapproval#}: {$chat.text|mb_wordwrap:70|escape:html}{elseif $chat.moderated}{#live__chat_moderated#}{else}{$chat.text|mb_wordwrap:70|escape:html}{/if}</div>
       </li>
     {/if}
