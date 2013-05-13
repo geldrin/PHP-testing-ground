@@ -125,6 +125,7 @@ class MassInvite extends \Visitor\Form {
     file_put_contents( $file, $data );
     unset( $data );
     
+    ini_set( 'auto_detect_line_endings', true );
     $fhandle = fopen( $file, 'rb' );
     $line    = 0;
     $users   = array();
