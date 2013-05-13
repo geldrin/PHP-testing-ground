@@ -112,32 +112,32 @@ $config = array(
   //----
   'wowza' => array(
     
-    'httpurl'           => 'http://stream.videosquare.eu/vsq/_definst_/',
-    'sechttpurl'        => 'http://stream.videosquare.eu/vsq/_definst_/',
+    'httpurl'           => 'http://%s/vsq/_definst_/',
+    'sechttpurl'        => 'http://%s/vsq/_definst_/',
     
-    'rtmpurl'           => 'rtmp://stream.videosquare.eu:1935/vsq/',
-    'secrtmpsurl'       => 'rtmps://stream.videosquare.eu/vsqsec/',
-    'secrtmpurl'        => 'rtmpe://stream.videosquare.eu:1935/vsqsec/',
+    'rtmpurl'           => 'rtmp://%s:1935/vsq/',
+    'secrtmpsurl'       => 'rtmps://%s/vsqsec/',
+    'secrtmpurl'        => 'rtmpe://%s:1935/vsqsec/',
     
-    'rtmpturl'          => 'rtmpt://stream.videosquare.eu:80/vsq/',
-    'secrtmpturl'       => 'rtmpte://stream.videosquare.eu:80/vsqsec/',
+    'rtmpturl'          => 'rtmpt://%s:80/vsq/',
+    'secrtmpturl'       => 'rtmpte://%s:80/vsqsec/',
     
-    'rtspurl'           => 'rtsp://stream.videosquare.eu/vsq/_definst_/',
-    'secrtspurl'        => 'rtsp://stream.videosquare.eu/vsqsec/_definst_/',
+    'rtspurl'           => 'rtsp://%s/vsq/_definst_/',
+    'secrtspurl'        => 'rtsp://%s/vsqsec/_definst_/',
     
-    'liveingressurl'    => 'rtmp://stream.videosquare.eu:1935/vsqlive/',
-    'secliveingressurl' => 'rtmps://stream.videosquare.eu:1935/vsqlivesec/',
-    'secliveingressurl2' => 'rtmpe://stream.videosquare.eu:1935/vsqlivesec/',
-    'secliveingressurl3' => 'rtmp://stream.videosquare.eu:1935/vsqlivesec/', // ahova feltöltenek, rtmp szigoruan de sec application
+    'liveingressurl'    => 'rtmp://%s:1935/vsqlive/',
+    'secliveingressurl' => 'rtmps://%s:1935/vsqlivesec/',
+    'secliveingressurl2' => 'rtmpe://%s:1935/vsqlivesec/',
+    'secliveingressurl3' => 'rtmp://%s:1935/vsqlivesec/', // ahova feltöltenek, rtmp szigoruan de sec application
     
-    'liveurl'           => 'rtmpt://stream.videosquare.eu:80/vsqlive/',
-    'secliveurl'        => 'rtmpte://stream.videosquare.eu:80/vsqlivesec/',
+    'liveurl'           => 'rtmpt://%s:80/vsqlive/',
+    'secliveurl'        => 'rtmpte://%s:80/vsqlivesec/',
     
-    'livehttpurl'       => 'http://stream.videosquare.eu/vsqlive/',
-    'seclivehttpurl'    => 'http://stream.videosquare.eu/vsqlivesec/',
+    'livehttpurl'       => 'http://%s/vsqlive/',
+    'seclivehttpurl'    => 'http://%s/vsqlivesec/',
     
-    'livertspurl'       => 'rtsp://stream.videosquare.eu/vsqlive/',
-    'seclivertspurl'    => 'rtsp://stream.videosquare.eu/vsqlivesec/',
+    'livertspurl'       => 'rtsp://%s/vsqlive/',
+    'seclivertspurl'    => 'rtsp://%s/vsqlivesec/',
     
   ),
   //----

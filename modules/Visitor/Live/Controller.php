@@ -101,6 +101,7 @@ class Controller extends \Visitor\Controller {
     $streamtype    = $streams['streamtype'];
     $flashdata     = $feedModel->getFlashData( array(
         'sessionid' => session_id(),
+        'ipaddress' => $this->getIPAddress(),
         'BASE_URI'  => $this->toSmarty['BASE_URI'],
         'domain'    => $this->organization['domain'],
         'streams'   => $streams,

@@ -16,6 +16,7 @@ class Recordings extends \Springboard\Model {
   );
   
   protected $searchadvancedwhere;
+  protected $streamingserver;
   
   public function resetStats() {
     
@@ -1772,12 +1773,12 @@ class Recordings extends \Springboard\Model {
       $data['user_needPing'] = true;
     
     if ( $this->row['issecurestreamingforced'] ) {
-      $data['media_servers'][] = $this->getWowzaUrl( 'secrtmpsurl', true, $domain, $sessionid );
-      $data['media_servers'][] = $this->getWowzaUrl( 'secrtmpurl',  true, $domain, $sessionid );
-      $data['media_servers'][] = $this->getWowzaUrl( 'secrtmpturl', true, $domain, $sessionid );
+      $data['media_servers'][] = $this->getWowzaUrl( 'secrtmpsurl', true, $info, $sessionid );
+      $data['media_servers'][] = $this->getWowzaUrl( 'secrtmpurl',  true, $info, $sessionid );
+      $data['media_servers'][] = $this->getWowzaUrl( 'secrtmpturl', true, $info, $sessionid );
     } else {
-      $data['media_servers'][] = $this->getWowzaUrl( 'rtmpurl',  true, $domain, $sessionid );
-      $data['media_servers'][] = $this->getWowzaUrl( 'rtmpturl', true, $domain, $sessionid );
+      $data['media_servers'][] = $this->getWowzaUrl( 'rtmpurl',  true, $info, $sessionid );
+      $data['media_servers'][] = $this->getWowzaUrl( 'rtmpturl', true, $info, $sessionid );
     }
     
     // default bal oldalon van a video, csak akkor allitsuk be ha kell
@@ -2007,18 +2008,31 @@ class Recordings extends \Springboard\Model {
     
   }
   
-  protected function getWowzaUrl( $type, $needextraparam = false, $domain = null, $sessionid = null ) {
+  protected function getWowzaUrl( $type, $needextraparam = false, $info = null, $sessionid = null ) {
     
     $url = $this->bootstrap->config['wowza'][ $type ];
     
-    if ( !$needextraparam )
-      return $url;
-    else {
+    if ( $needextraparam ) {
       
       $this->ensureID();
-      return rtrim( $url, '/' ) . $this->getAuthorizeSessionid( $domain, $sessionid );
+      $url =
+        rtrim( $url, '/' ) .
+        $this->getAuthorizeSessionid( $info['organization']['domain'], $sessionid )
+      ;
       
     }
+    
+    if ( !$this->streamingserver ) {
+      
+      $streamingserverModel  = $this->bootstrap->getModel('streamingservers');
+      $this->streamingserver = $streamingserverModel->getServerByClientIP(
+        $info['ipaddress'],
+        array('ondemand', 'live|ondemand')
+      );
+      
+    }
+    
+    return sprintf( $url, $this->streamingserver );
     
   }
   

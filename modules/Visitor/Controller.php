@@ -244,4 +244,9 @@ class Controller extends \Springboard\Controller\Visitor {
     
   }
   
+  public function getIPAddress() {
+    // TODO x_forwarded_for support esetleg?
+    return $_SERVER['REMOTE_ADDR'];
+  }
+  
 }

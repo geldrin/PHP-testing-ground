@@ -305,6 +305,15 @@ class Livefeeds extends \Springboard\Model {
         rtrim( $this->bootstrap->config['wowza']['liveurl'], '/' ) . $authorizecode,
       );
     
+    $streamingserverModel = $this->bootstrap->getModel('streamingservers');
+    $streamingserver      = $streamingserverModel->getServerByClientIP(
+      $info['ipaddress'],
+      array('live', 'live|ondemand')
+    );
+    
+    foreach( $flashdata['media_servers'] as $key => $url )
+      $flashdata['media_servers'][ $key ] = sprintf( $url, $streamingserver );
+    
     $flashdata['media_secondaryServers'] = $flashdata['media_servers'];
     
     if ( !$this->row['slideonright'] )

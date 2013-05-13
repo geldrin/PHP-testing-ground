@@ -219,6 +219,7 @@ class Controller extends \Visitor\Controller {
     if ( $user['id'] )
       $this->toSmarty['channels'] = $recordingsModel->getChannelsForUser( $user );
     
+    $this->toSmarty['ipaddress']     = $this->getIPAddress();
     $this->toSmarty['member']        = $user;
     $this->toSmarty['needping']      = true;
     $this->toSmarty['height']        = $this->getPlayerHeight( $recordingsModel );
@@ -308,7 +309,8 @@ class Controller extends \Visitor\Controller {
     if ( $access[ $accesskey ] === 'registrationrestricted' )
       $needauth = true;
     
-    $this->toSmarty['member'] = $user;
+    $this->toSmarty['member']    = $user;
+    $this->toSmarty['ipaddress'] = $this->getIPAddress();
     $flashdata = $recordingsModel->getStructuredFlashData( $this->toSmarty, session_id() );
     
     if ( $needauth ) {
@@ -623,6 +625,7 @@ class Controller extends \Visitor\Controller {
       
     }
     
+    $this->toSmarty['ipaddress']     = $this->getIPAddress();
     $this->toSmarty['member']        = $user;
     $this->toSmarty['mobilehq']      = $mobilehq;
     $this->toSmarty['mobilehttpurl'] = $recordingsModel->getMediaUrl(
