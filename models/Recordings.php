@@ -1670,7 +1670,9 @@ class Recordings extends \Springboard\Model {
     
     $this->ensureID();
     $channelModel = $this->bootstrap->getModel('channels');
-    $where        = array();
+    $where        = array(
+      "c.isliveevent = '0'"
+    );
     
     if ( !$user['id'] )
       throw new \Exception("No user given");
