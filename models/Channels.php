@@ -171,7 +171,7 @@ class Channels extends \Springboard\Model {
    * Ezt a fuggvenyt video-csatorna osszerendeleskor hivjuk meg.
    */
 
-  function updateIndexFilename( $forceupdate = false ) {
+  function updateIndexFilename( $forceupdate = false, $default = null ) {
 
     $this->ensureObjectLoaded();
 
@@ -195,8 +195,12 @@ class Channels extends \Springboard\Model {
       array_merge( array( $parentid ), $children ),
       $parent->row['ispublic']
     );
-
-    $parent->row['indexphotofilename'] = $indexphotofilename;
+    
+    if ( !$indexphotofilename and $default )
+      $parent->row['indexphotofilename'] = $default;
+    else
+      $parent->row['indexphotofilename'] = $indexphotofilename;
+    
     $parent->updateRow();
 
   }

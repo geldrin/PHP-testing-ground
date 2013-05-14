@@ -300,6 +300,7 @@ class Recordings extends \Springboard\Model {
       WHERE recordingid = '" . $this->id . "'
     ");
     
+    $defaultindexphoto = $this->row['indexphotofilename'];
     if ( !isset( $channel ) )
       $channel = $this->bootstrap->getModel('channels');
     
@@ -314,7 +315,7 @@ class Recordings extends \Springboard\Model {
            !strlen( $channel->row['indexphotofilename'] ) and
            !in_array( $fields['channelid'], $indexPhotoDone )
          )
-        $channel->updateIndexFilename();
+        $channel->updateIndexFilename( false, $defaultindexphoto );
       
     }
     
