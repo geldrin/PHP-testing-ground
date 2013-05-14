@@ -3,7 +3,7 @@ namespace Model;
 
 class Streamingservers extends \Springboard\Model {
   
-  public function getServerByClientIP( $ip, $types ) {
+  public function getServerByClientIP($ip, $types) {
 
 	$default_streaming_servers_cachekey = 'defaultstreamingservers';
 
@@ -11,12 +11,15 @@ class Streamingservers extends \Springboard\Model {
     if ( empty( $types ) )
       throw new \Exception("No types specified for the streaming servers!");
       
-//    $hostname = $this->bootstrap->getSession('hostname');
-$hostname = "mail.streamnet.hu";
+    $hostname = $this->bootstrap->getSession('hostname');
+//$hostname = "mail.streamnet.hu";
 
     if ( $hostname['value'] === null ) {
-      
-      $hostname['value'] = gethostbyaddr( $ip );
+
+// Hibat dob!!!      
+//      $hostname['value'] = gethostbyaddr($ip);
+      $hostname['value'] = "10.1.1.1";
+// !!!!!
       if ( !$hostname['value'] or $hostname['value'] == $ip )
         $hostname['tld'] = $hostname['value'] = false;
       else {
@@ -32,11 +35,9 @@ $hostname = "mail.streamnet.hu";
 	if ( $types != 1 ) $servicetype = "ondemand";
 
 	// Handle default servers
-	$cache = $this->bootstrap->getCache($default_streaming_servers_cachekey . $servicetype, 15*60, true);
+	$cache = $this->bootstrap->getCache($default_streaming_servers_cachekey . $servicetype, 10, true);
 	if ( $cache->expired() ) {
 		// Get default servers
-echo "getdefs\n";
-
 		$query = "
 			SELECT 
 				ss.id,
@@ -71,6 +72,9 @@ echo "getdefs\n";
 		}
 
 		$cache->put($default_servers);
+/*echo "Cached this:\n";
+$aaa = $cache->get();
+var_dump($aaa); */
 	}
 
 	$query = "
@@ -101,14 +105,14 @@ echo "getdefs\n";
 		$rs = $this->db->Execute($query);
 	} catch (exception $err) {
 		echo "[ERROR] SQL query failed.\n", trim($query), $err . "\n";
-		return FALSE;
 	}
 
 	// No specific streaming server was found for source IP. Return default server
 	if ( $rs->RecordCount() != 1 ) {
-		// TODO: Return default servers from cache. Update cache one every X mins.
+		// Return default servers from cache. Choose random default server.
 		$default_servers = $cache->get();
-		return array_rand($default_servers);
+		$server = $default_servers[array_rand($default_servers)];
+		return $server;
 	}
 
 	// Server found for this IP
