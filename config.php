@@ -175,6 +175,10 @@ $config = array(
   // A flash altal is hasznalt kozos seed amivel a hasheket hasznaljuk.
   'flashhashseed' => 'ï!½Õz]Â7}h=ÎádÎ¶WâRì5mÂgà-ôZõ»',
   
+  //----
+  // alapból adatbázisban tároljuk a streaming servereket, ha nincs alapértelmezett
+  // akkor ez lesz használva
+  'fallbackstreamingserver' => 'stream.videosquare.eu',
 );
 
 $config['phpsettings'] = array(
