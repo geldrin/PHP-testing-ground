@@ -2030,7 +2030,7 @@ class Recordings extends \Springboard\Model {
       $streamingserverModel  = $this->bootstrap->getModel('streamingservers');
       $this->streamingserver = $streamingserverModel->getServerByClientIP(
         $info['ipaddress'],
-        array('ondemand', 'live|ondemand')
+        'ondemand'
       );
       
     }

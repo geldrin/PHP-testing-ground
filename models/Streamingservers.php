@@ -5,13 +5,15 @@ class Streamingservers extends \Springboard\Model {
   public $cachetimeoutseconds = 300;
   public $defaultservers      = array();
   
-  public function getServerByClientIP($ip, $types) {
+  public function getServerByClientIP( $ip, $type  ) {
     
     // TODO organizationid?
-    if ( empty( $types ) )
-      throw new \Exception("No types specified for the streaming servers!");
+    if ( !$type )
+      throw new \Exception("No type specified for the streaming servers!");
     
-    $ip    = $this->db->qstr( $ip );
+    $types   = array('live|ondemand');
+    $types[] =  $type;
+    $ip      = $this->db->qstr( $ip );
     // csak ipv4-et supportolunk!
     $query = "
       SELECT
@@ -46,7 +48,7 @@ class Streamingservers extends \Springboard\Model {
     if ( empty( $serverselected ) )
       return $this->getDefaultServer( $types );
     
-    return $serverselected;
+    return $serverselected['server'];
     
   }
   

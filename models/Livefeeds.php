@@ -308,7 +308,7 @@ class Livefeeds extends \Springboard\Model {
     $streamingserverModel = $this->bootstrap->getModel('streamingservers');
     $streamingserver      = $streamingserverModel->getServerByClientIP(
       $info['ipaddress'],
-      array('live', 'live|ondemand')
+      'live'
     );
     
     foreach( $flashdata['media_servers'] as $key => $url )
