@@ -6,37 +6,37 @@ class Streamingservers extends \Springboard\Model {
   public function getServerByClientIP($ip, $types) {
 
 	$default_streaming_servers_cachekey = 'defaultstreamingservers';
+	$default_streaming_servers_cachetimeout = 5 * 60;
 
     // TODO organizationid?
     if ( empty( $types ) )
       throw new \Exception("No types specified for the streaming servers!");
       
+/*
+	// Get host name (for future geoIP provisioning)
     $hostname = $this->bootstrap->getSession('hostname');
-//$hostname = "mail.streamnet.hu";
-
     if ( $hostname['value'] === null ) {
-
-// Hibat dob!!!      
+// !!! Reverse DNS call timeout      
 //      $hostname['value'] = gethostbyaddr($ip);
-      $hostname['value'] = "10.1.1.1";
-// !!!!!
       if ( !$hostname['value'] or $hostname['value'] == $ip )
         $hostname['tld'] = $hostname['value'] = false;
       else {
-        
         $pos = strrpos( $hostname['value'], '.' );
         $hostname['tld'] = substr( $hostname['value'], $pos );
-        
       }
-      
     }
+*/
 
 	$servicetype = "live";
 	if ( $types != 1 ) $servicetype = "ondemand";
 
 	// Handle default servers
-	$cache = $this->bootstrap->getCache($default_streaming_servers_cachekey . $servicetype, 10, true);
+	$cache = $this->bootstrap->getCache($default_streaming_servers_cachekey . $servicetype, $default_streaming_servers_cachetimeout, true);
 	if ( $cache->expired() ) {
+
+		// TODO: config.php!!!
+		$default_server = "stream.videosquare.eu";
+
 		// Get default servers
 		$query = "
 			SELECT 
@@ -54,27 +54,20 @@ class Streamingservers extends \Springboard\Model {
 		";
 
 		try {
-			$rs2 = $this->db->Execute($query);
+			$default_servers = $this->db->getArray($query);
 		} catch (exception $err) {
-			echo "[ERROR] SQL query failed.\n" . trim($query) . "\n" . $err . "\n";
-			return FALSE;
+			return $default_server;
 		}
 
-		// No default servers found
-		if ( $rs2->RecordCount() == 0 ) 
-			throw new \Exception("No default servers found");
+//var_dump($default_servers);
 
-		$default_servers = array();
-		while ( !$rs2->EOF ) {
-			$server = $rs2->fields;
-			array_push($default_servers, $server['server']);
-			$rs2->MoveNext();
+		// No default servers found
+		if ( count($default_servers) < 1 ) {
+			throw new \Exception("No default servers found");
+			return $default_server;
 		}
 
 		$cache->put($default_servers);
-/*echo "Cached this:\n";
-$aaa = $cache->get();
-var_dump($aaa); */
 	}
 
 	$query = "
@@ -102,22 +95,22 @@ var_dump($aaa); */
 	";
 
 	try {
-		$rs = $this->db->Execute($query);
+		$server_selected = $this->db->getArray($query);
 	} catch (exception $err) {
-		echo "[ERROR] SQL query failed.\n", trim($query), $err . "\n";
+		return $default_server;
 	}
 
 	// No specific streaming server was found for source IP. Return default server
-	if ( $rs->RecordCount() != 1 ) {
+	if ( count($server_selected) != 1 ) {
 		// Return default servers from cache. Choose random default server.
 		$default_servers = $cache->get();
-		$server = $default_servers[array_rand($default_servers)];
-		return $server;
+		$server_idx = array_rand($default_servers);
+		return $default_servers[$server_idx]['server'];
 	}
 
 	// Server found for this IP
-	$server = $rs->fields;
-	return $server['server'];	
+//var_dump($server_selected);
+	return $server_selected[0]['server'];	
 /*
     $where = array(
       "cdns.servicetype IN('" . implode("', '", $types ) . "')",
