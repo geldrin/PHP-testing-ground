@@ -99,7 +99,7 @@ class Streamingservers extends \Springboard\Model {
         $d->log(
           false,
           false,
-          'No default streaming servers for types: ' . $types,
+          'No default streaming servers for types: ' . $defaultcacheindex,
           $this->bootstrap->production
         );
         
