@@ -11,8 +11,7 @@ class Streamingservers extends \Springboard\Model {
     if ( empty( $types ) )
       throw new \Exception("No types specified for the streaming servers!");
     
-    $where = "ss.servicetype IN('" . implode("', '", $types ) . "')";
-    
+    $ip    = $this->db->qstr( $ip );
     // csak ipv4-et supportolunk!
     $query = "
       SELECT
@@ -21,17 +20,17 @@ class Streamingservers extends \Springboard\Model {
         ss.serverip,
         ss.servicetype
       FROM
-        cdn_streaming_servers as ss,
-        cdn_client_networks as cn,
-        cdn_servers_networks as sn
+        cdn_streaming_servers AS ss,
+        cdn_client_networks   AS cn,
+        cdn_servers_networks  AS sn
       WHERE
-        INET_ATON(cn.ipaddressstart) <= INET_ATON('" . $ip . "') AND
-        INET_ATON(cn.ipaddressend)   >= INET_ATON('" . $ip . "') AND
+        INET_ATON(cn.ipaddressstart) <= INET_ATON($ip) AND
+        INET_ATON(cn.ipaddressend)   >= INET_ATON($ip) AND
         cn.id                        = sn.clientnetworkid AND
         sn.streamingserverid         = ss.id AND
         cn.disabled                  = 0 AND
         ss.disabled                  = 0 AND
-        $where
+        ss.servicetype IN('" . implode("', '", $types ) . "')
       GROUP BY ss.server
       ORDER BY RAND()
       LIMIT 1
@@ -66,7 +65,7 @@ class Streamingservers extends \Springboard\Model {
     
     $cache = $this->bootstrap->getCache(
       'defaultstreamingservers-' . $defaultcacheindex,
-      null,
+      $this->cachetimeoutseconds,
       true
     );
     
@@ -80,7 +79,7 @@ class Streamingservers extends \Springboard\Model {
           ss.servicetype,
           ss.default
         FROM
-          cdn_streaming_servers as ss
+          cdn_streaming_servers AS ss
         WHERE
           ss.default  = 1 AND
           ss.disabled = 0 AND
