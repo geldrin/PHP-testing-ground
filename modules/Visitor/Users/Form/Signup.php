@@ -49,8 +49,15 @@ class Signup extends \Visitor\HelpForm {
       $invitationModel = $this->bootstrap->getModel('users_invitations');
       $invitationModel->select( $invitation['id'] );
       
-      if ( !$invitationModel->row )
-        throw new \Exception('No user invitation found with session data: ' . var_export( $invitation, true ) );
+      if ( !$invitationModel->row ) { // a meghivo mar kozben fel lett hasznalva
+        
+        $userinvitationSession->clear();
+        $this->controller->addMessage( $l('users', 'invitation_invalid') );
+        $this->form->addMessage( $l('users', 'invitation_invalid') );
+        $this->form->invalidate();
+        return;
+        
+      }
       
       foreach( explode('|', $invitation['permissions'] ) as $permission )
         $values[ $permission ] = 1;
