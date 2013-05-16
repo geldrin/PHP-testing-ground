@@ -493,6 +493,16 @@ class Controller extends \Visitor\Controller {
       )
     ;
     
+    $ip  = $this->application->getParameter('IP');
+    $ips = $this->bootstrap->config['allowedstreamips'];
+    
+    if ( $ip and $ips and in_array( $ip, $ips ) ) {
+      
+      $result  = '1';
+      $matched = false;
+      
+    }
+    
     if ( $matched ) {
       
       $this->bootstrap->setupSession( true, $matches['sessionid'], $matches['domain'] );

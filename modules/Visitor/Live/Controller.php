@@ -463,12 +463,7 @@ class Controller extends \Visitor\Controller {
     ;
     
     $ip  = $this->application->getParameter('IP');
-    $ips = gethostbynamel('tcs.streamnet.hu');
-    
-    if ( $ips === false ) // resolv failed
-      $ips = array();
-    
-    $ips = array_merge( $ips, $this->bootstrap->config['allowedstreamips'] );
+    $ips = $this->bootstrap->config['allowedstreamips'];
     
     if ( $ip and $ips and in_array( $ip, $ips ) ) {
       
