@@ -164,8 +164,8 @@ $config = array(
   // Az itt felsorolt IP cimeknel nem ellenorizunk semmit, rogton jova
   // hagyjuk a live/checkstreamaccess hivasnal (lehet ipv4/ipv6, nem szamit)
   'allowedstreamips' => array(
-	"91.120.59.239",	// tcs.streamnet.hu
-	"91.120.59.241"		// stream2.videosquare.eu
+    '91.120.59.239',  // tcs.streamnet.hu
+    '91.120.59.241'   // stream2.videosquare.eu
   ),
   
   //----
