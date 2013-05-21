@@ -35,10 +35,10 @@ class Invite extends \Visitor\Form {
     $values['validationcode'] = $crypto->randomPassword( 10 );
     $values['userid']         = $user['id'];
     
-    if ( is_array( $values['departments'] ) )
+    if ( isset( $values['departments'] ) and is_array( $values['departments'] ) )
       $values['departments']  = implode('|', $values['departments'] );
     
-    if ( is_array( $values['groups'] ) )
+    if ( isset( $values['groups'] ) and is_array( $values['groups'] ) )
       $values['groups']       = implode('|', $values['groups'] );
     
     $invModel->insert( $values );
