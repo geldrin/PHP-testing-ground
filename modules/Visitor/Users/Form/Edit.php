@@ -26,6 +26,13 @@ class Edit extends \Visitor\HelpForm {
       
     }
     
+    if ( $this->values['timestampdisabledafter'] ) {
+      $this->values['needtimestampdisabledafter'] = 1;
+      $this->values['timestampdisabledafter']     =
+        substr( $this->values['timestampdisabledafter'], 0, 16 )
+      ;
+    }
+    
   }
   
   public function onComplete() {
@@ -57,6 +64,10 @@ class Edit extends \Visitor\HelpForm {
       $this->userModel->addGroups( $values['groups'] );
     
     unset( $values['departments'], $values['groups'] );
+    
+    if ( !$values['needtimestampdisabledafter'] )
+      $values['timestampdisabledafter'] = null;
+    
     $this->userModel->updateRow( $values );
     
     $forward = $this->application->getParameter('forward', 'users/admin');

@@ -38,6 +38,7 @@ $j(document).ready(function() {
   runIfExists('#recordings_modifydescription', setupDescription );
   runIfExists('#live_create, #live_modify', setupLiveCreate );
   runIfExists('#groups_invite', setupGroupInvitation );
+  runIfExists('#timestampdisabledafter', setupDisabledAfter );
   
   if ( needping )
     setTimeout( setupPing, 1000 * pingsecs );
@@ -1648,5 +1649,23 @@ function setupGroupInvitation() {
     $j('#email').attr('disabled', false );
     $j('.delete').hide();
   });
+  
+}
+
+function setupDisabledAfter() {
+  
+  $j('input[name=needtimestampdisabledafter]').change(function(e) {
+    
+    var wanttimestamp = $j('input[name=needtimestampdisabledafter]:checked').val() == '1';
+    var parent        = $j('#timestampdisabledafter').parents('tr');
+    parent.toggle( wanttimestamp )
+    
+  }).change();
+  
+  setupDefaultDateTimePicker('#timestampdisabledafter');
+  $j('.presettime').click(function(e) {
+    e.preventDefault();
+    $j('#timestampdisabledafter').datetimepicker('setDate', $j(this).attr('data-date') );
+  })
   
 }

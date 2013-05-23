@@ -81,6 +81,8 @@ $config = array(
   
 );
 
+include( $this->bootstrap->config['modulepath'] . 'Visitor/Form/Configs/Timestampdisabledafter.php');
+
 $db              = $this->bootstrap->getAdoDB();
 $departmentcount = $db->getOne("
   SELECT COUNT(*)

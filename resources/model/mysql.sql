@@ -41,6 +41,7 @@ CREATE TABLE `users` (
    `isuploader` int(10) unsigned not null default '0',
    `isliveadmin` int(10) unsigned not null default '0',
    `timestamp` datetime not null,
+   `timestampdisabledafter` datetime,
    `lastloggedin` datetime not null,
    `language` text not null, -- default 'hu',
    `newsletter` int(10) unsigned not null,
