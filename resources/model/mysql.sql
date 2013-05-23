@@ -353,6 +353,7 @@ CREATE TABLE `users_invitations` (
    `departments` text,
    `groups` text,
    `validationcode` text not null,
+   `timestampdisabledafter` datetime,
    PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;
 
