@@ -125,10 +125,10 @@ $config = array(
     'rtspurl'           => 'rtsp://%s/vsq/_definst_/',
     'secrtspurl'        => 'rtsp://%s/vsqsec/_definst_/',
     
-    'liveingressurl'    => 'rtmp://%s:1935/vsqlive/',
-    'secliveingressurl' => 'rtmps://%s:1935/vsqlivesec/',
-    'secliveingressurl2' => 'rtmpe://%s:1935/vsqlivesec/',
-    'secliveingressurl3' => 'rtmp://%s:1935/vsqlivesec/', // ahova feltöltenek, rtmp szigoruan de sec application
+    'liveingressurl'     => 'rtmp://stream.videosquare.eu:1935/vsqlive/',
+    'secliveingressurl'  => 'rtmps://stream.videosquare.eu:1935/vsqlivesec/',
+    'secliveingressurl2' => 'rtmpe://stream.videosquare.eu:1935/vsqlivesec/',
+    'secliveingressurl3' => 'rtmp://stream.videosquare.eu:1935/vsqlivesec/', // ahova feltöltenek, rtmp szigoruan de sec application
     
     'liveurl'           => 'rtmpt://%s:80/vsqlive/',
     'secliveurl'        => 'rtmpte://%s:80/vsqlivesec/',
