@@ -140,9 +140,9 @@ $config = array(
     'seclivertspurl'    => 'rtsp://%s/vsqlivesec/',
     
     'livertmpurl'       => 'rtmp://%s:1935/vsqlive/',
-    'seclivertmps'      => 'rtmps://%s:1935/vsqlivesec/',
-    'seclivertmpe'      => 'rtmpe://%s:1935/vsqlivesec/',
-    'seclivertmp'       => 'rtmp://%s:1935/vsqlivesec/',
+    'seclivertmpsurl'   => 'rtmps://%s:1935/vsqlivesec/',
+    'seclivertmpeurl'   => 'rtmpe://%s:1935/vsqlivesec/',
+    'seclivertmpurl'    => 'rtmp://%s:1935/vsqlivesec/',
     
   ),
   //----
