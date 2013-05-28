@@ -49,6 +49,17 @@ class Controller extends \Springboard\Controller\Visitor {
       $userModel = $this->bootstrap->getModel('users');
       $userModel->select( $user['id'] );
       
+      if (
+           $userModel->row['timestampdisabledafter'] and
+           strtotime( $userModel->row['timestampdisabledafter'] ) < time()
+         ) {
+        
+        $user->clear();
+        $l = $this->bootstrap->getLocalization();
+        $this->redirectWithMessage('users/login', $l('users', 'timestampdisabled') );
+        
+      }
+      
       if ( $userModel->row['issingleloginenforced'] ) {
 
         if ( !$userModel->checkSingleLoginUsers() ) {
