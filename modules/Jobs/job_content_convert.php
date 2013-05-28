@@ -187,7 +187,7 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_content_convert.stop' ) an
 // !!!!!!!!!!!!
 
 		//// End of media conversion
-		$global_log .= "URL: http://" . $app->config['baseuri'] . "/" . $uploader_user['language'] . "/recordings/details/" . $recording['id'] . "\n\n";
+		$global_log .= "URL: http://" . $uploader_user['domain'] . "/" . $uploader_user['language'] . "/recordings/details/" . $recording['id'] . "\n\n";
 		$conversion_duration = time() - $total_duration;
 		$hms = secs2hms($conversion_duration);
 		log_recording_conversion($recording['id'], $jconf['jobid_content_convert'], "-", "[OK] Successful content conversion in " . $hms . " time.\n\nConversion summary:\n\n" . $global_log, "-", "-", $conversion_duration, TRUE);
