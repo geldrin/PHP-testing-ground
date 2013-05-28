@@ -139,6 +139,11 @@ $config = array(
     'livertspurl'       => 'rtsp://%s/vsqlive/',
     'seclivertspurl'    => 'rtsp://%s/vsqlivesec/',
     
+    'livertmpurl'       => 'rtmp://%s:1935/vsqlive/',
+    'seclivertmps'      => 'rtmps://%s:1935/vsqlivesec/',
+    'seclivertmpe'      => 'rtmpe://%s:1935/vsqlivesec/',
+    'seclivertmp'       => 'rtmp://%s:1935/vsqlivesec/',
+    
   ),
   //----
   // lehet ures is ha nem akarjuk redirectelni a usert, ilyenkor
