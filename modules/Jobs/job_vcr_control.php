@@ -280,6 +280,13 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_vcr_control.stop' ) and !i
 			log_recording_conversion($vcr_upload['id'], $myjobid, $jconf['dbstatus_vcr_upload'], "[FATAL ERROR] Temp directory " . $jconf['vcr_dir'] . " is not writable. Storage error???\n", "-", "-", "-", 0, TRUE);
 			break;
 		}
+		// Temporary directory cleanup
+		$err = tempdir_cleanup($jconf['vcr_dir']);
+		if ( !$err['code'] ) {
+			log_recording_conversion(0, $jconf['jobid_media_convert'], "-", $err['message'], $err['command'], $err['result'], 0, TRUE);
+			$sleep_length = 15 * 60;
+			break;
+		}
 
 		// Connect to Cisco TCS if connection is not yet established
 		if ( $tcs_isconnected === FALSE ) {
@@ -420,13 +427,6 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_vcr_control.stop' ) and !i
 // channel add példa:
 //$api->addRecordingToChannel( $channelid, 1 );
 // Sikeres feltöltéskor felvétel törlése a TCS-ről? (javasolt egy hosszabb tesztidőszak után bevezetni)
-
-		// Temporary directory cleanup
-		$err = tempdir_cleanup($jconf['vcr_dir']);
-		if ( !$err['code'] ) {
-			log_recording_conversion($vcr_upload['id'], $myjobid, $jconf['dbstatus_vcr_upload'], $err['message'], $err['command'], $err['result'], 0, TRUE);
-			break;
-		}
 
 	}
 
