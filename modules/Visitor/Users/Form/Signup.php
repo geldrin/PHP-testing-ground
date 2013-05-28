@@ -80,6 +80,12 @@ class Signup extends \Visitor\HelpForm {
         
       }
       
+      if (
+           isset( $invitation['timestampdisabledafter'] ) and
+           $invitation['timestampdisabledafter']
+         )
+        $values['timestampdisabledafter'] = $invitation['timestampdisabledafter'];
+      
       $userinvitationSession->clear();
       $invitationModel->delete( $invitationModel->id );
       

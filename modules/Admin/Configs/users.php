@@ -49,6 +49,17 @@ $config = Array(
     ),
   ),
 
+  'timestampdisabledafter' => Array(
+    'displayname' => 'Registration disabled after',
+    'type'        => 'inputText',
+    'validation'  => Array(
+      Array(
+        'type' => 'date',
+        'format' => 'YYYY-MM-DD hh:mm:ss' 
+      ),
+    ),
+  ),
+
   'lastloggedin' => Array(
     'displayname' => 'Last login timestamp',
     'type'        => 'inputText',

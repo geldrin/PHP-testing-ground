@@ -41,6 +41,9 @@ class Invite extends \Visitor\Form {
     if ( isset( $values['groups'] ) and is_array( $values['groups'] ) )
       $values['groups']       = implode('|', $values['groups'] );
     
+    if ( !$values['needtimestampdisabledafter'] )
+      unset( $values['timestampdisabledafter'] );
+    
     $invModel->insert( $values );
     
     $invModel->row['id'] = $crypto->asciiEncrypt( $invModel->row['id'] );

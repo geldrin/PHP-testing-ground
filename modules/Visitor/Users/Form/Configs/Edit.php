@@ -175,6 +175,8 @@ $config = array(
   
 );
 
+include( $this->bootstrap->config['modulepath'] . 'Visitor/Form/Configs/Timestampdisabledafter.php');
+
 $departmentModel = $this->bootstrap->getModel('departments');
 $departmentModel->addFilter('organizationid', $this->controller->organization['id'] );
 

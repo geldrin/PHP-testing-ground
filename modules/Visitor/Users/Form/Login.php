@@ -22,10 +22,16 @@ class Login extends \Visitor\Form {
     $access         = $this->bootstrap->getSession('recordingaccess');
     
     $uservalid = $userModel->selectAndCheckUserValid( $organizationid, $values['email'], $values['password'] );
-    $orgvalid  = false;
+    $orgvalid  = $timestampvalid = false;
     
     if ( $uservalid and ( $userModel->row['organizationid'] == $organizationid or $userModel->row['isadmin'] ) )
       $orgvalid = true;
+    
+    if (
+         $uservalid and $userModel->row['timestampdisabledafter'] and
+         strtotime( $userModel->row['timestampdisabledafter'] ) > time()
+       )
+      $timestampvalid = true;
     
     if ( $userModel->row['isadmin'] )
       $userModel->row['organizationid'] = $organizationid; // a registerforsession miatt
@@ -33,7 +39,7 @@ class Login extends \Visitor\Form {
     // single login location check 
     $sessionvalid = $uservalid && $userModel->checkSingleLoginUsers();
     
-    if ( !$uservalid or !$orgvalid or !$sessionvalid ) {
+    if ( !$uservalid or !$orgvalid or !$sessionvalid or !$timestampvalid ) {
 
       $l            = $this->bootstrap->getLocalization();
       $lang         = \Springboard\Language::get();
@@ -56,7 +62,11 @@ class Login extends \Visitor\Form {
             $lang . '/users/resetsession?email=' . $encodedemail
           );
           break;
-          
+        
+        case $timestampvalid:
+          $message = $l('users', 'timestampdisabled');
+          break;
+        
         default: throw new \Exception('unhandled switch case'); break;
           
       }

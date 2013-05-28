@@ -2,7 +2,7 @@
 $config = array(
   'siteid'       => 'teleconnect',
   'hashseed'     => 'ö923mfk3a,.dműteleconnect',
-  'version'      => '_v20130513',
+  'version'      => '_v20130523',
   'charset'      => 'UTF-8',
   'cacheseconds' => 3600,
   'errormessage' => 'An unexpected error has occured, our staff has been notified. Sorry for the inconvenience and thanks for your understanding!',
@@ -112,32 +112,32 @@ $config = array(
   //----
   'wowza' => array(
     
-    'httpurl'           => 'http://stream.videosquare.eu/vsq/_definst_/',
-    'sechttpurl'        => 'http://stream.videosquare.eu/vsq/_definst_/',
+    'httpurl'           => 'http://%s/vsq/_definst_/',
+    'sechttpurl'        => 'http://%s/vsq/_definst_/',
     
-    'rtmpurl'           => 'rtmp://stream.videosquare.eu:1935/vsq/',
-    'secrtmpsurl'       => 'rtmps://stream.videosquare.eu/vsqsec/',
-    'secrtmpurl'        => 'rtmpe://stream.videosquare.eu:1935/vsqsec/',
+    'rtmpurl'           => 'rtmp://%s:1935/vsq/',
+    'secrtmpsurl'       => 'rtmps://%s/vsqsec/',
+    'secrtmpurl'        => 'rtmpe://%s:1935/vsqsec/',
     
-    'rtmpturl'          => 'rtmpt://stream.videosquare.eu:80/vsq/',
-    'secrtmpturl'       => 'rtmpte://stream.videosquare.eu:80/vsqsec/',
+    'rtmpturl'          => 'rtmpt://%s:80/vsq/',
+    'secrtmpturl'       => 'rtmpte://%s:80/vsqsec/',
     
-    'rtspurl'           => 'rtsp://stream.videosquare.eu/vsq/_definst_/',
-    'secrtspurl'        => 'rtsp://stream.videosquare.eu/vsqsec/_definst_/',
+    'rtspurl'           => 'rtsp://%s/vsq/_definst_/',
+    'secrtspurl'        => 'rtsp://%s/vsqsec/_definst_/',
     
-    'liveingressurl'    => 'rtmp://stream.videosquare.eu:1935/vsqlive/',
-    'secliveingressurl' => 'rtmps://stream.videosquare.eu:1935/vsqlivesec/',
+    'liveingressurl'     => 'rtmp://stream.videosquare.eu:1935/vsqlive/',
+    'secliveingressurl'  => 'rtmps://stream.videosquare.eu:1935/vsqlivesec/',
     'secliveingressurl2' => 'rtmpe://stream.videosquare.eu:1935/vsqlivesec/',
     'secliveingressurl3' => 'rtmp://stream.videosquare.eu:1935/vsqlivesec/', // ahova feltöltenek, rtmp szigoruan de sec application
     
-    'liveurl'           => 'rtmpt://stream.videosquare.eu:80/vsqlive/',
-    'secliveurl'        => 'rtmpte://stream.videosquare.eu:80/vsqlivesec/',
+    'liveurl'           => 'rtmpt://%s:80/vsqlive/',
+    'secliveurl'        => 'rtmpte://%s:80/vsqlivesec/',
     
-    'livehttpurl'       => 'http://stream.videosquare.eu/vsqlive/',
-    'seclivehttpurl'    => 'http://stream.videosquare.eu/vsqlivesec/',
+    'livehttpurl'       => 'http://%s/vsqlive/',
+    'seclivehttpurl'    => 'http://%s/vsqlivesec/',
     
-    'livertspurl'       => 'rtsp://stream.videosquare.eu/vsqlive/',
-    'seclivertspurl'    => 'rtsp://stream.videosquare.eu/vsqlivesec/',
+    'livertspurl'       => 'rtsp://%s/vsqlive/',
+    'seclivertspurl'    => 'rtsp://%s/vsqlivesec/',
     
   ),
   //----
@@ -177,6 +177,10 @@ $config = array(
   // A flash altal is hasznalt kozos seed amivel a hasheket hasznaljuk.
   'flashhashseed' => 'ï!½Õz]Â7}h=ÎádÎ¶WâRì5mÂgà-ôZõ»',
   
+  //----
+  // alapból adatbázisban tároljuk a streaming servereket, ha nincs alapértelmezett
+  // akkor ez lesz használva
+  'fallbackstreamingserver' => 'stream.videosquare.eu',
 );
 
 $config['phpsettings'] = array(

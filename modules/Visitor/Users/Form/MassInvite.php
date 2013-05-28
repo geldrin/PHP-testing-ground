@@ -51,6 +51,10 @@ class MassInvite extends \Visitor\Form {
     $departments = implode('|', $values['departments'] );
     $groups      = implode('|', $values['groups'] );
     $userid      = $user['id'];
+    $disabledafter = ( $values['needtimestampdisabledafter'] )
+      ? $values['timestampdisabledafter']
+      : null
+    ;
     
     foreach( $users as $email => $username ) {
       
@@ -62,6 +66,7 @@ class MassInvite extends \Visitor\Form {
         'departments'    => $departments,
         'permissions'    => $permissions,
         'validationcode' => $this->crypto->randomPassword( 10 ),
+        'timestampdisabledafter' => $disabledafter,
       );
       
       $invModel->insert( $invite );
