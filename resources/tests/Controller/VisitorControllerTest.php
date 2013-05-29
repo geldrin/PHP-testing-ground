@@ -25,7 +25,7 @@ class VisitorControllerTest extends \PHPUnit_Framework_TestCase {
       false
     );
     
-    $acl->expects( $this->once() )
+    $acl->expects( $this->any() )
         ->method('hasPermission')
         ->will( $this->returnValue( $aclshouldreturn ) );
     
@@ -33,9 +33,10 @@ class VisitorControllerTest extends \PHPUnit_Framework_TestCase {
               ->method('getAcl')
               ->will( $this->returnValue( $acl ) );
     
-    $application = new Springboard\Application();
+    $application = new Springboard\Application( BASE_PATH, false );
     $application->bootstrap( $bootstrap );
     $bootstrap->application = $application;
+    $bootstrap->config      = array('baseuri' => 'http://testhost.tld');
     
     if ( empty( $controllermethods ) )
       return new Springboard\Controller\Visitor( $bootstrap );
@@ -60,17 +61,20 @@ class VisitorControllerTest extends \PHPUnit_Framework_TestCase {
       false
     );
     
-    $application = new Springboard\Application();
+    $application = new Springboard\Application( BASE_PATH, false );
     $application->bootstrap( $bootstrap );
     $bootstrap->application = $application;
+    $bootstrap->config      = array('baseuri' => 'http://testhost.tld');
     
     $controller = $this->getMock(
       'Springboard\\Controller\\Visitor',
-      array('displayNotFound'),
+      array('displayNotFound', 'redirectToMainDomain', 'redirectToController'),
       array( $bootstrap )
     );
+    
     $controller->expects( $this->once() )
-               ->method('displayNotFound');
+               ->method('redirectToController')
+               ->with($this->equalTo('contents'), $this->equalTo('http404'));
     
     $controller->route();
     
@@ -86,7 +90,7 @@ class VisitorControllerTest extends \PHPUnit_Framework_TestCase {
     $controller->expects( $this->never() )
                ->method('indexAction');
     
-    $controller->expects( $this->once() )
+    $controller->expects( $this->exactly(2) )
                ->method('handleAccessFailure');
     
     $controller->permissions = array('index' => 'nopermission');
@@ -137,7 +141,7 @@ class VisitorControllerTest extends \PHPUnit_Framework_TestCase {
     $paging = $this->getMock(
       'Springboard\\Controller\\Paging',
       array('route'),
-      array(),
+      array( $controller->bootstrap, $controller ),
       '',
       false
     );
@@ -152,6 +156,35 @@ class VisitorControllerTest extends \PHPUnit_Framework_TestCase {
     
     $controller->route();
     
+  }
+  
+  // abstract classok konkret metodusait akarjuk ezzel mockolni
+  // http://stackoverflow.com/questions/8040296/mocking-concrete-method-in-abstract-class-using-phpunit
+  public function getMock($originalClassName, $methods = array(), array $arguments = array(), $mockClassName = '', $callOriginalConstructor = TRUE, $callOriginalClone = TRUE, $callAutoload = TRUE) {
+    if ($methods !== null) {
+        $methods = array_unique(array_merge($methods,
+                self::getAbstractMethods($originalClassName, $callAutoload)));
+    }
+    return parent::getMock($originalClassName, $methods, $arguments, $mockClassName, $callOriginalConstructor, $callOriginalClone, $callAutoload);
+  }
+  
+  /**
+   * Returns an array containing the names of the abstract methods in <code>$class</code>.
+   *
+   * @param string $class name of the class
+   * @return array zero or more abstract methods names
+   */
+  public static function getAbstractMethods($class, $autoload=true) {
+    $methods = array();
+    if (class_exists($class, $autoload) || interface_exists($class, $autoload)) {
+      $reflector = new ReflectionClass($class);
+      foreach ($reflector->getMethods() as $method) {
+        if ($method->isAbstract()) {
+          $methods[] = $method->getName();
+        }
+      }
+    }
+    return $methods;
   }
   
 }

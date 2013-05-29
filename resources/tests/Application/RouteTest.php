@@ -7,7 +7,7 @@ setupAutoloader();
 class RouteTest extends \PHPUnit_Framework_TestCase {
   
   public function setUp() {
-    $this->application = new Springboard\Application();
+    $this->application = new Springboard\Application( BASE_PATH, false );
   }
   
   public function tearDown() {
@@ -37,6 +37,9 @@ class RouteTest extends \PHPUnit_Framework_TestCase {
     
     $bootstrap = new stdClass();
     $bootstrap->application = $this->application;
+    $bootstrap->config      = array(
+      'baseuri' => 'http://testhost',
+    );
     
     $controller = $this->getMock(
       'Springboard\\Controller',
