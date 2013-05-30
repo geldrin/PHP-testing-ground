@@ -603,22 +603,11 @@ class Livefeeds extends \Springboard\Model {
   
   public function getAuthorizeSessionidParam( $domain, $sessionid, $user = null ) {
     
-    if ( !$user === null )
-      $user = $this->bootstrap->getSession('user');
-    
-    if ( $user['id'] )
-      return sprintf('?sessionid=%s_%s_%s&uid=%s',
-        $domain,
-        $sessionid,
-        $this->id,
-        $user['id']
-      );
-    else
-      return sprintf('?sessionid=%s_%s_%s',
-        $domain,
-        $sessionid,
-        $this->id
-      );
+    return sprintf('?sessionid=%s_%s_%s',
+      $domain,
+      $sessionid,
+      $this->id
+    );
     
   }
   
