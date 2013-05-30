@@ -90,9 +90,13 @@ class Login extends \Visitor\Form {
     if ( $this->application->getParameter('diaginfo') )
       $diagnostics = $this->application->getParameter('diaginfo');
     
-    $ipaddress = $this->controller->getIPAddress();
+    $ipaddresses = $this->controller->getIPAddress(true);
+    $ipaddress   = '';
+    foreach( $ipaddresses as $key => $value )
+      $ipaddress .= ' ' . $key . ': ' . $value;
+    
     $userModel->updateLastlogin( $diagnostics, $ipaddress );
-    $d->log(false, 'login.txt', 'LOGIN SESSIONID: ' . session_id() . ' IPADDRESS: ' . $ipaddress );
+    $d->log(false, 'login.txt', 'LOGIN SESSIONID: ' . session_id() . ' IPADDRESS:' . $ipaddress );
     $forward = $this->application->getParameter('forward');
     
     if ( $values['welcome'] )

@@ -255,9 +255,25 @@ class Controller extends \Springboard\Controller\Visitor {
     
   }
   
-  public function getIPAddress() {
-    // TODO x_forwarded_for support esetleg?
+  public function getIPAddress( $extended = null ) {
+    
+    if ( $extended ) {
+      
+      $ipaddresses = array(
+        'REMOTE_ADDR' => $_SERVER['REMOTE_ADDR'],
+      );
+      
+      if ( @$_SERVER['HTTP_VIA'] )
+        $ipaddresses['VIA'] = $_SERVER['HTTP_VIA'];
+      if ( @$_SERVER['HTTP_X_FORWARDED_FOR'] )
+        $ipaddresses['FORWARDED_FOR'] = $_SERVER['HTTP_X_FORWARDED_FOR'];
+      
+      return $ipaddresses;
+      
+    }
+    
     return $_SERVER['REMOTE_ADDR'];
+    
   }
   
 }
