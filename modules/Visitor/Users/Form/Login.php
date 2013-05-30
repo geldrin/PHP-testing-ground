@@ -28,8 +28,11 @@ class Login extends \Visitor\Form {
       $orgvalid = true;
     
     if (
-         $uservalid and $userModel->row['timestampdisabledafter'] and
-         strtotime( $userModel->row['timestampdisabledafter'] ) > time()
+         ( $uservalid and !$userModel->row['timestampdisabledafter'] ) or
+         (
+           $uservalid and $userModel->row['timestampdisabledafter'] and
+           strtotime( $userModel->row['timestampdisabledafter'] ) > time()
+         )
        )
       $timestampvalid = true;
     
