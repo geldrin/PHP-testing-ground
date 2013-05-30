@@ -250,9 +250,17 @@ class Controller extends \Visitor\Controller {
     if ( $userModel->row['isadmin'] )
       $userModel->row['organizationid'] = $this->organization['id']; // a registerforsession miatt
     
+    $ipaddresses = $this->controller->getIPAddress(true);
+    $ipaddress   = '';
+    foreach( $ipaddresses as $key => $value )
+      $ipaddress .= ' ' . $key . ': ' . $value;
+    
     $userModel->registerForSession();
     $userModel->updateSessionInformation();
-    $userModel->updateLastlogin();
+    $userModel->updateLastlogin( null, $ipaddress );
+    
+    $d = \Springboard\Debug::getInstance();
+    $d->log( false, 'login.txt', 'APILOGIN SESSIONID: ' . session_id() . ' IPADDRESS:' . $ipaddress );
     
     $output = array(
       'userid'                           => $userModel->id,
