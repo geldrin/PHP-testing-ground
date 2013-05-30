@@ -159,12 +159,15 @@ class Users extends \Springboard\Model {
 
   }
   
-  public function updateLastLogin( $diagnostics = null ) {
+  public function updateLastLogin( $diagnostics = null, $ipaddress = null ) {
     
     $sql = '';
     if ( $diagnostics )
       $sql = ', browser = ' . $this->db->qstr( $diagnostics );
-      
+    
+    if ( $ipaddress )
+      $sql .= ', lastloggedinipaddress = ' . $this->db->qstr( $ipaddress );
+    
     $this->db->query("
       UPDATE LOW_PRIORITY users 
       SET
