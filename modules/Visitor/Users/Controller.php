@@ -250,7 +250,7 @@ class Controller extends \Visitor\Controller {
     if ( $userModel->row['isadmin'] )
       $userModel->row['organizationid'] = $this->organization['id']; // a registerforsession miatt
     
-    $ipaddresses = $this->controller->getIPAddress(true);
+    $ipaddresses = $this->getIPAddress(true);
     $ipaddress   = '';
     foreach( $ipaddresses as $key => $value )
       $ipaddress .= ' ' . $key . ': ' . $value;
