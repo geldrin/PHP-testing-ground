@@ -10,7 +10,7 @@ include_once( BASE_PATH . 'libraries/Springboard/Application/Cli.php');
 
 set_time_limit(0);
 
-$iscommit = TRUE;
+$iscommit = true;
 
 // Init
 $app = new Springboard\Application\Cli(BASE_PATH, PRODUCTION);
@@ -19,7 +19,7 @@ $app = new Springboard\Application\Cli(BASE_PATH, PRODUCTION);
 // Organization ID = Conforg (ID: 200)
 $org_id = 200;
 // Department ID
-$org_dep_id = 47;
+$org_dep_id = 57;
 // How many users?
 $user_num = 100;
 // Single login: forced?
