@@ -247,7 +247,7 @@ class Livefeeds extends \Springboard\Model {
   public function getFlashData( $info ) {
     
     $authorizecode = $this->getAuthorizeSessionidParam(
-      $info['domain'],
+      $info['cookiedomain'],
       $info['sessionid'],
       $info['user']
     );
@@ -383,16 +383,16 @@ class Livefeeds extends \Springboard\Model {
     
   }
   
-  protected function getAuthorizeSessionid( $domain, $sessionid, $streamcode ) {
+  protected function getAuthorizeSessionid( $cookiedomain, $sessionid, $streamcode ) {
     
-    if ( !$domain or !$sessionid )
+    if ( !$cookiedomain or !$sessionid )
       return '';
     
-    return '?sessionid=' . $domain . '_' . $sessionid . '_' . $this->id;
+    return '?sessionid=' . $cookiedomain . '_' . $sessionid . '_' . $this->id;
     
   }
   
-  public function getMediaUrl( $type, $streamcode, $domain = null, $sessionid = null ) {
+  public function getMediaUrl( $type, $streamcode, $cookiedomain = null, $sessionid = null ) {
     
     switch( $type ) {
       
@@ -400,7 +400,7 @@ class Livefeeds extends \Springboard\Model {
         //http://stream.videosquare.eu/devvsqlive/123456/playlist.m3u8
         $sprintfterm =
           '%s/playlist.m3u8' .
-          $this->getAuthorizeSessionid( $domain, $sessionid, $streamcode )
+          $this->getAuthorizeSessionid( $cookiedomain, $sessionid, $streamcode )
         ;
         
         break;
@@ -409,7 +409,7 @@ class Livefeeds extends \Springboard\Model {
         //rtsp://stream.videosquare.eu/devvsqlive/123456
         $sprintfterm =
           '%s' .
-          $this->getAuthorizeSessionid( $domain, $sessionid, $streamcode )
+          $this->getAuthorizeSessionid( $cookiedomain, $sessionid, $streamcode )
         ;
         
         break;
@@ -601,10 +601,10 @@ class Livefeeds extends \Springboard\Model {
     
   }
   
-  public function getAuthorizeSessionidParam( $domain, $sessionid, $user = null ) {
+  public function getAuthorizeSessionidParam( $cookiedomain, $sessionid, $user = null ) {
     
     return sprintf('?sessionid=%s_%s_%s',
-      $domain,
+      $cookiedomain,
       $sessionid,
       $this->id
     );

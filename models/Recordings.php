@@ -1751,7 +1751,7 @@ class Recordings extends \Springboard\Model {
     include_once( $this->bootstrap->config['templatepath'] . 'Plugins/modifier.indexphoto.php' );
     
     $recordingbaseuri = $info['BASE_URI'] . \Springboard\Language::get() . '/recordings/';
-    $domain           = $info['organization']['domain'];
+    $cookiedomain     = $info['organization']['cookiedomain'];
     
     $data = array(
       'language'              => \Springboard\Language::get(),
@@ -1791,12 +1791,12 @@ class Recordings extends \Springboard\Model {
     if ( $data['language'] != 'en' )
       $data['locale'] = $info['STATIC_URI'] . 'js/flash_locale_' . $data['language'] . '.json';
     
-    $data['media_streams'] = array( $this->getMediaUrl('default', false, $domain ) );
+    $data['media_streams'] = array( $this->getMediaUrl('default', false, $cookiedomain ) );
     
     if ( $this->row['videoreshq'] )
-      $data['media_streams'][] = $this->getMediaUrl('default', true, $domain );
+      $data['media_streams'][] = $this->getMediaUrl('default', true, $cookiedomain );
     
-    $data = $data + $this->getIntroOutroFlashdata( $domain );
+    $data = $data + $this->getIntroOutroFlashdata( $cookiedomain );
     
     if ( $this->row['offsetstart'] )
       $data['timeline_virtualStart'] = $this->row['offsetstart'];
@@ -1806,11 +1806,11 @@ class Recordings extends \Springboard\Model {
     
     if ( $this->row['contentstatus'] == 'onstorage' and !isset( $info['skipcontent'] ) ) {
       
-      $data['media_secondaryStreams'] = array( $this->getMediaUrl('content', false, $domain ) );
+      $data['media_secondaryStreams'] = array( $this->getMediaUrl('content', false, $cookiedomain ) );
       
       if ( $this->row['contentvideoreshq'] ) {
         
-        $data['media_secondaryStreams'][] = $this->getMediaUrl('content', true, $domain );
+        $data['media_secondaryStreams'][] = $this->getMediaUrl('content', true, $cookiedomain );
         
         // ha van HQ content, de nincs HQ "default" verzio akkor ketszer
         // kell szerepeljen a default verzio
@@ -1919,7 +1919,7 @@ class Recordings extends \Springboard\Model {
     
   }
   
-  public function getIntroOutroFlashdata( $domain ) {
+  public function getIntroOutroFlashdata( $cookiedomain ) {
     
     $this->ensureObjectLoaded();
     if ( !$this->row['introrecordingid'] and !$this->row['outrorecordingid'] )
@@ -1958,12 +1958,12 @@ class Recordings extends \Springboard\Model {
         $key = 'outro_streams';
       
       $data[ $key ] = array(
-        $this->getMediaUrl('default', false, $domain, null, '', $id )
+        $this->getMediaUrl('default', false, $cookiedomain, null, '', $id )
       );
       
       if ( isset( $highres[ $id ] ) and $highres[ $id ] )
         $data[ $key ][] =
-          $this->getMediaUrl('default', true, $domain, null, '', $id )
+          $this->getMediaUrl('default', true, $cookiedomain, null, '', $id )
         ;
       
     }
@@ -2020,7 +2020,7 @@ class Recordings extends \Springboard\Model {
       $this->ensureID();
       $url =
         rtrim( $url, '/' ) .
-        $this->getAuthorizeSessionid( $info['organization']['domain'], $sessionid )
+        $this->getAuthorizeSessionid( $info['organization']['cookiedomain'], $sessionid )
       ;
       
     }
@@ -2039,17 +2039,17 @@ class Recordings extends \Springboard\Model {
     
   }
   
-  protected function getAuthorizeSessionid( $domain, $sessionid ) {
+  protected function getAuthorizeSessionid( $cookiedomain, $sessionid ) {
     
     return sprintf('?sessionid=%s_%s_%s',
-      $domain,
+      $cookiedomain,
       $sessionid,
       $this->id
     );
     
   }
   
-  public function getMediaUrl( $type, $highquality, $domain = null, $sessionid = null, $host = '', $id = null ) {
+  public function getMediaUrl( $type, $highquality, $cookiedomain = null, $sessionid = null, $host = '', $id = null ) {
     
     $this->ensureObjectLoaded();
     
@@ -2078,7 +2078,7 @@ class Recordings extends \Springboard\Model {
         $host        = $this->getWowzaUrl( $typeprefix . 'httpurl');
         $sprintfterm =
           '%3$s:%s/%s_mobile' . $postfix . '.%s/playlist.m3u8' .
-          $this->getAuthorizeSessionid( $domain, $sessionid )
+          $this->getAuthorizeSessionid( $cookiedomain, $sessionid )
         ;
         
         break;
@@ -2088,7 +2088,7 @@ class Recordings extends \Springboard\Model {
         $host        = $this->getWowzaUrl( $typeprefix . 'rtspurl');
         $sprintfterm =
           '%3$s:%s/%s_mobile' . $postfix . '.%s' .
-          $this->getAuthorizeSessionid( $domain, $sessionid )
+          $this->getAuthorizeSessionid( $cookiedomain, $sessionid )
         ;
         
         break;

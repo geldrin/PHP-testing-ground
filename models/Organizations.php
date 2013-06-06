@@ -4,10 +4,14 @@ namespace Model;
 class Organizations extends \Springboard\Model\Multilingual {
   public $multistringfields = array( 'name', 'nameshort', 'introduction', );
   
-  public function checkDomain( $domain ) {
+  public function checkDomain( $domain, $isstatic = false ) {
     
     $this->clearFilter();
-    $this->addFilter('domain', $domain, false, false );
+    if ( $isstatic )
+      $this->addFilter('staticdomain', $domain, false, false );
+    else
+      $this->addFilter('domain', $domain, false, false );
+    
     $this->addFilter('disabled', 0 );
     $organization = $this->getRow();
     
