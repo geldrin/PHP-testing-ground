@@ -104,6 +104,32 @@ $config = Array(
     ),
   ),
   
+  'staticdomain' => array(
+    'displayname' => 'File kiszolgáló domain',
+    'type'        => 'inputText',
+    'validation'  => array(
+      array(
+        'type' => 'string',
+        'minimum'  => 2,
+        'maximum'  => 512,
+        'required' => false,
+      ),
+    ),
+  ),
+  
+  'cookiedomain' => array(
+    'displayname' => 'Cookie domain (ami lefedi az összes többi domaint)',
+    'type'        => 'inputText',
+    'validation'  => array(
+      array(
+        'type' => 'string',
+        'minimum'  => 2,
+        'maximum'  => 512,
+        'required' => false,
+      ),
+    ),
+  ),
+  
   'supportemail' => array(
     'displayname' => 'Support e-mail cím',
     'type'        => 'inputText',
