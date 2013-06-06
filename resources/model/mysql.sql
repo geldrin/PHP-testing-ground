@@ -83,8 +83,6 @@ CREATE TABLE `organizations` (
    `issecurestreamingenabled` int(11) not null default '0',
    `islivestreamingenabled` int(11) not null default '0',
    `issessionvalidationenabled` int(11) not null default '0',
-   `presencechecktimeinterval` int(11) unsigned not null default '900',
-   `presencecheckconfirmationtime` int(11) unsigned not null default '600',
    `domain` text,
    `supportemail` text,
    `registrationtype` text,
