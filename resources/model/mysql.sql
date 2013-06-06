@@ -84,6 +84,8 @@ CREATE TABLE `organizations` (
    `islivestreamingenabled` int(11) not null default '0',
    `issessionvalidationenabled` int(11) not null default '0',
    `domain` text,
+   `staticdomain` text,
+   `cookiedomain` text,
    `supportemail` text,
    `registrationtype` text,
    `backgroundcolor` text,

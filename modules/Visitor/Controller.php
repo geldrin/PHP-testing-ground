@@ -115,10 +115,10 @@ class Controller extends \Springboard\Controller\Visitor {
       $organization = $cache->get();
     
     $baseuri   = $this->bootstrap->scheme . $organization['domain'] . '/';
-    $staticuri = $this->bootstrap->scheme . 'static.' . $organization['domain'] . '/';
+    $staticuri = $this->bootstrap->scheme . $organization['staticdomain'] . '/';
     
     $this->application->config['combine']['domains'][] = $organization['domain'];
-    $this->application->config['combine']['domains'][] = 'static.' . $organization['domain'];
+    $this->application->config['combine']['domains'][] = $organization['staticdomain'];
     
     $this->toSmarty['supportemail'] = $this->bootstrap->config['mail']['fromemail'] =
       $this->application->config['mail']['fromemail'] = $organization['supportemail']
@@ -129,6 +129,7 @@ class Controller extends \Springboard\Controller\Visitor {
     $this->bootstrap->staticuri       =
     $this->toSmarty['STATIC_URI']     = $organization['staticuri'] = $staticuri;
     $this->bootstrap->validatesession = (bool)$organization['issessionvalidationenabled'];
+    $this->bootstrap->config['cookiedomain'] = $organization['cookiedomain'];
     
     $this->organization = $organization;
     
