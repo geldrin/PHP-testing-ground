@@ -271,19 +271,19 @@ class Controller extends \Visitor\Controller {
     $this->toSmarty['mobilehttpurl'] = $recordingsModel->getMediaUrl(
       'mobilehttp',
       $mobilehq,
-      $this->toSmarty['organization']['domain'],
+      $this->toSmarty['organization']['cookiedomain'],
       session_id()
     );
     $this->toSmarty['mobilertspurl'] = $recordingsModel->getMediaUrl(
       'mobilertsp',
       $mobilehq,
-      $this->toSmarty['organization']['domain'],
+      $this->toSmarty['organization']['cookiedomain'],
       session_id()
     );
     $this->toSmarty['audiofileurl']  = $recordingsModel->getMediaUrl(
       'direct',
       false, // non-hq
-      $this->toSmarty['organization']['domain'],
+      $this->toSmarty['organization']['cookiedomain'],
       session_id(),
       $this->toSmarty['STATIC_URI']
     );
@@ -641,19 +641,19 @@ class Controller extends \Visitor\Controller {
     $this->toSmarty['mobilehttpurl'] = $recordingsModel->getMediaUrl(
       'mobilehttp',
       $mobilehq,
-      $this->toSmarty['organization']['domain'],
+      $this->toSmarty['organization']['cookiedomain'],
       session_id()
     );
     $this->toSmarty['mobilertspurl'] = $recordingsModel->getMediaUrl(
       'mobilertsp',
       $mobilehq,
-      $this->toSmarty['organization']['domain'],
+      $this->toSmarty['organization']['cookiedomain'],
       session_id()
     );
     $this->toSmarty['audiofileurl']  = $recordingsModel->getMediaUrl(
       'direct',
       false, // non-hq
-      $this->toSmarty['organization']['domain'],
+      $this->toSmarty['organization']['cookiedomain'],
       session_id(),
       $this->toSmarty['STATIC_URI']
     );

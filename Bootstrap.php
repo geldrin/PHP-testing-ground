@@ -116,12 +116,8 @@ class Bootstrap {
       return;
     
     $cookiedomain = $this->config['cookiedomain'];
-    // egy dinamikus cookie domain a host alapjan amibe a static. aldomain
-    // nem tartozik bele
-    if ( isset( $_SERVER['SERVER_NAME'] ) and $domain === null )
-      $cookiedomain = '.' . str_replace( 'static.', '', $_SERVER['SERVER_NAME'] );
-    elseif ( $domain !== null )
-      $cookiedomain = '.' . $domain;
+    if ( $domain !== null )
+      $cookiedomain = $domain;
     
     $this->config['cookiedomain'] = $cookiedomain;
     

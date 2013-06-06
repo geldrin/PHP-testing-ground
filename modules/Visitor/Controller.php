@@ -110,6 +110,11 @@ class Controller extends \Springboard\Controller\Visitor {
         $organization['languages'][ $language ] = $languages[ $language ];
       
       $cache->put( $organization );
+      $staticcache = $this->bootstrap->getCache(
+        'organizations-' . $organization['staticdomain'],
+        null
+      );
+      $staticcache->put( $organization );
       
     } else
       $organization = $cache->get();

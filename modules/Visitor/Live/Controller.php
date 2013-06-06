@@ -100,12 +100,12 @@ class Controller extends \Visitor\Controller {
     $currentstream = $streams['defaultstream'];
     $streamtype    = $streams['streamtype'];
     $flashdata     = $feedModel->getFlashData( array(
-        'sessionid' => session_id(),
-        'ipaddress' => $this->getIPAddress(),
-        'BASE_URI'  => $this->toSmarty['BASE_URI'],
-        'domain'    => $this->organization['domain'],
-        'streams'   => $streams,
-        'user'      => $user,
+        'sessionid'    => session_id(),
+        'ipaddress'    => $this->getIPAddress(),
+        'BASE_URI'     => $this->toSmarty['BASE_URI'],
+        'cookiedomain' => $this->organization['cookiedomain'],
+        'streams'      => $streams,
+        'user'         => $user,
         'checkwatchingtimeinterval' => $this->organization['presencechecktimeinterval'],
         'checkwatchingconfirmationtimeout' => $this->organization['presencecheckconfirmationtime'],
       )
@@ -177,13 +177,13 @@ class Controller extends \Visitor\Controller {
     $this->toSmarty['livehttpurl'] = $feedModel->getMediaUrl(
       'livehttp',
       $currentstream['keycode'],
-      $this->toSmarty['organization']['domain'],
+      $this->toSmarty['organization']['cookiedomain'],
       session_id()
     );
     $this->toSmarty['livertspurl'] = $feedModel->getMediaUrl(
       'livertsp',
       $currentstream['keycode'],
-      $this->toSmarty['organization']['domain'],
+      $this->toSmarty['organization']['cookiedomain'],
       session_id()
     );
     

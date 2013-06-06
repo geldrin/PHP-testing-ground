@@ -179,12 +179,70 @@ function filenameize( $filename ) {
 
 function checkAccess( $recordingid ) {
   
-  // - session_start (meg kell kapnunk a cookie aldomainkent)
-  $cookiedomain = '.videosquare.eu';
+  define('BASE_PATH',  realpath( dirname( __FILE__ ) . '/..' ) . '/' );
+  if ( strpos( BASE_PATH, 'dev.') !== false )
+    define('PRODUCTION', false );
+  else
+    define('PRODUCTION', true );
   
-  if ( isset( $_SERVER['SERVER_NAME'] ) )
-    $cookiedomain = '.' . str_replace( 'static.', '', $_SERVER['SERVER_NAME'] );
+  $loader = new ConfigLoader();
+  $config = $loader->load();
   
+  $bootstrap = new stdClass();
+  $bootstrap->config = $config;
+  
+  switch( $config['cache']['type'] ) {
+    
+    case 'file':
+      $file  = 'File.php';
+      $class = 'Springboard\\Cache\\File';
+      break;
+    
+    case 'redis':
+      $file  = 'Redis.php';
+      $class = 'Springboard\\Cache\\Redis';
+      break;
+    
+    case 'memcache':
+      $file  = 'Memcached.php';
+      $class = 'Springboard\\Cache\\Memcached';
+      break;
+    
+  }
+  
+  include_once( $config['libpath'] . 'Springboard/Cache/CacheInterface.php' );
+  include_once( $config['libpath'] . 'Springboard/Cache.php' );
+  include_once( $config['libpath'] . 'Springboard/Cache/' . $file );
+  
+  $host  = $_SERVER['SERVER_NAME'];
+  $cache = new $class(
+    $bootstrap,
+    'organizations-' . $host,
+    $config['cacheseconds']
+  );
+  
+  if ( $cache->expired() ) {
+    
+    $application = setupApp();
+    
+    $orgModel = $application->bootstrap->getModel('organizations');
+    $orgModel->checkDomain( $host, true );
+    
+    $organization = $orgModel->row;
+    $l            = $application->bootstrap->getLocalization();
+    $languages    = $l->getLov('languages');
+    $languagekeys = explode(',', $organization['languages'] );
+    $organization['languages'] = array();
+    
+    foreach( $languagekeys as $language )
+      $organization['languages'][ $language ] = $languages[ $language ];
+    
+    $cache->put( $organization );
+    
+  } else
+    $organization = $cache->get();
+  
+  $cookiedomain = $organization['cookiedomain'];
   ini_set('session.cookie_domain',    $cookiedomain );
   session_set_cookie_params( 0 , '/', $cookiedomain );
   $sessionkey = 'teleconnect' . $cookiedomain;
@@ -193,20 +251,9 @@ function checkAccess( $recordingid ) {
   
   if ( DEBUG or !isset( $_SESSION[ $sessionkey ]['recordingaccess'][ $recordingid ] ) ) {
     
-    define('BASE_PATH',  realpath( dirname( __FILE__ ) . '/..' ) . '/' );
-    if ( strpos( BASE_PATH, 'dev.') !== false )
-      define('PRODUCTION', false );
-    else
-      define('PRODUCTION', true );
+    if ( !isset( $application ) )
+      $application = setupApp();
     
-    include_once( BASE_PATH . 'libraries/Springboard/Application.php');
-    $application = new Springboard\Application( BASE_PATH, PRODUCTION, $_REQUEST );
-    $application->loadConfig('config.php');
-
-    if ( !PRODUCTION )
-      $application->loadConfig('config_local.php');
-
-    $application->bootstrap();
     $application->bootstrap->sessionstarted = true;
     $application->bootstrap->config['cookiedomain'] = $cookiedomain;
     $user            = $application->bootstrap->getSession('user');
@@ -250,6 +297,39 @@ function handleSendfile( $path, $handlerange = false ) {
     $path  = str_replace( ',', '%2c', urlencode( $path ) ); // sima urlencode mert azt irja a lighttpd doksi
     
     headerOutput( 'X-Sendfile2: ' . $path . ' ' . $range );
+    
+  }
+  
+}
+
+function setupApp() {
+  
+  include_once( BASE_PATH . 'libraries/Springboard/Application.php');
+  $application = new Springboard\Application( BASE_PATH, PRODUCTION, $_REQUEST );
+  $application->loadConfig('config.php');
+
+  if ( !PRODUCTION )
+    $application->loadConfig('config_local.php');
+
+  $application->bootstrap();
+  return $application;
+  
+}
+
+class ConfigLoader {
+  
+  public function __construct() {
+    $this->basepath   = BASE_PATH;
+    $this->production = PRODUCTION;
+  }
+  
+  public function load() {
+    
+    $config = include( BASE_PATH . 'config.php' );
+    if ( !PRODUCTION )
+      $config = array_merge( $config, include( BASE_PATH . 'config_local.php') );
+    
+    return $config;
     
   }
   
