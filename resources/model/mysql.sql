@@ -86,6 +86,8 @@ CREATE TABLE `organizations` (
    `presencechecktimeinterval` int(11) unsigned not null default '900',
    `presencecheckconfirmationtime` int(11) unsigned not null default '600',
    `domain` text,
+   `staticdomain` text,
+   `cookiedomain` text,
    `supportemail` text,
    `registrationtype` text,
    `backgroundcolor` text,
