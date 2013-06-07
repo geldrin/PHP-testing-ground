@@ -9,6 +9,6 @@ function smarty_modifier_uri( $organization, $type, $scheme = null ) {
   if ( $type == 'static' )
     $orgkey = 'staticdomain';
   
-  return $scheme . $prefix . $organization[ $orgkey ] . '/';
+  return $scheme . $organization[ $orgkey ] . '/';
   
 }
