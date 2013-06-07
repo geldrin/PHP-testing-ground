@@ -5,11 +5,10 @@ function smarty_modifier_uri( $organization, $type, $scheme = null ) {
   if ( $scheme === null )
     $scheme = SSL? 'https://': 'http://';
   
-  $prefix = '';
-  
+  $orgkey = 'domain';
   if ( $type == 'static' )
-    $prefix = 'static.';
+    $orgkey = 'staticdomain';
   
-  return $scheme . $prefix . $organization['domain'] . '/';
+  return $scheme . $prefix . $organization[ $orgkey ] . '/';
   
 }
