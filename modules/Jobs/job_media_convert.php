@@ -306,7 +306,7 @@ global $jconf, $db;
 		WHERE
 			a.userid = b.id AND
 			a.id = " . $recording['id'] . " AND
-			b.organizationid = c.id
+			a.organizationid = c.id
 	";
 
 	try {
