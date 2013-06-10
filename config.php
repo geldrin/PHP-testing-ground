@@ -59,16 +59,6 @@ $config = array(
     ),
   ),
   'timezone' => 'Europe/Budapest',
-  //-----
-  'database' => array(
-    'type'     => 'mysql',
-    'host'     => 'localhost',
-    'username' => 'videosquare',
-    'password' => '6NosJir7PWAanzo9hfv7',
-    'database' => 'videosquare',
-    'reconnectonbusy' => true,
-    'maxretries' => 30,
-  ),
   'image' => array(
     'jpgquality' => 80,
   ),
