@@ -1,6 +1,5 @@
 <?php
 $config = array(
-  'siteid'       => 'teleconnect',
   'version'      => '_v20130523',
   'charset'      => 'UTF-8',
   'cacheseconds' => 3600,
