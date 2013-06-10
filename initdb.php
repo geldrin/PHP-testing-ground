@@ -10,7 +10,7 @@ else
 
 include_once( BASE_PATH . 'libraries/Springboard/Application/Cli.php');
 
-$app    = new Springboard\Application\Cli( BASE_PATH, PRODUCTION );
+$app    = new Springboard\Application\Cli( BASE_PATH, false );
 $initdb = new Initdb( $app, $argv );
 $initdb->setupMultistring();
 echo "Done!\n";
