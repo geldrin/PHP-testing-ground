@@ -3,8 +3,8 @@ return array (
   0 => 
   array (
     'title' => 'A meghívó sikeresen elfogadva!',
-	'titleen' => 'Invitation successfully accepted!',
-	'shortname' => 'invitationvalidated',
+    'titleen' => 'Invitation successfully accepted!',
+    'shortname' => 'invitationvalidated',
     'title_stringid' => 0,
     'body' => '<p>Kérjük regisztráljon a <a href="hu/users/signup">Regisztráció</a> linkre kattintva!</p>',
     'bodyen' => '<p>Please register to the site by clicking <a href="en/users/signup">Register</a> in the menu!</p>',
@@ -13,8 +13,8 @@ return array (
   1 => 
   array (
     'title' => 'Üdvözöljük!',
-	'titleen' => 'Welcome!',
-	'shortname' => 'signupvalidated',
+    'titleen' => 'Welcome!',
+    'shortname' => 'signupvalidated',
     'title_stringid' => 0,
     'body' => '<p><span>Regisztrációja sikeres volt, üdvözöljük!</span></p>',
     'bodyen' => '<p><span>Registration was completed successfully, welcome!</span></p>',
@@ -23,8 +23,8 @@ return array (
   2 => 
   array (
     'title' => 'Megerősítés sikertelen',
-	'titleen' => 'Validation failed',
-	'shortname' => 'signupvalidationfailed',
+    'titleen' => 'Validation failed',
+    'shortname' => 'signupvalidationfailed',
     'title_stringid' => 0,
     'body' => '<p>A megerősítés sikertelen volt, kérjük ellenőrizze hogy pontosan az e-mailben küldött hivatkozást nyitotta-e meg.</p><p>Ha a levélben a hivatkozásra kattintva nem nyílt meg a böngészőprogram, másolja a teljes hivatkozást a böngésző címsorába!</p>',
     'bodyen' => '<p><span>Validation failed, please make sure the link sent via e-mail stayed intact and is the same as the one in the e-mail.</span></p>',
@@ -33,8 +33,8 @@ return array (
   3 => 
   array (
     'title' => 'Feltöltés átmenetileg szünetel',
-	'titleen' => 'Uploading is temporarily disabled',
-	'shortname' => 'uploaddisabled',
+    'titleen' => 'Uploading is temporarily disabled',
+    'shortname' => 'uploaddisabled',
     'title_stringid' => 0,
     'body' => '<p>A feltöltés technikai okok miatt átmenetileg szünetel.</p><p>A kellemetlenségért elnézését kérjük.</p>',
     'bodyen' => '<p>Uploading is temporarily disabled.</p><p>We apologize for the inconvenience.</p>',
@@ -43,8 +43,8 @@ return array (
   4 => 
   array (
     'title' => 'Feltöltés sikeres',
-	'titleen' => 'Uploading completed successfully',
-	'shortname' => 'uploadsuccessfull',
+    'titleen' => 'Uploading completed successfully',
+    'shortname' => 'uploadsuccessfull',
     'title_stringid' => 0,
     'body' => '<p><span> A feltöltés sikeres volt, a felvétel adatai a konverzió után lesznek szerkeszthetőek. A konverzió sikerességéről e-mailben értesítjük.</span></p>',
     'bodyen' => '<p><span> Uploading completed successfully, the recording will become editable once the conversion process finishes of which we will notify you via e-mail.</span></p>',
@@ -53,8 +53,8 @@ return array (
   5 => 
   array (
     'title' => 'Prezentáció feltöltése sikeres',
-	'titleen' => 'Uploading presentation successful',
-	'shortname' => 'uploadcontentsuccessfull',
+    'titleen' => 'Uploading presentation successful',
+    'shortname' => 'uploadcontentsuccessfull',
     'title_stringid' => 0,
     'body' => '<p><span>Prezentáció feltöltése sikeres volt. A konverziót követően a prezentáció láthatóvá válik a lejátszóban.</span></p>',
     'bodyen' => '<p><span>Upload of presentation was successful. After the conversion, it will be visible in the player.</span></p>',
@@ -63,8 +63,8 @@ return array (
   6 => 
   array (
     'title' => 'Feltöltés hozzáférési hiba',
-	'titleen' => 'Upload access error',
-	'shortname' => 'nopermissionuploader',
+    'titleen' => 'Upload access error',
+    'shortname' => 'nopermissionuploader',
     'title_stringid' => 0,
     'body' => '<p>Nincs feltöltési jogosultsága.</p>',
     'bodyen' => '<p>You have no permission to upload.</p>',
@@ -73,8 +73,8 @@ return array (
   7 => 
   array (
     'title' => 'Szerkesztő hozzáférési hiba',
-	'titleen' => 'Editor access error',
-	'shortname' => 'nopermissioneditor',
+    'titleen' => 'Editor access error',
+    'shortname' => 'nopermissioneditor',
     'title_stringid' => 0,
     'body' => '<p>Nincs szerkesztői jogosultsága.</p>',
     'bodyen' => '<p>You have no editor access.</p>',
@@ -83,8 +83,8 @@ return array (
   8 => 
   array (
     'title' => 'Élő közvetítés hozzáférési hiba',
-	'titleen' => 'Live webcast access error',
-	'shortname' => 'nopermissionliveadmin',
+    'titleen' => 'Live webcast access error',
+    'shortname' => 'nopermissionliveadmin',
     'title_stringid' => 0,
     'body' => '<p>Nincs élő közvetítés adminisztrátori jogosultsága.</p>',
     'bodyen' => '<p>You have no live webcast administrator access.</p>',
@@ -93,8 +93,8 @@ return array (
   9 => 
   array (
     'title' => 'Ügyfél adminisztrátor hozzáférési hiba',
-	'titleen' => 'Client administrator access error',
-	'shortname' => 'nopermissionclientadmin',
+    'titleen' => 'Client administrator access error',
+    'shortname' => 'nopermissionclientadmin',
     'title_stringid' => 0,
     'body' => '<p>Nincs ügyfél adminisztrátor jogosultsága.</p>',
     'bodyen' => '<p>You have no client administrator access.</p>',
@@ -103,8 +103,8 @@ return array (
   10 => 
   array (
     'title' => 'Hírszerkesztő jogosultsági hiba',
-	'titleen' => 'News editor access error',
-	'shortname' => 'nopermissionnewseditor',
+    'titleen' => 'News editor access error',
+    'shortname' => 'nopermissionnewseditor',
     'title_stringid' => 0,
     'body' => '<p>Nincs hírszerkesztői jogosultsága.</p>',
     'bodyen' => '<p>You have no news editor access.</p>',
@@ -113,8 +113,8 @@ return array (
   11 => 
   array (
     'title' => 'Tartalom feltöltés jelenleg nem elérhető',
-	'titleen' => 'Content upload not available at present',
-	'shortname' => 'uploadcontentunavailable',
+    'titleen' => 'Content upload not available at present',
+    'shortname' => 'uploadcontentunavailable',
     'title_stringid' => 0,
     'body' => '<p>Videó tartalom (prezentáció) feltöltés funkció folyamatban lévő konverzió miatt jelenleg nem elérhető.</p>',
     'bodyen' => '<p>Content (presentation) upload feature not accessible at the moment due to conversion in progress.</p>',
@@ -123,8 +123,8 @@ return array (
   12 => 
   array (
     'title' => 'Hiba 404',
-	'titleen' => 'Error 404',
-	'shortname' => 'http404',
+    'titleen' => 'Error 404',
+    'shortname' => 'http404',
     'title_stringid' => 0,
     'body' => '<p>A kért oldal nem található.</p>',
     'bodyen' => '<p>Requested page cannot be found.</p>',
@@ -133,8 +133,8 @@ return array (
   13 => 
   array (
     'title' => 'Regisztráció validáció',
-	'titleen' => 'Registration validation',
-	'shortname' => 'needvalidation',
+    'titleen' => 'Registration validation',
+    'shortname' => 'needvalidation',
     'title_stringid' => 0,
     'body' => '<p>Köszönjük regisztrációját!</p><p>Utolsó lépésként a megadott e-mail címre elküldtünk egy ellenőrző levelet. Kérjük, a levélben található hivatkozásra kattintva erősítse meg regisztrációjának érvényességét.</p>',
     'bodyen' => '<p>Thank you for signing up!</p><p>We\'ve just sent an e-mail to the address provided, which should arrive in a few minutes. Please open the e-mail and click on the link included to confirm your registration.</p>',
@@ -143,8 +143,8 @@ return array (
   14 => 
   array (
     'title' => 'Rólunk',
-	'titleen' => 'About us',
-	'shortname' => 'about',
+    'titleen' => 'About us',
+    'shortname' => 'about',
     'title_stringid' => 0,
     'body' => null,
     'bodyen' => null,
@@ -153,8 +153,8 @@ return array (
   15 => 
   array (
     'title' => 'Kapcsolat',
-	'titleen' => 'Contact us',
-	'shortname' => 'contact',
+    'titleen' => 'Contact us',
+    'shortname' => 'contact',
     'title_stringid' => 0,
     'body' => '<p><strong>Videosquare Kft.</strong></p><p>Cím: H-1139 Budapest, Frangepán u. 46.</p><p>Telefon: +36 1 889 7603</p><p>Fax: +36 1 889 7601</p><p>E-mail: <a href="mailto:info@videosquare.eu">info@videosquare.eu</a></p>',
     'bodyen' => '<p><strong>Videosquare Ltd.</strong></p><p>Address: 46. Frangepán, 1139 Budapest, Hungary</p><p>Phone: +36 1 889 7603</p><p>Fax: +36 1 889 7601</p><p>E-mail: <a href="mailto:info@videosquare.eu">info@videosquare.eu</a></p>',
@@ -163,8 +163,8 @@ return array (
   16 => 
   array (
     'title' => 'Mobil verzió nem elérhető',
-	'titleen' => 'Mobile version not available',
-	'shortname' => 'mobileunavailable',
+    'titleen' => 'Mobile version not available',
+    'shortname' => 'mobileunavailable',
     'title_stringid' => 0,
     'body' => '<p><span><span>A felvétel mobil verziója nem elérhető.</span><br /></span></p>',
     'bodyen' => '<p><span>Mobile version of this recording is not available.</span></p>',
@@ -173,8 +173,8 @@ return array (
   17 => 
   array (
     'title' => 'Élő közvetítés jogosultság hiba',
-	'titleen' => 'Live streaming access error',
-	'shortname' => 'nopermissionlivestreaming',
+    'titleen' => 'Live streaming access error',
+    'shortname' => 'nopermissionlivestreaming',
     'title_stringid' => 0,
     'body' => '<p>Nincs jogosultsága az élő közvetítés megtekintéséhez.</p>',
     'bodyen' => '<p>You have no authorization to access this live webcast.</p>',
@@ -183,8 +183,8 @@ return array (
   18 => 
   array (
     'title' => 'Szervezeti egység hozzáférési hiba',
-	'titleen' => 'Department restriction error',
-	'shortname' => 'departmentrestricted',
+    'titleen' => 'Department restriction error',
+    'shortname' => 'departmentrestricted',
     'title_stringid' => 0,
     'body' => '<p>A felvétel vagy közvetítés megtekintéséhez Önnek nincs megfelelő szervezeti egység tagsága.</p>',
     'bodyen' => '<p>You do not belong to the right department to access this recording or live webcast.</p>',
@@ -193,8 +193,8 @@ return array (
   19 => 
   array (
     'title' => 'Jogosultság hiba',
-	'titleen' => 'Permission error',
-	'shortname' => 'nopermission',
+    'titleen' => 'Permission error',
+    'shortname' => 'nopermission',
     'title_stringid' => 0,
     'body' => '<p>Nincs jogosultsága az oldal megtekintéséhez.</p>',
     'bodyen' => '<p>You have no permissions to view this content.</p>',
@@ -203,8 +203,8 @@ return array (
   20 => 
   array (
     'title' => 'Adatkezelési és felhasználási hozzájárulás',
-	'titleen' => 'Privacy and use policy approval',
-	'shortname' => 'userstos',
+    'titleen' => 'Privacy and use policy approval',
+    'shortname' => 'userstos',
     'title_stringid' => 0,
     'body' => '<p align="center"><b>Adatkezelési és felhasználási hozzájárulás</b> (<b>Hozzájárulás</b>)</p>
 <p align="center">A Videosquare oldalon történő regisztrációhoz</p>
@@ -247,8 +247,8 @@ return array (
   21 => 
   array (
     'title' => 'Felvétel nem publikált',
-	'titleen' => 'Recording is not published',
-	'shortname' => 'recordingisnotpublished',
+    'titleen' => 'Recording is not published',
+    'shortname' => 'recordingisnotpublished',
     'title_stringid' => 0,
     'body' => '<p>A feltöltő nem publikálta ezt a felvételt.</p>',
     'bodyen' => '<p>The uploader has not published this recording.</p>',
@@ -257,8 +257,8 @@ return array (
   22 => 
   array (
     'title' => 'Validáció sikertelen',
-	'titleen' => 'Validation failed',
-	'shortname' => 'invitationvalidationfailed',
+    'titleen' => 'Validation failed',
+    'shortname' => 'invitationvalidationfailed',
     'title_stringid' => 0,
     'body' => '<p>A meghívó validációja sikertelen.</p>',
     'bodyen' => '<p>Validation of invitation failed.</p>',
@@ -267,8 +267,8 @@ return array (
   23 => 
   array (
     'title' => 'Jelszó emlékeztető',
-	'titleen' => 'Password reminder',
-	'shortname' => 'passwordreminder',
+    'titleen' => 'Password reminder',
+    'shortname' => 'passwordreminder',
     'title_stringid' => 0,
     'body' => '<p>Jelszava megváltoztatásához szükséges információkat elküldtük az Ön e-mail címére.</p>',
     'bodyen' => '<p>Instructions required to change you password was posted to your e-mail address.</p>',
@@ -277,8 +277,8 @@ return array (
   24 => 
   array (
     'title' => 'Videokonferencia felvétel indítás hiba',
-	'titleen' => 'Videoconference recording start failure',
-	'shortname' => 'livestream_invalidtransition_start',
+    'titleen' => 'Videoconference recording start failure',
+    'shortname' => 'livestream_invalidtransition_start',
     'title_stringid' => 0,
     'body' => '<p>A videokonferencia felvételt nem tudtuk elindítani vagy már korábban elindítása került.</p>',
     'bodyen' => '<p>Videoconference recording cannot be started or it has been already running.</p>',
@@ -287,8 +287,8 @@ return array (
   25 => 
   array (
     'title' => 'Videokonferencia felvétel leállítás hiba',
-	'titleen' => 'Videoconference recording termination failure',
-	'shortname' => 'livestream_invalidtransition_stop',
+    'titleen' => 'Videoconference recording termination failure',
+    'shortname' => 'livestream_invalidtransition_stop',
     'title_stringid' => 0,
     'body' => '<p>A videokonferencia felvételt nem tudtuk leállítani vagy már korábban leállításra került.</p>',
     'bodyen' => '<p>Videoconference recording cannot be stopped or it has been already stopped.</p>',
@@ -297,8 +297,8 @@ return array (
   26 => 
   array (
     'title' => 'Videosquare felvételek lejátszása',
-	'titleen' => 'Videosquare recordings playback',
-	'shortname' => 'playerhelp',
+    'titleen' => 'Videosquare recordings playback',
+    'shortname' => 'playerhelp',
     'title_stringid' => 0,
     'body' => '<h1>Minimális követelmények</h1>
 <h2>Adobe Flash lejátszó</h2>
@@ -325,8 +325,8 @@ return array (
   27 => 
   array (
     'title' => 'Felhasználási hozzájárulás audiovizuális tartalmak felöltéséhez',
-	'titleen' => 'Terms of use for sharing audiovisual content',
-	'shortname' => 'recordingstos',
+    'titleen' => 'Terms of use for sharing audiovisual content',
+    'shortname' => 'recordingstos',
     'title_stringid' => 0,
     'body' => '<p style="text-align: center;"><b>Felhasználási hozzájárulás</b> (<b>Hozzájárulás</b>)</p>
 <p style="text-align: center;">Audiovizuális tartalmak megosztásához</p>
@@ -356,8 +356,8 @@ return array (
   28 => 
   array (
     'title' => 'Konverzió folyamatban',
-	'titleen' => 'Conversion in progress',
-	'shortname' => 'recordingconverting',
+    'titleen' => 'Conversion in progress',
+    'shortname' => 'recordingconverting',
     'title_stringid' => 0,
     'body' => '<p>A felvétel konverziója folyamatban van. A konverzió befejezéséig a felvétel nem tekinthető meg.</p>',
     'bodyen' => '<p>Recording conversion is in progress. Recording will be available after converion is finished.</p>',
@@ -366,8 +366,8 @@ return array (
   29 => 
   array (
     'title' => 'Konverzió hiba',
-	'titleen' => 'Conversion error',
-	'shortname' => 'recordingerrorconverting',
+    'titleen' => 'Conversion error',
+    'shortname' => 'recordingerrorconverting',
     'title_stringid' => 0,
     'body' => '<p>A felvétel konverziója közben váratlan hiba történt. Vegye fel a kapcsolatot a portál adminisztrátorával.</p>',
     'bodyen' => '<p>A unexpected error experienced during conversion of this recording. Please contact site administrator.</p>',
@@ -376,8 +376,8 @@ return array (
   30 => 
   array (
     'title' => 'Felvétel törölve',
-	'titleen' => 'Recording deleted',
-	'shortname' => 'recordingdeleted',
+    'titleen' => 'Recording deleted',
+    'shortname' => 'recordingdeleted',
     'title_stringid' => 0,
     'body' => '<p>A felvételt a felvétel tulajdonosa eltávolította.</p>',
     'bodyen' => '<p>Recording is deleted by recording owner.</p>',
@@ -386,8 +386,8 @@ return array (
   31 => 
   array (
     'title' => 'Beragadt belépési állapot törlése',
-	'titleen' => 'Reset stuck login',
-	'shortname' => 'validateresetsession',
+    'titleen' => 'Reset stuck login',
+    'shortname' => 'validateresetsession',
     'title_stringid' => 0,
     'body' => '<p>Beragadt belépési állapot törléséhez a megadott e-mail címre elküldtünk egy ellenőrző levelet. Kérjük, a levélben található hivatkozásra kattintva erősítse meg regisztrációjának érvényességét!</p>',
     'bodyen' => null,
@@ -396,8 +396,8 @@ return array (
   32 => 
   array (
     'title' => 'Beragadt belépési állapot sikeresen törölve',
-	'titleen' => 'Resetting stuck login was successful',
-	'shortname' => 'sessionreset',
+    'titleen' => 'Resetting stuck login was successful',
+    'shortname' => 'sessionreset',
     'title_stringid' => 0,
     'body' => '<p>A beragadt belépési állapotot sikeresen töröltük és autómatikusan beléptettük.</p>',
     'bodyen' => null,
@@ -406,8 +406,8 @@ return array (
   33 => 
   array (
     'title' => 'Regisztráció nem engedélyezett',
-	'titleen' => 'Registration not allowed',
-	'shortname' => 'noregistration',
+    'titleen' => 'Registration not allowed',
+    'shortname' => 'noregistration',
     'title_stringid' => 0,
     'body' => '<p>A regisztráció nem engedélyezett, kérjen felhasználói fiókot adminisztrátorától.</p>','<p>Registration is disabled, please ask your organization to create an account for you.</p>',
     'bodyen' => null,
