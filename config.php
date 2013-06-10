@@ -1,7 +1,6 @@
 <?php
 $config = array(
   'siteid'       => 'teleconnect',
-  'hashseed'     => 'ö923mfk3a,.dműteleconnect',
   'version'      => '_v20130523',
   'charset'      => 'UTF-8',
   'cacheseconds' => 3600,
