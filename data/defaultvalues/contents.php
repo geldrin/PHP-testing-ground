@@ -146,8 +146,8 @@ return array (
     'titleen' => 'About us',
     'shortname' => 'about',
     'title_stringid' => 0,
-    'body' => null,
-    'bodyen' => null,
+    'body' => '',
+    'bodyen' => '',
     'body_stringid' => 0,
   ),
   15 => 
@@ -241,7 +241,7 @@ return array (
 <p style="padding-left: 30px;">f) a Felhasználó eszközének adatai: böngésző verziója és konfigurációja;</p>
 <p><i>Mint a Videosquare által nyújtott szolgáltatások felhasználója, a jelen Hozzájárulás elfogadásával igazolom, hogy a Hozzájárulást elolvastam és megértettem.</i></p>
 <p align="center"><b><br /></b></p>',
-    'bodyen' => null,
+    'bodyen' => '',
     'body_stringid' => 0,
   ),
   21 => 
@@ -319,7 +319,7 @@ return array (
 <p>Amennyiben bármilyen kérdése van, vagy további segítséget igényel, kérjük forduljon hozzánk bizalommal!</p>
 <p><strong>E-mail: </strong><a href="mailto:support@videosquare.eu">support@videosquare.eu</a></p>
 <p><strong>Telefon:</strong> +36 1 889 7610<strong></strong></p>',
-    'bodyen' => null,
+    'bodyen' => '',
     'body_stringid' => 0,
   ),
   27 => 
@@ -350,7 +350,7 @@ return array (
 <p>5) Felhasználó tudomásul veszi, hogy a Videosquare oldalon, a Felhasználó választása szerint, lehetőség van a feltöltött Tartalmak külső weboldalakon történő megjelenítésére (beágyazására). Üzemeltető kizárja a felelősségét ezen a Tartalmak külső weboldalakon történő megjelenítéséből származó károkért.</p>
 <p>6) Üzemeltető nem tehető felelőssé azért, amennyiben harmadik fél jogosulatlanul használja fel Felhasználó Videosquare rendszerbe feltöltött felvételeit és azok leíró adatait, vagy a felvételhez csatolt dokumentumok tartalmát.</p>
 <p><i>A fentiekben megadott tájékoztatást megértettem. Üzemeltető által nyújtott Videosquare szolgáltatás Felhasználójaként ezúton igazolom, hogy az általam feltöltött Tartalmak felhasználási jogaival rendelkezem - a Tartalmak előállítójának minősülök, illetve a Tartalmak előállítójától a szükséges engedélyeket megszereztem - és sem nekem, sem az előállítónak vagy esetleges egyéb szerzői vagy szomszédos jogi jogosultnak a Tartalmakkal kapcsolatban díjigénye nincsen. Ezúton engedélyezem, hogy Üzemeltető az általam feltöltött Tartalmakat a Videosquare weboldalon megjelenítse, az ehhez szükséges, többszörözés, nyilvánossághoz közvetítés, nyilvános előadás, terjesztés és átdolgozás jogát Üzemeltető részére engedélyezem. Emellett kijelentem, hogy a Tartalmakon szereplő vagy egyéb harmadik személyek képmásának és hangfelvételének megjelenítése a Ptk. 80. §-ra vonatkozó személyiségi vagy egyéb jogaikat nem sérti, a szükséges hozzájárulásokat megszereztem. Ha harmadik személy Üzemeltető ellen az általam feltöltött Tartalom miatt, jogsértésre való hivatkozással fellép, úgy Üzemeltetőt az ezzel kapcsolatos eljárások és az igényérvényesítés valamint a kapcsolódó költségek és díjigény alól teljes mértékben mentesítem, azokat közvetlenül megfizetem és helytállok.</i></p>',
-    'bodyen' => null,
+    'bodyen' => '',
     'body_stringid' => 0,
   ),
   28 => 
@@ -390,7 +390,7 @@ return array (
     'shortname' => 'validateresetsession',
     'title_stringid' => 0,
     'body' => '<p>Beragadt belépési állapot törléséhez a megadott e-mail címre elküldtünk egy ellenőrző levelet. Kérjük, a levélben található hivatkozásra kattintva erősítse meg regisztrációjának érvényességét!</p>',
-    'bodyen' => null,
+    'bodyen' => '',
     'body_stringid' => 0,
   ),
   32 => 
@@ -400,7 +400,7 @@ return array (
     'shortname' => 'sessionreset',
     'title_stringid' => 0,
     'body' => '<p>A beragadt belépési állapotot sikeresen töröltük és autómatikusan beléptettük.</p>',
-    'bodyen' => null,
+    'bodyen' => '',
     'body_stringid' => 0,
   ),
   33 => 
@@ -410,7 +410,7 @@ return array (
     'shortname' => 'noregistration',
     'title_stringid' => 0,
     'body' => '<p>A regisztráció nem engedélyezett, kérjen felhasználói fiókot adminisztrátorától.</p>','<p>Registration is disabled, please ask your organization to create an account for you.</p>',
-    'bodyen' => null,
+    'bodyen' => '',
     'body_stringid' => 0,
   ),
 
