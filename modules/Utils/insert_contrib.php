@@ -9,7 +9,7 @@ include_once( BASE_PATH . 'libraries/Springboard/Application/Cli.php');
 
 set_time_limit(0);
 
-$iscommit = TRUE;
+$iscommit = FALSE;
 
 // Init
 $app = new Springboard\Application\Cli(BASE_PATH, PRODUCTION);

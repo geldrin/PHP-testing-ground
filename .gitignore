@@ -8,6 +8,5 @@ surveyor.config
 *.exe
 config_local.php
 httpdocs/flash/**
-data/defaultvalues/**
 data/cache/smarty/**
 data/cache/application/**

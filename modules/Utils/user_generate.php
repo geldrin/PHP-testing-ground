@@ -10,7 +10,7 @@ include_once( BASE_PATH . 'libraries/Springboard/Application/Cli.php');
 
 set_time_limit(0);
 
-$iscommit = true;
+$iscommit = FALSE;
 
 // Init
 $app = new Springboard\Application\Cli(BASE_PATH, PRODUCTION);
@@ -141,7 +141,7 @@ for ( $i = 1; $i <= $user_num; $i++ ) {
 			'isuploader'		=> 0,
 			'isliveadmin'		=> 0,
 			'timestamp'			=> $date,
-			'lastloggedin'		=> $date,
+			'lastloggedin'		=> null,
 			'language'			=> "hu",
 			'newsletter'		=> 0,
 			'password'			=> $users[$username]['hash'],

@@ -6,7 +6,7 @@
 <p>
   {assign var=BASE_URI value=$organization|@uri:base}
   {assign var=playurl value="http://$domain/$language/recordings/details/$recid"}
-  {assign var=editurl value="http://$domain/$language/recordings/modifybasics/$recid"}
+  {assign var=editurl value="http://$domain/recordings/modifybasics/$recid"}
   {#recordings__email_contentconversiondone_body#|sprintf:$filename:$playurl:$playurl:$editurl:$editurl}
 </p>
 
