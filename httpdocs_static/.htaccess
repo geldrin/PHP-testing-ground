@@ -14,4 +14,8 @@ RewriteRule ^(.+)_v[0-9]+(.+)$ $1$2 [L,NS,QSA]
 
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteCond %{REQUEST_FILENAME} !-f
+RewriteRule ^files/(.+/attachments/.+)/([^/]+)$ handlefile.php?file=$1&filename=$2
+
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{REQUEST_FILENAME} !-f
 RewriteRule ^files/(.+)$ handlefile.php?file=$1 [L,NS,QSA]

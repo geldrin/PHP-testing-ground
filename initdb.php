@@ -78,8 +78,9 @@ class Initdb {
     $model    = $this->bootstrap->getModel( $table );
     $parentid = '0';
     $orgid    = $this->orgModel->id;
+    $origidtonewid = array();
     
-    foreach( $values as $data ) {
+    foreach( $values as $id => $data ) {
       
       if ( empty( $data ) )
         continue;
@@ -121,10 +122,13 @@ class Initdb {
       
       if ( isset( $data['origparentid'] ) and !$data['origparentid'] )
         $data['parentid'] = $parentid;
-      else
+      elseif ( isset( $data['origparentid'] ) and isset( $origidtonewid[ $data['origparentid'] ] ) )
+        $data['parentid'] = $origidtonewid[ $data['origparentid'] ];
+      elseif ( !isset( $data['origparentid'] ) )
         $data['parentid'] = 0;
       
       $row = $model->insert( $data, $strings, false );
+      $origidtonewid[ $id ] = $row['id'];
       
       if ( isset( $data['origparentid'] ) and !$data['origparentid'] )
         $data['parentid'] = $row['id'];

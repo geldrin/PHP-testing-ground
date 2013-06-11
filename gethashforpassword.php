@@ -15,4 +15,4 @@ if ( count( $argv ) == 1 )
   echo "Please provide a string to be hashed!\n";
 
 $crypt = $app->bootstrap->getEncryption();
-echo "Hash for: ", var_export( $argv[1] ), " is: ", $crypt->getHash( $argv[1] ), "\n";
+echo "Hash for: ", $argv[1], " is: ", $crypt->getHash( $argv[1] ), "\n";

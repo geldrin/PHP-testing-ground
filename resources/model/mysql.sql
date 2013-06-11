@@ -34,6 +34,7 @@ CREATE TABLE `users` (
    `namelast` text not null,
    `nameformat` text,
    `organizationid` int(10) unsigned not null default '0',
+   `departmentid` int(10) unsigned not null,
    `isadmin` int(10) unsigned not null default '0',
    `isclientadmin` int(10) unsigned not null default '0',
    `iseditor` int(10) unsigned not null default '0',
@@ -126,7 +127,7 @@ CREATE TABLE `recordings` (
    `languageid` int(10) unsigned not null,
    `organizationid` int(10) unsigned not null,
    `locationid` int(10) unsigned,
-   `intorecordingid` int(10) unsigned,
+   `introrecordingid` int(10) unsigned,
    `outrorecordingid` int(10) unsigned,
    `title` text,
    `subtitle` text,
@@ -148,6 +149,7 @@ CREATE TABLE `recordings` (
    `isfeatured` int(11) not null default '0',
    `isintrooutro` int(11) not null default '0',
    `isseekbardisabled` int(11) not null default '0',
+   `issecurestreamingforced` int(11) not null default '0',
    `status` text not null,
    `offsetstart` int(11),
    `offsetend` int(11),
@@ -230,6 +232,8 @@ CREATE TABLE `recordings` (
    `livefeedid` int(10) unsigned default null,
    `deletedtimestamp` datetime,
    `contentdeletedtimestamp` datetime,
+   `hascontentvideo` int(11) not null default '0',
+   `markedfordeletion` int(11) not null default '0',
    PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;
 
@@ -299,7 +303,7 @@ CREATE TABLE `categories` (
    `name` text,
    `name_stringid` int(10) unsigned not null,
    `namehyphenated` text,
-   `namehyphenated_stringid` int(10) unsigned not null,
+   `namehyphenated_stringid` int(10) unsigned,
    `iconfilename` text,
    `weight` int(11) not null default '100',
    `disabled` int(11) not null default '0',
@@ -445,6 +449,7 @@ CREATE TABLE `contributors_roles` (
    `organizationid` int(10) unsigned, -- references organizations(id),
    `contributorid` int(10) unsigned, -- references contributors(id),
    `recordingid` int(10) unsigned not null,
+   `jobgroupid` int(10) unsigned,
    `roleid` int(10) unsigned,
    `weight` int(10) unsigned not null default '100',
    PRIMARY KEY (`id`)
@@ -513,6 +518,8 @@ CREATE TABLE `livefeeds` (
    `accesstype` text not null,
    `issecurestreamingforced` int(11) not null default '0',
    `needrecording` int(11) not null default '1',
+   `hascontent` int(11) not null default '0',
+   `moderationtype` text,
    `feedtype` text,
    PRIMARY KEY (`id`),
    KEY `channelid` (`channelid`)
