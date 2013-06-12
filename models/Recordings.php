@@ -2140,7 +2140,8 @@ class Recordings extends \Springboard\Model {
         namelast,
         nameformat,
         nickname,
-        avatarstatus
+        avatarstatus,
+        avatarfilename
       FROM users
       WHERE id = '" . $this->row['userid'] . "'
       LIMIT 1
@@ -2228,6 +2229,7 @@ class Recordings extends \Springboard\Model {
       us.namefirst,
       us.namelast,
       us.avatarstatus,
+      us.avatarfilename,
       us.id AS userid,
       r.id,
       r.title,

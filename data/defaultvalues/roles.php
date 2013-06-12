@@ -7,6 +7,9 @@ return array (
     'namehungarian' => 'Előadó',
     'nameenglish' => 'Lecturer',
     'weight' => '100',
+    'ispersonrelated' => 1,
+    'isorganizationrelated' => 0,
+    'ispresenter' => 1,
   ),
   1 => 
   array (
@@ -15,6 +18,9 @@ return array (
     'namehungarian' => 'Műsorvezető',
     'nameenglish' => 'Presenter',
     'weight' => '110',
+    'ispersonrelated' => 1,
+    'isorganizationrelated' => 0,
+    'ispresenter' => 1,
   ),
   2 => 
   array (
@@ -23,5 +29,8 @@ return array (
     'namehungarian' => 'Moderátor',
     'nameenglish' => 'Moderator',
     'weight' => '120',
+    'ispersonrelated' => 1,
+    'isorganizationrelated' => 0,
+    'ispresenter' => 0,
   ),
 );

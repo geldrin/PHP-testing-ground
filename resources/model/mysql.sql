@@ -406,7 +406,7 @@ CREATE TABLE `channels` (
    `isliveevent` int(11) not null default '0',
    `livefeedid` int(10) unsigned not null default '0',
    `organizationid` int(10) unsigned not null,
-   `accesstype` text not null,
+   `accesstype` text,
    `isdeleted` int(11) not null default '0',
    `livestatsstatus` text,
    PRIMARY KEY (`id`)
