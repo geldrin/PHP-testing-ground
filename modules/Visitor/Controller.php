@@ -6,6 +6,7 @@ class Controller extends \Springboard\Controller\Visitor {
   
   public function init() {
     $this->setupOrganization();
+    $this->debugLogUsers();
     
     $skipsinglelogincheck = array(
       'users' => array(
@@ -279,6 +280,30 @@ class Controller extends \Springboard\Controller\Visitor {
     }
     
     return $_SERVER['REMOTE_ADDR'];
+    
+  }
+  
+  public function debugLogUsers() {
+    
+    $user = $this->bootstrap->getSession('user');
+    if ( !$user or !$user['id'] )
+      return;
+      
+    foreach( $this->bootstrap->config['debugloguserids'] as $userid ) {
+      
+      if ( $user['id'] != $userid )
+        continue;
+      
+      $d = \Springboard\Debug::getInstance();
+      $d->log(
+        false,
+        'userdebuglog.txt',
+        "USER DEBUG LOG FOR USERID $userid\n" .
+        \Springboard\Debug::getRequestInformation(2)
+      );
+      break;
+      
+    }
     
   }
   

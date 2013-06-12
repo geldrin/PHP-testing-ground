@@ -174,6 +174,12 @@ $config = array(
   // alapból adatbázisban tároljuk a streaming servereket, ha nincs alapértelmezett
   // akkor ez lesz használva
   'fallbackstreamingserver' => 'stream.videosquare.eu',
+  
+  //----
+  // adott userid-k minden egyes a frontend fele erkezo requestje logolasra kerul
+  // a data/logs/userdebuglog.txt -ben
+  'debugloguserids' => array(
+  ),
 );
 
 $config['phpsettings'] = array(
