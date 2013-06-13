@@ -7,6 +7,20 @@ return array(
     'en' => 'angol',
   ),
   
+  'mailqueueerrors' => array(
+    ''          => '<b>küldésre vár</b>',
+    'sent'      => '<font color="green"><b>elküldve</b></font>',
+    'error'     => '<font color="red"><b>hiba a küldés során</font>',
+    'cancelled' => '<font color="brown">leállítva</font>',
+  ),
+  
+  'mailqueueerrors_plain' => array(
+    ''          => 'küldésre vár',
+    'sent'      => 'elküldve',
+    'error'     => 'hiba a küldés során',
+    'cancelled' => 'leállítva',
+  ),
+  
   'tinymceadmin' => array(
     'language' => \Springboard\Language::get(),
     'theme' => "advanced",

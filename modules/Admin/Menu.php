@@ -80,6 +80,13 @@ class Menu {
         'text'   => 'szerepek',
       ),
       */
+
+      array(
+        'link'   => 'mailqueue',
+        'icon'   => 'images/sekkyumu/write_document.png',
+        'text'   => 'Küldési sor',
+      ),
+      
     );
     
     foreach( $menu as $key => $value )
