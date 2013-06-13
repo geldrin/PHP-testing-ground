@@ -4,7 +4,10 @@ class Users extends \Springboard\Controller\Admin {
   
   public function init() {
     
-    $this->permissions['loginas'] = 'admin';
+    // azert public hogy be tudjuk allitani adott domainen a usert
+    // muszaj hogy ne inditsunk session-t mert az a mostani domainre allitana
+    // a sessiont, nekunk pedig a cel domainre kell,
+    $this->permissions['loginas'] = 'public';
     parent::init();
     
   }
@@ -16,18 +19,57 @@ class Users extends \Springboard\Controller\Admin {
     if ( $userid <= 0 )
       $this->redirect('users');
     
-    $user      = $this->bootstrap->getSession('user');
+    $crypto    = $this->bootstrap->getEncryption();
     $userModel = $this->bootstrap->getModel('users');
+    $orgModel  = $this->bootstrap->getModel('organizations');
     $userModel->select( $userid );
+    $orgModel->select( $userModel->row['organizationid'] );
     
     if ( empty( $userModel->row ) )
       $this->redirect('users');
     
-    $url = ( SSL? 'https://': 'http://' ) . $this->application->config['baseuri'];
+    // eltesszuk a user azonosito hasht ami ha nincs meg az adott domainen
+    // akkor nem hagyjuk bejelentkezni a usert az adott id-vel
+    $cache = $this->bootstrap->getCache('admin-users-loginas', 300, true );
+    $hash  = $crypto->getHash(
+      @$_SERVER['HTTP_USER_AGENT'] . '-' . $_SERVER['REMOTE_ADDR']
+    );
     
-    $user->setArray( $userModel->row );
-    $this->redirect( $url );
+    $basedomain = substr(
+      $this->bootstrap->config['baseuri'],
+      0,
+      strpos( $this->bootstrap->config['baseuri'], '/')
+    );
     
+    if ( $_SERVER['SERVER_NAME'] != $orgModel->row['domain'] ) {
+      
+      $this->checkAccess('admin');
+      $cache->put( $hash );
+      $url = 'http://' . $orgModel->row['domain'] . $_SERVER['REQUEST_URI'];
+      $this->redirect( $url );
+      
+    } elseif ( $_SERVER['SERVER_NAME'] == $basedomain ) {
+      
+      // az alap domainre akarunk beloginolni
+      $this->checkAccess('admin');
+      $cache->put( $hash );
+      
+    }
+    
+    if ( $cache->get() != $hash )
+      $this->redirect('users');
+    
+    $cache->put("");
+    $cache->expire();
+    $this->bootstrap->config['cookiedomain'] = $orgModel->row['cookiedomain'];
+    $userModel->registerForSession(); // sima user-kent register
+    $this->redirect( 'http://' . $orgModel->row['domain'] );
+    
+  }
+  
+  public function redirectToMainDomain() {
+    if ( @$this->action != 'loginas' )
+      return parent::redirectToMainDomain();
   }
   
 }
