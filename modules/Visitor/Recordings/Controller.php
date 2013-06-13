@@ -482,7 +482,6 @@ class Controller extends \Visitor\Controller {
   
   public function checkstreamaccessAction( $secure = false ) {
     
-    \Springboard\Debug::getInstance()->log( false, false, "SECURE: $secure\n" . var_export( $_SERVER, true ) );
     $param   = $this->application->getParameter('sessionid');
     $result  = '0';
     $matched =
@@ -529,6 +528,13 @@ class Controller extends \Visitor\Controller {
         $result = '1';
       
     }
+    
+    \Springboard\Debug::getInstance()->log(
+      false,
+      'recordingcheckaccessdebug.txt',
+      "SECURE: $secure | RESULT: $result\n" .
+      var_export( $_SERVER, true )
+    );
     
     echo
       '<?xml version="1.0"?>
