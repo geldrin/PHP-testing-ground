@@ -1,11 +1,5 @@
 <?php
 $this->navigation[] = Array(
-  'link'  => 'newsletter',
-  'key'   => 'Vissza a hírlevelekhez',
-  'icon'  => 'images/clearbits/arrow1_w.gif',
-  'style' => 'display: block; width: 200px; text-align: left;',
-);
-$this->navigation[] = Array(
   'link'  => 'mailqueue',
   'key'   => 'Küldési sor',
   'icon'  => 'images/clearbits/zoomin.gif',

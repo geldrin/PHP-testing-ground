@@ -62,12 +62,18 @@ class Form extends \Springboard\Controller\Admin\Form {
     $values     = $this->form->getElementValues( false );
     $queueModel = $this->bootstrap->getModel('mailqueue');
     $queueModel->remove( $values );
+    $this->controller->redirect(
+      'mailqueue/index'
+    );
   }
   
   public function changemultipleAction() {
     $values     = $this->form->getElementValues( false );
     $queueModel = $this->bootstrap->getModel('mailqueue');
     $queueModel->change( $values );
+    $this->controller->redirect(
+      'mailqueue/index'
+    );
   }
   
 }
