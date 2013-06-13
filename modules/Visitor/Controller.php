@@ -6,7 +6,6 @@ class Controller extends \Springboard\Controller\Visitor {
   
   public function init() {
     $this->setupOrganization();
-    $this->debugLogUsers();
     
     $skipsinglelogincheck = array(
       'users' => array(
@@ -32,6 +31,7 @@ class Controller extends \Springboard\Controller\Visitor {
       
     }
     
+    $this->debugLogUsers();
     $this->handleSingleLoginUsers();
     parent::init();
     

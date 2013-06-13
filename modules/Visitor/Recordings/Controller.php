@@ -507,6 +507,7 @@ class Controller extends \Visitor\Controller {
     if ( $matched ) {
       
       $this->bootstrap->setupSession( true, $matches['sessionid'], $matches['domain'] );
+      $this->debugLogUsers();
       $access    = $this->bootstrap->getSession('recordingaccess');
       $accesskey = $matches['recordingid'] . '-' . (int)$secure;
       
