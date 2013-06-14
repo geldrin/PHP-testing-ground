@@ -18,7 +18,7 @@ include_once(BASE_PATH . 'modules/Jobs/job_utils_log.php');
 set_time_limit(0);
 
 // Init
-$app = new Springboard\Application\Cli(BASE_PATH, PRODUCTION);
+$app = new Springboard\Application\Cli(BASE_PATH, FALSE);
 
 // Load jobs configuration file
 $app->loadConfig('modules/Jobs/config_jobs.php');
@@ -40,16 +40,18 @@ clearstatcache();
 
 // Exit if any STOP file appears
 if ( is_file( $app->config['datapath'] . 'jobs/job_integrity_check.stop' ) or is_file( $app->config['datapath'] . 'jobs/all.stop' ) ) exit;
+
 // Establish database connection
-try {
+$db = null;
+$db = db_maintain();
+/*try {
 	$db = $app->bootstrap->getAdoDB();
 } catch (exception $err) {
 	// Send mail alert, sleep for 15 minutes
 	$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] No connection to DB (getAdoDB() failed). Error message:\n" . $err, $sendmail = TRUE);
 	exit;
 }
-
-$db_close = TRUE;
+$db_close = TRUE; */
 
 $log_summary  = "NODE: " . $app->config['node_sourceip'] . "\n";
 $log_summary .= "SITE: " . $app->config['baseuri'] . "\n";
@@ -267,15 +269,16 @@ $log_summary .= "Check duration: " . secs2hms($duration) . "\n";
 
 $debug->log($jconf['log_dir'], ($myjobid . ".log"), "Data integrity check results:\n\n" . $log_summary, $sendmail = TRUE);
 
-if ( $db_close ) {
-	$db->close();
-}
+// Close DB connection if open
+if ( is_resource($db->_connectionID) ) $db->close();
 
 exit;
 
 //---< Functions >---------------------------------------------------------------------------------
 function check_contributor_images() {
  global $db, $log_summary;
+
+	$db = db_maintain();
  
 	$contributor_image_path = realpath("/srv/storage/videosquare.eu/contributors/");
 
@@ -401,7 +404,9 @@ function check_video_thumbnails($rec_id, $num_thumbs) {
 }
 
 function check_attachments($rec_id) {
-	global $db, $recording_summary, $app;
+ global $db, $recording_summary, $app;
+
+	$db = db_maintain();
 
 	$attachment_ids = array();
 

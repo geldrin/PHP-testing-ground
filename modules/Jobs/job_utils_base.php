@@ -906,5 +906,88 @@ function is_process_closedfile($file, $PID) {
 	return $err;
 }
 
+// *************************************************************************
+// *					function db_maintain()							   *
+// *************************************************************************
+
+function db_maintain() {
+ global $app, $db;
+
+	if ( !empty($db) ) {
+		if ( is_resource($db->_connectionID) ) return $db;
+	}
+
+	$job = getRunningJobName();
+
+	// Sleep time to start from
+	$sleep_time = 1;		// (1: 30 secs, 2: 1 min, 3: 2 mins, 4: 4 mins, 5: 8 mins, 6: 16 mins, 7: 32 mins, 8: 64 mins)
+
+	// Prepare possibly needed mail intro with site information
+	$mail_head  = "NODE: " . $app->config['node_sourceip'] . "<br/>";
+	$mail_head .= "SITE: " . $app->config['baseuri'] . "<br/>";
+	$mail_head .= "JOB: " . $job . ".php<br/>";
+
+	$num_retries = 6;			// X retries taking a sleep_time = sleep_time * 2 after each
+	$retry = 1;
+	while ( $retry <= $num_retries ) {
+
+		if ( is_file( $app->config['datapath'] . 'jobs/' . $job . '.stop' ) or is_file( $app->config['datapath'] . 'jobs/all.stop' ) ) exit;
+
+		// Establish database connection
+		try {
+			$db = $app->bootstrap->getAdoDB();
+			if ( is_resource($db->_connectionID) ) {
+				// Send mail only if not the first retry
+				if ( $retry > 1 ) {
+					$title = "[OK] DB connection restored (retried: " . $retry . " / " . $num_retries . "). Job continues to run.";
+					$body  = $mail_head . "<br/>" . $title . "<br/><br/>WARNING: Please check DB!<br/>";
+					sendHTMLEmail_errorWrapper($title, $body);
+				}
+				return $db;
+			}
+		} catch (exception $err) {
+			// Send mail warning messages every 5 retries
+			if ( ( $retry < $num_retries ) and ( $retry % 3 ) == 0 ) {
+				$title = "[WARNING] Cannot connect to DB. (retried " . $retry . " / " . $num_retries . "). Keep trying.";
+				$body  = $mail_head . "<br/>" . $title . "<br/><br/>Please check DB for errors!<br/><br/>Error message:<br/><br/>" . $err . "<br/>";
+				sendHTMLEmail_errorWrapper($title, $body);
+			}
+		}
+
+		$retry++;
+
+		// Sleep 1 mins then try again
+		sleep($sleep_time);
+		$sleep_time = $sleep_time * 2;
+	}
+
+	$title = "[FATAL ERROR] Cannot connect to DB permanently. Check DB!!! Job has been terminated.";
+	$body  = $mail_head . "<br/>" . $title . "<br/><br/>Job will be restarted, config will be reloaded. Please check DB for errors!<br/>";
+	sendHTMLEmail_errorWrapper($title, $body);
+
+	exit -1;
+}
+
+function sendHTMLEmail_errorWrapper($title, $body, $sendhtml = true) {
+ global $app;
+
+	$queue = $app->bootstrap->getMailqueue(TRUE);
+	$queue->instant = TRUE;
+	foreach ( $app->bootstrap->config['logemails'] as $email ) {
+		if ( $sendhtml ) {
+			$queue->sendHTMLEmail($email, $title, $body);
+		} else {
+			$queue->put($email, '', $title, $body, false, 'text/plain');
+		}
+	}
+
+	return TRUE;
+}
+
+// Return job name (without extension)
+function getRunningJobName() {
+	$tmp = pathinfo(realpath($_SERVER['argv'][0]));
+	return $tmp['filename'];
+}
 
 ?>

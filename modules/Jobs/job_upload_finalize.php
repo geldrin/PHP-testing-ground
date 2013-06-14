@@ -17,7 +17,7 @@ include_once( BASE_PATH . 'libraries/Springboard/Application/Cli.php');
 set_time_limit(0);
 
 // Init
-$app = new Springboard\Application\Cli(BASE_PATH, PRODUCTION);
+$app = new Springboard\Application\Cli(BASE_PATH, FALSE);
 
 // Load jobs configuration file
 $app->loadConfig('modules/Jobs/config_jobs.php');
@@ -43,11 +43,11 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_upload_finalize.stop' ) an
 
 		$app->watchdog();
 	
-		$db_close = FALSE;
-		$sleep_length = $jconf['sleep_short'];
-
 		// Establish database connection
-		try {
+		$db = null;
+		$db = db_maintain();
+
+/*		try {
 			$db = $app->bootstrap->getAdoDB();
 		} catch (exception $err) {
 			// Send mail alert, sleep for 15 minutes
@@ -56,7 +56,9 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_upload_finalize.stop' ) an
 			$sleep_length = 15 * 60;
 			break;
 		}
-		$db_close = TRUE;
+		$db_close = TRUE; */
+
+		$sleep_length = $jconf['sleep_short'];
 
 		// Initialize log for closing message and total duration timer
 		$global_log = "Moving document(s) to storage:\n\n";
@@ -266,15 +268,11 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_upload_finalize.stop' ) an
 
 		} // End of contributor images finalize
 
-//echo $global_log . "\n";
-
 		break;
 	} // End of while(1)
 
 	// Close DB connection if open
-	if ( $db_close ) {
-		$db->close();
-	}
+	if ( is_resource($db->_connectionID) ) $db->close();
 
 	$app->watchdog();
 
@@ -298,6 +296,8 @@ exit;
 //	- $recording: recording_element DB record returned in global $recording variable
 function query_docnew(&$docs) {
 global $jconf, $db, $app;
+
+	$db = db_maintain();
 
 	$node = $app->config['node_sourceip'];
 
@@ -353,6 +353,8 @@ global $jconf, $db, $app;
 function query_user_avatars(&$avatars) {
 global $jconf, $db, $app;
 
+	$db = db_maintain();
+
 //	$node = $app->config['node_sourceip'];
 
 	$query = "
@@ -389,6 +391,8 @@ global $jconf, $db, $app;
 
 function query_contributor_images(&$cimages) {
 global $jconf, $db, $app;
+
+	$db = db_maintain();
 
 	$query = "
 		SELECT

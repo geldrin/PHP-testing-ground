@@ -41,7 +41,20 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_media_convert.stop' ) and 
 
 		$app->watchdog();
 	
-		$db_close = FALSE;
+		// Establish database connection
+		$db = null;
+		$db = db_maintain();
+
+/*		try {
+			$db = $app->bootstrap->getAdoDB();
+		} catch (exception $err) {
+			// Send mail alert, sleep for 15 minutes
+			$debug->log($jconf['log_dir'], $jconf['jobid_media_convert'] . ".log", "[ERROR] No connection to DB (getAdoDB() failed). Error message:\n" . $err, $sendmail = true);
+			// Sleep 15 mins then resume
+			break;
+		}
+*/
+
 		$converter_sleep_length = $jconf['sleep_media'];
 
 		// Check if temp directory readable/writable
@@ -51,18 +64,6 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_media_convert.stop' ) and 
 			$converter_sleep_length = 60 * 60;
 			break;
 		}
-
-		// Establish database connection
-		try {
-			$db = $app->bootstrap->getAdoDB();
-		} catch (exception $err) {
-			// Send mail alert, sleep for 15 minutes
-			$debug->log($jconf['log_dir'], $jconf['jobid_media_convert'] . ".log", "[ERROR] No connection to DB (getAdoDB() failed). Error message:\n" . $err, $sendmail = true);
-			// Sleep 15 mins then resume
-			$converter_sleep_length = 15 * 60;
-			break;
-		}
-		$db_close = TRUE;
 
 		// Temporary directory cleanup and log result
 		$err = tempdir_cleanup($jconf['media_dir']);
@@ -211,14 +212,11 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_media_convert.stop' ) and 
 	}	// End of while(1)
 
 	// Close DB connection if open
-	if ( $db_close ) {
-		$db->close();
-		$db_close = FALSE;
-	}
+	if ( is_resource($db->_connectionID) ) $db->close();
 
 	$app->watchdog();
 
-	sleep( $converter_sleep_length );
+	sleep($converter_sleep_length);
 	
 }	// End of outer while
 
@@ -238,6 +236,8 @@ exit;
 //	- $recording: recording_element DB record returned in global $recording variable
 function query_nextjob(&$recording, &$uploader_user) {
 global $jconf, $db;
+
+	$db = db_maintain();
 
 	$query = "
 		SELECT
