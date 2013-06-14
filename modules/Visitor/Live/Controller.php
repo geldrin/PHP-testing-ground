@@ -502,7 +502,7 @@ class Controller extends \Visitor\Controller {
       false,
       'livecheckaccessdebug.txt',
       "LIVESECURE: $secure | RESULT: $result\n" .
-      var_export( $_SERVER, true )
+      "  REQUEST_URI: " . $_SERVER['REQUEST_URI']
     );
     
     echo
