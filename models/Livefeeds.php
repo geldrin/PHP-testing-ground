@@ -2,6 +2,7 @@
 namespace Model;
 
 class Livefeeds extends \Springboard\Model {
+  protected $streamingserver;
   
   public function delete( $id, $magic_quotes_gpc = 0 ) {
     
@@ -392,7 +393,7 @@ class Livefeeds extends \Springboard\Model {
     
   }
   
-  public function getMediaUrl( $type, $streamcode, $cookiedomain = null, $sessionid = null ) {
+  public function getMediaUrl( $type, $streamcode, $info, $sessionid = null ) {
     
     switch( $type ) {
       
@@ -400,7 +401,9 @@ class Livefeeds extends \Springboard\Model {
         //http://stream.videosquare.eu/devvsqlive/123456/playlist.m3u8
         $sprintfterm =
           '%s/playlist.m3u8' .
-          $this->getAuthorizeSessionid( $cookiedomain, $sessionid, $streamcode )
+          $this->getAuthorizeSessionid(
+            $info['cookiedomain'], $sessionid, $streamcode
+          )
         ;
         
         break;
@@ -409,15 +412,26 @@ class Livefeeds extends \Springboard\Model {
         //rtsp://stream.videosquare.eu/devvsqlive/123456
         $sprintfterm =
           '%s' .
-          $this->getAuthorizeSessionid( $cookiedomain, $sessionid, $streamcode )
+          $this->getAuthorizeSessionid(
+            $info['cookiedomain'], $sessionid, $streamcode
+          )
         ;
         
         break;
       
     }
     
-    $host = $this->bootstrap->config['wowza'][ $type . 'url' ];
-    return $host . sprintf( $sprintfterm, $streamcode );
+    if ( !$this->streamingserver ) {
+      
+      $streamingserverModel  = $this->bootstrap->getModel('streamingservers');
+      $this->streamingserver = $streamingserverModel->getServerByClientIP(
+        $info['ipaddress'],
+        'live'
+      );
+      
+    }
+    
+    return sprintf( $sprintfterm, $this->streamingserver );
     
   }
   
