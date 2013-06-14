@@ -920,7 +920,7 @@ function db_maintain() {
 	$job = getRunningJobName();
 
 	// Sleep time to start from
-	$sleep_time = 1;		// (1: 30 secs, 2: 1 min, 3: 2 mins, 4: 4 mins, 5: 8 mins, 6: 16 mins, 7: 32 mins, 8: 64 mins)
+	$sleep_time = 30;		// (1: 30 secs, 2: 1 min, 3: 2 mins, 4: 4 mins, 5: 8 mins, 6: 16 mins, 7: 32 mins, 8: 64 mins)
 
 	// Prepare possibly needed mail intro with site information
 	$mail_head  = "NODE: " . $app->config['node_sourceip'] . "<br/>";
