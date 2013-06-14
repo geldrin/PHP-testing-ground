@@ -15,6 +15,8 @@
 function update_db_recording_status($rec_id, $status) {
 global $app, $jconf, $db;
 
+	$db = db_maintain();
+
 	$query = "
 		UPDATE
 			recordings
@@ -52,6 +54,8 @@ global $app, $jconf, $db;
 function update_db_masterrecording_status($rec_id, $status) {
 global $app, $jconf, $db;
 
+	$db = db_maintain();
+
 	$query = "
 		UPDATE
 			recordings
@@ -85,6 +89,8 @@ global $app, $jconf, $db;
 //	  o TRUE: OK
 function update_db_mediainfo($recording, $mobile_lq, $mobile_hq, $video_lq, $video_hq) {
 global $app, $jconf, $db;
+
+	$db = db_maintain();
 
 	unset($indexphotodata);
 
@@ -151,6 +157,8 @@ global $app, $jconf, $db;
 function update_db_content_status($id, $status) {
 global $db;
 
+	$db = db_maintain();
+
 	$query = "
 		UPDATE
 			recordings
@@ -183,6 +191,8 @@ global $db;
 //	  o TRUE: OK
 function update_db_mobile_status($id, $status) {
 global $db;
+
+	$db = db_maintain();
 
 	$query = "
 		UPDATE
@@ -218,6 +228,8 @@ global $db;
 function update_db_mastercontent_status($id, $status) {
  global $db;
 
+	$db = db_maintain();
+
 	$query = "
 		UPDATE
 			recordings
@@ -250,6 +262,8 @@ function update_db_mastercontent_status($id, $status) {
 //	  o TRUE: OK
 function update_db_contentinfo($id, $content_info_lq, $content_info_hq, $mobile_info_lq, $mobile_info_hq) {
 global $jconf, $db;
+
+	$db = db_maintain();
 
 	$is_update = FALSE;
 
@@ -306,6 +320,8 @@ global $jconf, $db;
 function update_db_vcr_reclink_status($id, $status) {
 global $db, $jconf;
 
+	$db = db_maintain();
+
 	$query = "
 		UPDATE
 			recording_links
@@ -328,6 +344,8 @@ global $db, $jconf;
 function update_db_stream_status($id, $status) {
 global $db, $jconf;
 
+	$db = db_maintain();
+
 	$query = "
 		UPDATE
 			livefeed_streams
@@ -348,6 +366,8 @@ global $db, $jconf;
 
 function update_db_stream_params($id, $keycode, $aspectratio, $conferenceid) {
 global $db, $jconf;
+
+	$db = db_maintain();
 
 	if ( empty($conferenceid) ) $conferenceid = "NULL";
 
@@ -376,6 +396,8 @@ global $db, $jconf;
 function update_db_vcr_reclink_params($id, $conf_id) {
 global $db, $jconf;
 
+	$db = db_maintain();
+
 	// Update stream parameters
 	$query = "
 		UPDATE
@@ -398,6 +420,8 @@ global $db, $jconf;
 function update_db_attachment_status($id, $status) {
 global $jconf, $db;
 
+	$db = db_maintain();
+
 	$query = "
 		UPDATE
 			attached_documents
@@ -418,6 +442,8 @@ global $jconf, $db;
 
 function update_db_attachment_indexingstatus($id, $status) {
 global $jconf, $db;
+
+	$db = db_maintain();
 
 	$query = "
 		UPDATE
@@ -440,6 +466,8 @@ global $jconf, $db;
 
 function update_db_avatar_status($userid, $status) {
 global $jconf, $db;
+
+	$db = db_maintain();
 
 	$query = "
 		UPDATE
@@ -476,24 +504,26 @@ global $jconf, $db;
 function update_db_attachment_documentcache($attachment_id, $documentcache) {
  global $db, $jconf;
 
-  $documentcache_escaped = $db->qstr($documentcache);
+	$db = db_maintain();
 
-  $query = "
-    UPDATE
-		attached_documents
-    SET
-		documentcache = " . $documentcache_escaped . "
-    WHERE
-		id = " . $attachment_id;
+	$documentcache_escaped = $db->qstr($documentcache);
 
-  try {
-    $rs = $db->Execute($query);
-  } catch (exception $err) {
-    log_document_conversion($attachment_id, 0, $jconf['jobid_document_index'], "-", "[ERROR] Cannot update attachment document cache. SQL query failed.", trim(substr($query, 1, 255)), trim(substr($err, 1, 255)), 0, TRUE);
-    return FALSE;
-  }
+	$query = "
+		UPDATE
+			attached_documents
+		SET
+			documentcache = " . $documentcache_escaped . "
+		WHERE
+			id = " . $attachment_id;
 
-  return TRUE;
+	try {
+		$rs = $db->Execute($query);
+	} catch (exception $err) {
+		log_document_conversion($attachment_id, 0, $jconf['jobid_document_index'], "-", "[ERROR] Cannot update attachment document cache. SQL query failed.", trim(substr($query, 1, 255)), trim(substr($err, 1, 255)), 0, TRUE);
+		return FALSE;
+	}
+
+	return TRUE;
 }
 
 ?>

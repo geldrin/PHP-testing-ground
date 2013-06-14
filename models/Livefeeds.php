@@ -395,13 +395,14 @@ class Livefeeds extends \Springboard\Model {
   
   public function getMediaUrl( $type, $streamcode, $info, $sessionid = null ) {
     
-    $url = $this->bootstrap->config['wowza'][ $type . 'url' ];
+    $url = $this->bootstrap->config['wowza'][ $type . 'url' ] . $streamcode;
+
     switch( $type ) {
       
       case 'livehttp':
         //http://stream.videosquare.eu/devvsqlive/123456/playlist.m3u8
         $url .=
-          'playlist.m3u8' .
+          '/playlist.m3u8' .
           $this->getAuthorizeSessionid(
             $info['cookiedomain'], $sessionid, $streamcode
           )

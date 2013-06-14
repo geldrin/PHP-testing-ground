@@ -70,7 +70,9 @@ if ( file_exists($stop_file) ) {
 	$msg = "WARNING: jobs are not running. See stop file:\n\n" . $stop_file . "\n\nRemove it to start all jobs. This message is sent once every day.";
 	// Send mail once every hour to warn admin
 	if ( ( $now_time > $alert_time_start ) and ( $now_time < $alert_time_end ) ) {
-		$debug->log($jconf['log_dir'], $jconf['jobid_watcher'] . ".log", $msg, $sendmail = true);
+		// Log: log to file using no DB, then send mail
+		$debug->log($jconf['log_dir'], $jconf['jobid_watcher'] . ".log", $msg, $sendmail = false);
+		sendHTMLEmail_errorWrapper('[' . $app->bootstrap->config['siteid'] . ' log]: ' . substr( $msg, 0, 100 ), $msg, false);
 	}
 	exit;
 }
@@ -95,7 +97,9 @@ foreach ( $jobs as $job => $difference ) {
 if ( $jobs_isstopped ) {
 	$msg = "WARNING: some jobs may not running. See stop file(s):\n\n" . $jobs_stopped . "\nRemove them to restart jobs. This message is sent once every hour.";
 	if ( ( $now_time > $alert_time_start ) and ( $now_time < $alert_time_end ) ) {
-		$debug->log($jconf['log_dir'], $jconf['jobid_watcher'] . ".log", $msg, $sendmail = true);
+		// Log: log to file using no DB, then send mail
+		$debug->log($jconf['log_dir'], $jconf['jobid_watcher'] . ".log", $msg, $sendmail = false);
+		sendHTMLEmail_errorWrapper('[' . $app->bootstrap->config['siteid'] . ' log]: ' . substr( $msg, 0, 100 ), $msg, false);
 	}
 }
 
@@ -169,7 +173,9 @@ foreach ( $jobs as $job => $difference ) {
 			}
 			$msg .= "COMMAND DURATION: " . ($megallas - $inditas) . "usec\n";
 
-			$debug->log($jconf['log_dir'], $jconf['jobid_watcher'] . ".log", $msg, $sendmail = true);
+			// Log: log to file using no DB, then send mail
+			$debug->log($jconf['log_dir'], $jconf['jobid_watcher'] . ".log", $msg, $sendmail = false);
+			sendHTMLEmail_errorWrapper('[' . $app->bootstrap->config['siteid'] . ' log]: ' . substr( $msg, 0, 100 ), $msg, false);
 			break;
 		case '1':
 			// Running: check watchdog time difference (if larger and ffmpeg is not running...)
@@ -181,7 +187,9 @@ foreach ( $jobs as $job => $difference ) {
 			if ( ( ( time() - $time ) >= $difference ) && ( $isrunning === FALSE ) ) {
 				$msg  = "Job " . $job . ".php is stalled.\n\nDetailed information:\n\n";
 				$msg .= $body . "\n\n";
-				$debug->log($jconf['log_dir'], $jconf['jobid_watcher'] . ".log", $msg, $sendmail = true);
+				// Log: log to file using no DB, then send mail
+				$debug->log($jconf['log_dir'], $jconf['jobid_watcher'] . ".log", $msg, $sendmail = false);
+				sendHTMLEmail_errorWrapper('[' . $app->bootstrap->config['siteid'] . ' log]: ' . substr( $msg, 0, 100 ), $msg, false);
 			}
 
 			break;
@@ -189,7 +197,9 @@ foreach ( $jobs as $job => $difference ) {
 			// Running in more than 1 instances: undefined (send alert)
 			$msg  = "Job " . $job . ".php is running in more instances.\n\nDetailed information:\n\n";
 			$msg .= $body . "\n\n";
-			$debug->log($jconf['log_dir'], $jconf['jobid_watcher'] . ".log", $msg, $sendmail = true);
+			// Log: log to file using no DB, then send mail
+			$debug->log($jconf['log_dir'], $jconf['jobid_watcher'] . ".log", $msg, $sendmail = false);
+			sendHTMLEmail_errorWrapper('[' . $app->bootstrap->config['siteid'] . ' log]: ' . substr( $msg, 0, 100 ), $msg, false);
 			break;
 	}
 

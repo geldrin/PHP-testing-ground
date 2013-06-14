@@ -24,7 +24,7 @@ include_once('job_utils_status.php');
 set_time_limit(0);
 
 // Init
-$app = new Springboard\Application\Cli(BASE_PATH, PRODUCTION);
+$app = new Springboard\Application\Cli(BASE_PATH, FALSE);
 
 // Load jobs configuration file
 $app->loadConfig('modules/Jobs/config_jobs.php');
@@ -39,8 +39,6 @@ if ( iswindows() ) {
 	exit;
 }
 
-$db_close = FALSE;
-
 // Start an infinite loop - exit if any STOP file appears
 while( !is_file( $app->config['datapath'] . 'jobs/job_document_index.stop' ) and !is_file( $app->config['datapath'] . 'jobs/all.stop' ) ) {
 
@@ -48,7 +46,22 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_document_index.stop' ) and
     while ( 1 ) {
 
 		$app->watchdog();
-	
+
+		// Establish database connection
+		$db = null;
+		$db = db_maintain();
+
+/*		try {
+			$db = $app->bootstrap->getAdoDB();
+		} catch (exception $err) {
+			// Send mail alert, sleep for 15 minutes
+			$debug->log($jconf['log_dir'], $jconf['jobid_document_index'] . ".log", "[ERROR] No connection to DB (getAdoDB() failed). Error message:\n" . $err, $sendmail = true);
+			// Sleep 15 mins then resume
+			$converter_sleep_length = 15 * 60;
+			break;
+		}
+		$db_close = TRUE; */
+
 		$converter_sleep_length = $jconf['sleep_media'];
 
 		// Check if temp directory readable/writable
@@ -58,18 +71,6 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_document_index.stop' ) and
 			$converter_sleep_length = 60 * 60;
 			break;
 		}
-
-		// Establish database connection
-		try {
-			$db = $app->bootstrap->getAdoDB();
-		} catch (exception $err) {
-			// Send mail alert, sleep for 15 minutes
-			$debug->log($jconf['log_dir'], $jconf['jobid_document_index'] . ".log", "[ERROR] No connection to DB (getAdoDB() failed). Error message:\n" . $err, $sendmail = true);
-			// Sleep 15 mins then resume
-			$converter_sleep_length = 15 * 60;
-			break;
-		}
-		$db_close = TRUE;
 
 // Testing!!!
 //update_db_attachment_indexingstatus(3, null);
@@ -296,10 +297,8 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_document_index.stop' ) and
 		break;
     }
 
-    if ( $db_close ) {
-		$db->close();
-		$db_close = FALSE;
-    }
+	// Close DB connection if open
+	if ( is_resource($db->_connectionID) ) $db->close();
 
     $app->watchdog();
 

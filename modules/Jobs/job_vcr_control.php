@@ -18,7 +18,7 @@ include_once('job_utils_status.php');
 set_time_limit(0);
 
 // Init
-$app = new Springboard\Application\Cli(BASE_PATH, PRODUCTION);
+$app = new Springboard\Application\Cli(BASE_PATH, FALSE);
 
 // Load jobs configuration file
 $app->loadConfig('modules/Jobs/config_jobs.php');
@@ -42,12 +42,14 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_vcr_control.stop' ) and !i
 
 	$app->watchdog();
 
-	$db_close = FALSE;
 	$tcs_isconnected = FALSE;
 	$sleep_length = $jconf['sleep_vcr'];
 
 	// Establish database connection
-	try {
+	$db = null;
+	$db = db_maintain();
+
+/*	try {
 		$db = $app->bootstrap->getAdoDB();
 	} catch (exception $err) {
 		// Send mail alert, sleep for 15 minutes
@@ -56,7 +58,7 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_vcr_control.stop' ) and !i
 		$sleep_length = 15 * 60;
 		sleep( $sleep_length );
 		continue;
-	}
+	} */
 
 	// VCR: start, maintain and stop recording
     while ( 1 ) {
@@ -431,13 +433,11 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_vcr_control.stop' ) and !i
 	}
 
 	// Close DB connection if open
-	if ( $db_close ) {
-		$db->close();
-	}
+	if ( is_resource($db->_connectionID) ) $db->close();
 
 	$app->watchdog();
 
-	sleep( $sleep_length );
+	sleep($sleep_length);
 	
 }	// End of outer while
 
@@ -483,6 +483,8 @@ global $jconf;
 //	- $recording: recording_element DB record returned in global $recording variable
 function query_vcrrecording(&$vcr, &$vcr_user) {
 global $jconf, $db;
+
+	$db = db_maintain();
 
 	$query = "
 		SELECT
@@ -572,6 +574,8 @@ global $jconf, $db;
 // Query VCR recording to upload
 function query_vcrupload(&$vcr_upload, &$vcr_user) {
 global $jconf, $db;
+
+	$db = db_maintain();
 
 	$query = "
 		SELECT

@@ -21,6 +21,9 @@
 function log_recording_conversion($rec_id, $job, $action, $status, $command, $data, $duration, $log2mail) {
 global $app, $jconf, $debug, $db, $uploader_user;
 
+	$db = db_maintain();
+
+	// Check DB connection: do not log if does not exist
 	$values = Array(
 		'timestamp'					=> date("Y-m-d H:i:s"),
 		'node'						=> $app->config['node_sourceip'],
@@ -36,6 +39,7 @@ global $app, $jconf, $debug, $db, $uploader_user;
 	$recording_logs = $app->bootstrap->getModel('recording_logs');
 	$recording_logs->insert($values);
 
+	// Assemble log message
 	$msg = "";
 	$msg .= "NODE: " . $app->config['node_sourceip'] . "\n";
 	$msg .= "SITE: " . $app->config['baseuri'] . "\n";
@@ -133,6 +137,8 @@ function print_recording_info($recording) {
 
 function log_document_conversion($doc_id, $rec_id, $job, $action, $status, $command, $data, $duration, $log2mail) {
 global $app, $jconf, $debug, $db, $uploader_user;
+
+	$db = db_maintain();
 
 	$values = Array(
 		'timestamp'					=> date("Y-m-d H:i:s"),
