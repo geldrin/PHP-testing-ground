@@ -534,7 +534,7 @@ class Controller extends \Visitor\Controller {
       false,
       'recordingcheckaccessdebug.txt',
       "SECURE: $secure | RESULT: $result\n" .
-      var_export( $_SERVER, true )
+      "  REQUEST_URI: " . $_SERVER['REQUEST_URI']
     );
     
     echo
