@@ -395,12 +395,13 @@ class Livefeeds extends \Springboard\Model {
   
   public function getMediaUrl( $type, $streamcode, $info, $sessionid = null ) {
     
+    $url = $this->bootstrap->config['wowza'][ $type . 'url' ];
     switch( $type ) {
       
       case 'livehttp':
         //http://stream.videosquare.eu/devvsqlive/123456/playlist.m3u8
-        $sprintfterm =
-          '%s/playlist.m3u8' .
+        $url .=
+          'playlist.m3u8' .
           $this->getAuthorizeSessionid(
             $info['cookiedomain'], $sessionid, $streamcode
           )
@@ -410,12 +411,9 @@ class Livefeeds extends \Springboard\Model {
       
       case 'livertsp':
         //rtsp://stream.videosquare.eu/devvsqlive/123456
-        $sprintfterm =
-          '%s' .
-          $this->getAuthorizeSessionid(
-            $info['cookiedomain'], $sessionid, $streamcode
-          )
-        ;
+        $url .= $this->getAuthorizeSessionid(
+          $info['cookiedomain'], $sessionid, $streamcode
+        );
         
         break;
       
@@ -431,7 +429,7 @@ class Livefeeds extends \Springboard\Model {
       
     }
     
-    return sprintf( $sprintfterm, $this->streamingserver );
+    return sprintf( $url, $this->streamingserver );
     
   }
   
