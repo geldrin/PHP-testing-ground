@@ -99,17 +99,17 @@ class Controller extends \Visitor\Controller {
     
     $currentstream = $streams['defaultstream'];
     $streamtype    = $streams['streamtype'];
-    $flashdata     = $feedModel->getFlashData( array(
-        'sessionid'    => session_id(),
-        'ipaddress'    => $this->getIPAddress(),
-        'BASE_URI'     => $this->toSmarty['BASE_URI'],
-        'cookiedomain' => $this->organization['cookiedomain'],
-        'streams'      => $streams,
-        'user'         => $user,
-        'checkwatchingtimeinterval' => $this->organization['presencechecktimeinterval'],
-        'checkwatchingconfirmationtimeout' => $this->organization['presencecheckconfirmationtime'],
-      )
+    $info          = array(
+      'sessionid'    => session_id(),
+      'ipaddress'    => $this->getIPAddress(),
+      'BASE_URI'     => $this->toSmarty['BASE_URI'],
+      'cookiedomain' => $this->organization['cookiedomain'],
+      'streams'      => $streams,
+      'user'         => $user,
+      'checkwatchingtimeinterval' => $this->organization['presencechecktimeinterval'],
+      'checkwatchingconfirmationtimeout' => $this->organization['presencecheckconfirmationtime'],
     );
+    $flashdata     = $feedModel->getFlashData( $info );
     
     $this->toSmarty['playerwidth']  = 950;
     $this->toSmarty['playerheight'] = 530;
@@ -177,13 +177,13 @@ class Controller extends \Visitor\Controller {
     $this->toSmarty['livehttpurl'] = $feedModel->getMediaUrl(
       'livehttp',
       $currentstream['keycode'],
-      $this->toSmarty['organization']['cookiedomain'],
+      $info,
       session_id()
     );
     $this->toSmarty['livertspurl'] = $feedModel->getMediaUrl(
       'livertsp',
       $currentstream['keycode'],
-      $this->toSmarty['organization']['cookiedomain'],
+      $info,
       session_id()
     );
     
@@ -502,7 +502,7 @@ class Controller extends \Visitor\Controller {
       false,
       'livecheckaccessdebug.txt',
       "LIVESECURE: $secure | RESULT: $result\n" .
-      var_export( $_SERVER, true )
+      "  REQUEST_URI: " . $_SERVER['REQUEST_URI']
     );
     
     echo
