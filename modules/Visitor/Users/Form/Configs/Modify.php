@@ -136,7 +136,7 @@ $config = array(
         'required'         => false,
         'help'             => $l('users', 'avatarfilename_help'),
         'imagecreatecheck' => true,
-        'types'            => Array('gif', 'jpg', 'png', 'bmp'),
+        'types'            => Array('gif', 'jpg', 'png'),
       )
     )
   ),
