@@ -2899,8 +2899,8 @@ class Recordings extends \Springboard\Model {
     
     $this->ensureID();
     
-    $id = $this->db->getOne("
-      SELECT id
+    $row = $this->db->getRow("
+      SELECT id, position
       FROM recording_view_progress
       WHERE
         userid      = '$userid' AND
@@ -2916,11 +2916,11 @@ class Recordings extends \Springboard\Model {
       'position'    => $lastposition,
     );
     
-    if ( !$id )
+    if ( !$row )
       $progressModel->insert( $record );
-    else {
+    elseif ( $row['position'] < $lastposition ) {
       
-      $progressModel->id = $id;
+      $progressModel->id = $row['id'];
       $progressModel->updateRow( $record );
       
     }
