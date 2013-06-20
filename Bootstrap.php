@@ -409,7 +409,7 @@ class Bootstrap {
     header("Cache-Control: post-check=0, pre-check=0", false);
     header("Pragma: no-cache");                                    // HTTP/1.0
     header("Content-type: text/html; charset=utf-8");
-    //header('X-UA-Compatible: IE=EmulateIE7');
+    header('X-UA-Compatible: IE=edge'); // force compatibility mode "off"
     header('X-UA-Compatible: chrome=1', false ); // enable chrome frame, one can only dream its installed
     header('P3P: CP="CAO PSA OUR"');
     
