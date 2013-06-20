@@ -307,4 +307,28 @@ class Controller extends \Springboard\Controller\Visitor {
     
   }
   
+  public function handleUserAccess( $access ) {
+    
+    if ( $access === true )
+      return;
+    
+    $errors = array(
+      'registrationrestricted',
+      'grouprestricted',
+      'departmentrestricted',
+    );
+    
+    $user = $this->bootstrap->getSession('user');
+    if ( $user['id'] or !in_array( $access, $errors, true ) )
+      $this->redirectToController('contents', $access );
+    
+    $l = $this->bootstrap->getLocalization();
+    $this->redirectWithMessage(
+      'users/login',
+      $l('', 'nopermission_message_' . $access ),
+      array('forward' => $_SERVER['REQUEST_URI'] )
+    );
+    
+  }
+  
 }

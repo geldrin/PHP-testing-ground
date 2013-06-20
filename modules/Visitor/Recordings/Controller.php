@@ -207,9 +207,7 @@ class Controller extends \Visitor\Controller {
     $accesskey   = $recordingsModel->id . '-' . (int)$recordingsModel->row['issecurestreamingforced'];
     
     $access[ $accesskey ] = $recordingsModel->userHasAccess( $user, null, $browserinfo['mobile'] );
-    
-    if ( $access[ $accesskey ] !== true )
-      $this->redirectToController('contents', $access[ $accesskey ] );
+    $this->handleUserAccess( $access[ $accesskey ] );
     
     include_once(
       $this->bootstrap->config['templatepath'] .

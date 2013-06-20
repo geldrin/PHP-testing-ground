@@ -86,8 +86,8 @@ class Controller extends \Visitor\Controller {
       $needauth = true;
     elseif ( $chromeless and $access[ $accesskey ] !== true )
       $nopermission = true;
-    elseif ( $access[ $accesskey ] !== true )
-      $this->redirectToController('contents', $access[ $accesskey ] );
+    else
+      $this->handleUserAccess( $access[ $accesskey ] );
     
     if ( !count( $browserinfo ) )
       $browserinfo->setArray( \Springboard\Browser::getInfo() );
