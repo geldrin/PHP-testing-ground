@@ -1,4 +1,17 @@
 
+CREATE TABLE `springboardconfiguration` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `name` text NOT NULL,
+  `value` text,
+  `comment` text,
+  `timestamp` datetime,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+INSERT INTO `springboardconfiguration` (`id`, `name`, `value`, `comment`, `timestamp`) VALUES
+(1, 'databaseversion', NULL, NULL, NULL);
+
+
 CREATE TABLE `mailqueue` (
    `id` int(11) not null auto_increment,
    `fromemail` text,
