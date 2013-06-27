@@ -1763,6 +1763,7 @@ class Recordings extends \Springboard\Model {
       'recording_title'       => $this->row['title'],
       'recording_subtitle'    => (string)$this->row['subtitle'],
       'recording_description' => (string)$this->row['description'],
+      'recording_duration'    => $this->row['masterlength'],
       'recording_image'       => \smarty_modifier_indexphoto( $this->row, 'player', $info['STATIC_URI'] ),
       'user_checkWatching'    => (bool)@$info['member']['ispresencecheckforced'],
       'user_checkWatchingTimeInterval' => $info['organization']['presencechecktimeinterval'],
@@ -1872,7 +1873,6 @@ class Recordings extends \Springboard\Model {
     if ( $this->row['isseekbardisabled'] and @$info['member'] and $info['member']['id'] ) {
       
       $options = $this->getSeekbarOptions( $info['member'] );
-      $data['recording_duration']                = $this->row['masterlength'];
       $data['timeline_seekbarDisabled']          = $options['isseekbardisabled'];
       $data['timeline_lastPositionTimeInterval'] = $options['lastpositiontimeinterval'];
       $data['timeline_lastPlaybackPosition']     = $options['lastplaybackposition'];
