@@ -2,7 +2,7 @@
   </div>{*}wrap div{/*}
 </div>{*}pagecontainer div{/*}
 
-{if $smarty.const.PRODUCTION}
+{if $smarty.const.PRODUCTION and $bootstrap->config.loadgoogleanalytics}
 {literal}
 <script type="text/javascript">
 

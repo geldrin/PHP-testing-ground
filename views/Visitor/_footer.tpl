@@ -51,7 +51,7 @@
 <div id="footerbg"></div>
 
 {if $bootstrap->debug and false}{debug}{/if}
-{if $bootstrap->production}
+{if $bootstrap->production and $bootstrap->config.loadgoogleanalytics}
 {literal}
 <script type="text/javascript">
 

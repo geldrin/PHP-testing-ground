@@ -180,6 +180,11 @@ $config = array(
   // a data/logs/userdebuglog.txt -ben
   'debugloguserids' => array(
   ),
+  
+  //----
+  'loadgoogleanalytics' => true,
+  'loadaddthis' => true,
+  
 );
 
 $config['phpsettings'] = array(

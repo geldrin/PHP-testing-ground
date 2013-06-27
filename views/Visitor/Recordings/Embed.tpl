@@ -46,6 +46,7 @@
 
 </head>
 <body>
+{if $bootstrap->production and $bootstrap->config.loadgoogleanalytics}
 {literal}
 <script type="text/javascript">
 
@@ -61,6 +62,7 @@
 
 </script>
 {/literal}
+{/if}
 <center>
 {if $browser.mobile}
   {if $recording.mobilevideoreshq}
