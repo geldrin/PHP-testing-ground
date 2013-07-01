@@ -23,10 +23,10 @@ echo "Wowza log analizer v0.4 - STARTING...\n";
 $islivestats = TRUE;
 
 // Channel ID: calculate statistics for this channel (live or on demand)
-$channelid = 63;
+$channelid = 93;
 
 // Analyze per connection: TRUE = track all connections | FALSE = give a summary only
-$analyze_perconnection = TRUE;
+$analyze_perconnection = FALSE;
 
 // Minimal duration to include a connection (seconds)
 $min_duration = 3;
@@ -42,23 +42,23 @@ $wowza_app = "live";
 $usereversedns = TRUE;
 
 // Clean from breakes? (see $event_timings)
-$cleanfrombreaks = TRUE;
+$cleanfrombreaks = FALSE;
 
 // Event timings, indexed by feedid (locations), [0] index applies all locations
 $event_timings = array(
 	0 => array(
-			array(
-				'type'			=> 'EVENT',
-				'starttime'		=> '2013-04-17 10:06:26',	// event start
-				'endtime'		=> '2013-04-17 15:07:10',	// event finish
-				'description'	=> 'ESEMÉNY KEZDETE/VÉGE'
-			),
-			array(
-				'type'			=> 'BREAK',
-				'starttime'		=> '2013-04-17 12:08:26',	// break start
-				'endtime'		=> '2013-04-17 13:07:10',	// break end
-				'description'	=> 'EBÉDSZÜNET'
-			)
+		array(
+			'type'			=> 'EVENT',
+			'starttime'		=> '2013-06-26 13:15:14',	// event start
+			'endtime'		=> '2013-06-26 16:30:20',	// event finish
+			'description'	=> 'KÖRNYEZETVÉDELMI TERMÉKDÍJ, SZAKKÉPZÉSI HOZZÁJÁRULÁS - II.'
+		),
+		array(
+			'type'			=> 'BREAK',
+			'starttime'		=> '2013-06-26 14:47:57',	// break start
+			'endtime'		=> '2013-06-26 14:59:27',	// break end
+			'description'	=> 'DÉLUTÁNI SZÜNET'
+		)
 	)
 );
 
@@ -71,10 +71,10 @@ $debug_client = array(
 );
 
 // Debug: duration calculation
-$debug_duration = FALSE;
+$debug_duration = TRUE;
 
 // Debug: time slice creation based on $event_timings
-$debug_timeslicing = FALSE;
+$debug_timeslicing = TRUE;
 
 // Ondemand stats analyze start and end dates
 $ondemand_startdate = "2013-02-28";
@@ -605,8 +605,9 @@ for ( $i = 0; $i < count($log_files); $i++ ) {
 
 				// DESTROY -> DESTROY: ?
 				if ( $viewers[$cip][$uid]['clients'][$clientid]['destroy'] ) {
-					echo "ERROR: DESTROY -> DESTROY (clientid = " . $clientid . ")\n";
-					exit -1;
+					echo "WARNING: DESTROY -> DESTROY (clientid = " . $clientid . ")\n";
+					$viewers[$cip][$uid]['clients'][$clientid]['prevduration'] = $duration;
+					continue;
 				}
 
 				if ( $debug_client['do'] ) {
@@ -655,7 +656,7 @@ for ( $i = 0; $i < count($log_files); $i++ ) {
 
 //exit;
 
-//var_dump($viewers);
+var_dump($viewers);
 
 //var_dump($location_info);
 
@@ -833,18 +834,21 @@ foreach ($viewers as $cip => $client_ip) {
 		$duration_full = 0;
 		for ( $i = 0; $i < $columns_num; $i++ ) {
 			if ( !empty($columns['duration'][$i]) ) {
-//echo $i . ": " . $columns['eventduration'][$i] . "\n";
+				// Stream watched duration
 				$main_line .= "," . secs2hms($columns['duration'][$i]);
+				// Calculate % watched compared to full length (only when break cleaning is selected)
 				if ( $cleanfrombreaks ) {
 					$event_duration = $columns['eventduration'][$i];
 					$watched_percent = ( 100 / $event_duration ) * $columns['duration'][$i];
-//echo "eventdur = " . $event_duration . " | coldur = " . $columns['duration'][$i] . "\n";
 					$duration_full += $columns['duration'][$i];
 					$main_line .= "," . round($watched_percent, 2) . "%";
 				} else {
-					$main_line .= ",-,-";
+					// Leave % empty
+					$main_line .= ",-";
+					$duration_full += $columns['duration'][$i];
 				}
 			} else {
+				// No data for this stream
 				$main_line .= ",-,-";
 			}
 		}
@@ -1200,7 +1204,8 @@ function event_searchtiming($starttime, $endtime, $feedid) {
 
 		$duration = $end - $start;
 		if ( $duration <= 0 ) {
-			echo "ERROR: invalid duration from slice \"" . $start . "\"-\"" . $end . "\"!\n";
+		//if ( $duration < 0 ) {
+			echo "ERROR: invalid duration from slice \"" . time('G:i:s', $start) . "\"-\"" . time('G:i:s', $end) . "\"!\n";
 			exit -1;
 		}
 		$tmp = array(
@@ -1274,7 +1279,8 @@ function event_timing_add_breakpoint($starttime, $endtime) {
 
 	$duration = $endtime - $starttime;
 	if ( $duration <= 0 ) {
-		echo "ERROR: invalid duration from slice " . $starttime . " - " . $endtime . "!\n";
+	//if ( $duration < 0 ) {
+		echo "ERROR: invalid duration from slice " . time('G:i:s', $starttime) . " - " . time('G:i:s', $endtime) . "!\n";
 		exit -1;
 	}
 	$tmp = array(
