@@ -187,6 +187,11 @@ class Controller extends \Visitor\Controller {
       session_id()
     );
     
+    if ( $user['id'] ) {
+      $this->toSmarty['livehttpurl'] .= '&uid=' . $user['id'];
+      $this->toSmarty['livertspurl'] .= '&uid=' . $user['id'];
+    }
+    
     if ( $displaychat ) {
       
       if ( !$this->acl ) {
