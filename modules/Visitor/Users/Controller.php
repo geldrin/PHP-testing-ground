@@ -117,6 +117,15 @@ class Controller extends \Visitor\Controller {
     
     $userModel->registerForSession();
     $userModel->updateSessionInformation();
+    
+    $ipaddresses = $this->getIPAddress(true);
+    $ipaddress   = '';
+    foreach( $ipaddresses as $key => $value )
+      $ipaddress .= ' ' . $key . ': ' . $value;
+    
+    $d = \Springboard\Debug::getInstance();
+    $d->log(false, 'login.txt', 'RESETSESSION LOGIN SESSIONID: ' . session_id() . ' IPADDRESS:' . $ipaddress );
+    
     $this->redirectToController('contents', 'sessionreset');
     
   }
@@ -140,6 +149,14 @@ class Controller extends \Visitor\Controller {
     
     $userModel->registerForSession();
     $access->clear();
+    
+    $ipaddresses = $this->getIPAddress(true);
+    $ipaddress   = '';
+    foreach( $ipaddresses as $key => $value )
+      $ipaddress .= ' ' . $key . ': ' . $value;
+    
+    $d = \Springboard\Debug::getInstance();
+    $d->log(false, 'login.txt', 'VALIDATED LOGIN SESSIONID: ' . session_id() . ' IPADDRESS:' . $ipaddress );
     
     $this->redirectToController('contents', 'signupvalidated');
     
