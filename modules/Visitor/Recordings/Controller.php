@@ -286,6 +286,11 @@ class Controller extends \Visitor\Controller {
       $this->toSmarty['STATIC_URI']
     );
     
+    if ( $user['id'] ) {
+      $this->toSmarty['mobilehttpurl'] .= '&uid=' . $user['id'];
+      $this->toSmarty['mobilertspurl'] .= '&uid=' . $user['id'];
+    }
+    
     $this->smartyoutput('Visitor/Recordings/Details.tpl');
     
   }
@@ -662,6 +667,11 @@ class Controller extends \Visitor\Controller {
       session_id(),
       $this->toSmarty['STATIC_URI']
     );
+    
+    if ( $user['id'] ) {
+      $this->toSmarty['mobilehttpurl'] .= '&uid=' . $user['id'];
+      $this->toSmarty['mobilertspurl'] .= '&uid=' . $user['id'];
+    }
     
     $autoplay  = $this->application->getParameter('autoplay');
     $start     = $this->application->getParameter('start');
