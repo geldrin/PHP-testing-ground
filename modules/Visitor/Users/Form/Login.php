@@ -20,7 +20,6 @@ class Login extends \Visitor\Form {
     $userModel      = $this->bootstrap->getModel('users');
     $organizationid = $this->controller->organization['id'];
     $access         = $this->bootstrap->getSession('recordingaccess');
-    $d              = \Springboard\Debug::getInstance();
     
     $uservalid = $userModel->selectAndCheckUserValid( $organizationid, $values['email'], $values['password'] );
     $orgvalid  = $timestampvalid = false;
@@ -96,7 +95,7 @@ class Login extends \Visitor\Form {
       $ipaddress .= ' ' . $key . ': ' . $value;
     
     $userModel->updateLastlogin( $diagnostics, $ipaddress );
-    $d->log(false, 'login.txt', 'LOGIN SESSIONID: ' . session_id() . ' IPADDRESS:' . $ipaddress );
+    $this->controller->logUserLogin('LOGIN', $ipaddress );
     $forward = $this->application->getParameter('forward');
     
     if ( $values['welcome'] )

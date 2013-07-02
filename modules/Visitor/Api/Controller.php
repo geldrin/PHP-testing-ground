@@ -258,14 +258,7 @@ class Controller extends \Visitor\Controller {
         );
       
       $userModel->registerForSession();
-      
-      $ipaddresses = $this->getIPAddress(true);
-      $ipaddress   = '';
-      foreach( $ipaddresses as $key => $value )
-        $ipaddress .= ' ' . $key . ': ' . $value;
-      
-      $d = \Springboard\Debug::getInstance();
-      $d->log(false, 'login.txt', 'IMPERSONATE APILOGIN SESSIONID: ' . session_id() . ' IPADDRESS:' . $ipaddress );
+      $this->logUserLogin('IMPERSONATE APILOGIN');
       
     }
     

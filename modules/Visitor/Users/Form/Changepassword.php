@@ -51,14 +51,7 @@ class Changepassword extends \Visitor\Form {
       $this->userModel->registerForSession();
       $this->userModel->updateLastLogin();
       $access->clear();
-      
-      $ipaddresses = $this->controller->getIPAddress(true);
-      $ipaddress   = '';
-      foreach( $ipaddresses as $key => $value )
-        $ipaddress .= ' ' . $key . ': ' . $value;
-      
-      $d = \Springboard\Debug::getInstance();
-      $d->log(false, 'login.txt', 'CHANGEPASSWORD LOGIN SESSIONID: ' . session_id() . ' IPADDRESS:' . $ipaddress );
+      $this->controller->logUserLogin('CHANGEPASSWORD LOGIN');
       
     }
     

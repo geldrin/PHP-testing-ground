@@ -331,4 +331,24 @@ class Controller extends \Springboard\Controller\Visitor {
     
   }
   
+  public function logUserLogin( $ident, $ipaddress = null ) {
+    
+    if ( !$ipaddress ) {
+      
+      $ipaddresses = $this->getIPAddress(true);
+      $ipaddress   = '';
+      foreach( $ipaddresses as $key => $value )
+        $ipaddress .= ' ' . $key . ': ' . $value;
+      
+    }
+    
+    $d = \Springboard\Debug::getInstance();
+    $d->log(
+      false,
+      'login.txt',
+      $ident . ' SESSIONID: ' . session_id() . ' IPADDRESS:' . $ipaddress
+    );
+    
+  }
+  
 }

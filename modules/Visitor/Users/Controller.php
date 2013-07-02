@@ -117,14 +117,7 @@ class Controller extends \Visitor\Controller {
     
     $userModel->registerForSession();
     $userModel->updateSessionInformation();
-    
-    $ipaddresses = $this->getIPAddress(true);
-    $ipaddress   = '';
-    foreach( $ipaddresses as $key => $value )
-      $ipaddress .= ' ' . $key . ': ' . $value;
-    
-    $d = \Springboard\Debug::getInstance();
-    $d->log(false, 'login.txt', 'RESETSESSION LOGIN SESSIONID: ' . session_id() . ' IPADDRESS:' . $ipaddress );
+    $this->logUserLogin('RESETSESSION LOGIN');
     
     $this->redirectToController('contents', 'sessionreset');
     
@@ -149,14 +142,7 @@ class Controller extends \Visitor\Controller {
     
     $userModel->registerForSession();
     $access->clear();
-    
-    $ipaddresses = $this->getIPAddress(true);
-    $ipaddress   = '';
-    foreach( $ipaddresses as $key => $value )
-      $ipaddress .= ' ' . $key . ': ' . $value;
-    
-    $d = \Springboard\Debug::getInstance();
-    $d->log(false, 'login.txt', 'VALIDATED LOGIN SESSIONID: ' . session_id() . ' IPADDRESS:' . $ipaddress );
+    $this->logUserLogin('VALIDATED LOGIN');
     
     $this->redirectToController('contents', 'signupvalidated');
     
@@ -275,9 +261,7 @@ class Controller extends \Visitor\Controller {
     $userModel->registerForSession();
     $userModel->updateSessionInformation();
     $userModel->updateLastlogin( null, $ipaddress );
-    
-    $d = \Springboard\Debug::getInstance();
-    $d->log( false, 'login.txt', 'APILOGIN SESSIONID: ' . session_id() . ' IPADDRESS:' . $ipaddress );
+    $this->logUserLogin('APILOGIN');
     
     $output = array(
       'userid'                           => $userModel->id,
