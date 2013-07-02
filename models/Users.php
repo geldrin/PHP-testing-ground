@@ -317,4 +317,17 @@ class Users extends \Springboard\Model {
     
   }
   
+  public function emailExists( $email, $organizationid ) {
+    
+    $email = $this->db->qstr( $email );
+    return !!$this->db->getOne("
+      SELECT COUNT(*)
+      FROM users
+      WHERE
+        email          = $email AND
+        organizationid = '$organizationid'
+    ");
+    
+  }
+  
 }

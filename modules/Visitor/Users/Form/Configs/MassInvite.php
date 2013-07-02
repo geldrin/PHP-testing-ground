@@ -50,9 +50,9 @@ $config = array(
     'validation'  => Array(
       array(
         'type'             => 'file',
-        'required'         => false,
+        'required'         => true,
         'help'             => $l('users', 'invitefile_help'),
-        'imagecreatecheck' => true,
+        'imagecreatecheck' => false,
         'extensions'       => Array('csv', 'txt',),
       )
     )

@@ -94,7 +94,9 @@ class MassInvite extends \Visitor\Form {
   public function parseInviteFile( $file, $encoding, $delimeter ) {
     
     include_once( $this->bootstrap->config['libpath'] . 'clonefish/constants.php');
-    $l = $this->l;
+    $l              = $this->l;
+    $organizationid = $this->controller->organization['id'];
+    $usersModel     = $this->bootstrap->getModel('users');
     
     if ( filesize( $file ) > 5242880 ) { // nagyobb mint 5 mega
       
@@ -167,6 +169,16 @@ class MassInvite extends \Visitor\Form {
         
         $this->form->addMessage(
           sprintf( $l('users', 'invitefileinvalidduplicateemail'), $line )
+        );
+        
+        $error = true;
+        
+      }
+      
+      if ( $usersModel->emailExists( $email, $organizationid ) ) {
+        
+        $this->form->addMessage(
+          sprintf( $l('users', 'invitefileinvalidexistingemail'), $line )
         );
         
         $error = true;
