@@ -45,16 +45,6 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_media_convert.stop' ) and 
 		$db = null;
 		$db = db_maintain();
 
-/*		try {
-			$db = $app->bootstrap->getAdoDB();
-		} catch (exception $err) {
-			// Send mail alert, sleep for 15 minutes
-			$debug->log($jconf['log_dir'], $jconf['jobid_media_convert'] . ".log", "[ERROR] No connection to DB (getAdoDB() failed). Error message:\n" . $err, $sendmail = true);
-			// Sleep 15 mins then resume
-			break;
-		}
-*/
-
 		$converter_sleep_length = $jconf['sleep_media'];
 
 		// Check if temp directory readable/writable
@@ -268,9 +258,9 @@ global $jconf, $db;
 		FROM
 			recordings
 		WHERE
-		( ( status = \"" . $jconf['dbstatus_uploaded']  . "\" AND masterstatus = \"" . $jconf['dbstatus_uploaded'] . "\" ) OR
-		( status = \"" . $jconf['dbstatus_reconvert'] . "\" AND masterstatus = \"" . $jconf['dbstatus_copystorage_ok'] . "\" ) ) AND 
-		( mastersourceip IS NOT NULL OR mastersourceip != '' )
+			( ( status = \"" . $jconf['dbstatus_uploaded']  . "\" AND masterstatus = \"" . $jconf['dbstatus_uploaded'] . "\" ) OR
+			( status = \"" . $jconf['dbstatus_reconvert'] . "\" AND masterstatus = \"" . $jconf['dbstatus_copystorage_ok'] . "\" ) ) AND 
+			( mastersourceip IS NOT NULL OR mastersourceip != '' )
 		ORDER BY
 			conversionpriority,
 			id
