@@ -417,7 +417,7 @@ global $app, $jconf, $global_log;
 				$recording_info['DAR'] = $DAR_M / $DAR_N;
 				$recording_info['DAR_MN'] = $recording[$c_idx . 'mastervideodar'];
 				// Y: keep fixed, X: recalculate
-				$recording_info['res_x_dar'] = $recording_info['res_y_dar'] * $recording_info['DAR'];
+				$recording_info['res_x_dar'] = round($recording_info['res_y_dar'] * $recording_info['DAR']);
 			}
 		}
 	}
