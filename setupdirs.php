@@ -86,7 +86,7 @@ class Setupdirs {
       $matches
     );
     
-    $attr = $this->getAttributes(null, 'privileged');
+    $attr = $this->getAttributes();
     chdir( $this->basepath );
     
     echo `chmod -R {$attr['perms']} .`;
