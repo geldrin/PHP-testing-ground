@@ -1,6 +1,6 @@
 <ul id="chatlist">
   {foreach from=$chatitems item=chat}
-    {if $chat.moderated >= 0 or $chat.userid == $member.id or $liveadmin}
+    {if $chat.moderated == 0 or $liveadmin}
       <li class="{if $chat.moderated < 0}waitingforapproval {/if}{if $member.id and $member.id == $chat.userid}self{/if}">
         {if $liveadmin}
           <div class="actions">

@@ -204,7 +204,7 @@ class Controller extends \Visitor\Controller {
       $this->toSmarty['needauth']      = $needauth;
       $this->toSmarty['liveadmin']     = $this->acl->hasPermission('liveadmin|clientadmin');
       // ha liveadmin akkor kiirjuk a moderalasra varo commenteket
-      $this->toSmarty['chatitems']     = $feedModel->getChat( $this->toSmarty['liveadmin']? null: -1 );
+      $this->toSmarty['chatitems']     = $feedModel->getChat();
       
       if ( $access[ $accesskey ] !== true ) {
         $l                             = $this->bootstrap->getLocalization();
