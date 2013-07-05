@@ -185,6 +185,21 @@ $config = array(
   'loadgoogleanalytics' => true,
   'loadaddthis' => true,
   
+  //----
+  'setupdirs' => array(
+    'defaultuser'     => 'dam', // a user/group amire chown -R eljuk az egesz konyvtarat
+    'defaultgroup'    => 'cms',
+    'defaultperms'    => 'g+w', // a chmor -R parametere
+    'privilegeduser'  => 'www-data', // a gitignorebol vett konyvtarak user/group/permje
+    'privilegedgroup' => 'www-data',
+    'extradirs'       => array(
+      array(
+        'dir'  => $this->basepath . 'httpdocs/flash',
+        'user' => 'xtro',
+      ),
+    ),
+  ),
+  
 );
 
 $config['phpsettings'] = array(
