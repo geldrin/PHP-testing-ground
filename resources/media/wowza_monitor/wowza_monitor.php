@@ -53,57 +53,76 @@
 
 */
 
+define('BASE_PATH',	realpath( __DIR__ . '/../../..' ) . '/' );
+define('DEBUG', false );
+
+include_once( BASE_PATH . 'libraries/Springboard/Application/Cli.php');
+//include_once( BASE_PATH . 'modules/Jobs/job_utils_base.php' );
+
+set_time_limit(0);
+
+// Init
+$app = new Springboard\Application\Cli(BASE_PATH, FALSE);
+
+// Establish database connection
+try {
+	$db = $app->bootstrap->getAdoDB();
+} catch (exception $err) {
+	echo "ERROR: cannot connect to DB.\n" . $err . "\n";
+	exit -1;
+}
+
+// Query streaming servers and passwords
+$query = "
+	SELECT
+		ss.id,
+		ss.server,
+		ss.serverip,
+		ss.shortname,
+		ss.servicetype,
+		ss.adminuser,
+		ss.monitoringpassword as password,
+		ss.disabled
+	FROM
+		cdn_streaming_servers AS ss
+	WHERE
+		ss.disabled = 0
+";
+
+try {
+	$monitor_servers = $db->getArray($query);
+} catch ( \Exception $e ) {
+	echo "[ERROR]: Cannot query streaming servers.\n";
+	exit -1;
+}
+
+var_dump($monitor_servers);
+
+$munin_labels = "";
+foreach( $monitor_servers as $server ) {
+	$munin_labels .= $server['shortname'] . ".label " . $server['shortname'] . "\n";
+}
+
+echo $munin_labels;
+
 if ((count($argv) > 1) && ($argv[1] == 'config')) {
 	print("graph_title Streaming server load
 graph_category network
 graph_vlabel Clients
 total.label Total
-stream-bp-1.label BP-1
-stream-bp-2.label BP-2
-stream-deb-3.label Debrecen-3
-stream-deb-4.label Debrecen-4
-");
+" . $munin_labels);
     exit();
 }
 
-$wowza_list =  array(
-	0	=> array(
-					'server'				=> "stream-bp-1videosquare.hu.t-internal.com",
-					'shortname'				=> "stream-bp-1",
-					'user'					=> "admin",
-					'password'				=> "MisiMokus",
-					'currentconnections'	=> 0
-				),
-	1	=> array(
-					'server'				=> "stream-bp-2videosquare.hu.t-internal.com",
-					'shortname'				=> "stream-bp-2",
-					'user'					=> "admin",
-					'password'				=> "MisiMokus",
-					'currentconnections'	=> 0
-				),
-	2	=> array(
-					'server'				=> "stream-deb-3videosquare.hu.t-internal.com",
-					'shortname'				=> "stream-deb-3",
-					'user'					=> "admin",
-					'password'				=> "MisiMokus",
-					'currentconnections'	=> 0
-				),
-	3	=> array(
-					'server'				=> "stream-deb-4videosquare.hu.t-internal.com",
-					'shortname'				=> "stream-deb-4",
-					'user'					=> "admin",
-					'password'				=> "MisiMokus",
-					'currentconnections'	=> 0
-				)
-);
+$wowza_app = "devvsq";
 
 $total_currentconnections = 0;
 
-for ( $i = 0; $i < count($wowza_list); $i++ ) {
+for ($i = 0; $i < count($monitor_servers); $i++ ) {
 
 	$curl = curl_init();
 
-	$wowza_url = "http://" . $wowza_list[$i]['server'] . ":8086/connectioncounts";
+	$wowza_url = "http://" . $monitor_servers[$i]['server'] . ":8086/connectioncounts";
 
 //echo $wowza_url . "\n";
 
@@ -112,25 +131,27 @@ for ( $i = 0; $i < count($wowza_list); $i++ ) {
 	curl_setopt($curl, CURLOPT_PORT, 8086); 
 	curl_setopt($curl, CURLOPT_VERBOSE, 0); 
 	curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1); 
-	curl_setopt($curl, CURLOPT_USERPWD, $wowza_list[$i]['user'] . ":" . $wowza_list[$i]['password']);
+	curl_setopt($curl, CURLOPT_USERPWD, $monitor_servers[$i]['adminuser'] . ":" . $monitor_servers[$i]['password']);
 	curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_ANY);
 	//curl_setopt($curl, CURLOPT_POST, 1); 
 	//curl_setopt($curl, CURLOPT_POSTFIELDS, $data);
 
 	$data = curl_exec($curl); 
 	if( curl_errno($curl) ){ 
-//		echo "CURL ERROR: " . curl_error($curl) . " " . $wowza_list[$i]['server'] . "\n";;
-		$wowza_list[$i]['currentconnections'] = -1;
+//		echo "CURL ERROR: " . curl_error($curl) . " " . $monitor_servers[$i]['server'] . "\n";;
 		curl_close($curl);
+		$monitor_servers[$i]['currentconnections'] = 0;
+		streamingServerUpdateDB($monitor_servers[$i]['id'], "unreachable", 0);
 		continue;
 	}
 
 	// Check if authentication failed
 	$header = curl_getinfo($curl);
 	if ( $header['http_code'] == 401 ) {
-//		echo "ERROR: HTTP 401. Cannot authenticate at " . $wowza_list[$i]['server'] . "\n";
-		$wowza_list[$i]['currentconnections'] = -1;
+//		echo "ERROR: HTTP 401. Cannot authenticate at " . $monitor_servers[$i]['server'] . "\n";
 		curl_close($curl); 
+		$monitor_servers[$i]['currentconnections'] = 0;
+		streamingServerUpdateDB($monitor_servers[$i]['id'], "autherror", 0);
 		continue;
 	}
 
@@ -139,24 +160,52 @@ for ( $i = 0; $i < count($wowza_list); $i++ ) {
 
 	$wowza_xml = simplexml_load_string($data);
 //	print_r($wowza_xml);
-//	echo $wowza_xml->ConnectionsCurrent . "\n";
+	echo $wowza_xml->ConnectionsCurrent . "\n";
 	$currentconnections = 0 + (string)$wowza_xml->ConnectionsCurrent;
 
 	if ( is_numeric($currentconnections) ) {
-		$wowza_list[$i]['currentconnections'] = $currentconnections;
+		$monitor_servers[$i]['currentconnections'] = $currentconnections;
+		streamingServerUpdateDB($monitor_servers[$i]['id'], "ok", $currentconnections);
 		$total_currentconnections += $currentconnections;
 	}
+
+	// Update current load into database
+
+
 
 	curl_close($curl); 
 
 }
 
-//var_dump($wowza_list);
+//var_dump($monitor_servers);
 
 echo "total.value " . $total_currentconnections . "\n";
 
-for ( $i = 0; $i < count($wowza_list); $i++ ) echo $wowza_list[$i]['shortname'] . ".value " . $wowza_list[$i]['currentconnections'] . "\n";
+foreach( $monitor_servers as $server ) echo $server['shortname'] . ".value " . $server['currentconnections'] . "\n";
 
 exit;
+
+function streamingServerUpdateDB($id, $reachable, $currentload) {
+ global $db;
+
+	// Query streaming servers and passwords
+	$query = "
+		UPDATE
+			cdn_streaming_servers
+		SET
+			serverstatus = \"". $reachable . "\",
+			currentload = " . $currentload . "
+		WHERE
+			id = " . $id;
+
+	try {
+		$rs = $db->Execute($query);
+	} catch ( \Exception $e ) {
+		echo "[ERROR]: Cannot update streaming server record.\n" .  $err . "\n";
+		return FALSE;
+	}
+
+	return TRUE;
+}
 
 ?>
