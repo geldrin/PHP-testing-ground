@@ -37,6 +37,7 @@ $j(document).ready(function() {
   runIfExists('#recordings_modifysharing', setupSharing );
   runIfExists('#recordings_modifydescription', setupDescription );
   runIfExists('#live_create, #live_modify', setupLiveCreate );
+  runIfExists('#organizations_createnews, #organizations_modifynews', setupLiveCreate );
   runIfExists('#groups_invite', setupGroupInvitation );
   runIfExists('#timestampdisabledafter', setupDisabledAfter );
   

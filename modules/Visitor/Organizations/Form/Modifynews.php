@@ -1,7 +1,7 @@
 <?php
 namespace Visitor\Organizations\Form;
 
-class Modifynews extends \Visitor\Form {
+class Modifynews extends Createnews {
   public $configfile = 'Modifynews.php';
   public $template   = 'Visitor/genericform.tpl';
   public $needdb     = true;
@@ -18,8 +18,19 @@ class Modifynews extends \Visitor\Form {
        )
       $this->controller->redirect('index');
     
-    $this->newsModel = $this->controller->modelIDCheck('organizations_news', $id );
-    $this->values    = $this->newsModel->row;
+    $this->newsModel        = $this->controller->modelIDCheck('organizations_news', $id );
+    $this->values           = $this->newsModel->row;
+    $this->values['starts'] = substr( $this->values['starts'], 0, 16);
+    $this->values['ends']   = substr( $this->values['ends'], 0, 16);
+    
+    foreach( $this->bootstrap->config['languages'] as $language ) {
+      
+      $langvalues = $this->newsModel->getStringsForLanguage( $language );
+      foreach( $langvalues as $k => $v )
+        $this->values[ $k . '_' . $language ] = $v;
+      
+    }
+    
     parent::init();
     
   }
@@ -34,8 +45,14 @@ class Modifynews extends \Visitor\Form {
   
   public function onComplete() {
     
-    $values = $this->form->getElementValues( 0 );
-    $this->newsModel->updateRow( $values );
+    $values  = $this->form->getElementValues( 0 );
+    $false   = false;
+    $strings = $this->ensureStringsExist( $this->newsModel->multistringfields, $values );
+    if ( !$this->form->validate() )
+      return;
+    
+    $strings = $this->assembleStrings( $values );
+    $this->newsModel->update( $false, $values, false, $strings, false );
     
     $this->controller->redirect(
       $this->application->getParameter('forward', 'organizations/listnews' )
