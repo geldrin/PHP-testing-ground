@@ -96,14 +96,12 @@ try {
 	exit -1;
 }
 
-var_dump($monitor_servers);
+//var_dump($monitor_servers);
 
 $munin_labels = "";
 foreach( $monitor_servers as $server ) {
 	$munin_labels .= $server['shortname'] . ".label " . $server['shortname'] . "\n";
 }
-
-echo $munin_labels;
 
 if ((count($argv) > 1) && ($argv[1] == 'config')) {
 	print("graph_title Streaming server load
@@ -114,7 +112,10 @@ total.label Total
     exit();
 }
 
-$wowza_app = "devvsq";
+// TODO:
+// - Honnan tudom, melyik app kell
+// - Per app leszurni es ugy abrazolni, esetleg kulon-kulon grafikonban
+//$wowza_app = "devvsq";
 
 $total_currentconnections = 0;
 
@@ -160,7 +161,7 @@ for ($i = 0; $i < count($monitor_servers); $i++ ) {
 
 	$wowza_xml = simplexml_load_string($data);
 //	print_r($wowza_xml);
-	echo $wowza_xml->ConnectionsCurrent . "\n";
+//	echo $wowza_xml->ConnectionsCurrent . "\n";
 	$currentconnections = 0 + (string)$wowza_xml->ConnectionsCurrent;
 
 	if ( is_numeric($currentconnections) ) {
