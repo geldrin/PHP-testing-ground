@@ -1,44 +1,129 @@
 <?php
 
 /*
+
 <WowzaMediaServer>
-	<ConnectionsCurrent>1</ConnectionsCurrent>
-	<ConnectionsTotal>4</ConnectionsTotal>
-	<ConnectionsTotalAccepted>4</ConnectionsTotalAccepted>
-	<ConnectionsTotalRejected>0</ConnectionsTotalRejected>
-	<MessagesInBytesRate>2.0</MessagesInBytesRate>
-	<MessagesOutBytesRate>1266.0</MessagesOutBytesRate>
+	<ConnectionsCurrent>6</ConnectionsCurrent>
+	<ConnectionsTotal>293</ConnectionsTotal>
+	<ConnectionsTotalAccepted>287</ConnectionsTotalAccepted>
+	<ConnectionsTotalRejected>6</ConnectionsTotalRejected>
+	<MessagesInBytesRate>403858.0</MessagesInBytesRate>
+	<MessagesOutBytesRate>175126.0</MessagesOutBytesRate>
 	<VHost>
 		<Name>_defaultVHost_</Name>
-		<TimeRunning>7540.514</TimeRunning>
+		<TimeRunning>505435.573</TimeRunning>
 		<ConnectionsLimit>0</ConnectionsLimit>
-		<ConnectionsCurrent>1</ConnectionsCurrent>
-		<ConnectionsTotal>4</ConnectionsTotal>
-		<ConnectionsTotalAccepted>4</ConnectionsTotalAccepted>
-		<ConnectionsTotalRejected>0</ConnectionsTotalRejected>
-		<MessagesInBytesRate>2.0</MessagesInBytesRate>
-		<MessagesOutBytesRate>1273.0</MessagesOutBytesRate>
+		<ConnectionsCurrent>6</ConnectionsCurrent>
+		<ConnectionsTotal>293</ConnectionsTotal>
+		<ConnectionsTotalAccepted>287</ConnectionsTotalAccepted>
+		<ConnectionsTotalRejected>6</ConnectionsTotalRejected>
+		<MessagesInBytesRate>403858.0</MessagesInBytesRate>
+		<MessagesOutBytesRate>175126.0</MessagesOutBytesRate>
 		<Application>
-			<Name>vod</Name>
+			<Name>devvsqlive</Name>
 			<Status>loaded</Status>
-			<TimeRunning>7538.637</TimeRunning>
-			<ConnectionsCurrent>1</ConnectionsCurrent>
-			<ConnectionsTotal>4</ConnectionsTotal>
-			<ConnectionsTotalAccepted>4</ConnectionsTotalAccepted>
+			<TimeRunning>505434.616</TimeRunning>
+			<ConnectionsCurrent>0</ConnectionsCurrent>
+			<ConnectionsTotal>0</ConnectionsTotal>
+			<ConnectionsTotalAccepted>0</ConnectionsTotalAccepted>
 			<ConnectionsTotalRejected>0</ConnectionsTotalRejected>
-			<MessagesInBytesRate>2.0</MessagesInBytesRate>
-			<MessagesOutBytesRate>1273.0</MessagesOutBytesRate>
+			<MessagesInBytesRate>403855.0</MessagesInBytesRate>
+			<MessagesOutBytesRate>0.0</MessagesOutBytesRate>
 			<ApplicationInstance>
 				<Name>_definst_</Name>
-				<TimeRunning>7538.606</TimeRunning>
-				<ConnectionsCurrent>1</ConnectionsCurrent>
-				<ConnectionsTotal>4</ConnectionsTotal>
-				<ConnectionsTotalAccepted>4</ConnectionsTotalAccepted>
+				<TimeRunning>505434.575</TimeRunning>
+				<ConnectionsCurrent>0</ConnectionsCurrent>
+				<ConnectionsTotal>0</ConnectionsTotal>
+				<ConnectionsTotalAccepted>0</ConnectionsTotalAccepted>
 				<ConnectionsTotalRejected>0</ConnectionsTotalRejected>
-				<MessagesInBytesRate>2.0</MessagesInBytesRate>
-				<MessagesOutBytesRate>1273.0</MessagesOutBytesRate>
+				<MessagesInBytesRate>403855.0</MessagesInBytesRate>
+				<MessagesOutBytesRate>0.0</MessagesOutBytesRate>
 				<Stream>
-					<Name>sample.mp4</Name>
+					<Name>461272.stream</Name>
+					<SessionsFlash>0</SessionsFlash>
+					<SessionsCupertino>0</SessionsCupertino>
+					<SessionsSanJose>0</SessionsSanJose>
+					<SessionsSmooth>0</SessionsSmooth>
+					<SessionsRTSP>0</SessionsRTSP>
+					<SessionsTotal>0</SessionsTotal>
+				</Stream>
+				<Stream>
+					<Name>549088.stream</Name>
+					<SessionsFlash>0</SessionsFlash>
+					<SessionsCupertino>0</SessionsCupertino>
+					<SessionsSanJose>0</SessionsSanJose>
+					<SessionsSmooth>0</SessionsSmooth>
+					<SessionsRTSP>0</SessionsRTSP>
+					<SessionsTotal>0</SessionsTotal>
+				</Stream>
+			</ApplicationInstance>
+		</Application>
+		<Application>
+			<Name>vsq</Name>
+			<Status>loaded</Status>
+			<TimeRunning>10918.991</TimeRunning>
+			<ConnectionsCurrent>6</ConnectionsCurrent>
+			<ConnectionsTotal>21</ConnectionsTotal>
+			<ConnectionsTotalAccepted>21</ConnectionsTotalAccepted>
+			<ConnectionsTotalRejected>0</ConnectionsTotalRejected>
+			<MessagesInBytesRate>3.0</MessagesInBytesRate>
+			<MessagesOutBytesRate>175126.0</MessagesOutBytesRate>
+			<ApplicationInstance>
+				<Name>_definst_</Name>
+				<TimeRunning>10918.976</TimeRunning>
+				<ConnectionsCurrent>6</ConnectionsCurrent>
+				<ConnectionsTotal>21</ConnectionsTotal>
+				<ConnectionsTotalAccepted>21</ConnectionsTotalAccepted>
+				<ConnectionsTotalRejected>0</ConnectionsTotalRejected>
+				<MessagesInBytesRate>3.0</MessagesInBytesRate>
+				<MessagesOutBytesRate>175126.0</MessagesOutBytesRate>
+				<Stream>
+					<Name>294%2F294%2F294_content_lq.mp4</Name>
+					<SessionsFlash>1</SessionsFlash>
+					<SessionsCupertino>0</SessionsCupertino>
+					<SessionsSanJose>0</SessionsSanJose>
+					<SessionsSmooth>0</SessionsSmooth>
+					<SessionsRTSP>0</SessionsRTSP>
+					<SessionsTotal>1</SessionsTotal>
+				</Stream>
+				<Stream>
+					<Name>302%2F302%2F302_content_lq.mp4</Name>
+					<SessionsFlash>1</SessionsFlash>
+					<SessionsCupertino>0</SessionsCupertino>
+					<SessionsSanJose>0</SessionsSanJose>
+					<SessionsSmooth>0</SessionsSmooth>
+					<SessionsRTSP>0</SessionsRTSP>
+					<SessionsTotal>1</SessionsTotal>
+				</Stream>
+				<Stream>
+					<Name>294%2F294%2F294_video_lq.mp4</Name>
+					<SessionsFlash>1</SessionsFlash>
+					<SessionsCupertino>0</SessionsCupertino>
+					<SessionsSanJose>0</SessionsSanJose>
+					<SessionsSmooth>0</SessionsSmooth>
+					<SessionsRTSP>0</SessionsRTSP>
+					<SessionsTotal>1</SessionsTotal>
+				</Stream>
+				<Stream>
+					<Name>302%2F302%2F302_video_lq.mp4</Name>
+					<SessionsFlash>1</SessionsFlash>
+					<SessionsCupertino>0</SessionsCupertino>
+					<SessionsSanJose>0</SessionsSanJose>
+					<SessionsSmooth>0</SessionsSmooth>
+					<SessionsRTSP>0</SessionsRTSP>
+					<SessionsTotal>1</SessionsTotal>
+				</Stream>
+				<Stream>
+					<Name>295%2F295%2F295_video_lq.mp4</Name>
+					<SessionsFlash>1</SessionsFlash>
+					<SessionsCupertino>0</SessionsCupertino>
+					<SessionsSanJose>0</SessionsSanJose>
+					<SessionsSmooth>0</SessionsSmooth>
+					<SessionsRTSP>0</SessionsRTSP>
+					<SessionsTotal>1</SessionsTotal>
+				</Stream>
+				<Stream>
+					<Name>295%2F295%2F295_content_lq.mp4</Name>
 					<SessionsFlash>1</SessionsFlash>
 					<SessionsCupertino>0</SessionsCupertino>
 					<SessionsSanJose>0</SessionsSanJose>
@@ -60,6 +145,8 @@ include_once( BASE_PATH . 'libraries/Springboard/Application/Cli.php');
 //include_once( BASE_PATH . 'modules/Jobs/job_utils_base.php' );
 
 set_time_limit(0);
+
+$islive = TRUE;
 
 // Init
 $app = new Springboard\Application\Cli(BASE_PATH, FALSE);
@@ -98,26 +185,34 @@ try {
 
 //var_dump($monitor_servers);
 
+// Wowza app: vsq or devvsq for on demand, vsqlive or devvsqlive for live analysis
+$wowza_app = "vsq";
+if ( $islive ) $wowza_app .= "live";
+$isdev = FALSE;
+if ( stripos($app->config['baseuri'], "dev.videosquare.eu") !== FALSE ) {
+	$isdev = TRUE;
+	$wowza_app = "dev" . $wowza_app;
+}
+
 $munin_labels = "";
 foreach( $monitor_servers as $server ) {
 	$munin_labels .= $server['shortname'] . ".label " . $server['shortname'] . "\n";
 }
 
+// round: graph_printf?
 if ((count($argv) > 1) && ($argv[1] == 'config')) {
-	print("graph_title Streaming server load
-graph_category network
+	$graph_title = "Videosquare streaming server load (" . $wowza_app . ")";
+	print("graph_title " . $graph_title . "
+graph_category videosquare
 graph_vlabel Clients
 total.label Total
+apptotal.label Total " . $wowza_app . "
 " . $munin_labels);
     exit();
 }
 
-// TODO:
-// - Honnan tudom, melyik app kell
-// - Per app leszurni es ugy abrazolni, esetleg kulon-kulon grafikonban
-//$wowza_app = "devvsq";
-
 $total_currentconnections = 0;
+$total_currentconnections_perapp = 0;
 
 for ($i = 0; $i < count($monitor_servers); $i++ ) {
 
@@ -125,17 +220,12 @@ for ($i = 0; $i < count($monitor_servers); $i++ ) {
 
 	$wowza_url = "http://" . $monitor_servers[$i]['server'] . ":8086/connectioncounts";
 
-//echo $wowza_url . "\n";
-
-	//curl_setopt($curl, CURLOPT_URL, "http://stream.videosquare.eu:8086/streammanager/index.html"); 
 	curl_setopt($curl, CURLOPT_URL, $wowza_url); 
 	curl_setopt($curl, CURLOPT_PORT, 8086); 
 	curl_setopt($curl, CURLOPT_VERBOSE, 0); 
 	curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1); 
 	curl_setopt($curl, CURLOPT_USERPWD, $monitor_servers[$i]['adminuser'] . ":" . $monitor_servers[$i]['password']);
 	curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_ANY);
-	//curl_setopt($curl, CURLOPT_POST, 1); 
-	//curl_setopt($curl, CURLOPT_POSTFIELDS, $data);
 
 	$data = curl_exec($curl); 
 	if( curl_errno($curl) ){ 
@@ -157,22 +247,34 @@ for ($i = 0; $i < count($monitor_servers); $i++ ) {
 	}
 
 	// Process XML output
-//var_dump($data);
+	//var_dump($data);
 
+	// Open XML data
 	$wowza_xml = simplexml_load_string($data);
-//	print_r($wowza_xml);
-//	echo $wowza_xml->ConnectionsCurrent . "\n";
+
+	// Total number of clients connected to server
 	$currentconnections = 0 + (string)$wowza_xml->ConnectionsCurrent;
 
 	if ( is_numeric($currentconnections) ) {
-		$monitor_servers[$i]['currentconnections'] = $currentconnections;
+		$monitor_servers[$i]['total_currentconnections'] = $currentconnections;
+		// Update current load into database
 		streamingServerUpdateDB($monitor_servers[$i]['id'], "ok", $currentconnections);
 		$total_currentconnections += $currentconnections;
 	}
 
-	// Update current load into database
+	// Search for Wowza on demand (dev, non-dev) applications and record number of current connections
+	foreach ($wowza_xml->VHost as $w_vhost) {
+		$wowza_app_currentconnections = 0;
+		foreach ($w_vhost->Application as $w_app) {
+			// Wowza load for specific app
+			if ( strcmp($w_app->Name, $wowza_app ) == 0 ) $wowza_app_currentconnections = 0 + (string)$w_app->ConnectionsCurrent;
+		}
+		$monitor_servers[$i][$wowza_app . '_currentconnections'] = $wowza_app_currentconnections;
+	}
 
+//var_dump($monitor_servers[$i]);
 
+//echo "currconnections: " . $wowza_app_currentconnections . "\n";
 
 	curl_close($curl); 
 
@@ -182,7 +284,9 @@ for ($i = 0; $i < count($monitor_servers); $i++ ) {
 
 echo "total.value " . $total_currentconnections . "\n";
 
-foreach( $monitor_servers as $server ) echo $server['shortname'] . ".value " . $server['currentconnections'] . "\n";
+foreach( $monitor_servers as $server ) {
+	echo $server['shortname'] . ".value " . $server[$wowza_app . '_currentconnections'] . "\n";
+}
 
 exit;
 
