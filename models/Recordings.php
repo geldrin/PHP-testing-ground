@@ -2242,9 +2242,10 @@ class Recordings extends \Springboard\Model {
     ";
     
     $where = "
-      us.id = r.userid AND
+      us.id            = r.userid AND
       r.organizationid = '" . $organizationid . "' AND
-	  r.isfeatured = 1
+      r.isfeatured     = 1 AND
+      r.isintrooutro   = 0
     ";
     
     return $this->db->getArray(

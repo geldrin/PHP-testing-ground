@@ -173,6 +173,10 @@
   select {
     width: 100%;
   }
+  .widepager select {
+    width: auto;
+  }
+  
   .form.search {
     margin-bottom: 10px;
   }
@@ -341,6 +345,10 @@
   }
   #pagebg {
     top: 76px;
+  }
+  
+  .widepager .itemsperpagecontainer {
+    display: none;
   }
   
 }

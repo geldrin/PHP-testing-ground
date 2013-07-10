@@ -4,6 +4,30 @@ namespace Model;
 class Organizations_news extends \Springboard\Model\Multilingual {
   public $multistringfields = array( 'title', 'lead', 'body' );
   
+  public function getStringsForLanguage( $language ) {
+    $this->ensureID();
+    
+    return $this->db->getRow("
+      SELECT
+        slead.value AS lead,
+        stitle.value AS title,
+        sbody.value AS body
+      FROM
+        organizations_news AS orgn,
+        strings AS stitle,
+        strings AS slead,
+        strings AS sbody
+      WHERE
+        orgn.id              = '" . $this->id . "' AND
+        stitle.translationof = orgn.title_stringid AND
+        stitle.language      = '$language' AND
+        slead.translationof  = orgn.lead_stringid AND
+        slead.language       = '$language' AND
+        sbody.translationof  = orgn.body_stringid AND
+        sbody.language       = '$language'
+    ");
+  }
+  
   protected static function getNewsSringsSQL( $language = null, $skipselect = false ) {
     
     if ( !$language )

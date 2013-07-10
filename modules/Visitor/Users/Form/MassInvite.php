@@ -74,7 +74,11 @@ class MassInvite extends \Visitor\Form {
       
     }
     
-    $this->controller->redirectWithMessage('users/admin', $l('users', 'user_invited') );
+    $messages = $this->form->getMessages();
+    if ( empty( $messages ) )
+      $this->controller->redirectWithMessage('users/admin', $l('users', 'user_invited') );
+    
+    $this->controller->toSmarty['sessionmessage'] = $l('users', 'user_invited');
     
   }
   
@@ -136,7 +140,6 @@ class MassInvite extends \Visitor\Form {
     $fhandle = fopen( $file, 'rb' );
     $line    = 0;
     $users   = array();
-    $error   = false;
     
     while( ( $row = fgetcsv( $fhandle, 0, $delimeter ) ) !== false ) {
       
@@ -151,6 +154,7 @@ class MassInvite extends \Visitor\Form {
       
       $username = trim( $row[0] ); // elso oszlop a nev
       $email    = trim( $row[1] ); // masodik email
+      $lineerror = false;
       
       if ( !preg_match( CF_EMAIL, $email ) ) {
         
@@ -161,7 +165,7 @@ class MassInvite extends \Visitor\Form {
           sprintf( $l('users', 'invitefileinvalidemail'), $line )
         );
         
-        $error = true;
+        $lineerror = true;
         
       }
       
@@ -171,7 +175,7 @@ class MassInvite extends \Visitor\Form {
           sprintf( $l('users', 'invitefileinvalidduplicateemail'), $line )
         );
         
-        $error = true;
+        $lineerror = true;
         
       }
       
@@ -181,16 +185,14 @@ class MassInvite extends \Visitor\Form {
           sprintf( $l('users', 'invitefileinvalidexistingemail'), $line )
         );
         
-        $error = true;
+        $lineerror = true;
         
       }
       
-      $users[ $email ] = $username;
+      if ( !$lineerror )
+        $users[ $email ] = $username;
       
     }
-    
-    if ( $error )
-      $this->form->invalidate();
     
     return $users;
     

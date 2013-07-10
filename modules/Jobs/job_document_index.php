@@ -62,8 +62,7 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_document_index.stop' ) and
 		}
 
 // Testing!!!
-//update_db_attachment_indexingstatus(3, null);
-//update_db_attachment_indexingstatus(4, null);
+//update_db_attachment_indexingstatus(18, null);
 // !!!!!!!!!!
 
 		// Temporary directory cleanup and log result
@@ -78,8 +77,6 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_document_index.stop' ) and
 		unset($attached_doc);
 		$attached_doc = array();
 		if ( !query_nextjob($attached_doc) ) break;
-
-//var_dump($attached_doc);
 
 		// Get indexing start time
 		$total_duration = time();
@@ -182,8 +179,8 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_document_index.stop' ) and
 			$command = "unoconv -f pdf " . $attached_doc['source_file']. " 2>&1";
 			exec($command, $output, $result);
 			$output_string = implode("\n", $output);
-			// unoconv: sometimes it returns "Floating point exception", but result is produced. Maybe output is truncated.
-			if ( ( $result != 0 ) and ( $output_string != "Floating point exception" ) ) {
+			// unoconv: sometimes it returns "Floating point exception", but result is produced. Maybe output is truncated?
+			if ( ( $result != 0 ) and ( stripos($output_string, "Floating point exception") === FALSE ) ) {
 				update_db_attachment_indexingstatus($attached_doc['id'], $jconf['dbstatus_indexing_err']);
 				log_document_conversion($attached_doc['id'], $attached_doc['rec_id'], $jconf['jobid_document_index'], $jconf['dbstatus_indexing'], "[ERROR] unoconv conversion error.\n\n" . $output_string, $command, $result, 0, TRUE);
 				break;

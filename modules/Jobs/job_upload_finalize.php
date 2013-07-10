@@ -47,17 +47,6 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_upload_finalize.stop' ) an
 		$db = null;
 		$db = db_maintain();
 
-/*		try {
-			$db = $app->bootstrap->getAdoDB();
-		} catch (exception $err) {
-			// Send mail alert, sleep for 15 minutes
-			$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] No connection to DB (getAdoDB() failed). Error message:\n" . $err, $sendmail = true);
-			// Sleep 15 mins then resume
-			$sleep_length = 15 * 60;
-			break;
-		}
-		$db_close = TRUE; */
-
 		$sleep_length = $jconf['sleep_short'];
 
 		// Initialize log for closing message and total duration timer

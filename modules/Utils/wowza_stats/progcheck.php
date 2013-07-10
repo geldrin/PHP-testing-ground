@@ -137,7 +137,8 @@ foreach ($org_channels as $ch) {
       }
 
       $position_percent = round( ( 100 / $rec['masterlength'] ) * $up['position'], 2);
-      $msg .= $up['email'] . ";" . secs2hms($up['position']) . ";" . secs2hms($rec['masterlength']) . ";" . $position_percent . "%\n";
+		if ( $position_percent > 100 ) $position_percent = 100;
+      $msg .= $up['email'] . "," . secs2hms($up['position']) . "," . secs2hms($rec['masterlength']) . "," . $position_percent . "%\n";
 
       $user_added = true;
     }

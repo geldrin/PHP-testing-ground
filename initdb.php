@@ -13,6 +13,7 @@ include_once( BASE_PATH . 'libraries/Springboard/Application/Cli.php');
 $app    = new Springboard\Application\Cli( BASE_PATH, false );
 $initdb = new Initdb( $app, $argv );
 $initdb->setupMultistring();
+$initdb->setupUniqueTables();
 echo "Done!\n";
 
 class Initdb {
@@ -23,6 +24,9 @@ class Initdb {
     'genres',
     'roles',
     'channel_types',
+  );
+  
+  public $uniquetables = array(
     'help_contents',
     'contents',
     'languages',
@@ -53,21 +57,38 @@ class Initdb {
     
   }
   
+  public function setupTable( $table ) {
+    
+    echo "Now setting up $table\n";
+    $file = sprintf(
+      BASE_PATH . 'data/defaultvalues/%s.php',
+      $table
+    );
+    
+    if ( !file_exists( $file ) )
+      throw new Exception("Defaultvalues for table $table does not exist: " . $file );
+    
+    $values = include( $file );
+    $this->loadMultiStrings( $table, $values );
+    
+  }
+  
   public function setupMultistring() {
     
-    foreach( $this->multistringtables as $table ) {
+    foreach( $this->multistringtables as $table )
+      $this->setupTable( $table );
+    
+  }
+  
+  public function setupUniqueTables() {
+    
+    foreach ( $this->uniquetables as $table ) {
       
-      echo "Now setting up $table\n";
-      $file = sprintf(
-        BASE_PATH . 'data/defaultvalues/%s.php',
-        $table
-      );
-      
-      if ( !file_exists( $file ) )
-        throw new Exception("Defaultvalues for table $table does not exist: " . $file );
-      
-      $values = include( $file );
-      $this->loadMultiStrings( $table, $values );
+      $model = $this->bootstrap->getModel( $table );
+      if ( !$model->getCount() )
+        $this->setupTable( $table );
+      else
+        echo "Skipping $table because the table contains unique values and it is not empty - this is not an error\n";
       
     }
     
