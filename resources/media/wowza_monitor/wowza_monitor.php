@@ -185,27 +185,30 @@ try {
 
 //var_dump($monitor_servers);
 
-// Wowza app: vsq or devvsq for on demand, vsqlive or devvsqlive for live analysis
-$wowza_app = "vsq";
-if ( $islive ) $wowza_app .= "live";
-$isdev = FALSE;
-if ( stripos($app->config['baseuri'], "dev.videosquare.eu") !== FALSE ) {
-	$isdev = TRUE;
-	$wowza_app = "dev" . $wowza_app;
-}
-
+// Munin: generate labels for munin plugin "config"
 $munin_labels = "";
 foreach( $monitor_servers as $server ) {
 	$munin_labels .= $server['shortname'] . ".label " . $server['shortname'] . "\n";
 }
 
-// round: graph_printf?
-if ((count($argv) > 1) && ($argv[1] == 'config')) {
+// Wowza app: vsq or devvsq for on demand, vsqlive or devvsqlive for live analysis
+$wowza_app = "vsq";
+if ( stripos($app->config['baseuri'], "dev.videosquare.eu") !== FALSE ) $wowza_app = "dev" . $wowza_app;
+
+// Wowza app: live or on demand config
+$islive = FALSE;
+if ( ( ( count($argv) > 1 ) && ( $argv[1] == 'live' ) ) or ( (count($argv) > 2) && ($argv[2] == 'live') ) ) {
+	$islive = TRUE;
+	$wowza_app .= "live";
+}
+
+// Munin config. See: http://munin-monitoring.org/wiki/protocol-config
+if ( (count($argv) > 1) && ($argv[1] == 'config') ) {
 	$graph_title = "Videosquare streaming server load (" . $wowza_app . ")";
 	print("graph_title " . $graph_title . "
 graph_category videosquare
 graph_vlabel Clients
-total.label Total
+total.label All server load
 apptotal.label Total " . $wowza_app . "
 " . $munin_labels);
     exit();
@@ -231,7 +234,7 @@ for ($i = 0; $i < count($monitor_servers); $i++ ) {
 	if( curl_errno($curl) ){ 
 //		echo "CURL ERROR: " . curl_error($curl) . " " . $monitor_servers[$i]['server'] . "\n";;
 		curl_close($curl);
-		$monitor_servers[$i]['currentconnections'] = 0;
+		$monitor_servers[$i]['currentconnections'] = "U";		// Munin: undefined value
 		streamingServerUpdateDB($monitor_servers[$i]['id'], "unreachable", 0);
 		continue;
 	}
@@ -241,7 +244,7 @@ for ($i = 0; $i < count($monitor_servers); $i++ ) {
 	if ( $header['http_code'] == 401 ) {
 //		echo "ERROR: HTTP 401. Cannot authenticate at " . $monitor_servers[$i]['server'] . "\n";
 		curl_close($curl); 
-		$monitor_servers[$i]['currentconnections'] = 0;
+		$monitor_servers[$i]['currentconnections'] = "U";		// Munin: undefined value
 		streamingServerUpdateDB($monitor_servers[$i]['id'], "autherror", 0);
 		continue;
 	}
@@ -264,12 +267,13 @@ for ($i = 0; $i < count($monitor_servers); $i++ ) {
 
 	// Search for Wowza on demand (dev, non-dev) applications and record number of current connections
 	foreach ($wowza_xml->VHost as $w_vhost) {
-		$wowza_app_currentconnections = 0;
+		$wowza_app_currentconnections = -1;
 		foreach ($w_vhost->Application as $w_app) {
 			// Wowza load for specific app
 			if ( strcmp($w_app->Name, $wowza_app ) == 0 ) $wowza_app_currentconnections = 0 + (string)$w_app->ConnectionsCurrent;
 		}
 		$monitor_servers[$i][$wowza_app . '_currentconnections'] = $wowza_app_currentconnections;
+		$total_currentconnections_perapp += $wowza_app_currentconnections;
 	}
 
 //var_dump($monitor_servers[$i]);
@@ -282,10 +286,25 @@ for ($i = 0; $i < count($monitor_servers); $i++ ) {
 
 //var_dump($monitor_servers);
 
-echo "total.value " . $total_currentconnections . "\n";
+// Server total load
+if ( $total_currentconnections >= 0 ) {
+	echo "total.value " . $total_currentconnections . "\n";
+} else {
+	echo "total.value U\n";
+}
+// Per app load
+if ( $total_currentconnections_perapp >= 0 ) {
+	echo "apptotal.value " . $total_currentconnections_perapp . "\n";
+} else {
+	echo "apptotal.value U\n";
+}
 
 foreach( $monitor_servers as $server ) {
-	echo $server['shortname'] . ".value " . $server[$wowza_app . '_currentconnections'] . "\n";
+	if ( $server[$wowza_app . '_currentconnections'] >= 0 ) {
+		echo $server['shortname'] . ".value " . $server[$wowza_app . '_currentconnections'] . "\n";
+	} else {
+		echo $server['shortname'] . ".value U\n";
+	}
 }
 
 exit;
