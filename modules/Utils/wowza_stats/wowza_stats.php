@@ -20,10 +20,10 @@ echo "Wowza log analizer v0.4 - STARTING...\n";
 // ---------------------------- User settings ----------------------------------------
 
 // Is stats for live or on demand?
-$islivestats = TRUE;
+$islivestats = FALSE;
 
 // Channel ID: calculate statistics for this channel (live or on demand)
-$channelid = 93;
+$channelid = 89;
 
 // Analyze per connection: TRUE = track all connections | FALSE = give a summary only
 $analyze_perconnection = FALSE;
@@ -77,8 +77,8 @@ $debug_duration = TRUE;
 $debug_timeslicing = TRUE;
 
 // Ondemand stats analyze start and end dates
-$ondemand_startdate = "2013-02-28";
-$ondemand_enddate = "2013-02-28";
+$ondemand_startdate = "2013-07-02";
+$ondemand_enddate = "2013-07-03";
 
 // ---------------------------- User settings ----------------------------------------
 
