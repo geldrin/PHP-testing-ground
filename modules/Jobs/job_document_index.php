@@ -51,17 +51,6 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_document_index.stop' ) and
 		$db = null;
 		$db = db_maintain();
 
-/*		try {
-			$db = $app->bootstrap->getAdoDB();
-		} catch (exception $err) {
-			// Send mail alert, sleep for 15 minutes
-			$debug->log($jconf['log_dir'], $jconf['jobid_document_index'] . ".log", "[ERROR] No connection to DB (getAdoDB() failed). Error message:\n" . $err, $sendmail = true);
-			// Sleep 15 mins then resume
-			$converter_sleep_length = 15 * 60;
-			break;
-		}
-		$db_close = TRUE; */
-
 		$converter_sleep_length = $jconf['sleep_media'];
 
 		// Check if temp directory readable/writable
