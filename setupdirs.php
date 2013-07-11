@@ -16,7 +16,9 @@ class Setupdirs {
   public $config     = array();
   public $production = true;
   public $basepath;
-  
+
+  public $debug      = false;
+
   public function __construct( $basepath, $production = null ) {
     
     $this->basepath = $basepath;
@@ -43,6 +45,11 @@ class Setupdirs {
          )
        )
       $this->loadConfig( $localconfig );
+
+    $this->defaultDevDirs .=
+      '.git libraries models modules resources views ' .
+      basename( $this->config['docroot'] )
+    ;
     
   }
   
@@ -50,29 +57,24 @@ class Setupdirs {
     
     if ( !is_readable( $filename ) )
       throw new \Exception("Unable to read $filename\n");
-    
+
     $config = include( $filename );
     $this->config = array_replace_recursive( $this->config, $config );
-    
+
   }
   
-  protected function getAttributes( $values = null, $prefix = null ) {
-    
+  protected function getAttributes( $array, $prefix ) {
+
     $ret = array(
-      'user'  => $this->config['setupdirs']['defaultuser'],
-      'group' => $this->config['setupdirs']['defaultgroup'],
-      'perms' => $this->config['setupdirs']['defaultperms'],
+      'user'  => $this->config['setupdirs']['user'],
+      'group' => $this->config['setupdirs']['group'],
+      'perms' => $this->config['setupdirs']['perms'],
     );
-    
-    if ( !$values and $prefix !== null ) {
-      
-      foreach( $ret as $key => $v ) {
-        if ( isset( $this->config['setupdirs'][ $prefix . $key ] ) )
-          $ret[ $key ] = $this->config['setupdirs'][ $prefix . $key ];
-      }
-      
-    } elseif ( $values )
-      $ret = array_merge( $ret, $values );
+
+    foreach( $ret as $key => $v ) {
+      if ( isset( $array[ $prefix . $key ] ) )
+        $ret[ $key ] = $array[ $prefix . $key ];
+    }
     
     return $ret;
     
@@ -80,38 +82,96 @@ class Setupdirs {
   
   public function setup() {
     
+    chdir( $this->basepath );
+
+    $attr = $this->getAttributes( $this->config['setupdirs'], '' );
+ 
+    // process default directories 
+    $this->chmod("{$attr['perms']} .");
+    $this->chown("{$attr['user']}:{$attr['group']} " . $this->defaultDevDirs );
+
+    // process 'privileged' (=typically www-data owned dirs) directories
+    // by processing .gitignore
     preg_match_all(
-      '#(.+)/\*\*$#',
-      file_get_contents( $this->basepath . '.gitignore' ),
+      '#^(.+)/\*\*$#mUi',
+      file_get_contents( '.gitignore' ),
       $matches
     );
-    
-    $attr = $this->getAttributes();
-    chdir( $this->basepath );
-    
-    echo `chmod -R {$attr['perms']} .`;
-    echo `chown -R {$attr['user']}:{$attr['group']} .git modules libraries views resources models`;
-    
-    $attr = $this->getAttributes(null, 'privileged');
-    foreach( $matches[1] as $dir ) {
-      
-      $dir = $this->basepath . $dir;
-      echo `mkdir -p $dir`;
-      echo `chmod -R {$attr['perms']} $dir`;
-      echo `chown -R {$attr['user']}:{$attr['group']} $dir`;
-      
+
+    $attr = $this->getAttributes( $this->config['setupdirs'], 'privileged' );
+
+    foreach( $matches[1] as $dir )
+      $this->setupDirectory( $dir, $attr );
+
+    // process additional dirs
+    foreach( @$this->config['setupdirs']['extradirs'] as $dirItem ) {
+      $this->setupDirectory(
+        $dirItem['dir'], $this->getAttributes( $dirItem, '' )
+      );
     }
-    
-    foreach( $this->config['setupdirs']['extradirs'] as $value ) {
-      
-      $dir  = $value['dir'];
-      $attr = $this->getAttributes(null, 'privileged');
-      echo `mkdir -p $dir`;
-      echo `chmod -R {$attr['perms']} $dir`;
-      echo `chown -R {$attr['user']}:{$attr['group']} $dir`;
-      
-    }
-    
+
+  }
+
+  private function setupDirectory( $dir, $attr ) {
+
+    $this->mkdir( $dir );
+    $this->chmod( "{$attr['perms']} $dir" );
+    $this->chown( "{$attr['user']}:{$attr['group']} $dir" );
+
+  }  
+
+  private function chown( $parameters ) {
+
+    if ( $this->isUnixBasedServer() )
+      $this->execute('chown -R ' . $parameters );
+    else
+      $this->warning('chown', $parameters );
+
+  }
+
+  private function chmod( $parameters ) {
+
+    if ( $this->isUnixBasedServer() )
+      $this->execute('chmod -R ' . $parameters );
+    else
+      $this->warning('chmod', $parameters );
+
+  }
+
+  private function mkdir( $parameters ) {
+
+    if ( $this->isUnixBasedServer() )
+      $this->execute('mkdir -p ' . $parameters );
+    else
+      $this->execute('mkdir ' . $parameters );
+
+  }
+
+  private function execute( $command ) {
+
+    if ( $this->isUnixBasedServer() )
+      $command .= ' 2>&1';
+
+    if ( !$this->isUnixBasedServer() )
+      $command = str_replace( '/', DIRECTORY_SEPARATOR, $command );
+
+    if ( $this->debug )
+      echo $command . '<br />'; 
+
+    echo `$command`;
+
+  }
+
+  private function warning( $command, $parameters ) {
+
+    echo 'warning: "' . $command . ' ' . $parameters . '" not supported on ' . PHP_OS . "\n";
+
+  }
+
+  private function isUnixBasedServer() {
+
+    return !preg_match('/^win/i', PHP_OS );
+
   }
   
 }
