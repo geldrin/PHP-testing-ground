@@ -20,7 +20,7 @@ if ( isset( $argv[1] ) and $argv[1] == 'initdb' ) {
   
   $migrate->loadSchema();
   $migrate->migrate();
-  exit(EXIT_SUCCESS);
+  exit(0);
   
 } else {
 
@@ -29,6 +29,6 @@ if ( isset( $argv[1] ) and $argv[1] == 'initdb' ) {
     throw new Exception("Refusing to migrate, there is no database version!");
 
   $migrate->migrate();
-  exit(EXIT_SUCCESS);
+  exit(0);
   
 }
