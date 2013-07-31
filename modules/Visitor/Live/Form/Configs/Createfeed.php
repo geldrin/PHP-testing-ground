@@ -73,7 +73,7 @@ if ( $this->controller->organization['isvcrenabled'] ) {
     'displayname' => $l('live', 'needrecording'),
     'type'        => 'inputRadio',
     'values'      => $l->getLov('yesno'),
-    'value'       => 1,
+    'value'       => 0,
   );
   
 } else

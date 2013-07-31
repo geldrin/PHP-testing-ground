@@ -20,15 +20,20 @@ if ( isset( $argv[1] ) and $argv[1] == 'initdb' ) {
   
   $migrate->loadSchema();
   $migrate->migrate();
-  exit(EXIT_SUCCESS);
+  exit(0);
   
 } else {
 
-  $currentversion = $migrate->getCurrentVersion();
-  if ( !$currentversion )
-    throw new Exception("Refusing to migrate, there is no database version!");
-
+  try {
+    $currentversion = $migrate->getCurrentVersion();
+  } catch(Exception $e) {
+    
+    echo "Refusing to migrate, there is no database version! Original exception is shown below:\n\n";
+    throw $e;
+    
+  }
+  
   $migrate->migrate();
-  exit(EXIT_SUCCESS);
+  exit(0);
   
 }

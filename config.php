@@ -187,9 +187,9 @@ $config = array(
   
   //----
   'setupdirs' => array(
-    'defaultuser'     => 'dam', // a user/group amire chown -R eljuk az egesz konyvtarat
-    'defaultgroup'    => 'cms',
-    'defaultperms'    => 'g+w', // a chmor -R parametere
+    'user'            => 'dam', // a user/group amire chown -R eljuk az egesz konyvtarat
+    'group'           => 'cms',
+    'perms'           => 'g+w', // a chmor -R parametere
     'privilegeduser'  => 'www-data', // a gitignorebol vett konyvtarak user/group/permje
     'privilegedgroup' => 'www-data',
     'extradirs'       => array(
