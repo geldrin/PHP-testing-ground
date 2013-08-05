@@ -6,7 +6,7 @@
     <a href="{$language}/live/togglestream/{$stream.id}?start=0" class="submitbutton">{#live__stoprecord#}</a>
   {else}
     {assign var=streamstatus value=$stream.status|default:''}
-    {$l->getLov('streamstatus', $language, $streamstatus)}
+    {$l->getLov('streamstatus', $language, $streamstatus, '')}
   {/if}
 {else}
   {#live__streamerror#|sprintf:$stream.status}

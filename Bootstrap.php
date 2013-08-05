@@ -481,6 +481,10 @@ class Bootstrap {
     return new Springboard\Acl( $this );
   }
   
+  public function getAdminAcl() {
+    return new Springboard\Acl( $this );
+  }
+  
   public function getController( $module ) {
     
     if ( $this->debug )
