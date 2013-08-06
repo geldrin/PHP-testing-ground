@@ -133,6 +133,6 @@ class inputcheckboxDynamicRequired extends validation {
 
   }
 
-} 
+}
 
 ?>
