@@ -65,7 +65,7 @@
 </div>
 
 <div class="rightbox">
-  <div class="title"><h1>Üdvözöljük</h1></div>
+  <div class="title"><h1>{#sitewide_welcome_bare#}</h1></div>
   {$introduction}
 </div>
 
