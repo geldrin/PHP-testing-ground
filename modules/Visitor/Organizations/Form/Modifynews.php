@@ -40,6 +40,7 @@ class Modifynews extends Createnews {
     $l = $this->bootstrap->getLocalization();
     $this->controller->toSmarty['title'] = $l('organizations', 'modifynews_title');
     $this->controller->toSmarty['formclass'] = 'leftdoublebox';
+    $this->controller->toSmarty['helpclass'] = 'rightbox small';
     
   }
   

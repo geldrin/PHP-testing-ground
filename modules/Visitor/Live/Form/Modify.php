@@ -23,6 +23,7 @@ class Modify extends \Visitor\HelpForm {
     $this->values['starttimestamp'] = substr( $this->values['starttimestamp'], 0, 16 );
     $this->values['endtimestamp']   = substr( $this->values['endtimestamp'], 0, 16 );
     $this->controller->toSmarty['formclass'] = 'leftdoublebox';
+    $this->controller->toSmarty['helpclass'] = 'rightbox small';
     parent::init();
     
   }
