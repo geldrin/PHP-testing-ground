@@ -10,7 +10,7 @@ else
 
 include_once( BASE_PATH . 'libraries/Springboard/Application/Cli.php');
 
-$app     = new Springboard\Application\Cli( BASE_PATH, PRODUCTION );
+$app     = new Springboard\Application\Cli( BASE_PATH, false );
 $migrate = new Springboard\DBMigrate( $app->bootstrap );
 
 if ( isset( $argv[1] ) and $argv[1] == 'initdb' ) {
