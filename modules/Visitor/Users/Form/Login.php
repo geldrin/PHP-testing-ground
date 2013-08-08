@@ -98,6 +98,11 @@ class Login extends \Visitor\Form {
     $this->controller->logUserLogin('LOGIN', $ipaddress );
     $forward = $this->application->getParameter('forward');
     
+    if ( strpos( $forward, 'users/login' ) !== false ) {
+      $forward = '';
+      $values['welcome'] = true;
+    }
+    
     if ( $values['welcome'] )
       $this->controller->redirect('users/welcome', array( 'forward' => $forward ) );
     else
