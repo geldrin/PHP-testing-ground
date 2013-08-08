@@ -7,11 +7,11 @@
       </div>
     {/if}
     {assign var=columncount value=2}
-    {if $member.isnewseditor or $member.isclientadmin}
+    {if $member.isnewseditor or $member.isclientadmin or $member.iseditor}
       {assign var=columncount value=$columncount+1}
     {/if}
     
-    {if ( $member.isuploader or $member.isclientadmin ) or ( $organization.islivestreamingenabled and $member.isliveadmin )}
+    {if ( $member.isuploader or $member.isclientadmin or $member.iseditor ) or ( $organization.islivestreamingenabled and $member.isliveadmin )}
       {assign var=columncount value=$columncount+1}
     {/if}
     
@@ -20,15 +20,17 @@
       <div id="currentusercontent">
         <a id="currentusername" href="#">{$member.namefirst|escape:html}<span></span></a>
         <div id="currentusermenu" style="width: {$columncount*216-216+241}px">
-          {if $member.isnewseditor or $member.isclientadmin}
+          {if $member.isnewseditor or $member.isclientadmin or $member.iseditor}
             <div class="column first">
                 <div class="title">{#usermenu_organizations_title#}</div>
                 <ul>
                   <li><a href="{$language}/organizations/listnews">{#usermenu_organizations_news#}</a></li>
                   <li><a href="{$language}/organizations/modifyintroduction">{#usermenu_organizations_introduction#}</a></li>
-                  <li><a href="{$language}/users/admin">{#usermenu_organizations_admin#}</a></li>
-                  <li><a href="{$language}/users/invite">{#usermenu_organizations_invite#}</a></li>
-                  <li><a href="{$language}/users/massinvite">{#usermenu_organizations_massinvite#}</a></li>
+                  {if $member.isnewseditor or $member.isclientadmin}
+                    <li><a href="{$language}/users/admin">{#usermenu_organizations_admin#}</a></li>
+                    <li><a href="{$language}/users/invite">{#usermenu_organizations_invite#}</a></li>
+                    <li><a href="{$language}/users/massinvite">{#usermenu_organizations_massinvite#}</a></li>
+                  {/if}
                 </ul>
                 <div class="hr"></div>
             </div>
@@ -47,10 +49,10 @@
             <div class="title">{#usermenu_channels_title#}</div>
             <ul>
               <li><a href="{$language}/channels/mychannels">{#usermenu_channels_mychannels#}</a></li>
-              {if $member.isuploader or $member.isclientadmin}<li><a href="{$language}/channels/create">{#usermenu_channels_create#}</a></li>{/if}
+              {if $member.isuploader or $member.isclientadmin or $member.iseditor}<li><a href="{$language}/channels/create">{#usermenu_channels_create#}</a></li>{/if}
             </ul>
           </div>
-          {if ( $member.isuploader or $member.isclientadmin ) or ( $organization.islivestreamingenabled and $member.isliveadmin )}
+          {if ( $member.isuploader or $member.isclientadmin or $member.iseditor) or ( $organization.islivestreamingenabled and $member.isliveadmin )}
           <div class="column">
             {*}
             <div class="title">{#usermenu_events_title#}</div>
@@ -67,7 +69,7 @@
             </ul>
             <div class="hr"></div>
             
-            {if $member.isuploader or $member.isclientadmin}
+            {if $member.isuploader or $member.isclientadmin or $member.iseditor}
               <div class="title">{#usermenu_recordings_title#}</div>
               <ul>
                 <li><a href="{$language}/recordings/myrecordings">{#usermenu_recordings_myrecordings#}</a></li>
