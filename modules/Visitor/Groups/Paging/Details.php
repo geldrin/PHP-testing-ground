@@ -25,6 +25,14 @@ class Details extends \Visitor\Paging {
     
   }
   
+  protected function getUrl() {
+    return
+      $this->controller->getUrlFromFragment( $this->module . '/' . $this->action ) .
+      '/' . $this->groupModel->id . ',' .
+      \Springboard\Filesystem::filenameize( $this->groupModel->row['name'] )
+    ;
+  }
+  
   protected function setupCount() {
     return $this->itemcount = $this->groupModel->getUserCount();
   }
