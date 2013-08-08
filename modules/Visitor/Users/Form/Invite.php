@@ -1,6 +1,6 @@
 <?php
 namespace Visitor\Users\Form;
-class Invite extends \Visitor\Form {
+class Invite extends \Visitor\HelpForm {
   public $configfile = 'Invite.php';
   public $template   = 'Visitor/genericform.tpl';
   public $needdb     = true;
@@ -8,7 +8,8 @@ class Invite extends \Visitor\Form {
   public function postSetupForm() {
     
     $l = $this->bootstrap->getLocalization();
-    $this->controller->toSmarty['title'] = $l('users', 'invite_title');
+    $this->controller->toSmarty['title']     = $l('users', 'invite_title');
+    $this->controller->toSmarty['helpclass'] = 'small right';
     
   }
   

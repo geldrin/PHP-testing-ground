@@ -1,6 +1,6 @@
 <?php
 namespace Visitor\Users\Form;
-class MassInvite extends \Visitor\Form {
+class MassInvite extends \Visitor\HelpForm {
   public $configfile = 'MassInvite.php';
   public $template   = 'Visitor/genericform.tpl';
   public $needdb     = true;
@@ -12,7 +12,8 @@ class MassInvite extends \Visitor\Form {
   public function postSetupForm() {
     
     $l = $this->bootstrap->getLocalization();
-    $this->controller->toSmarty['title'] = $l('users', 'massinvite_title');
+    $this->controller->toSmarty['title']     = $l('users', 'massinvite_title');
+    $this->controller->toSmarty['helpclass'] = 'small right';
     
   }
   
