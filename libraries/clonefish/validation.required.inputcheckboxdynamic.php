@@ -127,12 +127,12 @@ class inputcheckboxDynamicRequired extends validation {
   }
 
   // -------------------------------------------------------------------------
-  function getJSField( &$element, $key ) {
+  function getJSField( &$element, $key = null ) {
 
     return $this->form->getJSName() . '["' . $element->getName() . '[' . $key . ']"]';
 
   }
 
-} 
+}
 
 ?>

@@ -52,7 +52,7 @@ class Groups extends \Springboard\Model {
     
   }
   
-  protected function getUserGroupWhere( $user ) {
+  public function getUserGroupWhere( $user ) {
     
     if ( !$user['isadmin'] and !$user['isclientadmin'] )
       return "

@@ -1,6 +1,6 @@
 <?php
 $config = array(
-  'version'      => '_v20130708',
+  'version'      => '_v20130806',
   'charset'      => 'UTF-8',
   'cacheseconds' => 3600,
   'errormessage' => 'An unexpected error has occured, our staff has been notified. Sorry for the inconvenience and thanks for your understanding!',

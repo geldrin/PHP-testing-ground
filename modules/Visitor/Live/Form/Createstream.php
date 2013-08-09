@@ -33,6 +33,7 @@ class Createstream extends \Visitor\HelpForm {
     $this->controller->toSmarty['title']          = $l('live', 'createstream_title');
     $this->controller->toSmarty['sessionmessage'] = $l('live', 'create_notice');
     $this->controller->toSmarty['formclass']      = 'leftdoublebox';
+    $this->controller->toSmarty['helpclass']      = 'rightbox small';
     
   }
   

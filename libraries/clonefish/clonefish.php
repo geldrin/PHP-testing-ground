@@ -1530,8 +1530,8 @@ class clonefish {
               $parts[1] = substr( $parts[1], 1, -1 );
 
             $parts[ 1 ] = 
-              preg_replace(
-                '/\\\([nrt"])/e', "\"\\\\$1\"", $parts[ 1 ]
+              preg_replace_callback(
+                '/\\\([nrt"])/', array( $this, 'loadConfigReplaceCallback' ), $parts[ 1 ]
               );
 
             if ( strpos( $parts[ 0 ], '.' ) !== false ) {
@@ -1573,6 +1573,10 @@ class clonefish {
       else
         $this->$key = $value;
 
+  }
+
+  static function loadConfigReplaceCallback( $m ) {
+    return "\"\\\\" . $m[1] . "\"";
   }
 
   /**

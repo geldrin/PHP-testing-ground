@@ -2,12 +2,8 @@
 if ( !isset( $user ) )
   $user = $this->bootstrap->getSession('user');
 
-if ( !isset( $userModel ) ) {
-  
-  $userModel = $this->bootstrap->getModel('users');
-  $userModel->select( $user['id'] );
-  
-}
+if ( !isset( $groupModel ) )
+  $groupModel = $this->bootstrap->getModel('groups');
 
 if ( !isset( $departmentModel ) ) {
   
@@ -17,7 +13,7 @@ if ( !isset( $departmentModel ) ) {
 }
 
 $accesstypes = $l->getLov('accesstype');
-if ( $userModel->getGroupCount() == 0 )
+if ( $groupModel->getGroupCount( $user ) == 0 )
   unset( $accesstypes['groups'] );
 
 if ( $departmentModel->getCount() == 0 )
@@ -74,12 +70,7 @@ $config['groups[]'] = array(
   'type'        => 'inputCheckboxDynamic',
   'sql'         => "
     SELECT g.id, g.name
-    FROM
-      groups AS g,
-      groups_members AS gm
-    WHERE
-      gm.userid = '" . $user['id'] . "' AND
-      g.id      = gm.groupid
+    " . $groupModel->getUserGroupWhere( $user ) . "
     ORDER BY g.name DESC",
   'validation'  => array(
     array(

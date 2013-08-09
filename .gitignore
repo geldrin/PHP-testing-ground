@@ -10,3 +10,6 @@ config_local.php
 httpdocs/flash/**
 data/cache/smarty/**
 data/cache/application/**
+data/logs/**
+data/logs/jobs/**
+data/watchdog/**

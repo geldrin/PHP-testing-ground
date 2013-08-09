@@ -41,6 +41,7 @@ class Createfeed extends \Visitor\HelpForm {
     $l = $this->bootstrap->getLocalization();
     $this->controller->toSmarty['title'] = $l('live', 'createfeed_title');
     $this->controller->toSmarty['formclass'] = 'leftdoublebox';
+    $this->controller->toSmarty['helpclass'] = 'rightbox small';
     parent::init();
     
   }

@@ -9,6 +9,7 @@ class Createnews extends \Visitor\Form {
     $l = $this->bootstrap->getLocalization();
     $this->controller->toSmarty['title'] = $l('organizations', 'createnews_title');
     $this->controller->toSmarty['formclass'] = 'leftdoublebox';
+    $this->controller->toSmarty['helpclass'] = 'rightbox small';
     
   }
   

@@ -1447,10 +1447,6 @@ class Recordings extends \Springboard\Model {
       'contentmasterstatus' => 'uploaded',
     );
     
-    // contentmasterstatus not null -> nem "friss" feltoltes
-    if ( $this->oldcontentstatuses['contentmasterstatus'] )
-      $contentstatus['contentstatus'] = 'reconvert';
-    
     $this->updateRow( $contentstatus );
     
   }

@@ -5,9 +5,9 @@ class Controller extends \Visitor\Controller {
   public $permissions = array(
     'index'               => 'public',
     'details'             => 'public',
-    'create'              => 'uploader|clientadmin',
-    'modify'              => 'uploader|clientadmin',
-    'delete'              => 'uploader|clientadmin',
+    'create'              => 'uploader|editor|clientadmin',
+    'modify'              => 'uploader|editor|clientadmin',
+    'delete'              => 'uploader|editor|clientadmin',
     'mychannels'          => 'member',
     'addrecording'        => 'member',
     'deleterecording'     => 'member',
