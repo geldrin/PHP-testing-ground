@@ -188,7 +188,7 @@ $config = array(
   //----
   'setupdirs' => array(
     'user'            => 'dam', // a user/group amire chown -R eljuk az egesz konyvtarat
-    'group'           => 'cms',
+    'group'           => 'vsq',
     'perms'           => 'g+w', // a chmor -R parametere
     'privilegeduser'  => 'www-data', // a gitignorebol vett konyvtarak user/group/permje
     'privilegedgroup' => 'www-data',
