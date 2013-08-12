@@ -18,7 +18,7 @@ $config         = array(
       array(
         'type' => 'custom',
         'php'  => '<FORM.q> != "' . $l('search', 'q') . '"',
-        'js'   => '<FORM.q> != "' . $l('search', 'q') . '"',
+        'js'   => 'checkAdvancedSearchInputs()',
         'help' => $l('search', 'q_help'),
       ),
     ),

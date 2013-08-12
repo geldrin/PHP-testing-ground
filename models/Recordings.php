@@ -2387,56 +2387,60 @@ class Recordings extends \Springboard\Model {
       return $this->searchadvancedwhere;
     
     $where = array();
-    if ( $search['wholeword'] ) {
+    if ( strlen( $search['q'] ) ) {
       
-      $term  = preg_quote( $search['q'] );
-      $trans = array(
-        'a' => '[aá]',
-        'á' => '[aá]',
-        'Á' => '[AÁ]',
-        'A' => '[AÁ]',
-        'e' => '[eé]',
-        'é' => '[eé]',
-        'E' => '[EÉ]',
-        'É' => '[EÉ]',
-        'i' => '[ií]',
-        'í' => '[ií]',
-        'I' => '[IÍ]',
-        'Í' => '[IÍ]',
-        'o' => '[oóöő]',
-        'ó' => '[oóöő]',
-        'ö' => '[oóöő]',
-        'ő' => '[oóöő]',
-        'O' => '[OÓÖŐ]',
-        'Ó' => '[OÓÖŐ]',
-        'Ö' => '[OÓÖŐ]',
-        'Ő' => '[OÓÖŐ]',
-        'u' => '[uúüű]',
-        'ú' => '[uúüű]',
-        'ü' => '[uúüű]',
-        'Ű' => '[uúüű]',
-        'U' => '[UÚÜŰ]',
-        'Ú' => '[UÚÜŰ]',
-        'Ü' => '[UÚÜŰ]',
-        'Ű' => '[UÚÜŰ]',
-      );
-      $term = strtr( $term, $trans );
-      $term = "REGEXP " . $this->db->qstr( '[[:<:]]' . $term . '[[:>:]]' );
+      if ( $search['wholeword'] ) {
+        
+        $term  = preg_quote( $search['q'] );
+        $trans = array(
+          'a' => '[aá]',
+          'á' => '[aá]',
+          'Á' => '[AÁ]',
+          'A' => '[AÁ]',
+          'e' => '[eé]',
+          'é' => '[eé]',
+          'E' => '[EÉ]',
+          'É' => '[EÉ]',
+          'i' => '[ií]',
+          'í' => '[ií]',
+          'I' => '[IÍ]',
+          'Í' => '[IÍ]',
+          'o' => '[oóöő]',
+          'ó' => '[oóöő]',
+          'ö' => '[oóöő]',
+          'ő' => '[oóöő]',
+          'O' => '[OÓÖŐ]',
+          'Ó' => '[OÓÖŐ]',
+          'Ö' => '[OÓÖŐ]',
+          'Ő' => '[OÓÖŐ]',
+          'u' => '[uúüű]',
+          'ú' => '[uúüű]',
+          'ü' => '[uúüű]',
+          'Ű' => '[uúüű]',
+          'U' => '[UÚÜŰ]',
+          'Ú' => '[UÚÜŰ]',
+          'Ü' => '[UÚÜŰ]',
+          'Ű' => '[UÚÜŰ]',
+        );
+        $term = strtr( $term, $trans );
+        $term = "REGEXP " . $this->db->qstr( '[[:<:]]' . $term . '[[:>:]]' );
+        
+      } else {
+        
+        $term = str_replace( ' ', '%', $search['q'] );
+        $term = 'LIKE ' . $this->db->qstr( '%' . $term . '%' );
+        
+      }
       
-    } else {
-      
-      $term = str_replace( ' ', '%', $search['q'] );
-      $term = 'LIKE ' . $this->db->qstr( '%' . $term . '%' );
+      $where[] = "
+        (
+           r.title       $term OR
+           r.subtitle    $term OR
+           r.description $term
+        )
+      ";
       
     }
-    
-    $where[] = "
-      (
-         r.title       $term OR
-         r.subtitle    $term OR
-         r.description $term
-      )
-    ";
     
     if ( strlen( $search['uploaddatefrom'] ) )
       $where[] = "r.timestamp >= " . $this->db->qstr( $search['uploaddatefrom'] );

@@ -1670,3 +1670,29 @@ function setupDisabledAfter() {
   })
   
 }
+
+function checkAdvancedSearchInputs() {
+  
+  if (
+    (
+      $j('#search').val() &&
+      $j('#search').val() != $j('#search').attr('data-origval')
+    ) ||
+    (
+      $j('#contributorjob').val() &&
+      $j('#contributorjob').val() != $j('#contributorjob').attr('data-origval')
+    ) ||
+    (
+      $j('#contributororganization').val() &&
+      $j('#contributororganization').val() != $j('#contributororganization').attr('data-origval')
+    ) ||
+    (
+      $j('#contributorname').val() &&
+      $j('#contributorname').val() != $j('#contributorname').attr('data-origval')
+    )
+  )
+    return true;
+  
+  return false;
+  
+}
