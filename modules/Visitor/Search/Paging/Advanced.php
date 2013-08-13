@@ -19,15 +19,24 @@ class Advanced extends \Visitor\Paging {
     $this->user        = $this->bootstrap->getSession('user');
     $this->foreachelse = $l('', 'foreachelse');
     $this->title       = $l('search', 'advanced_title');
+    
+    if ( isset( $_REQUEST['s'] ) and $_REQUEST['s'] == 1 ) {
+      $form = $this->getForm( $this->application->getParameters() );
+      $this->formvalid = $form->validate();
+    } else {
+      $form = $this->getForm( array() );
+      $this->formvalid = false;
+    }
+    
     $this->controller->toSmarty['listclass'] = 'recordinglist';
     $this->controller->toSmarty['form']      =
-      $this->getForm()->getHTML()
+      $form->getHTML()
     ;
     parent::init();
     
     $this->searchterms = $this->getSearchParams();
     
-    if ( !$this->searchterms['q'] )
+    if ( !$this->formvalid )
      $this->foreachelse = $l('search', 'search_minimum_3chars');
     
   }
@@ -46,7 +55,7 @@ class Advanced extends \Visitor\Paging {
   
   protected function setupCount() {
     
-    if ( !$this->searchterms['q'] )
+    if ( !$this->formvalid )
       return $this->itemcount = 0;
     
     $this->recordingsModel = $this->bootstrap->getModel('recordings');
@@ -61,7 +70,7 @@ class Advanced extends \Visitor\Paging {
   
   protected function getItems( $start, $limit, $orderby ) {
     
-    if ( !$this->searchterms['q'] )
+    if ( !$this->formvalid )
       return array();
     
     $items = $this->recordingsModel->getSearchAdvancedArray(
@@ -81,7 +90,7 @@ class Advanced extends \Visitor\Paging {
     
   }
   
-  public function getForm() {
+  public function getForm( $values ) {
     
     $l    = $this->bootstrap->getLocalization();
     $form = $this->bootstrap->getForm(
@@ -126,7 +135,6 @@ class Advanced extends \Visitor\Paging {
       'Visitor/Search/Form/Configs/Advanced.php'
     ;
     
-    $values = $this->application->getParameters();
     include( $configfile ); // innen jon a $config
     
     $form->addElements( $config, $values, false );
@@ -181,6 +189,33 @@ class Advanced extends \Visitor\Paging {
     }
     
     return $params;
+    
+  }
+  
+  public function checkAdvancedSearchInputs( $q, $contributorjob, $contributororganization, $contributorname ) {
+    
+    $l = $this->bootstrap->getLocalization();
+    if (
+        (
+          strlen( trim( $q ) ) and
+          $q != $l('search', 'q')
+        ) or
+        (
+          strlen( trim( $contributorjob ) ) and
+          $contributorjob != $l('search', 'contributorjob')
+        ) or
+        (
+          strlen( trim( $contributororganization ) ) and
+          $contributororganization != $l('search', 'contributororganization')
+        ) or
+        (
+          strlen( trim( $contributorname ) ) and
+          $contributorname != $l('search', 'contributorname')
+        )
+      )
+      return true;
+    else
+      return false;
     
   }
   

@@ -2525,7 +2525,7 @@ class Recordings extends \Springboard\Model {
             " AND id IN('" . implode("', '", $contributorids ) . "'"
           )
         );
-      
+        
       }
       
     }
@@ -2569,21 +2569,30 @@ class Recordings extends \Springboard\Model {
     }
     
     $where = implode(' AND ', $where );
-    return $this->searchadvancedwhere = array(
-      'term'  => $term,
+    $ret   = array(
       'where' => $where,
+      'empty' => false,
     );
+    
+    if ( isset( $term ) )
+      $ret['term'] = $term;
+    elseif ( empty( $recordingids ) )
+      $ret['empty'] = true;
+    
+    return $this->searchadvancedwhere = $ret;
     
   }
   
   public function getSearchAdvancedCount( $user, $organizationid, $search ) {
     
     $where  = $this->getSearchAdvancedWhere( $organizationid, $search );
+    if ( $where['empty'] )
+      return 0;
     
-    $where['where'] .= "
-      AND
-      r.organizationid = '$organizationid'
-    ";
+    if ( strlen( trim( $where['where'] ) ) )
+      $where['where'] .= ' AND ';
+    
+    $where['where'] .= "r.organizationid = '$organizationid'";
     
     $query = "(
         SELECT COUNT(*) FROM
@@ -2600,13 +2609,21 @@ class Recordings extends \Springboard\Model {
   public function getSearchAdvancedArray( $user, $organizationid, $search, $start, $limit, $order ) {
     
     $where  = $this->getSearchAdvancedWhere( $organizationid, $search );
+    if ( $where['empty'] )
+      return array();
+    
     $select = "
       'recording' AS type,
       (
-        1 +
-        IF( r.title " . $where['term'] . ", 2, 0 ) +
-        IF( r.subtitle " . $where['term'] . ", 1, 0 ) +
-        IF( r.description " . $where['term'] . ", 1, 0 )
+        1 " .
+        (
+          isset( $where['term'] ) ? "
+            +
+            IF( r.title " . $where['term'] . ", 2, 0 ) +
+            IF( r.subtitle " . $where['term'] . ", 1, 0 ) +
+            IF( r.description " . $where['term'] . ", 1, 0 )
+          ": ""
+        ) . "
       ) AS relevancy,
       r.id,
       '1' AS parentid,
@@ -2624,10 +2641,10 @@ class Recordings extends \Springboard\Model {
       '0' AS numberofrecordings
     ";
     
-    $where['where'] .= "
-      AND
-      r.organizationid = '$organizationid'
-    ";
+    if ( strlen( trim( $where['where'] ) ) )
+      $where['where'] .= ' AND ';
+    
+    $where['where'] .= "r.organizationid = '$organizationid'";
     
     $query = self::getUnionSelect( $user, $select, 'recordings AS r', $where['where'] ) . "
       ORDER BY $order
