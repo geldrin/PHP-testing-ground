@@ -44,7 +44,8 @@ class Modify extends \Visitor\HelpForm {
       if ( !move_uploaded_file( $_FILES['avatarfilename']['tmp_name'], $dest ) )
         throw new \Exception("Failed moving avatarfile: " . var_export( $_FILES, true ) );
       
-      $values['avatarstatus'] = 'uploaded';
+      $values['avatarstatus']   = 'uploaded';
+      $values['avatarsourceip'] = $this->bootstrap->config['node_sourceip'];
       
     }
     
