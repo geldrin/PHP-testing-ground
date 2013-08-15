@@ -3,6 +3,12 @@ $language       = \Springboard\Language::get();
 $organizationid = $this->controller->organization['id'];
 $config         = array(
   
+  // submitted = true, if set -> form was submitted
+  's' => array(
+    'type'  => 'inputHidden',
+    'value' => 1,
+  ),
+  
   'q' => array(
     'displayname' => $l('search', 'q'),
     'type'        => 'inputText',
@@ -17,8 +23,15 @@ $config         = array(
       ),
       array(
         'type' => 'custom',
-        'php'  => '<FORM.q> != "' . $l('search', 'q') . '"',
-        'js'   => '<FORM.q> != "' . $l('search', 'q') . '"',
+        'php'  => '
+          $GLOBALS["formcontroller"]->checkAdvancedSearchInputs(
+            <FORM.q>,
+            <FORM.contributorjob>,
+            <FORM.contributororganization>,
+            <FORM.contributorname>
+          )
+        ',
+        'js'   => 'checkAdvancedSearchInputs()',
         'help' => $l('search', 'q_help'),
       ),
     ),
@@ -234,3 +247,5 @@ $config         = array(
   ),
   
 );
+
+$GLOBALS['formcontroller'] = $this;
