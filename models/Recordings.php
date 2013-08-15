@@ -2387,56 +2387,60 @@ class Recordings extends \Springboard\Model {
       return $this->searchadvancedwhere;
     
     $where = array();
-    if ( $search['wholeword'] ) {
+    if ( strlen( $search['q'] ) ) {
       
-      $term  = preg_quote( $search['q'] );
-      $trans = array(
-        'a' => '[aá]',
-        'á' => '[aá]',
-        'Á' => '[AÁ]',
-        'A' => '[AÁ]',
-        'e' => '[eé]',
-        'é' => '[eé]',
-        'E' => '[EÉ]',
-        'É' => '[EÉ]',
-        'i' => '[ií]',
-        'í' => '[ií]',
-        'I' => '[IÍ]',
-        'Í' => '[IÍ]',
-        'o' => '[oóöő]',
-        'ó' => '[oóöő]',
-        'ö' => '[oóöő]',
-        'ő' => '[oóöő]',
-        'O' => '[OÓÖŐ]',
-        'Ó' => '[OÓÖŐ]',
-        'Ö' => '[OÓÖŐ]',
-        'Ő' => '[OÓÖŐ]',
-        'u' => '[uúüű]',
-        'ú' => '[uúüű]',
-        'ü' => '[uúüű]',
-        'Ű' => '[uúüű]',
-        'U' => '[UÚÜŰ]',
-        'Ú' => '[UÚÜŰ]',
-        'Ü' => '[UÚÜŰ]',
-        'Ű' => '[UÚÜŰ]',
-      );
-      $term = strtr( $term, $trans );
-      $term = "REGEXP " . $this->db->qstr( '[[:<:]]' . $term . '[[:>:]]' );
+      if ( $search['wholeword'] ) {
+        
+        $term  = preg_quote( $search['q'] );
+        $trans = array(
+          'a' => '[aá]',
+          'á' => '[aá]',
+          'Á' => '[AÁ]',
+          'A' => '[AÁ]',
+          'e' => '[eé]',
+          'é' => '[eé]',
+          'E' => '[EÉ]',
+          'É' => '[EÉ]',
+          'i' => '[ií]',
+          'í' => '[ií]',
+          'I' => '[IÍ]',
+          'Í' => '[IÍ]',
+          'o' => '[oóöő]',
+          'ó' => '[oóöő]',
+          'ö' => '[oóöő]',
+          'ő' => '[oóöő]',
+          'O' => '[OÓÖŐ]',
+          'Ó' => '[OÓÖŐ]',
+          'Ö' => '[OÓÖŐ]',
+          'Ő' => '[OÓÖŐ]',
+          'u' => '[uúüű]',
+          'ú' => '[uúüű]',
+          'ü' => '[uúüű]',
+          'Ű' => '[uúüű]',
+          'U' => '[UÚÜŰ]',
+          'Ú' => '[UÚÜŰ]',
+          'Ü' => '[UÚÜŰ]',
+          'Ű' => '[UÚÜŰ]',
+        );
+        $term = strtr( $term, $trans );
+        $term = "REGEXP " . $this->db->qstr( '[[:<:]]' . $term . '[[:>:]]' );
+        
+      } else {
+        
+        $term = str_replace( ' ', '%', $search['q'] );
+        $term = 'LIKE ' . $this->db->qstr( '%' . $term . '%' );
+        
+      }
       
-    } else {
-      
-      $term = str_replace( ' ', '%', $search['q'] );
-      $term = 'LIKE ' . $this->db->qstr( '%' . $term . '%' );
+      $where[] = "
+        (
+           r.title       $term OR
+           r.subtitle    $term OR
+           r.description $term
+        )
+      ";
       
     }
-    
-    $where[] = "
-      (
-         r.title       $term OR
-         r.subtitle    $term OR
-         r.description $term
-      )
-    ";
     
     if ( strlen( $search['uploaddatefrom'] ) )
       $where[] = "r.timestamp >= " . $this->db->qstr( $search['uploaddatefrom'] );
@@ -2521,7 +2525,7 @@ class Recordings extends \Springboard\Model {
             " AND id IN('" . implode("', '", $contributorids ) . "'"
           )
         );
-      
+        
       }
       
     }
@@ -2565,21 +2569,30 @@ class Recordings extends \Springboard\Model {
     }
     
     $where = implode(' AND ', $where );
-    return $this->searchadvancedwhere = array(
-      'term'  => $term,
+    $ret   = array(
       'where' => $where,
+      'empty' => false,
     );
+    
+    if ( isset( $term ) )
+      $ret['term'] = $term;
+    elseif ( empty( $recordingids ) )
+      $ret['empty'] = true;
+    
+    return $this->searchadvancedwhere = $ret;
     
   }
   
   public function getSearchAdvancedCount( $user, $organizationid, $search ) {
     
     $where  = $this->getSearchAdvancedWhere( $organizationid, $search );
+    if ( $where['empty'] )
+      return 0;
     
-    $where['where'] .= "
-      AND
-      r.organizationid = '$organizationid'
-    ";
+    if ( strlen( trim( $where['where'] ) ) )
+      $where['where'] .= ' AND ';
+    
+    $where['where'] .= "r.organizationid = '$organizationid'";
     
     $query = "(
         SELECT COUNT(*) FROM
@@ -2596,13 +2609,21 @@ class Recordings extends \Springboard\Model {
   public function getSearchAdvancedArray( $user, $organizationid, $search, $start, $limit, $order ) {
     
     $where  = $this->getSearchAdvancedWhere( $organizationid, $search );
+    if ( $where['empty'] )
+      return array();
+    
     $select = "
       'recording' AS type,
       (
-        1 +
-        IF( r.title " . $where['term'] . ", 2, 0 ) +
-        IF( r.subtitle " . $where['term'] . ", 1, 0 ) +
-        IF( r.description " . $where['term'] . ", 1, 0 )
+        1 " .
+        (
+          isset( $where['term'] ) ? "
+            +
+            IF( r.title " . $where['term'] . ", 2, 0 ) +
+            IF( r.subtitle " . $where['term'] . ", 1, 0 ) +
+            IF( r.description " . $where['term'] . ", 1, 0 )
+          ": ""
+        ) . "
       ) AS relevancy,
       r.id,
       '1' AS parentid,
@@ -2620,10 +2641,10 @@ class Recordings extends \Springboard\Model {
       '0' AS numberofrecordings
     ";
     
-    $where['where'] .= "
-      AND
-      r.organizationid = '$organizationid'
-    ";
+    if ( strlen( trim( $where['where'] ) ) )
+      $where['where'] .= ' AND ';
+    
+    $where['where'] .= "r.organizationid = '$organizationid'";
     
     $query = self::getUnionSelect( $user, $select, 'recordings AS r', $where['where'] ) . "
       ORDER BY $order
