@@ -15,15 +15,15 @@ set_time_limit(0);
 
 date_default_timezone_set("Europe/Budapest");
 
-echo "Wowza log analizer v0.4 - STARTING...\n";
+echo "Wowza log analizer v0.41 - STARTING...\n";
 
 // ---------------------------- User settings ----------------------------------------
 
 // Is stats for live or on demand?
-$islivestats = FALSE;
+$islivestats = TRUE;
 
 // Channel ID: calculate statistics for this channel (live or on demand)
-$channelid = 89;
+$channelid = 108;
 
 // Analyze per connection: TRUE = track all connections | FALSE = give a summary only
 $analyze_perconnection = FALSE;
@@ -173,12 +173,17 @@ if ( $islivestats ) {
 // Log files: prepare the list of log files to be checked (one Wowza log file per day)
 $log_files = array();
 $sec_oneday = 3600 * 24;
+$today_midnight = strtotime(date("Y-m-d 23:59:59"));
 
 if ( !$islocallogfiles ) {
 
-	for ( $timestamp = $event_startdate['timestamp']; $timestamp <= $event_enddate['timestamp']; $timestamp += $sec_oneday ) {
+	for ( $timestamp = $event_startdate['timestamp']; $timestamp <= min($event_enddate['timestamp'], $today_midnight); $timestamp += $sec_oneday ) {
 
-		$log_file = $wowza_log_dir . "access.log." . date("Y-m-d", $timestamp);
+		// Log file suffix
+		$current_suffix = "";
+		if ( date("Y-m-d", $timestamp) != date("Y-m-d") ) $current_suffix = "." . date("Y-m-d", $timestamp);
+
+		$log_file = $wowza_log_dir . "access.log" . $current_suffix;
 		if ( file_exists($log_file) ) {
 			array_push($log_files, $log_file);
 		} else {
@@ -311,6 +316,7 @@ for ( $i = 0; $i < count($log_files); $i++ ) {
 		// Read one line from descriptor file
 		$oneline = fgets($fh);
 		$line++;
+echo ".";
 
 		$oneline = trim($oneline);
 
@@ -395,6 +401,8 @@ for ( $i = 0; $i < count($log_files); $i++ ) {
 
 		// Math log entries: YYYY-MM-DD HH:MM:SS
 		if ( preg_match('/^[\s]*[0-9]{4}-[0-1][0-9]-[0-3][0-9][\s]+[0-2][0-9]:[0-5][0-9]:[0-5][0-9][\s]+[A-Z]+[\s]+(play|publish|stop|unpause|seek|destroy)/', $oneline) ) {
+
+echo "+";
 
 			$log_line = preg_split('/\t+/', $oneline);
 
