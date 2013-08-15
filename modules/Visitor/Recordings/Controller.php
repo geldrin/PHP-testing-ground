@@ -645,6 +645,7 @@ class Controller extends \Visitor\Controller {
       
     }
     
+    $this->toSmarty['needauth']      = $needauth;
     $this->toSmarty['ipaddress']     = $this->getIPAddress();
     $this->toSmarty['member']        = $user;
     $this->toSmarty['mobilehq']      = $mobilehq;

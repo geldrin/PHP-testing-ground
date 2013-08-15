@@ -64,7 +64,9 @@
 {/literal}
 {/if}
 <center>
-{if $browser.mobile}
+{if $browser.mobile and $needauth}
+  {include file=Visitor/mobile_logintoview.tpl indexphoto=$recording|@indexphoto width=$width height=$height}
+{elseif $browser.mobile}
   {if $recording.mobilevideoreshq}
     {assign var=height value=$height-30}
   {/if}

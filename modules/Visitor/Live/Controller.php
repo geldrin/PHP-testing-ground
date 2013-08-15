@@ -215,6 +215,8 @@ class Controller extends \Visitor\Controller {
       $this->toSmarty['lastmodified']  = md5( $this->toSmarty['chat'] );
       
     }
+    
+    $this->toSmarty['needauth']      = $needauth;
     $this->toSmarty['needping']      = true;
     $this->toSmarty['chromeless']    = $chromeless;
     $this->toSmarty['streamtype']    = $streamtype;

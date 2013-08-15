@@ -2,13 +2,16 @@
 namespace Visitor\Users\Form;
 class Login extends \Visitor\Form {
   public $configfile = 'Login.php';
-  public $template = 'Visitor/genericform.tpl';
+  public $template = 'Visitor/Users/Login.tpl';
   public $xsrfprotect = false; // hogy mukodjon a fooldali gyors belepes
   
   public function postSetupForm() {
     
     $l = $this->bootstrap->getLocalization();
     $this->controller->toSmarty['title'] = $l('users', 'login_title');
+    if ( $this->application->getParameter('nolayout') )
+      $this->controller->toSmarty['nolayout'] = true;
+    
     parent::postSetupForm();
     
   }
