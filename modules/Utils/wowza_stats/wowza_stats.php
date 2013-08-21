@@ -22,8 +22,11 @@ echo "Wowza log analizer v0.41 - STARTING...\n";
 // Is stats for live or on demand?
 $islivestats = TRUE;
 
+// Show progress? ".": line is processes, "+" relevant line is found.
+$showprogress = TRUE;
+
 // Channel ID: calculate statistics for this channel (live or on demand)
-$channelid = 108;
+$channelid = 107;
 
 // Analyze per connection: TRUE = track all connections | FALSE = give a summary only
 $analyze_perconnection = FALSE;
@@ -316,7 +319,7 @@ for ( $i = 0; $i < count($log_files); $i++ ) {
 		// Read one line from descriptor file
 		$oneline = fgets($fh);
 		$line++;
-echo ".";
+		if ( $showprogress ) echo ".";
 
 		$oneline = trim($oneline);
 
@@ -402,7 +405,7 @@ echo ".";
 		// Math log entries: YYYY-MM-DD HH:MM:SS
 		if ( preg_match('/^[\s]*[0-9]{4}-[0-1][0-9]-[0-3][0-9][\s]+[0-2][0-9]:[0-5][0-9]:[0-5][0-9][\s]+[A-Z]+[\s]+(play|publish|stop|unpause|seek|destroy)/', $oneline) ) {
 
-echo "+";
+			if ( $showprogress ) echo "+";
 
 			$log_line = preg_split('/\t+/', $oneline);
 
