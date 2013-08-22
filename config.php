@@ -81,7 +81,7 @@ $config = array(
   'categoryiconpath' => $this->basepath . 'httpdocs_static/images/categories/',
   'relatedrecordingcount' => 6,
   'mplayer_identify' => 'mplayer -ao null -vo null -frames 0 -identify %s 2>&1',
-  'mediainfo_identify' => 'mediainfo --output=XML %s 2>&1',
+  'mediainfo_identify' => 'mediainfo --full --output=XML %s 2>&1',
   //----
   'combine' => array(
     'css'     => true,
