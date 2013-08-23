@@ -544,35 +544,6 @@ class Recordings extends \Springboard\Model {
     
   }
   
-  protected function mediainfoDurationToSeconds( $duration ) {
-    
-    $duration = strval( $duration );
-    if (
-         !preg_match(
-           '/^(?:(?<hour>\d+)h)? ?(?:(?<min>\d+)mn)? ?(?:(?<sec>\d+)s)? ?(?:(?<milisec>\d+)ms)?$/',
-           $duration,
-           $matches
-         )
-       )
-      throw new \Exception("Unable to parse mediainfo duration!");
-    
-    $ret = 0;
-    if ( isset( $matches['hour'] ) )
-      $ret += $matches['hour'] * 60 * 60;
-    
-    if ( isset( $matches['min'] ) )
-      $ret += $matches['min'] * 60;
-    
-    if ( isset( $matches['sec'] ) )
-      $ret += $matches['sec'];
-    
-    if ( isset( $matches['milisec'] ) )
-      $ret += $matches['milisec'] / 1000;
-    
-    return $ret;
-    
-  }
-  
   protected function getMediainfoNumericValue( $elem, $isfloat = false, $scale = 1 ) {
     
     $elem = strval( $elem );
@@ -641,17 +612,20 @@ class Recordings extends \Springboard\Model {
     $audiobitrate      = null;
     
     if ( $general->Duration )
-      $videolength = $this->mediainfoDurationToSeconds( $general->Duration );
+      $videolength = $this->getMediainfoNumericValue( $general->Duration[0] );
+    elseif ( $video->Duration )
+      $videolength = $this->getMediainfoNumericValue( $video->Duration[0] );
+    elseif ( $audio->Duration )
+      $videolength = $this->getMediainfoNumericValue( $audio->Duration[0] );
+    else
+      throw new InvalidLengthException('Length not found for the media, output was ' . $output );
+    
+    $videolength = round( $videolength / 1000 ); // mert milisec
     
     if ( $videolength <= $config['recordings_seconds_minlength'] )
       throw new InvalidLengthException('Recording length was less than ' . $config['recordings_seconds_minlength'] );
     
     if ( $video ) {
-      
-      if ( $video->Duration )
-        $videolength = $this->mediainfoDurationToSeconds( $video->Duration );
-      else
-        throw new InvalidLengthException('Length not found for the media, output was ' . $output );
       
       $videostreamid  = $this->getMediainfoNumericValue( $video->ID );
       $videofps       = $this->getMediainfoNumericValue( $video->Frame_rate, true );
@@ -661,10 +635,15 @@ class Recordings extends \Springboard\Model {
       if ( $video->Format_profile )
         $videocodec  .= ' / ' . $video->Format_profile;
       
-      if ( $video->Bit_rate_mode == 'Constant' )
-        $videobitratemode = 'cbr';
-      else
-        $videobitratemode = 'vbr';
+      if ( is_array( $video->Bit_rate_mode ) ) {
+        // sometimes it's placed inside of a subarray, sometimes not, needs to be checked every time.
+        if ( $video->Bit_rate_mode == 'Constant' )
+          $videobitratemode = 'cbr';
+        else
+          $videobitratemode = 'vbr';
+        
+      } else
+        $videobitratemode = $video->Bit_rate_mode[1];
       
       if ( $video->Width and $video->Height ) {
         
@@ -675,18 +654,17 @@ class Recordings extends \Springboard\Model {
         );
         
         if ( $video->Display_aspect_ratio )
-          $videodar = $video->Display_aspect_ratio;
+          $videodar = $this->getMediainfoNumericValue( $video->Display_aspect_ratio, true );
         
-        $videobitrate = $video->Bit_rate ?: $general->Overall_bit_rate;
+        $videobitrate =
+          $this->getMediainfoNumericValue( $video->Bit_rate )?:
+          $this->getMediainfoNumericValue( $general->Overall_bit_rate )
+        ;
         
-        if ( $videobitrate and stripos( $videobitrate, 'kbps' ) !== false )
-          $scale = 1000;
-        elseif ( $videobitrate and stripos( $videobitrate, 'mbps' ) !== false )
-          $scale = 1000000;
+        if ( $video->Scan_type )
+          $videoisinterlaced = $video->Scan_type == 'Progressive'? 0: 1;
         else
-          $scale = 1;
-        
-        $videobitrate = $this->getMediainfoNumericValue( $videobitrate, false, $scale );
+          throw new InvalidLengthException('Unable to find Scan_type, output was: ' . $output );
         
       }
       
@@ -700,23 +678,16 @@ class Recordings extends \Springboard\Model {
       if ( $audio->Format_profile )
         $audiocodec .= ' / ' . $audio->Format_profile;
       
-      $audiostreamid = $this->getMediainfoNumericValue( $audio->ID );
-      $audiofreq     = $this->getMediainfoNumericValue( $audio->Sampling_rate, true, 1000 );
-      $audiobitrate  = $this->getMediainfoNumericValue( $audio->Bit_rate, false, 1000 );
-      $audiochannels = $this->getMediainfoNumericValue( $audio->Channel_s_ );
+      $audiostreamid = $this->getMediainfoNumericValue( $audio->ID[0] );
+      $audiofreq     = $this->getMediainfoNumericValue( $audio->Sampling_rate[0] );
+      $audiobitrate  = $this->getMediainfoNumericValue( $audio->Bit_rate[0] );
+      $audiochannels = $this->getMediainfoNumericValue( $audio->Channel_s_[1] );
+      $audiomode     = $audio->Bit_rate_mode[0]?: null;
       
-      if ( $audio->Bit_rate_mode == 'Constant' )
-        $audiomode   = 'cbr';
-      elseif ( $audio->Bit_rate_mode == 'Variable' )
-        $audiomode   = 'vbr';
-      
-      if ( $audio->Compression_mode == 'Lossy' )
+      if ( $audio->Compression_mode[0] == 'Lossy' )
         $audioquality = 'lossy';
-      elseif ( $audio->Compression_mode == 'Lossless' )
+      elseif ( $audio->Compression_mode[0] == 'Lossless' )
         $audioquality = 'lossless';
-      
-      if ( !$videolength )
-        $videolength = $this->mediainfoDurationToSeconds( $audio->Duration );
       
     }
     
