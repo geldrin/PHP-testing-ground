@@ -32,6 +32,8 @@
     swfobject.embedSWF('flash/TCPlayer.swf?v={$VERSION}', 'playercontainer', '{$playerwidth}', '{$playerheight}', '11.1.0', 'flash/swfobject/expressInstall.swf', {$flashdata|@jsonescape:true}, flashdefaults.params );
   </script>
   <div id="playercontainer" style="width: {$playerwidth}px; height: {$playerheight}px">{#recordings__noflash#}</div>
+{elseif $needauth}
+  {include file=Visitor/mobile_logintoview.tpl}
 {else}
   <center>
     {if $streamtype == 'ios'}
@@ -51,7 +53,7 @@
 {if $chromeless}
 </center>
 {/if}
-{if $displaychat}
+{if $displaychat and ( $streamtype == 'desktop' or !$needauth )}
   
   <div class="clear"></div><br/>
   

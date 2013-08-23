@@ -57,6 +57,7 @@ class MassInvite extends \Visitor\HelpForm {
       : null
     ;
     
+    $invitecount = 0;
     foreach( $users as $email => $username ) {
       
       $invite = array(
@@ -72,14 +73,28 @@ class MassInvite extends \Visitor\HelpForm {
       
       $invModel->insert( $invite );
       $this->sendEmail( $invModel->row );
+      $invitecount++;
       
     }
     
     $messages = $this->form->getMessages();
-    if ( empty( $messages ) )
-      $this->controller->redirectWithMessage('users/admin', $l('users', 'user_invited') );
     
-    $this->controller->toSmarty['sessionmessage'] = $l('users', 'user_invited');
+    $thousandsseparator = ' ';
+    if ( \Springboard\Language::get() == 'en' )
+      $thousandsseparator = ',';
+    
+    $invitecount = number_format( $invitecount, 0, '.', $thousandsseparator );
+    
+    if ( empty( $messages ) )
+      $this->controller->redirectWithMessage(
+        'users/admin',
+        sprintf( $l('users', 'users_invited'), $invitecount )
+      );
+    
+    $this->controller->toSmarty['sessionmessage'] = sprintf(
+      $l('users', 'users_invited'),
+      $invitecount
+    );
     
   }
   

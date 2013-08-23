@@ -1675,8 +1675,8 @@ function checkAdvancedSearchInputs() {
   
   if (
     (
-      $j('#search').val() &&
-      $j('#search').val() != $j('#search').attr('data-origval')
+      $j('#q').val() &&
+      $j('#q').val() != $j('#q').attr('data-origval')
     ) ||
     (
       $j('#contributorjob').val() &&
