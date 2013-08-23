@@ -544,6 +544,35 @@ class Recordings extends \Springboard\Model {
     
   }
   
+  protected function mediainfoDurationToSeconds( $duration ) {
+    
+    $duration = strval( $duration );
+    if (
+         !preg_match(
+           '/^(?:(?<hour>\d+)h)? ?(?:(?<min>\d+)mn)? ?(?:(?<sec>\d+)s)? ?(?:(?<milisec>\d+)ms)?$/',
+           $duration,
+           $matches
+         )
+       )
+      throw new \Exception("Unable to parse mediainfo duration!");
+    
+    $ret = 0;
+    if ( isset( $matches['hour'] ) )
+      $ret += $matches['hour'] * 60 * 60;
+    
+    if ( isset( $matches['min'] ) )
+      $ret += $matches['min'] * 60;
+    
+    if ( isset( $matches['sec'] ) )
+      $ret += $matches['sec'];
+    
+    if ( isset( $matches['milisec'] ) )
+      $ret += $matches['milisec'] / 1000;
+    
+    return $ret;
+    
+  }
+  
   protected function getMediainfoNumericValue( $elem, $isfloat = false, $scale = 1 ) {
     
     $elem = strval( $elem );
@@ -558,185 +587,168 @@ class Recordings extends \Springboard\Model {
     
   }
   
-	public function analyze( $filename, $originalfilename = null ) {
-		$config = $this->bootstrap->config;
-		$debug = $this->bootstrap->debug;
-		
-		if ( !$originalfilename )
-			$originalfilename = $filename;
-
-		$cmd = sprintf( $config['mediainfo_identify'], escapeshellarg( $filename ) );
-		exec( $cmd, $output, $return );
-		$output = implode("\n", $output );
-
-		if ( $return )
-			throw new \Exception('Mediainfo returned non-zero exit code, output was: ' . $output , $return );
-
-		if ( $debug )
-			var_dump( $output );
-
-		$xml     = new \SimpleXMLElement( $output );
-		$general = current( $xml->xpath('File/track[@type="General"][1]') );
-		$video   = current( $xml->xpath('File/track[@type="Video"][1]') );
-		$audio   = current( $xml->xpath('File/track[@type="Audio"][1]') );
-		
-		if ( !($general instanceof SimpleXMLElement) or ( !$video and !$audio ) )
-			throw new InvalidFileTypeException('Unrecognized file, output was: ' . $output );
-		$general = $this->SXEtoArray($general);
-			
-		if ( $video and $audio )
-			$mediatype = 'video';
-		elseif ( !$video and $audio )
-			$mediatype = 'audio';
-		elseif ( $video and !$audio )
-			$mediatype = 'videoonly';
-		else
-			throw new \Exception("Cannot happen wtf, output was: " . $output );
-
-		$extension         = \Springboard\Filesystem::getExtension( $originalfilename ) ? : $general['File_extension'];;
-		$videocontainer    = $general['Format'][0]?: $extension;
-		$videostreamid     = null;
-		$videofps          = null;
-		$videocodec        = null;
-		$videores          = null;
-		$videodar          = null;
-		$videobitrate      = null;
-		$videobitratemode  = null;
-		$videoisinterlaced = null;
-		$videolength       = null;
-		$audiostreamid     = null;
-		$audiocodec        = null;
-		$audiochannels     = null;
-		$audiomode         = null;
-		$audioquality      = null;
-		$audiofreq         = null;
-		$audiobitrate      = null;
-
-		if ( $general['Duration'][0] ) {
-			$videolength = round($general['Duration'][0] / 1000);
-		}
-
-		if ( $videolength <= $config['recordings_seconds_minlength'] )
-			throw new InvalidLengthException('Recording length was less than ' . $config['recordings_seconds_minlength'] );
-			
-		if ( $video instanceof SimpleXMLElement ) {
-			$video = $this->SXEtoArray($video);
-			
-			if ( $video['Duration'][0] ) {
-				$videolength = round($video['Duration'][0] / 1000);	// Duration[0] is in milisecs
-			} else {
-				throw new InvalidLengthException('Length not found for the media, output was ' . $output );
-			}
-
-			$videostreamid  = array_key_exists('ID', $video) === true ? $this->getMediainfoNumericValue( $video['ID'][0]): null;
-			$videofps       = $this->getMediainfoNumericValue( $video['Frame_rate'][0], true );
-			$videocodec     = $video['Format'];
-			
-			if ( is_array( $videocodec)) {
-				echo "\nvideo->Format !!!\n";
-				if ( array_key_exists('Format_Info', $video) )
-					$videocodec .= ' (' . $video['Format_Info'] . ')';
-				if ( array_key_exists('Format_profile', $video) )	// There's no such entry in the current video values
-					$videocodec .= ' / ' . $video['Format_profile'];
-			}
-			
-			if ( array_key_exists( 'Bit_rate_mode', $video)) {	// Ain't nobody use this attribute, man!
-				if ( !is_array( $video['Bit_rate_mode'])) {
-				// sometimes it's placed inside of a subarray, sometimes not, needs to be checked every time.
-					if ( $video['Bit_rate_mode'] == 'Constant' )
-						$videobitratemode = 'cbr';
-					else
-						$videobitratemode = 'vbr';
-				} else {
-					$videobitratemode = $video['Bit_rate_mode'][1];
-				}
-			}
-			
-			if ( $video['Width'][0] and $video['Height'][0] ) {
-				$videores = sprintf(
-					'%sx%s',
-					$this->getMediainfoNumericValue( $video['Width'][0] ),
-					$this->getMediainfoNumericValue( $video['Height'][0] )
-				);
-
-				if ( $video['Display_aspect_ratio'][0] )
-					$videodar = $this->getMediainfoNumericValue( $video['Display_aspect_ratio'][0], true);
-
-				$videobitrate = $video['Bit_rate'][0] + 0 ?: $general['Overall_bit_rate'][0] + 0;
-				$videobitrate = $this->getMediainfoNumericValue( $videobitrate, false, 1);
-			}
-			
-			if ($video['Scan_type']) {
-				$videoisinterlaced = $video['Scan_type'][0] == "Progressive" ? 0 : 1;
-			} else {
-				throw new InvalidLengthException('Length not found for the media, output was ' . $output );
-			}
-		}
-
-		if ( $audio instanceof SimpleXMLElement) {
-			$audio = $this->SXEtoArray($audio);
-			
-			$audiocodec    = $audio['Format'];
-			if ( array_key_exists('Format_Info', $audio))
-				$audiocodec .= ' ( ' . $audio['Format_Info'] . ' ) ';
-			if ( array_key_exists('Format_profile', $audio))
-				$audiocodec .= ' / ' . $audio['Format_profile'];
-
-			$audiostreamid = array_key_exists('ID', $audio) === true ? $this->getMediainfoNumericValue( $audio['ID'][0]) : null;
-			$audiofreq     = $this->getMediainfoNumericValue( $audio['Sampling_rate'][0] , false, 1 );
-			$audiobitrate  = $this->getMediainfoNumericValue( $audio['Bit_rate'][0], false, 1 );
-			$audiochannels = $this->getMediainfoNumericValue( $audio['Channel_s_'][1] );
-
-			$audiomode = array_key_exists('Bit_rate_mode', $audio) ? $audio['Bit_rate_mode'][0] : null;
-			
-			if ( array_key_exists('Compression_mode', $audio) === true)
-				$audioquality = $audio['Compression_mode'][0] == 'Lossy' ? 'lossy' : 'lossless' ;
-			
-			if ( !$videolength ) {
-				$videolength = array_key_exists('Duration', $audio) ? round($audio['Duration'][0] / 1000) : null;
-			}
-			
-		}
-
-		$info = array(
-			'mastermediatype'            => $mediatype,
-			'mastervideostreamselected'  => $videostreamid,
-			'mastervideoextension'       => $extension,
-			'mastervideocontainerformat' => $videocontainer,
-			'mastervideofilename'        => basename($originalfilename),
-			'mastervideofps'             => $videofps,
-			'mastervideocodec'           => $videocodec,
-			'mastervideores'             => $videores,
-			'mastervideodar'             => $videodar,
-			'mastervideobitrate'         => $videobitrate,
-			'mastervideobitratemode'     => $videobitratemode,
-			'mastervideoisinterlaced'    => $videoisinterlaced,
-			'masterlength'               => $videolength,
-			'masteraudiostreamselected'  => $audiostreamid,
-			'masteraudiocodec'           => $audiocodec,
-			'masteraudiochannels'        => $audiochannels,
-			'masteraudiobitratemode'     => $audiomode,
-			'masteraudioquality'         => $audioquality,
-			'masteraudiofreq'            => $audiofreq,
-			'masteraudiobitrate'         => $audiobitrate,
-		);
-
-		foreach( $info as $key => $value )
-			$info[ $key ] = gettype( $value ) == 'object' ? strval( $value ): $value;
-		
-		return $this->metadata = $info;
-	}
-	
-	// convert SimpleXML objects into arrays
-	function SXEtoArray(SimpleXMLElement $xml) {
-		$array = (array) $xml;
-		foreach ( array_slice($array, 0) as $key => $value ) {
-			if ( $value instanceof SimpleXMLElement ) {
-				$array[$key] = empty($value) ? NULL : json_decode(json_encode($value), true);
-			}
-		}
-		return $array;
-	}
+  public function analyze( $filename, $originalfilename = null ) {
+    
+    $config = $this->bootstrap->config;
+    
+    if ( !$originalfilename )
+      $originalfilename = $filename;
+    
+    $cmd = sprintf( $config['mediainfo_identify'], escapeshellarg( $filename ) );
+    exec( $cmd, $output, $return );
+    $output = implode("\n", $output );
+    
+    if ( $return )
+      throw new \Exception('Mediainfo returned non-zero exit code, output was: ' . $output, $return );
+    
+    if ( $this->bootstrap->debug )
+      var_dump( $output );
+    
+    $xml     = new \SimpleXMLElement( $output );
+    $general = current( $xml->xpath('File/track[@type="General"][1]') );
+    $video   = current( $xml->xpath('File/track[@type="Video"][1]') );
+    $audio   = current( $xml->xpath('File/track[@type="Audio"][1]') );
+    
+    if ( !$general or ( !$video and !$audio ) )
+      throw new InvalidFileTypeException('Unrecognized file, output was: ' . $output );
+    
+    if ( $video and $audio )
+      $mediatype = 'video';
+    elseif ( !$video and $audio )
+      $mediatype = 'audio';
+    elseif ( $video and !$audio )
+      $mediatype = 'videoonly';
+    else
+      throw new \Exception("Cannot happen wtf, output was: " . $output );
+    
+    $extension         = \Springboard\Filesystem::getExtension( $originalfilename )?: null;
+    $videocontainer    = $general->Format?: $extension;
+    $videostreamid     = null;
+    $videofps          = null;
+    $videocodec        = null;
+    $videores          = null;
+    $videodar          = null;
+    $videobitrate      = null;
+    $videobitratemode  = null;
+    $videoisinterlaced = null; // nem adunk neki erteket sose, torolni kene?
+    $videolength       = null;
+    $audiostreamid     = null;
+    $audiocodec        = null;
+    $audiochannels     = null;
+    $audiomode         = null;
+    $audioquality      = null;
+    $audiofreq         = null;
+    $audiobitrate      = null;
+    
+    if ( $general->Duration )
+      $videolength = $this->mediainfoDurationToSeconds( $general->Duration );
+    
+    if ( $videolength <= $config['recordings_seconds_minlength'] )
+      throw new InvalidLengthException('Recording length was less than ' . $config['recordings_seconds_minlength'] );
+    
+    if ( $video ) {
+      
+      if ( $video->Duration )
+        $videolength = $this->mediainfoDurationToSeconds( $video->Duration );
+      else
+        throw new InvalidLengthException('Length not found for the media, output was ' . $output );
+      
+      $videostreamid  = $this->getMediainfoNumericValue( $video->ID );
+      $videofps       = $this->getMediainfoNumericValue( $video->Frame_rate, true );
+      $videocodec     = $video->Format;
+      if ( $video->Format_Info )
+        $videocodec  .= ' (' . $video->Format_Info . ')';
+      if ( $video->Format_profile )
+        $videocodec  .= ' / ' . $video->Format_profile;
+      
+      if ( $video->Bit_rate_mode == 'Constant' )
+        $videobitratemode = 'cbr';
+      else
+        $videobitratemode = 'vbr';
+      
+      if ( $video->Width and $video->Height ) {
+        
+        $videores = sprintf(
+          '%sx%s',
+          $this->getMediainfoNumericValue( $video->Width ),
+          $this->getMediainfoNumericValue( $video->Height )
+        );
+        
+        if ( $video->Display_aspect_ratio )
+          $videodar = $video->Display_aspect_ratio;
+        
+        $videobitrate = $video->Bit_rate ?: $general->Overall_bit_rate;
+        
+        if ( $videobitrate and stripos( $videobitrate, 'kbps' ) !== false )
+          $scale = 1000;
+        elseif ( $videobitrate and stripos( $videobitrate, 'mbps' ) !== false )
+          $scale = 1000000;
+        else
+          $scale = 1;
+        
+        $videobitrate = $this->getMediainfoNumericValue( $videobitrate, false, $scale );
+        
+      }
+      
+    }
+    
+    if ( $audio ) {
+      
+      $audiocodec    = $audio->Format;
+      if ( $audio->Format_Info )
+        $audiocodec .= ' ( ' . $audio->Format_Info . ' ) ';
+      if ( $audio->Format_profile )
+        $audiocodec .= ' / ' . $audio->Format_profile;
+      
+      $audiostreamid = $this->getMediainfoNumericValue( $audio->ID );
+      $audiofreq     = $this->getMediainfoNumericValue( $audio->Sampling_rate, true, 1000 );
+      $audiobitrate  = $this->getMediainfoNumericValue( $audio->Bit_rate, false, 1000 );
+      $audiochannels = $this->getMediainfoNumericValue( $audio->Channel_s_ );
+      
+      if ( $audio->Bit_rate_mode == 'Constant' )
+        $audiomode   = 'cbr';
+      elseif ( $audio->Bit_rate_mode == 'Variable' )
+        $audiomode   = 'vbr';
+      
+      if ( $audio->Compression_mode == 'Lossy' )
+        $audioquality = 'lossy';
+      elseif ( $audio->Compression_mode == 'Lossless' )
+        $audioquality = 'lossless';
+      
+      if ( !$videolength )
+        $videolength = $this->mediainfoDurationToSeconds( $audio->Duration );
+      
+    }
+    
+    $info = array(
+      'mastermediatype'            => $mediatype,
+      'mastervideostreamselected'  => $videostreamid,
+      'mastervideoextension'       => $extension,
+      'mastervideocontainerformat' => $videocontainer,
+      'mastervideofilename'        => basename($originalfilename),
+      'mastervideofps'             => $videofps,
+      'mastervideocodec'           => $videocodec,
+      'mastervideores'             => $videores,
+      'mastervideodar'             => $videodar,
+      'mastervideobitrate'         => $videobitrate,
+      'mastervideobitratemode'     => $videobitratemode,
+      'mastervideoisinterlaced'    => $videoisinterlaced,
+      'masterlength'               => $videolength,
+      'masteraudiostreamselected'  => $audiostreamid,
+      'masteraudiocodec'           => $audiocodec,
+      'masteraudiochannels'        => $audiochannels,
+      'masteraudiobitratemode'     => $audiomode,
+      'masteraudioquality'         => $audioquality,
+      'masteraudiofreq'            => $audiofreq,
+      'masteraudiobitrate'         => $audiobitrate,
+    );
+    
+    foreach( $info as $key => $value )
+      $info[ $key ] = gettype( $value ) == 'object' ? strval( $value ): $value;
+    
+    return $this->metadata = $info;
+    
+  }
   
   public function clearGenres() {
     
