@@ -682,7 +682,7 @@ class Recordings extends \Springboard\Model {
       $audiofreq     = $this->getMediainfoNumericValue( $audio->Sampling_rate[0] );
       $audiobitrate  = $this->getMediainfoNumericValue( $audio->Bit_rate[0] );
       $audiochannels = $this->getMediainfoNumericValue( $audio->Channel_s_[1] );
-      $audiomode     = $audio->Bit_rate_mode[0]?: null;
+      $audiomode     = current( $audio->Bit_rate_mode )?: null;
       
       if ( $audio->Compression_mode[0] == 'Lossy' )
         $audioquality = 'lossy';
