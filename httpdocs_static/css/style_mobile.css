@@ -29,6 +29,9 @@
     width: auto;
     padding: 0px 10px 0px 10px;
   }
+  body.nolayout #wrap{
+    padding: 0;
+  }
   #wrap #body, #footer, #myrecordingsquicksearch {
     width: 100%;
   }
