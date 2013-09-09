@@ -1,6 +1,6 @@
 <?php
 $config = array(
-  'version'      => '_v20130806',
+  'version'      => '_v20130905',
   'charset'      => 'UTF-8',
   'cacheseconds' => 3600,
   'errormessage' => 'An unexpected error has occured, our staff has been notified. Sorry for the inconvenience and thanks for your understanding!',
@@ -189,13 +189,25 @@ $config = array(
   'setupdirs' => array(
     'user'            => 'dam', // a user/group amire chown -R eljuk az egesz konyvtarat
     'group'           => 'vsq',
-    'perms'           => 'g+w', // a chmor -R parametere
+    'perms'           => 'g+w', // a chmod -R parametere
     'privilegeduser'  => 'www-data', // a gitignorebol vett konyvtarak user/group/permje
     'privilegedgroup' => 'www-data',
     'extradirs'       => array(
       array(
         'dir'  => $this->basepath . 'httpdocs/flash',
         'user' => 'xtro',
+      ),
+      array(
+        'dir'   => $this->basepath . 'data',
+        'perms' => 'a+w',
+      ),
+      array(
+        'dir'   => $this->basepath . 'modules/Locale',
+        'perms' => 'a+w',
+      ),
+      array(
+        'dir'   => $this->basepath . 'modules/**/**/Locale',
+        'perms' => 'a+w',
       ),
     ),
   ),
