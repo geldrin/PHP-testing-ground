@@ -158,6 +158,9 @@ class Api {
     
     $filename     = basename( $file );
     $size         = filesize( $file );
+    if ( $size < 0 )
+      throw new Exception("Filesize is negative, your PHP cannot handle large files");
+
     $chunkcount   = 1;
     $currentchunk = 0;
     $resumeinfo   = $this->getResumeInfo(

@@ -26,7 +26,7 @@ $islivestats = TRUE;
 $showprogress = TRUE;
 
 // Channel ID: calculate statistics for this channel (live or on demand)
-$channelid = 107;
+$channelid = 109;
 
 // Analyze per connection: TRUE = track all connections | FALSE = give a summary only
 $analyze_perconnection = FALSE;
