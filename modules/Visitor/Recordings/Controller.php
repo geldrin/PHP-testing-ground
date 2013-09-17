@@ -901,6 +901,13 @@ class Controller extends \Visitor\Controller {
     $chunk       = $this->application->getNumericParameter('chunk');
     $chunks      = $this->application->getNumericParameter('chunks');
     $filesize    = $this->application->getNumericParameter('size', null, true ); // float hogy beleferjen nagy szam
+    if ( $filesize < 0 )
+      $this->chunkResponseAndLog( array(
+          'status' => 'error',
+          'error'  => 'upload_uploaderror',
+        ), 'Upload error, filesize was negative: $_FILES: ' . var_export( $_FILES, true )
+      );
+
     $uploadModel = $this->bootstrap->getModel('uploads');
     $user        = $this->bootstrap->getSession('user');
     $iscontent   = (bool)$this->application->getNumericParameter('iscontent');
