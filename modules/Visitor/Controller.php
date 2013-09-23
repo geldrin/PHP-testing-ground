@@ -7,6 +7,9 @@ class Controller extends \Springboard\Controller\Visitor {
   public function init() {
     $this->setupOrganization();
     
+    if ( in_array( $this->module, array('api', 'jsonapi') ) ) // az api ->authenticate mindig kezeli
+      return parent::init();
+    
     $skipsinglelogincheck = array(
       'users' => array(
         'ping',
@@ -20,9 +23,6 @@ class Controller extends \Springboard\Controller\Visitor {
         'securecheckstreamaccess',
       ),
     );
-    
-    if ( $this->module == 'api' ) // az api ->authenticate mindig kezeli
-      return parent::init();
     
     foreach( $skipsinglelogincheck as $module => $actions ) {
       
@@ -288,7 +288,7 @@ class Controller extends \Springboard\Controller\Visitor {
     $user = $this->bootstrap->getSession('user');
     if ( !$user or !$user['id'] )
       return;
-      
+    
     foreach( $this->bootstrap->config['debugloguserids'] as $userid ) {
       
       if ( $user['id'] != $userid )
