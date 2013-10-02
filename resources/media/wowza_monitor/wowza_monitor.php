@@ -220,6 +220,9 @@ for ($i = 0; $i < count($monitor_servers); $i++ ) {
 
 	$curl = curl_init();
 
+// KIVENNI! HACK!
+if ( $monitor_servers[$i]['server'] == "10.1.20.1" ) continue;
+
 	$wowza_url = "http://" . $monitor_servers[$i]['server'] . ":8086/connectioncounts";
 
 	curl_setopt($curl, CURLOPT_URL, $wowza_url); 
