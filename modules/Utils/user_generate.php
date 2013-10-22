@@ -10,7 +10,7 @@ include_once( BASE_PATH . 'libraries/Springboard/Application/Cli.php');
 
 set_time_limit(0);
 
-$iscommit = TRUE;
+$iscommit = true;
 
 // Init
 $app = new Springboard\Application\Cli(BASE_PATH, PRODUCTION);
@@ -19,13 +19,13 @@ $app = new Springboard\Application\Cli(BASE_PATH, PRODUCTION);
 // Organization ID = Conforg (ID: 200)
 $org_id = 200;
 // Department ID
-$org_dep_id = 81;
+$org_dep_id = 48;
 // How many users?
-$user_num = 50;
+$user_num = 30;
 // Single login: forced?
 $issingleloginenforced = 1;
 // Presence check: forced?
-$ispresencecheckforced = 0;
+$ispresencecheckforced = 1;
 
 // User name format and length: prefix + random number @ suffix
 $user_nameprefix = "felh";

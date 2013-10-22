@@ -664,7 +664,7 @@ class Recordings extends \Springboard\Model {
         if ( $video->Scan_type )
           $videoisinterlaced = $video->Scan_type == 'Progressive'? 0: 1;
         else
-          throw new InvalidLengthException('Unable to find Scan_type, output was: ' . $output );
+          $videoisinterlaced = 0;
         
       }
       
