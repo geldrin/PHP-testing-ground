@@ -12,10 +12,12 @@
       <div class="footercontent leftbox">
         <h2>{#footer_modules#}</h2>
         <ul class="footerlinks">
-          <li><a href="{$language}/#">{#footer_categories#}</a></li>
-          <li><a href="{$language}/#">{#footer_live#}</a></li>
-          <li><a href="{$language}/#">{#footer_channels#}</a></li>
-          <li><a href="{$language}/#">{#footer_featured#}</a></li>
+          <li><a href="{$language}/categories">{#footer_categories#}</a></li>
+          {if $organization.islivestreamingenabled}
+            <li><a href="{$language}/live">{#footer_live#}</a></li>
+          {/if}
+          <li><a href="{$language}/channels">{#footer_channels#}</a></li>
+          <li><a href="{$language}/featured">{#footer_featured#}</a></li>
         </ul>
       </div>
       {if $member.id}

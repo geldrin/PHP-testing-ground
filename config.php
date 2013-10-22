@@ -1,6 +1,6 @@
 <?php
 $config = array(
-  'version'      => '_v20130905',
+  'version'      => '_v20131001',
   'charset'      => 'UTF-8',
   'cacheseconds' => 3600,
   'errormessage' => 'An unexpected error has occured, our staff has been notified. Sorry for the inconvenience and thanks for your understanding!',
@@ -81,7 +81,7 @@ $config = array(
   'categoryiconpath' => $this->basepath . 'httpdocs_static/images/categories/',
   'relatedrecordingcount' => 6,
   'mplayer_identify' => 'mplayer -ao null -vo null -frames 0 -identify %s 2>&1',
-  'mediainfo_identify' => 'mediainfo --output=XML %s 2>&1',
+  'mediainfo_identify' => 'mediainfo --full --output=XML %s 2>&1',
   //----
   'combine' => array(
     'css'     => true,

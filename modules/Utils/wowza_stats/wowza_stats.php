@@ -26,10 +26,10 @@ $islivestats = TRUE;
 $showprogress = TRUE;
 
 // Channel ID: calculate statistics for this channel (live or on demand)
-$channelid = 107;
+$channelid = 125;
 
 // Analyze per connection: TRUE = track all connections | FALSE = give a summary only
-$analyze_perconnection = FALSE;
+$analyze_perconnection = TRUE;
 
 // Minimal duration to include a connection (seconds)
 $min_duration = 3;
@@ -45,23 +45,47 @@ $wowza_app = "live";
 $usereversedns = TRUE;
 
 // Clean from breakes? (see $event_timings)
-$cleanfrombreaks = FALSE;
+$cleanfrombreaks = TRUE;
 
 // Event timings, indexed by feedid (locations), [0] index applies all locations
 $event_timings = array(
 	0 => array(
-		array(
+/*		array(
 			'type'			=> 'EVENT',
-			'starttime'		=> '2013-06-26 13:15:14',	// event start
-			'endtime'		=> '2013-06-26 16:30:20',	// event finish
-			'description'	=> 'KÖRNYEZETVÉDELMI TERMÉKDÍJ, SZAKKÉPZÉSI HOZZÁJÁRULÁS - II.'
+			'starttime'		=> '2013-09-25 08:59:16',	// event start
+			'endtime'		=> '2013-09-25 12:21:56',	// event finish
+			'description'	=> '2013-09-25'
 		),
 		array(
 			'type'			=> 'BREAK',
-			'starttime'		=> '2013-06-26 14:47:57',	// break start
-			'endtime'		=> '2013-06-26 14:59:27',	// break end
-			'description'	=> 'DÉLUTÁNI SZÜNET'
-		)
+			'starttime'		=> '2013-09-25 10:34:16',	// break start
+			'endtime'		=> '2013-09-25 10:52:39',	// break end
+			'description'	=> 'DÉLELŐTTI SZÜNET'
+		), */
+/*		array(
+			'type'			=> 'EVENT',
+			'starttime'		=> '2013-09-25 13:17:32',	// event start
+			'endtime'		=> '2013-09-25 16:30:42',	// event finish
+			'description'	=> '2013-09-25'
+		),
+		array(
+			'type'			=> 'BREAK',
+			'starttime'		=> '2013-09-25 14:45:56',	// break start
+			'endtime'		=> '2013-09-25 15:02:42',	// break end
+			'description'	=> 'DÉLELŐTTI SZÜNET'
+		), */
+		array(
+			'type'			=> 'EVENT',
+			'starttime'		=> '2013-09-25 09:03:30',	// event start
+			'endtime'		=> '2013-09-25 12:20:31',	// event finish
+			'description'	=> '2013-09-25'
+		),
+		array(
+			'type'			=> 'BREAK',
+			'starttime'		=> '2013-09-25 10:36:44',	// break start
+			'endtime'		=> '2013-09-25 10:52:37',	// break end
+			'description'	=> 'SZÜNET'
+		),
 	)
 );
 

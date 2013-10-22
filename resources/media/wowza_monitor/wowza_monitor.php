@@ -142,7 +142,6 @@ define('BASE_PATH',	realpath( __DIR__ . '/../../..' ) . '/' );
 define('DEBUG', false );
 
 include_once( BASE_PATH . 'libraries/Springboard/Application/Cli.php');
-//include_once( BASE_PATH . 'modules/Jobs/job_utils_base.php' );
 
 set_time_limit(0);
 
@@ -221,6 +220,9 @@ for ($i = 0; $i < count($monitor_servers); $i++ ) {
 
 	$curl = curl_init();
 
+// KIVENNI! HACK!
+if ( $monitor_servers[$i]['server'] == "10.1.20.1" ) continue;
+
 	$wowza_url = "http://" . $monitor_servers[$i]['server'] . ":8086/connectioncounts";
 
 	curl_setopt($curl, CURLOPT_URL, $wowza_url); 
@@ -236,6 +238,7 @@ for ($i = 0; $i < count($monitor_servers); $i++ ) {
 		curl_close($curl);
 		$monitor_servers[$i]['currentconnections'] = "U";		// Munin: undefined value
 		streamingServerUpdateDB($monitor_servers[$i]['id'], "unreachable", 0);
+		curl_close($curl); 
 		continue;
 	}
 
@@ -246,6 +249,7 @@ for ($i = 0; $i < count($monitor_servers); $i++ ) {
 		curl_close($curl); 
 		$monitor_servers[$i]['currentconnections'] = "U";		// Munin: undefined value
 		streamingServerUpdateDB($monitor_servers[$i]['id'], "autherror", 0);
+		curl_close($curl); 
 		continue;
 	}
 
@@ -281,7 +285,6 @@ for ($i = 0; $i < count($monitor_servers); $i++ ) {
 //echo "currconnections: " . $wowza_app_currentconnections . "\n";
 
 	curl_close($curl); 
-
 }
 
 //var_dump($monitor_servers);
@@ -299,11 +302,16 @@ if ( $total_currentconnections_perapp >= 0 ) {
 	echo "apptotal.value U\n";
 }
 
+//echo $wowza_app . "\n";
+//var_dump($monitor_servers);
 foreach( $monitor_servers as $server ) {
-	if ( $server[$wowza_app . '_currentconnections'] >= 0 ) {
-		echo $server['shortname'] . ".value " . $server[$wowza_app . '_currentconnections'] . "\n";
-	} else {
-		echo $server['shortname'] . ".value U\n";
+//var_dump($server);
+	if ( isset($server[$wowza_app . '_currentconnections']) ) {
+		if ( $server[$wowza_app . '_currentconnections'] >= 0 ) {
+			echo $server['shortname'] . ".value " . $server[$wowza_app . '_currentconnections'] . "\n";
+		} else {
+			echo $server['shortname'] . ".value U\n";
+		}
 	}
 }
 
