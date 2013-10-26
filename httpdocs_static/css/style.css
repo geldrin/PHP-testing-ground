@@ -562,7 +562,7 @@ a.submitbutton:hover, .form a.submitbutton:hover {
   padding-left: 13px;
   padding-top: 4px;
 }
-#headerlogo a {
+#headerlogo a, #headerlogo a.basic span {
   display: inline-block;
   overflow: hidden;
 }
