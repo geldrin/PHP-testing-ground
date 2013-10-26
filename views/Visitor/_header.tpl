@@ -21,7 +21,17 @@
     <link rel="StyleSheet" type="text/css" href="{$STATIC_URI}css/style_mobile{$VERSION}.css" media="screen"/>
   {/if}
   {/csscombine}
-  
+
+  {if $organization.linkcolor}
+    <style>
+      {if $organization.linkcolor}
+        a, #header a, #header .submitbutton {ldelim}
+          color: #{$organization.linkcolor};
+        {rdelim}
+      {/if}
+    </style>
+  {/if}
+
   <!--[if lte IE 8]>
   <link rel="StyleSheet" type="text/css" href="{$STATIC_URI}css/style_ie{$VERSION}.css" />
   <![endif]-->
@@ -75,7 +85,11 @@
         {include file="Visitor/_login.tpl"}
         
         <div id="headerlogo">
-          <a href="{$BASE_URI}" title="{#sitename#}"><span></span>{#sitename#}</a>
+          {if ($language == 'hu' and $organization.logofilename) or ($language == 'en' and $organization.logofilenameen)}
+            <a href="{$BASE_URI}" title="{#sitename#}"><img src="{$STATIC_URI}files/organizations/{$organization.id}.{$language}.png"/></a>
+          {else}
+            <a href="{$BASE_URI}" title="{#sitename#}" class="basic"><span></span>{#sitename#}</a>
+          {/if}
         </div>
       </div>
       <div id="headerbottom">

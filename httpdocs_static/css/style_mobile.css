@@ -297,9 +297,12 @@
   #headersearch.rightbox {
     width: auto;
   }
-  #headerlogo a, #headerlogo a span {
+  #headerlogo a.basic, #headerlogo a.basic span {
     width: 114px;
     height: 34px;
+  }
+  #headerlogo img {
+    max-height: 34px;
   }
   #headertop, #headerlogo {
     height: 41px;
@@ -309,7 +312,7 @@
     padding-left: 0px;
     height: 38px;
   }
-  #headerlogo a span {
+  #headerlogo a.basic span {
     -webkit-background-size: 100% auto;
     background-size: 100% auto;
   }
@@ -366,9 +369,12 @@
   #headersearchlink, #headerloginactions, #headerloginactions a {
     font-size: 12px;
   }
-  #headerlogo a, #headerlogo a span {
+  #headerlogo a.basic, #headerlogo a.basic span {
     width: 78px;
     height: 22px;
+  }
+  #headerlogo img {
+    max-height: 29px;
   }
   #headertop, #headerlogo {
     height: 29px;
