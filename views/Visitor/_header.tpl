@@ -86,7 +86,7 @@
         
         <div id="headerlogo">
           {if ($language == 'hu' and $organization.logofilename) or ($language == 'en' and $organization.logofilenameen)}
-            <a href="{$BASE_URI}" title="{#sitename#}"><img src="{$STATIC_URI}files/organizations/{$organization.id}.{$language}.png"/></a>
+            <a href="{$BASE_URI}" title="{#sitename#}"><img src="{$STATIC_URI}files/organizations/{$organization.id}.{$language}.png?v={$VERSION}"/></a>
           {else}
             <a href="{$BASE_URI}" title="{#sitename#}" class="basic"><span></span>{#sitename#}</a>
           {/if}
