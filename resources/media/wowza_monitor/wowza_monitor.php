@@ -234,27 +234,25 @@ if ( $monitor_servers[$i]['server'] == "10.1.20.1" ) continue;
 
 	$data = curl_exec($curl); 
 	if( curl_errno($curl) ){ 
-//		echo "CURL ERROR: " . curl_error($curl) . " " . $monitor_servers[$i]['server'] . "\n";;
+		echo "CURL ERROR: " . curl_error($curl) . " " . $monitor_servers[$i]['server'] . "\n";;
 		curl_close($curl);
 		$monitor_servers[$i]['currentconnections'] = "U";		// Munin: undefined value
 		streamingServerUpdateDB($monitor_servers[$i]['id'], "unreachable", 0);
-		curl_close($curl); 
 		continue;
 	}
 
 	// Check if authentication failed
 	$header = curl_getinfo($curl);
 	if ( $header['http_code'] == 401 ) {
-//		echo "ERROR: HTTP 401. Cannot authenticate at " . $monitor_servers[$i]['server'] . "\n";
+		echo "ERROR: HTTP 401. Cannot authenticate at " . $monitor_servers[$i]['server'] . "\n";
 		curl_close($curl); 
 		$monitor_servers[$i]['currentconnections'] = "U";		// Munin: undefined value
 		streamingServerUpdateDB($monitor_servers[$i]['id'], "autherror", 0);
-		curl_close($curl); 
 		continue;
 	}
 
 	// Process XML output
-	//var_dump($data);
+//	var_dump($data);
 
 	// Open XML data
 	$wowza_xml = simplexml_load_string($data);
