@@ -173,8 +173,12 @@ class subtitleValidation extends validation {
     }
     
     array_unshift( $encodings, 'ISO-8859-2');
+    if ( in_array( 'UTF-8', $encodings ) );
+      array_unshift( $encodings, 'UTF-8');
+
     $encodings = array_merge( $encodings, $allencodings );
     $encodings = array_unique( $encodings );
+
     return $encodings;
     
   }
