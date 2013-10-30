@@ -238,7 +238,6 @@ if ( $monitor_servers[$i]['server'] == "10.1.20.1" ) continue;
 		curl_close($curl);
 		$monitor_servers[$i]['currentconnections'] = "U";		// Munin: undefined value
 		streamingServerUpdateDB($monitor_servers[$i]['id'], "unreachable", 0);
-		curl_close($curl); 
 		continue;
 	}
 
@@ -249,12 +248,11 @@ if ( $monitor_servers[$i]['server'] == "10.1.20.1" ) continue;
 		curl_close($curl); 
 		$monitor_servers[$i]['currentconnections'] = "U";		// Munin: undefined value
 		streamingServerUpdateDB($monitor_servers[$i]['id'], "autherror", 0);
-		curl_close($curl); 
 		continue;
 	}
 
 	// Process XML output
-	//var_dump($data);
+//	var_dump($data);
 
 	// Open XML data
 	$wowza_xml = simplexml_load_string($data);
