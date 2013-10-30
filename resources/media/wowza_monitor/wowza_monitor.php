@@ -204,10 +204,10 @@ if ( ( ( count($argv) > 1 ) && ( $argv[1] == 'live' ) ) or ( (count($argv) > 2) 
 // Munin config. See: http://munin-monitoring.org/wiki/protocol-config
 if ( (count($argv) > 1) && ($argv[1] == 'config') ) {
 	$graph_title = "Videosquare streaming server load (" . $wowza_app . ")";
+// total.label All server load
 	print("graph_title " . $graph_title . "
 graph_category videosquare
 graph_vlabel Clients
-total.label All server load
 apptotal.label Total " . $wowza_app . "
 " . $munin_labels);
     exit();
@@ -288,12 +288,13 @@ if ( $monitor_servers[$i]['server'] == "10.1.20.1" ) continue;
 //var_dump($monitor_servers);
 
 // Server total load
-if ( $total_currentconnections >= 0 ) {
+/*if ( $total_currentconnections >= 0 ) {
 	echo "total.value " . $total_currentconnections . "\n";
 } else {
 	echo "total.value U\n";
-}
-// Per app load
+} */
+
+// Per app total load
 if ( $total_currentconnections_perapp >= 0 ) {
 	echo "apptotal.value " . $total_currentconnections_perapp . "\n";
 } else {
