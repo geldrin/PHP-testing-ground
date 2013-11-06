@@ -5,7 +5,12 @@ function smarty_block_newsletter( $params, $content, &$smarty ) {
   if ( !$content )
     return;
   
-  $astyle   = 'color: #1e97d4;';
+  $organization = $smarty->get_template_vars('organization');
+  if ( isset( $organization['linkcolor'] ) and $organization['linkcolor'] )
+    $astyle = 'color: #' . $organization['linkcolor'] . ';';
+  else
+    $astyle = 'color: #1e97d4;';
+
   $h1style  = 'font-size: 20px; margin: 0 0 10px 0; padding: 0; font-weight: bold;';
   $h2style  = 'font-size: 17px; margin: 0 0 10px 0; padding: 0; font-weight: bold;';
   $h3style  = 'font-size: 15px; margin: 0 0 10px 0; padding: 0; font-weight: bold;';
