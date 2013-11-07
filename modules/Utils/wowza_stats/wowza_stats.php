@@ -26,7 +26,7 @@ $islivestats = TRUE;
 $showprogress = TRUE;
 
 // Channel ID: calculate statistics for this channel (live or on demand)
-$channelid = 125;
+$channelid = 140;
 
 // Analyze per connection: TRUE = track all connections | FALSE = give a summary only
 $analyze_perconnection = TRUE;
@@ -52,56 +52,84 @@ $event_timings = array(
 	0 => array(
 /*		array(
 			'type'			=> 'EVENT',
-			'starttime'		=> '2013-09-25 08:59:16',	// event start
-			'endtime'		=> '2013-09-25 12:21:56',	// event finish
-			'description'	=> '2013-09-25'
+			'starttime'		=> '2013-10-29 09:19:56',	// event start
+			'endtime'		=> '2013-10-29 16:36:48',	// event finish
+			'description'	=> 'EVENT'
 		),
 		array(
 			'type'			=> 'BREAK',
-			'starttime'		=> '2013-09-25 10:34:16',	// break start
-			'endtime'		=> '2013-09-25 10:52:39',	// break end
-			'description'	=> 'DÉLELŐTTI SZÜNET'
-		), */
+			'starttime'		=> '2013-10-29 10:35:56',	// break start
+			'endtime'		=> '2013-10-29 10:55:19',	// break end
+			'description'	=> 'Kávészünet'
+		),
+		array(
+			'type'			=> 'BREAK',
+			'starttime'		=> '2013-10-29 12:13:28',	// break start
+			'endtime'		=> '2013-10-29 13:17:39',	// break end
+			'description'	=> 'Ebéd'
+		),
+		array(
+			'type'			=> 'BREAK',
+			'starttime'		=> '2013-10-29 14:51:00',	// break start
+			'endtime'		=> '2013-10-29 15:08:27',	// break end
+			'description'	=> 'délutáni szünet'
+		),
+*/
 /*		array(
 			'type'			=> 'EVENT',
-			'starttime'		=> '2013-09-25 13:17:32',	// event start
-			'endtime'		=> '2013-09-25 16:30:42',	// event finish
-			'description'	=> '2013-09-25'
+			'starttime'		=> '2013-10-30 08:59:22',	// event start
+			'endtime'		=> '2013-10-30 12:13:30',	// event finish
+			'description'	=> 'EVENT'
 		),
 		array(
 			'type'			=> 'BREAK',
-			'starttime'		=> '2013-09-25 14:45:56',	// break start
-			'endtime'		=> '2013-09-25 15:02:42',	// break end
-			'description'	=> 'DÉLELŐTTI SZÜNET'
-		), */
+			'starttime'		=> '2013-10-30 10:29:54',	// break start
+			'endtime'		=> '2013-10-30 10:45:59',	// break end
+			'description'	=> 'Kávészünet'
+		),
+*/
+/*
 		array(
 			'type'			=> 'EVENT',
-			'starttime'		=> '2013-09-25 09:03:30',	// event start
-			'endtime'		=> '2013-09-25 12:20:31',	// event finish
-			'description'	=> '2013-09-25'
+			'starttime'		=> '2013-10-30 13:14:47',	// event start
+			'endtime'		=> '2013-10-30 16:19:58',	// event finish
+			'description'	=> 'EVENT'
 		),
 		array(
 			'type'			=> 'BREAK',
-			'starttime'		=> '2013-09-25 10:36:44',	// break start
-			'endtime'		=> '2013-09-25 10:52:37',	// break end
-			'description'	=> 'SZÜNET'
+			'starttime'		=> '2013-10-30 14:47:25',	// break start
+			'endtime'		=> '2013-10-30 15:03:14',	// break end
+			'description'	=> 'délutáni szünet'
+		)		
+*/
+		array(
+			'type'			=> 'EVENT',
+			'starttime'		=> '2013-10-31 10:02:08',	// event start
+			'endtime'		=> '2013-10-31 14:49:50',	// event finish
+			'description'	=> 'EVENT'
 		),
+		array(
+			'type'			=> 'BREAK',
+			'starttime'		=> '2013-10-31 12:20:05',	// break start
+			'endtime'		=> '2013-10-31 13:03:09',	// break end
+			'description'	=> 'Ebédszünet'
+		)
 	)
 );
 
 // DEBUG: set IP and/or client ID to filter for the specific client
 $debug_client = array(
 	'do'		=> FALSE,
-	'ip'		=> "84.206.45.194",
+	'ip'		=> "82.131.142.203",
 	'clientid'	=> "",
 	'streamid'	=> ""
 );
 
 // Debug: duration calculation
-$debug_duration = TRUE;
+$debug_duration = FALSE;
 
 // Debug: time slice creation based on $event_timings
-$debug_timeslicing = TRUE;
+$debug_timeslicing = FALSE;
 
 // Ondemand stats analyze start and end dates
 $ondemand_startdate = "2013-07-02";
@@ -707,7 +735,7 @@ $msg .= "# Log analization started: " . date("Y-m-d H:i:s") . "\n";
 $msg .= "# Log files processed:\n";
 
 for ( $i = 0; $i < count($log_files); $i++ ) {
-	$msg .= "#\t" . $log_files[$i] . "\n";
+	$msg .= "#" . $log_files[$i] . "\n";
 }
 
 $msg .= "# Event: " . $event_info['title'] . "\n";
@@ -1238,7 +1266,7 @@ function event_searchtiming($starttime, $endtime, $feedid) {
 	if ( empty($retval) ) {
 
 		$duration = $end - $start;
-		if ( $duration <= 0 ) {
+		if ( $duration < 0 ) {
 		//if ( $duration < 0 ) {
 			echo "ERROR: invalid duration from slice \"" . time('G:i:s', $start) . "\"-\"" . time('G:i:s', $end) . "\"!\n";
 			exit -1;
@@ -1313,7 +1341,7 @@ function event_timing_add_breakpoint($starttime, $endtime) {
  global $debug_timeslicing;
 
 	$duration = $endtime - $starttime;
-	if ( $duration <= 0 ) {
+	if ( $duration < 0 ) {
 	//if ( $duration < 0 ) {
 		echo "ERROR: invalid duration from slice " . time('G:i:s', $starttime) . " - " . time('G:i:s', $endtime) . "!\n";
 		exit -1;

@@ -28,8 +28,9 @@ try {
 }
 
 // Query channels of org
-$org_id = 200;	// conforg
-//$org_id = 2; // videosquare
+$org_id = 200; // conforg
+//$org_id = 222; // infoszfera
+//$org_id = 2;   // videosquare
 $query = "
   SELECT
     ch.id,

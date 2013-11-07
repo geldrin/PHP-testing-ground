@@ -11,6 +11,7 @@ include_once( BASE_PATH . 'libraries/Springboard/Application/Cli.php');
 set_time_limit(0);
 
 $iscommit = true;
+//$iscommit = false;
 
 // Init
 $app = new Springboard\Application\Cli(BASE_PATH, PRODUCTION);
@@ -19,13 +20,43 @@ $app = new Springboard\Application\Cli(BASE_PATH, PRODUCTION);
 // Organization ID = Conforg (ID: 200)
 $org_id = 200;
 // Department ID
-$org_dep_id = 48;
+$org_dep_id = 27;
+ 
+// 2013-11-11
+//	$org_dep_id = 105;
+//	$user_num = 50;
+//	$ispresencecheckforced = 0;
+// 2013-11-18
+//	$org_dep_id = 107;
+//	$user_num = 50;
+//	$ispresencecheckforced = 0;
+// 2013-11-21
+//	$org_dep_id = 108;
+//	$user_num = 50;
+//	$ispresencecheckforced = 1;
+// 2013-11-25
+//	$org_dep_id = 109;
+//	$user_num = 50;
+//	$ispresencecheckforced = 0;
+// 2013-11-26
+//	$org_dep_id = 110;
+//	$user_num = 100;
+//	$ispresencecheckforced = 1;
+// 2013-11-27 de
+//	$org_dep_id = 111;
+//	$user_num = 250;
+//	$ispresencecheckforced = 1;
+// 2013-11-27 du
+//	$org_dep_id = 112;
+//	$user_num = 200;
+//	$ispresencecheckforced = 1;
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // How many users?
-$user_num = 30;
+$user_num = 50;
 // Single login: forced?
 $issingleloginenforced = 1;
 // Presence check: forced?
-$ispresencecheckforced = 1;
+$ispresencecheckforced = 0;
 
 // User name format and length: prefix + random number @ suffix
 $user_nameprefix = "felh";
@@ -54,7 +85,7 @@ $msg .= "# Username number length: " . $user_namesuffix_length . "\n";
 $msg .= "# Username suffix: " . $user_nametermination . "\n";
 $msg .= "# Password length: " . $pass_length . "\n";
 $msg .= "# Org ID: " . $org_id . "\n";
-$msg .= "# Org department ID: " . $org_dep_id . " (" . $org_dep_name . ")\n";
+$msg .= "# Org department ID: " . $org_dep_id . " (" . $org_dep_name . ")". ($ispresencecheckforced == TRUE ? " - Presence check enabled.\n" : "\n");
 
 $msg .= "# COMMIT: " . ($iscommit?"YES":"NO, TEST ONLY") . "\n";
 

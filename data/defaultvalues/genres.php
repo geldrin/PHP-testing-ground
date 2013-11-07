@@ -106,10 +106,10 @@ return array (
   ),
   13 => 
   array (
-    'name' => 'Vita, beszélgetés',
+    'name' => 'Vita, beszélgetés, kerekasztal',
     'name_stringid' => 0,
-    'namehungarian' => 'Vita, beszélgetés',
-    'nameenglish' => 'Debate, discussion',
+    'namehungarian' => 'Vita, beszélgetés, kerekasztal',
+    'nameenglish' => 'Debate, discussion, roundtable',
     'origparentid' => '11',
   ),
   14 => 
