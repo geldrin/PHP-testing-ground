@@ -204,10 +204,10 @@ if ( ( ( count($argv) > 1 ) && ( $argv[1] == 'live' ) ) or ( (count($argv) > 2) 
 // Munin config. See: http://munin-monitoring.org/wiki/protocol-config
 if ( (count($argv) > 1) && ($argv[1] == 'config') ) {
 	$graph_title = "Videosquare streaming server load (" . $wowza_app . ")";
+// total.label All server load
 	print("graph_title " . $graph_title . "
 graph_category videosquare
 graph_vlabel Clients
-total.label All server load
 apptotal.label Total " . $wowza_app . "
 " . $munin_labels);
     exit();
@@ -238,7 +238,6 @@ if ( $monitor_servers[$i]['server'] == "10.1.20.1" ) continue;
 		curl_close($curl);
 		$monitor_servers[$i]['currentconnections'] = "U";		// Munin: undefined value
 		streamingServerUpdateDB($monitor_servers[$i]['id'], "unreachable", 0);
-		curl_close($curl); 
 		continue;
 	}
 
@@ -249,12 +248,11 @@ if ( $monitor_servers[$i]['server'] == "10.1.20.1" ) continue;
 		curl_close($curl); 
 		$monitor_servers[$i]['currentconnections'] = "U";		// Munin: undefined value
 		streamingServerUpdateDB($monitor_servers[$i]['id'], "autherror", 0);
-		curl_close($curl); 
 		continue;
 	}
 
 	// Process XML output
-	//var_dump($data);
+//	var_dump($data);
 
 	// Open XML data
 	$wowza_xml = simplexml_load_string($data);
@@ -290,12 +288,13 @@ if ( $monitor_servers[$i]['server'] == "10.1.20.1" ) continue;
 //var_dump($monitor_servers);
 
 // Server total load
-if ( $total_currentconnections >= 0 ) {
+/*if ( $total_currentconnections >= 0 ) {
 	echo "total.value " . $total_currentconnections . "\n";
 } else {
 	echo "total.value U\n";
-}
-// Per app load
+} */
+
+// Per app total load
 if ( $total_currentconnections_perapp >= 0 ) {
 	echo "apptotal.value " . $total_currentconnections_perapp . "\n";
 } else {

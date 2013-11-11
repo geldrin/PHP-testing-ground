@@ -17,7 +17,7 @@
             <li><a href="{$language}/live">{#footer_live#}</a></li>
           {/if}
           <li><a href="{$language}/channels">{#footer_channels#}</a></li>
-          <li><a href="{$language}/featured">{#footer_featured#}</a></li>
+          <li><a href="{$language}/recordings/featured">{#footer_featured#}</a></li>
         </ul>
       </div>
       {if $member.id}

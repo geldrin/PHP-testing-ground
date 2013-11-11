@@ -33,4 +33,16 @@ return array (
     'isorganizationrelated' => 0,
     'ispresenter' => 0,
   ),
+  3 => 
+  array (
+    'name' => 'Szekcióelnök',
+    'name_stringid' => 0,
+    'namehungarian' => 'Szekcióelnök',
+    'nameenglish' => 'Session moderator',
+    'weight' => '120',
+    'ispersonrelated' => 1,
+    'isorganizationrelated' => 0,
+    'ispresenter' => 0,
+  ),
+
 );

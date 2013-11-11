@@ -562,13 +562,18 @@ a.submitbutton:hover, .form a.submitbutton:hover {
   padding-left: 13px;
   padding-top: 4px;
 }
-#headerlogo a, #headerlogo a span {
+#headerlogo a, #headerlogo a.basic span {
   display: inline-block;
-  width:  171px;
   overflow: hidden;
+}
+#headerlogo a.basic, #headerlogo a.basic span {
+  width:  171px;
   height: 51px;
 }
-#headerlogo a span {
+#headerlogo img {
+  max-height: 51px;
+}
+#headerlogo a.basic span {
   background-image: url(images/header_logo.png);
 }
 

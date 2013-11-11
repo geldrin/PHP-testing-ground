@@ -24,4 +24,20 @@ return array (
     'nameenglish' => 'Training',
     'weight' => '120',
   ),
+  3 => 
+  array (
+    'name' => 'Sajtótájékoztató',
+    'name_stringid' => 0,
+    'namehungarian' => 'Sajtótájékoztató',
+    'nameenglish' => 'Press Conference',
+    'weight' => '130',
+  ),
+  4 => 
+  array (
+    'name' => 'Előadás',
+    'name_stringid' => 0,
+    'namehungarian' => 'Előadás',
+    'nameenglish' => 'Performance',
+    'weight' => '140',
+  ),
 );

@@ -143,15 +143,21 @@ $config = Array(
     ),
   ),
   
-  'backgroundcolor' => array(
-    'displayname' => 'Háttér színe',
+  'linkcolor' => array(
+    'displayname' => 'Linkek színe',
     'type'        => 'inputText',
+    'postfix'     => '
+      <div class="info">
+        Hat karakteres hexadecimális kód, például: f1f1f1
+      </div>
+    ',
     'validation'  => array(
       array(
         'type' => 'string',
         'minimum'  => 6,
         'maximum'  => 6,
         'required' => false,
+        'help'     => 'A link színét hat karakteres hexadecimális kódként várjuk!',
       ),
     ),
   ),
