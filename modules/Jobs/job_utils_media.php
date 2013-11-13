@@ -295,6 +295,11 @@ global $app, $jconf, $global_log;
 		return TRUE;
 	}
 
+	if ( empty($recording[$c_idx . 'mastervideofps']) ) {
+		log_recording_conversion($recording['id'], $jconf['jobid_media_convert'], $jconf['dbstatus_conv_video'], "[ERROR] Undefined video fps.\n", "-", "-", 0, TRUE);
+		return FALSE;
+	}
+
 	// Temp directory
 	$temp_directory = $recording['temp_directory'];
 
