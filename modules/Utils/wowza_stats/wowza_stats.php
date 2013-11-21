@@ -26,13 +26,13 @@ $islivestats = TRUE;
 $showprogress = TRUE;
 
 // Channel ID: calculate statistics for this channel (live or on demand)
-$channelid = 140;
+$channelid = 146;
 
 // Analyze per connection: TRUE = track all connections | FALSE = give a summary only
 $analyze_perconnection = TRUE;
 
 // Minimal duration to include a connection (seconds)
-$min_duration = 3;
+$min_duration = 1;
 
 // Log files: work *.log files found in working directory
 $islocallogfiles = FALSE;
@@ -50,68 +50,16 @@ $cleanfrombreaks = TRUE;
 // Event timings, indexed by feedid (locations), [0] index applies all locations
 $event_timings = array(
 	0 => array(
-/*		array(
+		array(
 			'type'			=> 'EVENT',
-			'starttime'		=> '2013-10-29 09:19:56',	// event start
-			'endtime'		=> '2013-10-29 16:36:48',	// event finish
+			'starttime'		=> '2013-11-11 10:01:46',	// event start
+			'endtime'		=> '2013-11-11 14:54:48',	// event finish
 			'description'	=> 'EVENT'
 		),
 		array(
 			'type'			=> 'BREAK',
-			'starttime'		=> '2013-10-29 10:35:56',	// break start
-			'endtime'		=> '2013-10-29 10:55:19',	// break end
-			'description'	=> 'Kávészünet'
-		),
-		array(
-			'type'			=> 'BREAK',
-			'starttime'		=> '2013-10-29 12:13:28',	// break start
-			'endtime'		=> '2013-10-29 13:17:39',	// break end
-			'description'	=> 'Ebéd'
-		),
-		array(
-			'type'			=> 'BREAK',
-			'starttime'		=> '2013-10-29 14:51:00',	// break start
-			'endtime'		=> '2013-10-29 15:08:27',	// break end
-			'description'	=> 'délutáni szünet'
-		),
-*/
-/*		array(
-			'type'			=> 'EVENT',
-			'starttime'		=> '2013-10-30 08:59:22',	// event start
-			'endtime'		=> '2013-10-30 12:13:30',	// event finish
-			'description'	=> 'EVENT'
-		),
-		array(
-			'type'			=> 'BREAK',
-			'starttime'		=> '2013-10-30 10:29:54',	// break start
-			'endtime'		=> '2013-10-30 10:45:59',	// break end
-			'description'	=> 'Kávészünet'
-		),
-*/
-/*
-		array(
-			'type'			=> 'EVENT',
-			'starttime'		=> '2013-10-30 13:14:47',	// event start
-			'endtime'		=> '2013-10-30 16:19:58',	// event finish
-			'description'	=> 'EVENT'
-		),
-		array(
-			'type'			=> 'BREAK',
-			'starttime'		=> '2013-10-30 14:47:25',	// break start
-			'endtime'		=> '2013-10-30 15:03:14',	// break end
-			'description'	=> 'délutáni szünet'
-		)		
-*/
-		array(
-			'type'			=> 'EVENT',
-			'starttime'		=> '2013-10-31 10:02:08',	// event start
-			'endtime'		=> '2013-10-31 14:49:50',	// event finish
-			'description'	=> 'EVENT'
-		),
-		array(
-			'type'			=> 'BREAK',
-			'starttime'		=> '2013-10-31 12:20:05',	// break start
-			'endtime'		=> '2013-10-31 13:03:09',	// break end
+			'starttime'		=> '2013-11-11 11:47:00',	// break start
+			'endtime'		=> '2013-11-11 13:02:07',	// break end
 			'description'	=> 'Ebédszünet'
 		)
 	)
