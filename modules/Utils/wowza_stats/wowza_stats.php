@@ -17,73 +17,20 @@ date_default_timezone_set("Europe/Budapest");
 
 echo "Wowza log analizer v0.41 - STARTING...\n";
 
-// ---------------------------- User settings ----------------------------------------
-
-// Is stats for live or on demand?
-$islivestats = TRUE;
-
-// Show progress? ".": line is processes, "+" relevant line is found.
-$showprogress = TRUE;
-
-// Channel ID: calculate statistics for this channel (live or on demand)
-$channelid = 146;
-
-// Analyze per connection: TRUE = track all connections | FALSE = give a summary only
-$analyze_perconnection = TRUE;
-
-// Minimal duration to include a connection (seconds)
-$min_duration = 1;
-
-// Log files: work *.log files found in working directory
-$islocallogfiles = FALSE;
-// Wowza app: override?
-$overridewowzaapp = FALSE;
-// Wowza application to use if override
-$wowza_app = "live";
-
-// DNS: reverse DNS enable/disable
-$usereversedns = TRUE;
-
-// Clean from breakes? (see $event_timings)
-$cleanfrombreaks = TRUE;
-
-// Event timings, indexed by feedid (locations), [0] index applies all locations
-$event_timings = array(
-	0 => array(
-		array(
-			'type'			=> 'EVENT',
-			'starttime'		=> '2013-11-11 10:01:46',	// event start
-			'endtime'		=> '2013-11-11 14:54:48',	// event finish
-			'description'	=> 'EVENT'
-		),
-		array(
-			'type'			=> 'BREAK',
-			'starttime'		=> '2013-11-11 11:47:00',	// break start
-			'endtime'		=> '2013-11-11 13:02:07',	// break end
-			'description'	=> 'Ebédszünet'
-		)
-	)
-);
-
-// DEBUG: set IP and/or client ID to filter for the specific client
-$debug_client = array(
-	'do'		=> FALSE,
-	'ip'		=> "82.131.142.203",
-	'clientid'	=> "",
-	'streamid'	=> ""
-);
-
-// Debug: duration calculation
-$debug_duration = FALSE;
-
-// Debug: time slice creation based on $event_timings
-$debug_timeslicing = FALSE;
-
-// Ondemand stats analyze start and end dates
-$ondemand_startdate = "2013-07-02";
-$ondemand_enddate = "2013-07-03";
-
-// ---------------------------- User settings ----------------------------------------
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// User settings must be passed as an argument when running the script.
+// E.g.: php -f livestats.php company.php
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+if ($argc < 2) {
+	print_r("User settings has been not passed\nTerminating.\n");
+	exit -1;
+} elseif (realpath($argv[1]) !== false) {
+	include_once $argv[1];
+} else {
+	print_r("'". $argv[1] ."' not found!\nTerminating.\n");
+	exit -1;
+}
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // Check input data
 
