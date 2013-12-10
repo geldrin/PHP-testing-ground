@@ -1737,11 +1737,10 @@ class Recordings extends \Springboard\Model {
       'user_checkWatchingConfirmationTimeout' => $info['organization']['presencecheckconfirmationtime'],
     );
     
-    if ( @$info['member'] and $info['member']['id'] )
+    if ( @$info['member'] and $info['member']['id'] ) {
       $data['user_id'] = $info['member']['id'];
-    
-    if ( @$info['member'] and $info['member']['issingleloginenforced'] )
       $data['user_needPing'] = true;
+    }
     
     if ( $this->row['issecurestreamingforced'] ) {
       $data['media_servers'][] = $this->getWowzaUrl( 'secrtmpsurl', true, $info, $sessionid );
