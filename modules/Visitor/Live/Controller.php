@@ -100,6 +100,7 @@ class Controller extends \Visitor\Controller {
     $currentstream = $streams['defaultstream'];
     $streamtype    = $streams['streamtype'];
     $info          = array(
+      'organization' => $this->organization,
       'sessionid'    => session_id(),
       'ipaddress'    => $this->getIPAddress(),
       'BASE_URI'     => $this->toSmarty['BASE_URI'],
