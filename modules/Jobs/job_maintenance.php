@@ -156,78 +156,81 @@ global $db, $jconf;
 }
 
 function uploads_maintenance() {
-global $db, $app, $jconf;
+global $db, $app, $jconf, $debug;
 
 	$chunkpath = $app->config['chunkpath'];
 
-	$files = array();
+	$uploadids = array();
+	// vegig nezzuk a konyvtarban levo osszes filet
+	foreach (new \DirectoryIterator( $chunkpath ) as $fileinfo ) {
 
-	// One week
-	$date_old = date("Y-m-d H:i:00", time() - (60 * 60 * 24 * 7));
-//	$date_old = date("Y-m-d H:i:00");
+		// az esetleges konyvtarak es . vagy .. filok nem erdekelnek minket
+		if( $fileinfo->isDot() or $fileinfo->isDir() )
+			continue;
 
-	$query = "
-		SELECT
-			id,
-			userid,
-			filename,
-			size,
-			chunkcount,
-			currentchunk,
-			status,
-			timestamp
-		FROM
-			uploads
-		WHERE
-			( status NOT IN ('completed', 'deleted') AND
-			timestamp < '" . $date_old . "' ) OR
-			status = '" . $jconf['dbstatus_markedfordeletion'] . "'";
+		// megkapjuk a filenevbol az uploads.id-t
+		if ( !preg_match( '/^(\d+)\..*$/', $fileinfo->getFilename(), $match ) )
+			continue;
+
+		$uploadids[] = $match[1];
+
+	}
+
+	if ( empty( $uploadids ) )
+		return true;
 
 	try {
-		$files = $db->Execute($query);
-	} catch(exception $err) {
+		// minden 1 hetnel regebbi filet aminel nem volt aktivitas torlunk
+		// nem nezzuk a statust sehol mert a feltoltes tobb helyen is elhasalhat
+		// peldaul: amikor a file feltoltodik es a status = completed, de elhasal
+		// az analizalasnal es nem kerul atmozgatasra
+		// csak ott nezzuk a statust ahol a user direkt torolte (es azt toroljuk
+		// minel elobb)
+		$query = "
+			SELECT *
+			FROM uploads
+			WHERE
+				(
+					id IN('" . implode("', '", $uploadids ) . "') AND
+					timestamp < DATE_SUB(NOW(), INTERVAL 1 WEEK)
+				) OR
+				status = '" . $jconf['dbstatus_markedfordeletion'] . "'
+		";
+		$uploads = $db->getArray( $query );
+	} catch(\Exception $err ) {
 		$debug->log($jconf['log_dir'], $jconf['jobid_maintenance'] . ".log", "[ERROR] SQL query failed. Query:\n\n" . trim($query), $sendmail = true);
 		return FALSE;
 	}
-	
-	// Remove file chunks older than a week
-	while ( !$files->EOF ) {
 
-		$file = array();
-		$file = $files->fields;
+	foreach( $uploads as $upload ) {
 
-		$path_parts = pathinfo($file['filename']);
-		$filename = $chunkpath . $file['id'] . "." . $path_parts['extension'];
+		$filepath =
+			$chunkpath . $upload['id'] . '.' .
+			\Springboard\Filesystem::getExtension( $upload['filename'] )
+		;
 
-		if ( file_exists($filename) ) {
-			// Remove file
-			if ( unlink($filename) ) {
-				// Update chunk status
-				$query = "
-					UPDATE
-						uploads
-					SET
-						status = 'deleted'
-					WHERE
-						id = " . $file['id'];
-				try {
-					$db->Execute($query);
-				} catch(exception $err) {
-					$debug->log($jconf['log_dir'], $jconf['jobid_maintenance'] . ".log", "[ERROR] SQL query failed. Query:\n\n" . trim($query), $sendmail = true);
-					return FALSE;
-				}
-			} else {
-				// File does not exist
-				$debug->log($jconf['log_dir'], $jconf['jobid_maintenance'] . ".log", "[ERROR] Uploaded file chunk cannot be deleted. File: " . $filename . "\n\n" . print_r($file, TRUE), $sendmail = true);
-				continue;
-			}
-		} else {
-		    // File does not exist
-		    $debug->log($jconf['log_dir'], $jconf['jobid_maintenance'] . ".log", "[ERROR] Uploaded chunk not found. File: " . $filename . "\n\n" . print_r($file, TRUE), $sendmail = true);
-		    continue;
+		if ( !file_exists( $filepath ) ) {
+			$debug->log($jconf['log_dir'], $jconf['jobid_maintenance'] . ".log", "[ERROR] Uploaded chunk not found. File: " . $filepath . "\n\n" . print_r($upload, TRUE), $sendmail = true);
+			continue;
 		}
 
-		$files->MoveNext();
+		if ( !unlink( $filepath ) ) {
+			$debug->log($jconf['log_dir'], $jconf['jobid_maintenance'] . ".log", "[ERROR] Uploaded file chunk cannot be deleted. File: " . $filepath . "\n\n" . print_r($upload, TRUE), $sendmail = true);
+			continue;
+		}
+
+		try {
+			$query = "
+				UPDATE uploads
+				SET status = 'deleted'
+				WHERE id = '" . $upload['id'] . "'
+			";
+			$db->execute( $query );
+		} catch(\Exception $err ) {
+			$debug->log($jconf['log_dir'], $jconf['jobid_maintenance'] . ".log", "[ERROR] SQL query failed. Query:\n\n" . trim($query), $sendmail = true);
+			return FALSE;
+		}
+
 	}
 
 	return TRUE;
