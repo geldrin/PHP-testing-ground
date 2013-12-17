@@ -20,7 +20,7 @@ class Admin extends \Visitor\Paging {
     $l                 = $this->bootstrap->getLocalization();
     $this->foreachelse = $l('users', 'foreachelse' );
     $this->title       = $l('users', 'admin_title');
-    $this->controller->toSmarty['listclass'] = 'treeadminlist';
+    $this->controller->toSmarty['listclass'] = 'treeadminlist useradmin';
     
   }
   
