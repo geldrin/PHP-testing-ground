@@ -1,5 +1,9 @@
 {foreach from=$presenters item=presenter name=presenter}
   <b>{$presenter|@nameformat:true|escape:html}</b>
+  {php}
+    global $presenterjob;
+    $presenterjob = array();
+  {/php}
   {foreach from=$presenter.jobs item=job name=job}
     {capture assign=joborganization}
       {if strlen( trim( $job.nameshort ) )}
@@ -18,8 +22,20 @@
     {/capture}
     
     {if strlen( trim( $jobcapture ) )}
-      {if $smarty.foreach.job.first}({/if}{$jobcapture|trim}{if !$smarty.foreach.job.last} -{/if}{if $smarty.foreach.job.last}){/if}
+      {php}
+        global $presenterjob;
+        $presenterjob[] = trim( $this->get_template_vars('jobcapture') );
+      {/php}
     {/if}
   {/foreach}
+  {php}
+    global $presenterjob;
+    $presenterjob = implode(' - ', $presenterjob );
+    if ( strlen( trim( $presenterjob ) ) )
+      $presenterjob = '(' . $presenterjob . ')';
+
+    $this->assign('presenterjob', $presenterjob );
+  {/php}
+  {$presenterjob}
   {if !$smarty.foreach.presenter.last}<br/>{/if}
 {/foreach}
