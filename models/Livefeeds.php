@@ -273,7 +273,7 @@ class Livefeeds extends \Springboard\Model {
     
     $flashdata = array(
       'language'               => \Springboard\Language::get(),
-      'api_url'                => 'https://' . $info['organization']['domain'] . '/' . \Springboard\Language::get() . '/jsonapi',
+      'api_url'                => $info['BASE_URI'] . \Springboard\Language::get() . '/jsonapi',
       'user_needPing'          => false,
       'media_streams'          => $streams,
       'feed_id'                => $this->id,

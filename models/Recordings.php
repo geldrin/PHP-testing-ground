@@ -1722,7 +1722,7 @@ class Recordings extends \Springboard\Model {
     
     $data = array(
       'language'              => \Springboard\Language::get(),
-      'api_url'               => 'https://' . $info['organization']['domain'] . '/' . \Springboard\Language::get() . '/jsonapi',
+      'api_url'               => $info['BASE_URI'] . \Springboard\Language::get() . '/jsonapi',
       'user_needPing'         => false,
       'media_servers'         => array(),
       'track_firstPlay'       => true,
