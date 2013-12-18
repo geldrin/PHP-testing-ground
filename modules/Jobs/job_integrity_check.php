@@ -3,8 +3,7 @@
 //	1. Check contributor images
 //	2. Check recordings: media files, thumbnails
 //	3. Check recording attachments
-// define('BASE_PATH',	realpath( __DIR__ . '/../..' ) . '/' );
-define('BASE_PATH',     realpath( '/var/www/videosquare.eu/' ) . '/' );	#stream server/vsqlive
+define('BASE_PATH',	realpath( __DIR__ . '/../..' ) . '/' );
 define('PRODUCTION', false);
 define('DEBUG', false);
 
@@ -126,8 +125,7 @@ while ( !$recordings->EOF ) {
 		$recording_summary .= "ERROR: recording path does not exist (" . $recording_path . ")\n";
 		$recordings->MoveNext();
 		continue;
-	}
-	
+	}	
 
 	// Check media files	
 	$hq_record_available = FALSE;
