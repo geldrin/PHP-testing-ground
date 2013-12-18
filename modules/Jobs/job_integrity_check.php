@@ -1,11 +1,10 @@
 <?php
-
 // Dataintegrity check job for VideoSquare
 //	1. Check contributor images
 //	2. Check recordings: media files, thumbnails
 //	3. Check recording attachments
-
-define('BASE_PATH',	realpath( __DIR__ . '/../..' ) . '/' );
+// define('BASE_PATH',	realpath( __DIR__ . '/../..' ) . '/' );
+define('BASE_PATH',     realpath( '/var/www/videosquare.eu/' ) . '/' );	#stream server/vsqlive
 define('PRODUCTION', false);
 define('DEBUG', false);
 
@@ -14,11 +13,13 @@ include_once(BASE_PATH . 'libraries/Springboard/Application/Cli.php');
 // Utils
 include_once(BASE_PATH . 'modules/Jobs/job_utils_base.php');
 include_once(BASE_PATH . 'modules/Jobs/job_utils_log.php');
+include_once(BASE_PATH . 'modules/Jobs/job_utils_status.php');
+include_once(BASE_PATH . 'modules/Jobs/job_utils_media.php');
 
 set_time_limit(0);
 
 // Init
-$app = new Springboard\Application\Cli(BASE_PATH, FALSE);
+$app = new Springboard\Application\Cli(BASE_PATH, DEBUG);
 
 // Load jobs configuration file
 $app->loadConfig('modules/Jobs/config_jobs.php');
@@ -28,6 +29,7 @@ $myjobid = $jconf['jobid_integrity_check'];
 // Log related init
 $debug = Springboard\Debug::getInstance();
 $debug->log($jconf['log_dir'], $myjobid . ".log", "Data integrity job started", $sendmail = FALSE);
+$recordingsModel = $app->bootstrap->getModel('recordings');
 $num_errors = 0;
 
 // Check operating system - exit if Windows
@@ -78,6 +80,7 @@ $query = "
 		a.status,
 		a.contentstatus,
 		a.masterstatus,
+		a.masterlength,
 		a.mobilestatus,
 		a.contentmasterstatus,
 		a.mastermediatype,
@@ -111,7 +114,6 @@ $num_recordings = $recordings->RecordCount();
 while ( !$recordings->EOF ) {
 	// Get current field from the query
 	$rec = $recordings->fields;
-
 	$rec_id = $rec['id'];
 	
 	// init log string
@@ -125,6 +127,7 @@ while ( !$recordings->EOF ) {
 		$recordings->MoveNext();
 		continue;
 	}
+	
 
 	// Check media files	
 	$hq_record_available = FALSE;
@@ -167,6 +170,19 @@ while ( !$recordings->EOF ) {
 		if (is_res1_gt_res2($rec['mastervideores'], $jconf['profile_mobile_lq']['video_bbox'])) {
 			$hq_mobile_available = TRUE;
 		}
+		
+		try {
+			$recordingsModel->analyze($master_record);
+			$mi_master_record = $recordingsModel->metadata;
+			if (empty($mi_master_record['masterlength'])) {
+				$recording_summary .= "ERROR: masterlength data missing(". $master_record .")\n";
+				$mastervideolength = null;
+			} else {
+				$mastervideolength = $mi_master_record['masterlength'];
+			}
+		} catch ( Exception $ex) {
+			$recording_summary .= "ERROR: Recording analysis failed (". $master_record ."):\n". $ex->getMessage() ."\n";
+		}
 	}
 	
 	if ( $rec['mastermediatype'] != "audio" ) {
@@ -175,6 +191,17 @@ while ( !$recordings->EOF ) {
 			$recording_summary .= "ERROR: media file does not exist (" . $record_lq . ")\n";
 		} elseif ( filesize($record_lq) == 0 ) {
 			$recording_summary .= "ERROR: media file zero size (" . $record_lq . ")\n";
+		} else {
+			// $info = $recordingsModel->analyze( $filepath );
+			try {
+				$recordingsModel->analyze($record_lq);
+				$record_lq_duration = $recordingsModel->metadata['masterlength'];
+				if (abs($mastervideolength - $record_lq_duration) > 1) {
+					$recording_summary .= "ERROR: invalid video duration (". $record_lq ." - ". $record_lq_duration ."s/". $rec['masterlength'] ."s)\n";
+				}
+			} catch ( Exception $ex) {
+				$recording_summary .= "ERROR: Recording analysis failed (". $record_lq ."):\n". $ex->getMessage() ."\n";
+			}
 		}
 	
 		// Check high quality file
@@ -183,6 +210,16 @@ while ( !$recordings->EOF ) {
 				$recording_summary .= "ERROR: media file does not exist (" . $record_hq . ")\n";
 			} elseif ( filesize($record_hq) == 0 ) {
 				$recording_summary .= "ERROR: media file zero size (" . $record_hq . ")\n";
+			} else {
+				try {
+					$recordingsModel->analyze($record_hq);
+					$record_hq_duration = $recordingsModel->metadata['masterlength'];
+					if (abs($mastervideolength - $record_hq_duration) > 1) {
+						$recording_summary .= "ERROR: invalid video duration (". $record_hq ." - ". $record_hq_duration ."s/". $rec['masterlength'] ."s)\n";
+					}
+				} catch ( Exception $ex) {
+					$recording_summary .= "ERROR: Recording analysis failed (". $record_hq ."):\n". $ex->getMessage() ."\n";
+				}
 			}
 		}
 	}
@@ -199,6 +236,19 @@ while ( !$recordings->EOF ) {
 			if(is_res1_gt_res2($rec['contentmastervideores'], $jconf['profile_content_lq']['video_bbox'])) {
 				$hq_content_available = TRUE;
 			}
+			
+			try {
+				$recordingsModel->analyze($content_master);
+				$mi_master_content = $recordingsModel->metadata;
+				if (empty($mi_master_content['masterlength'])) {
+					$recording_summary .= "ERROR: masterlength data missing(". $content_master .")\n";
+					$mastercontentlength = null;
+				} else {
+					$mastercontentlength = $mi_master_content['masterlength'];
+				}
+			} catch ( Exception $ex) {
+				$recording_summary .= "ERROR: Recording analysis failed (". $content_master ."):\n". $ex->getMessage() ."\n";
+			}
 		}
 	
 	}
@@ -209,6 +259,16 @@ while ( !$recordings->EOF ) {
 			$recording_summary .= "ERROR: content media file does not exist (". $content_lq .")\n";
 		} elseif ( filesize($content_lq) == 0 ) {
 			$recording_summary .= "ERROR: content media file zero size (". $content_lq .")\n";
+		} else {
+			try {
+				$recordingsModel->analyze($content_lq);
+				$content_lq_duration = $recordingsModel->metadata['masterlength'];
+				if (abs($mastercontentlength - $content_lq_duration) > 1) {
+					$recording_summary .= "ERROR: invalid content duration (". $content_lq ." - ". $content_lq_duration ."s/". $rec['masterlength'] ."s)\n";
+				}
+			} catch ( Exception $ex) {
+				$recording_summary .= "ERROR: Recording analysis failed (". $content_lq ."):\n". $ex->getMessage() ."\n";
+			}
 		}
 
 		// Check high resolution file
@@ -217,6 +277,16 @@ while ( !$recordings->EOF ) {
 				$recording_summary .= "ERROR: content media file does not exist (" . $content_hq . ")\n";
 			} elseif ( filesize($content_hq) == 0 ) {
 				$recording_summary .= "ERROR: content media file zero size (" . $content_hq . ")\n";
+			} else {
+				try {
+					$recordingsModel->analyze($content_hq);
+					$content_hq_duration = $recordingsModel->metadata['masterlength'];
+					if (abs($mastercontentlength - $content_hq_duration) > 1) {
+						$recording_summary .= "ERROR: invalid content duration (". $content_hq ." - ". $content_hq_duration ."s/". $rec['masterlength'] ."s)\n";
+					}
+				} catch ( Exception $ex) {
+					$recording_summary .= "ERROR: Recording analysis failed (". $content_hq ."):\n". $ex->getMessage() ."\n";
+				}
 			}
 		}
 	}
