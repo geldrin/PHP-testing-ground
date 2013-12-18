@@ -11,16 +11,17 @@ include_once( BASE_PATH . 'libraries/Springboard/Application/Cli.php');
 set_time_limit(0);
 
 $iscommit = true;
-//$iscommit = false;
 
 // Init
 $app = new Springboard\Application\Cli(BASE_PATH, PRODUCTION);
 
 // Users base data
-// Organization ID = Conforg (ID: 200)
-$org_id = 200;
+// Organization ID = Conforg (conforg.hu) [ID: 200]
+// Organization ID = Infoszféra 
+// Organization ID = IIR (iir-hungary.hu) [ID: 282]
+$org_id = 282;
 // Department ID
-$org_dep_id = 27;
+$org_dep_id = 115;
  
 // 2013-11-11
 //	$org_dep_id = 105;
@@ -61,7 +62,7 @@ $ispresencecheckforced = 0;
 // User name format and length: prefix + random number @ suffix
 $user_nameprefix = "felh";
 $user_namesuffix_length = 4;
-$user_nametermination = "conforg.hu";
+$user_nametermination = "iir-hungary.hu";
 $pass_length = 8;
 
 $users = array();
@@ -119,7 +120,7 @@ for ( $i = 1; $i <= $user_num; $i++ ) {
 
 		// Regenerate until local uniqueness is granted
 		if ( !empty($users[$username]) ) {
-			echo "Username exists. Regenerate.\n";
+//			echo "Username exists. Regenerate.\n";
 			continue;
 		}
 
@@ -130,7 +131,7 @@ for ( $i = 1; $i <= $user_num; $i++ ) {
 			FROM
 				users
 			WHERE
-				email LIKE '%" . $username . "%'
+				email LIKE '%" . $username ."@". $user_nametermination ."%'
 		";
 
 //echo $query . "\n";

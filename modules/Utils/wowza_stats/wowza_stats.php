@@ -17,125 +17,20 @@ date_default_timezone_set("Europe/Budapest");
 
 echo "Wowza log analizer v0.41 - STARTING...\n";
 
-// ---------------------------- User settings ----------------------------------------
-
-// Is stats for live or on demand?
-$islivestats = TRUE;
-
-// Show progress? ".": line is processes, "+" relevant line is found.
-$showprogress = TRUE;
-
-// Channel ID: calculate statistics for this channel (live or on demand)
-$channelid = 140;
-
-// Analyze per connection: TRUE = track all connections | FALSE = give a summary only
-$analyze_perconnection = TRUE;
-
-// Minimal duration to include a connection (seconds)
-$min_duration = 3;
-
-// Log files: work *.log files found in working directory
-$islocallogfiles = FALSE;
-// Wowza app: override?
-$overridewowzaapp = FALSE;
-// Wowza application to use if override
-$wowza_app = "live";
-
-// DNS: reverse DNS enable/disable
-$usereversedns = TRUE;
-
-// Clean from breakes? (see $event_timings)
-$cleanfrombreaks = TRUE;
-
-// Event timings, indexed by feedid (locations), [0] index applies all locations
-$event_timings = array(
-	0 => array(
-/*		array(
-			'type'			=> 'EVENT',
-			'starttime'		=> '2013-10-29 09:19:56',	// event start
-			'endtime'		=> '2013-10-29 16:36:48',	// event finish
-			'description'	=> 'EVENT'
-		),
-		array(
-			'type'			=> 'BREAK',
-			'starttime'		=> '2013-10-29 10:35:56',	// break start
-			'endtime'		=> '2013-10-29 10:55:19',	// break end
-			'description'	=> 'Kávészünet'
-		),
-		array(
-			'type'			=> 'BREAK',
-			'starttime'		=> '2013-10-29 12:13:28',	// break start
-			'endtime'		=> '2013-10-29 13:17:39',	// break end
-			'description'	=> 'Ebéd'
-		),
-		array(
-			'type'			=> 'BREAK',
-			'starttime'		=> '2013-10-29 14:51:00',	// break start
-			'endtime'		=> '2013-10-29 15:08:27',	// break end
-			'description'	=> 'délutáni szünet'
-		),
-*/
-/*		array(
-			'type'			=> 'EVENT',
-			'starttime'		=> '2013-10-30 08:59:22',	// event start
-			'endtime'		=> '2013-10-30 12:13:30',	// event finish
-			'description'	=> 'EVENT'
-		),
-		array(
-			'type'			=> 'BREAK',
-			'starttime'		=> '2013-10-30 10:29:54',	// break start
-			'endtime'		=> '2013-10-30 10:45:59',	// break end
-			'description'	=> 'Kávészünet'
-		),
-*/
-/*
-		array(
-			'type'			=> 'EVENT',
-			'starttime'		=> '2013-10-30 13:14:47',	// event start
-			'endtime'		=> '2013-10-30 16:19:58',	// event finish
-			'description'	=> 'EVENT'
-		),
-		array(
-			'type'			=> 'BREAK',
-			'starttime'		=> '2013-10-30 14:47:25',	// break start
-			'endtime'		=> '2013-10-30 15:03:14',	// break end
-			'description'	=> 'délutáni szünet'
-		)		
-*/
-		array(
-			'type'			=> 'EVENT',
-			'starttime'		=> '2013-10-31 10:02:08',	// event start
-			'endtime'		=> '2013-10-31 14:49:50',	// event finish
-			'description'	=> 'EVENT'
-		),
-		array(
-			'type'			=> 'BREAK',
-			'starttime'		=> '2013-10-31 12:20:05',	// break start
-			'endtime'		=> '2013-10-31 13:03:09',	// break end
-			'description'	=> 'Ebédszünet'
-		)
-	)
-);
-
-// DEBUG: set IP and/or client ID to filter for the specific client
-$debug_client = array(
-	'do'		=> FALSE,
-	'ip'		=> "82.131.142.203",
-	'clientid'	=> "",
-	'streamid'	=> ""
-);
-
-// Debug: duration calculation
-$debug_duration = FALSE;
-
-// Debug: time slice creation based on $event_timings
-$debug_timeslicing = FALSE;
-
-// Ondemand stats analyze start and end dates
-$ondemand_startdate = "2013-07-02";
-$ondemand_enddate = "2013-07-03";
-
-// ---------------------------- User settings ----------------------------------------
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// User settings must be passed as an argument when running the script.
+// E.g.: php -f livestats.php company.php
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+if ($argc < 2) {
+	print_r("User settings has been not passed\nTerminating.\n");
+	exit -1;
+} elseif (realpath($argv[1]) !== false) {
+	include_once $argv[1];
+} else {
+	print_r("'". $argv[1] ."' not found!\nTerminating.\n");
+	exit -1;
+}
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // Check input data
 

@@ -287,11 +287,8 @@ class Livefeeds extends \Springboard\Model {
     );
     
     if ( $info['user'] and $info['user']['id'] ) {
-      
       $flashdata['user_id'] = $info['user']['id'];
-      if ( $info['user']['issingleloginenforced'] )
-        $flashdata['user_needPing'] = true;
-      
+      $flashdata['user_needPing'] = true;
     }
     
     if ( $this->row['issecurestreamingforced'] )
