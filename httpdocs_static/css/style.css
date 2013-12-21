@@ -1515,7 +1515,7 @@ a#currentusername span {
   padding: 0;
 }
 .treeadminlist h3 {
-  font-size: 18px;
+  font-size: 13px;
   display: inline-block;
   margin: 0px 15px 3px 0px;
   padding: 0;
@@ -1525,10 +1525,6 @@ a#currentusername span {
 }
 .treeadminlist h3 a:hover {
   text-decoration: none;
-}
-.treeadminlist.children h3, .treeadminlist.useradmin h3 {
-  font-weight: normal;
-  font-size: 13px;
 }
 
 /* indexcontainer */
