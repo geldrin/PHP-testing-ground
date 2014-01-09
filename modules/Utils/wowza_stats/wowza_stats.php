@@ -616,8 +616,8 @@ for ( $i = 0; $i < count($log_files); $i++ ) {
 
 var_dump($viewers);
 
-//var_dump($location_info);
-
+//var_dump($recording_info);
+//exit; //////////////////////////
 // Debug: print relevant viewer collected data
 if ( $debug_client['do'] ) {
 	$ip = $debug_client['ip'];
