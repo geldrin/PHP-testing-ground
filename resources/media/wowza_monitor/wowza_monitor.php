@@ -220,9 +220,6 @@ for ($i = 0; $i < count($monitor_servers); $i++ ) {
 
 	$curl = curl_init();
 
-// KIVENNI! HACK!
-if ( $monitor_servers[$i]['server'] == "10.1.20.1" ) continue;
-
 	$wowza_url = "http://" . $monitor_servers[$i]['server'] . ":8086/connectioncounts";
 
 	curl_setopt($curl, CURLOPT_URL, $wowza_url); 
@@ -236,7 +233,7 @@ if ( $monitor_servers[$i]['server'] == "10.1.20.1" ) continue;
 	if( curl_errno($curl) ){ 
 //		echo "CURL ERROR: " . curl_error($curl) . " " . $monitor_servers[$i]['server'] . "\n";;
 		curl_close($curl);
-		$monitor_servers[$i]['currentconnections'] = "U";		// Munin: undefined value
+		$monitor_servers[$i]['currentconnections'] = "0";		// Munin: undefined value
 		streamingServerUpdateDB($monitor_servers[$i]['id'], "unreachable", 0);
 		continue;
 	}
@@ -246,13 +243,12 @@ if ( $monitor_servers[$i]['server'] == "10.1.20.1" ) continue;
 	if ( $header['http_code'] == 401 ) {
 //		echo "ERROR: HTTP 401. Cannot authenticate at " . $monitor_servers[$i]['server'] . "\n";
 		curl_close($curl); 
-		$monitor_servers[$i]['currentconnections'] = "U";		// Munin: undefined value
+		$monitor_servers[$i]['currentconnections'] = "0";		// Munin: undefined value
 		streamingServerUpdateDB($monitor_servers[$i]['id'], "autherror", 0);
 		continue;
 	}
 
 	// Process XML output
-//	var_dump($data);
 
 	// Open XML data
 	$wowza_xml = simplexml_load_string($data);
@@ -278,27 +274,21 @@ if ( $monitor_servers[$i]['server'] == "10.1.20.1" ) continue;
 		$total_currentconnections_perapp += $wowza_app_currentconnections;
 	}
 
-//var_dump($monitor_servers[$i]);
-
-//echo "currconnections: " . $wowza_app_currentconnections . "\n";
-
 	curl_close($curl); 
 }
-
-//var_dump($monitor_servers);
 
 // Server total load
 /*if ( $total_currentconnections >= 0 ) {
 	echo "total.value " . $total_currentconnections . "\n";
 } else {
-	echo "total.value U\n";
+	echo "total.value 0\n";
 } */
 
 // Per app total load
 if ( $total_currentconnections_perapp >= 0 ) {
 	echo "apptotal.value " . $total_currentconnections_perapp . "\n";
 } else {
-	echo "apptotal.value U\n";
+	echo "apptotal.value 0\n";
 }
 
 //echo $wowza_app . "\n";
@@ -309,7 +299,7 @@ foreach( $monitor_servers as $server ) {
 		if ( $server[$wowza_app . '_currentconnections'] >= 0 ) {
 			echo $server['shortname'] . ".value " . $server[$wowza_app . '_currentconnections'] . "\n";
 		} else {
-			echo $server['shortname'] . ".value U\n";
+			echo $server['shortname'] . ".value 0\n";
 		}
 	}
 }
