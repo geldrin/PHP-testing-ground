@@ -4,6 +4,7 @@
 //	2. Check recordings: media files, thumbnails
 //	3. Check recording attachments
 define('BASE_PATH',	realpath( __DIR__ . '/../..' ) . '/' );
+// define('BASE_PATH',	realpath('/var/www/videosquare.eu' ) . '/' );
 define('PRODUCTION', false);
 define('DEBUG', false);
 
@@ -45,14 +46,14 @@ if ( is_file( $app->config['datapath'] . 'jobs/job_integrity_check.stop' ) or is
 // Establish database connection
 $db = null;
 $db = db_maintain();
-/*try {
+try {
 	$db = $app->bootstrap->getAdoDB();
 } catch (exception $err) {
 	// Send mail alert, sleep for 15 minutes
 	$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] No connection to DB (getAdoDB() failed). Error message:\n" . $err, $sendmail = TRUE);
 	exit;
 }
-$db_close = TRUE; */
+$db_close = TRUE;
 
 $log_summary  = "NODE: " . $app->config['node_sourceip'] . "\n";
 $log_summary .= "SITE: " . $app->config['baseuri'] . "\n";
@@ -80,6 +81,7 @@ $query = "
 		a.contentstatus,
 		a.masterstatus,
 		a.masterlength,
+		a.contentmasterlength,
 		a.mobilestatus,
 		a.contentmasterstatus,
 		a.mastermediatype,
@@ -125,7 +127,12 @@ while ( !$recordings->EOF ) {
 		$recording_summary .= "ERROR: recording path does not exist (" . $recording_path . ")\n";
 		$recordings->MoveNext();
 		continue;
-	}	
+	} elseif  ($rec['status'] !== $jconf['dbstatus_copystorage_ok']) {
+		$recordings->MoveNext();
+		continue;
+	}
+	// Threshold variable
+	$threshold = 0;
 
 	// Check media files	
 	$hq_record_available = FALSE;
@@ -169,17 +176,11 @@ while ( !$recordings->EOF ) {
 			$hq_mobile_available = TRUE;
 		}
 		
-		try {
-			$recordingsModel->analyze($master_record);
-			$mi_master_record = $recordingsModel->metadata;
-			if (empty($mi_master_record['masterlength'])) {
-				$recording_summary .= "ERROR: masterlength data missing(". $master_record .")\n";
-				$mastervideolength = null;
-			} else {
-				$mastervideolength = $mi_master_record['masterlength'];
-			}
-		} catch ( Exception $ex) {
-			$recording_summary .= "ERROR: Recording analysis failed (". $master_record ."):\n". $ex->getMessage() ."\n";
+		$mastervideolength = check_length($master_record, $msg);
+		$threshold = ( round($mastervideolength * 0.005) < 1 ? 1 : round($mastervideolength * 0.005) );
+		
+		if (abs($mastervideolength - $rec['masterlength']) > $threshold) {
+			$recording_summary .= "ERROR: invalid database value (". $master_record ." - ". $mastervideolength ."s, db - ". $rec['masterlength'] ."s)\n";
 		}
 	}
 	
@@ -190,15 +191,9 @@ while ( !$recordings->EOF ) {
 		} elseif ( filesize($record_lq) == 0 ) {
 			$recording_summary .= "ERROR: media file zero size (" . $record_lq . ")\n";
 		} else {
-			// $info = $recordingsModel->analyze( $filepath );
-			try {
-				$recordingsModel->analyze($record_lq);
-				$record_lq_duration = $recordingsModel->metadata['masterlength'];
-				if (abs($mastervideolength - $record_lq_duration) > 1) {
-					$recording_summary .= "ERROR: invalid video duration (". $record_lq ." - ". $record_lq_duration ."s/". $rec['masterlength'] ."s)\n";
-				}
-			} catch ( Exception $ex) {
-				$recording_summary .= "ERROR: Recording analysis failed (". $record_lq ."):\n". $ex->getMessage() ."\n";
+			$record_lq_duration = check_length($record_lq, $msg);
+			if (abs($mastervideolength - $record_lq_duration) > $threshold) {
+				$recording_summary .= "ERROR: invalid video duration (". $record_lq ." - ". $record_lq_duration ."s, db - ". $rec['masterlength'] ."s)\n";
 			}
 		}
 	
@@ -209,14 +204,9 @@ while ( !$recordings->EOF ) {
 			} elseif ( filesize($record_hq) == 0 ) {
 				$recording_summary .= "ERROR: media file zero size (" . $record_hq . ")\n";
 			} else {
-				try {
-					$recordingsModel->analyze($record_hq);
-					$record_hq_duration = $recordingsModel->metadata['masterlength'];
-					if (abs($mastervideolength - $record_hq_duration) > 1) {
-						$recording_summary .= "ERROR: invalid video duration (". $record_hq ." - ". $record_hq_duration ."s/". $rec['masterlength'] ."s)\n";
-					}
-				} catch ( Exception $ex) {
-					$recording_summary .= "ERROR: Recording analysis failed (". $record_hq ."):\n". $ex->getMessage() ."\n";
+				$record_hq_duration = check_length($record_hq, $msg);
+				if (abs($mastervideolength - $record_hq_duration) > $threshold) {
+					$recording_summary .= "ERROR: invalid video duration (". $record_hq ." - ". $record_hq_duration ."s, db - ". $rec['masterlength'] ."s)\n";
 				}
 			}
 		}
@@ -235,17 +225,9 @@ while ( !$recordings->EOF ) {
 				$hq_content_available = TRUE;
 			}
 			
-			try {
-				$recordingsModel->analyze($content_master);
-				$mi_master_content = $recordingsModel->metadata;
-				if (empty($mi_master_content['masterlength'])) {
-					$recording_summary .= "ERROR: masterlength data missing(". $content_master .")\n";
-					$mastercontentlength = null;
-				} else {
-					$mastercontentlength = $mi_master_content['masterlength'];
-				}
-			} catch ( Exception $ex) {
-				$recording_summary .= "ERROR: Recording analysis failed (". $content_master ."):\n". $ex->getMessage() ."\n";
+			$mastercontentlength = check_length($content_master, $msg);
+			if (abs($mastercontentlength - $rec['contentmasterlength']) > $threshold) {
+				$recording_summary .= "ERROR: invalid database value (". $content_master ." - ". $mastercontentlength ."s, db - ". $rec['contentmasterlength'] ."s)\n";
 			}
 		}
 	
@@ -258,14 +240,9 @@ while ( !$recordings->EOF ) {
 		} elseif ( filesize($content_lq) == 0 ) {
 			$recording_summary .= "ERROR: content media file zero size (". $content_lq .")\n";
 		} else {
-			try {
-				$recordingsModel->analyze($content_lq);
-				$content_lq_duration = $recordingsModel->metadata['masterlength'];
-				if (abs($mastercontentlength - $content_lq_duration) > 1) {
-					$recording_summary .= "ERROR: invalid content duration (". $content_lq ." - ". $content_lq_duration ."s/". $rec['masterlength'] ."s)\n";
-				}
-			} catch ( Exception $ex) {
-				$recording_summary .= "ERROR: Recording analysis failed (". $content_lq ."):\n". $ex->getMessage() ."\n";
+			$content_lq_duration = check_length($content_lq, $msg);
+			if (abs($mastercontentlength - $content_lq_duration) > $threshold) {
+				$recording_summary .= "ERROR: invalid content duration (". $content_lq ." - ". $content_lq_duration ."s, db - ". $rec['masterlength'] ."s)\n";
 			}
 		}
 
@@ -276,25 +253,34 @@ while ( !$recordings->EOF ) {
 			} elseif ( filesize($content_hq) == 0 ) {
 				$recording_summary .= "ERROR: content media file zero size (" . $content_hq . ")\n";
 			} else {
-				try {
-					$recordingsModel->analyze($content_hq);
-					$content_hq_duration = $recordingsModel->metadata['masterlength'];
-					if (abs($mastercontentlength - $content_hq_duration) > 1) {
-						$recording_summary .= "ERROR: invalid content duration (". $content_hq ." - ". $content_hq_duration ."s/". $rec['masterlength'] ."s)\n";
-					}
-				} catch ( Exception $ex) {
-					$recording_summary .= "ERROR: Recording analysis failed (". $content_hq ."):\n". $ex->getMessage() ."\n";
+				$content_hq_duration = check_length($content_hq, $msg);
+				if (abs($mastercontentlength - $content_hq_duration) > $threshold) {
+					$recording_summary .= "ERROR: invalid content duration (". $content_hq ." - ". $content_hq_duration ."s, db - ". $rec['contentmasterlength'] ."s)\n";
 				}
 			}
 		}
 	}
 	
 	if ($rec['mobilestatus'] == $jconf['dbstatus_copystorage_ok']) {
+		// Calculate mobile duration
+		if ($rec['contentstatus'] == $jconf['dbstatus_copystorage_ok']) {
+			$iscontentlonger = ($mastervideolength > $mastercontentlength ? false : true);
+			$lengthfull = ($iscontentlonger === true ? $mastercontentlength : $mastervideolength);
+		} else {
+			$lengthfull = $mastervideolength;
+			$iscontentlonger = false;
+		}
+		
 		// Check mobile normal quality file
 		if ( !file_exists($record_mobile_lq) ) {
 			$recording_summary .= "ERROR: media file does not exist (" . $record_mobile_lq . ")\n";
 		} elseif ( filesize($record_mobile_lq) == 0 ) {
 			$recording_summary .= "ERROR: media file zero size (" . $record_mobile_lq . ")\n";
+		} else {
+			$mobile_lq_duration = check_length($record_mobile_lq, $msg);
+			if (abs($lengthfull - $mobile_lq_duration) > $threshold) {
+				$recording_summary .= "ERROR: invalid mobile duration (". $record_mobile_lq ." - ". $mobile_lq_duration ."s, db/". ($iscontentlonger ? "content" : "video") ." - ". $lengthfull ."s)\n";
+			}
 		}
 		// Check mobile high quality file
 		if ($hq_mobile_available) {
@@ -302,6 +288,11 @@ while ( !$recordings->EOF ) {
 				$recording_summary .= "ERROR: media file does not exist (" . $record_mobile_hq . ")\n";
 			} elseif ( filesize($record_mobile_hq) == 0 ) {
 				$recording_summary .= "ERROR: media file zero size (" . $record_mobile_hq . ")\n";
+			} else {
+				$mobile_hq_duration = check_length($record_mobile_hq, $msg);
+				if (abs($lengthfull - $mobile_hq_duration) > $threshold) {
+					$recording_summary .= "ERROR: invalid mobile duration (". $record_mobile_hq ." - ". $mobile_hq_duration ."s, db/". ($iscontentlonger ? "content" : "video") ." - ". $lengthfull ."s)\n";
+				}
 			}
 		}
 	}
@@ -321,7 +312,7 @@ while ( !$recordings->EOF ) {
 	$num_checked_recs++;
 
 	if ( $rec['status'] == "onstorage" ) $num_onstorage_recs++;
-
+	
 	$recordings->MoveNext();
 }
 
@@ -343,6 +334,24 @@ if ( is_resource($db->_connectionID) ) $db->close();
 exit;
 
 //---< Functions >---------------------------------------------------------------------------------
+function check_length($mediafile, &$message) {
+	global $recordingsModel;
+	$length = 0;
+	try {
+		$recordingsModel->analyze($mediafile);
+		$metadata = $recordingsModel->metadata;
+		if (empty($metadata['masterlength'])) {
+			$message .= "ERROR: metadata cannot be retrieved (". $mediafile .")\n";
+			return false;
+		} else {
+			$length = $metadata['masterlength'];
+		}
+	} catch ( Exception $ex) {
+		$message .= "ERROR: Recording analysis failed ( ". $mediafile ." ):\n". $ex->getMessage() ."\n";
+	}
+	return $length;
+}
+
 function check_contributor_images() {
  global $db, $log_summary;
 
@@ -411,6 +420,7 @@ function check_contributor_images() {
 
 	return TRUE;
 }
+
 function check_video_thumbnails($rec_id, $num_thumbs) {
 	global	$recording_summary;
 	global	$app;
