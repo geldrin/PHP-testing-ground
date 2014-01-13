@@ -18,6 +18,7 @@ return array('config_jobs' => array(
 	'temp_dir'						=> $this->config['datapath'] . 'temp/',				// Temporary dir for jobs
 	'media_dir'						=> $this->config['datapath'] . 'temp/media/',		// Temporary dir for media conversion
 	'content_dir'					=> $this->config['datapath'] . 'temp/content/',		// Temporary dir for content conversion
+	'ocr_dir'						=> $this->config['datapath'] . 'temp/ocr/',			// Temporary dir for ocr conversion
 	'doc_dir'						=> $this->config['datapath'] . 'temp/doc/',			// Temporary dir for document conversion
 	'vcr_dir'						=> $this->config['datapath'] . 'temp/vcr/',			// Temporary dir for VCR download/upload
 	'job_dir'						=> $this->config['modulepath'] . 'Jobs/',
@@ -40,6 +41,7 @@ return array('config_jobs' => array(
 	// Job identifiers
 	'jobid_media_convert'			=> 'job_media_convert',
 	'jobid_content_convert'			=> 'job_content_convert',
+	'jobid_ocr_convert'				=> 'job_ocr_convert',
 	'jobid_document_index'			=> 'job_document_index',
 	'jobid_vcr_control'				=> 'job_vcr_control',
 	'jobid_maintenance'				=> 'job_maintenance',
@@ -76,6 +78,8 @@ return array('config_jobs' => array(
 	'dbstatus_conv_audio_err'		=> 'failedconverting2audio',
 	'dbstatus_conv_video'			=> 'converting3video',
 	'dbstatus_conv_video_err'		=> 'failedconverting3video',
+	'dbstatus_conv_ocr'				=> 'converting4ocr',
+	'dbstatus_conv_ocr_fail'		=> 'failedconverting4ocr',
 	'dbstatus_invalidinput'			=> 'failedinput',
 	'dbstatus_cimage'				=> 'contributorimagecopy',
 	// VCR related
@@ -123,12 +127,18 @@ return array('config_jobs' => array(
 	'thumb_video_large'				=> '618x348',						// Resolution of wide video thumbnails
 	'thumb_video_numframes'			=> 20,								// Number of video thumbnails generated per recording
 
+	// Ocr frames
+	'ocr_snapshot_small'			=> 180,						// Bounding box of small ocr snapshot
+	'ocr_snapshot_medium'			=> 400,						// Bounding box of medium ocr snaphot
+	
 	// Constraints
 	'video_min_length'				=> 3,			// Min. media length in seconds
 	'video_res_modulo'				=> 8,			// Rescaled video X/Y resolution modulo 0 divider (16 = F4V!)
 	'video_max_bw'					=> 3000000,		// Maximum of video bandwidth (absolute limit)
 	'video_max_res'					=> '1920x1080',	// Max. resolution for uploaded video (otherwise fraud upload)
 	'video_max_fps'					=> 60,			// Max. video FPS
+	
+	'ocr_threshold'					=> 0.02,		// Max. difference between ocr frames 
 	
 	// Media conversion profiles
 
