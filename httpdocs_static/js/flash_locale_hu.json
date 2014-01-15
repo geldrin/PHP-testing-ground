@@ -1,6 +1,6 @@
 {
   "error": {
-    "connection_failed":"Kapcsolódás sikertelen.",
+    "connection_failed":"Szerver nem elérhető.",
     "async_error":"ASync Hiba: An exception is thrown from native asynchronous code",
     "security_error":"Biztonsági hiba",
     "io_error":"IO Hiba: Nem lehetett betölteni vagy elküldeni a műveletet.",
@@ -36,6 +36,7 @@
     "recordingURL": "Felvétel címe:"
   },
   "login": {
+	"relogin": "Bejelentkezés újra",
     "title": "Bejelentkezés",
     "description": "A felvétel megtekintéséhez belépés szükséges,\nkérjük adja meg adatait!",
     "username": "Felhasználói név:",
