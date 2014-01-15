@@ -1,5 +1,6 @@
 ALTER TABLE users ADD firstloggedin DATETIME NULL DEFAULT NULL AFTER timestampdisabledafter;
 ALTER TABLE recordings ADD smilstatus TEXT CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL AFTER ocrstatus;
+ALTER TABLE users ADD isusergenerated INT UNSIGNED NULL DEFAULT '0' AFTER validationcode;
 
 CREATE TABLE IF NOT EXISTS recordings_versions (
   id int(10) unsigned NOT NULL AUTO_INCREMENT,

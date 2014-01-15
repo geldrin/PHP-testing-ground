@@ -63,6 +63,7 @@ CREATE TABLE `users` (
    `password` text,
    `browser` text not null,
    `validationcode` text not null,
+   `isusergenerated` int(10) unsigned not null default '0',
    `disabled` int(11) not null default '0',
    `isapienabled` int(11) not null default '0',
    `issingleloginenforced` int(11) not null default '0',
