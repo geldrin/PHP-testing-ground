@@ -64,8 +64,6 @@ $recordings = array();
 $size_toremove = 0;
 if ( query_recordings2remove($recordings) ) {
 
-	$global_log .= "Removing recording(s) from storage:\n\n";
-
 	while ( !$recordings->EOF ) {
 
 		$recording = array();
@@ -77,13 +75,9 @@ if ( query_recordings2remove($recordings) ) {
 		$rec_retain = $recording['daystoretainrecordings'] * 24 * 3600;
 		if ( ( $now - $rec_deleted ) < $rec_retain ) {
 			// Falls within retain period, no action taken
-echo "retained ID: " . $recording['id'] . "\n";
 			$recordings->MoveNext();
 			continue;
 		}
-
-// Content???
-//		a.contentdeletedtimestamp
 
 		$global_log .= "ID: " . $recording['id'] . "\n";
 		$global_log .= "User: " . $recording['email'] . " (domain: " . $recording['domain'] . ")\n";
@@ -94,6 +88,7 @@ echo "retained ID: " . $recording['id'] . "\n";
 		// Log file path information
 		$global_log .= "Remove: " . $remove_path . "\n";
 
+		// Check directory size
 		$err = array();
 		$err = directory_size($remove_path);
 	
@@ -104,9 +99,9 @@ echo "retained ID: " . $recording['id'] . "\n";
 			$global_log .= "Recording size: " . $dir_size . "MB\n\n";
 		}
 
-// !
-$recordings->MoveNext();
-continue;
+// !!!
+//$recordings->MoveNext();
+//continue;
 
 		// Remove recording directory
 		$err = remove_file_ifexists($remove_path);
@@ -149,6 +144,10 @@ continue;
 		$recordings->MoveNext();
 	}
 
+	if ( !empty($global_log) ) {
+		$global_log = "Removing recording(s) from storage:\n\n" . $global_log;
+	}
+
 } // End of removing recordings
 
 // Attachments: remove uploaded attachments
@@ -171,8 +170,9 @@ if ( query_attachments2remove($attachments) ) {
 		$global_log .= "Attached document: " . $filename . "\n";
 		$size_toremove += filesize($filename);
 
-$attachments->MoveNext();
-continue;
+// !!!
+//$attachments->MoveNext();
+//continue;
 
 		// Remove attachment
 		$err = remove_file_ifexists($filename);
@@ -210,6 +210,7 @@ continue;
 	}
 }
 
+	echo $global_log . "\n";
 if ( !empty($global_log) ) {
 	$global_log .= "\nTotal size removed: " . round($size_toremove / 1024 / 1024, 2) . "MB\n";
 
@@ -217,7 +218,7 @@ if ( !empty($global_log) ) {
 	$hms = secs2hms($duration);
 	$debug->log($jconf['log_dir'], $myjobid . ".log", "File remove finished in " . $hms . " time.\n\nSummary:\n\n" . $global_log, $sendmail = true);
 
-	echo $global_log . "\n";
+//	echo $global_log . "\n";
 }
 
 // Close DB connection if open
@@ -245,9 +246,6 @@ function query_recordings2remove(&$recordings) {
 
 	$node = $app->config['node_sourceip'];
 
-// !!!
-$node = "stream.videosquare.eu";
-
 	$query = "
 		SELECT
 			a.id,
@@ -274,6 +272,8 @@ $node = "stream.videosquare.eu";
 			b.organizationid = c.id
 	";
 
+//echo $query . "\n";
+
 	try {
 		$recordings = $db->Execute($query);
 	} catch (exception $err) {
@@ -293,9 +293,6 @@ function query_attachments2remove(&$attachments) {
  global $db, $app, $jconf;
 
 	$node = $app->config['node_sourceip'];
-
-// !!!
-$node = "stream.videosquare.eu";
 
 	$query = "
 		SELECT
