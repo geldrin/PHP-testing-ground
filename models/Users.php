@@ -161,13 +161,18 @@ class Users extends \Springboard\Model {
   
   public function updateLastLogin( $diagnostics = null, $ipaddress = null ) {
     
+    $this->ensureObjectLoaded();
+
     $sql = '';
     if ( $diagnostics )
       $sql = ', browser = ' . $this->db->qstr( $diagnostics );
-    
+
     if ( $ipaddress )
       $sql .= ', lastloggedinipaddress = ' . $this->db->qstr( $ipaddress );
-    
+
+    if ( !$this->row['firstloggedin'] )
+      $sql .= ', firstloggedin = ' . $this->db->qstr( date('Y-m-d H:i:s') );
+
     $this->db->query("
       UPDATE LOW_PRIORITY users 
       SET
