@@ -5,9 +5,11 @@
 //
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
+define('STORAGE_PATH', realpath('/srv/vsq_storage/dev.videosquare.eu/') .'/');  #stream server/dev
+// define('STORAGE_PATH', realpath('/srv/vsq_storage/videosquare.eu/') .'/');  #stream server/vsqlive
+define('BASE_PATH',     realpath( '/var/www/dev.videosquare.eu/' ) . '/' );	#stream server/dev
+// define('BASE_PATH',     realpath( '/var/www/videosquare.eu/' ) . '/' );	#stream server/vsqlive
 //define('BASE_PATH',     realpath( '/home/conv/dev.videosquare.eu' ) . '/' );	#conv server
-//define('BASE_PATH',     realpath( '/var/www/dev.videosquare.eu/' ) . '/' );	#stream server/dev
-define('BASE_PATH',     realpath( '/var/www/videosquare.eu/' ) . '/' );	#stream server/vsqlive
 
 echo BASE_PATH ."\n";
 define('PRODUCTION', false );
@@ -40,10 +42,11 @@ $config = array(
 );
 
 //$qryrecordings = "SELECT id, mastervideoextension, masterlength, status FROM recordings";
-$qryrecordings = "SELECT id, mastervideoextension, contentmastervideoextension, contentmasterlength, status, contentstatus FROM recordings";
+$qryrecordings = "SELECT id, mastervideoextension, contentmastervideoextension, contentmasterlength, masterstatus, contentstatus FROM recordings";
 $recordingarray = null;
 
-$recordings = new Recordings();
+// $recordings = new Recordings();
+$recordings = $app->bootstrap->getModel('recordings');
 
 try {
 	$recordingarray = $db->execute($qryrecordings);
@@ -53,27 +56,31 @@ try {
 }
 do {
 	$rec = $recordingarray->fields;
-	$path = "/srv/vsq_storage/videosquare.eu/recordings/". ($rec['id'] - (1000 * round($rec['id'] / 1000, 0))) ."/". $rec['id'] ."/master/";
+	$path = STORAGE_PATH ."recordings/". ($rec['id'] - (1000 * round($rec['id'] / 1000, 0))) ."/". $rec['id'] ."/master/";
 	$videopath = $path . $rec['id'] ."_video.". $rec['mastervideoextension'];
 	$contentpath = $path . $rec['id'] ."_content.". (empty($rec['contentmastervideoextension']) ? $rec['mastervideoextension'] : $rec['contentmastervideoextension']);
 	
 	// filter deleted recordings:
-	//if ($rec['status'] == 'markedfordeletion' || $rec['status'] == 'deleted' || $rec['status'] == null) {
-	if ($rec['contentstatus'] == 'markedfordeletion' || $rec['contentstatus'] == 'deleted' || $rec['contentstatus'] == null) {
+	if ($rec['masterstatus'] == 'markedfordeletion' || $rec['masterstatus'] == 'deleted' || $rec['masterstatus'] == null) {
+	// if ($rec['contentstatus'] == 'markedfordeletion' || $rec['contentstatus'] == 'deleted' || $rec['contentstatus'] == null) {
 		print_r("Recording #". $rec['id'] ." is deleted. Skipping entry.\n");
 		continue;	
-	//} elseif ( file_exists( $videopath) === false) {
-	} elseif ( file_exists( $contentpath) === false) {
-		//print_r("Path doesn't exists! (id - ". $rec['id'] .", $videopath). Skipping entry.\n");
-		print_r("[ERROR] Path doesn't exists! (id - ". $rec['id'] .", $contentpath). Skipping entry.\nCONTENTSTATUS-". var_export($rec['contentstatus']) ."\n");
+	} elseif ( file_exists( $videopath) === false) {
+	// } elseif ( file_exists( $contentpath) === false) {
+		print_r("Path doesn't exists! (id - ". $rec['id'] .", $videopath). Skipping entry.\n");
+		// print_r("[ERROR] Path doesn't exists! (id - ". $rec['id'] .", $contentpath). Skipping entry.\nCONTENTSTATUS-". var_export($rec['contentstatus']) ."\n");
 		continue;
 	} else {
-		//$recordings->analyze($videopath);
-		$recordings->analyze($contentpath);
-		//echo "analyze $videopath - masterlength = ". $recordings->metadata['masterlength'] ."\n";
-		echo "analyze $contentpath - contentmasterlength = ". $recordings->metadata['masterlength'] ."\n";
-		//$recordings->updateData(array('id' => $rec['id']), 'masterlength', $recordings->metadata['masterlength'], true);
-		$recordings->updateData(array('id' => $rec['id']), 'contentmasterlength', $recordings->metadata['masterlength'], false);
+		try {
+			$recordings->analyze($videopath);
+			// $recordings->analyze($contentpath);
+		} catch (Exception $ex) {
+			print_r("[ERROR] Analyze failed! (id - ". $rec['id'] ."\nError message:\n\n". $ex->getMessage()."\n");
+		}
+		echo "analyze $videopath - masterlength = ". $recordings->metadata['masterlength'] ."\n";
+		// echo "analyze $contentpath - contentmasterlength = ". $recordings->metadata['masterlength'] ."\n";
+		/*$recordings->*/updateData(array('id' => $rec['id']), 'masterlength', $recordings->metadata['masterlength'], false);
+		// /*$recordings->*/updateData(array('id' => $rec['id']), 'contentmasterlength', $recordings->metadata['masterlength'], false);
 	}
 } while ($recordingarray->MoveNext() === true);
 
@@ -90,7 +97,7 @@ exit(0);
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //	Function to override previous length values in recordings table
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-class Recordings {
+// class Recordings {
 	function updateData($recording, $key, $value, $debug = true) {
 		global $db;
 		$checkqry = "SELECT	". $key ." FROM recordings WHERE id = ". $recording['id'];
@@ -111,10 +118,10 @@ class Recordings {
 		
 		$dbresult = $dbresult->fields;
 		if ($dbresult[$key] != $value) {
-			print_r("[WARN] Different values. (original:". $dbresult[$key] ."/result". $value .") Updating\n");
+			print_r("[WARN] Different values. (original:". $dbresult[$key] ."/result". $value .") Updating");
 			if ($debug === false) {
 				try {
-					print_r($updateqry);
+					print_r(":\n". $updateqry);
 					$db->execute($updateqry);
 				} catch( exception $ex) {
 					print_r("\n[ERROR] - db update failed.\n". $ex->getMessage() ."\n");
@@ -128,7 +135,7 @@ class Recordings {
 		}
 		// no output message when values are matching
 	}
-
+	/*
 	function SXEtoArray(SimpleXMLElement $xml) {
 		$array = (array) $xml;
 		foreach ( array_slice($array, 0) as $key => $value ) {
@@ -259,12 +266,12 @@ class Recordings {
 				$videobitrate = $this->getMediainfoNumericValue( $videobitrate, false, 1);
 			}
 			
-			if ($video['Scan_type']) {
+			if (isset($video['Scan_type']) && !empty($video['Scan_type'])) {
 				$videoisinterlaced = $video['Scan_type'][0] == "Progressive" ? 0 : 1;
-			elseif ($general['Interlacement']) {
+			} elseif (isset($general['Interlacement']) && !empty($video['Interlacement'])) {
 				$videoisinterlaced = $general['Interlacement'][1] == "Progressive" ? 0 : 1;
 			} else {
-				throw new InvalidLengthException('Length not found for the media, output was ' . $output );
+				throw new Exception('Length not found for the media, output was ' . $output );
 			}
 		}
 
@@ -321,5 +328,5 @@ class Recordings {
 		
 		return $this->metadata = $info;
 	}
-}
+}*/
 ?>
