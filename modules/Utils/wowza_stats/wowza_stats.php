@@ -12,14 +12,43 @@ include_once( BASE_PATH . 'libraries/Springboard/Application/Cli.php');
 include_once( BASE_PATH . 'modules/Jobs/job_utils_base.php' );
 
 set_time_limit(0);
-
 date_default_timezone_set("Europe/Budapest");
 
 echo "Wowza log analizer v0.41 - STARTING...\n";
-
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // User settings must be passed as an argument when running the script.
 // E.g.: php -f livestats.php company.php
+/////////////////////////////////////////////////// SAMPLE DATA //////////////////////////////////////////////////////
+// $islivestats = TRUE;            // Is stats for live or on demand?
+// $showprogress = TRUE;           // Show progress? ".": line is processes, "+" relevant line is found.
+// $channelid = 0;                 // Channel ID: calculate statistics for this channel (live or on demand)
+// $analyze_perconnection = TRUE;  // Analyze per connection: TRUE = track all connections | FALSE = give a summary only
+// $min_duration = 1;              // Minimal duration to include a connection (seconds)
+// $islocallogfiles = FALSE;       // Log files: work *.log files found in working directory
+// $overridewowzaapp = FALSE;      // Wowza app: override?
+// $wowza_app = "live";	           // Wowza application to use if override
+// $usereversedns = TRUE;          // DNS: reverse DNS enable/disable
+// $cleanfrombreaks = TRUE;        // Clean from breakes? (see $event_timings)
+// $event_timings = array(
+//	0 => array(
+//		array(
+//			'type'			=> 'EVENT',                 // EVENT / BREAK
+//			'starttime'		=> '2013-12-10 08:55:42',	// event start
+//			'endtime'		=> '2013-12-10 16:26:31',	// event finish
+//			'description'	=> 'text'
+//		),
+//		array(...)
+//	);                             // Event timings, indexed by feedid (locations), [0] index applies all locations
+// $debug_client = array(
+//	'do'		=> FALSE,
+//	'ip'		=> "0.0.0.0",
+//	'clientid'	=> "",
+//	'streamid'	=> ""
+// );                              // DEBUG: set IP and/or client ID to filter for the specific client
+// $debug_duration = FALSE;              // Debug: duration calculation
+// $debug_timeslicing = FALSE;           // Debug: time slice creation based on $event_timings
+// $ondemand_startdate = "2013-07-02";   // Ondemand stats analyze start and end dates
+// $ondemand_enddate = "2013-07-03";
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 if ($argc < 2) {
 	print_r("User settings has been not passed\nTerminating.\n");
