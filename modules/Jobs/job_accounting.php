@@ -50,7 +50,7 @@ $org_contracts = array(
 			'name'			=> "IIR",
 			'price_peruser'	=> 2000,
 			'currency'		=> "HUF",
-			'listfromdate'	=> "2013-11-01 00:00:00"
+			'listfromdate'	=> null
 		)
 );
 
@@ -99,16 +99,27 @@ for ($i = 0; $i < count($org_contracts); $i++ ) {
 
 	$query = "
 		SELECT
-			id,
-			email,
-			firstloggedin
+			u.id,
+			u.email,
+			u.firstloggedin,
+			GROUP_CONCAT(d.name SEPARATOR ';') as deps
 		FROM
-			users
+			users as u
+		LEFT JOIN
+			users_departments as ud
+		ON
+			u.id = ud.userid
+		LEFT JOIN
+			departments as d
+		ON
+			ud.departmentid = d.id
 		WHERE
-			organizationid = " . $org_contracts[$i]['orgid'] . " AND
-			isusergenerated = 1 AND
-			firstloggedin > \"" . $firstloggedin_startdate . "\" AND
-			firstloggedin < \"" . $firstloggedin_enddate . "\"
+			u.organizationid = " . $org_contracts[$i]['orgid'] . " AND
+			u.isusergenerated = 1 AND
+			u.firstloggedin > \"" . $firstloggedin_startdate . "\" AND
+			u.firstloggedin < \"" . $firstloggedin_enddate . "\"
+		GROUP BY
+			u.id
 		ORDER BY
 			firstloggedin";
 
@@ -132,7 +143,7 @@ for ($i = 0; $i < count($org_contracts); $i++ ) {
 	$accounting_log .= "Accounting period: " . $firstloggedin_startdate . "-" . $firstloggedin_enddate . "\n";
 	$accounting_log .= "Per user price: " . $org_contracts[$i]['price_peruser'] . $org_contracts[$i]['currency'] . "\n\n";
 
-	$accounting_log .= "User ID;Username;Activated\n";
+	$accounting_log .= "User ID;Username;Activated;Group1;Group2;Group3;...\n";
 
 	$users_num = 0;
 	while ( !$users->EOF ) {
@@ -140,7 +151,7 @@ for ($i = 0; $i < count($org_contracts); $i++ ) {
 		$user = array();
 		$user = $users->fields;
 
-		$accounting_log .= $user['id'] . ";" . $user['email'] . ";" . $user['firstloggedin'] . "\n";
+		$accounting_log .= $user['id'] . ";" . $user['email'] . ";" . $user['firstloggedin'] . ";" . $user['deps'] . "\n";
 
 		$users_num++;
 		$users->MoveNext();
