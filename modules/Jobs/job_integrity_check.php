@@ -6,6 +6,8 @@
 define('BASE_PATH',	realpath( __DIR__ . '/../..' ) . '/' );
 define('PRODUCTION', false);
 define('DEBUG', false);
+define('THRESHOLD', 0.005);
+define('THRESHOLD_MOBILE', 0.02);
 
 include_once(BASE_PATH . 'libraries/Springboard/Application/Cli.php');
 
@@ -158,7 +160,7 @@ while ( !$recordings->EOF ) {
 		if ( !file_exists($record_audio_only) ) {
 			$recording_summary .= "ERROR: audio only version does not exist (" . $record_audio_only . ")\n";
 		} elseif ( filesize($record_audio_only) == 0 ) {
-			$recording_summary .= "ERROR: audio only version zero size (" . $record_audio_only . ")\n";
+			$recording_summary .= "ERROR : audio only version zero size (" . $record_audio_only . ")\n";
 		}
 	}
 	
@@ -176,10 +178,10 @@ while ( !$recordings->EOF ) {
 		}
 		
 		$mastervideolength = check_length($master_record, $msg);
-		$threshold = ( round($mastervideolength * 0.005) < 1 ? 1 : round($mastervideolength * 0.005) );
+		$threshold = ( round($mastervideolength * THRESHOLD) < 1 ? 1 : round($mastervideolength * THRESHOLD) );
 		
 		if (abs($mastervideolength - $rec['masterlength']) > $threshold) {
-			$recording_summary .= "ERROR: invalid database value (". $master_record ." - ". $mastervideolength ."s, db - ". $rec['masterlength'] ."s)\n";
+			$recording_summary .= "ERROR: invalid database value (". $master_record ." - ". $mastervideolength ."sec, db - ". $rec['masterlength'] ."s)\n";
 		}
 	}
 	
@@ -192,7 +194,7 @@ while ( !$recordings->EOF ) {
 		} else {
 			$record_lq_duration = check_length($record_lq, $msg);
 			if (abs($mastervideolength - $record_lq_duration) > $threshold) {
-				$recording_summary .= "ERROR: invalid video duration (". $record_lq ." - ". $record_lq_duration ."s, db - ". $rec['masterlength'] ."s)\n";
+				$recording_summary .= "ERROR: invalid video duration (". $record_lq ." - ". $record_lq_duration ."sec, db - ". $mastervideolength ."s)\n";
 			}
 		}
 	
@@ -205,7 +207,7 @@ while ( !$recordings->EOF ) {
 			} else {
 				$record_hq_duration = check_length($record_hq, $msg);
 				if (abs($mastervideolength - $record_hq_duration) > $threshold) {
-					$recording_summary .= "ERROR: invalid video duration (". $record_hq ." - ". $record_hq_duration ."s, db - ". $rec['masterlength'] ."s)\n";
+					$recording_summary .= "ERROR: invalid video duration (". $record_hq ." - ". $record_hq_duration ."sec, master - ". $mastervideolength ."s)\n";
 				}
 			}
 		}
@@ -226,7 +228,7 @@ while ( !$recordings->EOF ) {
 			
 			$mastercontentlength = check_length($content_master, $msg);
 			if (abs($mastercontentlength - $rec['contentmasterlength']) > $threshold) {
-				$recording_summary .= "ERROR: invalid database value (". $content_master ." - ". $mastercontentlength ."s, db - ". $rec['contentmasterlength'] ."s)\n";
+				$recording_summary .= "ERROR: invalid database value (". $content_master ." - ". $mastercontentlength ."sec, db - ". $rec['contentmasterlength'] ."s)\n";
 			}
 		}
 	
@@ -241,7 +243,7 @@ while ( !$recordings->EOF ) {
 		} else {
 			$content_lq_duration = check_length($content_lq, $msg);
 			if (abs($mastercontentlength - $content_lq_duration) > $threshold) {
-				$recording_summary .= "ERROR: invalid content duration (". $content_lq ." - ". $content_lq_duration ."s, db - ". $rec['masterlength'] ."s)\n";
+				$recording_summary .= "ERROR: invalid content duration (". $content_lq ." - ". $content_lq_duration ."sec, db - ". $mastercontentlength ."s)\n";
 			}
 		}
 
@@ -254,7 +256,7 @@ while ( !$recordings->EOF ) {
 			} else {
 				$content_hq_duration = check_length($content_hq, $msg);
 				if (abs($mastercontentlength - $content_hq_duration) > $threshold) {
-					$recording_summary .= "ERROR: invalid content duration (". $content_hq ." - ". $content_hq_duration ."s, db - ". $rec['contentmasterlength'] ."s)\n";
+					$recording_summary .= "ERROR: invalid content duration (". $content_hq ." - ". $content_hq_duration ."sec, db - ". $mastercontentlength ."s)\n";
 				}
 			}
 		}
@@ -269,6 +271,7 @@ while ( !$recordings->EOF ) {
 			$lengthfull = $mastervideolength;
 			$iscontentlonger = false;
 		}
+		$threshold = ( round($lengthfull * THRESHOLD_MOBILE) < 1 ? 1 : round($lengthfull * THRESHOLD_MOBILE) );
 		
 		// Check mobile normal quality file
 		if ( !file_exists($record_mobile_lq) ) {
@@ -278,7 +281,7 @@ while ( !$recordings->EOF ) {
 		} else {
 			$mobile_lq_duration = check_length($record_mobile_lq, $msg);
 			if (abs($lengthfull - $mobile_lq_duration) > $threshold) {
-				$recording_summary .= "ERROR: invalid mobile duration (". $record_mobile_lq ." - ". $mobile_lq_duration ."s, db/". ($iscontentlonger ? "content" : "video") ." - ". $lengthfull ."s)\n";
+				$recording_summary .= "ERROR: invalid mobile duration (". $record_mobile_lq ." - ". $mobile_lq_duration ."sec, db/". ($iscontentlonger ? "content" : "video") ." - ". $lengthfull ."s)\n";
 			}
 		}
 		// Check mobile high quality file
@@ -290,7 +293,7 @@ while ( !$recordings->EOF ) {
 			} else {
 				$mobile_hq_duration = check_length($record_mobile_hq, $msg);
 				if (abs($lengthfull - $mobile_hq_duration) > $threshold) {
-					$recording_summary .= "ERROR: invalid mobile duration (". $record_mobile_hq ." - ". $mobile_hq_duration ."s, db/". ($iscontentlonger ? "content" : "video") ." - ". $lengthfull ."s)\n";
+					$recording_summary .= "ERROR: invalid mobile duration (". $record_mobile_hq ." - ". $mobile_hq_duration ."sec, db/". ($iscontentlonger ? "content" : "video") ." - ". $lengthfull ."s)\n";
 				}
 			}
 		}
