@@ -68,9 +68,7 @@ $org_contracts = array(
 $db = null;
 $db = db_maintain();
 
-$err = users_setvalidity($org_contracts);
-
-exit;
+//$err = users_setvalidity($org_contracts);
 
 // Mailqueue maintenance
 $err = mailqueue_cleanup();
@@ -83,7 +81,6 @@ $err = db_maintenance();
 
 // Upload chunks maintenance
 $err = uploads_maintenance();
-
 
 $db->close();
 
