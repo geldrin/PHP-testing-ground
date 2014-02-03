@@ -32,25 +32,28 @@ if ( is_file( $app->config['datapath'] . 'jobs/job_accounting.stop' ) or is_file
 // Contract data: should be retrived from DB later, when contract description database is implemented.
 $org_contracts = array(
 	0	=> array(
-			'orgid' 		=> 200,
-			'name'			=> "Conforg",
-			'price_peruser'	=> 2000,
-			'currency'		=> "HUF",
-			'listfromdate'	=> null
+			'orgid' 					=> 200,
+			'name'						=> "Conforg",
+			'price_peruser'				=> 2000,
+			'currency'					=> "HUF",
+			'listfromdate'				=> null,
+			'generateduservaliditydays'	=> 30
 		),
 	1	=> array(
-			'orgid' 		=> 222,
-			'name'			=> "Infoszféra",
-			'price_peruser'	=> 2000,
-			'currency'		=> "HUF",
-			'listfromdate'	=> "2013-12-01 00:00:00"
+			'orgid' 					=> 222,
+			'name'						=> "Infoszféra",
+			'price_peruser'				=> 2000,
+			'currency'					=> "HUF",
+			'listfromdate'				=> "2013-12-01 00:00:00",
+			'generateduservaliditydays'	=> 30
 		),
 	2	=> array(
-			'orgid' 		=> 282,
-			'name'			=> "IIR",
-			'price_peruser'	=> 2000,
-			'currency'		=> "HUF",
-			'listfromdate'	=> null
+			'orgid' 					=> 282,
+			'name'						=> "IIR",
+			'price_peruser'				=> 2000,
+			'currency'					=> "HUF",
+			'listfromdate'				=> null,
+			'generateduservaliditydays'	=> 30
 		)
 );
 
@@ -160,10 +163,6 @@ for ($i = 0; $i < count($org_contracts); $i++ ) {
 	$accounting_log .= "Summary;" . $users_num . ";" . $users_num * $org_contracts[$i]['price_peruser'] . $org_contracts[$i]['currency'] . "\n\n";
 
 }
-
-// Send mail with accounting information
-//$queue = $app->bootstrap->getMailqueue();
-//$queue->sendHTMLEmail("andras.kovacs@videosquare.eu", "Videosquare accounting information", $accounting_log);
 
 $email = "andras.kovacs@videosquare.eu";
 $queue = $app->bootstrap->getMailqueue();
