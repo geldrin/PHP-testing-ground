@@ -19,18 +19,50 @@ $jconf = $app->config['config_jobs'];
 $recordings = array();
 $users = array();
 
+$msg  = "# Videosquare ondemand statistics report\n\n";
+$msg .= "# Log analization started: " . date("Y-m-d H:i:s") . "\n";
+//$msg .= "# Customer: " . $event_info['name'] . " - " . $event_info['url'] . "\n";
+//$msg .= "# Domain: " . $event_info['domain'] . "\n#\n";
+$msg .= "# Locations (location / stream name): (*) = encoder\n";
+
 try {
   $db = $app->bootstrap->getAdoDB();
 } catch (exception $err) {
-  // Send mail alert, sleep for 15 minutes
+  // Send mail alert
   $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] No connection to DB (getAdoDB() failed). Error message:\n" . $err, $sendmail = TRUE);
   exit;
 }
 
-// Query channels of org
-$org_id = 200; // conforg
-//$org_id = 222; // infoszfera
-//$org_id = 2;   // videosquare
+$org_id = null;
+// get organization id from user/argument
+if ($argc > 1) {
+  $input = $argv[1];
+  $data = db_query("SELECT id, name FROM organizations WHERE id=". intval($input));
+  if ($data['success'] === true && $data['returnvalue'] !== false) {
+    $org_id = intval($data['returnvalue']['id']);
+  } else {
+    print_r($data['message']);
+	exit -1;
+  }
+} else {
+  while (true) {
+    print_r(" > ");
+    $input = fgets(STDIN);
+    if (!preg_match('/[A-Za-z.#\\-$]/', $input)) {
+      $input = intval($input);
+      $data = db_query("SELECT id, name FROM organizations WHERE id=". intval($input));
+      if ($data['success'] === true) {
+        $org_id = intval($data['returnvalue']['id']);
+        print_r("Organization name = ". $data['returnvalue']['name'] ." (". $input .")\n");
+        break;
+      } elseif ($data['returnvalue'] === false) {
+        print_r("Organization does not exist! Please type again.\n");
+      }
+    }
+    print_r('Invalid value! Please type again: ');
+  }
+}
+// query database
 $query = "
   SELECT
     ch.id,
@@ -52,12 +84,6 @@ try {
   echo "false!\n";
   exit -1;
 }
-
-$msg  = "# Videosquare ondemand statistics report\n\n";
-$msg .= "# Log analization started: " . date("Y-m-d H:i:s") . "\n";
-//$msg .= "# Customer: " . $event_info['name'] . " - " . $event_info['url'] . "\n";
-//$msg .= "# Domain: " . $event_info['domain'] . "\n#\n";
-$msg .= "# Locations (location / stream name): (*) = encoder\n";
 
 foreach ($org_channels as $ch) {
 
@@ -138,8 +164,9 @@ foreach ($org_channels as $ch) {
       }
 
       $position_percent = round( ( 100 / $rec['masterlength'] ) * $up['position'], 2);
-		if ( $position_percent > 100 ) $position_percent = 100;
+    if ( $position_percent > 100 ) $position_percent = 100;
       $msg .= $up['email'] . ";" . secs2hms($up['position']) . ";" . secs2hms($rec['masterlength']) . ";" . $position_percent . "%\n";
+      //$msg .= $up['email'] .";". secs2hms($up['position']) .";". secs2hms($rec['masterlength']) .";". $position_percent ."%;". $up['timestamp'] ."\n";
 
       $user_added = true;
     }
@@ -169,5 +196,28 @@ exit;
 function toUpper($string) { 
   return (strtoupper(strtr($string, 'áéíóöőüű','ÁÉÍÓÖŐÜŰ'))); 
 };
+
+function db_query($qry) {
+  global $db;
+  $returnarray = array(
+    'success'     => false,
+    'returnvalue' => null,
+    'message'     => null
+  );
+  try {
+    $arr = $db->getArray($qry);
+    $returnarray['returnvalue'] = !empty($arr) ? $arr[0] : false;
+    $returnarray['message'] = !$returnarray['returnvalue'] ? "Database query failed!\nQuery:\n". $qry ."\n" : "Success.\n";
+    if ($returnarray['returnvalue'] === false) {
+      $returnarray['message'] = "[ERROR] The query returned an empty array.\n";
+      return $returnarray;
+    }
+    $returnarray['success'] = true;
+  } catch (Exception $ex) {
+    $returnarray['returnvalue'] = "Database query failed!\nQuery:\n". $qry ."\n";
+    $returnarray['message'] = "Database query failed!\nQuery:\n". $qry ."\n";
+  }
+  return $returnarray;
+}
 
 ?>
