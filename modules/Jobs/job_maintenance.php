@@ -44,15 +44,17 @@ $org_contracts = array(
 			'price_peruser'				=> 2000,
 			'currency'					=> "HUF",
 			'listfromdate'				=> null,
-			'generateduservaliditydays'	=> 31
+			'generateduservaliditydays'	=> 30,
+			'disableuseraftervalidity'	=> true
 		),
-	1	=> array(
+/*	1	=> array(
 			'orgid' 					=> 222,
 			'name'						=> "Infoszféra",
 			'price_peruser'				=> 2000,
 			'currency'					=> "HUF",
-			'listfromdate'				=> "2013-12-01 00:00:00",
-			'generateduservaliditydays'	=> 31
+			'listfromdate'				=> null,
+			'generateduservaliditydays'	=> 30,
+			'disableuseraftervalidity'	=> false
 		),
 	2	=> array(
 			'orgid' 					=> 282,
@@ -60,15 +62,18 @@ $org_contracts = array(
 			'price_peruser'				=> 2000,
 			'currency'					=> "HUF",
 			'listfromdate'				=> null,
-			'generateduservaliditydays'	=> 31
+			'generateduservaliditydays'	=> 30,
+			'disableuseraftervalidity'	=> false
 		)
+*/
 );
 
 // Establish database connection
 $db = null;
 $db = db_maintain();
 
-//$err = users_setvalidity($org_contracts);
+// User validity: maintain for generated users
+$err = users_setvalidity($org_contracts);
 
 // Mailqueue maintenance
 $err = mailqueue_cleanup();
@@ -260,7 +265,11 @@ global $db, $app, $jconf, $debug;
 }
 
 function users_setvalidity($org_contracts) {
- global $db, $debug;
+ global $db, $debug, $jconf;
+
+	$myjobid = $jconf['jobid_maintenance'];
+
+	$global_log = "";
 
 	for ($i = 0; $i < count($org_contracts); $i++ ) {
 
@@ -288,13 +297,12 @@ function users_setvalidity($org_contracts) {
 			$users = $db->Execute($query);
 		} catch (exception $err) {
 			$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] SQL query failed.\n" . trim($query) . "\n" . $err . "\n", $sendmail = TRUE);
-			exit -1;
 		}
 
-		// Is user list empty for this organiztion?
-		if ( $users->RecordCount() < 1 ) {
-			continue;
-		}
+		// Is user list empty for this organization?
+//		if ( $users->RecordCount() < 1 ) {
+//			continue;
+//		}
 
 		$users_num = 0;
 		while ( !$users->EOF ) {
@@ -302,14 +310,7 @@ function users_setvalidity($org_contracts) {
 			$user = array();
 			$user = $users->fields;
 
-			echo $user['id'] . "," . $user['email'] . ",1st:" . $user['firstloggedin'] . ",last:" . $user['lastloggedin'] . ",dis:" . $user['timestampdisabledafter'] . "\n";
-
-			// User is not yet logged in
-/*			if ( empty($user['firstloggedin']) and empty($user['lastloggedin']) ) {
-				echo "notyetloggedin\n";
-				continue;
-			}
-*/
+			$global_log .= $user['id'] . "," . $user['email'] . ",1st:" . $user['firstloggedin'] . ",last:" . $user['lastloggedin'] . ",dis:" . $user['timestampdisabledafter'] . "\n";
 
 			$user_firstloggedin = strtotime($user['firstloggedin']);
 
@@ -317,12 +318,7 @@ function users_setvalidity($org_contracts) {
 			if ( empty($user['timestampdisabledafter']) ) {
 				$user_validitytime = date("Y-m-d H:i:s", $user_firstloggedin + $org_contracts[$i]['generateduservaliditydays'] * 24 * 3600);
 
-/*				if ( $user_firstloggedin < strtotime("2014-01-01 00:00:00") ) {
-					$user_validitytime = "2014-01-31 23:59:59";
-				}
-*/
-
-				echo "newvaliditytime: " . $user_validitytime . "\n";
+				$global_log .= "newvaliditytime: " . $user_validitytime . "\n";
 
 				$query = "
 					UPDATE
@@ -331,19 +327,46 @@ function users_setvalidity($org_contracts) {
 						u.timestampdisabledafter = \"" . $user_validitytime . "\"
 					WHERE
 						u.id = " . $user['id'];
-/*
+
 				try {
 					$rs = $db->Execute($query);
 				} catch (exception $err) {
-					$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] SQL query failed.\n" . trim($query) . "\n" . $err . "\n", $sendmail = TRUE);
-					exit -1;
+					$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] SQL query failed.\n" . trim($query) . "\n" . $err . "\n", $sendmail = true);
 				}
-*/
+
 			}
 
 			$users_num++;
 			$users->MoveNext();
 		}
+
+		$global_log .= "\n";
+
+		// Disable: users that behind their disable date
+		$datetimenow = date("Y-m-d H:i:s");
+
+		$query = "
+			UPDATE
+				users as u
+			SET
+				disabled = 1
+			WHERE
+				u.organizationid = " . $org_contracts[$i]['orgid'] . " AND
+				u.isusergenerated = 1 AND
+				u.disabled = 0 AND
+				u.firstloggedin IS NOT NULL AND
+				u.timestampdisabledafter < \"" . $datetimenow . "\"
+		";
+
+		$global_log .= $query . "\n\n";
+
+		try {
+			$rs2 = $db->Execute($query);
+		} catch (exception $err) {
+			$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] SQL query failed.\n" . trim($query) . "\n" . $err . "\n", $sendmail = TRUE);
+		}
+
+		$debug->log($jconf['log_dir'], $myjobid . ".log", "[MAINTENANCE] " . $global_log, $sendmail = true);
 
 	}
 }
