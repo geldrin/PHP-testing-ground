@@ -35,17 +35,40 @@ if ( iswindows() ) {
 if ( is_file( $app->config['datapath'] . 'jobs/job_maintenance.stop' ) or is_file( $app->config['datapath'] . 'jobs/all.stop' ) ) exit;
 
 clearstatcache();
-	
-// Establish database connection
-try {
-	$db = $app->bootstrap->getAdoDB();
-} catch (exception $err) {
-	// Send mail alert, sleep for 15 minutes
-	$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] No connection to DB (getAdoDB() failed). Error message:\n" . $err, $sendmail = true);
-	// Sleep 15 mins then resume
-	exit;
-}
 
+// Contract data: should be retrived from DB later, when contract description database is implemented.
+$org_contracts = array(
+	0	=> array(
+			'orgid' 					=> 200,
+			'name'						=> "Conforg",
+			'price_peruser'				=> 2000,
+			'currency'					=> "HUF",
+			'listfromdate'				=> null,
+			'generateduservaliditydays'	=> 31
+		),
+	1	=> array(
+			'orgid' 					=> 222,
+			'name'						=> "Infoszféra",
+			'price_peruser'				=> 2000,
+			'currency'					=> "HUF",
+			'listfromdate'				=> "2013-12-01 00:00:00",
+			'generateduservaliditydays'	=> 31
+		),
+	2	=> array(
+			'orgid' 					=> 282,
+			'name'						=> "IIR",
+			'price_peruser'				=> 2000,
+			'currency'					=> "HUF",
+			'listfromdate'				=> null,
+			'generateduservaliditydays'	=> 31
+		)
+);
+
+// Establish database connection
+$db = null;
+$db = db_maintain();
+
+//$err = users_setvalidity($org_contracts);
 
 // Mailqueue maintenance
 $err = mailqueue_cleanup();
@@ -58,7 +81,6 @@ $err = db_maintenance();
 
 // Upload chunks maintenance
 $err = uploads_maintenance();
-
 
 $db->close();
 
@@ -235,6 +257,95 @@ global $db, $app, $jconf, $debug;
 
 	return TRUE;
 
+}
+
+function users_setvalidity($org_contracts) {
+ global $db, $debug;
+
+	for ($i = 0; $i < count($org_contracts); $i++ ) {
+
+		// Query: users that generated, already logged in and should have a 31-days of validity but not yet set
+		$query = "
+			SELECT
+				u.id,
+				u.email,
+				u.firstloggedin,
+				u.lastloggedin,
+				u.timestampdisabledafter
+			FROM
+				users as u
+			WHERE
+				u.organizationid = " . $org_contracts[$i]['orgid'] . " AND
+				u.isusergenerated = 1 AND
+				u.firstloggedin IS NOT NULL AND
+				u.timestampdisabledafter IS NULL
+			ORDER BY
+				u.firstloggedin";
+
+		unset($users);
+
+		try {
+			$users = $db->Execute($query);
+		} catch (exception $err) {
+			$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] SQL query failed.\n" . trim($query) . "\n" . $err . "\n", $sendmail = TRUE);
+			exit -1;
+		}
+
+		// Is user list empty for this organiztion?
+		if ( $users->RecordCount() < 1 ) {
+			continue;
+		}
+
+		$users_num = 0;
+		while ( !$users->EOF ) {
+
+			$user = array();
+			$user = $users->fields;
+
+			echo $user['id'] . "," . $user['email'] . ",1st:" . $user['firstloggedin'] . ",last:" . $user['lastloggedin'] . ",dis:" . $user['timestampdisabledafter'] . "\n";
+
+			// User is not yet logged in
+/*			if ( empty($user['firstloggedin']) and empty($user['lastloggedin']) ) {
+				echo "notyetloggedin\n";
+				continue;
+			}
+*/
+
+			$user_firstloggedin = strtotime($user['firstloggedin']);
+
+			// If disable timestamp is not set
+			if ( empty($user['timestampdisabledafter']) ) {
+				$user_validitytime = date("Y-m-d H:i:s", $user_firstloggedin + $org_contracts[$i]['generateduservaliditydays'] * 24 * 3600);
+
+/*				if ( $user_firstloggedin < strtotime("2014-01-01 00:00:00") ) {
+					$user_validitytime = "2014-01-31 23:59:59";
+				}
+*/
+
+				echo "newvaliditytime: " . $user_validitytime . "\n";
+
+				$query = "
+					UPDATE
+						users as u
+					SET
+						u.timestampdisabledafter = \"" . $user_validitytime . "\"
+					WHERE
+						u.id = " . $user['id'];
+/*
+				try {
+					$rs = $db->Execute($query);
+				} catch (exception $err) {
+					$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] SQL query failed.\n" . trim($query) . "\n" . $err . "\n", $sendmail = TRUE);
+					exit -1;
+				}
+*/
+			}
+
+			$users_num++;
+			$users->MoveNext();
+		}
+
+	}
 }
 
 ?>

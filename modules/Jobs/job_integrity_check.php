@@ -47,13 +47,6 @@ if ( is_file( $app->config['datapath'] . 'jobs/job_integrity_check.stop' ) or is
 // Establish database connection
 $db = null;
 $db = db_maintain();
-/*try {
-	$db = $app->bootstrap->getAdoDB();
-} catch (exception $err) {
-	// Send mail alert, sleep for 15 minutes
-	$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] No connection to DB (getAdoDB() failed). Error message:\n" . $err, $sendmail = TRUE);
-	exit;
-}*/
 $db_close = TRUE;
 
 $log_summary  = "NODE: " . $app->config['node_sourceip'] . "\n";
