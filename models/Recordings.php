@@ -1726,9 +1726,15 @@ class Recordings extends \Springboard\Model {
     $recordingbaseuri = $info['BASE_URI'] . \Springboard\Language::get() . '/recordings/';
     $cookiedomain     = $info['organization']['cookiedomain'];
     
-    $data = array(
+    if ( $this->bootstrap->config['forcesecureapiurl'] )
+      $apiurl = 'https://' . $info['organization']['domain'] . '/';
+    else
+      $apiurl = $info['BASE_URI'];
+
+    $apiurl .=  \Springboard\Language::get() . '/jsonapi';
+    $data    = array(
       'language'              => \Springboard\Language::get(),
-      'api_url'               => $info['BASE_URI'] . \Springboard\Language::get() . '/jsonapi',
+      'api_url'               => $apiurl,
       'user_needPing'         => false,
       'media_servers'         => array(),
       'track_firstPlay'       => true,
