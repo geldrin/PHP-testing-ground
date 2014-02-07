@@ -15,7 +15,7 @@
       <input type="text" name="term" value="{$smarty.get.term|escape:html}" id="term"/>
     </div>
     <div class="submitwrap">
-      <input class="submitbutton" type="submit" value="{#recordings__myrecordings_filter#}"/>
+      <input class="submitbutton" type="submit" value="{#users__admin_filter#}"/>
     </div>
   </form>
 </div>
