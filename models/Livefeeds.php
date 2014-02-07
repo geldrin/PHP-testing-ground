@@ -270,10 +270,16 @@ class Livefeeds extends \Springboard\Model {
       $contentstreams[] = $stream['contentkeycode'];
       
     }
-    
+
+    if ( $this->bootstrap->config['forcesecureapiurl'] )
+      $apiurl = 'https://' . $info['organization']['domain'] . '/';
+    else
+      $apiurl = $info['BASE_URI'];
+
+    $apiurl   .=  \Springboard\Language::get() . '/jsonapi';
     $flashdata = array(
       'language'               => \Springboard\Language::get(),
-      'api_url'                => $info['BASE_URI'] . \Springboard\Language::get() . '/jsonapi',
+      'api_url'                => $apiurl,
       'user_needPing'          => false,
       'media_streams'          => $streams,
       'feed_id'                => $this->id,

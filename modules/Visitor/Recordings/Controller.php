@@ -1273,13 +1273,22 @@ class Controller extends \Visitor\Controller {
   
   public function updatepositionAction( $recordingid, $lastposition ) {
     
+    $d = \Springboard\Debug::getInstance();
     $user            = $this->bootstrap->getSession('user');
     $recordingsModel = $this->modelIDCheck(
       'recordings',
       $recordingid,
       false
     );
-    
+
+    $d->log(
+      false,
+      'updateposition.txt',
+      'recordingid: ' . $recordingid .
+      ' foundrecording: ' . ( !!$recordingsModel ? 'true' : 'false' ) .
+      ' position: ' . $lastposition
+    );
+
     if ( !$user or !$user['id'] )
       throw new \Visitor\Api\ApiException('User not logged in', false, false );
     

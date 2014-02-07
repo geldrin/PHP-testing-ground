@@ -1,6 +1,6 @@
 <?php
 $config = array(
-  'version'      => '_v20140109',
+  'version'      => '_v20140129',
   'charset'      => 'UTF-8',
   'cacheseconds' => 3600,
   'errormessage' => 'An unexpected error has occured, our staff has been notified. Sorry for the inconvenience and thanks for your understanding!',
@@ -169,6 +169,11 @@ $config = array(
   //----
   // A flash altal is hasznalt kozos seed amivel a hasheket hasznaljuk.
   'flashhashseed' => 'ï!½Õz]Â7}h=ÎádÎ¶WâRì5mÂgà-ôZõ»',
+  
+  //----
+  // Ha true akkor https-re forcoljuk az api urlt, amugy automata attol fuggoen
+  // hogy milyen a site
+  'forcesecureapiurl' => true,
   
   //----
   // alapból adatbázisban tároljuk a streaming servereket, ha nincs alapértelmezett

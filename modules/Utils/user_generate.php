@@ -1,6 +1,27 @@
 <?php
-
 // Generate given number of Videosquare users with random username, password and validated status
+
+/////////////////////////////////////////////////////////////////////
+//                          PARAMETERS                             //
+/////////////////////////////////////////////////////////////////////
+// The parameters are palced in an array, where the key-value      //
+// pairs are correspontding the variables used in the script.      //
+// All key names MUST be a VALID variable name.                    //
+/////////////////////////////////////////////////////////////////////
+// Sample array:
+// $params = array(
+//	'iscommit'               => true,
+//	'dep_id'                 => 122,
+//	'issingleloginenforced'  => true,
+//	'ispresencecheckforced'  => false,
+//	'user_nameprefix'        => 'felh',
+//	'user_nametermination'   => 'valami.hu',
+//	'pass_length'            => 8,
+//	'user_namesuffix_length' => 4,
+//	'timestamp_disable'      => '2014-Dec-07',
+//  'user_num'               => 1,
+// );
+/////////////////////////////////////////////////////////////////////
 
 define('BASE_PATH',	realpath( __DIR__ . '/../..' ) . '/' );
 define('PRODUCTION', false );
@@ -10,63 +31,24 @@ include_once( BASE_PATH . 'libraries/Springboard/Application/Cli.php');
 
 set_time_limit(0);
 
-$iscommit = true;
-
 // Init
 $app = new Springboard\Application\Cli(BASE_PATH, PRODUCTION);
 
-// Users base data
-// Organization ID = Conforg (conforg.hu) [ID: 200]
-// Organization ID = Infoszféra 
-// Organization ID = IIR (iir-hungary.hu) [ID: 282]
-$org_id = 282;
-// Department ID
-$org_dep_id = 115;
- 
-// 2013-11-11
-//	$org_dep_id = 105;
-//	$user_num = 50;
-//	$ispresencecheckforced = 0;
-// 2013-11-18
-//	$org_dep_id = 107;
-//	$user_num = 50;
-//	$ispresencecheckforced = 0;
-// 2013-11-21
-//	$org_dep_id = 108;
-//	$user_num = 50;
-//	$ispresencecheckforced = 1;
-// 2013-11-25
-//	$org_dep_id = 109;
-//	$user_num = 50;
-//	$ispresencecheckforced = 0;
-// 2013-11-26
-//	$org_dep_id = 110;
-//	$user_num = 100;
-//	$ispresencecheckforced = 1;
-// 2013-11-27 de
-//	$org_dep_id = 111;
-//	$user_num = 250;
-//	$ispresencecheckforced = 1;
-// 2013-11-27 du
-//	$org_dep_id = 112;
-//	$user_num = 200;
-//	$ispresencecheckforced = 1;
-//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-// How many users?
-$user_num = 50;
-// Single login: forced?
-$issingleloginenforced = 1;
-// Presence check: forced?
-$ispresencecheckforced = 0;
-
-// User name format and length: prefix + random number @ suffix
-$user_nameprefix = "felh";
-$user_namesuffix_length = 4;
-$user_nametermination = "iir-hungary.hu";
-$pass_length = 8;
-
-$users = array();
-
+// initalize variables
+$variablenames = array('iscommit', 'dep_id', 'user_num', 'issingleloginenforced', 'ispresencecheckforced', 'user_nameprefix', 'user_nametermination', 'pass_length', 'user_namesuffix_length', 'timestamp_disable');
+foreach ($variablenames as $var) {
+	$$var = NULL;
+}
+// read data
+if ($argc < 2) {
+	print_r("User settings has been not passed\nTerminating.\n");
+	exit -1;
+} elseif (realpath($argv[1]) !== false) {
+	include_once $argv[1];
+} else {
+	print_r("'". $argv[1] ."' not found!\nTerminating.\n");
+	exit -1;
+}
 // Establish database connection
 try {
 	$db = $app->bootstrap->getAdoDB();
@@ -76,7 +58,34 @@ try {
 	exit -1;
 }
 
-$org_dep_name = query_department($org_dep_id);
+foreach ($params as $paramkey => $param) {
+	$$paramkey = $param;
+}
+
+// check some variables
+if (empty($dep_id) || empty($user_nameprefix) || empty($user_nametermination) || empty($user_namesuffix_length) || empty($pass_length)) {
+	echo "[ERROR] None of \"dep_id\", \"user_nameprefix\", \"user_nametermination\", \"user_namesuffix_length\" or \"pass_length\" are to be left empty!\nTerminating.\n";
+	exit -1;
+}
+
+if ( !is_null( $timestamp_disable)) {
+	$timestamp_disable = strtotime($timestamp_disable . " 23:59:59");
+	if ($timestamp_disable === false) {
+		echo "[ERROR] Invalid timestamp value! (". $timestamp_disable .")\n Correct form is \"YY-MM-DD\"\n";
+		exit -1;
+	}
+	
+	if (time() >= $timestamp_disable) {
+		echo "[ERROR] \"timestamp_disable\"( ". date("Y-m-d", $timestamp_disable) ." ) cannot be earlier than the current date( ". date("Y-m-d", time()) ." )!\n";
+		exit -1;
+	}
+} else
+
+$users = array();
+$dep = query_department($dep_id);
+$org_dep_name = $dep['name'];
+$org_id = $dep['organizationid'];
+unset($dep);
 
 echo "-= VIDEOSQUARE User Generator Script =-\n";
 
@@ -86,14 +95,15 @@ $msg .= "# Username number length: " . $user_namesuffix_length . "\n";
 $msg .= "# Username suffix: " . $user_nametermination . "\n";
 $msg .= "# Password length: " . $pass_length . "\n";
 $msg .= "# Org ID: " . $org_id . "\n";
-$msg .= "# Org department ID: " . $org_dep_id . " (" . $org_dep_name . ")". ($ispresencecheckforced == TRUE ? " - Presence check enabled.\n" : "\n");
+$msg .= $timestamp_disable !== NULL ? ("# User disabled after: ". date("Y-m-d", $timestamp_disable) . "\n") : "";
+$msg .= "# Org department ID: " . $dep_id . " (" . $org_dep_name . ")". ($ispresencecheckforced == TRUE ? " - Presence check enabled.\n" : "\n");
 
 $msg .= "# COMMIT: " . ($iscommit?"YES":"NO, TEST ONLY") . "\n";
 
 echo $msg;
 
 // Open TXT (CSV) file for user data
-$out_file = "vsq_users.txt";
+$out_file = "vsq_users_". $dep_id .".txt";
 if ( file_exists($out_file) ) {
 	if ( !is_writable($out_file) ) {
 		echo "[ERROR]: Cannot write output file\n";
@@ -160,29 +170,31 @@ for ( $i = 1; $i <= $user_num; $i++ ) {
 		$date = date("Y-m-d H:i:s");
 
 		$values = Array(
-			'nickname'			=> $username,
-			'email'				=> $users[$username]['username'],
-			'namefirst'			=> $username,
-			'namelast'			=> $user_nametermination,
-			'nameformat'		=> "straight",
-			'organizationid'	=> $org_id,
-			'isadmin'			=> 0,
-			'isclientadmin'		=> 0,
-			'iseditor'			=> 0,
-			'isnewseditor'		=> 0,
-			'isuploader'		=> 0,
-			'isliveadmin'		=> 0,
-			'timestamp'			=> $date,
-			'lastloggedin'		=> null,
-			'language'			=> "hu",
-			'newsletter'		=> 0,
-			'password'			=> $users[$username]['hash'],
-			'browser'			=> "(diag information was not posted)",
-			'validationcode'	=> "123456",
-			'disabled'			=> 0,
-			'isapienabled'		=> 0,
-			'issingleloginenforced'	=> $issingleloginenforced,
-			'ispresencecheckforced'	=> $ispresencecheckforced
+			'nickname'					=> $username,
+			'email'						=> $users[$username]['username'],
+			'namefirst'					=> $username,
+			'namelast'					=> $user_nametermination,
+			'nameformat'				=> "straight",
+			'organizationid'			=> $org_id,
+			'isadmin'					=> 0,
+			'isclientadmin'				=> 0,
+			'iseditor'					=> 0,
+			'isnewseditor'				=> 0,
+			'isuploader'				=> 0,
+			'isliveadmin'				=> 0,
+			'isusergenerated'			=> 1,
+			'timestampdisabledafter'	=> $timestamp_disable,
+			'timestamp'					=> $date,
+			'lastloggedin'				=> null,
+			'language'					=> "hu",
+			'newsletter'				=> 0,
+			'password'					=> $users[$username]['hash'],
+			'browser'					=> "(diag information was not posted)",
+			'validationcode'			=> "123456",
+			'disabled'					=> 0,
+			'isapienabled'				=> 0,
+			'issingleloginenforced'		=> $issingleloginenforced,
+			'ispresencecheckforced'		=> $ispresencecheckforced
 		);
 
 //var_dump($values);
@@ -202,7 +214,7 @@ for ( $i = 1; $i <= $user_num; $i++ ) {
 
 			$userid = $usersdb->id;
 
-			$userdepid = insert_users_deps($userid, $org_dep_id);
+			$userdepid = insert_users_deps($userid, $dep_id);
 		}
 
 
@@ -218,8 +230,10 @@ echo "Users added: " . $users_added . "\n";
 
 fclose($fh);
 
+
 exit;
 
+/////////////////////////////////////////////////// FUNCTIONS /////////////////////////////////////////////////////////
 function insert_users_deps($userid, $depid) {
  global $db, $iscommit; 
 
@@ -313,6 +327,7 @@ function query_department($department_id) {
 	$query = "
 		SELECT
 			id,
+			organizationid,
 			name
 		FROM
 			departments
@@ -336,7 +351,7 @@ function query_department($department_id) {
 
 	$department = $rs->fields;
 	
-	return $department['name'];
+	return $department;
 }
 
 ?>

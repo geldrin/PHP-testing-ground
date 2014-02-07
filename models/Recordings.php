@@ -611,11 +611,11 @@ class Recordings extends \Springboard\Model {
     $audiofreq         = null;
     $audiobitrate      = null;
     
-    if ( $general->Duration )
+    if ( property_exists( $general, 'Duration' ))
       $videolength = $this->getMediainfoNumericValue( $general->Duration[0] );
-    elseif ( $video->Duration )
+    elseif ( property_exists( $video, 'Duration' ))
       $videolength = $this->getMediainfoNumericValue( $video->Duration[0] );
-    elseif ( $audio->Duration )
+    elseif ( property_exists( $audio, 'Duration' ))
       $videolength = $this->getMediainfoNumericValue( $audio->Duration[0] );
     else
       throw new InvalidLengthException('Length not found for the media, output was ' . $output );
@@ -626,25 +626,30 @@ class Recordings extends \Springboard\Model {
       throw new InvalidLengthException('Recording length was less than ' . $config['recordings_seconds_minlength'] );
     
     if ( $video ) {
-      
-      $videostreamid  = $this->getMediainfoNumericValue( $video->ID );
-      $videofps       = $this->getMediainfoNumericValue( $video->Frame_rate, true );
+      $videostreamid  = $this->getMediainfoNumericValue( $video->ID[0] );
       $videocodec     = $video->Format;
+      
+      if ( $video->Frame_rate )
+        $videofps = $this->getMediainfoNumericValue( $video->Frame_rate[0], true );
+      else
+        $videofps = 25.0;
+      // $videofps       = $this->getMediainfoNumericValue( $video->Frame_rate, true );
+      
       if ( $video->Format_Info )
         $videocodec  .= ' (' . $video->Format_Info . ')';
       if ( $video->Format_profile )
         $videocodec  .= ' / ' . $video->Format_profile;
       
-      if ( is_array( $video->Bit_rate_mode ) ) {
-        // sometimes it's placed inside of a subarray, sometimes not, needs to be checked every time.
-        if ( $video->Bit_rate_mode == 'Constant' )
-          $videobitratemode = 'cbr';
-        else
-          $videobitratemode = 'vbr';
-        
-      } else
-        $videobitratemode = $video->Bit_rate_mode[1];
-      
+      if ( $video->Bit_rate_mode ) {
+        if ( is_array( $video->Bit_rate_mode ) ) {
+          // sometimes it's placed inside of a subarray, sometimes not, needs to be checked every time.
+          $videobitratemode = $video->Bit_rate_mode[1] == 'Constant' ? 'CBR' : 'VBR';
+        } else {
+          $videobitratemode = $video->Bit_rate_mode;
+        }
+      } else {
+        $videobitratemode = null;
+      }
       if ( $video->Width and $video->Height ) {
         
         $videores = sprintf(
@@ -662,10 +667,11 @@ class Recordings extends \Springboard\Model {
         ;
         
         if ( $video->Scan_type )
-          $videoisinterlaced = $video->Scan_type == 'Progressive'? 0: 1;
+          $videoisinterlaced = $video->Scan_type[1] == 'Progressive' ? 0 : 1;
+        elseif ( $video->Interlacement )
+          $videoisinterlaced = $video->Interlacement[1] == 'Progressive' ? 0 : 1;
         else
           $videoisinterlaced = 0;
-        
       }
       
     }
@@ -1720,9 +1726,15 @@ class Recordings extends \Springboard\Model {
     $recordingbaseuri = $info['BASE_URI'] . \Springboard\Language::get() . '/recordings/';
     $cookiedomain     = $info['organization']['cookiedomain'];
     
-    $data = array(
+    if ( $this->bootstrap->config['forcesecureapiurl'] )
+      $apiurl = 'https://' . $info['organization']['domain'] . '/';
+    else
+      $apiurl = $info['BASE_URI'];
+
+    $apiurl .=  \Springboard\Language::get() . '/jsonapi';
+    $data    = array(
       'language'              => \Springboard\Language::get(),
-      'api_url'               => $info['BASE_URI'] . \Springboard\Language::get() . '/jsonapi',
+      'api_url'               => $apiurl,
       'user_needPing'         => false,
       'media_servers'         => array(),
       'track_firstPlay'       => true,
