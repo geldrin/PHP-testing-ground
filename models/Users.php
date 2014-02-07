@@ -335,4 +335,69 @@ class Users extends \Springboard\Model {
     
   }
   
+  public function getSearchWhere( $searchterm, $organization ) {
+    $searchterm = str_replace( ' ', '%', $searchterm );
+    $searchterm = $this->db->qstr( '%' . $searchterm . '%' );
+    if ( $organization['fullnames'] )
+      $where = "
+        namefirst LIKE $searchterm OR
+        namelast  LIKE $searchterm OR
+        IF( nameformat = 'straight',
+          CONCAT_WS(' ', nameprefix, namelast, namefirst ),
+          CONCAT_WS(' ', nameprefix, namefirst, namelast )
+        ) LIKE $searchterm
+      ";
+    else
+      $where = "nickname LIKE $searchterm";
+
+    return "
+      organizationid = '" . $organization['id'] . "' AND
+      isadmin        = '0' AND
+      (
+        email LIKE $searchterm OR $where
+      )
+    ";
+  }
+
+  public function getSearchCount( $searchterm, $organization ) {
+    return $this->db->getOne("
+      SELECT COUNT(*)
+      FROM users
+      WHERE " . $this->getSearchWhere( $searchterm, $organization )
+    );
+  }
+
+  public function getSearchArray( $originalterm, $organization, $start, $limit, $order ) {
+    $term        = $this->db->qstr( $originalterm );
+    $searchterm  = str_replace( ' ', '%', $originalterm );
+    $searchterm  = $this->db->qstr( '%' . $searchterm . '%' );
+
+    return $this->db->getArray("
+      SELECT
+        *,
+        (
+          1 +
+          IF( email     = $term, 3, 0 ) +
+          " . ( $organization['fullnames']
+            ? "
+              IF( namefirst = $term, 2, 0 ) +
+              IF( namelast  = $term, 2, 0 ) +
+              IF( email LIKE $searchterm, 1, 0 ) +
+              IF(
+                IF( nameformat = 'straight',
+                  CONCAT_WS(' ', nameprefix, namelast, namefirst ),
+                  CONCAT_WS(' ', nameprefix, namefirst, namelast )
+                ) LIKE $searchterm,
+                1,
+                0
+              )"
+            : "IF( nickname = $term, 3, 0 )"
+          ) . "
+        ) AS relevancy
+      FROM users
+      WHERE " . $this->getSearchWhere( $originalterm, $organization ) . "
+      ORDER BY $order
+      LIMIT $start, $limit
+    ");
+  }
 }

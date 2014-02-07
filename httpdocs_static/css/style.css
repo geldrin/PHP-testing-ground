@@ -1195,8 +1195,8 @@ a#currentusername span {
   vertical-align: middle;
 }
 
-/* myrecordings search */
-#myrecordingsquicksearch {
+/* paging search */
+.pagingsearch {
   clear: both;
   margin: 5px 0px 5px 0px;
   float: left;
@@ -1204,25 +1204,25 @@ a#currentusername span {
   padding: 10px 0px 10px 0px;
   border-bottom: 1px solid #a5a5a5;
 }
-#myrecordingsquicksearch .textwrap, #myrecordingsquicksearch .submitwrap {
+.pagingsearch .textwrap, .pagingsearch .submitwrap {
   float: left;
 }
-#myrecordingsquicksearch .selectwrap .elem {
+.pagingsearch .selectwrap .elem {
   margin-right: 20px;
   float: left;
 }
-#myrecordingsquicksearch .textwrap {
+.pagingsearch .textwrap {
   float: left;
   margin-right: 20px;
 }
-#myrecordingsquicksearch .textwrap input {
+.pagingsearch .textwrap input {
   width: 150px;
 }
-#myrecordingsquicksearch .submitwrap {
+.pagingsearch .submitwrap {
   position: relative;
   top: -2px;
 }
-#myrecordingsquicksearch .selectwrap select {
+.pagingsearch .selectwrap select {
   width: 100px;
 }
 
