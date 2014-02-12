@@ -6,7 +6,6 @@ class MassInvite extends \Visitor\HelpForm {
   public $needdb     = true;
   
   protected $l;
-  protected $queue;
   protected $crypto;
   
   public function postSetupForm() {
@@ -25,7 +24,6 @@ class MassInvite extends \Visitor\HelpForm {
     
     $this->controller->toSmarty['user'] = $user;
     $l = $this->l = $this->bootstrap->getLocalization();
-    $this->queue  = $this->bootstrap->getMailqueue();
     $this->crypto = $this->bootstrap->getEncryption();
     
     if ( $values['delimeter'] == 'tab' )
@@ -103,7 +101,7 @@ class MassInvite extends \Visitor\HelpForm {
     $l = $this->l;
     $values['id'] = $this->crypto->asciiEncrypt( $values['id'] );
     $this->controller->toSmarty['values'] = $values;
-    $this->queue->sendHTMLEmail(
+    $this->controller->sendOrganizationHTMLEmail(
       $values['email'],
       $l('users', 'invitationmailsubject'),
       $this->controller->fetchSmarty('Visitor/Users/Email/MassInvitation.tpl')

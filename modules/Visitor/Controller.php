@@ -3,7 +3,8 @@ namespace Visitor;
 
 class Controller extends \Springboard\Controller\Visitor {
   public $organization;
-  
+  protected $queue;
+
   public function init() {
     $this->setupOrganization();
     
@@ -129,6 +130,7 @@ class Controller extends \Springboard\Controller\Visitor {
     $this->toSmarty['supportemail'] = $this->bootstrap->config['mail']['fromemail'] =
       $this->application->config['mail']['fromemail'] = $organization['supportemail']
     ;
+
     $this->toSmarty['organization']   = $this->organization        = $organization;
     $this->bootstrap->baseuri         =
     $this->toSmarty['BASE_URI']       = $organization['baseuri']   = $baseuri;
@@ -136,7 +138,7 @@ class Controller extends \Springboard\Controller\Visitor {
     $this->toSmarty['STATIC_URI']     = $organization['staticuri'] = $staticuri;
     $this->bootstrap->validatesession = (bool)$organization['issessionvalidationenabled'];
     $this->bootstrap->config['cookiedomain'] = $organization['cookiedomain'];
-    
+
     $this->organization = $organization;
     
   }
@@ -351,4 +353,15 @@ class Controller extends \Springboard\Controller\Visitor {
     
   }
   
+  public function sendOrganizationHTMLEmail( $email, $subject, $body, $values = array() ) {
+    
+    $olderrorsto = $this->bootstrap->config['mail']['errorsto'];
+    $this->bootstrap->config['mail']['errorsto'] = $this->organization['mailerrorto'];
+    if ( !$this->queue )
+      $this->queue = $this->bootstrap->getMailqueue();
+
+    $this->queue->sendHTMLEmail( $email, $subject, $body, $values );
+    $this->bootstrap->config['mail']['errorsto'] = $olderrorsto;
+
+  }
 }
