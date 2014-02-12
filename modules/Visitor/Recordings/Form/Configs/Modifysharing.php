@@ -151,3 +151,17 @@ $config['isseekbardisabled'] = array(
     ),
   ),
 );
+
+if ( !isset( $user ) )
+  $user = $this->bootstrap->getSession('user');
+
+if ( $user['isadmin'] or $user['isclientadmin'] or $user['iseditor'] ) {
+
+  $config['isfeatured'] = array(
+    'displayname' => $l('recordings', 'isfeatured'),
+    'type'        => 'inputRadio',
+    'value'       => 0,
+    'values'      => $l->getLov('noyes'),
+  );
+
+}

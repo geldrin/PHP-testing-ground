@@ -2199,7 +2199,6 @@ class Recordings extends \Springboard\Model {
   
   public function getRandomRecordings( $limit, $organizationid, $user ) {
     
-    // TODO isfeatured uncomment
     $select = "
       us.nickname,
       us.nameformat,
