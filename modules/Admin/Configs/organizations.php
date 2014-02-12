@@ -143,6 +143,19 @@ $config = Array(
     ),
   ),
   
+  'mailerrorto' => array(
+    'displayname' => 'Küldési hiba e-mail cím (Errors-To:)',
+    'type'        => 'inputText',
+    'validation'  => array(
+      array(
+        'type'     => 'string',
+        'regexp'   => CF_EMAIL,
+        'help'     => $l('users', 'emailhelp'),
+        'required' => false,
+      ),
+    ),
+  ),
+  
   'linkcolor' => array(
     'displayname' => 'Linkek színe',
     'type'        => 'inputText',
