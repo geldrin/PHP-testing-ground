@@ -38,6 +38,14 @@ class Forgotpassword extends \Visitor\Form {
       
     }
     
+    if ( $userModel->row['isusergenerated'] ) {
+
+      $this->form->addMessage( $l('users', 'forgotpassword_generror') );
+      $this->form->invalidate();
+      return;
+      
+    }
+
     $userModel->row['id'] = $crypto->asciiEncrypt( $userModel->row['id'] );
     $this->controller->toSmarty['values'] = $userModel->row;
     
