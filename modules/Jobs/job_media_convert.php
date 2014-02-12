@@ -72,7 +72,7 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_media_convert.stop' ) and 
 		// Query next job - exit if none
 		if ( !query_nextjob($recording, $uploader_user) ) break;
 
-		// Initialize log for closing message and total duration timer
+		// Initialize log for summary mail message and total duration timer
 		$global_log = "";
 		$total_duration = time();
 
@@ -337,14 +337,9 @@ global $app, $jconf;
 	// Update watchdog timer
 	$app->watchdog();
 
+// !!! nem kellenek ezek a mezok?
 	// Update media status
 	update_db_recording_status($recording['id'], $jconf['dbstatus_copyfromfe']);
-
-	if ( !isset($recording['mastersourceip']) ) {
-		log_recording_conversion($recording['id'], $jconf['jobid_media_convert'], $jconf['copyfromfe'], "[ERROR] Source IP is empty, cannot identify front-end server.", "-", "-", 0, TRUE);
-		update_db_recording_status($recording['id'], $jconf['dbstatus_copyfromfe_err']);
-		return FALSE;
-	}
 
 	// Media is too short (fraud check)
 	$playtime = ceil($recording['masterlength']);
@@ -354,15 +349,14 @@ global $app, $jconf;
 		return FALSE;
 	}
 
-	// SSH command template
-	$ssh_command = "ssh -i " . $jconf['ssh_key'] . " " . $jconf['ssh_user'] . "@" . $recording['mastersourceip'] . " ";
-	// Set upload path to default upload area
-	$uploadpath = $app->config['uploadpath'] . "recordings/";
-	// Media path and filename
+	//// Filenames and path
+	// Base filename
 	$suffix = "video";
 	if ( $recording['mastermediatype'] == "audio" ) $suffix = "audio";
 	$base_filename = $recording['id'] . "_" . $suffix . "." . $recording['mastervideoextension'];
-	// Check reconvert state. In case of reconvert, we copy from recordings area
+	// Upload path
+	$uploadpath = $app->config['uploadpath'] . "recordings/";
+	// Reconvert state: copy from storage area
 	$recording['conversion_type'] = "convert";
 	if ( ( ( $recording['status'] == $jconf['dbstatus_reconvert'] ) && ( $recording['masterstatus'] == $jconf['dbstatus_copystorage_ok'] ) ) || ( $recording['masterstatus'] == $jconf['dbstatus_copystorage_ok'] ) ) {
 		$uploadpath = $app->config['recordingpath'] . ( $recording['id'] % 1000 ) . "/" . $recording['id'] . "/master/";
@@ -371,7 +365,6 @@ global $app, $jconf;
 
 	$remote_filename = $jconf['ssh_user'] . "@" . $recording['mastersourceip'] . ":" . $uploadpath . $base_filename;
 	$master_filename = $jconf['media_dir'] . $recording['id'] . "/master/" . $base_filename;
-
 	$recording['remote_filename'] = $remote_filename;
 	$recording['source_file'] = $master_filename;
 
@@ -394,6 +387,9 @@ global $app, $jconf;
 		update_db_recording_status($recording['id'], $jconf['dbstatus_uploaded']);
 		return FALSE;
 	}
+
+	// SSH command template
+//	$ssh_command = "ssh -i " . $jconf['ssh_key'] . " " . $jconf['ssh_user'] . "@" . $recording['mastersourceip'] . " ";
 
 	// SCP copy from remote location
 	$err = ssh_filecopy($recording['mastersourceip'], $uploadpath . $base_filename, $master_filename);
@@ -888,6 +884,75 @@ global $app, $jconf;
 	$app->watchdog();
 
 	return TRUE;
+}
+
+// Kell-e szurni valamivel?
+function query_encoding_profiles() {
+ global $jconf, $db;
+
+	$db = db_maintain();
+	$unset($encoding_profiles);
+
+	$query = "
+		SELECT
+			eg.id AS encodinggroupid,
+			eg.name AS encodinggroupname,
+			ep.name,
+			ep.shortname,
+			ep.type,
+			ep.mediatype,
+			ep.isdesktopcompatible,
+			ep.isioscompatible,
+			ep.isandroidcompatible,
+			ep.filenamesuffix,
+			ep.filecontainerformat,
+			ep.videocodec,
+			ep.videopasses,
+			ep.videobboxsizex,
+			ep.videobboxsizey,
+			ep.videomaxfps,
+			ep.videobpp,
+			ep.ffmpegh264profile,
+			ep.ffmpegh264preset,
+			ep.audiocodec,
+			ep.audiomaxchannels,
+			ep.audiobitrateperchannel,
+			ep.audiomode,
+			ep.pipenabled,
+			ep.pipcodecprofile,
+			ep.pipposx,
+			ep.pipposy,
+			ep.pipalign,
+			ep.pipsize
+			disabled
+		FROM
+			encoding_groups AS eg,
+			encoding_profiles_groups AS epg,
+			encoding_profiles AS ep
+		WHERE
+			eg.default = 1 AND
+			eg.disabled = 0 AND
+			eg.id = epg.encodingprofilegroupid AND
+			epg.encodingprofileid = ep.id AND
+			ep.disabled = 0
+		ORDER BY
+			epg.encodingorder
+	";
+
+
+	try {
+		$encoding_profiles = $db->Execute($query);
+	} catch (exception $err) {
+		log_recording_conversion(0, $jconf['jobid_media_convert'], $jconf['dbstatus_init'], "[ERROR] Cannot query next media conversion job. SQL query failed.", trim($query), $err, 0, TRUE);
+		return FALSE;
+	}
+
+	// Check if any encoding profiles exist
+	if ( $encoding_profiles->RecordCount() < 1 ) {
+		return FALSE;
+	}
+
+	return $encoding_profiles;
 }
 
 ?>

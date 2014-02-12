@@ -63,7 +63,6 @@ CREATE TABLE `users` (
    `password` text,
    `browser` text not null,
    `validationcode` text not null,
-   `isusergenerated` int(10) unsigned not null default '0',
    `disabled` int(11) not null default '0',
    `isapienabled` int(11) not null default '0',
    `issingleloginenforced` int(11) not null default '0',
@@ -719,18 +718,4 @@ CREATE TABLE `cdn_servers_networks` (
    `streamingserverid` int(10) unsigned not null,
    `clientnetworkid` int(10) unsigned not null,
    PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;
-
-CREATE TABLE `recordings_versions` (
-  `id` int(10) unsigned not null auto_increment,
-  `recordingid` int(10) unsigned not null,
-  `name` text not null,
-  `filename` text not null,
-  `iscontent` int(10) unsigned not null default '0',
-  `status` text not null,
-  `resolution` text,
-  `bandwidth` int(10) unsigned default null,
-  `isdesktopcompatible` int(10) unsigned default null,
-  `ismobilecompatible` int(10) unsigned default null,
-  PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;
