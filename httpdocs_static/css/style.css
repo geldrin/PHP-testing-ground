@@ -1704,6 +1704,10 @@ a#currentusername span {
   float: right;
   margin-right: 30px;
 }
+#recordingviews .count {
+  display: inline;
+  font-weight: normal;
+}
 .recordinginfo .rating {
   margin-top: -2px;
 }

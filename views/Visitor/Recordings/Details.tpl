@@ -98,8 +98,7 @@
     </ul>
   </div>
   <div id="recordingviews">
-    <h3>{#recordings__metadata_views#}:</h3>
-    {$recording.numberofviews|numberformat}
+    <h3>{#recordings__metadata_views#}: <div class="count">{$recording.numberofviews|numberformat}</div></h3>
   </div>
   <div class="recordinguploader">
     {if $author.avatarstatus == 'onstorage'}
