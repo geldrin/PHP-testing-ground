@@ -6,6 +6,15 @@ class Controller extends \Springboard\Controller\Visitor {
   protected $queue;
 
   public function init() {
+
+    if (
+         $this->bootstrap->ssl and
+         $this->bootstrap->config['forcesecuremaxage']
+       )
+      $this->headeroptions['Strict-Transport-Security'] =
+        '"max-age=' . $this->bootstrap->config['forcesecuremaxage'] . '"'
+      ;
+
     $this->setupOrganization();
     
     if ( in_array( $this->module, array('api', 'jsonapi') ) ) // az api ->authenticate mindig kezeli

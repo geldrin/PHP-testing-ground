@@ -174,6 +174,9 @@ $config = array(
   // Ha true akkor https-re forcoljuk az api urlt, amugy automata attol fuggoen
   // hogy milyen a site
   'forcesecureapiurl' => true,
+  //----
+  // Ha nem 0 akkor kuldjuk a HSTS headert, masodpercben van, 1nap 86400
+  'forcesecuremaxage' => 0,
 
   //----
   // alapból adatbázisban tároljuk a streaming servereket, ha nincs alapértelmezett
