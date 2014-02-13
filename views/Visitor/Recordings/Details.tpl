@@ -97,7 +97,10 @@
       <li{if $recording.rating > 4.5} class="full"{/if}><a href="{$language}/recordings/rate/{$recording.id}?rating=5"><span></span>5</a></li>
     </ul>
   </div>
-  
+  <div id="recordingviews">
+    <h3>{#recordings__metadata_views#}:</h3>
+    {$recording.numberofviews|numberformat}
+  </div>
   <div class="recordinguploader">
     {if $author.avatarstatus == 'onstorage'}
       <div class="avatar">
@@ -135,10 +138,6 @@
         <td>{$recording.keywords|escape:html}</td>
       </tr>
     {/if}
-    <tr>
-      <td class="labelcolumn">{#recordings__metadata_views#}:</td>
-      <td>{$recording.numberofviews|numberformat}</td>
-    </tr>
     <tr>
       <td class="labelcolumn">{#recordings__recordlength#}:</td>
       <td>{$recording.masterlength|timeformat}</td>

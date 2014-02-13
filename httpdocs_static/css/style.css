@@ -1700,6 +1700,10 @@ a#currentusername span {
 #metadata .ratewidget h3 {
   margin: 0 0 0 1px;
 }
+#metadata #recordingviews {
+  float: right;
+  margin-right: 30px;
+}
 .recordinginfo .rating {
   margin-top: -2px;
 }
