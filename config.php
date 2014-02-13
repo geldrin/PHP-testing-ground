@@ -174,7 +174,7 @@ $config = array(
   // Ha true akkor https-re forcoljuk az api urlt, amugy automata attol fuggoen
   // hogy milyen a site
   'forcesecureapiurl' => true,
-  
+
   //----
   // alapból adatbázisban tároljuk a streaming servereket, ha nincs alapértelmezett
   // akkor ez lesz használva

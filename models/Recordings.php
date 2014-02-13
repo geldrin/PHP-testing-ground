@@ -2303,7 +2303,8 @@ class Recordings extends \Springboard\Model {
       r.recordedtimestamp,
       r.numberofviews,
       r.rating,
-      '0' AS numberofrecordings
+      '0' AS numberofrecordings,
+      r.status
     ";
     $where  = "
       (
@@ -2336,7 +2337,8 @@ class Recordings extends \Springboard\Model {
           starttimestamp AS recordedtimestamp,
           '0' AS numberofviews,
           '0' AS rating,
-          numberofrecordings
+          numberofrecordings,
+          '' AS status
         FROM channels
         WHERE
           ispublic = 1 AND 
