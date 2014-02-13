@@ -335,26 +335,26 @@ class Users extends \Springboard\Model {
     
   }
   
-  public function getSearchWhere( $searchterm, $organization ) {
+  public function getSearchWhere( $searchterm, $organization, $prefix = '' ) {
     $searchterm = str_replace( ' ', '%', $searchterm );
     $searchterm = $this->db->qstr( '%' . $searchterm . '%' );
     if ( $organization['fullnames'] )
       $where = "
-        namefirst LIKE $searchterm OR
-        namelast  LIKE $searchterm OR
-        IF( nameformat = 'straight',
-          CONCAT_WS(' ', nameprefix, namelast, namefirst ),
-          CONCAT_WS(' ', nameprefix, namefirst, namelast )
+        {$prefix}namefirst LIKE $searchterm OR
+        {$prefix}namelast  LIKE $searchterm OR
+        IF( {$prefix}nameformat = 'straight',
+          CONCAT_WS(' ', {$prefix}nameprefix, {$prefix}namelast, {$prefix}namefirst ),
+          CONCAT_WS(' ', {$prefix}nameprefix, {$prefix}namefirst, {$prefix}namelast )
         ) LIKE $searchterm
       ";
     else
-      $where = "nickname LIKE $searchterm";
+      $where = "{$prefix}nickname LIKE $searchterm";
 
     return "
-      organizationid = '" . $organization['id'] . "' AND
-      isadmin        = '0' AND
+      {$prefix}organizationid = '" . $organization['id'] . "' AND
+      {$prefix}isadmin        = '0' AND
       (
-        email LIKE $searchterm OR $where
+        {$prefix}email LIKE $searchterm OR $where
       )
     ";
   }

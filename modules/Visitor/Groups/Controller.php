@@ -4,7 +4,7 @@ namespace Visitor\Groups;
 class Controller extends \Visitor\Controller {
   public $permissions = array(
     'index'      => 'member',
-    'details'    => 'member',
+    'users'      => 'member',
     'create'     => 'member',
     'modify'     => 'member',
     'delete'     => 'member',
@@ -22,7 +22,7 @@ class Controller extends \Visitor\Controller {
   
   public $paging = array(
     'index'      => 'Visitor\\Groups\\Paging\\Index',
-    'details'    => 'Visitor\\Groups\\Paging\\Details',
+    'users'      => 'Visitor\\Groups\\Paging\\Users',
     'recordings' => 'Visitor\\Groups\\Paging\\Recordings',
   );
   
@@ -51,7 +51,7 @@ class Controller extends \Visitor\Controller {
     $this->redirect(
       $this->application->getParameter(
         'forward',
-        'groups/details/' . $groupModel->id . ',' .
+        'groups/users/' . $groupModel->id . ',' .
         \Springboard\Filesystem::filenameize( $groupModel->row['name'] )
       )
     );

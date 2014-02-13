@@ -22,7 +22,7 @@ class Admin extends \Visitor\Paging {
     $this->foreachelse = $l('users', 'foreachelse' );
     $this->title       = $l('users', 'admin_title');
     $this->controller->toSmarty['listclass'] = 'treeadminlist';
-    $term = trim( @$_REQUEST['term'] );
+    $term = trim( $this->application->getParameter('term') );
     if ( mb_strlen( $term ) >= 2 ) {
       $this->searchterm = $term;
       $this->passparams['term'] = $term;
