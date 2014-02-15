@@ -97,9 +97,7 @@
       <li{if $recording.rating > 4.5} class="full"{/if}><a href="{$language}/recordings/rate/{$recording.id}?rating=5"><span></span>5</a></li>
     </ul>
   </div>
-  <div id="recordingviews">
-    <h3>{#recordings__metadata_views#}: <div class="count">{$recording.numberofviews|numberformat}</div></h3>
-  </div>
+  <div id="recordingviews" title="{#recordings__metadata_views#}">{$recording.numberofviews|numberformat}</div>
   <div class="recordinguploader">
     {if $author.avatarstatus == 'onstorage'}
       <div class="avatar">
@@ -158,9 +156,7 @@
       {/if}
       <li id="embedlink"><a href="#" title="{#recordings__embed#}"><span></span>{#recordings__embed#}</a></li>
     </ul>
-    <div class="leftside"></div>
-    <div class="rightside"></div>
-    <div class="center"></div>
+    <div id="gradient"></div>
     <a id="detaillink" href="#" data-show="{#recordings__showdetails#|escape:html}" data-hide="{#recordings__hidedetails#|escape:html}">{#recordings__showdetails#}</a>
   </div>
   

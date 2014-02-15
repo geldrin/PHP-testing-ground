@@ -1702,11 +1702,12 @@ a#currentusername span {
 }
 #metadata #recordingviews {
   float: right;
-  margin-right: 30px;
-}
-#recordingviews .count {
-  display: inline;
-  font-weight: normal;
+  margin: 0 10px 0 0;
+  padding: 0 10px 0 0;
+  font-weight: bold;
+  font-size: 40px;
+  line-height: 45px;
+  border-right: 1px solid #c0c0c0;
 }
 .recordinginfo .rating {
   margin-top: -2px;
@@ -1754,36 +1755,14 @@ a#currentusername span {
   font-weight: bold;
   display: block;
 }
-#metadata #infotoggle div {
+#metadata #infotoggle #gradient {
   position: absolute;
   z-index: -10;
   bottom: 18px;
-  height: 40px;
-}
-#metadata #infotoggle .leftside {
-  background: -webkit-radial-gradient(bottom right, circle, rgba(0, 0, 0, 0.08), transparent 40px, transparent 100%);
-  background: -moz-radial-gradient(bottom right, circle, rgba(0, 0, 0, 0.08), transparent 40px, transparent 100%);
-  background: -o-radial-gradient(bottom right, circle, rgba(0, 0, 0, 0.08), transparent 40px, transparent 100%);
-  background: radial-gradient(bottom right, circle, rgba(0, 0, 0, 0.08), transparent 40px, transparent 100%);
-  width: 80px;
-  left: 0px;
-}
-#metadata #infotoggle .center {
-  background: -webkit-linear-gradient(bottom,rgba(0, 0, 0, 0.12), rgba(0, 0, 0, 0.08) 1px, rgba(0, 0, 0, 0.08) 1px, transparent 40px, transparent 100%);
-  background: -moz-linear-gradient(bottom, rgba(0, 0, 0, 0.12), rgba(0, 0, 0, 0.08) 1px, rgba(0, 0, 0, 0.08) 1px, transparent 40px, transparent 100%);
-  background: -o-linear-gradient(bottom, rgba(0, 0, 0, 0.12), rgba(0, 0, 0, 0.08) 1px, rgba(0, 0, 0, 0.08) 1px, transparent 40px, transparent 100%);
-  background: linear-gradient(bottom,rgba(0, 0, 0, 0.12), rgba(0, 0, 0, 0.08) 1px, rgba(0, 0, 0, 0.08) 1px, transparent 40px, transparent 100%);
-  top: -40px;
-  margin: 0px 80px 0px 80px;
-  width: 430px;
-}
-#metadata #infotoggle .rightside {
-  background: -webkit-radial-gradient(bottom left, circle, rgba(0, 0, 0, 0.08), transparent 40px, transparent 100%);
-  background: -moz-radial-gradient(bottom left, circle, rgba(0, 0, 0, 0.08), transparent 40px, transparent 100%);
-  background: -o-radial-gradient(bottom left, circle, rgba(0, 0, 0, 0.08), transparent 40px, transparent 100%);
-  background: radial-gradient(bottom left, circle, rgba(0, 0, 0, 0.08), transparent 40px, transparent 100%);
-  width: 80px;
-  right: 0px;
+  height: 60px;
+  top: -60px;
+  width: 590px;
+  background-image: url(images/infotoggle_gradient.png);
 }
 #metadata .attachments ul {
   margin: 0;
