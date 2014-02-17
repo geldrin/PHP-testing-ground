@@ -40,7 +40,8 @@ $j(document).ready(function() {
   runIfExists('#organizations_createnews, #organizations_modifynews', setupLiveCreate );
   runIfExists('#groups_invite', setupGroupInvitation );
   runIfExists('#timestampdisabledafter', setupDisabledAfter );
-  
+  runIfExists('#recordingssearch', setupRecordingsSearch );
+
   if ( needping )
     setTimeout( setupPing, 1000 * pingsecs );
   
@@ -1695,4 +1696,43 @@ function checkAdvancedSearchInputs() {
   
   return false;
   
+}
+
+
+function setupRecordingsSearch() {
+  
+  var html = $j.parseJSON( '"' + $j('#recordingssearch').attr('data-listitemhtml') + '"' );
+  $j('#term').autocomplete({
+    minLength: 2,
+    source: BASE_URI + language + '/recordings/search',
+    select: function( event, ui ) {
+      $j('#term').val( ui.item.label );
+      $j('#recordingid').val( ui.item.value );
+      //if (!confirm(l.areyousure)) return;
+
+      var data = $j('#recordingssearchform').serializeArray();
+      $j.ajax({
+        //beforeSend:
+        //complete:
+        cache: false,
+        success: function( data ) {
+          location.href = location.href;
+        },
+        data: data,
+        dataType: 'json',
+        type: 'POST',
+        url: BASE_URI + language + '/recordings/togglefeatured'
+      });
+      return false;
+    }
+  }).data( "autocomplete" )._renderItem = function( ul, item ) {
+    
+    var itemhtml = html.replace('__IMGSRC__', item.img ).replace('__NAME__', item.label );
+    return $j("<li>")
+      .data( "item.autocomplete", item )
+      .append( "<a>" + itemhtml + "</a>" )
+      .appendTo( ul )
+    ;
+    
+  };
 }
