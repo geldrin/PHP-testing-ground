@@ -2928,4 +2928,52 @@ class Recordings extends \Springboard\Model {
     
   }
   
+  public function search( $searchterm, $userid, $organizationid ) {
+    
+    $searchterm  = str_replace( ' ', '%', $searchterm );
+    $searchterm  = $this->db->qstr( '%' . $searchterm . '%' );
+    
+    $query   = "
+      SELECT
+        (
+          1 +
+          IF( r.title LIKE $searchterm, 2, 0 ) +
+          IF( r.subtitle LIKE $searchterm, 1, 0 ) +
+          IF( r.description LIKE $searchterm, 1, 0 ) +
+          IF( r.primarymetadatacache LIKE $searchterm, 1, 0 )
+        ) AS relevancy,
+        r.id,
+        r.userid,
+        r.organizationid,
+        r.title,
+        r.subtitle,
+        r.description,
+        r.indexphotofilename,
+        r.recordedtimestamp,
+        r.numberofviews,
+        r.rating,
+        r.status,
+        r.isfeatured
+      FROM recordings AS r
+      WHERE
+        r.status NOT IN('markedfordeletion', 'deleted') AND
+        (
+          r.primarymetadatacache LIKE $searchterm OR
+          r.additionalcache LIKE $searchterm
+        ) AND
+        (
+          r.organizationid = '$organizationid' OR
+          (
+            r.userid         = '$userid' AND
+            r.organizationid = '$organizationid'
+          )
+        )
+      ORDER BY relevancy DESC
+      LIMIT 20
+    ";
+    
+    return $this->db->getArray( $query );
+    
+  }
+  
 }
