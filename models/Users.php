@@ -400,4 +400,102 @@ class Users extends \Springboard\Model {
       LIMIT $start, $limit
     ");
   }
+
+  public function getRecordingsProgressWithChannels( $organizationid ) {
+
+    $this->ensureID();
+    $recordings = $this->db->getAssoc("
+      SELECT
+        r.id AS indexkey,
+        r.id,
+        r.userid,
+        r.organizationid,
+        r.title,
+        r.subtitle,
+        r.description,
+        r.indexphotofilename,
+        r.recordedtimestamp,
+        r.numberofviews,
+        r.rating,
+        r.status,
+        r.masterlength,
+        rwp.position,
+        rwp.timestamp
+      FROM
+        recordings AS r,
+        recording_view_progress AS rwp
+      WHERE
+        rwp.userid       = '" . $this->id . "' AND
+        rwp.recordingid  = r.id AND
+        r.organizationid = '$organizationid' AND
+        r.status NOT IN('markedfordeletion', 'deleted')
+    ");
+
+    if ( empty( $recordings ) )
+      return array();
+
+    $seenrecordings = array();
+    $recordids = array();
+    foreach( $recordings as $key => $recording ) {
+      $recordids[] = $recording['id'];
+      $recordings[ $key ]['positionpercent'] = round(
+        ( $recording['position'] / $recording['masterlength'] ) * 100
+      );
+      $recordings[ $key ]['viewedminutes'] = round( $recording['position'] / 60 );
+    }
+
+    $recordids = implode("', '", $recordids );
+    $chanrecordings = $this->db->getArray("
+      SELECT
+        cr.channelid,
+        cr.recordingid,
+        cr.weight
+      FROM channels_recordings AS cr
+      WHERE recordingid IN('$recordids')
+      ORDER BY weight
+    ");
+    $channelstorecordings = array();
+    foreach( $chanrecordings as $row ) {
+      if ( !isset( $channelstorecordings[ $row['channelid'] ] ) )
+        $channelstorecordings[ $row['channelid'] ] = array();
+
+      $channelstorecordings[ $row['channelid'] ][] = $row['recordingid'];
+    }
+
+    $channels = $this->db->getArray("
+      SELECT DISTINCT
+        c.id,
+        c.title,
+        c.subtitle,
+        c.indexphotofilename,
+        c.starttimestamp,
+        c.endtimestamp
+      FROM
+        channels AS c,
+        channels_recordings AS cr
+      WHERE
+        cr.recordingid IN('$recordids') AND
+        cr.channelid = c.id
+      ORDER BY c.title
+    ");
+
+    foreach( $channels as $key => $channel ) {
+      $channels[ $key ]['recordings'] = array();
+      foreach( $channelstorecordings[ $channel['id'] ] as $recordingid ) {
+        $channels[ $key ]['recordings'][] = $recordings[ $recordingid ];
+        $seenrecordings[ $recordingid ] = true;
+      }
+    }
+
+    $channels['channelcount'] = count( $channels );
+    $channels['recordings']   = array();
+    foreach( $recordings as $recording ) {
+      if ( !isset( $seenrecordings[ $recording['id'] ] ) )
+        $channels['recordings'][] = $recording;
+    }
+
+    return $channels;
+
+  }
+
 }

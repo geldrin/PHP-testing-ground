@@ -40,6 +40,7 @@
   </div>
 {/if}
 
+{*}
 {if $type == 'featured' and ( $member.isclientadmin or $member.iseditor )}
   {capture assign="listitemhtml"}
     <div class="wrap contributor">
@@ -53,3 +54,4 @@
     {$form}
   </div>
 {/if}
+{/*}
