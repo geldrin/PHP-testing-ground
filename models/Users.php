@@ -481,6 +481,9 @@ class Users extends \Springboard\Model {
 
     foreach( $channels as $key => $channel ) {
       $channels[ $key ]['recordings'] = array();
+
+      // weight szerint van rendezve ez a tomb, ezert weight szerint lesznek
+      // besorolva ala a recordingok is
       foreach( $channelstorecordings[ $channel['id'] ] as $recordingid ) {
         $channels[ $key ]['recordings'][] = $recordings[ $recordingid ];
         $seenrecordings[ $recordingid ] = true;

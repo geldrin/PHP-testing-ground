@@ -3,21 +3,31 @@ namespace Model;
 
 class Departments extends \Springboard\Model {
   
-  public function getDepartmentTree( $organizationid, $parentid = 0, $maxlevel = 2, $currentlevel = 0 ) {
+  public function getDepartmentTree( $organizationid, $orderby, $parentid = 0, $maxlevel = 2, $currentlevel = 0 ) {
     
     if ( $currentlevel >= $maxlevel )
       return array();
     
     $currentlevel++;
-    $this->clearFilter();
-    $this->addFilter('parentid',       $parentid );
-    $this->addFilter('organizationid', $organizationid );
-    
-    $items = $this->getArray( false, false, false, 'weight, name');
+    $items = $this->db->getArray("
+      SELECT
+        d.*,
+        COUNT(*) AS usercount
+      FROM
+        departments AS d,
+        users_departments AS ud
+      WHERE
+        d.parentid       = '$parentid' AND
+        d.organizationid = '$organizationid' AND
+        ud.departmentid  = d.id
+      GROUP BY d.id
+      ORDER BY $orderby
+    ");
     
     foreach( $items as $key => $value )
       $items[ $key ]['children'] = $this->getDepartmentTree(
         $organizationid,
+        $orderby,
         $value['id'],
         $maxlevel,
         $currentlevel

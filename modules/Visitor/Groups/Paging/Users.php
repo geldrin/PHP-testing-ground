@@ -12,6 +12,7 @@ class Users extends \Visitor\Paging {
   protected $groupModel;
   protected $usersModel;
   protected $searchterm;
+  protected $perpage = 20;
 
   public function init() {
     $l                 = $this->bootstrap->getLocalization();

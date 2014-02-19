@@ -52,49 +52,30 @@ class Groups extends \Springboard\Model {
     
   }
   
-  public function getUserGroupWhere( $user ) {
-    
-    if ( !$user['isadmin'] and !$user['isclientadmin'] )
-      return "
-        FROM
-          groups AS g,
-          groups_members AS gm
-        WHERE
-          g.organizationid = '" . $user['organizationid'] . "' AND
-          (
-            g.userid = '" . $user['id'] . "' OR
-            (
-              gm.userid  = '" . $user['id'] . "' AND
-              gm.groupid = g.id
-            )
-          )
-      ";
-    else
-      return "
-        FROM
-          groups AS g
-        WHERE
-          g.organizationid = '" . $user['organizationid'] . "'
-      ";
-    
-  }
-  
   public function getGroupCount( $user ) {
     
-    $where = $this->getUserGroupWhere( $user );
     return $this->db->getOne("
       SELECT COUNT(*)
-      $where
+      FROM groups
+      WHERE userid = '" . $user['id'] . "'
+      LIMIT 1
     ");
     
   }
   
   public function getGroupArray( $start, $limit, $orderby, $user ) {
     
-    $where = $this->getUserGroupWhere( $user );
     return $this->db->getArray("
-      SELECT g.*
-      $where
+      SELECT
+        g.*,
+        COUNT(*) AS usercount
+      FROM
+        groups AS g,
+        groups_members AS gm
+      WHERE
+        g.userid = '" . $user['id'] . "' AND
+        gm.groupid = g.id
+      GROUP BY g.id
       ORDER BY $orderby
       LIMIT $start, $limit
     ");

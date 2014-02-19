@@ -2,10 +2,10 @@
 namespace Visitor\Groups\Paging;
 
 class Index extends \Visitor\Paging {
-  protected $orderkey = 'creation_desc';
+  protected $orderkey = 'name';
   protected $sort = array(
-    'creation'      => 'id',
-    'creation_desc' => 'id DESC',
+    'name'      => 'g.name',
+    'name_desc' => 'g.name DESC',
   );
   protected $insertbeforepager = Array( 'Visitor/Groups/Paging/IndexBeforepager.tpl' );
   protected $template = 'Visitor/Groups/Paging/Index.tpl';
