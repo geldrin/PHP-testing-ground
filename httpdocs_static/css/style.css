@@ -1419,6 +1419,9 @@ a#currentusername span {
   background-repeat: no-repeat;
   background-position: right 3px;
 }
+.recordinglist .recordinginfo li.progress {
+  padding-left: 0;
+}
 .recordinglist .recordinginfo li.timestamp span {
   background-image: url(images/recordinginfo_timestamp.png);
   display: inline-block;
@@ -1480,6 +1483,37 @@ a#currentusername span {
 }
 .recordinglist .presenters {
   padding-left: 10px;
+}
+
+/* smallrecordings */
+.smallrecordings {
+  width: 738px;
+}
+.recordinglist .smallrecordings {
+  margin-left: 213px;
+}
+.smallrecordings .recordinglist,
+.smallrecordings .recordinglist .listitem {
+  width: 738px;
+}
+.smallrecordings .recordinglist .listitem:last-child {
+  border-bottom: none;
+}
+.smallrecordings .recordinglist .listitem .recordingpic {
+  background: none;
+  float: left;
+  height: 100%;
+  width: auto;
+}
+.smallrecordings .recordinglist .listitem .recordingpic img {
+  width: 192px;
+  height: 113px;
+  position: static;
+  border-radius: 5px;
+  -moz-border-radius: 5px;
+}
+.smallrecordings .recordinglist .listitem .recordingcontent {
+  width: 529px;
 }
 
 /* treeadminlist */
