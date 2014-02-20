@@ -441,6 +441,10 @@ class Users extends \Springboard\Model {
       $recordings[ $key ]['positionpercent'] = round(
         ( $recording['position'] / $recording['masterlength'] ) * 100
       );
+      
+      if ( $recordings[ $key ]['positionpercent'] > 100 )
+        $recordings[ $key ]['positionpercent'] = 100;
+
       $recordings[ $key ]['viewedminutes'] = round( $recording['position'] / 60 );
     }
 

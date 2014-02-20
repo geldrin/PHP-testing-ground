@@ -23,11 +23,12 @@
 <div class="clear"></div><br/>
 
 {if !empty( $channels.recordings )}
-  <ul class="recordinglist">
+  <ul class="recordinglist recordingprogress">
     {foreach from=$channels.recordings item=item}
+      {assign var=views value=$item.numberofviews|numberformat}
       <li class="listitem">
         <div class="recordingpic">
-          <a href="{$language}/recordings/details/{$item.id},{$item.title|filenameize}"><span class="playpic"></span><img src="{$item|@indexphoto}"/></a>
+          <a href="{$language}/recordings/details/{$item.id},{$item.title|filenameize}"><span class="playpic"></span><img src="{$item|@indexphoto}"/><span class="playprogress" title="{#recordings__progress#}: {$recording.positionpercent}% ({$recording.viewedminutes} {#recordings__embedmin#})">{$recording.positionpercent}%</span></a>
         </div>
         
         <div class="recordingcontent">
@@ -40,8 +41,8 @@
           {/if}
           <div class="recordinginfo">
             <ul>
-              <li class="progress">{#recordings__progress#}: {$item.positionpercent}% ({$item.viewedminutes} {#recordings__embedmin#})</li>
               <li class="timestamp"><span></span>{$item.recordedtimestamp|date_format:#smarty_dateformat_long#}</li>
+              <li class="views">{#recordings__recording_views#|sprintf:$views}</li>
               <li class="rating last">
                 <div{if $item.rating > 0} class="full"{/if}><span></span>1</div>
                 <div{if $item.rating > 1.5} class="full"{/if}><span></span>2</div>
@@ -80,7 +81,7 @@
 {/if}
 
 {if $channels.channelcount}
-  <ul class="recordinglist">
+  <ul class="recordinglist recordingprogress">
     {section loop=$channels.channelcount name=channels}
       {assign var=item value=$channels[$smarty.section.channels.index]}
       <li class="listitem channel">
@@ -102,9 +103,10 @@
         <div class="smallrecordings">
           <ul class="recordinglist">
             {foreach from=$item.recordings item=recording}
+              {assign var=views value=$item.numberofviews|numberformat}
               <li class="listitem">
                 <div class="recordingpic">
-                  <a href="{$language}/recordings/details/{$item.id},{$item.title|filenameize}"><span class="playpic"></span><img src="{$item|@indexphoto}"/></a>
+                  <a href="{$language}/recordings/details/{$item.id},{$item.title|filenameize}"><span class="playpic"></span><img src="{$item|@indexphoto}"/><span class="playprogress" title="{#recordings__progress#}: {$recording.positionpercent}% ({$recording.viewedminutes} {#recordings__embedmin#})">{$recording.positionpercent}%</span></a>
                 </div>
                 <div class="recordingcontent">
                   <div class="title">
@@ -116,8 +118,8 @@
                   {/if}
                   <div class="recordinginfo">
                     <ul>
-                      <li class="progress">{#recordings__progress#}: {$recording.positionpercent}% ({$recording.viewedminutes} {#recordings__embedmin#})</li>
                       <li class="timestamp"><span></span>{$recording.recordedtimestamp|date_format:#smarty_dateformat_long#}</li>
+                      <li class="views">{#recordings__recording_views#|sprintf:$views}</li>
                       <li class="rating last">
                         <div{if $recording.rating > 0} class="full"{/if}><span></span>1</div>
                         <div{if $recording.rating > 1.5} class="full"{/if}><span></span>2</div>

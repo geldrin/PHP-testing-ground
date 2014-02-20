@@ -1392,6 +1392,20 @@ a#currentusername span {
   width: 172px;
   height: auto;
 }
+.recordinglist.recordingprogress .recordingpic {
+  position: relative;
+}
+.recordinglist.recordingprogress .recordingpic .playprogress {
+  position: absolute;
+  font-size: 40px;
+  line-height: 42px;
+  top: 10px;
+  left: 10px;
+  background-color: rgba(0, 0, 0, 0.25);
+  color: #000;
+  text-shadow: none;
+  padding: 0 2px;
+}
 #relatedvideos a .playpic {
   top: 93px;
   left: 211px;
