@@ -28,7 +28,7 @@
       {assign var=views value=$item.numberofviews|numberformat}
       <li class="listitem">
         <div class="recordingpic">
-          <a href="{$language}/recordings/details/{$item.id},{$item.title|filenameize}"><span class="playpic"></span><img src="{$item|@indexphoto}"/><span class="playprogress" title="{#recordings__progress#}: {$recording.positionpercent}% ({$recording.viewedminutes} {#recordings__embedmin#})">{$recording.positionpercent}%</span></a>
+          <a href="{$language}/recordings/details/{$item.id},{$item.title|filenameize}"><span class="playpic"></span><img src="{$item|@indexphoto}"/><span class="playprogress" title="{#recordings__progress#}: {$item.positionpercent}% ({$item.viewedminutes} {#recordings__embedmin#})">{$item.positionpercent}%</span></a>
         </div>
         
         <div class="recordingcontent">
@@ -103,7 +103,7 @@
         <div class="smallrecordings">
           <ul class="recordinglist">
             {foreach from=$item.recordings item=recording}
-              {assign var=views value=$item.numberofviews|numberformat}
+              {assign var=views value=$recording.numberofviews|numberformat}
               <li class="listitem">
                 <div class="recordingpic">
                   <a href="{$language}/recordings/details/{$item.id},{$item.title|filenameize}"><span class="playpic"></span><img src="{$item|@indexphoto}"/><span class="playprogress" title="{#recordings__progress#}: {$recording.positionpercent}% ({$recording.viewedminutes} {#recordings__embedmin#})">{$recording.positionpercent}%</span></a>
