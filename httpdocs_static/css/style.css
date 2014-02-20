@@ -1401,8 +1401,8 @@ a#currentusername span {
   line-height: 42px;
   top: 10px;
   left: 10px;
-  background-color: rgba(0, 0, 0, 0.25);
-  color: #000;
+  background-color: rgba(0, 0, 0, 0.5);
+  color: #FAFAFA;
   text-shadow: none;
   padding: 0 2px;
 }
