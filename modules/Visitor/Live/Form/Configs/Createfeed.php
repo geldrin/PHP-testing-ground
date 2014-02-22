@@ -113,6 +113,13 @@ $config['slideonright'] = array(
 
 include( $this->bootstrap->config['modulepath'] . 'Visitor/Form/Configs/Accesstype.php');
 
+$config['anonymousallowed'] = array(
+  'displayname' => $l('live', 'anonymousallowed'),
+  'type'        => 'inputRadio',
+  'value'       => 0,
+  'values'      => $l->getLov('noyes'),
+);
+
 $config['moderationtype'] = array(
   'displayname' => $l('live', 'moderationtype'),
   'type'        => 'select',

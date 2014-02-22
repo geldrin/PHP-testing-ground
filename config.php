@@ -66,6 +66,12 @@ $config = array(
     'host' => '127.0.0.1',
     'port' => 6379,
   ),
+  //-----
+  'redis' => array(
+    'host'     => '127.0.0.1',
+    'port'     => 6379,
+    'database' => 0,
+  ),
   //----
   'allowedextensions' => array(
     'wmv', 'avi', 'mov', 'flv', 'mp4', 'asf', 'mp3', 'flac',
@@ -219,7 +225,9 @@ $config = array(
       ),
     ),
   ),
-  
+  //-------
+  'recaptchapub'  => '6LfNBu8SAAAAAKcud9Rcdjlt9aDHhRpxb5KeTd21',
+  'recaptchapriv' => '6LfNBu8SAAAAAF7-5iJibdVzFrC1_K-YgILLVu4I',
 );
 
 $config['phpsettings'] = array(

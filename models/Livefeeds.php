@@ -654,4 +654,16 @@ class Livefeeds extends \Springboard\Model {
     
   }
   
+  public function getAnonUserID() {
+    return $this->bootstrap->getRedis()->incr( $this->getAnonUserIDKey() );
+  }
+
+  public function refreshAnonUserID() {
+    return $this->bootstrap->getRedis()->persist( $this->getAnonUserIDKey() );
+  }
+
+  private function getAnonUserIDKey() {
+    return $this->bootstrap->config['siteid'] . ':anonymoususerid';
+  }
+
 }

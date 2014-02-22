@@ -5,6 +5,7 @@ class Createchat extends \Visitor\HelpForm {
   public $configfile = 'Createchat.php';
   public $template   = 'Visitor/genericform.tpl';
   public $user;
+  public $anonuser;
   public $feedModel;
   
   public function init() {
@@ -15,10 +16,28 @@ class Createchat extends \Visitor\HelpForm {
       $this->application->getNumericParameter('id')
     );
     
-    $access = $this->feedModel->isAccessible( $this->user );
-    if ( $access !== true )
-      $this->jsonOutput( array('status' => 'error', 'error' => $access ) );
-    
+    if ( !$this->user and !$this->feedModel->row['anonymousallowed'] )
+      $this->jsonOutput( array('status' => 'error', 'error' => 'registrationrestricted' ) );
+    elseif( $this->user ) {
+
+      $access = $this->feedModel->isAccessible( $this->user );
+      if ( $access !== true )
+        $this->jsonOutput( array('status' => 'error', 'error' => $access ) );
+
+    } elseif( !$this->user ) {
+      
+      $this->anonuser = $this->bootstrap->getSession('anonuser');
+      if ( !isset( $this->anonuser['id'] ) ) {
+        $this->anonuser['id']        = $this->feedModel->getAnonUserID();
+        $this->anonuser['timestamp'] = date('Y-m-d H:i:s');
+      } else {
+        $this->feedModel->refreshAnonUserID();
+      }
+
+      $this->controller->toSmarty['anonuser'] = $this->anonuser;
+
+    }
+
     if ( $this->feedModel->row['moderationtype'] == 'nochat' )
       $this->jsonOutput( array('status' => 'error', 'error' => 'nochat' ) );
     
@@ -35,7 +54,35 @@ class Createchat extends \Visitor\HelpForm {
     else
       $values['moderated'] = 0;
     
-    $values['userid']     = $this->user['id'];
+    if ( $this->user )
+      $values['userid']     = $this->user['id'];
+    elseif ( !isset( $this->anonuser['captchavalidated'] ) ) {
+
+      $challenge = @$_REQUEST['recaptcha_challenge_field'];
+      $response  = @$_REQUEST['recaptcha_response_field'];
+      if ( !$challenge or !$response )
+        $this->jsonOutput( array('status' => 'error', 'error' => 'captcharequired' ) );
+
+      include_once( $this->bootstrap->config['libpath'] . 'recaptchalib/recaptchalib.php' );
+      $answer = \recaptcha_check_answer(
+        $this->bootstrap->config['recaptchapriv'],
+        $_SERVER['REMOTE_ADDR'],
+        $challenge,
+        $response
+      );
+
+      if ( !$answer->is_valid )
+        $this->jsonOutput( array('status' => 'error', 'error' => 'captchaerror', 'errormessage' => $answer->error ) );
+      else
+        $this->anonuser['captchavalidated'] = true;
+
+    }
+
+    if ( $this->anonuser['captchavalidated'] )
+      $values['anonymoususer'] =
+        $this->anonuser['id'] . '_' . $this->anonuser['timestamp']
+      ;
+
     $values['timestamp']  = date('Y-m-d H:i:s');
     $values['livefeedid'] = $this->feedModel->id;
     $values['ipaddress']  = $_SERVER['REMOTE_ADDR'];

@@ -8,7 +8,7 @@ class Controller extends \Visitor\Controller {
     'view'                 => 'public',
     'getchat'              => 'public',
     'refreshchatinput'     => 'public',
-    'createchat'           => 'member',
+    'createchat'           => 'public',
     'moderatechat'         => 'liveadmin|clientadmin',
     'create'               => 'liveadmin|clientadmin',
     'modify'               => 'liveadmin|clientadmin',
@@ -60,6 +60,7 @@ class Controller extends \Visitor\Controller {
     );
     
     $user      = $this->bootstrap->getSession('user');
+    $anonuser  = $this->bootstrap->getSession('anonuser');
     $access    = $this->bootstrap->getSession('liveaccess');
     $accesskey = $feedModel->id . '-' . ( $feedModel->row['issecurestreamingforced']? '1': '0');
     
@@ -114,7 +115,8 @@ class Controller extends \Visitor\Controller {
     
     $this->toSmarty['playerwidth']  = 950;
     $this->toSmarty['playerheight'] = 530;
-    
+    $this->toSmarty['anonuser']     = $anonuser;
+
     if ( $feedModel->row['moderationtype'] == 'nochat' )
       $displaychat = false;
     

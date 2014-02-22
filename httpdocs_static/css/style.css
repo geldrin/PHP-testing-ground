@@ -2311,6 +2311,9 @@ a#currentusername span {
 }
 
 /* chat */
+#chat {
+  position: relative;
+}
 #chat .title {
   font-size: 14px;
   font-weight: bold;
@@ -2360,6 +2363,13 @@ a#currentusername span {
 }
 #spinner {
   display: none;
+}
+#recaptchacontainer {
+  display: none;
+  position: absolute;
+  width: 442px;
+  height: 102px;
+  top: 50%;
 }
 
 /* feeds */

@@ -1156,8 +1156,8 @@ function onLiveFlashLogin() {
 }
 
 function setupLiveChat() {
-  
-  var chat = new livechat('#chatcontainer', chatpollurl, chatpolltime );
+
+  chat = new livechat('#chatcontainer', chatpollurl, chatpolltime );
   
 }
 
@@ -1168,7 +1168,8 @@ var livechat = function( container, pollurl, polltime ) {
   self.pollurl   = pollurl;
   self.polltime  = polltime;
   self.topposition = null;
-  
+  self.needRecaptcha = $j('#live_createchat').attr('data-ishuman') == 'false';
+
   if ( self.container.find('#chatlist').length == 0 )
     self.container.hide();
   
@@ -1264,7 +1265,24 @@ livechat.prototype.onModerate = function( elem ) {
   
 };
 livechat.prototype.onSubmit = function() {
-  
+
+  if (this.needRecaptcha && !this.recaptchaShown) {
+
+    Recaptcha.create(
+      $j('#recaptchacontainer').attr('data-recaptchapubkey'),
+      'recaptchacontainer',
+      {
+        tabindex: 1,
+        theme: "clean",
+        callback: Recaptcha.focus_response_field
+      }
+    );
+    this.recaptchaShown = true;
+    $j('#recaptchacontainer').show();
+    return;
+
+  }
+
   if ( !this.submitOptions )
     this.submitOptions = {
       beforeSend: this.beforeSend,
@@ -1273,8 +1291,13 @@ livechat.prototype.onSubmit = function() {
         
         this.onPoll( data );
         
-        if ( typeof( data ) == 'object' && data.status == 'success' )
+        if ( typeof( data ) == 'object' && data.status == 'success' ) {
+
+          if (this.needRecaptcha)
+            this.needRecaptcha = false;
+
           $j('#text').val('');
+        }
         
       }, this ),
       dataType  : 'json',
@@ -1287,7 +1310,12 @@ livechat.prototype.onSubmit = function() {
   
   this.submitOptions.data = $j('#live_createchat').serializeArray();
   $j.ajax( this.submitOptions );
-  
+
+  if (this.recaptchaShown) {
+    Recaptcha.destroy();
+    $j('#recaptchacontainer').hide();
+  }
+
 };
 livechat.prototype.messageValid = function() {
   
