@@ -419,6 +419,8 @@ class Users extends \Springboard\Model {
         r.rating,
         r.status,
         r.masterlength,
+        r.isintrooutro,
+        r.ispublished,
         rwp.position,
         rwp.timestamp
       FROM
