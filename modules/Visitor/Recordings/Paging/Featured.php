@@ -60,7 +60,7 @@ class Featured extends \Visitor\Paging {
     $this->controller->toSmarty['type']      = $this->type;
     $this->controller->toSmarty['module']    = 'featured';
     if ( $this->type == 'featured' ) {
-      $this->controller->toSmarty['form']    = $this->getSearchForm()->getHTML();
+      //$this->controller->toSmarty['form']    = $this->getSearchForm()->getHTML();
     }
     parent::init();
     
