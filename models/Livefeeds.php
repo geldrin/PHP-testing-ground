@@ -597,24 +597,26 @@ class Livefeeds extends \Springboard\Model {
     
     $this->ensureID();
     
-    return $this->db->getArray("
+    $ret = $this->db->getArray("
       SELECT
         lc.*,
+        SUBSTRING_INDEX(lc.anonymoususer, '_', 1) AS anonuserid,
         u.nickname,
         u.nameformat,
         u.nameprefix,
         u.namefirst,
         u.namelast
-      FROM
-        livefeed_chat AS lc,
-        users AS u
-      WHERE
-        lc.livefeedid = '" . $this->id . "' AND
-        lc.userid     = u.id
+      FROM livefeed_chat AS lc
+      LEFT JOIN users AS u ON(
+        lc.userid = u.id
+      )
+      WHERE lc.livefeedid = '" . $this->id . "'
       ORDER BY lc.id ASC
       LIMIT 0, 200
     ");
-    
+
+    return $ret;
+
   }
   
   public function getAuthorizeSessionidParam( $cookiedomain, $sessionid, $user = null ) {

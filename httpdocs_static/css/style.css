@@ -2365,7 +2365,6 @@ a#currentusername span {
   display: none;
 }
 #recaptchacontainer {
-  display: none;
   position: absolute;
   width: 442px;
   height: 102px;

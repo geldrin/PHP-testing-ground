@@ -1225,9 +1225,11 @@ livechat.prototype.onPoll = function( data ) {
   
   if ( data === null || typeof( data ) != 'object' )
     return;
-  
-  if ( data.status == 'error' && data.error )
-    alert( data.error );
+
+  if ( data.status == 'error' && data.error ) {
+    var msg = l[data.error] || data.error;
+    alert( msg );
+  }
   
   if ( data.status != 'success' || this.container.attr('data-lastmodified') == data.lastmodified )
     return;
@@ -1268,17 +1270,17 @@ livechat.prototype.onSubmit = function() {
 
   if (this.needRecaptcha && !this.recaptchaShown) {
 
+    var options = RecaptchaOptions || {};
+    options.tabindex = 1;
+    options.callback = Recaptcha.focus_response_field;
+
     Recaptcha.create(
       $j('#recaptchacontainer').attr('data-recaptchapubkey'),
       'recaptchacontainer',
-      {
-        tabindex: 1,
-        theme: "clean",
-        callback: Recaptcha.focus_response_field
-      }
+      options
     );
+    $j('#recaptchacontainer').show()
     this.recaptchaShown = true;
-    $j('#recaptchacontainer').show();
     return;
 
   }
@@ -1298,7 +1300,7 @@ livechat.prototype.onSubmit = function() {
 
           $j('#text').val('');
         }
-        
+
       }, this ),
       dataType  : 'json',
       type      : 'POST',
@@ -1314,6 +1316,8 @@ livechat.prototype.onSubmit = function() {
   if (this.recaptchaShown) {
     Recaptcha.destroy();
     $j('#recaptchacontainer').hide();
+    this.recaptchaShown = false;
+    $j('#text').focus();
   }
 
 };

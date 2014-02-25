@@ -38,3 +38,23 @@ jQuery(function($){
   };
 });
 {/literal}
+
+{if $language == 'hu'}
+{literal}
+var RecaptchaOptions = {
+  custom_translations : {
+    instructions_visual: "Írja be a fent látható szavakat:",
+    instructions_audio:  "Hang alapú feladvány",
+    play_again:          "Újrajátszás",
+    cant_hear_this:      "Letöltés MP3 formátumban",
+    visual_challenge:    "Képi feladvány",
+    audio_challenge:     "Hang alapú feladvány",
+    refresh_btn:         "Új szavakat kérek",
+    help_btn:            "Súgó",
+    incorrect_try_again: "Hiba. Próbálja újra!"
+  },
+  lang: 'hu',
+  theme : 'clean'
+};
+{/literal}
+{/if}

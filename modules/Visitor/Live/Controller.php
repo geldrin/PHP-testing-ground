@@ -390,6 +390,7 @@ class Controller extends \Visitor\Controller {
       } else
         $chat = $cache->get();
       
+      $this->toSmarty['anonuser']  = $this->bootstrap->getSession('anonuser');
       $this->toSmarty['liveadmin'] = $liveadmin;
       $this->toSmarty['chatitems'] = $chat;
       $data                        = array('html' => $this->fetchSmarty('Visitor/Live/Chat.tpl') );

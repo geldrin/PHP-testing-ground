@@ -16,23 +16,19 @@ class Createchat extends \Visitor\HelpForm {
       $this->application->getNumericParameter('id')
     );
     
-    if ( !$this->user and !$this->feedModel->row['anonymousallowed'] )
+    if ( !$this->user['id'] and !$this->feedModel->row['anonymousallowed'] )
       $this->jsonOutput( array('status' => 'error', 'error' => 'registrationrestricted' ) );
-    elseif( $this->user ) {
+    elseif( $this->user['id'] ) {
 
       $access = $this->feedModel->isAccessible( $this->user );
       if ( $access !== true )
         $this->jsonOutput( array('status' => 'error', 'error' => $access ) );
 
-    } elseif( !$this->user ) {
+    } elseif( !$this->user['id'] ) {
       
       $this->anonuser = $this->bootstrap->getSession('anonuser');
-      if ( !isset( $this->anonuser['id'] ) ) {
-        $this->anonuser['id']        = $this->feedModel->getAnonUserID();
-        $this->anonuser['timestamp'] = date('Y-m-d H:i:s');
-      } else {
+      if ( $this->anonuser['id'] )
         $this->feedModel->refreshAnonUserID();
-      }
 
       $this->controller->toSmarty['anonuser'] = $this->anonuser;
 
@@ -54,9 +50,9 @@ class Createchat extends \Visitor\HelpForm {
     else
       $values['moderated'] = 0;
     
-    if ( $this->user )
+    if ( $this->user['id'] )
       $values['userid']     = $this->user['id'];
-    elseif ( !isset( $this->anonuser['captchavalidated'] ) ) {
+    elseif ( !$this->anonuser['id'] ) {
 
       $challenge = @$_REQUEST['recaptcha_challenge_field'];
       $response  = @$_REQUEST['recaptcha_response_field'];
@@ -71,14 +67,15 @@ class Createchat extends \Visitor\HelpForm {
         $response
       );
 
-      if ( !$answer->is_valid )
+      if ( $answer->is_valid ) {
+        $this->anonuser['id']        = $this->feedModel->getAnonUserID();
+        $this->anonuser['timestamp'] = date('Y-m-d H:i:s');
+      } else
         $this->jsonOutput( array('status' => 'error', 'error' => 'captchaerror', 'errormessage' => $answer->error ) );
-      else
-        $this->anonuser['captchavalidated'] = true;
 
     }
 
-    if ( $this->anonuser['captchavalidated'] )
+    if ( $this->anonuser['id'] )
       $values['anonymoususer'] =
         $this->anonuser['id'] . '_' . $this->anonuser['timestamp']
       ;

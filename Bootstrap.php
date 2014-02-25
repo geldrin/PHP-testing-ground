@@ -611,8 +611,8 @@ class Bootstrap {
     $redis->pconnect( $host, $port, 1 );
 
     // 0 a default, csak akkor selectaljunk ha non-0
-    if ( $this->config['database'] )
-      $redis->select( $this->config['database'] );
+    if ( $this->config['redis']['database'] )
+      $redis->select( $this->config['redis']['database'] );
 
     return $this->instances['redis'] = $redis;
 
