@@ -1273,6 +1273,7 @@ livechat.prototype.onSubmit = function() {
     var options = RecaptchaOptions || {};
     options.tabindex = 1;
     options.callback = Recaptcha.focus_response_field;
+    options.theme    = 'clean';
 
     Recaptcha.create(
       $j('#recaptchacontainer').attr('data-recaptchapubkey'),

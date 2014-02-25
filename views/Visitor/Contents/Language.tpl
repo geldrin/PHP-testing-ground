@@ -53,8 +53,7 @@ var RecaptchaOptions = {
     help_btn:            "Súgó",
     incorrect_try_again: "Hiba. Próbálja újra!"
   },
-  lang: 'hu',
-  theme : 'clean'
+  lang: 'hu'
 };
 {/literal}
 {/if}
