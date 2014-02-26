@@ -19,6 +19,7 @@ $config = array(
   'libpath'      => $this->basepath . 'libraries/',
   'templatepath' => $this->basepath . 'views/',
   'modelpath'    => $this->basepath . 'models/',
+  'convpath'     => $this->basepath . 'data/temp/',
   //-----
   'destroysession' => array(
     'onuserlogout'  => true,
