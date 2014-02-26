@@ -227,8 +227,9 @@ $config = array(
     ),
   ),
   //-------
-  'recaptchapub'  => '6LfNBu8SAAAAAKcud9Rcdjlt9aDHhRpxb5KeTd21',
-  'recaptchapriv' => '6LfNBu8SAAAAAF7-5iJibdVzFrC1_K-YgILLVu4I',
+  'recaptchaenabled' => true,
+  'recaptchapub'     => '6LfNBu8SAAAAAKcud9Rcdjlt9aDHhRpxb5KeTd21',
+  'recaptchapriv'    => '6LfNBu8SAAAAAF7-5iJibdVzFrC1_K-YgILLVu4I',
 );
 
 $config['phpsettings'] = array(

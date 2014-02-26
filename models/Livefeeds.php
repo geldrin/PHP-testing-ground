@@ -665,7 +665,8 @@ class Livefeeds extends \Springboard\Model {
   }
 
   private function getAnonUserIDKey() {
-    return $this->bootstrap->config['siteid'] . ':anonymoususerid';
+    // a cookiedomain organization fuggo, igy az anonymuserid is org fuggo
+    return $this->bootstrap->config['cookiedomain'] . ':anonymoususerid';
   }
 
 }

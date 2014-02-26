@@ -1,8 +1,8 @@
 {if $member.id or $feed.anonymousallowed}
-{if !$anonuser.id}
+{if !$anonuser.id and $bootstrap->config.recaptchaenabled}
 <script type="text/javascript" src="http://www.google.com/recaptcha/api/js/recaptcha_ajax.js"></script>
 {/if}
-  <form enctype="multipart/form-data" id="live_createchat" name="live_createchat" action="{$language}/live/createchat/{$feed.id}" method="post"{if !$member.id} data-ishuman="{if $anonuser.id}true{else}false{/if}"{/if}>
+  <form enctype="multipart/form-data" id="live_createchat" name="live_createchat" action="{$language}/live/createchat/{$feed.id}" method="post"{if !$member.id} data-ishuman="{if $anonuser.id or !$bootstrap->config.recaptchaenabled}true{else}false{/if}"{/if}>
     <input type="hidden" id="action" name="action" value="submitcreatechat"/>
     <div id="recaptchacontainer" data-recaptchapubkey="{$bootstrap->config.recaptchapub}" style="display: none"></div>
     <label for="text">{#live__chat_message#}:</label>

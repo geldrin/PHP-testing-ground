@@ -34,6 +34,7 @@ $j(document).ready(function() {
   runIfExists('#recordings_modifycontributors', setupContributors );
   runIfExists('#contributors_create, #contributors_modify', setupContributorEdit );
   runIfExists('#live_modify, #live_create', setupLiveAccessCheck );
+  runIfExists('#live_modifyfeed, #live_createfeed', setupLiveFeed );
   runIfExists('#recordings_modifysharing', setupSharing );
   runIfExists('#recordings_modifydescription', setupDescription );
   runIfExists('#live_create, #live_modify', setupLiveCreate );
@@ -1768,4 +1769,14 @@ function setupRecordingsSearch() {
     ;
     
   };
+}
+
+function setupLiveFeed() {
+
+  $j('#moderationtype').change(function() {
+    var modtype = $j(this).val();
+    var elem    = $j('input[name=anonymousallowed]').parents('tr');
+    elem.toggle( modtype != 'nochat' );
+  }).change();
+
 }
