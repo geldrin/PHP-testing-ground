@@ -2,7 +2,7 @@
 namespace Visitor\Users\Form;
 class Edit extends \Visitor\HelpForm {
   public $configfile = 'Edit.php';
-  public $template = 'Visitor/genericform.tpl';
+  public $template = 'Visitor/Users/Edit.tpl';
   public $needdb = true;
   public $userModel;
   public $user;
@@ -32,6 +32,12 @@ class Edit extends \Visitor\HelpForm {
         substr( $this->values['timestampdisabledafter'], 0, 16 )
       ;
     }
+
+    $this->controller->toSmarty['channels'] =
+      $this->userModel->getRecordingsProgressWithChannels(
+        $this->controller->organization['id']
+      )
+    ;
     
   }
   

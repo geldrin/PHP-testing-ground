@@ -1,6 +1,7 @@
 nbproject
 *.sublime-*
 resources/local/**
+resources/dbmigration/*.txt
 modules/Visitor/Test/**
 libraries/smarty.2620
 libraries/adodb.510

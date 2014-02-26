@@ -70,7 +70,10 @@ $config['groups[]'] = array(
   'type'        => 'inputCheckboxDynamic',
   'sql'         => "
     SELECT g.id, g.name
-    " . $groupModel->getUserGroupWhere( $user ) . "
+    FROM groups AS g
+    WHERE
+      g.userid         = '" . $user['id'] . "' AND
+      g.organizationid = '" . $this->controller->organization['id'] . "'
     ORDER BY g.name DESC",
   'validation'  => array(
     array(

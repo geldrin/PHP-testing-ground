@@ -1195,8 +1195,8 @@ a#currentusername span {
   vertical-align: middle;
 }
 
-/* myrecordings search */
-#myrecordingsquicksearch {
+/* paging search */
+.pagingsearch {
   clear: both;
   margin: 5px 0px 5px 0px;
   float: left;
@@ -1204,25 +1204,25 @@ a#currentusername span {
   padding: 10px 0px 10px 0px;
   border-bottom: 1px solid #a5a5a5;
 }
-#myrecordingsquicksearch .textwrap, #myrecordingsquicksearch .submitwrap {
+.pagingsearch .textwrap, .pagingsearch .submitwrap {
   float: left;
 }
-#myrecordingsquicksearch .selectwrap .elem {
+.pagingsearch .selectwrap .elem {
   margin-right: 20px;
   float: left;
 }
-#myrecordingsquicksearch .textwrap {
+.pagingsearch .textwrap {
   float: left;
   margin-right: 20px;
 }
-#myrecordingsquicksearch .textwrap input {
+.pagingsearch .textwrap input {
   width: 150px;
 }
-#myrecordingsquicksearch .submitwrap {
+.pagingsearch .submitwrap {
   position: relative;
   top: -2px;
 }
-#myrecordingsquicksearch .selectwrap select {
+.pagingsearch .selectwrap select {
   width: 100px;
 }
 
@@ -1392,6 +1392,20 @@ a#currentusername span {
   width: 172px;
   height: auto;
 }
+.recordinglist.recordingprogress .recordingpic {
+  position: relative;
+}
+.recordinglist.recordingprogress .recordingpic .playprogress {
+  position: absolute;
+  font-size: 40px;
+  line-height: 42px;
+  top: 10px;
+  left: 10px;
+  background-color: rgba(0, 0, 0, 0.5);
+  color: #FAFAFA;
+  text-shadow: none;
+  padding: 0 2px;
+}
 #relatedvideos a .playpic {
   top: 93px;
   left: 211px;
@@ -1418,6 +1432,9 @@ a#currentusername span {
   background-image: url(images/recordinginfo_border.png);
   background-repeat: no-repeat;
   background-position: right 3px;
+}
+.recordinglist .recordinginfo li.progress {
+  padding-left: 0;
 }
 .recordinglist .recordinginfo li.timestamp span {
   background-image: url(images/recordinginfo_timestamp.png);
@@ -1480,6 +1497,37 @@ a#currentusername span {
 }
 .recordinglist .presenters {
   padding-left: 10px;
+}
+
+/* smallrecordings */
+.smallrecordings {
+  width: 738px;
+}
+.recordinglist .smallrecordings {
+  margin-left: 213px;
+}
+.smallrecordings .recordinglist,
+.smallrecordings .recordinglist .listitem {
+  width: 738px;
+}
+.smallrecordings .recordinglist .listitem:last-child {
+  border-bottom: none;
+}
+.smallrecordings .recordinglist .listitem .recordingpic {
+  background: none;
+  float: left;
+  height: 100%;
+  width: auto;
+}
+.smallrecordings .recordinglist .listitem .recordingpic img {
+  width: 192px;
+  height: 113px;
+  position: static;
+  border-radius: 5px;
+  -moz-border-radius: 5px;
+}
+.smallrecordings .recordinglist .listitem .recordingcontent {
+  width: 529px;
 }
 
 /* treeadminlist */
@@ -1700,6 +1748,15 @@ a#currentusername span {
 #metadata .ratewidget h3 {
   margin: 0 0 0 1px;
 }
+#metadata #recordingviews {
+  float: right;
+  margin: 0 10px 0 0;
+  padding: 0 10px 0 0;
+  font-weight: bold;
+  font-size: 40px;
+  line-height: 45px;
+  border-right: 1px solid #c0c0c0;
+}
 .recordinginfo .rating {
   margin-top: -2px;
 }
@@ -1746,36 +1803,14 @@ a#currentusername span {
   font-weight: bold;
   display: block;
 }
-#metadata #infotoggle div {
+#metadata #infotoggle #gradient {
   position: absolute;
   z-index: -10;
   bottom: 18px;
-  height: 40px;
-}
-#metadata #infotoggle .leftside {
-  background: -webkit-radial-gradient(bottom right, circle, rgba(0, 0, 0, 0.08), transparent 40px, transparent 100%);
-  background: -moz-radial-gradient(bottom right, circle, rgba(0, 0, 0, 0.08), transparent 40px, transparent 100%);
-  background: -o-radial-gradient(bottom right, circle, rgba(0, 0, 0, 0.08), transparent 40px, transparent 100%);
-  background: radial-gradient(bottom right, circle, rgba(0, 0, 0, 0.08), transparent 40px, transparent 100%);
-  width: 80px;
-  left: 0px;
-}
-#metadata #infotoggle .center {
-  background: -webkit-linear-gradient(bottom,rgba(0, 0, 0, 0.12), rgba(0, 0, 0, 0.08) 1px, rgba(0, 0, 0, 0.08) 1px, transparent 40px, transparent 100%);
-  background: -moz-linear-gradient(bottom, rgba(0, 0, 0, 0.12), rgba(0, 0, 0, 0.08) 1px, rgba(0, 0, 0, 0.08) 1px, transparent 40px, transparent 100%);
-  background: -o-linear-gradient(bottom, rgba(0, 0, 0, 0.12), rgba(0, 0, 0, 0.08) 1px, rgba(0, 0, 0, 0.08) 1px, transparent 40px, transparent 100%);
-  background: linear-gradient(bottom,rgba(0, 0, 0, 0.12), rgba(0, 0, 0, 0.08) 1px, rgba(0, 0, 0, 0.08) 1px, transparent 40px, transparent 100%);
-  top: -40px;
-  margin: 0px 80px 0px 80px;
-  width: 430px;
-}
-#metadata #infotoggle .rightside {
-  background: -webkit-radial-gradient(bottom left, circle, rgba(0, 0, 0, 0.08), transparent 40px, transparent 100%);
-  background: -moz-radial-gradient(bottom left, circle, rgba(0, 0, 0, 0.08), transparent 40px, transparent 100%);
-  background: -o-radial-gradient(bottom left, circle, rgba(0, 0, 0, 0.08), transparent 40px, transparent 100%);
-  background: radial-gradient(bottom left, circle, rgba(0, 0, 0, 0.08), transparent 40px, transparent 100%);
-  width: 80px;
-  right: 0px;
+  height: 60px;
+  top: -60px;
+  width: 590px;
+  background-image: url(images/infotoggle_gradient.png);
 }
 #metadata .attachments ul {
   margin: 0;

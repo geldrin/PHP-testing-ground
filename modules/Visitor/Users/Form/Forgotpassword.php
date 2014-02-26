@@ -28,7 +28,6 @@ class Forgotpassword extends \Visitor\Form {
     $crypto    = $this->bootstrap->getEncryption();
     $code      = $crypto->randomPassword( 10 );
     $l         = $this->bootstrap->getLocalization();
-    $queue     = $this->bootstrap->getMailqueue();
     
     if ( !$userModel->checkEmailAndUpdateValidationCode( $values['email'], $code ) ) {
       
@@ -38,10 +37,18 @@ class Forgotpassword extends \Visitor\Form {
       
     }
     
+    if ( $userModel->row['isusergenerated'] ) {
+
+      $this->form->addMessage( $l('users', 'forgotpassword_generror') );
+      $this->form->invalidate();
+      return;
+      
+    }
+
     $userModel->row['id'] = $crypto->asciiEncrypt( $userModel->row['id'] );
     $this->controller->toSmarty['values'] = $userModel->row;
     
-    $queue->sendHTMLEmail(
+    $this->controller->sendOrganizationHTMLEmail(
       $userModel->row['email'],
       $l('users', 'forgotpass_emailsubject'),
       $this->controller->fetchSmarty('Visitor/Users/Email/Forgotpassword.tpl')

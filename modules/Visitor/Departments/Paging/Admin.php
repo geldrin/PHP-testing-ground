@@ -2,10 +2,9 @@
 namespace Visitor\Departments\Paging;
 
 class Admin extends \Visitor\Paging {
-  protected $orderkey = 'creation_desc';
+  protected $orderkey = 'default';
   protected $sort = array(
-    'creation'      => 'id',
-    'creation_desc' => 'id DESC',
+    'default' => 'weight, name',
   );
   protected $insertbeforepager = Array( 'Visitor/Departments/Paging/AdminBeforepager.tpl' );
   protected $template = 'Visitor/Departments/Paging/Admin.tpl';
@@ -26,7 +25,9 @@ class Admin extends \Visitor\Paging {
   
   protected function getItems( $start, $limit, $orderby ) {
     $departmentModel = $this->bootstrap->getModel('departments');
-    $items = $departmentModel->getDepartmentTree( $this->controller->organization['id'], 0, 8 );
+    $items = $departmentModel->getDepartmentTree(
+      $this->controller->organization['id'], $orderby, 0, 8
+    );
     return $items;
   }
   

@@ -1,6 +1,6 @@
 <?php
 $config = array(
-  'version'      => '_v20140129',
+  'version'      => '_v20140220',
   'charset'      => 'UTF-8',
   'cacheseconds' => 3600,
   'errormessage' => 'An unexpected error has occured, our staff has been notified. Sorry for the inconvenience and thanks for your understanding!',
@@ -174,7 +174,10 @@ $config = array(
   // Ha true akkor https-re forcoljuk az api urlt, amugy automata attol fuggoen
   // hogy milyen a site
   'forcesecureapiurl' => true,
-  
+  //----
+  // Ha nem 0 akkor kuldjuk a HSTS headert, masodpercben van, 1nap 86400
+  'forcesecuremaxage' => 0,
+
   //----
   // alapból adatbázisban tároljuk a streaming servereket, ha nincs alapértelmezett
   // akkor ez lesz használva

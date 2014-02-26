@@ -52,49 +52,30 @@ class Groups extends \Springboard\Model {
     
   }
   
-  public function getUserGroupWhere( $user ) {
-    
-    if ( !$user['isadmin'] and !$user['isclientadmin'] )
-      return "
-        FROM
-          groups AS g,
-          groups_members AS gm
-        WHERE
-          g.organizationid = '" . $user['organizationid'] . "' AND
-          (
-            g.userid = '" . $user['id'] . "' OR
-            (
-              gm.userid  = '" . $user['id'] . "' AND
-              gm.groupid = g.id
-            )
-          )
-      ";
-    else
-      return "
-        FROM
-          groups AS g
-        WHERE
-          g.organizationid = '" . $user['organizationid'] . "'
-      ";
-    
-  }
-  
   public function getGroupCount( $user ) {
     
-    $where = $this->getUserGroupWhere( $user );
     return $this->db->getOne("
       SELECT COUNT(*)
-      $where
+      FROM groups
+      WHERE userid = '" . $user['id'] . "'
+      LIMIT 1
     ");
     
   }
   
   public function getGroupArray( $start, $limit, $orderby, $user ) {
     
-    $where = $this->getUserGroupWhere( $user );
     return $this->db->getArray("
-      SELECT g.*
-      $where
+      SELECT
+        g.*,
+        COUNT(*) AS usercount
+      FROM
+        groups AS g,
+        groups_members AS gm
+      WHERE
+        g.userid = '" . $user['id'] . "' AND
+        gm.groupid = g.id
+      GROUP BY g.id
       ORDER BY $orderby
       LIMIT $start, $limit
     ");
@@ -185,4 +166,66 @@ class Groups extends \Springboard\Model {
     
   }
   
+  public function getSearchCount( $searchterm, $organization, $userModel ) {
+    $this->ensureID();
+    return $this->db->getOne("
+      SELECT COUNT(*)
+      FROM
+        users AS u,
+        groups_members AS gm
+      WHERE
+        gm.userid  = u.id AND
+        gm.groupid = '" . $this->id . "' AND
+        u.disabled = '0' AND
+        " . $userModel->getSearchWhere( $searchterm, $organization, 'u.' ) . "
+    ");
+  }
+
+  public function getSearchArray( $originalterm, $organization, $userModel, $start, $limit, $order ) {
+
+    $this->ensureID();
+    $term        = $this->db->qstr( $originalterm );
+    $searchterm  = str_replace( ' ', '%', $originalterm );
+    $searchterm  = $this->db->qstr( '%' . $searchterm . '%' );
+
+    return $this->db->getArray("
+      SELECT
+        u.id,
+        u.nameformat,
+        u.nickname,
+        u.nameprefix,
+        u.namefirst,
+        u.namelast,
+        u.disabled,
+        (
+          1 +
+          IF( u.email     = $term, 3, 0 ) +
+          " . ( $organization['fullnames']
+            ? "
+              IF( u.namefirst = $term, 2, 0 ) +
+              IF( u.namelast  = $term, 2, 0 ) +
+              IF( u.email LIKE $searchterm, 1, 0 ) +
+              IF(
+                IF( u.nameformat = 'straight',
+                  CONCAT_WS(' ', u.nameprefix, u.namelast, u.namefirst ),
+                  CONCAT_WS(' ', u.nameprefix, u.namefirst, u.namelast )
+                ) LIKE $searchterm,
+                1,
+                0
+              )"
+            : "IF( u.nickname = $term, 3, 0 )"
+          ) . "
+        ) AS relevancy
+      FROM
+        users AS u,
+        groups_members AS gm
+      WHERE
+        gm.userid  = u.id AND
+        gm.groupid = '" . $this->id . "' AND
+        u.disabled = '0' AND
+        " . $userModel->getSearchWhere( $originalterm, $organization, 'u.' ) . "
+      ORDER BY $order
+      LIMIT $start, $limit
+    ");
+  }
 }

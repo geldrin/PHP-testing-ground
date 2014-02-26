@@ -143,7 +143,7 @@ class Myrecordings extends \Visitor\Paging {
     
     $myrecordingsq = $this->application->getParameter('myrecordingsq');
     
-    if ( $myrecordingsq and strlen( trim( $myrecordingsq ) ) >= 2 ) {
+    if ( $myrecordingsq and mb_strlen( trim( $myrecordingsq ) ) >= 2 ) {
       
       $this->passparams['myrecordingsq'] = trim( $myrecordingsq );
       $db              = $this->bootstrap->getAdoDB();

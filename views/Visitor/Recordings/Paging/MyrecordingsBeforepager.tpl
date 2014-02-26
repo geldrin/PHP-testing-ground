@@ -4,7 +4,7 @@
 </div>
 
 {if !$nosearch}
-<div id="myrecordingsquicksearch" class="form">
+<div id="myrecordingsquicksearch" class="form pagingsearch">
   <form method="GET" action="{$language}/recordings/myrecordings">
     <input type="hidden" name="order" value="{$order|escape:html}"/>
     <input type="hidden" name="start" value="0"/>

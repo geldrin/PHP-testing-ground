@@ -59,6 +59,9 @@ class Featured extends \Visitor\Paging {
     $this->controller->toSmarty['listclass'] = 'recordinglist';
     $this->controller->toSmarty['type']      = $this->type;
     $this->controller->toSmarty['module']    = 'featured';
+    if ( $this->type == 'featured' ) {
+      //$this->controller->toSmarty['form']    = $this->getSearchForm()->getHTML();
+    }
     parent::init();
     
   }
@@ -89,4 +92,62 @@ class Featured extends \Visitor\Paging {
     ;
   }
   
+  protected function getSearchForm() {
+
+    $l    = $this->bootstrap->getLocalization();
+    $form = $this->bootstrap->getForm(
+      'recordingssearchform',
+      \Springboard\Language::get() . '/recordings/togglefeatured',
+      'post'
+    );
+    
+    $form->jspath =
+      $this->controller->toSmarty['STATIC_URI'] . 'js/clonefish.js'
+    ;
+    
+    $form->messagecontainerlayout =
+      '<div class="formerrors"><ul>%s</ul></div>'
+    ;
+    
+    $form->messageprefix = '';
+    $form->layouts['tabular']['container']  =
+      "<table cellpadding=\"0\" cellspacing=\"0\" class=\"formtable\">\n%s\n</table>\n"
+    ;
+    
+    $form->layouts['tabular']['element'] =
+      '<tr %errorstyle%>' .
+        '<td class="labelcolumn">' .
+          '<label for="%id%">%displayname%</label>' .
+        '</td>' .
+        '<td class="elementcolumn">%prefix%%element%%postfix%%errordiv%</td>' .
+      '</tr>'
+    ;
+    
+    $form->layouts['tabular']['buttonrow'] =
+      '<tr class="buttonrow"><td colspan="2">%s</td></tr>'
+    ;
+    
+    $form->layouts['tabular']['button'] =
+      '<input type="submit" value="%s" class="submitbutton" />'
+    ;
+    
+    $form->layouts['rowbyrow']['errordiv'] =
+      '<div id="%divid%" style="display: none; visibility: hidden; ' .
+      'padding: 2px 5px 2px 5px; background-color: #d03030; color: white;' .
+      'clear: both;"></div>'
+    ;
+    
+    $configfile =
+      $this->application->config['modulepath'] .
+      'Visitor/Recordings/Form/Configs/Recordingssearch.php'
+    ;
+    
+    $values = $this->application->getParameters();
+    include( $configfile ); // innen jon a $config
+    
+    $form->addElements( $config, $values, false );
+    
+    return $form;
+    
+  }
 }

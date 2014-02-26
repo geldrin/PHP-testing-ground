@@ -22,7 +22,6 @@ class Resend extends \Visitor\HelpForm {
     $values    = $this->form->getElementValues( 0 );
     $userModel = $this->bootstrap->getModel('users');
     $crypto    = $this->bootstrap->getEncryption();
-    $queue     = $this->bootstrap->getMailqueue();
     $l         = $this->bootstrap->getLocalization();
     
     $userModel->checkEmailAndDisabledStatus( $values['email'], \Model\Users::USER_UNVALIDATED );
@@ -35,10 +34,18 @@ class Resend extends \Visitor\HelpForm {
       
     }
     
+    if ( $userModel->row['isusergenerated'] ) {
+      
+      $this->form->addMessage( $l('users', 'forgotpassword_generror') );
+      $this->form->invalidate();
+      return;
+      
+    }
+    
     $userModel->row['id'] = $crypto->asciiEncrypt( $userModel->id );
     $this->controller->toSmarty['values'] = $userModel->row;
     
-    $queue->sendHTMLEmail(
+    $this->controller->sendOrganizationHTMLEmail(
       $userModel->row['email'],
       $l('users', 'validationemailsubject'),
       $this->controller->fetchSmarty('Visitor/Users/Email/Validation.tpl')

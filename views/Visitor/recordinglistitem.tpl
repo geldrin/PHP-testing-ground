@@ -62,6 +62,9 @@
     <div class="recordingactions">
       <ul>
         <li><a href="{$language}/recordings/modifybasics/{$item.id}?forward={$FULL_URI|escape:url}">{#recordings__editrecording#}</a></li>
+        {if !$item.isintrooutro and preg_match( '/^onstorage$|^failed.*$/', $item.status )}
+          <li><a href="{$language}/recordings/delete/{$item.id}?forward={$FULL_URI|escape:url}" title="{#recordings__deleterecording#}" class="confirm right">{#delete#|ucfirst}</a></li>
+        {/if}
       </ul>
     </div>
     {/if}

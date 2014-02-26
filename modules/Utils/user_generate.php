@@ -7,10 +7,14 @@
 // The parameters are palced in an array, where the key-value      //
 // pairs are correspontding the variables used in the script.      //
 // All key names MUST be a VALID variable name.                    //
+// If you are going to create generic users without departments,   //
+// you have to supply the organization id only, otherways this     //
+// value can be omitted.                                           //
 /////////////////////////////////////////////////////////////////////
 // Sample array:
 // $params = array(
 //	'iscommit'               => true,
+//  'org_id'                 => 200,
 //	'dep_id'                 => 122,
 //	'issingleloginenforced'  => true,
 //	'ispresencecheckforced'  => false,
@@ -35,7 +39,7 @@ set_time_limit(0);
 $app = new Springboard\Application\Cli(BASE_PATH, PRODUCTION);
 
 // initalize variables
-$variablenames = array('iscommit', 'dep_id', 'user_num', 'issingleloginenforced', 'ispresencecheckforced', 'user_nameprefix', 'user_nametermination', 'pass_length', 'user_namesuffix_length', 'timestamp_disable');
+$variablenames = array('iscommit', 'dep_id', 'org_id', 'user_num', 'issingleloginenforced', 'ispresencecheckforced', 'user_nameprefix', 'user_nametermination', 'pass_length', 'user_namesuffix_length', 'timestamp_disable');
 foreach ($variablenames as $var) {
 	$$var = NULL;
 }
@@ -63,9 +67,13 @@ foreach ($params as $paramkey => $param) {
 }
 
 // check some variables
-if (empty($dep_id) || empty($user_nameprefix) || empty($user_nametermination) || empty($user_namesuffix_length) || empty($pass_length)) {
-	echo "[ERROR] None of \"dep_id\", \"user_nameprefix\", \"user_nametermination\", \"user_namesuffix_length\" or \"pass_length\" are to be left empty!\nTerminating.\n";
+if ( empty($user_nameprefix) || empty($user_nametermination) || empty($user_namesuffix_length) || empty($pass_length)) {
+	echo "[ERROR] None of \"user_nameprefix\", \"user_nametermination\", \"user_namesuffix_length\" or \"pass_length\" are to be left empty!\nTerminating.\n";
 	exit -1;
+}
+if ( empty($org_id) && empty($dep_id) ) {
+  echo "[ERROR] You must provide an organization ID and/or a department id!\n";
+  exit -1;
 }
 
 if ( !is_null( $timestamp_disable)) {
@@ -79,31 +87,61 @@ if ( !is_null( $timestamp_disable)) {
 		echo "[ERROR] \"timestamp_disable\"( ". date("Y-m-d", $timestamp_disable) ." ) cannot be earlier than the current date( ". date("Y-m-d", time()) ." )!\n";
 		exit -1;
 	}
-} else
+}
 
 $users = array();
-$dep = query_department($dep_id);
-$org_dep_name = $dep['name'];
-$org_id = $dep['organizationid'];
-unset($dep);
+if ($dep_id !== null) {
+  $dep = query_department($dep_id);
+  $org_dep_name = $dep['name'];
+  $org_name = $dep['orgname'];
+  if ( isset($org_id) && $org_id != $dep['organizationid']) {
+    echo "[ERROR] Department's organization is different from \"org_id\"!\n";
+    exit -1;
+  }
+  $org_id = $dep['organizationid'];
+  $out_file = "vsq_users_dep". $dep_id .".txt";
+  unset($dep);
+} elseif ($org_id !== null) {
+  $query = "SELECT id, name FROM organizations WHERE id = ". $org_id;
+  try {
+    $org = $db->Execute($query);
+    if ($org->RecordCount() < 1) {
+      echo "[ERROR] organization_id \"". $org_id ."\" doesn't exsist!\n";
+      exit -1;
+    }
+    $org = $org->fields;
+    $org_name = $org['name'];
+    $out_file = "vsq_users_org". $org_id .".txt";
+    unset($org);
+  } catch (Exception $ex) {
+    echo "[ERROR] Database query failed.\n". $ex->getMessage();
+    exit -1;
+  }
+}
 
 echo "-= VIDEOSQUARE User Generator Script =-\n";
 
-$msg  = "# Number of users to generate: " . $user_num . "\n";
-$msg .= "# Username prefix: " . $user_nameprefix . "\n";
-$msg .= "# Username number length: " . $user_namesuffix_length . "\n";
-$msg .= "# Username suffix: " . $user_nametermination . "\n";
-$msg .= "# Password length: " . $pass_length . "\n";
-$msg .= "# Org ID: " . $org_id . "\n";
-$msg .= $timestamp_disable !== NULL ? ("# User disabled after: ". date("Y-m-d", $timestamp_disable) . "\n") : "";
-$msg .= "# Org department ID: " . $dep_id . " (" . $org_dep_name . ")". ($ispresencecheckforced == TRUE ? " - Presence check enabled.\n" : "\n");
-
-$msg .= "# COMMIT: " . ($iscommit?"YES":"NO, TEST ONLY") . "\n";
+$msg  = "# Number of users to generate: ". $user_num ."\n";
+$msg .= "# Username prefix: ". $user_nameprefix ."\n";
+$msg .= "# Username number length: " . $user_namesuffix_length ."\n";
+$msg .= "# Username suffix: ". $user_nametermination ."\n";
+$msg .= "# Password length: ". $pass_length ."\n";
+$msg .= "# Org ID: ". $org_id ." (". $org_name .")\n";
+$msg .= $timestamp_disable !== NULL ? ("# User disabled after: ". date("Y-m-d", $timestamp_disable) ."\n") : "";
+$msg .= (
+    !is_null($dep_id) ?
+    "# Org department ID: ". $dep_id ." (". $org_dep_name .")" :
+    "# No departments!"
+  ) . (
+    $ispresencecheckforced == TRUE ?
+    " - Presence check enabled.\n" :
+    "\n"
+  );
+$msg .= "# COMMIT: " . ($iscommit ? "YES" : "NO, TEST ONLY") . "\n";
 
 echo $msg;
 
 // Open TXT (CSV) file for user data
-$out_file = "vsq_users_". $dep_id .".txt";
 if ( file_exists($out_file) ) {
 	if ( !is_writable($out_file) ) {
 		echo "[ERROR]: Cannot write output file\n";
@@ -170,31 +208,31 @@ for ( $i = 1; $i <= $user_num; $i++ ) {
 		$date = date("Y-m-d H:i:s");
 
 		$values = Array(
-			'nickname'					=> $username,
-			'email'						=> $users[$username]['username'],
-			'namefirst'					=> $username,
-			'namelast'					=> $user_nametermination,
-			'nameformat'				=> "straight",
-			'organizationid'			=> $org_id,
-			'isadmin'					=> 0,
-			'isclientadmin'				=> 0,
-			'iseditor'					=> 0,
-			'isnewseditor'				=> 0,
-			'isuploader'				=> 0,
-			'isliveadmin'				=> 0,
-			'isusergenerated'			=> 1,
-			'timestampdisabledafter'	=> $timestamp_disable,
-			'timestamp'					=> $date,
-			'lastloggedin'				=> null,
-			'language'					=> "hu",
-			'newsletter'				=> 0,
-			'password'					=> $users[$username]['hash'],
-			'browser'					=> "(diag information was not posted)",
-			'validationcode'			=> "123456",
-			'disabled'					=> 0,
-			'isapienabled'				=> 0,
-			'issingleloginenforced'		=> $issingleloginenforced,
-			'ispresencecheckforced'		=> $ispresencecheckforced
+			'nickname'               => $username,
+			'email'                  => $users[$username]['username'],
+			'namefirst'              => $username,
+			'namelast'               => $user_nametermination,
+			'nameformat'             => "straight",
+			'organizationid'         => $org_id,
+			'isadmin'                => 0,
+			'isclientadmin'          => 0,
+			'iseditor'               => 0,
+			'isnewseditor'           => 0,
+			'isuploader'             => 0,
+			'isliveadmin'            => 0,
+			'isusergenerated'        => 1,
+			'timestampdisabledafter' => $timestamp_disable,
+			'timestamp'              => $date,
+			'lastloggedin'           => null,
+			'language'               => "hu",
+			'newsletter'             => 0,
+			'password'               => $users[$username]['hash'],
+			'browser'                => "(diag information was not posted)",
+			'validationcode'         => "123456",
+			'disabled'               => 0,
+			'isapienabled'           => 0,
+			'issingleloginenforced'  => $issingleloginenforced,
+			'ispresencecheckforced'  => $ispresencecheckforced
 		);
 
 //var_dump($values);
@@ -213,10 +251,10 @@ for ( $i = 1; $i <= $user_num; $i++ ) {
 			}
 
 			$userid = $usersdb->id;
-
-			$userdepid = insert_users_deps($userid, $dep_id);
-		}
-
+      
+      if ($dep_id !== null)
+        $userdepid = insert_users_deps($userid, $dep_id);
+    }
 
 		$data_write = $i . "," . $users[$username]['username'] . "," . $users[$username]['password'] . "\n";
 		fwrite($fh, $data_write);
@@ -326,13 +364,16 @@ function query_department($department_id) {
 
 	$query = "
 		SELECT
-			id,
-			organizationid,
-			name
+			d.id,
+			d.organizationid,
+			d.name,
+      o.name AS orgname
 		FROM
-			departments
+			departments AS d,
+      organizations AS o
 		WHERE
-			id = " . $department_id;
+			d.id = " . $department_id ." AND
+      o.id = d.organizationid";
 
 //echo $query . "\n";
 

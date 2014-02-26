@@ -31,7 +31,6 @@ class Signup extends \Visitor\HelpForm {
     $values    = $this->form->getElementValues( 0 );
     $userModel = $this->bootstrap->getModel('users');
     $crypto    = $this->bootstrap->getEncryption();
-    $queue     = $this->bootstrap->getMailqueue();
     $l         = $this->bootstrap->getLocalization();
     $userinvitationSession = $this->bootstrap->getSession('userinvitation');
     
@@ -102,7 +101,7 @@ class Signup extends \Visitor\HelpForm {
     $userModel->row['id'] = $crypto->asciiEncrypt( $userModel->id );
     $this->controller->toSmarty['values'] = $userModel->row;
     
-    $queue->sendHTMLEmail(
+    $this->controller->sendOrganizationHTMLEmail(
       $userModel->row['email'],
       $l('users', 'validationemailsubject'),
       $this->controller->fetchSmarty('Visitor/Users/Email/Validation.tpl')

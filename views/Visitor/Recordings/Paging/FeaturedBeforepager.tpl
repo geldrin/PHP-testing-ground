@@ -39,3 +39,19 @@
     {/if}
   </div>
 {/if}
+
+{*}
+{if $type == 'featured' and ( $member.isclientadmin or $member.iseditor )}
+  {capture assign="listitemhtml"}
+    <div class="wrap contributor">
+      <img src="__IMGSRC__"/>
+      <span class="name">__NAME__</span>
+      <div class="clear"></div>
+    </div>
+  {/capture}
+  <div class="clear"></div></br>
+  <div id="recordingssearch" class="form" data-listitemhtml="{$listitemhtml|trim|jsonescape:false:true}">
+    {$form}
+  </div>
+{/if}
+{/*}

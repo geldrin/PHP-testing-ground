@@ -26,7 +26,6 @@ class Invite extends \Visitor\HelpForm {
     
     $invModel  = $this->bootstrap->getModel('users_invitations');
     $crypto    = $this->bootstrap->getEncryption();
-    $queue     = $this->bootstrap->getMailqueue();
     $l         = $this->bootstrap->getLocalization();
     $user      = $this->bootstrap->getSession('user');
     
@@ -51,7 +50,7 @@ class Invite extends \Visitor\HelpForm {
     $this->controller->toSmarty['values'] = $invModel->row;
     $this->controller->toSmarty['user']   = $user;
     
-    $queue->sendHTMLEmail(
+    $this->controller->sendOrganizationHTMLEmail(
       $values['email'],
       $l('users', 'invitationmailsubject'),
       $this->controller->fetchSmarty('Visitor/Users/Email/Invitation.tpl')

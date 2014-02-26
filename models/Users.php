@@ -335,4 +335,176 @@ class Users extends \Springboard\Model {
     
   }
   
+  public function getSearchWhere( $searchterm, $organization, $prefix = '' ) {
+    $searchterm = str_replace( ' ', '%', $searchterm );
+    $searchterm = $this->db->qstr( '%' . $searchterm . '%' );
+    if ( $organization['fullnames'] )
+      $where = "
+        {$prefix}namefirst LIKE $searchterm OR
+        {$prefix}namelast  LIKE $searchterm OR
+        IF( {$prefix}nameformat = 'straight',
+          CONCAT_WS(' ', {$prefix}nameprefix, {$prefix}namelast, {$prefix}namefirst ),
+          CONCAT_WS(' ', {$prefix}nameprefix, {$prefix}namefirst, {$prefix}namelast )
+        ) LIKE $searchterm
+      ";
+    else
+      $where = "{$prefix}nickname LIKE $searchterm";
+
+    return "
+      {$prefix}organizationid = '" . $organization['id'] . "' AND
+      {$prefix}isadmin        = '0' AND
+      (
+        {$prefix}email LIKE $searchterm OR $where
+      )
+    ";
+  }
+
+  public function getSearchCount( $searchterm, $organization ) {
+    return $this->db->getOne("
+      SELECT COUNT(*)
+      FROM users
+      WHERE " . $this->getSearchWhere( $searchterm, $organization )
+    );
+  }
+
+  public function getSearchArray( $originalterm, $organization, $start, $limit, $order ) {
+    $term        = $this->db->qstr( $originalterm );
+    $searchterm  = str_replace( ' ', '%', $originalterm );
+    $searchterm  = $this->db->qstr( '%' . $searchterm . '%' );
+
+    return $this->db->getArray("
+      SELECT
+        *,
+        (
+          1 +
+          IF( email     = $term, 3, 0 ) +
+          " . ( $organization['fullnames']
+            ? "
+              IF( namefirst = $term, 2, 0 ) +
+              IF( namelast  = $term, 2, 0 ) +
+              IF( email LIKE $searchterm, 1, 0 ) +
+              IF(
+                IF( nameformat = 'straight',
+                  CONCAT_WS(' ', nameprefix, namelast, namefirst ),
+                  CONCAT_WS(' ', nameprefix, namefirst, namelast )
+                ) LIKE $searchterm,
+                1,
+                0
+              )"
+            : "IF( nickname = $term, 3, 0 )"
+          ) . "
+        ) AS relevancy
+      FROM users
+      WHERE " . $this->getSearchWhere( $originalterm, $organization ) . "
+      ORDER BY $order
+      LIMIT $start, $limit
+    ");
+  }
+
+  public function getRecordingsProgressWithChannels( $organizationid ) {
+
+    $this->ensureID();
+    $recordings = $this->db->getAssoc("
+      SELECT
+        r.id AS indexkey,
+        r.id,
+        r.userid,
+        r.organizationid,
+        r.title,
+        r.subtitle,
+        r.description,
+        r.indexphotofilename,
+        r.recordedtimestamp,
+        r.numberofviews,
+        r.rating,
+        r.status,
+        r.masterlength,
+        r.isintrooutro,
+        r.ispublished,
+        rwp.position,
+        rwp.timestamp
+      FROM
+        recordings AS r,
+        recording_view_progress AS rwp
+      WHERE
+        rwp.userid       = '" . $this->id . "' AND
+        rwp.recordingid  = r.id AND
+        r.organizationid = '$organizationid' AND
+        r.status NOT IN('markedfordeletion', 'deleted')
+    ");
+
+    if ( empty( $recordings ) )
+      return array();
+
+    $seenrecordings = array();
+    $recordids = array();
+    foreach( $recordings as $key => $recording ) {
+      $recordids[] = $recording['id'];
+      $recordings[ $key ]['positionpercent'] = round(
+        ( $recording['position'] / $recording['masterlength'] ) * 100
+      );
+      
+      if ( $recordings[ $key ]['positionpercent'] > 100 )
+        $recordings[ $key ]['positionpercent'] = 100;
+
+      $recordings[ $key ]['viewedminutes'] = round( $recording['position'] / 60 );
+    }
+
+    $recordids = implode("', '", $recordids );
+    $chanrecordings = $this->db->getArray("
+      SELECT
+        cr.channelid,
+        cr.recordingid,
+        cr.weight
+      FROM channels_recordings AS cr
+      WHERE recordingid IN('$recordids')
+      ORDER BY weight
+    ");
+    $channelstorecordings = array();
+    foreach( $chanrecordings as $row ) {
+      if ( !isset( $channelstorecordings[ $row['channelid'] ] ) )
+        $channelstorecordings[ $row['channelid'] ] = array();
+
+      $channelstorecordings[ $row['channelid'] ][] = $row['recordingid'];
+    }
+
+    $channels = $this->db->getArray("
+      SELECT DISTINCT
+        c.id,
+        c.title,
+        c.subtitle,
+        c.indexphotofilename,
+        c.starttimestamp,
+        c.endtimestamp
+      FROM
+        channels AS c,
+        channels_recordings AS cr
+      WHERE
+        cr.recordingid IN('$recordids') AND
+        cr.channelid = c.id
+      ORDER BY c.title
+    ");
+
+    foreach( $channels as $key => $channel ) {
+      $channels[ $key ]['recordings'] = array();
+
+      // weight szerint van rendezve ez a tomb, ezert weight szerint lesznek
+      // besorolva ala a recordingok is
+      foreach( $channelstorecordings[ $channel['id'] ] as $recordingid ) {
+        $channels[ $key ]['recordings'][] = $recordings[ $recordingid ];
+        $seenrecordings[ $recordingid ] = true;
+      }
+    }
+
+    $channels['channelcount'] = count( $channels );
+    $channels['recordings']   = array();
+    foreach( $recordings as $recording ) {
+      if ( !isset( $seenrecordings[ $recording['id'] ] ) )
+        $channels['recordings'][] = $recording;
+    }
+
+    return $channels;
+
+  }
+
 }

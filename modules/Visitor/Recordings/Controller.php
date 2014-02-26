@@ -31,6 +31,7 @@ class Controller extends \Visitor\Controller {
     'securecheckstreamaccess' => 'public',
     'embed'                => 'public',
     'featured'             => 'public',
+    'search'               => 'editor|clientadmin',
     'linkcontributor'      => 'uploader|editor|clientadmin',
     'addtochannel'         => 'member',
     'removefromchannel'    => 'member',
@@ -1297,6 +1298,47 @@ class Controller extends \Visitor\Controller {
     
     $recordingsModel->updateLastPosition( $user['id'], $lastposition );
     return true;
+    
+  }
+  
+  public function searchAction() {
+    
+    $term   = $this->application->getParameter('term');
+    $output = array(
+    );
+    
+    if ( !$term )
+      $this->jsonoutput( $output );
+    
+    $user           = $this->bootstrap->getSession('user');
+    $recordingModel = $this->bootstrap->getModel('recordings');
+    $results        = $recordingModel->search( $term, $user['id'], $this->organization['id'] );
+    
+    if ( empty( $results ) )
+      $this->jsonoutput( $output );
+    
+    foreach( $results as $result ) {
+      
+      $title = $result['title'];
+      if ( strlen( trim( $result['subtitle'] ) ) )
+        $title .= '<br/>' . $result['subtitle'];
+
+      $data = array(
+        'value' => $result['id'],
+        'label' => $title,
+        'img'   => $this->bootstrap->staticuri,
+      );
+      
+      if ( $result['indexphotofilename'] )
+        $data['img'] .= 'files/' . $result['indexphotofilename'];
+      else
+        $data['img'] .= 'images/videothumb_audio_placeholder.png';
+      
+      $output[] = $data;
+      
+    }
+    
+    $this->jsonoutput( $output );
     
   }
   

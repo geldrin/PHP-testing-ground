@@ -310,7 +310,7 @@ function users_setvalidity($org_contracts) {
 			$user = array();
 			$user = $users->fields;
 
-			$global_log .= $user['id'] . "," . $user['email'] . ",1st:" . $user['firstloggedin'] . ",last:" . $user['lastloggedin'] . ",dis:" . $user['timestampdisabledafter'] . "\n";
+//			$global_log .= $user['id'] . "," . $user['email'] . ",1st:" . $user['firstloggedin'] . ",last:" . $user['lastloggedin'] . ",dis:" . $user['timestampdisabledafter'] . "\n";
 
 			$user_firstloggedin = strtotime($user['firstloggedin']);
 
@@ -318,7 +318,7 @@ function users_setvalidity($org_contracts) {
 			if ( empty($user['timestampdisabledafter']) ) {
 				$user_validitytime = date("Y-m-d H:i:s", $user_firstloggedin + $org_contracts[$i]['generateduservaliditydays'] * 24 * 3600);
 
-				$global_log .= "newvaliditytime: " . $user_validitytime . "\n";
+//				$global_log .= "newvaliditytime: " . $user_validitytime . "\n";
 
 				$query = "
 					UPDATE
@@ -358,15 +358,11 @@ function users_setvalidity($org_contracts) {
 				u.timestampdisabledafter < \"" . $datetimenow . "\"
 		";
 
-		$global_log .= $query . "\n\n";
-
 		try {
 			$rs2 = $db->Execute($query);
 		} catch (exception $err) {
 			$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] SQL query failed.\n" . trim($query) . "\n" . $err . "\n", $sendmail = TRUE);
 		}
-
-		$debug->log($jconf['log_dir'], $myjobid . ".log", "[MAINTENANCE] " . $global_log, $sendmail = true);
 
 	}
 }
