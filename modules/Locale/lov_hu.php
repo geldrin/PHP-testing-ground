@@ -182,4 +182,21 @@ return array(
     1 => 'pontos kifejezésre',
   ),
   
+  'invite_contenttype' => array(
+    'recordingid' => 'Felvétel',
+    'livefeedid'  => 'Élő közvetítés',
+    'channelid'   => 'Csatorna',
+  ),
+
+  'invite_invitetype' => array(
+    'content'    => 'Tartalom meghívás',
+    'group'      => 'Szervezeti egység meghívás',
+    'permission' => 'Jogosultság',
+  ),
+
+  'invite_usertype' => array(
+    'single'   => 'Egy felhasználó meghívása',
+    'multiple' => 'Csoportos meghívás',
+  ),
+
 );

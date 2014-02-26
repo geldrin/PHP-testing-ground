@@ -437,6 +437,23 @@ class Livefeeds extends \Springboard\Model {
     
   }
   
+  public function isAccessibleByInvitation( $user ) {
+
+    if ( !$user['id'] )
+      return false;
+
+    $this->ensureID();
+    return (bool)$this->db->getOne("
+      SELECT COUNT(*)
+      FROM users_invitations
+      WHERE
+        registereduserid = '" . $user['id'] . "' AND
+        livefeedid       = '" . $this->id . "'
+      LIMIT 1
+    ");
+
+  }
+
   public function isAccessible( $user, $secure = null ) {
     
     $this->ensureObjectLoaded();
@@ -457,6 +474,9 @@ class Livefeeds extends \Springboard\Model {
        )
       return true;
     
+    if ( $this->isAccessibleByInvitation( $user ) )
+      return true;
+
     switch( $this->row['accesstype'] ) {
       
       case 'public':

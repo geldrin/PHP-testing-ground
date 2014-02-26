@@ -149,4 +149,21 @@ return array(
     1 => 'whole word',
   ),
   
+  'invite_contenttype' => array(
+    'recordingid' => 'Recording',
+    'livefeedid'  => 'Live broadcast',
+    'channelid'   => 'Channel',
+  ),
+
+  'invite_invitetype' => array(
+    'content'    => 'Content',
+    'group'      => 'Department',
+    'permission' => 'Permission',
+  ),
+
+  'invite_usertype' => array(
+    'single'   => 'Single user',
+    'multiple' => 'Multiple users',
+  ),
+
 );

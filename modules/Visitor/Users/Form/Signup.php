@@ -86,8 +86,7 @@ class Signup extends \Visitor\HelpForm {
         $values['timestampdisabledafter'] = $invitation['timestampdisabledafter'];
       
       $userinvitationSession->clear();
-      $invitationModel->delete( $invitationModel->id );
-      
+
     }
     
     $userModel->insert( $values );
@@ -97,7 +96,10 @@ class Signup extends \Visitor\HelpForm {
     
     if ( isset( $groups ) and !empty( $groups ) )
       $userModel->addGroups( $groups );
-    
+
+    if ( isset( $invitationModel ) )
+      $userModel->invitationRegistered( $invitationModel->id );
+
     $userModel->row['id'] = $crypto->asciiEncrypt( $userModel->id );
     $this->controller->toSmarty['values'] = $userModel->row;
     

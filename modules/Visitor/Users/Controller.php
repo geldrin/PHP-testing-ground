@@ -84,6 +84,10 @@ class Controller extends \Visitor\Controller {
     ),
   );
   
+  protected $l;
+  protected $crypto;
+  protected $invitationcache;
+
   public function indexAction() {
     echo 'Nothing here yet';
   }
@@ -363,4 +367,82 @@ class Controller extends \Visitor\Controller {
     
   }
   
+  public function sendInvitationEmail( $invitation ) {
+    
+    if ( !$this->l )
+      $this->l = $this->bootstrap->getLocalization();
+
+    if ( !$this->crypto )
+      $this->crypto = $this->bootstrap->getEncryption();
+
+    $db = $this->bootstrap->getAdoDB();
+    if ( $invitation['recordingid'] ) {
+
+      if ( !isset( $this->invitationcache['recording-' . $invitation['recordingid'] ] ) )
+        $this->invitationcache['recording-' . $invitation['recordingid'] ] =
+          $db->getRow("
+            SELECT
+              title,
+              subtitle
+            FROM recordings
+            WHERE id = '" . $invitation['recordingid'] . "'
+            LIMIT 1
+          ");
+        ;
+
+      $this->toSmarty['recording'] =
+        $this->invitationcache['recording-' . $invitation['recordingid'] ]
+      ;
+
+    }
+
+    if ( $invitation['livefeedid'] ) {
+
+      if ( !isset( $this->invitationcache['livefeed-' . $invitation['livefeedid'] ] ) )
+        $this->invitationcache['livefeed-' . $invitation['livefeedid'] ] =
+          $db->getOne("
+            SELECT name
+            FROM livefeeds
+            WHERE id = '" . $invitation['livefeedid'] . "'
+            LIMIT 1
+          ");
+        ;
+
+      $this->toSmarty['livefeed'] =
+        $this->invitationcache['livefeed-' . $invitation['livefeedid'] ]
+      ;
+
+    }
+
+    if ( $invitation['channelid'] ) {
+
+      if ( !isset( $this->invitationcache['channel-' . $invitation['channelid'] ] ) )
+        $this->invitationcache['channel-' . $invitation['channelid'] ] =
+          $db->getRow("
+            SELECT
+              title,
+              subtitle
+            FROM channels
+            WHERE id = '" . $invitation['channelid'] . "'
+            LIMIT 1
+          ");
+        ;
+
+      $this->toSmarty['channel'] =
+        $this->invitationcache['channel-' . $invitation['channelid'] ]
+      ;
+
+    }
+
+    $l = $this->l;
+    $invitation['id'] = $this->crypto->asciiEncrypt( $invitation['id'] );
+    $this->toSmarty['values'] = $invitation;
+    $this->sendOrganizationHTMLEmail(
+      $invitation['email'],
+      $l('users', 'invitationmailsubject'),
+      $this->controller->fetchSmarty('Visitor/Users/Email/Invitation.tpl')
+    );
+    
+  }
+
 }

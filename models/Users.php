@@ -507,4 +507,16 @@ class Users extends \Springboard\Model {
 
   }
 
+  public function invitationRegistered( $invitationid ) {
+    
+    $this->db->execute("
+      UPDATE users_invitations
+      SET
+        registereduserid = '" . $this->id . "',
+        status           = 'registered'
+      WHERE id = '$invitationid'
+    ");
+    
+  }
+
 }
