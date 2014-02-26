@@ -56,18 +56,20 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_media_convert.stop' ) and 
 		}
 
 		// Temporary directory cleanup and log result
-		$err = tempdir_cleanup($jconf['media_dir']);
+// !!! REMOVE
+/*		$err = tempdir_cleanup($jconf['media_dir']);
 		if ( !$err['code'] ) {
 			log_recording_conversion(0, $jconf['jobid_media_convert'], "-", $err['message'], $err['command'], $err['result'], 0, TRUE);
 			$converter_sleep_length = 15 * 60;
 			break;
 		}
+*/
 
 		$recording = array();
 		$uploader_user = array();
 
-//update_db_recording_status(173, "reconvert");
-//update_db_masterrecording_status(12, "onstorage");
+update_db_recording_status(89, "uploaded");
+update_db_masterrecording_status(89, "uploaded");
 
 		// Query next job - exit if none
 		if ( !query_nextjob($recording, $uploader_user) ) break;
@@ -82,6 +84,8 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_media_convert.stop' ) and 
 		$global_log .= "Original filename: " . $recording['mastervideofilename'] . "\n";
 		$global_log .= "Media length: " . secs2hms( $recording['masterlength'] ) . "\n";
 		$global_log .= "Media type: " . $recording['mastermediatype'] . "\n\n";
+
+//var_dump($recording);
 
 		// Copy media from front-end server
 		if ( !copy_recording_to_converter($recording) ) break;
@@ -332,7 +336,14 @@ global $jconf, $db;
 //	  o logs in local logfile and SQL DB table recordings_log
 //	  o updates recording status field
 function copy_recording_to_converter(&$recording) {
-global $app, $jconf;
+global $app, $jconf, $debug;
+
+// Full rewrite: pehelykonnyu, egyszeru kod
+// 1. Megnezzuk megvan-e mar az adott fajl es egyezik-e a filesize a temp directory-ban:
+//	- IGEN: letoltjuk
+//	- NEM: hasznaljuk a meglevot. KERDES: Mi van ha kezzel felulirjuk es reconvert? (filesize? file date?)
+// Megallapitasok:
+//	- Nem akarunk tudni ennyi statusz informaciot, csak "converting" elegendo, hiszen a reszletes logobol minden kideritheto
 
 	// Update watchdog timer
 	$app->watchdog();
@@ -341,20 +352,22 @@ global $app, $jconf;
 	// Update media status
 	update_db_recording_status($recording['id'], $jconf['dbstatus_copyfromfe']);
 
+// !!! A feltolteskor kellene ez?
 	// Media is too short (fraud check)
-	$playtime = ceil($recording['masterlength']);
+/*	$playtime = ceil($recording['masterlength']);
 	if ( $playtime < $jconf['video_min_length'] ) {
 		log_recording_conversion($recording['id'], $jconf['jobid_media_convert'], $jconf['dbstatus_init'], "[ERROR] Media length is too short: " . $recording['id'] . "." . $recording['mastervideoextension'], "-", "-", 0, TRUE);
 		update_db_recording_status($recording['id'], $jconf['dbstatus_invalidinput']);
 		return FALSE;
 	}
+*/
 
-	//// Filenames and path
+	//// Filenames and paths
 	// Base filename
 	$suffix = "video";
 	if ( $recording['mastermediatype'] == "audio" ) $suffix = "audio";
 	$base_filename = $recording['id'] . "_" . $suffix . "." . $recording['mastervideoextension'];
-	// Upload path
+	// Upload path (Front-End)
 	$uploadpath = $app->config['uploadpath'] . "recordings/";
 	// Reconvert state: copy from storage area
 	$recording['conversion_type'] = "convert";
@@ -367,29 +380,40 @@ global $app, $jconf;
 	$master_filename = $jconf['media_dir'] . $recording['id'] . "/master/" . $base_filename;
 	$recording['remote_filename'] = $remote_filename;
 	$recording['source_file'] = $master_filename;
-
-	// Prepare temporary conversion directory, remove any existing content
+	// Temp directory
 	$temp_directory = $jconf['media_dir'] . $recording['id'] . "/";
 	$recording['temp_directory'] = $temp_directory;
-	$err = create_directory($temp_directory);
+
+	//// Is file already downloaded? Check based on filesize and file mtime
+	$err = ssh_file_cmp_isupdated($recording['mastersourceip'], $uploadpath . $base_filename, $recording['source_file']);
+	// Local copy is up to date
+	if ( $err['value'] ) {
+		$debug->log($jconf['log_dir'], $jconf['jobid_media_convert'] . ".log", $err['message'], $sendmail = false);
+		return true;
+	} else {
+		$debug->log($jconf['log_dir'], $jconf['jobid_media_convert'] . ".log", $err['message'], $sendmail = false);
+	}
+	// Error occured
+	if ( !$err['code'] ) $debug->log($jconf['log_dir'], $jconf['jobid_media_convert'] . ".log", "MSG: " . $err['message'] . "\nCOMMAND: " . $err['command'] . "\nRESULT: " . $err['result'], $sendmail = true);
+
+	// Prepare temporary conversion directory, remove any existing content
+/*	$err = create_directory($recording['temp_directory']);
 	if ( !$err['code'] ) {
 		log_recording_conversion($recording['id'], $jconf['jobid_media_convert'], $jconf['dbstatus_copyfromfe'], $err['message'], $err['command'], $err['result'], 0, TRUE);
 		// Set status to "uploaded" to allow other nodes to take over task
 		update_db_recording_status($recording['id'], $jconf['dbstatus_uploaded']);
 		return FALSE;
 	}
+*/
 
 	// Prepare master directory
-	$err = create_directory($temp_directory . "master/");
+	$err = create_directory($recording['temp_directory'] . "master/");
 	if ( !$err['code'] ) {
 		log_recording_conversion($recording['id'], $jconf['jobid_media_convert'], $jconf['dbstatus_copyfromfe'], $err['message'], $err['command'], $err['result'], 0, TRUE);
 		// Set status to "uploaded" to allow other nodes to take over task
 		update_db_recording_status($recording['id'], $jconf['dbstatus_uploaded']);
 		return FALSE;
 	}
-
-	// SSH command template
-//	$ssh_command = "ssh -i " . $jconf['ssh_key'] . " " . $jconf['ssh_user'] . "@" . $recording['mastersourceip'] . " ";
 
 	// SCP copy from remote location
 	$err = ssh_filecopy($recording['mastersourceip'], $uploadpath . $base_filename, $master_filename);
@@ -748,7 +772,7 @@ global $app, $jconf, $global_log;
 //	  o Media file(s) and video thumbnails on front-end machine
 //	  o Log entries (file and database)
 function copy_media_to_frontend($recording, $recording_info_mobile_lq, $recording_info_mobile_hq, $recording_info_lq, $recording_info_hq) {
-global $app, $jconf;
+ global $app, $jconf, $debug;
 
 	$app->watchdog();
 
@@ -852,7 +876,7 @@ global $app, $jconf;
 	}
 
 	// Remove master from upload area if not reconvert!
-	if ( $recording['conversion_type'] != $jconf['dbstatus_reconvert'] ) {
+/*	if ( $recording['conversion_type'] != $jconf['dbstatus_reconvert'] ) {
 		$uploadpath = $app->config['uploadpath'] . "recordings/";
 		$suffix = "video";
 		if ( $recording['mastermediatype'] == "audio" ) $suffix = "audio";
@@ -860,6 +884,7 @@ global $app, $jconf;
 		$err = ssh_fileremove($recording['mastersourceip'], $uploadpath . $base_filename);
 		if ( !$err['code'] ) log_recording_conversion($recording['id'], $jconf['jobid_media_convert'], $jconf['dbstatus_copystorage'], $err['message'], $err['command'], $err['result'], 0, TRUE);
 	}
+*/
 
 	// Update recording size
 	$err = ssh_filesize($recording['mastersourceip'], $remote_recording_directory . "master/");
@@ -878,8 +903,15 @@ global $app, $jconf;
 	$recDoc->updateRow($update);
 
 	// Remove temporary directory, no failure if not successful
-	$err = remove_file_ifexists($recording['temp_directory']);
-	if ( !$err['code'] ) log_recording_conversion($recording['id'], $jconf['jobid_media_convert'], $jconf['dbstatus_copystorage'], $err['message'], $err['command'], $err['result'], 0, TRUE);
+//	$err = remove_file_ifexists($recording['temp_directory']);
+//	if ( !$err['code'] ) log_recording_conversion($recording['id'], $jconf['jobid_media_convert'], $jconf['dbstatus_copystorage'], $err['message'], $err['command'], $err['result'], 0, TRUE);
+// !!! TEMP CODE
+	$command1 = "find " . $recording['temp_directory'] . " -mount -maxdepth 1 -type f -regex '" . $media_regex . "' -exec rm -f {} \\; 2>/dev/null";
+	// Indexpic: all recording related .jpg thumbnails and full sized .png images
+	$command2 = "rm -r -f " . $recording['temp_directory'] . "indexpics/ 2>/dev/null";
+	$command = $command1 . " ; " . $command2;
+//	echo $command . "\n";
+	exec($command, $output, $result);
 
 	$app->watchdog();
 
