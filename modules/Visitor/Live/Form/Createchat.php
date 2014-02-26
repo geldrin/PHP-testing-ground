@@ -54,24 +54,31 @@ class Createchat extends \Visitor\HelpForm {
       $values['userid']     = $this->user['id'];
     elseif ( !$this->anonuser['id'] ) {
 
-      $challenge = @$_REQUEST['recaptcha_challenge_field'];
-      $response  = @$_REQUEST['recaptcha_response_field'];
-      if ( !$challenge or !$response )
-        $this->jsonOutput( array('status' => 'error', 'error' => 'captcharequired' ) );
+      if ( $this->bootstrap->config['recaptchaenabled'] ) {
 
-      include_once( $this->bootstrap->config['libpath'] . 'recaptchalib/recaptchalib.php' );
-      $answer = \recaptcha_check_answer(
-        $this->bootstrap->config['recaptchapriv'],
-        $_SERVER['REMOTE_ADDR'],
-        $challenge,
-        $response
-      );
+        $challenge = @$_REQUEST['recaptcha_challenge_field'];
+        $response  = @$_REQUEST['recaptcha_response_field'];
+        if ( !$challenge or !$response )
+          $this->jsonOutput( array('status' => 'error', 'error' => 'captcharequired' ) );
 
-      if ( $answer->is_valid ) {
+        include_once( $this->bootstrap->config['libpath'] . 'recaptchalib/recaptchalib.php' );
+        $answer = \recaptcha_check_answer(
+          $this->bootstrap->config['recaptchapriv'],
+          $_SERVER['REMOTE_ADDR'],
+          $challenge,
+          $response
+        );
+
+        if ( $answer->is_valid ) {
+          $this->anonuser['id']        = $this->feedModel->getAnonUserID();
+          $this->anonuser['timestamp'] = date('Y-m-d H:i:s');
+        } else
+          $this->jsonOutput( array('status' => 'error', 'error' => 'captchaerror', 'errormessage' => $answer->error ) );
+
+      } else {
         $this->anonuser['id']        = $this->feedModel->getAnonUserID();
         $this->anonuser['timestamp'] = date('Y-m-d H:i:s');
-      } else
-        $this->jsonOutput( array('status' => 'error', 'error' => 'captchaerror', 'errormessage' => $answer->error ) );
+      }
 
     }
 
