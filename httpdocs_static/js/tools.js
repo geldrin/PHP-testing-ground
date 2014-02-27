@@ -42,6 +42,7 @@ $j(document).ready(function() {
   runIfExists('#groups_invite', setupGroupInvitation );
   runIfExists('#timestampdisabledafter', setupDisabledAfter );
   runIfExists('#recordingssearch', setupRecordingsSearch );
+  runIfExists('#users_invite', setupUserInvitation );
 
   if ( needping )
     setTimeout( setupPing, 1000 * pingsecs );
@@ -1779,4 +1780,54 @@ function setupLiveFeed() {
     elem.toggle( modtype != 'nochat' );
   }).change();
 
+}
+
+function setupUserInvitation() {
+
+  $j('input[name=usertype]').change(function() {
+    var type  = $j('input[name=usertype]:checked').val();
+    var singleelems = $j('#email').parents('tr');
+    var multielems  = $j('#invitefile, #encoding, #delimeter').parents('tr');
+    singleelems.toggle( type == 'single' );
+    multielems.toggle( type == 'multiple' );
+  }).change();
+
+  $j('input[name=contenttype]').change(function() {
+    var type  = $j('input[name=contenttype]:checked').val();
+    var elems = $j('#recordingid, #livefeedid, #channelid').not('#' + type ).parents('tr').hide();
+    $j('#' + type ).parents('tr').show();
+  }).change();
+
+  var html = $j('#autocomplete-listitem').html();
+  $j('#recordingid_search').autocomplete({
+    minLength: 2,
+    source: BASE_URI + language + '/recordings/search',
+    select: function( event, ui ) {
+      console.log(event);
+      var target = $j(event.target).attr('id').replace('_search', '');
+      $j(target + '_title').val( ui.item.label );
+      $j(target).val( ui.item.value );
+      $j(target + '_search').attr('disabled', true );
+      $j(target).parents('tr').find('foundwrap').show();
+      return false;
+    }
+  }).data( "autocomplete" )._renderItem = function( ul, item ) {
+    
+    var itemhtml = html.replace('__IMGSRC__', item.img ).replace('__NAME__', item.label );
+    return $j("<li>")
+      .data( "item.autocomplete", item )
+      .append( "<a>" + itemhtml + "</a>" )
+      .appendTo( ul )
+    ;
+    
+  };
+  
+  $j('.cancel').click( function( e ) {
+    e.preventDefault();
+    var root = $j(this).parents('tr');
+    root.find('input').val('');
+    root.find('input').attr('disabled', false);
+    root.find('.foundwrap').hide();
+  });
+  
 }

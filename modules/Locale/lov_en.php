@@ -150,15 +150,10 @@ return array(
   ),
   
   'invite_contenttype' => array(
+    'nocontent'   => 'Invitation without specifying content',
     'recordingid' => 'Recording',
     'livefeedid'  => 'Live broadcast',
     'channelid'   => 'Channel',
-  ),
-
-  'invite_invitetype' => array(
-    'content'    => 'Content',
-    'group'      => 'Department',
-    'permission' => 'Permission',
   ),
 
   'invite_usertype' => array(

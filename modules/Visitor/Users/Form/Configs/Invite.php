@@ -9,18 +9,117 @@ $config = array(
     'value' => 'submitinvite'
   ),
   
-  'fs1' => array(
+  'fs_user' => array(
     'type'   => 'fieldset',
-    'legend' => $l('users', 'invite_title'),
-    'prefix' => '<span class="legendsubtitle">' . $l('users', 'invite_subtitle') . '</span>',
-  ),
-  
-  'invitetype' => array(
-    'type'        => 'inputCheckboxDynamic',
-    'displayname' => $l('users', 'invite_invitetype'),
-    'values'      => $l->getLov('invite_invitetype'),
+    'legend' => $l('users', 'invite_user'),
+    'prefix' => '<span class="legendsubtitle"></span>',
   ),
 
+  'usertype' => array(
+    'type'        => 'inputRadio',
+    'displayname' => $l('users', 'invite_usertype'),
+    'values'      => $l->getLov('invite_usertype'),
+    'value'       => 'single',
+    'itemlayout'  => '%radio% %label%<br/>',
+  ),
+
+  'email' => Array(
+    'displayname' => $l('users', 'email'),
+    'type'        => 'inputText',
+    'validation'  => Array(
+      Array(
+        'type'      => 'string',
+        'regexp'    => CF_EMAIL,
+        'help'      => $l('users', 'emailhelp'),
+        'anddepend' => array(
+          array(
+            'js'  => '<FORM.usertype> == "single"',
+            'php' => '<FORM.usertype> == "single"',
+          ),
+        ),
+      ),
+    ),
+  ),
+  
+  'invitefile' => Array(
+    'displayname' => $l('users', 'invitefile'),
+    'type'        => 'inputFile',
+    'validation'  => Array(
+      array(
+        'type'             => 'file',
+        'required'         => true,
+        'help'             => $l('users', 'invitefile_help'),
+        'imagecreatecheck' => false,
+        'extensions'       => Array('csv', 'txt',),
+        'anddepend'        => array(
+          array(
+            'js'  => '<FORM.usertype> == "multiple"',
+            'php' => '<FORM.usertype> == "multiple"',
+          ),
+        ),
+      )
+    )
+  ),
+  
+  'encoding' => Array(
+    'displayname' => $l('users', 'encoding'),
+    'type'        => 'select',
+    'values'      => array(
+      'Windows-1252' => 'Windows Central European (Windows-1252)',
+      'ISO-8859-2'   => 'ASCII Central European (ISO-8859-2)',
+      'UTF-16LE'     => 'UTF16LE',
+      'UTF-8'        => 'UTF-8',
+      'ASCII'        => 'ASCII',
+    ),
+    'validation' => array(
+      array(
+        'type'      => 'required',
+        'anddepend' => array(
+          array(
+            'js'  => '<FORM.usertype> == "multiple"',
+            'php' => '<FORM.usertype> == "multiple"',
+          ),
+        ),
+      ),
+    ),
+  ),
+  
+  'delimeter' => Array(
+    'displayname' => $l('users', 'delimeter'),
+    'type'        => 'select',
+    'values'      => array(
+      ';'   => ';',
+      ','   => ',',
+      'tab' => 'tab',
+    ),
+    'value'       => ';',
+    'validation'  => array(
+      array(
+        'type'      => 'required',
+        'anddepend' => array(
+          array(
+            'js'  => '<FORM.usertype> == "multiple"',
+            'php' => '<FORM.usertype> == "multiple"',
+          ),
+        ),
+      ),
+    ),
+  ),
+  
+  'fs_permission' => array(
+    'type'   => 'fieldset',
+    'legend' => $l('users', 'invite_permission'),
+    'prefix' => '<span class="legendsubtitle"></span>',
+  ),
+  
+  'permissions[]' => array(
+    'displayname' => $l('users', 'permissions'),
+    'type'        => 'inputCheckboxDynamic',
+    'values'      => $l->getLov('permissions'),
+    'validation' => array(
+    ),
+  ),
+  
   'fs_content' => array(
     'type'   => 'fieldset',
     'legend' => $l('users', 'invite_content'),
@@ -31,6 +130,8 @@ $config = array(
     'type'        => 'inputRadio',
     'displayname' => $l('users', 'invite_contenttype'),
     'values'      => $l->getLov('invite_contenttype'),
+    'value'       => 'nocontent',
+    'itemlayout'  => '%radio% %label%<br/>',
   ),
 
   'recordingid' => array(
@@ -38,10 +139,10 @@ $config = array(
     'displayname' => $l('users', 'invite_recording'),
     'rowlayout'   => '
       <tr>
-        <td class="labelcolumn" colspan="2"><label for="%id%_search">%displayname%</label></td>
-      </tr>
-      <tr>
-        <td class="elementcolumn" colspan="2">
+        <td class="labelcolumn elementcolumn" colspan="2">
+          <div class="labelwrap">
+            <label for="%id%_search">%displayname%</label>
+          </div>
           <input type="hidden" name="%id%" id="%id%"/>
           %prefix%
           <input type="text" name="%id%_search" id="%id%_search"/>
@@ -55,6 +156,18 @@ $config = array(
         </td>
       </tr>
     ',
+    'validation'  => array(
+      array(
+        'type'      => 'required',
+        'help'      => $l('users', 'invite_recording_help'),
+        'anddepend' => array(
+          array(
+            'js'  => '<FORM.contenttype> == "recordingid"',
+            'php' => '<FORM.contenttype> == "recordingid"',
+          ),
+        ),
+      ),
+    ),
   ),
 
   'livefeedid' => array(
@@ -62,10 +175,10 @@ $config = array(
     'displayname' => $l('users', 'invite_livefeed'),
     'rowlayout'   => '
       <tr>
-        <td class="labelcolumn" colspan="2"><label for="%id%_search">%displayname%</label></td>
-      </tr>
-      <tr>
-        <td class="elementcolumn" colspan="2">
+        <td class="labelcolumn elementcolumn" colspan="2">
+          <div class="labelwrap">
+            <label for="%id%_search">%displayname%</label>
+          </div>
           <input type="hidden" name="%id%" id="%id%"/>
           %prefix%
           <input type="text" name="%id%_search" id="%id%_search"/>
@@ -79,6 +192,18 @@ $config = array(
         </td>
       </tr>
     ',
+    'validation'  => array(
+      array(
+        'type'      => 'required',
+        'help'      => $l('users', 'invite_livefeed_help'),
+        'anddepend' => array(
+          array(
+            'js'  => '<FORM.contenttype> == "livefeedid"',
+            'php' => '<FORM.contenttype> == "livefeedid"',
+          ),
+        ),
+      ),
+    ),
   ),
 
   'channelid' => array(
@@ -86,10 +211,10 @@ $config = array(
     'displayname' => $l('users', 'invite_channel'),
     'rowlayout'   => '
       <tr>
-        <td class="labelcolumn" colspan="2"><label for="%id%_search">%displayname%</label></td>
-      </tr>
-      <tr>
-        <td class="elementcolumn" colspan="2">
+        <td class="labelcolumn elementcolumn" colspan="2">
+          <div class="labelwrap">
+            <label for="%id%_search">%displayname%</label>
+          </div>
           <input type="hidden" name="%id%" id="%id%"/>
           %prefix%
           <input type="text" name="%id%_search" id="%id%_search"/>
@@ -103,6 +228,18 @@ $config = array(
         </td>
       </tr>
     ',
+    'validation'  => array(
+      array(
+        'type'      => 'required',
+        'help'      => $l('users', 'invite_channel_help'),
+        'anddepend' => array(
+          array(
+            'js'  => '<FORM.contenttype> == "channelid"',
+            'php' => '<FORM.contenttype> == "channelid"',
+          ),
+        ),
+      ),
+    ),
   ),
 
   'fs_group' => array(
@@ -140,87 +277,6 @@ $config = array(
     ",
     'validation'  => array(
     ),
-  ),
-  
-  'fs_permission' => array(
-    'type'   => 'fieldset',
-    'legend' => $l('users', 'invite_permission'),
-    'prefix' => '<span class="legendsubtitle"></span>',
-  ),
-  
-  'permissions[]' => array(
-    'displayname' => $l('users', 'permissions'),
-    'type'        => 'inputCheckboxDynamic',
-    'values'      => $l->getLov('permissions'),
-    'validation' => array(
-    ),
-  ),
-  
-  'fs_user' => array(
-    'type'   => 'fieldset',
-    'legend' => $l('users', 'invite_user'),
-    'prefix' => '<span class="legendsubtitle"></span>',
-  ),
-
-  'usertype' => array(
-    'type'        => 'inputRadio',
-    'displayname' => $l('users', 'invite_usertype'),
-    'values'      => $l->getLov('invite_usertype'),
-  ),
-
-  'email' => Array(
-    'displayname' => $l('users', 'email'),
-    'type'        => 'inputText',
-    'validation'  => Array(
-      Array(
-        'type'   => 'string',
-        'regexp' => CF_EMAIL,
-        'help'   => $l('users', 'emailhelp')
-      ),
-    ),
-  ),
-  
-  'encoding' => Array(
-    'displayname' => $l('users', 'encoding'),
-    'type'        => 'select',
-    'values'      => array(
-      'Windows-1252' => 'Windows Central European (Windows-1252)',
-      'ISO-8859-2'   => 'ASCII Central European (ISO-8859-2)',
-      'UTF-16LE'     => 'UTF16LE',
-      'UTF-8'        => 'UTF-8',
-      'ASCII'        => 'ASCII',
-    ),
-    'validation' => array(
-      array('type' => 'required'),
-    ),
-  ),
-  
-  'delimeter' => Array(
-    'displayname' => $l('users', 'delimeter'),
-    'type'        => 'select',
-    'values'      => array(
-      ';'   => ';',
-      ','   => ',',
-      'tab' => 'tab',
-    ),
-    'value'       => ';',
-    'validation' => array(
-      array('type' => 'required'),
-    ),
-  ),
-  
-  'invitefile' => Array(
-    'displayname' => $l('users', 'invitefile'),
-    'type'        => 'inputFile',
-    'validation'  => Array(
-      array(
-        'type'             => 'file',
-        'required'         => true,
-        'help'             => $l('users', 'invitefile_help'),
-        'imagecreatecheck' => false,
-        'extensions'       => Array('csv', 'txt',),
-      )
-    )
   ),
   
 );
