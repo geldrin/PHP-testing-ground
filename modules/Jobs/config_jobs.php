@@ -15,6 +15,7 @@ return array('config_jobs' => array(
 
 	// Directories
 	'temp_dir'						=> $this->config['convpath'],				// Temporary dir for jobs
+	'master_dir'					=> $this->config['convpath'] . 'master/',	// Master caching directory
 	'media_dir'						=> $this->config['convpath'] . 'media/',	// Temporary dir for media conversion
 	'content_dir'					=> $this->config['convpath'] . 'content/',	// Temporary dir for content conversion
 	'ocr_dir'						=> $this->config['convpath'] . 'ocr/',		// Temporary dir for ocr conversion

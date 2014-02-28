@@ -304,7 +304,7 @@ global $app, $jconf, $global_log;
 	$temp_directory = $recording['temp_directory'];
 
 	// Local master file name
-	$recording_info['input_file'] = $recording['source_file'];
+	$recording_info['input_file'] = $recording['master_filename'];
 
 	// Basic video data for preliminary checks
 	$video_in = array();
@@ -377,7 +377,7 @@ global $app, $jconf, $global_log;
 	// Calculate video parameters
 	//// Basics
 	$recording_info['name'] = $profile['name'];
-	$recording_info['source_file'] = $recording['source_file'];
+	$recording_info['source_file'] = $recording['master_filename'];
 	$recording_info['format'] = $profile['format'];
 	$recording_info['video_codec'] = $profile['video_codec'];
 	$recording_info['playtime'] = $video_in['playtime'];
@@ -475,5 +475,100 @@ global $app, $jconf, $global_log;
 
 	return TRUE;
 }
+
+function get_encoding_profile($encodingprofileid) {
+global $db, $jconf, $debug;
+
+	$db = db_maintain();
+
+	$query = "
+		SELECT
+			id,
+			parentid,
+			name,
+			shortname,
+			type,
+			mediatype,
+			isdesktopcompatible,
+			isioscompatible,
+			isandroidcompatible,
+			filenamesuffix,
+			filecontainerformat,
+			videocodec,
+			videopasses,
+			videobboxsizex,
+			videobboxsizey,
+			videomaxfps,
+			videobpp,
+			ffmpegh264profile,
+			ffmpegh264preset,
+			audiocodec,
+			audiomaxchannels,
+			audiobitrateperchannel,
+			audiomode,
+			pipenabled,
+			pipcodecprofile,
+			pipposx,
+			pipposy,
+			pipalign,
+			pipsize
+		FROM
+			encoding_profiles
+		WHERE
+			id = " . $encodingprofileid;
+
+	try {
+		$profile = $db->getArray($query);
+	} catch (exception $err) {
+		$debug->log($jconf['log_dir'], $jconf['jobid_media_convert'] . ".log", "[ERROR] Cannot query encoding profile. SQL query failed." . trim($query), $sendmail = true);
+		return false;
+	}
+
+	// Check if any record returned
+	if ( count($profile) < 1 ) {
+		return false;
+	}
+
+	return $profile[0];
+}
+
+function get_recording_creator($recordingid) {
+global $db, $jconf, $debug;
+
+	$db = db_maintain();
+
+	$query = "
+		SELECT
+			a.userid,
+			b.nickname,
+			b.email,
+			b.language,
+			b.organizationid,
+			c.domain,
+			c.supportemail
+		FROM
+			recordings as a,
+			users as b,
+			organizations as c
+		WHERE
+			a.userid = b.id AND
+			a.id = " . $recordingid . " AND
+			a.organizationid = c.id";
+
+	try {
+		$user = $db->getArray($query);
+	} catch (exception $err) {
+		$debug->log($jconf['log_dir'], $jconf['jobid_media_convert'] . ".log", "[ERROR] Cannot query recording creator. SQL query failed." . trim($query), $sendmail = true);
+		return false;
+	}
+
+	// Check if any record returned
+	if ( count($user) < 1 ) {
+		return false;
+	}
+
+	return $user[0];
+}
+
 
 ?>
