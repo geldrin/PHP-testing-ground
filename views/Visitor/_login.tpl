@@ -29,7 +29,6 @@
                   {if $member.isnewseditor or $member.isclientadmin}
                     <li><a href="{$language}/users/admin">{#usermenu_organizations_admin#}</a></li>
                     <li><a href="{$language}/users/invite">{#usermenu_organizations_invite#}</a></li>
-                    <li><a href="{$language}/users/massinvite">{#usermenu_organizations_massinvite#}</a></li>
                   {/if}
                 </ul>
                 <div class="hr"></div>

@@ -14,6 +14,7 @@ class Controller extends \Visitor\Controller {
     'listfavorites'       => 'member',
     'addtofavorites'      => 'member',
     'deletefromfavorites' => 'member',
+    'search'              => 'member',
   );
   
   public $forms = array(
@@ -127,6 +128,47 @@ class Controller extends \Visitor\Controller {
     $channelModel->updateVideoCounters();
     
     $this->redirect( $this->application->getParameter('forward') );
+    
+  }
+  
+  public function searchAction() {
+    
+    $term   = $this->application->getParameter('term');
+    $output = array(
+    );
+    
+    if ( !$term )
+      $this->jsonoutput( $output );
+    
+    $user         = $this->bootstrap->getSession('user');
+    $channelModel = $this->bootstrap->getModel('channels');
+    $results      = $channelModel->search( $term, $user['id'], $this->organization['id'] );
+    
+    if ( empty( $results ) )
+      $this->jsonoutput( $output );
+    
+    foreach( $results as $result ) {
+      
+      $title = $result['title'];
+      if ( strlen( trim( $result['subtitle'] ) ) )
+        $title .= '<br/>' . $result['subtitle'];
+
+      $data = array(
+        'value' => $result['id'],
+        'label' => $title,
+        'img'   => $this->bootstrap->staticuri,
+      );
+      
+      if ( $result['indexphotofilename'] )
+        $data['img'] .= 'files/' . $result['indexphotofilename'];
+      else
+        $data['img'] .= 'images/videothumb_audio_placeholder.png';
+      
+      $output[] = $data;
+      
+    }
+    
+    $this->jsonoutput( $output );
     
   }
   

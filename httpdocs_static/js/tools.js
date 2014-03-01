@@ -1338,8 +1338,7 @@ livechat.prototype.messageValid = function() {
 };
 
 function setupContributors() {
-  
-  var html = $j('#autocomplete-listitem').html();
+  var html = $j.parseJSON( '"' + $j('#contributors').attr('data-listitemhtml') + '"' );
   var resetcontributor = function() {
     $j('#searchterm, #contributorid').val('');
     $j('#contributorrolerow, #addcontributor').hide();
@@ -1798,36 +1797,42 @@ function setupUserInvitation() {
     $j('#' + type ).parents('tr').show();
   }).change();
 
-  var html = $j('#autocomplete-listitem').html();
-  $j('#recordingid_search').autocomplete({
-    minLength: 2,
-    source: BASE_URI + language + '/recordings/search',
-    select: function( event, ui ) {
-      console.log(event);
-      var target = $j(event.target).attr('id').replace('_search', '');
-      $j(target + '_title').val( ui.item.label );
-      $j(target).val( ui.item.value );
-      $j(target + '_search').attr('disabled', true );
-      $j(target).parents('tr').find('foundwrap').show();
-      return false;
-    }
-  }).data( "autocomplete" )._renderItem = function( ul, item ) {
-    
-    var itemhtml = html.replace('__IMGSRC__', item.img ).replace('__NAME__', item.label );
-    return $j("<li>")
-      .data( "item.autocomplete", item )
-      .append( "<a>" + itemhtml + "</a>" )
-      .appendTo( ul )
-    ;
-    
-  };
-  
   $j('.cancel').click( function( e ) {
     e.preventDefault();
     var root = $j(this).parents('tr');
     root.find('input').val('');
-    root.find('input').attr('disabled', false);
     root.find('.foundwrap').hide();
   });
   
+  var html = $j.parseJSON( '"' + $j('#usersinvitewrap').attr('data-listitemhtml') + '"' );
+  var setupSearch = function( elem, callback ) {
+    var target = elem.replace('_search', '');
+    var elem   = $j(elem);
+    $j(elem).autocomplete({
+      minLength: 2,
+      source   : $j(elem).attr('data-searchurl'),
+      select   : function( event, ui ) {
+        var label   = ui.item.label.replace('<br/>', ' - ');
+
+        $j(target + '_title').text( label ).attr('title', label );
+        $j(target).val( ui.item.value );
+        $j(target).parents('tr').find('.foundwrap').show();
+        return false;
+      }
+    }).data( "autocomplete" )._renderItem = function( ul, item ) {
+      
+      var itemhtml = html.replace('__IMGSRC__', item.img ).replace('__NAME__', item.label );
+      return $j("<li>")
+        .data( "item.autocomplete", item )
+        .append( "<a>" + itemhtml + "</a>" )
+        .appendTo( ul )
+      ;
+      
+    };
+  };
+
+  setupSearch('#recordingid_search');
+  setupSearch('#livefeedid_search');
+  setupSearch('#channelid_search');
+
 }

@@ -1,5 +1,14 @@
 {include file="Visitor/Email/_header.tpl"}
-
+{*}
+// ezek egyetlen rekordok (1dimenzios tomb)
+$recording
+$livefeed
+$channel
+// ezek tombok amiknek ertekei a rekordok (2dimenzios tomb)
+$permissions
+$groups
+$departments
+{/*}
 {newsletter}
 <h1>{#users__email_invitation_title#}</h1>
 <p>

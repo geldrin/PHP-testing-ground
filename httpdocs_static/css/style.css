@@ -2600,7 +2600,11 @@ a#currentusername span {
   padding: 0;
   display: inline-block;
   font-weight: bolder;
-  line-height: 30px;
+  line-height: 31px;
+  width: 422px;
+  height: 31px;
+  text-overflow: ellipsis;
+  overflow: hidden;
 }
 #users_invite .foundwrap .cancel {
   display: block;

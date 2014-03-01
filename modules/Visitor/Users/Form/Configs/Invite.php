@@ -1,8 +1,8 @@
 <?php
 
 include_once( $this->bootstrap->config['libpath'] . 'clonefish/constants.php');
-
-$config = array(
+$language = \Springboard\Language::get();
+$config   = array(
   
   'action' => array(
     'type'  => 'inputHidden',
@@ -105,7 +105,10 @@ $config = array(
       ),
     ),
   ),
-  
+);
+
+include( $this->bootstrap->config['modulepath'] . 'Visitor/Form/Configs/Timestampdisabledafter.php');
+$config = $config + array(
   'fs_permission' => array(
     'type'   => 'fieldset',
     'legend' => $l('users', 'invite_permission'),
@@ -145,7 +148,7 @@ $config = array(
           </div>
           <input type="hidden" name="%id%" id="%id%"/>
           %prefix%
-          <input type="text" name="%id%_search" id="%id%_search"/>
+          <input type="text" name="%id%_search" id="%id%_search" data-searchurl="' . $language . '/recordings/search"/>
           <div id="%id%_foundwrap" class="foundwrap">
             <a id="%id%_cancel" href="#" class="ui-state-default ui-corner-all cancel">
               <span class="ui-icon ui-icon-cancel"></span>
@@ -181,7 +184,7 @@ $config = array(
           </div>
           <input type="hidden" name="%id%" id="%id%"/>
           %prefix%
-          <input type="text" name="%id%_search" id="%id%_search"/>
+          <input type="text" name="%id%_search" id="%id%_search" data-searchurl="' . $language . '/live/search"/>
           <div id="%id%_foundwrap" class="foundwrap">
             <a id="%id%_cancel" href="#" class="ui-state-default ui-corner-all cancel">
               <span class="ui-icon ui-icon-cancel"></span>
@@ -217,7 +220,7 @@ $config = array(
           </div>
           <input type="hidden" name="%id%" id="%id%"/>
           %prefix%
-          <input type="text" name="%id%_search" id="%id%_search"/>
+          <input type="text" name="%id%_search" id="%id%_search" data-searchurl="' . $language . '/channels/search"/>
           <div id="%id%_foundwrap" class="foundwrap">
             <a id="%id%_cancel" href="#" class="ui-state-default ui-corner-all cancel">
               <span class="ui-icon ui-icon-cancel"></span>
@@ -280,8 +283,6 @@ $config = array(
   ),
   
 );
-
-include( $this->bootstrap->config['modulepath'] . 'Visitor/Form/Configs/Timestampdisabledafter.php');
 
 $db              = $this->bootstrap->getAdoDB();
 $departmentcount = $db->getOne("

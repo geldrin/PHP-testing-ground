@@ -14,7 +14,6 @@ class Controller extends \Visitor\Controller {
     'changepassword' => 'public',
     'resend'         => 'public',
     'invite'         => 'clientadmin',
-    'massinvite'     => 'clientadmin',
     'validateinvite' => 'public',
     'disable'        => 'clientadmin',
     'admin'          => 'clientadmin',
@@ -29,7 +28,6 @@ class Controller extends \Visitor\Controller {
     'forgotpassword' => 'Visitor\\Users\\Form\\Forgotpassword',
     'changepassword' => 'Visitor\\Users\\Form\\Changepassword',
     'invite'         => 'Visitor\\Users\\Form\\Invite',
-    'massinvite'     => 'Visitor\\Users\\Form\\MassInvite',
     'modify'         => 'Visitor\\Users\\Form\\Modify',
     'resend'         => 'Visitor\\Users\\Form\\Resend',
     'edit'           => 'Visitor\\Users\\Form\\Edit',
@@ -367,7 +365,7 @@ class Controller extends \Visitor\Controller {
     
   }
   
-  public function sendInvitationEmail( $invitation ) {
+  public function sendInvitationEmail( &$invitation ) {
     
     if ( !$this->l )
       $this->l = $this->bootstrap->getLocalization();
@@ -376,7 +374,7 @@ class Controller extends \Visitor\Controller {
       $this->crypto = $this->bootstrap->getEncryption();
 
     $db = $this->bootstrap->getAdoDB();
-    if ( $invitation['recordingid'] ) {
+    if ( isset( $invitation['recordingid'] ) and $invitation['recordingid'] ) {
 
       if ( !isset( $this->invitationcache['recording-' . $invitation['recordingid'] ] ) )
         $this->invitationcache['recording-' . $invitation['recordingid'] ] =
@@ -396,7 +394,7 @@ class Controller extends \Visitor\Controller {
 
     }
 
-    if ( $invitation['livefeedid'] ) {
+    if ( isset( $invitation['livefeedid'] ) and $invitation['livefeedid'] ) {
 
       if ( !isset( $this->invitationcache['livefeed-' . $invitation['livefeedid'] ] ) )
         $this->invitationcache['livefeed-' . $invitation['livefeedid'] ] =
@@ -414,7 +412,7 @@ class Controller extends \Visitor\Controller {
 
     }
 
-    if ( $invitation['channelid'] ) {
+    if ( isset( $invitation['channelid'] ) and $invitation['channelid'] ) {
 
       if ( !isset( $this->invitationcache['channel-' . $invitation['channelid'] ] ) )
         $this->invitationcache['channel-' . $invitation['channelid'] ] =
@@ -434,13 +432,70 @@ class Controller extends \Visitor\Controller {
 
     }
 
+    if ( !isset( $this->invitationcache['user-' . $invitation['userid'] ] ) ) {
+      $this->invitationcache['user-' . $invitation['userid'] ] =
+        $db->getRow("
+          SELECT
+            nameprefix,
+            namefirst,
+            namelast,
+            nameformat,
+            nickname
+          FROM users
+          WHERE id = '" . $invitation['userid'] . "'
+          LIMIT 1
+        ");
+
+      $this->toSmarty['user']   =
+        $this->invitationcache['user-' . $invitation['userid'] ]
+      ;
+
+    }
+
+    if ( !isset( $this->invitationcache['groups-' . $invitation['groups'] ] ) ) {
+
+      $this->invitationcache['groups-' . $invitation['groups'] ] = true;
+      $ids = explode('|', $invitation['groups'] );
+      if ( !empty( $ids ) )
+        $this->toSmarty['groups'] = $db->getArray("
+          SELECT *
+          FROM groups
+          WHERE id IN('" . implode("', '", $ids ) . "')
+        ");
+
+    }
+
+    if ( !isset( $this->invitationcache['departments-' . $invitation['departments'] ] ) ) {
+
+      $this->invitationcache['departments-' . $invitation['departments'] ] = true;
+      $ids = explode('|', $invitation['departments'] );
+      if ( !empty( $ids ) )
+        $this->toSmarty['departments'] = $db->getArray("
+          SELECT *
+          FROM departments
+          WHERE id IN('" . implode("', '", $ids ) . "')
+        ");
+
+    }
+
     $l = $this->l;
+    if ( !isset( $this->invitationcache['permissions-' . $invitation['permissions'] ] ) ) {
+
+      $permissions = array();
+      foreach ( explode('|', $invitation['permissions'] ) as $permission )
+        $permissions[] = $l->getLov('permissions', null, $permission );
+
+      $this->invitationcache['permissions-' . $invitation['permissions'] ] = true;
+      $this->toSmarty['permissions'] = $permissions;
+
+    }
+
     $invitation['id'] = $this->crypto->asciiEncrypt( $invitation['id'] );
     $this->toSmarty['values'] = $invitation;
     $this->sendOrganizationHTMLEmail(
       $invitation['email'],
       $l('users', 'invitationmailsubject'),
-      $this->controller->fetchSmarty('Visitor/Users/Email/Invitation.tpl')
+      $this->fetchSmarty('Visitor/Users/Email/Invitation.tpl')
     );
     
   }
