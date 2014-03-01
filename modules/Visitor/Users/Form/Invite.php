@@ -78,6 +78,7 @@ class Invite extends \Visitor\HelpForm {
       : null
     ;
 
+    $timestamp   = date('Y-m-d H:i:s');
     $invitecount = 0;
     $emails      = array_keys( $users );
     $userids     = $userModel->searchEmails(
@@ -103,6 +104,8 @@ class Invite extends \Visitor\HelpForm {
         'validationcode'         => $this->crypto->randomPassword( 10 ),
         'timestampdisabledafter' => $disabledafter,
         'status'                 => 'invited',
+        'organizationid'         => $this->controller->organization['id'],
+        'timestamp'              => $timestamp,
       );
 
       // mert a contenttype nocontent|recordingid|livefeedid|channelid lehet

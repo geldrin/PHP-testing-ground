@@ -14,6 +14,7 @@ class Controller extends \Visitor\Controller {
     'changepassword' => 'public',
     'resend'         => 'public',
     'invite'         => 'clientadmin',
+    'invitations'    => 'clientadmin',
     'validateinvite' => 'public',
     'disable'        => 'clientadmin',
     'admin'          => 'clientadmin',
@@ -35,7 +36,8 @@ class Controller extends \Visitor\Controller {
   );
   
   public $paging = array(
-    'admin' => 'Visitor\\Users\\Paging\\Admin',
+    'admin'       => 'Visitor\\Users\\Paging\\Admin',
+    'invitations' => 'Visitor\\Users\\Paging\\Invitations',
   );
   
   public $apisignature = array(
