@@ -437,6 +437,23 @@ class Livefeeds extends \Springboard\Model {
     
   }
   
+  public function isAccessibleByInvitation( $user ) {
+
+    if ( !$user['id'] )
+      return false;
+
+    $this->ensureID();
+    return (bool)$this->db->getOne("
+      SELECT COUNT(*)
+      FROM users_invitations
+      WHERE
+        registereduserid = '" . $user['id'] . "' AND
+        livefeedid       = '" . $this->id . "'
+      LIMIT 1
+    ");
+
+  }
+
   public function isAccessible( $user, $secure = null ) {
     
     $this->ensureObjectLoaded();
@@ -457,6 +474,9 @@ class Livefeeds extends \Springboard\Model {
        )
       return true;
     
+    if ( $this->isAccessibleByInvitation( $user ) )
+      return true;
+
     switch( $this->row['accesstype'] ) {
       
       case 'public':
@@ -669,4 +689,44 @@ class Livefeeds extends \Springboard\Model {
     return $this->bootstrap->config['cookiedomain'] . ':anonymoususerid';
   }
 
+  public function search( $term, $userid, $organizationid ) {
+    
+    $searchterm  = str_replace( ' ', '%', $term );
+    $searchterm  = $this->db->qstr( '%' . $searchterm . '%' );
+    $term        = $this->db->qstr( $term );
+
+    $query   = "
+      SELECT
+        (
+          1 +
+          IF( l.name = $term, 2, 0 )
+        ) AS relevancy,
+        l.id,
+        l.userid,
+        l.organizationid,
+        l.name,
+        c.ordinalnumber,
+        c.starttimestamp,
+        c.endtimestamp
+      FROM
+        livefeeds AS l LEFT JOIN channels AS c ON(
+          l.channelid = c.id
+        )
+      WHERE
+        l.name LIKE $searchterm AND
+        (
+          l.organizationid = '$organizationid' OR
+          (
+            l.userid         = '$userid' AND
+            l.organizationid = '$organizationid'
+          )
+        )
+      ORDER BY relevancy DESC
+      LIMIT 20
+    ";
+    
+    return $this->db->getArray( $query );
+    
+  }
+  
 }

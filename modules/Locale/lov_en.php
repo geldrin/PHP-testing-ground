@@ -149,4 +149,16 @@ return array(
     1 => 'whole word',
   ),
   
+  'invite_contenttype' => array(
+    'nocontent'   => 'Invitation without specifying content',
+    'recordingid' => 'Recording',
+    'livefeedid'  => 'Live broadcast',
+    'channelid'   => 'Channel',
+  ),
+
+  'invite_usertype' => array(
+    'single'   => 'Single user',
+    'multiple' => 'Multiple users',
+  ),
+
 );

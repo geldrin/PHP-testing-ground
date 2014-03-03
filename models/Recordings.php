@@ -845,7 +845,24 @@ class Recordings extends \Springboard\Model {
     return true;
     
   }
-  
+
+  public function isAccessibleByInvitation( $user ) {
+
+    if ( !$user['id'] )
+      return false;
+
+    $this->ensureID();
+    return (bool)$this->db->getOne("
+      SELECT COUNT(*)
+      FROM users_invitations
+      WHERE
+        registereduserid = '" . $user['id'] . "' AND
+        recordingid      = '" . $this->id . "'
+      LIMIT 1
+    ");
+
+  }
+
   public function isAccessibleBySettings( $user ) {
     
     $this->ensureObjectLoaded();

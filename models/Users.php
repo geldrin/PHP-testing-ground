@@ -507,4 +507,89 @@ class Users extends \Springboard\Model {
 
   }
 
+  public function invitationRegistered( $invitationid ) {
+    
+    $this->db->execute("
+      UPDATE users_invitations
+      SET
+        registereduserid = '" . $this->id . "',
+        status           = 'registered'
+      WHERE id = '$invitationid'
+    ");
+    
+  }
+
+  public function searchEmails( &$emails, $organizationid ) {
+    
+    $ret = array();
+    while( !empty( $emails ) ) {
+
+      $chunk = array_splice( $emails, 0, 50 );
+      $users = $this->db->getAssoc("
+        SELECT
+          email AS arraykey,
+          id,
+          email,
+          nameprefix,
+          namefirst,
+          namelast,
+          nameformat,
+          nickname
+        FROM users
+        WHERE
+          organizationid = '$organizationid' AND
+          email IN('" . implode("', '", $chunk ) . "')
+        LIMIT 50
+      ");
+      $ret = array_merge( $ret, $users );
+
+    }
+
+    return $ret;
+
+  }
+
+  public function applyInvitationPermissions( $invitation ) {
+
+    $this->ensureID();
+
+    $values = array();
+    foreach( explode('|', $invitation['permissions'] ) as $permission )
+      $values[ $permission ] = 1;
+
+    $departments = array();
+    foreach( explode('|', $invitation['departments'] ) as $id ) {
+
+      $id = intval( $id );
+      if ( $id )
+        $departments[] = $id;
+      
+    }
+
+    $groups      = array();
+    foreach( explode('|', $invitation['groups'] ) as $id ) {
+
+      $id = intval( $id );
+      if ( $id )
+        $groups[] = $id;
+
+    }
+    
+    if (
+         isset( $invitation['timestampdisabledafter'] ) and
+         $invitation['timestampdisabledafter']
+       )
+      $values['timestampdisabledafter'] = $invitation['timestampdisabledafter'];
+
+    if ( !empty( $values ) )
+      $this->updateRow( $values );
+
+    if ( !empty( $departments ) )
+      $this->addDepartments( $departments );
+
+    if ( !empty( $groups ) )
+      $this->addGroups( $groups );
+
+  }
+
 }

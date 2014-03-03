@@ -42,6 +42,7 @@ $j(document).ready(function() {
   runIfExists('#groups_invite', setupGroupInvitation );
   runIfExists('#timestampdisabledafter', setupDisabledAfter );
   runIfExists('#recordingssearch', setupRecordingsSearch );
+  runIfExists('#users_invite', setupUserInvitation );
 
   if ( needping )
     setTimeout( setupPing, 1000 * pingsecs );
@@ -1337,8 +1338,7 @@ livechat.prototype.messageValid = function() {
 };
 
 function setupContributors() {
-  
-  var html = $j('#autocomplete-listitem').html();
+  var html = $j.parseJSON( '"' + $j('#contributors').attr('data-listitemhtml') + '"' );
   var resetcontributor = function() {
     $j('#searchterm, #contributorid').val('');
     $j('#contributorrolerow, #addcontributor').hide();
@@ -1778,5 +1778,61 @@ function setupLiveFeed() {
     var elem    = $j('input[name=anonymousallowed]').parents('tr');
     elem.toggle( modtype != 'nochat' );
   }).change();
+
+}
+
+function setupUserInvitation() {
+
+  $j('input[name=usertype]').change(function() {
+    var type  = $j('input[name=usertype]:checked').val();
+    var singleelems = $j('#email').parents('tr');
+    var multielems  = $j('#invitefile, #encoding, #delimeter').parents('tr');
+    singleelems.toggle( type == 'single' );
+    multielems.toggle( type == 'multiple' );
+  }).change();
+
+  $j('input[name=contenttype]').change(function() {
+    var type  = $j('input[name=contenttype]:checked').val();
+    var elems = $j('#recordingid, #livefeedid, #channelid').not('#' + type ).parents('tr').hide();
+    $j('#' + type ).parents('tr').show();
+  }).change();
+
+  $j('.cancel').click( function( e ) {
+    e.preventDefault();
+    var root = $j(this).parents('tr');
+    root.find('input').val('');
+    root.find('.foundwrap').hide();
+  });
+  
+  var html = $j.parseJSON( '"' + $j('#usersinvitewrap').attr('data-listitemhtml') + '"' );
+  var setupSearch = function( elem, callback ) {
+    var target = elem.replace('_search', '');
+    var elem   = $j(elem);
+    $j(elem).autocomplete({
+      minLength: 2,
+      source   : $j(elem).attr('data-searchurl'),
+      select   : function( event, ui ) {
+        var label   = ui.item.label.replace('<br/>', ' - ');
+
+        $j(target + '_title').text( label ).attr('title', label );
+        $j(target).val( ui.item.value );
+        $j(target).parents('tr').find('.foundwrap').show();
+        return false;
+      }
+    }).data( "autocomplete" )._renderItem = function( ul, item ) {
+      
+      var itemhtml = html.replace('__IMGSRC__', item.img ).replace('__NAME__', item.label );
+      return $j("<li>")
+        .data( "item.autocomplete", item )
+        .append( "<a>" + itemhtml + "</a>" )
+        .appendTo( ul )
+      ;
+      
+    };
+  };
+
+  setupSearch('#recordingid_search');
+  setupSearch('#livefeedid_search');
+  setupSearch('#channelid_search');
 
 }

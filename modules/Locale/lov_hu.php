@@ -182,4 +182,16 @@ return array(
     1 => 'pontos kifejezésre',
   ),
   
+  'invite_contenttype' => array(
+    'nocontent'   => 'Nem konkrét tartalomra küldök meghívót',
+    'recordingid' => 'Felvétel',
+    'livefeedid'  => 'Élő közvetítés',
+    'channelid'   => 'Csatorna',
+  ),
+
+  'invite_usertype' => array(
+    'single'   => 'Egy felhasználó meghívása',
+    'multiple' => 'Csoportos meghívás',
+  ),
+
 );

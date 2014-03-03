@@ -2591,3 +2591,26 @@ a#currentusername span {
   right: 11px;
   top: 8px;
 }
+#users_invite .foundwrap {
+  display: none;
+}
+#users_invite .foundwrap .title {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  display: inline-block;
+  font-weight: bolder;
+  line-height: 31px;
+  width: 422px;
+  height: 31px;
+  text-overflow: ellipsis;
+  overflow: hidden;
+}
+#users_invite .foundwrap .cancel {
+  display: block;
+  float: right;
+  margin: 5px 0px 0px 10px;
+}
+#users_invite .labelwrap {
+  margin: 0 0 5px 0;
+}
