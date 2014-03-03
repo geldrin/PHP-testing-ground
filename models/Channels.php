@@ -777,6 +777,23 @@ class Channels extends \Springboard\Model {
     
   }
   
+  public function isAccessibleByInvitation( $user, $channelid ) {
+
+    if ( !$user['id'] )
+      return false;
+
+    $this->ensureID();
+    return (bool)$this->db->getOne("
+      SELECT COUNT(*)
+      FROM users_invitations
+      WHERE
+        registereduserid = '" . $user['id'] . "' AND
+        channelid        = '$channelid'
+      LIMIT 1
+    ");
+
+  }
+
   public function isAccessible( $user, $skipaccesstypecheck = false ) {
     
     $this->ensureObjectLoaded();
@@ -797,9 +814,14 @@ class Channels extends \Springboard\Model {
        )
       return true;
     
+    // ezt csatorna hozzaadas-hoz valo permission checknel hasznaljuk,
+    // ez utan nezzunk minden mast ami csak a csatorna megnezesehez kell
     if ( $skipaccesstypecheck )
       return false;
-    
+
+    if ( $this->isAccessibleByInvitation( $user, $channel['id'] ) )
+      return true;
+
     switch( $channel['accesstype'] ) {
       
       case '':
@@ -1023,7 +1045,8 @@ class Channels extends \Springboard\Model {
         c.indexphotofilename
       FROM channels AS c
       WHERE
-        c.isliveevent = 0 AND
+        c.isliveevent = '0' AND
+        c.parentid    = '0' AND -- csak root channeleket
         (
           c.title LIKE $searchterm OR
           c.subtitle LIKE $searchterm OR
