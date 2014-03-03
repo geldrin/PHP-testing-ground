@@ -126,7 +126,7 @@ global $jconf;
 
 	}
 
-	// 1 pass encoding
+	// 1 encoding
 	if ( $profile['passes'] < 2 ) {
 		// Execute ffmpeg command
 		$command  = $profile['nice'] . " ffmpeg -y -i " . $media_info['source_file'] . " -v " . $jconf['ffmpeg_loglevel'] . " " . $jconf['ffmpeg_flags'] . " ";
@@ -154,20 +154,141 @@ global $jconf;
 		$err['message'] = "[OK] ffmpeg conversion OK (in " . $mins_taken . " mins)";
 	}
 
-/*
-‘-pass n’
+	return $err;
+}
 
-Select the pass number (1 or 2). It is used to do two-pass video encoding. The statistics of the video are recorded in the first pass into a log file (see also the option -passlogfile), and in the second pass that log file is used to generate the video at the exact requested bitrate. On pass 1, you may just deactivate audio and set output to null, examples for Windows and Unix:  	ffmpeg -i foo.mov -c:v libxvid -pass 1 -an -f rawvideo -y NUL
-ffmpeg -i foo.mov -c:v libxvid -pass 1 -an -f rawvideo -y /dev/null
+function ffmpegConvert($recording, $profile) {
+global $jconf;
 
- ‘-passlogfile prefix (global)’
+	$err = array();
+	$encodingparams = array();
+	$encodingparams['name'] = $profile['name'];
 
-Set two-pass log file name prefix to prefix, the default file name prefix is “ffmpeg2pass”. The complete file name will be ‘PREFIX-N.log’, where N is a number specific to the output stream
+	// Audio parameters
+	if ( $recording['mastermediatype'] == "videoonly" ) {
+		$encodingparams['audiochannels'] = null;
+		$encodingparams['audiosamplerate'] = null;
+		$encodingparams['audiobitrate'] = null;
+		// No audio channels to be encoded
+		$ffmpeg_audio = " -an ";
+	} else {
+		// Samplerate correction according to encoding profile
+		$audiosamplerate = doSampleRateCorrectionForProfile($recording['masteraudiofreq'], $profile);
+		// Bitrate settings for audio
+		$audiochannels = $profile['audiomaxchannels'];
+		if ( $recording['masteraudiochannels'] < $profile['audiomaxchannels'] ) {
+			$audiochannels = $recording['masteraudiochannels'];
+		}
+		$audiobitrate = $audiochannels * $profile['audiobitrateperchannel'];
 
-*/
+		$encodingparams['audiochannels'] = $audiochannels;
+		$encodingparams['audiosamplerate'] = $audiosamplerate;
+		$encodingparams['audiobitrate'] = $audiobitrate;
+
+		// ffmpeg audio encoding settings
+		$ffmpeg_audio = "-async " . $jconf['ffmpeg_async_frames'] . " -c:a " . $profile['audiocodec'] . " -ac " . $audiochannels . " -b:a " . $audiobitrate . "k -ar " . $audiosamplerate . " ";
+	}
+
+	// Video parameters
+//	if ( empty($profile['video_codec']) || empty($media_info['res_x']) || empty($media_info['res_y']) || empty($media_info['video_bitrate']) ) {
+	if ( 1 ) {
+		$ffmpeg_video = " -vn ";
+	} else {
+
+		// Video bitrate
+		$ffmpeg_bw = " -b:v " . 10 * ceil($media_info['video_bitrate'] / 10000) . "k";
+
+		// Resize
+		$resize = " -s " . $media_info['res_x'] . "x" . $media_info['res_y'];
+
+		// Display Aspect Ratio should be updated (changed by conversion)
+		$aspect = "";
+		if ( !empty($media_info['DAR_MN']) ) {
+			$aspect = " -aspect " . $media_info['DAR_MN'];
+		}
+
+		// FPS
+		$fps = "";
+		if ( ( $media_info['fps'] > 0 ) || ( !empty($media_info['fps'] ) ) ) {
+			$fps = " -r " . $media_info['fps'] ;
+		}
+
+		// Deinterlace
+		$deint = "";
+		if ( $media_info['interlaced']  > 0 ) {
+			$deint = " -deinterlace";
+		}
+
+		$ffmpeg_video = "-c:v libx264 " . $profile['codec_profile'] . $resize . $aspect . $deint . $fps . $ffmpeg_bw;
+
+	}
+
+	// Final encoding parameters to return
+	$err['value'] = $encodingparams;
+
+	// 1 pass encoding
+	if ( $profile['videopasses'] < 2 ) {
+		// Execute ffmpeg command
+		$command  = $jconf['encoding_nice'] . " ffmpeg -y -i " . $recording['master_filename'] . " -v " . $jconf['ffmpeg_loglevel'] . " " . $jconf['ffmpeg_flags'] . " ";
+		$command .= $ffmpeg_audio;
+		$command .= $ffmpeg_video;
+		$command .= " -threads " . $jconf['ffmpeg_threads'] . " -f " . $profile['filecontainerformat'] . " " . $recording['output_file'] . " 2>&1";
+
+echo $command . "\n";
+
+		$time_start = time();
+		$output = runExternal($command);
+		$err['duration'] = time() - $time_start;
+		$mins_taken = round( $err['duration'] / 60, 2);
+		$err['command'] = $command;
+		$err['command_output'] = $output['cmd_output'];
+		$err['result'] = $output['code'];
+		if ( $err['result'] < 0 ) $err['result'] = 0;
+
+var_dump($err['command_output']);
+echo "ffmpeg err code: " . $err['result'] . "\n";
+
+		// ffmpeg terminated with error or filesize suspiciously small
+		if ( ( $err['result'] != 0 ) or ( filesize($recording['output_file']) < 1000 ) ) {
+			$err['code'] = false;
+			$err['message'] = "[ERROR] ffmpeg conversion FAILED";
+			return $err;
+		}
+
+		$err['code'] = true;
+		$err['message'] = "[OK] ffmpeg conversion OK (in " . $mins_taken . " mins)";
+	}
 
 	return $err;
 
+}
+
+// Sample rate correction: to match codec requirements
+function doSampleRateCorrectionForProfile($samplerate, $profile) {
+
+	if ( ( $samplerate == 22050 ) or ( $samplerate == 44100 ) or ( ( $samplerate == 48000 ) and ( $profile['audiocodec'] == "libfaac" ) ) ) {
+		$sampleratenew = $samplerate;
+	} else {
+		// Should not occur to have different sample rate from aboves
+		if ( ( $samplerate > 22050 ) && ( $samplerate <= 44100 ) ) {
+			$sampleratenew = 44100;
+		} else {
+			if ( $samplerate <= 22050 ) {
+				$sampleratenew = 22050;
+			} elseif ( ( $samplerate >= 44100 ) && ( $samplerate < 48000 ) ) {
+				$sampleratenew = 44100;
+			} else {
+				// ffmpeg only allows 22050/44100Hz sample rate mp3 with f4v, 48000Hz only possible with AAC
+				if ( ( $profile['audiocodec'] == "libmp3lame" ) and ( $profile['filecontainerformat'] == "f4v" ) ) {
+					$sampleratenew = 44100;
+				} else {
+					$sampleratenew = 48000;
+				}
+			}
+		}
+	}
+
+	return $sampleratenew;
 }
 
 // *************************************************************************
@@ -476,7 +597,7 @@ global $app, $jconf, $global_log;
 	return TRUE;
 }
 
-function get_encoding_profile($encodingprofileid) {
+function getEncodingProfile($encodingprofileid) {
 global $db, $jconf, $debug;
 
 	$db = db_maintain();
@@ -515,7 +636,8 @@ global $db, $jconf, $debug;
 		FROM
 			encoding_profiles
 		WHERE
-			id = " . $encodingprofileid;
+			id = " . $encodingprofileid . " AND
+			disabled = 0";
 
 	try {
 		$profile = $db->getArray($query);
@@ -532,7 +654,7 @@ global $db, $jconf, $debug;
 	return $profile[0];
 }
 
-function get_recording_creator($recordingid) {
+function getRecordingCreator($recordingid) {
 global $db, $jconf, $debug;
 
 	$db = db_maintain();
