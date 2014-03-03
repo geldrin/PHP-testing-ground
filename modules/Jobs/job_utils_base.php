@@ -250,8 +250,8 @@ function runExternal_vlc($cmd, $output_file) {
 // *************************************************************************
 
 function hms2secs($timestamp) {
-  
-  $timestamp = explode(':', $timestamp );
+
+  $timestamp = explode(':', $timestamp);
   
   if ( count( $timestamp ) != 3 )
     return 0;
@@ -266,7 +266,7 @@ function hms2secs($timestamp) {
 
 function secs2hms($i_secs) {
 
-	$secs = abs($i_secs);
+	$secs = floor(abs($i_secs));
 	
 	$m = (int)($secs / 60);
 	$s = $secs % 60;

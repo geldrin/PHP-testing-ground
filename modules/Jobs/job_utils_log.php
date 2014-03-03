@@ -83,15 +83,24 @@ function print_audio_info($audio) {
 	if ( isset($audio['audio_srate']) ) $log_msg .= $audio['audio_srate'] . "Hz ";
 	if ( isset($audio['audio_bitrate']) ) $log_msg .= "@ " . $audio['audio_bitrate'] . "Kbps\n";
 
-/*	if ( isset($audio['source_file']) ) {
-		$log_msg .= "Source file: " . $audio['source_file'] . "\n";
-	}
-	if ( isset($audio['output_file']) ) {
-		$log_msg .= "Target file: " . $audio['output_file'] . "\n";
-	} */
+	return $log_msg;
+}
+
+function printMediaInfo($recording, $profile) {
+
+	$log_msg  = "[INFO] " . $profile['name'] . ":\n";
+
+	if ( isset($recording['masterlength']) ) $log_msg .= "Playtime: " . secs2hms($recording['masterlength']) . "\n";
+	if ( isset($profile['filecontainerformat']) ) $log_msg .= "Format: " . $profile['filecontainerformat'] . "\n";
+	if ( isset($profile['audiocodec']) ) $log_msg .= "Audio codec: " . $profile['audiocodec'] . "\n";
+	$log_msg .= "Audio quality: ";
+	if ( isset($recording['encodingparams']['audiochannels']) ) $log_msg .= $recording['encodingparams']['audiochannels'] . "ch ";
+	if ( isset($recording['encodingparams']['audiosamplerate']) ) $log_msg .= $recording['encodingparams']['audiosamplerate'] . "Hz ";
+	if ( isset($recording['encodingparams']['audiobitrate']) ) $log_msg .= "@ " . $recording['encodingparams']['audiobitrate'] . "Kbps\n";
 
 	return $log_msg;
 }
+
 
 // *************************************************************************
 // *				function print_recording_info()						   *
