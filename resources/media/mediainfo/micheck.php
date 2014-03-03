@@ -43,6 +43,7 @@ $config = array(
 
 //$qryrecordings = "SELECT id, mastervideoextension, masterlength, status FROM recordings";
 $qryrecordings = "SELECT id, mastervideoextension, contentmastervideoextension, contentmasterlength, masterstatus, contentstatus FROM recordings";
+$qryrecordings = "SELECT id, mastervideoextension, contentmastervideoextension, contentmasterlength, masterstatus, status, contentstatus FROM recordings WHERE contentvideoreshq IS NOT NULL ";
 $recordingarray = null;
 
 // $recordings = new Recordings();
@@ -55,32 +56,38 @@ try {
 	print_r("[ERROR] Database query failed.\n". $ex->getMessage() ."\n");
 }
 do {
+  print_r("\n");
 	$rec = $recordingarray->fields;
-	$path = STORAGE_PATH ."recordings/". ($rec['id'] - (1000 * round($rec['id'] / 1000, 0))) ."/". $rec['id'] ."/master/";
+	// $path = STORAGE_PATH ."recordings/". ($rec['id'] - (1000 * round($rec['id'] / 1000, 0))) ."/". $rec['id'] ."/master/";
+	$path = STORAGE_PATH ."recordings/". ($rec['id'] - (1000 * round($rec['id'] / 1000, 0))) ."/". $rec['id'] ."/";
 	$videopath = $path . $rec['id'] ."_video.". $rec['mastervideoextension'];
 	$contentpath = $path . $rec['id'] ."_content.". (empty($rec['contentmastervideoextension']) ? $rec['mastervideoextension'] : $rec['contentmastervideoextension']);
+	$videolqpath = $path . $rec['id'] ."_video_lq.mp4";
+	$videohqpath = $path . $rec['id'] ."_video_hq.mp4";
+	$contentlqpath = $path . $rec['id'] ."_content_lq.mp4";
+	$contenthqpath = $path . $rec['id'] ."_content_hq.mp4";
 	
+  $filepath = $contenthqpath; // Itt adjuk meg melyik fajlnevet hasznaljuk az elore generaltak kozul
+  $lblstatus = 'status';  // statusmezo neve, amelyre szurest vegzunk
+  $dbkey = 'videoreshq';  // Ezzel a kulccsal hasonlitjuk ossze az analyze-zal kinyert adatot
+  $param = 'mastervideores'; // Itt adjuk meg annak a parameternek a nevet, amit a metaadatokbol akarunk kinyerni (analyze)
+  
 	// filter deleted recordings:
-	if ($rec['masterstatus'] == 'markedfordeletion' || $rec['masterstatus'] == 'deleted' || $rec['masterstatus'] == null) {
-	// if ($rec['contentstatus'] == 'markedfordeletion' || $rec['contentstatus'] == 'deleted' || $rec['contentstatus'] == null) {
+	if ($rec[$lblstatus] == 'deleted' || $rec[$lblstatus] === null) {
 		print_r("Recording #". $rec['id'] ." is deleted. Skipping entry.\n");
 		continue;	
-	} elseif ( file_exists( $videopath) === false) {
-	// } elseif ( file_exists( $contentpath) === false) {
-		print_r("Path doesn't exists! (id - ". $rec['id'] .", $videopath). Skipping entry.\n");
-		// print_r("[ERROR] Path doesn't exists! (id - ". $rec['id'] .", $contentpath). Skipping entry.\nCONTENTSTATUS-". var_export($rec['contentstatus']) ."\n");
+	} elseif ( file_exists( $filepath) === false) {
+		print_r("[ERROR] Path doesn't exists! (id - ". $rec['id'] .", $filepath). Skipping entry.\nSTATUS-". var_export($rec[$lblstatus]) ."\n");
+		// print_r("[ERROR] Path doesn't exists! (id - ". $rec['id'] .", $filepath). Skipping entry.\nCONTENTSTATUS-". var_export($rec['contentstatus']) ."\n");
 		continue;
 	} else {
 		try {
-			$recordings->analyze($videopath);
-			// $recordings->analyze($contentpath);
+			$recordings->analyze($filepath);
 		} catch (Exception $ex) {
 			print_r("[ERROR] Analyze failed! (id - ". $rec['id'] ."\nError message:\n\n". $ex->getMessage()."\n");
 		}
-		echo "analyze $videopath - masterlength = ". $recordings->metadata['masterlength'] ."\n";
-		// echo "analyze $contentpath - contentmasterlength = ". $recordings->metadata['masterlength'] ."\n";
-		/*$recordings->*/updateData(array('id' => $rec['id']), 'masterlength', $recordings->metadata['masterlength'], false);
-		// /*$recordings->*/updateData(array('id' => $rec['id']), 'contentmasterlength', $recordings->metadata['masterlength'], false);
+		echo "analyze $filepath - ". $dbkey ." = ". $recordings->metadata[$param] ."\n";
+		updateData(array('id' => $rec['id']), $dbkey, $recordings->metadata[$param], false);
 	}
 } while ($recordingarray->MoveNext() === true);
 
@@ -102,7 +109,6 @@ exit(0);
 		global $db;
 		$checkqry = "SELECT	". $key ." FROM recordings WHERE id = ". $recording['id'];
 		$updateqry = empty($value) ? null : ("UPDATE recordings SET ". $key ." = '". $value ."' WHERE id = ". $recording['id']);
-		
 		$dbresult = null;
 		try {
 			$dbresult = $db->execute($checkqry);
@@ -118,7 +124,7 @@ exit(0);
 		
 		$dbresult = $dbresult->fields;
 		if ($dbresult[$key] != $value) {
-			print_r("[WARN] Different values. (original:". $dbresult[$key] ."/result". $value .") Updating");
+			print_r("[WARN] Different values. (original: ". $dbresult[$key] ."/result: ". $value .") Updating");
 			if ($debug === false) {
 				try {
 					print_r(":\n". $updateqry);
