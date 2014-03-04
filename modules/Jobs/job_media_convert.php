@@ -68,8 +68,11 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_media_convert.stop' ) and 
 //		$recording = array();
 //		$uploader_user = array();
 
+// TESTING: Reset media status
 update_db_recording_status(89, "uploaded");
 update_db_masterrecording_status(89, "uploaded");
+updateRecordingVersionStatus(1, "convert");
+updateRecordingVersionStatus(2, "convert");
 
 		// Query next job
 //		$recording = query_nextjob();
@@ -100,8 +103,9 @@ var_dump($encoding_profile);
 		$global_log .= "Encoding profile: " . $encoding_profile['name'] . "\n\n";
 
 		// Copy media from front-end server
-		if ( !copy_recording_to_converter($recording) ) break;
+		if ( !copyRecordingToConverter($recording) ) break;
 
+/*
 		// Video thumbnail generation, not a failure if fails
 		convert_video_thumbnails($recording);
 
@@ -110,11 +114,13 @@ var_dump($encoding_profile);
 		$recording_info_hq = array();
 		$recording_info_mobile_lq = array();
 		$recording_info_mobile_hq = array();
+*/
 
 		// Audio only surrogate
 //		if ( !convert_audio($recording, $jconf['profile_audio']) ) {
-		if ( !convertMediaAudio($recording, $encoding_profile) ) {
-			update_db_recording_status($recording['id'], $jconf['dbstatus_conv_audio_err']);
+		if ( !convertMedia($recording, $encoding_profile) ) {
+			updateRecordingVersionStatus($recording['recordingversionid'], $jconf['dbstatus_conv_err']);
+//			update_db_recording_status($recording['id'], $jconf['dbstatus_conv_audio_err']);
 			break;
 		}
 
@@ -178,9 +184,11 @@ exit;
 					break;
 				}
 			}
-*/
 
 		} // End of video conversion
+
+*/
+
 exit;
 
 		// Media finalization
@@ -346,7 +354,8 @@ global $jconf, $debug, $db;
 			recordings AS r
 		WHERE
 			rv.status = \"convert\" AND
-			rv.recordingid = r.id
+			rv.recordingid = r.id AND
+rv.id = 2
 		ORDER BY
 			rv.encodingorder,
 			rv.recordingid
@@ -383,7 +392,7 @@ global $jconf, $debug, $db;
 //	- Others:
 //	  o logs in local logfile and SQL DB table recordings_log
 //	  o updates recording status field
-function copy_recording_to_converter(&$recording) {
+function copyRecordingToConverter(&$recording) {
 global $app, $jconf, $debug;
 
 // Full rewrite: pehelykonnyu, egyszeru kod
@@ -796,56 +805,51 @@ global $app, $jconf, $global_log;
 	return TRUE;
 }
 
-function convertMediaAudio(&$recording, $profile) {
+// Convert media file based on profile
+function convertMedia(&$recording, $profile) {
 global $app, $jconf, $global_log;
 
 	// Update watchdog timer
 	$app->watchdog();
  
-	update_db_recording_status($recording['id'], $jconf['dbstatus_conv_audio']);
+	// STATUS: converting
+	updateRecordingVersionStatus($recording['recordingversionid'], $jconf['dbstatus_conv']);
+
+	// Output filename
+	$recording['output_file'] = $recording['temp_directory'] . $recording['id'] . $profile['filenamesuffix'] . "." . $profile['filecontainerformat'];
 
 	// No audio track - return to conversion
-	if ( $recording['mastermediatype'] == "videoonly" ) {
+/*	if ( $recording['mastermediatype'] == "videoonly" ) {
 		return true;
 	}
+*/
 
+// csak thumb generáláskor hívni meg?
 	if ( $recording['mastermediatype'] == "audio" ) {
 		$recording['thumbnail_numberofindexphotos'] = 0;
 		$recording['thumbnail_indexphotofilename'] = "images/videothumb_audio_placeholder.png?rid=" . $recording['id'];
 	}
 
-	$playtime = floor($recording['masterlength']);
-
-	// Calculate audio parameters
-//	$audio_info = $profile;
-	//// Basic
-//	$audio_info['playtime'] = $playtime;
-	//// Source and target filenames
-//	$audio_info['source_file'] = $recording['master_filename'];
-	// Output filename
-	$recording['output_file'] = $recording['temp_directory'] . $recording['id'] . $profile['filenamesuffix'] . "." . $profile['filecontainerformat'];
-
-// ???????????? kijebb tenni? nem lesz mit visszamasolni
-	if ( $recording['mastermediatype'] == "videoonly" ) return true;
+	$err = ffmpegConvert($recording, $profile);
+	$recording['encodingparams'] = $err['value'];
 
 	// Log input and target file details
-//	$log_msg = printMediaInfo($recording);
-//	$global_log .= $log_msg. "\n";
-
-	$err = ffmpegConvert($recording, $profile);
-	$recording['encodeparams'] = $err['value'];
 	$log_msg = printMediaInfo($recording, $profile);
 	$global_log .= $log_msg. "\n";
 
+print_r($log_msg) . "\n";
+
 echo "------------------------------\n";
-var_dump($recording['encodeparams']);
+var_dump($recording['encodingparams']);
+
+exit;
 
 	if ( !$err['code'] ) {
 		log_recording_conversion($recording['id'], $jconf['jobid_media_convert'], $jconf['dbstatus_conv_audio'], $err['message'] . "\nSource file: " . $recording['master_filename'] . "\nDestination file: " . $recording['output_file'] . "\n\n" . $log_msg, $err['command'], $err['command_output'], $err['duration'], true);
 		return false;
 	} else {
-		log_recording_conversion($recording['id'], $jconf['jobid_media_convert'], $jconf['dbstatus_conv_audio'], $err['message'] . "\nAudio track converted as: " . $recording['output_file'] . "\n\n" . $log_msg, $err['command'], $err['command_output'], $err['duration'], false);
-		$global_log .= "Audio conversion in " . secs2hms($err['duration']) . " time.\n";
+		log_recording_conversion($recording['id'], $jconf['jobid_media_convert'], $jconf['dbstatus_conv_audio'], $err['message'] . "\nConvertion done for: " . $recording['output_file'] . "\n\n" . $log_msg, $err['command'], $err['command_output'], $err['duration'], false);
+		$global_log .= "Conversion in " . secs2hms($err['duration']) . " time.\n";
 	}
 
 	$global_log .= "\n";
