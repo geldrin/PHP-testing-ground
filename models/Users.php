@@ -592,4 +592,17 @@ class Users extends \Springboard\Model {
 
   }
 
+  public function searchForValidInvitation( $organizationid ) {
+    $this->ensureObjectLoaded();
+    $email = $this->db->qstr( $this->row['email'] );
+    return $this->db->getRow("
+      SELECT *
+      FROM users_invitations
+      WHERE
+        email          = $email AND
+        organizationid = '$organizationid' AND
+        status         = 'invited'
+      LIMIT 1
+    ");
+  }
 }

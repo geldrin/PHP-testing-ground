@@ -6,7 +6,7 @@
 
 {if !$nosearch}
 <div id="useradminquicksearch" class="form pagingsearch">
-  <form method="GET" action="{$language}/users/admin">
+  <form method="GET" action="{$language}/users/invitations">
     <input type="hidden" name="order" value="{$order|escape:html}"/>
     <input type="hidden" name="start" value="0"/>
     <input type="hidden" name="perpage" value="{$smarty.get.perpage|escape:html}"/>

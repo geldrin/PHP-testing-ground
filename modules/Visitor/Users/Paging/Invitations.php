@@ -2,12 +2,10 @@
 namespace Visitor\Users\Paging;
 
 class Invitations extends \Visitor\Paging {
-  protected $orderkey = 'creation_desc';
+  protected $orderkey = 'default';
   protected $sort = array(
-    'email'         => 'email',
-    'email_desc'    => 'email DESC',
-    'creation'      => 'id',
-    'creation_desc' => 'id DESC',
+    'default'   => 'timestamp DESC, email',
+    'relevancy' => 'relevancy, timestamp DESC, email',
   );
   protected $insertbeforepager = Array( 'Visitor/Users/Paging/InvitationsBeforepager.tpl' );
   protected $template = 'Visitor/Users/Paging/Invitations.tpl';
@@ -19,7 +17,7 @@ class Invitations extends \Visitor\Paging {
   public function init() {
     
     $l                 = $this->bootstrap->getLocalization();
-    $this->foreachelse = $l('users', 'foreachelse' );
+    $this->foreachelse = $l('users', 'invitation_foreachelse' );
     $this->title       = $l('users', 'invitations_title');
     $term = trim( $this->application->getParameter('term') );
     if ( mb_strlen( $term ) >= 2 ) {
@@ -36,7 +34,7 @@ class Invitations extends \Visitor\Paging {
     if ( $this->searchterm ) {
       return $this->itemcount = $this->invModel->getSearchCount(
         $this->searchterm,
-        $this->controller->organization
+        $this->controller->organization['id']
       );
     }
 
@@ -47,15 +45,17 @@ class Invitations extends \Visitor\Paging {
   
   protected function getItems( $start, $limit, $orderby ) {
 
-    if ( $this->searchterm ) {
-      return $this->invModel->getSearchArray(
+    if ( $this->searchterm )
+      $data = $this->invModel->getSearchArray(
         $this->searchterm,
-        $this->controller->organization,
-        $start, $limit, 'relevancy, email'
+        $this->controller->organization['id'],
+        $start, $limit, $this->sort['relevancy']
       );
-    }
+    else
+      $data = $this->invModel->getArray( $start, $limit, false, $orderby );
 
-    return $this->invModel->getArray( $start, $limit, false, $orderby );
+    return $data;
+
   }
   
 }

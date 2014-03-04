@@ -65,9 +65,16 @@ class Signup extends \Visitor\HelpForm {
     
     $userModel->insert( $values );
     
-    if ( isset( $invitationModel ) ) {
+    if (
+         isset( $invitationModel ) or
+         (
+           $invitation = $userModel->searchForValidInvitation(
+             $this->controller->organization['id']
+           )
+         )
+       ) {
       $userModel->applyInvitationPermissions( $invitation );
-      $userModel->invitationRegistered( $invitationModel->id );
+      $userModel->invitationRegistered( $invitation['id'] );
       $userinvitationSession->clear();
     }
 
