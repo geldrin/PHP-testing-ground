@@ -9,4 +9,4 @@ UPDATE users_invitations SET status = 'invited';
 
 ALTER TABLE  `users_invitations` ADD  `organizationid` INT UNSIGNED NOT NULL,
 ADD  `timestamp` DATETIME NOT NULL;
-ALTER TABLE  `teleconnect`.`users_invitations` ADD INDEX  `ix_organizationid` (  `organizationid` );
+ALTER TABLE  `users_invitations` ADD INDEX  `ix_organizationid` (  `organizationid` );
