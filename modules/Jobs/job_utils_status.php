@@ -41,28 +41,6 @@ global $app, $jconf, $db;
 
 function updateRecordingVersionStatus($recordingversionid, $status) {
 global $app;
-/*
-	$db = db_maintain();
-
-	$query = "
-		UPDATE
-			recordings
-		SET
-			status = \"" . $status . "\"
-		WHERE
-			id = " . $rec_id;
-
-	try {
-		$rs = $db->Execute($query);
-	} catch (exception $err) {
-		log_video_conversion($rec_id, $jconf['jobid_media_convert'], "-", "[ERROR] Cannot update media status. SQL query failed.", trim($query), $err, 0, TRUE);
-		return FALSE;
-	}
-
-	$recordingObj = $app->bootstrap->getModel('recordings');
-	$recordingObj->select($rec_id);
-	$recordingObj->updateChannelIndexPhotos();
-*/
 
 	$values = array(
 		'status' => $status
@@ -178,6 +156,34 @@ global $app, $jconf, $db;
 
 	return TRUE;
 }
+
+function updateMediaInfo($recording, $profile) {
+ global $app;
+
+	$values = array(
+		'qualitytag'			=> $profile['shortname'],
+		'filename'				=> $recording['output_basename'],
+		'resolution'			=> $recording['encodingparams']['resx'] . "x" . $recording['encodingparams']['resy'],
+		'bandwidth'				=> $recording['encodingparams']['audiobitrate'] + $recording['encodingparams']['videobitrate'],
+		'isdesktopcompatible'	=> $profile['isdesktopcompatible'],
+		'ismobilecompatible'	=> max($profile['isioscompatible'], $profile['isandroidcompatible'])
+	);
+
+	$recordingVersionObj = $app->bootstrap->getModel('recordings_versions');
+	$recordingVersionObj->select($recording['recordingversionid']);
+    $recordingVersionObj->updateRow($values);
+
+/*
+// ???
+	if ( !empty($recording['thumbnail_indexphotofilename']) ) {
+		$query .= ", indexphotofilename = \"" . $recording['thumbnail_indexphotofilename'] . "\",\n";
+		$query .= "numberofindexphotos = \"" . $recording['thumbnail_numberofindexphotos'] . "\"\n";
+	}
+*/
+
+	return true;
+}
+
 
 // *************************************************************************
 // *				function update_db_content_status()		   			   *
