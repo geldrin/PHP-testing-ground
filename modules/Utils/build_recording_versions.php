@@ -1,6 +1,7 @@
 <?php
-define('BASE_PATH',	realpath( __DIR__ . '/../..' ) . '/' );
+//define('BASE_PATH',	realpath( __DIR__ . '/../..' ) . '/' );
 // define('BASE_PATH', realpath('/var/www/videosquare.eu/') .'/');
+define('BASE_PATH', realpath('/var/www/dev.videosquare.eu/') .'/');
 define('PRODUCTION', false );
 define('DEBUG', false );
 include_once( BASE_PATH . 'libraries/Springboard/Application/Cli.php');
@@ -40,6 +41,8 @@ try {
 $query_recordings = "
   SELECT
     id,
+    timestamp,
+    mastervideofilename,
     mediatype,
     mastermediatype,
     masterstatus,
@@ -61,8 +64,9 @@ $query_recordings = "
     recordings
   WHERE
     ( status = '". $jconf['dbstatus_copystorage_ok'] . "' OR status = '". $jconf['dbstatus_markedfordeletion'] ."' ) AND
-		( masterstatus = '". $jconf['dbstatus_copystorage_ok'] ."' OR masterstatus = '". $jconf['dbstatus_markedfordeletion'] ."' )";
-    
+		( masterstatus = '". $jconf['dbstatus_copystorage_ok'] ."' OR masterstatus = '". $jconf['dbstatus_markedfordeletion'] ."')";
+$query_default_cnode = "SELECT id FROM converter_nodes WHERE shortname LIKE 'conv-1'";
+
 $log = "\n=====[ ". date('Y-m-d H:i:s', time()) ." ]===========================================================================================\n";
 $log .= $debug === true ? "[NOTICE] Started in debug-mode.\n" : "";
 $recordings_done = 0;
@@ -73,12 +77,17 @@ try {
   $num_recordings = $recordings->RecordCount();
   
   $prof_audio = getProfile('_audio');
-  $prof_vidlq = getProfile('_video_360p');
-  $prof_vidhq = getProfile('_video_720p');
-  $prof_conlq = getProfile('_content_480p');
-  $prof_conhq = getProfile('_content_720p');
-  $prof_moblq = getProfile('_mobile_320p');
-  $prof_mobhq = getProfile('_mobile_480p');
+  $prof_vidlq = getProfile('_video_lq');
+  $prof_vidhq = getProfile('_video_hq');
+  $prof_conlq = getProfile('_content_lq');
+  $prof_conhq = getProfile('_content_hq');
+  $prof_moblq = getProfile('_mobile_lq');
+  $prof_mobhq = getProfile('_mobile_hq');
+
+  $converter_node = $db->Execute($query_default_cnode);
+  $converter_node = $converter_node->fields;
+  $converter_node = (integer) $converter_node['id'];
+  if (gettype($converter_node) !== 'integer') throw new Exception("[ERROR] Can't query default converter node!\nQuery (". print_r($query_default_cnode, true) .")" );
 } catch (Exception $e) {
   print_r($e->getMessage() ."\n");
   exit -1;
@@ -86,7 +95,7 @@ try {
 
 while (!$recordings->EOF) {
   $rec = $recordings->fields;
-  $msg = "\n> Recording #". $rec['id'] ."\n";
+  $msg = "\n> Recording #". $rec['id'] .", \"". $rec['mastervideofilename'] ."\"\n";
   $recording_path = $app->config['recordingpath'] . ( $rec['id'] % 1000 ) . "/" . $rec['id'] . "/";
   
   if (!file_exists($recording_path)) {
@@ -95,13 +104,13 @@ while (!$recordings->EOF) {
   }
   
   // Build filenames
-  $audio      = $recording_path . $rec['id'] ."_audio.mp3";
-  $video_lq   = $recording_path . $rec['id'] ."_video_lq.mp4";
-  $video_hq   = $recording_path . $rec['id'] ."_video_hq.mp4";
-  $content_lq = $recording_path . $rec['id'] ."_content_lq.mp4";
-  $content_hq = $recording_path . $rec['id'] ."_content_hq.mp4";
-  $mobile_lq  = $recording_path . $rec['id'] ."_mobile_lq.mp4";
-  $mobile_hq  = $recording_path . $rec['id'] ."_mobile_hq.mp4";
+  $audio      = $rec['id'] ."_audio.mp3";
+  $video_lq   = $rec['id'] ."_video_lq.mp4";
+  $video_hq   = $rec['id'] ."_video_hq.mp4";
+  $content_lq = $rec['id'] ."_content_lq.mp4";
+  $content_hq = $rec['id'] ."_content_hq.mp4";
+  $mobile_lq  = $rec['id'] ."_mobile_lq.mp4";
+  $mobile_hq  = $rec['id'] ."_mobile_hq.mp4";
   
   // Detect possible recordings_versions
   $is_audio_exists      = ( $rec['masterstatus'] == $jconf['dbstatus_copystorage_ok'] && $rec['mastermediatype'] != "videoonly");
@@ -115,36 +124,34 @@ while (!$recordings->EOF) {
   // Create labels for versions
   $versions = array();
   if ($is_audio_exists)
-    $versions[] = array('filename' => $audio, 'profile' => $prof_audio['id'], 'name' => $prof_audio['shortname'], 'status' => 'status', 'resolution' => null);
+    $versions[] = array('filename' => $audio, 'profile' => $prof_audio['id'], 'qtag' => $prof_audio['shortname'], 'status' => 'status', 'resolution' => null, 'encpty' => $prof_audio['encodingorder']);
   if ($is_video_lq_exists)
-    $versions[] = array('filename' => $video_lq, 'profile' => $prof_vidlq['id'], 'name' => $prof_vidlq['shortname'], 'status' => 'status', 'resolution' => 'videoreslq');
+    $versions[] = array('filename' => $video_lq, 'profile' => $prof_vidlq['id'], 'qtag' => $prof_vidlq['shortname'], 'status' => 'status', 'resolution' => 'videoreslq', 'encpty' => $prof_vidlq['encodingorder']);
   if ($is_video_hq_exists)
-    $versions[] = array('filename' => $video_hq, 'profile' => $prof_vidhq['id'], 'name' => $prof_vidhq['shortname'], 'status' => 'status', 'resolution' => 'videoreshq');
+    $versions[] = array('filename' => $video_hq, 'profile' => $prof_vidhq['id'], 'qtag' => $prof_vidhq['shortname'], 'status' => 'status', 'resolution' => 'videoreshq', 'encpty' => $prof_vidhq['encodingorder']);
   if ($is_content_lq_exists)
-    $versions[] = array('filename' => $content_lq, 'profile' => $prof_conlq['id'], 'name' => $prof_conlq['shortname'], 'status' => 'contentstatus', 'resolution' => 'contentvideoreslq');
+    $versions[] = array('filename' => $content_lq, 'profile' => $prof_conlq['id'], 'qtag' => $prof_conlq['shortname'], 'status' => 'contentstatus', 'resolution' => 'contentvideoreslq', 'encpty' => $prof_conlq['encodingorder']);
   if ($is_content_hq_exists)
-    $versions[] = array('filename' => $content_hq, 'profile' => $prof_conhq['id'], 'name' => $prof_conhq['shortname'], 'status' => 'contentstatus', 'resolution' => 'contentvideoreshq');
+    $versions[] = array('filename' => $content_hq, 'profile' => $prof_conhq['id'], 'qtag' => $prof_conhq['shortname'], 'status' => 'contentstatus', 'resolution' => 'contentvideoreshq', 'encpty' => $prof_conhq['encodingorder']);
   if ($is_mobile_lq_exists)
-    $versions[] = array('filename' => $mobile_lq, 'profile' => $prof_moblq['id'], 'name' => $prof_moblq['shortname'], 'status' => 'mobilestatus', 'resolution' => 'mobilevideoreslq');
+    $versions[] = array('filename' => $mobile_lq, 'profile' => $prof_moblq['id'], 'qtag' => $prof_moblq['shortname'], 'status' => 'mobilestatus', 'resolution' => 'mobilevideoreslq', 'encpty' => $prof_moblq['encodingorder']);
   if ($is_mobile_hq_exists)
-    $versions[] = array('filename' => $mobile_hq, 'profile' => $prof_mobhq['id'], 'name' => $prof_mobhq['shortname'], 'status' => 'mobilestatus', 'resolution' => 'mobilevideoreshq');
+    $versions[] = array('filename' => $mobile_hq, 'profile' => $prof_mobhq['id'], 'qtag' => $prof_mobhq['shortname'], 'status' => 'mobilestatus', 'resolution' => 'mobilevideoreshq', 'encpty' => $prof_mobhq['encodingorder']);
   
   // Iterate trough versions
   $versions_inserted = 0;
   $err = false;
   foreach($versions as $ver) {
     // check and skip existing versions
-    // $checkversions = query("SELECT id, encodingprofileid, name, status FROM recording_versions WHERE id = ". $rec['id']); //// ENCODINGPROFILEID
-    $checkversions = query("SELECT id, name, status FROM recordings_versions WHERE id = ". $rec['id']);
-    // $checkversions = query("SELECT * FROM recordings WHERE id = 10");
+    $checkversions = query("SELECT id, recordingid, encodingprofileid, qualitytag, status FROM recordings_versions WHERE recordingid = ". $rec['id'] ." AND encodingprofileid =". $ver['profile']);
     if ($checkversions['result'] === true && !is_null($checkversions['data'])) {
       $data = $checkversions['data'];
       if (!empty($data) && $data[0]['encodingprofileid'] == $ver['profile']) {
-        $msg .= "Recording version '". $ver['filename'] ."' already exists, skipping entry\n";
+        $msg .= "Recording version '". $ver['filename'] ."' already exists, skipping entry.\n";
         continue;
       }
     } else {
-      $msg .= "[ERROR] Check ". $ver['name'] ." version failed! ". $checkversions['message'];
+      $msg .= "[ERROR] Check ". $ver['qtag'] ." version failed! ". $checkversions['message'];
       $err = true;
       break;
     }
@@ -154,19 +161,22 @@ while (!$recordings->EOF) {
     $is_audio_only         = stripos($ver['filename'], '.mp3') !== false ? true : false ;
     $is_mobile_compatible  = !$is_desktop_compatible || $is_audio_only ? true : false ;
     try {
-      $meta = analyze($ver['filename']);
+      $meta = analyze($recording_path . $ver['filename']);
       $result = insertRecordingVersions(
         array(
-          'recid'    => $rec['id'],
-          'name'     => $ver['name'],
-          'profile'  => $ver['profile'],
-          'file'     => $ver['filename'],
-          'iscont'   => $is_content ? 1 : 0,
-          'status'   => $rec[$ver['status']],
-          'res'      => $rec[$ver['resolution']],
-          'bandw'    => $is_audio_only ? $meta['masteraudiobitrate'] : $meta['mastervideobitrate'] ,
-          'desktopc' => $is_desktop_compatible ? 1 : 0,
-          'mobilec'  => $is_mobile_compatible ? 1 : 0
+          'timestamp' => $rec['timestamp'],
+          'cnode'     => $converter_node,
+          'recid'     => $rec['id'],
+          'profile'   => $ver['profile'],
+          'encpty'    => $ver['encpty'],
+          'qtag'      => $ver['qtag'],
+          'file'      => $ver['filename'],
+          'iscont'    => $is_content ? 1 : 0,
+          'status'    => $rec[$ver['status']],
+          'res'       => $is_audio_only ? null : $rec[$ver['resolution']],
+          'bandw'     => $is_audio_only ? $meta['masteraudiobitrate'] : $meta['mastervideobitrate'] ,
+          'desktopc'  => $is_desktop_compatible ? 1 : 0,
+          'mobilec'   => $is_mobile_compatible ? 1 : 0
         )
       );
       // fwrite($fh, "recording ID: ". $rec['id'] ."\n". print_r($rec, true) ."\n". print_r($ver, true) ."\n-----------------\n"); //// DEBUG
@@ -190,6 +200,7 @@ while (!$recordings->EOF) {
   $msg .= "-----------------------------------------------------------------------------------------------------------------------\n";
   $log .= $msg;
   $recordings->MoveNext();
+  break; //// DEBUG
 }
 
 $log .= "\nTotal number of recordings done: ". $recordings_done ."/". $num_recordings ."\nTotal number of versions created: ". $versions_created ."\n";
@@ -198,6 +209,17 @@ fwrite($fh, $log);
 fclose($fh);
 
 /////////////////////////////////////////// FUNCTIONS ///////////////////////////////////////////
+// function query(querystring)
+/////////////////////////////////////////////////////////////////////////////////////////////////
+//
+// Return values:
+//   results['query']: the requested mysql query string
+//   results['result']: (bool) true if success
+//   results['message']: (string) message
+//   results['data']: (array) an array on success, NULL if an error occured. Note that if the
+//   query was executed, resulting no rows at all, the return value will still be an (empty) array.
+//
+/////////////////////////////////////////////////////////////////////////////////////////////////
 function query($query) {
   global $db;
   $results = array(
@@ -245,29 +267,27 @@ function insertRecordingVersions($rv) {
     'querystr' => null,
     'message'  => null,
   );
-  //
-  // 'ENCODINGPROFILEID' MEZO MEG NEM LETEZIK A DB-BEN, LETRE KELL HOZZNI!!!!
-  //
   $querystr =
-    "INSERT INTO recording_versions( recordingid, encodingprofileid, name, filename, iscontent, status, resolution, bandwidth, isdesktopcompatible, ismobilecompatible )
-    VALUES (".
-      $rv['recid'] .",".
-      $rv['profile'] .",".
-      $rv['name'] .",".
-      $rv['file'] .",".
-      $rv['iscont'] .",".
-      $rv['status'] .",".
-      $rv['res'] .",".
-      $rv['bandw'] .",".
-      $rv['desktopc'] .",".
-      $rv['mobilec'] .")";
+    "INSERT INTO recordings_versions( `timestamp`, `converternodeid`, `recordingid`, `encodingprofileid`, `encodingorder`, `qualitytag`, `filename`, `iscontent`, `status`, `resolution`, `bandwidth`, `isdesktopcompatible`, `ismobilecompatible` )
+    VALUES ('".
+      $rv['timestamp'] ."',".
+      $rv['cnode'    ] .",".
+      $rv['recid'    ] .",".
+      $rv['profile'  ] .",".
+      $rv['encpty'   ] .",'".
+      $rv['qtag'     ] ."','".
+      $rv['file'     ] ."',".
+      $rv['iscont'   ] .",'".
+      $rv['status'   ] ."','".
+      $rv['res'      ] ."',".
+      $rv['bandw'    ] .",".
+      $rv['desktopc' ] .",".
+      $rv['mobilec'  ] .")";
   $retval['querystr'] = $querystr;
   try {
     if ($debug === false) {
-      print_r("Updating recording #". $rv['file'] ."-". $rv['name'] ."\n");
-      ////////////////// AMIG NINCS VEGLEGESITVE AZ ADATBAZIS STRUKTURA, ADDIG KI VAN VEVE AZ INSERT //////////////////
-      // $db->Execute($querystr);
-      /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+      print_r("Updating recording #". $rv['file'] ."-". $rv['qtag'] ."\n");
+      $db->Execute($querystr);  // note: all queries are being logged
     } else {
       if ($debug)
         print_r(trim($querystr) . "\n");
@@ -300,7 +320,11 @@ function analyze($mediafile) {
 
 function getProfile($profilename) {
   global $db;
-  $qry = "SELECT id, shortname, filenamesuffix FROM encoding_profiles WHERE filenamesuffix LIKE '". $profilename ."'\n";
+
+  $qry = "SELECT encoding_profiles.id, encoding_profiles.shortname, encoding_profiles.filenamesuffix, encoding_profiles_groups.encodingprofileid,  encoding_profiles_groups.encodingprofilegroupid, encoding_profiles_groups.encodingorder
+  FROM encoding_profiles
+  INNER JOIN encoding_profiles_groups ON
+  encoding_profiles.id=encoding_profiles_groups.encodingprofileid AND encodingprofilegroupid = 2 AND encoding_profiles.filenamesuffix LIKE '". $profilename ."'\n";
   try {
     $profiles = $db->Execute($qry);
     if ($profiles->RecordCount() < 1) {
