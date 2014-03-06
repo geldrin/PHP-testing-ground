@@ -1,7 +1,5 @@
 <?php
-//define('BASE_PATH',	realpath( __DIR__ . '/../..' ) . '/' );
-// define('BASE_PATH', realpath('/var/www/videosquare.eu/') .'/');
-define('BASE_PATH', realpath('/var/www/dev.videosquare.eu/') .'/');
+define('BASE_PATH',	realpath( __DIR__ . '/../..' ) . '/' );
 define('PRODUCTION', false );
 define('DEBUG', false );
 include_once( BASE_PATH . 'libraries/Springboard/Application/Cli.php');
