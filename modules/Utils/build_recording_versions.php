@@ -31,7 +31,7 @@ try {
 // Open logfile
 try {
   $logfile = $app->config['datapath'] ."logs/". date('Y-m-', time()) ."recording_version_transfer.log";
-  $fh = fopen($logfile, 'w');
+  $fh = fopen($logfile, 'a');
 } catch (Exception $e) {
   print_r("[ERROR] file cannot be opened: ". $logfile ."\n". $e->getMessage());
 }
@@ -111,13 +111,13 @@ while (!$recordings->EOF) {
   $mobile_hq  = $rec['id'] ."_mobile_hq.mp4";
   
   // Detect possible recordings_versions
-  $is_audio_exists      = ( $rec['masterstatus'] == $jconf['dbstatus_copystorage_ok'] && $rec['mastermediatype'] != "videoonly");
-  $is_video_lq_exists   = ( $rec['masterstatus'] == $jconf['dbstatus_copystorage_ok'] );
+  $is_audio_exists      = (( $rec['masterstatus'] == $jconf['dbstatus_copystorage_ok'] || $rec['masterstatus'] == $jconf['dbstatus_markedfordeletion'] ) && $rec['mastermediatype'] != "videoonly");
+  $is_video_lq_exists   = ( $rec['masterstatus'] == $jconf['dbstatus_copystorage_ok'] || $rec['masterstatus'] == $jconf['dbstatus_markedfordeletion'] );
   $is_video_hq_exists   = ( $is_video_lq_exists && !empty($rec['videoreshq']) );
-  $is_content_lq_exists = ( $rec['contentstatus'] == $jconf['dbstatus_copystorage_ok'] );
+  $is_content_lq_exists = ( $rec['contentstatus'] == $jconf['dbstatus_copystorage_ok'] || $rec['contentstatus'] == $jconf['dbstatus_markedfordeletion'] );
   $is_content_hq_exists = ( $is_content_lq_exists && !empty($rec['contentvideoreshq']) );
-  $is_mobile_lq_exists  = ( $rec['mobilestatus'] == $jconf['dbstatus_copystorage_ok'] );
-  $is_mobile_hq_exists  = ( $is_content_lq_exists && !empty($rec['mobilevideoreshq']) );
+  $is_mobile_lq_exists  = ( $rec['mobilestatus'] == $jconf['dbstatus_copystorage_ok'] || $rec['mobilestatus'] == $jconf['dbstatus_markedfordeletion']);
+  $is_mobile_hq_exists  = ( $is_mobile_lq_exists && !empty($rec['mobilevideoreshq']) );
   
   // Create labels for versions
   $versions = array();
@@ -198,7 +198,6 @@ while (!$recordings->EOF) {
   $msg .= "-----------------------------------------------------------------------------------------------------------------------\n";
   $log .= $msg;
   $recordings->MoveNext();
-  break; //// DEBUG
 }
 
 $log .= "\nTotal number of recordings done: ". $recordings_done ."/". $num_recordings ."\nTotal number of versions created: ". $versions_created ."\n";
