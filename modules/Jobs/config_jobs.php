@@ -9,9 +9,7 @@ define('H264_PROFILE_MOBILE',		'-profile:v baseline -preset:v fast');
 return array('config_jobs' => array(
 
 	// Node
-// Not used?
-//	'node'							=> 'conv-1.videosquare.eu',
-//	'node_role'						=> 'converter',
+	'encoding_nice'					=> "nice -n 10",
 
 	// Directories
 	'temp_dir'						=> $this->config['convpath'],				// Temporary dir for jobs
@@ -40,6 +38,7 @@ return array('config_jobs' => array(
 
 	// Job identifiers
 	'jobid_media_convert'			=> 'job_media_convert',
+	'jobid_conv_control'			=> 'job_conversion_control',
 	'jobid_content_convert'			=> 'job_content_convert',
 	'jobid_ocr_convert'				=> 'job_ocr_convert',
 	'jobid_document_index'			=> 'job_document_index',
@@ -72,7 +71,9 @@ return array('config_jobs' => array(
 	'dbstatus_copystorage'			=> 'copyingtostorage',
 	'dbstatus_copystorage_ok'		=> 'onstorage',
 	'dbstatus_copystorage_err'		=> 'failedcopyingtostorage',
+// rename!
 	'dbstatus_conv'					=> 'converting',
+	'dbstatus_convert'				=> 'convert',
 	'dbstatus_conv_err'				=> 'failedconverting',
 	'dbstatus_conv_thumbs'			=> 'converting1thumbnails',
 	'dbstatus_conv_audio'			=> 'converting2audio',
@@ -112,6 +113,7 @@ return array('config_jobs' => array(
 	'api_password'					=> 'MekkElek123',
 
 	// FFMpeg related
+	'ffmpeg_alt'            => '/home/conv/ffmpeg/ffmpeg-git-20140217-64bit-static/ffmpeg', // current FFMpeg static build
 	'ffmpeg_loglevel'				=> 0,								// Loglevel
 	'ffmpeg_threads'				=> 0,								// Threads to use (0 - automatic)
 	'ffmpeg_async_frames'			=> 10,								// Max. frames to skip when audio and video is out of sync
@@ -138,6 +140,7 @@ return array('config_jobs' => array(
 	'video_max_bw'					=> 3000000,		// Maximum of video bandwidth (absolute limit)
 	'video_max_res'					=> '1920x1080',	// Max. resolution for uploaded video (otherwise fraud upload)
 	'video_max_fps'					=> 60,			// Max. video FPS
+	'video_default_fps'				=> 25,			// Default video FPS
 	
 	'ocr_threshold'					=> 0.02,		// Max. difference between ocr frames 
 	
@@ -176,7 +179,7 @@ return array('config_jobs' => array(
 		'video_bbox'		=> "480x320",		// Bounding box
 		'video_maxfps'		=> 30,				// Max FPS
 		'video_bpp'			=> 0.06,			// resx * resy * fps * bpp = video codec bandwidth
-		'audio_codec'		=> "libfaac",		// AAC
+		'audio_codec'		=> "libvo_aacenc",		// AAC (the static ffmpeg build used in the pip-converter has the free 'libvo_aacenc' and the experimental 'aac' encoders only)
 		'audio_ch'			=> 1,				// Max. number of audio channels
 		'audio_bw_ch'		=> 64,				// Kbps per audio channel
 		'audio_mode'		=> "cbr",
@@ -203,7 +206,7 @@ return array('config_jobs' => array(
 		'video_bbox'		=> "1280x720",		// Bounding box
 		'video_maxfps'		=> 30,				// Max FPS
 		'video_bpp'			=> 0.045,			// resx * resy * fps * bpp = video codec bandwidth
-		'audio_codec'		=> "libfaac",		// AAC
+		'audio_codec'		=> "libvo_aacenc",		// AAC (the static ffmpeg build used in the pip-converter has the free 'libvo_aacenc' and the experimental 'aac' encoders only)
 		'audio_ch'			=> 2,				// Max. number of audio channels
 		'audio_bw_ch'		=> 64,				// Kbps per audio channel
 		'audio_mode'		=> "cbr",
