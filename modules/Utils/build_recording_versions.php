@@ -162,16 +162,16 @@ while (!$recordings->EOF) {
       $meta = analyze($recording_path . $ver['filename']);
       $result = insertRecordingVersions(
         array(
-          'timestamp' => $rec['timestamp'],
+          'timestamp' => "'". $rec['timestamp'] ."'",
           'cnode'     => $converter_node,
           'recid'     => $rec['id'],
           'profile'   => $ver['profile'],
           'encpty'    => $ver['encpty'],
-          'qtag'      => $ver['qtag'],
-          'file'      => $ver['filename'],
+          'qtag'      => "'". $ver['qtag'] ."'",
+          'file'      => "'". $ver['filename'] ."'",
           'iscont'    => $is_content ? 1 : 0,
-          'status'    => $rec[$ver['status']],
-          'res'       => $is_audio_only ? null : $rec[$ver['resolution']],
+          'status'    => "'". $rec[$ver['status']] ."'",
+          'res'       => $is_audio_only ? 'NULL' : "'". $rec[$ver['resolution']] ."'",
           'bandw'     => $is_audio_only ? $meta['masteraudiobitrate'] : $meta['mastervideobitrate'] ,
           'desktopc'  => $is_desktop_compatible ? 1 : 0,
           'mobilec'   => $is_mobile_compatible ? 1 : 0
@@ -266,17 +266,17 @@ function insertRecordingVersions($rv) {
   );
   $querystr =
     "INSERT INTO recordings_versions( `timestamp`, `converternodeid`, `recordingid`, `encodingprofileid`, `encodingorder`, `qualitytag`, `filename`, `iscontent`, `status`, `resolution`, `bandwidth`, `isdesktopcompatible`, `ismobilecompatible` )
-    VALUES ('".
-      $rv['timestamp'] ."',".
+    VALUES (".
+      $rv['timestamp'] .",".
       $rv['cnode'    ] .",".
       $rv['recid'    ] .",".
       $rv['profile'  ] .",".
-      $rv['encpty'   ] .",'".
-      $rv['qtag'     ] ."','".
-      $rv['file'     ] ."',".
-      $rv['iscont'   ] .",'".
-      $rv['status'   ] ."','".
-      $rv['res'      ] ."',".
+      $rv['encpty'   ] .",".
+      $rv['qtag'     ] .",".
+      $rv['file'     ] .",".
+      $rv['iscont'   ] .",".
+      $rv['status'   ] .",".
+      $rv['res'      ] .",".
       $rv['bandw'    ] .",".
       $rv['desktopc' ] .",".
       $rv['mobilec'  ] .")";
