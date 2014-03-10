@@ -43,8 +43,8 @@ $app->watchdog();
 $db = null;
 $db = db_maintain();
 
-// Query new uploads
-$recordings = getNewUploads();
+// Query new uploads and insert recording versions
+/*$recordings = getNewUploads();
 if ( $recordings !== false ) {
 
 	while ( !$recordings->EOF ) {
@@ -54,20 +54,78 @@ if ( $recordings !== false ) {
 
 var_dump($recording);
 
-insertRecordingVersions($recording);
+		// Insert recording versions (recording_versions)
+		insertRecordingVersions($recording);
 
 exit;
+
 		$recordings->MoveNext();
 	}
-
 }
+*/
+
+// Upload: make recording status "onstorage" when a recording version is ready
+// ...
+$recordings = getReadyConversions();
+if ( $recordings !== false ) {
+
+	while ( !$recordings->EOF ) {
+
+		$recording = array();
+		$recording = $recordings->fields;
+
+var_dump($recording);
+
+		// Update recording status to "onstorage"
+		updateRecordingStatus($recording['id'], $jconf['dbstatus_copystorage_ok'], "recording");
+exit;
+
+		$recordings->MoveNext();
+	}
+}
+
+// E-mail: send e-mail about a converted recording
+// ... ok + error
+		// Query recording creator
+/*		$uploader_user = getRecordingCreator($recording['id']);
+		if ( $uploader_user === false ) break;
+*/
+
+// ??? ki kuldi a levelet??? ctrl job ha van legalabb egy peldany? vagy mi kuldjuk ki itt????
+		// Send e-mail to user about successful conversion
+/*		$smarty = $app->bootstrap->getSmarty();
+		$organization = $app->bootstrap->getModel('organizations');
+		$organization->select( $uploader_user['organizationid'] );
+		$smarty->assign('organization', $organization->row );
+		$smarty->assign('filename', $recording['mastervideofilename']);
+		$smarty->assign('language', $uploader_user['language']);
+		$smarty->assign('recid', $recording['id']);
+		$smarty->assign('supportemail', $uploader_user['supportemail']);
+		$smarty->assign('domain', $uploader_user['domain']);
+		if ( $uploader_user['language'] == "hu" ) {
+			$subject = "Videó konverzió kész";
+		} else {
+			$subject = "Video conversion ready";
+		}
+		if ( !empty($recording['mastervideofilename']) ) $subject .= ": " . $recording['mastervideofilename'];
+		$queue = $app->bootstrap->getMailqueue();
+
+		try {
+			$body = $smarty->fetch('Visitor/Recordings/Email/job_media_converter.tpl');
+			$queue->sendHTMLEmail($uploader_user['email'], $subject, $body);
+		} catch (exception $err) {
+			log_recording_conversion($recording['id'], $jconf['jobid_media_convert'], "-", "[ERROR] Cannot send mail to user: " . $uploader_user['email'], trim($body), $err, 0, TRUE);
+		}
+*/
+
+
+// SMIL: generate new SMIL files
+// ...
 
 // Close DB connection if open
 if ( is_resource($db->_connectionID) ) $db->close();
 
 $app->watchdog();
-
-sleep($converter_sleep_length);
 
 exit;
 
@@ -80,6 +138,7 @@ global $jconf, $debug, $db, $app;
 // !!!
 	$node = "stream.videosquare.eu";
 
+// master v. sima statuszt kell ellenorizni???
 	$query = "
 		SELECT
 			r.id,
@@ -94,6 +153,7 @@ global $jconf, $debug, $db, $app;
 		WHERE
 			(r.mastersourceip = '" . $node . "' AND r.masterstatus = '" . $jconf['dbstatus_uploaded'] . "') OR
 			(r.contentmastersourceip = '" . $node . "' AND r.contentmasterstatus = '" . $jconf['dbstatus_uploaded'] . "')
+AND r.id = 89
 		ORDER BY
 			r.id";
 
@@ -110,6 +170,50 @@ global $jconf, $debug, $db, $app;
 	return $rs;
 }
 
+function getReadyConversions() {
+global $jconf, $debug, $db, $app;
+
+	$db = db_maintain();
+
+	$node = $app->config['node_sourceip'];
+// !!!
+	$node = "stream.videosquare.eu";
+
+	$query = "
+		SELECT
+			r.id,
+			r.status,
+			r.masterstatus,
+			r.mastersourceip,
+			rv.status AS recordingversionstatus
+		FROM
+			recordings AS r,
+			recordings_versions AS rv,
+			encoding_profiles AS ep
+		WHERE
+			r.mastersourceip = '" . $node . "' AND
+			r.status = '" . $jconf['dbstatus_conv'] . "' AND
+			rv.recordingid = r.id AND
+			rv.status = '" . $jconf['dbstatus_copystorage_ok'] . "' AND
+			rv.encodingprofileid = ep.id AND
+			ep.mediatype = 'video'";
+
+echo $query . "\n";
+
+	try {
+		$rs = $db->Execute($query);
+	} catch (exception $err) {
+		$debug->log($jconf['log_dir'], $jconf['job_conversion_control'] . ".log", "[ERROR] SQL query failed." . trim($query), $sendmail = true);
+		return false;
+	}
+
+	// Check if any record returned
+	if ( $rs->RecordCount() < 1 ) return false;
+
+	return $rs;
+}
+
+
 function insertRecordingVersions($recording) {
 global $db, $debug, $jconf, $app;
 
@@ -118,8 +222,6 @@ global $db, $debug, $jconf, $app;
 	// Recording
 	$idx = "";
 	if ( $recording['masterstatus'] == $jconf['dbstatus_uploaded'] ) {
-
-		$iscontent = 0;
 
 		$profileset = getEncodingProfileSet("recording", $recording['mastervideores']);
 
@@ -136,7 +238,7 @@ var_dump($profileset);
 					'recordingid'		=> $recording['id'],
 					'encodingprofileid'	=> $profileset[$i]['id'],
 					'encodingorder'		=> $profileset[$i]['encodingorder'],
-					'iscontent'			=> $iscontent,
+					'iscontent'			=> 0,
 					'status'			=> $jconf['dbstatus_convert']
 				);
 var_dump($values);
@@ -146,46 +248,51 @@ var_dump($values);
 
 			}
 
+			// Status: uploaded -> converting
+			updateRecordingStatus($recording['id'], $jconf['dbstatus_conv'], "recording");
+
 		} else {
-echo "fuck\n";
-exit;
+			$debug->log($jconf['log_dir'], $jconf['job_conversion_control'] . ".log", "[ERROR] No encoding profile can be selected to recording.\n" . print_r($recording, true), $sendmail = true);
 		}
 	}
 
-exit;
-/*
 	if ( $recording['contentmasterstatus'] == $jconf['dbstatus_uploaded'] ) {
 
 		$profileset = getEncodingProfileSet("content", $recording['contentmastervideores']);
-//$cres = "640x480";
-//		$profileset = getEncodingProfileSet("content", $cres);
-		if ( $profileset === false ) {
-echo "fuck\n";
-exit;
-		}
+
+		if ( $profileset !== false ) {
+
 echo "CONTENT: " . $cres . "\n";
 var_dump($profileset);
-// INSERT
-	}
 
-//	if ( $recording['contentmasterstatus'] == $jconf['dbstatus_uploaded'] ) {
-	if ( 1 ) {
+			for ( $i = 0; $i < count($profileset); $i++ ) {
 
-//		$profileset = getEncodingProfileSet("content", $recording['contentmastervideores']);
+				$values = array(
+					'timestamp'			=> date('Y-m-d H:i:s'),
+					'converternodeid'	=> $converternodeid,
+					'recordingid'		=> $recording['id'],
+					'encodingprofileid'	=> $profileset[$i]['id'],
+					'encodingorder'		=> $profileset[$i]['encodingorder'],
+					'iscontent'			=> 1,
+					'status'			=> $jconf['dbstatus_convert']
+				);
+var_dump($values);
 
-		$profileset = getEncodingProfileSet("mobile", $rres);
-		if ( $profileset === false ) {
-echo "fuck\n";
-exit;
+				$recordingVersion = $app->bootstrap->getModel('recordings_versions');
+				$recordingVersion->insert($values);
+
+			}
+
+			// Status: uploaded -> converting
+			updateRecordingStatus($recording['id'], $jconf['dbstatus_conv'], "content");
+
+		} else {
+			$debug->log($jconf['log_dir'], $jconf['job_conversion_control'] . ".log", "[ERROR] No encoding profile to recording.\n" . print_r($recording, true), $sendmail = true);
 		}
-echo "MOBILE: " . $rres . "\n";
-var_dump($profileset);
-// INSERT
 	}
 
-exit;
-
-*/
+// Mobile versions?
+//		$profileset = getEncodingProfileSet("mobile", $rres);
 
 }
 
@@ -228,7 +335,7 @@ global $db, $debug, $jconf;
 			ep.type = '" . $profile_type . "' AND
 			( ep.parentid IS NULL OR ( epprev.videobboxsizex < " . $resx . " AND " . $resx . " <= ep.videobboxsizex ) OR ( epprev.videobboxsizey < " . $resy . " AND " . $resy . " <= ep.videobboxsizey ) )";
 
-echo $query . "\n";
+//echo $query . "\n";
 
 	try {
 		$profileset = $db->getArray($query);
