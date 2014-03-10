@@ -55,67 +55,56 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_media_convert.stop' ) and 
 			break;
 		}
 
-		// Temporary directory cleanup and log result
-// !!! REMOVE
-/*		$err = tempdir_cleanup($jconf['media_dir']);
-		if ( !$err['code'] ) {
-			log_recording_conversion(0, $jconf['jobid_media_convert'], "-", $err['message'], $err['command'], $err['result'], 0, TRUE);
-			$converter_sleep_length = 15 * 60;
-			break;
-		}
-*/
-
-//		$recording = array();
-//		$uploader_user = array();
-
 // TESTING: Reset media status
-update_db_recording_status(89, "uploaded");
+/*update_db_recording_status(89, "uploaded");
 update_db_masterrecording_status(89, "uploaded");
 updateRecordingVersionStatus(1, "convert");
 updateRecordingVersionStatus(2, "convert");
+*/
 
 		// Query next job
 		$recording = getNextConversionJob();
 		if ( $recording === false ) break;
-//var_dump($recording);
 
 		// Query recording creator
 		$uploader_user = getRecordingCreator($recording['id']);
 		if ( $uploader_user === false ) break;
-//var_dump($uploader_user);
 
 		// Query encoding profile
 		$encoding_profile = getEncodingProfile($recording['encodingprofileid']);
 		if ( $encoding_profile === false ) break;
-//var_dump($encoding_profile);
 
 		// Initialize log for summary mail message and total duration timer
-		$global_log = "";
 		$total_duration = time();
 
 		// Start log entry
-		log_recording_conversion($recording['id'], $jconf['jobid_media_convert'], $jconf['dbstatus_init'], "Converting: " . $recording['id'] . "." . $recording['mastervideoextension'] . " (" . $encoding_profile['shortname'] . ")", "-", "-", 0, FALSE);
+		$global_log  = "Converting: " . $recording['id'] . "." . $recording['mastervideoextension'] . " (" . $encoding_profile['shortname'] . ")\n";
 		$global_log .= "Source front-end: " . $recording['mastersourceip'] . "\n";
 		$global_log .= "Original filename: " . $recording['mastervideofilename'] . "\n";
 		$global_log .= "Media length: " . secs2hms( $recording['masterlength'] ) . "\n";
 		$global_log .= "Media type: " . $recording['mastermediatype'] . "\n";
 		$global_log .= "Encoding profile: " . $encoding_profile['name'] . "\n\n";
-echo "1\n";
+		log_recording_conversion($recording['id'], $jconf['jobid_media_convert'], $jconf['dbstatus_init'], $global_log, "-", "-", 0, false);
+
 		// Copy media from front-end server
 		if ( !copyMediaToConverter($recording) ) {
-// ??? mi van ilyenkor? statusz?
-echo "2\n";
+			updateRecordingVersionStatus($recording['recordingversionid'], $jconf['dbstatus_copyfromfe_err']);
 			break;
 		}
-echo "3\n";
 
+		// Watchdog
 		$app->watchdog();
 
-/*
-		// Video thumbnail generation, not a failure if fails
-// ??? hol??
-		convert_video_thumbnails($recording);
-*/
+		// Video thumbnail generation (when first video is converted)
+		if ( empty($encoding_profile['parentid']) and ( $encoding_profile['type'] == "recording" ) and ( $encoding_profile['mediatype'] == "video" ) ) {
+echo "!!! thumbconv\n";
+			$err = convertVideoThumbnails($recording);
+		}
+
+var_dump($recording);
+
+		// Watchdog
+		$app->watchdog();
 
 		// Convert recording version
 		if ( !convertMedia($recording, $encoding_profile) ) {
@@ -123,17 +112,20 @@ echo "3\n";
 			break;
 		}
 
+		// Watchdog
 		$app->watchdog();
 
 		// Copy: converted file to front-end
 		updateRecordingVersionStatus($recording['recordingversionid'], $jconf['dbstatus_copystorage']);
-		if ( !copyMediaToFrontend($recording, $encoding_profile) ) {
+		if ( !copyMediaToFrontEnd($recording, $encoding_profile) ) {
 			updateRecordingVersionStatus($recording['recordingversionid'], $jconf['dbstatus_copystorage_err']);
 			break;
 		}
+
 		updateRecordingVersionStatus($recording['recordingversionid'], $jconf['dbstatus_copystorage_ok']);
 
-exit;
+		// Watchdog
+		$app->watchdog();
 
 // ??? logot itt? ffmpeg logging drop?
 		//// End of media conversion
@@ -142,32 +134,7 @@ exit;
 		$hms = secs2hms($conversion_duration);
 		log_recording_conversion($recording['id'], $jconf['jobid_media_convert'], "-", "[OK] Successful media conversion in " . $hms . " time.\n\nConversion summary:\n\n" . $global_log, "-", "-", $conversion_duration, true);
 
-// ??? ki kuldi a levelet??? ctrl job ha van legalabb egy peldany? vagy mi kuldjuk ki itt????
-		// Send e-mail to user about successful conversion
-/*		$smarty = $app->bootstrap->getSmarty();
-		$organization = $app->bootstrap->getModel('organizations');
-		$organization->select( $uploader_user['organizationid'] );
-		$smarty->assign('organization', $organization->row );
-		$smarty->assign('filename', $recording['mastervideofilename']);
-		$smarty->assign('language', $uploader_user['language']);
-		$smarty->assign('recid', $recording['id']);
-		$smarty->assign('supportemail', $uploader_user['supportemail']);
-		$smarty->assign('domain', $uploader_user['domain']);
-		if ( $uploader_user['language'] == "hu" ) {
-			$subject = "Videó konverzió kész";
-		} else {
-			$subject = "Video conversion ready";
-		}
-		if ( !empty($recording['mastervideofilename']) ) $subject .= ": " . $recording['mastervideofilename'];
-		$queue = $app->bootstrap->getMailqueue();
-
-		try {
-			$body = $smarty->fetch('Visitor/Recordings/Email/job_media_converter.tpl');
-			$queue->sendHTMLEmail($uploader_user['email'], $subject, $body);
-		} catch (exception $err) {
-			log_recording_conversion($recording['id'], $jconf['jobid_media_convert'], "-", "[ERROR] Cannot send mail to user: " . $uploader_user['email'], trim($body), $err, 0, TRUE);
-		}
-*/
+exit;
 
 		break;
 	}	// End of while(1)
@@ -302,7 +269,6 @@ global $jconf, $debug, $db, $app;
 			rv.converternodeid = cn.id AND
 			cn.server = '" . $node . "' AND
 			cn.disabled = 0
-AND rv.id = 2
 		ORDER BY
 			rv.encodingorder,
 			rv.recordingid
@@ -416,14 +382,13 @@ global $app, $jconf, $debug;
 		return false;
 	}
 
-	// SCP copy from remote location
-	$err = ssh_filecopy($recording['mastersourceip'], $recording['master_remote_filename'], $recording['master_filename']);
+	// SCP: copy from front end server
+	$err = ssh_filecopy($recording['mastersourceip'], $recording['master_remote_filename'], $recording['master_filename'], true);
 	if ( !$err['code'] ) {
-//		log_recording_conversion($recording['id'], $jconf['jobid_media_convert'], $jconf['dbstatus_copyfromfe'], $err['message'], $err['command'], $err['result'], $err['value'], true);
 		$debug->log($jconf['log_dir'], $jconf['jobid_media_convert'] . ".log", "MSG: " . $err['message'] . "\nCOMMAND: " . $err['command'] . "\nRESULT: " . $err['result'], $sendmail = true);
 		// Set status to "uploaded" to allow other nodes to take over task
 // ???
-		return FALSE;
+		return false;
 	}
 	log_recording_conversion($recording['id'], $jconf['jobid_media_convert'], $jconf['dbstatus_copyfromfe'], $err['message'], $err['command'], $err['result'], $err['value'], false);
 
@@ -642,6 +607,193 @@ global $app, $jconf;
 	return TRUE;
 }
 
+function convertVideoThumbnails(&$recording) {
+global $app, $jconf, $debug;
+
+	// Initiate recording thumbnail attributes
+	$recording['thumbnail_size'] = 0;
+	$recording['thumbnail_indexphotofilename'] = "";
+	$recording['thumbnail_numberofindexphotos'] = 0;
+
+	if ( $recording['mastermediatype'] == "audio" ) {
+		return true;
+	}
+
+	// Check input media resolution
+	if ( empty($recording['mastervideores']) ) {
+		$debug->log($jconf['log_dir'], $jconf['job_conversion_control'] . ".log", "[ERROR] Video resolution field is empty. Cannot convert thumbnails. Check input media.\n", $sendmail = true);
+		return false;
+	}
+
+	$playtime = floor($recording['masterlength']);
+
+	// Creating thumbnail directories under ./indexpics/
+	$thumb_output_dir = $recording['temp_directory'] . "indexpics/";
+	$err = create_remove_directory($thumb_output_dir);
+	if ( !$err['code'] ) {
+		$debug->log($jconf['log_dir'], $jconf['jobid_media_convert'] . ".log", "MSG: " . $err['message'] . "\nCOMMAND: " . $err['command'] . "\nRESULT: " . $err['result'], $sendmail = true);
+		return false;
+	}
+
+	// Full sized frame
+	$err = create_remove_directory($thumb_output_dir . "original/");
+	if ( !$err['code'] ) {
+		$debug->log($jconf['log_dir'], $jconf['jobid_media_convert'] . ".log", "MSG: " . $err['message'] . "\nCOMMAND: " . $err['command'] . "\nRESULT: " . $err['result'], $sendmail = true);
+		return false;
+	}
+
+	// Wide frames
+	$err = create_remove_directory($thumb_output_dir . $jconf['thumb_video_medium'] . "/");
+	if ( !$err['code'] ) {
+		$debug->log($jconf['log_dir'], $jconf['jobid_media_convert'] . ".log", "MSG: " . $err['message'] . "\nCOMMAND: " . $err['command'] . "\nRESULT: " . $err['result'], $sendmail = true);
+		return false;
+	}
+
+	// 4:3 frames
+	$err = create_remove_directory($thumb_output_dir . $jconf['thumb_video_small'] . "/");
+	if ( !$err['code'] ) {
+		$debug->log($jconf['log_dir'], $jconf['jobid_media_convert'] . ".log", "MSG: " . $err['message'] . "\nCOMMAND: " . $err['command'] . "\nRESULT: " . $err['result'], $sendmail = true);
+		return false;
+	}
+
+	// High resolution wide frame
+	$err = create_remove_directory($thumb_output_dir . $jconf['thumb_video_large'] . "/");
+	if ( !$err['code'] ) {
+		$debug->log($jconf['log_dir'], $jconf['jobid_media_convert'] . ".log", "MSG: " . $err['message'] . "\nCOMMAND: " . $err['command'] . "\nRESULT: " . $err['result'], $sendmail = true);
+		return false;
+	}
+
+	// Calculate thumbnail step
+	$vthumbs_maxframes = $jconf['thumb_video_numframes'];
+	if ( floor($playtime) < $vthumbs_maxframes ) $vthumbs_maxframes = floor($playtime);
+	$thumb_steps = floor($playtime) / $vthumbs_maxframes;
+
+	if ( $thumb_steps == 0 ) {
+		$thumb_steps = 1;
+		$vthumbs_maxframes = floor($playtime);
+	}
+
+	$log_msg = "[INFO] Video thumbnail generation summary:\nStep: " . $thumb_steps . " sec\nNumber of thumbs: " . $vthumbs_maxframes . "\nResolutions: " . $jconf['thumb_video_medium'] . ", " . $jconf['thumb_video_small'] . ", " . $jconf['thumb_video_large'];
+	$time_start = time();
+
+	// Thumbnail generation under ./indexpics by each recording element
+	$res_wide   = explode("x", $jconf['thumb_video_medium'], 2);
+	$res_43     = explode("x", $jconf['thumb_video_small'], 2);
+	$res_high	= explode("x", $jconf['thumb_video_large'], 2);
+	$filename_prefix = $recording['id'] . "_";
+	$frame_number = 0;
+	$iserror = false;
+	$errors['messages'] = "";
+	$errors['commands'] = "";
+	$errors['data'] = "";
+	$recording['thumbnail_size'] = 0;
+	$recording['thumbnail_indexphotofilename'] = "";
+	$recording['thumbnail_numberofindexphotos'] = 0;
+	for ( $i = 0; $i < $vthumbs_maxframes; $i++ ) {
+		$position_sec = floor($i * $thumb_steps);
+		// Set filenames
+		$filename_basename = $filename_prefix . sprintf("%d", $frame_number + 1) . ".jpg";
+		$orig_thumb_filename = $thumb_output_dir . "original/" . $filename_basename;
+		$filename_wide = $thumb_output_dir . $jconf['thumb_video_medium'] . "/" . $filename_basename;
+		$filename_43 = $thumb_output_dir . $jconf['thumb_video_small'] . "/" . $filename_basename;
+		$filename_highres = $thumb_output_dir . $jconf['thumb_video_large'] . "/" . $filename_basename;
+
+//		$command  = CONVERSION_NICE . " ffmpeg -y -v " . FFMPEG_LOGLEVEL . " -ss " . $position_sec . " -i " . $master_filename . " " . $deinterlace . " -an ";
+//		$command .= " -vframes 1 -r 1 -vcodec mjpeg -f mjpeg " . $orig_thumb_filename ." 2>&1";
+		$command  = $jconf['nice_high'] . " " . $jconf['ffmpegthumbnailer'] . " -i " . $recording['master_filename'] . " -o " . $orig_thumb_filename . " -s0 -q8 -t" . secs2hms($position_sec) . " 2>&1";
+
+		clearstatcache();
+
+		$output = runExternal($command);
+		$output_string = $output['cmd_output'];
+		$result = $output['code'];
+		// ffmpegthumbnailer (ffmpeg) returns -1 on success (?)
+//echo "ffmpegthumb: " . $result . "\n";
+//echo "olen = " . strlen($output_string) . "\n";
+		if ( $result < 0 ) $result = 0;
+
+		if ( ( $result != 0 ) || !file_exists($orig_thumb_filename) || ( filesize($orig_thumb_filename) < 1 ) ) {
+			// If ffmpeg error, we log messages to an array and jump to first frame
+			$errors['messages'] .= "[ERROR] ffmpeg failed (frame: " . $i . ", position: " . $position_sec . "sec).\n";
+			$errors['commands'] .= "Frame " . $i . " command:\n" . $command . "\n\n";
+			if ( strlen($output_string) > 500 ) {
+				$output_len = strlen($output_string);
+				$output_normalized = substr($output_string, 0, 250) . "\n...\n" . substr($output_string, $output_len - 250, $output_len);
+			} else {
+				$output_normalized = $output_string;
+			}
+			$errors['data'] .= "Frame " . $i . " output: " . $output_normalized . "\n\n";
+			$iserror = true;
+			continue;
+		}
+
+		if ( file_exists($orig_thumb_filename) && ( filesize($orig_thumb_filename) > 0 ) ) {
+			// Copy required instances for resize
+			if ( copy($orig_thumb_filename, $filename_wide) && copy($orig_thumb_filename, $filename_43) && copy($orig_thumb_filename, $filename_highres) ) {
+
+				$is_error_now = false;
+
+				// Resize images according to thumbnail requirements. If one of them fails we cancel all the others.
+				// Wide thumb
+				try {
+					\Springboard\Image::resizeAndCropImage($filename_wide, $res_wide[0], $res_wide[1], 'top');
+				} catch (exception $err) {
+					$errors['messages'] .= "[ERROR] File " . $filename_wide . " resizeAndCropImage() failed to " . $res_wide[0] . "x" . $res_wide[1] . ".\n";
+					$iserror = $is_error_now = true;
+				}
+				// 4:3 thumb
+				try {
+					\Springboard\Image::resizeAndCropImage($filename_43, $res_43[0], $res_43[1]);
+				} catch (exception $err) {
+					$errors['messages'] .= "[ERROR] File " . $filename_43 . " resizeAndCropImage() failed to " . $res_43[0] . "x" . $res_43[1] . ".\n";
+					$iserror = $is_error_now = true;
+				}
+				// High resolution thumb
+				try {
+					\Springboard\Image::resizeAndCropImage($filename_highres, $res_high[0], $res_high[1]);
+				} catch (exception $err) {
+					$errors['messages'] .= "[ERROR] File " . $filename_highres . " resizeAndCropImage() failed to " . $res_high[0] . "x" . $res_high[1] . ".\n";
+					$iserror = $is_error_now = true;
+				}
+
+				if ( !$is_error_now ) {
+
+					// We have a valid frame here
+					$frame_number++;
+					// Select thumbnails with highest filesize (best automatic selection is supposed)
+					if ( filesize($filename_43) > $recording['thumbnail_size'] ) {
+						$recording['thumbnail_size'] = filesize($filename_43);
+						$recording['thumbnail_indexphotofilename'] = "recordings/" . ( $recording['id'] % 1000 ) . "/" . $recording['id'] . "/indexpics/" . $jconf['thumb_video_small'] . "/" . $filename_basename;
+					}
+				}
+
+			} else {
+
+				// Rename or copy operation(s) was/were not successful
+				$errors['messages'] .= "[ERROR] Cannot copy file (" . $orig_thumb_filename . ").\n";
+				$iserror = true;
+			}
+		}
+	}	// for loop
+
+	$recording['thumbnail_numberofindexphotos'] = $frame_number;
+
+	if ( $recording['thumbnail_numberofindexphotos'] == 0 ) $recording['thumbnail_indexphotofilename'] = "images/videothumb_audio_placeholder.png?rid=" . $recording['id'];
+
+	$duration = time() - $time_start;
+	$mins_taken = round( $duration / 60, 2);
+
+	// Log gathered messages
+	if ( $iserror ) {
+		log_recording_conversion($recording['id'], $jconf['jobid_media_convert'], $jconf['dbstatus_conv_thumbs'], "[WARNINGS] " . $frame_number . " thumbnails generated (in " . $mins_taken . " mins) with the following errors:\n" . $errors['messages'] . "\n\n" . $log_msg, $errors['commands'], $errors['data'], $duration, true);
+	} else {
+		log_recording_conversion($recording['id'], $jconf['jobid_media_convert'], $jconf['dbstatus_conv_thumbs'], "[OK] ffmpegthumbnailer conversion OK (in " . $mins_taken . " mins)\n\n" . $log_msg, $command, "-", $duration, false);
+	}
+
+	return true;
+}
+
+
 // *************************************************************************
 // *					function convert_audio()						   *
 // *************************************************************************
@@ -758,9 +910,6 @@ global $app, $jconf, $global_log;
 function convertMedia(&$recording, $profile) {
 global $app, $jconf, $global_log;
 
-	// Update watchdog timer
-	$app->watchdog();
- 
 	// STATUS: converting
 	updateRecordingVersionStatus($recording['recordingversionid'], $jconf['dbstatus_conv']);
 
@@ -768,13 +917,7 @@ global $app, $jconf, $global_log;
 	$recording['output_basename'] = $recording['id'] . $profile['filenamesuffix'] . "." . $profile['filecontainerformat'];
 	$recording['output_file'] = $recording['temp_directory'] . $recording['output_basename'];
 
-	// No audio track - return to conversion
-/*	if ( $recording['mastermediatype'] == "videoonly" ) {
-		return true;
-	}
-*/
-
-// ??? csak thumb generáláskor hívni meg?
+	// Audio only: add placeholder thumbnail with a speaker icon
 	if ( $recording['mastermediatype'] == "audio" ) {
 		$recording['thumbnail_numberofindexphotos'] = 0;
 		$recording['thumbnail_indexphotofilename'] = "images/videothumb_audio_placeholder.png?rid=" . $recording['id'];
@@ -800,13 +943,11 @@ var_dump($recording);
 		log_recording_conversion($recording['id'], $jconf['jobid_media_convert'], $jconf['dbstatus_conv_err'], $err['message'] . "\nSource file: " . $recording['master_filename'] . "\nDestination file: " . $recording['output_file'] . "\n\n" . $log_msg, $err['command'], $err['command_output'], $err['duration'], true);
 		return false;
 	} else {
-		log_recording_conversion($recording['id'], $jconf['jobid_media_convert'], $jconf['dbstatus_conv_err'], $err['message'] . "\nConvertion done for: " . $recording['output_file'] . "\n\n" . $log_msg, $err['command'], $err['command_output'], $err['duration'], false);
+		log_recording_conversion($recording['id'], $jconf['jobid_media_convert'], $jconf['dbstatus_conv'], $err['message'] . "\nConvertion done for: " . $recording['output_file'] . "\n\n" . $log_msg, $err['command'], $err['command_output'], $err['duration'], false);
 		$global_log .= "Conversion in " . secs2hms($err['duration']) . " time.\n";
 	}
 
 	$global_log .= "\n";
-
-	$app->watchdog();
 
 	return true;
 }
@@ -976,7 +1117,7 @@ function copy_media_to_frontend($recording, $recording_info_mobile_lq, $recordin
 	return TRUE;
 }
 
-function copyMediaToFrontend($recording, $profile) {
+function copyMediaToFrontEnd($recording, $profile) {
  global $app, $jconf, $debug;
 
 	$idx = "";
@@ -984,7 +1125,7 @@ function copyMediaToFrontend($recording, $profile) {
 
 	// SSH command templates
 	$ssh_command = "ssh -i " . $jconf['ssh_key'] . " " . $jconf['ssh_user'] . "@" . $recording['mastersourceip'] . " ";
-	$scp_command = "scp -B -i " . $jconf['ssh_key'] . " ";
+	$scp_command = "scp -B -r -i " . $jconf['ssh_key'] . " ";
 	$recording['output_ssh_filename'] = $jconf['ssh_user'] . "@" . $recording[$idx . 'mastersourceip'] . ":" . $recording['recording_remote_path'];
 
 	// Create remote directories, does nothing if exists
@@ -999,13 +1140,20 @@ echo $command . "\n";
 		return false;
 	}
 
-	// Remove existing remote file (e.g. reconvert)
-	$command = "rm -f " . $recording['recording_remote_path'] . $recording['output_basename'] . " 2>/dev/null";
+	//// Remove existing remote files (e.g. reconvert) and index thumbnails if needed
+	$command = "rm -f " . $recording['recording_remote_path'] . $recording['output_basename'] . " 2>&1";
+	// Remove indexpics if generated
+	if ( !empty($recording['thumbnail_numberofindexphotos']) ) {
+		$command .= " ; rm -f -r " . $recording['recording_remote_path'] . "indexpics/ 2>&1 ";
+	}
+	$command  = $ssh_command . "\"" . $command . "\"\n";
 echo $command . "\n";
 	exec($command, $output, $result);
+	$output_string = implode("\n", $output);
+	if ( $result != 0 ) $debug->log($jconf['log_dir'], $jconf['jobid_media_convert'] . ".log", "[WARN] Failed removing remote files (SSH)\nCOMMAND: " . $command . "\nRESULT: " . $output_string, $sendmail = true);
 
 	// SCP copy from local temp to remote location
-	$command = $scp_command . $recording['output_file'] . " " . $recording['output_ssh_filename'] . " 2>&1";
+/*	$command = $scp_command . $recording['output_file'] . " " . $recording['output_ssh_filename'] . " 2>&1";
 echo $command . "\n";
 	$time_start = time();
 	exec($command, $output, $result);
@@ -1028,41 +1176,28 @@ echo $command . "\n";
 			return false;
 		}
 	}
+*/
+
+	// SCP: copy converted file to front end server
+	$err = ssh_filecopy($recording['mastersourceip'], $recording['output_file'], $recording['recording_remote_path'], false);
+	if ( !$err['code'] ) {
+		$debug->log($jconf['log_dir'], $jconf['jobid_media_convert'] . ".log", "MSG: " . $err['message'] . "\nCOMMAND: " . $err['command'] . "\nRESULT: " . $err['result'], $sendmail = true);
+		return false;
+	} else {
+		log_recording_conversion($recording['id'], $jconf['jobid_media_convert'], $jconf['dbstatus_copystorage'], $err['message'], $err['command'], $err['result'], $err['value'], false);
+	}
+
+	// SCP: copy video thumbnails if updated
+	if ( !empty($recording['thumbnail_numberofindexphotos']) ) {
+		$err = ssh_filecopy($recording['mastersourceip'], $recording['temp_directory'] . "indexpics/", $recording['recording_remote_path'], false);
+		if ( !$err['code'] ) $debug->log($jconf['log_dir'], $jconf['jobid_media_convert'] . ".log", "MSG: " . $err['message'] . "\nCOMMAND: " . $err['command'] . "\nRESULT: " . $err['result'], $sendmail = true);
+	}
 
 	// Update recording version information
 	if ( !updateMediaInfo($recording, $profile) ) {
 		$debug->log($jconf['log_dir'], $jconf['jobid_media_convert'] . ".log", "[ERROR] Recording version update failed.", $sendmail = true);
 		return false;
 	}
-
-/*	if ( $recording['mastermediatype'] != "audio" ) {
-		// Video media: set MOBILE, LQ and HQ resolution and thumbnail data
-		$err = update_db_mediainfo($recording, $recording_info_mobile_lq, $recording_info_mobile_hq, $recording_info_lq, $recording_info_hq);
-		if ( !$err ) {
-			log_recording_conversion($recording['id'], $jconf['jobid_media_convert'], $jconf['dbstatus_copystorage'], "[ERROR] Media video info final DB update failed", "-", $err, 0, TRUE);
-			return FALSE;
-		}
-	} else {
-		// Audio only media: set only default thumbnail picture for audio only recordings
-		$err = update_db_mediainfo($recording, null, null, null, null);
-		if ( !$err ) {
-			log_recording_conversion($recording['id'], $jconf['jobid_media_convert'], $jconf['dbstatus_copystorage'], "[ERROR] Media audio thumbnail info final DB update failed", "-", $err, 0, TRUE);
-			return FALSE;
-		}
-	}
-*/
-
-	// Update recording status
-//	update_db_recording_status($recording['id'], $jconf['dbstatus_copystorage_ok']);
-//	update_db_masterrecording_status($recording['id'], $jconf['dbstatus_copystorage_ok']);
-	// If mobile version was converted, then set status
-/*	if ( $recording['is_mobile_convert'] ) {
-		update_db_mobile_status($recording['id'], $jconf['dbstatus_copystorage_ok']);
-	} else {
-		// If not, set "reconvert" for content converter
-		update_db_mobile_status($recording['id'], $jconf['dbstatus_reconvert']);
-	}
-*/
 
 	// Recording size: update database value
 	$err = ssh_filesize($recording['mastersourceip'], $recording['recording_remote_path'] . "master/");
@@ -1083,8 +1218,6 @@ echo $command . "\n";
 	// Remove temporary directory, no failure if not successful
 	$err = remove_file_ifexists($recording['temp_directory']);
 	if ( !$err['code'] ) $debug->log($jconf['log_dir'], $jconf['jobid_media_convert'] . ".log", "MSG: " . $err['message'] . "\nCOMMAND: " . $err['command'] . "\nRESULT: " . $err['result'], $sendmail = true);
-
-	$app->watchdog();
 
 	return true;
 }

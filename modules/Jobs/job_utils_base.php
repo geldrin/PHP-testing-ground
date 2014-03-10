@@ -875,29 +875,40 @@ global $jconf;
 	return $err;
 }
 
-function ssh_filecopy($server, $file_src, $file_dst) {
+function ssh_filecopy($server, $file_src, $file_dst, $isdownload = true) {
 global $jconf;
 
 	// SSH check file size before start copying
-	$err = ssh_filesize($server, $file_src);
-	if ( !$err['code'] ) {
-		return $err;
+	if ( $isdownload ) {
+		$err = ssh_filesize($server, $file_src);
+		if ( !$err['code'] ) {
+			return $err;
+		}
+		$filesize = $err['value'];
+	} else {
+		$filesize = filesize($file_src);
 	}
-	$filesize = $err['value'];
 
 	$err = array();
 
 	// Check available disk space (input media file size * 5 is the minimum)
-	$available_disk = floor(disk_free_space($jconf['media_dir']));
-	if ( $available_disk < $filesize * 5 ) {
-		$err['command'] = "php: disk_free_space(" . $jconf['media_dir'] . ")";
-		$err['result'] = $available_disk;
-		$err['code'] = FALSE;
-		$err['message'] = "[ERROR] Not enough free space to start conversion (available: " . ceil($available_disk / 1024 / 1024) . "Mb, filesize: " . ceil($filesize / 1024 / 1024) . ")";
-		return $err;
+	if ( $isdownload ) {
+		$available_disk = floor(disk_free_space($jconf['media_dir']));
+		if ( $available_disk < $filesize * 5 ) {
+			$err['command'] = "php: disk_free_space(" . $jconf['media_dir'] . ")";
+			$err['result'] = $available_disk;
+			$err['code'] = false;
+			$err['message'] = "[ERROR] Not enough free space to start conversion (available: " . ceil($available_disk / 1024 / 1024) . "Mb, filesize: " . ceil($filesize / 1024 / 1024) . ")";
+			return $err;
+		}
+		$command = "scp -B -r -i " . $jconf['ssh_key'] . " " . $jconf['ssh_user'] . "@" . $server . ":" . $file_src . " " . $file_dst . " 2>&1";
+	} else {
+		$command = "scp -B -r -i " . $jconf['ssh_key'] . " " . $file_src . " " . $jconf['ssh_user'] . "@" . $server . ":" . $file_dst . " 2>&1";
+echo $command . "\n";
+//scp -B -r -i /home/conv/.ssh/id_rsa /srv/vsq_temp/dev.videosquare.eu/converter/media/89/89_video_360p.mp4 conv@stream.videosquare.eu:/srv/vsq_storage/dev.videosquare.eu/recordings/89/89/ 2>&1
 	}
 
-	$command = "scp -B -i " . $jconf['ssh_key'] . " " . $jconf['ssh_user'] . "@" . $server . ":" . $file_src . " " . $file_dst . " 2>&1";
+//	$command = "scp -B -i " . $jconf['ssh_key'] . " " . $jconf['ssh_user'] . "@" . $server . ":" . $file_src . " " . $file_dst . " 2>&1";
 	$time_start = time();
 	exec($command, $output, $result);
 	$duration = time() - $time_start;
@@ -906,14 +917,14 @@ global $jconf;
     $err['result'] = $result;
 	$output_string = implode("\n", $output);
 	if ( $result != 0 ) {
-		$err['code'] = FALSE;
-		$err['message'] = "[ERROR] SCP copy failed from: " . $file_src;
+		$err['code'] = false;
+		$err['message'] = "[ERROR] SCP " . ($isdownload?"download":"upload") . " failed.\n";
 		return $err;
 	}
 
-	$err['code'] = TRUE;
+	$err['code'] = true;
 	$err['value'] = $duration;
-	$err['message'] = "[OK] SCP copy finished (in " . $mins_taken . " mins)";
+	$err['message'] = "[OK] SCP " . ($isdownload?"download":"upload") . " finished (in " . $mins_taken . " mins)";
 
 	return $err;
 }
