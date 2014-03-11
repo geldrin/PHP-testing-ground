@@ -39,6 +39,31 @@ global $app, $jconf, $db;
 	return TRUE;
 }
 
+function updateRecordingStatus($recordingid, $status, $type = "recording") {
+global $app, $jconf;
+
+	$idx = "";
+	if ( $type == "content" ) $idx = "content";
+
+	$values = array(
+		$idx . 'status' => $status
+	);
+
+	$recordingVersionObj = $app->bootstrap->getModel('recordings');
+	$recordingVersionObj->select($recordingid);
+    $recordingVersionObj->updateRow($values);
+
+	// Update index photos
+	if ( ( $status == $jconf['dbstatus_copystorage_ok'] ) and ( $type == "recording" ) ) {
+		$recordingObj = $app->bootstrap->getModel('recordings');
+		$recordingObj->select($recordingid);
+		$recordingObj->updateChannelIndexPhotos();
+	}
+
+	return TRUE;
+}
+
+
 function updateRecordingVersionStatus($recordingversionid, $status) {
 global $app;
 
@@ -158,28 +183,39 @@ global $app, $jconf, $db;
 }
 
 function updateMediaInfo($recording, $profile) {
- global $app;
+global $app;
 
 	$values = array(
 		'qualitytag'			=> $profile['shortname'],
 		'filename'				=> $recording['output_basename'],
-		'resolution'			=> $recording['encodingparams']['resx'] . "x" . $recording['encodingparams']['resy'],
-		'bandwidth'				=> $recording['encodingparams']['audiobitrate'] + $recording['encodingparams']['videobitrate'],
 		'isdesktopcompatible'	=> $profile['isdesktopcompatible'],
 		'ismobilecompatible'	=> max($profile['isioscompatible'], $profile['isandroidcompatible'])
 	);
+
+	if ( !empty($recording['encodingparams']['resx']) and !empty($recording['encodingparams']['resy']) ) {
+		$values['resolution'] = $recording['encodingparams']['resx'] . "x" . $recording['encodingparams']['resy'];
+	}
+
+	$values['bandwidth'] = 0;
+	if ( !empty($recording['encodingparams']['audiobitrate']) ) $values['bandwidth'] += $recording['encodingparams']['audiobitrate'];
+	if ( !empty($recording['encodingparams']['videobitrate']) ) $values['bandwidth'] += $recording['encodingparams']['videobitrate'];
 
 	$recordingVersionObj = $app->bootstrap->getModel('recordings_versions');
 	$recordingVersionObj->select($recording['recordingversionid']);
     $recordingVersionObj->updateRow($values);
 
-/*
-// ???
-	if ( !empty($recording['thumbnail_indexphotofilename']) ) {
-		$query .= ", indexphotofilename = \"" . $recording['thumbnail_indexphotofilename'] . "\",\n";
-		$query .= "numberofindexphotos = \"" . $recording['thumbnail_numberofindexphotos'] . "\"\n";
+	// Video thumbnails: update if generated
+	if ( !empty($recording['thumbnail_numberofindexphotos']) and !empty($recording['thumbnail_indexphotofilename']) ) {
+
+		$values = array(
+			'indexphotofilename'	=> $recording['thumbnail_indexphotofilename'],
+			'numberofindexphotos'	=> $recording['thumbnail_numberofindexphotos']
+		);
+
+		$recordingObj = $app->bootstrap->getModel('recordings');
+		$recordingObj->select($recording['id']);
+		$recordingObj->updateRow($values);
 	}
-*/
 
 	return true;
 }

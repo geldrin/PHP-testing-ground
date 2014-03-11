@@ -1,24 +1,61 @@
 {
   "error": {
-    "connection_failed":"Szerver nem elérhető.",
-    "async_error":"ASync Hiba: An exception is thrown from native asynchronous code",
-    "security_error":"Biztonsági hiba",
-    "io_error":"IO Hiba: Nem lehetett betölteni vagy elküldeni a műveletet.",
-    "connection_rejected":"A kapcsolat-kérelem nem rendelkezik az alkalmazáshoz szükséges jogosultságokkal.",
-    "secure_connection_rejected":"A biztonságos kapcsolat felépítése sikertelen volt.",
-    "connection_closed":"A kapcsolat sikeresen lezárva.",
-    "application_shutdown":"A megadott alkalmazás leállítása folyamatban.",
-    "idle_timeout":"Időtúllépés.",
-    "invalid_app":"A kapcsolatban megadott alkalmazás neve helytelen.",
-    "stream_not_found":"Stream nem létezik!",
-    "play_failed":"A felvétel lejátszása közben hiba lépett fel, amelynek többféle oka lehet, például az előfizető nem rendelkezik hozzáférési jogosultsággal.",
-    "streamNotFound":"A felvétel jelenleg nem elérhető.",
-    "liveStreamNotFound":"Az élő közvetítés jelenleg nem elérhető.",
-    "anotherComputer":"A felhasználói belépést már egy másik számítógépről használják.",
-	"cantPosition":"Ez a rész csak megtekintés után pozícionálható."
+	"onDemandRTMPStream":{
+		"connectionErrorTitle":"Kapcsolati hiba",
+		"connectionNetworkChange":"A szerver nem elérhető. (Hálozat váltás)",
+		"connectionFailed":"A szerver nem elérhető.",
+		"connectionCertificateInvalid":"A biztonságos kapcsolat felépítése sikertelen. (Érvénytelen tanusítvány)",
+		"connectionInvalidApp":"A kiszolgáló alkalmazás neve helytelen.",
+		"connectionAppShutdown":"A kiszolgáló alkalmazás leállítása folyamatban.",
+		"connectionRejected":"A kapcsolat-kérelem nem rendelkezik az alkalmazáshoz szükséges jogosultságokkal.",
+		"connectionSecureRejected":"A kapcsolat-kérelem nem rendelkezik az alkalmazáshoz szükséges jogosultságokkal.",
+		"connectionAsyncError":"ASync hiba",
+		"connectionSecurityError":"Biztonsági hiba",
+		"connectionIOError":"I/O hiba",
+		"streamErrorTitle":"Lejátszási hiba",
+		"streamNotFound": "Stream nem található",
+		"streamPlayFailed": "Lejátszás közben hiba lépett fel."
+	},
+	"liveRTMPStream":{
+		"connectionErrorTitle":"Kapcsolati hiba",
+		"connectionNetworkChange":"A szerver nem elérhető. (Hálózat megszakadt)",
+		"connectionFailed":"A szerver nem elérhető.",
+		"connectionCertificateInvalid":"A biztonságos kapcsolat felépítése sikertelen. (Érvénytelen tanúsítvány)",
+		"connectionInvalidApp":"A kiszolgáló alkalmazás neve helytelen.",
+		"connectionAppShutdown":"A kiszolgáló alkalmazás leállítása folyamatban.",
+		"connectionRejected":"A kapcsolat-kérelem nem rendelkezik az alkalmazáshoz szükséges jogosultságokkal.",
+		"connectionSecureRejected":"A kapcsolat-kérelem nem rendelkezik az alkalmazáshoz szükséges jogosultságokkal.",
+		"connectionAsyncError":"ASync hiba",
+		"connectionSecurityError":"Biztonsági hiba",
+		"connectionIOError":"I/O hiba",
+		"streamErrorTitle":"Nincs élő közvetítés",
+		"streamNotFound": "Az élő közvetítés jelenleg nem elérhető.",
+		"streamPlayFailed": "Az élő közvetítés jelenleg nem elérhető."
+	},
+	"onDemandHDSStream":{
+		"connectionErrorTitle":"Lejátszási hiba",
+		"connectionIOError":"Stream nem létezik!",
+		"connectionAsyncError":"A stream nem lejátszható. (Async hiba)",
+		"connectionSecurityError":"A stream nem lejátszható. (Biztonsági hiba)"
+	},
+	"liveHDSStream":{
+		"connectionErrorTitle":"Nincs élő közvetítés",
+		"connectionIOError":"Az élő közvetítés jelenleg nem elérhető\nvagy nincs kapcsolat.",
+		"connectionAsyncError":"Az élő közvetítés jelenleg nem elérhető\nvagy nincs kapcsolat.",
+		"connectionSecurityError":"Az élő közvetítés jelenleg nem elérhető\nvagy nincs kapcsolat."
+	},
+	"authorization":{
+		"errorTitle":"Hozzáférési hiba",
+		"unauthorized":"An error has occurred during authorization."
+	},
+	"seekbar":{
+      	  	"cantPositionTitle": "Nem pozicionálható",
+     	   	"cantPosition": "Ez a rész csak megtekintés után pozicionálható."
+	},
+      "anotherComputer": "A felhasználói belépést már egy másik számítógépről használják."
   },
   "help": {
-    "subtitle":"A felvételhez feliratok is tartoznak, az ikonra kattinva választhatja ki a kívánt nyelvet, illetve tesreszabhatja a vizuális megjelenítést.",
+    "subtitle":"A felvételhez feliratok is tartoznak, az ikonra kattintva választhatja ki a kívánt nyelvet, illetve tesreszabhatja a vizuális megjelenítést.",
     "layout":"A felvétel elrendezése az ikonra kattintva módosítható!"
   },
   "continuePlaying": {
@@ -36,7 +73,7 @@
     "recordingURL": "Felvétel címe:"
   },
   "login": {
-	"relogin": "Bejelentkezés újra",
+    "relogin": "Bejelentkezés újra",
     "title": "Bejelentkezés",
     "description": "A felvétel megtekintéséhez belépés szükséges,\nkérjük adja meg adatait!",
     "username": "Felhasználói név:",
