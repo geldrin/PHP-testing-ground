@@ -188,6 +188,13 @@ $config = Array(
     'values'      => $l->getLov('yesno'),
     'value'       => 0,
   ),
+
+  'isplayerlogolinkenabled' => array(
+    'displayname' => 'A lejátszóban megjelenő logo linkelése?',
+    'type'        => 'inputRadio',
+    'values'      => $l->getLov('yesno'),
+    'value'       => 1,
+  ),
   
   'isvcrenabled' => array(
     'displayname' => 'VCR funkcionalitás?',
