@@ -44,7 +44,7 @@ $db = null;
 $db = db_maintain();
 
 // Query new uploads and insert recording versions
-/*$recordings = getNewUploads();
+$recordings = getNewUploads();
 if ( $recordings !== false ) {
 
 	while ( !$recordings->EOF ) {
@@ -62,7 +62,11 @@ exit;
 		$recordings->MoveNext();
 	}
 }
-*/
+
+//$queue = $app->bootstrap->getMailqueue();
+//$queue->sendHTMLEmail("hiba@videosqr.com", "mikkamakka teszteles", "hovatova");
+//exit;
+
 
 // Upload: make recording status "onstorage" when a recording version is ready
 // ...
@@ -73,51 +77,50 @@ if ( $recordings !== false ) {
 
 		$recording = array();
 		$recording = $recordings->fields;
-
 var_dump($recording);
 
 		// Update recording status to "onstorage"
 		updateRecordingStatus($recording['id'], $jconf['dbstatus_copystorage_ok'], "recording");
-exit;
 
-		$recordings->MoveNext();
-	}
-}
-
-// E-mail: send e-mail about a converted recording
-// ... ok + error
+		//// E-mail: send e-mail about a converted recording
 		// Query recording creator
-/*		$uploader_user = getRecordingCreator($recording['id']);
-		if ( $uploader_user === false ) break;
-*/
+		$uploader_user = getRecordingCreator($recording['id']);
+		if ( $uploader_user === false ) {
+			$recordings->MoveNext();
+			continue;
+		}
+var_dump($uploader_user);
 
-// ??? ki kuldi a levelet??? ctrl job ha van legalabb egy peldany? vagy mi kuldjuk ki itt????
 		// Send e-mail to user about successful conversion
-/*		$smarty = $app->bootstrap->getSmarty();
+		$smarty = $app->bootstrap->getSmarty();
 		$organization = $app->bootstrap->getModel('organizations');
-		$organization->select( $uploader_user['organizationid'] );
-		$smarty->assign('organization', $organization->row );
+		$organization->select($uploader_user['organizationid']);
+		$smarty->assign('organization', $organization->row);
 		$smarty->assign('filename', $recording['mastervideofilename']);
 		$smarty->assign('language', $uploader_user['language']);
 		$smarty->assign('recid', $recording['id']);
 		$smarty->assign('supportemail', $uploader_user['supportemail']);
 		$smarty->assign('domain', $uploader_user['domain']);
-		if ( $uploader_user['language'] == "hu" ) {
-			$subject = "Videó konverzió kész";
-		} else {
-			$subject = "Video conversion ready";
-		}
+		// Nyelvi stringbe kivinni!!!
+		$subject = "Video conversion ready";
+		if ( $uploader_user['language'] == "hu" ) $subject = "VideÃ³ konverziÃ³ kÃ©sz";
+		// !!!
 		if ( !empty($recording['mastervideofilename']) ) $subject .= ": " . $recording['mastervideofilename'];
 		$queue = $app->bootstrap->getMailqueue();
 
+		// Send e-mail
 		try {
-			$body = $smarty->fetch('Visitor/Recordings/Email/job_media_converter.tpl');
+			$body = $smarty->fetch('Visitor/Recordings/Email/job_media_converter.tpl');			
 			$queue->sendHTMLEmail($uploader_user['email'], $subject, $body);
 		} catch (exception $err) {
-			log_recording_conversion($recording['id'], $jconf['jobid_media_convert'], "-", "[ERROR] Cannot send mail to user: " . $uploader_user['email'], trim($body), $err, 0, TRUE);
+			$debug->log($jconf['log_dir'], $jconf['jobid_conv_control'] . ".log", "[ERROR] Cannot send mail to user: " . $uploader_user['email'] . "\n\n" . trim($body), $sendmail = true);
 		}
-*/
 
+// Error mail????
+
+		$recordings->MoveNext();
+	}
+}
 
 // SMIL: generate new SMIL files
 // ...
@@ -151,16 +154,16 @@ global $jconf, $debug, $db, $app;
 		FROM
 			recordings AS r
 		WHERE
-			(r.mastersourceip = '" . $node . "' AND r.masterstatus = '" . $jconf['dbstatus_uploaded'] . "') OR
-			(r.contentmastersourceip = '" . $node . "' AND r.contentmasterstatus = '" . $jconf['dbstatus_uploaded'] . "')
-AND r.id = 89
+			( r.mastersourceip = '" . $node . "' AND r.status = '" . $jconf['dbstatus_uploaded'] . "' ) OR
+			( r.contentmastersourceip = '" . $node . "' AND r.contentstatus = '" . $jconf['dbstatus_uploaded'] . "' )
 		ORDER BY
 			r.id";
+// AND r.id = 89
 
 	try {
 		$rs = $db->Execute($query);
 	} catch (exception $err) {
-		$debug->log($jconf['log_dir'], $jconf['job_conversion_control'] . ".log", "[ERROR] SQL query failed." . trim($query), $sendmail = true);
+		$debug->log($jconf['log_dir'], $jconf['jobid_conv_control'] . ".log", "[ERROR] SQL query failed." . trim($query), $sendmail = true);
 		return false;
 	}
 
@@ -179,12 +182,14 @@ global $jconf, $debug, $db, $app;
 // !!!
 	$node = "stream.videosquare.eu";
 
+	// Get status = "converting" recordings with at least one "onstorage" recording version
 	$query = "
 		SELECT
 			r.id,
 			r.status,
 			r.masterstatus,
 			r.mastersourceip,
+			r.mastervideofilename,
 			rv.status AS recordingversionstatus
 		FROM
 			recordings AS r,
@@ -196,14 +201,14 @@ global $jconf, $debug, $db, $app;
 			rv.recordingid = r.id AND
 			rv.status = '" . $jconf['dbstatus_copystorage_ok'] . "' AND
 			rv.encodingprofileid = ep.id AND
-			ep.mediatype = 'video'";
+			( ep.mediatype = 'video' OR ( r.mastermediatype = 'audio' AND ep.mediatype = 'audio' ) )";
 
 echo $query . "\n";
 
 	try {
 		$rs = $db->Execute($query);
 	} catch (exception $err) {
-		$debug->log($jconf['log_dir'], $jconf['job_conversion_control'] . ".log", "[ERROR] SQL query failed." . trim($query), $sendmail = true);
+		$debug->log($jconf['log_dir'], $jconf['jobid_conv_control'] . ".log", "[ERROR] SQL query failed." . trim($query), $sendmail = true);
 		return false;
 	}
 
@@ -241,7 +246,7 @@ var_dump($profileset);
 					'iscontent'			=> 0,
 					'status'			=> $jconf['dbstatus_convert']
 				);
-var_dump($values);
+//var_dump($values);
 
 				$recordingVersion = $app->bootstrap->getModel('recordings_versions');
 				$recordingVersion->insert($values);
@@ -252,7 +257,7 @@ var_dump($values);
 			updateRecordingStatus($recording['id'], $jconf['dbstatus_conv'], "recording");
 
 		} else {
-			$debug->log($jconf['log_dir'], $jconf['job_conversion_control'] . ".log", "[ERROR] No encoding profile can be selected to recording.\n" . print_r($recording, true), $sendmail = true);
+			$debug->log($jconf['log_dir'], $jconf['jobid_conv_control'] . ".log", "[ERROR] No encoding profile can be selected to recording.\n" . print_r($recording, true), $sendmail = true);
 		}
 	}
 
@@ -263,7 +268,7 @@ var_dump($values);
 		if ( $profileset !== false ) {
 
 echo "CONTENT: " . $cres . "\n";
-var_dump($profileset);
+//var_dump($profileset);
 
 			for ( $i = 0; $i < count($profileset); $i++ ) {
 
@@ -276,7 +281,7 @@ var_dump($profileset);
 					'iscontent'			=> 1,
 					'status'			=> $jconf['dbstatus_convert']
 				);
-var_dump($values);
+//var_dump($values);
 
 				$recordingVersion = $app->bootstrap->getModel('recordings_versions');
 				$recordingVersion->insert($values);
@@ -287,13 +292,25 @@ var_dump($values);
 			updateRecordingStatus($recording['id'], $jconf['dbstatus_conv'], "content");
 
 		} else {
-			$debug->log($jconf['log_dir'], $jconf['job_conversion_control'] . ".log", "[ERROR] No encoding profile to recording.\n" . print_r($recording, true), $sendmail = true);
+			$debug->log($jconf['log_dir'], $jconf['jobid_conv_control'] . ".log", "[ERROR] No encoding profile to recording.\n" . print_r($recording, true), $sendmail = true);
 		}
 	}
 
-// Mobile versions?
-//		$profileset = getEncodingProfileSet("mobile", $rres);
+	//// Mobile versions
+// !!!
+	// No content: normal encoding
+/*	if ( ( $recording['masterstatus'] == $jconf['dbstatus_uploaded'] ) and empty($recording['contentmasterstatus']) ) {
 
+		$profileset = getEncodingProfileSet("mobile", $recording['mastervideores']);
+
+	}
+	// Content uploaded: picture-in-picture encoding
+	if ( ( $recording['masterstatus'] == $jconf['dbstatus_uploaded'] ) and ( $recording['contentmasterstatus'] == $jconf['dbstatus_uploaded'] ) ) {
+
+		$profileset = getEncodingProfileSet("mobile", $recording['contentmastervideores']);
+*/
+
+	return true;
 }
 
 function getEncodingProfileSet($profile_type, $resolution) {
@@ -340,7 +357,7 @@ global $db, $debug, $jconf;
 	try {
 		$profileset = $db->getArray($query);
 	} catch (exception $err) {
-		$debug->log($jconf['log_dir'], $jconf['job_conversion_control'] . ".log", "[ERROR] Cannot query next job. SQL query failed." . trim($query), $sendmail = true);
+		$debug->log($jconf['log_dir'], $jconf['jobid_conv_control'] . ".log", "[ERROR] Cannot query next job. SQL query failed." . trim($query), $sendmail = true);
 		return false;
 	}
 
