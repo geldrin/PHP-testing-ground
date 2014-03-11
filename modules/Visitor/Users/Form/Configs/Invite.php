@@ -146,7 +146,7 @@ $config = $config + array(
           <div class="labelwrap">
             <label for="%id%_search">%displayname%</label>
           </div>
-          <input type="hidden" name="%id%" id="%id%"/>
+          <input type="hidden" name="%id%" id="%id%" value=""/>
           %prefix%
           <input type="text" name="%id%_search" id="%id%_search" data-searchurl="' . $language . '/recordings/search"/>
           <div id="%id%_foundwrap" class="foundwrap">
@@ -182,7 +182,7 @@ $config = $config + array(
           <div class="labelwrap">
             <label for="%id%_search">%displayname%</label>
           </div>
-          <input type="hidden" name="%id%" id="%id%"/>
+          <input type="hidden" name="%id%" id="%id%" value=""/>
           %prefix%
           <input type="text" name="%id%_search" id="%id%_search" data-searchurl="' . $language . '/live/search"/>
           <div id="%id%_foundwrap" class="foundwrap">
@@ -218,7 +218,7 @@ $config = $config + array(
           <div class="labelwrap">
             <label for="%id%_search">%displayname%</label>
           </div>
-          <input type="hidden" name="%id%" id="%id%"/>
+          <input type="hidden" name="%id%" id="%id%" value=""/>
           %prefix%
           <input type="text" name="%id%_search" id="%id%_search" data-searchurl="' . $language . '/channels/search"/>
           <div id="%id%_foundwrap" class="foundwrap">

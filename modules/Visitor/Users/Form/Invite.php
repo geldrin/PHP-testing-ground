@@ -156,7 +156,7 @@ class Invite extends \Visitor\HelpForm {
 
     if ( empty( $messages ) )
       $this->controller->redirectWithMessage(
-        'users/admin',
+        'users/invitations',
         $redirmessage
       );
 
