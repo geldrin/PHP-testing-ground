@@ -19,6 +19,7 @@ class Invitations extends \Visitor\Paging {
     $l                 = $this->bootstrap->getLocalization();
     $this->foreachelse = $l('users', 'invitation_foreachelse' );
     $this->title       = $l('users', 'invitations_title');
+    $this->controller->toSmarty['listclass'] = 'treeadminlist';
     $term = trim( $this->application->getParameter('term') );
     if ( mb_strlen( $term ) >= 2 ) {
       $this->searchterm = $term;

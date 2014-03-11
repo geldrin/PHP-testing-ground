@@ -42,7 +42,7 @@ $j(document).ready(function() {
   runIfExists('#groups_invite', setupGroupInvitation );
   runIfExists('#timestampdisabledafter', setupDisabledAfter );
   runIfExists('#recordingssearch', setupRecordingsSearch );
-  runIfExists('#users_invite', setupUserInvitation );
+  runIfExists('#users_invite, #users_editinvite', setupUserInvitation );
 
   if ( needping )
     setTimeout( setupPing, 1000 * pingsecs );

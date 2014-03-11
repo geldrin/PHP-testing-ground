@@ -3,24 +3,27 @@ namespace Visitor\Users;
 
 class Controller extends \Visitor\Controller {
   public $permissions = array(
-    'login'          => 'public',
-    'logout'         => 'public',
-    'signup'         => 'public',
-    'modify'         => 'member',
-    'welcome'        => 'member',
-    'index'          => 'public',
-    'validate'       => 'public',
-    'forgotpassword' => 'public',
-    'changepassword' => 'public',
-    'resend'         => 'public',
-    'invite'         => 'clientadmin',
-    'invitations'    => 'clientadmin',
-    'validateinvite' => 'public',
-    'disable'        => 'clientadmin',
-    'admin'          => 'clientadmin',
-    'edit'           => 'clientadmin',
-    'resetsession'   => 'public',
+    'login'                => 'public',
+    'logout'               => 'public',
+    'signup'               => 'public',
+    'modify'               => 'member',
+    'welcome'              => 'member',
+    'index'                => 'public',
+    'validate'             => 'public',
+    'forgotpassword'       => 'public',
+    'changepassword'       => 'public',
+    'resend'               => 'public',
+    'invite'               => 'clientadmin',
+    'invitations'          => 'clientadmin',
+    'validateinvite'       => 'public',
+    'disable'              => 'clientadmin',
+    'admin'                => 'clientadmin',
+    'edit'                 => 'clientadmin',
+    'resetsession'         => 'public',
     'validateresetsession' => 'public',
+    'resendinvitation'     => 'clientadmin',
+    'disableinvitation'    => 'clientadmin',
+    'editinvite'           => 'clientadmin',
   );
   
   public $forms = array(
@@ -33,6 +36,7 @@ class Controller extends \Visitor\Controller {
     'resend'         => 'Visitor\\Users\\Form\\Resend',
     'edit'           => 'Visitor\\Users\\Form\\Edit',
     'resetsession'   => 'Visitor\\Users\\Form\\Resetsession',
+    'editinvite'     => 'Visitor\\Users\\Form\\Editinvite',
   );
   
   public $paging = array(
@@ -500,6 +504,44 @@ class Controller extends \Visitor\Controller {
       $this->fetchSmarty('Visitor/Users/Email/Invitation.tpl')
     );
     
+  }
+
+  public function resendinvitationAction() {
+
+    $invitationModel = $this->modelOrganizationAndUserIDCheck(
+      'users_invitations',
+      $this->application->getNumericParameter('id')
+    );
+    $this->sendInvitationEmail( $invitationModel->row );
+    $l = $this->l; // a sendInvitationEmail setupolta
+
+    $this->controller->redirectWithMessage(
+      $this->application->getParameter('forward', 'users/invitations'),
+      $l('users', 'user_invited')
+    );
+
+  }
+
+  public function disableinvitationAction() {
+
+    $invitationModel = $this->modelOrganizationAndUserIDCheck(
+      'users_invitations',
+      $this->application->getNumericParameter('id')
+    );
+
+    if ( $invitationModel->row['status'] != 'deleted' )
+      $invitationModel->updateRow( array(
+          'status' => 'deleted',
+        )
+      );
+
+    $l = $this->l; // a sendInvitationEmail setupolta
+
+    $this->controller->redirectWithMessage(
+      $this->application->getParameter('forward', 'users/invitations'),
+      $l('users', 'invitation_disabled')
+    );
+
   }
 
 }

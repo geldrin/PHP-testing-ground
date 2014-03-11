@@ -2594,7 +2594,7 @@ a#currentusername span {
 #users_invite .foundwrap {
   display: none;
 }
-#users_invite .foundwrap .title {
+#users_invite .foundwrap .title, #users_editinvite .foundwrap .title {
   border: 0;
   margin: 0;
   padding: 0;
@@ -2606,11 +2606,11 @@ a#currentusername span {
   text-overflow: ellipsis;
   overflow: hidden;
 }
-#users_invite .foundwrap .cancel {
+#users_invite .foundwrap .cancel, #users_editinvite .foundwrap .cancel {
   display: block;
   float: right;
   margin: 5px 0px 0px 10px;
 }
-#users_invite .labelwrap {
+#users_invite .labelwrap, #users_editinvite .labelwrap {
   margin: 0 0 5px 0;
 }
