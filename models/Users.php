@@ -507,6 +507,19 @@ class Users extends \Springboard\Model {
 
   }
 
+  public function getInvitations( $organizationid ) {
+    $this->ensureID();
+    return $this->db->getArray("
+      SELECT *
+      FROM users_invitations
+      WHERE
+        status           <> 'deleted' AND
+        registereduserid  = '" . $this->id . "' AND
+        organizationid    = '$organizationid'
+      ORDER BY id DESC
+    ");
+  }
+
   public function invitationRegistered( $invitationid ) {
     
     $this->db->execute("

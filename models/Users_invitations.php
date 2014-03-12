@@ -11,7 +11,8 @@ class Users_invitations extends \Springboard\Model {
       FROM users_invitations
       WHERE
         email LIKE $searchterm AND
-        organizationid = '$organizationid'
+        organizationid  = '$organizationid' AND
+        status         <> 'deleted'
       LIMIT 1
     ");
   }
@@ -31,7 +32,8 @@ class Users_invitations extends \Springboard\Model {
       FROM users_invitations
       WHERE
         email LIKE $searchterm AND
-        organizationid = '$organizationid'
+        organizationid  = '$organizationid' AND
+        status         <> 'deleted'
       ORDER BY $order
       LIMIT $start, $limit
     ");

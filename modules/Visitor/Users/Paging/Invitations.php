@@ -13,6 +13,7 @@ class Invitations extends \Visitor\Paging {
   protected $invModel;
   protected $pagestoshow = 3;
   protected $searchterm;
+  protected $searchid;
 
   public function init() {
     
@@ -25,6 +26,9 @@ class Invitations extends \Visitor\Paging {
       $this->searchterm = $term;
       $this->passparams['term'] = $term;
     }
+    $searchid = $this->application->getNumericParameter('invitationid');
+    if ( $searchid )
+      $this->searchid = $searchid;
 
   }
   
@@ -37,9 +41,11 @@ class Invitations extends \Visitor\Paging {
         $this->searchterm,
         $this->controller->organization['id']
       );
-    }
+    } elseif( $this->searchid )
+      $this->invModel->addFilter('id', $this->searchid );
 
     $this->invModel->addFilter('organizationid', $this->controller->organization['id'] );
+    $this->invModel->addTextFilter("status <> 'deleted'");
     return $this->itemcount = $this->invModel->getCount();
     
   }

@@ -161,4 +161,10 @@ return array(
     'multiple' => 'Multiple users',
   ),
 
+  'invite_status' => array(
+    'invited'    => 'Invited',
+    'existing'   => 'Existing user',
+    'registered' => 'Used (the user registered)',
+    'deleted'    => 'Deleted',
+  ),
 );

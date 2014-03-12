@@ -6,7 +6,8 @@
   <div class="row">
     <h3>{$item.email}</h3>
     <ul class="actions">
-      <li><a href="{$language}/users/editinvite/{$item.id}?forward={$FULL_URI|escape:url}">{#modify#}</a></li>
+      <li>{#users__invitation_status#}: {$l->getLov('invite_status', $language, $item.status)}</li>
+      <li><a href="{$language}/users/editinvite/{$item.id}?forward={$FULL_URI|escape:url}">{#users__invitation_modify#}</a></li>
       {if $item.status == 'invited'}
         <li><a href="{$language}/users/resendinvitation/{$item.id}?forward={$FULL_URI|escape:url}" class="confirm">{#users__invitation_resend#}</a></li>
       {/if}

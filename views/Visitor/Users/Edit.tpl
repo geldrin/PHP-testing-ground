@@ -140,6 +140,15 @@
   </ul>
 {/if}
 
+{if !empty( $invitations )}
+  {#users__invitations#}
+  <ul>
+    {foreach from=$invitations item=item}
+      <li>{$item.timestamp} - <a href="{$language}/users/invitations?invitationid={$item.id}">{#users__invitation_modify#}</a></li>
+    {/foreach}
+  </ul>
+{/if}
+
 {if $smarty.request.chromeless or $nolayout}
   {include file="Visitor/_footer_nolayout.tpl"}
 {else}

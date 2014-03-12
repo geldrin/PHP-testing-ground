@@ -194,4 +194,10 @@ return array(
     'multiple' => 'Csoportos meghívás',
   ),
 
+  'invite_status' => array(
+    'invited'    => 'Meghívva',
+    'existing'   => 'Létező felhasználó',
+    'registered' => 'A meghívó felhasználva (regisztrált)',
+    'deleted'    => 'Törölve',
+  ),
 );

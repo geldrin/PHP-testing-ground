@@ -515,7 +515,7 @@ class Controller extends \Visitor\Controller {
     $this->sendInvitationEmail( $invitationModel->row );
     $l = $this->l; // a sendInvitationEmail setupolta
 
-    $this->controller->redirectWithMessage(
+    $this->redirectWithMessage(
       $this->application->getParameter('forward', 'users/invitations'),
       $l('users', 'user_invited')
     );
@@ -535,9 +535,9 @@ class Controller extends \Visitor\Controller {
         )
       );
 
-    $l = $this->l; // a sendInvitationEmail setupolta
+    $l = $this->bootstrap->getLocalization();
 
-    $this->controller->redirectWithMessage(
+    $this->redirectWithMessage(
       $this->application->getParameter('forward', 'users/invitations'),
       $l('users', 'invitation_disabled')
     );
