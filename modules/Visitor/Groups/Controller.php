@@ -8,7 +8,6 @@ class Controller extends \Visitor\Controller {
     'create'     => 'member',
     'modify'     => 'member',
     'delete'     => 'member',
-    'invite'     => 'member',
     'deleteuser' => 'member',
     'recordings' => 'member',
     'searchuser' => 'member',
@@ -17,7 +16,6 @@ class Controller extends \Visitor\Controller {
   public $forms = array(
     'create' => 'Visitor\\Groups\\Form\\Create',
     'modify' => 'Visitor\\Groups\\Form\\Modify',
-    'invite' => 'Visitor\\Groups\\Form\\Invite',
   );
   
   public $paging = array(

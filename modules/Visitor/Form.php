@@ -3,7 +3,20 @@ namespace Visitor;
 
 class Form extends \Springboard\Controller\Form {
   public $xsrfprotect = false;
-  
+  public $checkboxitemlayout = '
+    <div class="checkboxwrap indentlevel-%level%">
+      <div class="checkboxindent indentlevel-%level%">%indent%</div>
+      <div class="checkboxitem">%checkbox%</div>
+      <div class="checkboxlabel" title="%valuehtmlescape%">%label%</div>
+    </div>
+  ';
+  public $radioitemlayout = '
+    <div class="radiowrap">
+      <div class="radioitem">%radio%</div>
+      <div class="radiolabel">%label%</div>
+    </div>
+  ';
+
   public function redirectToMainDomain() {}
   
   public function postGetForm() {

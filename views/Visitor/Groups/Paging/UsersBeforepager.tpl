@@ -1,7 +1,7 @@
 <div class="title">
   <h1>{#groups__users_title#}</h1>
   <h2>{$group.name|escape:html}</h2>
-  <a href="{$language}/groups/invite/{$group.id},{$group.name|filenameize}">{#groups__invite#}</a>
+  <a href="{$language}/users/invite?groupid={$group.id}">{#groups__invite#}</a>
   <br/>
 </div>
 

@@ -142,6 +142,12 @@ label {
 .formtable td.labelcolumn {
   min-width: 150px;
 }
+.form.halfbox td.labelcolumn {
+  width: 150px;
+}
+.form.leftdoublebox td.labelcolumn {
+  width: 170px;
+}
 .formtable td.elementcolumn {
   vertical-align: middle;
 }
@@ -264,6 +270,58 @@ a.submitbutton:hover, .form a.submitbutton:hover {
   margin: 0;
   width: 950px;
   
+}
+
+.form .checkboxwrap,
+.form .radiowrap {
+  display: -webkit-box;
+  display: -moz-box;
+  display: -ms-flexbox;
+  display: -webkit-flex;
+  display: flex;
+  -webkit-box-direction: normal;
+  -moz-box-direction: normal;
+  -webkit-box-orient: horizontal;
+  -moz-box-orient: horizontal;
+  -webkit-flex-direction: row;
+  -ms-flex-direction: row;
+  flex-direction: row;
+  -webkit-flex-wrap: nowrap;
+  -ms-flex-wrap: nowrap;
+  flex-wrap: nowrap;
+  -webkit-box-pack: start;
+  -moz-box-pack: start;
+  -webkit-justify-content: flex-start;
+  -ms-flex-pack: start;
+  justify-content: flex-start;
+  -webkit-align-content: flex-start;
+  -ms-flex-line-pack: start;
+  align-content: flex-start;
+  -webkit-box-align: start;
+  -moz-box-align: start;
+  -webkit-align-items: flex-start;
+  -ms-flex-align: start;
+  align-items: flex-start;
+}
+.form .checkboxitem, .form .checkboxlabel, .form .checkboxindent,
+.form .radioitem, .form .radiolabel {
+  display: inline;
+  -webkit-box-flex: 0;
+  -moz-box-flex: 0;
+  -webkit-flex: 0 0 auto;
+  -ms-flex: 0 0 auto;
+  flex: 0 0 auto;
+  -webkit-align-self: auto;
+  -ms-flex-item-align: auto;
+  align-self: auto;
+}
+.form .checkboxitem,
+.form .radioitem {
+  width: 22px;
+}
+.form .checkboxlabel,
+.form .radiolabel {
+  flex: 0 1 auto;
 }
 
 /* record upload form */

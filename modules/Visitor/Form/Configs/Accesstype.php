@@ -21,7 +21,7 @@ if ( $departmentModel->getCount() == 0 )
 
 $config['accesstype'] = array(
   'displayname' => $l('recordings', 'accesstype'),
-  'itemlayout'  => '%radio% %label% <br/>',
+  'itemlayout'  => $this->radioitemlayout,
   'type'        => 'inputRadio',
   'value'       => 'public',
   'values'      => $accesstypes,

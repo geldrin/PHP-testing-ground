@@ -125,6 +125,7 @@ $config = array(
   'permissions[]' => array(
     'displayname' => $l('users', 'permissions'),
     'type'        => 'inputCheckboxDynamic',
+    'itemlayout'  => $this->checkboxitemlayout,
     'values'      => $l->getLov('permissions'),
     'validation' => array(
     ),
@@ -133,6 +134,7 @@ $config = array(
   'departments[]' => array(
     'displayname' => $l('users', 'departments'),
     'type'        => 'inputCheckboxDynamic',
+    'itemlayout'  => $this->checkboxitemlayout,
     'treeid'      => 'id',
     'treestart'   => '0',
     'treeparent'  => 'parentid',
@@ -156,6 +158,7 @@ $config = array(
   'groups[]' => array(
     'displayname' => $l('users', 'groups'),
     'type'        => 'inputCheckboxDynamic',
+    'itemlayout'  => $this->checkboxitemlayout,
     'sql'         => "
       SELECT id, name
       FROM groups

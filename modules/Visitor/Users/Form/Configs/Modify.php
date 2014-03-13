@@ -83,6 +83,7 @@ $config = array(
   'newsletter' => array(
     'displayname' => $l('users', 'newsletter'),
     'type'        => 'inputCheckbox',
+    'itemlayout'  => $this->checkboxitemlayout,
     'onvalue'     => 1,
     'offvalue'    => 0,
     'value'       => 1,

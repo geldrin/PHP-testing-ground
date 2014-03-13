@@ -20,7 +20,7 @@ $config   = array(
     'displayname' => $l('users', 'invite_usertype'),
     'values'      => $l->getLov('invite_usertype'),
     'value'       => 'single',
-    'itemlayout'  => '%radio% %label%<br/>',
+    'itemlayout'  => $this->radioitemlayout,
   ),
 
   'email' => Array(
@@ -118,6 +118,7 @@ $config = $config + array(
   'permissions[]' => array(
     'displayname' => $l('users', 'permissions'),
     'type'        => 'inputCheckboxDynamic',
+    'itemlayout'  => $this->checkboxitemlayout,
     'values'      => $l->getLov('permissions'),
     'validation' => array(
     ),
@@ -134,7 +135,7 @@ $config = $config + array(
     'displayname' => $l('users', 'invite_contenttype'),
     'values'      => $l->getLov('invite_contenttype'),
     'value'       => 'nocontent',
-    'itemlayout'  => '%radio% %label%<br/>',
+    'itemlayout'  => $this->radioitemlayout,
   ),
 
   'recordingid' => array(
@@ -254,6 +255,7 @@ $config = $config + array(
   'departments[]' => array(
     'displayname' => $l('users', 'departments'),
     'type'        => 'inputCheckboxDynamic',
+    'itemlayout'  => $this->checkboxitemlayout,
     'treeid'      => 'id',
     'treestart'   => '0',
     'treeparent'  => 'parentid',
@@ -272,6 +274,7 @@ $config = $config + array(
   'groups[]' => array(
     'displayname' => $l('users', 'groups'),
     'type'        => 'inputCheckboxDynamic',
+    'itemlayout'  => $this->checkboxitemlayout,
     'sql'         => "
       SELECT g.id, g.name
       FROM groups AS g
@@ -283,6 +286,20 @@ $config = $config + array(
   ),
   
 );
+
+$groupid = $this->application->getNumericParameter('groupid');
+if ( $groupid ) {
+  $config['groups[]']['value'] = array(
+    $groupid,
+  );
+}
+
+$departmentid = $this->application->getNumericParameter('departmentid');
+if ( $departmentid ) {
+  $config['departments[]']['value'] = array(
+    $departmentid,
+  );
+}
 
 $db              = $this->bootstrap->getAdoDB();
 $departmentcount = $db->getOne("
