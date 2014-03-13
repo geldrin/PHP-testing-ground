@@ -28,7 +28,7 @@ $config = array(
   //-----
   'logemails'    => array(
     'dev@dotsamazing.com',
-    'hiba@videosquare.eu',
+    'hiba@videosqr.com',
   ),
   //-----
   'smtp'         => array(
@@ -39,7 +39,7 @@ $config = array(
   ),
   //-----
   'mail'         => array(
-    'fromemail' => 'support@videosquare.eu',
+    'fromemail' => 'support@videosqr.com',
     'fromname'  => 'Videosquare',
     'errorsto'  => '',
     'type'      => 'text/html; charset="UTF-8"'
