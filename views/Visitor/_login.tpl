@@ -28,7 +28,7 @@
                   <li><a href="{$language}/organizations/modifyintroduction">{#usermenu_organizations_introduction#}</a></li>
                   {if $member.isnewseditor or $member.isclientadmin}
                     <li><a href="{$language}/users/admin">{#usermenu_organizations_admin#}</a></li>
-                    <li><a href="{$language}/users/invite">{#usermenu_organizations_invite#}</a></li>
+                    <li><a href="{$language}/users/invitations">{#usermenu_invitations#}</a></li>
                   {/if}
                 </ul>
                 <div class="hr"></div>
