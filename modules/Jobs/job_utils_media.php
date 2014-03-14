@@ -317,7 +317,8 @@ global $jconf, $debug;
 		$command .= $ffmpeg_video;
 		$command .= " -threads " . $jconf['ffmpeg_threads'] . " -f " . $profile['filecontainerformat'] . " " . $recording['output_file'] . " 2>&1";
 
-echo $command . "\n";
+		// Log ffmpeg command
+		$debug->log($jconf['log_dir'], $jconf['jobid_media_convert'] . ".log", "[INFO] ffmpeg conversion. Command:\n" . $command, $sendmail = false);
 
 		$time_start = time();
 		$output = runExternal($command);
@@ -328,8 +329,8 @@ echo $command . "\n";
 		$err['result'] = $output['code'];
 		if ( $err['result'] < 0 ) $err['result'] = 0;
 
-var_dump($err['command_output']);
-echo "ffmpeg err code: " . $err['result'] . "\n";
+		// Log ffmpeg output
+		$debug->log($jconf['log_dir'], $jconf['jobid_media_convert'] . ".log", "[INFO] ffmpeg conversion output:\n" . print_r($err['command_output'], true) . "\nError code: " . $err['result'], $sendmail = false);
 
 		// ffmpeg terminated with error or filesize suspiciously small
 		if ( ( $err['result'] != 0 ) or ( filesize($recording['output_file']) < 1000 ) ) {

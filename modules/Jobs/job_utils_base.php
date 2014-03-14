@@ -904,11 +904,8 @@ global $jconf;
 		$command = "scp -B -r -i " . $jconf['ssh_key'] . " " . $jconf['ssh_user'] . "@" . $server . ":" . $file_src . " " . $file_dst . " 2>&1";
 	} else {
 		$command = "scp -B -r -i " . $jconf['ssh_key'] . " " . $file_src . " " . $jconf['ssh_user'] . "@" . $server . ":" . $file_dst . " 2>&1";
-echo $command . "\n";
-//scp -B -r -i /home/conv/.ssh/id_rsa /srv/vsq_temp/dev.videosquare.eu/converter/media/89/89_video_360p.mp4 conv@stream.videosquare.eu:/srv/vsq_storage/dev.videosquare.eu/recordings/89/89/ 2>&1
 	}
 
-//	$command = "scp -B -i " . $jconf['ssh_key'] . " " . $jconf['ssh_user'] . "@" . $server . ":" . $file_src . " " . $file_dst . " 2>&1";
 	$time_start = time();
 	exec($command, $output, $result);
 	$duration = time() - $time_start;
