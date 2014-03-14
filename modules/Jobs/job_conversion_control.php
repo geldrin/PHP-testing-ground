@@ -33,7 +33,7 @@ if ( is_file( $app->config['datapath'] . 'jobs/' . $jconf['jobid_conv_control'] 
 
 // Log related init
 $debug = Springboard\Debug::getInstance();
-$debug->log($jconf['log_dir'], $jconf['jobid_conv_control'] . ".log", "Job: " . $jconf['jobid_conv_control'] . "started", $sendmail = false);
+$debug->log($jconf['log_dir'], $jconf['jobid_conv_control'] . ".log", "Job: " . $jconf['jobid_conv_control'] . " started", $sendmail = false);
 
 clearstatcache();
 
@@ -57,16 +57,15 @@ var_dump($recording);
 		// Insert recording versions (recording_versions)
 		insertRecordingVersions($recording);
 
-exit;
-
 		$recordings->MoveNext();
 	}
 }
 
+exit;
+
 //$queue = $app->bootstrap->getMailqueue();
 //$queue->sendHTMLEmail("hiba@videosqr.com", "mikkamakka teszteles", "hovatova");
 //exit;
-
 
 // Upload: make recording status "onstorage" when a recording version is ready
 // ...
@@ -81,15 +80,16 @@ var_dump($recording);
 
 		// Update recording status to "onstorage"
 		updateRecordingStatus($recording['id'], $jconf['dbstatus_copystorage_ok'], "recording");
+		$debug->log($jconf['log_dir'], $jconf['jobid_conv_control'] . ".log", "[INFO] Recording status for recordingid = " . $recording['id'] . " (" . $recording['mastervideofilename'] . ") was set to: " . $jconf['dbstatus_copystorage_ok'], $sendmail = false);
 
 		//// E-mail: send e-mail about a converted recording
 		// Query recording creator
 		$uploader_user = getRecordingCreator($recording['id']);
 		if ( $uploader_user === false ) {
+			$debug->log($jconf['log_dir'], $jconf['jobid_conv_control'] . ".log", "[ERROR] Cannot get uploader user for recording. Not sending an e-mail to user. Recording data:\n\n" . print_r($recording, true), $sendmail = true);
 			$recordings->MoveNext();
 			continue;
 		}
-var_dump($uploader_user);
 
 		// Send e-mail to user about successful conversion
 		$smarty = $app->bootstrap->getSmarty();
@@ -145,20 +145,23 @@ global $jconf, $debug, $db, $app;
 	$query = "
 		SELECT
 			r.id,
-			r.masterstatus,
-			r.contentmasterstatus,
+			r.status,
+			r.contentstatus,
 			r.mastersourceip,
 			r.contentmastersourceip,
 			r.mastervideores,
-			r.contentmastervideores
+			r.contentmastervideores,
+			r.mastervideofilename,
+			r.contentmastervideofilename
 		FROM
 			recordings AS r
 		WHERE
 			( r.mastersourceip = '" . $node . "' AND r.status = '" . $jconf['dbstatus_uploaded'] . "' ) OR
 			( r.contentmastersourceip = '" . $node . "' AND r.contentstatus = '" . $jconf['dbstatus_uploaded'] . "' )
+AND r.id = 89
 		ORDER BY
 			r.id";
-// AND r.id = 89
+
 
 	try {
 		$rs = $db->Execute($query);
@@ -201,7 +204,9 @@ global $jconf, $debug, $db, $app;
 			rv.recordingid = r.id AND
 			rv.status = '" . $jconf['dbstatus_copystorage_ok'] . "' AND
 			rv.encodingprofileid = ep.id AND
-			( ep.mediatype = 'video' OR ( r.mastermediatype = 'audio' AND ep.mediatype = 'audio' ) )";
+			( ep.mediatype = 'video' OR ( r.mastermediatype = 'audio' AND ep.mediatype = 'audio' ) )
+		GROUP BY
+			r.id";
 
 echo $query . "\n";
 
@@ -226,14 +231,11 @@ global $db, $debug, $jconf, $app;
 
 	// Recording
 	$idx = "";
-	if ( $recording['masterstatus'] == $jconf['dbstatus_uploaded'] ) {
+	if ( $recording['status'] == $jconf['dbstatus_uploaded'] ) {
 
 		$profileset = getEncodingProfileSet("recording", $recording['mastervideores']);
 
 		if ( $profileset !== false ) {
-
-echo "RECORDING: ";
-var_dump($profileset);
 
 			for ( $i = 0; $i < count($profileset); $i++ ) {
 
@@ -246,7 +248,8 @@ var_dump($profileset);
 					'iscontent'			=> 0,
 					'status'			=> $jconf['dbstatus_convert']
 				);
-//var_dump($values);
+
+				$debug->log($jconf['log_dir'], $jconf['jobid_conv_control'] . ".log", "[INFO] Inserting recording version for recordingid = " . $recording['id'] . " (" . $recording['mastervideofilename'] . "):\n\n" . print_r($values, true), $sendmail = false);
 
 				$recordingVersion = $app->bootstrap->getModel('recordings_versions');
 				$recordingVersion->insert($values);
@@ -255,20 +258,18 @@ var_dump($profileset);
 
 			// Status: uploaded -> converting
 			updateRecordingStatus($recording['id'], $jconf['dbstatus_conv'], "recording");
+			$debug->log($jconf['log_dir'], $jconf['jobid_conv_control'] . ".log", "[INFO] Recording status for recordingid = " . $recording['id'] . " was set to: " . $jconf['dbstatus_conv'], $sendmail = false);
 
 		} else {
 			$debug->log($jconf['log_dir'], $jconf['jobid_conv_control'] . ".log", "[ERROR] No encoding profile can be selected to recording.\n" . print_r($recording, true), $sendmail = true);
 		}
 	}
 
-	if ( $recording['contentmasterstatus'] == $jconf['dbstatus_uploaded'] ) {
+	if ( $recording['contentstatus'] == $jconf['dbstatus_uploaded'] ) {
 
 		$profileset = getEncodingProfileSet("content", $recording['contentmastervideores']);
 
 		if ( $profileset !== false ) {
-
-echo "CONTENT: " . $cres . "\n";
-//var_dump($profileset);
 
 			for ( $i = 0; $i < count($profileset); $i++ ) {
 
@@ -281,7 +282,8 @@ echo "CONTENT: " . $cres . "\n";
 					'iscontent'			=> 1,
 					'status'			=> $jconf['dbstatus_convert']
 				);
-//var_dump($values);
+
+				$debug->log($jconf['log_dir'], $jconf['jobid_conv_control'] . ".log", "[INFO] Inserting recording version for content recordingid = " . $recording['id'] . " (" . $recording['mastervideofilename'] . "):\n\n" . print_r($values, true), $sendmail = false);
 
 				$recordingVersion = $app->bootstrap->getModel('recordings_versions');
 				$recordingVersion->insert($values);
@@ -290,6 +292,7 @@ echo "CONTENT: " . $cres . "\n";
 
 			// Status: uploaded -> converting
 			updateRecordingStatus($recording['id'], $jconf['dbstatus_conv'], "content");
+			$debug->log($jconf['log_dir'], $jconf['jobid_conv_control'] . ".log", "[INFO] Recording status for content recordingid = " . $recording['id'] . " (" . $recording['mastervideofilename'] . ") was set to: " . $jconf['dbstatus_conv'], $sendmail = false);
 
 		} else {
 			$debug->log($jconf['log_dir'], $jconf['jobid_conv_control'] . ".log", "[ERROR] No encoding profile to recording.\n" . print_r($recording, true), $sendmail = true);
@@ -368,12 +371,15 @@ global $db, $debug, $jconf;
 }
 
 function selectConverterNode() {
+global $debug, $jconf;
 
 	// Place for future code (multi-converter environment. Selection criterias might be:
 	// - Converter node reachability (watchdog mechanism to update DB field with last activity timestamp?)
 	// - Converter node current activity (converting vs. not converting)
 	// - Converter node queue length
 	$nodeid = 1;
+
+	$debug->log($jconf['log_dir'], $jconf['jobid_conv_control'] . ".log", "[INFO] Converter node nodeid = " . $nodeid . " was selected.", $sendmail = false);
 
 	return $nodeid;
 }
