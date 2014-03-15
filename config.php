@@ -240,4 +240,3 @@ $config['phpsettings'] = array(
 );
 
 return $config;
-g;

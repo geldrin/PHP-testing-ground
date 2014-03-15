@@ -40,6 +40,10 @@ img {
 body {
   background-color: #ebebeb;
 }
+body > pre {
+  z-index: 9999;
+  position: relative;
+}
 label {
   cursor: pointer;
 }
