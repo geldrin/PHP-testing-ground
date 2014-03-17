@@ -40,20 +40,12 @@ clearstatcache();
 
 $app->watchdog();
 
-$db_close = FALSE;
+$db_close = false;
 $sleep_length = $jconf['sleep_long'];
 
 // Establish database connection
-try {
-	$db = $app->bootstrap->getAdoDB();
-} catch (exception $err) {
-	// Send mail alert, sleep for 15 minutes
-	$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] No connection to DB (getAdoDB() failed). Error message:\n" . $err, $sendmail = true);
-	// Sleep 15 mins then resume
-//		$sleep_length = 15 * 60;
-	exit -1;
-}
-$db_close = TRUE;
+$db = null;
+$db = db_maintain();
 
 // Initialize log for closing message and total duration timer
 $global_log = "";
@@ -78,15 +70,15 @@ if ( query_recordings2remove($recordings) ) {
 			$recordings->MoveNext();
 			continue;
 		}
-
-		$global_log .= "ID: " . $recording['id'] . "\n";
-		$global_log .= "User: " . $recording['email'] . " (domain: " . $recording['domain'] . ")\n";
+		
+		$log_msg  = "ID: " . $recording['id'] . "\n";
+		$log_msg .= "User: " . $recording['email'] . " (domain: " . $recording['domain'] . ")\n";
 
 		// Directory to remove
 		$remove_path = $app->config['recordingpath'] . ( $recording['id'] % 1000 ) . "/" . $recording['id'] . "/";
 
 		// Log file path information
-		$global_log .= "Remove: " . $remove_path . "\n";
+		$log_msg .= "Remove: " . $remove_path . "\n";
 
 		// Check directory size
 		$err = array();
@@ -96,15 +88,19 @@ if ( query_recordings2remove($recordings) ) {
 		if ( $err['code'] === TRUE ) {
 			$size_toremove += $err['size'];
 			$dir_size = round($err['size'] / 1024 / 1024, 2);
-			$global_log .= "Recording size: " . $dir_size . "MB\n\n";
+			$log_msg .= "Recording size: " . $dir_size . "MB\n\n";
 		}
+
+		// Log recording to remove
+		$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Removing recording:\n" . $log_msg, $sendmail = false);
+		$global_log .= $log_msg;
 
 // !!!
 //$recordings->MoveNext();
 //continue;
 
 		// Remove recording directory
-		$err = remove_file_ifexists($remove_path);
+/*		$err = remove_file_ifexists($remove_path);
 		if ( !$err['code'] ) {
 			// Error: we skip this one, admin must check it manually
 			$debug->log($jconf['log_dir'], $myjobid . ".log", $err['message'] . "\n\nCommand:\n" . $err['command'] . "\n\nOutput:\n" . $err['command_output'], $sendmail = TRUE);
@@ -139,10 +135,15 @@ if ( query_recordings2remove($recordings) ) {
 			$recordings->MoveNext();
 			continue;
 		}
+*/
 
+		// Watchdog
 		$app->watchdog();
+
 		$recordings->MoveNext();
 	}
+
+exit;
 
 	if ( !empty($global_log) ) {
 		$global_log = "Removing recording(s) from storage:\n\n" . $global_log;
@@ -222,10 +223,9 @@ if ( !empty($global_log) ) {
 }
 
 // Close DB connection if open
-if ( $db_close ) {
-	$db->close();
-}
+if ( is_resource($db->_connectionID) ) $db->close();
 
+// Watchdog
 $app->watchdog();
 	
 exit;
