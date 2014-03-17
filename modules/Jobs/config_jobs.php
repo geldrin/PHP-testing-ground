@@ -3,24 +3,23 @@
 
 // Profiles: baseline, main, high
 // Worked on testing Debian until 05/2012
-//define('H264_PROFILE',				'-preset fast -vpre main');
-//define('H264_PROFILE_MOBILE',		'-preset fast -vpre baseline');
 define('H264_PROFILE',				'-profile:v main -preset:v fast');
 define('H264_PROFILE_MOBILE',		'-profile:v baseline -preset:v fast');
 
 return array('config_jobs' => array(
 
 	// Node
-	'node'							=> 'conv-1.videosquare.eu',
-	'node_role'						=> 'converter',
+// Not used?
+//	'node'							=> 'conv-1.videosquare.eu',
+//	'node_role'						=> 'converter',
 
 	// Directories
-	'temp_dir'						=> $this->config['datapath'] . 'temp/',				// Temporary dir for jobs
-	'media_dir'						=> $this->config['datapath'] . 'temp/media/',		// Temporary dir for media conversion
-	'content_dir'					=> $this->config['datapath'] . 'temp/content/',		// Temporary dir for content conversion
-	'ocr_dir'						=> $this->config['datapath'] . 'temp/ocr/',			// Temporary dir for ocr conversion
-	'doc_dir'						=> $this->config['datapath'] . 'temp/doc/',			// Temporary dir for document conversion
-	'vcr_dir'						=> $this->config['datapath'] . 'temp/vcr/',			// Temporary dir for VCR download/upload
+	'temp_dir'						=> $this->config['convpath'],				// Temporary dir for jobs
+	'media_dir'						=> $this->config['convpath'] . 'media/',	// Temporary dir for media conversion
+	'content_dir'					=> $this->config['convpath'] . 'content/',	// Temporary dir for content conversion
+	'ocr_dir'						=> $this->config['convpath'] . 'ocr/',		// Temporary dir for ocr conversion
+	'doc_dir'						=> $this->config['convpath'] . 'doc/',		// Temporary dir for document conversion
+	'vcr_dir'						=> $this->config['convpath'] . 'vcr/',		// Temporary dir for VCR download/upload
 	'job_dir'						=> $this->config['modulepath'] . 'Jobs/',
 	'log_dir'						=> $this->config['logpath'] . 'jobs/',
 	'wowza_log_dir'					=> '/var/log/wowza/',

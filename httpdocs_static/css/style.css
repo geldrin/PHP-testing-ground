@@ -1769,7 +1769,7 @@ a#currentusername span {
 #metadata #infotoggle {
   position: relative;
   text-align: center;
-  margin-top: 40px;
+  margin-top: 45px;
 }
 #metadata #infotoggle ul {
   position: absolute;
@@ -2311,6 +2311,9 @@ a#currentusername span {
 }
 
 /* chat */
+#chat {
+  position: relative;
+}
 #chat .title {
   font-size: 14px;
   font-weight: bold;
@@ -2360,6 +2363,12 @@ a#currentusername span {
 }
 #spinner {
   display: none;
+}
+#recaptchacontainer {
+  position: absolute;
+  width: 442px;
+  height: 102px;
+  top: 50%;
 }
 
 /* feeds */

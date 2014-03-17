@@ -14,12 +14,12 @@ class Departments extends \Springboard\Model {
         d.*,
         COUNT(*) AS usercount
       FROM
-        departments AS d,
-        users_departments AS ud
+        departments AS d LEFT JOIN users_departments AS ud ON(
+          ud.departmentid = d.id
+        )
       WHERE
         d.parentid       = '$parentid' AND
-        d.organizationid = '$organizationid' AND
-        ud.departmentid  = d.id
+        d.organizationid = '$organizationid'
       GROUP BY d.id
       ORDER BY $orderby
     ");

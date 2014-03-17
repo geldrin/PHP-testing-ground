@@ -119,3 +119,10 @@ $config['moderationtype'] = array(
   'values'      => $l->getLov('moderationtype'),
   'value'       => 'nochat',
 );
+
+$config['anonymousallowed'] = array(
+  'displayname' => $l('live', 'anonymousallowed'),
+  'type'        => 'inputRadio',
+  'value'       => 0,
+  'values'      => $l->getLov('noyes'),
+);

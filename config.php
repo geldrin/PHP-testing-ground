@@ -1,6 +1,6 @@
 <?php
 $config = array(
-  'version'      => '_v20140220',
+  'version'      => '_v201402312',
   'charset'      => 'UTF-8',
   'cacheseconds' => 3600,
   'errormessage' => 'An unexpected error has occured, our staff has been notified. Sorry for the inconvenience and thanks for your understanding!',
@@ -19,6 +19,7 @@ $config = array(
   'libpath'      => $this->basepath . 'libraries/',
   'templatepath' => $this->basepath . 'views/',
   'modelpath'    => $this->basepath . 'models/',
+  'convpath'     => $this->basepath . 'data/temp/',
   //-----
   'destroysession' => array(
     'onuserlogout'  => true,
@@ -65,6 +66,12 @@ $config = array(
     'type' => 'redis',
     'host' => '127.0.0.1',
     'port' => 6379,
+  ),
+  //-----
+  'redis' => array(
+    'host'     => '127.0.0.1',
+    'port'     => 6379,
+    'database' => 0,
   ),
   //----
   'allowedextensions' => array(
@@ -219,7 +226,10 @@ $config = array(
       ),
     ),
   ),
-  
+  //-------
+  'recaptchaenabled' => true,
+  'recaptchapub'     => '6LfNBu8SAAAAAKcud9Rcdjlt9aDHhRpxb5KeTd21',
+  'recaptchapriv'    => '6LfNBu8SAAAAAF7-5iJibdVzFrC1_K-YgILLVu4I',
 );
 
 $config['phpsettings'] = array(

@@ -34,6 +34,7 @@ $j(document).ready(function() {
   runIfExists('#recordings_modifycontributors', setupContributors );
   runIfExists('#contributors_create, #contributors_modify', setupContributorEdit );
   runIfExists('#live_modify, #live_create', setupLiveAccessCheck );
+  runIfExists('#live_modifyfeed, #live_createfeed', setupLiveFeed );
   runIfExists('#recordings_modifysharing', setupSharing );
   runIfExists('#recordings_modifydescription', setupDescription );
   runIfExists('#live_create, #live_modify', setupLiveCreate );
@@ -1156,8 +1157,8 @@ function onLiveFlashLogin() {
 }
 
 function setupLiveChat() {
-  
-  var chat = new livechat('#chatcontainer', chatpollurl, chatpolltime );
+
+  chat = new livechat('#chatcontainer', chatpollurl, chatpolltime );
   
 }
 
@@ -1168,7 +1169,8 @@ var livechat = function( container, pollurl, polltime ) {
   self.pollurl   = pollurl;
   self.polltime  = polltime;
   self.topposition = null;
-  
+  self.needRecaptcha = $j('#live_createchat').attr('data-ishuman') == 'false';
+
   if ( self.container.find('#chatlist').length == 0 )
     self.container.hide();
   
@@ -1224,9 +1226,11 @@ livechat.prototype.onPoll = function( data ) {
   
   if ( data === null || typeof( data ) != 'object' )
     return;
-  
-  if ( data.status == 'error' && data.error )
-    alert( data.error );
+
+  if ( data.status == 'error' && data.error ) {
+    var msg = l[data.error] || data.error;
+    alert( msg );
+  }
   
   if ( data.status != 'success' || this.container.attr('data-lastmodified') == data.lastmodified )
     return;
@@ -1264,7 +1268,25 @@ livechat.prototype.onModerate = function( elem ) {
   
 };
 livechat.prototype.onSubmit = function() {
-  
+
+  if (this.needRecaptcha && !this.recaptchaShown) {
+
+    var options = RecaptchaOptions || {};
+    options.tabindex = 1;
+    options.callback = Recaptcha.focus_response_field;
+    options.theme    = 'clean';
+
+    Recaptcha.create(
+      $j('#recaptchacontainer').attr('data-recaptchapubkey'),
+      'recaptchacontainer',
+      options
+    );
+    $j('#recaptchacontainer').show()
+    this.recaptchaShown = true;
+    return;
+
+  }
+
   if ( !this.submitOptions )
     this.submitOptions = {
       beforeSend: this.beforeSend,
@@ -1273,9 +1295,14 @@ livechat.prototype.onSubmit = function() {
         
         this.onPoll( data );
         
-        if ( typeof( data ) == 'object' && data.status == 'success' )
+        if ( typeof( data ) == 'object' && data.status == 'success' ) {
+
+          if (this.needRecaptcha)
+            this.needRecaptcha = false;
+
           $j('#text').val('');
-        
+        }
+
       }, this ),
       dataType  : 'json',
       type      : 'POST',
@@ -1287,7 +1314,14 @@ livechat.prototype.onSubmit = function() {
   
   this.submitOptions.data = $j('#live_createchat').serializeArray();
   $j.ajax( this.submitOptions );
-  
+
+  if (this.recaptchaShown) {
+    Recaptcha.destroy();
+    $j('#recaptchacontainer').hide();
+    this.recaptchaShown = false;
+    $j('#text').focus();
+  }
+
 };
 livechat.prototype.messageValid = function() {
   
@@ -1735,4 +1769,14 @@ function setupRecordingsSearch() {
     ;
     
   };
+}
+
+function setupLiveFeed() {
+
+  $j('#moderationtype').change(function() {
+    var modtype = $j(this).val();
+    var elem    = $j('input[name=anonymousallowed]').parents('tr');
+    elem.toggle( modtype != 'nochat' );
+  }).change();
+
 }
