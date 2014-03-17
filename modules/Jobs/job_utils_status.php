@@ -65,7 +65,7 @@ global $app, $jconf;
 
 
 function updateRecordingVersionStatus($recordingversionid, $status) {
-global $app;
+global $app, $debug, $jconf;
 
 	$values = array(
 		'status' => $status
@@ -74,6 +74,9 @@ global $app;
 	$recordingVersionObj = $app->bootstrap->getModel('recordings_versions');
 	$recordingVersionObj->select($recordingversionid);
     $recordingVersionObj->updateRow($values);
+
+	// Log status change
+	$debug->log($jconf['log_dir'], $jconf['jobid_media_convert'] . ".log", "[INFO] Recording version id = " . $recordingversionid . " status has been changed to \"" . $status . "\".", $sendmail = false);
 
 	return true;
 }
