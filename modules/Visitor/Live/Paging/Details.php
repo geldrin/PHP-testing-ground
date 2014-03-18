@@ -33,8 +33,9 @@ class Details extends \Visitor\Paging {
     $rootid = $this->channelModel->id;
     if ( $this->channelModel->row['parentid'] )
       $rootid = $this->channelModel->findRootID( $this->channelModel->row['parentid'] );;
-    
-    $channeltree = $this->channelModel->getSingleChannelTree( $rootid );
+
+    $this->channelModel->addFilter('isliveevent', 1 );
+    $channeltree = $this->channelModel->getSingleChannelTree( $rootid, null, 0, true );
     
     $this->controller->toSmarty['channeltree'] = $channeltree;
     $this->controller->toSmarty['listclass']   = 'recordinglist';
