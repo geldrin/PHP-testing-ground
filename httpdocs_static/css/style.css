@@ -1771,7 +1771,8 @@ a#currentusername span {
   font-size: 18px;
   color: #fff;
   font-weight: bold;
-  margin: 15px 0px 3px 0px;
+  margin: 9px 0px 0px 0px;
+  line-height: 30px;
   overflow: hidden;
   text-overflow: ellipsis;
 }
