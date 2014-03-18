@@ -2173,6 +2173,9 @@ a#currentusername span {
   font-size: 12px;
   font-weight: normal;
 }
+.listingitem h3 .subtitle {
+  font-style: italic;
+}
 .channellist .listingitem {
   padding-bottom: 10px;
 }
