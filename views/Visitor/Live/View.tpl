@@ -7,19 +7,6 @@
 
 <div class="title recording">
   <h1>{$channel.title|escape:html}</h1>
-  {if count( $streams ) > 1}
-    <div id="quality">
-      {#live__quality#}:
-      {foreach from=$streams item=stream name=streams}
-        {if $currentstream.id == $stream.id}
-          <b title="{$stream.name|escape:html}">{$stream.name|mb_truncate:30|escape:html}</b>
-        {else}
-          <a title="{$stream.name|escape:html}" href="{$language}/live/view/{$feed.id},{$stream.id},{$feed.name|filenameize}{$urlparams}">{$stream.name|mb_truncate:30|escape:html}</a>
-        {/if}
-        {if !$smarty.foreach.streams.last} | {/if}
-      {/foreach}
-    </div>
-  {/if}
   {if $channel.subtitle|stringempty}<h2>{$channel.subtitle|escape:html}</h2>{/if}
 </div>
 <div class="clear"></div>
