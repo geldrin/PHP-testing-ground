@@ -7,8 +7,8 @@ class Controller extends \Visitor\Controller {
     'newsdetails'       => 'public',
     'listnews'          => 'public',
     'newsrss'           => 'public',
-    'createnews'        => 'newseditor|clientadmin',
-    'modifynews'        => 'newseditor|clientadmin',
+    'createnews'        => 'newseditor|clientadmin|editor',
+    'modifynews'        => 'newseditor|clientadmin|editor',
     'modifyintroduction' => 'clientadmin',
   );
   
