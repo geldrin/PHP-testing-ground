@@ -25,7 +25,9 @@
                 <div class="title">{#usermenu_organizations_title#}</div>
                 <ul>
                   <li><a href="{$language}/organizations/listnews">{#usermenu_organizations_news#}</a></li>
-                  <li><a href="{$language}/organizations/modifyintroduction">{#usermenu_organizations_introduction#}</a></li>
+                  {if $member.isclientadmin}
+                    <li><a href="{$language}/organizations/modifyintroduction">{#usermenu_organizations_introduction#}</a></li>
+                  {/if}
                   {if $member.isnewseditor or $member.isclientadmin}
                     <li><a href="{$language}/users/admin">{#usermenu_organizations_admin#}</a></li>
                     <li><a href="{$language}/users/invitations">{#usermenu_invitations#}</a></li>
