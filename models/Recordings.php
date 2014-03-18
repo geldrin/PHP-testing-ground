@@ -2006,7 +2006,7 @@ class Recordings extends \Springboard\Model {
     
   }
   
-  protected function getWowzaUrl( $type, $needextraparam = false, $info = null, $sessionid = null ) {
+  public function getWowzaUrl( $type, $needextraparam = false, $info = null, $sessionid = null ) {
     
     $url = $this->bootstrap->config['wowza'][ $type ];
     

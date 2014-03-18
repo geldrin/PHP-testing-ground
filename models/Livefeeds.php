@@ -323,8 +323,75 @@ class Livefeeds extends \Springboard\Model {
     if ( !$this->row['slideonright'] )
       $flashdata['layout_videoOrientation'] = 'right';
     
+    if ( $this->row['introrecordingid'] )
+      $flashdata = $flashdata + $this->getPlaceholderFlashdata(
+        $info
+      );
+
     return $flashdata;
     
+  }
+  
+  public function getPlaceholderFlashdata( &$info ) {
+    
+    $this->ensureObjectLoaded();
+    if ( !$this->row['introrecordingid'] )
+      return array();
+
+    $data = array(
+      'livePlaceholder_servers' => array(),
+    );
+    $recordingsModel = $this->bootstrap->getModel('recordings');
+    $recordingsModel->select( $this->row['introrecordingid'] );
+
+    if ( $this->row['issecurestreamingforced'] ) {
+
+      $data['livePlaceholder_servers'][] = $recordingsModel->getWowzaUrl(
+        'secrtmpsurl', true, $info, $info['sessionid']
+      );
+      $data['livePlaceholder_servers'][] = $recordingsModel->getWowzaUrl(
+        'secrtmpurl',  true, $info, $info['sessionid']
+      );
+      $data['livePlaceholder_servers'][] = $recordingsModel->getWowzaUrl(
+        'secrtmpturl', true, $info, $info['sessionid']
+      );
+
+    } else {
+
+      $data['livePlaceholder_servers'][] = $recordingsModel->getWowzaUrl(
+        'rtmpurl',  true, $info, $info['sessionid']
+      );
+      $data['livePlaceholder_servers'][] = $recordingsModel->getWowzaUrl(
+        'rtmpturl', true, $info, $info['sessionid']
+      );
+
+    }
+
+    $data['livePlaceholder_streams'] = array(
+      $recordingsModel->getMediaUrl(
+        'default',
+        false,
+        $info['cookiedomain'],
+        null,
+        '',
+        $this->row['introrecordingid']
+      )
+    );
+
+    if ( $recordingsModel->row['videoreshq'] )
+      $data['livePlaceholder_streams'][] =
+        $recordingsModel->getMediaUrl(
+          'default',
+          true,
+          $info['cookiedomain'],
+          null,
+          '',
+          $this->row['introrecordingid']
+        )
+      ;
+
+    return $data;
+
   }
   
   public function deleteStreams() {
