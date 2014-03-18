@@ -246,7 +246,7 @@ class Channels extends \Springboard\Model {
     
   }
   
-  function getSingleChannelTree( $rootid, $orderby = 'c.weight, c.title', $parentid = 0, $ispublic = null ) {
+  function getSingleChannelTree( $rootid, $orderby = 'c.weight, c.starttimestamp, c.title', $parentid = 0, $ispublic = null ) {
     
     if ( $rootid )
       $this->addFilter('c.id', $rootid, true, false, 'rootid');
