@@ -28,7 +28,7 @@ $config = array(
   //-----
   'logemails'    => array(
     'dev@dotsamazing.com',
-    'hiba@videosquare.eu',
+    'hiba@videosqr.com',
   ),
   //-----
   'smtp'         => array(
@@ -39,7 +39,7 @@ $config = array(
   ),
   //-----
   'mail'         => array(
-    'fromemail' => 'support@videosquare.eu',
+    'fromemail' => 'support@videosqr.com',
     'fromname'  => 'Videosquare',
     'errorsto'  => '',
     'type'      => 'text/html; charset="UTF-8"'
@@ -82,8 +82,8 @@ $config = array(
   'uploadpath'       => '/srv/upload/videosquare.eu/',
   'chunkpath'        => '/srv/upload/videosquare.eu/recordings_chunks/',
   'useravatarpath'   => '/srv/upload/videosquare.eu/useravatars/',
-  'mediapath'        => '/srv/vsq_storage/videosquare.eu/',
-  'recordingpath'    => '/srv/vsq_storage/videosquare.eu/recordings/',
+  'mediapath'        => '/srv/vsq/videosquare.eu/',
+  'recordingpath'    => '/srv/vsq/videosquare.eu/recordings/',
   'recordings_seconds_minlength' => 3,
   'categoryiconpath' => $this->basepath . 'httpdocs_static/images/categories/',
   'relatedrecordingcount' => 6,
