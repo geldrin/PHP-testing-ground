@@ -21,9 +21,9 @@ class Bootstrap {
     
     self::$instance    = $this;
     $this->application = $application;
-    $this->config      = $application->config;
-    $this->basepath    = $application->basepath;
-    $this->production  = $application->production;
+    $this->config      = &$application->config;
+    $this->basepath    = &$application->basepath;
+    $this->production  = &$application->production;
     
     $this->setupAutoloader();
     $this->setupOutputBuffer();
