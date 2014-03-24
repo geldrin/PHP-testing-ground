@@ -1056,7 +1056,10 @@ class Controller extends \Visitor\Controller {
         }
         
         $recordingModel->upload( $info );
-        
+        $uploadModel->updateRow( array(
+            'recordingid' => $recordingsModel->id,
+          )
+        );
         $channelid = $this->application->getNumericParameter('channelid');
         if ( !$info['iscontent'] and $channelid ) {
           
