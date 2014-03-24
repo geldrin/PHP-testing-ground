@@ -57,7 +57,15 @@ class Editinvite extends \Visitor\HelpForm {
 
     if ( !$values['needtimestampdisabledafter'] )
       $values['timestampdisabledafter'] = null;
-    
+
+    $userModel   = $this->bootstrap->getModel('users');
+    $template    = $this->handleTemplate( $userModel, $values );
+    $templateid  = null;
+    if ( !empty( $template ) and $template['id'] )
+      $templateid = $template['id'];
+
+    $values['templateid'] = $templateid;
+
     $this->invitationModel->updateRow( $values );
     
     $forward = $this->application->getParameter('forward', 'users/invitations');
@@ -70,5 +78,17 @@ class Editinvite extends \Visitor\HelpForm {
     $string = str_replace( 'class="title">', "class=\"title\">$title", $string );
     return $string;
   }
-  
+
+  public function handleTemplate( $userModel, &$values ) {
+    $template = array(
+      'id'             => $values['templateid'],
+      'prefix'         => $this->sanitizeHTML( $values['templateprefix'] ),
+      'postfix'        => $this->sanitizeHTML( $values['templatepostfix'] ),
+      'timestamp'      => date('Y-m-d H:i:s'),
+      'organizationid' => $this->controller->organization['id'],
+    );
+
+    return $userModel->maybeInsertTemplate( $template );
+  }
+
 }

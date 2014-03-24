@@ -373,4 +373,5 @@ class Controller extends \Springboard\Controller\Visitor {
     $this->bootstrap->config['mail']['errorsto'] = $olderrorsto;
 
   }
+
 }

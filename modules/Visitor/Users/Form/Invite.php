@@ -85,6 +85,10 @@ class Invite extends \Visitor\HelpForm {
       $emails,
       $this->controller->organization['id']
     );
+    $template    = $this->handleTemplate( $userModel, $values );
+    $templateid  = null;
+    if ( !empty( $template ) and $template['id'] )
+      $templateid = $template['id'];
 
     if ( !empty( $userids ) )
       include_once(
@@ -106,6 +110,7 @@ class Invite extends \Visitor\HelpForm {
         'status'                 => 'invited',
         'organizationid'         => $this->controller->organization['id'],
         'timestamp'              => $timestamp,
+        'templateid'             => $templateid,
       );
 
       // mert a contenttype nocontent|recordingid|livefeedid|channelid lehet
@@ -162,6 +167,18 @@ class Invite extends \Visitor\HelpForm {
 
     $this->controller->toSmarty['sessionmessage'] = $redirmessage;
 
+  }
+
+  public function handleTemplate( $userModel, &$values ) {
+    $template = array(
+      'id'             => $values['templateid'],
+      'prefix'         => $this->sanitizeHTML( $values['templateprefix'] ),
+      'postfix'        => $this->sanitizeHTML( $values['templatepostfix'] ),
+      'timestamp'      => date('Y-m-d H:i:s'),
+      'organizationid' => $this->controller->organization['id'],
+    );
+
+    return $userModel->maybeInsertTemplate( $template );
   }
 
   public function parseInviteFile( $file, $encoding, $delimeter ) {

@@ -200,4 +200,8 @@ return array(
     'registered' => 'A meghívó felhasználva (regisztrált)',
     'deleted'    => 'Törölve',
   ),
+
+  'invite_templates' => array(
+    '' => '--- Új sablon ---',
+  ),
 );

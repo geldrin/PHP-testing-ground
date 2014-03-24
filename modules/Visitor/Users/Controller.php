@@ -24,6 +24,7 @@ class Controller extends \Visitor\Controller {
     'resendinvitation'     => 'clientadmin',
     'disableinvitation'    => 'clientadmin',
     'editinvite'           => 'clientadmin',
+    'getinvitationtemplate' => 'clientadmin',
   );
   
   public $forms = array(
@@ -496,6 +497,16 @@ class Controller extends \Visitor\Controller {
 
     }
 
+    if ( $invitation['templateid'] and !isset( $this->invitationcache['template-' . $invitation['templateid'] ] ) ) {
+      $userModel = $this->bootstrap->getModel('users');
+      $template  = $userModel->getTemplate(
+        $invitation['templateid'],
+        $this->organization['id']
+      );
+      $this->invitationcache['template-' . $invitation['templateid'] ] = $template;
+      $this->toSmarty['template'] = $template;
+    }
+
     $invitation['id'] = $this->crypto->asciiEncrypt( $invitation['id'] );
     $this->toSmarty['values'] = $invitation;
     $this->sendOrganizationHTMLEmail(
@@ -544,4 +555,27 @@ class Controller extends \Visitor\Controller {
 
   }
 
+  public function getinvitationtemplateAction() {
+
+    $userModel = $this->bootstrap->getModel('users');
+    $template  = $userModel->getTemplate(
+      $this->application->getNumericParameter('templateid'),
+      $this->organization['id']
+    );
+
+    if ( empty( $template ) )
+      $this->jsonOutput( array(
+          'status' => 'error',
+          'error'  => 'notfound',
+        )
+      );
+
+    $this->jsonOutput( array(
+        'status'  => 'success',
+        'prefix'  => $template['prefix'],
+        'postfix' => $template['postfix'],
+      )
+    );
+
+  }
 }

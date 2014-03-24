@@ -3,6 +3,7 @@ include('Invite.php');
 
 $config['action']['value'] = 'submiteditinvite';
 unset(
+  $config['email']['validation'][0]['anddepend'],
   $config['usertype'],
   $config['invitefile'],
   $config['encoding'],
@@ -85,5 +86,21 @@ if ( $this->invitationModel->row['livefeedid'] ) {
     $id,
     $title
   );
+
+}
+
+if ( $this->invitationModel->row['templateid'] ) {
+
+  $userModel = $this->bootstrap->getModel('users');
+  $template  = $userModel->getTemplate(
+    $this->invitationModel->row['templateid'],
+    $this->controller->organization['id']
+  );
+
+  if ( empty( $template ) )
+    throw new \Exception("No template found for invitation!");
+
+  $config['templateprefix']['value']  = $template['prefix'];
+  $config['templatepostfix']['value'] = $template['postfix'];
 
 }

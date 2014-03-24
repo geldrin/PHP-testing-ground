@@ -167,4 +167,8 @@ return array(
     'registered' => 'Used (the user registered)',
     'deleted'    => 'Deleted',
   ),
+
+  'invite_templates' => array(
+    '' => '--- New template ---',
+  ),
 );

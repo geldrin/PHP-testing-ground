@@ -618,4 +618,70 @@ class Users extends \Springboard\Model {
       LIMIT 1
     ");
   }
+
+  public function getInviteTemplates( $organizationid ) {
+    $templates = $this->db->getAssoc("
+      SELECT
+        id AS arraykey,
+        id,
+        prefix,
+        postfix,
+        timestamp
+      FROM invite_templates
+      WHERE organizationid = '$organizationid'
+      ORDER BY id DESC
+    ");
+
+    return $templates;
+  }
+
+  public function maybeInsertTemplate( $values ) {
+
+    $needinsert = false;
+    if ( intval( $values['id'] ) ) {
+
+      $template = $this->getTemplate(
+        intval( $values['id'] ),
+        $values['organizationid']
+      );
+
+      if ( empty( $template ) )
+        throw new \Exception("Template with id: " . $values['id'] . ' not found!');
+
+      $hash         = md5( $values['prefix'] . $values['postfix'] );
+      $existinghash = md5( $template['prefix'] . $template['postfix'] );
+
+      if ( $hash != $existinghash )
+        $needinsert = true;
+
+    } elseif (
+               strlen( trim( $values['prefix'] ) ) or
+               strlen( trim( $values['postfix'] ) )
+             )
+      $needinsert = true;
+    else // se template nem volt valasztva, se nem volt kitoltve semmi => nem akar a user templatet
+      return array();
+
+    if ( $needinsert ) {
+      unset( $values['id'] );
+      $templateModel = $this->bootstrap->getModel('invite_templates');
+      $templateModel->insert( $values );
+      $values['id'] = $templateModel->id;
+    }
+
+    return $values;
+
+  }
+
+  public function getTemplate( $templateid, $organizationid ) {
+    return $this->db->getRow("
+      SELECT *
+      FROM invite_templates
+      WHERE
+        id             = '$templateid' AND
+        organizationid = '$organizationid'
+      LIMIT 1
+    ");
+  }
+
 }

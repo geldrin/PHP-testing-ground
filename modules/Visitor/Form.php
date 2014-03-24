@@ -2,6 +2,7 @@
 namespace Visitor;
 
 class Form extends \Springboard\Controller\Form {
+  protected $purifier;
   public $xsrfprotect = false;
   public $checkboxitemlayout = '
     <div class="checkboxwrap indentlevel-%level%">
@@ -91,5 +92,26 @@ class Form extends \Springboard\Controller\Form {
     }
     
   }
-  
+
+  public function sanitizeHTML( $html ) {
+
+    if ( !$this->purifier ) {
+      require_once(
+        $this->bootstrap->config['libpath'] .
+        'HTMLPurifier/HTMLPurifier.includes.php'
+      );
+
+      $config = \HTMLPurifier_Config::createDefault();
+      // engedjuk amit a tinymce-be hagytunk editalni
+      $config->set('HTML.Allowed', 'p[style],b,a[href|target|title],i,ul,li,span[style]');
+      $config->set('Attr.AllowedFrameTargets', array('_blank' => true, '_self' => true, ) );
+      $config->set('Cache.SerializerPath', $this->bootstrap->config['cachepath'] . 'application/' );
+      $this->purifier = new \HTMLPurifier( $config );
+
+    }
+
+    return $this->purifier->purify( $html );
+
+  }
+
 }

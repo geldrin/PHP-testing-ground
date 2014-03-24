@@ -1,8 +1,30 @@
 <?php
+$tinymceconfig = $l->getLov('tinymcevisitor') + array(
+  'content_css' =>
+    $this->controller->toSmarty['STATIC_URI'] .
+    'css/style_tinymce_content' . $this->bootstrap->config['version'] . '.css'
+  ,
+);
 
+$smarty = $this->bootstrap->getSmarty();
 include_once( $this->bootstrap->config['libpath'] . 'clonefish/constants.php');
-$language = \Springboard\Language::get();
-$config   = array(
+include_once( \SMARTY_DIR . 'plugins/modifier.date_format.php' );
+$language  = \Springboard\Language::get();
+$userModel = $this->bootstrap->getModel('users');
+$templates = $userModel->getInviteTemplates( $this->controller->organization['id'] );
+
+$invitetemplates = $l->getLov('invite_templates');
+foreach( $templates as $template ) {
+
+  $prefix = substr( trim( strip_tags( $template['prefix'] ) ), 0, 30 );
+  $invitetemplates[ $template['id'] ] =
+    smarty_modifier_date_format( $template['timestamp'], $l('', 'smarty_dateformat_longer') ) .
+    ' | ' . $prefix . '...'
+  ;
+
+}
+
+$config    = array(
   
   'action' => array(
     'type'  => 'inputHidden',
@@ -283,6 +305,43 @@ $config = $config + array(
     ",
     'validation'  => array(
     ),
+  ),
+
+  'fs_template' => array(
+    'type'   => 'fieldset',
+    'legend' => $l('users', 'invite_template'),
+    'prefix' => '<span class="legendsubtitle"></span>',
+  ),
+
+  'templateid' => array(
+    'displayname' => $l('users', 'templateid'),
+    'type'        => 'select',
+    'html'        => 'data-templateurl="' . $language . '/users/getinvitationtemplate"',
+    'values'      => $invitetemplates,
+  ),
+
+  'templateprefix' => array(
+    'displayname' => $l('users', 'templateprefix'),
+    'type'        => 'tinyMCE',
+    'jspath'      => $this->controller->toSmarty['BASE_URI'] . 'js/tiny_mce/tiny_mce.js',
+    'width'       => 450,
+    'height'      => 200,
+    'config'      => $tinymceconfig,
+    'value'       => $this->application->getParameter('templateprefix'),
+    'validation'  => Array(
+    ),
+  ),
+  
+  'templatepostfix' => array(
+    'displayname' => $l('users', 'templatepostfix'),
+    'type'        => 'tinyMCE',
+    'jspath'      => $this->controller->toSmarty['BASE_URI'] . 'js/tiny_mce/tiny_mce.js',
+    'width'       => 450,
+    'height'      => 200,
+    'config'      => $tinymceconfig,
+    'value'       => $this->application->getParameter('templatepostfix'),
+    'validation'  => Array(
+    )
   ),
   
 );

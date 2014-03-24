@@ -1835,4 +1835,32 @@ function setupUserInvitation() {
   setupSearch('#livefeedid_search');
   setupSearch('#channelid_search');
 
+  $j('#templateid').change(function() {
+    var val = $j(this).val();
+    if (!val) {
+      tinyMCE.get('templateprefix').setContent('');
+      tinyMCE.get('templatepostfix').setContent('');
+      return;
+    }
+
+    var data = {templateid: val};
+    $j.ajax({
+      //beforeSend:
+      //complete:
+      cache  : false,
+      success: function( data ) {
+        if (!data || data.status != 'success')
+          return;
+
+        tinyMCE.get('templateprefix').setContent( data.prefix );
+        tinyMCE.get('templatepostfix').setContent( data.postfix );
+
+      },
+      data    : data,
+      dataType: 'json',
+      type    : 'GET',
+      url     : BASE_URI + language + '/users/getinvitationtemplate'
+    });
+  });
+
 }
