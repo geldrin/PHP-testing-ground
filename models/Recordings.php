@@ -251,6 +251,7 @@ class Recordings extends \Springboard\Model {
       FROM attached_documents
       WHERE
         recordingid = '" . $this->id . "' AND
+        status NOT IN('markedfordeletion', 'deleted') AND
         indexingstatus IN('completed', 'completedempty')
     ");
     
@@ -2717,7 +2718,7 @@ class Recordings extends \Springboard\Model {
     $this->ensureObjectLoaded();
     $where = array(
       "recordingid = '" . $this->id . "'",
-      "status <> 'markedfordeletion'",
+      "status NOT IN('markedfordeletion', 'deleted')",
     );
     
     if ( $publiconly ) {
