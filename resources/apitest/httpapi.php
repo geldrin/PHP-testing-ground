@@ -26,7 +26,11 @@ class Api {
     $this->password = $password;
     
   }
-  
+
+  public function setDomain( $domain ) {
+    $this->apiurl = "http://$domain/hu/api";
+  }
+
   protected function initCurl( $options ) {
     
     if ( $this->curl )
