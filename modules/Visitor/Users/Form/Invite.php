@@ -169,18 +169,6 @@ class Invite extends \Visitor\HelpForm {
 
   }
 
-  public function handleTemplate( $userModel, &$values ) {
-    $template = array(
-      'id'             => $values['templateid'],
-      'prefix'         => $this->sanitizeHTML( $values['templateprefix'] ),
-      'postfix'        => $this->sanitizeHTML( $values['templatepostfix'] ),
-      'timestamp'      => date('Y-m-d H:i:s'),
-      'organizationid' => $this->controller->organization['id'],
-    );
-
-    return $userModel->maybeInsertTemplate( $template );
-  }
-
   public function parseInviteFile( $file, $encoding, $delimeter ) {
 
     include_once( $this->bootstrap->config['libpath'] . 'clonefish/constants.php');

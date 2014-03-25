@@ -79,16 +79,4 @@ class Editinvite extends \Visitor\HelpForm {
     return $string;
   }
 
-  public function handleTemplate( $userModel, &$values ) {
-    $template = array(
-      'id'             => $values['templateid'],
-      'prefix'         => $this->sanitizeHTML( $values['templateprefix'] ),
-      'postfix'        => $this->sanitizeHTML( $values['templatepostfix'] ),
-      'timestamp'      => date('Y-m-d H:i:s'),
-      'organizationid' => $this->controller->organization['id'],
-    );
-
-    return $userModel->maybeInsertTemplate( $template );
-  }
-
 }

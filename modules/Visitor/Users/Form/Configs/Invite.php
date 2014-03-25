@@ -4,6 +4,7 @@ $tinymceconfig = $l->getLov('tinymcevisitor') + array(
     $this->controller->toSmarty['STATIC_URI'] .
     'css/style_tinymce_content' . $this->bootstrap->config['version'] . '.css'
   ,
+  'init_instance_callback' => 'tinyMCEInstanceInit',
 );
 
 $smarty = $this->bootstrap->getSmarty();
@@ -327,7 +328,10 @@ $config = $config + array(
     'width'       => 450,
     'height'      => 200,
     'config'      => $tinymceconfig,
-    'value'       => $this->application->getParameter('templateprefix'),
+    'value'       => $this->application->getParameter(
+      'templateprefix',
+      $l('users', 'templateprefix_default')
+    ),
     'validation'  => Array(
     ),
   ),
@@ -339,7 +343,10 @@ $config = $config + array(
     'width'       => 450,
     'height'      => 200,
     'config'      => $tinymceconfig,
-    'value'       => $this->application->getParameter('templatepostfix'),
+    'value'       => $this->application->getParameter(
+      'templatepostfix',
+      $l('users', 'templatepostfix_default')
+    ),
     'validation'  => Array(
     )
   ),

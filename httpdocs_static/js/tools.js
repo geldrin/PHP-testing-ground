@@ -1835,11 +1835,16 @@ function setupUserInvitation() {
   setupSearch('#livefeedid_search');
   setupSearch('#channelid_search');
 
+  var tinymceDefaults = {};
+  tinyMCEInstanceInit = function(instance) { // global so that tinyMCE can actually see it
+    tinymceDefaults[ instance.editorId ] = instance.getContent();
+  };
+  
   $j('#templateid').change(function() {
     var val = $j(this).val();
     if (!val) {
-      tinyMCE.get('templateprefix').setContent('');
-      tinyMCE.get('templatepostfix').setContent('');
+      tinyMCE.get('templateprefix').setContent( tinymceDefaults.templateprefix );
+      tinyMCE.get('templatepostfix').setContent( tinymceDefaults.templatepostfix );
       return;
     }
 
