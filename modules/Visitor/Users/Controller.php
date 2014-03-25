@@ -172,9 +172,25 @@ class Controller extends \Visitor\Controller {
     if ( !$invitationModel->row or $invitationModel->row['validationcode'] !== $validationcode )
       $this->redirectToController('contents', 'invitationvalidationfailed');
     
+    $user              = $this->bootstrap->getSession('user');
+    $forward           = $this->application->getParameter('forward');
     $invitationSession = $this->bootstrap->getSession('userinvitation');
     $invitationSession['invitation'] = $invitationModel->row;
-    
+
+    if (
+         $forward and
+         $invitationModel->row['registereduserid']
+       ) {
+
+      // ha van hova redirectelni, es be van lepve es azonos az invitationt elfogadott
+      // userrel akkor kozvetlenul iranyitsuk at
+      if ( $user['id'] and $invitationModel->row['registereduserid'] )
+        $this->redirect( $forward );
+      else // amugy eloszor leptessuk be es utana iranyitsuk at kozvetlenul
+        $this->redirect('users/login', array('forward' => $forward ) );
+
+    }
+
     // elküldeni regisztrálni
     $this->redirectToController('contents', 'invitationvalidated');
     
@@ -578,4 +594,5 @@ class Controller extends \Visitor\Controller {
     );
 
   }
+
 }

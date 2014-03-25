@@ -114,4 +114,28 @@ class Form extends \Springboard\Controller\Form {
 
   }
 
+  public function handleTemplate( $userModel, &$values ) {
+    $l              = $this->bootstrap->getLocalization();
+    $prefix         = $this->sanitizeHTML( $values['templateprefix'] );
+    $defaultprefix  = $l('users', 'templateprefix_default');
+    $postfix        = $this->sanitizeHTML( $values['templatepostfix'] );
+    $defaultpostfix = $l('users', 'templatepostfix_default');
+
+    if ( $prefix == $defaultprefix )
+      $prefix = '';
+
+    if ( $postfix == $defaultpostfix )
+      $postfix = '';
+
+    $template = array(
+      'id'             => $values['templateid'],
+      'prefix'         => $prefix,
+      'postfix'        => $postfix,
+      'timestamp'      => date('Y-m-d H:i:s'),
+      'organizationid' => $this->controller->organization['id'],
+    );
+
+    return $userModel->maybeInsertTemplate( $template );
+  }
+
 }
