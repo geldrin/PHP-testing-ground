@@ -153,6 +153,15 @@ class Controller extends \Visitor\Controller {
     $access->clear();
     $this->logUserLogin('VALIDATED LOGIN');
     
+    // ha users_invite-bol regisztralt a user akkor validalas utan itt lokjuk at
+    // kozvetlenul
+    $inviteforwardSession = $this->bootstrap->getSession('inviteforward');
+    if ( $inviteforwardSession['forward'] ) {
+      $forward = $inviteforwardSession['forward'];
+      $inviteforwardSession->clear();
+      $this->redirect( $forward );
+    }
+
     $this->redirectToController('contents', 'signupvalidated');
     
   }
@@ -172,10 +181,12 @@ class Controller extends \Visitor\Controller {
     if ( !$invitationModel->row or $invitationModel->row['validationcode'] !== $validationcode )
       $this->redirectToController('contents', 'invitationvalidationfailed');
     
-    $user              = $this->bootstrap->getSession('user');
-    $forward           = $this->application->getParameter('forward');
-    $invitationSession = $this->bootstrap->getSession('userinvitation');
+    $user                 = $this->bootstrap->getSession('user');
+    $forward              = $this->application->getParameter('forward');
+    $invitationSession    = $this->bootstrap->getSession('userinvitation');
+    $inviteforwardSession = $this->bootstrap->getSession('inviteforward');
     $invitationSession['invitation'] = $invitationModel->row;
+    $inviteforwardSession['forward'] = $forward;
 
     if (
          $forward and
