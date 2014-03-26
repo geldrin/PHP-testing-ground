@@ -36,44 +36,11 @@ if ( is_file( $app->config['datapath'] . 'jobs/job_maintenance.stop' ) or is_fil
 
 clearstatcache();
 
-// Contract data: should be retrived from DB later, when contract description database is implemented.
-$org_contracts = array(
-	0	=> array(
-			'orgid' 					=> 200,
-			'name'						=> "Conforg",
-			'price_peruser'				=> 2000,
-			'currency'					=> "HUF",
-			'listfromdate'				=> null,
-			'generateduservaliditydays'	=> 30,
-			'disableuseraftervalidity'	=> true
-		),
-/*	1	=> array(
-			'orgid' 					=> 222,
-			'name'						=> "Infoszféra",
-			'price_peruser'				=> 2000,
-			'currency'					=> "HUF",
-			'listfromdate'				=> null,
-			'generateduservaliditydays'	=> 30,
-			'disableuseraftervalidity'	=> false
-		),
-	2	=> array(
-			'orgid' 					=> 282,
-			'name'						=> "IIR",
-			'price_peruser'				=> 2000,
-			'currency'					=> "HUF",
-			'listfromdate'				=> null,
-			'generateduservaliditydays'	=> 30,
-			'disableuseraftervalidity'	=> false
-		)
-*/
-);
-
 // Establish database connection
-$db = null;
 $db = db_maintain();
 
 // User validity: maintain for generated users
-$err = users_setvalidity($org_contracts);
+$err = users_setvalidity();
 
 // Mailqueue maintenance
 $err = mailqueue_cleanup();
@@ -87,7 +54,8 @@ $err = db_maintenance();
 // Upload chunks maintenance
 $err = uploads_maintenance();
 
-$db->close();
+// Close DB connection if open
+if ( is_resource($db->_connectionID) ) $db->close();
 
 exit;
 
@@ -117,10 +85,10 @@ global $db, $jconf;
 		$rs = $db->Execute($query);
 	} catch (exception $err) {
 		$debug->log($jconf['log_dir'], $jconf['jobid_maintenance'] . ".log", "[ERROR] SQL query failed. Query:\n\n" . trim($query), $sendmail = true);
-		return FALSE;
+		return false;
 	}
 
-	return TRUE;
+	return true;
 }
 
 function statscounter_reset() {
@@ -129,7 +97,7 @@ global $app;
 	$recordingModel = $app->bootstrap->getModel('recordings');
 	$recordingModel->resetStats();
 
-	return TRUE;
+	return true;
 }
 
 // OPTIMIZE TABLE
@@ -176,10 +144,10 @@ global $db, $jconf;
 		");
 	} catch( exception $err ) {
 		$debug->log($jconf['log_dir'], $jconf['jobid_maintenance'] . ".log", "[ERROR] SQL query failed. Query:\n\n" . trim($query), $sendmail = true);
-		return FALSE;
+		return false;
 	}
 
-	return TRUE;
+	return true;
 }
 
 function uploads_maintenance() {
@@ -237,12 +205,12 @@ global $db, $app, $jconf, $debug;
 		;
 
 		if ( !file_exists( $filepath ) ) {
-			$debug->log($jconf['log_dir'], $jconf['jobid_maintenance'] . ".log", "[ERROR] Uploaded chunk not found. File: " . $filepath . "\n\n" . print_r($upload, TRUE), $sendmail = true);
+			$debug->log($jconf['log_dir'], $jconf['jobid_maintenance'] . ".log", "[ERROR] Uploaded chunk not found. File: " . $filepath . "\n\n" . print_r($upload, true), $sendmail = true);
 			continue;
 		}
 
 		if ( !unlink( $filepath ) ) {
-			$debug->log($jconf['log_dir'], $jconf['jobid_maintenance'] . ".log", "[ERROR] Uploaded file chunk cannot be deleted. File: " . $filepath . "\n\n" . print_r($upload, TRUE), $sendmail = true);
+			$debug->log($jconf['log_dir'], $jconf['jobid_maintenance'] . ".log", "[ERROR] Uploaded file chunk cannot be deleted. File: " . $filepath . "\n\n" . print_r($upload, true), $sendmail = true);
 			continue;
 		}
 
@@ -255,25 +223,26 @@ global $db, $app, $jconf, $debug;
 			$db->execute( $query );
 		} catch(\Exception $err ) {
 			$debug->log($jconf['log_dir'], $jconf['jobid_maintenance'] . ".log", "[ERROR] SQL query failed. Query:\n\n" . trim($query), $sendmail = true);
-			return FALSE;
+			return false;
 		}
 
 	}
 
-	return TRUE;
+	return true;
 
 }
 
-function users_setvalidity($org_contracts) {
- global $db, $debug, $jconf;
+function users_setvalidity() {
+global $db, $debug, $jconf, $app;
+
+	// Contract data: Should come from DB!
+	include_once('subscriber_descriptor.php');
 
 	$myjobid = $jconf['jobid_maintenance'];
 
-	$global_log = "";
-
 	for ($i = 0; $i < count($org_contracts); $i++ ) {
 
-		// Query: users that generated, already logged in and should have a 31-days of validity but not yet set
+		// Query: users that generated, already logged in and should have a validity but not yet set
 		$query = "
 			SELECT
 				u.id,
@@ -296,13 +265,8 @@ function users_setvalidity($org_contracts) {
 		try {
 			$users = $db->Execute($query);
 		} catch (exception $err) {
-			$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] SQL query failed.\n" . trim($query) . "\n" . $err . "\n", $sendmail = TRUE);
+			$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] SQL query failed.\n" . trim($query) . "\n" . $err . "\n", $sendmail = true);
 		}
-
-		// Is user list empty for this organization?
-//		if ( $users->RecordCount() < 1 ) {
-//			continue;
-//		}
 
 		$users_num = 0;
 		while ( !$users->EOF ) {
@@ -310,21 +274,21 @@ function users_setvalidity($org_contracts) {
 			$user = array();
 			$user = $users->fields;
 
-//			$global_log .= $user['id'] . "," . $user['email'] . ",1st:" . $user['firstloggedin'] . ",last:" . $user['lastloggedin'] . ",dis:" . $user['timestampdisabledafter'] . "\n";
-
 			$user_firstloggedin = strtotime($user['firstloggedin']);
 
 			// If disable timestamp is not set
 			if ( empty($user['timestampdisabledafter']) ) {
-				$user_validitytime = date("Y-m-d H:i:s", $user_firstloggedin + $org_contracts[$i]['generateduservaliditydays'] * 24 * 3600);
 
-//				$global_log .= "newvaliditytime: " . $user_validitytime . "\n";
+				$user_validity_days = $org_contracts[$i]['generateduservaliditydays'];
+				if ( preg_match("/^promo[0-9][0-9][0-9][0-9]@*/", $user['email']) ) $user_validity_days = $org_contracts[$i]['promouservaliditydays'];
+
+				$user_validitytime = date("Y-m-d H:i:s", $user_firstloggedin + $user_validity_days * 24 * 3600);
 
 				$query = "
 					UPDATE
 						users as u
 					SET
-						u.timestampdisabledafter = \"" . $user_validitytime . "\"
+						u.timestampdisabledafter = '" . $user_validitytime . "'
 					WHERE
 						u.id = " . $user['id'];
 
@@ -334,13 +298,15 @@ function users_setvalidity($org_contracts) {
 					$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] SQL query failed.\n" . trim($query) . "\n" . $err . "\n", $sendmail = true);
 				}
 
+				// Log change in user validity
+				$log_msg = "User validity set: uid=" . $user['id'] . "," . $user['email'] . ",firstloggedin='" . $user['firstloggedin'] . "',lastloggedin='" . $user['lastloggedin'] . "',disabledafter='" . $user['timestampdisabledafter'] . "',new validity time='" . $user_validitytime . "'\n";
+				$debug->log($jconf['log_dir'], $myjobid . ".log", $log_msg, $sendmail = false);
+
 			}
 
 			$users_num++;
 			$users->MoveNext();
 		}
-
-		$global_log .= "\n";
 
 		// Disable: users that behind their disable date
 		$datetimenow = date("Y-m-d H:i:s");
@@ -355,13 +321,19 @@ function users_setvalidity($org_contracts) {
 				u.isusergenerated = 1 AND
 				u.disabled = 0 AND
 				u.firstloggedin IS NOT NULL AND
-				u.timestampdisabledafter < \"" . $datetimenow . "\"
+				u.timestampdisabledafter < '" . $datetimenow . "'
 		";
 
 		try {
 			$rs2 = $db->Execute($query);
 		} catch (exception $err) {
-			$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] SQL query failed.\n" . trim($query) . "\n" . $err . "\n", $sendmail = TRUE);
+			$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] SQL query failed.\n" . trim($query) . "\n" . $err . "\n", $sendmail = true);
+		}
+
+		// Log disabled user and SQL query
+		if ( $db->Affected_Rows() > 0 ) {
+			$log_msg = "Users disabled: " . $db->Affected_Rows() . "\n";
+			$debug->log($jconf['log_dir'], $myjobid . ".log", $log_msg, $sendmail = false);
 		}
 
 	}
