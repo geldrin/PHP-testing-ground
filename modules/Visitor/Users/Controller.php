@@ -153,6 +153,15 @@ class Controller extends \Visitor\Controller {
     $access->clear();
     $this->logUserLogin('VALIDATED LOGIN');
     
+    // ha users_invite-bol regisztralt a user akkor validalas utan itt lokjuk at
+    // kozvetlenul
+    $inviteforwardSession = $this->bootstrap->getSession('inviteforward');
+    if ( $inviteforwardSession['forward'] ) {
+      $forward = $inviteforwardSession['forward'];
+      $inviteforwardSession->clear();
+      $this->redirect( $forward );
+    }
+
     $this->redirectToController('contents', 'signupvalidated');
     
   }
@@ -172,10 +181,12 @@ class Controller extends \Visitor\Controller {
     if ( !$invitationModel->row or $invitationModel->row['validationcode'] !== $validationcode )
       $this->redirectToController('contents', 'invitationvalidationfailed');
     
-    $user              = $this->bootstrap->getSession('user');
-    $forward           = $this->application->getParameter('forward');
-    $invitationSession = $this->bootstrap->getSession('userinvitation');
+    $user                 = $this->bootstrap->getSession('user');
+    $forward              = $this->application->getParameter('forward');
+    $invitationSession    = $this->bootstrap->getSession('userinvitation');
+    $inviteforwardSession = $this->bootstrap->getSession('inviteforward');
     $invitationSession['invitation'] = $invitationModel->row;
+    $inviteforwardSession['forward'] = $forward;
 
     if (
          $forward and
@@ -184,7 +195,7 @@ class Controller extends \Visitor\Controller {
 
       // ha van hova redirectelni, es be van lepve es azonos az invitationt elfogadott
       // userrel akkor kozvetlenul iranyitsuk at
-      if ( $user['id'] and $invitationModel->row['registereduserid'] )
+      if ( $user['id'] and $invitationModel->row['registereduserid'] == $user['id'] )
         $this->redirect( $forward );
       else // amugy eloszor leptessuk be es utana iranyitsuk at kozvetlenul
         $this->redirect('users/login', array('forward' => $forward ) );
@@ -402,9 +413,7 @@ class Controller extends \Visitor\Controller {
       if ( !isset( $this->invitationcache['recording-' . $invitation['recordingid'] ] ) )
         $this->invitationcache['recording-' . $invitation['recordingid'] ] =
           $db->getRow("
-            SELECT
-              title,
-              subtitle
+            SELECT *
             FROM recordings
             WHERE id = '" . $invitation['recordingid'] . "'
             LIMIT 1
@@ -419,15 +428,24 @@ class Controller extends \Visitor\Controller {
 
     if ( isset( $invitation['livefeedid'] ) and $invitation['livefeedid'] ) {
 
-      if ( !isset( $this->invitationcache['livefeed-' . $invitation['livefeedid'] ] ) )
+      if ( !isset( $this->invitationcache['livefeed-' . $invitation['livefeedid'] ] ) ) {
         $this->invitationcache['livefeed-' . $invitation['livefeedid'] ] =
-          $db->getOne("
-            SELECT name
+          $db->getRow("
+            SELECT *
             FROM livefeeds
             WHERE id = '" . $invitation['livefeedid'] . "'
             LIMIT 1
           ");
         ;
+        $this->invitationcache['livefeed-' . $invitation['livefeedid'] ]['channel'] =
+          $db->getRow("
+            SELECT *
+            FROM channels
+            WHERE id = '" . $this->invitationcache['livefeed-' . $invitation['livefeedid'] ]['channelid'] . "'
+            LIMIT 1
+          ");
+        ;
+      }
 
       $this->toSmarty['livefeed'] =
         $this->invitationcache['livefeed-' . $invitation['livefeedid'] ]
@@ -440,9 +458,7 @@ class Controller extends \Visitor\Controller {
       if ( !isset( $this->invitationcache['channel-' . $invitation['channelid'] ] ) )
         $this->invitationcache['channel-' . $invitation['channelid'] ] =
           $db->getRow("
-            SELECT
-              title,
-              subtitle
+            SELECT *
             FROM channels
             WHERE id = '" . $invitation['channelid'] . "'
             LIMIT 1
@@ -525,6 +541,8 @@ class Controller extends \Visitor\Controller {
 
     $invitation['id'] = $this->crypto->asciiEncrypt( $invitation['id'] );
     $this->toSmarty['values'] = $invitation;
+    
+    //$this->smartyOutput('Visitor/Users/Email/Invitation.tpl');
     $this->sendOrganizationHTMLEmail(
       $invitation['email'],
       $l('users', 'invitationmailsubject'),

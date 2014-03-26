@@ -14,30 +14,32 @@ $departments
 {/*}
 
 {newsletter}
-<h1>{#users__email_invitation_title#|sprintf:$name}</h1>
-<p>
+{assign var=name value=$values.name|default:#users__email_invitation_namedefault#}
+<h1>{#users__email_invitation_title#|sprintf:$name},</h1>
+
   {assign var=url value="$BASE_URI$language/users/validateinvite/`$values.id`,`$values.validationcode`"}
 
   {$template.prefix|default:#users__templateprefix_default#}
-  
+
+<p>
   {if !empty( $recording )}
     {capture assign=forward}{$BASE_URI}{$language}/recordings/details/{$recording.id},{$recording.title|filenameize}{/capture}
-    <br/>
-    <b>{#users__email_invitation_recording#}:</b> <a href="{$url}?forward={$forward|escape:url}">{$recording.title|escape:html}</a>
+    <b>{#users__email_invitation_recording#}:</b><br/>
+    <a href="{$url}?forward={$forward|escape:url}">{$recording.title|escape:html}{if $recording.subtitle|stringempty} - <i>{$recording.subtitle|escape:html}</i>{/if}</a>
     <br/>
   {/if}
 
   {if !empty( $livefeed )}
     {capture assign=forward}{$BASE_URI}{$language}/live/view/{$livefeed.id},{$livefeed.name|filenameize}{/capture}
-    <br/>
-    <b>{#users__email_invitation_livefeed#}:</b> <a href="{$url}?forward={$forward|escape:url}">{$livefeed.name|escape:html}</a>
+    <b>{#users__email_invitation_livefeed#}:</b><br/>
+    {$livefeed.channel.title|escape:html}: <a href="{$url}?forward={$forward|escape:url}">{$livefeed.name|escape:html}</a>
     <br/>
   {/if}
 
   {if !empty( $channel )}
     {capture assign=forward}{$BASE_URI}{$language}/channels/details/{$channel.id},{$channel.title|filenameize}{/capture}
-    <br/>
-    <b>{#users__email_invitation_channel#}:</b> <a href="{$url}?forward={$forward|escape:url}">{$channel.title|escape:html}</a>
+    <b>{#users__email_invitation_channel#}:</b><br/>
+    <a href="{$url}?forward={$forward|escape:url}">{$channel.title|escape:html}</a>
     <br/>
   {/if}
 
@@ -67,10 +69,10 @@ $departments
     {/foreach}
     <br/>
   {/if}
-
-  {$template.postfix|default:#users__templatepostfix_default#}
-
 </p>
+
+{$template.postfix|default:#users__templatepostfix_default#}
+
 <p>
 {#email_linkinfo#}<br/>
 {$url}

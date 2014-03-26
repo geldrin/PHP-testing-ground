@@ -1388,7 +1388,8 @@ class Recordings extends \Springboard\Model {
     if (
          (
            !$this->row['contentstatus'] or
-           $this->row['contentstatus'] == 'markedfordeletion'
+           $this->row['contentstatus'] == 'markedfordeletion' or
+           $this->row['contentstatus'] == 'deleted'
          ) and
          $this->row['contentmasterstatus'] != 'copyingtostorage'
        )
@@ -2188,12 +2189,39 @@ class Recordings extends \Springboard\Model {
   public function markAsDeleted() {
     
     $this->ensureObjectLoaded();
-    
+
     $this->updateRow( array(
         'status'           => 'markedfordeletion',
         'deletedtimestamp' => date('Y-m-d H:i:s'),
       )
     );
+
+    if ( $this->row['isintrooutro'] ) {
+
+      $this->db->execute("
+        UPDATE recordings
+        SET introrecordingid = NULL
+        WHERE introrecordingid = '" . $this->id . "'
+      ");
+      $this->db->execute("
+        UPDATE livefeeds
+        SET introrecordingid = NULL
+        WHERE introrecordingid = '" . $this->id . "'
+      ");
+
+      $this->db->execute("
+        UPDATE recordings
+        SET outrorecordingid = NULL
+        WHERE outrorecordingid = '" . $this->id . "'
+      ");
+      $this->db->execute("
+        UPDATE livefeeds
+        SET outrorecordingid = NULL
+        WHERE outrorecordingid = '" . $this->id . "'
+      ");
+
+    }
+
     // TODO delete minden ami ezzel kapcsolatos
     $this->updateChannelIndexPhotos();
     $this->updateCategoryCounters();
