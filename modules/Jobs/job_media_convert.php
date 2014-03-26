@@ -275,7 +275,7 @@ global $app, $jconf, $debug;
 	$recording['master_remote_filename'] = $recording['master_remote_path'] . $recording['master_basename'];
 	$recording['master_path'] = $jconf['master_dir'] . $recording['id'] . "/";
 	$recording['master_filename'] = $recording['master_path'] . $recording['master_basename'];
-	$recording['master_ssh_filename'] = $jconf['ssh_user'] . "@" . $recording['mastersourceip'] . ":" . $recording['master_remote_filename'];
+	$recording['master_ssh_filename'] = $jconf['ssh_user'] . "@" . $recording[$idx . 'mastersourceip'] . ":" . $recording['master_remote_filename'];
 	// Conversion: temporary directory
 	$recording['temp_directory'] = $jconf['media_dir'] . $recording['id'] . "/";
 	// Recording: remote storage directory
@@ -306,7 +306,7 @@ global $app, $jconf, $debug;
 	}
 
 	// SCP: copy from front end server
-	$err = ssh_filecopy($recording['mastersourceip'], $recording['master_remote_filename'], $recording['master_filename'], true);
+	$err = ssh_filecopy($recording[$idx . 'mastersourceip'], $recording['master_remote_filename'], $recording['master_filename'], true);
 	if ( !$err['code'] ) {
 		$debug->log($jconf['log_dir'], $jconf['jobid_media_convert'] . ".log", "MSG: " . $err['message'] . "\nCOMMAND: " . $err['command'] . "\nRESULT: " . $err['result'], $sendmail = true);
 		// Set status to "uploaded" to allow other nodes to take over task??? !!!
