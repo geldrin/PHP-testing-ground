@@ -1388,7 +1388,8 @@ class Recordings extends \Springboard\Model {
     if (
          (
            !$this->row['contentstatus'] or
-           $this->row['contentstatus'] == 'markedfordeletion'
+           $this->row['contentstatus'] == 'markedfordeletion' or
+           $this->row['contentstatus'] == 'deleted'
          ) and
          $this->row['contentmasterstatus'] != 'copyingtostorage'
        )
