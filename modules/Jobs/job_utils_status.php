@@ -69,18 +69,38 @@ global $app, $debug, $jconf, $myjobid;
 }
 
 function updateRecordingVersionStatusAll($recordingid, $status) {
-global $app, $debug, $jconf, $myjobid;
+global $app, $debug, $jconf, $myjobid, $db;
 
 	$values = array(
 		'status' => $status
 	);
 
-	$recordingVersionObj = $app->bootstrap->getModel('recordings_versions');
+// !!!
+/*	$recordingVersionObj = $app->bootstrap->getModel('recordings_versions');
 	$recordingVersionObj->select($recordingid);
     $recordingVersionObj->updateRow($values);
+*/
+// -----
+
+	$db = db_maintain();
+
+	$query = "
+		UPDATE
+			recordings_versions as rv
+		SET
+			rv.status = '" . $status . "'
+		WHERE
+			rv.recordingid = " . $recordingid;
+
+	try {
+		$rs = $db->Execute($query);
+	} catch (exception $err) {
+		$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] SQL query failed.\n" . trim(substr($query, 1, 255)) . "\n\nERR:\n" . trim(substr($err, 1, 255)), $sendmail = true);
+		return false;
+	}
 
 	// Log status change
-	$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Recording versions for recording id = " . $recordingid . " status have been changed to '" . $status . "'.", $sendmail = false);
+	$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] All recording versions for recording id = " . $recordingid . " status have been changed to '" . $status . "'.", $sendmail = false);
 
 	return true;
 }

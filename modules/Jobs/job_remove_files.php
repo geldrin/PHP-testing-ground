@@ -44,8 +44,33 @@ $app->watchdog();
 $sleep_length = $jconf['sleep_long'];
 
 // Establish database connection
-$db = null;
 $db = db_maintain();
+/*
+Fix wrong deleted status:
+
+$query = "
+SELECT r.id, rv.id as recverid, r.status, rv.filename, rv.status as rversionstatus FROM recordings as r, recordings_versions as rv
+WHERE
+r.id = rv.recordingid and
+r.status = 'markedfordeletion' and
+rv.status <> 'deleted'";
+
+$rs = $db->Execute($query);
+
+while ( !$rs->EOF ) {
+
+	$r = $rs->fields;
+
+var_dump($r);
+
+//updateRecordingVersionStatusAll($r['id'], $jconf['dbstatus_deleted']);
+//exit;
+
+	$rs->MoveNext();
+}
+
+exit;
+*/
 
 // Initialize log for closing message and total duration timer
 $global_log = "";
