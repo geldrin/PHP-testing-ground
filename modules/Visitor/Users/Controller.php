@@ -402,9 +402,7 @@ class Controller extends \Visitor\Controller {
       if ( !isset( $this->invitationcache['recording-' . $invitation['recordingid'] ] ) )
         $this->invitationcache['recording-' . $invitation['recordingid'] ] =
           $db->getRow("
-            SELECT
-              title,
-              subtitle
+            SELECT *
             FROM recordings
             WHERE id = '" . $invitation['recordingid'] . "'
             LIMIT 1
@@ -419,15 +417,24 @@ class Controller extends \Visitor\Controller {
 
     if ( isset( $invitation['livefeedid'] ) and $invitation['livefeedid'] ) {
 
-      if ( !isset( $this->invitationcache['livefeed-' . $invitation['livefeedid'] ] ) )
+      if ( !isset( $this->invitationcache['livefeed-' . $invitation['livefeedid'] ] ) ) {
         $this->invitationcache['livefeed-' . $invitation['livefeedid'] ] =
-          $db->getOne("
-            SELECT name
+          $db->getRow("
+            SELECT *
             FROM livefeeds
             WHERE id = '" . $invitation['livefeedid'] . "'
             LIMIT 1
           ");
         ;
+        $this->invitationcache['livefeed-' . $invitation['livefeedid'] ]['channel'] =
+          $db->getRow("
+            SELECT *
+            FROM channels
+            WHERE id = '" . $this->invitationcache['livefeed-' . $invitation['livefeedid'] ]['channelid'] . "'
+            LIMIT 1
+          ");
+        ;
+      }
 
       $this->toSmarty['livefeed'] =
         $this->invitationcache['livefeed-' . $invitation['livefeedid'] ]
@@ -440,9 +447,7 @@ class Controller extends \Visitor\Controller {
       if ( !isset( $this->invitationcache['channel-' . $invitation['channelid'] ] ) )
         $this->invitationcache['channel-' . $invitation['channelid'] ] =
           $db->getRow("
-            SELECT
-              title,
-              subtitle
+            SELECT *
             FROM channels
             WHERE id = '" . $invitation['channelid'] . "'
             LIMIT 1
@@ -525,6 +530,8 @@ class Controller extends \Visitor\Controller {
 
     $invitation['id'] = $this->crypto->asciiEncrypt( $invitation['id'] );
     $this->toSmarty['values'] = $invitation;
+    
+    //$this->smartyOutput('Visitor/Users/Email/Invitation.tpl');
     $this->sendOrganizationHTMLEmail(
       $invitation['email'],
       $l('users', 'invitationmailsubject'),
