@@ -3,8 +3,11 @@
 function updateRecordingStatus($recordingid, $status, $type = "recording") {
 global $app, $debug, $jconf, $myjobid;
 
+	if ( ( $type != "recording" ) and ( $type != "content" ) and ( $type != "smil" ) ) return false;
+
 	$idx = "";
 	if ( $type == "content" ) $idx = "content";
+	if ( $type == "smil" ) $idx = "smil";
 
 	$values = array(
 		$idx . 'status' => $status
