@@ -7,8 +7,8 @@
   
   <div class="recordingcontent">
     <div class="title">
-      {if !$item.isintrooutro and preg_match( '/^onstorage$|^failed.*$/', $item.status )}
-        <a href="{$language}/recordings/delete/{$item.id}?forward={$FULL_URI|escape:url}" title="{#recordings__deleterecording#}" class="confirm right">{#delete#}</a>
+      {if preg_match( '/^onstorage$|^failed.*$/', $item.status )}
+        <a href="{$language}/recordings/delete/{$item.id}?forward={$FULL_URI|escape:url}" title="{#recordings__deleterecording#}" class="confirm right"{if $item.isintrooutro} data-confirm="{#recordings__deleterecording_introoutro#}"{/if}>{#delete#}</a>
       {/if}
       <h3><a href="{$language}/recordings/details/{$item.id},{$item.title|filenameize}">{$item.title|escape:html}</a></h3>
       {if $item.subtitle|stringempty}<h4>{$item.subtitle|escape:html}</h4>{/if}
