@@ -485,6 +485,8 @@ echo $smil_remote_filename . "\n";
 		$err = ssh_filecopy($recording['mastersourceip'], $smil_filename, $smil_remote_filename, false);
 		if ( !$err['code'] ) {
 			$debug->log($jconf['log_dir'], $jconf['jobid_conv_control'] . ".log", "[ERROR] SMIL file update failed.\nMSG: " . $err['message'] . "\nCOMMAND: " . $err['command'] . "\nRESULT: " . $err['result'], $sendmail = true);
+			$recordings->MoveNext();
+			continue;
 		} else {
 			$debug->log($jconf['log_dir'], $jconf['jobid_conv_control'] . ".log", "[INFO] SMIL file updated.\nCOMMAND: " . $err['command'], $sendmail = false);
 		}
@@ -500,6 +502,7 @@ echo $smil_remote_filename . "\n";
 			$debug->log($jconf['log_dir'], $jconf['jobid_conv_control'] . ".log", "[INFO] Remote chmod OK. (SSH)\n\nCOMMAND: " . $command, $sendmail = false);
 		}
 
+		updateRecordingStatus($recording['id'], $jconf['dbstatus_copystorage_ok'], "smil");
 exit;
 
 		$recordings->MoveNext();
