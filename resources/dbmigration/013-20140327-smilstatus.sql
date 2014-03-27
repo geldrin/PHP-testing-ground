@@ -1,0 +1,1 @@
+ALTER TABLE `recordings` ADD `contentsmilstatus` TEXT NULL DEFAULT NULL AFTER `smilstatus`;
