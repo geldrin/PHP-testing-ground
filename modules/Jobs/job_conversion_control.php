@@ -41,8 +41,11 @@ clearstatcache();
 $app->watchdog();
 	
 // Establish database connection
-$db = null;
 $db = db_maintain();
+
+// !!!!
+//updateRecordingStatus(9, null, "smil");
+//updateRecordingStatus(9, null, "contentsmil");
 
 // Query new uploads and insert recording versions
 $recordings = getNewUploads();
@@ -62,10 +65,6 @@ var_dump($recording);
 	}
 }
 
-//$queue = $app->bootstrap->getMailqueue();
-//$queue->sendHTMLEmail("hiba@videosqr.com", "mikkamakka teszteles", "hovatova");
-//exit;
-
 // Upload: make recording status "onstorage" when a recording version is ready
 // ...
 $recordings = getReadyConversions();
@@ -77,16 +76,9 @@ if ( $recordings !== false ) {
 		$recording = $recordings->fields;
 var_dump($recording);
 
-		// Update recording status to "onstorage"
-		if ( $recording['status'] == $jconf['dbstatus_conv'] ) {
-			updateRecordingStatus($recording['id'], $jconf['dbstatus_copystorage_ok'], "recording");
-//			$debug->log($jconf['log_dir'], $jconf['jobid_conv_control'] . ".log", "[INFO] Recording status for recordingid = " . $recording['id'] . " (" . $recording['mastervideofilename'] . ") was set to: " . $jconf['dbstatus_copystorage_ok'], $sendmail = false);
-		}
-		// Update content status to "onstorage"
-		if ( $recording['contentstatus'] == $jconf['dbstatus_conv'] ) {
-			updateRecordingStatus($recording['id'], $jconf['dbstatus_copystorage_ok'], "content");
-//			$debug->log($jconf['log_dir'], $jconf['jobid_conv_control'] . ".log", "[INFO] Recording content status for recordingid = " . $recording['id'] . " (" . $recording['mastervideofilename'] . ") was set to: " . $jconf['dbstatus_copystorage_ok'], $sendmail = false);
-		}
+		// Update recording/content status to "onstorage"
+		if ( $recording['status'] == $jconf['dbstatus_conv'] ) updateRecordingStatus($recording['id'], $jconf['dbstatus_copystorage_ok'], "recording");
+		if ( $recording['contentstatus'] == $jconf['dbstatus_conv'] ) updateRecordingStatus($recording['id'], $jconf['dbstatus_copystorage_ok'], "content");
 
 		//// E-mail: send e-mail about a converted recording
 		// Query recording creator
@@ -129,7 +121,9 @@ var_dump($recording);
 }
 
 // SMIL: generate new SMIL files
-generateRecordingSIMLs();
+$err = generateRecordingSMILs("recording");
+$err = generateRecordingSMILs("content");
+exit;
 
 // Close DB connection if open
 if ( is_resource($db->_connectionID) ) $db->close();
@@ -393,23 +387,25 @@ global $debug, $jconf;
 	return $nodeid;
 }
 
-function generateRecordingSIMLs() {
+function generateRecordingSMILs($type = "recording") {
 global $db, $app, $debug, $jconf;
 
+	if ( ( $type != "recording" ) and ( $type != "content" ) ) return false;
+
+	$idx = "";
+	if ( $type == "content" ) $idx = "content";
+
 	// SMILs to update
-// !!! contentnek contentsmilstatus?
-// CONTENT SMIL GENERATION
 	$query = "
 		SELECT
 			r.id,
-			r.smilstatus,
-			r.mastersourceip,
-			r.contentmastersourceip
+			r." . $idx . "smilstatus,
+			r." . $idx . "mastersourceip
 		FROM
 			recordings AS r
 		WHERE
-			r.status = '" . $jconf['dbstatus_copystorage_ok'] . "' AND 
-			( r.smilstatus IS NULL OR r.smilstatus = '" . $jconf['dbstatus_regenerate'] . "' )
+			r." . $idx . "status = '" . $jconf['dbstatus_copystorage_ok'] . "' AND 
+			( r." . $idx . "smilstatus IS NULL OR r." . $idx . "smilstatus = '" . $jconf['dbstatus_regenerate'] . "' )
 		ORDER BY
 			r.id";
 
@@ -447,10 +443,11 @@ global $db, $app, $debug, $jconf;
 		$recording = $recordings->fields;
 
 var_dump($recording);
+
 		// Get all recording versions for this recording (or content)
-		$recording_versions = getRecordingVersionsForRecording($recording['id'], "recording");
+		$recording_versions = getRecordingVersionsForRecording($recording['id'], $type);
 		if ( $recording_versions === false ) {
-			$debug->log($jconf['log_dir'], $jconf['jobid_conv_control'] . ".log", "[ERROR] No recording versions found for recording id = " . $recording['id'], $sendmail = true);
+			$debug->log($jconf['log_dir'], $jconf['jobid_conv_control'] . ".log", "[ERROR] No recording versions found for " . $type . " id = " . $recording['id'], $sendmail = true);
 			$recordings->MoveNext();
 			continue;
 		}
@@ -464,13 +461,15 @@ var_dump($recording);
 
 			$recording_versions->MoveNext();
 		}
-
 		$smil .= $smil_footer;
 
-		echo $smil . "\n";
+echo $smil . "\n";
+
+		$smil_filename_suffix = "";
+		if ( $idx == "content" ) $smil_filename_suffix = "_content";
 
 		// Write SMIL content to a temporary file
-		$smil_filename = "/tmp/" . $recording['id'] . ".smil";
+		$smil_filename = "/tmp/" . $recording['id'] . $smil_filename_suffix . ".smil";
 		$err = file_put_contents($smil_filename, $smil);
 		if ( $err === false ) {
 			$debug->log($jconf['log_dir'], $jconf['jobid_conv_control'] . ".log", "[ERROR] SMIL file cannot be created at " . $smil_filename, $sendmail = true);
@@ -479,10 +478,10 @@ var_dump($recording);
 		}
 
 		// SSH: copy SMIL file to server
-		$smil_remote_filename = $app->config['recordingpath'] . ( $recording['id'] % 1000 ) . "/" . $recording['id'] . "/" . $recording['id'] . ".smil";
+		$smil_remote_filename = $app->config['recordingpath'] . ( $recording['id'] % 1000 ) . "/" . $recording['id'] . "/" . $recording['id'] . $smil_filename_suffix . ".smil";
 echo $smil_remote_filename . "\n";
 
-		$err = ssh_filecopy($recording['mastersourceip'], $smil_filename, $smil_remote_filename, false);
+		$err = ssh_filecopy($recording[$idx . 'mastersourceip'], $smil_filename, $smil_remote_filename, false);
 		if ( !$err['code'] ) {
 			$debug->log($jconf['log_dir'], $jconf['jobid_conv_control'] . ".log", "[ERROR] SMIL file update failed.\nMSG: " . $err['message'] . "\nCOMMAND: " . $err['command'] . "\nRESULT: " . $err['result'], $sendmail = true);
 			$recordings->MoveNext();
@@ -492,18 +491,17 @@ echo $smil_remote_filename . "\n";
 		}
 
 		// SSH: chmod new remote files
-		$ssh_command = "ssh -i " . $jconf['ssh_key'] . " " . $jconf['ssh_user'] . "@" . $recording['mastersourceip'] . " ";
+		$ssh_command = "ssh -i " . $jconf['ssh_key'] . " " . $jconf['ssh_user'] . "@" . $recording[$idx . 'mastersourceip'] . " ";
 		$command = $ssh_command . "\"" . "chmod -f " . $jconf['file_access'] . " " . $smil_remote_filename . "\"";
 		exec($command, $output, $result);
 		$output_string = implode("\n", $output);
 		if ( $result != 0 ) {
 			$debug->log($jconf['log_dir'], $jconf['jobid_conv_control'] . ".log", "[WARN] Cannot chmod new remote files (SSH)\nCOMMAND: " . $command . "\nRESULT: " . $output_string, $sendmail = true);
 		} else {
-			$debug->log($jconf['log_dir'], $jconf['jobid_conv_control'] . ".log", "[INFO] Remote chmod OK. (SSH)\n\nCOMMAND: " . $command, $sendmail = false);
+			$debug->log($jconf['log_dir'], $jconf['jobid_conv_control'] . ".log", "[INFO] Remote chmod OK. (SSH)\nCOMMAND: " . $command, $sendmail = false);
 		}
 
-		updateRecordingStatus($recording['id'], $jconf['dbstatus_copystorage_ok'], "smil");
-exit;
+		updateRecordingStatus($recording['id'], $jconf['dbstatus_copystorage_ok'], $idx . "smil");
 
 		$recordings->MoveNext();
 	}
@@ -518,10 +516,7 @@ global $db, $app, $jconf, $debug;
 
 	$iscontent = 0;
 	$mediatype = "video";
-	if ( $type == "content" ) {
-		$iscontent = 1;
-		$mediatype = "content";
-	}
+	if ( $type == "content" ) $iscontent = 1;
 
 	$query = "
 		SELECT
@@ -547,6 +542,7 @@ global $db, $app, $jconf, $debug;
 			rv.bandwidth";
 
 echo $query . "\n";
+//if ( $type == "content" ) exit;
 
 	try {
 		$recording_versions = $db->Execute($query);
