@@ -21,55 +21,59 @@ $departments
 
   {$template.prefix|default:#users__templateprefix_default#}
 
-<p>
-  {if !empty( $recording )}
-    {capture assign=forward}{$BASE_URI}{$language}/recordings/details/{$recording.id},{$recording.title|filenameize}{/capture}
-    <b>{#users__email_invitation_recording#}:</b><br/>
-    <a href="{$url}?forward={$forward|escape:url}">{$recording.title|escape:html}{if $recording.subtitle|stringempty} - <i>{$recording.subtitle|escape:html}</i>{/if}</a>
-    <br/>
-  {/if}
+<table border="0" cellpadding="0" cellspacing="0">
+  <tr>
+    <td style="width: 40px; background-color:'#e0e0e0';" background="e0e0e0"></td>
+    <td style="background-color:'#e0e0e0';" background="e0e0e0">
+      {if !empty( $recording )}
+        {capture assign=forward}{$BASE_URI}{$language}/recordings/details/{$recording.id},{$recording.title|filenameize}{/capture}
+        <b>{#users__email_invitation_recording#}:</b><br/>
+        <a href="{$url}?forward={$forward|escape:url}">{$recording.title|escape:html}{if $recording.subtitle|stringempty} - <i>{$recording.subtitle|escape:html}</i>{/if}</a>
+        <br/>
+      {/if}
 
-  {if !empty( $livefeed )}
-    {capture assign=forward}{$BASE_URI}{$language}/live/view/{$livefeed.id},{$livefeed.name|filenameize}{/capture}
-    <b>{#users__email_invitation_livefeed#}:</b><br/>
-    {$livefeed.channel.title|escape:html}: <a href="{$url}?forward={$forward|escape:url}">{$livefeed.name|escape:html}</a>
-    <br/>
-  {/if}
+      {if !empty( $livefeed )}
+        {capture assign=forward}{$BASE_URI}{$language}/live/view/{$livefeed.id},{$livefeed.name|filenameize}{/capture}
+        <b>{#users__email_invitation_livefeed#}:</b><br/>
+        {$livefeed.channel.title|escape:html}: <a href="{$url}?forward={$forward|escape:url}">{$livefeed.name|escape:html}</a>
+        <br/>
+      {/if}
 
-  {if !empty( $channel )}
-    {capture assign=forward}{$BASE_URI}{$language}/channels/details/{$channel.id},{$channel.title|filenameize}{/capture}
-    <b>{#users__email_invitation_channel#}:</b><br/>
-    <a href="{$url}?forward={$forward|escape:url}">{$channel.title|escape:html}</a>
-    <br/>
-  {/if}
+      {if !empty( $channel )}
+        {capture assign=forward}{$BASE_URI}{$language}/channels/details/{$channel.id},{$channel.title|filenameize}{/capture}
+        <b>{#users__email_invitation_channel#}:</b><br/>
+        <a href="{$url}?forward={$forward|escape:url}">{$channel.title|escape:html}</a>
+        <br/>
+      {/if}
 
-  {if !empty( $permissions )}
-    <br/>
-    <b>{#users__email_invitation_permissions#}:</b>
-    {foreach from=$permissions item=item name=permission}
-      {$item|escape:html}{if !$smarty.foreach.permission.last},{/if}
-    {/foreach}
-    <br/>
-  {/if}
+      {if !empty( $permissions )}
+        <br/>
+        <b>{#users__email_invitation_permissions#}:</b>
+        {foreach from=$permissions item=item name=permission}
+          {$item|escape:html}{if !$smarty.foreach.permission.last},{/if}
+        {/foreach}
+        <br/>
+      {/if}
 
-  {if !empty( $groups )}
-    <br/>
-    <b>{#users__email_invitation_groups#}:</b><br/>
-    {foreach from=$groups item=item name=group}
-      {$item.name|escape:html}{if !$smarty.foreach.group.last}<br/>{/if}
-    {/foreach}
-    <br/>
-  {/if}
+      {if !empty( $groups )}
+        <br/>
+        <b>{#users__email_invitation_groups#}:</b><br/>
+        {foreach from=$groups item=item name=group}
+          {$item.name|escape:html}{if !$smarty.foreach.group.last}<br/>{/if}
+        {/foreach}
+        <br/>
+      {/if}
 
-  {if !empty( $departments )}
-    <br/>
-    <b>{#users__email_invitation_departments#}:</b><br/>
-    {foreach from=$departments item=item name=department}
-      {$item.name|escape:html}{if !$smarty.foreach.department.last}<br/>{/if}
-    {/foreach}
-    <br/>
-  {/if}
-</p>
+      {if !empty( $departments )}
+        <br/>
+        <b>{#users__email_invitation_departments#}:</b><br/>
+        {foreach from=$departments item=item name=department}
+          {$item.name|escape:html}{if !$smarty.foreach.department.last}<br/>{/if}
+        {/foreach}
+      {/if}
+    <td style="width: 40px; background-color:'#e0e0e0';" background="e0e0e0"></td>
+  </tr>
+</table>
 
 {$template.postfix|default:#users__templatepostfix_default#}
 
