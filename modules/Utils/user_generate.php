@@ -231,8 +231,8 @@ for ( $i = 1; $i <= $user_num; $i++ ) {
 			'validationcode'         => "123456",
 			'disabled'               => 0,
 			'isapienabled'           => 0,
-			'issingleloginenforced'  => $issingleloginenforced,
-			'ispresencecheckforced'  => $ispresencecheckforced
+			'issingleloginenforced'  => $issingleloginenforced ? 1 : 0,
+			'ispresencecheckforced'  => $ispresencecheckforced ? 1 : 0
 		);
 
 //var_dump($values);
