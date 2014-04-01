@@ -9,8 +9,8 @@ db_backup[0]=teleconnectdev
 db_backup[1]=videosquare
 
 # DB backup directories
-db_backup_dirs[0]=/srv/storage/dev.videosquare.eu/backup/db
-db_backup_dirs[1]=/srv/storage/videosquare.eu/backup/db
+db_backup_dirs[0]=/srv/vsq/dev.videosquare.eu/backup/db
+db_backup_dirs[1]=/srv/vsq/videosquare.eu/backup/db
 
 date=`date +"%Y%m%d_%H%M%S"`
 
