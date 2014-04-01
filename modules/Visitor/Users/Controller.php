@@ -195,7 +195,7 @@ class Controller extends \Visitor\Controller {
 
       // ha van hova redirectelni, es be van lepve es azonos az invitationt elfogadott
       // userrel akkor kozvetlenul iranyitsuk at
-      if ( $user['id'] and $invitationModel->row['registereduserid'] )
+      if ( $user['id'] and $invitationModel->row['registereduserid'] == $user['id'] )
         $this->redirect( $forward );
       else // amugy eloszor leptessuk be es utana iranyitsuk at kozvetlenul
         $this->redirect('users/login', array('forward' => $forward ) );
