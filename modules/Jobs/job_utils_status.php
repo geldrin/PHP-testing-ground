@@ -3,11 +3,12 @@
 function updateRecordingStatus($recordingid, $status, $type = "recording") {
 global $app, $debug, $jconf, $myjobid;
 
-	if ( ( $type != "recording" ) and ( $type != "content" ) and ( $type != "smil" ) ) return false;
+	if ( ( $type != "recording" ) and ( $type != "content" ) and ( $type != "smil" ) and ( $type != "contentsmil" ) ) return false;
 
 	$idx = "";
 	if ( $type == "content" ) $idx = "content";
 	if ( $type == "smil" ) $idx = "smil";
+	if ( $type == "contentsmil" ) $idx = "contentsmil";
 
 	$values = array(
 		$idx . 'status' => $status
@@ -74,13 +75,6 @@ global $app, $debug, $jconf, $myjobid, $db;
 	$values = array(
 		'status' => $status
 	);
-
-// !!!
-/*	$recordingVersionObj = $app->bootstrap->getModel('recordings_versions');
-	$recordingVersionObj->select($recordingid);
-    $recordingVersionObj->updateRow($values);
-*/
-// -----
 
 	$db = db_maintain();
 
@@ -206,83 +200,29 @@ global $app, $debug, $jconf, $myjobid;
 	return true;
 }
 
+//AVATAR
 
-// *************************************************************************
-// *			function update_db_attachment_documentcache()	   	   	   *
-// *************************************************************************
-// Description: update attached document cache
-function update_db_attachment_documentcache($attachment_id, $documentcache) {
-global $db, $jconf;
+function updateAvatarStatus($userid, $status) {
+global $app, $debug, $jconf, $myjobid;
 
-	$db = db_maintain();
-
-	$documentcache_escaped = $db->qstr($documentcache);
-
-	$query = "
-		UPDATE
-			attached_documents
-		SET
-			documentcache = " . $documentcache_escaped . "
-		WHERE
-			id = " . $attachment_id;
+	$values = array(
+		'avatarstatus' => $status
+	);
 
 	try {
-		$rs = $db->Execute($query);
+		$AttachmentObj = $app->bootstrap->getModel('users');
+		$AttachmentObj->select($userid);
+		$AttachmentObj->updateRow($values);
 	} catch (exception $err) {
-		log_document_conversion($attachment_id, 0, $jconf['jobid_document_index'], "-", "[ERROR] Cannot update attachment document cache. SQL query failed.", trim(substr($query, 1, 255)), trim(substr($err, 1, 255)), 0, TRUE);
-		return FALSE;
+		$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] SQL query failed." . trim(substr($err, 1, 255)), $sendmail = true);
+		return false;
 	}
 
-	return TRUE;
+	// Log status change
+	$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] User avatar status = '" . $status . "'", $sendmail = false);
+
+	return true;
 }
-
-function update_db_attachment_indexingstatus($id, $status) {
-global $jconf, $db;
-
-	$db = db_maintain();
-
-	$query = "
-		UPDATE
-			attached_documents
-		SET
-			indexingstatus = '" . $status . "'
-		WHERE
-			id = " . $id;
-
-	try {
-		$rs = $db->Execute($query);
-	} catch (exception $err) {
-		log_document_conversion($id, 0, $jconf['jobid_document_index'], "-", "[ERROR] Cannot update document indexing status. SQL query failed.", trim($query), $err, 0, TRUE);
-		return FALSE;
-	}
-
-	return TRUE;
-}
-
-function update_db_attachment_status($id, $status) {
-global $jconf, $db;
-
-	$db = db_maintain();
-
-	$query = "
-		UPDATE
-			attached_documents
-		SET
-			status = '" . $status . "'
-		WHERE
-			id = " . $id;
-
-	try {
-		$rs = $db->Execute($query);
-	} catch (exception $err) {
-		log_document_conversion($id, 0, $jconf['jobid_upload_finalize'], "-", "[ERROR] Cannot update document status. SQL query failed.", trim($query), $err, 0, TRUE);
-		return FALSE;
-	}
-
-	return TRUE;
-}
-
-
 
 // VCR
 
@@ -387,32 +327,84 @@ global $db, $jconf;
 	return TRUE;
 }
 
-//AVATAR
 
-function update_db_avatar_status($userid, $status) {
-global $jconf, $db;
+// KIKUKÁZNI
+
+// *************************************************************************
+// *			function update_db_attachment_documentcache()	   	   	   *
+// *************************************************************************
+// Description: update attached document cache
+function update_db_attachment_documentcache($attachment_id, $documentcache) {
+global $db, $jconf;
 
 	$db = db_maintain();
 
+	$documentcache_escaped = $db->qstr($documentcache);
+
 	$query = "
 		UPDATE
-			users
+			attached_documents
 		SET
-			avatarstatus = '" . $status . "'
+			documentcache = " . $documentcache_escaped . "
 		WHERE
-			id = " . $userid;
+			id = " . $attachment_id;
 
 	try {
 		$rs = $db->Execute($query);
 	} catch (exception $err) {
-		log_document_conversion(0, 0, $jconf['jobid_upload_finalize'], "-", "[ERROR] Cannot update document status. SQL query failed.", trim($query), $err, 0, TRUE);
+		log_document_conversion($attachment_id, 0, $jconf['jobid_document_index'], "-", "[ERROR] Cannot update attachment document cache. SQL query failed.", trim(substr($query, 1, 255)), trim(substr($err, 1, 255)), 0, TRUE);
 		return FALSE;
 	}
 
 	return TRUE;
 }
 
-// KIKUKÁZNI
+function update_db_attachment_indexingstatus($id, $status) {
+global $jconf, $db;
+
+	$db = db_maintain();
+
+	$query = "
+		UPDATE
+			attached_documents
+		SET
+			indexingstatus = '" . $status . "'
+		WHERE
+			id = " . $id;
+
+	try {
+		$rs = $db->Execute($query);
+	} catch (exception $err) {
+		log_document_conversion($id, 0, $jconf['jobid_document_index'], "-", "[ERROR] Cannot update document indexing status. SQL query failed.", trim($query), $err, 0, TRUE);
+		return FALSE;
+	}
+
+	return TRUE;
+}
+
+function update_db_attachment_status($id, $status) {
+global $jconf, $db;
+
+	$db = db_maintain();
+
+	$query = "
+		UPDATE
+			attached_documents
+		SET
+			status = '" . $status . "'
+		WHERE
+			id = " . $id;
+
+	try {
+		$rs = $db->Execute($query);
+	} catch (exception $err) {
+		log_document_conversion($id, 0, $jconf['jobid_upload_finalize'], "-", "[ERROR] Cannot update document status. SQL query failed.", trim($query), $err, 0, TRUE);
+		return FALSE;
+	}
+
+	return TRUE;
+}
+
 
 // *************************************************************************
 // *				function update_db_video_status()		   			   *
