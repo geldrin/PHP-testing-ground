@@ -8,6 +8,8 @@ class Index extends \Visitor\Paging {
     'creation_desc'  => 'id DESC',
     'starttime'      => 'starttimestamp',
     'starttime_desc' => 'starttimestamp DESC',
+    'title'          => 'title',
+    'title_desc'     => 'title DESC',
   );
   protected $template          = 'Visitor/channellistitem.tpl';
   protected $insertbeforepager = Array( 'Visitor/Channels/Paging/IndexBeforepager.tpl' );
