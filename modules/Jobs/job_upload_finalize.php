@@ -51,8 +51,7 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_upload_finalize.stop' ) an
 
 		$sleep_length = $jconf['sleep_short'];
 
-		// Initialize log for closing message and total duration timer
-		$global_log = "Moving document(s) to storage:\n\n";
+		// Initialize log total duration timer
 		$start_time = time();
 
 //updateAttachedDocumentStatus(1, $jconf['dbstatus_uploaded']);
@@ -63,11 +62,8 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_upload_finalize.stop' ) an
 		if ( $docs !== false ) {
 
 			while ( !$docs->EOF ) {
-break;
-				$doc = $docs->fields;
 
-				$global_log .= "ID: " . $doc['id'] . " (RECORDING ID: " . $doc['recordingid'] . ")\n";
-				$global_log .= "User: " . $doc['email'] . " (domain: " . $doc['domain'] . ")\n";
+				$doc = $docs->fields;
 
 				// Uploaded document
 				$uploadpath = $app->config['uploadpath'] . "attachments/";
@@ -81,8 +77,7 @@ break;
 				$doc['path_target'] = $fname_target;
 
 				// Log file path information
-				$global_log .= "Source path: " . $doc['path_source'] . "\n";
-				$global_log .= "Target path: " . $doc['path_target'] . "\n";
+				$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Finalzing attached document. Info: attacheddocumentid = " . $doc['id'] . ", recordingid = " . $doc['recordingid'] . ", username = " . $doc['email'] . ", domain = " . $doc['domain'] . ".", $sendmail = false);
 
 				updateAttachedDocumentStatus($doc['id'], $jconf['dbstatus_copyfromfe']);
 
@@ -90,11 +85,10 @@ break;
 				$err = move_uploaded_file_to_storage($fname, $fname_target, false);
 				if ( !$err ) {
 					updateAttachedDocumentStatus($doc['id'], $jconf['dbstatus_copyfromfe_err']);
-					$global_log .= $err['message'] . "\n\n";
-//					log_document_conversion($doc['id'], $doc['recordingid'], $jconf['jobid_upload_finalize'], $jconf['dbstatus_copyfromfe'], $err['message'], $err['command'], $err['result'], $err['duration'], true);
 					$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Attached document id = " . $doc['id'] . " cannot be moved to storage.\nCOMMAND: " . $err['command'] . "\nRESULT: " . $err['result'], $sendmail = true);
 				} else {
-					$global_log .= "Status: [OK] Document moved in " . $err['duration'] . " seconds.\n\n";
+					$debug->log($jconf['log_dir'], $myjobid . ".log", "[OK] Document moved in " . $err['duration'] . " seconds. " . $doc['path_source'] . " -> " . $doc['path_target'], $sendmail = false);
+
 					updateAttachedDocumentStatus($doc['id'], $jconf['dbstatus_copystorage_ok']);
 
 					// Update recording size
@@ -121,22 +115,18 @@ break;
 
 			$duration = time() - $start_time;
 			$hms = secs2hms($duration);
-			$debug->log($jconf['log_dir'], $myjobid . ".log", "Document finalize finished in " . $hms . " time.\n\nSummary:\n\n" . $global_log, $sendmail = false);
+			$debug->log($jconf['log_dir'], $myjobid . ".log", "Document finalize finished in " . $hms . " time.", $sendmail = false);
 
 		} // End of attached document finalize
 
 		// User avatars: handle uploaded avatars
-		$global_log = "Moving avatars to storage:\n\n";
 		$start_time = time();
 		$avatars = getUploadedAvatars();
 		if ( $avatars !== false ) {
 
 			while ( !$avatars->EOF ) {
-break;
-				$avatar = $avatars->fields;
 
-				$global_log .= "ID: " . $avatar['userid'] . "\n";
-				$global_log .= "User: " . $avatar['email'] . " (domain: " . $avatar['domain'] . ")\n";
+				$avatar = $avatars->fields;
 
 				// Uploaded document
 				$uploadpath = $app->config['useravatarpath'];
@@ -151,8 +141,7 @@ break;
 				$avatar['path_target'] = $fname_target;
 
 				// Log file path information
-				$global_log .= "Source path: " . $avatar['path_source'] . "\n";
-				$global_log .= "Target path: " . $avatar['path_target'] . "\n";
+				$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Finalzing avatar. Info: userid = " . $avatar['userid'] . ", username = " . $avatar['email'] . ", domain = " . $avatar['domain'] . ".", $sendmail = false);
 
 				// Status = copying
 				updateAvatarStatus($avatar['userid'], $jconf['dbstatus_copyfromfe']);
@@ -161,9 +150,7 @@ break;
 				$err = move_uploaded_file_to_storage($avatar['path_source'], $avatar['path_target'], true);
 				if ( !$err ) {
 					// Status = error
-					$global_log .= $err['message'] . "\n\n";
 					updateAvatarStatus($avatar['userid'], $jconf['dbstatus_copyfromfe_err']);
-//					log_document_conversion(0, 0, $jconf['jobid_upload_finalize'], $jconf['dbstatus_copyfromfe'], $err['message'], $err['command'], $err['result'], $err['duration'], true);
 					$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Avatar for uid = " . $avatar['userid'] . " cannot be moved to storage.\nCOMMAND: " . $err['command'] . "\nRESULT: " . $err['result'], $sendmail = true);
 				} else {
 					// Status = OK
@@ -171,10 +158,10 @@ break;
 					try {
 						\Springboard\Image::resizeAndCropImage($avatar['path_target'], 36, 36, 'middle');
 					} catch (exception $err) {
-//						log_document_conversion(0, 0, $jconf['jobid_upload_finalize'], $jconf['dbstatus_copyfromfe'], $err['message'], $err['command'], $err['result'], $err['duration'], true);
 						$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Avatar for uid = " . $avatar['userid'] . " cannot be resized (/Springboard/Image::resizeAndCropImage).", $sendmail = true);
 					}
-					$global_log .= "Status: [OK] Avatar moved and resized in " . $err['duration'] . " seconds.\n\n";
+
+					$debug->log($jconf['log_dir'], $myjobid . ".log", "[OK] Avatar moved and resized in " . $err['duration'] . " seconds. " . $avatar['path_source'] . " -> " . $avatar['path_target'], $sendmail = false);
 				}
 
 				$app->watchdog();
@@ -183,22 +170,17 @@ break;
 
 			$duration = time() - $start_time;
 			$hms = secs2hms($duration);
-//			log_document_conversion(0, 0, $jconf['jobid_upload_finalize'], "-", "Avatar finalize finished in " . $hms . " time.\n\nSummary:\n\n" . $global_log, "-", "-", $duration, false);
-			$debug->log($jconf['log_dir'], $myjobid . ".log", "Avatar finalize finished in " . $hms . " time.\n\nSummary:\n\n" . $global_log, $sendmail = false);
+			$debug->log($jconf['log_dir'], $myjobid . ".log", "Avatar finalize finished in " . $hms . " time.", $sendmail = false);
 
 		} // End of avatar finalize
 
 		// Contributor images: handle selected video index pictures
-		$global_log = "Copying contributor images to storage:\n\n";
-		$start_time = time();
 		$cimages = getSelectedContributorImages();
 		if ( $cimages !== false ) {
 
 			while ( !$cimages->EOF ) {
-break;
-				$cimage = $cimages->fields;
 
-				$global_log .= "Contributor ID: " . $cimage['contributorid'] . "\n";
+				$cimage = $cimages->fields;
 
 				// Source and destination file
 				$source_file = $app->config['mediapath'] . $cimage['indexphotofilename'];
@@ -207,15 +189,11 @@ break;
 				$destination_file = $destination_path . $cimage['id'] . ".jpg";
 
 				// Log file path information
-				$global_log .= "Source file: " . $source_file . "\n";
-				$global_log .= "Target file: " . $destination_file . "\n";
+				$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Copying contributor index image. Info: contributorid = " . $cimage['contributorid'] . ".", $sendmail = false);
 
 				// Source file: check
 				if ( !file_exists($source_file) ) {
-					$msg = "[ERROR] Contributor index image not found at " . $source_file;
-//					log_document_conversion(0, 0, $jconf['jobid_upload_finalize'], $jconf['dbstatus_cimage'], $msg, "-", 0, 0, true);
-					$debug->log($jconf['log_dir'], $myjobid . ".log", $msg, $sendmail = true);
-					$global_log .= $msg . "\n\n";
+					$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Contributor index image not found at " . $source_file, $sendmail = true);
 					$cimages->MoveNext();
 					continue;
 				}
@@ -223,10 +201,7 @@ break;
 				// Create destination directory under "contributors"
 				$err = create_directory($destination_path);
 				if ( !$err['code'] ) {
-					$msg = "[ERROR] Cannot create directory " . $destination_path;
-//					log_document_conversion(0, 0, $jconf['jobid_upload_finalize'], $jconf['dbstatus_cimage'], $msg, "-", 0, 0, true);
-					$debug->log($jconf['log_dir'], $myjobid . ".log", $msg, $sendmail = true);
-					$global_log .= $msg . "\n\n";
+					$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Cannot create directory " . $destination_path, $sendmail = true);
 					$cimages->MoveNext();
 					continue;
 				}
@@ -234,17 +209,12 @@ break;
 				// Copy file to destination
 				$err = copy($source_file, $destination_file);
 				if ( !$err ) {
-					$msg = "[ERROR] Cannot copy " . $source_file . " -> " . $destination_file;
-//					log_document_conversion(0, 0, $jconf['jobid_upload_finalize'], $msg, "-", 0, 0, true);
-					$debug->log($jconf['log_dir'], $myjobid . ".log", $msg, $sendmail = true);
-					$global_log .= $msg . "\n\n";
+					$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Cannot copy " . $source_file . " -> " . $destination_file, $sendmail = true);
 					$cimages->MoveNext();
 					continue;
 				}
 
 				// Update new path in DB
-
-				// Update DB
 				$update = array(
 					'indexphotofilename'	=> $contributor_path . $cimage['id'] . ".jpg"
 				);
@@ -252,16 +222,11 @@ break;
 				$cImg->select($cimage['id']);
 				$cImg->updateRow($update);
 
-				$global_log .= "Status: [OK] Image copied.\n\n";
+				$debug->log($jconf['log_dir'], $myjobid . ".log", "[OK] Image copied " . $source_file . " -> " . $destination_file, $sendmail = false);
 
 				$app->watchdog();
 				$cimages->MoveNext();
 			}
-
-			$duration = time() - $start_time;
-			$hms = secs2hms($duration);
-//			log_document_conversion(0, 0, $jconf['jobid_upload_finalize'], "-", "Contributor images finalize finished in " . $hms . " time.\n\nSummary:\n\n" . $global_log, "-", "-", $duration, false);
-			$debug->log($jconf['log_dir'], $myjobid . ".log", "Contributor index image finalize finished in " . $hms . " time.\n\nSummary:\n\n" . $global_log, $sendmail = false);
 
 		} // End of contributor images finalize
 
@@ -270,7 +235,7 @@ break;
 
 	// Recordings: finalize masters (once daily, after midnight)
 	$start_time = time();
-	$inwhichhour = 18;
+	$inwhichhour = 0;
 	if ( ( date("G") == $inwhichhour ) and ( empty($finalizedonelasttime) or ( ( $start_time - $finalizedonelasttime ) > 3600 * 24 ) ) ) {
 
 		$recordings = getRecordingMastersToFinalize();
@@ -279,8 +244,6 @@ break;
 			$recording = $recordings->fields;
 
 			$destination_path = $app->config['recordingpath'] . ( $recording['id'] % 1000 ) . "/" . $recording['id'] . "/master/";
-
-var_dump($recording);
 
 			$debug->log($jconf['log_dir'], $myjobid . ".log", "Recording finalization for id = " . $recording['id'] . " started.", $sendmail = false);
 
@@ -291,38 +254,11 @@ var_dump($recording);
 				continue;
 			}
 
-			if ( $recording['masterstatus'] == $jconf['dbstatus_uploaded'] ) {
+			// Recording: finalize
+			if ( $recording['masterstatus'] == $jconf['dbstatus_uploaded'] ) $err = moveMediaFileToStorage($recording, "recording");
 
-				$idx = "";
-				$suffix = "video";
-				$source_filename = $app->config['uploadpath'] . "recordings/" . $recording['id'] . "_" . $suffix . "." . $recording[$idx . 'mastervideoextension'];
-				$destination_filename = $destination_path . $recording['id'] . "_" . $suffix . "." . $recording[$idx . 'mastervideoextension'];
-echo $source_filename . "\n";
-echo $destination_filename . "\n";
-
-				// Copy media file
-				$start_time = time();
-				if ( !copy($source_filename, $destination_filename) ) {
-					$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Cannot copy file " . $source_filename . " to " . $destination_filename, $sendmail = true);
-					$recordings->MoveNext();
-					continue;
-				} else {
-					$duration = time() - $start_time;
-					$hms = secs2hms($duration);
-					$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Copying " . $source_filename . " to " . $destination_filename . " finished in " . $hms . " time", $sendmail = false);
-					if ( !unlink($source_filename) ) {
-						$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Cannot remove file " . $source_filename, $sendmail = true);
-						$recordings->MoveNext();
-						continue;
-					} else {
-						$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] File " . $source_filename . " removed.", $sendmail = false);
-						updateMasterRecordingStatus($recording['id'], $jconf['dbstatus_copystorage_ok'], "recording");
-					}
-
-exit;
-				}
-
-			}
+			// Content: finalize
+			if ( $recording['contentmasterstatus'] == $jconf['dbstatus_uploaded'] ) $err = moveMediaFileToStorage($recording, "content");
 
 			$app->watchdog();
 			$recordings->MoveNext();
@@ -342,6 +278,41 @@ exit;
 
 exit;
 
+function moveMediaFileToStorage($recording, $type = "recording") {
+global $app, $debug, $myjobid, $jconf;
+
+	if ( ( $type != "recording" ) and ( $type != "content" ) ) return false;
+
+	$idx = "";
+	$suffix = "video";
+	if ( $type == "content" ) $idx = $suffix = "content";
+
+	$destination_path = $app->config['recordingpath'] . ( $recording['id'] % 1000 ) . "/" . $recording['id'] . "/master/";
+
+	$source_filename = $app->config['uploadpath'] . "recordings/" . $recording['id'] . "_" . $suffix . "." . $recording[$idx . 'mastervideoextension'];
+	$destination_filename = $destination_path . $recording['id'] . "_" . $suffix . "." . $recording[$idx . 'mastervideoextension'];
+
+	// Copy media file
+	$start_time = time();
+	if ( !copy($source_filename, $destination_filename) ) {
+		$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Cannot copy file " . $source_filename . " -> " . $destination_filename . ". CHECK!", $sendmail = true);
+		updateMasterRecordingStatus($recording['id'], $jconf['dbstatus_copystorage_err'], $type);
+		false;
+	} else {
+		$duration = time() - $start_time;
+		$hms = secs2hms($duration);
+		$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Copying " . $source_filename . " -> " . $destination_filename . " finished in " . $hms . " time", $sendmail = false);
+		updateMasterRecordingStatus($recording['id'], $jconf['dbstatus_copystorage_ok'], $type);
+		if ( !unlink($source_filename) ) {
+			$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Cannot remove file " . $source_filename . ". File won't be removed. Please CHECK error and REMOVE file from upload area!", $sendmail = true);
+			false;
+		} else {
+			$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] File " . $source_filename . " removed.", $sendmail = false);
+		}
+	}
+
+	return true;
+}
 
 // *************************************************************************
 // *						function query_docnew()						   *
@@ -381,7 +352,6 @@ global $jconf, $db, $app, $debug, $myjobid;
 	try {
 		$docs = $db->Execute($query);
 	} catch (exception $err) {
-//		log_document_conversion(0, 0, $jconf['jobid_upload_finalize'], $jconf['dbstatus_init'], "[ERROR] Cannot query next uploaded document. SQL query failed.", trim($query), $err, 0, true);
 		$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] SQL query failed." . trim($query), $sendmail = true);
 		return false;
 	}
@@ -402,8 +372,7 @@ function getUploadedAvatars() {
 global $jconf, $db, $app, $debug, $myjobid;
 
 	$db = db_maintain();
-
-//	$node = $app->config['node_sourceip'];
+	$node = $app->config['node_sourceip'];
 
 	$query = "
 		SELECT
@@ -413,19 +382,20 @@ global $jconf, $db, $app, $debug, $myjobid;
 			a.avatarfilename,
 			a.avatarstatus,
 			a.organizationid,
+			a.avatarsourceip,
 			b.domain
 		FROM
 			users as a,
 			organizations as b
 		WHERE
 			a.avatarstatus = '" . $jconf['dbstatus_uploaded'] . "' AND
+			a.avatarsourceip = '" . $node . "' AND
 			a.organizationid = b.id
 	";
 
 	try {
 		$avatars = $db->Execute($query);
 	} catch (exception $err) {
-//		log_document_conversion(0, 0, $jconf['jobid_upload_finalize'], $jconf['dbstatus_init'], "[ERROR] Cannot query user avatars. SQL query failed.", trim($query), $err, 0, true);
 		$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] SQL query failed.\n" . trim($query), $sendmail = true);
 		return false;
 	}
@@ -456,7 +426,6 @@ global $jconf, $db, $app, $debug, $myjobid;
 	try {
 		$cimages = $db->Execute($query);
 	} catch (exception $err) {
-//		log_document_conversion(0, 0, $jconf['jobid_upload_finalize'], $jconf['dbstatus_init'], "[ERROR] Cannot query contributor images. SQL query failed.", trim($query), $err, 0, true);
 		$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] SQL query failed.\n" . trim($query), $sendmail = true);
 		return false;
 	}
@@ -475,8 +444,6 @@ global $jconf, $debug, $db, $app, $myjobid;
 	$db = db_maintain();
 
 	$node = $app->config['node_sourceip'];
-// !!!
-	$node = "stream.videosquare.eu";
 
 	$query = "
 		SELECT
@@ -498,8 +465,6 @@ global $jconf, $debug, $db, $app, $myjobid;
 			( r.contentmastersourceip = '" . $node . "' AND r.contentmasterstatus = '" . $jconf['dbstatus_uploaded'] . "' AND r.contentstatus = '" . $jconf['dbstatus_copystorage_ok'] . "' )
 		ORDER BY
 			r.id";
-
-echo $query . "\n";
 
 	try {
 		$rs = $db->Execute($query);
