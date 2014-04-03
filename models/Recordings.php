@@ -2214,11 +2214,6 @@ class Recordings extends \Springboard\Model {
         SET outrorecordingid = NULL
         WHERE outrorecordingid = '" . $this->id . "'
       ");
-      $this->db->execute("
-        UPDATE livefeeds
-        SET outrorecordingid = NULL
-        WHERE outrorecordingid = '" . $this->id . "'
-      ");
 
     }
 
