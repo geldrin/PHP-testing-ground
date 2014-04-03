@@ -72,7 +72,6 @@ $config['groups[]'] = array(
     SELECT g.id, g.name
     FROM groups AS g
     WHERE
-      g.userid         = '" . $user['id'] . "' AND
       g.organizationid = '" . $this->controller->organization['id'] . "'
     ORDER BY g.name DESC",
   'validation'  => array(
