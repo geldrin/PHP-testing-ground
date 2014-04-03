@@ -45,44 +45,12 @@ $sleep_length = $jconf['sleep_long'];
 
 // Establish database connection
 $db = db_maintain();
-/*
-Fix wrong deleted status:
 
-$query = "
-SELECT r.id, rv.id as recverid, r.status, rv.filename, rv.status as rversionstatus FROM recordings as r, recordings_versions as rv
-WHERE
-r.id = rv.recordingid and
-r.status = 'markedfordeletion' and
-rv.status <> 'deleted'";
-
-$rs = $db->Execute($query);
-
-while ( !$rs->EOF ) {
-
-	$r = $rs->fields;
-
-var_dump($r);
-
-//updateRecordingVersionStatusAll($r['id'], $jconf['dbstatus_deleted']);
-//exit;
-
-	$rs->MoveNext();
-}
-
-exit;
-*/
-
-// Initialize log for closing message and total duration timer
-$global_log = "";
-$start_time = time();
-
-// Recordings: remove full recordings with respect to retain period set for organization
-$size_toremove = 0;
-
-// Recordings to remove
+// Recording to remove: delete all recording including master, surrogates, documents and index pictures
 $recordings = queryRecordingsToRemove();
-
 if ( $recordings !== false ) {
+
+	$size_toremove = 0;
 
 	while ( !$recordings->EOF ) {
 
@@ -98,8 +66,8 @@ if ( $recordings !== false ) {
 			continue;
 		}
 		
-		$log_msg  = "ID: " . $recording['id'] . "\n";
-		$log_msg .= "User: " . $recording['email'] . " (domain: " . $recording['domain'] . ")\n";
+		$log_msg  = "recordinid: " . $recording['id'] . "\n";
+		$log_msg .= "userid: " . $recording['email'] . " (domain: " . $recording['domain'] . ")\n";
 
 		// Directory to remove
 		$remove_path = $app->config['recordingpath'] . ( $recording['id'] % 1000 ) . "/" . $recording['id'] . "/";
@@ -108,7 +76,6 @@ if ( $recordings !== false ) {
 		$log_msg .= "Remove: " . $remove_path . "\n";
 
 		// Check directory size
-		$err = array();
 		$err = directory_size($remove_path);
 	
 		$dir_size = 0;
@@ -120,7 +87,6 @@ if ( $recordings !== false ) {
 
 		// Log recording to remove
 		$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Removing recording:\n" . $log_msg, $sendmail = false);
-		$global_log .= $log_msg;
 
 // !!!
 //$recordings->MoveNext();
@@ -162,7 +128,7 @@ if ( $recordings !== false ) {
 		try {
 			$rs = $db->Execute($query);
 		} catch (exception $err) {
-			$debug->log($jconf['log_dir'], $jconf['jobid_file_remove'] . ".log", "[ERROR] SQL query failed.\n\n" . trim($query), $sendmail = true);
+			$debug->log($jconf['log_dir'], $jconf['jobid_file_remove'] . ".log", "[ERROR] SQL query failed.\n" . trim($query), $sendmail = true);
 			$recordings->MoveNext();
 			continue;
 		}
@@ -174,17 +140,11 @@ if ( $recordings !== false ) {
 		$recordings->MoveNext();
 	}
 
-	if ( !empty($global_log) ) {
-		$global_log = "Removing recording(s) from storage:\n\n" . $global_log;
-	}
-
 } // End of removing recordings
 
 // Attachments: remove uploaded attachments
 $attachments = queryAttachmentsToRemove();
 if ( $attachments !== false ) {
-
-	$global_log .= "Removing attached documents from storage:\n\n";
 
 	while ( !$attachments->EOF ) {
 
@@ -197,17 +157,27 @@ if ( $attachments !== false ) {
 		$filename = $base_dir . $base_filename;
 
 		// Log file path information
-		$global_log .= "Attached document (id = " . $attached_doc['id'] . "): " . $filename . "\n";
-		$size_toremove += filesize($filename);
+		$size_toremove = filesize($filename);
 
 		// Remove attachment
 		$err = remove_file_ifexists($filename);
 		if ( !$err['code'] ) {
 			// Error: we skip this one, admin must check it manually
-			$debug->log($jconf['log_dir'], $myjobid . ".log", $err['message'] . "\n\nCommand:\n" . $err['command'] . "\n\nOutput:\n" . $err['command_output'], $sendmail = TRUE);
+			$debug->log($jconf['log_dir'], $myjobid . ".log", $err['message'] . "\n\nCommand:\n" . $err['command'] . "\n\nOutput:\n" . $err['command_output'], $sendmail = true);
 			$attachments->MoveNext();
 			continue;
 		}
+
+		$debug->log($jconf['log_dir'], $myjobid . ".log", "[OK] Attached document removed. Info: attacheddocumentid = " . $attached_doc['id'] . ", recordingid = " . $attached_doc['rec_id'] . ", size = " . round($size_toremove / 1024 / 1024, 2) . "MB, filename = " . $filename . ".", $sendmail = false);
+
+		// New recording size
+		$values = array(
+			'recordingdatasize'	=> $attached_doc['recordingdatasize'] - $size_toremove
+		);
+		$recDoc = $app->bootstrap->getModel('recordings');
+		$recDoc->select($attached_doc['rec_id']);
+		$recDoc->updateRow($values);
+		$debug->log($jconf['log_dir'], $jconf['jobid_media_convert'] . ".log", "[INFO] Recording filesize updated.\n\n" . print_r($values, true), $sendmail = false);
 
 		// Update attached document status to DELETED
 		updateAttachedDocumentStatus($attached_doc['id'], $jconf['dbstatus_deleted'], null);
@@ -223,18 +193,6 @@ if ( $attachments !== false ) {
 		$attachments->MoveNext();
 	}
 }
-
-if ( !empty($global_log) ) {
-
-	$global_log .= "\nTotal size removed: " . round($size_toremove / 1024 / 1024, 2) . "MB\n";
-
-	$duration = time() - $start_time;
-	$hms = secs2hms($duration);
-	$debug->log($jconf['log_dir'], $myjobid . ".log", "File remove finished in " . $hms . " time.\n\nSummary:\n\n" . $global_log, $sendmail = true);
-
-}
-
-echo $global_log . "\n";
 
 // Close DB connection if open
 if ( is_resource($db->_connectionID) ) $db->close();
@@ -311,15 +269,18 @@ global $jconf, $db, $app;
 			a.recordingid as rec_id,
 			a.userid,
 			b.nickname,
-			b.email
+			b.email,
+			r.recordingdatasize
 		FROM
-			attached_documents as a,
-			users as b
+			attached_documents AS a,
+			users AS b,
+			recordings AS r
 		WHERE
 			a.status = '" . $jconf['dbstatus_markedfordeletion'] . "' AND
 			( a.indexingstatus IS NULL OR a.indexingstatus = '' OR a.indexingstatus = '" . $jconf['dbstatus_indexing_ok'] . "' ) AND
 			a.sourceip = '" . $node . "' AND
-			a.userid = b.id
+			a.userid = b.id AND
+			a.recordingid = r.id
 	";
 
 //echo $query . "\n";
