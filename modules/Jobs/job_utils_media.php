@@ -681,7 +681,7 @@ global $app, $jconf, $global_log;
 }
 
 function getEncodingProfile($encodingprofileid) {
-global $db, $jconf, $debug;
+global $db, $jconf, $debug, $myjobid;
 
 	$db = db_maintain();
 
@@ -738,7 +738,7 @@ global $db, $jconf, $debug;
 }
 
 function getRecordingCreator($recordingid) {
-global $db, $jconf, $debug;
+global $db, $jconf, $debug, $myjobid;
 
 	$db = db_maintain();
 
@@ -763,7 +763,7 @@ global $db, $jconf, $debug;
 	try {
 		$user = $db->getArray($query);
 	} catch (exception $err) {
-		$debug->log($jconf['log_dir'], $jconf['jobid_media_convert'] . ".log", "[ERROR] Cannot query recording creator. SQL query failed." . trim($query), $sendmail = true);
+		$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Cannot query recording creator. SQL query failed." . trim($query), $sendmail = true);
 		return false;
 	}
 
@@ -775,5 +775,49 @@ global $db, $jconf, $debug;
 	return $user[0];
 }
 
+function getRecordingVersions($recordingid, $status, $type = "recording") {
+global $db, $jconf, $debug, $myjobid;
+
+	if ( ( $type != "recording" ) and ( $type != "content" ) ) return false;
+
+	$iscontent = 0;
+	if ( $type == "content" ) $iscontent = 1;
+
+	$db = db_maintain();
+
+	$query = "
+		SELECT
+			id,
+			recordingid,
+			qualitytag,
+			iscontent,
+			status,
+			resolution,
+			filename,
+			bandwidth,
+			isdesktopcompatible,
+			ismobilecompatible
+		FROM
+			recordings_versions
+		WHERE
+			recordingid = " . $recordingid . " AND
+			iscontent = " . $iscontent . "
+		ORDER BY
+			id";
+
+	try {
+		$recordings_versions = $db->Execute($query);
+	} catch (exception $err) {
+		$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] SQL query failed.\n" . trim($query), $sendmail = true);
+		return false;
+	}
+
+	// Check if any record returned
+	if ( count($recordings_versions) < 1 ) {
+		return false;
+	}
+
+	return $recordings_versions;
+}
 
 ?>

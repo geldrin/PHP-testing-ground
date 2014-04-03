@@ -10,6 +10,7 @@ define('DEBUG', false );
 include_once('job_utils_base.php');
 include_once('job_utils_log.php');
 include_once('job_utils_status.php');
+include_once('job_utils_media.php');
 
 include_once( BASE_PATH . 'libraries/Springboard/Application/Cli.php');
 
@@ -47,12 +48,14 @@ $sleep_length = $jconf['sleep_long'];
 $db = db_maintain();
 
 // Recording to remove: delete all recording including master, surrogates, documents and index pictures
-$recordings = queryRecordingsToRemove();
+$recordings = queryRecordingsToRemove("recording");
 if ( $recordings !== false ) {
 
 	$size_toremove = 0;
 
 	while ( !$recordings->EOF ) {
+// !!!
+break;
 
 		$recording = $recordings->fields;
 
@@ -66,7 +69,7 @@ if ( $recordings !== false ) {
 			continue;
 		}
 		
-		$log_msg  = "recordinid: " . $recording['id'] . "\n";
+		$log_msg  = "recordingid: " . $recording['id'] . "\n";
 		$log_msg .= "userid: " . $recording['email'] . " (domain: " . $recording['domain'] . ")\n";
 
 		// Directory to remove
@@ -142,6 +145,103 @@ if ( $recordings !== false ) {
 
 } // End of removing recordings
 
+// Content to remove: delete content including master, surrogates and others
+$recordings = queryRecordingsToRemove("content");
+if ( $recordings !== false ) {
+
+	$size_toremove = 0;
+
+	while ( !$recordings->EOF ) {
+
+		$recording = $recordings->fields;
+
+// !!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+		$log_msg  = "recordingid: " . $recording['id'] . "\n";
+		$log_msg .= "userid: " . $recording['email'] . " (domain: " . $recording['domain'] . ")\n";
+
+		// Main path
+		$remove_path = $app->config['recordingpath'] . ( $recording['id'] % 1000 ) . "/" . $recording['id'] . "/";
+
+		// Master path
+		$master_filename = $remove_path . "master/" . $recording['id'] . "_content." . $recording['contentmastervideoextension'];
+echo $master_filename . "\n";
+
+		// Remove recording directory
+/*		$err = remove_file_ifexists($master_filename);
+		if ( !$err['code'] ) {
+			// Error: we skip this one, admin must check it manually
+			$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Cannot remove recording.\n" . $err['message'] . "\nCommand:\n" . $err['command'] . "\nOutput:\n" . $err['command_output'], $sendmail = true);
+		} else {
+			// contentmasterstatus = "deleted"
+			updateMasterRecordingStatus($recording['id'], $jconf['dbstatus_deleted'], "content");
+			$debug->log($jconf['log_dir'], $myjobid . ".log", "[OK] Recording content master id = " . $recording['id'] . " removed.", $sendmail = false);
+		}
+*/
+
+		$recversions = getRecordingVersions($recording['id'], $jconf['dbstatus_copystorage_ok'], "content");
+echo "UFF:\n";
+var_dump($recversions);
+
+		if ( $recversions !== false ) {
+
+			while ( !$recversions->EOF ) {
+
+				$recversion = $recversions->fields;
+
+var_dump($recversion);
+
+				if ( ( $recversion['status'] == $jconf['dbstatus_copystorage_ok'] ) or ( $recversion['status'] == $jconf['dbstatus_markedfordeletion'] ) ) {
+
+					$recversion_filename = $remove_path = $app->config['recordingpath'] . ( $recording['id'] % 1000 ) . "/" . $recording['id'] . "/" . $recversion['filename'];
+
+					// Remove content surrogate
+/*					$err = remove_file_ifexists($recversion_filename);
+					if ( !$err['code'] ) {
+						// Error: we skip this one, admin must check it manually
+						$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Cannot remove recording version.\n" . $err['message'] . "\nCommand:\n" . $err['command'] . "\nOutput:\n" . $err['command_output'], $sendmail = true);
+					} else {
+						// recordings_versions.status = "deleted"
+						updateRecordingVersionStatus($recversion['id'], $jconf['dbstatus_deleted']);
+						$debug->log($jconf['log_dir'], $myjobid . ".log", "[OK] Recording version content removed. Info: recordingid = " . $recversion['recordingid'] . ", recordingversionid = " . $recversion['id'] . ", filename = " . $recversion_filename, $sendmail = false);
+					}
+*/
+echo $recversion_filename . "\n";
+
+				}
+
+				$recversions->MoveNext();
+			}
+		}
+exit;
+
+/*
+		// Log file path information
+		$log_msg .= "Remove: " . $remove_path . "\n";
+
+		// Check directory size
+		$err = directory_size($remove_path);
+	
+		$dir_size = 0;
+		if ( $err['code'] === true ) {
+			$size_toremove += $err['size'];
+			$dir_size = round($err['size'] / 1024 / 1024, 2);
+			$log_msg .= "Recording size: " . $dir_size . "MB\n\n";
+		}
+
+		// Log recording to remove
+		$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Removing recording:\n" . $log_msg, $sendmail = false);
+*/
+
+
+		// Watchdog
+		$app->watchdog();
+
+		// Next recording
+		$recordings->MoveNext();
+	}
+}
+
 // Attachments: remove uploaded attachments
 $attachments = queryAttachmentsToRemove();
 if ( $attachments !== false ) {
@@ -203,14 +303,17 @@ $app->watchdog();
 exit;
 
 // *************************************************************************
-// *				function query_recordings2remove()					   *
+// *				function queryRecordingsToRemove()					   *
 // *************************************************************************
 // Description: queries next uploaded document from attached_documents
-function queryRecordingsToRemove() {
+function queryRecordingsToRemove($type = null) {
 global $jconf, $db, $app;
+
+	if ( !empty($type) and ( $type != "content" ) ) return false;
 
 	$node = $app->config['node_sourceip'];
 
+// !!! status v. masterstatus figyeles?
 	$query = "
 		SELECT
 			a.id,
@@ -220,8 +323,13 @@ global $jconf, $db, $app;
 			a.contentstatus,
 			a.contentmasterstatus,
 			a.mastersourceip,
+			a.contentmastersourceip,
 			a.deletedtimestamp,
 			a.contentdeletedtimestamp,
+			a.mastervideofilename,
+			a.mastervideoextension,
+			a.contentmastervideofilename,
+			a.contentmastervideoextension,
 			b.email,
 			c.id as organizationid,
 			c.domain,
@@ -231,13 +339,11 @@ global $jconf, $db, $app;
 			users as b,
 			organizations as c
 		WHERE
-			a.status = '" . $jconf['dbstatus_markedfordeletion'] . "' AND
+			a." . $type . "status = '" . $jconf['dbstatus_markedfordeletion'] . "' AND
+			a." . $type . "mastersourceip = '" . $node . "' AND
 			a.userid = b.id AND
-			a.mastersourceip = '" . $node . "' AND
 			b.organizationid = c.id
 	";
-
-//echo $query . "\n";
 
 	try {
 		$recordings = $db->Execute($query);
@@ -282,8 +388,6 @@ global $jconf, $db, $app;
 			a.userid = b.id AND
 			a.recordingid = r.id
 	";
-
-//echo $query . "\n";
 
 	try {
 		$attachments = $db->Execute($query);
