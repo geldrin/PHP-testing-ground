@@ -45,7 +45,10 @@ class Details extends \Visitor\Paging {
       $this->application->getNumericParameter('id')
     );
     
-    if ( $this->channelModel->row['organizationid'] != $organization['id'] )
+    if (
+         $this->channelModel->row['organizationid'] != $organization['id'] or
+         $this->channelModel->row['isliveevent'] != '0'
+       )
       $this->controller->redirect('index');
     
     if ( $this->channelModel->isAccessible( $this->user ) !== true )

@@ -258,7 +258,7 @@ class Channels extends \Springboard\Model {
       $this->addFilter('c.parentid', $parentid, true, false, 'parentid');
     
     if ( $ispublic )
-      $this->addFilter('c.ispublic = 1', 'public', false, false, 'ispublic');
+      $this->addFilter('c.ispublic', 1, true, false, 'ispublic');
     
     $this->addTextFilter('c.channeltypeid = ct.id', 'channeltype');
     
