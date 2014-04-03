@@ -5,6 +5,8 @@ global $app, $debug, $jconf, $myjobid;
 
 	if ( ( $type != "recording" ) and ( $type != "content" ) and ( $type != "smil" ) and ( $type != "contentsmil" ) ) return false;
 
+	if ( empty($status) ) return false;
+
 	$idx = "";
 	if ( $type == "content" ) $idx = "content";
 	if ( $type == "smil" ) $idx = "smil";
@@ -34,6 +36,10 @@ global $app, $debug, $jconf, $myjobid;
 function updateMasterRecordingStatus($recordingid, $status, $type = "recording") {
 global $app, $debug, $jconf, $myjobid;
 
+	if ( ( $type != "recording" ) and ( $type != "content" ) ) return false;
+
+	if ( empty($status) ) return false;
+
 	$idx = "";
 	if ( $type == "content" ) $idx = "content";
 
@@ -55,6 +61,8 @@ global $app, $debug, $jconf, $myjobid;
 function updateRecordingVersionStatus($recordingversionid, $status) {
 global $app, $debug, $jconf, $myjobid;
 
+	if ( empty($status) ) return false;
+
 	$values = array(
 		'status' => $status
 	);
@@ -71,6 +79,8 @@ global $app, $debug, $jconf, $myjobid;
 
 function updateRecordingVersionStatusAll($recordingid, $status) {
 global $app, $debug, $jconf, $myjobid, $db;
+
+	if ( empty($status) ) return false;
 
 	$values = array(
 		'status' => $status
@@ -148,6 +158,10 @@ global $app, $debug, $jconf, $myjobid;
 function updateAttachedDocumentStatus($attachmentid, $status, $type = null) {
 global $app, $debug, $jconf, $myjobid;
 
+	if ( !empty($type) and ( $type != "indexingstatus" ) ) return false;
+
+	if ( empty($status) ) return false;
+
 	$idx = "";
 	if ( $type == "indexingstatus" ) $idx = "indexing";
 
@@ -165,7 +179,7 @@ global $app, $debug, $jconf, $myjobid;
 	}
 
 	// Log status change
-	$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Attached document id = " . $attachmentid . " " . $type . " status has been changed to '" . $status . "'.", $sendmail = false);
+	$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Attached document id = " . $attachmentid . " " . $type . " has been changed to '" . $status . "'.", $sendmail = false);
 
 	return true;
 }
@@ -205,6 +219,8 @@ global $app, $debug, $jconf, $myjobid;
 function updateAvatarStatus($userid, $status) {
 global $app, $debug, $jconf, $myjobid;
 
+	if ( empty($status) ) return false;
+
 	$values = array(
 		'avatarstatus' => $status
 	);
@@ -230,6 +246,8 @@ global $app, $debug, $jconf, $myjobid;
 function update_db_vcr_reclink_status($id, $status) {
 global $db, $jconf;
 
+	if ( empty($status) ) return false;
+
 	$db = db_maintain();
 
 	$query = "
@@ -253,6 +271,8 @@ global $db, $jconf;
 // VCR: update recording link
 function update_db_stream_status($id, $status) {
 global $db, $jconf;
+
+	if ( empty($status) ) return false;
 
 	$db = db_maintain();
 
