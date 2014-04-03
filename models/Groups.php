@@ -52,18 +52,20 @@ class Groups extends \Springboard\Model {
     
   }
   
-  public function getGroupCount( $user ) {
+  public function getGroupCount( $user, $organizationid ) {
     
     return $this->db->getOne("
       SELECT COUNT(*)
       FROM groups
-      WHERE userid = '" . $user['id'] . "'
+      WHERE
+        userid         = '" . $user['id'] . "' AND
+        organizationid = '$organizationid'
       LIMIT 1
     ");
     
   }
   
-  public function getGroupArray( $start, $limit, $orderby, $user ) {
+  public function getGroupArray( $start, $limit, $orderby, $user, $organizationid ) {
     
     return $this->db->getArray("
       SELECT
@@ -73,8 +75,9 @@ class Groups extends \Springboard\Model {
         groups AS g,
         groups_members AS gm
       WHERE
-        g.userid = '" . $user['id'] . "' AND
-        gm.groupid = g.id
+        g.userid         = '" . $user['id'] . "' AND
+        gm.groupid       = g.id AND
+        g.organizationid = '$organizationid'
       GROUP BY g.id
       ORDER BY $orderby
       LIMIT $start, $limit

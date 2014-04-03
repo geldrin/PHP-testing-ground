@@ -270,7 +270,7 @@ break;
 
 	// Recordings: finalize masters (once daily, after midnight)
 	$start_time = time();
-	$inwhichhour = 17;
+	$inwhichhour = 18;
 	if ( ( date("G") == $inwhichhour ) and ( empty($finalizedonelasttime) or ( ( $start_time - $finalizedonelasttime ) > 3600 * 24 ) ) ) {
 
 		$recordings = getRecordingMastersToFinalize();
@@ -283,14 +283,14 @@ break;
 var_dump($recording);
 
 			$debug->log($jconf['log_dir'], $myjobid . ".log", "Recording finalization for id = " . $recording['id'] . " started.", $sendmail = false);
-/*
+
 			$err = create_directory($destination_path);
 			if ( !$err['code'] ) {
 				$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Cannot create directory " . $destination_path, $sendmail = true);
 				$recordings->MoveNext();
 				continue;
 			}
-*/
+
 			if ( $recording['masterstatus'] == $jconf['dbstatus_uploaded'] ) {
 
 				$idx = "";
@@ -299,7 +299,7 @@ var_dump($recording);
 				$destination_filename = $destination_path . $recording['id'] . "_" . $suffix . "." . $recording[$idx . 'mastervideoextension'];
 echo $source_filename . "\n";
 echo $destination_filename . "\n";
-exit;
+
 				// Copy media file
 				$start_time = time();
 				if ( !copy($source_filename, $destination_filename) ) {
@@ -310,7 +310,7 @@ exit;
 					$duration = time() - $start_time;
 					$hms = secs2hms($duration);
 					$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Copying " . $source_filename . " to " . $destination_filename . " finished in " . $hms . " time", $sendmail = false);
-/*					if ( !unlink($source_filename) ) {
+					if ( !unlink($source_filename) ) {
 						$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Cannot remove file " . $source_filename, $sendmail = true);
 						$recordings->MoveNext();
 						continue;
@@ -318,7 +318,8 @@ exit;
 						$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] File " . $source_filename . " removed.", $sendmail = false);
 						updateMasterRecordingStatus($recording['id'], $jconf['dbstatus_copystorage_ok'], "recording");
 					}
-*/
+
+exit;
 				}
 
 			}
