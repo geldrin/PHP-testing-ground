@@ -13,7 +13,7 @@ if ( !isset( $departmentModel ) ) {
 }
 
 $accesstypes = $l->getLov('accesstype');
-if ( $groupModel->getGroupCount( $user ) == 0 )
+if ( $groupModel->getGroupCount( $user, $this->controller->organization['id'] ) == 0 )
   unset( $accesstypes['groups'] );
 
 if ( $departmentModel->getCount() == 0 )

@@ -25,11 +25,17 @@ class Index extends \Visitor\Paging {
   
   protected function setupCount() {
     $this->groupModel = $this->bootstrap->getModel('groups');
-    return $this->groupModel->getGroupCount( $this->user );
+    return $this->groupModel->getGroupCount(
+      $this->user,
+      $this->controller->organization['id']
+    );
   }
   
   protected function getItems( $start, $limit, $orderby ) {
-    return $this->groupModel->getGroupArray( $start, $limit, $orderby, $this->user );
+    return $this->groupModel->getGroupArray(
+      $start, $limit, $orderby,
+      $this->user, $this->controller->organization['id']
+    );
   }
   
 }
