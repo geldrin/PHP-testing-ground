@@ -98,8 +98,9 @@ $config = array(
         groups AS g,
         groups_members AS gm
       WHERE
-        gm.userid = '" . $user['id'] . "' AND
-        g.id      = gm.groupid
+        gm.userid        = '" . $user['id'] . "' AND
+        g.id             = gm.groupid AND
+        g.organizationid = '" . $this->controller->organization['id'] . "'
       ORDER BY g.name DESC
     ",
     'validation'  => array(
