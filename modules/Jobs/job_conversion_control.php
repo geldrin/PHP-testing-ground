@@ -38,6 +38,7 @@ $myjobid = $jconf['jobid_conv_control'];
 
 clearstatcache();
 
+// Watchdog
 $app->watchdog();
 	
 // Establish database connection

@@ -91,10 +91,15 @@ updateRecordingVersionStatus(2, "convert");
 		log_recording_conversion($recording['id'], $jconf['jobid_media_convert'], $jconf['dbstatus_init'], $global_log, "-", "-", 0, false);
 
 		// DOWNLOAD: download media from front-end server
-		if ( !copyMediaToConverter($recording) ) {
+		$err = copyMediaToConverter($recording); 
+		// Check if we need to stop conversion (do not handle error)
+		if ( checkRecordingVersionToStop($recording) ) break;
+		if ( !$err ) {
+			// recordings_versions.status = "failedcopyingfromfrontend"
 			updateRecordingVersionStatus($recording['recordingversionid'], $jconf['dbstatus_copyfromfe_err']);
 			break;
 		}
+		// recordings_versions.status = "copiedfromfrontend"
 		updateRecordingVersionStatus($recording['recordingversionid'], $jconf['dbstatus_copyfromfe_ok']);
 
 		// Watchdog
@@ -103,6 +108,8 @@ updateRecordingVersionStatus(2, "convert");
 		// Video thumbnail generation (when first video is converted)
 		if ( empty($encoding_profile['parentid']) and ( $encoding_profile['type'] == "recording" ) and ( $encoding_profile['mediatype'] == "video" ) ) {
 			$err = convertVideoThumbnails($recording);
+			// Check if we need to stop conversion
+			if ( checkRecordingVersionToStop($recording) ) break;
 		}
 
 //var_dump($recording);
@@ -111,7 +118,10 @@ updateRecordingVersionStatus(2, "convert");
 		$app->watchdog();
 
 		// CONVERT: convert recording version
-		if ( !convertMedia($recording, $encoding_profile) ) {
+		$err = convertMedia($recording, $encoding_profile);
+		// Check if we need to stop conversion
+		if ( checkRecordingVersionToStop($recording) ) break;
+		if ( !$err ) {
 			updateRecordingVersionStatus($recording['recordingversionid'], $jconf['dbstatus_conv_err']);
 			break;
 		}
@@ -120,11 +130,20 @@ updateRecordingVersionStatus(2, "convert");
 		$app->watchdog();
 
 		// UPLOAD: upload resulted file to front-end
-		if ( !copyMediaToFrontEnd($recording, $encoding_profile) ) {
+		$err = copyMediaToFrontEnd($recording, $encoding_profile);
+		// Check if we need to stop conversion
+		if ( checkRecordingVersionToStop($recording) ) break;
+		if ( !$err ) {
+			// recordings_versions.status = "failedcopyingtostorage"
 			updateRecordingVersionStatus($recording['recordingversionid'], $jconf['dbstatus_copystorage_err']);
 			break;
 		}
+		// recordings_versions.status = "onstorage"
 		updateRecordingVersionStatus($recording['recordingversionid'], $jconf['dbstatus_copystorage_ok']);
+		// recordings.(content)smilstatus = "regenerate" (new version is ready, regenerate SMIL file)
+		$type = "smil";
+		if  ( $recording['iscontent'] == 1 ) $type = "contentsmil";
+		updateRecordingStatus($recording['id'], $jconf['dbstatus_regenerate'], $type);
 
 		// Watchdog
 		$app->watchdog();
@@ -646,6 +665,23 @@ function copyMediaToFrontEnd($recording, $profile) {
 	if ( !$err['code'] ) $debug->log($jconf['log_dir'], $jconf['jobid_media_convert'] . ".log", "MSG: " . $err['message'] . "\nCOMMAND: " . $err['command'] . "\nRESULT: " . $err['result'], $sendmail = true);
 
 	return true;
+}
+
+function checkRecordingVersionToStop($recording) {
+global $jconf, $debug, $myjobid;
+
+	// status = "stop"?
+	if ( getRecordingVersionStatus($recording['recordingversionid']) == $jconf['dbstatus_stop'] ) {
+		// Cleanup temp directory
+		$err = remove_file_ifexists($recording['temp_directory']);
+		if ( !$err['code'] ) $debug->log($jconf['log_dir'], $jconf['jobid_media_convert'] . ".log", "MSG: " . $err['message'] . "\nCOMMAND: " . $err['command'] . "\nRESULT: " . $err['result'], $sendmail = true);
+		// recordings_versions.status = "stopped"
+		updateRecordingVersionStatus($recording['recordingversionid'], $jconf['dbstatus_stopped']);
+		$debug->log($jconf['log_dir'], $jconf['jobid_media_convert'] . ".log", "[INFO] Conversion STOPPED for recording version id = " . $recording['recordingversionid'] . ", recordingid = " . $recording['id'] . ".", $sendmail = false);
+		return true;
+	}
+
+	return false;
 }
 
 ?>

@@ -77,6 +77,16 @@ global $app, $debug, $jconf, $myjobid;
 	return true;
 }
 
+function getRecordingVersionStatus($recordingversionid) {
+global $app, $debug, $jconf, $myjobid;
+
+	$recordingVersionObj = $app->bootstrap->getModel('recordings_versions');
+	$recordingVersionObj->select($recordingversionid);
+    $recversion = $recordingVersionObj->getRow();
+
+	return $recversion['status'];
+}
+
 function updateRecordingVersionStatusAll($recordingid, $status) {
 global $app, $debug, $jconf, $myjobid, $db;
 
@@ -133,7 +143,7 @@ global $app, $debug, $jconf, $myjobid;
     $recordingVersionObj->updateRow($values);
 
 	// Log status change
-	$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Recording version id = " . $recording['recordingversionid'] . " media information has been updated.\n" . $print_r($values, true), $sendmail = false);
+	$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Recording version id = " . $recording['recordingversionid'] . " media information has been updated.\n" . print_r($values, true), $sendmail = false);
 
 	// Video thumbnails: update if generated
 	if ( !empty($recording['thumbnail_numberofindexphotos']) and !empty($recording['thumbnail_indexphotofilename']) ) {
@@ -148,7 +158,7 @@ global $app, $debug, $jconf, $myjobid;
 		$recordingObj->updateRow($values);
 
 		// Log status change
-		$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Recording id = " . $recording['id'] . " thumbnail information has been updated.\n" . $print_r($values, true), $sendmail = false);
+		$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Recording id = " . $recording['id'] . " thumbnail information has been updated.\n" . print_r($values, true), $sendmail = false);
 	}
 
 	return true;

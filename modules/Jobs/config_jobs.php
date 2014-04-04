@@ -71,6 +71,8 @@ return array('config_jobs' => array(
 	'dbstatus_copystorage'			=> 'copyingtostorage',
 	'dbstatus_copystorage_ok'		=> 'onstorage',
 	'dbstatus_copystorage_err'		=> 'failedcopyingtostorage',
+	'dbstatus_stop'					=> 'stop',
+	'dbstatus_stopped'				=> 'stopped',
 // rename!
 	'dbstatus_conv'					=> 'converting',
 	'dbstatus_convert'				=> 'convert',
