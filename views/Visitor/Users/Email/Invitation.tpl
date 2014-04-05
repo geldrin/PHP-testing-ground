@@ -71,6 +71,7 @@ $departments
           {$item.name|escape:html}{if !$smarty.foreach.department.last}<br/>{/if}
         {/foreach}
       {/if}
+      <br/>
     <td style="width: 40px; background-color:'#e0e0e0';" bgcolor="#e0e0e0"></td>
   </tr>
 </table>
