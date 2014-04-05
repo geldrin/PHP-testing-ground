@@ -1,0 +1,1 @@
+ALTER TABLE  `channels` ADD  `lastmodifiedtimestamp` TIMESTAMP NULL;

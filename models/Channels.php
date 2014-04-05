@@ -1000,4 +1000,61 @@ class Channels extends \Springboard\Model {
     
   }
   
+  public function search( $term, $userid, $organizationid ) {
+    
+    $searchterm  = str_replace( ' ', '%', $term );
+    $searchterm  = $this->db->qstr( '%' . $searchterm . '%' );
+    $term        = $this->db->qstr( $term );
+
+    $query   = "
+      SELECT
+        (
+          1 +
+          IF( c.title = $term, 2, 0 ) +
+          IF( c.title LIKE $searchterm, 2, 0 ) +
+          IF( c.subtitle LIKE $searchterm, 1, 0 )
+        ) AS relevancy,
+        c.id,
+        c.userid,
+        c.organizationid,
+        c.title,
+        c.subtitle,
+        c.description,
+        c.indexphotofilename
+      FROM channels AS c
+      WHERE
+        c.isliveevent = '0' AND
+        c.parentid    = '0' AND -- csak root channeleket
+        (
+          c.title LIKE $searchterm OR
+          c.subtitle LIKE $searchterm OR
+          c.description LIKE $searchterm
+        ) AND
+        (
+          c.organizationid = '$organizationid' OR
+          (
+            c.userid         = '$userid' AND
+            c.organizationid = '$organizationid'
+          )
+        )
+      ORDER BY relevancy DESC
+      LIMIT 20
+    ";
+    
+    return $this->db->getArray( $query );
+    
+  }
+  
+  public function updateModification() {
+    
+    $this->ensureID();
+    $channelids   = $this->findParents();
+    $channelids[] = $this->id;
+    $this->db->execute("
+      UPDATE channels
+      SET lastmodifiedtimestamp = '" . date('Y-m-d H:i:s') . "'
+      WHERE id IN('" . implode("', '", $channelids ) . "')
+    ");
+
+  }
 }
