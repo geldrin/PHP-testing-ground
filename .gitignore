@@ -15,3 +15,4 @@ data/cache/application/**
 data/logs/**
 data/logs/jobs/**
 data/watchdog/**
+modules/Utils/archive/*
