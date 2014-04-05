@@ -39,4 +39,15 @@ class Users_invitations extends \Springboard\Model {
     ");
   }
 
+  public function isExpired() {
+    $this->ensureObjectLoaded();
+    return !$this->db->getOne("
+      SELECT COUNT(*)
+      FROM users_invitations AS ui
+      WHERE
+        ui.id = '" . $this->id . "' AND
+        ui.invitationvaliduntil >= NOW()
+      LIMIT 1
+    ");
+  }
 }

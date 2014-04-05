@@ -181,6 +181,9 @@ class Controller extends \Visitor\Controller {
     if ( !$invitationModel->row or $invitationModel->row['validationcode'] !== $validationcode )
       $this->redirectToController('contents', 'invitationvalidationfailed');
     
+    if ( $invitationModel->isExpired() )
+      $this->redirectToController('contents', 'invitationvalidationexpired');
+
     $user                 = $this->bootstrap->getSession('user');
     $forward              = $this->application->getParameter('forward');
     $invitationSession    = $this->bootstrap->getSession('userinvitation');

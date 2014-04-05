@@ -131,6 +131,15 @@ $config    = array(
 );
 
 include( $this->bootstrap->config['modulepath'] . 'Visitor/Form/Configs/Timestampdisabledafter.php');
+
+$config['invitationvaliduntil']                = $config['timestampdisabledafter'];
+$config['invitationvaliduntil']['displayname'] = $l('users', 'invitationvaliduntil');
+$config['invitationvaliduntil']['postfix']     = str_replace(
+  'class="timestampdisabledafter"',
+  'class="invitationvaliduntil"',
+  $config['invitationvaliduntil']['postfix']
+);
+
 $config = $config + array(
   'fs_permission' => array(
     'type'   => 'fieldset',

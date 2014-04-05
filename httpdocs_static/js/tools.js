@@ -1699,7 +1699,7 @@ function setupDisabledAfter() {
   }).change();
   
   setupDefaultDateTimePicker('#timestampdisabledafter');
-  $j('.presettime').click(function(e) {
+  $j('.timestampdisabledafter .presettime').click(function(e) {
     e.preventDefault();
     $j('#timestampdisabledafter').datetimepicker('setDate', $j(this).attr('data-date') );
   })
@@ -1868,4 +1868,10 @@ function setupUserInvitation() {
     });
   });
 
+  setupDefaultDateTimePicker('#invitationvaliduntil');
+  $j('.invitationvaliduntil .presettime').click(function(e) {
+    e.preventDefault();
+    $j('#invitationvaliduntil').datetimepicker('setDate', $j(this).attr('data-date') );
+  })
+  
 }

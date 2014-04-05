@@ -111,6 +111,7 @@ class Invite extends \Visitor\HelpForm {
         'organizationid'         => $this->controller->organization['id'],
         'timestamp'              => $timestamp,
         'templateid'             => $templateid,
+        'invitationvaliduntil'   => $values['invitationvaliduntil'],
       );
 
       // mert a contenttype nocontent|recordingid|livefeedid|channelid lehet
