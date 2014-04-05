@@ -50,7 +50,8 @@ class Modify extends \Visitor\HelpForm {
       $this->channelModel->updateChildrenPublic( $values['ispublic'] );
     
     $this->channelModel->updateRow( $values );
-    
+    $this->channelModel->updateModification();
+
     $this->controller->redirect(
       $this->application->getParameter('forward', 'channels/mychannels')
     );

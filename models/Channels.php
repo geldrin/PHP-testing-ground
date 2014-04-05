@@ -1070,4 +1070,16 @@ class Channels extends \Springboard\Model {
     
   }
   
+  public function updateModification() {
+    
+    $this->ensureID();
+    $channelids   = $this->findParents();
+    $channelids[] = $this->id;
+    $this->db->execute("
+      UPDATE channels
+      SET lastmodifiedtimestamp = '" . date('Y-m-d H:i:s') . "'
+      WHERE id IN('" . implode("', '", $channelids ) . "')
+    ");
+
+  }
 }

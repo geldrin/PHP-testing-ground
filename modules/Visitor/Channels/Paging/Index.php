@@ -2,14 +2,14 @@
 namespace Visitor\Channels\Paging;
 
 class Index extends \Visitor\Paging {
-  protected $orderkey = 'starttime_desc';
+  protected $orderkey = 'lastmodified_desc';
   protected $sort = array(
-    'creation'       => 'id',
-    'creation_desc'  => 'id DESC',
-    'starttime'      => 'starttimestamp',
-    'starttime_desc' => 'starttimestamp DESC',
-    'title'          => 'title',
-    'title_desc'     => 'title DESC',
+    'creation'          => 'id',
+    'creation_desc'     => 'id DESC',
+    'lastmodified'      => 'lastmodifiedtimestamp, id',
+    'lastmodified_desc' => 'lastmodifiedtimestamp DESC, id DESC',
+    'title'             => 'title',
+    'title_desc'        => 'title DESC',
   );
   protected $template          = 'Visitor/channellistitem.tpl';
   protected $insertbeforepager = Array( 'Visitor/Channels/Paging/IndexBeforepager.tpl' );

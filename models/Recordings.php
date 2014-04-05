@@ -2835,6 +2835,10 @@ class Recordings extends \Springboard\Model {
     $this->updateChannelIndexPhotos();
     $this->updateCategoryCounters();
 
+    $channelModel = $this->bootstrap->getModel('channels');
+    $channelModel->id = $channelid;
+    $channelModel->updateModification();
+
     return true;
     
   }
@@ -2855,7 +2859,11 @@ class Recordings extends \Springboard\Model {
     
     $this->updateChannelIndexPhotos();
     $this->updateCategoryCounters();
-    
+
+    $channelModel = $this->bootstrap->getModel('channels');
+    $channelModel->id = $channelid;
+    $channelModel->updateModification();
+
   }
   
   public function getIntroOutroCount( $organizationid ) {
