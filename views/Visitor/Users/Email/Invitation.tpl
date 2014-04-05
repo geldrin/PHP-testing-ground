@@ -21,10 +21,10 @@ $departments
 
   {$template.prefix|default:#users__templateprefix_default#}
 
-<table border="0" cellpadding="15" cellspacing="0">
+<table border="0" cellpadding="10" cellspacing="0">
   <tr>
     <td style="width: 40px; background-color:'#e0e0e0';" bgcolor="#e0e0e0"></td>
-    <td style="background-color:'#e0e0e0'; padding: 15px 0;" bgcolor="#e0e0e0">
+    <td style="background-color:'#e0e0e0'; padding: 10px 0;" bgcolor="#e0e0e0">
       {if !empty( $recording )}
         {capture assign=forward}{$BASE_URI}{$language}/recordings/details/{$recording.id},{$recording.title|filenameize}{/capture}
         <b>{#users__email_invitation_recording#}:</b><br/>
