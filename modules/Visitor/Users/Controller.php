@@ -521,8 +521,12 @@ class Controller extends \Visitor\Controller {
     if ( !isset( $this->invitationcache['permissions-' . $invitation['permissions'] ] ) ) {
 
       $permissions = array();
-      foreach ( explode('|', $invitation['permissions'] ) as $permission )
+      foreach ( explode('|', $invitation['permissions'] ) as $permission ) {
+        if ( !$permission )
+          continue;
+
         $permissions[] = $l->getLov('permissions', null, $permission );
+      }
 
       $this->invitationcache['permissions-' . $invitation['permissions'] ] = true;
       $this->toSmarty['permissions'] = $permissions;
