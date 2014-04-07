@@ -1057,7 +1057,7 @@ class Controller extends \Visitor\Controller {
         
         $recordingModel->upload( $info );
         $uploadModel->updateRow( array(
-            'recordingid' => $recordingsModel->id,
+            'recordingid' => $recordingModel->id,
           )
         );
         $channelid = $this->application->getNumericParameter('channelid');
