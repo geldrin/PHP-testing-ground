@@ -110,9 +110,13 @@ if ( $recordings !== false ) {
 // !!!
 		update_db_mobile_status($recording['id'], $jconf['dbstatus_deleted']);
 // !!!
+		// smilstatus = NULL
+		updateRecordingStatus($recording['id'], null, "smil");
 		if ( !empty($recording['contentmasterstatus']) ) {
 			updateRecordingStatus($recording['id'], $jconf['dbstatus_deleted'], "content");
 			updateMasterRecordingStatus($recording['id'], $jconf['dbstatus_deleted'], "content");
+			// contentsmilstatus = NULL
+			updateRecordingStatus($recording['id'], null, "contentsmil");
 		}
 
 		// Update attached documents: of removed recording: status, delete document cache
@@ -177,8 +181,8 @@ if ( $recordings !== false ) {
 
 		// recordings_versions.status = "markedfordeletion" for all content surrogates (will be deleted in the next step, see below)
 		updateRecordingVersionStatusAll($recording['id'], $jconf['dbstatus_markedfordeletion'], "content");
-		// contentsmilstatus = "invalid"
-		updateRecordingStatus($recording['id'], $jconf['dbstatus_invalid'], "contentsmil");
+		// contentsmilstatus = NULL
+		updateRecordingStatus($recording['id'], null, "contentsmil");
 
 		// Watchdog
 		$app->watchdog();
