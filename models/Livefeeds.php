@@ -390,6 +390,7 @@ class Livefeeds extends \Springboard\Model {
         )
       ;
 
+    $data['intro_servers'] = $data['livePlaceholder_servers'];
     $data['intro_streams'] = $data['livePlaceholder_streams'];
     return $data;
 
