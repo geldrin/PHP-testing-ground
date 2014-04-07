@@ -108,7 +108,7 @@ break;
 		// Update status fields: status, masterstatus and all recording versions
 		updateRecordingStatus($recording['id'], $jconf['dbstatus_deleted'], "recording");
 		updateMasterRecordingStatus($recording['id'], $jconf['dbstatus_deleted'], "recording");
-		updateRecordingVersionStatusAll($recording['id'], $jconf['dbstatus_deleted']);
+		updateRecordingVersionStatusAll($recording['id'], $jconf['dbstatus_deleted'], "all");
 // !!!
 		update_db_mobile_status($recording['id'], $jconf['dbstatus_deleted']);
 // !!!
@@ -165,9 +165,9 @@ if ( $recordings !== false ) {
 
 		// Master path
 		$master_filename = $remove_path . "master/" . $recording['id'] . "_content." . $recording['contentmastervideoextension'];
-echo $master_filename . "\n";
+echo "Content master to remove: " . $master_filename . "\n";
 
-		// Remove recording directory
+		// Remove content master
 /*		$err = remove_file_ifexists($master_filename);
 		if ( !$err['code'] ) {
 			// Error: we skip this one, admin must check it manually
@@ -179,60 +179,10 @@ echo $master_filename . "\n";
 		}
 */
 
-		$recversions = getRecordingVersions($recording['id'], $jconf['dbstatus_copystorage_ok'], "content");
-echo "UFF:\n";
-var_dump($recversions);
-
-		if ( $recversions !== false ) {
-
-			while ( !$recversions->EOF ) {
-
-				$recversion = $recversions->fields;
-
-var_dump($recversion);
-
-				if ( ( $recversion['status'] == $jconf['dbstatus_copystorage_ok'] ) or ( $recversion['status'] == $jconf['dbstatus_markedfordeletion'] ) ) {
-
-					$recversion_filename = $remove_path = $app->config['recordingpath'] . ( $recording['id'] % 1000 ) . "/" . $recording['id'] . "/" . $recversion['filename'];
-
-					// Remove content surrogate
-/*					$err = remove_file_ifexists($recversion_filename);
-					if ( !$err['code'] ) {
-						// Error: we skip this one, admin must check it manually
-						$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Cannot remove recording version.\n" . $err['message'] . "\nCommand:\n" . $err['command'] . "\nOutput:\n" . $err['command_output'], $sendmail = true);
-					} else {
-						// recordings_versions.status = "deleted"
-						updateRecordingVersionStatus($recversion['id'], $jconf['dbstatus_deleted']);
-						$debug->log($jconf['log_dir'], $myjobid . ".log", "[OK] Recording version content removed. Info: recordingid = " . $recversion['recordingid'] . ", recordingversionid = " . $recversion['id'] . ", filename = " . $recversion_filename, $sendmail = false);
-					}
-*/
-echo $recversion_filename . "\n";
-
-				}
-
-				$recversions->MoveNext();
-			}
-		}
-exit;
-
-/*
-		// Log file path information
-		$log_msg .= "Remove: " . $remove_path . "\n";
-
-		// Check directory size
-		$err = directory_size($remove_path);
-	
-		$dir_size = 0;
-		if ( $err['code'] === true ) {
-			$size_toremove += $err['size'];
-			$dir_size = round($err['size'] / 1024 / 1024, 2);
-			$log_msg .= "Recording size: " . $dir_size . "MB\n\n";
-		}
-
-		// Log recording to remove
-		$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Removing recording:\n" . $log_msg, $sendmail = false);
-*/
-
+		// recordings_versions.status = "markedfordeletion" for all content surrogates (will be deleted in the next step, see below)
+//		updateRecordingVersionStatusAll($recording['id'], $jconf['dbstatus_markedfordeletion'], "content");
+		// contentsmilstatus = "invalid"
+//		updateRecordingStatus($recording['id'], $jconf['dbstatus_invalid'], "contentsmil");
 
 		// Watchdog
 		$app->watchdog();
@@ -241,6 +191,38 @@ exit;
 		$recordings->MoveNext();
 	}
 }
+exit;
+
+// Surrogates: delete recordings_versions elements one by one
+$recversions = getRecordingVersions($recording['id'], $jconf['dbstatus_markedfordeletion'], "all");
+echo "UFF:\n";
+var_dump($recversions);
+if ( $recversions !== false ) {
+
+	while ( !$recversions->EOF ) {
+
+		$recversion = $recversions->fields;
+
+var_dump($recversion);
+
+		$recversion_filename = $remove_path = $app->config['recordingpath'] . ( $recording['id'] % 1000 ) . "/" . $recording['id'] . "/" . $recversion['filename'];
+echo $recversion_filename . "\n";
+
+		// Remove content surrogate
+/*		$err = remove_file_ifexists($recversion_filename);
+		if ( !$err['code'] ) {
+			// Error: we skip this one, admin must check it manually
+			$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Cannot remove recording version.\n" . $err['message'] . "\nCommand:\n" . $err['command'] . "\nOutput:\n" . $err['command_output'], $sendmail = true);
+		} else {
+			// recordings_versions.status = "deleted"
+			updateRecordingVersionStatus($recversion['id'], $jconf['dbstatus_deleted']);
+			$debug->log($jconf['log_dir'], $myjobid . ".log", "[OK] Recording version removed. Info: recordingid = " . $recversion['recordingid'] . ", recordingversionid = " . $recversion['id'] . ", filename = " . $recversion_filename, $sendmail = false);
+		}
+*/
+		$recversions->MoveNext();
+	}
+}
+exit;
 
 // Attachments: remove uploaded attachments
 $attachments = queryAttachmentsToRemove();

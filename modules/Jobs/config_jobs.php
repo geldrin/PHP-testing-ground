@@ -78,6 +78,7 @@ return array('config_jobs' => array(
 	'dbstatus_convert'				=> 'convert',
 	'dbstatus_conv_err'				=> 'failedconverting',
 	'dbstatus_regenerate'			=> 'regenerate',
+	'dbstatus_invalid'				=> 'invalid',
 // kuka?
 	'dbstatus_conv_thumbs'			=> 'converting1thumbnails',
 	'dbstatus_conv_audio'			=> 'converting2audio',

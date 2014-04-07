@@ -87,10 +87,16 @@ global $app, $debug, $jconf, $myjobid;
 	return $recversion['status'];
 }
 
-function updateRecordingVersionStatusAll($recordingid, $status) {
+function updateRecordingVersionStatusAll($recordingid, $status, $type = "recording") {
 global $app, $debug, $jconf, $myjobid, $db;
 
+	if ( ( $type != "recording" ) and ( $type != "content" ) and ( $type != "all" ) ) return false;
+
 	if ( empty($status) ) return false;
+
+	if ( $type == "recording" ) $iscontent_filter = " AND rv.iscontent = 0";
+	if ( $type == "content" ) $iscontent_filter = " AND rv.iscontent = 1";
+	if ( $type == "all" ) $iscontent_filter = "";
 
 	$values = array(
 		'status' => $status
@@ -102,7 +108,7 @@ global $app, $debug, $jconf, $myjobid, $db;
 		UPDATE
 			recordings_versions as rv
 		SET
-			rv.status = '" . $status . "'
+			rv.status = '" . $status . "'" . $iscontent_filter . "
 		WHERE
 			rv.recordingid = " . $recordingid;
 
