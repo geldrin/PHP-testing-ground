@@ -778,10 +778,11 @@ global $db, $jconf, $debug, $myjobid;
 function getRecordingVersions($recordingid, $status, $type = "recording") {
 global $db, $jconf, $debug, $myjobid;
 
-	if ( ( $type != "recording" ) and ( $type != "content" ) ) return false;
+	if ( ( $type != "recording" ) and ( $type != "content" ) and ( $type != "all" ) ) return false;
 
-	$iscontent = 0;
-	if ( $type == "content" ) $iscontent = 1;
+	$iscontent_filter = " AND iscontent = 0";
+	if ( $type == "content" ) $iscontent_filter = " AND iscontent = 1";
+	if ( $type == "all" ) $iscontent_filter = "";
 
 	$db = db_maintain();
 
@@ -800,8 +801,7 @@ global $db, $jconf, $debug, $myjobid;
 		FROM
 			recordings_versions
 		WHERE
-			recordingid = " . $recordingid . " AND
-			iscontent = " . $iscontent . "
+			recordingid = " . $recordingid . $iscontent_filter . "
 		ORDER BY
 			id";
 
