@@ -108,9 +108,9 @@ global $app, $debug, $jconf, $myjobid, $db;
 		UPDATE
 			recordings_versions as rv
 		SET
-			rv.status = '" . $status . "'" . $iscontent_filter . "
+			rv.status = '" . $status . "'
 		WHERE
-			rv.recordingid = " . $recordingid;
+			rv.recordingid = " . $recordingid . $iscontent_filter;
 
 	try {
 		$rs = $db->Execute($query);

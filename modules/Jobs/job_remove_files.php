@@ -54,8 +54,6 @@ if ( $recordings !== false ) {
 	$size_toremove = 0;
 
 	while ( !$recordings->EOF ) {
-// !!!
-break;
 
 		$recording = $recordings->fields;
 
@@ -155,8 +153,6 @@ if ( $recordings !== false ) {
 
 		$recording = $recordings->fields;
 
-// !!!!!!!!!!!!!!!!!!!!!!!!!!!
-
 		$log_msg  = "recordingid: " . $recording['id'] . "\n";
 		$log_msg .= "userid: " . $recording['email'] . " (domain: " . $recording['domain'] . ")\n";
 
@@ -165,24 +161,24 @@ if ( $recordings !== false ) {
 
 		// Master path
 		$master_filename = $remove_path . "master/" . $recording['id'] . "_content." . $recording['contentmastervideoextension'];
-echo "Content master to remove: " . $master_filename . "\n";
 
 		// Remove content master
-/*		$err = remove_file_ifexists($master_filename);
+		$err = remove_file_ifexists($master_filename);
 		if ( !$err['code'] ) {
 			// Error: we skip this one, admin must check it manually
 			$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Cannot remove recording.\n" . $err['message'] . "\nCommand:\n" . $err['command'] . "\nOutput:\n" . $err['command_output'], $sendmail = true);
 		} else {
 			// contentmasterstatus = "deleted"
 			updateMasterRecordingStatus($recording['id'], $jconf['dbstatus_deleted'], "content");
-			$debug->log($jconf['log_dir'], $myjobid . ".log", "[OK] Recording content master id = " . $recording['id'] . " removed.", $sendmail = false);
+			// contentstatus = "deleted"
+			updateRecordingStatus($recording['id'], $jconf['dbstatus_deleted'], "content");
+			$debug->log($jconf['log_dir'], $myjobid . ".log", "[OK] Recording content master id = " . $recording['id'] . " removed. Filename: " . $master_filename, $sendmail = false);
 		}
-*/
 
 		// recordings_versions.status = "markedfordeletion" for all content surrogates (will be deleted in the next step, see below)
-//		updateRecordingVersionStatusAll($recording['id'], $jconf['dbstatus_markedfordeletion'], "content");
+		updateRecordingVersionStatusAll($recording['id'], $jconf['dbstatus_markedfordeletion'], "content");
 		// contentsmilstatus = "invalid"
-//		updateRecordingStatus($recording['id'], $jconf['dbstatus_invalid'], "contentsmil");
+		updateRecordingStatus($recording['id'], $jconf['dbstatus_invalid'], "contentsmil");
 
 		// Watchdog
 		$app->watchdog();
@@ -191,25 +187,19 @@ echo "Content master to remove: " . $master_filename . "\n";
 		$recordings->MoveNext();
 	}
 }
-exit;
 
 // Surrogates: delete recordings_versions elements one by one
-$recversions = getRecordingVersions($recording['id'], $jconf['dbstatus_markedfordeletion'], "all");
-echo "UFF:\n";
-var_dump($recversions);
+$recversions = queryRecordingsVersionsToRemove();
 if ( $recversions !== false ) {
 
 	while ( !$recversions->EOF ) {
 
 		$recversion = $recversions->fields;
 
-var_dump($recversion);
-
-		$recversion_filename = $remove_path = $app->config['recordingpath'] . ( $recording['id'] % 1000 ) . "/" . $recording['id'] . "/" . $recversion['filename'];
-echo $recversion_filename . "\n";
+		$recversion_filename = $app->config['recordingpath'] . ( $recversion['recordingid'] % 1000 ) . "/" . $recversion['recordingid'] . "/" . $recversion['filename'];
 
 		// Remove content surrogate
-/*		$err = remove_file_ifexists($recversion_filename);
+		$err = remove_file_ifexists($recversion_filename);
 		if ( !$err['code'] ) {
 			// Error: we skip this one, admin must check it manually
 			$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Cannot remove recording version.\n" . $err['message'] . "\nCommand:\n" . $err['command'] . "\nOutput:\n" . $err['command_output'], $sendmail = true);
@@ -218,11 +208,10 @@ echo $recversion_filename . "\n";
 			updateRecordingVersionStatus($recversion['id'], $jconf['dbstatus_deleted']);
 			$debug->log($jconf['log_dir'], $myjobid . ".log", "[OK] Recording version removed. Info: recordingid = " . $recversion['recordingid'] . ", recordingversionid = " . $recversion['id'] . ", filename = " . $recversion_filename, $sendmail = false);
 		}
-*/
+
 		$recversions->MoveNext();
 	}
 }
-exit;
 
 // Attachments: remove uploaded attachments
 $attachments = queryAttachmentsToRemove();
@@ -295,7 +284,6 @@ global $jconf, $db, $app;
 
 	$node = $app->config['node_sourceip'];
 
-// !!! status v. masterstatus figyeles?
 	$query = "
 		SELECT
 			a.id,
@@ -313,15 +301,15 @@ global $jconf, $db, $app;
 			a.contentmastervideofilename,
 			a.contentmastervideoextension,
 			b.email,
-			c.id as organizationid,
+			c.id AS organizationid,
 			c.domain,
 			c.daystoretainrecordings
 		FROM
-			recordings as a,
-			users as b,
-			organizations as c
+			recordings AS a,
+			users AS b,
+			organizations AS c
 		WHERE
-			a." . $type . "status = '" . $jconf['dbstatus_markedfordeletion'] . "' AND
+			( a." . $type . "status = '" . $jconf['dbstatus_markedfordeletion'] . "' OR a." . $type . "masterstatus = '" . $jconf['dbstatus_markedfordeletion'] . "' ) AND
 			a." . $type . "mastersourceip = '" . $node . "' AND
 			a.userid = b.id AND
 			b.organizationid = c.id
@@ -341,6 +329,42 @@ global $jconf, $db, $app;
 
 	return $recordings;
 }
+
+function queryRecordingsVersionsToRemove() {
+global $jconf, $db, $app;
+
+	$query = "
+		SELECT
+			id,
+			recordingid,
+			qualitytag,
+			iscontent,
+			status,
+			resolution,
+			filename,
+			bandwidth,
+			isdesktopcompatible,
+			ismobilecompatible
+		FROM
+			recordings_versions
+		WHERE
+			status = '" . $jconf['dbstatus_markedfordeletion'] . "'";
+
+	try {
+		$recversions = $db->Execute($query);
+	} catch (exception $err) {
+		$debug->log($jconf['log_dir'], $jconf['jobid_remove_files'] . ".log", "[ERROR] SQL query failed.\n\n" . trim($query), $sendmail = true);
+		return false;
+	}
+
+	// Check if pending job exsits
+	if ( $recversions->RecordCount() < 1 ) {
+		return false;
+	}
+
+	return $recversions;
+}
+
 
 function queryAttachmentsToRemove() {
 global $jconf, $db, $app;

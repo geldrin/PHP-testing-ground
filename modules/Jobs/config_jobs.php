@@ -31,7 +31,7 @@ return array('config_jobs' => array(
 	// Sleep duration - number of seconds to sleep after an operation
 	'sleep_media'					=> 60,			// Media conversion
 	'sleep_short'					=> 5,			// Short sleep
-	'sleep_long'					=> 300,			// Long sleep
+	'sleep_long'					=> 100,			// Long sleep
 	'sleep_vcr'						=> 20,			// VCS job
 	'sleep_vcr_wait'				=> 20,			// VCS job Cisco TCS wait timeout
 	'sleep_doc'						=> 300,			// Document conversion
