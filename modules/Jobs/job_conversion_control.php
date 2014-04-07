@@ -60,11 +60,13 @@ if ( $recordings !== false ) {
 var_dump($recording);
 
 		// Insert recording versions (recording_versions)
-//		insertRecordingVersions($recording);
+		insertRecordingVersions($recording);
+exit;
 
 		$recordings->MoveNext();
 	}
 }
+exit;
 
 // Upload: make recording status "onstorage" when a recording version is ready
 // ...
@@ -124,7 +126,6 @@ var_dump($recording);
 // SMIL: generate new SMIL files
 $err = generateRecordingSMILs("recording");
 $err = generateRecordingSMILs("content");
-exit;
 
 // Close DB connection if open
 if ( is_resource($db->_connectionID) ) $db->close();
@@ -142,7 +143,6 @@ global $jconf, $debug, $db, $app;
 // !!!
 	$node = "stream.videosquare.eu";
 
-// master v. sima statuszt kell ellenorizni???
 	$query = "
 		SELECT
 			r.id,
@@ -157,11 +157,12 @@ global $jconf, $debug, $db, $app;
 		FROM
 			recordings AS r
 		WHERE
-			( r.mastersourceip = '" . $node . "' AND r.masterstatus = '" . $jconf['dbstatus_uploaded'] . "' ) OR
-			( r.contentmastersourceip = '" . $node . "' AND r.contentmasterstatus = '" . $jconf['dbstatus_uploaded'] . "' )
-AND r.id = 89
+			( r.mastersourceip = '" . $node . "' AND r.masterstatus = '" . $jconf['dbstatus_uploaded'] . "' AND r.status = '" . $jconf['dbstatus_uploaded'] . "' ) OR
+			( r.contentmastersourceip = '" . $node . "' AND r.contentmasterstatus = '" . $jconf['dbstatus_uploaded'] . "' AND r.contentstatus = '" . $jconf['dbstatus_uploaded'] . "' )
 		ORDER BY
 			r.id";
+
+echo $query;
 
 	try {
 		$rs = $db->Execute($query);
@@ -208,7 +209,6 @@ global $jconf, $debug, $db, $app;
 			rv.encodingprofileid = ep.id AND
 			( ep.mediatype = 'video' OR ( r.mastermediatype = 'audio' AND ep.mediatype = 'audio' ) ) AND
 			( ( r.mastersourceip = '" . $node . "' AND r.status = '" . $jconf['dbstatus_conv'] . "' ) OR ( r.contentmastersourceip = '" . $node . "' AND r.contentstatus = '" . $jconf['dbstatus_conv'] . "' ) )
-AND r.id = 89
 		GROUP BY
 			r.id";
 
@@ -238,6 +238,8 @@ global $db, $debug, $jconf, $app;
 	if ( $recording['status'] == $jconf['dbstatus_uploaded'] ) {
 
 		$profileset = getEncodingProfileSet("recording", $recording['mastervideores']);
+//var_dump($profileset);
+//exit;
 
 		if ( $profileset !== false ) {
 
@@ -272,6 +274,8 @@ global $db, $debug, $jconf, $app;
 	if ( $recording['contentstatus'] == $jconf['dbstatus_uploaded'] ) {
 
 		$profileset = getEncodingProfileSet("content", $recording['contentmastervideores']);
+//var_dump($profileset);
+//exit;
 
 		if ( $profileset !== false ) {
 
@@ -323,9 +327,15 @@ global $db, $debug, $jconf, $app;
 function getEncodingProfileSet($profile_type, $resolution) {
 global $db, $debug, $jconf;
 
-	$tmp = explode("x", $resolution, 2);
-	$resx = $tmp[0];
-	$resy = $tmp[1];
+	if ( !empty($resolution) ) {
+		$tmp = explode("x", $resolution, 2);
+		$resx = $tmp[0];
+		$resy = $tmp[1];
+		$ep_filter = "( ep.parentid IS NULL OR ( epprev.videobboxsizex < " . $resx . " AND " . $resx . " <= ep.videobboxsizex ) OR ( epprev.videobboxsizey < " . $resy . " AND " . $resy . " <= ep.videobboxsizey ) )";
+	} else {
+		// No resolution, assume audio only input
+		$ep_filter = "ep.mediatype = 'audio'";
+	}
 
 	$db = db_maintain();
 
@@ -356,10 +366,9 @@ global $db, $debug, $jconf;
 		WHERE
 			eg.default = 1 AND
 			eg.disabled = 0 AND
-			ep.type = '" . $profile_type . "' AND
-			( ep.parentid IS NULL OR ( epprev.videobboxsizex < " . $resx . " AND " . $resx . " <= ep.videobboxsizex ) OR ( epprev.videobboxsizey < " . $resy . " AND " . $resy . " <= ep.videobboxsizey ) )";
+			ep.type = '" . $profile_type . "' AND " . $ep_filter;
 
-//echo $query . "\n";
+echo $query . "\n";
 
 	try {
 		$profileset = $db->getArray($query);
