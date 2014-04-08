@@ -7,6 +7,10 @@ class Controller extends \Springboard\Controller\Visitor {
 
   public function init() {
 
+    // mert itt redirectelunk a megfelelo domainre, csak utana akarjuk
+    // https-re forcolni a domaint
+    $this->setupOrganization();
+
     if (
          $this->bootstrap->ssl and
          $this->bootstrap->config['forcesecuremaxage']
@@ -15,8 +19,6 @@ class Controller extends \Springboard\Controller\Visitor {
         '"max-age=' . $this->bootstrap->config['forcesecuremaxage'] . '"'
       ;
 
-    $this->setupOrganization();
-    
     if ( in_array( $this->module, array('api', 'jsonapi') ) ) // az api ->authenticate mindig kezeli
       return parent::init();
     
