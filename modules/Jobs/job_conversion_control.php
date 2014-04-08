@@ -157,12 +157,12 @@ global $jconf, $debug, $db, $app;
 		FROM
 			recordings AS r
 		WHERE
-			( r.mastersourceip = '" . $node . "' AND r.masterstatus = '" . $jconf['dbstatus_uploaded'] . "' AND r.status = '" . $jconf['dbstatus_uploaded'] . "' ) OR
-			( r.contentmastersourceip = '" . $node . "' AND r.contentmasterstatus = '" . $jconf['dbstatus_uploaded'] . "' AND r.contentstatus = '" . $jconf['dbstatus_uploaded'] . "' )
+			( r.mastersourceip = '" . $node . "' AND r.status = '" . $jconf['dbstatus_uploaded'] . "' ) OR
+			( r.contentmastersourceip = '" . $node . "' AND r.contentstatus = '" . $jconf['dbstatus_uploaded'] . "' )
 		ORDER BY
 			r.id";
 
-echo $query;
+//echo $query;
 
 	try {
 		$rs = $db->Execute($query);
