@@ -54,7 +54,7 @@ echo "getNewUploads()\n";
 if ( $recordings !== false ) {
 
 	while ( !$recordings->EOF ) {
-
+break;
 		$recording = array();
 		$recording = $recordings->fields;
 
@@ -77,7 +77,6 @@ if ( $recordings !== false ) {
 
 		$recording = array();
 		$recording = $recordings->fields;
-var_dump($recording);
 
 		// Update recording/content status to "onstorage"
 		if ( $recording['status'] == $jconf['dbstatus_conv'] ) updateRecordingStatus($recording['id'], $jconf['dbstatus_copystorage_ok'], "recording");
@@ -92,36 +91,42 @@ var_dump($recording);
 			continue;
 		}
 
-		// Send e-mail to user about successful conversion
-		$smarty = $app->bootstrap->getSmarty();
-		$organization = $app->bootstrap->getModel('organizations');
-		$organization->select($uploader_user['organizationid']);
-		$smarty->assign('organization', $organization->row);
-		$smarty->assign('filename', $recording['mastervideofilename']);
-		$smarty->assign('language', $uploader_user['language']);
-		$smarty->assign('recid', $recording['id']);
-		$smarty->assign('supportemail', $uploader_user['supportemail']);
-		$smarty->assign('domain', $uploader_user['domain']);
+		// Recording e-mail
+		if ( $recording['status'] == $jconf['dbstatus_conv'] ) {
 
-		// Get e-mail subject line from localization
-		$localization = $app->bootstrap->getLocalization();
-		$subject = $localization('recordings', 'email_conversion_done_subject', $uploader_user['language']);
-		if ( !empty($recording['mastervideofilename']) ) $subject .= ": " . $recording['mastervideofilename'];
+			// Send e-mail to user about successful conversion
+			$smarty = $app->bootstrap->getSmarty();
+			$organization = $app->bootstrap->getModel('organizations');
+			$organization->select($uploader_user['organizationid']);
+			$smarty->assign('organization', $organization->row);
+			$smarty->assign('filename', $recording['mastervideofilename']);
+			$smarty->assign('language', $uploader_user['language']);
+			$smarty->assign('recid', $recording['id']);
+			$smarty->assign('supportemail', $uploader_user['supportemail']);
+			$smarty->assign('domain', $uploader_user['domain']);
 
-		// Send e-mail
-		try {
-			$queue = $app->bootstrap->getMailqueue();
-			$body = $smarty->fetch('Visitor/Recordings/Email/job_media_converter.tpl');			
-			$queue->sendHTMLEmail($uploader_user['email'], $subject, $body);
-		} catch (exception $err) {
-			$debug->log($jconf['log_dir'], $jconf['jobid_conv_control'] . ".log", "[ERROR] Cannot send mail to user: " . $uploader_user['email'] . "\n\n" . trim($body), $sendmail = true);
+			// Get e-mail subject line from localization
+			$localization = $app->bootstrap->getLocalization();
+			$subject = $localization('recordings', 'email_conversion_done_subject', $uploader_user['language']);
+			if ( !empty($recording['mastervideofilename']) ) $subject .= ": " . $recording['mastervideofilename'];
+
+			// Send e-mail
+			try {
+				$queue = $app->bootstrap->getMailqueue();
+				$body = $smarty->fetch('Visitor/Recordings/Email/job_media_converter.tpl');			
+				$queue->sendHTMLEmail($uploader_user['email'], $subject, $body);
+			} catch (exception $err) {
+				$debug->log($jconf['log_dir'], $jconf['jobid_conv_control'] . ".log", "[ERROR] Cannot send mail to user: " . $uploader_user['email'] . "\n\n" . trim($body), $sendmail = true);
+			}
+
 		}
-
-// Error mail???? Hiba a status/contentstatus mezőkben jelenik meg. Ha egy recversion meghal, attól még lehet jó a többi??????
 
 		$recordings->MoveNext();
 	}
 }
+// TODO:
+// Error mail???? Hiba a status/contentstatus mezőkben jelenik meg. Ha egy recversion meghal, attól még lehet jó a többi??????
+// Mobil: mikor kesz?
 
 // SMIL: generate new SMIL files
 $err = generateRecordingSMILs("recording");
@@ -207,15 +212,16 @@ global $jconf, $debug, $db, $app;
 			recordings_versions AS rv,
 			encoding_profiles AS ep
 		WHERE
-			rv.recordingid = r.id AND
+			r.id = rv.recordingid AND
 			rv.status = '" . $jconf['dbstatus_copystorage_ok'] . "' AND
 			rv.encodingprofileid = ep.id AND
 			( ep.mediatype = 'video' OR ( r.mastermediatype = 'audio' AND ep.mediatype = 'audio' ) ) AND
-			( ( r.mastersourceip = '" . $node . "' AND r.status = '" . $jconf['dbstatus_conv'] . "' ) OR ( r.contentmastersourceip = '" . $node . "' AND r.contentstatus = '" . $jconf['dbstatus_conv'] . "' ) )
+			( ( r.mastersourceip = '" . $node . "' AND r.status = '" . $jconf['dbstatus_conv'] . "' AND ep.type = 'recording' ) OR
+			  ( r.contentmastersourceip = '" . $node . "' AND r.contentstatus = '" . $jconf['dbstatus_conv'] . "' AND ep.type = 'content' ) )
 		GROUP BY
 			r.id";
 
-echo $query . "\n";
+//echo $query . "\n";
 
 	try {
 		$rs = $db->Execute($query);
@@ -241,8 +247,8 @@ global $db, $debug, $jconf, $app;
 	if ( $recording['status'] == $jconf['dbstatus_uploaded'] ) {
 
 		$profileset = getEncodingProfileSet("recording", $recording['mastervideores']);
-//var_dump($profileset);
-//exit;
+var_dump($profileset);
+exit;
 
 		if ( $profileset !== false ) {
 
@@ -258,26 +264,24 @@ global $db, $debug, $jconf, $app;
 					'status'			=> $jconf['dbstatus_convert']
 				);
 
-				$debug->log($jconf['log_dir'], $jconf['jobid_conv_control'] . ".log", "[INFO] Inserting recording version for recordingid = " . $recording['id'] . " (" . $recording['mastervideofilename'] . "):\n\n" . print_r($values, true), $sendmail = false);
-
 				$recordingVersion = $app->bootstrap->getModel('recordings_versions');
 				$recordingVersion->insert($values);
 
+				$debug->log($jconf['log_dir'], $jconf['jobid_conv_control'] . ".log", "[INFO] Recording version for recordingid = " . $recording['id'] . " (" . $recording['mastervideofilename'] . ") inserted:\n\n" . print_r($values, true), $sendmail = false);
 			}
 
 			// Status: uploaded -> converting
 			updateRecordingStatus($recording['id'], $jconf['dbstatus_conv'], "recording");
-			$debug->log($jconf['log_dir'], $jconf['jobid_conv_control'] . ".log", "[INFO] Recording status for recordingid = " . $recording['id'] . " was set to: " . $jconf['dbstatus_conv'], $sendmail = false);
-
 		} else {
-			$debug->log($jconf['log_dir'], $jconf['jobid_conv_control'] . ".log", "[ERROR] No encoding profile can be selected to recording.\n" . print_r($recording, true), $sendmail = true);
+			$debug->log($jconf['log_dir'], $jconf['jobid_conv_control'] . ".log", "[ERROR] No encoding profile can be selected for recording.\n" . print_r($recording, true), $sendmail = true);
 		}
 	}
 
 	if ( $recording['contentstatus'] == $jconf['dbstatus_uploaded'] ) {
 
 		$profileset = getEncodingProfileSet("content", $recording['contentmastervideores']);
-//var_dump($profileset);
+echo "content profileset:\n";
+var_dump($profileset);
 //exit;
 
 		if ( $profileset !== false ) {
@@ -294,35 +298,49 @@ global $db, $debug, $jconf, $app;
 					'status'			=> $jconf['dbstatus_convert']
 				);
 
-				$debug->log($jconf['log_dir'], $jconf['jobid_conv_control'] . ".log", "[INFO] Inserting recording version for content recordingid = " . $recording['id'] . " (" . $recording['mastervideofilename'] . "):\n\n" . print_r($values, true), $sendmail = false);
-
 				$recordingVersion = $app->bootstrap->getModel('recordings_versions');
 				$recordingVersion->insert($values);
 
+				$debug->log($jconf['log_dir'], $jconf['jobid_conv_control'] . ".log", "[INFO] Recording version for content recordingid = " . $recording['id'] . " (" . $recording['contentmastervideofilename'] . ") inserted:\n\n" . print_r($values, true), $sendmail = false);
 			}
 
 			// Status: uploaded -> converting
 			updateRecordingStatus($recording['id'], $jconf['dbstatus_conv'], "content");
-			$debug->log($jconf['log_dir'], $jconf['jobid_conv_control'] . ".log", "[INFO] Recording status for content recordingid = " . $recording['id'] . " (" . $recording['mastervideofilename'] . ") was set to: " . $jconf['dbstatus_conv'], $sendmail = false);
+		} else {
+			$debug->log($jconf['log_dir'], $jconf['jobid_conv_control'] . ".log", "[ERROR] No encoding profile for content.\n" . print_r($recording, true), $sendmail = true);
+		}
+
+		// Mobile versions into recordings_versions. Use content resolution as background.
+		$profileset = getEncodingProfileSet("pip", $recording['contentmastervideores']);
+echo "PiP profileset:\n";
+var_dump($profileset);
+//exit;
+
+		if ( $profileset !== false ) {
+
+			for ( $i = 0; $i < count($profileset); $i++ ) {
+
+				$values = array(
+					'timestamp'			=> date('Y-m-d H:i:s'),
+					'converternodeid'	=> $converternodeid,
+					'recordingid'		=> $recording['id'],
+					'encodingprofileid'	=> $profileset[$i]['id'],
+					'encodingorder'		=> $profileset[$i]['encodingorder'],
+					'iscontent'			=> 0,
+					'status'			=> $jconf['dbstatus_convert']
+				);
+
+				$recordingVersion = $app->bootstrap->getModel('recordings_versions');
+				$recordingVersion->insert($values);
+
+				$debug->log($jconf['log_dir'], $jconf['jobid_conv_control'] . ".log", "[INFO] Inserting recording version for PiP recordingid = " . $recording['id'] . " inserted:\n\n" . print_r($values, true), $sendmail = false);
+			}
 
 		} else {
-			$debug->log($jconf['log_dir'], $jconf['jobid_conv_control'] . ".log", "[ERROR] No encoding profile to recording.\n" . print_r($recording, true), $sendmail = true);
+			$debug->log($jconf['log_dir'], $jconf['jobid_conv_control'] . ".log", "[ERROR] No PiP encoding profile for recording.\n" . print_r($recording, true), $sendmail = true);
 		}
-	}
-
-	//// Mobile versions
-// !!!
-	// No content: normal encoding
-/*	if ( ( $recording['masterstatus'] == $jconf['dbstatus_uploaded'] ) and empty($recording['contentmasterstatus']) ) {
-
-		$profileset = getEncodingProfileSet("mobile", $recording['mastervideores']);
 
 	}
-	// Content uploaded: picture-in-picture encoding
-	if ( ( $recording['masterstatus'] == $jconf['dbstatus_uploaded'] ) and ( $recording['contentmasterstatus'] == $jconf['dbstatus_uploaded'] ) ) {
-
-		$profileset = getEncodingProfileSet("mobile", $recording['contentmastervideores']);
-*/
 
 	return true;
 }
@@ -334,7 +352,8 @@ global $db, $debug, $jconf;
 		$tmp = explode("x", $resolution, 2);
 		$resx = $tmp[0];
 		$resy = $tmp[1];
-		$ep_filter = "( ep.parentid IS NULL OR ( epprev.videobboxsizex < " . $resx . " AND " . $resx . " <= ep.videobboxsizex ) OR ( epprev.videobboxsizey < " . $resy . " AND " . $resy . " <= ep.videobboxsizey ) )";
+//		$ep_filter = "( ep.parentid IS NULL OR ( epprev.videobboxsizex < " . $resx . " AND " . $resx . " <= ep.videobboxsizex ) OR ( epprev.videobboxsizey < " . $resy . " AND " . $resy . " <= ep.videobboxsizey ) )";
+		$ep_filter = "( ep.parentid IS NULL OR ( epprev.videobboxsizex < " . $resx . " OR epprev.videobboxsizey < " . $resy . " ) )";
 	} else {
 		// No resolution, assume audio only input
 		$ep_filter = "ep.mediatype = 'audio'";
@@ -462,7 +481,7 @@ var_dump($recording);
 		if ( $recording_versions === false ) {
 			$debug->log($jconf['log_dir'], $jconf['jobid_conv_control'] . ".log", "[WARNING] No recording versions found for " . $type . " id = " . $recording['id'], $sendmail = false);
 			// recording.(content)smilstatus = null
-			updateRecordingStatus($recversion['recordingid'], null, $idx . "smil");
+			updateRecordingStatus($recording['id'], null, $idx . "smil");
 			$recordings->MoveNext();
 			continue;
 		}
