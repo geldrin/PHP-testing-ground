@@ -50,6 +50,7 @@ $db = db_maintain();
 
 // Query new uploads and insert recording versions
 $recordings = getNewUploads();
+echo "getNewUploads()\n";
 if ( $recordings !== false ) {
 
 	while ( !$recordings->EOF ) {
@@ -61,15 +62,14 @@ var_dump($recording);
 
 		// Insert recording versions (recording_versions)
 		insertRecordingVersions($recording);
-exit;
 
 		$recordings->MoveNext();
 	}
 }
-exit;
 
 // Upload: make recording status "onstorage" when a recording version is ready
 // ...
+echo "getReadyConversions()\n";
 $recordings = getReadyConversions();
 if ( $recordings !== false ) {
 
@@ -157,8 +157,10 @@ global $jconf, $debug, $db, $app;
 		FROM
 			recordings AS r
 		WHERE
+(
 			( r.mastersourceip = '" . $node . "' AND r.status = '" . $jconf['dbstatus_uploaded'] . "' ) OR
 			( r.contentmastersourceip = '" . $node . "' AND r.contentstatus = '" . $jconf['dbstatus_uploaded'] . "' )
+) AND r.id = 89
 		ORDER BY
 			r.id";
 
@@ -187,6 +189,7 @@ global $jconf, $debug, $db, $app;
 	$node = "stream.videosquare.eu";
 
 	// Get status = "converting" recordings with at least one "onstorage" recording version
+// !!! hogyan lesz onstorage a content???
 	$query = "
 		SELECT
 			r.id,
@@ -457,7 +460,9 @@ var_dump($recording);
 		// Get all recording versions for this recording (or content)
 		$recording_versions = getRecordingVersionsForRecording($recording['id'], $type);
 		if ( $recording_versions === false ) {
-			$debug->log($jconf['log_dir'], $jconf['jobid_conv_control'] . ".log", "[ERROR] No recording versions found for " . $type . " id = " . $recording['id'], $sendmail = true);
+			$debug->log($jconf['log_dir'], $jconf['jobid_conv_control'] . ".log", "[WARNING] No recording versions found for " . $type . " id = " . $recording['id'], $sendmail = false);
+			// recording.(content)smilstatus = null
+			updateRecordingStatus($recversion['recordingid'], null, $idx . "smil");
 			$recordings->MoveNext();
 			continue;
 		}

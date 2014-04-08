@@ -202,6 +202,9 @@ if ( $recversions !== false ) {
 
 		$recversion_filename = $app->config['recordingpath'] . ( $recversion['recordingid'] % 1000 ) . "/" . $recversion['recordingid'] . "/" . $recversion['filename'];
 
+		$idx = "";
+		if ( $recversion['iscontent'] ) $idx = "content";
+
 		// Remove content surrogate
 		$err = remove_file_ifexists($recversion_filename);
 		if ( !$err['code'] ) {
@@ -210,6 +213,8 @@ if ( $recversions !== false ) {
 		} else {
 			// recordings_versions.status = "deleted"
 			updateRecordingVersionStatus($recversion['id'], $jconf['dbstatus_deleted']);
+			// recording.(content)smilstatus = "regenerate"
+			updateRecordingStatus($recversion['recordingid'], $jconf['dbstatus_regenerate'], $idx . "smil");
 			$debug->log($jconf['log_dir'], $myjobid . ".log", "[OK] Recording version removed. Info: recordingid = " . $recversion['recordingid'] . ", recordingversionid = " . $recversion['id'] . ", filename = " . $recversion_filename, $sendmail = false);
 		}
 
@@ -339,20 +344,27 @@ global $jconf, $db, $app;
 
 	$query = "
 		SELECT
-			id,
-			recordingid,
-			qualitytag,
-			iscontent,
-			status,
-			resolution,
-			filename,
-			bandwidth,
-			isdesktopcompatible,
-			ismobilecompatible
+			rv.id,
+			rv.recordingid,
+			rv.qualitytag,
+			rv.iscontent,
+			rv.status,
+			rv.resolution,
+			rv.filename,
+			rv.bandwidth,
+			rv.isdesktopcompatible,
+			rv.ismobilecompatible,
+			rv.encodingprofileid,
+			ep.type,
+			ep.mediatype
 		FROM
-			recordings_versions
+			recordings_versions AS rv,
+			encoding_profiles AS ep
 		WHERE
-			status = '" . $jconf['dbstatus_markedfordeletion'] . "'";
+			rv.status = '" . $jconf['dbstatus_markedfordeletion'] . "' AND
+			rv.encodingprofileid = ep.id";
+
+echo $query . "\n";
 
 	try {
 		$recversions = $db->Execute($query);
