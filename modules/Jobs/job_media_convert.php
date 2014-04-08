@@ -75,6 +75,7 @@ updateRecordingVersionStatus(2, "convert");
 		// Query encoding profile
 		$encoding_profile = getEncodingProfile($recording['encodingprofileid']);
 		if ( $encoding_profile === false ) break;
+
 		// Log encoding profile information
 		$debug->log($jconf['log_dir'], $jconf['jobid_media_convert'] . ".log", "[INFO] Encoding profile id = " . $encoding_profile['id'] . " selected. Profile information:\n" . print_r($encoding_profile, true), $sendmail = false);
 
@@ -99,6 +100,22 @@ updateRecordingVersionStatus(2, "convert");
 			updateRecordingVersionStatus($recording['recordingversionid'], $jconf['dbstatus_copyfromfe_err']);
 			break;
 		}
+		// Picture-in-picture encoding: download content file as well
+		if ( $encoding_profile['type'] == "pip" ) {
+			$content = $recording;
+			$content['iscontent'] = 1;
+			$err = copyMediaToConverter($content); 
+			// Check if we need to stop conversion (do not handle error)
+			if ( checkRecordingVersionToStop($recording) ) break;
+			if ( !$err ) {
+				// recordings_versions.status = "failedcopyingfromfrontend"
+				updateRecordingVersionStatus($recording['recordingversionid'], $jconf['dbstatus_copyfromfe_err']);
+				break;
+			}
+echo "PiP encoding is not implemented!!!\n";
+exit;
+		}
+
 		// recordings_versions.status = "copiedfromfrontend"
 		updateRecordingVersionStatus($recording['recordingversionid'], $jconf['dbstatus_copyfromfe_ok']);
 
@@ -111,8 +128,6 @@ updateRecordingVersionStatus(2, "convert");
 			// Check if we need to stop conversion
 			if ( checkRecordingVersionToStop($recording) ) break;
 		}
-
-//var_dump($recording);
 
 		// Watchdog
 		$app->watchdog();
@@ -243,10 +258,13 @@ global $jconf, $debug, $db, $app;
 			rv.recordingid
 		LIMIT 1";
 
+//encoding_profiles AS ep
+//AND rv.encodingprofileid = ep.id AND ep.type <> 'pip'
+
 	try {
 		$recording = $db->getArray($query);
 	} catch (exception $err) {
-		$debug->log($jconf['log_dir'], $jconf['jobid_media_convert'] . ".log", "[ERROR] Cannot query next job. SQL query failed." . trim($query), $sendmail = true);
+		$debug->log($jconf['log_dir'], $jconf['jobid_media_convert'] . ".log", "[ERROR] SQL query failed." . trim($query), $sendmail = true);
 		return false;
 	}
 
