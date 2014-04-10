@@ -112,8 +112,12 @@ updateRecordingVersionStatus(2, "convert");
 				updateRecordingVersionStatus($recording['recordingversionid'], $jconf['dbstatus_copyfromfe_err']);
 				break;
 			}
+
 echo "PiP encoding is not implemented!!!\n";
+$debug->log($jconf['log_dir'], $jconf['jobid_media_convert'] . ".log", "[DUMPDATA]". var_export($encoding_profile, 1) ."\n\n". var_export($recording, 1) ."\n\n". var_export($content, 1) ."\n", $sendmail = false);
+updateRecordingVersionStatus($recording['recordingversionid'], $jconf['dbstatus_convert']);
 exit;
+
 		}
 
 		// recordings_versions.status = "copiedfromfrontend"
@@ -693,8 +697,8 @@ global $jconf, $debug, $myjobid;
 		// Cleanup temp directory
 		$err = remove_file_ifexists($recording['temp_directory']);
 		if ( !$err['code'] ) $debug->log($jconf['log_dir'], $jconf['jobid_media_convert'] . ".log", "MSG: " . $err['message'] . "\nCOMMAND: " . $err['command'] . "\nRESULT: " . $err['result'], $sendmail = true);
-		// recordings_versions.status = "stopped"
-		updateRecordingVersionStatus($recording['recordingversionid'], $jconf['dbstatus_stopped']);
+		// recordings_versions.status = "markedfordeletion" (mark this version to be deleted)
+		updateRecordingVersionStatus($recording['recordingversionid'], $jconf['dbstatus_markedfordeletion']);
 		$debug->log($jconf['log_dir'], $jconf['jobid_media_convert'] . ".log", "[INFO] Conversion STOPPED for recording version id = " . $recording['recordingversionid'] . ", recordingid = " . $recording['id'] . ".", $sendmail = false);
 		return true;
 	}
