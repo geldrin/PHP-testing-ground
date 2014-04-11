@@ -575,8 +575,11 @@ class Recordings extends \Springboard\Model {
     
     if ( $this->bootstrap->debug )
       var_dump( $output );
-    
-    $xml     = new \SimpleXMLElement( $output );
+			
+		libxml_use_internal_errors(true);
+		$xml = new \SimpleXMLElement( $output );
+		libxml_use_internal_errors(false);
+		
     $general = current( $xml->xpath('File/track[@type="General"][1]') );
     $video   = current( $xml->xpath('File/track[@type="Video"][1]') );
     $audio   = current( $xml->xpath('File/track[@type="Audio"][1]') );
