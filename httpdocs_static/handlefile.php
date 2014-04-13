@@ -1,8 +1,15 @@
 <?php
-if ( isset( $_SERVER['APPLICATION_ENV'] ) and $_SERVER['APPLICATION_ENV'] == 'developer' )
-  define('PATH_PREFIX',  '/srv/vsq/dev.videosquare.eu/');
+
+define('BASE_PATH',  realpath( dirname( __FILE__ ) . '/..' ) . '/' );
+if ( strpos( BASE_PATH, 'dev.') !== false )
+  define('PRODUCTION', false );
 else
-  define('PATH_PREFIX',  '/srv/vsq/videosquare.eu/');
+  define('PRODUCTION', true );
+
+$loader = new ConfigLoader();
+$config = $loader->load();
+
+define('PATH_PREFIX',  $config['storagepath'] );
 
 // ------------------------------------------------------------
 if (
@@ -46,7 +53,7 @@ if (
       
       if ( preg_match('/^\d+\/(\d+)\/.*$/', $parts[1], $results ) ) {
         
-        $result = checkAccess( $results[1] );
+        $result = checkAccess( $results[1], $config );
         
         if ( $result )
           exitWithContentHeaders( $_GET['file'] );
@@ -91,7 +98,7 @@ if (
     
   }
   
-  if ( is_readable( PATH_PREFIX . $file ) and checkAccess( $results[2] ) ) {
+  if ( is_readable( PATH_PREFIX . $file ) and checkAccess( $results[2], $config ) ) {
     
     $_GET['filename'] =
       filenameize( mb_substr( $results[5], 0, 45 ) ) .
@@ -177,16 +184,7 @@ function filenameize( $filename ) {
 
 }
 
-function checkAccess( $recordingid ) {
-  
-  define('BASE_PATH',  realpath( dirname( __FILE__ ) . '/..' ) . '/' );
-  if ( strpos( BASE_PATH, 'dev.') !== false )
-    define('PRODUCTION', false );
-  else
-    define('PRODUCTION', true );
-  
-  $loader = new ConfigLoader();
-  $config = $loader->load();
+function checkAccess( $recordingid, &$config ) {
   
   $bootstrap = new stdClass();
   $bootstrap->config = $config;
@@ -323,8 +321,7 @@ class ConfigLoader {
   public function load() {
     
     $config = include( BASE_PATH . 'config.php' );
-    if ( !PRODUCTION )
-      $config = array_merge( $config, include( BASE_PATH . 'config_local.php') );
+    $config = array_merge( $config, include( BASE_PATH . 'config_local.php') );
     
     return $config;
     
