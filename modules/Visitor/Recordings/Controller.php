@@ -245,7 +245,7 @@ class Controller extends \Visitor\Controller {
       'width'       => 398,
       'height'      => 303,
       'video'       =>
-        $this->toSmarty['BASE_URI'] . 'flash/TCSharedPlayer.swf?media_json=' .
+        $this->toSmarty['BASE_URI'] . 'flash/VSQEmbedPlayer.swf?media_json=' .
         rawurlencode(
           $this->toSmarty['BASE_URI'] . \Springboard\Language::get() .
           '/recordings/getplayerconfig/' . $recordingsModel->id
