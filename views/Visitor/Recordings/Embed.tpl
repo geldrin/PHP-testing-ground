@@ -103,7 +103,7 @@
   {rdelim};
 
   document.write('<div id="{$containerid}"></div>');
-  swfobject.embedSWF('flash/TCSharedPlayer.swf?v={$VERSION}', '{$containerid}', '{$width}', '{$height}', '11.1.0', 'flash/swfobject/expressInstall.swf', {$flashdata|@jsonescape:true}, params );
+  swfobject.embedSWF('flash/VSQEmbedPlayer.swf?v={$VERSION}', '{$containerid}', '{$width}', '{$height}', '11.1.0', 'flash/swfobject/expressInstall.swf', {$flashdata|@jsonescape:true}, params );
 
   {rdelim})();
   </script>
