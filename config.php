@@ -20,6 +20,7 @@ $config = array(
   'templatepath' => $this->basepath . 'views/',
   'modelpath'    => $this->basepath . 'models/',
   'convpath'     => $this->basepath . 'data/temp/',
+  'storagepath'  => '/srv/videosquare/', // always absolute!
   //-----
   'destroysession' => array(
     'onuserlogout'  => true,
