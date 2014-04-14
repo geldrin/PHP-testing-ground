@@ -106,7 +106,7 @@
               {assign var=views value=$recording.numberofviews|numberformat}
               <li class="listitem">
                 <div class="recordingpic">
-                  <a href="{$language}/recordings/details/{$item.id},{$item.title|filenameize}"><span class="playpic"></span><img src="{$item|@indexphoto}"/><span class="playprogress" title="{#recordings__progress#}: {$recording.positionpercent}% ({$recording.viewedminutes} {#recordings__embedmin#})">{$recording.positionpercent}%</span></a>
+                  <a href="{$language}/recordings/details/{$recording.id},{$recording.title|filenameize}"><span class="playpic"></span><img src="{$recording|@indexphoto}"/><span class="playprogress" title="{#recordings__progress#}: {$recording.positionpercent}% ({$recording.viewedminutes} {#recordings__embedmin#})">{$recording.positionpercent}%</span></a>
                 </div>
                 <div class="recordingcontent">
                   <div class="title">
