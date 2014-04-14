@@ -196,7 +196,7 @@ class Controller extends \Visitor\Controller {
   
   public function detailsAction() {
     
-    $recordingsModel = $this->modelIDCheck(
+    $recordingsModel = $this->modelOrganizationAndIDCheck(
       'recordings',
       $this->application->getNumericParameter('id')
     );
