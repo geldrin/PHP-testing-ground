@@ -1739,12 +1739,62 @@ class Recordings extends \Springboard\Model {
     return $channels;
     
   }
-  
+
+  public function getVersions( $ids = array() ) {
+    $this->ensureObjectLoaded();
+
+    if ( empty( $ids ) )
+      $ids[] = $this->id;
+
+    $rs = $this->db->query("
+      SELECT *
+      FROM recordings_versions
+      WHERE
+        recordingid IN('" . implode("', '", $ids ) . "') AND
+        status      = 'onstorage'
+      ORDER BY bandwidth DESC
+    ");
+
+    $ret = array(
+      'master'  => array(
+        'desktop' => array(),
+        'mobile'  => array(),
+      ),
+      'content' => array(
+        'desktop' => array(),
+        'mobile'  => array(),
+      ),
+    );
+
+    foreach( $rs as $version ) {
+
+      // should never happen
+      if ( $this->row['mediatype'] == 'audio' and $version['qualitytag'] != 'audio' )
+        continue;
+
+      if ( $version['iscontent'] )
+        $key = 'content';
+      else
+        $key = 'master';
+
+      if ( $version['isdesktopcompatible'] )
+        $ret[ $key ]['desktop'][] = $version;
+
+      if ( $version['ismobilecompatible'] )
+        $ret[ $key ]['mobile'][] = $version;
+
+    }
+
+    return $ret;
+
+  }
+
   public function getFlashData( $info, $sessionid ) {
     
     $this->ensureObjectLoaded();
     include_once( $this->bootstrap->config['templatepath'] . 'Plugins/modifier.indexphoto.php' );
     
+    $versions         = $this->getVersions();
     $recordingbaseuri = $info['BASE_URI'] . \Springboard\Language::get() . '/recordings/';
     $cookiedomain     = $info['organization']['cookiedomain'];
     
@@ -1792,42 +1842,47 @@ class Recordings extends \Springboard\Model {
     if ( $data['language'] != 'en' )
       $data['locale'] = $info['STATIC_URI'] . 'js/flash_locale_' . $data['language'] . '.json';
     
-    $data['media_streams'] = array( $this->getMediaUrl('default', false, $cookiedomain ) );
-    
-    if ( $this->row['videoreshq'] )
-      $data['media_streams'][] = $this->getMediaUrl('default', true, $cookiedomain );
-    
-    $data = $data + $this->getIntroOutroFlashdata( $cookiedomain );
-    
-    if ( $this->row['offsetstart'] )
-      $data['timeline_virtualStart'] = $this->row['offsetstart'];
-    
-    if ( $this->row['offsetend'] )
-      $data['timeline_virtualEnd'] = $this->row['offsetend'];
-    
-    if ( $this->row['contentstatus'] == 'onstorage' and !isset( $info['skipcontent'] ) ) {
-      
-      $data['media_secondaryStreams'] = array( $this->getMediaUrl('content', false, $cookiedomain ) );
-      
-      if ( $this->row['contentvideoreshq'] ) {
-        
-        $data['media_secondaryStreams'][] = $this->getMediaUrl('content', true, $cookiedomain );
-        
-        // ha van HQ content, de nincs HQ "default" verzio akkor ketszer
-        // kell szerepeljen a default verzio
-        if ( count( $data['media_streams'] ) == 1 )
-          $data['media_streams'][] = reset( $data['media_streams'] );
-        
-      }
-      
+    if ( !empty( $versions['master']['desktop'] ) ) {
+      $data['media_streams'] = array();
+      foreach( $versions['master']['desktop'] as $version )
+        $data['media_streams'][] =
+          $this->getMediaUrl('default', $version, $cookiedomain )
+        ;
+    }
+
+    if (
+         !isset( $info['skipcontent'] ) and
+         !empty( $versions['content']['desktop'] )
+       ) {
+
       if ( $this->row['contentoffsetstart'] )
         $data['timeline_contentVirtualStart'] = $this->row['contentoffsetstart'];
-      
+
       if ( $this->row['contentoffsetend'] )
         $data['timeline_contentVirtualEnd'] = $this->row['contentoffsetend'];
-      
+
+      $data['media_secondaryStreams'] = array();
+      foreach( $versions['content']['desktop'] as $version )
+        $data['media_secondaryStreams'][] =
+          $this->getMediaUrl('content', $version, $cookiedomain )
+        ;
+
+      if (
+           $this->row['contentvideoreshq'] and
+           isset( $data['media_streams'] ) and count( $data['media_streams'] ) == 1
+         )
+        $data['media_streams'][] = reset( $data['media_streams'] );
+
     }
-    
+
+    $data = $data + $this->getIntroOutroFlashdata( $cookiedomain );
+
+    if ( $this->row['offsetstart'] )
+      $data['timeline_virtualStart'] = $this->row['offsetstart'];
+
+    if ( $this->row['offsetend'] )
+      $data['timeline_virtualEnd'] = $this->row['offsetend'];
+
     $subtitles = $this->getSubtitleLanguages();
     if ( !empty( $subtitles ) ) {
       
@@ -1943,35 +1998,28 @@ class Recordings extends \Springboard\Model {
       $outroid = $this->row['outrorecordingid'];
       
     }
-    
-    $highres = $this->db->getAssoc("
-      SELECT id, videoreshq
-      FROM recordings
-      WHERE id IN('" . implode("', '", $ids ) . "')
-    ");
-    
-    foreach( $ids as $id ) {
+
+    $versions = $this->getVersions( $ids );
+
+    foreach( $versions as $version ) {
       
-      if ( $introid == $id )
+      if ( $version['recordingid'] == $introid )
         $key = 'intro_streams';
-      else
+      else if ( $version['recordingid'] == $outroid )
         $key = 'outro_streams';
-      
+      else // not possible
+        throw new \Exception("Invalid version in getIntroOutroFlashdata, neither intro nor outro!");
+
       $data[ $key ] = array(
-        $this->getMediaUrl('default', false, $cookiedomain, null, '', $id )
+        $this->getMediaUrl('default', $version, $cookiedomain, null, '' )
       );
-      
-      if ( isset( $highres[ $id ] ) and $highres[ $id ] )
-        $data[ $key ][] =
-          $this->getMediaUrl('default', true, $cookiedomain, null, '', $id )
-        ;
-      
+
     }
-    
+
     return $data;
-    
+
   }
-  
+
   public function getStructuredFlashData( $info, $sessionid ) {
     
     $flashdata = $this->transformFlashData(
@@ -2049,35 +2097,25 @@ class Recordings extends \Springboard\Model {
     
   }
   
-  public function getMediaUrl( $type, $highquality, $cookiedomain = null, $sessionid = null, $host = '', $id = null ) {
+  public function getMediaUrl( $type, $version, $cookiedomain = null, $sessionid = null, $host = '' ) {
     
     $this->ensureObjectLoaded();
-    
+
     $typeprefix = '';
-    $extension  = 'mp4';
-    $postfix    = '_lq';
-    $isaudio    = $this->row['mastermediatype'] == 'audio';
-    
-    if ( $highquality and !$isaudio )
-      $postfix = '_hq';
-    
     if ( $this->row['issecurestreamingforced'] )
       $typeprefix = 'sec';
     
-    if ( $isaudio ) {
-      
-      $postfix   = '';
+    $extension = 'mp4';
+    if ( $this->row['mastermediatype'] == 'audio' )
       $extension = 'mp3';
-      
-    }
-    
+
     switch( $type ) {
       
       case 'mobilehttp':
         //http://stream.videotorium.hu:1935/vtorium/_definst_/mp4:671/2671/2671_2608_mobile.mp4/playlist.m3u8
         $host        = $this->getWowzaUrl( $typeprefix . 'httpurl');
         $sprintfterm =
-          '%3$s:%s/%s_mobile' . $postfix . '.%s/playlist.m3u8' .
+          '%3$s:%s/%s/playlist.m3u8' .
           $this->getAuthorizeSessionid( $cookiedomain, $sessionid )
         ;
         
@@ -2087,43 +2125,26 @@ class Recordings extends \Springboard\Model {
         //rtsp://stream.videotorium.hu:1935/vtorium/_definst_/mp4:671/2671/2671_2608_mobile.mp4
         $host        = $this->getWowzaUrl( $typeprefix . 'rtspurl');
         $sprintfterm =
-          '%3$s:%s/%s_mobile' . $postfix . '.%s' .
+          '%3$s:%s/%s' .
           $this->getAuthorizeSessionid( $cookiedomain, $sessionid )
         ;
         
         break;
       
       case 'direct':
-        
-        if ( $isaudio )
-          $sprintfterm = 'files/recordings/%s/%s_audio.%s';
-        else
-          $sprintfterm = 'files/recordings/%s/%s_video' . $postfix . '.%s';
-        
+        $sprintfterm = 'files/recordings/%s/%s';
         break;
       
       case 'content':
-        
-        $sprintfterm = '%3$s:%s/%s_content' . $postfix . '.%s';
-        break;
-      
       default:
-        
-        if ( $isaudio )
-          $sprintfterm = '%3$s:%s/%s_audio.%s';
-        else
-          $sprintfterm = '%3$s:%s/%s_video' . $postfix . '.%s';
-        
+        $sprintfterm = '%3$s:%s/%s';
         break;
       
     }
     
-    if ( $id === null )
-      $id = $this->id;
-    
     return $host . sprintf( $sprintfterm,
-      \Springboard\Filesystem::getTreeDir( $id ),
-      $id,
+      \Springboard\Filesystem::getTreeDir( $version['recordingid'] ),
+      $version['filename'],
       $extension
     );
     
