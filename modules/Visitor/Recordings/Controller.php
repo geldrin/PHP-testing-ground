@@ -201,7 +201,6 @@ class Controller extends \Visitor\Controller {
       $this->application->getNumericParameter('id')
     );
     
-    $versions    = $recordingsModel->getVersions();
     $browserinfo = $this->bootstrap->getBrowserInfo();
     $user        = $this->bootstrap->getSession('user');
     $rating      = $this->bootstrap->getSession('rating');
@@ -258,48 +257,36 @@ class Controller extends \Visitor\Controller {
       $mobilehq = true;
     
     $quality = $this->application->getParameter('quality');
-    $mobileversion = array_pop( $versions['master']['mobile'] );
-
-    foreach( $versions['master']['mobile'] as $version ) {
-
-      if ( $version['qualitytag'] == $quality )
-        $mobileversion = $version;
-
+    if ( $quality and in_array( $quality, array('lq', 'hq') ) ) {
+      
+      if ( $quality == 'hq' and $recordingsModel->row['mobilevideoreshq'] )
+        $mobilehq = true;
+      elseif ( $quality == 'lq' )
+        $mobilehq = false;
+      
     }
-
-    if ( $mobileversion ) {
-      $this->toSmarty['mobilehq']      = $mobilehq;
-      $this->toSmarty['mobilehttpurl'] = $recordingsModel->getMediaUrl(
-        'mobilehttp',
-        $mobileversion,
-        $this->toSmarty['organization']['cookiedomain'],
-        session_id()
-      );
-      $this->toSmarty['mobilertspurl'] = $recordingsModel->getMediaUrl(
-        'mobilertsp',
-        $mobileversion,
-        $this->toSmarty['organization']['cookiedomain'],
-        session_id()
-      );
-    }
-
-    foreach( $versions['master']['desktop'] as $version ) {
-
-      if ( $version['qualitytag'] != 'audio' )
-        continue;
-
-      $this->toSmarty['audiofileurl']  = $recordingsModel->getMediaUrl(
-        'direct',
-        $version,
-        $this->toSmarty['organization']['cookiedomain'],
-        session_id(),
-        $this->toSmarty['STATIC_URI']
-      );
-
-      break;
-
-    }
-
+    
+    $this->toSmarty['mobilehq']      = $mobilehq;
+    $this->toSmarty['mobilehttpurl'] = $recordingsModel->getMediaUrl(
+      'mobilehttp',
+      $mobilehq,
+      $this->toSmarty['organization']['cookiedomain'],
+      session_id()
+    );
+    $this->toSmarty['mobilertspurl'] = $recordingsModel->getMediaUrl(
+      'mobilertsp',
+      $mobilehq,
+      $this->toSmarty['organization']['cookiedomain'],
+      session_id()
+    );
+    $this->toSmarty['audiofileurl']  = $recordingsModel->getMediaUrl(
+      'direct',
+      false, // non-hq
+      $this->toSmarty['organization']['cookiedomain'],
+      session_id(),
+      $this->toSmarty['STATIC_URI']
+    );
+    
     if ( $user['id'] ) {
       $this->toSmarty['mobilehttpurl'] .= '&uid=' . $user['id'];
       $this->toSmarty['mobilertspurl'] .= '&uid=' . $user['id'];

@@ -1794,11 +1794,7 @@ class Recordings extends \Springboard\Model {
     $this->ensureObjectLoaded();
     include_once( $this->bootstrap->config['templatepath'] . 'Plugins/modifier.indexphoto.php' );
     
-    if ( isset( $info['versions'] ) )
-      $versions = $info['versions'];
-    else
-      $versions       = $this->getVersions();
-
+    $versions         = $this->getVersions();
     $recordingbaseuri = $info['BASE_URI'] . \Springboard\Language::get() . '/recordings/';
     $cookiedomain     = $info['organization']['cookiedomain'];
     
