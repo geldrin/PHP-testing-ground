@@ -43,6 +43,7 @@ $j(document).ready(function() {
   runIfExists('#timestampdisabledafter', setupDisabledAfter );
   runIfExists('#recordingssearch', setupRecordingsSearch );
   runIfExists('#users_invite, #users_editinvite', setupUserInvitation );
+  runIfExists('#orderrecordings', setupOrderRecordings );
 
   if ( needping )
     setTimeout( setupPing, 1000 * pingsecs );
@@ -1873,5 +1874,79 @@ function setupUserInvitation() {
     e.preventDefault();
     $j('#invitationvaliduntil').datetimepicker('setDate', $j(this).attr('data-date') );
   })
+  
+}
+
+
+function setupOrderRecordings() {
+  
+  var channelid = $j('#orderrecordings').attr('data-channelid');
+  var needorderupdate = false;
+  $j('#orderrecordings #orderlist').sortable({
+    placeholder: 'placeholder',
+    forcePlaceholderSize: true,
+    containment: '#pagecontainer',
+    tolerance: 'pointer',
+    scroll: true,
+    update: function( event, ui ) {
+      needorderupdate = true;
+    }
+  });
+  
+
+  var OrderRecordingsMoveUp = function( e ) {
+    e.preventDefault();
+    
+    var currelem  = $j(this).parents('li'),
+        currindex = $j('#orderrecordings #orderlist li').index( currelem );
+    
+    if ( currindex == 0 )
+      return;
+    
+    needorderupdate = true;
+    $j('#orderrecordings #orderlist li').eq( currindex - 1 ).before( currelem );
+    $j('#orderrecordings #orderlist').sortable('refresh');
+    
+  }
+
+  var OrderRecordingsMoveDown = function( e ) {
+    e.preventDefault();
+    
+    var currelem  = $j(this).parents('li'),
+        currindex = $j('#orderrecordings #orderlist li').index( currelem );
+    
+    if ( currindex == ( $j('#orderrecordings #orderlist li').length - 1 ) )
+      return;
+    
+    needorderupdate = true;
+    $j('#orderrecordings #orderlist li').eq( currindex + 1 ).after( currelem );
+    $j('#orderrecordings #orderlist').sortable('refresh');
+    
+  }
+
+  $j('#orderrecordings #orderlist .orderarrows .recordingmoveup a').live('click', OrderRecordingsMoveUp );
+  $j('#orderrecordings #orderlist .orderarrows .recordingmovedown a').live('click', OrderRecordingsMoveDown );
+  $j('#orderrecordings .button').click( function( e ) {
+    
+    if ( !needorderupdate || !channelid )
+      return;
+    else
+      e.preventDefault();
+    
+    var origurl = $j(this).attr('href');
+    
+    $j.ajax({
+      url: BASE_URI + language + '/channels/setorder/' + channelid,
+      type: 'POST',
+      data: $j('#orderrecordings #orderlist').sortable('serialize'),
+      dataType: 'json',
+      success: function() {
+        location.href = origurl;
+      }
+    });
+    
+  });
+  
+  $j("#orderrecordings #orderlist").disableSelection();
   
 }

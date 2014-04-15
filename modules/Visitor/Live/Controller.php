@@ -65,7 +65,7 @@ class Controller extends \Visitor\Controller {
     $access    = $this->bootstrap->getSession('liveaccess');
     $accesskey = $feedModel->id . '-' . ( $feedModel->row['issecurestreamingforced']? '1': '0');
     
-    $access[ $accesskey ] = $feedModel->isAccessible( $user );
+    $access[ $accesskey ] = $feedModel->isAccessible( $user, $this->organization );
     
     $channelModel = $this->modelIDCheck('channels', $feedModel->row['channelid'] );
     $streamid     = $this->application->getNumericParameter('streamid');
@@ -498,7 +498,7 @@ class Controller extends \Visitor\Controller {
         
         if ( $feedModel ) {
           
-          $access[ $accesskey ] = $feedModel->isAccessible( $user, $secure );
+          $access[ $accesskey ] = $feedModel->isAccessible( $user, $this->organization, $secure );
           
           if ( $access[ $accesskey ] === true )
             $result = '1';

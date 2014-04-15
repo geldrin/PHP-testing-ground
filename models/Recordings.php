@@ -375,7 +375,7 @@ class Recordings extends \Springboard\Model {
     
   }
   
-  public function userHasAccess( $user, $secure = null, $mobile = false ) {
+  public function userHasAccess( $user, $secure = null, $mobile = false, $organization = null ) {
     
     $this->ensureObjectLoaded();
     
@@ -384,15 +384,18 @@ class Recordings extends \Springboard\Model {
     
     $bystatus   = $this->isAccessibleByStatus( $user, $mobile );
     $bysettings = $this->isAccessibleBySettings( $user );
-    
-    if ( $bystatus === true and $bysettings === true )
+    $bycoursecompletion = $this->isAccessibleByCourseCompletion( $user, $organization );
+
+    if ( $bystatus === true and $bysettings === true and $bycoursecompletion === true )
       return true;
     
     if ( $bystatus !== true )
       return $bystatus;
-    else
+    else if ( $bysettings !== true )
       return $bysettings;
-    
+    else
+      return $bycoursecompletion;
+
   }
   
   public function insertUploadingRecording( $userid, $organizationid, $languageid, $title, $sourceip, $isintrooutro = 0 ) {
@@ -850,10 +853,10 @@ class Recordings extends \Springboard\Model {
     
   }
 
-  public function isAccessibleByInvitation( $user ) {
+  public function isAccessibleByInvitation( $user, $organization ) {
 
     if ( !$user['id'] )
-      return false;
+      return 'registrationrestricted';
 
     $this->ensureID();
     return (bool)$this->db->getOne("
@@ -861,7 +864,9 @@ class Recordings extends \Springboard\Model {
       FROM users_invitations
       WHERE
         registereduserid = '" . $user['id'] . "' AND
-        recordingid      = '" . $this->id . "'
+        recordingid      = '" . $this->id . "' AND
+        status           <> 'deleted' AND
+        organizationid   = '" . $organization['id'] . "'
       LIMIT 1
     ");
 
@@ -963,6 +968,99 @@ class Recordings extends \Springboard\Model {
     
   }
   
+  public function isAccessibleByCourseCompletion( $user, $organization ) {
+
+    $this->ensureObjectLoaded();
+    // inside handlefile, skip the check? TODO reevaluate
+    if ( $organization === null )
+      return true;
+
+    $coursetypeid = $this->bootstrap->getModel('channels')->cachedGetCourseTypeID(
+      $organization['id']
+    );
+
+    // no course type set up for the organization, default allow
+    if ( !$coursetypeid )
+      return true;
+
+    // the course channels where the recording is a member
+    $coursechannelids = $this->db->getCol("
+      SELECT c.id
+      FROM
+        channels_recordings AS cr,
+        channels AS c
+      WHERE
+        cr.recordingid      = '" . $this->id . "' AND
+        cr.channelid        = c.id AND
+        c.organizationid    = '" . $organization['id'] . "' AND
+        c.channeltypeid     = '$coursetypeid'
+    ");
+
+    // recording not a member of any course
+    if ( empty( $coursechannelids ) )
+      return true;
+
+    // recording is a member of a course, only users who have access to it can
+    // view it
+    if ( !$user['id'] )
+      return 'registrationrestricted';
+
+    // channels where the user must view all of the previous recordings
+    // to be able to view this one
+    $usercourses = $this->db->getCol("
+      SELECT ui.channelid
+      FROM
+        users_invitations AS ui
+      WHERE
+        ui.channelid IN('" . implode("', '", $coursechannelids ) . "') AND
+        ui.registereduserid = '" . $user['id'] . "' AND
+        ui.organizationid   = '" . $organization['id'] . "' AND
+        ui.status           <> 'deleted' AND
+    ");
+
+    // user not a member of the course, cannot watch
+    if ( empty( $usercourses ) )
+      return 'courserestricted';
+
+    $recordings = $this->db->execute("
+      SELECT
+        r.id,
+        (
+          ROUND( ( IFNULL(rvp.position, 0) / r.masterlength ) * 100 )
+        ) AS percentwatched
+      FROM
+        channels_recordings AS cr,
+        recordings AS r
+        LEFT JOIN recording_view_progress AS rvp ON(
+          r.id       = rvp.recordingid AND
+          rvp.userid = '" . $user['id'] . "'
+        )
+      WHERE
+        cr.channelid IN('" . implode("', '", $usercourses ) . "') AND
+        r.id             = cr.recordingid AND
+        r.isintrooutro   = '0' AND
+        r.organizationid = '" . $organization['id'] . "' AND
+        r.status         = 'onstorage' -- TODO live?
+      GROUP BY r.id
+      ORDER BY cr.weight
+    ");
+
+    foreach( $recordings as $recording ) {
+
+      // if we arrived here, all dependencies were satisfied
+      if ( $recording['id'] == $this->id )
+        return true;
+      // a dependency has not been watched
+      else if ( $recording['percentwatched'] < $organization['elearningcoursecriteria'] )
+        return 'coursedependencyrestricted';
+
+    }
+
+    // should never arrive here
+    throw new \Exception('Cannot happen! ' . var_export( $coursechannelids, true ) );
+
+  }
+
   public static function getPublicRecordingWhere( $prefix = '', $isintrooutro = '0', $accesstype = 'public' ) {
     
     return "
@@ -1587,10 +1685,10 @@ class Recordings extends \Springboard\Model {
     
   }
   
-  public function addPresentersToArray( &$array, $withjobs = true, $organizationid ) {
+  public function addPresentersToArray( &$recordings, $withjobs = true, $organizationid ) {
     
-    $recordings = array();
-    foreach( $array as $key => $recording ) {
+    $idtoindexmap = array();
+    foreach( $recordings as $key => $recording ) {
       
       if ( isset( $recording['type'] ) and $recording['type'] != 'recording' )
         continue;
@@ -1598,12 +1696,12 @@ class Recordings extends \Springboard\Model {
       // store the index of the recordings in an array keyed by the recordingid
       // so as not to re-index the array
       if ( isset( $recording['id'] ) )
-        $recordings[ $recording['id'] ] = $key;
+        $idtoindexmap[ $recording['id'] ] = $key;
       
     }
     
-    if ( empty( $recordings ) )
-      return $array;
+    if ( empty( $idtoindexmap ) )
+      return $recordings;
     
     $contributors = $this->db->getArray("
       SELECT
@@ -1617,7 +1715,7 @@ class Recordings extends \Springboard\Model {
         contributors_roles AS cr
       WHERE
         c.id = cr.contributorid AND
-        cr.recordingid IN('" . implode("', '", array_keys( $recordings ) ) . "') AND
+        cr.recordingid IN('" . implode("', '", array_keys( $idtoindexmap ) ) . "') AND
         cr.roleid IN( (SELECT r.id FROM roles AS r WHERE r.organizationid = '$organizationid' AND r.ispresenter = '1') )
       ORDER BY cr.weight
     ");
@@ -1627,15 +1725,15 @@ class Recordings extends \Springboard\Model {
     
     foreach( $contributors as $contributor ) {
       
-      $key = $recordings[ $contributor['recordingid'] ];
-      if ( !isset( $array[ $key ]['presenters'] ) )
-        $array[ $key ]['presenters'] = array();
+      $key = $idtoindexmap[ $contributor['recordingid'] ];
+      if ( !isset( $recordings[ $key ]['presenters'] ) )
+        $recordings[ $key ]['presenters'] = array();
       
-      $array[ $key ]['presenters'][] = $contributor;
+      $recordings[ $key ]['presenters'][] = $contributor;
       
     }
     
-    return $array;
+    return $recordings;
     
   }
   
@@ -2829,11 +2927,19 @@ class Recordings extends \Springboard\Model {
     
     if ( $existingid )
       return false;
-    else
+    else {
       $this->db->query("
         INSERT INTO channels_recordings (channelid, recordingid, userid)
         VALUES ('$channelid', '" . $this->id . "', '" . $user['id'] . "')
       ");
+      $insertedid = $this->db->Insert_ID();
+      $this->db->query("
+        UPDATE channels_recordings
+        SET weight = '$insertedid'
+        WHERE id = '$insertedid'
+        LIMIT 1
+      ");
+    }
     
     $this->updateChannelIndexPhotos();
     $this->updateCategoryCounters();

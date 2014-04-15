@@ -416,10 +416,8 @@ class Channels extends \Springboard\Model {
     if ( !$recordingschannels ) {
       
       $recordingschannels = $this->db->getAssoc("
-        SELECT
-          channelid, id
-        FROM
-          channels_recordings
+        SELECT channelid, id
+        FROM channels_recordings
         WHERE
           recordingid = " . $this->db->qstr( $recordingid ) . "
       ");
@@ -711,7 +709,7 @@ class Channels extends \Springboard\Model {
         channels_recordings AS cr,
         recordings AS r
       WHERE
-        cr.channelid IN('" . $this->id . "') AND
+        cr.channelid  = '" . $this->id . "' AND
         r.id          = cr.recordingid AND
         r.ispublished = '1' AND
         r.mediatype   = 'live'
@@ -780,7 +778,7 @@ class Channels extends \Springboard\Model {
     
   }
   
-  public function isAccessibleByInvitation( $user, $channelid ) {
+  public function isAccessibleByInvitation( $user, $channelid, $organization ) {
 
     if ( !$user['id'] )
       return false;
@@ -791,13 +789,15 @@ class Channels extends \Springboard\Model {
       FROM users_invitations
       WHERE
         registereduserid = '" . $user['id'] . "' AND
-        channelid        = '$channelid'
+        channelid        = '$channelid' AND
+        status           <> 'deleted' AND
+        organizationid   = '" . $organization['id'] . "'
       LIMIT 1
     ");
 
   }
 
-  public function isAccessible( $user, $skipaccesstypecheck = false ) {
+  public function isAccessible( $user, $organization, $skipaccesstypecheck = false ) {
     
     $this->ensureObjectLoaded();
     
@@ -822,7 +822,7 @@ class Channels extends \Springboard\Model {
     if ( $skipaccesstypecheck )
       return false;
 
-    if ( $this->isAccessibleByInvitation( $user, $channel['id'] ) )
+    if ( $this->isAccessibleByInvitation( $user, $organization, $channel['id'] ) )
       return true;
 
     switch( $channel['accesstype'] ) {
@@ -1082,4 +1082,94 @@ class Channels extends \Springboard\Model {
     ");
 
   }
+
+  public function getRecordings( $organizationid, $start = false, $limit = false, $orderby = false ) {
+    $this->ensureID();
+    return $this->db->getArray("
+      SELECT
+        r.id,
+        r.title,
+        r.subtitle,
+        r.description,
+        r.recordedtimestamp,
+        r.numberofviews,
+        r.rating,
+        r.indexphotofilename,
+        r.ispublished,
+        r.status,
+        r.livefeedid,
+        r.organizationid AS organizationid,
+        cr.id AS channelrecordingid
+      FROM
+        recordings AS r,
+        channels_recordings AS cr
+      WHERE
+        cr.channelid     = '" . $this->id . "' AND
+        r.id             = cr.recordingid AND
+        r.isintrooutro   = '0' AND
+        r.organizationid = '$organizationid' AND
+        r.status         = 'onstorage' -- TODO live?
+      GROUP BY r.id
+      ORDER BY cr.weight
+    ");
+
+  }
+
+  public function getRecordingWeights( $organizationid ) {
+    $this->ensureID();
+    return $this->db->getCol("
+      SELECT cr.weight
+      FROM
+        channels_recordings AS cr,
+        recordings AS r
+        WHERE
+          cr.channelid     = '" . $this->id . "' AND
+          r.id             = cr.recordingid AND
+          r.isintrooutro   = '0' AND
+          r.organizationid = '$organizationid' AND
+          r.status         = 'onstorage' -- TODO live?
+        GROUP BY r.id
+        ORDER BY cr.weight
+    ");
+  }
+
+  public function setRecordingOrder( $crid, $weight ) {
+
+    $this->db->execute("
+      UPDATE channels_recordings
+      SET weight = '$weight'
+      WHERE
+        id        = '$crid' AND
+        channelid = '" . $this->id . "'
+      LIMIT 1
+    ");
+
+    return (bool)$this->db->Affected_Rows();
+
+  }
+
+  public function getCourseTypeID( $organizationid ) {
+    
+    $id = $this->db->getOne("
+      SELECT id
+      FROM channel_types
+      WHERE iscourse = '1'
+      ORDER BY weight
+      LIMIT 1
+    ");
+
+    if ( !$id ) {
+      $d = \Springboard\Debug::getInstance();
+      $d->log(
+        false,
+        false,
+        "No channel_types row with iscourse=1 set for the given organizationid ($organizationid)!",
+        true
+      );
+    }
+
+    return $id;
+
+  }
+
 }

@@ -326,7 +326,7 @@ class Controller extends \Visitor\Controller {
         (int)$recordingsModel->row['issecurestreamingforced']
       ;
       $access[ $accesskey ] =
-        $recordingsModel->userHasAccess( $user, null, $browserinfo['mobile'] )
+        $recordingsModel->userHasAccess( $user, null, $browserinfo['mobile'], $this->organization )
       ;
       
       if ( $access[ $accesskey ] !== true )
@@ -345,7 +345,7 @@ class Controller extends \Visitor\Controller {
       $access    = $this->bootstrap->getSession('liveaccess');
       $accesskey = $feedModel->id . '-' . ( $feedModel->row['issecurestreamingforced']? '1': '0');
       
-      $access[ $accesskey ] = $feedModel->isAccessible( $user );
+      $access[ $accesskey ] = $feedModel->isAccessible( $user, $this->organization );
       
       if ( $access[ $accesskey ] !== true )
         throw new \Visitor\Api\ApiException( $l('recordings', 'nopermission'), true, false );

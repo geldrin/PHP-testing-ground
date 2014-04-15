@@ -207,7 +207,9 @@ class Controller extends \Visitor\Controller {
     $access      = $this->bootstrap->getSession('recordingaccess');
     $accesskey   = $recordingsModel->id . '-' . (int)$recordingsModel->row['issecurestreamingforced'];
     
-    $access[ $accesskey ] = $recordingsModel->userHasAccess( $user, null, $browserinfo['mobile'] );
+    $access[ $accesskey ] = $recordingsModel->userHasAccess(
+      $user, null, $browserinfo['mobile'], $this->organization
+    );
     $this->handleUserAccess( $access[ $accesskey ] );
     
     include_once(
@@ -308,7 +310,7 @@ class Controller extends \Visitor\Controller {
     $accesskey = $recordingsModel->id . '-' . (int)$recordingsModel->row['issecurestreamingforced'];
     $needauth  = false;
     
-    $access[ $accesskey ] = $recordingsModel->userHasAccess( $user );
+    $access[ $accesskey ] = $recordingsModel->userHasAccess( $user, null, false, $this->organization );
     
     if ( $access[ $accesskey ] === 'registrationrestricted' )
       $needauth = true;
@@ -522,7 +524,7 @@ class Controller extends \Visitor\Controller {
         
         if ( $recordingsModel ) {
           
-          $access[ $accesskey ] = $recordingsModel->userHasAccess( $user, $secure );
+          $access[ $accesskey ] = $recordingsModel->userHasAccess( $user, $secure, false, $this->organization );
           
           if ( $access[ $accesskey ] === true )
             $result = '1';
@@ -613,7 +615,7 @@ class Controller extends \Visitor\Controller {
     $nopermission = false;
     $l            = $this->bootstrap->getLocalization();
     
-    $access[ $accesskey ] = $recordingsModel->userHasAccess( $user );
+    $access[ $accesskey ] = $recordingsModel->userHasAccess( $user, null, false, $this->organization );
     
     if (
          in_array( $access[ $accesskey ], array(

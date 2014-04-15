@@ -2680,3 +2680,79 @@ a#currentusername span {
 #users_invite .labelwrap, #users_editinvite .labelwrap {
   margin: 0 0 5px 0;
 }
+
+/* channels order controls */
+#orderrecordings .orderarrows span {
+  padding: 0;
+  margin-right: 10px;
+  float: left;
+  width: 16px;
+  height: 16px;
+  background-color: transparent;
+  overflow: hidden;
+  background-repeat: no-repeat;
+}
+#orderrecordings {
+  margin: 20px 0px 20px 0px;
+  width: 950px;
+  float: left;
+}
+#orderrecordings #orderlist {
+  float: left;
+  margin: 0;
+  padding: 0;
+  list-style-type: none;
+}
+#orderrecordings #orderlist li {
+  clear: both;
+  float: left;
+  width: 930px;
+  margin: 3px 0px 3px 0px;
+  padding: 3px 10px 3px 10px;
+  background-color: #e0e0e0;
+  -webkit-border-radius: 5px;
+  -moz-border-radius: 5px;
+  border-radius: 5px;
+}
+#orderrecordings #orderlist li .orderarrows {
+  float: right;
+  margin-left: 20px;
+}
+#orderrecordings #orderlist li .orderarrows a {
+  float: left;
+  height: 16px;
+  width: 16px;
+  background-color: transparent;
+  display: none;
+}
+#orderrecordings #orderlist li:hover {
+  background-color: #21ABF0;
+  color: #fff;
+  cursor: move;
+}
+#orderrecordings #orderlist li:hover a {
+  color: #fff;
+}
+#orderrecordings #orderlist li:hover .orderarrows a {
+  display: inline;
+}
+#orderrecordings #orderlist li h1 {
+  font-size: 13px;
+  font-weight: bold;
+  margin: 0;
+}
+#orderrecordings #orderlist li p {
+  margin: 0;
+}
+#orderrecordings #orderlist li .orderarrows .recordingmovedown a {
+  background-image: url(images/icons/arrow_down_active.png);
+}
+#orderrecordings #orderlist li .orderarrows .recordingmoveup a {
+  background-image: url(images/icons/arrow_up_active.png);
+}
+#orderrecordings .placeholder {
+  background-color: #ddd;
+  -webkit-border-radius: 5px;
+  -moz-border-radius: 5px;
+  border-radius: 5px;
+}
