@@ -16,7 +16,6 @@ class Controller extends \Visitor\Controller {
     'deletefromfavorites' => 'member',
     'search'              => 'member',
     'orderrecordings'     => 'uploader|editor|clientadmin',
-    'swaporder'           => 'uploader|editor|clientadmin',
     'setorder'            => 'uploader|editor|clientadmin',
   );
   
@@ -149,79 +148,10 @@ class Controller extends \Visitor\Controller {
 
   }
 
-  public function swaporderAction() {
-
-    $channelModel = $this->modelOrganizationAndUserIDCheck(
-      'channels',
-      $this->application->getNumericParameter('id')
-    );
-
-    $channelModel->startTrans();
-    $channelrecwhatModel  = $this->modelIDCheck(
-      'channels_recordings',
-      $this->application->getNumericParameter('what')
-    );
-    $channelrecwhereModel = $this->modelIDCheck(
-      'channels_recordings',
-      $this->application->getNumericParameter('where')
-    );
-    
-    if (
-         $channelrecwhatModel->row['channelid'] != $channelModel->id or
-         $channelrecwhatModel->row['channelid'] != $channelModel->id
-       )
-      $this->redirect();
-    
-    if ( $channelrecwhereModel->row['weight'] == $channelrecwhatModel->row['weight'] ) {
-
-      $d = \Springboard\Debug::getInstance();
-      $d->log(
-        false,
-        'channels.txt',
-        'channels/swaporder failed, a honnan/hova sulyozasa megegyezik (' .
-        $channelrecwhatModel->row['weight'] . '); honnan id: ' . $channelrecwhatModel->id .
-        ' hova id: ' . $channelrecwhereModel->id,
-        true
-      );
-
-      if ( $this->isAjaxRequest() )
-        $this->jsonoutput( array('status' => 'error') );
-      else
-        $this->redirectWithMessage(
-          $this->application->getParameter('forward', 'channels/orderrecordings') .
-          '#cr' . $channelrecwhatModel->id,
-          'System error occured, our teams have been notified, sorry for the inconvenience'
-        );
-
-    }
-
-    $whatweight = $channelrecwhatModel->row['weight'];
-    $channelrecwhatObj->updateRow( array(
-        'weight' => $channelrecwhereModel->row['weight'],
-      )
-    );
-    
-    $channelrecwhereObj->updateRow( array(
-        'weight' => $whatweight,
-      )
-    );
-
-    $channelModel->endTrans();
-
-    if ( $this->isAjaxRequest() )
-      $this->jsonoutput( array('status' => 'success') );
-    else
-      $this->redirect(
-        $this->application->getParameter('forward', 'channels/orderrecordings') .
-        '#cr' . $channelrecwhatModel->id
-      );
-
-  }
-
   public function setorderAction() {
 
-    $order = $this->application->getParameter('order');
-    if ( empty( $order ) )
+    $neworder = $this->application->getParameter('order');
+    if ( empty( $neworder ) )
       $this->jsonOutput( array('status' => 'error', 'message' => 'nothingprovided') );
 
     $channelModel = $this->modelOrganizationAndUserIDCheck(
@@ -230,9 +160,13 @@ class Controller extends \Visitor\Controller {
     );
 
     $channelModel->startTrans();
+    /* Get the current order of weights, exchange them for the new ones
+     * the current order is simply an array of weights
+     * the new order is an array of channelrecordingids
+     */
     $currentorder = $channelModel->getRecordingWeights( $this->organization['id'] );
 
-    if ( count( $order ) != count( $currentorder ) ) {
+    if ( count( $neworder ) != count( $currentorder ) ) {
 
       $this->jsonOutput( array(
           'status' => 'error',
@@ -242,7 +176,7 @@ class Controller extends \Visitor\Controller {
 
     }
 
-    foreach( $order as $key => $crid )
+    foreach( $neworder as $key => $crid )
       $channelModel->setRecordingOrder( $crid, $currentorder[ $key ] );
 
     $channelModel->endTrans();
