@@ -1864,7 +1864,6 @@ class Recordings extends \Springboard\Model {
       'language'              => \Springboard\Language::get(),
       'api_url'               => $apiurl,
       'user_needPing'         => false,
-      'media_servers'         => array(),
       'track_firstPlay'       => true,
       'recording_id'          => $this->id,
       'recording_title'       => $this->row['title'],
