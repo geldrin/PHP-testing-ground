@@ -419,6 +419,7 @@ class Users extends \Springboard\Model {
         r.rating,
         r.status,
         r.masterlength,
+        r.contentmasterlength,
         r.isintrooutro,
         r.ispublished,
         rwp.position,
@@ -440,8 +441,9 @@ class Users extends \Springboard\Model {
     $recordids = array();
     foreach( $recordings as $key => $recording ) {
       $recordids[] = $recording['id'];
+      $length      = max( $recording['masterlength'], $recording['contentmasterlength'] );
       $recordings[ $key ]['positionpercent'] = round(
-        ( $recording['position'] / $recording['masterlength'] ) * 100
+        ( $recording['position'] / $length ) * 100
       );
       
       if ( $recordings[ $key ]['positionpercent'] > 100 )

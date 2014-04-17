@@ -66,7 +66,7 @@
       <li>
         <div class="recordingpic">
           <a href="{$language}/recordings/details/{$item.id},{$item.title|filenameize}">
-            <div class="length">{$item.masterlength|timeformat:minimal}</div>
+            <div class="length">{$item|@recordinglength|timeformat:minimal}</div>
             <img src="{$item|@indexphoto}" width="150" height="94"/>
           </a>
         </div>
@@ -137,7 +137,7 @@
     {/if}
     <tr>
       <td class="labelcolumn">{#recordings__recordlength#}:</td>
-      <td>{$recording.masterlength|timeformat}</td>
+      <td>{$recording|@recordinglength|timeformat}</td>
     </tr>
     <tr>
       <td class="labelcolumn">{#recordings__details_recordedtimestamp#}:</td>
@@ -234,7 +234,7 @@
       <li>
         <div class="recordingpic">
           <a href="{$language}/recordings/details/{$item.id},{$item.title|filenameize}">
-            <div class="length">{$item.masterlength|timeformat:minimal}</div>
+            <div class="length">{$item|@recordinglength|timeformat:minimal}</div>
             <img src="{$item|@indexphoto}" width="159" height="94"/>
           </a>
         </div>
