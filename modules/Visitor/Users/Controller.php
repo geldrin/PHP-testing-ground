@@ -354,9 +354,32 @@ class Controller extends \Visitor\Controller {
       
       if ( $access[ $accesskey ] !== true )
         throw new \Visitor\Api\ApiException( $l('recordings', 'nopermission'), true, false );
-      
+
+      $info          = array(
+        'organization' => $this->organization,
+        'sessionid'    => session_id(),
+        'ipaddress'    => $this->getIPAddress(),
+        'BASE_URI'     => $this->toSmarty['BASE_URI'],
+        'cookiedomain' => $this->organization['cookiedomain'],
+        'streams'      => $feedModel->getStreamsForBrowser( $this->bootstrap->getBrowserInfo() ),
+        'user'         => $user,
+        'checkwatchingtimeinterval' => $this->organization['presencechecktimeinterval'],
+        'checkwatchingconfirmationtimeout' => $this->organization['presencecheckconfirmationtime'],
+      );
+      $flashdata = $feedModel->getFlashData( $info );
+      $output['media_servers'] = $flashdata['media_servers'];
+
+      if ( isset( $flashdata['media_secondaryServers'] ) )
+        $output['media_secondaryServers'] = $flashdata['media_secondaryServers'];
+
+      if ( isset( $flashdata['livePlaceholder_servers'] ) )
+        $output['livePlaceholder_servers'] = $flashdata['livePlaceholder_servers'];
+
+      if ( isset( $flashdata['intro_servers'] ) )
+        $output['intro_servers'] = $flashdata['intro_servers'];
+
     }
-    
+
     return $this->getFlashParameters( $output );
     
   }
