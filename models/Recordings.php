@@ -18,6 +18,11 @@ class Recordings extends \Springboard\Model {
   protected $searchadvancedwhere;
   protected $streamingserver;
   
+  public function getLength() {
+    $this->ensureObjectLoaded();
+    return max( $this->row['masterlength'], $this->row['contentmasterlength'] );
+  }
+
   public function resetStats() {
     
     $fields        = array();
@@ -1201,6 +1206,7 @@ class Recordings extends \Springboard\Model {
       r.subtitle,
       r.indexphotofilename,
       r.masterlength,
+      r.contentmasterlength,
       r.numberofviews,
       usr.id AS userid,
       usr.nickname,
@@ -1254,6 +1260,7 @@ class Recordings extends \Springboard\Model {
       r.subtitle,
       r.indexphotofilename,
       r.masterlength,
+      r.contentmasterlength,
       r.numberofviews,
       usr.id AS userid,
       usr.nickname,
@@ -1315,6 +1322,7 @@ class Recordings extends \Springboard\Model {
       r.subtitle,
       r.indexphotofilename,
       r.masterlength,
+      r.contentmasterlength,
       r.numberofviews,
       usr.id AS userid,
       usr.nickname,
@@ -1742,7 +1750,7 @@ class Recordings extends \Springboard\Model {
       'recording_title'       => $this->row['title'],
       'recording_subtitle'    => (string)$this->row['subtitle'],
       'recording_description' => (string)$this->row['description'],
-      'recording_duration'    => $this->row['masterlength'],
+      'recording_duration'    => $this->getLength(),
       'recording_image'       => \smarty_modifier_indexphoto( $this->row, 'player', $info['STATIC_URI'] ),
       'user_checkWatching'    => (bool)@$info['member']['ispresencecheckforced'],
       'user_checkWatchingTimeInterval' => $info['organization']['presencechecktimeinterval'],
