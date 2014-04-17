@@ -39,7 +39,7 @@ class Signup extends \Visitor\HelpForm {
     $values['browser']        = $_SERVER['HTTP_USER_AGENT'];
     $values['disabled']       = $userModel::USER_UNVALIDATED;
     $values['validationcode'] = $crypto->randomPassword( 10 );
-    $values['password']       = $crypto->getHash( $values['password'] );
+    $values['password']       = $crypto->getPasswordHash( $values['password'] );
     $values['language']       = \Springboard\Language::get();
     $values['organizationid'] = $this->controller->organization['id'];
     

@@ -13,7 +13,6 @@ class Users extends \Springboard\Model {
     $crypto = $this->bootstrap->getEncryption();
     $where  = array(
       'email    = ' . $this->db->qstr( $email ),
-      'password = ' . $this->db->qstr( $crypto->getHash( $password ) ),
       'disabled = ' . $this->db->qstr( self::USER_VALIDATED ),
     );
     
@@ -35,16 +34,25 @@ class Users extends \Springboard\Model {
       ORDER BY id
       LIMIT 1
     ");
-    
-    if ( empty( $user ) ) {
-      return false;
-    } else {
-      
+
+    if ( !empty( $user ) and $crypto->passwordValid( $password, $user['password'] ) ) {
+
       $this->id  = $user['id'];
       $this->row = $user;
+
+      if ( $crypto->shouldRehashPassword( $user['password'] ) ) {
+
+        $this->updateRow( array(
+            'password' => $crypto->getPasswordHash( $password ),
+          )
+        );
+
+      }
+
       return true;
-      
-    }
+
+    } else
+      return false;
     
   }
   

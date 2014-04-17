@@ -17,7 +17,7 @@ class Form extends \Springboard\Controller\Admin\Form {
     $crypto = $this->bootstrap->getEncryption();
     
     if ( strlen( $values['password'] ) )
-      $values['password'] = $crypto->getHash( $values['password'] );
+      $values['password'] = $crypto->getPasswordHash( $values['password'] );
     else
       unset( $values['password'] );
     
@@ -33,7 +33,7 @@ class Form extends \Springboard\Controller\Admin\Form {
     $model  = $this->bootstrap->getModel( $this->controller->module );
     $values = $this->form->getElementValues( false );
     $crypto = $this->bootstrap->getEncryption();
-    $values['password'] = $crypto->getHash( $values['password'] );
+    $values['password'] = $crypto->getPasswordHash( $values['password'] );
     $model->insert( $values );
     
     $this->controller->redirect('users/index');

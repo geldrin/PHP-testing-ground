@@ -26,7 +26,7 @@ class Modify extends \Visitor\HelpForm {
     if ( !@$values['password'] )
       unset( $values['password'] );
     else
-      $values['password'] = $crypt->getHash( $values['password'] );
+      $values['password'] = $crypt->getPasswordHash( $values['password'] );
     
     if (
          isset( $_FILES['avatarfilename'] ) and

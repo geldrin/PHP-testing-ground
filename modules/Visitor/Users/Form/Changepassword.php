@@ -41,7 +41,7 @@ class Changepassword extends \Visitor\Form {
     $crypto    = $this->bootstrap->getEncryption();
     
     $this->userModel->updateRow( array(
-        'password'       => $crypto->getHash( $values['password'] ),
+        'password'       => $crypto->getPasswordHash( $values['password'] ),
         'validationcode' => 'validated',
       )
     );

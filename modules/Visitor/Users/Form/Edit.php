@@ -65,7 +65,7 @@ class Edit extends \Visitor\HelpForm {
     if ( !@$values['password'] )
       unset( $values['password'] );
     else
-      $values['password'] = $crypt->getHash( $values['password'] );
+      $values['password'] = $crypt->getPasswordHash( $values['password'] );
     
     $this->userModel->clearDepartments();
     if ( isset( $_REQUEST['departments'] ) and !empty( $values['departments'] ) )
