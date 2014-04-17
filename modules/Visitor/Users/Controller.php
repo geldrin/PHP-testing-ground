@@ -332,7 +332,12 @@ class Controller extends \Visitor\Controller {
       if ( $access[ $accesskey ] !== true )
         throw new \Visitor\Api\ApiException( $l('recordings', 'nopermission'), true, false );
       
-      $output = array_merge( $output, $recordingsModel->getSeekbarOptions( $userModel->row ) );
+      $this->toSmarty['ipaddress'] = $this->getIPAddress();
+      $output = array_merge(
+        $output,
+        $recordingsModel->getSeekbarOptions( $userModel->row ),
+        $recordingsModel->getMediaServers( $this->toSmarty, session_id() )
+      );
       
     } elseif ( $feedid ) {
       

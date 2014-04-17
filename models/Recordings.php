@@ -1881,16 +1881,9 @@ class Recordings extends \Springboard\Model {
       $data['user_id'] = $info['member']['id'];
       $data['user_needPing'] = true;
     }
-    
-    if ( $this->row['issecurestreamingforced'] ) {
-      $data['media_servers'][] = $this->getWowzaUrl( 'secrtmpsurl', true, $info, $sessionid );
-      $data['media_servers'][] = $this->getWowzaUrl( 'secrtmpurl',  true, $info, $sessionid );
-      $data['media_servers'][] = $this->getWowzaUrl( 'secrtmpturl', true, $info, $sessionid );
-    } else {
-      $data['media_servers'][] = $this->getWowzaUrl( 'rtmpurl',  true, $info, $sessionid );
-      $data['media_servers'][] = $this->getWowzaUrl( 'rtmpturl', true, $info, $sessionid );
-    }
-    
+
+    $data = $data + $this->getMediaServers( $info, $sessionid );
+
     // default bal oldalon van a video, csak akkor allitsuk be ha kell
     if ( !$this->row['slideonright'] )
       $data['layout_videoOrientation'] = 'right';
@@ -2025,6 +2018,26 @@ class Recordings extends \Springboard\Model {
     
   }
   
+  public function getMediaServers( $info, $sessionid ) {
+
+    $this->ensureObjectLoaded();
+    $data = array(
+      'media_servers' => array(),
+    );
+
+    if ( $this->row['issecurestreamingforced'] ) {
+      $data['media_servers'][] = $this->getWowzaUrl( 'secrtmpsurl', true, $info, $sessionid );
+      $data['media_servers'][] = $this->getWowzaUrl( 'secrtmpurl',  true, $info, $sessionid );
+      $data['media_servers'][] = $this->getWowzaUrl( 'secrtmpturl', true, $info, $sessionid );
+    } else {
+      $data['media_servers'][] = $this->getWowzaUrl( 'rtmpurl',  true, $info, $sessionid );
+      $data['media_servers'][] = $this->getWowzaUrl( 'rtmpturl', true, $info, $sessionid );
+    }
+    
+    return $data;
+
+  }
+
   public function getIntroOutroFlashdata( $cookiedomain ) {
     
     $this->ensureObjectLoaded();
