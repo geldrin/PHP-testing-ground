@@ -28,6 +28,13 @@ class Controller extends \Visitor\Controller {
   */
   public function route() {
     
+    $debug  = \Springboard\Debug::getInstance();
+    $debug->log(
+      false, 'api.txt',
+      "API " . $_SERVER['REQUEST_METHOD'] . " REQUEST: " . $_SERVER['REQUEST_URI'] .
+     "\n  Info:\n" . \Springboard\Debug::getRequestInformation( 2 )
+    );
+
     $result = array(
       'result' => 'OK'
     );
@@ -53,7 +60,6 @@ class Controller extends \Visitor\Controller {
       
       if ( $shouldlog ) {
         
-        $debug     = \Springboard\Debug::getInstance();
         $message   =
           "API exception caught: " . $e->getMessage() . " --- '" . get_class( $e ) . "'\n" .
           "  Backtrace:\n" . \Springboard\Debug::formatBacktrace( $e->getTrace() ) .
