@@ -108,7 +108,8 @@
 		<RTP>
 			<!-- RTP/Authentication/[type]Methods defined in Authentication.xml. Default setup includes; none, basic, digest -->
 			<Authentication>
-				<PublishMethod>digest</PublishMethod>
+<!--				<PublishMethod>digest</PublishMethod> -->
+				<PublishMethod>none</PublishMethod>
 				<PlayMethod>none</PlayMethod>
 			</Authentication>
 			<!-- RTP/AVSyncMethod. Valid values are: senderreport, systemclock, rtptimecode -->
@@ -166,11 +167,11 @@
 				<Description>Base</Description>
 				<Class>com.wowza.wms.module.ModuleCore</Class>
 			</Module>
-			<Module>
+<!--			<Module>
 				<Name>properties</Name>
 				<Description>Properties</Description>
 				<Class>com.wowza.wms.module.ModuleProperties</Class>
-			</Module>
+			</Module> -->
 			<Module>
 				<Name>logging</Name>
 				<Description>Client Logging</Description>
@@ -203,10 +204,10 @@
 				<Name>rtmpEncoderAuthenticateFile</Name>
 				<Value>${com.wowza.wms.context.VHostConfigHome}/conf/${com.wowza.wms.context.Application}/publish.password</Value>
 			</Property>
-			<Property>
+<!--			<Property>
 				<Name>rtspEncoderAuthenticateFile</Name>
 				<Value>${com.wowza.wms.context.VHostConfigHome}/conf/${com.wowza.wms.context.Application}/publish.password</Value>
-			</Property>
+			</Property> -->
 			<!-- CONNECT HANDLER CONFIG -->
 			<Property>
 				<Name>URLPlayHandler</Name>

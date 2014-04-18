@@ -154,11 +154,11 @@
 				<Description>Base</Description>
 				<Class>com.wowza.wms.module.ModuleCore</Class>
 			</Module>
-			<Module>
+<!--			<Module>
 				<Name>properties</Name>
 				<Description>Properties</Description>
 				<Class>com.wowza.wms.module.ModuleProperties</Class>
-			</Module>
+			</Module> -->
 			<Module>
 				<Name>logging</Name>
 				<Description>Client Logging</Description>
@@ -177,7 +177,6 @@
 			<Module>
 				<Name>ModuleRequireSecureConnection</Name>
 				<Description>ModuleRequireSecureConnection</Description>
-<!--			<Class>com.wowza.wms.plugin.security.ModuleRequireSecureConnection</Class> -->
 				<Class>com.wowza.wms.security.ModuleRequireSecureConnection</Class>
 			</Module>
 		</Modules>

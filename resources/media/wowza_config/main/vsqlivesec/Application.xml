@@ -154,11 +154,11 @@
 				<Description>Base</Description>
 				<Class>com.wowza.wms.module.ModuleCore</Class>
 			</Module>
-			<Module>
+<!--			<Module>
 				<Name>properties</Name>
 				<Description>Properties</Description>
 				<Class>com.wowza.wms.module.ModuleProperties</Class>
-			</Module>
+			</Module> -->
 			<Module>
 				<Name>logging</Name>
 				<Description>Client Logging</Description>
@@ -182,17 +182,16 @@
 			<Module>
 				<Name>ModuleRequireSecureConnection</Name>
 				<Description>ModuleRequireSecureConnection</Description>
-<!-- W: 3.1.2	<Class>com.wowza.wms.plugin.security.ModuleRequireSecureConnection</Class> -->
 				<Class>com.wowza.wms.security.ModuleRequireSecureConnection</Class>
 			</Module>
 		</Modules>
 		<!-- Properties defined here will be added to the IApplication.getProperties() and IApplicationInstance.getProperties() collections -->
 		<Properties>
-			<Property>
+<!--			<Property>
 				<Name>smoothStreamingMediaMajorVersion</Name>
 				<Value>2</Value>
 				<Type>Integer</Type>
-			</Property>
+			</Property> -->
 			<Property>
 				<Name>rtmpEncoderAuthenticateFile</Name>
 				<Value>${com.wowza.wms.context.VHostConfigHome}/conf/${com.wowza.wms.context.Application}/publish.password</Value>

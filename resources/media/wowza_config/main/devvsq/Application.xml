@@ -25,9 +25,9 @@
 		-->
 		<Streams>
 			<StreamType>default</StreamType>
-			<StorageDir>/srv/vsq_storage/dev.videosquare.eu/recordings/</StorageDir>
+			<StorageDir>/srv/vsq/dev.videosquare.eu/recordings/</StorageDir>
 			<KeyDir>${com.wowza.wms.context.VHostConfigHome}/keys</KeyDir>
-			<!-- LiveStreamPacketizers (separate with commas): cupertinostreamingpacketizer, smoothstreamingpacketizer, sanjosestreamingpacketizer, cupertinostreamingrepeater, smoothstreamingrepeater, sanjosestreamingrepeater, dvrstreamingpacketizer, dvrstreamingrepeater -->
+			<!-- LiveStreamPacketizers (separate with commas): cupertinostreamingpacketizer, smoothstreamingpacketizer, sanjosestreamingpacketizer, mpegdashstreamingpacketizer, cupertinostreamingrepeater, smoothstreamingrepeater, sanjosestreamingrepeater, dvrstreamingpacketizer, dvrstreamingrepeater -->
 			<LiveStreamPacketizers></LiveStreamPacketizers>
 			<!-- Properties defined here will override any properties defined in conf/Streams.xml for any streams types loaded by this application -->
 			<Properties>
@@ -48,6 +48,8 @@
 			<!-- As a single server or as an origin, use dvrstreamingpacketizer in LiveStreamPacketizers above -->
 			<!-- Or, in an origin-edge configuration, edges use dvrstreamingrepeater in LiveStreamPacketizers above -->
 			<!-- As an origin, also add dvrchunkstreaming to HTTPStreamers below -->
+
+			<!-- If this is a dvrstreamingrepeater, define Application/Repeater/OriginURL to point back to the origin -->
 
 			<!-- To turn on DVR recording set Recorders to dvrrecorder.  This works with dvrstreamingpacketizer  -->
 			<Recorders></Recorders>
@@ -77,8 +79,8 @@
 			</Properties>
 		</DVR>
 
-		<!-- HTTPStreamers (separate with commas): cupertinostreaming, smoothstreaming, sanjosestreaming, dvrchunkstreaming -->
-		<HTTPStreamers>cupertinostreaming,smoothstreaming,sanjosestreaming</HTTPStreamers>
+		<!-- HTTPStreamers (separate with commas): cupertinostreaming, smoothstreaming, sanjosestreaming, mpegdashstreaming, dvrchunkstreaming -->
+		<HTTPStreamers>cupertinostreaming,sanjosestreaming</HTTPStreamers>
 		<SharedObjects>
 			<StorageDir></StorageDir>
 		</SharedObjects>
@@ -154,11 +156,11 @@
 				<Description>Base</Description>
 				<Class>com.wowza.wms.module.ModuleCore</Class>
 			</Module>
-			<Module>
+<!--			<Module>
 				<Name>properties</Name>
 				<Description>Properties</Description>
 				<Class>com.wowza.wms.module.ModuleProperties</Class>
-			</Module>
+			</Module> -->
 			<Module>
 				<Name>logging</Name>
 				<Description>Client Logging</Description>
@@ -174,6 +176,11 @@
 				<Description>BonzaWareURLHandler</Description>
 				<Class>com.bonzaware.free.url.URLNotifications</Class>
 			</Module>
+			<Module>
+				<Name>WowzaStats</Name>
+				<Description>WowzaStats</Description>
+				<Class>hu.videosquare.wowza.module.WowzaStats</Class>
+			</Module>
 		</Modules>
 		<!-- Properties defined here will be added to the IApplication.getProperties() and IApplicationInstance.getProperties() collections -->
 		<Properties>
@@ -182,10 +189,10 @@
 				<Value>enhanced</Value>
 			</Property>
 			<!-- CONNECT HANDLER CONFIG -->
-			<Property>
+<!--			<Property>
 				<Name>URLPlayHandler</Name>
 				<Value>http://dev.videosquare.eu/hu/recordings/checkstreamaccess</Value>
-			</Property>
+			</Property> -->
 			<Property>
 				<Name>PlayIP</Name>
 				<Value>On</Value>
@@ -197,6 +204,14 @@
 			<Property>
 				<Name>PlayURLParams</Name>
 				<Value>sessionid</Value>
+			</Property>
+			<Property>
+				<Name>WowzaStatsMySQLURL</Name>
+				<Value>jdbc:mysql://91.120.59.230/teleconnectdev?user=vsq_stats&amp;password=Ne2uEEABGNNUxW6h</Value>
+			</Property>
+			<Property>
+				<Name>WowzaStatsMySQLStatsTable</Name>
+				<Value>cdn_streaming_stats</Value>
 			</Property>
 		</Properties>
 	</Application>

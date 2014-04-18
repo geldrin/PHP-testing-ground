@@ -42,7 +42,7 @@
 		</StartupStream>
 		-->
 
-		<StartupStream>
+<!--	<StartupStream>
 			<Application>devvsqlive/_definst_</Application>
 			<MediaCasterType>rtp</MediaCasterType>
 			<StreamName>461272.stream</StreamName>
@@ -53,6 +53,32 @@
 			<MediaCasterType>rtp</MediaCasterType>
 			<StreamName>549088.stream</StreamName>
 		</StartupStream>
+-->
+<!--		<StartupStream>
+			<Application>vsqlive/_definst_</Application>
+			<MediaCasterType>rtp</MediaCasterType>
+			<StreamName>979736.stream</StreamName>
+		</StartupStream>
+
+		<StartupStream>
+			<Application>vsqlive/_definst_</Application>
+			<MediaCasterType>rtp</MediaCasterType>
+			<StreamName>813707.stream</StreamName>
+		</StartupStream>
+-->
+
+<!--		<StartupStream>
+			<Application>live/_definst_</Application>
+			<MediaCasterType>rtp</MediaCasterType>
+			<StreamName>burgas.stream</StreamName>
+		</StartupStream> -->
+
+<!--	Removed due to high number of publish request	
+		<StartupStream>
+			<Application>live/_definst_</Application>
+			<MediaCasterType>rtp</MediaCasterType>
+			<StreamName>333333.stream</StreamName>
+		</StartupStream> -->
 
 	</StartupStreams>
 </Root>
