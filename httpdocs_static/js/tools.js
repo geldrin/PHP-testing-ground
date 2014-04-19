@@ -44,6 +44,7 @@ $j(document).ready(function() {
   runIfExists('#recordingssearch', setupRecordingsSearch );
   runIfExists('#users_invite, #users_editinvite', setupUserInvitation );
   runIfExists('#orderrecordings', setupOrderRecordings );
+  runIfExists('.togglesmallrecordings', setupToggleRecordings );
 
   if ( needping )
     setTimeout( setupPing, 1000 * pingsecs );
@@ -1949,4 +1950,12 @@ function setupOrderRecordings() {
   
   $j("#orderrecordings #orderlist").disableSelection();
   
+}
+
+function setupToggleRecordings( elems ) {
+
+  elems.click(function(e) {
+    e.preventDefault();
+    $j(this).parents('li').find('.smallrecordings').toggle();
+  });
 }

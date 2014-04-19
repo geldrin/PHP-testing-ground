@@ -694,4 +694,79 @@ class Users extends \Springboard\Model {
     ");
   }
 
+  public function getCourses( $organization ) {
+
+    $this->ensureID();
+
+    $coursetypeid = $this->bootstrap->getModel('channels')->cachedGetCourseTypeID(
+      $organization['id']
+    );
+
+    $channels = $this->db->getArray("
+      SELECT c.*
+      FROM
+        channels AS c,
+        users_invitations AS ui
+      WHERE
+        c.channeltypeid     = '$coursetypeid' AND
+        c.organizationid    = '" . $organization['id'] . "' AND
+        ui.registereduserid = '" . $this->id . "'
+      ORDER BY c.title
+    ");
+
+    $channelids     = array();
+    $channelidtokey = array();
+    foreach( $channels as $key => $channel ) {
+      $channelids[] = $channel['id'];
+      $channelidtokey[ $channel['id'] ] = $key;
+      $channels[ $key ]['recordings'] = array();
+      $channels[ $key ]['recordingtowatch'] = null;
+    }
+
+    $recordingsModel = $this->bootstrap->getModel('recordings');
+    $recordings      = $recordingsModel->getUserChannelRecordingsWithProgress(
+      $channelids,
+      $this->row,
+      $organization,
+      false
+    );
+
+    $recordings      = $recordingsModel->addPresentersToArray(
+      $recordings,
+      true,
+      $organization['id']
+    );
+
+    foreach( $recordings as $recording ) {
+
+      $key = $channelidtokey[ $recording['channelid'] ];
+      $channels[ $key ]['recordings'][] = $recording;
+
+      // first recording that is not watched enough
+      if (
+           !$channels[ $key ]['recordingtowatch'] and
+           $recording['positionpercent'] < $organization['elearningcoursecriteria']
+         )
+        $channels[ $key ]['recordingtowatch'] = $recording;
+
+    }
+
+    usort( $channels, array( $this, 'compareUserChannels') );
+    return $channels;
+
+  }
+
+  private function compareUserChannels( $a, $b ) {
+
+    if (
+         $a['recordingtowatch'] !== null and
+         $b['recordingtowatch'] !== null )
+      return 0;
+    elseif ( $a['recordingtowatch'] !== null )
+      return -1;
+    else
+      return 1;
+
+  }
+
 }

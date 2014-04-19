@@ -200,7 +200,8 @@ class Controller extends \Visitor\Controller {
       'recordings',
       $this->application->getNumericParameter('id')
     );
-    
+
+    $start       = $this->application->getParameter('start');
     $browserinfo = $this->bootstrap->getBrowserInfo();
     $user        = $this->bootstrap->getSession('user');
     $rating      = $this->bootstrap->getSession('rating');
@@ -225,9 +226,12 @@ class Controller extends \Visitor\Controller {
     $this->toSmarty['needping']      = true;
     $this->toSmarty['height']        = $this->getPlayerHeight( $recordingsModel );
     $this->toSmarty['recording']     = $recordingsModel->addPresenters( true, $this->organization['id'] );
-    $this->toSmarty['flashdata']     = $this->getFlashParameters(
-      $recordingsModel->getFlashData( $this->toSmarty, session_id() )
-    );
+
+    $flashdata = $recordingsModel->getFlashData( $this->toSmarty, session_id() );
+    if ( preg_match( '/^\d{1,2}h\d{1,2}m\d{1,2}s$|^\d+$/', $start ) )
+      $flashdata['timeline_startPosition'] = $start;
+
+    $this->toSmarty['flashdata']     = $this->getFlashParameters( $flashdata );
     $this->toSmarty['comments']      = $recordingsModel->getComments();
     $this->toSmarty['commentcount']  = $recordingsModel->getCommentsCount();
     $this->toSmarty['author']        = $recordingsModel->getAuthor();
@@ -697,7 +701,7 @@ class Controller extends \Visitor\Controller {
         \Springboard\Filesystem::filenameize( $recordingsModel->row['title'] )
       ;
 
-    if ( preg_match( '/^\d{1,2}h\d{1,2}m\d{1,2}s$/', $start ) )
+    if ( preg_match( '/^\d{1,2}h\d{1,2}m\d{1,2}s$|^\d+$/', $start ) )
       $flashdata['timeline_startPosition'] = $start;
     
     if ( $autoplay )

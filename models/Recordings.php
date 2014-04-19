@@ -1009,6 +1009,11 @@ class Recordings extends \Springboard\Model {
     // view it
     if ( !$user['id'] )
       return 'registrationrestricted';
+    else if (
+              $this->row['userid'] == $user['id'] or
+              $user['isadmin'] or $user['isclientadmin'] or $user['iseditor']
+            )
+      return true;
 
     // channels where the user must view all of the previous recordings
     // to be able to view this one
@@ -1020,19 +1025,40 @@ class Recordings extends \Springboard\Model {
         ui.channelid IN('" . implode("', '", $coursechannelids ) . "') AND
         ui.registereduserid = '" . $user['id'] . "' AND
         ui.organizationid   = '" . $organization['id'] . "' AND
-        ui.status           <> 'deleted' AND
+        ui.status           <> 'deleted'
     ");
 
     // user not a member of the course, cannot watch
     if ( empty( $usercourses ) )
       return 'courserestricted';
 
-    $recordings = $this->db->execute("
+    $recordings = $this->getUserChannelRecordingsWithProgress( $usercourses, $user, $organization );
+
+    foreach( $recordings as $recording ) {
+
+      // if we arrived here, all dependencies were satisfied
+      if ( $recording['id'] == $this->id )
+        return true;
+      // a dependency has not been watched
+      else if ( $recording['positionpercent'] < $organization['elearningcoursecriteria'] )
+        return 'coursedependencyrestricted';
+
+    }
+
+    // should never arrive here
+    throw new \Exception('Cannot happen! ' . var_export( $coursechannelids, true ) );
+
+  }
+
+  public function getUserChannelRecordingsWithProgress( $channelids, $user, $organization, $distinct = true ) {
+    return $this->db->getArray("
       SELECT
-        r.id,
+        r.*,
+        cr.channelid,
         (
-          ROUND( ( IFNULL(rvp.position, 0) / GREATEST(r.masterlength, r.contentmasterlength) ) * 100 )
-        ) AS percentwatched
+          ROUND( ( IFNULL(rvp.position, 0) / GREATEST( IFNULL(r.masterlength, 0), IFNULL(r.contentmasterlength, 0) ) ) * 100 )
+        ) AS positionpercent,
+        IFNULL(rvp.position, 0) AS lastposition
       FROM
         channels_recordings AS cr,
         recordings AS r
@@ -1041,29 +1067,16 @@ class Recordings extends \Springboard\Model {
           rvp.userid = '" . $user['id'] . "'
         )
       WHERE
-        cr.channelid IN('" . implode("', '", $usercourses ) . "') AND
+        cr.channelid IN('" . implode("', '", $channelids ) . "') AND
         r.id             = cr.recordingid AND
         r.isintrooutro   = '0' AND
+        r.ispublished    = '1' AND
+        r.status         = 'onstorage' AND -- TODO live?
         r.organizationid = '" . $organization['id'] . "' AND
-        r.status         = 'onstorage' -- TODO live?
-      GROUP BY r.id
+        r.status         = 'onstorage'
+      " . ( $distinct? "GROUP BY r.id": "") . "
       ORDER BY cr.weight
     ");
-
-    foreach( $recordings as $recording ) {
-
-      // if we arrived here, all dependencies were satisfied
-      if ( $recording['id'] == $this->id )
-        return true;
-      // a dependency has not been watched
-      else if ( $recording['percentwatched'] < $organization['elearningcoursecriteria'] )
-        return 'coursedependencyrestricted';
-
-    }
-
-    // should never arrive here
-    throw new \Exception('Cannot happen! ' . var_export( $coursechannelids, true ) );
-
   }
 
   public static function getPublicRecordingWhere( $prefix = '', $isintrooutro = '0', $accesstype = 'public' ) {

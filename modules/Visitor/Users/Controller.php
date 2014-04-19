@@ -101,8 +101,16 @@ class Controller extends \Visitor\Controller {
     
     $l           = $this->bootstrap->getLocalization();
     $uploadModel = $this->bootstrap->getModel('uploads');
+    $userModel   = $this->bootstrap->getModel('users');
+    $user        = $this->bootstrap->getSession('user');
     $uploads     = $uploadModel->getUploads( $this->bootstrap->getSession('user') );
     
+    $userModel->id  = $user['id'];
+    $userModel->row = $user->toArray();
+    $this->toSmarty['channels'] = $userModel->getCourses(
+      $this->organization
+    );
+
     if ( !empty( $uploads ) )
       $this->toSmarty['sessionmessage'] = sprintf(
         $l('recordings', 'continueupload'),

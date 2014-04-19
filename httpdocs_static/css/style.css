@@ -1562,6 +1562,9 @@ a#currentusername span {
 }
 
 /* smallrecordings */
+.continuerecording {
+  font-weight: bolder;
+}
 .smallrecordings {
   width: 738px;
 }
