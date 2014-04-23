@@ -9,7 +9,8 @@ class Create extends \Visitor\HelpForm {
     
     $l = $this->bootstrap->getLocalization();
     $this->controller->toSmarty['title'] = $l('categories', 'create_title');
-    
+    $this->controller->toSmarty['helpclass'] = 'fullwidth left';
+
   }
   
   public function onComplete() {
