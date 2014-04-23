@@ -1,6 +1,6 @@
 <?php
 namespace Visitor\Users\Form;
-class Resetsession extends \Visitor\Form {
+class Resetsession extends \Visitor\HelpForm {
   public $configfile = 'Resetsession.php';
   public $template   = 'Visitor/genericform.tpl';
   public $needdb     = true;

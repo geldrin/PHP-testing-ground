@@ -1,7 +1,7 @@
 <?php
 namespace Visitor\Organizations\Form;
 
-class Modifyintroduction extends \Visitor\Form {
+class Modifyintroduction extends \Visitor\HelpForm {
   public $configfile = 'Modifyintroduction.php';
   public $template   = 'Visitor/genericform.tpl';
   public $needdb     = true;

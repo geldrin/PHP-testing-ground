@@ -1,7 +1,7 @@
 <?php
 namespace Visitor\Categories\Form;
 
-class Modify extends \Visitor\Form {
+class Modify extends \Visitor\HelpForm {
   public $configfile = 'Modify.php';
   public $template   = 'Visitor/genericform.tpl';
   public $needdb     = true;

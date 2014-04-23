@@ -1,7 +1,7 @@
 <?php
 namespace Visitor\Groups\Form;
 
-class Create extends \Visitor\Form {
+class Create extends \Visitor\HelpForm {
   public $configfile = 'Create.php';
   public $template   = 'Visitor/genericform.tpl';
   public $needdb     = true;
