@@ -2479,7 +2479,8 @@ class Recordings extends \Springboard\Model {
       r.numberofviews,
       r.rating,
       '0' AS numberofrecordings,
-      r.status
+      r.status,
+      r.ispublished
     ";
     $where  = "
       (
@@ -2513,7 +2514,8 @@ class Recordings extends \Springboard\Model {
           '0' AS numberofviews,
           '0' AS rating,
           numberofrecordings,
-          '' AS status
+          '' AS status,
+          '1' AS ispublished
         FROM channels
         WHERE
           ispublic = 1 AND 
