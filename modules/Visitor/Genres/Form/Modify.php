@@ -15,10 +15,11 @@ class Modify extends \Visitor\HelpForm {
   }
   
   public function postSetupForm() {
-    
+
     $l = $this->bootstrap->getLocalization();
     $this->controller->toSmarty['title'] = $l('genres', 'create_title');
-    
+    $this->controller->toSmarty['helpclass'] = 'rightbox small';
+
   }
   
   public function onComplete() {

@@ -10,7 +10,8 @@ class Create extends \Visitor\HelpForm {
     
     $l = $this->bootstrap->getLocalization();
     $this->controller->toSmarty['title'] = $l('genres', 'create_title');
-    
+    $this->controller->toSmarty['helpclass'] = 'rightbox small';
+
   }
   
   public function onComplete() {
