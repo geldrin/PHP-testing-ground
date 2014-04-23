@@ -1,7 +1,7 @@
 <?php
 namespace Visitor\Genres\Form;
 
-class Create extends \Visitor\Form {
+class Create extends \Visitor\HelpForm {
   public $configfile = 'Create.php';
   public $template   = 'Visitor/genericform.tpl';
   public $needdb     = true;
@@ -10,7 +10,8 @@ class Create extends \Visitor\Form {
     
     $l = $this->bootstrap->getLocalization();
     $this->controller->toSmarty['title'] = $l('genres', 'create_title');
-    
+    $this->controller->toSmarty['helpclass'] = 'rightbox small';
+
   }
   
   public function onComplete() {

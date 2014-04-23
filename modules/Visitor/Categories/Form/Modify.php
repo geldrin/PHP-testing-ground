@@ -1,7 +1,7 @@
 <?php
 namespace Visitor\Categories\Form;
 
-class Modify extends \Visitor\Form {
+class Modify extends \Visitor\HelpForm {
   public $configfile = 'Modify.php';
   public $template   = 'Visitor/genericform.tpl';
   public $needdb     = true;
@@ -19,6 +19,7 @@ class Modify extends \Visitor\Form {
     
     $l = $this->bootstrap->getLocalization();
     $this->controller->toSmarty['title'] = $l('categories', 'create_title');
+    $this->controller->toSmarty['helpclass'] = 'fullwidth left';
     
   }
   

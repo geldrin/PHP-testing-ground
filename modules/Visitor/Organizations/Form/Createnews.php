@@ -1,6 +1,6 @@
 <?php
 namespace Visitor\Organizations\Form;
-class Createnews extends \Visitor\Form {
+class Createnews extends \Visitor\HelpForm {
   public $configfile = 'Createnews.php';
   public $template   = 'Visitor/genericform.tpl';
   

@@ -1,6 +1,6 @@
 <?php
 namespace Visitor\Categories\Form;
-class Create extends \Visitor\Form {
+class Create extends \Visitor\HelpForm {
   public $configfile = 'Create.php';
   public $template   = 'Visitor/genericform.tpl';
   public $needdb     = true;
@@ -9,7 +9,8 @@ class Create extends \Visitor\Form {
     
     $l = $this->bootstrap->getLocalization();
     $this->controller->toSmarty['title'] = $l('categories', 'create_title');
-    
+    $this->controller->toSmarty['helpclass'] = 'fullwidth left';
+
   }
   
   public function onComplete() {
