@@ -28,6 +28,27 @@ if ( iswindows() ) {
 	exit;
 }
 
+// CONFIG:
+$stats_time_steps['short']['label']  = "5min";			// 5 min label
+$stats_time_steps['short']['secs']   = 60 * 5;			// 5 min
+$stats_time_steps['medium']['label'] = "1hour";			// 1 hour label
+$stats_time_steps['medium']['secs']  = 60 * 60;			// 1 hour
+$stats_time_steps['long']['label']   = "1day";			// 1 day label
+$stats_time_steps['long']['secs']    = 60 * 60 * 24;	// 1 day
+
+$platform_definitions = array(
+	//	'string to find'	=> "array index/sql column name"
+	'Flash/WIN'		=> "flashwin",		// Example: Flash/WIN 12,0,0,77
+	'Flash/MAC'		=> "flashmac",		// Example: ?
+	'Flash/Linux'	=> "flashlinux",	// Example: ?
+	'Android'		=> "android",		// Example: Samsung GT-I9100 stagefright/Beyonce/1.1.9 (Linux;Android 4.1.2)
+	'iPhone'		=> "iphone",		// Example: AppleCoreMedia/1.0.0.11D167 (iPhone; U; CPU OS 7_1 like Mac OS X; en_us)
+	'iPad'			=> "ipad"			// Example: AppleCoreMedia/1.0.0.10B329 (iPad; U; CPU OS 6_1_3 like Mac OS X; hu_hu)
+);
+
+// Empty array for each record initialization
+$platforms_null = returnStreamingClientPlatformEmptyArray($platform_definitions);
+
 // Start an infinite loop - exit if any STOP file appears
 if ( is_file( $app->config['datapath'] . 'jobs/' . $myjobid . '.stop' ) or is_file( $app->config['datapath'] . 'jobs/all.stop' ) ) exit;
 
@@ -44,10 +65,10 @@ $app->watchdog();
 $db = db_maintain();
 
 // Load last processed record time
-$status_filename = $jconf['temp_dir'] . $myjobid . ".status";
+$status_filename = $jconf['temp_dir'] . $myjobid . ".live.status";
 
 $last_processed_timestamp = 0;	// Unix epoch: 1970-01-01 00:00:00
-/*
+
 if ( file_exists($status_filename) ) {
 
 	// Is readable?
@@ -71,7 +92,7 @@ if ( file_exists($status_filename) ) {
 			$tmp = explode("=", $line);
 
 			switch ($tmp[0]) {
-				case "last_processed_time":
+				case "last_processed_time_" . $stats_time_steps['short']['label']:
 					$last_processed_time = strtotime($tmp[1]);
 					if ( $last_processed_time === false ) {
 						$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Stats status file: not a datetime value ('". $line . "')", $sendmail = false); // TRUE!!!
@@ -85,93 +106,135 @@ if ( file_exists($status_filename) ) {
 	}
 
 }
-*/
 
+$last_processed_timestamp = 0;	
+
+// Wowza application to filter
 $wowza_app = $jconf['streaming_live_app'];
 if ( $app->config['baseuri'] == "dev.videosquare.eu/" ) $wowza_app = "dev" . $wowza_app;
 
-$next_record_timestamp = getFirstStatsRecordFrom($last_processed_timestamp, $wowza_app);
-// No record in cdn_streaming_stats DB table
-if ( $next_record_timestamp === false ) exit;		// continue???
-$start_interval = getTimelineGridSeconds($next_record_timestamp, "left", 300);	// Normalize time value to the left (past) for 5mins (e.g. 15:05:00)
+$tmp_round = 0;
+while ( 1 ) {
 
-/*$big_bang_time = strtotime($next_record_time);
+	// Next record to process after last processed record
+	$start_interval = getFirstStatsRecordFrom($last_processed_timestamp, $wowza_app);
+	// Nothing to process, cdn_streaming_stats DB is empty after $last_processed_timestamp
+	if ( $start_interval === false ) exit;		// continue??? sleep???
 
-// First run: no process have taken place before
-if ( $last_processed_time < $big_bang_time ) {
-	$start_interval = $big_bang_time;
-} else {
-	$start_interval = $last_processed_time + 1;
-}*/
+	// Align to timeline grid (to left/past)
+	$start_interval = getTimelineGridSeconds($start_interval, "left", $stats_time_steps['short']['secs']);
+	// End of interval to process
+	$end_interval = $start_interval + $stats_time_steps['short']['secs'] - 1;
 
-$end_interval = $start_interval + 5 * 60;
+	// Debug information for logging
+	$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] last processed time = " . date("Y-m-d H:i:s", $last_processed_timestamp), $sendmail = false);
+	$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] stats processing for interval: " . date("Y-m-d H:i:s", $start_interval) . " - " . date("Y-m-d H:i:s", $end_interval), $sendmail = false);
 
-// Debug information for logging
-$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] next_record_time = " . date("Y-m-d H:i:s", $next_record_timestamp), $sendmail = false);
-$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] last_processed_time = " . date("Y-m-d H:i:s", $last_processed_timestamp), $sendmail = false);
-$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] stats processing for interval: " . date("Y-m-d H:i:s", $start_interval) . " - " . date("Y-m-d H:i:s", $end_interval), $sendmail = false);
+	// Query records between start and end intervals
+	$stats = queryStatsForInterval($start_interval, $end_interval, $wowza_app);
+	if ( $stats === false ) {
+		echo "error\n";
+	exit -1; // continue???
+	}
 
-// Query records between start and end intervals
-$stats = queryStatsForInterval(date("Y-m-d H:i:s", $start_interval), date("Y-m-d H:i:s", $end_interval), $wowza_app);
-if ( $stats === false ) {
-	echo "error\n";
-exit -1;
-// continue???
-}
+	$stats_f = array();
 
-$stats_f = array();
+	$records_processed = 0;
+	while ( !$stats->EOF ) {
 
-while ( !$stats->EOF ) {
+		$stat = $stats->fields;
 
-	$stat = $stats->fields;
+		// Live feed ID
+		$feedid = $stat["vsqrecordingfeed"];
+		$streamid = $stat["streamid"];		// livefeeds_stream.id
+		$qualitytag = $stat["qualitytag"];	// SD, HD, etc.
+		$streamname = $stat["streamname"];	// Wowza stream name (e.g. 123456)
 
-	// Live feed ID
-	$feedid = $stat["vsqrecordingfeed"];
+		$platform = findStreamingClientPlatform($stat["clientplayer"]);
+//echo "platform: " . $platform . "\n";
 
-	//// Platform
-	// Example: Flash/WIN 12,0,0,77
-	$platform = "";
-	$pos = stripos($stats["clientplayer"], "Flash");
-	if ( $pos !== false ) $platform = "flash";
-	// Example: Samsung GT-I9100 stagefright/Beyonce/1.1.9 (Linux;Android 4.1.2)
-	$pos = stripos($stats["clientplayer"], "Android");
-	if ( $pos !== false ) $platform = "android";
-	// Example: AppleCoreMedia/1.0.0.10B329 (iPad; U; CPU OS 6_1_3 like Mac OS X; hu_hu)
-	$pos = stripos($stats["clientplayer"], "iPad");
-	if ( $pos !== false ) $platform = "apple/ipad";
-	if ( empty($platform) ) $platform = "other";
-	// Others:
-	// - Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)
+		// Country (geo IP)
+		$country = geoip_country_code_by_name($stat["clientip"]);
+		if ( $country === false ) {
+			$country = "notdef";
+		}
 
-	// Country (geo IP)
-	$country = geoip_country_code_by_name($stat["clientip"]);
+		//// Statistics records filtered
+		// Build array index
+		$idx = $streamid . "_" . $country; 
+		if ( !isset($stats_f[$feedid][$idx]) ) {
+			$stats_f[$feedid][$idx] = $platforms_null;
+			$stats_f[$feedid][$idx]['timestamp'] = date("Y-m-d H:i:s", $start_interval);
+		}
+		// Add (repeat) livefeedid
+		if ( !isset($stats_f[$feedid][$idx]['livefeedid']) ) {
+			$stats_f[$feedid][$idx]['livefeedid'] = $feedid;
+		}
+		// Add livefeedstreamid
+		if ( !isset($stats_f[$feedid][$idx]['livefeedstreamid']) ) {
+			$stats_f[$feedid][$idx]['livefeedstreamid'] = $streamid;
+		}
+		// Add country
+		if ( !isset($stats_f[$feedid][$idx]['country']) ) {
+			$stats_f[$feedid][$idx]['country'] = $country;
+		}
+		// Increase platform counter
+		if ( isset($stats_f[$feedid][$idx][$platform]) ) {
+			$stats_f[$feedid][$idx][$platform]++;
+		}
 
-	// Add this record
-	if ( !isset($stats_f[$feedid][$country][$platform] ) {
-		$stats_f[$feedid][$country][$platform] = 1;
+//	var_dump($stat);
+
+//	var_dump($stats_f);
+
+//exit;
+//sleep(1);
+
+		$records_processed++;
+		$stats->MoveNext();
+	}
+
+	// Update results to DB
+	if ( count($stats_f) > 0 ) {
+
+		foreach ( $stats_f as $feedid => $feed_array ) {
+			foreach ( $feed_array as $idx => $stat_record ) {
+				insertStatRecord($stat_record);
+			}
+		}
+
+
+	}
+
+	// Shift start interval
+	$start_interval += $stats_time_steps['short']['secs'];
+
+	// Update last processed record
+	$last_processed_timestamp = $end_interval;
+	// Write last processed record to disk (for recovery)
+	$content = "last_processed_time_" . $stats_time_steps['short']['label'] . "=" . date("Y-m-d H:i:s", $last_processed_timestamp);
+	$err = file_put_contents($status_filename, $content);
+	if ( $err === false ) {
+		$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Cannot write staus file " . $status_filename, $sendmail = false);
 	} else {
-		$stats_f[$feedid][$country][$platform]++;
+		$debug->log($jconf['log_dir'], $myjobid . ".log", "[OK] last processed record time written to " . $status_filename, $sendmail = false);
 	}
 
+	// Debug information for logging
+	$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] records processed: " . $records_processed, $sendmail = false);
 
-	// Add record
-/*	if ( !isset($stats_f[$feedid]) ) {
-		$stats_f[$feedid][$country] = array();
+$tmp_round++;
+if ($tmp_round > 15) exit;
 
-	}
-*/
-
-var_dump($stat);
-
-exit;
-
-	$stats->MoveNext();
 }
 
 exit;
 
-function queryStatsForInterval($interval_start_time, $interval_end_time, $streaming_server_app) {
+function queryStatsForInterval($start_interval, $end_interval, $streaming_server_app) {
 global $db, $debug, $myjobid, $app, $jconf;
+
+	$start_interval_datetime = date("Y-m-d H:i:s", $start_interval);
+	$end_interval_datetime = date("Y-m-d H:i:s", $end_interval);
 
 	$query = "
 		SELECT
@@ -197,22 +260,23 @@ global $db, $debug, $myjobid, $app, $jconf;
 			css.url,
 			css.referrer,
 			css.clientplayer,
-			lfs.name,
-			lfs.keycode
+			lfs.id AS streamid,
+			lfs.name AS qualitytag,
+			lfs.keycode AS streamname
 		FROM
 			cdn_streaming_stats AS css,
 			livefeed_streams AS lfs
 		WHERE
 			css.wowzaappid = '" . $streaming_server_app . "'  AND (
-			( css.starttime >= '" . $interval_start_time . "' AND css.starttime <= '" . $interval_end_time . "' ) OR
-			( css.endtime >= '" . $interval_start_time . "'   AND css.endtime <= '" . $interval_end_time . "' ) OR
-			( css.starttime <= '" . $interval_end_time . "' AND css.endtime IS NULL ) ) AND 
+			( css.starttime >= '" . $start_interval_datetime . "' AND css.starttime <= '" . $end_interval_datetime . "' ) OR
+			( css.endtime >= '" . $start_interval_datetime . "'   AND css.endtime <= '" . $end_interval_datetime . "' ) OR
+			( css.starttime <= '" . $end_interval_datetime . "' AND css.endtime IS NULL ) ) AND 
 			css.vsqrecordingfeed = lfs.livefeedid AND
 			css.wowzalocalstreamname = lfs.keycode
 		GROUP BY
 			css.vsqsessionid";
 
-echo $query . "\n";
+//echo $query . "\n";
 
 	try {
 		$stats = $db->Execute($query);
@@ -222,7 +286,7 @@ echo $query . "\n";
 	}
 
 	// No records for interval
-	if ( $stats->RecordCount() < 1 ) return false;
+//	if ( $stats->RecordCount() < 1 ) return false;
 
 	return $stats;
 }
@@ -248,7 +312,7 @@ global $db, $debug, $myjobid, $app, $jconf;
 			css.starttime
 		LIMIT 1";
 
-echo $query . "\n";
+//echo $query . "\n";
 
 	try {
 		$stats = $db->getArray($query);
@@ -259,8 +323,6 @@ echo $query . "\n";
 
 	// No records in database
 	if ( count($stats) < 1 ) return false;
-
-var_dump($stats);
 
 	$starttime = strtotime($stats[0]["starttime"]);
 
@@ -278,6 +340,60 @@ function getTimelineGridSeconds($timestamp, $direction = "left", $timeresolution
 	}
 
 	return $timestamp_grid;
+}
+
+function findStreamingClientPlatform($platform_string) {
+global $platform_definitions;
+
+	foreach ( $platform_definitions as $key => $value ) {
+		if ( stripos($platform_string, $key) !== false ) return $value;
+	}
+
+echo "platform not found: " . $platform_string . "\n";
+exit;
+
+	return "other";
+}
+
+function returnStreamingClientPlatformEmptyArray($platform_definitions) {
+
+	$platforms_null = array();
+
+	foreach ( $platform_definitions as $key => $value ) {
+		$platforms_null[$value] = 0;
+	}
+
+	return $platforms_null;
+}
+
+function insertStatRecord($stat_record) {
+global $db, $debug, $app, $jconf, $myjobid;
+
+	$values = array(
+		'timestamp'			=> $stat_record['timestamp'],
+		'livefeedid'		=> $stat_record['livefeedid'],
+		'livefeedstreamid'	=> $stat_record['livefeedstreamid'],
+		'country'			=> $stat_record['country'],
+		'flashwin'			=> $stat_record['flashwin'],
+		'flashmac'			=> $stat_record['flashmac'],
+		'flashlinux'		=> $stat_record['flashlinux'],
+		'android'			=> $stat_record['android'],
+		'iphone'			=> $stat_record['iphone'],
+		'ipad'				=> $stat_record['ipad']
+	);
+
+var_dump($values);
+
+/*	try {
+		$liveStats = $app->bootstrap->getModel('live_stats_5min');
+		$liveStats->insert($values);
+	} catch (exception $err) {
+		$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] SQL operation failed." . trim($query), $sendmail = false);	// TRUE!!!!
+		return false;
+	}
+*/
+
+	return true;
 }
 
 ?>
