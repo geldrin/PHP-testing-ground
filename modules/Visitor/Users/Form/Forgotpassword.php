@@ -1,6 +1,6 @@
 <?php
 namespace Visitor\Users\Form;
-class Forgotpassword extends \Visitor\Form {
+class Forgotpassword extends \Visitor\HelpForm {
   public $configfile = 'Forgotpassword.php';
   public $template   = 'Visitor/genericform.tpl';
   public $needdb     = true;
