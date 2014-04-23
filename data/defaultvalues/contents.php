@@ -33,27 +33,27 @@ return array (
   3 => 
   array (
     'title' => 'Feltöltés átmenetileg szünetel',
-    'titleen' => 'Uploading is temporarily disabled',
+    'titleen' => 'Upload is temporarily disabled',
     'shortname' => 'uploaddisabled',
     'title_stringid' => 0,
     'body' => '<p>A feltöltés technikai okok miatt átmenetileg szünetel.</p><p>A kellemetlenségért elnézését kérjük.</p>',
-    'bodyen' => '<p>Uploading is temporarily disabled.</p><p>We apologize for the inconvenience.</p>',
+    'bodyen' => '<p>Upload is temporarily disabled.</p><p>We apologize for the inconvenience.</p>',
     'body_stringid' => 0,
   ),
   4 => 
   array (
     'title' => 'Feltöltés sikeres',
-    'titleen' => 'Uploading completed successfully',
+    'titleen' => 'Upload completed successfully',
     'shortname' => 'uploadsuccessfull',
     'title_stringid' => 0,
-    'body' => '<p><span> A feltöltés sikeres volt, a felvétel adatai a konverzió után lesznek szerkeszthetőek. A konverzió sikerességéről e-mailben értesítjük.</span></p>',
-    'bodyen' => '<p><span> Uploading completed successfully, the recording will become editable once the conversion process finishes of which we will notify you via e-mail.</span></p>',
+    'body' => '<p><span>A feltöltés sikeres volt, a felvétel adatai a konverzió után lesznek szerkeszthetőek. A konverzió sikerességéről e-mailben értesítjük.</span></p>',
+    'bodyen' => '<p><span>Upload completed successfully, the recording will become editable once the conversion process finishes of which we will notify you via e-mail.</span></p>',
     'body_stringid' => 0,
   ),
   5 => 
   array (
     'title' => 'Prezentáció feltöltése sikeres',
-    'titleen' => 'Uploading presentation successful',
+    'titleen' => 'Upload presentation successful',
     'shortname' => 'uploadcontentsuccessfull',
     'title_stringid' => 0,
     'body' => '<p><span>Prezentáció feltöltése sikeres volt. A konverziót követően a prezentáció láthatóvá válik a lejátszóban.</span></p>',
@@ -386,31 +386,41 @@ return array (
   31 => 
   array (
     'title' => 'Beragadt belépési állapot törlése',
-    'titleen' => 'Reset stuck login',
+    'titleen' => 'Resetting user session',
     'shortname' => 'validateresetsession',
     'title_stringid' => 0,
-    'body' => '<p>Beragadt belépési állapot törléséhez a megadott e-mail címre elküldtünk egy ellenőrző levelet. Kérjük, a levélben található hivatkozásra kattintva erősítse meg regisztrációjának érvényességét!</p>',
-    'bodyen' => '',
+    'body' => '<p>A beragadt belépési állapot törléséhez a megadott e-mail címre elküldtünk egy ellenőrző levelet. Kérjük, a levélben található hivatkozásra kattintva erősítse meg a beragadt munkamenet megszakítását!</p>',
+    'bodyen' => '<p>To confirm resetting user session we sent you a confirmation e-mail. Please approve this action by click on the link referenced in the message.</p>',
     'body_stringid' => 0,
   ),
   32 => 
   array (
     'title' => 'Beragadt belépési állapot sikeresen törölve',
-    'titleen' => 'Resetting stuck login was successful',
+    'titleen' => 'Resetting user session was successful',
     'shortname' => 'sessionreset',
     'title_stringid' => 0,
-    'body' => '<p>A beragadt belépési állapotot sikeresen töröltük és autómatikusan beléptettük.</p>',
-    'bodyen' => '',
+    'body' => '<p>A beragadt belépési állapotot sikeresen töröltük és automatikusan beléptettük Önt.</p>',
+    'bodyen' => '<p>User session was successfully reset and you were logged in automatically.</p>',
     'body_stringid' => 0,
   ),
   33 => 
   array (
     'title' => 'Regisztráció nem engedélyezett',
-    'titleen' => 'Registration not allowed',
+    'titleen' => 'Registration is not allowed',
     'shortname' => 'noregistration',
     'title_stringid' => 0,
-    'body' => '<p>A regisztráció nem engedélyezett, kérjen felhasználói fiókot adminisztrátorától.</p>','<p>Registration is disabled, please ask your organization to create an account for you.</p>',
-    'bodyen' => '',
+    'body' => '<p>A regisztráció nem engedélyezett, kérjen felhasználói fiókot adminisztrátorától.</p>',
+    'bodyen' => '<p>Registration is disabled, please ask your administrator to create an account for you.</p>',
+    'body_stringid' => 0,
+  ),
+  34 => 
+  array (
+    'title' => 'Meghívó lejárt',
+    'titleen' => 'Invitation expired',
+    'shortname' => 'invitationvalidationexpired',
+    'title_stringid' => 0,
+    'body' => '<p>A meghívó érvényességi ideje lejárt. A kellemetlenségért elnézését kérjük!</p>',
+    'bodyen' => '<p>The invitation has been expired. We are sorry for the inconvenience.</p>',
     'body_stringid' => 0,
   ),
 
