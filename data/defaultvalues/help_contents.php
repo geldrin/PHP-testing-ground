@@ -106,7 +106,7 @@ return array (
     'titleen' => 'Creating channels',
     'shortname' => 'channels_create',
     'title_stringid' => 0,
-    'body' => '<p>Felvételeinek összerendezéséhez használjon csatornákat!</p><p>A csatorna létrehozásához adja meg a csatorna <strong><em>"Megnevezés"</em></strong>-ét, <em><strong>"Alcím"</strong></em>-ét, kedve szerint hozzáadhat egy rövid <em><strong>"Leírás"</strong></em>-t, végül pedig válassza ki az alsó lenyíló menüből a csatorna típusát!<br />Amennyiben nem szeretné, hogy a csatorna nyilvánosan hozzáférhető legyen, az alsó rádiógombok segítségével priváttá teheti.</p><p>Az <em><strong>"Ok"</strong></em> gombra kattintva létrehozhatja a csatornát, amelyet később a <em>"Főmenü &gt; Csatornáim"</em> menüpont alatt tekintheti meg, ahol később módosíthatja, illetve további alcsatornákat adhat hozzá.</p>',
+    'body' => '<p>A felvételeket csatornákban, azaz felvétel-gyűjtemények segítségével rendszerezheti. A csatorna létrehozásához adja meg a csatorna "Megnevezés", "Alcím" és "Leírás" mezőit, majd a lenyíló menüből válassza ki a csatorna típusát!</p><p>Amennyiben nem szeretné, hogy a csatorna nyilvánosan hozzáférhető legyen, az alsó rádiógombok segítségével beállíthatja a kívánt hozzáférési csoportokat.</p>',
     'bodyen' => '',
     'body_stringid' => 0,
   ),
@@ -116,9 +116,111 @@ return array (
     'titleen' => 'Create live event',
     'shortname' => 'live_create',
     'title_stringid' => 0,
-    'body' => '<p>Élő adás létrehozásához adja meg az közvetítésre vonatkozó alapinformációkat, úgy mint az esemény címét, alcímét, illetve leírását. A cím kitöltése kötelező. Válassza ki a lenyíló listából az <em><strong>"Esemény típu</strong><strong>sá"</strong></em>-t!</p><p>A <em><strong>"Kezdési-"</strong></em> és <em><strong>"Zárási időpont"</strong></em> beállításával meghatározhatja azt az időintervallumot, amelyen belül az élő esemény látható marad a portálon.</p><p>Az alsó rádiógombok segítségével a felhasználók hozzáférését szabályozhatja.</p>',
+    'body' => '<p>Élő adás létrehozásához adja meg az közvetítésre vonatkozó alapinformációkat, úgy mint az esemény címét, alcímét, illetve leírását. A cím kitöltése kötelező. Válassza ki a lenyíló listából az "Esemény típusá"-t!</p><p>A "Kezdési-" és "Zárási időpont" beállításával meghatározhatja azt az időintervallumot, amelyen belül az élő esemény látható marad a portálon.</p><p>Az alsó rádiógombok segítségével a felhasználók hozzáférését szabályozhatja.</p>',
     'bodyen' => '',
     'body_stringid' => 0,
   ),
+  12 => 
+  array (
+    'title' => 'Helyszín létrehozása',
+    'titleen' => 'Create location',
+    'shortname' => 'live_createfeed',
+    'title_stringid' => 0,
+    'body' => '<p>Az élő eseményhez több helyszín tartozhat (pl. A, B, és C terem), amelyeket ezen a felületen hozhat létre.</p><p><strong>Típus:</strong> Klasszikus streaminghez (a H.264 streaming encoder eszköz az Ön birtokában van) válassza az "Élő adás" opciót. H.323/SIP videokonferencia felvételéhez a "Videokonferencia felvétel" beállítást kell alkalmazni (nem áll rendelkezésre minden előfizetőnek!).</p><p><strong>Biztonsági szint:</strong> A szerver és a lejátszók között titkosítottan továbbított adáshoz a "Titkosított streaming" funkció szükséges (nem áll rendelkezésre minden előfizetőnek!).</p><p><strong>Tartalom elhelyezése:</strong> A prezentáció elhelyezése bal, illetve jobb oldalon.</p><p><strong>Hozzáférés:</strong> Válassza ki az adáshoz hozzáférő felhasználói csoportokat!</p><p><strong>Hozzászólások moderálása:</strong> Amennyiben az élő adáshoz chat lehetőséget szeretne, az "Utólagos moderálás" vagy "Megjelenés előtt moderált hozzászólások" beállítást kell alkalmaznia. Előbbi esetén minden chat üzenet megjelenik, de utólagos moderálásra van lehetőség, míg utóbbi esetben minden hozzászólást <span>megjelenés előtt </span>explicit módon jóvá kell hagynia.</p>',
+    'bodyen' => '',
+    'body_stringid' => 0,
+  ),
+  13 => 
+  array (
+    'title' => 'Stream hozzáadása',
+    'titleen' => 'Create stream',
+    'shortname' => 'live_createstream',
+    'title_stringid' => 0,
+    'body' => '<p>Adja a helyszínhez a megfelelő streameket, és válassza ki azokat a platformokat, amelyekkel az Ön H.264 streaming encodere által küldött adás(ok) kompatibilis(ek)! Kérjük, a megfelelő beállítások elvégzéséhez forduljon az adott encoder eszköz dokumentációjához, vagy igényelje segítségünket a <a href="mailto:support@videosqr.com">support@videosqr.com</a> e-mail címen. Amennyiben egynél több minőségi változatot küldene (pl. desktop kompatibilis, mobil kompatibilis, stb.), akkor további streameket kell hozzáadnia.</p>',
+    'bodyen' => '',
+    'body_stringid' => 0,
+  ),
+  14 => 
+  array (
+    'title' => 'Helyszín módosítása',
+    'titleen' => 'Modify location',
+    'shortname' => 'live_modifyfeed',
+    'title_stringid' => 0,
+    'body' => '<p>Az élő eseményhez több helyszín tartozhat (pl. A, B, és C terem), amelyeket ezen a felületen hozhat létre.</p><p><strong>Típus:</strong> Klasszikus streaminghez (a H.264 streaming encoder eszköz az Ön birtokában van) válassza az "Élő adás" opciót. H.323/SIP videokonferencia felvételéhez a "Videokonferencia felvétel" beállítást kell alkalmazni (nem áll rendelkezésre minden előfizetőnek!).</p><p><strong>Biztonsági szint:</strong> A szerver és a lejátszók között titkosítottan továbbított adáshoz a "Titkosított streaming" funkció szükséges (nem áll rendelkezésre minden előfizetőnek!).</p><p><strong>Tartalom elhelyezése:</strong> A prezentáció elhelyezése bal, illetve jobb oldalon.</p><p><strong>Hozzáférés:</strong> Válassza ki az adáshoz hozzáférő felhasználói csoportokat!</p><p><strong>Hozzászólások moderálása:</strong> Amennyiben az élő adáshoz chat lehetőséget szeretne, az "Utólagos moderálás" vagy "Megjelenés előtt moderált hozzászólások" beállítást kell alkalmaznia. Előbbi esetén minden chat üzenet megjelenik, de utólagos moderálásra van lehetőség, míg utóbbi esetben minden hozzászólást megjelenés előtt explicit módon jóvá kell hagynia.</p>',
+    'bodyen' => '',
+    'body_stringid' => 0,
+  ),
+  15 => 
+  array (
+    'title' => 'Csatorna módosítása',
+    'titleen' => 'Modify channel',
+    'shortname' => 'channels_modify',
+    'title_stringid' => 0,
+    'body' => '<p>A felvételeket csatornákban, azaz felvétel-gyűjtemények segítségével rendszerezheti. A csatorna módosításához szerkessze a "Megnevezés", "Alcím" vagy "Leírás" mezőket. A típus módosításához a "Csatorna típus" menüt használhatja.</p><p>Amennyiben nem szeretné, hogy a csatorna nyilvánosan hozzáférhető legyen, az alsó rádiógombok segítségével beállíthatja a kívánt hozzáférési csoportokat.</p><p>A csatorna nézőkép változtatásához az aktuális csatornába sorolt felvételek nézőképei közül választhat.</p>',
+    'bodyen' => '',
+    'body_stringid' => 0,
+  ),
+  16 => 
+  array (
+    'title' => 'Csatorna módosítása',
+    'titleen' => 'Modify channel',
+    'shortname' => 'channels_modify',
+    'title_stringid' => 0,
+    'body' => '<p>A felvételeket csatornákban, azaz felvétel-gyűjtemények segítségével rendszerezheti. A csatorna módosításához szerkessze a "Megnevezés", "Alcím" vagy "Leírás" mezőket. A típus módosításához a "Csatorna típus" menüt használhatja.</p><p>Amennyiben nem szeretné, hogy a csatorna nyilvánosan hozzáférhető legyen, az alsó rádiógombok segítségével beállíthatja a kívánt hozzáférési csoportokat.</p><p>A csatorna nézőkép változtatásához az aktuális csatornába sorolt felvételek nézőképei közül választhat.</p>',
+    'bodyen' => '',
+    'body_stringid' => 0,
+  ),
+  17 => 
+  array (
+    'title' => 'Műfaj módosítása',
+    'titleen' => 'Modify genre',
+    'shortname' => 'genres_modify',
+    'title_stringid' => 0,
+    'body' => '<p>Ezen a képernyőn módosíthatja a műfajlista kiválasztott elemét. Amennyiben ez az elem nem fő műfaj, válassza ki a szülőt!</p>',
+    'bodyen' => '',
+    'body_stringid' => 0,
+  ),
+  18 => 
+  array (
+    'title' => 'Műfaj létrehozás',
+    'titleen' => 'Create genre',
+    'shortname' => 'genres_create',
+    'title_stringid' => 0,
+    'body' => '<p>Adja meg a műfaj nevét. Amennyiben nem fő műfajt hoz létre, válassza ki a szülő elemet!</p>',
+    'bodyen' => '',
+    'body_stringid' => 0,
+  ),
+  19 => 
+  array (
+    'title' => 'Kategória szerkesztése',
+    'titleen' => 'Edit categories',
+    'shortname' => 'categories_create',
+    'title_stringid' => 0,
+    'body' => '<p>Hozza létre a kívánt kategóriát! Adja meg a kategória nevét, majd jelölje ki a tárgyát reprezentáló ikont. Amennyiben nem fő elemről van szó, válasszon szülő kategóriát!</p>',
+    'bodyen' => '',
+    'body_stringid' => 0,
+  ),
+  20 => 
+  array (
+    'title' => 'Kategória létrehozása',
+    'titleen' => 'Create category',
+    'shortname' => 'categories_create',
+    'title_stringid' => 0,
+    'body' => '<p>Hozza létre a kívánt kategóriát! Adja meg a kategória nevét, majd jelölje ki a tárgyát reprezentáló ikont. Amennyiben nem fő elemről van szó, válasszon szülő kategóriát!</p>',
+    'bodyen' => '',
+    'body_stringid' => 0,
+  ),
+  21 => 
+  array (
+    'title' => 'Kategória szerkesztése',
+    'titleen' => 'Modify category',
+    'shortname' => 'categories_modify',
+    'title_stringid' => 0,
+    'body' => '<p>Módosítsa a kategória nevét, válasszon szülőt hozzá, illetve a tárgyát reprezentáló ikont!</p>',
+    'bodyen' => '',
+    'body_stringid' => 0,
+  ),
+
+
 
 );
