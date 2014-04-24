@@ -54,7 +54,6 @@ for ($i = 0; $i < count($org_contracts); $i++ ) {
 		$month = $this_month - 1;
 	}
 
-
 	$month_days = cal_days_in_month(CAL_GREGORIAN, $month, $year);
 
 	$firstloggedin_enddate = $year . "-" . sprintf("%02d", $month) . "-" . $month_days . " 23:59:59";
