@@ -162,16 +162,6 @@ return array (
   ),
   16 => 
   array (
-    'title' => 'Csatorna módosítása',
-    'titleen' => 'Modify channel',
-    'shortname' => 'channels_modify',
-    'title_stringid' => 0,
-    'body' => '<p>A felvételeket csatornákban, azaz felvétel-gyűjtemények segítségével rendszerezheti. A csatorna módosításához szerkessze a "Megnevezés", "Alcím" vagy "Leírás" mezőket. A típus módosításához a "Csatorna típus" menüt használhatja.</p><p>Amennyiben nem szeretné, hogy a csatorna nyilvánosan hozzáférhető legyen, az alsó rádiógombok segítségével beállíthatja a kívánt hozzáférési csoportokat.</p><p>A csatorna nézőkép változtatásához az aktuális csatornába sorolt felvételek nézőképei közül választhat.</p>',
-    'bodyen' => '',
-    'body_stringid' => 0,
-  ),
-  17 => 
-  array (
     'title' => 'Műfaj módosítása',
     'titleen' => 'Modify genre',
     'shortname' => 'genres_modify',
@@ -180,7 +170,7 @@ return array (
     'bodyen' => '',
     'body_stringid' => 0,
   ),
-  18 => 
+  17 => 
   array (
     'title' => 'Műfaj létrehozás',
     'titleen' => 'Create genre',
@@ -190,7 +180,7 @@ return array (
     'bodyen' => '',
     'body_stringid' => 0,
   ),
-  19 => 
+  18 => 
   array (
     'title' => 'Kategória szerkesztése',
     'titleen' => 'Edit categories',
@@ -200,7 +190,7 @@ return array (
     'bodyen' => '',
     'body_stringid' => 0,
   ),
-  20 => 
+  19 => 
   array (
     'title' => 'Kategória létrehozása',
     'titleen' => 'Create category',
@@ -210,7 +200,7 @@ return array (
     'bodyen' => '',
     'body_stringid' => 0,
   ),
-  21 => 
+  20 => 
   array (
     'title' => 'Kategória szerkesztése',
     'titleen' => 'Modify category',
@@ -220,7 +210,5 @@ return array (
     'bodyen' => '',
     'body_stringid' => 0,
   ),
-
-
 
 );
