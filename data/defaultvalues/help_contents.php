@@ -182,16 +182,6 @@ return array (
   ),
   18 => 
   array (
-    'title' => 'Kategória szerkesztése',
-    'titleen' => 'Edit categories',
-    'shortname' => 'categories_create',
-    'title_stringid' => 0,
-    'body' => '<p>Hozza létre a kívánt kategóriát! Adja meg a kategória nevét, majd jelölje ki a tárgyát reprezentáló ikont. Amennyiben nem fő elemről van szó, válasszon szülő kategóriát!</p>',
-    'bodyen' => '',
-    'body_stringid' => 0,
-  ),
-  19 => 
-  array (
     'title' => 'Kategória létrehozása',
     'titleen' => 'Create category',
     'shortname' => 'categories_create',
@@ -200,7 +190,7 @@ return array (
     'bodyen' => '',
     'body_stringid' => 0,
   ),
-  20 => 
+  19 => 
   array (
     'title' => 'Kategória szerkesztése',
     'titleen' => 'Modify category',
