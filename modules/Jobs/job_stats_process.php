@@ -31,12 +31,15 @@ if ( iswindows() ) {
 // --- CONFIG ---
 $platform_definitions = array(
 	//	'string to find'	=> "array index/sql column name"
-	'Flash/WIN'		=> "flashwin",		// Example: Flash/WIN 12,0,0,77
-	'Flash/MAC'		=> "flashmac",		// Example: ?
-	'Flash/Linux'	=> "flashlinux",	// Example: ?
-	'Android'		=> "android",		// Example: Samsung GT-I9100 stagefright/Beyonce/1.1.9 (Linux;Android 4.1.2)
-	'iPhone'		=> "iphone",		// Example: AppleCoreMedia/1.0.0.11D167 (iPhone; U; CPU OS 7_1 like Mac OS X; en_us)
-	'iPad'			=> "ipad"			// Example: AppleCoreMedia/1.0.0.10B329 (iPad; U; CPU OS 6_1_3 like Mac OS X; hu_hu)
+	'Flash/WIN'		=> "flashwin",		// Examples: Flash/WIN 12,0,0,77
+	'Flash/MAC'		=> "flashmac",		// Examples: Flash/MAC 12,0,0,77
+	'Flash/Linux'	=> "flashlinux",	// Examples: ?
+	'Flash'			=> "flashwin",		// Examples: Flash/Wirecast/FM 1.0 (compatible; FMSc/1.0) | Flash/FMLE/3.0 (compatible; FMSc/1.0) (nem korrekt???)
+	'Android'		=> "android",		// Examples: Samsung GT-I9100 stagefright/Beyonce/1.1.9 (Linux;Android 4.1.2)
+	'iPhone'		=> "iphone",		// Examples: AppleCoreMedia/1.0.0.11D167 (iPhone; U; CPU OS 7_1 like Mac OS X; en_us)
+	'iPad'			=> "ipad"			// Examples: AppleCoreMedia/1.0.0.10B329 (iPad; U; CPU OS 6_1_3 like Mac OS X; hu_hu)
+// Egyebek?
+// Flash IDE Builder: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_2) AppleWebKit/537.75.14 (KHTML, like Gecko) Version/7.0.3 Safari/537.75.14
 );
 
 
@@ -90,13 +93,20 @@ $app->watchdog();
 // Establish database connection
 $db = db_maintain();
 
+// fix endtime NULL recorda by updatine endtime = starttime + 60 secs
+//fixkaka();
+
 // Empty array for each record initialization
 $platforms_null = returnStreamingClientPlatformEmptyArray($platform_definitions);
 
-// Load last processed record time
-$status_filename = $jconf['temp_dir'] . $myjobid . ".live.status";
+// Which statistics filtering are we doing? See config.
+$statsidx = 0;
+$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Processing statistics: " . $stats_config[$statsidx]['label'], $sendmail = false);
 
-$last_processed_timestamp = 0;	// Unix epoch: 1970-01-01 00:00:00
+// Load last processed record time
+$status_filename = $jconf['temp_dir'] . $myjobid . "." . $stats_config[$statsidx]['label'] . ".status";
+
+//$last_processed_timestamp = 0;	// Unix epoch: 1970-01-01 00:00:00
 
 // Status file: read last processed record time
 if ( file_exists($status_filename) ) {
@@ -137,43 +147,41 @@ if ( file_exists($status_filename) ) {
 
 }
 
-var_dump($stats_config);
-
-// Which statistics filtering are we doing? See config.
-$statsidx = 0;
-$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Processing statistics: " . $stats_config[$statsidx]['label'], $sendmail = false);
-
+// Get last processed record to determine latest processing time
 $ltime = getLastStatsRecordFrom($stats_config[$statsidx]['sqltablename']);
 if ( $ltime === false ) {
-	$ltime = 0;
+	// Debug information for logging
+	$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Last processed time from db: no record found. Falling back to " . date("Y-m-d H:i:s", 0), $sendmail = false);
+	$stats_config[$statsidx]['lastprocessedtime'] = 0;
 } else {
-	$ltime = strtotime($ltime) + $stats_config[$statsidx]['interval'] - 1;
+	$ltime = $ltime + $stats_config[$statsidx]['interval'] - 1;
+	// Debug information for logging
+	$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Last processed time from db (" . $stats_config[$statsidx]['sqltablename'] . "): " . date("Y-m-d H:i:s", $ltime), $sendmail = false);
+	// Is the two last processed time values are equal?
+	if ( $stats_config[$statsidx]['lastprocessedtime'] != $ltime ) {
+		// Debug information for logging
+		$debug->log($jconf['log_dir'], $myjobid . ".log", "[WARN] Last processed time from status file (" . $stats_config[$statsidx]['lastprocessedtime'] . ") and db (" . date("Y-m-d H:i:s", $ltime) . " are NOT EQUAL! Falling back to db time.", $sendmail = false);
+		$stats_config[$statsidx]['lastprocessedtime'] = $ltime;
+	}
 }
 
-if ( $stats_config[$statsidx]['lastprocessedtime'] != $ltime ) {
-
-echo "file last proc time not equal to DB:\n";
-echo "file: " . date("Y-m-d H:i:s", $stats_config[$statsidx]['lastprocessedtime']) . "\n";
-echo "db: " . date("Y-m-d H:i:s", $ltime) . "\n";
-
-} else {
-
-echo "file last proc time EQUAL to DB:\n";
-echo "file: " . date("Y-m-d H:i:s", $stats_config[$statsidx]['lastprocessedtime']) . "\n";
-echo "db: " . date("Y-m-d H:i:s", $ltime) . "\n";
-
-}
-//exit;
-
-$stats_config[$statsidx]['lastprocessedtime'] = 0;
+//$stats_config[$statsidx]['lastprocessedtime'] = 0;
 
 $tmp_round = 0;
 while ( 1 ) {
 
+	// Debug information for logging
+	$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Processing from time = " . date("Y-m-d H:i:s", $stats_config[$statsidx]['lastprocessedtime']), $sendmail = false);
+
 	// Next record to process after last processed record
 	$start_interval = getFirstWowzaRecordFrom($stats_config[$statsidx]['lastprocessedtime'], $wowza_app);
 	// Nothing to process, cdn_streaming_stats DB is empty after $last_processed_timestamp
-	if ( $start_interval === false ) break;
+	if ( $start_interval === false ) {
+		$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] No record to process. Exiting.", $sendmail = false);
+		break;
+	}
+	// Debug information for logging
+	$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] First record after last processed time: " . date("Y-m-d H:i:s", $start_interval), $sendmail = false);
 
 	// Align to timeline grid (to left/past)
 	$start_interval = getTimelineGridSeconds($start_interval, "left", $stats_config[$statsidx]['interval']);
@@ -181,15 +189,11 @@ while ( 1 ) {
 	$end_interval = $start_interval + $stats_config[$statsidx]['interval'] - 1;
 
 	// Debug information for logging
-	$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Last processed time = " . date("Y-m-d H:i:s", $stats_config[$statsidx]['lastprocessedtime']), $sendmail = false);
 	$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Stats processing for interval: " . date("Y-m-d H:i:s", $start_interval) . " - " . date("Y-m-d H:i:s", $end_interval), $sendmail = false);
 
 	// Query records between start and end intervals
 	$stats = queryStatsForInterval($start_interval, $end_interval, $wowza_app);
-	if ( $stats === false ) {
-		echo "error\n";
-	exit -1; // continue???
-	}
+	if ( $stats === false ) break;
 
 	$stats_f = array();
 
@@ -199,7 +203,15 @@ while ( 1 ) {
 		$stat = $stats->fields;
 
 		// Live feed ID
-		$feedid = $stat['vsqrecordingfeed'];
+
+		// Normal client: livefeedid comes from Wowza URL (logged in DB)
+		if ( is_numeric($stat['vsqrecordingfeed']) ) {
+			$feedid = $stat['vsqrecordingfeed'];
+		} else {
+			// If null, then get it from livefeed_streams
+			$feedid = $stat['livefeedid'];
+		}
+
 		$streamid = $stat['streamid'];		// livefeeds_stream.id
 		$qualitytag = $stat['qualitytag'];	// SD, HD, etc.
 		$streamname = $stat['keycode'];		// Wowza stream name (e.g. 123456)
@@ -218,9 +230,7 @@ while ( 1 ) {
 		if ( $stat['wowzalocalstreamname'] == $stat['contentkeycode'] ) {
 			$iscontent = 1;
 		} elseif ( $stat['wowzalocalstreamname'] != $stat['keycode'] ) {
-			$debug->log($jconf['log_dir'], $myjobid . ".log", "[WARN] No video/content match.", $sendmail = false);
-echo "exited\n";
-			exit;	// !!!
+			$debug->log($jconf['log_dir'], $myjobid . ".log", "[WARN] No video/content match.", $sendmail = true);
 		}
 
 		//// Statistics records filtered
@@ -265,9 +275,7 @@ echo "exited\n";
 			}
 		}
 
-
 	}
-//var_dump($stats_f);
 
 	// Shift start interval
 	$start_interval += $stats_config[$statsidx]['interval'];
@@ -278,24 +286,28 @@ echo "exited\n";
 	// Debug information for logging
 	$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Records processed/committed: " . $records_processed . " / " . $records_committed, $sendmail = false);
 
-$tmp_round++;
-if ($tmp_round > 15) break;
+	// Watchdog
+	$app->watchdog();
+
+//$tmp_round++;
+//if ($tmp_round > 3) break;
 
 }
-
-echo "aaaaaaaaaaaaaa\n";
 
 // Write last processed record times to disk (for recovery)
-$content = "";
-foreach ( $stats_config as $idx => $stats_config_element ) {
-	$content .= "lastprocessedtime_" . $stats_config_element['label'] . "=" . date("Y-m-d H:i:s", $stats_config_element['lastprocessedtime']) . "\n";
-}
+$content = "lastprocessedtime_" . $stats_config[$statsidx]['label'] . "=" . date("Y-m-d H:i:s", $stats_config[$statsidx]['lastprocessedtime']) . "\n";
 $err = file_put_contents($status_filename, $content);
 if ( $err === false ) {
 	$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Cannot write staus file " . $status_filename, $sendmail = false);
 } else {
 	$debug->log($jconf['log_dir'], $myjobid . ".log", "[OK] Last processed record time written to " . $status_filename, $sendmail = false);
 }
+
+// Close DB connection if open
+if ( is_resource($db->_connectionID) ) $db->close();
+
+// Watchdog
+$app->watchdog();
 
 exit;
 
@@ -305,7 +317,6 @@ global $db, $debug, $myjobid, $app, $jconf;
 	$start_interval_datetime = date("Y-m-d H:i:s", $start_interval);
 	$end_interval_datetime = date("Y-m-d H:i:s", $end_interval);
 
-/*
 	$query = "
 		SELECT
 			css.id,
@@ -331,47 +342,7 @@ global $db, $debug, $myjobid, $app, $jconf;
 			css.referrer,
 			css.clientplayer,
 			lfs.id AS streamid,
-			lfs.name AS qualitytag,
-			lfs.keycode
-		FROM
-			cdn_streaming_stats AS css,
-			livefeed_streams AS lfs
-		WHERE
-			css.wowzaappid = '" . $streaming_server_app . "'  AND (
-			( css.starttime >= '" . $start_interval_datetime . "' AND css.starttime <= '" . $end_interval_datetime . "' ) OR
-			( css.endtime >= '" . $start_interval_datetime . "'   AND css.endtime <= '" . $end_interval_datetime . "' ) OR
-			( css.starttime <= '" . $end_interval_datetime . "' AND css.endtime IS NULL ) ) AND 
-			css.vsqrecordingfeed = lfs.livefeedid AND
-			css.wowzalocalstreamname = lfs.keycode
-		GROUP BY
-			css.vsqsessionid";
-*/
-
-$query = "
-		SELECT
-			css.id,
-			css.vsqsessionid,
-			css.vsqdomain,
-			css.vsqrecordingfeed,
-			css.wowzasessionid,
-			css.starttime,
-			css.endtime,
-			css.vsquserid,
-			css.httpsessionid,
-			css.wowzaappid,
-			css.sessiontype,
-			css.wowzalocalstreamname,
-			css.wowzaremotestreamname,
-			css.wowzaclientid,
-			css.rtspsessionid,
-			css.streamingtype,
-			css.serverip,
-			css.clientip,
-			css.encoder,
-			css.url,
-			css.referrer,
-			css.clientplayer,
-			lfs.id AS streamid,
+			lfs.livefeedid,
 			lfs.name AS qualitytag,
 			lfs.keycode,
 			lfs.contentkeycode
@@ -383,7 +354,7 @@ $query = "
 			( css.starttime >= '" . $start_interval_datetime . "' AND css.starttime <= '" . $end_interval_datetime . "' ) OR
 			( css.endtime >= '" . $start_interval_datetime . "'   AND css.endtime <= '" . $end_interval_datetime . "' ) OR
 			( css.starttime <= '" . $end_interval_datetime . "' AND css.endtime IS NULL ) ) AND 
-			css.vsqrecordingfeed = lfs.livefeedid AND
+			( css.vsqrecordingfeed = lfs.livefeedid OR ( css.vsqrecordingfeed IS NULL AND css.vsqsessionid IS NULL) ) AND
 			( css.wowzalocalstreamname = lfs.keycode OR css.wowzalocalstreamname = lfs.contentkeycode )
 		GROUP BY
 			css.vsqsessionid, css.wowzalocalstreamname, css.vsqrecordingfeed";
@@ -394,53 +365,6 @@ $query = "
 // - minõségi váltás: nincs új rekord (Wowza oldalon nem figyelünk valami eventet?)
 // - nem lezáruló rekordok: Wowza restart?
 
-/*
-contentet is figyeljük, plusz a group by bonyolultabb:
-	SELECT
-		css.id,
-		css.vsqsessionid,
-		css.vsqdomain,
-		css.vsqrecordingfeed,
-		css.wowzasessionid,
-		css.starttime,
-		css.endtime,
-		css.vsquserid,
-		css.httpsessionid,
-		css.wowzaappid,
-		css.sessiontype,
-		css.wowzalocalstreamname,
-		css.wowzaremotestreamname,
-		css.wowzaclientid,
-		css.rtspsessionid,
-		css.streamingtype,
-		css.serverip,
-		css.clientip,
-		css.encoder,
-		css.url,
-		css.referrer,
-		css.clientplayer,
-		lfs.id AS streamid,
-		lfs.name AS qualitytag,
-		lfs.keycode,
-		lfs.contentkeycode
-	FROM
-		cdn_streaming_stats AS css,
-		livefeed_streams AS lfs
-	WHERE
-		css.wowzaappid = 'devvsqlive'  AND (
-		( css.starttime >= '2014-04-24 16:00:00' AND css.starttime <= '2014-04-24 16:10:00' ) OR
-		( css.endtime >= '2014-04-24 16:00:00'   AND css.endtime <= '2014-04-24 16:10:00' ) OR
-		( css.starttime <= '2014-04-24 16:10:00' AND css.endtime IS NULL ) ) AND
-		css.vsqrecordingfeed = lfs.livefeedid AND
-		( css.wowzalocalstreamname = lfs.keycode OR css.wowzalocalstreamname = lfs.contentkeycode )
-		AND css.endtime IS NOT NULL
-	GROUP BY
-		css.vsqsessionid, css.wowzalocalstreamname, css.vsqrecordingfeed
-	ORDER BY
-		css.starttime
-*/
-
-
 	try {
 		$stats = $db->Execute($query);
 	} catch (exception $err) {
@@ -448,8 +372,8 @@ contentet is figyeljük, plusz a group by bonyolultabb:
 		return false;
 	}
 
-	// No records for interval
-//	if ( $stats->RecordCount() < 1 ) return false;
+	// No records
+	if ( $stats->RecordCount() < 1 ) return false;
 
 	return $stats;
 }
@@ -474,8 +398,6 @@ global $db, $debug, $myjobid, $app, $jconf;
 		ORDER BY
 			css.starttime
 		LIMIT 1";
-
-//echo $query . "\n";
 
 	try {
 		$stats = $db->getArray($query);
@@ -504,8 +426,6 @@ global $db, $debug, $myjobid, $app, $jconf;
 		ORDER BY
 			timestamp DESC
 		LIMIT 1";
-
-//echo $query . "\n";
 
 	try {
 		$stats = $db->getArray($query);
@@ -577,9 +497,8 @@ global $debug, $app, $jconf, $myjobid;
 		'numberofunknown'		=> $stat_record['unknown'],
 	);
 
-var_dump($values);
+//var_dump($values);
 
-/*
 	try {
 		$liveStats = $app->bootstrap->getModel($db_stats_table);
 		$liveStats->insert($values);
@@ -587,7 +506,6 @@ var_dump($values);
 		$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] SQL operation failed." . trim($query), $sendmail = false);	// TRUE!!!!
 		return false;
 	}
-*/
 
 	return true;
 }
@@ -603,5 +521,58 @@ function recursive_array_search($needle,$haystack) {
 
     return false;
 }
+
+function fixkaka() {
+global $db, $debug, $myjobid, $app, $jconf;
+
+	$query = "
+		SELECT
+			id,
+			starttime,
+			endtime
+		FROM
+			cdn_streaming_stats
+		WHERE
+			endtime IS NULL
+		";
+
+//echo $query . "\n";
+
+	try {
+		$stats = $db->getArray($query);
+	} catch (exception $err) {
+		$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] SQL query failed." . trim($query), $sendmail = false);
+		return false;
+	}
+
+	for ( $i = 0; $i < count($stats); $i++ ) {
+		var_dump($stats[$i]);
+		$time = strtotime($stats[$i]['starttime']) + 60;
+		$dtime = date("Y-m-d H:i:s", $time);
+
+		$query = "
+			UPDATE
+				cdn_streaming_stats
+			SET
+				endtime = '" . $dtime . "'
+			WHERE
+				id = " . $stats[$i]['id'];
+
+	echo $query . "\n";
+
+		try {
+			$ss = $db->Execute($query);
+		} catch (exception $err) {
+			$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] SQL query failed." . trim($query), $sendmail = false);
+			return false;
+		}
+
+	}
+
+echo "num: " . $i . "\n";
+	return true;
+}
+
+
 
 ?>
