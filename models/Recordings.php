@@ -1859,14 +1859,13 @@ class Recordings extends \Springboard\Model {
     
   }
   
-  public function getFlashData( $info, $sessionid ) {
+  public function getFlashData( $info ) {
     
     $this->ensureObjectLoaded();
     include_once( $this->bootstrap->config['templatepath'] . 'Plugins/modifier.indexphoto.php' );
-    
+
     $recordingbaseuri = $info['BASE_URI'] . \Springboard\Language::get() . '/recordings/';
-    $cookiedomain     = $info['organization']['cookiedomain'];
-    
+
     if ( $this->bootstrap->config['forcesecureapiurl'] )
       $apiurl = 'https://' . $info['organization']['domain'] . '/';
     else
@@ -1889,12 +1888,12 @@ class Recordings extends \Springboard\Model {
       'user_checkWatchingConfirmationTimeout' => $info['organization']['presencecheckconfirmationtime'],
     );
     
-    if ( @$info['member'] and $info['member']['id'] ) {
+    if ( isset( $info['member'] ) and $info['member']['id'] ) {
       $data['user_id'] = $info['member']['id'];
       $data['user_needPing'] = true;
     }
 
-    $data = $data + $this->getMediaServers( $info, $sessionid );
+    $data = $data + $this->getMediaServers( $info );
 
     // default bal oldalon van a video, csak akkor allitsuk be ha kell
     if ( !$this->row['slideonright'] )
@@ -1903,12 +1902,12 @@ class Recordings extends \Springboard\Model {
     if ( $data['language'] != 'en' )
       $data['locale'] = $info['STATIC_URI'] . 'js/flash_locale_' . $data['language'] . '.json';
     
-    $data['media_streams'] = array( $this->getMediaUrl('default', false, $cookiedomain ) );
+    $data['media_streams'] = array( $this->getMediaUrl('default', false, $info ) );
     
     if ( $this->row['videoreshq'] )
-      $data['media_streams'][] = $this->getMediaUrl('default', true, $cookiedomain );
+      $data['media_streams'][] = $this->getMediaUrl('default', true, $info );
     
-    $data = $data + $this->getIntroOutroFlashdata( $cookiedomain );
+    $data = $data + $this->getIntroOutroFlashdata( $info );
     
     if ( $this->row['offsetstart'] )
       $data['timeline_virtualStart'] = $this->row['offsetstart'];
@@ -1918,11 +1917,11 @@ class Recordings extends \Springboard\Model {
     
     if ( $this->row['contentstatus'] == 'onstorage' and !isset( $info['skipcontent'] ) ) {
       
-      $data['media_secondaryStreams'] = array( $this->getMediaUrl('content', false, $cookiedomain ) );
+      $data['media_secondaryStreams'] = array( $this->getMediaUrl('content', false, $info ) );
       
       if ( $this->row['contentvideoreshq'] ) {
         
-        $data['media_secondaryStreams'][] = $this->getMediaUrl('content', true, $cookiedomain );
+        $data['media_secondaryStreams'][] = $this->getMediaUrl('content', true, $info );
         
         // ha van HQ content, de nincs HQ "default" verzio akkor ketszer
         // kell szerepeljen a default verzio
@@ -2030,27 +2029,28 @@ class Recordings extends \Springboard\Model {
     
   }
   
-  public function getMediaServers( $info, $sessionid ) {
+  public function getMediaServers( $info ) {
 
     $this->ensureObjectLoaded();
     $data = array(
       'media_servers' => array(),
     );
 
+    $sessionid = $info['sessionid'];
     if ( $this->row['issecurestreamingforced'] ) {
-      $data['media_servers'][] = $this->getWowzaUrl( 'secrtmpsurl', true, $info, $sessionid );
-      $data['media_servers'][] = $this->getWowzaUrl( 'secrtmpurl',  true, $info, $sessionid );
-      $data['media_servers'][] = $this->getWowzaUrl( 'secrtmpturl', true, $info, $sessionid );
+      $data['media_servers'][] = $this->getWowzaUrl( 'secrtmpsurl', true, $info );
+      $data['media_servers'][] = $this->getWowzaUrl( 'secrtmpurl',  true, $info );
+      $data['media_servers'][] = $this->getWowzaUrl( 'secrtmpturl', true, $info );
     } else {
-      $data['media_servers'][] = $this->getWowzaUrl( 'rtmpurl',  true, $info, $sessionid );
-      $data['media_servers'][] = $this->getWowzaUrl( 'rtmpturl', true, $info, $sessionid );
+      $data['media_servers'][] = $this->getWowzaUrl( 'rtmpurl',  true, $info );
+      $data['media_servers'][] = $this->getWowzaUrl( 'rtmpturl', true, $info );
     }
     
     return $data;
 
   }
 
-  public function getIntroOutroFlashdata( $cookiedomain ) {
+  public function getIntroOutroFlashdata( $info ) {
     
     $this->ensureObjectLoaded();
     if ( !$this->row['introrecordingid'] and !$this->row['outrorecordingid'] )
@@ -2089,12 +2089,12 @@ class Recordings extends \Springboard\Model {
         $key = 'outro_streams';
       
       $data[ $key ] = array(
-        $this->getMediaUrl('default', false, $cookiedomain, null, '', $id )
+        $this->getMediaUrl('default', false, $info, $id )
       );
       
       if ( isset( $highres[ $id ] ) and $highres[ $id ] )
         $data[ $key ][] =
-          $this->getMediaUrl('default', true, $cookiedomain, null, '', $id )
+          $this->getMediaUrl('default', true, $info, $id )
         ;
       
     }
@@ -2103,10 +2103,10 @@ class Recordings extends \Springboard\Model {
     
   }
   
-  public function getStructuredFlashData( $info, $sessionid ) {
+  public function getStructuredFlashData( $info ) {
     
     $flashdata = $this->transformFlashData(
-      $this->getFlashData( $info, $sessionid )
+      $this->getFlashData( $info )
     );
     
     $flashdata['recommendatory'] = $flashdata['recommendatory']['string'];
@@ -2142,16 +2142,23 @@ class Recordings extends \Springboard\Model {
     
   }
   
-  public function getWowzaUrl( $type, $needextraparam = false, $info = null, $sessionid = null ) {
+  public function getWowzaUrl( $type, $needextraparam = false, $info = null ) {
     
     $url = $this->bootstrap->config['wowza'][ $type ];
     
     if ( $needextraparam ) {
-      
+
+      if ( isset( $info['member'] ) )
+        $user = $info['member'];
+      else
+        $user = null;
+
       $this->ensureID();
       $url =
         rtrim( $url, '/' ) .
-        $this->getAuthorizeSessionid( $info['organization']['cookiedomain'], $sessionid )
+        $this->getAuthorizeSessionid(
+          $info['organization']['cookiedomain'], $info['sessionid'], $user
+        )
       ;
       
     }
@@ -2170,25 +2177,38 @@ class Recordings extends \Springboard\Model {
     
   }
   
-  protected function getAuthorizeSessionid( $cookiedomain, $sessionid ) {
-    
-    return sprintf('?sessionid=%s_%s_%s',
+  protected function getAuthorizeSessionid( $cookiedomain, $sessionid, $user ) {
+
+    $ret = sprintf('?sessionid=%s_%s_%s',
       $cookiedomain,
       $sessionid,
       $this->id
     );
-    
+
+    if ( $user and $user['id'] )
+      $ret .= '&uid=' . $user['id'];
+
+    return $ret;
+
   }
   
-  public function getMediaUrl( $type, $highquality, $cookiedomain = null, $sessionid = null, $host = '', $id = null ) {
+  public function getMediaUrl( $type, $highquality, $info, $id = null ) {
     
     $this->ensureObjectLoaded();
     
-    $typeprefix = '';
-    $extension  = 'mp4';
-    $postfix    = '_lq';
-    $isaudio    = $this->row['mastermediatype'] == 'audio';
-    
+    $cookiedomain = $info['organization']['cookiedomain'];
+    $sessionid    = $info['sessionid'];
+    $host         = '';
+    $typeprefix   = '';
+    $extension    = 'mp4';
+    $postfix      = '_lq';
+    $isaudio      = $this->row['mastermediatype'] == 'audio';
+
+    if ( isset( $info['member'] ) )
+      $user = $info['member'];
+    else
+      $user = null;
+
     if ( $highquality and !$isaudio )
       $postfix = '_hq';
     
@@ -2209,7 +2229,7 @@ class Recordings extends \Springboard\Model {
         $host        = $this->getWowzaUrl( $typeprefix . 'httpurl');
         $sprintfterm =
           '%3$s:%s/%s_mobile' . $postfix . '.%s/playlist.m3u8' .
-          $this->getAuthorizeSessionid( $cookiedomain, $sessionid )
+          $this->getAuthorizeSessionid( $cookiedomain, $sessionid, $user )
         ;
         
         break;
@@ -2219,13 +2239,14 @@ class Recordings extends \Springboard\Model {
         $host        = $this->getWowzaUrl( $typeprefix . 'rtspurl');
         $sprintfterm =
           '%3$s:%s/%s_mobile' . $postfix . '.%s' .
-          $this->getAuthorizeSessionid( $cookiedomain, $sessionid )
+          $this->getAuthorizeSessionid( $cookiedomain, $sessionid, $user )
         ;
         
         break;
       
       case 'direct':
         
+        $host = $info['STATIC_URI'];
         if ( $isaudio )
           $sprintfterm = 'files/recordings/%s/%s_audio.%s';
         else

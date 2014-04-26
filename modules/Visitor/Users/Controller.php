@@ -340,11 +340,13 @@ class Controller extends \Visitor\Controller {
       if ( $access[ $accesskey ] !== true )
         throw new \Visitor\Api\ApiException( $l('recordings', 'nopermission'), true, false );
       
+      $this->toSmarty['member']    = $user;
       $this->toSmarty['ipaddress'] = $this->getIPAddress();
+      $this->toSmarty['sessionid'] = session_id();
       $output = array_merge(
         $output,
         $recordingsModel->getSeekbarOptions( $userModel->row ),
-        $recordingsModel->getMediaServers( $this->toSmarty, session_id() )
+        $recordingsModel->getMediaServers( $this->toSmarty )
       );
       
     } elseif ( $feedid ) {
@@ -368,9 +370,8 @@ class Controller extends \Visitor\Controller {
         'sessionid'    => session_id(),
         'ipaddress'    => $this->getIPAddress(),
         'BASE_URI'     => $this->toSmarty['BASE_URI'],
-        'cookiedomain' => $this->organization['cookiedomain'],
         'streams'      => $feedModel->getStreamsForBrowser( $this->bootstrap->getBrowserInfo() ),
-        'user'         => $user,
+        'member'       => $user,
         'checkwatchingtimeinterval' => $this->organization['presencechecktimeinterval'],
         'checkwatchingconfirmationtimeout' => $this->organization['presencecheckconfirmationtime'],
       );

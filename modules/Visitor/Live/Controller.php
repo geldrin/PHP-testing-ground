@@ -108,7 +108,7 @@ class Controller extends \Visitor\Controller {
       'BASE_URI'     => $this->toSmarty['BASE_URI'],
       'cookiedomain' => $this->organization['cookiedomain'],
       'streams'      => $streams,
-      'user'         => $user,
+      'member'       => $user,
       'checkwatchingtimeinterval' => $this->organization['presencechecktimeinterval'],
       'checkwatchingconfirmationtimeout' => $this->organization['presencecheckconfirmationtime'],
     );
@@ -181,20 +181,13 @@ class Controller extends \Visitor\Controller {
     $this->toSmarty['livehttpurl'] = $feedModel->getMediaUrl(
       'livehttp',
       $currentstream['keycode'],
-      $info,
-      session_id()
+      $info
     );
     $this->toSmarty['livertspurl'] = $feedModel->getMediaUrl(
       'livertsp',
       $currentstream['keycode'],
-      $info,
-      session_id()
+      $info
     );
-    
-    if ( $user['id'] ) {
-      $this->toSmarty['livehttpurl'] .= '&uid=' . $user['id'];
-      $this->toSmarty['livertspurl'] .= '&uid=' . $user['id'];
-    }
     
     if ( $displaychat ) {
       
