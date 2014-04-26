@@ -202,6 +202,7 @@ class Controller extends \Visitor\Controller {
     );
 
     $start       = $this->application->getParameter('start');
+    $versions    = $recordingsModel->getVersions();
     $browserinfo = $this->bootstrap->getBrowserInfo();
     $user        = $this->bootstrap->getSession('user');
     $rating      = $this->bootstrap->getSession('rating');
@@ -259,41 +260,43 @@ class Controller extends \Visitor\Controller {
         )
       ,
     );
-    $mobilehq = false;
-    if ( $recordingsModel->row['mobilevideoreshq'] and $browserinfo['tablet'] )
-      $mobilehq = true;
-    
-    $quality = $this->application->getParameter('quality');
-    if ( $quality and in_array( $quality, array('lq', 'hq') ) ) {
-      
-      if ( $quality == 'hq' and $recordingsModel->row['mobilevideoreshq'] )
-        $mobilehq = true;
-      elseif ( $quality == 'lq' )
-        $mobilehq = false;
-      
+
+    $quality        = $this->application->getParameter('quality');
+    $mobileversion  = array_pop( $versions['master']['mobile'] );
+    $mobileversions = array();
+
+    foreach( $versions['master']['mobile'] as $version ) {
+
+      if ( $quality and $version['qualitytag'] == $quality )
+        $mobileversion = $version;
+
+      $mobileversions[] = $version['qualitytag'];
+
     }
 
-    $this->toSmarty['mobilehq']      = $mobilehq;
+    $this->toSmarty['mobileversions'] = $mobileversions;
     $this->toSmarty['mobilehttpurl'] = $recordingsModel->getMediaUrl(
       'mobilehttp',
-      $mobilehq,
+      $mobileversion,
       $this->toSmarty
     );
     $this->toSmarty['mobilertspurl'] = $recordingsModel->getMediaUrl(
       'mobilertsp',
-      $mobilehq,
+      $mobileversion,
       $this->toSmarty
     );
-    $this->toSmarty['audiofileurl']  = $recordingsModel->getMediaUrl(
-      'direct',
-      false, // non-hq
-      $this->toSmarty
-    );
-    
+
+    if ( !empty( $versions['audio'] ) )
+      $this->toSmarty['audiofileurl']  = $recordingsModel->getMediaUrl(
+        'direct',
+        current( $versions['audio'] ),
+        $this->toSmarty
+      );
+
     $this->smartyoutput('Visitor/Recordings/Details.tpl');
-    
+
   }
-  
+
   public function getplayerconfigAction() {
     
     $recordingsModel = $this->modelIDCheck(

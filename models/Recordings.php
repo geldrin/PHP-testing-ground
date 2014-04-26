@@ -1183,13 +1183,13 @@ class Recordings extends \Springboard\Model {
         SELECT $select
         FROM
           $from,
-          channels_recordings AS cr,
+          channels_recordings AS ccr,
           users_invitations AS ui
         WHERE
           $where
           $generalwhere AND
-          cr.channelid        = ui.channelid AND
-          cr.recordingid      = r.id AND
+          ccr.channelid       = ui.channelid AND
+          ccr.recordingid     = r.id AND
           ui.registereduserid = '" . $user['id'] . "' AND
           ui.status          <> 'deleted'
       ) UNION DISTINCT (
@@ -1890,12 +1890,17 @@ class Recordings extends \Springboard\Model {
       $ids[] = $this->id;
 
     $rs = $this->db->query("
-      SELECT *
-      FROM recordings_versions
+      SELECT
+        rv.*,
+        ep.shortname AS encodingshortname
+      FROM
+        recordings_versions AS rv,
+        encoding_profiles AS ep
       WHERE
-        recordingid IN('" . implode("', '", $ids ) . "') AND
-        status      = 'onstorage'
-      ORDER BY bandwidth DESC
+        rv.recordingid IN('" . implode("', '", $ids ) . "') AND
+        rv.status = 'onstorage' AND
+        ep.id     = rv.encodingprofileid
+      ORDER BY qualitytag
     ");
 
     $ret = array(
@@ -1907,13 +1912,15 @@ class Recordings extends \Springboard\Model {
         'desktop' => array(),
         'mobile'  => array(),
       ),
+      'audio'   => array(),
     );
 
     foreach( $rs as $version ) {
 
-      // should never happen
-      if ( $this->row['mediatype'] == 'audio' and $version['qualitytag'] != 'audio' )
+      if ( $version['encodingshortname'] == 'audio' ) {
+        $ret['audio'][] = $version;
         continue;
+      }
 
       if ( $version['iscontent'] )
         $key = 'content';
@@ -1937,7 +1944,11 @@ class Recordings extends \Springboard\Model {
     $this->ensureObjectLoaded();
     include_once( $this->bootstrap->config['templatepath'] . 'Plugins/modifier.indexphoto.php' );
     
-    $versions         = $this->getVersions();
+    if ( isset( $info['versions'] ) )
+      $versions = $info['versions'];
+    else
+      $versions       = $this->getVersions();
+
     $recordingbaseuri = $info['BASE_URI'] . \Springboard\Language::get() . '/recordings/';
 
     if ( $this->bootstrap->config['forcesecureapiurl'] )
@@ -1979,7 +1990,7 @@ class Recordings extends \Springboard\Model {
     if ( !empty( $versions['master']['desktop'] ) ) {
       $data['media_streams'] = array();
       foreach( $versions['master']['desktop'] as $version )
-        $data['media_streams'][] =
+        $data['media_streams'][ $version['qualitytag'] ] =
           $this->getMediaUrl('default', $version, $info )
         ;
     }
@@ -1997,15 +2008,9 @@ class Recordings extends \Springboard\Model {
 
       $data['media_secondaryStreams'] = array();
       foreach( $versions['content']['desktop'] as $version )
-        $data['media_secondaryStreams'][] =
+        $data['media_secondaryStreams'][ $version['qualitytag'] ] =
           $this->getMediaUrl('content', $version, $info )
         ;
-
-      if (
-           $this->row['contentvideoreshq'] and
-           isset( $data['media_streams'] ) and count( $data['media_streams'] ) == 1
-         )
-        $data['media_streams'][] = reset( $data['media_streams'] );
 
     }
 
@@ -2265,23 +2270,26 @@ class Recordings extends \Springboard\Model {
   }
   
   public function getMediaUrl( $type, $version, $info, $id = null ) {
-    
+
     $this->ensureObjectLoaded();
     $cookiedomain = $info['organization']['cookiedomain'];
     $sessionid    = $info['sessionid'];
     $host         = '';
-    
+
+    $extension = 'mp4';
+    if ( $version['encodingshortname'] == 'audio' )
+      $extension = 'mp3';
+
+    $user = null;
     if ( isset( $info['member'] ) )
       $user = $info['member'];
-    else
-      $user = null;
 
     $typeprefix = '';
     if ( $this->row['issecurestreamingforced'] )
       $typeprefix = 'sec';
-    
+
     switch( $type ) {
-      
+
       case 'mobilehttp':
         //http://stream.videotorium.hu:1935/vtorium/_definst_/mp4:671/2671/2671_2608_mobile.mp4/playlist.m3u8
         $host        = $this->getWowzaUrl( $typeprefix . 'httpurl');
@@ -2291,7 +2299,7 @@ class Recordings extends \Springboard\Model {
         ;
         
         break;
-      
+
       case 'mobilertsp':
         //rtsp://stream.videotorium.hu:1935/vtorium/_definst_/mp4:671/2671/2671_2608_mobile.mp4
         $host        = $this->getWowzaUrl( $typeprefix . 'rtspurl');
@@ -2301,26 +2309,25 @@ class Recordings extends \Springboard\Model {
         ;
         
         break;
-      
-      case 'direct':
 
+      case 'direct':
         $host = $info['STATIC_URI'];
         $sprintfterm = 'files/recordings/%s/%s';
         break;
-      
+
       case 'content':
       default:
         $sprintfterm = '%3$s:%s/%s';
         break;
-      
+
     }
-    
+
     return $host . sprintf( $sprintfterm,
       \Springboard\Filesystem::getTreeDir( $version['recordingid'] ),
       $version['filename'],
       $extension
     );
-    
+
   }
   
   public function getAuthor() {
