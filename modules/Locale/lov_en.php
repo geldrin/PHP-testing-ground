@@ -164,7 +164,7 @@ return array(
   'invite_status' => array(
     'invited'    => 'Invited',
     'existing'   => 'Existing user',
-    'registered' => 'Used (the user registered)',
+    'registered' => 'Registered',
     'deleted'    => 'Deleted',
   ),
 

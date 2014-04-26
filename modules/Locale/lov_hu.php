@@ -197,7 +197,7 @@ return array(
   'invite_status' => array(
     'invited'    => 'Meghívva',
     'existing'   => 'Létező felhasználó',
-    'registered' => 'A meghívó felhasználva (regisztrált)',
+    'registered' => 'Regisztrált',
     'deleted'    => 'Törölve',
   ),
 

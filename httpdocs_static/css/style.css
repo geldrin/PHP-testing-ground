@@ -1633,11 +1633,30 @@ a#currentusername span {
   margin: 0px 15px 3px 0px;
   padding: 0;
 }
+.treeadminlist.fixedwidth h3 {
+  width: 200px;
+}
 .treeadminlist h3 a {
   color: #333;
 }
 .treeadminlist h3 a:hover {
   text-decoration: none;
+}
+
+.invite-status {
+  display: inline-block;
+  width: 110px;
+  font-weight: bold;
+}
+.invite-status.status-invited {
+  color: #FFA500;
+}
+.invite-status.status-existing {
+}
+.invite-status.status-registered {
+  color: #008000;
+}
+.invite-status.status-deleted {
 }
 
 /* indexcontainer */
