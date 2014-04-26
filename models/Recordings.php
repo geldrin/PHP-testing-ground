@@ -2272,7 +2272,8 @@ class Recordings extends \Springboard\Model {
           COUNT(*)
         FROM channels
         WHERE
-          " . \Model\Channels::getWhere( $user ) . " AND
+          ispublic = 1 AND 
+          numberofrecordings > 0 AND
           (
             title         LIKE $searchterm OR
             subtitle      LIKE $searchterm OR
@@ -2362,7 +2363,8 @@ class Recordings extends \Springboard\Model {
           '1' AS ispublished
         FROM channels
         WHERE
-          " . \Model\Channels::getWhere( $user ) . " AND
+          ispublic = 1 AND 
+          numberofrecordings > 0 AND
           (
             title         LIKE $searchterm OR
             subtitle      LIKE $searchterm OR
