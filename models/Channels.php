@@ -14,6 +14,41 @@ class Channels extends \Springboard\Model {
    *
    */
   
+  public static function getWhere( $user, $prefix = '' ) {
+    
+    if ( !$user or !$user['id'] ) {
+
+      return "
+        (
+          {$prefix}ispublic = 1 AND
+          {$prefix}numberofrecordings > 0
+        )
+      ";
+
+    }
+
+    return "
+      (
+        (
+          {$prefix}ispublic = 1 AND
+          {$prefix}numberofrecordings > 0
+        ) OR
+        {$prefix}userid = '" . $user['id'] . "' OR
+        (
+          (
+            SELECT COUNT(*)
+            FROM users_invitations AS cui
+            WHERE
+              cui.status          <> 'deleted' AND
+              cui.channelid        = {$prefix}id AND
+              cui.registereduserid = '" . $user['id'] . "'
+          ) > 0
+        )
+      )
+    ";
+
+  }
+
   public function updateVideoCounters() {
     
     $this->ensureObjectLoaded();
