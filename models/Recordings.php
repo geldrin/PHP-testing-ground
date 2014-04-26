@@ -1990,9 +1990,10 @@ class Recordings extends \Springboard\Model {
     if ( !empty( $versions['master']['desktop'] ) ) {
       $data['media_streams'] = array();
       foreach( $versions['master']['desktop'] as $version )
-        $data['media_streams'][ $version['qualitytag'] ] =
-          $this->getMediaUrl('default', $version, $info )
-        ;
+        $data['media_streams'][] = array(
+          'label' => $version['qualitytag'],
+          'url'   => $this->getMediaUrl('default', $version, $info ),
+        );
     }
 
     if (
@@ -2008,9 +2009,36 @@ class Recordings extends \Springboard\Model {
 
       $data['media_secondaryStreams'] = array();
       foreach( $versions['content']['desktop'] as $version )
-        $data['media_secondaryStreams'][ $version['qualitytag'] ] =
-          $this->getMediaUrl('content', $version, $info )
-        ;
+        $data['media_secondaryStreams'][] = array(
+          'label' => $version['qualitytag'],
+          'url'   => $this->getMediaUrl('content', $version, $info ),
+        );
+
+      if (
+          isset( $data['media_streams'] ) and
+          isset( $data['media_secondaryStreams'] ) and
+          count( $data['media_streams'] ) != count( $data['media_secondaryStreams'] )
+        ) {
+
+        $lengthneeded = abs(
+          count( $data['media_streams'] ) -
+          count( $data['media_secondaryStreams'] )
+        );
+
+        if ( count( $data['media_streams'] ) < count( $data['media_secondaryStreams'] ) )
+          $key = 'media_streams';
+        else
+          $key = 'media_secondaryStreams';
+
+        $data[ $key ] = array_merge(
+          $data[ $key ],
+          array_splice(
+            $data[ $key ],
+            0 - $lengthneeded
+          )
+        );
+
+      }
 
     }
 
