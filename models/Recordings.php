@@ -1179,6 +1179,30 @@ class Recordings extends \Springboard\Model {
           a.recordingid  = r.id AND
           a.departmentid = ud.departmentid AND
           ud.userid      = '" . $user['id'] . "'
+      ) UNION DISTINCT ( -- a hozzaferheto csatornak felveteleit is
+        SELECT $select
+        FROM
+          $from,
+          channels_recordings AS cr,
+          users_invitations AS ui
+        WHERE
+          $where
+          $generalwhere AND
+          cr.channelid        = ui.channelid AND
+          cr.recordingid      = r.id AND
+          ui.registereduserid = '" . $user['id'] . "' AND
+          ui.status          <> 'deleted'
+      ) UNION DISTINCT (
+        SELECT $select
+        FROM
+          $from,
+          users_invitations AS ui
+        WHERE
+          $where
+          $generalwhere AND
+          r.id                = ui.recordingid AND
+          ui.registereduserid = '" . $user['id'] . "' AND
+          ui.status          <> 'deleted'
       )
     ";
     
