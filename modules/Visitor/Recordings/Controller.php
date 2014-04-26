@@ -608,6 +608,12 @@ class Controller extends \Visitor\Controller {
       $this->application->getNumericParameter('id')
     );
     
+    $start        = $this->application->getParameter('start');
+    $autoplay     = $this->application->getParameter('autoplay');
+    $fullscale    = $this->application->getParameter('fullscale');
+    $skipcontent  = $this->application->getParameter('skipcontent');
+    $versions     = $recordingsModel->getVersions();
+    $browserinfo  = $this->bootstrap->getBrowserInfo();
     $user         = $this->bootstrap->getSession('user');
     $access       = $this->bootstrap->getSession('recordingaccess');
     $accesskey    = $recordingsModel->id . '-' . (int)$recordingsModel->row['issecurestreamingforced'];
@@ -628,57 +634,49 @@ class Controller extends \Visitor\Controller {
       $needauth = true;
     elseif ( $access[ $accesskey ] !== true )
       $nopermission = true;
-    
-    $mobilehq = false;
-    if ( $recordingsModel->row['mobilevideoreshq'] ) {
-      
-      $browserinfo = $this->bootstrap->getBrowserInfo();
-      if ( $browserinfo['tablet'] )
-        $mobilehq = true;
-      
-    }
-    
-    $quality = $this->application->getParameter('quality');
-    if ( $quality and in_array( $quality, array('lq', 'hq') ) ) {
-      
-      if ( $quality == 'hq' and $recordingsModel->row['mobilevideoreshq'] )
-        $mobilehq = true;
-      elseif ( $quality == 'lq' )
-        $mobilehq = false;
-      
-    }
-    
+
     $this->toSmarty['needauth']      = $needauth;
     $this->toSmarty['ipaddress']     = $this->getIPAddress();
     $this->toSmarty['member']        = $user;
     $this->toSmarty['sessionid']     = session_id();
-    $this->toSmarty['mobilehq']      = $mobilehq;
+
+    if ( $skipcontent )
+      $this->toSmarty['skipcontent'] = true;
+
+    $flashdata = $recordingsModel->getFlashData( $this->toSmarty );
+    
+    $quality        = $this->application->getParameter('quality');
+    $mobileversion  = array_pop( $versions['master']['mobile'] );
+    $mobileversions = array();
+
+    foreach( $versions['master']['mobile'] as $version ) {
+
+      if ( $quality and $version['qualitytag'] == $quality )
+        $mobileversion = $version;
+
+      $mobileversions[] = $version['qualitytag'];
+
+    }
+
+    $this->toSmarty['mobileversions'] = $mobileversions;
     $this->toSmarty['mobilehttpurl'] = $recordingsModel->getMediaUrl(
       'mobilehttp',
-      $mobilehq,
+      $mobileversion,
       $this->toSmarty
     );
     $this->toSmarty['mobilertspurl'] = $recordingsModel->getMediaUrl(
       'mobilertsp',
-      $mobilehq,
+      $mobileversion,
       $this->toSmarty
     );
-    $this->toSmarty['audiofileurl']  = $recordingsModel->getMediaUrl(
-      'direct',
-      false, // non-hq
-      $this->toSmarty
-    );
-    
-    $autoplay  = $this->application->getParameter('autoplay');
-    $start     = $this->application->getParameter('start');
-    $fullscale = $this->application->getParameter('fullscale');
-    $skipcontent = $this->application->getParameter('skipcontent');
-    
-    if ( $skipcontent )
-      $this->toSmarty['skipcontent'] = true;
-    
-    $flashdata = $recordingsModel->getFlashData( $this->toSmarty );
-    
+
+    if ( !empty( $versions['audio'] ) )
+      $this->toSmarty['audiofileurl']  = $recordingsModel->getMediaUrl(
+        'direct',
+        current( $versions['audio'] ),
+        $this->toSmarty
+      );
+
     $flashdata['layout_logo'] = $this->toSmarty['STATIC_URI'] . 'images/player_overlay_logo.png';
     $flashdata['layout_logoOrientation'] = 'TR';
 
