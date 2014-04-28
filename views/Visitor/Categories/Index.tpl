@@ -1,7 +1,6 @@
 {include file="Visitor/_header.tpl" title=#categories__categories_title#}
 <div class="heading categoryheading">
   <h1>{#categories__categories_title#}</h1>
-  <h2>{#categories__categories_subtitle#}</h2>
 </div>
 
 <ul class="categorylist">
