@@ -1988,12 +1988,14 @@ class Recordings extends \Springboard\Model {
       $data['locale'] = $info['STATIC_URI'] . 'js/flash_locale_' . $data['language'] . '.json';
     
     if ( !empty( $versions['master']['desktop'] ) ) {
-      $data['media_streams'] = array();
-      foreach( $versions['master']['desktop'] as $version )
-        $data['media_streams'][] = array(
-          'label' => $version['qualitytag'],
-          'url'   => $this->getMediaUrl('default', $version, $info ),
-        );
+      $data['media_streams']      = array();
+      $data['media_streamLabels'] = array();
+      foreach( $versions['master']['desktop'] as $version ) {
+        $data['media_streamLabels'][] = $version['qualitytag'];
+        $data['media_streams'][]      =
+          $this->getMediaUrl('default', $version, $info )
+        ;
+      }
     }
 
     if (
@@ -2009,36 +2011,9 @@ class Recordings extends \Springboard\Model {
 
       $data['media_secondaryStreams'] = array();
       foreach( $versions['content']['desktop'] as $version )
-        $data['media_secondaryStreams'][] = array(
-          'label' => $version['qualitytag'],
-          'url'   => $this->getMediaUrl('content', $version, $info ),
-        );
-
-      if (
-          isset( $data['media_streams'] ) and
-          isset( $data['media_secondaryStreams'] ) and
-          count( $data['media_streams'] ) != count( $data['media_secondaryStreams'] )
-        ) {
-
-        $lengthneeded = abs(
-          count( $data['media_streams'] ) -
-          count( $data['media_secondaryStreams'] )
-        );
-
-        if ( count( $data['media_streams'] ) < count( $data['media_secondaryStreams'] ) )
-          $key = 'media_streams';
-        else
-          $key = 'media_secondaryStreams';
-
-        $data[ $key ] = array_merge(
-          $data[ $key ],
-          array_splice(
-            $data[ $key ],
-            0 - $lengthneeded
-          )
-        );
-
-      }
+        $data['media_secondaryStreams'][] =
+          $this->getMediaUrl('content', $version, $info )
+        ;
 
     }
 
@@ -2188,8 +2163,10 @@ class Recordings extends \Springboard\Model {
     }
 
     $versions = $this->getVersions( $ids );
+    if ( empty( $versions['master']['desktop'] ) )
+      throw new \Exception("The intro/outro does not have desktopcompatible non-content recordings!");
 
-    foreach( $versions as $version ) {
+    foreach( $versions['master']['desktop'] as $version ) {
       
       if ( $version['recordingid'] == $introid )
         $key = 'intro_streams';
