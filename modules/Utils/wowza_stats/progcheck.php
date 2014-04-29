@@ -18,6 +18,7 @@ $jconf = $app->config['config_jobs'];
 
 $recordings = array();
 $users = array();
+$checktimestamps = false;
 
 $msg  = "# Videosquare ondemand statistics report\n\n";
 $msg .= "# Log analization started: " . date("Y-m-d H:i:s") . "\n";
@@ -34,17 +35,37 @@ try {
 }
 
 $org_id = null;
+$input = null;
 // get organization id from user/argument
 if ($argc > 1) {
   $input = $argv[1];
-  $data = db_query("SELECT id, name FROM organizations WHERE id=". intval($input));
-  if ($data['success'] === true && $data['returnvalue'] !== false) {
-    $org_id = intval($data['returnvalue']['id']);
-  } else {
-    print_r($data['message']);
-	exit -1;
-  }
-} else {
+	// var_dump($argv);
+	$i = 1;
+	do {
+		if (preg_match('/\d+/', $argv[$i]) === 1 && $i == 1) {
+			$input = $argv[$i];
+			$data = db_query("SELECT id, name FROM organizations WHERE id=". intval($input));
+			if ($data['success'] === true && $data['returnvalue'] !== false) {
+				$org_id = intval($data['returnvalue']['id']);
+			} else {
+				print_r($data['message']);
+				exit -1;
+			}
+			continue;
+		}
+		if (preg_match('/-\w+/', $argv[$i]) === 1) {
+			switch ($argv[$i]) {
+				case '-t':
+					$checktimestamps = true;
+					break;
+				default:
+					print_r($argv[$i] ." is not a valid option!\n");
+					exit;
+			}
+		}
+	} while(array_key_exists(++$i, $argv) === true);
+}
+if ($org_id === null) {
   while (true) {
     print_r(" > ");
     $input = fgets(STDIN);
@@ -62,6 +83,10 @@ if ($argc > 1) {
     print_r('Invalid value! Please type again: ');
   }
 }
+
+$msg .= "# Legend: (email,watched duration,total duration";
+$msg .= $checktimestamps === true ? (",last activity,first login)\n") : (")\n");
+
 // query database
 $query = "
   SELECT
@@ -126,7 +151,8 @@ foreach ($org_channels as $ch) {
         prog.recordingid,
         prog.position,
         prog.timestamp,
-        u.email
+        u.email,
+				u.firstloggedin
       FROM
         recording_view_progress AS prog,
         users AS u
@@ -150,7 +176,6 @@ foreach ($org_channels as $ch) {
 
     $user_added = false;
     foreach ($user_progress as $up) {
-    
       // Log channel header for this recording
       if ( !empty($msg_ch) ) {
         $msg .= $msg_ch;
@@ -165,9 +190,10 @@ foreach ($org_channels as $ch) {
 
       $position_percent = round( ( 100 / $rec['masterlength'] ) * $up['position'], 2);
     if ( $position_percent > 100 ) $position_percent = 100;
-      $msg .= $up['email'] . ";" . secs2hms($up['position']) . ";" . secs2hms($rec['masterlength']) . ";" . $position_percent . "%\n";
-      //$msg .= $up['email'] .";". secs2hms($up['position']) .";". secs2hms($rec['masterlength']) .";". $position_percent ."%;". $up['timestamp'] ."\n";
-
+      $msg .= $up['email'] . ";" . secs2hms($up['position']) . ";" . secs2hms($rec['masterlength']);
+			$msg .= $checktimestamps === true ? (";". $up['timestamp'] .";". $up['firstloggedin']) : ("");
+			$msg .= ";" . $position_percent . "%\n";
+			
       $user_added = true;
     }
 
