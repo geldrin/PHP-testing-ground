@@ -123,9 +123,9 @@ $title = "TEST. IGNORE. This is a test message from Videosquare";
 $body  = $mail_head . "<br/>" . $title . "<br/><br/>Test message<br/>";
 try {
 	sendHTMLEmail_errorWrapper($title, $body);
-	$debug->log($jconf['log_dir'], $myjobid . ".log", "[OK] Simple HTML mail sent to log mail addresses. CHECK MAIL.\n" . print_r($err, true), $sendmail = false);
+	$debug->log($jconf['log_dir'], $myjobid . ".log", "[OK] Simple HTML mail sent to log mail addresses. CHECK MAIL.\n", $sendmail = false);
 } catch (exception $err) {
-	$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Failed to send simple HTML e-mail.", $sendmail = false);
+	$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Failed to send simple HTML e-mail. Error: " . print_r($err, true), $sendmail = false);
 	$summary_result = false;
 }
 
@@ -187,6 +187,54 @@ try {
 } catch (exception $err) {
 	$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Failed to send HTML e-mail\n\n" . trim($body), $sendmail = false);
 	$summary_result = false;
+}
+
+// ffmpegthumbnailer/PHP test
+$gdtestfile = "";
+if ( !file_exists($jconf['ffmpegthumbnailer']) ) {
+	$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] ffmpegthumbnailer not found: " . $jconf['ffmpegthumbnailer'], $sendmail = false);
+} else {
+	$testfile = "andor_agnes.mp4";
+	$outfile = "output.png";
+	$command  = $jconf['nice_high'] . " " . $jconf['ffmpegthumbnailer'] . " -i " . $testfile . " -o " . $outfile . " -s0 -q8 -t 5";
+	$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Executing ffmpegthumbnailer: " . $command, $sendmail = false);
+	$output = runExternal($command);
+	$output_string = $output['cmd_output'];
+	$result = $output['code'];
+	$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] ffmpegthumbnailer return code = " . $result . "\nOutput: " . $output_string, $sendmail = false);
+	if ( $result > 0 ) {
+		$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] ffmpegthumbnailer error. CHECK.", $sendmail = false);
+		$summary_result = false;
+	} else {
+		$debug->log($jconf['log_dir'], $myjobid . ".log", "[OK] ffmpegthumbnailer test finished.", $sendmail = false);
+		$gdtestfile = $outfile;
+	}
+}
+
+// Imagemagick test
+$emptypic = "empty.png";
+$command = "convert -size 640x480 xc:none " . $emptypic;
+$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Executing Imagemagick: " . $command, $sendmail = false);
+exec($command, $output, $result);
+$output_string = implode("\n", $output);
+if ( $result != 0 ) {
+	$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] ImageMagick test failed.\nOutput: " . $output_string, $sendmail = false);
+} else {
+	$debug->log($jconf['log_dir'], $myjobid . ".log", "[OK] ImageMagick test finished.", $sendmail = false);
+	if ( empty($gdtestfile) ) $gdtestfile = $emptypic;
+}
+
+// php5-gd test (resize)
+$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Executing php5-gd test: resize " . $gdtestfile . " to 320x200.", $sendmail = false);
+if ( !empty($gdtestfile) ) {
+	try {
+		\Springboard\Image::resizeAndCropImage($gdtestfile, 320, 200, 'top');
+		$debug->log($jconf['log_dir'], $myjobid . ".log", "[OK] php5-gd test finished.", $sendmail = false);
+	} catch (exception $err) {
+		$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] php5-gd test failed.", $sendmail = false);
+	}
+} else {
+	$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] No test pic for php5-gd.", $sendmail = false);
 }
 
 // Close DB connection if open
