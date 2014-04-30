@@ -116,10 +116,11 @@ if ( $err === false ) {
 }
 
 // Send test mail
+$siteid = $boostrap->config['siteid'];
 $debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Simple HTML mail send test.", $sendmail = false);
 $mail_head  = "NODE: " . $app->config['node_sourceip'] . "<br/>";
 $mail_head .= "SITE: " . $app->config['baseuri'] . "<br/>";
-$title = "TEST. IGNORE. This is a test message from Videosquare";
+$title = "[" . $siteid . "] TEST. IGNORE. This is a test message from Videosquare";
 $body  = $mail_head . "<br/>" . $title . "<br/><br/>Test message<br/>";
 try {
 	sendHTMLEmail_errorWrapper($title, $body);
@@ -152,9 +153,9 @@ $smarty->assign('domain', "videosquare.eu");
 $debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Localization get test.", $sendmail = false);
 try {
 	$localization = $app->bootstrap->getLocalization();
-	$subject = $localization('recordings', 'email_conversion_done_subject', 'hu');
+	$subject = "[" . $siteid . "]" . $localization('recordings', 'email_conversion_done_subject', 'hu');
 	$debug->log($jconf['log_dir'], $myjobid . ".log", "[OK] Got localization.", $sendmail = false);
-	$subject = "TEST. IGNORE. This is a test smarty generated mail from Videosquare";
+	$subject = "[" . $siteid . "] TEST. IGNORE. This is a test smarty generated mail from Videosquare";
 } catch (exception $err) {
 	$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Failed to get localization.", $sendmail = false);
 	$summary_result = false;
