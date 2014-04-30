@@ -192,23 +192,25 @@ try {
 
 // ffmpegthumbnailer/PHP test
 $gdtestfile = "";
-if ( !file_exists($jconf['ffmpegthumbnailer']) ) {
-	$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] ffmpegthumbnailer not found: " . $jconf['ffmpegthumbnailer'], $sendmail = false);
-} else {
-	$testfile = "andor_agnes.mp4";
-	$outfile = "output.png";
-	$command  = $jconf['nice_high'] . " " . $jconf['ffmpegthumbnailer'] . " -i " . $testfile . " -o " . $outfile . " -s0 -q8 -t 5";
-	$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Executing ffmpegthumbnailer: " . $command, $sendmail = false);
-	$output = runExternal($command);
-	$output_string = $output['cmd_output'];
-	$result = $output['code'];
-	$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] ffmpegthumbnailer return code = " . $result . "\nOutput: " . $output_string, $sendmail = false);
-	if ( $result > 0 ) {
-		$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] ffmpegthumbnailer error. CHECK.", $sendmail = false);
-		$summary_result = false;
+if ( $app->config['node_role'] == "converter" ) {
+	if ( !file_exists($jconf['ffmpegthumbnailer']) ) {
+		$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] ffmpegthumbnailer not found: " . $jconf['ffmpegthumbnailer'], $sendmail = false);
 	} else {
-		$debug->log($jconf['log_dir'], $myjobid . ".log", "[OK] ffmpegthumbnailer test finished.", $sendmail = false);
-		$gdtestfile = $outfile;
+		$testfile = "andor_agnes.mp4";
+		$outfile = "output.png";
+		$command  = $jconf['nice_high'] . " " . $jconf['ffmpegthumbnailer'] . " -i " . $testfile . " -o " . $outfile . " -s0 -q8 -t 5";
+		$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Executing ffmpegthumbnailer: " . $command, $sendmail = false);
+		$output = runExternal($command);
+		$output_string = $output['cmd_output'];
+		$result = $output['code'];
+		$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] ffmpegthumbnailer return code = " . $result . "\nOutput: " . $output_string, $sendmail = false);
+		if ( $result > 0 ) {
+			$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] ffmpegthumbnailer error. CHECK.", $sendmail = false);
+			$summary_result = false;
+		} else {
+			$debug->log($jconf['log_dir'], $myjobid . ".log", "[OK] ffmpegthumbnailer test finished.", $sendmail = false);
+			$gdtestfile = $outfile;
+		}
 	}
 }
 
