@@ -43,7 +43,6 @@ try {
 	$summary_result = false;
 }
 if ( is_resource($db->_connectionID) ) $debug->log($jconf['log_dir'], $myjobid . ".log", "[OK] Connected to DB.", $sendmail = false);
-exit;
 
 // Check if directories readable/writable
 // For both type of nodes
