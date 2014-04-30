@@ -116,7 +116,7 @@ if ( $err === false ) {
 }
 
 // Send test mail
-$siteid = $boostrap->config['siteid'];
+$siteid = $app->config['siteid'];
 $debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Simple HTML mail send test.", $sendmail = false);
 $mail_head  = "NODE: " . $app->config['node_sourceip'] . "<br/>";
 $mail_head .= "SITE: " . $app->config['baseuri'] . "<br/>";
