@@ -36,13 +36,14 @@ if ( iswindows() ) {
 $app->watchdog();
 	
 // Establish database connection
-$db = $app->bootstrap->getAdoDB();
-if ( is_resource($db->_connectionID) ) {
-	$debug->log($jconf['log_dir'], $myjobid . ".log", "[OK] Connected to DB.", $sendmail = false);
-} else {
-	$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Faild to connect to DB.", $sendmail = false);
+try {
+	$db = $app->bootstrap->getAdoDB();
+} catch (exception $err) {
+	$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Failed to connect to DB.", $sendmail = false);
 	$summary_result = false;
 }
+if ( is_resource($db->_connectionID) ) $debug->log($jconf['log_dir'], $myjobid . ".log", "[OK] Connected to DB.", $sendmail = false);
+exit;
 
 // Check if directories readable/writable
 // For both type of nodes
