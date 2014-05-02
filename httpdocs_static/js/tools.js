@@ -88,6 +88,14 @@ function setupConfirm( elems ) {
   
 }
 
+function handleFlashLoad(e) {
+  if (e.success)
+    return;
+
+  alert( l.flashloaderror );
+
+}
+
 function setupSearch() {
   
   $j('.datepicker').datepicker({
