@@ -1300,6 +1300,7 @@ class Controller extends \Visitor\Controller {
       throw new \Visitor\Api\ApiException('Recording not found', false, false );
     
     $recordingsModel->updateLastPosition( $user['id'], $lastposition );
+    $recordingsModel->updateSession( $user['id'], session_id() );
     return true;
     
   }

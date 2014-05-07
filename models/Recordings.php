@@ -2957,6 +2957,24 @@ class Recordings extends \Springboard\Model {
     }
     
   }
+
+  public function updateSession( $userid, $sessionid ) {
+    
+    $this->ensureID();
+    $recordingid = $this->db->qstr( $this->id );
+    $userid      = $this->db->qstr( $userid );
+    $sessionid   = $this->db->qstr( $sessionid );
+    $timestamp   = $this->db->qstr( date('Y-m-d H:i:s') );
+
+    $this->db->execute("
+      INSERT INTO recordings_view_sessions
+        ( recordingid,  userid,  sessionid, timestampfrom, timestampuntil) VALUES
+        ($recordingid, $userid, $sessionid, $timestamp, $timestamp)
+      ON DUPLICATE KEY UPDATE
+        timestampuntil = $timestamp
+    ");
+
+  }
   
   public function search( $searchterm, $userid, $organizationid ) {
     
