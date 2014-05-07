@@ -33,7 +33,7 @@ class Controller extends \Visitor\Controller {
     if ( !is_array( $urls ) or empty( $urls ) )
       $this->redirect('index');
     
-    $urlmd5          = md5( $this->bootstrap->scheme . implode('&', $urls ) );
+    $urlmd5          = md5( $this->bootstrap->baseuri . implode('&', $urls ) );
     $plaincache      = $this->bootstrap->getCache( $type . 'combine_plain_' . $urlmd5 );
     $compressedcache = $this->bootstrap->getCache( $type . 'combine_gz_' . $urlmd5 );
     
