@@ -185,8 +185,8 @@ class Controller extends \Visitor\Controller {
     }
 
     $user->clear();
-    session_destroy();
-    $this->redirect('index');
+    session_regenerate_id( true );
+    $this->redirectWithMessage('index', $l('users', 'loggedout') );
     
   }
   
