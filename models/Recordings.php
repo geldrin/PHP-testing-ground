@@ -3206,7 +3206,7 @@ class Recordings extends \Springboard\Model {
     $position    = $this->db->qstr( $position );
 
     $this->db->execute("
-      INSERT INTO recordings_view_sessions
+      INSERT INTO recording_view_sessions
         ( recordingid,  userid,  sessionid, timestampfrom, timestampuntil, positionfrom, positionuntil) VALUES
         ($recordingid, $userid, $sessionid, $timestamp, $timestamp, $position, $position)
       ON DUPLICATE KEY UPDATE
