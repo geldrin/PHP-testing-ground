@@ -7,3 +7,6 @@ CREATE TABLE  `recording_view_sessions` (
 `timestampuntil` TIMESTAMP NULL ,
 UNIQUE  `uq-user-recording-session` (  `userid` ,  `recordingid` ,  `sessionid` ( 50 ) )
 ) ENGINE = INNODB;
+
+ALTER TABLE  `recording_view_sessions` ADD  `positionfrom` INT NULL ,
+ADD  `positionuntil` INT NULL;
