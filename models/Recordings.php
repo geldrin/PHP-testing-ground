@@ -2926,7 +2926,7 @@ class Recordings extends \Springboard\Model {
     
   }
   
-  public function updateLastPosition( $userid, $lastposition ) {
+  public function updateLastPosition( $userid, $lastposition, $sessionid ) {
     
     $this->ensureID();
     
@@ -2955,7 +2955,29 @@ class Recordings extends \Springboard\Model {
       $progressModel->updateRow( $record );
       
     }
+
+    $this->updateSession( $userid, $lastposition, $sessionid );
+
+  }
+
+  private function updateSession( $userid, $position, $sessionid ) {
     
+    $this->ensureID();
+    $recordingid = $this->db->qstr( $this->id );
+    $userid      = $this->db->qstr( $userid );
+    $sessionid   = $this->db->qstr( $sessionid );
+    $timestamp   = $this->db->qstr( date('Y-m-d H:i:s') );
+    $position    = $this->db->qstr( $position );
+
+    $this->db->execute("
+      INSERT INTO recording_view_sessions
+        ( recordingid,  userid,  sessionid, timestampfrom, timestampuntil, positionfrom, positionuntil) VALUES
+        ($recordingid, $userid, $sessionid, $timestamp, $timestamp, $position, $position)
+      ON DUPLICATE KEY UPDATE
+        timestampuntil = $timestamp,
+        positionuntil  = $position
+    ");
+
   }
   
   public function search( $searchterm, $userid, $organizationid ) {

@@ -34,7 +34,7 @@ if ( iswindows() ) {
 
 // Watchdog test
 $app->watchdog();
-	
+
 // Establish database connection
 try {
 	$db = $app->bootstrap->getAdoDB();
@@ -94,9 +94,8 @@ if ( $app->config['node_role'] == "converter" ) {
 }
 
 // SSH testing
-//$ssh_command = "ssh -i /home/conv/.ssh/id_rsa conv@telenorstream.videosquare.eu date";
 if ( $app->config['node_role'] == "converter" ) {
-	$ssh_command = "ssh -i /home/conv/.ssh/id_rsa conv@" . $app->config['fallbackstreamingserver'] . " date";
+	$ssh_command = "ssh -i /home/conv/.ssh/id_dsa conv@" . $app->config['fallbackstreamingserver'] . " date";
 	exec($ssh_command, $output, $result);
 	$output_string = implode("\n", $output);
 	if ( $result != 0 ) {
@@ -117,15 +116,30 @@ if ( $err === false ) {
 }
 
 // Send test mail
+$siteid = $app->config['siteid'];
+$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Simple HTML mail send test.", $sendmail = false);
 $mail_head  = "NODE: " . $app->config['node_sourceip'] . "<br/>";
 $mail_head .= "SITE: " . $app->config['baseuri'] . "<br/>";
-$title = "TEST. IGNORE. This is a test message from Videosquare";
+$title = "[" . $siteid . "] TEST. IGNORE. This is a test message from Videosquare";
 $body  = $mail_head . "<br/>" . $title . "<br/><br/>Test message<br/>";
-sendHTMLEmail_errorWrapper($title, $body);
-$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Simple HTML mail sent to log mail addresses. CHECK MAIL.\n" . print_r($err, true), $sendmail = false);
+try {
+	sendHTMLEmail_errorWrapper($title, $body);
+	$debug->log($jconf['log_dir'], $myjobid . ".log", "[OK] Simple HTML mail sent to log mail addresses. CHECK MAIL.\n", $sendmail = false);
+} catch (exception $err) {
+	$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Failed to send simple HTML e-mail. Error: " . print_r($err, true), $sendmail = false);
+	$summary_result = false;
+}
 
 // Smarty test + mail send
-$smarty = $app->bootstrap->getSmarty();
+$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Smarty test.", $sendmail = false);
+try {
+	$smarty = $app->bootstrap->getSmarty();
+	$debug->log($jconf['log_dir'], $myjobid . ".log", "[OK] Got Smarty.", $sendmail = false);
+} catch (exception $err) {
+	$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Failed to open Smarty.", $sendmail = false);
+	$summary_result = false;
+}
+
 $organization = $app->bootstrap->getModel('organizations');
 $organization->select(1);
 $smarty->assign('organization', $organization->row);
@@ -136,19 +150,94 @@ $smarty->assign('supportemail', "support@videosqr.com");
 $smarty->assign('domain', "videosquare.eu");
 
 // Get e-mail subject line from localization
-$localization = $app->bootstrap->getLocalization();
-$subject = $localization('recordings', 'email_conversion_done_subject', 'hu');
-$subject = "TEST. IGNORE. This is a test smarty generated mail from Videosquare";
+$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Localization get test.", $sendmail = false);
+try {
+	$localization = $app->bootstrap->getLocalization();
+	$subject = "[" . $siteid . "]" . $localization('recordings', 'email_conversion_done_subject', 'hu');
+	$debug->log($jconf['log_dir'], $myjobid . ".log", "[OK] Got localization.", $sendmail = false);
+	$subject = "[" . $siteid . "] TEST. IGNORE. This is a test smarty generated mail from Videosquare";
+} catch (exception $err) {
+	$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Failed to get localization.", $sendmail = false);
+	$summary_result = false;
+}
 
-// Send e-mail
+// Get mail queue
+$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Mailqueue test.", $sendmail = false);
 try {
 	$queue = $app->bootstrap->getMailqueue();
-	$body = $smarty->fetch('Visitor/Recordings/Email/job_media_converter.tpl');	
+	$queue->instant = true;
+	$debug->log($jconf['log_dir'], $myjobid . ".log", "[OK] Got mailqueue.", $sendmail = false);
+} catch (exception $err) {
+	$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Failed to get mailqueue.", $sendmail = false);
+	$summary_result = false;
+}
+// Fetch Smarty template
+$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Smarty fetch test.", $sendmail = false);
+try {
+	$body = $smarty->fetch('Visitor/Recordings/Email/job_media_converter.tpl');
+	$debug->log($jconf['log_dir'], $myjobid . ".log", "[OK] Smarty template fetched.", $sendmail = false);
+} catch (exception $err) {
+	$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Failed to fetch Smarty template.", $sendmail = false);
+	$summary_result = false;
+}
+// Send HTML e-mail
+$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Send HTML mail with Smarty content.", $sendmail = false);
+try {
 	$queue->sendHTMLEmail("hiba@videosqr.com", $subject, $body);
 	$debug->log($jconf['log_dir'], $myjobid . ".log", "[OK] Mail sent to hiba@videosqr.com. CHECK.", $sendmail = false);
 } catch (exception $err) {
-	$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Cannot generate email template for organization id = 1 or send mail to: hiba@videosqr.com\n\n" . trim($body), $sendmail = false);
+	$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Failed to send HTML e-mail\n\n" . trim($body), $sendmail = false);
 	$summary_result = false;
+}
+
+// ffmpegthumbnailer/PHP test
+$gdtestfile = "";
+if ( $app->config['node_role'] == "converter" ) {
+	if ( !file_exists($jconf['ffmpegthumbnailer']) ) {
+		$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] ffmpegthumbnailer not found: " . $jconf['ffmpegthumbnailer'], $sendmail = false);
+	} else {
+		$testfile = "andor_agnes.mp4";
+		$outfile = "output.png";
+		$command  = $jconf['nice_high'] . " " . $jconf['ffmpegthumbnailer'] . " -i " . $testfile . " -o " . $outfile . " -s0 -q8 -t 5";
+		$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Executing ffmpegthumbnailer: " . $command, $sendmail = false);
+		$output = runExternal($command);
+		$output_string = $output['cmd_output'];
+		$result = $output['code'];
+		$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] ffmpegthumbnailer return code = " . $result . "\nOutput: " . $output_string, $sendmail = false);
+		if ( $result > 0 ) {
+			$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] ffmpegthumbnailer error. CHECK.", $sendmail = false);
+			$summary_result = false;
+		} else {
+			$debug->log($jconf['log_dir'], $myjobid . ".log", "[OK] ffmpegthumbnailer test finished.", $sendmail = false);
+			$gdtestfile = $outfile;
+		}
+	}
+}
+
+// Imagemagick test
+$emptypic = "empty.png";
+$command = "convert -size 640x480 xc:none " . $emptypic;
+$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Executing Imagemagick: " . $command, $sendmail = false);
+exec($command, $output, $result);
+$output_string = implode("\n", $output);
+if ( $result != 0 ) {
+	$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] ImageMagick test failed.\nOutput: " . $output_string, $sendmail = false);
+} else {
+	$debug->log($jconf['log_dir'], $myjobid . ".log", "[OK] ImageMagick test finished.", $sendmail = false);
+	if ( empty($gdtestfile) ) $gdtestfile = $emptypic;
+}
+
+// php5-gd test (resize)
+$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Executing php5-gd test: resize " . $gdtestfile . " to 320x200.", $sendmail = false);
+if ( !empty($gdtestfile) ) {
+	try {
+		\Springboard\Image::resizeAndCropImage($gdtestfile, 320, 200, 'top');
+		$debug->log($jconf['log_dir'], $myjobid . ".log", "[OK] php5-gd test finished.", $sendmail = false);
+	} catch (exception $err) {
+		$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] php5-gd test failed.", $sendmail = false);
+	}
+} else {
+	$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] No test pic for php5-gd.", $sendmail = false);
 }
 
 // Close DB connection if open
@@ -167,7 +256,7 @@ exit;
 function getSomethingFromDB() {
 global $jconf, $debug, $db, $myjobid;
 
-	$query = "SELECT * FROM	organizations WHERE id > 1 LIMIT 1";
+	$query = "SELECT * FROM	organizations WHERE id >= 1 LIMIT 1";
 
 	$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Executing SQL query: " . trim($query), $sendmail = false);
 

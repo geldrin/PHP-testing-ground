@@ -91,7 +91,7 @@
 
   <script type="text/javascript">
   (function() {ldelim}
-    
+
   {include_php file="file:`$smarty.const.BASE_PATH`httpdocs_static/js/swfobject.full.js"}
 
   var params = {ldelim}
@@ -101,9 +101,22 @@
     allowfullscreen: "true",
     wmode: 'direct'
   {rdelim};
+  var handleFlashLoad = function(e) {ldelim}
+    if (e.success)
+      return;
+
+    var elem = document.getElementById('{$containerid}');
+    if (!elem)
+      return;
+
+    if (typeof(elem.textContent) != 'undefined')
+      elem.textContent = '{#contents__flashloaderror#}';
+    else
+      elem.innerText = '{#contents__flashloaderror#}';
+  {rdelim};
 
   document.write('<div id="{$containerid}"></div>');
-  swfobject.embedSWF('flash/VSQEmbedPlayer.swf?v={$VERSION}', '{$containerid}', '{$width}', '{$height}', '11.1.0', 'flash/swfobject/expressInstall.swf', {$flashdata|@jsonescape:true}, params );
+  swfobject.embedSWF('flash/VSQEmbedPlayer.swf?v={$VERSION}', '{$containerid}', '{$width}', '{$height}', '11.1.0', 'flash/swfobject/expressInstall.swf', {$flashdata|@jsonescape:true}, params, null, handleFlashLoad );
 
   {rdelim})();
   </script>
