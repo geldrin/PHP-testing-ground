@@ -1,0 +1,64 @@
+<?php
+$config = array(
+  'siteid'       => 'telenor',
+  'node_sourceip'=> 'conv-1.stream.pgsm.hu',
+  'node_role'    => 'converter',
+  //-----
+  'baseuri'      => 'stream.pgsm.hu/',
+  'staticuri'    => 'static.stream.pgsm.hu/',
+  'adminuri'     => 'stream.pgsm.hu/a2143/',
+  'cookiedomain' => '.stream.pgsm.hu',
+  'convpath'	 => '/srv/vsq_temp/videosquare.eu/converter/',
+  'fallbackstreamingserver' => 'stream-1.stream.pgsm.hu',
+  //-----
+  'logemails'    => array(
+    'telenor@videosqr.com',
+  ),
+  'storagepath' => '/srv/vsq/videosquare.eu/',
+  'database' => array(
+    'type'     => 'mysql',
+    'host'     => 'stream.pgsm.hu',
+    'username' => 'videosquare',
+    'password' => 'DytFmLfdpqe7spsV',
+    'database' => 'videosquare',
+    'reconnectonbusy' => true,
+    'maxretries' => 30,
+  ),
+  //-----
+  'mail'         => array(
+    'fromemail' => 'telenor@videosqr.com',
+    'fromname'  => 'Videosquare Telenor',
+    'errorsto'  => '',
+    'type'      => 'text/html; charset="UTF-8"'
+  ),
+
+ //----
+  'setupdirs' => array(
+    'user'            => 'conv', // a user/group amire chown -R eljuk az egesz konyvtarat
+    'group'           => 'vsq',
+    'perms'           => 'g+w', // a chmod -R parametere
+    'privilegeduser'  => 'www-data', // a gitignorebol vett konyvtarak user/group/permje
+    'privilegedgroup' => 'www-data',
+    'extradirs'       => array(
+      array(
+        'dir'  => $this->basepath . 'httpdocs/flash',
+        'user' => 'conv',
+      ),
+      array(
+        'dir'   => $this->basepath . 'data',
+        'perms' => 'a+w',
+      ),
+      array(
+        'dir'   => $this->basepath . 'modules/Locale',
+        'perms' => 'a+w',
+      ),
+      array(
+        'dir'   => $this->basepath . 'modules/**/**/Locale',
+        'perms' => 'a+w',
+      ),
+    ),
+  ),
+
+);
+
+return $config;
