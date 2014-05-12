@@ -13,8 +13,8 @@
 		"connectionSecurityError":"Biztonsági hiba",
 		"connectionIOError":"I/O hiba",
 		"streamErrorTitle":"Lejátszási hiba",
-		"streamNotFound": "Stream nem található",
-		"streamPlayFailed": "Lejátszás közben hiba lépett fel."
+		"streamNotFound":"Stream nem található",
+		"streamPlayFailed":"Lejátszás közben hiba lépett fel."
 	},
 	"liveRTMPStream":{
 		"connectionErrorTitle":"Kapcsolati hiba",

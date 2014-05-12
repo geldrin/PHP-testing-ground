@@ -113,8 +113,8 @@ return array(
   ),
   
   'encryption' => array(
-    0 => 'Unencrypted streaming',
-    1 => 'Encrypted streaming',
+    0 => 'Unencrypted',
+    1 => 'Encrypted',
   ),
   
   'streamstatus' => array(
