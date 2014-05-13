@@ -112,12 +112,16 @@ updateRecordingVersionStatus(2, "convert");
 				updateRecordingVersionStatus($recording['recordingversionid'], $jconf['dbstatus_copyfromfe_err']);
 				break;
 			}
+		 
+			// kulonbsegek:
+			// iscontent(bool), master_basename, master_remote_filename, master_filename,master_ssh_filename
+			
+			file_put_contents("/home/conv/dev.videosquare.eu/modules/Jobs/recording.log", var_export($recording, 1));
+			file_put_contents("/home/conv/dev.videosquare.eu/modules/Jobs/content.log", var_export($content, 1));
+			echo "PiP encoding is not implemented!!!\n";
+			$debug->log($jconf['log_dir'], $jconf['jobid_media_convert'] . ".log", "[DUMPDATA]". var_export($encoding_profile, 1) ."\n\n". var_export($recording, 1) ."\n\n". var_export($content, 1) ."\n", $sendmail = false);
 
-echo "PiP encoding is not implemented!!!\n";
-$debug->log($jconf['log_dir'], $jconf['jobid_media_convert'] . ".log", "[DUMPDATA]". var_export($encoding_profile, 1) ."\n\n". var_export($recording, 1) ."\n\n". var_export($content, 1) ."\n", $sendmail = false);
-updateRecordingVersionStatus($recording['recordingversionid'], $jconf['dbstatus_convert']);
-exit;
-
+			exit;
 		}
 
 		// recordings_versions.status = "copiedfromfrontend"
@@ -347,7 +351,7 @@ global $app, $jconf, $debug;
 	}
 
 	// SCP: copy from front end server
-	$err = ssh_filecopy($recording[$idx . 'mastersourceip'], $recording['master_remote_filename'], $recording['master_filename'], true);
+	$err = ssh_filecopy2($recording[$idx . 'mastersourceip'], $recording['master_remote_filename'], $recording['master_filename'], true);
 	if ( !$err['code'] ) {
 		$debug->log($jconf['log_dir'], $jconf['jobid_media_convert'] . ".log", "MSG: " . $err['message'] . "\nCOMMAND: " . $err['command'] . "\nRESULT: " . $err['result'], $sendmail = true);
 		// Set status to "uploaded" to allow other nodes to take over task??? !!!
@@ -632,7 +636,7 @@ function copyMediaToFrontEnd($recording, $profile) {
 	}
 
 	// SCP: copy converted file to front end server
-	$err = ssh_filecopy($recording['mastersourceip'], $recording['output_file'], $recording['recording_remote_path'], false);
+	$err = ssh_filecopy2($recording['mastersourceip'], $recording['output_file'], $recording['recording_remote_path'], false);
 	if ( !$err['code'] ) {
 		$debug->log($jconf['log_dir'], $jconf['jobid_media_convert'] . ".log", "MSG: " . $err['message'] . "\nCOMMAND: " . $err['command'] . "\nRESULT: " . $err['result'], $sendmail = true);
 		return false;
@@ -644,7 +648,7 @@ function copyMediaToFrontEnd($recording, $profile) {
 
 	// SCP: copy video thumbnails if updated
 	if ( !empty($recording['thumbnail_numberofindexphotos']) ) {
-		$err = ssh_filecopy($recording['mastersourceip'], $recording['temp_directory'] . "indexpics/", $recording['recording_remote_path'], false);
+		$err = ssh_filecopy2($recording['mastersourceip'], $recording['temp_directory'] . "indexpics/", $recording['recording_remote_path'], false);
 		if ( !$err['code'] ) $debug->log($jconf['log_dir'], $jconf['jobid_media_convert'] . ".log", "MSG: " . $err['message'] . "\nCOMMAND: " . $err['command'] . "\nRESULT: " . $err['result'], $sendmail = true);
 		$chmod_command .= " ; chmod -f " . $jconf['directory_access'] . " " . $recording['recording_remote_path'] . "indexpics/";
 	}

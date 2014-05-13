@@ -24,38 +24,13 @@ $myjobid = $jconf['jobid_acc'];
 
 // Log related init
 $debug = Springboard\Debug::getInstance();
-$debug->log($jconf['log_dir'], $myjobid . ".log", "Accounting job started", $sendmail = FALSE);
+$debug->log($jconf['log_dir'], $myjobid . ".log", "Accounting job started", $sendmail = false);
 
 // Exit if any STOP file appears
 if ( is_file( $app->config['datapath'] . 'jobs/job_accounting.stop' ) or is_file( $app->config['datapath'] . 'jobs/all.stop' ) ) exit;
 
 // Contract data: should be retrived from DB later, when contract description database is implemented.
-$org_contracts = array(
-	0	=> array(
-			'orgid' 					=> 200,
-			'name'						=> "Conforg",
-			'price_peruser'				=> 2000,
-			'currency'					=> "HUF",
-			'listfromdate'				=> null,
-			'generateduservaliditydays'	=> 30
-		),
-	1	=> array(
-			'orgid' 					=> 222,
-			'name'						=> "Infoszféra",
-			'price_peruser'				=> 2000,
-			'currency'					=> "HUF",
-			'listfromdate'				=> "2013-12-01 00:00:00",
-			'generateduservaliditydays'	=> 30
-		),
-	2	=> array(
-			'orgid' 					=> 282,
-			'name'						=> "IIR",
-			'price_peruser'				=> 2000,
-			'currency'					=> "HUF",
-			'listfromdate'				=> null,
-			'generateduservaliditydays'	=> 30
-		)
-);
+include_once('subscriber_descriptor.php');
 
 // Establish database connection
 $db = null;
@@ -70,8 +45,6 @@ for ($i = 0; $i < count($org_contracts); $i++ ) {
 	// Identify previous month
 	$this_year = date("Y");
 	$this_month = date("n");
-	$this_year = 2014;
-	$this_month = 2;
 
 	if ( $this_month == 1 ) {
 		$year = $this_year - 1;			
@@ -80,7 +53,6 @@ for ($i = 0; $i < count($org_contracts); $i++ ) {
 		$year = $this_year;
 		$month = $this_month - 1;
 	}
-
 
 	$month_days = cal_days_in_month(CAL_GREGORIAN, $month, $year);
 
@@ -120,8 +92,8 @@ for ($i = 0; $i < count($org_contracts); $i++ ) {
 		WHERE
 			u.organizationid = " . $org_contracts[$i]['orgid'] . " AND
 			u.isusergenerated = 1 AND
-			u.firstloggedin > \"" . $firstloggedin_startdate . "\" AND
-			u.firstloggedin < \"" . $firstloggedin_enddate . "\"
+			u.firstloggedin > '" . $firstloggedin_startdate . "' AND
+			u.firstloggedin < '" . $firstloggedin_enddate . "'
 		GROUP BY
 			u.id
 		ORDER BY
@@ -132,7 +104,7 @@ for ($i = 0; $i < count($org_contracts); $i++ ) {
 	try {
 		$users = $db->Execute($query);
 	} catch (exception $err) {
-		$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] SQL query failed.\n" . trim($query) . "\n" . $err . "\n", $sendmail = TRUE);
+		$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] SQL query failed.\n" . trim($query) . "\n" . $err . "\n", $sendmail = true);
 		exit -1;
 	}
 
@@ -165,14 +137,12 @@ for ($i = 0; $i < count($org_contracts); $i++ ) {
 
 }
 
-$email = "andras.kovacs@videosquare.eu";
+$email = "info@videosqr.com";
 $queue = $app->bootstrap->getMailqueue();
 $queue->instant = 1;
 $queue->put($email, null, "Videosquare accounting information", $accounting_log, false, 'text/plain; charset="UTF-8"');
 
 $debug->log($jconf['log_dir'], ($myjobid . ".log"), "Accounting information:\n\n" . $accounting_log, $sendmail = false);
-
-//echo $accounting_log . "\n";
 
 function verifyDate($date) {
     return (DateTime::createFromFormat('Y-m-d H:i:s', $date) !== false);

@@ -47,8 +47,10 @@ return array('config_jobs' => array(
 	'jobid_upload_finalize'			=> 'job_upload_finalize',
 	'jobid_integrity_check'			=> 'job_integrity_check',
 	'jobid_remove_files'			=> 'job_remove_files',
+	'jobid_stats_process'			=> 'job_stats_process',
 	'jobid_watcher'					=> 'watcher',
 	'jobid_acc'						=> 'job_accounting',
+	'jobid_live_thumb'				=> 'job_live_thumbnail',
 
 	// SSH related settings
 	'ssh_user'						=> 'conv',
@@ -58,6 +60,12 @@ return array('config_jobs' => array(
 	'file_owner'					=> 'conv:vsq',	// conv:vsq
 	'directory_access'				=> '6775',		// 6775 = drwsrwsr-x
 	'file_access'					=> '664',		// 664  = -rw-rw-r--
+
+	// Streaming server applications
+	'streaming_live_app'			=> 'vsqlive',
+	'streaming_live_app_secure'		=> 'vsqlivesec',
+	'streaming_ondemand_app'		=> 'vsq',
+	'streaming_ondemand_app_secure'	=> 'vsqsec',
 	
 	// DB status definitions
 	'dbstatus_init'					=> 'init',
@@ -117,7 +125,7 @@ return array('config_jobs' => array(
 	'api_password'					=> 'MekkElek123',
 
 	// FFMpeg related
-	'ffmpeg_alt'            => '/home/conv/ffmpeg/ffmpeg-git-20140217-64bit-static/ffmpeg', // current FFMpeg static build
+	'ffmpeg_alt'            		=> '/home/conv/ffmpeg/ffmpeg-git-20140217-64bit-static/ffmpeg', // current FFMpeg static build
 	'ffmpeg_loglevel'				=> 0,								// Loglevel
 	'ffmpeg_threads'				=> 0,								// Threads to use (0 - automatic)
 	'ffmpeg_async_frames'			=> 10,								// Max. frames to skip when audio and video is out of sync
