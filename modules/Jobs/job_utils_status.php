@@ -17,9 +17,15 @@ global $app, $debug, $jconf, $myjobid;
 	if ( $type == "smil" ) $idx = "smil";
 	if ( $type == "contentsmil" ) $idx = "contentsmil";
 
-	$values = array(
-		$idx . 'status' => $status
-	);
+	if ( !empty($status) ) {
+		$values = array(
+			$idx . 'status' => $status
+		);
+	} else {
+		$values = array(
+			$idx . 'status' => null
+		);
+	}
 
 	$recordingVersionObj = $app->bootstrap->getModel('recordings');
 	$recordingVersionObj->select($recordingid);
