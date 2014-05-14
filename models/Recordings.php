@@ -1883,72 +1883,10 @@ class Recordings extends \Springboard\Model {
     
   }
 
-  public function getVersions( $ids = array() ) {
-    $this->ensureObjectLoaded();
-
-    if ( empty( $ids ) )
-      $ids[] = $this->id;
-
-    $rs = $this->db->query("
-      SELECT
-        rv.*,
-        ep.shortname AS encodingshortname
-      FROM
-        recordings_versions AS rv,
-        encoding_profiles AS ep
-      WHERE
-        rv.recordingid IN('" . implode("', '", $ids ) . "') AND
-        rv.status = 'onstorage' AND
-        ep.id     = rv.encodingprofileid
-      ORDER BY qualitytag
-    ");
-
-    $ret = array(
-      'master'  => array(
-        'desktop' => array(),
-        'mobile'  => array(),
-      ),
-      'content' => array(
-        'desktop' => array(),
-        'mobile'  => array(),
-      ),
-      'audio'   => array(),
-    );
-
-    foreach( $rs as $version ) {
-
-      if ( $version['encodingshortname'] == 'audio' ) {
-        $ret['audio'][] = $version;
-        continue;
-      }
-
-      if ( $version['iscontent'] )
-        $key = 'content';
-      else
-        $key = 'master';
-
-      if ( $version['isdesktopcompatible'] )
-        $ret[ $key ]['desktop'][] = $version;
-
-      if ( $version['ismobilecompatible'] )
-        $ret[ $key ]['mobile'][] = $version;
-
-    }
-
-    return $ret;
-
-  }
-
   public function getFlashData( $info ) {
     
     $this->ensureObjectLoaded();
     include_once( $this->bootstrap->config['templatepath'] . 'Plugins/modifier.indexphoto.php' );
-    
-    if ( isset( $info['versions'] ) )
-      $versions = $info['versions'];
-    else
-      $versions       = $this->getVersions();
-
     $recordingbaseuri = $info['BASE_URI'] . \Springboard\Language::get() . '/recordings/';
 
     if ( $this->bootstrap->config['forcesecureapiurl'] )
@@ -1986,36 +1924,11 @@ class Recordings extends \Springboard\Model {
     
     if ( $data['language'] != 'en' )
       $data['locale'] = $info['STATIC_URI'] . 'js/flash_locale_' . $data['language'] . '.json';
-    
-    if ( !empty( $versions['master']['desktop'] ) ) {
-      $data['media_streams']      = array();
-      $data['media_streamLabels'] = array();
-      foreach( $versions['master']['desktop'] as $version ) {
-        $data['media_streamLabels'][] = $version['qualitytag'];
-        $data['media_streams'][]      =
-          $this->getMediaUrl('default', $version, $info )
-        ;
-      }
-    }
 
-    if (
-         !isset( $info['skipcontent'] ) and
-         !empty( $versions['content']['desktop'] )
-       ) {
+    $data['media_streams'] = array( $this->getMediaUrl('default', false, $info ) );
 
-      if ( $this->row['contentoffsetstart'] )
-        $data['timeline_contentVirtualStart'] = $this->row['contentoffsetstart'];
-
-      if ( $this->row['contentoffsetend'] )
-        $data['timeline_contentVirtualEnd'] = $this->row['contentoffsetend'];
-
-      $data['media_secondaryStreams'] = array();
-      foreach( $versions['content']['desktop'] as $version )
-        $data['media_secondaryStreams'][] =
-          $this->getMediaUrl('content', $version, $info )
-        ;
-
-    }
+    if ( $this->row['videoreshq'] )
+      $data['media_streams'][] = $this->getMediaUrl('default', true, $info );
 
     $data = $data + $this->getIntroOutroFlashdata( $info );
 
@@ -2142,42 +2055,45 @@ class Recordings extends \Springboard\Model {
     $this->ensureObjectLoaded();
     if ( !$this->row['introrecordingid'] and !$this->row['outrorecordingid'] )
       return array();
-    
+
     $ids     = array();
     $data    = array();
     $introid = 0;
     $outroid = 0;
-    
+
     if ( $this->row['introrecordingid'] ) {
-      
+
       $ids[]   = $this->row['introrecordingid'];
       $introid = $this->row['introrecordingid'];
-      
+
     }
     
     if ( $this->row['outrorecordingid'] ) {
-      
+
       $ids[]   = $this->row['outrorecordingid'];
       $outroid = $this->row['outrorecordingid'];
-      
+
     }
 
-    $versions = $this->getVersions( $ids );
-    if ( empty( $versions['master']['desktop'] ) )
-      throw new \Exception("The intro/outro does not have desktopcompatible non-content recordings!");
+    $highres = $this->db->getAssoc("
+      SELECT id, videoreshq
+      FROM recordings
+      WHERE id IN('" . implode("', '", $ids ) . "')
+    ");
 
-    foreach( $versions['master']['desktop'] as $version ) {
-      
-      if ( $version['recordingid'] == $introid )
+    foreach( $ids as $id ) {
+
+      if ( $introid == $id )
         $key = 'intro_streams';
-      else if ( $version['recordingid'] == $outroid )
+      else
         $key = 'outro_streams';
-      else // not possible
-        throw new \Exception("Invalid version in getIntroOutroFlashdata, neither intro nor outro!");
 
       $data[ $key ] = array(
-        $this->getMediaUrl('default', $version, $info )
+        $this->getMediaUrl('default', false, $info, $id )
       );
+
+      if ( isset( $highres[ $id ] ) and $highres[ $id ] )
+        $data[ $key ][] = $this->getMediaUrl('default', true, $info, $id );
 
     }
 
@@ -2274,16 +2190,21 @@ class Recordings extends \Springboard\Model {
 
   }
   
-  public function getMediaUrl( $type, $version, $info, $id = null ) {
+  public function getMediaUrl( $type, $highquality, $info, $id = null ) {
 
     $this->ensureObjectLoaded();
     $cookiedomain = $info['organization']['cookiedomain'];
     $sessionid    = $info['sessionid'];
     $host         = '';
 
+    $isaudio   = false;
+    $postfix   = '_lq';
     $extension = 'mp4';
-    if ( $version['encodingshortname'] == 'audio' )
+    if ( $this->row['mastermediatype'] == 'audio' ) {
+      $isaudio   = true;
+      $postfix   = '';
       $extension = 'mp3';
+    }
 
     $user = null;
     if ( isset( $info['member'] ) )
@@ -2299,7 +2220,7 @@ class Recordings extends \Springboard\Model {
         //http://stream.videotorium.hu:1935/vtorium/_definst_/mp4:671/2671/2671_2608_mobile.mp4/playlist.m3u8
         $host        = $this->getWowzaUrl( $typeprefix . 'httpurl');
         $sprintfterm =
-          '%3$s:%s/%s/playlist.m3u8' .
+          '%3$s:%s/%s_mobile' . $postfix . '.%s/playlist.m3u8' .
           $this->getAuthorizeSessionid( $cookiedomain, $sessionid, $user )
         ;
         
@@ -2309,7 +2230,7 @@ class Recordings extends \Springboard\Model {
         //rtsp://stream.videotorium.hu:1935/vtorium/_definst_/mp4:671/2671/2671_2608_mobile.mp4
         $host        = $this->getWowzaUrl( $typeprefix . 'rtspurl');
         $sprintfterm =
-          '%3$s:%s/%s' .
+          '%3$s:%s/%s_mobile' . $postfix . '.%s' .
           $this->getAuthorizeSessionid( $cookiedomain, $sessionid, $user )
         ;
         
@@ -2317,19 +2238,34 @@ class Recordings extends \Springboard\Model {
 
       case 'direct':
         $host = $info['STATIC_URI'];
-        $sprintfterm = 'files/recordings/%s/%s';
+        if ( $isaudio )
+          $sprintfterm = 'files/recordings/%s/%s_audio.%s';
+        else
+          $sprintfterm = 'files/recordings/%s/%s_video' . $postfix . '.%s';
         break;
 
       case 'content':
+        $sprintfterm = '%3$s:%s/%s_content' . $postfix . '.%s';
+        break;
+
       default:
-        $sprintfterm = '%3$s:%s/%s';
+
+        
+        if ( $isaudio )
+          $sprintfterm = '%3$s:%s/%s_audio.%s';
+        else
+          $sprintfterm = '%3$s:%s/%s_video' . $postfix . '.%s';
+
         break;
 
     }
 
+    if ( $id === null )
+      $id = $this->id;
+
     return $host . sprintf( $sprintfterm,
-      \Springboard\Filesystem::getTreeDir( $version['recordingid'] ),
-      $version['filename'],
+      \Springboard\Filesystem::getTreeDir( $id ),
+      $id,
       $extension
     );
 

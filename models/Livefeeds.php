@@ -341,9 +341,6 @@ class Livefeeds extends \Springboard\Model {
     );
     $recordingsModel = $this->bootstrap->getModel('recordings');
     $recordingsModel->select( $this->row['introrecordingid'] );
-    $versions = $recordingsModel->getVersions();
-    if ( empty( $versions['master']['desktop'] ) )
-      throw new \Exception("The placeholder does not have desktopcompatible recordings!");
 
     if ( $this->row['issecurestreamingforced'] ) {
 
@@ -369,9 +366,13 @@ class Livefeeds extends \Springboard\Model {
     }
 
     $data['livePlaceholder_streams'] = array();
-    foreach( $versions['master']['desktop'] as $version )
+    $data['livePlaceholder_streams'][] = $recordingsModel->getMediaUrl(
+      'default', false, $info
+    );
+
+    if ( $recordingsModel->row['videoreshq'] )
       $data['livePlaceholder_streams'][] = $recordingsModel->getMediaUrl(
-        'default', $version, $info
+        'default', true, $info
       );
 
     $data['intro_servers'] = $data['livePlaceholder_servers'];

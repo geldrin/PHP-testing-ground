@@ -41,13 +41,9 @@
         <a href="{if $recording.mediatype == 'audio'}{$audiofileurl}{else}{$mobilertspurl}{/if}"><img src="{$recording|@indexphoto}" width="280" height="165"/></a>
       </div>
     {/if}
-    {if count( $mobileversions ) > 1}
+    {if $recording.mobilevideoreshq}
       <div id="qualitychooser">
-        <ul>
-          {foreach from=$mobileversions item=version}
-            <li><a href="{$language}/recordings/details/{$recording.id},{$recording.title|filenameize}?quality={$version|escape:url}">{$version|escape:html}</a></li>
-          {/foreach}
-        </ul>
+        <a href="{$language}/recordings/details/{$recording.id},{$recording.title|filenameize}?quality={if $mobilehq}lq{else}hq{/if}">{if $mobilehq}{#recordings__lowquality#}{else}{#recordings__highquality#}{/if}</a>
       </div>
     {/if}
     <br/>
