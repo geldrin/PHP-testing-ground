@@ -62,7 +62,7 @@ function ffmpeg_qtfaststart($input_file) {
 
 	return $err;
 }
-/*
+
 // *************************************************************************
 // *				function ffmpeg_convert()		   					   *
 // *************************************************************************
@@ -129,7 +129,7 @@ global $jconf;
 	// 1 encoding
 	if ( $profile['passes'] < 2 ) {
 		// Execute ffmpeg command
-		$command  = $profile['nice'] . " ffmpeg -y -i " . $media_info['source_file'] . " -v " . $jconf['ffmpeg_loglevel'] . " " . $jconf['ffmpeg_flags'] . " ";
+		$command  = $profile['nice'] . " ffmpeg -y -i " . $media_info['master_filename'] . " -v " . $jconf['ffmpeg_loglevel'] . " " . $jconf['ffmpeg_flags'] . " ";
 		$command .= $ffmpeg_audio;
 		$command .= $ffmpeg_video;
 		$command .= " -threads " . $jconf['ffmpeg_threads'] . " -f " . $profile['format'] . " " . $media_info['output_file'] . " 2>&1";
@@ -156,7 +156,7 @@ global $jconf;
 
 	return $err;
 }
-*/
+
 function ffmpegConvert($recording, $profile) {
 global $jconf, $debug;
 
@@ -753,7 +753,7 @@ global $app, $jconf, $global_log;
 	// Calculate video parameters
 	//// Basics
 	$recording_info['name'] = $profile['name'];
-	$recording_info['source_file'] = $recording['master_filename'];
+	$recording_info['master_filename'] = $recording['master_filename'];
 	$recording_info['format'] = $profile['format'];
 	$recording_info['video_codec'] = $profile['video_codec'];
 	$recording_info['playtime'] = $video_in['playtime'];

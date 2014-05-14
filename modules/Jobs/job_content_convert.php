@@ -70,7 +70,6 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_content_convert.stop' ) an
 		// Temporary directory cleanup and log result
 		$err = tempdir_cleanup($jconf['content_dir']);
 		if ( !$err['code'] ) log_recording_conversion(0, $jconf['jobid_content_convert'], "-", $err['message'], $err['command'], $err['result'], 0, TRUE);
-
 		$recording = array();
 		$uploader_user = array();
 
@@ -448,7 +447,6 @@ global $jconf, $db;
 			conversionpriority,
 			id
 		LIMIT 1";
-
 
 	try {
 		$rs = $db->Execute($query);
