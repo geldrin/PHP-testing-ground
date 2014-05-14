@@ -39,7 +39,27 @@ if ( $app->config['baseuri'] == "dev.videosquare.eu/" ) {
 				'generateduservaliditydays'	=> 30,
 				'disableuseraftervalidity'	=> true,
 				'promouservaliditydays'		=> 7
-			)
+			),
+		3	=> array(
+				'orgid' 					=> 304,
+				'name'						=> "Kompkonzult Kft.",
+				'price_peruser'				=> 2000,
+				'currency'					=> "HUF",
+				'listfromdate'				=> null,
+				'generateduservaliditydays'	=> 30,
+				'disableuseraftervalidity'	=> true,
+				'promouservaliditydays'		=> 7
+			),
+		4	=> array(
+				'orgid' 					=> 305,
+				'name'						=> "OMI Kft.",
+				'price_peruser'				=> 2000,
+				'currency'					=> "HUF",
+				'listfromdate'				=> null,
+				'generateduservaliditydays'	=> 30,
+				'disableuseraftervalidity'	=> true,
+				'promouservaliditydays'		=> 7
+			),
 	);
 
 }
