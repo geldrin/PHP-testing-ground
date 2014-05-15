@@ -2,12 +2,16 @@
 
 include('httpapi.php');
 
-$api       = new Api('info@dotsamazing.com', 'asdasd');
-//$api->apiurl = 'http://teleconnect.home.sztanpet.net/hu/api';
-// ha kell a var_dump kijelzes, akkor ezzel bekapcsolhato:
-//$api->debug = true;
+$api       = new Api('support@videosqr.com', 'FeketeLeves622');
+$api->apiurl = 'https://dev.videosquare.eu/hu/api';
 
-$recording = $api->uploadRecording('/home/sztanpet/teleconnect/resources/local/big.mkv', 'hun');
+// debug (var_dump)
+$api->debug = true;
+
+/*
+$filename = "/home/conv/temp/ffmpeg/andor_agnes.mp4";
+
+$recording = $api->uploadRecording($filename, 'hun');
 
 if ( $recording and isset( $recording['data']['id'] ) ) {
   
@@ -18,9 +22,13 @@ if ( $recording and isset( $recording['data']['id'] ) ) {
     )
   );
   
-  $api->uploadContent( $recordingid, '/home/sztanpet/teleconnect/resources/local/big.mkv');
+  $api->uploadContent( $recordingid, $filename);
 
   // $api->addRecordingToChannel( $recordingid, 123 );
   // $api->removeRecordingFromChannel( $recordingid, 123 );
   
 }
+
+*/
+
+?>
