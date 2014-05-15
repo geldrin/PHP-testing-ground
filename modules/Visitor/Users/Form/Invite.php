@@ -17,6 +17,11 @@ class Invite extends \Visitor\HelpForm {
     
     $values = $this->form->getElementValues( 0 );
     $l      = $this->bootstrap->getLocalization();
+    $values['organizationid']       = $this->controller->organization['id'];
+    $values['timestamp']            = date('Y-m-d H:i:s');
+    $values['invitationvaliduntil'] = date('Y-m-d H:i:s', strtotime('+1 month') );
+    $values['status']               = 'invited';
+
     $this->addInvitation( $values );
     $this->controller->redirectWithMessage('users/admin', $l('users', 'user_invited') );
     
