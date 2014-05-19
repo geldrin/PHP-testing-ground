@@ -38,6 +38,12 @@ class Editinvite extends \Visitor\HelpForm {
       ;
     }
 
+    if ( $this->values['invitationvaliduntil'] ) {
+      $this->values['invitationvaliduntil']     =
+        substr( $this->values['invitationvaliduntil'], 0, 16 )
+      ;
+    }
+
   }
   
   public function onComplete() {
