@@ -45,15 +45,21 @@ class Editinvite extends \Visitor\HelpForm {
     $values = $this->form->getElementValues( 0 );
     $crypt  = $this->bootstrap->getEncryption();
     $l      = $this->bootstrap->getLocalization();
-    
+
     if ( !empty( $values['permissions'] ) )
       $values['permissions'] = implode('|', $values['permissions'] );
+    else
+      $values['permissions'] = '';
 
     if ( !empty( $values['departments'] ) )
       $values['departments'] = implode('|', $values['departments'] );
+    else
+      $values['departments'] = '';
 
     if ( !empty( $values['groups'] ) )
       $values['groups']      = implode('|', $values['groups'] );
+    else
+      $values['groups']      = '';
 
     if ( !$values['needtimestampdisabledafter'] )
       $values['timestampdisabledafter'] = null;
