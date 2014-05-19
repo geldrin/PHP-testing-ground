@@ -1927,6 +1927,7 @@ a#currentusername span {
 #channels .actions {
   float: right;
   position: relative;
+  right: -40px;
   z-index: 1;
 }
 #channels .added {
@@ -1944,11 +1945,15 @@ a#currentusername span {
   white-space: nowrap;
   overflow: hidden;
 }
+#channels .channelname {
+  padding-right: 55px;
+}
 #channels .channelname:hover, #availableuploads li:hover {
   background-color: #fbfbfa;
 }
 #channels .channelname.level1 {
   padding-left: 30px;
+  text-overflow: ellipsis;
 }
 #channels .addtochannel, #channels .removefromchannel, #channels .loading, #availableuploads .cancelupload, #availableuploads .cancelupload span {
   display: inline-block;

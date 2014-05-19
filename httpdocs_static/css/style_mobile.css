@@ -75,6 +75,12 @@
   }
   
   /* recording details */
+  #channels .actions {
+    right: -10px;
+  }
+  #channels .channelname {
+    padding-right: 15px;
+  }
   #metadata {
     width: 100%;
     float: none;
