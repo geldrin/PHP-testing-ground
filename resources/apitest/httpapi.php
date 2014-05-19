@@ -77,12 +77,39 @@ class Api {
     return $this->apiurl . '?' . http_build_query( array_merge( $params, $parameters ) );
     
   }
-  
+
+  private function isUTF8( $string ) {
+    // http://www.w3.org/International/questions/qa-forms-utf-8.en.php
+    return preg_match('%^(?:
+            [\x09\x0A\x0D\x20-\x7E]            # ASCII
+          | [\xC2-\xDF][\x80-\xBF]             # non-overlong 2-byte
+          | \xE0[\xA0-\xBF][\x80-\xBF]         # excluding overlongs
+          | [\xE1-\xEC\xEE\xEF][\x80-\xBF]{2}  # straight 3-byte
+          | \xED[\x80-\x9F][\x80-\xBF]         # excluding surrogates
+          | \xF0[\x90-\xBF][\x80-\xBF]{2}      # planes 1-3
+          | [\xF1-\xF3][\x80-\xBF]{3}          # planes 4-15
+          | \xF4[\x80-\x8F][\x80-\xBF]{2}      # plane 16
+        )*$%xs', $string );
+  }
+
+  protected function checkArrayValidUTF8( &$data ) {
+    foreach( $data as $key => $value ) {
+      if ( is_string( $value ) and !$this->isUTF8( $value ) )
+        throw new Exception("The value of array member $key is not valid UTF8: $value\n");
+
+      if ( is_array( $value ) and !empty( $value ) )
+        $this->checkArrayValidUTF8( $data[ $key ] );
+
+    }
+  }
+
   public function modifyRecording( $id, $values ) {
     
     if ( empty( $values ) or !is_array( $values ) )
       throw new Exception('Nothing to modify');
-    
+
+    $this->checkArrayValidUTF8( $values );
+
     // nem szamit hogy az url-ben vagy POST parameterekkent erkeznek a parameterek
     $parameters = array('id' => $id );
     $options    = array(
