@@ -449,8 +449,11 @@ class Controller extends \Visitor\Controller {
       $this->crypto = $this->bootstrap->getEncryption();
 
     $db = $this->bootstrap->getAdoDB();
+    $foundcontent = false;
+
     if ( isset( $invitation['recordingid'] ) and $invitation['recordingid'] ) {
 
+      $foundcontent = true;
       if ( !isset( $this->invitationcache['recording-' . $invitation['recordingid'] ] ) )
         $this->invitationcache['recording-' . $invitation['recordingid'] ] =
           $db->getRow("
@@ -469,6 +472,7 @@ class Controller extends \Visitor\Controller {
 
     if ( isset( $invitation['livefeedid'] ) and $invitation['livefeedid'] ) {
 
+      $foundcontent = true;
       if ( !isset( $this->invitationcache['livefeed-' . $invitation['livefeedid'] ] ) ) {
         $this->invitationcache['livefeed-' . $invitation['livefeedid'] ] =
           $db->getRow("
@@ -496,6 +500,7 @@ class Controller extends \Visitor\Controller {
 
     if ( isset( $invitation['channelid'] ) and $invitation['channelid'] ) {
 
+      $foundcontent = true;
       if ( !isset( $this->invitationcache['channel-' . $invitation['channelid'] ] ) )
         $this->invitationcache['channel-' . $invitation['channelid'] ] =
           $db->getRow("

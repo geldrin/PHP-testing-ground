@@ -25,6 +25,13 @@ $departments
   <tr>
     <td style="width: 40px;"></td>
     <td style="background-color:'#e0e0e0'; padding: 10px; font-family: 'Arial', 'sans-serif';" bgcolor="#e0e0e0">
+
+      {if !$foundcontent}
+        <b>{#users__email_invitation_register#}:</b><br/>
+        <a href="{$url}">{#users__email_invitation_link#}</a>
+        <br/>
+      {/if}
+
       {if !empty( $recording )}
         {capture assign=forward}{$BASE_URI}{$language}/recordings/details/{$recording.id},{$recording.title|filenameize}{/capture}
         <b>{#users__email_invitation_recording#}:</b><br/>
