@@ -21,7 +21,7 @@ if ( $departmentModel->getCount() == 0 )
 
 $config['accesstype'] = array(
   'displayname' => $l('recordings', 'accesstype'),
-  'itemlayout'  => '%radio% %label% <br/>',
+  'itemlayout'  => $this->radioitemlayout,
   'type'        => 'inputRadio',
   'value'       => 'public',
   'values'      => $accesstypes,
@@ -51,12 +51,7 @@ $config['departments[]'] = array(
       $l('recordings', 'accesstype_departments_postfix') .
     '</div>'
   ,
-  'itemlayout'  =>
-    '<div class="cbxdynamiclevel%level%">'.
-      '<span class="indent">%indent%</span> %checkbox% '.
-      '<span title="%valuehtmlescape%">%label%</span>'.
-    '</div>' . "\r\n"
-  ,
+  'itemlayout'  => $this->checkboxitemlayout,
   'treeid'      => 'id',
   'treestart'   => 0,
   'treestartinclusive' => true,
@@ -68,6 +63,7 @@ $config['groups[]'] = array(
   'prefix'      => '<div id="groupscontainer">',
   'postfix'     => '</div>',
   'type'        => 'inputCheckboxDynamic',
+  'itemlayout'  => $this->checkboxitemlayout,
   'sql'         => "
     SELECT g.id, g.name
     FROM groups AS g

@@ -42,6 +42,9 @@ $j(document).ready(function() {
   runIfExists('#groups_invite', setupGroupInvitation );
   runIfExists('#timestampdisabledafter', setupDisabledAfter );
   runIfExists('#recordingssearch', setupRecordingsSearch );
+  runIfExists('#users_invite, #users_editinvite', setupUserInvitation );
+  runIfExists('#orderrecordings', setupOrderRecordings );
+  runIfExists('.togglesmallrecordings', setupToggleRecordings );
 
   if ( needping )
     setTimeout( setupPing, 1000 * pingsecs );
@@ -1345,8 +1348,7 @@ livechat.prototype.messageValid = function() {
 };
 
 function setupContributors() {
-  
-  var html = $j('#autocomplete-listitem').html();
+  var html = $j.parseJSON( '"' + $j('#contributors').attr('data-listitemhtml') + '"' );
   var resetcontributor = function() {
     $j('#searchterm, #contributorid').val('');
     $j('#contributorrolerow, #addcontributor').hide();
@@ -1707,7 +1709,7 @@ function setupDisabledAfter() {
   }).change();
   
   setupDefaultDateTimePicker('#timestampdisabledafter');
-  $j('.presettime').click(function(e) {
+  $j('.timestampdisabledafter .presettime').click(function(e) {
     e.preventDefault();
     $j('#timestampdisabledafter').datetimepicker('setDate', $j(this).attr('data-date') );
   })
@@ -1787,4 +1789,181 @@ function setupLiveFeed() {
     elem.toggle( modtype != 'nochat' );
   }).change();
 
+}
+
+function setupUserInvitation() {
+
+  $j('input[name=usertype]').change(function() {
+    var type  = $j('input[name=usertype]:checked').val();
+    var singleelems = $j('#email').parents('tr');
+    var multielems  = $j('#invitefile, #encoding, #delimeter').parents('tr');
+    singleelems.toggle( type == 'single' );
+    multielems.toggle( type == 'multiple' );
+  }).change();
+
+  $j('input[name=contenttype]').change(function() {
+    var type  = $j('input[name=contenttype]:checked').val();
+    var elems = $j('#recordingid, #livefeedid, #channelid').not('#' + type ).parents('tr').hide();
+    $j('#' + type ).parents('tr').show();
+  }).change();
+
+  $j('.cancel').click( function( e ) {
+    e.preventDefault();
+    var root = $j(this).parents('tr');
+    root.find('input').val('');
+    root.find('.foundwrap').hide();
+  });
+  
+  var html = $j.parseJSON( '"' + $j('#usersinvitewrap').attr('data-listitemhtml') + '"' );
+  var setupSearch = function( elem, callback ) {
+    var target = elem.replace('_search', '');
+    var elem   = $j(elem);
+    $j(elem).autocomplete({
+      minLength: 2,
+      source   : $j(elem).attr('data-searchurl'),
+      select   : function( event, ui ) {
+        var label   = ui.item.label.replace('<br/>', ' - ');
+
+        $j(target + '_title').text( label ).attr('title', label );
+        $j(target).val( ui.item.value );
+        $j(target).parents('tr').find('.foundwrap').show();
+        return false;
+      }
+    }).data( "autocomplete" )._renderItem = function( ul, item ) {
+      
+      var itemhtml = html.replace('__IMGSRC__', item.img ).replace('__NAME__', item.label );
+      return $j("<li>")
+        .data( "item.autocomplete", item )
+        .append( "<a>" + itemhtml + "</a>" )
+        .appendTo( ul )
+      ;
+      
+    };
+  };
+
+  setupSearch('#recordingid_search');
+  setupSearch('#livefeedid_search');
+  setupSearch('#channelid_search');
+
+  var tinymceDefaults = {};
+  tinyMCEInstanceInit = function(instance) { // global so that tinyMCE can actually see it
+    tinymceDefaults[ instance.editorId ] = instance.getContent();
+  };
+  
+  $j('#templateid').change(function() {
+    var val = $j(this).val();
+    if (!val) {
+      tinyMCE.get('templateprefix').setContent( tinymceDefaults.templateprefix );
+      tinyMCE.get('templatepostfix').setContent( tinymceDefaults.templatepostfix );
+      return;
+    }
+
+    var data = {templateid: val};
+    $j.ajax({
+      //beforeSend:
+      //complete:
+      cache  : false,
+      success: function( data ) {
+        if (!data || data.status != 'success')
+          return;
+
+        tinyMCE.get('templateprefix').setContent( data.prefix );
+        tinyMCE.get('templatepostfix').setContent( data.postfix );
+
+      },
+      data    : data,
+      dataType: 'json',
+      type    : 'GET',
+      url     : BASE_URI + language + '/users/getinvitationtemplate'
+    });
+  });
+
+  setupDefaultDateTimePicker('#invitationvaliduntil');
+  $j('.invitationvaliduntil .presettime').click(function(e) {
+    e.preventDefault();
+    $j('#invitationvaliduntil').datetimepicker('setDate', $j(this).attr('data-date') );
+  })
+  
+}
+
+
+function setupOrderRecordings() {
+  
+  var channelid = $j('#orderrecordings').attr('data-channelid');
+  var needorderupdate = false;
+  $j('#orderrecordings #orderlist').sortable({
+    placeholder: 'placeholder',
+    forcePlaceholderSize: true,
+    containment: '#pagecontainer',
+    tolerance: 'pointer',
+    scroll: true,
+    update: function( event, ui ) {
+      needorderupdate = true;
+    }
+  });
+  
+
+  var OrderRecordingsMoveUp = function( e ) {
+    e.preventDefault();
+    
+    var currelem  = $j(this).parents('li'),
+        currindex = $j('#orderrecordings #orderlist li').index( currelem );
+    
+    if ( currindex == 0 )
+      return;
+    
+    needorderupdate = true;
+    $j('#orderrecordings #orderlist li').eq( currindex - 1 ).before( currelem );
+    $j('#orderrecordings #orderlist').sortable('refresh');
+    
+  }
+
+  var OrderRecordingsMoveDown = function( e ) {
+    e.preventDefault();
+    
+    var currelem  = $j(this).parents('li'),
+        currindex = $j('#orderrecordings #orderlist li').index( currelem );
+    
+    if ( currindex == ( $j('#orderrecordings #orderlist li').length - 1 ) )
+      return;
+    
+    needorderupdate = true;
+    $j('#orderrecordings #orderlist li').eq( currindex + 1 ).after( currelem );
+    $j('#orderrecordings #orderlist').sortable('refresh');
+    
+  }
+
+  $j('#orderrecordings #orderlist .orderarrows .recordingmoveup a').live('click', OrderRecordingsMoveUp );
+  $j('#orderrecordings #orderlist .orderarrows .recordingmovedown a').live('click', OrderRecordingsMoveDown );
+  $j('#orderrecordings .button').click( function( e ) {
+    
+    if ( !needorderupdate || !channelid )
+      return;
+    else
+      e.preventDefault();
+    
+    var origurl = $j(this).attr('href');
+    
+    $j.ajax({
+      url: BASE_URI + language + '/channels/setorder/' + channelid,
+      type: 'POST',
+      data: $j('#orderrecordings #orderlist').sortable('serialize'),
+      dataType: 'json',
+      success: function() {
+        location.href = origurl;
+      }
+    });
+    
+  });
+  
+  $j("#orderrecordings #orderlist").disableSelection();
+  
+}
+
+function setupToggleRecordings( elems ) {
+
+  elems.click(function(e) {
+    e.preventDefault();
+    $j(this).parents('li').find('.smallrecordings').toggle();
+  });
 }

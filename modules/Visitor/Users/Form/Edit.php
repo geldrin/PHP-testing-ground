@@ -39,6 +39,12 @@ class Edit extends \Visitor\HelpForm {
       )
     ;
     
+    $this->controller->toSmarty['invitations'] =
+      $this->userModel->getInvitations(
+        $this->controller->organization['id']
+      )
+    ;
+
   }
   
   public function onComplete() {

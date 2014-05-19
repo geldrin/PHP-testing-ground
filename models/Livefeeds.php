@@ -247,10 +247,10 @@ class Livefeeds extends \Springboard\Model {
   
   public function getFlashData( $info ) {
     
-    $authorizecode = $this->getAuthorizeSessionidParam(
-      $info['cookiedomain'],
+    $authorizecode = $this->getAuthorizeSessionid(
+      $info['organization']['cookiedomain'],
       $info['sessionid'],
-      $info['user']
+      $info['member']
     );
     
     $streams          = array();
@@ -287,13 +287,13 @@ class Livefeeds extends \Springboard\Model {
       'recording_type'         => 'live',
       'media_secondaryStreams' => $contentstreams,
       'timeline_autoPlay'      => true,
-      'user_checkWatching'     => (bool)$info['user']['ispresencecheckforced'],
+      'user_checkWatching'     => (bool)$info['member']['ispresencecheckforced'],
       'user_checkWatchingTimeInterval' => $info['checkwatchingtimeinterval'],
       'user_checkWatchingConfirmationTimeout' => $info['checkwatchingconfirmationtimeout'],
     );
     
-    if ( $info['user'] and $info['user']['id'] ) {
-      $flashdata['user_id'] = $info['user']['id'];
+    if ( $info['member'] and $info['member']['id'] ) {
+      $flashdata['user_id'] = $info['member']['id'];
       $flashdata['user_needPing'] = true;
     }
     
@@ -323,8 +323,62 @@ class Livefeeds extends \Springboard\Model {
     if ( !$this->row['slideonright'] )
       $flashdata['layout_videoOrientation'] = 'right';
     
+    if ( $this->row['introrecordingid'] )
+      $flashdata = $flashdata + $this->getPlaceholderFlashdata( $info );
+
     return $flashdata;
     
+  }
+  
+  public function getPlaceholderFlashdata( &$info ) {
+    
+    $this->ensureObjectLoaded();
+    if ( !$this->row['introrecordingid'] )
+      return array();
+
+    $data = array(
+      'livePlaceholder_servers' => array(),
+    );
+    $recordingsModel = $this->bootstrap->getModel('recordings');
+    $recordingsModel->select( $this->row['introrecordingid'] );
+
+    if ( $this->row['issecurestreamingforced'] ) {
+
+      $data['livePlaceholder_servers'][] = $recordingsModel->getWowzaUrl(
+        'secrtmpsurl', true, $info
+      );
+      $data['livePlaceholder_servers'][] = $recordingsModel->getWowzaUrl(
+        'secrtmpurl',  true, $info
+      );
+      $data['livePlaceholder_servers'][] = $recordingsModel->getWowzaUrl(
+        'secrtmpturl', true, $info
+      );
+
+    } else {
+
+      $data['livePlaceholder_servers'][] = $recordingsModel->getWowzaUrl(
+        'rtmpurl',  true, $info
+      );
+      $data['livePlaceholder_servers'][] = $recordingsModel->getWowzaUrl(
+        'rtmpturl', true, $info
+      );
+
+    }
+
+    $data['livePlaceholder_streams'] = array();
+    $data['livePlaceholder_streams'][] = $recordingsModel->getMediaUrl(
+      'default', false, $info
+    );
+
+    if ( $recordingsModel->row['videoreshq'] )
+      $data['livePlaceholder_streams'][] = $recordingsModel->getMediaUrl(
+        'default', true, $info
+      );
+
+    $data['intro_servers'] = $data['livePlaceholder_servers'];
+    $data['intro_streams'] = $data['livePlaceholder_streams'];
+    return $data;
+
   }
   
   public function deleteStreams() {
@@ -387,18 +441,32 @@ class Livefeeds extends \Springboard\Model {
     
   }
   
-  protected function getAuthorizeSessionid( $cookiedomain, $sessionid, $streamcode ) {
-    
+  protected function getAuthorizeSessionid( $cookiedomain, $sessionid, $user ) {
+
     if ( !$cookiedomain or !$sessionid )
       return '';
-    
-    return '?sessionid=' . $cookiedomain . '_' . $sessionid . '_' . $this->id;
-    
+
+    $ret = sprintf('?sessionid=%s_%s_%s',
+      $cookiedomain,
+      $sessionid,
+      $this->id
+    );
+
+    if ( $user and $user['id'] )
+      $ret .= '&uid=' . $user['id'];
+
+    return $ret;
+
   }
   
-  public function getMediaUrl( $type, $streamcode, $info, $sessionid = null ) {
+  public function getMediaUrl( $type, $streamcode, $info ) {
     
     $url = $this->bootstrap->config['wowza'][ $type . 'url' ] . $streamcode;
+    $sessionid = $info['sessionid'];
+    if ( isset( $info['member'] ) )
+      $user = $info['member'];
+    else
+      $user = null;
 
     switch( $type ) {
       
@@ -407,7 +475,7 @@ class Livefeeds extends \Springboard\Model {
         $url .=
           '/playlist.m3u8' .
           $this->getAuthorizeSessionid(
-            $info['cookiedomain'], $sessionid, $streamcode
+            $info['organization']['cookiedomain'], $sessionid, $user
           )
         ;
         
@@ -416,7 +484,7 @@ class Livefeeds extends \Springboard\Model {
       case 'livertsp':
         //rtsp://stream.videosquare.eu/devvsqlive/123456
         $url .= $this->getAuthorizeSessionid(
-          $info['cookiedomain'], $sessionid, $streamcode
+          $info['organization']['cookiedomain'], $sessionid, $user
         );
         
         break;
@@ -437,7 +505,26 @@ class Livefeeds extends \Springboard\Model {
     
   }
   
-  public function isAccessible( $user, $secure = null ) {
+  public function isAccessibleByInvitation( $user, $organization ) {
+
+    if ( !$user['id'] )
+      return false;
+
+    $this->ensureID();
+    return (bool)$this->db->getOne("
+      SELECT COUNT(*)
+      FROM users_invitations
+      WHERE
+        registereduserid = '" . $user['id'] . "' AND
+        livefeedid       = '" . $this->id . "' AND
+        status           <> 'deleted' AND
+        organizationid   = '" . $organization['id'] . "'
+      LIMIT 1
+    ");
+
+  }
+
+  public function isAccessible( $user, $organization, $secure = null ) {
     
     $this->ensureObjectLoaded();
     
@@ -457,6 +544,9 @@ class Livefeeds extends \Springboard\Model {
        )
       return true;
     
+    if ( $this->isAccessibleByInvitation( $user, $organization ) )
+      return true;
+
     switch( $this->row['accesstype'] ) {
       
       case 'public':
@@ -619,16 +709,6 @@ class Livefeeds extends \Springboard\Model {
 
   }
   
-  public function getAuthorizeSessionidParam( $cookiedomain, $sessionid, $user = null ) {
-    
-    return sprintf('?sessionid=%s_%s_%s',
-      $cookiedomain,
-      $sessionid,
-      $this->id
-    );
-    
-  }
-  
   public function canDeleteFeed( $feed = null, $streams = null ) {
     
     if ( !$feed ) {
@@ -669,4 +749,44 @@ class Livefeeds extends \Springboard\Model {
     return $this->bootstrap->config['cookiedomain'] . ':anonymoususerid';
   }
 
+  public function search( $term, $userid, $organizationid ) {
+    
+    $searchterm  = str_replace( ' ', '%', $term );
+    $searchterm  = $this->db->qstr( '%' . $searchterm . '%' );
+    $term        = $this->db->qstr( $term );
+
+    $query   = "
+      SELECT
+        (
+          1 +
+          IF( l.name = $term, 2, 0 )
+        ) AS relevancy,
+        l.id,
+        l.userid,
+        l.organizationid,
+        l.name,
+        c.ordinalnumber,
+        c.starttimestamp,
+        c.endtimestamp
+      FROM
+        livefeeds AS l LEFT JOIN channels AS c ON(
+          l.channelid = c.id
+        )
+      WHERE
+        l.name LIKE $searchterm AND
+        (
+          l.organizationid = '$organizationid' OR
+          (
+            l.userid         = '$userid' AND
+            l.organizationid = '$organizationid'
+          )
+        )
+      ORDER BY relevancy DESC
+      LIMIT 20
+    ";
+    
+    return $this->db->getArray( $query );
+    
+  }
+  
 }

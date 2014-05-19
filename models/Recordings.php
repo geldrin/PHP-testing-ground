@@ -256,6 +256,7 @@ class Recordings extends \Springboard\Model {
       FROM attached_documents
       WHERE
         recordingid = '" . $this->id . "' AND
+        status NOT IN('markedfordeletion', 'deleted') AND
         indexingstatus IN('completed', 'completedempty')
     ");
     
@@ -379,7 +380,7 @@ class Recordings extends \Springboard\Model {
     
   }
   
-  public function userHasAccess( $user, $secure = null, $mobile = false ) {
+  public function userHasAccess( $user, $secure = null, $mobile = false, $organization = null ) {
     
     $this->ensureObjectLoaded();
     
@@ -388,15 +389,18 @@ class Recordings extends \Springboard\Model {
     
     $bystatus   = $this->isAccessibleByStatus( $user, $mobile );
     $bysettings = $this->isAccessibleBySettings( $user );
-    
-    if ( $bystatus === true and $bysettings === true )
+    $bycoursecompletion = $this->isAccessibleByCourseCompletion( $user, $organization );
+
+    if ( $bystatus === true and $bysettings === true and $bycoursecompletion === true )
       return true;
     
     if ( $bystatus !== true )
       return $bystatus;
-    else
+    else if ( $bysettings !== true )
       return $bysettings;
-    
+    else
+      return $bycoursecompletion;
+
   }
   
   public function insertUploadingRecording( $userid, $organizationid, $languageid, $title, $sourceip, $isintrooutro = 0 ) {
@@ -579,8 +583,11 @@ class Recordings extends \Springboard\Model {
     
     if ( $this->bootstrap->debug )
       var_dump( $output );
-    
-    $xml     = new \SimpleXMLElement( $output );
+			
+		libxml_use_internal_errors(true);
+		$xml = new \SimpleXMLElement( $output );
+		libxml_use_internal_errors(false);
+		
     $general = current( $xml->xpath('File/track[@type="General"][1]') );
     $video   = current( $xml->xpath('File/track[@type="Video"][1]') );
     $audio   = current( $xml->xpath('File/track[@type="Audio"][1]') );
@@ -850,7 +857,26 @@ class Recordings extends \Springboard\Model {
     return true;
     
   }
-  
+
+  public function isAccessibleByInvitation( $user, $organization ) {
+
+    if ( !$user['id'] )
+      return 'registrationrestricted';
+
+    $this->ensureID();
+    return (bool)$this->db->getOne("
+      SELECT COUNT(*)
+      FROM users_invitations
+      WHERE
+        registereduserid = '" . $user['id'] . "' AND
+        recordingid      = '" . $this->id . "' AND
+        status           <> 'deleted' AND
+        organizationid   = '" . $organization['id'] . "'
+      LIMIT 1
+    ");
+
+  }
+
   public function isAccessibleBySettings( $user ) {
     
     $this->ensureObjectLoaded();
@@ -947,6 +973,112 @@ class Recordings extends \Springboard\Model {
     
   }
   
+  public function isAccessibleByCourseCompletion( $user, $organization ) {
+
+    $this->ensureObjectLoaded();
+    // inside handlefile, skip the check? TODO reevaluate
+    if ( $organization === null )
+      return true;
+
+    $coursetypeid = $this->bootstrap->getModel('channels')->cachedGetCourseTypeID(
+      $organization['id']
+    );
+
+    // no course type set up for the organization, default allow
+    if ( !$coursetypeid )
+      return true;
+
+    // the course channels where the recording is a member
+    $coursechannelids = $this->db->getCol("
+      SELECT c.id
+      FROM
+        channels_recordings AS cr,
+        channels AS c
+      WHERE
+        cr.recordingid      = '" . $this->id . "' AND
+        cr.channelid        = c.id AND
+        c.organizationid    = '" . $organization['id'] . "' AND
+        c.channeltypeid     = '$coursetypeid'
+    ");
+
+    // recording not a member of any course
+    if ( empty( $coursechannelids ) )
+      return true;
+
+    // recording is a member of a course, only users who have access to it can
+    // view it
+    if ( !$user['id'] )
+      return 'registrationrestricted';
+    else if (
+              $this->row['userid'] == $user['id'] or
+              $user['isadmin'] or $user['isclientadmin'] or $user['iseditor']
+            )
+      return true;
+
+    // channels where the user must view all of the previous recordings
+    // to be able to view this one
+    $usercourses = $this->db->getCol("
+      SELECT ui.channelid
+      FROM
+        users_invitations AS ui
+      WHERE
+        ui.channelid IN('" . implode("', '", $coursechannelids ) . "') AND
+        ui.registereduserid = '" . $user['id'] . "' AND
+        ui.organizationid   = '" . $organization['id'] . "' AND
+        ui.status           <> 'deleted'
+    ");
+
+    // user not a member of the course, cannot watch
+    if ( empty( $usercourses ) )
+      return 'courserestricted';
+
+    $recordings = $this->getUserChannelRecordingsWithProgress( $usercourses, $user, $organization );
+
+    foreach( $recordings as $recording ) {
+
+      // if we arrived here, all dependencies were satisfied
+      if ( $recording['id'] == $this->id )
+        return true;
+      // a dependency has not been watched
+      else if ( $recording['positionpercent'] < $organization['elearningcoursecriteria'] )
+        return 'coursedependencyrestricted';
+
+    }
+
+    // should never arrive here
+    throw new \Exception('Cannot happen! ' . var_export( $coursechannelids, true ) );
+
+  }
+
+  public function getUserChannelRecordingsWithProgress( $channelids, $user, $organization, $distinct = true ) {
+    return $this->db->getArray("
+      SELECT
+        r.*,
+        cr.channelid,
+        (
+          ROUND( ( IFNULL(rvp.position, 0) / GREATEST( IFNULL(r.masterlength, 0), IFNULL(r.contentmasterlength, 0) ) ) * 100 )
+        ) AS positionpercent,
+        IFNULL(rvp.position, 0) AS lastposition
+      FROM
+        channels_recordings AS cr,
+        recordings AS r
+        LEFT JOIN recording_view_progress AS rvp ON(
+          r.id       = rvp.recordingid AND
+          rvp.userid = '" . $user['id'] . "'
+        )
+      WHERE
+        cr.channelid IN('" . implode("', '", $channelids ) . "') AND
+        r.id             = cr.recordingid AND
+        r.isintrooutro   = '0' AND
+        r.ispublished    = '1' AND
+        r.status         = 'onstorage' AND -- TODO live?
+        r.organizationid = '" . $organization['id'] . "' AND
+        r.status         = 'onstorage'
+      " . ( $distinct? "GROUP BY r.id": "") . "
+      ORDER BY cr.weight
+    ");
+  }
+
   public static function getPublicRecordingWhere( $prefix = '', $isintrooutro = '0', $accesstype = 'public' ) {
     
     return "
@@ -1047,6 +1179,30 @@ class Recordings extends \Springboard\Model {
           a.recordingid  = r.id AND
           a.departmentid = ud.departmentid AND
           ud.userid      = '" . $user['id'] . "'
+      ) UNION DISTINCT ( -- a hozzaferheto csatornak felveteleit is
+        SELECT $select
+        FROM
+          $from,
+          channels_recordings AS ccr,
+          users_invitations AS ui
+        WHERE
+          $where
+          $generalwhere AND
+          ccr.channelid       = ui.channelid AND
+          ccr.recordingid     = r.id AND
+          ui.registereduserid = '" . $user['id'] . "' AND
+          ui.status          <> 'deleted'
+      ) UNION DISTINCT (
+        SELECT $select
+        FROM
+          $from,
+          users_invitations AS ui
+        WHERE
+          $where
+          $generalwhere AND
+          r.id                = ui.recordingid AND
+          ui.registereduserid = '" . $user['id'] . "' AND
+          ui.status          <> 'deleted'
       )
     ";
     
@@ -1378,7 +1534,8 @@ class Recordings extends \Springboard\Model {
     if (
          (
            !$this->row['contentstatus'] or
-           $this->row['contentstatus'] == 'markedfordeletion'
+           $this->row['contentstatus'] == 'markedfordeletion' or
+           $this->row['contentstatus'] == 'deleted'
          ) and
          $this->row['contentmasterstatus'] != 'copyingtostorage'
        )
@@ -1573,10 +1730,10 @@ class Recordings extends \Springboard\Model {
     
   }
   
-  public function addPresentersToArray( &$array, $withjobs = true, $organizationid ) {
+  public function addPresentersToArray( &$recordings, $withjobs = true, $organizationid ) {
     
-    $recordings = array();
-    foreach( $array as $key => $recording ) {
+    $idtoindexmap = array();
+    foreach( $recordings as $key => $recording ) {
       
       if ( isset( $recording['type'] ) and $recording['type'] != 'recording' )
         continue;
@@ -1584,12 +1741,12 @@ class Recordings extends \Springboard\Model {
       // store the index of the recordings in an array keyed by the recordingid
       // so as not to re-index the array
       if ( isset( $recording['id'] ) )
-        $recordings[ $recording['id'] ] = $key;
+        $idtoindexmap[ $recording['id'] ] = $key;
       
     }
     
-    if ( empty( $recordings ) )
-      return $array;
+    if ( empty( $idtoindexmap ) )
+      return $recordings;
     
     $contributors = $this->db->getArray("
       SELECT
@@ -1603,7 +1760,7 @@ class Recordings extends \Springboard\Model {
         contributors_roles AS cr
       WHERE
         c.id = cr.contributorid AND
-        cr.recordingid IN('" . implode("', '", array_keys( $recordings ) ) . "') AND
+        cr.recordingid IN('" . implode("', '", array_keys( $idtoindexmap ) ) . "') AND
         cr.roleid IN( (SELECT r.id FROM roles AS r WHERE r.organizationid = '$organizationid' AND r.ispresenter = '1') )
       ORDER BY cr.weight
     ");
@@ -1613,15 +1770,15 @@ class Recordings extends \Springboard\Model {
     
     foreach( $contributors as $contributor ) {
       
-      $key = $recordings[ $contributor['recordingid'] ];
-      if ( !isset( $array[ $key ]['presenters'] ) )
-        $array[ $key ]['presenters'] = array();
+      $key = $idtoindexmap[ $contributor['recordingid'] ];
+      if ( !isset( $recordings[ $key ]['presenters'] ) )
+        $recordings[ $key ]['presenters'] = array();
       
-      $array[ $key ]['presenters'][] = $contributor;
+      $recordings[ $key ]['presenters'][] = $contributor;
       
     }
     
-    return $array;
+    return $recordings;
     
   }
   
@@ -1725,15 +1882,13 @@ class Recordings extends \Springboard\Model {
     return $channels;
     
   }
-  
-  public function getFlashData( $info, $sessionid ) {
+
+  public function getFlashData( $info ) {
     
     $this->ensureObjectLoaded();
     include_once( $this->bootstrap->config['templatepath'] . 'Plugins/modifier.indexphoto.php' );
-    
     $recordingbaseuri = $info['BASE_URI'] . \Springboard\Language::get() . '/recordings/';
-    $cookiedomain     = $info['organization']['cookiedomain'];
-    
+
     if ( $this->bootstrap->config['forcesecureapiurl'] )
       $apiurl = 'https://' . $info['organization']['domain'] . '/';
     else
@@ -1756,12 +1911,12 @@ class Recordings extends \Springboard\Model {
       'user_checkWatchingConfirmationTimeout' => $info['organization']['presencecheckconfirmationtime'],
     );
     
-    if ( @$info['member'] and $info['member']['id'] ) {
+    if ( isset( $info['member'] ) and $info['member']['id'] ) {
       $data['user_id'] = $info['member']['id'];
       $data['user_needPing'] = true;
     }
 
-    $data = $data + $this->getMediaServers( $info, $sessionid );
+    $data = $data + $this->getMediaServers( $info );
 
     // default bal oldalon van a video, csak akkor allitsuk be ha kell
     if ( !$this->row['slideonright'] )
@@ -1769,43 +1924,20 @@ class Recordings extends \Springboard\Model {
     
     if ( $data['language'] != 'en' )
       $data['locale'] = $info['STATIC_URI'] . 'js/flash_locale_' . $data['language'] . '.json';
-    
-    $data['media_streams'] = array( $this->getMediaUrl('default', false, $cookiedomain ) );
-    
+
+    $data['media_streams'] = array( $this->getMediaUrl('default', false, $info ) );
+
     if ( $this->row['videoreshq'] )
-      $data['media_streams'][] = $this->getMediaUrl('default', true, $cookiedomain );
-    
-    $data = $data + $this->getIntroOutroFlashdata( $cookiedomain );
-    
+      $data['media_streams'][] = $this->getMediaUrl('default', true, $info );
+
+    $data = $data + $this->getIntroOutroFlashdata( $info );
+
     if ( $this->row['offsetstart'] )
       $data['timeline_virtualStart'] = $this->row['offsetstart'];
-    
+
     if ( $this->row['offsetend'] )
       $data['timeline_virtualEnd'] = $this->row['offsetend'];
-    
-    if ( $this->row['contentstatus'] == 'onstorage' and !isset( $info['skipcontent'] ) ) {
-      
-      $data['media_secondaryStreams'] = array( $this->getMediaUrl('content', false, $cookiedomain ) );
-      
-      if ( $this->row['contentvideoreshq'] ) {
-        
-        $data['media_secondaryStreams'][] = $this->getMediaUrl('content', true, $cookiedomain );
-        
-        // ha van HQ content, de nincs HQ "default" verzio akkor ketszer
-        // kell szerepeljen a default verzio
-        if ( count( $data['media_streams'] ) == 1 )
-          $data['media_streams'][] = reset( $data['media_streams'] );
-        
-      }
-      
-      if ( $this->row['contentoffsetstart'] )
-        $data['timeline_contentVirtualStart'] = $this->row['contentoffsetstart'];
-      
-      if ( $this->row['contentoffsetend'] )
-        $data['timeline_contentVirtualEnd'] = $this->row['contentoffsetend'];
-      
-    }
-    
+
     $subtitles = $this->getSubtitleLanguages();
     if ( !empty( $subtitles ) ) {
       
@@ -1897,83 +2029,82 @@ class Recordings extends \Springboard\Model {
     
   }
   
-  public function getMediaServers( $info, $sessionid ) {
+  public function getMediaServers( $info ) {
 
     $this->ensureObjectLoaded();
     $data = array(
       'media_servers' => array(),
     );
 
+    $sessionid = $info['sessionid'];
     if ( $this->row['issecurestreamingforced'] ) {
-      $data['media_servers'][] = $this->getWowzaUrl( 'secrtmpsurl', true, $info, $sessionid );
-      $data['media_servers'][] = $this->getWowzaUrl( 'secrtmpurl',  true, $info, $sessionid );
-      $data['media_servers'][] = $this->getWowzaUrl( 'secrtmpturl', true, $info, $sessionid );
+      $data['media_servers'][] = $this->getWowzaUrl( 'secrtmpsurl', true, $info );
+      $data['media_servers'][] = $this->getWowzaUrl( 'secrtmpurl',  true, $info );
+      $data['media_servers'][] = $this->getWowzaUrl( 'secrtmpturl', true, $info );
     } else {
-      $data['media_servers'][] = $this->getWowzaUrl( 'rtmpurl',  true, $info, $sessionid );
-      $data['media_servers'][] = $this->getWowzaUrl( 'rtmpturl', true, $info, $sessionid );
+      $data['media_servers'][] = $this->getWowzaUrl( 'rtmpurl',  true, $info );
+      $data['media_servers'][] = $this->getWowzaUrl( 'rtmpturl', true, $info );
     }
     
     return $data;
 
   }
 
-  public function getIntroOutroFlashdata( $cookiedomain ) {
+  public function getIntroOutroFlashdata( $info ) {
     
     $this->ensureObjectLoaded();
     if ( !$this->row['introrecordingid'] and !$this->row['outrorecordingid'] )
       return array();
-    
+
     $ids     = array();
     $data    = array();
     $introid = 0;
     $outroid = 0;
-    
+
     if ( $this->row['introrecordingid'] ) {
-      
+
       $ids[]   = $this->row['introrecordingid'];
       $introid = $this->row['introrecordingid'];
-      
+
     }
     
     if ( $this->row['outrorecordingid'] ) {
-      
+
       $ids[]   = $this->row['outrorecordingid'];
       $outroid = $this->row['outrorecordingid'];
-      
+
     }
-    
+
     $highres = $this->db->getAssoc("
       SELECT id, videoreshq
       FROM recordings
       WHERE id IN('" . implode("', '", $ids ) . "')
     ");
-    
+
     foreach( $ids as $id ) {
-      
+
       if ( $introid == $id )
         $key = 'intro_streams';
       else
         $key = 'outro_streams';
-      
+
       $data[ $key ] = array(
-        $this->getMediaUrl('default', false, $cookiedomain, null, '', $id )
+        $this->getMediaUrl('default', false, $info, $id )
       );
-      
+
       if ( isset( $highres[ $id ] ) and $highres[ $id ] )
-        $data[ $key ][] =
-          $this->getMediaUrl('default', true, $cookiedomain, null, '', $id )
-        ;
-      
+        $data[ $key ][] = $this->getMediaUrl('default', true, $info, $id );
+
     }
-    
+
     return $data;
-    
+
   }
   
-  public function getStructuredFlashData( $info, $sessionid ) {
+  public function getStructuredFlashData( $info ) {
     
     $flashdata = $this->transformFlashData(
-      $this->getFlashData( $info, $sessionid )
+      $this->getFlashData( $info )
     );
     
     $flashdata['recommendatory'] = $flashdata['recommendatory']['string'];
@@ -2009,16 +2140,23 @@ class Recordings extends \Springboard\Model {
     
   }
   
-  protected function getWowzaUrl( $type, $needextraparam = false, $info = null, $sessionid = null ) {
+  public function getWowzaUrl( $type, $needextraparam = false, $info = null ) {
     
     $url = $this->bootstrap->config['wowza'][ $type ];
     
     if ( $needextraparam ) {
-      
+
+      if ( isset( $info['member'] ) )
+        $user = $info['member'];
+      else
+        $user = null;
+
       $this->ensureID();
       $url =
         rtrim( $url, '/' ) .
-        $this->getAuthorizeSessionid( $info['organization']['cookiedomain'], $sessionid )
+        $this->getAuthorizeSessionid(
+          $info['organization']['cookiedomain'], $info['sessionid'], $user
+        )
       ;
       
     }
@@ -2037,94 +2175,100 @@ class Recordings extends \Springboard\Model {
     
   }
   
-  protected function getAuthorizeSessionid( $cookiedomain, $sessionid ) {
-    
-    return sprintf('?sessionid=%s_%s_%s',
+  protected function getAuthorizeSessionid( $cookiedomain, $sessionid, $user ) {
+
+    $ret = sprintf('?sessionid=%s_%s_%s',
       $cookiedomain,
       $sessionid,
       $this->id
     );
-    
+
+    if ( $user and $user['id'] )
+      $ret .= '&uid=' . $user['id'];
+
+    return $ret;
+
   }
   
-  public function getMediaUrl( $type, $highquality, $cookiedomain = null, $sessionid = null, $host = '', $id = null ) {
-    
+  public function getMediaUrl( $type, $highquality, $info, $id = null ) {
+
     $this->ensureObjectLoaded();
-    
-    $typeprefix = '';
-    $extension  = 'mp4';
-    $postfix    = '_lq';
-    $isaudio    = $this->row['mastermediatype'] == 'audio';
-    
-    if ( $highquality and !$isaudio )
-      $postfix = '_hq';
-    
-    if ( $this->row['issecurestreamingforced'] )
-      $typeprefix = 'sec';
-    
-    if ( $isaudio ) {
-      
+    $cookiedomain = $info['organization']['cookiedomain'];
+    $sessionid    = $info['sessionid'];
+    $host         = '';
+
+    $isaudio   = false;
+    $postfix   = '_lq';
+    $extension = 'mp4';
+    if ( $this->row['mastermediatype'] == 'audio' ) {
+      $isaudio   = true;
       $postfix   = '';
       $extension = 'mp3';
-      
     }
-    
+
+    $user = null;
+    if ( isset( $info['member'] ) )
+      $user = $info['member'];
+
+    $typeprefix = '';
+    if ( $this->row['issecurestreamingforced'] )
+      $typeprefix = 'sec';
+
     switch( $type ) {
-      
+
       case 'mobilehttp':
         //http://stream.videotorium.hu:1935/vtorium/_definst_/mp4:671/2671/2671_2608_mobile.mp4/playlist.m3u8
         $host        = $this->getWowzaUrl( $typeprefix . 'httpurl');
         $sprintfterm =
           '%3$s:%s/%s_mobile' . $postfix . '.%s/playlist.m3u8' .
-          $this->getAuthorizeSessionid( $cookiedomain, $sessionid )
+          $this->getAuthorizeSessionid( $cookiedomain, $sessionid, $user )
         ;
         
         break;
-      
+
       case 'mobilertsp':
         //rtsp://stream.videotorium.hu:1935/vtorium/_definst_/mp4:671/2671/2671_2608_mobile.mp4
         $host        = $this->getWowzaUrl( $typeprefix . 'rtspurl');
         $sprintfterm =
           '%3$s:%s/%s_mobile' . $postfix . '.%s' .
-          $this->getAuthorizeSessionid( $cookiedomain, $sessionid )
+          $this->getAuthorizeSessionid( $cookiedomain, $sessionid, $user )
         ;
         
         break;
-      
+
       case 'direct':
-        
+        $host = $info['STATIC_URI'];
         if ( $isaudio )
           $sprintfterm = 'files/recordings/%s/%s_audio.%s';
         else
           $sprintfterm = 'files/recordings/%s/%s_video' . $postfix . '.%s';
-        
         break;
-      
+
       case 'content':
-        
         $sprintfterm = '%3$s:%s/%s_content' . $postfix . '.%s';
         break;
-      
+
       default:
+
         
         if ( $isaudio )
           $sprintfterm = '%3$s:%s/%s_audio.%s';
         else
           $sprintfterm = '%3$s:%s/%s_video' . $postfix . '.%s';
-        
+
         break;
-      
+
     }
-    
+
     if ( $id === null )
       $id = $this->id;
-    
+
     return $host . sprintf( $sprintfterm,
       \Springboard\Filesystem::getTreeDir( $id ),
       $id,
       $extension
     );
-    
+
   }
   
   public function getAuthor() {
@@ -2190,12 +2334,34 @@ class Recordings extends \Springboard\Model {
   public function markAsDeleted() {
     
     $this->ensureObjectLoaded();
-    
+
     $this->updateRow( array(
         'status'           => 'markedfordeletion',
         'deletedtimestamp' => date('Y-m-d H:i:s'),
       )
     );
+
+    if ( $this->row['isintrooutro'] ) {
+
+      $this->db->execute("
+        UPDATE recordings
+        SET introrecordingid = NULL
+        WHERE introrecordingid = '" . $this->id . "'
+      ");
+      $this->db->execute("
+        UPDATE livefeeds
+        SET introrecordingid = NULL
+        WHERE introrecordingid = '" . $this->id . "'
+      ");
+
+      $this->db->execute("
+        UPDATE recordings
+        SET outrorecordingid = NULL
+        WHERE outrorecordingid = '" . $this->id . "'
+      ");
+
+    }
+
     // TODO delete minden ami ezzel kapcsolatos
     $this->updateChannelIndexPhotos();
     $this->updateCategoryCounters();
@@ -2272,8 +2438,7 @@ class Recordings extends \Springboard\Model {
           COUNT(*)
         FROM channels
         WHERE
-          ispublic = 1 AND 
-          numberofrecordings > 0 AND
+          " . \Model\Channels::getWhere( $user ) . " AND
           (
             title         LIKE $searchterm OR
             subtitle      LIKE $searchterm OR
@@ -2363,8 +2528,7 @@ class Recordings extends \Springboard\Model {
           '1' AS ispublished
         FROM channels
         WHERE
-          ispublic = 1 AND 
-          numberofrecordings > 0 AND
+          " . \Model\Channels::getWhere( $user ) . " AND
           (
             title         LIKE $searchterm OR
             subtitle      LIKE $searchterm OR
@@ -2722,7 +2886,7 @@ class Recordings extends \Springboard\Model {
     $this->ensureObjectLoaded();
     $where = array(
       "recordingid = '" . $this->id . "'",
-      "status <> 'markedfordeletion'",
+      "status NOT IN('markedfordeletion', 'deleted')",
     );
     
     if ( $publiconly ) {
@@ -2807,11 +2971,19 @@ class Recordings extends \Springboard\Model {
     
     if ( $existingid )
       return false;
-    else
+    else {
       $this->db->query("
         INSERT INTO channels_recordings (channelid, recordingid, userid)
         VALUES ('$channelid', '" . $this->id . "', '" . $user['id'] . "')
       ");
+      $insertedid = $this->db->Insert_ID();
+      $this->db->query("
+        UPDATE channels_recordings
+        SET weight = '$insertedid'
+        WHERE id = '$insertedid'
+        LIMIT 1
+      ");
+    }
     
     $this->updateChannelIndexPhotos();
     $this->updateCategoryCounters();

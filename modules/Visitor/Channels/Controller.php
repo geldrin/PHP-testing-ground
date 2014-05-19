@@ -14,6 +14,9 @@ class Controller extends \Visitor\Controller {
     'listfavorites'       => 'member',
     'addtofavorites'      => 'member',
     'deletefromfavorites' => 'member',
+    'search'              => 'member',
+    'orderrecordings'     => 'uploader|editor|clientadmin',
+    'setorder'            => 'uploader|editor|clientadmin',
   );
   
   public $forms = array(
@@ -76,58 +79,112 @@ class Controller extends \Visitor\Controller {
     
   }
   
-  public function addrecordingAction() {
+  public function searchAction() {
     
-    $recordingid    = $this->application->getNumericParameter('recordingid');
-    
-    if ( $recordingid <= 0 )
-      $this->redirect('index');
-    
-    $user           = $this->bootstrap->getSession('user');
-    $channelModel   = $this->modelOrganizationAndUserIDCheck(
-      'channels',
-      $this->application->getNumericParameter('id')
+    $term   = $this->application->getParameter('term');
+    $output = array(
     );
-    $recordingModel = $this->bootstrap->getModel('recordings');
-    $recordingModel->addFilter('id', $recordingid );
     
-    if ( !$recordingModel->getCount() )
-      $this->redirect('index');
+    if ( !$term )
+      $this->jsonoutput( $output );
     
-    if ( $channelModel->insertIntoChannel( $recordingid, $user ) ) {
+    $user         = $this->bootstrap->getSession('user');
+    $channelModel = $this->bootstrap->getModel('channels');
+    $results      = $channelModel->search( $term, $user['id'], $this->organization['id'] );
+    
+    if ( empty( $results ) )
+      $this->jsonoutput( $output );
+    
+    foreach( $results as $result ) {
       
-      $channelModel->updateIndexFilename();
-      $channelModel->updateVideoCounters();
+      $title = $result['title'];
+      if ( strlen( trim( $result['subtitle'] ) ) )
+        $title .= '<br/>' . $result['subtitle'];
+
+      $data = array(
+        'value' => $result['id'],
+        'label' => $title,
+        'img'   => $this->bootstrap->staticuri,
+      );
+      
+      if ( $result['indexphotofilename'] )
+        $data['img'] .= 'files/' . $result['indexphotofilename'];
+      else
+        $data['img'] .= 'images/videothumb_audio_placeholder.png';
+      
+      $output[] = $data;
       
     }
     
-    if ( $this->isAjaxRequest() )
-      $this->jsonoutput( array('status' => 'success') );
-    else
-      $this->redirect( $this->application->getParameter('forward') );
+    $this->jsonoutput( $output );
     
   }
   
-  public function deleterecordingAction() {
-    
-    // $_GET[id] az a channels_recordings.id
-    $channelrecordingModel = $this->modelIDCheck(
-      'channels_recordings',
-      $this->application->getNumericParameter('id')
-    );
-    
+  public function orderrecordingsAction() {
+
     $channelModel = $this->modelOrganizationAndUserIDCheck(
       'channels',
-      $channelrecordingModel->row['channelid']
+      $this->application->getNumericParameter('id')
     );
+
+    $items = $channelModel->getRecordings(
+      $this->organization['id']
+    );
+
+    $items = $this->bootstrap->getModel('recordings')->addPresentersToArray(
+      $items, true, $this->organization['id']
+    );
+
+    $helpModel = $this->bootstrap->getModel('help_contents');
+    $helpModel->addFilter('shortname', 'channels_orderrecordings', false, false );
     
-    $channelrecordingModel->delete( $channelrecordingModel->id );
-    
-    $channelModel->updateIndexFilename( true );
-    $channelModel->updateVideoCounters();
-    
-    $this->redirect( $this->application->getParameter('forward') );
-    
+    $this->toSmarty['help']    = $helpModel->getRow();
+    $this->toSmarty['items']   = $items;
+    $this->toSmarty['channel'] = $channelModel->row;
+    $this->toSmarty['forward'] = $this->application->getParameter(
+      'forward', \Springboard\Language::get() . '/channels/mychannels'
+    );
+    $this->smartyOutput('Visitor/Channels/Orderrecordings.tpl');
+
   }
-  
+
+  public function setorderAction() {
+
+    $neworder = $this->application->getParameter('order');
+    if ( empty( $neworder ) )
+      $this->jsonOutput( array('status' => 'error', 'message' => 'nothingprovided') );
+
+    $channelModel = $this->modelOrganizationAndUserIDCheck(
+      'channels',
+      $this->application->getNumericParameter('id')
+    );
+
+    $channelModel->startTrans();
+    /* Get the current order of weights, exchange them for the new ones
+     * the current order is simply an array of weights
+     * the new order is an array of channelrecordingids
+     */
+    $currentorder = $channelModel->getRecordingWeights( $this->organization['id'] );
+
+    if ( count( $neworder ) != count( $currentorder ) ) {
+
+      $this->jsonOutput( array(
+          'status' => 'error',
+          'error'  => 'received order count does not equal server-side count',
+        ), true
+      );
+
+    }
+
+    foreach( $neworder as $key => $crid )
+      $channelModel->setRecordingOrder( $crid, $currentorder[ $key ] );
+
+    $channelModel->endTrans();
+    $this->jsonoutput( array(
+        'status' => 'success',
+      )
+    );
+
+  }
+
 }

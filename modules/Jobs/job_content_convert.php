@@ -70,7 +70,6 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_content_convert.stop' ) an
 		// Temporary directory cleanup and log result
 		$err = tempdir_cleanup($jconf['content_dir']);
 		if ( !$err['code'] ) log_recording_conversion(0, $jconf['jobid_content_convert'], "-", $err['message'], $err['command'], $err['result'], 0, TRUE);
-
 		$recording = array();
 		$uploader_user = array();
 
@@ -249,7 +248,7 @@ global $jconf, $app, $db, $global_log;
 	$recording_info['name'] = $profile['name'];
 
 	// Input and output files
-	$recording_info['input_file'] = $recording['source_file'];
+	$recording_info['input_file'] = $recording['master_filename'];
 	$smarty->assign('content_file', "file://" . $recording_info['input_file']);
 	$recording_info['input_media_file'] = $recording['source_media_file'];
 	$smarty->assign('video_file', "file://" . $recording_info['input_media_file']);
@@ -449,7 +448,6 @@ global $jconf, $db;
 			id
 		LIMIT 1";
 
-
 	try {
 		$rs = $db->Execute($query);
 	} catch (exception $err) {
@@ -551,7 +549,7 @@ global $app, $jconf;
 	$remote_media_filename = $app->config['recordingpath'] . ( $recording['id'] % 1000 ) . "/" . $recording['id'] . "/" . $recording['id'] . "_video_lq.mp4";
 
 	$recording['remote_filename'] = $remote_filename;
-	$recording['source_file'] = $master_filename;
+	$recording['master_filename'] = $master_filename;
 	$recording['source_media_file'] = $media_filename;
 	$recording['remote_media_file'] = $remote_media_filename;
 
@@ -627,7 +625,7 @@ global $app, $jconf;
 
 	// Reconvert: remove master file (do not copy back as already in place)
 	if ( $recording['is_content_reconvert'] ) {
-		$err = remove_file_ifexists($recording['source_file']);
+		$err = remove_file_ifexists($recording['master_filename']);
 		if ( !$err['code'] ) log_recording_conversion($recording['id'], $jconf['jobid_content_convert'], $jconf['dbstatus_copystorage'], $err['message'], $err['command'], $err['result'], 0, TRUE);
 	}
 

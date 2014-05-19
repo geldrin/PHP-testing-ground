@@ -1,8 +1,7 @@
 <?php
 
 class Api {
-  //public $apiurl = 'http://dev.videosquare.eu/hu/api';
-  public $apiurl = 'http://videosquare.eu/hu/api';
+  public $apiurl = 'https://videosquare.eu/hu/api';
   public $debug = false;
   
   protected $curl;
@@ -14,8 +13,8 @@ class Api {
     CURLOPT_HEADER         => false,
     CURLOPT_RETURNTRANSFER => true,
     CURLOPT_FOLLOWLOCATION => false,
-    CURLOPT_SSL_VERIFYPEER => false,
-    CURLOPT_SSL_VERIFYHOST => 0,
+    CURLOPT_SSL_VERIFYPEER => true,
+    CURLOPT_SSL_VERIFYHOST => 2,
     CURLOPT_CONNECTTIMEOUT => 1,
     CURLOPT_USERAGENT      => 'teleconnect api client',
   );

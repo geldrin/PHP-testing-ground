@@ -18,6 +18,7 @@ $jconf = $app->config['config_jobs'];
 
 $recordings = array();
 $users = array();
+$sessioncheck = false;
 
 $msg  = "# Videosquare ondemand statistics report\n\n";
 $msg .= "# Log analization started: " . date("Y-m-d H:i:s") . "\n";
@@ -34,17 +35,40 @@ try {
 }
 
 $org_id = null;
+$input = null;
 // get organization id from user/argument
 if ($argc > 1) {
-  $input = $argv[1];
-  $data = db_query("SELECT id, name FROM organizations WHERE id=". intval($input));
-  if ($data['success'] === true && $data['returnvalue'] !== false) {
-    $org_id = intval($data['returnvalue']['id']);
-  } else {
-    print_r($data['message']);
-	exit -1;
+  $input = end($argv);
+  if ($input !== false && preg_match('/^\d+$/', $input) === 1) {
+    $input = array_pop($argv); // trim down the last argument if it's a number
+    $data = db_query("SELECT id, name FROM organizations WHERE id=". intval($input));
+    if ($data['success'] === true && $data['returnvalue'] !== false) {
+      $org_id = intval($data['returnvalue']['id']);
+      print_r("Organization name = ". $data['returnvalue']['name'] ." (". $input .")\n");
+    } else {
+      print_r($data['message']);
+      exit -1;
+    }
   }
-} else {
+
+  $i = 0;
+  while(array_key_exists(++$i, $argv) === true) {
+    if (preg_match('/-\w+/', $argv[$i]) === 1) {
+      switch ($argv[$i]) {
+        case '-s':
+          $sessioncheck = true;
+          print_r("Analizing sessions...\n");
+          break;
+        default:
+          print_r($argv[$i] ." is not a valid option!\n");
+          exit;
+      }
+    }
+  }
+}
+
+if ($org_id === null) {
+  print_r("OrgID:\n");
   while (true) {
     print_r(" > ");
     $input = fgets(STDIN);
@@ -62,6 +86,14 @@ if ($argc > 1) {
     print_r('Invalid value! Please type again: ');
   }
 }
+
+if ($sessioncheck === false)
+  $msg .= "# Legend: (email,watched duration,total duration)\n";
+else
+  $msg .= "# Legend: (email, watched duration, total duration, session started, session started from, session terminated, session stopped at, session duration)\n";
+$msg .= "\n";
+// $msg .= $checktimestamps === true ? (",last activity,first login)\n") : (")\n");
+
 // query database
 $query = "
   SELECT
@@ -119,26 +151,51 @@ foreach ($org_channels as $ch) {
   $msg_ch = toUpper($ch['title']) . " (" . $ch['starttimestamp'] . ") [ID=" . $ch['id'] . "]:\n\n";
 
   foreach ($recs as $rec) {
+    $query = array(
+      'progress' => "SELECT
+          prog.userid,
+          prog.recordingid,
+          prog.position,
+          prog.timestamp,
+          u.email,
+          u.firstloggedin
+        FROM
+          recording_view_progress AS prog,
+          users AS u
+        WHERE
+          prog.recordingid = " . $rec['id'] . " AND
+          prog.userid = u.id AND
+          u.organizationid = $org_id",
 
-    $query = "
-      SELECT
-        prog.userid,
-        prog.recordingid,
-        prog.position,
-        prog.timestamp,
-        u.email
-      FROM
-        recording_view_progress AS prog,
-        users AS u
-      WHERE
-        prog.recordingid = " . $rec['id'] . " AND
-        prog.userid = u.id AND
-        u.organizationid = " . $org_id;
+      'sessions' => "SELECT
+          session.userid,
+          users.email,
+          session.recordingid,
+          session.timestampfrom,
+          session.timestampuntil,
+          session.positionfrom,
+          session.positionuntil,
+          prog.position
+        FROM
+          recording_view_sessions AS session,
+          recording_view_progress AS prog,
+          users
+        WHERE
+          (users.id = session.userid AND
+          users.organizationid = $org_id AND
+          session.recordingid = ". $rec['id'] .") AND (
+          prog.userid = session.userid AND
+          prog.recordingid = session.recordingid)"
+    );
 
 //echo $query . "\n";
-  
+
     try {
-      $user_progress = $db->getArray($query);
+      if ($sessioncheck === true) {
+        $user_progress = $db->getArray($query['sessions']);
+      } else {
+        $user_progress = $db->getArray($query['progress']);
+      }
     } catch ( Exception $e) {
       print_r("false!!");
       exit -1;
@@ -150,7 +207,11 @@ foreach ($org_channels as $ch) {
 
     $user_added = false;
     foreach ($user_progress as $up) {
-    
+      if (array_key_exists('positionfrom', $up)) {
+        $session_duration = abs($up['positionuntil'] - $up['positionfrom']);
+        if ($session_duration > 0 === false) continue; // Skip headers if the session length was 0.
+      }
+      $row = '';
       // Log channel header for this recording
       if ( !empty($msg_ch) ) {
         $msg .= $msg_ch;
@@ -164,16 +225,21 @@ foreach ($org_channels as $ch) {
       }
 
       $position_percent = round( ( 100 / $rec['masterlength'] ) * $up['position'], 2);
-    if ( $position_percent > 100 ) $position_percent = 100;
-      $msg .= $up['email'] . ";" . secs2hms($up['position']) . ";" . secs2hms($rec['masterlength']) . ";" . $position_percent . "%\n";
-      //$msg .= $up['email'] .";". secs2hms($up['position']) .";". secs2hms($rec['masterlength']) .";". $position_percent ."%;". $up['timestamp'] ."\n";
-
+			if ( $position_percent > 100 ) $position_percent = 100;
+			$row = $up['email'] . ";" . secs2hms($up['position']) . ";" . secs2hms($rec['masterlength']) .";" . $position_percent . "%";
+			
+			if ($sessioncheck === true) { // when checking sessions, append the following data to the log:
+        $row .= ";". $up['timestampfrom'] .";". secs2hms($up['positionfrom']) .";". $up['timestampuntil'] .";". secs2hms($up['positionuntil']) .";". secs2hms($session_duration);
+      }
+			
+      $row .= "\n";
+      $msg .= $row;
       $user_added = true;
     }
 
     if ( $user_added ) $msg .= "\n";
-  }
 
+  }
 }
 
 //echo $msg;
@@ -188,7 +254,7 @@ if ( fwrite($fh, $msg) === FALSE ) {
 }
 
 fclose($fh);
-
+print_r("File written to: ". $result_file ."\n");
 exit;
 
 /////////////////////////////////////////////////////// functions ///////////////////////////////////////////////////////////

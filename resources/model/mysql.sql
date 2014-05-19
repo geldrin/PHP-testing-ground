@@ -47,7 +47,6 @@ CREATE TABLE `users` (
    `namelast` text not null,
    `nameformat` text,
    `organizationid` int(10) unsigned not null default '0',
-   `departmentid` int(10) unsigned not null,
    `isadmin` int(10) unsigned not null default '0',
    `isclientadmin` int(10) unsigned not null default '0',
    `iseditor` int(10) unsigned not null default '0',

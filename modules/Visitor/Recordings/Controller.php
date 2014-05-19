@@ -200,14 +200,17 @@ class Controller extends \Visitor\Controller {
       'recordings',
       $this->application->getNumericParameter('id')
     );
-    
+
+    $start       = $this->application->getParameter('start');
     $browserinfo = $this->bootstrap->getBrowserInfo();
     $user        = $this->bootstrap->getSession('user');
     $rating      = $this->bootstrap->getSession('rating');
     $access      = $this->bootstrap->getSession('recordingaccess');
     $accesskey   = $recordingsModel->id . '-' . (int)$recordingsModel->row['issecurestreamingforced'];
     
-    $access[ $accesskey ] = $recordingsModel->userHasAccess( $user, null, $browserinfo['mobile'] );
+    $access[ $accesskey ] = $recordingsModel->userHasAccess(
+      $user, null, $browserinfo['mobile'], $this->organization
+    );
     $this->handleUserAccess( $access[ $accesskey ] );
     
     include_once(
@@ -220,12 +223,16 @@ class Controller extends \Visitor\Controller {
     
     $this->toSmarty['ipaddress']     = $this->getIPAddress();
     $this->toSmarty['member']        = $user;
+    $this->toSmarty['sessionid']     = session_id();
     $this->toSmarty['needping']      = true;
     $this->toSmarty['height']        = $this->getPlayerHeight( $recordingsModel );
     $this->toSmarty['recording']     = $recordingsModel->addPresenters( true, $this->organization['id'] );
-    $this->toSmarty['flashdata']     = $this->getFlashParameters(
-      $recordingsModel->getFlashData( $this->toSmarty, session_id() )
-    );
+
+    $flashdata = $recordingsModel->getFlashData( $this->toSmarty );
+    if ( preg_match( '/^\d{1,2}h\d{1,2}m\d{1,2}s$|^\d+$/', $start ) )
+      $flashdata['timeline_startPosition'] = $start;
+
+    $this->toSmarty['flashdata']     = $this->getFlashParameters( $flashdata );
     $this->toSmarty['comments']      = $recordingsModel->getComments();
     $this->toSmarty['commentcount']  = $recordingsModel->getCommentsCount();
     $this->toSmarty['author']        = $recordingsModel->getAuthor();
@@ -252,10 +259,11 @@ class Controller extends \Visitor\Controller {
         )
       ,
     );
+
     $mobilehq = false;
     if ( $recordingsModel->row['mobilevideoreshq'] and $browserinfo['tablet'] )
       $mobilehq = true;
-    
+
     $quality = $this->application->getParameter('quality');
     if ( $quality and in_array( $quality, array('lq', 'hq') ) ) {
       
@@ -270,32 +278,23 @@ class Controller extends \Visitor\Controller {
     $this->toSmarty['mobilehttpurl'] = $recordingsModel->getMediaUrl(
       'mobilehttp',
       $mobilehq,
-      $this->toSmarty['organization']['cookiedomain'],
-      session_id()
+      $this->toSmarty
     );
     $this->toSmarty['mobilertspurl'] = $recordingsModel->getMediaUrl(
       'mobilertsp',
       $mobilehq,
-      $this->toSmarty['organization']['cookiedomain'],
-      session_id()
+      $this->toSmarty
     );
     $this->toSmarty['audiofileurl']  = $recordingsModel->getMediaUrl(
       'direct',
       false, // non-hq
-      $this->toSmarty['organization']['cookiedomain'],
-      session_id(),
-      $this->toSmarty['STATIC_URI']
+      $this->toSmarty
     );
     
-    if ( $user['id'] ) {
-      $this->toSmarty['mobilehttpurl'] .= '&uid=' . $user['id'];
-      $this->toSmarty['mobilertspurl'] .= '&uid=' . $user['id'];
-    }
-    
     $this->smartyoutput('Visitor/Recordings/Details.tpl');
-    
+
   }
-  
+
   public function getplayerconfigAction() {
     
     $recordingsModel = $this->modelIDCheck(
@@ -308,14 +307,15 @@ class Controller extends \Visitor\Controller {
     $accesskey = $recordingsModel->id . '-' . (int)$recordingsModel->row['issecurestreamingforced'];
     $needauth  = false;
     
-    $access[ $accesskey ] = $recordingsModel->userHasAccess( $user );
+    $access[ $accesskey ] = $recordingsModel->userHasAccess( $user, null, false, $this->organization );
     
     if ( $access[ $accesskey ] === 'registrationrestricted' )
       $needauth = true;
     
     $this->toSmarty['member']    = $user;
     $this->toSmarty['ipaddress'] = $this->getIPAddress();
-    $flashdata = $recordingsModel->getStructuredFlashData( $this->toSmarty, session_id() );
+    $this->toSmarty['sessionid'] = session_id();
+    $flashdata = $recordingsModel->getStructuredFlashData( $this->toSmarty );
     
     if ( $needauth ) {
       
@@ -522,7 +522,7 @@ class Controller extends \Visitor\Controller {
         
         if ( $recordingsModel ) {
           
-          $access[ $accesskey ] = $recordingsModel->userHasAccess( $user, $secure );
+          $access[ $accesskey ] = $recordingsModel->userHasAccess( $user, $secure, false, $this->organization );
           
           if ( $access[ $accesskey ] === true )
             $result = '1';
@@ -606,6 +606,11 @@ class Controller extends \Visitor\Controller {
       $this->application->getNumericParameter('id')
     );
     
+    $start        = $this->application->getParameter('start');
+    $autoplay     = $this->application->getParameter('autoplay');
+    $fullscale    = $this->application->getParameter('fullscale');
+    $skipcontent  = $this->application->getParameter('skipcontent');
+    $browserinfo  = $this->bootstrap->getBrowserInfo();
     $user         = $this->bootstrap->getSession('user');
     $access       = $this->bootstrap->getSession('recordingaccess');
     $accesskey    = $recordingsModel->id . '-' . (int)$recordingsModel->row['issecurestreamingforced'];
@@ -613,7 +618,7 @@ class Controller extends \Visitor\Controller {
     $nopermission = false;
     $l            = $this->bootstrap->getLocalization();
     
-    $access[ $accesskey ] = $recordingsModel->userHasAccess( $user );
+    $access[ $accesskey ] = $recordingsModel->userHasAccess( $user, null, false, $this->organization );
     
     if (
          in_array( $access[ $accesskey ], array(
@@ -626,7 +631,17 @@ class Controller extends \Visitor\Controller {
       $needauth = true;
     elseif ( $access[ $accesskey ] !== true )
       $nopermission = true;
-    
+
+    $this->toSmarty['needauth']      = $needauth;
+    $this->toSmarty['ipaddress']     = $this->getIPAddress();
+    $this->toSmarty['member']        = $user;
+    $this->toSmarty['sessionid']     = session_id();
+
+    if ( $skipcontent )
+      $this->toSmarty['skipcontent'] = true;
+
+    $flashdata = $recordingsModel->getFlashData( $this->toSmarty );
+
     $mobilehq = false;
     if ( $recordingsModel->row['mobilevideoreshq'] ) {
       
@@ -635,7 +650,7 @@ class Controller extends \Visitor\Controller {
         $mobilehq = true;
       
     }
-    
+
     $quality = $this->application->getParameter('quality');
     if ( $quality and in_array( $quality, array('lq', 'hq') ) ) {
       
@@ -645,57 +660,34 @@ class Controller extends \Visitor\Controller {
         $mobilehq = false;
       
     }
-    
-    $this->toSmarty['needauth']      = $needauth;
-    $this->toSmarty['ipaddress']     = $this->getIPAddress();
-    $this->toSmarty['member']        = $user;
-    $this->toSmarty['mobilehq']      = $mobilehq;
+
     $this->toSmarty['mobilehttpurl'] = $recordingsModel->getMediaUrl(
       'mobilehttp',
       $mobilehq,
-      $this->toSmarty['organization']['cookiedomain'],
-      session_id()
+      $this->toSmarty
     );
     $this->toSmarty['mobilertspurl'] = $recordingsModel->getMediaUrl(
       'mobilertsp',
       $mobilehq,
-      $this->toSmarty['organization']['cookiedomain'],
-      session_id()
+      $this->toSmarty
     );
     $this->toSmarty['audiofileurl']  = $recordingsModel->getMediaUrl(
       'direct',
       false, // non-hq
-      $this->toSmarty['organization']['cookiedomain'],
-      session_id(),
-      $this->toSmarty['STATIC_URI']
+      $this->toSmarty
     );
-    
-    if ( $user['id'] ) {
-      $this->toSmarty['mobilehttpurl'] .= '&uid=' . $user['id'];
-      $this->toSmarty['mobilertspurl'] .= '&uid=' . $user['id'];
-    }
-    
-    $autoplay  = $this->application->getParameter('autoplay');
-    $start     = $this->application->getParameter('start');
-    $fullscale = $this->application->getParameter('fullscale');
-    $skipcontent = $this->application->getParameter('skipcontent');
-    
-    if ( $skipcontent )
-      $this->toSmarty['skipcontent'] = true;
-    
-    $flashdata = $recordingsModel->getFlashData( $this->toSmarty, session_id() );
     
     $flashdata['layout_logo'] = $this->toSmarty['STATIC_URI'] . 'images/player_overlay_logo.png';
     $flashdata['layout_logoOrientation'] = 'TR';
-    /*
-    $flashdata['layout_logoDestination'] =
-      $this->toSmarty['BASE_URI'] . \Springboard\Language::get() .
-      '/recordings/details/' . $recordingsModel->id . ',' .
-      \Springboard\Filesystem::filenameize( $recordingsModel->row['title'] )
-    ;
-    */
-    
-    if ( preg_match( '/^\d{1,2}h\d{1,2}m\d{1,2}s$/', $start ) )
+
+    if ( $this->organization['isplayerlogolinkenabled'] )
+      $flashdata['layout_logoDestination'] =
+        $this->toSmarty['BASE_URI'] . \Springboard\Language::get() .
+        '/recordings/details/' . $recordingsModel->id . ',' .
+        \Springboard\Filesystem::filenameize( $recordingsModel->row['title'] )
+      ;
+
+    if ( preg_match( '/^\d{1,2}h\d{1,2}m\d{1,2}s$|^\d+$/', $start ) )
       $flashdata['timeline_startPosition'] = $start;
     
     if ( $autoplay )

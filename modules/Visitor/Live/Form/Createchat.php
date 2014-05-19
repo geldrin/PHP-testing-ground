@@ -20,7 +20,7 @@ class Createchat extends \Visitor\HelpForm {
       $this->jsonOutput( array('status' => 'error', 'error' => 'registrationrestricted' ) );
     elseif( $this->user['id'] ) {
 
-      $access = $this->feedModel->isAccessible( $this->user );
+      $access = $this->feedModel->isAccessible( $this->user, $this->controller->organization );
       if ( $access !== true )
         $this->jsonOutput( array('status' => 'error', 'error' => $access ) );
 

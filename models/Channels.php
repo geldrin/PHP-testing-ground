@@ -14,6 +14,41 @@ class Channels extends \Springboard\Model {
    *
    */
   
+  public static function getWhere( $user, $prefix = '' ) {
+    
+    if ( !$user or !$user['id'] ) {
+
+      return "
+        (
+          {$prefix}ispublic = 1 AND
+          {$prefix}numberofrecordings > 0
+        )
+      ";
+
+    }
+
+    return "
+      (
+        (
+          {$prefix}ispublic = 1 AND
+          {$prefix}numberofrecordings > 0
+        ) OR
+        {$prefix}userid = '" . $user['id'] . "' OR
+        (
+          (
+            SELECT COUNT(*)
+            FROM users_invitations AS cui
+            WHERE
+              cui.status          <> 'deleted' AND
+              cui.channelid        = {$prefix}id AND
+              cui.registereduserid = '" . $user['id'] . "'
+          ) > 0
+        )
+      )
+    ";
+
+  }
+
   public function updateVideoCounters() {
     
     $this->ensureObjectLoaded();
@@ -246,8 +281,11 @@ class Channels extends \Springboard\Model {
     
   }
   
-  function getSingleChannelTree( $rootid, $orderby = 'c.weight, c.title', $parentid = 0, $ispublic = null ) {
+  function getSingleChannelTree( $rootid, $orderby = null, $parentid = 0, $ispublic = null ) {
     
+    if ( $orderby === null )
+      $orderby = 'c.weight, c.starttimestamp, c.title';
+
     if ( $rootid )
       $this->addFilter('c.id', $rootid, true, false, 'rootid');
     
@@ -255,7 +293,7 @@ class Channels extends \Springboard\Model {
       $this->addFilter('c.parentid', $parentid, true, false, 'parentid');
     
     if ( $ispublic )
-      $this->addFilter('c.ispublic = 1', 'public', false, false, 'ispublic');
+      $this->addFilter('c.ispublic', 1, true, false, 'ispublic');
     
     $this->addTextFilter('c.channeltypeid = ct.id', 'channeltype');
     
@@ -413,10 +451,8 @@ class Channels extends \Springboard\Model {
     if ( !$recordingschannels ) {
       
       $recordingschannels = $this->db->getAssoc("
-        SELECT
-          channelid, id
-        FROM
-          channels_recordings
+        SELECT channelid, id
+        FROM channels_recordings
         WHERE
           recordingid = " . $this->db->qstr( $recordingid ) . "
       ");
@@ -708,7 +744,7 @@ class Channels extends \Springboard\Model {
         channels_recordings AS cr,
         recordings AS r
       WHERE
-        cr.channelid IN('" . $this->id . "') AND
+        cr.channelid  = '" . $this->id . "' AND
         r.id          = cr.recordingid AND
         r.ispublished = '1' AND
         r.mediatype   = 'live'
@@ -777,7 +813,26 @@ class Channels extends \Springboard\Model {
     
   }
   
-  public function isAccessible( $user, $skipaccesstypecheck = false ) {
+  public function isAccessibleByInvitation( $user, $channelid, $organization ) {
+
+    if ( !$user['id'] )
+      return false;
+
+    $this->ensureID();
+    return (bool)$this->db->getOne("
+      SELECT COUNT(*)
+      FROM users_invitations
+      WHERE
+        registereduserid = '" . $user['id'] . "' AND
+        channelid        = '$channelid' AND
+        status           <> 'deleted' AND
+        organizationid   = '" . $organization['id'] . "'
+      LIMIT 1
+    ");
+
+  }
+
+  public function isAccessible( $user, $organization, $skipaccesstypecheck = false ) {
     
     $this->ensureObjectLoaded();
     
@@ -797,9 +852,14 @@ class Channels extends \Springboard\Model {
        )
       return true;
     
+    // ezt csatorna hozzaadas-hoz valo permission checknel hasznaljuk,
+    // ez utan nezzunk minden mast ami csak a csatorna megnezesehez kell
     if ( $skipaccesstypecheck )
       return false;
-    
+
+    if ( $this->isAccessibleByInvitation( $user, $organization, $channel['id'] ) )
+      return true;
+
     switch( $channel['accesstype'] ) {
       
       case '':
@@ -1057,4 +1117,94 @@ class Channels extends \Springboard\Model {
     ");
 
   }
+
+  public function getRecordings( $organizationid, $start = false, $limit = false, $orderby = false ) {
+    $this->ensureID();
+    return $this->db->getArray("
+      SELECT
+        r.id,
+        r.title,
+        r.subtitle,
+        r.description,
+        r.recordedtimestamp,
+        r.numberofviews,
+        r.rating,
+        r.indexphotofilename,
+        r.ispublished,
+        r.status,
+        r.livefeedid,
+        r.organizationid AS organizationid,
+        cr.id AS channelrecordingid
+      FROM
+        recordings AS r,
+        channels_recordings AS cr
+      WHERE
+        cr.channelid     = '" . $this->id . "' AND
+        r.id             = cr.recordingid AND
+        r.isintrooutro   = '0' AND
+        r.organizationid = '$organizationid' AND
+        r.status         = 'onstorage' -- TODO live?
+      GROUP BY r.id
+      ORDER BY cr.weight
+    ");
+
+  }
+
+  public function getRecordingWeights( $organizationid ) {
+    $this->ensureID();
+    return $this->db->getCol("
+      SELECT cr.weight
+      FROM
+        channels_recordings AS cr,
+        recordings AS r
+        WHERE
+          cr.channelid     = '" . $this->id . "' AND
+          r.id             = cr.recordingid AND
+          r.isintrooutro   = '0' AND
+          r.organizationid = '$organizationid' AND
+          r.status         = 'onstorage' -- TODO live?
+        GROUP BY r.id
+        ORDER BY cr.weight
+    ");
+  }
+
+  public function setRecordingOrder( $crid, $weight ) {
+
+    $this->db->execute("
+      UPDATE channels_recordings
+      SET weight = '$weight'
+      WHERE
+        id        = '$crid' AND
+        channelid = '" . $this->id . "'
+      LIMIT 1
+    ");
+
+    return (bool)$this->db->Affected_Rows();
+
+  }
+
+  public function getCourseTypeID( $organizationid ) {
+    
+    $id = $this->db->getOne("
+      SELECT id
+      FROM channel_types
+      WHERE iscourse = '1'
+      ORDER BY weight
+      LIMIT 1
+    ");
+
+    if ( !$id ) {
+      $d = \Springboard\Debug::getInstance();
+      $d->log(
+        false,
+        false,
+        "No channel_types row with iscourse=1 set for the given organizationid ($organizationid)!",
+        true
+      );
+    }
+
+    return $id;
+
+  }
+
 }

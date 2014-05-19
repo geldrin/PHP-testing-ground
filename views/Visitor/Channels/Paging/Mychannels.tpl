@@ -4,8 +4,10 @@
     <ul class="actions">
       <li><a href="{$language}/channels/create?parent={$item.id}">{#channels__createchild#}</a></li>
       <li><a href="{$language}/channels/modify/{$item.id}">{#channels__modify#}</a></li>
+      <li><a href="{$language}/channels/orderrecordings/{$item.id}?forward={$FULL_URI|escape:url}">{#channels__orderrecordings#}</a></li>
       {if empty( $item.children )}<li><a href="{$language}/channels/delete/{$item.id}" class="confirm">{#channels__delete#}</a></li>{/if}
     </ul>
+    {if $item.subtitle}<div class="subtitle">{$item.subtitle|escape:html}</span>{/if}
   </div>
   {if !empty( $item.children )}
     <ul class="treeadminlist children">

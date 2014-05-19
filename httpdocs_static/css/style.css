@@ -40,6 +40,10 @@ img {
 body {
   background-color: #ebebeb;
 }
+body > pre {
+  z-index: 9999;
+  position: relative;
+}
 label {
   cursor: pointer;
 }
@@ -141,6 +145,12 @@ label {
 }
 .formtable td.labelcolumn {
   min-width: 150px;
+}
+.form.halfbox td.labelcolumn {
+  width: 150px;
+}
+.form.leftdoublebox td.labelcolumn {
+  width: 170px;
 }
 .formtable td.elementcolumn {
   vertical-align: middle;
@@ -264,6 +274,58 @@ a.submitbutton:hover, .form a.submitbutton:hover {
   margin: 0;
   width: 950px;
   
+}
+
+.form .checkboxwrap,
+.form .radiowrap {
+  display: -webkit-box;
+  display: -moz-box;
+  display: -ms-flexbox;
+  display: -webkit-flex;
+  display: flex;
+  -webkit-box-direction: normal;
+  -moz-box-direction: normal;
+  -webkit-box-orient: horizontal;
+  -moz-box-orient: horizontal;
+  -webkit-flex-direction: row;
+  -ms-flex-direction: row;
+  flex-direction: row;
+  -webkit-flex-wrap: nowrap;
+  -ms-flex-wrap: nowrap;
+  flex-wrap: nowrap;
+  -webkit-box-pack: start;
+  -moz-box-pack: start;
+  -webkit-justify-content: flex-start;
+  -ms-flex-pack: start;
+  justify-content: flex-start;
+  -webkit-align-content: flex-start;
+  -ms-flex-line-pack: start;
+  align-content: flex-start;
+  -webkit-box-align: start;
+  -moz-box-align: start;
+  -webkit-align-items: flex-start;
+  -ms-flex-align: start;
+  align-items: flex-start;
+}
+.form .checkboxitem, .form .checkboxlabel, .form .checkboxindent,
+.form .radioitem, .form .radiolabel {
+  display: inline;
+  -webkit-box-flex: 0;
+  -moz-box-flex: 0;
+  -webkit-flex: 0 0 auto;
+  -ms-flex: 0 0 auto;
+  flex: 0 0 auto;
+  -webkit-align-self: auto;
+  -ms-flex-item-align: auto;
+  align-self: auto;
+}
+.form .checkboxitem,
+.form .radioitem {
+  width: 22px;
+}
+.form .checkboxlabel,
+.form .radiolabel {
+  flex: 0 1 auto;
 }
 
 /* record upload form */
@@ -1500,6 +1562,9 @@ a#currentusername span {
 }
 
 /* smallrecordings */
+.continuerecording {
+  font-weight: bolder;
+}
 .smallrecordings {
   width: 738px;
 }
@@ -1568,11 +1633,30 @@ a#currentusername span {
   margin: 0px 15px 3px 0px;
   padding: 0;
 }
+.treeadminlist.fixedwidth h3 {
+  width: 200px;
+}
 .treeadminlist h3 a {
   color: #333;
 }
 .treeadminlist h3 a:hover {
   text-decoration: none;
+}
+
+.invite-status {
+  display: inline-block;
+  width: 110px;
+  font-weight: bold;
+}
+.invite-status.status-invited {
+  color: #FFA500;
+}
+.invite-status.status-existing {
+}
+.invite-status.status-registered {
+  color: #008000;
+}
+.invite-status.status-deleted {
 }
 
 /* indexcontainer */
@@ -2116,6 +2200,9 @@ a#currentusername span {
   font-size: 12px;
   font-weight: normal;
 }
+.listingitem .subtitle {
+  font-style: italic;
+}
 .channellist .listingitem {
   padding-bottom: 10px;
 }
@@ -2596,4 +2683,103 @@ a#currentusername span {
   position: absolute;
   right: 11px;
   top: 8px;
+}
+#users_invite .foundwrap {
+  display: none;
+}
+#users_invite .foundwrap .title, #users_editinvite .foundwrap .title {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  display: inline-block;
+  font-weight: bolder;
+  line-height: 31px;
+  width: 422px;
+  height: 31px;
+  text-overflow: ellipsis;
+  overflow: hidden;
+}
+#users_invite .foundwrap .cancel, #users_editinvite .foundwrap .cancel {
+  display: block;
+  float: right;
+  margin: 5px 0px 0px 10px;
+}
+#users_invite .labelwrap, #users_editinvite .labelwrap {
+  margin: 0 0 5px 0;
+}
+
+/* channels order controls */
+#orderrecordings .orderarrows span {
+  padding: 0;
+  margin-right: 10px;
+  float: left;
+  width: 16px;
+  height: 16px;
+  background-color: transparent;
+  overflow: hidden;
+  background-repeat: no-repeat;
+}
+#orderrecordings {
+  margin: 20px 0px 20px 0px;
+  width: 950px;
+  float: left;
+}
+#orderrecordings #orderlist {
+  float: left;
+  margin: 0;
+  padding: 0;
+  list-style-type: none;
+}
+#orderrecordings #orderlist li {
+  clear: both;
+  float: left;
+  width: 930px;
+  margin: 3px 0px 3px 0px;
+  padding: 3px 10px 3px 10px;
+  background-color: #e0e0e0;
+  -webkit-border-radius: 5px;
+  -moz-border-radius: 5px;
+  border-radius: 5px;
+}
+#orderrecordings #orderlist li .orderarrows {
+  float: right;
+  margin-left: 20px;
+}
+#orderrecordings #orderlist li .orderarrows a {
+  float: left;
+  height: 16px;
+  width: 16px;
+  background-color: transparent;
+  display: none;
+}
+#orderrecordings #orderlist li:hover {
+  background-color: #21ABF0;
+  color: #fff;
+  cursor: move;
+}
+#orderrecordings #orderlist li:hover a {
+  color: #fff;
+}
+#orderrecordings #orderlist li:hover .orderarrows a {
+  display: inline;
+}
+#orderrecordings #orderlist li h1 {
+  font-size: 13px;
+  font-weight: bold;
+  margin: 0;
+}
+#orderrecordings #orderlist li p {
+  margin: 0;
+}
+#orderrecordings #orderlist li .orderarrows .recordingmovedown a {
+  background-image: url(images/icons/arrow_down_active.png);
+}
+#orderrecordings #orderlist li .orderarrows .recordingmoveup a {
+  background-image: url(images/icons/arrow_up_active.png);
+}
+#orderrecordings .placeholder {
+  background-color: #ddd;
+  -webkit-border-radius: 5px;
+  -moz-border-radius: 5px;
+  border-radius: 5px;
 }

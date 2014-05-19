@@ -13,7 +13,7 @@ $config['id']              = Array(
 );
 
 $config['indexphotofilename'] = Array(
-  'type' => 'inputradio',
+  'type'        => 'inputradio',
   'displayname' => $l('recordings', 'modifyindexphoto_select'),
   'rowlayout'   => '
     <tr>

@@ -517,4 +517,256 @@ class Users extends \Springboard\Model {
 
   }
 
+  public function getInvitations( $organizationid ) {
+    $this->ensureID();
+    return $this->db->getArray("
+      SELECT *
+      FROM users_invitations
+      WHERE
+        status           <> 'deleted' AND
+        registereduserid  = '" . $this->id . "' AND
+        organizationid    = '$organizationid'
+      ORDER BY id DESC
+    ");
+  }
+
+  public function invitationRegistered( $invitationid ) {
+    
+    $this->db->execute("
+      UPDATE users_invitations
+      SET
+        registereduserid = '" . $this->id . "',
+        status           = 'registered'
+      WHERE id = '$invitationid'
+    ");
+    
+  }
+
+  public function searchEmails( &$emails, $organizationid ) {
+    
+    $ret = array();
+    while( !empty( $emails ) ) {
+
+      $chunk = array_splice( $emails, 0, 50 );
+      $users = $this->db->getAssoc("
+        SELECT
+          email AS arraykey,
+          id,
+          email,
+          nameprefix,
+          namefirst,
+          namelast,
+          nameformat,
+          nickname
+        FROM users
+        WHERE
+          organizationid = '$organizationid' AND
+          email IN('" . implode("', '", $chunk ) . "')
+        LIMIT 50
+      ");
+      $ret = array_merge( $ret, $users );
+
+    }
+
+    return $ret;
+
+  }
+
+  public function applyInvitationPermissions( $invitation ) {
+
+    $this->ensureID();
+
+    $values = array();
+    foreach( explode('|', $invitation['permissions'] ) as $permission )
+      $values[ $permission ] = 1;
+
+    $departments = array();
+    foreach( explode('|', $invitation['departments'] ) as $id ) {
+
+      $id = intval( $id );
+      if ( $id )
+        $departments[] = $id;
+      
+    }
+
+    $groups      = array();
+    foreach( explode('|', $invitation['groups'] ) as $id ) {
+
+      $id = intval( $id );
+      if ( $id )
+        $groups[] = $id;
+
+    }
+    
+    if (
+         isset( $invitation['timestampdisabledafter'] ) and
+         $invitation['timestampdisabledafter']
+       )
+      $values['timestampdisabledafter'] = $invitation['timestampdisabledafter'];
+
+    if ( !empty( $values ) )
+      $this->updateRow( $values );
+
+    if ( !empty( $departments ) )
+      $this->addDepartments( $departments );
+
+    if ( !empty( $groups ) )
+      $this->addGroups( $groups );
+
+  }
+
+  public function searchForValidInvitation( $organizationid ) {
+    $this->ensureObjectLoaded();
+    $email = $this->db->qstr( $this->row['email'] );
+    return $this->db->getRow("
+      SELECT *
+      FROM users_invitations
+      WHERE
+        email          = $email AND
+        organizationid = '$organizationid' AND
+        status         = 'invited'
+      LIMIT 1
+    ");
+  }
+
+  public function getInviteTemplates( $organizationid ) {
+    $templates = $this->db->getAssoc("
+      SELECT
+        id AS arraykey,
+        id,
+        prefix,
+        postfix,
+        timestamp
+      FROM invite_templates
+      WHERE organizationid = '$organizationid'
+      ORDER BY id DESC
+    ");
+
+    return $templates;
+  }
+
+  public function maybeInsertTemplate( $values ) {
+
+    $needinsert = false;
+    if ( intval( $values['id'] ) ) {
+
+      $template = $this->getTemplate(
+        intval( $values['id'] ),
+        $values['organizationid']
+      );
+
+      if ( empty( $template ) )
+        throw new \Exception("Template with id: " . $values['id'] . ' not found!');
+
+      $hash         = md5( $values['prefix'] . $values['postfix'] );
+      $existinghash = md5( $template['prefix'] . $template['postfix'] );
+
+      if ( $hash != $existinghash )
+        $needinsert = true;
+
+    } elseif (
+               strlen( trim( $values['prefix'] ) ) or
+               strlen( trim( $values['postfix'] ) )
+             )
+      $needinsert = true;
+    else // se template nem volt valasztva, se nem volt kitoltve semmi => nem akar a user templatet
+      return array();
+
+    if ( $needinsert ) {
+      unset( $values['id'] );
+      $templateModel = $this->bootstrap->getModel('invite_templates');
+      $templateModel->insert( $values );
+      $values['id'] = $templateModel->id;
+    }
+
+    return $values;
+
+  }
+
+  public function getTemplate( $templateid, $organizationid ) {
+    return $this->db->getRow("
+      SELECT *
+      FROM invite_templates
+      WHERE
+        id             = '$templateid' AND
+        organizationid = '$organizationid'
+      LIMIT 1
+    ");
+  }
+
+  public function getCourses( $organization ) {
+
+    $this->ensureID();
+
+    $coursetypeid = $this->bootstrap->getModel('channels')->cachedGetCourseTypeID(
+      $organization['id']
+    );
+
+    $channels = $this->db->getArray("
+      SELECT c.*
+      FROM
+        channels AS c,
+        users_invitations AS ui
+      WHERE
+        c.channeltypeid     = '$coursetypeid' AND
+        c.organizationid    = '" . $organization['id'] . "' AND
+        ui.registereduserid = '" . $this->id . "'
+      ORDER BY c.title
+    ");
+
+    $channelids     = array();
+    $channelidtokey = array();
+    foreach( $channels as $key => $channel ) {
+      $channelids[] = $channel['id'];
+      $channelidtokey[ $channel['id'] ] = $key;
+      $channels[ $key ]['recordings'] = array();
+      $channels[ $key ]['recordingtowatch'] = null;
+    }
+
+    $recordingsModel = $this->bootstrap->getModel('recordings');
+    $recordings      = $recordingsModel->getUserChannelRecordingsWithProgress(
+      $channelids,
+      $this->row,
+      $organization,
+      false
+    );
+
+    $recordings      = $recordingsModel->addPresentersToArray(
+      $recordings,
+      true,
+      $organization['id']
+    );
+
+    foreach( $recordings as $recording ) {
+
+      $key = $channelidtokey[ $recording['channelid'] ];
+      $channels[ $key ]['recordings'][] = $recording;
+
+      // first recording that is not watched enough
+      if (
+           !$channels[ $key ]['recordingtowatch'] and
+           $recording['positionpercent'] < $organization['elearningcoursecriteria']
+         )
+        $channels[ $key ]['recordingtowatch'] = $recording;
+
+    }
+
+    usort( $channels, array( $this, 'compareUserChannels') );
+    return $channels;
+
+  }
+
+  private function compareUserChannels( $a, $b ) {
+
+    if (
+         $a['recordingtowatch'] !== null and
+         $b['recordingtowatch'] !== null )
+      return 0;
+    elseif ( $a['recordingtowatch'] !== null )
+      return -1;
+    else
+      return 1;
+
+  }
+
 }

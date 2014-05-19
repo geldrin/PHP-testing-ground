@@ -3,24 +3,28 @@ namespace Visitor\Users;
 
 class Controller extends \Visitor\Controller {
   public $permissions = array(
-    'login'          => 'public',
-    'logout'         => 'public',
-    'signup'         => 'public',
-    'modify'         => 'member',
-    'welcome'        => 'member',
-    'index'          => 'public',
-    'validate'       => 'public',
-    'forgotpassword' => 'public',
-    'changepassword' => 'public',
-    'resend'         => 'public',
-    'invite'         => 'clientadmin',
-    'massinvite'     => 'clientadmin',
-    'validateinvite' => 'public',
-    'disable'        => 'clientadmin',
-    'admin'          => 'clientadmin',
-    'edit'           => 'clientadmin',
-    'resetsession'   => 'public',
+    'login'                => 'public',
+    'logout'               => 'public',
+    'signup'               => 'public',
+    'modify'               => 'member',
+    'welcome'              => 'member',
+    'index'                => 'public',
+    'validate'             => 'public',
+    'forgotpassword'       => 'public',
+    'changepassword'       => 'public',
+    'resend'               => 'public',
+    'invite'               => 'clientadmin',
+    'invitations'          => 'clientadmin',
+    'validateinvite'       => 'public',
+    'disable'              => 'clientadmin',
+    'admin'                => 'clientadmin',
+    'edit'                 => 'clientadmin',
+    'resetsession'         => 'public',
     'validateresetsession' => 'public',
+    'resendinvitation'     => 'clientadmin',
+    'disableinvitation'    => 'clientadmin',
+    'editinvite'           => 'clientadmin',
+    'getinvitationtemplate' => 'clientadmin',
   );
   
   public $forms = array(
@@ -29,15 +33,16 @@ class Controller extends \Visitor\Controller {
     'forgotpassword' => 'Visitor\\Users\\Form\\Forgotpassword',
     'changepassword' => 'Visitor\\Users\\Form\\Changepassword',
     'invite'         => 'Visitor\\Users\\Form\\Invite',
-    'massinvite'     => 'Visitor\\Users\\Form\\MassInvite',
     'modify'         => 'Visitor\\Users\\Form\\Modify',
     'resend'         => 'Visitor\\Users\\Form\\Resend',
     'edit'           => 'Visitor\\Users\\Form\\Edit',
     'resetsession'   => 'Visitor\\Users\\Form\\Resetsession',
+    'editinvite'     => 'Visitor\\Users\\Form\\Editinvite',
   );
   
   public $paging = array(
-    'admin' => 'Visitor\\Users\\Paging\\Admin',
+    'admin'       => 'Visitor\\Users\\Paging\\Admin',
+    'invitations' => 'Visitor\\Users\\Paging\\Invitations',
   );
   
   public $apisignature = array(
@@ -84,6 +89,10 @@ class Controller extends \Visitor\Controller {
     ),
   );
   
+  protected $l;
+  protected $crypto;
+  protected $invitationcache;
+
   public function indexAction() {
     echo 'Nothing here yet';
   }
@@ -92,8 +101,16 @@ class Controller extends \Visitor\Controller {
     
     $l           = $this->bootstrap->getLocalization();
     $uploadModel = $this->bootstrap->getModel('uploads');
+    $userModel   = $this->bootstrap->getModel('users');
+    $user        = $this->bootstrap->getSession('user');
     $uploads     = $uploadModel->getUploads( $this->bootstrap->getSession('user') );
     
+    $userModel->id  = $user['id'];
+    $userModel->row = $user->toArray();
+    $this->toSmarty['channels'] = $userModel->getCourses(
+      $this->organization
+    );
+
     if ( !empty( $uploads ) )
       $this->toSmarty['sessionmessage'] = sprintf(
         $l('recordings', 'continueupload'),
@@ -144,6 +161,15 @@ class Controller extends \Visitor\Controller {
     $access->clear();
     $this->logUserLogin('VALIDATED LOGIN');
     
+    // ha users_invite-bol regisztralt a user akkor validalas utan itt lokjuk at
+    // kozvetlenul
+    $inviteforwardSession = $this->bootstrap->getSession('inviteforward');
+    if ( $inviteforwardSession['forward'] ) {
+      $forward = $inviteforwardSession['forward'];
+      $inviteforwardSession->clear();
+      $this->redirect( $forward );
+    }
+
     $this->redirectToController('contents', 'signupvalidated');
     
   }
@@ -163,9 +189,30 @@ class Controller extends \Visitor\Controller {
     if ( !$invitationModel->row or $invitationModel->row['validationcode'] !== $validationcode )
       $this->redirectToController('contents', 'invitationvalidationfailed');
     
-    $invitationSession = $this->bootstrap->getSession('userinvitation');
+    if ( $invitationModel->isExpired() )
+      $this->redirectToController('contents', 'invitationvalidationexpired');
+
+    $user                 = $this->bootstrap->getSession('user');
+    $forward              = $this->application->getParameter('forward');
+    $invitationSession    = $this->bootstrap->getSession('userinvitation');
+    $inviteforwardSession = $this->bootstrap->getSession('inviteforward');
     $invitationSession['invitation'] = $invitationModel->row;
-    
+    $inviteforwardSession['forward'] = $forward;
+
+    if (
+         $forward and
+         $invitationModel->row['registereduserid']
+       ) {
+
+      // ha van hova redirectelni, es be van lepve es azonos az invitationt elfogadott
+      // userrel akkor kozvetlenul iranyitsuk at
+      if ( $user['id'] and $invitationModel->row['registereduserid'] == $user['id'] )
+        $this->redirect( $forward );
+      else // amugy eloszor leptessuk be es utana iranyitsuk at kozvetlenul
+        $this->redirect('users/login', array('forward' => $forward ) );
+
+    }
+
     // elküldeni regisztrálni
     $this->redirectToController('contents', 'invitationvalidated');
     
@@ -288,17 +335,19 @@ class Controller extends \Visitor\Controller {
         (int)$recordingsModel->row['issecurestreamingforced']
       ;
       $access[ $accesskey ] =
-        $recordingsModel->userHasAccess( $user, null, $browserinfo['mobile'] )
+        $recordingsModel->userHasAccess( $user, null, $browserinfo['mobile'], $this->organization )
       ;
       
       if ( $access[ $accesskey ] !== true )
         throw new \Visitor\Api\ApiException( $l('recordings', 'nopermission'), true, false );
       
+      $this->toSmarty['member']    = $user;
       $this->toSmarty['ipaddress'] = $this->getIPAddress();
+      $this->toSmarty['sessionid'] = session_id();
       $output = array_merge(
         $output,
         $recordingsModel->getSeekbarOptions( $userModel->row ),
-        $recordingsModel->getMediaServers( $this->toSmarty, session_id() )
+        $recordingsModel->getMediaServers( $this->toSmarty )
       );
       
     } elseif ( $feedid ) {
@@ -312,7 +361,7 @@ class Controller extends \Visitor\Controller {
       $access    = $this->bootstrap->getSession('liveaccess');
       $accesskey = $feedModel->id . '-' . ( $feedModel->row['issecurestreamingforced']? '1': '0');
       
-      $access[ $accesskey ] = $feedModel->isAccessible( $user );
+      $access[ $accesskey ] = $feedModel->isAccessible( $user, $this->organization );
       
       if ( $access[ $accesskey ] !== true )
         throw new \Visitor\Api\ApiException( $l('recordings', 'nopermission'), true, false );
@@ -324,7 +373,7 @@ class Controller extends \Visitor\Controller {
         'BASE_URI'     => $this->toSmarty['BASE_URI'],
         'cookiedomain' => $this->organization['cookiedomain'],
         'streams'      => $feedModel->getStreamsForBrowser( $this->bootstrap->getBrowserInfo() ),
-        'user'         => $user,
+        'member'       => $user,
         'checkwatchingtimeinterval' => $this->organization['presencechecktimeinterval'],
         'checkwatchingconfirmationtimeout' => $this->organization['presencecheckconfirmationtime'],
       );
@@ -392,4 +441,227 @@ class Controller extends \Visitor\Controller {
     
   }
   
+  public function sendInvitationEmail( &$invitation ) {
+    
+    if ( !$this->l )
+      $this->l = $this->bootstrap->getLocalization();
+
+    if ( !$this->crypto )
+      $this->crypto = $this->bootstrap->getEncryption();
+
+    $db = $this->bootstrap->getAdoDB();
+    $foundcontent = false;
+
+    if ( isset( $invitation['recordingid'] ) and $invitation['recordingid'] ) {
+
+      $foundcontent = true;
+      if ( !isset( $this->invitationcache['recording-' . $invitation['recordingid'] ] ) )
+        $this->invitationcache['recording-' . $invitation['recordingid'] ] =
+          $db->getRow("
+            SELECT *
+            FROM recordings
+            WHERE id = '" . $invitation['recordingid'] . "'
+            LIMIT 1
+          ");
+        ;
+
+      $this->toSmarty['recording'] =
+        $this->invitationcache['recording-' . $invitation['recordingid'] ]
+      ;
+
+    }
+
+    if ( isset( $invitation['livefeedid'] ) and $invitation['livefeedid'] ) {
+
+      $foundcontent = true;
+      if ( !isset( $this->invitationcache['livefeed-' . $invitation['livefeedid'] ] ) ) {
+        $this->invitationcache['livefeed-' . $invitation['livefeedid'] ] =
+          $db->getRow("
+            SELECT *
+            FROM livefeeds
+            WHERE id = '" . $invitation['livefeedid'] . "'
+            LIMIT 1
+          ");
+        ;
+        $this->invitationcache['livefeed-' . $invitation['livefeedid'] ]['channel'] =
+          $db->getRow("
+            SELECT *
+            FROM channels
+            WHERE id = '" . $this->invitationcache['livefeed-' . $invitation['livefeedid'] ]['channelid'] . "'
+            LIMIT 1
+          ");
+        ;
+      }
+
+      $this->toSmarty['livefeed'] =
+        $this->invitationcache['livefeed-' . $invitation['livefeedid'] ]
+      ;
+
+    }
+
+    if ( isset( $invitation['channelid'] ) and $invitation['channelid'] ) {
+
+      $foundcontent = true;
+      if ( !isset( $this->invitationcache['channel-' . $invitation['channelid'] ] ) )
+        $this->invitationcache['channel-' . $invitation['channelid'] ] =
+          $db->getRow("
+            SELECT *
+            FROM channels
+            WHERE id = '" . $invitation['channelid'] . "'
+            LIMIT 1
+          ");
+        ;
+
+      $this->toSmarty['channel'] =
+        $this->invitationcache['channel-' . $invitation['channelid'] ]
+      ;
+
+    }
+
+    if ( !isset( $this->invitationcache['user-' . $invitation['userid'] ] ) ) {
+      $this->invitationcache['user-' . $invitation['userid'] ] =
+        $db->getRow("
+          SELECT
+            nameprefix,
+            namefirst,
+            namelast,
+            nameformat,
+            nickname
+          FROM users
+          WHERE id = '" . $invitation['userid'] . "'
+          LIMIT 1
+        ");
+
+      $this->toSmarty['user']   =
+        $this->invitationcache['user-' . $invitation['userid'] ]
+      ;
+
+    }
+
+    if ( !isset( $this->invitationcache['groups-' . $invitation['groups'] ] ) ) {
+
+      $this->invitationcache['groups-' . $invitation['groups'] ] = true;
+      $ids = explode('|', $invitation['groups'] );
+      if ( !empty( $ids ) )
+        $this->toSmarty['groups'] = $db->getArray("
+          SELECT *
+          FROM groups
+          WHERE id IN('" . implode("', '", $ids ) . "')
+        ");
+
+    }
+
+    if ( !isset( $this->invitationcache['departments-' . $invitation['departments'] ] ) ) {
+
+      $this->invitationcache['departments-' . $invitation['departments'] ] = true;
+      $ids = explode('|', $invitation['departments'] );
+      if ( !empty( $ids ) )
+        $this->toSmarty['departments'] = $db->getArray("
+          SELECT *
+          FROM departments
+          WHERE id IN('" . implode("', '", $ids ) . "')
+        ");
+
+    }
+
+    $l = $this->l;
+    if ( !isset( $this->invitationcache['permissions-' . $invitation['permissions'] ] ) ) {
+
+      $permissions = array();
+      foreach ( explode('|', $invitation['permissions'] ) as $permission ) {
+        if ( !$permission )
+          continue;
+
+        $permissions[] = $l->getLov('permissions', null, $permission );
+      }
+
+      $this->invitationcache['permissions-' . $invitation['permissions'] ] = true;
+      $this->toSmarty['permissions'] = $permissions;
+
+    }
+
+    if ( $invitation['templateid'] and !isset( $this->invitationcache['template-' . $invitation['templateid'] ] ) ) {
+      $userModel = $this->bootstrap->getModel('users');
+      $template  = $userModel->getTemplate(
+        $invitation['templateid'],
+        $this->organization['id']
+      );
+      $this->invitationcache['template-' . $invitation['templateid'] ] = $template;
+      $this->toSmarty['template'] = $template;
+    }
+
+    $invitation['id'] = $this->crypto->asciiEncrypt( $invitation['id'] );
+    $this->toSmarty['values'] = $invitation;
+    
+    //$this->smartyOutput('Visitor/Users/Email/Invitation.tpl');
+    $this->sendOrganizationHTMLEmail(
+      $invitation['email'],
+      $l('users', 'invitationmailsubject'),
+      $this->fetchSmarty('Visitor/Users/Email/Invitation.tpl')
+    );
+    
+  }
+
+  public function resendinvitationAction() {
+
+    $invitationModel = $this->modelOrganizationAndUserIDCheck(
+      'users_invitations',
+      $this->application->getNumericParameter('id')
+    );
+    $this->sendInvitationEmail( $invitationModel->row );
+    $l = $this->l; // a sendInvitationEmail setupolta
+
+    $this->redirectWithMessage(
+      $this->application->getParameter('forward', 'users/invitations'),
+      $l('users', 'user_invited')
+    );
+
+  }
+
+  public function disableinvitationAction() {
+
+    $invitationModel = $this->modelOrganizationAndUserIDCheck(
+      'users_invitations',
+      $this->application->getNumericParameter('id')
+    );
+
+    if ( $invitationModel->row['status'] != 'deleted' )
+      $invitationModel->updateRow( array(
+          'status' => 'deleted',
+        )
+      );
+
+    $l = $this->bootstrap->getLocalization();
+
+    $this->redirectWithMessage(
+      $this->application->getParameter('forward', 'users/invitations'),
+      $l('users', 'invitation_disabled')
+    );
+
+  }
+
+  public function getinvitationtemplateAction() {
+
+    $userModel = $this->bootstrap->getModel('users');
+    $template  = $userModel->getTemplate(
+      $this->application->getNumericParameter('templateid'),
+      $this->organization['id']
+    );
+
+    if ( empty( $template ) )
+      $this->jsonOutput( array(
+          'status' => 'error',
+          'error'  => 'notfound',
+        )
+      );
+
+    $this->jsonOutput( array(
+        'status'  => 'success',
+        'prefix'  => $template['prefix'],
+        'postfix' => $template['postfix'],
+      )
+    );
+
+  }
+
 }

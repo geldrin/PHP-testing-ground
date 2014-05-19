@@ -26,6 +26,7 @@ $config = Array(
   'tos' => array(
     'displayname' => $l('', 'recordingstos'),
     'type'        => 'inputCheckbox',
+    'itemlayout'  => $this->checkboxitemlayout,
     'postfix'     =>
       '<a href="' . \Springboard\Language::get() . '/contents/recordingstos' .
       '" id="termsofservice" target="_blank">' . $l('', 'recordingstospostfix') . '</a>'

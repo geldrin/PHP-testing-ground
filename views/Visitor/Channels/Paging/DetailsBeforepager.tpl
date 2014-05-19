@@ -8,7 +8,8 @@
   {if $channeltree[0].subtitle}
     {if $member.id and $member.isuploader and $canaddrecording}
     <div class="actions">
-      <a href="{$language}/recordings/upload?channelid={$channel.id}">{#channels__addrecording#}</a>
+      <a href="{$language}/recordings/upload?channelid={$channel.id}">{#channels__addrecording#}</a> |
+      <a href="{$language}/channels/orderrecordings/{$channel.id}?forward={$FULL_URI|escape:url}">{#channels__orderrecordings#}</a>
     </div>
     {/if}
     <h2>{$channeltree[0].subtitle|escape:html}</h2>

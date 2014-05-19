@@ -48,7 +48,10 @@ class Signup extends \Visitor\HelpForm {
       $invitationModel = $this->bootstrap->getModel('users_invitations');
       $invitationModel->select( $invitation['id'] );
       
-      if ( !$invitationModel->row ) { // a meghivo mar kozben fel lett hasznalva
+      if (
+           !$invitationModel->row or // a meghivo nem letezik
+           $invitationModel->row['status'] != 'invited' // a meghivo fel lett hasznalva
+         ) {
         
         $userinvitationSession->clear();
         $this->controller->addMessage( $l('users', 'invitation_invalid') );
@@ -57,47 +60,24 @@ class Signup extends \Visitor\HelpForm {
         return;
         
       }
-      
-      foreach( explode('|', $invitation['permissions'] ) as $permission )
-        $values[ $permission ] = 1;
-      
-      $departments = array();
-      foreach( explode('|', $invitation['departments'] ) as $id ) {
-        
-        $id = intval( $id );
-        if ( $id )
-          $departments[] = $id;
-        
-      }
-      
-      $groups      = array();
-      foreach( explode('|', $invitation['groups'] ) as $id ) {
-        
-        $id = intval( $id );
-        if ( $id )
-          $groups[] = $id;
-        
-      }
-      
-      if (
-           isset( $invitation['timestampdisabledafter'] ) and
-           $invitation['timestampdisabledafter']
-         )
-        $values['timestampdisabledafter'] = $invitation['timestampdisabledafter'];
-      
-      $userinvitationSession->clear();
-      $invitationModel->delete( $invitationModel->id );
-      
+
     }
     
     $userModel->insert( $values );
     
-    if ( isset( $departments ) and !empty( $departments ) )
-      $userModel->addDepartments( $departments );
-    
-    if ( isset( $groups ) and !empty( $groups ) )
-      $userModel->addGroups( $groups );
-    
+    if (
+         isset( $invitationModel ) or
+         (
+           $invitation = $userModel->searchForValidInvitation(
+             $this->controller->organization['id']
+           )
+         )
+       ) {
+      $userModel->applyInvitationPermissions( $invitation );
+      $userModel->invitationRegistered( $invitation['id'] );
+      $userinvitationSession->clear();
+    }
+
     $userModel->row['id'] = $crypto->asciiEncrypt( $userModel->id );
     $this->controller->toSmarty['values'] = $userModel->row;
     

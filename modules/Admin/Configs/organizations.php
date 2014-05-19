@@ -188,6 +188,13 @@ $config = Array(
     'values'      => $l->getLov('yesno'),
     'value'       => 0,
   ),
+
+  'isplayerlogolinkenabled' => array(
+    'displayname' => 'A lejátszóban megjelenő logo linkelése?',
+    'type'        => 'inputRadio',
+    'values'      => $l->getLov('yesno'),
+    'value'       => 1,
+  ),
   
   'isvcrenabled' => array(
     'displayname' => 'VCR funkcionalitás?',
@@ -223,6 +230,21 @@ $config = Array(
     'values'      => $l->getLov('registrationtype'),
   ),
   
+  'elearningcoursecriteria' => array(
+    'displayname' => 'Kurzusokban a felvételek ennyi százaléket muszáj végignézni mielőtt a következő felvételre engedjük.',
+    'type'        => 'inputText',
+    'value'       => '90',
+    'validation'  => array(
+      array(
+        'type'     => 'number',
+        'real'     => 0,
+        'minimum'  => 1,
+        'maximum'  => 100,
+        'required' => true,
+      ),
+    ),
+  ),
+
   'disabled' => array(
     'displayname' => 'Kitiltva?',
     'type'        => 'inputRadio',

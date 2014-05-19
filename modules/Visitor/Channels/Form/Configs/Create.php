@@ -59,6 +59,7 @@ $config = array(
   'channeltypeid' => array(
     'displayname' => $l('channels', 'channeltype'),
     'type'        => 'selectDynamic',
+    'itemlayout'  => $this->checkboxitemlayout,
     'sql'         => "
       SELECT ct.id, s.value
       FROM channel_types AS ct, strings AS s

@@ -57,7 +57,9 @@ class Groups extends \Springboard\Model {
     return $this->db->getOne("
       SELECT COUNT(*)
       FROM groups
-      WHERE organizationid = '$organizationid'
+      WHERE
+        userid         = '" . $user['id'] . "' AND
+        organizationid = '$organizationid'
       LIMIT 1
     ");
     
@@ -73,6 +75,7 @@ class Groups extends \Springboard\Model {
         groups AS g,
         groups_members AS gm
       WHERE
+        g.userid         = '" . $user['id'] . "' AND
         gm.groupid       = g.id AND
         g.organizationid = '$organizationid'
       GROUP BY g.id

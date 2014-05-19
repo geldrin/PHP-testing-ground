@@ -113,8 +113,8 @@ return array(
   ),
   
   'encryption' => array(
-    0 => 'Unencrypted streaming',
-    1 => 'Encrypted streaming',
+    0 => 'Unencrypted',
+    1 => 'Encrypted',
   ),
   
   'streamstatus' => array(
@@ -149,4 +149,26 @@ return array(
     1 => 'whole word',
   ),
   
+  'invite_contenttype' => array(
+    'nocontent'   => 'Invitation without specifying content',
+    'recordingid' => 'Recording',
+    'livefeedid'  => 'Live broadcast',
+    'channelid'   => 'Channel',
+  ),
+
+  'invite_usertype' => array(
+    'single'   => 'Single user',
+    'multiple' => 'Multiple users',
+  ),
+
+  'invite_status' => array(
+    'invited'    => 'Invited',
+    'existing'   => 'Existing user',
+    'registered' => 'Registered',
+    'deleted'    => 'Deleted',
+  ),
+
+  'invite_templates' => array(
+    '' => '--- New template ---',
+  ),
 );

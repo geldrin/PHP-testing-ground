@@ -81,7 +81,7 @@ $query = "
 	FROM
 		recordings
 	WHERE
-		id < 66 AND	( ( masterstatus <> 'markedfordeletion' ) OR ( contentmasterstatus <> 'markedfordeletion' ) )
+		id < 66 AND	( ( masterstatus NOT IN('markedfordeletion', 'deleted') ) OR ( contentmasterstatus NOT IN('markedfordeletion', 'deleted') ) )
 	ORDER BY
 		id
 ";

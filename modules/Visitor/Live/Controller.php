@@ -23,6 +23,7 @@ class Controller extends \Visitor\Controller {
     'getstreamstatus'      => 'liveadmin|clientadmin',
     'checkstreamaccess'    => 'public',
     'securecheckstreamaccess' => 'public',
+    'search'               => 'member',
   );
   
   public $forms = array(
@@ -64,7 +65,7 @@ class Controller extends \Visitor\Controller {
     $access    = $this->bootstrap->getSession('liveaccess');
     $accesskey = $feedModel->id . '-' . ( $feedModel->row['issecurestreamingforced']? '1': '0');
     
-    $access[ $accesskey ] = $feedModel->isAccessible( $user );
+    $access[ $accesskey ] = $feedModel->isAccessible( $user, $this->organization );
     
     $channelModel = $this->modelIDCheck('channels', $feedModel->row['channelid'] );
     $streamid     = $this->application->getNumericParameter('streamid');
@@ -107,7 +108,7 @@ class Controller extends \Visitor\Controller {
       'BASE_URI'     => $this->toSmarty['BASE_URI'],
       'cookiedomain' => $this->organization['cookiedomain'],
       'streams'      => $streams,
-      'user'         => $user,
+      'member'       => $user,
       'checkwatchingtimeinterval' => $this->organization['presencechecktimeinterval'],
       'checkwatchingconfirmationtimeout' => $this->organization['presencecheckconfirmationtime'],
     );
@@ -125,13 +126,13 @@ class Controller extends \Visitor\Controller {
       $flashdata['layout_logo'] = $this->toSmarty['STATIC_URI'] . 'images/player_overlay_logo.png';
       $flashdata['layout_logoOrientation'] = 'TR';
       
-      /*
-      $flashdata['layout_logoDestination'] =
-        $this->toSmarty['BASE_URI'] . \Springboard\Language::get() .
-        '/live/view/' . $feedModel->id . ',' . $currentstream['id'] . ',' .
-        \Springboard\Filesystem::filenameize( $feedModel->row['name'] )
-      ;
-      */
+      if ( $this->organization['isplayerlogolinkenabled'] )
+        $flashdata['layout_logoDestination'] =
+          $this->toSmarty['BASE_URI'] . \Springboard\Language::get() .
+          '/live/view/' . $feedModel->id . ',' . $currentstream['id'] . ',' .
+          \Springboard\Filesystem::filenameize( $feedModel->row['name'] )
+        ;
+      
       $fullplayer = $this->application->getParameter('fullplayer');
       $chat       = $this->application->getParameter('chat');
       
@@ -180,20 +181,13 @@ class Controller extends \Visitor\Controller {
     $this->toSmarty['livehttpurl'] = $feedModel->getMediaUrl(
       'livehttp',
       $currentstream['keycode'],
-      $info,
-      session_id()
+      $info
     );
     $this->toSmarty['livertspurl'] = $feedModel->getMediaUrl(
       'livertsp',
       $currentstream['keycode'],
-      $info,
-      session_id()
+      $info
     );
-    
-    if ( $user['id'] ) {
-      $this->toSmarty['livehttpurl'] .= '&uid=' . $user['id'];
-      $this->toSmarty['livertspurl'] .= '&uid=' . $user['id'];
-    }
     
     if ( $displaychat ) {
       
@@ -497,7 +491,7 @@ class Controller extends \Visitor\Controller {
         
         if ( $feedModel ) {
           
-          $access[ $accesskey ] = $feedModel->isAccessible( $user, $secure );
+          $access[ $accesskey ] = $feedModel->isAccessible( $user, $this->organization, $secure );
           
           if ( $access[ $accesskey ] === true )
             $result = '1';
@@ -574,6 +568,49 @@ class Controller extends \Visitor\Controller {
         'html'   => $this->fetchSmarty('Visitor/Live/Chatinput.tpl'),
       )
     );
+    
+  }
+  
+  public function searchAction() {
+    
+    $term   = $this->application->getParameter('term');
+    $output = array(
+    );
+    
+    if ( !$term )
+      $this->jsonoutput( $output );
+    
+    $user          = $this->bootstrap->getSession('user');
+    $livefeedModel = $this->bootstrap->getModel('livefeeds');
+    $results       = $livefeedModel->search( $term, $user['id'], $this->organization['id'] );
+    
+    if ( empty( $results ) )
+      $this->jsonoutput( $output );
+    
+    $img = $this->bootstrap->staticuri . 'images/videothumb_wide_placeholder.png';
+    include_once( $this->bootstrap->config['templatepath'] . 'Plugins/modifier.shortdate.php');
+
+    foreach( $results as $result ) {
+
+      $label = $result['name'];
+      if ( $result['starttimestamp'] )
+        $label .= '<br/>' . smarty_modifier_shortdate(
+          '%Y. %B %e',
+          $result['starttimestamp'],
+          $result['endtimestamp']
+        );
+
+      $data = array(
+        'value' => $result['id'],
+        'label' => $label,
+        'img'   => $img,
+      );
+      
+      $output[] = $data;
+      
+    }
+    
+    $this->jsonoutput( $output );
     
   }
   

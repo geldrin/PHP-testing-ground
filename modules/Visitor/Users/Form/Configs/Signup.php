@@ -140,6 +140,7 @@ $config = array(
   'newsletter' => array(
     'displayname' => $l('users', 'newsletter'),
     'type'        => 'inputCheckbox',
+    'itemlayout'  => $this->checkboxitemlayout,
     'onvalue'     => 1,
     'offvalue'    => 0,
     'value'       => 1,
@@ -150,6 +151,7 @@ $config = array(
   'tos' => array(
     'displayname' => $l('', 'userstos'),
     'type'        => 'inputCheckbox',
+    'itemlayout'  => $this->checkboxitemlayout,
     'postfix'     =>
       '<a href="' . $language . '/contents/userstos' .
       '" id="termsofservice" target="_blank">' . $l('', 'userstospostfix') . '</a>'

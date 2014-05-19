@@ -65,7 +65,14 @@ $config = Array(
     'validation'  => Array(
     )
   ),
-  
+
+  'iscourse'      => Array(
+    'displayname' => 'Ez a kurzus típus?',
+    'type'        => 'inputRadio',
+    'values'      => $l->getLov('noyes'),
+    'value'       => 0,
+  ),
+
   'weight' => Array(
     'displayname' => 'Súlyozás',
     'type'        => 'inputText',

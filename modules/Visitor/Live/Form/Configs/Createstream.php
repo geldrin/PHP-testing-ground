@@ -41,6 +41,7 @@ $config = array(
   'compatibility[]' => array(
     'displayname' => $l('live', 'compatibility'),
     'type'        => 'inputCheckboxDynamic',
+    'itemlayout'  => $this->checkboxitemlayout,
     'values'      => $l->getLov('live_compatibility'),
     'html'        => 'class="livecompatibility"',
     'postfix'     =>

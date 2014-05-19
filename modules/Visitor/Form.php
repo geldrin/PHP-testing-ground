@@ -2,8 +2,22 @@
 namespace Visitor;
 
 class Form extends \Springboard\Controller\Form {
+  protected $purifier;
   public $xsrfprotect = false;
-  
+  public $checkboxitemlayout = '
+    <div class="checkboxwrap indentlevel-%level%">
+      <div class="checkboxindent indentlevel-%level%">%indent%</div>
+      <div class="checkboxitem">%checkbox%</div>
+      <div class="checkboxlabel" title="%valuehtmlescape%">%label%</div>
+    </div>
+  ';
+  public $radioitemlayout = '
+    <div class="radiowrap">
+      <div class="radioitem">%radio%</div>
+      <div class="radiolabel">%label%</div>
+    </div>
+  ';
+
   public function redirectToMainDomain() {}
   
   public function postGetForm() {
@@ -78,5 +92,50 @@ class Form extends \Springboard\Controller\Form {
     }
     
   }
-  
+
+  public function sanitizeHTML( $html ) {
+
+    if ( !$this->purifier ) {
+      require_once(
+        $this->bootstrap->config['libpath'] .
+        'HTMLPurifier/HTMLPurifier.includes.php'
+      );
+
+      $config = \HTMLPurifier_Config::createDefault();
+      // engedjuk amit a tinymce-be hagytunk editalni
+      $config->set('HTML.Allowed', 'p[style],b,a[href|target|title],i,ul,li,span[style]');
+      $config->set('Attr.AllowedFrameTargets', array('_blank' => true, '_self' => true, ) );
+      $config->set('Cache.SerializerPath', $this->bootstrap->config['cachepath'] . 'application/' );
+      $this->purifier = new \HTMLPurifier( $config );
+
+    }
+
+    return $this->purifier->purify( $html );
+
+  }
+
+  public function handleTemplate( $userModel, &$values ) {
+    $l              = $this->bootstrap->getLocalization();
+    $prefix         = $this->sanitizeHTML( $values['templateprefix'] );
+    $defaultprefix  = $l('users', 'templateprefix_default');
+    $postfix        = $this->sanitizeHTML( $values['templatepostfix'] );
+    $defaultpostfix = $l('users', 'templatepostfix_default');
+
+    if ( $prefix == $defaultprefix )
+      $prefix = '';
+
+    if ( $postfix == $defaultpostfix )
+      $postfix = '';
+
+    $template = array(
+      'id'             => $values['templateid'],
+      'prefix'         => $prefix,
+      'postfix'        => $postfix,
+      'timestamp'      => date('Y-m-d H:i:s'),
+      'organizationid' => $this->controller->organization['id'],
+    );
+
+    return $userModel->maybeInsertTemplate( $template );
+  }
+
 }

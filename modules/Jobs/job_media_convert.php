@@ -366,7 +366,7 @@ global $app, $jconf;
 	$remote_filename = $jconf['ssh_user'] . "@" . $recording['mastersourceip'] . ":" . $uploadpath . $base_filename;
 	$master_filename = $jconf['media_dir'] . $recording['id'] . "/master/" . $base_filename;
 	$recording['remote_filename'] = $remote_filename;
-	$recording['source_file'] = $master_filename;
+	$recording['master_filename'] = $master_filename;
 
 	// Prepare temporary conversion directory, remove any existing content
 	$temp_directory = $jconf['media_dir'] . $recording['id'] . "/";
@@ -523,7 +523,7 @@ global $app, $jconf;
 
 //		$command  = CONVERSION_NICE . " ffmpeg -y -v " . FFMPEG_LOGLEVEL . " -ss " . $position_sec . " -i " . $master_filename . " " . $deinterlace . " -an ";
 //		$command .= " -vframes 1 -r 1 -vcodec mjpeg -f mjpeg " . $orig_thumb_filename ." 2>&1";
-		$command  = $jconf['nice_high'] . " " . $jconf['ffmpegthumbnailer'] . " -i " . $recording['source_file'] . " -o " . $orig_thumb_filename . " -s0 -q8 -t" . secs2hms($position_sec) . " 2>&1";
+		$command  = $jconf['nice_high'] . " " . $jconf['ffmpegthumbnailer'] . " -i " . $recording['master_filename'] . " -o " . $orig_thumb_filename . " -s0 -q8 -t" . secs2hms($position_sec) . " 2>&1";
 
 		clearstatcache();
 
@@ -660,7 +660,7 @@ global $app, $jconf, $global_log;
 	$audio_info['format'] = $profile['format'];
 	$audio_info['playtime'] = $playtime;
 	//// Source and target filenames
-	$audio_info['source_file'] = $recording['source_file'];
+	$audio_info['master_filename'] = $recording['master_filename'];
 	$extension = $profile['format'];
 	$audio_info['output_file'] = $recording['temp_directory'] . $recording['id'] . $profile['file_suffix'] . "." . $extension;
 
@@ -717,7 +717,7 @@ global $app, $jconf, $global_log;
 
 	$err = ffmpeg_convert($audio_info, $profile);
 	if ( !$err['code'] ) {
-		log_recording_conversion($recording['id'], $jconf['jobid_media_convert'], $jconf['dbstatus_conv_audio'], $err['message'] . "\nSource file: " . $recording['source_file'] . "\nDestination file: " . $audio_info['output_file'] . "\n\n" . $log_msg, $err['command'], $err['command_output'], $err['duration'], TRUE);
+		log_recording_conversion($recording['id'], $jconf['jobid_media_convert'], $jconf['dbstatus_conv_audio'], $err['message'] . "\nSource file: " . $recording['master_filename'] . "\nDestination file: " . $audio_info['output_file'] . "\n\n" . $log_msg, $err['command'], $err['command_output'], $err['duration'], TRUE);
 		return FALSE;
 	} else {
 		log_recording_conversion($recording['id'], $jconf['jobid_media_convert'], $jconf['dbstatus_conv_audio'], $err['message'] . "\nAudio track converted as: " . $audio_info['output_file'] . "\n\n" . $log_msg, $err['command'], $err['command_output'], $err['duration'], FALSE);
@@ -756,7 +756,7 @@ global $app, $jconf;
 
 	// Reconvert: remove master file (do not copy back as already in place)
 	if ( $recording['conversion_type'] == $jconf['dbstatus_reconvert'] ) {
-		$err = remove_file_ifexists($recording['source_file']);
+		$err = remove_file_ifexists($recording['master_filename']);
 		if ( !$err['code'] ) log_recording_conversion($recording['id'], $jconf['jobid_media_convert'], $jconf['dbstatus_copystorage'], $err['message'], $err['command'], $err['result'], 0, TRUE);
 	}
 

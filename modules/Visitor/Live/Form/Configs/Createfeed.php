@@ -104,12 +104,31 @@ $config['slideonright'] = array(
   'displayname' => $l('live', 'slideonright'),
   'type'        => 'inputRadio',
   'value'       => 1,
-  'itemlayout'  => '%radio% %label%<br />',
+  'itemlayout'  => $this->radioitemlayout,
   'values'      => array(
     0 => $l('live', 'slideright'),
     1 => $l('live', 'slideleft'),
   ),
 );
+
+$recordingsModel = $this->bootstrap->getModel('recordings');
+if ( $recordingsModel->getIntroOutroCount( $this->controller->organization['id'] ) ) {
+
+  $recordings =
+    $recordingsModel->getIntroOutroAssoc( $this->controller->organization['id'] )
+  ;
+
+  $introoutro = array(
+    'introrecordingid' => array(
+      'displayname' => $l('recordings', 'introrecordingid'),
+      'type'        => 'select',
+      'values'      => array('' => $l('recordings', 'nointro') ) + $recordings,
+    ),
+  );
+
+  $config = \Springboard\Tools::insertAfterKey( $config, $introoutro, 'slideonright' );
+
+}
 
 include( $this->bootstrap->config['modulepath'] . 'Visitor/Form/Configs/Accesstype.php');
 

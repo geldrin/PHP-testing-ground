@@ -250,8 +250,8 @@ function runExternal_vlc($cmd, $output_file) {
 // *************************************************************************
 
 function hms2secs($timestamp) {
-  
-  $timestamp = explode(':', $timestamp );
+
+  $timestamp = explode(':', $timestamp);
   
   if ( count( $timestamp ) != 3 )
     return 0;
@@ -266,7 +266,7 @@ function hms2secs($timestamp) {
 
 function secs2hms($i_secs) {
 
-	$secs = abs($i_secs);
+	$secs = floor(abs($i_secs));
 	
 	$m = (int)($secs / 60);
 	$s = $secs % 60;
@@ -298,7 +298,7 @@ global $recording;
 
   $err = array();
   
-  $err['code'] = TRUE;
+  $err['code'] = true;
   $err['command'] = "-";
   $err['command_output'] = "-";
   $err['result'] = 0;
@@ -652,7 +652,7 @@ global $jconf;
 
 	$err = array();
 	$err['value'] = null;
-	$err['code'] = FALSE;
+	$err['code'] = false;
 	$err['command_output'] = "-";
 	$err['result'] = 0;
 	$err['size'] = 0;
@@ -693,6 +693,113 @@ global $jconf;
 
 	return $err;
 }
+
+function ssh_filemtime($server, $file) {
+ global $jconf;
+
+	$err = array();
+	$err['value'] = null;
+	$err['code'] = false;
+	$err['command_output'] = "-";
+	$err['result'] = 0;
+	$err['size'] = 0;
+
+	$ssh_command = "ssh -i " . $jconf['ssh_key'] . " " . $jconf['ssh_user'] . "@" . $server . " ";
+	$remote_filename = $jconf['ssh_user'] . "@" . $server . ":" . $file;
+
+	$filesize = 0;
+	$command = $ssh_command . "stat -c %Y " . $file . " 2>&1";
+	exec($command, $output, $result);
+	$err['command'] = $command;
+    $err['result'] = $result;
+	$output_string = implode("\n", $output);
+	if ( $result != 0 ) {
+		// If file does not exists then error is logged
+		if ( strpos($output_string, "No such file or directory") > 0 ) {
+			$err['code'] = FALSE;
+			$err['message'] = "[ERROR] Input file/directory does not exists at: " . $remote_filename;
+			return $err;
+		} else {
+			// Other error occured
+			$err['code'] = FALSE;
+			$err['message'] = "[ERROR] SSH command failed";
+			return $err;
+		}
+	} else {
+		$tmp = preg_split('/\s+/', $output_string);
+		$filemtime = $tmp[0];
+		if ( ( $filemtime == 0) or (!is_numeric($filemtime)) ) {
+			$err['code'] = FALSE;
+			$err['message'] = "[ERROR] Input file/directory mtime invalid: " . $remote_filename;
+			return $err;
+		}
+	}
+
+	$err['code'] = TRUE;
+	$err['value'] = $filemtime;
+
+	return $err;
+}
+
+function ssh_file_cmp_isupdated($server, $remote_file, $local_file) {
+global $jconf;
+
+	$err = array();
+	$err['value'] = false;
+	$err['code'] = false;
+	$err['message'] = "-";
+	$err['command'] = null;
+	$err['command_output'] = null;
+	$err['result'] = 0;
+
+	// File already exists in temp area
+	if ( file_exists($local_file) ) {
+
+		//// Filesize and file mtime check
+		// Get local filesize
+		$local_filesize = filesize($local_file);
+		// Get local file mtime
+		$local_filemtime = filemtime($local_file);
+		// Get remote filesize
+		$err2 = ssh_filesize($server, $remote_file);
+		if ( !$err2['code'] ) {
+			$err['message'] = $err2['message'];
+			$err['command'] = $err2['command'];
+			return $err;
+		}
+		$remote_filesize = $err2['value'];
+		// Get remote file mtime
+		$err2 = ssh_filemtime($server, $remote_file);
+		if ( !$err2['code'] ) {
+			$err['message'] = $err2['message'];
+			$err['command'] = $err2['command'];
+			return $err;
+		}
+		$remote_filemtime = $err2['value'];
+
+		// File size match and file mtime check: do we need to download?
+		if ( ( $local_filesize == $remote_filesize ) and ( $local_filemtime >= $remote_filemtime ) ) {
+			// File is up to date
+			$err['message']  = "[OK] File is up to date.\n";
+			$err['value'] = true;
+		} else {
+			// File is not up to date
+			$err['message']  = "[REDOWNLOAD] File is NOT up to date.\n";
+			$err['value'] = false;
+		}
+
+		// Log check results
+		$err['message'] .= "Local file: " . $local_file . " (size = " . $local_filesize . ", mtime = " . date("Y-m-d H:i:s", $local_filemtime) . ")\n";
+		$err['message'] .= "Remote file: " . $remote_file . " (size = " . $remote_filesize . ", mtime = " . date("Y-m-d H:i:s", $remote_filemtime) . ")\n";
+		$err['code'] = true;
+	} else {
+		$err['message'] = "[OK] Local file does not exists. Download will be executed (" . $local_file . "\n";
+		$err['code'] = true;
+	}
+
+	return $err;
+}
+
 
 function ssh_filecopy_from($server, $file, $destination) {
 global $jconf;
@@ -768,6 +875,7 @@ global $jconf;
 	return $err;
 }
 
+// download only
 function ssh_filecopy($server, $file_src, $file_dst) {
 global $jconf;
 
@@ -807,6 +915,58 @@ global $jconf;
 	$err['code'] = TRUE;
 	$err['value'] = $duration;
 	$err['message'] = "[OK] SCP copy finished (in " . $mins_taken . " mins)";
+
+	return $err;
+}
+
+// new: download or upload
+function ssh_filecopy2($server, $file_src, $file_dst, $isdownload = true) {
+global $jconf;
+
+	// SSH check file size before start copying
+	if ( $isdownload ) {
+		$err = ssh_filesize($server, $file_src);
+		if ( !$err['code'] ) {
+			return $err;
+		}
+		$filesize = $err['value'];
+	} else {
+		$filesize = filesize($file_src);
+	}
+
+	$err = array();
+
+	// Check available disk space (input media file size * 5 is the minimum)
+	if ( $isdownload ) {
+		$available_disk = floor(disk_free_space($jconf['media_dir']));
+		if ( $available_disk < $filesize * 5 ) {
+			$err['command'] = "php: disk_free_space(" . $jconf['media_dir'] . ")";
+			$err['result'] = $available_disk;
+			$err['code'] = false;
+			$err['message'] = "[ERROR] Not enough free space to start conversion (available: " . ceil($available_disk / 1024 / 1024) . "Mb, filesize: " . ceil($filesize / 1024 / 1024) . ")";
+			return $err;
+		}
+		$command = "scp -B -r -i " . $jconf['ssh_key'] . " " . $jconf['ssh_user'] . "@" . $server . ":" . $file_src . " " . $file_dst . " 2>&1";
+	} else {
+		$command = "scp -B -r -i " . $jconf['ssh_key'] . " " . $file_src . " " . $jconf['ssh_user'] . "@" . $server . ":" . $file_dst . " 2>&1";
+	}
+
+	$time_start = time();
+	exec($command, $output, $result);
+	$duration = time() - $time_start;
+	$mins_taken = round( $duration / 60, 2);
+	$err['command'] = $command;
+    $err['result'] = $result;
+	$output_string = implode("\n", $output);
+	if ( $result != 0 ) {
+		$err['code'] = false;
+		$err['message'] = "[ERROR] SCP " . ($isdownload?"download":"upload") . " failed.\n";
+		return $err;
+	}
+
+	$err['code'] = true;
+	$err['value'] = $duration;
+	$err['message'] = "[OK] SCP " . ($isdownload?"download":"upload") . " finished (in " . $mins_taken . " mins)";
 
 	return $err;
 }

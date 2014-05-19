@@ -126,10 +126,10 @@ global $jconf;
 
 	}
 
-	// 1 pass encoding
+	// 1 encoding
 	if ( $profile['passes'] < 2 ) {
 		// Execute ffmpeg command
-		$command  = $profile['nice'] . " ffmpeg -y -i " . $media_info['source_file'] . " -v " . $jconf['ffmpeg_loglevel'] . " " . $jconf['ffmpeg_flags'] . " ";
+		$command  = $profile['nice'] . " ffmpeg -y -i " . $media_info['master_filename'] . " -v " . $jconf['ffmpeg_loglevel'] . " " . $jconf['ffmpeg_flags'] . " ";
 		$command .= $ffmpeg_audio;
 		$command .= $ffmpeg_video;
 		$command .= " -threads " . $jconf['ffmpeg_threads'] . " -f " . $profile['format'] . " " . $media_info['output_file'] . " 2>&1";
@@ -154,20 +154,396 @@ global $jconf;
 		$err['message'] = "[OK] ffmpeg conversion OK (in " . $mins_taken . " mins)";
 	}
 
-/*
-‘-pass n’
+	return $err;
+}
 
-Select the pass number (1 or 2). It is used to do two-pass video encoding. The statistics of the video are recorded in the first pass into a log file (see also the option -passlogfile), and in the second pass that log file is used to generate the video at the exact requested bitrate. On pass 1, you may just deactivate audio and set output to null, examples for Windows and Unix:  	ffmpeg -i foo.mov -c:v libxvid -pass 1 -an -f rawvideo -y NUL
-ffmpeg -i foo.mov -c:v libxvid -pass 1 -an -f rawvideo -y /dev/null
+function ffmpegConvert($recording, $profile) {
+global $jconf, $debug;
 
- ‘-passlogfile prefix (global)’
+	$err = array();
+	$err['code'] = false;
+	$err['result'] = 0;
+	$err['command'] = "";
+	$err['command_output'] = "-";
+	$err['message'] = "";
+	$err['result'] = 0;
 
-Set two-pass log file name prefix to prefix, the default file name prefix is “ffmpeg2pass”. The complete file name will be ‘PREFIX-N.log’, where N is a number specific to the output stream
+	// Encoding paramteres: an array for recording final parameters used for encoding
+	$encodingparams = array();
+	$encodingparams['name'] = $profile['name'];
 
-*/
+// !!!!!!!!!!!!!!
+	$idx = "";
+	if ( $recording['iscontent'] ) $idx = "content";
+
+	// Audio parameters
+	if ( ( $recording[$idx . 'mastermediatype'] == "videoonly" ) || ( empty($profile['audiocodec']) ) ) {
+		// No audio channels to be encoded
+		$encodingparams['audiochannels'] = null;
+		$encodingparams['audiosamplerate'] = null;
+		$encodingparams['audiobitrate'] = null;
+		$ffmpeg_audio = " -an ";
+	} else {
+		// Samplerate correction according to encoding profile
+		$audiosamplerate = doSampleRateCorrectionForProfile($recording[$idx . 'masteraudiofreq'], $profile);
+		// Bitrate settings for audio
+		$audiochannels = $profile['audiomaxchannels'];
+		if ( $recording['masteraudiochannels'] < $profile['audiomaxchannels'] ) $audiochannels = $recording[$idx . 'masteraudiochannels'];
+		$audiobitrate = $audiochannels * $profile['audiobitrateperchannel'];
+
+		$encodingparams['audiochannels'] = $audiochannels;
+		$encodingparams['audiosamplerate'] = $audiosamplerate;
+		$encodingparams['audiobitrate'] = $audiobitrate * 1000;
+
+		// ffmpeg audio encoding settings
+		$ffmpeg_audio = "-async " . $jconf['ffmpeg_async_frames'] . " -c:a " . $profile['audiocodec'] . " -ac " . $audiochannels . " -b:a " . $audiobitrate . "k -ar " . $audiosamplerate . " ";
+	}
+
+	// Video parameters
+	if ( ( $recording[$idx . 'mastermediatype'] == "audio" ) || empty($profile['videocodec']) ) {
+		$ffmpeg_video = " -vn ";
+	} else {
+
+		// FPS check and correction
+		$fps = "";
+		$encodingparams['videofps'] = $recording[$idx . 'mastervideofps'];
+		if ( empty($recording[$idx . 'mastervideofps']) ) {
+			$debug->log($jconf['log_dir'], $jconf['jobid_media_convert'] . ".log", "[WARNING] Media FPS is zero/empty. Resetting to " . $jconf['video_default_fps'] . ", might cause problem.", $sendmail = true);
+			$encodingparams['videofps'] = $jconf['video_default_fps'];
+		} else {
+			// Max fps check
+			if ( $recording[$idx . 'mastervideofps'] > $profile['videomaxfps'] ) {
+				$debug->log($jconf['log_dir'], $jconf['jobid_media_convert'] . ".log", "[WARNING] Media fps too high: " . $recording[$idx . 'mastervideofps'] . " (max: " . $profile['videomaxfps'] . ")", $sendmail = true);
+				switch ($recording[$idx . 'mastervideofps']) {
+					case 60:
+						$encodingparams['videofps'] = 30;
+						break;
+					case 50:
+						$encodingparams['videofps'] = 25;
+						break;
+					default:
+						$debug->log($jconf['log_dir'], $jconf['jobid_media_convert'] . ".log", "[WARNING] Strange video FPS? Will not apply video_maxfps profile value. Info:\n\nInput FPS: " . $recording[$idx . 'mastervideofps'] . " (profile limit: " . $profile['videomaxfps'] . ")", $sendmail = true);
+				}
+			}
+		}
+		$ffmpeg_fps = " -r " . $encodingparams['videofps'];
+
+		// Max resolution check (fraud check)
+		$videores = explode("x", strtolower($recording[$idx . 'mastervideores']), 2);
+		$maxres = explode("x", strtolower($jconf['video_max_res']), 2);
+		if ( ( $videores[0] > $maxres[0] ) || ( $videores[1] > $maxres[1]) ) {
+			$err['message'] = "[ERROR] Invalid video resolution: " . $recording[$idx . 'mastervideores'];
+			return $err;
+		}
+
+		//// Scaling 1: Display Aspect Ratio (DAR)
+		// Display Aspect Ratio (DAR): check and update if not square pixel
+		$encodingparams['resxdar'] = $videores[0];
+		$encodingparams['resydar'] = $videores[1];
+		if ( !empty($recording[$idx . 'mastervideodar'] ) ) {
+			// Display Aspect Ratio: M:N
+			$tmp = explode(":", $recording[$idx . 'mastervideodar'], 2);
+			if ( count($tmp) == 1 ) $tmp[1] = 1;
+			if ( !empty($tmp[0]) and !empty($tmp[1]) ) {
+				$DAR_M = $tmp[0];
+				$DAR_N = $tmp[1];
+				// Pixel Aspect Ratio: square pixel?
+				$PAR = ( $videores[1] * $DAR_M ) / ( $videores[0] * $DAR_N );
+				if ( $PAR != 1 ) {
+					// No square pixel, add ARs to logs
+					// SAR: Source Aspect Ratio = Width/Height
+					$encodingparams['SAR'] = $videores[0] / $videores[1];
+					// PAR
+					$encodingparams['PAR'] = $PAR;
+					// DAR
+					$encodingparams['DAR'] = $DAR_M / $DAR_N;
+					$encodingparams['DAR_MN'] = $recording[$idx . 'mastervideodar'];
+					// Y: keep fixed, X: recalculate
+					$encodingparams['resxdar'] = round($encodingparams['resydar'] * $encodingparams['DAR']);
+				}
+			}
+		}
+		// ffmpeg aspect ratio parameter
+		$ffmpeg_aspect = "";
+		if ( !empty($encodingparams['DAR_MN']) ) $ffmpeg_aspect = " -aspect " . $encodingparams['DAR_MN'];
+
+		//// Scaling 2: profile bounding box
+		$tmp = calculate_video_scaler($encodingparams['resxdar'], $encodingparams['resydar'], $profile['videobboxsizex'] . "x" . $profile['videobboxsizey']);
+		$encodingparams['scaler'] = $tmp['scaler'];
+		$encodingparams['resx'] = $tmp['x'];
+		$encodingparams['resy'] = $tmp['y'];
+		// ffmpeg scaling parameter
+		$ffmpeg_resize = " -s " . $encodingparams['resx'] . "x" . $encodingparams['resy'];
+
+		//// Video bitrate calculation
+		// Source Bit Per Pixel
+		$encodingparams['videobpp_source'] = $recording[$idx . 'mastervideobitrate'] / ( $videores[0] * $videores[1] * $recording[$idx . 'mastervideofps'] );
+		// BPP check and update: use input BPP if lower than profile BPP
+		$encodingparams['videobpp'] = $profile['videobpp'];
+		if ( $encodingparams['videobpp_source'] < $profile['videobpp'] ) $encodingparams['videobpp'] = $encodingparams['videobpp_source'];
+		$encodingparams['videobitrate'] = $encodingparams['videobpp'] * $encodingparams['resx'] * $encodingparams['resy'] * $encodingparams['videofps'];
+		if ( $encodingparams['videobitrate'] > $jconf['video_max_bw'] ) $encodingparams['videobitrate'] = $jconf['video_max_bw'];
+		// ffmpeg video bitrate encoding parameter
+		$ffmpeg_bw = " -b:v " . 10 * ceil($encodingparams['videobitrate'] / 10000) . "k";
+
+		// Deinterlace
+		$ffmpeg_deint = "";
+		if ( $recording[$idx . 'mastervideoisinterlaced'] > 0 ) $ffmpeg_deint = " -deinterlace";
+
+		// H.264 profile
+		$ffmpeg_profile = "-profile:v " . $profile['ffmpegh264profile'] . " -preset:v " . $profile['ffmpegh264preset'];
+	
+		// ffmpeg video encoding parameters
+		$ffmpeg_video = "-c:v libx264 " . $ffmpeg_profile . $ffmpeg_resize . $ffmpeg_aspect . $ffmpeg_deint . $ffmpeg_fps . $ffmpeg_bw;
+	}
+
+	// Final encoding parameters to return
+	$err['value'] = $encodingparams;
+
+	// 1 pass encoding
+	if ( $profile['videopasses'] < 2 ) {
+		// Execute ffmpeg command
+		$command  = $jconf['encoding_nice'] . " ffmpeg -y -i " . $recording['master_filename'] . " -v " . $jconf['ffmpeg_loglevel'] . " " . $jconf['ffmpeg_flags'] . " ";
+		$command .= $ffmpeg_audio;
+		$command .= $ffmpeg_video;
+		$command .= " -threads " . $jconf['ffmpeg_threads'] . " -f " . $profile['filecontainerformat'] . " " . $recording['output_file'] . " 2>&1";
+
+		// Log ffmpeg command
+		$debug->log($jconf['log_dir'], $jconf['jobid_media_convert'] . ".log", "[INFO] ffmpeg conversion. Command:\n" . $command, $sendmail = false);
+
+		$time_start = time();
+		$output = runExternal($command);
+		$err['duration'] = time() - $time_start;
+		$mins_taken = round( $err['duration'] / 60, 2);
+		$err['command'] = $command;
+		$err['command_output'] = $output['cmd_output'];
+		$err['result'] = $output['code'];
+		if ( $err['result'] < 0 ) $err['result'] = 0;
+
+		// Log ffmpeg output
+		$debug->log($jconf['log_dir'], $jconf['jobid_media_convert'] . ".log", "[INFO] ffmpeg conversion output:\n" . print_r($err['command_output'], true) . "\nError code: " . $err['result'], $sendmail = false);
+
+		// ffmpeg terminated with error or filesize suspiciously small
+		if ( ( $err['result'] != 0 ) or ( filesize($recording['output_file']) < 1000 ) ) {
+			$err['code'] = false;
+			$err['message'] = "[ERROR] ffmpeg conversion FAILED";
+			return $err;
+		}
+
+		$err['code'] = true;
+		$err['message'] = "[OK] ffmpeg conversion OK (in " . $mins_taken . " mins)";
+	}
 
 	return $err;
+}
 
+
+function ffmpegUniConvert($recording, $profile) {
+global $jconf, $debug;
+
+	$err = array();
+	$err['code'] = false;
+	$err['result'] = 0;
+	$err['command'] = "";
+	$err['command_output'] = "-";
+	$err['message'] = "";
+	$err['result'] = 0;
+
+	// Encoding paramteres: an array for recording final parameters used for encoding
+	$encodingparams = array();
+	$encodingparams['name'] = $profile['name'];
+
+// !!!!!!!!!!!!!!
+	$idx = "";
+	if ( $recording['iscontent'] ) $idx = "content";
+
+	// Audio parameters
+	if ( ( $recording[$idx . 'mastermediatype'] == "videoonly" ) || ( empty($profile['audiocodec']) ) ) {
+		// No audio channels to be encoded
+		$encodingparams['audiochannels'] = null;
+		$encodingparams['audiosamplerate'] = null;
+		$encodingparams['audiobitrate'] = null;
+		$ffmpeg_audio = " -an ";
+	} else {
+		// Samplerate correction according to encoding profile
+		$audiosamplerate = doSampleRateCorrectionForProfile($recording[$idx . 'masteraudiofreq'], $profile);
+		// Bitrate settings for audio
+		$audiochannels = $profile['audiomaxchannels'];
+		if ( $recording['masteraudiochannels'] < $profile['audiomaxchannels'] ) $audiochannels = $recording[$idx . 'masteraudiochannels'];
+		$audiobitrate = $audiochannels * $profile['audiobitrateperchannel'];
+
+		$encodingparams['audiochannels'] = $audiochannels;
+		$encodingparams['audiosamplerate'] = $audiosamplerate;
+		$encodingparams['audiobitrate'] = $audiobitrate * 1000;
+
+		// ffmpeg audio encoding settings
+		$ffmpeg_audio = "-async " . $jconf['ffmpeg_async_frames'] . " -c:a " . $profile['audiocodec'] . " -ac " . $audiochannels . " -b:a " . $audiobitrate . "k -ar " . $audiosamplerate . " ";
+	}
+
+	// Video parameters
+	if ( ( $recording[$idx . 'mastermediatype'] == "audio" ) || empty($profile['videocodec']) ) {
+		$ffmpeg_video = " -vn ";
+	} else {
+
+		// FPS check and correction
+		$fps = "";
+		$encodingparams['videofps'] = $recording[$idx . 'mastervideofps'];
+		if ( empty($recording[$idx . 'mastervideofps']) ) {
+			$debug->log($jconf['log_dir'], $jconf['jobid_media_convert'] . ".log", "[WARNING] Media FPS is zero/empty. Resetting to " . $jconf['video_default_fps'] . ", might cause problem.", $sendmail = true);
+			$encodingparams['videofps'] = $jconf['video_default_fps'];
+		} else {
+			// Max fps check
+			if ( $recording[$idx . 'mastervideofps'] > $profile['videomaxfps'] ) {
+				$debug->log($jconf['log_dir'], $jconf['jobid_media_convert'] . ".log", "[WARNING] Media fps too high: " . $recording[$idx . 'mastervideofps'] . " (max: " . $profile['videomaxfps'] . ")", $sendmail = true);
+				switch ($recording[$idx . 'mastervideofps']) {
+					case 60:
+						$encodingparams['videofps'] = 30;
+						break;
+					case 50:
+						$encodingparams['videofps'] = 25;
+						break;
+					default:
+						$debug->log($jconf['log_dir'], $jconf['jobid_media_convert'] . ".log", "[WARNING] Strange video FPS? Will not apply video_maxfps profile value. Info:\n\nInput FPS: " . $recording[$idx . 'mastervideofps'] . " (profile limit: " . $profile['videomaxfps'] . ")", $sendmail = true);
+				}
+			}
+		}
+		$ffmpeg_fps = " -r " . $encodingparams['videofps'];
+
+		// Max resolution check (fraud check)
+		$videores = explode("x", strtolower($recording[$idx . 'mastervideores']), 2);
+		$maxres = explode("x", strtolower($jconf['video_max_res']), 2);
+		if ( ( $videores[0] > $maxres[0] ) || ( $videores[1] > $maxres[1]) ) {
+			$err['message'] = "[ERROR] Invalid video resolution: " . $recording[$idx . 'mastervideores'];
+			return $err;
+		}
+
+		//// Scaling 1: Display Aspect Ratio (DAR)
+		// Display Aspect Ratio (DAR): check and update if not square pixel
+		$encodingparams['resxdar'] = $videores[0];
+		$encodingparams['resydar'] = $videores[1];
+		if ( !empty($recording[$idx . 'mastervideodar'] ) ) {
+			// Display Aspect Ratio: M:N
+			$tmp = explode(":", $recording[$idx . 'mastervideodar'], 2);
+			if ( count($tmp) == 1 ) $tmp[1] = 1;
+			if ( !empty($tmp[0]) and !empty($tmp[1]) ) {
+				$DAR_M = $tmp[0];
+				$DAR_N = $tmp[1];
+				// Pixel Aspect Ratio: square pixel?
+				$PAR = ( $videores[1] * $DAR_M ) / ( $videores[0] * $DAR_N );
+				if ( $PAR != 1 ) {
+					// No square pixel, add ARs to logs
+					// SAR: Source Aspect Ratio = Width/Height
+					$encodingparams['SAR'] = $videores[0] / $videores[1];
+					// PAR
+					$encodingparams['PAR'] = $PAR;
+					// DAR
+					$encodingparams['DAR'] = $DAR_M / $DAR_N;
+					$encodingparams['DAR_MN'] = $recording[$idx . 'mastervideodar'];
+					// Y: keep fixed, X: recalculate
+					$encodingparams['resxdar'] = round($encodingparams['resydar'] * $encodingparams['DAR']);
+				}
+			}
+		}
+		// ffmpeg aspect ratio parameter
+		$ffmpeg_aspect = "";
+		if ( !empty($encodingparams['DAR_MN']) ) $ffmpeg_aspect = " -aspect " . $encodingparams['DAR_MN'];
+
+		//// Scaling 2: profile bounding box
+		$tmp = calculate_video_scaler($encodingparams['resxdar'], $encodingparams['resydar'], $profile['videobboxsizex'] . "x" . $profile['videobboxsizey']);
+		$encodingparams['scaler'] = $tmp['scaler'];
+		$encodingparams['resx'] = $tmp['x'];
+		$encodingparams['resy'] = $tmp['y'];
+		// ffmpeg scaling parameter
+		$ffmpeg_resize = " -s " . $encodingparams['resx'] . "x" . $encodingparams['resy'];
+
+		//// Video bitrate calculation
+		// Source Bit Per Pixel
+		$encodingparams['videobpp_source'] = $recording[$idx . 'mastervideobitrate'] / ( $videores[0] * $videores[1] * $recording[$idx . 'mastervideofps'] );
+		// BPP check and update: use input BPP if lower than profile BPP
+		$encodingparams['videobpp'] = $profile['videobpp'];
+		if ( $encodingparams['videobpp_source'] < $profile['videobpp'] ) $encodingparams['videobpp'] = $encodingparams['videobpp_source'];
+		$encodingparams['videobitrate'] = $encodingparams['videobpp'] * $encodingparams['resx'] * $encodingparams['resy'] * $encodingparams['videofps'];
+		if ( $encodingparams['videobitrate'] > $jconf['video_max_bw'] ) $encodingparams['videobitrate'] = $jconf['video_max_bw'];
+		// ffmpeg video bitrate encoding parameter
+		$ffmpeg_bw = " -b:v " . 10 * ceil($encodingparams['videobitrate'] / 10000) . "k";
+
+		// Deinterlace
+		$ffmpeg_deint = "";
+		if ( $recording[$idx . 'mastervideoisinterlaced'] > 0 ) $ffmpeg_deint = " -deinterlace";
+
+		// H.264 profile
+		$ffmpeg_profile = "-profile:v " . $profile['ffmpegh264profile'] . " -preset:v " . $profile['ffmpegh264preset'];
+	
+		// ffmpeg video encoding parameters
+		$ffmpeg_video = "-c:v libx264 " . $ffmpeg_profile . $ffmpeg_resize . $ffmpeg_aspect . $ffmpeg_deint . $ffmpeg_fps . $ffmpeg_bw;
+	}
+
+	// Final encoding parameters to return
+	$err['value'] = $encodingparams;
+
+	// 1 pass encoding
+	if ( $profile['videopasses'] < 2 ) {
+		// Execute ffmpeg command
+		$command  = $jconf['encoding_nice'] . " ffmpeg -y -i " . $recording['master_filename'] . " -v " . $jconf['ffmpeg_loglevel'] . " " . $jconf['ffmpeg_flags'] . " ";
+		$command .= $ffmpeg_audio;
+		$command .= $ffmpeg_video;
+		$command .= " -threads " . $jconf['ffmpeg_threads'] . " -f " . $profile['filecontainerformat'] . " " . $recording['output_file'] . " 2>&1";
+
+		// Log ffmpeg command
+		$debug->log($jconf['log_dir'], $jconf['jobid_media_convert'] . ".log", "[INFO] ffmpeg conversion. Command:\n" . $command, $sendmail = false);
+
+		$time_start = time();
+		$output = runExternal($command);
+		$err['duration'] = time() - $time_start;
+		$mins_taken = round( $err['duration'] / 60, 2);
+		$err['command'] = $command;
+		$err['command_output'] = $output['cmd_output'];
+		$err['result'] = $output['code'];
+		if ( $err['result'] < 0 ) $err['result'] = 0;
+
+		// Log ffmpeg output
+		$debug->log($jconf['log_dir'], $jconf['jobid_media_convert'] . ".log", "[INFO] ffmpeg conversion output:\n" . print_r($err['command_output'], true) . "\nError code: " . $err['result'], $sendmail = false);
+
+		// ffmpeg terminated with error or filesize suspiciously small
+		if ( ( $err['result'] != 0 ) or ( filesize($recording['output_file']) < 1000 ) ) {
+			$err['code'] = false;
+			$err['message'] = "[ERROR] ffmpeg conversion FAILED";
+			return $err;
+		}
+
+		$err['code'] = true;
+		$err['message'] = "[OK] ffmpeg conversion OK (in " . $mins_taken . " mins)";
+	}
+
+	return $err;
+}
+
+// Sample rate correction: to match codec requirements
+function doSampleRateCorrectionForProfile($samplerate, $profile) {
+
+	if ( ( $samplerate == 22050 ) or ( $samplerate == 44100 ) or ( ( $samplerate == 48000 ) and ( $profile['audiocodec'] == "libfaac" ) ) ) {
+		$sampleratenew = $samplerate;
+	} else {
+		// Should not occur to have different sample rate from aboves
+		if ( ( $samplerate > 22050 ) && ( $samplerate <= 44100 ) ) {
+			$sampleratenew = 44100;
+		} else {
+			if ( $samplerate <= 22050 ) {
+				$sampleratenew = 22050;
+			} elseif ( ( $samplerate >= 44100 ) && ( $samplerate < 48000 ) ) {
+				$sampleratenew = 44100;
+			} else {
+				// ffmpeg only allows 22050/44100Hz sample rate mp3 with f4v, 48000Hz only possible with AAC
+				if ( ( $profile['audiocodec'] == "libmp3lame" ) and ( $profile['filecontainerformat'] == "f4v" ) ) {
+					$sampleratenew = 44100;
+				} else {
+					$sampleratenew = 48000;
+				}
+			}
+		}
+	}
+
+	return $sampleratenew;
 }
 
 // *************************************************************************
@@ -304,7 +680,7 @@ global $app, $jconf, $global_log;
 	$temp_directory = $recording['temp_directory'];
 
 	// Local master file name
-	$recording_info['input_file'] = $recording['source_file'];
+	$recording_info['input_file'] = $recording['master_filename'];
 
 	// Basic video data for preliminary checks
 	$video_in = array();
@@ -377,7 +753,7 @@ global $app, $jconf, $global_log;
 	// Calculate video parameters
 	//// Basics
 	$recording_info['name'] = $profile['name'];
-	$recording_info['source_file'] = $recording['source_file'];
+	$recording_info['master_filename'] = $recording['master_filename'];
 	$recording_info['format'] = $profile['format'];
 	$recording_info['video_codec'] = $profile['video_codec'];
 	$recording_info['playtime'] = $video_in['playtime'];
@@ -474,6 +850,146 @@ global $app, $jconf, $global_log;
 	$global_log .= "\n";
 
 	return TRUE;
+}
+
+function getEncodingProfile($encodingprofileid) {
+global $db, $jconf, $debug, $myjobid;
+
+	$db = db_maintain();
+
+	$query = "
+		SELECT
+			id,
+			parentid,
+			name,
+			shortname,
+			type,
+			mediatype,
+			isdesktopcompatible,
+			isioscompatible,
+			isandroidcompatible,
+			filenamesuffix,
+			filecontainerformat,
+			videocodec,
+			videopasses,
+			videobboxsizex,
+			videobboxsizey,
+			videomaxfps,
+			videobpp,
+			ffmpegh264profile,
+			ffmpegh264preset,
+			audiocodec,
+			audiomaxchannels,
+			audiobitrateperchannel,
+			audiomode,
+			pipenabled,
+			pipcodecprofile,
+			pipposx,
+			pipposy,
+			pipalign,
+			pipsize
+		FROM
+			encoding_profiles
+		WHERE
+			id = " . $encodingprofileid . " AND
+			disabled = 0";
+
+	try {
+		$profile = $db->getArray($query);
+	} catch (exception $err) {
+		$debug->log($jconf['log_dir'], $jconf['jobid_media_convert'] . ".log", "[ERROR] Cannot query encoding profile. SQL query failed." . trim($query), $sendmail = true);
+		return false;
+	}
+
+	// Check if any record returned
+	if ( count($profile) < 1 ) {
+		return false;
+	}
+
+	return $profile[0];
+}
+
+function getRecordingCreator($recordingid) {
+global $db, $jconf, $debug, $myjobid;
+
+	$db = db_maintain();
+
+	$query = "
+		SELECT
+			a.userid,
+			b.nickname,
+			b.email,
+			b.language,
+			b.organizationid,
+			c.domain,
+			c.supportemail
+		FROM
+			recordings as a,
+			users as b,
+			organizations as c
+		WHERE
+			a.userid = b.id AND
+			a.id = " . $recordingid . " AND
+			a.organizationid = c.id";
+
+	try {
+		$user = $db->getArray($query);
+	} catch (exception $err) {
+		$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Cannot query recording creator. SQL query failed." . trim($query), $sendmail = true);
+		return false;
+	}
+
+	// Check if any record returned
+	if ( count($user) < 1 ) {
+		return false;
+	}
+
+	return $user[0];
+}
+
+function getRecordingVersions($recordingid, $status, $type = "recording") {
+global $db, $jconf, $debug, $myjobid;
+
+	if ( ( $type != "recording" ) and ( $type != "content" ) and ( $type != "all" ) ) return false;
+
+	$iscontent_filter = " AND iscontent = 0";
+	if ( $type == "content" ) $iscontent_filter = " AND iscontent = 1";
+	if ( $type == "all" ) $iscontent_filter = "";
+
+	$db = db_maintain();
+
+	$query = "
+		SELECT
+			id,
+			recordingid,
+			qualitytag,
+			iscontent,
+			status,
+			resolution,
+			filename,
+			bandwidth,
+			isdesktopcompatible,
+			ismobilecompatible
+		FROM
+			recordings_versions
+		WHERE
+			recordingid = " . $recordingid . $iscontent_filter . "
+		ORDER BY
+			id";
+
+	try {
+		$recordings_versions = $db->Execute($query);
+	} catch (exception $err) {
+		$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] SQL query failed.\n" . trim($query), $sendmail = true);
+		return false;
+	}
+
+	// Check if any record returned
+	if ( count($recordings_versions) < 1 ) {
+		return false;
+	}
+
+	return $recordings_versions;
 }
 
 ?>

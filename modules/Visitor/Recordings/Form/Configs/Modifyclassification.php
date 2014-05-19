@@ -26,6 +26,7 @@ $config = array(
   'categories[]' => array(
     'type'        => 'inputCheckboxDynamic',
     'displayname' => $l('recordings', 'categories'),
+    'itemlayout'  => $this->checkboxitemlayout,
     'sql'         => "
       SELECT
         c.id, s.value as name
@@ -54,6 +55,7 @@ $config = array(
   'genres[]' => array(
     'type'        => 'inputCheckboxDynamic',
     'displayname' => $l('recordings', 'genres'),
+    'itemlayout'  => $this->checkboxitemlayout,
     'sql'         => "
       SELECT
         g.id, s.value as name
