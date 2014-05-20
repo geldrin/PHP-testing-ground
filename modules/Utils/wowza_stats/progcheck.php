@@ -90,7 +90,7 @@ if ($org_id === null) {
 if ($sessioncheck === false)
   $msg .= "# Legend: (email,watched duration,total duration)\n";
 else
-  $msg .= "# Legend: (email, watched duration, total duration, session started, session started from, session terminated, session stopped at, session duration)\n";
+  $msg .= "# Legend: (email, watched duration, total duration, session started, session started from, session terminated, session stopped at, session duration, sessionpercent)\n";
 $msg .= "\n";
 // $msg .= $checktimestamps === true ? (",last activity,first login)\n") : (")\n");
 
@@ -227,11 +227,13 @@ foreach ($org_channels as $ch) {
       $position_percent = round( ( 100 / $rec['masterlength'] ) * $up['position'], 2);
 			if ( $position_percent > 100 ) $position_percent = 100;
 			$row = $up['email'] . ";" . secs2hms($up['position']) . ";" . secs2hms($rec['masterlength']) .";" . $position_percent . "%";
-			
+
 			if ($sessioncheck === true) { // when checking sessions, append the following data to the log:
-        $row .= ";". $up['timestampfrom'] .";". secs2hms($up['positionfrom']) .";". $up['timestampuntil'] .";". secs2hms($up['positionuntil']) .";". secs2hms($session_duration);
+				$sessionpercent = $session_duration / $rec['masterlength'] * 100;
+        $row .= ";". $up['timestampfrom'] .";". secs2hms($up['positionfrom']) .";". $up['timestampuntil'] .";". secs2hms($up['positionuntil']) .";". secs2hms($session_duration) .";". round($sessionpercent, 2) ."%";
+				unset($sessionpercent);
       }
-			
+
       $row .= "\n";
       $msg .= $row;
       $user_added = true;
