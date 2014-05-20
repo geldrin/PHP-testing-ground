@@ -1938,6 +1938,29 @@ class Recordings extends \Springboard\Model {
     if ( $this->row['offsetend'] )
       $data['timeline_virtualEnd'] = $this->row['offsetend'];
 
+    if ( $this->row['contentstatus'] == 'onstorage' and !isset( $info['skipcontent'] ) ) {
+
+      $data['media_secondaryStreams'] = array( $this->getMediaUrl('content', false, $info ) );
+
+      if ( $this->row['contentvideoreshq'] ) {
+
+        $data['media_secondaryStreams'][] = $this->getMediaUrl('content', true, $info );
+
+        // ha van HQ content, de nincs HQ "default" verzio akkor ketszer
+        // kell szerepeljen a default verzio
+        if ( count( $data['media_streams'] ) == 1 )
+          $data['media_streams'][] = reset( $data['media_streams'] );
+
+      }
+
+      if ( $this->row['contentoffsetstart'] )
+        $data['timeline_contentVirtualStart'] = $this->row['contentoffsetstart'];
+
+      if ( $this->row['contentoffsetend'] )
+        $data['timeline_contentVirtualEnd'] = $this->row['contentoffsetend'];
+
+    }
+
     $subtitles = $this->getSubtitleLanguages();
     if ( !empty( $subtitles ) ) {
       
@@ -2199,6 +2222,9 @@ class Recordings extends \Springboard\Model {
 
     $isaudio   = false;
     $postfix   = '_lq';
+    if ( $highquality )
+      $postfix = '_hq';
+
     $extension = 'mp4';
     if ( $this->row['mastermediatype'] == 'audio' ) {
       $isaudio   = true;
