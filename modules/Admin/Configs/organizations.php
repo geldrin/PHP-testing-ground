@@ -245,6 +245,20 @@ $config = Array(
     ),
   ),
 
+  'iselearningcoursesessionbound' => array(
+    'displayname' => 'A kurzus felvétel viszzaállítása csak az adott munkamenetben?',
+    'postfix'     =>
+      '<br/><div class="info">Az adott felvétel utolsó pozicióját' .
+        ' csak akkor állítjuk vissza ha a felhasználó ugyanabban a munkamenetben' .
+        ' van (nem zárta be a böngészőt, nem volt távol túl sokáig az oldalt, nem' .
+        ' lépett ki, stb...)<br/>' .
+        'Alapértelmezve pedig mindig visszaállítjuk a poziciót.' .
+      '</div>',
+    'type'        => 'inputRadio',
+    'values'      => $l->getLov('yesno'),
+    'value'       => 0,
+  ),
+
   'disabled' => array(
     'displayname' => 'Kitiltva?',
     'type'        => 'inputRadio',

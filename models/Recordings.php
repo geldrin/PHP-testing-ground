@@ -2005,7 +2005,7 @@ class Recordings extends \Springboard\Model {
     
     if ( $this->row['isseekbardisabled'] and @$info['member'] and $info['member']['id'] ) {
       
-      $options = $this->getSeekbarOptions( $info['member'] );
+      $options = $this->getSeekbarOptions( $info );
       $data['timeline_seekbarDisabled']          = $options['isseekbardisabled'];
       $data['timeline_lastPositionTimeInterval'] = $options['lastpositiontimeinterval'];
       $data['timeline_lastPlaybackPosition']     = $options['lastplaybackposition'];
@@ -2019,26 +2019,43 @@ class Recordings extends \Springboard\Model {
     
   }
   
-  public function getSeekbarOptions( $user ) {
+  public function getSeekbarOptions( $info ) {
     
     $this->ensureObjectLoaded();
-    
+    $user = $info['member'];
+
     if ( !$this->row['isseekbardisabled'] or !$user or !$user['id'] )
       return array();
-    
-    $options = array(
-      'isseekbardisabled'         => true,
-      'lastpositiontimeinterval'  =>
-        $this->bootstrap->config['recordingpositionupdateseconds']
-      ,
-      'lastplaybackposition'      => (int)$this->db->getOne("
+
+    // ha session-bound akkor csak az adott sessionben allitjuk vissza
+    // a felvetel poziciojat (ha nincs adott session-hoz rekord akkor 0-rol kezd)
+    if ( $info['organization']['iselearningcoursesessionbound'] )
+      $lastposition = (int)$this->db->getOne("
+        SELECT positionuntil
+        FROM recording_view_sessions
+        WHERE
+          userid      = '" . $user['id'] . "' AND
+          recordingid = '" . $this->id . "' AND
+          sessionid   = " . $this->db->qstr( $info['sessionid'] ) . "
+        ORDER BY id DESC
+        LIMIT 1
+      ");
+    else // amugy meg visszaalitjuk mindig az utolso poziciot ha van
+      $lastposition = (int)$this->db->getOne("
         SELECT position
         FROM recording_view_progress
         WHERE
           userid      = '" . $user['id'] . "' AND
           recordingid = '" . $this->id . "'
         LIMIT 1
-      "),
+      ");
+
+    $options = array(
+      'isseekbardisabled'         => true,
+      'lastplaybackposition'      => $lastposition,
+      'lastpositiontimeinterval'  =>
+        $this->bootstrap->config['recordingpositionupdateseconds']
+      ,
     );
     
     if (
