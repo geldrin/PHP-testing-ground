@@ -551,7 +551,7 @@ class Controller extends \Visitor\Controller {
       false,
       'recordingcheckaccessdebug.txt',
       "SECURE: $secure | RESULT: $result\n" .
-      "  REQUEST_URI: " . $_SERVER['REQUEST_URI']
+      "  REQUEST_URI: " . $_SERVER['REQUEST_URI'] . $_SERVER['QUERY_STRING']
     );
     
     echo

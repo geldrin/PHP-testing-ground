@@ -518,7 +518,7 @@ class Controller extends \Visitor\Controller {
       false,
       'livecheckaccessdebug.txt',
       "LIVESECURE: $secure | RESULT: $result\n" .
-      "  REQUEST_URI: " . $_SERVER['REQUEST_URI']
+      "  REQUEST_URI: " . $_SERVER['REQUEST_URI'] . $_SERVER['QUERY_STRING']
     );
     
     echo
