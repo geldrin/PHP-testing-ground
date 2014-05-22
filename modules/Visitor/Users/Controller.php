@@ -346,7 +346,7 @@ class Controller extends \Visitor\Controller {
       $this->toSmarty['sessionid'] = session_id();
       $output = array_merge(
         $output,
-        $recordingsModel->getSeekbarOptions( $userModel->row ),
+        $recordingsModel->getSeekbarOptions( $this->toSmarty ),
         $recordingsModel->getMediaServers( $this->toSmarty )
       );
       
