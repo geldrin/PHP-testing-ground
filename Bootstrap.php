@@ -472,7 +472,7 @@ class Bootstrap {
   public function getSession( $namespace = 'default' ) {
     
     $this->setupSession();
-    $basenamespace = $this->config['siteid'] . $this->config['cookiedomain'];
+    $basenamespace = $this->config['siteid'] . '-' . $this->config['sessionidentifier'];
     return new Springboard\Session( $basenamespace, $namespace );
     
   }

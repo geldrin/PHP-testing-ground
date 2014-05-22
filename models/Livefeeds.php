@@ -247,11 +247,7 @@ class Livefeeds extends \Springboard\Model {
   
   public function getFlashData( $info ) {
     
-    $authorizecode = $this->getAuthorizeSessionid(
-      $info['organization']['cookiedomain'],
-      $info['sessionid'],
-      $info['member']
-    );
+    $authorizecode = $this->getAuthorizeSessionid( $info );
     
     $streams          = array();
     $streams[]        = $info['streams']['defaultstream']['keycode'];
@@ -441,19 +437,23 @@ class Livefeeds extends \Springboard\Model {
     
   }
   
-  protected function getAuthorizeSessionid( $cookiedomain, $sessionid, $user ) {
+  protected function getAuthorizeSessionid( &$info ) {
 
-    if ( !$cookiedomain or !$sessionid )
+    if (
+         !isset( $info['organization'] ) or
+         !isset( $info['sessionid'] ) or
+         !$info['sessionid']
+       )
       return '';
 
     $ret = sprintf('?sessionid=%s_%s_%s',
-      $cookiedomain,
-      $sessionid,
+      $info['organization']['id'],
+      $info['sessionid'],
       $this->id
     );
 
-    if ( $user and $user['id'] )
-      $ret .= '&uid=' . $user['id'];
+    if ( isset( $info['member'] ) and $info['member']['id'] )
+      $ret .= '&uid=' . $info['member']['id'];
 
     return $ret;
 
@@ -474,18 +474,14 @@ class Livefeeds extends \Springboard\Model {
         //http://stream.videosquare.eu/devvsqlive/123456/playlist.m3u8
         $url .=
           '/playlist.m3u8' .
-          $this->getAuthorizeSessionid(
-            $info['organization']['cookiedomain'], $sessionid, $user
-          )
+          $this->getAuthorizeSessionid( $info )
         ;
         
         break;
       
       case 'livertsp':
         //rtsp://stream.videosquare.eu/devvsqlive/123456
-        $url .= $this->getAuthorizeSessionid(
-          $info['organization']['cookiedomain'], $sessionid, $user
-        );
+        $url .= $this->getAuthorizeSessionid( $info );
         
         break;
       

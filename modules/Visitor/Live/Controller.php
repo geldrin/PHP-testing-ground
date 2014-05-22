@@ -459,7 +459,7 @@ class Controller extends \Visitor\Controller {
     $result  = '0';
     $matched =
       preg_match(
-        '/(?P<domain>[a-z\.]+)_' .
+        '/(?P<organizationid>\d+)_' .
         '(?P<sessionid>[a-z0-9]{32})_' .
         '(?P<feedid>\d+)/',
         $param,
@@ -478,29 +478,40 @@ class Controller extends \Visitor\Controller {
     }
     
     if ( $matched ) {
-      
-      $this->bootstrap->setupSession( true, $matches['sessionid'], $matches['domain'] );
-      $this->debugLogUsers();
-      $access    = $this->bootstrap->getSession('liveaccess');
-      $accesskey = $matches['feedid'] . '-' . (int)$secure;
-      
-      if ( $access[ $accesskey ] !== true ) {
+
+      $orgModel     = $this->bootstrap->getModel('organizations');
+      $organization = $orgModel->getOrganizationByID( $matches['organizationid'] );
+      if ( $organization ) {
+
+        $this->bootstrap->setupSession(
+          true, $matches['sessionid'], $organization['cookiedomain']
+        );
+
+        $this->debugLogUsers();
+        $access    = $this->bootstrap->getSession('liveaccess');
+        $accesskey = $matches['feedid'] . '-' . (int)$secure;
         
-        $user      = $this->bootstrap->getSession('user');
-        $feedModel = $this->modelIDCheck('livefeeds', $matches['feedid'], false );
-        
-        if ( $feedModel ) {
+        if ( $access[ $accesskey ] !== true ) {
+
+          $user      = $this->bootstrap->getSession('user');
+          $feedModel = $this->modelIDCheck('livefeeds', $matches['feedid'], false );
+
+          if ( $feedModel ) {
+
+            $access[ $accesskey ] = $feedModel->isAccessible(
+              $user, $organization, $secure
+            );
+
+            if ( $access[ $accesskey ] === true )
+              $result = '1';
+
+          }
           
-          $access[ $accesskey ] = $feedModel->isAccessible( $user, $this->organization, $secure );
-          
-          if ( $access[ $accesskey ] === true )
-            $result = '1';
-          
-        }
-        
-      } else
-        $result = '1';
-      
+        } else
+          $result = '1';
+
+      }
+
     }
     
     \Springboard\Debug::getInstance()->log(

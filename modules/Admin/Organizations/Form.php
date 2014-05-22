@@ -25,8 +25,19 @@ class Form extends \Springboard\Controller\Admin\Form {
     $model->select( $values['id'] );
     $model->updateRow( $values );
     $this->runHandlers( $model );
+
+    $cachekeys = array(
+      'organizations-' . $model->row['domain'],
+      'organizations-' . $model->row['staticdomain'],
+      'organizations-' . $model->row['id'],
+    );
+    foreach( $cachekeys as $cachekey ) {
+      $cache = $this->bootstrap->getCache( $cachekey, null );
+      $cache->expire();
+    }
+
     $this->controller->redirect('organizations/index');
-    
+
   }
   
   protected function insertAction() {

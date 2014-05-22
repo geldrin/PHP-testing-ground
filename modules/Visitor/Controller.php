@@ -9,6 +9,7 @@ class Controller extends \Springboard\Controller\Visitor {
 
     // mert itt redirectelunk a megfelelo domainre, csak utana akarjuk
     // https-re forcolni a domaint
+    // nem szabad hogy session induljon ez elott
     $this->setupOrganization();
 
     if (
@@ -24,21 +25,21 @@ class Controller extends \Springboard\Controller\Visitor {
     
     $skipsinglelogincheck = array(
       'users' => array(
-        'ping',
+        'ping' => true,
       ),
       'recordings' => array(
-        'checkstreamaccess',
-        'securecheckstreamaccess',
+        'checkstreamaccess'       => true,
+        'securecheckstreamaccess' => true,
       ),
       'live' => array(
-        'checkstreamaccess',
-        'securecheckstreamaccess',
+        'checkstreamaccess'       => true,
+        'securecheckstreamaccess' => true,
       ),
     );
     
     foreach( $skipsinglelogincheck as $module => $actions ) {
       
-      if ( $this->module == $module and in_array( $this->action, $actions ) )
+      if ( $this->module == $module and isset( $actions[ $this->action ] ) )
         return parent::init();
       
     }
@@ -96,42 +97,21 @@ class Controller extends \Springboard\Controller\Visitor {
   
   public function setupOrganization() {
     
-    $host = $_SERVER['SERVER_NAME'];
-    
-    $cache = $this->bootstrap->getCache( 'organizations-' . $host, null );
-    if ( $cache->expired() ) {
+    $host         = $_SERVER['SERVER_NAME'];
+    $orgModel     = $this->bootstrap->getModel('organizations');
+    $organization = $orgModel->getOrganizationByDomain( $host, false );
+
+    if ( !$organization ) {
+
+      $fallbackurl = @$this->bootstrap->config['organizationfallbackurl'];
       
-      $orgModel = $this->bootstrap->getModel('organizations');
-      if ( !$orgModel->checkDomain( $host ) ) {
-        
-        $fallbackurl = @$this->bootstrap->config['organizationfallbackurl'];
-        
-        if ( !$fallbackurl )
-          die();
-        else
-          $this->redirect( $fallbackurl );
-        
-      }
-      
-      $organization = $orgModel->row;
-      $l            = $this->bootstrap->getLocalization();
-      $languages    = $l->getLov('languages');
-      $languagekeys = explode(',', $organization['languages'] );
-      $organization['languages'] = array();
-      
-      foreach( $languagekeys as $language )
-        $organization['languages'][ $language ] = $languages[ $language ];
-      
-      $cache->put( $organization );
-      $staticcache = $this->bootstrap->getCache(
-        'organizations-' . $organization['staticdomain'],
-        null
-      );
-      $staticcache->put( $organization );
-      
-    } else
-      $organization = $cache->get();
-    
+      if ( !$fallbackurl )
+        die();
+      else
+        $this->redirect( $fallbackurl );
+
+    }
+
     $baseuri   = $this->bootstrap->scheme . $organization['domain'] . '/';
     $staticuri = $this->bootstrap->scheme . $organization['staticdomain'] . '/';
     
@@ -149,7 +129,7 @@ class Controller extends \Springboard\Controller\Visitor {
     $this->toSmarty['STATIC_URI']     = $organization['staticuri'] = $staticuri;
     $this->bootstrap->validatesession = (bool)$organization['issessionvalidationenabled'];
     $this->bootstrap->config['cookiedomain'] = $organization['cookiedomain'];
-
+    $this->bootstrap->config['sessionidentifier'] = $organization['domain'];
     $this->organization = $organization;
     
   }

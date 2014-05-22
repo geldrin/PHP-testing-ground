@@ -106,5 +106,85 @@ class Organizations extends \Springboard\Model\Multilingual {
       return $nameshort;
     
   }
-  
+
+  public function transformLanguages() {
+
+    $this->ensureObjectLoaded();
+
+    $organization = $this->row;
+    $l            = $this->bootstrap->getLocalization();
+    $languages    = $l->getLov('languages');
+    $languagekeys = explode(',', $this->row['languages'] );
+    $organization['languages'] = array();
+
+    foreach( $languagekeys as $language )
+      $organization['languages'][ $language ] = $languages[ $language ];
+
+    return $organization;
+
+  }
+
+  public function getOrganizationByDomain( $domain, $isstatic = false ) {
+
+    $cache = $this->bootstrap->getCache( 'organizations-' . $domain, null );
+    if ( $cache->expired() ) {
+
+      if ( !$this->checkDomain( $domain, $isstatic ) )
+        return false;
+
+      $organization = $this->transformLanguages();
+      $cache->put( $organization );
+
+      $cachekeys = array(
+        'organizationsbyid-' . $organization['id'],
+      );
+
+      if ( !$isstatic )
+        $cachekeys[] = 'organizations-' . $organization['domain'];
+      else
+        $cachekeys[] = 'organizations-' . $organization['staticdomain'];
+
+      foreach( $cachekeys as $cachekey ) {
+        $alternatecache = $this->bootstrap->getCache( $cachekey, null );
+        $alternatecache->put( $organization );
+      }
+
+      return $organization;
+
+    }
+
+    return $cache->get();
+
+  }
+
+  public function getOrganizationByID( $id ) {
+
+    $cache = $this->bootstrap->getCache('organizationsbyid-' . $id, $null );
+    if ( $cache->expired() ) {
+
+      $this->select( $id );
+      if ( !$this->row )
+        return false;
+
+      $organization = $this->transformLanguages();
+      $cache->put( $organization );
+
+      $cachekeys = array(
+        'organizations-' . $organization['domain'],
+        'organizations-' . $organization['staticdomain'],
+      );
+
+      foreach( $cachekeys as $cachekey ) {
+        $alternatecache = $this->bootstrap->getCache( $cachekey, null );
+        $alternatecache->put( $organization );
+      }
+
+      return $organization;
+
+    }
+
+    return $cache->get();
+
+  }
+
 }

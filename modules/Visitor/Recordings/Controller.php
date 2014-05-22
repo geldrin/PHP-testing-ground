@@ -490,7 +490,7 @@ class Controller extends \Visitor\Controller {
     $result  = '0';
     $matched =
       preg_match(
-        '/(?P<domain>[a-z\.]+)_' .
+        '/(?P<organizationid>\d+)_' .
         '(?P<sessionid>[a-z0-9]{32})_' .
         '(?P<recordingid>\d+)/',
         $param,
@@ -509,29 +509,42 @@ class Controller extends \Visitor\Controller {
     }
     
     if ( $matched ) {
-      
-      $this->bootstrap->setupSession( true, $matches['sessionid'], $matches['domain'] );
-      $this->debugLogUsers();
-      $access    = $this->bootstrap->getSession('recordingaccess');
-      $accesskey = $matches['recordingid'] . '-' . (int)$secure;
-      
-      if ( $access[ $accesskey ] !== true ) {
-        
-        $user            = $this->bootstrap->getSession('user');
-        $recordingsModel = $this->modelIDCheck('recordings', $matches['recordingid'], false );
-        
-        if ( $recordingsModel ) {
-          
-          $access[ $accesskey ] = $recordingsModel->userHasAccess( $user, $secure, false, $this->organization );
-          
-          if ( $access[ $accesskey ] === true )
-            $result = '1';
-          
-        }
-        
-      } else
-        $result = '1';
-      
+
+      $orgModel     = $this->bootstrap->getModel('organizations');
+      $organization = $orgModel->getOrganizationByID( $matches['organizationid'] );
+      if ( $organization ) {
+
+        $this->bootstrap->setupSession(
+          true, $matches['sessionid'], $organization['cookiedomain']
+        );
+
+        $this->debugLogUsers();
+        $access    = $this->bootstrap->getSession('recordingaccess');
+        $accesskey = $matches['recordingid'] . '-' . (int)$secure;
+
+        if ( $access[ $accesskey ] !== true ) {
+
+          $user            = $this->bootstrap->getSession('user');
+          $recordingsModel = $this->modelIDCheck(
+            'recordings', $matches['recordingid'], false
+          );
+
+          if ( $recordingsModel ) {
+
+            $access[ $accesskey ] = $recordingsModel->userHasAccess(
+              $user, $secure, false, $organization
+            );
+
+            if ( $access[ $accesskey ] === true )
+              $result = '1';
+
+          }
+
+        } else
+          $result = '1';
+
+      }
+
     }
     
     \Springboard\Debug::getInstance()->log(

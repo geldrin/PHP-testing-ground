@@ -212,38 +212,14 @@ function checkAccess( $recordingid, &$config ) {
   include_once( $config['libpath'] . 'Springboard/Cache.php' );
   include_once( $config['libpath'] . 'Springboard/Cache/' . $file );
   
-  $host  = $_SERVER['SERVER_NAME'];
-  $cache = new $class(
-    $bootstrap,
-    'organizations-' . $host,
-    $config['cacheseconds']
-  );
-  
-  if ( $cache->expired() ) {
-    
-    $application = setupApp();
-    
-    $orgModel = $application->bootstrap->getModel('organizations');
-    $orgModel->checkDomain( $host, true );
-    
-    $organization = $orgModel->row;
-    $l            = $application->bootstrap->getLocalization();
-    $languages    = $l->getLov('languages');
-    $languagekeys = explode(',', $organization['languages'] );
-    $organization['languages'] = array();
-    
-    foreach( $languagekeys as $language )
-      $organization['languages'][ $language ] = $languages[ $language ];
-    
-    $cache->put( $organization );
-    
-  } else
-    $organization = $cache->get();
-  
+  $host         = $_SERVER['SERVER_NAME'];
+  $orgModel     = $this->bootstrap->getModel('organizations');
+  $organization = $orgModel->getOrganizationByDomain( $host, true );
+
   $cookiedomain = $organization['cookiedomain'];
   ini_set('session.cookie_domain',    $cookiedomain );
   session_set_cookie_params( 0 , '/', $cookiedomain );
-  $sessionkey = 'teleconnect' . $cookiedomain;
+  $sessionkey = 'teleconnect-' . $organization['domain'];
   
   session_start();
   
@@ -254,6 +230,8 @@ function checkAccess( $recordingid, &$config ) {
     
     $application->bootstrap->sessionstarted = true;
     $application->bootstrap->config['cookiedomain'] = $cookiedomain;
+    $application->bootstrap->config['sessionidentifier'] = $organization['domain'];
+
     $user            = $application->bootstrap->getSession('user');
     $recordingsModel = $application->bootstrap->getModel('recordings');
     $access          = $application->bootstrap->getSession('recordingaccess');
@@ -261,9 +239,11 @@ function checkAccess( $recordingid, &$config ) {
     $recordingsModel->select( $recordingid );
     
     if ( $recordingsModel->row ) {
-      
-      $access[ $recordingsModel->id ] = $recordingsModel->userHasAccess( $user );
-      
+
+      $access[ $recordingsModel->id ] = $recordingsModel->userHasAccess(
+        $user, null, false, $organization
+      );
+
       if ( $access[ $recordingsModel->id ] === true )
         $result = true;
       else

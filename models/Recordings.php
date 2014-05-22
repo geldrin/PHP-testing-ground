@@ -2186,21 +2186,14 @@ class Recordings extends \Springboard\Model {
     
     if ( $needextraparam ) {
 
-      if ( isset( $info['member'] ) )
-        $user = $info['member'];
-      else
-        $user = null;
-
       $this->ensureID();
       $url =
         rtrim( $url, '/' ) .
-        $this->getAuthorizeSessionid(
-          $info['organization']['cookiedomain'], $info['sessionid'], $user
-        )
+        $this->getAuthorizeSessionid( $info )
       ;
-      
+
     }
-    
+
     if ( !$this->streamingserver ) {
       
       $streamingserverModel  = $this->bootstrap->getModel('streamingservers');
@@ -2215,16 +2208,16 @@ class Recordings extends \Springboard\Model {
     
   }
   
-  protected function getAuthorizeSessionid( $cookiedomain, $sessionid, $user ) {
+  protected function getAuthorizeSessionid( &$info ) {
 
     $ret = sprintf('?sessionid=%s_%s_%s',
-      $cookiedomain,
-      $sessionid,
+      $info['organization']['id'],
+      $info['sessionid'],
       $this->id
     );
 
-    if ( $user and $user['id'] )
-      $ret .= '&uid=' . $user['id'];
+    if ( isset( $info['member'] ) and $info['member']['id'] )
+      $ret .= '&uid=' . $info['member']['id'];
 
     return $ret;
 
@@ -2264,7 +2257,7 @@ class Recordings extends \Springboard\Model {
         $host        = $this->getWowzaUrl( $typeprefix . 'httpurl');
         $sprintfterm =
           '%3$s:%s/%s_mobile' . $postfix . '.%s/playlist.m3u8' .
-          $this->getAuthorizeSessionid( $cookiedomain, $sessionid, $user )
+          $this->getAuthorizeSessionid( $info )
         ;
         
         break;
@@ -2274,7 +2267,7 @@ class Recordings extends \Springboard\Model {
         $host        = $this->getWowzaUrl( $typeprefix . 'rtspurl');
         $sprintfterm =
           '%3$s:%s/%s_mobile' . $postfix . '.%s' .
-          $this->getAuthorizeSessionid( $cookiedomain, $sessionid, $user )
+          $this->getAuthorizeSessionid( $info )
         ;
         
         break;
