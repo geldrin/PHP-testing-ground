@@ -1935,8 +1935,8 @@ function setupOrderRecordings() {
 
   $j('#orderrecordings #orderlist .orderarrows .recordingmoveup a').live('click', OrderRecordingsMoveUp );
   $j('#orderrecordings #orderlist .orderarrows .recordingmovedown a').live('click', OrderRecordingsMoveDown );
-  $j('#orderrecordings .button').click( function( e ) {
-    
+  $j('#orderrecordings .submitbutton').click( function( e ) {
+
     if ( !needorderupdate || !channelid )
       return;
     else

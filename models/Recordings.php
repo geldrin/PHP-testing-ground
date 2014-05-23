@@ -386,23 +386,36 @@ class Recordings extends \Springboard\Model {
     
     if ( $secure !== null and $this->row['issecurestreamingforced'] != $secure )
       return 'securerestricted';
-    
-    $bystatus   = $this->isAccessibleByStatus( $user, $mobile );
-    $bysettings = $this->isAccessibleBySettings( $user );
-    $bycoursecompletion = $this->isAccessibleByCourseCompletion( $user, $organization );
 
-    if ( $bystatus === true and $bysettings === true and $bycoursecompletion === true )
-      return true;
-    
+    $bystatus = $this->isAccessibleByStatus( $user, $mobile );
     if ( $bystatus !== true )
       return $bystatus;
-    else if ( $bysettings !== true )
-      return $bysettings;
-    else
+
+    $bysettings = $this->isAccessibleBySettings( $user );
+    if ( $bysettings === true )
+      return true;
+
+    // ennek a vissza teresi erteke nem erdekel minket, csak az hogy true e
+    $byinvitation = $this->isAccessibleByInvitation( $user, $organization );
+    if ( $byinvitation === true )
+      return true;
+
+    // ennek a vissza teresi erteke csak akkor fontos ha true vagy non-null
+    // ha null, akkor nem tartozik olyan csatornaba ami erdekes
+    $bycoursecompletion = $this->isAccessibleByCourseCompletion( $user, $organization );
+    if ( $bycoursecompletion === true )
+      return true;
+    elseif ( $bycoursecompletion !== null )
       return $bycoursecompletion;
 
+    // nem sikerult talalni semmit ami engedne a hozzaferest
+    if ( $bysettings !== true )
+      return $bysettings;
+
+    throw new \Exception('Cannot happen!');
+
   }
-  
+
   public function insertUploadingRecording( $userid, $organizationid, $languageid, $title, $sourceip, $isintrooutro = 0 ) {
     
     $recording = array(
@@ -819,10 +832,10 @@ class Recordings extends \Springboard\Model {
       'deleted'           => 'recordingdeleted',
       'markedfordeletion' => 'recordingdeleted',
     );
-    
-    if ( in_array( $this->row['status'], array_keys( $statuses ) ) )
+
+    if ( isset( $statuses[ $this->row['status'] ] ) )
       return $statuses[ $this->row['status'] ];
-    
+
     if (
          ( !$mobile and $this->row['status'] != 'onstorage' ) or
          ( $mobile and $this->row['mobilestatus'] != 'onstorage' )
@@ -1003,17 +1016,12 @@ class Recordings extends \Springboard\Model {
 
     // recording not a member of any course
     if ( empty( $coursechannelids ) )
-      return true;
+      return null;
 
     // recording is a member of a course, only users who have access to it can
     // view it
     if ( !$user['id'] )
       return 'registrationrestricted';
-    else if (
-              $this->row['userid'] == $user['id'] or
-              $user['isadmin'] or $user['isclientadmin'] or $user['iseditor']
-            )
-      return true;
 
     // channels where the user must view all of the previous recordings
     // to be able to view this one
