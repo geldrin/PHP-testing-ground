@@ -10,10 +10,19 @@ class Modify extends \Visitor\HelpForm {
   public function init() {
     
     parent::init();
+    $l               = $this->bootstrap->getLocalization();
     $this->user      = $this->bootstrap->getSession('user');
     $this->userModel = $this->controller->modelIDCheck('users', $this->user['id'] );
     $this->values    = $this->userModel->row;
     unset( $this->values['password'] );
+    
+    $this->values['permissions'] = array();
+    foreach( $l->getLov('permissions') as $k => $v ) {
+      
+      if ( $this->values[ $k ] )
+        $this->values['permissions'][] = $k;
+      
+    }
     
   }
   
@@ -23,6 +32,13 @@ class Modify extends \Visitor\HelpForm {
     $crypt  = $this->bootstrap->getEncryption();
     $l      = $this->bootstrap->getLocalization();
     
+    // nem itt valtoztatjuk a jogosultsagokat, csak mutatjuk oket a usernek
+    unset(
+      $values['permissions'],
+      $values['groups'],
+      $values['departments']
+    );
+
     if ( !@$values['password'] )
       unset( $values['password'] );
     else

@@ -141,7 +141,83 @@ $config = array(
       )
     )
   ),
+
+  'fs2' => array(
+    'type'   => 'fieldset',
+    'legend' => $l('users', 'permissions'),
+    'prefix' => '<span class="legendsubtitle"></span>',
+  ),
+
+  'permissions[]' => array(
+    'displayname' => $l('users', 'permissions'),
+    'type'        => 'inputCheckboxDynamic',
+    'html'        => 'disabled="disabled"',
+    'itemlayout'  => $this->checkboxitemlayout,
+    'values'      => $l->getLov('permissions'),
+    'validation'  => array(
+    ),
+  ),
+  
+  'departments[]' => array(
+    'displayname' => $l('users', 'departments'),
+    'type'        => 'inputCheckboxDynamic',
+    'html'        => 'disabled="disabled"',
+    'itemlayout'  => $this->checkboxitemlayout,
+    'treeid'      => 'id',
+    'treestart'   => '0',
+    'treeparent'  => 'parentid',
+    'sql'         => "
+      SELECT id, name
+      FROM departments
+      WHERE
+        organizationid = '" . $this->controller->organization['id'] . "' AND
+        %s
+      ORDER BY weight, name
+    ",
+    'valuesql'    => "
+      SELECT departmentid
+      FROM users_departments
+      WHERE userid = '" . $this->userModel->row['id'] . "'
+    ",
+    'validation' => array(
+    ),
+  ),
+  
+  'groups[]' => array(
+    'displayname' => $l('users', 'groups'),
+    'type'        => 'inputCheckboxDynamic',
+    'html'        => 'disabled="disabled"',
+    'itemlayout'  => $this->checkboxitemlayout,
+    'sql'         => "
+      SELECT id, name
+      FROM groups
+      WHERE
+        organizationid = '" . $this->controller->organization['id'] . "'
+      ORDER BY name DESC
+    ",
+    'valuesql' => "
+      SELECT groupid
+      FROM groups_members
+      WHERE
+        userid = '" . $this->userModel->row['id'] . "'
+    ",
+    'validation'  => array(
+    ),
+  ),
+  
 );
 
 if ( !$this->userModel->canUploadAvatar() )
   unset( $config['avatarfilename'] );
+
+$departmentModel = $this->bootstrap->getModel('departments');
+$departmentModel->addFilter('organizationid', $this->controller->organization['id'] );
+
+if ( $departmentModel->getCount() == 0 )
+  unset( $config['departments[]'] );
+
+$groupModel = $this->bootstrap->getModel('groups');
+$groupModel->addFilter('organizationid', $this->controller->organization['id'] );
+
+if ( $groupModel->getCount() == 0 )
+  unset( $config['groups[]'] );
