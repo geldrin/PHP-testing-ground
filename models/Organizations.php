@@ -159,7 +159,7 @@ class Organizations extends \Springboard\Model\Multilingual {
 
   public function getOrganizationByID( $id ) {
 
-    $cache = $this->bootstrap->getCache('organizationsbyid-' . $id, $null );
+    $cache = $this->bootstrap->getCache('organizationsbyid-' . $id, null );
     if ( $cache->expired() ) {
 
       $this->select( $id );
