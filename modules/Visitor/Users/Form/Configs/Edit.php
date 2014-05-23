@@ -18,6 +18,12 @@ $config = array(
     'value' => $this->application->getParameter('forward'),
   ),
   
+  'email' => array(
+    'displayname' => $l('users', 'email'),
+    'type'        => 'inputText',
+    'html'        => 'disabled="disabled"',
+  ),
+
   'nickname' => array(
     'displayname' => $l('users', 'username'),
     'type'        => 'inputText',
@@ -191,3 +197,14 @@ $groupModel->addFilter('organizationid', $this->controller->organization['id'] )
 
 if ( $groupModel->getCount() == 0 )
   unset( $config['groups[]'] );
+
+$config['lastloggedin'] = array(
+  'displayname' => $l('users', 'lastloggedin'),
+  'type'        => 'inputText',
+  'html'        => 'disabled="disabled"',
+);
+$config['lastloggedinipaddress'] = array(
+  'displayname' => $l('users', 'lastloggedinipaddress'),
+  'type'        => 'textarea',
+  'html'        => 'disabled="disabled"',
+);
