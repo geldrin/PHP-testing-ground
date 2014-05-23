@@ -64,6 +64,7 @@ class Users extends \Springboard\Controller\Admin {
     $cache->put("");
     $cache->expire();
     $this->bootstrap->config['cookiedomain'] = $orgModel->row['cookiedomain'];
+    $this->bootstrap->config['sessionidentifier'] = $orgModel->row['domain'];
     $userModel->registerForSession(); // sima user-kent register
     $this->redirect( 'http://' . $orgModel->row['domain'] );
     

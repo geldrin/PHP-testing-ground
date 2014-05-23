@@ -874,7 +874,7 @@ class Recordings extends \Springboard\Model {
   public function isAccessibleByInvitation( $user, $organization ) {
 
     if ( !$user['id'] )
-      return 'registrationrestricted';
+      return null;
 
     $this->ensureID();
     return (bool)$this->db->getOne("

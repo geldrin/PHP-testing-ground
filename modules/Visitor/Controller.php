@@ -77,7 +77,12 @@ class Controller extends \Springboard\Controller\Visitor {
       if ( $userModel->row['issingleloginenforced'] ) {
 
         if ( !$userModel->checkSingleLoginUsers() ) {
+
           $user->clear();
+          // kijelentkeztettuk, regeneraljuk a sessionidt
+          if ( !session_regenerate_id() ) // logoljuk ha nem sikerul
+            throw new \Exception("session_regenerate_id() returned false!");
+
           $l = $this->bootstrap->getLocalization();
           $this->redirectWithMessage('users/login', sprintf(
             $l('users', 'loggedout_sessionexpired'),
