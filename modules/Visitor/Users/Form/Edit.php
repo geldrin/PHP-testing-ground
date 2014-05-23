@@ -53,6 +53,13 @@ class Edit extends \Visitor\HelpForm {
     $crypt  = $this->bootstrap->getEncryption();
     $l      = $this->bootstrap->getLocalization();
     
+    // ezeket a user sohase valtoztathatja
+    unset(
+      $values['email'],
+      $values['lastloggedin'],
+      $values['lastloggedinipaddress']
+    );
+
     foreach( $l->getLov('permissions') as $k => $v ) {
       
       if ( isset( $_REQUEST['permissions'][ $k ] ) and in_array( $k, $values['permissions'] ) )
