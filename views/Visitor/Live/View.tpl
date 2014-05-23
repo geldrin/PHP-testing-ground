@@ -3,13 +3,13 @@
   {assign var=linksinnewwindow value=' target="_blank"'}
 {else}
   {include file="Visitor/_header.tpl" title=$rootchannel.title islive=true pagebgclass=fullheight}
-{/if}
 
-<div class="title recording">
-  <h1>{$channel.title|escape:html}</h1>
-  {if $channel.subtitle|stringempty}<h2>{$channel.subtitle|escape:html}</h2>{/if}
-</div>
-<div class="clear"></div>
+  <div class="title recording">
+    <h1>{$channel.title|escape:html}</h1>
+    {if $channel.subtitle|stringempty}<h2>{$channel.subtitle|escape:html}</h2>{/if}
+  </div>
+  <div class="clear"></div>
+{/if}
 {if $chromeless}
 <center>
 {/if}
