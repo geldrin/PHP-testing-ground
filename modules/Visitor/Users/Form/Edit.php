@@ -16,6 +16,9 @@ class Edit extends \Visitor\HelpForm {
       $this->application->getNumericParameter('id')
     );
     $this->values    = $this->userModel->row;
+    $this->values['lastloggedinipaddress'] = trim(
+      str_replace( 'REMOTE_ADDR:', '', $this->values['lastloggedinipaddress'] )
+    );
     unset( $this->values['password'] );
     
     $this->values['permissions'] = array();
