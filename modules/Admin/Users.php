@@ -23,7 +23,9 @@ class Users extends \Springboard\Controller\Admin {
     $userModel = $this->bootstrap->getModel('users');
     $orgModel  = $this->bootstrap->getModel('organizations');
     $userModel->select( $userid );
-    $orgModel->select( $userModel->row['organizationid'] );
+    $organization = $orgModel->getOrganizationByID(
+      $userModel->row['organizationid']
+    );
     
     if ( empty( $userModel->row ) )
       $this->redirect('users');
