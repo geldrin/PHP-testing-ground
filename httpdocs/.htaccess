@@ -15,9 +15,9 @@ RewriteEngine On
 
 <IfModule mod_ssl.c>
 # HTTPS FORCE
-RewriteCond %{HTTPS} off
-RewriteRule .* https://%{HTTP_HOST}%{REQUEST_URI} [redirect=301,L]
-Header set Strict-Transport-Security "max-age=86400"
+#RewriteCond %{HTTPS} off
+#RewriteRule .* https://%{HTTP_HOST}%{REQUEST_URI} [redirect=301,L]
+#Header set Strict-Transport-Security "max-age=86400"
 </IfModule>
 
 RewriteRule ^([a-z]{2,4})/live/view/([0-9]+),([0-9]+),?(.*)$ index.php?module=live&action=view&id=$2&streamid=$3&name=$4&language=$1 [L,QSA]
