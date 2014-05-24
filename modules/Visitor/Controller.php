@@ -35,6 +35,10 @@ class Controller extends \Springboard\Controller\Visitor {
         'checkstreamaccess'       => true,
         'securecheckstreamaccess' => true,
       ),
+      'combine' => array(
+        'css' => true,
+        'js'  => true,
+      ),
     );
     
     foreach( $skipsinglelogincheck as $module => $actions ) {
@@ -54,7 +58,7 @@ class Controller extends \Springboard\Controller\Visitor {
     
     $user = $this->bootstrap->getSession('user');
 
-    if ( $user['id'] ) {
+    if ( $user['id'] and !$user['isadmin'] ) {
 
       // mindig adatbazisbol kerdezzuk le a usert, mivel
       // elofordulhat, hogy menetkozben akarjuk a usert
@@ -69,6 +73,9 @@ class Controller extends \Springboard\Controller\Visitor {
          ) {
         
         $user->clear();
+        if ( !session_regenerate_id() ) // logoljuk ha nem sikerul
+          throw new \Exception("session_regenerate_id() returned false!");
+
         $l = $this->bootstrap->getLocalization();
         $this->redirectWithMessage('users/login', $l('users', 'timestampdisabled') );
         
