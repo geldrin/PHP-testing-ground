@@ -232,9 +232,7 @@ class Controller extends \Visitor\Controller {
     }
 
     $user->clear();
-    if ( !session_regenerate_id() ) // logoljuk ha nem sikerul
-      throw new \Exception("session_regenerate_id() returned false!");
-
+    $this->regenerateSessionID();
     $this->redirectWithMessage('index', $l('users', 'loggedout') );
     
   }

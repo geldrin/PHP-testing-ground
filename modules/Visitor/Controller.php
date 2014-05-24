@@ -73,8 +73,7 @@ class Controller extends \Springboard\Controller\Visitor {
          ) {
         
         $user->clear();
-        if ( !session_regenerate_id() ) // logoljuk ha nem sikerul
-          throw new \Exception("session_regenerate_id() returned false!");
+        $this->regenerateSessionID();
 
         $l = $this->bootstrap->getLocalization();
         $this->redirectWithMessage('users/login', $l('users', 'timestampdisabled') );
@@ -86,9 +85,7 @@ class Controller extends \Springboard\Controller\Visitor {
         if ( !$userModel->checkSingleLoginUsers() ) {
 
           $user->clear();
-          // kijelentkeztettuk, regeneraljuk a sessionidt
-          if ( !session_regenerate_id() ) // logoljuk ha nem sikerul
-            throw new \Exception("session_regenerate_id() returned false!");
+          $this->regenerateSessionID();
 
           $l = $this->bootstrap->getLocalization();
           $this->redirectWithMessage('users/login', sprintf(
@@ -365,6 +362,40 @@ class Controller extends \Springboard\Controller\Visitor {
 
     $this->queue->sendHTMLEmail( $email, $subject, $body, $values );
     $this->bootstrap->config['mail']['errorsto'] = $olderrorsto;
+
+  }
+
+  public function regenerateSessionID() {
+
+    if ( !$this->bootstrap->sessionstarted )
+      return;
+
+    /*
+     * ha a session cookie domain egy olyan domainrol erkezik ami a subdomain
+     * cookie domainjet is lefedi (peldaul a .conforg.videosquare.eu-t lefedi a
+     * .videosquare.eu) akkor az elsonek letrejott cookie lesz az ami szamit
+     * igy amikor a regenerate_id(false)-nel a PHP elkuldi a Set-Cookie headert
+     * akkor arra a cookie domainre kuldi el amit nem hasznalunk es ineffektiv
+     * igy nem lep ervenybe, erre nincs megoldas, arra viszont igen hogy az adatok
+     * megsemmisuljenek legalabb, mert akkor a redisben tarolt session adatokat
+     * dobjuk el konkretan, ezert kell a regenerate_id(true) hogy ezt jelezzuk
+     * mert kulonben az adatok ott maradnak a regi sessionid alatt amit a
+     * tovabbra is hasznal a browser
+     * ezert van az hogy session_regenerate_id(false) hivas utan latszolag
+     * nem valtoznak a session adatok a regi sessionid-ben
+     * ketto megoldas van:
+     *  - vagy mindig destroyolni a sessiont
+     *  - vagy bezarni a sessiont, ezaltal elmentve a valtoztatasokat benne
+     *    majd ujra megnyitni es akkor megprobalni rotalni az id-t
+     *    igy a "regi" sessionid-ben ugyanaz lesz mint az ujban ami nem biztos
+     *    hogy ervenybe lep
+     *
+     */
+    session_write_close();
+    $this->bootstrap->sessionstarted = false;
+    $this->bootstrap->setupSession();
+    if ( !session_regenerate_id() ) // logoljuk ha nem sikerul
+      throw new \Exception("session_regenerate_id() returned false!");
 
   }
 
