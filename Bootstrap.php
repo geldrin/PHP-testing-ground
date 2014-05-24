@@ -477,7 +477,7 @@ class Bootstrap {
       $d = \Springboard\Debug::getInstance();
       $d->log(
         false, 'sessionlog.txt',
-        \Springboard\Debug::formatBacktrace( $bt ) .
+        \Springboard\Debug::formatBacktrace( $bt, false, true ) .
         \Springboard\Debug::getRequestInformation( 2 ) . "\n\n\n\n"
       );
     }
