@@ -475,7 +475,7 @@ class Bootstrap {
     if ( !$this->config['sessionidentifier'] ) {
       ob_start();
       debug_print_backtrace();
-      $bt = ob_get_flush();
+      $bt = ob_get_clean();
       $d = \Springboard\Debug::getInstance();
       $d->log(
         false, 'sessionlog.txt',
