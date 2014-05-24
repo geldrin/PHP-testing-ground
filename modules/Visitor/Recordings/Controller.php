@@ -514,8 +514,7 @@ class Controller extends \Visitor\Controller {
       $organization = $orgModel->getOrganizationByID( $matches['organizationid'] );
       if ( $organization ) {
 
-        $this->bootstrap->config['cookiedomain']      = $organization['cookiedomain'];
-        $this->bootstrap->config['sessionidentifier'] = $organization['domain'];
+        $this->impersonateOrganization( $organization );
         $this->bootstrap->setupSession(
           true, $matches['sessionid'], $organization['cookiedomain']
         );

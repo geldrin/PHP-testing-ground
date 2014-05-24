@@ -121,26 +121,9 @@ class Controller extends \Springboard\Controller\Visitor {
 
     }
 
-    $baseuri   = $this->bootstrap->scheme . $organization['domain'] . '/';
-    $staticuri = $this->bootstrap->scheme . $organization['staticdomain'] . '/';
-    
-    $this->application->config['combine']['domains'][] = $organization['domain'];
-    $this->application->config['combine']['domains'][] = $organization['staticdomain'];
-    
-    $this->toSmarty['supportemail'] = $this->bootstrap->config['mail']['fromemail'] =
-      $this->application->config['mail']['fromemail'] = $organization['supportemail']
-    ;
-
-    $this->toSmarty['organization']   = $this->organization        = $organization;
-    $this->bootstrap->baseuri         =
-    $this->toSmarty['BASE_URI']       = $organization['baseuri']   = $baseuri;
-    $this->bootstrap->staticuri       =
-    $this->toSmarty['STATIC_URI']     = $organization['staticuri'] = $staticuri;
-    $this->bootstrap->validatesession = (bool)$organization['issessionvalidationenabled'];
-    $this->bootstrap->config['cookiedomain'] = $organization['cookiedomain'];
-    $this->bootstrap->config['sessionidentifier'] = $organization['domain'];
+    $this->impersonateOrganization( $organization );
     $this->organization = $organization;
-    
+
   }
   
   public function handleAccessFailure( $permission ) {
@@ -396,6 +379,28 @@ class Controller extends \Springboard\Controller\Visitor {
     $this->bootstrap->setupSession();
     if ( !session_regenerate_id() ) // logoljuk ha nem sikerul
       throw new \Exception("session_regenerate_id() returned false!");
+
+  }
+
+  public function impersonateOrganization( &$organization ) {
+
+    $baseuri   = $this->bootstrap->scheme . $organization['domain'] . '/';
+    $staticuri = $this->bootstrap->scheme . $organization['staticdomain'] . '/';
+    
+    $this->application->config['combine']['domains'][] = $organization['domain'];
+    $this->application->config['combine']['domains'][] = $organization['staticdomain'];
+    
+    $this->toSmarty['supportemail'] = $this->bootstrap->config['mail']['fromemail'] =
+      $this->application->config['mail']['fromemail'] = $organization['supportemail']
+    ;
+
+    $this->bootstrap->baseuri         =
+    $this->toSmarty['BASE_URI']       = $organization['baseuri']   = $baseuri;
+    $this->bootstrap->staticuri       =
+    $this->toSmarty['STATIC_URI']     = $organization['staticuri'] = $staticuri;
+    $this->bootstrap->validatesession = (bool)$organization['issessionvalidationenabled'];
+    $this->bootstrap->config['cookiedomain'] = $organization['cookiedomain'];
+    $this->bootstrap->config['sessionidentifier'] = $organization['domain'];
 
   }
 
