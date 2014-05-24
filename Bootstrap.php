@@ -472,20 +472,6 @@ class Bootstrap {
   public function getSession( $namespace = 'default' ) {
     
     $this->setupSession();
-    if ( !$this->config['sessionidentifier'] ) {
-      ob_start();
-      debug_print_backtrace();
-      $bt = ob_get_clean();
-      $d = \Springboard\Debug::getInstance();
-      $d->log(
-        false, 'sessionlog.txt',
-        $bt . "\n" .
-        \Springboard\Debug::getRequestInformation( 2 ) . "\n\n\n\n",
-        false,
-        true,
-        true
-      );
-    }
     $basenamespace = $this->config['siteid'] . '-' . $this->config['sessionidentifier'];
     return new Springboard\Session( $basenamespace, $namespace );
     
