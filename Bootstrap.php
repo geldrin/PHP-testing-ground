@@ -473,11 +473,13 @@ class Bootstrap {
     
     $this->setupSession();
     if ( !$this->config['sessionidentifier'] ) {
-      $bt = debug_backtrace();
+      ob_start();
+      debug_print_backtrace();
+      $bt = ob_get_flush();
       $d = \Springboard\Debug::getInstance();
       $d->log(
         false, 'sessionlog.txt',
-        \Springboard\Debug::formatBacktrace( $bt, false, true ) .
+        $bt . "\n" .
         \Springboard\Debug::getRequestInformation( 2 ) . "\n\n\n\n"
       );
     }
