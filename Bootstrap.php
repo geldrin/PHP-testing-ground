@@ -480,7 +480,10 @@ class Bootstrap {
       $d->log(
         false, 'sessionlog.txt',
         $bt . "\n" .
-        \Springboard\Debug::getRequestInformation( 2 ) . "\n\n\n\n"
+        \Springboard\Debug::getRequestInformation( 2 ) . "\n\n\n\n",
+        false,
+        true,
+        true
       );
     }
     $basenamespace = $this->config['siteid'] . '-' . $this->config['sessionidentifier'];
