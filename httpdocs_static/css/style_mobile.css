@@ -283,7 +283,9 @@
     margin: 0px 10px 0px 0px;
     display: block;
   }
-  
+  #pagebg {
+    top: 76px;
+  }
   #indexcontainer {
     width: 100%;
   }
@@ -363,10 +365,7 @@
   #header .rightbox {
     float: right;
   }
-  #pagebg {
-    top: 76px;
-  }
-
+  
   #indexcontainer .wlarge {
     width: 100%;
   }
