@@ -186,9 +186,6 @@ function filenameize( $filename ) {
 
 function checkAccess( $recordingid, &$config ) {
   
-  $bootstrap = new stdClass();
-  $bootstrap->config = $config;
-  
   switch( $config['cache']['type'] ) {
     
     case 'file':
@@ -212,21 +209,21 @@ function checkAccess( $recordingid, &$config ) {
   include_once( $config['libpath'] . 'Springboard/Cache.php' );
   include_once( $config['libpath'] . 'Springboard/Cache/' . $file );
   
+  if ( !isset( $application ) )
+    $application = setupApp();
+  
   $host         = $_SERVER['SERVER_NAME'];
-  $orgModel     = $this->bootstrap->getModel('organizations');
+  $orgModel     = $application->bootstrap->getModel('organizations');
   $organization = $orgModel->getOrganizationByDomain( $host, true );
 
   $cookiedomain = $organization['cookiedomain'];
   ini_set('session.cookie_domain',    $cookiedomain );
   session_set_cookie_params( 0 , '/', $cookiedomain );
-  $sessionkey = 'teleconnect-' . $organization['domain'];
+  $sessionkey = $application->bootstrap->config['siteid'] . '-' . $organization['domain'];
   
   session_start();
   
   if ( DEBUG or !isset( $_SESSION[ $sessionkey ]['recordingaccess'][ $recordingid ] ) ) {
-    
-    if ( !isset( $application ) )
-      $application = setupApp();
     
     $application->bootstrap->sessionstarted = true;
     $application->bootstrap->config['cookiedomain'] = $cookiedomain;
