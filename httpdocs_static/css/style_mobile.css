@@ -304,7 +304,6 @@
     float: none;
   }
   #indexcontainer .wlarge, #indexcontainer .wwide {
-    width: 100%;
     height: auto;
   }
   .rightbox {
@@ -367,7 +366,11 @@
   #pagebg {
     top: 76px;
   }
-  
+
+  #indexcontainer .wlarge {
+    width: 100%;
+  }
+
   .widepager .itemsperpagecontainer {
     display: none;
   }
