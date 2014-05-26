@@ -1020,36 +1020,39 @@ class Channels extends \Springboard\Model {
     
     switch ( $this->row['accesstype'] ) {
       
-      case 'departments':
+      case 'departmentsorgroups':
         
         $ids = $this->db->getCol("
           SELECT departmentid
           FROM access
-          WHERE channelid = '" . $this->id . "'
+          WHERE
+            channelid = '" . $this->id . "' AND
+            departmentid IS NOT NULL
         ");
         
-        if ( empty( $ids ) )
-          return true;
-        
-        foreach( $livefeedids as $livefeedid )
-          $this->insertMultipleIDs( $ids, 'access', 'departmentid', $livefeedid, 'livefeedid' );
-        
-        break;
-      
-      case 'groups':
-        
+        if ( !empty( $ids ) ) {
+
+          foreach( $livefeedids as $livefeedid )
+            $this->insertMultipleIDs( $ids, 'access', 'departmentid', $livefeedid, 'livefeedid' );
+          
+        }
+
         $ids = $this->db->getCol("
           SELECT groupid
           FROM access
-          WHERE channelid = '" . $this->id . "'
+          WHERE
+            channelid = '" . $this->id . "' AND
+            groupid IS NOT NULL
         ");
         
-        if ( empty( $ids ) )
-          return true;
-        
-        foreach( $livefeedids as $livefeedid )
-          $this->insertMultipleIDs( $ids, 'access', 'groupid', $livefeedid, 'livefeedid' );
-        
+        if ( !empty( $ids ) ) {
+          
+          foreach( $livefeedids as $livefeedid )
+            $this->insertMultipleIDs( $ids, 'access', 'groupid', $livefeedid, 'livefeedid' );
+          
+        }
+
+        return true;
         break;
       
       default:

@@ -555,16 +555,10 @@ class Livefeeds extends \Springboard\Model {
         
         break;
       
-      case 'departments':
-      case 'groups':
-        
-        if ( $this->row['accesstype'] == 'groups')
-          $error = 'grouprestricted';
-        else
-          $error = 'departmentrestricted';
+      case 'departmentsorgroups':
         
         if ( !isset( $user['id'] ) )
-          return $error;
+          return 'registrationrestricted';
         elseif ( $user['id'] == $this->row['userid'] )
           return true;
         elseif ( $user['iseditor'] and $user['organizationid'] == $this->row['organizationid'] )
@@ -573,8 +567,8 @@ class Livefeeds extends \Springboard\Model {
         $feedid = "'" . $this->row['id'] . "'";
         $userid = "'" . $user['id'] . "'";
         
-        if ( $this->row['accesstype'] == 'departments')
-          $sql = "
+        $row = $this->db->getRow("
+          (
             SELECT
               ud.id
             FROM
@@ -585,11 +579,9 @@ class Livefeeds extends \Springboard\Model {
               ud.departmentid = a.departmentid AND
               ud.userid       = $userid
             LIMIT 1
-          ";
-        else
-          $sql = "
+          ) UNION DISTINCT (
             SELECT
-              gm.userid
+              gm.id
             FROM
               access AS a,
               groups_members AS gm
@@ -598,12 +590,11 @@ class Livefeeds extends \Springboard\Model {
               gm.groupid   = a.groupid AND
               gm.userid    = $userid
             LIMIT 1
-          ";
-        
-        $row = $this->db->getRow( $sql );
+          )
+        ");
         
         if ( empty( $row ) )
-          return $error;
+          return 'departmentorgrouprestricted';
         
         break;
       

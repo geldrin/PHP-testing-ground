@@ -44,9 +44,10 @@ class Modify extends \Visitor\HelpForm {
     
     switch ( $oldvalues['accesstype'] ) {
       
-      case 'departments':
-      case 'groups':
-        return $this->hasSameAccess( $oldvalues['accesstype'], $newvalues[ $oldvalues['accesstype'] ] );
+      case 'departmentsorgroups':
+        $groups      = $this->hasSameAccess( 'groups', $newvalues['groups'] );
+        $departments = $this->hasSameAccess( 'departments', $newvalues['departments'] );
+        return ($groups and $departments);
         break;
       
     }

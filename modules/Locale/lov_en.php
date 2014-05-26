@@ -72,6 +72,12 @@ return array(
     'groups'        => 'own group',
   ),
   
+  'liveaccesstype' => array(
+    'public'        => 'public (recommended)',
+    'registrations' => 'requires registration',
+    'departmentsorgroups' => 'group of departments or my own groups',
+  ),
+  
   'permissions' => array(
     'isadmin'       => 'Administrator',
     'iseditor'      => 'Editor',

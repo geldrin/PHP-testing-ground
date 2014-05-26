@@ -18,21 +18,22 @@ class Createfeed extends \Visitor\HelpForm {
     
     switch( $this->channelModel->row['accesstype'] ) {
       
-      case 'departments':
+      case 'departmentsorgroups':
         
         $this->values['departments'] = $this->channelModel->db->getCol("
           SELECT departmentid
           FROM access
-          WHERE channelid = '" . $this->channelModel->id . "'
+          WHERE
+            channelid = '" . $this->channelModel->id . "' AND
+            departmentid IS NOT NULL
         ");
-        break;
-      
-      case 'groups':
         
         $this->values['groups'] = $this->channelModel->db->getCol("
           SELECT groupid
           FROM access
-          WHERE channelid = '" . $this->channelModel->id . "'
+          WHERE
+            channelid = '" . $this->channelModel->id . "' AND
+            groupid IS NOT NULL
         ");
         break;
       

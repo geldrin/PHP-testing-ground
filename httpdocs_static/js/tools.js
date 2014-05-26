@@ -765,6 +765,10 @@ function setupAccesstype( elem ) {
         $j('#groupscontainer').parents('tr').show();
         break;
       
+      case 'departmentsorgroups':
+        $j('#departmentscontainer, #groupscontainer').parents('tr').show();
+        break;
+      
     }
     
   }).change();

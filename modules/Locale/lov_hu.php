@@ -107,6 +107,12 @@ return array(
     'groups'        => 'saját csoportom számára',
   ),
   
+  'liveaccesstype' => array(
+    'public'        => 'publikus (ajánlott)',
+    'registrations' => 'regisztráció szükséges',
+    'departmentsorgroups' => 'szervezeti egységek vagy saját csoportom számára',
+  ),
+  
   'permissions' => array(
     'iseditor'      => 'Szerkesztő',
     'isclientadmin' => 'Kliens adminisztrátor',

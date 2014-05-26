@@ -85,6 +85,16 @@ class Form extends \Springboard\Controller\Form {
         
         break;
       
+      case 'departmentsorgroups':
+
+        if ( isset( $_REQUEST['departments'] ) and !empty( $values['departments'] ) )
+          $model->restrictDepartments( $values['departments'] );
+
+        if ( isset( $_REQUEST['groups'] ) and !empty( $values['groups'] ) )
+          $model->restrictGroups( $values['groups'] );
+
+        break;
+
       default:
         throw new \Exception('Unhandled accesstype');
         break;
