@@ -394,6 +394,7 @@ class Controller extends \Springboard\Controller\Visitor {
       $this->application->config['mail']['fromemail'] = $organization['supportemail']
     ;
 
+    $this->toSmarty['organization']   = $organization;
     $this->bootstrap->baseuri         =
     $this->toSmarty['BASE_URI']       = $organization['baseuri']   = $baseuri;
     $this->bootstrap->staticuri       =
