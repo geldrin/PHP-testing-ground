@@ -881,16 +881,10 @@ class Channels extends \Springboard\Model {
         
         break;
       
-      case 'departments':
-      case 'groups':
-        
-        if ( $channel['accesstype'] == 'groups')
-          $error = 'grouprestricted';
-        else
-          $error = 'departmentrestricted';
-        
+      case 'departmentsorgroups':
+
         if ( !isset( $user['id'] ) )
-          return $error;
+          return 'registrationrestricted';
         elseif ( $user['id'] == $channel['userid'] )
           return true;
         elseif ( $user['iseditor'] and $user['organizationid'] == $channel['organizationid'] )
@@ -899,9 +893,9 @@ class Channels extends \Springboard\Model {
         $channelid = "'" . $channel['id'] . "'";
         $userid    = "'" . $user['id'] . "'";
         
-        if ( $this->row['accesstype'] == 'departments')
-          $sql = "
-            SELECT ud.id
+        $hasaccess = $this->db->getOne("
+          SELECT (
+            SELECT COUNT(*)
             FROM
               access AS a,
               users_departments AS ud
@@ -910,11 +904,8 @@ class Channels extends \Springboard\Model {
               ud.departmentid = a.departmentid AND
               ud.userid       = $userid
             LIMIT 1
-          ";
-        else
-          $sql = "
-            SELECT
-              gm.userid
+          ) + (
+            SELECT COUNT(*)
             FROM
               access AS a,
               groups_members AS gm
@@ -923,12 +914,11 @@ class Channels extends \Springboard\Model {
               gm.groupid  = a.groupid AND
               gm.userid   = $userid
             LIMIT 1
-          ";
+          ) AS count
+        ");
         
-        $row = $this->db->getRow( $sql );
-        
-        if ( empty( $row ) )
-          return $error;
+        if ( !$hasaccess )
+          return 'departmentorgrouprestricted';
         
         break;
       

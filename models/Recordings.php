@@ -922,16 +922,10 @@ class Recordings extends \Springboard\Model {
         
         break;
       
-      case 'departments':
-      case 'groups':
-        
-        if ( $this->row['accesstype'] == 'groups')
-          $error = 'grouprestricted';
-        else
-          $error = 'departmentrestricted';
-        
+      case 'departmentsorgroups':
+
         if ( !isset( $user['id'] ) )
-          return $error;
+          return 'registrationrestricted';
         elseif ( $user['id'] == $this->row['userid'] )
           return true;
         elseif ( ( $user['iseditor'] or $user['isclientadmin'] ) and $user['organizationid'] == $this->row['organizationid'] )
@@ -940,10 +934,9 @@ class Recordings extends \Springboard\Model {
         $recordingid = "'" . $this->id . "'";
         $userid      = "'" . $user['id'] . "'";
         
-        if ( $this->row['accesstype'] == 'departments')
-          $sql = "
-            SELECT
-              ud.id
+        $hasaccess = $this->db->getOne("
+          SELECT (
+            SELECT COUNT(*)
             FROM
               access AS a,
               users_departments AS ud
@@ -952,11 +945,9 @@ class Recordings extends \Springboard\Model {
               ud.departmentid = a.departmentid AND
               ud.userid       = $userid
             LIMIT 1
-          ";
-        else
-          $sql = "
-            SELECT
-              gm.userid
+          ) +
+          (
+            SELECT COUNT(*)
             FROM
               access AS a,
               groups_members AS gm
@@ -965,14 +956,13 @@ class Recordings extends \Springboard\Model {
               gm.groupid    = a.groupid AND
               gm.userid     = $userid
             LIMIT 1
-          ";
+          ) AS count
+        ");
         
-        $row = $this->db->getRow( $sql );
-        
-        if ( empty( $row ) )
-          return $error;
+        if ( !$hasaccess )
+          return 'departmentorgrouprestricted';
         elseif ( $timefailed )
-          return $error . '_timefailed';
+          return 'departmentorgrouprestricted_timefailed';
         
         break;
       

@@ -68,13 +68,6 @@ return array(
   'accesstype' => array(
     'public'        => 'public (recommended)',
     'registrations' => 'requires registration',
-    'departments'   => 'group of departments',
-    'groups'        => 'own group',
-  ),
-  
-  'liveaccesstype' => array(
-    'public'        => 'public (recommended)',
-    'registrations' => 'requires registration',
     'departmentsorgroups' => 'group of departments or my own groups',
   ),
   

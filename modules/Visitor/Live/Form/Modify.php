@@ -67,7 +67,11 @@ class Modify extends \Visitor\HelpForm {
       $column = 'groupid';
     
     $existingaccess = $db->getCol("
-      SELECT $column FROM access WHERE channelid = '$channelid'
+      SELECT $column
+      FROM access
+      WHERE
+        channelid = '$channelid' AND
+        $column IS NOT NULL
     ");
     
     if ( count( $existingaccess ) != count( $newaccess ) )

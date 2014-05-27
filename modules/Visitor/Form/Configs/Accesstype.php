@@ -5,6 +5,10 @@ if ( !isset( $user ) )
 if ( !isset( $groupModel ) )
   $groupModel = $this->bootstrap->getModel('groups');
 
+$groupsexist =
+  $groupModel->getGroupCount( $user, $this->controller->organization['id'] )
+;
+
 if ( !isset( $departmentModel ) ) {
   
   $departmentModel = $this->bootstrap->getModel('departments');
@@ -12,12 +16,10 @@ if ( !isset( $departmentModel ) ) {
   
 }
 
+$departmentsexist = $departmentModel->getCount();
 $accesstypes = $l->getLov('accesstype');
-if ( $groupModel->getGroupCount( $user, $this->controller->organization['id'] ) == 0 )
-  unset( $accesstypes['groups'] );
-
-if ( $departmentModel->getCount() == 0 )
-  unset( $accesstypes['departments'] );
+if ( !$groupsexist and !$departmentsexist )
+  unset( $accesstypes['departmentsorgroups'] );
 
 $config['accesstype'] = array(
   'displayname' => $l('recordings', 'accesstype'),

@@ -103,13 +103,6 @@ return array(
   'accesstype' => array(
     'public'        => 'publikus (ajánlott)',
     'registrations' => 'regisztráció szükséges',
-    'departments'   => 'szervezeti egységek egy csoportja számára',
-    'groups'        => 'saját csoportom számára',
-  ),
-  
-  'liveaccesstype' => array(
-    'public'        => 'publikus (ajánlott)',
-    'registrations' => 'regisztráció szükséges',
     'departmentsorgroups' => 'szervezeti egységek vagy saját csoportom számára',
   ),
   

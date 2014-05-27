@@ -567,10 +567,9 @@ class Livefeeds extends \Springboard\Model {
         $feedid = "'" . $this->row['id'] . "'";
         $userid = "'" . $user['id'] . "'";
         
-        $row = $this->db->getRow("
-          (
-            SELECT
-              ud.id
+        $hasaccess = $this->db->getOne("
+          SELECT (
+            SELECT COUNT(*)
             FROM
               access AS a,
               users_departments AS ud
@@ -579,9 +578,8 @@ class Livefeeds extends \Springboard\Model {
               ud.departmentid = a.departmentid AND
               ud.userid       = $userid
             LIMIT 1
-          ) UNION DISTINCT (
-            SELECT
-              gm.id
+          ) + (
+            SELECT COUNT(*)
             FROM
               access AS a,
               groups_members AS gm
@@ -590,10 +588,10 @@ class Livefeeds extends \Springboard\Model {
               gm.groupid   = a.groupid AND
               gm.userid    = $userid
             LIMIT 1
-          )
+          ) AS count
         ");
         
-        if ( empty( $row ) )
+        if ( !$hasaccess )
           return 'departmentorgrouprestricted';
         
         break;

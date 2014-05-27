@@ -9,13 +9,17 @@ $config['fs1']['prefix']               =
 $config['departments[]']['valuesql'] = "
   SELECT departmentid
   FROM access
-  WHERE livefeedid = " . $this->application->getNumericParameter('id')
-;
+  WHERE
+    livefeedid = " . $this->application->getNumericParameter('id') . " AND
+    departmentid IS NOT NULL
+";
 $config['groups[]']['valuesql']        = "
   SELECT groupid
   FROM access
-  WHERE livefeedid = " . $this->application->getNumericParameter('id')
-;
+  WHERE
+    livefeedid = " . $this->application->getNumericParameter('id') . " AND
+    groupid IS NOT NULL
+";
 
 if ( $this->feedModel->row['feedtype'] == 'live' ) {
   

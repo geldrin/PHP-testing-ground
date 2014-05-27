@@ -31,14 +31,18 @@ if ( isset( $config['departments[]'] ) )
   $config['departments[]']['valuesql'] = "
     SELECT departmentid
     FROM access
-    WHERE recordingid = '" . $this->recordingsModel->id . "'
+    WHERE
+      recordingid = '" . $this->recordingsModel->id . "' AND
+      departmentid IS NOT NULL
   ";
 
 if ( isset( $config['groups[]'] ) )
   $config['groups[]']['valuesql'] = "
     SELECT groupid
     FROM access
-    WHERE recordingid = '" . $this->recordingsModel->id . "'
+    WHERE
+      recordingid = '" . $this->recordingsModel->id . "' AND
+      groupid IS NOT NULL
   ";
 
 $config = array_merge( $config, array(
