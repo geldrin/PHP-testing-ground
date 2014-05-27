@@ -58,6 +58,22 @@ $config['departments[]'] = array(
   'treestart'   => 0,
   'treestartinclusive' => true,
   'treeparent'  => 'parentid',
+  'validation'  => array(
+    array(
+      'type' => 'required',
+      'help' => $l('recordings', 'groupshelp'),
+      'anddepend' => Array(
+        Array(
+          'js'  => '<FORM.accesstype> == "departmentsorgroups"',
+          'php' => '<FORM.accesstype> == "departmentsorgroups"',
+        ),
+        Array( // valami clonefish bug van, a !<FORM.groups> nemmukodik
+          'js'  => '!clonefishGetFieldValue( "recordings_modifysharing", "groups", "inputCheckboxDynamic")',
+          'php' => '!count( <FORM.groups[]> )',
+        ),
+      ),
+    ),
+  ),
 );
 
 $config['groups[]'] = array(
@@ -78,9 +94,13 @@ $config['groups[]'] = array(
       'help' => $l('recordings', 'groupshelp'),
       'anddepend' => Array(
         Array(
-          'js'  => '<FORM.accesstype> == "groups"',
-          'php' => '<FORM.accesstype> == "groups"',
-        )
+          'js'  => '<FORM.accesstype> == "departmentsorgroups"',
+          'php' => '<FORM.accesstype> == "departmentsorgroups"',
+        ),
+        Array(
+          'js'  => '!clonefishGetFieldValue( "recordings_modifysharing", "departments", "inputCheckboxDynamic")',
+          'php' => '!count( <FORM.departments[]> )',
+        ),
       ),
     ),
   ),

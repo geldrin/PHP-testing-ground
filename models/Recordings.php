@@ -1160,7 +1160,7 @@ class Recordings extends \Springboard\Model {
         WHERE
           $where
           $generalwhere AND
-          r.accesstype  = 'groups' AND
+          r.accesstype  = 'departmentsorgroups' AND
           a.recordingid = r.id AND
           a.groupid     = gm.groupid AND
           gm.userid     = '" . $user['id'] . "'
@@ -1173,7 +1173,7 @@ class Recordings extends \Springboard\Model {
         WHERE
           $where
           $generalwhere AND
-          r.accesstype   = 'departments' AND
+          r.accesstype   = 'departmentsorgroups' AND
           a.recordingid  = r.id AND
           a.departmentid = ud.departmentid AND
           ud.userid      = '" . $user['id'] . "'
