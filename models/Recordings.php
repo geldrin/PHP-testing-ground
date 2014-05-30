@@ -1001,7 +1001,8 @@ class Recordings extends \Springboard\Model {
         cr.recordingid      = '" . $this->id . "' AND
         cr.channelid        = c.id AND
         c.organizationid    = '" . $organization['id'] . "' AND
-        c.channeltypeid     = '$coursetypeid'
+        c.channeltypeid     = '$coursetypeid' AND
+        c.isdeleted         = '0'
     ");
 
     // recording not a member of any course
@@ -1689,8 +1690,9 @@ class Recordings extends \Springboard\Model {
     
     $where =
       "cr.channelid IN ('" . implode("', '", $channelids ) . "') AND
-      c.id = cr.channelid AND
-      r.id = cr.recordingid"
+      c.id        = cr.channelid AND
+      c.isdeleted = '0' AND
+      r.id        = cr.recordingid"
     ;
     
     return $this->db->getArray("

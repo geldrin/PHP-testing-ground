@@ -16,13 +16,17 @@ $config['indexphotofilename'] = array(
 $config['departments[]']['valuesql'] = "
   SELECT departmentid
   FROM access
-  WHERE channelid = " . $this->application->getNumericParameter('id')
-;
+  WHERE
+    channelid = " . $this->application->getNumericParameter('id') . " AND
+    departmentid IS NOT NULL
+";
 $config['groups[]']['valuesql']        = "
   SELECT groupid
   FROM access
-  WHERE channelid = " . $this->application->getNumericParameter('id')
-;
+  WHERE
+    channelid = " . $this->application->getNumericParameter('id') . " AND
+    groupid IS NOT NULL
+";
 
 unset( $config['parent'] );
 $recordings = $this->channelModel->getRecordingsIndexphotos();
@@ -65,4 +69,3 @@ $config['accesstype']['validation'] = array(
     ,
   ),
 );
-

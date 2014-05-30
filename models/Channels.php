@@ -20,7 +20,8 @@ class Channels extends \Springboard\Model {
 
       return "
         (
-          {$prefix}ispublic = 1 AND
+          {$prefix}accesstype = 'public' AND
+          {$prefix}isdeleted  = '0' AND
           {$prefix}numberofrecordings > 0
         )
       ";
@@ -29,20 +30,22 @@ class Channels extends \Springboard\Model {
 
     return "
       (
-        (
-          {$prefix}ispublic = 1 AND
-          {$prefix}numberofrecordings > 0
-        ) OR
-        {$prefix}userid = '" . $user['id'] . "' OR
-        (
+        {$prefix}isdeleted  = '0' AND (
           (
-            SELECT COUNT(*)
-            FROM users_invitations AS cui
-            WHERE
-              cui.status          <> 'deleted' AND
-              cui.channelid        = {$prefix}id AND
-              cui.registereduserid = '" . $user['id'] . "'
-          ) > 0
+            {$prefix}accesstype = 'public' AND
+            {$prefix}numberofrecordings > 0
+          ) OR
+          {$prefix}userid = '" . $user['id'] . "' OR
+          (
+            (
+              SELECT COUNT(*)
+              FROM users_invitations AS cui
+              WHERE
+                cui.status          <> 'deleted' AND
+                cui.channelid        = {$prefix}id AND
+                cui.registereduserid = '" . $user['id'] . "'
+            ) > 0
+          )
         )
       )
     ";
@@ -55,12 +58,11 @@ class Channels extends \Springboard\Model {
     
     /* leszarmazott csatornak szamlaloi */
     $counter = $this->db->getOne("
-      SELECT 
-        SUM( numberofrecordings ) 
-      FROM
-        channels
-      WHERE 
-        parentid = '" . $this->id . "'
+      SELECT SUM( numberofrecordings ) 
+      FROM channels
+      WHERE
+        parentid  = '" . $this->id . "' AND
+        isdeleted = '0'
     ");
     
     if ( !is_numeric( $counter ) )
@@ -71,18 +73,21 @@ class Channels extends \Springboard\Model {
       SET numberofrecordings = 
         (
           -- az adott csatornahoz rendelt felvetelek szama
-          SELECT
-            COUNT(*)
+          SELECT COUNT(*)
           FROM
-            recordings r, channels_recordings cr
+            recordings r,
+            channels_recordings cr
           WHERE
-            r.id = cr.recordingid AND
+            r.id         = cr.recordingid AND
             cr.channelid = '" . $this->id . "' AND
-            ( r.status = 'onstorage' OR r.status = 'live' ) AND
-            r.ispublished = 1 AND
-            r.accesstype = 'public' AND
             (
-              r.visiblefrom IS NULL OR
+              r.status = 'onstorage' OR
+              r.status = 'live'
+            ) AND
+            r.ispublished = 1 AND
+            r.accesstype  = 'public' AND
+            (
+              r.visiblefrom  IS NULL OR
               r.visibleuntil IS NULL OR
               (
                 r.visiblefrom  <= CURRENT_DATE() AND
@@ -90,8 +95,7 @@ class Channels extends \Springboard\Model {
               )
             )
         ) + " . $counter . "
-      WHERE
-        id = '" . $this->id . "'
+      WHERE id = '" . $this->id . "'
     ");
     
     $row = $this->row;
@@ -153,13 +157,15 @@ class Channels extends \Springboard\Model {
     $sql = "
       SELECT id
       FROM channels
-      WHERE parentid = " . $parentid . "
-      ORDER BY weight
+      WHERE
+        parentid  = " . $parentid . " AND
+        isdeleted = '0'
     ";
     
     if ( $ispublic )
-      $sql .= " AND ispublic = '1'";
+      $sql .= " AND accesstype = 'public'";
     
+    $sql .= "ORDER BY weight";
     $children = $this->db->getCol( $sql );
     
     foreach( $children as $parentid )
@@ -180,7 +186,9 @@ class Channels extends \Springboard\Model {
     $parents = $this->db->getAssoc("
       SELECT parentid, id
       FROM channels
-      WHERE id = $id
+      WHERE
+        id        = $id AND
+        isdeleted = '0'
       ORDER BY weight
     ");
     
@@ -228,7 +236,7 @@ class Channels extends \Springboard\Model {
     // a children csatornak felol keresunk egyetlen videot
     $indexphotofilename = $this->bootstrap->getModel('recordings')->getIndexPhotoFromChannels( 
       array_merge( array( $parentid ), $children ),
-      $parent->row['ispublic']
+      $parent->row['accesstype']
     );
     
     if ( !$indexphotofilename and $default )
@@ -282,18 +290,20 @@ class Channels extends \Springboard\Model {
   }
   
   function getSingleChannelTree( $rootid, $orderby = null, $parentid = 0, $ispublic = null ) {
-    
+
+    $this->addFilter('c.isdeleted', 0, true, false, 'isdeleted');
+
     if ( $orderby === null )
       $orderby = 'c.weight, c.starttimestamp, c.title';
 
     if ( $rootid )
       $this->addFilter('c.id', $rootid, true, false, 'rootid');
-    
+
     if ( $parentid !== null )
       $this->addFilter('c.parentid', $parentid, true, false, 'parentid');
     
     if ( $ispublic )
-      $this->addFilter('c.ispublic', 1, true, false, 'ispublic');
+      $this->addFilter('c.accesstype', 'public', false, false, 'accesstype');
     
     $this->addTextFilter('c.channeltypeid = ct.id', 'channeltype');
     
@@ -351,7 +361,7 @@ class Channels extends \Springboard\Model {
     
     if ( $parentid !== null )
       $this->addFilter('c.parentid', $parentid, true, false, 'parentid');
-    
+
     $this->addTextFilter('c.channeltypeid = ct.id', 'channeltype');
     
     $channels = $this->getChannelArray( $start, $limit, $where, $orderby );
@@ -366,7 +376,8 @@ class Channels extends \Springboard\Model {
     
     if ( $where )
       $this->addTextFilter( $where );
-    
+
+    $this->addFilter('c.isdeleted', 0, true, false, 'isdeleted');
     $this->addTextFilter("s.translationof = ct.name_stringid AND s.language = '". \Springboard\Language::get() . "'", 'channeltypestring');
 
     $ret =
@@ -426,6 +437,8 @@ class Channels extends \Springboard\Model {
         c.organizationid IN('" . implode("', '", $organizationids ) . "')
       )";
     
+    $where .= " AND c.isdeleted = '0'";
+
     // az eventeket is belevesszuk a channelokba mert ez jelenik meg a
     // video nezo oldalon mint lista amihez hozza lehet adni a videot
     return $this->db->getArray("
@@ -436,8 +449,7 @@ class Channels extends \Springboard\Model {
         ct.isfavorite = 0 AND
         c.channeltypeid = ct.id AND
         $where
-      ORDER BY
-        ct.ispersonal DESC
+      ORDER BY ct.ispersonal DESC
     ");
 
   }
@@ -484,6 +496,7 @@ class Channels extends \Springboard\Model {
       FROM channels
       WHERE
         channeltypeid IN ('" . implode("', '", $ids ) . "') AND
+        isdeleted = '0' AND
         starttimestamp IS NOT NULL
       ORDER BY
         starttimestamp DESC
@@ -502,13 +515,13 @@ class Channels extends \Springboard\Model {
         ct.isevent = 0 AND
         ( 
           ct.ispersonal = 0 OR
-          ( ct.ispersonal = 1 AND c.ispublic = 1 )
+          ( ct.ispersonal = 1 AND c.accesstype = 'public' )
         ) AND
         c.starttimestamp IS NOT NULL AND
-        c.parentid = 0 AND
+        c.parentid  = 0 AND
+        c.isdeleted = 0 AND
         c.numberofrecordings > 0
-      ORDER BY
-        c.starttimestamp DESC
+      ORDER BY c.starttimestamp DESC
     ");
     
   }
@@ -531,7 +544,8 @@ class Channels extends \Springboard\Model {
         channel_types AS ct
       WHERE
         ct.id           = c.channeltypeid AND
-        c.ispublic      = '1' AND
+        c.accesstype    = 'public' AND
+        c.isdeleted     = '0' AND
         s.translationof = ct.name_stringid AND
         s.language      = '" . \Springboard\Language::get() . "' AND
         c.id            = '" . $channel['parentid'] . "'
@@ -557,11 +571,13 @@ class Channels extends \Springboard\Model {
     $sql = "
       SELECT id, parentid
       FROM channels
-      WHERE id = '" . $parentid . "'
+      WHERE
+        id        = '" . $parentid . "' AND
+        isdeleted = 0
     ";
     
     if ( $ispublic )
-      $sql .= " AND ispublic = 1";
+      $sql .= " AND accesstype = 'public'";
     
     $parent = $this->db->getRow( $sql );
     
@@ -798,6 +814,7 @@ class Channels extends \Springboard\Model {
       $order = 'weight, title';
     
     $this->addFilter('parentid', $parentid, true, true, 'treearray' );
+    $this->addFilter('isdeleted', 0, true, true, 'isdeleted' );
     
     $items = $this->db->getArray("
       SELECT *
@@ -854,7 +871,7 @@ class Channels extends \Springboard\Model {
     
     // ezt csatorna hozzaadas-hoz valo permission checknel hasznaljuk,
     // ez utan nezzunk minden mast ami csak a csatorna megnezesehez kell
-    if ( $skipaccesstypecheck )
+    if ( $skipaccesstypecheck or $channel['isdeleted'] )
       return false;
 
     if ( $this->isAccessibleByInvitation( $user, $organization, $channel['id'] ) )
@@ -866,7 +883,7 @@ class Channels extends \Springboard\Model {
         
         // idaig nem jutunk el ha a user hozzafer a csatornahoz, nem kell nezni
         // ha nem publikus
-        if ( $channel['ispublic'] )
+        if ( $channel['accesstype'] )
           return true;
         
         break;
@@ -969,18 +986,6 @@ class Channels extends \Springboard\Model {
     $this->insertMultipleIDs( $groupids, 'access', 'groupid');
   }
   
-  public function updateChildrenPublic( $ispublic ) {
-    
-    $this->ensureObjectLoaded();
-    $childrenids = array_merge( array( $this->id ), $this->findChildrenIDs() );
-    $this->db->execute("
-      UPDATE channels
-      SET ispublic = " . $this->db->qstr( $ispublic ) . "
-      WHERE id IN('" . implode("', '", $childrenids ) . "')
-    ");
-    
-  }
-  
   public function syncAccessWithFeeds( $livefeedids = null ) {
     
     $this->ensureObjectLoaded();
@@ -1076,6 +1081,7 @@ class Channels extends \Springboard\Model {
         c.indexphotofilename
       FROM channels AS c
       WHERE
+        c.isdeleted   = '0' AND
         c.isliveevent = '0' AND
         c.parentid    = '0' AND -- csak root channeleket
         (
@@ -1197,6 +1203,18 @@ class Channels extends \Springboard\Model {
     }
 
     return $id;
+
+  }
+
+  public function markAsDeleted() {
+    
+    $this->ensureID();
+    $this->db->execute("
+      UPDATE channels
+      SET isdeleted = '1'
+      WHERE id = '" . $this->id . "'
+      LIMIT 1
+    ");
 
   }
 

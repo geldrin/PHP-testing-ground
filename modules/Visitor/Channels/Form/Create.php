@@ -21,7 +21,7 @@ class Create extends \Visitor\HelpForm {
       );
       
       $this->channelroot = $this->parentchannelModel->findRoot( $this->parentchannelModel->row );
-      $this->values['ispublic'] = $this->channelroot['ispublic'];
+      $this->values['accesstype'] = $this->channelroot['accesstype'];
       
     }
     
@@ -50,13 +50,15 @@ class Create extends \Visitor\HelpForm {
     if ( $this->parentchannelModel ) {
       
       $values['parentid'] = $this->parentchannelModel->id;
-      $values['ispublic'] = $this->channelroot['ispublic'];
+      $values['accesstype'] = $this->channelroot['accesstype'];
       
     }
     
     $channelModel->insert( $values );
     $channelModel->updateIndexFilename();
     $channelModel->updateModification();
+
+    $this->handleAccesstypeForModel( $channelModel, $values, false );
 
     $this->controller->redirect(
       $this->application->getParameter('forward', 'channels/mychannels')
