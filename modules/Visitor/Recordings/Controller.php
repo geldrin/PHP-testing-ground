@@ -2,6 +2,8 @@
 namespace Visitor\Recordings;
 
 class Controller extends \Visitor\Controller {
+  public $commentsperpage = 5;
+
   public $permissions = array(
     'index'                => 'public',
     'details'              => 'public',
@@ -9,6 +11,7 @@ class Controller extends \Visitor\Controller {
     'getcomments'          => 'public',
     'getsubtitle'          => 'public',
     'newcomment'           => 'member',
+    'moderatecomment'      => 'uploader|editor|clientadmin',
     'rate'                 => 'member',
     'upload'               => 'uploader',
     'uploadcontent'        => 'uploader',
@@ -201,6 +204,7 @@ class Controller extends \Visitor\Controller {
       $this->application->getNumericParameter('id')
     );
 
+    $commentspage = $this->application->getNumericParameter('commentspage', -1 );
     $start       = $this->application->getParameter('start');
     $browserinfo = $this->bootstrap->getBrowserInfo();
     $user        = $this->bootstrap->getSession('user');
@@ -218,13 +222,19 @@ class Controller extends \Visitor\Controller {
       'Plugins/modifier.indexphoto.php'
     );
     
-    if ( $user['id'] )
-      $this->toSmarty['channels'] = $recordingsModel->getChannelsForUser( $user );
+    if ( $user['id'] ) {
+      $this->toSmarty['channels']    = $recordingsModel->getChannelsForUser( $user );
+      $this->toSmarty['commentform'] = $this->getCommentForm()->getHTML();
+    }
     
+    $this->toSmarty['commentoutput'] = $this->getComments(
+      $recordingsModel, $commentspage
+    );
     $this->toSmarty['ipaddress']     = $this->getIPAddress();
     $this->toSmarty['member']        = $user;
     $this->toSmarty['sessionid']     = session_id();
     $this->toSmarty['needping']      = true;
+    $this->toSmarty['needhistory']   = true;
     $this->toSmarty['height']        = $this->getPlayerHeight( $recordingsModel );
     $this->toSmarty['recording']     = $recordingsModel->addPresenters( true, $this->organization['id'] );
 
@@ -233,8 +243,6 @@ class Controller extends \Visitor\Controller {
       $flashdata['timeline_startPosition'] = $start;
 
     $this->toSmarty['flashdata']     = $this->getFlashParameters( $flashdata );
-    $this->toSmarty['comments']      = $recordingsModel->getComments();
-    $this->toSmarty['commentcount']  = $recordingsModel->getCommentsCount();
     $this->toSmarty['author']        = $recordingsModel->getAuthor();
     $this->toSmarty['attachments']   = $recordingsModel->getAttachments();
     $this->toSmarty['canrate']       = ( $user['id'] and !$rating[ $recordingsModel->id ] );
@@ -336,33 +344,6 @@ class Controller extends \Visitor\Controller {
     ;
     
     $this->jsonOutput( $this->getFlashParameters( $flashdata ) );
-    
-  }
-  
-  public function getcommentsAction() {
-    
-    $recordingid = $this->application->getNumericParameter('id');
-    $start       = $this->application->getNumericParameter('start');
-    
-    if ( $recordingid <= 0 )
-      $this->redirect('index');
-    
-    if ( $start < 0 )
-      $start = 0;
-    
-    $l               = $this->bootstrap->getLocalization();
-    $recordingsModel = $this->bootstrap->getModel('recordings');
-    $recordingsModel->id = $recordingid;
-    
-    $comments     = $recordingsModel->getComments( $start );
-    $commentcount = $recordingsModel->getCommentsCount();
-    
-    $this->jsonOutput( array(
-        'comments'     => $comments,
-        'nocomments'   => $l('recordings', 'nocomments'),
-        'commentcount' => $commentcount,
-      )
-    );
     
   }
   
@@ -1349,6 +1330,105 @@ class Controller extends \Visitor\Controller {
     
     $this->jsonoutput( $output );
     
+  }
+  
+  public function getCommentForm() {
+
+    $l    = $this->bootstrap->getLocalization();
+    $form = $this->bootstrap->getForm('recordings_newcomment');
+
+    $form->formopenlayout =
+      '<form enctype="multipart/form-data" target="%target%" ' .
+      'id="%id%" name="%name%" action="%action%" method="%method%">'
+    ;
+
+    $form->jspath =
+      $this->toSmarty['STATIC_URI'] . 'js/clonefish.js'
+    ;
+    $form->layouts['tabular']['container']  =
+      "<table cellpadding=\"0\" cellspacing=\"0\">\n%s\n</table>\n"
+    ;
+    
+    $form->layouts['tabular']['element'] =
+      '<tr %errorstyle%>' .
+        '<td class="labelcolumn">' .
+          '<label for="%id%">%displayname%</label>' .
+        '</td>' .
+        '<td class="elementcolumn">%prefix%%element%%postfix%%errordiv%</td>' .
+      '</tr>'
+    ;
+    
+    $form->layouts['tabular']['buttonrow'] =
+      '<tr class="buttonrow"><td>%s</td></tr>'
+    ;
+    
+    $form->layouts['tabular']['button'] =
+      '<input type="submit" value="%s" class="submitbutton" />'
+    ;
+    
+    $form->layouts['rowbyrow']['errordiv'] =
+      '<div id="%divid%" style="display: none; visibility: hidden; ' .
+      'padding: 2px 5px 2px 5px; background-color: #d03030; color: white;' .
+      'clear: both;"></div>'
+    ;
+    
+    include(
+      $this->bootstrap->config['modulepath'] .
+      'Visitor/Recordings/Form/Configs/Newcomment.php'
+    );
+
+    $form->addElements( $config, false, false );
+    return $form;
+  }
+
+  public function moderatecommentAction() {
+    
+    $recordingsModel = $this->modelOrganizationAndUserIDCheck(
+      'recordings',
+      $this->application->getNumericParameter('id')
+    );
+    
+  }
+
+  public function getComments( $recordingsModel, $page ) {
+
+    $l         = $this->bootstrap->getLocalization();
+    $pagecount = $recordingsModel->getCommentsPageCount(
+      $this->commentsperpage
+    );
+
+    if ( $page < 1 or $page > $pagecount )
+      $page = $pagecount;
+
+    $this->toSmarty['maxpages']     = 4;
+    $this->toSmarty['activepage']   = $page?: 1; // egy oldalnak mindig lennie kell
+    $this->toSmarty['pagecount']    = $pagecount?: 1;
+    $this->toSmarty['recording']    = $recordingsModel->row;
+    $this->toSmarty['comments']     = $recordingsModel->getCommentsPage(
+      $this->commentsperpage, $page
+    );
+
+    return array(
+      'html'       => $this->fetchSmarty('Visitor/Recordings/Comments.tpl'),
+    );
+
+  }
+
+  public function getcommentsAction() {
+    
+    $recordingid = $this->application->getNumericParameter('id');
+    $page        = $this->application->getNumericParameter('page');
+    
+    if ( $recordingid <= 0 )
+      $this->redirect('index');
+
+    $recordingsModel = $this->modelIDCheck(
+      'recordings', $recordingid
+    );
+
+    $comments = $this->getComments( $recordingsModel, $page );
+    $this->jsonOutput( $comments );
+
   }
   
 }

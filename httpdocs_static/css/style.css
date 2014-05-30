@@ -1205,6 +1205,17 @@ a#currentusername span {
 .channelrecordings .widepager {
   width: 550px;
 }
+#comments .widepager {
+  border-top: 1px solid #a5a5a5;
+  width: 590px;
+  margin-bottom: 10px;
+}
+#comments .widepager .currentpage {
+  padding: 3px 0 0 14px;
+}
+#comments .widepager .currentpage .divider {
+  padding: 0 0 0 18px;
+}
 
 /* categories list */
 .categorylist {
@@ -2782,4 +2793,70 @@ a#currentusername span {
   -webkit-border-radius: 5px;
   -moz-border-radius: 5px;
   border-radius: 5px;
+}
+
+/* recordings comments */
+#comments {
+  float: left;
+  clear: left;
+  width: 590px;
+  position: relative;
+}
+#body #comments .title {
+  margin-bottom: 0;
+}
+#commentlist, #commentlist ul {
+  margin: 0;
+  padding: 0;
+}
+#commentlist {
+  margin: 20px 0 0 0;
+}
+#comments .commentlistitem {
+  padding: 5px;
+}
+#comments .commentlistitem, #comments .commentlistitem li {
+  margin: 10px 0;
+  list-style-type: none;
+}
+#comments .commentlistitem li {
+  display: inline;
+  margin: 0 10px 0 0;
+}
+#comments .user .avatar {
+  float: left;
+  margin: 0 10px 0 0;
+}
+#comments .commentlistitem .actions {
+  margin: 5px 0 0 0;
+  visibility: hidden;
+}
+#comments .commentlistitem:hover .actions {
+  visibility: visible;
+}
+#comments .loading {
+  display: none;
+  position: absolute;
+  top: 20px;
+  left: 50%;
+  width: 16px;
+  height: 16px;
+  background-image: url(images/spinner.gif);
+}
+#commentform .labelcolumn {
+  padding: 5px 0;
+  font-size: 16px;
+}
+#commentform textarea {
+  width: 568px;
+}
+#commentform .buttonrow td {
+  padding: 10px 0 0 0;
+}
+#comments .commentlistitem.highlight {
+  background-color: #FDFFC3;
+}
+#comments .nocomments {
+  list-style-type: none;
+  padding: 20px 5px;
 }
