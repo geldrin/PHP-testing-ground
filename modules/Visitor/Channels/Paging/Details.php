@@ -47,7 +47,8 @@ class Details extends \Visitor\Paging {
     
     if (
          $this->channelModel->row['organizationid'] != $organization['id'] or
-         $this->channelModel->row['isliveevent'] != '0'
+         $this->channelModel->row['isliveevent'] != '0' or
+         $this->channelModel->row['isdeleted']
        )
       $this->controller->redirect('index');
     
@@ -65,7 +66,7 @@ class Details extends \Visitor\Paging {
       $rootid = $this->channelModel->findRootID( $this->channelModel->row['parentid'], 'c.weight, c.title', 0, true );;
     
     $this->channelModel->addFilter('isliveevent', 0 );
-    $channeltree = $this->channelModel->getSingleChannelTree( $rootid, null, 0, true );
+    $channeltree = $this->channelModel->getSingleChannelTree( $rootid, null, 0 );
     
     $this->title                               = $this->channelModel->row['title'];
     $this->controller->toSmarty['listclass']   = 'recordinglist';
