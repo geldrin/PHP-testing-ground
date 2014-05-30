@@ -37,10 +37,22 @@ class Controller extends \Visitor\Controller {
       'channels',
       $this->application->getNumericParameter('id')
     );
-    $channelModel->delete( $channelModel->id );
-    
-    $this->redirect(
-      $this->application->getParameter('forward', 'channels/mychannels')
+    $l        = $this->bootstrap->getLocalization();
+    $children = $channelModel->findChildrenIDs();
+
+    // nem engedunk torolni csatornat aminek vannak gyerekei vagy kulonleges csatorna
+    if (
+         empty( $children ) and
+         $channelModel->id != $channelModel->getFavoriteChannelID()
+       ) {
+      $channelModel->markAsDeleted();
+      $message = $l('channels', 'channels_deleted');
+    } else
+      $message = $l('channels', 'channels_deletefailed');
+
+    $this->redirectWithMessage(
+      $this->application->getParameter('forward', 'channels/mychannels'),
+      $message
     );
     
   }

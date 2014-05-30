@@ -65,13 +65,14 @@ class Livefeeds extends \Springboard\Model {
       WHERE
         (
           lf.status IS NOT NULL AND
-          lf.status <> 'finished' AND
-          lf.external = '0'
+          lf.status   <> 'finished' AND
+          lf.external  = '0'
         ) OR (
-          lf.external = '1' AND
-          c.id = lf.channelid AND
+          lf.external       = '1' AND
+          c.id              = lf.channelid AND
+          c.isdeleted       = '0' AND
           c.starttimestamp <= NOW() AND
-          c.endtimestamp >= NOW()
+          c.endtimestamp   >= NOW()
         )
     ");
     

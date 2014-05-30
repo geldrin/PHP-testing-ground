@@ -29,6 +29,26 @@ $config['indexphotofilename'] = Array(
   )
 );
 
+if ( $this->channelroot )
+  $channelid = $this->channelroot['id'];
+else
+  $channelid = $this->application->getNumericParameter('id');
+
+$config['departments[]']['valuesql'] = "
+  SELECT departmentid
+  FROM access
+  WHERE
+    channelid = '$channelid' AND
+    departmentid IS NOT NULL
+";
+$config['groups[]']['valuesql'] = "
+  SELECT groupid
+  FROM access
+  WHERE
+    channelid = '$channelid' AND
+    groupid IS NOT NULL
+";
+
 $recordings = $this->channelModel->getRecordingsIndexphotos();
 $img        = '<img title="%s" src="' . $this->bootstrap->staticuri . 'files/%s"/>';
 
@@ -44,3 +64,15 @@ foreach ( $recordings as $recording ) {
 
 if ( !count( @$config['indexphotofilename']['values'] ) )
   unset( $config['indexphotofilename'] );
+
+if (
+     $this->parentchannelModel and $this->parentchannelModel->id
+   ) {
+  
+  $config['accesstype']['postfix']    = $l('channels', 'accesstype_disabled');
+  $config['departments[]']['postfix'] = '';
+  $config['accesstype']['html']       = 'disabled="disabled"';
+  $config['departments[]']['html']    = 'disabled="disabled"';
+  $config['groups[]']['html']         = 'disabled="disabled"';
+  
+}

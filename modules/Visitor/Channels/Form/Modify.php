@@ -27,7 +27,7 @@ class Modify extends \Visitor\HelpForm {
       );
       
       $this->channelroot = $this->parentchannelModel->findRoot( $this->parentchannelModel->row );
-      $this->values['ispublic'] = $this->channelroot['ispublic'];
+      $this->values['accesstype'] = $this->channelroot['accesstype'];
       
     }
     
@@ -46,9 +46,16 @@ class Modify extends \Visitor\HelpForm {
   public function onComplete() {
     
     $values = $this->form->getElementValues( 0 );
-    if ( !$this->channelModel->row['parentid'] )
-      $this->channelModel->updateChildrenPublic( $values['ispublic'] );
+
+    // mivel az accesstype disable-zve van ha van szulo ezert nem kuldi el nekunk
+    // a browser az inputokat, csak akkor kezeljuk ha nincs szulo
+    if (
+         !$this->channelModel->row['parentid'] and
+         isset( $values['accesstype'] ) and $values['accesstype']
+       )
+      $this->handleAccesstypeForModel( $this->channelModel, $values );
     
+    unset( $values['departments'], $values['groups'] );
     $this->channelModel->updateRow( $values );
     $this->channelModel->updateModification();
 

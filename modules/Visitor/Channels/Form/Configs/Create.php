@@ -82,23 +82,34 @@ $config = array(
       ),
     ),
   ),
-  
-  'ispublic' => array(
-    'displayname' => $l('channels', 'ispublic'),
-    'type'        => 'inputRadio',
-    'values'      => $l->getLov('yesno'),
-    'value'       => 0,
-    'validation'  => array(
-    ),
-  ),
-  
 );
+
+include( $this->bootstrap->config['modulepath'] . 'Visitor/Form/Configs/Accesstype.php');
 
 if (
      $this->parentchannelModel and $this->parentchannelModel->id
    ) {
   
-  $config['ispublic']['html']    = 'disabled="disabled"';
-  $config['ispublic']['postfix'] = $l('channels', 'ispublic_disabled');
+  $config['accesstype']['postfix']    = $l('channels', 'accesstype_disabled');
+  $config['departments[]']['postfix'] = '';
+  $config['accesstype']['html']       = 'disabled="disabled"';
+  $config['departments[]']['html']    = 'disabled="disabled"';
+  $config['groups[]']['html']         = 'disabled="disabled"';
   
+  $channelid = $this->channelroot['id'];
+  $config['departments[]']['valuesql'] = "
+    SELECT departmentid
+    FROM access
+    WHERE
+      channelid = '$channelid' AND
+      departmentid IS NOT NULL
+  ";
+  $config['groups[]']['valuesql'] = "
+    SELECT groupid
+    FROM access
+    WHERE
+      channelid = '$channelid' AND
+      groupid IS NOT NULL
+  ";
+
 }
