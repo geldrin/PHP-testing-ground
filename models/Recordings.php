@@ -2135,6 +2135,9 @@ class Recordings extends \Springboard\Model {
       if ( isset( $highres[ $id ] ) and $highres[ $id ] )
         $data[ $key ][] = $this->getMediaUrl('default', true, $info, $id );
 
+      if ( $outroid == $introid )
+        $data['outro_streams'] = $data['intro_streams'];
+
     }
 
     return $data;
