@@ -14,7 +14,7 @@ $departments
 {/*}
 
 {newsletter}
-{assign var=name value=$values|@nameformat|default:#users__email_invitation_namedefault#}
+{assign var=name value=$values.name|default:#users__email_invitation_namedefault#}
 <h1>{#users__email_invitation_title#|sprintf:$name},</h1>
 
   {if $values.registereduserid}
