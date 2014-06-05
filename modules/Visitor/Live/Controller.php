@@ -24,6 +24,8 @@ class Controller extends \Visitor\Controller {
     'checkstreamaccess'    => 'public',
     'securecheckstreamaccess' => 'public',
     'search'               => 'member',
+    'analytics'            => 'liveadmin|clientadmin',
+    'getstatistics'        => 'liveadmin|clientadmin',
   );
   
   public $forms = array(
@@ -34,6 +36,7 @@ class Controller extends \Visitor\Controller {
     'createstream'         => 'Visitor\\Live\\Form\\Createstream',
     'modifystream'         => 'Visitor\\Live\\Form\\Modifystream',
     'createchat'           => 'Visitor\\Live\\Form\\Createchat',
+    'analytics'            => 'Visitor\\Live\\Form\\Analytics',
   );
   
   public $paging = array(
@@ -630,4 +633,95 @@ class Controller extends \Visitor\Controller {
     
   }
   
+  public function getstatisticsAction() {
+    
+    $channelModel = $this->modelOrganizationAndUserIDCheck(
+      'channels',
+      $this->application->getNumericParameter('id')
+    );
+
+    $l      = $this->bootstrap->getLocalization();
+    $filter = array(
+      'starttimestamp' => $channelModel->row['starttimestamp'],
+      'endtimestamp'   => $channelModel->row['endtimestamp'],
+    );
+    $ret    = array(
+      'status' => 'OK',
+    );
+
+    $feeds   = $channelModel->getFeeds();
+    $feedids = $this->application->getParameter('feedids', array() );
+
+    // sanitize the feedids
+    foreach( $feedids as $k => $v ) {
+
+      if ( !isset( $feeds[ $v ] ) )
+        unset( $feedids[ $k ] );
+
+    }
+
+    if ( empty( $feedids ) )
+      $this->jsonOutput( $ret );
+
+    $filter['livefeedids'] = $feedids;
+
+    $feedModel  = $this->bootstrap->getModel('livefeeds');
+    $data       = $feedModel->getStatistics( $filter );
+    $ret['data'] = $this->transformStatistics( $data );
+
+    $this->jsonOutput( $ret );
+
+  }
+
+  public function transformStatistics( $data ) {
+
+    $l          = $this->bootstrap->getLocalization();
+    $fieldtokey = array();
+    $ret        = array(
+      'data'   => array(),
+      'labels' => array(),
+    );
+
+    // prepare the chart labels
+    foreach( $data as $value ) {
+
+      foreach( $value as $field => $v ) {
+
+        if ( $field == 'timestamp' )
+          continue;
+
+        $ret['data'][]   = array();
+        $ret['labels'][] = $l('live', 'stats_' . $field );
+        $fieldtokey[ $field ] = count( $ret['labels'] ) - 1;
+
+      }
+
+      break;
+
+    }
+
+    // prepare the values
+    foreach( $data as $value ) {
+
+      // "javascript" time with ms precision
+      $ts  = $value['timestamp'] * 1000;
+      foreach( $value as $field => $v ) {
+
+        if ( $field == 'timestamp' )
+          continue;
+
+        $key = $fieldtokey[ $field ];
+        $ret['data'][ $key ][] = array(
+          'x' => $ts,          // X axis
+          'y' => intval( $v ), // Y axis
+        );
+
+      }
+
+    }
+
+    return $ret;
+
+  }
+
 }
