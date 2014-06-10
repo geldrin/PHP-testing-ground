@@ -100,7 +100,9 @@ if ( $this->invitationModel->row['templateid'] ) {
   if ( empty( $template ) )
     throw new \Exception("No template found for invitation!");
 
-  $config['templateprefix']['value']  = $template['prefix'];
-  $config['templatepostfix']['value'] = $template['postfix'];
+  
+
+  $config['templateprefix']['value']  = $template['prefix'] ?: $l('users', 'templateprefix_default');
+  $config['templatepostfix']['value'] = $template['postfix'] ?: $l('users', 'templatepostfix_default');
 
 }

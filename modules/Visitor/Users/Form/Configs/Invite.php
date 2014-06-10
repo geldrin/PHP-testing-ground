@@ -10,6 +10,7 @@ $tinymceconfig = $l->getLov('tinymcevisitor') + array(
 $smarty = $this->bootstrap->getSmarty();
 include_once( $this->bootstrap->config['libpath'] . 'clonefish/constants.php');
 include_once( \SMARTY_DIR . 'plugins/modifier.date_format.php' );
+include_once( $this->bootstrap->config['templatepath'] . 'Plugins/modifier.jsonescape.php');
 $language  = \Springboard\Language::get();
 $userModel = $this->bootstrap->getModel('users');
 $templates = $userModel->getInviteTemplates( $this->controller->organization['id'] );
@@ -326,7 +327,11 @@ $config = $config + array(
   'templateid' => array(
     'displayname' => $l('users', 'templateid'),
     'type'        => 'select',
-    'html'        => 'data-templateurl="' . $language . '/users/getinvitationtemplate"',
+    'html'        =>
+      'data-templateurl="' . $language . '/users/getinvitationtemplate"' .
+      ' data-defaulttemplateprefix=' . smarty_modifier_jsonescape( $l('users', 'templateprefix_default') ) .
+      ' data-defaulttemplatepostfix=' . smarty_modifier_jsonescape( $l('users', 'templatepostfix_default') ),
+    'postfix'     => '<div class="loading" style="display: none;"></div>',
     'values'      => $invitetemplates,
   ),
 

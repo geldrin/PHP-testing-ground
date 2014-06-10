@@ -1852,8 +1852,14 @@ function setupUserInvitation() {
   var tinymceDefaults = {};
   tinyMCEInstanceInit = function(instance) { // global so that tinyMCE can actually see it
     tinymceDefaults[ instance.editorId ] = instance.getContent();
+
+    if ( !tinymceDefaults[ instance.editorId ] )
+      tinymceDefaults[ instance.editorId ] = $j.parseJSON(
+        '"' + $j('#templateid').attr('data-default' + instance.editorId ) + '"'
+      );
+
   };
-  
+
   $j('#templateid').change(function() {
     var val = $j(this).val();
     if (!val) {
@@ -1864,29 +1870,45 @@ function setupUserInvitation() {
 
     var data = {templateid: val};
     $j.ajax({
-      //beforeSend:
-      //complete:
       cache  : false,
       success: function( data ) {
-        if (!data || data.status != 'success')
+        if ( typeof( data ) != 'object' || data.status != 'success')
           return;
+
+        // default values
+        if ( !data.prefix )
+          data.prefix = $j.parseJSON(
+            '"' + $j('#templateid').attr('data-defaulttemplateprefix') + '"'
+          );
+
+        if ( !data.postfix )
+          data.postfix = $j.parseJSON(
+            '"' + $j('#templateid').attr('data-defaulttemplatepostfix') + '"'
+          );
 
         tinyMCE.get('templateprefix').setContent( data.prefix );
         tinyMCE.get('templatepostfix').setContent( data.postfix );
 
+      },
+      beforeSend: function() {
+        $j('#usersinvitewrap .loading').show();
+      },
+      complete: function() {
+        $j('#usersinvitewrap .loading').hide();
       },
       data    : data,
       dataType: 'json',
       type    : 'GET',
       url     : BASE_URI + language + '/users/getinvitationtemplate'
     });
+
   });
 
   setupDefaultDateTimePicker('#invitationvaliduntil');
   $j('.invitationvaliduntil .presettime').click(function(e) {
     e.preventDefault();
     $j('#invitationvaliduntil').datetimepicker('setDate', $j(this).attr('data-date') );
-  })
+  });
   
 }
 
