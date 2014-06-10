@@ -1851,13 +1851,9 @@ function setupUserInvitation() {
 
   var tinymceDefaults = {};
   tinyMCEInstanceInit = function(instance) { // global so that tinyMCE can actually see it
-    tinymceDefaults[ instance.editorId ] = instance.getContent();
-
-    if ( !tinymceDefaults[ instance.editorId ] )
-      tinymceDefaults[ instance.editorId ] = $j.parseJSON(
-        '"' + $j('#templateid').attr('data-default' + instance.editorId ) + '"'
-      );
-
+    tinymceDefaults[ instance.editorId ] = $j.parseJSON(
+      '"' + $j('#templateid').attr('data-default' + instance.editorId ) + '"'
+    );
   };
 
   $j('#templateid').change(function() {
