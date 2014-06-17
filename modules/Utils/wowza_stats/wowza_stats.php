@@ -28,7 +28,8 @@ echo "Wowza log analizer v0.41 - STARTING...\n";
 // $overridewowzaapp = FALSE;      // Wowza app: override?
 // $wowza_app = "live";	           // Wowza application to use if override
 // $usereversedns = TRUE;          // DNS: reverse DNS enable/disable
-// $cleanfrombreaks = TRUE;        // Clean from breakes? (see $event_timings)
+// $cleanfrombreaks = TRUE;        // Clean from breaks? (see $event_timings)
+// $usedatetime = TRUE;            // Use "YYYY-MM-DD HH:MM:SS" or "HH:MM:SS" only
 // $event_timings = array(
 //	0 => array(
 //		array(
@@ -70,6 +71,13 @@ if ( !$islivestats and ( ( !check_date_validity($ondemand_startdate) ) or ( !che
 
 // Init
 $app = new Springboard\Application\Cli(BASE_PATH, PRODUCTION);
+
+// Date template
+if ( $usedatetime ) {
+	$datetemplate = "Y-m-d H:i:s";
+} else {
+	$datetemplate = "H:i:s";
+}
 
 // Load jobs configuration file
 $app->loadConfig('modules/Jobs/config_jobs.php');
@@ -770,7 +778,7 @@ foreach ($viewers as $cip => $client_ip) {
 					$str_id = $client_data['streamid'];
 
 					// Debug: print real play time
-					if ( $debug_duration ) echo "PLAY: " . date("H:i:s", $playsession['started_timestamp']) . " - " . date("H:i:s", $playsession['ended_timestamp']) . "\n";
+					if ( $debug_duration ) echo "PLAY: " . date($datetemplate, $playsession['started_timestamp']) . " - " . date($datetemplate, $playsession['ended_timestamp']) . "\n";
 
 					// Column guide
 					$num_column = $column_guide[$loc_id][$str_id];
@@ -780,15 +788,15 @@ foreach ($viewers as $cip => $client_ip) {
 
 					$tmp = "";
 
-					// Clean viewing tfrom breaks?
+					// Clean viewing from breaks?
 					if ( $cleanfrombreaks ) {
 						// Apply event timing (start & end time, breaks)
 						$retval = event_searchtiming($playsession['started_timestamp'], $playsession['ended_timestamp'], $loc_id);
 						if ( $retval === FALSE ) continue;
 						// Add per connection data (slices due to breaks)
 						foreach ($retval as $key => $value) {
-							$started_time = date("H:i:s", $retval[$key]['starttimestamp']);
-							$ended_time = date("H:i:s", $retval[$key]['endtimestamp']);
+							$started_time = date($datetemplate, $retval[$key]['starttimestamp']);
+							$ended_time = date($datetemplate, $retval[$key]['endtimestamp']);
 							if ( $debug_duration ) echo "PLAY CLEANED: " . $started_time . " - " . $ended_time . "\n";
 							$tmp .= $uid . ",1,," . $cip;
 							for ( $q = 0; $q < ( 5 + $num_column * 2 - 2 ); $q++ ) $tmp .= ",";
@@ -798,8 +806,8 @@ foreach ($viewers as $cip => $client_ip) {
 							if ( $debug_duration ) echo "Watched DUR: added " . $retval[$key]['duration'] . " secs. Full: " . secs2hms($columns['duration'][$num_column]) . "\n";
 						}
 					} else {
-						$started_time = date("H:i:s", $playsession['started_timestamp']);
-						$ended_time = date("H:i:s", $playsession['ended_timestamp']);
+						$started_time = date($datetemplate, $playsession['started_timestamp']);
+						$ended_time = date($datetemplate, $playsession['ended_timestamp']);
 						// Add per connection data to log
 						$tmp .= $uid . ",1,," . $cip;
 						for ( $q = 0; $q < ( 5 + $num_column * 2 - 2 ); $q++ ) $tmp .= ",";
@@ -1036,7 +1044,7 @@ function check_date_validity($date) {
 }
 
 function event_searchtiming($starttime, $endtime, $feedid) {
- global $event_timings, $debug_timeslicing;
+ global $event_timings, $debug_timeslicing, $datetemplate;
 
 	if ( !isset($event_timings[$feedid]) ) $feedid = 0;
 
@@ -1191,15 +1199,14 @@ function event_searchtiming($starttime, $endtime, $feedid) {
 
 		$duration = $end - $start;
 		if ( $duration < 0 ) {
-		//if ( $duration < 0 ) {
 			echo "ERROR: invalid duration from slice \"" . time('G:i:s', $start) . "\"-\"" . time('G:i:s', $end) . "\"!\n";
 			exit -1;
 		}
 		$tmp = array(
 			'starttimestamp'	=> $start,
 			'endtimestamp'		=> $end,
-			'starttime'			=> date("H:i:s", $start),
-			'endtime'			=> date("H:i:s", $end),
+			'starttime'			=> date($datetemplate, $start),
+			'endtime'			=> date($datetemplate, $end),
 			'duration'			=> $duration
 		);
 		array_push($retval, $tmp);
@@ -1262,7 +1269,7 @@ function event_calculate_duration($event_timings, $feedid) {
 
 
 function event_timing_add_breakpoint($starttime, $endtime) {
- global $debug_timeslicing;
+ global $debug_timeslicing, $datetemplate;
 
 	$duration = $endtime - $starttime;
 	if ( $duration < 0 ) {
@@ -1273,8 +1280,8 @@ function event_timing_add_breakpoint($starttime, $endtime) {
 	$tmp = array(
 		'starttimestamp'	=> $starttime,
 		'endtimestamp'		=> $endtime,
-		'starttime'			=> date("H:i:s", $starttime),
-		'endtime'			=> date("H:i:s", $endtime),
+		'starttime'			=> date($datetemplate, $starttime),
+		'endtime'			=> date($datetemplate, $endtime),
 		'duration'			=> $duration
 	);
 
