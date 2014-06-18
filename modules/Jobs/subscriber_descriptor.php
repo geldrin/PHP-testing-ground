@@ -60,6 +60,27 @@ if ( $app->config['baseuri'] == "dev.videosquare.eu/" ) {
 				'disableuseraftervalidity'	=> true,
 				'promouservaliditydays'		=> 7
 			),
+		5	=> array(
+				'orgid' 					=> 307,
+				'name'						=> "CEDH Hungária Kft.",
+				'price_peruser'				=> 0,
+				'currency'					=> "HUF",
+				'listfromdate'				=> null,
+				'generateduservaliditydays'	=> 30,
+				'disableuseraftervalidity'	=> true,
+				'promouservaliditydays'		=> 7
+			),
+		6	=> array(
+				'orgid' 					=> 308,
+				'name'						=> "Menedzsment Fórum",
+				'price_peruser'				=> 0,
+				'currency'					=> "HUF",
+				'listfromdate'				=> null,
+				'generateduservaliditydays'	=> 30,
+				'disableuseraftervalidity'	=> true,
+				'promouservaliditydays'		=> 7
+			),
+
 	);
 
 }
