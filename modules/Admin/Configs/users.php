@@ -54,8 +54,9 @@ $config = Array(
     'type'        => 'inputText',
     'validation'  => Array(
       Array(
-        'type' => 'date',
-        'format' => 'YYYY-MM-DD hh:mm:ss' 
+        'type'     => 'date',
+        'format'   => 'YYYY-MM-DD hh:mm:ss',
+        'required' => false,
       ),
     ),
   ),
