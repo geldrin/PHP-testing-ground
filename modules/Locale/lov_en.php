@@ -74,6 +74,7 @@ return array(
   'permissions' => array(
     'isadmin'       => 'Administrator',
     'iseditor'      => 'Editor',
+    'isnewseditor'  => 'News editor',
     'isclientadmin' => 'Client administrator',
     'isuploader'    => 'Uploader',
     'isliveadmin'   => 'Live administrator',

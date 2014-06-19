@@ -108,6 +108,7 @@ return array(
   
   'permissions' => array(
     'iseditor'      => 'Szerkesztő',
+    'isnewseditor'  => 'Hír szerkesztő',
     'isclientadmin' => 'Kliens adminisztrátor',
     'isuploader'    => 'Feltöltő',
     'isliveadmin'   => 'Live adminisztrátor',
