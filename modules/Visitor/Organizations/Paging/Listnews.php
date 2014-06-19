@@ -27,7 +27,15 @@ class Listnews extends \Visitor\Paging {
     $this->user      = $this->bootstrap->getSession('user');
     $this->newsModel = $this->bootstrap->getModel('organizations_news');
     
-    if ( $this->user['iseditor'] and $this->user['organizationid'] == $this->controller->organization['id'] )
+    if (
+         (
+           $this->user['iseditor'] or
+           $this->user['isnewseditor'] or
+           $this->user['isclientadmin'] or
+           $this->user['isadmin']
+         ) and
+         $this->user['organizationid'] == $this->controller->organization['id']
+       )
       $this->controller->toSmarty['canadminister'] = true;
     
     return $this->itemcount = $this->newsModel->getNewsCount(
