@@ -50,7 +50,11 @@ class Controller extends \Visitor\Controller {
       $this->redirectToController('contents', 'nopermissionlivestreaming');
       
     }
-    
+
+    $this->toSmarty['defaultimage'] =
+      $this->bootstrap->staticuri . 'images/live_player_placeholder.png'
+    ;
+
   }
   
   public function viewAction() {

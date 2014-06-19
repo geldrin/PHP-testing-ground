@@ -3,6 +3,9 @@
 <meta property="og:site_name" content="{#sitename#|escape:html}"/>
 <meta property="fb:admins"    content="{$smarty.const.FACEBOOK_IDS|escape:html}"/>
 <meta property="og:title"     content="{if $title}{$title|strip_tags|escape:html|titleescape} | {/if}{#sitename#}"/>
+{if $defaultimage}
+  <meta property="og:image"     content="{$defaultimage|escape:html}"/>
+{/if}
 
 {if !empty( $opengraph )}
   
