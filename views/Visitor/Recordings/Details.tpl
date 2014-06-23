@@ -221,6 +221,20 @@
   <script type="text/javascript" src="//s7.addthis.com/js/250/addthis_widget.js#pubid=xa-5045da4260dfe0a6"></script>
   {/if}
 </div>
+
+<div id="comments">
+  <div class="loading"></div>
+  <div class="title"><h2>{#recordings__comments#}</h2></div>
+  <div id="commentwrap">
+    {$commentoutput.html}
+  </div>
+  {if $member.id}
+    <div id="commentform">
+      <div class="loading"></div>
+      {$commentform}
+    </div>
+  {/if}
+</div>
 <div class="clear"></div>
 
 {if !empty( $relatedvideos )}
@@ -253,48 +267,4 @@
 </div>
 {/if}
 
-{*}
-<div id="comments">
-  <div class="wrap">
-    <div id="hider"><a href="#"><span></span>Hide/Show</a></div>
-    <div id="comments-wrap">
-      <h1><a href="#">{#recordings__comments#} <span>({$commentcount})</span></a></h1>
-      <div class="wrap">
-        <ul>
-          {foreach from=$comments item=comment name=comment}
-          <li{if $smarty.foreach.comment.last} class="last"{/if}>
-            <h2><a href="#">{$comment|@nickformat|escape:html}</a> ({$comment.timestamp})</h2>
-            <p>{$comment.text}</p>
-          </li>
-          {foreachelse}
-          <li id="comments-none" class="last">{#recordings__nocomments#}</li>
-          {assign var=nocomments value=true}
-          {/foreach}
-        </ul>
-        <div id="comments-spinner">&nbsp;</div>
-        <div id="comments-more"{if $nocomments} class="hidden"{/if}>
-          <a href="{$language}/recordings/getcomments/{$recording.id}">{#recordings__morecomments#}</a>
-        </div>
-      </div>
-    </div>
-  </div>
-{if $member}
-  <div id="comment-form">
-    <form enctype="multipart/form-data" target="_self" id="commentform" name="commentform" action="{$language}/recordings/newcomment/{$recording.id}" method="post">
-      <input type="hidden" id="actopm" name="target" value="submitnewcomment"/>
-      <input type="hidden" id="id" name="id" value="{$recording.id}"/>
-      <h1>{#recordings__yourcomment#}</h1>
-        <div class="wrap">
-          <textarea name="text" id="text" class="textarea"></textarea>
-        </div>
-      <input type="submit" value="{#recordings__sendcomment#}" class="left button"/>
-    </form>
-  </div>
-{else}
-  <div id="comments-needlogin">
-    <center><a class="ajaxlogin" href="{$language}/users/login?forward={$FULL_URI|escape:url}">{#recordings__logintocomment#}</a></center>
-  </div>
-{/if}
-</div>
-{/*}
 {include file="Visitor/_footer.tpl"}
