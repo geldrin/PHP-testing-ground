@@ -1273,7 +1273,7 @@ class Recordings extends \Springboard\Model {
     
   }
 
-  public function insertComment( $comment ) {
+  public function insertComment( $comment, $perpage ) {
 
     $this->ensureID();
     $commentModel = $this->bootstrap->getModel('comments');
@@ -1303,6 +1303,11 @@ class Recordings extends \Springboard\Model {
       }
 
     }
+
+    if ( $commentModel->row['replyto'] )
+      $commentModel->row['replypage'] =
+        ceil( $commentModel->row['replyto'] / $perpage )
+      ;
 
     $this->incrementCommentCount();
     return $commentModel->row;

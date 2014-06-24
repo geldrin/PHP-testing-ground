@@ -27,7 +27,9 @@ class Newcomment extends \Visitor\Form {
     $values['userid']    = $user['id'];
     $values['ipaddress'] = implode(', ', $this->controller->getIPAddress( true ) );
     
-    $comment = $this->recordingsModel->insertComment( $values );
+    $comment = $this->recordingsModel->insertComment(
+      $values, $this->controller->commentsperpage
+    );
     $this->handleEmail( $comment );
 
     if ( !$this->isAjaxRequest() ) {
@@ -51,7 +53,7 @@ class Newcomment extends \Visitor\Form {
     $output['focus'] = $comment['sequenceid'];
 
     $this->controller->jsonoutput( $output );
-    
+
   }
   
   private function handleEmail( $comment ) {
@@ -69,17 +71,27 @@ class Newcomment extends \Visitor\Form {
 
       $commentModel = $this->bootstrap->getModel('comments');
       $commentModel->select( $comment['replyto'] );
-      $usersModel->select( $commentModel->row['userid'] );
-      // TODO check email is generated or not
-      $this->controller->toSmarty['replyuser'] = $usersModel->row;
 
-      $this->controller->sendOrganizationHTMLEmail(
-        $usersModel->row['email'],
-        $l('recordings', 'comments_reply_subject'),
-        $this->controller->fetchSmarty('Visitor/Recordings/Email/Commentsreply.tpl')
-      );
+      // ha sajat magunknak valaszolunk ne kuldjunk emailt
+      if ( $commentModel->row['userid'] != $comment['userid'] ) {
+
+        $usersModel->select( $commentModel->row['userid'] );
+        // TODO check email is generated or not
+        $this->controller->toSmarty['replyuser'] = $usersModel->row;
+
+        $this->controller->sendOrganizationHTMLEmail(
+          $usersModel->row['email'],
+          $l('recordings', 'comments_reply_subject'),
+          $this->controller->fetchSmarty('Visitor/Recordings/Email/Commentsreply.tpl')
+        );
+
+      }
 
     }
+
+    // sajat recordingukra valaszoltunk, ne kuldjunk emailt
+    if ( $comment['userid'] == $this->recordingsModel->row['userid'] )
+      return;
 
     $usersModel->select( $this->recordingsModel->row['userid'] );
     $this->controller->toSmarty['recordinguser'] = $usersModel->row;
