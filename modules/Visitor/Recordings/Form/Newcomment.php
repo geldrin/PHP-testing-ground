@@ -81,7 +81,10 @@ class Newcomment extends \Visitor\Form {
 
         $this->controller->sendOrganizationHTMLEmail(
           $usersModel->row['email'],
-          $l('recordings', 'comments_reply_subject'),
+          sprintf(
+            $l('recordings', 'comments_reply_subject'),
+            $this->recordingsModel->row['title']
+          ),
           $this->controller->fetchSmarty('Visitor/Recordings/Email/Commentsreply.tpl')
         );
 
@@ -98,7 +101,10 @@ class Newcomment extends \Visitor\Form {
 
     $this->controller->sendOrganizationHTMLEmail(
       $usersModel->row['email'],
-      $l('recordings', 'comments_new_subject'),
+      sprintf(
+        $l('recordings', 'comments_new_subject'),
+        $this->recordingsModel->row['title']
+      ),
       $this->controller->fetchSmarty('Visitor/Recordings/Email/Commentsnew.tpl')
     );
 
