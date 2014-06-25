@@ -261,6 +261,11 @@ class Channels extends \Springboard\Model {
       WHERE channelid IN('" . implode("', '", $childrenids ) . "')
     ");
     
+    $this->db->execute("
+      DELETE FROM access
+      WHERE channelid IN('" . implode("', '", $childrenids ) . "')
+    ");
+    
     $this->updateVideoCounters();
     $ret = $this->db->execute("
       DELETE FROM channels

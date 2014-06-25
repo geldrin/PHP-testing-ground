@@ -32,7 +32,7 @@ class Controller extends \Visitor\Controller {
       'departments',
       $this->application->getNumericParameter('id')
     );
-    $departmentModel->deleteAndClearMembers();
+    $departmentModel->delete( $departmentModel->id );
     
     $this->redirect(
       $this->application->getParameter('forward', 'departments/admin' )

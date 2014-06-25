@@ -30,7 +30,7 @@ class Controller extends \Visitor\Controller {
       'groups',
       $this->application->getNumericParameter('id')
     );
-    $groupModel->deleteAndClearMembers();
+    $groupModel->delete( $groupModel->id );
     
     $this->redirect(
       $this->application->getParameter('forward', 'groups/index' )

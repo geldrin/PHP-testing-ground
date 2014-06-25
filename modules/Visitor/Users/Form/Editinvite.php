@@ -51,6 +51,7 @@ class Editinvite extends \Visitor\HelpForm {
     $values = $this->form->getElementValues( 0 );
     $crypt  = $this->bootstrap->getEncryption();
     $l      = $this->bootstrap->getLocalization();
+    $resend = false; // kell e ujrakuldeni az emailt
 
     if ( !empty( $values['permissions'] ) )
       $values['permissions'] = implode('|', $values['permissions'] );
@@ -78,11 +79,25 @@ class Editinvite extends \Visitor\HelpForm {
 
     $values['templateid'] = $templateid;
 
+    // ha valtozott az email akkor ujrakuldjuk
+    if (
+         isset( $values['email'] ) and $values['email'] and
+         $this->invitationModel->row['email'] and
+         $this->invitationModel->row['email'] != $values['email']
+       )
+      $resend = true;
+
     $this->invitationModel->updateRow( $values );
-    
+
+    if ( $resend ) {
+      $this->controller->sendInvitationEmail( $this->invitationModel->row );
+      $message = $l('users', 'usermodifiedandinvited');
+    } else
+      $message = $l('users', 'usermodified');
+
     $forward = $this->application->getParameter('forward', 'users/invitations');
-    $this->controller->redirectWithMessage( $forward, $l('users', 'usermodified') );
-    
+    $this->controller->redirectWithMessage( $forward, $message );
+
   }
 
   public function insertIDAndTitle( &$string, $id, $title ) {

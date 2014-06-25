@@ -28,5 +28,16 @@ class Genres extends \Springboard\Model\Multilingual {
     return $items;
     
   }
-  
+
+  // --------------------------------------------------------------------------
+  public function delete( $id, $magic_quotes_gpc = 0 ) {
+
+    $this->db->query("
+      DELETE FROM recordings_genres
+      WHERE genreid = " . $this->db->qstr( $id )
+    );
+    return parent::delete( $id, $magic_quotes_gpc );
+
+  }
+
 }

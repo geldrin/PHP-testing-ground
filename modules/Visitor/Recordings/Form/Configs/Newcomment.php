@@ -8,6 +8,11 @@ $config = array(
     'readonly' => true,
   ),
   
+  'replyto' => array(
+    'type'  => 'inputHidden',
+    'value' => $this->application->getNumericParameter('replyto'),
+  ),
+  
   'recordingid' => array(
     'type'  => 'inputHidden',
     'value' => $this->application->getNumericParameter('id'),
@@ -16,8 +21,22 @@ $config = array(
   'text' => array(
     'displayname' => $l('recordings', 'yourcomment'),
     'type'        => 'textarea',
+    'rowlayout'   => '
+      <tr %errorstyle%>
+        <td class="labelcolumn">
+          <label for="%id%">%displayname%</label>
+        </td>
+      </tr>
+      <tr>
+        <td class="elementcolumn">%prefix%%element%%postfix%%errordiv%</td>
+      </tr>
+    ',
     'validation'  => array(
-      array('type' => 'required'),
+      array(
+        'type' => 'string',
+        'minimum' => 3,
+        'maximum' => 1000,
+      ),
     ),
   ),
   

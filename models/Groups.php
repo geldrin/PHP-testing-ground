@@ -3,6 +3,21 @@ namespace Model;
 
 class Groups extends \Springboard\Model {
   
+  // --------------------------------------------------------------------------
+  public function delete( $id, $magic_quotes_gpc = 0 ) {
+
+    $this->db->query("
+      DELETE FROM groups_members
+      WHERE groupid = " . $this->db->qstr( $id )
+    );
+    $this->db->query("
+      DELETE FROM access
+      WHERE groupid = " . $this->db->qstr( $id )
+    );
+    return parent::delete( $id, $magic_quotes_gpc );
+
+  }
+
   public function getUserCount() {
     
     $this->ensureID();
@@ -81,20 +96,6 @@ class Groups extends \Springboard\Model {
       GROUP BY g.id
       ORDER BY $orderby
       LIMIT $start, $limit
-    ");
-    
-  }
-  
-  public function deleteAndClearMembers() {
-    
-    $this->ensureID();
-    $this->db->query("
-      DELETE FROM groups_members
-      WHERE groupid = '" . $this->id . "'
-    ");
-    $this->db->query("
-      DELETE FROM groups
-      WHERE id = '" . $this->id . "'
     ");
     
   }

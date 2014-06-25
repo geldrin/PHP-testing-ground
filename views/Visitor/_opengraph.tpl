@@ -2,7 +2,10 @@
 <meta property="og:url"       content="{$FULL_URI|escape:html}"/>
 <meta property="og:site_name" content="{#sitename#|escape:html}"/>
 <meta property="fb:admins"    content="{$smarty.const.FACEBOOK_IDS|escape:html}"/>
-<meta property="og:title"     content="{if $title}{$title|escape:html|titleescape} | {/if}{#sitename#}"/>
+<meta property="og:title"     content="{if $title}{$title|strip_tags|escape:html|titleescape} | {/if}{#sitename#}"/>
+{if $defaultimage}
+  <meta property="og:image"     content="{$defaultimage|escape:html}"/>
+{/if}
 
 {if !empty( $opengraph )}
   
@@ -10,7 +13,7 @@
   <meta property="og:type"      content="{$opengraph.type|escape:html}"/>
 
   {if !$opengraph.description}
-    <meta property="og:description" content="{$opengraph.title|escape:html}{if $opengraph.subtitle} - {$opengraph.subtitle|escape:html}{/if}"/>
+    <meta property="og:description" content="{$opengraph.title|strip_tags|escape:html}{if $opengraph.subtitle} - {$opengraph.subtitle|strip_tags|escape:html}{/if}"/>
   {else}
     <meta property="og:description" content="{$opengraph.description|mb_truncate:250|escape:html}"/>
   {/if}

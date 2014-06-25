@@ -3,6 +3,23 @@ namespace Model;
 
 class Departments extends \Springboard\Model {
   
+  // --------------------------------------------------------------------------
+  public function delete( $id, $magic_quotes_gpc = 0 ) {
+
+    $this->query("
+      DELETE FROM users_departments
+      WHERE departmentid = " . $this->db->qstr( $id )
+    );
+
+    $this->query("
+      DELETE FROM access
+      WHERE departmentid = " . $this->db->qstr( $id )
+    );
+
+    return parent::delete( $id, $magic_quotes_gpc );
+
+  }
+
   public function getDepartmentTree( $organizationid, $orderby, $parentid = 0, $maxlevel = 2, $currentlevel = 0 ) {
     
     if ( $currentlevel >= $maxlevel )
@@ -104,20 +121,6 @@ class Departments extends \Springboard\Model {
         departmentid = '" . $this->id . "' AND
         userid  = " . $this->db->qstr( $userid ) . "
       LIMIT 1
-    ");
-    
-  }
-  
-  public function deleteAndClearMembers() {
-    
-    $this->ensureID();
-    $this->db->query("
-      DELETE FROM users_departments
-      WHERE departmentid = '" . $this->id . "'
-    ");
-    $this->db->query("
-      DELETE FROM departments
-      WHERE id = '" . $this->id . "'
     ");
     
   }

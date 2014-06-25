@@ -17,7 +17,11 @@ $departments
 {assign var=name value=$values.name|default:#users__email_invitation_namedefault#}
 <h1>{#users__email_invitation_title#|sprintf:$name},</h1>
 
-  {assign var=url value="$BASE_URI$language/users/validateinvite/`$values.id`,`$values.validationcode`"}
+  {if $values.registereduserid}
+    {assign var=nurl value="$BASE_URI$language/users/login"}
+  {else}
+    {assign var=url value="$BASE_URI$language/users/validateinvite/`$values.id`,`$values.validationcode`"}
+  {/if}
 
   {$template.prefix|default:#users__templateprefix_default#}
 
@@ -27,7 +31,7 @@ $departments
     <td style="background-color:'#e0e0e0'; padding: 10px; font-family: 'Arial', 'sans-serif';" bgcolor="#e0e0e0">
 
       {if !$foundcontent}
-        <b>{#users__email_invitation_register#}:</b><br/>
+        <b>{if $values.registereduserid}{#users__email_invitation_login#}{else}{#users__email_invitation_register#}{/if}:</b><br/>
         <a href="{$url}">{#users__email_invitation_link#}</a>
         <br/>
       {/if}

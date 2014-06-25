@@ -367,17 +367,15 @@ class Controller extends \Springboard\Controller\Visitor {
      * ezert van az hogy session_regenerate_id(false) hivas utan latszolag
      * nem valtoznak a session adatok a regi sessionid-ben
      * ketto megoldas van:
-     *  - vagy mindig destroyolni a sessiont
+     *  - vagy mindig destroyolni a "regi" sessiont (session_regenerate_id(true))
      *  - vagy bezarni a sessiont, ezaltal elmentve a valtoztatasokat benne
      *    majd ujra megnyitni es akkor megprobalni rotalni az id-t
      *    igy a "regi" sessionid-ben ugyanaz lesz mint az ujban ami nem biztos
      *    hogy ervenybe lep
      *
      */
-    session_write_close();
-    $this->bootstrap->sessionstarted = false;
-    $this->bootstrap->setupSession();
-    if ( !session_regenerate_id() ) // logoljuk ha nem sikerul
+
+    if ( !session_regenerate_id(true) ) // logoljuk ha nem sikerul
       throw new \Exception("session_regenerate_id() returned false!");
 
   }

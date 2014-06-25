@@ -1272,23 +1272,105 @@ class Recordings extends \Springboard\Model {
     return (bool)$this->db->Affected_Rows();
     
   }
-  
-  public function addComment( $values ) {
-    
+
+  public function insertComment( $comment, $perpage ) {
+
     $this->ensureID();
-    
     $commentModel = $this->bootstrap->getModel('comments');
-    $commentModel->insert( $values );
-    
+
+    $comment['recordingid'] = $this->id;
+    $comment['timestamp']   = date('Y-m-d H:i:s');
+
+    $comment = $this->ensureCommentReply( $comment );
+
+    $iterations = 0;
+    while( $iterations < 100 ) {
+      $iterations++;
+
+      try {
+        $comment['sequenceid'] = $this->db->getOne("
+          SELECT IFNULL(MAX(sequenceid) + 1, 1)
+          FROM comments
+          WHERE recordingid = '" . $this->id . "'
+        ");
+
+        // exceptiont fog dobni ha mar van ilyen sequenceid,
+        $commentModel->insert( $comment );
+        break; // nem volt exception, kilepunk a loopbol
+
+      } catch( \Exception $e ) {
+        continue;
+      }
+
+    }
+
+    if ( $commentModel->row['replyto'] )
+      $commentModel->row['replypage'] =
+        ceil( $commentModel->row['replyto'] / $perpage )
+      ;
+
+    $this->incrementCommentCount();
+    return $commentModel->row;
+
   }
-  
-  public function getComments( $start = 0, $limit = 10 ) {
-    
+
+  private function ensureCommentReply( &$comment ) {
+
     $this->ensureID();
-    
-    $comments = $this->db->getArray("
+    $rs = $this->db->execute("
+      SELECT
+        c.sequenceid,
+        u.nickname
+      FROM
+        comments AS c,
+        users AS u
+      WHERE
+        c.recordingid = '" . $this->id . "' AND
+        u.id          = c.userid
+    ");
+
+    foreach( $rs as $value ) {
+      $validids[ $value['sequenceid'] ] = true;
+      if ( !isset( $nicknametoids[ $value['nickname'] ] ) )
+        $nicknametoids[ $value['nickname'] ] = array();
+
+      $nicknametoids[ $value['nickname'] ][] = $value['sequenceid'];
+    }
+
+    $found = preg_match( '/^@([^:]+):/', trim( $comment['text'] ), $match );
+    if ( !$found ) {
+      $comment['replyto'] = 0;
+      return $comment;
+    } else
+      $nick = $match[1];
+
+    // a user sajat maga irta be a user nickjet, a legutolso commentre
+    // linkelunk amit a target user irt
+    if ( !$comment['replyto'] and isset( $nicknametoids[ $nick ] ) )
+      $comment['replyto'] =
+        $nicknametoids[ $nick ][ count( $nicknametoids[ $nick ] ) - 1 ]
+      ;
+    elseif( // ellenorizzuk hogy a replyto megfelel a valosagnak
+            $comment['replyto'] and 
+            ( // nincs ilyen nick vagy nincs ilyen commentid
+              !isset( $nicknametoids[ $nick ] ) or
+              !isset( $validids[ $comment['replyto'] ] )
+            )
+          )
+      $comment['replyto'] = 0;
+
+    return $comment;
+
+  }
+
+  public function getComments( $start = 0, $limit = 10 ) {
+
+    $this->ensureID();
+    $rs = $this->db->execute("
       SELECT
         c.id,
+        c.sequenceid,
+        c.replyto,
         c.timestamp,
         c.text,
         c.userid,
@@ -1296,7 +1378,9 @@ class Recordings extends \Springboard\Model {
         u.nameformat,
         u.nameprefix,
         u.namefirst,
-        u.namelast
+        u.namelast,
+        u.avatarstatus,
+        u.avatarfilename
       FROM
         comments AS c,
         users AS u
@@ -1304,22 +1388,24 @@ class Recordings extends \Springboard\Model {
         c.recordingid = '" . $this->id . "' AND
         c.userid      = u.id AND
         c.moderated   = '0'
-      ORDER BY
-        c.id DESC
+      ORDER BY c.id ASC
       LIMIT $start, $limit
     ");
-    
-    foreach( $comments as $key => $value ) {
-      // TODO user name format
-      $comments[ $key ]['nickname'] = htmlspecialchars( $value['nickname'], ENT_QUOTES, 'UTF-8' );
-      $comments[ $key ]['text']     = nl2br( htmlspecialchars( $value['text'], ENT_QUOTES, 'UTF-8' ) );
-      
+
+    $ret = array();
+
+    foreach( $rs as $value ) {
+
+      $ret[] = $value;
+      $idtokey[ $value['id'] ] = count( $ret ) - 1;
+      $nicknametoid[ $value['nickname'] ] = $value['id'];
+
     }
-    
-    return $comments;
-    
+
+    return $ret;
+
   }
-  
+
   public function getCommentsCount() {
     
     $this->ensureID();
@@ -1333,7 +1419,36 @@ class Recordings extends \Springboard\Model {
     ");
     
   }
-  
+
+  public function getCommentsPageCount( $perpage ) {
+    $commentcount = $this->getCommentsCount();
+    return ceil( $commentcount / $perpage );
+  }
+
+  public function getCommentsPage( $perpage, $page ) {
+    // mert az oldalak 1-basedek, de a LIMIT 0 based
+    $page--;
+    $start = $page * $perpage;
+    if ( $start < 0 )
+      return array();
+
+    $ret      = array();
+    $comments = $this->getComments( $start, $perpage );
+    // gyakorlatilag array_reverse csak kitoltjuk a replypage-et is
+    for ( $i = count( $comments ) - 1; $i >= 0; $i-- ) {
+
+      if ( $comments[ $i ]['replyto'] )
+        $comments[ $i ]['replypage'] =
+          ceil( $comments[ $i ]['replyto'] / $perpage )
+        ;
+
+      $ret[] = $comments[ $i ];
+      unset( $comments[ $i ] );
+    }
+
+    return $ret;
+  }
+
   public function getRelatedVideosByKeywords( $limit, $user, $organizationid ){
     
     $this->ensureObjectLoaded();
@@ -2134,6 +2249,9 @@ class Recordings extends \Springboard\Model {
 
       if ( isset( $highres[ $id ] ) and $highres[ $id ] )
         $data[ $key ][] = $this->getMediaUrl('default', true, $info, $id );
+
+      if ( $outroid == $introid )
+        $data['outro_streams'] = $data['intro_streams'];
 
     }
 

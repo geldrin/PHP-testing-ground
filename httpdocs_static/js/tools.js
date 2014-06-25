@@ -45,6 +45,7 @@ $j(document).ready(function() {
   runIfExists('#users_invite, #users_editinvite', setupUserInvitation );
   runIfExists('#orderrecordings', setupOrderRecordings );
   runIfExists('.togglesmallrecordings', setupToggleRecordings );
+  runIfExists('#comments', setupComments );
 
   if ( needping )
     setTimeout( setupPing, 1000 * pingsecs );
@@ -1851,9 +1852,11 @@ function setupUserInvitation() {
 
   var tinymceDefaults = {};
   tinyMCEInstanceInit = function(instance) { // global so that tinyMCE can actually see it
-    tinymceDefaults[ instance.editorId ] = instance.getContent();
+    tinymceDefaults[ instance.editorId ] = $j.parseJSON(
+      '"' + $j('#templateid').attr('data-default' + instance.editorId ) + '"'
+    );
   };
-  
+
   $j('#templateid').change(function() {
     var val = $j(this).val();
     if (!val) {
@@ -1864,29 +1867,45 @@ function setupUserInvitation() {
 
     var data = {templateid: val};
     $j.ajax({
-      //beforeSend:
-      //complete:
       cache  : false,
       success: function( data ) {
-        if (!data || data.status != 'success')
+        if ( typeof( data ) != 'object' || data.status != 'success')
           return;
+
+        // default values
+        if ( !data.prefix )
+          data.prefix = $j.parseJSON(
+            '"' + $j('#templateid').attr('data-defaulttemplateprefix') + '"'
+          );
+
+        if ( !data.postfix )
+          data.postfix = $j.parseJSON(
+            '"' + $j('#templateid').attr('data-defaulttemplatepostfix') + '"'
+          );
 
         tinyMCE.get('templateprefix').setContent( data.prefix );
         tinyMCE.get('templatepostfix').setContent( data.postfix );
 
+      },
+      beforeSend: function() {
+        $j('#usersinvitewrap .loading').show();
+      },
+      complete: function() {
+        $j('#usersinvitewrap .loading').hide();
       },
       data    : data,
       dataType: 'json',
       type    : 'GET',
       url     : BASE_URI + language + '/users/getinvitationtemplate'
     });
+
   });
 
   setupDefaultDateTimePicker('#invitationvaliduntil');
   $j('.invitationvaliduntil .presettime').click(function(e) {
     e.preventDefault();
     $j('#invitationvaliduntil').datetimepicker('setDate', $j(this).attr('data-date') );
-  })
+  });
   
 }
 
@@ -1970,4 +1989,143 @@ function setupToggleRecordings( elems ) {
     e.preventDefault();
     $j(this).parents('li').find('.smallrecordings').toggle();
   });
+}
+
+function setupComments() {
+
+  var baseurl       = window.location.href.replace(/[\?&]commentspage=\d+/, '')
+  var getcommenturl = $j('#comments .widepager').attr('data-getcommenturl');
+  var commentregex  = /[\?&]focus=(\d+)/;
+  var loadedpage    = null;
+  var tryFocus      = function(id, dontjump) {
+
+    if ( !dontjump )
+      $j('body').scrollTop( $j('#comments').position().top + 10 );
+
+    if ( !id ) {
+      var currenthref = window.location.href;
+
+      var match = currenthref.match(commentregex)
+      if ( !match )
+        return;
+
+      // must jump, need to focus
+      $j('body').scrollTop( $j('#comments').position().top + 10 );
+      var id = match[1];
+    }
+
+    $j('.commentlistitem').removeClass('highlight');
+    $j( '#comment-' + id ).addClass('highlight');
+
+  };
+
+  tryFocus(null, true);
+
+  var loadComments = function (data) {
+    var page = data.page;
+
+    if ( loadedpage == page ) {
+      tryFocus();
+      return;
+    }
+
+    $j.ajax({
+      url: getcommenturl,
+      data: data,
+      type: 'GET',
+      cache: false,
+      dataType: 'json',
+      success: function( data ) {
+
+        if ( typeof( data ) != 'object' || !data.html )
+          return;
+
+        $j('#commentwrap').html( data.html );
+
+        tryFocus();
+        loadedpage = page;
+      },
+      beforeSend: function() {
+        $j('#comments .loading').show();
+      },
+      complete: function() {
+        $j('#comments .loading').hide();
+      }
+    });
+  };
+
+  $j(window).bind('statechange', function() {
+    var state = History.getState();
+    if ( !state.data )
+      return
+
+    loadComments(state.data);
+  });
+
+  $j('#comments .widepager a, #comments a.replylink').live('click', function(e) {
+    e.preventDefault();
+
+    var data = {
+      page: $j(this).attr('data-pageid')
+    };
+
+    History.pushState(data, null, $j(this).attr('href') );
+  });
+
+  if ( $j('#recordings_newcomment').length == 0 )
+    return; // not logged in
+
+  $j('#comments .reply').live('click', function(e) {
+    e.preventDefault();
+
+    var text      = $j('#text').val();
+    var replyto   = $j(this).attr('data-commentid');
+    var nick      = $j(this).attr('data-nick');
+    var replytext = '@' + nick + ': ';
+
+    var text = text.replace(/@[^:]+: /g, '');
+    $j('#text').val( replytext + text );
+    $j('#replyto').val( replyto );
+
+  });
+
+  $j('#recordings_newcomment').submit(function(e) {
+
+    if ( !check_recordings_newcomment() )
+      return false;
+
+    e.preventDefault();
+
+    var data = $j(this).serializeArray();
+    $j.ajax({
+      url: $j(this).attr('action'),
+      type: 'POST',
+      data: data,
+      dataType: 'json',
+      success: function( data ) {
+
+        if ( typeof( data ) != 'object' || !data.html )
+          return;
+
+        History.pushState({
+            data: {
+              page: -1
+            }
+          }, null, baseurl
+        );
+
+        $j('#commentwrap').html( data.html );
+        tryFocus( data.focus );
+        $j('#text').val('');
+
+      },
+      beforeSend: function() {
+        $j('#comments .loading').show();
+      },
+      complete: function() {
+        $j('#comments .loading').hide();
+      }
+    });
+  });
+
 }
