@@ -470,7 +470,7 @@ function getTimelineGridSeconds($timestamp, $direction = "left", $timeresolution
 }
 
 function findStreamingClientPlatform($platform_string) {
-global $platform_definitions, $debug, $myjobid;
+global $platform_definitions, $debug, $myjobid, $jconf;
 
 	foreach ( $platform_definitions as $key => $value ) {
 		if ( stripos($platform_string, $key) !== false ) return $value;
