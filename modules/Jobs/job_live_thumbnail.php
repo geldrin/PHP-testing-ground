@@ -33,8 +33,6 @@ if ( iswindows() ) {
 	exit;
 }
 
-$temp_dir = "/tmp/";
-
 // Thumb sizes
 $res_wide   = explode("x", $jconf['thumb_video_medium'], 2);
 $res_43     = explode("x", $jconf['thumb_video_small'], 2);
@@ -62,7 +60,36 @@ while( !is_file( $app->config['datapath'] . 'jobs/' . $myjobid . '.stop' ) and !
 
 	for ( $i = 0; $i < count($channels); $i++ ) {
 
-		// RTMP URL
+var_dump($channels);
+
+		//// Prepare temp directories
+		$temp_dir = "/tmp/" . $channels[$i]['streamid'] . "/";
+		// Base working directory
+		$err = create_remove_directory($temp_dir);
+		if ( !$err['code'] ) {
+			$debug->log($jconf['log_dir'], $myjobid . ".log", $err['message'] . "\n\nCOMMAND: " . $err['command'] . "\n\nRESULT: " . $err['result'], $sendmail = true);
+			return false;
+		}
+		// Wide frames
+		$err = create_remove_directory($temp_dir . $jconf['thumb_video_medium'] . "/");
+		if ( !$err['code'] ) {
+			$debug->log($jconf['log_dir'], $myjobid . ".log", $err['message'] . "\n\nCOMMAND: " . $err['command'] . "\n\nRESULT: " . $err['result'], $sendmail = true);
+			return false;
+		}
+		// 4:3 frames
+		$err = create_remove_directory($temp_dir . $jconf['thumb_video_small'] . "/");
+		if ( !$err['code'] ) {
+			$debug->log($jconf['log_dir'], $myjobid . ".log", $err['message'] . "\n\nCOMMAND: " . $err['command'] . "\n\nRESULT: " . $err['result'], $sendmail = true);
+			return false;
+		}
+		// High resolution wide frame
+		$err = create_remove_directory($temp_dir . $jconf['thumb_video_large'] . "/");
+		if ( !$err['code'] ) {
+			$debug->log($jconf['log_dir'], $myjobid . ".log", $err['message'] . "\n\nCOMMAND: " . $err['command'] . "\n\nRESULT: " . $err['result'], $sendmail = true);
+			return false;
+		}
+
+		// RTMP URL - Use fallback always
 		$rtmp_server = $app->config['fallbackstreamingserver'];
 
 		$wowza_app = "vsqlive";
@@ -70,67 +97,86 @@ while( !is_file( $app->config['datapath'] . 'jobs/' . $myjobid . '.stop' ) and !
 
 		$rtmp_url = sprintf("rtmp://%s/" . $wowza_app . "/", $rtmp_server) . $channels[$i]['wowzastreamid'];
 
-		$thumb_filename = $temp_dir . $channels[$i]['locationid'] . ".png";
-		$ffmpeg_command = 'rm -f ' . $temp_dir . $channels[$i]['locationid'] . '*.png ' . $temp_dir . $channels[$i]['locationid'] . '*.jpg > /dev/null 2>&1 ; ffmpeg -i ' . $rtmp_url . ' -vf "thumbnail" -frames:v 1 ' . $thumb_filename;
+		$thumb_filename = "/tmp/" . $channels[$i]['streamid'] . ".png";
+		$ffmpeg_command = 'rm -f ' . $temp_dir . $channels[$i]['streamid'] . '*.png ' . $temp_dir . $channels[$i]['streamid'] . '*.jpg > /dev/null 2>&1 ; ffmpeg -i ' . $rtmp_url . ' -vf "thumbnail" -frames:v 1 ' . $thumb_filename;
 echo $ffmpeg_command . "\n";
 
 		// Run ffmpeg
 		$err = runExternal($ffmpeg_command);
 
 		if ( is_readable($thumb_filename) and ( filesize($thumb_filename) > 0 ) ) {
-			$debug->log($jconf['log_dir'], $myjobid . ".log", "[OK] ffmpeg live thumb created. Error code = " . $err['code'] . ", lifefeed id = " . $channels[$i]['locationid'] . ", ffmpeg command = " . $ffmpeg_command . ". Full output:\n" . $err['cmd_output'], $sendmail = false);
+			$debug->log($jconf['log_dir'], $myjobid . ".log", "[OK] ffmpeg live thumb created. Error code = " . $err['code'] . ", lifefeed_stream.id = " . $channels[$i]['streamid'] . ", ffmpeg command = " . $ffmpeg_command . ". Full output:\n" . $err['cmd_output'], $sendmail = false);
 
 		} else {
 			// ffmpeg error: default logo
-			$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] ffmpeg cannot get live thumb. Error code = " . $err['code'] . ", lifefeed id = " . $channels[$i]['locationid'] . ", ffmpeg command = " . $ffmpeg_command . ". Full output:\n" . $err['cmd_output'], $sendmail = false);
+			$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] ffmpeg cannot get live thumb. Error code = " . $err['code'] . ", lifefeed_stream.id = " . $channels[$i]['streamid'] . ", ffmpeg command = " . $ffmpeg_command . ". Full output:\n" . $err['cmd_output'], $sendmail = false);
 // def logo hogyan?
-
+echo "no adas bazdmeg\n";
+exit;
 			continue;
 		}
 
-		$filename_wide = $temp_dir . $channels[$i]['locationid'] . "_wide.png";
-		$filename_wide_jpg = $temp_dir . $channels[$i]['locationid'] . "_wide.jpg";
-		$filename_43 = $temp_dir . $channels[$i]['locationid'] . "_sm.png";
-		$filename_highres = $temp_dir . $channels[$i]['locationid'] . "_high.png";
+		$filename = $channels[$i]['streamid'] . ".png";
+		$filename_jpg = $channels[$i]['streamid'] . ".jpg";
 
-		if ( copy($thumb_filename, $filename_wide) && copy($thumb_filename, $filename_43) && copy($thumb_filename, $filename_highres) ) {
+		$path_wide = $temp_dir . $jconf['thumb_video_medium'] . "/";
+		$path_43 = $temp_dir . $jconf['thumb_video_small'] . "/";
+		$path_highres = $temp_dir . $jconf['thumb_video_large'] . "/";
+
+var_dump($path_wide);
+
+var_dump($path_43);
+
+var_dump($path_highres);
+
+		if ( copy($thumb_filename, $path_wide . $filename) && copy($thumb_filename, $path_43 . $filename) && copy($thumb_filename, $path_highres . $filename) ) {
 
 			// Wide thumb
 			try {
-				\Springboard\Image::resizeAndCropImage($filename_wide, $res_wide[0], $res_wide[1], 'top');
+				\Springboard\Image::resizeAndCropImage($path_wide . $filename, $res_wide[0], $res_wide[1], 'top');
+				png2jpg($path_wide . $filename, $path_wide . $filename_jpg, 95);
+				unlink($path_wide . $filename);
 			} catch (exception $err) {
-				$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Cannot copy " . $err['code'] . ", lifefeed id = " . $channels[$i]['locationid'] . ", ffmpeg command = " . $ffmpeg_command . ". Full output:\n" . $err['cmd_output'], $sendmail = false);
+				$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Cannot resize image. File = " . $path_wide . $filename . ".", $sendmail = false);
 			}
-
-			\Springboard\Image::resizeImageMagick($filename_wide, $filename_wide_jpg, $res_wide[0], $res_wide[1], "jpeg" );
-exit;
 
 			// 4:3 thumb
 			try {
-				\Springboard\Image::resizeAndCropImage($filename_43, $res_43[0], $res_43[1]);
+				\Springboard\Image::resizeAndCropImage($path_43 . $filename, $res_43[0], $res_43[1]);
+				png2jpg($path_43 . $filename, $path_43 . $filename_jpg, 95);
+				unlink($path_43 . $filename);
 			} catch (exception $err) {
-				$errors['messages'] .= "[ERROR] File " . $filename_43 . " resizeAndCropImage() failed to " . $res_43[0] . "x" . $res_43[1] . ".\n";
-				$iserror = $is_error_now = TRUE;
+				$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Cannot resize image. File = " . $path_43 . $filename . ".", $sendmail = false);
 			}
+
 			// High resolution thumb
 			try {
-				\Springboard\Image::resizeAndCropImage($filename_highres, $res_high[0], $res_high[1]);
+				\Springboard\Image::resizeAndCropImage($path_highres . $filename, $res_high[0], $res_high[1]);
+				png2jpg($path_highres . $filename, $path_highres . $filename_jpg, 95);
+				unlink($path_highres . $filename);
 			} catch (exception $err) {
-				$errors['messages'] .= "[ERROR] File " . $filename_highres . " resizeAndCropImage() failed to " . $res_high[0] . "x" . $res_high[1] . ".\n";
-				$iserror = $is_error_now = TRUE;
+				$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Cannot resize image. File = " . $path_highres . $filename . ".", $sendmail = false);
 			}
 
 		} else {
-echo "error\n";
-exit;
+			$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Cannot copy image " . $thumb_filename . " to temp directories.\n", $sendmail = false);
 		}
 
-		// Resize
 $size = getimagesize($thumb_filename);
 var_dump($size);
 
-// Resize images according to thumbnail requirements. If one of them fails we cancel all the others.
+		// Copy images to server
 
+		$remote_path = $app->config['livestreampath'];
+		$err = ssh_filecopy2($app->config['fallbackstreamingserver'], $temp_dir, $remote_path, false);
+		if ( !$err['code'] ) {
+			$debug->log($jconf['log_dir'], $myjobid . ".log", "MSG: " . $err['message'] . "\nCOMMAND: " . $err['command'] . "\nRESULT: " . $err['result'], $sendmail = false);
+			return false;
+		} else {
+			$debug->log($jconf['log_dir'], $myjobid . ".log", "[OK] Updated live thumbs published for livefeed_stream.id = " . $channels[$i]['streamid'] . " at " . $app->config['fallbackstreamingserver'] . ":" . $remote_path, $sendmail = false);
+		}
+
+// ALTER TABLE  `livefeed_streams` ADD  `indexphotofilename` TEXT CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL AFTER  `status`;
 
 exit;
 
@@ -168,6 +214,7 @@ global $jconf, $debug, $db, $app, $myjobid;
 			lf.id AS locationid,
 			lf.name AS locationname,
 			lf.issecurestreamingforced,
+			lf.indexphotofilename,
 			lfs.id AS streamid,
 			lfs.name AS streamname,
 			lfs.keycode AS wowzastreamid,
@@ -182,7 +229,7 @@ global $jconf, $debug, $db, $app, $myjobid;
 			ch.id = lf.channelid AND
 			lf.id = lfs.livefeedid AND
 			lf.issecurestreamingforced = 0
-AND lfs.keycode = 215278
+AND lfs.keycode = 420767
 		GROUP BY
 			lf.id
 		ORDER BY
@@ -201,5 +248,10 @@ AND lfs.keycode = 215278
 	return $channels;
 }
 
+function png2jpg($originalFile, $outputFile, $quality) {
+	$image = imagecreatefrompng($originalFile);
+	imagejpeg($image, $outputFile, $quality);
+	imagedestroy($image);;
+}
 
 ?>
