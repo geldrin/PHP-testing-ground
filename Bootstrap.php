@@ -370,16 +370,15 @@ class Bootstrap {
   }
   
   public function getModel( $model ) {
-    
-    $db     = $this->getAdoDB();
+
     $loader = Springboard\Autoloader::getInstance();
     $class  = $loader->findExistingClass(
       'Model\\' . ucfirst( $model ),
       'Springboard\\Model'
     );
-    
+
     return new $class( $this, $model );
-    
+
   }
   
   public function getMailqueue( $nodb = false ) {
