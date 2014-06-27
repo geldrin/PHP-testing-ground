@@ -718,7 +718,7 @@ class Controller extends \Visitor\Controller {
         $key = $fieldtokey[ $field ];
         $ret['data'][ $key ][] = array(
           'x' => $ts,
-          'y' => intval( $v ),
+          'y' => floatval( $v ),
         );
 
       }
