@@ -42,6 +42,11 @@ function smarty_modifier_indexphoto( $data, $type = '', $staticuri = null ) {
         $default = $staticuri . 'images/videothumb_player_placeholder.png';
       break;
     
+    case 'live':
+      $replace = $bootstrap->config['videothumbnailresolutions']['player'];
+      $default = $staticuri . 'images/live_player_placeholder.png';
+      break;
+    
   }
   
   if ( strlen( @$data['indexphotofilename'] ) )

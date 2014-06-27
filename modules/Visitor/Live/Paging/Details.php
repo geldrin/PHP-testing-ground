@@ -15,15 +15,29 @@ class Details extends \Visitor\Paging {
   
   public function init() {
     
+    include_once(
+      $this->bootstrap->config['templatepath'] .
+      'Plugins/modifier.indexphoto.php'
+    );
+    
     $l                  = $this->bootstrap->getLocalization();
     $user               = $this->bootstrap->getSession('user');
     $this->foreachelse  = '';
-    $this->title        = $l('','sitewide_live');
     $this->channelModel = $this->controller->modelIDCheck(
       'channels',
       $this->application->getNumericParameter('id')
     );
-    
+    $this->title        = sprintf(
+      $l('live','details_title'),
+      $this->channelModel->row['title']
+    );
+    $this->controller->toSmarty['opengraph']     = array(
+      'image'       => smarty_modifier_indexphoto( $this->channelModel->row, 'live' ),
+      'description' => $this->channelModel->row['description'],
+      'title'       => $this->channelModel->row['title'],
+      'subtitle'    => $this->channelModel->row['subtitle'],
+    );
+
     if ( !$this->channelModel->row['isliveevent'] )
       $this->controller->redirect(
         'channels/details/' . $this->channelModel->id . ',' . \Springboard\Filesystem::filenameize( $this->channelModel->row['title'] )
