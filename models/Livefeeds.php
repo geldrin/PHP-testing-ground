@@ -781,13 +781,13 @@ class Livefeeds extends \Springboard\Model {
     $sql   = "
       SELECT
         UNIX_TIMESTAMP(s.timestamp) AS timestamp,
-        SUM( s.numberofflashwin )   AS numberofflashwin,
-        SUM( s.numberofflashmac )   AS numberofflashmac,
-        SUM( s.numberofflashlinux ) AS numberofflashlinux,
-        SUM( s.numberofandroid )    AS numberofandroid,
-        SUM( s.numberofiphone )     AS numberofiphone,
-        SUM( s.numberofipad )       AS numberofipad,
-        SUM( s.numberofunknown )    AS numberofunknown
+        SUM( s.numberofflashwin ) + 1   AS numberofflashwin,
+        SUM( s.numberofflashmac ) + 1   AS numberofflashmac,
+        SUM( s.numberofflashlinux ) + 1 AS numberofflashlinux,
+        SUM( s.numberofandroid ) + 1    AS numberofandroid,
+        SUM( s.numberofiphone ) + 1     AS numberofiphone,
+        SUM( s.numberofipad ) + 1       AS numberofipad,
+        SUM( s.numberofunknown ) + 1    AS numberofunknown
       FROM
         statistics_live_5min AS s,
         livefeed_streams AS ls
