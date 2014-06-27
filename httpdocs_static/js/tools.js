@@ -10,7 +10,7 @@ $j(document).ready(function() {
   
   $j.datepicker.setDefaults($j.datepicker.regional[ language ]);
   $j.timepicker.setDefaults($j.timepicker.regional[ language ]);
-  
+
   runIfExists('#headerlogin', setupHeaderLogin );
   runIfExists('#headersearch', setupHeaderSearch );
   runIfExists('.ratewidget', setupRateWidget );
@@ -2139,7 +2139,7 @@ function setupLivestatistics( elem ) {
   var options = {
     element: elem,
     width: 700,
-    height: 500,
+    height: 400,
     renderer: 'area',
     interpolation: 'step-after',
     stroke: true,
@@ -2164,16 +2164,22 @@ function setupLivestatistics( elem ) {
 
   graph.render();
 
+  localetime = new Rickshaw.Fixtures.Time.Local();
+  if ( language == 'hu' ) {
+    localetime.months = $j.datepicker.regional[ language ].monthNamesShort;
+    d3.time.format = d3.locale( d3locale['hu'] ).timeFormat;
+  }
   var hoverDetail = new Rickshaw.Graph.HoverDetail({
     graph: graph,
     xFormatter: function(x) {
-      return new Date(x * 1000).toString();
+      return d3.time.format('%c')( new Date(x * 1000) );
     }
   });
+
   var xAxis = new Rickshaw.Graph.Axis.Time({
     graph: graph,
     ticksTreatment: 'glow',
-    timeFixture: new Rickshaw.Fixtures.Time.Local()
+    timeFixture: localetime
   });
 
   xAxis.render();
