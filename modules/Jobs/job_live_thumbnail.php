@@ -58,7 +58,7 @@ $app->watchdog();
 $channels = getActiveChannels();
 if ( $channels === false ) break;
 
-var_dump($channels);
+//var_dump($channels);
 
 for ( $i = 0; $i < count($channels); $i++ ) {
 
@@ -112,8 +112,7 @@ for ( $i = 0; $i < count($channels); $i++ ) {
 	} else {
 		// ffmpeg error: default logo
 		$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] ffmpeg cannot get live thumb. Using default index photo instead. Error code = " . $err['code'] . ", lifefeed_stream.id = " . $channels[$i]['streamid'] . ", ffmpeg command = " . $ffmpeg_command . ". Full output:\n" . $err['cmd_output'], $sendmail = false);
-// def logo: update
-echo "xxxx\n";
+		// No index photo update, keep existing
 		continue;
 	}
 
@@ -219,14 +218,14 @@ global $jconf, $debug, $db, $app, $myjobid;
 			ch.id = lf.channelid AND
 			lf.id = lfs.livefeedid AND
 			lf.issecurestreamingforced = 0
-		GROUP BY
-			lf.id
 		ORDER BY
 			ch.id";
 //AND lfs.keycode = 420767
+//		GROUP BY
+//			lf.id
 
-echo $query . "\n";
-exit;
+//echo $query . "\n";
+
 	try {
 		$channels = $db->getArray($query);
 	} catch (exception $err) {
