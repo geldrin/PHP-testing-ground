@@ -703,8 +703,7 @@ class Controller extends \Visitor\Controller {
     // prepare the values
     foreach( $data as $value ) {
 
-      // "javascript" time with ms precision
-      $ts  = $value['timestamp'] * 1000;
+      $ts  = intval( $value['timestamp'] );
       foreach( $value as $field => $v ) {
 
         if ( $field == 'timestamp' )
@@ -712,8 +711,8 @@ class Controller extends \Visitor\Controller {
 
         $key = $fieldtokey[ $field ];
         $ret['data'][ $key ][] = array(
-          'x' => $ts,          // X axis
-          'y' => intval( $v ), // Y axis
+          'x' => $ts,
+          'y' => intval( $v ),
         );
 
       }

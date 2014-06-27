@@ -2138,9 +2138,10 @@ function setupLivestatistics( elem ) {
   var elem    = elem.get(0);
   var options = {
     element: elem,
-    width: 950,
+    width: 700,
     height: 500,
     renderer: 'area',
+    interpolation: 'step-after',
     stroke: true,
     preserve: true
   };
@@ -2166,7 +2167,7 @@ function setupLivestatistics( elem ) {
   var hoverDetail = new Rickshaw.Graph.HoverDetail({
     graph: graph,
     xFormatter: function(x) {
-      return new Date(x).toString();
+      return new Date(x * 1000).toString();
     }
   });
   var xAxis = new Rickshaw.Graph.Axis.Time({
@@ -2189,8 +2190,19 @@ function setupLivestatistics( elem ) {
     element: $j('#statisticslegend').get(0),
     graph: graph
   });
+  var shelving = new Rickshaw.Graph.Behavior.Series.Toggle({
+    graph: graph,
+    legend: legend
+  });
+  var highlighter = new Rickshaw.Graph.Behavior.Series.Highlight({
+    graph: graph,
+    legend: legend
+  });
 
-  legend.render();
+  var preview = new Rickshaw.Graph.RangeSlider( {
+    graph: graph,
+    element: $j('#zoomer').get(0),
+  });
 
   var poll = function() {
     var data = $j('#live_analytics').serializeArray();

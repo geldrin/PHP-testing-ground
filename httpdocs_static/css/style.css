@@ -2554,21 +2554,31 @@ a#currentusername span {
   margin-left: 5px;
   width: 300px;
 }
-#livestatistics {
+
+#analyticscontainer {
   width: 950px;
+  position: relative;
+}
+#analyticscontainer .form {
+  width: 250px;
+}
+#livestatistics {
+  float: right;
+  width: 700px;
   height: 500px;
   -webkit-user-select: none;
   -moz-user-select: none;
   -o-user-select: none;
   user-select: none;
-  position: relative;
+}
+#zoomer {
+  float: right;
 }
 #statisticslegend {
-  position: absolute;
-  top: 10px;
-  right: 10px;
   display: inline-block;
   vertical-align: top;
+  background-color: #c7c7c7;
+  width: 235px;
 }
 
 .liveiframe, .contribiframe {

@@ -9,16 +9,21 @@ var analyticsdata = {$analyticsdata|@jsonescape};
 </div>
 <br/>
 
-<div id="livestatistics" data-url="{$language}/live/getstatistics/{$channel.id}">
+<div id="analyticscontainer">
+  <div id="livestatistics" data-url="{$language}/live/getstatistics/{$channel.id}"></div>
   <div id="statisticslegend"></div>
+
+  <div class="form">
+    {$form}
+  </div>
+
+  <div class="clear"></div><br/>
+
+  <div id="zoomer"></div>
 </div>
 
 <div class="clear"></div>
 <br/>
-
-<div class="form halfbox left">
-{$form}
-</div>
 
 {if !empty( $help )}
 <div class="help fullwidth">
