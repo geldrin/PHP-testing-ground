@@ -46,6 +46,7 @@ $j(document).ready(function() {
   runIfExists('#orderrecordings', setupOrderRecordings );
   runIfExists('.togglesmallrecordings', setupToggleRecordings );
   runIfExists('#comments', setupComments );
+  runIfExists('#livestatistics', setupLivestatistics );
 
   if ( needping )
     setTimeout( setupPing, 1000 * pingsecs );
@@ -2127,5 +2128,106 @@ function setupComments() {
       }
     });
   });
+
+}
+
+function setupLivestatistics( elem ) {
+
+  var palette = new Rickshaw.Color.Palette( { scheme: 'classic9' } );
+  var dataurl = elem.attr('data-url');
+  var elem    = elem.get(0);
+  var options = {
+    element: elem,
+    width: 950,
+    height: 500,
+    renderer: 'area',
+    stroke: true,
+    preserve: true
+  };
+
+  // analyticsdata global
+  var graphdata = analyticsdata.data;
+  var series  = [];
+  for (var i = 0, j = analyticsdata.labels.length - 1; i <= j; i++) {
+
+    series.push({
+      color: palette.color(),
+      name: analyticsdata.labels[i],
+      data: graphdata[i]
+    });
+
+  };
+
+  options.series = series;
+  var graph = new Rickshaw.Graph( options );
+
+  graph.render();
+
+  var hoverDetail = new Rickshaw.Graph.HoverDetail({
+    graph: graph,
+    xFormatter: function(x) {
+      return new Date(x).toString();
+    }
+  });
+  var xAxis = new Rickshaw.Graph.Axis.Time({
+    graph: graph,
+    ticksTreatment: 'glow',
+    timeFixture: new Rickshaw.Fixtures.Time.Local()
+  });
+
+  xAxis.render();
+
+  var yAxis = new Rickshaw.Graph.Axis.Y({
+    graph: graph,
+    tickFormat: Rickshaw.Fixtures.Number.formatKMBT,
+    ticksTreatment: 'glow'
+  });
+
+  yAxis.render();
+
+  var legend = new Rickshaw.Graph.Legend( {
+    element: $j('#statisticslegend').get(0),
+    graph: graph
+  });
+
+  legend.render();
+
+  var poll = function() {
+    var data = $j('#live_analytics').serializeArray();
+    data.splice(0, 1);
+    $j.ajax({
+      url: dataurl,
+      data: data,
+      type: 'GET',
+      dataType: 'json',
+      success: function( data ) {
+        if ( !data || typeof( data ) != 'object' || data.status != 'OK' )
+          return;
+
+        // yea...
+        var newdata = data.data;
+        if (newdata.length != graphdata.length)
+          return;
+
+        for (var i = newdata.length - 1; i >= 0; i--) {
+
+          // remove old data
+          for (var j = graphdata[i].length - 1; j >= 0; j--) {
+            graphdata[i].pop();
+          };
+
+          // add new data
+          for (var j = newdata[i].length - 1; j >= 0; j--) {
+            graphdata[i].unshift( newdata[i][j] );
+          };
+
+        };
+
+        graph.update();
+        setTimeout( poll, 5000 );
+      }
+    });
+  };
+  poll();
 
 }

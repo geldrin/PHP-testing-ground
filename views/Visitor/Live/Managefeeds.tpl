@@ -23,13 +23,13 @@
     <td class="feed">
       <a href="{$language}/live/view/{$feed.id},{$feed.name|filenameize}" class="left"><b>{$feed.name|escape:html}</b></a>
       <br/>
+        <a href="{$language}/live/analytics/{$channel.id}?feedids[]={$feed.id}">{#live__analytics#}</a>
       {if $feed.feedtype != 'vcr' or $feed.candelete}
-        <a href="{$language}/live/modifyfeed/{$feed.id}">{#live__live_edit#}</a> |
-        <a href="{$language}/live/deletefeed/{$feed.id}" class="confirm" question="{#sitewide_areyousure#|escape:html}">{#live__live_delete#}</a>
+        | <a href="{$language}/live/modifyfeed/{$feed.id}">{#live__live_edit#}</a>
+        | <a href="{$language}/live/deletefeed/{$feed.id}" class="confirm" question="{#sitewide_areyousure#|escape:html}">{#live__live_delete#}</a>
       {/if}
       {if !empty( $feed.streams )}
-        {if $feed.candelete }|{/if}
-        <a href="#" class="liveembed">{#live__embed#}</a>
+        | <a href="#" class="liveembed">{#live__embed#}</a>
       {/if}
    </td>
     <td class="streamcolumn">

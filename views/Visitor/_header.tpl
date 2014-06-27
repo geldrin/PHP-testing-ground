@@ -15,6 +15,9 @@
   {if $needfancybox}
     <link rel="StyleSheet" type="text/css" href="{$STATIC_URI}js/fancybox/jquery.fancybox-1.3.4.css" media="screen"/>
   {/if}
+  {if $needanalytics}
+    <link rel="StyleSheet" type="text/css" href="{$STATIC_URI}js/analytics/rickshaw.min.css" media="screen"/>
+  {/if}
   <link rel="StyleSheet" type="text/css" href="{$STATIC_URI}css/style{$VERSION}.css" media="screen"/>
   {if $browser.mobile}
     <meta name="viewport" content="width=device-width, maximum-scale=1.0"/>
@@ -51,6 +54,12 @@
   {/if}
   {if $needhistory}
     <script type="text/javascript" src="{$STATIC_URI}js/jquery.history.js"></script>
+  {/if}
+  {if $needanalytics}
+    <script type="text/javascript" src="{$STATIC_URI}js/analytics/d3.min.js"></script>
+    <script type="text/javascript" src="{$STATIC_URI}js/analytics/aight.min.js"></script>
+    <script type="text/javascript" src="{$STATIC_URI}js/analytics/aight.d3.min.js"></script>
+    <script type="text/javascript" src="{$STATIC_URI}js/analytics/rickshaw.min.js"></script>
   {/if}
   <script type="text/javascript" src="{$STATIC_URI}js/tools{$VERSION}.js"></script>
   {/jscombine}

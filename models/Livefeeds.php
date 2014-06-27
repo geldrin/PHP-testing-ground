@@ -775,4 +775,50 @@ class Livefeeds extends \Springboard\Model {
     
   }
   
+  public function getStatistics( $filter ) {
+
+    $where = array();
+    $sql   = "
+      SELECT
+        UNIX_TIMESTAMP(s.timestamp) AS timestamp,
+        SUM( s.numberofflashwin )   AS numberofflashwin,
+        SUM( s.numberofflashmac )   AS numberofflashmac,
+        SUM( s.numberofflashlinux ) AS numberofflashlinux,
+        SUM( s.numberofandroid )    AS numberofandroid,
+        SUM( s.numberofiphone )     AS numberofiphone,
+        SUM( s.numberofipad )       AS numberofipad,
+        SUM( s.numberofunknown )    AS numberofunknown
+      FROM
+        statistics_live_5min AS s,
+        livefeed_streams AS ls
+      WHERE
+        s.livefeedstreamid = ls.id AND
+        s.iscontent        = '0'
+    ";
+
+    if ( empty( $filter['livefeedids'] ) )
+      $filter['livefeedids'] = array( $this->id );
+
+    $where[] = "s.livefeedid IN('" . implode("', '", $filter['livefeedids'] ) . "')";
+
+    if ( !empty( $filter['quality'] ) )
+      $where[] = "ls.quality IN('" . implode("', '", $filter['quality'] ) . "')";
+
+    if ( isset( $filter['starttimestamp'] ) )
+      $where[] = "s.timestamp >= " . $this->db->qstr( $filter['starttimestamp'] );
+
+    if ( isset( $filter['endtimestamp'] ) )
+      $where[] = "s.timestamp <= " . $this->db->qstr( $filter['endtimestamp'] );
+
+    if ( !empty( $where ) )
+      $sql .= "AND " . implode(' AND ', $where );
+
+    $sql .= "
+      GROUP BY s.timestamp
+    ";
+
+    return $this->db->getArray( $sql );
+
+  }
+
 }
