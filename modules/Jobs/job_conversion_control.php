@@ -48,13 +48,17 @@ $db = db_maintain();
 //updateRecordingStatus(9, null, "smil");
 //updateRecordingStatus(9, null, "contentsmil");
 
+// HIANYOK
+// - recording.{content|status} = "reconvert"?
+//   o 
+
 // Query new uploads and insert recording versions
 $recordings = getNewUploads();
 echo "getNewUploads()\n";
 if ( $recordings !== false ) {
 
 	while ( !$recordings->EOF ) {
-break;
+//break;
 		$recording = array();
 		$recording = $recordings->fields;
 
@@ -163,13 +167,13 @@ global $jconf, $debug, $db, $app;
 			recordings AS r
 		WHERE
 (
-			( r.mastersourceip = '" . $node . "' AND r.status = '" . $jconf['dbstatus_uploaded'] . "' ) OR
-			( r.contentmastersourceip = '" . $node . "' AND r.contentstatus = '" . $jconf['dbstatus_uploaded'] . "' )
-) AND r.id = 89
+			( r.mastersourceip = '" . $node . "' AND ( r.status = '" . $jconf['dbstatus_uploaded'] . "' OR r.status = '" . $jconf['dbstatus_reconvert'] . "' ) ) OR
+			( r.contentmastersourceip = '" . $node . "' AND ( r.contentstatus = '" . $jconf['dbstatus_uploaded'] . "' OR r.status = '" . $jconf['dbstatus_reconvert'] . "' ) )
+) AND r.id = 90
 		ORDER BY
 			r.id";
 
-//echo $query;
+echo $query . "\n";
 
 	try {
 		$rs = $db->Execute($query);
@@ -248,7 +252,7 @@ global $db, $debug, $jconf, $app;
 
 		$profileset = getEncodingProfileSet("recording", $recording['mastervideores']);
 var_dump($profileset);
-exit;
+//exit;
 
 		if ( $profileset !== false ) {
 
@@ -515,7 +519,8 @@ echo $smil . "\n";
 		$smil_remote_filename = $app->config['recordingpath'] . ( $recording['id'] % 1000 ) . "/" . $recording['id'] . "/" . $recording['id'] . $smil_filename_suffix . ".smil";
 echo $smil_remote_filename . "\n";
 
-		$err = ssh_filecopy($recording[$idx . 'mastersourceip'], $smil_filename, $smil_remote_filename, false);
+//function ssh_filecopy2($server, $file_src, $file_dst, $isdownload = true) {
+		$err = ssh_filecopy2($recording[$idx . 'mastersourceip'], $smil_filename, $smil_remote_filename, false);
 		if ( !$err['code'] ) {
 			$debug->log($jconf['log_dir'], $jconf['jobid_conv_control'] . ".log", "[ERROR] SMIL file update failed.\nMSG: " . $err['message'] . "\nCOMMAND: " . $err['command'] . "\nRESULT: " . $err['result'], $sendmail = true);
 			$recordings->MoveNext();
