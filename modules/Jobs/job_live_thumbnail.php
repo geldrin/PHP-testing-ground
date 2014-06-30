@@ -170,6 +170,14 @@ for ( $i = 0; $i < count($channels); $i++ ) {
 		return false;
 	}
 
+	// SSH chmod/chown
+	$err = sshMakeChmodChown($app->config['fallbackstreamingserver'], $remote_path . $channels[$i]['streamid'] . "/" .$jconf['thumb_video_small'] . "/" . $filename_jpg);
+	if ( !$err['code'] ) $debug->log($jconf['log_dir'], $myjobid . ".log", "MSG: " . $err['message'] . "\nCOMMAND: " . $err['command'] . "\nRESULT: " . $err['result'], $sendmail = false);
+	$err = sshMakeChmodChown($app->config['fallbackstreamingserver'], $remote_path . $channels[$i]['streamid'] . "/" .$jconf['thumb_video_medium'] . "/" . $filename_jpg);
+	if ( !$err['code'] ) $debug->log($jconf['log_dir'], $myjobid . ".log", "MSG: " . $err['message'] . "\nCOMMAND: " . $err['command'] . "\nRESULT: " . $err['result'], $sendmail = false);
+	$err = sshMakeChmodChown($app->config['fallbackstreamingserver'], $remote_path . $channels[$i]['streamid'] . "/" .$jconf['thumb_video_large'] . "/" . $filename_jpg);
+	if ( !$err['code'] ) $debug->log($jconf['log_dir'], $myjobid . ".log", "MSG: " . $err['message'] . "\nCOMMAND: " . $err['command'] . "\nRESULT: " . $err['result'], $sendmail = false);
+
 	// Update index photo filename
 	$tmp = explode("/", $app->config['livestreampath']);
 	$indexphotofilename = $tmp[count($tmp)-2] . "/" . $channels[$i]['streamid'] . "/" . $jconf['thumb_video_small'] . "/" . $filename_jpg;

@@ -971,6 +971,32 @@ global $jconf;
 	return $err;
 }
 
+// SSH: chmod/chown remote files
+function sshMakeChmodChown($server, $file) {
+global $jconf;
+
+	$err = array();
+	$err['code'] = false;
+	$err['value'] = 0;
+
+	// SSH command template
+	$ssh_command = "ssh -i " . $jconf['ssh_key'] . " " . $jconf['ssh_user'] . "@" . $server . " ";
+	// Shell command
+	$chmod_command = "chmod -f -R " . $jconf['file_access'] . " " . $file . " 2>&1 ; chown -f -R " . $jconf['file_owner'] . " " . $file . " 2>&1";
+	$command = $ssh_command . "\"" . $chmod_command . "\"";
+	exec($command, $output, $result);
+	$output_string = implode("\n", $output);
+	if ( $result != 0 ) {
+		$err['message'] = "[WARN] SCP cannot stat " . $jconf['ssh_user'] . "@" . $server . ":" . $file . " file.\n";
+		return $err;
+	}
+
+	$err['code'] = true;
+	$err['message'] = "[OK] SCP stat " . $jconf['ssh_user'] . "@" . $server . ":" . $file . " file.\n";
+
+	return $err;
+}
+
 function string_to_file($file, $str) {
 
 	$err['command'] = "php: remove_file_ifexists()";
