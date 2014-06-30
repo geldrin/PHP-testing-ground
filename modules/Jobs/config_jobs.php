@@ -125,7 +125,7 @@ return array('config_jobs' => array(
 	'api_password'					=> 'MekkElek123',
 
 	// FFMpeg related
-	'ffmpeg_alt'            => '/home/conv/ffmpeg/ffmpeg-git-20140623-64bit-static/ffmpeg', // current FFMpeg static build
+	'ffmpeg_alt'            		=> '/home/conv/ffmpeg/ffmpeg-git-20140217-64bit-static/ffmpeg', // current FFMpeg static build
 	'ffmpeg_loglevel'				=> 0,								// Loglevel
 	'ffmpeg_threads'				=> 0,								// Threads to use (0 - automatic)
 	'ffmpeg_async_frames'			=> 10,								// Max. frames to skip when audio and video is out of sync
@@ -133,8 +133,6 @@ return array('config_jobs' => array(
 	'ffmpeg_video_codec'			=> 'h264',
 	'ffmpeg_flags'					=> '-strict experimental',
 	'ffmpeg_audio_codec'			=> 'libfaac',						// Audio codec (libmp3lame or libfaac)
-	'ffmpeg_report_enabled'		=> true,
-	'max_duration_error'			=> 20,						// margin of error when comparing master and converted video lengths
 
 	// Thumbnails
 //	'ffmpegthumbnailer'				=> '/usr/bin/ffmpegthumbnailer',	// ffmpegthumbnailer path

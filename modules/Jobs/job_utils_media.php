@@ -268,7 +268,7 @@ global $jconf, $debug;
 		if ( !empty($encodingparams['DAR_MN']) ) $ffmpeg_aspect = " -aspect " . $encodingparams['DAR_MN'];
 
 		//// Scaling 2: profile bounding box
-		$tmp = calculate_video_scaler($encodingparams['resxdar'], $encodingparams['resydar'], $profile['videobboxsizex'], $profile['videobboxsizey']);
+		$tmp = calculate_video_scaler($encodingparams['resxdar'], $encodingparams['resydar'], $profile['videobboxsizex'] . "x" . $profile['videobboxsizey']);
 		$encodingparams['scaler'] = $tmp['scaler'];
 		$encodingparams['resx'] = $tmp['x'];
 		$encodingparams['resy'] = $tmp['y'];
@@ -338,106 +338,92 @@ global $jconf, $debug;
 }
 
 
-///////////////////////////////////////////////////////////////////////////////////////////////////
-	function ffmpegPrep($rec, $profile) {
-///////////////////////////////////////////////////////////////////////////////////////////////////
-// Description
-// goes
-// here.
-// 
-// iscontent(bool), master_basename, master_remote_filename, master_filename,master_ssh_filename
-// encoding_profiles.type:       recording/pip/content
-// encoding_profiles.mediatype:  video/audio
-//
-// > a 'videoonly' kulcsokat le kell cserelni jconf-os verziora!
-// > erdemes volna a DAR/SAR/PAR-os benazas helyett a scale filtert hasznalni -force_aspect_ratio
-//  kapcsoloval? (https://www.ffmpeg.org/ffmpeg-filters.html#Options-1)
-//  out_w, out_h -t kell hasznalni a PIP eseten => Le kell tesztelni!!!
-//
-// > converzio utani duration check-et bele kell tenni!
-//
-// > DEBUG:
-//  ki kell deriteni, miert lep ki az ffmpeg process hq felvetelek konvertalasakor!
-//  => ffmpeg output loggolasa: '-report' kapcsolo
-//    sysvar: FFREPORT="file=<filename>:level=<#int>"
-//  => log bekapcsolasa: debug=true (+ jconf['ffmpeg_report_enabled']=true ???)
-//  => mi legyen a reportfile-okkal?
-//
-// PIP eseten:
-// > az alacsonyabb vagy a magasabb fps legyen az alap? -> magasabb!
-///////////////////////////////////////////////////////////////////////////////////////////////////
+function ffmpegUniConvert($recording, $profile) {
 global $jconf, $debug;
+
 	$err = array();
 	$err['code'] = false;
 	$err['result'] = 0;
 	$err['command'] = "";
 	$err['command_output'] = "-";
 	$err['message'] = "";
+	$err['result'] = 0;
 
 	// Encoding paramteres: an array for recording final parameters used for encoding
-	$encpars = array();
-	$encpars['name'] = $profile['name'];
-	$encpars['hasaudio'] = true;
-	$encpars['hasvideo'] = true;
-	
-	$idx = ($rec['iscontent'] ? 'content' : '');
-	echo "Iscontent - ". print_r(($rec['iscontent'] ? 'true' : 'false' ), 1) ."(idx='$idx')\n";
-	
-	// Audio parameters
-	if (($rec[$idx . 'mastermediatype'] == "videoonly" ) || ( empty($profile['audiocodec']))) {
-		// No audio channels to be encoded
-		echo "File '". $rec[$idx .'mastervideofilename'] ."' - mediatype=". $rec[$idx .'mastermediatype'] .",profile '". $profile['name'] ."',acodec=". $profile['audiocodec'] ."\n";
-		$encpars['hasaudio'] = false;
-	} else {
-		// Bitrate settings for audio
-		if ( $rec['masteraudiochannels'] < $profile['audiomaxchannels'] ) $audiochannels = $rec[$idx . 'masteraudiochannels'];
-		$audiobitrate = $profile['audiomaxchannels'] * $profile['audiobitrateperchannel'];
+	$encodingparams = array();
+	$encodingparams['name'] = $profile['name'];
 
-		$encpars['audiochannels'] = $profile['audiomaxchannels'];
-		// Samplerate correction according to encoding profile
-		$encpars['audiosamplerate'] = doSampleRateCorrectionForProfile($rec[$idx . 'masteraudiofreq'], $profile);
-		$encpars['audiobitrate'] = $audiobitrate * 1000;
-	}
-	
-	// Video parameters
-	if ($rec[$idx .'mastermediatype'] == 'audio' || empty($profile['videocodec'])) { // audio VAGY audioonly
-		$encpars['hasvideo'] = false;
+// !!!!!!!!!!!!!!
+	$idx = "";
+	if ( $recording['iscontent'] ) $idx = "content";
+
+	// Audio parameters
+	if ( ( $recording[$idx . 'mastermediatype'] == "videoonly" ) || ( empty($profile['audiocodec']) ) ) {
+		// No audio channels to be encoded
+		$encodingparams['audiochannels'] = null;
+		$encodingparams['audiosamplerate'] = null;
+		$encodingparams['audiobitrate'] = null;
+		$ffmpeg_audio = " -an ";
 	} else {
-		// pip eseten ossze kell hasonlitani az fps-t es a nagyobbat kell valasztani (vidx valtoztatas)
-		$encpars['videofps'] = $rec[$idx .'mastervideofps'];
-	
-		if ( empty($rec[$idx . 'mastervideofps']) ) {
-			$encpars['videofps'] = $jconf['video_default_fps'];
+		// Samplerate correction according to encoding profile
+		$audiosamplerate = doSampleRateCorrectionForProfile($recording[$idx . 'masteraudiofreq'], $profile);
+		// Bitrate settings for audio
+		$audiochannels = $profile['audiomaxchannels'];
+		if ( $recording['masteraudiochannels'] < $profile['audiomaxchannels'] ) $audiochannels = $recording[$idx . 'masteraudiochannels'];
+		$audiobitrate = $audiochannels * $profile['audiobitrateperchannel'];
+
+		$encodingparams['audiochannels'] = $audiochannels;
+		$encodingparams['audiosamplerate'] = $audiosamplerate;
+		$encodingparams['audiobitrate'] = $audiobitrate * 1000;
+
+		// ffmpeg audio encoding settings
+		$ffmpeg_audio = "-async " . $jconf['ffmpeg_async_frames'] . " -c:a " . $profile['audiocodec'] . " -ac " . $audiochannels . " -b:a " . $audiobitrate . "k -ar " . $audiosamplerate . " ";
+	}
+
+	// Video parameters
+	if ( ( $recording[$idx . 'mastermediatype'] == "audio" ) || empty($profile['videocodec']) ) {
+		$ffmpeg_video = " -vn ";
+	} else {
+
+		// FPS check and correction
+		$fps = "";
+		$encodingparams['videofps'] = $recording[$idx . 'mastervideofps'];
+		if ( empty($recording[$idx . 'mastervideofps']) ) {
+			$debug->log($jconf['log_dir'], $jconf['jobid_media_convert'] . ".log", "[WARNING] Media FPS is zero/empty. Resetting to " . $jconf['video_default_fps'] . ", might cause problem.", $sendmail = true);
+			$encodingparams['videofps'] = $jconf['video_default_fps'];
 		} else {
 			// Max fps check
-			if ( $rec[$idx . 'mastervideofps'] > $profile['videomaxfps'] ) {
-				switch ($rec[$idx . 'mastervideofps']) {
+			if ( $recording[$idx . 'mastervideofps'] > $profile['videomaxfps'] ) {
+				$debug->log($jconf['log_dir'], $jconf['jobid_media_convert'] . ".log", "[WARNING] Media fps too high: " . $recording[$idx . 'mastervideofps'] . " (max: " . $profile['videomaxfps'] . ")", $sendmail = true);
+				switch ($recording[$idx . 'mastervideofps']) {
 					case 60:
-						$encpars['videofps'] = 30;
+						$encodingparams['videofps'] = 30;
 						break;
 					case 50:
-						$encpars['videofps'] = 25;
+						$encodingparams['videofps'] = 25;
 						break;
+					default:
+						$debug->log($jconf['log_dir'], $jconf['jobid_media_convert'] . ".log", "[WARNING] Strange video FPS? Will not apply video_maxfps profile value. Info:\n\nInput FPS: " . $recording[$idx . 'mastervideofps'] . " (profile limit: " . $profile['videomaxfps'] . ")", $sendmail = true);
 				}
 			}
 		}
+		$ffmpeg_fps = " -r " . $encodingparams['videofps'];
 
 		// Max resolution check (fraud check)
-		$videores = explode('x', strtolower($rec[$idx .'mastervideores']), 2);
-		echo $idx ."video resolution=". $videores[0] ."x". $videores[1] .".\n";
-		$maxres   = explode('x', strtolower($jconf['video_max_res']), 2);
-		if (($videores[0] > $maxres[0]) || ($videores[1] > $maxres[1])) {
-			$err['message'] = "[ERROR] Invalid video resolution: ". $rec[$idx .'mastervideores'];
+		$videores = explode("x", strtolower($recording[$idx . 'mastervideores']), 2);
+		$maxres = explode("x", strtolower($jconf['video_max_res']), 2);
+		if ( ( $videores[0] > $maxres[0] ) || ( $videores[1] > $maxres[1]) ) {
+			$err['message'] = "[ERROR] Invalid video resolution: " . $recording[$idx . 'mastervideores'];
 			return $err;
 		}
 
 		//// Scaling 1: Display Aspect Ratio (DAR)
 		// Display Aspect Ratio (DAR): check and update if not square pixel
-		$encpars['resxdar'] = $videores[0];
-		$encpars['resydar'] = $videores[1];
-		if ( !empty($rec[$idx . 'mastervideodar'] ) ) {
+		$encodingparams['resxdar'] = $videores[0];
+		$encodingparams['resydar'] = $videores[1];
+		if ( !empty($recording[$idx . 'mastervideodar'] ) ) {
 			// Display Aspect Ratio: M:N
-			$tmp = explode(':', $rec[$idx . 'mastervideodar'], 2);
+			$tmp = explode(":", $recording[$idx . 'mastervideodar'], 2);
 			if ( count($tmp) == 1 ) $tmp[1] = 1;
 			if ( !empty($tmp[0]) and !empty($tmp[1]) ) {
 				$DAR_M = $tmp[0];
@@ -447,279 +433,85 @@ global $jconf, $debug;
 				if ( $PAR != 1 ) {
 					// No square pixel, add ARs to logs
 					// SAR: Source Aspect Ratio = Width/Height
-					$encpars['SAR'] = $videores[0] / $videores[1];
+					$encodingparams['SAR'] = $videores[0] / $videores[1];
 					// PAR
-					$encpars['PAR'] = $PAR;
+					$encodingparams['PAR'] = $PAR;
 					// DAR
-					$encpars['DAR'] = $DAR_M / $DAR_N;
-					$encpars['DAR_MN'] = $rec[$idx . 'mastervideodar'];
+					$encodingparams['DAR'] = $DAR_M / $DAR_N;
+					$encodingparams['DAR_MN'] = $recording[$idx . 'mastervideodar'];
 					// Y: keep fixed, X: recalculate
-					$encpars['resxdar'] = round($encpars['resydar'] * $encpars['DAR']);
+					$encodingparams['resxdar'] = round($encodingparams['resydar'] * $encodingparams['DAR']);
 				}
 			}
 		}
-		echo "resxDAR=". $encpars['resxdar'] ."/resyDAR=". $encpars['resydar'] ."\n";
-		echo "bboxx=". $profile['videobboxsizex'] ."/bboxy=". $profile['videobboxsizey'] ."\n";
+		// ffmpeg aspect ratio parameter
+		$ffmpeg_aspect = "";
+		if ( !empty($encodingparams['DAR_MN']) ) $ffmpeg_aspect = " -aspect " . $encodingparams['DAR_MN'];
+
 		//// Scaling 2: profile bounding box
-		$tmp = calculate_video_scaler($encpars['resxdar'], $encpars['resydar'], $profile['videobboxsizex'], $profile['videobboxsizey']);
-		$encpars['scaler'] = $tmp['scaler'];
-		$encpars['resx'] = $tmp['x'];
-		$encpars['resy'] = $tmp['y'];
-		echo "new resolution=". $tmp['x'] ."x". $tmp['y'] ."\n";
+		$tmp = calculate_video_scaler($encodingparams['resxdar'], $encodingparams['resydar'], $profile['videobboxsizex'] . "x" . $profile['videobboxsizey']);
+		$encodingparams['scaler'] = $tmp['scaler'];
+		$encodingparams['resx'] = $tmp['x'];
+		$encodingparams['resy'] = $tmp['y'];
 		// ffmpeg scaling parameter
-		
-		//$ffmpeg_filter_resize = " scale=w=". $encpars['resx'] .":h=". $encpars['resy'] .":sws_flags=bilinear "; // kell ez a PIP-hez??
-		
+		$ffmpeg_resize = " -s " . $encodingparams['resx'] . "x" . $encodingparams['resy'];
+
 		//// Video bitrate calculation
 		// Source Bit Per Pixel
-		$encpars['videobpp_source'] = $rec[$idx . 'mastervideobitrate'] / ( $videores[0] * $videores[1] * $rec[$idx . 'mastervideofps'] );
+		$encodingparams['videobpp_source'] = $recording[$idx . 'mastervideobitrate'] / ( $videores[0] * $videores[1] * $recording[$idx . 'mastervideofps'] );
 		// BPP check and update: use input BPP if lower than profile BPP
-		$encpars['videobpp'] = $profile['videobpp'];
-		if ( $encpars['videobpp_source'] < $profile['videobpp'] ) $encpars['videobpp'] = $encpars['videobpp_source'];
-		$encpars['videobitrate'] = $encpars['videobpp'] * $encpars['resx'] * $encpars['resy'] * $encpars['videofps'];
-		if ( $encpars['videobitrate'] > $jconf['video_max_bw'] ) $encpars['videobitrate'] = $jconf['video_max_bw'];
+		$encodingparams['videobpp'] = $profile['videobpp'];
+		if ( $encodingparams['videobpp_source'] < $profile['videobpp'] ) $encodingparams['videobpp'] = $encodingparams['videobpp_source'];
+		$encodingparams['videobitrate'] = $encodingparams['videobpp'] * $encodingparams['resx'] * $encodingparams['resy'] * $encodingparams['videofps'];
+		if ( $encodingparams['videobitrate'] > $jconf['video_max_bw'] ) $encodingparams['videobitrate'] = $jconf['video_max_bw'];
+		// ffmpeg video bitrate encoding parameter
+		$ffmpeg_bw = " -b:v " . 10 * ceil($encodingparams['videobitrate'] / 10000) . "k";
 
 		// Deinterlace
-		$encpars['deinterlace'] = ($rec[$idx .'mastervideoisinterlaced'] > 0) ? true : false;
+		$ffmpeg_deint = "";
+		if ( $recording[$idx . 'mastervideoisinterlaced'] > 0 ) $ffmpeg_deint = " -deinterlace";
+
+		// H.264 profile
+		$ffmpeg_profile = "-profile:v " . $profile['ffmpegh264profile'] . " -preset:v " . $profile['ffmpegh264preset'];
+	
+		// ffmpeg video encoding parameters
+		$ffmpeg_video = "-c:v libx264 " . $ffmpeg_profile . $ffmpeg_resize . $ffmpeg_aspect . $ffmpeg_deint . $ffmpeg_fps . $ffmpeg_bw;
 	}
-	
-	if (!($encpars['hasvideo'] || $encpars['hasaudio'])) {
-		$err['message'] = "[ERROR] Conflict encountered while parsing database values! (hasaudio/hasvideo false)\n";
-		$err['message'] .= $idx ."mastermediatype = '". $rec[$idx . 'mastermediatype'] ."'\nprofile.name=' ". $profile['name'] ." ';";
-		$err['message'] .= " profile.videocodec='". ($profile['videocodec'] ? $profile['videocodec'] : "null" ) ."';";
-		$err['message'] .= " profile.videocodec='". ($profile['audiocodec'] ? $profile['audiocodec'] : "null" ) ."'\n";
-		$err['code'] = false;
-		return $err;
-	}
-	
-	var_export($encpars); //DEBUG
-	echo "\nEncoding parameter preparation finished.\n----\n";
-	return $encpars;
-}
 
-///////////////////////////////////////////////////////////////////////////////////////////////////
-  function advancedFFmpegConvert($rec, $profile, $main, $overlay = null) {
-///////////////////////////////////////////////////////////////////////////////////////////////////
-// Description
-// goes
-// here.
-//
-// $main - $overlay:
-// Az ffmpeg preparalo fuggveny altal visszaadott encoding parameter tombok, az overlay csak pip
-// eseten hasznalatos.
-//
-// Uj jconf index-ek:
-//  - max_duration_error: a mester- es a szolgaltatasi peldany hosszanak megengedett elterese (s)
-//
-// Kerdesek:
-// - report-kornyezeti_valtozok vagy stderr>logfile ?
-// - mi legyen a logfajllal?
-// - error reportba beleirodjon a logfile? (tul nagy fajlok generalodhatnak)
-// - pip-nel kell az overlayre interlace-t beallitani? (side-by-side uzzemmod eseten szukseg lehet
-//   ra, de ahhoz be kell vezetni valamilyen pip uzemmod valasztasi mechanizmust.) IGEN
-//
-//
-// CHECKLIST:
-// Audio:
-//  - dupla audio     - OK
-//  - main audio only - OK
-//  - ovrl audio only - OK
-//
-// Video:
-//  - egyforma hossz - OK
-//  - rovid main
-//  - rovig ovrl
-//  - main out-of-bounding-box
-//  - ovrl out-of-bounding-box
-//  - 2x out-of-bounding_box
-//  - pozicionalas, meretezes
-//  - deinterlace
-///////////////////////////////////////////////////////////////////////////////////////////////////
-global $jconf, $debug, $app;
-	$err = array();
-	$err['code'] = false;
-	$err['result'] = 0;
-	$err['command'] = "";
-	$err['command_output'] = "-";
-	$err['message'] = "";
-	$err['result'] = 0;
+	// Final encoding parameters to return
+	$err['value'] = $encodingparams;
 
-	// INIT COMMAND ASSEMBLY
-	$ffmpeg_audio = null;
-	$ffmpeg_video = null;
-	if ($profile['type'] == 'recording' || $profile['type'] == 'content' ) {
-		// SINGLE MEDIA ///////////////////////////////////////////////////////////////////////////////
-		$idx = '';
-		if ($profile['type'] == 'content') $idx = 'content';
-		
-		// Audio ----------------------------------
-		if ($main['hasaudio'] === false) {
-			$ffmpeg_audio = " -an";
-		} else {
-			// When using ffmpeg's built-in aac library, "-strict experimental" option is required.
-			if ($profile['audiocodec'] == 'aac') $ffmpeg_audio .= " -strict experimental";
-			
-			$ffmpeg_audio .= " -async ". $jconf['ffmpeg_async_frames'] ." -c:a ". $profile['audiocodec'] ." -ac ". $main['audiochannels'] ." -b:a ". $main['audiobitrate'] ." -ar ". $main['audiosamplerate'];
-		}
-
-		// Video ----------------------------------
-		if ($main['hasvideo'] === false ) {
-			$ffmpeg_video = " -vn";
-		} else {
-			// H.264 profile
-			$ffmpeg_profile = " -profile:v " . $profile['ffmpegh264profile'] . " -preset:v " . $profile['ffmpegh264preset'];
-			$ffmpeg_resize  = " -s ". $main['resx'] ."x". $main['resy'];
-			$ffmpeg_aspect  = null;
-			if ( !empty($main['DAR_MN']) ) $ffmpeg_aspect = " -aspect " . $main['DAR_MN'];
-			$ffmpeg_deint   = ($main['deinterlace'] === true) ? " -deint " : null;
-			$ffmpeg_fps     = " -r ". $main['videofps'];
-			$ffmpeg_bitrate = " -b:v ". (10 * ceil($main['videobitrate'] / 10000)) . "k";
-			// ffmpeg video encoding parameters
-			$ffmpeg_video   = " -c:v libx264 " . $ffmpeg_profile . $ffmpeg_resize . $ffmpeg_aspect . $ffmpeg_deint . $ffmpeg_fps . $ffmpeg_bitrate;
-		}
-		
-		///// VIDEO ENCODING
-		if ($profile['videopasses'] < 2) {
-			$command  = $jconf['encoding_nice'] ." ". $jconf['ffmpeg_alt'] ." -y -i ". $rec[$idx .'master_filename'] . " -v " . $jconf['ffmpeg_loglevel'];
-			$command .= $ffmpeg_audio;
-			$command .= $ffmpeg_video;
-			$command .= " -threads " . $jconf['ffmpeg_threads'] . " -f " . $profile['filecontainerformat'] . " " . $rec['output_file'] . " 2>&1 </dev/null";
-		}
-	} elseif($profile['type'] === 'pip') {
-		// PIP ////////////////////////////////////////////////////////////////////////////////////////
-		echo "Pip command line assembly\n";
-		// Audio ----------------------------------
-		echo "main-hasaudio: ". var_export($main['hasaudio'],1) .", ovrl-hasaudio: ". var_export($overlay['hasaudio'],1) ."\n";
-		
-		// When using ffmpeg's built-in aac library, "-strict experimental" option is required.
-		if ($profile['audiocodec'] == 'aac') $ffmpeg_audio .= " -strict experimental";
-		
-		if ($main['hasaudio'] === true && $overlay['hasaudio'] === true) {
-			// ha ketto audiobemenet van, akkor vedd a jobb minosegu parametereket
-			echo "Mixing input audiochannels\n";
-			$values = array('audiochannels', 'audiobitrate', 'audiosamplerate');
-			foreach ($values as $v) {
-				$$v = ($main[$v] >= $overlay[$v]) ? $main[$v] : $overlay[$v];
-				echo $v ." = ". $$v ."\n";
-			}
-			unset($values);
-			
-			// $audio_filter = " [1:a][2:a] amix=inputs=2:duration=longest, apad";
-			$audio_filter = " [1:a][2:a] amix=inputs=2:duration=longest";
-			$ffmpeg_audio .= " -async ". $jconf['ffmpeg_async_frames'] ." -c:a ". $profile['audiocodec'] ." -ac ". $audiochannels ." -b:a ". $audiobitrate ." -ar ". $audiosamplerate;
-		} else {
-			if ($main['hasaudio'] === true) {
-				echo "Audio channel - main\n";
-				// ha csak egyetlen audio input van, akkor azt keveri be, nem kell 'amix' filter
-				$audio_filter = null;
-				// vedd a main hangbeallitasait:
-				$ffmpeg_audio .= " -async ". $jconf['ffmpeg_async_frames'] ." -c:a ". $profile['audiocodec'] ." -ac ". $main['audiochannels'] ." -b:a ". $main['audiobitrate'] ." -ar ". $main['audiosamplerate'];
-			} elseif( $overlay['hasaudio'] === true) {
-				echo "Audio channels - overlay\n";
-				// ha csak egyetlen audio input van, akkor azt keveri be, nem kell 'amix' filter
-				$audio_filter = null;
-				// vedd az overlay hangbeallitasait:
-				$ffmpeg_audio .= " -async ". $jconf['ffmpeg_async_frames'] ." -c:a ". $profile['audiocodec'] ." -ac ". $overlay['audiochannels'] ." -b:a ". $overlay['audiobitrate'] ." -ar ". $overlay['audiosamplerate'];
-			} else {
-				"No audiochannels\n";
-				$audio_filter = null;
-				$ffmpeg_audio = ' -an';
-			}
-		}
-		
-		// Video ----------------------------------
-		$values = array('videofps', 'videobitrate');
-		foreach ($values as $v) {
-			$$v = ($main[$v] >= $overlay[$v] ? $main[$v] : $overlay[$v]);
-		}
-		
-		$ffmpeg_profile = " -profile:v " . $profile['ffmpegh264profile'] . " -preset:v " . $profile['ffmpegh264preset'];
-		$ffmpeg_fps      = " -r:v ". $videofps;
-		$ffmpeg_bitrate = " -b:v ". (10 * ceil($videobitrate / 10000)) . "k";
-		
-		$ffmpeg_video = " -c:v libx264 ". $ffmpeg_profile . $ffmpeg_fps . $ffmpeg_bitrate;
-		
-		//// ENCODE PICTURE-IN-PICTURE
-		$target_length = ceil(max($rec['masterlength'], $rec['contentmasterlength']) + 1); // Bele kellene szamitani a offset-et!
-		$pip = array();
-		$pip = calculate_mobile_pip($rec['mastervideores'], $rec['contentmastervideores'], $profile);
-		var_dump($pip);//DEBUG
-		
-		$command  = $jconf['encoding_nice'] ." ". $jconf['ffmpeg_alt'] ." -y -v ". $jconf['ffmpeg_loglevel'];
-		$command .= " -f lavfi -i color=c=0x000000:size=". $main['resx'] ."x". $main['resy'] .":duration=". $target_length;
-		$command .= " -i ". $rec['contentmaster_filename'] ." -i ". $rec['master_filename'];
-		$command .= " -filter_complex '[1:v]". ($main['deinterlace'] ? " yadif," : null) ." scale=w=". $main['resx'] .":h=". $main['resy'] .":sws_flags=bicubic [main];";
-		$command .= " [2:v] ". ($overlay['deinterlace'] ? " yadif," : null) ." scale=w=". $pip['pip_res_x'] .":h=". $pip['pip_res_y'] .":sws_flags=bicubic [pip];";
-		$command .= " [0:v][main] overlay=repeatlast=0 [bg];";
-		$command .= " [bg][pip] overlay=x=". $pip['pip_x'] .":y=". $pip['pip_y'] .":repeatlast=0";
-		$command .= ($audio_filter === null) ? ("'") : ("; ". $audio_filter ."'");
-		$command .= $ffmpeg_audio;
-		$command .= $ffmpeg_video;
-		$command .= " -threads ". $jconf['ffmpeg_threads'] ." -f ". $profile['filecontainerformat'] ." ". $rec['output_file'] ." 2>&1 </dev/null"; 
-	} // END OF COMMAND ASSEMBLY
-	
 	// 1 pass encoding
 	if ( $profile['videopasses'] < 2 ) {
 		// Execute ffmpeg command
+		$command  = $jconf['encoding_nice'] . " ffmpeg -y -i " . $recording['master_filename'] . " -v " . $jconf['ffmpeg_loglevel'] . " " . $jconf['ffmpeg_flags'] . " ";
+		$command .= $ffmpeg_audio;
+		$command .= $ffmpeg_video;
+		$command .= " -threads " . $jconf['ffmpeg_threads'] . " -f " . $profile['filecontainerformat'] . " " . $recording['output_file'] . " 2>&1";
 
 		// Log ffmpeg command
-		$info = "ffmpeg conversion";
-		if ($debug) $info = "-- FFMPEG CONVERTER TEST --";
-		$debug->log($jconf['log_dir'], $jconf['jobid_media_convert'] . ".log", "[INFO] $info\n Command:\n" . $command, $sendmail = false);
+		$debug->log($jconf['log_dir'], $jconf['jobid_media_convert'] . ".log", "[INFO] ffmpeg conversion. Command:\n" . $command, $sendmail = false);
 
 		$time_start = time();
 		$output = runExternal($command);
-		
-		$err['duration'      ] = time() - $time_start;
+		$err['duration'] = time() - $time_start;
 		$mins_taken = round( $err['duration'] / 60, 2);
-		$err['command'       ] = $command;
+		$err['command'] = $command;
 		$err['command_output'] = $output['cmd_output'];
-		$err['result'        ] = $output['code'];
+		$err['result'] = $output['code'];
 		if ( $err['result'] < 0 ) $err['result'] = 0;
-		
-		//////// DURATION CHECK!!
-		try {
-			$r = $app->bootstrap->getModel('recordings');
-			$r->analyze($rec['output_file']);
-		
-			if (!isset($target_length)) $target_length = $rec[$idx .'masterlength'];	
-			if (abs($r->metadata['masterlength'] - $target_length) > $jconf['max_duration_error']) {
-				$msg  = "[ERROR] Duration check failed on ". $rec['output_file'] ."!\n";
-				$msg .= "Output file's duration (". $r->metadata['masterlength'] ." sec) does not match with target duration (". $target_length ." sec)!\n";
-				$msg .= "Command output:\n";
-				$msg .= print_r($err['command_output'], 1);
-				$debug->log($jconf['log_dir'], $jconf['jobid_media_convert'] .'.log', $msg, $sendmail = false);
-				unset($msg);
-				
-				updateRecordingVersionStatus($recording['recordingversionid'], $jconf['dbstatus_reconvert']);
-				// Temp directory cleanup??
-				
-				$err['code'   ] = false;
-				$err['message'] = "[ERROR] ffmpeg conversion failed: conversion stopped unexpectedly!\n.";
-				unset($r);
-				
-				return $err;
-			}
-			$msg = "[INFO] Duration check finished on ". $rec['output_file'] .".\n";
-			$debug->log($jconf['log_dir'], $jconf['jobid_media_convert'] .'.log', $msg, $sendmail = false);
-			unset($msg);
-		} catch (Exception $e) {
-			$msg = "[WARN] Mediainfo check failed after conversion.\nError message: ". $e->getMessage() ."\n";
-			$debug->log($jconf['log_dir'], $jconf['jobid_media_convert'] .'.log', $msg, $sendmail = false);
-			unset($msg);
-		}
 
 		// Log ffmpeg output
-		$debug->log($jconf['log_dir'], $jconf['jobid_media_convert'] . ".log", "[INFO] $info\nOutput:\n" . print_r($err['command_output'], true) . "\nError code: " . $err['result'], $sendmail = false);
+		$debug->log($jconf['log_dir'], $jconf['jobid_media_convert'] . ".log", "[INFO] ffmpeg conversion output:\n" . print_r($err['command_output'], true) . "\nError code: " . $err['result'], $sendmail = false);
 
 		// ffmpeg terminated with error or filesize suspiciously small
-		if ( ( $err['result'] != 0 ) or ( filesize($rec['output_file']) < 1000 ) ) {
-			$err['code'   ] = false;
-			$err['message'] = "[ERROR] ffmpeg conversion FAILED!";
+		if ( ( $err['result'] != 0 ) or ( filesize($recording['output_file']) < 1000 ) ) {
+			$err['code'] = false;
+			$err['message'] = "[ERROR] ffmpeg conversion FAILED";
 			return $err;
 		}
 
-		$err['code'   ] = true;
+		$err['code'] = true;
 		$err['message'] = "[OK] ffmpeg conversion OK (in " . $mins_taken . " mins)";
 	}
 
@@ -768,35 +560,30 @@ function doSampleRateCorrectionForProfile($samplerate, $profile) {
 //		'x'		 => $resx_new,		// New X resolution
 //		'y'		 => $resy_new,		// New Y resolution
 //	);
-function calculate_video_scaler($resx, $resy, $bboxx, $bboxy) {
+function calculate_video_scaler($resx, $resy, $bbox) {
 global $jconf;
 
 	$scaler = 1;
-echo " -- scaler calculation\n input: resx=$resx, resy=$resy, bboxx=$bboxx, bboxy=$bboxy\n";
+	$maxres = explode("x", $bbox, 2);
+
 	// Check if video is larger than bounding box
-	if ( ( $resx > $bboxx ) || ( $resy > $bboxy ) ) {
-		echo " -> video larger then scaler.\n";
-		$scaler_x = $bboxx / $resx;
-		$scaler_y = $bboxy / $resy;
-		echo " scaler_x = $scaler_x, scaler_y = $scaler_y\n";
+	if ( ( $resx > $maxres[0] ) || ( $resy > $maxres[1] ) ) {
+		$scaler_x = $maxres[0] / $resx;
+		$scaler_y = $maxres[1] / $resy;
 		// Select minimal scaler to fit bounding box
 		$scaler = min($scaler_x, $scaler_y);
-		echo " selecting minimal scaler: $scaler.\n resizing image\n";
-		// $resx_new = $jconf['video_res_modulo'] * floor(($resx * $scaler) / $jconf['video_res_modulo']);
-		// $resy_new = $jconf['video_res_modulo'] * floor(($resy * $scaler) / $jconf['video_res_modulo']);
-		$resx_new = (int) $jconf['video_res_modulo'] * round(($resx * $scaler) / $jconf['video_res_modulo'], 0, PHP_ROUND_HALF_DOWN);
-		$resy_new = (int) $jconf['video_res_modulo'] * round(($resy * $scaler) / $jconf['video_res_modulo'], 0, PHP_ROUND_HALF_DOWN);
+		$resx_new = $jconf['video_res_modulo'] * floor(($resx * $scaler) / $jconf['video_res_modulo']);
+		$resy_new = $jconf['video_res_modulo'] * floor(($resy * $scaler) / $jconf['video_res_modulo']);
 	} else {
 		// Recalculate resolution with codec modulo if needed (fix for odd resolutions)
 		$resx_new = $resx;
 		$resy_new = $resy;
 		if ( ( ( $resx % $jconf['video_res_modulo'] ) > 0 ) || ( ( $resy % $jconf['video_res_modulo'] ) > 0 ) ) {
-			echo " -- calculating video resolution with modulo ". $jconf['video_res_modulo'] ."\n";
-			$resx_new = (int) $jconf['video_res_modulo'] * round($resx / $jconf['video_res_modulo'], 0, PHP_ROUND_HALF_DOWN);
-			$resy_new = (int) $jconf['video_res_modulo'] * round($resy / $jconf['video_res_modulo'], 0, PHP_ROUND_HALF_DOWN);
+			$resx_new = $jconf['video_res_modulo'] * floor($resx / $jconf['video_res_modulo']);
+			$resy_new = $jconf['video_res_modulo'] * floor($resy / $jconf['video_res_modulo']);
 		}
 	}
-	echo " -- new resolution is: ". $resx_new ."x". $resy_new .".\n -- scaler calculation finished.\n";
+
 	$new_resolution = array (
 		'scaler' => $scaler,
 		'x'		 => $resx_new,
@@ -813,46 +600,44 @@ echo " -- scaler calculation\n input: resx=$resx, resy=$resy, bboxx=$bboxx, bbox
 // INPUTS:
 //	- $mastervideores: media resolution
 //	- $contentmastervideores: content resolution
+//	- $recording_info: recording info array 
 //	- $profile: conversion profile 
 // OUTPUTS:
 //	- Boolean:
 //	  o FALSE: encoding failed (error cause logged in DB and local files)
 //	  o TRUE: encoding OK
-//	- $pip: calculated resolutions
-function calculate_mobile_pip($mastervideores, $contentmastervideores, $profile) {
-	global $jconf;
-echo " -- Calulate mobile pip\n Videores: $mastervideores, contentres: $contentmastervideores\n";
-	
-	$pip = array();
+//	- $recording_info: info updated
+function calculate_mobile_pip($mastervideores, $contentmastervideores, &$recording_info, $profile) {
+global $jconf;
+
 	// Content resolution
 	$tmp = explode("x", $contentmastervideores, 2);
 	$c_resx = $tmp[0];
 	$c_resy = $tmp[1];
-	$c_resnew = calculate_video_scaler($c_resx, $c_resy, $profile['videobboxsizex'], $profile['videobboxsizey']);
-	$pip['scaler'] = $c_resnew['scaler'];
-	$pip['res_x'] = $c_resnew['x'];
-	$pip['res_y'] = $c_resnew['y'];
-echo " New content resolution: c-resx=". $pip['res_x'] ." c-resy=". $pip['res_y'] ."\n";
-echo " PIP-SCALER: ". var_export($c_resnew, 1) ."\n";
+	$c_resnew = calculate_video_scaler($c_resx, $c_resy, $profile['video_bbox']);
+	$recording_info['scaler'] = $c_resnew['scaler'];
+	$recording_info['res_x'] = $c_resnew['x'];
+	$recording_info['res_y'] = $c_resnew['y'];
+
 	// Media resolution
+//	$tmp = explode("x", $contentmastervideores, 2);
+//	$recording_info['pip_res_x'] = $jconf['video_res_modulo'] * floor(($tmp[0] * $profile['pip_resize']) / $jconf['video_res_modulo']);
+//	$recording_info['pip_res_y'] = $jconf['video_res_modulo'] * floor(($tmp[1] * $profile['pip_resize']) / $jconf['video_res_modulo']);
 	$tmp = explode("x", $mastervideores, 2);
 	$resx = $tmp[0];
 	$resy = $tmp[1];
 	$scaler_pip = $resy / $resx;
-	
-	$pip['pip_res_x'] = $jconf['video_res_modulo'] * round(($pip['res_x'] * $profile['pipsize']) / $jconf['video_res_modulo'], 0, PHP_ROUND_HALF_DOWN);
-	$pip['pip_res_y'] = $jconf['video_res_modulo'] * round(($pip['pip_res_x'] * $scaler_pip) / $jconf['video_res_modulo'], 0, PHP_ROUND_HALF_DOWN);
-echo " New media resolution: res_x=". $pip['pip_res_x'] ." res_y=". $pip['pip_res_y'] ."\n";
-	// Calculate PiP position
-	$pip_align_x = ceil($pip['res_x'] * $profile['pipalign']);
-	$pip_align_y = ceil($pip['res_y'] * $profile['pipalign']);
-	if ( $profile['pipposx'] == "left" ) $pip['pip_x'] = 0 + $pip_align_y;
-	if ( $profile['pipposx'] == "right" ) $pip['pip_x'] = $pip['res_x'] - $pip['pip_res_x'] - $pip_align_x;
-	if ( $profile['pipposy'] == "up" ) $pip['pip_y'] = 0 + $pip_align_y;
-	if ( $profile['pipposy'] == "down" ) $pip['pip_y'] = $pip['res_y'] - $pip['pip_res_y'] - $pip_align_y;
-echo " Pip position: x=". $pip['pip_x'] ." y=". $pip['pip_y'] ."\n -- Mobile pip calculation finished.\n";
+	$recording_info['pip_res_x'] = $jconf['video_res_modulo'] * floor(($recording_info['res_x'] * $profile['pip_resize']) / $jconf['video_res_modulo']);
+	$recording_info['pip_res_y'] = $jconf['video_res_modulo'] * floor(($recording_info['pip_res_x'] * $scaler_pip) / $jconf['video_res_modulo']);
 
-	return $pip;
+	// Calculate PiP position
+	$pip_align = ceil($recording_info['res_x'] * $profile['pip_align']);
+	if ( $profile['pip_posx'] == "left" ) $recording_info['pip_x'] = 0 + $pip_align;
+	if ( $profile['pip_posx'] == "right" ) $recording_info['pip_x'] = $recording_info['res_x'] - $recording_info['pip_res_x'] - $pip_align;
+	if ( $profile['pip_posy'] == "up" ) $recording_info['pip_y'] = 0 + $pip_align;
+	if ( $profile['pip_posy'] == "down" ) $recording_info['pip_y'] = $recording_info['res_y'] - $recording_info['pip_res_y'] - $pip_align;
+
+	return TRUE;
 }
 
 // *************************************************************************
@@ -1019,7 +804,7 @@ global $app, $jconf, $global_log;
 	}
 
 	//// New resolution/scaler according to profile bounding box
-	$tmp = calculate_video_scaler($recording_info['res_x_dar'], $recording_info['res_y_dar'], $profile['videobboxsizex'], $profile['videobboxsizey']);
+	$tmp = calculate_video_scaler($recording_info['res_x_dar'], $recording_info['res_y_dar'], $profile['video_bbox']);
 	$recording_info['scaler'] = $tmp['scaler'];
 	$recording_info['res_x'] = $tmp['x'];
 	$recording_info['res_y'] = $tmp['y'];
