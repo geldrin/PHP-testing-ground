@@ -521,7 +521,7 @@ global $jconf, $debug;
 //
 // CHECKLIST:
 // Audio:
-//  - dupla audio     - OK
+//  - dupla audio
 //  - main audio only - OK
 //  - ovrl audio only - OK
 //
@@ -583,7 +583,7 @@ global $jconf, $debug, $app;
 			$command  = $jconf['encoding_nice'] ." ". $jconf['ffmpeg_alt'] ." -y -i ". $rec[$idx .'master_filename'] . " -v " . $jconf['ffmpeg_loglevel'];
 			$command .= $ffmpeg_audio;
 			$command .= $ffmpeg_video;
-			$command .= " -threads " . $jconf['ffmpeg_threads'] . " -f " . $profile['filecontainerformat'] . " " . $rec['output_file'] . " 2>&1 </dev/null";
+			$command .= " -threads " . $jconf['ffmpeg_threads'] . " -f " . $profile['filecontainerformat'] . " " . $rec['output_file'] . " 2>&1";
 		}
 	} elseif($profile['type'] === 'pip') {
 		// PIP ////////////////////////////////////////////////////////////////////////////////////////
@@ -604,8 +604,7 @@ global $jconf, $debug, $app;
 			}
 			unset($values);
 			
-			// $audio_filter = " [1:a][2:a] amix=inputs=2:duration=longest, apad";
-			$audio_filter = " [1:a][2:a] amix=inputs=2:duration=longest";
+			$audio_filter = " [1:a][2:a] amix=inputs=2:duration=longest, apad";
 			$ffmpeg_audio .= " -async ". $jconf['ffmpeg_async_frames'] ." -c:a ". $profile['audiocodec'] ." -ac ". $audiochannels ." -b:a ". $audiobitrate ." -ar ". $audiosamplerate;
 		} else {
 			if ($main['hasaudio'] === true) {
@@ -643,9 +642,10 @@ global $jconf, $debug, $app;
 		$target_length = ceil(max($rec['masterlength'], $rec['contentmasterlength']) + 1); // Bele kellene szamitani a offset-et!
 		$pip = array();
 		$pip = calculate_mobile_pip($rec['mastervideores'], $rec['contentmastervideores'], $profile);
-		var_dump($pip);//DEBUG
+		var_dump($pip);
 		
 		$command  = $jconf['encoding_nice'] ." ". $jconf['ffmpeg_alt'] ." -y -v ". $jconf['ffmpeg_loglevel'];
+		// $command .= ($debug === true || $jconf['ffmpeg_report_enabled'] === true) ? " -report " : null;
 		$command .= " -f lavfi -i color=c=0x000000:size=". $main['resx'] ."x". $main['resy'] .":duration=". $target_length;
 		$command .= " -i ". $rec['contentmaster_filename'] ." -i ". $rec['master_filename'];
 		$command .= " -filter_complex '[1:v]". ($main['deinterlace'] ? " yadif," : null) ." scale=w=". $main['resx'] .":h=". $main['resy'] .":sws_flags=bicubic [main];";
@@ -655,7 +655,7 @@ global $jconf, $debug, $app;
 		$command .= ($audio_filter === null) ? ("'") : ("; ". $audio_filter ."'");
 		$command .= $ffmpeg_audio;
 		$command .= $ffmpeg_video;
-		$command .= " -threads ". $jconf['ffmpeg_threads'] ." -f ". $profile['filecontainerformat'] ." ". $rec['output_file'] ." 2>&1 </dev/null"; 
+		$command .= " -threads ". $jconf['ffmpeg_threads'] ." -f ". $profile['filecontainerformat'] ." ". $rec['output_file'] ." 2>&1"; 
 	} // END OF COMMAND ASSEMBLY
 	
 	// 1 pass encoding
