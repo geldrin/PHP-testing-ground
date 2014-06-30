@@ -815,6 +815,7 @@ class Livefeeds extends \Springboard\Model {
 
     $sql .= "
       GROUP BY s.timestamp
+      ORDER BY s.timestamp, s.id
     ";
 
     return $this->db->getArray( $sql );

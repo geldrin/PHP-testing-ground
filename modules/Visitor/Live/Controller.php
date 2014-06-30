@@ -66,7 +66,8 @@ class Controller extends \Visitor\Controller {
       'livefeeds',
       $this->application->getNumericParameter('id')
     );
-    
+
+    $l         = $this->bootstrap->getLocalization();
     $user      = $this->bootstrap->getSession('user');
     $anonuser  = $this->bootstrap->getSession('anonuser');
     $access    = $this->bootstrap->getSession('liveaccess');
@@ -83,7 +84,7 @@ class Controller extends \Visitor\Controller {
     $nopermission = false;
     $fullplayer   = true;
     $urlparams    = array();
-    
+
     if (
          $chromeless and in_array( $access[ $accesskey ], array(
              'registrationrestricted',
@@ -211,7 +212,6 @@ class Controller extends \Visitor\Controller {
       $this->toSmarty['chatitems']     = $feedModel->getChat();
       
       if ( $access[ $accesskey ] !== true ) {
-        $l                             = $this->bootstrap->getLocalization();
         $this->toSmarty['chat']        = '&nbsp;';
       } else
         $this->toSmarty['chat']        = $this->fetchSmarty('Visitor/Live/Chat.tpl');
@@ -232,6 +232,12 @@ class Controller extends \Visitor\Controller {
     $this->toSmarty['liveurl']       = $this->bootstrap->config['wowza']['liveurl'];
     $this->toSmarty['chatpolltime']  = $this->bootstrap->config['chatpolltimems'];
     
+    $this->toSmarty['title'] = sprintf(
+      $l('live', 'view_title'),
+      $channelModel->row['title'],
+      $feedModel->row['name']
+    );
+
     if ( !empty( $urlparams ) )
       $this->toSmarty['urlparams'] = '?' . http_build_query( $urlparams );
     
@@ -703,8 +709,7 @@ class Controller extends \Visitor\Controller {
     // prepare the values
     foreach( $data as $value ) {
 
-      // "javascript" time with ms precision
-      $ts  = $value['timestamp'] * 1000;
+      $ts  = intval( $value['timestamp'] );
       foreach( $value as $field => $v ) {
 
         if ( $field == 'timestamp' )
@@ -712,8 +717,8 @@ class Controller extends \Visitor\Controller {
 
         $key = $fieldtokey[ $field ];
         $ret['data'][ $key ][] = array(
-          'x' => $ts,          // X axis
-          'y' => intval( $v ), // Y axis
+          'x' => $ts,
+          'y' => intval( $v ),
         );
 
       }

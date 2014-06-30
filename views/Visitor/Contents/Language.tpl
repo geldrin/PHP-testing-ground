@@ -37,6 +37,22 @@ jQuery(function($){
     isRTL: false
   };
 });
+d3locale = {
+  'hu' : {
+    "decimal": ",",
+    "thousands": ".",
+    "grouping": [3],
+    "currency": ["", "HUF"],
+    "dateTime": "%Y. %B %e. %A %X",
+    "date": "%Y-%m-%d",
+    "time": "%H:%M:%S",
+    "periods": ["DE", "DU"],
+    "days": ['Vasámap', 'Hétfö', 'Kedd', 'Szerda', 'Csütörtök', 'Péntek', 'Szombat'],
+    "shortDays": ['Vas', 'Hét', 'Ked', 'Sze', 'Csü', 'Pén', 'Szo'],
+    "months": ['Január', 'Február', 'Március', 'Április', 'Május', 'Június', 'Július', 'Augusztus', 'Szeptember', 'Október', 'November', 'December'],
+    "shortMonths": ['Jan', 'Feb', 'Már', 'Ápr', 'Máj', 'Jún', 'Júl', 'Aug', 'Szep', 'Okt', 'Nov', 'Dec']
+  }
+}
 {/literal}
 
 {if $language == 'hu'}

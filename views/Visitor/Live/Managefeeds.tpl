@@ -23,7 +23,9 @@
     <td class="feed">
       <a href="{$language}/live/view/{$feed.id},{$feed.name|filenameize}" class="left"><b>{$feed.name|escape:html}</b></a>
       <br/>
+      <!--
         <a href="{$language}/live/analytics/{$channel.id}?feedids[]={$feed.id}">{#live__analytics#}</a>
+      -->
       {if $feed.feedtype != 'vcr' or $feed.candelete}
         | <a href="{$language}/live/modifyfeed/{$feed.id}">{#live__live_edit#}</a>
         | <a href="{$language}/live/deletefeed/{$feed.id}" class="confirm" question="{#sitewide_areyousure#|escape:html}">{#live__live_delete#}</a>
@@ -47,7 +49,7 @@
             {if $stream.isioscompatible}<img src="{$STATIC_URI}images/icons/ios.png" title="iOS" alt="iOS"/>{/if}
             {if $stream.isandroidcompatible}<img src="{$STATIC_URI}images/icons/android.png" title="Android" alt="Android"/>{/if}
           </td>
-          <td class="streamactions{if $feed.feedtype == 'vcr'} needpoll" id="stream{$stream.id}" data-streamid="{$stream.id}" data-streamstatus="{$stream.status|escape:html}"{else}"{/if}>
+          <td class="streamactions{if $feed.feedtype == 'vcr'} needpoll" id="stream{$stream.id}" data-streamid="{$stream.id}" data-streamstatus="{$stream.status|escape:html}{/if}">
             <span class="nobr">
               {if $feed.feedtype == 'vcr'}
                 {include file=Visitor/Live/Managefeeds_streamaction.tpl stream=$stream}
@@ -65,7 +67,7 @@
               <label for="broadcastlink-{$stream.id}">{#live__streambroadcastlink#}:</label>
               <input id="broadcastlink-{$stream.id}" type="text" value="{$ingressurl|escape:html}{$stream.keycode|escape:html}"/>
             </div>
-            {if $stream.isdesktopcompatible}
+            {if $stream.contentkeycode}
               <div class="broadcastlink">
                 <label for="broadcastlink-{$stream.id}-2">{#live__secondarystreambroadcastlink#}:</label>
                 <input id="broadcastlink-{$stream.id}-2" type="text" value="{$ingressurl|escape:html}{$stream.contentkeycode|escape:html}"/>

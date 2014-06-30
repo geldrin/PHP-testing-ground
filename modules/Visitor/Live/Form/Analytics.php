@@ -56,20 +56,22 @@ class Analytics extends \Visitor\HelpForm {
     
     $l = $this->bootstrap->getLocalization();
     $this->controller->toSmarty['title'] = $l('live', 'analytics_title');
-    
+    $this->form->method = 'GET';
+
   }
   
   public function onComplete() {
-    
+
     $values   = $this->form->getElementValues( 0 );
-    
+    /*
     $this->controller->redirect(
       $this->application->getParameter(
         'forward',
         'live/managefeeds/' . $this->channelModel->id
       )
     );
-    
+    */
+
   }
   
 }

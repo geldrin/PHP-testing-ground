@@ -2,7 +2,7 @@
   {include file="Visitor/_header_nolayout.tpl" title=$rootchannel.title islive=true bodyclass=liveiframe}
   {assign var=linksinnewwindow value=' target="_blank"'}
 {else}
-  {include file="Visitor/_header.tpl" title=$rootchannel.title islive=true pagebgclass=fullheight}
+  {include file="Visitor/_header.tpl" islive=true pagebgclass=fullheight}
 
   <div class="title recording">
     <h1>{$channel.title|escape:html}</h1>

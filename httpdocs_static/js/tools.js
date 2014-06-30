@@ -10,7 +10,7 @@ $j(document).ready(function() {
   
   $j.datepicker.setDefaults($j.datepicker.regional[ language ]);
   $j.timepicker.setDefaults($j.timepicker.regional[ language ]);
-  
+
   runIfExists('#headerlogin', setupHeaderLogin );
   runIfExists('#headersearch', setupHeaderSearch );
   runIfExists('.ratewidget', setupRateWidget );
@@ -2138,9 +2138,10 @@ function setupLivestatistics( elem ) {
   var elem    = elem.get(0);
   var options = {
     element: elem,
-    width: 950,
-    height: 500,
+    width: 700,
+    height: 400,
     renderer: 'area',
+    interpolation: 'step-after',
     stroke: true,
     preserve: true
   };
@@ -2163,16 +2164,22 @@ function setupLivestatistics( elem ) {
 
   graph.render();
 
+  localetime = new Rickshaw.Fixtures.Time.Local();
+  if ( language == 'hu' ) {
+    localetime.months = $j.datepicker.regional[ language ].monthNamesShort;
+    d3.time.format = d3.locale( d3locale['hu'] ).timeFormat;
+  }
   var hoverDetail = new Rickshaw.Graph.HoverDetail({
     graph: graph,
     xFormatter: function(x) {
-      return new Date(x).toString();
+      return d3.time.format('%c')( new Date(x * 1000) );
     }
   });
+
   var xAxis = new Rickshaw.Graph.Axis.Time({
     graph: graph,
     ticksTreatment: 'glow',
-    timeFixture: new Rickshaw.Fixtures.Time.Local()
+    timeFixture: localetime
   });
 
   xAxis.render();
@@ -2189,8 +2196,19 @@ function setupLivestatistics( elem ) {
     element: $j('#statisticslegend').get(0),
     graph: graph
   });
+  var shelving = new Rickshaw.Graph.Behavior.Series.Toggle({
+    graph: graph,
+    legend: legend
+  });
+  var highlighter = new Rickshaw.Graph.Behavior.Series.Highlight({
+    graph: graph,
+    legend: legend
+  });
 
-  legend.render();
+  var preview = new Rickshaw.Graph.RangeSlider( {
+    graph: graph,
+    element: $j('#zoomer').get(0),
+  });
 
   var poll = function() {
     var data = $j('#live_analytics').serializeArray();
