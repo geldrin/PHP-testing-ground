@@ -49,7 +49,7 @@
             {if $stream.isioscompatible}<img src="{$STATIC_URI}images/icons/ios.png" title="iOS" alt="iOS"/>{/if}
             {if $stream.isandroidcompatible}<img src="{$STATIC_URI}images/icons/android.png" title="Android" alt="Android"/>{/if}
           </td>
-          <td class="streamactions{if $feed.feedtype == 'vcr'} needpoll" id="stream{$stream.id}" data-streamid="{$stream.id}" data-streamstatus="{$stream.status|escape:html}"{else}"{/if}>
+          <td class="streamactions{if $feed.feedtype == 'vcr'} needpoll" id="stream{$stream.id}" data-streamid="{$stream.id}" data-streamstatus="{$stream.status|escape:html}{/if}">
             <span class="nobr">
               {if $feed.feedtype == 'vcr'}
                 {include file=Visitor/Live/Managefeeds_streamaction.tpl stream=$stream}
@@ -67,7 +67,7 @@
               <label for="broadcastlink-{$stream.id}">{#live__streambroadcastlink#}:</label>
               <input id="broadcastlink-{$stream.id}" type="text" value="{$ingressurl|escape:html}{$stream.keycode|escape:html}"/>
             </div>
-            {if $stream.isdesktopcompatible}
+            {if $feed.hascontent}
               <div class="broadcastlink">
                 <label for="broadcastlink-{$stream.id}-2">{#live__secondarystreambroadcastlink#}:</label>
                 <input id="broadcastlink-{$stream.id}-2" type="text" value="{$ingressurl|escape:html}{$stream.contentkeycode|escape:html}"/>
