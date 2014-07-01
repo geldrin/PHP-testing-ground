@@ -31,13 +31,21 @@ if ( iswindows() ) {
 	echo "ERROR: Non-Windows process started on Windows platform\n";
 	exit;
 }
+echo "--STARTING CONVERTER TEST--\n";
+// TESTING: Reset media status
+// update_db_recording_status(90, "uploaded");
+// update_db_masterrecording_status(90, "uploaded");
+// updateRecordingVersionStatus(128, "convert");
+// updateRecordingVersionStatus(129, "convert");
+// updateRecordingVersionStatus(158, "convert");
+// updateRecordingVersionStatus(159, "convert");
+// var_dump(calculate_video_scaler(1280,720,480,320));exit;
 
 // Start an infinite loop - exit if any STOP file appears
-while( !is_file( $app->config['datapath'] . 'jobs/job_media_convert.stop' ) and !is_file( $app->config['datapath'] . 'jobs/all.stop' ) ) {
-
+while( /*!is_file( $app->config['datapath'] . 'jobs/job_media_convert.stop' )  and */ !is_file( $app->config['datapath'] . 'jobs/all.stop' ) ) {
 	clearstatcache();
-
-    while ( 1 ) {
+	
+	while ( 1 ) {
 
 		$app->watchdog();
 	
@@ -55,16 +63,10 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_media_convert.stop' ) and 
 			break;
 		}
 
-// TESTING: Reset media status
-/*update_db_recording_status(89, "uploaded");
-update_db_masterrecording_status(89, "uploaded");
-updateRecordingVersionStatus(1, "convert");
-updateRecordingVersionStatus(2, "convert");
-*/
-
 		// Query next job
 		$recording = getNextConversionJob();
 		if ( $recording === false ) break;
+		echo "Queried recording: #". $recording['id'] .".\n";
 		// Log job information
 		$debug->log($jconf['log_dir'], $jconf['jobid_media_convert'] . ".log", "[INFO] Recording id = " . $recording['id'] . " selected for conversion. Recording information:\n" . print_r($recording, true), $sendmail = false);
 
@@ -75,7 +77,7 @@ updateRecordingVersionStatus(2, "convert");
 		// Query encoding profile
 		$encoding_profile = getEncodingProfile($recording['encodingprofileid']);
 		if ( $encoding_profile === false ) break;
-
+echo "Selecting encoding profile: ". $encoding_profile['shortname'] ."\n";
 		// Log encoding profile information
 		$debug->log($jconf['log_dir'], $jconf['jobid_media_convert'] . ".log", "[INFO] Encoding profile id = " . $encoding_profile['id'] . " selected. Profile information:\n" . print_r($encoding_profile, true), $sendmail = false);
 
@@ -92,19 +94,20 @@ updateRecordingVersionStatus(2, "convert");
 		log_recording_conversion($recording['id'], $jconf['jobid_media_convert'], $jconf['dbstatus_init'], $global_log, "-", "-", 0, false);
 
 		// DOWNLOAD: download media from front-end server
-		$err = copyMediaToConverter($recording); 
+		$err = copyMediaToConverter($recording);
+		echo "Moving mediafile to frontend (id=". $recording['id'] .")\n";
 		// Check if we need to stop conversion (do not handle error)
 		if ( checkRecordingVersionToStop($recording) ) break;
 		if ( !$err ) {
 			// recordings_versions.status = "failedcopyingfromfrontend"
 			updateRecordingVersionStatus($recording['recordingversionid'], $jconf['dbstatus_copyfromfe_err']);
+			echo "Copiing from frontend failed! Status => ". $jconf['dbstatus_copyfromfe_err'] ."\n";
 			break;
 		}
 		// Picture-in-picture encoding: download content file as well
 		if ( $encoding_profile['type'] == "pip" ) {
-			$content = $recording;
-			$content['iscontent'] = 1;
-			$err = copyMediaToConverter($content); 
+			$recording['iscontent'] = 1;
+			$err = copyMediaToConverter($recording); 
 			// Check if we need to stop conversion (do not handle error)
 			if ( checkRecordingVersionToStop($recording) ) break;
 			if ( !$err ) {
@@ -112,20 +115,11 @@ updateRecordingVersionStatus(2, "convert");
 				updateRecordingVersionStatus($recording['recordingversionid'], $jconf['dbstatus_copyfromfe_err']);
 				break;
 			}
-		 
-			// kulonbsegek:
-			// iscontent(bool), master_basename, master_remote_filename, master_filename,master_ssh_filename
-			
-			file_put_contents("/home/conv/dev.videosquare.eu/modules/Jobs/recording.log", var_export($recording, 1));
-			file_put_contents("/home/conv/dev.videosquare.eu/modules/Jobs/content.log", var_export($content, 1));
-			echo "PiP encoding is not implemented!!!\n";
-			$debug->log($jconf['log_dir'], $jconf['jobid_media_convert'] . ".log", "[DUMPDATA]". var_export($encoding_profile, 1) ."\n\n". var_export($recording, 1) ."\n\n". var_export($content, 1) ."\n", $sendmail = false);
-
-			exit;
 		}
 
 		// recordings_versions.status = "copiedfromfrontend"
 		updateRecordingVersionStatus($recording['recordingversionid'], $jconf['dbstatus_copyfromfe_ok']);
+		echo "Status =>". $jconf['dbstatus_copyfromfe_ok'] ."\n";
 
 		// Watchdog
 		$app->watchdog();
@@ -141,11 +135,13 @@ updateRecordingVersionStatus(2, "convert");
 		$app->watchdog();
 
 		// CONVERT: convert recording version
+		echo "Converting recording version: ". $encoding_profile['shortname'] .".\n";
 		$err = convertMedia($recording, $encoding_profile);
 		// Check if we need to stop conversion
 		if ( checkRecordingVersionToStop($recording) ) break;
 		if ( !$err ) {
 			updateRecordingVersionStatus($recording['recordingversionid'], $jconf['dbstatus_conv_err']);
+			echo "Conversion failed! Status => ". $jconf['dbstatus_conv_err'] ."\n";
 			break;
 		}
 
@@ -153,16 +149,20 @@ updateRecordingVersionStatus(2, "convert");
 		$app->watchdog();
 
 		// UPLOAD: upload resulted file to front-end
+		echo "Uloading ". $recording['output_file'] ."to frontend.\n";
 		$err = copyMediaToFrontEnd($recording, $encoding_profile);
 		// Check if we need to stop conversion
 		if ( checkRecordingVersionToStop($recording) ) break;
 		if ( !$err ) {
 			// recordings_versions.status = "failedcopyingtostorage"
+			echo "Uploading failed. Status => ". $jconf['dbstatus_copystorage_err'] ."\n";
 			updateRecordingVersionStatus($recording['recordingversionid'], $jconf['dbstatus_copystorage_err']);
 			break;
 		}
+		echo "Done.\n";
 		// recordings_versions.status = "onstorage"
 		updateRecordingVersionStatus($recording['recordingversionid'], $jconf['dbstatus_copystorage_ok']);
+		echo "Status => ". $jconf['dbstatus_copystorage_ok'] ."\n";
 		// recordings.(content)smilstatus = "regenerate" (new version is ready, regenerate SMIL file)
 		$type = "smil";
 		if  ( $recording['iscontent'] == 1 ) $type = "contentsmil";
@@ -176,7 +176,9 @@ updateRecordingVersionStatus(2, "convert");
 		$conversion_duration = time() - $total_duration;
 		$hms = secs2hms($conversion_duration);
 		log_recording_conversion($recording['id'], $jconf['jobid_media_convert'], "-", "[OK] Successful media conversion in " . $hms . " time.\n\nConversion summary:\n\n" . $global_log, "-", "-", $conversion_duration, true);
-
+		
+		
+		break;//DEBUG
 	}	// End of while(1)
 
 	// Close DB connection if open
@@ -184,15 +186,17 @@ updateRecordingVersionStatus(2, "convert");
 
 	$app->watchdog();
 
-	sleep($converter_sleep_length);
-	
+	//sleep($converter_sleep_length);
+	sleep(5);
+	echo "\n -> Sleeping ". $converter_sleep_length ." sec...\n";
 }	// End of outer while
-
+$debug->log($jconf['log_dir'], $jconf['jobid_media_convert'] . ".log", "Media conversion job interrupted.", $sendmail = false);
+echo "-- EXITING CONVERT JOB --\n";
 exit;
 
 
 // *************************************************************************
-// *					function getNextConversionJob()					   *
+// *                    function getNextConversionJob()                    *
 // *************************************************************************
 // Description: queries next job from recordings_versions database table
 function getNextConversionJob() {
@@ -284,7 +288,7 @@ global $jconf, $debug, $db, $app;
 
 
 // *************************************************************************
-// *				function copyMediaToConverter()   			   	       *
+// *                  function copyMediaToConverter()                      *
 // *************************************************************************
 // Description: download media from converter
 function copyMediaToConverter(&$recording) {
@@ -315,12 +319,13 @@ global $app, $jconf, $debug;
 
 	//// Directories: assemble master and temporary directory paths
 	// Master: caching directory
-	$recording['master_basename'] = $recording['id'] . "_" . $suffix . "." . $recording[$idx . 'mastervideoextension'];
-	$recording['master_remote_path'] = $uploadpath;
-	$recording['master_remote_filename'] = $recording['master_remote_path'] . $recording['master_basename'];
-	$recording['master_path'] = $jconf['master_dir'] . $recording['id'] . "/";
-	$recording['master_filename'] = $recording['master_path'] . $recording['master_basename'];
-	$recording['master_ssh_filename'] = $jconf['ssh_user'] . "@" . $recording[$idx . 'mastersourceip'] . ":" . $recording['master_remote_filename'];
+	$recording[      'master_remote_path'    ] = $uploadpath;
+	$recording[      'master_path'           ] = $jconf['master_dir'] . $recording['id'] . "/";
+	$recording[$idx .'master_basename'       ] = $recording['id'] . "_" . $suffix . "." . $recording[$idx .'mastervideoextension'];
+	$recording[$idx .'master_remote_filename'] = $recording['master_remote_path'] . $recording[$idx .'master_basename'];
+	$recording[$idx .'master_filename'       ] = $recording['master_path'] . $recording[$idx .'master_basename'];
+	$recording[$idx .'master_ssh_filename'   ] = $jconf['ssh_user'] . "@" . $recording[$idx . 'mastersourceip'] . ":" . $recording[$idx .'master_remote_filename'];
+echo "master_ssh_filename = ". $recording[$idx .'master_ssh_filename'] ."\n";
 	// Conversion: temporary directory
 	$recording['temp_directory'] = $jconf['media_dir'] . $recording['id'] . "/";
 	// Recording: remote storage directory
@@ -335,7 +340,7 @@ global $app, $jconf, $debug;
 	}
 
 	//// Is file already downloaded? Check based on filesize and file mtime
-	$err = ssh_file_cmp_isupdated($recording[$idx . 'mastersourceip'], $recording['master_remote_filename'], $recording['master_filename']);
+	$err = ssh_file_cmp_isupdated($recording[$idx . 'mastersourceip'], $recording[$idx .'master_remote_filename'], $recording[$idx .'master_filename']);
 	$debug->log($jconf['log_dir'], $jconf['jobid_media_convert'] . ".log", $err['message'], $sendmail = false);
 	// Local copy is up to date
 	if ( $err['value'] ) return true;
@@ -351,19 +356,19 @@ global $app, $jconf, $debug;
 	}
 
 	// SCP: copy from front end server
-	$err = ssh_filecopy2($recording[$idx . 'mastersourceip'], $recording['master_remote_filename'], $recording['master_filename'], true);
+	$err = ssh_filecopy2($recording[$idx . 'mastersourceip'], $recording[$idx .'master_remote_filename'], $recording[$idx .'master_filename'], true);
 	if ( !$err['code'] ) {
 		$debug->log($jconf['log_dir'], $jconf['jobid_media_convert'] . ".log", "MSG: " . $err['message'] . "\nCOMMAND: " . $err['command'] . "\nRESULT: " . $err['result'], $sendmail = true);
 		// Set status to "uploaded" to allow other nodes to take over task??? !!!
 		return false;
 	}
 	log_recording_conversion($recording['id'], $jconf['jobid_media_convert'], $jconf['dbstatus_copyfromfe'], $err['message'], $err['command'], $err['result'], $err['value'], false);
-
+echo $recording[$idx .'master_filename'] ." (id=". $recording['id'] .") has been copied to converter.";
 	return true;
 }
 
 // *************************************************************************
-// *				function convertVideoThumbnails()			   		   *
+// *                  function convertVideoThumbnails()                    *
 // *************************************************************************
 // Description: generate video thumbnails
 function convertVideoThumbnails(&$recording) {
@@ -549,7 +554,7 @@ global $app, $jconf, $debug;
 
 
 // *************************************************************************
-// *					function convertMedia()						   	   *
+// *                       function convertMedia()                         *
 // *************************************************************************
 // Description: convert media file based on encoding profile
 function convertMedia(&$recording, $profile) {
@@ -567,9 +572,24 @@ global $app, $jconf, $global_log;
 		$recording['thumbnail_numberofindexphotos'] = 0;
 		$recording['thumbnail_indexphotofilename'] = "images/videothumb_audio_placeholder.png?rid=" . $recording['id'];
 	}
+	
+	
+	if ($profile['type'] === 'pip') {
+		$recording['iscontent'] = false;
+		$encoding_params_overlay = ffmpegPrep($recording, $profile);
+		$recording['iscontent'] = true;
+		$encoding_params_main    = ffmpegPrep($recording, $profile);
+	} else {
+		$encoding_params_main    = ffmpegPrep($recording, $profile);
+		$encoding_params_overlay = null;
+	}
 
-	$err = ffmpegConvert($recording, $profile);
-	$recording['encodingparams'] = $err['value'];
+	// $err = ffmpegConvert($recording, $profile);
+	$err = advancedFFmpegConvert($recording, $profile, $encoding_params_main, $encoding_params_overlay);
+	
+	// $recording['encodingparams'] = $err['value'];
+	$recording['encodingparams'][] = $encoding_params_main;
+	$recording['encodingparams'][] = $encoding_params_overlay;
 
 	// Log input and target file details
 	$log_msg = printMediaInfo($recording, $profile);
@@ -590,7 +610,7 @@ global $app, $jconf, $global_log;
 
 
 // *************************************************************************
-// *					function copyMediaToFrontEnd()			   		   *
+// *                    function copyMediaToFrontEnd()                     *
 // *************************************************************************
 // Description: Copy (SCP) media file back to front-end server
 function copyMediaToFrontEnd($recording, $profile) {
@@ -603,7 +623,7 @@ function copyMediaToFrontEnd($recording, $profile) {
 	if ( $recording['iscontent'] != 0 ) $idx = "content";
 
 	// SSH command templates
-	$ssh_command = "ssh -i " . $jconf['ssh_key'] . " " . $jconf['ssh_user'] . "@" . $recording['mastersourceip'] . " ";
+	$ssh_command = "ssh -i " . $jconf['ssh_key'] . " " . $jconf['ssh_user'] . "@" . $recording[$idx .'mastersourceip'] . " ";
 	$scp_command = "scp -B -r -i " . $jconf['ssh_key'] . " ";
 	$recording['output_ssh_filename'] = $jconf['ssh_user'] . "@" . $recording[$idx . 'mastersourceip'] . ":" . $recording['recording_remote_path'];
 
@@ -636,7 +656,7 @@ function copyMediaToFrontEnd($recording, $profile) {
 	}
 
 	// SCP: copy converted file to front end server
-	$err = ssh_filecopy2($recording['mastersourceip'], $recording['output_file'], $recording['recording_remote_path'], false);
+	$err = ssh_filecopy2($recording[$idx .'mastersourceip'], $recording['output_file'], $recording['recording_remote_path'], false);
 	if ( !$err['code'] ) {
 		$debug->log($jconf['log_dir'], $jconf['jobid_media_convert'] . ".log", "MSG: " . $err['message'] . "\nCOMMAND: " . $err['command'] . "\nRESULT: " . $err['result'], $sendmail = true);
 		return false;
@@ -648,7 +668,7 @@ function copyMediaToFrontEnd($recording, $profile) {
 
 	// SCP: copy video thumbnails if updated
 	if ( !empty($recording['thumbnail_numberofindexphotos']) ) {
-		$err = ssh_filecopy2($recording['mastersourceip'], $recording['temp_directory'] . "indexpics/", $recording['recording_remote_path'], false);
+		$err = ssh_filecopy2($recording[$idx .'mastersourceip'], $recording['temp_directory'] . "indexpics/", $recording['recording_remote_path'], false);
 		if ( !$err['code'] ) $debug->log($jconf['log_dir'], $jconf['jobid_media_convert'] . ".log", "MSG: " . $err['message'] . "\nCOMMAND: " . $err['command'] . "\nRESULT: " . $err['result'], $sendmail = true);
 		$chmod_command .= " ; chmod -f " . $jconf['directory_access'] . " " . $recording['recording_remote_path'] . "indexpics/";
 	}
@@ -670,10 +690,10 @@ function copyMediaToFrontEnd($recording, $profile) {
 	}
 
 	// Recording size: update database value
-	$err = ssh_filesize($recording['mastersourceip'], $recording['recording_remote_path'] . "master/");
+	$err = ssh_filesize($recording[$idx .'mastersourceip'], $recording['recording_remote_path'] . "master/");
 	$master_filesize = 0;
 	if ( $err['code'] ) $master_filesize = $err['value'];
-	$err = ssh_filesize($recording['mastersourceip'], $recording['recording_remote_path']);
+	$err = ssh_filesize($recording[$idx .'mastersourceip'], $recording['recording_remote_path']);
 	$recording_filesize = 0;
 	if ( $err['code'] ) $recording_filesize = $err['value'];
 	// Update DB
