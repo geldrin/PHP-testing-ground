@@ -564,7 +564,7 @@ global $app, $jconf, $global_log;
 	updateRecordingVersionStatus($recording['recordingversionid'], $jconf['dbstatus_conv']);
 
 	// Output filename
-	$recording['output_basename'] = $recording['id'] . $profile['filenamesuffix'] . "." . $profile['filecontainerformat'];
+	$recording['output_basename'] = $recording['id'] ."_". $profile['id'] . $profile['filenamesuffix'] . "." . $profile['filecontainerformat'];
 	$recording['output_file'] = $recording['temp_directory'] . $recording['output_basename'];
 
 	// Audio only: add placeholder thumbnail with a speaker icon
