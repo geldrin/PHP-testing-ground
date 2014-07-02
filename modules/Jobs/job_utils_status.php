@@ -376,6 +376,21 @@ global $app, $debug, $jconf, $myjobid;
 	return $recversion['status'];
 }
 
+function getRecordingStatus($recordingid, $type = "recording") {
+global $app, $debug, $jconf, $myjobid;
+
+	if ( ( $type != "recording" ) and ( $type != "content" ) ) return false;
+
+	$idx = "";
+	if ( $type == "content" ) $idx = "content";
+
+	$recordingObj = $app->bootstrap->getModel('recordings');
+	$recordingObj->select($recordingid);
+    $recording = $recordingObj->getRow();
+
+	return $recording[$idx . 'status'];
+}
+
 function updateRecordingVersionStatusAll($recordingid, $status, $type = "recording") {
 global $app, $debug, $jconf, $myjobid, $db;
 

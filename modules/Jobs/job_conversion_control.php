@@ -48,23 +48,28 @@ $db = db_maintain();
 //updateRecordingStatus(9, null, "smil");
 //updateRecordingStatus(9, null, "contentsmil");
 
-// HIANYOK
-// - recording.{content|status} = "reconvert"?
-//   o 
-
 // Query new uploads and insert recording versions
 $recordings = getNewUploads();
-echo "getNewUploads()\n";
 if ( $recordings !== false ) {
 
 	while ( !$recordings->EOF ) {
-//break;
+
 		$recording = array();
 		$recording = $recordings->fields;
 
-var_dump($recording);
+//var_dump($recording);
 
-		// Insert recording versions (recording_versions)
+		//// Recording level reconvert: mark all recording versions to be deleted
+		// Recording
+		if ( $recording['status'] == $jconf['dbstatus_reconvert'] ) {
+			updateRecordingVersionStatusAll($recording['id'], $jconf['dbstatus_markedfordeletion'], "recording");
+		}
+		// Content
+		if ( $recording['contentstatus'] == $jconf['dbstatus_reconvert'] ) {
+			updateRecordingVersionStatusAll($recording['id'], $jconf['dbstatus_markedfordeletion'], "content");
+		}
+
+		//// Insert recording versions (recording_versions)
 		insertRecordingVersions($recording);
 
 		$recordings->MoveNext();
@@ -162,13 +167,17 @@ global $jconf, $debug, $db, $app;
 			r.mastervideores,
 			r.contentmastervideores,
 			r.mastervideofilename,
-			r.contentmastervideofilename
+			r.contentmastervideofilename,
+			r.organizationid,
+			o.defaultencodingprofilegroupid
 		FROM
-			recordings AS r
+			recordings AS r,
+			organization AS o
 		WHERE
 (
 			( r.mastersourceip = '" . $node . "' AND ( r.status = '" . $jconf['dbstatus_uploaded'] . "' OR r.status = '" . $jconf['dbstatus_reconvert'] . "' ) ) OR
-			( r.contentmastersourceip = '" . $node . "' AND ( r.contentstatus = '" . $jconf['dbstatus_uploaded'] . "' OR r.status = '" . $jconf['dbstatus_reconvert'] . "' ) )
+			( r.contentmastersourceip = '" . $node . "' AND ( r.contentstatus = '" . $jconf['dbstatus_uploaded'] . "' OR r.status = '" . $jconf['dbstatus_reconvert'] . "' ) ) AND
+			r.organizationid = o.id
 ) AND r.id = 90
 		ORDER BY
 			r.id";
@@ -250,7 +259,7 @@ global $db, $debug, $jconf, $app;
 	$idx = "";
 	if ( $recording['status'] == $jconf['dbstatus_uploaded'] ) {
 
-		$profileset = getEncodingProfileSet("recording", $recording['mastervideores']);
+		$profileset = getEncodingProfileSet("recording", $recording['mastervideores'], $recording['defaultencodingprofilegroupid']);
 var_dump($profileset);
 //exit;
 
@@ -283,7 +292,7 @@ var_dump($profileset);
 
 	if ( $recording['contentstatus'] == $jconf['dbstatus_uploaded'] ) {
 
-		$profileset = getEncodingProfileSet("content", $recording['contentmastervideores']);
+		$profileset = getEncodingProfileSet("content", $recording['contentmastervideores'], $recording['defaultencodingprofilegroupid']);
 echo "content profileset:\n";
 var_dump($profileset);
 //exit;
@@ -315,7 +324,7 @@ var_dump($profileset);
 		}
 
 		// Mobile versions into recordings_versions. Use content resolution as background.
-		$profileset = getEncodingProfileSet("pip", $recording['contentmastervideores']);
+		$profileset = getEncodingProfileSet("pip", $recording['contentmastervideores'], $recording['defaultencodingprofilegroupid']);
 echo "PiP profileset:\n";
 var_dump($profileset);
 //exit;
@@ -349,7 +358,7 @@ var_dump($profileset);
 	return true;
 }
 
-function getEncodingProfileSet($profile_type, $resolution) {
+function getEncodingProfileSet($profile_type, $resolution, $encoding_group) {
 global $db, $debug, $jconf;
 
 	if ( !empty($resolution) ) {
@@ -361,6 +370,13 @@ global $db, $debug, $jconf;
 	} else {
 		// No resolution, assume audio only input
 		$ep_filter = "ep.mediatype = 'audio'";
+	}
+
+	// Encoding group filter: choose default if invalid value
+	if ( !empty($encoding_group) and $encoding_group > 0 ) {
+		$eg_filter = "eg.id = " . $encoding_group;
+	} else {
+		$eg_filter = "eg.default = 1"
 	}
 
 	$db = db_maintain();
@@ -390,7 +406,7 @@ global $db, $debug, $jconf;
 		ON
 			ep.parentid = epprev.id
 		WHERE
-			eg.default = 1 AND
+			" . $eg_filter . " AND
 			eg.disabled = 0 AND
 			ep.type = '" . $profile_type . "' AND " . $ep_filter;
 
