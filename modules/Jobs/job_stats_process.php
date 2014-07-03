@@ -21,11 +21,34 @@ $app = new Springboard\Application\Cli(BASE_PATH, PRODUCTION);
 $app->loadConfig('modules/Jobs/config_jobs.php');
 $jconf = $app->config['config_jobs'];
 $myjobid = $jconf['jobid_stats_process'];
+$debug = Springboard\Debug::getInstance();
+
+// !!!!
+$kaka = "";
 
 // Check operating system - exit if Windows
 if ( iswindows() ) {
 	echo "ERROR: Non-Windows process started on Windows platform\n";
 	exit;
+}
+
+// Exit if any STOP file appears
+if ( is_file( $app->config['datapath'] . 'jobs/' . $myjobid . '.stop' ) or is_file( $app->config['datapath'] . 'jobs/all.stop' ) ) exit;
+
+// Log related init
+$debug->log($jconf['log_dir'], $myjobid . ".log", "********************* Job: " . $myjobid . " started *********************", $sendmail = false);
+
+// Already running. Not finished a tough job?
+$run_filename = $jconf['temp_dir'] . $myjobid . ".run";
+if  ( file_exists($run_filename) ) {
+	$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] I am already running. Not finished a tough job?", $sendmail = true);
+	exit;
+} else {
+	$content = "Running. Started: " . date("Y-m-d H:i:s");
+	$err = file_put_contents($run_filename, $content);
+	if ( $err === false ) {
+		$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Cannot write run file " . $run_filename, $sendmail = true);
+	}
 }
 
 // --- CONFIG ---
@@ -69,13 +92,6 @@ if ( $app->config['baseuri'] == "dev.videosquare.eu/" ) $wowza_app = "dev" . $wo
 
 // --- END OF CONFIG ---
 
-// Start an infinite loop - exit if any STOP file appears
-if ( is_file( $app->config['datapath'] . 'jobs/' . $myjobid . '.stop' ) or is_file( $app->config['datapath'] . 'jobs/all.stop' ) ) exit;
-
-// Log related init
-$debug = Springboard\Debug::getInstance();
-$debug->log($jconf['log_dir'], $myjobid . ".log", "Job: " . $myjobid . " started", $sendmail = false);
-
 clearstatcache();
 
 // Watchdog
@@ -90,8 +106,6 @@ $platforms_null = returnStreamingClientPlatformEmptyArray($platform_definitions)
 // Loop through defined statistics (5min, hourly, daily). See config.
 for ( $statsidx = 0; $statsidx < count($stats_config); $statsidx++ ) {
 
-	$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Processing statistics: " . $stats_config[$statsidx]['label'], $sendmail = false);
-
 	// Load last processed record time
 	$status_filename = $jconf['temp_dir'] . $myjobid . "." . $stats_config[$statsidx]['label'] . ".status";
 
@@ -101,7 +115,7 @@ for ( $statsidx = 0; $statsidx < count($stats_config); $statsidx++ ) {
 		// Is readable?
 		if ( !is_readable($status_filename) ) {
 
-			$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Stats status file: " . $status_filename . ".", $sendmail = false); // TRUE!!!
+			$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Stats status file: " . $status_filename . ".", $sendmail = true);
 
 		} else {
 
@@ -122,11 +136,11 @@ for ( $statsidx = 0; $statsidx < count($stats_config); $statsidx++ ) {
 				$idx = recursive_array_search($key[1], $stats_config);
 				$timestamp = strtotime($line_split[1]);
 				if ( $timestamp === false ) {
-					$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Stats status file: not a datetime value ('". $line . "')", $sendmail = false); // TRUE!!!
+					$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Stats status file: not a datetime value ('". $line . "')", $sendmail = true);
 					exit;
 				}
 				$stats_config[$idx]['lastprocessedtime'] = $timestamp;
-				$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Last processed timestamp from status file (" . $stats_config[$idx]['label'] . "): " . $line_split[1], $sendmail = false); // TRUE!!!
+				$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Last processed timestamp from status file (" . $stats_config[$idx]['label'] . "): " . $line_split[1], $sendmail = false);
 			}
 
 			fclose($fh);
@@ -134,7 +148,7 @@ for ( $statsidx = 0; $statsidx < count($stats_config); $statsidx++ ) {
 
 	}
 
-	// Get last processed record to determine latest processing time
+	// Get last processed record to determine last processing time
 	$ltime = getLastStatsRecordFrom($stats_config[$statsidx]['sqltablename']);
 	if ( $ltime === false ) {
 		// Debug information for logging
@@ -156,54 +170,83 @@ for ( $statsidx = 0; $statsidx < count($stats_config); $statsidx++ ) {
 
 	$start_interval = $stats_config[$statsidx]['lastprocessedtime'] + 1;
 
-	//$tmp_round = 0;
 	$records_committed_all = 0;
 	$processing_started = time();
+	//  Loop through the full time period until. Exit when right end is in future.
 	while ( ( $start_interval + $stats_config[$statsidx]['interval'] ) < time() ) {
 
-	/*$tmp_round++;
-	if ($tmp_round > 3) break;
-	*/
-
-		// Debug information for logging
-		$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Processing from time = " . date("Y-m-d H:i:s", $stats_config[$statsidx]['lastprocessedtime']), $sendmail = false);
-
-		// Next record to process after last processed record
-		$start_interval = getFirstWowzaRecordFrom($stats_config[$statsidx]['lastprocessedtime'] + 1, $wowza_app);
-		// Nothing to process, cdn_streaming_stats DB is empty after $last_processed_timestamp
-		if ( $start_interval === false ) {
-			$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] No record to process. Exiting.", $sendmail = false);
-			break;
-		}
-		// Debug information for logging
-		$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] First record after last processed time: " . date("Y-m-d H:i:s", $start_interval), $sendmail = false);
-
-		// Align to timeline grid (to left/past)
-		$start_interval = getTimelineGridSeconds($start_interval, "left", $stats_config[$statsidx]['interval']);
-		// End of interval to process
+		// Set end of interval
 		$end_interval = $start_interval + $stats_config[$statsidx]['interval'] - 1;
+
+		// Log processing cycle (5min, hourly, daily)
+		$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Processing statistics: " . $stats_config[$statsidx]['label'], $sendmail = false);
+
+		// Debug information for logging
+		$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Last processed interval end: " . date("Y-m-d H:i:s", $stats_config[$statsidx]['lastprocessedtime']), $sendmail = false);
+
+		// Query active stream records for this interval
+		$stats = queryStatsForInterval($start_interval, $end_interval, $wowza_app);
+		if ( $stats === false ) {
+			// No active records found in database. A gap is supposed.
+			$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] No active record(s) found for the next interval: " . date("Y-m-d H:i:s", $start_interval) . " - " . date("Y-m-d H:i:s", $end_interval), $sendmail = false);
+
+			// Next record breaking the inactive period that also occured before the end of the last whole interval
+			$now_left = getTimelineGridSeconds(time(), "left", $stats_config[$statsidx]['interval']);
+			$next_active_record = getFirstWowzaRecordFromInterval($end_interval, $now_left, $wowza_app);
+			if ( $next_active_record === false ) {
+				// Nothing to process, cdn_streaming_stats DB is empty from end of interval. Exit processing.
+
+				// Calculate last finished interval
+				$start_interval = $now_left - $stats_config[$statsidx]['interval'];
+				$end_interval = $now_left - 1;
+
+				// Update last processed record
+				$stats_config[$statsidx]['lastprocessedtime'] = $end_interval;
+
+				// Log
+				$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Inactive period skipped. No more records to process. Last processed time is " . date("Y-m-d H:i:s", $end_interval) . ". Exiting.", $sendmail = false);
+
+				break;
+			}
+			// Debug information for logging
+			$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Inactive period skipped. Next stream record: " . date("Y-m-d H:i:s", $next_active_record), $sendmail = false);
+
+			// Timeline grid: first left from next active record time
+			$next_active_left = getTimelineGridSeconds($next_active_record, "left", $stats_config[$statsidx]['interval']);
+//			$start_interval = $next_active_left - $stats_config[$statsidx]['interval'];
+			$start_interval = $next_active_left;
+			$end_interval = $next_active_left + $stats_config[$statsidx]['interval'] - 1;
+
+			// Query finally selected interval with record(s)
+			$stats = queryStatsForInterval($start_interval, $end_interval, $wowza_app);
+			if ( $stats === false ) {
+echo "KAKA!!\n";
+$debug->log($jconf['log_dir'], $myjobid . ".log", "[WARN] Unexpected. No record(s) to process. Interval: " . date("Y-m-d H:i:s", $start_interval) . " - " . date("Y-m-d H:i:s", $end_interval), $sendmail = false);
+echo $kaka . "\n";
+			// Update last processed interval. Next active record will be found in next round.
+$stats_config[$statsidx]['lastprocessedtime'] = $end_interval;
+$start_interval = $start_interval + $stats_config[$statsidx]['interval'];
+continue;
+			}
+
+		}
 
 		// Debug information for logging
 		$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Stats processing for interval: " . date("Y-m-d H:i:s", $start_interval) . " - " . date("Y-m-d H:i:s", $end_interval), $sendmail = false);
 
-		// Query records between start and end intervals
-		$stats = queryStatsForInterval($start_interval, $end_interval, $wowza_app);
-		if ( $stats === false ) {
-			// Shift start interval
-			$start_interval += $stats_config[$statsidx]['interval'];
-			// Update last processed record
-			$stats_config[$statsidx]['lastprocessedtime'] = $end_interval;
-			// Absolutely unexpected, but we go on when occurs. We send a notification for admins. SQL query needs to be adjusted?
-			$debug->log($jconf['log_dir'], $myjobid . ".log", "[WARN] No records found for interval: " . date("Y-m-d H:i:s", $start_interval) . " - " . date("Y-m-d H:i:s", $end_interval), $sendmail = true);
-			continue;
-		}
-
+		$records_processed = 0;
+		$records_committed = 0;
 		$stats_f = array();
 
-		$records_processed = 0;
 		while ( !$stats->EOF ) {
 
 			$stat = $stats->fields;
+/*var_dump($stat);
+$records_processed++;
+
+			$stats->MoveNext();
+		}
+*/
 
 			// Live feed ID
 
@@ -233,7 +276,7 @@ for ( $statsidx = 0; $statsidx < count($stats_config); $statsidx++ ) {
 			if ( $stat['wowzalocalstreamname'] == $stat['contentkeycode'] ) {
 				$iscontent = 1;
 			} elseif ( $stat['wowzalocalstreamname'] != $stat['keycode'] ) {
-				$debug->log($jconf['log_dir'], $myjobid . ".log", "[WARN] No video/content match.", $sendmail = true);
+				$debug->log($jconf['log_dir'], $myjobid . ".log", "[WARN] No video/content match. Wowza says: " . $stat['wowzalocalstreamname'] . " / db keycode: " . $stat['keycode'] . "(record id: " . $stat['id'] . ")", $sendmail = false);
 			}
 
 			//// Statistics records filtered
@@ -264,7 +307,7 @@ for ( $statsidx = 0; $statsidx < count($stats_config); $statsidx++ ) {
 
 			$records_processed++;
 			$stats->MoveNext();
-		}
+		} // End of stats while loop
 
 		// Update results to DB
 		$records_committed = 0;
@@ -290,13 +333,15 @@ for ( $statsidx = 0; $statsidx < count($stats_config); $statsidx++ ) {
 		$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Records processed/committed: " . $records_processed . " / " . $records_committed, $sendmail = false);
 		$records_committed_all += $records_committed;
 
+/*
 		if ( ( $start_interval + $stats_config[$statsidx]['interval'] ) >= time() ) {
 			$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] now() time reached for " . $stats_config[$statsidx]['label'] . ". Stopping.", $sendmail = false);
 		}
-
+*/
 		// Watchdog
 		$app->watchdog();
-	}
+
+	} // End of interval processing while
 
 	// Time of processing
 	$processing_time = time() - $processing_started;
@@ -308,7 +353,7 @@ for ( $statsidx = 0; $statsidx < count($stats_config); $statsidx++ ) {
 	$content = "lastprocessedtime_" . $stats_config[$statsidx]['label'] . "=" . date("Y-m-d H:i:s", $stats_config[$statsidx]['lastprocessedtime']) . "\n";
 	$err = file_put_contents($status_filename, $content);
 	if ( $err === false ) {
-		$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Cannot write staus file " . $status_filename, $sendmail = false);
+		$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Cannot write status file " . $status_filename, $sendmail = false);
 	} else {
 		$debug->log($jconf['log_dir'], $myjobid . ".log", "[OK] Last processed record time written to " . $status_filename, $sendmail = false);
 	}
@@ -318,13 +363,17 @@ for ( $statsidx = 0; $statsidx < count($stats_config); $statsidx++ ) {
 // Close DB connection if open
 if ( is_resource($db->_connectionID) ) $db->close();
 
+// Remove run file
+unlink($run_filename);
+
 // Watchdog
 $app->watchdog();
 
 exit;
 
+// Query active stream records from database in a time interval
 function queryStatsForInterval($start_interval, $end_interval, $streaming_server_app) {
-global $db, $debug, $myjobid, $app, $jconf;
+global $db, $debug, $myjobid, $app, $jconf, $kaka;
 
 	$start_interval_datetime = date("Y-m-d H:i:s", $start_interval);
 	$end_interval_datetime = date("Y-m-d H:i:s", $end_interval);
@@ -363,16 +412,20 @@ global $db, $debug, $myjobid, $app, $jconf;
 			livefeed_streams AS lfs
 		WHERE
 			css.wowzaappid = '" . $streaming_server_app . "'  AND (
-			( css.starttime >= '" . $start_interval_datetime . "' AND css.starttime <= '" . $end_interval_datetime . "' ) OR
-			( css.endtime >= '" . $start_interval_datetime . "'   AND css.endtime <= '" . $end_interval_datetime . "' ) OR
-			( css.starttime <= '" . $end_interval_datetime . "' AND css.endtime IS NULL ) ) AND 
-			( ( css.vsqrecordingfeed IS NOT NULL AND css.vsqrecordingfeed = lfs.livefeedid ) OR ( css.vsqrecordingfeed IS NULL AND css.vsqsessionid IS NULL) ) AND
-			( css.wowzalocalstreamname = lfs.keycode OR css.wowzalocalstreamname = lfs.contentkeycode )
+			( css.starttime >= '" . $start_interval_datetime . "' AND css.starttime <= '" . $end_interval_datetime . "' ) OR	# START in the interval
+			( css.endtime >= '" . $start_interval_datetime . "'   AND css.endtime <= '" . $end_interval_datetime . "' ) OR		# END in the interval
+			( css.starttime <= '" . $end_interval_datetime . "' AND css.endtime IS NULL ) OR									# Open record
+			( css.starttime < '" . $start_interval_datetime . "' AND css.endtime > '" . $end_interval_datetime . "' ) ) AND 	# Record covering the whole interval
+			( ( css.vsqrecordingfeed IS NOT NULL AND css.vsqrecordingfeed = lfs.livefeedid ) OR ( css.vsqrecordingfeed IS NULL AND css.vsqsessionid IS NULL) )
+AND	( css.wowzalocalstreamname = lfs.keycode OR css.wowzalocalstreamname = lfs.contentkeycode )
 		GROUP BY
 			css.vsqsessionid, css.wowzalocalstreamname, css.vsqrecordingfeed";
 
-//echo $query . "\n";
+// Ez a VCR-es izeket kicsinálja!!!! keycode változik!
+//AND	( css.wowzalocalstreamname = lfs.keycode OR css.wowzalocalstreamname = lfs.contentkeycode )
 
+echo $query . "\n";
+$kaka = $query;
 // Record problémák:
 // - minõségi váltás: nincs új rekord (Wowza oldalon nem figyelünk valami eventet?)
 // - nem lezáruló rekordok: Wowza restart?
@@ -391,12 +444,14 @@ global $db, $debug, $myjobid, $app, $jconf;
 }
 
 // Get next live statistics record timestamp (to help jumping empty time slots)
-function getFirstWowzaRecordFrom($from_timestamp, $streaming_server_app) {
+// WARNING: does not check for active records
+function getFirstWowzaRecordFromInterval($from_timestamp, $to_timestamp, $streaming_server_app) {
 global $db, $debug, $myjobid, $app, $jconf;
 
 	if ( empty($from_timestamp) ) $from_timestamp = 0;
 
 	$from_datetime = date("Y-m-d H:i:s", $from_timestamp);
+	$to_datetime = date("Y-m-d H:i:s", $to_timestamp);
 
 	$query = "
 		SELECT
@@ -406,12 +461,15 @@ global $db, $debug, $myjobid, $app, $jconf;
 			cdn_streaming_stats AS css
 		WHERE
 			css.starttime >= '" . $from_datetime . "' AND
+			css.starttime <= '" . $to_datetime . "' AND
 			css.wowzaappid = '" . $streaming_server_app . "' AND
 			css.wowzalocalstreamname IS NOT NULL AND
 			css.wowzalocalstreamname <> ''
 		ORDER BY
 			css.starttime
 		LIMIT 1";
+
+//echo $query . "\n";
 
 	try {
 		$stats = $db->getArray($query);
@@ -440,6 +498,8 @@ global $db, $debug, $myjobid, $app, $jconf;
 		ORDER BY
 			timestamp DESC
 		LIMIT 1";
+
+//echo $query . "\n";
 
 	try {
 		$stats = $db->getArray($query);
@@ -476,7 +536,7 @@ global $platform_definitions, $debug, $myjobid, $jconf;
 		if ( stripos($platform_string, $key) !== false ) return $value;
 	}
 
-	$debug->log($jconf['log_dir'], $myjobid . ".log", "[WARN] Platform \"" . $platform_string . "\" not found." . trim($query), $sendmail = true);
+	$debug->log($jconf['log_dir'], $myjobid . ".log", "[WARN] Platform \"" . $platform_string . "\" not found.", $sendmail = false);
 	return 'unknown';
 }
 
