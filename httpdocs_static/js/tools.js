@@ -2133,15 +2133,16 @@ function setupComments() {
 
 function setupLivestatistics( elem ) {
 
-  var palette = new Rickshaw.Color.Palette( { scheme: 'classic9' } );
+  var palette = new Rickshaw.Color.Palette( { scheme: 'munin' } );
   var dataurl = elem.attr('data-url');
   var elem    = elem.get(0);
   var options = {
     element: elem,
     width: 700,
     height: 400,
-    renderer: 'area',
-    interpolation: 'step-after',
+    renderer: 'line',
+    offset: 'value',
+    interpolation: 'linear',
     stroke: true,
     preserve: true
   };
@@ -2175,6 +2176,11 @@ function setupLivestatistics( elem ) {
       return d3.time.format('%c')( new Date(x * 1000) );
     }
   });
+
+  var smoother = new Rickshaw.Graph.Smoother( {
+    graph: graph
+  });
+  smoother.setScale(1.5);
 
   var xAxis = new Rickshaw.Graph.Axis.Time({
     graph: graph,
