@@ -424,7 +424,7 @@ AND	( css.wowzalocalstreamname = lfs.keycode OR css.wowzalocalstreamname = lfs.c
 // Ez a VCR-es izeket kicsinálja!!!! keycode változik!
 //AND	( css.wowzalocalstreamname = lfs.keycode OR css.wowzalocalstreamname = lfs.contentkeycode )
 
-echo $query . "\n";
+//echo $query . "\n";
 $kaka = $query;
 // Record problémák:
 // - minõségi váltás: nincs új rekord (Wowza oldalon nem figyelünk valami eventet?)
