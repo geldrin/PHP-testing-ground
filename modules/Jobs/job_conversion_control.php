@@ -61,13 +61,14 @@ if ( $recordings !== false ) {
 
 		//// Recording level reconvert: mark all recording versions to be deleted
 		// Recording
-		if ( $recording['status'] == $jconf['dbstatus_reconvert'] ) {
+/*		if ( $recording['status'] == $jconf['dbstatus_reconvert'] ) {
 			updateRecordingVersionStatusAll($recording['id'], $jconf['dbstatus_markedfordeletion'], "recording");
 		}
 		// Content
 		if ( $recording['contentstatus'] == $jconf['dbstatus_reconvert'] ) {
 			updateRecordingVersionStatusAll($recording['id'], $jconf['dbstatus_markedfordeletion'], "content");
 		}
+*/
 
 		//// Insert recording versions (recording_versions)
 		insertRecordingVersions($recording);
@@ -172,17 +173,16 @@ global $jconf, $debug, $db, $app;
 			o.defaultencodingprofilegroupid
 		FROM
 			recordings AS r,
-			organization AS o
+			organizations AS o
 		WHERE
-(
-			( r.mastersourceip = '" . $node . "' AND ( r.status = '" . $jconf['dbstatus_uploaded'] . "' OR r.status = '" . $jconf['dbstatus_reconvert'] . "' ) ) OR
-			( r.contentmastersourceip = '" . $node . "' AND ( r.contentstatus = '" . $jconf['dbstatus_uploaded'] . "' OR r.status = '" . $jconf['dbstatus_reconvert'] . "' ) ) AND
+			( ( r.mastersourceip = '" . $node . "' AND ( r.status = '" . $jconf['dbstatus_uploaded'] . "' OR r.status = '" . $jconf['dbstatus_reconvert'] . "' ) ) OR
+			( r.contentmastersourceip = '" . $node . "' AND ( r.contentstatus = '" . $jconf['dbstatus_uploaded'] . "' OR r.status = '" . $jconf['dbstatus_reconvert'] . "' ) ) ) AND
 			r.organizationid = o.id
-) AND r.id = 90
+AND r.id = 89
 		ORDER BY
 			r.id";
 
-echo $query . "\n";
+//echo $query . "\n";
 
 	try {
 		$rs = $db->Execute($query);
@@ -257,10 +257,10 @@ global $db, $debug, $jconf, $app;
 
 	// Recording
 	$idx = "";
-	if ( $recording['status'] == $jconf['dbstatus_uploaded'] ) {
+	if ( ( $recording['status'] == $jconf['dbstatus_uploaded'] ) or  ( $recording['status'] == $jconf['dbstatus_reconvert'] ) ) {
 
 		$profileset = getEncodingProfileSet("recording", $recording['mastervideores'], $recording['defaultencodingprofilegroupid']);
-var_dump($profileset);
+//var_dump($profileset);
 //exit;
 
 		if ( $profileset !== false ) {
@@ -290,11 +290,11 @@ var_dump($profileset);
 		}
 	}
 
-	if ( $recording['contentstatus'] == $jconf['dbstatus_uploaded'] ) {
+	if ( ( $recording['contentstatus'] == $jconf['dbstatus_uploaded'] ) or ( $recording['contentstatus'] == $jconf['dbstatus_reconvert'] ) ) {
 
 		$profileset = getEncodingProfileSet("content", $recording['contentmastervideores'], $recording['defaultencodingprofilegroupid']);
-echo "content profileset:\n";
-var_dump($profileset);
+//echo "content profileset:\n";
+//var_dump($profileset);
 //exit;
 
 		if ( $profileset !== false ) {
@@ -325,8 +325,8 @@ var_dump($profileset);
 
 		// Mobile versions into recordings_versions. Use content resolution as background.
 		$profileset = getEncodingProfileSet("pip", $recording['contentmastervideores'], $recording['defaultencodingprofilegroupid']);
-echo "PiP profileset:\n";
-var_dump($profileset);
+//echo "PiP profileset:\n";
+//var_dump($profileset);
 //exit;
 
 		if ( $profileset !== false ) {
@@ -376,7 +376,7 @@ global $db, $debug, $jconf;
 	if ( !empty($encoding_group) and $encoding_group > 0 ) {
 		$eg_filter = "eg.id = " . $encoding_group;
 	} else {
-		$eg_filter = "eg.default = 1"
+		$eg_filter = "eg.default = 1";
 	}
 
 	$db = db_maintain();
