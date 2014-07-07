@@ -166,14 +166,18 @@ for ( $statsidx = 0; $statsidx < count($stats_config); $statsidx++ ) {
 		}
 	}
 
-	//$stats_config[$statsidx]['lastprocessedtime'] = 0;
-
 	$start_interval = $stats_config[$statsidx]['lastprocessedtime'] + 1;
+
+// !!! DEBUG
+//$start_interval = strtotime("2014-07-04 14:50:00");
 
 	$records_committed_all = 0;
 	$processing_started = time();
 	//  Loop through the full time period until. Exit when right end is in future.
 	while ( ( $start_interval + $stats_config[$statsidx]['interval'] ) < time() ) {
+
+// !!! DEBUG
+//if ( $start_interval > strtotime("2014-07-04 15:00:00") ) break;
 
 		// Set end of interval
 		$end_interval = $start_interval + $stats_config[$statsidx]['interval'] - 1;
@@ -241,12 +245,8 @@ continue;
 		while ( !$stats->EOF ) {
 
 			$stat = $stats->fields;
-/*var_dump($stat);
-$records_processed++;
-
-			$stats->MoveNext();
-		}
-*/
+/*echo "DEBUG: Wowza record\n";
+var_dump($stat); */
 
 			// Live feed ID
 
@@ -305,18 +305,26 @@ $records_processed++;
 				$stats_f[$feedid][$idx][$platform]++;
 			}
 
+/*
+echo "DEBUG: processed record\n";
+var_dump($stats_f);
+*/
+
 			$records_processed++;
 			$stats->MoveNext();
 		} // End of stats while loop
 
 		// Update results to DB
+
 		$records_committed = 0;
 		if ( count($stats_f) > 0 ) {
 
 			$records_committed = 0;
+//echo "DB:\n";
 			foreach ( $stats_f as $feedid => $feed_array ) {
 				foreach ( $feed_array as $idx => $stat_record ) {
 					insertStatRecord($stat_record, $stats_config[$statsidx]['sqltablename']);
+//var_dump($stat_record);
 					$records_committed++;
 				}
 			}
@@ -333,11 +341,6 @@ $records_processed++;
 		$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Records processed/committed: " . $records_processed . " / " . $records_committed, $sendmail = false);
 		$records_committed_all += $records_committed;
 
-/*
-		if ( ( $start_interval + $stats_config[$statsidx]['interval'] ) >= time() ) {
-			$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] now() time reached for " . $stats_config[$statsidx]['label'] . ". Stopping.", $sendmail = false);
-		}
-*/
 		// Watchdog
 		$app->watchdog();
 
@@ -358,7 +361,7 @@ $records_processed++;
 		$debug->log($jconf['log_dir'], $myjobid . ".log", "[OK] Last processed record time written to " . $status_filename, $sendmail = false);
 	}
 
-}
+} // End of 5min, hourly, daily cycles
 
 // Close DB connection if open
 if ( is_resource($db->_connectionID) ) $db->close();
