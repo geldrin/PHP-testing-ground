@@ -32,8 +32,11 @@ if ( iswindows() ) {
 	exit;
 }
 
+// Log buffer
+$log_buffer = array();
+
 // Start an infinite loop - exit if any STOP file appears
-while( !is_file( $app->config['datapath'] . 'jobs/job_media_convert.stop' ) and !is_file( $app->config['datapath'] . 'jobs/all.stop' ) ) {
+while( /*!is_file( $app->config['datapath'] . 'jobs/job_media_convert.stop' ) and*/ !is_file( $app->config['datapath'] . 'jobs/all.stop' ) ) {
 	clearstatcache();
 	
 	while ( 1 ) {
@@ -158,7 +161,19 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_media_convert.stop' ) and 
 		if ( isset($uploader_user) ) $global_log .= "URL: http://" . $uploader_user['domain'] . "/" . $uploader_user['language'] . "/recordings/details/" . $recording['id'] . "\n\n";
 		$conversion_duration = time() - $total_duration;
 		$hms = secs2hms($conversion_duration);
-		log_recording_conversion($recording['id'], $jconf['jobid_media_convert'], "-", "[OK] Successful media conversion in " . $hms . " time.\n\nConversion summary:\n\n" . $global_log, "-", "-", $conversion_duration, true);
+		if ( !isset($log_buffer[$recording['id']) ) {
+			$log_buffer[$recording['id'] = $global_log;
+		} else {
+			$log_buffer[$recording['id'] .= "---\n\n" . $global_log;
+		}
+		// Log this recording version conversion summary
+		log_recording_conversion($recording['id'], $jconf['jobid_media_convert'], "-", "[OK] Successful media conversion in " . $hms . " time.\n\nConversion summary:\n\n" . $global_log, "-", "-", $conversion_duration, false);
+		// Have we finished? Then send all logs to admin
+		if ( getRecordingVersionsApplyStatusFilter($recording['id'], $type = "recording", "convert") === false ) {
+			$debug->log($jconf['log_dir'], $jconf['jobid_media_convert'] . ".log", "[INFO] Recording conversion summary.\n\n" . $log_buffer[$recording['id'], $sendmail = true);
+			unset($log_buffer[$recording['id']);
+		}
+
 	}	// End of while(1)
 
 	// Close DB connection if open
@@ -548,8 +563,7 @@ global $app, $jconf, $global_log;
 		$recording['thumbnail_numberofindexphotos'] = 0;
 		$recording['thumbnail_indexphotofilename'] = "images/videothumb_audio_placeholder.png?rid=" . $recording['id'];
 	}
-	
-	
+
 	if ($profile['type'] === 'pip') {
 		$recording['iscontent'] = false;
 		$encoding_params_overlay = ffmpegPrep($recording, $profile);
@@ -562,8 +576,6 @@ global $app, $jconf, $global_log;
 
 	// $err = ffmpegConvert($recording, $profile);
 	$err = advancedFFmpegConvert($recording, $profile, $encoding_params_main, $encoding_params_overlay);
-	var_dump($err['encodingparams']);
-	
 	$recording['encodingparams'] = $err['encodingparams'];
 
 	// Log input and target file details
@@ -694,14 +706,14 @@ global $jconf, $debug, $myjobid;
 	$type = "recording";
 	if ( $recording['iscontent'] ) $type = "content";
 	$r_status = getRecordingStatus($recording['id'], $type);
-	// recording_versions.status = "stop"? OR recordings.status = "markedfordeletion"/"deleted"
+	// recording_versions.status = "stop" / "markedfordeletion" / "deleted"? OR recordings.status = "markedfordeletion" / "deleted"?
 	$rv_status = getRecordingVersionStatus($recording['recordingversionid']);
 
-	if ( ( $rv_status == $jconf['dbstatus_stop'] ) or ($rv_status == $jconf['dbstatus_markedfordeletion'] ) or ( $rv_status == $jconf['dbstatus_deleted'] ) or ( $r_status == $jconf['dbstatus_markedfordeletion'] ) or ( $r_status == $jconf['dbstatus_deleted'] ) ) {
+	if ( ( $rv_status == $jconf['dbstatus_stop'] ) or ( $rv_status == $jconf['dbstatus_markedfordeletion'] ) or ( $rv_status == $jconf['dbstatus_deleted'] ) or ( $r_status == $jconf['dbstatus_markedfordeletion'] ) or ( $r_status == $jconf['dbstatus_deleted'] ) ) {
 		// Cleanup temp directory
 		$err = remove_file_ifexists($recording['temp_directory']);
 		if ( !$err['code'] ) $debug->log($jconf['log_dir'], $myjobid . ".log", "MSG: " . $err['message'] . "\nCOMMAND: " . $err['command'] . "\nRESULT: " . $err['result'], $sendmail = true);
-		// If recordings_versions.status = "stop" then recordings_versions.status = "markedfordeletion" (mark this version to be deleted)
+		// If recordings_versions.status = "stop" then recordings_versions.status := "markedfordeletion" (mark this version to be deleted)
 		if ( $rv_status == $jconf['dbstatus_stop'] ) updateRecordingVersionStatus($recording['recordingversionid'], $jconf['dbstatus_markedfordeletion']);
 		$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Conversion STOPPED for recording version id = " . $recording['recordingversionid'] . ", recordingid = " . $recording['id'] . ".", $sendmail = false);
 		return true;
