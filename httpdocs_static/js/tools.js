@@ -2177,11 +2177,6 @@ function setupLivestatistics( elem ) {
     }
   });
 
-  var smoother = new Rickshaw.Graph.Smoother( {
-    graph: graph
-  });
-  smoother.setScale(1.5);
-
   var xAxis = new Rickshaw.Graph.Axis.Time({
     graph: graph,
     ticksTreatment: 'glow',
