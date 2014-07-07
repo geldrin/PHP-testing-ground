@@ -26,7 +26,7 @@ $myjobid = $jconf['jobid_remove_files'];
 
 // Log related init
 $debug = Springboard\Debug::getInstance();
-$debug->log($jconf['log_dir'], $myjobid . ".log", "*************************** Remove files job started *************************** ", $sendmail = false);
+$debug->log($jconf['log_dir'], $myjobid . ".log", "*************************** Job: Remove files started *************************** ", $sendmail = false);
 
 // Debug mode on/off
 $isdebug = true;
@@ -46,8 +46,6 @@ clearstatcache();
 
 // Watchdog
 $app->watchdog();
-
-//$sleep_length = $jconf['sleep_long'];
 
 // Establish database connection
 $db = db_maintain();
@@ -110,11 +108,13 @@ if ( $recordings !== false ) {
 				continue;
 			}
 
-			// Update status fields: status, masterstatus and all recording versions
+			// Update status fields: status, masterstatus and all active recording versions
 			updateRecordingStatus($recording['id'], $jconf['dbstatus_deleted'], "recording");
 			updateMasterRecordingStatus($recording['id'], $jconf['dbstatus_deleted'], "recording");
-			updateRecordingVersionStatusAll($recording['id'], $jconf['dbstatus_deleted'], "all");
-// !!!
+//			updateRecordingVersionStatusAll($recording['id'], $jconf['dbstatus_deleted'], "all");
+			$filter = $jconf['dbstatus_copystorage_ok'] . "|" . $jconf['dbstatus_conv'] . "|" . $jconf['dbstatus_convert'] . "|" . $jconf['dbstatus_stop'] . "|" . $jconf['dbstatus_copystorage'] . "|" . $jconf['dbstatus_copyfromfe'] . "|" . $jconf['dbstatus_copyfromfe_ok'] . "|" . $jconf['dbstatus_reconvert'];
+			updateRecordingVersionStatusApplyFilter($recording['id'], $jconf['dbstatus_deleted'], "all", $filter);
+// REMOVE!!!
 			update_db_mobile_status($recording['id'], $jconf['dbstatus_deleted']);
 // !!!
 			// smilstatus = NULL
@@ -207,7 +207,9 @@ if ( $recordings !== false ) {
 			}
 
 			// recordings_versions.status = "markedfordeletion" for all content surrogates (will be deleted in the next step, see below)
-			updateRecordingVersionStatusAll($recording['id'], $jconf['dbstatus_markedfordeletion'], "content");
+//			updateRecordingVersionStatusAll($recording['id'], $jconf['dbstatus_markedfordeletion'], "content");
+			$filter = $jconf['dbstatus_copystorage_ok'] . "|" . $jconf['dbstatus_conv'] . "|" . $jconf['dbstatus_convert'] . "|" . $jconf['dbstatus_stop'] . "|" . $jconf['dbstatus_copystorage'] . "|" . $jconf['dbstatus_copyfromfe'] . "|" . $jconf['dbstatus_copyfromfe_ok'] . "|" . $jconf['dbstatus_reconvert'];
+			updateRecordingVersionStatusApplyFilter($recording['id'], $jconf['dbstatus_markedfordeletion'], "content", $filter);
 			// contentsmilstatus = NULL
 			updateRecordingStatus($recording['id'], null, "contentsmil");
 
@@ -361,37 +363,40 @@ global $jconf, $db, $app;
 	$idx = "";
 	if ( $type == "content" ) $idx = "content";
 
+	$node = $app->config['node_sourceip'];
+// !!!
+	$node = "stream.videosquare.eu";
+
 	$query = "
 		SELECT
-			a.id,
-			a.userid,
-			a.status,
-			a.masterstatus,
-			a.contentstatus,
-			a.contentmasterstatus,
-			a.mastersourceip,
-			a.contentmastersourceip,
-			a.deletedtimestamp,
-			a.contentdeletedtimestamp,
-			a.mastervideofilename,
-			a.mastervideoextension,
-			a.contentmastervideofilename,
-			a.contentmastervideoextension,
-			b.email,
-			c.id AS organizationid,
-			c.domain,
-			c.daystoretainrecordings
+			r.id,
+			r.userid,
+			r.status,
+			r.masterstatus,
+			r.contentstatus,
+			r.contentmasterstatus,
+			r.mastersourceip,
+			r.contentmastersourceip,
+			r.deletedtimestamp,
+			r.contentdeletedtimestamp,
+			r.mastervideofilename,
+			r.mastervideoextension,
+			r.contentmastervideofilename,
+			r.contentmastervideoextension,
+			u.email,
+			o.id AS organizationid,
+			o.domain,
+			o.daystoretainrecordings,
+			o.defaultencodingprofilegroupid
 		FROM
-			recordings AS a,
-			users AS b,
-			organizations AS c
+			recordings AS r,
+			users AS u,
+			organizations AS o
 		WHERE
-			a." . $idx . "status = '" . $jconf['dbstatus_markedfordeletion'] . "' AND
- 			a.userid = b.id AND
-			b.organizationid = c.id
-	";
-// OR a." . $type . "masterstatus = '" . $jconf['dbstatus_markedfordeletion'] . "' ) AND
-// 			a." . $type . "mastersourceip = '" . $node . "' AND
+			r." . $idx . "status = '" . $jconf['dbstatus_markedfordeletion'] . "' AND
+			r." . $idx . "mastersourceip = '" . $node . "' AND
+ 			r.userid = u.id AND
+			u.organizationid = o.id";
 
 	try {
 		$recordings = $db->Execute($query);
