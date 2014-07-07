@@ -780,6 +780,7 @@ class Livefeeds extends \Springboard\Model {
     $where = array();
     $sql   = "
       SELECT
+        UNIX_TIMESTAMP(s.timestamp) AS arraykey,
         UNIX_TIMESTAMP(s.timestamp) AS timestamp,
         SUM( s.numberofflashwin )   AS numberofflashwin,
         SUM( s.numberofflashmac )   AS numberofflashmac,
@@ -818,7 +819,37 @@ class Livefeeds extends \Springboard\Model {
       ORDER BY s.timestamp, s.id
     ";
 
-    return $this->db->getArray( $sql );
+    $data = $this->db->getAssoc( $sql );
+
+    $firstdata = reset( $data );
+    $lastdata  = end( $data );
+
+    $startts   = $firstdata['timestamp'];
+    $endts     = $lastdata['timestamp'];
+    $tickcount = round( ( $endts - $startts ) / 300 );
+
+    $ret  = array();
+    for ( $i = 0; $i < $tickcount; $i++ ) {
+
+      $key = $startts + ( $i * 300 );
+
+      if ( isset( $data[ $key ] ) )
+        $ret[] = $data[ $key ];
+      else
+        $ret[] = array(
+          'timestamp'          => $key,
+          'numberofflashwin'   => 0,
+          'numberofflashmac'   => 0,
+          'numberofflashlinux' => 0,
+          'numberofandroid'    => 0,
+          'numberofiphone'     => 0,
+          'numberofipad'       => 0,
+          'numberofunknown'    => 0,
+        );
+
+    }
+
+    return $ret;
 
   }
 
