@@ -684,9 +684,17 @@ class Controller extends \Visitor\Controller {
     $l          = $this->bootstrap->getLocalization();
     $fieldtokey = array();
     $ret        = array(
-      'data'   => array(),
-      'labels' => array(),
+      'startts' => 0,
+      'endts'   => 0,
+      'labels'  => array(),
+      'data'    => array(),
     );
+
+    $firstdata = reset( $data );
+    $lastdata  = end( $data );
+
+    $ret['startts'] = intval( $firstdata['timestamp'] );
+    $ret['endts']   = intval( $lastdata['timestamp'] );
 
     // prepare the chart labels
     foreach( $data as $value ) {
@@ -696,7 +704,6 @@ class Controller extends \Visitor\Controller {
         if ( $field == 'timestamp' )
           continue;
 
-        $ret['data'][]   = array();
         $ret['labels'][] = $l('live', 'stats_' . $field );
         $fieldtokey[ $field ] = count( $ret['labels'] ) - 1;
 
@@ -707,21 +714,23 @@ class Controller extends \Visitor\Controller {
     }
 
     // prepare the values
-    foreach( $data as $value ) {
+    foreach( $data as $key => $value ) {
 
-      $ts  = intval( $value['timestamp'] );
+      $ret['data'][ $key ] = array(
+        'ts' => intval( $value['timestamp'] ),
+      );
+
       foreach( $value as $field => $v ) {
 
         if ( $field == 'timestamp' )
           continue;
 
-        $key = $fieldtokey[ $field ];
-        $ret['data'][ $key ][] = array(
-          'x' => $ts,
-          'y' => intval( $v ),
-        );
+        $fieldkey = $fieldtokey[ $field ];
+        $ret['data'][ $key ][ $fieldkey ] = intval( $v );
 
       }
+
+      unset( $data[ $key ] );
 
     }
 

@@ -2148,7 +2148,32 @@ function setupLivestatistics( elem ) {
   };
 
   // analyticsdata global
-  var graphdata = analyticsdata.data;
+  var graphdata = [];
+  var tickcount = Math.round( ( analyticsdata.endts - analyticsdata.startts ) / 300 );
+
+  // prepare graphdata array
+  for (var i = 0, j = analyticsdata.labels.length - 1; i <= j; i++) {
+    graphdata.push([]);
+  };
+
+  var pushData = function( ts, data ) {
+
+    for (var i = 0, j = analyticsdata.labels.length - 1; i <= j; i++) {
+
+      graphdata[ i ].push({
+        'x': ts,
+        'y': ( typeof( data ) == 'object' )? data[ i + '' ]: 0
+      });
+
+    }
+
+  };
+
+  for( var i = 0; i < tickcount; i++ ) {
+    var key = ( i * 300 ) + analyticsdata.startts;
+    pushData( key, analyticsdata.data[ key ] );
+  }
+
   var series  = [];
   for (var i = 0, j = analyticsdata.labels.length - 1; i <= j; i++) {
 
