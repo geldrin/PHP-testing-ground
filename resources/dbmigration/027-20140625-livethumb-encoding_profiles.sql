@@ -7,3 +7,5 @@ ALTER TABLE  `encoding_groups` ADD  `islegacy` INT(10) UNSIGNED NOT NULL DEFAULT
 ALTER TABLE  `organizations` ADD  `defaultencodingprofilegroupid` INT( 10 ) UNSIGNED NULL DEFAULT  '1' AFTER  `iselearningcoursesessionbound`;
 
 UPDATE organizations SET defaultencodingprofilegroupid = 1 WHERE issubscriber = 1;
+
+ALTER TABLE  `recordings` ADD  `encodinggroupid` INT UNSIGNED NULL DEFAULT NULL AFTER  `notifyaboutcomments`;
