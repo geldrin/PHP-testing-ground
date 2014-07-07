@@ -402,10 +402,6 @@ global $app, $debug, $jconf, $myjobid, $db;
 	if ( $type == "content" ) $iscontent_filter = " AND rv.iscontent = 1";
 	if ( $type == "all" ) $iscontent_filter = "";
 
-	$values = array(
-		'status' => $status
-	);
-
 	$db = db_maintain();
 
 	$query = "
@@ -424,7 +420,77 @@ global $app, $debug, $jconf, $myjobid, $db;
 	}
 
 	// Log status change
-	$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] All recording versions for recording id = " . $recordingid . " status have been changed to '" . $status . "'.", $sendmail = false);
+	$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] All recording versions for recording id = " . $recordingid . " have been changed to '" . $status . "' status.", $sendmail = false);
+
+	return true;
+}
+
+// Set recording version status only where listed statuses are set.
+// Important: When especially deleting recordings and recording versions, we cannot set
+// all recording version statuses to "markedfordeletion" blindly. This would affect recording versions
+// with undesired statuses such as "deleted" (removed earlier), going back to "markedfordeletion" again.
+function updateRecordingVersionStatusApplyFilter($recordingid, $status, $type = "recording", $statusfilter) {
+global $app, $debug, $jconf, $myjobid, $db;
+
+	if ( ( $type != "recording" ) and ( $type != "content" ) and ( $type != "all" ) ) return false;
+
+	if ( empty($status) ) return false;
+
+	if ( $type == "recording" ) $iscontent_filter = " AND rv.iscontent = 0";
+	if ( $type == "content" ) $iscontent_filter = " AND rv.iscontent = 1";
+	if ( $type == "all" ) $iscontent_filter = "";
+
+	$sql_statusfilter = "";
+	if ( !empty($statusfilter) ) {
+		$statuses2filter = explode("|", $statusfilter);
+		for ( $i = 0; $i < count($statuses2filter); $i++ ) {
+			$sql_statusfilter .= "'" . $statuses2filter[$i] . "'";
+			if ( $i < count($statuses2filter) - 1 ) $sql_statusfilter .= ",";
+		}
+		$sql_statusfilter = " AND rv.status IN (" . $sql_statusfilter . ")";
+	}
+
+	$db = db_maintain();
+
+	$query = "
+		UPDATE
+			recordings_versions as rv
+		SET
+			rv.status = '" . $status . "'
+		WHERE
+			rv.recordingid = " . $recordingid . $iscontent_filter . $sql_statusfilter;
+
+//echo $query . "\n";
+
+	try {
+		$rs = $db->Execute($query);
+	} catch (exception $err) {
+		$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] SQL query failed.\n" . trim(substr($query, 1, 255)) . "\n\nERR:\n" . trim(substr($err, 1, 255)), $sendmail = true);
+		return false;
+	}
+
+	// Log status change
+	$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] All filter = '" . $statusfilter . "' recording versions for recording id = " . $recordingid . " have been changed to '" . $status . "' status.", $sendmail = false);
+
+	return true;
+}
+
+// !!!!
+function updateRecordingEncodingProfile($recordingid, $encodinggroupid) {
+global $app, $debug, $jconf, $myjobid;
+
+	if ( empty($encodinggroupid) ) return false;
+
+	$values = array(
+		'encodinggroupid' => $encodinggroupid
+	);
+
+	$recordingVersionObj = $app->bootstrap->getModel('recordings');
+	$recordingVersionObj->select($recordingid);
+    $recordingVersionObj->updateRow($values);
+
+	// Log change
+	$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Recording id = " . $recordingid . " encoding group changed to '" . $encodinggroupid . "'.", $sendmail = false);
 
 	return true;
 }

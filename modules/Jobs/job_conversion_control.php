@@ -33,7 +33,7 @@ if ( is_file( $app->config['datapath'] . 'jobs/' . $jconf['jobid_conv_control'] 
 
 // Log related init
 $debug = Springboard\Debug::getInstance();
-$debug->log($jconf['log_dir'], $jconf['jobid_conv_control'] . ".log", "Job: " . $jconf['jobid_conv_control'] . " started", $sendmail = false);
+$debug->log($jconf['log_dir'], $jconf['jobid_conv_control'] . ".log", "*************************** Job: " . $jconf['jobid_conv_control'] . " started ***************************", $sendmail = false);
 $myjobid = $jconf['jobid_conv_control'];
 
 clearstatcache();
@@ -42,11 +42,18 @@ clearstatcache();
 $app->watchdog();
 	
 // Establish database connection
-$db = db_maintain();
+//$db = db_maintain();
 
 // !!!!
 //updateRecordingStatus(9, null, "smil");
 //updateRecordingStatus(9, null, "contentsmil");
+/*
+$filter = $jconf['dbstatus_copystorage_ok'] . "|" . $jconf['dbstatus_conv'] . "|" . $jconf['dbstatus_convert'] . "|" . $jconf['dbstatus_stop'] . "|" . $jconf['dbstatus_copystorage'] . "|" . $jconf['dbstatus_copyfromfe'] . "|" . $jconf['dbstatus_copyfromfe_ok'] . "|" . $jconf['dbstatus_reconvert'];
+updateRecordingVersionStatusApplyFilter(89, "markedfordeletion", $type = "recording", "onstorage|converting");
+updateRecordingVersionStatusApplyFilter(89, "markedfordeletion", $type = "recording", $filter);
+
+exit;
+*/
 
 // Query new uploads and insert recording versions
 $recordings = getNewUploads();
@@ -59,18 +66,32 @@ if ( $recordings !== false ) {
 
 //var_dump($recording);
 
-		//// Recording level reconvert: mark all recording versions to be deleted
-		// Recording
-/*		if ( $recording['status'] == $jconf['dbstatus_reconvert'] ) {
-			updateRecordingVersionStatusAll($recording['id'], $jconf['dbstatus_markedfordeletion'], "recording");
-		}
-		// Content
+		// ## Recording level reconvert: mark all recording versions to be deleted (onstorage, convert, converting, stop, copy*, reconvert)
+		$isrecording_reconvert_force = false;
+		$filter = $jconf['dbstatus_copystorage_ok'] . "|" . $jconf['dbstatus_conv'] . "|" . $jconf['dbstatus_convert'] . "|" . $jconf['dbstatus_stop'] . "|" . $jconf['dbstatus_copystorage'] . "|" . $jconf['dbstatus_copyfromfe'] . "|" . $jconf['dbstatus_copyfromfe_ok'] . "|" . $jconf['dbstatus_reconvert'];
+		// Content: Do content first. If legacy encoded, we will reconvert recording
 		if ( $recording['contentstatus'] == $jconf['dbstatus_reconvert'] ) {
-			updateRecordingVersionStatusAll($recording['id'], $jconf['dbstatus_markedfordeletion'], "content");
+			$debug->log($jconf['log_dir'], $jconf['jobid_conv_control'] . ".log", "[INFO] Content reconvert for recordingid = " . $recording['id'] . " (" . $recording['contentmastervideofilename'] . ").", $sendmail = false);
+			updateRecordingVersionStatusApplyFilter($recording['id'], $jconf['dbstatus_markedfordeletion'], "content", $filter);
+			// Is recording encoded with a legacy encoding group?
+			$encodinggroup = getEncodingProfileGroup($recording['encodinggroupid']);
+			if ( $encodinggroup !== false ) {
+				if ( $encodinggroup['islegacy'] == 1 ) $isrecording_reconvert_force = true;
+			}
 		}
-*/
+		// Recording: Reconvert. If recording was legacy encoded, then force reconvert.
+		if ( ( $recording['status'] == $jconf['dbstatus_reconvert'] ) or $isrecording_reconvert_force ) {
+			$debug->log($jconf['log_dir'], $jconf['jobid_conv_control'] . ".log", "[INFO] Recording reconvert for recordingid = " . $recording['id'] . " (" . $recording['mastervideofilename'] . ").", $sendmail = false);
+			// Force "reconvert", set status fields
+			if ( $recording['status'] != $jconf['dbstatus_reconvert'] ) {
+				$debug->log($jconf['log_dir'], $jconf['jobid_conv_control'] . ".log", "[INFO] Recording reconvert forced by legacy encoding profile group.", $sendmail = false);
+				$recording['status'] = $jconf['dbstatus_reconvert'];
+				updateRecordingStatus($recording['id'], $jconf['dbstatus_reconvert'], "recording");
+			}
+			updateRecordingVersionStatusApplyFilter($recording['id'], $jconf['dbstatus_markedfordeletion'], "recording", $filter);
+		}
 
-		//// Insert recording versions (recording_versions)
+		// ## Insert recording versions (recording_versions)
 		insertRecordingVersions($recording);
 
 		$recordings->MoveNext();
@@ -78,8 +99,6 @@ if ( $recordings !== false ) {
 }
 
 // Upload: make recording status "onstorage" when a recording version is ready
-// ...
-echo "getReadyConversions()\n";
 $recordings = getReadyConversions();
 if ( $recordings !== false ) {
 
@@ -134,9 +153,10 @@ if ( $recordings !== false ) {
 		$recordings->MoveNext();
 	}
 }
-// TODO:
-// Error mail???? Hiba a status/contentstatus mezőkben jelenik meg. Ha egy recversion meghal, attól még lehet jó a többi??????
-// Mobil: mikor kesz?
+
+// Fail recordings:
+// - Ha a recversion meghal, attol meg lehet jo a kovetkezo?
+// - Hasonloan a getReadyConversions()-hez lekerdezni a hibas recversion listat es ha mind elfailelt, akkor kuldeni a usernak valami hibauzenetet? 
 
 // SMIL: generate new SMIL files
 $err = generateRecordingSMILs("recording");
@@ -170,18 +190,18 @@ global $jconf, $debug, $db, $app;
 			r.mastervideofilename,
 			r.contentmastervideofilename,
 			r.organizationid,
+			r.encodinggroupid,
 			o.defaultencodingprofilegroupid
 		FROM
 			recordings AS r,
 			organizations AS o
 		WHERE
 			( ( r.mastersourceip = '" . $node . "' AND ( r.status = '" . $jconf['dbstatus_uploaded'] . "' OR r.status = '" . $jconf['dbstatus_reconvert'] . "' ) ) OR
-			( r.contentmastersourceip = '" . $node . "' AND ( r.contentstatus = '" . $jconf['dbstatus_uploaded'] . "' OR r.status = '" . $jconf['dbstatus_reconvert'] . "' ) ) ) AND
+			( r.contentmastersourceip = '" . $node . "' AND ( r.contentstatus = '" . $jconf['dbstatus_uploaded'] . "' OR r.contentstatus = '" . $jconf['dbstatus_reconvert'] . "' ) ) ) AND
 			r.organizationid = o.id
-AND r.id = 89
 		ORDER BY
 			r.id";
-
+// AND r.id = 89
 //echo $query . "\n";
 
 	try {
@@ -253,13 +273,17 @@ global $jconf, $debug, $db, $app;
 function insertRecordingVersions($recording) {
 global $db, $debug, $jconf, $app;
 
+	// Converter node selection
 	$converternodeid = selectConverterNode();
+
+	// Encoding group selection
+	$encodinggroupid = $recording['defaultencodingprofilegroupid'];
 
 	// Recording
 	$idx = "";
 	if ( ( $recording['status'] == $jconf['dbstatus_uploaded'] ) or  ( $recording['status'] == $jconf['dbstatus_reconvert'] ) ) {
 
-		$profileset = getEncodingProfileSet("recording", $recording['mastervideores'], $recording['defaultencodingprofilegroupid']);
+		$profileset = getEncodingProfileSet("recording", $recording['mastervideores'], $encodinggroupid);
 //var_dump($profileset);
 //exit;
 
@@ -280,8 +304,12 @@ global $db, $debug, $jconf, $app;
 				$recordingVersion = $app->bootstrap->getModel('recordings_versions');
 				$recordingVersion->insert($values);
 
-				$debug->log($jconf['log_dir'], $jconf['jobid_conv_control'] . ".log", "[INFO] Recording version for recordingid = " . $recording['id'] . " (" . $recording['mastervideofilename'] . ") inserted:\n\n" . print_r($values, true), $sendmail = false);
+				$debug->log($jconf['log_dir'], $jconf['jobid_conv_control'] . ".log", "[INFO] Recording version for recordingid = " . $recording['id'] . " (" . $recording['mastervideofilename'] . ") inserted (" . $profileset['encodingprofilegroupname'] . "):\n\n" . print_r($values, true), $sendmail = false);
+
 			}
+
+			// Update encoding profile group id (to help islegacy check)
+			updateRecordingEncodingProfile($recording['id'], $encodinggroupid);
 
 			// Status: uploaded -> converting
 			updateRecordingStatus($recording['id'], $jconf['dbstatus_conv'], "recording");
@@ -292,7 +320,7 @@ global $db, $debug, $jconf, $app;
 
 	if ( ( $recording['contentstatus'] == $jconf['dbstatus_uploaded'] ) or ( $recording['contentstatus'] == $jconf['dbstatus_reconvert'] ) ) {
 
-		$profileset = getEncodingProfileSet("content", $recording['contentmastervideores'], $recording['defaultencodingprofilegroupid']);
+		$profileset = getEncodingProfileSet("content", $recording['contentmastervideores'], $encodinggroupid);
 //echo "content profileset:\n";
 //var_dump($profileset);
 //exit;
@@ -314,7 +342,7 @@ global $db, $debug, $jconf, $app;
 				$recordingVersion = $app->bootstrap->getModel('recordings_versions');
 				$recordingVersion->insert($values);
 
-				$debug->log($jconf['log_dir'], $jconf['jobid_conv_control'] . ".log", "[INFO] Recording version for content recordingid = " . $recording['id'] . " (" . $recording['contentmastervideofilename'] . ") inserted:\n\n" . print_r($values, true), $sendmail = false);
+				$debug->log($jconf['log_dir'], $jconf['jobid_conv_control'] . ".log", "[INFO] Recording version for content recordingid = " . $recording['id'] . " (" . $recording['contentmastervideofilename'] . ") inserted (" . $profileset['encodingprofilegroupname'] . "):\n\n" . print_r($values, true), $sendmail = false);
 			}
 
 			// Status: uploaded -> converting
@@ -324,7 +352,7 @@ global $db, $debug, $jconf, $app;
 		}
 
 		// Mobile versions into recordings_versions. Use content resolution as background.
-		$profileset = getEncodingProfileSet("pip", $recording['contentmastervideores'], $recording['defaultencodingprofilegroupid']);
+		$profileset = getEncodingProfileSet("pip", $recording['contentmastervideores'], $encodinggroupid);
 //echo "PiP profileset:\n";
 //var_dump($profileset);
 //exit;
@@ -346,7 +374,7 @@ global $db, $debug, $jconf, $app;
 				$recordingVersion = $app->bootstrap->getModel('recordings_versions');
 				$recordingVersion->insert($values);
 
-				$debug->log($jconf['log_dir'], $jconf['jobid_conv_control'] . ".log", "[INFO] Inserting recording version for PiP recordingid = " . $recording['id'] . " inserted:\n\n" . print_r($values, true), $sendmail = false);
+				$debug->log($jconf['log_dir'], $jconf['jobid_conv_control'] . ".log", "[INFO] Inserting recording version for PiP recordingid = " . $recording['id'] . " inserted (" . $profileset['encodingprofilegroupname'] . "):\n\n" . print_r($values, true), $sendmail = false);
 			}
 
 		} else {
@@ -358,14 +386,13 @@ global $db, $debug, $jconf, $app;
 	return true;
 }
 
-function getEncodingProfileSet($profile_type, $resolution, $encoding_group) {
+function getEncodingProfileSet($profile_type, $resolution, $encodinggroupid) {
 global $db, $debug, $jconf;
 
 	if ( !empty($resolution) ) {
 		$tmp = explode("x", $resolution, 2);
 		$resx = $tmp[0];
 		$resy = $tmp[1];
-//		$ep_filter = "( ep.parentid IS NULL OR ( epprev.videobboxsizex < " . $resx . " AND " . $resx . " <= ep.videobboxsizex ) OR ( epprev.videobboxsizey < " . $resy . " AND " . $resy . " <= ep.videobboxsizey ) )";
 		$ep_filter = "( ep.parentid IS NULL OR ( epprev.videobboxsizex < " . $resx . " OR epprev.videobboxsizey < " . $resy . " ) )";
 	} else {
 		// No resolution, assume audio only input
@@ -373,8 +400,8 @@ global $db, $debug, $jconf;
 	}
 
 	// Encoding group filter: choose default if invalid value
-	if ( !empty($encoding_group) and $encoding_group > 0 ) {
-		$eg_filter = "eg.id = " . $encoding_group;
+	if ( !empty($encodinggroupid) and $encodinggroupid > 0 ) {
+		$eg_filter = "eg.id = " . $encodinggroupid;
 	} else {
 		$eg_filter = "eg.default = 1";
 	}
@@ -385,6 +412,8 @@ global $db, $debug, $jconf;
 		SELECT
 			eg.id AS encodingprofilegroupid,
 			eg.name AS encodingprofilegroupname,
+			eg.default,
+			eg.islegacy,
 			epg.encodingorder,
 			ep.id,
 			ep.parentid,
@@ -410,7 +439,7 @@ global $db, $debug, $jconf;
 			eg.disabled = 0 AND
 			ep.type = '" . $profile_type . "' AND " . $ep_filter;
 
-echo $query . "\n";
+//echo $query . "\n";
 
 	try {
 		$profileset = $db->getArray($query);
@@ -424,6 +453,40 @@ echo $query . "\n";
 
 	return $profileset;
 }
+
+function getEncodingProfileGroup($encodinggroupid) {
+global $db, $debug, $jconf;
+
+	// Encoding group filter: choose default if invalid value
+	if ( empty($encodinggroupid) ) return false;
+
+	$db = db_maintain();
+
+	$query = "
+		SELECT
+			eg.id,
+			eg.name,
+			eg.default,
+			eg.islegacy,
+			eg.disabled
+		FROM
+			encoding_groups AS eg
+		WHERE
+			eg.id = " . $encodinggroupid . " AND eg.disabled = 0";
+
+	try {
+		$encoding_group = $db->getArray($query);
+	} catch (exception $err) {
+		$debug->log($jconf['log_dir'], $jconf['jobid_conv_control'] . ".log", "[ERROR] Cannot query encoding group. SQL query failed.\n" . trim($query), $sendmail = true);
+		return false;
+	}
+
+	// Check if any record returned
+	if ( count($encoding_group) < 1 ) return false;
+
+	return $encoding_group[0];
+}
+
 
 function selectConverterNode() {
 global $debug, $jconf;
@@ -471,20 +534,21 @@ global $db, $app, $debug, $jconf;
 	// No pending SMILs
 	if ( $recordings->RecordCount() < 1 ) return false;
 
-/*
-<smil>
-    <head>
-    </head>
-    <body>
-        <switch>
-            <video src="mp4:20_320p_aligned.mp4" system-bitrate="264000"/>
-            <video src="mp4:20_360p_aligned.mp4" system-bitrate="700000"/>
-            <video src="mp4:20_480p_aligned.mp4" system-bitrate="1170000"/>
-            <video src="mp4:20_720p_aligned.mp4" system-bitrate="2500000"/>
-        </switch>
-    </body>
-</smil>
-*/
+	/*
+	SMIL example:
+		<smil>
+			<head>
+			</head>
+			<body>
+				<switch>
+					<video src="mp4:20_320p_aligned.mp4" system-bitrate="264000"/>
+					<video src="mp4:20_360p_aligned.mp4" system-bitrate="700000"/>
+					<video src="mp4:20_480p_aligned.mp4" system-bitrate="1170000"/>
+					<video src="mp4:20_720p_aligned.mp4" system-bitrate="2500000"/>
+				</switch>
+			</body>
+		</smil>
+	*/
 
 	// SMIL header and footer tags
 	$smil_header = "<smil>\n\t<head>\n\t</head>\n\t<body>\n\t\t<switch>\n";
@@ -494,7 +558,7 @@ global $db, $app, $debug, $jconf;
 
 		$recording = $recordings->fields;
 
-var_dump($recording);
+//var_dump($recording);
 
 		// Get all recording versions for this recording (or content)
 		$recording_versions = getRecordingVersionsForRecording($recording['id'], $type);
@@ -517,7 +581,7 @@ var_dump($recording);
 		}
 		$smil .= $smil_footer;
 
-echo $smil . "\n";
+//echo $smil . "\n";
 
 		$smil_filename_suffix = "";
 		if ( $idx == "content" ) $smil_filename_suffix = "_content";
@@ -533,7 +597,7 @@ echo $smil . "\n";
 
 		// SSH: copy SMIL file to server
 		$smil_remote_filename = $app->config['recordingpath'] . ( $recording['id'] % 1000 ) . "/" . $recording['id'] . "/" . $recording['id'] . $smil_filename_suffix . ".smil";
-echo $smil_remote_filename . "\n";
+//echo $smil_remote_filename . "\n";
 
 //function ssh_filecopy2($server, $file_src, $file_dst, $isdownload = true) {
 		$err = ssh_filecopy2($recording[$idx . 'mastersourceip'], $smil_filename, $smil_remote_filename, false);
@@ -596,8 +660,7 @@ global $db, $app, $jconf, $debug;
 		ORDER BY
 			rv.bandwidth";
 
-echo $query . "\n";
-//if ( $type == "content" ) exit;
+//echo $query . "\n";
 
 	try {
 		$recording_versions = $db->Execute($query);
