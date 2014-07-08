@@ -777,20 +777,42 @@ class Livefeeds extends \Springboard\Model {
   
   public function getStatistics( $filter ) {
 
+    $table = 'statistics_live_5min';
+    $step  = 300; // 5perc
+
+    if ( isset( $filter['starttimestamp'] ) and isset( $filter['endtimestamp'] ) ) {
+      $startts = strtotime( $filter['starttimestamp'] );
+      $endts   = strtotime( $filter['endtimestamp'] );
+      $diff    = $endts - $startts;
+
+      if ( $diff < 604800 ) { // 1 het
+        $table = 'statistics_live_5min';
+        $step  = 300;
+      } elseif ( $diff < 1814400 ) { // 3 het
+        $table = 'statistics_live_hourly';
+        $step  = 3600;
+      } else {
+        $table = 'statistics_live_daily';
+        $step  = 86400;
+      }
+
+    }
+
     $where = array();
     $sql   = "
       SELECT
         UNIX_TIMESTAMP(s.timestamp) AS arraykey,
         UNIX_TIMESTAMP(s.timestamp) AS timestamp,
-        SUM( s.numberofflashwin )   AS numberofflashwin,
-        SUM( s.numberofflashmac )   AS numberofflashmac,
-        SUM( s.numberofflashlinux ) AS numberofflashlinux,
+        $step                       AS stepinterval,
+        SUM( s.numberofflashwin )   +
+        SUM( s.numberofflashmac )   +
+        SUM( s.numberofflashlinux ) +
+        SUM( s.numberofunknown )    AS numberofdesktop,
         SUM( s.numberofandroid )    AS numberofandroid,
         SUM( s.numberofiphone )     AS numberofiphone,
-        SUM( s.numberofipad )       AS numberofipad,
-        SUM( s.numberofunknown )    AS numberofunknown
+        SUM( s.numberofipad )       AS numberofipad
       FROM
-        statistics_live_5min AS s,
+        $table AS s,
         livefeed_streams AS ls
       WHERE
         s.livefeedstreamid = ls.id AND

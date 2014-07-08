@@ -2555,6 +2555,9 @@ a#currentusername span {
   width: 300px;
 }
 
+#live_analytics .singlecolumn .inputtext {
+  width: 186px;
+}
 #analyticscontainer {
   width: 950px;
   position: relative;
