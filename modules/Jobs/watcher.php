@@ -48,15 +48,35 @@ file_put_contents($jconf['temp_dir'] . 'processids', $processes);
 if ( $app->config['node_role'] == 'converter' ) {
 	// Converter node jobs
 	$jobs = array(
-		$jconf['jobid_media_convert']	=> 15*60,	// 15 minutes (if no update or ffmpeg is not running)
-		$jconf['jobid_content_convert']	=> 15*60,	// 15 minutes (if no update or ffmpeg or vlc is not running)
-		$jconf['jobid_vcr_control']		=> 15*60,	// 15 minutes
-		$jconf['jobid_document_index']	=> 5*60		// 5 minutes
+		$jconf['jobid_media_convert']	=> array(
+			'watchdogtimeoutsecs'	=> 15 * 60,
+			'supresswarnings'		=> false
+		),
+		$jconf['jobid_content_convert']	=> array(
+			'watchdogtimeoutsecs'	=> 15 * 60,
+			'supresswarnings'		=> true
+		),
+		$jconf['jobid_vcr_control']		=> array(
+			'watchdogtimeoutsecs'	=> 15 * 60,
+			'supresswarnings'		=> false
+		),
+		$jconf['jobid_document_index']	=> array(
+			'watchdogtimeoutsecs'	=> 5 * 60,
+			'supresswarnings'		=> false
+		),
+/*		$jconf['jobid_conv_control']	=> array(
+			'watchdogtimeoutsecs'	=> 5 * 60,
+			'supresswarnings'		=> false
+		)
+*/
 	);
 } else {
 	// Front-end jobs
 	$jobs = array(
-		$jconf['jobid_upload_finalize']	=> 60
+		$jconf['jobid_upload_finalize']	=> array(
+			'watchdogtimeoutsecs'	=> 60,
+			'supresswarnings'		=> false
+		)
 	);
 }
 
@@ -77,24 +97,23 @@ if ( file_exists($stop_file) ) {
 	exit;
 }
 
+// Check job stop files one by one and report if any exists
 $jobs_isstopped = false;
 $jobs_stopped = "";
 $jobs_toskip = array();
-
-// Check job stop files one by one and report if any exists
-foreach ( $jobs as $job => $difference ) {
+foreach ( $jobs as $job => $job_info ) {
 	// Check if any stop file is present
 	$jobs_toskip[$job] = false;
 	$stop_file = $app->config['datapath'] . 'jobs/' . $job . '.stop';
 	if ( file_exists($stop_file) ) {
 		$jobs_isstopped = true;
-		$jobs_stopped .= $stop_file . "\n";
+		if ( $job_info['supresswarnings'] == false ) $jobs_stopped .= $stop_file . "\n";
 		$jobs_toskip[$job] = true;
 	}
 }
 
 // Report jobs stopped
-if ( $jobs_isstopped ) {
+if ( $jobs_isstopped and !empty($jobs_stopped) ) {
 	$msg = "WARNING: some jobs may not running. See stop file(s):\n\n" . $jobs_stopped . "\nRemove them to restart jobs. This message is sent once every hour.";
 	if ( ( $now_time > $alert_time_start ) and ( $now_time < $alert_time_end ) ) {
 		// Log: log to file using no DB, then send mail
@@ -119,12 +138,14 @@ $cmd = 'ps uax | grep "ffmpeg.*' . $check_string . '" | grep -v "grep" | wc -l 2
 exec($cmd, $output, $result);
 if ( isset($output[0]) ) if ( $output[0] > 0 ) $isrunning_contentconv = true;
 // Content conversion/VLC: check if running
+// !!! NEW CONV: REMOVE !!!
 $output = array();
 $cmd = 'ps uax | grep "cvlc" | grep -v "grep" | wc -l 2>&1';
 exec($cmd, $output, $result);
 if ( isset($output[0]) ) if ( $output[0] > 0 ) $isrunning_contentconv = true;
+// !!! NEW CONV: REMOVE !!!
 
-foreach ( $jobs as $job => $difference ) {
+foreach ( $jobs as $job => $job_info ) {
 
 	if ( $jobs_toskip[$job] == true ) continue;
 
@@ -200,7 +221,7 @@ foreach ( $jobs as $job => $difference ) {
 			$isrunning = false;
 			if ( stripos($job, "media") !== false ) $isrunning = $isrunning_mediaconv;
 			if ( stripos($job, "content") !== false ) $isrunning = $isrunning_contentconv;
-			if ( ( ( time() - $time ) >= $difference ) && ( $isrunning === false ) ) {
+			if ( ( ( time() - $time ) >= $job_info['watchdogtimeoutsecs'] ) && ( $isrunning === false ) ) {
 				$msg  = "Job " . $job . ".php is stalled.\n\nDetailed information:\n\n";
 				$msg .= $body . "\n\n";
 				// Log: log to file using no DB, then send mail
