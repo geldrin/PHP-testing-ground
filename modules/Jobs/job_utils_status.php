@@ -513,8 +513,6 @@ global $app, $debug, $jconf, $myjobid;
 		WHERE
 			rv.recordingid = " . $recordingid . $iscontent_filter . $sql_statusfilter;
 
-echo $query . "\n";
-
 	try {
 		$rs = $db->Execute($query);
 	} catch (exception $err) {

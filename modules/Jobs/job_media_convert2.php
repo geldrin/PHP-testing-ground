@@ -21,10 +21,11 @@ $app = new Springboard\Application\Cli(BASE_PATH, PRODUCTION);
 // Load jobs configuration file
 $app->loadConfig('modules/Jobs/config_jobs.php');
 $jconf = $app->config['config_jobs'];
+$myjobid = $jconf['jobid_media_convert'];
 
 // Log related init
 $debug = Springboard\Debug::getInstance();
-$debug->log($jconf['log_dir'], $jconf['jobid_media_convert'] . ".log", "Media conversion job started", $sendmail = false);
+$debug->log($jconf['log_dir'], $jconf['jobid_media_convert'] . ".log", "*************************** Job: Media conversion started ***************************", $sendmail = false);
 
 // Check operating system - exit if Windows
 if ( iswindows() ) {
@@ -36,7 +37,7 @@ if ( iswindows() ) {
 $log_buffer = array();
 
 // Start an infinite loop - exit if any STOP file appears
-while( /*!is_file( $app->config['datapath'] . 'jobs/job_media_convert.stop' ) and*/ !is_file( $app->config['datapath'] . 'jobs/all.stop' ) ) {
+while( !is_file( $app->config['datapath'] . 'jobs/' . myjobid . '2.stop' ) and !is_file( $app->config['datapath'] . 'jobs/all.stop' ) ) {
 	clearstatcache();
 	
 	while ( 1 ) {
@@ -161,17 +162,17 @@ while( /*!is_file( $app->config['datapath'] . 'jobs/job_media_convert.stop' ) an
 		if ( isset($uploader_user) ) $global_log .= "URL: http://" . $uploader_user['domain'] . "/" . $uploader_user['language'] . "/recordings/details/" . $recording['id'] . "\n\n";
 		$conversion_duration = time() - $total_duration;
 		$hms = secs2hms($conversion_duration);
-		if ( !isset($log_buffer[$recording['id']) ) {
-			$log_buffer[$recording['id'] = $global_log;
+		if ( !isset($log_buffer[$recording['id']]) ) {
+			$log_buffer[$recording['id']] = $global_log;
 		} else {
-			$log_buffer[$recording['id'] .= "---\n\n" . $global_log;
+			$log_buffer[$recording['id']] .= "---\n\n" . $global_log;
 		}
 		// Log this recording version conversion summary
 		log_recording_conversion($recording['id'], $jconf['jobid_media_convert'], "-", "[OK] Successful media conversion in " . $hms . " time.\n\nConversion summary:\n\n" . $global_log, "-", "-", $conversion_duration, false);
 		// Have we finished? Then send all logs to admin
 		if ( getRecordingVersionsApplyStatusFilter($recording['id'], $type = "recording", "convert") === false ) {
-			$debug->log($jconf['log_dir'], $jconf['jobid_media_convert'] . ".log", "[INFO] Recording conversion summary.\n\n" . $log_buffer[$recording['id'], $sendmail = true);
-			unset($log_buffer[$recording['id']);
+			$debug->log($jconf['log_dir'], $jconf['jobid_media_convert'] . ".log", "[INFO] Recording conversion summary.\n\n" . $log_buffer[$recording['id']], $sendmail = true);
+			unset($log_buffer[$recording['id']]);
 		}
 
 	}	// End of while(1)
@@ -183,7 +184,9 @@ while( /*!is_file( $app->config['datapath'] . 'jobs/job_media_convert.stop' ) an
 
 	sleep($converter_sleep_length);
 }	// End of outer while
+
 $debug->log($jconf['log_dir'], $jconf['jobid_media_convert'] . ".log", "Media conversion job interrupted.", $sendmail = false);
+
 exit;
 
 

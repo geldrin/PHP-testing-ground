@@ -64,8 +64,8 @@ if ( $app->config['node_role'] == 'converter' ) {
 			'watchdogtimeoutsecs'	=> 5 * 60,
 			'supresswarnings'		=> false
 		),
-/*		$jconf['jobid_conv_control']	=> array(
-			'watchdogtimeoutsecs'	=> 5 * 60,
+/*		$jconf['jobid_media_convert2']	=> array(
+			'watchdogtimeoutsecs'	=> 15 * 60,
 			'supresswarnings'		=> false
 		)
 */
