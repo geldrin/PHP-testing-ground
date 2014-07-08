@@ -1,4 +1,6 @@
 <?php
+$fromdatetime  = substr( $this->channelModel->row['starttimestamp'], 0, 16 );
+$untildatetime = substr( $this->channelModel->row['endtimestamp'], 0, 16 );
 
 $config = array(
 
@@ -16,6 +18,46 @@ $config = array(
       WHERE channelid = '" . $this->channelModel->id . "'
     ",
     'value'       => $this->application->getParameter('feedids', array() ),
+  ),
+
+  'starttimestamp' => array(
+    'displayname' => $l('live', 'analytics_starttimestamp'),
+    'type'        => 'inputText',
+    'html'        =>
+      'class="inputtext inputbackground clearonclick datetimepicker margin" ' .
+      'data-datetimefrom="' . $fromdatetime . '"' .
+      'data-datetimeuntil="' . $untildatetime . '"'
+    ,
+    'rowlayout'   => $this->singlecolumnlayout,
+    'value'       => $fromdatetime,
+    'validation'  => array(
+      array(
+        'type'       => 'date',
+        'format'     => 'YYYY-MM-DD h:m',
+        'lesseqthan' => 'endtimestamp',
+        'help'       => $l('live', 'analytics_starttimestamp_help'),
+      )
+    ),
+  ),
+
+  'endtimestamp' => array(
+    'displayname' => $l('live', 'analytics_endtimestamp'),
+    'type'        => 'inputText',
+    'html'        =>
+      'class="inputtext inputbackground clearonclick datetimepicker margin" ' .
+      'data-datetimefrom="' . $fromdatetime . '"' .
+      'data-datetimeuntil="' . $untildatetime . '"'
+    ,
+    'rowlayout'   => $this->singlecolumnlayout,
+    'value'       => $untildatetime,
+    'validation'  => array(
+      array(
+        'type'          => 'date',
+        'format'        => 'YYYY-MM-DD h:m',
+        'greatereqthan' => 'starttimestamp',
+        'help'          => $l('live', 'analytics_endtimestamp_help'),
+      )
+    ),
   ),
 
 );

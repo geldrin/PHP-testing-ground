@@ -2132,6 +2132,8 @@ function setupComments() {
 }
 
 function setupLivestatistics( elem ) {
+  setupDefaultDateTimePicker('#starttimestamp');
+  setupDefaultDateTimePicker('#endtimestamp');
 
   var palette = new Rickshaw.Color.Palette( { scheme: 'munin' } );
   var dataurl = elem.attr('data-url');
@@ -2149,7 +2151,7 @@ function setupLivestatistics( elem ) {
 
   // analyticsdata global
   var graphdata = [];
-  var tickcount = Math.round( ( analyticsdata.endts - analyticsdata.startts ) / 300 );
+  var tickcount = Math.round( ( analyticsdata.endts - analyticsdata.startts ) / analyticsdata.stepinterval );
 
   // prepare graphdata array
   for (var i = 0, j = analyticsdata.labels.length - 1; i <= j; i++) {
@@ -2169,13 +2171,13 @@ function setupLivestatistics( elem ) {
 
   };
 
-  for( var i = 0; i < tickcount; i++ ) {
-    var key = ( i * 300 ) + analyticsdata.startts;
+  for(var i = 0; i < tickcount; i++) {
+    var key = ( i * analyticsdata.stepinterval ) + analyticsdata.startts;
     pushData( key, analyticsdata.data[ key ] );
   }
 
   var series  = [];
-  for (var i = 0, j = analyticsdata.labels.length - 1; i <= j; i++) {
+  for (var i = analyticsdata.labels.length - 1; i >= 0; i--) {
 
     series.push({
       color: palette.color(),

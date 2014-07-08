@@ -17,6 +17,14 @@ class Form extends \Springboard\Controller\Form {
       <div class="radiolabel">%label%</div>
     </div>
   ';
+  public $singlecolumnlayout = '
+    <tr>
+      <td class="labelcolumn singlecolumn"><label for="%id%">%displayname%</label></td>
+    </tr>
+    <tr %errorstyle%>
+      <td class="elementcolumn singlecolumn">%prefix%%element%%postfix%%errordiv%</td>
+    </tr>
+  ';
 
   public function redirectToMainDomain() {}
   

@@ -9,6 +9,13 @@ class Analytics extends \Visitor\HelpForm {
   protected $channelModel;
   protected $feedModel;
   
+  private function validateDateTime( $value, $default = null ) {
+
+    if ( !preg_match('/^\d{4}-\d{2}-\d{2} \d{2}:{2}$/', $value ) )
+      return $default;
+
+  }
+
   public function init() {
 
     $this->channelModel = $this->controller->modelOrganizationAndUserIDCheck(
@@ -21,6 +28,14 @@ class Analytics extends \Visitor\HelpForm {
     
     $feeds   = $this->channelModel->getFeeds();
     $feedids = $this->application->getParameter('feedids', array() );
+    $starttime = $this->application->getParameter(
+      'starttimestamp',
+      substr( $this->channelModel->row['starttimestamp'], 0, 16 )
+    );
+    $endtime = $this->application->getParameter(
+      'endtimestamp',
+      substr( $this->channelModel->row['endtimestamp'], 0, 16 )
+    );
 
     // sanitize the feedids
     foreach( $feedids as $k => $v ) {
@@ -34,8 +49,8 @@ class Analytics extends \Visitor\HelpForm {
       $this->controller->redirect('');
 
     $filter = array(
-      'starttimestamp' => $this->channelModel->row['starttimestamp'],
-      'endtimestamp'   => $this->channelModel->row['endtimestamp'],
+      'starttimestamp' => $starttime,
+      'endtimestamp'   => $endtime,
       'livefeedids'    => $feedids,
     );
     $feedModel = $this->bootstrap->getModel('livefeeds');

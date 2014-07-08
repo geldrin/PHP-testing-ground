@@ -684,24 +684,26 @@ class Controller extends \Visitor\Controller {
     $l          = $this->bootstrap->getLocalization();
     $fieldtokey = array();
     $ret        = array(
-      'startts' => 0,
-      'endts'   => 0,
-      'labels'  => array(),
-      'data'    => array(),
+      'startts'      => 0,
+      'endts'        => 0,
+      'stepinterval' => 0,
+      'labels'       => array(),
+      'data'         => array(),
     );
 
     $firstdata = reset( $data );
     $lastdata  = end( $data );
 
-    $ret['startts'] = intval( $firstdata['timestamp'] );
-    $ret['endts']   = intval( $lastdata['timestamp'] );
+    $ret['stepinterval'] = intval( $firstdata['stepinterval'] );
+    $ret['startts']      = intval( $firstdata['timestamp'] );
+    $ret['endts']        = intval( $lastdata['timestamp'] );
 
     // prepare the chart labels
     foreach( $data as $value ) {
 
       foreach( $value as $field => $v ) {
 
-        if ( $field == 'timestamp' )
+        if ( $field == 'timestamp' or $field == 'stepinterval' )
           continue;
 
         $ret['labels'][] = $l('live', 'stats_' . $field );
@@ -722,7 +724,7 @@ class Controller extends \Visitor\Controller {
 
       foreach( $value as $field => $v ) {
 
-        if ( $field == 'timestamp' )
+        if ( $field == 'timestamp' or $field == 'stepinterval' )
           continue;
 
         $fieldkey = $fieldtokey[ $field ];
