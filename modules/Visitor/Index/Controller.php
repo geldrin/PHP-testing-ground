@@ -12,6 +12,9 @@ class Controller extends \Visitor\Controller {
     $newsModel       = $this->bootstrap->getModel('organizations_news');
     $user            = $this->bootstrap->getSession('user');
     
+    $this->toSmarty['defaultimage'] =
+      $this->bootstrap->staticuri . 'images/header_logo.png'
+    ;
     $this->toSmarty['welcome']      = true;
     $this->toSmarty['introduction'] = $this->organization['introduction'];
     $this->toSmarty['recordings']   = $recordingsModel->getRandomRecordings(
