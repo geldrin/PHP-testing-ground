@@ -25,7 +25,7 @@ $myjobid = $jconf['jobid_live_thumb'];
 
 // Log related init
 $debug = Springboard\Debug::getInstance();
-$debug->log($jconf['log_dir'], $myjobid . ".log", "Live thumbnail job started", $sendmail = false);
+$debug->log($jconf['log_dir'], $myjobid . ".log", "*************************** Job: Live thumbnail started ***************************", $sendmail = false);
 
 // Check operating system - exit if Windows
 if ( iswindows() ) {
@@ -35,6 +35,11 @@ if ( iswindows() ) {
 
 // Start an infinite loop - exit if any STOP file appears
 if ( is_file( $app->config['datapath'] . 'jobs/' . $myjobid . '.stop' ) or is_file( $app->config['datapath'] . 'jobs/all.stop' ) ) exit;
+
+if ( !is_writable($jconf['livestreams_dir']) ) {
+	$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Temp directory " . $jconf['livestreams_dir'] . " is not writeable.", $sendmail = false);
+	exit;
+}
 
 // Thumb sizes
 $res_wide   = explode("x", $jconf['thumb_video_medium'], 2);
@@ -46,7 +51,6 @@ clearstatcache();
 $app->watchdog();
 
 // Establish database connection
-$db = null;
 $db = db_maintain();
 
 $converter_sleep_length = $jconf['sleep_media'];
@@ -62,32 +66,8 @@ if ( $channels === false ) break;
 
 for ( $i = 0; $i < count($channels); $i++ ) {
 
-	//// Prepare temp directories
-	$temp_dir = "/tmp/" . $channels[$i]['streamid'] . "/";
-	// Base working directory
-	$err = create_remove_directory($temp_dir);
-	if ( !$err['code'] ) {
-		$debug->log($jconf['log_dir'], $myjobid . ".log", $err['message'] . "\n\nCOMMAND: " . $err['command'] . "\n\nRESULT: " . $err['result'], $sendmail = true);
-		return false;
-	}
-	// Wide frames
-	$err = create_remove_directory($temp_dir . $jconf['thumb_video_medium'] . "/");
-	if ( !$err['code'] ) {
-		$debug->log($jconf['log_dir'], $myjobid . ".log", $err['message'] . "\n\nCOMMAND: " . $err['command'] . "\n\nRESULT: " . $err['result'], $sendmail = true);
-		return false;
-	}
-	// 4:3 frames
-	$err = create_remove_directory($temp_dir . $jconf['thumb_video_small'] . "/");
-	if ( !$err['code'] ) {
-		$debug->log($jconf['log_dir'], $myjobid . ".log", $err['message'] . "\n\nCOMMAND: " . $err['command'] . "\n\nRESULT: " . $err['result'], $sendmail = true);
-		return false;
-	}
-	// High resolution wide frame
-	$err = create_remove_directory($temp_dir . $jconf['thumb_video_large'] . "/");
-	if ( !$err['code'] ) {
-		$debug->log($jconf['log_dir'], $myjobid . ".log", $err['message'] . "\n\nCOMMAND: " . $err['command'] . "\n\nRESULT: " . $err['result'], $sendmail = true);
-		return false;
-	}
+	// Temp directory
+	$temp_dir = $jconf['livestreams_dir'] . $channels[$i]['streamid'] . "/";
 
 	// RTMP URL - Use fallback server always
 	$rtmp_server = $app->config['fallbackstreamingserver'];
@@ -99,16 +79,42 @@ for ( $i = 0; $i < count($channels); $i++ ) {
 
 	$rtmp_url = sprintf("rtmp://%s/" . $wowza_app . "/", $rtmp_server) . $channels[$i]['wowzastreamid'];
 
-	$thumb_filename = "/tmp/" . $channels[$i]['streamid'] . "/" . $channels[$i]['streamid'] . ".png";
-	$ffmpeg_command = 'ffmpeg -i ' . $rtmp_url . ' -vf "thumbnail" -frames:v 1 ' . $thumb_filename;
+	$thumb_filename = "/tmp/" . $channels[$i]['streamid'] . "_" . rand(100000,999999) . ".png";
+	$ffmpeg_command = 'ffmpeg -v 0 -i ' . $rtmp_url . ' -vf "thumbnail" -frames:v 1 ' . $thumb_filename;
 	$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] ffmpeg command to be executed: " . $ffmpeg_command, $sendmail = false);
 
 	// Run ffmpeg
 	$err = runExternal($ffmpeg_command);
 
 	if ( is_readable($thumb_filename) and ( filesize($thumb_filename) > 0 ) ) {
+
 		$debug->log($jconf['log_dir'], $myjobid . ".log", "[OK] ffmpeg live thumb created. Error code = " . $err['code'] . ", lifefeed_stream.id = " . $channels[$i]['streamid'] . ", ffmpeg command = " . $ffmpeg_command . ". Full output:\n" . $err['cmd_output'], $sendmail = false);
 
+		// ## Prepare working directories
+		// Base working directory
+		$err = create_remove_directory($temp_dir);
+		if ( !$err['code'] ) {
+			$debug->log($jconf['log_dir'], $myjobid . ".log", $err['message'] . "\n\nCOMMAND: " . $err['command'] . "\n\nRESULT: " . $err['result'], $sendmail = true);
+			return false;
+		}
+		// Wide frames
+		$err = create_remove_directory($temp_dir . $jconf['thumb_video_medium'] . "/");
+		if ( !$err['code'] ) {
+			$debug->log($jconf['log_dir'], $myjobid . ".log", $err['message'] . "\n\nCOMMAND: " . $err['command'] . "\n\nRESULT: " . $err['result'], $sendmail = true);
+			return false;
+		}
+		// 4:3 frames
+		$err = create_remove_directory($temp_dir . $jconf['thumb_video_small'] . "/");
+		if ( !$err['code'] ) {
+			$debug->log($jconf['log_dir'], $myjobid . ".log", $err['message'] . "\n\nCOMMAND: " . $err['command'] . "\n\nRESULT: " . $err['result'], $sendmail = true);
+			return false;
+		}
+		// High resolution wide frame
+		$err = create_remove_directory($temp_dir . $jconf['thumb_video_large'] . "/");
+		if ( !$err['code'] ) {
+			$debug->log($jconf['log_dir'], $myjobid . ".log", $err['message'] . "\n\nCOMMAND: " . $err['command'] . "\n\nRESULT: " . $err['result'], $sendmail = true);
+			return false;
+		}
 	} else {
 		// ffmpeg error: default logo
 		$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] ffmpeg cannot get live thumb. Using default index photo instead. Error code = " . $err['code'] . ", lifefeed_stream.id = " . $channels[$i]['streamid'] . ", ffmpeg command = " . $ffmpeg_command . ". Full output:\n" . $err['cmd_output'], $sendmail = false);
