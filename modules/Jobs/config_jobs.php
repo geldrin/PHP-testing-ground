@@ -13,12 +13,13 @@ return array('config_jobs' => array(
 
 	// Directories
 	'temp_dir'						=> $this->config['convpath'],				// Temporary dir for jobs
-	'master_dir'					=> $this->config['convpath'] . 'master/',	// Master caching directory
-	'media_dir'						=> $this->config['convpath'] . 'media/',	// Temporary dir for media conversion
-	'content_dir'					=> $this->config['convpath'] . 'content/',	// Temporary dir for content conversion
-	'ocr_dir'						=> $this->config['convpath'] . 'ocr/',		// Temporary dir for ocr conversion
-	'doc_dir'						=> $this->config['convpath'] . 'doc/',		// Temporary dir for document conversion
-	'vcr_dir'						=> $this->config['convpath'] . 'vcr/',		// Temporary dir for VCR download/upload
+	'master_dir'					=> $this->config['convpath'] . 'master/',		// Master caching directory
+	'media_dir'						=> $this->config['convpath'] . 'media/',		// Temporary dir for media conversion
+	'content_dir'					=> $this->config['convpath'] . 'content/',		// Temporary dir for content conversion
+	'livestreams_dir'				=> $this->config['convpath'] . 'livestreams/',	// Temporary dir for live thumbnail
+	'ocr_dir'						=> $this->config['convpath'] . 'ocr/',			// Temporary dir for ocr conversion
+	'doc_dir'						=> $this->config['convpath'] . 'doc/',			// Temporary dir for document conversion
+	'vcr_dir'						=> $this->config['convpath'] . 'vcr/',			// Temporary dir for VCR download/upload
 	'job_dir'						=> $this->config['modulepath'] . 'Jobs/',
 	'log_dir'						=> $this->config['logpath'] . 'jobs/',
 	'wowza_log_dir'					=> '/var/log/wowza/',
@@ -126,14 +127,13 @@ return array('config_jobs' => array(
 
 	// FFMpeg related
 	'ffmpeg_alt'            => '/home/conv/ffmpeg/ffmpeg-git-20140623-64bit-static/ffmpeg', // current FFMpeg static build
-	'ffmpeg_loglevel'				=> 0,								// Loglevel
+	'ffmpeg_loglevel'				=> 30,								// Loglevel
 	'ffmpeg_threads'				=> 0,								// Threads to use (0 - automatic)
 	'ffmpeg_async_frames'			=> 10,								// Max. frames to skip when audio and video is out of sync
 	'ffmpeg_h264_passes'			=> 1,								// FFMpeg passes for H.264 (not operational!)
 	'ffmpeg_video_codec'			=> 'h264',
 	'ffmpeg_flags'					=> '-strict experimental',
 	'ffmpeg_audio_codec'			=> 'libfaac',						// Audio codec (libmp3lame or libfaac)
-	'ffmpeg_report_enabled'		=> true,
 	'max_duration_error'			=> 20,						// margin of error when comparing master and converted video lengths
 
 	// Thumbnails
