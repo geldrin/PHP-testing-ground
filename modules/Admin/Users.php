@@ -27,7 +27,7 @@ class Users extends \Springboard\Controller\Admin {
       $userModel->row['organizationid']
     );
     
-    if ( empty( $userModel->row ) )
+    if ( empty( $userModel->row ) or empty( $organization ) )
       $this->redirect('users');
     
     // eltesszuk a user azonosito hasht ami ha nincs meg az adott domainen
@@ -43,11 +43,11 @@ class Users extends \Springboard\Controller\Admin {
       strpos( $this->bootstrap->config['baseuri'], '/')
     );
     
-    if ( $_SERVER['SERVER_NAME'] != $orgModel->row['domain'] ) {
+    if ( $_SERVER['SERVER_NAME'] != $organization['domain'] ) {
       
       $this->checkAccess('admin');
       $cache->put( $hash );
-      $url = 'http://' . $orgModel->row['domain'] . $_SERVER['REQUEST_URI'];
+      $url = 'http://' . $organization['domain'] . $_SERVER['REQUEST_URI'];
       $this->redirect( $url );
       
     } elseif ( $_SERVER['SERVER_NAME'] == $basedomain ) {
@@ -63,10 +63,10 @@ class Users extends \Springboard\Controller\Admin {
     
     $cache->put("");
     $cache->expire();
-    $this->bootstrap->config['cookiedomain'] = $orgModel->row['cookiedomain'];
-    $this->bootstrap->config['sessionidentifier'] = $orgModel->row['domain'];
+    $this->bootstrap->config['cookiedomain'] = $organization['cookiedomain'];
+    $this->bootstrap->config['sessionidentifier'] = $organization['domain'];
     $userModel->registerForSession(); // sima user-kent register
-    $this->redirect( 'http://' . $orgModel->row['domain'] );
+    $this->redirect( $this->bootstrap->scheme . $organization['domain'] );
     
   }
   
