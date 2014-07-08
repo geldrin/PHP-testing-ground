@@ -16,7 +16,7 @@ RewriteEngine On
 <IfModule mod_ssl.c>
 # HTTPS FORCE
 RewriteCond %{HTTPS} off
-RewriteCond %{REQUEST_URI} !checkstreamaccess
+RewriteCond %{THE_REQUEST} !checkstreamaccess
 RewriteRule .* https://%{HTTP_HOST}%{REQUEST_URI} [redirect=301,L]
 Header set Strict-Transport-Security "max-age=86400"
 </IfModule>
