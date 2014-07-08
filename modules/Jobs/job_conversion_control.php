@@ -42,18 +42,7 @@ clearstatcache();
 $app->watchdog();
 	
 // Establish database connection
-//$db = db_maintain();
-
-// !!!!
-//updateRecordingStatus(9, null, "smil");
-//updateRecordingStatus(9, null, "contentsmil");
-/*
-$filter = $jconf['dbstatus_copystorage_ok'] . "|" . $jconf['dbstatus_conv'] . "|" . $jconf['dbstatus_convert'] . "|" . $jconf['dbstatus_stop'] . "|" . $jconf['dbstatus_copystorage'] . "|" . $jconf['dbstatus_copyfromfe'] . "|" . $jconf['dbstatus_copyfromfe_ok'] . "|" . $jconf['dbstatus_reconvert'];
-updateRecordingVersionStatusApplyFilter(89, "markedfordeletion", $type = "recording", "onstorage|converting");
-updateRecordingVersionStatusApplyFilter(89, "markedfordeletion", $type = "recording", $filter);
-
-exit;
-*/
+$db = db_maintain();
 
 // Query new uploads and insert recording versions
 $recordings = getNewUploads();
@@ -63,8 +52,6 @@ if ( $recordings !== false ) {
 
 		$recording = array();
 		$recording = $recordings->fields;
-
-//var_dump($recording);
 
 		// ## Recording level reconvert: mark all recording versions to be deleted (onstorage, convert, converting, stop, copy*, reconvert)
 		$isrecording_reconvert_force = false;
@@ -519,7 +506,8 @@ global $db, $app, $debug, $jconf;
 		FROM
 			recordings AS r
 		WHERE
-			r." . $idx . "status = '" . $jconf['dbstatus_copystorage_ok'] . "' AND 
+			r." . $idx . "status = '" . $jconf['dbstatus_copystorage_ok'] . "' AND
+			r." . $idx . "mastermediatype <> 'audio' AND
 			( r." . $idx . "smilstatus IS NULL OR r." . $idx . "smilstatus = '" . $jconf['dbstatus_regenerate'] . "' )
 		ORDER BY
 			r.id";

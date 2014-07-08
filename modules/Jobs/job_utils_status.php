@@ -460,8 +460,6 @@ global $app, $debug, $jconf, $myjobid, $db;
 		WHERE
 			rv.recordingid = " . $recordingid . $iscontent_filter . $sql_statusfilter;
 
-//echo $query . "\n";
-
 	try {
 		$rs = $db->Execute($query);
 	} catch (exception $err) {
@@ -470,12 +468,67 @@ global $app, $debug, $jconf, $myjobid, $db;
 	}
 
 	// Log status change
-	$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] All filter = '" . $statusfilter . "' recording versions for recording id = " . $recordingid . " have been changed to '" . $status . "' status.", $sendmail = false);
+	$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] All recording versions with filter = '" . $statusfilter . "' for recording id = " . $recordingid . " have been changed to '" . $status . "' status.", $sendmail = false);
 
 	return true;
 }
 
-// !!!!
+function getRecordingVersionsApplyStatusFilter($recordingid, $type = "recording", $statusfilter) {
+global $app, $debug, $jconf, $myjobid;
+
+	if ( ( $type != "recording" ) and ( $type != "content" ) and ( $type != "all" ) ) return false;
+
+	if ( $type == "recording" ) $iscontent_filter = " AND rv.iscontent = 0";
+	if ( $type == "content" ) $iscontent_filter = " AND rv.iscontent = 1";
+	if ( $type == "all" ) $iscontent_filter = "";
+
+	$sql_statusfilter = "";
+	if ( !empty($statusfilter) ) {
+		$statuses2filter = explode("|", $statusfilter);
+		for ( $i = 0; $i < count($statuses2filter); $i++ ) {
+			$sql_statusfilter .= "'" . $statuses2filter[$i] . "'";
+			if ( $i < count($statuses2filter) - 1 ) $sql_statusfilter .= ",";
+		}
+		$sql_statusfilter = " AND rv.status IN (" . $sql_statusfilter . ")";
+	}
+
+	$db = db_maintain();
+
+	$query = "
+		SELECT
+			rv.id,
+			rv.recordingid,
+			rv.encodingprofileid,
+			rv.encodingorder,
+			rv.qualitytag,
+			rv.filename,
+			rv.iscontent,
+			rv.status,
+			rv.resolution,
+			rv.bandwidth,
+			rv.isdesktopcompatible,
+			rv.ismobilecompatible
+		FROM
+			recordings_versions as rv
+		WHERE
+			rv.recordingid = " . $recordingid . $iscontent_filter . $sql_statusfilter;
+
+echo $query . "\n";
+
+	try {
+		$rs = $db->Execute($query);
+	} catch (exception $err) {
+		$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] SQL query failed.\n" . trim(substr($query, 1, 255)) . "\n\nERR:\n" . trim(substr($err, 1, 255)), $sendmail = true);
+		return false;
+	}
+
+	// Check if any record returned
+	if ( $rs->RecordCount() < 1 ) return false;
+
+	return true;
+}
+
+// Update recording encoding profile group
 function updateRecordingEncodingProfile($recordingid, $encodinggroupid) {
 global $app, $debug, $jconf, $myjobid;
 
