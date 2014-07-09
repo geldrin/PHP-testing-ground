@@ -44,45 +44,48 @@ file_put_contents($jconf['temp_dir'] . 'uptime', $uptime);
 $processes = `ps uax | egrep "job_|watcher" | grep -v "grep" 2>&1`;
 file_put_contents($jconf['temp_dir'] . 'processids', $processes);
 
-// Job list and watchdog timeouts
-if ( $app->config['node_role'] == 'converter' ) {
-	// Converter node jobs
-	$jobs = array(
+$node_role = $app->config['node_role'];
+
+$jobs = array(
+	'converter'	=> array(
 		$jconf['jobid_media_convert']	=> array(
+			'enabled'				=> true,
 			'watchdogtimeoutsecs'	=> 15 * 60,
 			'supresswarnings'		=> false
 		),
 		$jconf['jobid_content_convert']	=> array(
+			'enabled'				=> true,
 			'watchdogtimeoutsecs'	=> 15 * 60,
-			'supresswarnings'		=> true
+			'supresswarnings'		=> false
 		),
 		$jconf['jobid_vcr_control']		=> array(
+			'enabled'				=> true,
 			'watchdogtimeoutsecs'	=> 15 * 60,
 			'supresswarnings'		=> false
 		),
 		$jconf['jobid_document_index']	=> array(
+			'enabled'				=> true,
 			'watchdogtimeoutsecs'	=> 5 * 60,
 			'supresswarnings'		=> false
 		),
-/*		$jconf['jobid_media_convert2']	=> array(
+		$jconf['jobid_media_convert2']	=> array(
+			'enabled'				=> true,
 			'watchdogtimeoutsecs'	=> 15 * 60,
 			'supresswarnings'		=> false
 		)
-*/
-	);
-} else {
-	// Front-end jobs
-	$jobs = array(
+	),
+	'frontend'	=> array(
 		$jconf['jobid_upload_finalize']	=> array(
+			'enabled'				=> true,
 			'watchdogtimeoutsecs'	=> 60,
 			'supresswarnings'		=> false
 		)
-	);
-}
+	)
+);
 
 // Send alert of stopped jobs between 06:00:00 - 06:05:00
 $alert_time_start = 6 * 3600 + 0 * 60 + 0;
-$alert_time_end = 6 * 3600 + 5 * 60 + 0;
+$alert_time_end = 6 * 3600 + 5 * 60 - 1;
 $now_time = date('G') * 3600 + date('i') * 60 + date('s');
 // Check if all.stop file is present blocking all the jobs
 $stop_file = $app->config['datapath'] . 'jobs/all.stop';
@@ -101,7 +104,11 @@ if ( file_exists($stop_file) ) {
 $jobs_isstopped = false;
 $jobs_stopped = "";
 $jobs_toskip = array();
-foreach ( $jobs as $job => $job_info ) {
+foreach ( $jobs[$node_role] as $job => $job_info ) {
+
+	// Is job enabled?
+	if ( !$job_info['enabled'] ) continue;
+
 	// Check if any stop file is present
 	$jobs_toskip[$job] = false;
 	$stop_file = $app->config['datapath'] . 'jobs/' . $job . '.stop';
@@ -145,8 +152,12 @@ exec($cmd, $output, $result);
 if ( isset($output[0]) ) if ( $output[0] > 0 ) $isrunning_contentconv = true;
 // !!! NEW CONV: REMOVE !!!
 
-foreach ( $jobs as $job => $job_info ) {
+foreach ( $jobs[$node_role] as $job => $job_info ) {
 
+	// Is job enabled?
+	if ( !$job_info['enabled'] ) continue;
+
+	// Is there stop file for this job?
 	if ( $jobs_toskip[$job] == true ) continue;
 
 	$output = array();
