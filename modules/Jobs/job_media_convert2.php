@@ -37,7 +37,7 @@ if ( iswindows() ) {
 $log_buffer = array();
 
 // Start an infinite loop - exit if any STOP file appears
-while( !is_file( $app->config['datapath'] . 'jobs/' . myjobid . '2.stop' ) and !is_file( $app->config['datapath'] . 'jobs/all.stop' ) ) {
+while( !is_file( $app->config['datapath'] . 'jobs/' . $myjobid . '2.stop' ) and !is_file( $app->config['datapath'] . 'jobs/all.stop' ) ) {
 	clearstatcache();
 	
 	while ( 1 ) {
@@ -80,7 +80,7 @@ while( !is_file( $app->config['datapath'] . 'jobs/' . myjobid . '2.stop' ) and !
 		$total_duration = time();
 
 		// Start log entry
-		$global_log  = "Converting: " . $recording['id'] . "." . $recording['mastervideoextension'] . " (" . $encoding_profile['shortname'] . ")\n";
+		$global_log  = "Converting: " . $recording['id'] . "." . $recording['mastervideoextension'] . " (" . $encoding_profile['name'] . ")\n";
 		$global_log .= "Source front-end: " . $recording['mastersourceip'] . "\n";
 		$global_log .= "Original filename: " . $recording['mastervideofilename'] . "\n";
 		$global_log .= "Media length: " . secs2hms( $recording['masterlength'] ) . "\n";
