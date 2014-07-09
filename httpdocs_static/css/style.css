@@ -2899,3 +2899,7 @@ a#currentusername span {
   list-style-type: none;
   padding: 20px 5px;
 }
+
+#recordings_modifyclassification #channelslist {
+  max-width: 607px;
+}
