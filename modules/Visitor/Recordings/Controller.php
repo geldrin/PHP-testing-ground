@@ -1337,6 +1337,7 @@ class Controller extends \Visitor\Controller {
     $l    = $this->bootstrap->getLocalization();
     $form = $this->bootstrap->getForm('recordings_newcomment');
 
+    $form->submit = $l('recordings', 'submit_comment');
     $form->formopenlayout =
       '<form enctype="multipart/form-data" target="%target%" ' .
       'id="%id%" name="%name%" action="%action%" method="%method%">'

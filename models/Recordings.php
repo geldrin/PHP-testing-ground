@@ -1664,7 +1664,7 @@ class Recordings extends \Springboard\Model {
     $this->ensureObjectLoaded();
     
     if ( !$this->metadata )
-      throw new Exception('No metadata for the video found, please ->analyize() it beforehand!');
+      throw new \Exception('No metadata for the video found, please ->analyize() it beforehand!');
     
     if ( $this->metadata['mastermediatype'] == 'audio' )
       throw new InvalidFileTypeException('The file provided contains only audio, that is not supported');
@@ -1695,7 +1695,7 @@ class Recordings extends \Springboard\Model {
     
     $this->ensureObjectLoaded();
     if ( empty( $this->oldcontentstatuses ) )
-      throw new Exception('No oldcontentstatuses found, was there an addContentRecording before this?');
+      throw new \Exception('No oldcontentstatuses found, was there an addContentRecording before this?');
     
     // uj feltoltes
     $contentstatus = array(

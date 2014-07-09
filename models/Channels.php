@@ -424,7 +424,7 @@ class Channels extends \Springboard\Model {
     ");
     
     if ( !$channelid )
-      throw new Exception("favorite channel missing");
+      throw new \Exception("favorite channel missing");
     else
       return $channelid;
     
@@ -642,7 +642,7 @@ class Channels extends \Springboard\Model {
     }
     
     if ( !$user or !isset( $user['id'] ) )
-      throw new Exception('Invalid user specified');
+      throw new \Exception('Invalid user specified');
     
     $channelrecordingsModel = $this->bootstrap->getModel('channels_recordings');
     $channelrecordingsModel->addFilter('userid', $user['id'] );
