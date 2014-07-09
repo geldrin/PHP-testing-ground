@@ -54,20 +54,20 @@ if ( $recordings !== false ) {
 		$recording = $recordings->fields;
 
 		// ## Recording level reconvert: mark all recording versions to be deleted (onstorage, convert, converting, stop, copy*, reconvert)
-		$isrecording_reconvert_force = false;
+		$isreconvertforce = false;
 		$filter = $jconf['dbstatus_copystorage_ok'] . "|" . $jconf['dbstatus_conv'] . "|" . $jconf['dbstatus_convert'] . "|" . $jconf['dbstatus_stop'] . "|" . $jconf['dbstatus_copystorage'] . "|" . $jconf['dbstatus_copyfromfe'] . "|" . $jconf['dbstatus_copyfromfe_ok'] . "|" . $jconf['dbstatus_reconvert'];
 		// Content: Do content first. If legacy encoded, we will reconvert recording
 		if ( $recording['contentstatus'] == $jconf['dbstatus_reconvert'] ) {
 			$debug->log($jconf['log_dir'], $jconf['jobid_conv_control'] . ".log", "[INFO] Content reconvert for recordingid = " . $recording['id'] . " (" . $recording['contentmastervideofilename'] . ").", $sendmail = false);
-			updateRecordingVersionStatusApplyFilter($recording['id'], $jconf['dbstatus_markedfordeletion'], "content", $filter);
+			updateRecordingVersionStatusApplyFilter($recording['id'], $jconf['dbstatus_markedfordeletion'], "content|pip", $filter);
 			// Is recording encoded with a legacy encoding group?
 			$encodinggroup = getEncodingProfileGroup($recording['encodinggroupid']);
 			if ( $encodinggroup !== false ) {
-				if ( $encodinggroup['islegacy'] == 1 ) $isrecording_reconvert_force = true;
+				if ( $encodinggroup['islegacy'] == 1 ) $isreconvertforce = true;
 			}
 		}
 		// Recording: Reconvert. If recording was legacy encoded, then force reconvert.
-		if ( ( $recording['status'] == $jconf['dbstatus_reconvert'] ) or $isrecording_reconvert_force ) {
+		if ( ( $recording['status'] == $jconf['dbstatus_reconvert'] ) or $isreconvertforce ) {
 			$debug->log($jconf['log_dir'], $jconf['jobid_conv_control'] . ".log", "[INFO] Recording reconvert for recordingid = " . $recording['id'] . " (" . $recording['mastervideofilename'] . ").", $sendmail = false);
 			// Force "reconvert", set status fields
 			if ( $recording['status'] != $jconf['dbstatus_reconvert'] ) {
@@ -291,7 +291,7 @@ global $db, $debug, $jconf, $app;
 				$recordingVersion = $app->bootstrap->getModel('recordings_versions');
 				$recordingVersion->insert($values);
 
-				$debug->log($jconf['log_dir'], $jconf['jobid_conv_control'] . ".log", "[INFO] Recording version for recordingid = " . $recording['id'] . " (" . $recording['mastervideofilename'] . ") inserted (" . $profileset['encodingprofilegroupname'] . "):\n\n" . print_r($values, true), $sendmail = false);
+				$debug->log($jconf['log_dir'], $jconf['jobid_conv_control'] . ".log", "[INFO] Recording version for recordingid = " . $recording['id'] . " (" . $recording['mastervideofilename'] . ") inserted (" . $profileset[$i]['name'] . "):\n\n" . print_r($values, true), $sendmail = false);
 
 			}
 
@@ -329,7 +329,7 @@ global $db, $debug, $jconf, $app;
 				$recordingVersion = $app->bootstrap->getModel('recordings_versions');
 				$recordingVersion->insert($values);
 
-				$debug->log($jconf['log_dir'], $jconf['jobid_conv_control'] . ".log", "[INFO] Recording version for content recordingid = " . $recording['id'] . " (" . $recording['contentmastervideofilename'] . ") inserted (" . $profileset['encodingprofilegroupname'] . "):\n\n" . print_r($values, true), $sendmail = false);
+				$debug->log($jconf['log_dir'], $jconf['jobid_conv_control'] . ".log", "[INFO] Recording version for content recordingid = " . $recording['id'] . " (" . $recording['contentmastervideofilename'] . ") inserted (" . $profileset[$i]['name'] . "):\n\n" . print_r($values, true), $sendmail = false);
 			}
 
 			// Status: uploaded -> converting
@@ -361,7 +361,7 @@ global $db, $debug, $jconf, $app;
 				$recordingVersion = $app->bootstrap->getModel('recordings_versions');
 				$recordingVersion->insert($values);
 
-				$debug->log($jconf['log_dir'], $jconf['jobid_conv_control'] . ".log", "[INFO] Inserting recording version for PiP recordingid = " . $recording['id'] . " inserted (" . $profileset['encodingprofilegroupname'] . "):\n\n" . print_r($values, true), $sendmail = false);
+				$debug->log($jconf['log_dir'], $jconf['jobid_conv_control'] . ".log", "[INFO] Inserting recording version for PiP recordingid = " . $recording['id'] . " inserted (" . $profileset[$i]['name'] . "):\n\n" . print_r($values, true), $sendmail = false);
 			}
 
 		} else {

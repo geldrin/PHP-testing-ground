@@ -429,23 +429,37 @@ global $app, $debug, $jconf, $myjobid, $db;
 // Important: When especially deleting recordings and recording versions, we cannot set
 // all recording version statuses to "markedfordeletion" blindly. This would affect recording versions
 // with undesired statuses such as "deleted" (removed earlier), going back to "markedfordeletion" again.
-function updateRecordingVersionStatusApplyFilter($recordingid, $status, $type = "recording", $statusfilter) {
+function updateRecordingVersionStatusApplyFilter($recordingid, $status, $typefilter, $statusfilter) {
 global $app, $debug, $jconf, $myjobid, $db;
 
-	if ( ( $type != "recording" ) and ( $type != "content" ) and ( $type != "all" ) ) return false;
+	// Check parameters
+	if ( empty($status) ) {
+		$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] updateRecordingVersionStatusApplyFilter() called with invalid status: " . $status, $sendmail = false);
+		return false;
+	}
+	if ( empty($typefilter) or ( $typefilter == "all" ) ) $typefilter = "recording|content|pip";
 
-	if ( empty($status) ) return false;
+	// Build type filter
+	$sql_typefilter = "";
+	$tmp = explode("|", $typefilter);
+	for ( $i = 0; $i < count($tmp); $i++ ) {
+		// Check if type is valid
+		if ( ( $tmp[$i] != "recording" ) and ( $tmp[$i] != "content" ) and ( $tmp[$i] != "pip" ) ) {
+			$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] updateRecordingVersionStatusApplyFilter() called with invalid type filter: " . $typefilter, $sendmail = false);
+			return false;
+		}
+		$sql_typefilter .= "'" . $tmp[$i] . "'";
+		if ( $i < count($tmp) - 1 ) $sql_typefilter .= ",";
+	}
+	$sql_typefilter = " AND ep.type IN (" . $sql_typefilter . ")";
 
-	if ( $type == "recording" ) $iscontent_filter = " AND rv.iscontent = 0";
-	if ( $type == "content" ) $iscontent_filter = " AND rv.iscontent = 1";
-	if ( $type == "all" ) $iscontent_filter = "";
-
+	// Build status filter
 	$sql_statusfilter = "";
 	if ( !empty($statusfilter) ) {
-		$statuses2filter = explode("|", $statusfilter);
-		for ( $i = 0; $i < count($statuses2filter); $i++ ) {
-			$sql_statusfilter .= "'" . $statuses2filter[$i] . "'";
-			if ( $i < count($statuses2filter) - 1 ) $sql_statusfilter .= ",";
+		$tmp = explode("|", $statusfilter);
+		for ( $i = 0; $i < count($tmp); $i++ ) {
+			$sql_statusfilter .= "'" . $tmp[$i] . "'";
+			if ( $i < count($tmp) - 1 ) $sql_statusfilter .= ",";
 		}
 		$sql_statusfilter = " AND rv.status IN (" . $sql_statusfilter . ")";
 	}
@@ -454,11 +468,14 @@ global $app, $debug, $jconf, $myjobid, $db;
 
 	$query = "
 		UPDATE
-			recordings_versions as rv
+			recordings_versions as rv, encoding_profiles as ep
 		SET
 			rv.status = '" . $status . "'
 		WHERE
-			rv.recordingid = " . $recordingid . $iscontent_filter . $sql_statusfilter;
+			rv.recordingid = " . $recordingid . " AND
+			rv.encodingprofileid = ep.id" . $sql_typefilter . $sql_statusfilter;
+
+//echo $query . "\n";
 
 	try {
 		$rs = $db->Execute($query);
@@ -468,7 +485,7 @@ global $app, $debug, $jconf, $myjobid, $db;
 	}
 
 	// Log status change
-	$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] All recording versions with filter = '" . $statusfilter . "' for recording id = " . $recordingid . " have been changed to '" . $status . "' status.", $sendmail = false);
+	$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] All recording versions with status filter = '" . $statusfilter . "' and type filter = '" . $typefilter . "' for recording id = " . $recordingid . " have been changed to '" . $status . "' status.", $sendmail = false);
 
 	return true;
 }
