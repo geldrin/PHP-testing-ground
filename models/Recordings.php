@@ -637,15 +637,15 @@ class Recordings extends \Springboard\Model {
     $audiobitrate      = null;
     
     if ( property_exists( $general, 'Duration' ))
-      $videolength = $this->getMediainfoNumericValue( $general->Duration[0] );
+      $videolength = $this->getMediainfoNumericValue( $general->Duration[0], $isfloat = true );
     elseif ( property_exists( $video, 'Duration' ))
-      $videolength = $this->getMediainfoNumericValue( $video->Duration[0] );
+      $videolength = $this->getMediainfoNumericValue( $video->Duration[0], $isfloat = true );
     elseif ( property_exists( $audio, 'Duration' ))
-      $videolength = $this->getMediainfoNumericValue( $audio->Duration[0] );
+      $videolength = $this->getMediainfoNumericValue( $audio->Duration[0], $isfloat = true );
     else
       throw new InvalidLengthException('Length not found for the media, output was ' . $output );
     
-    $videolength = round( $videolength / 1000 ); // mert milisec
+    $videolength = round($videolength / 1000, 2, PHP_ROUND_HALF_UP); // mert milisec
     
     if ( $videolength <= $config['recordings_seconds_minlength'] )
       throw new InvalidLengthException('Recording length was less than ' . $config['recordings_seconds_minlength'] );
