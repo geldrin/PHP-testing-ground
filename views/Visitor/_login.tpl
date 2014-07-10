@@ -24,6 +24,9 @@
             <div class="column first">
                 <div class="title">{#usermenu_organizations_title#}</div>
                 <ul>
+                  {if $member.isclientadmin}
+                    <li><a href="{$language}/organizations/accountstatus">{#usermenu_organizations_accountstatus#}</a></li>
+                  {/if}
                   <li><a href="{$language}/organizations/listnews">{#usermenu_organizations_news#}</a></li>
                   {if $member.isclientadmin}
                     <li><a href="{$language}/organizations/modifyintroduction">{#usermenu_organizations_introduction#}</a></li>
