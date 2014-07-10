@@ -2,7 +2,7 @@
 namespace Model;
 
 class Organizations extends \Springboard\Model\Multilingual {
-  public $multistringfields = array( 'name', 'nameshort', 'introduction', );
+  public $multistringfields = array( 'introduction', );
   
   public function checkDomain( $domain, $isstatic = false ) {
     
@@ -185,6 +185,66 @@ class Organizations extends \Springboard\Model\Multilingual {
 
     return $cache->get();
 
+  }
+
+  public function getUserCount() {
+    $this->ensureID();
+    $ret = array();
+    $ret['active'] = $this->db->getOne("
+      SELECT COUNT(*)
+      FROM users
+      WHERE
+        organizationid = '" . $this->id . "' AND
+        disabled       = '" . \Model\Users::USER_VALIDATED . "'
+      LIMIT 1
+    ");
+    $ret['inactive'] = $this->db->getOne("
+      SELECT COUNT(*)
+      FROM users
+      WHERE
+        organizationid = '" . $this->id . "' AND
+        disabled      <> '" . \Model\Users::USER_VALIDATED . "'
+      LIMIT 1
+    ");
+
+    return $ret;
+
+  }
+
+  public function getRecordingStats() {
+    $this->ensureID();
+    return $this->db->getRow("
+      SELECT
+        ROUND( SUM( recordingdatasize / ( 1024 * 1024 ) ) ) AS recordingdatasizemb,
+        ROUND( SUM( masterdatasize / ( 1024 * 1024 ) ) )    AS masterdatasizemb,
+        ROUND( SUM( masterlength ) )        AS masterlength,
+        ROUND( SUM( contentmasterlength ) ) AS contentmasterlength
+      FROM recordings
+      WHERE
+        organizationid = '" . $this->id . "' AND
+        status         = 'onstorage'
+      LIMIT 1
+    ");
+  }
+
+  public function getDepartmentCount() {
+    return $this->db->getOne("
+      SELECT COUNT(*)
+      FROM departments
+      WHERE
+        organizationid = '" . $this->id . "'
+      LIMIT 1
+    ");
+  }
+
+  public function getGroupCount() {
+    return $this->db->getOne("
+      SELECT COUNT(*)
+      FROM groups
+      WHERE
+        organizationid = '" . $this->id . "'
+      LIMIT 1
+    ");
   }
 
 }

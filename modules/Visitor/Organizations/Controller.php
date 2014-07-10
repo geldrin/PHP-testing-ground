@@ -10,6 +10,7 @@ class Controller extends \Visitor\Controller {
     'createnews'        => 'newseditor|clientadmin|editor',
     'modifynews'        => 'newseditor|clientadmin|editor',
     'modifyintroduction' => 'clientadmin',
+    'accountstatus'     => 'clientadmin',
   );
   
   public $forms = array(
@@ -77,6 +78,20 @@ class Controller extends \Visitor\Controller {
     
     return date('r', strtotime( $timestamp ) );
     
+  }
+
+  public function accountstatusAction() {
+
+    $orgModel = $this->bootstrap->getModel('organizations');
+    $orgModel->id = $this->organization['id'];
+
+    $this->toSmarty['usercount']       = $orgModel->getUserCount();
+    $this->toSmarty['recordingstats']  = $orgModel->getRecordingStats();
+    $this->toSmarty['groupcount']      = $orgModel->getGroupCount();
+    $this->toSmarty['departmentcount'] = $orgModel->getDepartmentCount();
+
+    return $this->smartyOutput('Visitor/Organizations/Accountstatus.tpl');
+
   }
 
 }
