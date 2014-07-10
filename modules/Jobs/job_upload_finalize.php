@@ -26,7 +26,7 @@ $myjobid = $jconf['jobid_upload_finalize'];
 
 // Log related init
 $debug = Springboard\Debug::getInstance();
-$debug->log($jconf['log_dir'], $myjobid . ".log", "Upload finalize job started", $sendmail = false);
+$debug->log($jconf['log_dir'], $myjobid . ".log", "*************************** Job: Upload finalize started ***************************", $sendmail = false);
 
 // Check operating system - exit if Windows
 if ( iswindows() ) {
@@ -53,9 +53,6 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_upload_finalize.stop' ) an
 
 		// Initialize log total duration timer
 		$start_time = time();
-
-//updateAttachedDocumentStatus(1, $jconf['dbstatus_uploaded']);
-//updateAttachedDocumentStatus(2, $jconf['dbstatus_uploaded']);
 
 		// Attached documents: query pending uploads
 		$docs = getUploadedAttachments();
@@ -234,9 +231,8 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_upload_finalize.stop' ) an
 	} // End of while(1)
 
 	// Recordings: finalize masters (once daily, after midnight)
-/*
 	$start_time = time();
-	$inwhichhour = 0;
+	$inwhichhour = 15;
 	if ( ( date("G") == $inwhichhour ) and ( empty($finalizedonelasttime) or ( ( $start_time - $finalizedonelasttime ) > 3600 * 24 ) ) ) {
 
 		$recordings = getRecordingMastersToFinalize();
@@ -267,10 +263,11 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_upload_finalize.stop' ) an
 
 		$finalizedonelasttime = time();
 	}
-*/
+
 	// Close DB connection if open
 	if ( is_resource($db->_connectionID) ) $db->close();
 
+	// Watchdog
 	$app->watchdog();
 
 	sleep($sleep_length);
@@ -286,6 +283,7 @@ global $app, $debug, $myjobid, $jconf;
 
 	$idx = "";
 	$suffix = "video";
+	if ( $recording[$idx . 'mastermediatype'] == "audio" ) $suffix = "audio";
 	if ( $type == "content" ) $idx = $suffix = "content";
 
 	$destination_path = $app->config['recordingpath'] . ( $recording['id'] % 1000 ) . "/" . $recording['id'] . "/master/";
@@ -458,7 +456,9 @@ global $jconf, $debug, $db, $app, $myjobid;
 			r.mastervideofilename,
 			r.contentmastervideofilename,
 			r.mastervideoextension,
-			r.contentmastervideoextension
+			r.contentmastervideoextension,
+			r.mastermediatype,
+			r.contentmastermediatype
 		FROM
 			recordings AS r
 		WHERE

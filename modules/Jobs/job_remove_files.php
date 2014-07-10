@@ -29,7 +29,7 @@ $debug = Springboard\Debug::getInstance();
 $debug->log($jconf['log_dir'], $myjobid . ".log", "*************************** Job: Remove files started ***************************", $sendmail = false);
 
 // Should we remove files and do any changes to DB?
-$isexecute = true;
+$isexecute = false;
 
 // Check operating system - exit if Windows
 if ( iswindows() ) {
@@ -92,11 +92,13 @@ if ( $recordings !== false ) {
 		}
 
 		// Log recording info before removal
-		$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Recording:\n" . $log_msg, $sendmail = false);
+		$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Removing recording:\n" . $log_msg, $sendmail = false);
 
 		// Remove recording directory
 		if ( $isexecute ) {
 
+			// ## Remove recording directory from storage
+			safeCheckPath($remove_path);
 			$err = remove_file_ifexists($remove_path);
 			if ( !$err['code'] ) {
 				// Error: we skip this one, admin must check it manually
@@ -106,35 +108,76 @@ if ( $recordings !== false ) {
 				continue;
 			}
 
-			// ## Update status fields
-			// Status, masterstatus and all active recording versions
+		}
+
+		// ## Remove master from upload area
+		if ( $recording['masterstatus'] == $jconf['dbstatus_uploaded'] ) {
+			$suffix = "video";
+			if ( $recording['mastermediatype'] == "audio" ) $suffix = "audio";
+			$remove_filename = $app->config['uploadpath'] . "recordings/" . $recording['id'] . "_" . $suffix . "." . $recording['mastervideoextension'];
+			$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Removing recording master from upload area: " . $remove_filename, $sendmail = false);
+			if ( $isexecute ) {
+				safeCheckPath($remove_filename);
+				$err = remove_file_ifexists($remove_filename);
+				if ( !$err['code'] ) {
+					// Error: we skip this one, admin must check it manually
+					$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Cannot remove file from upload area.\n" . $err['message'] . "\n\nCommand:\n" . $err['command'] . "\n\nOutput:\n" . $err['command_output'], $sendmail = true);
+				} else {
+					$debug->log($jconf['log_dir'], $myjobid . ".log", "[OK] Recording removed from upload area: id = " . $recording['id'] . ", filename = " . $remove_filename, $sendmail = false);
+				}
+			}
+		}
+
+		// ## Update status fields (recording)
+		if ( $isexecute ) {
+			// status, masterstatus and all active recording versions + empty smilstatus
 			updateRecordingStatus($recording['id'], $jconf['dbstatus_deleted'], "recording");
 			updateMasterRecordingStatus($recording['id'], $jconf['dbstatus_deleted'], "recording");
 			$filter = $jconf['dbstatus_copystorage_ok'] . "|" . $jconf['dbstatus_conv'] . "|" . $jconf['dbstatus_convert'] . "|" . $jconf['dbstatus_stop'] . "|" . $jconf['dbstatus_copystorage'] . "|" . $jconf['dbstatus_copyfromfe'] . "|" . $jconf['dbstatus_copyfromfe_ok'] . "|" . $jconf['dbstatus_reconvert'];
 			updateRecordingVersionStatusApplyFilter($recording['id'], $jconf['dbstatus_deleted'], "all", $filter);
-			// smilstatus := NULL
 			updateRecordingStatus($recording['id'], null, "smil");
-			if ( !empty($recording['contentmasterstatus']) ) {
-				// Update status fields: contentstatus, contentmasterstatus, contentsmilstatus
+		}
+
+		// ## Remove content from upload area
+		if ( $recording['contentmasterstatus'] == $jconf['dbstatus_uploaded'] ) {
+			$suffix = "content";
+			$remove_filename = $app->config['uploadpath'] . "recordings/" . $recording['id'] . "_" . $suffix . "." . $recording['contentmastervideoextension'];
+			$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Removing content master from upload area: " . $remove_filename, $sendmail = false);
+			if ( $isexecute ) {
+				safeCheckPath($remove_filename);
+				$err = remove_file_ifexists($remove_filename);
+				if ( !$err['code'] ) {
+					// Error: we skip this one, admin must check it manually
+					$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Cannot remove file from upload area.\n" . $err['message'] . "\n\nCommand:\n" . $err['command'] . "\n\nOutput:\n" . $err['command_output'], $sendmail = true);
+				} else {
+					$debug->log($jconf['log_dir'], $myjobid . ".log", "[OK] Recording content removed from upload area: id = " . $recording['id'] . ", filename = " . $remove_filename, $sendmail = false);
+				}
+			}
+		}
+
+
+		// ## Update status fields (content)
+		if ( !empty($recording['contentmasterstatus']) ) {
+			// contentstatus, contentmasterstatus + emtpy contentsmilstatus
+			if ( $isexecute ) {
 				updateRecordingStatus($recording['id'], $jconf['dbstatus_deleted'], "content");
 				updateMasterRecordingStatus($recording['id'], $jconf['dbstatus_deleted'], "content");
 				updateRecordingStatus($recording['id'], null, "contentsmil");
 			}
+		}
 
-			// Log physical removal
-			$debug->log($jconf['log_dir'], $myjobid . ".log", "[OK] Recording directory removed: id = " . $recording['id'] . ", dirname = " . $remove_path . ", size = " . $dir_size . "MB.", $sendmail = false);
+		// Update attached documents: of removed recording: status, delete document cache
+		$query = "
+			UPDATE
+				attached_documents
+			SET
+				status = '" . $jconf['dbstatus_deleted'] . "',
+				indexingstatus = NULL,
+				documentcache = NULL
+			WHERE
+				recordingid = " . $recording['id'];
 
-			// Update attached documents: of removed recording: status, delete document cache
-			$query = "
-				UPDATE
-					attached_documents
-				SET
-					status = '" . $jconf['dbstatus_deleted'] . "',
-					indexingstatus = NULL,
-					documentcache = NULL
-				WHERE
-					recordingid = " . $recording['id'];
-
+		if ( $isexecute ) {
 			try {
 				$rs = $db->Execute($query);
 			} catch (exception $err) {
@@ -142,21 +185,25 @@ if ( $recordings !== false ) {
 				$recordings->MoveNext();
 				continue;
 			}
+		}
 
-			// Log attachment cleanup
-			$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Recording id = " . $recording['id'] . " attachment(s) cleaned up.", $sendmail = false);
+		// Log attachment cleanup
+		$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Recording id = " . $recording['id'] . " attachment(s) cleaned up.", $sendmail = false);
 
-			// New recording and master size
-			$values = array(
-				'recordingdatasize'	=> 0,
-				'masterdatasize'	=> 0
-			);
+		// New recording and master size
+		$values = array(
+			'recordingdatasize'	=> 0,
+			'masterdatasize'	=> 0
+		);
+		if ( $isexecute ) {
 			$recDoc = $app->bootstrap->getModel('recordings');
 			$recDoc->select($recording['id']);
 			$recDoc->updateRow($values);
-			$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Recording and master data size updated to 0.", $sendmail = false);
+		}
+		$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Recording and master data size updated to 0.", $sendmail = false);
 
-		} // End of isexecute block
+		// Log physical removal
+		$debug->log($jconf['log_dir'], $myjobid . ".log", "[OK] Recording directory removed: id = " . $recording['id'] . ", dirname = " . $remove_path . ", size = " . $dir_size . "MB.", $sendmail = false);
 
 		// Watchdog
 		$app->watchdog();
@@ -186,52 +233,103 @@ if ( $recordings !== false ) {
 		// Main path
 		$remove_path = $app->config['recordingpath'] . ( $recording['id'] % 1000 ) . "/" . $recording['id'] . "/";
 
-		// Master path
-		$master_filename = $remove_path . "master/" . $recording['id'] . "_content." . $recording['contentmastervideoextension'];
+		// ## Remove content master from storage
+		if ( $recording['contentmasterstatus'] == $jconf['dbstatus_copystorage_ok'] ) {
 
-		// Log recording to remove
-		$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Removing content: " . $master_filename, $sendmail = false);
+			// Master path
+			$remove_filename = $remove_path . "master/" . $recording['id'] . "_content." . $recording['contentmastervideoextension'];
 
-		// Remove content master
-		if ( $isexecute ) {
+			// Log recording to remove
+			$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Removing content: " . $remove_filename, $sendmail = false);
 
-			// Size of the file to be removed
-			$size_toremove = filesize($master_filename);
+			if ( !$isexecute ) {
 
-			$err = remove_file_ifexists($master_filename);
-			if ( !$err['code'] ) {
-				// Error: we skip this one, admin must check it manually
-				$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Cannot remove recording.\n" . $err['message'] . "\nCommand:\n" . $err['command'] . "\nOutput:\n" . $err['command_output'], $sendmail = true);
-				// Next recording
-				$recordings->MoveNext();
-				continue;
+				// Size of the file to be removed
+				$size_toremove = filesize($remove_filename);
+
+				safeCheckPath($remove_filename);
+				$err = remove_file_ifexists($remove_filename);
+				if ( !$err['code'] ) {
+					// Error: we skip this one, admin must check it manually
+					$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Cannot remove recording.\n" . $err['message'] . "\nCommand:\n" . $err['command'] . "\nOutput:\n" . $err['command_output'], $sendmail = true);
+					// Next recording
+					$recordings->MoveNext();
+					continue;
+				}
 			}
+		}
 
-			// ## Update status fields
-			// contentmasterstatus := "deleted"
+		// ## Remove content from upload area
+		if ( $recording['contentmasterstatus'] == $jconf['dbstatus_uploaded'] ) {
+
+			$suffix = "content";
+
+			// Master path
+			$remove_filename = $app->config['uploadpath'] . "recordings/" . $recording['id'] . "_" . $suffix . "." . $recording['contentmastervideoextension'];
+
+			// Log recording to remove
+			$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Removing content: " . $remove_filename, $sendmail = false);
+
+			if ( !$isexecute ) {
+
+				// Size of the file to be removed
+				$size_toremove = filesize($remove_filename);
+
+				safeCheckPath($remove_filename);
+				$err = remove_file_ifexists($remove_filename);
+				if ( !$err['code'] ) {
+					// Error: we skip this one, admin must check it manually
+					$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Cannot remove file from upload area.\n" . $err['message'] . "\n\nCommand:\n" . $err['command'] . "\n\nOutput:\n" . $err['command_output'], $sendmail = true);
+					// Next recording
+					$recordings->MoveNext();
+					continue;
+				} else {
+					$debug->log($jconf['log_dir'], $myjobid . ".log", "[OK] Recording content removed from upload area: id = " . $recording['id'] . ", filename = " . $remove_filename, $sendmail = false);
+				}
+			}
+		}
+
+		// ## Update status fields
+		if ( !$isexecute ) {
+			// contentmasterstatus, contentstatus
 			updateMasterRecordingStatus($recording['id'], $jconf['dbstatus_deleted'], "content");
-			// contentstatus := "deleted"
 			updateRecordingStatus($recording['id'], $jconf['dbstatus_deleted'], "content");
 			// recordings_versions.status := "markedfordeletion" for all content surrogates (will be deleted in the next step, see below)
 			$filter = $jconf['dbstatus_copystorage_ok'] . "|" . $jconf['dbstatus_conv'] . "|" . $jconf['dbstatus_convert'] . "|" . $jconf['dbstatus_stop'] . "|" . $jconf['dbstatus_copystorage'] . "|" . $jconf['dbstatus_copyfromfe'] . "|" . $jconf['dbstatus_copyfromfe_ok'] . "|" . $jconf['dbstatus_reconvert'];
 			updateRecordingVersionStatusApplyFilter($recording['id'], $jconf['dbstatus_markedfordeletion'], "content", $filter);
-			// contentsmilstatus := NULL
+			// contentsmilstatus
 			updateRecordingStatus($recording['id'], null, "contentsmil");
+		}
 
-			// Log physical removal
-			$debug->log($jconf['log_dir'], $myjobid . ".log", "[OK] Content master was removed: id = " . $recordind['id'] . ", filename = " . $master_filename . ", size = " . round($size_toremove / 1024 / 1024, 2) . "MB.", $sendmail = false);
+		// Log physical removal
+		$debug->log($jconf['log_dir'], $myjobid . ".log", "[OK] Content master was removed: id = " . $recording['id'] . ", filename = " . $remove_filename . ", size = " . round($size_toremove / 1024 / 1024, 2) . "MB.", $sendmail = false);
 
-			// New recording and master size
+		// ## Update recording and master size
+		if ( $isexecute ) {
+			$err = directory_size($remove_path);
+			if ( $err['code'] === true ) {
+				$recording_dir_size = $err['size'];
+			} else {
+				$recording_dir_size = 0;
+				$debug->log($jconf['log_dir'], $myjobid . ".log", "[WARN] Cannot get recording directory size. Truncated to 0.", $sendmail = false);
+			}
+			$err = directory_size($remove_path . "master/");
+			if ( $err['code'] === true ) {
+				$master_dir_size = $err['size'];
+			} else {
+				$master_dir_size = 0;
+				$debug->log($jconf['log_dir'], $myjobid . ".log", "[WARN] Cannot get master directory size. Truncated to 0.", $sendmail = false);
+			}
 			$values = array(
-				'recordingdatasize'	=> $recording['recordingdatasize'] - $size_toremove,
-				'masterdatasize'	=> $recording['masterdatasize'] - $size_toremove
+				'recordingdatasize'	=> $recording_dir_size,
+				'masterdatasize'	=> $master_dir_size
 			);
 			$recDoc = $app->bootstrap->getModel('recordings');
 			$recDoc->select($recording['id']);
 			$recDoc->updateRow($values);
-			$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Recording and master data size updated.\n" . print_r($values, true), $sendmail = false);
 
-		} // End of file removal
+			$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Recording and master data size updated.\n" . print_r($values, true), $sendmail = false);
+		}
 
 		// Next recording
 		$recordings->MoveNext();
@@ -249,13 +347,28 @@ if ( $recversions !== false ) {
 
 		$recversion = $recversions->fields;
 
-		$recversion_filename = $app->config['recordingpath'] . ( $recversion['recordingid'] % 1000 ) . "/" . $recversion['recordingid'] . "/" . $recversion['filename'];
+		// Recording version path
+		$remove_path = $app->config['recordingpath'] . ( $recversion['recordingid'] % 1000 ) . "/" . $recversion['recordingid'] . "/";
+		$recversion_filename = $remove_path . $recversion['filename'];
+		// Log recording to remove
+		$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Removing recording version: id = " . $recversion['id'] . ", recid = " . $recversion['recordingid'] . ", filename = " . $recversion_filename, $sendmail = false);
+
+		// Filename: if empty then assume no recording version was ever made
+		if ( empty($recversion['filename']) ) {
+			// ## Update status fields
+			$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Recording version has no filename. Set status and exit.", $sendmail = false);
+			if ( $isexecute ) {
+				// recordings_versions.status := "deleted"
+				updateRecordingVersionStatus($recversion['id'], $jconf['dbstatus_deleted']);
+				// recording.(content)smilstatus := "regenerate"
+				updateRecordingStatus($recversion['recordingid'], $jconf['dbstatus_regenerate'], $idx . "smil");
+			}
+			$recversions->MoveNext();
+			continue;
+		}
 
 		$idx = "";
 		if ( $recversion['iscontent'] ) $idx = "content";
-
-		// Log recording to remove
-		$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Removing recording version: " . $recversion_filename, $sendmail = false);
 
 		// Remove content surrogate
 		if ( $isexecute ) {
@@ -263,12 +376,12 @@ if ( $recversions !== false ) {
 			// Size of the file to be removed
 			$size_toremove = filesize($recversion_filename);
 
+			safeCheckPath($recversion_filename);
 			$err = remove_file_ifexists($recversion_filename);
 			if ( !$err['code'] ) {
 				// Error: we skip this one, admin must check it manually
-				$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Cannot remove recording version.\n" . $err['message'] . "\nCommand:\n" . $err['command'] . "\nOutput:\n" . $err['command_output'], $sendmail = true);
-				$recversions->MoveNext();
-				continue;
+				$debug->log($jconf['log_dir'], $myjobid . ".log", "[WARN] Cannot remove recording version: recordingid = " . $recversion['recordingid'] . ", recordingversionid = " . $recversion['id'] . ", filename = " . $recversion_filename, $sendmail = false);
+				// We does not send any alarms nor exit, as recording versions might be removed earlier.
 			}
 
 			// ## Update status fields
@@ -278,11 +391,18 @@ if ( $recversions !== false ) {
 			updateRecordingStatus($recversion['recordingid'], $jconf['dbstatus_regenerate'], $idx . "smil");
 
 			// Log physical removal
-			$debug->log($jconf['log_dir'], $myjobid . ".log", "[OK] Recording version removed. Info: recordingid = " . $recversion['recordingid'] . ", recordingversionid = " . $recversion['id'] . ", filename = " . $recversion_filename . ", size = " . round($size_toremove / 1024 / 1024, 2) . "MB.", $sendmail = false);
+			$debug->log($jconf['log_dir'], $myjobid . ".log", "[OK] Recording version removed: recordingid = " . $recversion['recordingid'] . ", recordingversionid = " . $recversion['id'] . ", filename = " . $recversion_filename . ", size = " . round($size_toremove / 1024 / 1024, 2) . "MB.", $sendmail = false);
 
-			// New recording size
+			// ## Update recording and master size
+			$err = directory_size($remove_path);
+			if ( $err['code'] === true ) {
+				$recording_dir_size = $err['size'];
+			} else {
+				$recording_dir_size = 0;
+				$debug->log($jconf['log_dir'], $myjobid . ".log", "[WARN] Cannot get recording directory size. Truncated to 0.", $sendmail = false);
+			}
 			$values = array(
-				'recordingdatasize'	=> $recversion['recordingdatasize'] - $size_toremove
+				'recordingdatasize'	=> $recording_dir_size
 			);
 			$recDoc = $app->bootstrap->getModel('recordings');
 			$recDoc->select($recversion['recordingid']);
@@ -308,7 +428,8 @@ if ( $attachments !== false ) {
 		$attached_doc = $attachments->fields;
 
 		// Path and filename
-		$base_dir = $app->config['recordingpath'] . ( $attached_doc['rec_id'] % 1000 ) . "/" . $attached_doc['rec_id'] . "/attachments/";
+		$remove_path = $app->config['recordingpath'] . ( $attached_doc['rec_id'] % 1000 ) . "/" . $attached_doc['rec_id'] . "/";
+		$base_dir = $remove_path . "attachments/";
 		$base_filename = $attached_doc['id'] . "." . $attached_doc['masterextension'];
 		$filename = $base_dir . $base_filename;
 
@@ -321,6 +442,7 @@ if ( $attachments !== false ) {
 			// Size of the file to be removed
 			$size_toremove = filesize($filename);
 
+			safeCheckPath($filename);
 			$err = remove_file_ifexists($filename);
 			if ( !$err['code'] ) {
 				// Error: we skip this one, admin must check it manually
@@ -338,9 +460,16 @@ if ( $attachments !== false ) {
 			// Update attached document cache to NULL
 			updateAttachedDocumentCache($attached_doc['id'], null);
 
-			// New recording size
+			// ## Update recording and master size
+			$err = directory_size($remove_path);
+			if ( $err['code'] === true ) {
+				$recording_dir_size = $err['size'];
+			} else {
+				$recording_dir_size = 0;
+				$debug->log($jconf['log_dir'], $myjobid . ".log", "[WARN] Cannot get recording directory size. Truncated to 0.", $sendmail = false);
+			}
 			$values = array(
-				'recordingdatasize'	=> $attached_doc['recordingdatasize'] - $size_toremove
+				'recordingdatasize'	=> $recording_dir_size
 			);
 			$recDoc = $app->bootstrap->getModel('recordings');
 			$recDoc->select($attached_doc['rec_id']);
@@ -378,8 +507,6 @@ global $jconf, $db, $app;
 	if ( $type == "content" ) $idx = "content";
 
 	$node = $app->config['node_sourceip'];
-// !!!
-	$node = "stream.videosquare.eu";
 
 	$query = "
 		SELECT
@@ -397,6 +524,10 @@ global $jconf, $db, $app;
 			r.mastervideoextension,
 			r.contentmastervideofilename,
 			r.contentmastervideoextension,
+			r.mastermediatype,
+			r.contentmastermediatype,
+			r.recordingdatasize,
+			r.masterdatasize,
 			u.email,
 			o.id AS organizationid,
 			o.domain,
@@ -430,6 +561,9 @@ global $jconf, $db, $app;
 function queryRecordingsVersionsToRemove() {
 global $jconf, $db, $app;
 
+	$node = $app->config['node_sourceip'];
+// Multinode: csak azokat torolhessuk, amiket az erre a node-ra feltett file-bol generaltunk???
+
 	$query = "
 		SELECT
 			rv.id,
@@ -456,8 +590,6 @@ global $jconf, $db, $app;
 			rv.status = '" . $jconf['dbstatus_markedfordeletion'] . "' AND
 			rv.encodingprofileid = ep.id";
 
-//echo $query . "\n";
-
 	try {
 		$recversions = $db->Execute($query);
 	} catch (exception $err) {
@@ -477,7 +609,7 @@ global $jconf, $db, $app;
 function queryAttachmentsToRemove() {
 global $jconf, $db, $app;
 
-//	$node = $app->config['node_sourceip'];
+	$node = $app->config['node_sourceip'];
 
 	$query = "
 		SELECT
@@ -496,6 +628,7 @@ global $jconf, $db, $app;
 			users AS b,
 			recordings AS r
 		WHERE
+			a.sourceip = '" . $node . "' AND
 			a.status = '" . $jconf['dbstatus_markedfordeletion'] . "' AND
 			( a.indexingstatus IS NULL OR a.indexingstatus = '' OR a.indexingstatus = '" . $jconf['dbstatus_indexing_ok'] . "' ) AND
 			a.userid = b.id AND
@@ -515,6 +648,17 @@ global $jconf, $db, $app;
 	}
 
 	return $attachments;
+}
+
+// SAFE CHECK
+function safeCheckPath($remove_path) {
+
+	if ( ( stripos($remove_path, $app->config['recordingpath'] . "recordings/") === false ) and ( stripos($remove_path, $app->config['uploadpath'] . "recordings/") === false ) ) {
+		$debug->log($jconf['log_dir'], $myjobid . ".log", "[FATAL] Remove path check failed. SAFE EXIT. Invalid path: " . $remove_path, $sendmail = true);
+		exit;
+	}
+
+	return true;
 }
 
 ?>

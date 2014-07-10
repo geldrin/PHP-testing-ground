@@ -296,47 +296,49 @@ function secs2hms($i_secs) {
 function remove_file_ifexists($filename) {
 global $recording;
 
-  $err = array();
-  
-  $err['code'] = true;
-  $err['command'] = "-";
-  $err['command_output'] = "-";
-  $err['result'] = 0;
+	$err = array();
 
-  if ( !isset($filename) ) return $err;
-
-  if ( !file_exists($filename) ) return $err;
-
-  if ( is_dir($filename) ) {
-	$command = "rm -r -f " . $filename . " 2>&1";
-	if ( iswindows() ) {
-		$command = "rmdir /S /Q " . realpath($filename) . " 2>&1";
-	}
-	exec($command, $output, $result);
-	$output_string = implode("\n", $output);
-	$err['result'] = $result;
-	$err['command'] = $command;
-	$err['command_output'] = $output_string;
-	if ( $result != 0 ) {
-		$err['code'] = FALSE;
-		$err['message'] = "[ERROR] Cannot remove directory: " . $filename;
-		return $err;
-	}
-  } else {
-	$err['result'] = unlink($filename);
-	$err['command'] = "php: unlink(\"" . $filename . "\")";
+	$err['code'] = true;
+	$err['command'] = "-";
 	$err['command_output'] = "-";
-	if ( !$err['result'] ) {
-		$err['code'] = FALSE;
-		$err['message'] = "[ERROR] Cannot remove file: " . $filename;
-		return $err;
-	}
-  }
+	$err['result'] = 0;
 
-  $err['code'] = TRUE;
-  $err['message'] = "[OK] Removed file/directory: " . $filename;
-  
-  return $err;
+	// Safety check: WE DO NOT DELETE ANYTHING OUTSIDE STORAGE?????
+
+	if ( !isset($filename) ) return $err;
+
+	if ( !file_exists($filename) ) return $err;
+
+	if ( is_dir($filename) ) {
+		$command = "rm -r -f " . $filename . " 2>&1";
+		if ( iswindows() ) {
+			$command = "rmdir /S /Q " . realpath($filename) . " 2>&1";
+		}
+		exec($command, $output, $result);
+		$output_string = implode("\n", $output);
+		$err['result'] = $result;
+		$err['command'] = $command;
+		$err['command_output'] = $output_string;
+		if ( $result != 0 ) {
+			$err['code'] = FALSE;
+			$err['message'] = "[ERROR] Cannot remove directory: " . $filename;
+			return $err;
+		}
+	} else {
+		$err['result'] = unlink($filename);
+		$err['command'] = "php: unlink(\"" . $filename . "\")";
+		$err['command_output'] = "-";
+		if ( !$err['result'] ) {
+			$err['code'] = FALSE;
+			$err['message'] = "[ERROR] Cannot remove file: " . $filename;
+			return $err;
+		}
+	}
+
+	$err['code'] = TRUE;
+	$err['message'] = "[OK] Removed file/directory: " . $filename;
+
+	return $err;
 }
 
 // *************************************************************************
