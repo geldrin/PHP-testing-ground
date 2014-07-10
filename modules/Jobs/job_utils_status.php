@@ -622,7 +622,7 @@ global $app, $debug, $jconf, $myjobid;
 	}
 
 	// Log status change
-	$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Attached document id = " . $attachmentid . " cache has been updated to '" . $documentcache . "'.", $sendmail = false);
+	$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Attached document id = " . $attachmentid . " cache has been updated to '" . trim(substr($documentcache, 1, 50)) . "'.", $sendmail = false);
 
 	return true;
 }

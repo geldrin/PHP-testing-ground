@@ -26,12 +26,10 @@ $myjobid = $jconf['jobid_remove_files'];
 
 // Log related init
 $debug = Springboard\Debug::getInstance();
-$debug->log($jconf['log_dir'], $myjobid . ".log", "*************************** Job: Remove files started *************************** ", $sendmail = false);
+$debug->log($jconf['log_dir'], $myjobid . ".log", "*************************** Job: Remove files started ***************************", $sendmail = false);
 
-// Debug mode on/off
-$isdebug = true;
 // Should we remove files and do any changes to DB?
-$isexecute = false;
+$isexecute = true;
 
 // Check operating system - exit if Windows
 if ( iswindows() ) {
@@ -52,7 +50,7 @@ $db = db_maintain();
 
 // Should we delete files or just testing?
 if ( !$isexecute ) {
-	$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] NO FILES WILL BE REMOVED! isexecute = 1!\n", $sendmail = false);
+	$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] NO FILES WILL BE REMOVED! isexecute = false!\n", $sendmail = false);
 }
 
 // Recording to remove: delete all recording including master, surrogates, documents and index pictures
@@ -90,11 +88,11 @@ if ( $recordings !== false ) {
 		if ( $err['code'] === true ) {
 			$size_toremove += $err['size'];
 			$dir_size = round($err['size'] / 1024 / 1024, 2);
-			$log_msg .= "Recording size: " . $dir_size . "MB\n\n";
+			$log_msg .= "Recording size: " . $dir_size . "MB\n";
 		}
 
-		// Log recording to remove
-		$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Removing recording:\n" . $log_msg, $sendmail = false);
+		// Log recording info before removal
+		$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Recording:\n" . $log_msg, $sendmail = false);
 
 		// Remove recording directory
 		if ( $isexecute ) {
@@ -108,16 +106,13 @@ if ( $recordings !== false ) {
 				continue;
 			}
 
-			// Update status fields: status, masterstatus and all active recording versions
+			// ## Update status fields
+			// Status, masterstatus and all active recording versions
 			updateRecordingStatus($recording['id'], $jconf['dbstatus_deleted'], "recording");
 			updateMasterRecordingStatus($recording['id'], $jconf['dbstatus_deleted'], "recording");
-//			updateRecordingVersionStatusAll($recording['id'], $jconf['dbstatus_deleted'], "all");
 			$filter = $jconf['dbstatus_copystorage_ok'] . "|" . $jconf['dbstatus_conv'] . "|" . $jconf['dbstatus_convert'] . "|" . $jconf['dbstatus_stop'] . "|" . $jconf['dbstatus_copystorage'] . "|" . $jconf['dbstatus_copyfromfe'] . "|" . $jconf['dbstatus_copyfromfe_ok'] . "|" . $jconf['dbstatus_reconvert'];
 			updateRecordingVersionStatusApplyFilter($recording['id'], $jconf['dbstatus_deleted'], "all", $filter);
-// REMOVE!!!
-			update_db_mobile_status($recording['id'], $jconf['dbstatus_deleted']);
-// !!!
-			// smilstatus = NULL
+			// smilstatus := NULL
 			updateRecordingStatus($recording['id'], null, "smil");
 			if ( !empty($recording['contentmasterstatus']) ) {
 				// Update status fields: contentstatus, contentmasterstatus, contentsmilstatus
@@ -125,6 +120,9 @@ if ( $recordings !== false ) {
 				updateMasterRecordingStatus($recording['id'], $jconf['dbstatus_deleted'], "content");
 				updateRecordingStatus($recording['id'], null, "contentsmil");
 			}
+
+			// Log physical removal
+			$debug->log($jconf['log_dir'], $myjobid . ".log", "[OK] Recording directory removed: id = " . $recording['id'] . ", dirname = " . $remove_path . ", size = " . $dir_size . "MB.", $sendmail = false);
 
 			// Update attached documents: of removed recording: status, delete document cache
 			$query = "
@@ -145,6 +143,9 @@ if ( $recordings !== false ) {
 				continue;
 			}
 
+			// Log attachment cleanup
+			$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Recording id = " . $recording['id'] . " attachment(s) cleaned up.", $sendmail = false);
+
 			// New recording and master size
 			$values = array(
 				'recordingdatasize'	=> 0,
@@ -153,18 +154,21 @@ if ( $recordings !== false ) {
 			$recDoc = $app->bootstrap->getModel('recordings');
 			$recDoc->select($recording['id']);
 			$recDoc->updateRow($values);
-			$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Recording and master data size updated.\n\n" . print_r($values, true), $sendmail = false);
+			$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Recording and master data size updated to 0.", $sendmail = false);
 
-		} // End of file remove
+		} // End of isexecute block
 
 		// Watchdog
 		$app->watchdog();
 
 		// Next recording
 		$recordings->MoveNext();
-	}
+	} // End of file remove
 
 } // End of removing recordings
+
+// Watchdog
+$app->watchdog();
 
 // Content to remove: delete content including master, surrogates and others
 $recordings = queryRecordingsToRemove("content");
@@ -198,20 +202,24 @@ if ( $recordings !== false ) {
 			if ( !$err['code'] ) {
 				// Error: we skip this one, admin must check it manually
 				$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Cannot remove recording.\n" . $err['message'] . "\nCommand:\n" . $err['command'] . "\nOutput:\n" . $err['command_output'], $sendmail = true);
-			} else {
-				// contentmasterstatus = "deleted"
-				updateMasterRecordingStatus($recording['id'], $jconf['dbstatus_deleted'], "content");
-				// contentstatus = "deleted"
-				updateRecordingStatus($recording['id'], $jconf['dbstatus_deleted'], "content");
-				$debug->log($jconf['log_dir'], $myjobid . ".log", "[OK] Recording content master id = " . $recording['id'] . " removed. Filename: " . $master_filename, $sendmail = false);
+				// Next recording
+				$recordings->MoveNext();
+				continue;
 			}
 
-			// recordings_versions.status = "markedfordeletion" for all content surrogates (will be deleted in the next step, see below)
-//			updateRecordingVersionStatusAll($recording['id'], $jconf['dbstatus_markedfordeletion'], "content");
+			// ## Update status fields
+			// contentmasterstatus := "deleted"
+			updateMasterRecordingStatus($recording['id'], $jconf['dbstatus_deleted'], "content");
+			// contentstatus := "deleted"
+			updateRecordingStatus($recording['id'], $jconf['dbstatus_deleted'], "content");
+			// recordings_versions.status := "markedfordeletion" for all content surrogates (will be deleted in the next step, see below)
 			$filter = $jconf['dbstatus_copystorage_ok'] . "|" . $jconf['dbstatus_conv'] . "|" . $jconf['dbstatus_convert'] . "|" . $jconf['dbstatus_stop'] . "|" . $jconf['dbstatus_copystorage'] . "|" . $jconf['dbstatus_copyfromfe'] . "|" . $jconf['dbstatus_copyfromfe_ok'] . "|" . $jconf['dbstatus_reconvert'];
 			updateRecordingVersionStatusApplyFilter($recording['id'], $jconf['dbstatus_markedfordeletion'], "content", $filter);
-			// contentsmilstatus = NULL
+			// contentsmilstatus := NULL
 			updateRecordingStatus($recording['id'], null, "contentsmil");
+
+			// Log physical removal
+			$debug->log($jconf['log_dir'], $myjobid . ".log", "[OK] Content master was removed: id = " . $recordind['id'] . ", filename = " . $master_filename . ", size = " . round($size_toremove / 1024 / 1024, 2) . "MB.", $sendmail = false);
 
 			// New recording and master size
 			$values = array(
@@ -221,17 +229,17 @@ if ( $recordings !== false ) {
 			$recDoc = $app->bootstrap->getModel('recordings');
 			$recDoc->select($recording['id']);
 			$recDoc->updateRow($values);
-			$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Recording and master data size updated.\n\n" . print_r($values, true), $sendmail = false);
+			$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Recording and master data size updated.\n" . print_r($values, true), $sendmail = false);
 
 		} // End of file removal
-
-		// Watchdog
-		$app->watchdog();
 
 		// Next recording
 		$recordings->MoveNext();
 	}
 }
+
+// Watchdog
+$app->watchdog();
 
 // Surrogates: delete recordings_versions elements one by one
 $recversions = queryRecordingsVersionsToRemove();
@@ -263,26 +271,32 @@ if ( $recversions !== false ) {
 				continue;
 			}
 
-			// recordings_versions.status = "deleted"
+			// ## Update status fields
+			// recordings_versions.status := "deleted"
 			updateRecordingVersionStatus($recversion['id'], $jconf['dbstatus_deleted']);
-			// recording.(content)smilstatus = "regenerate"
+			// recording.(content)smilstatus := "regenerate"
 			updateRecordingStatus($recversion['recordingid'], $jconf['dbstatus_regenerate'], $idx . "smil");
-			$debug->log($jconf['log_dir'], $myjobid . ".log", "[OK] Recording version removed. Info: recordingid = " . $recversion['recordingid'] . ", recordingversionid = " . $recversion['id'] . ", filename = " . $recversion_filename, $sendmail = false);
+
+			// Log physical removal
+			$debug->log($jconf['log_dir'], $myjobid . ".log", "[OK] Recording version removed. Info: recordingid = " . $recversion['recordingid'] . ", recordingversionid = " . $recversion['id'] . ", filename = " . $recversion_filename . ", size = " . round($size_toremove / 1024 / 1024, 2) . "MB.", $sendmail = false);
 
 			// New recording size
 			$values = array(
-				'recordingdatasize'	=> $recording['recordingdatasize'] - $size_toremove
+				'recordingdatasize'	=> $recversion['recordingdatasize'] - $size_toremove
 			);
 			$recDoc = $app->bootstrap->getModel('recordings');
-			$recDoc->select($recording['id']);
+			$recDoc->select($recversion['recordingid']);
 			$recDoc->updateRow($values);
-			$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Recording data size updated.\n\n" . print_r($values, true), $sendmail = false);
+			$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Recording data size updated.\n" . print_r($values, true), $sendmail = false);
 
 		} // End of recording version removal
 
 		$recversions->MoveNext();
 	}
 }
+
+// Watchdog
+$app->watchdog();
 
 // Attachments: remove uploaded attachments
 $attachments = queryAttachmentsToRemove();
@@ -331,7 +345,7 @@ if ( $attachments !== false ) {
 			$recDoc = $app->bootstrap->getModel('recordings');
 			$recDoc->select($attached_doc['rec_id']);
 			$recDoc->updateRow($values);
-			$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Recording data size updated.\n\n" . print_r($values, true), $sendmail = false);
+			$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Recording data size updated.\n" . print_r($values, true), $sendmail = false);
 
 		} // End of file removal
 
