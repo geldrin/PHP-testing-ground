@@ -215,8 +215,8 @@ class Organizations extends \Springboard\Model\Multilingual {
     $this->ensureID();
     return $this->db->getRow("
       SELECT
-        ROUND( SUM( recordingdatasize / ( 1024 * 1024 ) ) ) AS recordingdatasizemb,
-        ROUND( SUM( masterdatasize / ( 1024 * 1024 ) ) )    AS masterdatasizemb,
+        SUM( recordingdatasize / ( 1024 * 1024 ) ) AS recordingdatasizemb,
+        SUM( masterdatasize / ( 1024 * 1024 ) )    AS masterdatasizemb,
         ROUND( SUM( masterlength ) )        AS masterlength,
         ROUND( SUM( contentmasterlength ) ) AS contentmasterlength
       FROM recordings
