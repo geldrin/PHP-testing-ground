@@ -29,7 +29,7 @@ $debug = Springboard\Debug::getInstance();
 $debug->log($jconf['log_dir'], $myjobid . ".log", "*************************** Job: Remove files started ***************************", $sendmail = false);
 
 // Should we remove files and do any changes to DB?
-$isexecute = false;
+$isexecute = true;
 
 // Check operating system - exit if Windows
 if ( iswindows() ) {
@@ -652,12 +652,14 @@ global $jconf, $db, $app;
 
 // SAFE CHECK
 function safeCheckPath($remove_path) {
+ global $myjobid, $app, $debug, $jconf;
 
-	if ( ( stripos($remove_path, $app->config['recordingpath'] . "recordings/") === false ) and ( stripos($remove_path, $app->config['uploadpath'] . "recordings/") === false ) ) {
-		$debug->log($jconf['log_dir'], $myjobid . ".log", "[FATAL] Remove path check failed. SAFE EXIT. Invalid path: " . $remove_path, $sendmail = true);
+	if ( ( stripos($remove_path, $app->config['recordingpath']) === false ) and ( stripos($remove_path, $app->config['uploadpath'] . "recordings/") === false ) ) {
+		$debug->log($jconf['log_dir'], $myjobid . ".log", "[FATAL] Remove path check failed. SAFE EXIT. Invalid path: " . $remove_path, $sendmail = false);
 		exit;
 	}
 
+//	$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Path safe check OK. Path: " . $remove_path, $sendmail = false);
 	return true;
 }
 
