@@ -89,6 +89,7 @@ class Controller extends \Visitor\Controller {
     $this->toSmarty['recordingstats']  = $orgModel->getRecordingStats();
     $this->toSmarty['groupcount']      = $orgModel->getGroupCount();
     $this->toSmarty['departmentcount'] = $orgModel->getDepartmentCount();
+    $this->toSmarty['contract']        = $orgModel->getContract();
 
     return $this->smartyOutput('Visitor/Organizations/Accountstatus.tpl');
 

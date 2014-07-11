@@ -42,6 +42,12 @@
   <tr>
     <th colspan="2">{#organizations__accountstatus_subscription#}</th>
   </tr>
+  {if !empty( $contract )}
+    <tr>
+      <td>{#organizations__accountstatus_subscriptionperiod#}:</td>
+      <td>{$contract.startdate} - {$contract.enddate}</td>
+    </tr>
+  {/if}
   <tr>
     <td>{#organizations__accountstatus_islivestreamingenabled#}:</td>
     <td>{if $organization.islivestreamingenabled}{#organizations__accountstatus_islivestreamingenabled_yes#}{else}{#organizations__accountstatus_islivestreamingenabled_no#}{/if}</td>

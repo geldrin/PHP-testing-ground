@@ -203,7 +203,7 @@ class Organizations extends \Springboard\Model\Multilingual {
       FROM users
       WHERE
         organizationid = '" . $this->id . "' AND
-        disabled      <> '" . \Model\Users::USER_VALIDATED . "'
+        disabled       = '" . \Model\Users::USER_BANNED . "'
       LIMIT 1
     ");
 
@@ -247,4 +247,21 @@ class Organizations extends \Springboard\Model\Multilingual {
     ");
   }
 
+  public function getContract() {
+    $this->ensureID();
+    return $this->db->getRow("
+      SELECT *
+      FROM organizations_contracts
+      WHERE
+        organizationid = '" . $this->id . "' AND
+        disabled       = '0' AND
+        startdate     <= NOW() AND
+        (
+          enddate     >= NOW() OR
+          enddate IS NULL
+        )
+      ORDER BY id DESC
+      LIMIT 1
+    ");
+  }
 }
