@@ -347,6 +347,20 @@ global $app, $jconf, $debug;
 		$debug->log($jconf['log_dir'], $jconf['jobid_media_convert'] . ".log", "MSG: " . $err['message'] . "\nCOMMAND: " . $err['command'] . "\nRESULT: " . $err['result'], $sendmail = true);
 		// Set status to "uploaded" to allow other nodes to take over task??? !!!
 		return false;
+	} elseif ($err['code'] === 0) {
+	// remove any existing passlogfiles, from directory
+		$passlogfiles = array(
+			$ffmpeg_pass_prefix = $recording['master_path'] . $recording['id'] ."_". $profile['type'] ."_passlog",
+			$ffmpeg_passlogfile = $ffmpeg_pass_prefix ."-0.log",
+		);
+		foreach($passlogfiles as $plf) {
+			$err = remove_file_ifexists($plf);
+			if (!$err['code']) {
+				$msg = "[ERROR] Removing passlogfiles failed, error message: ". $err['message'];
+				$debug->log($jconf['log_dir'], $jconf['jobid_media_convert'] . ".log", $msg, $sendmail = true);
+				return false;
+			}
+		}
 	}
 
 	// SCP: copy from front end server
@@ -577,7 +591,6 @@ global $app, $jconf, $global_log;
 		$encoding_params_overlay = null;
 	}
 
-	// $err = ffmpegConvert($recording, $profile);
 	$err = advancedFFmpegConvert($recording, $profile, $encoding_params_main, $encoding_params_overlay);
 	$recording['encodingparams'] = $err['encodingparams'];
 
@@ -696,7 +709,7 @@ function copyMediaToFrontEnd($recording, $profile) {
 	$debug->log($jconf['log_dir'], $jconf['jobid_media_convert'] . ".log", "[INFO] Recording filesize updated.\n\n" . print_r($values, true), $sendmail = false);
 
 	// Remove temporary directory, no failure if not successful
-	$err = remove_file_ifexists($recording['temp_directory']);
+	//$err = remove_file_ifexists($recording['temp_directory']); // DEBUG
 	if ( !$err['code'] ) $debug->log($jconf['log_dir'], $jconf['jobid_media_convert'] . ".log", "MSG: " . $err['message'] . "\nCOMMAND: " . $err['command'] . "\nRESULT: " . $err['result'], $sendmail = true);
 
 	return true;
@@ -717,7 +730,7 @@ global $jconf, $debug, $myjobid;
 		$err = remove_file_ifexists($recording['temp_directory']);
 		if ( !$err['code'] ) $debug->log($jconf['log_dir'], $myjobid . ".log", "MSG: " . $err['message'] . "\nCOMMAND: " . $err['command'] . "\nRESULT: " . $err['result'], $sendmail = true);
 		// If recordings_versions.status = "stop" then recordings_versions.status := "markedfordeletion" (mark this version to be deleted)
-		if ( $rv_status == $jconf['dbstatus_stop'] ) updateRecordingVersionStatus($recording['recordingversionid'], $jconf['dbstatus_markedfordeletion']);
+		updateRecordingVersionStatus($recording['recordingversionid'], $jconf['dbstatus_markedfordeletion']);
 		$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Conversion STOPPED for recording version id = " . $recording['recordingversionid'] . ", recordingid = " . $recording['id'] . ".", $sendmail = false);
 		return true;
 	}

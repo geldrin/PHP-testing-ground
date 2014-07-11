@@ -360,7 +360,6 @@ global $jconf, $debug;
 //  ki kell deriteni, miert lep ki az ffmpeg process hq felvetelek konvertalasakor!
 //  => ffmpeg output loggolasa: '-report' kapcsolo
 //    sysvar: FFREPORT="file=<filename>:level=<#int>"
-//  => log bekapcsolasa: debug=true (+ jconf['ffmpeg_report_enabled']=true ???)
 //  => mi legyen a reportfile-okkal?
 //
 // PIP eseten:
@@ -497,17 +496,17 @@ global $jconf, $debug;
 //
 // Uj jconf index-ek:
 //  - max_duration_error: a mester- es a szolgaltatasi peldany hosszanak megengedett elterese (s)
-//  - ffmpeg_report_enabled: console output kiiras engedelyezese logfajlba (bool)
 //
 // Kerdesek:
 // - report-kornyezeti_valtozok vagy stderr>logfile ?                           -> INKABB AZ UTOBBI
-// - mi legyen a logfajllal?
+// - mi legyen a logfajllal?                    -> NINCS KULON LOGFAJL, AZ EGESZ MEGY A SIMA LOG-BA
 // - error reportba beleirodjon a logfile? (tul nagy fajlok generalodhatnak)
 // - pip-nel kell az overlayre interlace-t beallitani? (side-by-side uzzemmod eseten szukseg lehet
 //   ra, de ahhoz be kell vezetni valamilyen pip uzemmod valasztasi mechanizmust.)          -> IGEN
 // - Multipass encoding-nal mi legyen, ha mar megvannak a passlogfilelok?
 //
 // CHECKLIST:
+//  - long test                - OK
 // Audio:
 //  - dupla audio              - OK
 //  - main audio only          - OK
@@ -516,16 +515,16 @@ global $jconf, $debug;
 // Video:
 //  - egyforma hossz           - OK
 //  - rovid main               - OK
-//  - rovid ovrl
+//  - rovid ovrl               - OK
 //  - main out-of-bounding-box - OK
 //  - ovrl out-of-bounding-box - OK
 //  - 2x out-of-bounding_box   - OK
 //  - pozicionalas, meretezes  - OK
-//  - deinterlace
-//  - deinterlace filter - pip
+//  - deinterlace              - OK
+//  - deinterlace filter - pip - OK
 //
 //  Multipass
-//  - two-pass enc             - OK ?
+//  - two-pass enc             - OK
 //  - mobile two-pass          - OK
 //  - invalid-pass             - OK
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -545,9 +544,7 @@ global $jconf, $debug, $app;
 	$ffmpeg_video       = null;	// video encoding parameters
 	$ffmpeg_payload     = null; // contains input option on normal encoding OR overlay filter on pip encoding
 	$ffmpeg_pass_prefix = null; // used with multipass encoding (passlogfiles will be written here, with the given prefix)
-	$ffmpeg_globals     = $jconf['encoding_nice'] ." ". $jconf['ffmpeg_alt'] .(
-		$jconf['ffmpeg_report_enabled'] === true ? "" : " -v ". $jconf['ffmpeg_loglevel']
-		) ." -y";
+	$ffmpeg_globals     = $jconf['encoding_nice'] ." ". $jconf['ffmpeg_alt'] ." -v ". $jconf['ffmpeg_loglevel'] ." -y";
 	$ffmpeg_output      = " -threads ". $jconf['ffmpeg_threads'] ." -f ". $profile['filecontainerformat'] ." ". $rec['output_file'];
 	
 	if ($profile['type'] == 'recording' || $profile['type'] == 'content' ) {
@@ -572,12 +569,13 @@ global $jconf, $debug, $app;
 			$ffmpeg_video = " -vn";
 		} else {
 			// H.264 profile
+			// $ffmpeg_payload .= " -filter_complex '[0:v] scale=w=". $main['resx'] .":h=". $main['resy'] .":force_original_aspect_ratio=decrease:flags=sws_flags=bicubic"; // placeholder for filter based scaling/bounding box
 			$ffmpeg_profile = " -profile:v " . $profile['ffmpegh264profile'] ." -pix_fmt yuv420p";
 			$ffmpeg_preset  = " -preset:v ". $profile['ffmpegh264preset'];
 			$ffmpeg_resize  = " -s ". $main['resx'] ."x". $main['resy'];
 			$ffmpeg_aspect  = null;
 			if ( !empty($main['DAR_MN']) ) $ffmpeg_aspect = " -aspect " . $main['DAR_MN'];
-			$ffmpeg_deint   = ($main['deinterlace'] === true) ? " -deint " : null;
+			$ffmpeg_deint   = ($main['deinterlace'] === true) ? " -deinterlace " : null;
 			$ffmpeg_fps     = " -r ". $main['videofps'];
 			$ffmpeg_bitrate = " -b:v ". (10 * ceil($main['videobitrate'] / 10000)) . "k";
 			// ffmpeg video encoding parameters
@@ -636,7 +634,7 @@ global $jconf, $debug, $app;
 		$ffmpeg_video = " -c:v libx264 ". $ffmpeg_profile . $ffmpeg_preset . $ffmpeg_fps . $ffmpeg_bitrate;
 		
 		// ASSEMBLE PICTURE-IN-PICTURE FILTER FOR FFMPEG
-		$target_length = ceil(max($rec['masterlength'], $rec['contentmasterlength']) + 1); // Bele kellene szamitani a offset-et!
+		$target_length = max($rec['masterlength'], $rec['contentmasterlength']); // Bele kellene szamitani a offset-et!
 		$pip = array();
 		$pip = calculate_mobile_pip($rec['mastervideores'], $rec['contentmastervideores'], $profile);
 		$err['encodingparams'] = array_merge($err['encodingparams'], $pip);
@@ -649,8 +647,6 @@ global $jconf, $debug, $app;
 		$ffmpeg_payload .= " [bg][pip] overlay=x=". $pip['pip_x'] .":y=". $pip['pip_y'] .":repeatlast=0";
 		$ffmpeg_payload .= ($audio_filter === null) ? ("'") : ("; ". $audio_filter ."'");
 		
-		// ASSEMBLE PIP COMMAND LINE
-		/*$cmd  = $ffmpeg_globals . $fltr . $ffmpeg_audio . $ffmpeg_video . $ffmpeg_output;*/
 		unset($pip);
 	}
 	
@@ -665,19 +661,25 @@ global $jconf, $debug, $app;
 	}
 	
 	if ($profile['videopasses'] == 1 || $profile['videopasses'] === null) {
+	// Single encoding
 		$cmd  = $ffmpeg_globals . $ffmpeg_payload . $ffmpeg_video . $ffmpeg_audio . $ffmpeg_output;
-		$command[] = $cmd;
-	} elseif($profile['videopasses'] == 2) { // two pass encoding
-		$ffmpeg_pass_prefix = $rec['master_path'] . $rec['id'] ."_". $profile['id'] . $profile['filenamesuffix'] ."_passlog";
+		$command[1] = $cmd;
 		
+	} elseif($profile['videopasses'] == 2) {
+	// Two-pass encoding
+		$ffmpeg_pass_prefix = $rec['master_path'] . $rec['id'] ."_". $profile['type'] ."_passlog";
+		$ffmpeg_passlogfile = $ffmpeg_pass_prefix ."-0.log"; // <prefix>-<#pass>-<N>.log (N=output-stream specifier)
+
 		// first-pass
-		$cmd  = $ffmpeg_globals . $ffmpeg_payload ." -pass 1 -passlogfile ". $ffmpeg_pass_prefix . $ffmpeg_audio . $ffmpeg_video;
-		$cmd .= " -threads ". $jconf['ffmpeg_threads'] ." -f ". $profile['filecontainerformat'] ." /dev/null";
-		$command[] = $cmd;
+		if (!file_exists($ffmpeg_passlogfile .".mbtree")) {
+			$cmd  = $ffmpeg_globals . $ffmpeg_payload ." -pass 1 -passlogfile ". $ffmpeg_pass_prefix . $ffmpeg_video . $ffmpeg_audio;
+			$cmd .= " -threads ". $jconf['ffmpeg_threads'] ." -f ". $profile['filecontainerformat'] ." /dev/null";
+			$command[1] = $cmd;
+		}
 		
 		// second-pass
 		$cmd  = $ffmpeg_globals . $ffmpeg_payload ." -pass 2 -passlogfile ". $ffmpeg_pass_prefix . $ffmpeg_audio . $ffmpeg_video . $ffmpeg_output;
-		$command[] = $cmd;
+		$command[2] = $cmd;
 	}
 	unset($cmd);
 	////////////////////////////////////////////////////////////////////// END OF COMMAND ASSEMBLY //
@@ -686,25 +688,23 @@ global $jconf, $debug, $app;
 	$start_time = time();
 
 	$msg = "FFmpeg converter starting.\n";
-	if ($jcong['ffmpeg_report_enabled']) $msg .= " !! DEBUG MODE !!\n";
 	
 	foreach ($command as $n => $c) {
 		$msg = "";
 		$search4file = false; // Not all commands will generate output file - check this variable before looking after missing files
-		if (($n + 1) == count($command)) $search4file = true;
+		if (($profile['videopasses'] > 1) && ($n == count($command))) $search4file = true;
+
 		// Log ffmpeg command
-		if (count($command) >= 2) {
-			$msg .= "\nMultipass encoding - Converting ". ($n + 1) .". pass of ". $profile['videopasses'] .".";
+		if ($profile['videopasses'] !== null && $profile['videopasses'] > 1) {
+			$msg .= "\nMultipass encoding - Converting ". $n .". pass of ". $profile['videopasses'] .".";
 		}
 		$msg .= "\nCommand line:\n". $c;
 		$debug->log($jconf['log_dir'], $jconf['jobid_media_convert'] . ".log", $msg, $sendmail = false);
 
 		// Check passlogfile's availability
-		$ffmpeg_passlogfile = $ffmpeg_pass_prefix ."-". ($n-1) .".log";
-		if (($n + 1) >= 2 && is_readable($ffmpeg_passlogfile) && is_readable($ffmpeg_passlogfile .".mbtree") === false) {
+		if ($search4file && (is_readable($ffmpeg_passlogfile) && is_readable($ffmpeg_passlogfile .".mbtree")) === false) {
 			$msg = "Permission denied:";
 			if (!file_exists($ffmpeg_passlogfile)) $msg = "File doesn't exists:";
-			
 			$msg = "[ERROR] Multipass encoding failed! ". $msg ." (". $ffmpeg_passlogfile .")";
 			$debug->log($jconf['log_dir'], $jconf['jobid_media_convert'] . ".log", $msg, $sendmail = false);
 
@@ -717,10 +717,10 @@ global $jconf, $debug, $app;
 		$start 	= time();
 		$output = runExt($c);
 		
-		$err['duration'      ] = time() - $start;
-		$err['command'       ] = $c;
-		$err['result'        ] = $output['code'];
-		$err['command_output'] = $output['cmd_output'];
+		$err['duration'      ]  = time() - $start;
+		$err['command'       ]  = $c;
+		$err['result'        ]  = $output['code'];
+		$err['command_output'] .= $output['cmd_output'];
 		if ($jconf['ffmpeg_loglevel'] == 0 || $jconf['ffmpeg_loglevel'] == 'quiet')
 			$err['command_output']= "( FFmpeg output was suppressed - loglevel: ". $jconf['ffmpeg_loglevel'] .". )";
 		$mins_taken = round( $err['duration'] / 60, 2);
@@ -733,7 +733,7 @@ global $jconf, $debug, $app;
 			return $err;
 		}
 		
-		if (($n == count($command) - 1) || count($command) < 2 ) {
+		if ($n == count($command)) {
 			if (filesize($rec['output_file']) < 1000) {
 				// FFmpeg terminated with error or filesize suspiciously small
 				$err['message'] = "[ERROR] Output file is too small.";
@@ -742,16 +742,7 @@ global $jconf, $debug, $app;
 			}
 		}	
 		
-		// Log FFmpeg output
-		$msg  = ($jconf['ffmpeg_report_enabled'] ? " !! DEBUG MODE !!" : null) ." [ OK ] FFmpeg encoding was successful! Exit code: ". $output['code'] ."\n";
-		
-		if ($jconf['ffmpeg_report_enabled']) {
-			$msg .= " [INFO] Report enabled!\n";
-			$msg .= str_pad(" FFmpeg console output ", 80, '-', STR_PAD_BOTH) ."\n";
-			$msg .= $err['command_output'];
-			$msg .= str_pad(" FFmpeg console output ", 80, '-', STR_PAD_BOTH) ."\n";
-		}
-		
+		$msg = " [OK] FFmpeg encoding was successful! Exit code: ". $output['code'] ."\n";
 		$debug->log($jconf['log_dir'], $jconf['jobid_media_convert'] . ".log", $msg, $sendmail = false);
 		unset($msg);
 	}
@@ -768,17 +759,15 @@ global $jconf, $debug, $app;
 			$msg .= "Command output:\n";
 			$msg .= print_r($err['command_output'], 1);
 			$debug->log($jconf['log_dir'], $jconf['jobid_media_convert'] .'.log', $msg, $sendmail = false);
-			unset($msg);
-			
-			updateRecordingVersionStatus($recording['recordingversionid'], $jconf['dbstatus_reconvert']);
-			
+
 			$err['code'   ] = false;
 			$err['message'] = "[ERROR] FFmpeg conversion failed: conversion stopped unexpectedly!\n.";
+
 			unset($r);
-			
+			unset($msg);
 			return $err;
 		}
-		$msg = "[INFO] Duration check finished on ". $rec['output_file'] .".\n";
+		$msg = "[INFO] Duration check finished on ". $rec['output_file'] ."\n";
 		$debug->log($jconf['log_dir'], $jconf['jobid_media_convert'] .'.log', $msg, $sendmail = false);
 
 		unset($msg);
@@ -790,13 +779,10 @@ global $jconf, $debug, $app;
 	} ////////////////////////////////////////////////////////////////////// END OF DURATION CHECK //
 
 	$full_duration  = round((time() - $start_time) / 60, 2);
-	$msg = "[ OK ] FFmpeg ". (
+	$msg = "[OK] FFmpeg ". (
 		($profile['videopasses'] > 1) ? ($profile['videopasses'] ."-pass encoding") : ("conversion")
 		) ." completed in ". $full_duration ." minutes!";
 	$debug->log($jconf['log_dir'], $jconf['jobid_media_convert'] .'.log', $msg, $sendmail = false);
-	if ($jconf['ffmpeg_report_enabled']) {
-		$msg .= " -> Report enabled. FFmpeg console output was written to ". $jconf['logdir'] . $jconf['jobid_media_convert'] .".log";
-	}
 
 	$err['message'] = $msg;
 	$err['code'   ] = true;
