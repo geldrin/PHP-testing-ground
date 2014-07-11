@@ -709,7 +709,7 @@ function copyMediaToFrontEnd($recording, $profile) {
 	$debug->log($jconf['log_dir'], $jconf['jobid_media_convert'] . ".log", "[INFO] Recording filesize updated.\n\n" . print_r($values, true), $sendmail = false);
 
 	// Remove temporary directory, no failure if not successful
-	//$err = remove_file_ifexists($recording['temp_directory']); // DEBUG
+	$err = remove_file_ifexists($recording['temp_directory']);
 	if ( !$err['code'] ) $debug->log($jconf['log_dir'], $jconf['jobid_media_convert'] . ".log", "MSG: " . $err['message'] . "\nCOMMAND: " . $err['command'] . "\nRESULT: " . $err['result'], $sendmail = true);
 
 	return true;
