@@ -47,6 +47,7 @@ $j(document).ready(function() {
   runIfExists('.togglesmallrecordings', setupToggleRecordings );
   runIfExists('#comments', setupComments );
   runIfExists('#livestatistics', setupLivestatistics );
+  runIfExists('#recordingdownloads', setupRecordingDownloads );
 
   if ( needping )
     setTimeout( setupPing, 1000 * pingsecs );
@@ -2276,4 +2277,11 @@ function setupLivestatistics( elem ) {
   };
   poll();
 
+}
+
+function setupRecordingDownloads() {
+  $j('#recordingdownloads .submitbutton').click(function(e) {
+    e.preventDefault();
+    $j('#recordingdownloads ul').toggle();
+  });
 }

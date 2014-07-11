@@ -237,6 +237,9 @@ class Controller extends \Visitor\Controller {
     $this->toSmarty['needhistory']   = true;
     $this->toSmarty['height']        = $this->getPlayerHeight( $recordingsModel );
     $this->toSmarty['recording']     = $recordingsModel->addPresenters( true, $this->organization['id'] );
+    $this->toSmarty['recordingdownloads'] = $recordingsModel->getDownloadUrls(
+      $this->bootstrap->staticuri
+    );
 
     $flashdata = $recordingsModel->getFlashData( $this->toSmarty );
     if ( preg_match( '/^\d{1,2}h\d{1,2}m\d{1,2}s$|^\d+$/', $start ) )

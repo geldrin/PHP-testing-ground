@@ -2906,3 +2906,12 @@ a#currentusername span {
 #accountstatus th {
   padding: 10px 0;
 }
+
+#recordingdownloads {
+  float: right;
+  margin: 20px 20px 0 0;
+  width: 320px;
+}
+#recordingdownloads ul {
+  display: none;
+}

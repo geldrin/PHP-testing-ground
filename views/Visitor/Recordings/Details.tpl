@@ -84,6 +84,17 @@
   </ul>
 </div>
 {/if}
+{if !empty( $recordingdownloads )}
+  <div id="recordingdownloads">
+    <center><a href="#" class="submitbutton">{#recordings__recordingdownloads#}</a></center>
+    <ul>
+      {foreach from=$recordingdownloads key=key item=url}
+        {assign var=localekey value="recordingdownloads_$key"}
+        <li><a href="{$url}">{$l->get('recordings', $localekey, $language)}</a></li>
+      {/foreach}
+    </ul>
+  </div>
+{/if}
 <div id="metadata">
   {assign var=numberofratings value=$recording.numberofratings|numberformat}
   <div class="ratewidget right" data-canrate="{$canrate}" title="{#recordings__ratewidgetheading#|sprintf:$numberofratings}">

@@ -3354,4 +3354,73 @@ class Recordings extends \Springboard\Model {
     
   }
   
+  public function getDownloadUrls( $staticuri ) {
+    $this->ensureObjectLoaded();
+    if ( !$this->row['isdownloadable'] and !$this->row['isaudiodownloadable'] )
+      return array();
+
+    $ret      = array();
+    $treedir  = \Springboard\Filesystem::getTreeDir( $this->id );
+    $versions = $this->db->getArray("
+      SELECT
+        rv.filename,
+        rv.qualitytag,
+        rv.iscontent,
+        ep.type,
+        ep.shortname,
+        ep.pipenabled
+      FROM
+        recordings_versions AS rv,
+        encoding_profiles AS ep
+      WHERE
+        rv.recordingid       = '" . $this->id . "' AND
+        rv.status            = 'onstorage' AND
+        rv.encodingprofileid = ep.id
+      ORDER BY rv.bandwidth DESC
+    ");
+
+    if ( $this->row['isaudiodownloadable'] ) {
+
+      foreach( $versions as $version ) {
+        if ( $version['qualitytag'] != 'audio' )
+          continue;
+
+        $ret['audio'] =
+          $staticuri . 'files/recordings/' . $treedir . '/' . $version['filename']
+        ;
+        break;
+      }
+
+    }
+
+    if ( $this->row['isdownloadable'] ) {
+
+      if ( $this->row['masterstatus'] == 'onstorage' )
+        $ret['master'] =
+          $staticuri . 'files/recordings/' . $treedir . '/master/' . $this->id .
+          '_' . $this->row['mastermediatype'] . '.' . $this->row['mastervideoextension']
+        ;
+
+      if ( $this->row['contentmasterstatus'] == 'onstorage' )
+        $ret['contentmaster'] =
+          $staticuri . 'files/recordings/' . $treedir . '/master/' . $this->id .
+          '_content.' . $this->row['contentmastervideoextension']
+        ;
+
+      foreach( $versions as $version ) {
+        if ( $version['type'] != 'pip' )
+          continue;
+
+        $ret['pip'] =
+          $staticuri . 'files/recordings/' . $treedir . '/' . $version['filename']
+        ;
+        break;
+      }
+
+    }
+
+    return $ret;
+
+  }
+
 }
