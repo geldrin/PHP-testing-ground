@@ -110,6 +110,9 @@ class Controller extends \Visitor\Controller {
     $this->toSmarty['channels'] = $userModel->getCourses(
       $this->organization
     );
+    $this->toSmarty['accreditedrecordings'] = $userModel->getAccreditedRecordings(
+      $this->organization['id']
+    );
 
     if ( !empty( $uploads ) )
       $this->toSmarty['sessionmessage'] = sprintf(

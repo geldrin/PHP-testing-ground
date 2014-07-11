@@ -694,6 +694,33 @@ class Users extends \Springboard\Model {
     ");
   }
 
+  public function getAccreditedRecordings( $organizationid ) {
+    $this->ensureObjectLoaded();
+    // azok a recording ahol .isseekbardisabled = 1
+    return $this->db->getArray("
+      SELECT
+        r.*,
+        (
+          ROUND( ( IFNULL(rvp.position, 0) / GREATEST( IFNULL(r.masterlength, 0), IFNULL(r.contentmasterlength, 0) ) ) * 100 )
+        ) AS positionpercent,
+        IFNULL(rvp.position, 0) AS lastposition
+      FROM
+        recordings AS r
+        LEFT JOIN recording_view_progress AS rvp ON(
+          r.id       = rvp.recordingid AND
+          rvp.userid = '" . $this->id . "'
+        )
+      WHERE
+        r.isintrooutro      = '0' AND
+        r.ispublished       = '1' AND
+        r.status            = 'onstorage' AND -- TODO live?
+        r.organizationid    = '$organizationid' AND
+        r.status            = 'onstorage' AND
+        r.isseekbardisabled = '1'
+      ORDER BY rvp.timestamp DESC
+    ");
+  }
+
   public function getCourses( $organization ) {
 
     $this->ensureID();
