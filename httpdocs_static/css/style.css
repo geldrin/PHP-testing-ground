@@ -2903,3 +2903,6 @@ a#currentusername span {
 #recordings_modifyclassification #channelslist {
   max-width: 607px;
 }
+#accountstatus th {
+  padding: 10px 0;
+}
