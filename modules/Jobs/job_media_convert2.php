@@ -151,9 +151,11 @@ while( !is_file( $app->config['datapath'] . 'jobs/' . $myjobid . '2.stop' ) and 
 		// recordings_versions.status = "onstorage"
 		updateRecordingVersionStatus($recording['recordingversionid'], $jconf['dbstatus_copystorage_ok']);
 		// recordings.(content)smilstatus = "regenerate" (new version is ready, regenerate SMIL file)
-		$type = "smil";
-		if  ( $recording['iscontent'] == 1 ) $type = "contentsmil";
-		updateRecordingStatus($recording['id'], $jconf['dbstatus_regenerate'], $type);
+		if ( $encoding_profile['type'] != "pip" ) {
+			$type = "smil";
+			if  ( $recording['iscontent'] == 1 ) $type = "contentsmil";
+			updateRecordingStatus($recording['id'], $jconf['dbstatus_regenerate'], $type);
+		}
 
 		// Watchdog
 		$app->watchdog();
