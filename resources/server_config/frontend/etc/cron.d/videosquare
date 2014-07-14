@@ -1,0 +1,25 @@
+# Cron jobs for: converter stream.videosquare.eu
+
+MAILTO=hiba@videosqr.com
+SHELL=/bin/sh
+PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
+
+## Jobs
+
+# DB backup (every night 0:01)
+1 0 * * *		root    /usr/local/sbin/vsq_db_backup.sh
+
+# Watcher (every 5 minutes)
+*/5 * * * *		conv    /usr/bin/php -f /var/www/videosquare.eu/modules/Jobs/watcher.php &> /dev/null
+
+# Remove files (every 2 minutes)
+#*/2 * * * *	conv    /usr/bin/php -f /var/www/videosquare.eu/modules/Jobs/job_remove_files.php &> /dev/null
+
+# Daily maintenance (every day 0:05)
+5 0 * * *		conv    /usr/bin/php -f /var/www/videosquare.eu/modules/Jobs/job_maintenance.php &> /dev/null
+
+# Integrity check (Sunday 23:55)
+55 23 * * 6		conv    /usr/bin/php -f /var/www/videosquare.eu/modules/Jobs/job_integrity_check.php &> /dev/null
+
+# Accounting (1st day of month 0:05)
+5 0 1 * *		conv    /usr/bin/php -f /var/www/videosquare.eu/modules/Jobs/job_accounting.php &> /dev/null
