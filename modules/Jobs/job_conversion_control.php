@@ -53,9 +53,26 @@ if ( $recordings !== false ) {
 		$recording = array();
 		$recording = $recordings->fields;
 
-		// ## Recording level reconvert: mark all recording versions to be deleted (onstorage, convert, converting, stop, copy*, reconvert)
+		// Reconvert flag := false (legacy profile)
 		$isreconvertforce = false;
+		// Recording version status filter set
 		$filter = $jconf['dbstatus_copystorage_ok'] . "|" . $jconf['dbstatus_conv'] . "|" . $jconf['dbstatus_convert'] . "|" . $jconf['dbstatus_stop'] . "|" . $jconf['dbstatus_copystorage'] . "|" . $jconf['dbstatus_copyfromfe'] . "|" . $jconf['dbstatus_copyfromfe_ok'] . "|" . $jconf['dbstatus_reconvert'];
+
+		// ## New content is uploaded (old removed). Check if recording is legacy encoded. If yes, launch a full reconvert.
+		if ( $recording['contentstatus'] == $jconf['dbstatus_uploaded'] ) {
+
+			// Is recording encoded with a legacy encoding group?
+			$encodinggroup = getEncodingProfileGroup($recording['encodinggroupid']);
+			if ( $encodinggroup !== false ) {
+				if ( $encodinggroup['islegacy'] == 1 ) {
+					$isreconvertforce = true;
+					$debug->log($jconf['log_dir'], $jconf['jobid_conv_control'] . ".log", "[INFO] Content uploaded for legacy profile encoded recording id = " . $recording['id'] . " (" . $recording['contentmastervideofilename'] . "). Forcing full reconvert.", $sendmail = false);
+					$recording['status'] = $jconf['dbstatus_reconvert'];
+				}
+			}
+		}
+
+		// ## Recording level reconvert: mark all recording versions to be deleted (onstorage, convert, converting, stop, copy*, reconvert)
 		// Content: Do content first. If legacy encoded, we will reconvert recording
 		if ( $recording['contentstatus'] == $jconf['dbstatus_reconvert'] ) {
 			$debug->log($jconf['log_dir'], $jconf['jobid_conv_control'] . ".log", "[INFO] Content reconvert for recordingid = " . $recording['id'] . " (" . $recording['contentmastervideofilename'] . ").", $sendmail = false);
