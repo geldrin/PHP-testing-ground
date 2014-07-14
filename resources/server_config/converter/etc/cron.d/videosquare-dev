@@ -1,0 +1,20 @@
+# Cron jobs for: converter conv-1.videosquare.eu (dev)
+
+MAILTO=hiba@videosqr.com
+
+## Jobs
+
+# Watcher: every 5 minutes
+*/5 * * * *	conv	/usr/bin/php -f /home/conv/dev.videosquare.eu/modules/Jobs/watcher.php &> /dev/null
+
+# Conversion control: every 1 minutes
+* * * * *	conv	/usr/bin/php -f /home/conv/dev.videosquare.eu/modules/Jobs/job_conversion_control.php &> /dev/null
+
+# Statistics process: every 5 minutes
+*/5 * * * *	conv	/usr/bin/php -f /home/conv/dev.videosquare.eu/modules/Jobs/job_stats_process.php &> /dev/null
+
+# Live thumbnail
+*/5 * * * *	conv	/usr/bin/php -f /home/conv/dev.videosquare.eu/modules/Jobs/job_live_thumbnail.php &> /dev/null
+
+## Temp directory cleanup
+10 0 * * *	conv	find /srv/vsq_temp/dev.videosquare.eu/converter/*/ -type f -mtime +60 -exec rm {} \; &> /dev/null

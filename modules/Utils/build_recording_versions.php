@@ -74,13 +74,13 @@ try {
   $recordings = $db->Execute($query_recordings);
   $num_recordings = $recordings->RecordCount();
   
-  $prof_audio = getProfile('_audio'     );
-  $prof_vidlq = getProfile('_video_lq'  );
-  $prof_vidhq = getProfile('_video_hq'  );
+  $prof_audio = getProfile('_audio');
+  $prof_vidlq = getProfile('_video_lq');
+  $prof_vidhq = getProfile('_video_hq');
   $prof_conlq = getProfile('_content_lq');
   $prof_conhq = getProfile('_content_hq');
-  $prof_moblq = getProfile('_mobile_lq' );
-  $prof_mobhq = getProfile('_mobile_hq' );
+  $prof_moblq = getProfile('_mobile_lq');
+  $prof_mobhq = getProfile('_mobile_hq');
 
   $converter_node = $db->Execute($query_default_cnode);
   $converter_node = $converter_node->fields;
