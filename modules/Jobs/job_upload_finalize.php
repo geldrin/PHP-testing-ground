@@ -232,7 +232,7 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_upload_finalize.stop' ) an
 
 	// Recordings: finalize masters (once daily, after midnight)
 	$start_time = time();
-	$inwhichhour = 15;
+	$inwhichhour = 0;
 	if ( ( date("G") == $inwhichhour ) and ( empty($finalizedonelasttime) or ( ( $start_time - $finalizedonelasttime ) > 3600 * 24 ) ) ) {
 
 		$recordings = getRecordingMastersToFinalize();
@@ -300,13 +300,13 @@ global $app, $debug, $myjobid, $jconf;
 	} else {
 		$duration = time() - $start_time;
 		$hms = secs2hms($duration);
-		$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Copying " . $source_filename . " -> " . $destination_filename . " finished in " . $hms . " time", $sendmail = false);
+		$debug->log($jconf['log_dir'], $myjobid . ".log", "[OK] Copy " . $source_filename . " -> " . $destination_filename . " finished in " . $hms . " time", $sendmail = false);
 		updateMasterRecordingStatus($recording['id'], $jconf['dbstatus_copystorage_ok'], $type);
 		if ( !unlink($source_filename) ) {
 			$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Cannot remove file " . $source_filename . ". File won't be removed. Please CHECK error and REMOVE file from upload area!", $sendmail = true);
 			false;
 		} else {
-			$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] File " . $source_filename . " removed.", $sendmail = false);
+			$debug->log($jconf['log_dir'], $myjobid . ".log", "[OK] File " . $source_filename . " removed.", $sendmail = false);
 		}
 	}
 
