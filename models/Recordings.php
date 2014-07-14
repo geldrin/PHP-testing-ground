@@ -1648,7 +1648,6 @@ class Recordings extends \Springboard\Model {
     if (
          (
            !$this->row['contentstatus'] or
-           $this->row['contentstatus'] == 'markedfordeletion' or
            $this->row['contentstatus'] == 'deleted'
          ) and
          $this->row['contentmasterstatus'] != 'copyingtostorage'
@@ -3386,7 +3385,10 @@ class Recordings extends \Springboard\Model {
           continue;
 
         $ret['audio'] =
-          $staticuri . 'files/recordings/' . $treedir . '/' . $version['filename']
+          $staticuri . 'files/recordings/' . $treedir . '/' .
+          \Springboard\Filesystem::getWithoutExtension( $version['filename'] ) .
+          ',' . \Springboard\Filesystem::filenameize( $this->row['title'] ) . '.' .
+          \Springboard\Filesystem::getExtension( $version['filename'] )
         ;
         break;
       }
@@ -3398,13 +3400,13 @@ class Recordings extends \Springboard\Model {
       if ( $this->row['masterstatus'] == 'onstorage' )
         $ret['master'] =
           $staticuri . 'files/recordings/' . $treedir . '/master/' . $this->id .
-          '_' . $this->row['mastermediatype'] . '.' . $this->row['mastervideoextension']
+          '_' . $this->row['mastermediatype'] . ',' . $this->row['mastervideofilename']
         ;
 
       if ( $this->row['contentmasterstatus'] == 'onstorage' )
         $ret['contentmaster'] =
           $staticuri . 'files/recordings/' . $treedir . '/master/' . $this->id .
-          '_content.' . $this->row['contentmastervideoextension']
+          '_content,' . $this->row['contentmastervideofilename']
         ;
 
       foreach( $versions as $version ) {
@@ -3412,7 +3414,10 @@ class Recordings extends \Springboard\Model {
           continue;
 
         $ret['pip'] =
-          $staticuri . 'files/recordings/' . $treedir . '/' . $version['filename']
+          $staticuri . 'files/recordings/' . $treedir . '/' .
+          \Springboard\Filesystem::getWithoutExtension( $version['filename'] ) .
+          ',' . \Springboard\Filesystem::filenameize( $this->row['title'] ) . '.' .
+          \Springboard\Filesystem::getExtension( $version['filename'] )
         ;
         break;
       }

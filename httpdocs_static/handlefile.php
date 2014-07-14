@@ -72,7 +72,7 @@ if (
 // recording master/audio download
 if (
       $parts[0] == 'recordings' and
-      preg_match('/^(\d+)\/(\d+)\/(master\/)?(\d+),(.*)\.(.+)$/', $parts[1], $results )
+      preg_match('/^(\d+)\/(\d+)\/(master\/)?(\d+(?:_.+)?),(.*)\.(.+)$/', $parts[1], $results )
    ) {
   
   // 1 mod
@@ -82,11 +82,12 @@ if (
   // 5 title
   // 6 extension
   
-  // recordings/263/2263/master/2263_2265.wmv
-  // recordings/263/2263/2263_2265.mp3
+  // recordings/106/106/master/106_video,eurosport.mpg
+  // recordings/106/106/master/106_content,eurosportcontent.avi
+  // recordings/106/106/106_286_audio,eurosport.mp3
   $file =
     'recordings/' . $results[1] . '/' . $results[2] . '/' . $results[3] .
-    $results[2] . '_' . $results[4] . '.' . $results[6]
+    $results[4] . '.' . $results[6]
   ;
   
   if ( DEBUG ) {
@@ -117,7 +118,7 @@ if (
 // vegso fallback: nem kapott hozzaferest
 headerOutput("HTTP/1.1 404 Not Found");
 headerOutput("Status: 404 Not Found"); // FastCGI alternative
-exitWithContentHeaders( '/var/www/videosquare.eu/httpdocs_static/images/accessdenied.png', '' );
+exitWithContentHeaders( BASE_PATH . 'httpdocs_static/images/accessdenied.png', '' );
 
 function exitWithContentHeaders( $file, $prefix = PATH_PREFIX ) {
   
