@@ -74,9 +74,6 @@ $jobs_stopped = "";
 $jobs_toskip = array();
 foreach ( $jobs[$node_role] as $job => $job_info ) {
 
-//echo "Checking stop file for: " . $job . "\n";
-//var_dump($job_info);
-
 	// Is job enabled?
 	if ( !$job_info['enabled'] ) continue;
 
@@ -196,6 +193,7 @@ foreach ( $jobs[$node_role] as $job => $job_info ) {
 			// Log: log to file using no DB, then send mail
 			$debug->log($jconf['log_dir'], $jconf['jobid_watcher'] . ".log", $msg, $sendmail = false);
 			sendHTMLEmail_errorWrapper('[' . $app->bootstrap->config['siteid'] . ' log]: ' . substr( $msg, 0, 100 ), $msg, false);
+
 			break;
 		case '1':
 			// Running: check watchdog time difference (if larger and ffmpeg is not running...)
