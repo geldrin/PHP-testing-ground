@@ -240,6 +240,18 @@ $config = array(
   // a facebook userid amivel adminisztralhato a site
   // https://developers.facebook.com/docs/insights/
   'facebook_admins' => '',
+  //-------
+  // Job configuration template for frontend and converter nodes
+  'jobs' => array(
+    'frontend'  => array(
+      'job_upload_finalize' => array(
+        'enabled'             => true,  // watcher to check or skip this job
+        'watchdogtimeoutsecs' => 60,    // watchdog timeout (stuck processes)
+        'supresswarnings'     => false  // do not send warnings (e.g. stop files)
+      )
+    ),
+    'converter' => array(),
+  ),
 );
 
 $config['phpsettings'] = array(
@@ -247,18 +259,6 @@ $config['phpsettings'] = array(
   'display_errors'   => !$this->production, // kikapcsolas utan johet fatal error, ugyhogy meg itt dontsuk el
   'output_buffering' => 0,
   'error_log'        => $config['logpath'] . date( 'Y-m-' ) . 'php.txt',
-);
-
-// Job configuration template for frontend and converter nodes
-$config['jobs'] = array(
-	'frontend'	=> array(
-		'job_upload_finalize'	=> array(
-			'enabled'				=> true,	// watcher to check or skip this job
-			'watchdogtimeoutsecs'	=> 60,		// watchdog timeout (stuck processes)
-			'supresswarnings'		=> false	// do not send warnings (e.g. stop files)
-		)
-	),
-	'converter'	=> array()						// Should be overwritten from config_local.php
 );
 
 return $config;
