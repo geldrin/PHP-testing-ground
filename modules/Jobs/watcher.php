@@ -46,52 +46,20 @@ file_put_contents($jconf['temp_dir'] . 'processids', $processes);
 
 $node_role = $app->config['node_role'];
 
-$jobs = array(
-	'converter'	=> array(
-		$jconf['jobid_media_convert']	=> array(
-			'enabled'				=> true,
-			'watchdogtimeoutsecs'	=> 15 * 60,
-			'supresswarnings'		=> false
-		),
-		$jconf['jobid_content_convert']	=> array(
-			'enabled'				=> true,
-			'watchdogtimeoutsecs'	=> 15 * 60,
-			'supresswarnings'		=> false
-		),
-		$jconf['jobid_vcr_control']		=> array(
-			'enabled'				=> true,
-			'watchdogtimeoutsecs'	=> 15 * 60,
-			'supresswarnings'		=> false
-		),
-		$jconf['jobid_document_index']	=> array(
-			'enabled'				=> true,
-			'watchdogtimeoutsecs'	=> 5 * 60,
-			'supresswarnings'		=> false
-		),
-		$jconf['jobid_media_convert2']	=> array(
-			'enabled'				=> true,
-			'watchdogtimeoutsecs'	=> 15 * 60,
-			'supresswarnings'		=> false
-		)
-	),
-	'frontend'	=> array(
-		$jconf['jobid_upload_finalize']	=> array(
-			'enabled'				=> true,
-			'watchdogtimeoutsecs'	=> 60,
-			'supresswarnings'		=> false
-		)
-	)
-);
+// Jobs configuration
+$jobs = $app->config['jobs'];
 
-// Send alert of stopped jobs between 06:00:00 - 06:05:00
-$alert_time_start = 6 * 3600 + 0 * 60 + 0;
-$alert_time_end = 6 * 3600 + 5 * 60 - 1;
-$now_time = date('G') * 3600 + date('i') * 60 + date('s');
+// Send alert of stopped jobs between 06:00:00 - 06:04:59
+$date = date("Y-m-d");
+$alert_time_start = strtotime($date . " " . "06:00:00");
+$alert_time_end = strtotime($date . " " . "06:04:59");
+$now_time = time();
+
 // Check if all.stop file is present blocking all the jobs
 $stop_file = $app->config['datapath'] . 'jobs/all.stop';
 if ( file_exists($stop_file) ) {
 	$msg = "WARNING: jobs are not running. See stop file:\n\n" . $stop_file . "\n\nRemove it to start all jobs. This message is sent once every day.";
-	// Send mail once every hour to warn admin
+	// Send mail once a day to warn admin
 	if ( ( $now_time > $alert_time_start ) and ( $now_time < $alert_time_end ) ) {
 		// Log: log to file using no DB, then send mail
 		$debug->log($jconf['log_dir'], $jconf['jobid_watcher'] . ".log", $msg, $sendmail = false);
@@ -105,6 +73,9 @@ $jobs_isstopped = false;
 $jobs_stopped = "";
 $jobs_toskip = array();
 foreach ( $jobs[$node_role] as $job => $job_info ) {
+
+//echo "Checking stop file for: " . $job . "\n";
+//var_dump($job_info);
 
 	// Is job enabled?
 	if ( !$job_info['enabled'] ) continue;
@@ -121,7 +92,7 @@ foreach ( $jobs[$node_role] as $job => $job_info ) {
 
 // Report jobs stopped
 if ( $jobs_isstopped and !empty($jobs_stopped) ) {
-	$msg = "WARNING: some jobs may not running. See stop file(s):\n\n" . $jobs_stopped . "\nRemove them to restart jobs. This message is sent once every hour.";
+	$msg = "WARNING: some jobs may not running. See stop file(s):\n\n" . $jobs_stopped . "\nRemove them to restart jobs. This message is sent once a day.";
 	if ( ( $now_time > $alert_time_start ) and ( $now_time < $alert_time_end ) ) {
 		// Log: log to file using no DB, then send mail
 		$debug->log($jconf['log_dir'], $jconf['jobid_watcher'] . ".log", $msg, $sendmail = false);
@@ -144,8 +115,9 @@ $check_string = $jconf['content_dir'];
 $cmd = 'ps uax | grep "ffmpeg.*' . $check_string . '" | grep -v "grep" | wc -l 2>&1';
 exec($cmd, $output, $result);
 if ( isset($output[0]) ) if ( $output[0] > 0 ) $isrunning_contentconv = true;
-// Content conversion/VLC: check if running
+
 // !!! NEW CONV: REMOVE !!!
+// Content conversion/VLC: check if running
 $output = array();
 $cmd = 'ps uax | grep "cvlc" | grep -v "grep" | wc -l 2>&1';
 exec($cmd, $output, $result);
