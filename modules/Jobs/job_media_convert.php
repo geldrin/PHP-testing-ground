@@ -21,6 +21,7 @@ $app = new Springboard\Application\Cli(BASE_PATH, PRODUCTION);
 // Load jobs configuration file
 $app->loadConfig('modules/Jobs/config_jobs.php');
 $jconf = $app->config['config_jobs'];
+$myjobid = $jconf['jobid_conv_control'];
 
 // Log related init
 $debug = Springboard\Debug::getInstance();
@@ -42,7 +43,6 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_media_convert.stop' ) and 
 		$app->watchdog();
 	
 		// Establish database connection
-		$db = null;
 		$db = db_maintain();
 
 		$converter_sleep_length = $jconf['sleep_media'];
