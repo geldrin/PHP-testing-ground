@@ -3385,8 +3385,10 @@ class Recordings extends \Springboard\Model {
           continue;
 
         $ret['audio'] =
-          $staticuri . 'files/recordings/' . $treedir . '/' . $version['filename'] .
-          ',' . \Springboard\Filesystem::filenameize( $this->row['title'] ) . '.mp3'
+          $staticuri . 'files/recordings/' . $treedir . '/' .
+          \Springboard\Filesystem::getWithoutExtension( $version['filename'] ) .
+          ',' . \Springboard\Filesystem::filenameize( $this->row['title'] ) . '.' .
+          \Springboard\Filesystem::getExtension( $version['filename'] )
         ;
         break;
       }
@@ -3412,7 +3414,8 @@ class Recordings extends \Springboard\Model {
           continue;
 
         $ret['pip'] =
-          $staticuri . 'files/recordings/' . $treedir . '/' . $version['filename'] .
+          $staticuri . 'files/recordings/' . $treedir . '/' .
+          \Springboard\Filesystem::getWithoutExtension( $version['filename'] ) .
           ',' . \Springboard\Filesystem::filenameize( $this->row['title'] ) . '.' .
           \Springboard\Filesystem::getExtension( $version['filename'] )
         ;
