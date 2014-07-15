@@ -61,6 +61,9 @@
       </li>
     {/foreach}
     </ul>
+    <div class="morenews">
+      <a href="{$language}/organizations/listnews">{#index__morenews#}</a>
+    </div>
   {/if}
 </div>
 
