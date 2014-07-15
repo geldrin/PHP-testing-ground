@@ -92,6 +92,9 @@ try {
 }
 
 while (!$recordings->EOF) {
+	if (!empty($msg)) @fwrite($fh, $msg);
+	$msg = null;
+
   $rec = $recordings->fields;
   $msg = "\n> Recording #". $rec['id'] .", \"". $rec['mastervideofilename'] ."\"\n";
   $recording_path = $app->config['recordingpath'] . ( $rec['id'] % 1000 ) . "/" . $rec['id'] . "/";
@@ -146,6 +149,8 @@ while (!$recordings->EOF) {
       $data = $checkversions['data'];
       if (!empty($data) && $data[0]['encodingprofileid'] == $ver['profile']) {
         $msg .= "Recording version '". $ver['filename'] ."' already exists, skipping entry.\n";
+				fwrite($fh, $msg);
+				$recordings->MoveNext();
         continue;
       }
     } else {
@@ -183,6 +188,7 @@ while (!$recordings->EOF) {
       if ($result['success'] === false) {
         $msg .= "[WARNING] Query failed, skipping.\n";
         $err = true;
+				$recordings->MoveNext();
         continue;
       } 
       $versions_inserted++;
@@ -196,7 +202,7 @@ while (!$recordings->EOF) {
   $recordings_done = $recordings_done + ($err === true ? 0 : 1 );
   $msg .= "\nVersions inserted: ". $versions_inserted ."/". count($versions) ."\n";
   $msg .= "-----------------------------------------------------------------------------------------------------------------------\n";
-  $log .= $msg;
+  fwrite($fh, $msg);
   $recordings->MoveNext();
 }
 
