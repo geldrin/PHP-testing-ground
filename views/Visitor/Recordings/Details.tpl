@@ -86,7 +86,7 @@
 {/if}
 {if !empty( $recordingdownloads )}
   <div id="recordingdownloads">
-    <center><a href="#" class="submitbutton">{#recordings__recordingdownloads#}</a></center>
+    <a href="#" class="submitbutton">{#recordings__recordingdownloads#}</a>
     <ul>
       {foreach from=$recordingdownloads key=key item=url}
         {assign var=localekey value="recordingdownloads_$key"}

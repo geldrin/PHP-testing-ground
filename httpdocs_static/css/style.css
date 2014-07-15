@@ -2914,4 +2914,6 @@ a#currentusername span {
 }
 #recordingdownloads ul {
   display: none;
+  list-style-type: square;
+  padding: 0 0 0 22px;
 }
