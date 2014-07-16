@@ -401,14 +401,10 @@ global $jconf, $debug;
 		} else {
 			// Max fps check
 			if ( $rec[$idx . 'mastervideofps'] > $profile['videomaxfps'] ) {
-				switch ($rec[$idx . 'mastervideofps']) {
-					case 60:
-						$encpars['videofps'] = 30;
-						break;
-					case 50:
-						$encpars['videofps'] = 25;
-						break;
-				}
+				$encpars['videofps'] = $profile['videomaxfps'];
+				// Falling back to closest rate 50 or 60
+				if ( ( round($rec[$idx . 'mastervideofps']) % 50 ) == 0 ) $encpars['videofps'] = 50;
+				if ( ( round($rec[$idx . 'mastervideofps']) % 60 ) == 0 ) $encpars['videofps'] = 60;
 			}
 		}
 
@@ -416,7 +412,7 @@ global $jconf, $debug;
 		$videores = explode('x', strtolower($rec[$idx .'mastervideores']), 2);
 		$maxres   = explode('x', strtolower($jconf['video_max_res']), 2);
 		if (($videores[0] > $maxres[0]) || ($videores[1] > $maxres[1])) {
-			$msg = "[ERROR] Invalid video resolution: ". $rec[$idx .'mastervideores'];
+			$msg = "[ERROR] Invalid video resolution: ". $rec[$idx .'mastervideores'] . " (max:" . $jconf['video_max_res'] . ")";
 			$debug->log($jconf['log_dir'], $jconf['jobid_media_convert'] .'.log', $msg, $sendmail = false);
 			return false;
 		}
@@ -464,7 +460,12 @@ global $jconf, $debug;
 		// BPP check and update: use input BPP if lower than profile BPP
 		$encpars['videobpp'] = $profile['videobpp'];
 		if ( $encpars['videobpp_source'] < $profile['videobpp'] ) $encpars['videobpp'] = $encpars['videobpp_source'];
-		$encpars['videobitrate'] = $encpars['videobpp'] * $encpars['resx'] * $encpars['resy'] * $encpars['videofps'];
+		// Over 30 fps, we does not calculate same bpp for all the frames. Compensate 50% for extra frames.
+		$fps_bps_normalized = $encpars['videofps'];
+		if ( $encpars['videofps'] > 30 ) $fps_bps_normalized = 30 + round( ( $encpars['videofps'] - 30 ) / 2 );
+		$encpars['videofps_bps_normalized'] = $fps_bps_normalized;
+		$encpars['videobitrate'] = $encpars['videobpp'] * $encpars['resx'] * $encpars['resy'] * $fps_bps_normalized;
+		// Max bitrate check and clip
 		if ( $encpars['videobitrate'] > $jconf['video_max_bw'] ) $encpars['videobitrate'] = $jconf['video_max_bw'];
 
 		// Deinterlace
