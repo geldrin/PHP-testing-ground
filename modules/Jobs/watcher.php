@@ -31,6 +31,8 @@ $kill = '';
 
 clearstatcache();
 
+$debug->log($jconf['log_dir'], $jconf['jobid_watcher'] . ".log", "********************* Job: " . $jconf['jobid_watcher'] . " started *********************", $sendmail = false);
+
 $app->watchdog();
 
 $command = "cat /proc/cpuinfo > " . $jconf['temp_dir'] . "cpuinfo";
@@ -121,6 +123,12 @@ exec($cmd, $output, $result);
 if ( isset($output[0]) ) if ( $output[0] > 0 ) $isrunning_contentconv = true;
 // !!! NEW CONV: REMOVE !!!
 
+// List and log all running jobs
+$grep_target = "php -f " . $jconf['job_dir'];
+$processes = `ps uax | egrep "$grep_target(job_|watcher)" | grep -v "grep" 2>&1`;
+file_put_contents($jconf['temp_dir'] . 'processids', $processes);
+$debug->log($jconf['log_dir'], $jconf['jobid_watcher'] . ".log", "[INFO] All running jobs:\n" . $processes, $sendmail = false);
+
 foreach ( $jobs[$node_role] as $job => $job_info ) {
 
 	// Is job enabled?
@@ -130,14 +138,9 @@ foreach ( $jobs[$node_role] as $job => $job_info ) {
 	if ( $jobs_toskip[$job] == true ) continue;
 
 	$output = array();
-	$grep_target = "php -f " . $jconf['job_dir'];
 
-	// List all running jobs
-	$processes = `ps uax | egrep "$grep_target(job_|watcher)" | grep -v "grep" 2>&1`;
-	file_put_contents($jconf['temp_dir'] . 'processids', $processes);
-	$debug->log($jconf['log_dir'], $jconf['jobid_watcher'] . ".log", "[INFO] All running jobs:\n" . $processes, $sendmail = false);
-
-	// Check if job is running
+	// Check if this job is running
+	$debug->log($jconf['log_dir'], $jconf['jobid_watcher'] . ".log", "[INFO] Check if " . $job . ".php is running.", $sendmail = false);
 	$cmd = 'ps uax | grep "' . $grep_target . $job . '.php" | grep -v "grep" | wc -l 2>&1';
 	exec($cmd, $output, $result);
 	$debug->log($jconf['log_dir'], $jconf['jobid_watcher'] . ".log", "[INFO] Command executed: " . $cmd . "\nResult: " . $result . "\nOutput: " . var_export($output, 1), $sendmail = false);
@@ -159,15 +162,16 @@ foreach ( $jobs[$node_role] as $job => $job_info ) {
 	switch ( $num_jobs ) {
 		case '0':
 			// Not running: execute script and send alert message
+			$debug->log($jconf['log_dir'], $jconf['jobid_watcher'] . ".log", "[WARN] Job " . $job . ".php is not running!", $sendmail = false);
 
 			// Problem: sometime ps does not give result while the process is running. Maybe some strange transient is occured? As a workaround, let's wait for some time and double check if process is running.
 			sleep(1);
 			$cmd = 'ps uax | grep "' . $grep_target . $job . '.php" | grep -v "grep" | wc -l 2>&1';
 			exec($cmd, $output, $result);
-			$debug->log($jconf['log_dir'], $jconf['jobid_watcher'] . ".log", "[INFO] Process recheck command executed: " . $cmd . "\nResult: " . $result . "\nOutput: " . var_export($output, 1), $sendmail = false);
+			$debug->log($jconf['log_dir'], $jconf['jobid_watcher'] . ".log", "[INFO] Job " . $job . ".php recheck: " . $cmd . "\nResult: " . $result . "\nOutput: " . var_export($output, 1), $sendmail = false);
 
 			if ( $output[0] > 0 ) {
-				$debug->log($jconf['log_dir'], $jconf['jobid_watcher'] . ".log", "[OK] Process recheck: process is running. No restart.", $sendmail = false);
+				$debug->log($jconf['log_dir'], $jconf['jobid_watcher'] . ".log", "[OK] Job " . $job . ".php recheck: process is running.", $sendmail = false);
 				break;
 			}
 
@@ -197,6 +201,7 @@ foreach ( $jobs[$node_role] as $job => $job_info ) {
 			break;
 		case '1':
 			// Running: check watchdog time difference (if larger and ffmpeg is not running...)
+
 			$time = @filemtime( $app->config['datapath'] . 'watchdog/' . $job . '.php.watchdog' );
 
 			$isrunning = false;
@@ -208,11 +213,15 @@ foreach ( $jobs[$node_role] as $job => $job_info ) {
 				// Log: log to file using no DB, then send mail
 				$debug->log($jconf['log_dir'], $jconf['jobid_watcher'] . ".log", $msg, $sendmail = false);
 				sendHTMLEmail_errorWrapper('[' . $app->bootstrap->config['siteid'] . ' log]: ' . substr( $msg, 0, 100 ), $msg, false);
+			} else {
+				$debug->log($jconf['log_dir'], $jconf['jobid_watcher'] . ".log", "[OK] Job " . $job . ".php is running. Watchdog time check is OK.", $sendmail = false);
 			}
 
 			break;
 		default:
 			// Running in more than 1 instances: undefined (send alert)
+			$debug->log($jconf['log_dir'], $jconf['jobid_watcher'] . ".log", "[ERROR] Job " . $job . ".php is running in more instances.", $sendmail = false);
+
 			$msg  = "Job " . $job . ".php is running in more instances.\n\nDetailed information:\n\n";
 			$msg .= $body . "\n\n";
 			// Log: log to file using no DB, then send mail

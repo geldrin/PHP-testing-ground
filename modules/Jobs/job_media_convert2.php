@@ -25,7 +25,7 @@ $myjobid = $jconf['jobid_media_convert'];
 
 // Log related init
 $debug = Springboard\Debug::getInstance();
-$debug->log($jconf['log_dir'], $jconf['jobid_media_convert'] . ".log", "*************************** Job: Media conversion started ***************************", $sendmail = false);
+$debug->log($jconf['log_dir'], $jconf['jobid_media_convert'] . ".log", str_pad(" Job: Media conversion started ", 80, '=') ."\n", $sendmail = false);
 
 // Check operating system - exit if Windows
 if ( iswindows() ) {

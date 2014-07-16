@@ -117,7 +117,13 @@
     width: 65%;
     height: auto;
   }
-  
+  #recordingdownloads {
+    float: none;
+  }
+  #comments, #comments .widepager, #commentform textarea {
+    width: 100%;
+  }
+
   /* recordinglist auto-size */
   .recordinglist, .recordinglist .listitem {
     width: 100%;
