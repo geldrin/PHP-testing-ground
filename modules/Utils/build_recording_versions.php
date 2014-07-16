@@ -20,6 +20,7 @@ if ($argc > 1) {
 } else {
   $debug = false;
 }
+
 // Establish database connection
 try {
 	$db = $app->bootstrap->getAdoDB();
@@ -57,19 +58,25 @@ $query_recordings = "
     contentvideoreslq,
     contentvideoreshq,
     mobilevideoreslq,
-    mobilevideoreshq
+    mobilevideoreshq,
+		encodinggroupid
   FROM
     recordings
   WHERE
     ( status = '". $jconf['dbstatus_copystorage_ok'] . "' OR status = '". $jconf['dbstatus_markedfordeletion'] ."' ) AND
-		( masterstatus = '". $jconf['dbstatus_copystorage_ok'] ."' OR masterstatus = '". $jconf['dbstatus_markedfordeletion'] ."')";
+		( masterstatus = '". $jconf['dbstatus_copystorage_ok'] ."' OR masterstatus = '". $jconf['dbstatus_markedfordeletion'] ."') AND
+		encodinggroupid IS NULL";
+		// $query_recordings .= " AND id BETWEEN 9 AND 18"; // debug (select test subjects only)
 $query_default_cnode = "SELECT id FROM converter_nodes WHERE shortname LIKE 'conv-1'";
 
-$log = "\n=====[ ". date('Y-m-d H:i:s', time()) ." ]===========================================================================================\n";
-$log .= $debug === true ? "[NOTICE] Started in debug-mode.\n" : "";
+$msg = "\n". str_pad("[ ". date('Y-m-d H:i:s', time()) ." ]", 80, "=", STR_PAD_BOTH) ."\n";
+$msg .= $debug === true ? "[NOTICE] Started in debug-mode.\n" : "";
+@fwrite($fh, $msg);
+
 $recordings_done = 0;
 $versions_created = 0;
 // Read basic profile ids from database
+
 try {
   $recordings = $db->Execute($query_recordings);
   $num_recordings = $recordings->RecordCount();
@@ -103,6 +110,8 @@ while (!$recordings->EOF) {
     $msg .= print_r("[ERROR] recording path doesn't exists! [ ". $recording_path ." ]\n", true);
     continue;
   }
+	
+	// if ($rec['encodinggroupid'] !== null || $rec['encodinggroupid'] !== "" ) continue; // recording already migrated, skip entry
   
   // Build filenames
   $audio      = $rec['id'] ."_audio.mp3";
@@ -179,7 +188,7 @@ while (!$recordings->EOF) {
           'res'       => $is_audio_only ? 'NULL' : "'". $rec[$ver['resolution']] ."'",
           'bandw'     => $is_audio_only ? $meta['masteraudiobitrate'] : $meta['mastervideobitrate'] ,
           'desktopc'  => $is_desktop_compatible ? 1 : 0,
-          'mobilec'   => $is_mobile_compatible ? 1 : 0
+          'mobilec'   => $is_mobile_compatible ? 1 : 0      // should we check meta->mastervideocodec ~ baseline?
         )
       );
       // fwrite($fh, "recording ID: ". $rec['id'] ."\n". print_r($rec, true) ."\n". print_r($ver, true) ."\n-----------------\n"); //// DEBUG
@@ -196,19 +205,36 @@ while (!$recordings->EOF) {
     } catch(Exception $ex) {
       print_r(print_r($ver, true) . $ex->getMessage());
       fwrite($fh, print_r(trim($ex->getMessage()), true));
-      exit -1;
+			
+			break 2;
+      // exit -1;
     }
   }
+	
   $recordings_done = $recordings_done + ($err === true ? 0 : 1 );
+
+	$qry = "UPDATE `recordings` SET `encodinggroupid` = 2 WHERE `id` = ". intval($rec['id']);
+	$msg .= "\nUpdating recording #". $rec['id'] ." \n". $qry ."\n";
+	if ($debug === false) {
+		$tmp = query($qry);
+		if ($tmp['result'] === false) {
+			$msg .= "[ERROR] Database update (recordings.encodinggroupid) failed.\n". $tmp['message'] ."\n";
+		  break;
+		}
+		unset($tmp);
+		$msg .= "result: ok\n";
+	}
+	
   $msg .= "\nVersions inserted: ". $versions_inserted ."/". count($versions) ."\n";
-  $msg .= "-----------------------------------------------------------------------------------------------------------------------\n";
+  $msg .= str_pad("", 80, "=") ."\n";
+	
   fwrite($fh, $msg);
   $recordings->MoveNext();
 }
 
-$log .= "\nTotal number of recordings done: ". $recordings_done ."/". $num_recordings ."\nTotal number of versions created: ". $versions_created ."\n";
+$msg = "\nTotal number of recordings done: ". $recordings_done ."/". $num_recordings ."\nTotal number of versions created: ". $versions_created ."\n";
 print_r("\nWriting log file: \"". $logfile ."\"\n");
-fwrite($fh, $log);
+fwrite($fh, $msg);
 fclose($fh);
 
 /////////////////////////////////////////// FUNCTIONS ///////////////////////////////////////////
@@ -238,7 +264,7 @@ function query($query) {
     return $results;
   }
   if ( $rs->RecordCount() < 1 ) {
-    $results['data'] = $rs->GetRows();
+		if (method_exists($rs, "GetRows")) $results['data'] = $rs->GetRows();
     $results['result'] = true;
     $results['message'] = "Query returned an empty array.\n";
   } else {
