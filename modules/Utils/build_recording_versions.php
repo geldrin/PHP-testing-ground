@@ -1,5 +1,5 @@
 <?php
-define('BASE_PATH',	realpath( __DIR__ . '/../..' ) . '/' );
+define('BASE_PATH', realpath( __DIR__ . '/../..' ) . '/' );
 define('PRODUCTION', false );
 define('DEBUG', false );
 include_once( BASE_PATH . 'libraries/Springboard/Application/Cli.php');
@@ -23,11 +23,11 @@ if ($argc > 1) {
 
 // Establish database connection
 try {
-	$db = $app->bootstrap->getAdoDB();
+  $db = $app->bootstrap->getAdoDB();
 } catch (exception $err) {
-	// Send mail alert, sleep for 15 minutes
-	echo "[ERROR] No connection to DB (getAdoDB() failed). Error message:\n" . $err . "\n";
-	exit -1;
+  // Send mail alert, sleep for 15 minutes
+  echo "[ERROR] No connection to DB (getAdoDB() failed). Error message:\n" . $err . "\n";
+  exit -1;
 }
 // Open logfile
 try {
@@ -59,14 +59,14 @@ $query_recordings = "
     contentvideoreshq,
     mobilevideoreslq,
     mobilevideoreshq,
-		encodinggroupid
+    encodinggroupid
   FROM
     recordings
   WHERE
     ( status = '". $jconf['dbstatus_copystorage_ok'] . "' OR status = '". $jconf['dbstatus_markedfordeletion'] ."' ) AND
-		( masterstatus = '". $jconf['dbstatus_copystorage_ok'] ."' OR masterstatus = '". $jconf['dbstatus_markedfordeletion'] ."') AND
-		encodinggroupid IS NULL";
-		// $query_recordings .= " AND id BETWEEN 9 AND 18"; // debug (select test subjects only)
+    ( masterstatus = '". $jconf['dbstatus_copystorage_ok'] ."' OR masterstatus = '". $jconf['dbstatus_markedfordeletion'] ."') AND
+    encodinggroupid IS NULL";
+    // $query_recordings .= " AND id BETWEEN 9 AND 18"; // debug (select test subjects only)
 $query_default_cnode = "SELECT id FROM converter_nodes WHERE shortname LIKE 'conv-1'";
 
 $msg = "\n". str_pad("[ ". date('Y-m-d H:i:s', time()) ." ]", 80, "=", STR_PAD_BOTH) ."\n";
@@ -99,8 +99,8 @@ try {
 }
 
 while (!$recordings->EOF) {
-	if (!empty($msg)) @fwrite($fh, $msg);
-	$msg = null;
+  if (!empty($msg)) @fwrite($fh, $msg);
+  $msg = null;
 
   $rec = $recordings->fields;
   $msg = "\n> Recording #". $rec['id'] .", \"". $rec['mastervideofilename'] ."\"\n";
@@ -110,8 +110,8 @@ while (!$recordings->EOF) {
     $msg .= print_r("[ERROR] recording path doesn't exists! [ ". $recording_path ." ]\n", true);
     continue;
   }
-	
-	// if ($rec['encodinggroupid'] !== null || $rec['encodinggroupid'] !== "" ) continue; // recording already migrated, skip entry
+  
+  // if ($rec['encodinggroupid'] !== null || $rec['encodinggroupid'] !== "" ) continue; // recording already migrated, skip entry
   
   // Build filenames
   $audio      = $rec['id'] ."_audio.mp3";
@@ -158,8 +158,8 @@ while (!$recordings->EOF) {
       $data = $checkversions['data'];
       if (!empty($data) && $data[0]['encodingprofileid'] == $ver['profile']) {
         $msg .= "Recording version '". $ver['filename'] ."' already exists, skipping entry.\n";
-				fwrite($fh, $msg);
-				$recordings->MoveNext();
+        fwrite($fh, $msg);
+        $recordings->MoveNext();
         continue;
       }
     } else {
@@ -197,7 +197,7 @@ while (!$recordings->EOF) {
       if ($result['success'] === false) {
         $msg .= "[WARNING] Query failed, skipping.\n";
         $err = true;
-				$recordings->MoveNext();
+        $recordings->MoveNext();
         continue;
       } 
       $versions_inserted++;
@@ -205,29 +205,29 @@ while (!$recordings->EOF) {
     } catch(Exception $ex) {
       print_r(print_r($ver, true) . $ex->getMessage());
       fwrite($fh, print_r(trim($ex->getMessage()), true));
-			
-			break 2;
+
+      break 2;
       // exit -1;
     }
   }
-	
+  
   $recordings_done = $recordings_done + ($err === true ? 0 : 1 );
 
-	$qry = "UPDATE `recordings` SET `encodinggroupid` = 2 WHERE `id` = ". intval($rec['id']);
-	$msg .= "\nUpdating recording #". $rec['id'] ." \n". $qry ."\n";
-	if ($debug === false) {
-		$tmp = query($qry);
-		if ($tmp['result'] === false) {
-			$msg .= "[ERROR] Database update (recordings.encodinggroupid) failed.\n". $tmp['message'] ."\n";
-		  break;
-		}
-		unset($tmp);
-		$msg .= "result: ok\n";
-	}
-	
+  $qry = "UPDATE `recordings` SET `encodinggroupid` = 2 WHERE `id` = ". intval($rec['id']);
+  $msg .= "\nUpdating recording #". $rec['id'] ." \n". $qry ."\n";
+  if ($debug === false) {
+    $tmp = query($qry);
+    if ($tmp['result'] === false) {
+      $msg .= "[ERROR] Database update (recordings.encodinggroupid) failed.\n". $tmp['message'] ."\n";
+      break;
+    }
+    unset($tmp);
+    $msg .= "result: ok\n";
+  }
+  
   $msg .= "\nVersions inserted: ". $versions_inserted ."/". count($versions) ."\n";
-  $msg .= str_pad("", 80, "=") ."\n";
-	
+  $msg .= str_pad("", 80, "-") ."\n";
+  
   fwrite($fh, $msg);
   $recordings->MoveNext();
 }
@@ -264,7 +264,7 @@ function query($query) {
     return $results;
   }
   if ( $rs->RecordCount() < 1 ) {
-		if (method_exists($rs, "GetRows")) $results['data'] = $rs->GetRows();
+    if (method_exists($rs, "GetRows")) $results['data'] = $rs->GetRows();
     $results['result'] = true;
     $results['message'] = "Query returned an empty array.\n";
   } else {
@@ -275,17 +275,17 @@ function query($query) {
 }
 
 function is_res1_gt_res2($res1, $res2) {
-	$tmp = explode('x', strtolower($res1));
-	$resx1 = $tmp[0] + 0;
-	$resy1 = $tmp[1] + 0;
-	$tmp = explode('x', strtolower($res2));
-	$resx2 = $tmp[0] + 0;
-	$resy2 = $tmp[1] + 0;
-	
-	if (($resx1 > $resx2) && ($resy1 > $resy2))
-		return true;
-	else 
-		return false;
+  $tmp = explode('x', strtolower($res1));
+  $resx1 = $tmp[0] + 0;
+  $resy1 = $tmp[1] + 0;
+  $tmp = explode('x', strtolower($res2));
+  $resx2 = $tmp[0] + 0;
+  $resy2 = $tmp[1] + 0;
+  
+  if (($resx1 > $resx2) && ($resy1 > $resy2))
+    return true;
+  else 
+    return false;
 }
 
 function insertRecordingVersions($rv) {
