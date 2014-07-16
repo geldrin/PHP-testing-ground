@@ -176,10 +176,7 @@
   "controller": {
     "exitFullscreen": "Kilépés a teljes képernyős nézetből (ESC)",
     "goFullscreen": "Teljes képernyős nézet (F11)",
-    "changeHiQuality": "Váltás magas minőségre",
-    "changeLoQuality": "Váltás normál minőségre",
-    "hiQuality": "Magas minőség",
-    "loQuality": "Normál minőség",
+	"changeQuality": "Váltás '[QUALITY_NAME]' minőségre",
     "play": "Lejátszás",
     "skip": "Léptetés",
     "pause": "Megállítás",
