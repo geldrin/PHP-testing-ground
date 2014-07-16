@@ -1,0 +1,52 @@
+INSERT INTO `encoding_groups` (`id`, `timestamp`, `name`, `default`, `islegacy`, `description`, `disabled`) VALUES
+(1, '2014-02-13 13:00:00', 'Videosquare default', 1, 0, 'Video: 360p, 720p, 1080p\r\nContent: 480p, 720p, 1080p\r\nPiP: 320p, 480p', 0),
+(2, '2014-03-04 16:00:00', 'Videosquare OLD', 0, 1, 'Legacy Videosquare profile (v:360p, 720p, c: 480p,720p + PiP versions). If any reconvert needed with recording encoding with this profile, the whole recording will be reencoded with new profile.', 0),
+(3, '2014-07-16 09:40:00', 'Video + Content as movie', 0, 0, 'Video: 360p, 720p, 1080p\r\nContent (movie, higher bpp): 480p, 720p, 1080p\r\nPiP: 320p, 480p', 0);
+
+INSERT INTO `encoding_profiles_groups` (`id`, `encodingprofilegroupid`, `encodingprofileid`, `encodingorder`) VALUES
+(1, 1, 1, 10),
+(2, 1, 2, 40),
+(3, 1, 3, 70),
+(4, 1, 4, 20),
+(5, 1, 5, 50),
+(6, 1, 6, 30),
+(7, 1, 7, 60),
+(8, 2, 1, 10),
+(9, 2, 8, 40),
+(10, 2, 9, 70),
+(11, 2, 10, 20),
+(12, 2, 11, 50),
+(13, 2, 12, 30),
+(14, 2, 13, 60),
+(15, 1, 14, 80),
+(16, 1, 15, 90),
+(17, 3, 1, 10),
+(18, 3, 4, 20),
+(19, 3, 16, 30),
+(20, 3, 2, 40),
+(21, 3, 5, 50),
+(22, 3, 17, 60),
+(23, 3, 3, 70),
+(24, 3, 14, 80),
+(25, 3, 18, 90);
+
+INSERT INTO `encoding_profiles` (`id`, `parentid`, `name`, `shortname`, `type`, `mediatype`, `isdesktopcompatible`, `isioscompatible`, `isandroidcompatible`, `filenamesuffix`, `filecontainerformat`, `videocodec`, `videopasses`, `videobboxsizex`, `videobboxsizey`, `videomaxfps`, `videobpp`, `ffmpegh264profile`, `ffmpegh264preset`, `audiocodec`, `audiomaxchannels`, `audiobitrateperchannel`, `audiomode`, `pipenabled`, `pipcodecprofile`, `pipposx`, `pipposy`, `pipalign`, `pipsize`, `disabled`) VALUES
+(1, NULL, 'Audio only', 'audio', 'recording', 'audio', 1, 1, 1, '_audio', 'mp3', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'libmp3lame', 2, 64, 'cbr', 0, 'a', 'a', 'a', 0, 0, 0),
+(2, NULL, 'PiP 320p', '320p', 'pip', 'video', 0, 1, 1, '_pip_320p', 'mp4', 'h264', 1, 480, 320, 30, 0.09, 'baseline', 'fast', 'aac', 1, 64, 'cbr', 1, 'baseline', 'left', 'up', 0.03, 0.2, 0),
+(3, 2, 'PiP 480p', '480p', 'pip', 'video', 0, 1, 1, '_pip_480p', 'mp4', 'h264', 1, 854, 480, 30, 0.045, 'baseline', 'fast', 'aac', 2, 64, 'cbr', 1, 'baseline', 'left', 'up', 0.03, 0.2, 0),
+(4, NULL, 'Video 360p', '360p', 'recording', 'video', 1, 1, 1, '_video_360p', 'mp4', 'h264', 1, 640, 360, 60, 0.09, 'baseline', 'fast', 'aac', 1, 64, 'cbr', 0, NULL, NULL, NULL, NULL, NULL, 0),
+(5, 4, 'Video 720p', '720p', 'recording', 'video', 1, 1, 1, '_video_720p', 'mp4', 'h264', 1, 1280, 720, 60, 0.05, 'baseline', 'fast', 'aac', 2, 64, 'cbr', 0, NULL, NULL, NULL, NULL, NULL, 0),
+(6, NULL, 'Content 480p', '480p', 'content', 'video', 1, 0, 0, '_content_480p', 'mp4', 'h264', 1, 854, 480, 60, 0.033, 'main', 'fast', 'aac', 1, 64, 'cbr', 0, NULL, NULL, NULL, NULL, NULL, 0),
+(7, 6, 'Content 720p', '720p', 'content', 'video', 1, 0, 0, '_content_720p', 'mp4', 'h264', 1, 1280, 720, 60, 0.02, 'main', 'fast', 'aac', 2, 64, 'cbr', 0, NULL, NULL, NULL, NULL, NULL, 0),
+(8, NULL, 'Mobile low quality', '320p', 'pip', 'video', 0, 1, 1, '_mobile_lq', 'mp4', 'h264', 1, 480, 320, 30, 0.06, 'baseline', 'fast', 'aac', 1, 64, 'cbr', 1, 'baseline', 'left', 'up', 0.03, 0.2, 0),
+(9, 8, 'Mobile high quality', '720p', 'pip', 'video', 0, 1, 1, '_mobile_hq', 'mp4', 'h264', 1, 1280, 720, 30, 0.045, 'baseline', 'fast', 'aac', 2, 64, 'cbr', 1, 'baseline', 'left', 'up', 0.03, 0.02, 0),
+(10, NULL, 'Video normal quality', '360p', 'recording', 'video', 1, 0, 0, '_video_lq', 'mp4', 'h264', 1, 640, 360, 60, 0.09, 'main', 'fast', 'aac', 1, 64, 'cbr', 0, NULL, NULL, NULL, NULL, NULL, 0),
+(11, 10, 'Video high quality', '720p', 'recording', 'video', 1, 0, 0, '_video_hq', 'mp4', 'h264', 1, 1280, 720, 60, 0.05, 'main', 'fast', 'aac', 2, 64, 'cbr', 0, NULL, NULL, NULL, NULL, NULL, 0),
+(12, NULL, 'Content normal quality', '480p', 'content', 'video', 1, 0, 0, '_content_lq', 'mp4', 'h264', 1, 640, 480, 60, 0.033, 'main', 'fast', 'aac', 1, 64, 'cbr', 0, NULL, NULL, NULL, NULL, NULL, 0),
+(13, 12, 'Content high quality', '720p', 'content', 'video', 1, 0, 0, '_content_hq', 'mp4', 'h264', 1, 1280, 720, 60, 0.02, 'main', 'fast', 'aac', 2, 64, 'cbr', 0, NULL, NULL, NULL, NULL, NULL, 0),
+(14, 5, 'Video 1080p', '1080p', 'recording', 'video', 1, 0, 0, '_video_1080p', 'mp4', 'h264', 1, 1920, 1080, 60, 0.05, 'baseline', 'fast', 'aac', 2, 64, 'cbr', 0, NULL, NULL, NULL, NULL, NULL, 0),
+(15, 7, 'Content 1080p', '1080p', 'content', 'video', 1, 0, 0, '_content_1080p', 'mp4', 'h264', 1, 1920, 1080, 60, 0.02, 'main', 'fast', 'aac', 2, 64, 'cbr', 0, NULL, NULL, NULL, NULL, NULL, 0),
+(16, NULL, 'Content Movie 480p', '480p', 'content', 'video', 1, 0, 0, '_content_480p', 'mp4', 'h264', 1, 854, 480, 60, 0.06, 'main', 'fast', 'aac', 1, 64, 'cbr', 0, NULL, NULL, NULL, NULL, NULL, 0),
+(17, 16, 'Content Movie 720p', '720p', 'content', 'video', 1, 0, 0, '_content_720p', 'mp4', 'h264', 1, 1280, 720, 60, 0.05, 'main', 'fast', 'aac', 2, 64, 'cbr', 0, NULL, NULL, NULL, NULL, NULL, 0),
+(18, 17, 'Content Movie 1080p', '1080p', 'content', 'video', 1, 0, 0, '_content_1080p', 'mp4', 'h264', 1, 1920, 1080, 60, 0.05, 'main', 'fast', 'aac', 2, 64, 'cbr', 0, NULL, NULL, NULL, NULL, NULL, 0);
+
