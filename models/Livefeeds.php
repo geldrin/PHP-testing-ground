@@ -785,10 +785,10 @@ class Livefeeds extends \Springboard\Model {
       $endts   = strtotime( $filter['endtimestamp'] );
       $diff    = $endts - $startts;
 
-      if ( $diff < 604800 ) { // 1 het
+      if ( $diff < 1209600 ) { // 2 het
         $table = 'statistics_live_5min';
         $step  = 300;
-      } elseif ( $diff < 1814400 ) { // 3 het
+      } elseif ( $diff < 3024000 ) { // 5 het
         $table = 'statistics_live_hourly';
         $step  = 3600;
       } else {

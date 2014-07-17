@@ -682,7 +682,6 @@ class Controller extends \Visitor\Controller {
   public function transformStatistics( $data ) {
 
     $l          = $this->bootstrap->getLocalization();
-    $fieldtokey = array();
     $ret        = array(
       'startts'      => 0,
       'endts'        => 0,
@@ -694,20 +693,19 @@ class Controller extends \Visitor\Controller {
     $firstdata = reset( $data );
     $lastdata  = end( $data );
 
-    $ret['stepinterval'] = intval( $firstdata['stepinterval'] );
-    $ret['startts']      = intval( $firstdata['timestamp'] );
-    $ret['endts']        = intval( $lastdata['timestamp'] );
+    $ret['stepinterval'] = intval( $firstdata['stepinterval'] ) * 1000;
+    $ret['startts']      = intval( $firstdata['timestamp'] ) * 1000;
+    $ret['endts']        = intval( $lastdata['timestamp'] ) * 1000;
 
     // prepare the chart labels
     foreach( $data as $value ) {
 
       foreach( $value as $field => $v ) {
 
-        if ( $field == 'timestamp' or $field == 'stepinterval' )
+        if ( $field == 'stepinterval' )
           continue;
 
         $ret['labels'][] = $l('live', 'stats_' . $field );
-        $fieldtokey[ $field ] = count( $ret['labels'] ) - 1;
 
       }
 
@@ -718,8 +716,8 @@ class Controller extends \Visitor\Controller {
     // prepare the values
     foreach( $data as $key => $value ) {
 
-      $ret['data'][ $key ] = array(
-        'ts' => intval( $value['timestamp'] ),
+      $row = array(
+        intval( $value['timestamp'] ) * 1000,
       );
 
       foreach( $value as $field => $v ) {
@@ -727,12 +725,12 @@ class Controller extends \Visitor\Controller {
         if ( $field == 'timestamp' or $field == 'stepinterval' )
           continue;
 
-        $fieldkey = $fieldtokey[ $field ];
-        $ret['data'][ $key ][ $fieldkey ] = intval( $v );
+        $row[] = intval( $v );
 
       }
 
       unset( $data[ $key ] );
+      $ret['data'][] = $row;
 
     }
 
