@@ -10,6 +10,8 @@ function smarty_modifier_sizeformat( $bytes, $precision = 2, $basepow = 0 ) {
   $pow   = floor( log( $bytes, 1024 ) ) + $basepow;
   $pow   = min( $pow, count( $units ) - 1 );
 
+  $bytes /= pow( 1024, $pow );
+
   return smarty_modifier_numberformat( $bytes, $precision ) . ' ' . $units[ $pow ];
 
 }
