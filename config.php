@@ -114,7 +114,7 @@ $config = array(
   'wowza'      => array(
     
     'httpurl'           => 'http://%s/vsq/_definst_/',
-    'sechttpurl'        => 'http://%s/vsq/_definst_/',
+    'sechttpurl'        => 'https://%s/vsq/_definst_/',
     
     'rtmpurl'           => 'rtmp://%s:1935/vsq/',
     'secrtmpsurl'       => 'rtmps://%s/vsqsec/',
@@ -135,7 +135,7 @@ $config = array(
     'secliveurl'        => 'rtmpte://%s:80/vsqlivesec/',
     
     'livehttpurl'       => 'http://%s/vsqlive/',
-    'seclivehttpurl'    => 'http://%s/vsqlivesec/',
+    'seclivehttpurl'    => 'https://%s/vsqlivesec/',
     
     'livertspurl'       => 'rtsp://%s/vsqlive/',
     'seclivertspurl'    => 'rtsp://%s/vsqlivesec/',
