@@ -683,27 +683,17 @@ class Controller extends \Visitor\Controller {
 
     $l          = $this->bootstrap->getLocalization();
     $ret        = array(
-      'startts'      => 0,
-      'endts'        => 0,
-      'stepinterval' => 0,
+      'startts'      => $data['starttimestamp'] * 1000,
+      'endts'        => $data['endtimestamp'] * 1000,
+      'stepinterval' => $data['step'] * 1000,
       'labels'       => array(),
       'data'         => array(),
     );
 
-    $firstdata = reset( $data );
-    $lastdata  = end( $data );
-
-    $ret['stepinterval'] = intval( $firstdata['stepinterval'] ) * 1000;
-    $ret['startts']      = intval( $firstdata['timestamp'] ) * 1000;
-    $ret['endts']        = intval( $lastdata['timestamp'] ) * 1000;
-
     // prepare the chart labels
-    foreach( $data as $value ) {
+    foreach( $data['data'] as $value ) {
 
       foreach( $value as $field => $v ) {
-
-        if ( $field == 'stepinterval' )
-          continue;
 
         $ret['labels'][] = $l('live', 'stats_' . $field );
 
@@ -716,7 +706,7 @@ class Controller extends \Visitor\Controller {
     $ret['labels'][] = $l('live', 'stats_sum');
 
     // prepare the values
-    foreach( $data as $key => $value ) {
+    foreach( $data['data'] as $key => $value ) {
 
       $row = array(
         intval( $value['timestamp'] ) * 1000,
@@ -725,7 +715,7 @@ class Controller extends \Visitor\Controller {
       $sum = 0;
       foreach( $value as $field => $v ) {
 
-        if ( $field == 'timestamp' or $field == 'stepinterval' )
+        if ( $field == 'timestamp' )
           continue;
 
         $v = intval( $v );
@@ -734,7 +724,7 @@ class Controller extends \Visitor\Controller {
 
       }
 
-      unset( $data[ $key ] );
+      unset( $data['data'][ $key ] );
       $row[] = $sum;
       $ret['data'][] = $row;
 

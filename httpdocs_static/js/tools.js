@@ -2168,6 +2168,7 @@ function setupLivestatistics( elem ) {
     graphdata.push( row );
 
   }
+
   var visibility = [];
   $j('input[name^="datapoints"]').each(function() {
     visibility.push( $j(this).is(':checked') );
