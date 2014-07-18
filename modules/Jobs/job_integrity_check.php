@@ -1,13 +1,16 @@
 <?php
-// Dataintegrity check job for VideoSquare
-//	1. Check contributor images
+///////////////////////////////////////////////////////////////////////////////////////////////////
+// Data integrity check for converter2.0
+///////////////////////////////////////////////////////////////////////////////////////////////////
+//	1. Check contributor images (placeholder)
 //	2. Check recordings: media files, thumbnails
 //	3. Check recording attachments
+///////////////////////////////////////////////////////////////////////////////////////////////////
+
 define('BASE_PATH',	realpath( __DIR__ . '/../..' ) . '/' );
 define('PRODUCTION', false);
 define('DEBUG', false);
 define('THRESHOLD', 0.005);
-define('THRESHOLD_MOBILE', 0.02);
 
 include_once(BASE_PATH . 'libraries/Springboard/Application/Cli.php');
 
@@ -35,7 +38,7 @@ $num_errors = 0;
 
 // Check operating system - exit if Windows
 if ( iswindows() ) {
-	echo "ERROR: Non-Windows process started on Windows platform\n";
+	echo "[ERROR] Non-Windows process started on Windows platform\n";
 	exit;
 }
 
@@ -99,13 +102,14 @@ try {
 } catch (exception $err) {
 	$msg = "[ERROR] Data integrity check interrupted due to error. Manual restart is required.\nCheck log files.\n\n";
 	$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] No connection to DB (getAdoDB() failed). Error message:\n" . $err, $sendmail = TRUE);
-	exit;
+	exit (1);
 }
 
 $num_checked_recs = 0;
 $num_onstorage_recs = 0;
 $num_recordings = $recordings->RecordCount();
 
+// MAIN CYCLE /////////////////////////////////////////////////////////////////////////////////////
 while ( !$recordings->EOF ) {
 	// Get current field from the query
 	$rec = $recordings->fields;
@@ -118,7 +122,7 @@ while ( !$recordings->EOF ) {
 
 	// Check recording directory
 	if ( !file_exists($recording_path) ) {
-		$recording_summary .= "ERROR: recording path does not exist (" . $recording_path . ")\n";
+		$recording_summary .= "[ERROR] recording path does not exist (" . $recording_path . ")\n";
 		$recordings->MoveNext();
 		continue;
 	} elseif  ($rec['status'] !== $jconf['dbstatus_copystorage_ok']) {
@@ -128,176 +132,122 @@ while ( !$recordings->EOF ) {
 	// Threshold variable
 	$threshold = 0;
 
-	// Check media files	
-	$hq_record_available = FALSE;
-	$hq_content_available = FALSE;
-	$hq_mobile_available = FALSE;
-	
-	// build filenames
-	$record_audio_only = $recording_path . $rec_id . "_audio.mp3";
-	$record_mobile_lq = $recording_path . $rec_id . "_mobile_lq.mp4";
-	$record_mobile_hq = $recording_path . $rec_id . "_mobile_hq.mp4";
-	$record_lq = $recording_path . $rec_id . "_video_lq.mp4";	
-	$record_hq = $recording_path . $rec_id . "_video_hq.mp4";	
-	$content_lq = $recording_path . $rec_id . "_content_lq.mp4";
-	$content_hq = $recording_path . $rec_id . "_content_hq.mp4";
-
 	if ($rec['mastermediatype'] == "audio") {
-		$master_record = $recording_path . "master/" . $rec_id . "_audio." . $rec['mastervideoextension'];
+		$master_record = $recording_path ."master/". $rec_id ."_audio.". $rec['mastervideoextension'];
 	} else {
-		$master_record = $recording_path . "master/" . $rec_id . "_video." . $rec['mastervideoextension'];
+		$master_record = $recording_path ."master/". $rec_id ."_video.". $rec['mastervideoextension'];
 	}
-	
-	// Check audio only version
-	if ( $rec['mastermediatype'] != "videoonly" ) {
-		if ( !file_exists($record_audio_only) ) {
-			$recording_summary .= "ERROR: audio only version does not exist (" . $record_audio_only . ")\n";
-		} elseif ( filesize($record_audio_only) == 0 ) {
-			$recording_summary .= "ERROR : audio only version zero size (" . $record_audio_only . ")\n";
-		}
-	}
-	
 	// Check master media file
 	if ( !file_exists($master_record) ) {
-		$recording_summary .= "ERROR: master media file does not exist (" . $master_record . ")\n";
+		$recording_summary .= "[ERROR] master media file does not exist (" . $master_record . ")\n";
 	} elseif ( filesize($master_record) == 0 ) {
-		$recording_summary .= "ERROR: master media file zero size (" . $master_record . ")\n";
+		$recording_summary .= "[ERROR] master media file zero size (" . $master_record . ")\n";
 	} elseif ($rec['mastermediatype'] != "audio") {
-		if (is_res1_gt_res2($rec['mastervideores'], $jconf['profile_video_lq']['video_bbox'])) {
-			$hq_record_available = TRUE;
+		$tmp = getLength($master_record);
+		if ($tmp['result'] === false) {
+			$recording_summary .= "[ERROR] Master recording analyzation failed: ".  $tmp['message'] ."(". $master_record .")\n";
+			$debug->log($jconf['log_dir'], $recording_summary, $sendmail = false);
+			break(1);
 		}
-		if (is_res1_gt_res2($rec['mastervideores'], $jconf['profile_mobile_lq']['video_bbox'])) {
-			$hq_mobile_available = TRUE;
-		}
-		
-		$mastervideolength = check_length($master_record, $msg);
-		$threshold = ( round($mastervideolength * THRESHOLD) < 1 ? 1 : round($mastervideolength * THRESHOLD) );
+		$mastervideolength = $tmp['length'];
+		unset($tmp);
+		$threshold = ( round($mastervideolength * THRESHOLD) < 1.5 ? 1.5 : round($mastervideolength * THRESHOLD) );
 		
 		if (abs($mastervideolength - $rec['masterlength']) > $threshold) {
-			$recording_summary .= "ERROR: invalid database value (". $master_record ." - ". $mastervideolength ."sec, db - ". $rec['masterlength'] ."s)\n";
+			$recording_summary .= "[ERROR] invalid database value (". $master_record ." - ". $mastervideolength ."sec, db - ". $rec['masterlength'] ."s)\n";
 		}
 	}
 	
-	if ( $rec['mastermediatype'] != "audio" ) {
-		// Check normal quality file
-		if ( !file_exists($record_lq) ) {
-			$recording_summary .= "ERROR: media file does not exist (" . $record_lq . ")\n";
-		} elseif ( filesize($record_lq) == 0 ) {
-			$recording_summary .= "ERROR: media file zero size (" . $record_lq . ")\n";
-		} else {
-			$record_lq_duration = check_length($record_lq, $msg);
-			if (abs($mastervideolength - $record_lq_duration) > $threshold) {
-				$recording_summary .= "ERROR: invalid video duration (". $record_lq ." - ". $record_lq_duration ."sec, db - ". $mastervideolength ."s)\n";
-			}
-		}
-	
-		// Check high quality file
-		if ( $hq_record_available) {
-			if ( !file_exists($record_hq) ) {
-				$recording_summary .= "ERROR: media file does not exist (" . $record_hq . ")\n";
-			} elseif ( filesize($record_hq) == 0 ) {
-				$recording_summary .= "ERROR: media file zero size (" . $record_hq . ")\n";
-			} else {
-				$record_hq_duration = check_length($record_hq, $msg);
-				if (abs($mastervideolength - $record_hq_duration) > $threshold) {
-					$recording_summary .= "ERROR: invalid video duration (". $record_hq ." - ". $record_hq_duration ."sec, master - ". $mastervideolength ."s)\n";
-				}
-			}
-		}
-	}
-
 	// Check content master media file
 	if ( $rec['contentmasterstatus'] == $jconf['dbstatus_copystorage_ok'] ) {	// masterstatus = "onstorage"
 		$content_master = $recording_path . "master/" . $rec_id . "_content." . $rec['contentmastervideoextension'];
 
-		if ( !file_exists($content_master) ) {
-			$recording_summary .= "ERROR: content master media file does not exist (" . $content_master . ")\n";
-		} elseif ( filesize($content_master) == 0 ) {
-			$recording_summary .= "ERROR: content master media file zero size (" . $content_master . ")\n";
+		if ($rec['contentmastermediatype'] == "audio") {
+			$content_master = $recording_path ."master/". $rec_id ."_audio.". $rec['contentmastervideoextension'];
 		} else {
-			if(is_res1_gt_res2($rec['contentmastervideores'], $jconf['profile_content_lq']['video_bbox'])) {
-				$hq_content_available = TRUE;
-			}
-			
-			$mastercontentlength = check_length($content_master, $msg);
-			if (abs($mastercontentlength - $rec['contentmasterlength']) > $threshold) {
-				$recording_summary .= "ERROR: invalid database value (". $content_master ." - ". $mastercontentlength ."sec, db - ". $rec['contentmasterlength'] ."s)\n";
-			}
-		}
-	
-	}
-	
-	if ( $rec['contentstatus'] == $jconf['dbstatus_copystorage_ok'] ) {
-		// Check low resolution file
-		if ( !file_exists($content_lq) ) {
-			$recording_summary .= "ERROR: content media file does not exist (". $content_lq .")\n";
-		} elseif ( filesize($content_lq) == 0 ) {
-			$recording_summary .= "ERROR: content media file zero size (". $content_lq .")\n";
-		} else {
-			$content_lq_duration = check_length($content_lq, $msg);
-			if (abs($mastercontentlength - $content_lq_duration) > $threshold) {
-				$recording_summary .= "ERROR: invalid content duration (". $content_lq ." - ". $content_lq_duration ."sec, db - ". $mastercontentlength ."s)\n";
-			}
+			$content_master = $recording_path ."master/". $rec_id ."_content.". $rec['contentmastervideoextension'];
 		}
 
-		// Check high resolution file
-		if ($hq_content_available) {
-			if ( !file_exists($content_hq) ) {
-				$recording_summary .= "ERROR: content media file does not exist (" . $content_hq . ")\n";
-			} elseif ( filesize($content_hq) == 0 ) {
-				$recording_summary .= "ERROR: content media file zero size (" . $content_hq . ")\n";
-			} else {
-				$content_hq_duration = check_length($content_hq, $msg);
-				if (abs($mastercontentlength - $content_hq_duration) > $threshold) {
-					$recording_summary .= "ERROR: invalid content duration (". $content_hq ." - ". $content_hq_duration ."sec, db - ". $mastercontentlength ."s)\n";
-				}
+		if ( !file_exists($content_master) ) {
+			$recording_summary .= "[ERROR] content master media file does not exist (" . $content_master . ")\n";
+		} elseif ( filesize($content_master) == 0 ) {
+			$recording_summary .= "[ERROR] content master media file zero size (" . $content_master . ")\n";
+		} else {
+			$tmp = getLength($content_master);
+			if ($tmp['result'] === false) {
+				$recording_summary .= "[ERROR] Content master analyzation failed: ".  $tmp['message'] ."(". $content_master .")\n";
+				$debug->log($jconf['log_dir'], $recording_summary, $sendmail = false);
+				break(1);
+			}
+			$mastercontentlength = $tmp['length'];
+			$threshold = ( round($mastercontentlength * THRESHOLD) < 1.5 ? 1.5 : round($mastercontentlength * THRESHOLD) );
+			unset($tmp);
+			if (abs($mastercontentlength - $rec['contentmasterlength']) > $threshold) {
+				$recording_summary .= "[ERROR] invalid database value (". $content_master ." - ". $mastercontentlength ."sec, db - ". $rec['contentmasterlength'] ."s)\n";
 			}
 		}
 	}
 	
-	if ($rec['mobilestatus'] == $jconf['dbstatus_copystorage_ok']) {
-		// Calculate mobile duration
-		if ($rec['contentstatus'] == $jconf['dbstatus_copystorage_ok']) {
-			$iscontentlonger = ($mastervideolength > $mastercontentlength ? false : true);
-			$lengthfull = ($iscontentlonger === true ? $mastercontentlength : $mastervideolength);
+	// Get associated recordings_versions
+	$query = "
+		SELECT
+			rv.id, rv.converternodeid, rv.recordingid, rv.encodingprofileid, rv.qualitytag, rv.filename, rv.iscontent, rv.status, rv.resolution, rv.bandwidth, rv.isdesktopcompatible, rv. ismobilecompatible, ep.type, ep.mediatype, ep.shortname, ep.name
+		FROM
+			recordings_versions AS rv, encoding_profiles AS ep
+		WHERE
+			rv.encodingprofileid = ep.id AND rv.status = '". $jconf['dbstatus_copystorage_ok'] ."' AND rv.recordingid = ". $rec_id;
+
+	$tmp = query($query);
+	if ($tmp['result'] === false) {
+		$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Querying recording #". $rec_id ." failed. Error message:\n". $tmp['message'], $sendmail = TRUE);
+		exit (1);
+	}
+	$recordings_versions = $tmp['data'];
+	unset($tmp, $query);
+
+	foreach ($recordings_versions as $rv) {
+		if (!file_exists($recording_path . $rv['filename'])) {
+			$recording_summary .= "[ERROR] recording version ". $rv['shortname'] ." does not exist (". $recording_path . $rv['filename'] .")";
+			$recording_summary .= ", id#". $rv['id'] .".\n";
+		} elseif(filesize($recording_path . $rv['filename']) == 0) {
+			$recording_summary .= "[ERROR] recording version ". $rv['shortname'] ." has zero size (". $rv['filename'] .")";
+			$recording_summary .= ", id#". $rv['id'] .".\n";
 		} else {
-			$lengthfull = $mastervideolength;
-			$iscontentlonger = false;
-		}
-		$threshold = ( round($lengthfull * THRESHOLD_MOBILE) < 1 ? 1 : round($lengthfull * THRESHOLD_MOBILE) );
-		
-		// Check mobile normal quality file
-		if ( !file_exists($record_mobile_lq) ) {
-			$recording_summary .= "ERROR: media file does not exist (" . $record_mobile_lq . ")\n";
-		} elseif ( filesize($record_mobile_lq) == 0 ) {
-			$recording_summary .= "ERROR: media file zero size (" . $record_mobile_lq . ")\n";
-		} else {
-			$mobile_lq_duration = check_length($record_mobile_lq, $msg);
-			if (abs($lengthfull - $mobile_lq_duration) > $threshold) {
-				$recording_summary .= "ERROR: invalid mobile duration (". $record_mobile_lq ." - ". $mobile_lq_duration ."sec, db/". ($iscontentlonger ? "content" : "video") ." - ". $lengthfull ."s)\n";
+			$msg = '';
+			$tmp = getLength($recording_path . $rv['filename']);
+			if ($tmp['result'] === false) {
+				$debug->log($jconf['log_dir'], "[ERROR] ".  $tmp['message'] ."(recordings_version #". $rv['id'] .")" , $sendmail = false);
+				break 2;
 			}
-		}
-		// Check mobile high quality file
-		if ($hq_mobile_available) {
-			if ( !file_exists($record_mobile_hq) ) {
-				$recording_summary .= "ERROR: media file does not exist (" . $record_mobile_hq . ")\n";
-			} elseif ( filesize($record_mobile_hq) == 0 ) {
-				$recording_summary .= "ERROR: media file zero size (" . $record_mobile_hq . ")\n";
-			} else {
-				$mobile_hq_duration = check_length($record_mobile_hq, $msg);
-				if (abs($lengthfull - $mobile_hq_duration) > $threshold) {
-					$recording_summary .= "ERROR: invalid mobile duration (". $record_mobile_hq ." - ". $mobile_hq_duration ."sec, db/". ($iscontentlonger ? "content" : "video") ." - ". $lengthfull ."s)\n";
-				}
+			$duration = $tmp['length'];
+			unset($tmp);
+			switch($rv['type']) {
+				case('recording'):
+					$masterduration = $rec['masterlength'];
+				break;
+				
+				case('content'):
+					$masterduration = $rec['contentmasterlength'];
+				break;
+				
+				case('pip'):
+					$masterduration = max($rec['masterlength'], $rec['contentmasterlength']);
+				break;
+			}
+			$threshold = ( round($masterduration * THRESHOLD) < 1.5 ? 1.5 : round($masterduration * THRESHOLD) );
+			if (abs($masterduration - $duration) > $threshold) {
+				$recording_summary .= "[ERROR] invalid ". $rv['name'] ." duration (". $rv['filename'] ." - ". $duration ."s, db - ";
+				$recording_summary .= $masterduration ."s), id#". $rv['id'] .".\n";
 			}
 		}
 	}
-	
+
 	// Check video thumbnails
 	check_video_thumbnails($rec_id, $rec['numberofindexphotos']);
-	
+
 	// Check all attachments
 	check_attachments($rec_id);
-	
+
 	if ( !empty($recording_summary) ) {
 		$log_summary .= "Recording: " . $rec_id . " (user: " . $rec['email'] . ") - " . $rec['status'] . "\n\n";
 		$log_summary .= $recording_summary . "\n";
@@ -307,9 +257,10 @@ while ( !$recordings->EOF ) {
 	$num_checked_recs++;
 
 	if ( $rec['status'] == "onstorage" ) $num_onstorage_recs++;
-	
+
 	$recordings->MoveNext();
 }
+// MAIN CYCLE END ///////////////////////////////////////////////////////////////////////////////
 
 // Summarize check statistics
 $log_summary .= "\nNumber of recordings: " . $num_recordings . "\n";
@@ -327,27 +278,87 @@ $debug->log($jconf['log_dir'], ($myjobid . ".log"), "Data integrity check result
 if ( is_resource($db->_connectionID) ) $db->close();
 
 exit;
-
-//---< Functions >---------------------------------------------------------------------------------
-function check_length($mediafile, &$message) {
+//////////////////////////////////////////// FUNCTIONS ////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////
+// function query(querystring)
+///////////////////////////////////////////////////////////////////////////////////////////////////
+//
+// Return values:
+//   results['query']: the requested mysql query string
+//   results['result']: (bool) true if success
+//   results['message']: (string) message
+//   results['data']: (array) an array on success, NULL if an error occured. Note that if the
+//   query was executed, resulting no rows at all, the return value will still be an (empty) array.
+//
+///////////////////////////////////////////////////////////////////////////////////////////////////
+function query($query) {
+  global $db;
+  $results = array(
+    'query' => $query,
+    'result' => false,
+    'message' => "Ok!",
+    'data' => null
+  );
+  try {
+    $rs = $db->Execute($query);
+  } catch (exception $err) {
+    $results['message'] = "SQL query failed.\n". trim($err->getMessage()) ."\n";
+    return $results;
+  }
+  if (method_exists($rs, "GetRows")) {
+		if ( $rs->RecordCount() < 1 ) {
+			$results['data'] = $rs->GetRows();
+			$results['result'] = true;
+			$results['message'] = "Query returned an empty array.\n";
+		} else {
+			$results['result'] = true;
+			$results['data'] = $rs->GetRows();
+		}
+	} else {
+		$results['message'] = "Cannot get rows from recordset.\n";
+	}
+  return $results;
+}
+///////////////////////////////////////////////////////////////////////////////////////////////////
+	function getLength($mediafile) {
+///////////////////////////////////////////////////////////////////////////////////////////////////
+//
+// Analyzes input file's length via Recordigs->analyze method.
+// Return values:
+//   result (bool): true on success, false on faliure
+//   length (int): playing time of the input video
+//   message (string): error message on failure
+//
+///////////////////////////////////////////////////////////////////////////////////////////////////
 	global $recordingsModel;
-	$length = 0;
+	$results = array(
+		'result'  => false,
+		'length'  => null,
+		'message' => '',
+	);
+	if (!file_exists($mediafile)) {
+		$results['message'] = "File doesn't exists! (". $mediafile .")\n";
+		return $results;
+	}
+	
 	try {
 		$recordingsModel->analyze($mediafile);
 		$metadata = $recordingsModel->metadata;
 		if (empty($metadata['masterlength'])) {
-			$message .= "ERROR: metadata cannot be retrieved (". $mediafile .")\n";
-			return false;
+			$results['message'] = "Metadata cannot be retrieved (". $mediafile .")\n";
 		} else {
-			$length = $metadata['masterlength'];
+			$results['length' ] = $metadata['masterlength'];
+			$results['result' ] = true;
+			$results['message'] = 'ok!';
 		}
 	} catch ( Exception $ex) {
-		$message .= "ERROR: Recording analysis failed ( ". $mediafile ." ):\n". $ex->getMessage() ."\n";
+		$results['message'] = "Recording analysis failed ( ". $mediafile ." ):\n". $ex->getMessage() ."\n";
 	}
-	return $length;
+	return $results;
 }
-
-function check_contributor_images() {
+///////////////////////////////////////////////////////////////////////////////////////////////////
+	function check_contributor_images() {
+///////////////////////////////////////////////////////////////////////////////////////////////////
  global $db, $log_summary;
 
 	$db = db_maintain();
@@ -391,9 +402,9 @@ function check_contributor_images() {
 		}
 
 		if ( !file_exists($image_file) ) {
-			$recording_summary .= "ERROR: contributor thumb does not exist (" . $image_file . ")\n";
+			$recording_summary .= "[ERROR] contributor thumb does not exist (" . $image_file . ")\n";
 		} elseif ( filesize($image_file) == 0 ) {
-			$recording_summary .= "ERROR: contributor thumb zero size (" . $image_file . ")\n";
+			$recording_summary .= "[ERROR] contributor thumb zero size (" . $image_file . ")\n";
 		}
 
 		if ( $image_notfin ) {
@@ -416,7 +427,9 @@ function check_contributor_images() {
 	return TRUE;
 }
 
-function check_video_thumbnails($rec_id, $num_thumbs) {
+///////////////////////////////////////////////////////////////////////////////////////////////////
+	function check_video_thumbnails($rec_id, $num_thumbs) {
+///////////////////////////////////////////////////////////////////////////////////////////////////
 	global	$recording_summary;
 	global	$app;
 	
@@ -434,36 +447,36 @@ function check_video_thumbnails($rec_id, $num_thumbs) {
 		//$thumb_tocheck = $thumb_path . $app->config_jobs['thumb_video_small'|'thumb_video_medium'|'thumb_video_large']
 		$thumb_tocheck = $thumb_path . $app->config['videothumbnailresolutions']['4:3'] . "/" . $thumb_filename;
 		if ( !file_exists($thumb_tocheck) ) {
-			$recording_summary .= "ERROR: thumb does not exist (" . $thumb_tocheck . ")\n";
+			$recording_summary .= "[ERROR] thumb does not exist (" . $thumb_tocheck . ")\n";
 		} elseif ( filesize($thumb_tocheck) == 0 ) {
-			$recording_summary .= "ERROR: thumb zero size (" . $thumb_tocheck . ")\n";
+			$recording_summary .= "[ERROR] thumb zero size (" . $thumb_tocheck . ")\n";
 		} else {
 			$num_thumbs_small++;
 		}
 		// check 16:9[] thumbnails
 		$thumb_tocheck = $thumb_path . $app->config['videothumbnailresolutions']['wide'] . "/" . $thumb_filename;
 		if ( !file_exists($thumb_tocheck) ) {
-			$recording_summary .= "ERROR: thumb does not exist (" . $thumb_tocheck . ")\n";
+			$recording_summary .= "[ERROR] thumb does not exist (" . $thumb_tocheck . ")\n";
 		} elseif ( filesize($thumb_tocheck) == 0 ) {
-			$recording_summary .= "ERROR: thumb zero size (" . $thumb_tocheck . ")\n";
+			$recording_summary .= "[ERROR] thumb zero size (" . $thumb_tocheck . ")\n";
 		} else {
 			$num_thumbs_wide++;
 		}
 		// check normal[] thumbnails
 		$thumb_tocheck = $thumb_path . $app->config['videothumbnailresolutions']['player'] . "/" . $thumb_filename;
 		if ( !file_exists($thumb_tocheck) ) {
-			$recording_summary .= "ERROR: thumb does not exist (" . $thumb_tocheck . ")\n";
+			$recording_summary .= "[ERROR] thumb does not exist (" . $thumb_tocheck . ")\n";
 		} elseif ( filesize($thumb_tocheck) == 0 ) {
-			$recording_summary .= "ERROR: thumb zero size (" . $thumb_tocheck . ")\n";
+			$recording_summary .= "[ERROR] thumb zero size (" . $thumb_tocheck . ")\n";
 		} else {
 			$num_thumbs_player++;
 		}
 		// check original thumbnails
 		$thumb_tocheck = $thumb_path . "original/" . $thumb_filename;
 		if ( !file_exists($thumb_tocheck) ) {
-			$recording_summary .= "ERROR: thumb does not exist (" . $thumb_tocheck . ")\n";
+			$recording_summary .= "[ERROR] thumb does not exist (" . $thumb_tocheck . ")\n";
 		} elseif ( filesize($thumb_tocheck) == 0 ) {
-			$recording_summary .= "ERROR: thumb zero size (" . $thumb_tocheck . ")\n";
+			$recording_summary .= "[ERROR] thumb zero size (" . $thumb_tocheck . ")\n";
 		} else {
 			$num_thumbs_original++;
 		}
@@ -476,7 +489,9 @@ function check_video_thumbnails($rec_id, $num_thumbs) {
 	return TRUE;
 }
 
-function check_attachments($rec_id) {
+///////////////////////////////////////////////////////////////////////////////////////////////////
+	function check_attachments($rec_id) {
+///////////////////////////////////////////////////////////////////////////////////////////////////
  global $db, $recording_summary, $app;
 
 	$db = db_maintain();
@@ -506,6 +521,7 @@ function check_attachments($rec_id) {
 		return FALSE;
 	}
 	$num_attachments = 0;
+	
 	while ( !$attachments->EOF ) {
 		$attachment = $attachments->fields;
 		$attachment_file = $attachment_path . $attachment['id'] . "." . $attachment['masterextension'];
@@ -513,9 +529,9 @@ function check_attachments($rec_id) {
 		$attachment_ids[] = $attachment['id'];
 		
 		if ( !file_exists($attachment_file) ) {
-			$recording_summary .= "ERROR: attachment file missing (" . $attachment_file . ")\n";
+			$recording_summary .= "[ERROR] attachment file missing (" . $attachment_file . ")\n";
 		} elseif ( filesize($attachment_file) == 0 ) {
-			$recording_summary .= "ERROR: attachment file zero size (" . $attachment_file . ")\n";
+			$recording_summary .= "[ERROR] attachment file zero size (" . $attachment_file . ")\n";
 		} else {
 			$num_attachments++;
 		}
@@ -531,7 +547,9 @@ function check_attachments($rec_id) {
 	return TRUE;
 }
 
-function is_res1_gt_res2($res1, $res2) {
+///////////////////////////////////////////////////////////////////////////////////////////////////
+	function is_res1_gt_res2($res1, $res2) {
+///////////////////////////////////////////////////////////////////////////////////////////////////
 	$tmp = explode('x', strtolower($res1));
 	$resx1 = $tmp[0] + 0;
 	$resy1 = $tmp[1] + 0;
