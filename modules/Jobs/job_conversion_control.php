@@ -541,6 +541,7 @@ global $db, $app, $debug, $jconf;
 
 	/*
 	SMIL example:
+		<?xml version="1.0" encoding="UTF-8"?>
 		<smil>
 			<head>
 			</head>
@@ -553,11 +554,40 @@ global $db, $app, $debug, $jconf;
 				</switch>
 			</body>
 		</smil>
+
+	SMIL live example with audio stream (audio tag is for Smooth Streaming only?):
+		<?xml version="1.0" encoding="UTF-8"?>
+		<smil title="">
+			<body>
+				<switch>
+					<video height="240" src="bigbuckbunny_450.mp4" systemLanguage="eng" width="424">
+						<param name="videoBitrate" value="450000" valuetype="data"></param>
+						<param name="audioBitrate" value="44100" valuetype="data"></param>
+					</video>
+					<video height="360" src="bigbuckbunny_750.mp4" systemLanguage="eng" width="640">
+						<param name="videoBitrate" value="750000" valuetype="data"></param>
+						<param name="audioBitrate" value="44100" valuetype="data"></param>
+					</video>
+					<video height="720" src="bigbuckbunny_1100.mp4" systemLanguage="eng" width="1272">
+						<param name="videoBitrate" value="1100000" valuetype="data"></param>
+						<param name="audioBitrate" value="44100" valuetype="data"></param>
+					</video>
+					<video height="900" src="bigbuckbunny_1500.mp4" systemLanguage="eng" width="1590">
+						<param name="videoBitrate" value="1500000" valuetype="data"></param>
+						<param name="audioBitrate" value="44100" valuetype="data"></param>
+					</video>
+					<audio>
+						<param name="audioBitrate" value="44100" valuetype="data"></param>
+					</audio>
+				</switch>
+			</body>
+		</smil>
+
 	*/
 
 	// SMIL header and footer tags
-	$smil_header = "<smil>\n\t<head>\n\t</head>\n\t<body>\n\t\t<switch>\n";
-	$smil_footer = "\t\t</switch>\n\t</body>\n</smil>\n";
+	$smil_header = '<?xml version="1.0" encoding="UTF-8"?>\n<smil>\n\t<head>\n\t</head>\n\t<body>\n\t\t<switch>\n';
+	$smil_footer = '\t\t</switch>\n\t</body>\n</smil>\n';
 
 	while ( !$recordings->EOF ) {
 
