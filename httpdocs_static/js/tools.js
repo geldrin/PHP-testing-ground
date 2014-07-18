@@ -2174,6 +2174,7 @@ function setupLivestatistics( elem ) {
     labels           : analyticsdata.labels,
     showRangeSelector: true,
     stackedGraph     : false,
+    stepPlot         : true,
     fillGraph        : true,
     strokeWidth      : 2,
     colors           : [
