@@ -2104,11 +2104,19 @@ class Recordings extends \Springboard\Model {
     if ( !empty( $versions['master']['desktop'] ) ) {
       $data['media_streams']      = array();
       $data['media_streamLabels'] = array();
+      if ( $this->bootstrap->config['hdsenabled'] )
+        $data['media_streams'][]    =
+          $this->getMediaUrl('smil', null, $info )
+        ;
+
       foreach( $versions['master']['desktop'] as $version ) {
         $data['media_streamLabels'][] = $version['qualitytag'];
-        $data['media_streams'][]      =
-          $this->getMediaUrl('default', $version, $info )
-        ;
+
+        if ( !$this->bootstrap->config['hdsenabled'] )
+          $data['media_streams'][]    =
+            $this->getMediaUrl('default', $version, $info )
+          ;
+
       }
     }
 
@@ -2125,11 +2133,19 @@ class Recordings extends \Springboard\Model {
 
       $data['content_streams']      = array();
       $data['content_streamLabels'] = array();
+      if ( $this->bootstrap->config['hdsenabled'] )
+        $data['content_streams'][]    =
+          $this->getMediaUrl('contentsmil', null, $info )
+        ;
+
       foreach( $versions['content']['desktop'] as $version ) {
         $data['content_streamLabels'][] = $version['qualitytag'];
-        $data['content_streams'][]      =
-          $this->getMediaUrl('content', $version, $info )
-        ;
+
+        if ( !$this->bootstrap->config['hdsenabled'] )
+          $data['content_streams'][]      =
+            $this->getMediaUrl('content', $version, $info )
+          ;
+
       }
 
     }
@@ -2257,16 +2273,31 @@ class Recordings extends \Springboard\Model {
       'media_servers' => array(),
     );
 
-    $sessionid = $info['sessionid'];
-    if ( $this->row['issecurestreamingforced'] ) {
+    if (
+         $this->bootstrap->config['hdsenabled'] and
+         $this->row['issecurestreamingforced']
+       ) {
+      $data['media_servers'][] = $this->getWowzaUrl( 'sechttpurl', true, $info );
+    } elseif (
+         $this->bootstrap->config['hdsenabled'] and
+         !$this->row['issecurestreamingforced']
+      ) {
+      $data['media_servers'][] = $this->getWowzaUrl( 'httpurl', true, $info );
+    } elseif (
+         !$this->bootstrap->config['hdsenabled'] and
+         $this->row['issecurestreamingforced']
+      ) {
       $data['media_servers'][] = $this->getWowzaUrl( 'secrtmpsurl', true, $info );
       $data['media_servers'][] = $this->getWowzaUrl( 'secrtmpurl',  true, $info );
       $data['media_servers'][] = $this->getWowzaUrl( 'secrtmpturl', true, $info );
-    } else {
+    } elseif (
+         !$this->bootstrap->config['hdsenabled'] and
+         !$this->row['issecurestreamingforced']
+      ) {
       $data['media_servers'][] = $this->getWowzaUrl( 'rtmpurl',  true, $info );
       $data['media_servers'][] = $this->getWowzaUrl( 'rtmpturl', true, $info );
     }
-    
+
     return $data;
 
   }
@@ -2426,7 +2457,7 @@ class Recordings extends \Springboard\Model {
         //http://stream.videotorium.hu:1935/vtorium/_definst_/mp4:671/2671/2671_2608_mobile.mp4/playlist.m3u8
         $host        = $this->getWowzaUrl( $typeprefix . 'httpurl');
         $sprintfterm =
-          '%3$s:%s/%s_mobile.%s/playlist.m3u8' .
+          '%3$s:%s/%s/playlist.m3u8' .
           $this->getAuthorizeSessionid( $info )
         ;
         
@@ -2436,7 +2467,7 @@ class Recordings extends \Springboard\Model {
         //rtsp://stream.videotorium.hu:1935/vtorium/_definst_/mp4:671/2671/2671_2608_mobile.mp4
         $host        = $this->getWowzaUrl( $typeprefix . 'rtspurl');
         $sprintfterm =
-          '%3$s:%s/%s_mobile.%s' .
+          '%3$s:%s/%s' .
           $this->getAuthorizeSessionid( $info )
         ;
         
@@ -2445,6 +2476,17 @@ class Recordings extends \Springboard\Model {
       case 'direct':
         $host = $info['STATIC_URI'];
         $sprintfterm = 'files/recordings/%s/%s';
+        break;
+
+      case 'smil':
+      case 'contentsmil':
+        $postfix     = $type == 'contentsmil'? '_content': '';
+        $sprintfterm = '%3$s:%s/' . $this->id . $postfix . '.%3$s/manifest.f4m';
+        $extension   = 'smil';
+        $version     = array(
+          'filename'    => '',
+          'recordingid' => $this->id,
+        );
         break;
 
       case 'content':

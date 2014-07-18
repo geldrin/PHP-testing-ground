@@ -110,7 +110,8 @@ $config = array(
     'player' => '618x348',
   ),
   //----
-  'wowza' => array(
+  'hdsenabled' => true,
+  'wowza'      => array(
     
     'httpurl'           => 'http://%s/vsq/_definst_/',
     'sechttpurl'        => 'http://%s/vsq/_definst_/',
