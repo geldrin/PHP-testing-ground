@@ -2123,11 +2123,14 @@ class Recordings extends \Springboard\Model {
       if ( $this->row['contentoffsetend'] )
         $data['timeline_contentVirtualEnd'] = $this->row['contentoffsetend'];
 
-      $data['media_secondaryStreams'] = array();
-      foreach( $versions['content']['desktop'] as $version )
-        $data['media_secondaryStreams'][] =
+      $data['content_streams']      = array();
+      $data['content_streamLabels'] = array();
+      foreach( $versions['content']['desktop'] as $version ) {
+        $data['content_streamLabels'][] = $version['qualitytag'];
+        $data['content_streams'][]      =
           $this->getMediaUrl('content', $version, $info )
         ;
+      }
 
     }
 
