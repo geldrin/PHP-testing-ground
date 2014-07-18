@@ -2092,7 +2092,8 @@ class Recordings extends \Springboard\Model {
       $data['user_needPing'] = true;
     }
 
-    $data = $data + $this->getMediaServers( $info );
+    $hds  = $this->isHDSEnabled();
+    $data = $data + $this->getMediaServers( $info, $hds );
 
     // default bal oldalon van a video, csak akkor allitsuk be ha kell
     if ( !$this->row['slideonright'] )
@@ -2104,7 +2105,7 @@ class Recordings extends \Springboard\Model {
     if ( !empty( $versions['master']['desktop'] ) ) {
       $data['media_streams']      = array();
       $data['media_streamLabels'] = array();
-      if ( $this->bootstrap->config['hdsenabled'] )
+      if ( $hds )
         $data['media_streams'][]    =
           $this->getMediaUrl('smil', null, $info )
         ;
@@ -2112,7 +2113,7 @@ class Recordings extends \Springboard\Model {
       foreach( $versions['master']['desktop'] as $version ) {
         $data['media_streamLabels'][] = $version['qualitytag'];
 
-        if ( !$this->bootstrap->config['hdsenabled'] )
+        if ( !$hds )
           $data['media_streams'][]    =
             $this->getMediaUrl('default', $version, $info )
           ;
@@ -2133,7 +2134,7 @@ class Recordings extends \Springboard\Model {
 
       $data['content_streams']      = array();
       $data['content_streamLabels'] = array();
-      if ( $this->bootstrap->config['hdsenabled'] )
+      if ( $hds )
         $data['content_streams'][]    =
           $this->getMediaUrl('contentsmil', null, $info )
         ;
@@ -2141,7 +2142,7 @@ class Recordings extends \Springboard\Model {
       foreach( $versions['content']['desktop'] as $version ) {
         $data['content_streamLabels'][] = $version['qualitytag'];
 
-        if ( !$this->bootstrap->config['hdsenabled'] )
+        if ( !$hds )
           $data['content_streams'][]      =
             $this->getMediaUrl('content', $version, $info )
           ;
@@ -2266,32 +2267,42 @@ class Recordings extends \Springboard\Model {
     
   }
   
-  public function getMediaServers( $info ) {
+  public function isHDSEnabled() {
+    return
+      $this->bootstrap->config['hdsenabled'] and
+      in_array( $this->row['smilstatus'], array('onstorage', 'regenerate') )
+    ;
+  }
+
+  public function getMediaServers( $info, $hds = null ) {
 
     $this->ensureObjectLoaded();
     $data = array(
       'media_servers' => array(),
     );
 
+    if ( $hds === null )
+      $hds = $this->isHDSEnabled();
+
     if (
-         $this->bootstrap->config['hdsenabled'] and
+         $hds and
          $this->row['issecurestreamingforced']
        ) {
       $data['media_servers'][] = $this->getWowzaUrl( 'sechttpurl', true, $info );
     } elseif (
-         $this->bootstrap->config['hdsenabled'] and
+         $hds and
          !$this->row['issecurestreamingforced']
       ) {
       $data['media_servers'][] = $this->getWowzaUrl( 'httpurl', true, $info );
     } elseif (
-         !$this->bootstrap->config['hdsenabled'] and
+         $hds and
          $this->row['issecurestreamingforced']
       ) {
       $data['media_servers'][] = $this->getWowzaUrl( 'secrtmpsurl', true, $info );
       $data['media_servers'][] = $this->getWowzaUrl( 'secrtmpurl',  true, $info );
       $data['media_servers'][] = $this->getWowzaUrl( 'secrtmpturl', true, $info );
     } elseif (
-         !$this->bootstrap->config['hdsenabled'] and
+         $hds and
          !$this->row['issecurestreamingforced']
       ) {
       $data['media_servers'][] = $this->getWowzaUrl( 'rtmpurl',  true, $info );
@@ -2302,12 +2313,15 @@ class Recordings extends \Springboard\Model {
 
   }
 
-  public function getIntroOutroFlashdata( $info ) {
+  public function getIntroOutroFlashdata( $info, $hds = null ) {
     
     $this->ensureObjectLoaded();
     if ( !$this->row['introrecordingid'] and !$this->row['outrorecordingid'] )
       return array();
     
+    if ( $hds === null )
+      $hds   = $this->isHDSEnabled();
+
     $ids     = array();
     $data    = array();
     $introid = 0;
@@ -2331,6 +2345,7 @@ class Recordings extends \Springboard\Model {
     if ( empty( $versions['master']['desktop'] ) )
       throw new \Exception("The intro/outro does not have desktopcompatible non-content recordings!");
 
+    $type = $hds? 'smil': 'default';
     foreach( $versions['master']['desktop'] as $version ) {
       
       if ( $version['recordingid'] == $introid )
@@ -2341,7 +2356,7 @@ class Recordings extends \Springboard\Model {
         throw new \Exception("Invalid version in getIntroOutroFlashdata, neither intro nor outro!");
 
       $data[ $key ] = array(
-        $this->getMediaUrl('default', $version, $info )
+        $this->getMediaUrl( $type, $version, $info )
       );
 
     }
@@ -2480,13 +2495,15 @@ class Recordings extends \Springboard\Model {
 
       case 'smil':
       case 'contentsmil':
+        if ( !$version )
+          $version   = array(
+            'filename'    => '',
+            'recordingid' => $this->id,
+          );
+
         $postfix     = $type == 'contentsmil'? '_content': '';
-        $sprintfterm = '%3$s:%s/' . $this->id . $postfix . '.%3$s/manifest.f4m';
+        $sprintfterm = '%3$s:%s/' . $version['recordingid'] . $postfix . '.%3$s/manifest.f4m';
         $extension   = 'smil';
-        $version     = array(
-          'filename'    => '',
-          'recordingid' => $this->id,
-        );
         break;
 
       case 'content':
