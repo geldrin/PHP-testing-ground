@@ -2173,7 +2173,8 @@ function setupLivestatistics( elem ) {
   graph = new Dygraph( elem.get(0), graphdata, {
     labels           : analyticsdata.labels,
     showRangeSelector: true,
-    stackedGraph     : true,
+    stackedGraph     : false,
+    fillGraph        : true,
     strokeWidth      : 2,
     colors           : [
       '#00cc00', '#0066b3', '#ff8000', '#ffcc00', '#330099', '#990099',
@@ -2192,6 +2193,14 @@ function setupLivestatistics( elem ) {
         }/*,
         axisLabelFormatter: function(d, granularity, options, graph) {
         }*/
+      },
+      y: {
+        axisLabelFormatter: function(v) {
+          if ( v % 1 === 0 )
+            return v + '';
+          else
+            return '';
+        }
       }
     }
   });

@@ -713,6 +713,8 @@ class Controller extends \Visitor\Controller {
 
     }
 
+    $ret['labels'][] = $l('live', 'stats_sum');
+
     // prepare the values
     foreach( $data as $key => $value ) {
 
@@ -720,16 +722,20 @@ class Controller extends \Visitor\Controller {
         intval( $value['timestamp'] ) * 1000,
       );
 
+      $sum = 0;
       foreach( $value as $field => $v ) {
 
         if ( $field == 'timestamp' or $field == 'stepinterval' )
           continue;
 
-        $row[] = intval( $v );
+        $v = intval( $v );
+        $row[] = $v;
+        $sum += $v;
 
       }
 
       unset( $data[ $key ] );
+      $row[] = $sum;
       $ret['data'][] = $row;
 
     }
