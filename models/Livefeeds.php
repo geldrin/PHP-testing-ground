@@ -365,14 +365,18 @@ class Livefeeds extends \Springboard\Model {
 
     }
 
-    $data['livePlaceholder_streams'] = array();
-    foreach( $versions['master']['desktop'] as $version )
-      $data['livePlaceholder_streams'][] = $recordingsModel->getMediaUrl(
+    $data['livePlaceholder_streams']      = array();
+    $data['livePlaceholder_streamLabels'] = array();
+    foreach( $versions['master']['desktop'] as $version ) {
+      $data['livePlaceholder_streamLabels'] = $version['qualitytag'];
+      $data['livePlaceholder_streams'][]    = $recordingsModel->getMediaUrl(
         'default', $version, $info
       );
+    }
 
-    $data['intro_servers'] = $data['livePlaceholder_servers'];
-    $data['intro_streams'] = $data['livePlaceholder_streams'];
+    $data['intro_servers']      = $data['livePlaceholder_servers'];
+    $data['intro_streams']      = $data['livePlaceholder_streams'];
+    $data['intro_streamLabels'] = $data['livePlaceholder_streamLabels'];
     return $data;
 
   }
@@ -797,6 +801,7 @@ class Livefeeds extends \Springboard\Model {
 
     }
 
+    // fontos az adatok sorrendje! ha valtoztatasra kerul at kell irni a lov_hu-t
     $where = array();
     $sql   = "
       SELECT

@@ -2168,9 +2168,14 @@ function setupLivestatistics( elem ) {
     graphdata.push( row );
 
   }
-  
+  var visibility = [];
+  $j('input[name^="datapoints"]').each(function() {
+    visibility.push( $j(this).is(':checked') );
+  });
+
   delete( timestamptoindex );
-  graph = new Dygraph( elem.get(0), graphdata, {
+  var graph = new Dygraph( elem.get(0), graphdata, {
+    visibility       : visibility,
     labels           : analyticsdata.labels,
     showRangeSelector: true,
     stackedGraph     : false,
@@ -2185,15 +2190,13 @@ function setupLivestatistics( elem ) {
       '#666600', '#ffbfff', '#00ffcc', '#cc6699', '#999900'
     ],
     zoomCallback: function(min, max) {
-      // ratelimit
+      // needs ratelimit
     },
     axes: {
       x: {
         valueFormatter: function(ms) {
           return moment(ms).format('LLLL');
-        }/*,
-        axisLabelFormatter: function(d, granularity, options, graph) {
-        }*/
+        }
       },
       y: {
         axisLabelFormatter: function(v) {
@@ -2206,6 +2209,10 @@ function setupLivestatistics( elem ) {
     }
   });
 
+  $j('input[name^="datapoints"]').change(function(e) {
+    var index = parseInt( $j(this).val(), 10 );
+    graph.setVisibility( index, $j(this).is(':checked') );
+  });
 }
 
 function setupRecordingDownloads() {
