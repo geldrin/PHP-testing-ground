@@ -781,22 +781,27 @@ class Livefeeds extends \Springboard\Model {
   public function getStatistics( $filter ) {
 
     $table = 'statistics_live_5min';
-    $step  = 300; // 5perc
+    $ret   = array(
+      'step' => 300, // 5perc
+    );
 
     if ( isset( $filter['starttimestamp'] ) and isset( $filter['endtimestamp'] ) ) {
       $startts = strtotime( $filter['starttimestamp'] );
       $endts   = strtotime( $filter['endtimestamp'] );
       $diff    = $endts - $startts;
 
+      $ret['starttimestamp'] = $startts;
+      $ret['endtimestamp']   = $endts;
+
       if ( $diff < 1209600 ) { // 2 het
         $table = 'statistics_live_5min';
-        $step  = 300;
+        $ret['step'] = 300;
       } elseif ( $diff < 3024000 ) { // 5 het
         $table = 'statistics_live_hourly';
-        $step  = 3600;
+        $ret['step'] = 3600;
       } else {
         $table = 'statistics_live_daily';
-        $step  = 86400;
+        $ret['step'] = 86400;
       }
 
     }
@@ -805,9 +810,7 @@ class Livefeeds extends \Springboard\Model {
     $where = array();
     $sql   = "
       SELECT
-        UNIX_TIMESTAMP(s.timestamp) AS arraykey,
         UNIX_TIMESTAMP(s.timestamp) AS timestamp,
-        $step                       AS stepinterval,
         SUM( s.numberofflashwin )   +
         SUM( s.numberofflashmac )   +
         SUM( s.numberofflashlinux ) +
@@ -845,7 +848,34 @@ class Livefeeds extends \Springboard\Model {
       ORDER BY s.timestamp, s.id
     ";
 
-    return $this->db->getAssoc( $sql );
+    $ret['data'] = $this->db->getArray( $sql );
+
+    $item = reset( $ret['data'] );
+    if ( !isset( $filter['starttimestamp'] ) )
+      $ret['starttimestamp'] = $item['timestamp'];
+    else {
+      // how many "ticks" based on the step is there between the user-provided
+      // starttimestamp and the actual timestamp, so we can align the ticks
+      $steps = round(
+        ( $item['timestamp'] - $ret['starttimestamp'] ) / $ret['step']
+      );
+      // now subtract those ticks from the start timestamp, so we can
+      // achieve the range the user actually requested
+      $ret['starttimestamp'] = $item['timestamp'] - ( $steps * $ret['step'] );
+    }
+
+    $item = end( $ret['data'] );
+    if ( !isset( $filter['endtimestamp'] ) )
+      $ret['endtimestamp'] = $item['timestamp'];
+    else {
+      // same thing, ensure that it ends on a "tick" boundary
+      $steps = round(
+        ( $ret['endtimestamp'] - $item['timestamp'] ) / $ret['step']
+      );
+      $ret['endtimestamp'] = $item['timestamp'] + ( $steps * $ret['step'] );
+    }
+
+    return $ret;
 
   }
 
