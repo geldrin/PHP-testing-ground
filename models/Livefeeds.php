@@ -782,7 +782,10 @@ class Livefeeds extends \Springboard\Model {
 
     $table = 'statistics_live_5min';
     $ret   = array(
-      'step' => 300, // 5perc
+      'step'           => 300, // 5perc
+      'starttimestamp' => 0,
+      'endtimestamp'   => 0,
+      'data'           => array(),
     );
 
     if ( isset( $filter['starttimestamp'] ) and isset( $filter['endtimestamp'] ) ) {
@@ -849,6 +852,8 @@ class Livefeeds extends \Springboard\Model {
     ";
 
     $ret['data'] = $this->db->getArray( $sql );
+    if ( empty( $ret['data'] ) )
+      return $ret;
 
     $item = reset( $ret['data'] );
     if ( !isset( $filter['starttimestamp'] ) )
@@ -856,8 +861,8 @@ class Livefeeds extends \Springboard\Model {
     else {
       // how many "ticks" based on the step is there between the user-provided
       // starttimestamp and the actual timestamp, so we can align the ticks
-      $steps = round(
-        ( $item['timestamp'] - $ret['starttimestamp'] ) / $ret['step']
+      $steps = ceil(
+        ( $item['timestamp'] + 1 - $ret['starttimestamp'] ) / $ret['step']
       );
       // now subtract those ticks from the start timestamp, so we can
       // achieve the range the user actually requested
@@ -869,8 +874,8 @@ class Livefeeds extends \Springboard\Model {
       $ret['endtimestamp'] = $item['timestamp'];
     else {
       // same thing, ensure that it ends on a "tick" boundary
-      $steps = round(
-        ( $ret['endtimestamp'] - $item['timestamp'] ) / $ret['step']
+      $steps = ceil(
+        ( $ret['endtimestamp'] + 1 - $item['timestamp'] ) / $ret['step']
       );
       $ret['endtimestamp'] = $item['timestamp'] + ( $steps * $ret['step'] );
     }
