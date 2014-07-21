@@ -583,14 +583,27 @@ global $app, $jconf, $global_log;
 		$recording['thumbnail_indexphotofilename'] = "images/videothumb_audio_placeholder.png?rid=" . $recording['id'];
 	}
 
+	$msg = '';
 	if ($profile['type'] === 'pip') {
 		$recording['iscontent'] = false;
-		$encoding_params_overlay = ffmpegPrep($recording, $profile);
+		$tmp = ffmpegPrep($recording, $profile);
+		$encoding_params_overlay = $tmp['params'];
+		$msg .= $tmp['params'] === false ? $tmp['message'] : "";
+		
 		$recording['iscontent'] = true;
-		$encoding_params_main    = ffmpegPrep($recording, $profile);
+		$tmp = ffmpegPrep($recording, $profile);
+		$encoding_params_main = $tmp['params'];
+		$msg .= $tmp['params'] === false ? $tmp['message'] : "";
 	} else {
-		$encoding_params_main    = ffmpegPrep($recording, $profile);
+		$tmp = ffmpegPrep($recording, $profile);
+		$encoding_params_main    = $tmp['params'];
 		$encoding_params_overlay = null;
+		$msg = $tmp['message'];
+	}
+
+	if (!($encoding_params_main && $encoding_params_overlay)) {
+		log_recording_conversion($recording['id'], $jconf['jobid_media_convert'], $jconf['dbstatus_conv_err'], $msg . "\nRecording version: " . $profile['name'] . "\n", '-', '-', 0, true);
+		return false;
 	}
 
 	$err = advancedFFmpegConvert($recording, $profile, $encoding_params_main, $encoding_params_overlay);
