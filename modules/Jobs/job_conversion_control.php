@@ -519,15 +519,16 @@ global $db, $app, $debug, $jconf;
 		SELECT
 			r.id,
 			r." . $idx . "smilstatus,
-			r." . $idx . "mastersourceip
+			r." . $idx . "mastersourceip,
+			r." . $idx . "mastermediatype
 		FROM
 			recordings AS r
 		WHERE
 			r." . $idx . "status = '" . $jconf['dbstatus_copystorage_ok'] . "' AND
-			r." . $idx . "mastermediatype <> 'audio' AND
 			( r." . $idx . "smilstatus IS NULL OR r." . $idx . "smilstatus = '" . $jconf['dbstatus_regenerate'] . "' )
 		ORDER BY
 			r.id";
+// r." . $idx . "mastermediatype <> 'audio' AND
 
 	try {
 		$recordings = $db->Execute($query);
@@ -583,11 +584,23 @@ global $db, $app, $debug, $jconf;
 			</body>
 		</smil>
 
+	HDS: audio only SMIL
+		<smil>
+			<head>
+			</head>
+			<body>
+				<switch>
+					<video src="mp3:music.mp3" system-bitrate="128000"/>
+					<video src="mp3:music_256.mp3" system-bitrate="256000"/>
+				</switch>
+			</body>
+		</smil>
+
 	*/
 
 	// SMIL header and footer tags
-	$smil_header = '<?xml version="1.0" encoding="UTF-8"?>\n<smil>\n\t<head>\n\t</head>\n\t<body>\n\t\t<switch>\n';
-	$smil_footer = '\t\t</switch>\n\t</body>\n</smil>\n';
+	$smil_header = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<smil>\n\t<head>\n\t</head>\n\t<body>\n\t\t<switch>\n";
+	$smil_footer = "\t\t</switch>\n\t</body>\n</smil>\n";
 
 	while ( !$recordings->EOF ) {
 
@@ -595,8 +608,16 @@ global $db, $app, $debug, $jconf;
 
 //var_dump($recording);
 
+		// Is recording audio only?
+		$media_type = "mp4";
+		$isaudio = false;
+		if ( $recording[$idx . 'mastermediatype'] == "audio" ) {
+			$media_type = "mp3";
+			$isaudio = true;
+		}
+
 		// Get all recording versions for this recording (or content)
-		$recording_versions = getRecordingVersionsForRecording($recording['id'], $type);
+		$recording_versions = getRecordingVersionsForRecording($recording['id'], $type, $isaudio);
 		if ( $recording_versions === false ) {
 			$debug->log($jconf['log_dir'], $jconf['jobid_conv_control'] . ".log", "[WARNING] No recording versions found for " . $type . " id = " . $recording['id'], $sendmail = false);
 			// recording.(content)smilstatus = null
@@ -605,18 +626,18 @@ global $db, $app, $debug, $jconf;
 			continue;
 		}
 
+		// SMIL: add header
 		$smil = $smil_header;
+
 		while ( !$recording_versions->EOF ) {
 
 			$recording_version = $recording_versions->fields;
 
-			$smil .= sprintf("\t\t<video src=\"mp4:%s\" system-bitrate=\"%d\"/>\n", $recording_version['filename'], $recording_version['bandwidth']);
+			$smil .= sprintf("\t\t\t<video src=\"%s:%s\" system-bitrate=\"%d\"/>\n", $media_type, $recording_version['filename'], $recording_version['bandwidth']);
 
 			$recording_versions->MoveNext();
 		}
 		$smil .= $smil_footer;
-
-//echo $smil . "\n";
 
 		$smil_filename_suffix = "";
 		if ( $idx == "content" ) $smil_filename_suffix = "_content";
@@ -663,13 +684,14 @@ global $db, $app, $debug, $jconf;
 	return true;
 }
 
-function getRecordingVersionsForRecording($recordingid, $type = "recording") {
+function getRecordingVersionsForRecording($recordingid, $type = "recording", $filteraudioonly = false) {
 global $db, $app, $jconf, $debug;
 
 	if ( ( $type != "recording" ) and ( $type != "content" ) ) return false;
 
 	$iscontent = 0;
 	$mediatype = "video";
+	if ( $filteraudioonly ) $mediatype = "audio";
 	if ( $type == "content" ) $iscontent = 1;
 
 	$query = "
