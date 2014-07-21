@@ -366,6 +366,11 @@ global $jconf, $debug;
 // > az alacsonyabb vagy a magasabb fps legyen az alap? -> magasabb!
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 global $jconf, $debug;
+	$result = array(
+		'result' => true,
+		'message' => "ok!",
+		'params' => null,
+	);
 	// Encoding paramteres: an array for recording final parameters used for encoding
 	$encpars = array();
 	$encpars['name'] = $profile['name'];
@@ -412,9 +417,11 @@ global $jconf, $debug;
 		$videores = explode('x', strtolower($rec[$idx .'mastervideores']), 2);
 		$maxres   = explode('x', strtolower($jconf['video_max_res']), 2);
 		if (($videores[0] > $maxres[0]) || ($videores[1] > $maxres[1])) {
-			$msg = "[ERROR] Invalid video resolution: ". $rec[$idx .'mastervideores'] . " (max:" . $jconf['video_max_res'] . ")";
+			$msg = "[ERROR] Invalid video resolution: ". $rec[$idx .'mastervideores'] . " (max: " . $jconf['video_max_res'] . ")";
 			$debug->log($jconf['log_dir'], $jconf['jobid_media_convert'] .'.log', $msg, $sendmail = false);
-			return false;
+			$result['message'] = $msg;
+			$result['result' ] = false;
+			return $result;
 		}
 
 		//// Scaling 1: Display Aspect Ratio (DAR)
@@ -478,10 +485,14 @@ global $jconf, $debug;
 		$msg .= " profile.videocodec='". ($profile['videocodec'] ? $profile['videocodec'] : "null" ) ."';";
 		$msg .= " profile.audiocodec='". ($profile['audiocodec'] ? $profile['audiocodec'] : "null" ) ."'\n";
 		$debug->log($jconf['log_dir'], $jconf['jobid_media_convert'] .'.log', $msg, $sendmail = false);
-		return false;
+		$result['message'] = $msg;
+		$result['result' ] = false;
+		return $result;
 	}
 
-	return $encpars;
+	$result['params'] = $encpars;
+	unset($encpars);
+	return $result;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -709,7 +720,6 @@ global $jconf, $debug, $app;
 			$msg = "[ERROR] Multipass encoding failed! ". $msg ." (". $ffmpeg_passlogfile .")";
 			$debug->log($jconf['log_dir'], $jconf['jobid_media_convert'] . ".log", $msg, $sendmail = false);
 
-			$err['code'   ] = false;
 			$err['message'] = $msg;	
 			return $err;
 		}
@@ -730,15 +740,16 @@ global $jconf, $debug, $app;
 		if ($output['code'] !== 0) {
 			// FFmpeg returned with a non-zero error code
 			$err['message'] = "[ERROR] FFmpeg conversion FAILED!";
-			$err['code'   ] = false;
 			return $err;
 		}
 		
 		if ($n == count($command)) {
-			if (filesize($rec['output_file']) < 1000) {
+			if (!file_exists($rec['output_file'])) {
+				$err['message'] = "[ERROR] No output file!";
+				return $err;
+			}	elseif (filesize($rec['output_file']) < 1000) {
 				// FFmpeg terminated with error or filesize suspiciously small
 				$err['message'] = "[ERROR] Output file is too small.";
-				$err['code'   ] = false;
 				return $err;
 			}
 		}	
@@ -761,7 +772,6 @@ global $jconf, $debug, $app;
 			$msg .= print_r($err['command_output'], 1);
 			$debug->log($jconf['log_dir'], $jconf['jobid_media_convert'] .'.log', $msg, $sendmail = false);
 
-			$err['code'   ] = false;
 			$err['message'] = "[ERROR] FFmpeg conversion failed: conversion stopped unexpectedly!\n.";
 
 			unset($r);
