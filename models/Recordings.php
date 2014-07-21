@@ -2281,32 +2281,20 @@ class Recordings extends \Springboard\Model {
       'media_servers' => array(),
     );
 
+    $prefix = $this->row['issecurestreamingforced']? 'sec': '';
     if ( $hds === null )
       $hds = $this->isHDSEnabled();
 
-    if (
-         $hds and
-         $this->row['issecurestreamingforced']
-       ) {
-      $data['media_servers'][] = $this->getWowzaUrl( 'sechttpurl', true, $info );
-    } elseif (
-         $hds and
-         !$this->row['issecurestreamingforced']
-      ) {
-      $data['media_servers'][] = $this->getWowzaUrl( 'httpurl', true, $info );
-    } elseif (
-         $hds and
-         $this->row['issecurestreamingforced']
-      ) {
-      $data['media_servers'][] = $this->getWowzaUrl( 'secrtmpsurl', true, $info );
-      $data['media_servers'][] = $this->getWowzaUrl( 'secrtmpurl',  true, $info );
-      $data['media_servers'][] = $this->getWowzaUrl( 'secrtmpturl', true, $info );
-    } elseif (
-         $hds and
-         !$this->row['issecurestreamingforced']
-      ) {
-      $data['media_servers'][] = $this->getWowzaUrl( 'rtmpurl',  true, $info );
-      $data['media_servers'][] = $this->getWowzaUrl( 'rtmpturl', true, $info );
+    if ( $hds ) {
+      $data['media_servers'][] = $this->getWowzaUrl( $prefix . 'smilurl', false, $info );
+    } else {
+
+      if ( $prefix )
+        $data['media_servers'][] = $this->getWowzaUrl( 'secrtmpsurl', true, $info );
+
+      $data['media_servers'][] = $this->getWowzaUrl( $prefix . 'rtmpurl',  true, $info );
+      $data['media_servers'][] = $this->getWowzaUrl( $prefix . 'rtmpturl', true, $info );
+
     }
 
     return $data;
@@ -2501,9 +2489,12 @@ class Recordings extends \Springboard\Model {
             'recordingid' => $this->id,
           );
 
-        $postfix     = $type == 'contentsmil'? '_content': '';
-        $sprintfterm = '%3$s:%s/' . $version['recordingid'] . $postfix . '.%3$s/manifest.f4m';
         $extension   = 'smil';
+        $postfix     = $type == 'contentsmil'? '_content': '';
+        $sprintfterm =
+          '%3$s:%s/' . $version['recordingid'] . $postfix . '.%3$s/manifest.f4m' .
+          $this->getAuthorizeSessionid( $info )
+        ;
         break;
 
       case 'content':

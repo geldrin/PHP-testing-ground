@@ -115,7 +115,10 @@ $config = array(
     
     'httpurl'           => 'http://%s/vsq/_definst_/',
     'sechttpurl'        => 'https://%s/vsq/_definst_/',
-    
+
+    'smilurl'           => 'http://%s/vsq/_definst_/',
+    'secsmilurl'        => 'https://%s/vsq/_definst_/',
+
     'rtmpurl'           => 'rtmp://%s:1935/vsq/',
     'secrtmpsurl'       => 'rtmps://%s/vsqsec/',
     'secrtmpurl'        => 'rtmpe://%s:1935/vsqsec/',
