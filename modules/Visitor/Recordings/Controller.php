@@ -273,7 +273,7 @@ class Controller extends \Visitor\Controller {
     );
 
     $quality        = $this->application->getParameter('quality');
-    $mobileversion  = array_pop( $versions['master']['mobile'] );
+    $mobileversion  = array_shift( $versions['master']['mobile'] );
     $mobileversions = array();
 
     foreach( $versions['master']['mobile'] as $version ) {
