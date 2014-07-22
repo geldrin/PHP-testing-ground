@@ -2031,10 +2031,8 @@ class Recordings extends \Springboard\Model {
 
     foreach( $rs as $version ) {
 
-      if ( $version['encodingshortname'] == 'audio' ) {
+      if ( $version['encodingshortname'] == 'audio' )
         $ret['audio'][] = $version;
-        continue;
-      }
 
       if ( $version['iscontent'] )
         $key = 'content';
@@ -2441,10 +2439,10 @@ class Recordings extends \Springboard\Model {
     $cookiedomain = $info['organization']['cookiedomain'];
     $sessionid    = $info['sessionid'];
     $host         = '';
+    $extension    = 'mp4';
 
-    $extension = 'mp4';
-    if ( $version['encodingshortname'] == 'audio' )
-      $extension = 'mp3';
+    if ( $version )
+      $extension = \Springboard\Filesystem::getExtension( $version['filename'] );
 
     $user = null;
     if ( isset( $info['member'] ) )
