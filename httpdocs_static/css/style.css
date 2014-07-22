@@ -2302,6 +2302,11 @@ a#currentusername span {
   display: inline-block;
 }
 
+#qualitychooser ul {
+  list-style-type: none;
+  margin: 3px 0 0 0;
+  padding: 0;
+}
 #qualitychooser a {
   outline: 0;
   width: 260px;
