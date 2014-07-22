@@ -2014,7 +2014,7 @@ class Recordings extends \Springboard\Model {
         rv.recordingid IN('" . implode("', '", $ids ) . "') AND
         rv.status = 'onstorage' AND
         ep.id     = rv.encodingprofileid
-      ORDER BY qualitytag
+      ORDER BY ( qualitytag <> 'audio' ) DESC, qualitytag
     ");
 
     $ret = array(
