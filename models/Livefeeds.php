@@ -795,7 +795,7 @@ class Livefeeds extends \Springboard\Model {
 
       $ret['starttimestamp'] = $startts;
       $ret['endtimestamp']   = $endts;
-
+/*
       if ( $diff < 1209600 ) { // 2 het
         $table = 'statistics_live_5min';
         $ret['step'] = 300;
@@ -806,7 +806,7 @@ class Livefeeds extends \Springboard\Model {
         $table = 'statistics_live_daily';
         $ret['step'] = 86400;
       }
-
+*/
     }
 
     // fontos az adatok sorrendje! ha valtoztatasra kerul at kell irni a lov_hu-t
