@@ -2006,7 +2006,8 @@ class Recordings extends \Springboard\Model {
     $rs = $this->db->query("
       SELECT
         rv.*,
-        ep.shortname AS encodingshortname
+        ep.shortname AS encodingshortname,
+        ep.mediatype
       FROM
         recordings_versions AS rv,
         encoding_profiles AS ep
@@ -2014,7 +2015,7 @@ class Recordings extends \Springboard\Model {
         rv.recordingid IN('" . implode("', '", $ids ) . "') AND
         rv.status = 'onstorage' AND
         ep.id     = rv.encodingprofileid
-      ORDER BY ( qualitytag <> 'audio' ) DESC, qualitytag
+      ORDER BY rv.bandwidth
     ");
 
     $ret = array(
@@ -2031,8 +2032,10 @@ class Recordings extends \Springboard\Model {
 
     foreach( $rs as $version ) {
 
-      if ( $version['encodingshortname'] == 'audio' )
+      if ( $version['encodingshortname'] == 'audio' ) {
         $ret['audio'][] = $version;
+        continue;
+      }
 
       if ( $version['iscontent'] )
         $key = 'content';
@@ -2046,6 +2049,12 @@ class Recordings extends \Springboard\Model {
         $ret[ $key ]['mobile'][] = $version;
 
     }
+
+    if ( $this->row['mastermediatype'] == 'audio' )
+      $ret['master']['desktop'] = $ret['master']['mobile'] = $ret['audio'];
+
+    if ( $this->row['contentmastermediatype'] == 'audio' )
+      $ret['content']['desktop'] = $ret['content']['mobile'] = $ret['audio'];
 
     return $ret;
 
