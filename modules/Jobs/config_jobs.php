@@ -128,7 +128,7 @@ return array('config_jobs' => array(
 
 	// FFMpeg related
 	'ffmpeg_alt'            		=> '/home/conv/ffmpeg/ffmpeg-git-20140623-64bit-static/ffmpeg', // current FFMpeg static build
-	'ffmpeg_loglevel'				=> 35,								// Loglevel
+	'ffmpeg_loglevel'				=> 25,								// Loglevel
 	'ffmpeg_threads'				=> 0,								// Threads to use (0 - automatic)
 	'ffmpeg_async_frames'			=> 10,								// Max. frames to skip when audio and video is out of sync
 	'ffmpeg_h264_passes'			=> 1,								// FFMpeg passes for H.264 (not operational!)

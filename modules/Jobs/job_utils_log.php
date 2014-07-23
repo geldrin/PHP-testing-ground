@@ -23,6 +23,8 @@ global $app, $jconf, $debug, $db, $uploader_user;
 
 	$db = db_maintain();
 
+	$data = substr(trim($data), 1, 255);
+
 	// Check DB connection: do not log if does not exist
 	$values = Array(
 		'timestamp'					=> date("Y-m-d H:i:s"),
