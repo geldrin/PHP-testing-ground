@@ -2093,7 +2093,10 @@ class Recordings extends \Springboard\Model {
       'user_checkWatchingTimeInterval' => $info['organization']['presencechecktimeinterval'],
       'user_checkWatchingConfirmationTimeout' => $info['organization']['presencecheckconfirmationtime'],
     );
-    
+
+    if ( $this->row['mastermediatype'] == 'audio' )
+      $data['recording_isAudio'] = true;
+
     if ( isset( $info['member'] ) and $info['member']['id'] ) {
       $data['user_id'] = $info['member']['id'];
       $data['user_needPing'] = true;
