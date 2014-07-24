@@ -990,6 +990,23 @@ class Recordings extends \Springboard\Model {
     if ( !$coursetypeid )
       return true;
 
+    // replicating the check from isAccessibleByStatus
+    if (
+         isset( $user['id'] ) and
+         (
+           $this->row['userid'] == $user['id'] or
+           (
+             $user['iseditor'] and
+             $user['organizationid'] == $this->row['organizationid']
+           ) or
+           (
+             $user['isclientadmin'] and
+             $user['organizationid'] == $this->row['organizationid']
+           )
+         )
+       )
+      return true;
+
     // the course channels where the recording is a member
     $coursechannelids = $this->db->getCol("
       SELECT c.id
