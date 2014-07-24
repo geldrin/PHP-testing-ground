@@ -2006,7 +2006,8 @@ class Recordings extends \Springboard\Model {
     $rs = $this->db->query("
       SELECT
         rv.*,
-        ep.shortname AS encodingshortname
+        ep.shortname AS encodingshortname,
+        ep.mediatype
       FROM
         recordings_versions AS rv,
         encoding_profiles AS ep
@@ -2014,7 +2015,7 @@ class Recordings extends \Springboard\Model {
         rv.recordingid IN('" . implode("', '", $ids ) . "') AND
         rv.status = 'onstorage' AND
         ep.id     = rv.encodingprofileid
-      ORDER BY qualitytag
+      ORDER BY rv.bandwidth
     ");
 
     $ret = array(
@@ -2048,6 +2049,12 @@ class Recordings extends \Springboard\Model {
         $ret[ $key ]['mobile'][] = $version;
 
     }
+
+    if ( $this->row['mastermediatype'] == 'audio' )
+      $ret['master']['desktop'] = $ret['master']['mobile'] = $ret['audio'];
+
+    if ( $this->row['contentmastermediatype'] == 'audio' )
+      $ret['content']['desktop'] = $ret['content']['mobile'] = $ret['audio'];
 
     return $ret;
 
@@ -2086,7 +2093,10 @@ class Recordings extends \Springboard\Model {
       'user_checkWatchingTimeInterval' => $info['organization']['presencechecktimeinterval'],
       'user_checkWatchingConfirmationTimeout' => $info['organization']['presencecheckconfirmationtime'],
     );
-    
+
+    if ( $this->row['mastermediatype'] == 'audio' )
+      $data['recording_isAudio'] = true;
+
     if ( isset( $info['member'] ) and $info['member']['id'] ) {
       $data['user_id'] = $info['member']['id'];
       $data['user_needPing'] = true;
@@ -2441,10 +2451,10 @@ class Recordings extends \Springboard\Model {
     $cookiedomain = $info['organization']['cookiedomain'];
     $sessionid    = $info['sessionid'];
     $host         = '';
+    $extension    = 'mp4';
 
-    $extension = 'mp4';
-    if ( $version['encodingshortname'] == 'audio' )
-      $extension = 'mp3';
+    if ( $version )
+      $extension = \Springboard\Filesystem::getExtension( $version['filename'] );
 
     $user = null;
     if ( isset( $info['member'] ) )
