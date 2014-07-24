@@ -367,9 +367,9 @@ global $jconf, $debug;
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 global $jconf, $debug;
 	$result = array(
-		'result' => true,
+		'result'  => true,
 		'message' => "ok!",
-		'params' => null,
+		'params'  => null,
 	);
 	// Encoding paramteres: an array for recording final parameters used for encoding
 	$encpars = array();
@@ -378,6 +378,8 @@ global $jconf, $debug;
 	$encpars['hasvideo'] = true;
 	
 	$idx = ($rec['iscontent'] ? 'content' : '');
+	
+	$debug->log($jconf['log_dir'], $jconf['jobid_media_convert'] .'.log', "[INFO] Preparing encoding parameters. (rec#". $rec['id'] ." - '". $profile['name'] .")" , $sendmail = false);
 	
 	// Audio parameters
 	if (($rec[$idx . 'mastermediatype'] == "videoonly" ) || ( empty($profile['audiocodec']))) {
