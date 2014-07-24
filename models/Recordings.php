@@ -383,16 +383,32 @@ class Recordings extends \Springboard\Model {
   public function userHasAccess( $user, $secure = null, $mobile = false, $organization = null ) {
     
     $this->ensureObjectLoaded();
-    
+    /*
+      tehat a logika a kovetkezo:
+      ha a kapcsolat non-secure (ergo non-https-en) keresztul jott akkor azonnal
+      tiltjuk ha secure kapcsolat nezese be van kapcsolva
+    */
     if ( $secure !== null and $this->row['issecurestreamingforced'] != $secure )
       return 'securerestricted';
 
+    /*
+      ha nincs lekonvertalva vagy meg vazlat allapotban van akkor tiltjuk rogton
+      (de a letrehozo usernek/adminnak engedjuk)
+    */
     $bystatus = $this->isAccessibleByStatus( $user, $mobile );
     if ( $bystatus !== true )
       return $bystatus;
 
+    /*
+      aztan megnezzuk beallitas (recordings/modifysharing Hozzáférés) alapjan
+      hogy engedve van e, meg nem dontunk a visszateresi ertekrol egyelore
+    */
     $bysettings = $this->isAccessibleBySettings( $user );
 
+    /*
+      ha nem fer hozza beallitas alapjan akkor megnezzuk hogy invitacio alapjan
+      hozzafer e, ha igen akkor itt abbahagyjuk, es biztos hozzafer
+    */
     if ( $bysettings !== true ) {
 
       // ennek a vissza teresi erteke nem erdekel minket, csak az hogy true e
@@ -402,15 +418,27 @@ class Recordings extends \Springboard\Model {
 
     }
 
-    // ennek a vissza teresi erteke csak akkor fontos ha true vagy non-null
-    // ha null, akkor nem tartozik olyan csatornaba ami erdekes
+    /*
+      a user lehet hogy bealitas alapjan hozzaferhetne a felvetelhez, de meg
+      muszaj megnezni hogy a felvetel tartozik e kurzusba es az alapjan
+      hozzafer e a user
+      ennek a vissza teresi erteke csak akkor fontos ha true (be van a felvetel
+      sorolva kurzusba, es hozzafer a user) vagy non-null (be van sorolva
+      kurzusba, de nem fer hozza)
+      ha null, akkor nem tartozik a felvetel kurzusba es a beallitas szerinti
+      hozzaferes szamit
+    */
     $bycoursecompletion = $this->isAccessibleByCourseCompletion( $user, $organization );
     if ( $bycoursecompletion === true )
       return true;
     elseif ( $bycoursecompletion !== null )
       return $bycoursecompletion;
 
-    // nem sikerult talalni semmit ami engedne a hozzaferest
+    /*
+      ha idaig eljutottunk akkor a felvetel nem tartozott kurzusba, es a
+      felhasznalonak nem volt ra meghivoja, visszaadjuk a beallitas alapjan
+      kapott visszateresi erteket
+    */
     return $bysettings;
 
   }
