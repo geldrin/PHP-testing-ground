@@ -47,7 +47,7 @@ while( !is_file( $app->config['datapath'] . 'jobs/' . $myjobid . '2.stop' ) and 
 		// Establish database connection
 		$db = null;
 		$db = db_maintain();
-
+		
 		$converter_sleep_length = $jconf['sleep_media'];
 
 		// Check if temp directory readable/writable
@@ -269,7 +269,6 @@ global $jconf, $debug, $db, $app;
 
 //encoding_profiles AS ep
 //AND rv.encodingprofileid = ep.id AND ep.type <> 'pip'
-
 	try {
 		$recording = $db->getArray($query);
 	} catch (exception $err) {
@@ -588,12 +587,12 @@ global $app, $jconf, $global_log;
 		$recording['iscontent'] = false;
 		$tmp = ffmpegPrep($recording, $profile);
 		$encoding_params_overlay = $tmp['params'];
-		$msg .= $tmp['params'] === false ? $tmp['message'] : "";
+		$msg .= ($tmp['result'] === false) ? ($tmp['message']) : ("");
 		
 		$recording['iscontent'] = true;
 		$tmp = ffmpegPrep($recording, $profile);
-		$encoding_params_main = $tmp['params'];
-		$msg .= $tmp['params'] === false ? $tmp['message'] : "";
+		$encoding_params_main    = $tmp['params'];
+		$msg .= ($tmp['result'] === false) ? ($tmp['message']) : ("");
 	} else {
 		$tmp = ffmpegPrep($recording, $profile);
 		$encoding_params_main    = $tmp['params'];
@@ -601,8 +600,8 @@ global $app, $jconf, $global_log;
 		$msg = $tmp['message'];
 	}
 
-	if (!($encoding_params_main && $encoding_params_overlay)) {
-		log_recording_conversion($recording['id'], $jconf['jobid_media_convert'], $jconf['dbstatus_conv_err'], $msg . "\nRecording version: " . $profile['name'] . "\n", '-', '-', 0, true);
+	if (($encoding_params_main === null) && ($encoding_params_overlay === null)) {
+		log_recording_conversion($recording['id'], $jconf['jobid_media_convert'], $jconf['dbstatus_conv_err'], "[ERROR] Encoding parameter preparation failed!\n". $msg ."\n(Recording version: ". $profile('name') .")", '-', '-', 0, false);
 		return false;
 	}
 
