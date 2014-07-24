@@ -392,13 +392,15 @@ class Recordings extends \Springboard\Model {
       return $bystatus;
 
     $bysettings = $this->isAccessibleBySettings( $user );
-    if ( $bysettings === true )
-      return true;
 
-    // ennek a vissza teresi erteke nem erdekel minket, csak az hogy true e
-    $byinvitation = $this->isAccessibleByInvitation( $user, $organization );
-    if ( $byinvitation === true )
-      return true;
+    if ( $bysettings !== true ) {
+
+      // ennek a vissza teresi erteke nem erdekel minket, csak az hogy true e
+      $byinvitation = $this->isAccessibleByInvitation( $user, $organization );
+      if ( $byinvitation === true )
+        return true;
+
+    }
 
     // ennek a vissza teresi erteke csak akkor fontos ha true vagy non-null
     // ha null, akkor nem tartozik olyan csatornaba ami erdekes
@@ -409,10 +411,7 @@ class Recordings extends \Springboard\Model {
       return $bycoursecompletion;
 
     // nem sikerult talalni semmit ami engedne a hozzaferest
-    if ( $bysettings !== true )
-      return $bysettings;
-
-    throw new \Exception('Cannot happen!');
+    return $bysettings;
 
   }
 
