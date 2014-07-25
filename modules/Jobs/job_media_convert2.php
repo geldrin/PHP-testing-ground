@@ -172,7 +172,7 @@ while( !is_file( $app->config['datapath'] . 'jobs/' . $myjobid . '2.stop' ) and 
 		// Log this recording version conversion summary
 		log_recording_conversion($recording['id'], $jconf['jobid_media_convert'], "-", "[OK] Successful media conversion in " . $hms . " time.\n\nConversion summary:\n\n" . $global_log, "-", "-", $conversion_duration, false);
 		// Have we finished? Then send all logs to admin
-		if ( getRecordingVersionsApplyStatusFilter($recording['id'], $type = "recording", "convert") === false ) {
+		if ( getRecordingVersionsApplyStatusFilter($recording['id'], $type = "all", "convert|reconvert") === false ) {
 			$debug->log($jconf['log_dir'], $jconf['jobid_media_convert'] . ".log", "[INFO] Recording conversion summary.\n\n" . $log_buffer[$recording['id']], $sendmail = true);
 			unset($log_buffer[$recording['id']]);
 		}
