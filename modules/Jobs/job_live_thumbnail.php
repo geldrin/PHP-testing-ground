@@ -23,10 +23,6 @@ $app->loadConfig('modules/Jobs/config_jobs.php');
 $jconf = $app->config['config_jobs'];
 $myjobid = $jconf['jobid_live_thumb'];
 
-// Log related init
-$debug = Springboard\Debug::getInstance();
-$debug->log($jconf['log_dir'], $myjobid . ".log", "*************************** Job: Live thumbnail started ***************************", $sendmail = false);
-
 // Check operating system - exit if Windows
 if ( iswindows() ) {
 	echo "ERROR: Non-Windows process started on Windows platform\n";
@@ -35,6 +31,23 @@ if ( iswindows() ) {
 
 // Start an infinite loop - exit if any STOP file appears
 if ( is_file( $app->config['datapath'] . 'jobs/' . $myjobid . '.stop' ) or is_file( $app->config['datapath'] . 'jobs/all.stop' ) ) exit;
+
+// Log related init
+$debug = Springboard\Debug::getInstance();
+$debug->log($jconf['log_dir'], $myjobid . ".log", "*************************** Job: Live thumbnail started ***************************", $sendmail = false);
+
+// Already running. Not finished a tough job?
+$run_filename = $jconf['temp_dir'] . $myjobid . ".run";
+if  ( file_exists($run_filename) ) {
+	$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] I am already running. Not finished a tough job?", $sendmail = true);
+	exit;
+} else {
+	$content = "Running. Started: " . date("Y-m-d H:i:s");
+	$err = file_put_contents($run_filename, $content);
+	if ( $err === false ) {
+		$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Cannot write run file " . $run_filename, $sendmail = true);
+	}
+}
 
 if ( !is_writable($jconf['livestreams_dir']) ) {
 	$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Temp directory " . $jconf['livestreams_dir'] . " is not writeable.", $sendmail = false);
@@ -65,6 +78,7 @@ if ( $channels === false ) break;
 //var_dump($channels);
 
 for ( $i = 0; $i < count($channels); $i++ ) {
+echo "i=" . $i . "\n";
 
 	// Temp directory
 	$temp_dir = $jconf['livestreams_dir'] . $channels[$i]['streamid'] . "/";
@@ -88,7 +102,7 @@ for ( $i = 0; $i < count($channels); $i++ ) {
 
 	if ( is_readable($thumb_filename) and ( filesize($thumb_filename) > 0 ) ) {
 
-		$debug->log($jconf['log_dir'], $myjobid . ".log", "[OK] ffmpeg live thumb created. Error code = " . $err['code'] . ", lifefeed_stream.id = " . $channels[$i]['streamid'] . ", ffmpeg command = " . $ffmpeg_command . ". Full output:\n" . $err['cmd_output'], $sendmail = false);
+		$debug->log($jconf['log_dir'], $myjobid . ".log", "[OK] ffmpeg live thumb created. Error code = " . $err['code'] . ", lifefeed_stream.id = " . $channels[$i]['streamid'] . ", ffmpeg command = \"" . $ffmpeg_command . "\". Full output:\n" . $err['cmd_output'], $sendmail = false);
 
 		// ## Prepare working directories
 		// Base working directory
@@ -117,7 +131,7 @@ for ( $i = 0; $i < count($channels); $i++ ) {
 		}
 	} else {
 		// ffmpeg error: default logo
-		$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] ffmpeg cannot get live thumb. Using default index photo instead. Error code = " . $err['code'] . ", lifefeed_stream.id = " . $channels[$i]['streamid'] . ", ffmpeg command = " . $ffmpeg_command . ". Full output:\n" . $err['cmd_output'], $sendmail = false);
+		$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] ffmpeg cannot get live thumb. Error code = " . $err['code'] . ", lifefeed_stream.id = " . $channels[$i]['streamid'] . ", ffmpeg command = " . $ffmpeg_command . ". Full output:\n" . $err['cmd_output'], $sendmail = false);
 		// No index photo update, keep existing
 		continue;
 	}
@@ -196,6 +210,9 @@ for ( $i = 0; $i < count($channels); $i++ ) {
 
 // Close DB connection if open
 if ( is_resource($db->_connectionID) ) $db->close();
+
+// Remove run file
+unlink($run_filename);
 
 exit;
 
