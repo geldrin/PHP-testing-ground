@@ -434,7 +434,9 @@ class Controller extends \Visitor\Controller {
   public function getChatCache( $livefeedid ) {
     
     return $this->bootstrap->getCache(
-      sprintf('livefeed_chat-%d', $livefeedid )
+      sprintf('livefeed_chat-%d', $livefeedid ),
+      null,
+      true
     );
     
   }
