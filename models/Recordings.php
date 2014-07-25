@@ -1075,7 +1075,9 @@ class Recordings extends \Springboard\Model {
     if ( empty( $usercourses ) )
       return 'courserestricted';
 
-    $recordings = $this->getUserChannelRecordingsWithProgress( $usercourses, $user, $organization );
+    $recordings = $this->getUserChannelRecordingsWithProgress(
+      $usercourses, $user, $organization
+    );
 
     foreach( $recordings as $recording ) {
 
@@ -1099,7 +1101,15 @@ class Recordings extends \Springboard\Model {
         r.*,
         cr.channelid,
         (
-          ROUND( ( IFNULL(rvp.position, 0) / GREATEST( IFNULL(r.masterlength, 0), IFNULL(r.contentmasterlength, 0) ) ) * 100 )
+          ROUND(
+            (
+              IFNULL( rvp.position, 0 ) /
+              GREATEST(
+                IFNULL(r.masterlength, 0),
+                IFNULL(r.contentmasterlength, 0)
+              )
+            ) * 100
+          )
         ) AS positionpercent,
         IFNULL(rvp.position, 0) AS lastposition
       FROM

@@ -387,7 +387,7 @@ class Controller extends \Visitor\Controller {
       $liveadmin = $this->acl->hasPermission('liveadmin|clientadmin');
       $cache     = $this->getChatCache( $livefeedid );
       
-      if ( $cache->expired() or !$this->application->production ) {
+      if ( $cache->expired() ) {
         
         $feedModel = $this->modelIDCheck( 'livefeeds', $livefeedid );
         $chat      = $feedModel->getChat();
