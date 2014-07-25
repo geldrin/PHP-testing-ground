@@ -690,10 +690,11 @@ class Livefeeds extends \Springboard\Model {
         lc.userid = u.id
       )
       WHERE lc.livefeedid = '" . $this->id . "'
-      ORDER BY lc.id ASC
+      ORDER BY lc.id DESC
       LIMIT 0, 200
     ");
 
+    $ret = array_reverse( $ret );
     return $ret;
 
   }
