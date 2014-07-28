@@ -870,5 +870,29 @@ global $app, $debug, $jconf, $myjobid;
 	return true;
 }
 
+function updateLiveFeedSMILStatus($livefeedid, $status, $type = "video") {
+global $app, $debug, $jconf, $myjobid;
+
+	if ( ( $type != "video" ) and ( $type != "content" ) ) return false;
+
+	if ( empty($status) ) return false;
+
+	$idx = "";
+	if ( $type == "content" ) $idx = "content";
+
+	$values = array(
+		$idx . 'smilstatus' => $status
+	);
+
+	$recordingVersionObj = $app->bootstrap->getModel('livefeeds');
+	$recordingVersionObj->select($livefeedid);
+    $recordingVersionObj->updateRow($values);
+
+	// Log status change
+	$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Livefeed id = " . $livefeedid . " " . $type . " status has been changed to '" . $status . "'.", $sendmail = false);
+
+	return true;
+}
+
 
 ?>

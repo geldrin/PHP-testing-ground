@@ -166,6 +166,10 @@ if ( $recordings !== false ) {
 $err = generateRecordingSMILs("recording");
 $err = generateRecordingSMILs("content");
 
+// SMIL: generate SMILs for live
+$err = generateLiveSMILs("video");
+$err = generateLiveSMILs("content");
+
 // Close DB connection if open
 if ( is_resource($db->_connectionID) ) $db->close();
 
@@ -653,9 +657,7 @@ global $db, $app, $debug, $jconf;
 
 		// SSH: copy SMIL file to server
 		$smil_remote_filename = $app->config['recordingpath'] . ( $recording['id'] % 1000 ) . "/" . $recording['id'] . "/" . $recording['id'] . $smil_filename_suffix . ".smil";
-//echo $smil_remote_filename . "\n";
 
-//function ssh_filecopy2($server, $file_src, $file_dst, $isdownload = true) {
 		$err = ssh_filecopy2($recording[$idx . 'mastersourceip'], $smil_filename, $smil_remote_filename, false);
 		if ( !$err['code'] ) {
 			$debug->log($jconf['log_dir'], $jconf['jobid_conv_control'] . ".log", "[ERROR] SMIL file update failed.\nMSG: " . $err['message'] . "\nCOMMAND: " . $err['command'] . "\nRESULT: " . $err['result'], $sendmail = true);
@@ -679,6 +681,130 @@ global $db, $app, $debug, $jconf;
 		updateRecordingStatus($recording['id'], $jconf['dbstatus_copystorage_ok'], $idx . "smil");
 
 		$recordings->MoveNext();
+	}
+
+	return true;
+}
+
+function generateLiveSMILs($type = "video") {
+global $db, $app, $debug, $jconf;
+
+	if ( ( $type != "video" ) and ( $type != "content" ) ) return false;
+
+	$idx = "";
+	if ( $type == "content" ) $idx = "content";
+
+	// SMILs to update
+	$query = "
+		SELECT
+			lf.id,
+			lf." . $idx . "smilstatus,
+			lfs.id AS streamid,
+			lfs." . $idx . "keycode,
+			lfs.status
+		FROM
+			livefeeds as lf,
+			livefeed_streams as lfs
+		WHERE
+			( lf." . $idx . "smilstatus IS NULL OR lf." . $idx . "smilstatus = '" . $jconf['dbstatus_regenerate'] . "' ) AND
+			lf.id = lfs.livefeedid AND
+			( lfs.status IS NULL OR lfs.status = '" . $jconf['dbstatus_vcr_ready'] . "' )
+		ORDER BY
+			lf.id, lfs.id";
+
+//echo $query . "\n";
+
+	try {
+		$livefeeds = $db->getArray($query);
+	} catch (exception $err) {
+		$debug->log($jconf['log_dir'], $jconf['jobid_conv_control'] . ".log", "[ERROR] SQL query failed." . trim($query), $sendmail = true);
+		return false;
+	}
+
+	// No pending SMILs
+	if ( count($livefeeds) < 1 ) return false;
+
+//var_dump($livefeeds);
+
+	// SMIL header and footer tags
+	$smil_header = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<smil>\n\t<head>\n\t</head>\n\t<body>\n\t\t<switch>\n";
+	$smil_footer = "\t\t</switch>\n\t</body>\n</smil>\n";
+
+	$smil_filename_suffix = "";
+	if ( $idx == "content" ) $smil_filename_suffix = "_content";
+
+	$smil = "";
+
+	$i = 0;
+	while ( $i < count($livefeeds) ) {
+
+		// Live SMIL example
+		/* <smil>
+			<head>
+			</head>
+			<body>
+				<switch>
+					<video src="111111" system-bitrate="500000"/>
+					<video src="222222" system-bitrate="900000"/>
+				</switch>
+			</body>
+		</smil> */
+
+		// SMIL: start a new file, add header first
+		$smil = $smil_header;
+
+		$q = 0;
+		while ( $livefeeds[$i]['id'] == $livefeeds[$i + $q]['id'] ) {
+
+//echo "ID(i): " . $livefeeds[$i]['id'] . " / ID(q): " . $livefeeds[$i + $q]['id'] . "\n";
+
+			// !!! bandwidth calculation: absolutely fake! (no way to calc, if the bitrate is not added on website - no GUI)
+			$smil .= sprintf("\t\t\t<video src=\"%s\" system-bitrate=\"%d\"/>\n", $livefeeds[$i + $q][$idx . 'keycode'], ( $q + 1 ) * 400000);
+
+			$q++;
+
+			if ( !isset($livefeeds[$i + $q]['id']) ) break;
+
+		}
+
+		// SMIL: close with footer
+		$smil .= $smil_footer;
+
+//echo "SMIL ready: " . $smil . "\n";
+
+		// Write SMIL content to a temporary file
+		$smil_filename = "/tmp/" . $livefeeds[$i]['id'] . $smil_filename_suffix . ".smil";
+		$err = file_put_contents($smil_filename, $smil);
+		if ( $err === false ) {
+			$debug->log($jconf['log_dir'], $jconf['jobid_conv_control'] . ".log", "[ERROR] SMIL live file cannot be created at " . $smil_filename, $sendmail = true);
+		} else {
+			$debug->log($jconf['log_dir'], $jconf['jobid_conv_control'] . ".log", "[INFO] SMIL live file created at " . $smil_filename, $sendmail = false);
+		}
+
+		// SSH: copy SMIL file to server
+		$smil_remote_filename = $app->config['livestreampath'] . $livefeeds[$i]['id'] . $smil_filename_suffix . ".smil";
+
+		$err = ssh_filecopy2($app->config['fallbackstreamingserver'], $smil_filename, $smil_remote_filename, false);
+		if ( !$err['code'] ) {
+			$debug->log($jconf['log_dir'], $jconf['jobid_conv_control'] . ".log", "[ERROR] SMIL live file update failed.\nMSG: " . $err['message'] . "\nCOMMAND: " . $err['command'] . "\nRESULT: " . $err['result'], $sendmail = true);
+		} else {
+			$debug->log($jconf['log_dir'], $jconf['jobid_conv_control'] . ".log", "[INFO] SMIL live file updated.\nCOMMAND: " . $err['command'], $sendmail = false);
+		}
+
+		// SSH: chmod new remote files
+		$ssh_command = "ssh -i " . $jconf['ssh_key'] . " " . $jconf['ssh_user'] . "@" . $app->config['fallbackstreamingserver'] . " ";
+		$command = $ssh_command . "\"" . "chmod -f " . $jconf['file_access'] . " " . $smil_remote_filename . "\"";
+		exec($command, $output, $result);
+		$output_string = implode("\n", $output);
+		if ( $result != 0 ) {
+			$debug->log($jconf['log_dir'], $jconf['jobid_conv_control'] . ".log", "[WARN] Cannot chmod new remote files (SSH)\nCOMMAND: " . $command . "\nRESULT: " . $output_string, $sendmail = true);
+		} else {
+			$debug->log($jconf['log_dir'], $jconf['jobid_conv_control'] . ".log", "[INFO] Remote chmod OK. (SSH)\nCOMMAND: " . $command, $sendmail = false);
+		}
+
+		updateLiveFeedSMILStatus($livefeeds[$i]['id'], $jconf['dbstatus_copystorage_ok'], $type);
+
+		$i = $i + $q;
 	}
 
 	return true;
