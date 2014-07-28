@@ -23,9 +23,12 @@ class Analytics extends \Visitor\HelpForm {
       $this->application->getNumericParameter('id')
     );
 
+    /*
+    nem nezzuk hogy a channel liveevent e, Andras keresere
     if ( !$this->channelModel->row['isliveevent'] )
       $this->controller->redirect('');
-    
+    */
+
     $feeds   = $this->channelModel->getFeeds();
     $feedids = $this->application->getParameter('feedids', array() );
     $starttime = $this->application->getParameter(
