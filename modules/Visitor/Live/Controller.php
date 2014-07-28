@@ -387,7 +387,7 @@ class Controller extends \Visitor\Controller {
       $liveadmin = $this->acl->hasPermission('liveadmin|clientadmin');
       $cache     = $this->getChatCache( $livefeedid );
       
-      if ( $cache->expired() or !$this->application->production ) {
+      if ( $cache->expired() ) {
         
         $feedModel = $this->modelIDCheck( 'livefeeds', $livefeedid );
         $chat      = $feedModel->getChat();
@@ -434,7 +434,9 @@ class Controller extends \Visitor\Controller {
   public function getChatCache( $livefeedid ) {
     
     return $this->bootstrap->getCache(
-      sprintf('livefeed_chat-%d', $livefeedid )
+      sprintf('livefeed_chat-%d', $livefeedid ),
+      null,
+      true
     );
     
   }
@@ -682,32 +684,20 @@ class Controller extends \Visitor\Controller {
   public function transformStatistics( $data ) {
 
     $l          = $this->bootstrap->getLocalization();
-    $fieldtokey = array();
     $ret        = array(
-      'startts'      => 0,
-      'endts'        => 0,
-      'stepinterval' => 0,
+      'startts'      => $data['starttimestamp'] * 1000,
+      'endts'        => $data['endtimestamp'] * 1000,
+      'stepinterval' => $data['step'] * 1000,
       'labels'       => array(),
       'data'         => array(),
     );
 
-    $firstdata = reset( $data );
-    $lastdata  = end( $data );
-
-    $ret['stepinterval'] = intval( $firstdata['stepinterval'] );
-    $ret['startts']      = intval( $firstdata['timestamp'] );
-    $ret['endts']        = intval( $lastdata['timestamp'] );
-
     // prepare the chart labels
-    foreach( $data as $value ) {
+    foreach( $data['data'] as $value ) {
 
       foreach( $value as $field => $v ) {
 
-        if ( $field == 'timestamp' or $field == 'stepinterval' )
-          continue;
-
         $ret['labels'][] = $l('live', 'stats_' . $field );
-        $fieldtokey[ $field ] = count( $ret['labels'] ) - 1;
 
       }
 
@@ -715,24 +705,30 @@ class Controller extends \Visitor\Controller {
 
     }
 
-    // prepare the values
-    foreach( $data as $key => $value ) {
+    $ret['labels'][] = $l('live', 'stats_sum');
 
-      $ret['data'][ $key ] = array(
-        'ts' => intval( $value['timestamp'] ),
+    // prepare the values
+    foreach( $data['data'] as $key => $value ) {
+
+      $row = array(
+        intval( $value['timestamp'] ) * 1000,
       );
 
+      $sum = 0;
       foreach( $value as $field => $v ) {
 
-        if ( $field == 'timestamp' or $field == 'stepinterval' )
+        if ( $field == 'timestamp' )
           continue;
 
-        $fieldkey = $fieldtokey[ $field ];
-        $ret['data'][ $key ][ $fieldkey ] = intval( $v );
+        $v = intval( $v );
+        $row[] = $v;
+        $sum += $v;
 
       }
 
-      unset( $data[ $key ] );
+      unset( $data['data'][ $key ] );
+      $row[] = $sum;
+      $ret['data'][] = $row;
 
     }
 

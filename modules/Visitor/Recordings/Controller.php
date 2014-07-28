@@ -206,6 +206,7 @@ class Controller extends \Visitor\Controller {
 
     $commentspage = $this->application->getNumericParameter('commentspage', -1 );
     $start       = $this->application->getParameter('start');
+    $versions    = $recordingsModel->getVersions();
     $browserinfo = $this->bootstrap->getBrowserInfo();
     $user        = $this->bootstrap->getSession('user');
     $rating      = $this->bootstrap->getSession('rating');
@@ -271,37 +272,38 @@ class Controller extends \Visitor\Controller {
       ,
     );
 
-    $mobilehq = false;
-    if ( $recordingsModel->row['mobilevideoreshq'] and $browserinfo['tablet'] )
-      $mobilehq = true;
+    $quality        = $this->application->getParameter('quality');
+    $mobileversion  = array_shift( $versions['master']['mobile'] );
+    $mobileversions = array();
 
-    $quality = $this->application->getParameter('quality');
-    if ( $quality and in_array( $quality, array('lq', 'hq') ) ) {
-      
-      if ( $quality == 'hq' and $recordingsModel->row['mobilevideoreshq'] )
-        $mobilehq = true;
-      elseif ( $quality == 'lq' )
-        $mobilehq = false;
-      
+    foreach( $versions['master']['mobile'] as $version ) {
+
+      if ( $quality and $version['qualitytag'] == $quality )
+        $mobileversion = $version;
+
+      $mobileversions[] = $version['qualitytag'];
+
     }
-    
-    $this->toSmarty['mobilehq']      = $mobilehq;
+
+    $this->toSmarty['mobileversions'] = $mobileversions;
     $this->toSmarty['mobilehttpurl'] = $recordingsModel->getMediaUrl(
       'mobilehttp',
-      $mobilehq,
+      $mobileversion,
       $this->toSmarty
     );
     $this->toSmarty['mobilertspurl'] = $recordingsModel->getMediaUrl(
       'mobilertsp',
-      $mobilehq,
+      $mobileversion,
       $this->toSmarty
     );
-    $this->toSmarty['audiofileurl']  = $recordingsModel->getMediaUrl(
-      'direct',
-      false, // non-hq
-      $this->toSmarty
-    );
-    
+
+    if ( !empty( $versions['audio'] ) )
+      $this->toSmarty['audiofileurl']  = $recordingsModel->getMediaUrl(
+        'direct',
+        current( $versions['audio'] ),
+        $this->toSmarty
+      );
+
     $this->smartyoutput('Visitor/Recordings/Details.tpl');
 
   }
@@ -608,6 +610,7 @@ class Controller extends \Visitor\Controller {
     $autoplay     = $this->application->getParameter('autoplay');
     $fullscale    = $this->application->getParameter('fullscale');
     $skipcontent  = $this->application->getParameter('skipcontent');
+    $versions     = $recordingsModel->getVersions();
     $browserinfo  = $this->bootstrap->getBrowserInfo();
     $user         = $this->bootstrap->getSession('user');
     $access       = $this->bootstrap->getSession('recordingaccess');
@@ -639,42 +642,39 @@ class Controller extends \Visitor\Controller {
       $this->toSmarty['skipcontent'] = true;
 
     $flashdata = $recordingsModel->getFlashData( $this->toSmarty );
+    
+    $quality        = $this->application->getParameter('quality');
+    $mobileversion  = array_pop( $versions['master']['mobile'] );
+    $mobileversions = array();
 
-    $mobilehq = false;
-    if ( $recordingsModel->row['mobilevideoreshq'] ) {
-      
-      $browserinfo = $this->bootstrap->getBrowserInfo();
-      if ( $browserinfo['tablet'] )
-        $mobilehq = true;
-      
+    foreach( $versions['master']['mobile'] as $version ) {
+
+      if ( $quality and $version['qualitytag'] == $quality )
+        $mobileversion = $version;
+
+      $mobileversions[] = $version['qualitytag'];
+
     }
 
-    $quality = $this->application->getParameter('quality');
-    if ( $quality and in_array( $quality, array('lq', 'hq') ) ) {
-      
-      if ( $quality == 'hq' and $recordingsModel->row['mobilevideoreshq'] )
-        $mobilehq = true;
-      elseif ( $quality == 'lq' )
-        $mobilehq = false;
-      
-    }
-
+    $this->toSmarty['mobileversions'] = $mobileversions;
     $this->toSmarty['mobilehttpurl'] = $recordingsModel->getMediaUrl(
       'mobilehttp',
-      $mobilehq,
+      $mobileversion,
       $this->toSmarty
     );
     $this->toSmarty['mobilertspurl'] = $recordingsModel->getMediaUrl(
       'mobilertsp',
-      $mobilehq,
+      $mobileversion,
       $this->toSmarty
     );
-    $this->toSmarty['audiofileurl']  = $recordingsModel->getMediaUrl(
-      'direct',
-      false, // non-hq
-      $this->toSmarty
-    );
-    
+
+    if ( !empty( $versions['audio'] ) )
+      $this->toSmarty['audiofileurl']  = $recordingsModel->getMediaUrl(
+        'direct',
+        current( $versions['audio'] ),
+        $this->toSmarty
+      );
+
     $flashdata['layout_logo'] = $this->toSmarty['STATIC_URI'] . 'images/player_overlay_logo.png';
     $flashdata['layout_logoOrientation'] = 'TR';
 

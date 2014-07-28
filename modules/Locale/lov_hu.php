@@ -204,4 +204,12 @@ return array(
   'invite_templates' => array(
     '' => '--- Új sablon ---',
   ),
+
+  'live_analitics_datapoints' => array(
+    '0' => $l('live', 'stats_numberofdesktop'),
+    '1' => $l('live', 'stats_numberofandroid'),
+    '2' => $l('live', 'stats_numberofiphone'),
+    '3' => $l('live', 'stats_numberofipad'),
+    '4' => $l('live', 'stats_sum'),
+  ),
 );

@@ -12,6 +12,7 @@ $config = array(
   'feedids' => array(
     'type'        => 'inputCheckboxDynamic',
     'displayname' => $l('live', 'analytics_feedids'),
+    'rowlayout'   => $this->singlecolumnlayout,
     'sql'         => "
       SELECT id, name
       FROM livefeeds
@@ -60,4 +61,11 @@ $config = array(
     ),
   ),
 
+  'datapoints' => array(
+    'displayname' => $l('live', 'analytics_datapoints'),
+    'type'        => 'inputCheckboxDynamic',
+    'rowlayout'   => $this->singlecolumnlayout,
+    'values'      => $l->getLov('live_analitics_datapoints'),
+    'value'       => array( '4' ),
+  ),
 );

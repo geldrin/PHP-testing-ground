@@ -152,8 +152,8 @@ return array('config_jobs' => array(
 	// Constraints
 	'video_min_length'				=> 3,			// Min. media length in seconds
 	'video_res_modulo'				=> 8,			// Rescaled video X/Y resolution modulo 0 divider (16 = F4V!)
-	'video_max_bw'					=> 3000000,		// Maximum of video bandwidth (absolute limit)
-	'video_max_res'					=> '1920x1080',	// Max. resolution for uploaded video (otherwise fraud upload)
+	'video_max_bw'					=> 6500000,		// Maximum of video bandwidth (absolute limit)
+	'video_max_res'					=> '4096x2160',	// Max. resolution for uploaded video (otherwise fraud upload)
 	'video_max_fps'					=> 60,			// Max. video FPS
 	'video_default_fps'				=> 25,			// Default video FPS
 	

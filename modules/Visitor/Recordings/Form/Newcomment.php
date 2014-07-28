@@ -76,17 +76,18 @@ class Newcomment extends \Visitor\Form {
       if ( $commentModel->row['userid'] != $comment['userid'] ) {
 
         $usersModel->select( $commentModel->row['userid'] );
-        // TODO check email is generated or not
-        $this->controller->toSmarty['replyuser'] = $usersModel->row;
+        if ( !$usersModel->row['isusergenerated'] ) {
+          $this->controller->toSmarty['replyuser'] = $usersModel->row;
 
-        $this->controller->sendOrganizationHTMLEmail(
-          $usersModel->row['email'],
-          sprintf(
-            $l('recordings', 'comments_reply_subject'),
-            $this->recordingsModel->row['title']
-          ),
-          $this->controller->fetchSmarty('Visitor/Recordings/Email/Commentsreply.tpl')
-        );
+          $this->controller->sendOrganizationHTMLEmail(
+            $usersModel->row['email'],
+            sprintf(
+              $l('recordings', 'comments_reply_subject'),
+              $this->recordingsModel->row['title']
+            ),
+            $this->controller->fetchSmarty('Visitor/Recordings/Email/Commentsreply.tpl')
+          );
+        }
 
       }
 
@@ -98,6 +99,9 @@ class Newcomment extends \Visitor\Form {
 
     $usersModel->select( $this->recordingsModel->row['userid'] );
     $this->controller->toSmarty['recordinguser'] = $usersModel->row;
+
+    if ( $usersModel->row['isusergenerated'] )
+      return;
 
     $this->controller->sendOrganizationHTMLEmail(
       $usersModel->row['email'],

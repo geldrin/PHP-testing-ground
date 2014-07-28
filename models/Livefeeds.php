@@ -338,6 +338,9 @@ class Livefeeds extends \Springboard\Model {
     );
     $recordingsModel = $this->bootstrap->getModel('recordings');
     $recordingsModel->select( $this->row['introrecordingid'] );
+    $versions = $recordingsModel->getVersions();
+    if ( empty( $versions['master']['desktop'] ) )
+      throw new \Exception("The placeholder does not have desktopcompatible recordings!");
 
     if ( $this->row['issecurestreamingforced'] ) {
 
@@ -362,18 +365,18 @@ class Livefeeds extends \Springboard\Model {
 
     }
 
-    $data['livePlaceholder_streams'] = array();
-    $data['livePlaceholder_streams'][] = $recordingsModel->getMediaUrl(
-      'default', false, $info
-    );
-
-    if ( $recordingsModel->row['videoreshq'] )
-      $data['livePlaceholder_streams'][] = $recordingsModel->getMediaUrl(
-        'default', true, $info
+    $data['livePlaceholder_streams']      = array();
+    $data['livePlaceholder_streamLabels'] = array();
+    foreach( $versions['master']['desktop'] as $version ) {
+      $data['livePlaceholder_streamLabels'] = $version['qualitytag'];
+      $data['livePlaceholder_streams'][]    = $recordingsModel->getMediaUrl(
+        'default', $version, $info
       );
+    }
 
-    $data['intro_servers'] = $data['livePlaceholder_servers'];
-    $data['intro_streams'] = $data['livePlaceholder_streams'];
+    $data['intro_servers']      = $data['livePlaceholder_servers'];
+    $data['intro_streams']      = $data['livePlaceholder_streams'];
+    $data['intro_streamLabels'] = $data['livePlaceholder_streamLabels'];
     return $data;
 
   }
@@ -687,10 +690,11 @@ class Livefeeds extends \Springboard\Model {
         lc.userid = u.id
       )
       WHERE lc.livefeedid = '" . $this->id . "'
-      ORDER BY lc.id ASC
+      ORDER BY lc.id DESC
       LIMIT 0, 200
     ");
 
+    $ret = array_reverse( $ret );
     return $ret;
 
   }
@@ -778,32 +782,39 @@ class Livefeeds extends \Springboard\Model {
   public function getStatistics( $filter ) {
 
     $table = 'statistics_live_5min';
-    $step  = 300; // 5perc
+    $ret   = array(
+      'step'           => 300, // 5perc
+      'starttimestamp' => 0,
+      'endtimestamp'   => 0,
+      'data'           => array(),
+    );
 
     if ( isset( $filter['starttimestamp'] ) and isset( $filter['endtimestamp'] ) ) {
       $startts = strtotime( $filter['starttimestamp'] );
       $endts   = strtotime( $filter['endtimestamp'] );
       $diff    = $endts - $startts;
 
-      if ( $diff < 604800 ) { // 1 het
+      $ret['starttimestamp'] = $startts;
+      $ret['endtimestamp']   = $endts;
+/*
+      if ( $diff < 1209600 ) { // 2 het
         $table = 'statistics_live_5min';
-        $step  = 300;
-      } elseif ( $diff < 1814400 ) { // 3 het
+        $ret['step'] = 300;
+      } elseif ( $diff < 3024000 ) { // 5 het
         $table = 'statistics_live_hourly';
-        $step  = 3600;
+        $ret['step'] = 3600;
       } else {
         $table = 'statistics_live_daily';
-        $step  = 86400;
+        $ret['step'] = 86400;
       }
-
+*/
     }
 
+    // fontos az adatok sorrendje! ha valtoztatasra kerul at kell irni a lov_hu-t
     $where = array();
     $sql   = "
       SELECT
-        UNIX_TIMESTAMP(s.timestamp) AS arraykey,
         UNIX_TIMESTAMP(s.timestamp) AS timestamp,
-        $step                       AS stepinterval,
         SUM( s.numberofflashwin )   +
         SUM( s.numberofflashmac )   +
         SUM( s.numberofflashlinux ) +
@@ -841,7 +852,36 @@ class Livefeeds extends \Springboard\Model {
       ORDER BY s.timestamp, s.id
     ";
 
-    return $this->db->getAssoc( $sql );
+    $ret['data'] = $this->db->getArray( $sql );
+    if ( empty( $ret['data'] ) )
+      return $ret;
+
+    $item = reset( $ret['data'] );
+    if ( !isset( $filter['starttimestamp'] ) )
+      $ret['starttimestamp'] = $item['timestamp'];
+    else {
+      // how many "ticks" based on the step is there between the user-provided
+      // starttimestamp and the actual timestamp, so we can align the ticks
+      $steps = ceil(
+        ( $item['timestamp'] + 1 - $ret['starttimestamp'] ) / $ret['step']
+      );
+      // now subtract those ticks from the start timestamp, so we can
+      // achieve the range the user actually requested
+      $ret['starttimestamp'] = $item['timestamp'] - ( $steps * $ret['step'] );
+    }
+
+    $item = end( $ret['data'] );
+    if ( !isset( $filter['endtimestamp'] ) )
+      $ret['endtimestamp'] = $item['timestamp'];
+    else {
+      // same thing, ensure that it ends on a "tick" boundary
+      $steps = ceil(
+        ( $ret['endtimestamp'] + 1 - $item['timestamp'] ) / $ret['step']
+      );
+      $ret['endtimestamp'] = $item['timestamp'] + ( $steps * $ret['step'] );
+    }
+
+    return $ret;
 
   }
 

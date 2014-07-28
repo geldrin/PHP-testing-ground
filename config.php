@@ -110,11 +110,15 @@ $config = array(
     'player' => '618x348',
   ),
   //----
-  'wowza' => array(
+  'hdsenabled' => true,
+  'wowza'      => array(
     
     'httpurl'           => 'http://%s/vsq/_definst_/',
-    'sechttpurl'        => 'http://%s/vsq/_definst_/',
-    
+    'sechttpurl'        => 'https://%s/vsq/_definst_/',
+
+    'smilurl'           => 'http://%s/vsq/_definst_/',
+    'secsmilurl'        => 'https://%s/vsq/_definst_/',
+
     'rtmpurl'           => 'rtmp://%s:1935/vsq/',
     'secrtmpsurl'       => 'rtmps://%s/vsqsec/',
     'secrtmpurl'        => 'rtmpe://%s:1935/vsqsec/',
@@ -134,7 +138,7 @@ $config = array(
     'secliveurl'        => 'rtmpte://%s:80/vsqlivesec/',
     
     'livehttpurl'       => 'http://%s/vsqlive/',
-    'seclivehttpurl'    => 'http://%s/vsqlivesec/',
+    'seclivehttpurl'    => 'https://%s/vsqlivesec/',
     
     'livertspurl'       => 'rtsp://%s/vsqlive/',
     'seclivertspurl'    => 'rtsp://%s/vsqlivesec/',
