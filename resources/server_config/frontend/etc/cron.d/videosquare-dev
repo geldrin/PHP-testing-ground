@@ -10,7 +10,7 @@ PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
 */5 * * * *		conv    /usr/bin/php -f /var/www/dev.videosquare.eu/modules/Jobs/watcher.php &> /dev/null
 
 # Remove files (every 2 minutes)
-#*/2 * * * *	conv    /usr/bin/php -f /var/www/dev.videosquare.eu/modules/Jobs/job_remove_files.php &> /dev/null
+* * * * *		conv    /usr/bin/php -f /var/www/dev.videosquare.eu/modules/Jobs/job_remove_files.php &> /dev/null
 
 # Daily maintenance (every day 0:05)
 5 0 * * *		conv    /usr/bin/php -f /var/www/dev.videosquare.eu/modules/Jobs/job_maintenance.php &> /dev/null
