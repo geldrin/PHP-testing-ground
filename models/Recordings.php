@@ -3512,6 +3512,7 @@ class Recordings extends \Springboard\Model {
 
     $ret      = array();
     $treedir  = \Springboard\Filesystem::getTreeDir( $this->id );
+    $basedir  = $staticuri . 'files/recordings/' . $treedir . '/';
     $versions = $this->db->getArray("
       SELECT
         rv.filename,
@@ -3537,7 +3538,7 @@ class Recordings extends \Springboard\Model {
           continue;
 
         $ret['audio'] =
-          $staticuri . 'files/recordings/' . $treedir . '/' .
+          $basedir .
           \Springboard\Filesystem::getWithoutExtension( $version['filename'] ) .
           ',' . \Springboard\Filesystem::filenameize( $this->row['title'] ) . '.' .
           \Springboard\Filesystem::getExtension( $version['filename'] )
@@ -3549,29 +3550,22 @@ class Recordings extends \Springboard\Model {
 
     if ( $this->row['isdownloadable'] ) {
 
-      if ( $this->row['masterstatus'] == 'onstorage' )
-        $ret['master'] =
-          $staticuri . 'files/recordings/' . $treedir . '/master/' . $this->id .
-          '_' . $this->row['mastermediatype'] . ',' . $this->row['mastervideofilename']
-        ;
-
-      if ( $this->row['contentmasterstatus'] == 'onstorage' )
-        $ret['contentmaster'] =
-          $staticuri . 'files/recordings/' . $treedir . '/master/' . $this->id .
-          '_content,' . $this->row['contentmastervideofilename']
-        ;
-
       foreach( $versions as $version ) {
-        if ( $version['type'] != 'pip' )
-          continue;
 
-        $ret['pip'] =
-          $staticuri . 'files/recordings/' . $treedir . '/' .
+        $filename =
           \Springboard\Filesystem::getWithoutExtension( $version['filename'] ) .
           ',' . \Springboard\Filesystem::filenameize( $this->row['title'] ) . '.' .
           \Springboard\Filesystem::getExtension( $version['filename'] )
         ;
-        break;
+
+        if ( $version['type'] == 'recording' and !isset( $ret['master'] ) ) {
+          $ret['master'] = $basedir . $filename;
+        } elseif ( $version['type'] == 'content' and !isset( $ret['content'] ) ) {
+          $ret['contentmaster'] = $basedir . $filename;
+        } elseif ( $version['type'] == 'pip' and !isset( $ret['pip'] ) ) {
+          $ret['pip'] = $basedir . $filename;
+        }
+
       }
 
     }
