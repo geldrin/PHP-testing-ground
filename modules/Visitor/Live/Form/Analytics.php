@@ -22,6 +22,7 @@ class Analytics extends \Visitor\HelpForm {
       'channels',
       $this->application->getNumericParameter('id')
     );
+    $this->feedModel = $this->bootstrap->getModel('livefeeds');
 
     /*
     nem nezzuk hogy a channel liveevent e, Andras keresere
@@ -55,9 +56,14 @@ class Analytics extends \Visitor\HelpForm {
       'starttimestamp' => $starttime,
       'endtimestamp'   => $endtime,
       'livefeedids'    => $feedids,
+      'resolution'     => $this->application->getNumericParameter('resolution',
+        $this->feedModel->getMinStep(
+          $this->channelModel->row['starttimestamp'],
+          $this->channelModel->row['endtimestamp']
+        )
+      ),
     );
-    $feedModel = $this->bootstrap->getModel('livefeeds');
-    $data   = $feedModel->getStatistics( $filter );
+    $data   = $this->feedModel->getStatistics( $filter );
 
     $this->controller->toSmarty['helpclass']     = 'rightbox small';
     $this->controller->toSmarty['channel']       = $this->channelModel->row;

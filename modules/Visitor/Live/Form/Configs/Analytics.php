@@ -61,11 +61,24 @@ $config = array(
     ),
   ),
 
+  'resolution' => array(
+    'displayname' => $l('live', 'analytics_resolution'),
+    'type'        => 'inputRadio',
+    'rowlayout'   => $this->singlecolumnlayout,
+    'divide'      => 1,
+    'divider'     => '<br/>',
+    'values'      => $l->getLov('live_analytics_resolutions'),
+    'value'       => $this->feedModel->getMinStep(
+      $this->channelModel->row['starttimestamp'],
+      $this->channelModel->row['endtimestamp']
+    ),
+  ),
+
   'datapoints' => array(
     'displayname' => $l('live', 'analytics_datapoints'),
     'type'        => 'inputCheckboxDynamic',
     'rowlayout'   => $this->singlecolumnlayout,
-    'values'      => $l->getLov('live_analitics_datapoints'),
+    'values'      => $l->getLov('live_analytics_datapoints'),
     'value'       => array( '4' ),
   ),
 );

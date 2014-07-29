@@ -647,11 +647,18 @@ class Controller extends \Visitor\Controller {
       'channels',
       $this->application->getNumericParameter('id')
     );
+    $feedModel  = $this->bootstrap->getModel('livefeeds');
 
     $l      = $this->bootstrap->getLocalization();
     $filter = array(
       'starttimestamp' => $channelModel->row['starttimestamp'],
       'endtimestamp'   => $channelModel->row['endtimestamp'],
+      'resolution'     => $this->application->getNumericParameter('resolution',
+        $feedModel->getMinStep(
+          $channelModel->row['starttimestamp'],
+          $channelModel->row['endtimestamp']
+        )
+      ),
     );
     $ret    = array(
       'status' => 'OK',
@@ -672,9 +679,7 @@ class Controller extends \Visitor\Controller {
       $this->jsonOutput( $ret );
 
     $filter['livefeedids'] = $feedids;
-
-    $feedModel  = $this->bootstrap->getModel('livefeeds');
-    $data       = $feedModel->getStatistics( $filter );
+    $data        = $feedModel->getStatistics( $filter );
     $ret['data'] = $this->transformStatistics( $data );
 
     $this->jsonOutput( $ret );

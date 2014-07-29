@@ -171,11 +171,17 @@ return array(
     '' => '--- New template ---',
   ),
 
-  'live_analitics_datapoints' => array(
+  'live_analytics_datapoints' => array(
     '0' => $l('live', 'stats_numberofdesktop'),
     '1' => $l('live', 'stats_numberofandroid'),
     '2' => $l('live', 'stats_numberofiphone'),
     '3' => $l('live', 'stats_numberofipad'),
     '4' => $l('live', 'stats_sum'),
+  ),
+
+  'live_analytics_resolutions' => array(
+    '300'   => $l('live', 'resolution_5min'),
+    '3600'  => $l('live', 'resolution_hourly'),
+    '86400' => $l('live', 'resolution_daily'),
   ),
 );
