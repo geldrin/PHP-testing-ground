@@ -26,6 +26,7 @@ class Controller extends \Visitor\Controller {
     'search'               => 'member',
     'analytics'            => 'liveadmin|clientadmin',
     'getstatistics'        => 'liveadmin|clientadmin',
+    'delete'               => 'liveadmin|clientadmin',
   );
   
   public $forms = array(
@@ -259,6 +260,25 @@ class Controller extends \Visitor\Controller {
     $this->toSmarty['channel'] = $channelModel->row;
     $this->smartyOutput('Visitor/Live/Managefeeds.tpl');
     
+  }
+  
+  public function deleteAction() {
+
+    $channelModel = $this->modelOrganizationAndUserIDCheck(
+      'channels',
+      $this->application->getNumericParameter('id')
+    );
+
+    $forward = $this->application->getParameter(
+      'forward', 'live'
+    );
+
+    if ( !$channelModel->row['isliveevent'] )
+      $this->redirect( $forward );
+
+    $channelModel->markAsDeleted();
+    $this->redirect( $forward );
+
   }
   
   public function deletefeedAction() {

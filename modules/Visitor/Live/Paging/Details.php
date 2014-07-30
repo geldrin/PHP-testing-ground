@@ -65,7 +65,8 @@ class Details extends \Visitor\Paging {
       )
     ;
     
-    if ( $this->channelModel->row['endtimestamp'] ) {
+    $isadmin = $user['id'] and ( $user['isadmin'] or $user['isliveadmin'] or $user['isclientadmin'] );
+    if ( !$isadmin and $this->channelModel->row['endtimestamp'] ) {
       
       $endtime = strtotime( $this->channelModel->row['endtimestamp'] );
       if ( strtotime('+3 days', $endtime ) < time() )

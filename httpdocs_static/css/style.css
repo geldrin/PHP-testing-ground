@@ -1291,6 +1291,7 @@ a#currentusername span {
 }
 .pagingsearch .textwrap input {
   width: 150px;
+  padding: 1px 5px;
 }
 .pagingsearch .submitwrap {
   position: relative;
@@ -1298,6 +1299,9 @@ a#currentusername span {
 }
 .pagingsearch .selectwrap select {
   width: 100px;
+}
+#livequicksearch.pagingsearch .selectwrap select {
+  width: 140px;
 }
 
 /* sorter */

@@ -701,39 +701,68 @@ class Channels extends \Springboard\Model {
     
   }
   
-  // TODO szukites channeltype es ev alapjan
-  public function getLiveCount( $organizationid ) {
+  private function getLiveSQL( $filters ) {
+    $ret = array(
+      'order' => '',
+      'where' => array(
+        "isliveevent = '1'",
+        "isdeleted   = '0'",
+        "parentid    = '0'",
+      ),
+    );
     
+    $ret['where'][] = "organizationid = '" . $filters['organizationid'] . "'";
+    if ( isset( $filters['term'] ) and $filters['term'] ) {
+
+      $searchterm      = str_replace( ' ', '%', $filters['term'] );
+      $searchterm      = $this->db->qstr( '%' . $searchterm . '%' );
+      $ret['order']    = "
+        (
+           title    LIKE $searchterm OR
+           subtitle LIKE $searchterm
+        ) DESC,
+      ";
+
+      $ret['where'][] = "(
+        title         LIKE $searchterm OR
+        subtitle      LIKE $searchterm OR
+        ordinalnumber LIKE $searchterm OR
+        description   LIKE $searchterm OR
+        url           LIKE $searchterm
+      )";
+
+    }
+
+    if ( !$filters['showall'] )
+      $ret['where'][] = "endtimestamp >= NOW()";
+
+    $ret['where'] = implode(" AND ", $ret['where'] );
+    return $ret;
+
+  }
+
+  public function getLiveCount( $filters ) {
+    
+    $sql = $this->getLiveSQL( $filters );
     return $this->db->getOne("
       SELECT COUNT(*)
       FROM channels
-      WHERE
-        isliveevent    = '1' AND
-        isdeleted      = '0' AND
-        parentid       = '0' AND
-        endtimestamp   >= NOW() AND
-        organizationid = '$organizationid'
+      WHERE " . $sql['where'] . "
       LIMIT 1
     ");
     
   }
   
-  public function getLiveArray( $organizationid, $start, $limit, $orderby ) {
-    
-    $sql = "
+  public function getLiveArray( $filters, $start, $limit, $orderby ) {
+
+    $sql = $this->getLiveSQL( $filters );
+    return $this->db->getArray("
       SELECT *
       FROM channels
-      WHERE
-        isliveevent    = '1' AND
-        isdeleted      = '0' AND
-        parentid       = '0' AND
-        endtimestamp   >= NOW() AND
-        organizationid = '$organizationid'
-      ORDER BY $orderby
+      WHERE " . $sql['where'] . "
+      ORDER BY " . $sql['order'] . " $orderby
       LIMIT $start, $limit
-    ";
-    
-    return $this->db->getArray( $sql );
+    ");
     
   }
   
