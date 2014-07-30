@@ -778,7 +778,22 @@ class Livefeeds extends \Springboard\Model {
     return $this->db->getArray( $query );
     
   }
-  
+
+  public function getMinStep( $startts, $endts ) {
+
+    $startts = strtotime( $startts );
+    $endts   = strtotime( $endts );
+    $diff    = abs( $endts - $startts );
+
+    if ( $diff < 1209600 ) // 2 het
+      return 300;
+    elseif ( $diff < 3024000 ) // 5 het
+      return 3600;
+    else
+      return 86400;
+
+  }
+
   public function getStatistics( $filter ) {
 
     $table = 'statistics_live_5min';
@@ -789,21 +804,40 @@ class Livefeeds extends \Springboard\Model {
       'data'           => array(),
     );
 
+    if ( isset( $filter['endtimestamp'] ) ) {
+      $endts = min( strtotime( $filter['endtimestamp'] ), time() );
+      $filter['endtimestamp'] = date('Y-m-d H:i', $endts );
+    }
+
     if ( isset( $filter['starttimestamp'] ) and isset( $filter['endtimestamp'] ) ) {
-      $startts = strtotime( $filter['starttimestamp'] );
-      $endts   = strtotime( $filter['endtimestamp'] );
-      $diff    = $endts - $startts;
+      $minstep = $this->getMinStep( $filter['starttimestamp'], $filter['endtimestamp'] );
+      if ( $filter['resolution'] < $minstep )
+        $filter['resolution'] = $minstep;
 
-      $ret['starttimestamp'] = $startts;
-      $ret['endtimestamp']   = $endts;
+      $ret['starttimestamp'] = strtotime( $filter['starttimestamp'] );
+      $ret['endtimestamp']   = strtotime( $filter['endtimestamp'] );
+      $diff = $ret['starttimestamp'] - $ret['endtimestamp'];
 
-      if ( $diff < 1209600 ) { // 2 het
+      if ( $filter['resolution'] == 300 ) {
         $table = 'statistics_live_5min';
         $ret['step'] = 300;
-      } elseif ( $diff < 3024000 ) { // 5 het
+
+        // hozzaigazitani a datumot ha az adott intervallumon kivul esne
+        if ( $diff > 1209600 ) { // 2 het
+          $ret['starttimestamp'] = $ret['endtimestamp'] - 1209600;
+          $filter['starttimestamp'] = date('Y-m-d H:i:s', $ret['starttimestamp'] );
+        }
+
+      } elseif ( $filter['resolution'] == 3600 ) {
         $table = 'statistics_live_hourly';
         $ret['step'] = 3600;
-      } else {
+
+        if ( $diff > 3024000 ) { // 5 het
+          $ret['starttimestamp'] = $ret['endtimestamp'] - 3024000;
+          $filter['starttimestamp'] = date('Y-m-d H:i:s', $ret['starttimestamp'] );
+        }
+
+      } elseif ( $filter['resolution'] == 86400 ) {
         $table = 'statistics_live_daily';
         $ret['step'] = 86400;
       }
