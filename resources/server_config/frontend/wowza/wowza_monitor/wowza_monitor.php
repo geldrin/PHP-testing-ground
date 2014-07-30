@@ -138,8 +138,10 @@
 
 */
 
-define('BASE_PATH',	realpath( __DIR__ . '/../../..' ) . '/' );
+define('BASE_PATH',	realpath( __DIR__ . '../../../../..' ) . '/' );
 define('DEBUG', false );
+
+exit;
 
 include_once( BASE_PATH . 'libraries/Springboard/Application/Cli.php');
 
