@@ -804,6 +804,11 @@ class Livefeeds extends \Springboard\Model {
       'data'           => array(),
     );
 
+    if ( isset( $filter['endtimestamp'] ) ) {
+      $endts = min( strtotime( $filter['endtimestamp'] ), time() );
+      $filter['endtimestamp'] = date('Y-m-d H:i', $endts );
+    }
+
     if ( isset( $filter['starttimestamp'] ) and isset( $filter['endtimestamp'] ) ) {
       $minstep = $this->getMinStep( $filter['starttimestamp'], $filter['endtimestamp'] );
       if ( $filter['resolution'] < $minstep )

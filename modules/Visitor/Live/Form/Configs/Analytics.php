@@ -1,6 +1,7 @@
 <?php
 $fromdatetime  = substr( $this->channelModel->row['starttimestamp'], 0, 16 );
-$untildatetime = substr( $this->channelModel->row['endtimestamp'], 0, 16 );
+$endts         = min( strtotime( $this->channelModel->row['endtimestamp'] ), time() );
+$untildatetime = date('Y-m-d H:i', $endts );
 
 $config = array(
 
