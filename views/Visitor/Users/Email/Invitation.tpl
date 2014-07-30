@@ -18,7 +18,7 @@ $departments
 <h1>{#users__email_invitation_title#|sprintf:$name},</h1>
 
   {if $values.registereduserid}
-    {assign var=nurl value="$BASE_URI$language/users/login"}
+    {assign var=url value="$BASE_URI$language/users/login"}
   {else}
     {assign var=url value="$BASE_URI$language/users/validateinvite/`$values.id`,`$values.validationcode`"}
   {/if}
