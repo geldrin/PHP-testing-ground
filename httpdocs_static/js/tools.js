@@ -2231,10 +2231,10 @@ function setupLivestatistics( elem ) {
     var interval = endts - startts;
 
     if ( step == 300 && interval > max5min )
-      return false;
+      return 'analytics_interval_max2weeks';
 
     if ( step == 3600 && interval > maxhourly )
-      return false;
+      return 'analytics_interval_max5weeks';
 
     return true;
 
@@ -2246,12 +2246,12 @@ function setupLivestatistics( elem ) {
   });
 
   $j('#live_analytics').submit( function(e) {
-    if ( !isIntervalValid() ) {
-      alert('notvalid interval');
+    var intervalerror = isIntervalValid();
+    if ( intervalerror !== true ) {
+      alert( l[ intervalerror ] );
       return false;
     }
 
-    //e.preventDefault();
   });
 
 }
