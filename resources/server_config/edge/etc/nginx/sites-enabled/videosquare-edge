@@ -1,0 +1,89 @@
+# Caching proxy config (Videosquare Edge Cache)
+
+	server {
+		listen 80;
+		listen 443 ssl;
+		server_name stream2.videosquare.eu;
+		keepalive_timeout 70;
+
+		# SSL config
+		ssl_certificate /etc/nginx/certs/stream2.videosquare.eu.chained.pem;
+		ssl_certificate_key /etc/nginx/certs/stream2.videosquare.eu.key;
+		ssl_protocols SSLv3 TLSv1 TLSv1.1 TLSv1.2;
+		ssl_ciphers AES128-SHA:AES256-SHA:RC4-SHA:DES-CBC3-SHA:RC4-MD5;
+		ssl_session_cache shared:SSL:10m;
+		ssl_session_timeout 10m;
+#??? proxy_ssl_session_reuse off;
+#! http://wiki.nginx.org/SSL-Offloader
+
+		# On demand services: cache all files (HLS: .m3u8 playlist + .ts media segments | HDS: crossdomain.xml + Seg*-Frag*)
+		location ~* /((devvsq|vsq)/.*(\.m3u8|\.ts|\.f4m|\/Seg[0-9]*-Frag[0-9]*)$|crossdomain.xml$) {
+
+			# Origin server list
+			proxy_pass http://origins;
+
+			# Cache pool
+			proxy_cache edge-cache;
+
+			# HTTP version
+			proxy_http_version 1.1;
+
+			# Remove headers preventing from caching
+			proxy_set_header Connection "";
+			proxy_ignore_headers Set-Cookie;
+			proxy_hide_header Set-Cookie;
+			proxy_ignore_headers Cache-Control Expires;
+			expires 60m;
+
+			# Add headers (debug)
+			# Var: $upstream_cache_status
+			# Keeps the status of accessing a response cache (0.8.3). The status can be either
+			# "MISS", "BYPASS", "EXPIRED", "STALE", "UPDATING", "REVALIDATED" or "HIT".
+			#add_header X-Cache-Status $upstream_cache_status;
+			#add_header X-Handled-By $proxy_host;
+		} # On demand service
+
+		# Live services: cache media segments only, do not cache playlist (HLS: .ts media segments | HDS: crossdomain.xml + Seg*-Frag*)
+		location ~* /(devvsqlive|vsqlive)/.*(\.ts|\/Seg[0-9]*-Frag[0-9]*)$ {
+
+			# Origin server list
+			proxy_pass http://origins;
+
+			# Cache pool
+			proxy_cache edge-cache;
+
+			# HTTP version
+			proxy_http_version 1.1;
+
+			# Remove headers preventing from caching
+			proxy_set_header Connection "";
+			proxy_ignore_headers Set-Cookie;
+			proxy_hide_header Set-Cookie;
+			proxy_ignore_headers Cache-Control Expires;
+
+			# Add headers (debug)
+			#
+			# Var: $upstream_cache_status
+			# Keeps the status of accessing a response cache (0.8.3). The status can be either
+			# "MISS", "BYPASS", "EXPIRED", "STALE", "UPDATING", "REVALIDATED" or "HIT".
+			#add_header X-Cache-Status $upstream_cache_status;
+			#add_header X-Handled-By $proxy_host;
+		}
+
+		# Live: do not cache playlists (HLS: .m3u8 | HDS: .f4m? )
+		location ~* /(devvsqlive|vsqlive)/.*(\.m3u8|\.f4m|\.abst)$ {
+
+			# Origin server list
+			proxy_pass http://origins;
+
+			# Remove all URL parameters (?=....) - causing custom Wowza URLs for HDS
+			if ($args != '') {
+				rewrite ^(.*) $1? permanent;
+			}
+
+			proxy_no_cache 1;
+			proxy_cache_bypass 1;
+
+		} # Live service
+
+	} # Server config
