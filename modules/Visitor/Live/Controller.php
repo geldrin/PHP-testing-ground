@@ -668,20 +668,30 @@ class Controller extends \Visitor\Controller {
       $this->application->getNumericParameter('id')
     );
     $feedModel  = $this->bootstrap->getModel('livefeeds');
+    $starttime = $this->application->getParameter(
+      'starttimestamp',
+      $channelModel->row['starttimestamp']
+    );
+    $endtime = $this->application->getParameter(
+      'endtimestamp',
+      $channelModel->row['endtimestamp']
+    );
 
     $l      = $this->bootstrap->getLocalization();
     $filter = array(
-      'starttimestamp' => $channelModel->row['starttimestamp'],
-      'endtimestamp'   => $channelModel->row['endtimestamp'],
+      'originalstarttimestamp' => $channelModel->row['starttimestamp'],
+      'originalendtimestamp'   => $channelModel->row['endtimestamp'],
+      'starttimestamp' => $starttime,
+      'endtimestamp'   => $endtime,
       'resolution'     => $this->application->getNumericParameter('resolution',
         $feedModel->getMinStep(
-          $channelModel->row['starttimestamp'],
-          $channelModel->row['endtimestamp']
+          $starttime,
+          $endtime
         )
       ),
     );
     $ret    = array(
-      'status' => 'OK',
+      'status' => 'ERR',
     );
 
     $feeds   = $channelModel->getFeeds();
@@ -699,8 +709,9 @@ class Controller extends \Visitor\Controller {
       $this->jsonOutput( $ret );
 
     $filter['livefeedids'] = $feedids;
-    $data        = $feedModel->getStatistics( $filter );
+    $data = $feedModel->getStatistics( $filter );
     $ret['data'] = $this->transformStatistics( $data );
+    $ret['status'] = 'OK';
 
     $this->jsonOutput( $ret );
 
@@ -710,6 +721,8 @@ class Controller extends \Visitor\Controller {
 
     $l          = $this->bootstrap->getLocalization();
     $ret        = array(
+      'origstartts'  => strtotime( $data['originalstarttimestamp'] ) * 1000,
+      'origendts'    => strtotime( $data['originalendtimestamp'] ) * 1000,
       'startts'      => $data['starttimestamp'] * 1000,
       'endts'        => $data['endtimestamp'] * 1000,
       'stepinterval' => $data['step'] * 1000,

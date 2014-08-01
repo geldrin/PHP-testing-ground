@@ -2183,10 +2183,13 @@ function setupLivestatistics( elem ) {
   });
 
   delete( timestamptoindex );
+  var refreshtimer = null;
+  var lastclick = null;
+  var isdoubleclick = null;
   var graph = new Dygraph( elem.get(0), graphdata, {
     visibility       : visibility,
     labels           : analyticsdata.labels,
-    showRangeSelector: true,
+    showRangeSelector: false,
     stackedGraph     : false,
     stepPlot         : true,
     fillGraph        : true,
@@ -2198,8 +2201,31 @@ function setupLivestatistics( elem ) {
       '#80c9ff', '#ffc080', '#ffe680', '#aa80ff', '#ee00cc', '#ff8080',
       '#666600', '#ffbfff', '#00ffcc', '#cc6699', '#999900'
     ],
+    clickCallback: function() {
+      var now = new Date().getTime();
+      if ( !lastclick ) {
+        lastclick = now;
+        return;
+      } else if ( now - lastclick <= 500 ) {
+        // double click, reset the graph
+        if ( refreshtimer ) {
+          clearTimeout( refreshtimer );
+          refreshtimer = null;
+        }
+        isdoubleclick = true;
+        lastclick = null;
+        refreshData(analyticsdata.origstartts, analyticsdata.origendts)();
+      } else
+        lastclick = null;
+    },
     zoomCallback: function(min, max) {
-      // needs ratelimit
+      if ( isdoubleclick )
+        return;
+
+      if ( refreshtimer )
+        clearTimeout( refreshtimer );
+
+      setTimeout( refreshData(min, max), 500 );
     },
     axes: {
       x: {
@@ -2218,6 +2244,55 @@ function setupLivestatistics( elem ) {
     }
   });
 
+  var refreshData = function(min, max) {
+    return function() {
+      var url = $j('#livestatistics').attr('data-url');
+      var params = $j('#live_analytics').serializeArray();
+      var starttimestamp = moment(min).format('YYYY-MM-DD HH:mm');
+      var endtimestamp = moment(max).format('YYYY-MM-DD HH:mm');
+
+      for (var i = params.length - 1; i >= 0; i--) {
+        switch( params[i].name ) {
+          case 'action':
+          case 'resolution':
+            params.splice(i, 1);
+            break;
+          case 'starttimestamp':
+            params[i].value = starttimestamp;
+            break;
+          case 'endtimestamp':
+            params[i].value = endtimestamp;
+            break;
+        };
+      };
+
+      $j('#live_analytics').deserializeArray( params );
+
+      $j.ajax({
+        url: url,
+        data: params,
+        dataType: 'json',
+        success: function(data) {
+          if ( !data || typeof( data ) != 'object' || data.status != 'OK' )
+            return;
+
+          var params = [{name: 'resolution', value: ( data.data.stepinterval / 1000 ) + ''}];
+          console.log(params);
+          $j('#live_analytics').deserializeArray( params );
+
+          graphdata = prepareData(data.data);
+          graph.updateOptions({
+            file: graphdata
+          });
+        },
+        complete: function() {
+          refreshtimer = null;
+          isdoubleclick = false;
+        }
+      })
+      
+    };
+  };
   var isIntervalValid = function() {
     var step = parseInt( $j('input[name="resolution"]:checked').val(), 10 );
     if ( step > 3600 )

@@ -14,12 +14,8 @@ $config = array(
     'type'        => 'inputCheckboxDynamic',
     'displayname' => $l('live', 'analytics_feedids'),
     'rowlayout'   => $this->singlecolumnlayout,
-    'sql'         => "
-      SELECT id, name
-      FROM livefeeds
-      WHERE channelid = '" . $this->channelModel->id . "'
-    ",
-    'value'       => $this->application->getParameter('feedids', array() ),
+    'values'      => $this->feeds,
+    'value'       => $this->application->getParameter('feedids', $this->feedids ),
   ),
 
   'starttimestamp' => array(

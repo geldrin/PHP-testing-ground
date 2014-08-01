@@ -802,6 +802,8 @@ class Livefeeds extends \Springboard\Model {
       'starttimestamp' => 0,
       'endtimestamp'   => 0,
       'data'           => array(),
+      'originalstarttimestamp' => $filter['originalstarttimestamp'],
+      'originalendtimestamp'   => $filter['originalendtimestamp'],
     );
 
     if ( isset( $filter['endtimestamp'] ) ) {
