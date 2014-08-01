@@ -24,7 +24,7 @@ class Categories extends \Springboard\Model\Multilingual {
             r.id = rc.recordingid AND
             rc.categoryid IN('" . implode("', '", $childrenids ) . "') AND
             r.status = 'onstorage' AND
-            r.ispublished = 1 AND
+            r.approvalstatus = 'approved' AND
             r.accesstype = 'public' AND
             (
               r.visiblefrom IS NULL OR

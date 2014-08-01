@@ -275,7 +275,7 @@ class Recordings extends \Springboard\Model {
     if (
          $this->row === null or // toroltek
          $this->row['status'] != 'onstorage' or // nincs onstorage eleme
-         $this->row['ispublished'] != 1 // nincs metaadata vagy kikapcsolva
+         $this->row['approvalstatus'] != 'approved' // nincs metaadata vagy kikapcsolva
        ) {
       
       // indexphoto
@@ -463,7 +463,7 @@ class Recordings extends \Springboard\Model {
     
     if ( $isintrooutro ) {
       
-      $recording['ispublished'] = 1;
+      $recording['approvalstatus'] = 'approved';
       
     }
     
@@ -891,7 +891,7 @@ class Recordings extends \Springboard\Model {
          )
        )
       return true;
-    elseif ( !$this->row['ispublished'] )
+    elseif ( $this->row['approvalstatus'] != 'approved' )
       return 'recordingisnotpublished';
     
     return true;
@@ -1123,7 +1123,7 @@ class Recordings extends \Springboard\Model {
         cr.channelid IN('" . implode("', '", $channelids ) . "') AND
         r.id             = cr.recordingid AND
         r.isintrooutro   = '0' AND
-        r.ispublished    = '1' AND
+        r.approvalstatus = 'approved' AND
         r.status         = 'onstorage' AND -- TODO live?
         r.organizationid = '" . $organization['id'] . "' AND
         r.status         = 'onstorage'
@@ -1136,7 +1136,7 @@ class Recordings extends \Springboard\Model {
     
     return "
       {$prefix}status       = 'onstorage' AND
-      {$prefix}ispublished  = '1' AND
+      {$prefix}approvalstatus = 'approved' AND
       {$prefix}isintrooutro = '$isintrooutro' AND
       {$prefix}accesstype   = '$accesstype' AND
       (
@@ -1182,7 +1182,7 @@ class Recordings extends \Springboard\Model {
       r.status       = 'onstorage' AND
       r.isintrooutro = '$isintrooutro' AND
       (
-        r.ispublished = '1'" . ( $isadmin? '': " OR
+        r.approvalstatus = 'approved'" . ( $isadmin? '': " OR
         r.userid = '" . $user['id'] . "'" ) . "
       ) AND
       (
@@ -2795,7 +2795,7 @@ class Recordings extends \Springboard\Model {
       r.rating,
       '0' AS numberofrecordings,
       r.status,
-      r.ispublished
+      r.approvalstatus
     ";
     $where  = "
       (
@@ -2830,7 +2830,7 @@ class Recordings extends \Springboard\Model {
           '0' AS rating,
           numberofrecordings,
           '' AS status,
-          '1' AS ispublished
+          'approved' AS approvalstatus
         FROM channels
         WHERE
           " . \Model\Channels::getWhere( $user ) . " AND

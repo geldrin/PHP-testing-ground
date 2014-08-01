@@ -32,7 +32,7 @@
       <h3><a href="{$language}/recordings/details/{$item.id},{$item.title|filenameize}">{$item.title|escape:html}</a></h3>
       {if $item.subtitle|stringempty}<h4>{$item.subtitle|escape:html}</h4>{/if}
     </div>
-    {if !$item.ispublished and $item.status == 'onstorage' and $member.id}
+    {if $item.approvalstatus == 'draft' and $item.status == 'onstorage' and $member.id}
       <span class="notpublished"><a href="{$language}/recordings/modifysharing/{$item.id}?forward={$FULL_URI|escape:url}">{#recordings__notpublished_warning#}</a></span>
     {/if}
     <div class="recordinginfo">

@@ -184,4 +184,21 @@ return array(
     '3600'  => $l('live', 'resolution_hourly'),
     '86400' => $l('live', 'resolution_daily'),
   ),
+  
+  'recordings_approvalstatus_full' => array(
+    'pending'  => $l('recordings', 'approvalstatus_pending'),
+    'draft'    => $l('recordings', 'approvalstatus_draft'),
+    'approved' => $l('recordings', 'approvalstatus_approved'),
+  ),
+
+  'recordings_approvalstatus_min' => array(
+    'pending'  => $l('recordings', 'approvalstatus_pending'),
+    'draft'    => $l('recordings', 'approvalstatus_draft'),
+  ),
+
+  'recordings_approvalstatus_default' => array(
+    'pending'  => $l('recordings', 'approvalstatus_pending'),
+    'approved' => $l('recordings', 'approvalstatus_approved'),
+  ),
+
 );

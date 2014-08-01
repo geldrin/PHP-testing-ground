@@ -429,7 +429,7 @@ class Users extends \Springboard\Model {
         r.masterlength,
         r.contentmasterlength,
         r.isintrooutro,
-        r.ispublished,
+        r.approvalstatus,
         rwp.position,
         rwp.timestamp
       FROM
@@ -712,7 +712,7 @@ class Users extends \Springboard\Model {
         )
       WHERE
         r.isintrooutro      = '0' AND
-        r.ispublished       = '1' AND
+        r.approvalstatus    = 'approved' AND
         r.status            = 'onstorage' AND -- TODO live?
         r.organizationid    = '$organizationid' AND
         r.status            = 'onstorage' AND
