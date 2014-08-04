@@ -10,7 +10,7 @@
 {/if}
 {include file="Visitor/_header.tpl" title=$recording.title pagebgclass=$pagebgclass}
 <div class="title recording">
-  {if !$recording.ispublished}
+  {if $recording.approvalstatus != 'approved'}
     <center><a href="{$language}/recordings/modifysharing/{$recording.id}">{#recordings__notpublished_warning#}</a></center>
     <br/>
   {/if}

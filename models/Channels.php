@@ -84,7 +84,7 @@ class Channels extends \Springboard\Model {
               r.status = 'onstorage' OR
               r.status = 'live'
             ) AND
-            r.ispublished = 1 AND
+            r.approvalstatus = 'approved' AND
             r.accesstype  = 'public' AND
             (
               r.visiblefrom  IS NULL OR
@@ -778,7 +778,7 @@ class Channels extends \Springboard\Model {
       WHERE
         cr.channelid IN('" . $this->id . "') AND
         r.id          = cr.recordingid AND
-        r.ispublished = '1' AND
+        r.approvalstatus = 'approved' AND
         r.mediatype   = 'live'
     ");
     
@@ -796,7 +796,7 @@ class Channels extends \Springboard\Model {
       WHERE
         cr.channelid  = '" . $this->id . "' AND
         r.id          = cr.recordingid AND
-        r.ispublished = '1' AND
+        r.approvalstatus = 'approved' AND
         r.mediatype   = 'live'
     ");
     
@@ -1163,7 +1163,7 @@ class Channels extends \Springboard\Model {
         r.numberofviews,
         r.rating,
         r.indexphotofilename,
-        r.ispublished,
+        r.approvalstatus,
         r.status,
         r.livefeedid,
         r.organizationid AS organizationid,
