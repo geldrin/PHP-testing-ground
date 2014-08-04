@@ -28,18 +28,43 @@ class Modifysharing extends \Visitor\Recordings\ModifyForm {
   public function onComplete() {
     
     $values = $this->form->getElementValues( 0 );
-    
+    $oldapprovalstatus = $this->recordingsModel->row['approvalstatus'];
+
     if ( !$values['wanttimelimit'] )
       $values['visibleuntil'] = $values['visiblefrom'] = null;
     
     $this->handleAccesstypeForModel( $this->recordingsModel, $values );
-    
     unset( $values['departments'], $values['groups'] );
     $this->recordingsModel->updateRow( $values );
     $this->recordingsModel->updateFulltextCache( true );
     $this->recordingsModel->updateChannelIndexPhotos(); // a channel szamlalok miatt
     $this->recordingsModel->updateCategoryCounters();
     
+    if (
+         $oldapprovalstatus != $this->recordingsModel->row['approvalstatus'] and
+         $this->recordingsModel->row['approvalstatus'] == 'pending'
+       ) {
+
+      $user      = $this->bootstrap->getSession('user');
+      $userModel = $this->bootstrap->getModel('users');
+      $this->controller->toSmarty['user']      = $user->toArray();
+      $this->controller->toSmarty['recording'] = $this->recordingsModel->row;
+      $title = sprintf(
+        $l('recordings', 'approvalstatus_subject'),
+        $this->recordingsModel->row['title']
+      );
+      $body  = $this->controller->fetchSmarty('Visitor/Recordings/Email/Approvalneeded.tpl');
+      $users = $userModel->getUsersWithPermission(
+        "editor",
+        $user['id'],
+        $this->controller->organization['id']
+      );
+
+      foreach( $users as $user )
+        $this->controller->sendOrganizationHTMLEmail( $user['email'], $title, $body );
+
+    }
+
     $this->controller->redirect(
       $this->application->getParameter('forward', 'recordings/myrecordings')
     );

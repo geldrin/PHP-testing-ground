@@ -11,7 +11,7 @@
       {assign var=columncount value=$columncount+1}
     {/if}
     
-    {if ( $member.isuploader or $member.isclientadmin or $member.iseditor ) or ( $organization.islivestreamingenabled and $member.isliveadmin )}
+    {if ( $member.isuploader or $member.ismoderateduploader or $member.isclientadmin or $member.iseditor ) or ( $organization.islivestreamingenabled and $member.isliveadmin )}
       {assign var=columncount value=$columncount+1}
     {/if}
     
@@ -53,10 +53,10 @@
             <div class="title">{#usermenu_channels_title#}</div>
             <ul>
               <li><a href="{$language}/channels/mychannels">{#usermenu_channels_mychannels#}</a></li>
-              {if $member.isuploader or $member.isclientadmin or $member.iseditor}<li><a href="{$language}/channels/create">{#usermenu_channels_create#}</a></li>{/if}
+              {if $member.isuploader or $member.ismoderateduploader or $member.isclientadmin or $member.iseditor}<li><a href="{$language}/channels/create">{#usermenu_channels_create#}</a></li>{/if}
             </ul>
           </div>
-          {if ( $member.isuploader or $member.isclientadmin or $member.iseditor) or ( $organization.islivestreamingenabled and $member.isliveadmin )}
+          {if ( $member.isuploader or $member.ismoderateduploader or $member.isclientadmin or $member.iseditor) or ( $organization.islivestreamingenabled and $member.isliveadmin )}
           <div class="column">
             {*}
             <div class="title">{#usermenu_events_title#}</div>
@@ -73,11 +73,11 @@
             </ul>
             <div class="hr"></div>
             
-            {if $member.isuploader or $member.isclientadmin or $member.iseditor}
+            {if $member.isuploader or $member.ismoderateduploader or $member.isclientadmin or $member.iseditor}
               <div class="title">{#usermenu_recordings_title#}</div>
               <ul>
                 <li><a href="{$language}/recordings/myrecordings">{#usermenu_recordings_myrecordings#}</a></li>
-                {if $member.isuploader}<li><a href="{$language}/recordings/upload">{#usermenu_recordings_upload#}</a></li>{/if}
+                {if $member.isuploader or $member.ismoderateduploader}<li><a href="{$language}/recordings/upload">{#usermenu_recordings_upload#}</a></li>{/if}
               </ul>
               <div class="hr"></div>
             {/if}

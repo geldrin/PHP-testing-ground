@@ -112,7 +112,7 @@
   <li><a href="{$language}/users/logout">{#users__welcomepage_logout#}</a></li>
 </ul>
 
-{if $member.isuploader}
+{if $member.isuploader or $member.ismoderateduploader}
   <h2>{#users__welcomepage_manage#}</h2>
   <p>{#users__welcomepage_manage_intro#}</p>
   <ul>

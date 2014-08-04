@@ -3,9 +3,9 @@
 if ( !isset( $user ) )
   $user = $this->bootstrap->getSession('user');
 
-if ( $user['isadmin'] or $user['isclientadmin'] )
+if ( $user['isadmin'] or $user['isclientadmin'] or $user['iseditor'] )
   $approvalstatuses = $l->getLov('recordings_approvalstatus_full');
-elseif ( $user['needsmoderation'] )
+elseif ( $user['ismoderateduploader'] )
   $approvalstatuses = $l->getLov('recordings_approvalstatus_min');
 else
   $approvalstatuses = $l->getLov('recordings_approvalstatus_default');
@@ -126,7 +126,7 @@ $config = array_merge( $config, array(
     'displayname' => $l('recordings', 'approvalstatus'),
     'postfix'     => '<div class="smallinfo">' . $l('recordings', 'approvalstatus_postfix') . '</div>',
     'type'        => 'inputRadio',
-    'value'       => 'pending',
+    'value'       => 'draft',
     'values'      => $approvalstatuses,
     'itemlayout'  => $this->radioitemlayout,
   ),

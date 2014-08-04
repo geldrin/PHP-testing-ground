@@ -5,9 +5,9 @@ class Controller extends \Visitor\Controller {
   public $permissions = array(
     'index'               => 'public',
     'details'             => 'public',
-    'create'              => 'uploader|editor|clientadmin',
-    'modify'              => 'uploader|editor|clientadmin',
-    'delete'              => 'uploader|editor|clientadmin',
+    'create'              => 'uploader|moderateduploader|editor|clientadmin',
+    'modify'              => 'uploader|moderateduploader|editor|clientadmin',
+    'delete'              => 'uploader|moderateduploader|editor|clientadmin',
     'mychannels'          => 'member',
     'addrecording'        => 'member',
     'deleterecording'     => 'member',
@@ -15,8 +15,8 @@ class Controller extends \Visitor\Controller {
     'addtofavorites'      => 'member',
     'deletefromfavorites' => 'member',
     'search'              => 'member',
-    'orderrecordings'     => 'uploader|editor|clientadmin',
-    'setorder'            => 'uploader|editor|clientadmin',
+    'orderrecordings'     => 'uploader|moderateduploader|editor|clientadmin',
+    'setorder'            => 'uploader|moderateduploader|editor|clientadmin',
   );
   
   public $forms = array(

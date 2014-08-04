@@ -454,6 +454,7 @@ class Recordings extends \Springboard\Model {
       'status'          => 'uploading',
       'masterstatus'    => 'uploading',
       'accesstype'      => 'public',
+      'approvalstatus'  => 'draft',
       'mastersourceip'  => $sourceip,
       'isintrooutro'    => $isintrooutro,
       'timestamp'       => date('Y-m-d H:i:s'),

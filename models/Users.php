@@ -796,4 +796,15 @@ class Users extends \Springboard\Model {
 
   }
 
+  public function getUsersWithPermission( $permission, $filteruserid, $organizationid ) {
+    return $this->db->getArray("
+      SELECT *
+      FROM users
+      WHERE
+        is{$permission} = '1' AND
+        organizationid  = '$organizationid' AND
+        id             <> '$filteruserid' AND
+        disabled        = '0'
+    ");
+  }
 }

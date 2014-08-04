@@ -20,13 +20,13 @@ class Uploadcontent extends \Visitor\HelpForm {
     
     $user = $this->bootstrap->getSession('user');
     
-    if ( $this->swfupload and !$user['isuploader'] )
+    if ( $this->swfupload and !$user['isuploader'] and !$user['ismoderateduploader'] )
       $this->controller->swfuploadMessage( array(
           'error' => 'membersonly',
           'url'   => $this->controller->getUrlFromFragment('index'),
         )
       );
-    elseif ( !$user['isuploader'] )
+    elseif ( !$user['isuploader'] and !$user['ismoderateduploader'] )
       $this->controller->redirectToController('contents', 'nopermissionuploader');
     
     $this->recordingModel = $this->controller->modelOrganizationAndUserIDCheck(

@@ -111,6 +111,7 @@ return array(
     'isnewseditor'  => 'Hír szerkesztő',
     'isclientadmin' => 'Kliens adminisztrátor',
     'isuploader'    => 'Feltöltő',
+    'ismoderateduploader' => 'Moderált feltöltő',
     'isliveadmin'   => 'Live adminisztrátor',
   ),
   
@@ -220,18 +221,18 @@ return array(
   ),
 
   'recordings_approvalstatus_full' => array(
-    'pending'  => $l('recordings', 'approvalstatus_pending'),
     'draft'    => $l('recordings', 'approvalstatus_draft'),
+    'pending'  => $l('recordings', 'approvalstatus_pending'),
     'approved' => $l('recordings', 'approvalstatus_approved'),
   ),
 
   'recordings_approvalstatus_min' => array(
-    'pending'  => $l('recordings', 'approvalstatus_pending'),
     'draft'    => $l('recordings', 'approvalstatus_draft'),
+    'pending'  => $l('recordings', 'approvalstatus_pending'),
   ),
 
   'recordings_approvalstatus_default' => array(
-    'pending'  => $l('recordings', 'approvalstatus_pending'),
+    'draft'    => $l('recordings', 'approvalstatus_draft'),
     'approved' => $l('recordings', 'approvalstatus_approved'),
   ),
 
