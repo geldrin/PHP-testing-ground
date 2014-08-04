@@ -45,6 +45,7 @@ class Modifysharing extends \Visitor\Recordings\ModifyForm {
          $this->recordingsModel->row['approvalstatus'] == 'pending'
        ) {
 
+      $l         = $this->bootstrap->getLocalization();
       $user      = $this->bootstrap->getSession('user');
       $userModel = $this->bootstrap->getModel('users');
       $this->controller->toSmarty['user']      = $user->toArray();
