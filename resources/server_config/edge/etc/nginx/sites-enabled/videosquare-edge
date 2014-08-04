@@ -1,7 +1,7 @@
 # Caching proxy config (Videosquare Edge Cache)
 
 	server {
-		listen 80;
+		listen 80 default_server;
 		listen 443 ssl;
 		server_name stream2.videosquare.eu;
 		keepalive_timeout 70;
@@ -16,31 +16,54 @@
 #??? proxy_ssl_session_reuse off;
 #! http://wiki.nginx.org/SSL-Offloader
 
+		## Proxy configuration for server
+
+		# Cache pool
+		proxy_cache edge-cache;
+
+		# HTTP version - keep alive
+		proxy_http_version 1.1;
+
+		## Header manipulation
+		# Connection header: avoid that clients circumvent Keep-Alive.
+		proxy_set_header Connection "";
+		# Clean cookies.
+		proxy_set_header cookie "";
+		proxy_ignore_headers Set-Cookie;
+		# Remove the session cookie we might get. Since we cache the response, this would hand out the same session to many users.
+		proxy_hide_header Set-Cookie;
+		# Ignore Cache-Control + Expires headers
+		proxy_ignore_headers Cache-Control Expires;
+		## Add headers (debug)
+		# Var: $upstream_cache_status
+		# Keeps the status of accessing a response cache (0.8.3). The status can be either
+		# "MISS", "BYPASS", "EXPIRED", "STALE", "UPDATING", "REVALIDATED" or "HIT".
+		#add_header X-Cache-Status $upstream_cache_status;
+		#add_header X-Handled-By $proxy_host;
+
+		# Remove all URL parameters (?=....) - causing custom Wowza URLs for HDS
+#		if ($args != '') {
+#			rewrite ^(.*) $1? permanent;
+#		}
+
 		# On demand services: cache all files (HLS: .m3u8 playlist + .ts media segments | HDS: crossdomain.xml + Seg*-Frag*)
 		location ~* /((devvsq|vsq)/.*(\.m3u8|\.ts|\.f4m|\/Seg[0-9]*-Frag[0-9]*)$|crossdomain.xml$) {
 
 			# Origin server list
 			proxy_pass http://origins;
 
-			# Cache pool
-			proxy_cache edge-cache;
+# https://blog.engineyard.com/2011/useful-rewrites-for-nginx
+rewrite_log on;
+proxy_redirect off;
+proxy_cache_revalidate off;
+			if ($args != '') {
+#				rewrite ^(.*) $1? permanent;
+				rewrite ^(.*) $1? ;
+			}
 
-			# HTTP version
-			proxy_http_version 1.1;
-
-			# Remove headers preventing from caching
-			proxy_set_header Connection "";
-			proxy_ignore_headers Set-Cookie;
-			proxy_hide_header Set-Cookie;
-			proxy_ignore_headers Cache-Control Expires;
+			# max-age: 3600 seconds
 			expires 60m;
 
-			# Add headers (debug)
-			# Var: $upstream_cache_status
-			# Keeps the status of accessing a response cache (0.8.3). The status can be either
-			# "MISS", "BYPASS", "EXPIRED", "STALE", "UPDATING", "REVALIDATED" or "HIT".
-			#add_header X-Cache-Status $upstream_cache_status;
-			#add_header X-Handled-By $proxy_host;
 		} # On demand service
 
 		# Live services: cache media segments only, do not cache playlist (HLS: .ts media segments | HDS: crossdomain.xml + Seg*-Frag*)
@@ -49,25 +72,8 @@
 			# Origin server list
 			proxy_pass http://origins;
 
-			# Cache pool
-			proxy_cache edge-cache;
+# URL rewrite????
 
-			# HTTP version
-			proxy_http_version 1.1;
-
-			# Remove headers preventing from caching
-			proxy_set_header Connection "";
-			proxy_ignore_headers Set-Cookie;
-			proxy_hide_header Set-Cookie;
-			proxy_ignore_headers Cache-Control Expires;
-
-			# Add headers (debug)
-			#
-			# Var: $upstream_cache_status
-			# Keeps the status of accessing a response cache (0.8.3). The status can be either
-			# "MISS", "BYPASS", "EXPIRED", "STALE", "UPDATING", "REVALIDATED" or "HIT".
-			#add_header X-Cache-Status $upstream_cache_status;
-			#add_header X-Handled-By $proxy_host;
 		}
 
 		# Live: do not cache playlists (HLS: .m3u8 | HDS: .f4m? )
@@ -78,7 +84,8 @@
 
 			# Remove all URL parameters (?=....) - causing custom Wowza URLs for HDS
 			if ($args != '') {
-				rewrite ^(.*) $1? permanent;
+#				rewrite ^(.*) $1? permanent;
+				rewrite ^(.*) $1? ;
 			}
 
 			proxy_no_cache 1;
@@ -86,4 +93,13 @@
 
 		} # Live service
 
+		location /nginx_status {
+			stub_status on;
+			access_log off;
+			allow 127.0.0.1;
+			allow 91.120.59.241;
+			deny all;
+		}
+
 	} # Server config
+
