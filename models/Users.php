@@ -698,7 +698,7 @@ class Users extends \Springboard\Model {
     $this->ensureObjectLoaded();
     // azok a recording ahol .isseekbardisabled = 1
     return $this->db->getArray("
-      SELECT
+      SELECT DISTINCT
         r.*,
         (
           ROUND( ( IFNULL(rvp.position, 0) / GREATEST( IFNULL(r.masterlength, 0), IFNULL(r.contentmasterlength, 0) ) ) * 100 )
@@ -730,7 +730,7 @@ class Users extends \Springboard\Model {
     );
 
     $channels = $this->db->getArray("
-      SELECT c.*
+      SELECT DISTINCT c.*
       FROM
         channels AS c,
         users_invitations AS ui
