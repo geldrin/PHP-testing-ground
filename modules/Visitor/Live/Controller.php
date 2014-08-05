@@ -25,7 +25,6 @@ class Controller extends \Visitor\Controller {
     'securecheckstreamaccess' => 'public',
     'search'               => 'member',
     'analytics'            => 'liveadmin|clientadmin',
-    'getstatistics'        => 'liveadmin|clientadmin',
     'delete'               => 'liveadmin|clientadmin',
   );
   
@@ -661,62 +660,6 @@ class Controller extends \Visitor\Controller {
     
   }
   
-  public function getstatisticsAction() {
-    
-    $channelModel = $this->modelOrganizationAndUserIDCheck(
-      'channels',
-      $this->application->getNumericParameter('id')
-    );
-    $feedModel  = $this->bootstrap->getModel('livefeeds');
-    $starttime = $this->application->getParameter(
-      'starttimestamp',
-      $channelModel->row['starttimestamp']
-    );
-    $endtime = $this->application->getParameter(
-      'endtimestamp',
-      $channelModel->row['endtimestamp']
-    );
-
-    $l      = $this->bootstrap->getLocalization();
-    $filter = array(
-      'originalstarttimestamp' => $channelModel->row['starttimestamp'],
-      'originalendtimestamp'   => $channelModel->row['endtimestamp'],
-      'starttimestamp' => $starttime,
-      'endtimestamp'   => $endtime,
-      'resolution'     => $this->application->getNumericParameter('resolution',
-        $feedModel->getMinStep(
-          $starttime,
-          $endtime
-        )
-      ),
-    );
-    $ret    = array(
-      'status' => 'ERR',
-    );
-
-    $feeds   = $channelModel->getFeeds();
-    $feedids = $this->application->getParameter('feedids', array() );
-
-    // sanitize the feedids
-    foreach( $feedids as $k => $v ) {
-
-      if ( !isset( $feeds[ $v ] ) )
-        unset( $feedids[ $k ] );
-
-    }
-
-    if ( empty( $feedids ) )
-      $this->jsonOutput( $ret );
-
-    $filter['livefeedids'] = $feedids;
-    $data = $feedModel->getStatistics( $filter );
-    $ret['data'] = $this->transformStatistics( $data );
-    $ret['status'] = 'OK';
-
-    $this->jsonOutput( $ret );
-
-  }
-
   public function transformStatistics( $data ) {
 
     $l          = $this->bootstrap->getLocalization();

@@ -2246,7 +2246,7 @@ function setupLivestatistics( elem ) {
 
   var refreshData = function(min, max) {
     return function() {
-      var url = $j('#livestatistics').attr('data-url');
+      var url = $j('#live_analytics').attr('action');
       var params = $j('#live_analytics').serializeArray();
       var starttimestamp = moment(min).format('YYYY-MM-DD HH:mm');
       var endtimestamp = moment(max).format('YYYY-MM-DD HH:mm');
@@ -2269,16 +2269,13 @@ function setupLivestatistics( elem ) {
       $j('#live_analytics').deserializeArray( params );
 
       $j.ajax({
-        url: url,
-        data: params,
+        url     : url,
+        type    : 'POST',
+        data    : params,
         dataType: 'json',
-        success: function(data) {
+        success : function(data) {
           if ( !data || typeof( data ) != 'object' || data.status != 'OK' )
             return;
-
-          var params = [{name: 'resolution', value: ( data.data.stepinterval / 1000 ) + ''}];
-          console.log(params);
-          $j('#live_analytics').deserializeArray( params );
 
           graphdata = prepareData(data.data);
           graph.updateOptions({
@@ -2293,40 +2290,21 @@ function setupLivestatistics( elem ) {
       
     };
   };
-  var isIntervalValid = function() {
-    var step = parseInt( $j('input[name="resolution"]:checked').val(), 10 );
-    if ( step > 3600 )
-      return true;
-
-    var max5min   = 1209600000;
-    var maxhourly = 3024000000;
-
-    var startts  = $j('#starttimestamp').datetimepicker('getDate').getTime();
-    var endts    = $j('#endtimestamp').datetimepicker('getDate').getTime();
-    var interval = endts - startts;
-
-    if ( step == 300 && interval > max5min )
-      return 'analytics_interval_max2weeks';
-
-    if ( step == 3600 && interval > maxhourly )
-      return 'analytics_interval_max5weeks';
-
-    return true;
-
-  };
 
   $j('input[name^="datapoints"]').change(function(e) {
     var index = parseInt( $j(this).val(), 10 );
     graph.setVisibility( index, $j(this).is(':checked') );
   });
 
-  $j('#live_analytics').submit( function(e) {
-    var intervalerror = isIntervalValid();
-    if ( intervalerror !== true ) {
-      alert( l[ intervalerror ] );
-      return false;
+  $j('#live_analytics .reset').click( function(e) {
+    e.preventDefault();
+    if ( refreshtimer ) {
+      clearTimeout( refreshtimer );
+      refreshtimer = null;
     }
-
+    isdoubleclick = null;
+    lastclick = null;
+    refreshData(analyticsdata.origstartts, analyticsdata.origendts)();
   });
 
 }

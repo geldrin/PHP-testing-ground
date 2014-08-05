@@ -2575,6 +2575,9 @@ a#currentusername span {
 #analyticscontainer .form {
   width: 250px;
 }
+#analyticscontainer .buttonrow td {
+  text-align: left;
+}
 #livestatistics {
   float: right;
   width: 700px;

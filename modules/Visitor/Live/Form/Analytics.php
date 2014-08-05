@@ -64,8 +64,13 @@ class Analytics extends \Visitor\HelpForm {
       $goodendtime
     );
 
-    if ( empty( $feedids ) )
+    if ( empty( $feedids ) and !$this->controller->isAjaxRequest() )
       $this->controller->redirect('');
+    elseif ( empty( $feedids ) )
+      $this->jsonOutput( array(
+          'status' => 'ERR',
+        )
+      );
 
     $filter = array(
       'originalstarttimestamp' => $this->channelModel->row['starttimestamp'],
@@ -83,7 +88,7 @@ class Analytics extends \Visitor\HelpForm {
     $this->controller->toSmarty['channel']       = $this->channelModel->row;
     $this->controller->toSmarty['needanalytics'] = true;
     $this->controller->toSmarty['analyticsdata'] =
-      $this->controller->transformStatistics( $data )
+      $this->transformStatistics( $data )
     ;
 
     parent::init();
@@ -95,6 +100,12 @@ class Analytics extends \Visitor\HelpForm {
     $l = $this->bootstrap->getLocalization();
     $this->controller->toSmarty['title'] = $l('live', 'analytics_title');
     $this->form->method = 'GET';
+
+    $this->form->layouts['tabular']['button'] = '
+      <input type="submit" value="' . $l('live', 'analytics_reset') . '" class="submitbutton reset" /><br/>
+      <br/>
+      <input type="submit" value="%s" class="submitbutton" />
+    ';
 
   }
   
@@ -111,5 +122,78 @@ class Analytics extends \Visitor\HelpForm {
     */
 
   }
-  
+
+  public function displayForm( $submitted ) {
+
+    if ( $submitted and $this->controller->isAjaxRequest() ) {
+
+      $this->jsonOutput( array(
+          'status' => 'OK',
+          'data'   => $this->controller->toSmarty['analyticsdata'],
+        )
+      );
+
+    }
+
+    return parent::displayForm( $submitted );
+
+  }
+
+  public function transformStatistics( $data ) {
+
+    $l          = $this->bootstrap->getLocalization();
+    $ret        = array(
+      'origstartts'  => strtotime( $data['originalstarttimestamp'] ) * 1000,
+      'origendts'    => strtotime( $data['originalendtimestamp'] ) * 1000,
+      'startts'      => $data['starttimestamp'] * 1000,
+      'endts'        => $data['endtimestamp'] * 1000,
+      'stepinterval' => $data['step'] * 1000,
+      'labels'       => array(),
+      'data'         => array(),
+    );
+
+    // prepare the chart labels
+    foreach( $data['data'] as $value ) {
+
+      foreach( $value as $field => $v ) {
+
+        $ret['labels'][] = $l('live', 'stats_' . $field );
+
+      }
+
+      break;
+
+    }
+
+    $ret['labels'][] = $l('live', 'stats_sum');
+
+    // prepare the values
+    foreach( $data['data'] as $key => $value ) {
+
+      $row = array(
+        intval( $value['timestamp'] ) * 1000,
+      );
+
+      $sum = 0;
+      foreach( $value as $field => $v ) {
+
+        if ( $field == 'timestamp' )
+          continue;
+
+        $v = intval( $v );
+        $row[] = $v;
+        $sum += $v;
+
+      }
+
+      unset( $data['data'][ $key ] );
+      $row[] = $sum;
+      $ret['data'][] = $row;
+
+    }
+
+    return $ret;
+
+  }
+
 }
