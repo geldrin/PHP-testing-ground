@@ -16,6 +16,8 @@ class Analytics extends \Visitor\HelpForm {
     if ( !preg_match('/^\d{4}-\d{2}-\d{2} \d{2}:{2}$/', $value ) )
       return $default;
 
+    return $value;
+
   }
 
   public function init() {
@@ -37,24 +39,30 @@ class Analytics extends \Visitor\HelpForm {
       $this->feeds[ $feed['id'] ] = $feed['name'];
       $this->feedids[] = $feed['id'];
     }
-    
-    $feedids = $this->application->getParameter('feedids', $this->feedids );
-    $starttime = $this->application->getParameter(
-      'starttimestamp',
-      substr( $this->channelModel->row['starttimestamp'], 0, 16 )
-    );
-    $endtime = $this->application->getParameter(
-      'endtimestamp',
-      substr( $this->channelModel->row['endtimestamp'], 0, 16 )
-    );
 
     // sanitize the feedids
+    $feedids = $this->application->getParameter('feedids', $this->feedids );
     foreach( $feedids as $k => $v ) {
 
       if ( !isset( $feeds[ $v ] ) )
         unset( $feedids[ $k ] );
 
     }
+
+    $goodstarttime = substr( $this->channelModel->row['starttimestamp'], 0, 16 );
+    $starttime     = $this-> validateDateTime( $this->application->getParameter(
+        'starttimestamp',
+        $goodstarttime
+      ),
+      $goodstarttime
+    );
+    $goodendtime = substr( $this->channelModel->row['endtimestamp'], 0, 16 );
+    $endtime     = $this->validateDateTime( $this->application->getParameter(
+        'endtimestamp',
+        $goodendtime
+      ),
+      $goodendtime
+    );
 
     if ( empty( $feedids ) )
       $this->controller->redirect('');
@@ -66,10 +74,7 @@ class Analytics extends \Visitor\HelpForm {
       'endtimestamp'   => $endtime,
       'livefeedids'    => $feedids,
       'resolution'     => $this->application->getNumericParameter('resolution',
-        $this->feedModel->getMinStep(
-          $this->channelModel->row['starttimestamp'],
-          $this->channelModel->row['endtimestamp']
-        )
+        $this->feedModel->getMinStep( $starttime, $endtime )
       ),
     );
     $data   = $this->feedModel->getStatistics( $filter );
