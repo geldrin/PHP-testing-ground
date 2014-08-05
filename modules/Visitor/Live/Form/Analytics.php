@@ -13,7 +13,7 @@ class Analytics extends \Visitor\HelpForm {
 
   private function validateDateTime( $value, $default = null ) {
 
-    if ( !preg_match('/^\d{4}-\d{2}-\d{2} \d{2}:{2}$/', $value ) )
+    if ( !preg_match('/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/', $value ) )
       return $default;
 
     return $value;
