@@ -73,7 +73,7 @@ $app->watchdog();
 
 // Query active channels
 $channels = getActiveChannels();
-if ( $channels === false ) break;
+if ( $channels === false ) exit;
 
 //var_dump($channels);
 
