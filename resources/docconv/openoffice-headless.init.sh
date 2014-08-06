@@ -5,8 +5,8 @@
 # Required-Stop:     $local_fs $remote_fs $syslog
 # Default-Start:     2 3 4 5
 # Default-Stop:      0 1 6
-# Short-Description: Start OpenOffice in headless mode for Videotorium slide conversion
-# Description:       Start OpenOffice in headless mode for Videotorium slide conversion of ODP/SXI files.
+# Short-Description: Start OpenOffice in headless mode for Videosquare slide conversion
+# Description:       Start OpenOffice in headless mode for Videosquare slide conversion of ODP/SXI files.
 ### END INIT INFO
 
 OOo_HOME=/usr/lib/libreoffice
