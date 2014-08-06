@@ -73,7 +73,13 @@ $app->watchdog();
 
 // Query active channels
 $channels = getActiveChannels();
-if ( $channels === false ) exit;
+if ( $channels === false ) {
+	// Close DB connection if open
+	if ( is_resource($db->_connectionID) ) $db->close();
+	// Remove run file
+	unlink($run_filename);
+	exit;
+}
 
 //var_dump($channels);
 
