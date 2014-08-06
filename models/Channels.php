@@ -52,26 +52,40 @@ class Channels extends \Springboard\Model {
 
   }
 
-  public function updateVideoCounters() {
+  public function updateVideoCounters( $where = null ) {
     
     $this->ensureObjectLoaded();
-    
+    if ( $where === null ) {
+
+      // ellenorizni kell hogy a csatorna kurzus e
+      $coursetypeid = $this->cachedGetCourseTypeID( $this->row['organizationid'] );
+      $root         = $this->findRoot( $this->row, true );
+      // ha kurzus tipusu akkor nem szamit a recordings.accesstype, barmi lehet
+      if ( $root['channeltypeid'] == $coursetypeid )
+        $where = '';
+      else
+        $where = "r.accesstype = 'public' AND";
+
+    }
+
     /* leszarmazott csatornak szamlaloi */
-    $counter = $this->db->getOne("
-      SELECT SUM( numberofrecordings ) 
+    $row = $this->db->getRow("
+      SELECT
+        SUM( numberofrecordings ) AS numberofrecordings,
+        SUM( recordingslength ) AS recordingslength
       FROM channels
       WHERE
         parentid  = '" . $this->id . "' AND
         isdeleted = '0'
     ");
-    
-    if ( !is_numeric( $counter ) )
-      $counter = 0;
+
+    $numberofrecordings = $row['numberofrecordings'] ?: '0';
+    $recordingslength   = $row['recordingslength'] ?: '0';
 
     $this->db->query("
       UPDATE channels
-      SET numberofrecordings = 
-        (
+      SET
+        numberofrecordings = (
           -- az adott csatornahoz rendelt felvetelek szama
           SELECT COUNT(*)
           FROM
@@ -85,7 +99,7 @@ class Channels extends \Springboard\Model {
               r.status = 'live'
             ) AND
             r.approvalstatus = 'approved' AND
-            r.accesstype  = 'public' AND
+            $where
             (
               r.visiblefrom  IS NULL OR
               r.visibleuntil IS NULL OR
@@ -94,7 +108,28 @@ class Channels extends \Springboard\Model {
                 r.visibleuntil >= CURRENT_DATE()
               )
             )
-        ) + " . $counter . "
+        ) + $numberofrecordings,
+        recordingslength = (
+          -- az adott csatornahoz rendelt felvetelek hossza
+          SELECT DISTINCT IFNULL( SUM(r.masterlength), 0 )
+          FROM
+            recordings r,
+            channels_recordings cr
+          WHERE
+            r.id             = cr.recordingid AND
+            cr.channelid     = '" . $this->id . "' AND
+            r.status         = 'onstorage' AND
+            r.approvalstatus = 'approved' AND
+            $where
+            (
+              r.visiblefrom  IS NULL OR
+              r.visibleuntil IS NULL OR
+              (
+                r.visiblefrom  <= CURRENT_DATE() AND
+                r.visibleuntil >= CURRENT_DATE()
+              )
+            )
+        ) + $recordingslength
       WHERE id = '" . $this->id . "'
     ");
     
@@ -104,7 +139,7 @@ class Channels extends \Springboard\Model {
       $parent = $this->bootstrap->getModel('channels');
       while ( $row['parentid'] ) {
         $parent->select( $row['parentid'] );
-        $parent->updateVideoCounters();
+        $parent->updateVideoCounters( $where );
         $row = $parent->row;
       }
       
@@ -531,7 +566,7 @@ class Channels extends \Springboard\Model {
     
   }
   
-  function findRoot( $channel ) {
+  function findRoot( $channel, $ignoreaccesstype = false ) {
     
     if ( !$channel['parentid'] )
       return $this->channelroots[ $channel['id'] ] = $channel;
@@ -539,6 +574,7 @@ class Channels extends \Springboard\Model {
     if ( isset( $this->channelroots[ $channel['id'] ] ) )
       return $this->channelroots[ $channel['id'] ];
     
+    $where  = $ignoreaccesstype? '': "AND c.accesstype = 'public'";
     $parent = $this->db->getRow("
       SELECT
         c.*,
@@ -549,11 +585,11 @@ class Channels extends \Springboard\Model {
         channel_types AS ct
       WHERE
         ct.id           = c.channeltypeid AND
-        c.accesstype    = 'public' AND
         c.isdeleted     = '0' AND
         s.translationof = ct.name_stringid AND
         s.language      = '" . \Springboard\Language::get() . "' AND
         c.id            = '" . $channel['parentid'] . "'
+        $where
     ");
     
     if ( empty( $parent ) )
@@ -1217,11 +1253,13 @@ class Channels extends \Springboard\Model {
   }
 
   public function getCourseTypeID( $organizationid ) {
-    
+
     $id = $this->db->getOne("
       SELECT id
       FROM channel_types
-      WHERE iscourse = '1'
+      WHERE
+        iscourse       = '1' AND
+        organizationid = '$organizationid'
       ORDER BY weight
       LIMIT 1
     ");
