@@ -3506,7 +3506,7 @@ class Recordings extends \Springboard\Model {
     
   }
   
-  public function getDownloadUrls( $staticuri ) {
+  public function getDownloadInfo( $staticuri ) {
     $this->ensureObjectLoaded();
     if ( !$this->row['isdownloadable'] and !$this->row['isaudiodownloadable'] )
       return array();
@@ -3538,12 +3538,14 @@ class Recordings extends \Springboard\Model {
         if ( $version['qualitytag'] != 'audio' )
           continue;
 
-        $ret['audio'] =
-          $basedir .
-          \Springboard\Filesystem::getWithoutExtension( $version['filename'] ) .
-          ',' . \Springboard\Filesystem::filenameize( $this->row['title'] ) . '.' .
-          \Springboard\Filesystem::getExtension( $version['filename'] )
-        ;
+        $ret['audio'] = array(
+          'url'        => $basedir .
+            \Springboard\Filesystem::getWithoutExtension( $version['filename'] ) .
+            ',' . \Springboard\Filesystem::filenameize( $this->row['title'] ) . '.' .
+            \Springboard\Filesystem::getExtension( $version['filename'] )
+          ,
+          'qualitytag' => $version['qualitytag'],
+        );
         break;
       }
 
@@ -3559,12 +3561,17 @@ class Recordings extends \Springboard\Model {
           \Springboard\Filesystem::getExtension( $version['filename'] )
         ;
 
+        $data = array(
+          'url'        => $basedir . $filename,
+          'qualitytag' => $version['qualitytag'],
+        );
+
         if ( $version['type'] == 'recording' and !isset( $ret['master'] ) ) {
-          $ret['master'] = $basedir . $filename;
+          $ret['master'] = $data;
         } elseif ( $version['type'] == 'content' and !isset( $ret['content'] ) ) {
-          $ret['contentmaster'] = $basedir . $filename;
+          $ret['contentmaster'] = $data;
         } elseif ( $version['type'] == 'pip' and !isset( $ret['pip'] ) ) {
-          $ret['pip'] = $basedir . $filename;
+          $ret['pip'] = $data;
         }
 
       }

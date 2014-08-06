@@ -238,7 +238,7 @@ class Controller extends \Visitor\Controller {
     $this->toSmarty['needhistory']   = true;
     $this->toSmarty['height']        = $this->getPlayerHeight( $recordingsModel );
     $this->toSmarty['recording']     = $recordingsModel->addPresenters( true, $this->organization['id'] );
-    $this->toSmarty['recordingdownloads'] = $recordingsModel->getDownloadUrls(
+    $this->toSmarty['recordingdownloads'] = $recordingsModel->getDownloadInfo(
       $this->bootstrap->staticuri
     );
 

@@ -231,9 +231,10 @@
   <div id="recordingdownloads">
     <a href="#" class="submitbutton">{#recordings__recordingdownloads#}</a>
     <ul>
-      {foreach from=$recordingdownloads key=key item=url}
+      {foreach from=$recordingdownloads key=key item=item}
         {assign var=localekey value="recordingdownloads_$key"}
-        <li><a href="{$url}">{$l->get('recordings', $localekey, $language)}</a></li>
+        {assign var=itemlocale value=$l->get('recordings', $localekey, $language)}
+        <li><a href="{$item.url}">{$itemlocale|sprintf:$item.qualitytag}</a></li>
       {/foreach}
     </ul>
   </div>
