@@ -368,7 +368,7 @@ class Livefeeds extends \Springboard\Model {
     $data['livePlaceholder_streams']      = array();
     $data['livePlaceholder_streamLabels'] = array();
     foreach( $versions['master']['desktop'] as $version ) {
-      $data['livePlaceholder_streamLabels'] = $version['qualitytag'];
+      $data['livePlaceholder_streamLabels'] = array( $version['qualitytag'] );
       $data['livePlaceholder_streams'][]    = $recordingsModel->getMediaUrl(
         'default', $version, $info
       );
