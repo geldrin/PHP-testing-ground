@@ -5,43 +5,40 @@ class Categories extends \Springboard\Model\Multilingual {
   public $multistringfields = array( 'name', 'namehyphenated' );
   
   public function updateVideoCounters() {
-    
+
     $this->ensureObjectLoaded();
-    
+
     $childrenids   = $this->cachedFindChildrenIDs( $this->id );
     $childrenids[] = $this->id;
-    
+
     $this->db->query("
       UPDATE categories
-      SET numberofrecordings = 
-        (
-          -- az adott kategoriahoz rendelt felvetelek szama
-          SELECT
-            COUNT( distinct r.id )
-          FROM
-            recordings r, recordings_categories rc
-          WHERE
-            r.id = rc.recordingid AND
-            rc.categoryid IN('" . implode("', '", $childrenids ) . "') AND
-            r.status = 'onstorage' AND
-            r.approvalstatus = 'approved' AND
-            r.accesstype = 'public' AND
+      SET numberofrecordings = (
+        -- az adott kategoriahoz rendelt felvetelek szama
+        SELECT COUNT( DISTINCT r.id )
+        FROM
+          recordings r,
+          recordings_categories rc
+        WHERE
+          rc.categoryid IN('" . implode("', '", $childrenids ) . "') AND
+          r.id             = rc.recordingid AND
+          r.status         = 'onstorage' AND
+          r.approvalstatus = 'approved' AND
+          (
+            r.visiblefrom IS NULL OR
+            r.visibleuntil IS NULL OR
             (
-              r.visiblefrom IS NULL OR
-              r.visibleuntil IS NULL OR
-              (
-                r.visiblefrom  <= CURRENT_DATE() AND
-                r.visibleuntil >= CURRENT_DATE()
-              )
+              r.visiblefrom  <= CURRENT_DATE() AND
+              r.visibleuntil >= CURRENT_DATE()
             )
-        )
-      WHERE
-        id = '" . $this->id . "'
+          )
+      )
+      WHERE id = '" . $this->id . "'
     ");
-    
+
     $row = $this->row;
     if ( $row['parentid'] ) {
-      
+
       //felfele is bejarjuk
       $parent = $this->bootstrap->getModel('categories');
       while ( $row['parentid'] ) {
@@ -49,11 +46,11 @@ class Categories extends \Springboard\Model\Multilingual {
         $parent->updateVideoCounters();
         $row = $parent->row;
       }
-      
+
     }
-    
+
   }
-  
+
   public function getCategoryTree( $organizationid, $parentid = 0, $maxlevel = 2, $currentlevel = 0 ) {
     
     if ( $currentlevel >= $maxlevel )

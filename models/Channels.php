@@ -52,27 +52,15 @@ class Channels extends \Springboard\Model {
 
   }
 
-  public function updateVideoCounters( $where = null ) {
-    
+  public function updateVideoCounters() {
+
     $this->ensureObjectLoaded();
-    if ( $where === null ) {
-
-      // ellenorizni kell hogy a csatorna kurzus e
-      $coursetypeid = $this->cachedGetCourseTypeID( $this->row['organizationid'] );
-      $root         = $this->findRoot( $this->row, true );
-      // ha kurzus tipusu akkor nem szamit a recordings.accesstype, barmi lehet
-      if ( $root['channeltypeid'] == $coursetypeid )
-        $where = '';
-      else
-        $where = "r.accesstype = 'public' AND";
-
-    }
 
     /* leszarmazott csatornak szamlaloi */
     $row = $this->db->getRow("
       SELECT
         SUM( numberofrecordings ) AS numberofrecordings,
-        SUM( recordingslength ) AS recordingslength
+        SUM( recordingslength )   AS recordingslength
       FROM channels
       WHERE
         parentid  = '" . $this->id . "' AND
@@ -99,7 +87,6 @@ class Channels extends \Springboard\Model {
               r.status = 'live'
             ) AND
             r.approvalstatus = 'approved' AND
-            $where
             (
               r.visiblefrom  IS NULL OR
               r.visibleuntil IS NULL OR
@@ -120,7 +107,6 @@ class Channels extends \Springboard\Model {
             cr.channelid     = '" . $this->id . "' AND
             r.status         = 'onstorage' AND
             r.approvalstatus = 'approved' AND
-            $where
             (
               r.visiblefrom  IS NULL OR
               r.visibleuntil IS NULL OR
@@ -132,17 +118,17 @@ class Channels extends \Springboard\Model {
         ) + $recordingslength
       WHERE id = '" . $this->id . "'
     ");
-    
+
     $row = $this->row;
     if ( $row['parentid'] ) {
-    
+
       $parent = $this->bootstrap->getModel('channels');
       while ( $row['parentid'] ) {
         $parent->select( $row['parentid'] );
-        $parent->updateVideoCounters( $where );
+        $parent->updateVideoCounters();
         $row = $parent->row;
       }
-      
+
     }
 
   }
