@@ -2253,10 +2253,6 @@ function setupLivestatistics( elem ) {
 
       for (var i = params.length - 1; i >= 0; i--) {
         switch( params[i].name ) {
-          case 'action':
-          case 'resolution':
-            params.splice(i, 1);
-            break;
           case 'starttimestamp':
             params[i].value = starttimestamp;
             break;
