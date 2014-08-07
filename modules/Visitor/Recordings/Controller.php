@@ -244,7 +244,7 @@ class Controller extends \Visitor\Controller {
     $this->toSmarty['relatedvideos'] = $recordingsModel->getRelatedVideos(
       $this->application->config['relatedrecordingcount'],
       $user,
-      $this->organization['id']
+      $this->organization
     );
 
     $flashdata = $recordingsModel->getFlashData( $this->toSmarty );

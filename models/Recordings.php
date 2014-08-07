@@ -1529,7 +1529,7 @@ class Recordings extends \Springboard\Model {
     return $ret;
   }
 
-  public function getRelatedVideosByCourse( $limit, $user, $organizationid ){
+  public function getRelatedVideosByCourse( $limit, $user, $organization ){
 
     if ( !$user['id'] )
       return array();
@@ -1537,7 +1537,7 @@ class Recordings extends \Springboard\Model {
     $this->ensureID();
 
     $coursetypeid = $this->bootstrap->getModel('channels')->cachedGetCourseTypeID(
-      $organizationid
+      $organization['id']
     );
 
     if ( !$coursetypeid )
@@ -1552,7 +1552,7 @@ class Recordings extends \Springboard\Model {
       WHERE
         cr.recordingid      = '" . $this->id . "' AND
         cr.channelid        = c.id AND
-        c.organizationid    = '$organizationid' AND
+        c.organizationid    = '" . $organization['id'] . "' AND
         c.channeltypeid     = '$coursetypeid' AND
         c.isdeleted         = '0'
     ");
@@ -1568,7 +1568,7 @@ class Recordings extends \Springboard\Model {
       WHERE
         ui.channelid IN('" . implode("', '", $coursechannelids ) . "') AND
         ui.registereduserid = '" . $user['id'] . "' AND
-        ui.organizationid   = '$organizationid' AND
+        ui.organizationid   = '" . $organization['id'] . "' AND
         ui.status           <> 'deleted'
     ");
 
@@ -1614,7 +1614,7 @@ class Recordings extends \Springboard\Model {
 
   }
   
-  public function getRelatedVideosByKeywords( $limit, $user, $organizationid ){
+  public function getRelatedVideosByKeywords( $limit, $user, $organization ){
     
     $this->ensureObjectLoaded();
     if ( !strlen( trim( $this->row['keywords'] ) ) )
@@ -1659,7 +1659,7 @@ class Recordings extends \Springboard\Model {
     $where = "
       usr.id = r.userid AND
       r.id <> '" . $this->id . "' AND
-      r.organizationid = '$organizationid'"
+      r.organizationid = '" . $organization['id'] . "'"
     ;
     
     if ( !empty( $keywordwhere ) )
@@ -1673,7 +1673,7 @@ class Recordings extends \Springboard\Model {
     
   }
   
-  public function getRelatedVideosByChannel( $limit, $user, $organizationid, $channelids = null ) {
+  public function getRelatedVideosByChannel( $limit, $user, $organization, $channelids = null ) {
     
     $this->ensureID();
     $dontrecurse = true;
@@ -1716,7 +1716,7 @@ class Recordings extends \Springboard\Model {
       r.id = cr.recordingid AND
       usr.id = r.userid AND
       r.id <> '" . $this->id . "' AND
-      r.organizationid = '$organizationid'"
+      r.organizationid = '" . $organization['id'] . "'"
     ;
     
     $return = $this->db->getAssoc(
@@ -1738,7 +1738,7 @@ class Recordings extends \Springboard\Model {
       }
       
       $parentids = array_unique( $parentids );
-      $return = $return + $this->getRelatedVideosByChannel( $limit - count( $return ), $user, $organizationid, $parentids );
+      $return = $return + $this->getRelatedVideosByChannel( $limit - count( $return ), $user, $organization, $parentids );
       
     }
     
@@ -1746,7 +1746,7 @@ class Recordings extends \Springboard\Model {
     
   }
   
-  public function getRelatedVideosRandom( $limit, $user, $organizationid ) {
+  public function getRelatedVideosRandom( $limit, $user, $organization ) {
     
     $this->ensureID();
     
@@ -1775,7 +1775,7 @@ class Recordings extends \Springboard\Model {
     $where = "
       usr.id = r.userid AND
       r.id <> '" . $this->id . "' AND
-      r.organizationid = '$organizationid'"
+      r.organizationid = '" . $organization['id'] . "'"
     ;
     
     return $this->db->getAssoc(
@@ -1787,23 +1787,23 @@ class Recordings extends \Springboard\Model {
     
   }
   
-  public function getRelatedVideos( $count, $user, $organizationid ) {
+  public function getRelatedVideos( $count, $user, $organization ) {
     
     $this->ensureObjectLoaded();
     
     $return = array();
     
     if ( count( $return ) < $count )
-      $return = $return + $this->getRelatedVideosByCourse( $count - count( $return ), $user, $organizationid );
+      $return = $return + $this->getRelatedVideosByCourse( $count - count( $return ), $user, $organization );
     
     if ( count( $return ) < $count )
-      $return = $return + $this->getRelatedVideosByChannel( $count - count( $return ), $user, $organizationid );
+      $return = $return + $this->getRelatedVideosByChannel( $count - count( $return ), $user, $organization );
     
     if ( count( $return ) < $count )
-      $return = $return + $this->getRelatedVideosByKeywords( $count - count( $return ), $user, $organizationid );
+      $return = $return + $this->getRelatedVideosByKeywords( $count - count( $return ), $user, $organization );
     
     if ( count( $return ) < $count )
-      $return = $return + $this->getRelatedVideosRandom( $count - count( $return ), $user, $organizationid );
+      $return = $return + $this->getRelatedVideosRandom( $count - count( $return ), $user, $organization );
     
     return $return;
     
@@ -2367,7 +2367,7 @@ class Recordings extends \Springboard\Model {
         $relatedvideos = $this->getRelatedVideos(
           $this->bootstrap->config['relatedrecordingcount'],
           $info['member'],
-          $info['organization']['id']
+          $info['organization']
         );
 
       $data['recommendatory_string'] = array();
