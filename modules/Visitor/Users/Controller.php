@@ -8,6 +8,7 @@ class Controller extends \Visitor\Controller {
     'signup'               => 'public',
     'modify'               => 'member',
     'welcome'              => 'member',
+    'info'                 => 'member',
     'index'                => 'public',
     'validate'             => 'public',
     'forgotpassword'       => 'public',
@@ -664,6 +665,27 @@ class Controller extends \Visitor\Controller {
         'postfix' => $template['postfix'],
       )
     );
+
+  }
+
+  public function infoAction() {
+
+    $userModel = $this->modelOrganizationAndIDCheck(
+      'users',
+      $this->application->getNumericParameter('id')
+    );
+
+    $this->toSmarty['user']     = $userModel->row;
+    $this->toSmarty['channels'] =
+      $userModel->getRecordingsProgressWithChannels(
+        $this->organization['id']
+      )
+    ;
+    $this->toSmarty['forward']  = $this->application->getParameter(
+      'forward', 'users/admin'
+    );
+
+    $this->smartyOutput('Visitor/Users/Info.tpl');
 
   }
 
