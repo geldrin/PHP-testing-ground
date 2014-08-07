@@ -108,6 +108,16 @@ class Bootstrap {
     if ( get_class( $this->application ) == 'Springboard\Application\Admin' )
       Springboard\Language::$languages = array('hu');
     
+    // ha auto-detectalni akarjuk a nyelvet kizarolag olyan url-eken ahol nincs
+    // megadva, mint peldaul a recording embedeles
+    if (
+         !isset( $_REQUEST['language'] ) and
+         !\Springboard\Language::isLanguageSet()
+       )
+      \Springboard\Language::setLanguage(
+        \Springboard\Language::getDefaultLanguage()
+      );
+
   }
   
   public function setupSession( $allowoverride = false, $sessionid = null, $domain = null ) {

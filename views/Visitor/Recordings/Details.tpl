@@ -167,7 +167,7 @@
   
   <div id="embed">
     {capture assign=embed}
-      <iframe width="480" height="{$height}" src="{$BASE_URI}{$language}/recordings/embed/{$recording.id}" frameborder="0" allowfullscreen="allowfullscreen"></iframe>
+      <iframe width="480" height="{$height}" src="{$BASE_URI}recordings/embed/{$recording.id}" frameborder="0" allowfullscreen="allowfullscreen"></iframe>
     {/capture}
     <label for="embedcode">{#recordings__embedcode#}:</label>
     <textarea id="embedcode" data-fullscaleheight="{$flashheight}" data-normalheight="{$height}">{$embed|trim|escape:html}</textarea>

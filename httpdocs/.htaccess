@@ -53,6 +53,21 @@ RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteRule ^([a-z]{2})/([a-zA-Z0-9_\-]+)/([a-zA-Z0-9_\-]+)/([a-zA-Z0-9_\-]+) index.php?language=$1&module=$2&action=$3&subaction=$4 [L,QSA]
 
+# language auto-detect
+
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{QUERY_STRING} ^(.*)module(.*)$
+RewriteRule ^api/?$ index.php?module=api&%1_module%2
+
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^([a-zA-Z0-9_\-]+)/([a-zA-Z0-9_\-]+)/?$ index.php?module=$1&action=$2 [L,QSA]
+
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^([a-zA-Z0-9_\-]+)/([a-zA-Z0-9_\-]+)/([0-9]+) index.php?module=$1&action=$2&id=$3 [L,QSA]
+
 # versioning
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteCond %{REQUEST_FILENAME} !-f

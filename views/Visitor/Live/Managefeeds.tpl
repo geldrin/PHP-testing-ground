@@ -95,7 +95,7 @@
   {if !empty( $feed.streams )}
   <tr class="liveembedrow">
     <td colspan="3">
-      <div class="liveembedwrap" data-embedurl="{$BASE_URI}{$language}/live/view/{$feed.id},{$feed.name|filenameize}?chromeless=true">
+      <div class="liveembedwrap" data-embedurl="{$BASE_URI}live/view/{$feed.id},{$feed.name|filenameize}?chromeless=true">
         <span class="label">{#live__embed_info#}</span>
         {if $feed.moderationtype != 'nochat'}
         <div class="option">
@@ -114,7 +114,7 @@
           <label for="fullplayer_no_{$feed.id}">{#live__fullplayer_no#}</label>
         </div>
         {capture assign=liveembed}
-          <iframe width="950" height="{if $feed.moderationtype == 'nochat'}530{else}860{/if}" src="{$BASE_URI}{$language}/live/view/{$feed.id},{$feed.name|filenameize}?chromeless=true{if $feed.moderationtype == 'nochat'}&chat=false{/if}" frameborder="0" allowfullscreen="allowfullscreen"></iframe>
+          <iframe width="950" height="{if $feed.moderationtype == 'nochat'}530{else}860{/if}" src="{$BASE_URI}live/view/{$feed.id},{$feed.name|filenameize}?chromeless=true{if $feed.moderationtype == 'nochat'}&chat=false{/if}" frameborder="0" allowfullscreen="allowfullscreen"></iframe>
         {/capture}
         <textarea onclick="this.select();">{$liveembed|trim|escape:html}</textarea>
       </div>
