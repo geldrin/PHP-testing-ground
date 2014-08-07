@@ -1579,7 +1579,7 @@ class Recordings extends \Springboard\Model {
     $found      = false;
     $ret        = array();
     $recordings = $this->getUserChannelRecordingsWithProgress(
-      $usercourses, $user, $organization
+      $usercourses, $user, $organization, true, true
     );
 
     foreach( $recordings as $recording ) {
