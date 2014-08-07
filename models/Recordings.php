@@ -1096,7 +1096,29 @@ class Recordings extends \Springboard\Model {
 
   }
 
-  public function getUserChannelRecordingsWithProgress( $channelids, $user, $organization, $distinct = true ) {
+  public function getUserChannelRecordingsWithProgress( $channelids, $user, $organization, $distinct = true, $includeuser = false ) {
+
+    if ( $includeuser ) {
+      $select = ",
+        usr.id AS userid,
+        usr.nickname,
+        usr.nameformat,
+        usr.nameprefix,
+        usr.namefirst,
+        usr.namelast
+      ";
+      $table = ",
+        users AS usr
+      ";
+      $where = "
+        usr.id = r.userid AND
+      ";
+    } else {
+      $select = '';
+      $table  = '';
+      $where  = '';
+    }
+
     return $this->db->getArray("
       SELECT
         r.*,
@@ -1113,6 +1135,7 @@ class Recordings extends \Springboard\Model {
           )
         ) AS positionpercent,
         IFNULL(rvp.position, 0) AS lastposition
+        $select
       FROM
         channels_recordings AS cr,
         recordings AS r
@@ -1120,7 +1143,9 @@ class Recordings extends \Springboard\Model {
           r.id       = rvp.recordingid AND
           rvp.userid = '" . $user['id'] . "'
         )
+        $table
       WHERE
+        $where
         cr.channelid IN('" . implode("', '", $channelids ) . "') AND
         r.id             = cr.recordingid AND
         r.isintrooutro   = '0' AND
@@ -1504,6 +1529,91 @@ class Recordings extends \Springboard\Model {
     return $ret;
   }
 
+  public function getRelatedVideosByCourse( $limit, $user, $organizationid ){
+
+    if ( !$user['id'] )
+      return array();
+
+    $this->ensureID();
+
+    $coursetypeid = $this->bootstrap->getModel('channels')->cachedGetCourseTypeID(
+      $organizationid
+    );
+
+    if ( !$coursetypeid )
+      return array();
+
+    // the course channels where the recording is a member
+    $coursechannelids = $this->db->getCol("
+      SELECT c.id
+      FROM
+        channels_recordings AS cr,
+        channels AS c
+      WHERE
+        cr.recordingid      = '" . $this->id . "' AND
+        cr.channelid        = c.id AND
+        c.organizationid    = '$organizationid' AND
+        c.channeltypeid     = '$coursetypeid' AND
+        c.isdeleted         = '0'
+    ");
+
+    // recording not a member of any course
+    if ( empty( $coursechannelids ) )
+      return array();
+
+    $usercourses = $this->db->getCol("
+      SELECT ui.channelid
+      FROM
+        users_invitations AS ui
+      WHERE
+        ui.channelid IN('" . implode("', '", $coursechannelids ) . "') AND
+        ui.registereduserid = '" . $user['id'] . "' AND
+        ui.organizationid   = '$organizationid' AND
+        ui.status           <> 'deleted'
+    ");
+
+    // user not a member of the course
+    if ( empty( $usercourses ) )
+      return array();
+
+    $found      = false;
+    $ret        = array();
+    $recordings = $this->getUserChannelRecordingsWithProgress(
+      $usercourses, $user, $organization
+    );
+
+    foreach( $recordings as $recording ) {
+
+      if ( !$found and $recording['id'] == $this->id ) {
+        $found = true;
+        continue;
+      }
+
+      if ( !$found )
+        continue;
+
+      $ret[ $recording['id'] ] = array(
+        'id'                  => $recording['id'],
+        'title'               => $recording['title'],
+        'subtitle'            => $recording['subtitle'],
+        'indexphotofilename'  => $recording['indexphotofilename'],
+        'masterlength'        => $recording['masterlength'],
+        'contentmasterlength' => $recording['contentmasterlength'],
+        'numberofviews'       => $recording['numberofviews'],
+        'userid'              => $recording['userid'],
+        'nickname'            => $recording['nickname'],
+        'nameformat'          => $recording['nameformat'],
+        'nameprefix'          => $recording['nameprefix'],
+        'namefirst'           => $recording['namefirst'],
+        'namelast'            => $recording['namelast'],
+      );
+
+    }
+
+    return $ret;
+
+  }
+  
   public function getRelatedVideosByKeywords( $limit, $user, $organizationid ){
     
     $this->ensureObjectLoaded();
@@ -1682,6 +1792,9 @@ class Recordings extends \Springboard\Model {
     $this->ensureObjectLoaded();
     
     $return = array();
+    
+    if ( count( $return ) < $count )
+      $return = $return + $this->getRelatedVideosByCourse( $count - count( $return ), $user, $organizationid );
     
     if ( count( $return ) < $count )
       $return = $return + $this->getRelatedVideosByChannel( $count - count( $return ), $user, $organizationid );
@@ -2246,24 +2359,32 @@ class Recordings extends \Springboard\Model {
       
     }
     
-    $relatedvideos = $this->getRelatedVideos(
-      $this->bootstrap->config['relatedrecordingcount'],
-      $info['member'],
-      $info['organization']['id']
-    );
-    $data['recommendatory_string'] = array();
-    foreach( $relatedvideos as $video ) {
-      
-      $data['recommendatory_string'][] = array(
-        'title'       => $video['title'],
-        'subtitle'    => $video['subtitle'],
-        'image'       => \smarty_modifier_indexphoto( $video, 'wide', $info['STATIC_URI'] ),
-        'url'         =>
-          $recordingbaseuri . 'details/' . $video['id'] . ',' .
-          \Springboard\Filesystem::filenameize( $video['title'] )
-        ,
-      );
-      
+    if ( !$info['organization']['isrecommendationdisabled'] ) {
+
+      if ( isset( $info['relatedvideos'] ) )
+        $relatedvideos = $info['relatedvideos'];
+      else
+        $relatedvideos = $this->getRelatedVideos(
+          $this->bootstrap->config['relatedrecordingcount'],
+          $info['member'],
+          $info['organization']['id']
+        );
+
+      $data['recommendatory_string'] = array();
+      foreach( $relatedvideos as $video ) {
+        
+        $data['recommendatory_string'][] = array(
+          'title'       => $video['title'],
+          'subtitle'    => $video['subtitle'],
+          'image'       => \smarty_modifier_indexphoto( $video, 'wide', $info['STATIC_URI'] ),
+          'url'         =>
+            $recordingbaseuri . 'details/' . $video['id'] . ',' .
+            \Springboard\Filesystem::filenameize( $video['title'] )
+          ,
+        );
+        
+      }
+
     }
     
     if ( $this->row['isseekbardisabled'] and @$info['member'] and $info['member']['id'] ) {

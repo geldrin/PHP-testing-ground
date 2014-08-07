@@ -241,6 +241,11 @@ class Controller extends \Visitor\Controller {
     $this->toSmarty['recordingdownloads'] = $recordingsModel->getDownloadInfo(
       $this->bootstrap->staticuri
     );
+    $this->toSmarty['relatedvideos'] = $recordingsModel->getRelatedVideos(
+      $this->application->config['relatedrecordingcount'],
+      $user,
+      $this->organization['id']
+    );
 
     $flashdata = $recordingsModel->getFlashData( $this->toSmarty );
     if ( preg_match( '/^\d{1,2}h\d{1,2}m\d{1,2}s$|^\d+$/', $start ) )
@@ -250,11 +255,7 @@ class Controller extends \Visitor\Controller {
     $this->toSmarty['author']        = $recordingsModel->getAuthor();
     $this->toSmarty['attachments']   = $recordingsModel->getAttachments();
     $this->toSmarty['canrate']       = ( $user['id'] and !$rating[ $recordingsModel->id ] );
-    $this->toSmarty['relatedvideos'] = $recordingsModel->getRelatedVideos(
-      $this->application->config['relatedrecordingcount'],
-      $user,
-      $this->organization['id']
-    );
+    
     $this->toSmarty['opengraph']     = array(
       'type'        => 'video',
       'image'       => smarty_modifier_indexphoto( $recordingsModel->row, 'player' ),
