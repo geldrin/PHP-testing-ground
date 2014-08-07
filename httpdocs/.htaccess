@@ -11,6 +11,7 @@ ExpiresByType application/x-shockwave-flash  "access plus 1 month"
 ExpiresByType application/xml                "access plus 1 month"
 </IfModule>
 
+ErrorDocument 404 /index.php?module=contents&action=http404
 RewriteEngine On
 
 <IfModule mod_ssl.c>
