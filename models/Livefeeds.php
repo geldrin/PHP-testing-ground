@@ -273,7 +273,7 @@ class Livefeeds extends \Springboard\Model {
     else
       $apiurl = $info['BASE_URI'];
 
-    $apiurl   .=  \Springboard\Language::get() . '/jsonapi';
+    $apiurl   .=  'jsonapi';
     $flashdata = array(
       'language'               => \Springboard\Language::get(),
       'api_url'                => $apiurl,

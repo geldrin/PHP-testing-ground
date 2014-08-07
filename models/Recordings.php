@@ -2132,7 +2132,7 @@ class Recordings extends \Springboard\Model {
     else
       $apiurl = $info['BASE_URI'];
 
-    $apiurl .=  \Springboard\Language::get() . '/jsonapi';
+    $apiurl .=  'jsonapi';
     $data    = array(
       'language'              => \Springboard\Language::get(),
       'api_url'               => $apiurl,
