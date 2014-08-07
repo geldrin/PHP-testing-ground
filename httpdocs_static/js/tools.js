@@ -2183,8 +2183,8 @@ function setupLivestatistics( elem ) {
   });
 
   delete( timestamptoindex );
-  var refreshtimer = null;
-  var lastclick = null;
+  var refreshtimer  = null;
+  var lastclick     = null;
   var isdoubleclick = null;
   var graph = new Dygraph( elem.get(0), graphdata, {
     visibility       : visibility,
@@ -2275,11 +2275,12 @@ function setupLivestatistics( elem ) {
 
           graphdata = prepareData(data.data);
           graph.updateOptions({
-            file: graphdata
+            file: graphdata,
+            dateWindow: [data.data.startts, data.data.endts]
           });
         },
         complete: function() {
-          refreshtimer = null;
+          refreshtimer  = null;
           isdoubleclick = false;
         }
       })
@@ -2299,7 +2300,7 @@ function setupLivestatistics( elem ) {
       refreshtimer = null;
     }
     isdoubleclick = null;
-    lastclick = null;
+    lastclick     = null;
     refreshData(analyticsdata.origstartts, analyticsdata.origendts)();
   });
 
