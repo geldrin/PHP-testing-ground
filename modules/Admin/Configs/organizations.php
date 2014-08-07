@@ -259,6 +259,13 @@ $config = Array(
     'value'       => 0,
   ),
 
+  'isrecommendationdisabled' => array(
+    'displayname' => 'Flash ajánló letiltása?',
+    'type'        => 'inputRadio',
+    'values'      => $l->getLov('yesno'),
+    'value'       => 0,
+  ),
+
   'disabled' => array(
     'displayname' => 'Kitiltva?',
     'type'        => 'inputRadio',
