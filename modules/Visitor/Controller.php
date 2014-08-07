@@ -299,8 +299,7 @@ class Controller extends \Springboard\Controller\Visitor {
     
     $errors = array(
       'registrationrestricted',
-      'grouprestricted',
-      'departmentrestricted',
+      'departmentorgrouprestricted',
     );
     
     $user = $this->bootstrap->getSession('user');

@@ -88,8 +88,7 @@ class Controller extends \Visitor\Controller {
     if (
          $chromeless and in_array( $access[ $accesskey ], array(
              'registrationrestricted',
-             'grouprestricted',
-             'departmentrestricted',
+             'departmentorgrouprestricted',
            ), true // strict = true
          )
        )
