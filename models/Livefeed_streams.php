@@ -67,4 +67,23 @@ class Livefeed_streams extends \Springboard\Model {
     
   }
   
+  public function updateFeedThumbnail() {
+    $this->ensureObjectLoaded();
+    $this->db->execute("
+      UPDATE livefeeds AS lf
+      SET lf.indexphotofilename = (
+        SELECT lfs.indexphotofilename
+        FROM livefeed_streams AS lfs
+        WHERE
+          lfs.indexphotofilename IS NOT NULL AND
+          lfs.indexphotofilename <> '' AND
+          lfs.livefeedid          = '" . $this->row['livefeedid'] . "'
+        ORDER BY lfs.id ASC
+        LIMIT 1
+      )
+      WHERE lf.id = '" . $this->row['livefeedid'] . "'
+      LIMIT 1
+    ");
+  }
+
 }
