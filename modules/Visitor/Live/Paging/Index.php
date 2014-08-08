@@ -20,7 +20,7 @@ class Index extends \Visitor\Paging {
     $l                 = $this->bootstrap->getLocalization();
     $this->foreachelse = $l('live','live_foreachelse');
     $this->title       = $l('','sitewide_live');
-    $this->controller->toSmarty['listclass'] = 'channellist live';
+    $this->controller->toSmarty['listclass'] = 'recordinglist';
 
     $this->handleSearch();
     parent::init();

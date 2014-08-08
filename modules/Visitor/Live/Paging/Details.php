@@ -43,6 +43,17 @@ class Details extends \Visitor\Paging {
         'channels/details/' . $this->channelModel->id . ',' . \Springboard\Filesystem::filenameize( $this->channelModel->row['title'] )
       );
     
+    $isadmin = $user['id'] and ( $user['isadmin'] or $user['isliveadmin'] or $user['isclientadmin'] );
+    if ( !$isadmin and $this->channelModel->row['endtimestamp'] ) {
+      
+      $endtime = strtotime( $this->channelModel->row['endtimestamp'] );
+      if ( strtotime('+3 days', $endtime ) < time() )
+        $this->controller->redirect(
+          'channels/details/' . $this->channelModel->id . ',' . \Springboard\Filesystem::filenameize( $this->channelModel->row['title'] )
+        );
+      
+    }
+    
     $this->channelModel->clearFilter();
     $rootid = $this->channelModel->id;
     if ( $this->channelModel->row['parentid'] )
@@ -64,17 +75,6 @@ class Details extends \Visitor\Paging {
         ( strtotime( $this->channelModel->row['endtimestamp'] ) >= time() )
       )
     ;
-    
-    $isadmin = $user['id'] and ( $user['isadmin'] or $user['isliveadmin'] or $user['isclientadmin'] );
-    if ( !$isadmin and $this->channelModel->row['endtimestamp'] ) {
-      
-      $endtime = strtotime( $this->channelModel->row['endtimestamp'] );
-      if ( strtotime('+3 days', $endtime ) < time() )
-        $this->controller->redirect(
-          'channels/details/' . $this->channelModel->id . ',' . \Springboard\Filesystem::filenameize( $this->channelModel->row['title'] )
-        );
-      
-    }
     
     parent::init();
     
