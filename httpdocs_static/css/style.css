@@ -2252,15 +2252,21 @@ a#currentusername span {
   float: right;
   width: 550px;
 }
-.channelrecordings .recordinglist {
+.channelrecordings .recordinglist, .livelist.recordinglist {
   width: 550px;
 }
-.channelrecordings .listitem {
+.channelrecordings .listitem, .livelist.recordinglist .listitem {
   width: 550px;
 }
-.channelrecordings .recordingcontent {
+.channelrecordings .recordingcontent, .livelist.recordinglist .recordingcontent {
   margin-left: 20px;
   width: 338px;
+}
+.eventfeeds .recordingpic {
+  display: inline-block;
+  float: right;
+  margin: -7px 10px 0 0;
+  vertical-align: middle;
 }
 .livefeed {
   display: inline-block;
@@ -2268,7 +2274,6 @@ a#currentusername span {
   line-height: 29px;
   vertical-align: middle;
   float: right;
-  margin: -7px 0 0 0;
   padding: 0px 6px 0px 30px;
   text-transform: uppercase;
   font-weight: bold;

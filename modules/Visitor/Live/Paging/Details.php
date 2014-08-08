@@ -40,30 +40,27 @@ class Details extends \Visitor\Paging {
 
     if ( !$this->channelModel->row['isliveevent'] )
       $this->controller->redirect(
-        'channels/details/' . $this->channelModel->id . ',' . \Springboard\Filesystem::filenameize( $this->channelModel->row['title'] )
+        'channels/details/' . $this->channelModel->id . ',' .
+        \Springboard\Filesystem::filenameize( $this->channelModel->row['title'] )
       );
-    
-    $isadmin = $user['id'] and ( $user['isadmin'] or $user['isliveadmin'] or $user['isclientadmin'] );
+
+    $isadmin =
+      $user['id'] and
+      ( $user['isadmin'] or $user['isliveadmin'] or $user['isclientadmin'] )
+    ;
+    // admin mindig eleri
     if ( !$isadmin and $this->channelModel->row['endtimestamp'] ) {
       
       $endtime = strtotime( $this->channelModel->row['endtimestamp'] );
       if ( strtotime('+3 days', $endtime ) < time() )
         $this->controller->redirect(
-          'channels/details/' . $this->channelModel->id . ',' . \Springboard\Filesystem::filenameize( $this->channelModel->row['title'] )
+          'channels/details/' .$this->channelModel->id . ',' .
+          \Springboard\Filesystem::filenameize( $this->channelModel->row['title'] )
         );
       
     }
     
-    $this->channelModel->clearFilter();
-    $rootid = $this->channelModel->id;
-    if ( $this->channelModel->row['parentid'] )
-      $rootid = $this->channelModel->findRootID( $this->channelModel->row['parentid'] );;
-
-    $this->channelModel->addFilter('isliveevent', 1 );
-    $channeltree = $this->channelModel->getSingleChannelTree( $rootid, null, 0, true );
-    
-    $this->controller->toSmarty['channeltree'] = $channeltree;
-    $this->controller->toSmarty['listclass']   = 'recordinglist';
+    $this->controller->toSmarty['listclass']   = 'recordinglist livelist';
     $this->controller->toSmarty['feeds']       = $this->channelModel->getFeeds();
     $this->controller->toSmarty['channel']     = $this->channelModel->row;
     
@@ -88,7 +85,7 @@ class Details extends \Visitor\Paging {
   
   protected function getItems( $start, $limit, $orderby ) {
     
-    return array();
+    return $this->controller->toSmarty['feeds'];
     
   }
   

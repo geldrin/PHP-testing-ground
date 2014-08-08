@@ -837,7 +837,8 @@ class Channels extends \Springboard\Model {
         slideonright,
         feedtype,
         moderationtype,
-        issecurestreamingforced
+        issecurestreamingforced,
+        indexphotofilename
       FROM livefeeds
       WHERE channelid IN('" . $this->id . "')
       ORDER BY name
