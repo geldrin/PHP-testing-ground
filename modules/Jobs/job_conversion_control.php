@@ -183,8 +183,7 @@ global $jconf, $debug, $db, $app;
 	$db = db_maintain();
 
 	$node = $app->config['node_sourceip'];
-// !!!
-	$node = "stream.videosquare.eu";
+//	$node = "stream.videosquare.eu";
 
 	$query = "
 		SELECT
@@ -204,13 +203,14 @@ global $jconf, $debug, $db, $app;
 			recordings AS r,
 			organizations AS o
 		WHERE
-			( ( r.mastersourceip = '" . $node . "' AND ( r.status = '" . $jconf['dbstatus_uploaded'] . "' OR r.status = '" . $jconf['dbstatus_reconvert'] . "' ) ) OR
-			( r.contentmastersourceip = '" . $node . "' AND ( r.contentstatus = '" . $jconf['dbstatus_uploaded'] . "' OR r.contentstatus = '" . $jconf['dbstatus_reconvert'] . "' ) ) ) AND
-			r.organizationid = o.id
+			r.organizationid = o.id AND (
+			( ( r.status = '" . $jconf['dbstatus_uploaded'] . "' OR r.status = '" . $jconf['dbstatus_reconvert'] . "' ) AND
+			( r.masterstatus = '" . $jconf['dbstatus_uploaded'] . "' OR r.masterstatus = '" . $jconf['dbstatus_copystorage_ok'] . "' ) ) OR
+			( ( r.contentstatus = '" . $jconf['dbstatus_uploaded'] . "' OR r.contentstatus = '" . $jconf['dbstatus_reconvert'] . "' ) AND
+			( r.contentmasterstatus = '" . $jconf['dbstatus_uploaded'] . "' OR r.contentmasterstatus = '" . $jconf['dbstatus_copystorage_ok'] . "' ) )
+			)
 		ORDER BY
 			r.id";
-// AND r.id = 89
-//echo $query . "\n";
 
 	try {
 		$rs = $db->Execute($query);
@@ -231,11 +231,9 @@ global $jconf, $debug, $db, $app;
 	$db = db_maintain();
 
 	$node = $app->config['node_sourceip'];
-// !!!
-	$node = "stream.videosquare.eu";
+//	$node = "stream.videosquare.eu";
 
 	// Get status = "converting" recordings with at least one "onstorage" recording version
-// !!! hogyan lesz onstorage a content???
 	$query = "
 		SELECT
 			r.id,
@@ -257,12 +255,10 @@ global $jconf, $debug, $db, $app;
 			rv.status = '" . $jconf['dbstatus_copystorage_ok'] . "' AND
 			rv.encodingprofileid = ep.id AND
 			( ep.mediatype = 'video' OR ( r.mastermediatype = 'audio' AND ep.mediatype = 'audio' ) ) AND
-			( ( r.mastersourceip = '" . $node . "' AND r.status = '" . $jconf['dbstatus_conv'] . "' AND ep.type = 'recording' ) OR
-			  ( r.contentmastersourceip = '" . $node . "' AND r.contentstatus = '" . $jconf['dbstatus_conv'] . "' AND ep.type = 'content' ) )
+			( ( r.status = '" . $jconf['dbstatus_conv'] . "' AND ep.type = 'recording' ) OR
+			  ( r.contentstatus = '" . $jconf['dbstatus_conv'] . "' AND ep.type = 'content' ) )
 		GROUP BY
 			r.id";
-
-//echo $query . "\n";
 
 	try {
 		$rs = $db->Execute($query);
@@ -292,8 +288,6 @@ global $db, $debug, $jconf, $app;
 	if ( ( $recording['status'] == $jconf['dbstatus_uploaded'] ) or  ( $recording['status'] == $jconf['dbstatus_reconvert'] ) ) {
 
 		$profileset = getEncodingProfileSet("recording", $recording['mastervideores'], $encodinggroupid);
-//var_dump($profileset);
-//exit;
 
 		if ( $profileset !== false ) {
 
@@ -322,16 +316,14 @@ global $db, $debug, $jconf, $app;
 			// Status: uploaded -> converting
 			updateRecordingStatus($recording['id'], $jconf['dbstatus_conv'], "recording");
 		} else {
-			$debug->log($jconf['log_dir'], $jconf['jobid_conv_control'] . ".log", "[ERROR] No encoding profile can be selected for recording.\n" . print_r($recording, true), $sendmail = true);
+			$debug->log($jconf['log_dir'], $jconf['jobid_conv_control'] . ".log", "[ERROR] No encoding profile can be selected for recordingid = " . $recording['id'] . ". Recording info:\n" . print_r($recording, true), $sendmail = true);
 		}
 	}
 
+	// Content
 	if ( ( $recording['contentstatus'] == $jconf['dbstatus_uploaded'] ) or ( $recording['contentstatus'] == $jconf['dbstatus_reconvert'] ) ) {
 
 		$profileset = getEncodingProfileSet("content", $recording['contentmastervideores'], $encodinggroupid);
-//echo "content profileset:\n";
-//var_dump($profileset);
-//exit;
 
 		if ( $profileset !== false ) {
 
@@ -356,14 +348,11 @@ global $db, $debug, $jconf, $app;
 			// Status: uploaded -> converting
 			updateRecordingStatus($recording['id'], $jconf['dbstatus_conv'], "content");
 		} else {
-			$debug->log($jconf['log_dir'], $jconf['jobid_conv_control'] . ".log", "[ERROR] No encoding profile for content.\n" . print_r($recording, true), $sendmail = true);
+			$debug->log($jconf['log_dir'], $jconf['jobid_conv_control'] . ".log", "[ERROR] No encoding profile for content recordingid = " . $recording['id'] . ". Content info:\n" . print_r($recording, true), $sendmail = true);
 		}
 
 		// Mobile versions into recordings_versions. Use content resolution as background.
 		$profileset = getEncodingProfileSet("pip", $recording['contentmastervideores'], $encodinggroupid);
-//echo "PiP profileset:\n";
-//var_dump($profileset);
-//exit;
 
 		if ( $profileset !== false ) {
 
@@ -386,7 +375,7 @@ global $db, $debug, $jconf, $app;
 			}
 
 		} else {
-			$debug->log($jconf['log_dir'], $jconf['jobid_conv_control'] . ".log", "[ERROR] No PiP encoding profile for recording.\n" . print_r($recording, true), $sendmail = true);
+			$debug->log($jconf['log_dir'], $jconf['jobid_conv_control'] . ".log", "[ERROR] No encoding profile for PiP version recordingid = " . $recording['id'] . ". Recording info:\n" . print_r($recording, true), $sendmail = true);
 		}
 
 	}
