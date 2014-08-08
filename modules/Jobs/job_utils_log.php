@@ -23,6 +23,8 @@ global $app, $jconf, $debug, $db, $uploader_user;
 
 	$db = db_maintain();
 
+	$data = substr($data, 0, 255);
+
 	// Check DB connection: do not log if does not exist
 	$values = Array(
 		'timestamp'					=> date("Y-m-d H:i:s"),
@@ -92,20 +94,6 @@ function printMediaInfo($recording, $profile) {
 
 	$idx = "";
 	if ( $recording['iscontent'] ) $idx = "content";
-
-// Audio only
-/*
-array(4) {
-  ["name"]=>
-  string(10) "Audio only"
-  ["audiochannels"]=>
-  string(1) "2"
-  ["audiosamplerate"]=>
-  int(48000)
-  ["audiobitrate"]=>
-  int(128)
-}
-*/
 
 	// General
 	if ( isset($recording[$idx . 'masterlength']) ) $log_msg .= "Playtime: " . secs2hms($recording[$idx . 'masterlength']) . "\n";
@@ -220,6 +208,8 @@ function log_document_conversion($doc_id, $rec_id, $job, $action, $status, $comm
 global $app, $jconf, $debug, $db, $uploader_user;
 
 	$db = db_maintain();
+
+	$data = substr($data, 0, 255);
 
 	$values = Array(
 		'timestamp'					=> date("Y-m-d H:i:s"),
