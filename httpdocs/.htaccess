@@ -58,7 +58,11 @@ RewriteRule ^([a-z]{2})/([a-zA-Z0-9_\-]+)/([a-zA-Z0-9_\-]+)/([a-zA-Z0-9_\-]+) in
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteCond %{QUERY_STRING} ^(.*)module(.*)$
-RewriteRule ^api/?$ index.php?module=api&%1_module%2
+RewriteRule ^api/?$ index.php?module=api&%1_module%2  [L,QSA]
+
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^jsonapi/?$ index.php?module=jsonapi  [L,QSA]
 
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
