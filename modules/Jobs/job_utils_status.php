@@ -855,14 +855,7 @@ global $app, $debug, $jconf, $myjobid;
 	$recordingVersionObj = $app->bootstrap->getModel('livefeed_streams');
 	$recordingVersionObj->select($streamid);
     $recordingVersionObj->updateRow($values);
-
-	// Update index photos
-/*	if ( ( $status == $jconf['dbstatus_copystorage_ok'] ) and ( $type == "recording" ) ) {
-		$recordingObj = $app->bootstrap->getModel('recordings');
-		$recordingObj->select($recordingid);
-		$recordingObj->updateChannelIndexPhotos();
-	}
-*/
+	$recordingVersionObj->updateFeedThumbnail();
 
 	// Log index photo change
 	$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] livefeed_streams.id = " . $streamid . " index photo updated to " . $indexphotofilename, $sendmail = false);
