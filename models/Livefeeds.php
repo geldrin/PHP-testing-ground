@@ -290,8 +290,9 @@ class Livefeeds extends \Springboard\Model {
     );
     
     if ( $info['member'] and $info['member']['id'] ) {
-      $flashdata['user_id'] = $info['member']['id'];
-      $flashdata['user_needPing'] = true;
+      $flashdata['user_id']          = $info['member']['id'];
+      $flashdata['user_needPing']    = true;
+      $flashdata['user_pingSeconds'] = $this->bootstrap->config['sessionpingseconds'];
     }
     
     if ( $this->row['issecurestreamingforced'] )

@@ -2266,8 +2266,9 @@ class Recordings extends \Springboard\Model {
       $data['recording_isAudio'] = true;
 
     if ( isset( $info['member'] ) and $info['member']['id'] ) {
-      $data['user_id'] = $info['member']['id'];
-      $data['user_needPing'] = true;
+      $data['user_id']          = $info['member']['id'];
+      $data['user_needPing']    = true;
+      $data['user_pingSeconds'] = $this->bootstrap->config['sessionpingseconds'];
     }
 
     $hds  = $this->isHDSEnabled();
@@ -2387,17 +2388,8 @@ class Recordings extends \Springboard\Model {
 
     }
     
-    if ( $this->row['isseekbardisabled'] and @$info['member'] and $info['member']['id'] ) {
-      
-      $options = $this->getSeekbarOptions( $info );
-      $data['timeline_seekbarDisabled']          = $options['isseekbardisabled'];
-      $data['timeline_lastPositionTimeInterval'] = $options['lastpositiontimeinterval'];
-      $data['timeline_lastPlaybackPosition']     = $options['lastplaybackposition'];
-      
-      if ( isset( $options['seekbarvisible'] ) )
-        $data['timeline_seekbarVisible']         = $options['seekbarvisible'];
-      
-    }
+    if ( $this->row['isseekbardisabled'] and @$info['member'] and $info['member']['id'] )
+      $data = array_merge( $data, $this->getSeekbarOptions( $info ) );
     
     return $data;
     
@@ -2435,9 +2427,9 @@ class Recordings extends \Springboard\Model {
       ");
 
     $options = array(
-      'isseekbardisabled'         => true,
-      'lastplaybackposition'      => $lastposition,
-      'lastpositiontimeinterval'  =>
+      'timeline_seekbarDisabled'          => true,
+      'timeline_lastPlaybackPosition'     => $lastposition,
+      'timeline_lastPositionTimeInterval' =>
         $this->bootstrap->config['recordingpositionupdateseconds']
       ,
     );
@@ -2447,7 +2439,7 @@ class Recordings extends \Springboard\Model {
          $user['isclientadmin'] or
          $user['iseditor']
        )
-      $options['seekbarvisible'] = true;
+      $options['timeline_seekbarVisible'] = true;
     
     return $options;
     

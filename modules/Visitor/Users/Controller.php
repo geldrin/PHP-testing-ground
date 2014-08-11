@@ -315,15 +315,6 @@ class Controller extends \Visitor\Controller {
     $userModel->updateLastlogin( null, $ipaddress );
     $this->logUserLogin('APILOGIN');
     
-    $output = array(
-      'userid'                           => $userModel->id,
-      'needping'                         => (bool)$userModel->row['issingleloginenforced'],
-      'pingseconds'                      => $this->bootstrap->config['sessionpingseconds'],
-      'checkwatching'                    => (bool)$userModel->row['ispresencecheckforced'],
-      'checkwatchingtimeinterval'        => $this->organization['presencechecktimeinterval'],
-      'checkwatchingconfirmationtimeout' => $this->organization['presencecheckconfirmationtime'],
-    );
-    
     if ( $recordingid ) {
       
       $recordingsModel = $this->modelIDCheck( 'recordings', $recordingid, false );
@@ -348,11 +339,7 @@ class Controller extends \Visitor\Controller {
       $this->toSmarty['member']    = $user;
       $this->toSmarty['ipaddress'] = $this->getIPAddress();
       $this->toSmarty['sessionid'] = session_id();
-      $output = array_merge(
-        $output,
-        $recordingsModel->getSeekbarOptions( $this->toSmarty ),
-        $recordingsModel->getMediaServers( $this->toSmarty )
-      );
+      $output = $recordingsModel->getFlashData( $this->toSmarty );
       
     } elseif ( $feedid ) {
       
@@ -370,7 +357,7 @@ class Controller extends \Visitor\Controller {
       if ( $access[ $accesskey ] !== true )
         throw new \Visitor\Api\ApiException( $l('recordings', 'nopermission'), true, false );
 
-      $info          = array(
+      $info = array(
         'organization' => $this->organization,
         'sessionid'    => session_id(),
         'ipaddress'    => $this->getIPAddress(),
@@ -381,17 +368,7 @@ class Controller extends \Visitor\Controller {
         'checkwatchingtimeinterval' => $this->organization['presencechecktimeinterval'],
         'checkwatchingconfirmationtimeout' => $this->organization['presencecheckconfirmationtime'],
       );
-      $flashdata = $feedModel->getFlashData( $info );
-      $output['media_servers'] = $flashdata['media_servers'];
-
-      if ( isset( $flashdata['media_secondaryServers'] ) )
-        $output['media_secondaryServers'] = $flashdata['media_secondaryServers'];
-
-      if ( isset( $flashdata['livePlaceholder_servers'] ) )
-        $output['livePlaceholder_servers'] = $flashdata['livePlaceholder_servers'];
-
-      if ( isset( $flashdata['intro_servers'] ) )
-        $output['intro_servers'] = $flashdata['intro_servers'];
+      $output = $feedModel->getFlashData( $info );
 
     }
 
