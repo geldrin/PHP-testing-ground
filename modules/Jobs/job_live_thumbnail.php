@@ -11,7 +11,7 @@ include_once( BASE_PATH . 'libraries/Springboard/Application/Cli.php');
 include_once('job_utils_base.php');
 include_once('job_utils_log.php');
 include_once('job_utils_status.php');
-include_once('job_utils_media.php');
+include_once('job_utils_media2.php');
 
 set_time_limit(0);
 
@@ -84,7 +84,6 @@ if ( $channels === false ) {
 //var_dump($channels);
 
 for ( $i = 0; $i < count($channels); $i++ ) {
-echo "i=" . $i . "\n";
 
 	// Temp directory
 	$temp_dir = $jconf['livestreams_dir'] . $channels[$i]['streamid'] . "/";
@@ -104,7 +103,8 @@ echo "i=" . $i . "\n";
 	$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] ffmpeg command to be executed: " . $ffmpeg_command, $sendmail = false);
 
 	// Run ffmpeg
-	$err = runExternal($ffmpeg_command);
+//	$err = runExternal($ffmpeg_command);
+	$err = runExt($ffmpeg_command);
 
 	if ( is_readable($thumb_filename) and ( filesize($thumb_filename) > 0 ) ) {
 
@@ -257,11 +257,6 @@ global $jconf, $debug, $db, $app, $myjobid;
 			lf.issecurestreamingforced = 0
 		ORDER BY
 			ch.id";
-//AND lfs.keycode = 420767
-//		GROUP BY
-//			lf.id
-
-//echo $query . "\n";
 
 	try {
 		$channels = $db->getArray($query);
