@@ -432,25 +432,6 @@ class Channels extends \Springboard\Model {
     
   }
   
-  function getFavoriteChannelID() {
-    
-    $channelid = $this->db->getOne("
-      SELECT c.id
-      FROM channels c, channel_types ct
-      WHERE
-        ( c.userid IS NULL OR c.userid = 0 ) AND
-        c.channeltypeid = ct.id AND
-        ct.isfavorite = 1
-      ORDER BY c.id
-    ");
-    
-    if ( !$channelid )
-      throw new \Exception("favorite channel missing");
-    else
-      return $channelid;
-    
-  }
-  
   function getUsersChannels( $userid, $organizationids = null ) {
 
     if ( !$userid )
@@ -644,13 +625,6 @@ class Channels extends \Springboard\Model {
         s.translationof = ct.name_stringid AND
         s.language      = '" . \Springboard\Language::get() . "'
     ");
-    
-  }
-  
-  public function insertIntoFavorites( $recordingid, $user ) {
-    
-    $channelid = $this->cachedGetFavoriteChannelID();
-    return $this->insertIntoChannel( $recordingid, $user, false, $channelid );
     
   }
   
