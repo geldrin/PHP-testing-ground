@@ -13,13 +13,13 @@
       <h3><a href="{$language}/recordings/details/{$item.id},{$item.title|filenameize}">{$item.title|escape:html}</a></h3>
       {if $item.subtitle|stringempty}<h4>{$item.subtitle|escape:html}</h4>{/if}
     </div>
-    {if $item.approvalstatus == 'draft' and $item.status == 'onstorage'}
+    {if $item.approvalstatus != 'approved' and $item.status == 'onstorage'}
       <span class="notpublished"><a href="{$language}/recordings/modifysharing/{$item.id}?forward={$FULL_URI|escape:url}">{#recordings__notpublished_warning#}</a></span>
     {/if}
     <div class="recordinginfo">
       <ul>
         <li class="status"><span class="bold">{#recordings__recording_status#}:</span>
-        {if $item.approvalstatus == 'draft' and $item.status == 'onstorage'}
+        {if $item.approvalstatus != 'approved' and $item.status == 'onstorage'}
           {#recordings__waitingforpublish#}&nbsp;(<span class="status-{$item.status}">{l lov=recordingstatus key=$item.status}</span>)
         {elseif preg_match( '/^converting/', $item.status )}
           <span class="status-{$item.status}">{l lov=recordingstatus key=unavailable}</span>

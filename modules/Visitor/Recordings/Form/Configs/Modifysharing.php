@@ -5,8 +5,17 @@ if ( !isset( $user ) )
 
 if ( $user['isadmin'] or $user['isclientadmin'] or $user['iseditor'] )
   $approvalstatuses = $l->getLov('recordings_approvalstatus_full');
-elseif ( $user['ismoderateduploader'] )
+elseif (
+         $user['ismoderateduploader'] and
+         $this->recordingsModel->row['approvalstatus'] != 'approved'
+       )
   $approvalstatuses = $l->getLov('recordings_approvalstatus_min');
+// ha mar engedve van akkor mindent mutatunk
+elseif (
+         $user['ismoderateduploader'] and
+         $this->recordingsModel->row['approvalstatus'] == 'approved'
+       )
+  $approvalstatuses = $l->getLov('recordings_approvalstatus_full');
 else
   $approvalstatuses = $l->getLov('recordings_approvalstatus_default');
 

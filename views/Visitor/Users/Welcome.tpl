@@ -82,7 +82,7 @@
             <h3><a href="{$language}/recordings/details/{$recording.id},{$recording.title|filenameize}">{$recording.title|escape:html}</a></h3>
             {if $recording.subtitle|stringempty}<h4>{$recording.subtitle|escape:html}</h4>{/if}
           </div>
-          {if $recording.approvalstatus == 'draft' and $recording.status == 'onstorage'}
+          {if $recording.approvalstatus != 'approved' and $recording.status == 'onstorage'}
             <span class="notpublished"><a href="{$language}/recordings/modifysharing/{$recording.id}?forward={$FULL_URI|escape:url}">{#recordings__notpublished_warning#}</a></span>
           {/if}
           <div class="recordinginfo">
