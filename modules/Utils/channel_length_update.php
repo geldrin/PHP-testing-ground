@@ -24,7 +24,6 @@ try {
 	exit -1;
 }
 
-/*
 $channelModel = $app->bootstrap->getModel('channels');
 $channels     = $db->query("
 SELECT *
@@ -36,7 +35,6 @@ foreach( $channels as $channel ) {
   $channelModel->row = $channel;
   $channelModel->updateVideoCounters();
 }
-*/
 
 $categoryModel = $app->bootstrap->getModel('categories');
 $categories     = $db->query("
