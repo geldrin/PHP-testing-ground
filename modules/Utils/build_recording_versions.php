@@ -207,6 +207,7 @@ while (!$recordings->EOF) {
       $versions_created++;
     } catch(\Exception $ex) {
       print_r(print_r($ver, true) . $ex->getMessage());
+			$err = true;
       $msg .= "[WARNING] ". trim($ex->getMessage()) . PHP_EOL ."Skipping.\n";
       $warnings++;
       continue;
