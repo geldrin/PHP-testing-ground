@@ -207,13 +207,10 @@ while (!$recordings->EOF) {
       $versions_created++;
     } catch(\Exception $ex) {
       print_r(print_r($ver, true) . $ex->getMessage());
-      // fwrite($fh, print_r(trim($ex->getMessage()), true));
-			
-			$msg .= "[WARNING] ". trim($ex->getMessage()) . PHP_EOL ."Skipping.\n";
-			$warnings++;
-			continue;
+      $msg .= "[WARNING] ". trim($ex->getMessage()) . PHP_EOL ."Skipping.\n";
+      $warnings++;
+      continue;
       // break 2;
-      // exit -1;
     }
   }
   
@@ -223,7 +220,7 @@ while (!$recordings->EOF) {
   $msg .= "\nUpdating recording #". $rec['id'] ." \n". $qry ."\n";
   if ($debug === false) {
 	
-		if ($err === true) {
+		if ($err === false) {
 			$tmp = query($qry);
 			if ($tmp['result'] === false) {
 				$msg .= "[ERROR] Database update (recordings.encodinggroupid) failed.\n". $tmp['message'] ."\n";
