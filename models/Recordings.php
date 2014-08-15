@@ -1791,11 +1791,10 @@ class Recordings extends \Springboard\Model {
     
     $this->ensureObjectLoaded();
     
-    $return = array();
-    
-    if ( count( $return ) < $count )
-      $return = $return + $this->getRelatedVideosByCourse( $count - count( $return ), $user, $organization );
-    
+    $return = $this->getRelatedVideosByCourse( $count, $user, $organization );
+    if ( !empty( $return ) ) // ha kurzusba tartozik  akkor csak azokat adjuk vissza
+      return $return;
+
     if ( count( $return ) < $count )
       $return = $return + $this->getRelatedVideosByChannel( $count - count( $return ), $user, $organization );
     
