@@ -38,8 +38,10 @@ $jconf['ocr_alt'] = "/home/gergo/cf";
 $jconf['ocr_frame_distance'] = 1;
 $jconf['threshold'] =  0.004;
 
+$time_start = time();
 $ocr_result = convertOCR($testrec);
 var_dump($ocr_result);
+print_r("Total duration: ". date("H:i:s", time() - $time_start)) .".". PHP_EOL;
 exit;
 //////////////////////////////////////////// TEST BLOCK ///////////////////////////////////////////	
 
@@ -61,7 +63,9 @@ function convertOCR($rec) {
 // OPTIMALIZACIO:
 // - torles: ne egyenkent torolgesse a fajlokat, hanem egyszerre
 // - IM - parancsok osszelinkelese, ahol lehet                                                -> OK
-// - 
+// - Redundancia ellenorzes pici kepeken??
+//       |`- 300px:  22.1 sec   !!!
+//        `- 1280px: 206.4 sec 
 ///////////////////////////////////////////////////////////////////////////////////////////////////	
 	global $jconf, $debug, $app, $db;
 	$logdir = $jconf['log_dir'];
@@ -75,12 +79,13 @@ function convertOCR($rec) {
 	$numocrwarns = 0;
 	$ocrlog = null;
 	/////////////////
-	$wdir    = $jconf['ocr_dir'] . $rec['id'] ."/wdir". DIRECTORY_SEPARATOR;	// source directory
-	$tempdir = $jconf['ocr_dir'] . $rec['id'] ."/temp". DIRECTORY_SEPARATOR;
-	$snapdir = $jconf['ocr_dir'] . $rec['id'] ."/ocrsnapshots". DIRECTORY_SEPARATOR;
+	$wdir    = $jconf['ocr_dir'] . $rec['id'] ."/wdir". DIRECTORY_SEPARATOR;         // source directory
+	$cmpdir  = $jconf['ocr_dir'] . $rec['id'] ."/cmp". DIRECTORY_SEPARATOR;          // folder for comparing downsized frames
+	$tempdir = $jconf['ocr_dir'] . $rec['id'] ."/temp". DIRECTORY_SEPARATOR;         // folder for prepared frames
+	$snapdir = $jconf['ocr_dir'] . $rec['id'] ."/ocrsnapshots". DIRECTORY_SEPARATOR; // output directory
 	
 	$frames = array(
-		'frames'      => array(),	// arrays of frame names, ocrtext, and dbid
+		'frames'      => array(), // arrays of frame names, ocrtext, and dbid
 		'transitions' => array(), // pointers to 'frames' which are on transition points
 		'sorted'      => array(), // pointers to 'frames' to be passed to OCR engine
 		'processed'   => array(), // pointers to 'frames' which could be updated to database
@@ -88,7 +93,7 @@ function convertOCR($rec) {
 	
 	$errstr = "Function convertOCR(rec#". $rec['id'] .") failed!"; //// Megtarthato?????
 	
-	$debug->log($logdir, $logfile, "[INFO] Starting ocr process on recording#". $rec['id'] .".");
+	$debug->log($logdir, $logfile, str_pad("[INFO] Starting ocr process on recording #". $rec['id'] .".", 100, '=', STR_PAD_BOTH), false);
 	// 3RD PARTY UTILITY-K ELLENORZESE ///////////////////////////
 	$cmd_test_imagick = "convert -version";
 	$cmd_test_ocr = "type \"". $jconf['ocr_alt'] ."\"";
@@ -120,7 +125,8 @@ function convertOCR($rec) {
 	}
 	
 	// KEPKOCKAK KINYERESE ///////////////////////////////////////
-	$cmd_explode = escapeshellcmd($jconf['ffmpeg_alt'] ." -v ". $jconf['ffmpeg_loglevel'] ." -i ". $rec['contentmaster_filename'] ." -r ". $jconf['ocr_frame_distance'] ." -f image2 -q:v 1 ". $wdir ."%05d.jpg");
+	$cmd_explode = escapeshellcmd($jconf['ffmpeg_alt'] ." -v ". $jconf['ffmpeg_loglevel'] ." -i ". $rec['contentmaster_filename'] ." -filter_complex  'scale=w=320:h=180:force_original_aspect_ratio=decrease' -r ". $jconf['ocr_frame_distance'] ." -q:v 1 -f image2 ". $cmpdir ."%05d.jpg -r ". $jconf['ocr_frame_distance'] ." -q:v 1 -f image2 ". $wdir ."%05d.jpg");
+	
 	$debug->log($logdir, $logfile, "Extracting frames from video. Command line:". PHP_EOL . $cmd_explode);
 	
 	$err = runExt($cmd_explode);
@@ -161,15 +167,14 @@ function convertOCR($rec) {
 	$p2 = 0;
 	$cntr = 0;
 	$timedif = 0;
-	$scenecount = 0;
 	
 	for($i = 0; $i <= (count($frames['frames']) - 2); $i++) {
 		$p1 = $i;
 		$p2 = $i + 1;
-		
-		$img1 = $wdir . $frames['frames'][$p1]['file'];
-		$img2 = $wdir . $frames['frames'][$p2]['file'];
 		$mean = 0;
+		
+		$img1 = $cmpdir . $frames['frames'][$p1]['file'];
+		$img2 = $cmpdir . $frames['frames'][$p2]['file'];
 
 		$cmdIMdiff = "convert \"". $img1 ."\" \"". $img2 ."\" -compose difference -colorspace gray -composite png:- | identify -verbose -format %[fx:mean] png:-";
 		$IMdiff = runExt($cmdIMdiff);
@@ -188,9 +193,9 @@ function convertOCR($rec) {
 		}
 // echo "\rComparing frames:  (". ($p2 - 1) ."/". $p2 .") - mean=$mean | ". round( $p1 / ((count($frames['frames']) / 100) ), 0, PHP_ROUND_HALF_UP) ."% complete.";
 	}
-	
 	// MOZGOKEP KISZURESE ///////////////////////////////////
 // echo "\nSorting motion scenes.". PHP_EOL;
+	
 	$debug->log($logdir, $logfile, "Detecting motion scenes.", false);
 	$motion = array();
 	
@@ -221,26 +226,25 @@ function convertOCR($rec) {
 
 	// HASZNOS FRAME-EK KIGYUJTESE //////////////////////////
 
-	$ocrlog .= "Removing motion scenes...\n";
-	$debug->log($logdir, $logfile, "Removing motion scenes...\n", false);
-	$frames2remove = array();
-
 	if (!empty($motion)) {
+		$ocrlog .= "Removing motion scenes...\n";
+		$debug->log($logdir, $logfile, "Removing motion scenes...\n", false);
+		$frames2remove = array();
+
 		foreach($motion as $movie_scene) {
 			$frames2remove += array_intersect($frames['transitions'], range(($movie_scene['start'] + 1), $movie_scene['stop']));
 
-print_r("picking movie scene sample at ". (floor(abs($movie_scene['start'] - $movie_scene['stop']) / 2) + $movie_scene['start']) ." (between ". $movie_scene['start'] ."-". $movie_scene['stop'] .")". PHP_EOL);
+// print_r("picking movie scene sample at ". (floor(abs($movie_scene['start'] - $movie_scene['stop']) / 2) + $movie_scene['start']) ." (between ". $movie_scene['start'] ."-". $movie_scene['stop'] .")". PHP_EOL);
 
 			// get frames from the middle of a scene (igoring poor quality frames right after keyframes/scene cuts)
 			$frames['sorted'][] = ( int ) floor(abs($movie_scene['start'] - $movie_scene['stop']) / 2) + $movie_scene['start'];
 		}
+
+		$frames['sorted'] = array_diff($frames['transitions'], $frames2remove);
+		$frames['sorted'] = array_values($frames['sorted']);
+		unset($motion, $frames2remove);
 	}
 
-	$frames['sorted'] = array_diff($frames['transitions'], $frames2remove);
-		
-	$frames['sorted'] = array_values($frames['sorted']);
-	unset($motion, $frames2remove);
-	
 	// SZOVEG KINYERESE FRAMEKBOL ///////////////////////////
 	
 // echo "Preparing frames for OCR.\n";
@@ -292,7 +296,14 @@ print_r("picking movie scene sample at ". (floor(abs($movie_scene['start'] - $mo
 	$log_ocr_progress .= count($frames['processed']) . " frames has been prepared.\nTotal number of warnings: " . $ocr_progress_cntr .".";
 	$debug->log($logdir, $logfile, $log_ocr_progress, false);
 	unset($log_ocr_progress, $ocr_progress_cntr);
-
+	
+	if (empty($frames['processed'])) {
+		$result['result'] = true;
+		$result['message'] = "[INFO] No frames to be updated to database, ending OCR process.";
+		$debug->log($logdir, $logfile, $result['message'], false);
+		return $result;
+	}
+	
 	// SZOVEG VISSZATOLTESE AZ ADATBAZISBA //////////////////
 	
 	$debug->log($logdir, $logfile, "Updating database.", false);
