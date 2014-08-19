@@ -1040,7 +1040,10 @@ class Channels extends \Springboard\Model {
     
     $this->db->execute("
       UPDATE livefeeds
-      SET accesstype = '" . $this->row['accesstype'] . "'
+      SET
+        accesstype        = '" . $this->row['accesstype'] . "',
+        smilstatus        = 'regenerate',
+        contentsmilstatus = 'regenerate'
       WHERE id IN('" . implode("', '", $livefeedids ) . "')
     ");
     

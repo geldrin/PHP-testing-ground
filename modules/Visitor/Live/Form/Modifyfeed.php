@@ -43,7 +43,10 @@ class Modifyfeed extends \Visitor\HelpForm {
     
     $values       = $this->form->getElementValues( 0 );
     $createstream = false;
-    
+
+    $values['smilstatus']        = 'regenerate';
+    $values['contentsmilstatus'] = 'regenerate';
+
     if ( isset( $values['feedtype'] ) and $this->feedModel->row['feedtype'] != $values['feedtype'] ) {
       
       // minden streamet torlunk, valtozott a feedtype
