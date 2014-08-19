@@ -294,6 +294,11 @@ class Controller extends \Visitor\Controller {
     if ( $feedModel->row['feedtype'] == 'vcr' and !$feedModel->canDeleteFeed() )
       throw new \Exception("VCR helszín törles nem lehetséges!");
     
+    $feedModel->updateRow( array(
+        'smilstatus'        => 'regenerate',
+        'contentsmilstatus' => 'regenerate',
+      )
+    );
     $feedModel->delete( $feedModel->id );
     $this->redirect(
       $this->application->getParameter(
@@ -320,8 +325,14 @@ class Controller extends \Visitor\Controller {
       'channels',
       $feedModel->row['channelid']
     );
-    
+
     $streamModel->delete( $streamModel->id );
+    $feedModel->updateRow( array(
+        'smilstatus'        => 'regenerate',
+        'contentsmilstatus' => 'regenerate',
+      )
+    );
+
     $this->redirect(
       $this->application->getParameter(
         'forward',
@@ -373,7 +384,12 @@ class Controller extends \Visitor\Controller {
         'status' => $status,
       )
     );
-    
+    $feedModel->updateRow( array(
+        'smilstatus'        => 'regenerate',
+        'contentsmilstatus' => 'regenerate',
+      )
+    );
+
     $this->redirect(
       $this->application->getParameter(
         'forward',
