@@ -48,12 +48,36 @@ class Controller extends \Springboard\Controller\Visitor {
       
     }
     
+    $this->handleAutologin();
     $this->debugLogUsers();
     $this->handleSingleLoginUsers();
     parent::init();
     
   }
   
+  public function handleAutologin() {
+    
+    if ( !isset( $_COOKIE['rememberme'] ) )
+      return;
+
+    $user = $this->bootstrap->getSession('user');
+    if ( $user['id'] )
+      return;
+
+    $userModel   = $this->bootstrap->getModel('users');
+    $ipaddresses = $this->getIPAddress(true);
+    $valid       = $userModel->loginFromRememberme(
+      $this->organization['id'], $ipaddresses
+    );
+
+    if ( !$valid )
+      return $userModel->unsetRemembermeCookie( $this->bootstrap->ssl );
+
+    $this->toSmarty['member'] = $userModel->row;
+    $this->logUserLogin('LOGIN');
+
+  }
+
   public function handleSingleLoginUsers() {
     
     $user = $this->bootstrap->getSession('user');

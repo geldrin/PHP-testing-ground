@@ -8,6 +8,21 @@ class Users extends \Springboard\Model {
   const USER_DISABLED    = 1;
   protected $registeredSessionKey;
   
+  protected function checkUser( &$user, $organizationid ) {
+
+    if ( $user['organizationid'] != $organizationid and !$user['isadmin'] )
+      return 'organizationinvalid';
+
+    if (
+         $user['timestampdisabledafter'] and
+         strtotime( $user['timestampdisabledafter'] ) < time()
+       )
+      return 'expired';
+
+    return true;
+
+  }
+
   public function selectAndCheckUserValid( $organizationid, $email, $password, $isadmin = null ) {
     
     $crypto = $this->bootstrap->getEncryption();
@@ -37,6 +52,13 @@ class Users extends \Springboard\Model {
 
     if ( !empty( $user ) and $crypto->passwordValid( $password, $user['password'] ) ) {
 
+      $valid = $this->checkUser( $user, $organizationid );
+      if ( $valid !== true )
+        return $valid;
+
+      if ( $user['isadmin'] );
+        $user['organizationid'] = $organizationid;
+
       $this->id  = $user['id'];
       $this->row = $user;
 
@@ -60,7 +82,7 @@ class Users extends \Springboard\Model {
     
     $uservalid = $this->selectAndCheckUserValid( $organizationid, $email, $password );
     
-    if ( !$uservalid )
+    if ( $uservalid !== true )
       return false;
     
     if ( !$this->row['isapienabled'] )
@@ -167,7 +189,7 @@ class Users extends \Springboard\Model {
 
   }
   
-  public function updateLastLogin( $diagnostics = null, $ipaddress = null ) {
+  public function updateLastLogin( $diagnostics = null, $ipaddresses = array() ) {
     
     $this->ensureObjectLoaded();
 
@@ -175,8 +197,13 @@ class Users extends \Springboard\Model {
     if ( $diagnostics )
       $sql = ', browser = ' . $this->db->qstr( $diagnostics );
 
-    if ( $ipaddress )
+    if ( $ipaddresses ) {
+      $ipaddress = '';
+      foreach( $ipaddresses as $key => $value )
+        $ipaddress .= ' ' . $key . ': ' . $value;
+      
       $sql .= ', lastloggedinipaddress = ' . $this->db->qstr( $ipaddress );
+    }
 
     if ( !$this->row['firstloggedin'] )
       $sql .= ', firstloggedin = ' . $this->db->qstr( date('Y-m-d H:i:s') );
@@ -807,4 +834,84 @@ class Users extends \Springboard\Model {
         disabled        = '0'
     ");
   }
+
+  protected function validateRemembermeCookie() {
+
+    if (
+         !isset( $_COOKIE['rememberme'] ) or
+         !preg_match('/^[a-zA-Z0-9|]{34,}$/', $_COOKIE['rememberme'] )
+       )
+      return array();
+
+    $values = explode('|', $_COOKIE['rememberme'], 3 );
+    if ( count( $values ) != 2 )
+      return array();
+
+    $crypt = $this->bootstrap->getEncryption();
+    $id = intval( $crypt->asciiDecrypt( $values[0] ) );
+    if ( !$id )
+      return array();
+
+    $this->clearFilter();
+    $this->addFilter('id', $id );
+    $row = $this->getRow();
+
+    if ( md5( $row['password'] . $row['validationcode'] . $row['disabled'] ) != $values[1] )
+      return array();
+
+    return $row;
+
+  }
+
+  public function loginFromRememberme( $organizationid, $ipaddresses ) {
+    
+    $row = $this->validateRemembermeCookie();
+    if ( !$row )
+      return false;
+
+    if ( $row['isadmin'] )
+      $row['organizationid'] = $organizationid;
+
+    $valid     = $this->checkUser( $row, $organizationid );
+    if ( $valid !== true )
+      return false;
+
+    $this->id  = $row['id'];
+    $this->row = $row;
+
+    if ( !$this->checkSingleLoginUsers() )
+      return false;
+
+    $this->registerForSession();
+    $this->updateSessionInformation();
+
+    $this->updateLastlogin(
+      "(rememberme auto-login)\n" .
+      \Springboard\Debug::getRequestInformation( 0, false ),
+      $ipaddresses
+    );
+
+    return true;
+
+  }
+
+  public function setRemembermeCookie( $ssl = false ) {
+
+    $this->ensureObjectLoaded();
+    $crypt = $this->bootstrap->getEncryption();
+    $value =
+      $crypt->asciiEncrypt( $this->id ) . "|" .
+      md5( $this->row['password'] . $this->row['validationcode'] . $this->row['disabled'] )
+    ;
+
+    // httponly cookie
+    setcookie('rememberme', $value, strtotime('+1 year'), '/', null, $ssl, true );
+
+  }
+
+  public function unsetRemembermeCookie( $ssl = false ) {
+    // expiry in the past
+    setcookie('rememberme', '', 1, '/', null, $ssl, true );
+  }
+
 }

@@ -56,6 +56,13 @@ $config = Array(
     )
   ),
   
+  'rememberme' => Array(
+    'displayname' => $l('users', 'rememberme'),
+    'type'        => 'inputCheckbox',
+    'validation'  => Array(),
+    'value'       => isset( $_COOKIE['rememberme'] ),
+  ),
+  
   'diagnostics' => Array(
     'type'  => 'text',
     'value' => '

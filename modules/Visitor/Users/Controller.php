@@ -305,14 +305,9 @@ class Controller extends \Visitor\Controller {
     if ( $userModel->row['isadmin'] )
       $userModel->row['organizationid'] = $this->organization['id']; // a registerforsession miatt
     
-    $ipaddresses = $this->getIPAddress(true);
-    $ipaddress   = '';
-    foreach( $ipaddresses as $key => $value )
-      $ipaddress .= ' ' . $key . ': ' . $value;
-    
     $userModel->registerForSession();
     $userModel->updateSessionInformation();
-    $userModel->updateLastlogin( null, $ipaddress );
+    $userModel->updateLastlogin( null, $this->getIPAddress(true) );
     $this->logUserLogin('APILOGIN');
     
     if ( $recordingid ) {

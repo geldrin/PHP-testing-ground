@@ -25,57 +25,30 @@ class Login extends \Visitor\Form {
     $access         = $this->bootstrap->getSession('recordingaccess');
     
     $uservalid = $userModel->selectAndCheckUserValid( $organizationid, $values['email'], $values['password'] );
-    $orgvalid  = $timestampvalid = false;
     
-    if ( $uservalid and ( $userModel->row['organizationid'] == $organizationid or $userModel->row['isadmin'] ) )
-      $orgvalid = true;
-    
-    if (
-         ( $uservalid and !$userModel->row['timestampdisabledafter'] ) or
-         (
-           $uservalid and $userModel->row['timestampdisabledafter'] and
-           strtotime( $userModel->row['timestampdisabledafter'] ) > time()
-         )
-       )
-      $timestampvalid = true;
-    
-    if ( $userModel->row['isadmin'] )
-      $userModel->row['organizationid'] = $organizationid; // a registerforsession miatt
-      
     // single login location check 
-    $sessionvalid = $uservalid && $userModel->checkSingleLoginUsers();
+    $sessionvalid = $uservalid === true && $userModel->checkSingleLoginUsers();
     
-    if ( !$uservalid or !$orgvalid or !$sessionvalid or !$timestampvalid ) {
+    if ( $uservalid !== true or !$sessionvalid ) {
 
       $l            = $this->bootstrap->getLocalization();
       $lang         = \Springboard\Language::get();
       $encodedemail = rawurlencode( $values['email'] );
       
-      switch ( false ) {
-        case $uservalid:
-        case $orgvalid:
-          $message = sprintf(
-            $l('users','login_error'),
-            $lang . '/users/forgotpassword?email=' . $encodedemail,
-            $lang . '/users/resend?email=' . $encodedemail
-          );
-          break;
-        
-        case $sessionvalid:
-          $message = sprintf(
-            $l('users','login_sessionerror'),
-            ceil( $this->bootstrap->config['sessiontimeout'] / 60 ),
-            $lang . '/users/resetsession?email=' . $encodedemail
-          );
-          break;
-        
-        case $timestampvalid:
-          $message = $l('users', 'timestampdisabled');
-          break;
-        
-        default: throw new \Exception('unhandled switch case'); break;
-          
-      }
+      if ( !$uservalid or $uservalid == 'organizationinvalid' )
+        $message = sprintf(
+          $l('users','login_error'),
+          $lang . '/users/forgotpassword?email=' . $encodedemail,
+          $lang . '/users/resend?email=' . $encodedemail
+        );
+      elseif ( $uservalid == 'expired' )
+        $message = $l('users', 'timestampdisabled');
+      elseif ( !$sessionvalid )
+        $message = sprintf(
+          $l('users','login_sessionerror'),
+          ceil( $this->bootstrap->config['sessiontimeout'] / 60 ),
+          $lang . '/users/resetsession?email=' . $encodedemail
+        );
 
       $this->form->addMessage( $message );
       $this->form->invalidate();
@@ -92,15 +65,13 @@ class Login extends \Visitor\Form {
     if ( $this->application->getParameter('diaginfo') )
       $diagnostics = $this->application->getParameter('diaginfo');
     
-    $ipaddresses = $this->controller->getIPAddress(true);
-    $ipaddress   = '';
-    foreach( $ipaddresses as $key => $value )
-      $ipaddress .= ' ' . $key . ': ' . $value;
-    
-    $userModel->updateLastlogin( $diagnostics, $ipaddress );
-    $this->controller->logUserLogin('LOGIN', $ipaddress );
+    $userModel->updateLastlogin( $diagnostics, $this->controller->getIPAddress(true) );
+    $this->controller->logUserLogin('LOGIN');
     $forward = $this->application->getParameter('forward');
-    
+
+    if ( $values['rememberme'] )
+      $userModel->setRemembermeCookie( $this->bootstrap->ssl );
+
     if ( strpos( $forward, 'users/login' ) !== false ) {
       $forward = '';
       $values['welcome'] = true;
