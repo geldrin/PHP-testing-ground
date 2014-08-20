@@ -837,18 +837,29 @@ class Users extends \Springboard\Model {
 
   protected function validateRemembermeCookie() {
 
+    // a msghash 64char, a hash 32char, plusz az id
     if (
          !isset( $_COOKIE['rememberme'] ) or
-         !preg_match('/^[a-zA-Z0-9|]{34,}$/', $_COOKIE['rememberme'] )
+         !preg_match('/^[a-zA-Z0-9|]{96,}$/', $_COOKIE['rememberme'] )
        )
       return array();
 
-    $values = explode('|', $_COOKIE['rememberme'], 3 );
-    if ( count( $values ) != 2 )
+    $values = explode('|', $_COOKIE['rememberme'], 4 );
+    if ( count( $values ) != 3 )
+      return array();
+
+    // ellenorizzuk hogy ezt a cookiet tenylegesen mi allitottuk be
+    // ha nem ellenoriznenk akkor aranylag egyszeruen lehetne DOS-olni minket
+    // csupan azzal hogy mindig lekerjuk az id-nek megfelelo usert az adatbazisbol
+    $msghash  = $values[0];
+    $pos      = strpos( $_COOKIE['rememberme'], '|' );
+    $msg      = substr( $_COOKIE['rememberme'], $pos + 1 );
+    $msghash2 = hash_hmac( 'sha256', $msg, $this->bootstrap->config['hashseed'] );
+    if ( $msghash != $msghash2 )
       return array();
 
     $crypt = $this->bootstrap->getEncryption();
-    $id = intval( $crypt->asciiDecrypt( $values[0] ) );
+    $id    = intval( $crypt->asciiDecrypt( $values[1] ) );
     if ( !$id )
       return array();
 
@@ -856,6 +867,8 @@ class Users extends \Springboard\Model {
     $this->addFilter('id', $id );
     $row = $this->getRow();
 
+    // a hash valtozzon ha a user passwordot valt, elfelejtette a passwordjet,
+    // vagy kitiltjak
     if ( md5( $row['password'] . $row['validationcode'] . $row['disabled'] ) != $values[1] )
       return array();
 
@@ -903,6 +916,9 @@ class Users extends \Springboard\Model {
       $crypt->asciiEncrypt( $this->id ) . "|" .
       md5( $this->row['password'] . $this->row['validationcode'] . $this->row['disabled'] )
     ;
+
+    $msghash = hash_hmac( 'sha256', $value, $this->bootstrap->config['hashseed'] );
+    $value   = $msghash . '|' . $value;
 
     // httponly cookie
     setcookie('rememberme', $value, strtotime('+1 year'), '/', null, $ssl, true );

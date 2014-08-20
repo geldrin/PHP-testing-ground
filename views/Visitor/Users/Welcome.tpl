@@ -1,6 +1,6 @@
 {include file="Visitor/_header.tpl"}
 <div id="contentsbody">
-<h1>{#users__welcomepage_welcome#} {$member|nickformat|escape:html}!</h1>
+<h1>{#users__welcomepage_welcome#} {$member|@nickformat|escape:html}!</h1>
 
 <p>{#users__welcomepage_intro#}</p>
 

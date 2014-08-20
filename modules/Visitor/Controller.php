@@ -74,7 +74,7 @@ class Controller extends \Springboard\Controller\Visitor {
       return $userModel->unsetRemembermeCookie( $this->bootstrap->ssl );
 
     $this->toSmarty['member'] = $userModel->row;
-    $this->logUserLogin('LOGIN');
+    $this->logUserLogin('AUTO-LOGIN');
 
   }
 
@@ -252,6 +252,10 @@ class Controller extends \Springboard\Controller\Visitor {
   }
   
   public function getHashForFlash( $string ) {
+    // azert nem hmac (mert amugy message authenticity-t nezunk) mert a flash
+    // a kliens oldalan generalja, igy mindenfele keppen meg tudja hamisitani
+    // a user ha nagyon akarja, _NAGYON_ fontos hogy itt kulon seed legyen
+    // pont emiatt
     return md5( $string . $this->bootstrap->config['flashhashseed'] );
   }
   
