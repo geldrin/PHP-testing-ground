@@ -57,7 +57,7 @@ class Controller extends \Springboard\Controller\Visitor {
   
   public function handleAutologin() {
     
-    if ( !isset( $_COOKIE['rememberme'] ) )
+    if ( !isset( $_COOKIE['autologin'] ) )
       return;
 
     $user = $this->bootstrap->getSession('user');
@@ -66,12 +66,12 @@ class Controller extends \Springboard\Controller\Visitor {
 
     $userModel   = $this->bootstrap->getModel('users');
     $ipaddresses = $this->getIPAddress(true);
-    $valid       = $userModel->loginFromRememberme(
+    $valid       = $userModel->loginFromCookie(
       $this->organization['id'], $ipaddresses
     );
 
     if ( !$valid )
-      return $userModel->unsetRemembermeCookie( $this->bootstrap->ssl );
+      return $userModel->unsetAutoLoginCookie( $this->bootstrap->ssl );
 
     $this->toSmarty['member'] = $userModel->row;
     $this->logUserLogin('AUTO-LOGIN');

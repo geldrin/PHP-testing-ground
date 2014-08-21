@@ -498,6 +498,7 @@ a.submitbutton:hover, .form a.submitbutton:hover {
   font-size: 12px;
   color:#666;
   font-family: Verdana;
+  z-index: 99999;
 }
 #browserAlert span {
   text-decoration: underline;
@@ -659,10 +660,22 @@ a.submitbutton:hover, .form a.submitbutton:hover {
 }
 #headerloginactions {
   color: #999;
-  margin-top: 10px;
+  margin-top: 15px;
 }
 #headerloginform {
-  margin-top: 10px;
+  margin-top: 0px;
+}
+#headerloginform form {
+  float: right;
+}
+#login_rememberme_wrap {
+  margin-top: 3px;
+  color: #808080;
+  float: left;
+}
+#login_rememberme {
+  vertical-align: top;
+  margin-right: 5px;
 }
 #headerlogin .inputtext {
   width: 90px;

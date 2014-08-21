@@ -69,8 +69,8 @@ class Login extends \Visitor\Form {
     $this->controller->logUserLogin('LOGIN');
     $forward = $this->application->getParameter('forward');
 
-    if ( $values['rememberme'] )
-      $userModel->setRemembermeCookie( $this->bootstrap->ssl );
+    if ( $values['autologin'] )
+      $userModel->setAutoLoginCookie( $this->bootstrap->ssl );
 
     if ( strpos( $forward, 'users/login' ) !== false ) {
       $forward = '';

@@ -56,11 +56,10 @@ $config = Array(
     )
   ),
   
-  'rememberme' => Array(
-    'displayname' => $l('users', 'rememberme'),
+  'autologin' => Array(
+    'displayname' => $l('users', 'autologin'),
     'type'        => 'inputCheckbox',
-    'validation'  => Array(),
-    'value'       => isset( $_COOKIE['rememberme'] ),
+    'value'       => isset( $_COOKIE['autologin'] ),
   ),
   
   'diagnostics' => Array(

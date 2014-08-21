@@ -835,16 +835,16 @@ class Users extends \Springboard\Model {
     ");
   }
 
-  protected function validateRemembermeCookie() {
+  protected function validateAutoLoginCookie() {
 
     // a msghash 64char, a hash 32char, a ketto separator char (|), plusz az id
     if (
-         !isset( $_COOKIE['rememberme'] ) or
-         !preg_match('/^[a-zA-Z0-9|]{98,}$/', $_COOKIE['rememberme'] )
+         !isset( $_COOKIE['autologin'] ) or
+         !preg_match('/^[a-zA-Z0-9|]{98,}$/', $_COOKIE['autologin'] )
        )
       return array();
 
-    $values = explode('|', $_COOKIE['rememberme'], 4 );
+    $values = explode('|', $_COOKIE['autologin'], 4 );
     if ( count( $values ) != 3 )
       return array();
 
@@ -852,8 +852,8 @@ class Users extends \Springboard\Model {
     // ha nem ellenoriznenk akkor aranylag egyszeruen lehetne DOS-olni minket
     // csupan azzal hogy mindig lekerjuk az id-nek megfelelo usert az adatbazisbol
     $msghash  = $values[0];
-    $pos      = strpos( $_COOKIE['rememberme'], '|' );
-    $msg      = substr( $_COOKIE['rememberme'], $pos + 1 );
+    $pos      = strpos( $_COOKIE['autologin'], '|' );
+    $msg      = substr( $_COOKIE['autologin'], $pos + 1 );
     $msghash2 = hash_hmac( 'sha256', $msg, $this->bootstrap->config['hashseed'] );
     if ( $msghash != $msghash2 )
       return array();
@@ -869,16 +869,16 @@ class Users extends \Springboard\Model {
 
     // a hash valtozzon ha a user passwordot valt, elfelejtette a passwordjet,
     // vagy kitiltjak
-    if ( md5( $row['password'] . $row['validationcode'] . $row['disabled'] ) != $values[1] )
+    if ( md5( $row['password'] . $row['validationcode'] . $row['disabled'] ) != $values[2] )
       return array();
 
     return $row;
 
   }
 
-  public function loginFromRememberme( $organizationid, $ipaddresses ) {
+  public function loginFromCookie( $organizationid, $ipaddresses ) {
     
-    $row = $this->validateRemembermeCookie();
+    $row = $this->validateAutoLoginCookie();
     if ( !$row )
       return false;
 
@@ -899,7 +899,7 @@ class Users extends \Springboard\Model {
     $this->updateSessionInformation();
 
     $this->updateLastlogin(
-      "(rememberme auto-login)\n" .
+      "(cookie auto-login)\n" .
       \Springboard\Debug::getRequestInformation( 0, false ),
       $ipaddresses
     );
@@ -908,7 +908,7 @@ class Users extends \Springboard\Model {
 
   }
 
-  public function setRemembermeCookie( $ssl = false ) {
+  public function setAutoLoginCookie( $ssl = false ) {
 
     $this->ensureObjectLoaded();
     $crypt = $this->bootstrap->getEncryption();
@@ -921,13 +921,13 @@ class Users extends \Springboard\Model {
     $value   = $msghash . '|' . $value;
 
     // httponly cookie
-    setcookie('rememberme', $value, strtotime('+1 year'), '/', null, $ssl, true );
+    setcookie('autologin', $value, strtotime('+1 year'), '/', null, $ssl, true );
 
   }
 
-  public function unsetRemembermeCookie( $ssl = false ) {
+  public function unsetAutoLoginCookie( $ssl = false ) {
     // expiry in the past
-    setcookie('rememberme', '', 1, '/', null, $ssl, true );
+    setcookie('autologin', '', 1, '/', null, $ssl, true );
   }
 
 }

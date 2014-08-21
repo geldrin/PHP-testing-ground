@@ -226,13 +226,14 @@ class Controller extends \Visitor\Controller {
     
     $l    = $this->bootstrap->getLocalization();
     $user = $this->bootstrap->getSession('user');
-   
+
     if ( $user['id'] ) {
       $userModel = $this->bootstrap->getModel('users');
       $userModel->select( $user['id'] );
       $userModel->row['sessionlastupdated'] = '';
       $userModel->row['sessionid']          = '';
       $userModel->updateRow( $userModel->row );
+      $userModel->unsetAutoLoginCookie( $this->bootstrap->ssl );
     }
 
     $user->clear();
