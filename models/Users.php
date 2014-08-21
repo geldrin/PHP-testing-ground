@@ -837,10 +837,10 @@ class Users extends \Springboard\Model {
 
   protected function validateRemembermeCookie() {
 
-    // a msghash 64char, a hash 32char, plusz az id
+    // a msghash 64char, a hash 32char, a ketto separator char (|), plusz az id
     if (
          !isset( $_COOKIE['rememberme'] ) or
-         !preg_match('/^[a-zA-Z0-9|]{96,}$/', $_COOKIE['rememberme'] )
+         !preg_match('/^[a-zA-Z0-9|]{98,}$/', $_COOKIE['rememberme'] )
        )
       return array();
 
