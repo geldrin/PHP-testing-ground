@@ -272,6 +272,7 @@ class Controller extends \Visitor\Controller {
         )
       ,
     );
+    $this->toSmarty['metadescription'] = true;
 
     $quality        = $this->application->getParameter('quality');
     $mobileversion  = array_shift( $versions['master']['mobile'] );
