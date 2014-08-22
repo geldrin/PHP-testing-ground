@@ -22,6 +22,9 @@
   #headerlogin {
     margin-top: 10px;
   }
+  #headerloginactions {
+    margin-top: 7px;
+  }
   #languageselector {
     display: none;
   }
