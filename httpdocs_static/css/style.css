@@ -2457,8 +2457,13 @@ a#currentusername span {
   padding: 0px 5px 0px 10px;
   display: inline;
 }
-#chat #text {
+#chat #textcontainer {
+  display: inline-block;
   width: 50%;
+  margin-right: 5px;
+}
+#chat #text {
+  width: 100%;
 }
 #spinnercontainer {
   width: 16px;
@@ -2474,6 +2479,11 @@ a#currentusername span {
   width: 442px;
   height: 102px;
   top: 50%;
+}
+#moderationalertcontainer {
+  position: absolute;
+  background-color: #FDFDBD;
+  padding: 5px 10px 5px 5px;
 }
 
 /* feeds */

@@ -44,10 +44,21 @@ class Createchat extends \Visitor\HelpForm {
   public function onComplete() {
     
     $values = $this->form->getElementValues( 0 );
-    
-    if ( $this->feedModel->row['moderationtype'] == 'premoderation' )
+    $ret    = array();
+
+    if ( $this->feedModel->row['moderationtype'] == 'premoderation' ) {
       $values['moderated'] = -1;
-    else
+
+      if ( !$this->controller->acl ) {
+        $this->controller->acl = $this->bootstrap->getAcl();
+        $this->controller->acl->usersessionkey = $this->controller->usersessionkey;
+      }
+
+      // ha nem admin akkor mutatjuk az alertet
+      if ( !$this->controller->acl->hasPermission('liveadmin|clientadmin') )
+        $ret['moderationalert'] = true;
+
+    } else
       $values['moderated'] = 0;
     
     if ( $this->user['id'] )
@@ -93,9 +104,9 @@ class Createchat extends \Visitor\HelpForm {
     
     $chatModel = $this->bootstrap->getModel('livefeed_chat');
     $chatModel->insert( $values );
-    
+
     $this->controller->expireChatCache( $values['livefeedid'] );
-    return $this->controller->getchatAction( $values['livefeedid'] );
+    return $this->controller->getchatAction( $values['livefeedid'], $ret );
     
   }
   

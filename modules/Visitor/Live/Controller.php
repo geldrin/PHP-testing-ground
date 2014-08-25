@@ -365,7 +365,7 @@ class Controller extends \Visitor\Controller {
     
   }
   
-  public function getchatAction( $livefeedid = null ) {
+  public function getchatAction( $livefeedid = null, $ret = array() ) {
     
     if ( !$livefeedid )
       $livefeedid = $this->application->getNumericParameter('id');
@@ -417,13 +417,11 @@ class Controller extends \Visitor\Controller {
       
     }
     
-    $this->jsonOutput( array(
-        'status'       => 'success',
-        'lastmodified' => $data['lastmodified'],
-        'html'         => $data['html'],
-        'polltime'     => $this->bootstrap->config['chatpolltimems'],
-      )
-    );
+    $ret['status']       = 'success';
+    $ret['lastmodified'] = $data['lastmodified'];
+    $ret['html']         = $data['html'];
+    $ret['polltime']     = $this->bootstrap->config['chatpolltimems'];
+    $this->jsonOutput( $ret );
     
   }
   
