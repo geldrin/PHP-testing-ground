@@ -1249,20 +1249,24 @@ livechat.prototype.onPoll = function( data ) {
     var msg = l[data.error] || data.error;
     alert( msg );
   }
-  
+
+  if ( data.moderationalert ) {
+    $j('#moderationalertcontainer').show().delay(5000).fadeOut(300);
+  }
+
   if ( data.status != 'success' || this.container.attr('data-lastmodified') == data.lastmodified )
     return;
-  
+
   this.polltime = data.polltime;
   this.container.attr('data-lastmodified', data.lastmodified );
   this.container.html( data.html );
-  
+
   if ( this.topposition !== null ) {
     this.container.scrollTop( this.topposition );
     this.topposition = null;
   } else
     this.container.scrollTop( this.container.get(0).scrollHeight );
-  
+
   if ( this.container.find('#chatlist').length == 0 )
     this.container.hide();
   else
