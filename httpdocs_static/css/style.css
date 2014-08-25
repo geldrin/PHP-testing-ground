@@ -2506,6 +2506,7 @@ a#currentusername span {
   width: 442px;
   height: 102px;
   top: 50%;
+  background-color: #fff;
 }
 #moderationalertcontainer {
   position: absolute;
