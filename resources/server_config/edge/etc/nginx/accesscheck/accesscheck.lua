@@ -38,9 +38,7 @@ end
 local result = redis:get( cachekey )
 if not result then
   -- nincs cacheben, meghivjuk es eltesszuk
-  local options  = {
-    'args' = {'sessionid' = cachekey},
-  }
+  local options  = {['args'] = {['sessionid'] = cachekey}}
   local response = ngx.location.capture( ngx.var.accesscheckuri, options )
   if response.status ~= ngx.HTTP_OK then
     ngx.log(ngx.ERR, 'non-200 response from accesscheck! status: ', response.status, ' body: ', response.body )
