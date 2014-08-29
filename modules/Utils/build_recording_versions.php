@@ -148,7 +148,7 @@ while (!$recordings->EOF) {
     $versions[] = array('filename' => $mobile_lq, 'profile' => $prof_moblq['id'], 'qtag' => $prof_moblq['shortname'], 'status' => 'mobilestatus', 'resolution' => 'mobilevideoreslq', 'encpty' => $prof_moblq['encodingorder']);
   if ($is_mobile_hq_exists)
     $versions[] = array('filename' => $mobile_hq, 'profile' => $prof_mobhq['id'], 'qtag' => $prof_mobhq['shortname'], 'status' => 'mobilestatus', 'resolution' => 'mobilevideoreshq', 'encpty' => $prof_mobhq['encodingorder']);
-  
+		
   // Iterate trough versions
   $versions_inserted = 0;
   $err = false;
@@ -210,7 +210,7 @@ while (!$recordings->EOF) {
 			$err = true;
       $msg .= "[WARNING] ". trim($ex->getMessage()) . PHP_EOL ."Skipping.\n";
       $warnings++;
-      continue;
+      continue 2;
       // break 2;
     }
   }
@@ -225,8 +225,9 @@ while (!$recordings->EOF) {
 			$tmp = query($qry);
 			if ($tmp['result'] === false) {
 				$msg .= "[ERROR] Database update (recordings.encodinggroupid) failed.\n". $tmp['message'] ."\n";
+				fwrite($fh, $msg);
 				$warnings++;
-				break;
+				// break;
 			}
 			unset($tmp);
 			$msg .= "result: ok\n";
