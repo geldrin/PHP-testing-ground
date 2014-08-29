@@ -10,7 +10,7 @@
 {/if}
 {include file="Visitor/_header.tpl" title=$recording.title pagebgclass=$pagebgclass}
 <div class="title recording">
-  {if !$recording.ispublished}
+  {if $recording.approvalstatus != 'approved'}
     <center><a href="{$language}/recordings/modifysharing/{$recording.id}">{#recordings__notpublished_warning#}</a></center>
     <br/>
   {/if}
@@ -41,9 +41,13 @@
         <a href="{if $recording.mediatype == 'audio'}{$audiofileurl}{else}{$mobilertspurl}{/if}"><img src="{$recording|@indexphoto}" width="280" height="165"/></a>
       </div>
     {/if}
-    {if $recording.mobilevideoreshq}
+    {if count( $mobileversions ) > 1}
       <div id="qualitychooser">
-        <a href="{$language}/recordings/details/{$recording.id},{$recording.title|filenameize}?quality={if $mobilehq}lq{else}hq{/if}">{if $mobilehq}{#recordings__lowquality#}{else}{#recordings__highquality#}{/if}</a>
+        <ul>
+          {foreach from=$mobileversions item=version}
+            <li><a href="{$language}/recordings/details/{$recording.id},{$recording.title|filenameize}?quality={$version|escape:url}">{$version|escape:html}</a></li>
+          {/foreach}
+        </ul>
       </div>
     {/if}
     <br/>
@@ -84,17 +88,7 @@
   </ul>
 </div>
 {/if}
-{if !empty( $recordingdownloads )}
-  <div id="recordingdownloads">
-    <a href="#" class="submitbutton">{#recordings__recordingdownloads#}</a>
-    <ul>
-      {foreach from=$recordingdownloads key=key item=url}
-        {assign var=localekey value="recordingdownloads_$key"}
-        <li><a href="{$url}">{$l->get('recordings', $localekey, $language)}</a></li>
-      {/foreach}
-    </ul>
-  </div>
-{/if}
+
 <div id="metadata">
   {assign var=numberofratings value=$recording.numberofratings|numberformat}
   <div class="ratewidget right" data-canrate="{$canrate}" title="{#recordings__ratewidgetheading#|sprintf:$numberofratings}">
@@ -173,7 +167,7 @@
   
   <div id="embed">
     {capture assign=embed}
-      <iframe width="480" height="{$height}" src="{$BASE_URI}{$language}/recordings/embed/{$recording.id}" frameborder="0" allowfullscreen="allowfullscreen"></iframe>
+      <iframe width="480" height="{$height}" src="{$BASE_URI}recordings/embed/{$recording.id}" frameborder="0" allowfullscreen="allowfullscreen"></iframe>
     {/capture}
     <label for="embedcode">{#recordings__embedcode#}:</label>
     <textarea id="embedcode" data-fullscaleheight="{$flashheight}" data-normalheight="{$height}">{$embed|trim|escape:html}</textarea>
@@ -232,6 +226,19 @@
   <script type="text/javascript" src="//s7.addthis.com/js/250/addthis_widget.js#pubid=xa-5045da4260dfe0a6"></script>
   {/if}
 </div>
+
+{if !empty( $recordingdownloads )}
+  <div id="recordingdownloads">
+    <a href="#" class="submitbutton">{#recordings__recordingdownloads#}</a>
+    <ul>
+      {foreach from=$recordingdownloads key=key item=item}
+        {assign var=localekey value="recordingdownloads_$key"}
+        {assign var=itemlocale value=$l->get('recordings', $localekey, $language)}
+        <li><a href="{$item.url}">{$itemlocale|sprintf:$item.qualitytag}</a></li>
+      {/foreach}
+    </ul>
+  </div>
+{/if}
 
 <div id="comments">
   <div class="loading"></div>

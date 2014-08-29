@@ -1,5 +1,24 @@
 <?php
 
+if ( !isset( $user ) )
+  $user = $this->bootstrap->getSession('user');
+
+if ( $user['isadmin'] or $user['isclientadmin'] or $user['iseditor'] )
+  $approvalstatuses = $l->getLov('recordings_approvalstatus_full');
+elseif (
+         $user['ismoderateduploader'] and
+         $this->recordingsModel->row['approvalstatus'] != 'approved'
+       )
+  $approvalstatuses = $l->getLov('recordings_approvalstatus_min');
+// ha mar engedve van akkor mindent mutatunk
+elseif (
+         $user['ismoderateduploader'] and
+         $this->recordingsModel->row['approvalstatus'] == 'approved'
+       )
+  $approvalstatuses = $l->getLov('recordings_approvalstatus_full');
+else
+  $approvalstatuses = $l->getLov('recordings_approvalstatus_default');
+
 $config = array(
 
   'action' => array(
@@ -112,17 +131,15 @@ $config = array_merge( $config, array(
     'values'      => $l->getLov('noyes'),
   ),
   
-  'ispublished' => array(
-    'displayname' => $l('recordings', 'ispublished'),
-    'postfix'     => '<div class="smallinfo">' . $l('recordings', 'ispublished_postfix') . '</div>',
+  'approvalstatus' => array(
+    'displayname' => $l('recordings', 'approvalstatus'),
+    'postfix'     => '<div class="smallinfo">' . $l('recordings', 'approvalstatus_postfix') . '</div>',
     'type'        => 'inputRadio',
-    'value'       => 0,
-    'values'      => array(
-      $l('recordings', 'ispublished_no'),
-      $l('recordings', 'ispublished_yes'),
-    ),
+    'value'       => 'draft',
+    'values'      => $approvalstatuses,
+    'itemlayout'  => $this->radioitemlayout,
   ),
-  
+
 ));
 
 if ( $this->controller->organization['issecurestreamingenabled'] )
@@ -155,9 +172,6 @@ $config['isseekbardisabled'] = array(
     ),
   ),
 );
-
-if ( !isset( $user ) )
-  $user = $this->bootstrap->getSession('user');
 
 if ( $user['isadmin'] or $user['isclientadmin'] or $user['iseditor'] ) {
 

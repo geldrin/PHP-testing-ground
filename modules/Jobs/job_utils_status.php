@@ -855,17 +855,34 @@ global $app, $debug, $jconf, $myjobid;
 	$recordingVersionObj = $app->bootstrap->getModel('livefeed_streams');
 	$recordingVersionObj->select($streamid);
     $recordingVersionObj->updateRow($values);
-
-	// Update index photos
-/*	if ( ( $status == $jconf['dbstatus_copystorage_ok'] ) and ( $type == "recording" ) ) {
-		$recordingObj = $app->bootstrap->getModel('recordings');
-		$recordingObj->select($recordingid);
-		$recordingObj->updateChannelIndexPhotos();
-	}
-*/
+	$recordingVersionObj->updateFeedThumbnail();
 
 	// Log index photo change
 	$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] livefeed_streams.id = " . $streamid . " index photo updated to " . $indexphotofilename, $sendmail = false);
+
+	return true;
+}
+
+function updateLiveFeedSMILStatus($livefeedid, $status, $type = "video") {
+global $app, $debug, $jconf, $myjobid;
+
+	if ( ( $type != "video" ) and ( $type != "content" ) ) return false;
+
+	if ( empty($status) ) return false;
+
+	$idx = "";
+	if ( $type == "content" ) $idx = "content";
+
+	$values = array(
+		$idx . 'smilstatus' => $status
+	);
+
+	$recordingVersionObj = $app->bootstrap->getModel('livefeeds');
+	$recordingVersionObj->select($livefeedid);
+    $recordingVersionObj->updateRow($values);
+
+	// Log status change
+	$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Livefeed id = " . $livefeedid . " " . $type . " status has been changed to '" . $status . "'.", $sendmail = false);
 
 	return true;
 }

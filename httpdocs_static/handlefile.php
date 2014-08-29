@@ -103,7 +103,7 @@ if (
     
     $_GET['filename'] =
       filenameize( mb_substr( $results[5], 0, 45 ) ) .
-      '-' . $results[4] . '-videotorium.' . $results[6]
+      '-' . $results[4] . '-videosquare.' . $results[6]
     ;
     
     if ( DEBUG )

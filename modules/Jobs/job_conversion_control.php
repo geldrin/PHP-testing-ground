@@ -166,6 +166,10 @@ if ( $recordings !== false ) {
 $err = generateRecordingSMILs("recording");
 $err = generateRecordingSMILs("content");
 
+// SMIL: generate SMILs for live
+$err = generateLiveSMILs("video");
+$err = generateLiveSMILs("content");
+
 // Close DB connection if open
 if ( is_resource($db->_connectionID) ) $db->close();
 
@@ -179,8 +183,7 @@ global $jconf, $debug, $db, $app;
 	$db = db_maintain();
 
 	$node = $app->config['node_sourceip'];
-// !!!
-	$node = "stream.videosquare.eu";
+//	$node = "stream.videosquare.eu";
 
 	$query = "
 		SELECT
@@ -200,13 +203,14 @@ global $jconf, $debug, $db, $app;
 			recordings AS r,
 			organizations AS o
 		WHERE
-			( ( r.mastersourceip = '" . $node . "' AND ( r.status = '" . $jconf['dbstatus_uploaded'] . "' OR r.status = '" . $jconf['dbstatus_reconvert'] . "' ) ) OR
-			( r.contentmastersourceip = '" . $node . "' AND ( r.contentstatus = '" . $jconf['dbstatus_uploaded'] . "' OR r.contentstatus = '" . $jconf['dbstatus_reconvert'] . "' ) ) ) AND
-			r.organizationid = o.id
+			r.organizationid = o.id AND (
+			( ( r.status = '" . $jconf['dbstatus_uploaded'] . "' OR r.status = '" . $jconf['dbstatus_reconvert'] . "' ) AND
+			( r.masterstatus = '" . $jconf['dbstatus_uploaded'] . "' OR r.masterstatus = '" . $jconf['dbstatus_copystorage_ok'] . "' ) ) OR
+			( ( r.contentstatus = '" . $jconf['dbstatus_uploaded'] . "' OR r.contentstatus = '" . $jconf['dbstatus_reconvert'] . "' ) AND
+			( r.contentmasterstatus = '" . $jconf['dbstatus_uploaded'] . "' OR r.contentmasterstatus = '" . $jconf['dbstatus_copystorage_ok'] . "' ) )
+			)
 		ORDER BY
 			r.id";
-// AND r.id = 89
-//echo $query . "\n";
 
 	try {
 		$rs = $db->Execute($query);
@@ -227,11 +231,9 @@ global $jconf, $debug, $db, $app;
 	$db = db_maintain();
 
 	$node = $app->config['node_sourceip'];
-// !!!
-	$node = "stream.videosquare.eu";
+//	$node = "stream.videosquare.eu";
 
 	// Get status = "converting" recordings with at least one "onstorage" recording version
-// !!! hogyan lesz onstorage a content???
 	$query = "
 		SELECT
 			r.id,
@@ -253,12 +255,10 @@ global $jconf, $debug, $db, $app;
 			rv.status = '" . $jconf['dbstatus_copystorage_ok'] . "' AND
 			rv.encodingprofileid = ep.id AND
 			( ep.mediatype = 'video' OR ( r.mastermediatype = 'audio' AND ep.mediatype = 'audio' ) ) AND
-			( ( r.mastersourceip = '" . $node . "' AND r.status = '" . $jconf['dbstatus_conv'] . "' AND ep.type = 'recording' ) OR
-			  ( r.contentmastersourceip = '" . $node . "' AND r.contentstatus = '" . $jconf['dbstatus_conv'] . "' AND ep.type = 'content' ) )
+			( ( r.status = '" . $jconf['dbstatus_conv'] . "' AND ep.type = 'recording' ) OR
+			  ( r.contentstatus = '" . $jconf['dbstatus_conv'] . "' AND ep.type = 'content' ) )
 		GROUP BY
 			r.id";
-
-//echo $query . "\n";
 
 	try {
 		$rs = $db->Execute($query);
@@ -288,8 +288,6 @@ global $db, $debug, $jconf, $app;
 	if ( ( $recording['status'] == $jconf['dbstatus_uploaded'] ) or  ( $recording['status'] == $jconf['dbstatus_reconvert'] ) ) {
 
 		$profileset = getEncodingProfileSet("recording", $recording['mastervideores'], $encodinggroupid);
-//var_dump($profileset);
-//exit;
 
 		if ( $profileset !== false ) {
 
@@ -318,16 +316,14 @@ global $db, $debug, $jconf, $app;
 			// Status: uploaded -> converting
 			updateRecordingStatus($recording['id'], $jconf['dbstatus_conv'], "recording");
 		} else {
-			$debug->log($jconf['log_dir'], $jconf['jobid_conv_control'] . ".log", "[ERROR] No encoding profile can be selected for recording.\n" . print_r($recording, true), $sendmail = true);
+			$debug->log($jconf['log_dir'], $jconf['jobid_conv_control'] . ".log", "[ERROR] No encoding profile can be selected for recordingid = " . $recording['id'] . ". Recording info:\n" . print_r($recording, true), $sendmail = true);
 		}
 	}
 
+	// Content
 	if ( ( $recording['contentstatus'] == $jconf['dbstatus_uploaded'] ) or ( $recording['contentstatus'] == $jconf['dbstatus_reconvert'] ) ) {
 
 		$profileset = getEncodingProfileSet("content", $recording['contentmastervideores'], $encodinggroupid);
-//echo "content profileset:\n";
-//var_dump($profileset);
-//exit;
 
 		if ( $profileset !== false ) {
 
@@ -352,14 +348,11 @@ global $db, $debug, $jconf, $app;
 			// Status: uploaded -> converting
 			updateRecordingStatus($recording['id'], $jconf['dbstatus_conv'], "content");
 		} else {
-			$debug->log($jconf['log_dir'], $jconf['jobid_conv_control'] . ".log", "[ERROR] No encoding profile for content.\n" . print_r($recording, true), $sendmail = true);
+			$debug->log($jconf['log_dir'], $jconf['jobid_conv_control'] . ".log", "[ERROR] No encoding profile for content recordingid = " . $recording['id'] . ". Content info:\n" . print_r($recording, true), $sendmail = true);
 		}
 
 		// Mobile versions into recordings_versions. Use content resolution as background.
 		$profileset = getEncodingProfileSet("pip", $recording['contentmastervideores'], $encodinggroupid);
-//echo "PiP profileset:\n";
-//var_dump($profileset);
-//exit;
 
 		if ( $profileset !== false ) {
 
@@ -382,7 +375,7 @@ global $db, $debug, $jconf, $app;
 			}
 
 		} else {
-			$debug->log($jconf['log_dir'], $jconf['jobid_conv_control'] . ".log", "[ERROR] No PiP encoding profile for recording.\n" . print_r($recording, true), $sendmail = true);
+			$debug->log($jconf['log_dir'], $jconf['jobid_conv_control'] . ".log", "[ERROR] No encoding profile for PiP version recordingid = " . $recording['id'] . ". Recording info:\n" . print_r($recording, true), $sendmail = true);
 		}
 
 	}
@@ -519,15 +512,16 @@ global $db, $app, $debug, $jconf;
 		SELECT
 			r.id,
 			r." . $idx . "smilstatus,
-			r." . $idx . "mastersourceip
+			r." . $idx . "mastersourceip,
+			r." . $idx . "mastermediatype
 		FROM
 			recordings AS r
 		WHERE
 			r." . $idx . "status = '" . $jconf['dbstatus_copystorage_ok'] . "' AND
-			r." . $idx . "mastermediatype <> 'audio' AND
 			( r." . $idx . "smilstatus IS NULL OR r." . $idx . "smilstatus = '" . $jconf['dbstatus_regenerate'] . "' )
 		ORDER BY
 			r.id";
+// r." . $idx . "mastermediatype <> 'audio' AND
 
 	try {
 		$recordings = $db->Execute($query);
@@ -541,6 +535,7 @@ global $db, $app, $debug, $jconf;
 
 	/*
 	SMIL example:
+		<?xml version="1.0" encoding="UTF-8"?>
 		<smil>
 			<head>
 			</head>
@@ -553,10 +548,51 @@ global $db, $app, $debug, $jconf;
 				</switch>
 			</body>
 		</smil>
+
+	SMIL live example with audio stream (audio tag is for Smooth Streaming only?):
+		<?xml version="1.0" encoding="UTF-8"?>
+		<smil title="">
+			<body>
+				<switch>
+					<video height="240" src="bigbuckbunny_450.mp4" systemLanguage="eng" width="424">
+						<param name="videoBitrate" value="450000" valuetype="data"></param>
+						<param name="audioBitrate" value="44100" valuetype="data"></param>
+					</video>
+					<video height="360" src="bigbuckbunny_750.mp4" systemLanguage="eng" width="640">
+						<param name="videoBitrate" value="750000" valuetype="data"></param>
+						<param name="audioBitrate" value="44100" valuetype="data"></param>
+					</video>
+					<video height="720" src="bigbuckbunny_1100.mp4" systemLanguage="eng" width="1272">
+						<param name="videoBitrate" value="1100000" valuetype="data"></param>
+						<param name="audioBitrate" value="44100" valuetype="data"></param>
+					</video>
+					<video height="900" src="bigbuckbunny_1500.mp4" systemLanguage="eng" width="1590">
+						<param name="videoBitrate" value="1500000" valuetype="data"></param>
+						<param name="audioBitrate" value="44100" valuetype="data"></param>
+					</video>
+					<audio>
+						<param name="audioBitrate" value="44100" valuetype="data"></param>
+					</audio>
+				</switch>
+			</body>
+		</smil>
+
+	HDS: audio only SMIL
+		<smil>
+			<head>
+			</head>
+			<body>
+				<switch>
+					<video src="mp3:music.mp3" system-bitrate="128000"/>
+					<video src="mp3:music_256.mp3" system-bitrate="256000"/>
+				</switch>
+			</body>
+		</smil>
+
 	*/
 
 	// SMIL header and footer tags
-	$smil_header = "<smil>\n\t<head>\n\t</head>\n\t<body>\n\t\t<switch>\n";
+	$smil_header = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<smil>\n\t<head>\n\t</head>\n\t<body>\n\t\t<switch>\n";
 	$smil_footer = "\t\t</switch>\n\t</body>\n</smil>\n";
 
 	while ( !$recordings->EOF ) {
@@ -565,8 +601,16 @@ global $db, $app, $debug, $jconf;
 
 //var_dump($recording);
 
+		// Is recording audio only?
+		$media_type = "mp4";
+		$isaudio = false;
+		if ( $recording[$idx . 'mastermediatype'] == "audio" ) {
+			$media_type = "mp3";
+			$isaudio = true;
+		}
+
 		// Get all recording versions for this recording (or content)
-		$recording_versions = getRecordingVersionsForRecording($recording['id'], $type);
+		$recording_versions = getRecordingVersionsForRecording($recording['id'], $type, $isaudio);
 		if ( $recording_versions === false ) {
 			$debug->log($jconf['log_dir'], $jconf['jobid_conv_control'] . ".log", "[WARNING] No recording versions found for " . $type . " id = " . $recording['id'], $sendmail = false);
 			// recording.(content)smilstatus = null
@@ -575,18 +619,18 @@ global $db, $app, $debug, $jconf;
 			continue;
 		}
 
+		// SMIL: add header
 		$smil = $smil_header;
+
 		while ( !$recording_versions->EOF ) {
 
 			$recording_version = $recording_versions->fields;
 
-			$smil .= sprintf("\t\t<video src=\"mp4:%s\" system-bitrate=\"%d\"/>\n", $recording_version['filename'], $recording_version['bandwidth']);
+			$smil .= sprintf("\t\t\t<video src=\"%s:%s\" system-bitrate=\"%d\"/>\n", $media_type, $recording_version['filename'], $recording_version['bandwidth']);
 
 			$recording_versions->MoveNext();
 		}
 		$smil .= $smil_footer;
-
-//echo $smil . "\n";
 
 		$smil_filename_suffix = "";
 		if ( $idx == "content" ) $smil_filename_suffix = "_content";
@@ -602,9 +646,7 @@ global $db, $app, $debug, $jconf;
 
 		// SSH: copy SMIL file to server
 		$smil_remote_filename = $app->config['recordingpath'] . ( $recording['id'] % 1000 ) . "/" . $recording['id'] . "/" . $recording['id'] . $smil_filename_suffix . ".smil";
-//echo $smil_remote_filename . "\n";
 
-//function ssh_filecopy2($server, $file_src, $file_dst, $isdownload = true) {
 		$err = ssh_filecopy2($recording[$idx . 'mastersourceip'], $smil_filename, $smil_remote_filename, false);
 		if ( !$err['code'] ) {
 			$debug->log($jconf['log_dir'], $jconf['jobid_conv_control'] . ".log", "[ERROR] SMIL file update failed.\nMSG: " . $err['message'] . "\nCOMMAND: " . $err['command'] . "\nRESULT: " . $err['result'], $sendmail = true);
@@ -633,13 +675,138 @@ global $db, $app, $debug, $jconf;
 	return true;
 }
 
-function getRecordingVersionsForRecording($recordingid, $type = "recording") {
+function generateLiveSMILs($type = "video") {
+global $db, $app, $debug, $jconf;
+
+	if ( ( $type != "video" ) and ( $type != "content" ) ) return false;
+
+	$idx = "";
+	if ( $type == "content" ) $idx = "content";
+
+	// SMILs to update
+	$query = "
+		SELECT
+			lf.id,
+			lf." . $idx . "smilstatus,
+			lfs.id AS streamid,
+			lfs." . $idx . "keycode,
+			lfs.status
+		FROM
+			livefeeds as lf,
+			livefeed_streams as lfs
+		WHERE
+			( lf." . $idx . "smilstatus IS NULL OR lf." . $idx . "smilstatus = '" . $jconf['dbstatus_regenerate'] . "' ) AND
+			lf.id = lfs.livefeedid AND
+			( lfs.status IS NULL OR lfs.status = '" . $jconf['dbstatus_vcr_ready'] . "' )
+		ORDER BY
+			lf.id, lfs.id";
+
+//echo $query . "\n";
+
+	try {
+		$livefeeds = $db->getArray($query);
+	} catch (exception $err) {
+		$debug->log($jconf['log_dir'], $jconf['jobid_conv_control'] . ".log", "[ERROR] SQL query failed." . trim($query), $sendmail = true);
+		return false;
+	}
+
+	// No pending SMILs
+	if ( count($livefeeds) < 1 ) return false;
+
+//var_dump($livefeeds);
+
+	// SMIL header and footer tags
+	$smil_header = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<smil>\n\t<head>\n\t</head>\n\t<body>\n\t\t<switch>\n";
+	$smil_footer = "\t\t</switch>\n\t</body>\n</smil>\n";
+
+	$smil_filename_suffix = "";
+	if ( $idx == "content" ) $smil_filename_suffix = "_content";
+
+	$smil = "";
+
+	$i = 0;
+	while ( $i < count($livefeeds) ) {
+
+		// Live SMIL example
+		/* <smil>
+			<head>
+			</head>
+			<body>
+				<switch>
+					<video src="111111" system-bitrate="500000"/>
+					<video src="222222" system-bitrate="900000"/>
+				</switch>
+			</body>
+		</smil> */
+
+		// SMIL: start a new file, add header first
+		$smil = $smil_header;
+
+		$q = 0;
+		while ( $livefeeds[$i]['id'] == $livefeeds[$i + $q]['id'] ) {
+
+//echo "ID(i): " . $livefeeds[$i]['id'] . " / ID(q): " . $livefeeds[$i + $q]['id'] . "\n";
+
+			// !!! bandwidth calculation: absolutely fake! (no way to calc, if the bitrate is not added on website - no GUI)
+			$smil .= sprintf("\t\t\t<video src=\"%s\" system-bitrate=\"%d\"/>\n", $livefeeds[$i + $q][$idx . 'keycode'], ( $q + 1 ) * 400000);
+
+			$q++;
+
+			if ( !isset($livefeeds[$i + $q]['id']) ) break;
+
+		}
+
+		// SMIL: close with footer
+		$smil .= $smil_footer;
+
+//echo "SMIL ready: " . $smil . "\n";
+
+		// Write SMIL content to a temporary file
+		$smil_filename = "/tmp/" . $livefeeds[$i]['id'] . $smil_filename_suffix . ".smil";
+		$err = file_put_contents($smil_filename, $smil);
+		if ( $err === false ) {
+			$debug->log($jconf['log_dir'], $jconf['jobid_conv_control'] . ".log", "[ERROR] SMIL live file cannot be created at " . $smil_filename, $sendmail = true);
+		} else {
+			$debug->log($jconf['log_dir'], $jconf['jobid_conv_control'] . ".log", "[INFO] SMIL live file created at " . $smil_filename, $sendmail = false);
+		}
+
+		// SSH: copy SMIL file to server
+		$smil_remote_filename = $app->config['livestreampath'] . $livefeeds[$i]['id'] . $smil_filename_suffix . ".smil";
+
+		$err = ssh_filecopy2($app->config['fallbackstreamingserver'], $smil_filename, $smil_remote_filename, false);
+		if ( !$err['code'] ) {
+			$debug->log($jconf['log_dir'], $jconf['jobid_conv_control'] . ".log", "[ERROR] SMIL live file update failed.\nMSG: " . $err['message'] . "\nCOMMAND: " . $err['command'] . "\nRESULT: " . $err['result'], $sendmail = true);
+		} else {
+			$debug->log($jconf['log_dir'], $jconf['jobid_conv_control'] . ".log", "[INFO] SMIL live file updated.\nCOMMAND: " . $err['command'], $sendmail = false);
+		}
+
+		// SSH: chmod new remote files
+		$ssh_command = "ssh -i " . $jconf['ssh_key'] . " " . $jconf['ssh_user'] . "@" . $app->config['fallbackstreamingserver'] . " ";
+		$command = $ssh_command . "\"" . "chmod -f " . $jconf['file_access'] . " " . $smil_remote_filename . "\"";
+		exec($command, $output, $result);
+		$output_string = implode("\n", $output);
+		if ( $result != 0 ) {
+			$debug->log($jconf['log_dir'], $jconf['jobid_conv_control'] . ".log", "[WARN] Cannot chmod new remote files (SSH)\nCOMMAND: " . $command . "\nRESULT: " . $output_string, $sendmail = true);
+		} else {
+			$debug->log($jconf['log_dir'], $jconf['jobid_conv_control'] . ".log", "[INFO] Remote chmod OK. (SSH)\nCOMMAND: " . $command, $sendmail = false);
+		}
+
+		updateLiveFeedSMILStatus($livefeeds[$i]['id'], $jconf['dbstatus_copystorage_ok'], $type);
+
+		$i = $i + $q;
+	}
+
+	return true;
+}
+
+function getRecordingVersionsForRecording($recordingid, $type = "recording", $filteraudioonly = false) {
 global $db, $app, $jconf, $debug;
 
 	if ( ( $type != "recording" ) and ( $type != "content" ) ) return false;
 
 	$iscontent = 0;
 	$mediatype = "video";
+	if ( $filteraudioonly ) $mediatype = "audio";
 	if ( $type == "content" ) $iscontent = 1;
 
 	$query = "

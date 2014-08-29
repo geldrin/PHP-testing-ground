@@ -1,6 +1,6 @@
 {include file="Visitor/_header.tpl"}
 <div id="contentsbody">
-<h1>{#users__welcomepage_welcome#} {$member|nickformat|escape:html}!</h1>
+<h1>{#users__welcomepage_welcome#} {$member|@nickformat|escape:html}!</h1>
 
 <p>{#users__welcomepage_intro#}</p>
 
@@ -41,7 +41,7 @@
                     <h3><a href="{$language}/recordings/details/{$recording.id},{$recording.title|filenameize}">{$recording.title|escape:html}</a></h3>
                     {if $recording.subtitle|stringempty}<h4>{$recording.subtitle|escape:html}</h4>{/if}
                   </div>
-                  {if !$recording.ispublished and $recording.status == 'onstorage'}
+                  {if $recording|@userHasAccess and $recording.approvalstatus != 'approved' and $recording.status == 'onstorage'}
                     <span class="notpublished"><a href="{$language}/recordings/modifysharing/{$recording.id}?forward={$FULL_URI|escape:url}">{#recordings__notpublished_warning#}</a></span>
                   {/if}
                   <div class="recordinginfo">
@@ -82,7 +82,7 @@
             <h3><a href="{$language}/recordings/details/{$recording.id},{$recording.title|filenameize}">{$recording.title|escape:html}</a></h3>
             {if $recording.subtitle|stringempty}<h4>{$recording.subtitle|escape:html}</h4>{/if}
           </div>
-          {if !$recording.ispublished and $recording.status == 'onstorage'}
+          {if $recording|@userHasAccess and $recording.approvalstatus != 'approved' and $recording.status == 'onstorage'}
             <span class="notpublished"><a href="{$language}/recordings/modifysharing/{$recording.id}?forward={$FULL_URI|escape:url}">{#recordings__notpublished_warning#}</a></span>
           {/if}
           <div class="recordinginfo">
@@ -112,7 +112,7 @@
   <li><a href="{$language}/users/logout">{#users__welcomepage_logout#}</a></li>
 </ul>
 
-{if $member.isuploader}
+{if $member.isuploader or $member.ismoderateduploader}
   <h2>{#users__welcomepage_manage#}</h2>
   <p>{#users__welcomepage_manage_intro#}</p>
   <ul>

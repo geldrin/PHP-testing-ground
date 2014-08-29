@@ -48,12 +48,36 @@ class Controller extends \Springboard\Controller\Visitor {
       
     }
     
+    $this->handleAutologin();
     $this->debugLogUsers();
     $this->handleSingleLoginUsers();
     parent::init();
     
   }
   
+  public function handleAutologin() {
+    
+    if ( !isset( $_COOKIE['autologin'] ) )
+      return;
+
+    $user = $this->bootstrap->getSession('user');
+    if ( $user['id'] )
+      return;
+
+    $userModel   = $this->bootstrap->getModel('users');
+    $ipaddresses = $this->getIPAddress(true);
+    $valid       = $userModel->loginFromCookie(
+      $this->organization['id'], $ipaddresses
+    );
+
+    if ( !$valid )
+      return $userModel->unsetAutoLoginCookie( $this->bootstrap->ssl );
+
+    $this->toSmarty['member'] = $userModel->row;
+    $this->logUserLogin('AUTO-LOGIN');
+
+  }
+
   public function handleSingleLoginUsers() {
     
     $user = $this->bootstrap->getSession('user');
@@ -228,6 +252,10 @@ class Controller extends \Springboard\Controller\Visitor {
   }
   
   public function getHashForFlash( $string ) {
+    // azert nem hmac (mert amugy message authenticity-t nezunk) mert a flash
+    // a kliens oldalan generalja, igy mindenfele keppen meg tudja hamisitani
+    // a user ha nagyon akarja, _NAGYON_ fontos hogy itt kulon seed legyen
+    // pont emiatt
     return md5( $string . $this->bootstrap->config['flashhashseed'] );
   }
   
@@ -299,8 +327,7 @@ class Controller extends \Springboard\Controller\Visitor {
     
     $errors = array(
       'registrationrestricted',
-      'grouprestricted',
-      'departmentrestricted',
+      'departmentorgrouprestricted',
     );
     
     $user = $this->bootstrap->getSession('user');

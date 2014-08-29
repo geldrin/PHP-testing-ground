@@ -110,11 +110,15 @@ $config = array(
     'player' => '618x348',
   ),
   //----
-  'wowza' => array(
+  'hdsenabled' => true,
+  'wowza'      => array(
     
     'httpurl'           => 'http://%s/vsq/_definst_/',
-    'sechttpurl'        => 'http://%s/vsq/_definst_/',
-    
+    'sechttpurl'        => 'https://%s/vsq/_definst_/',
+
+    'smilurl'           => 'http://%s/vsq/_definst_/',
+    'secsmilurl'        => 'https://%s/vsq/_definst_/',
+
     'rtmpurl'           => 'rtmp://%s:1935/vsq/',
     'secrtmpsurl'       => 'rtmps://%s/vsqsec/',
     'secrtmpurl'        => 'rtmpe://%s:1935/vsqsec/',
@@ -134,7 +138,7 @@ $config = array(
     'secliveurl'        => 'rtmpte://%s:80/vsqlivesec/',
     
     'livehttpurl'       => 'http://%s/vsqlive/',
-    'seclivehttpurl'    => 'http://%s/vsqlivesec/',
+    'seclivehttpurl'    => 'https://%s/vsqlivesec/',
     
     'livertspurl'       => 'rtsp://%s/vsqlive/',
     'seclivertspurl'    => 'rtsp://%s/vsqlivesec/',
@@ -232,14 +236,21 @@ $config = array(
       ),
     ),
   ),
+
   //-------
   'recaptchaenabled' => true,
   'recaptchapub'     => '6LfNBu8SAAAAAKcud9Rcdjlt9aDHhRpxb5KeTd21',
   'recaptchapriv'    => '6LfNBu8SAAAAAF7-5iJibdVzFrC1_K-YgILLVu4I',
+
   //-------
   // a facebook userid amivel adminisztralhato a site
   // https://developers.facebook.com/docs/insights/
   'facebook_admins' => '',
+
+  //-------
+  // a reflector altal hasznalt accesscheck visszateresi erteket cacheljuk eddig
+  'accesscheckcacheseconds' => 300,
+
   //-------
   // Job configuration template for frontend and converter nodes
   'jobs' => array(

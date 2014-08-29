@@ -11,7 +11,7 @@ include_once( BASE_PATH . 'libraries/Springboard/Application/Cli.php');
 include_once('job_utils_base.php');
 include_once('job_utils_log.php');
 include_once('job_utils_status.php');
-include_once('job_utils_media.php');
+include_once('job_utils_media2.php');
 
 set_time_limit(0);
 
@@ -23,10 +23,6 @@ $app->loadConfig('modules/Jobs/config_jobs.php');
 $jconf = $app->config['config_jobs'];
 $myjobid = $jconf['jobid_live_thumb'];
 
-// Log related init
-$debug = Springboard\Debug::getInstance();
-$debug->log($jconf['log_dir'], $myjobid . ".log", "*************************** Job: Live thumbnail started ***************************", $sendmail = false);
-
 // Check operating system - exit if Windows
 if ( iswindows() ) {
 	echo "ERROR: Non-Windows process started on Windows platform\n";
@@ -35,6 +31,25 @@ if ( iswindows() ) {
 
 // Start an infinite loop - exit if any STOP file appears
 if ( is_file( $app->config['datapath'] . 'jobs/' . $myjobid . '.stop' ) or is_file( $app->config['datapath'] . 'jobs/all.stop' ) ) exit;
+
+// Log related init
+$debug = Springboard\Debug::getInstance();
+$debug->log($jconf['log_dir'], $myjobid . ".log", "*************************** Job: Live thumbnail started ***************************", $sendmail = false);
+
+// Already running. Not finished a tough job?
+$run_filename = $jconf['temp_dir'] . $myjobid . ".run";
+if  ( file_exists($run_filename) ) {
+	if ( ( time() - filemtime($run_filename) ) < 15 * 60 ) {
+		$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] I am already running. Not finished previous run?", $sendmail = true);
+	}
+	exit;
+} else {
+	$content = "Running. Started: " . date("Y-m-d H:i:s");
+	$err = file_put_contents($run_filename, $content);
+	if ( $err === false ) {
+		$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Cannot write run file " . $run_filename, $sendmail = true);
+	}
+}
 
 if ( !is_writable($jconf['livestreams_dir']) ) {
 	$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Temp directory " . $jconf['livestreams_dir'] . " is not writeable.", $sendmail = false);
@@ -60,7 +75,13 @@ $app->watchdog();
 
 // Query active channels
 $channels = getActiveChannels();
-if ( $channels === false ) break;
+if ( $channels === false ) {
+	// Close DB connection if open
+	if ( is_resource($db->_connectionID) ) $db->close();
+	// Remove run file
+	unlink($run_filename);
+	exit;
+}
 
 //var_dump($channels);
 
@@ -84,11 +105,12 @@ for ( $i = 0; $i < count($channels); $i++ ) {
 	$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] ffmpeg command to be executed: " . $ffmpeg_command, $sendmail = false);
 
 	// Run ffmpeg
-	$err = runExternal($ffmpeg_command);
+//	$err = runExternal($ffmpeg_command);
+	$err = runExt($ffmpeg_command);
 
 	if ( is_readable($thumb_filename) and ( filesize($thumb_filename) > 0 ) ) {
 
-		$debug->log($jconf['log_dir'], $myjobid . ".log", "[OK] ffmpeg live thumb created. Error code = " . $err['code'] . ", lifefeed_stream.id = " . $channels[$i]['streamid'] . ", ffmpeg command = " . $ffmpeg_command . ". Full output:\n" . $err['cmd_output'], $sendmail = false);
+		$debug->log($jconf['log_dir'], $myjobid . ".log", "[OK] ffmpeg live thumb created. Error code = " . $err['code'] . ", lifefeed_stream.id = " . $channels[$i]['streamid'] . ", ffmpeg command = \"" . $ffmpeg_command . "\". Full output:\n" . $err['cmd_output'], $sendmail = false);
 
 		// ## Prepare working directories
 		// Base working directory
@@ -117,7 +139,7 @@ for ( $i = 0; $i < count($channels); $i++ ) {
 		}
 	} else {
 		// ffmpeg error: default logo
-		$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] ffmpeg cannot get live thumb. Using default index photo instead. Error code = " . $err['code'] . ", lifefeed_stream.id = " . $channels[$i]['streamid'] . ", ffmpeg command = " . $ffmpeg_command . ". Full output:\n" . $err['cmd_output'], $sendmail = false);
+		$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] ffmpeg cannot get live thumb. Error code = " . $err['code'] . ", lifefeed_stream.id = " . $channels[$i]['streamid'] . ", ffmpeg command = " . $ffmpeg_command . ". Full output:\n" . $err['cmd_output'], $sendmail = false);
 		// No index photo update, keep existing
 		continue;
 	}
@@ -197,6 +219,9 @@ for ( $i = 0; $i < count($channels); $i++ ) {
 // Close DB connection if open
 if ( is_resource($db->_connectionID) ) $db->close();
 
+// Remove run file
+unlink($run_filename);
+
 exit;
 
 
@@ -234,11 +259,6 @@ global $jconf, $debug, $db, $app, $myjobid;
 			lf.issecurestreamingforced = 0
 		ORDER BY
 			ch.id";
-//AND lfs.keycode = 420767
-//		GROUP BY
-//			lf.id
-
-//echo $query . "\n";
 
 	try {
 		$channels = $db->getArray($query);

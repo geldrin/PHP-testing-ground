@@ -1,13 +1,13 @@
 {capture assign=recordingurl}{$language}/recordings/details/{$recording.id},{$recording.title|filenameize}?commentspage={$activepage}{/capture}
 
-{if $member.id}
-  {capture assign=replylink}{$recordingurl}&focus={$item.sequenceid}{/capture}
-{else}
-  {capture assign=replylink}{$language}/users/login?forward={$recordingurl|escape:url}{/capture}
-{/if}
 <ul id="commentlist">
   {if !empty( $comments )}
     {foreach from=$comments item=item}
+      {if $member.id}
+        {capture assign=replylink}{$recordingurl}&focus={$item.sequenceid}{/capture}
+      {else}
+        {capture assign=replylink}{$language}/users/login?forward={$recordingurl|escape:url}{/capture}
+      {/if}
       <li class="commentlistitem nick-{$item.nickname|escape:html}{if $commentfocus == $item.sequenceid} highlight{/if}" id="comment-{$item.sequenceid}">
         <div class="user">
           <div class="avatar"><img src="{$item|@avatarphoto|escape:html}" width="36" height="36"/></div>

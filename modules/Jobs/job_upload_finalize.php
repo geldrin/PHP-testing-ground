@@ -230,6 +230,7 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_upload_finalize.stop' ) an
 		break;
 	} // End of while(1)
 
+/*
 	// Recordings: finalize masters (once daily, after midnight)
 	$start_time = time();
 	$inwhichhour = 0;
@@ -263,6 +264,7 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_upload_finalize.stop' ) an
 
 		$finalizedonelasttime = time();
 	}
+*/
 
 	// Close DB connection if open
 	if ( is_resource($db->_connectionID) ) $db->close();

@@ -25,7 +25,7 @@ class Controller extends \Visitor\Controller {
     'securecheckstreamaccess' => 'public',
     'search'               => 'member',
     'analytics'            => 'liveadmin|clientadmin',
-    'getstatistics'        => 'liveadmin|clientadmin',
+    'delete'               => 'liveadmin|clientadmin',
   );
   
   public $forms = array(
@@ -88,8 +88,7 @@ class Controller extends \Visitor\Controller {
     if (
          $chromeless and in_array( $access[ $accesskey ], array(
              'registrationrestricted',
-             'grouprestricted',
-             'departmentrestricted',
+             'departmentorgrouprestricted',
            ), true // strict = true
          )
        )
@@ -261,6 +260,25 @@ class Controller extends \Visitor\Controller {
     
   }
   
+  public function deleteAction() {
+
+    $channelModel = $this->modelOrganizationAndUserIDCheck(
+      'channels',
+      $this->application->getNumericParameter('id')
+    );
+
+    $forward = $this->application->getParameter(
+      'forward', 'live'
+    );
+
+    if ( !$channelModel->row['isliveevent'] )
+      $this->redirect( $forward );
+
+    $channelModel->markAsDeleted();
+    $this->redirect( $forward );
+
+  }
+  
   public function deletefeedAction() {
     
     $feedModel    = $this->modelIDCheck(
@@ -276,6 +294,11 @@ class Controller extends \Visitor\Controller {
     if ( $feedModel->row['feedtype'] == 'vcr' and !$feedModel->canDeleteFeed() )
       throw new \Exception("VCR helszín törles nem lehetséges!");
     
+    $feedModel->updateRow( array(
+        'smilstatus'        => 'regenerate',
+        'contentsmilstatus' => 'regenerate',
+      )
+    );
     $feedModel->delete( $feedModel->id );
     $this->redirect(
       $this->application->getParameter(
@@ -302,8 +325,14 @@ class Controller extends \Visitor\Controller {
       'channels',
       $feedModel->row['channelid']
     );
-    
+
     $streamModel->delete( $streamModel->id );
+    $feedModel->updateRow( array(
+        'smilstatus'        => 'regenerate',
+        'contentsmilstatus' => 'regenerate',
+      )
+    );
+
     $this->redirect(
       $this->application->getParameter(
         'forward',
@@ -355,7 +384,12 @@ class Controller extends \Visitor\Controller {
         'status' => $status,
       )
     );
-    
+    $feedModel->updateRow( array(
+        'smilstatus'        => 'regenerate',
+        'contentsmilstatus' => 'regenerate',
+      )
+    );
+
     $this->redirect(
       $this->application->getParameter(
         'forward',
@@ -387,7 +421,7 @@ class Controller extends \Visitor\Controller {
       $liveadmin = $this->acl->hasPermission('liveadmin|clientadmin');
       $cache     = $this->getChatCache( $livefeedid );
       
-      if ( $cache->expired() or !$this->application->production ) {
+      if ( $cache->expired() ) {
         
         $feedModel = $this->modelIDCheck( 'livefeeds', $livefeedid );
         $chat      = $feedModel->getChat();
@@ -432,7 +466,9 @@ class Controller extends \Visitor\Controller {
   public function getChatCache( $livefeedid ) {
     
     return $this->bootstrap->getCache(
-      sprintf('livefeed_chat-%d', $livefeedid )
+      sprintf('livefeed_chat-%d', $livefeedid ),
+      null,
+      true
     );
     
   }
@@ -637,75 +673,25 @@ class Controller extends \Visitor\Controller {
     
   }
   
-  public function getstatisticsAction() {
-    
-    $channelModel = $this->modelOrganizationAndUserIDCheck(
-      'channels',
-      $this->application->getNumericParameter('id')
-    );
-
-    $l      = $this->bootstrap->getLocalization();
-    $filter = array(
-      'starttimestamp' => $channelModel->row['starttimestamp'],
-      'endtimestamp'   => $channelModel->row['endtimestamp'],
-    );
-    $ret    = array(
-      'status' => 'OK',
-    );
-
-    $feeds   = $channelModel->getFeeds();
-    $feedids = $this->application->getParameter('feedids', array() );
-
-    // sanitize the feedids
-    foreach( $feedids as $k => $v ) {
-
-      if ( !isset( $feeds[ $v ] ) )
-        unset( $feedids[ $k ] );
-
-    }
-
-    if ( empty( $feedids ) )
-      $this->jsonOutput( $ret );
-
-    $filter['livefeedids'] = $feedids;
-
-    $feedModel  = $this->bootstrap->getModel('livefeeds');
-    $data       = $feedModel->getStatistics( $filter );
-    $ret['data'] = $this->transformStatistics( $data );
-
-    $this->jsonOutput( $ret );
-
-  }
-
   public function transformStatistics( $data ) {
 
     $l          = $this->bootstrap->getLocalization();
-    $fieldtokey = array();
     $ret        = array(
-      'startts'      => 0,
-      'endts'        => 0,
-      'stepinterval' => 0,
+      'origstartts'  => strtotime( $data['originalstarttimestamp'] ) * 1000,
+      'origendts'    => strtotime( $data['originalendtimestamp'] ) * 1000,
+      'startts'      => $data['starttimestamp'] * 1000,
+      'endts'        => $data['endtimestamp'] * 1000,
+      'stepinterval' => $data['step'] * 1000,
       'labels'       => array(),
       'data'         => array(),
     );
 
-    $firstdata = reset( $data );
-    $lastdata  = end( $data );
-
-    $ret['stepinterval'] = intval( $firstdata['stepinterval'] );
-    $ret['startts']      = intval( $firstdata['timestamp'] );
-    $ret['endts']        = intval( $lastdata['timestamp'] );
-
     // prepare the chart labels
-    foreach( $data as $value ) {
+    foreach( $data['data'] as $value ) {
 
       foreach( $value as $field => $v ) {
 
-        if ( $field == 'timestamp' or $field == 'stepinterval' )
-          continue;
-
         $ret['labels'][] = $l('live', 'stats_' . $field );
-        $fieldtokey[ $field ] = count( $ret['labels'] ) - 1;
 
       }
 
@@ -713,24 +699,30 @@ class Controller extends \Visitor\Controller {
 
     }
 
-    // prepare the values
-    foreach( $data as $key => $value ) {
+    $ret['labels'][] = $l('live', 'stats_sum');
 
-      $ret['data'][ $key ] = array(
-        'ts' => intval( $value['timestamp'] ),
+    // prepare the values
+    foreach( $data['data'] as $key => $value ) {
+
+      $row = array(
+        intval( $value['timestamp'] ) * 1000,
       );
 
+      $sum = 0;
       foreach( $value as $field => $v ) {
 
-        if ( $field == 'timestamp' or $field == 'stepinterval' )
+        if ( $field == 'timestamp' )
           continue;
 
-        $fieldkey = $fieldtokey[ $field ];
-        $ret['data'][ $key ][ $fieldkey ] = intval( $v );
+        $v = intval( $v );
+        $row[] = $v;
+        $sum += $v;
 
       }
 
-      unset( $data[ $key ] );
+      unset( $data['data'][ $key ] );
+      $row[] = $sum;
+      $ret['data'][] = $row;
 
     }
 

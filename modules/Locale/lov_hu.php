@@ -111,6 +111,7 @@ return array(
     'isnewseditor'  => 'Hír szerkesztő',
     'isclientadmin' => 'Kliens adminisztrátor',
     'isuploader'    => 'Feltöltő',
+    'ismoderateduploader' => 'Moderált feltöltő',
     'isliveadmin'   => 'Live adminisztrátor',
   ),
   
@@ -204,4 +205,35 @@ return array(
   'invite_templates' => array(
     '' => '--- Új sablon ---',
   ),
+
+  'live_analytics_datapoints' => array(
+    '0' => $l('live', 'stats_numberofdesktop'),
+    '1' => $l('live', 'stats_numberofandroid'),
+    '2' => $l('live', 'stats_numberofiphone'),
+    '3' => $l('live', 'stats_numberofipad'),
+    '4' => $l('live', 'stats_sum'),
+  ),
+
+  'live_analytics_resolutions' => array(
+    '300'   => $l('live', 'resolution_5min'),
+    '3600'  => $l('live', 'resolution_hourly'),
+    '86400' => $l('live', 'resolution_daily'),
+  ),
+
+  'recordings_approvalstatus_full' => array(
+    'draft'    => $l('recordings', 'approvalstatus_draft'),
+    'pending'  => $l('recordings', 'approvalstatus_pending'),
+    'approved' => $l('recordings', 'approvalstatus_approved'),
+  ),
+
+  'recordings_approvalstatus_min' => array(
+    'draft'    => $l('recordings', 'approvalstatus_draft'),
+    'pending'  => $l('recordings', 'approvalstatus_pending'),
+  ),
+
+  'recordings_approvalstatus_default' => array(
+    'draft'    => $l('recordings', 'approvalstatus_draft'),
+    'approved' => $l('recordings', 'approvalstatus_approved'),
+  ),
+
 );

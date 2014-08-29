@@ -61,7 +61,12 @@ class Createstream extends \Visitor\HelpForm {
     
     unset( $values['id'] );
     $this->streamModel->insert( $values );
-    
+    $this->feedModel->updateRow( array(
+        'smilstatus'        => 'regenerate',
+        'contentsmilstatus' => 'regenerate',
+      )
+    );
+
     $this->controller->redirect(
       $this->application->getParameter(
         'forward',

@@ -275,7 +275,7 @@ class Recordings extends \Springboard\Model {
     if (
          $this->row === null or // toroltek
          $this->row['status'] != 'onstorage' or // nincs onstorage eleme
-         $this->row['ispublished'] != 1 // nincs metaadata vagy kikapcsolva
+         $this->row['approvalstatus'] != 'approved' // nincs metaadata vagy kikapcsolva
        ) {
       
       // indexphoto
@@ -383,36 +383,63 @@ class Recordings extends \Springboard\Model {
   public function userHasAccess( $user, $secure = null, $mobile = false, $organization = null ) {
     
     $this->ensureObjectLoaded();
-    
+    /*
+      tehat a logika a kovetkezo:
+      ha a kapcsolat non-secure (ergo non-https-en) keresztul jott akkor azonnal
+      tiltjuk ha secure kapcsolat nezese be van kapcsolva
+    */
     if ( $secure !== null and $this->row['issecurestreamingforced'] != $secure )
       return 'securerestricted';
 
+    /*
+      ha nincs lekonvertalva vagy meg vazlat allapotban van akkor tiltjuk rogton
+      (de a letrehozo usernek/adminnak engedjuk)
+    */
     $bystatus = $this->isAccessibleByStatus( $user, $mobile );
     if ( $bystatus !== true )
       return $bystatus;
 
+    /*
+      aztan megnezzuk beallitas (recordings/modifysharing Hozzáférés) alapjan
+      hogy engedve van e, meg nem dontunk a visszateresi ertekrol egyelore
+    */
     $bysettings = $this->isAccessibleBySettings( $user );
-    if ( $bysettings === true )
-      return true;
 
-    // ennek a vissza teresi erteke nem erdekel minket, csak az hogy true e
-    $byinvitation = $this->isAccessibleByInvitation( $user, $organization );
-    if ( $byinvitation === true )
-      return true;
+    /*
+      ha nem fer hozza beallitas alapjan akkor megnezzuk hogy invitacio alapjan
+      hozzafer e, ha igen akkor itt abbahagyjuk, es biztos hozzafer
+    */
+    if ( $bysettings !== true ) {
 
-    // ennek a vissza teresi erteke csak akkor fontos ha true vagy non-null
-    // ha null, akkor nem tartozik olyan csatornaba ami erdekes
+      // ennek a vissza teresi erteke nem erdekel minket, csak az hogy true e
+      $byinvitation = $this->isAccessibleByInvitation( $user, $organization );
+      if ( $byinvitation === true )
+        return true;
+
+    }
+
+    /*
+      a user lehet hogy bealitas alapjan hozzaferhetne a felvetelhez, de meg
+      muszaj megnezni hogy a felvetel tartozik e kurzusba es az alapjan
+      hozzafer e a user
+      ennek a vissza teresi erteke csak akkor fontos ha true (be van a felvetel
+      sorolva kurzusba, es hozzafer a user) vagy non-null (be van sorolva
+      kurzusba, de nem fer hozza)
+      ha null, akkor nem tartozik a felvetel kurzusba es a beallitas szerinti
+      hozzaferes szamit
+    */
     $bycoursecompletion = $this->isAccessibleByCourseCompletion( $user, $organization );
     if ( $bycoursecompletion === true )
       return true;
     elseif ( $bycoursecompletion !== null )
       return $bycoursecompletion;
 
-    // nem sikerult talalni semmit ami engedne a hozzaferest
-    if ( $bysettings !== true )
-      return $bysettings;
-
-    throw new \Exception('Cannot happen!');
+    /*
+      ha idaig eljutottunk akkor a felvetel nem tartozott kurzusba, es a
+      felhasznalonak nem volt ra meghivoja, visszaadjuk a beallitas alapjan
+      kapott visszateresi erteket
+    */
+    return $bysettings;
 
   }
 
@@ -427,6 +454,7 @@ class Recordings extends \Springboard\Model {
       'status'          => 'uploading',
       'masterstatus'    => 'uploading',
       'accesstype'      => 'public',
+      'approvalstatus'  => 'draft',
       'mastersourceip'  => $sourceip,
       'isintrooutro'    => $isintrooutro,
       'timestamp'       => date('Y-m-d H:i:s'),
@@ -436,7 +464,7 @@ class Recordings extends \Springboard\Model {
     
     if ( $isintrooutro ) {
       
-      $recording['ispublished'] = 1;
+      $recording['approvalstatus'] = 'approved';
       
     }
     
@@ -864,7 +892,7 @@ class Recordings extends \Springboard\Model {
          )
        )
       return true;
-    elseif ( !$this->row['ispublished'] )
+    elseif ( $this->row['approvalstatus'] != 'approved' )
       return 'recordingisnotpublished';
     
     return true;
@@ -991,6 +1019,23 @@ class Recordings extends \Springboard\Model {
     if ( !$coursetypeid )
       return true;
 
+    // replicating the check from isAccessibleByStatus
+    if (
+         isset( $user['id'] ) and
+         (
+           $this->row['userid'] == $user['id'] or
+           (
+             $user['iseditor'] and
+             $user['organizationid'] == $this->row['organizationid']
+           ) or
+           (
+             $user['isclientadmin'] and
+             $user['organizationid'] == $this->row['organizationid']
+           )
+         )
+       )
+      return true;
+
     // the course channels where the recording is a member
     $coursechannelids = $this->db->getCol("
       SELECT c.id
@@ -1031,7 +1076,9 @@ class Recordings extends \Springboard\Model {
     if ( empty( $usercourses ) )
       return 'courserestricted';
 
-    $recordings = $this->getUserChannelRecordingsWithProgress( $usercourses, $user, $organization );
+    $recordings = $this->getUserChannelRecordingsWithProgress(
+      $usercourses, $user, $organization
+    );
 
     foreach( $recordings as $recording ) {
 
@@ -1049,15 +1096,46 @@ class Recordings extends \Springboard\Model {
 
   }
 
-  public function getUserChannelRecordingsWithProgress( $channelids, $user, $organization, $distinct = true ) {
+  public function getUserChannelRecordingsWithProgress( $channelids, $user, $organization, $distinct = true, $includeuser = false ) {
+
+    if ( $includeuser ) {
+      $select = ",
+        usr.id AS userid,
+        usr.nickname,
+        usr.nameformat,
+        usr.nameprefix,
+        usr.namefirst,
+        usr.namelast
+      ";
+      $table = ",
+        users AS usr
+      ";
+      $where = "
+        usr.id = r.userid AND
+      ";
+    } else {
+      $select = '';
+      $table  = '';
+      $where  = '';
+    }
+
     return $this->db->getArray("
       SELECT
         r.*,
         cr.channelid,
         (
-          ROUND( ( IFNULL(rvp.position, 0) / GREATEST( IFNULL(r.masterlength, 0), IFNULL(r.contentmasterlength, 0) ) ) * 100 )
+          ROUND(
+            (
+              IFNULL( rvp.position, 0 ) /
+              GREATEST(
+                IFNULL(r.masterlength, 0),
+                IFNULL(r.contentmasterlength, 0)
+              )
+            ) * 100
+          )
         ) AS positionpercent,
         IFNULL(rvp.position, 0) AS lastposition
+        $select
       FROM
         channels_recordings AS cr,
         recordings AS r
@@ -1065,11 +1143,13 @@ class Recordings extends \Springboard\Model {
           r.id       = rvp.recordingid AND
           rvp.userid = '" . $user['id'] . "'
         )
+        $table
       WHERE
+        $where
         cr.channelid IN('" . implode("', '", $channelids ) . "') AND
         r.id             = cr.recordingid AND
         r.isintrooutro   = '0' AND
-        r.ispublished    = '1' AND
+        r.approvalstatus = 'approved' AND
         r.status         = 'onstorage' AND -- TODO live?
         r.organizationid = '" . $organization['id'] . "' AND
         r.status         = 'onstorage'
@@ -1082,7 +1162,7 @@ class Recordings extends \Springboard\Model {
     
     return "
       {$prefix}status       = 'onstorage' AND
-      {$prefix}ispublished  = '1' AND
+      {$prefix}approvalstatus = 'approved' AND
       {$prefix}isintrooutro = '$isintrooutro' AND
       {$prefix}accesstype   = '$accesstype' AND
       (
@@ -1128,7 +1208,7 @@ class Recordings extends \Springboard\Model {
       r.status       = 'onstorage' AND
       r.isintrooutro = '$isintrooutro' AND
       (
-        r.ispublished = '1'" . ( $isadmin? '': " OR
+        r.approvalstatus = 'approved'" . ( $isadmin? '': " OR
         r.userid = '" . $user['id'] . "'" ) . "
       ) AND
       (
@@ -1449,7 +1529,92 @@ class Recordings extends \Springboard\Model {
     return $ret;
   }
 
-  public function getRelatedVideosByKeywords( $limit, $user, $organizationid ){
+  public function getRelatedVideosByCourse( $limit, $user, $organization ){
+
+    if ( !$user['id'] )
+      return array();
+
+    $this->ensureID();
+
+    $coursetypeid = $this->bootstrap->getModel('channels')->cachedGetCourseTypeID(
+      $organization['id']
+    );
+
+    if ( !$coursetypeid )
+      return array();
+
+    // the course channels where the recording is a member
+    $coursechannelids = $this->db->getCol("
+      SELECT c.id
+      FROM
+        channels_recordings AS cr,
+        channels AS c
+      WHERE
+        cr.recordingid      = '" . $this->id . "' AND
+        cr.channelid        = c.id AND
+        c.organizationid    = '" . $organization['id'] . "' AND
+        c.channeltypeid     = '$coursetypeid' AND
+        c.isdeleted         = '0'
+    ");
+
+    // recording not a member of any course
+    if ( empty( $coursechannelids ) )
+      return array();
+
+    $usercourses = $this->db->getCol("
+      SELECT ui.channelid
+      FROM
+        users_invitations AS ui
+      WHERE
+        ui.channelid IN('" . implode("', '", $coursechannelids ) . "') AND
+        ui.registereduserid = '" . $user['id'] . "' AND
+        ui.organizationid   = '" . $organization['id'] . "' AND
+        ui.status           <> 'deleted'
+    ");
+
+    // user not a member of the course
+    if ( empty( $usercourses ) )
+      return array();
+
+    $found      = false;
+    $ret        = array();
+    $recordings = $this->getUserChannelRecordingsWithProgress(
+      $usercourses, $user, $organization, true, true
+    );
+
+    foreach( $recordings as $recording ) {
+
+      if ( !$found and $recording['id'] == $this->id ) {
+        $found = true;
+        continue;
+      }
+
+      if ( !$found )
+        continue;
+
+      $ret[ $recording['id'] ] = array(
+        'id'                  => $recording['id'],
+        'title'               => $recording['title'],
+        'subtitle'            => $recording['subtitle'],
+        'indexphotofilename'  => $recording['indexphotofilename'],
+        'masterlength'        => $recording['masterlength'],
+        'contentmasterlength' => $recording['contentmasterlength'],
+        'numberofviews'       => $recording['numberofviews'],
+        'userid'              => $recording['userid'],
+        'nickname'            => $recording['nickname'],
+        'nameformat'          => $recording['nameformat'],
+        'nameprefix'          => $recording['nameprefix'],
+        'namefirst'           => $recording['namefirst'],
+        'namelast'            => $recording['namelast'],
+      );
+
+    }
+
+    return $ret;
+
+  }
+  
+  public function getRelatedVideosByKeywords( $limit, $user, $organization ){
     
     $this->ensureObjectLoaded();
     if ( !strlen( trim( $this->row['keywords'] ) ) )
@@ -1494,7 +1659,7 @@ class Recordings extends \Springboard\Model {
     $where = "
       usr.id = r.userid AND
       r.id <> '" . $this->id . "' AND
-      r.organizationid = '$organizationid'"
+      r.organizationid = '" . $organization['id'] . "'"
     ;
     
     if ( !empty( $keywordwhere ) )
@@ -1508,7 +1673,7 @@ class Recordings extends \Springboard\Model {
     
   }
   
-  public function getRelatedVideosByChannel( $limit, $user, $organizationid, $channelids = null ) {
+  public function getRelatedVideosByChannel( $limit, $user, $organization, $channelids = null ) {
     
     $this->ensureID();
     $dontrecurse = true;
@@ -1551,7 +1716,7 @@ class Recordings extends \Springboard\Model {
       r.id = cr.recordingid AND
       usr.id = r.userid AND
       r.id <> '" . $this->id . "' AND
-      r.organizationid = '$organizationid'"
+      r.organizationid = '" . $organization['id'] . "'"
     ;
     
     $return = $this->db->getAssoc(
@@ -1573,7 +1738,7 @@ class Recordings extends \Springboard\Model {
       }
       
       $parentids = array_unique( $parentids );
-      $return = $return + $this->getRelatedVideosByChannel( $limit - count( $return ), $user, $organizationid, $parentids );
+      $return = $return + $this->getRelatedVideosByChannel( $limit - count( $return ), $user, $organization, $parentids );
       
     }
     
@@ -1581,7 +1746,7 @@ class Recordings extends \Springboard\Model {
     
   }
   
-  public function getRelatedVideosRandom( $limit, $user, $organizationid ) {
+  public function getRelatedVideosRandom( $limit, $user, $organization ) {
     
     $this->ensureID();
     
@@ -1610,7 +1775,7 @@ class Recordings extends \Springboard\Model {
     $where = "
       usr.id = r.userid AND
       r.id <> '" . $this->id . "' AND
-      r.organizationid = '$organizationid'"
+      r.organizationid = '" . $organization['id'] . "'"
     ;
     
     return $this->db->getAssoc(
@@ -1622,20 +1787,22 @@ class Recordings extends \Springboard\Model {
     
   }
   
-  public function getRelatedVideos( $count, $user, $organizationid ) {
+  public function getRelatedVideos( $count, $user, $organization ) {
     
     $this->ensureObjectLoaded();
     
-    $return = array();
+    $return = $this->getRelatedVideosByCourse( $count, $user, $organization );
+    if ( !empty( $return ) ) // ha kurzusba tartozik  akkor csak azokat adjuk vissza
+      return $return;
+
+    if ( count( $return ) < $count )
+      $return = $return + $this->getRelatedVideosByChannel( $count - count( $return ), $user, $organization );
     
     if ( count( $return ) < $count )
-      $return = $return + $this->getRelatedVideosByChannel( $count - count( $return ), $user, $organizationid );
+      $return = $return + $this->getRelatedVideosByKeywords( $count - count( $return ), $user, $organization );
     
     if ( count( $return ) < $count )
-      $return = $return + $this->getRelatedVideosByKeywords( $count - count( $return ), $user, $organizationid );
-    
-    if ( count( $return ) < $count )
-      $return = $return + $this->getRelatedVideosRandom( $count - count( $return ), $user, $organizationid );
+      $return = $return + $this->getRelatedVideosRandom( $count - count( $return ), $user, $organization );
     
     return $return;
     
@@ -1997,10 +2164,79 @@ class Recordings extends \Springboard\Model {
     
   }
 
+  public function getVersions( $ids = array() ) {
+    $this->ensureObjectLoaded();
+
+    if ( empty( $ids ) )
+      $ids[] = $this->id;
+
+    $rs = $this->db->query("
+      SELECT
+        rv.*,
+        ep.shortname AS encodingshortname,
+        ep.mediatype
+      FROM
+        recordings_versions AS rv,
+        encoding_profiles AS ep
+      WHERE
+        rv.recordingid IN('" . implode("', '", $ids ) . "') AND
+        rv.status = 'onstorage' AND
+        ep.id     = rv.encodingprofileid
+      ORDER BY rv.bandwidth
+    ");
+
+    $ret = array(
+      'master'  => array(
+        'desktop' => array(),
+        'mobile'  => array(),
+      ),
+      'content' => array(
+        'desktop' => array(),
+        'mobile'  => array(),
+      ),
+      'audio'   => array(),
+    );
+
+    foreach( $rs as $version ) {
+
+      if ( $version['encodingshortname'] == 'audio' ) {
+        $ret['audio'][] = $version;
+        continue;
+      }
+
+      if ( $version['iscontent'] )
+        $key = 'content';
+      else
+        $key = 'master';
+
+      if ( $version['isdesktopcompatible'] )
+        $ret[ $key ]['desktop'][] = $version;
+
+      if ( $version['ismobilecompatible'] )
+        $ret[ $key ]['mobile'][] = $version;
+
+    }
+
+    if ( $this->row['mastermediatype'] == 'audio' )
+      $ret['master']['desktop'] = $ret['master']['mobile'] = $ret['audio'];
+
+    if ( $this->row['contentmastermediatype'] == 'audio' )
+      $ret['content']['desktop'] = $ret['content']['mobile'] = $ret['audio'];
+
+    return $ret;
+
+  }
+
   public function getFlashData( $info ) {
     
     $this->ensureObjectLoaded();
     include_once( $this->bootstrap->config['templatepath'] . 'Plugins/modifier.indexphoto.php' );
+    
+    if ( isset( $info['versions'] ) )
+      $versions = $info['versions'];
+    else
+      $versions       = $this->getVersions();
+
     $recordingbaseuri = $info['BASE_URI'] . \Springboard\Language::get() . '/recordings/';
 
     if ( $this->bootstrap->config['forcesecureapiurl'] )
@@ -2008,7 +2244,7 @@ class Recordings extends \Springboard\Model {
     else
       $apiurl = $info['BASE_URI'];
 
-    $apiurl .=  \Springboard\Language::get() . '/jsonapi';
+    $apiurl .=  'jsonapi';
     $data    = array(
       'language'              => \Springboard\Language::get(),
       'api_url'               => $apiurl,
@@ -2024,13 +2260,18 @@ class Recordings extends \Springboard\Model {
       'user_checkWatchingTimeInterval' => $info['organization']['presencechecktimeinterval'],
       'user_checkWatchingConfirmationTimeout' => $info['organization']['presencecheckconfirmationtime'],
     );
-    
+
+    if ( $this->row['mastermediatype'] == 'audio' )
+      $data['recording_isAudio'] = true;
+
     if ( isset( $info['member'] ) and $info['member']['id'] ) {
-      $data['user_id'] = $info['member']['id'];
-      $data['user_needPing'] = true;
+      $data['user_id']          = $info['member']['id'];
+      $data['user_needPing']    = true;
+      $data['user_pingSeconds'] = $this->bootstrap->config['sessionpingseconds'];
     }
 
-    $data = $data + $this->getMediaServers( $info );
+    $hds  = $this->isHDSEnabled();
+    $data = $data + $this->getMediaServers( $info, $hds );
 
     // default bal oldalon van a video, csak akkor allitsuk be ha kell
     if ( !$this->row['slideonright'] )
@@ -2038,11 +2279,55 @@ class Recordings extends \Springboard\Model {
     
     if ( $data['language'] != 'en' )
       $data['locale'] = $info['STATIC_URI'] . 'js/flash_locale_' . $data['language'] . '.json';
+    
+    if ( !empty( $versions['master']['desktop'] ) ) {
+      $data['media_streams']      = array();
+      $data['media_streamLabels'] = array();
+      if ( $hds )
+        $data['media_streams'][]    =
+          $this->getMediaUrl('smil', null, $info )
+        ;
 
-    $data['media_streams'] = array( $this->getMediaUrl('default', false, $info ) );
+      foreach( $versions['master']['desktop'] as $version ) {
+        $data['media_streamLabels'][] = $version['qualitytag'];
 
-    if ( $this->row['videoreshq'] )
-      $data['media_streams'][] = $this->getMediaUrl('default', true, $info );
+        if ( !$hds )
+          $data['media_streams'][]    =
+            $this->getMediaUrl('default', $version, $info )
+          ;
+
+      }
+    }
+
+    if (
+         !isset( $info['skipcontent'] ) and
+         !empty( $versions['content']['desktop'] )
+       ) {
+
+      if ( $this->row['contentoffsetstart'] )
+        $data['timeline_contentVirtualStart'] = $this->row['contentoffsetstart'];
+
+      if ( $this->row['contentoffsetend'] )
+        $data['timeline_contentVirtualEnd'] = $this->row['contentoffsetend'];
+
+      $data['content_streams']      = array();
+      $data['content_streamLabels'] = array();
+      if ( $hds )
+        $data['content_streams'][]    =
+          $this->getMediaUrl('contentsmil', null, $info )
+        ;
+
+      foreach( $versions['content']['desktop'] as $version ) {
+        $data['content_streamLabels'][] = $version['qualitytag'];
+
+        if ( !$hds )
+          $data['content_streams'][]      =
+            $this->getMediaUrl('content', $version, $info )
+          ;
+
+      }
+
+    }
 
     $data = $data + $this->getIntroOutroFlashdata( $info );
 
@@ -2051,29 +2336,6 @@ class Recordings extends \Springboard\Model {
 
     if ( $this->row['offsetend'] )
       $data['timeline_virtualEnd'] = $this->row['offsetend'];
-
-    if ( $this->row['contentstatus'] == 'onstorage' and !isset( $info['skipcontent'] ) ) {
-
-      $data['media_secondaryStreams'] = array( $this->getMediaUrl('content', false, $info ) );
-
-      if ( $this->row['contentvideoreshq'] ) {
-
-        $data['media_secondaryStreams'][] = $this->getMediaUrl('content', true, $info );
-
-        // ha van HQ content, de nincs HQ "default" verzio akkor ketszer
-        // kell szerepeljen a default verzio
-        if ( count( $data['media_streams'] ) == 1 )
-          $data['media_streams'][] = reset( $data['media_streams'] );
-
-      }
-
-      if ( $this->row['contentoffsetstart'] )
-        $data['timeline_contentVirtualStart'] = $this->row['contentoffsetstart'];
-
-      if ( $this->row['contentoffsetend'] )
-        $data['timeline_contentVirtualEnd'] = $this->row['contentoffsetend'];
-
-    }
 
     $subtitles = $this->getSubtitleLanguages();
     if ( !empty( $subtitles ) ) {
@@ -2097,37 +2359,36 @@ class Recordings extends \Springboard\Model {
       
     }
     
-    $relatedvideos = $this->getRelatedVideos(
-      $this->bootstrap->config['relatedrecordingcount'],
-      $info['member'],
-      $info['organization']['id']
-    );
-    $data['recommendatory_string'] = array();
-    foreach( $relatedvideos as $video ) {
-      
-      $data['recommendatory_string'][] = array(
-        'title'       => $video['title'],
-        'subtitle'    => $video['subtitle'],
-        'image'       => \smarty_modifier_indexphoto( $video, 'wide', $info['STATIC_URI'] ),
-        'url'         =>
-          $recordingbaseuri . 'details/' . $video['id'] . ',' .
-          \Springboard\Filesystem::filenameize( $video['title'] )
-        ,
-      );
-      
+    if ( !$info['organization']['isrecommendationdisabled'] ) {
+
+      if ( isset( $info['relatedvideos'] ) )
+        $relatedvideos = $info['relatedvideos'];
+      else
+        $relatedvideos = $this->getRelatedVideos(
+          $this->bootstrap->config['relatedrecordingcount'],
+          $info['member'],
+          $info['organization']
+        );
+
+      $data['recommendatory_string'] = array();
+      foreach( $relatedvideos as $video ) {
+        
+        $data['recommendatory_string'][] = array(
+          'title'       => $video['title'],
+          'subtitle'    => $video['subtitle'],
+          'image'       => \smarty_modifier_indexphoto( $video, 'wide', $info['STATIC_URI'] ),
+          'url'         =>
+            $recordingbaseuri . 'details/' . $video['id'] . ',' .
+            \Springboard\Filesystem::filenameize( $video['title'] )
+          ,
+        );
+        
+      }
+
     }
     
-    if ( $this->row['isseekbardisabled'] and @$info['member'] and $info['member']['id'] ) {
-      
-      $options = $this->getSeekbarOptions( $info );
-      $data['timeline_seekbarDisabled']          = $options['isseekbardisabled'];
-      $data['timeline_lastPositionTimeInterval'] = $options['lastpositiontimeinterval'];
-      $data['timeline_lastPlaybackPosition']     = $options['lastplaybackposition'];
-      
-      if ( isset( $options['seekbarvisible'] ) )
-        $data['timeline_seekbarVisible']         = $options['seekbarvisible'];
-      
-    }
+    if ( $this->row['isseekbardisabled'] and @$info['member'] and $info['member']['id'] )
+      $data = array_merge( $data, $this->getSeekbarOptions( $info ) );
     
     return $data;
     
@@ -2165,9 +2426,9 @@ class Recordings extends \Springboard\Model {
       ");
 
     $options = array(
-      'isseekbardisabled'         => true,
-      'lastplaybackposition'      => $lastposition,
-      'lastpositiontimeinterval'  =>
+      'timeline_seekbarDisabled'          => true,
+      'timeline_lastPlaybackPosition'     => $lastposition,
+      'timeline_lastPositionTimeInterval' =>
         $this->bootstrap->config['recordingpositionupdateseconds']
       ,
     );
@@ -2177,80 +2438,91 @@ class Recordings extends \Springboard\Model {
          $user['isclientadmin'] or
          $user['iseditor']
        )
-      $options['seekbarvisible'] = true;
+      $options['timeline_seekbarVisible'] = true;
     
     return $options;
     
   }
   
-  public function getMediaServers( $info ) {
+  public function isHDSEnabled() {
+    return
+      $this->bootstrap->config['hdsenabled'] and
+      in_array( $this->row['smilstatus'], array('onstorage', 'regenerate') )
+    ;
+  }
+
+  public function getMediaServers( $info, $hds = null ) {
 
     $this->ensureObjectLoaded();
     $data = array(
       'media_servers' => array(),
     );
 
-    $sessionid = $info['sessionid'];
-    if ( $this->row['issecurestreamingforced'] ) {
-      $data['media_servers'][] = $this->getWowzaUrl( 'secrtmpsurl', true, $info );
-      $data['media_servers'][] = $this->getWowzaUrl( 'secrtmpurl',  true, $info );
-      $data['media_servers'][] = $this->getWowzaUrl( 'secrtmpturl', true, $info );
+    $prefix = $this->row['issecurestreamingforced']? 'sec': '';
+    if ( $hds === null )
+      $hds = $this->isHDSEnabled();
+
+    if ( $hds ) {
+      $data['media_servers'][] = $this->getWowzaUrl( $prefix . 'smilurl', false, $info );
     } else {
-      $data['media_servers'][] = $this->getWowzaUrl( 'rtmpurl',  true, $info );
-      $data['media_servers'][] = $this->getWowzaUrl( 'rtmpturl', true, $info );
+
+      if ( $prefix )
+        $data['media_servers'][] = $this->getWowzaUrl( 'secrtmpsurl', true, $info );
+
+      $data['media_servers'][] = $this->getWowzaUrl( $prefix . 'rtmpurl',  true, $info );
+      $data['media_servers'][] = $this->getWowzaUrl( $prefix . 'rtmpturl', true, $info );
+
     }
-    
+
     return $data;
 
   }
 
-  public function getIntroOutroFlashdata( $info ) {
+  public function getIntroOutroFlashdata( $info, $hds = null ) {
     
     $this->ensureObjectLoaded();
     if ( !$this->row['introrecordingid'] and !$this->row['outrorecordingid'] )
       return array();
+    
+    if ( $hds === null )
+      $hds   = $this->isHDSEnabled();
 
     $ids     = array();
     $data    = array();
     $introid = 0;
     $outroid = 0;
-
+    
     if ( $this->row['introrecordingid'] ) {
-
+      
       $ids[]   = $this->row['introrecordingid'];
       $introid = $this->row['introrecordingid'];
-
+      
     }
     
     if ( $this->row['outrorecordingid'] ) {
-
+      
       $ids[]   = $this->row['outrorecordingid'];
       $outroid = $this->row['outrorecordingid'];
-
+      
     }
 
-    $highres = $this->db->getAssoc("
-      SELECT id, videoreshq
-      FROM recordings
-      WHERE id IN('" . implode("', '", $ids ) . "')
-    ");
+    $versions = $this->getVersions( $ids );
+    if ( empty( $versions['master']['desktop'] ) )
+      throw new \Exception("The intro/outro does not have desktopcompatible non-content recordings!");
 
-    foreach( $ids as $id ) {
-
-      if ( $introid == $id )
+    $type = $hds? 'smil': 'default';
+    foreach( $versions['master']['desktop'] as $version ) {
+      
+      if ( $version['recordingid'] == $introid )
         $key = 'intro_streams';
-      else
+      else if ( $version['recordingid'] == $outroid )
         $key = 'outro_streams';
+      else // not possible
+        throw new \Exception("Invalid version in getIntroOutroFlashdata, neither intro nor outro!");
 
       $data[ $key ] = array(
-        $this->getMediaUrl('default', false, $info, $id )
+        $this->getMediaUrl( $type, $version, $info )
       );
-
-      if ( isset( $highres[ $id ] ) and $highres[ $id ] )
-        $data[ $key ][] = $this->getMediaUrl('default', true, $info, $id );
-
-      if ( $outroid == $introid )
-        $data['outro_streams'] = $data['intro_streams'];
 
     }
 
@@ -2340,24 +2612,16 @@ class Recordings extends \Springboard\Model {
 
   }
   
-  public function getMediaUrl( $type, $highquality, $info, $id = null ) {
+  public function getMediaUrl( $type, $version, $info, $id = null ) {
 
     $this->ensureObjectLoaded();
     $cookiedomain = $info['organization']['cookiedomain'];
     $sessionid    = $info['sessionid'];
     $host         = '';
+    $extension    = 'mp4';
 
-    $isaudio   = false;
-    $postfix   = '_lq';
-    if ( $highquality )
-      $postfix = '_hq';
-
-    $extension = 'mp4';
-    if ( $this->row['mastermediatype'] == 'audio' ) {
-      $isaudio   = true;
-      $postfix   = '';
-      $extension = 'mp3';
-    }
+    if ( $version )
+      $extension = \Springboard\Filesystem::getExtension( $version['filename'] );
 
     $user = null;
     if ( isset( $info['member'] ) )
@@ -2370,20 +2634,20 @@ class Recordings extends \Springboard\Model {
     switch( $type ) {
 
       case 'mobilehttp':
-        //http://stream.videotorium.hu:1935/vtorium/_definst_/mp4:671/2671/2671_2608_mobile.mp4/playlist.m3u8
+        //http://stream.videosquare.hu:1935/vtorium/_definst_/mp4:671/2671/2671_2608_mobile.mp4/playlist.m3u8
         $host        = $this->getWowzaUrl( $typeprefix . 'httpurl');
         $sprintfterm =
-          '%3$s:%s/%s_mobile' . $postfix . '.%s/playlist.m3u8' .
+          '%3$s:%s/%s/playlist.m3u8' .
           $this->getAuthorizeSessionid( $info )
         ;
         
         break;
 
       case 'mobilertsp':
-        //rtsp://stream.videotorium.hu:1935/vtorium/_definst_/mp4:671/2671/2671_2608_mobile.mp4
+        //rtsp://stream.videosquare.hu:1935/vtorium/_definst_/mp4:671/2671/2671_2608_mobile.mp4
         $host        = $this->getWowzaUrl( $typeprefix . 'rtspurl');
         $sprintfterm =
-          '%3$s:%s/%s_mobile' . $postfix . '.%s' .
+          '%3$s:%s/%s' .
           $this->getAuthorizeSessionid( $info )
         ;
         
@@ -2391,34 +2655,35 @@ class Recordings extends \Springboard\Model {
 
       case 'direct':
         $host = $info['STATIC_URI'];
-        if ( $isaudio )
-          $sprintfterm = 'files/recordings/%s/%s_audio.%s';
-        else
-          $sprintfterm = 'files/recordings/%s/%s_video' . $postfix . '.%s';
+        $sprintfterm = 'files/recordings/%s/%s';
+        break;
+
+      case 'smil':
+      case 'contentsmil':
+        if ( !$version )
+          $version   = array(
+            'filename'    => '',
+            'recordingid' => $this->id,
+          );
+
+        $extension   = 'smil';
+        $postfix     = $type == 'contentsmil'? '_content': '';
+        $sprintfterm =
+          '%3$s:%s/' . $version['recordingid'] . $postfix . '.%3$s/manifest.f4m' .
+          $this->getAuthorizeSessionid( $info )
+        ;
         break;
 
       case 'content':
-        $sprintfterm = '%3$s:%s/%s_content' . $postfix . '.%s';
-        break;
-
       default:
-
-        
-        if ( $isaudio )
-          $sprintfterm = '%3$s:%s/%s_audio.%s';
-        else
-          $sprintfterm = '%3$s:%s/%s_video' . $postfix . '.%s';
-
+        $sprintfterm = '%3$s:%s/%s';
         break;
 
     }
 
-    if ( $id === null )
-      $id = $this->id;
-
     return $host . sprintf( $sprintfterm,
-      \Springboard\Filesystem::getTreeDir( $id ),
-      $id,
+      \Springboard\Filesystem::getTreeDir( $version['recordingid'] ),
+      $version['filename'],
       $extension
     );
 
@@ -2643,7 +2908,7 @@ class Recordings extends \Springboard\Model {
       r.rating,
       '0' AS numberofrecordings,
       r.status,
-      r.ispublished
+      r.approvalstatus
     ";
     $where  = "
       (
@@ -2678,7 +2943,7 @@ class Recordings extends \Springboard\Model {
           '0' AS rating,
           numberofrecordings,
           '' AS status,
-          '1' AS ispublished
+          'approved' AS approvalstatus
         FROM channels
         WHERE
           " . \Model\Channels::getWhere( $user ) . " AND
@@ -3353,13 +3618,14 @@ class Recordings extends \Springboard\Model {
     
   }
   
-  public function getDownloadUrls( $staticuri ) {
+  public function getDownloadInfo( $staticuri ) {
     $this->ensureObjectLoaded();
     if ( !$this->row['isdownloadable'] and !$this->row['isaudiodownloadable'] )
       return array();
 
     $ret      = array();
     $treedir  = \Springboard\Filesystem::getTreeDir( $this->id );
+    $basedir  = $staticuri . 'files/recordings/' . $treedir . '/';
     $versions = $this->db->getArray("
       SELECT
         rv.filename,
@@ -3384,12 +3650,14 @@ class Recordings extends \Springboard\Model {
         if ( $version['qualitytag'] != 'audio' )
           continue;
 
-        $ret['audio'] =
-          $staticuri . 'files/recordings/' . $treedir . '/' .
-          \Springboard\Filesystem::getWithoutExtension( $version['filename'] ) .
-          ',' . \Springboard\Filesystem::filenameize( $this->row['title'] ) . '.' .
-          \Springboard\Filesystem::getExtension( $version['filename'] )
-        ;
+        $ret['audio'] = array(
+          'url'        => $basedir .
+            \Springboard\Filesystem::getWithoutExtension( $version['filename'] ) .
+            ',' . \Springboard\Filesystem::filenameize( $this->row['title'] ) . '.' .
+            \Springboard\Filesystem::getExtension( $version['filename'] )
+          ,
+          'qualitytag' => $version['qualitytag'],
+        );
         break;
       }
 
@@ -3397,29 +3665,27 @@ class Recordings extends \Springboard\Model {
 
     if ( $this->row['isdownloadable'] ) {
 
-      if ( $this->row['masterstatus'] == 'onstorage' )
-        $ret['master'] =
-          $staticuri . 'files/recordings/' . $treedir . '/master/' . $this->id .
-          '_' . $this->row['mastermediatype'] . ',' . $this->row['mastervideofilename']
-        ;
-
-      if ( $this->row['contentmasterstatus'] == 'onstorage' )
-        $ret['contentmaster'] =
-          $staticuri . 'files/recordings/' . $treedir . '/master/' . $this->id .
-          '_content,' . $this->row['contentmastervideofilename']
-        ;
-
       foreach( $versions as $version ) {
-        if ( $version['type'] != 'pip' )
-          continue;
 
-        $ret['pip'] =
-          $staticuri . 'files/recordings/' . $treedir . '/' .
+        $filename =
           \Springboard\Filesystem::getWithoutExtension( $version['filename'] ) .
           ',' . \Springboard\Filesystem::filenameize( $this->row['title'] ) . '.' .
           \Springboard\Filesystem::getExtension( $version['filename'] )
         ;
-        break;
+
+        $data = array(
+          'url'        => $basedir . $filename,
+          'qualitytag' => $version['qualitytag'],
+        );
+
+        if ( $version['type'] == 'recording' and !isset( $ret['master'] ) ) {
+          $ret['master'] = $data;
+        } elseif ( $version['type'] == 'content' and !isset( $ret['content'] ) ) {
+          $ret['contentmaster'] = $data;
+        } elseif ( $version['type'] == 'pip' and !isset( $ret['pip'] ) ) {
+          $ret['pip'] = $data;
+        }
+
       }
 
     }

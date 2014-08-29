@@ -498,6 +498,7 @@ a.submitbutton:hover, .form a.submitbutton:hover {
   font-size: 12px;
   color:#666;
   font-family: Verdana;
+  z-index: 99999;
 }
 #browserAlert span {
   text-decoration: underline;
@@ -659,10 +660,22 @@ a.submitbutton:hover, .form a.submitbutton:hover {
 }
 #headerloginactions {
   color: #999;
-  margin-top: 10px;
+  margin-top: 15px;
 }
 #headerloginform {
-  margin-top: 10px;
+  margin-top: 0px;
+}
+#headerloginform form {
+  float: right;
+}
+#login_rememberme_wrap {
+  margin-top: 3px;
+  color: #808080;
+  float: left;
+}
+#login_rememberme {
+  vertical-align: top;
+  margin-right: 5px;
 }
 #headerlogin .inputtext {
   width: 90px;
@@ -1291,6 +1304,7 @@ a#currentusername span {
 }
 .pagingsearch .textwrap input {
   width: 150px;
+  padding: 1px 5px;
 }
 .pagingsearch .submitwrap {
   position: relative;
@@ -1298,6 +1312,9 @@ a#currentusername span {
 }
 .pagingsearch .selectwrap select {
   width: 100px;
+}
+#livequicksearch.pagingsearch .selectwrap select {
+  width: 140px;
 }
 
 /* sorter */
@@ -2248,15 +2265,21 @@ a#currentusername span {
   float: right;
   width: 550px;
 }
-.channelrecordings .recordinglist {
+.channelrecordings .recordinglist, .livelist.recordinglist {
   width: 550px;
 }
-.channelrecordings .listitem {
+.channelrecordings .listitem, .livelist.recordinglist .listitem {
   width: 550px;
 }
-.channelrecordings .recordingcontent {
+.channelrecordings .recordingcontent, .livelist.recordinglist .recordingcontent {
   margin-left: 20px;
   width: 338px;
+}
+.eventfeeds .recordingpic {
+  display: inline-block;
+  float: right;
+  margin: -7px 10px 0 0;
+  vertical-align: middle;
 }
 .livefeed {
   display: inline-block;
@@ -2264,7 +2287,6 @@ a#currentusername span {
   line-height: 29px;
   vertical-align: middle;
   float: right;
-  margin: -7px 0 0 0;
   padding: 0px 6px 0px 30px;
   text-transform: uppercase;
   font-weight: bold;
@@ -2302,6 +2324,11 @@ a#currentusername span {
   display: inline-block;
 }
 
+#qualitychooser ul {
+  list-style-type: none;
+  margin: 3px 0 0 0;
+  padding: 0;
+}
 #qualitychooser a {
   outline: 0;
   width: 260px;
@@ -2576,6 +2603,9 @@ a#currentusername span {
 }
 #analyticscontainer .form {
   width: 250px;
+}
+#analyticscontainer .buttonrow td {
+  text-align: left;
 }
 #livestatistics {
   float: right;

@@ -11,36 +11,37 @@ class Controller extends \Visitor\Controller {
     'getcomments'          => 'public',
     'getsubtitle'          => 'public',
     'newcomment'           => 'member',
-    'moderatecomment'      => 'uploader|editor|clientadmin',
+    'moderatecomment'      => 'uploader|moderateduploader|editor|clientadmin',
     'rate'                 => 'member',
-    'upload'               => 'uploader',
-    'uploadcontent'        => 'uploader',
-    'uploadsubtitle'       => 'uploader',
-    'uploadattachment'     => 'uploader',
-    'myrecordings'         => 'uploader|editor|clientadmin',
-    'modifybasics'         => 'uploader|editor|clientadmin',
-    'modifyclassification' => 'uploader|editor|clientadmin',
-    'modifydescription'    => 'uploader|editor|clientadmin',
-    'modifycontributors'   => 'uploader|editor|clientadmin',
-    'modifysharing'        => 'uploader|editor|clientadmin',
-    'modifyattachment'     => 'uploader|editor|clientadmin',
-    'deleteattachment'     => 'uploader|editor|clientadmin',
-    'deletesubtitle'       => 'uploader|editor|clientadmin',
-    'delete'               => 'uploader|editor|clientadmin',
-    'deletecontent'        => 'uploader|editor|clientadmin',
-    'deletecontributor'    => 'uploader|editor|clientadmin',
-    'swapcontributor'      => 'uploader|editor|clientadmin',
+    'upload'               => 'uploader|moderateduploader',
+    'uploadcontent'        => 'uploader|moderateduploader',
+    'uploadsubtitle'       => 'uploader|moderateduploader',
+    'uploadattachment'     => 'uploader|moderateduploader',
+    'myrecordings'         => 'uploader|moderateduploader|editor|clientadmin',
+    'modifybasics'         => 'uploader|moderateduploader|editor|clientadmin',
+    'modifyclassification' => 'uploader|moderateduploader|editor|clientadmin',
+    'modifydescription'    => 'uploader|moderateduploader|editor|clientadmin',
+    'modifycontributors'   => 'uploader|moderateduploader|editor|clientadmin',
+    'modifysharing'        => 'uploader|moderateduploader|editor|clientadmin',
+    'modifyattachment'     => 'uploader|moderateduploader|editor|clientadmin',
+    'deleteattachment'     => 'uploader|moderateduploader|editor|clientadmin',
+    'deletesubtitle'       => 'uploader|moderateduploader|editor|clientadmin',
+    'delete'               => 'uploader|moderateduploader|editor|clientadmin',
+    'deletecontent'        => 'uploader|moderateduploader|editor|clientadmin',
+    'deletecontributor'    => 'uploader|moderateduploader|editor|clientadmin',
+    'swapcontributor'      => 'uploader|moderateduploader|editor|clientadmin',
     'checkstreamaccess'    => 'public',
     'securecheckstreamaccess' => 'public',
     'embed'                => 'public',
     'featured'             => 'public',
     'search'               => 'editor|clientadmin',
-    'linkcontributor'      => 'uploader|editor|clientadmin',
+    'linkcontributor'      => 'uploader|moderateduploader|editor|clientadmin',
     'addtochannel'         => 'member',
     'removefromchannel'    => 'member',
-    'checkfileresume'      => 'uploader',
-    'uploadchunk'          => 'uploader',
-    'cancelupload'         => 'uploader',
+    'checkfileresume'      => 'uploader|moderateduploader',
+    'uploadchunk'          => 'uploader|moderateduploader',
+    'cancelupload'         => 'uploader|moderateduploader',
+    'reflectoraccesscheck' => 'public',
   );
   
   public $forms = array(
@@ -206,6 +207,7 @@ class Controller extends \Visitor\Controller {
 
     $commentspage = $this->application->getNumericParameter('commentspage', -1 );
     $start       = $this->application->getParameter('start');
+    $versions    = $recordingsModel->getVersions();
     $browserinfo = $this->bootstrap->getBrowserInfo();
     $user        = $this->bootstrap->getSession('user');
     $rating      = $this->bootstrap->getSession('rating');
@@ -237,8 +239,13 @@ class Controller extends \Visitor\Controller {
     $this->toSmarty['needhistory']   = true;
     $this->toSmarty['height']        = $this->getPlayerHeight( $recordingsModel );
     $this->toSmarty['recording']     = $recordingsModel->addPresenters( true, $this->organization['id'] );
-    $this->toSmarty['recordingdownloads'] = $recordingsModel->getDownloadUrls(
+    $this->toSmarty['recordingdownloads'] = $recordingsModel->getDownloadInfo(
       $this->bootstrap->staticuri
+    );
+    $this->toSmarty['relatedvideos'] = $recordingsModel->getRelatedVideos(
+      $this->application->config['relatedrecordingcount'],
+      $user,
+      $this->organization
     );
 
     $flashdata = $recordingsModel->getFlashData( $this->toSmarty );
@@ -249,11 +256,7 @@ class Controller extends \Visitor\Controller {
     $this->toSmarty['author']        = $recordingsModel->getAuthor();
     $this->toSmarty['attachments']   = $recordingsModel->getAttachments();
     $this->toSmarty['canrate']       = ( $user['id'] and !$rating[ $recordingsModel->id ] );
-    $this->toSmarty['relatedvideos'] = $recordingsModel->getRelatedVideos(
-      $this->application->config['relatedrecordingcount'],
-      $user,
-      $this->organization['id']
-    );
+    
     $this->toSmarty['opengraph']     = array(
       'type'        => 'video',
       'image'       => smarty_modifier_indexphoto( $recordingsModel->row, 'player' ),
@@ -270,38 +273,40 @@ class Controller extends \Visitor\Controller {
         )
       ,
     );
+    $this->toSmarty['metadescription'] = true;
 
-    $mobilehq = false;
-    if ( $recordingsModel->row['mobilevideoreshq'] and $browserinfo['tablet'] )
-      $mobilehq = true;
+    $quality        = $this->application->getParameter('quality');
+    $mobileversion  = array_shift( $versions['master']['mobile'] );
+    $mobileversions = array();
 
-    $quality = $this->application->getParameter('quality');
-    if ( $quality and in_array( $quality, array('lq', 'hq') ) ) {
-      
-      if ( $quality == 'hq' and $recordingsModel->row['mobilevideoreshq'] )
-        $mobilehq = true;
-      elseif ( $quality == 'lq' )
-        $mobilehq = false;
-      
+    foreach( $versions['master']['mobile'] as $version ) {
+
+      if ( $quality and $version['qualitytag'] == $quality )
+        $mobileversion = $version;
+
+      $mobileversions[] = $version['qualitytag'];
+
     }
-    
-    $this->toSmarty['mobilehq']      = $mobilehq;
+
+    $this->toSmarty['mobileversions'] = $mobileversions;
     $this->toSmarty['mobilehttpurl'] = $recordingsModel->getMediaUrl(
       'mobilehttp',
-      $mobilehq,
+      $mobileversion,
       $this->toSmarty
     );
     $this->toSmarty['mobilertspurl'] = $recordingsModel->getMediaUrl(
       'mobilertsp',
-      $mobilehq,
+      $mobileversion,
       $this->toSmarty
     );
-    $this->toSmarty['audiofileurl']  = $recordingsModel->getMediaUrl(
-      'direct',
-      false, // non-hq
-      $this->toSmarty
-    );
-    
+
+    if ( !empty( $versions['audio'] ) )
+      $this->toSmarty['audiofileurl']  = $recordingsModel->getMediaUrl(
+        'direct',
+        current( $versions['audio'] ),
+        $this->toSmarty
+      );
+
     $this->smartyoutput('Visitor/Recordings/Details.tpl');
 
   }
@@ -467,7 +472,73 @@ class Controller extends \Visitor\Controller {
     return true;
     
   }
-  
+
+  public function reflectoraccesscheckAction() {
+    $param   = $this->application->getParameter('sessionid');
+    $result  = '0';
+    $matched =
+      preg_match(
+        '/^(?P<sessionid>[a-z0-9]+)_' .
+        '(?P<recordingid>\d+)_' .
+        '(?P<secure>\d)$/',
+        $param,
+        $matches
+      )
+    ;
+
+    if ( $matched ) {
+
+      $cache = $this->bootstrap->getCache(
+        $param,
+        $this->bootstrap->config['accesscheckcacheseconds'],
+        true
+      );
+
+      if ( !$cache->expired() ) {
+        echo $cache->get();
+        die();
+      }
+
+      $this->bootstrap->setupSession(
+        true, $matches['sessionid'], $this->organization['cookiedomain']
+      );
+      $access    = $this->bootstrap->getSession('recordingaccess');
+      $accesskey = $matches['recordingid'] . '-' . $matches['secure'];
+
+      if ( !isset( $access[ $accesskey ] ) ) {
+
+        $user = $this->bootstrap->getSession('user');
+        if ( !$user['id'] ) {
+          echo $result;
+          die();
+        } else
+          $organizationModel = $this->modelIDCheck(
+            'organizations', $user['organizationid'], false
+          );
+
+        $recordingsModel = $this->modelIDCheck(
+          'recordings', $matches['recordingid'], false
+        );
+
+        if ( $recordingsModel and $organizationModel )
+          $access[ $accesskey ] = $recordingsModel->userHasAccess(
+            $user, $secure, false, $organizationModel->row
+          );
+
+      }
+
+      if ( $access[ $accesskey ] === true )
+        $result = '1';
+
+      $cache->put( $result );
+
+    }
+
+    echo $result;
+    die();
+
+  }
+
   public function checkstreamaccessAction( $secure = false ) {
     
     $param   = $this->application->getParameter('sessionid');
@@ -608,6 +679,7 @@ class Controller extends \Visitor\Controller {
     $autoplay     = $this->application->getParameter('autoplay');
     $fullscale    = $this->application->getParameter('fullscale');
     $skipcontent  = $this->application->getParameter('skipcontent');
+    $versions     = $recordingsModel->getVersions();
     $browserinfo  = $this->bootstrap->getBrowserInfo();
     $user         = $this->bootstrap->getSession('user');
     $access       = $this->bootstrap->getSession('recordingaccess');
@@ -621,8 +693,7 @@ class Controller extends \Visitor\Controller {
     if (
          in_array( $access[ $accesskey ], array(
              'registrationrestricted',
-             'grouprestricted',
-             'departmentrestricted',
+             'departmentorgrouprestricted',
            ), true // strict = true
          )
        )
@@ -639,42 +710,39 @@ class Controller extends \Visitor\Controller {
       $this->toSmarty['skipcontent'] = true;
 
     $flashdata = $recordingsModel->getFlashData( $this->toSmarty );
+    
+    $quality        = $this->application->getParameter('quality');
+    $mobileversion  = array_pop( $versions['master']['mobile'] );
+    $mobileversions = array();
 
-    $mobilehq = false;
-    if ( $recordingsModel->row['mobilevideoreshq'] ) {
-      
-      $browserinfo = $this->bootstrap->getBrowserInfo();
-      if ( $browserinfo['tablet'] )
-        $mobilehq = true;
-      
+    foreach( $versions['master']['mobile'] as $version ) {
+
+      if ( $quality and $version['qualitytag'] == $quality )
+        $mobileversion = $version;
+
+      $mobileversions[] = $version['qualitytag'];
+
     }
 
-    $quality = $this->application->getParameter('quality');
-    if ( $quality and in_array( $quality, array('lq', 'hq') ) ) {
-      
-      if ( $quality == 'hq' and $recordingsModel->row['mobilevideoreshq'] )
-        $mobilehq = true;
-      elseif ( $quality == 'lq' )
-        $mobilehq = false;
-      
-    }
-
+    $this->toSmarty['mobileversions'] = $mobileversions;
     $this->toSmarty['mobilehttpurl'] = $recordingsModel->getMediaUrl(
       'mobilehttp',
-      $mobilehq,
+      $mobileversion,
       $this->toSmarty
     );
     $this->toSmarty['mobilertspurl'] = $recordingsModel->getMediaUrl(
       'mobilertsp',
-      $mobilehq,
+      $mobileversion,
       $this->toSmarty
     );
-    $this->toSmarty['audiofileurl']  = $recordingsModel->getMediaUrl(
-      'direct',
-      false, // non-hq
-      $this->toSmarty
-    );
-    
+
+    if ( !empty( $versions['audio'] ) )
+      $this->toSmarty['audiofileurl']  = $recordingsModel->getMediaUrl(
+        'direct',
+        current( $versions['audio'] ),
+        $this->toSmarty
+      );
+
     $flashdata['layout_logo'] = $this->toSmarty['STATIC_URI'] . 'images/player_overlay_logo.png';
     $flashdata['layout_logoOrientation'] = 'TR';
 

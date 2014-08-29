@@ -1,6 +1,7 @@
 <?php
 $fromdatetime  = substr( $this->channelModel->row['starttimestamp'], 0, 16 );
-$untildatetime = substr( $this->channelModel->row['endtimestamp'], 0, 16 );
+$endts         = min( strtotime( $this->channelModel->row['endtimestamp'] ), time() );
+$untildatetime = date('Y-m-d H:i', $endts );
 
 $config = array(
 
@@ -12,12 +13,9 @@ $config = array(
   'feedids' => array(
     'type'        => 'inputCheckboxDynamic',
     'displayname' => $l('live', 'analytics_feedids'),
-    'sql'         => "
-      SELECT id, name
-      FROM livefeeds
-      WHERE channelid = '" . $this->channelModel->id . "'
-    ",
-    'value'       => $this->application->getParameter('feedids', array() ),
+    'rowlayout'   => $this->singlecolumnlayout,
+    'values'      => $this->feeds,
+    'value'       => $this->application->getParameter('feedids', $this->feedids ),
   ),
 
   'starttimestamp' => array(
@@ -60,4 +58,11 @@ $config = array(
     ),
   ),
 
+  'datapoints' => array(
+    'displayname' => $l('live', 'analytics_datapoints'),
+    'type'        => 'inputCheckboxDynamic',
+    'rowlayout'   => $this->singlecolumnlayout,
+    'values'      => $l->getLov('live_analytics_datapoints'),
+    'value'       => array( '4' ),
+  ),
 );

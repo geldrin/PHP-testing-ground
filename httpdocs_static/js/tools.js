@@ -2140,146 +2140,173 @@ function setupLivestatistics( elem ) {
   setupDefaultDateTimePicker('#starttimestamp');
   setupDefaultDateTimePicker('#endtimestamp');
 
-  var palette = new Rickshaw.Color.Palette( { scheme: 'munin' } );
-  var dataurl = elem.attr('data-url');
-  var elem    = elem.get(0);
-  var options = {
-    element: elem,
-    width: 700,
-    height: 400,
-    renderer: 'line',
-    offset: 'value',
-    interpolation: 'linear',
-    stroke: true,
-    preserve: true
+  var prepareData = function( data ) {
+
+    var graphdata = [];
+    var tickcount = Math.round(
+      ( data.endts - data.startts ) / data.stepinterval
+    );
+
+    var nullrow = [];
+    for (var i = 0, j = data.labels.length - 1; i <= j; i++)
+      nullrow.push( 0 );
+
+    var timestamptoindex = {};
+    for (var i = data.data.length - 1; i >= 0; i--) {
+      timestamptoindex[ data.data[i][0] ] = i;
+      data.data[i][0] = new Date( data.data[i][0] );
+    }
+
+    for(var i = 0; i < tickcount; i++) {
+
+      var ts  = ( i * data.stepinterval ) + data.startts;
+      var ind = timestamptoindex[ ts ];
+      if ( typeof( ind ) != 'undefined' ) { // data exists
+        graphdata.push( data.data[ ind ] );
+        continue;
+      }
+
+      // data does not exist, copy the nullrow, update the timestamp
+      var row = nullrow.slice();
+      row[0] = new Date( ts );
+
+      graphdata.push( row );
+
+    }
+
+    return graphdata
+
   };
 
   // analyticsdata global
-  var graphdata = [];
-  var tickcount = Math.round( ( analyticsdata.endts - analyticsdata.startts ) / analyticsdata.stepinterval );
+  var graphdata = prepareData( analyticsdata );
 
-  // prepare graphdata array
-  for (var i = 0, j = analyticsdata.labels.length - 1; i <= j; i++) {
-    graphdata.push([]);
-  };
-
-  var pushData = function( ts, data ) {
-
-    for (var i = 0, j = analyticsdata.labels.length - 1; i <= j; i++) {
-
-      graphdata[ i ].push({
-        'x': ts,
-        'y': ( typeof( data ) == 'object' )? data[ i + '' ]: 0
-      });
-
-    }
-
-  };
-
-  for(var i = 0; i < tickcount; i++) {
-    var key = ( i * analyticsdata.stepinterval ) + analyticsdata.startts;
-    pushData( key, analyticsdata.data[ key ] );
-  }
-
-  var series  = [];
-  for (var i = analyticsdata.labels.length - 1; i >= 0; i--) {
-
-    series.push({
-      color: palette.color(),
-      name: analyticsdata.labels[i],
-      data: graphdata[i]
-    });
-
-  };
-
-  options.series = series;
-  var graph = new Rickshaw.Graph( options );
-
-  graph.render();
-
-  localetime = new Rickshaw.Fixtures.Time.Local();
-  if ( language == 'hu' ) {
-    localetime.months = $j.datepicker.regional[ language ].monthNamesShort;
-    d3.time.format = d3.locale( d3locale['hu'] ).timeFormat;
-  }
-  var hoverDetail = new Rickshaw.Graph.HoverDetail({
-    graph: graph,
-    xFormatter: function(x) {
-      return d3.time.format('%c')( new Date(x * 1000) );
-    }
+  var visibility = [];
+  $j('input[name^="datapoints"]').each(function() {
+    visibility.push( $j(this).is(':checked') );
   });
 
-  var xAxis = new Rickshaw.Graph.Axis.Time({
-    graph: graph,
-    ticksTreatment: 'glow',
-    timeFixture: localetime
-  });
+  delete( timestamptoindex );
+  var refreshtimer  = null;
+  var lastclick     = null;
+  var isdoubleclick = null;
+  var graph = new Dygraph( elem.get(0), graphdata, {
+    visibility       : visibility,
+    labels           : analyticsdata.labels,
+    showRangeSelector: false,
+    stackedGraph     : false,
+    stepPlot         : true,
+    fillGraph        : true,
+    strokeWidth      : 2,
+    colors           : [
+      '#00cc00', '#0066b3', '#ff8000', '#ffcc00', '#330099', '#990099',
+      '#ccff00', '#ff0000', '#808080', '#008f00', '#00487d', '#b35a00',
+      '#b38f00', '#6b006b', '#8fb300', '#b30000', '#bebebe', '#80ff80',
+      '#80c9ff', '#ffc080', '#ffe680', '#aa80ff', '#ee00cc', '#ff8080',
+      '#666600', '#ffbfff', '#00ffcc', '#cc6699', '#999900'
+    ],
+    clickCallback: function() {
+      var now = new Date().getTime();
+      if ( !lastclick ) {
+        lastclick = now;
+        return;
+      } else if ( now - lastclick <= 500 ) {
+        // double click, reset the graph
+        if ( refreshtimer ) {
+          clearTimeout( refreshtimer );
+          refreshtimer = null;
+        }
+        isdoubleclick = true;
+        lastclick = null;
+        refreshData(analyticsdata.origstartts, analyticsdata.origendts)();
+      } else
+        lastclick = null;
+    },
+    zoomCallback: function(min, max) {
+      if ( isdoubleclick )
+        return;
 
-  xAxis.render();
+      if ( refreshtimer )
+        clearTimeout( refreshtimer );
 
-  var yAxis = new Rickshaw.Graph.Axis.Y({
-    graph: graph,
-    tickFormat: Rickshaw.Fixtures.Number.formatKMBT,
-    ticksTreatment: 'glow'
-  });
-
-  yAxis.render();
-
-  var legend = new Rickshaw.Graph.Legend( {
-    element: $j('#statisticslegend').get(0),
-    graph: graph
-  });
-  var shelving = new Rickshaw.Graph.Behavior.Series.Toggle({
-    graph: graph,
-    legend: legend
-  });
-  var highlighter = new Rickshaw.Graph.Behavior.Series.Highlight({
-    graph: graph,
-    legend: legend
-  });
-
-  var preview = new Rickshaw.Graph.RangeSlider( {
-    graph: graph,
-    element: $j('#zoomer').get(0),
-  });
-
-  var poll = function() {
-    var data = $j('#live_analytics').serializeArray();
-    data.splice(0, 1);
-    $j.ajax({
-      url: dataurl,
-      data: data,
-      type: 'GET',
-      dataType: 'json',
-      success: function( data ) {
-        if ( !data || typeof( data ) != 'object' || data.status != 'OK' )
-          return;
-
-        // yea...
-        var newdata = data.data;
-        if (newdata.length != graphdata.length)
-          return;
-
-        for (var i = newdata.length - 1; i >= 0; i--) {
-
-          // remove old data
-          for (var j = graphdata[i].length - 1; j >= 0; j--) {
-            graphdata[i].pop();
-          };
-
-          // add new data
-          for (var j = newdata[i].length - 1; j >= 0; j--) {
-            graphdata[i].unshift( newdata[i][j] );
-          };
-
-        };
-
-        graph.update();
-        setTimeout( poll, 5000 );
+      setTimeout( refreshData(min, max), 500 );
+    },
+    axes: {
+      x: {
+        valueFormatter: function(ms) {
+          return moment(ms).format('LLLL');
+        }
+      },
+      y: {
+        axisLabelFormatter: function(v) {
+          if ( v % 1 === 0 )
+            return v + '';
+          else
+            return '';
+        }
       }
-    });
+    }
+  });
+
+  var refreshData = function(min, max) {
+    return function() {
+      var url = $j('#live_analytics').attr('action');
+      var params = $j('#live_analytics').serializeArray();
+      var starttimestamp = moment(min).format('YYYY-MM-DD HH:mm');
+      var endtimestamp = moment(max).format('YYYY-MM-DD HH:mm');
+
+      for (var i = params.length - 1; i >= 0; i--) {
+        switch( params[i].name ) {
+          case 'starttimestamp':
+            params[i].value = starttimestamp;
+            break;
+          case 'endtimestamp':
+            params[i].value = endtimestamp;
+            break;
+        };
+      };
+
+      $j('#live_analytics').deserializeArray( params );
+
+      $j.ajax({
+        url     : url,
+        type    : 'POST',
+        data    : params,
+        dataType: 'json',
+        success : function(data) {
+          if ( !data || typeof( data ) != 'object' || data.status != 'OK' )
+            return;
+
+          graphdata = prepareData(data.data);
+          graph.updateOptions({
+            file: graphdata,
+            dateWindow: [data.data.startts, data.data.endts]
+          });
+        },
+        complete: function() {
+          refreshtimer  = null;
+          isdoubleclick = false;
+        }
+      })
+      
+    };
   };
-  poll();
+
+  $j('input[name^="datapoints"]').change(function(e) {
+    var index = parseInt( $j(this).val(), 10 );
+    graph.setVisibility( index, $j(this).is(':checked') );
+  });
+
+  $j('#live_analytics .reset').click( function(e) {
+    e.preventDefault();
+    if ( refreshtimer ) {
+      clearTimeout( refreshtimer );
+      refreshtimer = null;
+    }
+    isdoubleclick = null;
+    lastclick     = null;
+    refreshData(analyticsdata.origstartts, analyticsdata.origendts)();
+  });
 
 }
 

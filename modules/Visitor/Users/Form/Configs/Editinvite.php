@@ -42,7 +42,7 @@ if ( $this->invitationModel->row['recordingid'] ) {
 
 if ( $this->invitationModel->row['channelid'] ) {
 
-  $id           = $this->invitationModel->row['recordingid'];
+  $id           = $this->invitationModel->row['channelid'];
   $channelModel = $this->controller->modelIDCheck(
     'channels',
     $id

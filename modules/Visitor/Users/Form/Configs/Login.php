@@ -56,6 +56,12 @@ $config = Array(
     )
   ),
   
+  'autologin' => Array(
+    'displayname' => $l('users', 'autologin'),
+    'type'        => 'inputCheckbox',
+    'value'       => isset( $_COOKIE['autologin'] ),
+  ),
+  
   'diagnostics' => Array(
     'type'  => 'text',
     'value' => '

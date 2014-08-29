@@ -25,7 +25,7 @@ $myjobid = $jconf['jobid_media_convert'];
 
 // Log related init
 $debug = Springboard\Debug::getInstance();
-$debug->log($jconf['log_dir'], $jconf['jobid_media_convert'] . ".log", "*************************** Job: Media conversion started ***************************", $sendmail = false);
+$debug->log($jconf['log_dir'], $jconf['jobid_media_convert'] . ".log", str_pad(" Job: Media conversion started ", 80, '=') ."\n", $sendmail = false);
 
 // Check operating system - exit if Windows
 if ( iswindows() ) {
@@ -47,7 +47,7 @@ while( !is_file( $app->config['datapath'] . 'jobs/' . $myjobid . '2.stop' ) and 
 		// Establish database connection
 		$db = null;
 		$db = db_maintain();
-
+		
 		$converter_sleep_length = $jconf['sleep_media'];
 
 		// Check if temp directory readable/writable
@@ -151,7 +151,7 @@ while( !is_file( $app->config['datapath'] . 'jobs/' . $myjobid . '2.stop' ) and 
 		// recordings_versions.status = "onstorage"
 		updateRecordingVersionStatus($recording['recordingversionid'], $jconf['dbstatus_copystorage_ok']);
 		// recordings.(content)smilstatus = "regenerate" (new version is ready, regenerate SMIL file)
-		if ( $encoding_profile['type'] != "pip" ) {
+		if ( ( $encoding_profile['type'] != "pip" ) and ( $encoding_profile['mediatype'] != "audio" ) ) {
 			$type = "smil";
 			if  ( $recording['iscontent'] == 1 ) $type = "contentsmil";
 			updateRecordingStatus($recording['id'], $jconf['dbstatus_regenerate'], $type);
@@ -172,7 +172,7 @@ while( !is_file( $app->config['datapath'] . 'jobs/' . $myjobid . '2.stop' ) and 
 		// Log this recording version conversion summary
 		log_recording_conversion($recording['id'], $jconf['jobid_media_convert'], "-", "[OK] Successful media conversion in " . $hms . " time.\n\nConversion summary:\n\n" . $global_log, "-", "-", $conversion_duration, false);
 		// Have we finished? Then send all logs to admin
-		if ( getRecordingVersionsApplyStatusFilter($recording['id'], $type = "recording", "convert") === false ) {
+		if ( getRecordingVersionsApplyStatusFilter($recording['id'], $type = "all", "convert|reconvert") === false ) {
 			$debug->log($jconf['log_dir'], $jconf['jobid_media_convert'] . ".log", "[INFO] Recording conversion summary.\n\n" . $log_buffer[$recording['id']], $sendmail = true);
 			unset($log_buffer[$recording['id']]);
 		}
@@ -250,6 +250,7 @@ global $jconf, $debug, $db, $app;
 			r.masterstatus,
 			r.contentstatus,
 			r.contentmasterstatus,
+			r.ocrstatus,
 			r.mastersourceip,
 			r.contentmastersourceip
 		FROM
@@ -269,7 +270,6 @@ global $jconf, $debug, $db, $app;
 
 //encoding_profiles AS ep
 //AND rv.encodingprofileid = ep.id AND ep.type <> 'pip'
-
 	try {
 		$recording = $db->getArray($query);
 	} catch (exception $err) {
@@ -476,7 +476,7 @@ global $app, $jconf, $debug;
 
 		clearstatcache();
 
-		$output = runExternal($command);
+		$output = runExt($command);
 		$output_string = $output['cmd_output'];
 		$result = $output['code'];
 		if ( $result < 0 ) $result = 0;
@@ -583,14 +583,27 @@ global $app, $jconf, $global_log;
 		$recording['thumbnail_indexphotofilename'] = "images/videothumb_audio_placeholder.png?rid=" . $recording['id'];
 	}
 
+	$msg = '';
 	if ($profile['type'] === 'pip') {
 		$recording['iscontent'] = false;
-		$encoding_params_overlay = ffmpegPrep($recording, $profile);
+		$tmp = ffmpegPrep($recording, $profile);
+		$encoding_params_overlay = $tmp['params'];
+		$msg .= ($tmp['result'] === false) ? ($tmp['message']) : ("");
+		
 		$recording['iscontent'] = true;
-		$encoding_params_main    = ffmpegPrep($recording, $profile);
+		$tmp = ffmpegPrep($recording, $profile);
+		$encoding_params_main    = $tmp['params'];
+		$msg .= ($tmp['result'] === false) ? ($tmp['message']) : ("");
 	} else {
-		$encoding_params_main    = ffmpegPrep($recording, $profile);
+		$tmp = ffmpegPrep($recording, $profile);
+		$encoding_params_main    = $tmp['params'];
 		$encoding_params_overlay = null;
+		$msg = $tmp['message'];
+	}
+
+	if (($encoding_params_main === null) && ($encoding_params_overlay === null)) {
+		log_recording_conversion($recording['id'], $jconf['jobid_media_convert'], $jconf['dbstatus_conv_err'], "[ERROR] Encoding parameter preparation failed!\n". $msg ."\n(Recording version: ". $profile('name') .")", '-', '-', 0, false);
+		return false;
 	}
 
 	$err = advancedFFmpegConvert($recording, $profile, $encoding_params_main, $encoding_params_overlay);

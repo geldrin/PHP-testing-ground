@@ -8,6 +8,21 @@ class Users extends \Springboard\Model {
   const USER_DISABLED    = 1;
   protected $registeredSessionKey;
   
+  protected function checkUser( &$user, $organizationid ) {
+
+    if ( $user['organizationid'] != $organizationid and !$user['isadmin'] )
+      return 'organizationinvalid';
+
+    if (
+         $user['timestampdisabledafter'] and
+         strtotime( $user['timestampdisabledafter'] ) < time()
+       )
+      return 'expired';
+
+    return true;
+
+  }
+
   public function selectAndCheckUserValid( $organizationid, $email, $password, $isadmin = null ) {
     
     $crypto = $this->bootstrap->getEncryption();
@@ -37,6 +52,13 @@ class Users extends \Springboard\Model {
 
     if ( !empty( $user ) and $crypto->passwordValid( $password, $user['password'] ) ) {
 
+      $valid = $this->checkUser( $user, $organizationid );
+      if ( $valid !== true )
+        return $valid;
+
+      if ( $user['isadmin'] );
+        $user['organizationid'] = $organizationid;
+
       $this->id  = $user['id'];
       $this->row = $user;
 
@@ -60,7 +82,7 @@ class Users extends \Springboard\Model {
     
     $uservalid = $this->selectAndCheckUserValid( $organizationid, $email, $password );
     
-    if ( !$uservalid )
+    if ( $uservalid !== true )
       return false;
     
     if ( !$this->row['isapienabled'] )
@@ -167,7 +189,7 @@ class Users extends \Springboard\Model {
 
   }
   
-  public function updateLastLogin( $diagnostics = null, $ipaddress = null ) {
+  public function updateLastLogin( $diagnostics = null, $ipaddresses = array() ) {
     
     $this->ensureObjectLoaded();
 
@@ -175,8 +197,13 @@ class Users extends \Springboard\Model {
     if ( $diagnostics )
       $sql = ', browser = ' . $this->db->qstr( $diagnostics );
 
-    if ( $ipaddress )
+    if ( $ipaddresses ) {
+      $ipaddress = '';
+      foreach( $ipaddresses as $key => $value )
+        $ipaddress .= ' ' . $key . ': ' . $value;
+      
       $sql .= ', lastloggedinipaddress = ' . $this->db->qstr( $ipaddress );
+    }
 
     if ( !$this->row['firstloggedin'] )
       $sql .= ', firstloggedin = ' . $this->db->qstr( date('Y-m-d H:i:s') );
@@ -429,7 +456,7 @@ class Users extends \Springboard\Model {
         r.masterlength,
         r.contentmasterlength,
         r.isintrooutro,
-        r.ispublished,
+        r.approvalstatus,
         rwp.position,
         rwp.timestamp
       FROM
@@ -698,7 +725,7 @@ class Users extends \Springboard\Model {
     $this->ensureObjectLoaded();
     // azok a recording ahol .isseekbardisabled = 1
     return $this->db->getArray("
-      SELECT
+      SELECT DISTINCT
         r.*,
         (
           ROUND( ( IFNULL(rvp.position, 0) / GREATEST( IFNULL(r.masterlength, 0), IFNULL(r.contentmasterlength, 0) ) ) * 100 )
@@ -712,7 +739,7 @@ class Users extends \Springboard\Model {
         )
       WHERE
         r.isintrooutro      = '0' AND
-        r.ispublished       = '1' AND
+        r.approvalstatus    = 'approved' AND
         r.status            = 'onstorage' AND -- TODO live?
         r.organizationid    = '$organizationid' AND
         r.status            = 'onstorage' AND
@@ -730,7 +757,7 @@ class Users extends \Springboard\Model {
     );
 
     $channels = $this->db->getArray("
-      SELECT c.*
+      SELECT DISTINCT c.*
       FROM
         channels AS c,
         users_invitations AS ui
@@ -794,6 +821,113 @@ class Users extends \Springboard\Model {
     else
       return 1;
 
+  }
+
+  public function getUsersWithPermission( $permission, $filteruserid, $organizationid ) {
+    return $this->db->getArray("
+      SELECT *
+      FROM users
+      WHERE
+        is{$permission} = '1' AND
+        organizationid  = '$organizationid' AND
+        id             <> '$filteruserid' AND
+        disabled        = '0'
+    ");
+  }
+
+  protected function validateAutoLoginCookie() {
+
+    // a msghash 64char, a hash 32char, a ketto separator char (|), plusz az id
+    if (
+         !isset( $_COOKIE['autologin'] ) or
+         !preg_match('/^[a-zA-Z0-9|]{98,}$/', $_COOKIE['autologin'] )
+       )
+      return array();
+
+    $values = explode('|', $_COOKIE['autologin'], 4 );
+    if ( count( $values ) != 3 )
+      return array();
+
+    // ellenorizzuk hogy ezt a cookiet tenylegesen mi allitottuk be
+    // ha nem ellenoriznenk akkor aranylag egyszeruen lehetne DOS-olni minket
+    // csupan azzal hogy mindig lekerjuk az id-nek megfelelo usert az adatbazisbol
+    $msghash  = $values[0];
+    $pos      = strpos( $_COOKIE['autologin'], '|' );
+    $msg      = substr( $_COOKIE['autologin'], $pos + 1 );
+    $msghash2 = hash_hmac( 'sha256', $msg, $this->bootstrap->config['hashseed'] );
+    if ( $msghash != $msghash2 )
+      return array();
+
+    $crypt = $this->bootstrap->getEncryption();
+    $id    = intval( $crypt->asciiDecrypt( $values[1] ) );
+    if ( !$id )
+      return array();
+
+    $this->clearFilter();
+    $this->addFilter('id', $id );
+    $row = $this->getRow();
+
+    // a hash valtozzon ha a user passwordot valt, elfelejtette a passwordjet,
+    // vagy kitiltjak
+    if ( md5( $row['password'] . $row['validationcode'] . $row['disabled'] ) != $values[2] )
+      return array();
+
+    return $row;
+
+  }
+
+  public function loginFromCookie( $organizationid, $ipaddresses ) {
+    
+    $row = $this->validateAutoLoginCookie();
+    if ( !$row )
+      return false;
+
+    if ( $row['isadmin'] )
+      $row['organizationid'] = $organizationid;
+
+    $valid     = $this->checkUser( $row, $organizationid );
+    if ( $valid !== true )
+      return false;
+
+    $this->id  = $row['id'];
+    $this->row = $row;
+
+    if ( !$this->checkSingleLoginUsers() )
+      return false;
+
+    $this->registerForSession();
+    $this->updateSessionInformation();
+
+    $this->updateLastlogin(
+      "(cookie auto-login)\n" .
+      \Springboard\Debug::getRequestInformation( 0, false ),
+      $ipaddresses
+    );
+
+    return true;
+
+  }
+
+  public function setAutoLoginCookie( $ssl = false ) {
+
+    $this->ensureObjectLoaded();
+    $crypt = $this->bootstrap->getEncryption();
+    $value =
+      $crypt->asciiEncrypt( $this->id ) . "|" .
+      md5( $this->row['password'] . $this->row['validationcode'] . $this->row['disabled'] )
+    ;
+
+    $msghash = hash_hmac( 'sha256', $value, $this->bootstrap->config['hashseed'] );
+    $value   = $msghash . '|' . $value;
+
+    // httponly cookie
+    setcookie('autologin', $value, strtotime('+1 year'), '/', null, $ssl, true );
+
+  }
+
+  public function unsetAutoLoginCookie( $ssl = false ) {
+    // expiry in the past
+    setcookie('autologin', '', 1, '/', null, $ssl, true );
   }
 
 }

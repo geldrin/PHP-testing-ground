@@ -5,18 +5,15 @@ class Controller extends \Visitor\Controller {
   public $permissions = array(
     'index'               => 'public',
     'details'             => 'public',
-    'create'              => 'uploader|editor|clientadmin',
-    'modify'              => 'uploader|editor|clientadmin',
-    'delete'              => 'uploader|editor|clientadmin',
+    'create'              => 'uploader|moderateduploader|editor|clientadmin',
+    'modify'              => 'uploader|moderateduploader|editor|clientadmin',
+    'delete'              => 'uploader|moderateduploader|editor|clientadmin',
     'mychannels'          => 'member',
     'addrecording'        => 'member',
     'deleterecording'     => 'member',
-    'listfavorites'       => 'member',
-    'addtofavorites'      => 'member',
-    'deletefromfavorites' => 'member',
     'search'              => 'member',
-    'orderrecordings'     => 'uploader|editor|clientadmin',
-    'setorder'            => 'uploader|editor|clientadmin',
+    'orderrecordings'     => 'uploader|moderateduploader|editor|clientadmin',
+    'setorder'            => 'uploader|moderateduploader|editor|clientadmin',
   );
   
   public $forms = array(
@@ -28,7 +25,6 @@ class Controller extends \Visitor\Controller {
     'index'          => 'Visitor\\Channels\\Paging\\Index',
     'details'        => 'Visitor\\Channels\\Paging\\Details',
     'mychannels'     => 'Visitor\\Channels\\Paging\\Mychannels',
-    'listfavorites'  => 'Visitor\\Channels\\Paging\\Listfavorites',
   );
   
   public function deleteAction() {
@@ -41,10 +37,7 @@ class Controller extends \Visitor\Controller {
     $children = $channelModel->findChildrenIDs();
 
     // nem engedunk torolni csatornat aminek vannak gyerekei vagy kulonleges csatorna
-    if (
-         empty( $children ) and
-         $channelModel->id != $channelModel->getFavoriteChannelID()
-       ) {
+    if ( empty( $children ) ) {
       $channelModel->markAsDeleted();
       $message = $l('channels', 'channels_deleted');
     } else
@@ -54,40 +47,6 @@ class Controller extends \Visitor\Controller {
       $this->application->getParameter('forward', 'channels/mychannels'),
       $message
     );
-    
-  }
-  
-  public function addtofavoritesAction() {
-    
-    $user           = $this->bootstrap->getSession('user');
-    $recordingModel = $this->modelIDCheck(
-      'recordings',
-      $this->application->getNumericParameter('id')
-    ); // $_GET[id] az a recordingid
-    $channelModel   = $this->bootstrap->getModel('channels');
-    
-    $channelModel->insertIntoFavorites( $recordingModel->id, $user );
-    
-    if ( $this->isAjaxRequest() )
-      $this->jsonoutput( array(
-          'success' => true,
-        )
-      );
-    
-    $this->redirect( $this->application->getParameter('forward') );
-    
-  }
-  
-  public function deletefromfavoritesAction() {
-    
-    // $_GET[id] az a channels_recordings.id
-    $channelrecordingModel = $this->modelUserAndIDCheck(
-      'channels_recordings',
-      $this->application->getNumericParameter('id')
-    );
-    $channelrecordingModel->delete( $channelrecordingModel->id );
-    
-    $this->redirect( $this->application->getParameter('forward') );
     
   }
   

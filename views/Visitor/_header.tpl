@@ -9,14 +9,12 @@
   <base href="{$BASE_URI}" /><!--[if IE]></base><![endif]-->
   <title>{if $title}{$title|strip_tags|escape:html|titleescape} | {/if}{#sitename#}</title>
   {include file="Visitor/_opengraph.tpl"}
+  {if $metadescription}{include file="Visitor/Recordings/Metadescription.tpl"}{/if}
   <link rel="icon" type="image/png" href="{$STATIC_URI}images/favicon.png"/>
   {csscombine}
   <link rel="StyleSheet" type="text/css" href="{$STATIC_URI}css/custom-theme/jquery-ui-1.9.2.custom.min.css" media="screen"/>
   {if $needfancybox}
     <link rel="StyleSheet" type="text/css" href="{$STATIC_URI}js/fancybox/jquery.fancybox-1.3.4.css" media="screen"/>
-  {/if}
-  {if $needanalytics}
-    <link rel="StyleSheet" type="text/css" href="{$STATIC_URI}js/analytics/rickshaw.min.css" media="screen"/>
   {/if}
   <link rel="StyleSheet" type="text/css" href="{$STATIC_URI}css/style{$VERSION}.css" media="screen"/>
   {if $browser.mobile}
@@ -48,6 +46,7 @@
   <script type="text/javascript" src="{$STATIC_URI}js/jquery.min.js"></script>
   <script type="text/javascript" src="{$STATIC_URI}js/jquery-ui-1.9.2.custom.min.js"></script>
   <script type="text/javascript" src="{$STATIC_URI}js/swfobject.full.js"></script>
+  <script type="text/javascript" src="{$STATIC_URI}js/moment-with-langs.min.js"></script>
   <script type="text/javascript" src="{$bootstrap->scheme}{$bootstrap->config.baseuri}{$language}/contents/language"></script>
   {if $needfancybox}
     <script type="text/javascript" src="{$STATIC_URI}js/fancybox/jquery.fancybox-1.3.4.pack.js"></script>
@@ -56,10 +55,7 @@
     <script type="text/javascript" src="{$STATIC_URI}js/jquery.history.js"></script>
   {/if}
   {if $needanalytics}
-    <script type="text/javascript" src="{$STATIC_URI}js/analytics/d3.min.js"></script>
-    <script type="text/javascript" src="{$STATIC_URI}js/analytics/aight.min.js"></script>
-    <script type="text/javascript" src="{$STATIC_URI}js/analytics/aight.d3.min.js"></script>
-    <script type="text/javascript" src="{$STATIC_URI}js/analytics/rickshaw.min.js"></script>
+    <script type="text/javascript" src="{$STATIC_URI}js/analytics/dygraph-combined.js"></script>
   {/if}
   <script type="text/javascript" src="{$STATIC_URI}js/tools{$VERSION}.js"></script>
   {/jscombine}
