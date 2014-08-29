@@ -29,7 +29,7 @@ $debug = Springboard\Debug::getInstance();
 $debug->log($jconf['log_dir'], $myjobid . ".log", "*************************** Job: Remove files started ***************************", $sendmail = false);
 
 // Should we remove files and do any changes to DB?
-$isexecute = true;
+$isexecute = false;
 
 // Check operating system - exit if Windows
 if ( iswindows() ) {
