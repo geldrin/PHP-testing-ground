@@ -41,7 +41,7 @@ class Controller extends \Visitor\Controller {
     'checkfileresume'      => 'uploader|moderateduploader',
     'uploadchunk'          => 'uploader|moderateduploader',
     'cancelupload'         => 'uploader|moderateduploader',
-    'reflectoraccesscheck' => 'public',
+    'reflectorstreamaccess' => 'public',
   );
   
   public $forms = array(
@@ -473,7 +473,7 @@ class Controller extends \Visitor\Controller {
     
   }
 
-  public function reflectoraccesscheckAction() {
+  public function reflectorstreamaccessAction() {
     $param   = $this->application->getParameter('sessionid');
     $result  = '0';
     $matched =

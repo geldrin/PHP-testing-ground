@@ -31,7 +31,7 @@ if not ok then
   return ngx.exit(ngx.HTTP_INTERNAL_SERVER_ERROR)
 end
 
-local ok, err redis:select( tonumber( ngx.var.redis_db ) )
+local ok, err = redis:select( tonumber( ngx.var.redis_db ) )
 if not ok then
   ngx.log(ngx.ERR, 'could not select redis db ', err )
   return ngx.exit(ngx.HTTP_INTERNAL_SERVER_ERROR)
@@ -49,7 +49,7 @@ if not result then
 
   local ok, err = redis:setex( cachekey, ngx.var.cacheexpirationsec, response.body )
   if not ok then
-    ngx.log(ngx.ERR, 'unable to set redis key, continuing ', cachekey, " err: " err)
+    ngx.log(ngx.ERR, 'unable to set redis key, continuing ', cachekey, " err: ", err)
   end
 
   result = response.body
