@@ -2140,38 +2140,46 @@ function setupLivestatistics( elem ) {
   setupDefaultDateTimePicker('#starttimestamp');
   setupDefaultDateTimePicker('#endtimestamp');
 
-  // analyticsdata global
-  var graphdata = [];
-  var tickcount = Math.round(
-    ( analyticsdata.endts - analyticsdata.startts ) / analyticsdata.stepinterval
-  );
+  var prepareData = function( data ) {
 
-  var nullrow = [];
-  for (var i = 0, j = analyticsdata.labels.length - 1; i <= j; i++)
-    nullrow.push( 0 );
+    var graphdata = [];
+    var tickcount = Math.round(
+      ( data.endts - data.startts ) / data.stepinterval
+    );
 
-  var timestamptoindex = {};
-  for (var i = analyticsdata.data.length - 1; i >= 0; i--) {
-    timestamptoindex[ analyticsdata.data[i][0] ] = i;
-    analyticsdata.data[i][0] = new Date( analyticsdata.data[i][0] );
-  }
+    var nullrow = [];
+    for (var i = 0, j = data.labels.length - 1; i <= j; i++)
+      nullrow.push( 0 );
 
-  for(var i = 0; i < tickcount; i++) {
-
-    var ts  = ( i * analyticsdata.stepinterval ) + analyticsdata.startts;
-    var ind = timestamptoindex[ ts ];
-    if ( typeof( ind ) != 'undefined' ) { // data exists
-      graphdata.push( analyticsdata.data[ ind ] );
-      continue;
+    var timestamptoindex = {};
+    for (var i = data.data.length - 1; i >= 0; i--) {
+      timestamptoindex[ data.data[i][0] ] = i;
+      data.data[i][0] = new Date( data.data[i][0] );
     }
 
-    // data does not exist, copy the nullrow, update the timestamp
-    var row = nullrow.slice();
-    row[0] = new Date( ts );
+    for(var i = 0; i < tickcount; i++) {
 
-    graphdata.push( row );
+      var ts  = ( i * data.stepinterval ) + data.startts;
+      var ind = timestamptoindex[ ts ];
+      if ( typeof( ind ) != 'undefined' ) { // data exists
+        graphdata.push( data.data[ ind ] );
+        continue;
+      }
 
-  }
+      // data does not exist, copy the nullrow, update the timestamp
+      var row = nullrow.slice();
+      row[0] = new Date( ts );
+
+      graphdata.push( row );
+
+    }
+
+    return graphdata
+
+  };
+
+  // analyticsdata global
+  var graphdata = prepareData( analyticsdata );
 
   var visibility = [];
   $j('input[name^="datapoints"]').each(function() {
@@ -2179,10 +2187,13 @@ function setupLivestatistics( elem ) {
   });
 
   delete( timestamptoindex );
+  var refreshtimer  = null;
+  var lastclick     = null;
+  var isdoubleclick = null;
   var graph = new Dygraph( elem.get(0), graphdata, {
     visibility       : visibility,
     labels           : analyticsdata.labels,
-    showRangeSelector: true,
+    showRangeSelector: false,
     stackedGraph     : false,
     stepPlot         : true,
     fillGraph        : true,
@@ -2194,8 +2205,31 @@ function setupLivestatistics( elem ) {
       '#80c9ff', '#ffc080', '#ffe680', '#aa80ff', '#ee00cc', '#ff8080',
       '#666600', '#ffbfff', '#00ffcc', '#cc6699', '#999900'
     ],
+    clickCallback: function() {
+      var now = new Date().getTime();
+      if ( !lastclick ) {
+        lastclick = now;
+        return;
+      } else if ( now - lastclick <= 500 ) {
+        // double click, reset the graph
+        if ( refreshtimer ) {
+          clearTimeout( refreshtimer );
+          refreshtimer = null;
+        }
+        isdoubleclick = true;
+        lastclick = null;
+        refreshData(analyticsdata.origstartts, analyticsdata.origendts)();
+      } else
+        lastclick = null;
+    },
     zoomCallback: function(min, max) {
-      // needs ratelimit
+      if ( isdoubleclick )
+        return;
+
+      if ( refreshtimer )
+        clearTimeout( refreshtimer );
+
+      setTimeout( refreshData(min, max), 500 );
     },
     axes: {
       x: {
@@ -2214,10 +2248,66 @@ function setupLivestatistics( elem ) {
     }
   });
 
+  var refreshData = function(min, max) {
+    return function() {
+      var url = $j('#live_analytics').attr('action');
+      var params = $j('#live_analytics').serializeArray();
+      var starttimestamp = moment(min).format('YYYY-MM-DD HH:mm');
+      var endtimestamp = moment(max).format('YYYY-MM-DD HH:mm');
+
+      for (var i = params.length - 1; i >= 0; i--) {
+        switch( params[i].name ) {
+          case 'starttimestamp':
+            params[i].value = starttimestamp;
+            break;
+          case 'endtimestamp':
+            params[i].value = endtimestamp;
+            break;
+        };
+      };
+
+      $j('#live_analytics').deserializeArray( params );
+
+      $j.ajax({
+        url     : url,
+        type    : 'POST',
+        data    : params,
+        dataType: 'json',
+        success : function(data) {
+          if ( !data || typeof( data ) != 'object' || data.status != 'OK' )
+            return;
+
+          graphdata = prepareData(data.data);
+          graph.updateOptions({
+            file: graphdata,
+            dateWindow: [data.data.startts, data.data.endts]
+          });
+        },
+        complete: function() {
+          refreshtimer  = null;
+          isdoubleclick = false;
+        }
+      })
+      
+    };
+  };
+
   $j('input[name^="datapoints"]').change(function(e) {
     var index = parseInt( $j(this).val(), 10 );
     graph.setVisibility( index, $j(this).is(':checked') );
   });
+
+  $j('#live_analytics .reset').click( function(e) {
+    e.preventDefault();
+    if ( refreshtimer ) {
+      clearTimeout( refreshtimer );
+      refreshtimer = null;
+    }
+    isdoubleclick = null;
+    lastclick     = null;
+    refreshData(analyticsdata.origstartts, analyticsdata.origendts)();
+  });
+
 }
 
 function setupRecordingDownloads() {

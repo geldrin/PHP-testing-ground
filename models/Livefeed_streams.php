@@ -67,4 +67,50 @@ class Livefeed_streams extends \Springboard\Model {
     
   }
   
+  public function updateFeedThumbnail() {
+    $this->ensureObjectLoaded();
+    // befrissítjuk a livefeedet, nem problema ha NULL-ozzuk
+    $this->db->execute("
+      UPDATE livefeeds AS lf
+      SET lf.indexphotofilename = (
+        SELECT lfs.indexphotofilename
+        FROM livefeed_streams AS lfs
+        WHERE
+          lfs.indexphotofilename IS NOT NULL AND
+          lfs.indexphotofilename <> '' AND
+          lfs.livefeedid          = '" . $this->row['livefeedid'] . "'
+        ORDER BY lfs.id ASC
+        LIMIT 1
+      )
+      WHERE lf.id = '" . $this->row['livefeedid'] . "'
+      LIMIT 1
+    ");
+
+    // majd megkeressuk a csatornat ahove a livefeed tartozik hogy azt is befrissithessuk
+    $channelid = $this->db->getOne("
+      SELECT channelid
+      FROM livefeeds
+      WHERE id = '" . $this->row['livefeedid'] . "'
+      LIMIT 1
+    ");
+
+    // tobb livefeed lehet a csatorna alatt, az elso aminek van thumbnailje
+    // azt allitjuk be a csatornanak
+    $this->db->execute("
+      UPDATE channels AS c
+      SET c.indexphotofilename = (
+        SELECT lf.indexphotofilename
+        FROM livefeeds AS lf
+        WHERE
+          lf.indexphotofilename IS NOT NULL AND
+          lf.indexphotofilename <> '' AND
+          lf.channelid           = '$channelid'
+        ORDER BY lf.id ASC
+        LIMIT 1
+      )
+      WHERE c.id = '$channelid'
+      LIMIT 1
+    ");
+  }
+
 }

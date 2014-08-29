@@ -53,25 +53,27 @@ class Channels extends \Springboard\Model {
   }
 
   public function updateVideoCounters() {
-    
+
     $this->ensureObjectLoaded();
-    
+
     /* leszarmazott csatornak szamlaloi */
-    $counter = $this->db->getOne("
-      SELECT SUM( numberofrecordings ) 
+    $row = $this->db->getRow("
+      SELECT
+        SUM( numberofrecordings ) AS numberofrecordings,
+        SUM( recordingslength )   AS recordingslength
       FROM channels
       WHERE
         parentid  = '" . $this->id . "' AND
         isdeleted = '0'
     ");
-    
-    if ( !is_numeric( $counter ) )
-      $counter = 0;
+
+    $numberofrecordings = $row['numberofrecordings'] ?: '0';
+    $recordingslength   = $row['recordingslength'] ?: '0';
 
     $this->db->query("
       UPDATE channels
-      SET numberofrecordings = 
-        (
+      SET
+        numberofrecordings = (
           -- az adott csatornahoz rendelt felvetelek szama
           SELECT COUNT(*)
           FROM
@@ -84,8 +86,7 @@ class Channels extends \Springboard\Model {
               r.status = 'onstorage' OR
               r.status = 'live'
             ) AND
-            r.ispublished = 1 AND
-            r.accesstype  = 'public' AND
+            r.approvalstatus = 'approved' AND
             (
               r.visiblefrom  IS NULL OR
               r.visibleuntil IS NULL OR
@@ -94,20 +95,40 @@ class Channels extends \Springboard\Model {
                 r.visibleuntil >= CURRENT_DATE()
               )
             )
-        ) + " . $counter . "
+        ) + $numberofrecordings,
+        recordingslength = (
+          -- az adott csatornahoz rendelt felvetelek hossza
+          SELECT DISTINCT IFNULL( SUM(r.masterlength), 0 )
+          FROM
+            recordings r,
+            channels_recordings cr
+          WHERE
+            r.id             = cr.recordingid AND
+            cr.channelid     = '" . $this->id . "' AND
+            r.status         = 'onstorage' AND
+            r.approvalstatus = 'approved' AND
+            (
+              r.visiblefrom  IS NULL OR
+              r.visibleuntil IS NULL OR
+              (
+                r.visiblefrom  <= CURRENT_DATE() AND
+                r.visibleuntil >= CURRENT_DATE()
+              )
+            )
+        ) + $recordingslength
       WHERE id = '" . $this->id . "'
     ");
-    
+
     $row = $this->row;
     if ( $row['parentid'] ) {
-    
+
       $parent = $this->bootstrap->getModel('channels');
       while ( $row['parentid'] ) {
         $parent->select( $row['parentid'] );
         $parent->updateVideoCounters();
         $row = $parent->row;
       }
-      
+
     }
 
   }
@@ -411,25 +432,6 @@ class Channels extends \Springboard\Model {
     
   }
   
-  function getFavoriteChannelID() {
-    
-    $channelid = $this->db->getOne("
-      SELECT c.id
-      FROM channels c, channel_types ct
-      WHERE
-        ( c.userid IS NULL OR c.userid = 0 ) AND
-        c.channeltypeid = ct.id AND
-        ct.isfavorite = 1
-      ORDER BY c.id
-    ");
-    
-    if ( !$channelid )
-      throw new \Exception("favorite channel missing");
-    else
-      return $channelid;
-    
-  }
-  
   function getUsersChannels( $userid, $organizationids = null ) {
 
     if ( !$userid )
@@ -531,7 +533,7 @@ class Channels extends \Springboard\Model {
     
   }
   
-  function findRoot( $channel ) {
+  function findRoot( $channel, $ignoreaccesstype = false ) {
     
     if ( !$channel['parentid'] )
       return $this->channelroots[ $channel['id'] ] = $channel;
@@ -539,6 +541,7 @@ class Channels extends \Springboard\Model {
     if ( isset( $this->channelroots[ $channel['id'] ] ) )
       return $this->channelroots[ $channel['id'] ];
     
+    $where  = $ignoreaccesstype? '': "AND c.accesstype = 'public'";
     $parent = $this->db->getRow("
       SELECT
         c.*,
@@ -549,11 +552,11 @@ class Channels extends \Springboard\Model {
         channel_types AS ct
       WHERE
         ct.id           = c.channeltypeid AND
-        c.accesstype    = 'public' AND
         c.isdeleted     = '0' AND
         s.translationof = ct.name_stringid AND
         s.language      = '" . \Springboard\Language::get() . "' AND
         c.id            = '" . $channel['parentid'] . "'
+        $where
     ");
     
     if ( empty( $parent ) )
@@ -622,13 +625,6 @@ class Channels extends \Springboard\Model {
         s.translationof = ct.name_stringid AND
         s.language      = '" . \Springboard\Language::get() . "'
     ");
-    
-  }
-  
-  public function insertIntoFavorites( $recordingid, $user ) {
-    
-    $channelid = $this->cachedGetFavoriteChannelID();
-    return $this->insertIntoChannel( $recordingid, $user, false, $channelid );
     
   }
   
@@ -701,39 +697,68 @@ class Channels extends \Springboard\Model {
     
   }
   
-  // TODO szukites channeltype es ev alapjan
-  public function getLiveCount( $organizationid ) {
+  private function getLiveSQL( $filters ) {
+    $ret = array(
+      'order' => '',
+      'where' => array(
+        "isliveevent = '1'",
+        "isdeleted   = '0'",
+        "parentid    = '0'",
+      ),
+    );
     
+    $ret['where'][] = "organizationid = '" . $filters['organizationid'] . "'";
+    if ( isset( $filters['term'] ) and $filters['term'] ) {
+
+      $searchterm      = str_replace( ' ', '%', $filters['term'] );
+      $searchterm      = $this->db->qstr( '%' . $searchterm . '%' );
+      $ret['order']    = "
+        (
+           title    LIKE $searchterm OR
+           subtitle LIKE $searchterm
+        ) DESC,
+      ";
+
+      $ret['where'][] = "(
+        title         LIKE $searchterm OR
+        subtitle      LIKE $searchterm OR
+        ordinalnumber LIKE $searchterm OR
+        description   LIKE $searchterm OR
+        url           LIKE $searchterm
+      )";
+
+    }
+
+    if ( !$filters['showall'] )
+      $ret['where'][] = "endtimestamp >= NOW()";
+
+    $ret['where'] = implode(" AND ", $ret['where'] );
+    return $ret;
+
+  }
+
+  public function getLiveCount( $filters ) {
+    
+    $sql = $this->getLiveSQL( $filters );
     return $this->db->getOne("
       SELECT COUNT(*)
       FROM channels
-      WHERE
-        isliveevent    = '1' AND
-        isdeleted      = '0' AND
-        parentid       = '0' AND
-        endtimestamp   >= NOW() AND
-        organizationid = '$organizationid'
+      WHERE " . $sql['where'] . "
       LIMIT 1
     ");
     
   }
   
-  public function getLiveArray( $organizationid, $start, $limit, $orderby ) {
-    
-    $sql = "
+  public function getLiveArray( $filters, $start, $limit, $orderby ) {
+
+    $sql = $this->getLiveSQL( $filters );
+    return $this->db->getArray("
       SELECT *
       FROM channels
-      WHERE
-        isliveevent    = '1' AND
-        isdeleted      = '0' AND
-        parentid       = '0' AND
-        endtimestamp   >= NOW() AND
-        organizationid = '$organizationid'
-      ORDER BY $orderby
+      WHERE " . $sql['where'] . "
+      ORDER BY " . $sql['order'] . " $orderby
       LIMIT $start, $limit
-    ";
-    
-    return $this->db->getArray( $sql );
+    ");
     
   }
   
@@ -749,7 +774,7 @@ class Channels extends \Springboard\Model {
       WHERE
         cr.channelid IN('" . $this->id . "') AND
         r.id          = cr.recordingid AND
-        r.ispublished = '1' AND
+        r.approvalstatus = 'approved' AND
         r.mediatype   = 'live'
     ");
     
@@ -767,7 +792,7 @@ class Channels extends \Springboard\Model {
       WHERE
         cr.channelid  = '" . $this->id . "' AND
         r.id          = cr.recordingid AND
-        r.ispublished = '1' AND
+        r.approvalstatus = 'approved' AND
         r.mediatype   = 'live'
     ");
     
@@ -786,7 +811,8 @@ class Channels extends \Springboard\Model {
         slideonright,
         feedtype,
         moderationtype,
-        issecurestreamingforced
+        issecurestreamingforced,
+        indexphotofilename
       FROM livefeeds
       WHERE channelid IN('" . $this->id . "')
       ORDER BY name
@@ -1014,7 +1040,10 @@ class Channels extends \Springboard\Model {
     
     $this->db->execute("
       UPDATE livefeeds
-      SET accesstype = '" . $this->row['accesstype'] . "'
+      SET
+        accesstype        = '" . $this->row['accesstype'] . "',
+        smilstatus        = 'regenerate',
+        contentsmilstatus = 'regenerate'
       WHERE id IN('" . implode("', '", $livefeedids ) . "')
     ");
     
@@ -1134,7 +1163,7 @@ class Channels extends \Springboard\Model {
         r.numberofviews,
         r.rating,
         r.indexphotofilename,
-        r.ispublished,
+        r.approvalstatus,
         r.status,
         r.livefeedid,
         r.organizationid AS organizationid,
@@ -1188,11 +1217,13 @@ class Channels extends \Springboard\Model {
   }
 
   public function getCourseTypeID( $organizationid ) {
-    
+
     $id = $this->db->getOne("
       SELECT id
       FROM channel_types
-      WHERE iscourse = '1'
+      WHERE
+        iscourse       = '1' AND
+        organizationid = '$organizationid'
       ORDER BY weight
       LIMIT 1
     ");

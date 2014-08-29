@@ -14,6 +14,9 @@ include_once('job_utils_status.php');
 
 set_time_limit(0);
 
+// UTC: calc everything in UTC 
+date_default_timezone_set('UTC');
+
 // Init
 $app = new Springboard\Application\Cli(BASE_PATH, PRODUCTION);
 
@@ -65,24 +68,26 @@ $platform_definitions = array(
 // Flash IDE Builder: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_2) AppleWebKit/537.75.14 (KHTML, like Gecko) Version/7.0.3 Safari/537.75.14
 );
 
+$vsq_epoch = strtotime("2012-11-30 23:59:59");
+
 $stats_config = array(
 	0 => array(
 		'label'				=> "5min",
 		'sqltablename'		=> "statistics_live_5min",
 		'interval'			=> 60 * 5,
-		'lastprocessedtime'	=> 0
+		'lastprocessedtime'	=> $vsq_epoch
 	),
 	1 => array(
 		'label'				=> "hourly",
 		'sqltablename'		=> "statistics_live_hourly",
 		'interval'			=> 60 * 60,
-		'lastprocessedtime'	=> 0
+		'lastprocessedtime'	=> $vsq_epoch
 	),
 	2 => array(
 		'label'				=> "daily",
 		'sqltablename'		=> "statistics_live_daily",
 		'interval'			=> 60 * 60 * 24,
-		'lastprocessedtime'	=> 0
+		'lastprocessedtime'	=> $vsq_epoch
 	)
 );
 
@@ -152,8 +157,8 @@ for ( $statsidx = 0; $statsidx < count($stats_config); $statsidx++ ) {
 	$ltime = getLastStatsRecordFrom($stats_config[$statsidx]['sqltablename']);
 	if ( $ltime === false ) {
 		// Debug information for logging
-		$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Last processed time from db: no record found. Falling back to " . date("Y-m-d H:i:s", 0), $sendmail = false);
-		$stats_config[$statsidx]['lastprocessedtime'] = 0;
+		$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Last processed time from db: no record found. Falling back to " . date("Y-m-d H:i:s", $vsq_epoch), $sendmail = false);
+		$stats_config[$statsidx]['lastprocessedtime'] = $vsq_epoch;
 	} else {
 		$ltime = $ltime + $stats_config[$statsidx]['interval'] - 1;
 		// Debug information for logging
@@ -224,13 +229,11 @@ for ( $statsidx = 0; $statsidx < count($stats_config); $statsidx++ ) {
 			// Query finally selected interval with record(s)
 			$stats = queryStatsForInterval($start_interval, $end_interval, $wowza_app);
 			if ( $stats === false ) {
-echo "KAKA!!\n";
-$debug->log($jconf['log_dir'], $myjobid . ".log", "[WARN] Unexpected. No record(s) to process. Interval: " . date("Y-m-d H:i:s", $start_interval) . " - " . date("Y-m-d H:i:s", $end_interval), $sendmail = false);
-echo $kaka . "\n";
-			// Update last processed interval. Next active record will be found in next round.
-$stats_config[$statsidx]['lastprocessedtime'] = $end_interval;
-$start_interval = $start_interval + $stats_config[$statsidx]['interval'];
-continue;
+				$debug->log($jconf['log_dir'], $myjobid . ".log", "[WARN] Unexpected. No record(s) to process. Interval: " . date("Y-m-d H:i:s", $start_interval) . " - " . date("Y-m-d H:i:s", $end_interval) . "\n\nkaka: " . $kaka, $sendmail = true);
+				// Update last processed interval. Next active record will be found in next round.
+				$stats_config[$statsidx]['lastprocessedtime'] = $end_interval;
+				$start_interval = $start_interval + $stats_config[$statsidx]['interval'];
+				continue;
 			}
 
 		}
@@ -521,13 +524,22 @@ global $db, $debug, $myjobid, $app, $jconf;
 
 function getTimelineGridSeconds($timestamp, $direction = "left", $timeresolution) {
 
+	// UTC: calc everything in UTC 
+	date_default_timezone_set('UTC');
+
+//	echo "------------------------------------------\ndebug: in = " . $timestamp . " / " . date("Y-m-d H:i:s", $timestamp) . "\n";
+//	echo "debug: res = " . $timeresolution . "\n";
+
 	$mod = $timestamp % $timeresolution;
+//	echo "debug: mod = " . $mod . "\n";
 
 	if ( $direction == "left" ) {
 		$timestamp_grid = $timestamp - $mod;
 	} else {
 		$timestamp_grid = $timestamp + ($timeresolution + $mod);
 	}
+
+//	echo "debug: grid = " . date("Y-m-d H:i:s", $timestamp_grid) . "\n";
 
 	return $timestamp_grid;
 }

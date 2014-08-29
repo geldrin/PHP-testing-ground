@@ -76,6 +76,7 @@ return array(
     'isnewseditor'  => 'News editor',
     'isclientadmin' => 'Client administrator',
     'isuploader'    => 'Uploader',
+    'ismoderateduploader' => 'Moderated uploader',
     'isliveadmin'   => 'Live administrator',
   ),
   
@@ -171,11 +172,34 @@ return array(
     '' => '--- New template ---',
   ),
 
-  'live_analitics_datapoints' => array(
+  'live_analytics_datapoints' => array(
     '0' => $l('live', 'stats_numberofdesktop'),
     '1' => $l('live', 'stats_numberofandroid'),
     '2' => $l('live', 'stats_numberofiphone'),
     '3' => $l('live', 'stats_numberofipad'),
     '4' => $l('live', 'stats_sum'),
   ),
+
+  'live_analytics_resolutions' => array(
+    '300'   => $l('live', 'resolution_5min'),
+    '3600'  => $l('live', 'resolution_hourly'),
+    '86400' => $l('live', 'resolution_daily'),
+  ),
+
+  'recordings_approvalstatus_full' => array(
+    'draft'    => $l('recordings', 'approvalstatus_draft'),
+    'pending'  => $l('recordings', 'approvalstatus_pending'),
+    'approved' => $l('recordings', 'approvalstatus_approved'),
+  ),
+
+  'recordings_approvalstatus_min' => array(
+    'draft'    => $l('recordings', 'approvalstatus_draft'),
+    'pending'  => $l('recordings', 'approvalstatus_pending'),
+  ),
+
+  'recordings_approvalstatus_default' => array(
+    'draft'    => $l('recordings', 'approvalstatus_draft'),
+    'approved' => $l('recordings', 'approvalstatus_approved'),
+  ),
+
 );

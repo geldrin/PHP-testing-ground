@@ -71,7 +71,12 @@ class Modifystream extends \Visitor\HelpForm {
     }
     
     $this->streamModel->updateRow( $values );
-    
+    $this->feedModel->updateRow( array(
+        'smilstatus'        => 'regenerate',
+        'contentsmilstatus' => 'regenerate',
+      )
+    );
+
     $this->controller->redirect(
       $this->application->getParameter(
         'forward',

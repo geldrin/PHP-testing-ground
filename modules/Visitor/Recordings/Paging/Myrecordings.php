@@ -118,13 +118,12 @@ class Myrecordings extends \Visitor\Paging {
       
     }
     
-    $publishstatus = $this->application->getParameter('publishstatus');
+    $approvalstatus = $this->application->getParameter('approvalstatus');
     
-    if ( $publishstatus and in_array( $publishstatus, array('published', 'nonpublished') ) ) {
+    if ( $approvalstatus and in_array( $application, array('pending', 'draft', 'approved') ) ) {
       
-      $ispublished = $publishstatus == 'published'? '1': '0';
-      $where[] = "ispublished = '" . $ispublished . "'";
-      $this->passparams['publishstatus'] = $publishstatus;
+      $where[] = "approvalstatus = '$approvalstatus'";
+      $this->passparams['approvalstatus'] = $approvalstatus;
       
     }
     

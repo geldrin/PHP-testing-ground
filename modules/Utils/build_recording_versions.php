@@ -66,15 +66,15 @@ $query_recordings = "
     ( status = '". $jconf['dbstatus_copystorage_ok'] . "' OR status = '". $jconf['dbstatus_markedfordeletion'] ."' ) AND
     ( masterstatus = '". $jconf['dbstatus_copystorage_ok'] ."' OR masterstatus = '". $jconf['dbstatus_markedfordeletion'] ."') AND
     encodinggroupid IS NULL";
-    // $query_recordings .= " AND id BETWEEN 9 AND 18"; // debug (select test subjects only)
+// $query_recordings .= " AND id BETWEEN 1 AND 10"; // debug (select test subjects only)
 $query_default_cnode = "SELECT id FROM converter_nodes WHERE shortname LIKE 'conv-1'";
 
 $msg = "\n". str_pad("[ ". date('Y-m-d H:i:s', time()) ." ]", 80, "=", STR_PAD_BOTH) ."\n";
 $msg .= $debug === true ? "[NOTICE] Started in debug-mode.\n" : "";
-@fwrite($fh, $msg);
 
 $recordings_done = 0;
 $versions_created = 0;
+$warnings = 0;
 // Read basic profile ids from database
 
 try {
@@ -108,6 +108,7 @@ while (!$recordings->EOF) {
   
   if (!file_exists($recording_path)) {
     $msg .= print_r("[ERROR] recording path doesn't exists! [ ". $recording_path ." ]\n", true);
+		$warnings++;
     continue;
   }
   
@@ -158,12 +159,13 @@ while (!$recordings->EOF) {
       $data = $checkversions['data'];
       if (!empty($data) && $data[0]['encodingprofileid'] == $ver['profile']) {
         $msg .= "Recording version '". $ver['filename'] ."' already exists, skipping entry.\n";
-        fwrite($fh, $msg);
-        $recordings->MoveNext();
+        // $recordings->MoveNext();
+				$warnings++;
         continue;
       }
     } else {
       $msg .= "[ERROR] Check ". $ver['qtag'] ." version failed! ". $checkversions['message'];
+			$warnings++;
       $err = true;
       break;
     }
@@ -197,17 +199,19 @@ while (!$recordings->EOF) {
       if ($result['success'] === false) {
         $msg .= "[WARNING] Query failed, skipping.\n";
         $err = true;
+				$warnings++;
         $recordings->MoveNext();
         continue;
-      } 
+      }
       $versions_inserted++;
       $versions_created++;
-    } catch(Exception $ex) {
+    } catch(\Exception $ex) {
       print_r(print_r($ver, true) . $ex->getMessage());
-      fwrite($fh, print_r(trim($ex->getMessage()), true));
-
-      break 2;
-      // exit -1;
+			$err = true;
+      $msg .= "[WARNING] ". trim($ex->getMessage()) . PHP_EOL ."Skipping.\n";
+      $warnings++;
+      continue;
+      // break 2;
     }
   }
   
@@ -216,23 +220,29 @@ while (!$recordings->EOF) {
   $qry = "UPDATE `recordings` SET `encodinggroupid` = 2 WHERE `id` = ". intval($rec['id']);
   $msg .= "\nUpdating recording #". $rec['id'] ." \n". $qry ."\n";
   if ($debug === false) {
-    $tmp = query($qry);
-    if ($tmp['result'] === false) {
-      $msg .= "[ERROR] Database update (recordings.encodinggroupid) failed.\n". $tmp['message'] ."\n";
-      break;
-    }
-    unset($tmp);
-    $msg .= "result: ok\n";
+	
+		if ($err === false) {
+			$tmp = query($qry);
+			if ($tmp['result'] === false) {
+				$msg .= "[ERROR] Database update (recordings.encodinggroupid) failed.\n". $tmp['message'] ."\n";
+				$warnings++;
+				break;
+			}
+			unset($tmp);
+			$msg .= "result: ok\n";
+		}
   }
   
   $msg .= "\nVersions inserted: ". $versions_inserted ."/". count($versions) ."\n";
   $msg .= str_pad("", 80, "-") ."\n";
   
   fwrite($fh, $msg);
+	$msg = '';
   $recordings->MoveNext();
 }
 
-$msg = "\nTotal number of recordings done: ". $recordings_done ."/". $num_recordings ."\nTotal number of versions created: ". $versions_created ."\n";
+$msg = "\nTotal number of recordings done: ". $recordings_done ."/". $num_recordings ."\nTotal number of versions created: ". $versions_created ."
+\nWarnings: ". $warnings ."\n";
 print_r("\nWriting log file: \"". $logfile ."\"\n");
 fwrite($fh, $msg);
 fclose($fh);

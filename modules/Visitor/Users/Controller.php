@@ -8,6 +8,7 @@ class Controller extends \Visitor\Controller {
     'signup'               => 'public',
     'modify'               => 'member',
     'welcome'              => 'member',
+    'info'                 => 'member',
     'index'                => 'public',
     'validate'             => 'public',
     'forgotpassword'       => 'public',
@@ -225,13 +226,14 @@ class Controller extends \Visitor\Controller {
     
     $l    = $this->bootstrap->getLocalization();
     $user = $this->bootstrap->getSession('user');
-   
+
     if ( $user['id'] ) {
       $userModel = $this->bootstrap->getModel('users');
       $userModel->select( $user['id'] );
       $userModel->row['sessionlastupdated'] = '';
       $userModel->row['sessionid']          = '';
       $userModel->updateRow( $userModel->row );
+      $userModel->unsetAutoLoginCookie( $this->bootstrap->ssl );
     }
 
     $user->clear();
@@ -304,24 +306,10 @@ class Controller extends \Visitor\Controller {
     if ( $userModel->row['isadmin'] )
       $userModel->row['organizationid'] = $this->organization['id']; // a registerforsession miatt
     
-    $ipaddresses = $this->getIPAddress(true);
-    $ipaddress   = '';
-    foreach( $ipaddresses as $key => $value )
-      $ipaddress .= ' ' . $key . ': ' . $value;
-    
     $userModel->registerForSession();
     $userModel->updateSessionInformation();
-    $userModel->updateLastlogin( null, $ipaddress );
+    $userModel->updateLastlogin( null, $this->getIPAddress(true) );
     $this->logUserLogin('APILOGIN');
-    
-    $output = array(
-      'userid'                           => $userModel->id,
-      'needping'                         => (bool)$userModel->row['issingleloginenforced'],
-      'pingseconds'                      => $this->bootstrap->config['sessionpingseconds'],
-      'checkwatching'                    => (bool)$userModel->row['ispresencecheckforced'],
-      'checkwatchingtimeinterval'        => $this->organization['presencechecktimeinterval'],
-      'checkwatchingconfirmationtimeout' => $this->organization['presencecheckconfirmationtime'],
-    );
     
     if ( $recordingid ) {
       
@@ -347,11 +335,7 @@ class Controller extends \Visitor\Controller {
       $this->toSmarty['member']    = $user;
       $this->toSmarty['ipaddress'] = $this->getIPAddress();
       $this->toSmarty['sessionid'] = session_id();
-      $output = array_merge(
-        $output,
-        $recordingsModel->getSeekbarOptions( $this->toSmarty ),
-        $recordingsModel->getMediaServers( $this->toSmarty )
-      );
+      $output = $recordingsModel->getFlashData( $this->toSmarty );
       
     } elseif ( $feedid ) {
       
@@ -369,7 +353,7 @@ class Controller extends \Visitor\Controller {
       if ( $access[ $accesskey ] !== true )
         throw new \Visitor\Api\ApiException( $l('recordings', 'nopermission'), true, false );
 
-      $info          = array(
+      $info = array(
         'organization' => $this->organization,
         'sessionid'    => session_id(),
         'ipaddress'    => $this->getIPAddress(),
@@ -380,17 +364,7 @@ class Controller extends \Visitor\Controller {
         'checkwatchingtimeinterval' => $this->organization['presencechecktimeinterval'],
         'checkwatchingconfirmationtimeout' => $this->organization['presencecheckconfirmationtime'],
       );
-      $flashdata = $feedModel->getFlashData( $info );
-      $output['media_servers'] = $flashdata['media_servers'];
-
-      if ( isset( $flashdata['media_secondaryServers'] ) )
-        $output['media_secondaryServers'] = $flashdata['media_secondaryServers'];
-
-      if ( isset( $flashdata['livePlaceholder_servers'] ) )
-        $output['livePlaceholder_servers'] = $flashdata['livePlaceholder_servers'];
-
-      if ( isset( $flashdata['intro_servers'] ) )
-        $output['intro_servers'] = $flashdata['intro_servers'];
+      $output = $feedModel->getFlashData( $info );
 
     }
 
@@ -664,6 +638,27 @@ class Controller extends \Visitor\Controller {
         'postfix' => $template['postfix'],
       )
     );
+
+  }
+
+  public function infoAction() {
+
+    $userModel = $this->modelOrganizationAndIDCheck(
+      'users',
+      $this->application->getNumericParameter('id')
+    );
+
+    $this->toSmarty['user']     = $userModel->row;
+    $this->toSmarty['channels'] =
+      $userModel->getRecordingsProgressWithChannels(
+        $this->organization['id']
+      )
+    ;
+    $this->toSmarty['forward']  = $this->application->getParameter(
+      'forward', 'users/admin'
+    );
+
+    $this->smartyOutput('Visitor/Users/Info.tpl');
 
   }
 

@@ -28,7 +28,7 @@
             {if $member.isnewseditor or $member.isclientadmin}
               <li><a href="{$language}/organizations/listnews">{#footer_newseditor#}</a></li>
             {/if}
-            {if $member.isuploader}
+            {if $member.isuploader or $member.ismoderateduploader}
               <li><a href="{$language}/recordings/upload">{#footer_upload#}</a></li>
               <li><a href="{$language}/recordings/myrecordings">{#footer_myrecordings#}</a></li>
             {/if}

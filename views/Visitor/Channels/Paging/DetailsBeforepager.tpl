@@ -1,12 +1,12 @@
 <div class="heading categories title">
-  {if !$channeltree[0].subtitle and $member.id and $member.isuploader and $canaddrecording}
+  {if !$channeltree[0].subtitle and $member.id and ($member.isuploader or $member.ismoderateduploader) and $canaddrecording}
   <div class="actions">
     <a href="{$language}/recordings/upload?channelid={$channel.id}">{#channels__addrecording#}</a>
   </div>
   {/if}
   <h1>{$channeltree[0].title|escape:html}</h1>
   {if $channeltree[0].subtitle}
-    {if $member.id and $member.isuploader and $canaddrecording}
+    {if $member.id and ($member.isuploader or $member.ismoderateduploader) and $canaddrecording}
     <div class="actions">
       <a href="{$language}/recordings/upload?channelid={$channel.id}">{#channels__addrecording#}</a> |
       <a href="{$language}/channels/orderrecordings/{$channel.id}?forward={$FULL_URI|escape:url}">{#channels__orderrecordings#}</a>

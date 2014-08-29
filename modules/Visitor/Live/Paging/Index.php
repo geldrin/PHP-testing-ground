@@ -11,36 +11,69 @@ class Index extends \Visitor\Paging {
   protected $insertbeforepager = Array( 'Visitor/Live/Paging/IndexBeforepager.tpl' );
   protected $template = 'Visitor/Live/Paging/Index.tpl';
   protected $channelModel;
-  
+  protected $filters = array(
+    'showall' => false,
+  );
+
   public function init() {
-    
+
     $l                 = $this->bootstrap->getLocalization();
     $this->foreachelse = $l('live','live_foreachelse');
     $this->title       = $l('','sitewide_live');
-    $this->controller->toSmarty['listclass'] = 'channellist live';
+    $this->controller->toSmarty['listclass'] = 'recordinglist';
+
+    $this->handleSearch();
     parent::init();
-    
+
   }
   
   protected function setupCount() {
-    
+
     $this->channelModel = $this->bootstrap->getModel('channels');
-    
     return $this->itemcount = $this->channelModel->getLiveCount(
-      $this->controller->organization['id']
+      $this->filters
     );
-    
+
   }
-  
+
   protected function getItems( $start, $limit, $orderby ) {
-    
+
     $items = $this->channelModel->getLiveArray(
-      $this->controller->organization['id'],
+      $this->filters,
       $start, $limit, $orderby
     );
-    
+
+    if ( empty( $this->passparams ) and empty( $items ) )
+      $this->controller->toSmarty['nosearch'] = true;
+
     return $items;
-    
+
   }
-  
+
+  protected function handleSearch() {
+
+    $this->filters['organizationid'] = $this->controller->organization['id'];
+    $user = $this->bootstrap->getSession('user');
+    if (
+         !$user['id'] or
+         ( !$user['isadmin'] and !$user['isclientadmin'] and !$user['isliveadmin'] )
+       ) {
+      $this->controller->toSmarty['nosearch'] = true;
+      return;
+    }
+
+    $showall = $this->application->getParameter('showall');
+    if ( $showall and in_array( $showall, array('0', '1') ) ) {
+      $this->filters['showall'] = (bool)$showall;
+      $this->passparams['showall'] = $showall;
+    }
+
+    $term = $this->application->getParameter('term');
+    if ( $term and mb_strlen( trim( $term ) ) >= 2 ) {
+      $this->passparams['term'] = trim( $term );
+      $this->filters['term'] = $this->passparams['term'];
+    }
+
+  }
+
 }

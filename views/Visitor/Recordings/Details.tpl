@@ -10,7 +10,7 @@
 {/if}
 {include file="Visitor/_header.tpl" title=$recording.title pagebgclass=$pagebgclass}
 <div class="title recording">
-  {if !$recording.ispublished}
+  {if $recording.approvalstatus != 'approved'}
     <center><a href="{$language}/recordings/modifysharing/{$recording.id}">{#recordings__notpublished_warning#}</a></center>
     <br/>
   {/if}
@@ -167,7 +167,7 @@
   
   <div id="embed">
     {capture assign=embed}
-      <iframe width="480" height="{$height}" src="{$BASE_URI}{$language}/recordings/embed/{$recording.id}" frameborder="0" allowfullscreen="allowfullscreen"></iframe>
+      <iframe width="480" height="{$height}" src="{$BASE_URI}recordings/embed/{$recording.id}" frameborder="0" allowfullscreen="allowfullscreen"></iframe>
     {/capture}
     <label for="embedcode">{#recordings__embedcode#}:</label>
     <textarea id="embedcode" data-fullscaleheight="{$flashheight}" data-normalheight="{$height}">{$embed|trim|escape:html}</textarea>
@@ -231,9 +231,10 @@
   <div id="recordingdownloads">
     <a href="#" class="submitbutton">{#recordings__recordingdownloads#}</a>
     <ul>
-      {foreach from=$recordingdownloads key=key item=url}
+      {foreach from=$recordingdownloads key=key item=item}
         {assign var=localekey value="recordingdownloads_$key"}
-        <li><a href="{$url}">{$l->get('recordings', $localekey, $language)}</a></li>
+        {assign var=itemlocale value=$l->get('recordings', $localekey, $language)}
+        <li><a href="{$item.url}">{$itemlocale|sprintf:$item.qualitytag}</a></li>
       {/foreach}
     </ul>
   </div>

@@ -10,7 +10,7 @@ var analyticsdata = {$analyticsdata|@jsonescape};
 <br/>
 
 <div id="analyticscontainer">
-  <div id="livestatistics" data-url="{$language}/live/getstatistics/{$channel.id}"></div>
+  <div id="livestatistics"></div>
   <div id="statisticslegend"></div>
 
   <div class="form">

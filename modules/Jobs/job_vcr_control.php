@@ -381,7 +381,7 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_vcr_control.stop' ) and !i
 			'subtitle'				=> $vcr_upload['datetime'],
 			'recordedtimestamp'		=> $vcr_upload['datetime'],
 			'accesstype'			=> 'public',	// örökölje a csatornáét?
-			'ispublished'			=> 0,
+			'approvalstatus'		=> 'draft',
 			'isdownloadable'		=> 0,
 			'isaudiodownloadable'	=> 0,
 			'isembedable'			=> 1,

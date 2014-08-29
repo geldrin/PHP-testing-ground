@@ -177,6 +177,12 @@ $config = Array(
     'values'      => $l->getLov('yesno'),
   ),
   
+  'ismoderateduploader' => array(
+    'displayname' => 'Moderált feltöltő?',
+    'type'        => 'inputRadio',
+    'values'      => $l->getLov('yesno'),
+  ),
+  
   'isapienabled' => array(
     'displayname' => 'API használatának engedélyezése?',
     'type'        => 'inputRadio',

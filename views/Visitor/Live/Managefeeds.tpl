@@ -21,11 +21,11 @@
       <a href="{$language}/live/view/{$feed.id},{$feed.name|filenameize}" class="livefeed" title="{if $feed.status == 'live'}{#live__feedislive#}{else}{#live__feedistesting#}{/if}"></a>
     </td>
     <td class="feed">
-      <a href="{$language}/live/view/{$feed.id},{$feed.name|filenameize}" class="left"><b>{$feed.name|escape:html}</b></a>
+      <a href="{$language}/live/view/{$feed.id},{$feed.name|filenameize}" class="left"><b>{$feed.name|mb_wordwrap:30|escape:html}</b></a>
       <br/>
-      <!--
+      {if !$bootstrap->production}
         <a href="{$language}/live/analytics/{$channel.id}?feedids[]={$feed.id}">{#live__analytics#}</a>
-      -->
+      {/if}
       {if $feed.feedtype != 'vcr' or $feed.candelete}
         | <a href="{$language}/live/modifyfeed/{$feed.id}">{#live__live_edit#}</a>
         | <a href="{$language}/live/deletefeed/{$feed.id}" class="confirm" question="{#sitewide_areyousure#|escape:html}">{#live__live_delete#}</a>
@@ -95,7 +95,7 @@
   {if !empty( $feed.streams )}
   <tr class="liveembedrow">
     <td colspan="3">
-      <div class="liveembedwrap" data-embedurl="{$BASE_URI}{$language}/live/view/{$feed.id},{$feed.name|filenameize}?chromeless=true">
+      <div class="liveembedwrap" data-embedurl="{$BASE_URI}live/view/{$feed.id},{$feed.name|filenameize}?chromeless=true">
         <span class="label">{#live__embed_info#}</span>
         {if $feed.moderationtype != 'nochat'}
         <div class="option">
@@ -114,7 +114,7 @@
           <label for="fullplayer_no_{$feed.id}">{#live__fullplayer_no#}</label>
         </div>
         {capture assign=liveembed}
-          <iframe width="950" height="{if $feed.moderationtype == 'nochat'}530{else}860{/if}" src="{$BASE_URI}{$language}/live/view/{$feed.id},{$feed.name|filenameize}?chromeless=true{if $feed.moderationtype == 'nochat'}&chat=false{/if}" frameborder="0" allowfullscreen="allowfullscreen"></iframe>
+          <iframe width="950" height="{if $feed.moderationtype == 'nochat'}530{else}860{/if}" src="{$BASE_URI}live/view/{$feed.id},{$feed.name|filenameize}?chromeless=true{if $feed.moderationtype == 'nochat'}&chat=false{/if}" frameborder="0" allowfullscreen="allowfullscreen"></iframe>
         {/capture}
         <textarea onclick="this.select();">{$liveembed|trim|escape:html}</textarea>
       </div>

@@ -275,7 +275,7 @@ class Recordings extends \Springboard\Model {
     if (
          $this->row === null or // toroltek
          $this->row['status'] != 'onstorage' or // nincs onstorage eleme
-         $this->row['ispublished'] != 1 // nincs metaadata vagy kikapcsolva
+         $this->row['approvalstatus'] != 'approved' // nincs metaadata vagy kikapcsolva
        ) {
       
       // indexphoto
@@ -454,6 +454,7 @@ class Recordings extends \Springboard\Model {
       'status'          => 'uploading',
       'masterstatus'    => 'uploading',
       'accesstype'      => 'public',
+      'approvalstatus'  => 'draft',
       'mastersourceip'  => $sourceip,
       'isintrooutro'    => $isintrooutro,
       'timestamp'       => date('Y-m-d H:i:s'),
@@ -463,7 +464,7 @@ class Recordings extends \Springboard\Model {
     
     if ( $isintrooutro ) {
       
-      $recording['ispublished'] = 1;
+      $recording['approvalstatus'] = 'approved';
       
     }
     
@@ -891,7 +892,7 @@ class Recordings extends \Springboard\Model {
          )
        )
       return true;
-    elseif ( !$this->row['ispublished'] )
+    elseif ( $this->row['approvalstatus'] != 'approved' )
       return 'recordingisnotpublished';
     
     return true;
@@ -1095,7 +1096,29 @@ class Recordings extends \Springboard\Model {
 
   }
 
-  public function getUserChannelRecordingsWithProgress( $channelids, $user, $organization, $distinct = true ) {
+  public function getUserChannelRecordingsWithProgress( $channelids, $user, $organization, $distinct = true, $includeuser = false ) {
+
+    if ( $includeuser ) {
+      $select = ",
+        usr.id AS userid,
+        usr.nickname,
+        usr.nameformat,
+        usr.nameprefix,
+        usr.namefirst,
+        usr.namelast
+      ";
+      $table = ",
+        users AS usr
+      ";
+      $where = "
+        usr.id = r.userid AND
+      ";
+    } else {
+      $select = '';
+      $table  = '';
+      $where  = '';
+    }
+
     return $this->db->getArray("
       SELECT
         r.*,
@@ -1112,6 +1135,7 @@ class Recordings extends \Springboard\Model {
           )
         ) AS positionpercent,
         IFNULL(rvp.position, 0) AS lastposition
+        $select
       FROM
         channels_recordings AS cr,
         recordings AS r
@@ -1119,11 +1143,13 @@ class Recordings extends \Springboard\Model {
           r.id       = rvp.recordingid AND
           rvp.userid = '" . $user['id'] . "'
         )
+        $table
       WHERE
+        $where
         cr.channelid IN('" . implode("', '", $channelids ) . "') AND
         r.id             = cr.recordingid AND
         r.isintrooutro   = '0' AND
-        r.ispublished    = '1' AND
+        r.approvalstatus = 'approved' AND
         r.status         = 'onstorage' AND -- TODO live?
         r.organizationid = '" . $organization['id'] . "' AND
         r.status         = 'onstorage'
@@ -1136,7 +1162,7 @@ class Recordings extends \Springboard\Model {
     
     return "
       {$prefix}status       = 'onstorage' AND
-      {$prefix}ispublished  = '1' AND
+      {$prefix}approvalstatus = 'approved' AND
       {$prefix}isintrooutro = '$isintrooutro' AND
       {$prefix}accesstype   = '$accesstype' AND
       (
@@ -1182,7 +1208,7 @@ class Recordings extends \Springboard\Model {
       r.status       = 'onstorage' AND
       r.isintrooutro = '$isintrooutro' AND
       (
-        r.ispublished = '1'" . ( $isadmin? '': " OR
+        r.approvalstatus = 'approved'" . ( $isadmin? '': " OR
         r.userid = '" . $user['id'] . "'" ) . "
       ) AND
       (
@@ -1503,7 +1529,92 @@ class Recordings extends \Springboard\Model {
     return $ret;
   }
 
-  public function getRelatedVideosByKeywords( $limit, $user, $organizationid ){
+  public function getRelatedVideosByCourse( $limit, $user, $organization ){
+
+    if ( !$user['id'] )
+      return array();
+
+    $this->ensureID();
+
+    $coursetypeid = $this->bootstrap->getModel('channels')->cachedGetCourseTypeID(
+      $organization['id']
+    );
+
+    if ( !$coursetypeid )
+      return array();
+
+    // the course channels where the recording is a member
+    $coursechannelids = $this->db->getCol("
+      SELECT c.id
+      FROM
+        channels_recordings AS cr,
+        channels AS c
+      WHERE
+        cr.recordingid      = '" . $this->id . "' AND
+        cr.channelid        = c.id AND
+        c.organizationid    = '" . $organization['id'] . "' AND
+        c.channeltypeid     = '$coursetypeid' AND
+        c.isdeleted         = '0'
+    ");
+
+    // recording not a member of any course
+    if ( empty( $coursechannelids ) )
+      return array();
+
+    $usercourses = $this->db->getCol("
+      SELECT ui.channelid
+      FROM
+        users_invitations AS ui
+      WHERE
+        ui.channelid IN('" . implode("', '", $coursechannelids ) . "') AND
+        ui.registereduserid = '" . $user['id'] . "' AND
+        ui.organizationid   = '" . $organization['id'] . "' AND
+        ui.status           <> 'deleted'
+    ");
+
+    // user not a member of the course
+    if ( empty( $usercourses ) )
+      return array();
+
+    $found      = false;
+    $ret        = array();
+    $recordings = $this->getUserChannelRecordingsWithProgress(
+      $usercourses, $user, $organization, true, true
+    );
+
+    foreach( $recordings as $recording ) {
+
+      if ( !$found and $recording['id'] == $this->id ) {
+        $found = true;
+        continue;
+      }
+
+      if ( !$found )
+        continue;
+
+      $ret[ $recording['id'] ] = array(
+        'id'                  => $recording['id'],
+        'title'               => $recording['title'],
+        'subtitle'            => $recording['subtitle'],
+        'indexphotofilename'  => $recording['indexphotofilename'],
+        'masterlength'        => $recording['masterlength'],
+        'contentmasterlength' => $recording['contentmasterlength'],
+        'numberofviews'       => $recording['numberofviews'],
+        'userid'              => $recording['userid'],
+        'nickname'            => $recording['nickname'],
+        'nameformat'          => $recording['nameformat'],
+        'nameprefix'          => $recording['nameprefix'],
+        'namefirst'           => $recording['namefirst'],
+        'namelast'            => $recording['namelast'],
+      );
+
+    }
+
+    return $ret;
+
+  }
+  
+  public function getRelatedVideosByKeywords( $limit, $user, $organization ){
     
     $this->ensureObjectLoaded();
     if ( !strlen( trim( $this->row['keywords'] ) ) )
@@ -1548,7 +1659,7 @@ class Recordings extends \Springboard\Model {
     $where = "
       usr.id = r.userid AND
       r.id <> '" . $this->id . "' AND
-      r.organizationid = '$organizationid'"
+      r.organizationid = '" . $organization['id'] . "'"
     ;
     
     if ( !empty( $keywordwhere ) )
@@ -1562,7 +1673,7 @@ class Recordings extends \Springboard\Model {
     
   }
   
-  public function getRelatedVideosByChannel( $limit, $user, $organizationid, $channelids = null ) {
+  public function getRelatedVideosByChannel( $limit, $user, $organization, $channelids = null ) {
     
     $this->ensureID();
     $dontrecurse = true;
@@ -1605,7 +1716,7 @@ class Recordings extends \Springboard\Model {
       r.id = cr.recordingid AND
       usr.id = r.userid AND
       r.id <> '" . $this->id . "' AND
-      r.organizationid = '$organizationid'"
+      r.organizationid = '" . $organization['id'] . "'"
     ;
     
     $return = $this->db->getAssoc(
@@ -1627,7 +1738,7 @@ class Recordings extends \Springboard\Model {
       }
       
       $parentids = array_unique( $parentids );
-      $return = $return + $this->getRelatedVideosByChannel( $limit - count( $return ), $user, $organizationid, $parentids );
+      $return = $return + $this->getRelatedVideosByChannel( $limit - count( $return ), $user, $organization, $parentids );
       
     }
     
@@ -1635,7 +1746,7 @@ class Recordings extends \Springboard\Model {
     
   }
   
-  public function getRelatedVideosRandom( $limit, $user, $organizationid ) {
+  public function getRelatedVideosRandom( $limit, $user, $organization ) {
     
     $this->ensureID();
     
@@ -1664,7 +1775,7 @@ class Recordings extends \Springboard\Model {
     $where = "
       usr.id = r.userid AND
       r.id <> '" . $this->id . "' AND
-      r.organizationid = '$organizationid'"
+      r.organizationid = '" . $organization['id'] . "'"
     ;
     
     return $this->db->getAssoc(
@@ -1676,20 +1787,22 @@ class Recordings extends \Springboard\Model {
     
   }
   
-  public function getRelatedVideos( $count, $user, $organizationid ) {
+  public function getRelatedVideos( $count, $user, $organization ) {
     
     $this->ensureObjectLoaded();
     
-    $return = array();
+    $return = $this->getRelatedVideosByCourse( $count, $user, $organization );
+    if ( !empty( $return ) ) // ha kurzusba tartozik  akkor csak azokat adjuk vissza
+      return $return;
+
+    if ( count( $return ) < $count )
+      $return = $return + $this->getRelatedVideosByChannel( $count - count( $return ), $user, $organization );
     
     if ( count( $return ) < $count )
-      $return = $return + $this->getRelatedVideosByChannel( $count - count( $return ), $user, $organizationid );
+      $return = $return + $this->getRelatedVideosByKeywords( $count - count( $return ), $user, $organization );
     
     if ( count( $return ) < $count )
-      $return = $return + $this->getRelatedVideosByKeywords( $count - count( $return ), $user, $organizationid );
-    
-    if ( count( $return ) < $count )
-      $return = $return + $this->getRelatedVideosRandom( $count - count( $return ), $user, $organizationid );
+      $return = $return + $this->getRelatedVideosRandom( $count - count( $return ), $user, $organization );
     
     return $return;
     
@@ -2131,7 +2244,7 @@ class Recordings extends \Springboard\Model {
     else
       $apiurl = $info['BASE_URI'];
 
-    $apiurl .=  \Springboard\Language::get() . '/jsonapi';
+    $apiurl .=  'jsonapi';
     $data    = array(
       'language'              => \Springboard\Language::get(),
       'api_url'               => $apiurl,
@@ -2152,8 +2265,9 @@ class Recordings extends \Springboard\Model {
       $data['recording_isAudio'] = true;
 
     if ( isset( $info['member'] ) and $info['member']['id'] ) {
-      $data['user_id'] = $info['member']['id'];
-      $data['user_needPing'] = true;
+      $data['user_id']          = $info['member']['id'];
+      $data['user_needPing']    = true;
+      $data['user_pingSeconds'] = $this->bootstrap->config['sessionpingseconds'];
     }
 
     $hds  = $this->isHDSEnabled();
@@ -2245,37 +2359,36 @@ class Recordings extends \Springboard\Model {
       
     }
     
-    $relatedvideos = $this->getRelatedVideos(
-      $this->bootstrap->config['relatedrecordingcount'],
-      $info['member'],
-      $info['organization']['id']
-    );
-    $data['recommendatory_string'] = array();
-    foreach( $relatedvideos as $video ) {
-      
-      $data['recommendatory_string'][] = array(
-        'title'       => $video['title'],
-        'subtitle'    => $video['subtitle'],
-        'image'       => \smarty_modifier_indexphoto( $video, 'wide', $info['STATIC_URI'] ),
-        'url'         =>
-          $recordingbaseuri . 'details/' . $video['id'] . ',' .
-          \Springboard\Filesystem::filenameize( $video['title'] )
-        ,
-      );
-      
+    if ( !$info['organization']['isrecommendationdisabled'] ) {
+
+      if ( isset( $info['relatedvideos'] ) )
+        $relatedvideos = $info['relatedvideos'];
+      else
+        $relatedvideos = $this->getRelatedVideos(
+          $this->bootstrap->config['relatedrecordingcount'],
+          $info['member'],
+          $info['organization']
+        );
+
+      $data['recommendatory_string'] = array();
+      foreach( $relatedvideos as $video ) {
+        
+        $data['recommendatory_string'][] = array(
+          'title'       => $video['title'],
+          'subtitle'    => $video['subtitle'],
+          'image'       => \smarty_modifier_indexphoto( $video, 'wide', $info['STATIC_URI'] ),
+          'url'         =>
+            $recordingbaseuri . 'details/' . $video['id'] . ',' .
+            \Springboard\Filesystem::filenameize( $video['title'] )
+          ,
+        );
+        
+      }
+
     }
     
-    if ( $this->row['isseekbardisabled'] and @$info['member'] and $info['member']['id'] ) {
-      
-      $options = $this->getSeekbarOptions( $info );
-      $data['timeline_seekbarDisabled']          = $options['isseekbardisabled'];
-      $data['timeline_lastPositionTimeInterval'] = $options['lastpositiontimeinterval'];
-      $data['timeline_lastPlaybackPosition']     = $options['lastplaybackposition'];
-      
-      if ( isset( $options['seekbarvisible'] ) )
-        $data['timeline_seekbarVisible']         = $options['seekbarvisible'];
-      
-    }
+    if ( $this->row['isseekbardisabled'] and @$info['member'] and $info['member']['id'] )
+      $data = array_merge( $data, $this->getSeekbarOptions( $info ) );
     
     return $data;
     
@@ -2313,9 +2426,9 @@ class Recordings extends \Springboard\Model {
       ");
 
     $options = array(
-      'isseekbardisabled'         => true,
-      'lastplaybackposition'      => $lastposition,
-      'lastpositiontimeinterval'  =>
+      'timeline_seekbarDisabled'          => true,
+      'timeline_lastPlaybackPosition'     => $lastposition,
+      'timeline_lastPositionTimeInterval' =>
         $this->bootstrap->config['recordingpositionupdateseconds']
       ,
     );
@@ -2325,7 +2438,7 @@ class Recordings extends \Springboard\Model {
          $user['isclientadmin'] or
          $user['iseditor']
        )
-      $options['seekbarvisible'] = true;
+      $options['timeline_seekbarVisible'] = true;
     
     return $options;
     
@@ -2521,7 +2634,7 @@ class Recordings extends \Springboard\Model {
     switch( $type ) {
 
       case 'mobilehttp':
-        //http://stream.videotorium.hu:1935/vtorium/_definst_/mp4:671/2671/2671_2608_mobile.mp4/playlist.m3u8
+        //http://stream.videosquare.hu:1935/vtorium/_definst_/mp4:671/2671/2671_2608_mobile.mp4/playlist.m3u8
         $host        = $this->getWowzaUrl( $typeprefix . 'httpurl');
         $sprintfterm =
           '%3$s:%s/%s/playlist.m3u8' .
@@ -2531,7 +2644,7 @@ class Recordings extends \Springboard\Model {
         break;
 
       case 'mobilertsp':
-        //rtsp://stream.videotorium.hu:1935/vtorium/_definst_/mp4:671/2671/2671_2608_mobile.mp4
+        //rtsp://stream.videosquare.hu:1935/vtorium/_definst_/mp4:671/2671/2671_2608_mobile.mp4
         $host        = $this->getWowzaUrl( $typeprefix . 'rtspurl');
         $sprintfterm =
           '%3$s:%s/%s' .
@@ -2795,7 +2908,7 @@ class Recordings extends \Springboard\Model {
       r.rating,
       '0' AS numberofrecordings,
       r.status,
-      r.ispublished
+      r.approvalstatus
     ";
     $where  = "
       (
@@ -2830,7 +2943,7 @@ class Recordings extends \Springboard\Model {
           '0' AS rating,
           numberofrecordings,
           '' AS status,
-          '1' AS ispublished
+          'approved' AS approvalstatus
         FROM channels
         WHERE
           " . \Model\Channels::getWhere( $user ) . " AND
@@ -3505,13 +3618,14 @@ class Recordings extends \Springboard\Model {
     
   }
   
-  public function getDownloadUrls( $staticuri ) {
+  public function getDownloadInfo( $staticuri ) {
     $this->ensureObjectLoaded();
     if ( !$this->row['isdownloadable'] and !$this->row['isaudiodownloadable'] )
       return array();
 
     $ret      = array();
     $treedir  = \Springboard\Filesystem::getTreeDir( $this->id );
+    $basedir  = $staticuri . 'files/recordings/' . $treedir . '/';
     $versions = $this->db->getArray("
       SELECT
         rv.filename,
@@ -3536,12 +3650,14 @@ class Recordings extends \Springboard\Model {
         if ( $version['qualitytag'] != 'audio' )
           continue;
 
-        $ret['audio'] =
-          $staticuri . 'files/recordings/' . $treedir . '/' .
-          \Springboard\Filesystem::getWithoutExtension( $version['filename'] ) .
-          ',' . \Springboard\Filesystem::filenameize( $this->row['title'] ) . '.' .
-          \Springboard\Filesystem::getExtension( $version['filename'] )
-        ;
+        $ret['audio'] = array(
+          'url'        => $basedir .
+            \Springboard\Filesystem::getWithoutExtension( $version['filename'] ) .
+            ',' . \Springboard\Filesystem::filenameize( $this->row['title'] ) . '.' .
+            \Springboard\Filesystem::getExtension( $version['filename'] )
+          ,
+          'qualitytag' => $version['qualitytag'],
+        );
         break;
       }
 
@@ -3549,29 +3665,27 @@ class Recordings extends \Springboard\Model {
 
     if ( $this->row['isdownloadable'] ) {
 
-      if ( $this->row['masterstatus'] == 'onstorage' )
-        $ret['master'] =
-          $staticuri . 'files/recordings/' . $treedir . '/master/' . $this->id .
-          '_' . $this->row['mastermediatype'] . ',' . $this->row['mastervideofilename']
-        ;
-
-      if ( $this->row['contentmasterstatus'] == 'onstorage' )
-        $ret['contentmaster'] =
-          $staticuri . 'files/recordings/' . $treedir . '/master/' . $this->id .
-          '_content,' . $this->row['contentmastervideofilename']
-        ;
-
       foreach( $versions as $version ) {
-        if ( $version['type'] != 'pip' )
-          continue;
 
-        $ret['pip'] =
-          $staticuri . 'files/recordings/' . $treedir . '/' .
+        $filename =
           \Springboard\Filesystem::getWithoutExtension( $version['filename'] ) .
           ',' . \Springboard\Filesystem::filenameize( $this->row['title'] ) . '.' .
           \Springboard\Filesystem::getExtension( $version['filename'] )
         ;
-        break;
+
+        $data = array(
+          'url'        => $basedir . $filename,
+          'qualitytag' => $version['qualitytag'],
+        );
+
+        if ( $version['type'] == 'recording' and !isset( $ret['master'] ) ) {
+          $ret['master'] = $data;
+        } elseif ( $version['type'] == 'content' and !isset( $ret['content'] ) ) {
+          $ret['contentmaster'] = $data;
+        } elseif ( $version['type'] == 'pip' and !isset( $ret['pip'] ) ) {
+          $ret['pip'] = $data;
+        }
+
       }
 
     }

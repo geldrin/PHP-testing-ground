@@ -9,6 +9,7 @@
   <base href="{$BASE_URI}" /><!--[if IE]></base><![endif]-->
   <title>{if $title}{$title|strip_tags|escape:html|titleescape} | {/if}{#sitename#}</title>
   {include file="Visitor/_opengraph.tpl"}
+  {if $metadescription}{include file="Visitor/Recordings/Metadescription.tpl"}{/if}
   <link rel="icon" type="image/png" href="{$STATIC_URI}images/favicon.png"/>
   {csscombine}
   <link rel="StyleSheet" type="text/css" href="{$STATIC_URI}css/custom-theme/jquery-ui-1.9.2.custom.min.css" media="screen"/>

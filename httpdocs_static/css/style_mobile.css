@@ -22,6 +22,9 @@
   #headerlogin {
     margin-top: 10px;
   }
+  #headerloginactions {
+    margin-top: 7px;
+  }
   #languageselector {
     display: none;
   }
@@ -35,7 +38,12 @@
   #wrap #body, #footer, #myrecordingsquicksearch {
     width: 100%;
   }
-  .widepager, .help.fullwidth, .channelrecordings, .channelrecordings .widepager, .channelrecordings .recordinglist {
+  .widepager,
+  .help.fullwidth,
+  .channelrecordings,
+  .channelrecordings .widepager,
+  .channelrecordings .recordinglist,
+  .livelist.recordinglist {
     width: auto;
   }
   
@@ -125,7 +133,9 @@
   }
 
   /* recordinglist auto-size */
-  .recordinglist, .recordinglist .listitem {
+  .recordinglist,
+  .recordinglist .listitem,
+  .livelist.recordinglist .listitem {
     width: 100%;
   }
   .recordinglist .recordingpic {
@@ -166,10 +176,12 @@
     left: 53.6875%;
     position: absolute;
   }
-  .recordinglist .recordingcontent {
+  .recordinglist .recordingcontent,
+  .livelist.recordinglist .recordingcontent {
     width: 80%;
   }
-  .recordinglist .recordingcontent {
+  .recordinglist .recordingcontent,
+  .livelist.recordinglist .recordingcontent {
     margin-left: 0px;
   }
   

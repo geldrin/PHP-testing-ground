@@ -273,7 +273,7 @@ class Livefeeds extends \Springboard\Model {
     else
       $apiurl = $info['BASE_URI'];
 
-    $apiurl   .=  \Springboard\Language::get() . '/jsonapi';
+    $apiurl   .=  'jsonapi';
     $flashdata = array(
       'language'               => \Springboard\Language::get(),
       'api_url'                => $apiurl,
@@ -290,8 +290,9 @@ class Livefeeds extends \Springboard\Model {
     );
     
     if ( $info['member'] and $info['member']['id'] ) {
-      $flashdata['user_id'] = $info['member']['id'];
-      $flashdata['user_needPing'] = true;
+      $flashdata['user_id']          = $info['member']['id'];
+      $flashdata['user_needPing']    = true;
+      $flashdata['user_pingSeconds'] = $this->bootstrap->config['sessionpingseconds'];
     }
     
     if ( $this->row['issecurestreamingforced'] )
@@ -368,7 +369,7 @@ class Livefeeds extends \Springboard\Model {
     $data['livePlaceholder_streams']      = array();
     $data['livePlaceholder_streamLabels'] = array();
     foreach( $versions['master']['desktop'] as $version ) {
-      $data['livePlaceholder_streamLabels'] = $version['qualitytag'];
+      $data['livePlaceholder_streamLabels'] = array( $version['qualitytag'] );
       $data['livePlaceholder_streams'][]    = $recordingsModel->getMediaUrl(
         'default', $version, $info
       );
@@ -778,7 +779,22 @@ class Livefeeds extends \Springboard\Model {
     return $this->db->getArray( $query );
     
   }
-  
+
+  public function getMinStep( $startts, $endts ) {
+
+    $startts = strtotime( $startts );
+    $endts   = strtotime( $endts );
+    $diff    = abs( $endts - $startts );
+
+    if ( $diff < 1209600 ) // 2 het
+      return 300;
+    elseif ( $diff < 3024000 ) // 5 het
+      return 3600;
+    else
+      return 86400;
+
+  }
+
   public function getStatistics( $filter ) {
 
     $table = 'statistics_live_5min';
@@ -787,27 +803,48 @@ class Livefeeds extends \Springboard\Model {
       'starttimestamp' => 0,
       'endtimestamp'   => 0,
       'data'           => array(),
+      'originalstarttimestamp' => $filter['originalstarttimestamp'],
+      'originalendtimestamp'   => $filter['originalendtimestamp'],
     );
 
-    if ( isset( $filter['starttimestamp'] ) and isset( $filter['endtimestamp'] ) ) {
-      $startts = strtotime( $filter['starttimestamp'] );
-      $endts   = strtotime( $filter['endtimestamp'] );
-      $diff    = $endts - $startts;
+    if ( isset( $filter['endtimestamp'] ) ) {
+      $endts = min( strtotime( $filter['endtimestamp'] ), time() );
+      $filter['endtimestamp'] = date('Y-m-d H:i', $endts );
+    }
 
-      $ret['starttimestamp'] = $startts;
-      $ret['endtimestamp']   = $endts;
-/*
-      if ( $diff < 1209600 ) { // 2 het
+    if ( isset( $filter['starttimestamp'] ) and isset( $filter['endtimestamp'] ) ) {
+      $minstep = $this->getMinStep( $filter['starttimestamp'], $filter['endtimestamp'] );
+      if ( $filter['resolution'] < $minstep )
+        $filter['resolution'] = $minstep;
+
+      $ret['starttimestamp'] = strtotime( $filter['starttimestamp'] );
+      $ret['endtimestamp']   = strtotime( $filter['endtimestamp'] );
+      $diff = $ret['starttimestamp'] - $ret['endtimestamp'];
+
+      if ( $filter['resolution'] == 300 ) {
         $table = 'statistics_live_5min';
         $ret['step'] = 300;
-      } elseif ( $diff < 3024000 ) { // 5 het
+
+        // hozzaigazitani a datumot ha az adott intervallumon kivul esne
+        if ( $diff > 1209600 ) { // 2 het
+          $ret['starttimestamp'] = $ret['endtimestamp'] - 1209600;
+          $filter['starttimestamp'] = date('Y-m-d H:i:s', $ret['starttimestamp'] );
+        }
+
+      } elseif ( $filter['resolution'] == 3600 ) {
         $table = 'statistics_live_hourly';
         $ret['step'] = 3600;
-      } else {
+
+        if ( $diff > 3024000 ) { // 5 het
+          $ret['starttimestamp'] = $ret['endtimestamp'] - 3024000;
+          $filter['starttimestamp'] = date('Y-m-d H:i:s', $ret['starttimestamp'] );
+        }
+
+      } elseif ( $filter['resolution'] == 86400 ) {
         $table = 'statistics_live_daily';
         $ret['step'] = 86400;
       }
-*/
+
     }
 
     // fontos az adatok sorrendje! ha valtoztatasra kerul at kell irni a lov_hu-t
