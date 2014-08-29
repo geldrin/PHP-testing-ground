@@ -6,6 +6,7 @@ do
   local matches, err = ngx.re.match( ngx.var.request_uri, regex, 'jo')
   if matches == nil then
     -- varatlan url, automatan engedjuk
+    ngx.log(ngx.DEBUG, ngx.var.request_uri, "unrecognized url, allow")
     return ngx.exit(ngx.HTTP_OK)
   end
 
@@ -15,6 +16,7 @@ end
 local sessionid = ngx.var.cookie_PHPSESSID
 if not sessionid or sessionid == '' then
   -- nincs sessionid, nincs mit ellenorizni
+  ngx.log(ngx.DEBUG, ngx.var.request_uri, "no sessionid, forbid")
   return ngx.exit(ngx.HTTP_FORBIDDEN)
 end
 
@@ -47,7 +49,7 @@ if not result then
 
   local ok, err = redis:setex( cachekey, ngx.var.cacheexpirationsec, response.body )
   if not ok then
-    ngx.log(ngx.ERR, 'unable to set redis key', cachekey, err)
+    ngx.log(ngx.ERR, 'unable to set redis key, continuing', cachekey, err)
   end
 
   result = response.body
@@ -60,6 +62,7 @@ else
   ret = ngx.HTTP_FORBIDDEN
 end
 
+ngx.log(ngx.DEBUG, ngx.var.request_uri, "result was", result)
 -- vissza a connection poolba, 10sec idle time-al, max 100 kapcsolattal
 redis:set_keepalive(10000, 100)
 ngx.exit(ret)
