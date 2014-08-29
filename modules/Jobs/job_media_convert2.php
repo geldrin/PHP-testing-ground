@@ -25,7 +25,7 @@ $myjobid = $jconf['jobid_media_convert'];
 
 // Log related init
 $debug = Springboard\Debug::getInstance();
-$debug->log($jconf['log_dir'], $jconf['jobid_media_convert'] . ".log", str_pad(" Job: Media conversion started ", 80, '=') ."\n", $sendmail = false);
+$debug->log($jconf['log_dir'], $jconf['jobid_media_convert'] . ".log", "*************************** Job: Media conversion started ***************************" ."\n", $sendmail = false);
 
 // Check operating system - exit if Windows
 if ( iswindows() ) {
@@ -47,7 +47,7 @@ while( !is_file( $app->config['datapath'] . 'jobs/' . $myjobid . '2.stop' ) and 
 		// Establish database connection
 		$db = null;
 		$db = db_maintain();
-		
+
 		$converter_sleep_length = $jconf['sleep_media'];
 
 		// Check if temp directory readable/writable
@@ -268,8 +268,6 @@ global $jconf, $debug, $db, $app;
 			rv.recordingid
 		LIMIT 1";
 
-//encoding_profiles AS ep
-//AND rv.encodingprofileid = ep.id AND ep.type <> 'pip'
 	try {
 		$recording = $db->getArray($query);
 	} catch (exception $err) {
