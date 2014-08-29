@@ -41,7 +41,6 @@ class Controller extends \Visitor\Controller {
     'checkfileresume'      => 'uploader|moderateduploader',
     'uploadchunk'          => 'uploader|moderateduploader',
     'cancelupload'         => 'uploader|moderateduploader',
-    'reflectorstreamaccess' => 'public',
   );
   
   public $forms = array(
@@ -471,72 +470,6 @@ class Controller extends \Visitor\Controller {
     
     return true;
     
-  }
-
-  public function reflectorstreamaccessAction() {
-    $param   = $this->application->getParameter('sessionid');
-    $result  = '0';
-    $matched =
-      preg_match(
-        '/^(?P<sessionid>[a-z0-9]+)_' .
-        '(?P<recordingid>\d+)_' .
-        '(?P<secure>\d)$/',
-        $param,
-        $matches
-      )
-    ;
-
-    if ( $matched ) {
-
-      $cache = $this->bootstrap->getCache(
-        $param,
-        $this->bootstrap->config['accesscheckcacheseconds'],
-        true
-      );
-
-      if ( !$cache->expired() ) {
-        echo $cache->get();
-        die();
-      }
-
-      $this->bootstrap->setupSession(
-        true, $matches['sessionid'], $this->organization['cookiedomain']
-      );
-      $access    = $this->bootstrap->getSession('recordingaccess');
-      $accesskey = $matches['recordingid'] . '-' . $matches['secure'];
-
-      if ( !isset( $access[ $accesskey ] ) ) {
-
-        $user = $this->bootstrap->getSession('user');
-        if ( !$user['id'] ) {
-          echo $result;
-          die();
-        } else
-          $organizationModel = $this->modelIDCheck(
-            'organizations', $user['organizationid'], false
-          );
-
-        $recordingsModel = $this->modelIDCheck(
-          'recordings', $matches['recordingid'], false
-        );
-
-        if ( $recordingsModel and $organizationModel )
-          $access[ $accesskey ] = $recordingsModel->userHasAccess(
-            $user, $secure, false, $organizationModel->row
-          );
-
-      }
-
-      if ( $access[ $accesskey ] === true )
-        $result = '1';
-
-      $cache->put( $result );
-
-    }
-
-    echo $result;
-    die();
-
   }
 
   public function checkstreamaccessAction( $secure = false ) {

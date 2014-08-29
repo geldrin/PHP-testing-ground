@@ -1,9 +1,9 @@
 # Caching proxy config (Videosquare Edge Cache)
 
 server {
-	listen 80 default_server;
-	listen 443 ssl;
-	server_name stream2.videosquare.eu;
+	listen 91.120.59.238:80 default_server;
+	listen 91.120.59.238:443 ssl;
+	server_name stream3.videosquare.eu;
 	keepalive_timeout 70;
 
 	# SSL config
@@ -48,7 +48,7 @@ server {
 	#}
 
 	# On demand services: cache all files (HLS: .m3u8 playlist + .ts media segments | HDS: crossdomain.xml + Seg*-Frag*)
-	location ~* /((devvsq|vsq)/.*(\.m3u8|\.ts|\.f4m|\/Seg[0-9]*-Frag[0-9]*)$|crossdomain.xml$) {
+	location ~* /((devvsq|vsq)/.*(\.ts|\.f4m|\/Seg[0-9]*-Frag[0-9]*)$|crossdomain\.xml$) {
 		include accesscheck/accesscheck.conf;
 
 		# Origin server list
@@ -96,11 +96,25 @@ server {
 	} # Live service
 
 	location /nginx_status {
-		stub_status on;
+		#stub_status on;
 		access_log off;
 		allow 127.0.0.1;
 		allow 91.120.59.241;
 		deny all;
+	}
+
+	location /accesscheck {
+		internal;
+		proxy_pass http://dev.videosquare.eu/recordings/checkstreamaccess;
+		proxy_no_cache 1;
+		proxy_cache_bypass 1;
+	}
+
+	location /secureaccesscheck {
+		internal;
+		proxy_pass http://dev.videosquare.eu/recordings/securecheckstreamaccess;
+		proxy_no_cache 1;
+		proxy_cache_bypass 1;
 	}
 
 } # Server config
