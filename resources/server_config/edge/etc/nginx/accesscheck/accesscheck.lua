@@ -7,7 +7,7 @@ do
   if matches == nil then
     -- varatlan url, automatan engedjuk
     ngx.log(ngx.DEBUG, ngx.var.request_uri, "unrecognized url, allow")
-    return ngx.exit(ngx.HTTP_OK)
+    return ngx.exit(ngx.OK)
   end
 
   recordingid = matches[1]
@@ -57,7 +57,8 @@ end
 
 local ret = nil
 if result and result == '1' then
-  ret = ngx.HTTP_OK
+  -- nem HTTP_OK mert akkor elakad a request nalunk es nem megy tovabb a proxy-ra
+  ret = ngx.OK
 else
   ret = ngx.HTTP_FORBIDDEN
 end
