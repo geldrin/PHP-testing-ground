@@ -58,14 +58,19 @@ function convertOCR($rec) {
 // - Legyen szigoru vagy a kisebb hibakat hagyja figyelmen kivul?
 // - Milyen hibauzeneteket adjon vissza a fuggveny? (Irassuk ki az osszes hibas frame-et, vagy
 //   vagy inkabb mindig az utolso esemenyt adjuk vissza?
-// - Legyen egy max. hibahatar, ami utan kilep a feldolgozasbol?
+// - Legyen egy max. hibahatar, ami utan kilep a feldolgozasbol? ('numocrwarns')
 //
 // OPTIMALIZACIO:
-// - torles: ne egyenkent torolgesse a fajlokat, hanem egyszerre
+// - torles: ne egyenkent torolgesse a fajlokat, hanem egyszerre                              -> OK
 // - IM - parancsok osszelinkelese, ahol lehet                                                -> OK
 // - Redundancia ellenorzes pici kepeken??
 //       |`- 300px:  22.1 sec   !!!
-//        `- 1280px: 206.4 sec 
+//        `- 1280px: 206.4 sec
+// - Monokrom (bilevel) kepek mentese OCRprep-nel (-10%!)                                     -> OK
+// - Atmerezezes csökkentese: 300% -> 200%
+//    -> ~35%-al gyorsabb, le kell tesztelni, hogy tetszik az OCR-nek!!!!
+// - Bulk DB update (mi a maximalis query length?)
+//
 ///////////////////////////////////////////////////////////////////////////////////////////////////	
 	global $jconf, $debug, $app, $db;
 	$logdir = $jconf['log_dir'];
@@ -77,12 +82,19 @@ function convertOCR($rec) {
 		'message'        => null,
 	);
 	$numocrwarns = 0;
-	$ocrlog = null;
-	/////////////////
+	/////////////////////////////////////////////////////////
 	$wdir    = $jconf['ocr_dir'] . $rec['id'] ."/wdir". DIRECTORY_SEPARATOR;         // source directory
 	$cmpdir  = $jconf['ocr_dir'] . $rec['id'] ."/cmp". DIRECTORY_SEPARATOR;          // folder for comparing downsized frames
 	$tempdir = $jconf['ocr_dir'] . $rec['id'] ."/temp". DIRECTORY_SEPARATOR;         // folder for prepared frames
 	$snapdir = $jconf['ocr_dir'] . $rec['id'] ."/ocrsnapshots". DIRECTORY_SEPARATOR; // output directory
+	
+	$snapshotparams = array('resize' => array(), 'folders' => array());              // resize values and destination folders for ocr-snashots
+	foreach ($app->config['videothumbnailresolutions'] as $tres) {                   // foldernames are derived from thumbnailresolutions + original
+		$tmp = explode("x", $tres);
+		$snapshotparams['resize'][] = $tres;
+		$snapshotparams['folders'][] = $snapdir . $tmp[0];
+	}
+	$snapshotparams['folders']['original'] = $snapdir .'original'. DIRECTORY_SEPARATOR;
 	
 	$frames = array(
 		'frames'      => array(), // arrays of frame names, ocrtext, and dbid
@@ -90,11 +102,26 @@ function convertOCR($rec) {
 		'sorted'      => array(), // pointers to 'frames' to be passed to OCR engine
 		'processed'   => array(), // pointers to 'frames' which could be updated to database
 	);
-	
+
 	$errstr = "Function convertOCR(rec#". $rec['id'] .") failed!"; //// Megtarthato?????
 	
 	$debug->log($logdir, $logfile, str_pad("[INFO] Starting ocr process on recording #". $rec['id'] .".", 100, '=', STR_PAD_BOTH), false);
-	// 3RD PARTY UTILITY-K ELLENORZESE ///////////////////////////
+
+	// IDEIGLENES KONYVTARAK ELOKESZITESE ///////////////////
+	$prepOCRdirs = array();
+	$folders2create = array_merge(array($wdir, $cmpdir, $tempdir, $snapdir), $snapshotparams['folders']);
+	foreach($folders2create as $d) {
+		$prepOCRdirs = create_remove_directory($d);
+		if ($prepOCRdirs['code'] === false) {
+			$result['message'] = $prepOCRdirs['message'] ." (". $d .")";
+			$debug->log($logdir, $logfile, $result['message'], $sendmail = false);
+			return $result;
+		}
+	}
+	$debug->log($logdir, $logfile, "[INFO] Temporary directories have been created.", $sendmail = false);
+	unset($prepOCRdirs);
+
+	// 3RD PARTY UTILITY-K ELLENORZESE //////////////////////
 	$cmd_test_imagick = "convert -version";
 	$cmd_test_ocr = "type \"". $jconf['ocr_alt'] ."\"";
 	if (runExt($cmd_test_imagick)['code'] !== 0 ) {
@@ -119,13 +146,12 @@ function convertOCR($rec) {
 	} elseif ($langcode === null) {
 		$msg = "[WARN] Language code is not available or not supported by OCR engine. Using default charset ('hun').";
 		$debug->log($logdir, $logfile, $msg, false);
-		$ocrlog .= $msg . PHP_EOL;
 		$numocrwarns++;
 		$langcode = 'hun';
 	}
 	
-	// KEPKOCKAK KINYERESE ///////////////////////////////////////
-	$cmd_explode = escapeshellcmd($jconf['ffmpeg_alt'] ." -v ". $jconf['ffmpeg_loglevel'] ." -i ". $rec['contentmaster_filename'] ." -filter_complex  'scale=w=320:h=180:force_original_aspect_ratio=decrease' -r ". $jconf['ocr_frame_distance'] ." -q:v 1 -f image2 ". $cmpdir ."%05d.jpg -r ". $jconf['ocr_frame_distance'] ." -q:v 1 -f image2 ". $wdir ."%05d.jpg");
+	// KEPKOCKAK KINYERESE //////////////////////////////////
+	$cmd_explode = escapeshellcmd($jconf['ffmpeg_alt'] ." -v ". $jconf['ffmpeg_loglevel'] ." -i ". $rec['contentmaster_filename'] ." -filter_complex  'scale=w=320:h=180:force_original_aspect_ratio=decrease' -r ". $jconf['ocr_frame_distance'] ." -q:v 1 -f image2 ". $cmpdir ."%06d.jpg -r ". $jconf['ocr_frame_distance'] ." -q:v 1 -f image2 ". $wdir ."%06d.jpg");
 	
 	$debug->log($logdir, $logfile, "Extracting frames from video. Command line:". PHP_EOL . $cmd_explode);
 	
@@ -138,7 +164,7 @@ function convertOCR($rec) {
 		$result['message'] = $msg;
 		return $result;
 	} else {
-		// KEPKOCKAK BETOLTESE TOMBBE ////////////////////////////////
+		// KEPKOCKAK BETOLTESE TOMBBE /////////////////////////
 		$files = glob($wdir .'*.jpg');
 		if (empty($files)) {
 			$msg = "[ERROR] Can't extract frames from video! No frames found.\nCommand:\n". $cmd_explode;
@@ -155,14 +181,12 @@ function convertOCR($rec) {
 			}
 		}
 		unset($files);
-		
-		$ocrlog .= "Frame extraction finished. Total number of frames: ". count($frames['frames']) ."\n";
-		$debug->log($logdir, $logfile, "Frame extraction finished. Total number of frames: ". count($frames['frames']) . PHP_EOL, false);
+		$debug->log($logdir, $logfile, "Frame extraction finished. Total number of frames: ". count($frames['frames']), false);
 	}
 
 	// REDUNDANS FRAME-EK KISZURESE /////////////////////////
-// echo "Throwing out redundant frames...";
-	$debug->log($logdir, $logfile, "Throwing out redundant frames...", false);
+
+	$debug->log($logdir, $logfile, "Discarding redundant frames...", false);
 	$p1 = 0;
 	$p2 = 0;
 	$cntr = 0;
@@ -180,22 +204,18 @@ function convertOCR($rec) {
 		$IMdiff = runExt($cmdIMdiff);
 
 		if ($IMdiff['code'] !== 0) {
-			$ocrlog .= "[WARN] Comparing frames (". ($p2 - 1) ."/". $p2 .") failed! Message:". $IMdiff['cmd_output'] ."\n";
-// echo "[WARN] Comparing frames (". ($p2 - 1) ."/". $p2 .") failed! Message:". $IMdiff['cmd_output'] ."\ncmd:". $cmdIMdiff . PHP_EOL;
+			// $debug->log($logdir, $logfile, "[WARN] Comparing frames (". ($p2 - 1) ."/". $p2 .") failed! Message:". $IMdiff['cmd_output'] ."\n", false);
 			$numocrwarns++;
 			continue;
 		}	else {
 			$mean = floatval($IMdiff['cmd_output']);
 			if ($mean > $jconf['ocr_threshold']) {		// kulonbozik
-// echo " - hit!";
 				$frames['transitions'][] = $p2;
 			}
 		}
-// echo "\rComparing frames:  (". ($p2 - 1) ."/". $p2 .") - mean=$mean | ". round( $p1 / ((count($frames['frames']) / 100) ), 0, PHP_ROUND_HALF_UP) ."% complete.";
 	}
-	// MOZGOKEP KISZURESE ///////////////////////////////////
-// echo "\nSorting motion scenes.". PHP_EOL;
 	
+	// MOZGOKEP KISZURESE ///////////////////////////////////
 	$debug->log($logdir, $logfile, "Detecting motion scenes.", false);
 	$motion = array();
 	
@@ -211,9 +231,7 @@ function convertOCR($rec) {
 				'start'	=> ($frames['transitions'][$i - $cntr]),
 				'stop'  => ($frames['transitions'][$i]),
 			);
-			$ocrlog .= "Motion picture section detected between ". ($frames['transitions'][$i - $cntr]) ." - ". $frames['transitions'][$i] ."\n";
 			$debug->log($logdir, $logfile, "Motion picture section detected between ". ($frames['transitions'][$i - $cntr]) ." - ". $frames['transitions'][$i], false);
-// echo "Motion picture section detected between ". ($frames['transitions'][$i - $cntr]) ." - ". $frames['transitions'][$i] ."\n";
 			$cntr = 0;
 		} else {
 			// set counter back to default if counter < 4 and difference > 1.
@@ -221,14 +239,11 @@ function convertOCR($rec) {
 		}
 	}
 	
-	$ocrlog .= " > ". count($motion) ." motion sections have been detected.\n";
-	$debug->log($logdir, $logfile, " > ". count($motion) ." motion sections have been detected.\n");
+	$debug->log($logdir, $logfile, " > ". count($motion) ." motion sections have been detected.");
 
 	// HASZNOS FRAME-EK KIGYUJTESE //////////////////////////
-
 	if (!empty($motion)) {
-		$ocrlog .= "Removing motion scenes...\n";
-		$debug->log($logdir, $logfile, "Removing motion scenes...\n", false);
+		$debug->log($logdir, $logfile, "Removing motion scenes...", false);
 		$frames2remove = array();
 
 		foreach($motion as $movie_scene) {
@@ -246,39 +261,31 @@ function convertOCR($rec) {
 	}
 
 	// SZOVEG KINYERESE FRAMEKBOL ///////////////////////////
-	
-// echo "Preparing frames for OCR.\n";
 	$debug->log($logdir, $logfile, "Preparing frames for OCR.", false);
 	
 	$log_ocr_progress = '';
-	$ocr_progress_cntr = 0;
+	$ocr_proc_errors = 0;
 	
 	foreach ($frames['sorted'] as $ptr) {
 		$image = $wdir . $frames['frames'][$ptr]['file'];
-// echo "image#". $ptr ." - ". $image . PHP_EOL;
 
 		// FRAME ELOKESZITESE OCR-HEZ /////////////////////////
 		$prepare = prepareImage4OCR($image, $tempdir);
-// echo "$image -> $tempdir\n";
 		if ($prepare['result'] === false) {
-			// echo "WARN: ". $prepare['message'] ."\n";
-			$log_ocr_progress .= "[WARN] ". $prepare['message'] ." at frame#". $ptr . PHP_EOL;
+			$log_ocr_progress .= "[WARN] ". $prepare['message'] ." at frame#". ($ptr + 1) . PHP_EOL;
+			$numocrwarns++;
+			$ocr_proc_errors++;
 			continue;
 		}
 
 		// OCR-ENGINE FUTTATASA ///////////////////////////////
 		$ocr = getOCRtext($prepare['output'], $tempdir, $langcode, "ocrdata_$ptr.txt");
 		if ($ocr['result'] === false)	{
-			// echo "WARN:". $ocr['message'] ."\n";
-			$log_ocr_progress .= "[WARN] ". $ocr['message'] ." at frame#". $ptr . PHP_EOL;
-		}
-		
-		if (($prepare['result'] || $ocr['result']) === false) {
+			$log_ocr_progress .= "[WARN] ". $ocr['message'] ." at frame#". ($ptr + 1) . PHP_EOL;
 			$numocrwarns++;
-			$ocr_progress_cntr++;
+			$ocr_proc_errors++;
 			continue;
 		}
-
 		$text = addslashes(trim($ocr['output']));
 
 		if (!empty($text)) {
@@ -293,9 +300,9 @@ function convertOCR($rec) {
 		// Charecter encoding?? (iconv)
 	}
 	
-	$log_ocr_progress .= count($frames['processed']) . " frames has been prepared.\nTotal number of warnings: " . $ocr_progress_cntr .".";
+	$log_ocr_progress .= count($frames['processed']) . " frames has been processed out of ". count($frames['sorted']) .".\nTotal number of warnings: " . $ocr_proc_errors .".";
 	$debug->log($logdir, $logfile, $log_ocr_progress, false);
-	unset($log_ocr_progress, $ocr_progress_cntr);
+	unset($log_ocr_progress, $ocr_proc_errors);
 	
 	if (empty($frames['processed'])) {
 		$result['result'] = true;
@@ -305,13 +312,11 @@ function convertOCR($rec) {
 	}
 	
 	// SZOVEG VISSZATOLTESE AZ ADATBAZISBA //////////////////
-	
 	$debug->log($logdir, $logfile, "Updating database.", false);
 	foreach ($frames['processed'] as $f) {
 		$updateocr = updateOCRdata($rec['id'], $f + 1, $frames['frames'][$f]['text'], $jconf['ocr_frame_distance'], $jconf['dbstatus_conv']);
 		if ($updateocr['result'] === false) {
 			$msg = "[ERROR] " . $updateocr['message'];
-			$ocrlog .= $msg;
 			$debug->log($logdir, $logfile, $msg, $sendmail = false);
 			$result['message'] = $msg;
 			return $result;
@@ -321,23 +326,17 @@ function convertOCR($rec) {
 	
 	// THUMBNAIL-EK GENERALASA //////////////////////////////
 	$debug->log($logdir, $logfile, "Generating snapshots.", false);
-	
-	$ori = "original";
-	if (!file_exists($snapdir) || !file_exists($snapdir . $ori)) {
-		$result['message'] = "Thumbnails cannot be generated, missing directory!";
+
+	if (!file_exists($snapdir)) {
+		$result['message'] = "[ERROR] Thumbnails cannot be generated, missing directory! (". $snapdir .")";
 	} else {
-			$snapshotparams = array('resize' => array(), 'folders' => array());
-		foreach ($app->config['videothumbnailresolutions'] as $tres) {
-			$tmp = explode("x", $tres);
-			$snapshotparams['resize'][] = $tres;
-			$snapshotparams['folders'][] = $tmp[0];
-			
-			if (file_exists($snapdir . $tmp[0]) === false) {
-				$result['message'] = "Thumbnails cannot be generated, missing directory!";
+		foreach($snapshotparams['folders'] as $s) {	
+			if (file_exists($s) === false) {
+				$result['message'] = "[ERROR] Thumbnails cannot be generated, missing directory! (". $s .")";
 				break;
 			}
 		}
-	} // echo "SNAPSHOTPARAMS:\n";var_dump($snapshotparams);
+	}
 	
 	if ($result['message']) {
 		$debug->log($logdir, $logfile, $result['message'], false);
@@ -348,33 +347,32 @@ function convertOCR($rec) {
 	if ($snapshots['result'] === false) {
 		$msg = "[ERROR] ". $snapshots['message'];
 		$result['message'] = $msg;
-		$ocrlog .= $msg;
 		$debug->log($logdir, $logfile, $msg, $sendmail = false);
 		return $result;
 	}
 	
 	foreach($frames['sorted'] as $f) {
 		$src = $wdir . $frames['frames'][$f]['file'];
-		$dst = $snapdir . $ori . DIRECTORY_SEPARATOR . $rec['id'] ."_". $frames['frames'][$f]['dbid'] .".jpg";
+		$dst = $snapshotparams['folders']['original'] . DIRECTORY_SEPARATOR . $rec['id'] ."_". $frames['frames'][$f]['dbid'] .".jpg";
 		if (!copy($src, $dst)) {
 			$msg = "[ERROR] Failed to copy \"". $src ."\" to \"". $dst ."\"!";
 			$result['message'] = $msg;
 			return $result;
 		}
 	}
-	$ocrlog .= "Snaphot converting finished.";
 	
 	////// UPDATE OCR_FRAMES.STATUS - SZUKSEGES?
 	////// -> dbstatus_copystorage(copyingtostorage)
 	
-	$result['result'] = true;
+	$result['result']  = true;
+	$result['output']  = $frames['frames'];
 	$result['message'] = "[OK] OCR process finished successfully!";
-	if ($numocrwarns) $result['message'] .= PHP_EOL ."Total number of warnings: ". $numocrwarns .".\nTotal number of processed frames: ". count($frames['processed']) .".";
+	if ($numocrwarns)
+		$result['message'] .= PHP_EOL ."Total number of warnings: ". $numocrwarns . PHP_EOL;
+	$result['message'] .= "Total number of processed frames: ". count($frames['processed']) .".";
 	$debug->log($logdir, $logfile, $result['message'], $sendmail = false);
 	
-	// var_dump($frames);
 	return $result;
-	
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 	function prepareImage4OCR($image, $destpath) {
@@ -403,14 +401,13 @@ function convertOCR($rec) {
 		$return_array['message'] = $strmethoderr ." Image file ('". $imagepath ."') is not accessible!";
 		return $return_array;
 	}
-	// $destpath = realpath($destpath);
+
 	if ($destpath === false || !file_exists($destpath) || !is_dir($destpath)) {
 		$return_array['code'] = 2;
 		$return_array['message'] = $strmethoderr ." Destination path ('". $destpath ."') does not exists!";
 		return $return_array;
 	}
 	$out_img = $destpath . pathinfo($image, PATHINFO_FILENAME) .".png";
-// echo "out_img = ". $out_img ."\n";
 	
 	$cmd_identify = "identify -verbose -format %[fx:mean] ". $imagepath;
 	$err = runExt($cmd_identify);
@@ -426,12 +423,11 @@ function convertOCR($rec) {
 		
 	$invert = null;
 	if ($mean < .5) $invert = " -negate"; // ha a kep tobbsegeben sotet, akkor invert
-	// $cmd_convert = "convert ". $imagepath . $invert ." -despeckle -modulate 100,0 -colorspace gray +repage -resize 300% -level 25%,85% -threshold 40% -trim PNG:". $out_img;
-	$cmd_convert = "convert ". $imagepath . $invert ." -modulate 100,0 -colorspace gray +repage -resize 300% -level 25%,80% -threshold 35% -trim PNG:". $out_img;
+	$cmd_convert = "convert ". $imagepath . $invert ." -colorspace gray +repage -auto-level -resize 200% -threshold 35% -type bilevel -trim PNG:". $out_img;
 	$err = runExt($cmd_convert);
 	
 	if ($err['code'] !== 0) {
-		$return_array['message'] = $strmethoderr . $err['message'];
+		$return_array['message'] = $strmethoderr ." Imagemagick command failed. Messge: '". trim($err['cmd_output']) ."'";
 		$return_array['code'] = 4;
 	} else {
 		$return_array['result'] = true;
@@ -459,12 +455,10 @@ global $jconf;
 	$OCRtext = '';
 
 	if (!is_dir($workdir) || !is_writeable($workdir)) {
-		// $return_array['code'] = 2;
 		$return_array['message'] = "'". $workdir . "' is not accessible!";
 		return $return_array;
 	}
 	if ($imagepath === false || !file_exists($imagepath)) {
-		// $return_array['code'] = 1;
 		$return_array['message'] = "File ('". $imagepath ."') does not exists!";
 		return $return_array;
 	}
@@ -474,13 +468,11 @@ global $jconf;
 	// TESSERACT
 	// $cmd_ocr = $jconf['ocr_alt'] ." ". $imagepath ." \"". pathinfo($textpath, PATHINFO_DIRNAME) . DIRECTORY_SEPARATOR . pathinfo($textpath, PATHINFO_FILENAME) . "\" -l ". $lang;
 
-	$err = runext($cmd_ocr);
+	$err = runExt($cmd_ocr);
 	if ($err['code'] !== 0) {
-		// $return_array['code'] = 3;
 		$return_array['message'] = "Ocr conversion failed! Message:\n". $err['cmd_output'];
 		return $return_array;
 	} elseif (!file_exists($textpath)) {
-		// $return_array['code'] = 4;
 		$return_array['message'] = "Ocr result file ('". $textpath ."') cannot be found.\n";
 		return $return_array;
 	}
@@ -494,7 +486,6 @@ global $jconf;
 		fclose($handle);
 		unlink($textpath);
 	} catch (Exception $ex) {
-		// $return_array['code'] = 5;
 		$return_array['message'] = $ex->getMessage();
 		$return_array['output'] = $OCRtext;
 		return $return_array;
@@ -507,13 +498,12 @@ global $jconf;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-	function createOCRsnapshots($recordingid, $images, $snapshotparams, $source, $destination = "./") {
+	function createOCRsnapshots($recordingid, $images, $snapshotparams, $source) {
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //
 // Description...
 //
 // images(arr) full frames array (with processed frames) 
-// destination(str) output directory
 // 
 // Thumbnail naming convention:
 // <RECORDINGS.ID>_<OCR_FRAMES.ID>.jpg
@@ -541,20 +531,18 @@ global $jconf;
 		$i = 0;
 		do {
 			$size = $snapshotparams['resize'][$i];
-// echo "size = $size\n";
-			$folder = $destination . $snapshotparams['folders'][$i] . DIRECTORY_SEPARATOR;
+			$folder = $snapshotparams['folders'][$i] . DIRECTORY_SEPARATOR;
 			$cmdresize .= " \( +clone -resize ". $size ."^ -gravity center -extent ". $size ." -write \"". $folder . $rid ."_". $img2resize['dbid'] .".jpg\" +delete \)";
 			if ($i >= (count($snapshotparams['resize']) - 1))	{
-				$cmdresize .= " -resize ". $size ."^ -gravity center -extent \"". $size ." ". $folder . $rid ."_". $img2resize['dbid'] .".jpg\"";
+				$cmdresize .= " -resize ". $size ."^ -gravity center -extent ". $size ." \"". $folder . $rid ."_". $img2resize['dbid'] .".jpg\"";
 				break;
 			}
 			$i++;
 		} while (1);
 		
 		$cmdresize = trim($cmdresize);
-// echo "cmdresize = '". $cmdresize ."'". PHP_EOL;
-		
 		$resize = runExt($cmdresize);
+		
 		if ($resize['code'] !== 0) {
 			$return['message'] = "Function createOCRsnapshots failed!". PHP_EOL . $resize['cmd_output'] ."\nCommand: ". $cmdresize;
 			$return['output'] = $snapshotsdone;
@@ -661,18 +649,19 @@ global $jconf;
 //  TODO: ELLENORIZNI KELL FMPEG THUMBNAILER-REL!!
 //
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-	$cmd .= ";echo $? >&3";	// Echo previous command's exit code to file descriptor #3.
+	$cmd .= "; echo $? 1>&3";	// Echo previous command's exit code to file descriptor #3.
 
 	$return_array = array();
-	$return_array['pid'] = 0;
-	$return_array['code'] = 0;
+	$return_array['pid'] = 1;
+	$return_array['code'] = -1;
 	$return_array['cmd_output'] = "";
 
 	$descriptorspec = array(
 		0 => array("pipe", "r"),  // stdin is a pipe that the child will read from
 		1 => array("pipe", "w"),  // stdout is a pipe that the child will write to
 		2 => array("pipe", "w"),  // stderr is a file to write to
-		3 => array("pipe", "w")   // pipe for child process (used to capture exit code)
+		3 => array("pipe", "w"),   // pipe for child process (used to capture exit code)
+		// 3 => array("file", "/home/gergo/pipe_exitcode.log", "a"), // dump exitcode to file
 	);
 
 	$pipes = array();
@@ -684,23 +673,21 @@ global $jconf;
 	// close child's input imidiately
 	fclose($pipes[0]);
 	
-	for ($i = 1; $i <= 3; $i++) {
+	for ($i = 1; $i < 2; $i++) {
 		stream_set_blocking($pipes[$i], false);
 	}
 	
-	$exitcode = null;
+	$exitcode = -1;
 	$output = "";
-	while( !feof($pipes[1]) || !feof($pipes[2])) {
+	while( !feof($pipes[1]) || !feof($pipes[2]) || !feof($pipes[3])) {
 		$read = array();
 		if( !feof($pipes[1]) ) $read[1]= $pipes[1];
 		if( !feof($pipes[2]) ) $read[2]= $pipes[2];
 		if (!feof($pipes[3])) {
-			$readcode = rtrim(fgets($pipes[3], 5), "\n");
-			if (!empty($readcode) || !is_null($readcode)) $exitcode = intval($readcode);
+			$readcode = rtrim(fgets($pipes[3]), "\n");
+			$read[3] = $pipes[3];
+			if (strlen($readcode)) $exitcode = intval($readcode);
 		}
-		// $exitcode = stream_get_line($pipes[3], 1024, "\n"); // Does not always works :'(
-		
-		if (!$read) break;
 
 		$write = NULL;
 		$ex = NULL;
@@ -719,6 +706,7 @@ global $jconf;
 	fclose($pipes[1]);
 	fclose($pipes[2]);
 	fclose($pipes[3]);
+	
 	// Get process PID
 	$tmp = proc_get_status($process);
 	proc_close($process);
@@ -729,23 +717,6 @@ global $jconf;
 	$return_array['cmd_output'] = $output;
 
 	return $return_array;
-}
-///////////////////////////////////////////////////////////////////////////////////////////////////
-	function list2file($file, $arr) {
-///////////////////////////////////////////////////////////////////////////////////////////////////
-// Listazas fajlba
-///////////////////////////////////////////////////////////////////////////////////////////////////
-	$handle = fopen($file, "w") or die("'$die\' cannot be opened: '$php_errormsg'\n");	// open/create file for logging
-	
-	foreach($arr as $arr_item) {
-		if(fwrite($handle, implode($arr_item)) == false) {
-			die("'$file' cannot be written: $php_errormsg\n");
-		}
-	}
-
-	if (fclose($handle) == false) {
-		die("'$file' cannot be closed: $php_errormsg\n");
-	}	
 }
 
 ?>
