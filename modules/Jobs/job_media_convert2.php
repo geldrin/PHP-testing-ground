@@ -250,6 +250,7 @@ global $jconf, $debug, $db, $app;
 			r.masterstatus,
 			r.contentstatus,
 			r.contentmasterstatus,
+			r.ocrstatus,
 			r.mastersourceip,
 			r.contentmastersourceip
 		FROM
@@ -475,7 +476,7 @@ global $app, $jconf, $debug;
 
 		clearstatcache();
 
-		$output = runExternal($command);
+		$output = runExt($command);
 		$output_string = $output['cmd_output'];
 		$result = $output['code'];
 		if ( $result < 0 ) $result = 0;
