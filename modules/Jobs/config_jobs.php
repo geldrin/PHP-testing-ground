@@ -38,8 +38,8 @@ return array('config_jobs' => array(
 	'sleep_doc'						=> 300,			// Document conversion
 
 	// Job identifiers
-	'jobid_media_convert'			=> 'job_media_convert',
-	'jobid_media_convert2'			=> 'job_media_convert2',
+//	'jobid_media_convert'			=> 'job_media_convert',
+	'jobid_media_convert'			=> 'job_media_convert2',
 	'jobid_conv_control'			=> 'job_conversion_control',
 	'jobid_content_convert'			=> 'job_content_convert',
 	'jobid_ocr_convert'				=> 'job_ocr_convert',

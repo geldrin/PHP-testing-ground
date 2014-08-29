@@ -612,7 +612,7 @@ global $db, $app, $debug, $jconf;
 		// Get all recording versions for this recording (or content)
 		$recording_versions = getRecordingVersionsForRecording($recording['id'], $type, $isaudio);
 		if ( $recording_versions === false ) {
-			$debug->log($jconf['log_dir'], $jconf['jobid_conv_control'] . ".log", "[WARNING] No recording versions found for " . $type . " id = " . $recording['id'], $sendmail = false);
+			$debug->log($jconf['log_dir'], $jconf['jobid_conv_control'] . ".log", "[WARNING] No recording versions for SMIL found for " . $type . " id = " . $recording['id'], $sendmail = false);
 			// recording.(content)smilstatus = null
 			updateRecordingStatus($recording['id'], null, $idx . "smil");
 			$recordings->MoveNext();
