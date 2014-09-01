@@ -1,9 +1,10 @@
 local sessionid = ngx.var.sessionid
 if not ngx.re.find( sessionid, [[^\d+_[a-z0-9]+_\d+$]], 'jo') then
   -- nem megfelelo sessionid param, default nem engedjuk
-  ngx.log(ngx.DEBUG, ngx.var.request_uri, ' sessionid invalid, forbid: ', sessionid )
+  ngx.log(ngx.DEBUG, ngx.var.uri, ' sessionid invalid, forbid: ', sessionid )
   return ngx.exit(ngx.HTTP_FORBIDDEN)
 end
+ngx.log(ngx.DEBUG, ngx.var.uri, ' checking if sessionid has access: ', sessionid )
 
 local cachekey = sessionid
 local redis    = (require 'resty.redis'):new()
@@ -26,7 +27,6 @@ if not result or result == ngx.null then
   -- nincs cacheben, meghivjuk es eltesszuk
   -- ezek internal location-ok mert nem tudunk tetszes szerinti urlt meghivni magunk
   local checkuri = ngx.var.scheme == 'https' and "/secureaccesscheck" or "/accesscheck"
-  ngx.log(ngx.DEBUG, 'calling url to check: ', checkuri, ' with param sessionid=', sessionid )
   local response = ngx.location.capture( checkuri, {['args'] = {['sessionid'] = sessionid}} )
 
   if response.status ~= ngx.HTTP_OK then
@@ -34,7 +34,7 @@ if not result or result == ngx.null then
     return ngx.exit(ngx.HTTP_INTERNAL_SERVER_ERROR)
   end
 
-  ngx.log(ngx.DEBUG, ngx.var.request_uri, " accesscheck response was: ", response.body)
+  ngx.log(ngx.DEBUG, ngx.var.uri, " url response was: ", response.body)
   local matched = ngx.re.find( response.body, [[<success>1</success>]], 'jo' )
   result = matched and '1' or '0'
 
@@ -51,7 +51,7 @@ else
   ret = ngx.HTTP_FORBIDDEN
 end
 
-ngx.log(ngx.DEBUG, ngx.var.request_uri, " result was ", result)
+ngx.log(ngx.DEBUG, ngx.var.uri, " check result was ", result)
 -- vissza a connection poolba, 10sec idle time-al, max 100 kapcsolattal
 redis:set_keepalive(10000, 100)
 ngx.exit(ret)

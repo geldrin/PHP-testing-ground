@@ -49,12 +49,8 @@ server {
 	}
 
 	# On demand services: cache all files (HLS: .m3u8 playlist + .ts media segments | HDS: crossdomain.xml + Seg*-Frag*)
-	location ~* /((devvsq|vsq)/.*(\.ts|\.f4m|\/Seg[0-9]*-Frag[0-9]*)$|crossdomain\.xml$) {
+	location ~ /(?:devvsq|vsq)/.*(?:\.ts|/Seg[0-9]*-Frag[0-9]*)$ {
 		include accesscheck/accesscheck.conf;
-
-		# ezt a valtozot valtoztatja a rewrite.lua ha kell, default request_uri
-		set $cachekey $request_uri;
-		proxy_cache_key $cachekey;
 
 		# Origin server list
 		proxy_pass http://origins;
@@ -81,7 +77,7 @@ server {
 
 	# Live: do not cache playlists (HLS: .m3u8 | HDS: .f4m? )
 	location ~* /(devvsqlive|vsqlive)/.*(\.m3u8|\.f4m|\.abst)$ {
-
+		# TODO
 		# Origin server list
 		proxy_pass http://origins;
 
@@ -104,14 +100,19 @@ server {
 		deny all;
 	}
 
+	# belso locationok amit a lua hiv meg kizarolag mert nem tud kozvetlenul url-t hivni
 	location /accesscheck {
-		internal;
+		internal; # nem elerheto kivulrol
 		proxy_pass http://dev.videosquare.eu/recordings/checkstreamaccess;
+		# abszolut nem cacheljuk
 		proxy_no_cache 1;
 		proxy_cache_bypass 1;
+		# nehogy atmenjen barmi header amitol mondjuk gzippelnenk a requestet
+		# (mert akkor nem tudja beolvasni a lua egyszeruen)
 		proxy_pass_request_headers off;
 	}
 
+	# a location ha https-en keresztul jon a request, securenak tekintjuk
 	location /secureaccesscheck {
 		internal;
 		proxy_pass http://dev.videosquare.eu/recordings/securecheckstreamaccess;
