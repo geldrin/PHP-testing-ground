@@ -2,7 +2,9 @@ local sessionid = nil
 do -- block a lexikalis scope miatt, hogy ne leakeljunk foloslegesen valtozokat
   -- kizarolag HLS es HDS stream segmenseket validalunk
   -- a query paramokat a rewrite strippelheti, ezert captureoljuk itt
-  local regex = [[^/(?:devvsqlive|vsqlive|devvsq|vsq)/.*:\d+/\d+/\d+.*\..*/(?:media_\d+.ts|Seg[0-9]+-Frag[0-9]+.*).*?(?:\?(.*))?$]]
+  -- a HDS-nel a parameterek base64 encodolva jonnek a filenevben, ezt is ki kell pucolni pl:
+  -- /devvsq/_definst_/mp4:105/105/105_295_video_360p.mp4/media_b306792_qY2xpZW50PTE=.abst/Seg1-Frag1
+  local regex = [[^/(?:devvsqlive|vsqlive|devvsq|vsq)/.*:\d+/\d+/\d+.*\..*/(?:media_\d+.ts|(?:_q([a-zA-Z0-9=+/])+\.abst/)?Seg[0-9]+-Frag[0-9]+.*).*?(?:\?(.*))?$]]
   -- jo = regex options: jit, compile only once
   local matches = ngx.re.match( ngx.var.request_uri, regex, 'jo')
   if not matches then
@@ -12,22 +14,28 @@ do -- block a lexikalis scope miatt, hogy ne leakeljunk foloslegesen valtozokat
     return ngx.exit(ngx.OK)
   end
 
-  if not matches[1] then
+  if not matches[1] and not matches[2] then
     -- nincs sessionid param, default nem engedjuk
-    ngx.log(ngx.DEBUG, ngx.var.request_uri, " no query params, forbid")
+    ngx.log(ngx.DEBUG, ngx.var.request_uri, " no query/encoded params, forbid")
     return ngx.exit(ngx.HTTP_FORBIDDEN)
   end
 
   local origargs  = ngx.var.args
-  ngx.var.args    = matches[1]
+  if matches[1] then
+    ngx.var.args = ngx.decode_base64( matches[1] )
+  elseif matches[2] then
+    ngx.var.args = matches[2]
+  end
+
   local arguments = ngx.req.get_uri_args(2)
-  if not matches[1] then
+  if not arguments.sessionid then
     -- nincs sessionid param, default nem engedjuk
     ngx.log(ngx.DEBUG, ngx.var.request_uri, " no sessionid in query params, forbid")
     return ngx.exit(ngx.HTTP_FORBIDDEN)
   end
-  ngx.var.args = origargs
+
   sessionid    = arguments.sessionid
+  ngx.var.args = origargs
 end
 
 local cachekey = sessionid
