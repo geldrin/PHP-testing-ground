@@ -51,6 +51,10 @@ server {
 	location ~* /((devvsq|vsq)/.*(\.ts|\.f4m|\/Seg[0-9]*-Frag[0-9]*)$|crossdomain\.xml$) {
 		include accesscheck/accesscheck.conf;
 
+		# ezt a valtozot valtoztatja a rewrite.lua ha kell, default request_uri
+		set $cachekey $request_uri;
+		proxy_cache_key $cachekey;
+
 		# Origin server list
 		proxy_pass http://origins;
 
@@ -58,10 +62,6 @@ server {
 		rewrite_log on;
 		proxy_redirect off;
 		proxy_cache_revalidate off;
-		if ($args != '') {
-			#rewrite ^(.*) $1? permanent;
-			rewrite ^(.*) $1? ;
-		}
 
 		# max-age: 3600 seconds
 		expires 60m;
@@ -108,6 +108,7 @@ server {
 		proxy_pass http://dev.videosquare.eu/recordings/checkstreamaccess;
 		proxy_no_cache 1;
 		proxy_cache_bypass 1;
+		proxy_pass_request_headers off;
 	}
 
 	location /secureaccesscheck {
@@ -115,6 +116,7 @@ server {
 		proxy_pass http://dev.videosquare.eu/recordings/securecheckstreamaccess;
 		proxy_no_cache 1;
 		proxy_cache_bypass 1;
+		proxy_pass_request_headers off;
 	}
 
 } # Server config
