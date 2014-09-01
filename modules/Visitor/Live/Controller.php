@@ -168,14 +168,16 @@ class Controller extends \Visitor\Controller {
         'js/flash_locale_' . $flashdata['language'] . '.json'
       ;
     
-    if ( $needauth )
-      $flashdata['authorization_need']    = true;
+    if ( $needauth ) {
+      $flashdata['authorization_need']  = true;
+      $flashdata['authorization_login'] = true;
+    }
     
     if ( $nopermission ) {
       
-      $flashdata['authorization_need']      = true;
-      $flashdata['authorization_loginForm'] = false;
-      $flashdata['authorization_message']   = $l('recordings', 'nopermission');
+      $flashdata['authorization_need']    = true;
+      $flashdata['authorization_login']   = false;
+      $flashdata['authorization_message'] = $l('recordings', 'nopermission');
       
     }
     
