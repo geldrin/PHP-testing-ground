@@ -38,6 +38,21 @@ $myjobid = $jconf['jobid_conv_control'];
 
 clearstatcache();
 
+// Already running. Not finished a tough job?
+$run_filename = $jconf['temp_dir'] . $myjobid . ".run";
+if  ( file_exists($run_filename) ) {
+	if ( ( time() - filemtime($run_filename) ) < 15 * 60 ) {
+		$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] " . $myjobid . " is already running. Not finished previous run?", $sendmail = true);
+	}
+	exit;
+} else {
+	$content = "Running. Started: " . date("Y-m-d H:i:s");
+	$err = file_put_contents($run_filename, $content);
+	if ( $err === false ) {
+		$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Cannot write run file " . $run_filename, $sendmail = true);
+	}
+}
+
 // Watchdog
 $app->watchdog();
 	
@@ -173,7 +188,11 @@ $err = generateLiveSMILs("content");
 // Close DB connection if open
 if ( is_resource($db->_connectionID) ) $db->close();
 
+// Watchdog
 $app->watchdog();
+
+// Remove run file
+unlink($run_filename);
 
 exit;
 

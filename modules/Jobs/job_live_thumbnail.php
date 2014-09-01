@@ -40,7 +40,7 @@ $debug->log($jconf['log_dir'], $myjobid . ".log", "*************************** J
 $run_filename = $jconf['temp_dir'] . $myjobid . ".run";
 if  ( file_exists($run_filename) ) {
 	if ( ( time() - filemtime($run_filename) ) < 15 * 60 ) {
-		$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] I am already running. Not finished previous run?", $sendmail = true);
+		$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] " . $myjobid . " is already running. Not finished previous run?", $sendmail = true);
 	}
 	exit;
 } else {

@@ -44,7 +44,9 @@ $debug->log($jconf['log_dir'], $myjobid . ".log", "********************* Job: " 
 // Already running. Not finished a tough job?
 $run_filename = $jconf['temp_dir'] . $myjobid . ".run";
 if  ( file_exists($run_filename) ) {
-	$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] I am already running. Not finished a tough job?", $sendmail = true);
+	if ( ( time() - filemtime($run_filename) ) < 15 * 60 ) {
+		$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] " . $myjobid . " is already running. Not finished a tough job?", $sendmail = true);
+	}
 	exit;
 } else {
 	$content = "Running. Started: " . date("Y-m-d H:i:s");
