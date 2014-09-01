@@ -692,8 +692,10 @@ class Controller extends \Visitor\Controller {
     if ( $autoplay )
       $flashdata['timeline_autoPlay'] = true;
     
-    if ( $needauth )
+    if ( $needauth ) {
       $flashdata['authorization_need'] = true;
+      $flashdata['authorization_loginForm'] = true;
+    }
     
     if ( $nopermission ) {
       
