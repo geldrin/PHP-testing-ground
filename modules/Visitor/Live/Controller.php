@@ -169,15 +169,15 @@ class Controller extends \Visitor\Controller {
       ;
     
     if ( $needauth ) {
-      $flashdata['authorization_need']  = true;
-      $flashdata['authorization_login'] = true;
+      $flashdata['authorization_need']      = true;
+      $flashdata['authorization_loginForm'] = true;
     }
     
     if ( $nopermission ) {
       
-      $flashdata['authorization_need']    = true;
-      $flashdata['authorization_login']   = false;
-      $flashdata['authorization_message'] = $l('recordings', 'nopermission');
+      $flashdata['authorization_need']      = true;
+      $flashdata['authorization_loginForm'] = false;
+      $flashdata['authorization_message']   = $l('recordings', 'nopermission');
       
     }
     
