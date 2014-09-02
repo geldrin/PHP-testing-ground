@@ -28,6 +28,7 @@ $debug = Springboard\Debug::getInstance();
 
 // !!!!
 $kaka = "";
+$kaka2 = "";
 
 // Check operating system - exit if Windows
 if ( iswindows() ) {
@@ -106,6 +107,14 @@ $app->watchdog();
 
 // Establish database connection
 $db = db_maintain();
+
+// Delete all stuff - if required!
+//removeStatsAll($stats_config, true);
+
+// Check Wowza records with open endtime
+$now_hour = date("G");
+$now_min = date("i");
+if ( ( $now_hour == 11 ) and ($now_min > 0) and ($now_min < 5 ) ) checkWowzaOpenRecords();
 
 // Empty array for each record initialization
 $platforms_null = returnStreamingClientPlatformEmptyArray($platform_definitions);
@@ -231,7 +240,7 @@ for ( $statsidx = 0; $statsidx < count($stats_config); $statsidx++ ) {
 			// Query finally selected interval with record(s)
 			$stats = queryStatsForInterval($start_interval, $end_interval, $wowza_app);
 			if ( $stats === false ) {
-				$debug->log($jconf['log_dir'], $myjobid . ".log", "[WARN] Unexpected. No record(s) to process. Interval: " . date("Y-m-d H:i:s", $start_interval) . " - " . date("Y-m-d H:i:s", $end_interval) . "\n\nkaka: " . $kaka, $sendmail = true);
+				$debug->log($jconf['log_dir'], $myjobid . ".log", "[WARN] Unexpected. No record(s) to process. Interval: " . date("Y-m-d H:i:s", $start_interval) . " - " . date("Y-m-d H:i:s", $end_interval) . "\n\nDEBUG:\n\ngetFirstWowzaRecordFromInterval(): " . $kaka2 . "\n\nqueryStatsForInterval(): " . $kaka, $sendmail = false);
 				// Update last processed interval. Next active record will be found in next round.
 				$stats_config[$statsidx]['lastprocessedtime'] = $end_interval;
 				$start_interval = $start_interval + $stats_config[$statsidx]['interval'];
@@ -454,7 +463,7 @@ $kaka = $query;
 // Get next live statistics record timestamp (to help jumping empty time slots)
 // WARNING: does not check for active records
 function getFirstWowzaRecordFromInterval($from_timestamp, $to_timestamp, $streaming_server_app) {
-global $db, $debug, $myjobid, $app, $jconf;
+global $db, $debug, $myjobid, $app, $jconf, $kaka2;
 
 	if ( empty($from_timestamp) ) $from_timestamp = 0;
 
@@ -478,6 +487,7 @@ global $db, $debug, $myjobid, $app, $jconf;
 		LIMIT 1";
 
 //echo $query . "\n";
+$kaka2 = $query;
 
 	try {
 		$stats = $db->getArray($query);
@@ -661,6 +671,79 @@ global $db, $debug, $myjobid, $app, $jconf;
 	}
 
 echo "num: " . $i . "\n";
+	return true;
+}
+
+function removeStatsAll($stats_config, $isexec) {
+ global $db, $debug, $myjobid, $app, $jconf;
+
+	if ( !$isexec ) return true;
+
+	// Log
+	$debug->log($jconf['log_dir'], $myjobid . ".log", "[WARN] Removing all statistics information", $sendmail = false);
+
+	for ( $statsidx = 0; $statsidx < count($stats_config); $statsidx++ ) {
+
+		// Truncate table
+		$query = "TRUNCATE TABLE " . $stats_config[$statsidx]['sqltablename'];
+
+		try {
+			$rs = $db->Execute($query);
+		} catch (exception $err) {
+			$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] SQL query failed." . trim($query), $sendmail = true);
+			return false;
+		}
+
+		// Remove status file
+		$status_filename = $jconf['temp_dir'] . $myjobid . "." . $stats_config[$statsidx]['label'] . ".status";
+		if ( file_exists($status_filename ) ) unlink($status_filename);
+
+		// Log
+		$debug->log($jconf['log_dir'], $myjobid . ".log", "[OK] Stats table " . $stats_config[$statsidx]['sqltablename'] . " cleaned. Status file removed: " . $status_filename, $sendmail = false);
+	}
+
+	return true;
+}
+
+function checkWowzaOpenRecords() {
+ global $db, $debug, $myjobid, $app, $jconf;
+
+	// Select records open for 3 days
+	$startdate = date("Y-m-d H:i:s" , time() - 24 * 60 * 60 * 3);
+
+	$query = "
+		SELECT
+			id,
+			starttime
+			wowzalocalstreamname,
+			wowzaremotestreamname,
+			serverip,
+			clientip,
+			encoder
+		FROM
+			cdn_streaming_stats AS css
+		WHERE
+			css.endtime IS NULL AND
+			css.starttime < '" . $startdate . "'
+		ORDER BY starttime";
+
+	try {
+		$stats = $db->getArray($query);
+	} catch (exception $err) {
+		$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] SQL query failed." . trim($query), $sendmail = true);
+		return false;
+	}
+
+	// Log open records and send warning message
+	$msg_log = "";
+	for ( $i = 0; $i < count($stats); $i++ ) {
+		$msg_log .= print_r($stats[$i], true) . "\n";
+	}
+
+	if ( !empty($msg_log) ) {
+		$debug->log($jconf['log_dir'], $myjobid . ".log", "[WARN] Records with open endtime exist! Please check!\n\n" . $msg_log, $sendmail = true);
+	}
+
 	return true;
 }
 
