@@ -24,6 +24,21 @@ $jconf = $app->config['config_jobs'];
 // Log related init
 $debug = Springboard\Debug::getInstance();
 
+// OCR nice level
+$onice = $jconf['encoding_nice'];
+$nicelevel = $tmp = null;
+$tmp = preg_match('/[-]?[\d]+$/', $jconf['encoding_nice'], $nicelevel);
+if ($tmp === 1) {
+	if ((intval($nicelevel[0]) + 5) > 19)
+		$onice = "nice -n 19";
+	else
+		$onice = "nice -n ". (intval($nicelevel[0]) + 5);
+} else {
+	// jconf parameter is invalid, or given param cannot be found => set process priority to the lowest value
+	$onice = "nice -n 19";
+}
+unset($tmp, $nicelevel);
+
 //////////////////////////////////////////// TEST BLOCK ///////////////////////////////////////////	
 // make some fake variables
 $testrec = array(
@@ -72,7 +87,7 @@ function convertOCR($rec) {
 // - Bulk DB update (mi a maximalis query length?)
 //
 ///////////////////////////////////////////////////////////////////////////////////////////////////	
-	global $jconf, $debug, $app, $db;
+	global $jconf, $debug, $onice, $app, $db;
 	$logdir = $jconf['log_dir'];
 	$logfile = $jconf['jobid_media_convert'] .'.log';
 	
@@ -151,7 +166,7 @@ function convertOCR($rec) {
 	}
 	
 	// KEPKOCKAK KINYERESE //////////////////////////////////
-	$cmd_explode = escapeshellcmd($jconf['ffmpeg_alt'] ." -v ". $jconf['ffmpeg_loglevel'] ." -i ". $rec['contentmaster_filename'] ." -filter_complex  'scale=w=320:h=180:force_original_aspect_ratio=decrease' -r ". $jconf['ocr_frame_distance'] ." -q:v 1 -f image2 ". $cmpdir ."%06d.jpg -r ". $jconf['ocr_frame_distance'] ." -q:v 1 -f image2 ". $wdir ."%06d.jpg");
+	$cmd_explode = escapeshellcmd($onice ." ". $jconf['ffmpeg_alt'] ." -v ". $jconf['ffmpeg_loglevel'] ." -i ". $rec['contentmaster_filename'] ." -filter_complex  'scale=w=320:h=180:force_original_aspect_ratio=decrease' -r ". $jconf['ocr_frame_distance'] ." -q:v 1 -f image2 ". $cmpdir ."%06d.jpg -r ". $jconf['ocr_frame_distance'] ." -q:v 1 -f image2 ". $wdir ."%06d.jpg");
 	
 	$debug->log($logdir, $logfile, "Extracting frames from video. Command line:". PHP_EOL . $cmd_explode);
 	
@@ -200,7 +215,7 @@ function convertOCR($rec) {
 		$img1 = $cmpdir . $frames['frames'][$p1]['file'];
 		$img2 = $cmpdir . $frames['frames'][$p2]['file'];
 
-		$cmdIMdiff = "convert \"". $img1 ."\" \"". $img2 ."\" -compose difference -colorspace gray -composite png:- | identify -verbose -format %[fx:mean] png:-";
+		$cmdIMdiff = $onice ." convert \"". $img1 ."\" \"". $img2 ."\" -compose difference -colorspace gray -composite png:- | identify -verbose -format %[fx:mean] png:-";
 		$IMdiff = runExt($cmdIMdiff);
 
 		if ($IMdiff['code'] !== 0) {
@@ -386,6 +401,8 @@ function convertOCR($rec) {
 // + Need some better image preparation method.
 // 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
+global $onice;
+
 	$return_array = array(
 		'code'    => 0,
 		'result'  => false,
@@ -409,7 +426,7 @@ function convertOCR($rec) {
 	}
 	$out_img = $destpath . pathinfo($image, PATHINFO_FILENAME) .".png";
 	
-	$cmd_identify = "identify -verbose -format %[fx:mean] ". $imagepath;
+	$cmd_identify = $onice ." identify -verbose -format %[fx:mean] ". $imagepath;
 	$err = runExt($cmd_identify);
 	
 	if ($err['code'] !== 0) {
@@ -423,7 +440,7 @@ function convertOCR($rec) {
 		
 	$invert = null;
 	if ($mean < .5) $invert = " -negate"; // ha a kep tobbsegeben sotet, akkor invert
-	$cmd_convert = "convert ". $imagepath . $invert ." -colorspace gray +repage -auto-level -resize 200% -threshold 35% -type bilevel -trim PNG:". $out_img;
+	$cmd_convert = $onice ." convert ". $imagepath . $invert ." -colorspace gray +repage -auto-level -resize 200% -threshold 35% -type bilevel -trim PNG:". $out_img;
 	$err = runExt($cmd_convert);
 	
 	if ($err['code'] !== 0) {
@@ -443,7 +460,7 @@ function convertOCR($rec) {
 // Description goes here...
 //
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-global $jconf;
+global $jconf, $onice;
 	$return_array = array(
 		// 'code'    => 0,
 		'result'  => false,
@@ -463,10 +480,10 @@ global $jconf;
 		return $return_array;
 	}
 	// CUNEIFORM
-	$cmd_ocr = $jconf['ocr_alt']." --fax -l ". $lang ." -f text -o ". $textpath ." ". $imagepath;
+	$cmd_ocr = $onice ." ". $jconf['ocr_alt']." --fax -l ". $lang ." -f text -o ". $textpath ." ". $imagepath;
 	
 	// TESSERACT
-	// $cmd_ocr = $jconf['ocr_alt'] ." ". $imagepath ." \"". pathinfo($textpath, PATHINFO_DIRNAME) . DIRECTORY_SEPARATOR . pathinfo($textpath, PATHINFO_FILENAME) . "\" -l ". $lang;
+	// $cmd_ocr = $onice ." ". $jconf['ocr_alt'] ." ". $imagepath ." \"". pathinfo($textpath, PATHINFO_DIRNAME) . DIRECTORY_SEPARATOR . pathinfo($textpath, PATHINFO_FILENAME) . "\" -l ". $lang;
 
 	$err = runExt($cmd_ocr);
 	if ($err['code'] !== 0) {
@@ -515,7 +532,7 @@ global $jconf;
 //  |`- <app->config['videothumbnailresolutions']['wide']>
 //   `- <app->config['videothumbnailresolutions']['player']>
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-	global $app;
+	global $app, $onice;
 	$return = array(
 		'result'  => false,
 		'message' => null,
@@ -527,7 +544,7 @@ global $jconf;
 	
 	foreach($images['processed'] as $frameid) {
 		$img2resize = $images['frames'][$frameid];
-		$cmdresize = "convert \"". $source . $img2resize['file'] ."\"";
+		$cmdresize = $onice ." convert \"". $source . $img2resize['file'] ."\"";
 		$i = 0;
 		do {
 			$size = $snapshotparams['resize'][$i];
