@@ -974,17 +974,20 @@ global $jconf;
 }
 
 // SSH: chmod/chown remote files
-function sshMakeChmodChown($server, $file) {
+function sshMakeChmodChown($server, $file, $isdirectory) {
 global $jconf;
 
 	$err = array();
 	$err['code'] = false;
 	$err['value'] = 0;
 
+	$permissions = $jconf['file_access'];
+	if ( $isdirectory ) $permissions = $jconf['directory_access'];
+
 	// SSH command template
 	$ssh_command = "ssh -i " . $jconf['ssh_key'] . " " . $jconf['ssh_user'] . "@" . $server . " ";
 	// Shell command
-	$chmod_command = "chmod -f -R " . $jconf['file_access'] . " " . $file . " 2>&1 ; chown -f -R " . $jconf['file_owner'] . " " . $file . " 2>&1";
+	$chmod_command = "chmod -f -R " . $permissions . " " . $file . " 2>&1 ; chown -f -R " . $jconf['file_owner'] . " " . $file . " 2>&1";
 	$command = $ssh_command . "\"" . $chmod_command . "\"";
 	exec($command, $output, $result);
 	$output_string = implode("\n", $output);

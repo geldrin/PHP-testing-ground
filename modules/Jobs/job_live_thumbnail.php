@@ -105,7 +105,6 @@ for ( $i = 0; $i < count($channels); $i++ ) {
 	$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] ffmpeg command to be executed: " . $ffmpeg_command, $sendmail = false);
 
 	// Run ffmpeg
-//	$err = runExternal($ffmpeg_command);
 	$err = runExt($ffmpeg_command);
 
 	if ( is_readable($thumb_filename) and ( filesize($thumb_filename) > 0 ) ) {
@@ -137,6 +136,15 @@ for ( $i = 0; $i < count($channels); $i++ ) {
 			$debug->log($jconf['log_dir'], $myjobid . ".log", $err['message'] . "\n\nCOMMAND: " . $err['command'] . "\n\nRESULT: " . $err['result'], $sendmail = true);
 			return false;
 		}
+
+		// Chmod local directory
+		$command = "chmod -f -R " . $jconf['directory_access'] . " " . $temp_dir . " 2>&1";
+		exec($command, $output, $result);
+		$output_string = implode("\n", $output);
+		if ( $result != 0 ) {
+			$debug->log($jconf['log_dir'], $myjobid . ".log", "[WARN] Chmod failed. Command: " . $command, $sendmail = false);
+		}
+
 	} else {
 		// ffmpeg error: default logo
 		$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] ffmpeg cannot get live thumb. Error code = " . $err['code'] . ", lifefeed_stream.id = " . $channels[$i]['streamid'] . ", ffmpeg command = " . $ffmpeg_command . ". Full output:\n" . $err['cmd_output'], $sendmail = false);
@@ -187,9 +195,6 @@ for ( $i = 0; $i < count($channels); $i++ ) {
 		$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Cannot copy image " . $thumb_filename . " to temp directories.\n", $sendmail = false);
 	}
 
-//$size = getimagesize($thumb_filename);
-//var_dump($size);
-
 	// Copy images to server
 	$remote_path = $app->config['livestreampath'];
 	$err = ssh_filecopy2($app->config['fallbackstreamingserver'], $temp_dir, $remote_path, false);
@@ -199,11 +204,11 @@ for ( $i = 0; $i < count($channels); $i++ ) {
 	}
 
 	// SSH chmod/chown
-	$err = sshMakeChmodChown($app->config['fallbackstreamingserver'], $remote_path . $channels[$i]['streamid'] . "/" .$jconf['thumb_video_small'] . "/" . $filename_jpg);
+	$err = sshMakeChmodChown($app->config['fallbackstreamingserver'], $remote_path . $channels[$i]['streamid'] . "/" .$jconf['thumb_video_small'] . "/" . $filename_jpg, false);
 	if ( !$err['code'] ) $debug->log($jconf['log_dir'], $myjobid . ".log", "MSG: " . $err['message'] . "\nCOMMAND: " . $err['command'] . "\nRESULT: " . $err['result'], $sendmail = false);
-	$err = sshMakeChmodChown($app->config['fallbackstreamingserver'], $remote_path . $channels[$i]['streamid'] . "/" .$jconf['thumb_video_medium'] . "/" . $filename_jpg);
+	$err = sshMakeChmodChown($app->config['fallbackstreamingserver'], $remote_path . $channels[$i]['streamid'] . "/" .$jconf['thumb_video_medium'] . "/" . $filename_jpg, false);
 	if ( !$err['code'] ) $debug->log($jconf['log_dir'], $myjobid . ".log", "MSG: " . $err['message'] . "\nCOMMAND: " . $err['command'] . "\nRESULT: " . $err['result'], $sendmail = false);
-	$err = sshMakeChmodChown($app->config['fallbackstreamingserver'], $remote_path . $channels[$i]['streamid'] . "/" .$jconf['thumb_video_large'] . "/" . $filename_jpg);
+	$err = sshMakeChmodChown($app->config['fallbackstreamingserver'], $remote_path . $channels[$i]['streamid'] . "/" .$jconf['thumb_video_large'] . "/" . $filename_jpg, false);
 	if ( !$err['code'] ) $debug->log($jconf['log_dir'], $myjobid . ".log", "MSG: " . $err['message'] . "\nCOMMAND: " . $err['command'] . "\nRESULT: " . $err['result'], $sendmail = false);
 
 	// Update index photo filename
