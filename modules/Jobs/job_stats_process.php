@@ -14,9 +14,6 @@ include_once('job_utils_status.php');
 
 set_time_limit(0);
 
-// UTC: calc everything in UTC 
-date_default_timezone_set('UTC');
-
 // Init
 $app = new Springboard\Application\Cli(BASE_PATH, PRODUCTION);
 
@@ -26,7 +23,7 @@ $jconf = $app->config['config_jobs'];
 $myjobid = $jconf['jobid_stats_process'];
 $debug = Springboard\Debug::getInstance();
 
-// !!!!
+// DEBUG !!!!
 $kaka = "";
 $kaka2 = "";
 
@@ -38,6 +35,9 @@ if ( iswindows() ) {
 
 // Exit if any STOP file appears
 if ( is_file( $app->config['datapath'] . 'jobs/' . $myjobid . '.stop' ) or is_file( $app->config['datapath'] . 'jobs/all.stop' ) ) exit;
+
+// UTC: calc everything in UTC 
+date_default_timezone_set('UTC');
 
 // Log related init
 $debug->log($jconf['log_dir'], $myjobid . ".log", "********************* Job: " . $myjobid . " started *********************", $sendmail = false);
@@ -109,7 +109,7 @@ $app->watchdog();
 $db = db_maintain();
 
 // Delete all stuff - if required!
-//removeStatsAll($stats_config, true);
+removeStatsAll($stats_config, true);
 
 // Check Wowza records with open endtime
 $now_hour = date("G");
@@ -434,7 +434,7 @@ global $db, $debug, $myjobid, $app, $jconf, $kaka;
 			( css.starttime <= '" . $end_interval_datetime . "' AND css.endtime IS NULL ) OR									# Open record
 			( css.starttime < '" . $start_interval_datetime . "' AND css.endtime > '" . $end_interval_datetime . "' ) ) AND 	# Record covering the whole interval
 			( ( css.vsqrecordingfeed IS NOT NULL AND css.vsqrecordingfeed = lfs.livefeedid ) OR ( css.vsqrecordingfeed IS NULL AND css.vsqsessionid IS NULL) )
-AND	( css.wowzalocalstreamname = lfs.keycode OR css.wowzalocalstreamname = lfs.contentkeycode )
+			AND	( css.wowzalocalstreamname = lfs.keycode OR css.wowzalocalstreamname = lfs.contentkeycode )
 		GROUP BY
 			css.vsqsessionid, css.wowzalocalstreamname, css.vsqrecordingfeed";
 
