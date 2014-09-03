@@ -44,13 +44,7 @@ if not result or result == ngx.null then
   end
 end
 
-local ret = nil
-if result and result == '1' then
-  ret = ngx.OK
-else
-  ret = ngx.HTTP_FORBIDDEN
-end
-
+local ret = result == '1' and ngx.OK or ngx.HTTP_FORBIDDEN
 ngx.log(ngx.DEBUG, ngx.var.uri, " check result was ", result)
 -- vissza a connection poolba, 10sec idle time-al, max 100 kapcsolattal
 redis:set_keepalive(10000, 100)

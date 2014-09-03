@@ -851,15 +851,18 @@ class Users extends \Springboard\Model {
     // ellenorizzuk hogy ezt a cookiet tenylegesen mi allitottuk be
     // ha nem ellenoriznenk akkor aranylag egyszeruen lehetne DOS-olni minket
     // csupan azzal hogy mindig lekerjuk az id-nek megfelelo usert az adatbazisbol
-    $msghash  = $values[0];
     $pos      = strpos( $_COOKIE['autologin'], '|' );
     $msg      = substr( $_COOKIE['autologin'], $pos + 1 );
-    $msghash2 = hash_hmac( 'sha256', $msg, $this->bootstrap->config['hashseed'] );
-    if ( $msghash != $msghash2 )
+    $crypt    = $this->bootstrap->getEncryption();
+    $hashinfo = array(
+      'expected' => hash_hmac( 'sha256', $msg, $this->bootstrap->config['hashseed'] ),
+      'actual'   => $values[0]
+    );
+
+    if ( !$crypt->hashEqual( $hashinfo ) )
       return array();
 
-    $crypt = $this->bootstrap->getEncryption();
-    $id    = intval( $crypt->asciiDecrypt( $values[1] ) );
+    $id = intval( $crypt->asciiDecrypt( $values[1] ) );
     if ( !$id )
       return array();
 
