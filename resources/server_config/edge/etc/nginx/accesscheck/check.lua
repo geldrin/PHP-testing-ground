@@ -26,7 +26,10 @@ local result = redis:get( cachekey )
 if not result or result == ngx.null then
   -- nincs cacheben, meghivjuk es eltesszuk
   -- ezek internal location-ok mert nem tudunk tetszes szerinti urlt meghivni magunk
-  local checkuri = ngx.var.scheme == 'https' and "/secureaccesscheck" or "/accesscheck"
+  local checkuri =
+    ngx.var.accesscheckprefix ..
+    (ngx.var.scheme == 'https' and "secureaccesscheck" or "accesscheck")
+  ;
   local response = ngx.location.capture( checkuri, {['args'] = {['sessionid'] = sessionid}} )
 
   if response.status ~= ngx.HTTP_OK then

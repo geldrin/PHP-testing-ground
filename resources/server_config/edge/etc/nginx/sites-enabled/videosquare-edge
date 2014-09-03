@@ -50,6 +50,10 @@ server {
 
 	# On demand services: cache all files (HLS: .m3u8 playlist + .ts media segments | HDS: crossdomain.xml + Seg*-Frag*)
 	location ~ /(?:devvsq|vsq)/.*(?:\.ts|/Seg[0-9]*-Frag[0-9]*)$ {
+		# ez a valtozo hatarozza meg az access check url prefix-et
+		# tehat ehhez rakjuk hozza dinamikusan hogy accesscheck vagy secureaccesscheck
+		# es igy lesz belole /recordingsaccesscheck peldaul
+		set $accesscheckprefix '/recordings';
 		include accesscheck/accesscheck.conf;
 
 		# Origin server list
@@ -65,15 +69,23 @@ server {
 
 	} # On demand service
 
-	# Live services: cache media segments only, do not cache playlist (HLS: .ts media segments | HDS: crossdomain.xml + Seg*-Frag*)
-	location ~* /(devvsqlive|vsqlive)/.*(\.ts|\/Seg[0-9]*-Frag[0-9]*)$ {
+	# Live services: cache all files (HLS: .m3u8 playlist + .ts media segments | HDS: crossdomain.xml + Seg*-Frag*)
+	location ~ /(?:devvsqlive|vsqlive)/.*(?:\.ts|/Seg[0-9]*-Frag[0-9]*)$ {
+		set $accesscheckprefix '/live';
+		include accesscheck/accesscheck.conf;
 
 		# Origin server list
 		proxy_pass http://origins;
 
-		# URL rewrite????
+		# https://blog.engineyard.com/2011/useful-rewrites-for-nginx
+		rewrite_log on;
+		proxy_redirect off;
+		proxy_cache_revalidate off;
 
-	}
+		# max-age: 3600 seconds
+		expires 60m;
+
+	} # On demand service
 
 	# Live: do not cache playlists (HLS: .m3u8 | HDS: .f4m? )
 	location ~* /(devvsqlive|vsqlive)/.*(\.m3u8|\.f4m|\.abst)$ {
@@ -101,7 +113,7 @@ server {
 	}
 
 	# belso locationok amit a lua hiv meg kizarolag mert nem tud kozvetlenul url-t hivni
-	location /accesscheck {
+	location /recordingsaccesscheck {
 		internal; # nem elerheto kivulrol
 		proxy_pass http://dev.videosquare.eu/recordings/checkstreamaccess;
 		# abszolut nem cacheljuk
@@ -113,9 +125,25 @@ server {
 	}
 
 	# a location ha https-en keresztul jon a request, securenak tekintjuk
-	location /secureaccesscheck {
+	location /recordingssecureaccesscheck {
 		internal;
 		proxy_pass http://dev.videosquare.eu/recordings/securecheckstreamaccess;
+		proxy_no_cache 1;
+		proxy_cache_bypass 1;
+		proxy_pass_request_headers off;
+	}
+
+	location /liveaccesscheck {
+		internal;
+		proxy_pass http://dev.videosquare.eu/live/checkstreamaccess;
+		proxy_no_cache 1;
+		proxy_cache_bypass 1;
+		proxy_pass_request_headers off;
+	}
+
+	location /livesecureaccesscheck {
+		internal;
+		proxy_pass http://dev.videosquare.eu/live/securecheckstreamaccess;
 		proxy_no_cache 1;
 		proxy_cache_bypass 1;
 		proxy_pass_request_headers off;
