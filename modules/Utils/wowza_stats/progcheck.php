@@ -90,7 +90,7 @@ if ($org_id === null) {
 if ($sessioncheck === false)
   $msg .= "# Legend: (email,watched duration,total duration)\n";
 else
-  $msg .= "# Legend: (email, watched duration, total duration, session started, session started from, session terminated, session stopped at, session duration, sessionpercent)\n";
+  $msg .= "# Legend: (email, watched duration, total duration, total percent,  session started, session started from, session terminated, session stopped at, session duration, session percent)\n";
 $msg .= "\n";
 // $msg .= $checktimestamps === true ? (",last activity,first login)\n") : (")\n");
 
