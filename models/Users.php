@@ -924,7 +924,7 @@ class Users extends \Springboard\Model {
     $value   = $msghash . '|' . $value;
 
     // httponly cookie
-    setcookie('autologin', $value, strtotime('+1 year'), '/', null, $ssl, true );
+    setcookie('autologin', $value, strtotime('+3 months'), '/', null, $ssl, true );
 
   }
 
