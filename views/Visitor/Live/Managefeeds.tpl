@@ -23,9 +23,7 @@
     <td class="feed">
       <a href="{$language}/live/view/{$feed.id},{$feed.name|filenameize}" class="left"><b>{$feed.name|mb_wordwrap:30|escape:html}</b></a>
       <br/>
-      {if !$bootstrap->production}
-        <a href="{$language}/live/analytics/{$channel.id}?feedids[]={$feed.id}">{#live__analytics#}</a>
-      {/if}
+      <a href="{$language}/live/analytics/{$channel.id}?feedids[]={$feed.id}">{#live__analytics#}</a>
       {if $feed.feedtype != 'vcr' or $feed.candelete}
         | <a href="{$language}/live/modifyfeed/{$feed.id}">{#live__live_edit#}</a>
         | <a href="{$language}/live/deletefeed/{$feed.id}" class="confirm" question="{#sitewide_areyousure#|escape:html}">{#live__live_delete#}</a>
