@@ -55,12 +55,12 @@ class Index extends \Visitor\Paging {
     $this->filters['organizationid'] = $this->controller->organization['id'];
     $user = $this->bootstrap->getSession('user');
     if (
-         !$user['id'] or
-         ( !$user['isadmin'] and !$user['isclientadmin'] and !$user['isliveadmin'] )
+         $user['id'] and
+         ( $user['isadmin'] or $user['isclientadmin'] or $user['isliveadmin'] )
        ) {
-      $this->controller->toSmarty['nosearch'] = true;
+      $this->controller->toSmarty['showsearch'] = true;
+    } else
       return;
-    }
 
     $showall = $this->application->getParameter('showall');
     if ( $showall and in_array( $showall, array('0', '1') ) ) {

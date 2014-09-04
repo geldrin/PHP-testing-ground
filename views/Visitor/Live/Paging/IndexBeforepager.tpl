@@ -2,7 +2,7 @@
   <h1>{#sitewide_live#}</h1>
 </div>
 
-{if !$nosearch}
+{if $showsearch}
 <div id="livequicksearch" class="form pagingsearch">
   <form method="GET" action="{$language}/live">
     <input type="hidden" name="order" value="{$order|escape:html}"/>
