@@ -899,8 +899,8 @@ class Livefeeds extends \Springboard\Model {
     else {
       // how many "ticks" based on the step is there between the user-provided
       // starttimestamp and the actual timestamp, so we can align the ticks
-      $steps = ceil(
-        ( $item['timestamp'] + 1 - $ret['starttimestamp'] ) / $ret['step']
+      $steps = floor(
+        ( $item['timestamp'] - $ret['starttimestamp'] ) / $ret['step']
       );
       // now subtract those ticks from the start timestamp, so we can
       // achieve the range the user actually requested
@@ -913,7 +913,7 @@ class Livefeeds extends \Springboard\Model {
     else {
       // same thing, ensure that it ends on a "tick" boundary
       $steps = ceil(
-        ( $ret['endtimestamp'] + 1 - $item['timestamp'] ) / $ret['step']
+        ( $ret['endtimestamp'] - $item['timestamp'] ) / $ret['step']
       );
       $ret['endtimestamp'] = $item['timestamp'] + ( $steps * $ret['step'] );
     }
