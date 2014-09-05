@@ -237,7 +237,8 @@ global $jconf, $debug, $app;
 			// When using ffmpeg's built-in aac library, "-strict experimental" option is required.
 			if ($profile['audiocodec'] == 'aac') $ffmpeg_audio .= " -strict experimental";
 			
-			$ffmpeg_audio .= " -async ". $jconf['ffmpeg_async_frames'] ." -c:a ". $profile['audiocodec'] ." -ac ". $main['audiochannels'] ." -b:a ". $main['audiobitrate'] ." -ar ". $main['audiosamplerate'];
+			// $ffmpeg_audio .= " -async ". $jconf['ffmpeg_async_frames'] ." -c:a ". $profile['audiocodec'] ." -ac ". $main['audiochannels'] ." -b:a ". $main['audiobitrate'] ." -ar ". $main['audiosamplerate'];
+			$ffmpeg_audio .= " -c:a ". $profile['audiocodec'] ." -ac ". $main['audiochannels'] ." -b:a ". $main['audiobitrate'] ." -ar ". $main['audiosamplerate'];
 		}
 
 		// Video //
@@ -276,18 +277,21 @@ global $jconf, $debug, $app;
 			
 			// $audio_filter = " [1:a][2:a] amix=inputs=2:duration=longest, apad"; // APAD FILTERREL NEM ALL LE A KONVERZIO. (CHECK NEEDED!)
 			$audio_filter  = " [1:a][2:a] amix=inputs=2:duration=longest";
-			$ffmpeg_audio .= " -async ". $jconf['ffmpeg_async_frames'] ." -c:a ". $profile['audiocodec'] ." -ac ". $audiochannels ." -b:a ". $audiobitrate ." -ar ". $audiosamplerate;
+			// $ffmpeg_audio .= " -async ". $jconf['ffmpeg_async_frames'] ." -c:a ". $profile['audiocodec'] ." -ac ". $audiochannels ." -b:a ". $audiobitrate ." -ar ". $audiosamplerate;
+			$ffmpeg_audio .= " -c:a ". $profile['audiocodec'] ." -ac ". $audiochannels ." -b:a ". $audiobitrate ." -ar ". $audiosamplerate;
 		} else {
 			if ($main['hasaudio'] === true) {
 				// ha csak egyetlen audio input van, akkor azt keveri be, nem kell 'amix' filter
 				$audio_filter  = null;
 				// vedd a main hangbeallitasait:
-				$ffmpeg_audio .= " -async ". $jconf['ffmpeg_async_frames'] ." -c:a ". $profile['audiocodec'] ." -ac ". $main['audiochannels'] ." -b:a ". $main['audiobitrate'] ." -ar ". $main['audiosamplerate'];
+				// $ffmpeg_audio .= " -async ". $jconf['ffmpeg_async_frames'] ." -c:a ". $profile['audiocodec'] ." -ac ". $main['audiochannels'] ." -b:a ". $main['audiobitrate'] ." -ar ". $main['audiosamplerate'];
+				$ffmpeg_audio .= " -c:a ". $profile['audiocodec'] ." -ac ". $main['audiochannels'] ." -b:a ". $main['audiobitrate'] ." -ar ". $main['audiosamplerate'];
 			} elseif( $overlay['hasaudio'] === true) {
 				// ha csak egyetlen audio input van, akkor azt keveri be, nem kell 'amix' filter
 				$audio_filter  = null;
 				// vedd az overlay hangbeallitasait:
-				$ffmpeg_audio .= " -async ". $jconf['ffmpeg_async_frames'] ." -c:a ". $profile['audiocodec'] ." -ac ". $overlay['audiochannels'] ." -b:a ". $overlay['audiobitrate'] ." -ar ". $overlay['audiosamplerate'];
+				// $ffmpeg_audio .= " -async ". $jconf['ffmpeg_async_frames'] ." -c:a ". $profile['audiocodec'] ." -ac ". $overlay['audiochannels'] ." -b:a ". $overlay['audiobitrate'] ." -ar ". $overlay['audiosamplerate'];
+				$ffmpeg_audio .= " -c:a ". $profile['audiocodec'] ." -ac ". $overlay['audiochannels'] ." -b:a ". $overlay['audiobitrate'] ." -ar ". $overlay['audiosamplerate'];
 			} else {
 				"No audiochannels\n";
 				$audio_filter = null;
