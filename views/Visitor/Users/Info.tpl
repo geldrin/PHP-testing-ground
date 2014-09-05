@@ -25,7 +25,7 @@
             <h3><a href="{$language}/recordings/details/{$item.id},{$item.title|filenameize}">{$item.title|escape:html}</a></h3>
             {if $item.subtitle|stringempty}<h4>{$item.subtitle|escape:html}</h4>{/if}
           </div>
-          {if !$item.ispublished and $item.status == 'onstorage'}
+          {if $item|@userHasAccess and $item.approvalstatus != 'approved' and $item.status == 'onstorage'}
             <span class="notpublished"><a href="{$language}/recordings/modifysharing/{$item.id}?forward={$FULL_URI|escape:url}">{#recordings__notpublished_warning#}</a></span>
           {/if}
           <div class="recordinginfo">
@@ -102,7 +102,7 @@
                     <h3><a href="{$language}/recordings/details/{$recording.id},{$recording.title|filenameize}">{$recording.title|escape:html}</a></h3>
                     {if $recording.subtitle|stringempty}<h4>{$recording.subtitle|escape:html}</h4>{/if}
                   </div>
-                  {if !$recording.ispublished and $recording.status == 'onstorage'}
+                  {if $recording|@userHasAccess and $recording.approvalstatus != 'approved' and $recording.status == 'onstorage'}
                     <span class="notpublished"><a href="{$language}/recordings/modifysharing/{$recording.id}?forward={$FULL_URI|escape:url}">{#recordings__notpublished_warning#}</a></span>
                   {/if}
                   <div class="recordinginfo">
