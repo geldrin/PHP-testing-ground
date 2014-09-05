@@ -22,9 +22,7 @@ $config = array(
     'displayname' => $l('live', 'analytics_starttimestamp'),
     'type'        => 'inputText',
     'html'        =>
-      'class="inputtext inputbackground clearonclick datetimepicker margin" ' .
-      'data-datetimefrom="' . $fromdatetime . '"' .
-      'data-datetimeuntil="' . $untildatetime . '"'
+      'class="inputtext inputbackground clearonclick datetimepicker margin"'
     ,
     'rowlayout'   => $this->singlecolumnlayout,
     'value'       => $fromdatetime,
@@ -42,9 +40,7 @@ $config = array(
     'displayname' => $l('live', 'analytics_endtimestamp'),
     'type'        => 'inputText',
     'html'        =>
-      'class="inputtext inputbackground clearonclick datetimepicker margin" ' .
-      'data-datetimefrom="' . $fromdatetime . '"' .
-      'data-datetimeuntil="' . $untildatetime . '"'
+      'class="inputtext inputbackground clearonclick datetimepicker margin"'
     ,
     'rowlayout'   => $this->singlecolumnlayout,
     'value'       => $untildatetime,

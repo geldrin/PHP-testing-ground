@@ -691,11 +691,8 @@ class Controller extends \Visitor\Controller {
     // prepare the chart labels
     foreach( $data['data'] as $value ) {
 
-      foreach( $value as $field => $v ) {
-
+      foreach( $value as $field => $v )
         $ret['labels'][] = $l('live', 'stats_' . $field );
-
-      }
 
       break;
 
