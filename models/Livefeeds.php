@@ -246,25 +246,35 @@ class Livefeeds extends \Springboard\Model {
     
   }
   
-  public function getFlashData( $info ) {
-    
-    $streams          = array();
-    $streams[]        = $info['streams']['defaultstream']['keycode'];
-    $contentstreams   = array();
-    $contentstreams[] = $info['streams']['defaultstream']['contentkeycode'];
-    
+  public function getStreamUrls( $info, $prefix = '' ) {
+
+    $streams   = array();
+    $streams[] = $info['streams']['defaultstream'][ $prefix . 'keycode'];
+
     foreach( $info['streams']['streams'] as $stream ) {
-      
+
       if (
            $info['streams']['defaultstream']['id'] == $stream['id'] or
            $info['streams']['defaultstream']['quality'] == $stream['quality']
          )
         continue;
-      
-      $streams[]        = $stream['keycode'];
-      $contentstreams[] = $stream['contentkeycode'];
-      
+
+      $streams[] = $stream[ $prefix . 'keycode'];
+
     }
+
+    if ( !$this->isHDSEnabled( $prefix ) )
+      return $streams;
+
+    $smilurl = 'smil:%s.smil/manifest.f4m';
+    foreach( $streams as $key => $value )
+      $streams[ $key ] = sprintf( $smilurl, $value );
+
+    return $streams;
+
+  }
+
+  public function getFlashData( $info ) {
 
     if ( $this->bootstrap->config['forcesecureapiurl'] )
       $apiurl = 'https://' . $info['organization']['domain'] . '/';
@@ -276,11 +286,11 @@ class Livefeeds extends \Springboard\Model {
       'language'               => \Springboard\Language::get(),
       'api_url'                => $apiurl,
       'user_needPing'          => false,
-      'media_streams'          => $streams,
       'feed_id'                => $this->id,
       'recording_title'        => $this->row['name'],
       'recording_type'         => 'live',
-      'media_secondaryStreams' => $contentstreams,
+      'media_streams'          => $this->getStreamUrls( $info ),
+      'media_secondaryStreams' => $this->getStreamUrls( $info, 'content'),
       'timeline_autoPlay'      => true,
       'user_checkWatching'     => (bool)$info['member']['ispresencecheckforced'],
       'user_checkWatchingTimeInterval' => $info['checkwatchingtimeinterval'],
