@@ -248,30 +248,41 @@ class Livefeeds extends \Springboard\Model {
   
   public function getStreamUrls( $info, $prefix = '' ) {
 
-    $streams   = array();
-    $streams[] = $info['streams']['defaultstream'][ $prefix . 'keycode'];
+    if ( $this->isHDSEnabled( $prefix ) ) {
 
-    foreach( $info['streams']['streams'] as $stream ) {
+      $authorizecode = $this->getAuthorizeSessionid( $info );
+      $smilurl       = 'smil:%s.smil/manifest.f4m%s';
+      $filename      = $this->id;
 
-      if (
-           $info['streams']['defaultstream']['id'] == $stream['id'] or
-           $info['streams']['defaultstream']['quality'] == $stream['quality']
-         )
-        continue;
+      if ( $prefix )
+        $filename .= '_' . $prefix;
 
-      $streams[] = $stream[ $prefix . 'keycode'];
+      $streams = array(
+        sprintf( $smilurl, $filename, $authorizecode )
+      );
 
-    }
-
-    if ( !$this->isHDSEnabled( $prefix ) )
       return $streams;
 
-    $authorizecode = $this->getAuthorizeSessionid( $info );
-    $smilurl       = 'smil:%s.smil/manifest.f4m%s';
-    foreach( $streams as $key => $value )
-      $streams[ $key ] = sprintf( $smilurl, $value, $authorizecode );
+    } else {
 
-    return $streams;
+      $streams   = array();
+      $streams[] = $info['streams']['defaultstream'][ $prefix . 'keycode'];
+
+      foreach( $info['streams']['streams'] as $stream ) {
+
+        if (
+             $info['streams']['defaultstream']['id'] == $stream['id'] or
+             $info['streams']['defaultstream']['quality'] == $stream['quality']
+           )
+          continue;
+
+        $streams[] = $stream[ $prefix . 'keycode'];
+
+      }
+
+      return $streams;
+
+    }
 
   }
 
