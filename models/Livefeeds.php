@@ -339,7 +339,7 @@ class Livefeeds extends \Springboard\Model {
     $prefix = $this->row['issecurestreamingforced']? 'sec': '';
     if ( $hds ) {
       $data['media_servers'][] =
-        rtrim( $this->bootstrap->config['wowza'][ $prefix . 'livesmilurl' ], '/' )
+        $this->bootstrap->config['wowza'][ $prefix . 'livesmilurl' ]
       ;
     } else {
 
