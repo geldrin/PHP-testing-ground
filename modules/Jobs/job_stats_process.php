@@ -46,7 +46,7 @@ $debug->log($jconf['log_dir'], $myjobid . ".log", "********************* Job: " 
 $run_filename = $jconf['temp_dir'] . $myjobid . ".run";
 if  ( file_exists($run_filename) ) {
 	if ( ( time() - filemtime($run_filename) ) < 15 * 60 ) {
-		$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] " . $myjobid . " is already running. Not finished a tough job?", $sendmail = true);
+		$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] " . $myjobid . " is already running. Not finished a tough job? See: " . $run_filename . " (created: " . date("Y-m-d H:i:s", filemtime($run_filename)) . ")", $sendmail = true);
 	}
 	exit;
 } else {
@@ -109,7 +109,7 @@ $app->watchdog();
 $db = db_maintain();
 
 // Delete all stuff - if required!
-removeStatsAll($stats_config, true);
+//removeStatsAll($stats_config, true);
 
 // Check Wowza records with open endtime
 $now_hour = date("G");
