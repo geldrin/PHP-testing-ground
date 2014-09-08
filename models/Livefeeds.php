@@ -305,10 +305,10 @@ class Livefeeds extends \Springboard\Model {
 
   }
   
-  public function isHDSEnabled() {
+  public function isHDSEnabled( $prefix = '' ) {
     return
       $this->bootstrap->config['hdsenabled'] and
-      in_array( $this->row['smilstatus'], array('onstorage', 'regenerate') )
+      in_array( $this->row[ $prefix . 'smilstatus'], array('onstorage', 'regenerate') )
     ;
   }
 
@@ -317,6 +317,7 @@ class Livefeeds extends \Springboard\Model {
     $this->ensureObjectLoaded();
     $data = array(
       'media_servers' => array(),
+      'media_secondaryServers' => array(),
     );
 
     $authorizecode = $this->getAuthorizeSessionid( $info );
@@ -354,7 +355,34 @@ class Livefeeds extends \Springboard\Model {
     foreach( $data['media_servers'] as $key => $url )
       $data['media_servers'][ $key ] = sprintf( $url, $streamingserver );
 
-    $data['media_secondaryServers'] = $data['media_servers'];
+    $contenthds = $this->isHDSEnabled('content');
+    if ( $hds == $contenthds ) {
+
+      $data['media_secondaryServers'] = $data['media_servers'];
+      return $data;
+
+    } elseif ( $contenthds )
+      $data['media_secondaryServers'][] =
+        rtrim( $this->bootstrap->config['wowza'][ $prefix . 'livesmilurl' ], '/' ) . $authorizecode
+      ;
+    else {
+
+      if ( $this->row['issecurestreamingforced'] )
+        $data['media_secondaryServers'] = array(
+          rtrim( $this->bootstrap->config['wowza']['seclivertmpsurl'], '/' ) . $authorizecode,
+          rtrim( $this->bootstrap->config['wowza']['seclivertmpeurl'], '/' ) . $authorizecode,
+          rtrim( $this->bootstrap->config['wowza']['secliveurl'], '/' ) . $authorizecode,
+        );
+      else
+        $data['media_secondaryServers'] = array(
+          rtrim( $this->bootstrap->config['wowza']['livertmpurl'], '/' ) . $authorizecode,
+          rtrim( $this->bootstrap->config['wowza']['liveurl'], '/' ) . $authorizecode,
+        );
+
+    }
+
+    foreach( $data['media_secondaryServers'] as $key => $url )
+      $data['media_secondaryServers'][ $key ] = sprintf( $url, $streamingserver );
 
     return $data;
 
