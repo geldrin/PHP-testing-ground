@@ -119,6 +119,9 @@ $config = array(
     'smilurl'           => 'http://%s/vsq/_definst_/',
     'secsmilurl'        => 'https://%s/vsq/_definst_/',
 
+    'livesmilurl'       => 'http://%s/vsqlive/_definst_/',
+    'seclivesmilurl'    => 'https://%s/vsqlive/_definst_/',
+
     'rtmpurl'           => 'rtmp://%s:1935/vsq/',
     'secrtmpsurl'       => 'rtmps://%s/vsqsec/',
     'secrtmpurl'        => 'rtmpe://%s:1935/vsqsec/',
