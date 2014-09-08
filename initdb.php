@@ -134,7 +134,6 @@ class Initdb {
         
       }
       
-      
       // nem szamit ha nincsenek ilyen mezok
       $data['organizationid'] = $orgid;
       

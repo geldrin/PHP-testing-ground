@@ -286,7 +286,7 @@ class Livefeeds extends \Springboard\Model {
       'user_checkWatchingTimeInterval' => $info['checkwatchingtimeinterval'],
       'user_checkWatchingConfirmationTimeout' => $info['checkwatchingconfirmationtimeout'],
     );
-    
+
     if ( $info['member'] and $info['member']['id'] ) {
       $flashdata['user_id']          = $info['member']['id'];
       $flashdata['user_needPing']    = true;
@@ -297,14 +297,21 @@ class Livefeeds extends \Springboard\Model {
 
     if ( !$this->row['slideonright'] )
       $flashdata['layout_videoOrientation'] = 'right';
-    
+
     if ( $this->row['introrecordingid'] )
       $flashdata = $flashdata + $this->getPlaceholderFlashdata( $info );
 
     return $flashdata;
-    
+
   }
   
+  public function isHDSEnabled() {
+    return
+      $this->bootstrap->config['hdsenabled'] and
+      in_array( $this->row['smilstatus'], array('onstorage', 'regenerate') )
+    ;
+  }
+
   public function getMediaServers( $info, $hds = null ) {
 
     $this->ensureObjectLoaded();
@@ -314,10 +321,8 @@ class Livefeeds extends \Springboard\Model {
 
     $authorizecode = $this->getAuthorizeSessionid( $info );
     $prefix        = $this->row['issecurestreamingforced']? 'sec': '';
-    if ( $hds === null ) {
-      $recordingsModel = $this->bootstrap->getModel('recordings');
-      $hds = $recordingsModel->isHDSEnabled();
-    }
+    if ( $hds === null )
+      $hds = $this->isHDSEnabled();
 
     $prefix = $this->row['issecurestreamingforced']? 'sec': '';
     if ( $hds ) {
@@ -372,7 +377,7 @@ class Livefeeds extends \Springboard\Model {
       throw new \Exception("The placeholder does not have desktopcompatible recordings!");
 
     $recordingsModel->row['issecurestreamingforced'] = $this->row['issecurestreamingforced'];
-    $server = $recordingsModel->getMediaServers( $info );
+    $server = $recordingsModel->getMediaServers( $info, $this->isHDSEnabled() );
     $data['livePlaceholder_servers'] = $server['media_servers'];
     unset( $server );
 
