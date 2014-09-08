@@ -266,9 +266,10 @@ class Livefeeds extends \Springboard\Model {
     if ( !$this->isHDSEnabled( $prefix ) )
       return $streams;
 
-    $smilurl = 'smil:%s.smil/manifest.f4m';
+    $authorizecode = $this->getAuthorizeSessionid( $info );
+    $smilurl       = 'smil:%s.smil/manifest.f4m%s';
     foreach( $streams as $key => $value )
-      $streams[ $key ] = sprintf( $smilurl, $value );
+      $streams[ $key ] = sprintf( $smilurl, $value, $authorizecode );
 
     return $streams;
 
@@ -338,7 +339,7 @@ class Livefeeds extends \Springboard\Model {
     $prefix = $this->row['issecurestreamingforced']? 'sec': '';
     if ( $hds ) {
       $data['media_servers'][] =
-        rtrim( $this->bootstrap->config['wowza'][ $prefix . 'livesmilurl' ], '/' ) . $authorizecode
+        rtrim( $this->bootstrap->config['wowza'][ $prefix . 'livesmilurl' ], '/' )
       ;
     } else {
 
