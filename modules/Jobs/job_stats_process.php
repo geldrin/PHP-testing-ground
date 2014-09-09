@@ -23,6 +23,39 @@ $jconf = $app->config['config_jobs'];
 $myjobid = $jconf['jobid_stats_process'];
 $debug = Springboard\Debug::getInstance();
 
+// !!!
+/*
+$x = strtotime("2014-09-08 12:33:23");
+$a = getTimelineGridSeconds($x, "left", 5 * 60);
+echo date("Y-m-d H:i:s", $x) . " -> " . date("Y-m-d H:i:s", $a) . "\n";
+
+$x = strtotime("2014-09-08 00:00:23");
+$a = getTimelineGridSeconds($x, "left", 5 * 60);
+echo date("Y-m-d H:i:s", $x) . " -> " . date("Y-m-d H:i:s", $a) . "\n";
+
+$x = strtotime("2014-09-08 12:00:23");
+$a = getTimelineGridSeconds($x, "left", 5 * 60);
+echo date("Y-m-d H:i:s", $x) . " -> " . date("Y-m-d H:i:s", $a) . "\n";
+
+$x = strtotime("2014-09-08 00:00:23");
+$a = getTimelineGridSeconds($x, "left", 60 * 60);
+echo date("Y-m-d H:i:s", $x) . " -> " . date("Y-m-d H:i:s", $a) . "\n";
+
+$x = strtotime("2014-12-08 12:00:23");
+$a = getTimelineGridSeconds($x, "left", 60 * 60);
+echo date("Y-m-d H:i:s", $x) . " -> " . date("Y-m-d H:i:s", $a) . "\n";
+
+$x = strtotime("2014-09-08 12:00:23");
+$a = getTimelineGridSeconds($x, "left", 60 * 60 * 24);
+echo date("Y-m-d H:i:s", $x) . " -> " . date("Y-m-d H:i:s", $a) . "\n";
+
+$x = strtotime("2014-12-08 12:00:23");
+$a = getTimelineGridSeconds($x, "left", 60 * 60 * 24);
+echo date("Y-m-d H:i:s", $x) . " -> " . date("Y-m-d H:i:s", $a) . "\n";
+
+exit; */
+// !!!
+
 // DEBUG !!!!
 $kaka = "";
 $kaka2 = "";
@@ -36,9 +69,6 @@ if ( iswindows() ) {
 // Exit if any STOP file appears
 if ( is_file( $app->config['datapath'] . 'jobs/' . $myjobid . '.stop' ) or is_file( $app->config['datapath'] . 'jobs/all.stop' ) ) exit;
 
-// UTC: calc everything in UTC 
-date_default_timezone_set('UTC');
-
 // Log related init
 $debug->log($jconf['log_dir'], $myjobid . ".log", "********************* Job: " . $myjobid . " started *********************", $sendmail = false);
 
@@ -46,7 +76,7 @@ $debug->log($jconf['log_dir'], $myjobid . ".log", "********************* Job: " 
 $run_filename = $jconf['temp_dir'] . $myjobid . ".run";
 if  ( file_exists($run_filename) ) {
 	if ( ( time() - filemtime($run_filename) ) < 15 * 60 ) {
-		$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] " . $myjobid . " is already running. Not finished a tough job? See: " . $run_filename . " (created: " . date("Y-m-d H:i:s", filemtime($run_filename)) . ")", $sendmail = true);
+		$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] " . $myjobid . " is already running. Not finished a previous job? See: " . $run_filename . " (created: " . date("Y-m-d H:i:s", filemtime($run_filename)) . ")", $sendmail = true);
 	}
 	exit;
 } else {
@@ -259,8 +289,8 @@ for ( $statsidx = 0; $statsidx < count($stats_config); $statsidx++ ) {
 		while ( !$stats->EOF ) {
 
 			$stat = $stats->fields;
-/*echo "DEBUG: Wowza record\n";
-var_dump($stat); */
+//echo "DEBUG: Wowza record\n";
+//var_dump($stat);
 
 			// Live feed ID
 
@@ -319,10 +349,8 @@ var_dump($stat); */
 				$stats_f[$feedid][$idx][$platform]++;
 			}
 
-/*
-echo "DEBUG: processed record\n";
-var_dump($stats_f);
-*/
+//echo "DEBUG: processed record\n";
+//var_dump($stats_f);
 
 			$records_processed++;
 			$stats->MoveNext();
@@ -426,9 +454,11 @@ global $db, $debug, $myjobid, $app, $jconf, $kaka;
 			lfs.contentkeycode
 		FROM
 			cdn_streaming_stats AS css,
-			livefeed_streams AS lfs
+			livefeed_streams AS lfs,
+			converter_nodes AS cn
 		WHERE
-			css.wowzaappid = '" . $streaming_server_app . "'  AND (
+			css.wowzaappid = '" . $streaming_server_app . "' AND
+			css.clientip <> cn.serverip AND (
 			( css.starttime >= '" . $start_interval_datetime . "' AND css.starttime <= '" . $end_interval_datetime . "' ) OR	# START in the interval
 			( css.endtime >= '" . $start_interval_datetime . "'   AND css.endtime <= '" . $end_interval_datetime . "' ) OR		# END in the interval
 			( css.starttime <= '" . $end_interval_datetime . "' AND css.endtime IS NULL ) OR									# Open record
@@ -463,7 +493,7 @@ $kaka = $query;
 // Get next live statistics record timestamp (to help jumping empty time slots)
 // WARNING: does not check for active records
 function getFirstWowzaRecordFromInterval($from_timestamp, $to_timestamp, $streaming_server_app) {
-global $db, $debug, $myjobid, $app, $jconf, $kaka2;
+ global $db, $debug, $myjobid, $app, $jconf, $kaka2;
 
 	if ( empty($from_timestamp) ) $from_timestamp = 0;
 
@@ -475,8 +505,10 @@ global $db, $debug, $myjobid, $app, $jconf, $kaka2;
 			css.id,
 			css.starttime
 		FROM
-			cdn_streaming_stats AS css
+			cdn_streaming_stats AS css,
+			converter_nodes AS cn
 		WHERE
+			css.clientip <> cn.serverip AND
 			css.starttime >= '" . $from_datetime . "' AND
 			css.starttime <= '" . $to_datetime . "' AND
 			css.wowzaappid = '" . $streaming_server_app . "' AND
@@ -536,22 +568,29 @@ global $db, $debug, $myjobid, $app, $jconf;
 
 function getTimelineGridSeconds($timestamp, $direction = "left", $timeresolution) {
 
-	// UTC: calc everything in UTC 
-	date_default_timezone_set('UTC');
+	if ( ( $timeresolution != 5 * 60 ) and ( $timeresolution != 60 * 60 ) and ( $timeresolution != 60 * 60 * 24 ) ) return false;
 
-//	echo "------------------------------------------\ndebug: in = " . $timestamp . " / " . date("Y-m-d H:i:s", $timestamp) . "\n";
 //	echo "debug: res = " . $timeresolution . "\n";
 
-	$mod = $timestamp % $timeresolution;
-//	echo "debug: mod = " . $mod . "\n";
+	if ( ( $timeresolution == 5 * 60 ) or ( $timeresolution == 60 * 60 ) ) {
 
-	if ( $direction == "left" ) {
-		$timestamp_grid = $timestamp - $mod;
+		$mod = $timestamp % $timeresolution;
+
+		if ( $direction == "left" ) {
+			$timestamp_grid = $timestamp - $mod;
+		} else {
+			$timestamp_grid = $timestamp - $mod + $timeresolution;
+		}
+
+//		echo "debug: mod = " . $mod . "\n";
+
 	} else {
-		$timestamp_grid = $timestamp + ($timeresolution + $mod);
+
+		$timestamp_grid = strtotime(date("Y-m-d 00:00:00", $timestamp));
+
 	}
 
-//	echo "debug: grid = " . date("Y-m-d H:i:s", $timestamp_grid) . "\n";
+//	echo "debug: input = " . date("Y-m-d H:i:s (e)", $timestamp) . " | grid = " . date("Y-m-d H:i:s (e)", $timestamp_grid) . "\n";
 
 	return $timestamp_grid;
 }
