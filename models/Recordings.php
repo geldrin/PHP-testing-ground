@@ -2198,7 +2198,7 @@ class Recordings extends \Springboard\Model {
       'audio'   => array(),
     );
 
-    $hascontent  = $his->row['contentstatus'] == 'onstorage';
+    $hascontent  = $this->row['contentstatus'] == 'onstorage';
     $pipversions = array();
 
     foreach( $rs as $version ) {
