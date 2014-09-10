@@ -136,27 +136,35 @@ class pager {
 
     $options = '';
     foreach ( $this->perpageoptions as $option ) {
-      $option = htmlspecialchars( $option, ENT_QUOTES, 'UTF-8', true );
-      $options .= 
-        '<option ' . ( $this->perpage == $option ? 'selected="selected"' : '' ) . ' value="' . $option . '">' . $option . '</option>';
+      $selected = $this->perpage == $option ? 'selected="selected" ' : '';
+      $option   = htmlspecialchars( $option, ENT_QUOTES, 'UTF-8', true );
+      $options .=
+        '<option ' . $selected  . 'value="' . $option . '">' . $option . '</option>';
     }
 
-    $hiddenvars = '';
+    $hiddenvars      = '';
     $hiddenvarformat = '<input type="hidden" name="%s" value="%s"/>';
     foreach( $this->pass as $name => $value ) {
       $name = htmlspecialchars( $name, ENT_QUOTES, 'UTF-8', true );
+
       if ( is_array( $value ) ) {
+
         foreach( $value as $k => $v ) {
-          $k = htmlspecialchars( $k, ENT_QUOTES, 'UTF-8', true );
-          $v = htmlspecialchars( $v, ENT_QUOTES, 'UTF-8', true );
-          $newname = $name . '[' . $k . ']';
+
+          if ( !is_scalar( $v ) )
+            throw new Exception("Non-scalar value found for variable $name [ $k ]");
+
+          $k           = htmlspecialchars( $k, ENT_QUOTES, 'UTF-8', true );
+          $v           = htmlspecialchars( $v, ENT_QUOTES, 'UTF-8', true );
+          $newname     = $name . '[' . $k . ']';
           $hiddenvars .= sprintf( $hiddenvarformat, $newname, $v );
         }
 
-      } else {
-        $value = htmlspecialchars( $value, ENT_QUOTES, 'UTF-8', true );
+      } elseif ( is_scalar( $value ) ) {
+        $value       = htmlspecialchars( $value, ENT_QUOTES, 'UTF-8', true );
         $hiddenvars .= sprintf( $hiddenvarformat, $name, $value );
-      }
+      } else
+        throw new Exception("Non-array and non-scalar type for variable to pass");
     }
 
     return $this->itemLayout(
@@ -324,6 +332,9 @@ class pager {
 
   // --------------------------------------------------------------------------
   function pass( $variable, $value ) {
+    if ( !is_array( $value ) and !is_scalar( $value ) )
+      throw new Exception("Non-array and non-scalar type as value is unsupported");
+
     $this->pass[ $variable ] = $value;
   }
 
@@ -355,11 +366,12 @@ class pager {
 
     $link = sprintf( $linkformat, $url, $start );
 
-    if ( !$skipperpage and $this->perpageselector )
+    if ( !$skipperpage and $this->perpageselector ) {
       if ( strpos( $link, '?' ) !== false )
         $link .= '&amp;perpage=' . $this->perpage;
       else
         $link .= '?perpage=' . $this->perpage;
+    }
 
     return $link . $this->bookmark;
 
