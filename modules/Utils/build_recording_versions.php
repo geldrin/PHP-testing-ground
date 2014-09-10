@@ -67,7 +67,7 @@ $query_recordings = "
     ( masterstatus = '". $jconf['dbstatus_copystorage_ok'] ."' OR masterstatus = '". $jconf['dbstatus_markedfordeletion'] ."') AND
     encodinggroupid IS NULL";
 // $query_recordings .= " AND id BETWEEN 1 AND 10"; // debug (select test subjects only)
-$query_default_cnode = "SELECT id FROM converter_nodes WHERE default = 1";
+$query_default_cnode = "SELECT `id` FROM `converter_nodes` WHERE 'default' = 1";
 
 $msg = "\n". str_pad("[ ". date('Y-m-d H:i:s', time()) ." ]", 80, "=", STR_PAD_BOTH) ."\n";
 $msg .= $debug === true ? "[NOTICE] Started in debug-mode.\n" : "";
