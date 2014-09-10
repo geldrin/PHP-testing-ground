@@ -70,8 +70,6 @@ $time_start = time();
 $rec = array();
 $recordings = array();
 
-$jconf['dbstatus_uploaded'] = "zombi";
-
 $query = "
   SELECT
 	a.id,
