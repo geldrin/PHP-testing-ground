@@ -275,10 +275,13 @@ class Controller extends \Visitor\Controller {
     $this->toSmarty['metadescription'] = true;
 
     $quality        = $this->application->getParameter('quality');
-    $mobileversion  = array_shift( $versions['master']['mobile'] );
+    $mobileversion  = null;
     $mobileversions = array();
 
     foreach( $versions['master']['mobile'] as $version ) {
+
+      if ( $mobileversion === null )
+        $mobileversion = $version;
 
       if ( $quality and $version['qualitytag'] == $quality )
         $mobileversion = $version;
