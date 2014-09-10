@@ -2219,7 +2219,7 @@ class Recordings extends \Springboard\Model {
       if ( $version['ismobilecompatible'] ) {
 
         // pip verziok kizarolag iscontent = 0-ak ergo master kulcsa alatt lesznek
-        if ( $version['encodingtype'] == 'pip' )
+        if ( $hascontent and $version['encodingtype'] == 'pip' )
           $pipversions[] = $version;
         else
           $ret[ $key ]['mobile'][] = $version;
