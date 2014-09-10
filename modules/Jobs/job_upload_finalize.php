@@ -34,13 +34,13 @@ if ( iswindows() ) {
 	exit;
 }
 
+// Recording finalization last time
+$finalizedonelasttime = null;
+
 // Start an infinite loop - exit if any STOP file appears
 while( !is_file( $app->config['datapath'] . 'jobs/job_upload_finalize.stop' ) and !is_file( $app->config['datapath'] . 'jobs/all.stop' ) ) {
 
 	clearstatcache();
-
-	// Recording finalization last time
-	$finalizedonelasttime = null;
 
     while ( 1 ) {
 
@@ -230,10 +230,9 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_upload_finalize.stop' ) an
 		break;
 	} // End of while(1)
 
-/*
 	// Recordings: finalize masters (once daily, after midnight)
 	$start_time = time();
-	$inwhichhour = 0;
+	$inwhichhour = 15;
 	if ( ( date("G") == $inwhichhour ) and ( empty($finalizedonelasttime) or ( ( $start_time - $finalizedonelasttime ) > 3600 * 24 ) ) ) {
 
 		$recordings = getRecordingMastersToFinalize();
@@ -264,7 +263,6 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_upload_finalize.stop' ) an
 
 		$finalizedonelasttime = time();
 	}
-*/
 
 	// Close DB connection if open
 	if ( is_resource($db->_connectionID) ) $db->close();
@@ -298,18 +296,29 @@ global $app, $debug, $myjobid, $jconf;
 	if ( !copy($source_filename, $destination_filename) ) {
 		$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Cannot copy file " . $source_filename . " -> " . $destination_filename . ". CHECK!", $sendmail = true);
 		updateMasterRecordingStatus($recording['id'], $jconf['dbstatus_copystorage_err'], $type);
-		false;
+		return false;
 	} else {
 		$duration = time() - $start_time;
 		$hms = secs2hms($duration);
 		$debug->log($jconf['log_dir'], $myjobid . ".log", "[OK] Copy " . $source_filename . " -> " . $destination_filename . " finished in " . $hms . " time", $sendmail = false);
 		updateMasterRecordingStatus($recording['id'], $jconf['dbstatus_copystorage_ok'], $type);
+
+		// Chmod master file
+		$command = "chmod -f -R " . $jconf['file_access'] . " " . $destination_filename . " 2>&1";
+		exec($command, $output, $result);
+		$output_string = implode("\n", $output);
+		if ( $result != 0 ) {
+			$debug->log($jconf['log_dir'], $myjobid . ".log", "[WARN] Cannot stat file " . $destination_filename, $sendmail = true);
+		}
+
+		// Remove master from upload area
 		if ( !unlink($source_filename) ) {
 			$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Cannot remove file " . $source_filename . ". File won't be removed. Please CHECK error and REMOVE file from upload area!", $sendmail = true);
-			false;
+			return false;
 		} else {
 			$debug->log($jconf['log_dir'], $myjobid . ".log", "[OK] File " . $source_filename . " removed.", $sendmail = false);
 		}
+
 	}
 
 	return true;

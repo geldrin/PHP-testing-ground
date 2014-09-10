@@ -33,7 +33,7 @@ if ( is_file( $app->config['datapath'] . 'jobs/' . $jconf['jobid_conv_control'] 
 
 // Log related init
 $debug = Springboard\Debug::getInstance();
-$debug->log($jconf['log_dir'], $jconf['jobid_conv_control'] . ".log", "*************************** Job: " . $jconf['jobid_conv_control'] . " started ***************************", $sendmail = false);
+//$debug->log($jconf['log_dir'], $jconf['jobid_conv_control'] . ".log", "*************************** Job: " . $jconf['jobid_conv_control'] . " started ***************************", $sendmail = false);
 $myjobid = $jconf['jobid_conv_control'];
 
 clearstatcache();
@@ -42,14 +42,14 @@ clearstatcache();
 $run_filename = $jconf['temp_dir'] . $myjobid . ".run";
 if  ( file_exists($run_filename) ) {
 	if ( ( time() - filemtime($run_filename) ) < 15 * 60 ) {
-		$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] " . $myjobid . " is already running. Not finished previous run?", $sendmail = true);
+		$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] " . $myjobid . " is already running. Not finished previous run? See: " . $run_filename . " (created: " . date("Y-m-d H:i:s", filemtime($run_filename)) . ")", $sendmail = true);
 	}
 	exit;
 } else {
 	$content = "Running. Started: " . date("Y-m-d H:i:s");
 	$err = file_put_contents($run_filename, $content);
 	if ( $err === false ) {
-		$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Cannot write run file " . $run_filename, $sendmail = true);
+		$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Cannot write run file: " . $run_filename, $sendmail = true);
 	}
 }
 

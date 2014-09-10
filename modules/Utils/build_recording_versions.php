@@ -67,7 +67,7 @@ $query_recordings = "
     ( masterstatus = '". $jconf['dbstatus_copystorage_ok'] ."' OR masterstatus = '". $jconf['dbstatus_markedfordeletion'] ."') AND
     encodinggroupid IS NULL";
 // $query_recordings .= " AND id BETWEEN 1 AND 10"; // debug (select test subjects only)
-$query_default_cnode = "SELECT id FROM converter_nodes WHERE shortname LIKE 'conv-1'";
+$query_default_cnode = "SELECT `id` FROM `converter_nodes` WHERE `default` = 1";
 
 $msg = "\n". str_pad("[ ". date('Y-m-d H:i:s', time()) ." ]", 80, "=", STR_PAD_BOTH) ."\n";
 $msg .= $debug === true ? "[NOTICE] Started in debug-mode.\n" : "";
@@ -90,9 +90,9 @@ try {
   $prof_mobhq = getProfile('_mobile_hq');
 
   $converter_node = $db->Execute($query_default_cnode);
-  $converter_node = $converter_node->fields;
-  $converter_node = (integer) $converter_node['id'];
-  if (gettype($converter_node) !== 'integer') throw new Exception("[ERROR] Can't query default converter node!\nQuery (". print_r($query_default_cnode, true) .")" );
+  if ($converter_node === false || $converter_node->EOF) throw new Exception("[ERROR] Can't query default converter node!\nQuery (". print_r($query_default_cnode, true) .")" );
+  $converter_node = $converter_node->getArray();
+  $converter_node = intval($converter_node[0]['id']);
 } catch (Exception $e) {
   print_r($e->getMessage() ."\n");
   exit -1;
@@ -108,7 +108,7 @@ while (!$recordings->EOF) {
   
   if (!file_exists($recording_path)) {
     $msg .= print_r("[ERROR] recording path doesn't exists! [ ". $recording_path ." ]\n", true);
-		$warnings++;
+    $warnings++;
     continue;
   }
   
@@ -145,10 +145,10 @@ while (!$recordings->EOF) {
   if ($is_content_hq_exists)
     $versions[] = array('filename' => $content_hq, 'profile' => $prof_conhq['id'], 'qtag' => $prof_conhq['shortname'], 'status' => 'contentstatus', 'resolution' => 'contentvideoreshq', 'encpty' => $prof_conhq['encodingorder']);
   if ($is_mobile_lq_exists)
-    $versions[] = array('filename' => $mobile_lq, 'profile' => $prof_moblq['id'], 'qtag' => $prof_moblq['shortname'], 'status' => 'mobilestatus', 'resolution' => 'mobilevideoreslq', 'encpty' => $prof_moblq['encodingorder']);
+    $versions[] = array('filename' => $mobile_lq, 'profile' => $prof_moblq['id'], 'qtag' => $prof_moblq['shortname'], 'status' => 'status', 'resolution' => 'mobilevideoreslq', 'encpty' => $prof_moblq['encodingorder']);
   if ($is_mobile_hq_exists)
-    $versions[] = array('filename' => $mobile_hq, 'profile' => $prof_mobhq['id'], 'qtag' => $prof_mobhq['shortname'], 'status' => 'mobilestatus', 'resolution' => 'mobilevideoreshq', 'encpty' => $prof_mobhq['encodingorder']);
-		
+    $versions[] = array('filename' => $mobile_hq, 'profile' => $prof_mobhq['id'], 'qtag' => $prof_mobhq['shortname'], 'status' => 'status', 'resolution' => 'mobilevideoreshq', 'encpty' => $prof_mobhq['encodingorder']);
+    
   // Iterate trough versions
   $versions_inserted = 0;
   $err = false;
@@ -160,12 +160,12 @@ while (!$recordings->EOF) {
       if (!empty($data) && $data[0]['encodingprofileid'] == $ver['profile']) {
         $msg .= "Recording version '". $ver['filename'] ."' already exists, skipping entry.\n";
         // $recordings->MoveNext();
-				$warnings++;
+        $warnings++;
         continue;
       }
     } else {
       $msg .= "[ERROR] Check ". $ver['qtag'] ." version failed! ". $checkversions['message'];
-			$warnings++;
+      $warnings++;
       $err = true;
       break;
     }
@@ -199,7 +199,7 @@ while (!$recordings->EOF) {
       if ($result['success'] === false) {
         $msg .= "[WARNING] Query failed, skipping.\n";
         $err = true;
-				$warnings++;
+        $warnings++;
         $recordings->MoveNext();
         continue;
       }
@@ -207,11 +207,11 @@ while (!$recordings->EOF) {
       $versions_created++;
     } catch(\Exception $ex) {
       print_r(print_r($ver, true) . $ex->getMessage());
-			$err = true;
+      $err = true;
       $msg .= "[WARNING] ". trim($ex->getMessage()) . PHP_EOL ."Skipping.\n";
       $warnings++;
+      $recordings->MoveNext();
       continue 2;
-      // break 2;
     }
   }
   
@@ -220,25 +220,25 @@ while (!$recordings->EOF) {
   $qry = "UPDATE `recordings` SET `encodinggroupid` = 2 WHERE `id` = ". intval($rec['id']);
   $msg .= "\nUpdating recording #". $rec['id'] ." \n". $qry ."\n";
   if ($debug === false) {
-	
-		if ($err === false) {
-			$tmp = query($qry);
-			if ($tmp['result'] === false) {
-				$msg .= "[ERROR] Database update (recordings.encodinggroupid) failed.\n". $tmp['message'] ."\n";
-				fwrite($fh, $msg);
-				$warnings++;
-				// break;
-			}
-			unset($tmp);
-			$msg .= "result: ok\n";
-		}
+  
+    if ($err === false) {
+      $tmp = query($qry);
+      if ($tmp['result'] === false) {
+        $msg .= "[ERROR] Database update (recordings.encodinggroupid) failed.\n". $tmp['message'] ."\n";
+        fwrite($fh, $msg);
+        $warnings++;
+        // break;
+      }
+      unset($tmp);
+      $msg .= "result: ok\n";
+    }
   }
   
   $msg .= "\nVersions inserted: ". $versions_inserted ."/". count($versions) ."\n";
   $msg .= str_pad("", 80, "-") ."\n";
   
   fwrite($fh, $msg);
-	$msg = '';
+  $msg = '';
   $recordings->MoveNext();
 }
 

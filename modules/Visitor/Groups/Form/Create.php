@@ -27,7 +27,7 @@ class Create extends \Visitor\HelpForm {
     $this->controller->redirect(
       $this->application->getParameter(
         'forward',
-        'groups/invite/' . $groupModel->id . ',' .
+        'groups/users/' . $groupModel->id . ',' .
         \Springboard\Filesystem::filenameize( $groupModel->row['name'] )
       )
     );

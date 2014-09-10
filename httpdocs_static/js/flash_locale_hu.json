@@ -88,14 +88,18 @@
 	"live": {
        "title":"Ez a közvetítés az Ön személyes jelenlétét igényli",
        "description":"Jelenléte megerősítéséhez, kérjük nyugtázza ezt az üzenetet! Amennyiben a jelzett időn belül nem kerül sor a visszajelzésre, a lejátszás megszakad!",
-	   "confirm":"Itt vagyok",
-       "timeoutMessage":"Az élő közvetítés az Ön személyes jelenlétét igényli. A jelenlét ellenőrzése sikertelen volt, ezért a kapcsolat megszakadt. Újrakapcsolódáshoz kattinson a lejátszás ikonra!"
+       "confirm":"Itt vagyok",
+       "timeoutTitle": "A felvétel az Ön személyes jelenlétét igényli.",
+       "timeoutMessage": "A jelenlét ellenőrzése sikertelen volt, ezért a kapcsolat megszakadt.",
+       "replay": "Újrajátszás"
 	},
-	"record": {
+	"record": {    
        "title":"Ez a felvétel az Ön személyes jelenlétét igényli",
        "description":"Jelenléte megerősítéséhez, kérjük nyugtázza ezt az üzenetet! Amennyiben a jelzett időn belül nem kerül sor a visszajelzésre, a lejátszás megszakad!",
-	   "confirm":"Itt vagyok",
-	   "timeoutMessage":"A felvétel az Ön személyes jelenlétét igényli. A jelenlét ellenőrzése sikertelen volt, ezért a kapcsolat megszakadt. Újrakapcsolódáshoz kattinson a lejátszás ikonra!"
+       "confirm":"Itt vagyok",
+       "timeoutTitle": "A felvétel az Ön személyes jelenlétét igényli.",
+       "timeoutMessage": "A jelenlét ellenőrzése sikertelen volt, ezért a kapcsolat megszakadt.",
+       "replay": "Újrajátszás"
 	}
   },
   "layout": {

@@ -246,27 +246,47 @@ class Livefeeds extends \Springboard\Model {
     
   }
   
-  public function getFlashData( $info ) {
-    
-    $authorizecode = $this->getAuthorizeSessionid( $info );
-    
-    $streams          = array();
-    $streams[]        = $info['streams']['defaultstream']['keycode'];
-    $contentstreams   = array();
-    $contentstreams[] = $info['streams']['defaultstream']['contentkeycode'];
-    
-    foreach( $info['streams']['streams'] as $stream ) {
-      
-      if (
-           $info['streams']['defaultstream']['id'] == $stream['id'] or
-           $info['streams']['defaultstream']['quality'] == $stream['quality']
-         )
-        continue;
-      
-      $streams[]        = $stream['keycode'];
-      $contentstreams[] = $stream['contentkeycode'];
-      
+  public function getStreamUrls( $info, $prefix = '' ) {
+
+    if ( $this->isHDSEnabled( $prefix ) ) {
+
+      $authorizecode = $this->getAuthorizeSessionid( $info );
+      $smilurl       = 'smil:%s.smil/manifest.f4m%s';
+      $filename      = $this->id;
+
+      if ( $prefix )
+        $filename .= '_' . $prefix;
+
+      $streams = array(
+        sprintf( $smilurl, $filename, $authorizecode )
+      );
+
+      return $streams;
+
+    } else {
+
+      $streams   = array();
+      $streams[] = $info['streams']['defaultstream'][ $prefix . 'keycode'];
+
+      foreach( $info['streams']['streams'] as $stream ) {
+
+        if (
+             $info['streams']['defaultstream']['id'] == $stream['id'] or
+             $info['streams']['defaultstream']['quality'] == $stream['quality']
+           )
+          continue;
+
+        $streams[] = $stream[ $prefix . 'keycode'];
+
+      }
+
+      return $streams;
+
     }
+
+  }
+
+  public function getFlashData( $info ) {
 
     if ( $this->bootstrap->config['forcesecureapiurl'] )
       $apiurl = 'https://' . $info['organization']['domain'] . '/';
@@ -278,56 +298,118 @@ class Livefeeds extends \Springboard\Model {
       'language'               => \Springboard\Language::get(),
       'api_url'                => $apiurl,
       'user_needPing'          => false,
-      'media_streams'          => $streams,
       'feed_id'                => $this->id,
       'recording_title'        => $this->row['name'],
       'recording_type'         => 'live',
-      'media_secondaryStreams' => $contentstreams,
+      'media_streams'          => $this->getStreamUrls( $info ),
+      'media_secondaryStreams' => $this->getStreamUrls( $info, 'content'),
       'timeline_autoPlay'      => true,
       'user_checkWatching'     => (bool)$info['member']['ispresencecheckforced'],
       'user_checkWatchingTimeInterval' => $info['checkwatchingtimeinterval'],
       'user_checkWatchingConfirmationTimeout' => $info['checkwatchingconfirmationtimeout'],
     );
-    
+
     if ( $info['member'] and $info['member']['id'] ) {
       $flashdata['user_id']          = $info['member']['id'];
       $flashdata['user_needPing']    = true;
       $flashdata['user_pingSeconds'] = $this->bootstrap->config['sessionpingseconds'];
     }
-    
-    if ( $this->row['issecurestreamingforced'] )
-      $flashdata['media_servers'] = array(
-        rtrim( $this->bootstrap->config['wowza']['seclivertmpsurl'], '/' ) . $authorizecode,
-        rtrim( $this->bootstrap->config['wowza']['seclivertmpeurl'], '/' ) . $authorizecode,
-        rtrim( $this->bootstrap->config['wowza']['secliveurl'], '/' ) . $authorizecode,
-      );
-    else
-      $flashdata['media_servers'] = array(
-        rtrim( $this->bootstrap->config['wowza']['livertmpurl'], '/' ) . $authorizecode,
-        rtrim( $this->bootstrap->config['wowza']['liveurl'], '/' ) . $authorizecode,
-      );
-    
+
+    $flashdata = $flashdata + $this->getMediaServers( $info );
+
+    if ( !$this->row['slideonright'] )
+      $flashdata['layout_videoOrientation'] = 'right';
+
+    if ( $this->row['introrecordingid'] )
+      $flashdata = $flashdata + $this->getPlaceholderFlashdata( $info );
+
+    return $flashdata;
+
+  }
+  
+  public function isHDSEnabled( $prefix = '' ) {
+    return
+      $this->bootstrap->config['hdsenabled'] and
+      in_array( $this->row[ $prefix . 'smilstatus'], array('onstorage', 'regenerate') )
+    ;
+  }
+
+  public function getMediaServers( $info, $hds = null ) {
+
+    $this->ensureObjectLoaded();
+    $data = array(
+      'media_servers' => array(),
+      'media_secondaryServers' => array(),
+    );
+
+    $authorizecode = $this->getAuthorizeSessionid( $info );
+    $prefix        = $this->row['issecurestreamingforced']? 'sec': '';
+    if ( $hds === null )
+      $hds = $this->isHDSEnabled();
+
+    $prefix = $this->row['issecurestreamingforced']? 'sec': '';
+    if ( $hds ) {
+      $data['media_servers'][] =
+        $this->bootstrap->config['wowza'][ $prefix . 'livesmilurl' ]
+      ;
+    } else {
+
+      if ( $this->row['issecurestreamingforced'] )
+        $data['media_servers'] = array(
+          rtrim( $this->bootstrap->config['wowza']['seclivertmpsurl'], '/' ) . $authorizecode,
+          rtrim( $this->bootstrap->config['wowza']['seclivertmpeurl'], '/' ) . $authorizecode,
+          rtrim( $this->bootstrap->config['wowza']['secliveurl'], '/' ) . $authorizecode,
+        );
+      else
+        $data['media_servers'] = array(
+          rtrim( $this->bootstrap->config['wowza']['livertmpurl'], '/' ) . $authorizecode,
+          rtrim( $this->bootstrap->config['wowza']['liveurl'], '/' ) . $authorizecode,
+        );
+
+    }
+
     $streamingserverModel = $this->bootstrap->getModel('streamingservers');
     $streamingserver      = $streamingserverModel->getServerByClientIP(
       $info['ipaddress'],
       'live'
     );
-    
-    foreach( $flashdata['media_servers'] as $key => $url )
-      $flashdata['media_servers'][ $key ] = sprintf( $url, $streamingserver );
-    
-    $flashdata['media_secondaryServers'] = $flashdata['media_servers'];
-    
-    if ( !$this->row['slideonright'] )
-      $flashdata['layout_videoOrientation'] = 'right';
-    
-    if ( $this->row['introrecordingid'] )
-      $flashdata = $flashdata + $this->getPlaceholderFlashdata( $info );
 
-    return $flashdata;
-    
+    foreach( $data['media_servers'] as $key => $url )
+      $data['media_servers'][ $key ] = sprintf( $url, $streamingserver );
+
+    $contenthds = $this->isHDSEnabled('content');
+    if ( $hds == $contenthds ) {
+
+      $data['media_secondaryServers'] = $data['media_servers'];
+      return $data;
+
+    } elseif ( $contenthds )
+      $data['media_secondaryServers'][] =
+        rtrim( $this->bootstrap->config['wowza'][ $prefix . 'livesmilurl' ], '/' ) . $authorizecode
+      ;
+    else {
+
+      if ( $this->row['issecurestreamingforced'] )
+        $data['media_secondaryServers'] = array(
+          rtrim( $this->bootstrap->config['wowza']['seclivertmpsurl'], '/' ) . $authorizecode,
+          rtrim( $this->bootstrap->config['wowza']['seclivertmpeurl'], '/' ) . $authorizecode,
+          rtrim( $this->bootstrap->config['wowza']['secliveurl'], '/' ) . $authorizecode,
+        );
+      else
+        $data['media_secondaryServers'] = array(
+          rtrim( $this->bootstrap->config['wowza']['livertmpurl'], '/' ) . $authorizecode,
+          rtrim( $this->bootstrap->config['wowza']['liveurl'], '/' ) . $authorizecode,
+        );
+
+    }
+
+    foreach( $data['media_secondaryServers'] as $key => $url )
+      $data['media_secondaryServers'][ $key ] = sprintf( $url, $streamingserver );
+
+    return $data;
+
   }
-  
+
   public function getPlaceholderFlashdata( &$info ) {
     
     $this->ensureObjectLoaded();
@@ -340,31 +422,14 @@ class Livefeeds extends \Springboard\Model {
     $recordingsModel = $this->bootstrap->getModel('recordings');
     $recordingsModel->select( $this->row['introrecordingid'] );
     $versions = $recordingsModel->getVersions();
+
     if ( empty( $versions['master']['desktop'] ) )
       throw new \Exception("The placeholder does not have desktopcompatible recordings!");
 
-    if ( $this->row['issecurestreamingforced'] ) {
-
-      $data['livePlaceholder_servers'][] = $recordingsModel->getWowzaUrl(
-        'secrtmpsurl', true, $info
-      );
-      $data['livePlaceholder_servers'][] = $recordingsModel->getWowzaUrl(
-        'secrtmpurl',  true, $info
-      );
-      $data['livePlaceholder_servers'][] = $recordingsModel->getWowzaUrl(
-        'secrtmpturl', true, $info
-      );
-
-    } else {
-
-      $data['livePlaceholder_servers'][] = $recordingsModel->getWowzaUrl(
-        'rtmpurl',  true, $info
-      );
-      $data['livePlaceholder_servers'][] = $recordingsModel->getWowzaUrl(
-        'rtmpturl', true, $info
-      );
-
-    }
+    $recordingsModel->row['issecurestreamingforced'] = $this->row['issecurestreamingforced'];
+    $server = $recordingsModel->getMediaServers( $info, $this->isHDSEnabled() );
+    $data['livePlaceholder_servers'] = $server['media_servers'];
+    unset( $server );
 
     $data['livePlaceholder_streams']      = array();
     $data['livePlaceholder_streamLabels'] = array();
