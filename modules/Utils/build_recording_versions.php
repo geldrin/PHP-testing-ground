@@ -108,7 +108,7 @@ while (!$recordings->EOF) {
   
   if (!file_exists($recording_path)) {
     $msg .= print_r("[ERROR] recording path doesn't exists! [ ". $recording_path ." ]\n", true);
-		$warnings++;
+    $warnings++;
     continue;
   }
   
@@ -148,7 +148,7 @@ while (!$recordings->EOF) {
     $versions[] = array('filename' => $mobile_lq, 'profile' => $prof_moblq['id'], 'qtag' => $prof_moblq['shortname'], 'status' => 'status', 'resolution' => 'mobilevideoreslq', 'encpty' => $prof_moblq['encodingorder']);
   if ($is_mobile_hq_exists)
     $versions[] = array('filename' => $mobile_hq, 'profile' => $prof_mobhq['id'], 'qtag' => $prof_mobhq['shortname'], 'status' => 'status', 'resolution' => 'mobilevideoreshq', 'encpty' => $prof_mobhq['encodingorder']);
-		
+    
   // Iterate trough versions
   $versions_inserted = 0;
   $err = false;
@@ -160,12 +160,12 @@ while (!$recordings->EOF) {
       if (!empty($data) && $data[0]['encodingprofileid'] == $ver['profile']) {
         $msg .= "Recording version '". $ver['filename'] ."' already exists, skipping entry.\n";
         // $recordings->MoveNext();
-				$warnings++;
+        $warnings++;
         continue;
       }
     } else {
       $msg .= "[ERROR] Check ". $ver['qtag'] ." version failed! ". $checkversions['message'];
-			$warnings++;
+      $warnings++;
       $err = true;
       break;
     }
@@ -199,7 +199,7 @@ while (!$recordings->EOF) {
       if ($result['success'] === false) {
         $msg .= "[WARNING] Query failed, skipping.\n";
         $err = true;
-				$warnings++;
+        $warnings++;
         $recordings->MoveNext();
         continue;
       }
@@ -207,10 +207,10 @@ while (!$recordings->EOF) {
       $versions_created++;
     } catch(\Exception $ex) {
       print_r(print_r($ver, true) . $ex->getMessage());
-			$err = true;
+      $err = true;
       $msg .= "[WARNING] ". trim($ex->getMessage()) . PHP_EOL ."Skipping.\n";
       $warnings++;
-			$recordings->MoveNext();
+      $recordings->MoveNext();
       continue 2;
     }
   }
@@ -220,25 +220,25 @@ while (!$recordings->EOF) {
   $qry = "UPDATE `recordings` SET `encodinggroupid` = 2 WHERE `id` = ". intval($rec['id']);
   $msg .= "\nUpdating recording #". $rec['id'] ." \n". $qry ."\n";
   if ($debug === false) {
-	
-		if ($err === false) {
-			$tmp = query($qry);
-			if ($tmp['result'] === false) {
-				$msg .= "[ERROR] Database update (recordings.encodinggroupid) failed.\n". $tmp['message'] ."\n";
-				fwrite($fh, $msg);
-				$warnings++;
-				// break;
-			}
-			unset($tmp);
-			$msg .= "result: ok\n";
-		}
+  
+    if ($err === false) {
+      $tmp = query($qry);
+      if ($tmp['result'] === false) {
+        $msg .= "[ERROR] Database update (recordings.encodinggroupid) failed.\n". $tmp['message'] ."\n";
+        fwrite($fh, $msg);
+        $warnings++;
+        // break;
+      }
+      unset($tmp);
+      $msg .= "result: ok\n";
+    }
   }
   
   $msg .= "\nVersions inserted: ". $versions_inserted ."/". count($versions) ."\n";
   $msg .= str_pad("", 80, "-") ."\n";
   
   fwrite($fh, $msg);
-	$msg = '';
+  $msg = '';
   $recordings->MoveNext();
 }
 
