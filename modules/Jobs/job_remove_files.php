@@ -235,7 +235,6 @@ $app->watchdog();
 
 // Content to remove: delete content including master, surrogates and others
 $recordings = queryRecordingsToRemove("content");
-$i = 0;
 if ( $recordings !== false ) {
 
 	$size_toremove = 0;
@@ -288,7 +287,7 @@ if ( $recordings !== false ) {
 			$remove_filename = $app->config['uploadpath'] . "recordings/" . $recording['id'] . "_" . $suffix . "." . $recording['contentmastervideoextension'];
 
 			// Log recording to remove
-			$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Removing content: " . $remove_filename, $sendmail = false);
+			$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Removing content rec#" . $recording['id'] . " with status '" . $recording['contentstatus'] . "'. Filename = " . $remove_filename, $sendmail = false);
 
 			if ( $isexecute ) {
 
@@ -324,6 +323,7 @@ if ( $recordings !== false ) {
 		// Log physical removal
 		$debug->log($jconf['log_dir'], $myjobid . ".log", "[OK] Content master was removed: id = " . $recording['id'] . ", filename = " . $remove_filename . ", size = " . round($size_toremove / 1024 / 1024, 2) . "MB.", $sendmail = false);
 
+// Ez rossz, ha a master az upload területen van!!! FIXED - TESZTELNI!!!
 		// ## Update recording and master size
 		if ( $isexecute ) {
 			$err = directory_size($remove_path);
@@ -333,12 +333,26 @@ if ( $recordings !== false ) {
 				$recording_dir_size = 0;
 				$debug->log($jconf['log_dir'], $myjobid . ".log", "[WARN] Cannot get recording directory size. Truncated to 0.", $sendmail = false);
 			}
-			$err = directory_size($remove_path . "master/");
-			if ( $err['code'] === true ) {
-				$master_dir_size = $err['size'];
-			} else {
+			// Master directory is not yet on storage
+			if ( $recording['masterstatus'] == $jconf['dbstatus_uploaded'] ) {
+				$suffix = "video";
 				$master_dir_size = 0;
-				$debug->log($jconf['log_dir'], $myjobid . ".log", "[WARN] Cannot get master directory size. Truncated to 0.", $sendmail = false);
+				if ( $recording['mastermediatype'] == "audio" ) $suffix = "audio";
+				$master_filename = $app->config['uploadpath'] . "recordings/" . $recording['id'] . "_" . $suffix . "." . $recording['mastervideoextension'];
+				if ( file_exists($master_filename) ) {
+					$master_dir_size = filesize($master_filename);
+				} else {
+					$master_dir_size = 0;
+					$debug->log($jconf['log_dir'], $myjobid . ".log", "[WARN] Master is not present in upload area: " . $master_filename, $sendmail = true);
+				}
+			} else {
+				$err = directory_size($remove_path . "master/");
+				if ( $err['code'] === true ) {
+					$master_dir_size = $err['size'];
+				} else {
+					$master_dir_size = 0;
+					$debug->log($jconf['log_dir'], $myjobid . ".log", "[WARN] Cannot get master directory size. Truncated to 0.", $sendmail = false);
+				}
 			}
 			$values = array(
 				'recordingdatasize'	=> $recording_dir_size,
@@ -348,15 +362,8 @@ if ( $recordings !== false ) {
 			$recDoc->select($recording['id']);
 			$recDoc->updateRow($values);
 
-			$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Recording and master data size updated.\n" . print_r($values, true), $sendmail = false);
+			$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Recording and master data size updated: " . round($recording_dir_size / 1024 / 1024, 2) . "MB / " . round($master_dir_size / 1024 / 1024, 2) . "MB", $sendmail = false);
 		}
-
-exit;
-$i++;
-if ( $i > 5 ) {
-unlink($run_filename);
-exit;
-}
 
 		// Next recording
 		$recordings->MoveNext();
@@ -365,11 +372,6 @@ exit;
 
 // Watchdog
 $app->watchdog();
-
-// !!!!!
-//unlink($run_filename);
-//exit;
-// !!!!!
 
 // Surrogates: delete recordings_versions elements one by one
 $recversions = queryRecordingsVersionsToRemove();
@@ -389,12 +391,13 @@ if ( $recversions !== false ) {
 		// Filename: if empty then assume no recording version was ever made
 		if ( empty($recversion['filename']) ) {
 			// ## Update status fields
-			$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Recording version has no filename. Set status and exit.", $sendmail = false);
+			$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Recording version has no filename. Moving to 'deleted' status...", $sendmail = false);
 			if ( $isexecute ) {
 				// recordings_versions.status := "deleted"
 				updateRecordingVersionStatus($recversion['id'], $jconf['dbstatus_deleted']);
 				// recording.(content)smilstatus := "regenerate"
-				updateRecordingStatus($recversion['recordingid'], $jconf['dbstatus_regenerate'], $idx . "smil");
+// Not needed when 'markedfordeletion' recversion is removed?
+//				updateRecordingStatus($recversion['recordingid'], $jconf['dbstatus_regenerate'], $idx . "smil");
 			}
 			$recversions->MoveNext();
 			continue;
