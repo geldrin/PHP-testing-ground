@@ -129,6 +129,50 @@ class pager {
   }
 
   // --------------------------------------------------------------------------
+  function getPerPageForm() {
+
+    if ( !$this->perpageselector )
+      return '';
+
+    $options = '';
+    foreach ( $this->perpageoptions as $option ) {
+      $option = htmlspecialchars( $option, ENT_QUOTES, 'UTF-8', true );
+      $options .= 
+        '<option ' . ( $this->perpage == $option ? 'selected="selected"' : '' ) . ' value="' . $option . '">' . $option . '</option>';
+    }
+
+    $hiddenvars = '';
+    $hiddenvarformat = '<input type="hidden" name="%s" value="%s"/>';
+    foreach( $this->pass as $name => $value ) {
+      $name = htmlspecialchars( $name, ENT_QUOTES, 'UTF-8', true );
+      if ( is_array( $value ) ) {
+        foreach( $value as $k => $v ) {
+          $k = htmlspecialchars( $k, ENT_QUOTES, 'UTF-8', true );
+          $v = htmlspecialchars( $v, ENT_QUOTES, 'UTF-8', true );
+          $newname = $name . '[' . $k . ']';
+          $hiddenvars .= sprintf( $hiddenvarformat, $newname, $v );
+        }
+
+      } else {
+        $value = htmlspecialchars( $value, ENT_QUOTES, 'UTF-8', true );
+        $hiddenvars .= sprintf( $hiddenvarformat, $name, $value );
+      }
+    }
+
+    return $this->itemLayout(
+      sprintf(
+        $this->perpagecontainer,
+        $this->getPagerLink( 0, true ),
+        sprintf( $this->perpageselectcontainer,
+          $hiddenvars . sprintf( $this->perpageselect, $options )
+        ),
+        $this->perpageformmethod
+      )
+    );
+
+  }
+
+  // --------------------------------------------------------------------------
   function gethtml( $vars = 0 ) {
 
     $nrofpages = ceil( $this->all / $this->perpage );
@@ -233,24 +277,8 @@ class pager {
       );
     }
 
-    if ( $this->perpageselector ) {
-      $options = '';
-      foreach ( $this->perpageoptions as $option ) {
-        $option = htmlspecialchars( $option );
-        $options .= 
-          '<option ' . ( $this->perpage == $option ? 'selected="selected"' : '' ) . ' value="' . $option . '">' . $option . '</option>';
-      }
-      $controls['perpage'] = $this->itemLayout( 
-        sprintf(
-          $this->perpagecontainer,
-          $this->getPagerLink( 0, true ),
-          sprintf( $this->perpageselectcontainer,
-            sprintf( $this->perpageselect, $options )
-          ),
-          $this->perpageformmethod
-        )
-      );
-    }
+    if ( $this->perpageselector )
+      $controls['perpage'] = $this->getPerPageForm();
 
     if ( ( $this->start + $this->perpage ) < $this->all ) {
       $controls['next'] = $this->itemLayout(
@@ -296,23 +324,14 @@ class pager {
 
   // --------------------------------------------------------------------------
   function pass( $variable, $value ) {
-
-    if ( is_array( $value ) ) 
-      foreach ( $value as $valueitem ) 
-        $this->pass[] = $variable . '[]=' . rawurlencode( $valueitem );
-    else {
-      if ( $value != null )
-        $this->pass[] = $variable . '=' . rawurlencode( $value );
-      else
-        $this->pass[] = $variable . '=';
-    }
-
+    $this->pass[ $variable ] = $value;
   }
 
   // --------------------------------------------------------------------------
   function _geturl() {
 
-    $parameters = implode('&amp;', $this->_getpassvars() );
+    $parameters = http_build_query( $this->pass );
+    $parameters = htmlspecialchars( $parameters, ENT_QUOTES, 'UTF-8', true );
 
     if ( !strlen( $parameters ) || $this->noparameters )
       return $this->script;
@@ -326,24 +345,13 @@ class pager {
   }
 
   // --------------------------------------------------------------------------
-  function _getpassvars() {
-
-    $vars = Array();
-    foreach ( $this->pass as $value ) 
-      $vars[] = $value;
-
-    return $vars;
-
-  }
-
-  // --------------------------------------------------------------------------
   function getPagerLink( $start, $skipperpage = false ) {
 
     $url        = $this->_geturl();
     $linkformat = $this->linkformat;
 
     if ( strpos( $url, '?' ) !== false )
-      $linkformat = str_replace( '?start=', '&amp;start=', $linkformat );
+      $linkformat = htmlspecialchars( $linkformat, ENT_QUOTES, 'UTF-8', true );
 
     $link = sprintf( $linkformat, $url, $start );
 
