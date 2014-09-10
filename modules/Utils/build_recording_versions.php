@@ -67,7 +67,7 @@ $query_recordings = "
     ( masterstatus = '". $jconf['dbstatus_copystorage_ok'] ."' OR masterstatus = '". $jconf['dbstatus_markedfordeletion'] ."') AND
     encodinggroupid IS NULL";
 // $query_recordings .= " AND id BETWEEN 1 AND 10"; // debug (select test subjects only)
-$query_default_cnode = "SELECT id FROM converter_nodes WHERE shortname LIKE 'conv-1'";
+$query_default_cnode = "SELECT id FROM converter_nodes WHERE default = 1";
 
 $msg = "\n". str_pad("[ ". date('Y-m-d H:i:s', time()) ." ]", 80, "=", STR_PAD_BOTH) ."\n";
 $msg .= $debug === true ? "[NOTICE] Started in debug-mode.\n" : "";
@@ -145,9 +145,9 @@ while (!$recordings->EOF) {
   if ($is_content_hq_exists)
     $versions[] = array('filename' => $content_hq, 'profile' => $prof_conhq['id'], 'qtag' => $prof_conhq['shortname'], 'status' => 'contentstatus', 'resolution' => 'contentvideoreshq', 'encpty' => $prof_conhq['encodingorder']);
   if ($is_mobile_lq_exists)
-    $versions[] = array('filename' => $mobile_lq, 'profile' => $prof_moblq['id'], 'qtag' => $prof_moblq['shortname'], 'status' => 'mobilestatus', 'resolution' => 'mobilevideoreslq', 'encpty' => $prof_moblq['encodingorder']);
+    $versions[] = array('filename' => $mobile_lq, 'profile' => $prof_moblq['id'], 'qtag' => $prof_moblq['shortname'], 'status' => 'status', 'resolution' => 'mobilevideoreslq', 'encpty' => $prof_moblq['encodingorder']);
   if ($is_mobile_hq_exists)
-    $versions[] = array('filename' => $mobile_hq, 'profile' => $prof_mobhq['id'], 'qtag' => $prof_mobhq['shortname'], 'status' => 'mobilestatus', 'resolution' => 'mobilevideoreshq', 'encpty' => $prof_mobhq['encodingorder']);
+    $versions[] = array('filename' => $mobile_hq, 'profile' => $prof_mobhq['id'], 'qtag' => $prof_mobhq['shortname'], 'status' => 'status', 'resolution' => 'mobilevideoreshq', 'encpty' => $prof_mobhq['encodingorder']);
 		
   // Iterate trough versions
   $versions_inserted = 0;
