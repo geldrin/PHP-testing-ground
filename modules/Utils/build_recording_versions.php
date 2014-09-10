@@ -67,7 +67,7 @@ $query_recordings = "
     ( masterstatus = '". $jconf['dbstatus_copystorage_ok'] ."' OR masterstatus = '". $jconf['dbstatus_markedfordeletion'] ."') AND
     encodinggroupid IS NULL";
 // $query_recordings .= " AND id BETWEEN 1 AND 10"; // debug (select test subjects only)
-$query_default_cnode = "SELECT `id` FROM `converter_nodes` WHERE 'default' = 1";
+$query_default_cnode = "SELECT `id` FROM `converter_nodes` WHERE `default` = 1";
 
 $msg = "\n". str_pad("[ ". date('Y-m-d H:i:s', time()) ." ]", 80, "=", STR_PAD_BOTH) ."\n";
 $msg .= $debug === true ? "[NOTICE] Started in debug-mode.\n" : "";
@@ -90,9 +90,9 @@ try {
   $prof_mobhq = getProfile('_mobile_hq');
 
   $converter_node = $db->Execute($query_default_cnode);
-  $converter_node = $converter_node->fields;
-  $converter_node = (integer) $converter_node['id'];
-  if (gettype($converter_node) !== 'integer') throw new Exception("[ERROR] Can't query default converter node!\nQuery (". print_r($query_default_cnode, true) .")" );
+  if ($converter_node === false || $converter_node->EOF) throw new Exception("[ERROR] Can't query default converter node!\nQuery (". print_r($query_default_cnode, true) .")" );
+  $converter_node = $converter_node->getArray();
+  $converter_node = intval($converter_node[0]['id']);
 } catch (Exception $e) {
   print_r($e->getMessage() ."\n");
   exit -1;
@@ -210,8 +210,8 @@ while (!$recordings->EOF) {
 			$err = true;
       $msg .= "[WARNING] ". trim($ex->getMessage()) . PHP_EOL ."Skipping.\n";
       $warnings++;
+			$recordings->MoveNext();
       continue 2;
-      // break 2;
     }
   }
   
