@@ -362,7 +362,7 @@ class pager {
     $linkformat = $this->linkformat;
 
     if ( strpos( $url, '?' ) !== false )
-      $linkformat = htmlspecialchars( $linkformat, ENT_QUOTES, 'UTF-8', true );
+      $linkformat = str_replace( '?start=', '&amp;start=', $linkformat );
 
     $link = sprintf( $linkformat, $url, $start );
 
