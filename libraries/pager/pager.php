@@ -151,7 +151,7 @@ class pager {
 
         foreach( $value as $k => $v ) {
 
-          if ( !is_scalar( $v ) )
+          if ( $v !== null and !is_scalar( $v ) )
             throw new Exception("Non-scalar value found for variable $name [ $k ]");
 
           $k           = htmlspecialchars( $k, ENT_QUOTES, 'UTF-8', true );
@@ -160,7 +160,7 @@ class pager {
           $hiddenvars .= sprintf( $hiddenvarformat, $newname, $v );
         }
 
-      } elseif ( is_scalar( $value ) ) {
+      } elseif ( $value !== null and is_scalar( $value ) ) {
         $value       = htmlspecialchars( $value, ENT_QUOTES, 'UTF-8', true );
         $hiddenvars .= sprintf( $hiddenvarformat, $name, $value );
       } else
@@ -332,7 +332,7 @@ class pager {
 
   // --------------------------------------------------------------------------
   function pass( $variable, $value ) {
-    if ( !is_array( $value ) and !is_scalar( $value ) )
+    if ( !is_array( $value ) and $value !== null and !is_scalar( $value ) )
       throw new Exception("Non-array and non-scalar type as value is unsupported");
 
     $this->pass[ $variable ] = $value;
