@@ -160,7 +160,7 @@ class pager {
           $hiddenvars .= sprintf( $hiddenvarformat, $newname, $v );
         }
 
-      } elseif ( $value !== null and is_scalar( $value ) ) {
+      } elseif ( $value === null or is_scalar( $value ) ) {
         $value       = htmlspecialchars( $value, ENT_QUOTES, 'UTF-8', true );
         $hiddenvars .= sprintf( $hiddenvarformat, $name, $value );
       } else
