@@ -3551,16 +3551,18 @@ class Recordings extends \Springboard\Model {
       'position'    => $lastposition,
     );
     
-    if ( !$row )
+    if ( !$row ) {
+
       $progressModel->insert( $record );
-    elseif ( $row['position'] < $lastposition ) {
-      
+      $this->updateSession( $userid, $lastposition, $sessionid );
+
+    } elseif ( $row['position'] < $lastposition ) {
+
       $progressModel->id = $row['id'];
       $progressModel->updateRow( $record );
-      
-    }
+      $this->updateSession( $userid, $lastposition, $sessionid );
 
-    $this->updateSession( $userid, $lastposition, $sessionid );
+    }
 
   }
 
