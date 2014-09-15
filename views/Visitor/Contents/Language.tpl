@@ -39,7 +39,8 @@ jQuery(function($){
 });
 {/literal}
 
-moment.lang('{$language}');
+if ( typeof(moment) != "undefined" )
+  moment.lang('{$language}');
 
 {if $language == 'hu'}
 {literal}

@@ -1466,30 +1466,7 @@ function setupContributorEdit( elements ) {
   
   if ( !parent )
     return;
-  /*
-  if ( $j('#orgid').val() )
-    $j('#selectedorganizationrow').show();
-  
-  $j('#organization').autocomplete({
-    minLength: 2,
-    source: BASE_URI + language + '/contributors/searchorganization',
-    select: function( event, ui ) {
-      $j('#organization').val( ui.item.label );
-      $j('#orgid').val( ui.item.value );
-      $j('#selectedorganization').text( ui.item.label );
-      $j('#selectedorganizationrow').show();
-      return false;
-    }
-  });
-  
-  $j('#clearorganization').click( function( e ) {
-    
-    e.preventDefault();
-    $j('#organization, #orgid').val('');
-    $j('#selectedorganizationrow').hide();
-    
-  });
-  */
+
   $j('#showphotos').click( function(e) {
     
     e.preventDefault();
