@@ -3575,11 +3575,29 @@ class Recordings extends \Springboard\Model {
 
     $this->db->execute("
       INSERT INTO recording_view_sessions
-        ( recordingid,  userid,  sessionid, timestampfrom, timestampuntil, positionfrom, positionuntil) VALUES
-        ($recordingid, $userid, $sessionid, $timestamp, $timestamp, $position, $position)
+        (
+          recordingid,
+          userid,
+          sessionid,
+          timestampfrom,
+          timestampuntil,
+          currentposition,
+          positionfrom,
+          positionuntil
+        ) VALUES
+        (
+          $recordingid,
+          $userid,
+          $sessionid,
+          $timestamp,
+          $timestamp,
+          $position,
+          $position,
+          $position
+        )
       ON DUPLICATE KEY UPDATE
         timestampuntil = $timestamp,
-        positionuntil  = $position
+        positionuntil  = IF( $position < positionuntil, positionuntil, $position)
     ");
 
   }
