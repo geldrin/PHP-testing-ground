@@ -2633,9 +2633,15 @@ class Recordings extends \Springboard\Model {
     $sessionid    = $info['sessionid'];
     $host         = '';
     $extension    = 'mp4';
+    $postfix      = '';
 
-    if ( $version )
+    if ( $version ) {
       $extension = \Springboard\Filesystem::getExtension( $version['filename'] );
+      $postfix   =
+        '&recordingversionid=' . $version['id'] .
+        '&viewsessionid=' . $this->generateViewSessionid( $version['id'] )
+      ;
+    }
 
     $user = null;
     if ( isset( $info['member'] ) )
@@ -2652,7 +2658,8 @@ class Recordings extends \Springboard\Model {
         $host        = $this->getWowzaUrl( $typeprefix . 'httpurl');
         $sprintfterm =
           '%3$s:%s/%s/playlist.m3u8' .
-          $this->getAuthorizeSessionid( $info )
+          $this->getAuthorizeSessionid( $info ) .
+          $postfix
         ;
         
         break;
@@ -2662,7 +2669,8 @@ class Recordings extends \Springboard\Model {
         $host        = $this->getWowzaUrl( $typeprefix . 'rtspurl');
         $sprintfterm =
           '%3$s:%s/%s' .
-          $this->getAuthorizeSessionid( $info )
+          $this->getAuthorizeSessionid( $info ) .
+          $postfix
         ;
         
         break;
@@ -2686,6 +2694,9 @@ class Recordings extends \Springboard\Model {
           '%3$s:%s/' . $version['recordingid'] . $postfix . '.%3$s/manifest.f4m' .
           $this->getAuthorizeSessionid( $info )
         ;
+        if ( $type == 'smil' )
+          $sprintfterm .= $postfix;
+
         break;
 
       case 'content':
@@ -3724,6 +3735,15 @@ class Recordings extends \Springboard\Model {
 
     return $ret;
 
+  }
+
+  public function generateViewSessionid( $extra ) {
+    $this->ensureObjectLoaded();
+    $ts        = microtime(true);
+    $user      = $this->bootstrap->getSession('user');
+    $sessionid = session_id();
+
+    return md5( $ts . $sessionid . $this->id . $extra );
   }
 
 }

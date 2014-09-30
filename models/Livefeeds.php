@@ -257,6 +257,14 @@ class Livefeeds extends \Springboard\Model {
       if ( $prefix )
         $filename .= '_' . $prefix;
 
+      if ( $authorizecode )
+        $authorizecode .= '&';
+      else
+        $authorizecode .= '?';
+
+      $authorizecode .= 'viewsessionid=' . $this->generateViewSessionid(
+        $authorizecode
+      );
       $streams = array(
         sprintf( $smilurl, $filename, $authorizecode )
       );
@@ -366,6 +374,16 @@ class Livefeeds extends \Springboard\Model {
           rtrim( $this->bootstrap->config['wowza']['liveurl'], '/' ) . $authorizecode,
         );
 
+      if ( $authorizecode )
+        $postfix = '&viewsessionid=';
+      else
+        $postfix = '?viewsessionid=';
+
+      foreach( $data['media_servers'] as $key => $value )
+        $data['media_servers'][ $key ] .= $postfix . $this->generateViewSessionid(
+          $value
+        );
+
     }
 
     $streamingserverModel = $this->bootstrap->getModel('streamingservers');
@@ -399,6 +417,16 @@ class Livefeeds extends \Springboard\Model {
         $data['media_secondaryServers'] = array(
           rtrim( $this->bootstrap->config['wowza']['livertmpurl'], '/' ) . $authorizecode,
           rtrim( $this->bootstrap->config['wowza']['liveurl'], '/' ) . $authorizecode,
+        );
+
+      if ( $authorizecode )
+        $postfix = '&viewsessionid=';
+      else
+        $postfix = '?viewsessionid=';
+
+      foreach( $data['media_secondaryServers'] as $key => $value )
+        $data['media_secondaryServers'][ $key ] .= $postfix . $this->generateViewSessionid(
+          $value
         );
 
     }
@@ -985,6 +1013,15 @@ class Livefeeds extends \Springboard\Model {
 
     return $ret;
 
+  }
+
+  public function generateViewSessionid( $extra ) {
+    $this->ensureObjectLoaded();
+    $ts        = microtime(true);
+    $user      = $this->bootstrap->getSession('user');
+    $sessionid = session_id();
+
+    return md5( $ts . $sessionid . $this->id . $extra );
   }
 
 }

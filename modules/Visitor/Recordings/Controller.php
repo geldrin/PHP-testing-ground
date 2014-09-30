@@ -142,6 +142,32 @@ class Controller extends \Visitor\Controller {
         'required' => false,
       ),
     ),
+    'logview' => array(
+      'loginrequired' => false,
+      'recordingid' => array(
+        'type' => 'id',
+      ),
+      'recordingversionid' => array(
+        'type' => 'id',
+      ),
+      'viewsessionid' => array(
+        'type' => 'string',
+      ),
+      'action' => array(
+        'type' => 'string',
+      ),
+      'streamurl' => array(
+        'type' => 'string',
+      ),
+      'positionfrom' => array(
+        'type'     => 'id',
+        'required' => false,
+      ),
+      'positionuntil'=> array(
+        'type'     => 'id',
+        'required' => false,
+      ),
+    ),
   );
   
   public function init() {
@@ -1441,4 +1467,31 @@ class Controller extends \Visitor\Controller {
 
   }
   
+  public function logviewAction( $recordingid, $recordingversionid, $viewsessionid, $action, $streamurl, $positionfrom = null, $positionuntil = null ) {
+    
+    $statModel = $this->bootstrap->getModel('view_statistics_ondemand');
+    $user      = $this->bootstrap->getSession('user');
+    $useragent = $_SERVER['HTTP_USER_AGENT'];
+    $ipaddress = $this->getIPAddress();
+    $sessionid = session_id();
+
+    $values = array(
+      'userid'             => $user['id'],
+      'recordingid'        => $recordingid,
+      'recordingversionid' => $recordingversionid,
+      'sessionid'          => $sessionid,
+      'viewsessionid'      => $viewsessionid,
+      'action'             => $action,
+      'url'                => $streamurl,
+      'ipaddress'          => $ipaddress,
+      'useragent'          => $useragent,
+      'positionfrom'       => $positionfrom,
+      'positionuntil'      => $positionuntil,
+    );
+
+    $statModel->log( $values );
+    return true;
+
+  }
+
 }

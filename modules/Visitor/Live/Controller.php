@@ -44,6 +44,24 @@ class Controller extends \Visitor\Controller {
     'details' => 'Visitor\\Live\\Paging\\Details',
   );
   
+  public $apisignature = array(
+    'logview' => array(
+      'loginrequired' => false,
+      'livefeedid' => array(
+        'type' => 'id',
+      ),
+      'viewsessionid' => array(
+        'type' => 'string',
+      ),
+      'action' => array(
+        'type' => 'string',
+      ),
+      'streamurl' => array(
+        'type' => 'string',
+      ),
+    ),
+  );
+  
   public function init() {
     
     parent::init();
@@ -726,6 +744,30 @@ class Controller extends \Visitor\Controller {
     }
 
     return $ret;
+
+  }
+
+  public function logviewAction( $livefeedid, $viewsessionid, $action, $streamurl ) {
+    
+    $statModel = $this->bootstrap->getModel('view_statistics_live');
+    $user      = $this->bootstrap->getSession('user');
+    $useragent = $_SERVER['HTTP_USER_AGENT'];
+    $ipaddress = $this->getIPAddress();
+    $sessionid = session_id();
+
+    $values = array(
+      'userid'             => $user['id'],
+      'livefeedid'         => $livefeedid,
+      'sessionid'          => $sessionid,
+      'viewsessionid'      => $viewsessionid,
+      'action'             => $action,
+      'url'                => $streamurl,
+      'ipaddress'          => $ipaddress,
+      'useragent'          => $useragent,
+    );
+
+    $statModel->log( $values );
+    return true;
 
   }
 
