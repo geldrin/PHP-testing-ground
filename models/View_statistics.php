@@ -7,7 +7,6 @@ abstract class View_statistics extends \Springboard\Model {
     'PLAY'    => 'newSlice',
     'SEEK'    => 'closeAndCreateSlice',
     'PAUSE'   => 'closeSlice',
-    'STOP'    => 'closeSlice',
     'PLAYING' => 'updateSlice',
   );
 
