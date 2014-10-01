@@ -45,10 +45,12 @@ if ( is_file( $app->config['datapath'] . 'jobs/job_remove_files.stop' ) or is_fi
 }
 
 // Runover control (avoid executing job multiple times)
-$run_filename = "/tmp/" . $myjobid . ".run";
+$devsite = "";
+if ( $app->config['baseuri'] == "dev.videosquare.eu/" ) $devsite = ".dev";
+$run_filename = "/tmp/" . $myjobid . $devsite . ".run";
 if  ( file_exists($run_filename) ) {
     if ( ( time() - filemtime($run_filename) ) < 15 * 60 ) {
-        $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] " . $myjobid . " is already running. Not finished previous run?", $sendmail = true);
+        $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] " . $myjobid . " is already running. Not finished previous run? See: " . $run_filename . " (created: " . date("Y-m-d H:i:s", filemtime($run_filename)) . ")", $sendmail = true);
     }
     exit;
 } else {
@@ -81,19 +83,20 @@ if ( $recordings !== false ) {
         $recording = $recordings->fields;
 
         // Check recording retain time period
-        $now = time();
+//        $now = time();
         $rec_deleted = 0;
         if ( !empty($recording['deletedtimestamp']) ) {
             $rec_deleted = strtotime($recording['deletedtimestamp']);
         }
-        $rec_retain = $recording['daystoretainrecordings'] * 24 * 3600;
+/*        $rec_retain = $recording['daystoretainrecordings'] * 24 * 3600;
         if ( ( $now - $rec_deleted ) < $rec_retain ) {
             // Falls within retain period, no action taken
 //			$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Recording rec#" . $recording['id'] . " with status '" . $recording['status'] . "' appointed for removal. Retained until: " . date("Y-m-d H:i:s", $rec_deleted + $rec_retain), $sendmail = false);
             $recordings->MoveNext();
             continue;
         }
-        
+*/
+
         // Directory to remove
         $remove_path = $app->config['recordingpath'] . ( $recording['id'] % 1000 ) . "/" . $recording['id'] . "/";
 
