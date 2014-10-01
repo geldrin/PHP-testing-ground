@@ -148,7 +148,8 @@ class Controller extends \Visitor\Controller {
         'type' => 'id',
       ),
       'recordingversionid' => array(
-        'type' => 'id',
+        'type'     => 'id',
+        'required' => false,
       ),
       'viewsessionid' => array(
         'type' => 'string',

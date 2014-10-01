@@ -20,7 +20,7 @@ CREATE TABLE `view_statistics_ondemand` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `userid` int(10) unsigned DEFAULT NULL,
   `recordingid` int(10) unsigned NOT NULL,
-  `recordingversionid` int(10) unsigned NOT NULL,
+  `recordingversionid` int(10) unsigned,
   `sessionid` text NOT NULL,
   `viewsessionid` text NOT NULL,
   `action` text NOT NULL,

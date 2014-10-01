@@ -288,6 +288,11 @@ class Livefeeds extends \Springboard\Model {
 
       }
 
+      foreach( $streams as $key => $value )
+        $streams[ $key ] .= '?viewsessionid=' . $this->generateViewSessionid(
+          $value
+        );
+
       return $streams;
 
     }
@@ -374,16 +379,6 @@ class Livefeeds extends \Springboard\Model {
           rtrim( $this->bootstrap->config['wowza']['liveurl'], '/' ) . $authorizecode,
         );
 
-      if ( $authorizecode )
-        $postfix = '&viewsessionid=';
-      else
-        $postfix = '?viewsessionid=';
-
-      foreach( $data['media_servers'] as $key => $value )
-        $data['media_servers'][ $key ] .= $postfix . $this->generateViewSessionid(
-          $value
-        );
-
     }
 
     $streamingserverModel = $this->bootstrap->getModel('streamingservers');
@@ -417,16 +412,6 @@ class Livefeeds extends \Springboard\Model {
         $data['media_secondaryServers'] = array(
           rtrim( $this->bootstrap->config['wowza']['livertmpurl'], '/' ) . $authorizecode,
           rtrim( $this->bootstrap->config['wowza']['liveurl'], '/' ) . $authorizecode,
-        );
-
-      if ( $authorizecode )
-        $postfix = '&viewsessionid=';
-      else
-        $postfix = '?viewsessionid=';
-
-      foreach( $data['media_secondaryServers'] as $key => $value )
-        $data['media_secondaryServers'][ $key ] .= $postfix . $this->generateViewSessionid(
-          $value
         );
 
     }

@@ -2633,15 +2633,21 @@ class Recordings extends \Springboard\Model {
     $sessionid    = $info['sessionid'];
     $host         = '';
     $extension    = 'mp4';
-    $postfix      = '';
+    $authtoken    = $this->getAuthorizeSessionid( $info );
+
+    if ( $authtoken )
+      $extratoken = '&';
+    else
+      $extratoken = '?';
 
     if ( $version ) {
-      $extension = \Springboard\Filesystem::getExtension( $version['filename'] );
-      $postfix   =
-        '&recordingversionid=' . $version['id'] .
+      $extension   = \Springboard\Filesystem::getExtension( $version['filename'] );
+      $extratoken .=
+        'recordingversionid=' . $version['id'] .
         '&viewsessionid=' . $this->generateViewSessionid( $version['id'] )
       ;
-    }
+    } else
+      $extratoken .= 'viewsessionid=' . $this->generateViewSessionid('');
 
     $user = null;
     if ( isset( $info['member'] ) )
@@ -2658,8 +2664,8 @@ class Recordings extends \Springboard\Model {
         $host        = $this->getWowzaUrl( $typeprefix . 'httpurl');
         $sprintfterm =
           '%3$s:%s/%s/playlist.m3u8' .
-          $this->getAuthorizeSessionid( $info ) .
-          $postfix
+          $authtoken .
+          $extratoken
         ;
         
         break;
@@ -2669,8 +2675,8 @@ class Recordings extends \Springboard\Model {
         $host        = $this->getWowzaUrl( $typeprefix . 'rtspurl');
         $sprintfterm =
           '%3$s:%s/%s' .
-          $this->getAuthorizeSessionid( $info ) .
-          $postfix
+          $authtoken .
+          $extratoken
         ;
         
         break;
@@ -2692,10 +2698,10 @@ class Recordings extends \Springboard\Model {
         $postfix     = $type == 'contentsmil'? '_content': '';
         $sprintfterm =
           '%3$s:%s/' . $version['recordingid'] . $postfix . '.%3$s/manifest.f4m' .
-          $this->getAuthorizeSessionid( $info )
+          $authtoken
         ;
         if ( $type == 'smil' )
-          $sprintfterm .= $postfix;
+          $sprintfterm .= $extratoken;
 
         break;
 
