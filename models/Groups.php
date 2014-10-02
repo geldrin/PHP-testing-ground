@@ -97,7 +97,7 @@ class Groups extends \Springboard\Model {
     return $this->db->getArray("
       SELECT
         g.*,
-        COUNT(*) AS usercount
+        COUNT(DISTINCT gm.userid) AS usercount
       FROM
         groups AS g,
         groups_members AS gm
@@ -105,7 +105,7 @@ class Groups extends \Springboard\Model {
         $where
         gm.groupid       = g.id AND
         g.organizationid = '$organizationid'
-      GROUP BY g.id, gm.userid
+      GROUP BY g.id
       ORDER BY $orderby
       LIMIT $start, $limit
     ");
