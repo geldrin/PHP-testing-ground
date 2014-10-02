@@ -69,9 +69,23 @@ class Groups extends \Springboard\Model {
     
   }
   
+  private function canSeeGroups( $user ) {
+    if (
+         $user['isadmin'] or
+         $user['isclientadmin'] or
+         $user['isuploader'] or
+         $user['ismoderateduploader'] or
+         $user['isliveadmin'] or
+         $user['iseditor']
+       )
+      return true;
+
+    return false;
+  }
+
   public function getGroupCount( $user, $organizationid ) {
 
-    if ( $user['isadmin'] or $user['isclientadmin'] )
+    if ( $this->canSeeGroups( $user ) )
       $where = '';
     else
       $where = "userid         = '" . $user['id'] . "' AND";
@@ -89,7 +103,7 @@ class Groups extends \Springboard\Model {
   
   public function getGroupArray( $start, $limit, $orderby, $user, $organizationid ) {
     
-    if ( $user['isadmin'] or $user['isclientadmin'] )
+    if ( $this->canSeeGroups( $user ) )
       $where = '';
     else
       $where = "g.userid         = '" . $user['id'] . "' AND";
