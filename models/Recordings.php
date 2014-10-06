@@ -2295,18 +2295,24 @@ class Recordings extends \Springboard\Model {
       $data['locale'] = $info['STATIC_URI'] . 'js/flash_locale_' . $data['language'] . '.json';
     
     if ( !empty( $versions['master']['desktop'] ) ) {
-      $data['media_streams']      = array();
-      $data['media_streamLabels'] = array();
+      $data['media_streams']          = array();
+      $data['media_streamLabels']     = array();
+      $data['media_streamParameters'] = array();
+
       if ( $hds )
-        $data['media_streams'][]    =
+        $data['media_streams'][]      =
           $this->getMediaUrl('smil', null, $info )
         ;
 
       foreach( $versions['master']['desktop'] as $version ) {
-        $data['media_streamLabels'][] = $version['qualitytag'];
+        $data['media_streamLabels'][]     = $version['qualitytag'];
+        $data['media_streamParameters'][] =
+          'recordingversionid=' . $version['id'] .
+          '&viewsessionid=' . $this->generateViewSessionid( $version['id'] )
+        ;
 
         if ( !$hds )
-          $data['media_streams'][]    =
+          $data['media_streams'][]        =
             $this->getMediaUrl('default', $version, $info )
           ;
 
@@ -2634,20 +2640,22 @@ class Recordings extends \Springboard\Model {
     $host         = '';
     $extension    = 'mp4';
     $authtoken    = $this->getAuthorizeSessionid( $info );
-
-    if ( $authtoken )
-      $extratoken = '&';
-    else
-      $extratoken = '?';
+    $extratoken   = '';
 
     if ( $version ) {
       $extension   = \Springboard\Filesystem::getExtension( $version['filename'] );
+
+      if ( $authtoken )
+        $extratoken = '&';
+      else
+        $extratoken = '?';
+
       $extratoken .=
         'recordingversionid=' . $version['id'] .
         '&viewsessionid=' . $this->generateViewSessionid( $version['id'] )
       ;
-    } else
-      $extratoken .= 'viewsessionid=' . $this->generateViewSessionid('');
+
+    }
 
     $user = null;
     if ( isset( $info['member'] ) )
@@ -2700,8 +2708,6 @@ class Recordings extends \Springboard\Model {
           '%3$s:%s/' . $version['recordingid'] . $postfix . '.%3$s/manifest.f4m' .
           $authtoken
         ;
-        if ( $type == 'smil' )
-          $sprintfterm .= $extratoken;
 
         break;
 
@@ -2719,7 +2725,7 @@ class Recordings extends \Springboard\Model {
     );
 
   }
-  
+
   public function getAuthor() {
     
     $this->ensureObjectLoaded();
