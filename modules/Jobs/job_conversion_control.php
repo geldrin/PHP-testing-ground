@@ -127,7 +127,11 @@ if ( $recordings !== false ) {
 		$recording = $recordings->fields;
 
 		// Update recording/content status to "onstorage"
-		if ( $recording['status'] == $jconf['dbstatus_conv'] ) updateRecordingStatus($recording['id'], $jconf['dbstatus_copystorage_ok'], "recording");
+		if ( $recording['status'] == $jconf['dbstatus_conv'] ) {
+			updateRecordingStatus($recording['id'], $jconf['dbstatus_copystorage_ok'], "recording");
+			// Update recording.mobilestatus to "onstorage"
+			if ( $recording['ismobilecompatible'] == 1 ) updateRecordingStatus($recording['id'], $jconf['dbstatus_copystorage_ok'], "mobile");
+		}
 		if ( $recording['contentstatus'] == $jconf['dbstatus_conv'] ) updateRecordingStatus($recording['id'], $jconf['dbstatus_copystorage_ok'], "content");
 
 		//// E-mail: send e-mail about a converted recording
@@ -264,7 +268,8 @@ global $jconf, $debug, $db, $app;
 			r.contentmasterstatus,
 			r.contentmastersourceip,
 			r.contentmastervideofilename,
-			rv.status AS recordingversionstatus
+			rv.status AS recordingversionstatus,
+			rv.ismobilecompatible
 		FROM
 			recordings AS r,
 			recordings_versions AS rv,

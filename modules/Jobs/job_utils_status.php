@@ -8,7 +8,7 @@
 function updateRecordingStatus($recordingid, $status, $type = "recording") {
 global $app, $debug, $jconf, $myjobid;
 
-	if ( ( $type != "recording" ) and ( $type != "content" ) and ( $type != "smil" ) and ( $type != "contentsmil" ) ) return false;
+	if ( ( $type != "recording" ) and ( $type != "content" ) and ( $type != "smil" ) and ( $type != "contentsmil" ) and ( $type != "mobile" ) ) return false;
 
 	if ( empty($status) ) return false;
 
@@ -16,7 +16,8 @@ global $app, $debug, $jconf, $myjobid;
 	if ( $type == "content" ) $idx = "content";
 	if ( $type == "smil" ) $idx = "smil";
 	if ( $type == "contentsmil" ) $idx = "contentsmil";
-
+	if ( $type == "mobile" ) $idx = "mobile";
+	
 	if ( !empty($status) ) {
 		$values = array(
 			$idx . 'status' => $status
