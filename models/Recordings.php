@@ -2306,10 +2306,10 @@ class Recordings extends \Springboard\Model {
 
       foreach( $versions['master']['desktop'] as $version ) {
         $data['media_streamLabels'][]     = $version['qualitytag'];
-        $data['media_streamParameters'][] =
-          'recordingversionid=' . $version['id'] .
-          '&viewsessionid=' . $this->generateViewSessionid( $version['id'] )
-        ;
+        $data['media_streamParameters'][] = array(
+          'recordingversionid' => $version['id'],
+          'viewsessionid'      => $this->generateViewSessionid( $version['id'] ),
+        );
 
         if ( !$hds )
           $data['media_streams'][]        =
