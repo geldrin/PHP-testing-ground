@@ -3,7 +3,7 @@
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
   <meta http-equiv="imagetoolbar" content="no" />
-  <meta name="author" content="Dots Amazing - www.dotsamazing.com" />
+  <meta name="X-Developer" content="Dots Amazing - www.dotsamazing.com" />
   <meta name="MSSmartTagsPreventParsing" content="true" />
   <meta name="format-detection" content="telephone=no" />{*} iphone ne vegye a random szamokat telefonszamoknak {/*}
   <base href="{$BASE_URI}" /><!--[if IE]></base><![endif]-->
