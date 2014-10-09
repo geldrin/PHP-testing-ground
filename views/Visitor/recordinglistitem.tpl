@@ -29,8 +29,8 @@
   
   <div class="recordingcontent">
     <div class="title">
-      <h3><a href="{$language}/recordings/details/{$item.id},{$item.title|filenameize}">{$item.title|escape:html}</a></h3>
-      {if $item.subtitle|stringempty}<h4>{$item.subtitle|escape:html}</h4>{/if}
+      <h3><a href="{$language}/recordings/details/{$item.id},{$item.title|filenameize}">{$item.title|escape:html|mb_wordwrap:25}</a></h3>
+      {if $item.subtitle|stringempty}<h4>{$item.subtitle|escape:html|mb_wordwrap:25}</h4>{/if}
     </div>
     {if $item.approvalstatus != 'approved' and $item.status == 'onstorage' and $member.id}
       <span class="notpublished"><a href="{$language}/recordings/modifysharing/{$item.id}?forward={$FULL_URI|escape:url}">{#recordings__notpublished_warning#}</a></span>

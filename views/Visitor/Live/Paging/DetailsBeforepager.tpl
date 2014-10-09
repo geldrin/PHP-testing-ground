@@ -1,5 +1,5 @@
 <div class="title">
-  <h1>{$channel.title|escape:html}</h1>
+  <h1>{$channel.title|escape:html|mb_wordwrap:25}</h1>
   {if $member.id or $channel.subtitle}
     <h2>
       {if $channel|@userHasAccess}
@@ -9,7 +9,7 @@
           <a href="{$language}/live/managefeeds/{$channel.id}">{#live__managefeeds#}</a>
         </div>
       {/if}
-      {if $channel.subtitle}{$channel.subtitle|escape:html}{else}&nbsp;{/if}
+      {if $channel.subtitle}{$channel.subtitle|escape:html|mb_wordwrap:25}{else}&nbsp;{/if}
     </h2>
   {/if}
   {if $channel.starttimestamp}

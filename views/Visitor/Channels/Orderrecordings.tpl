@@ -25,7 +25,7 @@
           
           <div class="recording">
             
-            <h1>{$item.title|escape:html}</h1>
+            <h1>{$item.title|escape:html|mb_wordwrap:25}</h1>
             <p class="recordingpresenters">{include file=Visitor/presenters.tpl presenters=$item.presenters skippresenterbolding=true presenterdelimiter=", "}</p>
             
           </div>

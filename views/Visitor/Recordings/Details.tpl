@@ -15,10 +15,10 @@
     <br/>
   {/if}
   
-  <h1>{$recording.title|escape:html}</h1>
+  <h1>{$recording.title|escape:html|mb_wordwrap:25}</h1>
   
   {if $recording.subtitle|stringempty}
-    <h2>{$recording.subtitle|escape:html}</h2>
+    <h2>{$recording.subtitle|escape:html|mb_wordwrap:25}</h2>
   {/if}
   
   {if !empty( $recording.presenters )}

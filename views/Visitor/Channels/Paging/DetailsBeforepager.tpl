@@ -4,7 +4,7 @@
     <a href="{$language}/recordings/upload?channelid={$channel.id}">{#channels__addrecording#}</a>
   </div>
   {/if}
-  <h1>{$channeltree[0].title|escape:html}</h1>
+  <h1>{$channeltree[0].title|escape:html|mb_wordwrap:25}</h1>
   {if $channeltree[0].subtitle}
     {if $member.id and ($member.isuploader or $member.ismoderateduploader) and $canaddrecording}
     <div class="actions">
@@ -12,7 +12,7 @@
       <a href="{$language}/channels/orderrecordings/{$channel.id}?forward={$FULL_URI|escape:url}">{#channels__orderrecordings#}</a>
     </div>
     {/if}
-    <h2>{$channeltree[0].subtitle|escape:html}</h2>
+    <h2>{$channeltree[0].subtitle|escape:html|mb_wordwrap:25}</h2>
   {/if}
   {if $channeltree[0].starttimestamp}
     <div class="channeltimestamp">{#channels__timestamp#} {"%Y. %B %e"|shortdate:$channeltree[0].starttimestamp:$channeltree[0].endtimestamp}</div>

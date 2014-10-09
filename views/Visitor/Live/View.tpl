@@ -5,8 +5,8 @@
   {include file="Visitor/_header.tpl" islive=true pagebgclass=fullheight}
 
   <div class="title recording">
-    <h1>{$channel.title|escape:html}</h1>
-    {if $channel.subtitle|stringempty}<h2>{$channel.subtitle|escape:html}</h2>{/if}
+    <h1>{$channel.title|escape:html|mb_wordwrap:25}</h1>
+    {if $channel.subtitle|stringempty}<h2>{$channel.subtitle|escape:html|mb_wordwrap:25}</h2>{/if}
   </div>
   <div class="clear"></div>
 {/if}

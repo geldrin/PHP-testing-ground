@@ -1,5 +1,5 @@
 <h2>
-  <a href="{$language}/channels/details/{$child.id},{$child.title|filenameize}"{if $child.id == $channel.id} class="active"{/if}>{$child.title|escape:html}</a>&nbsp;({$child.numberofrecordings})
+  <a href="{$language}/channels/details/{$child.id},{$child.title|filenameize}"{if $child.id == $channel.id} class="active"{/if}>{$child.title|escape:html|mb_wordwrap:25}</a>&nbsp;({$child.numberofrecordings})
 </h2>
 {if !empty( $child.children )}
 <div class="children">
