@@ -14,7 +14,7 @@
 <center>
 {/if}
 <div id="player">
-{if $streamtype == 'desktop'}
+{if $streamtype == 'desktop' and !$browser.mobile}
   <script type="text/javascript">
     swfobject.embedSWF('flash/VSQPlayer.swf?v={$VERSION}', 'playercontainer', '{$playerwidth}', '{$playerheight}', '11.1.0', 'flash/swfobject/expressInstall.swf', {$flashdata|@jsonescape:true}, flashdefaults.params, null, handleFlashLoad );
   </script>
@@ -33,6 +33,8 @@
       <div id="mobileplayercontainer">
         <a href="{$livertspurl}"><img src="{$STATIC_URI}images/live_player_placeholder_small.png" width="220" height="130"/></a>
       </div>
+    {else}
+      <span class="warning">{#live__no_compatible_stream#}</span>
     {/if}
   </center>
 {/if}

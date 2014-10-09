@@ -2643,6 +2643,9 @@ a#currentusername span {
 .liveiframe #player, .contribiframe #player {
   display: inline-block;
 }
+#player .warning {
+  color: red;
+}
 
 /* advanced search */
 .searchtable {
