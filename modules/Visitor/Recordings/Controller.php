@@ -317,6 +317,7 @@ class Controller extends \Visitor\Controller {
 
     }
 
+    $this->toSmarty['activemobileversion'] = $mobileversion;
     $this->toSmarty['mobileversions'] = $mobileversions;
     $this->toSmarty['mobilehttpurl'] = $recordingsModel->getMediaUrl(
       'mobilehttp',

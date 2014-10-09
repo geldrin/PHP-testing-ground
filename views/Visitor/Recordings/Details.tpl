@@ -45,7 +45,7 @@
       <div id="qualitychooser">
         <ul>
           {foreach from=$mobileversions item=version}
-            <li><a href="{$language}/recordings/details/{$recording.id},{$recording.title|filenameize}?quality={$version|escape:url}">{$version|escape:html}</a></li>
+            <li{if $activemobileversion.qualitytag == $version} class="active"{/if}><a href="{$language}/recordings/details/{$recording.id},{$recording.title|filenameize}?quality={$version|escape:url}">{$version|escape:html}</a></li>
           {/foreach}
         </ul>
       </div>
