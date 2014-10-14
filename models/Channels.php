@@ -905,7 +905,7 @@ class Channels extends \Springboard\Model {
     if ( $skipaccesstypecheck or $channel['isdeleted'] )
       return false;
 
-    if ( $this->isAccessibleByInvitation( $user, $organization, $channel['id'] ) )
+    if ( $this->isAccessibleByInvitation( $user, $channel['id'],  $organization ) )
       return true;
 
     switch( $channel['accesstype'] ) {
