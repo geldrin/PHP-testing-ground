@@ -34,6 +34,7 @@ if ( is_file( $app->config['datapath'] . 'jobs/' . $myjobid . '.stop' ) or is_fi
 
 // Log init
 $debug = Springboard\Debug::getInstance();
+$debug_mode = false;
 
 // Already running. Not finished a tough job?
 $run_filename = $jconf['temp_dir'] . $myjobid . ".run";
@@ -99,10 +100,15 @@ for ( $i = 0; $i < count($channels); $i++ ) {
 
 	$datetime = date("YmdHis");
 
+	// RTMP URL
 	$rtmp_url = sprintf("rtmp://%s/" . $wowza_app . "/", $rtmp_server) . $channels[$i]['wowzastreamid'];
 
-	$thumb_filename = "/tmp/" . $channels[$i]['streamid'] . "_" . rand(100000,999999) . ".png";
-	$ffmpeg_command = 'ffmpeg -v 0 -i ' . $rtmp_url . ' -vf "thumbnail" -frames:v 1 ' . $thumb_filename;
+	// ffmpeg log level
+	$ffmpeg_loglevel = '-v 0 ';
+	if ( $debug_mode ) $ffmpeg_loglevel = '';
+	
+	$thumb_filename = "/tmp/" . $channels[$i]['streamid'] . "_" . rand(100000, 999999) . ".png";
+	$ffmpeg_command = 'ffmpeg ' . $ffmpeg_loglevel . '-i ' . $rtmp_url . ' -vf "thumbnail" -frames:v 1 ' . $thumb_filename;
 	$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] ffmpeg live thumb atempt for feed#" . $channels[$i]['locationid'] . "/stream#" . $channels[$i]['streamid'], $sendmail = false);
 
 	$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] ffmpeg command to be executed: " . $ffmpeg_command, $sendmail = false);
@@ -112,7 +118,7 @@ for ( $i = 0; $i < count($channels); $i++ ) {
 
 	if ( is_readable($thumb_filename) and ( filesize($thumb_filename) > 0 ) ) {
 
-		$debug->log($jconf['log_dir'], $myjobid . ".log", "[OK] ffmpeg live thumb created. Error code = " . $err['code'] . ", feed#" . $channels[$i]['locationid'] . "/stream#" . $channels[$i]['streamid'] . ", ffmpeg command = \"" . $ffmpeg_command . "\". Full output:\n" . $err['cmd_output'], $sendmail = false);
+		$debug->log($jconf['log_dir'], $myjobid . ".log", "[OK] ffmpeg live thumb created. Error code = " . $err['code'] . ", feed#" . $channels[$i]['locationid'] . "/stream#" . $channels[$i]['streamid'] . ", ffmpeg command = \"" . $ffmpeg_command . "\"", $sendmail = false);
 
 		// ## Prepare working directories
 		// Base working directory
@@ -149,7 +155,8 @@ for ( $i = 0; $i < count($channels); $i++ ) {
 		}
 
 	} else {
-		// ffmpeg error: default logo
+
+		// ffmpeg error
 		$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] ffmpeg cannot get live thumb. Error code = " . $err['code'] . ", lifefeed_stream.id = " . $channels[$i]['streamid'] . ", ffmpeg command = " . $ffmpeg_command . ". Full output:\n" . $err['cmd_output'], $sendmail = false);
 		// No index photo update, keep existing
 		continue;
