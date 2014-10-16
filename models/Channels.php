@@ -533,7 +533,7 @@ class Channels extends \Springboard\Model {
     
   }
   
-  function findRoot( $channel, $ignoreaccesstype = false ) {
+  function findRoot( $channel, $ispublic = null ) {
     
     if ( !$channel['parentid'] )
       return $this->channelroots[ $channel['id'] ] = $channel;
@@ -541,7 +541,7 @@ class Channels extends \Springboard\Model {
     if ( isset( $this->channelroots[ $channel['id'] ] ) )
       return $this->channelroots[ $channel['id'] ];
     
-    $where  = $ignoreaccesstype? '': "AND c.accesstype = 'public'";
+    $where  = $ispublic? "AND c.accesstype = 'public'": '';
     $parent = $this->db->getRow("
       SELECT
         c.*,
@@ -563,7 +563,7 @@ class Channels extends \Springboard\Model {
       return $this->channelroots[ $channel['id'] ] = $channel;
     
     $this->channelroots[ $channel['id'] ] = $parent;
-    return $this->findRoot( $parent );
+    return $this->findRoot( $parent, $ispublic );
     
   }
   
@@ -905,7 +905,7 @@ class Channels extends \Springboard\Model {
     if ( $skipaccesstypecheck or $channel['isdeleted'] )
       return false;
 
-    if ( $this->isAccessibleByInvitation( $user, $organization, $channel['id'] ) )
+    if ( $this->isAccessibleByInvitation( $user, $channel['id'],  $organization ) )
       return true;
 
     switch( $channel['accesstype'] ) {
