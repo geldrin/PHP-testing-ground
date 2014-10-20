@@ -2710,7 +2710,7 @@ a#currentusername span {
   width: 590px;
 }
 #contributors li {
-  min-height: 22px;
+  min-height: 24px;
 }
 #contributors .iconplaceholder {
   display: inline-block;

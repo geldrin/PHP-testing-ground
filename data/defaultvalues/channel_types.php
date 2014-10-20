@@ -7,6 +7,7 @@ return array (
     'namehungarian' => 'Konferencia',
     'nameenglish' => 'Conference',
     'weight' => '100',
+	'iscourse' => 0,
   ),
   1 => 
   array (
@@ -15,6 +16,7 @@ return array (
     'namehungarian' => 'Szekció',
     'nameenglish' => 'Section',
     'weight' => '110',
+	'iscourse' => 0,
   ),
   2 => 
   array (
@@ -23,6 +25,7 @@ return array (
     'namehungarian' => 'Oktatás',
     'nameenglish' => 'Training',
     'weight' => '120',
+	'iscourse' => 0,
   ),
   3 => 
   array (
@@ -31,6 +34,7 @@ return array (
     'namehungarian' => 'Sajtótájékoztató',
     'nameenglish' => 'Press Conference',
     'weight' => '130',
+	'iscourse' => 0,
   ),
   4 => 
   array (
@@ -39,5 +43,15 @@ return array (
     'namehungarian' => 'Előadás',
     'nameenglish' => 'Performance',
     'weight' => '140',
+	'iscourse' => 0,
+  ),
+  5 => 
+  array (
+    'name' => 'Kurzus',
+    'name_stringid' => 0,
+    'namehungarian' => 'Kurzus',
+    'nameenglish' => 'Course',
+    'weight' => '150',
+	'iscourse' => 1,
   ),
 );

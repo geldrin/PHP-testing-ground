@@ -40,7 +40,7 @@ $debug->log($jconf['log_dir'], $myjobid . ".log", "*************************** J
 $run_filename = $jconf['temp_dir'] . $myjobid . ".run";
 if  ( file_exists($run_filename) ) {
 	if ( ( time() - filemtime($run_filename) ) < 15 * 60 ) {
-		$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] " . $myjobid . " is already running. Not finished previous run?", $sendmail = true);
+		$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] " . $myjobid . " is already running. Not finished previous run? See: " . $run_filename . " (created: " . date("Y-m-d H:i:s", filemtime($run_filename)) . ")", $sendmail = true);
 	}
 	exit;
 } else {
@@ -102,6 +102,8 @@ for ( $i = 0; $i < count($channels); $i++ ) {
 
 	$thumb_filename = "/tmp/" . $channels[$i]['streamid'] . "_" . rand(100000,999999) . ".png";
 	$ffmpeg_command = 'ffmpeg -v 0 -i ' . $rtmp_url . ' -vf "thumbnail" -frames:v 1 ' . $thumb_filename;
+	$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] ffmpeg live thumb atempt for feed#" . $channels[$i]['locationid'] . "/stream#" . $channels[$i]['streamid'], $sendmail = false);
+
 	$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] ffmpeg command to be executed: " . $ffmpeg_command, $sendmail = false);
 
 	// Run ffmpeg
@@ -109,7 +111,7 @@ for ( $i = 0; $i < count($channels); $i++ ) {
 
 	if ( is_readable($thumb_filename) and ( filesize($thumb_filename) > 0 ) ) {
 
-		$debug->log($jconf['log_dir'], $myjobid . ".log", "[OK] ffmpeg live thumb created. Error code = " . $err['code'] . ", lifefeed_stream.id = " . $channels[$i]['streamid'] . ", ffmpeg command = \"" . $ffmpeg_command . "\". Full output:\n" . $err['cmd_output'], $sendmail = false);
+		$debug->log($jconf['log_dir'], $myjobid . ".log", "[OK] ffmpeg live thumb created. Error code = " . $err['code'] . ", feed#" . $channels[$i]['locationid'] . "/stream#" . $channels[$i]['streamid'] . ", ffmpeg command = \"" . $ffmpeg_command . "\". Full output:\n" . $err['cmd_output'], $sendmail = false);
 
 		// ## Prepare working directories
 		// Base working directory

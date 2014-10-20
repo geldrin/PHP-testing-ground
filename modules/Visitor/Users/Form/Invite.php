@@ -254,16 +254,6 @@ class Invite extends \Visitor\HelpForm {
 
       }
 
-      if ( $usersModel->emailExists( $email, $organizationid ) ) {
-
-        $this->form->addMessage(
-          sprintf( $l('users', 'invitefileinvalidexistingemail'), $line )
-        );
-
-        $lineerror = true;
-
-      }
-
       if ( !$lineerror )
         $users[ $email ] = $username;
 

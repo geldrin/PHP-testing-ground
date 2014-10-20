@@ -2174,7 +2174,8 @@ class Recordings extends \Springboard\Model {
       SELECT
         rv.*,
         ep.shortname AS encodingshortname,
-        ep.mediatype
+        ep.mediatype,
+        ep.type AS encodingtype
       FROM
         recordings_versions AS rv,
         encoding_profiles AS ep
@@ -2197,6 +2198,9 @@ class Recordings extends \Springboard\Model {
       'audio'   => array(),
     );
 
+    $hascontent  = $this->row['contentstatus'] == 'onstorage';
+    $pipversions = array();
+
     foreach( $rs as $version ) {
 
       if ( $version['encodingshortname'] == 'audio' ) {
@@ -2212,10 +2216,20 @@ class Recordings extends \Springboard\Model {
       if ( $version['isdesktopcompatible'] )
         $ret[ $key ]['desktop'][] = $version;
 
-      if ( $version['ismobilecompatible'] )
-        $ret[ $key ]['mobile'][] = $version;
+      if ( $version['ismobilecompatible'] ) {
+
+        // pip verziok kizarolag iscontent = 0-ak ergo master kulcsa alatt lesznek
+        if ( $hascontent and $version['encodingtype'] == 'pip' )
+          $pipversions[] = $version;
+        else
+          $ret[ $key ]['mobile'][] = $version;
+
+      }
 
     }
+
+    if ( !empty( $pipversions ) )
+      $ret['master']['mobile'] = $pipversions;
 
     if ( $this->row['mastermediatype'] == 'audio' )
       $ret['master']['desktop'] = $ret['master']['mobile'] = $ret['audio'];

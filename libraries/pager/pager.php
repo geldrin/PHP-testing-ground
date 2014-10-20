@@ -129,6 +129,58 @@ class pager {
   }
 
   // --------------------------------------------------------------------------
+  function getPerPageForm() {
+
+    if ( !$this->perpageselector )
+      return '';
+
+    $options = '';
+    foreach ( $this->perpageoptions as $option ) {
+      $selected = $this->perpage == $option ? 'selected="selected" ' : '';
+      $option   = htmlspecialchars( $option, ENT_QUOTES, 'UTF-8', true );
+      $options .=
+        '<option ' . $selected  . 'value="' . $option . '">' . $option . '</option>';
+    }
+
+    $hiddenvars      = '';
+    $hiddenvarformat = '<input type="hidden" name="%s" value="%s"/>';
+    foreach( $this->pass as $name => $value ) {
+      $name = htmlspecialchars( $name, ENT_QUOTES, 'UTF-8', true );
+
+      if ( is_array( $value ) ) {
+
+        foreach( $value as $k => $v ) {
+
+          if ( $v !== null and !is_scalar( $v ) )
+            throw new Exception("Non-scalar value found for variable $name [ $k ]");
+
+          $k           = htmlspecialchars( $k, ENT_QUOTES, 'UTF-8', true );
+          $v           = htmlspecialchars( $v, ENT_QUOTES, 'UTF-8', true );
+          $newname     = $name . '[' . $k . ']';
+          $hiddenvars .= sprintf( $hiddenvarformat, $newname, $v );
+        }
+
+      } elseif ( $value === null or is_scalar( $value ) ) {
+        $value       = htmlspecialchars( $value, ENT_QUOTES, 'UTF-8', true );
+        $hiddenvars .= sprintf( $hiddenvarformat, $name, $value );
+      } else
+        throw new Exception("Non-array and non-scalar type for variable to pass");
+    }
+
+    return $this->itemLayout(
+      sprintf(
+        $this->perpagecontainer,
+        $this->getPagerLink( 0, true ),
+        sprintf( $this->perpageselectcontainer,
+          $hiddenvars . sprintf( $this->perpageselect, $options )
+        ),
+        $this->perpageformmethod
+      )
+    );
+
+  }
+
+  // --------------------------------------------------------------------------
   function gethtml( $vars = 0 ) {
 
     $nrofpages = ceil( $this->all / $this->perpage );
@@ -233,24 +285,8 @@ class pager {
       );
     }
 
-    if ( $this->perpageselector ) {
-      $options = '';
-      foreach ( $this->perpageoptions as $option ) {
-        $option = htmlspecialchars( $option );
-        $options .= 
-          '<option ' . ( $this->perpage == $option ? 'selected="selected"' : '' ) . ' value="' . $option . '">' . $option . '</option>';
-      }
-      $controls['perpage'] = $this->itemLayout( 
-        sprintf(
-          $this->perpagecontainer,
-          $this->getPagerLink( 0, true ),
-          sprintf( $this->perpageselectcontainer,
-            sprintf( $this->perpageselect, $options )
-          ),
-          $this->perpageformmethod
-        )
-      );
-    }
+    if ( $this->perpageselector )
+      $controls['perpage'] = $this->getPerPageForm();
 
     if ( ( $this->start + $this->perpage ) < $this->all ) {
       $controls['next'] = $this->itemLayout(
@@ -296,23 +332,17 @@ class pager {
 
   // --------------------------------------------------------------------------
   function pass( $variable, $value ) {
+    if ( !is_array( $value ) and $value !== null and !is_scalar( $value ) )
+      throw new Exception("Non-array and non-scalar type as value is unsupported");
 
-    if ( is_array( $value ) ) 
-      foreach ( $value as $valueitem ) 
-        $this->pass[] = $variable . '[]=' . rawurlencode( $valueitem );
-    else {
-      if ( $value != null )
-        $this->pass[] = $variable . '=' . rawurlencode( $value );
-      else
-        $this->pass[] = $variable . '=';
-    }
-
+    $this->pass[ $variable ] = $value;
   }
 
   // --------------------------------------------------------------------------
   function _geturl() {
 
-    $parameters = implode('&amp;', $this->_getpassvars() );
+    $parameters = http_build_query( $this->pass );
+    $parameters = htmlspecialchars( $parameters, ENT_QUOTES, 'UTF-8', true );
 
     if ( !strlen( $parameters ) || $this->noparameters )
       return $this->script;
@@ -322,17 +352,6 @@ class pager {
       else
         return $this->script . '?' . $parameters;
     }
-
-  }
-
-  // --------------------------------------------------------------------------
-  function _getpassvars() {
-
-    $vars = Array();
-    foreach ( $this->pass as $value ) 
-      $vars[] = $value;
-
-    return $vars;
 
   }
 
@@ -347,11 +366,12 @@ class pager {
 
     $link = sprintf( $linkformat, $url, $start );
 
-    if ( !$skipperpage and $this->perpageselector )
+    if ( !$skipperpage and $this->perpageselector ) {
       if ( strpos( $link, '?' ) !== false )
         $link .= '&amp;perpage=' . $this->perpage;
       else
         $link .= '?perpage=' . $this->perpage;
+    }
 
     return $link . $this->bookmark;
 

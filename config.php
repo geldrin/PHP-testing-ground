@@ -1,6 +1,6 @@
 <?php
 $config = array(
-  'version'      => '_v20140825',
+  'version'      => '_v20140915',
   'charset'      => 'UTF-8',
   'cacheseconds' => 3600,
   'errormessage' => 'An unexpected error has occured, our staff has been notified. Sorry for the inconvenience and thanks for your understanding!',
@@ -118,6 +118,9 @@ $config = array(
 
     'smilurl'           => 'http://%s/vsq/_definst_/',
     'secsmilurl'        => 'https://%s/vsq/_definst_/',
+
+    'livesmilurl'       => 'http://%s/vsqlive/_definst_/',
+    'seclivesmilurl'    => 'https://%s/vsqlive/_definst_/',
 
     'rtmpurl'           => 'rtmp://%s:1935/vsq/',
     'secrtmpsurl'       => 'rtmps://%s/vsqsec/',
