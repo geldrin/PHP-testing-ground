@@ -168,6 +168,10 @@ class Controller extends \Visitor\Controller {
         'type'     => 'id',
         'required' => false,
       ),
+      'useragent' => array(
+        'type' => 'string',
+        'required' => false,
+      ),
     ),
   );
   
@@ -1469,13 +1473,15 @@ class Controller extends \Visitor\Controller {
 
   }
   
-  public function logviewAction( $recordingid, $recordingversionid, $viewsessionid, $action, $streamurl, $positionfrom = null, $positionuntil = null ) {
+  public function logviewAction( $recordingid, $recordingversionid, $viewsessionid, $action, $streamurl, $positionfrom = null, $positionuntil = null, $useragent = null ) {
     
     $statModel = $this->bootstrap->getModel('view_statistics_ondemand');
     $user      = $this->bootstrap->getSession('user');
-    $useragent = $_SERVER['HTTP_USER_AGENT'];
     $ipaddress = $this->getIPAddress();
     $sessionid = session_id();
+
+    if ( !$useragent )
+      $useragent = $_SERVER['HTTP_USER_AGENT'];
 
     $values = array(
       'userid'             => $user['id'],
