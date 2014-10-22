@@ -117,7 +117,7 @@
   
   {if $recording.description|stringempty}
     <div class="recordingdescription">
-      <p>{$recording.description|escape:html}</p>
+      <p>{$recording.description|escape:html|autolink|nl2br}</p>
     </div>
   {/if}
   

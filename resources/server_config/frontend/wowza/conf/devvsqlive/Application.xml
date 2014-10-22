@@ -244,6 +244,11 @@
 				<Description>WowzaStats</Description>
 				<Class>hu.videosquare.wowza.module.WowzaStats</Class>
 			</Module>
+			<Module>
+				<Name>ModuleLimitStreamViewers</Name>
+				<Description>ModuleLimitStreamViewers</Description>
+				<Class>com.wowza.wms.plugin.collection.module.ModuleLimitStreamViewers</Class>
+			</Module>
 		</Modules>
 		<!-- Properties defined here will be added to the IApplication.getProperties() and IApplicationInstance.getProperties() collections -->
 		<Properties>
@@ -281,6 +286,17 @@
 			<Property>
 				<Name>WowzaStatsMySQLStatsTable</Name>
 				<Value>cdn_streaming_stats</Value>
+			</Property>
+			<!-- ModuleLimitStreamViewers -->
+			<Property>
+				<Name>limitStreamViewersMaxConnections</Name>
+				<Value>10</Value>
+				<Type>Integer</Type>
+			</Property>
+			<Property>
+				<Name>maxStreamViewers</Name>
+				<Value>10</Value>
+				<Type>Integer</Type>
 			</Property>
 		</Properties>
 	</Application>

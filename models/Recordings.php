@@ -3604,7 +3604,6 @@ class Recordings extends \Springboard\Model {
           sessionid,
           timestampfrom,
           timestampuntil,
-          currentposition,
           positionfrom,
           positionuntil
         ) VALUES
@@ -3614,7 +3613,6 @@ class Recordings extends \Springboard\Model {
           $sessionid,
           $timestamp,
           $timestamp,
-          $position,
           $position,
           $position
         )
