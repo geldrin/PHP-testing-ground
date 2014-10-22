@@ -1473,15 +1473,13 @@ class Controller extends \Visitor\Controller {
 
   }
   
-  public function logviewAction( $recordingid, $recordingversionid, $viewsessionid, $action, $streamurl, $positionfrom = null, $positionuntil = null, $useragent = null ) {
+  public function logviewAction( $recordingid, $recordingversionid, $viewsessionid, $action, $streamurl, $positionfrom = null, $positionuntil = null, $useragent = '' ) {
     
     $statModel = $this->bootstrap->getModel('view_statistics_ondemand');
     $user      = $this->bootstrap->getSession('user');
     $ipaddress = $this->getIPAddress();
     $sessionid = session_id();
-
-    if ( !$useragent )
-      $useragent = $_SERVER['HTTP_USER_AGENT'];
+    $useragent .= "\n" . $_SERVER['HTTP_USER_AGENT'];
 
     $values = array(
       'userid'             => $user['id'],
