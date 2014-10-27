@@ -15,6 +15,7 @@ class Recordings extends \Springboard\Model {
     ),
   );
   
+  public $metadata;
   protected $searchadvancedwhere;
   protected $streamingserver;
   

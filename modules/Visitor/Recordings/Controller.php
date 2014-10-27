@@ -1100,13 +1100,10 @@ class Controller extends \Visitor\Controller {
           if ( !$channelModel ) {
             
             $error = 'upload_invalidchannel';
-            $message( $l('recordings', 'invalidchannel') );
+            $message = $l('recordings', 'invalidchannel');
             
-          } else {
-            
+          } else
             $channelModel->insertIntoChannel( $recordingModel->id, $user );
-            
-          }
           
         }
         
@@ -1133,7 +1130,7 @@ class Controller extends \Visitor\Controller {
             'error'  => $error
           ),
           "Recording upload (iscontent: $iscontent) failed with exception message: $message \n\n" .
-          'Metadata: ' . var_export( @$recordingModel->metadata, true )
+          'Metadata: ' . var_export( $recordingModel->metadata, true )
         );
       
       if ( $iscontent )
