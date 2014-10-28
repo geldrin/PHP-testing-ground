@@ -50,6 +50,10 @@ class Controller extends \Visitor\Controller {
       'livefeedid' => array(
         'type' => 'id',
       ),
+      'livefeedstreamid' => array(
+        'type' => 'id',
+        'required' => false,
+      ),
       'viewsessionid' => array(
         'type' => 'string',
       ),
@@ -58,6 +62,10 @@ class Controller extends \Visitor\Controller {
       ),
       'streamurl' => array(
         'type' => 'string',
+      ),
+      'useragent' => array(
+        'type' => 'string',
+        'required' => false,
       ),
     ),
   );
@@ -747,17 +755,18 @@ class Controller extends \Visitor\Controller {
 
   }
 
-  public function logviewAction( $livefeedid, $viewsessionid, $action, $streamurl ) {
+  public function logviewAction( $livefeedid, $livefeedstreamid, $viewsessionid, $action, $streamurl, $useragent = '' ) {
     
     $statModel = $this->bootstrap->getModel('view_statistics_live');
     $user      = $this->bootstrap->getSession('user');
-    $useragent = $_SERVER['HTTP_USER_AGENT'];
     $ipaddress = $this->getIPAddress();
     $sessionid = session_id();
+    $useragent .= "\n" . $_SERVER['HTTP_USER_AGENT'];
 
     $values = array(
       'userid'             => $user['id'],
       'livefeedid'         => $livefeedid,
+      'livefeedstreamid'   => $livefeedstreamid,
       'sessionid'          => $sessionid,
       'viewsessionid'      => $viewsessionid,
       'action'             => $action,
