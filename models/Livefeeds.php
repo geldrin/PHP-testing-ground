@@ -255,7 +255,8 @@ class Livefeeds extends \Springboard\Model {
       ),
       'parameters' => array(
         array(
-          'viewsessionid' => $this->generateViewSessionid(
+          'livefeedstreamid' => $info['streams']['defaultstream']['id'],
+          'viewsessionid'    => $this->generateViewSessionid(
             $info['streams']['defaultstream']['id']
           ),
         ),
@@ -272,7 +273,8 @@ class Livefeeds extends \Springboard\Model {
 
       $ret['labels'][]     = mb_substr( $stream['name'], 0, 6 );
       $ret['parameters'][] = array(
-        'viewsessionid' => $this->generateViewSessionid( $stream['id'] ),
+        'livefeedstreamid' => $stream['id'],
+        'viewsessionid'    => $this->generateViewSessionid( $stream['id'] ),
       );
 
     }
