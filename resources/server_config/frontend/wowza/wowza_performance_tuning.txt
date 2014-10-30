@@ -1,0 +1,31 @@
+To tune your server based on the available CPU resources of your server, use the following guidelines:
+
+The [total-core-count] refers to the total number of CPU cores in your server. For example, if you have dual quad-core processors (two quad-core processors), the [total-core-count] is:
+
+2 (processor) x 4 (cores) = 8
+
+If your server supports hyper-threading, then use the total number of threads. In the above example, if hyper-threading is available, then the total number of threads is:
+
+2 (processor) x 4 (cores) x 2 (threads per core) = 16
+
+With the number of cores and threads per physical processor continually growing, we suggest a maximum number of threads for each value below:
+
+In the configuration file [install-dir]/conf/VHost.xml:
+
+HostPort/ProcessorCount: 2x[total-core-count] (maximum of 24)
+Note: The HostPort/ProcessorCount field in the Admin HostPort (/Port "8086") shouldn't be modified.
+
+IdleWorkers/WorkerCount: 2x[total-core-count] (maximum of 24)
+
+NetConnections/ProcessorCount: 2x[total-core-count]  (maximum of 24)
+
+RTP/UnicastIncoming/ProcessorCount: [total-core-count]  (maximum of 12)
+RTP/UnicastOutgoing/ProcessorCount: 2x[total-core-count]  (maximum of 24)
+
+RTP/MulticastIncoming/ProcessorCount: [total-core-count]  (maximum of 12)
+RTP/MulticastOutgoing/ProcessorCount: [total-core-count]  (maximum of 12)
+
+HandlerThreadPool/PoolSize: (60x[total-core-count]) (maximum of 480)
+TransportThreadPool/PoolSize: (40x[total-core-count]) (maximum of 320)
+
+These configuration calculations assume that you have at least 1GB of memory per core or—if you have four or more total cores—that you're running the 64–bit Java VM, and that you're using the suggested memory settings above.
