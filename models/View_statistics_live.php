@@ -22,8 +22,12 @@ class View_statistics_live extends \Model\View_statistics {
 
   protected function closeSlice( $values ) {
     unset( $values['timestampfrom'] );
-    $values['timestampuntil'] = date('Y-m-d H:i:s');
     parent::closeSlice( $values );
+  }
+
+  protected function updateSlice( $values, $stopaction = null ) {
+    $values['timestampuntil'] = date('Y-m-d H:i:s');
+    parent::updateSlice( $values, $stopaction );
   }
 
 }
