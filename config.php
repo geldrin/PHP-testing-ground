@@ -24,6 +24,8 @@ $config = array(
   'modelpath'    => $this->basepath . 'models/',
   'convpath'     => $this->basepath . 'data/temp/',
   'storagepath'  => '/srv/vsq/videosquare.eu/', // always absolute!
+  // szoljunk e azert mert a bongeszo elavult?
+  'warnobsoletebrowser' => true,
   //-----
   'destroysession' => array(
     'onuserlogout'  => true,
