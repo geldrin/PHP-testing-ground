@@ -79,7 +79,7 @@
   <link rel="alternate" type="application/rss+xml" title="{#rss_news#|sprintf:$organization.name|escape:html}" href="{$language}/organizations/newsrss" />
 </head>
 <body>
-{if $browser.obsolete}
+{if $bootstrap->config.warnobsoletebrowser and $browser.obsolete}
   <a class="openinlayer" target="_blank" href="{$BASE_URI}{$language}/tools/updateyourbrowser" id="browserAlert">{#sitewide_updateyourbrowser#}</a>
 {/if}
 <div id="headerbg"></div>
