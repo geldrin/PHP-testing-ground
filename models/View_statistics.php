@@ -57,7 +57,7 @@ abstract class View_statistics extends \Springboard\Model {
     $viewid   = $this->db->qstr( $values['viewsessionid'] );
     $this->id = $this->db->getOne("
       SELECT id
-      FROM view_statistics_ondemand
+      FROM " . $this->table . "
       WHERE viewsessionid = $viewid
       ORDER BY id DESC
       LIMIT 1
