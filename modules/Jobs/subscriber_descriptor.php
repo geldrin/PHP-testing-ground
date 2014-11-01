@@ -80,7 +80,36 @@ if ( $app->config['baseuri'] == "dev.videosquare.eu/" ) {
 				'disableuseraftervalidity'	=> true,
 				'promouservaliditydays'		=> 7
 			),
-
+		7	=> array(
+				'orgid' 					=> 309,
+				'name'						=> "Hessyn",
+				'price_peruser'				=> 2000,
+				'currency'					=> "HUF",
+				'listfromdate'				=> null,
+				'generateduservaliditydays'	=> 30,
+				'disableuseraftervalidity'	=> true,
+				'promouservaliditydays'		=> 7
+			),
+		8	=> array(
+				'orgid' 					=> 311,
+				'name'						=> "Vezinfó",
+				'price_peruser'				=> 2000,
+				'currency'					=> "HUF",
+				'listfromdate'				=> null,
+				'generateduservaliditydays'	=> 30,
+				'disableuseraftervalidity'	=> true,
+				'promouservaliditydays'		=> 7
+			),
+		9	=> array(
+				'orgid' 					=> 312,
+				'name'						=> "Penta",
+				'price_peruser'				=> 2000,
+				'currency'					=> "HUF",
+				'listfromdate'				=> null,
+				'generateduservaliditydays'	=> 30,
+				'disableuseraftervalidity'	=> true,
+				'promouservaliditydays'		=> 7
+			),
 	);
 
 }

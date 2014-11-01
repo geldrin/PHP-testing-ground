@@ -25,7 +25,7 @@
 		-->
 		<Streams>
 			<StreamType>live</StreamType>
-			<StorageDir>/srv/wowza_record/</StorageDir>
+			<StorageDir>/srv/vsq/videosquare.eu/livestreams</StorageDir>
 			<KeyDir>${com.wowza.wms.context.VHostConfigHome}/keys</KeyDir>
 			<!-- LiveStreamPacketizers (separate with commas): cupertinostreamingpacketizer, smoothstreamingpacketizer, sanjosestreamingpacketizer, cupertinostreamingrepeater, smoothstreamingrepeater, sanjosestreamingrepeater, dvrstreamingpacketizer, dvrstreamingrepeater -->
 			<LiveStreamPacketizers>cupertinostreamingpacketizer,smoothstreamingpacketizer,sanjosestreamingpacketizer</LiveStreamPacketizers>
@@ -150,11 +150,76 @@
 		<LiveStreamPacketizer>
 			<!-- Properties defined here will override any properties defined in conf/LiveStreamPacketizers.xml for any LiveStreamPacketizers loaded by this applications -->
 			<Properties>
+				<!-- httpRandomizeMediaName: Set this property to true to help to ensure that the chunks in live streams are unique if the encoder is restarted. -->
+				<Property>
+					<Name>httpRandomizeMediaName</Name>
+					<Value>true</Value>
+					<Type>Boolean</Type>
+				</Property>
 			</Properties>
 		</LiveStreamPacketizer>
 		<HTTPStreamer>
 			<!-- Properties defined here will override any properties defined in conf/HTTPStreamers.xml for any HTTPStreamer loaded by this applications -->
 			<Properties>
+				<!--
+				For HTTP caching to work properly, the following aspects of HTTP streaming behave differently:
+				o The Wowza server session identifier (_wXXXXXXXXX) must be removed from all playlist and manifest data.
+				  This is done automatically when you enable the Wowza server to be an HTTP caching origin (see below).
+				o HTTP caching headers must be set to enable content caching.
+				o Random identifiers must be added to live media chunk and fragment URLs so that each encoder session is unique from a caching perspective.
+				-->
+				<!-- httpOriginMode: Enables or disables HTTP origin mode. The default value is on (enabled). -->
+				<Property>
+					<Name>httpOriginMode</Name>
+					<Value>on</Value>
+					<Type>String</Type>
+				</Property>
+				<!-- Apple HLS related BEGIN -->
+				<Property>
+					<Name>cupertinoCacheControlPlaylist</Name>
+					<Value>max-age=1</Value>
+					<Type>String</Type>
+				</Property>
+				<Property>
+					<Name>cupertinoCacheControlMediaChunk</Name>
+					<Value>max-age=180</Value>
+					<Type>String</Type>
+				</Property>
+				<!-- HLS related END -->
+				<!-- Adobe HDS related BEGIN -->
+				<Property>
+					<Name>sanjoseCacheControlPlaylist</Name>
+					<Value>max-age=1</Value>
+					<Type>String</Type>
+				</Property>
+				<Property>
+					<Name>sanjoseCacheControlMediaChunk</Name>
+					<Value>max-age=180</Value>
+					<Type>String</Type>
+				</Property>
+				<!-- Adobe HDS related END -->
+				<!-- Smooth Streaming related BEGIN-->
+<!--				<Property>
+					<Name>smoothCacheControlPlaylist</Name>
+					<Value>max-age=1</Value>
+					<Type>String</Type>
+				</Property>
+				<Property>
+					<Name>smoothCacheControlMediaChunk</Name>
+					<Value>max-age=3600</Value>
+					<Type>String</Type>
+				</Property>
+				<Property>
+					<Name>smoothCacheControlDataChunk</Name>
+					<Value>max-age=3600</Value>
+					<Type>String</Type>
+				</Property>
+				<Property>
+					<Name>smoothStreamingEncryptionRandomIV</Name>
+					<Value>false</Value>
+					<Type>Boolean</Type>
+				</Property> -->
+				<!-- Smooth Streaming related END -->
 			</Properties>
 		</HTTPStreamer>
 		<Repeater>

@@ -4,7 +4,7 @@ var analyticsdata = {$analyticsdata|@jsonescape};
 </script>
 
 <div class="heading">
-  <h1>{$channel.title|escape:html} - {#live__analytics_titlepostfix#}</h1>
+  <h1>{$channel.title|escape:html|mb_wordwrap:25} - {#live__analytics_titlepostfix#}</h1>
   <h2><a href="{$language}/live/managefeeds/{$channel.id}">{#live__managefeeds#}</a></h2>
 </div>
 <br/>

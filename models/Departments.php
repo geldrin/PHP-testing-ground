@@ -93,6 +93,7 @@ class Departments extends \Springboard\Model {
     return $this->db->getArray("
       SELECT
         u.id,
+        u.email,
         u.nameformat,
         u.nickname,
         u.nameprefix,
@@ -150,6 +151,7 @@ class Departments extends \Springboard\Model {
     return $this->db->getArray("
       SELECT
         u.id,
+        u.email,
         u.nameformat,
         u.nickname,
         u.nameprefix,

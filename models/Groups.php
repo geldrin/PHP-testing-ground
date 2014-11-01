@@ -23,8 +23,9 @@ class Groups extends \Springboard\Model {
     $this->ensureID();
     return $this->db->getOne("
       SELECT COUNT(*)
-      FROM groups_members
-      WHERE groupid = '" . $this->id . "'
+      FROM groups_members AS gm
+      WHERE gm.groupid = '" . $this->id . "'
+      GROUP BY gm.userid
     ");
     
   }
@@ -35,6 +36,7 @@ class Groups extends \Springboard\Model {
     return $this->db->getArray("
       SELECT
         u.id,
+        u.email,
         u.nameformat,
         u.nickname,
         u.nameprefix,
@@ -48,6 +50,7 @@ class Groups extends \Springboard\Model {
         u.id       = gm.userid AND
         gm.groupid = '" . $this->id . "' AND
         u.disabled = '0'
+      GROUP BY u.id
       ORDER BY $orderby
       LIMIT $start, $limit
     ");
@@ -62,18 +65,36 @@ class Groups extends \Springboard\Model {
       WHERE
         groupid = '" . $this->id . "' AND
         userid  = " . $this->db->qstr( $userid ) . "
-      LIMIT 1
     ");
     
   }
   
+  private function canSeeGroups( $user ) {
+    if (
+         $user['isadmin'] or
+         $user['isclientadmin'] or
+         $user['isuploader'] or
+         $user['ismoderateduploader'] or
+         $user['isliveadmin'] or
+         $user['iseditor']
+       )
+      return true;
+
+    return false;
+  }
+
   public function getGroupCount( $user, $organizationid ) {
-    
+
+    if ( $this->canSeeGroups( $user ) )
+      $where = '';
+    else
+      $where = "userid         = '" . $user['id'] . "' AND";
+
     return $this->db->getOne("
       SELECT COUNT(*)
       FROM groups
       WHERE
-        userid         = '" . $user['id'] . "' AND
+        $where
         organizationid = '$organizationid'
       LIMIT 1
     ");
@@ -82,15 +103,20 @@ class Groups extends \Springboard\Model {
   
   public function getGroupArray( $start, $limit, $orderby, $user, $organizationid ) {
     
+    if ( $this->canSeeGroups( $user ) )
+      $where = '';
+    else
+      $where = "g.userid         = '" . $user['id'] . "' AND";
+
     return $this->db->getArray("
       SELECT
         g.*,
-        COUNT(*) AS usercount
+        COUNT(DISTINCT gm.userid) AS usercount
       FROM
         groups AS g,
         groups_members AS gm
       WHERE
-        g.userid         = '" . $user['id'] . "' AND
+        $where
         gm.groupid       = g.id AND
         g.organizationid = '$organizationid'
       GROUP BY g.id
@@ -195,6 +221,7 @@ class Groups extends \Springboard\Model {
     return $this->db->getArray("
       SELECT
         u.id,
+        u.email,
         u.nameformat,
         u.nickname,
         u.nameprefix,

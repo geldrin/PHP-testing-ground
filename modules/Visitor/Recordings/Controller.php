@@ -142,6 +142,37 @@ class Controller extends \Visitor\Controller {
         'required' => false,
       ),
     ),
+    'logview' => array(
+      'loginrequired' => false,
+      'recordingid' => array(
+        'type' => 'id',
+      ),
+      'recordingversionid' => array(
+        'type'     => 'id',
+        'required' => false,
+      ),
+      'viewsessionid' => array(
+        'type' => 'string',
+      ),
+      'action' => array(
+        'type' => 'string',
+      ),
+      'streamurl' => array(
+        'type' => 'string',
+      ),
+      'positionfrom' => array(
+        'type'     => 'id',
+        'required' => false,
+      ),
+      'positionuntil'=> array(
+        'type'     => 'id',
+        'required' => false,
+      ),
+      'useragent' => array(
+        'type' => 'string',
+        'required' => false,
+      ),
+    ),
   );
   
   public function init() {
@@ -290,6 +321,7 @@ class Controller extends \Visitor\Controller {
 
     }
 
+    $this->toSmarty['activemobileversion'] = $mobileversion;
     $this->toSmarty['mobileversions'] = $mobileversions;
     $this->toSmarty['mobilehttpurl'] = $recordingsModel->getMediaUrl(
       'mobilehttp',
@@ -1068,13 +1100,10 @@ class Controller extends \Visitor\Controller {
           if ( !$channelModel ) {
             
             $error = 'upload_invalidchannel';
-            $message( $l('recordings', 'invalidchannel') );
+            $message = $l('recordings', 'invalidchannel');
             
-          } else {
-            
+          } else
             $channelModel->insertIntoChannel( $recordingModel->id, $user );
-            
-          }
           
         }
         
@@ -1101,7 +1130,7 @@ class Controller extends \Visitor\Controller {
             'error'  => $error
           ),
           "Recording upload (iscontent: $iscontent) failed with exception message: $message \n\n" .
-          'Metadata: ' . var_export( @$recordingModel->metadata, true )
+          'Metadata: ' . var_export( $recordingModel->metadata, true )
         );
       
       if ( $iscontent )
@@ -1441,4 +1470,31 @@ class Controller extends \Visitor\Controller {
 
   }
   
+  public function logviewAction( $recordingid, $recordingversionid, $viewsessionid, $action, $streamurl, $positionfrom = null, $positionuntil = null, $useragent = '' ) {
+    
+    $statModel = $this->bootstrap->getModel('view_statistics_ondemand');
+    $user      = $this->bootstrap->getSession('user');
+    $ipaddress = $this->getIPAddress();
+    $sessionid = session_id();
+    $useragent .= "\n" . $_SERVER['HTTP_USER_AGENT'];
+
+    $values = array(
+      'userid'             => $user['id'],
+      'recordingid'        => $recordingid,
+      'recordingversionid' => $recordingversionid,
+      'sessionid'          => $sessionid,
+      'viewsessionid'      => $viewsessionid,
+      'action'             => $action,
+      'url'                => $streamurl,
+      'ipaddress'          => $ipaddress,
+      'useragent'          => $useragent,
+      'positionfrom'       => $positionfrom,
+      'positionuntil'      => $positionuntil,
+    );
+
+    $statModel->log( $values );
+    return true;
+
+  }
+
 }

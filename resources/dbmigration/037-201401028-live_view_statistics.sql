@@ -1,0 +1,1 @@
+ALTER TABLE  `view_statistics_live` ADD  `livefeedstreamid` INT UNSIGNED NULL AFTER  `livefeedid`;

@@ -246,7 +246,38 @@ class Livefeeds extends \Springboard\Model {
     
   }
   
-  public function getStreamUrls( $info, $prefix = '' ) {
+  private function getStreamInfo( $info, $prefix = '' ) {
+
+    $ret = array(
+      'streams'    => array(),
+      'labels'     => array(
+        $info['streams']['defaultstream']['name'],
+      ),
+      'parameters' => array(
+        array(
+          'livefeedstreamid' => $info['streams']['defaultstream']['id'],
+          'viewsessionid'    => $this->generateViewSessionid(
+            $info['streams']['defaultstream']['id']
+          ),
+        ),
+      ),
+    );
+
+    foreach( $info['streams']['streams'] as $stream ) {
+
+      if (
+           $info['streams']['defaultstream']['id'] == $stream['id'] or
+           $info['streams']['defaultstream']['quality'] == $stream['quality']
+         )
+        continue;
+
+      $ret['labels'][]     = $stream['name'];
+      $ret['parameters'][] = array(
+        'livefeedstreamid' => $stream['id'],
+        'viewsessionid'    => $this->generateViewSessionid( $stream['id'] ),
+      );
+
+    }
 
     if ( $this->isHDSEnabled( $prefix ) ) {
 
@@ -257,16 +288,11 @@ class Livefeeds extends \Springboard\Model {
       if ( $prefix )
         $filename .= '_' . $prefix;
 
-      $streams = array(
-        sprintf( $smilurl, $filename, $authorizecode )
-      );
-
-      return $streams;
+      $ret['streams'][] = sprintf( $smilurl, $filename, $authorizecode );
 
     } else {
 
-      $streams   = array();
-      $streams[] = $info['streams']['defaultstream'][ $prefix . 'keycode'];
+      $ret['streams'][] = $info['streams']['defaultstream'][ $prefix . 'keycode'];
 
       foreach( $info['streams']['streams'] as $stream ) {
 
@@ -276,13 +302,13 @@ class Livefeeds extends \Springboard\Model {
            )
           continue;
 
-        $streams[] = $stream[ $prefix . 'keycode'];
+        $ret['streams'][] = $stream[ $prefix . 'keycode'];
 
       }
 
-      return $streams;
-
     }
+
+    return $ret;
 
   }
 
@@ -301,13 +327,19 @@ class Livefeeds extends \Springboard\Model {
       'feed_id'                => $this->id,
       'recording_title'        => $this->row['name'],
       'recording_type'         => 'live',
-      'media_streams'          => $this->getStreamUrls( $info ),
-      'media_secondaryStreams' => $this->getStreamUrls( $info, 'content'),
       'timeline_autoPlay'      => true,
       'user_checkWatching'     => (bool)$info['member']['ispresencecheckforced'],
       'user_checkWatchingTimeInterval' => $info['checkwatchingtimeinterval'],
       'user_checkWatchingConfirmationTimeout' => $info['checkwatchingconfirmationtimeout'],
     );
+
+    $streaminfo = $this->getStreamInfo( $info );
+    $flashdata['media_streams']          = $streaminfo['streams'];
+    $flashdata['media_streamLabels']     = $streaminfo['labels'];
+    $flashdata['media_streamParameters'] = $streaminfo['parameters'];
+
+    $streaminfo = $this->getStreamInfo( $info, 'content');
+    $flashdata['media_secondaryStreams'] = $streaminfo['streams'];
 
     if ( $info['member'] and $info['member']['id'] ) {
       $flashdata['user_id']          = $info['member']['id'];
@@ -985,6 +1017,15 @@ class Livefeeds extends \Springboard\Model {
 
     return $ret;
 
+  }
+
+  public function generateViewSessionid( $extra ) {
+    $this->ensureObjectLoaded();
+    $ts        = microtime(true);
+    $user      = $this->bootstrap->getSession('user');
+    $sessionid = session_id();
+
+    return md5( $ts . $sessionid . $this->id . $extra );
   }
 
 }

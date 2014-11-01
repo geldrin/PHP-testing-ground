@@ -600,7 +600,7 @@ global $app, $jconf, $global_log;
 	}
 
 	if (($encoding_params_main === null) && ($encoding_params_overlay === null)) {
-		log_recording_conversion($recording['id'], $jconf['jobid_media_convert'], $jconf['dbstatus_conv_err'], "[ERROR] Encoding parameter preparation failed!\n". $msg ."\n(Recording version: ". $profile('name') .")", '-', '-', 0, false);
+		log_recording_conversion($recording['id'], $jconf['jobid_media_convert'], $jconf['dbstatus_conv_err'], "[ERROR] Encoding parameter preparation failed!\n". $msg ."\n(Recording version: ". $profile['name'] .")", '-', '-', 0, false);
 		return false;
 	}
 

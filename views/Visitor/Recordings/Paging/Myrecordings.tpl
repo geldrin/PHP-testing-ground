@@ -10,8 +10,8 @@
       {if preg_match( '/^onstorage$|^failed.*$/', $item.status )}
         <a href="{$language}/recordings/delete/{$item.id}?forward={$FULL_URI|escape:url}" title="{#recordings__deleterecording#}" class="confirm right"{if $item.isintrooutro} data-confirm="{#recordings__deleterecording_introoutro#}"{/if}>{#delete#}</a>
       {/if}
-      <h3><a href="{$language}/recordings/details/{$item.id},{$item.title|filenameize}">{$item.title|escape:html}</a></h3>
-      {if $item.subtitle|stringempty}<h4>{$item.subtitle|escape:html}</h4>{/if}
+      <h3><a href="{$language}/recordings/details/{$item.id},{$item.title|filenameize}">{$item.title|escape:html|mb_wordwrap:25}</a></h3>
+      {if $item.subtitle|stringempty}<h4>{$item.subtitle|escape:html|mb_wordwrap:25}</h4>{/if}
     </div>
     {if $item.approvalstatus != 'approved' and $item.status == 'onstorage'}
       <span class="notpublished"><a href="{$language}/recordings/modifysharing/{$item.id}?forward={$FULL_URI|escape:url}">{#recordings__notpublished_warning#}</a></span>
