@@ -1,0 +1,281 @@
+I. Webszerver tanúsítványok kiállítása
+
+SSL szolgáltató adatai
+
+Szolgáltató: StartSSL
+Eljáró személy: Vajda Béla (felhatalmazva)
+Hitelesített cég: StreamNet Kft. (cégbírósági papírokkal, az ügyvezetõ felhívásával történt)
+Certificate request generálása
+
+A kiszemelt szerveren hajtsuk végre az alábbiakat.
+Leírás: http://apetec.com/support/GenerateSAN-CSR.htm
+
+Megjegyzés: A speciális OpenSSL konfigot igénylõ (.cnf fájl) leírások a wildcard cert igénylésre vonatkoznak, hagyjuk el, ha sima CSR-t készítünk!
+Hozzunk létre egy üres openssl.cnf fájlt, a tartalma legyen ez (a SAN, azaz a Subject Alternate Name miatt szükséges):
+
+[req]
+distinguished_name = req_distinguished_name
+req_extensions = v3_req
+
+[req_distinguished_name]
+countryName = HU
+countryName_default = HU
+stateOrProvinceName = Hungary
+stateOrProvinceName_default = Hungary
+localityName = Budapest
+localityName_default = Budapest
+organizationalUnitName =
+organizationalUnitName_default =
+commonName = Videosquare Ltd.
+commonName_max = 64
+
+[ v3_req ]
+# Extensions to add to a certificate request
+basicConstraints = CA:FALSE
+keyUsage = nonRepudiation, digitalSignature, keyEncipherment
+subjectAltName = @alt_names
+
+[alt_names]
+DNS.1 = videosquare.eu
+DNS.2 = *.videosquare.eu
+#IP.1 = 192.168.1.1
+#IP.2 = 192.168.69.14
+
+Generáljunk egy privát kulcsot:
+
+openssl genrsa -out videosquare.eu.key 2048
+
+Generáljuk le a CSR-t a config fájl alapján:
+
+openssl req -new -out videosquare.eu.csr -key videosquare.eu.key -config openssl.cnf
+
+Pár dologra rákérdez, jóvá kell hagyni. CSR ellenõrzése:
+
+$ openssl req -text -noout -in videosquare.eu.csr
+
+Certificate Request:
+    Data:
+        Version: 0 (0x0)
+        Subject: C=HU, ST=Hungary, L=Budapest
+        Subject Public Key Info:
+            Public Key Algorithm: rsaEncryption
+            RSA Public Key: (2048 bit)
+                Modulus (2048 bit): ...
+                Exponent: 65537 (0x10001)
+        Attributes:
+        Requested Extensions:
+            X509v3 Basic Constraints:
+                CA:FALSE
+            X509v3 Key Usage:
+                Digital Signature, Non Repudiation, Key Encipherment
+            X509v3 Subject Alternative Name:
+                DNS:videosquare.eu, DNS:*.videosquare.eu
+    Signature Algorithm: sha1WithRSAEncryption
+    ...
+
+Ld. SAN mezõ.
+
+II. Tanúsítványok elõkészítése
+
+Az CA szolgáltató rootját és intermediate tanúsítványát töltsük le a megfelelõ helyrõl az /etc/apache2/certs/ könyvtárba. PEM formátum lesz szükséges.
+Pár megjegyzés:
+Globál szolgáltató: OK, a böngészõk tartalmazzák a root-ot
+Helyi CA-nál (tipikusan private cloud telepítéseknél, ld. ITSH):
+Windows Certificate Store-ba vegyük fel a root CA-kat (Trusted Certificate Store)
+Firefox: A saját store-jába kell telepíteni
+StartSSL
+Ld: https://www.startssl.com/certs/ (figyeljünk oda a class1/2/3 intermediate-ekre is):
+ca.pem
+sub.class1.server.ca.pem (személy/cég azonosítás nélküli)
+sub.class2.server.ca.pem (személy-azonosított)
+sub.class3.server.ca.pem (cég-azonosított)
+sub.class4.server.ca.pem (?)
+
+cat sub.class1.server.ca.pem ca.pem >> ca-certs.crt
+
+Céges root (intermediate) CA tanúsítványok
+Ezeket is össze kell másolni ha több van, az Apache-nak és Lighttpdnek is kell. Továbbá a Windows Certificate Store-ba, illetve FF-nek a saját store-jába fel kell tenni (teszteléshez, a kliens gépeken ez egy belsõ céges rendszernél nyilván fel van téve).
+ITSH példa:
+
+cat rootca1.cer rootca2.cer > itsh_root_certs.pem
+
+III. Apache
+
+videosquare.hu.t-internal.com.key: privát kulcs (CSR-er elõtt generálva)
+videosquare.hu.t-internal.com.pem: tanúsítvány (StartSSL)
+videosquare.hu.t-internal.com.chained.pem: tanúsítvány + privát kulcs (egybe kell másolni!).
+
+cat videosquare.hu.t-internal.com.cer videosquare.hu.t-internal.com.key > videosquare.hu.t-internal.com.chained.pem
+
+
+Szerver globális konfig
+/etc/apache2/ports.conf (IP cím és port beállítása):
+
+...
+
+<IfModule mod_ssl.c>
+    # If you add NameVirtualHost *:443 here, you will also have to change
+    # the VirtualHost statement in /etc/apache2/sites-available/default-ssl
+    # to <VirtualHost *:443>
+    Listen 91.120.59.233:443
+</IfModule>
+
+<IfModule mod_gnutls.c>
+    Listen 91.120.59.233:443
+</IfModule>
+
+Virtual host
+
+<VirtualHost 91.120.59.233:80>
+
+... (normal config)
+
+</VirtualHost>
+
+<IfModule mod_ssl.c>
+<VirtualHost 91.120.59.233:443>
+    ServerAdmin support@videosquare.eu
+    DocumentRoot /var/www/videosquare.eu/httpdocs
+    ServerName videosquare.eu
+    ServerAlias *.videosquare.eu
+
+    Alias /php5-fcgi php5-fcgi
+
+    <Directory />
+      Options FollowSymLinks
+      AllowOverride None
+    </Directory>
+    <Directory /var/www/videosquare.eu/httpdocs>
+      Options Indexes FollowSymLinks MultiViews
+      AllowOverride All
+      Order allow,deny
+      Allow from all
+    </Directory>
+
+    LogLevel warn
+    ErrorLog ${APACHE_LOG_DIR}/videosquare.eu-ssl-error.log
+    CustomLog ${APACHE_LOG_DIR}/videosquare.eu-ssl-access.log combined
+
+        SSLEngine on
+        SSLProtocol all -SSLv2
+        SSLHonorCipherOrder On
+        SSLCipherSuite EECDH+AES:EDH+AES:-SHA1:EECDH+RC4:EDH+RC4:RC4-SHA:EECDH+AES256:EDH+AES256:AES256-SHA:!aNULL:!eNULL:!EXP:!LOW:!MD5
+        SSLCertificateFile /etc/apache2/certs/wildcard.videosquare.eu.pem
+        SSLCertificateKeyFile /etc/apache2/certs/wildcard.videosquare.eu.key
+        SSLCertificateChainFile /etc/apache2/certs/startssl-certs-class2.crt
+
+</VirtualHost>
+</IfModule>
+
+ITSH-hoz például:
+
+SSLEngine on
+SSLProtocol all -SSLv2
+SSLHonorCipherOrder On
+SSLCipherSuite EECDH+AES:EDH+AES:-SHA1:EECDH+RC4:EDH+RC4:RC4-SHA:EECDH+AES256:EDH+AES256:AES256-SHA:!aNULL:!eNULL:!EXP:!LOW:!MD5
+SSLCertificateFile /etc/apache2/certs/videosquare.hu.t-internal.com.chained.pem
+SSLCertificateKeyFile /etc/apache2/certs/videosquare.hu.t-internal.com.key
+SSLCertificateChainFile /etc/apache2/certs/itsh_root_certs.pem
+
+SSL force
+HTTP Strict Transport Security (HSTS) headert küldünk és a http://-t https://-re rewrite-oljuk.
+/var/www/videosquare.eu/httpdocs/.htpasswd (repóból jön, de ha nincs tanúsítvány, ki kell kommentezni!):
+
+<IfModule mod_ssl.c>
+# HTTPS FORCE
+RewriteCond %{HTTPS} off
+RewriteCond %{THE_REQUEST} !checkstreamaccess
+RewriteRule .* https://%{HTTP_HOST}%{REQUEST_URI} [redirect=301,L]
+Header set Strict-Transport-Security "max-age=86400"
+</IfModule>
+
+IV. Lighttpd
+
+Lighttpd SSL config:
+
+$SERVER["socket"] == "10.232.126.57:443" {
+  ssl.engine  = "enable"
+  ssl.pemfile = "/etc/apache2/certs/staticvideosquare.hu.t-internal.com.chained.pem"
+  ssl.ca-file = "/etc/apache2/certs/itsh_root_certs.pem"
+
+  ssl.cipher-list = "ECDHE-RSA-AES256-SHA384:AES256-SHA256:RC4-SHA:RC4:HIGH:!MD5:!aNULL:!EDH:!AESGCM"
+  ssl.honor-cipher-order = "enable"
+  ssl.use-sslv2          = "disable"
+
+}
+
+Lighttpd konfig
+
+/etc/lighttpd/conf-enabled/10-ssl.conf:
+
+$SERVER["socket"] == "91.120.59.234:443" {
+  ssl.engine  = "enable"
+  ssl.pemfile = "/etc/apache2/certs/wildcard.videosquare.eu.pem"
+  ssl.ca-file = "/etc/apache2/certs/startssl-certs-class2.crt"
+
+  ssl.cipher-list = "ECDHE-RSA-AES256-SHA384:AES256-SHA256:RC4-SHA:RC4:HIGH:!MD5:!aNULL:!EDH:!AESGCM"
+  ssl.honor-cipher-order = "enable"
+  ssl.use-sslv2          = "disable"
+  $HTTP["host"] == "static.dev.videosquare.eu" {
+    ssl.pemfile = "/etc/apache2/certs/static.dev.videosquare.eu.pem"
+        ssl.ca-file = "/etc/apache2/certs/ca-certs.crt"
+  }
+  $HTTP["host"] == "dev.videosquare.eu" {
+    ssl.pemfile = "/etc/apache2/certs/dev.videosquare.eu.chained.pem"
+  }
+}
+
+HSTS állításhoz (HTTPS force)
+
+/etc/lighttpd/conf-enabled/50-forcehttps.conf:
+
+#redirect everything, permanently
+$HTTP["scheme"] == "http" {
+    $HTTP["host"] =~ ".*" {
+        url.redirect-code = 301
+        url.redirect = (".*" => "https://%0$0")
+    }
+}
+
+# set HSTS header
+# needs mod_setenv
+$HTTP["scheme"] == "https" {
+    setenv.add-response-header = (
+        "Strict-Transport-Security" => "max-age=86400"
+    )
+}
+
+V. Konverziók
+
+A formátumok korrekt leírása itt: http://www.gtopia.org/blog/2010/02/der-vs-crt-vs-cer-vs-pem-certificates/
+További segítség: https://support.ssl.com/Knowledgebase/Article/View/19/0/der-vs-crt-vs-cer-vs-pem-certificates-and-how-to-convert-them
+StartSSL
+
+Nincs szükség konverzióra, PEM encoded tanúsítvány direktben jó.
+ITSH
+
+PEM-et adtak CER kiterjesztéssel és Windows sorvéggel (dos2unix kell, különben nem eszik meg).
+Példák
+
+Convert a DER file (.crt .cer .der) to PEM:
+
+openssl x509 -inform der -in certificate.cer -out certificate.pem
+
+Privát kulcs hiba esetén
+Például az Apache ezt adja:
+
+[Fri Mar 07 14:59:57 2014] [error] Unable to configure RSA server private key 
+[Fri Mar 07 14:59:57 2014] [error] SSL Library Error: 185073780 error:0B080074:x509 certificate routines:X509_check_private_key:key values mismatch
+
+Tehát nem tudja betölteni a privát kulcsot, nem egyezik a tanúsítottal. A manuális ellenõrzéshez a következõ parancsok kellenek.
+Tanúsítvány modulus (összehasonlításhoz):
+
+openssl x509 -noout -text -in wildcard.videosquare.eu.cer -modulus
+...
+Modulus=B3...D1
+
+Privát kulcs modulus:
+
+openssl rsa -noout -text -in wildcard.videosquare.eu.key -modulus
+
+Verify that the certificate and private key is saved in Notepad and that it has no trailing spaces. The "modulus" and "public exponent" portions in the key and the certificate must match exactly.
