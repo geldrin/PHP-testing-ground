@@ -33,7 +33,6 @@ $config = array(
   ),
   //-----
   'logemails'    => array(
-    'dev@dotsamazing.com',
     'hiba@videosqr.com',
   ),
   //-----
