@@ -98,22 +98,22 @@ for ($i = 0; $i < count($org_contracts); $i++ ) {
 			u.id
 		ORDER BY
 			firstloggedin";
-
+			
 	unset($users);
-
+	
 	try {
 		$users = $db->Execute($query);
 	} catch (exception $err) {
 		$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] SQL query failed.\n" . trim($query) . "\n" . $err . "\n", $sendmail = true);
 		exit -1;
 	}
-
+	
 	// User exist in DB, regenerate
 	if ( $users->RecordCount() < 1 ) {
 //		echo "No activated users found for this organization\n";
 		continue;
 	}
-
+	
 	// Print users to log
 	$accounting_log .= "Client: " . $org_contracts[$i]['name'] . " (" . $org_contracts[$i]['orgid'] . "):\n";
 	$accounting_log .= "Accounting period: " . $firstloggedin_startdate . "-" . $firstloggedin_enddate . "\n";
