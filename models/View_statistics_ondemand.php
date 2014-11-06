@@ -16,4 +16,9 @@ class View_statistics_ondemand extends \Model\View_statistics {
 
   }
 
+  protected function newSlice( $values ) {
+    unset( $values['positionuntil'] );
+    parent::newSlice($values);
+  }
+
 }
