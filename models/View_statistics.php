@@ -40,6 +40,19 @@ abstract class View_statistics extends \Springboard\Model {
   }
 
   protected function newSlice( $values ) {
+    if ( $values['action'] == 'PLAY' ) {
+
+      $lastslice = $this->getLastSlice( $values );
+      // SEEK utan jon egy PLAY akkor nem hozunk letre uj sliceot mert a
+      // SEEK-ben "bennevan" a PLAY
+      if (
+           $lastslice and
+           $lastslice['startaction'] == 'SEEK' and !$lastslice['stopaction']
+         )
+        return $this->updateSlice( $values ); // akkor updateljuk, nem krealunk ujjat
+
+    }
+
     $values['startaction'] = $values['action'];
     $this->insert( $values );
   }
@@ -53,17 +66,32 @@ abstract class View_statistics extends \Springboard\Model {
     $this->updateSlice( $values, $values['action'] );
   }
 
-  protected function updateSlice( $values, $stopaction = null ) {
-    $viewid   = $this->db->qstr( $values['viewsessionid'] );
-    $this->id = $this->db->getOne("
-      SELECT id
+  protected function getLastSlice( $values ) {
+    if ( $this->row )
+      return $this->row;
+
+    $viewid = $this->db->qstr( $values['viewsessionid'] );
+    $ret    = $this->db->getRow("
+      SELECT *
       FROM " . $this->table . "
       WHERE viewsessionid = $viewid
       ORDER BY id DESC
       LIMIT 1
     ");
 
-    if ( !$this->id )
+    if ( $ret ) {
+      $this->id  = $ret['id'];
+      $this->row = $ret;
+    }
+
+    return $ret;
+
+  }
+
+  protected function updateSlice( $values, $stopaction = null ) {
+    $row = $this->getLastSlice( $values );
+
+    if ( !$row )
       throw new \Exception("No open slice found!");
 
     $filteredvalues = array();
