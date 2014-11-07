@@ -44,6 +44,12 @@ if ( is_file( $app->config['datapath'] . 'jobs/job_remove_files.stop' ) or is_fi
     exit;
 }
 
+
+$filter = $jconf['dbstatus_copystorage_ok'] . "|" . $jconf['dbstatus_conv'] . "|" . $jconf['dbstatus_convert'] . "|" . $jconf['dbstatus_stop'] . "|" . $jconf['dbstatus_copystorage'] . "|" . $jconf['dbstatus_copyfromfe'] . "|" . $jconf['dbstatus_copyfromfe_ok'] . "|" . $jconf['dbstatus_reconvert'] . "|" . $jconf['dbstatus_markedfordeletion'];
+updateRecordingVersionStatusApplyFilter(748, $jconf['dbstatus_deleted'], "all", $filter);
+
+exit;
+
 // Runover control (avoid executing job multiple times)
 $devsite = "";
 if ( $app->config['baseuri'] == "dev.videosquare.eu/" ) $devsite = ".dev";
@@ -323,7 +329,7 @@ if ( $recordings !== false ) {
             updateRecordingStatus($recording['id'], $jconf['dbstatus_deleted'], "content");
             // recordings_versions.status := "markedfordeletion" for all content surrogates (will be deleted in the next step, see below)
             $filter = $jconf['dbstatus_copystorage_ok'] . "|" . $jconf['dbstatus_conv'] . "|" . $jconf['dbstatus_convert'] . "|" . $jconf['dbstatus_stop'] . "|" . $jconf['dbstatus_copystorage'] . "|" . $jconf['dbstatus_copyfromfe'] . "|" . $jconf['dbstatus_copyfromfe_ok'] . "|" . $jconf['dbstatus_reconvert'];
-            updateRecordingVersionStatusApplyFilter($recording['id'], $jconf['dbstatus_markedfordeletion'], "content", $filter);
+            updateRecordingVersionStatusApplyFilter($recording['id'], $jconf['dbstatus_markedfordeletion'], "content|pip", $filter);
             // contentsmilstatus
             updateRecordingStatus($recording['id'], null, "contentsmil");
         }

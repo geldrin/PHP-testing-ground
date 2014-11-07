@@ -476,8 +476,6 @@ global $app, $debug, $jconf, $myjobid, $db;
 			rv.recordingid = " . $recordingid . " AND
 			rv.encodingprofileid = ep.id" . $sql_typefilter . $sql_statusfilter;
 
-//echo $query . "\n";
-
 	try {
 		$rs = $db->Execute($query);
 	} catch (exception $err) {
