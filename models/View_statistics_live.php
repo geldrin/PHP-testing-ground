@@ -15,8 +15,7 @@ class View_statistics_live extends \Model\View_statistics {
   }
 
   protected function newSlice( $values ) {
-    unset( $values['timestampuntil'] );
-    $values['timestampfrom'] = date('Y-m-d H:i:s');
+    $values['timestampuntil'] = $values['timestampfrom'] = date('Y-m-d H:i:s');
     parent::newSlice( $values );
   }
 
