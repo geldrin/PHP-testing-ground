@@ -280,7 +280,7 @@ class Controller extends \Visitor\Controller {
       $password
     );
     
-    if ( !$uservalid ) {
+    if ( $uservalid !== true ) {
       
       $message = sprintf(
         $l('users', 'accessdenied'),
