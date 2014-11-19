@@ -664,6 +664,7 @@ global $debug, $app, $jconf, $myjobid;
     'timestamp'       => $stat_record['timestamp'],
     'livefeedid'      => $stat_record['livefeedid'],
     'livefeedstreamid'    => $stat_record['livefeedstreamid'],
+    'streamingserverid'     => $stat_record['streamserver'],
     'iscontent'       => $stat_record['iscontent'],
     'country'       => $stat_record['country'],
     'numberofflashwin'    => $stat_record['flashwin'],

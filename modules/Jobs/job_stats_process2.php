@@ -288,7 +288,7 @@ for ( $statsidx = 0; $statsidx < count($stats_config); $statsidx++ ) {
         $server_idx = findMediaServers($media_servers, $stat['streamserver']);
         if ( $server_idx === false ) {
                $errors .= print_r($stat, true) . "\n";
-               $server_idx = 0;
+               $server_idx = 1;
         }
         
         //// Statistics records filtered
@@ -627,9 +627,9 @@ global $debug, $app, $jconf, $myjobid;
     'timestamp'             => $stat_record['timestamp'],
     'livefeedid'            => $stat_record['livefeedid'],
     'livefeedstreamid'      => $stat_record['livefeedstreamid'],
+    'streamingserverid'     => $stat_record['streamserver'],
     'iscontent'             => 0,
     'country'               => $stat_record['country'],
-    // 'streamserver'   => $stat_record['streamserver'],
     'numberofflashwin'      => $stat_record['flashwin'],
     'numberofflashmac'      => $stat_record['flashmac'],
     'numberofflashlinux'    => $stat_record['flashlinux'],
@@ -645,7 +645,7 @@ global $debug, $app, $jconf, $myjobid;
     $liveStats = $app->bootstrap->getModel($db_stats_table);
     $liveStats->insert($values);
   } catch (exception $err) {
-    $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] SQL operation failed." . trim($query), $sendmail = false); // TRUE!!!!
+    $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] SQL operation failed." . print_r($values, true), $sendmail = false); // TRUE!!!!
     return false;
   }
 
