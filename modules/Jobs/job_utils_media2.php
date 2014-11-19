@@ -726,7 +726,7 @@ global $db, $jconf, $debug, $myjobid;
 		WHERE
 			id = " . $encodingprofileid . " AND
 			disabled = 0";
-// echo $query . PHP_EOL;
+
 	try {
 		$profile = $db->getArray($query);
 	} catch (exception $err) {

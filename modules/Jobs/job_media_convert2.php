@@ -264,7 +264,7 @@ global $jconf, $debug, $db, $app;
 			rv.recordingid = r.id AND
 			r.encodinggroupid = eg.id AND
 			rv.converternodeid = cn.id AND
-			cn.server = 'conv-1.videosquare.eu' AND
+			cn.server = '". $node ."' AND
 			cn.disabled = 0
 		ORDER BY
 			rv.encodingorder,
