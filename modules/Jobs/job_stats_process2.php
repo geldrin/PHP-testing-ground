@@ -105,6 +105,13 @@ $app->watchdog();
 // Establish database connection
 $db = db_maintain();
 
+// Check GeoIP database
+$geoip = true;
+if ( !geoip_db_avail(GEOIP_COUNTRY_EDITION) ) {
+    $debug->log($jconf['log_dir'], $myjobid . ".log", "[WARN] GeoIP database is not available. Please check.", $sendmail = false);
+    $geoip = false;
+}
+
 // Delete all stuff - if required!
 //removeStatsAll($stats_config, true);
 
@@ -279,11 +286,17 @@ for ( $statsidx = 0; $statsidx < count($stats_config); $statsidx++ ) {
         $platform = findStreamingClientPlatform($stat['useragent']);
 
         // Country (geo IP)
-        $country = geoip_country_code_by_name($stat['ipaddress']);
-        if ( $country === false ) {
-            $country = "notdef";
+        if ( $geoip ) {
+            if ( !isIpPrivate($stat['ipaddress']) ) {
+                $country = @geoip_country_code_by_name($stat['ipaddress']);
+                if ( $country === false ) {
+                    $country = "notdef";
+                }
+            } else {
+                    $country = "local";
+            }
         }
-
+        
         // Find Stream server
         $server_idx = findMediaServers($media_servers, $stat['streamserver']);
         if ( $server_idx === false ) {

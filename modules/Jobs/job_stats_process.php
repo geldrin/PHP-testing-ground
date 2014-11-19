@@ -105,8 +105,15 @@ $app->watchdog();
 // Establish database connection
 $db = db_maintain();
 
+// Check GeoIP database
+$geoip = true;
+if ( !geoip_db_avail(GEOIP_COUNTRY_EDITION) ) {
+    $debug->log($jconf['log_dir'], $myjobid . ".log", "[WARN] GeoIP database is not available. Please check.", $sendmail = false);
+    $geoip = false;
+}
+
 // Delete all stuff - if required!
-//removeStatsAll($stats_config, true);
+removeStatsAll($stats_config, true);
 
 // Check Wowza records with open endtime
 $now_hour = date("G");
@@ -280,11 +287,17 @@ for ( $statsidx = 0; $statsidx < count($stats_config); $statsidx++ ) {
 
       $platform = findStreamingClientPlatform($stat['clientplayer']);
 
-      // Country (geo IP)
-      $country = geoip_country_code_by_name($stat['clientip']);
-      if ( $country === false ) {
-        $country = "notdef";
-      }
+        // Country (geo IP)
+        if ( $geoip ) {
+            if ( !isIpPrivate($stat['clientip']) ) {
+                $country = @geoip_country_code_by_name($stat['clientip']);
+                if ( $country === false ) {
+                    $country = "notdef";
+                }
+            } else {
+                    $country = "local";
+            }
+        }
       
         // Find Stream server
         $server_idx = findMediaServers($media_servers, $stat['streamserver']);
