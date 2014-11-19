@@ -218,17 +218,21 @@ global $jconf, $debug, $app;
 	// INIT COMMAND ASSEMBLY ////////////////////////////////////////////////////////////////////////
 	$ffmpeg_audio       = null; // audio encoding parameters
 	$ffmpeg_video       = null;	// video encoding parameters
+	$ffmpeg_input       = null; // input filename and options
 	$ffmpeg_payload     = null; // contains input option on normal encoding OR overlay filter on pip encoding
 	$ffmpeg_pass_prefix = null; // used with multipass encoding (passlogfiles will be written here, with the given prefix)
 	$ffmpeg_globals     = $jconf['encoding_nice'] ." ". $jconf['ffmpeg_alt'] ." -v ". $jconf['ffmpeg_loglevel'] ." -y";
 	$ffmpeg_output      = " -threads ". $jconf['ffmpeg_threads'] ." -f ". $profile['filecontainerformat'] ." ". $rec['output_file'];
 	
-	if ($profile['type'] == 'recording' || $profile['type'] == 'content' ) {
+	$audio_filter = null;
+	$video_filter = null;
+	
+	if ($profile['type'] == 'recording' || $profile['type'] == 'content' || ($profile['type'] == 'pip' && $overlay === null)) {
 	// SINGLE MEDIA //
 		$idx = '';
 		if ($profile['type'] == 'content') $idx = 'content';
 		
-		$ffmpeg_payload = " -i ". $rec[$idx .'master_filename'];
+		$ffmpeg_input = " -i ". $rec[$idx .'master_filename'];
 		
 		// Audio //
 		if ($main['hasaudio'] === false) {
@@ -236,8 +240,7 @@ global $jconf, $debug, $app;
 		} else {
 			// When using ffmpeg's built-in aac library, "-strict experimental" option is required.
 			if ($profile['audiocodec'] == 'aac') $ffmpeg_audio .= " -strict experimental";
-			
-			// $ffmpeg_audio .= " -async ". $jconf['ffmpeg_async_frames'] ." -c:a ". $profile['audiocodec'] ." -ac ". $main['audiochannels'] ." -b:a ". $main['audiobitrate'] ." -ar ". $main['audiosamplerate'];
+
 			$ffmpeg_audio .= " -c:a ". $profile['audiocodec'] ." -ac ". $main['audiochannels'] ." -b:a ". $main['audiobitrate'] ." -ar ". $main['audiosamplerate'];
 		}
 
@@ -246,7 +249,7 @@ global $jconf, $debug, $app;
 			$ffmpeg_video = " -vn";
 		} else {
 			// H.264 profile
-			// $ffmpeg_payload .= " -filter_complex '[0:v] scale=w=". $main['resx'] .":h=". $main['resy'] .":force_original_aspect_ratio=decrease:flags=sws_flags=bicubic"; // placeholder for filter based scaling/bounding box
+			// $video_filter .= "[0:v] scale=w=". $main['resx'] .":h=". $main['resy'] .":force_original_aspect_ratio=decrease:flags=sws_flags=bicubic"; // placeholder for filter based scaling/bounding box
 			$ffmpeg_profile = " -profile:v " . $profile['ffmpegh264profile'] ." -pix_fmt yuv420p";
 			$ffmpeg_preset  = " -preset:v ". $profile['ffmpegh264preset'];
 			$ffmpeg_resize  = " -s ". $main['resx'] ."x". $main['resy'];
@@ -258,6 +261,13 @@ global $jconf, $debug, $app;
 			// ffmpeg video encoding parameters
 			$ffmpeg_video   = " -c:v libx264" . $ffmpeg_profile . $ffmpeg_resize . $ffmpeg_aspect . $ffmpeg_deint . $ffmpeg_fps . $ffmpeg_bitrate;
 		}
+		
+		// filters //
+		$tmp = array();
+		if ($audio_filter) $tmp[] = $audio_filter;
+		if ($video_filter) $tmp[] = $video_filter;
+		if (count($tmp) >= 1) $ffmpeg_payload = " -filter_complex '". implode(";", $tmp) ."'";
+		unset($tmp);
 		
 	} elseif($profile['type'] === 'pip') {
 	// PICTURE-IN-PICTURE //
@@ -277,20 +287,17 @@ global $jconf, $debug, $app;
 			
 			// $audio_filter = " [1:a][2:a] amix=inputs=2:duration=longest, apad"; // APAD FILTERREL NEM ALL LE A KONVERZIO. (CHECK NEEDED!)
 			$audio_filter  = " [1:a][2:a] amix=inputs=2:duration=longest";
-			// $ffmpeg_audio .= " -async ". $jconf['ffmpeg_async_frames'] ." -c:a ". $profile['audiocodec'] ." -ac ". $audiochannels ." -b:a ". $audiobitrate ." -ar ". $audiosamplerate;
 			$ffmpeg_audio .= " -c:a ". $profile['audiocodec'] ." -ac ". $audiochannels ." -b:a ". $audiobitrate ." -ar ". $audiosamplerate;
 		} else {
 			if ($main['hasaudio'] === true) {
 				// ha csak egyetlen audio input van, akkor azt keveri be, nem kell 'amix' filter
 				$audio_filter  = null;
 				// vedd a main hangbeallitasait:
-				// $ffmpeg_audio .= " -async ". $jconf['ffmpeg_async_frames'] ." -c:a ". $profile['audiocodec'] ." -ac ". $main['audiochannels'] ." -b:a ". $main['audiobitrate'] ." -ar ". $main['audiosamplerate'];
 				$ffmpeg_audio .= " -c:a ". $profile['audiocodec'] ." -ac ". $main['audiochannels'] ." -b:a ". $main['audiobitrate'] ." -ar ". $main['audiosamplerate'];
 			} elseif( $overlay['hasaudio'] === true) {
 				// ha csak egyetlen audio input van, akkor azt keveri be, nem kell 'amix' filter
 				$audio_filter  = null;
 				// vedd az overlay hangbeallitasait:
-				// $ffmpeg_audio .= " -async ". $jconf['ffmpeg_async_frames'] ." -c:a ". $profile['audiocodec'] ." -ac ". $overlay['audiochannels'] ." -b:a ". $overlay['audiobitrate'] ." -ar ". $overlay['audiosamplerate'];
 				$ffmpeg_audio .= " -c:a ". $profile['audiocodec'] ." -ac ". $overlay['audiochannels'] ." -b:a ". $overlay['audiobitrate'] ." -ar ". $overlay['audiosamplerate'];
 			} else {
 				"No audiochannels\n";
@@ -319,15 +326,20 @@ global $jconf, $debug, $app;
 		$pip = calculate_mobile_pip($rec['mastervideores'], $rec['contentmastervideores'], $profile);
 		$err['encodingparams'] = array_merge($err['encodingparams'], $pip);
 		
-		$ffmpeg_payload .= " -f lavfi -i color=c=0x000000:size=". $main['resx'] ."x". $main['resy'] .":duration=". $target_length;
-		$ffmpeg_payload .= " -i ". $rec['contentmaster_filename'] ." -i ". $rec['master_filename'];
-		$ffmpeg_payload .= " -filter_complex '[1:v]". ($main['deinterlace'] ? " yadif," : null) ." scale=w=". $main['resx'] .":h=". $main['resy'] .":sws_flags=bicubic [main];";
-		$ffmpeg_payload .= " [2:v] ". ($overlay['deinterlace'] ? " yadif," : null) ." scale=w=". $pip['pip_res_x'] .":h=". $pip['pip_res_y'] .":sws_flags=bicubic [pip];";
-		$ffmpeg_payload .= " [0:v][main] overlay=repeatlast=0 [bg];";
-		$ffmpeg_payload .= " [bg][pip] overlay=x=". $pip['pip_x'] .":y=". $pip['pip_y'] .":repeatlast=0";
-		$ffmpeg_payload .= ($audio_filter === null) ? ("'") : ("; ". $audio_filter ."'");
+		$ffmpeg_input .= " -f lavfi -i color=c=0x000000:size=". $main['resx'] ."x". $main['resy'] .":duration=". $target_length;
+		$ffmpeg_input .= " -i ". $rec['contentmaster_filename'] ." -i ". $rec['master_filename'];
 		
-		unset($pip);
+		$video_filter .= "[1:v]". ($main['deinterlace'] ? " yadif," : null) ." scale=w=". $main['resx'] .":h=". $main['resy'] .":sws_flags=bicubic [main];";
+		$video_filter .= " [2:v] ". ($overlay['deinterlace'] ? " yadif," : null) ." scale=w=". $pip['pip_res_x'] .":h=". $pip['pip_res_y'] .":sws_flags=bicubic [pip];";
+		$video_filter .= " [0:v][main] overlay=repeatlast=0 [bg];";
+		$video_filter .= " [bg][pip] overlay=x=". $pip['pip_x'] .":y=". $pip['pip_y'] .":repeatlast=0";
+		
+		$tmp = array();
+		if ($video_filter) $tmp[] = $video_filter;
+		if ($audio_filter) $tmp[] = $audio_filter;
+		if (count($tmp) >= 1) $ffmpeg_payload = " -filter_complex '". implode(";", $tmp) ."'";
+		
+		unset($pip, $tmp);
 	}
 	
 	// ASSEMBLE COMMAND LIST
@@ -342,7 +354,7 @@ global $jconf, $debug, $app;
 	
 	if ($profile['videopasses'] == 1 || $profile['videopasses'] === null) {
 	// Single encoding
-		$cmd  = $ffmpeg_globals . $ffmpeg_payload . $ffmpeg_video . $ffmpeg_audio . $ffmpeg_output;
+		$cmd  = $ffmpeg_globals . $ffmpeg_input . $ffmpeg_payload . $ffmpeg_video . $ffmpeg_audio . $ffmpeg_output;
 		$command[1] = $cmd;
 		
 	} elseif($profile['videopasses'] == 2) {
@@ -352,13 +364,13 @@ global $jconf, $debug, $app;
 
 		// first-pass
 		if (!file_exists($ffmpeg_passlogfile .".mbtree")) {
-			$cmd  = $ffmpeg_globals . $ffmpeg_payload ." -pass 1 -passlogfile ". $ffmpeg_pass_prefix . $ffmpeg_video . $ffmpeg_audio;
+			$cmd  = $ffmpeg_globals . $ffmpeg_input . $ffmpeg_payload ." -pass 1 -passlogfile ". $ffmpeg_pass_prefix . $ffmpeg_video . $ffmpeg_audio;
 			$cmd .= " -threads ". $jconf['ffmpeg_threads'] ." -f ". $profile['filecontainerformat'] ." /dev/null";
 			$command[1] = $cmd;
 		}
 		
 		// second-pass
-		$cmd  = $ffmpeg_globals . $ffmpeg_payload ." -pass 2 -passlogfile ". $ffmpeg_pass_prefix . $ffmpeg_audio . $ffmpeg_video . $ffmpeg_output;
+		$cmd  = $ffmpeg_globals . $ffmpeg_input . $ffmpeg_payload ." -pass 2 -passlogfile ". $ffmpeg_pass_prefix . $ffmpeg_audio . $ffmpeg_video . $ffmpeg_output;
 		$command[2] = $cmd;
 	}
 	unset($cmd);
@@ -714,7 +726,7 @@ global $db, $jconf, $debug, $myjobid;
 		WHERE
 			id = " . $encodingprofileid . " AND
 			disabled = 0";
-
+// echo $query . PHP_EOL;
 	try {
 		$profile = $db->getArray($query);
 	} catch (exception $err) {

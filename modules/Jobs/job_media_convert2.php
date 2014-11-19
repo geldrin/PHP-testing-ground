@@ -99,7 +99,7 @@ while( !is_file( $app->config['datapath'] . 'jobs/' . $myjobid . '2.stop' ) and 
 			break;
 		}
 		// Picture-in-picture encoding: download content file as well
-		if ( $encoding_profile['type'] == "pip" ) {
+		if ( $encoding_profile['type'] == "pip" && $recording['islegacy'] == 0 ) {
 			$recording['iscontent'] = 1;
 			$err = copyMediaToConverter($recording); 
 			// Check if we need to stop conversion (do not handle error)
@@ -176,9 +176,7 @@ while( !is_file( $app->config['datapath'] . 'jobs/' . $myjobid . '2.stop' ) and 
 			$debug->log($jconf['log_dir'], $jconf['jobid_media_convert'] . ".log", "[INFO] Recording conversion summary.\n\n" . $log_buffer[$recording['id']], $sendmail = true);
 			unset($log_buffer[$recording['id']]);
 		}
-
 	}	// End of while(1)
-
 	// Close DB connection if open
 	if ( is_resource($db->_connectionID) ) $db->close();
 
@@ -211,7 +209,8 @@ global $jconf, $debug, $db, $app;
 			rv.encodingprofileid,
 			rv.encodingorder,
 			rv.iscontent,
-			rv.status,
+			rv.status AS recordingversionstatus,
+			rv.filename,
 			r.mastervideofilename,
 			r.mastervideoextension,
 			r.mastermediatype,
@@ -252,22 +251,25 @@ global $jconf, $debug, $db, $app;
 			r.contentmasterstatus,
 			r.ocrstatus,
 			r.mastersourceip,
-			r.contentmastersourceip
+			r.contentmastersourceip,
+			r.encodinggroupid,
+			eg.islegacy
 		FROM
 			recordings_versions AS rv,
 			recordings AS r,
+			encoding_groups AS eg,
 			converter_nodes AS cn
 		WHERE
-			( rv.status = '" . $jconf['dbstatus_convert'] ."' OR rv.status = '" . $jconf['dbstatus_reconvert'] . "' ) AND
+			( rv.status = '". $jconf['dbstatus_convert'] ."' OR rv.status = '". $jconf['dbstatus_reconvert'] ."' ) AND
 			rv.recordingid = r.id AND
+			r.encodinggroupid = eg.id AND
 			rv.converternodeid = cn.id AND
-			cn.server = '" . $node . "' AND
+			cn.server = 'conv-1.videosquare.eu' AND
 			cn.disabled = 0
 		ORDER BY
 			rv.encodingorder,
 			rv.recordingid
 		LIMIT 1";
-
 	try {
 		$recording = $db->getArray($query);
 	} catch (exception $err) {
@@ -570,9 +572,13 @@ global $app, $jconf, $global_log;
 
 	// STATUS: converting
 	updateRecordingVersionStatus($recording['recordingversionid'], $jconf['dbstatus_conv']);
-
 	// Output filename
-	$recording['output_basename'] = $recording['id'] ."_". $recording['recordingversionid'] . $profile['filenamesuffix'] . "." . $profile['filecontainerformat'];
+	if ($recording['islegacy'] == 1)  {
+		// $recording['output_basename'] = $recording['id'] . $profile['filenamesuffix'] .".". $profile['filecontainerformat'];
+		$recording['output_basename'] = $recording['filename'];
+	} else {
+		$recording['output_basename'] = $recording['id'] ."_". $recording['recordingversionid'] . $profile['filenamesuffix'] .".". $profile['filecontainerformat'];
+	}
 	$recording['output_file'] = $recording['temp_directory'] . $recording['output_basename'];
 
 	// Audio only: add placeholder thumbnail with a speaker icon
@@ -582,16 +588,28 @@ global $app, $jconf, $global_log;
 	}
 
 	$msg = '';
+	$encoding_params_main    = null;
+	$encoding_params_overlay = null;
+	
 	if ($profile['type'] === 'pip') {
-		$recording['iscontent'] = false;
-		$tmp = ffmpegPrep($recording, $profile);
-		$encoding_params_overlay = $tmp['params'];
-		$msg .= ($tmp['result'] === false) ? ($tmp['message']) : ("");
+		$no_cntnt = array($jconf['dbstatus_deleted'], $jconf['dbstatus_markedfordeletion'], NULL);
 		
-		$recording['iscontent'] = true;
+		if (in_array($recording['contentstatus'], $no_cntnt, 1) === false) {
+		// legacy mobile versions can lacking of content component, so we need to check content availabilty every time.
+		// if there's no content, skip the overlay parameter preparation step
+			$recording['iscontent'] = false;
+			$tmp = ffmpegPrep($recording, $profile);
+			$encoding_params_overlay = $tmp['params'];
+			$msg .= ($tmp['result'] === false) ? ($tmp['message']) : ("");
+			
+			$recording['iscontent'] = true;
+		}
+		
 		$tmp = ffmpegPrep($recording, $profile);
 		$encoding_params_main    = $tmp['params'];
 		$msg .= ($tmp['result'] === false) ? ($tmp['message']) : ("");
+		
+		unset($no_cntnt);
 	} else {
 		$tmp = ffmpegPrep($recording, $profile);
 		$encoding_params_main    = $tmp['params'];
