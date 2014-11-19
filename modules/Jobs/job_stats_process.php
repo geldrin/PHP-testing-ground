@@ -23,39 +23,6 @@ $jconf = $app->config['config_jobs'];
 $myjobid = $jconf['jobid_stats_process'];
 $debug = Springboard\Debug::getInstance();
 
-// !!!
-/*
-$x = strtotime("2014-09-08 12:33:23");
-$a = getTimelineGridSeconds($x, "left", 5 * 60);
-echo date("Y-m-d H:i:s", $x) . " -> " . date("Y-m-d H:i:s", $a) . "\n";
-
-$x = strtotime("2014-09-08 00:00:23");
-$a = getTimelineGridSeconds($x, "left", 5 * 60);
-echo date("Y-m-d H:i:s", $x) . " -> " . date("Y-m-d H:i:s", $a) . "\n";
-
-$x = strtotime("2014-09-08 12:00:23");
-$a = getTimelineGridSeconds($x, "left", 5 * 60);
-echo date("Y-m-d H:i:s", $x) . " -> " . date("Y-m-d H:i:s", $a) . "\n";
-
-$x = strtotime("2014-09-08 00:00:23");
-$a = getTimelineGridSeconds($x, "left", 60 * 60);
-echo date("Y-m-d H:i:s", $x) . " -> " . date("Y-m-d H:i:s", $a) . "\n";
-
-$x = strtotime("2014-12-08 12:00:23");
-$a = getTimelineGridSeconds($x, "left", 60 * 60);
-echo date("Y-m-d H:i:s", $x) . " -> " . date("Y-m-d H:i:s", $a) . "\n";
-
-$x = strtotime("2014-09-08 12:00:23");
-$a = getTimelineGridSeconds($x, "left", 60 * 60 * 24);
-echo date("Y-m-d H:i:s", $x) . " -> " . date("Y-m-d H:i:s", $a) . "\n";
-
-$x = strtotime("2014-12-08 12:00:23");
-$a = getTimelineGridSeconds($x, "left", 60 * 60 * 24);
-echo date("Y-m-d H:i:s", $x) . " -> " . date("Y-m-d H:i:s", $a) . "\n";
-
-exit; */
-// !!!
-
 // DEBUG !!!!
 $kaka = "";
 $kaka2 = "";
@@ -144,10 +111,17 @@ $db = db_maintain();
 // Check Wowza records with open endtime
 $now_hour = date("G");
 $now_min = date("i");
-if ( ( $now_hour == 11 ) and ($now_min > 0) and ($now_min < 5 ) ) checkWowzaOpenRecords();
+//if ( ( $now_hour == 11 ) and ($now_min > 0) and ($now_min < 5 ) ) checkWowzaOpenRecords();
 
 // Empty array for each record initialization
 $platforms_null = returnStreamingClientPlatformEmptyArray($platform_definitions);
+
+// Query media servers
+$media_servers = queryMediaServers();
+if ( $media_servers === false ) {
+    $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Cannot find media servers", $sendmail = true);
+    exit;
+}
 
 // Loop through defined statistics (5min, hourly, daily). See config.
 for ( $statsidx = 0; $statsidx < count($stats_config); $statsidx++ ) {
@@ -162,7 +136,8 @@ for ( $statsidx = 0; $statsidx < count($stats_config); $statsidx++ ) {
     if ( !is_readable($status_filename) ) {
 
       $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Stats status file: " . $status_filename . ".", $sendmail = true);
-
+      $stats_config[$statsidx]['lastprocessedtime'] = $vsq_epoch;
+      
     } else {
 
       $fh = fopen($status_filename, "r");
@@ -195,7 +170,7 @@ for ( $statsidx = 0; $statsidx < count($stats_config); $statsidx++ ) {
   }
 
   // Get last processed record to determine last processing time
-  $ltime = getLastStatsRecordFrom($stats_config[$statsidx]['sqltablename']);
+/*  $ltime = getLastStatsRecordFrom($stats_config[$statsidx]['sqltablename']);
   if ( $ltime === false ) {
     // Debug information for logging
     $debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Last processed time from db: no record found. Falling back to " . date("Y-m-d H:i:s", $vsq_epoch), $sendmail = false);
@@ -210,12 +185,9 @@ for ( $statsidx = 0; $statsidx < count($stats_config); $statsidx++ ) {
       $debug->log($jconf['log_dir'], $myjobid . ".log", "[WARN] Last processed time from status file (" . date("Y-m-d H:i:s" , $stats_config[$statsidx]['lastprocessedtime']) . ") and db (" . date("Y-m-d H:i:s", $ltime) . ") are NOT EQUAL! Falling back to db time.", $sendmail = false);
       $stats_config[$statsidx]['lastprocessedtime'] = $ltime;
     }
-  }
+  } */
 
   $start_interval = $stats_config[$statsidx]['lastprocessedtime'] + 1;
-
-// !!! DEBUG
-//$start_interval = strtotime("2014-07-04 14:50:00");
 
   $records_committed_all = 0;
   $processing_started = time();
@@ -285,12 +257,11 @@ for ( $statsidx = 0; $statsidx < count($stats_config); $statsidx++ ) {
     $records_processed = 0;
     $records_committed = 0;
     $stats_f = array();
+    $errors = "";
 
     while ( !$stats->EOF ) {
 
       $stat = $stats->fields;
-//echo "DEBUG: Wowza record\n";
-//var_dump($stat);
 
       // Live feed ID
 
@@ -314,23 +285,31 @@ for ( $statsidx = 0; $statsidx < count($stats_config); $statsidx++ ) {
       if ( $country === false ) {
         $country = "notdef";
       }
+      
+        // Find Stream server
+        $server_idx = findMediaServers($media_servers, $stat['streamserver']);
+        if ( $server_idx === false ) {
+           $errors .= print_r($stat, true) . "\n";
+           $server_idx = 1;
+        }
 
       // Is content?
-      $iscontent = 0;
+/*      $iscontent = 0;
       if ( $stat['wowzalocalstreamname'] == $stat['contentkeycode'] ) {
         $iscontent = 1;
       } elseif ( $stat['wowzalocalstreamname'] != $stat['keycode'] ) {
         $debug->log($jconf['log_dir'], $myjobid . ".log", "[WARN] No video/content match. Wowza says: " . $stat['wowzalocalstreamname'] . " / db keycode: " . $stat['keycode'] . "(record id: " . $stat['id'] . ")", $sendmail = false);
       }
+*/
 
       //// Statistics records filtered
       // Build array index
-      $idx = $streamid . "_" . $iscontent . "_" . $country; 
+      $idx = $streamid . "_" . $country . "_" . $server_idx;
       // Initialize (if not yet record is open)
       if ( !isset($stats_f[$feedid][$idx]) ) {
         $stats_f[$feedid][$idx] = $platforms_null;
         $stats_f[$feedid][$idx]['timestamp'] = date("Y-m-d H:i:s", $start_interval);
-        $stats_f[$feedid][$idx]['iscontent'] = $iscontent;
+        $stats_f[$feedid][$idx]['iscontent'] = 0;
       }
       // Add (repeat) livefeedid
       if ( !isset($stats_f[$feedid][$idx]['livefeedid']) ) {
@@ -344,6 +323,10 @@ for ( $statsidx = 0; $statsidx < count($stats_config); $statsidx++ ) {
       if ( !isset($stats_f[$feedid][$idx]['country']) ) {
         $stats_f[$feedid][$idx]['country'] = $country;
       }
+      // Streaming server
+      if ( !isset($stats_f[$feedid][$idx]['streamserver']) ) {
+        $stats_f[$feedid][$idx]['streamserver'] = $server_idx;
+      }
       // Increase platform counter
       if ( isset($stats_f[$feedid][$idx][$platform]) ) {
         $stats_f[$feedid][$idx][$platform]++;
@@ -356,8 +339,11 @@ for ( $statsidx = 0; $statsidx < count($stats_config); $statsidx++ ) {
       $stats->MoveNext();
     } // End of stats while loop
 
-    // Update results to DB
+    if ( !empty($errors) ) {
+        $debug->log($jconf['log_dir'], $myjobid . ".log", "[WARN] Media server not found for the following stat records:\n" . $errors, $sendmail = false);
+    }
 
+    // Update results to DB
     $records_committed = 0;
     if ( count($stats_f) > 0 ) {
 
@@ -416,12 +402,63 @@ $app->watchdog();
 
 exit;
 
+// Query media servers
+function queryMediaServers() {
+global $db, $debug, $myjobid, $app, $jconf;
+
+    $query = "
+        SELECT
+            css.id,
+            css.server,
+            css.serverip,
+            css.servicetype,
+            css.disabled
+        FROM
+            cdn_streaming_servers as css
+        WHERE
+            css.id > 0
+        ";
+
+    try {
+        $media_servers = $db->getArray($query);
+    } catch (exception $err) {
+        $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] SQL query failed." . trim($query), $sendmail = true);
+        return false;
+    }
+
+    if ( count($media_servers) < 1 ) return false;        
+
+    return $media_servers;
+}
+
+// Find media server
+function findMediaServers($media_servers, $server_fqdn) {
+
+    $server_idx = false;
+    for ($i = 0; $i < count($media_servers); $i++) {
+
+        $val = array_search ($server_fqdn, $media_servers[$i], false);
+        if ( $val !== false ) {
+            $server_idx = $media_servers[$i]['id'];
+            break;
+        }
+        
+    }
+
+    return $server_idx;
+}
+
 // Query active stream records from database in a time interval
 function queryStatsForInterval($start_interval, $end_interval, $streaming_server_app) {
 global $db, $debug, $myjobid, $app, $jconf, $kaka;
 
   $start_interval_datetime = date("Y-m-d H:i:s", $start_interval);
   $end_interval_datetime = date("Y-m-d H:i:s", $end_interval);
+
+  $sql_filter = "";
+  if ( $start_interval >= strtotime("2014-11-19 00:00:00") ) {
+    $sql_filter = "( css.streamingtype = 'cupertino' OR css.streamingtype = 'rtsp' ) AND ";
+  }
 
   $query = "
     SELECT
@@ -441,7 +478,7 @@ global $db, $debug, $myjobid, $app, $jconf, $kaka;
       css.wowzaclientid,
       css.rtspsessionid,
       css.streamingtype,
-      css.serverip,
+      css.serverip AS streamserver,
       css.clientip,
       css.encoder,
       css.url,
@@ -457,9 +494,9 @@ global $db, $debug, $myjobid, $app, $jconf, $kaka;
       livefeed_streams AS lfs,
       converter_nodes AS cn
     WHERE
-      css.wowzaappid = '" . $streaming_server_app . "' AND
-      ( css.streamingtype = 'http' OR css.streamingtype = 'rtsp' ) AND
-      css.clientip <> cn.serverip AND (
+      css.wowzaappid = '" . $streaming_server_app . "' AND " . $sql_filter . "
+      css.clientip <> cn.serverip AND
+      css.starttime	< css.endtime AND (
       ( css.starttime >= '" . $start_interval_datetime . "' AND css.starttime <= '" . $end_interval_datetime . "' ) OR  # START in the interval
       ( css.endtime >= '" . $start_interval_datetime . "'   AND css.endtime <= '" . $end_interval_datetime . "' ) OR    # END in the interval
       ( css.starttime <= '" . $end_interval_datetime . "' AND css.endtime IS NULL ) OR                  # Open record
@@ -644,7 +681,7 @@ global $debug, $app, $jconf, $myjobid;
     $liveStats = $app->bootstrap->getModel($db_stats_table);
     $liveStats->insert($values);
   } catch (exception $err) {
-    $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] SQL operation failed." . trim($query), $sendmail = false); // TRUE!!!!
+    $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] SQL operation failed." . print_r($values, true), $sendmail = false); // TRUE!!!!
     return false;
   }
 

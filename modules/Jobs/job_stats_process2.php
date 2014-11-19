@@ -23,39 +23,6 @@ $jconf = $app->config['config_jobs'];
 $myjobid = $jconf['jobid_stats_process'] . "2";
 $debug = Springboard\Debug::getInstance();
 
-// !!!
-/*
-$x = strtotime("2014-09-08 12:33:23");
-$a = getTimelineGridSeconds($x, "left", 5 * 60);
-echo date("Y-m-d H:i:s", $x) . " -> " . date("Y-m-d H:i:s", $a) . "\n";
-
-$x = strtotime("2014-09-08 00:00:23");
-$a = getTimelineGridSeconds($x, "left", 5 * 60);
-echo date("Y-m-d H:i:s", $x) . " -> " . date("Y-m-d H:i:s", $a) . "\n";
-
-$x = strtotime("2014-09-08 12:00:23");
-$a = getTimelineGridSeconds($x, "left", 5 * 60);
-echo date("Y-m-d H:i:s", $x) . " -> " . date("Y-m-d H:i:s", $a) . "\n";
-
-$x = strtotime("2014-09-08 00:00:23");
-$a = getTimelineGridSeconds($x, "left", 60 * 60);
-echo date("Y-m-d H:i:s", $x) . " -> " . date("Y-m-d H:i:s", $a) . "\n";
-
-$x = strtotime("2014-12-08 12:00:23");
-$a = getTimelineGridSeconds($x, "left", 60 * 60);
-echo date("Y-m-d H:i:s", $x) . " -> " . date("Y-m-d H:i:s", $a) . "\n";
-
-$x = strtotime("2014-09-08 12:00:23");
-$a = getTimelineGridSeconds($x, "left", 60 * 60 * 24);
-echo date("Y-m-d H:i:s", $x) . " -> " . date("Y-m-d H:i:s", $a) . "\n";
-
-$x = strtotime("2014-12-08 12:00:23");
-$a = getTimelineGridSeconds($x, "left", 60 * 60 * 24);
-echo date("Y-m-d H:i:s", $x) . " -> " . date("Y-m-d H:i:s", $a) . "\n";
-
-exit; */
-// !!!
-
 // DEBUG !!!!
 $kaka = "";
 $kaka2 = "";
@@ -90,13 +57,13 @@ if  ( file_exists($run_filename) ) {
 // --- CONFIG ---
 $platform_definitions = array(
   //  'string to find'  => "array index/sql column name"
-  'Flash/WIN'   => "flashwin",    // Examples: Flash/WIN 12,0,0,77
-  'Flash/MAC'   => "flashmac",    // Examples: Flash/MAC 12,0,0,77
-  'Flash/Linux' => "flashlinux",  // Examples: ?
-  'Flash'     => "flashwin",    // Examples: Flash/Wirecast/FM 1.0 (compatible; FMSc/1.0) | Flash/FMLE/3.0 (compatible; FMSc/1.0) (nem korrekt???)
-  'Android'   => "android",   // Examples: Samsung GT-I9100 stagefright/Beyonce/1.1.9 (Linux;Android 4.1.2)
-  'iPhone'    => "iphone",    // Examples: AppleCoreMedia/1.0.0.11D167 (iPhone; U; CPU OS 7_1 like Mac OS X; en_us)
-  'iPad'      => "ipad"     // Examples: AppleCoreMedia/1.0.0.10B329 (iPad; U; CPU OS 6_1_3 like Mac OS X; hu_hu)
+  'Flash/WIN'   => "flashwin",      // Example: Flash/WIN 12,0,0,77
+  'Flash/MAC'   => "flashmac",      // Example: Flash/MAC 12,0,0,77
+  'Flash/Linux' => "flashlinux",    // Example: ?
+  'Flash'       => "flashwin",      // Example: Flash/Wirecast/FM 1.0 (compatible; FMSc/1.0) | Flash/FMLE/3.0 (compatible; FMSc/1.0) (nem korrekt???)
+  'Android'     => "android",       // Example: Samsung GT-I9100 stagefright/Beyonce/1.1.9 (Linux;Android 4.1.2)
+  'iPhone'      => "iphone",        // Example: AppleCoreMedia/1.0.0.11D167 (iPhone; U; CPU OS 7_1 like Mac OS X; en_us)
+  'iPad'        => "ipad"           // Example: AppleCoreMedia/1.0.0.10B329 (iPad; U; CPU OS 6_1_3 like Mac OS X; hu_hu)
 // Egyebek?
 // Flash IDE Builder: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_2) AppleWebKit/537.75.14 (KHTML, like Gecko) Version/7.0.3 Safari/537.75.14
 );
@@ -104,24 +71,24 @@ $platform_definitions = array(
 $vsq_epoch = strtotime("2014-11-01 00:00:00");
 
 $stats_config = array(
-  0 => array(
-    'label'       => "5min",
-    'sqltablename'    => "statistics_live_5min",
-    'interval'      => 60 * 5,
-    'lastprocessedtime' => $vsq_epoch
-  ),
-  1 => array(
-    'label'       => "hourly",
-    'sqltablename'    => "statistics_live_hourly",
-    'interval'      => 60 * 60,
-    'lastprocessedtime' => $vsq_epoch
-  ),
-  2 => array(
-    'label'       => "daily",
-    'sqltablename'    => "statistics_live_daily",
-    'interval'      => 60 * 60 * 24,
-    'lastprocessedtime' => $vsq_epoch
-  )
+    0 => array(
+        'label'             => "5min",
+        'sqltablename'      => "statistics_live_5min",
+        'interval'          => 60 * 5,
+        'lastprocessedtime' => $vsq_epoch
+    ),
+    1 => array(
+        'label'             => "hourly",
+        'sqltablename'      => "statistics_live_hourly",
+        'interval'          => 60 * 60,
+        'lastprocessedtime' => $vsq_epoch
+    ),
+    2 => array(
+        'label'             => "daily",
+        'sqltablename'      => "statistics_live_daily",
+        'interval'          => 60 * 60 * 24,
+        'lastprocessedtime' => $vsq_epoch
+    )
 );
 
 // Wowza application to filter
@@ -144,138 +111,141 @@ $db = db_maintain();
 // Check Wowza records with open endtime
 $now_hour = date("G");
 $now_min = date("i");
-//if ( ( $now_hour == 11 ) and ($now_min > 0) and ($now_min < 5 ) ) checkWowzaOpenRecords();
 
 // Empty array for each record initialization
 $platforms_null = returnStreamingClientPlatformEmptyArray($platform_definitions);
 
+// Query media servers
+$media_servers = queryMediaServers();
+if ( $media_servers === false ) {
+    $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Cannot find media servers", $sendmail = true);
+    exit;
+}
+
 // Loop through defined statistics (5min, hourly, daily). See config.
 for ( $statsidx = 0; $statsidx < count($stats_config); $statsidx++ ) {
 
-  // Load last processed record time
-  $status_filename = $jconf['temp_dir'] . $myjobid . "." . $stats_config[$statsidx]['label'] . ".status";
+    // Load last processed record time
+    $status_filename = $jconf['temp_dir'] . $myjobid . "." . $stats_config[$statsidx]['label'] . ".status";
 
-  // Status file: read last processed record time
-  if ( file_exists($status_filename) ) {
+    // Status file: read last processed record time
+    if ( file_exists($status_filename) ) {
 
-    // Is readable?
-    if ( !is_readable($status_filename) ) {
+        // Is readable?
+        if ( !is_readable($status_filename) ) {
 
-      $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Stats status file: " . $status_filename . ".", $sendmail = true);
+            $debug->log($jconf['log_dir'], $myjobid . ".log", "[WARN] Stats status file: " . $status_filename . " does not exist. Restarting from VSQ EPOCH (" . date("Y-m-d H:i:s", $vsq_epoch) . ").", $sendmail = true);
+            $stats_config[$statsidx]['lastprocessedtime'] = $vsq_epoch;
 
-    } else {
+        } else {
 
-      $fh = fopen($status_filename, "r");
+            $fh = fopen($status_filename, "r");
 
-      while( !feof($fh) ) {
+            while( !feof($fh) ) {
 
-        // Read one line from descriptor file
-        $line = fgets($fh);
-        $line = trim($line);
+                // Read one line from descriptor file
+                $line = fgets($fh);
+                $line = trim($line);
 
-        // Skip empty lines
-        if ( empty($line) ) continue;
+                // Skip empty lines
+                if ( empty($line) ) continue;
 
-        $line_split = explode("=", $line);
-        $key = explode("_", $line_split[0]);
+                $line_split = explode("=", $line);
+                $key = explode("_", $line_split[0]);
 
-        $idx = recursive_array_search($key[1], $stats_config);
-        $timestamp = strtotime($line_split[1]);
-        if ( $timestamp === false ) {
-          $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Stats status file: not a datetime value ('". $line . "')", $sendmail = true);
-          exit;
+                $idx = recursive_array_search($key[1], $stats_config);
+                $timestamp = strtotime($line_split[1]);
+                if ( $timestamp === false ) {
+                  $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Stats status file: not a datetime value ('". $line . "')", $sendmail = true);
+                  exit;
+                }
+                $stats_config[$idx]['lastprocessedtime'] = $timestamp;
+                $debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Last processed timestamp from status file (" . $stats_config[$idx]['label'] . "): " . $line_split[1], $sendmail = false);
+            }
+
+            fclose($fh);
         }
-        $stats_config[$idx]['lastprocessedtime'] = $timestamp;
-        $debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Last processed timestamp from status file (" . $stats_config[$idx]['label'] . "): " . $line_split[1], $sendmail = false);
-      }
 
-      fclose($fh);
     }
 
-  }
-
-  // Get last processed record to determine last processing time
-  $ltime = getLastStatsRecordFrom($stats_config[$statsidx]['sqltablename']);
-  if ( $ltime === false ) {
-    // Debug information for logging
-    $debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Last processed time from db: no record found. Falling back to " . date("Y-m-d H:i:s", $vsq_epoch), $sendmail = false);
-    $stats_config[$statsidx]['lastprocessedtime'] = $vsq_epoch;
-  } else {
-    $ltime = $ltime + $stats_config[$statsidx]['interval'] - 1;
-    // Debug information for logging
-    $debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Last processed time from db (" . $stats_config[$statsidx]['sqltablename'] . "): " . date("Y-m-d H:i:s", $ltime), $sendmail = false);
-    // Is the two last processed time values are equal?
-    if ( $stats_config[$statsidx]['lastprocessedtime'] != $ltime ) {
-      // Debug information for logging
-      $debug->log($jconf['log_dir'], $myjobid . ".log", "[WARN] Last processed time from status file (" . date("Y-m-d H:i:s" , $stats_config[$statsidx]['lastprocessedtime']) . ") and db (" . date("Y-m-d H:i:s", $ltime) . ") are NOT EQUAL! Falling back to db time.", $sendmail = false);
-      $stats_config[$statsidx]['lastprocessedtime'] = $ltime;
+    // Get last processed record from stats_live_* tables to cross check last processed record. - NOT NEEDED TO CROSS CHECK?
+/*    $ltime = getLastStatsRecordFrom($stats_config[$statsidx]['sqltablename']);
+    if ( $ltime === false ) {
+        // Debug information for logging
+        $debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Last processed time from db: no record found. Falling back to " . date("Y-m-d H:i:s", $vsq_epoch), $sendmail = false);
+        $stats_config[$statsidx]['lastprocessedtime'] = $vsq_epoch;
+    } else {
+        $ltime = $ltime + $stats_config[$statsidx]['interval'] - 1;
+        // Debug information for logging
+        $debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Last processed time from db (" . $stats_config[$statsidx]['sqltablename'] . "): " . date("Y-m-d H:i:s", $ltime), $sendmail = false);
+        // Is the two last processed time values are equal?
+        if ( $stats_config[$statsidx]['lastprocessedtime'] != $ltime ) {
+            // Debug information for logging
+            $debug->log($jconf['log_dir'], $myjobid . ".log", "[WARN] Last processed time from status file (" . date("Y-m-d H:i:s" , $stats_config[$statsidx]['lastprocessedtime']) . ") and db (" . date("Y-m-d H:i:s", $ltime) . ") are NOT EQUAL! Falling back to db time.", $sendmail = false);
+            $stats_config[$statsidx]['lastprocessedtime'] = $ltime;
+        }
     }
-  }
+*/
 
-  $start_interval = $stats_config[$statsidx]['lastprocessedtime'] + 1;
+    $start_interval = $stats_config[$statsidx]['lastprocessedtime'] + 1;
+  
+    $records_committed_all = 0;
+    $processing_started = time();
+    //  Loop through the full time period until. Exit when right end is in future.
+    while ( ( $start_interval + $stats_config[$statsidx]['interval'] ) < time() ) {
 
-// !!! DEBUG
-//$start_interval = strtotime("2014-07-04 14:50:00");
+        // Set end of interval
+        $end_interval = $start_interval + $stats_config[$statsidx]['interval'] - 1;
 
-  $records_committed_all = 0;
-  $processing_started = time();
-  //  Loop through the full time period until. Exit when right end is in future.
-  while ( ( $start_interval + $stats_config[$statsidx]['interval'] ) < time() ) {
+        // Log processing cycle (5min, hourly, daily)
+        $debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Processing statistics: " . $stats_config[$statsidx]['label'], $sendmail = false);
 
-// !!! DEBUG
-//if ( $start_interval > strtotime("2014-07-04 15:00:00") ) break;
+        // Debug information for logging
+        $debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Last processed interval end: " . date("Y-m-d H:i:s", $stats_config[$statsidx]['lastprocessedtime']), $sendmail = false);
 
-    // Set end of interval
-    $end_interval = $start_interval + $stats_config[$statsidx]['interval'] - 1;
+        // Query active stream records for this interval
+        $stats = queryStatsForInterval($start_interval, $end_interval, $wowza_app);
+        if ( $stats === false ) {
+            // No active records found in database. A gap is supposed.
+            $debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] No active record(s) found for the next interval: " . date("Y-m-d H:i:s", $start_interval) . " - " . date("Y-m-d H:i:s", $end_interval), $sendmail = false);
 
-    // Log processing cycle (5min, hourly, daily)
-    $debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Processing statistics: " . $stats_config[$statsidx]['label'], $sendmail = false);
+            // Next record breaking the inactive period that also occurred before the end of the last whole interval
+            $now_left = getTimelineGridSeconds(time(), "left", $stats_config[$statsidx]['interval']);
+            $next_active_record = getFirstLiveStatRecordFromInterval($end_interval, $now_left, $wowza_app);
+            if ( $next_active_record === false ) {
+                // Nothing to process, view_stats_live DB table is empty from end of interval. Exit processing.
 
-    // Debug information for logging
-    $debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Last processed interval end: " . date("Y-m-d H:i:s", $stats_config[$statsidx]['lastprocessedtime']), $sendmail = false);
+                // Calculate last finished interval
+                $start_interval = $now_left - $stats_config[$statsidx]['interval'];
+                $end_interval = $now_left - 1;
 
-    // Query active stream records for this interval
-    $stats = queryStatsForInterval($start_interval, $end_interval, $wowza_app);
-    if ( $stats === false ) {
-      // No active records found in database. A gap is supposed.
-      $debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] No active record(s) found for the next interval: " . date("Y-m-d H:i:s", $start_interval) . " - " . date("Y-m-d H:i:s", $end_interval), $sendmail = false);
+                // Update last processed record
+                $stats_config[$statsidx]['lastprocessedtime'] = $end_interval;
 
-      // Next record breaking the inactive period that also occured before the end of the last whole interval
-      $now_left = getTimelineGridSeconds(time(), "left", $stats_config[$statsidx]['interval']);
-      $next_active_record = getFirstLiveStatRecordFromInterval($end_interval, $now_left, $wowza_app);
-      if ( $next_active_record === false ) {
-        // Nothing to process, cdn_streaming_stats DB is empty from end of interval. Exit processing.
+                // Log
+                $debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Inactive period skipped. No more records to process. Last processed time is " . date("Y-m-d H:i:s", $end_interval) . ". Exiting.", $sendmail = false);
 
-        // Calculate last finished interval
-        $start_interval = $now_left - $stats_config[$statsidx]['interval'];
-        $end_interval = $now_left - 1;
+                break;
+            } 
 
-        // Update last processed record
-        $stats_config[$statsidx]['lastprocessedtime'] = $end_interval;
+            // Debug information for logging
+            $debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Inactive period skipped. Next stream record: " . date("Y-m-d H:i:s", $next_active_record), $sendmail = false);
 
-        // Log
-        $debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Inactive period skipped. No more records to process. Last processed time is " . date("Y-m-d H:i:s", $end_interval) . ". Exiting.", $sendmail = false);
+            // Timeline grid: first left from next active record time
+            $next_active_left = getTimelineGridSeconds($next_active_record, "left", $stats_config[$statsidx]['interval']);
+            $start_interval = $next_active_left;
+            $end_interval = $next_active_left + $stats_config[$statsidx]['interval'] - 1;
 
-        break;
-      }
-      // Debug information for logging
-      $debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Inactive period skipped. Next stream record: " . date("Y-m-d H:i:s", $next_active_record), $sendmail = false);
-
-      // Timeline grid: first left from next active record time
-      $next_active_left = getTimelineGridSeconds($next_active_record, "left", $stats_config[$statsidx]['interval']);
-//      $start_interval = $next_active_left - $stats_config[$statsidx]['interval'];
-      $start_interval = $next_active_left;
-      $end_interval = $next_active_left + $stats_config[$statsidx]['interval'] - 1;
-
-      // Query finally selected interval with record(s)
-      $stats = queryStatsForInterval($start_interval, $end_interval, $wowza_app);
-      if ( $stats === false ) {
-        $debug->log($jconf['log_dir'], $myjobid . ".log", "[WARN] Unexpected. No record(s) to process. Interval: " . date("Y-m-d H:i:s", $start_interval) . " - " . date("Y-m-d H:i:s", $end_interval) . "\n\nDEBUG:\n\ngetFirstLiveStatRecordFromInterval(): " . $kaka2 . "\n\nqueryStatsForInterval(): " . $kaka, $sendmail = false);
-        // Update last processed interval. Next active record will be found in next round.
-        $stats_config[$statsidx]['lastprocessedtime'] = $end_interval;
-        $start_interval = $start_interval + $stats_config[$statsidx]['interval'];
-        continue;
-      }
+            // !!! Never happens???
+            // Query finally selected interval with record(s)
+            $stats = queryStatsForInterval($start_interval, $end_interval, $wowza_app);
+            if ( $stats === false ) {
+                $debug->log($jconf['log_dir'], $myjobid . ".log", "[WARN] Unexpected. No record(s) to process. Interval: " . date("Y-m-d H:i:s", $start_interval) . " - " . date("Y-m-d H:i:s", $end_interval) . "\n\nDEBUG:\n\ngetFirstLiveStatRecordFromInterval(): " . $kaka2 . "\n\nqueryStatsForInterval(): " . $kaka, $sendmail = false);
+                // Update last processed interval. Next active record will be found in next round.
+                $stats_config[$statsidx]['lastprocessedtime'] = $end_interval;
+                $start_interval = $start_interval + $stats_config[$statsidx]['interval'];
+                continue;
+            }
 
     }
 
@@ -285,6 +255,7 @@ for ( $statsidx = 0; $statsidx < count($stats_config); $statsidx++ ) {
     $records_processed = 0;
     $records_committed = 0;
     $stats_f = array();
+    $errors = "";
 
     while ( !$stats->EOF ) {
 
@@ -313,10 +284,17 @@ for ( $statsidx = 0; $statsidx < count($stats_config); $statsidx++ ) {
             $country = "notdef";
         }
 
+        // Find Stream server
+        $server_idx = findMediaServers($media_servers, $stat['streamserver']);
+        if ( $server_idx === false ) {
+               $errors .= print_r($stat, true) . "\n";
+               $server_idx = 0;
+        }
+        
         //// Statistics records filtered
         // Build array index
-        $idx = $streamid . "_" . $country; 
-        // Initialize (if not yet record is open)
+        $idx = $streamid . "_" . $country . "_" . $server_idx;
+        // Initialize (if record is not yet open)
         if ( !isset($stats_f[$feedid][$idx]) ) {
             $stats_f[$feedid][$idx] = $platforms_null;
             $stats_f[$feedid][$idx]['timestamp'] = date("Y-m-d H:i:s", $start_interval);
@@ -333,20 +311,24 @@ for ( $statsidx = 0; $statsidx < count($stats_config); $statsidx++ ) {
         if ( !isset($stats_f[$feedid][$idx]['country']) ) {
             $stats_f[$feedid][$idx]['country'] = $country;
         }
+        // Streaming server
+        if ( !isset($stats_f[$feedid][$idx]['streamserver']) ) {
+            $stats_f[$feedid][$idx]['streamserver'] = $server_idx;
+        }
         // Increase platform counter
         if ( isset($stats_f[$feedid][$idx][$platform]) ) {
             $stats_f[$feedid][$idx][$platform]++;
         }
-
-//echo "DEBUG: processed record\n";
-//var_dump($stats_f);
-
+        
         $records_processed++;
         $stats->MoveNext();
     } // End of stats while loop
 
+    if ( !empty($errors) ) {
+        $debug->log($jconf['log_dir'], $myjobid . ".log", "[WARN] Media server not found for the following stat records:\n" . $errors, $sendmail = true);
+    }
+    
     // Update results to DB
-
     $records_committed = 0;
     if ( count($stats_f) > 0 ) {
 
@@ -368,7 +350,7 @@ for ( $statsidx = 0; $statsidx < count($stats_config); $statsidx++ ) {
     $stats_config[$statsidx]['lastprocessedtime'] = $end_interval;
 
     // Debug information for logging
-    $debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Records processed/committed: " . $records_processed . " / " . $records_committed, $sendmail = false);
+    $debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Records processed/inserted: " . $records_processed . " / " . $records_committed, $sendmail = false);
     $records_committed_all += $records_committed;
 
     // Watchdog
@@ -403,6 +385,52 @@ unlink($run_filename);
 $app->watchdog();
 
 exit;
+
+// Query media servers
+function queryMediaServers() {
+global $db, $debug, $myjobid, $app, $jconf;
+
+    $query = "
+        SELECT
+            css.id,
+            css.server,
+            css.serverip,
+            css.servicetype,
+            css.disabled
+        FROM
+            cdn_streaming_servers as css
+        WHERE
+            css.id > 0
+        ";
+
+    try {
+        $media_servers = $db->getArray($query);
+    } catch (exception $err) {
+        $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] SQL query failed." . trim($query), $sendmail = true);
+        return false;
+    }
+
+    if ( count($media_servers) < 1 ) return false;        
+
+    return $media_servers;
+}
+
+// Find media server
+function findMediaServers($media_servers, $server_fqdn) {
+
+    $server_idx = false;
+    for ($i = 0; $i < count($media_servers); $i++) {
+
+        $val = array_search ($server_fqdn, $media_servers[$i], false);
+        if ( $val !== false ) {
+            $server_idx = $media_servers[$i]['id'];
+            break;
+        }
+        
+    }
+
+    return $server_idx;
+}
 
 // Query active stream records from database in a time interval
 function queryStatsForInterval($start_interval, $end_interval, $streaming_server_app) {
@@ -446,6 +474,8 @@ global $db, $debug, $myjobid, $app, $jconf, $kaka;
         AND vsl.livefeedstreamid = lfs.id
     ";
 
+//AND vsl.timestampfrom > '2014-11-19 00:00:00'  # !!!!!!!!!!!
+   
 //echo $query . "\n";
 
   $kaka = $query;
@@ -599,6 +629,7 @@ global $debug, $app, $jconf, $myjobid;
     'livefeedstreamid'      => $stat_record['livefeedstreamid'],
     'iscontent'             => 0,
     'country'               => $stat_record['country'],
+    // 'streamserver'   => $stat_record['streamserver'],
     'numberofflashwin'      => $stat_record['flashwin'],
     'numberofflashmac'      => $stat_record['flashmac'],
     'numberofflashlinux'    => $stat_record['flashlinux'],
@@ -660,7 +691,7 @@ function removeStatsAll($stats_config, $isexec) {
     // Log
     $debug->log($jconf['log_dir'], $myjobid . ".log", "[OK] Stats table " . $stats_config[$statsidx]['sqltablename'] . " cleaned. Status file removed: " . $status_filename, $sendmail = false);
   }
-
+  
   return true;
 }
 
