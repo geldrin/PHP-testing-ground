@@ -113,7 +113,7 @@ if ( !geoip_db_avail(GEOIP_COUNTRY_EDITION) ) {
 }
 
 // Delete all stuff - if required!
-removeStatsAll($stats_config, true);
+//removeStatsAll($stats_config, true);
 
 // Check Wowza records with open endtime
 $now_hour = date("G");
