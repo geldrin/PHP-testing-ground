@@ -44,12 +44,6 @@ if ( is_file( $app->config['datapath'] . 'jobs/job_remove_files.stop' ) or is_fi
     exit;
 }
 
-
-$filter = $jconf['dbstatus_copystorage_ok'] . "|" . $jconf['dbstatus_conv'] . "|" . $jconf['dbstatus_convert'] . "|" . $jconf['dbstatus_stop'] . "|" . $jconf['dbstatus_copystorage'] . "|" . $jconf['dbstatus_copyfromfe'] . "|" . $jconf['dbstatus_copyfromfe_ok'] . "|" . $jconf['dbstatus_reconvert'] . "|" . $jconf['dbstatus_markedfordeletion'];
-updateRecordingVersionStatusApplyFilter(748, $jconf['dbstatus_deleted'], "all", $filter);
-
-exit;
-
 // Runover control (avoid executing job multiple times)
 $devsite = "";
 if ( $app->config['baseuri'] == "dev.videosquare.eu/" ) $devsite = ".dev";
