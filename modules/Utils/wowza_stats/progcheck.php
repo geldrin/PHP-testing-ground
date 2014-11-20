@@ -188,7 +188,7 @@ foreach ($org_channels as $ch) {
           prog.recordingid = session.recordingid)"
     );
 
-//echo $query . "\n";
+// var_dump($query);
 
     try {
       if ($sessioncheck === true) {
@@ -208,10 +208,17 @@ foreach ($org_channels as $ch) {
     $user_added = false;
     foreach ($user_progress as $up) {
       if (array_key_exists('positionfrom', $up)) {
-        $session_duration = abs($up['positionuntil'] - $up['positionfrom']);
-        if ($session_duration > 0 === false) continue; // Skip headers if the session length was 0.
+				// var_dump($up['timestampfrom']);
+				// var_dump($up['timestampuntil']);
+        $session_watched = abs($up['positionuntil'] - $up['positionfrom']);
+				$session_duration = abs(strtotime($up['timestampfrom']) - strtotime($up['timestampuntil']));
+				// var_dump(strtotime($up['timestampfrom']));
+				// var_dump(strtotime($up['timestampuntil']));
+				// var_dump($session_duration);
+        if ($session_watched > 0 === false) continue; // Skip headers if the session length was 0.
       }
       $row = '';
+			$tmp = array();
       // Log channel header for this recording
       if ( !empty($msg_ch) ) {
         $msg .= $msg_ch;
@@ -226,17 +233,32 @@ foreach ($org_channels as $ch) {
 
       $position_percent = round( ( 100 / $rec['masterlength'] ) * $up['position'], 2);
 			if ( $position_percent > 100 ) $position_percent = 100;
-			$row = $up['email'] . ";" . secs2hms($up['position']) . ";" . secs2hms($rec['masterlength']) .";" . $position_percent . "%";
+			if ( $up['position'] > $rec['masterlength'] ) $up['position'] = $rec['masterlength'];
+
+			$tmp[] = $up['email'];
+			$tmp[] = secs2hms($rec['masterlength']);
+			$tmp[] = secs2hms($up['position']);
+			$tmp[] = $position_percent ."%";
 
 			if ($sessioncheck === true) { // when checking sessions, append the following data to the log:
-				$sessionpercent = $session_duration / $rec['masterlength'] * 100;
-        $row .= ";". $up['timestampfrom'] .";". secs2hms($up['positionfrom']) .";". $up['timestampuntil'] .";". secs2hms($up['positionuntil']) .";". secs2hms($session_duration) .";". round($sessionpercent, 2) ."%";
-				unset($sessionpercent);
-      }
+				$session_percent = $session_watched / $rec['masterlength'] * 100;
 
-      $row .= "\n";
+        $tmp[] = $up['timestampfrom'];
+				$tmp[] = secs2hms($up['positionfrom']);
+				$tmp[] = $up['timestampuntil'];
+				$tmp[] = secs2hms($up['positionuntil']);
+				$tmp[] = secs2hms($session_duration);
+				$tmp[] = round($session_percent, 2) ."%";
+
+				unset($session_percent, $session_duration, $position_percent, $session_watched);
+      }
+			
+			$row = implode(";", $tmp) . PHP_EOL;
+			// echo $row;
       $msg .= $row;
       $user_added = true;
+			
+			unset($tmp);
     }
 
     if ( $user_added ) $msg .= "\n";
