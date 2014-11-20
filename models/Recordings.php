@@ -15,6 +15,7 @@ class Recordings extends \Springboard\Model {
     ),
   );
   
+  public $metadata = array();
   protected $searchadvancedwhere;
   protected $streamingserver;
   
@@ -2295,18 +2296,24 @@ class Recordings extends \Springboard\Model {
       $data['locale'] = $info['STATIC_URI'] . 'js/flash_locale_' . $data['language'] . '.json';
     
     if ( !empty( $versions['master']['desktop'] ) ) {
-      $data['media_streams']      = array();
-      $data['media_streamLabels'] = array();
+      $data['media_streams']          = array();
+      $data['media_streamLabels']     = array();
+      $data['media_streamParameters'] = array();
+
       if ( $hds )
-        $data['media_streams'][]    =
+        $data['media_streams'][]      =
           $this->getMediaUrl('smil', null, $info )
         ;
 
       foreach( $versions['master']['desktop'] as $version ) {
-        $data['media_streamLabels'][] = $version['qualitytag'];
+        $data['media_streamLabels'][]     = $version['qualitytag'];
+        $data['media_streamParameters'][] = array(
+          'recordingversionid' => $version['id'],
+          'viewsessionid'      => $this->generateViewSessionid( $version['id'] ),
+        );
 
         if ( !$hds )
-          $data['media_streams'][]    =
+          $data['media_streams'][]        =
             $this->getMediaUrl('default', $version, $info )
           ;
 
@@ -2633,9 +2640,23 @@ class Recordings extends \Springboard\Model {
     $sessionid    = $info['sessionid'];
     $host         = '';
     $extension    = 'mp4';
+    $authtoken    = $this->getAuthorizeSessionid( $info );
+    $extratoken   = '';
 
-    if ( $version )
-      $extension = \Springboard\Filesystem::getExtension( $version['filename'] );
+    if ( $version ) {
+      $extension   = \Springboard\Filesystem::getExtension( $version['filename'] );
+
+      if ( $authtoken )
+        $extratoken = '&';
+      else
+        $extratoken = '?';
+
+      $extratoken .=
+        'recordingversionid=' . $version['id'] .
+        '&viewsessionid=' . $this->generateViewSessionid( $version['id'] )
+      ;
+
+    }
 
     $user = null;
     if ( isset( $info['member'] ) )
@@ -2652,7 +2673,8 @@ class Recordings extends \Springboard\Model {
         $host        = $this->getWowzaUrl( $typeprefix . 'httpurl');
         $sprintfterm =
           '%3$s:%s/%s/playlist.m3u8' .
-          $this->getAuthorizeSessionid( $info )
+          $authtoken .
+          $extratoken
         ;
         
         break;
@@ -2662,7 +2684,8 @@ class Recordings extends \Springboard\Model {
         $host        = $this->getWowzaUrl( $typeprefix . 'rtspurl');
         $sprintfterm =
           '%3$s:%s/%s' .
-          $this->getAuthorizeSessionid( $info )
+          $authtoken .
+          $extratoken
         ;
         
         break;
@@ -2684,8 +2707,9 @@ class Recordings extends \Springboard\Model {
         $postfix     = $type == 'contentsmil'? '_content': '';
         $sprintfterm =
           '%3$s:%s/' . $version['recordingid'] . $postfix . '.%3$s/manifest.f4m' .
-          $this->getAuthorizeSessionid( $info )
+          $authtoken
         ;
+
         break;
 
       case 'content':
@@ -2702,7 +2726,7 @@ class Recordings extends \Springboard\Model {
     );
 
   }
-  
+
   public function getAuthor() {
     
     $this->ensureObjectLoaded();
@@ -3575,11 +3599,27 @@ class Recordings extends \Springboard\Model {
 
     $this->db->execute("
       INSERT INTO recording_view_sessions
-        ( recordingid,  userid,  sessionid, timestampfrom, timestampuntil, positionfrom, positionuntil) VALUES
-        ($recordingid, $userid, $sessionid, $timestamp, $timestamp, $position, $position)
+        (
+          recordingid,
+          userid,
+          sessionid,
+          timestampfrom,
+          timestampuntil,
+          positionfrom,
+          positionuntil
+        ) VALUES
+        (
+          $recordingid,
+          $userid,
+          $sessionid,
+          $timestamp,
+          $timestamp,
+          $position,
+          $position
+        )
       ON DUPLICATE KEY UPDATE
-        timestampuntil = $timestamp,
-        positionuntil  = $position
+        timestampuntil = IF( $position < positionuntil, timestampuntil, $timestamp),
+        positionuntil  = IF( $position < positionuntil, positionuntil, $position)
     ");
 
   }
@@ -3706,6 +3746,15 @@ class Recordings extends \Springboard\Model {
 
     return $ret;
 
+  }
+
+  public function generateViewSessionid( $extra ) {
+    $this->ensureObjectLoaded();
+    $ts        = microtime(true);
+    $user      = $this->bootstrap->getSession('user');
+    $sessionid = session_id();
+
+    return md5( $ts . $sessionid . $this->id . $extra );
   }
 
 }

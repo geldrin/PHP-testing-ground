@@ -111,8 +111,16 @@ class Controller extends \Visitor\Controller {
     $this->toSmarty['channels'] = $userModel->getCourses(
       $this->organization
     );
+
+    $recordingids = array();
+    foreach ( $this->toSmarty['channels'] as $channel ) {
+      foreach( $channel['recordings'] as $recording )
+        $recordingids[] = $recording['id'];
+    }
+
     $this->toSmarty['accreditedrecordings'] = $userModel->getAccreditedRecordings(
-      $this->organization['id']
+      $this->organization['id'],
+      $recordingids
     );
 
     if ( !empty( $uploads ) )
@@ -280,7 +288,7 @@ class Controller extends \Visitor\Controller {
       $password
     );
     
-    if ( !$uservalid ) {
+    if ( $uservalid !== true ) {
       
       $message = sprintf(
         $l('users', 'accessdenied'),

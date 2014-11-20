@@ -15,10 +15,10 @@
     <br/>
   {/if}
   
-  <h1>{$recording.title|escape:html}</h1>
+  <h1>{$recording.title|escape:html|mb_wordwrap:25}</h1>
   
   {if $recording.subtitle|stringempty}
-    <h2>{$recording.subtitle|escape:html}</h2>
+    <h2>{$recording.subtitle|escape:html|mb_wordwrap:25}</h2>
   {/if}
   
   {if !empty( $recording.presenters )}
@@ -45,7 +45,7 @@
       <div id="qualitychooser">
         <ul>
           {foreach from=$mobileversions item=version}
-            <li><a href="{$language}/recordings/details/{$recording.id},{$recording.title|filenameize}?quality={$version|escape:url}">{$version|escape:html}</a></li>
+            <li{if $activemobileversion.qualitytag == $version} class="active"{/if}><a href="{$language}/recordings/details/{$recording.id},{$recording.title|filenameize}?quality={$version|escape:url}">{$version|escape:html}</a></li>
           {/foreach}
         </ul>
       </div>

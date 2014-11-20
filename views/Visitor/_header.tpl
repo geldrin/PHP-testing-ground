@@ -3,7 +3,7 @@
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
   <meta http-equiv="imagetoolbar" content="no" />
-  <meta name="author" content="Dots Amazing - www.dotsamazing.com" />
+  <meta name="X-Developer" content="Dots Amazing - www.dotsamazing.com" />
   <meta name="MSSmartTagsPreventParsing" content="true" />
   <meta name="format-detection" content="telephone=no" />{*} iphone ne vegye a random szamokat telefonszamoknak {/*}
   <base href="{$BASE_URI}" /><!--[if IE]></base><![endif]-->
@@ -79,7 +79,7 @@
   <link rel="alternate" type="application/rss+xml" title="{#rss_news#|sprintf:$organization.name|escape:html}" href="{$language}/organizations/newsrss" />
 </head>
 <body>
-{if $browser.obsolete}
+{if $bootstrap->config.warnobsoletebrowser and $browser.obsolete}
   <a class="openinlayer" target="_blank" href="{$BASE_URI}{$language}/tools/updateyourbrowser" id="browserAlert">{#sitewide_updateyourbrowser#}</a>
 {/if}
 <div id="headerbg"></div>
@@ -109,19 +109,21 @@
             <a href="{$language}/search/advanced" id="headersearcharrow" title="{#sitewide_search_advanced#}"></a>
           </form>
           <div id="headersearchlink"><a href="{$language}/search/all">{#sitewide_search#}</a></div>
-          <div id="languageselector" class="inputbackground right">
-            {foreach from=$organization.languages key=languageid item=item}
-              {if $languageid == $language}
-                <a href="{$FULL_URI|changelanguage:$language}" class="{$language} active">{l lov=headerlanguages key=$language}<span></span></a>
-              {/if}
-            {/foreach}
-            
-            <div id="languages">
+          <div id="languagewrap">
+            <div id="languageselector" class="inputbackground right">
               {foreach from=$organization.languages key=languageid item=item}
-                {if $languageid != $language}
-                  <a href="{$FULL_URI|changelanguage:$languageid}" class="{$languageid}">{l lov=headerlanguages key=$languageid}</a>
+                {if $languageid == $language}
+                  <a href="{$FULL_URI|changelanguage:$language}" class="{$language} active">{l lov=headerlanguages key=$language}<span></span></a>
                 {/if}
               {/foreach}
+              
+              <div id="languages">
+                {foreach from=$organization.languages key=languageid item=item}
+                  {if $languageid != $language}
+                    <a href="{$FULL_URI|changelanguage:$languageid}" class="{$languageid}">{l lov=headerlanguages key=$languageid}</a>
+                  {/if}
+                {/foreach}
+              </div>
             </div>
           </div>
         </div>

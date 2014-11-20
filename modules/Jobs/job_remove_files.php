@@ -154,9 +154,10 @@ if ( $recordings !== false ) {
 
         // ## Update status fields (recording)
         if ( $isexecute ) {
-            // status, masterstatus and all active recording versions + empty smilstatus
+            // status, masterstatus, mobilestatus and all active recording versions + empty smilstatus
             updateRecordingStatus($recording['id'], $jconf['dbstatus_deleted'], "recording");
             updateMasterRecordingStatus($recording['id'], $jconf['dbstatus_deleted'], "recording");
+            updateRecordingStatus($recording['id'], $jconf['dbstatus_deleted'], "mobile");
             $filter = $jconf['dbstatus_copystorage_ok'] . "|" . $jconf['dbstatus_conv'] . "|" . $jconf['dbstatus_convert'] . "|" . $jconf['dbstatus_stop'] . "|" . $jconf['dbstatus_copystorage'] . "|" . $jconf['dbstatus_copyfromfe'] . "|" . $jconf['dbstatus_copyfromfe_ok'] . "|" . $jconf['dbstatus_reconvert'] . "|" . $jconf['dbstatus_markedfordeletion'];
             updateRecordingVersionStatusApplyFilter($recording['id'], $jconf['dbstatus_deleted'], "all", $filter);
             updateRecordingStatus($recording['id'], null, "smil");
@@ -322,7 +323,7 @@ if ( $recordings !== false ) {
             updateRecordingStatus($recording['id'], $jconf['dbstatus_deleted'], "content");
             // recordings_versions.status := "markedfordeletion" for all content surrogates (will be deleted in the next step, see below)
             $filter = $jconf['dbstatus_copystorage_ok'] . "|" . $jconf['dbstatus_conv'] . "|" . $jconf['dbstatus_convert'] . "|" . $jconf['dbstatus_stop'] . "|" . $jconf['dbstatus_copystorage'] . "|" . $jconf['dbstatus_copyfromfe'] . "|" . $jconf['dbstatus_copyfromfe_ok'] . "|" . $jconf['dbstatus_reconvert'];
-            updateRecordingVersionStatusApplyFilter($recording['id'], $jconf['dbstatus_markedfordeletion'], "content", $filter);
+            updateRecordingVersionStatusApplyFilter($recording['id'], $jconf['dbstatus_markedfordeletion'], "content|pip", $filter);
             // contentsmilstatus
             updateRecordingStatus($recording['id'], null, "contentsmil");
         }

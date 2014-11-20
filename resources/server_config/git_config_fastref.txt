@@ -1,0 +1,106 @@
+Git
+
+Alap konfiguráció
+
+su conv
+cd /var/www/videosquare.eu
+git config --global user.name "Telenor conv"
+git config --global user.email "andras.kovacs@videosqr.com"
+
+Repo lehúzása
+
+$ cd /var/www/videosquare.eu/
+
+$ git clone --recursive git@codebasehq.com:dam/teleconnect/master.git .
+
+$ git fetch --all
+
+$ git checkout -b stable refs/remotes/origin/stable
+
+$ git config branch.stable.remote origin
+
+$ git config branch.stable.merge refs/heads/stable
+
+(korábban ez volt, rossza húz le? - git config branch.stable.merge refs/remotes/origin/stable)
+
+$ ./pull.sh
+Already up-to-date.
+
+ERROR: itt még vmi nem stimmel. pull.sh-ba stable mégis csak????
+
+Flash repo beállítása
+
+$ cd /var/www/videosquare.eu/httpdocs/flash
+$ git init
+Initialized empty Git repository in /var/www/videosquare.eu/httpdocs/flash/.git/
+
+$ git remote add origin git@codebasehq.com:dam/teleconnect/flash.git
+$ git pull origin stable
+
+A git confignak ennek kell lennie: /var/www/videosquare.eu/httpdocs/flash/.git/config
+
+[core]
+        repositoryformatversion = 0
+        filemode = true
+        bare = false
+        logallrefupdates = true
+[remote "origin"]
+        url = git@codebasehq.com:dam/teleconnect/flash.git
+        fetch = +refs/heads/*:refs/remotes/origin/*
+[branch "master"]
+        remote = origin
+        merge = refs/heads/master
+[branch "stable"]
+        remote = origin
+        merge = refs/heads/stable
+
+Git HTTP proxy mögül
+
+A .bashrc végére (conv user) írjuk be:
+
+export http_proxy=http://myproxy.domain.com:1234
+export https_proxy=http://myproxy.domain.com:1234
+
+Lépjünk ki- és be (vagy CLI-ben is adjuk ki a fentieket). Majd állítsuk be a git-nek a proxy-t:
+
+cd /var/www/videosquare.eu/
+git config --global http.proxy $http_proxy
+git config --global https.proxy $https_proxy
+
+Then, a user-specific git configuration file (~/.gitconfig) will be created and updated as follows.
+
+[http]
+proxy = http://myproxy.domain.com:1234
+
+Repó SSH -> HTTPS
+
+Az alapból SSH-t használó Gitben át kell állítani a repo "remote" URL-eket. Main repo (ld. repo home: .git/config file '[remote "origin"]' rész alatt az URL-t):
+
+git remote set-url origin https://... (URL-eket ld. lent)
+
+Ha nem megy, akkor a Git config fájlban kell átírni. Így kell kinéznie a konfignak:
+
+...
+[remote "origin"]
+        fetch = +refs/heads/*:refs/remotes/origin/*
+        url = https://dam.codebasehq.com/teleconnect/master.git
+...
+
+A Springboard egy külön repo, ezért külön kell módosítani a repo URL-t. Git verziótól függõen a config két helyen lehet:
+o ./libraries/Springboard/.git/config
+o .git/modules/libraries/Springboard/config (ha ez az aktuális, akkor a fenti path-on a .git fájl - nem directory ilyenkor - egy referencia ide)
+
+Így kell kinéznie:
+
+...
+[remote "origin"]
+        fetch = +refs/heads/*:refs/remotes/origin/*
+        url = https://dam.codebasehq.com/springboard/springboard-core.git
+...
+
+Flash repó:
+...
+[remote "origin"]
+        fetch = +refs/heads/*:refs/remotes/origin/*
+        url = https://dam.codebasehq.com/teleconnect/flash.git
+...

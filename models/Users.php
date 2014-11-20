@@ -721,10 +721,11 @@ class Users extends \Springboard\Model {
     ");
   }
 
-  public function getAccreditedRecordings( $organizationid ) {
+  public function getAccreditedRecordings( $organizationid, $existingids = array() ) {
     $this->ensureObjectLoaded();
     // azok a recording ahol .isseekbardisabled = 1
-    return $this->db->getArray("
+    $ret        = array();
+    $recordings = $this->db->getArray("
       SELECT DISTINCT
         r.*,
         (
@@ -746,6 +747,60 @@ class Users extends \Springboard\Model {
         r.isseekbardisabled = '1'
       ORDER BY rvp.timestamp DESC
     ");
+
+    if ( !empty( $existingids ) )
+      foreach( $recordings as $key => $recording ) {
+        if ( in_array( $recording['id'], $existingids ) )
+          unset( $recordings[ $key ] );
+      }
+
+    if ( $this->row['isadmin'] or $this->row['iseditor'] or $this->row['isclientadmin'] )
+      return $recordings;
+
+    $ids = array();
+    foreach( $recordings as $key => $recording ) {
+      if ( $recording['accesstype'] == 'departmentsorgroups' )
+        $ids[] = $recording['id'];
+      else { // ha nem departmentsorgroups akkor public/registered ami automatan engedett
+        $ret[] = $recording;
+        unset( $recordings[ $key ] );
+      }
+    }
+
+    if ( empty( $ids ) )
+      return $ret;
+
+    $userid      = $this->id;
+    $departments = $this->db->getAssoc("
+      SELECT a.recordingid, COUNT(*)
+      FROM
+        access AS a,
+        users_departments AS ud
+      WHERE
+        a.recordingid IN('" . implode("', '", $ids ) . "') AND
+        ud.departmentid = a.departmentid AND
+        ud.userid       = $userid
+      GROUP BY a.recordingid
+    ");
+    $groups      = $this->db->getAssoc("
+      SELECT a.recordingid, COUNT(*)
+      FROM
+        access AS a,
+        groups_members AS gm
+      WHERE
+        a.recordingid   IN('" . implode("', '", $ids ) . "') AND
+        gm.groupid    = a.groupid AND
+        gm.userid     = $userid
+      GROUP BY a.recordingid
+    ");
+
+    foreach( $recordings as $recording ) {
+      $id = $recording['id'];
+      if ( isset( $departments[ $id ] ) or isset( $groups[ $id ] ) )
+        $ret[] = $recording;
+    }
+
+    return $ret;
   }
 
   public function getCourses( $organization ) {

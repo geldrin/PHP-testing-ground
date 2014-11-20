@@ -118,6 +118,7 @@
   "common": {
     "connecting": "Kapcsolódás...",
     "buffering": "Bufferelés...",
+    "syncing": "Szinkronizáció...",
     "seeking": "Pozícionálás..."
   },
   "subtitle": {
@@ -186,6 +187,7 @@
     "pause": "Megállítás",
     "playing": "A média lejátszása elindult.",
     "paused": "A média lejátszása leállt.",
-	"seek":"Ugrás [TIME]-ra"
+	"seek": "Ugrás [TIME]-ra",
+	"live": "ÉLŐ"
   }
 }

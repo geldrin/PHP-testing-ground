@@ -1,6 +1,6 @@
 {include file="Visitor/_header.tpl"}
 <div class="heading">
-  <h1>{$channel.title|escape:html} - {#live__streams_titlepostfix#}</h1>
+  <h1>{$channel.title|escape:html|mb_wordwrap:25} - {#live__streams_titlepostfix#}</h1>
   <h2><a href="{$language}/live/details/{$channel.id},{$channel.title|filenameize|escape:html}">{#live__backtoevent#}</a></h2>
 </div>
 <br/>

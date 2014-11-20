@@ -13,8 +13,9 @@
     min-width: 0px;
   }
   #headersearchlink {
-    display: block;
+    display: inline-block;
     text-align: right;
+    vertical-align: top;
   }
   #headersearch form {
     display: none;
@@ -25,8 +26,34 @@
   #headerloginactions {
     margin-top: 7px;
   }
-  #languageselector {
-    display: none;
+  #header #languagewrap {
+    display: inline-block;
+    width: 75px;
+  }
+  #header #languageselector {
+    position: absolute;
+    display: inline-block;
+    float: none;
+    height: auto;
+    overflow: visible;
+    width: auto;
+    border: 0;
+    -webkit-box-shadow: none;
+    -moz-box-shadow: none;
+    box-shadow: none;
+    padding: 3px 0 2px 0;
+    margin: -3px 0 -2px 0;
+  }
+  #header #languageselector a {
+    padding: 0 20px 0 35px;
+    background-position: 5px -3px;
+  }
+  #header #languageselector #languages {
+    margin: 4px 0 0px 0;
+    padding-bottom: 1px;
+  }
+  #header #languageselector a.active span {
+    top: 3px;
   }
   #wrap {
     width: auto;
@@ -215,6 +242,16 @@
   }
   .widepager select {
     width: auto;
+  }
+  .pagingsearch {
+    width: auto;
+    float: none;
+  }
+  .pagingsearch .textwrap, .pagingsearch .selectwrap, .pagingsearch .selectwrap .elem, .pagingsearch .submitwrap {
+    float: none;
+    display: inline-block;
+    margin-top: 2px;
+    margin-bottom: 2px;
   }
   
   .form.search {
