@@ -66,7 +66,8 @@ for ($i = 0; $i < count($org_contracts); $i++ ) {
             rvs.timestampuntil,
             TIMESTAMPDIFF(SECOND, rvs.timestampfrom, rvs.timestampuntil) AS sessionduration,
             o.elearningcoursecriteria,
-            ud.departmentid
+            ud.departmentid,
+            u.timestampdisabledafter
         FROM
             users AS u,
             recording_view_sessions AS rvs,
@@ -77,6 +78,7 @@ for ($i = 0; $i < count($org_contracts); $i++ ) {
         WHERE
             o.id = " . $org['id'] . " AND
             u.isusergenerated = 1 AND
+            u.disabled = 0 AND
             u.organizationid = o.id AND
             ( u.timestampdisabledafter IS NULL OR u.timestampdisabledafter > '" . $end_date . "' ) AND
             u.id = rvs.userid AND
@@ -155,6 +157,7 @@ for ($i = 0; $i < count($org_contracts); $i++ ) {
         if ( !isset($users_summary[$idx]) ) {
             $users_summary[$idx]['departmentid'] = $user['departmentid'];
             $users_summary[$idx]['email'] = $user['email'];
+            $users_summary[$idx]['timestampdisabledafter'] = $user['timestampdisabledafter'];
             $users_summary[$idx]['confirmed'] = 0;
             $users_summary[$idx]['recordings_finished'] = 1;
             $users_summary[$idx]['session_info'] = array();
@@ -174,8 +177,7 @@ for ($i = 0; $i < count($org_contracts); $i++ ) {
 
 //var_dump($users_summary);
 
-    // Compile e-mail summary
-    $subject = "Users completed accredited courses between " . $start_date . " - " . $end_date;
+    // USERS FINISHED COURSE - Compile e-mail summary
     $mail_body  = "";
     foreach ($users_summary as $key => $user_sum) {
 
@@ -193,9 +195,42 @@ for ($i = 0; $i < count($org_contracts); $i++ ) {
         }
 
     }
+    
+    if ( !empty($mail_body) ) $mail_body = "Users completed accredited courses between " . $start_date . " - " . $end_date . "\n\n" . $mail_body . "\n";
+    
+    // USERS NOT YET FINISHED COURSE AND 1 WEEK TO GO - Compile e-mail summary
+    $mail_body2 = "";
+    foreach ($users_summary as $key => $user_sum) {
 
-    if ( !empty($mail_body) ) {
+        // Filter NOT confirmed users (watched all recordings in department)
+        if ( $user_sum['confirmed'] == 0 ) {
 
+            $weekfromnow = time() + 24 * 3600 * 7 * 3;
+            $disabletime = strtotime($user_sum['timestampdisabledafter']);
+            if ( $disabletime <= $weekfromnow ) {
+        
+                $mail_body2 .= $user_sum['email'] . " / " . $deps[$user_sum['departmentid']]['name'] . ":\n";
+                
+                foreach ($user_sum['session_info'] as $session_info_key => $session_info) {
+                    $mail_body2 .= $session_info . "\n";
+                
+                }
+
+                $mail_body2 .= "Valid until;" . $user_sum['timestampdisabledafter'] . "\n";
+                $mail_body2 .= "\n";
+            }
+
+        }
+
+    }
+
+    if ( !empty($mail_body2) ) $mail_body2 = "Users NOT completed accredited courses and will be disabled in a week.\n\n" . $mail_body2 . "\n";
+    
+    if ( !empty($mail_body) or  !empty($mail_body2) ) {
+    
+        // Subject
+        $subject = "Accredited courses daily report for period: " . $start_date . " - " . $end_date;
+    
         // Header
         $header  = "Subscriber: " . $org['name'] . " (id: " . $org['id'] . ")\n";
         $header .= "Domain: " . $org['domain'] . "\n";
@@ -203,13 +238,16 @@ for ($i = 0; $i < count($org_contracts); $i++ ) {
         $header .= "Period: " . $start_date . " - " . $end_date . "\n";
 
         // Legend
-        $mail = $header . "\n" . $legend . "\n" . $mail_body;
+        $mail = $header . "\n" . $legend . "\n\n";
+
+        if ( !empty($mail_body) )  $mail .= $mail_body;
+        if ( !empty($mail_body2) ) $mail .= $mail_body2;
         
         // HTML mail
         $html_mail = nl2br($mail, true);
-
-//        $email = "andras.kovacs@videosqr.com";
+        
         $email = $org['supportemail'];
+//        $email = "andras.kovacs@videosqr.com";
         $queue = $app->bootstrap->getMailqueue();
         $queue->instant = 1;
         //$queue->put($email, null, $subject, $mail, false, 'text/plain; charset="UTF-8"');
@@ -217,9 +255,10 @@ for ($i = 0; $i < count($org_contracts); $i++ ) {
         $debug->log($jconf['log_dir'], ($myjobid . ".log"), "Information sent to subscriber: " . $email . "\n\n" . $mail, $sendmail = false);
         
         // !!!
-        $queue->sendHTMLEmail("szepcsik.tunde@conforg.hu", $subject, $html_mail);
+//        $queue->sendHTMLEmail("szepcsik.tunde@conforg.hu", $subject, $html_mail);
 
     }
+    
     
     $org_contracts->MoveNext();
 }
