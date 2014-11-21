@@ -42,9 +42,13 @@ if ( $org_contracts === false ) {
 }
 
 // Previous day
-$prev_day = date('Y-m-d', strtotime(' -1 day'));
-$start_date = $prev_day . " 00:00:00";
-$end_date = $prev_day . " 23:59:59";
+$interval_start = date('Y-m-d', strtotime(' -1 week'));
+$interval_end = date('Y-m-d', strtotime(' -1 week +7 day'));
+$start_date = $interval_start . " 00:00:00";
+$end_date = $interval_end . " 23:59:59";
+$start_date_ts = strtotime($start_date);
+$end_date_ts = strtotime($end_date);
+$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Checking for period: " . $start_date . " - " . $end_date, $sendmail = false);
 
 // CSV legend
 $legend = "Username;Recording ID;Length;Session start;Session end;Session last position;Session duration;Watched %";
@@ -53,7 +57,8 @@ for ($i = 0; $i < count($org_contracts); $i++ ) {
 
     $org = array();
     $org = $org_contracts->fields;
-    
+
+/*    
     $query = "
         SELECT
             u.id,
@@ -86,6 +91,52 @@ for ($i = 0; $i < count($org_contracts); $i++ ) {
             rvs.timestampuntil <= '" . $end_date . "' AND
             rvs.recordingid = r.id AND
             rvs.positionuntil >= (( o.elearningcoursecriteria / 100 ) * r.masterlength) AND
+            u.id = ud.userid AND
+            ud.departmentid = a.departmentid AND
+            a.recordingid = r.id AND
+            r.isseekbardisabled = 1 AND
+            r.approvalstatus = 'approved' AND
+            r.accesstype = 'departmentsorgroups' AND
+            r.status = '" . $jconf['dbstatus_copystorage_ok'] . "'
+        ORDER BY
+            u.id,
+            r.id,
+            ud.departmentid,
+            rvs.timestampuntil
+    ";
+*/
+
+    $query = "
+        SELECT
+            u.id,
+            u.email,
+            rvs.recordingid,
+            r.masterlength,
+            rvs.positionfrom,
+            rvs.positionuntil,
+            rvs.timestampfrom,
+            rvs.timestampuntil,
+            TIMESTAMPDIFF(SECOND, rvs.timestampfrom, rvs.timestampuntil) AS sessionduration,
+            o.elearningcoursecriteria,
+            ROUND( rvs.positionuntil * 100 / r.masterlength, 2) AS sessionpositionpercent,
+            ud.departmentid,
+            u.firstloggedin,
+            u.timestampdisabledafter
+        FROM
+            users AS u,
+            recording_view_sessions AS rvs,
+            recordings AS r,
+            organizations AS o,
+            users_departments AS ud,
+            access AS a
+        WHERE
+            o.id = " . $org['id'] . " AND
+            u.isusergenerated = 1 AND
+            u.disabled = 0 AND
+            u.organizationid = o.id AND
+            ( u.timestampdisabledafter IS NULL OR u.timestampdisabledafter > '" . $end_date . "' ) AND
+            u.id = rvs.userid AND
+            rvs.recordingid = r.id AND
             u.id = ud.userid AND
             ud.departmentid = a.departmentid AND
             a.recordingid = r.id AND
@@ -136,8 +187,8 @@ for ($i = 0; $i < count($org_contracts); $i++ ) {
                 if ( !isset($deps[$user['departmentid']]) ) {
                     $deps[$user['departmentid']] = array();
                     $deps[$user['departmentid']]['name'] = $dep_rec['name'];
-                    $deps[$user['departmentid']]['count'] = 1;
                     $deps[$user['departmentid']]['recordings'] = array();
+                    $deps[$user['departmentid']]['count'] = 1;
                 } else {
                     $deps[$user['departmentid']]['count']++;
                 }
@@ -153,39 +204,59 @@ for ($i = 0; $i < count($org_contracts); $i++ ) {
 
         }
         
-        // Add data to user
+        // Init per user/dep info array
         if ( !isset($users_summary[$idx]) ) {
             $users_summary[$idx]['departmentid'] = $user['departmentid'];
             $users_summary[$idx]['email'] = $user['email'];
+            // Frist login for user
+            $users_summary[$idx]['firstloggedin'] = $user['firstloggedin'];
+            // Validity time for user
             $users_summary[$idx]['timestampdisabledafter'] = $user['timestampdisabledafter'];
-            $users_summary[$idx]['confirmed'] = 0;
-            $users_summary[$idx]['recordings_finished'] = 1;
-            $users_summary[$idx]['session_info'] = array();
-            $users_summary[$idx]['session_info'][$user['recordingid']] = userRecordingViewSessionCSV($user);
-        } else {
-            $users_summary[$idx]['recordings_finished']++;
-            if ( isset($users_summary[$idx]['session_info'][$user['recordingid']]) ) echo "kaki!\n";
-            $users_summary[$idx]['session_info'][$user['recordingid']] = userRecordingViewSessionCSV($user);
+            // Has the course been completed?
+            $users_summary[$idx]['iscoursecompleted'] = 0;
+            // Recordings in this course
+            $users_summary[$idx]['coursecount'] = $deps[$user['departmentid']]['count'];
+            // Completed session information
+            $users_summary[$idx]['session_info_completed'] = array();
+            // Uncompleted session information
+            $users_summary[$idx]['session_info_notcompleted'] = array();
+            // How many recordings has the user finished watching?
+            $users_summary[$idx]['recordings_finished'] = 0;
+            // Report it? Yes, if a session finished between start/end date
+            $users_summary[$idx]['tobereported'] = 0;
         }
-
+        
+        // Is recording playback completed?
+        if ( $user['sessionpositionpercent'] > $org['elearningcoursecriteria'] ) {
+            // Completed
+            $users_summary[$idx]['recordings_finished']++;
+            $users_summary[$idx]['session_info_completed'][$user['recordingid']] = userRecordingViewSessionCSV($user);
+            // Completed at least one recording between start and end time
+            $timestampuntil = strtotime($user['timestampuntil']);
+            if ( ( $timestampuntil >= $start_date_ts ) and ( $timestampuntil <= $end_date_ts ) ) $users_summary[$idx]['tobereported']++;
+        } else {
+            // Not completed
+            $users_summary[$idx]['session_info_notcompleted'][$user['recordingid']] = userRecordingViewSessionCSV($user);
+        }
+        
         if ( $users_summary[$idx]['recordings_finished'] == $deps[$user['departmentid']]['count'] ) {
-            $users_summary[$idx]['confirmed'] = 1;
+            $users_summary[$idx]['iscoursecompleted'] = 1;
         }
         
         $users_sessions->MoveNext();
     }
 
-//var_dump($users_summary);
+    //// Compile e-mail summary
 
-    // USERS FINISHED COURSE - Compile e-mail summary
+    // USERS FINISHED COURSE (at least 1x recording watched between start and end period)
     $mail_body  = "";
     foreach ($users_summary as $key => $user_sum) {
 
-        // Filter confirmed users (watched all recordings in department)
-        if ( $user_sum['confirmed'] == 1 ) {
+        // Filter iscoursecompleted users (watched all recordings in department)
+        if ( ( $user_sum['iscoursecompleted'] == 1 ) and ( $user_sum['tobereported'] > 0 ) ) {
             $mail_body .= $user_sum['email'] . " / " . $deps[$user_sum['departmentid']]['name'] . ":\n";
             
-            foreach ($user_sum['session_info'] as $session_info_key => $session_info) {
+            foreach ($user_sum['session_info_completed'] as $session_info_key => $session_info) {
             
                 $mail_body .= $session_info . "\n";
             
@@ -196,27 +267,37 @@ for ($i = 0; $i < count($org_contracts); $i++ ) {
 
     }
     
-    if ( !empty($mail_body) ) $mail_body = "Users completed accredited courses between " . $start_date . " - " . $end_date . "\n\n" . $mail_body . "\n";
+    if ( !empty($mail_body) ) $mail_body = "*** Users completed accredited courses between " . $start_date . " - " . $end_date . "***\n\n" . $mail_body . "\n";
     
-    // USERS NOT YET FINISHED COURSE AND 1 WEEK TO GO - Compile e-mail summary
+    // USERS NOT YET FINISHED COURSE AND 1 WEEK TO GO
     $mail_body2 = "";
     foreach ($users_summary as $key => $user_sum) {
 
-        // Filter NOT confirmed users (watched all recordings in department)
-        if ( $user_sum['confirmed'] == 0 ) {
+        // Filter NOT iscoursecompleted users (watched all recordings in department)
+        if ( $user_sum['iscoursecompleted'] == 0 ) {
 
-            $weekfromnow = time() + 24 * 3600 * 7 * 3;
+            $weekfromnow = time() + 24 * 3600 * 7;
             $disabletime = strtotime($user_sum['timestampdisabledafter']);
             if ( $disabletime <= $weekfromnow ) {
         
                 $mail_body2 .= $user_sum['email'] . " / " . $deps[$user_sum['departmentid']]['name'] . ":\n";
-                
-                foreach ($user_sum['session_info'] as $session_info_key => $session_info) {
+
+                // Completed sessions: log them to hide uncompleted for the same recording
+                $finished_log = array();
+                foreach ($user_sum['session_info_completed'] as $session_info_key => $session_info) {
                     $mail_body2 .= $session_info . "\n";
+                    array_push($finished_log, $session_info_key);
+                }
                 
+                foreach ($user_sum['session_info_notcompleted'] as $session_info_key => $session_info) {
+                    if ( array_search($session_info_key, $finished_log) === false ) $mail_body2 .= $session_info . "\n";
                 }
 
-                $mail_body2 .= "Valid until;" . $user_sum['timestampdisabledafter'] . "\n";
+                if ( empty($user_sum['timestampdisabledafter']) ) {
+                    $user_sum['timestampdisabledafter'] = date("Y-m-d H:i:s", strtotime($user_sum['firstloggedin']) + 30 * 24 * 3600);
+                }
+                $mail_body2 .= "Valid;" . $user_sum['firstloggedin'] . ";" . $user_sum['timestampdisabledafter'] . "\n";
+                $mail_body2 .= "Finished/All videos;" . $user_sum['recordings_finished'] . ";" . $deps[$user_sum['departmentid']]['count'] . "\n";
                 $mail_body2 .= "\n";
             }
 
@@ -224,7 +305,7 @@ for ($i = 0; $i < count($org_contracts); $i++ ) {
 
     }
 
-    if ( !empty($mail_body2) ) $mail_body2 = "Users NOT completed accredited courses and will be disabled in a week.\n\n" . $mail_body2 . "\n";
+    if ( !empty($mail_body2) ) $mail_body2 = "*** Users NOT completed accredited courses and will be disabled in a week.***\n\n" . $mail_body2 . "\n";
     
     if ( !empty($mail_body) or  !empty($mail_body2) ) {
     
@@ -234,9 +315,10 @@ for ($i = 0; $i < count($org_contracts); $i++ ) {
         // Header
         $header  = "Subscriber: " . $org['name'] . " (id: " . $org['id'] . ")\n";
         $header .= "Domain: " . $org['domain'] . "\n";
-        $header .= "E-mail: " . $org['supportemail'] . "\n";
+        $header .= "E-mail: " . $org['reportemailaddresses'] . "\n";
         $header .= "Period: " . $start_date . " - " . $end_date . "\n";
-
+        $header .= "Course criteria: " . $org['elearningcoursecriteria'] . "%\n";
+        
         // Legend
         $mail = $header . "\n" . $legend . "\n\n";
 
@@ -246,19 +328,23 @@ for ($i = 0; $i < count($org_contracts); $i++ ) {
         // HTML mail
         $html_mail = nl2br($mail, true);
         
-        $email = $org['supportemail'];
-//        $email = "andras.kovacs@videosqr.com";
-        $queue = $app->bootstrap->getMailqueue();
-        $queue->instant = 1;
-        //$queue->put($email, null, $subject, $mail, false, 'text/plain; charset="UTF-8"');
-        $queue->sendHTMLEmail($email, $subject, $html_mail);
-        $debug->log($jconf['log_dir'], ($myjobid . ".log"), "Information sent to subscriber: " . $email . "\n\n" . $mail, $sendmail = false);
-        
-        // !!!
-//        $queue->sendHTMLEmail("szepcsik.tunde@conforg.hu", $subject, $html_mail);
+        //$email = $org['supportemail'];
+        $mail_list = explode(";", $org['reportemailaddresses']);
+        for ($i = 0; $i < count($mail_list); $i++) {
+            if (!filter_var($mail_list[$i], FILTER_VALIDATE_EMAIL)) {
+                $debug->log($jconf['log_dir'], ($myjobid . ".log"), "[ERROR] Mail address is not valid in organization_contracts DB table: " . $org['reportemailaddresses'], $sendmail = false);
+                continue;
+            }
+
+            $queue = $app->bootstrap->getMailqueue();
+            $queue->instant = 1;
+            $queue->sendHTMLEmail($mail_list[$i], $subject, $html_mail);
+        }
+
+        // Log outgoing message
+        $debug->log($jconf['log_dir'], ($myjobid . ".log"), "[INFO] Information sent to subscriber: " . $org['reportemailaddresses'] . "\n\n" . $mail, $sendmail = false);
 
     }
-    
     
     $org_contracts->MoveNext();
 }
@@ -279,15 +365,17 @@ global $db, $debug, $app, $myjobid;
             o.iselearningcoursesessionbound,
             oc.identifier,
             oc.startdate,
-            oc.enddate
+            oc.enddate,
+            oc.reportemailaddresses
         FROM
             organizations AS o,
             organizations_contracts AS oc
         WHERE
             o.issubscriber = 1 AND
-            o.id = 200 AND # !!! Conforg only - TEST !!!
             oc.organizationid = o.id AND
             oc.disabled = 0 AND
+            oc.isreportenabled = 1 AND
+            oc.reportemailaddresses IS NOT NULL AND
             oc.startdate <= NOW() AND ( oc.enddate >= NOW() OR oc.enddate IS NULL)
         ORDER BY
             o.id
