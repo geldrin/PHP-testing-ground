@@ -43,7 +43,7 @@ if ( $org_contracts === false ) {
 
 // Previous day
 $interval_start = date('Y-m-d', strtotime(' -1 week'));
-$interval_end = date('Y-m-d', strtotime(' -1 week +7 day'));
+$interval_end = date('Y-m-d', strtotime(' -1 week'));
 $start_date = $interval_start . " 00:00:00";
 $end_date = $interval_end . " 23:59:59";
 $start_date_ts = strtotime($start_date);
