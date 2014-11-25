@@ -40,18 +40,22 @@ abstract class View_statistics extends \Springboard\Model {
   }
 
   protected function newSlice( $values ) {
-    if ( $values['action'] == 'PLAY' ) {
+    $lastslice = $this->getLastSlice( $values );
 
-      $lastslice = $this->getLastSlice( $values );
-      // SEEK utan jon egy PLAY akkor nem hozunk letre uj sliceot mert a
-      // SEEK-ben "bennevan" a PLAY
-      if (
-           $lastslice and
-           $lastslice['startaction'] == 'SEEK' and !$lastslice['stopaction']
-         )
-        return $this->updateSlice( $values ); // akkor updateljuk, nem krealunk ujjat
-
-    }
+    // SEEK utan jon egy PLAY akkor nem hozunk letre uj sliceot mert a
+    // SEEK-ben "bennevan" a PLAY
+    if (
+         $values['action'] == 'PLAY' and
+         $lastslice and
+         $lastslice['startaction'] == 'SEEK' and
+         !$lastslice['stopaction']
+       )
+      return $this->updateSlice( $values ); // akkor updateljuk, nem krealunk ujjat
+    elseif ( // mar nyitottunk egy slice-ot, de a newslice csak kesobb esett be
+             $lastslice and
+             $lastslice['viewsessionid'] === $values['viewsessionid']
+           )
+      return $this->row; // ignore
 
     $values['startaction'] = $values['action'];
     $this->insert( $values );
