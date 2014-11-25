@@ -16,17 +16,17 @@ class View_statistics_live extends \Model\View_statistics {
 
   protected function newSlice( $values ) {
     $values['timestampuntil'] = $values['timestampfrom'] = date('Y-m-d H:i:s');
-    parent::newSlice( $values );
+    return parent::newSlice( $values );
   }
 
   protected function closeSlice( $values ) {
     unset( $values['timestampfrom'] );
-    parent::closeSlice( $values );
+    return parent::closeSlice( $values );
   }
 
   protected function updateSlice( $values, $stopaction = null ) {
     $values['timestampuntil'] = date('Y-m-d H:i:s');
-    parent::updateSlice( $values, $stopaction );
+    return parent::updateSlice( $values, $stopaction );
   }
 
 }

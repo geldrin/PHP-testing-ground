@@ -55,15 +55,16 @@ abstract class View_statistics extends \Springboard\Model {
 
     $values['startaction'] = $values['action'];
     $this->insert( $values );
+    return $this->row;
   }
 
   protected function closeAndCreateSlice( $values ) {
     $this->closeSlice( $values );
-    $this->newSlice( $values );
+    return $this->newSlice( $values );
   }
 
   protected function closeSlice( $values ) {
-    $this->updateSlice( $values, $values['action'] );
+    return $this->updateSlice( $values, $values['action'] );
   }
 
   protected function getLastSlice( $values ) {
@@ -92,7 +93,7 @@ abstract class View_statistics extends \Springboard\Model {
     $row = $this->getLastSlice( $values );
 
     if ( !$row )
-      throw new \Exception("No open slice found!");
+      $row = $this->newSlice( $values );
 
     $filteredvalues = array();
     foreach( $values as $field => $value ) {

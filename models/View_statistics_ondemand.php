@@ -17,8 +17,11 @@ class View_statistics_ondemand extends \Model\View_statistics {
   }
 
   protected function newSlice( $values ) {
+    if ( !isset( $values['positionfrom'] ) or !$values['positionfrom'] )
+      $values['positionfrom'] = $values['positionuntil'];
+
     unset( $values['positionuntil'] );
-    parent::newSlice($values);
+    return parent::newSlice($values);
   }
 
 }
