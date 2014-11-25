@@ -1233,7 +1233,8 @@ class Channels extends \Springboard\Model {
       $d->log(
         false,
         false,
-        "No channel_types row with iscourse=1 set for the given organizationid ($organizationid)!",
+        "No channel_types row with iscourse=1 set for the given organizationid ($organizationid)!\n" .
+        \Springboard\Debug::getRequestInformation(),
         true
       );
     }
