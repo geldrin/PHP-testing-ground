@@ -8,6 +8,7 @@ class Admin extends \Visitor\Paging {
   );
   protected $insertbeforepager = Array( 'Visitor/Departments/Paging/AdminBeforepager.tpl' );
   protected $template = 'Visitor/Departments/Paging/Admin.tpl';
+  protected $perpageselector = false;
   
   public function init() {
     
