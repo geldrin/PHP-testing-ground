@@ -2,7 +2,7 @@
   "error": {
 	"onDemandRTMPStream":{
 		"connectionErrorTitle":"Kapcsolati hiba",
-		"connectionNetworkChange":"A szerver nem elérhető. (Hálozat váltás)",
+		"connectionNetworkChange":"A szerver nem elérhető. (Hálozat megszakadt)",
 		"connectionFailed":"A szerver nem elérhető.",
 		"connectionCertificateInvalid":"A biztonságos kapcsolat felépítése sikertelen. (Érvénytelen tanusítvány)",
 		"connectionInvalidApp":"A kiszolgáló alkalmazás neve helytelen.",
