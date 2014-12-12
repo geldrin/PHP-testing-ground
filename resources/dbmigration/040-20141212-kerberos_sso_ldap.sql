@@ -20,7 +20,7 @@ CREATE TABLE IF NOT EXISTS `organization_directories` (
   `type` text NOT NULL,
   `server` text NOT NULL,
   `user` text NOT NULL,
-  `password` int(11) NOT NULL,
+  `password` text NOT NULL,
   `domains` text NOT NULL,
   `name` text NOT NULL,
   `ldapgroupaccess` text NOT NULL,
