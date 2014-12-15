@@ -32,6 +32,19 @@ if ( is_file( $app->config['datapath'] . 'jobs/job_accounting.stop' ) or is_file
 // Contract data: should be retrived from DB later, when contract description database is implemented.
 include_once('subscriber_descriptor.php');
 
+// Look current month?
+$iscurrentmonth = false;
+if ( $argc >= 2 ) {
+    switch ( $argv[1] ) {
+        case "-currentmonth":
+            $iscurrentmonth = true;
+            break;
+        case "-help":
+            echo "-currentmonth: print current month, instead of last month\n";
+            break;
+    }
+}
+
 // Establish database connection
 $db = null;
 $db = db_maintain();
@@ -46,14 +59,19 @@ for ($i = 0; $i < count($org_contracts); $i++ ) {
 	$this_year = date("Y");
 	$this_month = date("n");
 
-	if ( $this_month == 1 ) {
-		$year = $this_year - 1;			
-		$month = 12;
-	} else {
-		$year = $this_year;
-		$month = $this_month - 1;
-	}
-
+    if ( !$iscurrentmonth ) {
+        if ( $this_month == 1 ) {
+            $year = $this_year - 1;			
+            $month = 12;
+        } else {
+            $year = $this_year;
+            $month = $this_month - 1;
+        }
+    } else {
+        $year = $this_year;
+        $month = $this_month; 
+    }
+    
 	$month_days = cal_days_in_month(CAL_GREGORIAN, $month, $year);
 
 	$firstloggedin_enddate = $year . "-" . sprintf("%02d", $month) . "-" . $month_days . " 23:59:59";
