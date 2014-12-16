@@ -2,7 +2,7 @@
   "error": {
 	"onDemandRTMPStream":{
 		"connectionErrorTitle":"Kapcsolati hiba",
-		"connectionNetworkChange":"A szerver nem elérhető. (Hálozat váltás)",
+		"connectionNetworkChange":"A szerver nem elérhető. (Hálozat megszakadt)",
 		"connectionFailed":"A szerver nem elérhető.",
 		"connectionCertificateInvalid":"A biztonságos kapcsolat felépítése sikertelen. (Érvénytelen tanusítvány)",
 		"connectionInvalidApp":"A kiszolgáló alkalmazás neve helytelen.",
@@ -91,7 +91,8 @@
        "confirm":"Itt vagyok",
        "timeoutTitle": "A felvétel az Ön személyes jelenlétét igényli.",
        "timeoutMessage": "A jelenlét ellenőrzése sikertelen volt, ezért a kapcsolat megszakadt.",
-       "replay": "Újrajátszás"
+       "replay": "Újrajátszás",
+       "continueFromLastPosition": "Folytatás [LAST_TIME]"
 	},
 	"record": {    
        "title":"Ez a felvétel az Ön személyes jelenlétét igényli",
@@ -99,7 +100,8 @@
        "confirm":"Itt vagyok",
        "timeoutTitle": "A felvétel az Ön személyes jelenlétét igényli.",
        "timeoutMessage": "A jelenlét ellenőrzése sikertelen volt, ezért a kapcsolat megszakadt.",
-       "replay": "Újrajátszás"
+       "replay": "Újrajátszás",
+       "continueFromLastPosition": "Folytatás [LAST_TIME]"
 	}
   },
   "layout": {
@@ -166,9 +168,8 @@
       "mkd":"Macedonian",
       "nor":"Norwegian",
       "rus":"Russian",
-      "gre":"Greek",
       "per":"Persian",
-      "rum":"Romanian",
+      "rom":"Romanian",
       "swe":"Swedish",
       "srp":"Serbian",
       "slo":"Slovak",
@@ -188,6 +189,7 @@
     "playing": "A média lejátszása elindult.",
     "paused": "A média lejátszása leállt.",
 	"seek": "Ugrás [TIME]-ra",
-	"live": "ÉLŐ"
+	"live": "ÉLŐ",
+    "tryReconnect": "Folytatom"
   }
 }
