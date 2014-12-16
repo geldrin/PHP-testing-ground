@@ -3618,8 +3618,8 @@ class Recordings extends \Springboard\Model {
           $position
         )
       ON DUPLICATE KEY UPDATE
-        timestampuntil = IF( $position < positionuntil, timestampuntil, $timestamp),
-        positionuntil  = IF( $position < positionuntil, positionuntil, $position)
+        timestampuntil = IF( $position <= positionuntil, timestampuntil, $timestamp),
+        positionuntil  = IF( $position <= positionuntil, positionuntil, $position)
     ");
 
   }
