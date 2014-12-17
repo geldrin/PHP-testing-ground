@@ -67,7 +67,7 @@ if ( $recordings !== false ) {
 
 		$recording = array();
 		$recording = $recordings->fields;
-
+		
 		// Reconvert flag := false (legacy profile)
 		$isreconvertforce = false;
 		// Recording version status filter set
@@ -86,7 +86,7 @@ if ( $recordings !== false ) {
 				}
 			}
 		}
-
+		
 		// ## Recording level reconvert: mark all recording versions to be deleted (onstorage, convert, converting, stop, copy*, reconvert)
 		// Content: Do content first. If legacy encoded, we will reconvert recording
 		if ( $recording['contentstatus'] == $jconf['dbstatus_reconvert'] ) {
@@ -109,7 +109,7 @@ if ( $recordings !== false ) {
 			}
 			updateRecordingVersionStatusApplyFilter($recording['id'], $jconf['dbstatus_markedfordeletion'], "recording", $filter);
 		}
-
+		
 		// ## Insert recording versions (recording_versions)
 		insertRecordingVersions($recording);
 
@@ -219,6 +219,9 @@ global $jconf, $debug, $db, $app;
 			r.contentmastervideores,
 			r.mastervideofilename,
 			r.contentmastervideofilename,
+			r.mastermediatype,
+			r.contentmastermediatype,
+			r.mediatype,
 			r.organizationid,
 			r.encodinggroupid,
 			o.defaultencodingprofilegroupid
@@ -234,7 +237,7 @@ global $jconf, $debug, $db, $app;
 			)
 		ORDER BY
 			r.id";
-
+			
 	try {
 		$rs = $db->Execute($query);
 	} catch (exception $err) {
@@ -316,7 +319,12 @@ global $db, $debug, $jconf, $app;
 		if ( $profileset !== false ) {
 
 			for ( $i = 0; $i < count($profileset); $i++ ) {
-
+				
+				if ($profileset[$i]['mediatype'] == 'audio' && $mtype != 'videoonly') {
+					// If encprofile is audio-only, but the input has no audiochannel, skip inserting 'audio' rec. version
+					continue;
+				}
+				
 				$values = array(
 					'timestamp'			=> date('Y-m-d H:i:s'),
 					'converternodeid'	=> $converternodeid,
@@ -441,6 +449,7 @@ global $db, $debug, $jconf;
 			ep.name,
 			ep.shortname,
 			ep.type,
+			ep.mediatype,
 			ep.videobboxsizex,
 			ep.videobboxsizey,
 			epprev.videobboxsizex AS parentvideobboxsizex,
