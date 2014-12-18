@@ -1118,10 +1118,14 @@ function db_maintain() {
 	$mail_head .= "SITE: " . $app->config['baseuri'] . "<br/>";
 	$mail_head .= "JOB: " . $job . ".php<br/>";
 
-	$num_retries = 6;			// X retries taking a sleep_time = sleep_time * 2 after each
+	$num_retries = 24;			// X retries taking a sleep_time = sleep_time * 2 after each until 8 round (64 mins)
 	$retry = 1;
 	while ( $retry <= $num_retries ) {
 
+        // Watchdog timer
+        $app->watchdog();
+    
+        // Exit if stop file is enabled in meanwhile
 		if ( is_file( $app->config['datapath'] . 'jobs/' . $job . '.stop' ) or is_file( $app->config['datapath'] . 'jobs/all.stop' ) ) exit;
 
 		// Establish database connection
@@ -1137,8 +1141,8 @@ function db_maintain() {
 				return $db;
 			}
 		} catch (exception $err) {
-			// Send mail warning messages every 5 retries
-			if ( ( $retry < $num_retries ) and ( $retry % 3 ) == 0 ) {
+			// Send mail warning messages every 4 retries
+			if ( ( $retry < $num_retries ) and ( $retry % 8 ) == 0 ) {
 				$title = "[WARNING] Cannot connect to DB. (retried " . $retry . " / " . $num_retries . "). Keep trying.";
 				$body  = $mail_head . "<br/>" . $title . "<br/><br/>Please check DB for errors!<br/><br/>Error message:<br/><br/>" . $err . "<br/>";
 				sendHTMLEmail_errorWrapper($title, $body);
@@ -1149,9 +1153,12 @@ function db_maintain() {
 
 		// Sleep 1 mins then try again
 		sleep($sleep_time);
-		$sleep_time = $sleep_time * 2;
+        
+        // Increase retry timeout (until a certain point)
+        if ( $retry < 8 ) $sleep_time = $sleep_time * 2;
 	}
 
+    // Permanent error. Should we allow this?
 	$title = "[FATAL ERROR] Cannot connect to DB permanently. Check DB!!! Job has been terminated.";
 	$body  = $mail_head . "<br/>" . $title . "<br/><br/>Job will be restarted, config will be reloaded. Please check DB for errors!<br/>";
 	sendHTMLEmail_errorWrapper($title, $body);
