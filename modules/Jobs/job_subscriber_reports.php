@@ -269,18 +269,19 @@ while ( !$org_contracts->EOF ) {
 
     if ( !empty($mail_body2) ) $mail_body2 = "*** Users NOT completed accredited courses and will be disabled in a " . round($user_disable_interval /3600 / 24 ) . " days from now. ***\n\n" . $mail_body2 . "\n";
     
-    if ( !empty($mail_body) or  !empty($mail_body2) ) {
-    
-        // Subject
-        $subject = "Accredited courses daily report for period: " . $start_date . " - " . $end_date;
-    
         // Header
-        $header  = "Subscriber: " . $org['name'] . " (id: " . $org['id'] . ")\n";
-        $header .= "Domain: " . $org['domain'] . "\n";
+    $header  = "Subscriber: " . $org['name'] . " (id: " . $org['id'] . ")\n";
+    $header .= "Domain: " . $org['domain'] . "\n";
+    
+    if ( !empty($mail_body) or !empty($mail_body2) ) {
+
         $header .= "E-mail: " . $org['reportemailaddresses'] . "\n";
         $header .= "Period: " . $start_date . " - " . $end_date . "\n";
         $header .= "Course criteria: " . $org['elearningcoursecriteria'] . "%\n";
-        
+    
+        // Subject
+        $subject = "Accredited courses daily report for period: " . $start_date . " - " . $end_date;
+            
         // Legend
         $mail = $header . "\n" . $legend . "\n\n";
 
@@ -304,6 +305,9 @@ while ( !$org_contracts->EOF ) {
         // Log outgoing message
         $debug->log($jconf['log_dir'], ($myjobid . ".log"), "[INFO] Information sent to subscriber: " . $org['reportemailaddresses'] . "\n\n" . $mail, $sendmail = false);
 
+    } else {
+    
+        $debug->log($jconf['log_dir'], ($myjobid . ".log"), "[INFO] No information found for subscriber:\n" . $header, $sendmail = false);
     }
     
     $org_contracts->MoveNext();
@@ -346,7 +350,7 @@ global $db, $debug, $app, $myjobid;
         ORDER BY
             o.id
     ";
-    
+
     unset($org_contracts);
     
     try {
