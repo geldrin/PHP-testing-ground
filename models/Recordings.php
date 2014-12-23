@@ -2443,6 +2443,7 @@ class Recordings extends \Springboard\Model {
         WHERE
           userid      = '" . $user['id'] . "' AND
           recordingid = '" . $this->id . "'
+        ORDER BY id DESC
         LIMIT 1
       ");
 
@@ -3557,9 +3558,12 @@ class Recordings extends \Springboard\Model {
   public function updateLastPosition( $userid, $lastposition, $sessionid ) {
     
     $this->ensureID();
-    
-    $row = $this->db->getRow("
-      SELECT id, position
+    $timeout = $this->bootstrap->config['viewsessiontimeouthours'];
+    $row     = $this->db->getRow("
+      SELECT
+        id,
+        position,
+        IF(timestamp < DATE_SUB(NOW(), INTERVAL $timeout HOURS), 1, 0) AS expired
       FROM recording_view_progress
       WHERE
         userid      = '$userid' AND
@@ -3574,53 +3578,95 @@ class Recordings extends \Springboard\Model {
       'timestamp'   => date('Y-m-d H:i:s'),
       'position'    => $lastposition,
     );
-    
-    if ( !$row )
-      $progressModel->insert( $record );
-    elseif ( $row['position'] < $lastposition ) {
-      
-      $progressModel->id = $row['id'];
-      $progressModel->updateRow( $record );
-      
+
+    $updatesec = $this->bootstrap->config['recordingpositionupdateseconds'];
+    $extrasec  = $this->bootstrap->config['viewsessionallowedextraseconds'];
+    $ret       = false;
+
+    // ha a lastposition ennel nagyobb akkor nem csinalunk semmit
+    if ( $row and $lastposition > $row['position'] + $updatesec + $extrasec ) {
+      $this->updateSession( $userid, $lastposition, $sessionid );
+      $this->endTrans();
+      return $ret;
     }
 
+    if ( !$row ) {
+
+      $progressModel->insert( $record );
+      $ret = true;
+
+    } elseif ( $row['position'] < $lastposition and !$row['expired'] ) {
+
+      $progressModel->id = $row['id'];
+      unset( $record['timestamp'] ); // nem updatelhetunk timestampet hogy kideruljon hogy kifutottunk az idobol
+      $progressModel->updateRow( $record );
+      $ret = true;
+
+    } elseif ( $row['expired'] ) { // reset
+
+      $record['position'] = 0;
+      $progressModel->id  = $row['id'];
+      $progressModel->updateRow( $record );
+
+    }
+
+    $this->endTrans();
     $this->updateSession( $userid, $lastposition, $sessionid );
+    return $ret;
 
   }
 
   private function updateSession( $userid, $position, $sessionid ) {
-    
+
     $this->ensureID();
     $recordingid = $this->db->qstr( $this->id );
     $userid      = $this->db->qstr( $userid );
     $sessionid   = $this->db->qstr( $sessionid );
     $timestamp   = $this->db->qstr( date('Y-m-d H:i:s') );
     $position    = $this->db->qstr( $position );
+    $timeout     = $this->bootstrap->config['viewsessiontimeouthours'];
 
-    $this->db->execute("
-      INSERT INTO recording_view_sessions
-        (
-          recordingid,
-          userid,
-          sessionid,
-          timestampfrom,
-          timestampuntil,
-          positionfrom,
-          positionuntil
-        ) VALUES
-        (
-          $recordingid,
-          $userid,
-          $sessionid,
-          $timestamp,
-          $timestamp,
-          $position,
-          $position
-        )
-      ON DUPLICATE KEY UPDATE
-        timestampuntil = IF( $position <= positionuntil, timestampuntil, $timestamp),
-        positionuntil  = IF( $position <= positionuntil, positionuntil, $position)
+    $this->startTrans();
+    $existing = $this->db->getRow("
+      SELECT
+        id,
+        IF(timestampfrom < DATE_SUB($timestamp, INTERVAL $timeout HOURS), 1, 0) AS expired
+      FROM recording_view_sessions
+      WHERE sessionid = $sessionid
+      ORDER BY id DESC
+      LIMIT 1
     ");
+    if ( !$existing ) {
+      $this->db->execute("
+        INSERT INTO recording_view_sessions
+          (
+            recordingid,
+            userid,
+            sessionid,
+            timestampfrom,
+            timestampuntil,
+            positionfrom,
+            positionuntil
+          ) VALUES
+          (
+            $recordingid,
+            $userid,
+            $sessionid,
+            $timestamp,
+            $timestamp,
+            $position,
+            $position
+          )
+      ");
+    } elseif ( !$existing['expired'] ) {
+      $this->db->execute("
+        UPDATE recording_view_sessions SET
+          timestampuntil = IF( $position <= positionuntil, timestampuntil, $timestamp),
+          positionuntil  = IF( $position <= positionuntil, positionuntil, $position)
+        WHERE id = '" . $existing['id'] . "'
+        LIMIT 1
+      ");
+    }
 
   }
   
