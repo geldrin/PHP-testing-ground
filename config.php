@@ -186,17 +186,6 @@ $config = array(
   // Felvetelhez tartozo utolso megtekintett pozicionak frissitese ennyi
   // masodpercenkent tortenik
   'recordingpositionupdateseconds' => 60,
-  // a view sessionok timeoutja órákban
-  'viewsessiontimeouthours' => 5,
-  // ha jon egy jelentes az elozohoz kepest ezen kivuli intervallumban
-  // akkor nem szamoljuk a biztonsag kedveert
-  // tehat ha 0-rol kezdjuk a lejatszast akkor elfogadjuk ha a jelentes
-  // elozojelentes + viewsessionallowedextraseconds intervallumban van
-  // azert hogy ha 0-zuk a sessiont es aztan bejon egy jelentes 9000-es ertekkel
-  // azt ne szamoljuk
-  // ugy szamoljuk hogy
-  // elozojelentes + recordingpositionupdateseconds + viewsessionallowedextraseconds > jelentes
-  'viewsessionallowedextraseconds' => 360,
 
   //----
   // A flash altal is hasznalt kozos seed amivel a hasheket hasznaljuk.

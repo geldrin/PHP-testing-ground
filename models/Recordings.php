@@ -3555,11 +3555,14 @@ class Recordings extends \Springboard\Model {
     
   }
   
-  public function updateLastPosition( $userid, $lastposition, $sessionid ) {
+  public function updateLastPosition( $organization, $userid, $lastposition, $sessionid ) {
     
     $this->ensureID();
-    $timeout = $this->bootstrap->config['viewsessiontimeouthours'];
-    $row     = $this->db->getRow("
+    $timeout   = $organization['viewsessiontimeouthours'];
+    $updatesec = $this->bootstrap->config['recordingpositionupdateseconds'];
+    $extrasec  = $organization['viewsessionallowedextraseconds'];
+    $ret       = false;
+    $row       = $this->db->getRow("
       SELECT
         id,
         position,
@@ -3579,13 +3582,9 @@ class Recordings extends \Springboard\Model {
       'position'    => $lastposition,
     );
 
-    $updatesec = $this->bootstrap->config['recordingpositionupdateseconds'];
-    $extrasec  = $this->bootstrap->config['viewsessionallowedextraseconds'];
-    $ret       = false;
-
     // ha a lastposition ennel nagyobb akkor nem csinalunk semmit
     if ( $row and $lastposition > $row['position'] + $updatesec + $extrasec ) {
-      $this->updateSession( $userid, $lastposition, $sessionid );
+      $this->updateSession( $organization, $userid, $lastposition, $sessionid );
       $this->endTrans();
       return $ret;
     }
@@ -3611,12 +3610,12 @@ class Recordings extends \Springboard\Model {
     }
 
     $this->endTrans();
-    $this->updateSession( $userid, $lastposition, $sessionid );
+    $this->updateSession( $organization, $userid, $lastposition, $sessionid );
     return $ret;
 
   }
 
-  private function updateSession( $userid, $position, $sessionid ) {
+  private function updateSession( $organization, $userid, $position, $sessionid ) {
 
     $this->ensureID();
     $recordingid = $this->db->qstr( $this->id );
@@ -3624,7 +3623,7 @@ class Recordings extends \Springboard\Model {
     $sessionid   = $this->db->qstr( $sessionid );
     $timestamp   = $this->db->qstr( date('Y-m-d H:i:s') );
     $position    = $this->db->qstr( $position );
-    $timeout     = $this->bootstrap->config['viewsessiontimeouthours'];
+    $timeout     = $organization['viewsessiontimeouthours'];
 
     $this->startTrans();
     $existing = $this->db->getRow("

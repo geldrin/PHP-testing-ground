@@ -266,6 +266,36 @@ $config = Array(
     'value'       => 0,
   ),
 
+  'viewsessiontimeouthours' => array(
+    'displayname' => 'A view sessionok timeoutja órákban',
+    'type'        => 'inputText',
+    'value'       => '5',
+    'validation'  => array(
+      array(
+        'type'     => 'number',
+        'real'     => 0,
+        'minimum'  => 1,
+        'maximum'  => 10000,
+        'required' => true,
+      ),
+    ),
+  ),
+
+  'viewsessionallowedextraseconds' => array(
+    'displayname' => 'Engedélyezett intervallum amiben view session jelentés jöhet az előzőhöz képest.',
+    'type'        => 'inputText',
+    'value'       => '360',
+    'validation'  => array(
+      array(
+        'type'     => 'number',
+        'real'     => 0,
+        'minimum'  => 1,
+        'maximum'  => 100000,
+        'required' => true,
+      ),
+    ),
+  ),
+
   'disabled' => array(
     'displayname' => 'Kitiltva?',
     'type'        => 'inputRadio',
