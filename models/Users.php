@@ -988,11 +988,12 @@ class Users extends \Springboard\Model {
     setcookie('autologin', '', 1, '/', null, $ssl, true );
   }
 
-  public function loginFromExternalID( $externalid, $organizationid, $ipaddresses ) {
+  public function loginFromExternalID( $externalid, $source, $organizationid, $ipaddresses ) {
 
     $where  = array(
       'externalid = ' . $this->db->qstr( $externalid ),
       'disabled   = ' . $this->db->qstr( self::USER_VALIDATED ),
+      'source     = ' . $this->db->qstr( $source ),
     );
 
     if ( $organizationid !== null )
@@ -1027,7 +1028,7 @@ class Users extends \Springboard\Model {
     $this->updateSessionInformation();
 
     $this->updateLastlogin(
-      "(kerberos auto-login)\n" .
+      "($source auto-login)\n" .
       \Springboard\Debug::getRequestInformation( 0, false ),
       $ipaddresses
     );

@@ -152,14 +152,18 @@ class Controller extends \Springboard\Controller\Visitor {
 
     // we notice changes via the remoteuser changing undearneath us
     // TODO check for a timeout to check if LDAP permissions changed?
-    if ( $user['id'] and $user['externalid'] === $remoteuser )
+    if (
+         $user['id'] and
+         $user['source'] === 'kerberos' and
+         $user['externalid'] === $remoteuser
+       )
       return;
 
     $user->clear(); // reseteljuk a usert a biztonsag kedveert
     $userModel   = $this->bootstrap->getModel('users');
     $ipaddresses = $this->getIPAddress(true);
     $valid       = $userModel->loginFromExternalID(
-      $remoteuser, $this->organization['id'], $ipaddresses
+      $remoteuser, 'kerberos', $this->organization['id'], $ipaddresses
     );
 
     if ( !$valid ) // TODO insert
