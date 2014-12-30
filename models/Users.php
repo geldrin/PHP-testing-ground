@@ -988,4 +988,52 @@ class Users extends \Springboard\Model {
     setcookie('autologin', '', 1, '/', null, $ssl, true );
   }
 
+  public function loginFromExternalID( $externalid, $organizationid, $ipaddresses ) {
+
+    $where  = array(
+      'externalid = ' . $this->db->qstr( $externalid ),
+      'disabled   = ' . $this->db->qstr( self::USER_VALIDATED ),
+    );
+
+    if ( $organizationid !== null )
+      $where[] = 'organizationid = ' . $this->db->qstr( $organizationid );
+
+    $where = implode(" AND ", $where );
+    $row   = $this->db->getRow("
+      SELECT *
+      FROM users
+      WHERE $where
+      ORDER BY id
+      LIMIT 1
+    ");
+
+    if ( !$row )
+      return false;
+
+    if ( $row['isadmin'] )
+      $row['organizationid'] = $organizationid;
+
+    $valid = $this->checkUser( $row, $organizationid );
+    if ( $valid !== true )
+      return false;
+
+    $this->id  = $row['id'];
+    $this->row = $row;
+
+    if ( !$this->checkSingleLoginUsers() )
+      return false;
+
+    $this->registerForSession();
+    $this->updateSessionInformation();
+
+    $this->updateLastlogin(
+      "(kerberos auto-login)\n" .
+      \Springboard\Debug::getRequestInformation( 0, false ),
+      $ipaddresses
+    );
+
+    return true;
+
+  }
+
 }

@@ -107,7 +107,7 @@ class Organizations extends \Springboard\Model\Multilingual {
     
   }
 
-  public function transformLanguages() {
+  public function addExtraData() {
 
     $this->ensureObjectLoaded();
 
@@ -119,6 +119,14 @@ class Organizations extends \Springboard\Model\Multilingual {
 
     foreach( $languagekeys as $language )
       $organization['languages'][ $language ] = $languages[ $language ];
+
+    $organization['authtypes'] = $this->db->getArray("
+      SELECT *
+      FROM organizations_authtypes
+      WHERE
+        organizationid = '" . $this->id . "' AND
+        disabled       = 0
+    ");
 
     return $organization;
 
@@ -132,7 +140,7 @@ class Organizations extends \Springboard\Model\Multilingual {
       if ( !$this->checkDomain( $domain, $isstatic ) )
         return false;
 
-      $organization = $this->transformLanguages();
+      $organization = $this->addExtraData();
       $cache->put( $organization );
 
       $cachekeys = array(
@@ -166,7 +174,7 @@ class Organizations extends \Springboard\Model\Multilingual {
       if ( !$this->row )
         return false;
 
-      $organization = $this->transformLanguages();
+      $organization = $this->addExtraData();
       $cache->put( $organization );
 
       $cachekeys = array(

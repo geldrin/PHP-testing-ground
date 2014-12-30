@@ -5,8 +5,9 @@ ADD  `directoryid` INT( 10 ) NULL DEFAULT NULL AFTER  `source` ,
 ADD  `directorygroupobjectname` TEXT CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL AFTER  `directoryid` ,
 ADD  `directorygroupwhenchanged` TEXT CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL AFTER  `directorygroupobjectname`;
 
-CREATE TABLE IF NOT EXISTS `organization_authtypes` (
+CREATE TABLE `organizations_authtypes` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `organizationid` int(10) unsigned NOT NULL,
   `type` text NOT NULL,
   `domains` text NOT NULL,
   `name` text,
@@ -15,8 +16,9 @@ CREATE TABLE IF NOT EXISTS `organization_authtypes` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
 
-CREATE TABLE IF NOT EXISTS `organization_directories` (
+CREATE TABLE `organizations_directories` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `organizationid` int(10) unsigned NOT NULL,
   `type` text NOT NULL,
   `server` text NOT NULL,
   `user` text NOT NULL,
@@ -30,6 +32,5 @@ CREATE TABLE IF NOT EXISTS `organization_directories` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
 
-
-
-
+ALTER TABLE  `organizations_authtypes` ADD INDEX  `ix-org-disabled` (  `organizationid` ,  `disabled` );
+ALTER TABLE  `organizations_directories` ADD INDEX  `ix-org-disabled` (  `organizationid` ,  `disabled` );
