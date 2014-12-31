@@ -147,7 +147,7 @@ class Controller extends \Springboard\Controller\Visitor {
     $domain = substr( $remoteuser, $pos + 1 );
 
     // a domain nincs a vart domain-u loginok kozott
-    if ( !isset( $domans[ $domain ] ) )
+    if ( !isset( $domains[ $domain ] ) )
       return $this->redirectWithMessage('users/login', $l('users', 'kerberosloginfailed'), array('error' => 'domain') );
 
     // we notice changes via the remoteuser changing undearneath us
