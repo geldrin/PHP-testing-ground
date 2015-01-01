@@ -48,7 +48,7 @@ class Controller extends \Springboard\Controller\Visitor {
       
     }
     
-    $this->handleKerberosLogin();
+    $this->handleLogin();
     $this->handleAutologin();
     $this->debugLogUsers();
     $this->handleSingleLoginUsers();
@@ -79,99 +79,44 @@ class Controller extends \Springboard\Controller\Visitor {
 
   }
 
-  public function handleKerberosLogin() {
+  public function handleLogin() {
 
     if ( empty( $this->organization['authtypes'] ) )
       return;
 
-    // az organization egyatalan var kerberos logint?
-    $domains = array();
-    foreach( $this->organization['authtypes'] as $type ) {
-      if ( $type['type'] !== 'kerberos' )
+    $ipaddresses = $this->getIPAddress(true);
+    foreach( $this->organization['authtypes'] as $authtype ) {
+      if ( $authtype['type'] === 'local' )
         continue;
 
-      $doms = explode(',', $type['domains'] );
-      foreach($doms as $value)
-        $domains[ trim($value) ] = true;
+      $class = "\\AuthTypes\\" . ucfirst( $authtype['type'] );
+      $auth = new $class( $this->bootstrap, $this->organization, $ipaddresses);
+
+      try {
+
+        if ( $auth->handleType( $authtype, $this->module, $this->action ) ) {
+          $user = $this->bootstrap->getSession('user');
+          $this->toSmarty['member'] = $user->toArray();
+          $this->logUserLogin( $authtype['type'] . '-LOGIN');
+        }
+
+      } catch( \AuthTypes\Exception $e ) {
+
+        if ($e->redirectmessage)
+          $this->redirectWithMessage(
+            $e->redirecturl,
+            $e->redirectmessage,
+            $e->redirectparams
+          );
+        else
+          $this->redirect(
+            $e->redirecturl,
+            $e->redirectparams
+          );
+
+      }
 
     }
-
-    if ( empty( $domains ) )
-      return;
-
-    $skiplogin = array(
-      'users' => array(
-        'login'  => true,
-        'logout' => true,
-      ),
-      'recordings' => array(
-        'checkstreamaccess'       => true,
-        'securecheckstreamaccess' => true,
-      ),
-      'live' => array(
-        'checkstreamaccess'       => true,
-        'securecheckstreamaccess' => true,
-      ),
-      'combine' => array(
-        'css' => true,
-        'js'  => true,
-      ),
-    );
-
-    foreach( $skiplogin as $module => $actions ) {
-
-      if ( $this->module == $module and isset( $actions[ $this->action ] ) )
-        return;
-
-    }
-
-    $user = $this->bootstrap->getSession('user');
-    $l = $this->bootstrap->getLocalization();
-
-    // ha be van lepve a user, de nem a kerberos login leptette be akkor valoszinu
-    // hogy a fallback metodus leptette be, engedjuk
-    if ( $user['id'] and !$user['kerberoslogin'] )
-      return;
-
-    // a kerberos login ebbe a ket mezobe rakja a login nevet username@DOMAIN alakban
-    if ( isset( $_SERVER["REDIRECT_REMOTE_USER"] ) )
-      $remoteuser = $_SERVER["REDIRECT_REMOTE_USER"];
-    elseif ( isset( $_SERVER["REMOTE_USER"] ) )
-      $remoteuser = $_SERVER["REMOTE_USER"];
-
-    // nincs remoteuser
-    if ( !strlen( trim( $remoteuser ) ) )
-      return $this->redirectWithMessage('users/login', $l('users', 'kerberosloginfailed'), array('error' => 'kerberosfailed') );
-
-    $pos    = strpos( $remoteuser, '@' );
-    $domain = substr( $remoteuser, $pos + 1 );
-
-    // a domain nincs a vart domain-u loginok kozott
-    if ( !isset( $domains[ $domain ] ) )
-      return $this->redirectWithMessage('users/login', $l('users', 'kerberosloginfailed'), array('error' => 'domain') );
-
-    // we notice changes via the remoteuser changing undearneath us
-    // TODO check for a timeout to check if LDAP permissions changed?
-    if (
-         $user['id'] and
-         $user['source'] === 'kerberos' and
-         $user['externalid'] === $remoteuser
-       )
-      return;
-
-    $user->clear(); // reseteljuk a usert a biztonsag kedveert
-    $userModel   = $this->bootstrap->getModel('users');
-    $ipaddresses = $this->getIPAddress(true);
-    $valid       = $userModel->loginFromExternalID(
-      $remoteuser, 'kerberos', $this->organization['id'], $ipaddresses
-    );
-
-    if ( !$valid ) // TODO insert
-      return $this->redirectWithMessage('users/login', $l('users', 'kerberosloginfailed'), array('error' => 'usernotfound') );
-
-    $user['kerberoslogin'] = true; // megjeloljuk a logint hogy itt sikerult
-    $this->toSmarty['member'] = $userModel->row;
-    $this->logUserLogin('KERBEROS-LOGIN');
 
   }
 
