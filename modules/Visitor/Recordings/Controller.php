@@ -1324,11 +1324,12 @@ class Controller extends \Visitor\Controller {
     if ( !$recordingsModel )
       throw new \Visitor\Api\ApiException('Recording not found', false, false );
     
-    $recordingsModel->updateLastPosition(
+    $ret = $recordingsModel->updateLastPosition(
       $this->organization, $user['id'], $lastposition, session_id()
     );
-    return true;
-    
+
+    return $ret;
+
   }
   
   public function searchAction() {
