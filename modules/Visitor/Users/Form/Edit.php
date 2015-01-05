@@ -6,7 +6,12 @@ class Edit extends \Visitor\HelpForm {
   public $needdb = true;
   public $userModel;
   public $user;
-  
+  public $basefields = array(
+    'nickname', 'nameprefix', 'namefirst', 'namelast', 'nameformat',
+    'password', 'confirmpassword', 'externalid', 'groups', 'departments',
+    'needtimestampdisabledafter', 'timestampdisabledafter',
+  );
+
   public function init() {
     
     parent::init();
@@ -63,6 +68,14 @@ class Edit extends \Visitor\HelpForm {
       $values['lastloggedinipaddress']
     );
 
+    // nem localisan regisztralt usereknel nem engedunk permissiont allitani
+    if ( $this->userModel->row['source'] or $this->userModel->row['source'] !== 'local' ) {
+
+      foreach( $this->basefields as $field )
+        unset( $values[ $field ] );
+
+    }
+
     foreach( $l->getLov('permissions') as $k => $v ) {
       
       if ( isset( $_REQUEST['permissions'][ $k ] ) and in_array( $k, $values['permissions'] ) )
@@ -71,7 +84,7 @@ class Edit extends \Visitor\HelpForm {
         $values[ $k ] = 0;
       
     }
-    
+
     if ( !@$values['password'] )
       unset( $values['password'] );
     else
@@ -87,9 +100,9 @@ class Edit extends \Visitor\HelpForm {
     
     unset( $values['departments'], $values['groups'] );
     
-    if ( !$values['needtimestampdisabledafter'] )
+    if ( !@$values['needtimestampdisabledafter'] )
       $values['timestampdisabledafter'] = null;
-    
+
     $this->userModel->updateRow( $values );
     
     $forward = $this->application->getParameter('forward', 'users/admin');

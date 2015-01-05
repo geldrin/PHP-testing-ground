@@ -42,7 +42,8 @@ class Signup extends \Visitor\HelpForm {
     $values['password']       = $crypto->getPasswordHash( $values['password'] );
     $values['language']       = \Springboard\Language::get();
     $values['organizationid'] = $this->controller->organization['id'];
-    
+    $values['source']         = 'local';
+
     if ( $invitation = $userinvitationSession['invitation'] ) {
       
       $invitationModel = $this->bootstrap->getModel('users_invitations');

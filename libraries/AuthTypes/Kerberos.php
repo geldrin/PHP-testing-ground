@@ -56,12 +56,17 @@ class Kerberos extends \AuthTypes\Base {
 
     $valid = $this->findAndMarkUser( $type, $remoteuser );
     if ( !$valid ) {
-      // TODO insert; $this->markUser($type);
-      $e = new \AuthTypes\Exception("user not found");
-      $e->redirecturl     = 'users/login';
-      $e->redirectmessage = $l('users', 'kerberosloginfailed');
-      $e->redirectparams  = array('error' => 'usernotfound');
-      throw $e;
+      $userModel = $this->bootstrap->getModel('users');
+      $userModel->insertExternal( array(
+          'externalid' => $remoteuser,
+          'source'     => 'kerberos',
+        ),
+        $this->organization
+      );
+      // TODO add ldap permissions
+      $userModel->registerForSession();
+      $userModel->updateSessionInformation();
+      $this->markUser($type);
     }
 
     return true;

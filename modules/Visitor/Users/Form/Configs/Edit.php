@@ -208,3 +208,22 @@ $config['lastloggedinipaddress'] = array(
   'type'        => 'textarea',
   'html'        => 'disabled="disabled"',
 );
+
+if ($this->userModel->row['source'] !== 'local' and $this->userModel->row['source']) {
+  $config['externalid'] = array(
+    'displayname' => $l('users', 'externalid'),
+    'type'        => 'inputText',
+  );
+
+  foreach( $this->basefields as $field ) {
+    if ( !isset( $config[ $field ] ) )
+      $field .= '[]';
+
+    if ( !isset( $config[ $field ] ) )
+      continue;
+
+    $config[ $field ]['html'] = 'disabled="disabled"';
+    unset( $config[ $field ]['validation'] );
+  }
+
+}

@@ -389,7 +389,9 @@ class Users extends \Springboard\Model {
       {$prefix}organizationid = '" . $organization['id'] . "' AND
       {$prefix}isadmin        = '0' AND
       (
-        {$prefix}email LIKE $searchterm OR $where
+        {$prefix}email LIKE $searchterm OR
+        {$prefix}externalid LIKE $searchterm OR
+        $where
       )
     ";
   }
@@ -413,6 +415,7 @@ class Users extends \Springboard\Model {
         (
           1 +
           IF( email     = $term, 3, 0 ) +
+          IF( externalid = $term, 3, 0 ) +
           " . ( $organization['fullnames']
             ? "
               IF( namefirst = $term, 2, 0 ) +
@@ -1035,6 +1038,29 @@ class Users extends \Springboard\Model {
 
     return true;
 
+  }
+
+  public function insertExternal( $data, $organization ) {
+    $defaults = array(
+      'externalid'            => $data['externalid'],
+      'source'                => $data['source'],
+      'email'                 => '',
+      'nickname'              => '',
+      'namefirst'             => '',
+      'namelast'              => '',
+      'browser'               => '',
+      'validationcode'        => '',
+      'nameformat'            => 'straight',
+      'organizationid'        => $organization['id'],
+      'timestamp'             => date('Y-m-d H:i:s'),
+      'lastloggedin'          => date('Y-m-d H:i:s'),
+      'language'              => \Springboard\Language::get(),
+      'newsletter'            => 0,
+      'disabled'              => self::USER_VALIDATED,
+      'issingleloginenforced' => 0,
+    );
+
+    return $this->insert( array_merge( $defaults, $data ) );
   }
 
 }
