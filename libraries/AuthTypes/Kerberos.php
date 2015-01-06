@@ -64,8 +64,13 @@ class Kerberos extends \AuthTypes\Base {
         $this->organization
       );
       // TODO add ldap permissions
-      $userModel->registerForSession();
       $userModel->updateSessionInformation();
+      $userModel->updateLastlogin(
+        "($source auto-login)\n" .
+        \Springboard\Debug::getRequestInformation( 0, false ),
+        $ipaddresses
+      );
+      $userModel->registerForSession();
       $this->markUser($type);
     }
 
