@@ -147,7 +147,7 @@ while ( !$recordings->EOF ) {
 
   switch ($rec['masterstatus']) {
 	case $jconf['dbstatus_uploaded']:
-	  $master_record = $upload_path . $masterfilename;
+	  $master_record = $upload_path ."recordings/". $masterfilename;
 	  break;
 	case $jconf['dbstatus_copystorage_ok']:
 	default:
