@@ -39,6 +39,14 @@ clearstatcache();
 // Establish database connection
 $db = db_maintain();
 
+// Check failed conversions
+$err = checkFailedRecordings();
+
+if ($err['code'] && is_array($err['result'])) {
+	$debug->log($jconf['log_dir'], $jconf['jobid_maintenance'] . ".log", $err['message'], $sendmail = true);
+	print_r("REPORT SENT.\n");
+}
+
 // User validity: maintain for generated users
 $err = users_setvalidity();
 
@@ -336,6 +344,111 @@ global $db, $debug, $jconf, $app;
 			$debug->log($jconf['log_dir'], $myjobid . ".log", $log_msg, $sendmail = false);
 		}
 
+	}
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+function checkFailedRecordings() {
+///////////////////////////////////////////////////////////////////////////////////////////////////
+// Collect and generates report from failed recording versions.
+//
+// Args: none
+//
+// Return values:
+// - code (bool) - The success of the function, TRUE
+// - result (arr) - An array of the failed recording versions, FALSE on error or TRUE if everything were okay.
+// - message (str) - A string containing the report, or the error message if something goes wrong.
+///////////////////////////////////////////////////////////////////////////////////////////////////
+	global $db, $jconf;
+	
+	$ret = array(
+		'code'    => false,
+		'result'  => false,
+		'message' => '',
+	);
+	
+	$data = null;
+	$qry = "
+		SELECT
+			`rv`.`id`,
+			`r`.`title`,
+			`rv`.`recordingid`,
+			`rv`.`status`,
+			`rv`.`timestamp`,
+			`rv`.`filename`,
+			`ep`.`filenamesuffix`,
+			`ep`.`filecontainerformat`,
+			`ep`.`name`,
+			`ep`.`type`,
+			`ep`.`shortname`
+		FROM
+			`recordings_versions` AS `rv`
+		LEFT JOIN
+			`encoding_profiles` AS `ep`
+		ON
+			`rv`.`encodingprofileid`=`ep`.`id`
+		LEFT JOIN
+			`recordings` AS `r`
+		ON
+			`rv`.`recordingid`=`r`.`id`
+		WHERE
+			`rv`.`status` LIKE '%failed%'";
+	
+	try {
+		$recordset = $db->Execute($qry);
+		
+		if ($recordset->RecordCount() < 1) {
+			// everything is okay, move along
+			$ret['code']    = true;
+			$ret['result']  = true;
+			$ret['message'] = "OK";
+			return $ret;
+		}
+		
+		$data = $recordset->GetArray();
+		unset($recordset);
+		
+		$fldrecs = array();	
+		$num_fldrecs = 0;
+		$num_fldrvs  = count($data);
+		
+		foreach ($data as $rv) {
+			if (!array_key_exists($rv['recordingid'], $fldrecs)) {
+				$fldrecs[$rv['recordingid']] = array();
+				$num_fldrecs++;
+			}
+			$fldrecs[$rv['recordingid']][] = $rv;
+		}
+		unset($data);
+		
+		$msg  = "[NOTICE] some conversion(s) have been failed. Please check them manually.\n";
+		$msg .= "  - Number of failed recordings: ". $num_fldrecs ."\n";
+		$msg .= "  - Number of failed conversions: ". $num_fldrvs .".\n";
+		$msg .= "Detailed list:\n" . str_pad("", 100, "-", STR_PAD_BOTH);
+		
+		foreach ($fldrecs as $rec => $fldrec) {
+			$msg .= "\n  Rec #". $rec ." (\"". $fldrec[0]['title'] ."\") - failed conversions: ". count($fldrec) ."\n";
+			$n = 1;
+			foreach ($fldrec as $fldrv) {
+				$recver   = "rec.version = #". $fldrv['id'];
+				$filename = "'". ($fldrv['filename'] === null ? ($fldrv['id'] . $fldrv['filenamesuffix'] . $fldrv['filecontainerformat'] . "/null") : $fldrv['filename']) ."'";
+				$status   = "status = '". $fldrv['status'] ."'";
+				$date     = "timestamp = '". $fldrv['timestamp'] ."'";
+				$type     = $fldrv['type'] ." - ". $fldrv['shortname'];
+				
+				$msg .= "    ". $n++ .".) ". $recver .", ". $filename ." (". $type ."), ". $status .", ". $date ."\n";
+			}
+		}
+		$msg .= "\nThis report was generated on ". date('Y-m-d H:i:s') .".";
+		$ret['message'] = $msg;
+		$ret['code'] = true;
+		$ret['result'] = $fldrecs;
+		
+		return $ret;
+		
+	} catch(Exception $e) {
+		$ret['message'] = "[ERROR] checkFailedRecordings encountered an error:\n". $e->GetMessage();
+		return $ret;
 	}
 }
 
