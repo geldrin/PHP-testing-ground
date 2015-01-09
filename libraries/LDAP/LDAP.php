@@ -64,9 +64,8 @@ class LDAP {
   // binarisbol, ilyet:
   // 3f79048f-42cd-4c77-8426-835cd9f8a3ad
   public static function formatGUID( $binguid ) {
-    $guid    = array();
-    $hexguid = unpack("H*hex", $binary_guid); 
-    $hex     = $hexguid["hex"];
+    $guid = array();
+    $hex  = bin2hex( $binguid );
 
     $guid[] =
       substr($hex, -26, 2) .
