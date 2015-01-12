@@ -41,7 +41,7 @@ if ( $argc >= 2 ) {
             break;
         case "-help":
             echo "-currentmonth: print current month, instead of last month\n";
-            break;
+            exit;
     }
 }
 
