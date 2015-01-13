@@ -1,7 +1,7 @@
 <?php
 namespace Visitor\Groups\Form;
 
-class Modify extends \Visitor\HelpForm {
+class Modify extends \Visitor\Groups\Form\Create {
   public $configfile = 'Modify.php';
   public $template   = 'Visitor/genericform.tpl';
   public $needdb     = true;
@@ -24,6 +24,10 @@ class Modify extends \Visitor\HelpForm {
   public function onComplete() {
     
     $values = $this->form->getElementValues( 0 );
+    $values = $this->checkDirectory( $values );
+    if ( !$values )
+      return;
+
     $this->groupModel->updateRow( $values );
     
     $this->controller->redirect(

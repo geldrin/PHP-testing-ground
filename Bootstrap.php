@@ -627,4 +627,8 @@ class Bootstrap {
 
   }
 
+  public function getLDAP() {
+    $ldap = new \LDAP\LDAP( $this );
+    return $ldap;
+  }
 }

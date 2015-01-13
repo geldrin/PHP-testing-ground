@@ -236,4 +236,8 @@ return array(
     'approved' => $l('recordings', 'approvalstatus_approved'),
   ),
 
+  'groups_source' => array(
+    ''          => $l('groups', 'source_default'),
+    'directory' => $l('groups', 'source_directory'),
+  ),
 );

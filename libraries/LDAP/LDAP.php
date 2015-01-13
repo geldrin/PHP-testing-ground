@@ -8,13 +8,16 @@ class LDAP {
     'server'   => '',
     'username' => '', // the RDN or DN
     'password' => '', // the associated password
-    'options'  => array(),
+    'options'  => array(
+      LDAP_OPT_REFERRALS        => 0,
+      LDAP_OPT_PROTOCOL_VERSION => 3,
+    ),
   );
 
-  public function __construct($bootstrap) {
+  public function __construct($bootstrap, $config) {
     $this->bootstrap = $bootstrap;
-    if (isset($bootstrap->config['ldap']) and !empty($bootstrap->config['ldap']))
-      $this->config = array_merge($this->config, $bootstrap->config['ldap']);
+    if (!empty($config))
+      $this->config = array_merge($this->config, $config);
 
     $this->init();
   }

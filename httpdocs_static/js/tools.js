@@ -48,6 +48,7 @@ $j(document).ready(function() {
   runIfExists('#comments', setupComments );
   runIfExists('#livestatistics', setupLivestatistics );
   runIfExists('#recordingdownloads', setupRecordingDownloads );
+  runIfExists('#groups_create, #groups_modify', setupGroups );
 
   if ( needping )
     setTimeout( setupPing, 1000 * pingsecs );
@@ -2292,4 +2293,12 @@ function setupRecordingDownloads() {
     e.preventDefault();
     $j('#recordingdownloads ul').toggle();
   });
+}
+
+function setupGroups() {
+  $j('#source').change(function() {
+    var shouldshow = $j(this).val() === '';
+    $j('#organizationdirectoryid, #organizationdirectoryldapdn').parents('tr').toggle(!shouldshow);
+    $j('#name').parents('tr').toggle(shouldshow);
+  }).change();
 }
