@@ -21,6 +21,11 @@ $app->loadConfig('modules/Jobs/config_jobs.php');
 $jconf = $app->config['config_jobs'];
 $myjobid = $jconf['jobid_maintenance'];
 
+// Setup mail header
+$log_summary  = "NODE: " . $app->config['node_sourceip'] . "\n";
+$log_summary .= "SITE: " . $app->config['baseuri'] . "\n";
+$log_summary .= "JOB: " . $myjobid . "\n\n";
+
 // Log related init
 $debug = Springboard\Debug::getInstance();
 $debug->log($jconf['log_dir'], $myjobid . ".log", "Maintenance job started", $sendmail = false);
@@ -43,7 +48,8 @@ $db = db_maintain();
 $err = checkFailedRecordings();
 
 if ($err['code'] && is_array($err['result'])) {
-	$debug->log($jconf['log_dir'], $jconf['jobid_maintenance'] . ".log", $err['message'], $sendmail = true);
+	$debug->log($jconf['log_dir'], $jconf['jobid_maintenance'] . ".log", $log_summary . $err['message'], $sendmail = true);
+	// print_r("MESSAGE:\n\n". $log_summary . $err['message'] ."\n");
 	print_r("REPORT SENT.\n");
 }
 
@@ -360,20 +366,25 @@ function checkFailedRecordings() {
 // - message (str) - A string containing the report, or the error message if something goes wrong.
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 	global $db, $jconf;
-	
+
 	$ret = array(
 		'code'    => false,
 		'result'  => false,
 		'message' => '',
 	);
 	
-	$data = null;
-	$qry = "
+	$data_rv = null;
+	$data_rec = null;
+	$qry_rv = "
 		SELECT
 			`rv`.`id`,
 			`r`.`title`,
+			`r`.`subtitle`,
+			`r`.`status`,
+			`r`.`masterstatus`,
+			`r`.`status`,
 			`rv`.`recordingid`,
-			`rv`.`status`,
+			`rv`.`status` AS `rvstatus`,
 			`rv`.`timestamp`,
 			`rv`.`filename`,
 			`ep`.`filenamesuffix`,
@@ -392,12 +403,28 @@ function checkFailedRecordings() {
 		ON
 			`rv`.`recordingid`=`r`.`id`
 		WHERE
-			`rv`.`status` LIKE '%failed%'";
+		`rv`.`status` LIKE '%failed%'";
+		
+	$qry_rec = "
+		SELECT
+			`r`.`id` AS `recordingid`,
+			`r`.`title`,
+			`r`.`subtitle`,
+			`r`.`status`,
+			`r`.`masterstatus`,
+			`r`.`contentmasterstatus`
+		FROM
+			`recordings` AS `r`
+		WHERE
+			`r`.`status` LIKE '%failed%' OR
+			`r`.`masterstatus` LIKE '%failed%' OR
+			`r`.`contentmasterstatus` LIKE '%failed%'";
 	
 	try {
-		$recordset = $db->Execute($qry);
+		$recordset_rv = $db->Execute($qry_rv);
+		$recordset_rec = $db->Execute($qry_rec);
 		
-		if ($recordset->RecordCount() < 1) {
+		if ($recordset_rv->RecordCount() < 1 && $recordset_rec->RecordCount() < 1) {
 			// everything is okay, move along
 			$ret['code']    = true;
 			$ret['result']  = true;
@@ -405,21 +432,35 @@ function checkFailedRecordings() {
 			return $ret;
 		}
 		
-		$data = $recordset->GetArray();
-		unset($recordset);
+		$data_rv = $recordset_rv->GetArray();
+		$data_rec = $recordset_rec->GetArray();
+		unset($recordset_rv, $recordset_rec);
 		
 		$fldrecs = array();	
-		$num_fldrecs = 0;
-		$num_fldrvs  = count($data);
+		$num_fldrecs = count($data_rec);
+		$num_fldrvs  = count($data_rv);
 		
-		foreach ($data as $rv) {
+		foreach ($data_rec as $r) {
+			$r['recordings_versions'] = array();
+			$fldrecs[$r['recordingid']] = $r;
+		}
+		
+		foreach ($data_rv as $rv) {
 			if (!array_key_exists($rv['recordingid'], $fldrecs)) {
-				$fldrecs[$rv['recordingid']] = array();
+				$fldrecs[$rv['recordingid']] = array(
+					'recordingid'          => $rv['recordingid'],
+					'rstatus'              => $rv['status'],
+					'rmasterstatus'        => $rv['masterstatus'],
+					'rcontentmasterstatus' => $rv['contentmasterstatus'],
+					'recordings_versions'  => array()
+				);
 				$num_fldrecs++;
 			}
-			$fldrecs[$rv['recordingid']][] = $rv;
+			
+			$fldrecs[$rv['recordingid']]['recordings_versions'][] = array_diff_key($rv, $fldrecs[$rv['recordingid']]);	
 		}
-		unset($data);
+		
+		unset($data_rv, $data_rec);
 		
 		$msg  = "[NOTICE] some conversion(s) have been failed. Please check them manually.\n";
 		$msg .= "  - Number of failed recordings: ". $num_fldrecs ."\n";
@@ -427,12 +468,22 @@ function checkFailedRecordings() {
 		$msg .= "Detailed list:\n" . str_pad("", 100, "-", STR_PAD_BOTH);
 		
 		foreach ($fldrecs as $rec => $fldrec) {
-			$msg .= "\n  Rec #". $rec ." (\"". $fldrec[0]['title'] ."\") - failed conversions: ". count($fldrec) ."\n";
+			
+			$rstatus = " ". implode(', ',
+				array(
+					"status = ". (is_null($fldrec['status']) ? "NULL" : "'". $fldrec['status'] ."'"), 
+					"masterstatus = ". (is_null($fldrec['masterstatus']) ? "NULL" : "'". $fldrec['masterstatus'] ."'"),
+					"contentmasterstatus = ". (is_null($fldrec['contentmasterstatus']) ? "NULL" : "'". $fldrec['contentmasterstatus'] ."'"),
+				)
+			);
+			$rec_title = " \"". $fldrec['title'] . (is_null($fldrec['subtitle']) ? '' : " / ". $fldrec['subtitle']) ."\",";
+			
+			$msg .= "\n  Rec #". $rec . $rec_title . $rstatus ." - failed conversions: ". count($fldrec['recordings_versions']) ."\n";
 			$n = 1;
-			foreach ($fldrec as $fldrv) {
+			foreach ($fldrec['recordings_versions'] as $fldrv) {
 				$recver   = "rec.version = #". $fldrv['id'];
 				$filename = "'". ($fldrv['filename'] === null ? ($fldrv['id'] . $fldrv['filenamesuffix'] . $fldrv['filecontainerformat'] . "/null") : $fldrv['filename']) ."'";
-				$status   = "status = '". $fldrv['status'] ."'";
+				$status   = "status = ". (is_null($fldrv['rvstatus']) ? "NULL" : "'". $fldrv['rvstatus'] ."'");
 				$date     = "timestamp = '". $fldrv['timestamp'] ."'";
 				$type     = $fldrv['type'] ." - ". $fldrv['shortname'];
 				
