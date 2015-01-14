@@ -9,3 +9,7 @@ $config['id']              = Array(
   'type'  => 'inputHidden',
   'value' => $this->application->getNumericParameter('id'),
 );
+
+if ( $this->groupModel->row['source'] === 'directory' ) {
+  $config['name']['html'] = 'disabled="disabled"';
+}

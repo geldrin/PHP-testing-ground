@@ -45,6 +45,10 @@ class Controller extends \Visitor\Controller {
       $this->application->getNumericParameter('id')
     );
     $userid = $this->application->getNumericParameter('userid');
+
+    if ( $userid <= 0 or $groupModel->row['source'] === 'directory' )
+      $this->redirect( $this->application->getParameter('forward', 'groups') );
+
     $groupModel->deleteUser( $userid );
     $this->redirect(
       $this->application->getParameter(

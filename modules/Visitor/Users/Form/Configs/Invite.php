@@ -311,7 +311,9 @@ $config = $config + array(
     'sql'         => "
       SELECT g.id, g.name
       FROM groups AS g
-      WHERE organizationid = '" . $this->controller->organization['id'] . "'
+      WHERE
+        organizationid = '" . $this->controller->organization['id'] . "' AND
+        source        <> 'directory'
       ORDER BY g.name DESC
     ",
     'validation'  => array(

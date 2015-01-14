@@ -627,8 +627,8 @@ class Bootstrap {
 
   }
 
-  public function getLDAP() {
-    $ldap = new \LDAP\LDAP( $this );
+  public function getLDAP( $config ) {
+    $ldap = new \LDAP\LDAP( $this, $config );
     return $ldap;
   }
 }
