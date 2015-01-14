@@ -392,7 +392,9 @@ $departmentcount = $db->getOne("
 $groupcount      = $db->getOne("
   SELECT COUNT(*)
   FROM groups
-  WHERE organizationid = '" . $this->controller->organization['id'] . "'
+  WHERE
+    organizationid = '" . $this->controller->organization['id'] . "' AND
+    source        <> 'directory'
 ");
 
 if ( !$departmentcount )
