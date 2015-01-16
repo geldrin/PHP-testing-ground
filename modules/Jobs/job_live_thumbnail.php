@@ -108,7 +108,7 @@ for ( $i = 0; $i < count($channels); $i++ ) {
 	if ( $debug_mode ) $ffmpeg_loglevel = '';
 	
 	$thumb_filename = "/tmp/" . $channels[$i]['streamid'] . "_" . rand(100000, 999999) . ".png";
-	$ffmpeg_command = 'ffmpeg ' . $ffmpeg_loglevel . '-i ' . $rtmp_url . ' -vf "thumbnail" -frames:v 1 ' . $thumb_filename;
+	$ffmpeg_command = $jconf['ffmpeg_alt'] .' ' . $ffmpeg_loglevel . '-i ' . $rtmp_url . ' -vf "thumbnail" -frames:v 1 ' . $thumb_filename;
 	$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] ffmpeg live thumb atempt for feed#" . $channels[$i]['locationid'] . "/stream#" . $channels[$i]['streamid'], $sendmail = false);
 
 	$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] ffmpeg command to be executed: " . $ffmpeg_command, $sendmail = false);
