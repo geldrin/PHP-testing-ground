@@ -120,7 +120,28 @@
 					<RTPTransportMode>interleave</RTPTransportMode>
 				</RTSP>
 			</RTP>
-			<StreamValidator></StreamValidator>
+			<StreamValidator>
+				<Enable>true</Enable>
+				<ResetNameGroups>true</ResetNameGroups>
+				<StreamStartTimeout>20000</StreamStartTimeout>
+				<StreamTimeout>12000</StreamTimeout>
+				<VideoStartTimeout>0</VideoStartTimeout>
+				<VideoTimeout>0</VideoTimeout>
+				<AudioStartTimeout>0</AudioStartTimeout>
+				<AudioTimeout>0</AudioTimeout>
+				<VideoTCToleranceEnable>false</VideoTCToleranceEnable>
+				<VideoTCPosTolerance>3000</VideoTCPosTolerance>
+				<VideoTCNegTolerance>-500</VideoTCNegTolerance>
+				<AudioTCToleranceEnable>false</AudioTCToleranceEnable>
+				<AudioTCPosTolerance>3000</AudioTCPosTolerance>
+				<AudioTCNegTolerance>-500</AudioTCNegTolerance>
+				<DataTCToleranceEnable>false</DataTCToleranceEnable>
+				<DataTCPosTolerance>3000</DataTCPosTolerance>
+				<DataTCNegTolerance>-500</DataTCNegTolerance>
+				<AVSyncToleranceEnable>false</AVSyncToleranceEnable>
+				<AVSyncTolerance>1500</AVSyncTolerance>
+				<DebugLog>false</DebugLog>
+			</StreamValidator>
 			<!-- Properties defined here will override any properties defined in conf/MediaCasters.xml for any MediaCasters loaded by this applications -->
 			<Properties>
 			</Properties>
@@ -257,6 +278,11 @@
 				<Value>true</Value>
 				<Type>Boolean</Type>
 			</Property>
+			<Property>
+				<Name>securityPublishBlockDuplicateStreamNames</Name>
+				<Value>true</Value>
+				<Type>Boolean</Type>
+			</Property>
 			<!-- CONNECT HANDLER CONFIG -->
 			<Property>
 				<Name>URLPlayHandler</Name>
@@ -274,7 +300,7 @@
 				<Name>PlayURLParams</Name>
 				<Value>sessionid</Value>
 			</Property>
-			<!-- Wowzastats -->
+			<!-- WOWZASTATS -->
 			<Property>
 				<Name>WowzaStatsMySQLURL</Name>
 				<Value>jdbc:mysql://91.120.59.230/videosquare?user=vsq_stats&amp;password=Ne2uEEABGNNUxW6h</Value>
@@ -282,11 +308,6 @@
 			<Property>
 				<Name>WowzaStatsMySQLStatsTable</Name>
 				<Value>cdn_streaming_stats</Value>
-			</Property>
-			<Property>
-				<Name>securityPublishBlockDuplicateStreamNames</Name>
-				<Value>true</Value>
-				<Type>Boolean</Type>
 			</Property>
 		</Properties>
 	</Application>
