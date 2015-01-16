@@ -2299,6 +2299,9 @@ function setupGroups() {
   $j('#source').change(function() {
     var shouldshow = $j(this).val() === '';
     $j('#organizationdirectoryid, #organizationdirectoryldapdn').parents('tr').toggle(!shouldshow);
+  }).change();
+  $j('#groups_create #source').change(function() {
+    var shouldshow = $j(this).val() === '';
     $j('#name').parents('tr').toggle(shouldshow);
   }).change();
 }

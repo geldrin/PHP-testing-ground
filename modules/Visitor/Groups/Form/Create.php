@@ -42,7 +42,7 @@ class Create extends \Visitor\HelpForm {
     $user = $this->bootstrap->getSession('user');
     if (
          $values['source'] === '' or // non-directory, skip
-         ( !$values['isadmin'] and !$values['isclientadmin'] )
+         ( !$user['isadmin'] and !$user['isclientadmin'] )
        )
       return $values;
 
@@ -59,11 +59,12 @@ class Create extends \Visitor\HelpForm {
 
     $ldap = $this->bootstrap->getLDAP( $ldapconfig );
     $results = $ldap->search(
-      $userdn,
-      '', // TODO a filtert hogy megtalaljuk az adott groupot,
+      $values['organizationdirectoryldapdn'],
+      '(objectClass=group)',
       array('objectguid', 'dn', 'whenchanged', 'distinguishedname')
     );
 
+    // csak az elso dologra vagyunk kivancsiak
     $error = true;
     foreach( $results as $result ) {
       if ( empty( $result ) )
@@ -71,7 +72,10 @@ class Create extends \Visitor\HelpForm {
 
       $error = false;
       $values['name'] = $result['distinguishedname'];
-
+      $values['organizationdirectoryldapwhenchanged'] = $ldap::getTimestamp(
+        $result['whenchanged']
+      );
+      break;
     }
 
     if ( $error ) {

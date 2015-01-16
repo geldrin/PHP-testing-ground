@@ -64,6 +64,19 @@ class LDAP {
     return new \LDAP\Search( $this->conn, $result );
   }
 
+  public static function getTimestamp( $ldaptimestamp ) {
+    $ts = preg_replace(
+      "/(\d{4})(\d{2})(\d{2})(\d{2})(\d{2})(\d{2}).+/",
+      "$1-$2-$3 $4:$5:$6",
+      $ldaptimestamp
+    );
+
+    if (!$ts or $ts === $ldaptimestamp)
+      return '';
+
+    return $ts;
+  }
+
   // binarisbol, ilyet:
   // 3f79048f-42cd-4c77-8426-835cd9f8a3ad
   public static function formatGUID( $binguid ) {
