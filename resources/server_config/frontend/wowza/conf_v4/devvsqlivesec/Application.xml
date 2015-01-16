@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Root version="1">
 	<Application>
-		<Name>devvsqlive</Name>
+		<Name>devvsqlivesec</Name>
 		<AppType>LiveHTTPOrigin</AppType>
-		<Description>Videoquare DEV Live</Description>
+		<Description>Videoquare DEV Secure Live</Description>
 		<!-- Uncomment to set application level timeout values
 		<ApplicationTimeout>60000</ApplicationTimeout>
 		<PingTimeout>12000</PingTimeout>
@@ -316,10 +316,15 @@
 				<Value>true</Value>
 				<Type>Boolean</Type>
 			</Property>
+			<Property>
+				<Name>securityPlayRequireSecureConnection</Name>
+				<Value>true</Value>
+				<Type>Boolean</Type>
+			</Property>
 			<!-- CONNECT HANDLER CONFIG -->
-<!--			<Property>
+			<!--			<Property>
 				<Name>URLPlayHandler</Name>
-				<Value>http://dev.videosquare.eu/hu/live/checkstreamaccess</Value>
+				<Value>http://dev.videosquare.eu/hu/live/securecheckstreamaccess</Value>
 			</Property> -->
 			<Property>
 				<Name>PlayIP</Name>

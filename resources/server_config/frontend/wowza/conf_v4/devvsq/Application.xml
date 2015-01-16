@@ -264,6 +264,7 @@
 				<Name>PlayURLParams</Name>
 				<Value>sessionid</Value>
 			</Property>
+			<!-- WOWZASTATS -->
 			<Property>
 				<Name>WowzaStatsMySQLURL</Name>
 				<Value>jdbc:mysql://91.120.59.230/teleconnectdev?user=vsq_stats&amp;password=Ne2uEEABGNNUxW6h</Value>
