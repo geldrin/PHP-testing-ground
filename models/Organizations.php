@@ -127,6 +127,13 @@ class Organizations extends \Springboard\Model\Multilingual {
         organizationid = '" . $this->id . "' AND
         disabled       = 0
     ");
+    $organization['authdirectories'] = $this->db->getArray("
+      SELECT *
+      FROM organizations_directories
+      WHERE
+        organizationid = '" . $this->id . "' AND
+        disabled       = 0
+    ");
 
     return $organization;
 

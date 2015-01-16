@@ -60,7 +60,9 @@ abstract class Base {
       $externalid, $authtype['type'], $this->organization['id'], $this->ipaddresses
     );
 
-    if ( !$valid )
+    if ( $valid === null )
+      return null;
+    else
       return false;
 
     $this->markUser( $authtype );

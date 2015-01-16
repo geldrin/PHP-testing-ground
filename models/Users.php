@@ -2,10 +2,12 @@
 namespace Model;
 
 class Users extends \Springboard\Model {
-  const USER_UNVALIDATED = -2; // disabled mezo lehetseges ertekei
-  const USER_BANNED      = -1;
-  const USER_VALIDATED   = 0;
-  const USER_DISABLED    = 1;
+  // disabled mezo lehetseges ertekei
+  const USER_UNVALIDATED = -2; // letrehozva, az email kikuldve, validaciora varunk
+  const USER_BANNED      = -1; // inaktiv
+  const USER_VALIDATED   = 0; // minden oke
+  const USER_DISABLED    = 1; // letiltva adminisztracios oldalrol
+  const USER_DIRECTORYDISABLED = 2; // letiltva LDAP-bol (nem tagja a csoportnak), automatikusan viszacsinaljuk
   protected $registeredSessionKey;
   
   protected function checkUser( &$user, $organizationid ) {
@@ -334,12 +336,41 @@ class Users extends \Springboard\Model {
     
   }
   
+  public function clearFromGroups( $groupids ) {
+
+    $this->ensureID();
+
+    $this->db->execute("
+      DELETE FROM groups_members
+      WHERE
+        userid = '" . $this->id . "' AND
+        groupid IN('" . implode("', '", $groupids ) . "')
+    ");
+    
+  }
+
   public function addDepartments( $departmentids ) {
     $this->insertMultipleIDs( $departmentids, 'users_departments', 'departmentid');
   }
   
   public function addGroups( $groupids ) {
     $this->insertMultipleIDs( $groupids, 'groups_members', 'groupid');
+  }
+
+  public function getAssocDirectoryGroupIDs( $organizationid ) {
+    $this->ensureID();
+
+    return $this->db->getAssoc("
+      SELECT DISTINCT g.id AS key, '1' AS value
+      FROM
+        groups_members AS gm,
+        groups AS g
+      WHERE
+        gm.userid        = '" . $this->id . "' AND
+        gm.groupid       = g.id AND
+        g.source         = 'directory' AND
+        g.organizationid = '$organizationid'
+    ");
   }
   
   public function search( $email, $organizationid ) {
@@ -995,7 +1026,6 @@ class Users extends \Springboard\Model {
 
     $where  = array(
       'externalid = ' . $this->db->qstr( $externalid ),
-      'disabled   = ' . $this->db->qstr( self::USER_VALIDATED ),
       'source     = ' . $this->db->qstr( $source ),
     );
 
@@ -1012,6 +1042,9 @@ class Users extends \Springboard\Model {
     ");
 
     if ( !$row )
+      return null; // meg akarjuk kulonboztetni hogy nem letezik
+
+    if ( $row['disabled'] != self::USER_VALIDATED )
       return false;
 
     if ( $row['isadmin'] )

@@ -90,7 +90,7 @@ class Controller extends \Springboard\Controller\Visitor {
         continue;
 
       $class = "\\AuthTypes\\" . ucfirst( $authtype['type'] );
-      $auth = new $class( $this->bootstrap, $this->organization, $ipaddresses);
+      $auth = new $class( $this->bootstrap, $this->organization, $ipaddresses );
 
       try {
 

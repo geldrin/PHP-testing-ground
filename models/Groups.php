@@ -259,4 +259,16 @@ class Groups extends \Springboard\Model {
       LIMIT $start, $limit
     ");
   }
+
+  public function getDirectoryGroups( $organizationid ) {
+    return $this->db->getArray("
+      SELECT
+        id,
+        organizationdirectoryldapdn AS dn
+      FROM groups
+      WHERE
+        source         = 'directory' AND
+        organizationid = $organizationid
+    ");
+  }
 }

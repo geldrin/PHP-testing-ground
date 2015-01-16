@@ -64,6 +64,11 @@ class LDAP {
     return new \LDAP\Search( $this->conn, $result );
   }
 
+  public function escape( $value, $isdn = false ) {
+    $flags = $isdn? LDAP_ESCAPE_DN: LDAP_ESCAPE_FILTER;
+    return \ldap_escape( $value, null, $flags );
+  }
+
   public static function getTimestamp( $ldaptimestamp ) {
     $ts = preg_replace(
       "/(\d{4})(\d{2})(\d{2})(\d{2})(\d{2})(\d{2}).+/",
@@ -95,6 +100,23 @@ class LDAP {
     $guid[] = substr($hex, -12, 12);
 
     return implode('-', $guid);
+  }
+
+  public static function getArray( $value ) {
+    $pieces = array();
+    $count  = $value['count'];
+    for ( $i = 0; $i < $count; $i++ )
+      $pieces = $value[ $i ];
+
+    return $pieces;
+  }
+
+  public static function implodePossibleArray( $glue, $value ) {
+    if ( !is_array( $value ) )
+      return $value;
+
+    $pieces = self::getArray( $value );
+    return implode( $glue, $pieces );
   }
 
 }
