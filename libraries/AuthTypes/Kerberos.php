@@ -85,7 +85,7 @@ class Kerberos extends \AuthTypes\Base {
       $userModel->registerForSession();
       $this->markUser($type);
 
-      $this->applyLDAPGroupsForUser( $user, $ldapuser['groups'] );
+      $this->syncLdapGroupsForUser( $user, $ldapuser['groups'] );
 
     } else {
 
@@ -109,12 +109,12 @@ class Kerberos extends \AuthTypes\Base {
         // tiltottuk le
         $userModel = $this->bootstrap->getModel('users');
         $userModel->select( $user['id'] );
-        if ( $userModel->row['disabled'] == $userModel::USER_DIRECTORYDISABLED )
+        if ( $userModel->row['disabled'] == $userModel::USER_DIRECTORYDISABLED ) {
           $userModel->updateRow( array(
               'disabled' => $userModel::USER_VALIDATED,
             )
           );
-        else {
+        } else {
           $e = new \AuthTypes\Exception("user found but is manually banned");
           $e->redirecturl     = 'contents/ldapnoaccess';
           $e->redirectparams  = array('error' => 'banned');
@@ -128,15 +128,24 @@ class Kerberos extends \AuthTypes\Base {
         throw $e;
       }
 
+      // ha hirtelen modosult valami, itt synceljuk
+      $this->syncLdapWithUser( $user, $ldapuser['user'] );
       // valid, es van ldapuser, a groupokat synceljuk ha kell
-      $this->applyLDAPGroupsForUser( $user, $ldapuser['groups'] );
-
+      $this->syncLdapGroupsForUser( $user, $ldapuser['groups'] );
+      $this->markUser($type);
     }
 
     return true;
   }
 
-  private function applyLDAPGroupsForUser( $user, $groups ) {
+  public function syncLdapWithUser( $user, $ldapuser ) {
+    $userModel = $this->bootstrap->getModel('users');
+    $userModel->id = $user['id'];
+    $userModel->updateRow( $ldapuser );
+    $userModel->registerForSession();
+  }
+
+  private function syncLdapGroupsForUser( $user, $groups ) {
     $groupModel = $this->bootstrap->getModel('groups');
     $userModel  = $this->bootstrap->getModel('users');
     $userModel->id = $user['id'];

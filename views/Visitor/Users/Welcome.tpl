@@ -109,7 +109,9 @@
 <ul>
   <li><a href="{$language}/users/modify">{#users__welcomepage_mydata#}</a></li>
   <li><a href="{$language}/recordings/featured">{#users__welcomepage_recommended#}</a></li>
-  <li><a href="{$language}/users/logout">{#users__welcomepage_logout#}</a></li>
+  {if !$member.source}
+    <li><a href="{$language}/users/logout">{#users__welcomepage_logout#}</a></li>
+  {/if}
 </ul>
 
 {if $member.isuploader or $member.ismoderateduploader}

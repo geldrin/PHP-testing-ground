@@ -97,7 +97,9 @@
             <ul>
               <li><a href="{$language}/users/welcome">{#usermenu_users_welcome#}</a></li>
               <li><a href="{$language}/users/modify">{#usermenu_users_modify#}</a></li>
-              <li><a href="{$language}/users/logout">{#usermenu_users_logout#}</a></li>
+              {if !$member.source}
+                <li><a href="{$language}/users/logout">{#usermenu_users_logout#}</a></li>
+              {/if}
             </ul>
           </div>
         </div>
