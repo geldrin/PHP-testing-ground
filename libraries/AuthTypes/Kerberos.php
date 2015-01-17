@@ -78,9 +78,9 @@ class Kerberos extends \AuthTypes\Base {
 
       $userModel->updateSessionInformation();
       $userModel->updateLastlogin(
-        "($source auto-login)\n" .
+        "(Kerberos auto-login)\n" .
         \Springboard\Debug::getRequestInformation( 0, false ),
-        $ipaddresses
+        $this->ipaddresses
       );
       $userModel->registerForSession();
       $this->markUser($type);
@@ -246,7 +246,7 @@ class Kerberos extends \AuthTypes\Base {
            )
           continue;
 
-        $isadmin = in_array( $directory['ldapadminaccess'], $groups );
+        $isadmin = in_array( $directory['ldapgroupadmin'], $groups );
 
         // osszegyujtjuk a csoportokat, ez alapjan osztjuk ki a csoport hozzaferest
         $ret['groups'] = array_merge(
