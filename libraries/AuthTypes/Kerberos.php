@@ -235,24 +235,30 @@ class Kerberos extends \AuthTypes\Base {
       );
 
       foreach( $results as $result ) {
+        $groups = isset( $result['memberOf'] )
+          ? $ldap::getArray( $result['memberOf'] )
+          : array()
+        ;
+
         if (
-             !isset( $result['memberOf'] ) or
-             !in_array( $directory['ldapgroupaccess'], $result['memberOf'] )
+             empty( $groups ) or
+             !in_array( $directory['ldapgroupaccess'], $groups )
            )
           continue;
 
-        $isadmin = in_array( $directory['ldapadminaccess'], $result['memberOf'] );
+        $isadmin = in_array( $directory['ldapadminaccess'], $groups );
 
         // osszegyujtjuk a csoportokat, ez alapjan osztjuk ki a csoport hozzaferest
         $ret['groups'] = array_merge(
           $ret['groups'],
-          $ldap::getArray( $result['memberOf'] )
+          $groups
         );
 
-        $ret['user']['nickname'] = $result['sAMAccountName'];
+        // kotelezo, tobbi lehet hogy nincs
+        $ret['user']['nickname'] = $ldap::implodePossibleArray(' ', $result['sAMAccountName'] );
 
         if ( isset( $result['mail'] ) )
-          $ret['user']['email'] = $result['mail'];
+          $ret['user']['email'] = $ldap::implodePossibleArray(' ', $result['mail'] );
 
         if ( isset( $result['surname'] ) )
           $ret['user']['namelast'] = $ldap::implodePossibleArray(' ', $result['surname'] );

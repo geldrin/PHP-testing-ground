@@ -182,7 +182,7 @@ class LDAP {
     $pieces = array();
     $count  = $value['count'];
     for ( $i = 0; $i < $count; $i++ )
-      $pieces = $value[ $i ];
+      $pieces[] = $value[ $i ];
 
     return $pieces;
   }
