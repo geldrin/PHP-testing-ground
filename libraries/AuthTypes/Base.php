@@ -23,6 +23,9 @@ abstract class Base {
       'css' => true,
       'js'  => true,
     ),
+    'contents' => array(
+      '*' => true,
+    ),
   );
 
   public function __construct( $bootstrap, $organization, $ipaddresses ) {
@@ -37,6 +40,9 @@ abstract class Base {
       if ( $module == $currmodule and isset( $curractions[ $action ] ) )
         return true;
 
+      // wildcard
+      if ( $module == $currmodule and isset( $curractions['*'] ) )
+        return true;
     }
 
     $user = $this->bootstrap->getSession('user');
