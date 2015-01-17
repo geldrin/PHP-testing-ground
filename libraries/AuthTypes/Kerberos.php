@@ -105,17 +105,27 @@ class Kerberos extends \AuthTypes\Base {
         $e->redirectparams  = array('error' => 'accessrevoked');
         throw $e;
 
-      } elseif ( !$valid and !empty( $ldapuser['user'] ) and $user['disabled'] == $userModel::USER_DIRECTORYDISABLED ) {
-        // vigyazunk hogy csak akkor engedjuk vissza a felhasznalot ha mi
-        // tiltottuk le
-        $userModel->select( $user['id'] );
-        // az if ota megvaltozhatott
-        if ( $userModel->row['disabled'] == $userModel::USER_DIRECTORYDISABLED ) {
-          $userModel->updateRow( array(
-              'disabled' => $userModel::USER_VALIDATED,
-            )
-          );
-        } elseif ( $userModel->row['disabled'] != $userModel::USER_VALIDATED ) {
+      } elseif ( !$valid and !empty( $ldapuser['user'] ) ) {
+        if ( $user['disabled'] == $userModel::USER_DIRECTORYDISABLED ) {
+          // vigyazunk hogy csak akkor engedjuk vissza a felhasznalot ha mi
+          // tiltottuk le
+          $userModel->select( $user['id'] );
+          // az if ota megvaltozhatott
+          if ( $userModel->row['disabled'] == $userModel::USER_DIRECTORYDISABLED )
+            $userModel->updateRow( array(
+                'disabled' => $userModel::USER_VALIDATED,
+              )
+            );
+
+        }
+
+        if (
+             (
+               isset( $userModel->row['disabled'] ) and
+               $userModel->row['disabled'] != $userModel::USER_VALIDATED
+             ) or
+             $user['disabled'] != $userModel::USER_VALIDATED
+           ) {
           $e = new \AuthTypes\Exception("user found but is manually banned");
           $e->redirecturl     = 'contents/ldapnoaccess';
           $e->redirectparams  = array('error' => 'banned');
