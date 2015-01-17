@@ -54,7 +54,9 @@ class Kerberos extends \AuthTypes\Base {
 
     $user->clear(); // reseteljuk a usert a biztonsag kedveert
 
+    // ujra van user['id'] mert a findAndMarkUser regisztralja
     $valid = $this->findAndMarkUser( $type, $remoteuser );
+
     if ( $valid === null ) { // a null azt jelzi hogy nincs ilyen user
 
       $ldapuser = $this->getLDAPUser( $remoteuser );

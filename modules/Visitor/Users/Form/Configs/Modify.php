@@ -221,3 +221,18 @@ $groupModel->addFilter('organizationid', $this->controller->organization['id'] )
 
 if ( $groupModel->getCount() == 0 )
   unset( $config['groups[]'] );
+
+if ($this->userModel->row['source'] !== 'local' and $this->userModel->row['source']) {
+
+  foreach( $this->basefields as $field ) {
+    if ( !isset( $config[ $field ] ) )
+      $field .= '[]';
+
+    if ( !isset( $config[ $field ] ) )
+      continue;
+
+    $config[ $field ]['html'] = 'disabled="disabled"';
+    unset( $config[ $field ]['validation'] );
+  }
+
+}

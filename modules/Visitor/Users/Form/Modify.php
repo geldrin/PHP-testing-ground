@@ -6,7 +6,11 @@ class Modify extends \Visitor\HelpForm {
   public $needdb = true;
   public $userModel;
   public $user;
-  
+  public $basefields = array(
+    'nickname', 'nameprefix', 'namefirst', 'namelast', 'nameformat',
+    'password', 'confirmpassword',
+  );
+
   public function init() {
     
     parent::init();
