@@ -207,7 +207,7 @@ class Users extends \Springboard\Model {
       $sql .= ', lastloggedinipaddress = ' . $this->db->qstr( $ipaddress );
     }
 
-    if ( !$this->row['firstloggedin'] )
+    if ( isset( $this->row['firstloggedin'] ) and !$this->row['firstloggedin'] )
       $sql .= ', firstloggedin = ' . $this->db->qstr( date('Y-m-d H:i:s') );
 
     $this->db->query("
@@ -361,7 +361,9 @@ class Users extends \Springboard\Model {
     $this->ensureID();
 
     return $this->db->getAssoc("
-      SELECT DISTINCT g.id AS key, '1' AS value
+      SELECT DISTINCT
+        g.id AS idx,
+        '1' AS value
       FROM
         groups_members AS gm,
         groups AS g
