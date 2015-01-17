@@ -25,10 +25,7 @@ class Search implements \Iterator {
   }
 
   public function current() {
-    return array(
-      'attributes' => \ldap_get_attributes( $this->conn, $this->resultidentifier ),
-      'dn'         => \ldap_get_dn( $this->conn, $this->resultidentifier ),
-    );
+    return \ldap_get_attributes( $this->conn, $this->resultidentifier );
   }
 
   public function key() {
