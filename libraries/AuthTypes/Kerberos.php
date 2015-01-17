@@ -271,7 +271,7 @@ class Kerberos extends \AuthTypes\Base {
     }
 
     if ( !empty( $ret['user'] ) )
-      $ret['user']['isadmin'] = (int) $isadmin;
+      $ret['user']['isclientadmin'] = (int) $isadmin;
 
     return $ret;
   }
