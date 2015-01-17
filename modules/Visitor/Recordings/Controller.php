@@ -173,6 +173,12 @@ class Controller extends \Visitor\Controller {
         'required' => false,
       ),
     ),
+    'checkaccess' => array(
+      'loginrequired' => false,
+      'recordingid'   => array(
+        'type' => 'id',
+      ),
+    ),
   );
   
   public function init() {
@@ -1498,6 +1504,25 @@ class Controller extends \Visitor\Controller {
     $statModel->log( $values );
     return true;
 
+  }
+
+  public function checkaccessAction( $recordingid ) {
+    $browserinfo = $this->bootstrap->getBrowserInfo();
+    $user        = $this->bootstrap->getSession('user');
+    $ret         = array(
+      'hasaccess' => true,
+    );
+
+    $access = $recordingsModel->userHasAccess(
+      $user, null, $browserinfo['mobile'], $this->organization
+    );
+
+    if ( $access !== true ) {
+      $ret['hasaccess'] = false;
+      $ret['reason']    = $access;
+    }
+
+    return $ret;
   }
 
 }
