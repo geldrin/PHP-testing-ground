@@ -56,6 +56,7 @@ class Kerberos extends \AuthTypes\Base {
 
     // ujra van user['id'] mert a findAndMarkUser regisztralja
     $valid = $this->findAndMarkUser( $type, $remoteuser );
+    $userModel = $this->bootstrap->getModel('users');
 
     if ( $valid === null ) { // a null azt jelzi hogy nincs ilyen user
 
@@ -73,7 +74,6 @@ class Kerberos extends \AuthTypes\Base {
         $ldapuser['user']
       );
 
-      $userModel = $this->bootstrap->getModel('users');
       $userModel->insertExternal( $newuser,
         $this->organization
       );
@@ -94,7 +94,6 @@ class Kerberos extends \AuthTypes\Base {
       $ldapuser = $this->getLDAPUser( $remoteuser );
       if ( $valid and empty( $ldapuser['user'] ) ) {
         // le lett tiltva a felhasznalo LDAP-bol, de elotte valid volt
-        $userModel = $this->bootstrap->getModel('users');
         $userModel->select( $user['id'] );
         $userModel->updateRow( array(
             'disabled' => $userModel::USER_DIRECTORYDISABLED,
@@ -106,17 +105,17 @@ class Kerberos extends \AuthTypes\Base {
         $e->redirectparams  = array('error' => 'accessrevoked');
         throw $e;
 
-      } elseif ( !$valid and !empty( $ldapuser['user'] ) ) {
+      } elseif ( !$valid and !empty( $ldapuser['user'] ) and $user['disabled'] == $userModel::USER_DIRECTORYDISABLED ) {
         // vigyazunk hogy csak akkor engedjuk vissza a felhasznalot ha mi
         // tiltottuk le
-        $userModel = $this->bootstrap->getModel('users');
         $userModel->select( $user['id'] );
+        // az if ota megvaltozhatott
         if ( $userModel->row['disabled'] == $userModel::USER_DIRECTORYDISABLED ) {
           $userModel->updateRow( array(
               'disabled' => $userModel::USER_VALIDATED,
             )
           );
-        } else {
+        } elseif ( $userModel->row['disabled'] != $userModel::USER_VALIDATED ) {
           $e = new \AuthTypes\Exception("user found but is manually banned");
           $e->redirecturl     = 'contents/ldapnoaccess';
           $e->redirectparams  = array('error' => 'banned');
