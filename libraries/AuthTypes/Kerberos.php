@@ -240,7 +240,7 @@ class Kerberos extends \AuthTypes\Base {
         $filter,
         array(
           "objectguid", "dn",
-          "commonName", "surname", "givenName", "mail",
+          "commonName", "sn", "givenName", "mail",
           "memberOf", "sAMAccountName", "userPrincipalName"
         )
       );
@@ -271,8 +271,8 @@ class Kerberos extends \AuthTypes\Base {
         if ( isset( $result['mail'] ) )
           $ret['user']['email'] = $ldap::implodePossibleArray(' ', $result['mail'] );
 
-        if ( isset( $result['surname'] ) )
-          $ret['user']['namelast'] = $ldap::implodePossibleArray(' ', $result['surname'] );
+        if ( isset( $result['sn'] ) )
+          $ret['user']['namelast'] = $ldap::implodePossibleArray(' ', $result['sn'] );
 
         if ( isset( $result['givenName'] ) )
           $ret['user']['namefirst'] = $ldap::implodePossibleArray(' ', $result['givenName'] );
