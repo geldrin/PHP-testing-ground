@@ -32,6 +32,7 @@ class Kerberos extends \AuthTypes\Base {
     }
 
     $pos    = strpos( $remoteuser, '@' );
+    $uname  = substr( $remoteuser, 0, $pos );
     $domain = substr( $remoteuser, $pos + 1 );
 
     // a domain nincs a vart domain-u loginok kozott
@@ -61,17 +62,20 @@ class Kerberos extends \AuthTypes\Base {
     if ( $valid === null ) { // a null azt jelzi hogy nincs ilyen user
 
       $directoryuser = $this->handleAuthDirectory( $remoteuser );
+      $newuser       = array(
+        'nickname'   => $uname,
+        'namelast'   => $uname,
+        'externalid' => $remoteuser,
+        'source'     => 'kerberos',
+      );
+
+      // nem talaltunk directoryt a usernek, szimplan beleptetjuk
       if ( $directoryuser and empty( $directoryuser['user'] ) ) {
         $e = new \AuthTypes\Exception("user found but not member of ldap group");
         $e->redirecturl     = 'contents/ldapnoaccess';
         throw $e;
       } elseif ( $directoryuser )
-        $newuser = array_merge( array(
-            'externalid' => $remoteuser,
-            'source'     => 'kerberos',
-          ),
-          $directoryuser['user']
-        );
+        $newuser = array_merge( $newuser, $directoryuser['user'] );
 
       $userModel->insertExternal( $newuser,
         $this->organization
