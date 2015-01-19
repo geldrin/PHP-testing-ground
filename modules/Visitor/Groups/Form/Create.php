@@ -38,7 +38,7 @@ class Create extends \Visitor\HelpForm {
     
   }
   
-  public function checkDirectory( &$values ) {
+  public function checkDirectory( &$values, $skipname = false ) {
     $user = $this->bootstrap->getSession('user');
     if (
          $values['source'] === '' or // non-directory, skip
@@ -71,7 +71,9 @@ class Create extends \Visitor\HelpForm {
         break;
 
       $error = false;
-      $values['name'] = $ldap::implodePossibleArray(' ', $result['cn'] );
+      if ( $skipname )
+        $values['name'] = $ldap::implodePossibleArray(' ', $result['cn'] );
+
       $values['organizationdirectoryldapwhenchanged'] = $ldap::getTimestamp(
         $ldap::implodePossibleArray(' ', $result['whenChanged'] )
       );

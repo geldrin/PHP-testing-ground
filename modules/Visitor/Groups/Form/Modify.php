@@ -24,7 +24,7 @@ class Modify extends \Visitor\Groups\Form\Create {
   public function onComplete() {
     
     $values = $this->form->getElementValues( 0 );
-    $values = $this->checkDirectory( $values );
+    $values = $this->checkDirectory( $values, true );
     if ( !$values )
       return;
 
