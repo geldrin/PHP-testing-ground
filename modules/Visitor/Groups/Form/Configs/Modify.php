@@ -12,5 +12,4 @@ $config['id']              = Array(
 
 if ( $this->groupModel->row['source'] === 'directory' ) {
   unset( $config['name']['validation'][0]['anddepend'] );
-  $config['source']['html'] = 'disabled="disabled"';
 }
