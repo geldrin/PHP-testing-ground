@@ -73,7 +73,7 @@ class Create extends \Visitor\HelpForm {
       $error = false;
       $values['name'] = $ldap::implodePossibleArray(' ', $result['distinguishedName'] );
       $values['organizationdirectoryldapwhenchanged'] = $ldap::getTimestamp(
-        $result['whenChanged']
+        $ldap::implodePossibleArray(' ', $result['whenChanged'] )
       );
       break;
     }
