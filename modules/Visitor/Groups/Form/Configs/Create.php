@@ -30,7 +30,15 @@ $config = Array(
     'displayname' => $l('groups', 'name'),
     'type'        => 'inputText',
     'validation'  => Array(
-      array('type' => 'required'),
+      array(
+        'type' => 'required',
+        'anddepend' => Array(
+          Array(
+            'js'  => '<FORM.source> != "directory"',
+            'php' => '<FORM.source> != "directory"',
+          ),
+        ),
+      ),
     )
   ),
 
