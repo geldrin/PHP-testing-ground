@@ -5,6 +5,7 @@ abstract class Base {
   protected $bootstrap;
   protected $organization;
   protected $ipaddresses;
+  protected $directory; // az AuthDirectory ami kotodik az adott AuthTypehoz
 
   protected $skip = array(
     'users' => array(
@@ -83,6 +84,12 @@ abstract class Base {
     return $this->handle( $authtype );
   }
 
+  protected function getDirectory( $directory ) {
+    $class = "\\AuthDirectories\\" . ucfirst( $directory['type'] );
+    return new $class( $this->bootstrap, $this->organization, $directory );
+  }
+
   abstract public function handle($authtype);
+  abstract protected function handleAuthDirectory($externalid);
 
 }
