@@ -61,7 +61,7 @@ class Create extends \Visitor\HelpForm {
     $results = $ldap->search(
       $values['organizationdirectoryldapdn'],
       '(objectClass=group)',
-      array('objectguid', 'dn', 'whenchanged', 'distinguishedname')
+      array('objectguid', 'dn', 'cn', 'whenchanged', )
     );
 
     // csak az elso dologra vagyunk kivancsiak
@@ -71,7 +71,7 @@ class Create extends \Visitor\HelpForm {
         break;
 
       $error = false;
-      $values['name'] = $ldap::implodePossibleArray(' ', $result['distinguishedName'] );
+      $values['name'] = $ldap::implodePossibleArray(' ', $result['cn'] );
       $values['organizationdirectoryldapwhenchanged'] = $ldap::getTimestamp(
         $ldap::implodePossibleArray(' ', $result['whenChanged'] )
       );
