@@ -3558,7 +3558,7 @@ class Recordings extends \Springboard\Model {
   public function updateLastPosition( $organization, $userid, $lastposition, $sessionid ) {
     
     $this->ensureID();
-    $timeout   = $organization['viewsessiontimeouthours'];
+    $timeout   = $organization['viewsessiontimeoutminutes'];
     $updatesec = $this->bootstrap->config['recordingpositionupdateseconds'];
     $extrasec  = $organization['viewsessionallowedextraseconds'];
     $ret       = false;
@@ -3566,7 +3566,7 @@ class Recordings extends \Springboard\Model {
       SELECT
         id,
         position,
-        IF(timestamp < DATE_SUB(NOW(), INTERVAL $timeout HOUR), 1, 0) AS expired
+        IF(timestamp < DATE_SUB(NOW(), INTERVAL $timeout MINUTE), 1, 0) AS expired
       FROM recording_view_progress
       WHERE
         userid      = '$userid' AND
@@ -3623,13 +3623,13 @@ class Recordings extends \Springboard\Model {
     $sessionid   = $this->db->qstr( $sessionid );
     $timestamp   = $this->db->qstr( date('Y-m-d H:i:s') );
     $position    = $this->db->qstr( $position );
-    $timeout     = $organization['viewsessiontimeouthours'];
+    $timeout     = $organization['viewsessiontimeoutminutes'];
 
     $this->startTrans();
     $existing = $this->db->getRow("
       SELECT
         id,
-        IF(timestampfrom < DATE_SUB($timestamp, INTERVAL $timeout HOUR), 1, 0) AS expired
+        IF(timestampfrom < DATE_SUB($timestamp, INTERVAL $timeout MINUTE), 1, 0) AS expired
       FROM recording_view_sessions
       WHERE sessionid = $sessionid
       ORDER BY id DESC
