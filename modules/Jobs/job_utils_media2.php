@@ -406,7 +406,7 @@ global $jconf, $debug, $app;
 		
 		// EXECUTE FFMPEG COMMAND
 		$start 	= time();
-		$output = runExt($c);
+		$output = runExt4($c);
 		
 		$err['duration'      ]  = time() - $start;
 		$err['command'       ]  = $c;
@@ -420,6 +420,9 @@ global $jconf, $debug, $app;
 		if ($output['code'] !== 0) {
 			// FFmpeg returned with a non-zero error code
 			$err['message'] = "[ERROR] FFmpeg conversion FAILED!";
+			$msg = $err['message'] ."\nExit code: ". $output['code'] .".\nConsole output:\n". $err['command_output'] ."\n";
+			$debug->log($jconf['log_dir'], $jconf['jobid_media_convert'] .".log", $msg, false);
+			unset($msg);
 			return $err;
 		}
 		
@@ -454,8 +457,7 @@ global $jconf, $debug, $app;
 
 			$err['message'] = "[ERROR] FFmpeg conversion failed: conversion stopped unexpectedly!\n.";
 
-			unset($r);
-			unset($msg);
+			unset($r, $msg);
 			return $err;
 		}
 		$msg = "[INFO] Duration check finished on ". $rec['output_file'] ."\n";
@@ -480,6 +482,35 @@ global $jconf, $debug, $app;
 	unset($msg);
 
 	return $err;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+function runExt4($cmd) {
+///////////////////////////////////////////////////////////////////////////////////////////////////
+//
+// RunExt v4
+//
+// Favago modszer exec() + echo $? paranccsal.
+// Az echo kiirja az elozoleg futtatott parancs exitcode-jat az utolso sorba, amit az exec()
+// fuggveny ouput valtozo utolso eleme tartalmaz.
+//
+///////////////////////////////////////////////////////////////////////////////////////////////////
+	$return_array = array(
+		'code'       => -1,
+		'cmd_output' => '',
+	);
+	
+	$cmd .= " </dev/null 2>&1; echo $?";
+	
+	$output = array();
+	$code = -1;
+	
+	exec($cmd, $output, $code);
+	
+	$return_array['code'] = intval($output[count($output) - 1]);
+	$return_array['cmd_output'] = implode(PHP_EOL, $output);
+	
+	return $return_array;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
