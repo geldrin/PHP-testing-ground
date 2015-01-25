@@ -313,7 +313,10 @@ $config = $config + array(
       FROM groups AS g
       WHERE
         organizationid = '" . $this->controller->organization['id'] . "' AND
-        source        <> 'directory'
+        (
+          source <> 'directory' OR
+          source IS NULL
+        )
       ORDER BY g.name DESC
     ",
     'validation'  => array(
