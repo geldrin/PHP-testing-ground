@@ -267,6 +267,9 @@ $config = array(
     ),
     'converter' => array(),
   ),
+  //-------
+  // ldap belepeseket ennyi idonkent vegezzuk el ujra ha a user mar be van lepve
+  'directoryreauthminutes' => 240, // default 4 ora
 );
 
 $config['phpsettings'] = array(

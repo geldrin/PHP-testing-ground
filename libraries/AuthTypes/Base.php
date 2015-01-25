@@ -58,7 +58,19 @@ abstract class Base {
 
   protected function markUser( $authtype ) {
     $user = $this->bootstrap->getSession('user');
-    $user[ $authtype['type'] . 'login' ] = true;
+    $user[ $authtype['type'] . 'login' ] = time();
+  }
+
+  protected function shouldReauth() {
+    $user    = $this->bootstrap->getSession('user');
+    $timeout = $this->bootstrap->config['directoryreauthminutes'] * 60;
+    if (
+         !$user[ $authtype['type'] . 'login' ] or
+         $user[ $authtype['type'] . 'login' ] + $timeout < time()
+       )
+      return true;
+    else
+      return false;
   }
 
   protected function findAndMarkUser( $authtype, $externalid ) {
