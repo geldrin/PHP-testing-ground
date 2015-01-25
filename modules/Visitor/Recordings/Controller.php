@@ -576,14 +576,15 @@ class Controller extends \Visitor\Controller {
       }
 
     }
-    
-    \Springboard\Debug::getInstance()->log(
-      false,
-      'recordingcheckaccessdebug.txt',
-      "SECURE: $secure | RESULT: $result\n" .
-      "  REQUEST_URI: " . $_SERVER['REQUEST_URI'] . $_SERVER['QUERY_STRING']
-    );
-    
+
+    if ( $this->bootstrap->config['checkaccessdebuglog'] )
+      \Springboard\Debug::getInstance()->log(
+        false,
+        'recordingcheckaccessdebug.txt',
+        "SECURE: $secure | RESULT: $result\n" .
+        "  REQUEST_URI: " . $_SERVER['REQUEST_URI'] . $_SERVER['QUERY_STRING']
+      );
+
     echo
       '<?xml version="1.0"?>
       <result>

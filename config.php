@@ -272,6 +272,8 @@ $config = array(
   'directoryreauthminutes' => 240, // default 4 ora
   //-------
   'apidebuglog' => false,
+  'checkaccessdebuglog' => false,
+  'livecheckaccessdebuglog' => false,
 );
 
 $config['phpsettings'] = array(

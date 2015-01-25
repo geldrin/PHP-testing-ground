@@ -589,14 +589,15 @@ class Controller extends \Visitor\Controller {
       }
 
     }
-    
-    \Springboard\Debug::getInstance()->log(
-      false,
-      'livecheckaccessdebug.txt',
-      "LIVESECURE: $secure | RESULT: $result\n" .
-      "  REQUEST_URI: " . $_SERVER['REQUEST_URI'] . $_SERVER['QUERY_STRING']
-    );
-    
+
+    if ( $this->bootstrap->config['livecheckaccessdebuglog'] )
+      \Springboard\Debug::getInstance()->log(
+        false,
+        'livecheckaccessdebug.txt',
+        "LIVESECURE: $secure | RESULT: $result\n" .
+        "  REQUEST_URI: " . $_SERVER['REQUEST_URI'] . $_SERVER['QUERY_STRING']
+      );
+
     echo
       '<?xml version="1.0"?>
       <result>
