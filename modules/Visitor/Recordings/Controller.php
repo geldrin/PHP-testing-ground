@@ -1510,14 +1510,22 @@ class Controller extends \Visitor\Controller {
     $browserinfo = $this->bootstrap->getBrowserInfo();
     $user        = $this->bootstrap->getSession('user');
     $ret         = array(
-      'hasaccess' => true,
+      'hasaccess' => false,
     );
+
+    $recordingsModel = $this->bootstrap->getModel('recordings');
+    $recordingsModel->select( $recordingid );
+
+    if ( !$recordingsModel->row )
+      return $ret;
 
     $access = $recordingsModel->userHasAccess(
       $user, null, $browserinfo['mobile'], $this->organization
     );
 
-    if ( $access !== true ) {
+    if ( $access === true )
+      $ret['hasaccess'] = true;
+    else {
       $ret['hasaccess'] = false;
       $ret['reason']    = $access;
     }

@@ -44,8 +44,6 @@ class Kerberos extends \AuthTypes\Base {
       throw $e;
     }
 
-    // we notice changes via the remoteuser changing undearneath us
-    // TODO check for a timeout to check if LDAP permissions changed?
     if (
          $user['id'] and
          $user['source'] === 'kerberos' and
