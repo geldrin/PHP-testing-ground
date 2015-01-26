@@ -27,13 +27,15 @@ class Controller extends \Visitor\Controller {
   /api?format=json&layer=model&module=recordings&method=upload&title=title&filepath=filepath
   */
   public function route() {
-    
-    $debug  = \Springboard\Debug::getInstance();
-    $debug->log(
-      false, 'api.txt',
-      "API " . $_SERVER['REQUEST_METHOD'] . " REQUEST: " . $_SERVER['REQUEST_URI'] .
-     "\n  Info:\n" . \Springboard\Debug::getRequestInformation( 2 )
-    );
+
+    if ( $this->bootstrap->config['apidebuglog'] ) {
+      $debug  = \Springboard\Debug::getInstance();
+      $debug->log(
+        false, 'api.txt',
+        "API " . $_SERVER['REQUEST_METHOD'] . " REQUEST: " . $_SERVER['REQUEST_URI'] .
+       "\n  Info:\n" . \Springboard\Debug::getRequestInformation( 2 )
+      );
+    }
 
     $result = array(
       'result' => 'OK'

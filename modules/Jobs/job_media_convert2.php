@@ -476,7 +476,7 @@ global $app, $jconf, $debug;
 
 		clearstatcache();
 
-		$output = runExt($command);
+		$output = runExt4($command);
 		$output_string = $output['cmd_output'];
 		$result = $output['code'];
 		if ( $result < 0 ) $result = 0;

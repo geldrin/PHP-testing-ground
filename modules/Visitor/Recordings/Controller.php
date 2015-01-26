@@ -576,14 +576,15 @@ class Controller extends \Visitor\Controller {
       }
 
     }
-    
-    \Springboard\Debug::getInstance()->log(
-      false,
-      'recordingcheckaccessdebug.txt',
-      "SECURE: $secure | RESULT: $result\n" .
-      "  REQUEST_URI: " . $_SERVER['REQUEST_URI'] . $_SERVER['QUERY_STRING']
-    );
-    
+
+    if ( $this->bootstrap->config['checkaccessdebuglog'] )
+      \Springboard\Debug::getInstance()->log(
+        false,
+        'recordingcheckaccessdebug.txt',
+        "SECURE: $secure | RESULT: $result\n" .
+        "  REQUEST_URI: " . $_SERVER['REQUEST_URI'] . $_SERVER['QUERY_STRING']
+      );
+
     echo
       '<?xml version="1.0"?>
       <result>
@@ -1510,14 +1511,22 @@ class Controller extends \Visitor\Controller {
     $browserinfo = $this->bootstrap->getBrowserInfo();
     $user        = $this->bootstrap->getSession('user');
     $ret         = array(
-      'hasaccess' => true,
+      'hasaccess' => false,
     );
+
+    $recordingsModel = $this->bootstrap->getModel('recordings');
+    $recordingsModel->select( $recordingid );
+
+    if ( !$recordingsModel->row )
+      return $ret;
 
     $access = $recordingsModel->userHasAccess(
       $user, null, $browserinfo['mobile'], $this->organization
     );
 
-    if ( $access !== true ) {
+    if ( $access === true )
+      $ret['hasaccess'] = true;
+    else {
       $ret['hasaccess'] = false;
       $ret['reason']    = $access;
     }

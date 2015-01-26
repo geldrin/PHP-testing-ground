@@ -114,7 +114,7 @@ for ( $i = 0; $i < count($channels); $i++ ) {
 	$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] ffmpeg command to be executed: " . $ffmpeg_command, $sendmail = false);
 
 	// Run ffmpeg
-	$err = runExt($ffmpeg_command);
+	$err = runExt4($ffmpeg_command);
 
 	if ( is_readable($thumb_filename) and ( filesize($thumb_filename) > 0 ) ) {
 
