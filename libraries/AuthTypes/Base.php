@@ -61,7 +61,7 @@ abstract class Base {
     $user[ $authtype['type'] . 'login' ] = time();
   }
 
-  protected function shouldReauth() {
+  protected function shouldReauth( $authtype ) {
     $user    = $this->bootstrap->getSession('user');
     $timeout = $this->bootstrap->config['directoryreauthminutes'] * 60;
     if (

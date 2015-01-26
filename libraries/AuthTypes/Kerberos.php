@@ -48,7 +48,7 @@ class Kerberos extends \AuthTypes\Base {
          $user['id'] and
          $user['source'] === 'kerberos' and
          $user['externalid'] === $remoteuser and
-         !$this->shouldReauth()
+         !$this->shouldReauth( $type )
        )
       return false; // false mert nem tortent bejelentkeztetes
 
