@@ -423,6 +423,16 @@ return array (
     'bodyen' => '<p>The invitation has been expired. We are sorry for the inconvenience.</p>',
     'body_stringid' => 0,
   ),
+  35 => 
+  array (
+    'title' => 'LDAP/AD jogosultsági hiba',
+    'titleen' => 'LDAP/AD authorization error',
+    'shortname' => 'ldapnoaccess',
+    'title_stringid' => 0,
+    'body' => '<p>Ön jelenleg nem jogosult hozzáférni a szolgáltatáshoz. Ehhez a megfelelő LDAP/AD csoporttagság szükséges!</p>',
+    'bodyen' => '<p>You are not authorized to access this service. Specific LDAP/AD group membership is required.</p>',
+    'body_stringid' => 0,
+  ),
 
 
 );
