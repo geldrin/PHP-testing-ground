@@ -59,7 +59,6 @@ server {
 		# Origin server list
 		proxy_pass http://origins;
 
-		# https://blog.engineyard.com/2011/useful-rewrites-for-nginx
 		rewrite_log on;
 		proxy_redirect off;
 		proxy_cache_revalidate off;
@@ -104,14 +103,6 @@ server {
 
 	} # Live service
 
-	location /nginx_status {
-		#stub_status on;
-		access_log off;
-		allow 127.0.0.1;
-		allow 91.120.59.241;
-		deny all;
-	}
-
 	# belso locationok amit a lua hiv meg kizarolag mert nem tud kozvetlenul url-t hivni
 	location /recordingsaccesscheck {
 		internal; # nem elerheto kivulrol
@@ -147,6 +138,15 @@ server {
 		proxy_no_cache 1;
 		proxy_cache_bypass 1;
 		proxy_pass_request_headers off;
+	}
+
+	# NGINX status
+	location /nginx_status {
+		#stub_status on;
+		access_log off;
+		allow 127.0.0.1;
+		allow 91.120.59.241;
+		deny all;
 	}
 
 } # Server config
