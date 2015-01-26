@@ -99,7 +99,9 @@ while( !is_file( $app->config['datapath'] . 'jobs/' . $myjobid . '2.stop' ) and 
 			break;
 		}
 		// Picture-in-picture encoding: download content file as well
-		if ( $encoding_profile['type'] == "pip" && $recording['islegacy'] == 0 ) {
+		if ( $encoding_profile['type'] == "pip" && (
+		$recording['contentmasterstatus'] == $jconf['dbstatus_copystorage_ok'] ||
+		$recording['contentmasterstatus'] == $jconf['dbstatus_uploaded'] )) {
 			$recording['iscontent'] = 1;
 			$err = copyMediaToConverter($recording); 
 			// Check if we need to stop conversion (do not handle error)
