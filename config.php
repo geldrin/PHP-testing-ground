@@ -111,7 +111,8 @@ $config = array(
     'player' => '618x348',
   ),
   //----
-  'hdsenabled' => true,
+  'ondemandhdsenabled' => true,
+  'livehdsenabled' => true,
   'wowza'      => array(
     
     'httpurl'           => 'http://%s/vsq/_definst_/',

@@ -361,7 +361,7 @@ class Livefeeds extends \Springboard\Model {
   
   public function isHDSEnabled( $prefix = '' ) {
     return
-      $this->bootstrap->config['hdsenabled'] and
+      $this->bootstrap->config['livehdsenabled'] and
       in_array( $this->row[ $prefix . 'smilstatus'], array('onstorage', 'regenerate') )
     ;
   }

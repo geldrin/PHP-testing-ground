@@ -2468,7 +2468,7 @@ class Recordings extends \Springboard\Model {
   
   public function isHDSEnabled() {
     return
-      $this->bootstrap->config['hdsenabled'] and
+      $this->bootstrap->config['ondemandhdsenabled'] and
       in_array( $this->row['smilstatus'], array('onstorage', 'regenerate') )
     ;
   }
