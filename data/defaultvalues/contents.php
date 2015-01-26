@@ -433,6 +433,16 @@ return array (
     'bodyen' => '<p>You are not authorized to access this service. Specific LDAP/AD group membership is required.</p>',
     'body_stringid' => 0,
   ),
+  36 => 
+  array (
+    'title' => 'A felvétel megtekintéséhez az előzetes követelmények teljesítése szükséges',
+    'titleen' => 'To view this recording preliminary requirements must be met',
+    'shortname' => 'coursedependencyrestricted',
+    'title_stringid' => 0,
+    'body' => '<p>A felvétel megtekintése kizárólag az előzetes feltételek megtekintése után lehetséges. A felvétel feltöltője sorrendi haladást ír elő!</p>',
+    'bodyen' => '<p>To view this recording preliminary recordings must be accomplished. Content owner demands linear progress.</p>',
+    'body_stringid' => 0,
+  ),
 
 
 );
