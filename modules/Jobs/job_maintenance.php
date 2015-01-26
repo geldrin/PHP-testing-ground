@@ -476,13 +476,13 @@ function checkFailedRecordings() {
 					"contentmasterstatus = ". (is_null($fldrec['contentmasterstatus']) ? "NULL" : "'". $fldrec['contentmasterstatus'] ."'"),
 				)
 			);
-			$rec_title = " \"". $fldrec['title'] . (is_null($fldrec['subtitle']) ? '' : " / ". $fldrec['subtitle']) ."\",";
+			$rec_title = " \"". ($fldrec['title'] ? $fldrec['title'] : '-') . (is_null($fldrec['subtitle']) ? '' : " / ". $fldrec['subtitle']) ."\",";
 			
 			$msg .= "\n  Rec #". $rec . $rec_title . $rstatus ." - failed conversions: ". count($fldrec['recordings_versions']) ."\n";
 			$n = 1;
 			foreach ($fldrec['recordings_versions'] as $fldrv) {
 				$recver   = "rec.version = #". $fldrv['id'];
-				$filename = "'". ($fldrv['filename'] === null ? ($fldrv['id'] . $fldrv['filenamesuffix'] . $fldrv['filecontainerformat'] . "/null") : $fldrv['filename']) ."'";
+				$filename = "'". ($fldrv['filename'] === null ? ($fldrv['id'] ."_". $fldrv['filenamesuffix'] .".". $fldrv['filecontainerformat'] . "/null") : $fldrv['filename']) ."'";
 				$status   = "status = ". (is_null($fldrv['rvstatus']) ? "NULL" : "'". $fldrv['rvstatus'] ."'");
 				$date     = "timestamp = '". $fldrv['timestamp'] ."'";
 				$type     = $fldrv['type'] ." - ". $fldrv['shortname'];
