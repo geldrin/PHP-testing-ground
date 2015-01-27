@@ -482,7 +482,7 @@ function checkFailedRecordings() {
 			$n = 1;
 			foreach ($fldrec['recordings_versions'] as $fldrv) {
 				$recver   = "rec.version = #". $fldrv['id'];
-				$filename = "'". ($fldrv['filename'] === null ? ($fldrv['id'] ."_". $fldrv['filenamesuffix'] .".". $fldrv['filecontainerformat'] . "/null") : $fldrv['filename']) ."'";
+				$filename = "'". ($fldrv['filename'] === null ? ($rec ."_". $fldrv['id'] . $fldrv['filenamesuffix'] .".". $fldrv['filecontainerformat'] . "/null") : $fldrv['filename']) ."'";
 				$status   = "status = ". (is_null($fldrv['rvstatus']) ? "NULL" : "'". $fldrv['rvstatus'] ."'");
 				$date     = "timestamp = '". $fldrv['timestamp'] ."'";
 				$type     = $fldrv['type'] ." - ". $fldrv['shortname'];
