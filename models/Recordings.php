@@ -3561,16 +3561,30 @@ class Recordings extends \Springboard\Model {
     $timeout   = $organization['viewsessiontimeoutminutes'];
     $updatesec = $this->bootstrap->config['recordingpositionupdateseconds'];
     $extrasec  = $organization['viewsessionallowedextraseconds'];
-    $ret       = false;
+    $ret       = array(
+      'success' => false,
+    );
+
     $row       = $this->db->getRow("
       SELECT
-        id,
-        position,
-        IF(timestamp < DATE_SUB(NOW(), INTERVAL $timeout MINUTE), 1, 0) AS expired
-      FROM recording_view_progress
+        rvp.id,
+        rvp.position,
+        IF(
+          timestamp < DATE_SUB(NOW(), INTERVAL $timeout MINUTE),
+          1,
+          0
+        ) AS expired,
+        GREATEST(
+          IFNULL(r.masterlength, 0),
+          IFNULL(r.contentmasterlength, 0)
+        ) AS length
+      FROM
+        recording_view_progress AS rvp,
+        recordings AS r
       WHERE
-        userid      = '$userid' AND
-        recordingid = '" . $this->id . "'
+        rvp.userid      = '$userid' AND
+        rvp.recordingid = '" . $this->id . "' AND
+        r.id            = rvp.recordingid
       LIMIT 1
     ");
     
@@ -3587,27 +3601,48 @@ class Recordings extends \Springboard\Model {
       $this->updateSession( $organization, $userid, $lastposition, $sessionid );
       $this->endTrans();
       return $ret;
-    }
-
-    if ( !$row ) {
+    } elseif ( !$row ) { // nincs meg progress report, insert
 
       $progressModel->insert( $record );
-      $ret = true;
+      $ret['success'] = true;
+
+      // le kell kerdeznunk a recording hosszat
+      $row = $this->db->getRow("
+        SELECT
+          '$lastposition' AS position,
+          '0' AS expired,
+          GREATEST(
+            IFNULL(r.masterlength, 0),
+            IFNULL(r.contentmasterlength, 0)
+          ) AS length
+        FROM recordings AS r
+        WHERE r.id = '" . $this->id . "'
+        LIMIT 1
+      ");
 
     } elseif ( $row['position'] < $lastposition and !$row['expired'] ) {
+      // minden oke, update
 
       $progressModel->id = $row['id'];
       unset( $record['timestamp'] ); // nem updatelhetunk timestampet hogy kideruljon hogy kifutottunk az idobol
       $progressModel->updateRow( $record );
-      $ret = true;
+      $ret['success'] = true;
+      $row['position'] = $lastposition;
 
     } elseif ( $row['expired'] ) { // reset
+      // tul sok kimaradas volt, reseteljuk nullara a poziciot, kezdje elorol
 
-      $record['position'] = 0;
+      $row['position'] = $record['position'] = 0;
       $progressModel->id  = $row['id'];
       $progressModel->updateRow( $record );
 
     }
+
+    $ret['watchedpercent'] = round( ($row['position'] / $row['length']) * 100 );
+    $ret['needpercent']    = $organization['elearningcoursecriteria'];
+    $ret['watched']        =
+      $ret['positionpercent'] < $organization['elearningcoursecriteria']
+    ;
 
     $this->endTrans();
     $this->updateSession( $organization, $userid, $lastposition, $sessionid );
