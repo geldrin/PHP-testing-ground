@@ -28,8 +28,8 @@ class Controller extends \Visitor\Controller {
   */
   public function route() {
 
+    $debug  = \Springboard\Debug::getInstance();
     if ( $this->bootstrap->config['apidebuglog'] ) {
-      $debug  = \Springboard\Debug::getInstance();
       $debug->log(
         false, 'api.txt',
         "API " . $_SERVER['REQUEST_METHOD'] . " REQUEST: " . $_SERVER['REQUEST_URI'] .

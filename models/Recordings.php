@@ -3570,7 +3570,7 @@ class Recordings extends \Springboard\Model {
         rvp.id,
         rvp.position,
         IF(
-          timestamp < DATE_SUB(NOW(), INTERVAL $timeout MINUTE),
+          rvp.timestamp < DATE_SUB(NOW(), INTERVAL $timeout MINUTE),
           1,
           0
         ) AS expired,
@@ -3641,7 +3641,7 @@ class Recordings extends \Springboard\Model {
     $ret['watchedpercent'] = round( ($row['position'] / $row['length']) * 100 );
     $ret['needpercent']    = $organization['elearningcoursecriteria'];
     $ret['watched']        =
-      $ret['positionpercent'] < $organization['elearningcoursecriteria']
+      $ret['watchedpercent'] >= $organization['elearningcoursecriteria']
     ;
 
     $this->endTrans();
