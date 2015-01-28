@@ -61,7 +61,7 @@ class Kerberos extends \AuthTypes\Base {
       $directoryuser = $this->handleAuthDirectory( $remoteuser );
       $newuser       = array(
         'nickname'   => $uname,
-        'namelast'   => $uname,
+        'namefirst'  => $uname,
         'externalid' => $remoteuser,
         'source'     => 'kerberos',
       );
