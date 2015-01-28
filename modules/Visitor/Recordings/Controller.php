@@ -585,6 +585,9 @@ class Controller extends \Visitor\Controller {
         "  REQUEST_URI: " . $_SERVER['REQUEST_URI'] . $_SERVER['QUERY_STRING']
       );
 
+    if ( !$result )
+      header('HTTP/1.1 403 Forbidden');
+
     echo
       '<?xml version="1.0"?>
       <result>
@@ -599,7 +602,7 @@ class Controller extends \Visitor\Controller {
   public function securecheckstreamaccessAction() {
     return $this->checkstreamaccessAction( true );
   }
-  
+
   public function modifyrecordingAction( $id ) {
     
     $recordingModel = $this->modelUserAndIDCheck('recordings', $id, false );
