@@ -22,7 +22,8 @@ class Kerberos extends \AuthTypes\Base {
     else
       $remoteuser = '';
 
-    // nincs remoteuser
+    // nincs remoteuser, ez azt jelenti hogy muszaj hogy legyen kerberos login
+    // es nincsen fallback sima loginnal
     if ( !strlen( trim( $remoteuser ) ) ) {
       $e = new \AuthTypes\Exception("remote_user empty or not found");
       $e->redirecturl     = 'users/login';
@@ -36,13 +37,10 @@ class Kerberos extends \AuthTypes\Base {
     $domain = substr( $remoteuser, $pos + 1 );
 
     // a domain nincs a vart domain-u loginok kozott
-    if ( !isset( $domains[ $domain ] ) ) {
-      $e = new \AuthTypes\Exception("remote_user's domain was unexpected");
-      $e->redirecturl     = 'users/login';
-      $e->redirectmessage = $l('users', 'kerberosloginfailed');
-      $e->redirectparams  = array('error' => 'domain');
-      throw $e;
-    }
+    // ez azzal jar hogy ha nincsen letrehozva megfelelo organizations.authtypes
+    // akkor a site elerheto lesz
+    if ( !isset( $domains[ $domain ] ) )
+      return false;
 
     if (
          $user['id'] and
