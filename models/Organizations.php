@@ -123,9 +123,7 @@ class Organizations extends \Springboard\Model\Multilingual {
     $organization['authtypes'] = $this->db->getArray("
       SELECT *
       FROM organizations_authtypes
-      WHERE
-        organizationid = '" . $this->id . "' AND
-        disabled       = 0
+      WHERE organizationid = '" . $this->id . "'
     ");
     $organization['authdirectories'] = $this->db->getArray("
       SELECT *

@@ -5,6 +5,10 @@ class Kerberos extends \AuthTypes\Base {
 
   public function handle($type) {
 
+    // a tipus teljesen ignoralni akarjuk, mintha torolve lenne
+    if ( $type['disabled'] < 0 )
+      return false;
+
     // az organization egyatalan var kerberos logint?
     $domains = array();
     $doms = explode(',', $type['domains'] );
@@ -41,6 +45,16 @@ class Kerberos extends \AuthTypes\Base {
     // akkor a site elerheto lesz
     if ( !isset( $domains[ $domain ] ) )
       return false;
+
+    // az adott tipushoz tartozik es az adott tipusnal hibat akarunk kiiratni
+    // mert le van tiltva
+    if ( $type['disabled'] > 0 ) {
+      $e = new \AuthTypes\Exception("auth type disabled");
+      $e->redirecturl     = 'users/login';
+      $e->redirectmessage = $l('users', 'kerberosloginfailed');
+      $e->redirectparams  = array('error' => 'typedisabled');
+      throw $e;
+    }
 
     if (
          $user['id'] and
