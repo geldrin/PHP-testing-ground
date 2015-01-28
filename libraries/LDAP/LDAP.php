@@ -123,7 +123,8 @@ class LDAP {
   }
 
   public function search( $basedn, $filter, $attributes = null, $attrsonly = null, $sizelimit = null, $timelimit = null, $deref = null ) {
-    $result = \ldap_search(
+    // squelch mert ha kap egy invalid DN-t akkor dob WARNING-ot
+    $result = @\ldap_search(
       $this->conn,
       $basedn,
       $filter,

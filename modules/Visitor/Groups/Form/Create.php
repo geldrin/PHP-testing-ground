@@ -57,27 +57,31 @@ class Create extends \Visitor\HelpForm {
       'password' => $dir->row['password']
     );
 
+
+    // csak az elso dologra vagyunk kivancsiak
+    $error = true;
     $ldap = $this->bootstrap->getLDAP( $ldapconfig );
+
     $results = $ldap->search(
-      $values['organizationdirectoryldapdn'],
+      $ldap::escape( $values['organizationdirectoryldapdn'], true ),
       '(objectClass=group)',
       array('objectguid', 'dn', 'cn', 'whenchanged', )
     );
 
-    // csak az elso dologra vagyunk kivancsiak
-    $error = true;
-    foreach( $results as $result ) {
-      if ( empty( $result ) )
+    if ( $results !== false ) {
+      foreach( $results as $result ) {
+        if ( empty( $result ) )
+          break;
+
+        $error = false;
+        if ( !$skipname )
+          $values['name'] = $ldap::implodePossibleArray(' ', $result['cn'] );
+
+        $values['organizationdirectoryldapwhenchanged'] = $ldap::getTimestamp(
+          $ldap::implodePossibleArray(' ', $result['whenChanged'] )
+        );
         break;
-
-      $error = false;
-      if ( !$skipname )
-        $values['name'] = $ldap::implodePossibleArray(' ', $result['cn'] );
-
-      $values['organizationdirectoryldapwhenchanged'] = $ldap::getTimestamp(
-        $ldap::implodePossibleArray(' ', $result['whenChanged'] )
-      );
-      break;
+      }
     }
 
     if ( $error ) {
