@@ -89,6 +89,19 @@ if ( $user['isadmin'] or $user['isclientadmin'] ) {
           'type' => 'required',
           'anddepend' => $depend,
         ),
+        array(
+          'type' => 'database',
+          'help' => $l('groups','organizationdirectoryldapdn_duplicate'),
+          'sql'  =>  "
+            SELECT count(*) as counter
+            FROM groups
+            WHERE
+              organizationdirectoryldapdn = <FORM.organizationdirectoryldapdn> AND
+              organizationid = '" . $this->controller->organization['id'] . "'
+          ",
+          'field' => 'counter',
+          'value' => '0',
+        ),
       )
     ),
   ));
