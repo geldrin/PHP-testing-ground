@@ -1127,7 +1127,25 @@ function checkProcessStartTime($processName) {
     return $process_list;
 }
 
+function runOverControl($myjobid) {
+global $jconf, $debug;
 
+    $goahead = true;
+
+    $processes = checkProcessStartTime("php.*" . $jconf['job_dir'] . $myjobid . ".php");
+    if ( count($processes) > 1 ) {
+        $process_longest = 0;
+        $msg = "";
+        for ( $i = 0; $i < count($processes); $i++ ) {
+            if ( $process_longest < $processes[$i][0] ) $process_longest = $processes[$i][0];
+            $msg .= floor($processes[$i][0] / ( 24 * 3600 ) ) . "d " . secs2hms($processes[$i][0] % ( 24 * 3600 )) . " " . $processes[$i][1] . "\n";
+        }
+        $debug->log($jconf['log_dir'], $myjobid . ".log", "[WARN] Job " . $myjobid . " runover was detected. Job info (running time, process):\n" . $msg, $sendmail = true);
+        $goahead = false;
+    }
+
+    return $goahead;
+}
 
 // *************************************************************************
 // *					function db_maintain()							   *

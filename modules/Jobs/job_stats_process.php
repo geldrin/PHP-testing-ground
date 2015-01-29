@@ -1,5 +1,5 @@
 <?php
-// Media conversion job v0 @ 2012/02/??
+// Videosquare live statistics process job 2
 
 define('BASE_PATH', realpath( __DIR__ . '/../..' ) . '/' );
 define('PRODUCTION', false );
@@ -36,23 +36,8 @@ if ( iswindows() ) {
 // Exit if any STOP file appears
 if ( is_file( $app->config['datapath'] . 'jobs/' . $myjobid . '.stop' ) or is_file( $app->config['datapath'] . 'jobs/all.stop' ) ) exit;
 
-// Log related init
-$debug->log($jconf['log_dir'], $myjobid . ".log", "********************* Job: " . $myjobid . " started *********************", $sendmail = false);
-
-// Already running. Not finished a tough job?
-$run_filename = $jconf['temp_dir'] . $myjobid . ".run";
-if  ( file_exists($run_filename) ) {
-  if ( ( time() - filemtime($run_filename) ) < 15 * 60 ) {
-    $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] " . $myjobid . " is already running. Not finished a previous job? See: " . $run_filename . " (created: " . date("Y-m-d H:i:s", filemtime($run_filename)) . ")", $sendmail = true);
-  }
-  exit;
-} else {
-  $content = "Running. Started: " . date("Y-m-d H:i:s");
-  $err = file_put_contents($run_filename, $content);
-  if ( $err === false ) {
-    $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Cannot write run file " . $run_filename, $sendmail = true);
-  }
-}
+// Runover check. Is this process already running? If yes, report and exit
+if ( !runOverControl($myjobid) ) exit;
 
 // --- CONFIG ---
 $platform_definitions = array(
@@ -406,9 +391,6 @@ for ( $statsidx = 0; $statsidx < count($stats_config); $statsidx++ ) {
 
 // Close DB connection if open
 if ( is_resource($db->_connectionID) ) $db->close();
-
-// Remove run file
-unlink($run_filename);
 
 // Watchdog
 $app->watchdog();

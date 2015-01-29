@@ -1,5 +1,5 @@
 <?php
-// Media conversion job v0 @ 2012/02/??
+// Videosquare live statistics process job 2
 
 define('BASE_PATH', realpath( __DIR__ . '/../..' ) . '/' );
 define('PRODUCTION', false );
@@ -23,10 +23,6 @@ $jconf = $app->config['config_jobs'];
 $myjobid = $jconf['jobid_stats_process'] . "2";
 $debug = Springboard\Debug::getInstance();
 
-// DEBUG !!!!
-$kaka = "";
-$kaka2 = "";
-
 // Check operating system - exit if Windows
 if ( iswindows() ) {
   echo "ERROR: Non-Windows process started on Windows platform\n";
@@ -36,23 +32,8 @@ if ( iswindows() ) {
 // Exit if any STOP file appears
 if ( is_file( $app->config['datapath'] . 'jobs/' . $myjobid . '.stop' ) or is_file( $app->config['datapath'] . 'jobs/all.stop' ) ) exit;
 
-// Log related init
-$debug->log($jconf['log_dir'], $myjobid . ".log", "********************* Job: " . $myjobid . " started *********************", $sendmail = false);
-
-// Already running. Not finished a tough job?
-$run_filename = $jconf['temp_dir'] . $myjobid . ".run";
-if  ( file_exists($run_filename) ) {
-  if ( ( time() - filemtime($run_filename) ) < 15 * 60 ) {
-    $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] " . $myjobid . " is already running. Not finished a previous job? See: " . $run_filename . " (created: " . date("Y-m-d H:i:s", filemtime($run_filename)) . ")", $sendmail = true);
-  }
-  exit;
-} else {
-  $content = "Running. Started: " . date("Y-m-d H:i:s");
-  $err = file_put_contents($run_filename, $content);
-  if ( $err === false ) {
-    $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Cannot write run file " . $run_filename, $sendmail = true);
-  }
-}
+// Runover check. Is this process already running? If yes, report and exit
+if ( !runOverControl($myjobid) ) exit;
 
 // --- CONFIG ---
 $platform_definitions = array(
@@ -247,7 +228,7 @@ for ( $statsidx = 0; $statsidx < count($stats_config); $statsidx++ ) {
             // Query finally selected interval with record(s)
             $stats = queryStatsForInterval($start_interval, $end_interval, $wowza_app);
             if ( $stats === false ) {
-                $debug->log($jconf['log_dir'], $myjobid . ".log", "[WARN] Unexpected. No record(s) to process. Interval: " . date("Y-m-d H:i:s", $start_interval) . " - " . date("Y-m-d H:i:s", $end_interval) . "\n\nDEBUG:\n\ngetFirstLiveStatRecordFromInterval(): " . $kaka2 . "\n\nqueryStatsForInterval(): " . $kaka, $sendmail = false);
+                $debug->log($jconf['log_dir'], $myjobid . ".log", "[WARN] Unexpected. No record(s) to process. Interval: " . date("Y-m-d H:i:s", $start_interval) . " - " . date("Y-m-d H:i:s", $end_interval), $sendmail = false);
                 // Update last processed interval. Next active record will be found in next round.
                 $stats_config[$statsidx]['lastprocessedtime'] = $end_interval;
                 $start_interval = $start_interval + $stats_config[$statsidx]['interval'];
@@ -391,9 +372,6 @@ for ( $statsidx = 0; $statsidx < count($stats_config); $statsidx++ ) {
 // Close DB connection if open
 if ( is_resource($db->_connectionID) ) $db->close();
 
-// Remove run file
-unlink($run_filename);
-
 // Watchdog
 $app->watchdog();
 
@@ -447,7 +425,7 @@ function findMediaServers($media_servers, $server_fqdn) {
 
 // Query active stream records from database in a time interval
 function queryStatsForInterval($start_interval, $end_interval, $streaming_server_app) {
-global $db, $debug, $myjobid, $app, $jconf, $kaka;
+global $db, $debug, $myjobid, $app, $jconf;
 
   $start_interval_datetime = date("Y-m-d H:i:s", $start_interval);
   $end_interval_datetime = date("Y-m-d H:i:s", $end_interval);
@@ -487,12 +465,6 @@ global $db, $debug, $myjobid, $app, $jconf, $kaka;
         AND vsl.livefeedstreamid = lfs.id
     ";
 
-//AND vsl.timestampfrom > '2014-11-19 00:00:00'  # !!!!!!!!!!!
-   
-//echo $query . "\n";
-
-  $kaka = $query;
-
   try {
     $stats = $db->Execute($query);
   } catch (exception $err) {
@@ -509,7 +481,7 @@ global $db, $debug, $myjobid, $app, $jconf, $kaka;
 // Get next live statistics record timestamp (to help jumping empty time slots)
 // WARNING: does not check for active records
 function getFirstLiveStatRecordFromInterval($from_timestamp, $to_timestamp, $streaming_server_app) {
- global $db, $debug, $myjobid, $app, $jconf, $kaka2;
+ global $db, $debug, $myjobid, $app, $jconf;
 
   if ( empty($from_timestamp) ) $from_timestamp = 0;
 
@@ -530,10 +502,6 @@ function getFirstLiveStatRecordFromInterval($from_timestamp, $to_timestamp, $str
         vsl.timestampfrom
     LIMIT 1
     ";
-
-//echo $query . "\n";
-
-  $kaka2 = $query;
   
   try {
     $stats = $db->getArray($query);

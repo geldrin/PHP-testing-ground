@@ -1,5 +1,5 @@
 <?php
-// Media conversion job v0 @ 2012/02/??
+// Videosquare live thumbnail job
 
 define('BASE_PATH',	realpath( __DIR__ . '/../..' ) . '/' );
 define('PRODUCTION', false );
@@ -29,7 +29,7 @@ if ( iswindows() ) {
 	exit;
 }
 
-// Start an infinite loop - exit if any STOP file appears
+// Exit if any STOP file is present
 if ( is_file( $app->config['datapath'] . 'jobs/' . $myjobid . '.stop' ) or is_file( $app->config['datapath'] . 'jobs/all.stop' ) ) exit;
 
 // Log init
@@ -37,34 +37,7 @@ $debug = Springboard\Debug::getInstance();
 $debug_mode = false;
 
 // Runover check. Is this process already running? If yes, report and exit
-$my_process = "php.*" . $jconf['job_dir'] . $myjobid . ".php";
-$processes = checkProcessStartTime($my_process);
-if ( count($processes) > 1 ) {
-    $process_longest = 0;
-    $msg = "";
-    for ( $i = 0; $i < count($processes); $i++ ) {
-        if ( $process_longest < $processes[$i][0] ) $process_longest = $processes[$i][0];
-        $msg .= floor($processes[$i][0] / ( 24 * 3600 ) ) . "d " . secs2hms($processes[$i][0] % ( 24 * 3600 )) . " " . $processes[$i][1] . "\n";
-    }
-	$debug->log($jconf['log_dir'], $myjobid . ".log", "[WARN] Job " . $myjobid . " runover was detected. Job info (running time, process):\n" . $msg, $sendmail = true);
-    exit;
-}
-
-/*$run_filename = $jconf['temp_dir'] . $myjobid . ".run";
-if  ( file_exists($run_filename) ) {
-	if ( ( time() - filemtime($run_filename) ) < 15 * 60 ) {
-		$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] " . $myjobid . " is already running. Not finished previous run? See: " . $run_filename . " (created: " . date("Y-m-d H:i:s", filemtime($run_filename)) . ")", $sendmail = true);
-	}
-	exit;
-} else {
-	$content = "Running. Started: " . date("Y-m-d H:i:s");
-	$err = file_put_contents($run_filename, $content);
-	if ( $err === false ) {
-		$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Cannot write run file " . $run_filename, $sendmail = true);
-	}
-} */
-
-//$debug->log($jconf['log_dir'], $myjobid . ".log", "*************************** Job: Live thumbnail started ***************************", $sendmail = false);
+if ( !runOverControl($myjobid) ) exit;
 
 if ( !is_writable($jconf['livestreams_dir']) ) {
 	$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Temp directory " . $jconf['livestreams_dir'] . " is not writeable.", $sendmail = false);
@@ -93,12 +66,8 @@ $channels = getActiveChannels();
 if ( $channels === false ) {
 	// Close DB connection if open
 	if ( is_resource($db->_connectionID) ) $db->close();
-	// Remove run file
-//	unlink($run_filename);
 	exit;
 }
-
-//var_dump($channels);
 
 for ( $i = 0; $i < count($channels); $i++ ) {
 
@@ -246,9 +215,6 @@ for ( $i = 0; $i < count($channels); $i++ ) {
 
 // Close DB connection if open
 if ( is_resource($db->_connectionID) ) $db->close();
-
-// Remove run file
-//unlink($run_filename);
 
 exit;
 

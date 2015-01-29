@@ -27,7 +27,6 @@ $myjobid = $jconf['jobid_remove_files'];
 
 // Log related init
 $debug = Springboard\Debug::getInstance();
-//$debug->log($jconf['log_dir'], $myjobid . ".log", "*************************** Job: Remove files started ***************************", $sendmail = false);
 
 // Should we remove files and do any changes to DB?
 $isexecute = true;
@@ -39,27 +38,10 @@ if ( iswindows() ) {
 }
 
 // Exit if any STOP file exists
-if ( is_file( $app->config['datapath'] . 'jobs/job_remove_files.stop' ) or is_file( $app->config['datapath'] . 'jobs/all.stop' ) ) {
-	$debug->log($jconf['log_dir'], $myjobid . ".log", "[WARN] STOP file exists. Exiting...", $sendmail = false);
-    exit;
-}
+if ( is_file( $app->config['datapath'] . 'jobs/job_remove_files.stop' ) or is_file( $app->config['datapath'] . 'jobs/all.stop' ) ) exit;
 
-// Runover control (avoid executing job multiple times)
-$devsite = "";
-if ( $app->config['baseuri'] == "dev.videosquare.eu/" ) $devsite = ".dev";
-$run_filename = "/tmp/" . $myjobid . $devsite . ".run";
-if  ( file_exists($run_filename) ) {
-    if ( ( time() - filemtime($run_filename) ) < 15 * 60 ) {
-        $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] " . $myjobid . " is already running. Not finished previous run? See: " . $run_filename . " (created: " . date("Y-m-d H:i:s", filemtime($run_filename)) . ")", $sendmail = true);
-    }
-    exit;
-} else {
-    $content = "Running. Started: " . date("Y-m-d H:i:s");
-    $err = file_put_contents($run_filename, $content);
-    if ( $err === false ) {
-        $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Cannot write run file " . $run_filename, $sendmail = true);
-    }
-}
+// Runover check. Is this process already running? If yes, report and exit
+if ( !runOverControl($myjobid) ) exit;
 
 // Watchdog
 $app->watchdog();
@@ -534,9 +516,6 @@ if ( is_resource($db->_connectionID) ) $db->close();
 
 // Watchdog
 $app->watchdog();
-
-// Runover control: remove .run file
-unlink($run_filename);
     
 exit;
 
