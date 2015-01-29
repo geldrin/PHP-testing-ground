@@ -514,8 +514,25 @@ class Controller extends \Visitor\Controller {
   }
 
   public function checkstreamaccessAction( $secure = false ) {
-    
-    $param   = $this->application->getParameter('sessionid');
+
+    $ip    = $this->application->getParameter('IP');
+    $param = $this->application->getParameter('sessionid');
+    $tcurl = $this->application->getParameter('tcurl');
+
+    // nginx rtmp module igy kuldi
+    if ( !$param and $tcurl ) {
+      $q = parse_url( $tcurl, PHP_URL_QUERY );
+      if ( $q ) {
+        parse_str( $q, $params );
+        if ( isset( $params['sessionid'] ) )
+          $param = $params['sessionid'];
+      }
+
+      if ( !$ip )
+        $ip = $this->application->getParameter('addr');
+
+    }
+
     $result  = '0';
     $matched =
       preg_match(
@@ -526,10 +543,8 @@ class Controller extends \Visitor\Controller {
         $matches
       )
     ;
-    
-    $ip  = $this->application->getParameter('IP');
+
     $ips = $this->bootstrap->config['allowedstreamips'];
-    
     if ( $ip and $ips and in_array( $ip, $ips ) ) {
       
       $result  = '1';
