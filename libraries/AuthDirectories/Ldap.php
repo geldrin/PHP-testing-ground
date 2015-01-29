@@ -38,13 +38,20 @@ class Ldap extends \AuthDirectories\Base {
         : array()
       ;
 
+      // ha nincs ldapgroupaccess akkor engedjuk
       if (
            empty( $groups ) or
-           !in_array( $this->directory['ldapgroupaccess'], $groups )
+           (
+             $this->directory['ldapgroupaccess'] and
+             !in_array( $this->directory['ldapgroupaccess'], $groups )
+           )
          )
         continue;
 
-      $isadmin = in_array( $this->directory['ldapgroupadmin'], $groups );
+      $isadmin =
+        $this->directory['ldapgroupadmin'] and
+        in_array( $this->directory['ldapgroupadmin'], $groups )
+      ;
 
       // osszegyujtjuk a csoportokat, ez alapjan osztjuk ki a csoport hozzaferest
       $ret['groups'] = array_merge(
