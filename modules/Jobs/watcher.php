@@ -125,7 +125,7 @@ foreach ( $jobs[$node_role] as $job => $job_info ) {
 	$output = array();
 
 	// Check if this job is running
-    $num_jobs = isProcessExists($grep_target . $job . ".php");
+    $num_jobs = checkProcessExists($grep_target . $job . ".php");
     $isrunningjob = "NOT RUNNING";
     if ( $num_jobs > 0 ) $isrunningjob = "RUNNING (" . $num_jobs . ")";
     $debug->log($jconf['log_dir'], $jconf['jobid_watcher'] . ".log", "[INFO] " . $job . ".php status: " . $isrunningjob, $sendmail = false);
@@ -143,7 +143,7 @@ foreach ( $jobs[$node_role] as $job => $job_info ) {
 
 			// Problem: sometime ps does not give result while the process is running. Maybe some strange transient is occured? As a workaround, let's wait for some time and double check if process is running.
 			sleep(1);
-            $num_jobs_recheck = isProcessExists($grep_target . $job . ".php");
+            $num_jobs_recheck = checkProcessExists($grep_target . $job . ".php");
             $isrunningjob = "NOT RUNNING";
             if ( $num_jobs_recheck > 0 ) {
                 $isrunningjob = "RUNNING (" . $num_jobs_recheck . ")";
