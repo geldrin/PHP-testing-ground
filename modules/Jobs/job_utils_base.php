@@ -1036,11 +1036,7 @@ function string_to_file($file, $str) {
 // *************************************************************************
 // *					function is_process_running()	  				   *
 // *************************************************************************
-// Description: is a specific process running?
-// INPUTS:
-//	- $PID: process ID
-// OUTPUTS:
-//  - boolean: true/false
+// Process by PID
 function is_process_running($PID) {
 
 	exec("ps $PID", $ProcessState);
@@ -1096,6 +1092,42 @@ function is_process_closedfile($file, $PID) {
 
 	return $err;
 }
+
+// Number of processes by name (regexp)
+function checkProcessExists($processName) {
+    exec("ps uax | grep -i '$processName' | grep -v grep", $pids);
+    return count($pids);
+}
+
+// List processes with start time
+function checkProcessStartTime($processName) {
+
+    $process_list = array();
+
+    exec("ps -eo etime,pid,command | grep -i '$processName' | grep -v grep", $pids);
+
+    for ( $i = 0; $i < count($pids); $i++ ) {
+        $process_info = preg_split("/[\s]+[0-9]+[\s]+/", $pids[$i]);
+        $process_stime = trim($process_info[0]);
+        $tmp = explode("-", $process_stime, 2);
+        if ( count($tmp) > 1 ) {
+            $process_days = $tmp[0];
+            $process_hhmmss = $tmp[1];
+        } else {
+            $process_days = 0;
+            $process_hhmmss = $tmp[0];
+        }
+        if ( count(explode(":", $process_hhmmss)) < 3 ) $process_hhmmss = "00:" . $process_hhmmss;
+        $time_parsed = date_parse($process_hhmmss);
+        $process_time_running = $process_days * 24 * 3600 + $time_parsed['hour'] * 3600 + $time_parsed['minute'] * 60 + $time_parsed['second'];
+        
+        array_push($process_list, array(0 => $process_time_running, 1 => $process_info[1]));
+    }
+
+    return $process_list;
+}
+
+
 
 // *************************************************************************
 // *					function db_maintain()							   *

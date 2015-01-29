@@ -36,8 +36,21 @@ if ( is_file( $app->config['datapath'] . 'jobs/' . $myjobid . '.stop' ) or is_fi
 $debug = Springboard\Debug::getInstance();
 $debug_mode = false;
 
-// Already running. Not finished a tough job?
-$run_filename = $jconf['temp_dir'] . $myjobid . ".run";
+// Runover check. Is this process already running? If yes, report and exit
+$my_process = "php.*" . $jconf['job_dir'] . $myjobid . ".php";
+$processes = checkProcessStartTime($my_process);
+if ( count($processes) > 1 ) {
+    $process_longest = 0;
+    $msg = "";
+    for ( $i = 0; $i < count($processes); $i++ ) {
+        if ( $process_longest < $processes[$i][0] ) $process_longest = $processes[$i][0];
+        $msg .= floor($processes[$i][0] / ( 24 * 3600 ) ) . "d " . secs2hms($processes[$i][0] % ( 24 * 3600 )) . " " . $processes[$i][1] . "\n";
+    }
+	$debug->log($jconf['log_dir'], $myjobid . ".log", "[WARN] Job " . $myjobid . " runover was detected. Job info (running time, process):\n" . $msg, $sendmail = true);
+    exit;
+}
+
+/*$run_filename = $jconf['temp_dir'] . $myjobid . ".run";
 if  ( file_exists($run_filename) ) {
 	if ( ( time() - filemtime($run_filename) ) < 15 * 60 ) {
 		$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] " . $myjobid . " is already running. Not finished previous run? See: " . $run_filename . " (created: " . date("Y-m-d H:i:s", filemtime($run_filename)) . ")", $sendmail = true);
@@ -49,9 +62,9 @@ if  ( file_exists($run_filename) ) {
 	if ( $err === false ) {
 		$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Cannot write run file " . $run_filename, $sendmail = true);
 	}
-}
+} */
 
-$debug->log($jconf['log_dir'], $myjobid . ".log", "*************************** Job: Live thumbnail started ***************************", $sendmail = false);
+//$debug->log($jconf['log_dir'], $myjobid . ".log", "*************************** Job: Live thumbnail started ***************************", $sendmail = false);
 
 if ( !is_writable($jconf['livestreams_dir']) ) {
 	$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Temp directory " . $jconf['livestreams_dir'] . " is not writeable.", $sendmail = false);
@@ -81,7 +94,7 @@ if ( $channels === false ) {
 	// Close DB connection if open
 	if ( is_resource($db->_connectionID) ) $db->close();
 	// Remove run file
-	unlink($run_filename);
+//	unlink($run_filename);
 	exit;
 }
 
@@ -235,7 +248,7 @@ for ( $i = 0; $i < count($channels); $i++ ) {
 if ( is_resource($db->_connectionID) ) $db->close();
 
 // Remove run file
-unlink($run_filename);
+//unlink($run_filename);
 
 exit;
 
