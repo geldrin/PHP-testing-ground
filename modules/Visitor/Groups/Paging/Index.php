@@ -11,6 +11,7 @@ class Index extends \Visitor\Paging {
   protected $template = 'Visitor/Groups/Paging/Index.tpl';
   protected $groupModel;
   protected $user;
+  protected $perpage = 15;
   
   public function init() {
     
@@ -25,7 +26,7 @@ class Index extends \Visitor\Paging {
   
   protected function setupCount() {
     $this->groupModel = $this->bootstrap->getModel('groups');
-    return $this->groupModel->getGroupCount(
+    return $this->itemcount = $this->groupModel->getGroupCount(
       $this->user,
       $this->controller->organization['id']
     );
