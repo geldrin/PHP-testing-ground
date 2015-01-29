@@ -41,7 +41,7 @@ if ( $user['isadmin'] or $user['isclientadmin'] ) {
     ),
   );
 
-  $config['name']['validation'][1]['anddepend'] = Array(
+  $config['name']['validation'][0]['anddepend'] = Array(
     Array(
       'js'  => '<FORM.source> != "directory"',
       'php' => '<FORM.source> != "directory"',
