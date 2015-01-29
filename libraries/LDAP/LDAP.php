@@ -141,6 +141,8 @@ class LDAP {
     return new \LDAP\Search( $this->conn, $result );
   }
 
+  // akkor kell hasznalni ha az adott dolog egy filter-ben szerepel, lasd
+  // a ->search metodust
   public static function escape( $value, $isdn = false ) {
     $flags = $isdn? LDAP_ESCAPE_DN: LDAP_ESCAPE_FILTER;
     return ldap_escape( $value, null, $flags );

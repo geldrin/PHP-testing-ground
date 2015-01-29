@@ -63,7 +63,7 @@ class Create extends \Visitor\HelpForm {
     $ldap = $this->bootstrap->getLDAP( $ldapconfig );
 
     $results = $ldap->search(
-      $ldap::escape( $values['organizationdirectoryldapdn'], true ),
+      $values['organizationdirectoryldapdn'],
       '(objectClass=group)',
       array('objectguid', 'dn', 'cn', 'whenchanged', )
     );
