@@ -616,8 +616,6 @@ global $db, $app, $debug, $jconf;
 
 		$recording = $recordings->fields;
 
-//var_dump($recording);
-
 		// Is recording audio only?
 		$media_type = "mp4";
 		$isaudio = false;
