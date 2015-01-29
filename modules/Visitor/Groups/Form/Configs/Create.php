@@ -91,6 +91,7 @@ if ( $user['isadmin'] or $user['isclientadmin'] ) {
         ),
         array(
           'type' => 'database',
+          'anddepend' => $depend,
           'help' => $l('groups','organizationdirectoryldapdn_duplicate'),
           'sql'  =>  "
             SELECT count(*) as counter
