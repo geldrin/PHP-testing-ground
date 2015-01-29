@@ -277,6 +277,12 @@ function secs2hms($i_secs) {
 	return $hms;
 }
 
+function seconds2DaysHoursMinsSecs($seconds) {
+    $dtF = new DateTime("@0");
+    $dtT = new DateTime("@$seconds");
+    return $dtF->diff($dtT)->format('%a days, %h hours, %i minutes and %s seconds');
+}
+
 // -------------------------------------------------------------------------
 // |				    File manipulation functions						   |
 // -------------------------------------------------------------------------
@@ -1152,7 +1158,7 @@ global $jconf, $debug;
 // *************************************************************************
 
 function db_maintain() {
- global $app, $db;
+ global $app, $db, $jconf, $debug;
 
 	if ( !empty($db) ) {
 		if ( is_resource($db->_connectionID) ) return $db;
@@ -1164,13 +1170,14 @@ function db_maintain() {
 	$sleep_time = 30;		// (1: 30 secs, 2: 1 min, 3: 2 mins, 4: 4 mins, 5: 8 mins, 6: 16 mins, 7: 32 mins, 8: 64 mins)
 
 	// Prepare possibly needed mail intro with site information
-	$mail_head  = "NODE: " . $app->config['node_sourceip'] . "<br/>";
-	$mail_head .= "SITE: " . $app->config['baseuri'] . "<br/>";
-	$mail_head .= "JOB: " . $job . ".php<br/>";
+	$mail_head  = "NODE: " . $app->config['node_sourceip'] . "\n";
+	$mail_head .= "SITE: " . $app->config['baseuri'] . "\n";
+	$mail_head .= "JOB: " . $job . ".php\n";
 
-	$num_retries = 24;			// X retries taking a sleep_time = sleep_time * 2 after each until 8 round (64 mins)
+    $outage_starttime = time();
+    
 	$retry = 1;
-	while ( $retry <= $num_retries ) {
+	while ( 1 ) {
 
         // Watchdog timer
         $app->watchdog();
@@ -1182,33 +1189,37 @@ function db_maintain() {
 		try {
 			$db = $app->bootstrap->getAdoDB();
 			if ( is_resource($db->_connectionID) ) {
-				// Send mail only if not the first retry
+				// Send mail when recovered
 				if ( $retry > 1 ) {
-					$title = "[OK] DB connection restored (retried: " . $retry . " / " . $num_retries . "). Job continues to run.";
-					$body  = $mail_head . "<br/>" . $title . "<br/><br/>WARNING: Please check DB!<br/>";
-					sendHTMLEmail_errorWrapper($title, $body);
+                    $recovery_time = time() - $outage_starttime;
+					$title = "[OK] DB connection restored in " . seconds2DaysHoursMinsSecs($recovery_time) . ". Retried: " . $retry . ".\n\nJob continues to run.";
+					$body  = $mail_head . "\n" . $title . "\n\nWARNING: DB outage recovered?\n";
+					sendHTMLEmail_errorWrapper($title, nl2br($body));
+                    $debug->log($jconf['log_dir'], $job . ".log", $title, $sendmail = false);
 				}
 				return $db;
 			}
 		} catch (exception $err) {
-			// Send mail warning messages every 4 retries
-			if ( ( $retry < $num_retries ) and ( $retry % 8 ) == 0 ) {
-				$title = "[WARNING] Cannot connect to DB. (retried " . $retry . " / " . $num_retries . "). Keep trying.";
-				$body  = $mail_head . "<br/>" . $title . "<br/><br/>Please check DB for errors!<br/><br/>Error message:<br/><br/>" . $err . "<br/>";
-				sendHTMLEmail_errorWrapper($title, $body);
+			// Send mail warning messages at first and every 8th retry (approx. hourly)
+			if ( ( $retry == 1 ) or ( ( $retry % 8 ) == 0 ) ) {
+                $outage_time = time() - $outage_starttime;
+				$title = "[ERROR] Cannot connect to DB (retry: " . $retry . "). DB recovery has been tried for " . seconds2DaysHoursMinsSecs($outage_time) . ". Job operation is suspended.";
+				$body  = $mail_head . "\n" . $title . "\n\nPlease check DB connections!\n\nError message:\n" . $err . "\n";
+				sendHTMLEmail_errorWrapper($title, nl2br($body));
+                $debug->log($jconf['log_dir'], $job . ".log", $title . " Error message:\n" . $err, $sendmail = false);
 			}
 		}
 
 		$retry++;
 
-		// Sleep 1 mins then try again
+		// Sleep some time then try again
 		sleep($sleep_time);
         
         // Increase retry timeout (until a certain point)
         if ( $retry < 8 ) $sleep_time = $sleep_time * 2;
 	}
 
-    // Permanent error. Should we allow this?
+    // Permanent error. We do not allow this to happen.
 	$title = "[FATAL ERROR] Cannot connect to DB permanently. Check DB!!! Job has been terminated.";
 	$body  = $mail_head . "<br/>" . $title . "<br/><br/>Job will be restarted, config will be reloaded. Please check DB for errors!<br/>";
 	sendHTMLEmail_errorWrapper($title, $body);
