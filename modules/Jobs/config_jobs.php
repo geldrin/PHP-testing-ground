@@ -123,7 +123,7 @@ return array('config_jobs' => array(
   'vcr_password'          => 'BoRoKaBoGYo1980',
 
   // API authentication data
-  'api_user'            => 'support@videosquare.eu',
+  'api_user'            => 'support@videosqr.com',
   'api_password'          => 'MekkElek123',
 
   // FFMpeg related
