@@ -41,8 +41,8 @@ class Create extends \Visitor\HelpForm {
   public function checkDirectory( &$values, $skipname = false ) {
     $user = $this->bootstrap->getSession('user');
     if (
-         $values['source'] === '' or // non-directory, skip
-         ( !$user['isadmin'] and !$user['isclientadmin'] )
+         ( !$user['isadmin'] and !$user['isclientadmin'] ) or
+         $values['source'] === '' // non-directory, skip
        )
       return $values;
 
