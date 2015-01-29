@@ -1,10 +1,4 @@
 <?php
-$depend = Array(
-  Array(
-    'js'  => '<FORM.source> == "directory"',
-    'php' => '<FORM.source> == "directory"',
-  ),
-);
 
 $organizationid = $this->controller->organization['id'];
 $config = Array(
@@ -32,12 +26,6 @@ $config = Array(
     'validation'  => Array(
       array(
         'type' => 'required',
-        'anddepend' => Array(
-          Array(
-            'js'  => '<FORM.source> != "directory"',
-            'php' => '<FORM.source> != "directory"',
-          ),
-        ),
       ),
     )
   ),
@@ -46,6 +34,20 @@ $config = Array(
 
 $user = $this->bootstrap->getSession('user');
 if ( $user['isadmin'] or $user['isclientadmin'] ) {
+  $depend = Array(
+    Array(
+      'js'  => '<FORM.source> == "directory"',
+      'php' => '<FORM.source> == "directory"',
+    ),
+  );
+
+  $config['name']['validation'][1]['anddepend'] = Array(
+    Array(
+      'js'  => '<FORM.source> != "directory"',
+      'php' => '<FORM.source> != "directory"',
+    ),
+  );
+
   $config = array_merge( $config, Array(
 
     'source' => Array(
