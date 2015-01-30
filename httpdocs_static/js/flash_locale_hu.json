@@ -1,5 +1,12 @@
 {
   "error": {
+    "access":{
+        "tryAgain": "Újratöltés",
+        "title":"Hozzáférés megtagadva",
+        "courserestricted":"Önnek nincs jogosultsága a felvétel megtekintéséhez.",
+        "registrationrestricted":"Önnek nincs jogosultsága a felvétel megtekintéséhez.",
+        "coursedependencyrestricted":"A felvétel megtekintéséhez az előzetes követelmények teljesítése szükséges."
+    },
 	"onDemandRTMPStream":{
 		"connectionErrorTitle":"Kapcsolati hiba",
 		"connectionNetworkChange":"A szerver nem elérhető. (Hálozat megszakadt)",
