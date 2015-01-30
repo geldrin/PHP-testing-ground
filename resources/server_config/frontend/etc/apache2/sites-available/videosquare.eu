@@ -1,0 +1,64 @@
+<VirtualHost 91.120.59.233:80>
+    ServerAdmin support@videosquare.eu
+    DocumentRoot /var/www/videosquare.eu/httpdocs
+    ServerName videosquare.eu
+    ServerAlias *.videosquare.eu
+
+	ServerAlias videosquare.hu
+	ServerAlias *.videosquare.hu
+
+    Alias /php5-fcgi php5-fcgi
+
+    <Directory />
+      Options FollowSymLinks
+      AllowOverride None
+    </Directory>
+    <Directory /var/www/videosquare.eu/httpdocs>
+      Options Indexes FollowSymLinks MultiViews
+      AllowOverride All
+      Order allow,deny
+      Allow from all
+    </Directory>
+
+    LogLevel warn
+    ErrorLog ${APACHE_LOG_DIR}/videosquare.eu-error.log
+    CustomLog ${APACHE_LOG_DIR}/videosquare.eu-access.log combined
+
+</VirtualHost>
+
+<IfModule mod_ssl.c>
+<VirtualHost 91.120.59.233:443>
+    ServerAdmin support@videosquare.eu
+    DocumentRoot /var/www/videosquare.eu/httpdocs
+    ServerName videosquare.eu
+    ServerAlias *.videosquare.eu
+
+    Alias /php5-fcgi php5-fcgi
+
+    <Directory />
+      Options FollowSymLinks
+      AllowOverride None
+    </Directory>
+    <Directory /var/www/videosquare.eu/httpdocs>
+      Options Indexes FollowSymLinks MultiViews
+      AllowOverride All
+      Order allow,deny
+      Allow from all
+    </Directory>
+
+    LogLevel warn
+    ErrorLog ${APACHE_LOG_DIR}/videosquare.eu-ssl-error.log
+    CustomLog ${APACHE_LOG_DIR}/videosquare.eu-ssl-access.log combined
+
+	SSLEngine On
+	SSLProtocol All -SSLv2 -SSLv3
+	SSLHonorCipherOrder On
+	SSLCipherSuite ECDH+AESGCM:DH+AESGCM:ECDH+AES256:DH+AES256:ECDH+AES128:DH+AES:ECDH+3DES:DH+3DES:RSA+AESGCM:RSA+AES:RSA+3DES:!aNULL:!MD5:!DSS
+
+	SSLCertificateFile /etc/apache2/certs/wildcard.videosquare.eu.pem
+	SSLCertificateKeyFile /etc/apache2/certs/wildcard.videosquare.eu.key
+#	SSLCertificateChainFile /etc/apache2/certs/startssl-certs-class2.crt
+	SSLCertificateChainFile /etc/apache2/certs/sub.class2.server.ca.pem
+
+</VirtualHost>
+</IfModule>
