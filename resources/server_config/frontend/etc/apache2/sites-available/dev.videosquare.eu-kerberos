@@ -39,12 +39,12 @@
 		KrbAuthRealm STREAMNET.HU VSQTEST.HU
 		Krb5Keytab /etc/apache2/keys/dev.kfki.corp.multidomain.keytab
 		KrbServiceName Any
-###
+### multidomain
 		KrbMethodNegotiate On
 		KrbSaveCredentials Off
-		KrbMethodK5Passwd Off
+		KrbMethodK5Passwd On
 		KrbVerifyKDC On
-#		KrbAuthoritative On
+		KrbAuthoritative Off
 		Require valid-user
 
     </Directory>
