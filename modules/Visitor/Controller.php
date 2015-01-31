@@ -56,6 +56,20 @@ class Controller extends \Springboard\Controller\Visitor {
     
   }
   
+  public function inMaintenance( $type ) {
+    return file_exists( $this->bootstrap->config[ $type . 'maintenanceflagpath'] );
+  }
+
+  public function route() {
+
+    if ( $this->inMaintenance('site') ) {
+      $this->smartyOutput('Visitor/sitemaintenance.tpl');
+      return;
+    }
+
+    return parent::route();
+  }
+
   public function handleAutologin() {
     
     if ( !isset( $_COOKIE['autologin'] ) )

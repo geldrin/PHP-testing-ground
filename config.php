@@ -83,7 +83,6 @@ $config = array(
     'wmv', 'avi', 'mov', 'flv', 'mp4', 'asf', 'mp3', 'flac',
     'ogg', 'wav', 'wma', 'mpg', 'mpeg', 'ogm', 'f4v', 'm4v', 'mkv', 'm2v',
   ),
-  'disable_uploads'  => false,
   'uploadpath'       => '/srv/upload/videosquare.eu/',
   'chunkpath'        => '/srv/upload/videosquare.eu/recordings_chunks/',
   'useravatarpath'   => '/srv/upload/videosquare.eu/useravatars/',
@@ -275,6 +274,10 @@ $config = array(
   'apidebuglog' => false,
   'checkaccessdebuglog' => false,
   'livecheckaccessdebuglog' => false,
+  //-------
+  // csak letezniuk kell a filoknak, kikapcsolashoz torolni kell oket
+  'sitemaintenanceflagpath'   => $this->basepath . 'SITEMAINTENANCE',
+  'uploadmaintenanceflagpath' => $this->basepath . 'UPLOADMAINTENANCE',
 );
 
 $config['phpsettings'] = array(
