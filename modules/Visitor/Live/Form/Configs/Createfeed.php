@@ -145,3 +145,14 @@ $config['anonymousallowed'] = array(
   'value'       => 0,
   'values'      => $l->getLov('noyes'),
 );
+
+$config['isnumberofviewspublic'] = array(
+  'displayname' => $l('live', 'isnumberofviewspublic'),
+  'type'        => 'inputRadio',
+  'value'       => 1,
+  'itemlayout'  => $this->radioitemlayout,
+  'values'      => array(
+    0 => $l('live', 'isnumberofviewspublic_nonpublic'),
+    1 => $l('live', 'isnumberofviewspublic_public'),
+  ),
+);

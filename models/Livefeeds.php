@@ -1028,4 +1028,40 @@ class Livefeeds extends \Springboard\Model {
     return md5( $ts . $sessionid . $this->id . $extra );
   }
 
+  public function incrementViewCounters() {
+    $this->ensureID();
+
+    $this->db->execute("
+      UPDATE livefeeds
+      SET
+        numberofviews          = numberofviews + 1,
+        numberofviewsthisweek  = numberofviewsthisweek + 1,
+        numberofviewsthismonth = numberofviewsthismonth + 1
+      WHERE id = '" . $this->id . "'
+      LIMIT 1
+    ");
+
+    // nem pontos, de nem szamit, csak kiiras miatt fontos hogy valtozzon
+    if ( $this->row['numberofviews'] and isset( $this->row['numberofviews'] ) )
+      $this->row['numberofviews']++;
+
+    return (bool)$this->db->Affected_Rows();
+
+  }
+
+  public function resetViewCounters( $type ) {
+    $this->ensureID();
+
+    if ( $type != 'week' and $type != 'month' )
+      throw new \Exception('Invalid type passed, expecting "week" or "month"');
+
+    $this->db->execute("
+      UPDATE livefeeds
+      SET numberofviewsthis" . $type . " = 0
+      WHERE id = '" . $this->id . "'
+      LIMIT 1
+    ");
+
+  }
+
 }

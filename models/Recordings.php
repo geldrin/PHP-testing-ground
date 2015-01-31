@@ -1336,23 +1336,6 @@ class Recordings extends \Springboard\Model {
     return (bool)$this->db->Affected_Rows();
     
   }
-  
-  public function incrementViews() {
-    
-    $this->ensureID();
-    $this->db->execute("
-      UPDATE recordings
-      SET
-        numberofviews = numberofviews + 1,
-        numberofviewsthisweek = numberofviewsthisweek + 1,
-        numberofviewsthismonth = numberofviewsthismonth + 1
-      WHERE
-        id = '" . $this->id . "'
-    ");
-    
-    return (bool)$this->db->Affected_Rows();
-    
-  }
 
   public function insertComment( $comment, $perpage ) {
 
