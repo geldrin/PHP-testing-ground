@@ -7,6 +7,11 @@ class Controller extends \Springboard\Controller\Visitor {
 
   public function init() {
 
+    if ( $this->bootstrap->inMaintenance('site') ) {
+      $this->smartyOutput('Visitor/sitemaintenance.tpl');
+      return;
+    }
+
     // mert itt redirectelunk a megfelelo domainre, csak utana akarjuk
     // https-re forcolni a domaint
     // nem szabad hogy session induljon ez elott
@@ -54,20 +59,6 @@ class Controller extends \Springboard\Controller\Visitor {
     $this->handleSingleLoginUsers();
     parent::init();
     
-  }
-  
-  public function inMaintenance( $type ) {
-    return file_exists( $this->bootstrap->config[ $type . 'maintenanceflagpath'] );
-  }
-
-  public function route() {
-
-    if ( $this->inMaintenance('site') ) {
-      $this->smartyOutput('Visitor/sitemaintenance.tpl');
-      return;
-    }
-
-    return parent::route();
   }
 
   public function handleAutologin() {

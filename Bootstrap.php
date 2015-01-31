@@ -631,4 +631,17 @@ class Bootstrap {
     $ldap = new \LDAP\LDAP( $this, $config );
     return $ldap;
   }
+
+  public function inMaintenance( $type ) {
+    return file_exists( $this->config[ $type . 'maintenanceflagpath'] );
+  }
+
+  public function setMaintenance( $type ) {
+    return touch( $this->config[ $type . 'maintenanceflagpath'] );
+  }
+
+  public function disableMaintenance( $type ) {
+    return @unlink( $this->config[ $type . 'maintenanceflagpath'] );
+  }
+
 }

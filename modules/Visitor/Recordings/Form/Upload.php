@@ -12,7 +12,7 @@ class Upload extends \Visitor\HelpForm {
   
   public function init() {
 
-    if ( $this->controller->inMaintenance('upload') )
+    if ( $this->bootstrap->inMaintenance('upload') )
       $this->controller->redirectToController('contents', 'uploaddisabled');
 
     if ( $this->application->getParameter('swfupload') )
