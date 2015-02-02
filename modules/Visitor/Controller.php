@@ -7,6 +7,11 @@ class Controller extends \Springboard\Controller\Visitor {
 
   public function init() {
 
+    if ( $this->bootstrap->inMaintenance('site') ) {
+      $this->smartyOutput('Visitor/sitemaintenance.tpl');
+      return;
+    }
+
     // mert itt redirectelunk a megfelelo domainre, csak utana akarjuk
     // https-re forcolni a domaint
     // nem szabad hogy session induljon ez elott
@@ -55,7 +60,7 @@ class Controller extends \Springboard\Controller\Visitor {
     parent::init();
     
   }
-  
+
   public function handleAutologin() {
     
     if ( !isset( $_COOKIE['autologin'] ) )
