@@ -1,1 +1,1 @@
-Site in maintenance.
+{#maintenance_message#}
