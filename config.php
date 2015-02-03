@@ -275,9 +275,11 @@ $config = array(
   'checkaccessdebuglog' => false,
   'livecheckaccessdebuglog' => false,
   //-------
-  // csak letezniuk kell a filoknak, kikapcsolashoz torolni kell oket
+  // csak letezniuk kell a file-oknak, kikapcsolashoz torolni kell oket
   'sitemaintenanceflagpath'   => $this->basepath . 'SITEMAINTENANCE',
   'uploadmaintenanceflagpath' => $this->basepath . 'UPLOADMAINTENANCE',
+  'dbunavailableflagpath'     => $this->basepath . 'DBUNAVAILABLE',
+  
 );
 
 $config['phpsettings'] = array(
