@@ -68,6 +68,12 @@ class Controller extends \Visitor\Controller {
         'required' => false,
       ),
     ),
+    'checkaccess' => array(
+      'loginrequired' => false,
+      'livefeedid'   => array(
+        'type' => 'id',
+      ),
+    ),
   );
   
   public function init() {
@@ -804,6 +810,30 @@ class Controller extends \Visitor\Controller {
     $statModel->log( $values );
     return true;
 
+  }
+
+  public function checkaccessAction( $livefeedid ) {
+    $user        = $this->bootstrap->getSession('user');
+    $ret         = array(
+      'hasaccess' => false,
+    );
+
+    $feedModel = $this->bootstrap->getModel('livefeeds');
+    $feedModel->select( $livefeedid );
+
+    if ( !$feedModel->row )
+      return $ret;
+
+    $access = $feedModel->isAccessible( $user, $this->organization );
+
+    if ( $access === true )
+      $ret['hasaccess'] = true;
+    else {
+      $ret['hasaccess'] = false;
+      $ret['reason']    = $access;
+    }
+
+    return $ret;
   }
 
 }
