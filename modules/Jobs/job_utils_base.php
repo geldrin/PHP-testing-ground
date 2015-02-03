@@ -1157,7 +1157,7 @@ global $jconf, $debug;
 // *					function db_maintain()							   *
 // *************************************************************************
 
-function db_maintain() {
+function db_maintain($nonblockingmode = false) {
  global $app, $db, $jconf, $debug;
 
 	if ( !empty($db) ) {
@@ -1210,6 +1210,9 @@ function db_maintain() {
 			}
 		}
 
+        // Return when non blocking mode is selected
+        if ( $nonblockingmode ) return false;
+        
 		$retry++;
 
 		// Sleep some time then try again

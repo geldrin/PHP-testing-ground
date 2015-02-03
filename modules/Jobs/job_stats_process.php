@@ -487,10 +487,10 @@ global $db, $debug, $myjobid, $app, $jconf, $kaka;
     FROM
       cdn_streaming_stats AS css,
       livefeed_streams AS lfs,
-      infrastructure_nodes AS in
+      infrastructure_nodes AS inode
     WHERE
       css.wowzaappid = '" . $streaming_server_app . "' AND " . $sql_filter . "
-      css.clientip <> in.serverip AND
+      css.clientip <> inode.serverip AND
       css.starttime	< css.endtime AND (
       ( css.starttime >= '" . $start_interval_datetime . "' AND css.starttime <= '" . $end_interval_datetime . "' ) OR  # START in the interval
       ( css.endtime >= '" . $start_interval_datetime . "'   AND css.endtime <= '" . $end_interval_datetime . "' ) OR    # END in the interval
@@ -539,9 +539,9 @@ function getFirstWowzaRecordFromInterval($from_timestamp, $to_timestamp, $stream
         css.starttime
     FROM
         cdn_streaming_stats AS css,
-        infrastructure_nodes AS in
+        infrastructure_nodes AS inode
     WHERE
-        css.clientip <> in.serverip AND
+        css.clientip <> inode.serverip AND
         css.starttime >= '" . $from_datetime . "' AND
         css.starttime <= '" . $to_datetime . "' AND
         css.wowzaappid = '" . $streaming_server_app . "' AND

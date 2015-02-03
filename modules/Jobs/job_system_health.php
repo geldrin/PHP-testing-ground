@@ -31,6 +31,10 @@ if ( iswindows() ) {
     exit;
 }
 
+// Config
+$alarm_levels['warning'] = 70;
+$alarm_levels['critical'] = 90;
+
 // Start an infinite loop - exit if any STOP file appears
 if ( is_file( $app->config['datapath'] . 'jobs/' . $myjobid . '.stop' ) or is_file( $app->config['datapath'] . 'jobs/all.stop' ) ) exit;
 
@@ -42,20 +46,26 @@ $system_health_log = "";
 $node_role = $app->config['node_role'];
 $node_status = "ok";
 
-// Config
-$alarm_levels['warning'] = 70;
-$alarm_levels['critical'] = 90;
-
 // Establish database connection
-$db = db_maintain();
-// DB nélkül is tudunk működni????
-
-$converter_node = getNodeByName($app->config['node_sourceip']);
-if ( $converter_node === false ) {
-    $debug->log($jconf['log_dir'], $myjobid . ".log", "Node " . $app->config['node_sourceip'] . " is not defined in DB.", $sendmail = false);
-    exit;
+$usedb = true;
+$db = db_maintain($nonblockingmode = true);
+// Do not use DB if not available
+if ( $db === false ) {
+    $usedb = false;
+    // Turn off DB for all node jobs to stop useless polling
+    // ... DBUNAVAILABLE
 }
 
+var_dump($usedb);
+
+if ( $usedb ) {
+    $node_info = getNodeByName($app->config['node_sourceip']);
+    if ( $node_info === false ) {
+        $debug->log($jconf['log_dir'], $myjobid . ".log", "Node " . $app->config['node_sourceip'] . " is not defined in DB!", $sendmail = false);
+        $usedb = false;
+    }
+}
+    
 // CPU usage
 $node_cpu = trim(`top -b -n 1 | grep "^%Cpu" | awk '{ print $2+$4+$6; }'`);
 
@@ -115,15 +125,30 @@ if ( !empty($msg) ) $system_health_log .= "Directory check results:\n" . $msg . 
 //// Storag free space check
 if ( $node_role == "converter" ) {
     $storages2check = array(
-        "/",                        // system root
-        $app->config['convpath'],   // converter temp path
+        0   => array(
+                    'path'  => "/",                         // system root
+                    'db'    => "storagesystem",
+                ),
+        1   => array(
+                    'path'  => $app->config['convpath'],   // converter temp path
+                    'db'    => "storagework",
+                )
     );
 }
 if ( $node_role == "frontend" ) {
     $storages2check = array(
-        "/",                        // system root
-        $app->config['uploadpath'], // upload path
-        $app->config['mediapath'],  // main storage
+        0   => array(
+                    'path'  => "/",                         // system root
+                    'db'    => "storagesystem",
+                ),
+        1   => array(
+                    'path'  => $app->config['uploadpath'],   // upload path
+                    'db'    => "storagework",
+                ),
+        2   => array(
+                    'path'  => $app->config['mediapath'],   // storage
+                    'db'    => "storage",
+                )
     );
 }
 
@@ -133,46 +158,41 @@ $values = array(
     'status'                => null,
     'storagesystemtotal'    => 0,
     'storagesystemfree'     => 0,
-    'storagetemptotal'      => 0,
-    'storagetempfree'       => 0,
+    'storagetotal'          => 0,
+    'storagefree'           => 0,
     'cpuusage'              => 0,
 );
 for ( $i = 0; $i < count($storages2check); $i++) {
-    $diskinfo = checkDiskSpace($storages2check[$i]);
+    $diskinfo = checkDiskSpace($storages2check[$i]['path']);
     if ( ( $diskinfo['free_percent'] >= $alarm_levels['warning'] ) and ( $diskinfo['free_percent'] < $alarm_levels['critical'] ) ) {
-        $msg .= "File system free space for " . $storages2check[$i] . ": WARNING\n";
+        $msg .= "File system free space for " . $storages2check[$i]['path'] . ": WARNING\n";
         $msg .= "\tTotal: " . round($diskinfo['total'] / 1024 / 1024 / 1024, 2) . "GB Free: " . round($diskinfo['free'] / 1024 / 1024 / 1024, 2) . "GB (" . $diskinfo['free_percent'] . "%)\n";
         $msg .= "\t***** PLEASE CHECK *****\n\n";
     }
     if ( $diskinfo['free_percent'] >= $alarm_levels['critical'] ) {
-        $msg .= "File system free space for " . $storages2check[$i] . ": CRITICAL\n";
+        $msg .= "File system free space for " . $storages2check[$i]['path'] . ": CRITICAL\n";
         $msg .= "\tTotal: " . round($diskinfo['total'] / 1024 / 1024 / 1024, 2) . "GB Free: " . round($diskinfo['free'] / 1024 / 1024 / 1024, 2) . "GB (" . $diskinfo['free_percent'] . "%)\n";
         $msg .= "\t***** CHECK ASAP *****\n\n";
         $node_status = "disabledstoragelow";
     }
-    if ( $node_role == "converter" ) {
-        if ( $storages2check[$i] == "/" ) {
-            $values['storagesystemtotal'] = $diskinfo['total'];
-            $values['storagesystemfree'] = $diskinfo['free'];
-        }
-        if ( $storages2check[$i] == $app->config['convpath'] ) {
-            $values['storagetemptotal'] = $diskinfo['total'];
-            $values['storagetempfree'] = $diskinfo['free'];
-        }
+    if ( !empty($storages2check[$i]['db']) ) {
+        $values[$storages2check[$i]['db'] . 'total'] = $diskinfo['total'];
+        $values[$storages2check[$i]['db'] . 'free'] = $diskinfo['free'];
     }
 }
 
 // Update DB with disk data
-if ( $node_role == "converter" ) {
-    $values['status'] = $node_status;
-    if ( is_numeric($node_cpu) ) $values['cpuusage'] = $node_cpu;
+$values['status'] = $node_status;
+if ( is_numeric($node_cpu) ) $values['cpuusage'] = $node_cpu;
+if ( $usedb ) {
     $converterNodeObj = $app->bootstrap->getModel('infrastructure_nodes');
     $converterNodeObj->select($converter_node['id']);
     $converterNodeObj->updateRow($values);
+} else {
+    $msg .= "[INFO] DB is unreachable. Storage status information:\n" . print_r($values, true) . "\n";
 }
 
-
-if ( !empty($msg) ) $system_health_log .= "Storage space check results:\n" . $msg . "\n\n";
+if ( !empty($msg) ) $system_health_log .= $msg . "\n\n";
 
 echo $system_health_log . "\n";
 
@@ -197,20 +217,20 @@ global $db, $myjobid, $debug, $jconf;
 
 	$query = "
 		SELECT
-            cn.id,
-            cn.server,
-            cn.serverip,
-            cn.shortname,
-            cn.default,
-            cn.disabled
+            inode.id,
+            inode.server,
+            inode.serverip,
+            inode.shortname,
+            inode.default,
+            inode.disabled
 		FROM
-			infrastructure_nodes AS in
+			infrastructure_nodes AS inode
 		WHERE
-			in.server = '" . $node . "' AND
-            in.disabled = 0
+			inode.server = '" . $node . "' AND
+            inode.disabled = 0
         LIMIT 1";
 
-//echo $query . "\n";
+echo $query . "\n";
 
 	try {
 		$in = $db->getArray($query);
