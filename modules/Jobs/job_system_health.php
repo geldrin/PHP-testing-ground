@@ -1,5 +1,5 @@
 <?php
-// Job: maintenance 2012/08/28
+// Job: system health
 
 define('BASE_PATH', realpath( __DIR__ . '/../..' ) . '/' );
 define('PRODUCTION', false );
@@ -23,7 +23,6 @@ $myjobid = $jconf['jobid_system_health'];
 
 // Log related init
 $debug = Springboard\Debug::getInstance();
-$debug->log($jconf['log_dir'], $myjobid . ".log", "*************************** Job: System health job started ***************************", $sendmail = false);
 
 // Check operating system - exit if Windows
 if ( iswindows() ) {
@@ -46,18 +45,34 @@ $system_health_log = "";
 $node_role = $app->config['node_role'];
 $node_status = "ok";
 
-// Establish database connection
+// Establish database connection, ping database in non-blocking mode
 $usedb = true;
+$db_unavailable_flag = $app->config['dbunavailableflagpath'];
 $db = db_maintain($nonblockingmode = true);
-// Do not use DB if not available
+// Do not use DB if not available, enable DBUNAVAILABLE file flag for other jobs to stop useless polling
 if ( $db === false ) {
     $usedb = false;
-    // Turn off DB for all node jobs to stop useless polling
-    // ... DBUNAVAILABLE
+    if ( !file_exists($db_unavailable_flag) ) {
+        $err = touch($db_unavailable_flag);
+        if ( $err === false ) {
+            $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Cannot create DB unavailable flag file at " . $db_unavailable_flag . ". CHECK!", $sendmail = false);
+        } else {
+            $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] DB is unavailable. DBUNAVAILABLE flag created at " . $db_unavailable_flag . ". Job polls are blocked until DB comes back.", $sendmail = false);      
+        }
+    }
+} else {
+    // Remove DBUNAVAILABLE flag if DB is recovered
+    if ( file_exists($db_unavailable_flag) ) {
+        $err = unlink($db_unavailable_flag);
+        if ( $err === false ) {
+            $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Cannot remove DB unavailable flag file at " . $db_unavailable_flag . ". Will prevent jobs from running. CHECK!", $sendmail = true);
+        } else {
+            $debug->log($jconf['log_dir'], $myjobid . ".log", "[OK] DB is back. DBUNAVAILABLE flag removed from " . $db_unavailable_flag . ". Job polls are now enabled.", $sendmail = true);
+        }
+    }
 }
 
-var_dump($usedb);
-
+// Get node information from DB
 if ( $usedb ) {
     $node_info = getNodeByName($app->config['node_sourceip']);
     if ( $node_info === false ) {
@@ -186,7 +201,7 @@ $values['status'] = $node_status;
 if ( is_numeric($node_cpu) ) $values['cpuusage'] = $node_cpu;
 if ( $usedb ) {
     $converterNodeObj = $app->bootstrap->getModel('infrastructure_nodes');
-    $converterNodeObj->select($converter_node['id']);
+    $converterNodeObj->select($node_info['id']);
     $converterNodeObj->updateRow($values);
 } else {
     $msg .= "[INFO] DB is unreachable. Storage status information:\n" . print_r($values, true) . "\n";
@@ -197,7 +212,7 @@ if ( !empty($msg) ) $system_health_log .= $msg . "\n\n";
 echo $system_health_log . "\n";
 
 // Close DB connection if open
-if ( is_resource($db->_connectionID) ) $db->close();
+if ( ( $db !== false )  and is_resource($db->_connectionID) ) $db->close();
 
 exit;
 
@@ -229,8 +244,6 @@ global $db, $myjobid, $debug, $jconf;
 			inode.server = '" . $node . "' AND
             inode.disabled = 0
         LIMIT 1";
-
-echo $query . "\n";
 
 	try {
 		$in = $db->getArray($query);
