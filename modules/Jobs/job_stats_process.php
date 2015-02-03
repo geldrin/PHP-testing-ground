@@ -487,10 +487,10 @@ global $db, $debug, $myjobid, $app, $jconf, $kaka;
     FROM
       cdn_streaming_stats AS css,
       livefeed_streams AS lfs,
-      converter_nodes AS cn
+      infrastructure_nodes AS in
     WHERE
       css.wowzaappid = '" . $streaming_server_app . "' AND " . $sql_filter . "
-      css.clientip <> cn.serverip AND
+      css.clientip <> in.serverip AND
       css.starttime	< css.endtime AND (
       ( css.starttime >= '" . $start_interval_datetime . "' AND css.starttime <= '" . $end_interval_datetime . "' ) OR  # START in the interval
       ( css.endtime >= '" . $start_interval_datetime . "'   AND css.endtime <= '" . $end_interval_datetime . "' ) OR    # END in the interval
@@ -535,20 +535,20 @@ function getFirstWowzaRecordFromInterval($from_timestamp, $to_timestamp, $stream
 
   $query = "
     SELECT
-      css.id,
-      css.starttime
+        css.id,
+        css.starttime
     FROM
-      cdn_streaming_stats AS css,
-      converter_nodes AS cn
+        cdn_streaming_stats AS css,
+        infrastructure_nodes AS in
     WHERE
-      css.clientip <> cn.serverip AND
-      css.starttime >= '" . $from_datetime . "' AND
-      css.starttime <= '" . $to_datetime . "' AND
-      css.wowzaappid = '" . $streaming_server_app . "' AND
-      css.wowzalocalstreamname IS NOT NULL AND
-      css.wowzalocalstreamname <> ''
+        css.clientip <> in.serverip AND
+        css.starttime >= '" . $from_datetime . "' AND
+        css.starttime <= '" . $to_datetime . "' AND
+        css.wowzaappid = '" . $streaming_server_app . "' AND
+        css.wowzalocalstreamname IS NOT NULL AND
+        css.wowzalocalstreamname <> ''
     ORDER BY
-      css.starttime
+        css.starttime
     LIMIT 1";
 
 //echo $query . "\n";

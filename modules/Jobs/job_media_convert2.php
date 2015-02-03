@@ -260,14 +260,15 @@ global $jconf, $debug, $db, $app;
 			recordings_versions AS rv,
 			recordings AS r,
 			encoding_groups AS eg,
-			converter_nodes AS cn
+			infrastructure_nodes AS in
 		WHERE
 			( rv.status = '". $jconf['dbstatus_convert'] ."' OR rv.status = '". $jconf['dbstatus_reconvert'] ."' ) AND
 			rv.recordingid = r.id AND
 			r.encodinggroupid = eg.id AND
-			rv.converternodeid = cn.id AND
-			cn.server = '". $node ."' AND
-			cn.disabled = 0
+			rv.converternodeid = in.id AND
+			in.server = '". $node ."' AND
+            in.type = 'converter' AND
+			in.disabled = 0
 		ORDER BY
 			rv.encodingorder,
 			rv.recordingid

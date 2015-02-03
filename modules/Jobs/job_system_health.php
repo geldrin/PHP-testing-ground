@@ -48,13 +48,12 @@ $alarm_levels['critical'] = 90;
 
 // Establish database connection
 $db = db_maintain();
+// DB nélkül is tudunk működni????
 
-if ( $node_role == "converter" ) {
-    $converter_node = getConverterNodeByName($app->config['node_sourceip']);
-    if ( $converter_node === false ) {
-        $debug->log($jconf['log_dir'], $myjobid . ".log", "Converter node " . $app->config['node_sourceip'] . " is not defined in DB.", $sendmail = false);
-        exit;
-    }
+$converter_node = getNodeByName($app->config['node_sourceip']);
+if ( $converter_node === false ) {
+    $debug->log($jconf['log_dir'], $myjobid . ".log", "Node " . $app->config['node_sourceip'] . " is not defined in DB.", $sendmail = false);
+    exit;
 }
 
 // CPU usage
@@ -167,7 +166,7 @@ for ( $i = 0; $i < count($storages2check); $i++) {
 if ( $node_role == "converter" ) {
     $values['status'] = $node_status;
     if ( is_numeric($node_cpu) ) $values['cpuusage'] = $node_cpu;
-    $converterNodeObj = $app->bootstrap->getModel('converter_nodes');
+    $converterNodeObj = $app->bootstrap->getModel('infrastructure_nodes');
     $converterNodeObj->select($converter_node['id']);
     $converterNodeObj->updateRow($values);
 }
@@ -193,7 +192,7 @@ function checkDiskSpace($dir) {
     return $result;
 }
 
-function getConverterNodeByName($converter_node) {
+function getNodeByName($node) {
 global $db, $myjobid, $debug, $jconf;
 
 	$query = "
@@ -205,25 +204,25 @@ global $db, $myjobid, $debug, $jconf;
             cn.default,
             cn.disabled
 		FROM
-			converter_nodes AS cn
+			infrastructure_nodes AS in
 		WHERE
-			cn.server = '" . $converter_node . "' AND
-            cn.disabled = 0
+			in.server = '" . $node . "' AND
+            in.disabled = 0
         LIMIT 1";
 
 //echo $query . "\n";
 
 	try {
-		$cn = $db->getArray($query);
+		$in = $db->getArray($query);
 	} catch (exception $err) {
 		$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] SQL query failed." . trim($query), $sendmail = true);
 		return false;
 	}
 
 	// Check if any record returned
-	if ( count($cn) < 1 ) return false;
+	if ( count($in) < 1 ) return false;
     
-    return $cn[0];
+    return $in[0];
 }
 
 ?>
