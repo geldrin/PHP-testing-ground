@@ -497,17 +497,19 @@ function runExt4($cmd) {
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 	$return_array = array(
 		'code'       => -1,
-		'cmd_output' => '',
+		'cmd'        => null,
+		'cmd_output' => null,
 	);
 	
-	$cmd .= " </dev/null 2>&1; echo $?";
+	$cmd .= " 2>&1; echo $?";
+	$return_array['cmd'] = $cmd;
 	
 	$output = array();
 	$code = -1;
 	
 	exec($cmd, $output, $code);
 	
-	$return_array['code'] = intval($output[count($output) - 1]);
+	$return_array['code'] = intval(array_pop($output));
 	$return_array['cmd_output'] = implode(PHP_EOL, $output);
 	
 	return $return_array;
