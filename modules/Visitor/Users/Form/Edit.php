@@ -69,7 +69,7 @@ class Edit extends \Visitor\HelpForm {
     );
 
     // nem localisan regisztralt usereknel nem engedunk permissiont allitani
-    if ( $this->userModel->row['source'] or $this->userModel->row['source'] !== 'local' ) {
+    if ( $this->userModel->row['source'] !== 'local' ) {
 
       foreach( $this->basefields as $field )
         unset( $values[ $field ] );
