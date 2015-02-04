@@ -5,18 +5,18 @@
 // ------------
 
 // new functions
+///////////////////////////////////////////////////////////////////////////////////////////////////
 function updateRecordingStatus($recordingid, $status, $type = "recording") {
+///////////////////////////////////////////////////////////////////////////////////////////////////
 global $app, $debug, $jconf, $myjobid;
+	$allowed_types = array('recording', 'content', 'mobile', 'ocr', 'smil', 'contentsmil');
 
-	if ( ( $type != "recording" ) and ( $type != "content" ) and ( $type != "smil" ) and ( $type != "contentsmil" ) and ( $type != "mobile" ) ) return false;
-
+	if (!in_array($type, $allowed_types, $strict = true)) return false;
 	if ( empty($status) ) return false;
 
-	$idx = "";
-	if ( $type == "content" ) $idx = "content";
-	if ( $type == "smil" ) $idx = "smil";
-	if ( $type == "contentsmil" ) $idx = "contentsmil";
-	if ( $type == "mobile" ) $idx = "mobile";
+	$idx = null;
+	if ( $type === 'recording' ) $idx = '';
+	else $idx = $type;
 	
 	if ( !empty($status) ) {
 		$values = array(
