@@ -148,9 +148,9 @@ return array('config_jobs' => array(
   'thumb_video_numframes'     => 20,                // Number of video thumbnails generated per recording
 
   // Ocr frames
-	'ocr_engine'              => 'cuneiform'          // Supported: cuneiform, tesseract
-	'ocr_alt'                 => '/home/gergo/cf'     // Path to ocr binary
-  'ocr_frame_distance'      => 1.0;                 // Desired distance between frames (in seconds)
+	'ocr_engine'              => 'cuneiform',         // Supported: cuneiform, tesseract
+	'ocr_alt'                 => '/home/gergo/cf',    // Path to ocr binary
+  'ocr_frame_distance'      => 1.0,                 // Desired distance between frames (in seconds)
   'ocr_threshold'           => 0.004,               // Max. difference between ocr frames 
   
   // Constraints
