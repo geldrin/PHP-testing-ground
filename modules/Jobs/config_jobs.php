@@ -148,8 +148,10 @@ return array('config_jobs' => array(
   'thumb_video_numframes'     => 20,                // Number of video thumbnails generated per recording
 
   // Ocr frames
-  'ocr_snapshot_small'      => 180,           // Bounding box of small ocr snapshot
-  'ocr_snapshot_medium'     => 400,           // Bounding box of medium ocr snaphot
+	'ocr_engine'              => 'cuneiform'          // Supported: cuneiform, tesseract
+	'ocr_alt'                 => '/home/gergo/cf'     // Path to ocr binary
+  'ocr_frame_distance'      => 1.0;                 // Desired distance between frames (in seconds)
+  'ocr_threshold'           => 0.004,               // Max. difference between ocr frames 
   
   // Constraints
   'video_min_length'        => 3,     // Min. media length in seconds
@@ -159,7 +161,6 @@ return array('config_jobs' => array(
   'video_max_fps'         => 60,      // Max. video FPS
   'video_default_fps'       => 25,      // Default video FPS
   
-  'ocr_threshold'         => 0.02,    // Max. difference between ocr frames 
 
   // Media conversion profiles
 
