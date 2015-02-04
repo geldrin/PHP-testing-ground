@@ -711,7 +711,7 @@ class Controller extends \Visitor\Controller {
 
     foreach( $results as $result ) {
 
-      $label = $result['name'];
+      $label = $result['channeltitle'] . '<br/>(' . $result['name'] . ')';
       if ( $result['starttimestamp'] )
         $label .= '<br/>' . smarty_modifier_shortdate(
           '%Y. %B %e',
