@@ -1,15 +1,11 @@
 <?php
+///////////////////////////////////////////////////////////////////////////////////////////////////
 // Job configuration file
-
-// Profiles: baseline, main, high
-// Worked on testing Debian until 05/2012
+///////////////////////////////////////////////////////////////////////////////////////////////////
 define('H264_PROFILE',        '-profile:v main -preset:v fast');
 define('H264_PROFILE_MOBILE',   '-profile:v baseline -preset:v fast');
 
 return array('config_jobs' => array(
-
-  // Node
-  'encoding_nice'         => "nice -n 10",
 
   // Directories
   'temp_dir'            => $this->config['convpath'],       // Temporary dir for jobs
@@ -28,6 +24,7 @@ return array('config_jobs' => array(
   'nice'              => 'nice -n 19',  // General: lowest
   'nice_high'           => 'nice -n 10',  // High
   'nice_moderate'         => 'nice -n 14',  // Moderate
+  'encoding_nice'         => "nice -n 10",
   
   // Sleep duration - number of seconds to sleep after an operation
   'sleep_media'         => 60,      // Media conversion
@@ -38,11 +35,9 @@ return array('config_jobs' => array(
   'sleep_doc'           => 300,     // Document conversion
 
   // Job identifiers
-//  'jobid_media_convert'     => 'job_media_convert',
   'jobid_media_convert'     => 'job_media_convert2',
   'jobid_conv_control'      => 'job_conversion_control',
-  'jobid_content_convert'     => 'job_content_convert',
-  'jobid_ocr_convert'       => 'job_ocr_convert',
+  'jobid_ocr_convert'       => 'job_ocr',
   'jobid_document_index'      => 'job_document_index',
   'jobid_vcr_control'       => 'job_vcr_control',
   'jobid_maintenance'       => 'job_maintenance',
@@ -128,19 +123,14 @@ return array('config_jobs' => array(
   'api_password'          => 'MekkElek123',
 
   // FFMpeg related
-  // 'ffmpeg_alt'                => '/home/conv/ffmpeg/ffmpeg-git-20140623-64bit-static/ffmpeg', // current FFMpeg static build
   'ffmpeg_alt'                => '/home/conv/ffmpeg/ffmpeg-customvsq-git20150116-static/ffmpeg', // current FFMpeg static build
   'ffmpeg_loglevel'       => 25,                // Loglevel
   'ffmpeg_threads'        => 0,               // Threads to use (0 - automatic)
   'ffmpeg_async_frames'     => 10,                // Max. frames to skip when audio and video is out of sync (deprecated)
   'ffmpeg_h264_passes'      => 1,               // FFMpeg passes for H.264 (not operational!)
-  'ffmpeg_video_codec'      => 'h264',
-  'ffmpeg_flags'          => '-strict experimental',
-  'ffmpeg_audio_codec'      => 'libfaac',           // Audio codec (libmp3lame or libfaac)
   'max_duration_error'      => 20,            // margin of error when comparing master and converted video lengths
 
   // Thumbnails
-//  'ffmpegthumbnailer'       => '/usr/bin/ffmpegthumbnailer',  // ffmpegthumbnailer path
   'ffmpegthumbnailer'       => '/usr/bin/ffmpegthumbnailer-2.0.8',  // ffmpegthumbnailer path
   'thumb_video_small'       => '220x130',           // Resolution of normal video thumbnails
   'thumb_video_medium'      => '300x168',           // Resolution of wide video thumbnails
@@ -160,162 +150,6 @@ return array('config_jobs' => array(
   'video_max_res'         => '4096x2160', // Max. resolution for uploaded video (otherwise fraud upload)
   'video_max_fps'         => 60,      // Max. video FPS
   'video_default_fps'       => 25,      // Default video FPS
-  
-
-  // Media conversion profiles
-
-  // Video profiles
-  // Bits per pixel (BPP): 0.08 = low quality, 0.12 = good quality with moderate motion, 0.15 = waste
-
-  // Audio only profile
-  'profile_audio' => array(
-    'name'        => "Audio only version",
-    'type'        => "audio",
-    'video_codec'   => null,
-    'passes'      => null,
-    'codec_profile'   => null,
-    'format'      => "mp3",
-    'file_suffix'   => "_audio",    // recID_<suffix>.<format>
-    'video_bbox'    => null,
-    'video_bpp'     => null,
-    'audio_codec'   => "libmp3lame",  // AAC
-    'audio_ch'      => 2,       // Max. number of audio channels
-    'audio_bw_ch'   => 64,        // Kbps per audio channel
-    'audio_mode'    => "cbr",
-    'nice'        => "nice -n 10"   // Priority for this conversion
-  ),
-
-  // Mobile LQ version
-  'profile_mobile_lq' => array(
-    'name'        => "Mobile normal quality",
-    'type'        => "video",
-    'video_codec'   => "h264",
-    'passes'      => 1,       // Conversion passes
-    'codec_profile'   => H264_PROFILE_MOBILE,
-    'format'      => "mp4",
-    'file_suffix'   => "_mobile_lq",  // recID_<suffix>.<format>
-    'video_bbox'    => "480x320",   // Bounding box
-    'video_maxfps'    => 30,        // Max FPS
-    'video_bpp'     => 0.06,      // resx * resy * fps * bpp = video codec bandwidth
-    'audio_codec'   => "libvo_aacenc",    // AAC (the static ffmpeg build used in the pip-converter has the free 'libvo_aacenc' and the experimental 'aac' encoders only)
-    'audio_ch'      => 1,       // Max. number of audio channels
-    'audio_bw_ch'   => 64,        // Kbps per audio channel
-    'audio_mode'    => "cbr",
-    'pip_wcontent'    => "enabled",
-    'pip_codec_profile' => "baseline",    // H.264 profile for VideoLAN encoding
-    'pip_posx'      => "left",      // Left or right
-    'pip_posy'      => "up",      // Up or down
-    'pip_align'     => "0.03",      // 2% alignment from sides
-    'pip_resize'    => "0.2",     // 10 * % of original master media as PiP small
-    'nice'        => "nice -n 19"   // Priority for this conversion
-  ),
-
-  // Mobile HQ version
-// iPad: H.264 up to 720p@30, Main Profile level 3.1 w/ AAC-LC audio up to 160 Kbps per channel, 48kHz, stereo
-// iPad2: H.264 video up to 1080p@30 w/ High Profile level 4.1 + AAC-LC audio up to 160 Kbps, 48kHz, stereo audio in .m4v, .mp4, and .mov file formats;
-  'profile_mobile_hq' => array(
-    'name'        => "Mobile high quality",
-    'type'        => "video",
-    'video_codec'   => "h264",
-    'passes'      => 1,       // Conversion passes
-    'codec_profile'   => H264_PROFILE_MOBILE,
-    'format'      => "mp4",
-    'file_suffix'   => "_mobile_hq",  // recID_<suffix>.<format>
-    'video_bbox'    => "1280x720",    // Bounding box
-    'video_maxfps'    => 30,        // Max FPS
-    'video_bpp'     => 0.045,     // resx * resy * fps * bpp = video codec bandwidth
-    'audio_codec'   => "libvo_aacenc",    // AAC (the static ffmpeg build used in the pip-converter has the free 'libvo_aacenc' and the experimental 'aac' encoders only)
-    'audio_ch'      => 2,       // Max. number of audio channels
-    'audio_bw_ch'   => 64,        // Kbps per audio channel
-    'audio_mode'    => "cbr",
-    'pip_wcontent'    => "enabled",
-    'pip_codec_profile' => "baseline",    // H.264 profile for VideoLAN encoding
-    'pip_posx'      => "left",      // left or right
-    'pip_posy'      => "up",      // up or down
-    'pip_align'     => "0.03",      // 2% alignment from sides
-    'pip_resize'    => "0.2",     // 10% of original master media as PiP small
-    'nice'        => "nice -n 19"   // Priority for this conversion
-  ),
-
-  // Normal quality
-  'profile_video_lq' => array(
-    'name'        => "Video normal quality",
-    'type'        => "video",
-    'video_codec'   => "h264",
-    'passes'      => 1,       // Conversion passes
-    'codec_profile'   => H264_PROFILE,
-    'format'      => "mp4",
-    'file_suffix'   => "_video_lq",   // recID_<suffix>.<format>
-    'video_bbox'    => "640x360",   // Bounding box
-    'video_maxfps'    => 60,        // Max FPS
-    'video_bpp'     => 0.09,      // resx * resy * fps * bpp = video codec bandwidth
-    'audio_codec'   => "libfaac",   // AAC
-    'audio_ch'      => 1,       // Max. number of audio channels
-    'audio_bw_ch'   => 64,        // Kbps per audio channel
-    'audio_mode'    => "cbr",
-    'nice'        => "nice -n 10"   // Priority for this conversion
-  ),
-
-  // High quality
-  'profile_video_hq' => array(
-    'name'        => "Video high quality",
-    'type'        => "video",
-    'video_codec'   => "h264",
-    'passes'      => 1,       // Conversion passes
-    'codec_profile'   => H264_PROFILE,
-    'format'      => "mp4",
-    'file_suffix'   => "_video_hq",   // recID_<suffix>.<format>
-    'video_bbox'    => "1280x720",    // Bounding box
-    'video_maxfps'    => 60,        // Max FPS
-    'video_bpp'     => 0.05,      // resx * resy * fps * bpp = video codec bandwidth
-    'audio_codec'   => "libfaac",   // AAC
-    'audio_ch'      => 2,       // Max. number of audio channels
-    'audio_bw_ch'   => 64,        // Kbps per audio channel
-    'audio_mode'    => "cbr",
-    'nice'        => "nice -n 10"   // Priority for this conversion
-  ),
-
-  // Content video profiles
-
-  // Normal quality
-  'profile_content_lq' => array(
-    'name'        => "Content normal quality",
-    'type'        => "content",
-    'video_codec'   => "h264",
-    'passes'      => 1,       // Conversion passes
-    'codec_profile'   => H264_PROFILE,
-    'format'      => "mp4",
-    'file_suffix'   => "_content_lq", // recID_<suffix>.<format>
-    'video_bbox'    => "640x480",   // Video bounding box
-    'video_maxfps'    => 60,        // Max FPS
-    'video_bpp'     => 0.033,     // resx * resy * fps * bpp = video codec bandwidth
-    'audio_codec'   => "libfaac",   // AAC
-    'audio_ch'      => 1,       // Max. number of audio channels
-    'audio_bw_ch'   => 64,        // Kbps per audio channel
-    'audio_mode'    => "cbr",
-    'nice'        => "nice -n 14"   // Priority for this conversion
-  ),
-
-  // High quality
-  'profile_content_hq' => array(
-    'name'        => "Content high quality",
-    'type'        => "content",
-    'video_codec'   => "h264",
-    'passes'      => 1,       // Conversion passes
-    'codec_profile'   => H264_PROFILE,
-    'format'      => "mp4",
-    'file_suffix'   => "_content_hq", // recID_<suffix>.<format>
-    'video_bbox'    => "1280x720",    // Video bounding box
-    'video_maxfps'    => 60,        // Max FPS
-    'video_bpp'     => 0.020,     // resx * resy * fps * bpp = video codec bandwidth
-    'audio_codec'   => "libfaac",   // AAC
-    'audio_ch'      => 2,       // Max. number of audio channels
-    'audio_bw_ch'   => 64,        // Kbps per audio channel
-    'audio_mode'    => "cbr",
-    'nice'        => "nice -n 14"   // Priority for this conversion
-  ),
-
-
 ));
 
 ?>
