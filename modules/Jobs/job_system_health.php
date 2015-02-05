@@ -36,7 +36,7 @@ $alarm_levels['warning'] = 70;
 $alarm_levels['critical'] = 90;
 
 // Start an infinite loop - exit if any STOP file appears
-if ( is_file( $app->config['datapath'] . 'jobs/' . $myjobid . '.stop' ) or is_file( $app->config['datapath'] . 'jobs/all.stop' ) ) exit;
+//if ( is_file( $app->config['datapath'] . 'jobs/' . $myjobid . '.stop' ) or is_file( $app->config['datapath'] . 'jobs/all.stop' ) ) exit;
 
 clearstatcache();
 
@@ -236,7 +236,6 @@ if ( ( $node_role == "converter" ) and $usedb ) {
             $ssh_command = "ssh -i " . $jconf['ssh_key'] . " " . $jconf['ssh_user'] . "@" . $node_frontend['server'] . " date";
             exec($ssh_command, $output, $result);
             $output_string = implode("\n", $output);
-            $result = 1;
             if ( $result != 0 ) {
                 updateInfrastructureNodeStatus($node_info['id'], "statusnetwork", "disabledfrontendunreachable:" . $node_frontend['server']);
                 $msg = "[ERROR] Unsuccessful ping to: " . $node_frontend['server'] . ".\n\tCommand: " . $ssh_command . "\n\tOutput: " . $output_string;
@@ -253,7 +252,7 @@ if ( ( $node_role == "converter" ) and $usedb ) {
     }
 }
 
-echo $system_health_log . "\n";
+//echo $system_health_log . "\n";
 
 // Close DB connection if open
 if ( ( $db !== false )  and is_resource($db->_connectionID) ) $db->close();

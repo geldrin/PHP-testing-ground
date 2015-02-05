@@ -1134,19 +1134,26 @@ function checkProcessStartTime($processName) {
 }
 
 function runOverControl($myjobid) {
-global $jconf, $debug;
+global $app, $jconf, $debug;
 
     $goahead = true;
 
     $processes = checkProcessStartTime("php.*" . $jconf['job_dir'] . $myjobid . ".php");
     if ( count($processes) > 1 ) {
+        
         $process_longest = 0;
         $msg = "";
+        
         for ( $i = 0; $i < count($processes); $i++ ) {
             if ( $process_longest < $processes[$i][0] ) $process_longest = $processes[$i][0];
             $msg .= floor($processes[$i][0] / ( 24 * 3600 ) ) . "d " . secs2hms($processes[$i][0] % ( 24 * 3600 )) . " " . $processes[$i][1] . "\n";
         }
-        $debug->log($jconf['log_dir'], $myjobid . ".log", "[WARN] Job " . $myjobid . " runover was detected. Job info (running time, process):\n" . $msg, $sendmail = true);
+        
+        // Do not send alarm if DB is down
+        if ( !file_exists($app->config['dbunavailableflagpath']) ) {
+            $debug->log($jconf['log_dir'], $myjobid . ".log", "[WARN] Job " . $myjobid . " runover was detected. Job info (running time, process):\n" . $msg, $sendmail = true);
+        }
+        
         $goahead = false;
     }
 
@@ -1160,10 +1167,14 @@ global $jconf, $debug;
 function db_maintain($nonblockingmode = false) {
  global $app, $db, $jconf, $debug;
 
-	if ( !empty($db) ) {
+    // Does resource still exist?
+ 	if ( !empty($db) ) {
 		if ( is_resource($db->_connectionID) ) return $db;
 	}
-
+ 
+    // Check DBUNAVAILABLE file, sleep until it exists
+    if ( !$nonblockingmode ) dbWait4Recovery();
+ 
 	$job = getRunningJobName();
 
 	// Sleep time to start from
@@ -1183,6 +1194,7 @@ function db_maintain($nonblockingmode = false) {
         $app->watchdog();
     
         // Exit if stop file is enabled in meanwhile
+        // ???? nem jo ez itt, nem szabad kilepni?????
 		if ( is_file( $app->config['datapath'] . 'jobs/' . $job . '.stop' ) or is_file( $app->config['datapath'] . 'jobs/all.stop' ) ) exit;
 
 		// Establish database connection
@@ -1194,7 +1206,7 @@ function db_maintain($nonblockingmode = false) {
                     $recovery_time = time() - $outage_starttime;
 					$title = "[OK] DB connection restored in " . seconds2DaysHoursMinsSecs($recovery_time) . ". Retried: " . $retry . ".\n\nJob continues to run.";
 					$body  = $mail_head . "\n" . $title . "\n\nWARNING: DB outage recovered?\n";
-					sendHTMLEmail_errorWrapper($title, nl2br($body));
+					if ( $nonblockingmode ) sendHTMLEmail_errorWrapper($title, nl2br($body));
                     $debug->log($jconf['log_dir'], $job . ".log", $title, $sendmail = false);
 				}
 				return $db;
@@ -1205,14 +1217,19 @@ function db_maintain($nonblockingmode = false) {
                 $outage_time = time() - $outage_starttime;
 				$title = "[ERROR] Cannot connect to DB (retry: " . $retry . "). DB recovery has been tried for " . seconds2DaysHoursMinsSecs($outage_time) . ". Job operation is suspended.";
 				$body  = $mail_head . "\n" . $title . "\n\nPlease check DB connections!\n\nError message:\n" . $err . "\n";
-				sendHTMLEmail_errorWrapper($title, nl2br($body));
+				if ( $nonblockingmode ) sendHTMLEmail_errorWrapper($title, nl2br($body));
                 $debug->log($jconf['log_dir'], $job . ".log", $title . " Error message:\n" . $err, $sendmail = false);
 			}
 		}
 
         // Return when non blocking mode is selected
-        if ( $nonblockingmode ) return false;
-        
+        if ( $nonblockingmode ) {
+            return false;
+        } else {
+            // Check DBUNAVAILABLE file, wait until it exists
+            dbWait4Recovery();
+        }
+
 		$retry++;
 
 		// Sleep some time then try again
@@ -1228,6 +1245,27 @@ function db_maintain($nonblockingmode = false) {
 	sendHTMLEmail_errorWrapper($title, $body);
 
 	exit -1;
+}
+
+function dbWait4Recovery() {
+global $app;
+
+    $retry = 1;
+    $sleep_time = 30;
+    
+    // Does DBUNAVAILABLE file exist?
+    while ( file_exists($app->config['dbunavailableflagpath']) ) {
+        
+        // Sleep for a while
+        sleep($sleep_time);
+        
+        // Increase retry timeout (until a certain point) - 1: 30 sec, 2: 60 sec
+        if ( $retry <= 2 ) $sleep_time = $sleep_time * 2;
+
+        $retry++;
+    }
+    
+    return true;
 }
 
 function sendHTMLEmail_errorWrapper($title, $body, $sendhtml = true) {
