@@ -853,6 +853,8 @@ class Livefeeds extends \Springboard\Model {
         l.userid,
         l.organizationid,
         l.name,
+        c.title AS channeltitle,
+        c.subtitle AS channelsubtitle,
         c.ordinalnumber,
         c.starttimestamp,
         c.endtimestamp
