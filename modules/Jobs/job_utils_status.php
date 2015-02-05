@@ -113,237 +113,6 @@ global $app, $debug, $jconf, $myjobid;
 	return true;
 }
 
-// old functions - LEGACY: TO BE REMOVED WHEN ENCODER 2.0 IS LIVE
-function update_db_recording_status($rec_id, $status) {
-global $app, $jconf, $db;
-
-	$db = db_maintain();
-
-	$query = "
-		UPDATE
-			recordings
-		SET
-			status = \"" . $status . "\"
-		WHERE
-			id = " . $rec_id;
-
-	try {
-		$rs = $db->Execute($query);
-	} catch (exception $err) {
-		log_video_conversion($rec_id, $jconf['jobid_media_convert'], "-", "[ERROR] Cannot update media status. SQL query failed.", trim($query), $err, 0, TRUE);
-		return FALSE;
-	}
-
-	$recordingObj = $app->bootstrap->getModel('recordings');
-	$recordingObj->select($rec_id);
-	$recordingObj->updateChannelIndexPhotos();
-
-	return TRUE;
-}
-
-function update_db_masterrecording_status($rec_id, $status) {
-global $app, $jconf, $db;
-
-	$db = db_maintain();
-
-	$query = "
-		UPDATE
-			recordings
-		SET
-			masterstatus = \"" . $status . "\"
-		WHERE
-			id = " . $rec_id;
-
-	try {
-		$rs = $db->Execute($query);
-	} catch (exception $err) {
-		log_recording_conversion(0, $jconf['jobid_media_convert'], "-", "[ERROR] Cannot update master media status. SQL query failed.", trim($query), $err, 0, TRUE);
-		return FALSE;
-	}
-
-	return TRUE;
-}
-
-function update_db_mediainfo($recording, $mobile_lq, $mobile_hq, $video_lq, $video_hq) {
-global $app, $jconf, $db;
-
-	$db = db_maintain();
-
-	unset($indexphotodata);
-
-	$query = "
-		UPDATE
-			recordings
-		SET
-			";
-
-	// Mobile LQ
-	if ( !empty($mobile_lq) ) {
-		$query .= "mobilevideoreslq = \"" . $mobile_lq['res_x'] . "x" . $mobile_lq['res_y'] . "\"";
-	} else {
-		// Should never happen
-		$query .= "mobilevideoreslq = mobilevideoreslq";
-	}
-
-	// Mobile HQ
-	if ( !empty($mobile_hq) ) {
-		$query .= ", mobilevideoreshq = \"" . $mobile_hq['res_x'] . "x" . $mobile_hq['res_y'] . "\"";
-	}
-
-	// Video LQ
-	if ( !empty($video_lq) ) {
-		$query .= ", videoreslq = \"" . $video_lq['res_x'] . "x" . $video_lq['res_y'] . "\"";
-	}
-
-	// Video HQ
-	if ( !empty($video_hq) ) {
-		$query .= ", videoreshq = \"" . $video_hq['res_x'] . "x" . $video_hq['res_y'] . "\"";
-	}
-
-	if ( !empty($recording['thumbnail_indexphotofilename']) ) {
-		$query .= ", indexphotofilename = \"" . $recording['thumbnail_indexphotofilename'] . "\",\n";
-		$query .= "numberofindexphotos = \"" . $recording['thumbnail_numberofindexphotos'] . "\"\n";
-	}
-
-	$query .= "
-		WHERE
-			id = " . $recording['id'];
-
-	try {
-		$rs = $db->Execute($query);
-	} catch (exception $err) {
-		log_recording_conversion(0, $jconf['jobid_media_convert'], "-", "[ERROR] Cannot update media information. SQL query failed.", trim($query), $err, 0, TRUE);
-		return FALSE;
-	}
-
-	return TRUE;
-}
-
-function update_db_content_status($id, $status) {
-global $db;
-
-	$db = db_maintain();
-
-	$query = "
-		UPDATE
-			recordings
-		SET
-			contentstatus = \"" . $status . "\"
-		WHERE
-			id = " . $id;
-
-	try {
-		$rs = $db->Execute($query);
-	} catch (exception $err) {
-		log_recording_conversion($id, $jconf['jobid_content_convert'], "-", "[ERROR] Cannot update content status. SQL query failed.", trim($query), $err, 0, TRUE);
-		return FALSE;
-	}
-
-	return TRUE;
-}
-
-function update_db_mobile_status($id, $status) {
-global $db;
-
-	$db = db_maintain();
-
-	$query = "
-		UPDATE
-			recordings
-		SET
-			mobilestatus = \"" . $status . "\"
-		WHERE
-			id = " . $id;
-
-	try {
-		$rs = $db->Execute($query);
-	} catch (exception $err) {
-		log_recording_conversion($id, $jconf['jobid_content_convert'], "-", "[ERROR] Cannot update mobile status. SQL query failed.", trim($query), $err, 0, TRUE);
-		return FALSE;
-	}
-
-	return TRUE;
-}
-
-function update_db_mastercontent_status($id, $status) {
- global $db;
-
-	$db = db_maintain();
-
-	$query = "
-		UPDATE
-			recordings
-		SET
-			contentmasterstatus = \"" . $status . "\"
-		WHERE
-			id = " . $id;
-
-	try {
-		$rs = $db->Execute($query);
-	} catch (exception $err) {
-		log_recording_conversion($id, $jconf['jobid_content_convert'], "-", "[ERROR] Cannot update master content status. SQL query failed.", trim($query), $err, 0, TRUE);
-		return FALSE;
-	}
-
-	return TRUE;
-}
-
-function update_db_contentinfo($id, $content_info_lq, $content_info_hq, $mobile_info_lq, $mobile_info_hq) {
-global $jconf, $db;
-
-	$db = db_maintain();
-
-	$is_update = FALSE;
-
-	$query = "
-		UPDATE
-			recordings
-		SET
-			";
-
-	// Content LQ
-	if ( !empty($content_info_lq) ) {
-		$query .= "contentvideoreslq = \"" . $content_info_lq['res_x'] . "x" . $content_info_lq['res_y']. "\"";
-		$is_update = TRUE;
-	}
-
-	// Content HQ
-	if ( !empty($content_info_hq) ) {
-		if ( $is_update ) $query .= ", ";
-		$query .= "contentvideoreshq = \"" . $content_info_hq['res_x'] . "x" . $content_info_hq['res_y']. "\"";
-		$is_update = TRUE;
-	}
-
-	// Mobile LQ
-	if ( !empty($mobile_info_lq) ) {
-		if ( $is_update ) $query .= ", ";
-		$query .= "mobilevideoreslq = \"" . $mobile_info_lq['res_x'] . "x" . $mobile_info_lq['res_y']. "\"";
-		$is_update = TRUE;
-	}
-
-	// Mobile HQ
-	if ( !empty($mobile_info_hq) ) {
-		if ( $is_update ) $query .= ", ";
-		$query .= "mobilevideoreshq = \"" . $mobile_info_hq['res_x'] . "x" . $mobile_info_hq['res_y']. "\"";
-		$is_update = TRUE;
-	}
-
-	$query .= "
-		WHERE
-			id = " . $id;
-
-	if ( $is_update ) {
-		try {
-			$rs = $db->Execute($query);
-		} catch (exception $err) {
-			log_recording_conversion($id, $jconf['jobid_content_convert'], "-", "[ERROR] Cannot update content information. SQL query failed.", trim($query), $err, 0, TRUE);
-			return FALSE;
-		}
-	}
-
-	return TRUE;
-}
-
 // ------------
 // RECORDINGS VERSIONS
 // ------------
@@ -626,56 +395,9 @@ global $app, $debug, $jconf, $myjobid;
 	return true;
 }
 
-// old functions - LEGACY: TO BE REMOVED WHEN ENCODER 2.0 IS LIVE
-function update_db_attachment_status($id, $status) {
-global $jconf, $db;
-
-	$db = db_maintain();
-
-	$query = "
-		UPDATE
-			attached_documents
-		SET
-			status = '" . $status . "'
-		WHERE
-			id = " . $id;
-
-	try {
-		$rs = $db->Execute($query);
-	} catch (exception $err) {
-		log_document_conversion($id, 0, $jconf['jobid_upload_finalize'], "-", "[ERROR] Cannot update document status. SQL query failed.", trim($query), $err, 0, TRUE);
-		return FALSE;
-	}
-
-	return TRUE;
-}
-
-function update_db_attachment_indexingstatus($id, $status) {
-global $jconf, $db;
-
-	$db = db_maintain();
-
-	$query = "
-		UPDATE
-			attached_documents
-		SET
-			indexingstatus = '" . $status . "'
-		WHERE
-			id = " . $id;
-
-	try {
-		$rs = $db->Execute($query);
-	} catch (exception $err) {
-		log_document_conversion($id, 0, $jconf['jobid_document_index'], "-", "[ERROR] Cannot update document indexing status. SQL query failed.", trim($query), $err, 0, TRUE);
-		return FALSE;
-	}
-
-	return TRUE;
-}
-
-// ------------
+// ------
 // AVATAR
-// ------------
+// ------
 
 function updateAvatarStatus($userid, $status) {
 global $app, $debug, $jconf, $myjobid;
@@ -701,7 +423,59 @@ global $app, $debug, $jconf, $myjobid;
 	return true;
 }
 
+//------------
+//Live SMIL
+//------------
+
+function updateLiveFeedSMILStatus($livefeedid, $status, $type = "video") {
+global $app, $debug, $jconf, $myjobid;
+
+	if ( ( $type != "video" ) and ( $type != "content" ) ) return false;
+
+	if ( empty($status) ) return false;
+
+	$idx = "";
+	if ( $type == "content" ) $idx = "content";
+
+	$values = array(
+		$idx . 'smilstatus' => $status
+	);
+
+	$recordingVersionObj = $app->bootstrap->getModel('livefeeds');
+	$recordingVersionObj->select($livefeedid);
+    $recordingVersionObj->updateRow($values);
+
+	// Log status change
+	$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Livefeed id = " . $livefeedid . " " . $type . " status has been changed to '" . $status . "'.", $sendmail = false);
+
+	return true;
+}
+
+//---------------------
+// Infrastructure nodes
+//---------------------
+function updateInfrastructureNodeStatus($nodeid, $statusfield, $status) {
+global $app, $debug, $jconf, $myjobid;
+
+    if ( ( $statusfield != "statusstorage" ) and ( $statusfield != "statusnetwork" ) ) return false;
+	if ( empty($status) ) return false;
+	$values = array(
+		$statusfield => $status
+	);
+
+    $converterNodeObj = $app->bootstrap->getModel('infrastructure_nodes');
+    $converterNodeObj->select($nodeid);
+    $converterNodeObj->updateRow($values);
+    
+	// Log status change
+	$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Converter node#" . $nodeid . " " . $statusfield . " changed to '" . $status . "'.", $sendmail = false);
+
+	return true;
+}
+
+//----
 // VCR - untouched!!!
+//----
 
 // VCR: update recording link
 function update_db_vcr_reclink_status($id, $status) {
@@ -808,8 +582,80 @@ global $db, $jconf;
 	return TRUE;
 }
 
+//--------------------
+//Livefeed index photo
+//--------------------
 
-// KIKUKÁZNI
+function updateLiveFeedStreamIndexPhoto($streamid, $indexphotofilename) {
+global $app, $debug, $jconf, $myjobid;
+
+	if ( empty($indexphotofilename) ) return false;
+
+	$values = array(
+		'indexphotofilename'	=> $indexphotofilename
+	);
+
+	$recordingVersionObj = $app->bootstrap->getModel('livefeed_streams');
+	$recordingVersionObj->select($streamid);
+    $recordingVersionObj->updateRow($values);
+	$recordingVersionObj->updateFeedThumbnail();
+
+	// Log index photo change
+	$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] livefeed_streams.id = " . $streamid . " index photo updated to " . $indexphotofilename, $sendmail = false);
+
+	return true;
+}
+
+//***********************************************************************************
+// REMOVE!!!
+//***********************************************************************************
+
+// old functions - LEGACY: TO BE REMOVED WHEN ENCODER 2.0 IS LIVE
+function update_db_attachment_status($id, $status) {
+global $jconf, $db;
+
+	$db = db_maintain();
+
+	$query = "
+		UPDATE
+			attached_documents
+		SET
+			status = '" . $status . "'
+		WHERE
+			id = " . $id;
+
+	try {
+		$rs = $db->Execute($query);
+	} catch (exception $err) {
+		log_document_conversion($id, 0, $jconf['jobid_upload_finalize'], "-", "[ERROR] Cannot update document status. SQL query failed.", trim($query), $err, 0, TRUE);
+		return FALSE;
+	}
+
+	return TRUE;
+}
+
+function update_db_attachment_indexingstatus($id, $status) {
+global $jconf, $db;
+
+	$db = db_maintain();
+
+	$query = "
+		UPDATE
+			attached_documents
+		SET
+			indexingstatus = '" . $status . "'
+		WHERE
+			id = " . $id;
+
+	try {
+		$rs = $db->Execute($query);
+	} catch (exception $err) {
+		log_document_conversion($id, 0, $jconf['jobid_document_index'], "-", "[ERROR] Cannot update document indexing status. SQL query failed.", trim($query), $err, 0, TRUE);
+		return FALSE;
+	}
+
+	return TRUE;
+}
 
 // *************************************************************************
 // *			function update_db_attachment_documentcache()	   	   	   *
@@ -840,50 +686,235 @@ global $db, $jconf;
 	return TRUE;
 }
 
-// ---------------------------------------------------------------------------
+// old functions - LEGACY: TO BE REMOVED WHEN ENCODER 2.0 IS LIVE
+function update_db_recording_status($rec_id, $status) {
+global $app, $jconf, $db;
 
-function updateLiveFeedStreamIndexPhoto($streamid, $indexphotofilename) {
-global $app, $debug, $jconf, $myjobid;
+	$db = db_maintain();
 
-	if ( empty($indexphotofilename) ) return false;
+	$query = "
+		UPDATE
+			recordings
+		SET
+			status = \"" . $status . "\"
+		WHERE
+			id = " . $rec_id;
 
-	$values = array(
-		'indexphotofilename'	=> $indexphotofilename
-	);
+	try {
+		$rs = $db->Execute($query);
+	} catch (exception $err) {
+		log_video_conversion($rec_id, $jconf['jobid_media_convert'], "-", "[ERROR] Cannot update media status. SQL query failed.", trim($query), $err, 0, TRUE);
+		return FALSE;
+	}
 
-	$recordingVersionObj = $app->bootstrap->getModel('livefeed_streams');
-	$recordingVersionObj->select($streamid);
-    $recordingVersionObj->updateRow($values);
-	$recordingVersionObj->updateFeedThumbnail();
+	$recordingObj = $app->bootstrap->getModel('recordings');
+	$recordingObj->select($rec_id);
+	$recordingObj->updateChannelIndexPhotos();
 
-	// Log index photo change
-	$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] livefeed_streams.id = " . $streamid . " index photo updated to " . $indexphotofilename, $sendmail = false);
-
-	return true;
+	return TRUE;
 }
 
-function updateLiveFeedSMILStatus($livefeedid, $status, $type = "video") {
-global $app, $debug, $jconf, $myjobid;
+function update_db_masterrecording_status($rec_id, $status) {
+global $app, $jconf, $db;
 
-	if ( ( $type != "video" ) and ( $type != "content" ) ) return false;
+	$db = db_maintain();
 
-	if ( empty($status) ) return false;
+	$query = "
+		UPDATE
+			recordings
+		SET
+			masterstatus = \"" . $status . "\"
+		WHERE
+			id = " . $rec_id;
 
-	$idx = "";
-	if ( $type == "content" ) $idx = "content";
+	try {
+		$rs = $db->Execute($query);
+	} catch (exception $err) {
+		log_recording_conversion(0, $jconf['jobid_media_convert'], "-", "[ERROR] Cannot update master media status. SQL query failed.", trim($query), $err, 0, TRUE);
+		return FALSE;
+	}
 
-	$values = array(
-		$idx . 'smilstatus' => $status
-	);
+	return TRUE;
+}
 
-	$recordingVersionObj = $app->bootstrap->getModel('livefeeds');
-	$recordingVersionObj->select($livefeedid);
-    $recordingVersionObj->updateRow($values);
+function update_db_mediainfo($recording, $mobile_lq, $mobile_hq, $video_lq, $video_hq) {
+global $app, $jconf, $db;
 
-	// Log status change
-	$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Livefeed id = " . $livefeedid . " " . $type . " status has been changed to '" . $status . "'.", $sendmail = false);
+	$db = db_maintain();
 
-	return true;
+	unset($indexphotodata);
+
+	$query = "
+		UPDATE
+			recordings
+		SET
+			";
+
+	// Mobile LQ
+	if ( !empty($mobile_lq) ) {
+		$query .= "mobilevideoreslq = \"" . $mobile_lq['res_x'] . "x" . $mobile_lq['res_y'] . "\"";
+	} else {
+		// Should never happen
+		$query .= "mobilevideoreslq = mobilevideoreslq";
+	}
+
+	// Mobile HQ
+	if ( !empty($mobile_hq) ) {
+		$query .= ", mobilevideoreshq = \"" . $mobile_hq['res_x'] . "x" . $mobile_hq['res_y'] . "\"";
+	}
+
+	// Video LQ
+	if ( !empty($video_lq) ) {
+		$query .= ", videoreslq = \"" . $video_lq['res_x'] . "x" . $video_lq['res_y'] . "\"";
+	}
+
+	// Video HQ
+	if ( !empty($video_hq) ) {
+		$query .= ", videoreshq = \"" . $video_hq['res_x'] . "x" . $video_hq['res_y'] . "\"";
+	}
+
+	if ( !empty($recording['thumbnail_indexphotofilename']) ) {
+		$query .= ", indexphotofilename = \"" . $recording['thumbnail_indexphotofilename'] . "\",\n";
+		$query .= "numberofindexphotos = \"" . $recording['thumbnail_numberofindexphotos'] . "\"\n";
+	}
+
+	$query .= "
+		WHERE
+			id = " . $recording['id'];
+
+	try {
+		$rs = $db->Execute($query);
+	} catch (exception $err) {
+		log_recording_conversion(0, $jconf['jobid_media_convert'], "-", "[ERROR] Cannot update media information. SQL query failed.", trim($query), $err, 0, TRUE);
+		return FALSE;
+	}
+
+	return TRUE;
+}
+
+function update_db_content_status($id, $status) {
+global $db;
+
+	$db = db_maintain();
+
+	$query = "
+		UPDATE
+			recordings
+		SET
+			contentstatus = \"" . $status . "\"
+		WHERE
+			id = " . $id;
+
+	try {
+		$rs = $db->Execute($query);
+	} catch (exception $err) {
+		log_recording_conversion($id, $jconf['jobid_content_convert'], "-", "[ERROR] Cannot update content status. SQL query failed.", trim($query), $err, 0, TRUE);
+		return FALSE;
+	}
+
+	return TRUE;
+}
+
+function update_db_mobile_status($id, $status) {
+global $db;
+
+	$db = db_maintain();
+
+	$query = "
+		UPDATE
+			recordings
+		SET
+			mobilestatus = \"" . $status . "\"
+		WHERE
+			id = " . $id;
+
+	try {
+		$rs = $db->Execute($query);
+	} catch (exception $err) {
+		log_recording_conversion($id, $jconf['jobid_content_convert'], "-", "[ERROR] Cannot update mobile status. SQL query failed.", trim($query), $err, 0, TRUE);
+		return FALSE;
+	}
+
+	return TRUE;
+}
+
+function update_db_mastercontent_status($id, $status) {
+ global $db;
+
+	$db = db_maintain();
+
+	$query = "
+		UPDATE
+			recordings
+		SET
+			contentmasterstatus = \"" . $status . "\"
+		WHERE
+			id = " . $id;
+
+	try {
+		$rs = $db->Execute($query);
+	} catch (exception $err) {
+		log_recording_conversion($id, $jconf['jobid_content_convert'], "-", "[ERROR] Cannot update master content status. SQL query failed.", trim($query), $err, 0, TRUE);
+		return FALSE;
+	}
+
+	return TRUE;
+}
+
+function update_db_contentinfo($id, $content_info_lq, $content_info_hq, $mobile_info_lq, $mobile_info_hq) {
+global $jconf, $db;
+
+	$db = db_maintain();
+
+	$is_update = FALSE;
+
+	$query = "
+		UPDATE
+			recordings
+		SET
+			";
+
+	// Content LQ
+	if ( !empty($content_info_lq) ) {
+		$query .= "contentvideoreslq = \"" . $content_info_lq['res_x'] . "x" . $content_info_lq['res_y']. "\"";
+		$is_update = TRUE;
+	}
+
+	// Content HQ
+	if ( !empty($content_info_hq) ) {
+		if ( $is_update ) $query .= ", ";
+		$query .= "contentvideoreshq = \"" . $content_info_hq['res_x'] . "x" . $content_info_hq['res_y']. "\"";
+		$is_update = TRUE;
+	}
+
+	// Mobile LQ
+	if ( !empty($mobile_info_lq) ) {
+		if ( $is_update ) $query .= ", ";
+		$query .= "mobilevideoreslq = \"" . $mobile_info_lq['res_x'] . "x" . $mobile_info_lq['res_y']. "\"";
+		$is_update = TRUE;
+	}
+
+	// Mobile HQ
+	if ( !empty($mobile_info_hq) ) {
+		if ( $is_update ) $query .= ", ";
+		$query .= "mobilevideoreshq = \"" . $mobile_info_hq['res_x'] . "x" . $mobile_info_hq['res_y']. "\"";
+		$is_update = TRUE;
+	}
+
+	$query .= "
+		WHERE
+			id = " . $id;
+
+	if ( $is_update ) {
+		try {
+			$rs = $db->Execute($query);
+		} catch (exception $err) {
+			log_recording_conversion($id, $jconf['jobid_content_convert'], "-", "[ERROR] Cannot update content information. SQL query failed.", trim($query), $err, 0, TRUE);
+			return FALSE;
+		}
+	}
+
+	return TRUE;
 }
 
 
