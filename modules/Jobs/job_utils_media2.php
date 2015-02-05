@@ -254,7 +254,7 @@ global $jconf, $debug, $app;
 			$ffmpeg_preset  = " -preset:v ". $profile['ffmpegh264preset'];
 			$ffmpeg_resize  = " -s ". $main['resx'] ."x". $main['resy'];
 			$ffmpeg_aspect  = null;
-			if ( !empty($main['DAR_MN']) ) $ffmpeg_aspect = " -aspect " . $main['DAR_MN'];
+			if ( !empty($main['DAR']) ) $ffmpeg_aspect = " -aspect " . $main['DAR'];
 			$ffmpeg_deint   = ($main['deinterlace'] === true) ? " -deinterlace " : null;
 			$ffmpeg_fps     = " -r ". $main['videofps'];
 			$ffmpeg_bitrate = " -b:v ". (10 * ceil($main['videobitrate'] / 10000)) . "k";
