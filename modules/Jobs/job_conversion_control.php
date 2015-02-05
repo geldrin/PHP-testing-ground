@@ -72,6 +72,8 @@ if ( $recordings !== false ) {
 					$recording['status'] = $jconf['dbstatus_reconvert'];
 				}
 			}
+			
+			updateRecordingStatus($recording['id'], $jconf['dbstatus_convert'], 'ocr');
 		}
 		
 		// ## Recording level reconvert: mark all recording versions to be deleted (onstorage, convert, converting, stop, copy*, reconvert)
@@ -79,6 +81,9 @@ if ( $recordings !== false ) {
 		if ( $recording['contentstatus'] == $jconf['dbstatus_reconvert'] ) {
 			$debug->log($jconf['log_dir'], $jconf['jobid_conv_control'] . ".log", "[INFO] Content reconvert for recordingid = " . $recording['id'] . " (" . $recording['contentmastervideofilename'] . ").", $sendmail = false);
 			updateRecordingVersionStatusApplyFilter($recording['id'], $jconf['dbstatus_markedfordeletion'], "content|pip", $filter);
+			updateRecordingStatus($recording['id'], $jconf['dbstatus_reconvert'], 'ocr');
+			$debug->log($jconf['log_dir'], $jconf['jobid_conv_control'] . ".log", "[INFO] OCR reconvert has been issued.", $sendmail = false);
+			
 			// Is recording encoded with a legacy encoding group?
 			$encodinggroup = getEncodingProfileGroup($recording['encodinggroupid']);
 			if ( $encodinggroup !== false ) {
@@ -120,6 +125,12 @@ if ( $recordings !== false ) {
 			if ( $recording['ismobilecompatible'] == 1 ) updateRecordingStatus($recording['id'], $jconf['dbstatus_copystorage_ok'], "mobile");
 		}
 		if ( $recording['contentstatus'] == $jconf['dbstatus_conv'] ) updateRecordingStatus($recording['id'], $jconf['dbstatus_copystorage_ok'], "content");
+		if ( in_array($recording['contentstatus'], array(
+			$jconf['dbstatus_copystorage_ok'],
+			$jconf['dbstatus_uploaded'],
+			$jconf['dbstatus_conv'],
+			$jconf['dbstatus_convert'],
+		))) updateRecordingStatus($recording['id'], $jconf['dbstatus_convert'], 'ocr');
 
 		//// E-mail: send e-mail about a converted recording
 		// Query recording creator
