@@ -10,6 +10,7 @@ include_once( BASE_PATH . 'libraries/Springboard/Application/Cli.php');
 // Utils
 include_once('job_utils_base.php');
 include_once('job_utils_log.php');
+include_once('job_utils_status.php');
 
 set_time_limit(0);
 
@@ -57,7 +58,7 @@ if ( $db === false ) {
         if ( $err === false ) {
             $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Cannot create DB unavailable flag file at " . $db_unavailable_flag . ". CHECK!", $sendmail = false);
         } else {
-            $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] DB is unavailable. DBUNAVAILABLE flag created at " . $db_unavailable_flag . ". Job polls are blocked until DB comes back.", $sendmail = false);      
+            $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] DB is unavailable. DBUNAVAILABLE flag created at " . $db_unavailable_flag . ". Job polls are blocked until DB comes back.", $sendmail = false);
         }
     }
 } else {
@@ -65,7 +66,8 @@ if ( $db === false ) {
     if ( file_exists($db_unavailable_flag) ) {
         $err = unlink($db_unavailable_flag);
         if ( $err === false ) {
-            $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Cannot remove DB unavailable flag file at " . $db_unavailable_flag . ". Will prevent jobs from running. CHECK!", $sendmail = true);
+            // !!! sendmail = true eseten mail storm !!! ?
+            $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Cannot remove DB unavailable flag file at " . $db_unavailable_flag . ". Will prevent jobs from running. CHECK!", $sendmail = false);
         } else {
             $debug->log($jconf['log_dir'], $myjobid . ".log", "[OK] DB is back. DBUNAVAILABLE flag removed from " . $db_unavailable_flag . ". Job polls are now enabled.", $sendmail = true);
         }
@@ -96,6 +98,7 @@ $dirs2check = array(
     $app->config['datapath'] . "watchdog/"
 );
 
+// For converters
 if ( $node_role == "converter" ) {
 
     $dirs2check_conv = array(
@@ -109,6 +112,7 @@ if ( $node_role == "converter" ) {
     $dirs2check = array_merge($dirs2check, $dirs2check_conv);
 }
 
+// For frontends
 if ( $node_role == "frontend" ) {
 
     $dirs2check_fe = array(
@@ -128,6 +132,7 @@ if ( $node_role == "frontend" ) {
     
 }
 
+// Loop through directories
 $msg = "";
 for ( $i = 0; $i < count($dirs2check); $i++) {
     if ( !file_exists($dirs2check[$i]) ) {
@@ -135,7 +140,10 @@ for ( $i = 0; $i < count($dirs2check); $i++) {
         $node_status = "disabledmissingpath";
     }
 }
-if ( !empty($msg) ) $system_health_log .= "Directory check results:\n" . $msg . "\n\n";
+if ( !empty($msg) ) {
+    $debug->log($jconf['log_dir'], $myjobid . ".log", "Directory check results:\n" . $msg, $sendmail = false);    
+    $system_health_log .= $msg . "\n\n";
+}
 
 //// Storag free space check
 if ( $node_role == "converter" ) {
@@ -170,7 +178,7 @@ if ( $node_role == "frontend" ) {
 $msg = "";
 $diskinfo = array();
 $values = array(
-    'status'                => null,
+    'statusstorage'         => null,
     'storagesystemtotal'    => 0,
     'storagesystemfree'     => 0,
     'storagetotal'          => 0,
@@ -197,7 +205,7 @@ for ( $i = 0; $i < count($storages2check); $i++) {
 }
 
 // Update DB with disk data
-$values['status'] = $node_status;
+$values['statusstorage'] = $node_status;
 if ( is_numeric($node_cpu) ) $values['cpuusage'] = $node_cpu;
 if ( $usedb ) {
     $converterNodeObj = $app->bootstrap->getModel('infrastructure_nodes');
@@ -207,7 +215,43 @@ if ( $usedb ) {
     $msg .= "[INFO] DB is unreachable. Storage status information:\n" . print_r($values, true) . "\n";
 }
 
-if ( !empty($msg) ) $system_health_log .= $msg . "\n\n";
+if ( !empty($msg) ) {
+    $debug->log($jconf['log_dir'], $myjobid . ".log", "Storage check results:\n" . $msg, $sendmail = false);      
+    $system_health_log .= $msg . "\n\n";
+}
+
+// SSH ping all frontends from converter
+if ( ( $node_role == "converter" ) and $usedb ) {
+    $msg = "";
+    $values = array('statusnetwork' => $node_info['statusnetwork']);
+    $node_frontends = getNodesByType("frontend");
+    if ( $node_frontends === false ) {
+        $debug->log($jconf['log_dir'], $myjobid . ".log", "No front-end defined in DB!", $sendmail = false);
+    } else {
+        $ssh_all_ok = true;
+        while ( !$node_frontends->EOF ) {
+
+            $node_frontend = array();
+            $node_frontend = $node_frontends->fields;
+            $ssh_command = "ssh -i " . $jconf['ssh_key'] . " " . $jconf['ssh_user'] . "@" . $node_frontend['server'] . " date";
+            exec($ssh_command, $output, $result);
+            $output_string = implode("\n", $output);
+            $result = 1;
+            if ( $result != 0 ) {
+                updateInfrastructureNodeStatus($node_info['id'], "statusnetwork", "disabledfrontendunreachable:" . $node_frontend['server']);
+                $msg = "[ERROR] Unsuccessful ping to: " . $node_frontend['server'] . ".\n\tCommand: " . $ssh_command . "\n\tOutput: " . $output_string;
+                $ssh_all_ok = false;
+            }
+            $node_frontends->MoveNext();
+        }
+        // Status changed back to OK
+        if ( ( $ssh_all_ok ) and ( $node_info['statusnetwork'] != "ok" ) ) updateInfrastructureNodeStatus($node_info['id'], "statusnetwork", "ok");
+    }
+    if ( !empty($msg) ) {
+        $debug->log($jconf['log_dir'], $myjobid . ".log", "SSH frontend ping results:\n" . $msg, $sendmail = false);      
+        $system_health_log .= "SSH frontend ping results:\n" . $msg . "\n\n";
+    }
+}
 
 echo $system_health_log . "\n";
 
@@ -237,6 +281,8 @@ global $db, $myjobid, $debug, $jconf;
             inode.serverip,
             inode.shortname,
             inode.default,
+            inode.statusstorage,
+            inode.statusnetwork,
             inode.disabled
 		FROM
 			infrastructure_nodes AS inode
@@ -256,6 +302,40 @@ global $db, $myjobid, $debug, $jconf;
 	if ( count($in) < 1 ) return false;
     
     return $in[0];
+}
+
+function getNodesByType($type = "frontend") {
+global $db, $myjobid, $debug, $jconf;
+
+	$query = "
+		SELECT
+            inode.id,
+            inode.server,
+            inode.serverip,
+            inode.type,
+            inode.shortname,
+            inode.default,
+            inode.statusstorage,
+            inode.statusnetwork,
+            inode.disabled
+		FROM
+			infrastructure_nodes AS inode
+		WHERE
+			inode.type = '" . $type . "' AND
+            inode.disabled = 0
+        LIMIT 1";
+
+	try {
+		$in = $db->Execute($query);
+	} catch (exception $err) {
+		$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] SQL query failed." . trim($query), $sendmail = true);
+		return false;
+	}
+
+    // Check if any record returned
+	if ( $in->RecordCount() < 1 ) return false;
+        
+    return $in;
 }
 
 ?>
