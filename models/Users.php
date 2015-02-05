@@ -847,15 +847,59 @@ class Users extends \Springboard\Model {
       $organization['id']
     );
 
+    $departmentids = $this->db->getCol("
+      SELECT departmentid
+      FROM users_departments
+      WHERE userid = '" . $this->id . "'
+    ");
+    $groupids      = $this->db->getCol("
+      SELECT groupid
+      FROM groups_members
+      WHERE userid = '" . $this->id . "'
+    ");
+
+    $where = array();
+    if ( !empty( $departmentids ) )
+      $where[] = "
+        (
+          c.accesstype = 'departmentsorgroups' AND
+          a.departmentid IN('" . implode("', '", $departmentids ) . "')
+        )
+      ";
+
+    if ( !empty( $groupids ) )
+      $where[] = "
+        (
+          c.accesstype = 'departmentsorgroups' AND
+          a.groupid IN('" . implode("', '", $groupids ) . "')
+        )
+      ";
+
+    if ( !empty( $where ) )
+      $where = ' OR ' . implode(' OR ', $where );
+    else
+      $where = '';
+
     $channels = $this->db->getArray("
       SELECT DISTINCT c.*
-      FROM
-        channels AS c,
-        users_invitations AS ui
+      FROM channels AS c
+      LEFT JOIN users_invitations AS ui ON (
+        ui.registereduserid = '" . $this->id . "' AND
+        ui.channelid        = c.id
+      )
+      LEFT JOIN access AS a ON (
+        a.channelid = c.id AND
+        (
+          a.departmentid IS NOT NULL OR
+          a.groupid IS NOT NULL
+        )
+      )
       WHERE
         c.channeltypeid     = '$coursetypeid' AND
         c.organizationid    = '" . $organization['id'] . "' AND
-        ui.registereduserid = '" . $this->id . "'
+        (
+          ui.id IS NOT NULL $where
+        )
       ORDER BY c.title
     ");
 
