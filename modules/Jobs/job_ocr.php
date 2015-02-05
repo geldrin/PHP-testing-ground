@@ -208,13 +208,13 @@ function Main() {
 			
 			// FAJLOK OSSZEHASONLITASA //////////////////////////
 			
-			$msg = "[INFO] Comparing remote files.\n";
+			$msg = "[INFO] Comparing remote files.";
 			$debug->log($logdir, $logfile, $msg, false);
 			echo $msg;
 			
 			$ssh_cmp_result = ssh_file_cmp_isupdated($server, $remote, $local);
 			
-			$msg = "CMP RESULT:\n". $ssh_cmp_result['message'] ."\n";
+			$msg = "CMP RESULT:\n". $ssh_cmp_result['message'];
 			$debug->log($logdir, $logfile, $ssh_cmp_result['message'], false);
 			echo $msg;
 			
@@ -224,10 +224,11 @@ function Main() {
 			}
 
 			// FAJL LETOLTESE ///////////////////////////////////
+			
 			$action = 'DOWNLOADING';
 			
 			if ($ssh_cmp_result['value'] === false) {
-				$msg = " > Downloading file.\n";
+				$msg = " > Downloading file.";
 				$debug->log($logdir, $logfile, $msg, false);
 				echo $msg;
 				
@@ -295,7 +296,7 @@ function Main() {
 			
 			// Tavoli konyvtar elokeszitese
 			$cmd_check_dst = $ssh_template ."find ". $ocr_dst_dir ." -maxdepth 0 -not -empty";
-			$msg = "[INFO] Moving files.\n > Checking remote directory '". $ocr_dst_dir ."'\n COMMAND: '". $cmd_check_dst ."'\n";
+			$msg = "[INFO] Moving files.\n > Checking remote directory '". $ocr_dst_dir ."'\n COMMAND: '". $cmd_check_dst ."'";
 			$debug->log($logdir, $logfile, $msg, false);
 			echo $msg;
 			$check_dst = runExt4($cmd_check_dst);
@@ -367,7 +368,7 @@ function Main() {
 			}
 			
 			if ($copy_err['code'] === true) {
-				$msg = "OCR copying to frontend has been completed.\nMESSAGE:\n". $copy_err['message'] ."\n";
+				$msg = "OCR copying to frontend has been completed.\nMESSAGE: ". $copy_err['message'];
 				$debug->log($logdir, $logfile, $msg, false);
 				echo $msg;
 				updateOCRstatus($recording['id'], null, $jconf['dbstatus_copystorage_ok']);
@@ -423,10 +424,12 @@ function Main() {
 				$debug->log($logdir, $logfile, str_pad("[ CONVERSION END ]", 100, '-', STR_PAD_BOTH), false);
 			}
 		}
+		unset($msg, $OCRresult, $tsk, $recording); // cleanup junk
 		echo "Sleeping.\n";
-		// break; // DEBUG
+		
 		$app->watchdog();
 		sleep($sleep_duration);
+		
 	} // Main cycle
 
 	if (is_resource($db->_connectionID)) $db->close();
@@ -785,7 +788,7 @@ function convertOCR($rec) {
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-	function prepareImage4OCR($image, $destpath) {
+function prepareImage4OCR($image, $destpath) {
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //
 // Description goes here...
@@ -849,7 +852,7 @@ global $onice;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-	function getOCRtext($image, $workdir, $lang, $textfile) {
+function getOCRtext($image, $workdir, $lang, $textfile) {
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //
 // Description goes here...
@@ -917,7 +920,7 @@ global $jconf, $onice;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-	function createOCRsnapshots($recordingid, $images, $snapshotparams, $source) {
+function createOCRsnapshots($recordingid, $images, $snapshotparams, $source) {
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //
 // Az 'images[]' tombben atadott frameket atmeretezi a 'snapshotparams[]'-ban atadott ertekek
@@ -977,7 +980,7 @@ global $jconf, $onice;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-  function updateOCRstatus($recordingid, $id = null, $status) {
+function updateOCRstatus($recordingid, $id = null, $status) {
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //
 // A fuggveny segitsegevel a felvetelhez tartozo ocr_frames sorok statuszat lehet beallitani.
@@ -1031,7 +1034,7 @@ global $jconf, $onice;
 		$result['command'] = $updatequery;
 		$db->Execute($updatequery);
 	} catch (Exception $ex) {
-		$result['message'] = "insertOCRdata failed! Errormessage: ". $ex->getMessage();
+		$result['message'] = __FUNCTION__ ." failed! Errormessage: ". $ex->getMessage();
 		return $result;
 	}
 	$result['result'] = true;
@@ -1040,7 +1043,7 @@ global $jconf, $onice;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-  function insertOCRdata($recordingid, $framepos, $text = '', $timebase = 1.0, $status) {
+function insertOCRdata($recordingid, $framepos, $text = '', $timebase = 1.0, $status) {
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //
 // Beszurja az OCR-rel nyert szoveget az 'ocr_frames' tablaba, amit a 'text' valtozoban
@@ -1088,7 +1091,7 @@ global $jconf, $onice;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-	function getLangCode($recordingid, $ocrengine) {
+function getLangCode($recordingid, $ocrengine) {
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //
 // Kikeresi az adatbazisbol a 'recordings.languageid' alapjan a felvetel nyelvenek harombetus
