@@ -14,6 +14,8 @@ include_once(BASE_PATH . 'modules/Jobs/job_utils_base.php');
 set_time_limit(0);
 clearstatcache();
 
+date_default_timezone_set('Europe/Budapest');
+
 // Init
 $app = new Springboard\Application\Cli(BASE_PATH, PRODUCTION);
 
@@ -41,7 +43,7 @@ if ( $argc >= 2 ) {
             break;
         case "-help":
             echo "-currentmonth: print current month, instead of last month\n";
-            break;
+            exit;
     }
 }
 
@@ -161,6 +163,8 @@ $queue->instant = 1;
 $queue->put($email, null, "Videosquare accounting information", $accounting_log, false, 'text/plain; charset="UTF-8"');
 
 $debug->log($jconf['log_dir'], ($myjobid . ".log"), "Accounting information:\n\n" . $accounting_log, $sendmail = false);
+
+exit;
 
 function verifyDate($date) {
     return (DateTime::createFromFormat('Y-m-d H:i:s', $date) !== false);

@@ -34,78 +34,43 @@ if ( is_file( $app->config['datapath'] . 'jobs/' . $myjobid . '.stop' ) or is_fi
 $db = null;
 $db = db_maintain();
 
+// Is organization specified on command line?
+$organizationid = 0;
+if ( $argc >= 2 ) {
+    if ( !is_numeric($argv[1]) ) {
+        echo "[ERROR] organization ID is specified but not numeric\n";
+        exit -1;
+    }
+    $organizationid = $argv[1];
+}
+
 // Get organizations with valid contracts
-$org_contracts = getOrganizationsContracts();
+$org_contracts = getOrganizationsContracts($organizationid);
 if ( $org_contracts === false ) {
     $debug->log($jconf['log_dir'], $myjobid . ".log", "[WARN] No organization with valid contract found. Exiting.", $sendmail = false);
     exit;
 }
 
-// Previous day
-$interval_start = date('Y-m-d', strtotime(' -1 week'));
-$interval_end = date('Y-m-d', strtotime(' -1 week'));
+// # Intervals calculations
+// Interval for users completed
+$interval_start = date('Y-m-d', strtotime(' -1 day'));
+$interval_end = date('Y-m-d', strtotime(' -1 day'));
 $start_date = $interval_start . " 00:00:00";
 $end_date = $interval_end . " 23:59:59";
 $start_date_ts = strtotime($start_date);
 $end_date_ts = strtotime($end_date);
 $debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Checking for period: " . $start_date . " - " . $end_date, $sendmail = false);
+// Interval for users to be disabled
+$user_disable_interval = 24 * 3600 * 7;     // week
 
 // CSV legend
 $legend = "Username;Recording ID;Length;Session start;Session end;Session last position;Session duration;Watched %";
 
-for ($i = 0; $i < count($org_contracts); $i++ ) {
+while ( !$org_contracts->EOF ) {
 
     $org = array();
     $org = $org_contracts->fields;
-
-/*    
-    $query = "
-        SELECT
-            u.id,
-            u.email,
-            rvs.recordingid,
-            r.masterlength,
-            rvs.positionfrom,
-            rvs.positionuntil,
-            rvs.timestampfrom,
-            rvs.timestampuntil,
-            TIMESTAMPDIFF(SECOND, rvs.timestampfrom, rvs.timestampuntil) AS sessionduration,
-            o.elearningcoursecriteria,
-            ud.departmentid,
-            u.timestampdisabledafter
-        FROM
-            users AS u,
-            recording_view_sessions AS rvs,
-            recordings AS r,
-            organizations AS o,
-            users_departments AS ud,
-            access AS a
-        WHERE
-            o.id = " . $org['id'] . " AND
-            u.isusergenerated = 1 AND
-            u.disabled = 0 AND
-            u.organizationid = o.id AND
-            ( u.timestampdisabledafter IS NULL OR u.timestampdisabledafter > '" . $end_date . "' ) AND
-            u.id = rvs.userid AND
-            rvs.timestampuntil >= '" . $start_date . "' AND
-            rvs.timestampuntil <= '" . $end_date . "' AND
-            rvs.recordingid = r.id AND
-            rvs.positionuntil >= (( o.elearningcoursecriteria / 100 ) * r.masterlength) AND
-            u.id = ud.userid AND
-            ud.departmentid = a.departmentid AND
-            a.recordingid = r.id AND
-            r.isseekbardisabled = 1 AND
-            r.approvalstatus = 'approved' AND
-            r.accesstype = 'departmentsorgroups' AND
-            r.status = '" . $jconf['dbstatus_copystorage_ok'] . "'
-        ORDER BY
-            u.id,
-            r.id,
-            ud.departmentid,
-            rvs.timestampuntil
-    ";
-*/
-
+    
     $query = "
         SELECT
             u.id,
@@ -151,8 +116,6 @@ for ($i = 0; $i < count($org_contracts); $i++ ) {
             rvs.timestampuntil
     ";
     
-    //echo $query . "\n";
-
     unset($users_sessions);
     
     try {
@@ -267,7 +230,7 @@ for ($i = 0; $i < count($org_contracts); $i++ ) {
 
     }
     
-    if ( !empty($mail_body) ) $mail_body = "*** Users completed accredited courses between " . $start_date . " - " . $end_date . "***\n\n" . $mail_body . "\n";
+    if ( !empty($mail_body) ) $mail_body = "*** Users completed accredited courses between " . $start_date . " - " . $end_date . " ***\n\n" . $mail_body . "\n";
     
     // USERS NOT YET FINISHED COURSE AND 1 WEEK TO GO
     $mail_body2 = "";
@@ -276,9 +239,8 @@ for ($i = 0; $i < count($org_contracts); $i++ ) {
         // Filter NOT iscoursecompleted users (watched all recordings in department)
         if ( $user_sum['iscoursecompleted'] == 0 ) {
 
-            $weekfromnow = time() + 24 * 3600 * 7;
             $disabletime = strtotime($user_sum['timestampdisabledafter']);
-            if ( $disabletime <= $weekfromnow ) {
+            if ( $disabletime <= ( time() + $user_disable_interval ) ) {
         
                 $mail_body2 .= $user_sum['email'] . " / " . $deps[$user_sum['departmentid']]['name'] . ":\n";
 
@@ -305,45 +267,47 @@ for ($i = 0; $i < count($org_contracts); $i++ ) {
 
     }
 
-    if ( !empty($mail_body2) ) $mail_body2 = "*** Users NOT completed accredited courses and will be disabled in a week.***\n\n" . $mail_body2 . "\n";
-    
-    if ( !empty($mail_body) or  !empty($mail_body2) ) {
-    
-        // Subject
-        $subject = "Accredited courses daily report for period: " . $start_date . " - " . $end_date;
+    if ( !empty($mail_body2) ) $mail_body2 = "*** Users NOT completed accredited courses and will be disabled in a " . round($user_disable_interval /3600 / 24 ) . " days from now. ***\n\n" . $mail_body2 . "\n";
     
         // Header
-        $header  = "Subscriber: " . $org['name'] . " (id: " . $org['id'] . ")\n";
-        $header .= "Domain: " . $org['domain'] . "\n";
+    $header  = "Subscriber: " . $org['name'] . " (id: " . $org['id'] . ")\n";
+    $header .= "Domain: " . $org['domain'] . "\n";
+    
+    if ( !empty($mail_body) or !empty($mail_body2) ) {
+
         $header .= "E-mail: " . $org['reportemailaddresses'] . "\n";
         $header .= "Period: " . $start_date . " - " . $end_date . "\n";
         $header .= "Course criteria: " . $org['elearningcoursecriteria'] . "%\n";
-        
+    
+        // Subject
+        $subject = "Accredited courses daily report for period: " . $start_date . " - " . $end_date;
+            
         // Legend
         $mail = $header . "\n" . $legend . "\n\n";
 
         if ( !empty($mail_body) )  $mail .= $mail_body;
         if ( !empty($mail_body2) ) $mail .= $mail_body2;
-        
-        // HTML mail
-        $html_mail = nl2br($mail, true);
-        
-        //$email = $org['supportemail'];
+
+        // Send HTML mail
         $mail_list = explode(";", $org['reportemailaddresses']);
-        for ($i = 0; $i < count($mail_list); $i++) {
-            if (!filter_var($mail_list[$i], FILTER_VALIDATE_EMAIL)) {
+        $html_mail = nl2br($mail, true);
+        for ($q = 0; $q < count($mail_list); $q++) {
+            if (!filter_var($mail_list[$q], FILTER_VALIDATE_EMAIL)) {
                 $debug->log($jconf['log_dir'], ($myjobid . ".log"), "[ERROR] Mail address is not valid in organization_contracts DB table: " . $org['reportemailaddresses'], $sendmail = false);
                 continue;
             }
-
+            
             $queue = $app->bootstrap->getMailqueue();
             $queue->instant = 1;
-            $queue->sendHTMLEmail($mail_list[$i], $subject, $html_mail);
+            $queue->sendHTMLEmail($mail_list[$q], $subject, $html_mail);
         }
-
+        
         // Log outgoing message
         $debug->log($jconf['log_dir'], ($myjobid . ".log"), "[INFO] Information sent to subscriber: " . $org['reportemailaddresses'] . "\n\n" . $mail, $sendmail = false);
 
+    } else {
+    
+        $debug->log($jconf['log_dir'], ($myjobid . ".log"), "[INFO] No information found for subscriber:\n" . $header, $sendmail = false);
     }
     
     $org_contracts->MoveNext();
@@ -351,8 +315,13 @@ for ($i = 0; $i < count($org_contracts); $i++ ) {
 
 exit;
 
-function getOrganizationsContracts() {
+function getOrganizationsContracts($organizationid) {
 global $db, $debug, $app, $myjobid;
+
+    $sql_org_filter = "";
+    if ( $organizationid > 0 ) {
+        $sql_org_filter = " AND o.id = " . $organizationid;
+    }
 
     $query = "
         SELECT
@@ -376,11 +345,12 @@ global $db, $debug, $app, $myjobid;
             oc.disabled = 0 AND
             oc.isreportenabled = 1 AND
             oc.reportemailaddresses IS NOT NULL AND
-            oc.startdate <= NOW() AND ( oc.enddate >= NOW() OR oc.enddate IS NULL)
+            oc.startdate <= NOW() AND ( oc.enddate >= NOW() OR oc.enddate IS NULL)"
+            . $sql_org_filter . "
         ORDER BY
             o.id
     ";
-            
+
     unset($org_contracts);
     
     try {
