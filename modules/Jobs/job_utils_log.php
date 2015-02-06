@@ -22,8 +22,9 @@ function log_recording_conversion($rec_id, $job, $action, $status, $command, $da
 global $app, $jconf, $debug, $db, $uploader_user;
 
 	$db = db_maintain();
-
-	$data = substr(trim($data), 0, 255);
+	
+	$data = trim($data);
+	$data_trimmed = substr($data, 0, 255);
 
 	// Check DB connection: do not log if does not exist
 	$values = Array(
@@ -34,7 +35,7 @@ global $app, $jconf, $debug, $db, $uploader_user;
 		'action'					=> $action,
 		'status'					=> $status,
 		'command'					=> $command,
-		'data'						=> mb_convert_encoding($data, 'utf-8'),
+		'data'						=> mb_convert_encoding($data_trimmed, 'utf-8'),
 		'duration'					=> $duration
 	);
 
