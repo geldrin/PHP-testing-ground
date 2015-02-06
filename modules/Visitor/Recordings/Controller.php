@@ -179,6 +179,12 @@ class Controller extends \Visitor\Controller {
         'type' => 'id',
       ),
     ),
+    'checktimeout' => array(
+      'loginrequired' => true,
+      'recordingid'   => array(
+        'type' => 'id',
+      ),
+    ),
   );
   
   public function init() {
@@ -1324,7 +1330,24 @@ class Controller extends \Visitor\Controller {
     );
     
   }
-  
+
+  public function checktimeoutAction( $recordingid ) {
+    $user            = $this->bootstrap->getSession('user');
+    $recordingsModel = $this->modelIDCheck(
+      'recordings',
+      $recordingid,
+      false
+    );
+
+    if ( !$user or !$user['id'] )
+      throw new \Visitor\Api\ApiException('User not logged in', false, false );
+
+    if ( !$recordingsModel )
+      throw new \Visitor\Api\ApiException('Recording not found', false, false );
+
+    return $recordingsModel->checkViewProgressTimeout( $this->organization, $user['id'] );
+  }
+
   public function updatepositionAction( $recordingid, $lastposition ) {
     
     $d = \Springboard\Debug::getInstance();
