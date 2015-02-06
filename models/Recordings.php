@@ -3820,4 +3820,23 @@ class Recordings extends \Springboard\Model {
     return md5( $ts . $sessionid . $this->id . $extra );
   }
 
+  public function checkViewProgressTimeout( $organization, $userid ) {
+    $this->ensureID();
+    $timeout = $organization['viewsessiontimeoutminutes'];
+    $expired = $this->db->getOne("
+      SELECT
+        IF(
+          rvp.timestamp < DATE_SUB(NOW(), INTERVAL $timeout MINUTE),
+          1,
+          0
+        ) AS expired
+      FROM recording_view_progress AS rvp
+      WHERE
+        rvp.userid      = '$userid' AND
+        rvp.recordingid = '" . $this->id . "'
+      LIMIT 1
+    ");
+
+    return (bool) $expired;
+  }
 }
