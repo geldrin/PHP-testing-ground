@@ -2257,6 +2257,7 @@ class Recordings extends \Springboard\Model {
       'user_checkWatching'    => (bool)@$info['member']['ispresencecheckforced'],
       'user_checkWatchingTimeInterval' => $info['organization']['presencechecktimeinterval'],
       'user_checkWatchingConfirmationTimeout' => $info['organization']['presencecheckconfirmationtime'],
+      'recording_timeout' => $info['organization']['viewsessiontimeoutminutes'] * 60, // masodpercbe
     );
 
     if ( $this->row['mastermediatype'] == 'audio' )
@@ -2266,6 +2267,7 @@ class Recordings extends \Springboard\Model {
       $data['user_id']          = $info['member']['id'];
       $data['user_needPing']    = true;
       $data['user_pingSeconds'] = $this->bootstrap->config['sessionpingseconds'];
+      $data['recording_checkTimeout'] = true; // nezzuk hogy timeoutolt e a felvetel
     }
 
     $hds  = $this->isHDSEnabled();
