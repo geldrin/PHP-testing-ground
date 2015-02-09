@@ -1345,7 +1345,7 @@ class Controller extends \Visitor\Controller {
     if ( !$recordingsModel )
       throw new \Visitor\Api\ApiException('Recording not found', false, false );
 
-    return $recordingsModel->checkViewProgressTimeout( $this->organization, $user['id'] );
+    return !$recordingsModel->checkViewProgressTimeout( $this->organization, $user['id'] );
   }
 
   public function updatepositionAction( $recordingid, $lastposition ) {
