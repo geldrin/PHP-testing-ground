@@ -3850,7 +3850,9 @@ class Recordings extends \Springboard\Model {
       // reset
       $this->db->execute("
         UPDATE recording_view_progress
-        SET position = 0
+        SET
+          position  = 0,
+          timestamp = NOW()
         WHERE id = '" . $row['id'] . "'
         LIMIT 1
       ");
