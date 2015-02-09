@@ -3836,6 +3836,7 @@ class Recordings extends \Springboard\Model {
       WHERE
         rvp.userid      = '$userid' AND
         rvp.recordingid = '" . $this->id . "'
+      ORDER BY id DESC
       LIMIT 1
     ");
 

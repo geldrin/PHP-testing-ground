@@ -180,7 +180,7 @@ class Controller extends \Visitor\Controller {
       ),
     ),
     'checktimeout' => array(
-      'loginrequired' => true,
+      'loginrequired' => false,
       'recordingid'   => array(
         'type' => 'id',
       ),
