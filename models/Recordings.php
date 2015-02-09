@@ -3825,8 +3825,10 @@ class Recordings extends \Springboard\Model {
   public function checkViewProgressTimeout( $organization, $userid ) {
     $this->ensureID();
     $timeout = $organization['viewsessiontimeoutminutes'];
-    $expired = $this->db->getOne("
+    $row = $this->db->getRow("
       SELECT
+        rvp.id,
+        rvp.position,
         IF(
           rvp.timestamp < DATE_SUB(NOW(), INTERVAL $timeout MINUTE),
           1,
@@ -3840,6 +3842,23 @@ class Recordings extends \Springboard\Model {
       LIMIT 1
     ");
 
-    return (bool) $expired;
+    if ( !$row )
+      return false;
+
+    if ( $row['expired'] ) {
+
+      // reset
+      $this->db->execute("
+        UPDATE recording_view_progress
+        SET
+          position  = 0,
+          timestamp = NOW()
+        WHERE id = '" . $row['id'] . "'
+        LIMIT 1
+      ");
+
+    }
+
+    return (bool) $row['expired'];
   }
 }
