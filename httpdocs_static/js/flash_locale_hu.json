@@ -67,10 +67,20 @@
   },
   "continuePlaying": {
 	"title": "Megtekintés folytatása",
-	"message": "Folytatja a felvétel megtekintését? Eddig a teljes felvétel [TIME_PERCENT]-át nézte meg.\nA teljes megtekintendő hossz [TOTAL_TIME].",
+	"message": "Folytatja a felvétel megtekintését? Eddig a teljes felvétel [TIME_PERCENT]-át nézte meg.\nA teljes megtekintendő hossz [TOTAL_TIME].\nA megtekintésre fennmaradó idő [SESSION_TIME] perc.",
 	"startFromBegin": "Kezdés elölről",
-	"continueFromLastPosition": "Folytatás [LAST_TIME]-tól"
+	"continueFromLastPosition": "Folytatás [LAST_TIME]-tól",
+    "recordingViewed":{
+        "title": "Feltétel teljesítve",
+        "message": "Ön teljesítette a kreditpontos felvétel megtekintéséhez előírt feltételeket.",
+        "confirm": "OK"
     },
+    "timeout":{
+        "title": "Időkeret lejárt",
+        "message": "A kreditpontos felvétel megtekintésére engedélyezett időkeret lejárt. A megtekintést elölről kell kezdenie!",
+        "confirm": "Újrakezdés"
+    }    
+  },
   "recommendatory": {
     "lastPlayed": "Utoljára játszott:",
     "share": "Megosztás",
