@@ -8,6 +8,7 @@ class Controller extends \Springboard\Controller\Visitor {
   public function init() {
 
     if ( $this->bootstrap->inMaintenance('site') ) {
+      header('HTTP/1.1 500 Internal Server Error');
       $this->smartyOutput('Visitor/sitemaintenance.tpl');
       return;
     }
