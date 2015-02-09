@@ -1151,7 +1151,7 @@ global $app, $jconf, $debug;
         
         // Do not send alarm if DB is down
         if ( !file_exists($app->config['dbunavailableflagpath']) ) {
-            $debug->log($jconf['log_dir'], $myjobid . ".log", "[WARN] Job " . $myjobid . " runover was detected. Job info (running time, process):\n" . $msg, $sendmail = true);
+            $debug->log($jconf['log_dir'], $myjobid . ".log", "[WARN] Job " . $myjobid . " runover was detected. Job info (running time, process):\n" . $msg, $sendmail = false);
         }
         
         $goahead = false;
@@ -1167,10 +1167,13 @@ global $app, $jconf, $debug;
 function db_maintain($nonblockingmode = false) {
  global $app, $db, $jconf, $debug;
 
-    // Does resource still exist?
- 	if ( !empty($db) ) {
-		if ( is_resource($db->_connectionID) ) return $db;
-	}
+    // Does resource still exist? - NEM OK, ha elveszik a kapcsolat, attól ez még resource!
+/* 	if ( !empty($db) ) {
+		if ( is_resource($db->_connectionID) ) {
+            echo "dbcheck: ok\n";
+            return $db;    
+        }
+	} */
  
     // Check DBUNAVAILABLE file, sleep until it exists
     if ( !$nonblockingmode ) dbWait4Recovery();
@@ -1195,7 +1198,7 @@ function db_maintain($nonblockingmode = false) {
     
         // Exit if stop file is enabled in meanwhile
         // ???? nem jo ez itt, nem szabad kilepni?????
-		if ( is_file( $app->config['datapath'] . 'jobs/' . $job . '.stop' ) or is_file( $app->config['datapath'] . 'jobs/all.stop' ) ) exit;
+		//if ( is_file( $app->config['datapath'] . 'jobs/' . $job . '.stop' ) or is_file( $app->config['datapath'] . 'jobs/all.stop' ) ) exit;
 
 		// Establish database connection
 		try {
@@ -1206,18 +1209,18 @@ function db_maintain($nonblockingmode = false) {
                     $recovery_time = time() - $outage_starttime;
 					$title = "[OK] DB connection restored in " . seconds2DaysHoursMinsSecs($recovery_time) . ". Retried: " . $retry . ".\n\nJob continues to run.";
 					$body  = $mail_head . "\n" . $title . "\n\nWARNING: DB outage recovered?\n";
-					if ( $nonblockingmode ) sendHTMLEmail_errorWrapper($title, nl2br($body));
+					//if ( $nonblockingmode ) sendHTMLEmail_errorWrapper($title, nl2br($body));
                     $debug->log($jconf['log_dir'], $job . ".log", $title, $sendmail = false);
 				}
 				return $db;
 			}
 		} catch (exception $err) {
-			// Send mail warning messages at first and every 8th retry (approx. hourly)
+			// Log warning messages at first and every 8th retry (approx. hourly)
 			if ( ( $retry == 1 ) or ( ( $retry % 8 ) == 0 ) ) {
                 $outage_time = time() - $outage_starttime;
 				$title = "[ERROR] Cannot connect to DB (retry: " . $retry . "). DB recovery has been tried for " . seconds2DaysHoursMinsSecs($outage_time) . ". Job operation is suspended.";
 				$body  = $mail_head . "\n" . $title . "\n\nPlease check DB connections!\n\nError message:\n" . $err . "\n";
-				if ( $nonblockingmode ) sendHTMLEmail_errorWrapper($title, nl2br($body));
+				//if ( $nonblockingmode ) sendHTMLEmail_errorWrapper($title, nl2br($body));
                 $debug->log($jconf['log_dir'], $job . ".log", $title . " Error message:\n" . $err, $sendmail = false);
 			}
 		}
@@ -1240,9 +1243,9 @@ function db_maintain($nonblockingmode = false) {
 	}
 
     // Permanent error. We do not allow this to happen.
-	$title = "[FATAL ERROR] Cannot connect to DB permanently. Check DB!!! Job has been terminated.";
+/*	$title = "[FATAL ERROR] Cannot connect to DB permanently. Check DB!!! Job has been terminated.";
 	$body  = $mail_head . "<br/>" . $title . "<br/><br/>Job will be restarted, config will be reloaded. Please check DB for errors!<br/>";
-	sendHTMLEmail_errorWrapper($title, $body);
+	sendHTMLEmail_errorWrapper($title, $body); */
 
 	exit -1;
 }
@@ -1258,6 +1261,9 @@ global $app;
         
         // Sleep for a while
         sleep($sleep_time);
+        
+        // Watchdog timer
+        $app->watchdog();
         
         // Increase retry timeout (until a certain point) - 1: 30 sec, 2: 60 sec
         if ( $retry <= 2 ) $sleep_time = $sleep_time * 2;

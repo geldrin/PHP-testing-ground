@@ -294,6 +294,8 @@ global $jconf, $debug, $db, $app;
 function copyMediaToConverter(&$recording) {
 global $app, $jconf, $debug;
 
+    $db = db_maintain();
+
 	// STATUS: copyingfromfrontend
 	updateRecordingVersionStatus($recording['recordingversionid'], $jconf['dbstatus_copyfromfe']);
 
@@ -573,6 +575,8 @@ global $app, $jconf, $debug;
 function convertMedia(&$recording, $profile) {
 global $app, $jconf, $global_log;
 
+    $db = db_maintain();
+
 	// STATUS: converting
 	updateRecordingVersionStatus($recording['recordingversionid'], $jconf['dbstatus_conv']);
 	// Output filename
@@ -652,6 +656,8 @@ global $app, $jconf, $global_log;
 function copyMediaToFrontEnd($recording, $profile) {
  global $app, $jconf, $debug;
 
+    $db = db_maintain();
+ 
 	// STATUS: copyingtostorage
 	updateRecordingVersionStatus($recording['recordingversionid'], $jconf['dbstatus_copystorage']);
 
@@ -751,6 +757,8 @@ function copyMediaToFrontEnd($recording, $profile) {
 
 function checkRecordingVersionToStop($recording) {
 global $jconf, $debug, $myjobid;
+
+    $db = db_maintain();
 
 	// Is it recording or content? Get appropriate status.
 	$type = "recording";
