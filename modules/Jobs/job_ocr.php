@@ -197,7 +197,7 @@ function Main() {
 				$msg = "[INFO] Preparing working directory.\n";
 				
 				$createdir = mkdir($convpath, $mode = 0775, $recursive = true);
-				$debug->log($logpath, $logfile, $msg, false);
+				$debug->log($logdir, $logfile, $msg, false);
 				
 				if (!$createdir) {
 					$tmp = error_get_last();
