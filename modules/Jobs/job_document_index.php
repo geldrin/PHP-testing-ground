@@ -24,7 +24,7 @@ include_once('job_utils_status.php');
 set_time_limit(0);
 
 // Init
-$app = new Springboard\Application\Cli(BASE_PATH, FALSE);
+$app = new Springboard\Application\Cli(BASE_PATH, false);
 
 // Load jobs configuration file
 $app->loadConfig('modules/Jobs/config_jobs.php');
@@ -61,14 +61,10 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_document_index.stop' ) and
 			break;
 		}
 
-// Testing!!!
-//update_db_attachment_indexingstatus(18, null);
-// !!!!!!!!!!
-
 		// Temporary directory cleanup and log result
 		$err = tempdir_cleanup($jconf['doc_dir']);
 		if ( !$err['code'] ) {
-			log_document_conversion(0, 0, $jconf['jobid_document_index'], "-", $err['message'], $err['command'], $err['result'], 0, TRUE);
+			log_document_conversion(0, 0, $jconf['jobid_document_index'], "-", $err['message'], $err['command'], $err['result'], 0, true);
 			$converter_sleep_length = 15 * 60;
 			break;
 		}
@@ -107,7 +103,7 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_document_index.stop' ) and
 		if ( !copy_attacheddoc_to_converter($attached_doc) ) break;
 
 		// Set status to indexing
-		update_db_attachment_indexingstatus($attached_doc['id'], $jconf['dbstatus_indexing']);
+        updateAttachedDocumentStatus($attached_doc['id'], $jconf['dbstatus_indexing'], 'indexingstatus');
 
 		// Check file size
 		$attached_doc['filesize'] = filesize($attached_doc['source_file']);
@@ -115,7 +111,7 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_document_index.stop' ) and
 
 		// Identification: text vs. data
 		$file_type = file_identify($attached_doc['source_file']);
-		if ( $file_type !== FALSE ) {
+		if ( $file_type !== false ) {
 
 			$attached_doc['file_unix_type'] = $file_type;
 			// DB: update document type
@@ -127,25 +123,25 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_document_index.stop' ) and
 			$attDoc->updateRow($update);
 
 			// Text file, XML document, CSV, HTML, DOCX, PPTX, ODT, ODP or other text
-			if ( stripos($file_type, "text") !== FALSE ) {
+			if ( stripos($file_type, "text") !== false ) {
 				$attached_doc['file_type'] = "text";
 			}
 
 			// PDF file
-			if ( stripos($file_type, "PDF") !== FALSE ) {
+			if ( stripos($file_type, "PDF") !== false ) {
 				$attached_doc['file_type'] = "pdf";
 			}
 
 			// Data file
-			if ( stripos($file_type, "data") !== FALSE ) {
+			if ( stripos($file_type, "data") !== false ) {
 				$attached_doc['file_type'] = "data";
 			}
 
 			// Executable
-			if ( stripos($file_type, "executable") !== FALSE ) {
+			if ( stripos($file_type, "executable") !== false ) {
 				$attached_doc['file_type'] = "executable";
 				// Update media status to invalid input
-				update_db_attachment_indexingstatus($attached_doc['id'], $jconf['dbstatus_invalidinput']);
+                updateAttachedDocumentStatus($attached_doc['id'], $jconf['dbstatus_invalidinput'], 'indexingstatus');
 				// Send a warning to admin
 				$debug->log($jconf['log_dir'], $jconf['jobid_document_index'] . ".log", "[WARNING] Document to be indexed is an executable. Not indexing. Unix type: " . $file_type, $sendmail = true);
 				break;
@@ -164,13 +160,13 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_document_index.stop' ) and
 		if ( !empty($attached_doc['title']) ) $contents .= trim($attached_doc['title']) . "\n";
 
 		// Text document: insert text to database, no conversion
-		if ( ( array_search($attached_doc['masterextension'], $types_text) !== FALSE ) AND ( $attached_doc['file_type'] == "text" ) ) {
+		if ( ( array_search($attached_doc['masterextension'], $types_text) !== false ) AND ( $attached_doc['file_type'] == "text" ) ) {
 			$content_file = $attached_doc['source_file'];
 		}
 
 		// Presentation: convert to PDF before extracting text
-		$is_pres_pdf_source = FALSE;
-		if ( array_search($attached_doc['masterextension'], $types_pres) !== FALSE ) {
+		$is_pres_pdf_source = false;
+		if ( array_search($attached_doc['masterextension'], $types_pres) !== false ) {
 
 			$content_file = $attached_doc['temp_directory'] . $attached_doc['id'] . ".txt";
 			$content_pdf = $attached_doc['temp_directory'] . $attached_doc['id'] . ".pdf";
@@ -180,17 +176,17 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_document_index.stop' ) and
 			exec($command, $output, $result);
 			$output_string = implode("\n", $output);
 			// unoconv: sometimes it returns "Floating point exception", but result is produced. Maybe output is truncated?
-			if ( ( $result != 0 ) and ( stripos($output_string, "Floating point exception") === FALSE ) ) {
-				update_db_attachment_indexingstatus($attached_doc['id'], $jconf['dbstatus_indexing_err']);
-				log_document_conversion($attached_doc['id'], $attached_doc['rec_id'], $jconf['jobid_document_index'], $jconf['dbstatus_indexing'], "[ERROR] unoconv conversion error.\n\n" . $output_string, $command, $result, 0, TRUE);
+			if ( ( $result != 0 ) and ( stripos($output_string, "Floating point exception") === false ) ) {
+                updateAttachedDocumentStatus($attached_doc['id'], $jconf['dbstatus_indexing_err'], 'indexingstatus');
+				log_document_conversion($attached_doc['id'], $attached_doc['rec_id'], $jconf['jobid_document_index'], $jconf['dbstatus_indexing'], "[ERROR] unoconv conversion error.\n\n" . $output_string, $command, $result, 0, true);
 				break;
 			}
 
-			$is_pres_pdf_source = TRUE;
+			$is_pres_pdf_source = true;
 		}
 
 		// PDF: use pdftotext to extract plain text then check if valid text file
-		if ( ( ( array_search($attached_doc['masterextension'], $types_pdf) !== FALSE ) AND ( $attached_doc['file_type'] == "pdf" ) ) OR ( $is_pres_pdf_source == TRUE ) ) {
+		if ( ( ( array_search($attached_doc['masterextension'], $types_pdf) !== false ) AND ( $attached_doc['file_type'] == "pdf" ) ) OR ( $is_pres_pdf_source == true ) ) {
 
 			// Presentation: if converted to PDF first, change input file
 			$source_file = $attached_doc['source_file'];
@@ -203,23 +199,23 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_document_index.stop' ) and
 			exec($command, $output, $result);
 			$output_string = implode("\n", $output);
 			if ( $result != 0 ) {
-				update_db_attachment_indexingstatus($attached_doc['id'], $jconf['dbstatus_indexing_err']);
-				log_document_conversion($attached_doc['id'], $attached_doc['rec_id'], $jconf['jobid_document_index'], $jconf['dbstatus_indexing'], "[ERROR] pdftotext failed.\n\n" . $output_string, $command, $result, 0, TRUE);
+                updateAttachedDocumentStatus($attached_doc['id'], $jconf['dbstatus_indexing_err'], 'indexingstatus');
+				log_document_conversion($attached_doc['id'], $attached_doc['rec_id'], $jconf['jobid_document_index'], $jconf['dbstatus_indexing'], "[ERROR] pdftotext failed.\n\n" . $output_string, $command, $result, 0, true);
 				break;
 			}
 
 			// Check output if text: pdftotext can provide crap output (based on PDF character encoding) - GIVES WRONG OUTPUT SOMETIMES
 /*			$file_type = file_identify($content_file);
-			if ( ( $file_type === FALSE ) OR ( stripos($file_type, "text") === FALSE ) ) {
-				update_db_attachment_indexingstatus($attached_doc['id'], $jconf['dbstatus_indexing_err']);
-				log_document_conversion($attached_doc['id'], $attached_doc['rec_id'], $jconf['jobid_document_index'], $jconf['dbstatus_indexing'], "[WARNING] pdftotext output is not text.\n\n" . $output_string, $command, $result, 0, TRUE);
+			if ( ( $file_type === false ) OR ( stripos($file_type, "text") === false ) ) {
+                updateAttachedDocumentStatus($attached_doc['id'], $jconf['dbstatus_indexing_err'], 'indexingstatus');
+				log_document_conversion($attached_doc['id'], $attached_doc['rec_id'], $jconf['jobid_document_index'], $jconf['dbstatus_indexing'], "[WARNING] pdftotext output is not text.\n\n" . $output_string, $command, $result, 0, true);
 				break;
 			}
 */
 		}
 
 		// Other documents: use unoconv to extract text
-		if ( ( array_search($attached_doc['masterextension'], $types_doc) !== FALSE ) AND ( $attached_doc['file_type'] == "text" OR $attached_doc['file_type'] == "data" ) ) {
+		if ( ( array_search($attached_doc['masterextension'], $types_doc) !== false ) AND ( $attached_doc['file_type'] == "text" OR $attached_doc['file_type'] == "data" ) ) {
 
 			$content_file = $attached_doc['temp_directory'] . $attached_doc['id'] . ".txt";
 
@@ -229,8 +225,8 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_document_index.stop' ) and
 			$output_string = implode("\n", $output);
 			// unoconv: sometimes it returns "Floating point exception", but result is produced. Maybe output is truncated.
 			if ( ( $result != 0 ) and ( $output_string != "Floating point exception" ) ) {
-				update_db_attachment_indexingstatus($attached_doc['id'], $jconf['dbstatus_indexing_err']);
-				log_document_conversion($attached_doc['id'], $attached_doc['rec_id'], $jconf['jobid_document_index'], $jconf['dbstatus_indexing'], "[ERROR] unoconv conversion error.\n\n" . $output_string, $command, $result, 0, TRUE);
+                updateAttachedDocumentStatus($attached_doc['id'], $jconf['dbstatus_indexing_err'], 'indexingstatus');
+				log_document_conversion($attached_doc['id'], $attached_doc['rec_id'], $jconf['jobid_document_index'], $jconf['dbstatus_indexing'], "[ERROR] unoconv conversion error.\n\n" . $output_string, $command, $result, 0, true);
 				break;
 			}
 
@@ -253,8 +249,8 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_document_index.stop' ) and
 			$attached_doc['documentcache_size'] = strlen($contents);
 			fclose($fh);
 		} else {
-			update_db_attachment_indexingstatus($attached_doc['id'], $jconf['dbstatus_indexing_err']);
-			log_document_conversion($attached_doc['id'], $attached_doc['rec_id'], $jconf['jobid_document_index'], $jconf['dbstatus_indexing'], "[ERROR] Indexing output file does not exist or zero size. File: " . $content_file . "\n", "-", "-", 0, TRUE);
+            updateAttachedDocumentStatus($attached_doc['id'], $jconf['dbstatus_indexing_err'], 'indexingstatus');
+			log_document_conversion($attached_doc['id'], $attached_doc['rec_id'], $jconf['jobid_document_index'], $jconf['dbstatus_indexing'], "[ERROR] Indexing output file does not exist or zero size. File: " . $content_file . "\n", "-", "-", 0, true);
 			break;
 		}
 
@@ -263,14 +259,14 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_document_index.stop' ) and
 
 		// Update document cache and status
 		if ( empty($contents) ) {
-			update_db_attachment_indexingstatus($attached_doc['id'], $jconf['dbstatus_indexing_empty']);
+            updateAttachedDocumentStatus($attached_doc['id'], $jconf['dbstatus_indexing_empty'], 'indexingstatus');
 		} else {
-			update_db_attachment_documentcache($attached_doc['id'], $contents);
+            updateAttachedDocumentCache($attached_doc['id'], $contents);
 			// Update recording search cache
 			$recObj = $app->bootstrap->getModel('recordings');
 			$recObj->select($attached_doc['rec_id']);
 			$recObj->updateFulltextCache();
-			update_db_attachment_indexingstatus($attached_doc['id'], $jconf['dbstatus_indexing_ok']);
+            updateAttachedDocumentStatus($attached_doc['id'], $jconf['dbstatus_indexing_ok'], 'indexingstatus');
 		}
 	
 		$indexing_duration = time() - $total_duration;
@@ -278,7 +274,7 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_document_index.stop' ) and
 
 		$global_log .= "Indexed text: " . sprintf("%.2f", $attached_doc['documentcache_size'] / 1024 ) . " Kbyte\n";
 
-		log_document_conversion($attached_doc['id'], $attached_doc['rec_id'], $jconf['jobid_document_index'], "-", "[OK] Successful document indexation in " . $hms . " time.\n\n" . $global_log, "-", "-", $indexing_duration, TRUE);
+		log_document_conversion($attached_doc['id'], $attached_doc['rec_id'], $jconf['jobid_document_index'], "-", "[OK] Successful document indexation in " . $hms . " time.\n\n" . $global_log, "-", "-", $indexing_duration, true);
 
 		break;
     }
@@ -301,8 +297,8 @@ function file_identify($filename) {
 	exec($command, $output, $result);
 	$output_string = implode("\n", $output);
 	if ( $result != 0 ) {
-		$debug->log($jconf['log_dir'], $jconf['jobid_document_index'] . ".log", "[WARNING] file command output error. Command:\n" . $command . "\nError message:\n" . $output_string, $sendmail = TRUE);
-		return FALSE;
+		$debug->log($jconf['log_dir'], $jconf['jobid_document_index'] . ".log", "[WARNING] file command output error. Command:\n" . $command . "\nError message:\n" . $output_string, $sendmail = true);
+		return false;
 	}
 
 	$type = $output_string;
@@ -353,20 +349,20 @@ function query_nextjob(&$attached_doc) {
   try {
     $rs = $db->Execute($query);
   } catch (exception $err) {
-    log_document_conversion(0, 0, $jconf['jobid_document_index'], $jconf['dbstatus_init'], "[ERROR] SQL query failed", trim($query), $err, 0, TRUE);
-    return FALSE;
+    log_document_conversion(0, 0, $jconf['jobid_document_index'], $jconf['dbstatus_init'], "[ERROR] SQL query failed", trim($query), $err, 0, true);
+    return false;
   }
 
 //echo "recs: " . $rs->RecordCount() . "\n";
 
   // Check if pending job exists
   if ( $rs->RecordCount() < 1 ) {
-    return FALSE;
+    return false;
   }
 
   $attached_doc = $rs->fields;
 
-  return TRUE;
+  return true;
 }
 
 function copy_attacheddoc_to_converter(&$attached_doc) {
@@ -376,14 +372,14 @@ function copy_attacheddoc_to_converter(&$attached_doc) {
 	$app->watchdog();
 
 	// Update media status to copying
-	update_db_attachment_indexingstatus($attached_doc['id'], $jconf['dbstatus_copyfromfe']);
+    updateAttachedDocumentStatus($attached_doc['id'], $jconf['dbstatus_copyfromfe'], 'indexingstatus');
 
 	// Prepare temporary conversion directories, remove any existing content
 	$temp_directory = $jconf['doc_dir'] . $attached_doc['rec_id'] . "/";
 	$err = create_remove_directory($temp_directory);
 	if ( !$err['code'] ) {
-		log_document_conversion($attached_doc['id'], $attached_doc['rec_id'], $jconf['jobid_document_index'], $jconf['dbstatus_copyfromfe'], $err['message'], $err['command'], $err['result'], 0, TRUE);
-		return FALSE;
+		log_document_conversion($attached_doc['id'], $attached_doc['rec_id'], $jconf['jobid_document_index'], $jconf['dbstatus_copyfromfe'], $err['message'], $err['command'], $err['result'], 0, true);
+		return false;
 	}
 
 	// Path and filename
@@ -399,23 +395,23 @@ function copy_attacheddoc_to_converter(&$attached_doc) {
 	// SCP copy from remote location
 	$err = ssh_filecopy($attached_doc['sourceip'], $remote_path . $base_filename, $attached_doc['source_file']);
 	if ( !$err['code'] ) {
-		log_document_conversion($attached_doc['id'], $attached_doc['rec_id'], $jconf['jobid_document_index'], $jconf['dbstatus_copyfromfe'], $err['message'], $err['command'], $err['result'], 0, TRUE);
-		update_db_attachment_indexingstatus($attached_doc['id'], $jconf['dbstatus_copyfromfe_err']);
-		return FALSE;
+		log_document_conversion($attached_doc['id'], $attached_doc['rec_id'], $jconf['jobid_document_index'], $jconf['dbstatus_copyfromfe'], $err['message'], $err['command'], $err['result'], 0, true);
+        updateAttachedDocumentStatus($attached_doc['id'], $jconf['dbstatus_copyfromfe_err'], 'indexingstatus');
+		return false;
 	}
-	log_document_conversion($attached_doc['id'], $attached_doc['rec_id'], $jconf['jobid_document_index'], $jconf['dbstatus_copyfromfe'], $err['message'], $err['command'], $err['result'], 0, FALSE);
+	log_document_conversion($attached_doc['id'], $attached_doc['rec_id'], $jconf['jobid_document_index'], $jconf['dbstatus_copyfromfe'], $err['message'], $err['command'], $err['result'], 0, false);
 
 	// Input file does not exist in temp directory
 	if ( !file_exists($attached_doc['source_file']) ) {
-		update_db_attachment_indexingstatus($attached_doc['id'], $jconf['dbstatus_copyfromfe_err']);
-		log_document_conversion($attached_doc['id'], $attached_doc['rec_id'], $jconf['jobid_document_index'], $jconf['dbstatus_copyfromfe'], "[ERROR] Document file does NOT EXIST: " . $attached_doc['source_file'], "-", "-", 0, TRUE);
-		return FALSE;
+        updateAttachedDocumentStatus($attached_doc['id'], $jconf['dbstatus_copyfromfe_err'], 'indexingstatus');
+		log_document_conversion($attached_doc['id'], $attached_doc['rec_id'], $jconf['jobid_document_index'], $jconf['dbstatus_copyfromfe'], "[ERROR] Document file does NOT EXIST: " . $attached_doc['source_file'], "-", "-", 0, true);
+		return false;
 	}
 
 	// Update watchdog timer
 	$app->watchdog();
 
-	return TRUE;
+	return true;
 }
 
 

@@ -655,6 +655,7 @@ function updateOCRstatus($recordingid, $id = null, $status) {
 //***********************************************************************************
 
 // old functions - LEGACY: TO BE REMOVED WHEN ENCODER 2.0 IS LIVE
+/*
 function update_db_attachment_status($id, $status) {
 global $jconf, $db;
 
@@ -729,6 +730,10 @@ global $db, $jconf;
 
 	return TRUE;
 }
+
+*/
+
+/*
 
 // old functions - LEGACY: TO BE REMOVED WHEN ENCODER 2.0 IS LIVE
 function update_db_recording_status($rec_id, $status) {
@@ -961,5 +966,6 @@ global $jconf, $db;
 	return TRUE;
 }
 
+*/
 
 ?>
