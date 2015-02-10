@@ -1,5 +1,5 @@
 <?php
-// VCR control job 2012/08/17
+// VCR control job 2015/02/10
 
 define('BASE_PATH',	realpath( __DIR__ . '/../..' ) . '/' );
 define('PRODUCTION', false );
@@ -18,7 +18,7 @@ include_once('job_utils_status.php');
 set_time_limit(0);
 
 // Init
-$app = new Springboard\Application\Cli(BASE_PATH, FALSE);
+$app = new Springboard\Application\Cli(BASE_PATH, false);
 
 // Load jobs configuration file
 $app->loadConfig('modules/Jobs/config_jobs.php');
@@ -27,7 +27,7 @@ $myjobid = $jconf['jobid_vcr_control'];
 
 // Log related init
 $debug = Springboard\Debug::getInstance();
-$debug->log($jconf['log_dir'], $myjobid . ".log", "VCR control job started", $sendmail = false);
+$debug->log($jconf['log_dir'], $myjobid . ".log", "*************************** Job: VCR Control ***************************" ."\n", $sendmail = false);
 
 // Check operating system - exit if Windows
 if ( iswindows() ) {
@@ -42,34 +42,14 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_vcr_control.stop' ) and !i
 
 	$app->watchdog();
 
-	$tcs_isconnected = FALSE;
+	$tcs_isconnected = false;
 	$sleep_length = $jconf['sleep_vcr'];
 
 	// Establish database connection
-	$db = null;
 	$db = db_maintain();
-
-/*	try {
-		$db = $app->bootstrap->getAdoDB();
-	} catch (exception $err) {
-		// Send mail alert, sleep for 15 minutes
-		$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] No connection to DB (getAdoDB() failed). Error message:\n" . $err, $sendmail = true);
-		// Sleep 15 mins then resume
-		$sleep_length = 15 * 60;
-		sleep( $sleep_length );
-		continue;
-	} */
 
 	// VCR: start, maintain and stop recording
     while ( 1 ) {
-
-// !!! TEST ONLY: set start values from DB
-// START
-//update_db_stream_status(5, $jconf['dbstatus_vcr_start']);
-//update_db_vcr_reclink_status(1, $jconf['dbstatus_vcr_ready']);
-// STOP
-//update_db_stream_status(5, $jconf['dbstatus_vcr_disc']);
-// !!!
 
 		// Initialize log for closing message and total duration timer
 		$global_log = "";
@@ -96,19 +76,19 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_vcr_control.stop' ) and !i
 		$app->watchdog();
 
 		// Connect to Cisco TCS
-		$tcs_isconnected = FALSE;
+		$tcs_isconnected = false;
 		$soap_rs = TCS_Connect();
-		if ( $soap_rs === FALSE ) {
+		if ( $soap_rs === false ) {
 			$sleep_length = 15 * 60;
 			break;
 		} 
-		$tcs_isconnected = TRUE;
+		$tcs_isconnected = true;
 
 		// System health: check
 		$err = array();
 		$err = TCS_GetSystemHealth();
 		if ( !$err['code'] ) {
-			log_recording_conversion(0, $jconf['jobid_vcr_control'], $jconf['dbstatus_init'], "[ERROR] VCR system health problems.\n\n" . print_r($err['message'], TRUE), "-", "-", 0, TRUE);
+            $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] VCR system health problem.\n\n" . print_r($err['message'], true), $sendmail = true);
 			break;
 		}
 
@@ -125,23 +105,23 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_vcr_control.stop' ) and !i
 			$err = array();
 			$err = TCS_GetCallCapacity();
 			if ( $err['data']['maxcalls'] == $err['data']['currentcalls'] ) {
-				log_recording_conversion(0, $jconf['jobid_vcr_control'], $jconf['dbstatus_init'], "[ERROR] VCR call capacity reached. Cannot start a new recording. Info:\n\n" . $err['message'], "-", "-", 0, TRUE);
+                $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] VCR call capacity reached. Cannot start a new recording. Info:\n\n" . $err['message'], $sendmail = true);
 				break;
 			}
 			if ( $err['data']['maxlivecalls'] == $err['data']['currentlivecalls'] ) {
-				log_recording_conversion(0, $jconf['jobid_vcr_control'], $jconf['dbstatus_init'], "[ERROR] VCR live call capacity reached. Cannot start a new recording. Info:\n\n" . $err['message'], "-", "-", 0, TRUE);
+                $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] VCR live call capacity reached. Cannot start a new recording. Info:\n\n" . $err['message'], $sendmail = true);
 				break;
 			}
 
 			// Starting recording
-			update_db_stream_status($vcr['id'], $jconf['dbstatus_vcr_starting']);
+			updateLiveStreamStatus($vcr['id'], $jconf['dbstatus_vcr_starting']);
 
 			// TCS: reserve ConferenceID
 			$err = array();
 			$err = TCS_ReserveConfId($vcr);
 			if ( !$err['code'] ) {
 				$global_log .= $err['message'];
-				log_recording_conversion($vcr['id'], $myjobid, $jconf['dbstatus_vcr_recording'], "[ERROR] VCR cannot reserve Conference ID. More info:\n\n" . $err['message'], "-", "-", 0, TRUE);
+                $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] VCR cannot reserve Conference ID. More info:\n\n" . $err['message'], $sendmail = true);
 			}
 			$vcr['conf_id'] = $err['data']['conf_id'];
 
@@ -150,18 +130,18 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_vcr_control.stop' ) and !i
 			$err = TCS_Dial($vcr);
 			if ( $err['code'] ) {
 				$global_log .= $err['message'];
-				log_recording_conversion($vcr['id'], $myjobid, $jconf['dbstatus_vcr_recording'], $err['message'], "-", "-", 0, FALSE);
+                $debug->log($jconf['log_dir'], $myjobid . ".log", $err['message'], $sendmail = false);
 				// Recording link: indicate recording status
-				update_db_vcr_reclink_status($vcr['reclink_id'], $jconf['dbstatus_vcr_recording']);
+				updateVCRReclinkStatus($vcr['reclink_id'], $jconf['dbstatus_vcr_recording']);
 			} else {
-				log_recording_conversion($vcr['id'], $myjobid, $jconf['dbstatus_vcr_starting'], "[ERROR] VCR call cannot be established. Info:\n\n" . $err['message'], "-", "-", 0, TRUE);
+                $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] VCR call cannot be established. Info:\n\n" . $err['message'], $sendmail = true);
 				break;
 			}
 
 			// Get live streaming URL for recording started. Try 3x times, then exit with error.
-			$is_streamready = FALSE;
+			$is_streamready = false;
 			$num_trials = 3;
-			while ( ( $is_streamready === FALSE ) and ( $num_trials > 0 ) ) {
+			while ( ( $is_streamready === false ) and ( $num_trials > 0 ) ) {
 
 				// Wait for TCS 5 sec countdown
 				sleep(10);
@@ -173,14 +153,14 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_vcr_control.stop' ) and !i
 				if ( $err['code'] and !empty($vcr['rtmp_streamid']) ) {
 
 					// Update feed: stream ID, aspect ratio, conference ID
-					update_db_stream_params($vcr['id'], $vcr['rtmp_streamid'], $vcr['aspectratio'], $vcr['conf_id']);
+					updateVCRLiveStreamParams($vcr['id'], $vcr['rtmp_streamid'], $vcr['conf_id']);
 					// Update recording link: recording link with TCS conference ID
-					update_db_vcr_reclink_params($vcr['reclink_id'], $vcr['conf_id']);
+					updateVCRReclinkParams($vcr['reclink_id'], $vcr['conf_id']);
 					// Update stream status: playable
-					update_db_stream_status($vcr['id'], $jconf['dbstatus_vcr_recording']);
+					updateLiveStreamStatus($vcr['id'], $jconf['dbstatus_vcr_recording']);
 
 					// We have live streaming URL
-					$is_streamready = TRUE;
+					$is_streamready = true;
 				}
 
 				$num_trials--;
@@ -188,9 +168,9 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_vcr_control.stop' ) and !i
 
 			// Live streaming URL error: cannot determine stream URL
 			if ( !$is_streamready ) {
-				log_recording_conversion($vcr['id'], $myjobid, $jconf['dbstatus_vcr_recording'], "[ERROR] This recording has no movies to play. Cannot determine live streaming URL. TCS cannot send stream to Wowza? Tried 3x times for 30 seconds. Info:\n\n" . print_r($vcr, TRUE), "-", "-", 0, TRUE);
+                $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] This recording has no movies to play. Cannot determine live streaming URL. TCS cannot send stream to Wowza? Tried 3x times for 30 seconds. Info:\n\n" . print_r($vcr, true), $sendmail = true);
 				// Update stream status: disconnect (call is connected, but live streaming URL was not provided)
-				update_db_stream_status($vcr['id'], $jconf['dbstatus_vcr_disc']);
+				updateLiveStreamStatus($vcr['id'], $jconf['dbstatus_vcr_disc']);
 				// Skip uploading this very short recording???
 				break;
 			}
@@ -198,8 +178,9 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_vcr_control.stop' ) and !i
 			// Summary log entry and mail
 			$total_duration = time() - $start_time;
 			$hms = secs2hms($total_duration);
-			log_recording_conversion($vcr['id'], $myjobid, $jconf['dbstatus_vcr_recording'], "[OK] Successful recording initiation in " . $hms . " time.\n\nSummary:\n\n" . $global_log, "-", "-", "-", $total_duration, TRUE);
+            $debug->log($jconf['log_dir'], $myjobid . ".log", "[OK] Successful recording initiation in " . $hms . " time.\n\nSummary:\n\n" . $global_log, $sendmail = true);
 
+            // Watchdog
 			$app->watchdog();
 		}
 
@@ -211,20 +192,20 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_vcr_control.stop' ) and !i
 			if ( !$err['code'] ) {
 
 				if ( $err['data']['callstate'] != "IN_CALL" ) {
-					log_recording_conversion($vcr['id'], $myjobid, $jconf['dbstatus_vcr_recording'], "[ERROR] VCR call was disconnected unexpectedly. Info:\n\n" . $err['message'] . "\n\nDump:\n\n" . print_r($vcr, TRUE), "-", print_r($err['data'], TRUE), 0, TRUE);
+                    $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] VCR call was disconnected unexpectedly. Info:\n\n" . $err['message'] . "\n\nDump:\n\n" . print_r($vcr, true) . "\n\nData:\n\n" . print_r($err['data'], true), $sendmail = true);
 					// Indicate error on stream
-					update_db_stream_status($vcr['id'], $jconf['dbstatus_vcr_recording_err']);
+					updateLiveStreamStatus($vcr['id'], $jconf['dbstatus_vcr_recording_err']);
 					// Permanent error on recording link?
-					update_db_vcr_reclink_status($vcr['reclink_id'], $jconf['dbstatus_vcr_recording_err']);
+					updateVCRReclinkStatus($vcr['reclink_id'], $jconf['dbstatus_vcr_recording_err']);
 					break;
 				}
 
 				if ( ( $err['data']['mediastate'] != "RECORDING" ) and ( $err['data']['writerstatus'] != "OK" ) ) {
-					log_recording_conversion($vcr['id'], $myjobid, $jconf['dbstatus_vcr_recording'], "[ERROR] Unexpected VCR recording error. Info:\n\n" . $err['message'] . "\n\nDump:\n\n" . print_r($vcr, TRUE), "-", print_r($err['data'], TRUE), 0, TRUE);
+                    $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Unexpected VCR recording error. Info:\n\n" . $err['message'] . "\n\nDump:\n\n" . print_r($vcr, true) . "\n\nData:\n\n" . print_r($err['data'], true), $sendmail = true);
 					// Indicate error on stream
-					update_db_stream_status($vcr['id'], $jconf['dbstatus_vcr_recording_err']);
+					updateLiveStreamStatus($vcr['id'], $jconf['dbstatus_vcr_recording_err']);
 					// Permanent error on recording link?
-					update_db_vcr_reclink_status($vcr['reclink_id'], $jconf['dbstatus_vcr_recording_err']);
+					updateVCRReclinkStatus($vcr['reclink_id'], $jconf['dbstatus_vcr_recording_err']);
 					break;
 				}
 			}
@@ -240,16 +221,16 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_vcr_control.stop' ) and !i
 			$err = TCS_Disconnect($vcr);
 			if ( $err['code'] ) {
 				$global_log .= "VCR call disconnected:\n\n" . $err['message'] . "\n\n";
-				log_recording_conversion($vcr['id'], $myjobid, $jconf['dbstatus_init'], "[OK] VCR call disconnected. Call info:\n\n" . $err['message'], "-", "-", 0, FALSE);
-				update_db_vcr_reclink_status($vcr['reclink_id'], $jconf['dbstatus_vcr_ready']);
-				update_db_vcr_reclink_params($vcr['reclink_id'], null);
+                $debug->log($jconf['log_dir'], $myjobid . ".log", "[OK] VCR call disconnected. Call info:\n\n" . $err['message'], $sendmail = false);
+				updateVCRReclinkStatus($vcr['reclink_id'], $jconf['dbstatus_vcr_ready']);
+				updateVCRReclinkParams($vcr['reclink_id'], null);
 				if ( $vcr['needrecording'] == 1 ) {
-					update_db_stream_status($vcr['id'], $jconf['dbstatus_vcr_upload']);
+					updateLiveStreamStatus($vcr['id'], $jconf['dbstatus_vcr_upload']);
 				} else {
-					update_db_stream_status($vcr['id'], $jconf['dbstatus_vcr_ready']);
+					updateLiveStreamStatus($vcr['id'], $jconf['dbstatus_vcr_ready']);
 				}
 			} else {
-				log_recording_conversion($vcr['id'], $myjobid, $jconf['dbstatus_vcr_discing'], "[ERROR] VCR call cannot be disconnected. Check recording link! Info:\n\n" . $err['message'] . "\n\nDump:\n\n" . print_r($vcr, TRUE), "-", "-", 0, TRUE);
+                $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] VCR call cannot be disconnected. Check recording link! Info:\n\n" . $err['message'] . "\n\nDump:\n\n" . print_r($vcr, true), $sendmail = true);
 				break;
 			}
 
@@ -258,8 +239,9 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_vcr_control.stop' ) and !i
 			// Summary log entry and mail
 			$total_duration = time() - $start_time;
 			$hms = secs2hms($total_duration);
-			log_recording_conversion($vcr['id'], $myjobid, $jconf['dbstatus_vcr_ready'], "[OK] Successfuly disconnected recording in " . $hms . " time.\n\nSummary:\n\n" . $global_log, "-", "-", "-", $total_duration, TRUE);
+            $debug->log($jconf['log_dir'], $myjobid . ".log", "[OK] Successfuly disconnected recording in " . $hms . " time.\n\nSummary:\n\n" . $global_log, $sendmail = true);
 
+            // Watchdog
 			$app->watchdog();
 		}
 
@@ -269,6 +251,7 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_vcr_control.stop' ) and !i
 	// VCR UPLOAD: a finnished recording needs to be uploaded
 	while (1) {
 
+        // Watchdog
 		$app->watchdog();
 
 		$err = array();
@@ -279,36 +262,36 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_vcr_control.stop' ) and !i
 
 		// Temporary directory check
 		if ( !is_writable($jconf['vcr_dir']) ) {
-			log_recording_conversion($vcr_upload['id'], $myjobid, $jconf['dbstatus_vcr_upload'], "[FATAL ERROR] Temp directory " . $jconf['vcr_dir'] . " is not writable. Storage error???\n", "-", "-", "-", 0, TRUE);
+            $debug->log($jconf['log_dir'], $myjobid . ".log", "[FATAL ERROR] Temp directory " . $jconf['vcr_dir'] . " is not writable. Storage error???", $sendmail = true);
 			break;
 		}
 		// Temporary directory cleanup
 		$err = tempdir_cleanup($jconf['vcr_dir']);
 		if ( !$err['code'] ) {
-			log_recording_conversion(0, $jconf['jobid_media_convert'], "-", $err['message'], $err['command'], $err['result'], 0, TRUE);
+            $debug->log($jconf['log_dir'], $myjobid . ".log", $err['message'] . "\n\nCommand:\n\n" . $err['command'] . "\n\nResult: " . $err['result'], $sendmail = true);
 			$sleep_length = 15 * 60;
 			break;
 		}
 
 		// Connect to Cisco TCS if connection is not yet established
-		if ( $tcs_isconnected === FALSE ) {
+		if ( $tcs_isconnected === false ) {
 			$soap_rs = TCS_Connect();
-			if ( $soap_rs === FALSE ) {
+			if ( $soap_rs === false ) {
 				$sleep_length = 15 * 60;
 				break;
 			}
-			$tcs_isconnected = TRUE;
+			$tcs_isconnected = true;
 		}
 
 		// Get TCS recording information for download URL
 		$err = TCS_GetConfInfo($vcr_upload);
 		if ( !$err['code'] ) {
 			if ( $err['code_num'] == -1 ) {
-				log_recording_conversion($vcr_upload['id'], $myjobid, $jconf['dbstatus_vcr_upload'], "WARNING: recording is not yet available for download? Try how many times?\n" . $vcr_upload['conf_id'] . ").", "-", "VCR info:\n\n" . print_r($vcr_upload, TRUE), 0, TRUE);
+                $debug->log($jconf['log_dir'], $myjobid . ".log", "WARNING: recording is not yet available for download? Try how many times?\n" . $vcr_upload['conf_id'] . ").\n\nVCR info:\n\n" . print_r($vcr_upload, true), $sendmail = true);
 			}
 			if ( $err['code_num'] == -2 ) {
-				log_recording_conversion($vcr_upload['id'], $myjobid, $jconf['dbstatus_vcr_upload'], "[ERROR] VCR download failed. Did not find TCS Conference ID (" . $vcr_upload['conf_id'] . ").", "-", "VCR info:\n\n" . print_r($vcr_upload, TRUE), 0, TRUE);
-				update_db_stream_status($vcr_upload['id'], $jconf['dbstatus_vcr_upload_err']);
+                $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] VCR download failed. Did not find TCS Conference ID (" . $vcr_upload['conf_id'] . ").VCR info:\n\n" . print_r($vcr_upload, true), $sendmail = true);
+				updateLiveStreamStatus($vcr_upload['id'], $jconf['dbstatus_vcr_upload_err']);
 				break;
 			}
 		}
@@ -319,7 +302,7 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_vcr_control.stop' ) and !i
 		if ( !empty($vcr_upload['download_url']) ) {
 
 			// Update stream status
-			update_db_stream_status($vcr_upload['id'], $jconf['dbstatus_vcr_uploading']);
+			updateLiveStreamStatus($vcr_upload['id'], $jconf['dbstatus_vcr_uploading']);
 
 			// Get MP4 filename from URL
 			$tmp = parse_url($vcr_upload['download_url']);
@@ -337,27 +320,27 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_vcr_control.stop' ) and !i
 			$duration = time() - $time_start;
 			$mins_taken = round( $duration / 60, 2);
 			if ( $result != 0 ) {
-				log_recording_conversion($vcr_upload['id'], $myjobid, $jconf['dbstatus_vcr_upload'], "[ERROR] VCR download failed. URL:\n\n" . $vcr_upload['download_url'] . "\n\nInfo:\n\n" . print_r($vcr_upload, TRUE), $command, $output_string, $duration, TRUE);
-				update_db_stream_status($vcr_upload['id'], $jconf['dbstatus_vcr_upload_err']);
+                $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] VCR download failed. URL:\n\n" . $vcr_upload['download_url'] . "\n\nInfo:\n\n" . print_r($vcr_upload, true) . "\n\nCommand:\n\n" . $command . "\n\nOutput:\n\n" . $output_string, $sendmail = true);
+				updateLiveStreamStatus($vcr_upload['id'], $jconf['dbstatus_vcr_upload_err']);
 				break;
 			}
 	
 			$media_filename = $temp_directory . $filename;
 			if ( !file_exists($media_filename) ) {
-				log_recording_conversion($vcr_upload['id'], $jconf['jobid_vcr_control'], $jconf['dbstatus_vcr_upload'], "[ERROR] Cannot find downloaded VCR recording. File:\n\n" . $media_filename . "\n\nInfo:\n\n" . print_r($vcr_upload, TRUE), "-", "-", 0, TRUE);
-				update_db_stream_status($vcr_upload['id'], $jconf['dbstatus_vcr_upload_err']);
+                $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Cannot find downloaded VCR recording. File:\n\n" . $media_filename . "\n\nInfo:\n\n" . print_r($vcr_upload, true), $sendmail = true);
+				updateLiveStreamStatus($vcr_upload['id'], $jconf['dbstatus_vcr_upload_err']);
 				break;
 			}
 
-			log_recording_conversion($vcr_upload['id'], $myjobid, $jconf['dbstatus_vcr_upload'], "[OK] VCR recording download finished (in " . $mins_taken . " mins). URL:\n\n" . $vcr_upload['download_url'], $command, $output_string, $duration, FALSE);
+            $debug->log($jconf['log_dir'], $myjobid . ".log", "[OK] VCR recording download finished (in " . $mins_taken . " mins). URL:\n\n" . $vcr_upload['download_url'], $sendmail = false);
 
 			$app->watchdog();
 
 		} else {
 			// VCR download URL is not yet available (we are just after disconnect)
 			// Stream status: revert to "upload" (try later)
-			update_db_stream_status($vcr_upload['id'], $jconf['dbstatus_vcr_upload']);
-			log_recording_conversion($vcr_upload['id'], $jconf['jobid_vcr_control'], $jconf['dbstatus_vcr_upload'], "[WARNING] Cannot find VCR download URL. Will be trying later. Info:\n\n" . $print_r($vcr_upload, TRUE), "-", "-", 0, TRUE);
+			updateLiveStreamStatus($vcr_upload['id'], $jconf['dbstatus_vcr_upload']);
+            $debug->log($jconf['log_dir'], $myjobid . ".log", "[WARNING] Cannot find VCR download URL. Will be trying later. Info:\n\n" . $print_r($vcr_upload, true), $sendmail = false);
 			break;
 		}
 
@@ -366,8 +349,8 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_vcr_control.stop' ) and !i
 			$api = new Api($jconf['api_user'], $jconf['api_password']);
 		} catch (exception $err) {
 			// Stream status: revert to "upload" (try later)
-			update_db_stream_status($vcr_upload['id'], $jconf['dbstatus_vcr_upload']);
-			log_recording_conversion($vcr_upload['id'], $jconf['jobid_vcr_control'], $jconf['dbstatus_vcr_upload'], "[ERROR] Cannot connect to Videosquare API. Will be trying later. User: " .  $jconf['api_user'], "-", $err, 0, TRUE);
+			updateLiveStreamStatus($vcr_upload['id'], $jconf['dbstatus_vcr_upload']);
+            $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Cannot connect to Videosquare API. Will be trying later. User: " .  $jconf['api_user'] . "\n\nError:\n\n" . $err, $sendmail = true);
 			break;
 		}
 
@@ -394,11 +377,12 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_vcr_control.stop' ) and !i
 		} catch (exception $err) {
 			// API: cannot add recording. We log error and will try later.
 			// Stream status: revert to "upload" (try later)
-			update_db_stream_status($vcr_upload['id'], $jconf['dbstatus_vcr_upload']);
-			log_recording_conversion($vcr_upload['id'], $jconf['jobid_vcr_control'], $jconf['dbstatus_vcr_upload'], "[ERROR] Cannot add recording to Videosquare. Info:\n\nFilename: " . $media_filename . "\n\nMetadata:\n" . print_r($metadata, TRUE), "-", "-", 0, TRUE);
+			updateLiveStreamStatus($vcr_upload['id'], $jconf['dbstatus_vcr_upload']);
+            $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Cannot add recording to Videosquare. Info:\n\nFilename: " . $media_filename . "\n\nMetadata:\n" . print_r($metadata, true), $sendmail = true);
 			break;
 		}
 
+        // Watchdog
 		$app->watchdog();
 
 		// Metadata: add
@@ -409,20 +393,19 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_vcr_control.stop' ) and !i
 				$api->modifyRecording($recordingid, $metadata);
 			} catch (exception $err) {
 				// API: cannot add metadata. We log error, but upload is successful
-				log_recording_conversion($vcr_upload['id'], $jconf['jobid_vcr_control'], $jconf['dbstatus_vcr_upload'], "[WARNING] Cannot add metadata to recording. Info:\n\nFilename: " . $media_filename . "\n\nMetadata:\n" . print_r($metadata, TRUE), "-", $err, 0, TRUE);
+                $debug->log($jconf['log_dir'], $myjobid . ".log", "[WARNING] Cannot add metadata to recording. Info:\n\nFilename: " . $media_filename . "\n\nMetadata:\n" . print_r($metadata, true) . "\n\nError:\n\n" . $err, $sendmail = true);
 			}
 
 			// Stream status: revert to "ready" (next recording is possible)
-			update_db_stream_status($vcr_upload['id'], $jconf['dbstatus_vcr_ready']);
-			log_recording_conversion($vcr_upload['id'], $jconf['jobid_vcr_control'], $jconf['dbstatus_vcr_upload'], "[OK] VCR recording added. Info:\n\nFilename: " . $media_filename . "\n\nMetadata:\n" . print_r($metadata, TRUE), "-", "-", 0, TRUE);
+			updateLiveStreamStatus($vcr_upload['id'], $jconf['dbstatus_vcr_ready']);
+            $debug->log($jconf['log_dir'], $myjobid . ".log", "[OK] VCR recording added. Info:\n\nFilename: " . $media_filename . "\n\nMetadata:\n" . print_r($metadata, true), $sendmail = true);
 
 		} else {
 			// Stream status: revert to "upload" (try later)
-			update_db_stream_status($vcr_upload['id'], $jconf['dbstatus_vcr_ready']);
-			log_recording_conversion($vcr_upload['id'], $jconf['jobid_vcr_control'], $jconf['dbstatus_vcr_upload'], "[ERROR] Cannot find recording ID in array returned by API. Recording might be added, but metadata did not. Info:\n\nFilename: " . $media_filename . "\n\nRecording array:\n\n" . print_r($recording, TRUE) . "\n\nMetadata:\n" . print_r($metadata, TRUE), "-", "-", 0, TRUE);
+			updateLiveStreamStatus($vcr_upload['id'], $jconf['dbstatus_vcr_ready']);
+            $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Cannot find recording ID in array returned by API. Recording might be added, but metadata did not. Info:\n\nFilename: " . $media_filename . "\n\nRecording array:\n\n" . print_r($recording, true) . "\n\nMetadata:\n" . print_r($metadata, true), $sendmail = true);
 			break;
 		}
-
 
 // TODO:
 // - channel kreálás a live alapján?
@@ -462,8 +445,8 @@ global $jconf;
 	try {
 		$soap_rs = new SoapClient($vcr_wsdl, $soapOptions);
 	} catch (exception $err) {
-		log_recording_conversion(0, $jconf['jobid_vcr_control'], $jconf['dbstatus_init'], "[ERROR] Cannot connect to SOAP client. Please check.", print_r($soapOptions, TRUE), $err, 0, TRUE);
-		return FALSE;
+        $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Cannot connect to SOAP client. Please check.\n\n" . print_r($soapOptions, true) . "\n\nError:\n\n" . $err, $sendmail = true);
+		return false;
 	}
 
 	return $soap_rs;
@@ -526,18 +509,16 @@ global $jconf, $db;
 		LIMIT 1";
 // LIMIT 1???? Mi lesz ha tobb stream tartozik egy felvetelhez? TODO
 
-//echo $query . "\n";
-
 	try {
 		$rs = $db->Execute($query);
 	} catch (exception $err) {
-		log_recording_conversion(0, $jconf['jobid_vcr_control'], $jconf['dbstatus_init'], "[ERROR] Cannot query next VCR job. SQL query failed.", trim($query), $err, 0, TRUE);
-		return FALSE;
+        $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Cannot query next VCR job. SQL query failed.\n\n" . trim($query) . "\n\nError:\n\n" . $err, $sendmail = true);
+		return false;
 	}
 
 	// Check if pending job exsits
 	if ( $rs->RecordCount() < 1 ) {
-		return FALSE;
+		return false;
 	}
 
 	$vcr = $rs->fields;
@@ -557,18 +538,18 @@ global $jconf, $db;
 	try {
 		$rs2 = $db->Execute($query);
 	} catch (exception $err) {
-		log_recording_conversion(0, $jconf['jobid_vcr_control'], $jconf['dbstatus_init'], "[ERROR] Cannot query user to VCR. SQL query failed.", trim($query), $err, 0, TRUE);
-		return FALSE;
+        $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Cannot query next VCR job. SQL query failed.\n\n" . trim($query) . "\n\nError:\n\n" . $err, $sendmail = true);
+		return false;
 	}
 
 	// Check if user exsits to media
 	if ( $rs2->RecordCount() < 1 ) {
-		return FALSE;
+		return false;
 	}
 
 	$vcr_user = $rs2->fields;
 
-	return TRUE;
+	return true;
 }
 
 // Query VCR recording to upload
@@ -601,18 +582,16 @@ global $jconf, $db;
 			id
 		LIMIT 1";
 
-//echo $query . "\n";
-
 	try {
 		$rs = $db->Execute($query);
 	} catch (exception $err) {
-		log_recording_conversion(0, $jconf['jobid_vcr_control'], $jconf['dbstatus_init'], "[ERROR] Cannot query next VCR recording to upload. SQL query failed.", trim($query), $err, 0, TRUE);
-		return FALSE;
+        $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Cannot query next recording to upload. SQL query failed.\n\n" . trim($query) . "\n\nError:\n\n" . $err, $sendmail = true);
+		return false;
 	}
 
 	// Check if pending job exsits
 	if ( $rs->RecordCount() < 1 ) {
-		return FALSE;
+		return false;
 	}
 
 	$vcr_upload = $rs->fields;
@@ -632,18 +611,18 @@ global $jconf, $db;
 	try {
 		$rs2 = $db->Execute($query);
 	} catch (exception $err) {
-		log_recording_conversion(0, $jconf['jobid_vcr_control'], $jconf['dbstatus_init'], "[ERROR] Cannot query user to VCR. SQL query failed.", trim($query), $err, 0, TRUE);
-		return FALSE;
+        $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Cannot query user to VCR. SQL query failed.\n\n" . trim($query) . "\n\nError:\n\n" . $err, $sendmail = true);
+		return false;
 	}
 
 	// Check if user exsits to media
 	if ( $rs2->RecordCount() < 1 ) {
-		return FALSE;
+		return false;
 	}
 
 	$vcr_user = $rs2->fields;
 
-	return TRUE;
+	return true;
 }
 
 function TCS_ReserveConfId($vcr) {
@@ -669,17 +648,17 @@ global $soap_rs, $jconf;
 		'isRecurring'		=> false
     );
 
-	$err['command'] = "RequestConferenceID():\n\n" . print_r($conf, TRUE);
+	$err['command'] = "RequestConferenceID():\n\n" . print_r($conf, true);
 	try {
 		$result = $soap_rs->RequestConferenceID($conf);
 	} catch (exception $error) {
-		$err['code'] = FALSE;
-		$err['message'] = "[ERROR] TCS API Exception. VCR info:\n\n" . print_r($vcr, TRUE) . "\n\nException:\n\n" . $error->getMessage();
-		log_recording_conversion($vcr['id'], $jconf['jobid_vcr_control'], "-", $err['message'], $err['command'], "-", 0, TRUE);
+		$err['code'] = false;
+		$err['message'] = "[ERROR] TCS API Exception. VCR info:\n\n" . print_r($vcr, true) . "\n\nException:\n\n" . $error->getMessage();
+        $debug->log($jconf['log_dir'], $myjobid . ".log", $err['message'] . "\n\nCommand:\n\n" . $err['command'], $sendmail = true);
 		return $err;
 	}
 
-	$err['code'] = TRUE;
+	$err['code'] = true;
     $err['data']['conf_id'] = $result->RequestConferenceIDResult;
     return $err;
 }
@@ -690,7 +669,7 @@ global $soap_rs, $jconf;
 	$err = array();
 
 	// Recording link: update status
-	update_db_vcr_reclink_status($vcr['reclink_id'], $jconf['dbstatus_vcr_starting']);
+	updateVCRReclinkStatus($vcr['reclink_id'], $jconf['dbstatus_vcr_starting']);
 
 // Parameters:
 //  Number (the number to dial - string)
@@ -710,13 +689,13 @@ global $soap_rs, $jconf;
 		'SetMetadata'		=> false
 	);
 
-	$err['command'] = "Dial():\n\n" . print_r($conf, TRUE);
+	$err['command'] = "Dial():\n\n" . print_r($conf, true);
 	try {
 		$result = $soap_rs->Dial($conf);
 	} catch (exception $error) {
-		$err['code'] = FALSE;
-		$err['message'] = "[ERROR] TCS API Exception. VCR info:\n\n" . print_r($vcr, TRUE) . "\n\nException:\n\n" . $error->getMessage();
-		log_recording_conversion($vcr['id'], $jconf['jobid_vcr_control'], "-", $err['message'], $err['command'], "-", 0, TRUE);
+		$err['code'] = false;
+		$err['message'] = "[ERROR] TCS API Exception. VCR info:\n\n" . print_r($vcr, true) . "\n\nException:\n\n" . $error->getMessage();
+        $debug->log($jconf['log_dir'], $myjobid . ".log", $err['message'] . "\n\nCommand:\n\n" . $err['command'], $sendmail = true);
 		return $err;
 	}
 
@@ -724,7 +703,7 @@ global $soap_rs, $jconf;
 //var_dump($result);
 
 	if ( $result->DialResult->ErrorCode != 0 ) {
-		$err['code'] = FALSE;
+		$err['code'] = false;
 		$err['message'] = "[ERROR] VCR fatal error. Dial() call returned error. Error message:\n\n". $result->DialResult->Error;
 		return $err;
 	}
@@ -749,17 +728,17 @@ global $soap_rs, $jconf;
 
 		// Something unexpected
 		if ( $err_ci['result'] == "NOT_IN_CALL" ) {
-			$err['code'] = FALSE;
+			$err['code'] = false;
 			$err['result'] = $err_ci['result'];
-			$err['message'] = "[ERROR] VCR call init returned an error. Call target:\n\n" . print_r($conf, TRUE) . "\n\nCall state: " . $err_ci['message'];
+			$err['message'] = "[ERROR] VCR call init returned an error. Call target:\n\n" . print_r($conf, true) . "\n\nCall state: " . $err_ci['message'];
 			return $err;
 		}
 
 		// Check 25 seconds of timeout
 		if ( $i > 5 ) {
-			$err['code'] = FALSE;
+			$err['code'] = false;
 			$err['result'] = $err_ci['result'];
-			$err['message'] = "[ERROR] VCR call cannot be established in " . $i * 5 . " seconds. Call target:\n\n" . print_r($conf, TRUE) . "\n\nCall state:\n\n" . $err_ci['message'];
+			$err['message'] = "[ERROR] VCR call cannot be established in " . $i * 5 . " seconds. Call target:\n\n" . print_r($conf, true) . "\n\nCall state:\n\n" . $err_ci['message'];
 			return $err;
 		}
 
@@ -769,7 +748,7 @@ global $soap_rs, $jconf;
 		$i++;
 	}
 
-	$err['code'] = TRUE;
+	$err['code'] = true;
 	$err['result'] = $err_ci['result'];
 	$err['message'] = $err_ci['message'];
 	return $err;
@@ -784,13 +763,13 @@ global $soap_rs, $jconf;
 		'ConferenceID'  => $vcr['conf_id']
 	);
 
-	$err['command'] = "GetCallInfo():\n\n" . print_r($conf, TRUE);
+	$err['command'] = "GetCallInfo():\n\n" . print_r($conf, true);
 	try {
 		$result = $soap_rs->GetCallInfo($conf);
 	} catch (exception $error) {
-		$err['code'] = FALSE;
-		$err['message'] = "[ERROR] TCS API Exception. VCR info:\n\n" . print_r($vcr, TRUE) . "\n\nException:\n\n" . $error->getMessage();
-		log_recording_conversion($vcr['id'], $jconf['jobid_vcr_control'], "-", $err['message'], $err['command'], "-", 0, TRUE);
+		$err['code'] = false;
+		$err['message'] = "[ERROR] TCS API Exception. VCR info:\n\n" . print_r($vcr, true) . "\n\nException:\n\n" . $error->getMessage();
+        $debug->log($jconf['log_dir'], $myjobid . ".log", $err['message'] . "\n\nCommand:\n\n" . $err['command'], $sendmail = true);
 		return $err;
 	}
 
@@ -805,30 +784,30 @@ global $soap_rs, $jconf;
 
 	// Unknown conference ID, fatal error
 	if ( $callinfo->CallState == "NOT_IN_CALL" ) {
-		$err['code'] = FALSE;
+		$err['code'] = false;
 		$err['message'] = "[ERROR] VCR not in call.";
 		return $err;
 	}
 
 	// Dialing in progress
 	if ( $callinfo->CallState == "INITIALISING_CALL" ) {
-		$err['code'] = TRUE;
+		$err['code'] = true;
 		$err['message'] = "[ERROR] VCR is establishing a call.";
 		return $err;
 	}
 
 	// Disconnect in progress
 	if ( $callinfo->CallState == "ENDING_CALL" ) {
-		$err['code'] = TRUE;
+		$err['code'] = true;
 		$err['message'] = "[ERROR] VCR is disconnecting a call.";
 		return $err;
 	}
 
 	// Undefined error
 	if ( $callinfo->CallState != "IN_CALL" ) {
-		$err['code'] = FALSE;
+		$err['code'] = false;
 		$err['message'] = "[ERROR] VCR call is in undefined state.";
-		log_recording_conversion(0, $jconf['jobid_vcr_control'], $jconf['dbstatus_init'], "[ERROR] Undefined error in setting up call.", $err['command'], $err['message'], 0, TRUE);
+        $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Undefined error in setting up call.\n\nCommand:\n\n" . $err['command'] . "\n\nError:\n\n" . $err['message'], $sendmail = true);
 		return $err;
 	}
 
@@ -843,12 +822,12 @@ global $soap_rs, $jconf;
 
 	if ( ( $callinfo->MediaState != "RECORDING" ) and ( $callinfo->WriterStatus != "OK" ) ) {
 		// WriterStatus == FAILED? (tele a HDD?) Mas hiba?
-		$err['code'] = FALSE;
+		$err['code'] = false;
 		$err['message'] = "[ERROR] Undefined error in recording. Call info:\n\n" . $callinfo_log;
 		return $err;
 	}
 
-	$err['code'] = TRUE;
+	$err['code'] = true;
 	$err['message'] = "[OK] VCS call established. Call info:\n\n" . $callinfo_log;
 
 	return $err;
@@ -864,14 +843,14 @@ global $soap_rs, $jconf;
 		'ConferenceID'  => $vcr['conf_id']
 	);
 
-	$err['command'] = "GetConference():\n\n" . print_r($conf, TRUE);
+	$err['command'] = "GetConference():\n\n" . print_r($conf, true);
 	try {
 		$result = $soap_rs->GetConference($conf);
 	} catch (exception $error) {
-		$err['code'] = FALSE;
+		$err['code'] = false;
 		$err['code_num'] = -2;
-		$err['message'] = "[ERROR] TCS API Exception. VCR info:\n\n" . print_r($vcr, TRUE) . "\n\nException:\n\n" . $error->getMessage();
-		log_recording_conversion($vcr['id'], $jconf['jobid_vcr_control'], "-", $err['message'], $err['command'], "-", 0, TRUE);
+		$err['message'] = "[ERROR] TCS API Exception. VCR info:\n\n" . print_r($vcr, true) . "\n\nException:\n\n" . $error->getMessage();
+        $debug->log($jconf['log_dir'], $myjobid . ".log", $err['message'] . "\n\nCommand:\n\n" . $err['command'], $sendmail = true);
 		return $err;
 	}
 
@@ -900,14 +879,14 @@ var_dump($result); */
 		$vcr['width'] = $err_su['data']['width'];
 		$vcr['height'] = $err_su['data']['height'];
 	} else {
-		$err['code'] = FALSE;
+		$err['code'] = false;
 		$err['code_num'] = -1;
 		$err['message'] = $err_su['message'];
 		return $err;
 	}
 
-	$err['code'] = TRUE;
-	$err['message'] = "[OK] VCR conference info: " . print_r($err_su['data'], TRUE);
+	$err['code'] = true;
+	$err['message'] = "[OK] VCR conference info: " . print_r($err_su['data'], true);
     return $err;
 }
 
@@ -916,7 +895,7 @@ function TCS_GetStreamParams($conf_info) {
 
 	$err = array();
 
-	$is_flashver = FALSE;
+	$is_flashver = false;
 
 	// Get recording date and time
 	if ( !empty($conf_info->GetConferenceResult->DateTime) ) {
@@ -934,7 +913,7 @@ function TCS_GetStreamParams($conf_info) {
 
 		// Fatal error, no URL is provided by TCS
 		if ( $num == 0 ) {
-			$err['code'] = FALSE;
+			$err['code'] = false;
 			$err['message'] = "[ERROR] VCR does not have watchable video streams.";
 			return $err;
 		}
@@ -949,7 +928,7 @@ function TCS_GetStreamParams($conf_info) {
 				$err['data']['bitrate'] = $WatchableMovie->TotalBandwidth;
 				$err['data']['width'] = $WatchableMovie->MainWidth;
 				$err['data']['height'] = $WatchableMovie->MainHeight;
-				$is_flashver = TRUE;
+				$is_flashver = true;
 			}
 		}
 
@@ -965,7 +944,7 @@ function TCS_GetStreamParams($conf_info) {
 					$err['data']['bitrate'] = $WatchableMovie[$i]->TotalBandwidth;
 					$err['data']['width'] = $WatchableMovie[$i]->MainWidth;
 					$err['data']['height'] = $WatchableMovie[$i]->MainHeight;
-					$is_flashver = TRUE;
+					$is_flashver = true;
 					break;
 				}
 			}
@@ -975,7 +954,7 @@ function TCS_GetStreamParams($conf_info) {
 
 	if ( $is_flashver and ( $err['data']['width'] > 0 ) and ( $err['data']['height'] > 0 ) ) {
 		// Check if live or recording for download
-		if ( strpos($err['data']['mainurl'], "rtmp") === FALSE ) {
+		if ( strpos($err['data']['mainurl'], "rtmp") === false ) {
 			$err['data']['download_url'] = $err['data']['mainurl'];
 			$err['data']['rtmp_server'] = "";
 			$err['data']['rtmp_streamid'] = "";
@@ -986,10 +965,10 @@ function TCS_GetStreamParams($conf_info) {
 			$err['data']['rtmp_streamid'] = $tmp[1];
 		}
 
-		$err['code'] = TRUE;
+		$err['code'] = true;
 		$err['message'] = "[OK] VCR streaming URL is available.";
 	} else {
-		$err['code'] = FALSE;
+		$err['code'] = false;
 		$err['message'] = "[ERROR] VCR streaming URL is not available.";
 	}
 
@@ -1005,13 +984,13 @@ global $soap_rs, $jconf;
 		'ConferenceID'  => $vcr['conf_id']
 	);
 
-	$err['command'] = "DisconnectCall():\n\n" . print_r($conf, TRUE);
+	$err['command'] = "DisconnectCall():\n\n" . print_r($conf, true);
 	try {
 		$result = $soap_rs->DisconnectCall($conf);
 	} catch (exception $error) {
-		$err['code'] = FALSE;
-		$err['message'] = "[ERROR] TCS API Exception. VCR info:\n\n" . print_r($vcr, TRUE) . "\n\nException:\n\n" . $error->getMessage();
-		log_recording_conversion($vcr['id'], $jconf['jobid_vcr_control'], "-", $err['message'], $err['command'], "-", 0, TRUE);
+		$err['code'] = false;
+		$err['message'] = "[ERROR] TCS API Exception. VCR info:\n\n" . print_r($vcr, true) . "\n\nException:\n\n" . $error->getMessage();
+        $debug->log($jconf['log_dir'], $myjobid . ".log", $err['message'] . "\n\nCommand:\n\n" . $err['command'], $sendmail = true);
 		return $err;
 	}
 
@@ -1019,12 +998,12 @@ global $soap_rs, $jconf;
 //var_dump($result);
 
     if ( $result->DisconnectCallResult->Error != 0 ) {
-		$err['code'] = FALSE;
+		$err['code'] = false;
 		$err['message'] = "[ERROR] VCR is unable to disconnect call for conference " . $vcr['conf_id'] . ". Error code: " . $result->DisconnectCallResult->ErrorCode;
 		return $err;
 	}
 
-	$err['code'] = TRUE;
+	$err['code'] = true;
 	$err['message'] = "[OK] VCR call " . $vcr['conf_id'] . " disconnected.";
 
 	return $err;
@@ -1039,9 +1018,9 @@ global $soap_rs, $jconf;
 	try {
 		$result = $soap_rs->GetSystemHealth();
 	} catch (exception $error) {
-		$err['code'] = FALSE;
+		$err['code'] = false;
 		$err['message'] = "[ERROR] TCS API Exception. Exception:\n\n" . $error->getMessage();
-		log_recording_conversion(0, $jconf['jobid_vcr_control'], "-", $err['message'], $err['command'], "-", 0, TRUE);
+        $debug->log($jconf['log_dir'], $myjobid . ".log", $err['message'] . "\n\nCommand:\n\n" . $err['command'], $sendmail = true);
 		return $err;
 	}
 
@@ -1049,21 +1028,21 @@ global $soap_rs, $jconf;
 
 	$syshealth = $result->GetSystemHealthResult;
 
-	$err['code'] = TRUE;
+	$err['code'] = true;
 	$err['message'] = "";
 
 	if ( !$syshealth->EngineOK ) {
-		$err['code'] = FALSE;
+		$err['code'] = false;
 		$err['message'] .= "VCR engine error. Check system!\n";
 	}
 
 	if ( !$syshealth->LibraryOK ) {
-		$err['code'] = FALSE;
+		$err['code'] = false;
 		$err['message'] .= "VCR library error. Check system!\n";
 	}
 
 	if ( !$syshealth->DatabaseOK ) {
-		$err['code'] = FALSE;
+		$err['code'] = false;
 		$err['message'] .= "VCR database error. Check system!\n";
 	}
 
@@ -1079,13 +1058,13 @@ global $soap_rs, $jconf;
 	try {
 		$result = $soap_rs->GetSystemInformation();
 	} catch (exception $error) {
-		$err['code'] = FALSE;
+		$err['code'] = false;
 		$err['message'] = "[ERROR] TCS API Exception. Exception:\n\n" . $error->getMessage();
-		log_recording_conversion(0, $jconf['jobid_vcr_control'], "-", $err['message'], $err['command'], "-", 0, TRUE);
+        $debug->log($jconf['log_dir'], $myjobid . ".log", $err['message'] . "\n\nCommand:\n\n" . $err['command'], $sendmail = true);
 		return $err;
 	}
 
-	$err['code'] = TRUE;
+	$err['code'] = true;
 
 //var_dump($result);
 
@@ -1128,13 +1107,13 @@ global $soap_rs, $jconf;
 	try {
 		$result = $soap_rs->GetCallCapacity();
 	} catch (exception $error) {
-		$err['code'] = FALSE;
+		$err['code'] = false;
 		$err['message'] = "[ERROR] TCS API Exception. Exception:\n\n" . $error->getMessage();
-		log_recording_conversion(0, $jconf['jobid_vcr_control'], "-", $err['message'], $err['command'], "-", 0, TRUE);
+        $debug->log($jconf['log_dir'], $myjobid . ".log", $err['message'] . "\n\nCommand:\n\n" . $err['command'], $sendmail = true);
 		return $err;
 	}
 
-	$err['code'] = TRUE;
+	$err['code'] = true;
 
 	$err['data']['maxcalls'] = $result->GetCallCapacityResult->MaxCalls;
 	$err['data']['currentcalls'] = $result->GetCallCapacityResult->CurrentCalls;

@@ -474,113 +474,91 @@ global $app, $debug, $jconf, $myjobid;
 }
 
 //----
-// VCR - untouched!!!
+// VCR
 //----
 
-// VCR: update recording link
-function update_db_vcr_reclink_status($id, $status) {
-global $db, $jconf;
+// VCR: update recording link. Previously: update_db_vcr_reclink_status
+function updateVCRReclinkStatus($id, $status) {
+global $app, $debug, $jconf, $myjobid;
 
 	if ( empty($status) ) return false;
 
-	$db = db_maintain();
+	$values = array(
+		'status' => $status
+	);
 
-	$query = "
-		UPDATE
-			recording_links
-		SET
-			status = \"" . $status . "\"
-		WHERE
-			id = " . $id;
+    $converterNodeObj = $app->bootstrap->getModel('recording_links');
+    $converterNodeObj->select($id);
+    $converterNodeObj->updateRow($values);
+    
+	// Log status change
+	$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Recording link id#" . $id . " status changed to '" . $status . "'.", $sendmail = false);
 
-	try {
-		$rs = $db->Execute($query);
-	} catch (exception $err) {
-		log_recording_conversion($id, $jconf['jobid_vcr_control'], "-", "[ERROR] Cannot update VCR recording link status. SQL query failed.", trim($query), $err, 0, TRUE);
-		return FALSE;
-	}
-
-	return TRUE;
+	return true;
 }
 
-// VCR: update recording link
-function update_db_stream_status($id, $status) {
-global $db, $jconf;
+// VCR: update recording link - update_db_stream_status
+function updateLiveStreamStatus($id, $status) {
+global $app, $debug, $jconf, $myjobid;
 
 	if ( empty($status) ) return false;
 
-	$db = db_maintain();
+    $values = array(
+		'status' => $status
+	);
 
-	$query = "
-		UPDATE
-			livefeed_streams
-		SET
-			status = \"" . $status . "\"
-		WHERE
-			id = " . $id;
-
-	try {
-		$rs = $db->Execute($query);
-	} catch (exception $err) {
-		log_recording_conversion($id, $jconf['jobid_vcr_control'], "-", "[ERROR] Cannot update live stream status. SQL query failed.", trim($query), $err, 0, TRUE);
-		return FALSE;
-	}
-
-	return TRUE;
+    $converterNodeObj = $app->bootstrap->getModel('livefeed_streams');
+    $converterNodeObj->select($id);
+    $converterNodeObj->updateRow($values);
+    
+	// Log status change
+	$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Live stream id#" . $id . " status changed to '" . $status . "'.", $sendmail = false);
+    
+	return true;
 }
 
-function update_db_stream_params($id, $keycode, $aspectratio, $conferenceid) {
-global $db, $jconf;
+// update_db_stream_params
+function updateVCRLiveStreamParams($id, $keycode, $conferenceid) {
+global $app, $debug, $jconf, $myjobid;
 
-	$db = db_maintain();
-
+	if ( empty($keycode) ) return false;
 	if ( empty($conferenceid) ) $conferenceid = "NULL";
 
-	// Update stream parameters
-	$query = "
-		UPDATE
-			livefeed_streams
-		SET
-			keycode = '" . $keycode . "',
-			vcrconferenceid = '" . $conferenceid . "'
-		WHERE
-			id = " . $id;
+    $values = array(
+        'keycode'           => $keycode,
+        'vcrconferenceid'   => $conferenceid
+	);
 
-//aspectratio = '" . $aspectratio . "',
+    $converterNodeObj = $app->bootstrap->getModel('livefeed_streams');
+    $converterNodeObj->select($id);
+    $converterNodeObj->updateRow($values);
+    
+	// Log status change
+	$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Live stream id#" . $id . " params updated with keycode = " . $keycode . ", vcrconferenceid = " . $conferenceid . ".", $sendmail = false);
 
-	try {
-		$rs = $db->Execute($query);
-	} catch (exception $err) {
-		log_recording_conversion($id, $jconf['jobid_vcr_control'], "-", "[ERROR] VCR live stream parameters cannot be updated. SQL query failed.", trim($query), $err, 0, TRUE);
-		return FALSE;
-	}
-
-	return TRUE;
+	return true;
 }
 
-function update_db_vcr_reclink_params($id, $conf_id) {
-global $db, $jconf;
+// update_db_vcr_reclink_params
+function updateVCRReclinkParams($id, $conf_id) {
+global $app, $debug, $jconf, $myjobid;
 
-	$db = db_maintain();
+	if ( empty($conf_id) ) return false;
 
-	// Update stream parameters
-	$query = "
-		UPDATE
-			recording_links
-		SET
-			conferenceid = '" . $conf_id . "'
-		WHERE
-			id = " . $id;
+    $values = array(
+        'conferenceid'  => $conf_id
+	);
 
-	try {
-		$rs = $db->Execute($query);
-	} catch (exception $err) {
-		log_recording_conversion($id, $jconf['jobid_vcr_control'], "-", "[ERROR] VCR recording link parameters cannot be updated. SQL query failed.", trim($query), $err, 0, TRUE);
-		return FALSE;
-	}
+    $converterNodeObj = $app->bootstrap->getModel('recording_links');
+    $converterNodeObj->select($id);
+    $converterNodeObj->updateRow($values);
+    
+	// Log status change
+	$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] VCR recording link id#" . $id . " params updated with conferenceid = " . $conf_id . ".", $sendmail = false);
 
-	return TRUE;
+	return true;
 }
+
 //--------------------
 //Livefeed index photo
 //--------------------
@@ -671,6 +649,7 @@ function updateOCRstatus($recordingid, $id = null, $status) {
 	$result['output'] = ( int ) $db->Insert_ID();
 	return $result;
 }
+
 //***********************************************************************************
 // REMOVE!!!
 //***********************************************************************************
