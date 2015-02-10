@@ -10,7 +10,7 @@ define('DEBUG', false );
 include_once('job_utils_base.php');
 include_once('job_utils_log.php');
 include_once('job_utils_status.php');
-include_once('job_utils_media.php');
+include_once('job_utils_media2.php');
 
 include_once( BASE_PATH . 'libraries/Springboard/Application/Cli.php');
 
@@ -22,8 +22,10 @@ $app = new Springboard\Application\Cli(BASE_PATH, PRODUCTION);
 
 // Load jobs configuration file
 $app->loadConfig('modules/Jobs/config_jobs.php');
-$jconf = $app->config['config_jobs'];
+$jconf   = $app->config['config_jobs'];
 $myjobid = $jconf['jobid_remove_files'];
+$logdir  = $jconf['log_dir'];
+$logfile = $myjobid . ".log";
 
 // Log related init
 $debug = Springboard\Debug::getInstance();
@@ -511,6 +513,107 @@ if ( $attachments !== false ) {
     }
 }
 
+// OCR data: remove OCR frames marked for dumping
+$OCRframes = queryOCRdataToRemove();
+if (is_array($OCRframes)) {
+	
+	foreach($OCRframes as $rec) {
+		
+		$data_removed = .0;
+		$recid = $rec['recordingid'];
+		$basepath = $app->config['recordingpath'] . ( $recid % 1000 ) ."/". $recid ."/ocr/";
+		
+		$msg = "[INFO] Removing OCR data from Recording#". $recid .".";
+		$debug->log($logdir, $logfile, $msg, false);
+		
+		if ($rec['ocrstatus'] == $jconf['dbstatus_markedfordeletion'] || empty($rec['ocrframes2del'])) {
+			// All OCR data can be removed.
+			$msg = "Recordings.ocrstatus = '". $jconf['dbstatus_markedfordeletion'] ."' > applying full cleanup.";
+			$debug->log($logdir, $logfile, $msg, false);
+			unset($msg);
+			
+			if ($isexecute === FALSE) continue;
+			
+			$tmp = directory_size($basepath);
+			$size_toremove = $tmp['size'];
+			safeCheckPath($basepath);
+			$err = remove_file_ifexists($basepath);
+			
+			if (!$err['code']) {
+				$mesg = $err['message'] . "\n\nCommand:\n" . $err['command'] . "\n\nOutput:\n" . $err['command_output'];
+				$debug->log($logdir, $logfile, $mesg, $sendmail = false);
+				continue;
+			}
+			$data_removed += $size_toremove;
+			$debug->log($logdir, $logfile, "[OK] OCR directory has been removed: '". $basepath ."'.", false);
+			
+			updateRecordingStatus($recid, $jconf['dbstatus_deleted'], 'ocr');
+			$upd = updateOCRstatus($recid, null, $jconf['dbstatus_deleted']);
+			if ($upd['result'] === false) {
+				$debug->log($logdir, $logfile, $upd['message'], false);
+			}
+			unset($err, $tmp, $upd);
+		} else {
+			// We have to carefully remove OCRframes one by one.
+			if (!array_key_exists('ocrframes2del', $rec)) continue;
+			
+			foreach($rec['ocrframes2del'] as $frames) {
+				$files2remove = array();
+				$filename = $recid ."_". $frames['id'] .".jpg";
+				
+				$files2remove[] = $basepath ."original". DIRECTORY_SEPARATOR . $filename;
+				
+				foreach ($app->config['videothumbnailresolutions'] as $tres) {
+					$tmp = explode("x", $tres);
+					$files2remove[] = $basepath . $tmp[0] . DIRECTORY_SEPARATOR . $filename;
+				}
+				
+				if ($isexecute === FALSE) continue;
+				$size_toremove = .0;  // Size of the file to be removed
+
+				foreach($files2remove as $f) {
+					if (!file_exists($f)) continue;
+					safeCheckPath($f);
+					$size_toremove += filesize($f);
+					$err = remove_file_ifexists($f);
+					
+					if ( !$err['code'] ) {
+						$msg = $err['message'] . "\n\nCommand:\n" . $err['command'] . "\n\nOutput:\n" . $err['command_output'];
+						$debug->log($logdir, $logfile, $msg, $sendmail = false);
+						continue;
+					}
+				}
+				
+				$data_removed += $size_toremove;
+
+				if ($size_toremove > 0 === false) {
+					$msg = "[WARN] OCRframe#". $frames['id'] ." was already removed!\n";
+				} else {
+					$msg = "[OK] OCRframe#" . $frames['id'] . " removed (rec#" . $recid . "), size = " . round($size_toremove / 1024 / 1024, 2) . "MB.";
+				}
+				$debug->log($logdir, $logfile, $msg, $sendmail = false);
+				
+				$upd = updateOCRstatus($recid, $frames['id'], $jconf['dbstatus_deleted']);
+				if ($upd['result'] === false) {
+					$msg = "[ERROR] updating ocr_frames#". $frames['id'] ." failed. Error message: ". $upd['message'];
+					$debug->log($logdir, $logfile, $msg, $sendmail = false);
+				}
+
+				unset($files2remove, $size_toremove, $upd);
+			}
+		}
+		
+		if ($data_removed > 0) {
+			$msg = "[INFO] Total amount of data removed: ". round($data_removed / 1024 / 1024, 2) ."MB";
+			$debug->log($logdir, $logfile, $msg, $sendmail = false);
+			unset($msg);
+		}
+		
+		unset($data_removed, $recid, $basepath);
+	}
+	$app->Watchdog();
+}
+
 // Close DB connection if open
 if ( is_resource($db->_connectionID) ) $db->close();
 
@@ -524,7 +627,7 @@ exit;
 // *************************************************************************
 // Description: queries next uploaded document from attached_documents
 function queryRecordingsToRemove($type = null) {
-global $jconf, $db, $app;
+global $jconf, $db, $app, $debug;
 
     if ( empty($type) or ( $type != "recording" ) and ( $type != "content" ) ) return false;
 
@@ -587,7 +690,7 @@ global $jconf, $db, $app;
 }
 
 function queryRecordingsVersionsToRemove() {
-global $jconf, $db, $app;
+global $jconf, $db, $app, $debug;
 
     $node = $app->config['node_sourceip'];
 // Multinode: csak azokat torolhessuk, amiket az erre a node-ra feltett file-bol generaltunk???
@@ -633,9 +736,8 @@ global $jconf, $db, $app;
     return $recversions;
 }
 
-
 function queryAttachmentsToRemove() {
-global $jconf, $db, $app;
+global $jconf, $db, $app, $debug;
 
     $node = $app->config['node_sourceip'];
 
@@ -676,6 +778,90 @@ global $jconf, $db, $app;
     }
 
     return $attachments;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+function queryOCRdataToRemove() {
+///////////////////////////////////////////////////////////////////////////////////////////////////
+//
+// Kigyujti a torlesre jelolt ocr_frames rekordokat, illetve a hozzajuk tartozo recording statusz 
+// mezoit.
+// Amennyiben nincs torlesre varo OCR adat, a visszateresi ertek TRUE, ellenkezo esetben tomb-ot
+// ad vissza. Hiba soran a fuggveny FALSE ertekkel ter vissza.
+//
+///////////////////////////////////////////////////////////////////////////////////////////////////
+	global $app, $db, $debug, $jconf;
+	$logdir = $jconf['log_dir'];
+	$logfile = $jconf['jobid_remove_files'] .".log";
+	
+	$result = false;
+	
+	try {
+		
+		if (!is_resource($db->_connectionID)) $db = db_maintain();
+		
+		$qry_rec = "
+		SELECT
+			`r`.`id` AS 'recordingid',
+			`r`.`status` AS 'recordingstatus',
+			`r`.`contentstatus`,
+			`r`.`contentmasterstatus`,
+			`r`.`ocrstatus`
+		FROM
+			`recordings` AS `r`
+		RIGHT JOIN
+			`ocr_frames` AS `o`
+		ON
+			`r`.`id` = `o`.`recordingid`
+		WHERE
+			`r`.`ocrstatus` LIKE 'markedfordeletion' OR
+			`o`.`status` LIKE '". $jconf['dbstatus_markedfordeletion'] ."'
+		GROUP BY `r`.`id`;";
+		
+		$rs_rec = $db->Execute($qry_rec);
+		
+		if ($rs_rec->RecordCount() > 0) {
+			$junk = $rs_rec->GetArray();
+			unset($rs_rec);
+			
+			foreach ($junk AS $cur => $rec) {
+				$qry_frames = "
+				SELECT
+					`o`.`id`
+				FROM
+					`ocr_frames` AS `o`
+				WHERE
+					`o`.`recordingid` = ". $rec['recordingid'] ." AND
+					`o`.`status` = '". $jconf['dbstatus_markedfordeletion'] ."';";
+				$rs_frames = $db->Execute($qry_frames);
+				$junk[$cur]['ocrframes2del'] = $rs_frames->GetArray();
+				
+				$qry_count = "
+				SELECT
+				COUNT(*) AS 'ocrcount'
+				FROM
+					`ocr_frames` AS `o`
+				WHERE
+					`o`.`status` NOT REGEXP 'failed|delete' AND
+					`o`.`recordingid` = ". $rec['recordingid'] ."
+				GROUP BY `o`.`recordingid`;";
+				$rs_count = $db->Execute($qry_count);
+				$junk[$cur]['ocrcount'] = $rs_count->Fields('ocrcount');
+				unset($qry_frames, $rs_frames, $qry_count, $rs_count);
+			}
+			
+			$result = $junk;
+			unset($junk);
+		} else {
+			$result = true;
+		}
+		unset($qry_rec, $rs_rec);
+		
+	} catch (Exception $e) {
+		$mesg = "[ERROR] ". __FUNCTION__ ." failed. Errormessage:\n" . $e->getMessage();
+		$debug->log($logdir, $logfile, $mesg, $sendmail = false);
+	}
+	return $result;
 }
 
 // SAFE CHECK
