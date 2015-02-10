@@ -518,11 +518,13 @@ function convertOCR($rec) {
 	$result['phase'] = "Checking 3rd party utilites";
 	$cmd_test_imagick = "convert -version";
 	$cmd_test_ocr = "type \"". $jconf['ocr_alt'] ."\"";
-	if (runExt4($cmd_test_imagick)['code'] !== 0 ) {
+	$imtest = runExt4($cmd_test_imagick);
+	$ocrtest = runExt4($cmd_test_ocr);
+	if ($imtest['code'] !== 0 ) {
 		$result['message'] = $errstr ." Imagick utility missing!";
 		$debug->log($logdir, $logfile, $result['message'], $sendmail = false);
 		return $result;
-	} elseif (runExt4($cmd_test_ocr)['code'] !== 0) {
+	} elseif ($ocrtest['code'] !== 0) {
 		$result['message'] = $errstr ." OCR engine cannot be found!";
 		$debug->log($logdir, $logfile, $result['message'], $sendmail = false);
 		return $result;
@@ -977,69 +979,6 @@ function createOCRsnapshots($recordingid, $images, $snapshotparams, $source) {
 	$return['output'] = $snapshotsdone;
 	$return['result'] = true;
 	return $return;
-}
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
-function updateOCRstatus($recordingid, $id = null, $status) {
-///////////////////////////////////////////////////////////////////////////////////////////////////
-//
-// A fuggveny segitsegevel a felvetelhez tartozo ocr_frames sorok statuszat lehet beallitani.
-// Alapertelmezeskent a 'recordingid'-hoz tartozo osszes ocr_frames mezo statuszat updateljuk,
-// amelyek nem 'failed' vagy 'deleted' allapotuak. Ha az 'id'-ban atadunk egy listat, akkor csak
-// az adott listaban megadott 'ocr_frames.id' sorokat update-eljuk.
-//
-// id          = (opcionalis, arr/integer) Az update-elni kivant ocr_frames sorok listaja
-// recordingid = felveltel ID-je
-// status      = statusmezo
-//
-///////////////////////////////////////////////////////////////////////////////////////////////////
-	global $db;
-	$result = array(
-		'result'  => false, // sikerult/nem sikerult
-		'message' => null,  // hibauzenet
-		'command' => null,  // vegrehajtott SQL parancs
-		'output'  => null,  // a beszurt ocr_frames utolso ID-je
-	);
-	
-	if (!is_resource($db)) $db = db_maintain(); 
-	
-	if ($recordingid === null && $id === null) {
-		$result['message'] = "[ERROR] updateOCRdata has been called without 'recordingid' nor 'id'.";
-		return $result;
-	} elseif ($status === null ) {
-		$result['messge'] = "[ERROR] no 'status' passed to updateOCRdata().";
-		return $result;
-	}
-	
-	try {
-		$updatequery = "
-			UPDATE
-				`ocr_frames`
-			SET
-				`status` = '". $status ."'
-			WHERE";
-		if ($id === null) {
-			$updatequery .= "
-				`ocr_frames`.`recordingid` = ". $recordingid ." AND
-				`ocr_frames`.`status` NOT REGEXP 'delete|failed';
-			";
-		} elseif (is_array($id)) {
-			$updatequery .= "
-				`ocr_frames`.`id` IN (". implode(',', $arr) .");";
-		} else {
-			$updatequery .= "
-				`ocr_frames`.`id` = ". intval($id) .";";
-		}
-		
-		$result['command'] = $updatequery;
-		$db->Execute($updatequery);
-	} catch (Exception $ex) {
-		$result['message'] = __FUNCTION__ ." failed! Errormessage: ". $ex->getMessage();
-		return $result;
-	}
-	$result['result'] = true;
-	$result['output'] = ( int ) $db->Insert_ID();
-	return $result;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
