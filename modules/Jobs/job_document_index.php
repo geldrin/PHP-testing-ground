@@ -29,10 +29,11 @@ $app = new Springboard\Application\Cli(BASE_PATH, false);
 // Load jobs configuration file
 $app->loadConfig('modules/Jobs/config_jobs.php');
 $jconf = $app->config['config_jobs'];
+$myjobid = $jconf['jobid_document_index'];
 
 // Log related init
 $debug = Springboard\Debug::getInstance();
-$debug->log($jconf['log_dir'], $jconf['jobid_document_index'] . ".log", "Document index job started", $sendmail = false);
+$debug->log($jconf['log_dir'], $myjobid . ".log", "*************************** Job: Document index ***************************" ."\n", $sendmail = false);
 
 if ( iswindows() ) {
 	echo "ERROR: Non-Windows process started on Windows platform\n";
@@ -40,7 +41,7 @@ if ( iswindows() ) {
 }
 
 // Start an infinite loop - exit if any STOP file appears
-while( !is_file( $app->config['datapath'] . 'jobs/job_document_index.stop' ) and !is_file( $app->config['datapath'] . 'jobs/all.stop' ) ) {
+while( !is_file( $app->config['datapath'] . 'jobs/' .$myjobid . '.stop' ) and !is_file( $app->config['datapath'] . 'jobs/all.stop' ) ) {
 
 	clearstatcache();
     while ( 1 ) {
@@ -274,7 +275,7 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_document_index.stop' ) and
 
 		$global_log .= "Indexed text: " . sprintf("%.2f", $attached_doc['documentcache_size'] / 1024 ) . " Kbyte\n";
 
-		log_document_conversion($attached_doc['id'], $attached_doc['rec_id'], $jconf['jobid_document_index'], "-", "[OK] Successful document indexation in " . $hms . " time.\n\n" . $global_log, "-", "-", $indexing_duration, true);
+		log_document_conversion($attached_doc['id'], $attached_doc['rec_id'], $jconf['jobid_document_index'], "-", "[OK] Successful document indexation in " . $hms . " time.\n\n" . $global_log, "-", "-", $indexing_duration, false);
 
 		break;
     }
