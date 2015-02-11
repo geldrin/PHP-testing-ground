@@ -422,21 +422,21 @@ global $app, $jconf, $debug;
 	}
 
 	// Wide frames
-	$err = create_remove_directory($thumb_output_dir . $jconf['thumb_video_medium'] . "/");
+	$err = create_remove_directory($thumb_output_dir . $app->config['videothumbnailresolutions']['wide'] ."/");
 	if ( !$err['code'] ) {
 		$debug->log($jconf['log_dir'], $jconf['jobid_media_convert'] . ".log", "MSG: " . $err['message'] . "\nCOMMAND: " . $err['command'] . "\nRESULT: " . $err['result'], $sendmail = true);
 		return false;
 	}
 
 	// 4:3 frames
-	$err = create_remove_directory($thumb_output_dir . $jconf['thumb_video_small'] . "/");
+	$err = create_remove_directory($thumb_output_dir . $app->config['videothumbnailresolutions']['4:3'] ."/");
 	if ( !$err['code'] ) {
 		$debug->log($jconf['log_dir'], $jconf['jobid_media_convert'] . ".log", "MSG: " . $err['message'] . "\nCOMMAND: " . $err['command'] . "\nRESULT: " . $err['result'], $sendmail = true);
 		return false;
 	}
 
 	// High resolution wide frame
-	$err = create_remove_directory($thumb_output_dir . $jconf['thumb_video_large'] . "/");
+	$err = create_remove_directory($thumb_output_dir . $app->config['videothumbnailresolutions']['player'] ."/");
 	if ( !$err['code'] ) {
 		$debug->log($jconf['log_dir'], $jconf['jobid_media_convert'] . ".log", "MSG: " . $err['message'] . "\nCOMMAND: " . $err['command'] . "\nRESULT: " . $err['result'], $sendmail = true);
 		return false;
@@ -452,13 +452,13 @@ global $app, $jconf, $debug;
 		$vthumbs_maxframes = floor($playtime);
 	}
 
-	$log_msg = "[INFO] Video thumbnail generation summary:\nStep: " . $thumb_steps . " sec\nNumber of thumbs: " . $vthumbs_maxframes . "\nResolutions: " . $jconf['thumb_video_medium'] . ", " . $jconf['thumb_video_small'] . ", " . $jconf['thumb_video_large'];
+	$log_msg = "[INFO] Video thumbnail generation summary:\nStep: " . $thumb_steps . " sec\nNumber of thumbs: " . $vthumbs_maxframes . "\nResolutions: " . $app->config['videothumbnailresolutions']['wide'] . ", " . $app->config['videothumbnailresolutions']['4:3'] . ", " . $app->config['videothumbnailresolutions']['player'];
 	$time_start = time();
 
 	// Thumbnail generation under ./indexpics by each recording element
-	$res_wide   = explode("x", $jconf['thumb_video_medium'], 2);
-	$res_43     = explode("x", $jconf['thumb_video_small'], 2);
-	$res_high	= explode("x", $jconf['thumb_video_large'], 2);
+	$res_wide   = explode("x", $app->config['videothumbnailresolutions']['wide'  ], 2);
+	$res_43     = explode("x", $app->config['videothumbnailresolutions']['4:3'   ], 2);
+	$res_high	  = explode("x", $app->config['videothumbnailresolutions']['player'], 2);
 	$filename_prefix = $recording['id'] . "_";
 	$frame_number = 0;
 	$iserror = false;
@@ -473,9 +473,9 @@ global $app, $jconf, $debug;
 		// Set filenames
 		$filename_basename = $filename_prefix . sprintf("%d", $frame_number + 1) . ".jpg";
 		$orig_thumb_filename = $thumb_output_dir . "original/" . $filename_basename;
-		$filename_wide = $thumb_output_dir . $jconf['thumb_video_medium'] . "/" . $filename_basename;
-		$filename_43 = $thumb_output_dir . $jconf['thumb_video_small'] . "/" . $filename_basename;
-		$filename_highres = $thumb_output_dir . $jconf['thumb_video_large'] . "/" . $filename_basename;
+		$filename_wide    = $thumb_output_dir . $app->config['videothumbnailresolutions']['wide'  ] ."/". $filename_basename;
+		$filename_43      = $thumb_output_dir . $app->config['videothumbnailresolutions']['4:3'   ] ."/". $filename_basename;
+		$filename_highres = $thumb_output_dir . $app->config['videothumbnailresolutions']['player'] ."/". $filename_basename;
 
 		$command  = $jconf['nice_high'] . " " . $jconf['ffmpegthumbnailer'] . " -i " . $recording['master_filename'] . " -o " . $orig_thumb_filename . " -s0 -q8 -t" . secs2hms($position_sec) . " 2>&1";
 
@@ -537,7 +537,7 @@ global $app, $jconf, $debug;
 					// Select thumbnails with highest filesize (best automatic selection is supposed)
 					if ( filesize($filename_43) > $recording['thumbnail_size'] ) {
 						$recording['thumbnail_size'] = filesize($filename_43);
-						$recording['thumbnail_indexphotofilename'] = "recordings/" . ( $recording['id'] % 1000 ) . "/" . $recording['id'] . "/indexpics/" . $jconf['thumb_video_small'] . "/" . $filename_basename;
+						$recording['thumbnail_indexphotofilename'] = "recordings/" . ( $recording['id'] % 1000 ) . "/" . $recording['id'] . "/indexpics/" . $app->config['videothumbnailresolutions']['4:3'] . "/" . $filename_basename;
 					}
 				}
 

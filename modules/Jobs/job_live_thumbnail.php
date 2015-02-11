@@ -45,9 +45,13 @@ if ( !is_writable($jconf['livestreams_dir']) ) {
 }
 
 // Thumb sizes
-$res_wide   = explode("x", $jconf['thumb_video_medium'], 2);
-$res_43     = explode("x", $jconf['thumb_video_small'], 2);
-$res_high	= explode("x", $jconf['thumb_video_large'], 2);
+$scale_wide  = $app->config['videothumbnailresolutions']['wide'];
+$scale_small = $app->config['videothumbnailresolutions']['4:3'];
+$scale_high  = $app->config['videothumbnailresolutions']['player'];
+
+$res_wide   = explode("x", $scale_wide, 2);
+$res_43     = explode("x", $scale_small, 2);
+$res_high	= explode("x", $scale_high, 2);
 
 clearstatcache();
 
@@ -110,19 +114,19 @@ for ( $i = 0; $i < count($channels); $i++ ) {
 			exit -1;
 		}
 		// Wide frames
-		$err = create_remove_directory($temp_dir . $jconf['thumb_video_medium'] . "/");
+		$err = create_remove_directory($temp_dir . $scale_wide . "/");
 		if ( !$err['code'] ) {
 			$debug->log($jconf['log_dir'], $myjobid . ".log", $err['message'] . "\n\nCOMMAND: " . $err['command'] . "\n\nRESULT: " . $err['result'], $sendmail = true);
 			exit -1;
 		}
 		// 4:3 frames
-		$err = create_remove_directory($temp_dir . $jconf['thumb_video_small'] . "/");
+		$err = create_remove_directory($temp_dir . $scale_small . "/");
 		if ( !$err['code'] ) {
 			$debug->log($jconf['log_dir'], $myjobid . ".log", $err['message'] . "\n\nCOMMAND: " . $err['command'] . "\n\nRESULT: " . $err['result'], $sendmail = true);
 			exit -1;
 		}
 		// High resolution wide frame
-		$err = create_remove_directory($temp_dir . $jconf['thumb_video_large'] . "/");
+		$err = create_remove_directory($temp_dir . $scale_high . "/");
 		if ( !$err['code'] ) {
 			$debug->log($jconf['log_dir'], $myjobid . ".log", $err['message'] . "\n\nCOMMAND: " . $err['command'] . "\n\nRESULT: " . $err['result'], $sendmail = true);
 			exit -1;
@@ -148,9 +152,9 @@ for ( $i = 0; $i < count($channels); $i++ ) {
 	$filename = $channels[$i]['streamid'] . "_" . $datetime . ".png";
 	$filename_jpg = $channels[$i]['streamid'] . "_" . $datetime . ".jpg";
 
-	$path_wide = $temp_dir . $jconf['thumb_video_medium'] . "/";
-	$path_43 = $temp_dir . $jconf['thumb_video_small'] . "/";
-	$path_highres = $temp_dir . $jconf['thumb_video_large'] . "/";
+	$path_wide = $temp_dir . $scale_wide . "/";
+	$path_43 = $temp_dir . $scale_small . "/";
+	$path_highres = $temp_dir . $scale_high . "/";
 
 	if ( copy($thumb_filename, $path_wide . $filename) && copy($thumb_filename, $path_43 . $filename) && copy($thumb_filename, $path_highres . $filename) ) {
 
@@ -196,16 +200,16 @@ for ( $i = 0; $i < count($channels); $i++ ) {
 	}
 
 	// SSH chmod/chown
-	$err = sshMakeChmodChown($app->config['fallbackstreamingserver'], $remote_path . $channels[$i]['streamid'] . "/" .$jconf['thumb_video_small'] . "/" . $filename_jpg, false);
+	$err = sshMakeChmodChown($app->config['fallbackstreamingserver'], $remote_path . $channels[$i]['streamid'] . "/" . $scale_small . "/" . $filename_jpg, false);
 	if ( !$err['code'] ) $debug->log($jconf['log_dir'], $myjobid . ".log", "MSG: " . $err['message'] . "\nCOMMAND: " . $err['command'] . "\nRESULT: " . $err['result'], $sendmail = false);
-	$err = sshMakeChmodChown($app->config['fallbackstreamingserver'], $remote_path . $channels[$i]['streamid'] . "/" .$jconf['thumb_video_medium'] . "/" . $filename_jpg, false);
+	$err = sshMakeChmodChown($app->config['fallbackstreamingserver'], $remote_path . $channels[$i]['streamid'] . "/" . $scale_wide . "/" . $filename_jpg, false);
 	if ( !$err['code'] ) $debug->log($jconf['log_dir'], $myjobid . ".log", "MSG: " . $err['message'] . "\nCOMMAND: " . $err['command'] . "\nRESULT: " . $err['result'], $sendmail = false);
-	$err = sshMakeChmodChown($app->config['fallbackstreamingserver'], $remote_path . $channels[$i]['streamid'] . "/" .$jconf['thumb_video_large'] . "/" . $filename_jpg, false);
+	$err = sshMakeChmodChown($app->config['fallbackstreamingserver'], $remote_path . $channels[$i]['streamid'] . "/" . $scale_high . "/" . $filename_jpg, false);
 	if ( !$err['code'] ) $debug->log($jconf['log_dir'], $myjobid . ".log", "MSG: " . $err['message'] . "\nCOMMAND: " . $err['command'] . "\nRESULT: " . $err['result'], $sendmail = false);
 
 	// Update index photo filename
 	$tmp = explode("/", $app->config['livestreampath']);
-	$indexphotofilename = $tmp[count($tmp)-2] . "/" . $channels[$i]['streamid'] . "/" . $jconf['thumb_video_small'] . "/" . $filename_jpg;
+	$indexphotofilename = $tmp[count($tmp)-2] . "/" . $channels[$i]['streamid'] . "/" . $scale_small . "/" . $filename_jpg;
 	updateLiveFeedStreamIndexPhoto($channels[$i]['streamid'], $indexphotofilename);
 	$debug->log($jconf['log_dir'], $myjobid . ".log", "[OK] Updated live thumbs published for livefeed_stream.id = " . $channels[$i]['streamid'] . " at " . $app->config['fallbackstreamingserver'] . ":" . $remote_path, $sendmail = false);
 

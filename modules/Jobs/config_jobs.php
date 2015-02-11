@@ -133,9 +133,9 @@ return array('config_jobs' => array(
 
 	// Thumbnails
 	'ffmpegthumbnailer'      => '/usr/bin/ffmpegthumbnailer-2.0.8', // ffmpegthumbnailer path
-	'thumb_video_small'      => '220x130',         // Resolution of normal video thumbnails
-	'thumb_video_medium'     => '300x168',         // Resolution of wide video thumbnails
-	'thumb_video_large'      => '618x348',         // Resolution of wide video thumbnails
+	// 'thumb_video_small'      => '220x130',         // Resolution of normal video thumbnails
+	// 'thumb_video_medium'     => '300x168',         // Resolution of wide video thumbnails
+	// 'thumb_video_large'      => '618x348',         // Resolution of wide video thumbnails
 	'thumb_video_numframes'  => 20,                // Number of video thumbnails generated per recording
 
 	// Ocr frames
