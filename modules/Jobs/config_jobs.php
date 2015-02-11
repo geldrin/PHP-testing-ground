@@ -115,13 +115,13 @@ return array('config_jobs' => array(
 	'dbstatus_indexing_ok'       => 'completed',
 
 	// VCR options
-	'vcr_server'             => 'tcs.streamnet.hu',
+/*	'vcr_server'             => 'tcs.streamnet.hu',
 	'vcr_user'               => 'admin',
-	'vcr_password'           => 'BoRoKaBoGYo1980',
+	'vcr_password'           => 'BoRoKaBoGYo1980', */
 
 	// API authentication data
-	'api_user'               => 'support@videosqr.com',
-	'api_password'           => 'MekkElek123',
+/*	'api_user'               => 'support@videosqr.com',
+	'api_password'           => 'MekkElek123', */
 
 	// FFMpeg related
 	'ffmpeg_alt'             => '/home/conv/ffmpeg/ffmpeg-customvsq-git20150116-static/ffmpeg', // current FFMpeg static build

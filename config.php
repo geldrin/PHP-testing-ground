@@ -280,6 +280,17 @@ $config = array(
   'uploadmaintenanceflagpath' => $this->basepath . 'UPLOADMAINTENANCE',
   'dbunavailableflagpath'     => $this->basepath . 'DBUNAVAILABLE',
   
+  // Converter related settings
+  // VCR options
+  'vcr' => array(
+    'server'    => '',
+    'user'      => '',
+    'password'  => ''
+  ),
+  // API authentication data
+  'api_user' => 'support@videosqr.com',
+  'api_password' => '',
+  
 );
 
 $config['phpsettings'] = array(

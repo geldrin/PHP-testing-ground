@@ -427,18 +427,18 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_vcr_control.stop' ) and !i
 exit;
 
 function TCS_Connect() {
-global $jconf;
+global $app, $jconf, $myjobid;
 
 	// SOAP related URLs
-	$vcr_wsdl = "http://" . $jconf['vcr_server'] . "/tcs/Helium.wsdl";
-	$vcr_api_url = "http://" . $jconf['vcr_server'] . "/tcs/SoapServer.php";
+	$vcr_wsdl = "http://" . $app->config['vcr']['server'] . "/tcs/Helium.wsdl";
+	$vcr_api_url = "http://" . $app->config['vcr']['server'] . "/tcs/SoapServer.php";
 
 	// TCS: SOAP connection to Cisco TCS
 	$soapOptions = array(
 		'location'                  => $vcr_api_url,
 		'authentication'            => SOAP_AUTHENTICATION_DIGEST,
-		'login'                     => $jconf['vcr_user'],
-		'password'                  => $jconf['vcr_password'],
+		'login'                     => $app->config['vcr']['user'],
+		'password'                  => $app->config['vcr']['password'],
 		'connection_timeout'        => 10
 	);
 
@@ -465,7 +465,7 @@ global $jconf;
 //	  o TRUE: job is available for conversion
 //	- $recording: recording_element DB record returned in global $recording variable
 function query_vcrrecording(&$vcr, &$vcr_user) {
-global $jconf, $db;
+global $jconf, $db, $myjobid;
 
 	$db = db_maintain();
 
@@ -554,7 +554,7 @@ global $jconf, $db;
 
 // Query VCR recording to upload
 function query_vcrupload(&$vcr_upload, &$vcr_user) {
-global $jconf, $db;
+global $jconf, $db, $myjobid;
 
 	$db = db_maintain();
 
@@ -626,7 +626,7 @@ global $jconf, $db;
 }
 
 function TCS_ReserveConfId($vcr) {
-global $soap_rs, $jconf;
+global $soap_rs, $jconf, $myjobid;
 
 	$err = array();
 
@@ -664,7 +664,7 @@ global $soap_rs, $jconf;
 }
 
 function TCS_Dial($vcr) {
-global $soap_rs, $jconf;
+global $soap_rs, $jconf, $myjobid;
 
 	$err = array();
 
@@ -698,9 +698,6 @@ global $soap_rs, $jconf;
         $debug->log($jconf['log_dir'], $myjobid . ".log", $err['message'] . "\n\nCommand:\n\n" . $err['command'], $sendmail = true);
 		return $err;
 	}
-
-//echo "DIALING...\n";
-//var_dump($result);
 
 	if ( $result->DialResult->ErrorCode != 0 ) {
 		$err['code'] = false;
@@ -755,7 +752,7 @@ global $soap_rs, $jconf;
 }
 
 function TCS_CallInfo($vcr) {
-global $soap_rs, $jconf;
+global $soap_rs, $jconf, $myjobid;
 
 	$err = array();
 
@@ -778,9 +775,6 @@ global $soap_rs, $jconf;
 	$err['data']['callstate'] = $callinfo->CallState;
 	$err['data']['mediastate'] = $callinfo->MediaState;
 	$err['data']['writerstatus'] = $callinfo->WriterStatus;
-
-//echo "GETINGCALLINFO...\n";
-//var_dump($result);
 
 	// Unknown conference ID, fatal error
 	if ( $callinfo->CallState == "NOT_IN_CALL" ) {
@@ -834,7 +828,7 @@ global $soap_rs, $jconf;
 }
 
 function TCS_GetConfInfo(&$vcr) {
-global $soap_rs, $jconf;
+global $soap_rs, $jconf, $myjobid;
 
 	$err = array();
 	$err['code_num'] = 0;
@@ -853,9 +847,6 @@ global $soap_rs, $jconf;
         $debug->log($jconf['log_dir'], $myjobid . ".log", $err['message'] . "\n\nCommand:\n\n" . $err['command'], $sendmail = true);
 		return $err;
 	}
-
-/*echo "GET INFO\n";
-var_dump($result); */
 
 	$err_su = TCS_GetStreamParams($result);
 	if ( $err_su['code'] ) {
@@ -976,7 +967,7 @@ function TCS_GetStreamParams($conf_info) {
 }
 
 function TCS_Disconnect($vcr) {
-global $soap_rs, $jconf;
+global $soap_rs, $jconf, $myjobid;
 
 	$err = array();
 
@@ -994,9 +985,6 @@ global $soap_rs, $jconf;
 		return $err;
 	}
 
-//echo "DISCONNECT:\n";
-//var_dump($result);
-
     if ( $result->DisconnectCallResult->Error != 0 ) {
 		$err['code'] = false;
 		$err['message'] = "[ERROR] VCR is unable to disconnect call for conference " . $vcr['conf_id'] . ". Error code: " . $result->DisconnectCallResult->ErrorCode;
@@ -1010,7 +998,7 @@ global $soap_rs, $jconf;
 }
 
 function TCS_GetSystemHealth() {
-global $soap_rs, $jconf;
+global $soap_rs, $jconf, $myjobid;
 
 	$err = array();
 
@@ -1023,8 +1011,6 @@ global $soap_rs, $jconf;
         $debug->log($jconf['log_dir'], $myjobid . ".log", $err['message'] . "\n\nCommand:\n\n" . $err['command'], $sendmail = true);
 		return $err;
 	}
-
-//var_dump($result);
 
 	$syshealth = $result->GetSystemHealthResult;
 
@@ -1050,7 +1036,7 @@ global $soap_rs, $jconf;
 }
 
 function TCS_GetSystemInformation() {
-global $soap_rs, $jconf;
+global $soap_rs, $jconf, $myjobid;
 
 	$err = array();
 
@@ -1065,8 +1051,6 @@ global $soap_rs, $jconf;
 	}
 
 	$err['code'] = true;
-
-//var_dump($result);
 
 /*
   ["GetSystemInformationResult"]=>
@@ -1099,7 +1083,7 @@ global $soap_rs, $jconf;
 }
 
 function TCS_GetCallCapacity() {
-global $soap_rs, $jconf;
+global $soap_rs, $jconf, $myjobid;
 
 	$err = array();
 
