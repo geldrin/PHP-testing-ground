@@ -188,6 +188,11 @@ while( !is_file( $app->config['datapath'] . 'jobs/' . $myjobid . '.stop' ) and !
             if ( !file_exists($dirs2check[$i]) ) {
                 $msg .= "[ERROR] " . $dirs2check[$i] . " does not exist.\n";
                 $node_status = "disabledmissingpath";
+            } else {
+                if ( !is_writeable($dirs2check[$i]) ) {
+                    $msg .= "[ERROR] " . $dirs2check[$i] . " is not writeable.\n";
+                    $node_status = "disabledfailpath";
+                }
             }
         }
         if ( !empty($msg) ) {
@@ -199,33 +204,37 @@ while( !is_file( $app->config['datapath'] . 'jobs/' . $myjobid . '.stop' ) and !
     //// CPU usage
     $node_cpu = trim(`top -b -n 1 | grep "^%Cpu" | awk '{ print $2+$4+$6; }'`);
     
-    //// Storag free space check
+    //// Storage free space check
     if ( $firstround or empty($node_info) or ( ( $minutes % 5 ) == 0 ) ) {
         echo "storage: " . date("H:i:s") . "\n";
         if ( $node_role == "converter" ) {
             $storages2check = array(
                 0   => array(
-                            'path'  => "/",                         // system root
-                            'db'    => "storagesystem",
+                            'path'          => "/",                 // System root
+                            'db'            => "storagesystem",
+                            'cleanuppath'   => "/tmp",              // if auto cleanup is possible, what path?
+                            'cleanupdays'   => 20
                         ),
                 1   => array(
-                            'path'  => $app->config['convpath'],   // converter temp path
-                            'db'    => "storagework",
+                            'path'          => $app->config['convpath'],    // Converter temp path
+                            'db'            => "storagework",
+                            'cleanuppath'   => $app->config['convpath'],
+                            'cleanupdays'   => 10
                         )
             );
         }
         if ( $node_role == "frontend" ) {
             $storages2check = array(
                 0   => array(
-                            'path'  => "/",                         // system root
+                            'path'  => "/",                         // System root
                             'db'    => "storagesystem",
                         ),
                 1   => array(
-                            'path'  => $app->config['uploadpath'],   // upload path
+                            'path'  => $app->config['uploadpath'],  // Upload path
                             'db'    => "storagework",
                         ),
                 2   => array(
-                            'path'  => $app->config['mediapath'],   // storage
+                            'path'  => $app->config['mediapath'],   // Media storage
                             'db'    => "storage",
                         )
             );
@@ -251,8 +260,16 @@ while( !is_file( $app->config['datapath'] . 'jobs/' . $myjobid . '.stop' ) and !
             if ( $diskinfo['free_percent'] >= $alarm_levels['critical'] ) {
                 $msg .= "File system free space for " . $storages2check[$i]['path'] . ": CRITICAL\n";
                 $msg .= "\tTotal: " . round($diskinfo['total'] / 1024 / 1024 / 1024, 2) . "GB Free: " . round($diskinfo['free'] / 1024 / 1024 / 1024, 2) . "GB (" . $diskinfo['free_percent'] . "%)\n";
-                $msg .= "\t***** CHECK ASAP *****\n\n";
                 $node_status = "disabledstoragelow";
+                
+                // ## Start quick cleanup of temp areas
+                if ( isset($storages2check[$i]['cleanuppath']) and file_exists($storages2check[$i]['cleanuppath']) ) {
+                    if ( !isset($storages2check[$i]['cleanupdays']) ) $storages2check[$i]['cleanupdays'] = 20;
+                    $err = findRemoveFilesOlderThanDays($storages2check[$i]['cleanuppath'], $storages2check[$i]['cleanupdays'], true);
+                    $msg .= "\tQuick cleanup: " . round($err['size'] / 1024 / 1024, 2) . "MB (" . $err['value'] . " files) removed from " . $storages2check[$i]['cleanuppath'] . "\n";
+                }
+                
+                $msg .= "\t***** CHECK ASAP *****\n\n";
             }
             if ( !empty($storages2check[$i]['db']) ) {
                 $values[$storages2check[$i]['db'] . 'total'] = $diskinfo['total'];

@@ -1,6 +1,34 @@
 <?php
 // Base functions
 
+function findRemoveFilesOlderThanDays($path, $days, $remove = false) {
+
+	$err['code'] = false;
+	$err['command_output'] = "-";
+	$err['result'] = 0;
+	$err['size'] = 0;
+	$err['value'] = 0;
+
+    $remove_cmd = "";
+    if ( $remove ) $remove_cmd = "-exec rm -f {} \;";
+    $err['command'] = "find " . $path . " -type f -user conv -mtime +" . $days . " -printf '%s %p\n' " . $remove_cmd . " 2>&1 | grep -v 'Permission denied'";
+    
+   	exec($err['command'], $output, $err['result']);
+	$err['command_output'] = implode("\n", $output);
+    
+    for ( $i = 0; $i < count($output); $i++ ) {
+        $tmp = explode(" ", $output[$i], 2);
+        if ( is_numeric($tmp[0]) ) {
+            $err['size'] += $tmp[0];
+            $err['value']++;
+        }
+    }
+    
+	if ( $err['result'] == 0 ) $err['code'] = true;
+
+    return $err;
+}
+
 function directory_size($path) {
 
 	$err['code'] = FALSE;
