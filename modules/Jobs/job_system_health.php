@@ -309,14 +309,16 @@ while( !is_file( $app->config['datapath'] . 'jobs/' . $myjobid . '.stop' ) and !
 
                     $node_frontend = array();
                     $node_frontend = $node_frontends->fields;
+                    
                     $ssh_command = "ssh -i " . $jconf['ssh_key'] . " " . $jconf['ssh_user'] . "@" . $node_frontend['server'] . " date";
                     exec($ssh_command, $output, $result);
                     $output_string = implode("\n", $output);
                     if ( $result != 0 ) {
                         updateInfrastructureNodeStatus($node_info['id'], "statusnetwork", "disabledfrontendunreachable:" . $node_frontend['server']);
-                        $msg = "[ERROR] Unsuccessful ping to: " . $node_frontend['server'] . ".\n\tCommand: " . $ssh_command . "\n\tOutput: " . $output_string;
+                        $msg .= "[ERROR] Unsuccessful SSH ping to: " . $node_frontend['server'] . ".\n\tCommand: " . $ssh_command . "\n\tOutput: " . $output_string;
                         $ssh_all_ok = false;
                     }
+                    
                     $node_frontends->MoveNext();
                 }
                 // Status changed back to OK
