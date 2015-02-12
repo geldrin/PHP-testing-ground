@@ -394,7 +394,7 @@ function copy_attacheddoc_to_converter(&$attached_doc) {
 	$attached_doc['temp_directory'] = $temp_directory;
 
 	// SCP copy from remote location
-	$err = ssh_filecopy($attached_doc['sourceip'], $remote_path . $base_filename, $attached_doc['source_file']);
+	$err = ssh_filecopy2($attached_doc['sourceip'], $remote_path . $base_filename, $attached_doc['source_file']);
 	if ( !$err['code'] ) {
 		log_document_conversion($attached_doc['id'], $attached_doc['rec_id'], $jconf['jobid_document_index'], $jconf['dbstatus_copyfromfe'], $err['message'], $err['command'], $err['result'], 0, true);
         updateAttachedDocumentStatus($attached_doc['id'], $jconf['dbstatus_copyfromfe_err'], 'indexingstatus');
