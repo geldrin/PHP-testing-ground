@@ -477,7 +477,7 @@ function create_remove_directory($directory) {
 // *************************************************************************
 // Description: move file from upload area to storage
 function move_uploaded_file_to_storage($fname, $fname_target, $isoverwrite) {
- global $jconf, $app;
+ global $app, $jconf;
 
 	$err = array();
 	$err['code'] = FALSE;
@@ -684,7 +684,7 @@ function getFileList($dir) {
 // |				    SSH remote file functions						   |
 // -------------------------------------------------------------------------
 function ssh_filesize($server, $file) {
-global $jconf;
+global $app;
 
 	$err = array();
 	$err['value'] = null;
@@ -693,8 +693,8 @@ global $jconf;
 	$err['result'] = 0;
 	$err['size'] = 0;
 
-	$ssh_command = "ssh -i " . $jconf['ssh_key'] . " " . $jconf['ssh_user'] . "@" . $server . " ";
-	$remote_filename = $jconf['ssh_user'] . "@" . $server . ":" . $file;
+	$ssh_command = "ssh -i " . $app->config['ssh_key'] . " " . $app->config['ssh_user'] . "@" . $server . " ";
+	$remote_filename = $app->config['ssh_user'] . "@" . $server . ":" . $file;
 
 	$filesize = 0;
 	$command = $ssh_command . "du -sb " . $file . " 2>&1";
@@ -731,7 +731,7 @@ global $jconf;
 }
 
 function ssh_filemtime($server, $file) {
- global $jconf;
+ global $app;
 
 	$err = array();
 	$err['value'] = null;
@@ -740,8 +740,8 @@ function ssh_filemtime($server, $file) {
 	$err['result'] = 0;
 	$err['size'] = 0;
 
-	$ssh_command = "ssh -i " . $jconf['ssh_key'] . " " . $jconf['ssh_user'] . "@" . $server . " ";
-	$remote_filename = $jconf['ssh_user'] . "@" . $server . ":" . $file;
+	$ssh_command = "ssh -i " . $app->config['ssh_key'] . " " . $app->config['ssh_user'] . "@" . $server . " ";
+	$remote_filename = $app->config['ssh_user'] . "@" . $server . ":" . $file;
 
 	$filesize = 0;
 	$command = $ssh_command . "stat -c %Y " . $file . " 2>&1";
@@ -838,11 +838,11 @@ global $jconf;
 
 
 function ssh_filecopy_from($server, $file, $destination) {
-global $jconf;
+global $app;
 
 	$err = array();
 
-	$command = "scp -B -i " . $jconf['ssh_key'] . " " . $jconf['ssh_user'] . "@" . $server . ":" . $file . " " . $destination . " 2>&1";
+	$command = "scp -B -i " . $app->config['ssh_key'] . " " . $app->config['ssh_user'] . "@" . $server . ":" . $file . " " . $destination . " 2>&1";
 	$time_start = time();
 	exec($command, $output, $result);
 	$duration = time() - $time_start;
@@ -864,11 +864,11 @@ global $jconf;
 }
 
 function ssh_filerename($server, $from, $to) {
-global $jconf;
+global $app;
 
 	$err = array();
 
-	$ssh_command = "ssh -i " . $jconf['ssh_key'] . " " . $jconf['ssh_user'] . "@" . $server . " ";
+	$ssh_command = "ssh -i " . $app->config['ssh_key'] . " " . $app->config['ssh_user'] . "@" . $server . " ";
 
 	$command = $ssh_command . "mv -f " . $from . " " . $to . " 2>&1";
 	exec($command, $output, $result);
@@ -888,11 +888,11 @@ global $jconf;
 }
 
 function ssh_fileremove($server, $file_toremove) {
-global $jconf;
+global $app;
 
 	$err = array();
 
-	$ssh_command = "ssh -i " . $jconf['ssh_key'] . " " . $jconf['ssh_user'] . "@" . $server . " ";
+	$ssh_command = "ssh -i " . $app->config['ssh_key'] . " " . $app->config['ssh_user'] . "@" . $server . " ";
 
 	$command = $ssh_command . "rm -f " . $file_toremove . " 2>&1";
 	exec($command, $output, $result);
@@ -913,7 +913,7 @@ global $jconf;
 
 // download only
 function ssh_filecopy($server, $file_src, $file_dst) {
-global $jconf;
+global $app, $jconf;
 
 	// SSH check file size before start copying
 	$err = ssh_filesize($server, $file_src);
@@ -934,7 +934,7 @@ global $jconf;
 		return $err;
 	}
 
-	$command = "scp -B -i " . $jconf['ssh_key'] . " " . $jconf['ssh_user'] . "@" . $server . ":" . $file_src . " " . $file_dst . " 2>&1";
+	$command = "scp -B -i " . $app->config['ssh_key'] . " " . $app->config['ssh_user'] . "@" . $server . ":" . $file_src . " " . $file_dst . " 2>&1";
 	$time_start = time();
 	exec($command, $output, $result);
 	$duration = time() - $time_start;
@@ -957,7 +957,7 @@ global $jconf;
 
 // new: download or upload
 function ssh_filecopy2($server, $file_src, $file_dst, $isdownload = true) {
-global $jconf;
+global $app, $jconf;
 
 	// SSH check file size before start copying
 	if ( $isdownload ) {
@@ -982,9 +982,9 @@ global $jconf;
 			$err['message'] = "[ERROR] Not enough free space to start conversion (available: " . ceil($available_disk / 1024 / 1024) . "Mb, filesize: " . ceil($filesize / 1024 / 1024) . ")";
 			return $err;
 		}
-		$command = "scp -B -r -i " . $jconf['ssh_key'] . " " . $jconf['ssh_user'] . "@" . $server . ":" . $file_src . " " . $file_dst . " 2>&1";
+		$command = "scp -B -r -i " . $app->config['ssh_key'] . " " . $app->config['ssh_user'] . "@" . $server . ":" . $file_src . " " . $file_dst . " 2>&1";
 	} else {
-		$command = "scp -B -r -i " . $jconf['ssh_key'] . " " . $file_src . " " . $jconf['ssh_user'] . "@" . $server . ":" . $file_dst . " 2>&1";
+		$command = "scp -B -r -i " . $app->config['ssh_key'] . " " . $file_src . " " . $app->config['ssh_user'] . "@" . $server . ":" . $file_dst . " 2>&1";
 	}
 
 	$time_start = time();
@@ -1009,7 +1009,7 @@ global $jconf;
 
 // SSH: chmod/chown remote files
 function sshMakeChmodChown($server, $file, $isdirectory) {
-global $jconf;
+global $app, $jconf;
 
 	$err = array();
 	$err['code'] = false;
@@ -1019,19 +1019,19 @@ global $jconf;
 	if ( $isdirectory ) $permissions = $jconf['directory_access'];
 
 	// SSH command template
-	$ssh_command = "ssh -i " . $jconf['ssh_key'] . " " . $jconf['ssh_user'] . "@" . $server . " ";
+	$ssh_command = "ssh -i " . $app->config['ssh_key'] . " " . $app->config['ssh_user'] . "@" . $server . " ";
 	// Shell command
 	$chmod_command = "chmod -f -R " . $permissions . " " . $file . " 2>&1 ; chown -f -R " . $jconf['file_owner'] . " " . $file . " 2>&1";
 	$command = $ssh_command . "\"" . $chmod_command . "\"";
 	exec($command, $output, $result);
 	$output_string = implode("\n", $output);
 	if ( $result != 0 ) {
-		$err['message'] = "[WARN] SCP cannot stat " . $jconf['ssh_user'] . "@" . $server . ":" . $file . " file.\n";
+		$err['message'] = "[WARN] SCP cannot stat " . $app->config['ssh_user'] . "@" . $server . ":" . $file . " file.\n";
 		return $err;
 	}
 
 	$err['code'] = true;
-	$err['message'] = "[OK] SCP stat " . $jconf['ssh_user'] . "@" . $server . ":" . $file . " file.\n";
+	$err['message'] = "[OK] SCP stat " . $app->config['ssh_user'] . "@" . $server . ":" . $file . " file.\n";
 
 	return $err;
 }

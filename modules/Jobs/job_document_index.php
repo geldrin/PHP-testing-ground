@@ -386,7 +386,7 @@ function copy_attacheddoc_to_converter(&$attached_doc) {
 	// Path and filename
 	$remote_path = $app->config['recordingpath'] . ( $attached_doc['rec_id'] % 1000 ) . "/" . $attached_doc['rec_id'] . "/attachments/";
 	$base_filename = $attached_doc['id'] . "." . $attached_doc['masterextension'];
-	$remote_filename = $jconf['ssh_user'] . "@" . $attached_doc['sourceip'] . ":" . $remote_path . $base_filename;
+	$remote_filename = $app->config['ssh_user'] . "@" . $attached_doc['sourceip'] . ":" . $remote_path . $base_filename;
 	$master_filename = $temp_directory . $base_filename;
 
 	$attached_doc['remote_filename'] = $remote_filename;

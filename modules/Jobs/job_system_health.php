@@ -310,7 +310,7 @@ while( !is_file( $app->config['datapath'] . 'jobs/' . $myjobid . '.stop' ) and !
                     $node_frontend = array();
                     $node_frontend = $node_frontends->fields;
                     
-                    $ssh_command = "ssh -i " . $jconf['ssh_key'] . " " . $jconf['ssh_user'] . "@" . $node_frontend['server'] . " date";
+                    $ssh_command = "ssh -i " . $app->config['ssh_key'] . " " . $app->config['ssh_user'] . "@" . $node_frontend['server'] . " date";
                     exec($ssh_command, $output, $result);
                     $output_string = implode("\n", $output);
                     if ( $result != 0 ) {

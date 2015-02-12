@@ -683,7 +683,7 @@ global $db, $app, $debug, $jconf;
 		}
 
 		// SSH: chmod new remote files
-		$ssh_command = "ssh -i " . $jconf['ssh_key'] . " " . $jconf['ssh_user'] . "@" . $recording[$idx . 'mastersourceip'] . " ";
+		$ssh_command = "ssh -i " . $app->config['ssh_key'] . " " . $app->config['ssh_user'] . "@" . $recording[$idx . 'mastersourceip'] . " ";
 		$command = $ssh_command . "\"" . "chmod -f " . $jconf['file_access'] . " " . $smil_remote_filename . "\"";
 		exec($command, $output, $result);
 		$output_string = implode("\n", $output);
@@ -807,7 +807,7 @@ global $db, $app, $debug, $jconf;
 		}
 
 		// SSH: chmod new remote files
-		$ssh_command = "ssh -i " . $jconf['ssh_key'] . " " . $jconf['ssh_user'] . "@" . $app->config['fallbackstreamingserver'] . " ";
+		$ssh_command = "ssh -i " . $app->config['ssh_key'] . " " . $app->config['ssh_user'] . "@" . $app->config['fallbackstreamingserver'] . " ";
 		$command = $ssh_command . "\"" . "chmod -f " . $jconf['file_access'] . " " . $smil_remote_filename . "\"";
 		exec($command, $output, $result);
 		$output_string = implode("\n", $output);

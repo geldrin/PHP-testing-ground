@@ -52,8 +52,8 @@ return array('config_jobs' => array(
 	'jobid_live_thumb'      => 'job_live_thumbnail',
 
 	// SSH related settings
-	'ssh_user'              => 'conv',
-	'ssh_key'               => '/home/conv/.ssh/id_rsa',
+	//'ssh_user'              => 'conv',
+	//'ssh_key'               => '/home/conv/.ssh/id_rsa',
 
 	// File system related settings
 	'file_owner'            => 'conv:vsq',  // conv:vsq

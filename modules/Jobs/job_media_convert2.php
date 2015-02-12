@@ -326,7 +326,7 @@ global $app, $jconf, $debug;
 	$recording[$idx .'master_basename'       ] = $recording['id'] . "_" . $suffix . "." . $recording[$idx .'mastervideoextension'];
 	$recording[$idx .'master_remote_filename'] = $recording['master_remote_path'] . $recording[$idx .'master_basename'];
 	$recording[$idx .'master_filename'       ] = $recording['master_path'] . $recording[$idx .'master_basename'];
-	$recording[$idx .'master_ssh_filename'   ] = $jconf['ssh_user'] . "@" . $recording[$idx . 'mastersourceip'] . ":" . $recording[$idx .'master_remote_filename'];
+	$recording[$idx .'master_ssh_filename'   ] = $app->config['ssh_user'] . "@" . $recording[$idx . 'mastersourceip'] . ":" . $recording[$idx .'master_remote_filename'];
 	// Conversion: temporary directory
 	$recording['temp_directory'] = $jconf['media_dir'] . $recording['id'] . "/";
 	// Recording: remote storage directory
@@ -665,9 +665,9 @@ function copyMediaToFrontEnd($recording, $profile) {
 	if ( $recording['iscontent'] != 0 ) $idx = "content";
 
 	// SSH command templates
-	$ssh_command = "ssh -i " . $jconf['ssh_key'] . " " . $jconf['ssh_user'] . "@" . $recording[$idx .'mastersourceip'] . " ";
-	$scp_command = "scp -B -r -i " . $jconf['ssh_key'] . " ";
-	$recording['output_ssh_filename'] = $jconf['ssh_user'] . "@" . $recording[$idx . 'mastersourceip'] . ":" . $recording['recording_remote_path'];
+	$ssh_command = "ssh -i " . $app->config['ssh_key'] . " " . $app->config['ssh_user'] . "@" . $recording[$idx .'mastersourceip'] . " ";
+	$scp_command = "scp -B -r -i " . $app->config['ssh_key'] . " ";
+	$recording['output_ssh_filename'] = $app->config['ssh_user'] . "@" . $recording[$idx . 'mastersourceip'] . ":" . $recording['recording_remote_path'];
 
 	// Create remote directories, does nothing if exists
 	$command1 = "mkdir -m " . $jconf['directory_access'] . " -p " . $app->config['recordingpath'] . ( $recording['id'] % 1000 ) . "/" . " 2>&1";

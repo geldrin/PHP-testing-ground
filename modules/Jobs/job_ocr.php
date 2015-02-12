@@ -285,7 +285,7 @@ function Main() {
 			
 			// FAJLOK FELTOLTESE //////////////////////////////////
 			$action = 'UPLOADING';
-			$ssh_template  = "ssh -i " . $jconf['ssh_key'] . " " . $jconf['ssh_user'] . "@" . $recording['contentmastersourceip'] . " ";
+			$ssh_template  = "ssh -i " . $app->config['ssh_key'] . " " . $app->config['ssh_user'] . "@" . $recording['contentmastersourceip'] . " ";
 			
 			/*var_dump(runExt4($ssh_template . "find /srv/vsq/dev.videosquare.eu/recordings/9/9/ -maxdepth 0 -not -empty")); // DEBUG
 			var_dump(runExt4($ssh_template . "find /srv/vsq/dev.videosquare.eu/recordings/9/9/empty/ -maxdepth 0 -not -empty")); // DEBUG
