@@ -3,9 +3,6 @@
 // Job configuration file
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-define('H264_PROFILE',        '-profile:v main -preset:v fast');
-define('H264_PROFILE_MOBILE', '-profile:v baseline -preset:v fast');
-
 return array('config_jobs' => array(
 
 	// Directories
