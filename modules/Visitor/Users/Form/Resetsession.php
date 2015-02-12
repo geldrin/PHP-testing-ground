@@ -28,8 +28,9 @@ class Resetsession extends \Visitor\HelpForm {
     $crypto    = $this->bootstrap->getEncryption();
     $code      = $crypto->randomPassword( 10 );
     $l         = $this->bootstrap->getLocalization();
-    
-    if ( !$userModel->checkEmailAndUpdateValidationCode( $values['email'], $code ) ) {
+    $orgid     = $this->controller->organization['id'];
+
+    if ( !$userModel->checkEmailAndUpdateValidationCode( $values['email'], $code, $orgid ) ) {
       
       $this->form->addMessage( $l('users', 'forgotpassword_error') ); // nincs ilyen reg
       $this->form->invalidate();

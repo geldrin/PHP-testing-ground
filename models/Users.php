@@ -221,11 +221,12 @@ class Users extends \Springboard\Model {
     
   }
   
-  public function checkEmailAndDisabledStatus( $email, $disabled ) {
+  public function checkEmailAndDisabledStatus( $email, $disabled, $organizationid ) {
     
     $this->addFilter('email', $email, false, false);
     $this->addFilter('disabled', $disabled );
-    
+    $this->addFilter('organizationid', $organizationid );
+
     $user = $this->getRow();
     
     if ( empty( $user ) )
@@ -238,9 +239,9 @@ class Users extends \Springboard\Model {
     
   }
   
-  public function checkEmailAndUpdateValidationCode( $email, $code ) {
+  public function checkEmailAndUpdateValidationCode( $email, $code, $organizationid ) {
     
-    if ( !$this->checkEmailAndDisabledStatus( $email, self::USER_VALIDATED ) )
+    if ( !$this->checkEmailAndDisabledStatus( $email, self::USER_VALIDATED, $organizationid ) )
       return false;
     
     $this->updateRow( array(

@@ -23,8 +23,11 @@ class Resend extends \Visitor\HelpForm {
     $userModel = $this->bootstrap->getModel('users');
     $crypto    = $this->bootstrap->getEncryption();
     $l         = $this->bootstrap->getLocalization();
-    
-    $userModel->checkEmailAndDisabledStatus( $values['email'], \Model\Users::USER_UNVALIDATED );
+    $orgid     = $this->controller->organization['id'];
+
+    $userModel->checkEmailAndDisabledStatus(
+      $values['email'], \Model\Users::USER_UNVALIDATED, $orgid
+    );
     
     if ( !$userModel->row ) {
       
