@@ -283,13 +283,17 @@ $config = array(
   // Converter related settings
   // VCR options
   'vcr' => array(
-    'server'    => '',
-    'user'      => '',
-    'password'  => ''
+    'server'     => '',
+    'user'       => '',
+    'password'   => ''
   ),
   // API authentication data
-  'api_user' => 'support@videosqr.com',
+  'api_user'     => 'support@videosqr.com',
   'api_password' => '',
+	
+	// SSH authentication data
+	'ssh_user'     => 'conv',
+	'ssh_key'      => '/home/conv/.ssh/id_rsa',
   
 );
 
