@@ -20,6 +20,7 @@ include_once('job_utils_status.php');
 // Init
 set_time_limit(0);
 $app = new Springboard\Application\Cli(BASE_PATH, PRODUCTION);
+if ($app->config['node_role'] !== 'converter') die;
 
 // Load jobs configuration file
 $app->loadConfig('modules/Jobs/config_jobs.php');
@@ -49,41 +50,7 @@ if ($tmp === 1) {
 	$onice = "nice -n 19";
 }
 unset($tmp, $nicelevel);
-//////////////////////////////////////////// TEST BLOCK ///////////////////////////////////////////
-// set recording to OCR convert
-// updateRecordingStatus($recordingid = 9, $status = 'reconvert', $type = 'ocr'); // DEBUG
 
-// TEST SSH CONNECTION
-/*$address = 'stream.videosquare.eu';
-$port = '22';
-
-$fp = fsockopen($address, $port, $errno, $errstr, 300);
-if(! $fp) {
-     echo "No connection.\n";
-} else {   
-     echo "SSH Available.\n";
-} die;*/
-
-/*
-// TEST SOME FOLDER CREATING SCRIPT
-$convpath = $app->config['convpath'] ."master/9/";
-if (!is_dir($convpath)) {
-	restore_error_handler();
-	$msg = "[INFO] Preparing work directory.\n";
-	echo $msg;
-	// $debug->log($logdir, $logfile, $msg, false);
-	
-	$createdir = mkdir($convpath, $mode = 0775, $recursive = true);
-	var_dump($createdir);
-	if (!$createdir) {
-		$tmp = error_get_last();
-		var_dump($tmp);
-		$msg = "[WARNING] Failed to create directory - ". $tmp['message'] ."\n";
-		echo $msg;
-		// $debug->log($logpath, $logfile, $msg, true);
-	}
-}
-die;*/
 /////////////////////////////////////////// LAUNCH AREA ///////////////////////////////////////////
 
 $debug->log($logdir, $logfile, str_pad("[ OCR Job started ]", 100, '=', STR_PAD_BOTH), false);
@@ -287,13 +254,6 @@ function Main() {
 			$action = 'UPLOADING';
 			$ssh_template  = "ssh -i " . $app->config['ssh_key'] . " " . $app->config['ssh_user'] . "@" . $recording['contentmastersourceip'] . " ";
 			
-			/*var_dump(runExt4($ssh_template . "find /srv/vsq/dev.videosquare.eu/recordings/9/9/ -maxdepth 0 -not -empty")); // DEBUG
-			var_dump(runExt4($ssh_template . "find /srv/vsq/dev.videosquare.eu/recordings/9/9/empty/ -maxdepth 0 -not -empty")); // DEBUG
-			var_dump(runExt4($ssh_template . "find /srv/vsq/dev.videosquare.eu/recordings/9/9/not_empty/ -maxdepth 0 -not -empty")); // DEBUG
-			var_dump(runExt4($ssh_template . "find /srv/vsq/dev.videosquare.eu/recordings/9/9/non_existing/ -maxdepth 0 -not -empty")); // DEBUG
-			exit; // DEBUG
-			*/
-			
 			// Tavoli konyvtar elokeszitese
 			$cmd_check_dst = $ssh_template ."find ". $ocr_dst_dir ." -maxdepth 0 -not -empty";
 			$msg = "[INFO] Moving files.\n > Checking remote directory '". $ocr_dst_dir ."'\n COMMAND: '". $cmd_check_dst ."'";
@@ -461,7 +421,7 @@ function convertOCR($rec) {
 // - Bulk DB update (mi a maximalis query length?) => SHOW VARIABLES LIKE 'max_allowed_packet';
 //
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-	global $jconf, $debug, $onice, $app, $db, $logdir, $logfile;
+	global $app, $db, $debug, $jconf, $logdir, $logfile, $onice;
 	
 	$result = array(
 		'result'         => false,                                                     // success
@@ -517,7 +477,7 @@ function convertOCR($rec) {
 	// 3RD PARTY UTILITY-K ELLENORZESE //////////////////////
 	$result['phase'] = "Checking 3rd party utilites";
 	$cmd_test_imagick = "convert -version";
-	$cmd_test_ocr = "type \"". $jconf['ocr_alt'] ."\"";
+	$cmd_test_ocr = "type \"". $app->config['ocr_alt'] ."\"";
 	$imtest = runExt4($cmd_test_imagick);
 	$ocrtest = runExt4($cmd_test_ocr);
 	if ($imtest['code'] !== 0 ) {
@@ -532,7 +492,7 @@ function convertOCR($rec) {
 	
 	// NYELVI KOD ELLENORZESE ///////////////////////////////
 	$result['phase'] = "Checking language code";
-	$langcode = getLangCode($rec['id'], $jconf['ocr_engine']);
+	$langcode = getLangCode($rec['id'], $app->config['ocr_engine']);
 	// VAGY INKABB ADJUK MEG A JCONF-BAN, HOGY MIKET TUD HASZNALNI A BEKONFIGOLT OCR ENGINE????
 	if ($langcode === false) {
 		$msg = "[ERROR] Querying langcode(". $rec['languageid'] .") failed!";
@@ -549,7 +509,7 @@ function convertOCR($rec) {
 	
 	// KEPKOCKAK KINYERESE //////////////////////////////////
 	$result['phase'] = "Extracting frames from video";
-	$cmd_explode = escapeshellcmd($onice ." ". $jconf['ffmpeg_alt'] ." -v ". $jconf['ffmpeg_loglevel'] ." -i ". $rec['contentmasterfile'] ." -filter_complex  'scale=w=320:h=180:force_original_aspect_ratio=decrease' -r ". $jconf['ocr_frame_distance'] ." -q:v 1 -f image2 ". $cmpdir ."%06d.jpg -r ". $jconf['ocr_frame_distance'] ." -q:v 1 -f image2 ". $wdir ."%06d.jpg");
+	$cmd_explode = escapeshellcmd($onice ." ". $app->config['ffmpeg_alt'] ." -v ". $jconf['ffmpeg_loglevel'] ." -i ". $rec['contentmasterfile'] ." -filter_complex  'scale=w=320:h=180:force_original_aspect_ratio=decrease' -r ". $jconf['ocr_frame_distance'] ." -q:v 1 -f image2 ". $cmpdir ."%06d.jpg -r ". $jconf['ocr_frame_distance'] ." -q:v 1 -f image2 ". $wdir ."%06d.jpg");
 	
 	$debug->log($logdir, $logfile, "Extracting frames from video. Command line:". PHP_EOL . $cmd_explode);
 	
@@ -809,7 +769,7 @@ global $onice;
 		'message' => null,
 		'output'  => null, // full path to output image
 	);
-	$strmethoderr = "Function prepareImage4OCR failed!";
+	$strmethoderr = "Function ". __FUNCTION__ ." failed!";
 	
 	$imagepath = realpath($image);
 
@@ -860,7 +820,7 @@ function getOCRtext($image, $workdir, $lang, $textfile) {
 // Description goes here...
 //
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-global $jconf, $onice;
+global $app, $jconf, $onice;
 	$return_array = array(
 		'result'  => false,
 		'message' => null,
@@ -879,16 +839,16 @@ global $jconf, $onice;
 		return $return_array;
 	}
 	
-	switch ($jconf['ocr_engine']) {
+	switch ($app->config['ocr_engine']) {
 		case 'tesseract':
 			// TESSERACT
-			$cmd_ocr = $onice ." ". $jconf['ocr_alt'] ." ". $imagepath ." \"". pathinfo($textpath, PATHINFO_DIRNAME) . DIRECTORY_SEPARATOR . pathinfo($textpath, PATHINFO_FILENAME) . "\" -l ". $lang;
+			$cmd_ocr = $onice ." ". $app->config['ocr_alt'] ." ". $imagepath ." \"". pathinfo($textpath, PATHINFO_DIRNAME) . DIRECTORY_SEPARATOR . pathinfo($textpath, PATHINFO_FILENAME) . "\" -l ". $lang;
 			break;
 			
 		case 'cuneiform':
 		default:
 			// CUNEIFORM
-			$cmd_ocr = $onice ." ". $jconf['ocr_alt']." --fax -l ". $lang ." -f text -o ". $textpath ." ". $imagepath;
+			$cmd_ocr = $onice ." ". $app->config['ocr_alt']." --fax -l ". $lang ." -f text -o ". $textpath ." ". $imagepath;
 			break;
 	}
 
@@ -969,7 +929,7 @@ function createOCRsnapshots($recordingid, $images, $snapshotparams, $source) {
 		$resize = runExt4($cmdresize);
 		
 		if ($resize['code'] !== 0) {
-			$return['message'] = "Function createOCRsnapshots failed!". PHP_EOL . $resize['cmd_output'] ."\nCommand: ". $cmdresize;
+			$return['message'] = "Function ". __FUNCTION__ ." failed!". PHP_EOL . $resize['cmd_output'] ."\nCommand: ". $cmdresize;
 			$return['output'] = $snapshotsdone;
 			return $return;
 		}
@@ -1000,6 +960,7 @@ function insertOCRdata($recordingid, $framepos, $text = '', $timebase = 1.0, $st
 		'result'  => false, // sikerult/nem sikerult
 		'message' => null,  // hibauzenet
 		'output'  => null,  // a beszurt ocr_frames utolso ID-je
+		'query'   => null,
 	);
 	
 	try {
@@ -1009,19 +970,24 @@ function insertOCRdata($recordingid, $framepos, $text = '', $timebase = 1.0, $st
 		// NOTE::
 		// HA A 'TIMEBASE' < 1s AKKOR A SZOMSZEDOS FRAME-EK UGYAN AZT A POSITION-T FOGJAK FELÜLIRNI!!!!!!!!!!!!!!!
 		// MODOSITANI KELL!!!!!
-		
+		$updateparams = array($recordingid, $position, $text, $status);
 		$updatequery = trim("
 			INSERT INTO 
 				ocr_frames(recordingid, positionsec, ocrtext, status)
 			VALUES (
-				". $recordingid .",
-				". $position .",
-				'". $text ."',
-				'". $status ."')");
+				". $db->Param('recid') .",
+				". $db->Param('position') .",
+				". $db->Param('text') .",
+				". $db->Param('status') .")");
 
-		$db->Execute($updatequery);
+		$rs = $db->Prepare($updatequery);
+		$rs = $db->Execute($updatequery, array($recordingid, $position, $text, $status));
+		
+		if (isset($rs) && isset($rs->sql)) $result['query'] = $rs->sql;
+		else $result['query'] = $updatequery . PHP_EOL . "Params: ". implode(", ", $updateparams);
+		
 	} catch (Exception $ex) {
-		$result['message'] = "insertOCRdata failed! Errormessage: ". $ex->getMessage();
+		$result['message'] = __FUNCTION__ ." failed! Errormessage: ". $ex->getMessage();
 		return $result;
 	}
 	$result['result'] = true;
@@ -1054,10 +1020,14 @@ function getLangCode($recordingid, $ocrengine) {
 			recordings AS r,
 			languages AS l
 		WHERE
-			r.id = ". $recordingid ." AND
+			r.id = ". $db->Param('recordingid') ." AND
 			r.languageid = l.id";
+			
+			
 	try {
-		$langcodes = $db->Execute($query_langcode);
+		$langcodes = $db->Prepare($query_langcode);
+		$langcodes = $db->Execute($query_langcode, array($recordingid));
+		if (isset($langcodes) && isset($langcodes->sql)) var_dump($langcodes->sql);
 		if ($langcodes->EOF) return null;
 		$ISO_639_2 = $langcodes->GetArray();
 		$ISO_639_2 = $ISO_639_2[0]["shortname"];
@@ -1085,6 +1055,7 @@ function getOCRtasks() {
 		'result'  => false,
 		'message' => null,
 		'output'  => null,
+		'query'   => null,
 	);
 	
 	try {
@@ -1103,10 +1074,16 @@ function getOCRtasks() {
 			FROM
 				recordings
 			WHERE
-				(status = '". $jconf['dbstatus_copystorage_ok'] ."' AND contentmasterstatus REGEXP '". $jconf['dbstatus_copystorage_ok'] ."|". $jconf['dbstatus_uploaded'] ."') AND
-				ocrstatus REGEXP '". $jconf['dbstatus_reconvert'] ."|". $jconf['dbstatus_convert'] ."'";
-				
-		$recordset = $db->execute($query);
+				(status = ". $db->Param('sta') ." AND contentmasterstatus REGEXP ". $db->Param('cms') .") AND
+				ocrstatus REGEXP ". $db->Param('os') .";";
+		
+		$recordset = $db->Prepare($query);
+		$recordset = $db->execute($query, array(
+			$jconf['dbstatus_copystorage_ok'],
+			$jconf['dbstatus_copystorage_ok'] ."|". $jconf['dbstatus_uploaded'],
+			$jconf['dbstatus_reconvert'] ."|". $jconf['dbstatus_convert'])
+		);
+		if (isset($recordset) && isset($recordset->sql)) $result['query'] = $recordset->sql; 
 
 		if ($recordset->EOF) {
 			$result['message'] = "No recordings to be processed.";
@@ -1117,7 +1094,7 @@ function getOCRtasks() {
 			$result['output']  = $recordset->getArray(); 
 		}
 	} catch(Exception $e) {
-		$result['message'] = "GetOCRtask failed! ". $e->getMessage();
+		$result['message'] = __FUNCTION__ ." failed! ". $e->getMessage();
 		$result['output']  = false;
 	}
 	
