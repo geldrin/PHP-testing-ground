@@ -24,7 +24,7 @@ $myjobid = $jconf['jobid_system_health'];
 
 // Log related init
 $debug = Springboard\Debug::getInstance();
-$debug->log($jconf['log_dir'], $jconf['jobid_media_convert'] . ".log", "*************************** Job: System Health started ***************************", $sendmail = false);
+$debug->log($jconf['log_dir'], $jconf['jobid_system_health'] . ".log", "*************************** Job: System Health started ***************************", $sendmail = false);
 
 // Check operating system - exit if Windows
 if ( iswindows() ) {
