@@ -81,8 +81,13 @@ class Departments extends \Springboard\Model {
     $this->ensureID();
     return $this->db->getOne("
       SELECT COUNT(*)
-      FROM users_departments
-      WHERE departmentid = '" . $this->id . "'
+      FROM
+        users_departments AS ud,
+        users AS u
+      WHERE
+        ud.departmentid = '" . $this->id . "' AND
+        u.id            = ud.userid AND
+        u.disabled      = '0'
     ");
     
   }
