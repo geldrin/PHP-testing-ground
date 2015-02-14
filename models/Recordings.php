@@ -2399,20 +2399,22 @@ class Recordings extends \Springboard\Model {
     return $data;
     
   }
-  
-  public function getSeekbarOptions( $info ) {
-    
+
+  // csak a getflashdata hivja
+  private function getSeekbarOptions( $info ) {
+
     $this->ensureObjectLoaded();
     $user = $info['member'];
 
     if ( !$this->row['isseekbardisabled'] or !$user or !$user['id'] )
       return array();
 
-    // ha session-bound akkor csak az adott sessionben allitjuk vissza
-    // a felvetel poziciojat (ha nincs adott session-hoz rekord akkor 0-rol kezd)
-    if ( $info['organization']['iselearningcoursesessionbound'] )
-      $lastposition = (int)$this->db->getOne("
-        SELECT positionuntil
+    if ( $info['organization']['iselearningcoursesessionbound'] ) {
+
+      // ha session-bound akkor csak az adott sessionben allitjuk vissza
+      // a felvetel poziciojat
+      $row = $this->db->getRow("
+        SELECT positionuntil AS lastposition
         FROM recording_view_sessions
         WHERE
           userid      = '" . $user['id'] . "' AND
@@ -2421,9 +2423,21 @@ class Recordings extends \Springboard\Model {
         ORDER BY id DESC
         LIMIT 1
       ");
-    else // amugy meg visszaalitjuk mindig az utolso poziciot ha van
-      $lastposition = (int)$this->db->getOne("
-        SELECT position
+
+    } else {
+
+      // amugy meg visszaalitjuk mindig az utolso poziciot ha van,
+      // es reseteljuk a progresst ha kifutott az idobol
+      $timeout = $info['organization']['viewsessiontimeoutminutes'];
+      $row = $this->db->getRow("
+        SELECT
+          id,
+          position AS lastposition,
+          IF(
+            rvp.timestamp < DATE_SUB(NOW(), INTERVAL $timeout MINUTE),
+            1,
+            0
+          ) AS expired,
         FROM recording_view_progress
         WHERE
           userid      = '" . $user['id'] . "' AND
@@ -2432,23 +2446,51 @@ class Recordings extends \Springboard\Model {
         LIMIT 1
       ");
 
+      if ( $row and $row['expired'] ) {
+        // reset, kezdje elorol
+        $row['lastposition'] = 0;
+        $this->db->execute("
+          UPDATE recording_view_progress
+          SET position = 0
+          WHERE id = '" . $row['id'] . "'
+          LIMIT 1
+        ");
+      }
+
+    }
+
+    if ( !$row )
+      $row = array('lastposition' => 0);
+
+    // teljesitette a felvetelt? mert akkor nem kell seekbar
+    $length          = max(
+      (int)$this->row['masterlength'],
+      (int)$this->row['contentmasterlength']
+    );
+    $needpercent     = $info['organization']['elearningcoursecriteria'];
+    $watchedpercent  = round( ($row['lastposition'] / $length) * 100 );
+    $seekbardisabled = ($watchedpercent >= $needpercent)? true: false;
+
     $options = array(
-      'timeline_seekbarDisabled'          => true,
-      'timeline_lastPlaybackPosition'     => $lastposition,
+      'timeline_seekbarDisabled'          => $seekbardisabled,
+      'timeline_lastPlaybackPosition'     => (int) $row['lastposition'],
       'timeline_lastPositionTimeInterval' =>
         $this->bootstrap->config['recordingpositionupdateseconds']
       ,
     );
-    
+
     if (
-         $user['isadmin'] or
-         $user['isclientadmin'] or
-         $user['iseditor']
+         $seekbardisabled and
+         (
+           $user['isadmin'] or
+           $user['isclientadmin'] or
+           $user['iseditor']
+         )
        )
       $options['timeline_seekbarVisible'] = true;
-    
+
     return $options;
-    
+
   }
   
   public function isHDSEnabled() {
