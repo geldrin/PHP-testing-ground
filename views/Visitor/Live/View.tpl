@@ -5,6 +5,8 @@
   {include file="Visitor/_header.tpl" islive=true pagebgclass=fullheight}
 
   <div class="title recording">
+    {assign var=numberofviews value=$feed.numberofviews|numberformat}
+    <div id="liveviews">{#live__numberofviews#|sprintf:$numberofviews}</div>
     <h1>{$channel.title|escape:html|mb_wordwrap:25}</h1>
     {if $channel.subtitle|stringempty}<h2>{$channel.subtitle|escape:html|mb_wordwrap:25}</h2>{/if}
   </div>

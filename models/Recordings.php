@@ -3658,6 +3658,7 @@ class Recordings extends \Springboard\Model {
 
     } elseif ( $row['expired'] ) { // reset
       // tul sok kimaradas volt, reseteljuk nullara a poziciot, kezdje elorol
+      // ez updateli a timestamp-et is, ergo ujra kezdjuk a timeoutot is
 
       $row['position'] = $record['position'] = 0;
       $progressModel->id  = $row['id'];

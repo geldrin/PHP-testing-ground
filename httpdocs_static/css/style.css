@@ -2969,3 +2969,13 @@ a#currentusername span {
   list-style-type: square;
   padding: 0 0 0 22px;
 }
+
+#liveviews {
+  float: right;
+  margin: 0 0 0 20px;
+  font-size: 12px;
+}
+#liveviews span {
+  font-size: 20px;
+  margin: 0 3px 0 0;
+}
