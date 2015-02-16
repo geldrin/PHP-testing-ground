@@ -2437,7 +2437,7 @@ class Recordings extends \Springboard\Model {
             rvp.timestamp < DATE_SUB(NOW(), INTERVAL $timeout MINUTE),
             1,
             0
-          ) AS expired,
+          ) AS expired
         FROM recording_view_progress
         WHERE
           userid      = '" . $user['id'] . "' AND
