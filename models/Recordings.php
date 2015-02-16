@@ -2434,7 +2434,7 @@ class Recordings extends \Springboard\Model {
           id,
           position AS lastposition,
           IF(
-            rvp.timestamp < DATE_SUB(NOW(), INTERVAL $timeout MINUTE),
+            timestamp < DATE_SUB(NOW(), INTERVAL $timeout MINUTE),
             1,
             0
           ) AS expired
