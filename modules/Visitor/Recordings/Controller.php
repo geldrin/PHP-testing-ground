@@ -906,7 +906,7 @@ class Controller extends \Visitor\Controller {
   
   public function uploadchunkAction() {
     
-    if ( $this->bootstrap->config['disable_uploads'] )
+    if ( $this->bootstrap->inMaintenance('upload') )
       $this->jsonOutput( array('status' => 'error', 'error'  => 'upload_unknownerror') );
     
     if (
