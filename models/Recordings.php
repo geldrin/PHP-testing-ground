@@ -2469,7 +2469,7 @@ class Recordings extends \Springboard\Model {
     );
     $needpercent     = $info['organization']['elearningcoursecriteria'];
     $watchedpercent  = round( ($row['lastposition'] / $length) * 100 );
-    $seekbardisabled = ($watchedpercent >= $needpercent)? true: false;
+    $seekbardisabled = ($watchedpercent >= $needpercent)? false: true;
 
     $options = array(
       'timeline_seekbarDisabled'          => $seekbardisabled,
