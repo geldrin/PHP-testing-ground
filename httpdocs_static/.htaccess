@@ -10,7 +10,7 @@ RewriteEngine On
 # verziokezeles
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteCond %{REQUEST_FILENAME} !-f
-RewriteRule ^(.+)_v[0-9]+(.+)$ $1$2 [L,NS,QSA]
+RewriteRule ^(.+)_v[a-f0-9]+(.*)$ $1$2 [L,NS,QSA]
 
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteCond %{REQUEST_FILENAME} !-f

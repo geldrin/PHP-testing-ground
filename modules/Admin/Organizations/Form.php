@@ -4,7 +4,11 @@ namespace Admin\Organizations;
 class Form extends \Springboard\Controller\Admin\Form {
   
   public function preAddElements( $action, $data = null ) {
-    
+
+    $this->bootstrap->config['version'] = '_v' . md5(
+      $this->bootstrap->config['version'] . time()
+    );
+
     if ( $action == 'modify' and isset( $data['languages'] ) ) {
       
       $this->config['languages[]']['value'] = explode(',', $data['languages'] );
@@ -21,7 +25,8 @@ class Form extends \Springboard\Controller\Admin\Form {
     $model  = $this->bootstrap->getModel( $this->controller->module );
     $values = $this->form->getElementValues( false );
     $values['languages'] = implode(',', $values['languages'] );
-    
+    $values = $this->clearDefaultLayouts( $values );
+
     $model->select( $values['id'] );
     $model->updateRow( $values );
     $this->runHandlers( $model );
@@ -45,7 +50,7 @@ class Form extends \Springboard\Controller\Admin\Form {
     $orgModel  = $this->bootstrap->getModel('organizations');
     $values = $this->form->getElementValues( false );
     $values['languages'] = implode(',', $values['languages'] );
-    
+    $values = $this->clearDefaultLayouts( $values );
     $orgModel->insert( $values );
     
     if ( $values['parentid'] == 0 )
@@ -55,5 +60,23 @@ class Form extends \Springboard\Controller\Admin\Form {
     $this->controller->redirect('organizations/index');
     
   }
-  
+
+  private function clearDefaultLayouts( &$values ) {
+    foreach( array('header', 'footer') as $type ) {
+      $default = trim( $this->getLayoutDefault( $type ) );
+      $key     = 'layout' . $type;
+      if ( $values[ $key ] == $default )
+        unset( $values[ $key ] );
+    }
+
+    return $values;
+  }
+
+  private function getLayoutDefault( $type ) {
+    return file_get_contents(
+      $this->bootstrap->config['templatepath'] . 'Visitor/' .
+      '_layout_' . $type . '.tpl'
+    );
+  }
+
 }

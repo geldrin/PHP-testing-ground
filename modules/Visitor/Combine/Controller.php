@@ -138,7 +138,7 @@ class Controller extends \Visitor\Controller {
     else {
       
       $path      = $this->bootstrap->basepath . 'httpdocs_static/' .
-        preg_replace( '/\_v\d+/', '', $filename )
+        preg_replace( '/\??_v[a-f0-9]+/', '', $filename )
       ;
       $dir       = realpath( pathinfo( $path, PATHINFO_DIRNAME ) );
       $compareto = $this->bootstrap->basepath . 'httpdocs_static/';

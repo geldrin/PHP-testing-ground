@@ -37,7 +37,10 @@ return array(
     'verify_html' => false, // alapbol csak nehany html dolgot enged at, ez kikapcsolja
     'button_tile_map' => true, // nehany doctypeon nem jelennek meg az ikonok, ha eztortenik akkor ezt false-ra
     'gecko_spellcheck' => true,
-    'content_css' => '../css/style_tinymce_content' . $this->bootstrap->config['version'] . '.css',
+    'content_css' =>
+      '../css/style_tinymce_content' . $this->bootstrap->config['version'] . '.css,' .
+      '/contents/layoutwysywygcss?' . $this->bootstrap->config['version']
+    ,
     //'relative_urls' => false, // atirja az urleket relativera (ha in-site link), akar jo otlet is lehet
     'entity_encoding' => 'raw',
   ),

@@ -4,10 +4,16 @@ namespace Visitor\Contents;
 class Controller extends \Visitor\Controller {
   
   public function route() {
-    
-    if ( $this->action == 'language' )
-      return $this->languageAction();
-    
+
+    switch ( $this->action ) {
+      case 'language':
+      case 'layoutcss':
+      case 'layoutwysywygcss':
+        $method = $this->action . 'Action';
+        return $this->$method();
+        break;
+    }
+
     $contentsModel = $this->bootstrap->getModel('contents');
     $language      = \Springboard\Language::get();
     
@@ -52,7 +58,8 @@ class Controller extends \Visitor\Controller {
     );
     
     $output = $this->fetchSmarty('Visitor/Contents/Language.tpl');
-    
+
+    $this->sendheaders = false;
     header('Content-Type: application/javascript; charset=UTF-8');
     $this->output(
       $output,
@@ -61,5 +68,25 @@ class Controller extends \Visitor\Controller {
     );
     
   }
-  
+
+  public function layoutcssAction() {
+    $this->sendheaders = false;
+    header('Content-Type: text/css; charset=UTF-8');
+    $this->output(
+      $this->organization['layoutcss'],
+      false,
+      true // preserve message
+    );
+  }
+
+  public function layoutwysywygcssAction() {
+    $this->sendheaders = false;
+    header('Content-Type: text/css; charset=UTF-8');
+    $this->output(
+      $this->organization['layoutwysywygcss'],
+      false,
+      true // preserve message
+    );
+  }
+
 }
