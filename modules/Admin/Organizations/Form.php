@@ -13,9 +13,26 @@ class Form extends \Springboard\Controller\Admin\Form {
       
       $this->config['languages[]']['value'] = explode(',', $data['languages'] );
       unset( $data['languages'] );
-      
+
     }
     
+    if ( $action == 'modify' ) {
+      // default ertekeket toltjuk hogy megjelenjen
+      foreach( array('header', 'footer') as $type ) {
+        $key = 'layout' . $type;
+
+        if ( !$data or $data[ $key ] )
+          continue;
+
+        $default = file_get_contents(
+          $this->bootstrap->config['templatepath'] . 'Visitor/' .
+          '_layout_' . $type . '.tpl'
+        );
+
+        $data[ $key ] = $default;
+      }
+    }
+
     return $data;
     
   }
@@ -65,7 +82,9 @@ class Form extends \Springboard\Controller\Admin\Form {
     foreach( array('header', 'footer') as $type ) {
       $default = trim( $this->getLayoutDefault( $type ) );
       $key     = 'layout' . $type;
-      if ( $values[ $key ] == $default )
+      // normalize line endings
+      $val     = str_replace( "\r\n", "\n", trim( $values[ $key ] ) );
+      if ( $val == $default )
         unset( $values[ $key ] );
     }
 

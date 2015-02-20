@@ -24,7 +24,7 @@ function smarty_block_csscombine( $params, $content, $smarty ) {
     $content .=
       '<link rel="StyleSheet" type="text/css" href="' .
         $baseuri .
-        '/combine/css?url[]=' . implode( '&url[]=', $out ) .
+        'combine/css?url[]=' . implode( '&url[]=', $out ) .
       '" />'
     ;
     
