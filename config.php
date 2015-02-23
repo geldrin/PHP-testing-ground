@@ -1,6 +1,6 @@
 <?php
 $config = array(
-  'version'      => '_v20150216',
+  'version'      => '_v20141216',
   'charset'      => 'UTF-8',
   'cacheseconds' => 3600,
   'errormessage' => 'An unexpected error has occured, our staff has been notified. Sorry for the inconvenience and thanks for your understanding!',
@@ -83,17 +83,22 @@ $config = array(
     'wmv', 'avi', 'mov', 'flv', 'mp4', 'asf', 'mp3', 'flac',
     'ogg', 'wav', 'wma', 'mpg', 'mpeg', 'ogm', 'f4v', 'm4v', 'mkv', 'm2v',
   ),
-  'uploadpath'       => '/srv/upload/videosquare.eu/',
-  'chunkpath'        => '/srv/upload/videosquare.eu/recordings_chunks/',
-  'useravatarpath'   => '/srv/upload/videosquare.eu/useravatars/',
-  'mediapath'        => '/srv/vsq/videosquare.eu/',
-  'recordingpath'    => '/srv/vsq/videosquare.eu/recordings/',
-  'livestreampath'   => '/srv/vsq/videosquare.eu/livestreams/',
+  'uploadpath'            => '/srv/upload/videosquare.eu/',
+  'chunkpath'             => '/srv/upload/videosquare.eu/recordings_chunks/',
+  'useravatarpath'        => '/srv/upload/videosquare.eu/useravatars/',
+  'mediapath'             => '/srv/vsq/videosquare.eu/',
+  'recordingpath'         => '/srv/vsq/videosquare.eu/recordings/',
+  'livestreampath'        => '/srv/vsq/videosquare.eu/livestreams/',
   'recordings_seconds_minlength' => 3,
-  'categoryiconpath' => $this->basepath . 'httpdocs_static/images/categories/',
+  'categoryiconpath'      => $this->basepath . 'httpdocs_static/images/categories/',
   'relatedrecordingcount' => 6,
-  'mplayer_identify' => 'mplayer -ao null -vo null -frames 0 -identify %s 2>&1',
-  'mediainfo_identify' => 'mediainfo --full --output=XML %s 2>&1',
+  // Converter related settings
+  'mplayer_identify'      => 'mplayer -ao null -vo null -frames 0 -identify %s 2>&1',
+  'mediainfo_identify'    => 'mediainfo --full --output=XML %s 2>&1',
+	'ffmpeg_alt'            => 'ffmpeg',            // current FFMpeg static build'
+	'ffmpegthumbnailer'     => 'ffmpegthumbnailer', // Path to FFmpegThumbnailer
+	'ocr_engine'            => 'cuneiform',         // Supported: cuneiform, tesseract
+	'ocr_alt'               => 'cuneiform',         // Path to ocr binary
   //----
   'combine' => array(
     'css'     => true,
@@ -280,7 +285,6 @@ $config = array(
   'uploadmaintenanceflagpath' => $this->basepath . 'UPLOADMAINTENANCE',
   'dbunavailableflagpath'     => $this->basepath . 'DBUNAVAILABLE',
   
-  // Converter related settings
   // VCR options
   'vcr' => array(
     'server'     => '',
