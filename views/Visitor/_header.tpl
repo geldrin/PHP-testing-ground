@@ -17,12 +17,12 @@
     <link rel="StyleSheet" type="text/css" href="{$STATIC_URI}js/fancybox/jquery.fancybox-1.3.4.css" media="screen"/>
   {/if}
   <link rel="StyleSheet" type="text/css" href="{$STATIC_URI}css/style.css?{$VERSION}" media="screen"/>
-  <link rel="StyleSheet" type="text/css" href="{$BASE_URI}contents/layoutcss?{$VERSION}" media="screen"/>
   {if $browser.mobile}
     <meta name="viewport" content="width=device-width, maximum-scale=1.0"/>
     <link rel="StyleSheet" type="text/css" href="{$STATIC_URI}css/style_mobile{$VERSION}.css" media="screen"/>
   {/if}
   {/csscombine}
+  <link rel="StyleSheet" type="text/css" href="{$BASE_URI}contents/layoutcss?{$VERSION}" media="screen"/>
 
   <!--[if lte IE 8]>
   <link rel="StyleSheet" type="text/css" href="{$STATIC_URI}css/style_ie{$VERSION}.css" />
@@ -85,7 +85,6 @@
 
         {eval var=$layoutheader}
 
-        {include file="Visitor/_menu.tpl"}
       </div>
     </div>
     
