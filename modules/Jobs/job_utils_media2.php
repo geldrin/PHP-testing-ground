@@ -204,7 +204,7 @@ function advancedFFmpegConvert($rec, $profile, $main, $overlay = null) {
 //  - mobile two-pass          - OK
 //  - invalid-pass             - OK
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-global $jconf, $debug, $app;
+global $app, $debug, $jconf;
 	$err = array();
 	$err['code'          ] = false;
 	$err['result'        ] = 0;
@@ -221,7 +221,7 @@ global $jconf, $debug, $app;
 	$ffmpeg_input       = null; // input filename and options
 	$ffmpeg_payload     = null; // contains input option on normal encoding OR overlay filter on pip encoding
 	$ffmpeg_pass_prefix = null; // used with multipass encoding (passlogfiles will be written here, with the given prefix)
-	$ffmpeg_globals     = $jconf['encoding_nice'] ." ". $jconf['ffmpeg_alt'] ." -v ". $jconf['ffmpeg_loglevel'] ." -y";
+	$ffmpeg_globals     = $jconf['encoding_nice'] ." ". $app->config['ffmpeg_alt'] ." -v ". $jconf['ffmpeg_loglevel'] ." -y";
 	$ffmpeg_output      = " -threads ". $jconf['ffmpeg_threads'] ." -f ". $profile['filecontainerformat'] ." ". $rec['output_file'];
 	
 	$audio_filter = null;

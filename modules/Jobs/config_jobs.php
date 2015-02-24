@@ -121,7 +121,7 @@ return array('config_jobs' => array(
 	'api_password'           => 'MekkElek123', */
 
 	// FFMpeg related
-	'ffmpeg_alt'             => '/home/conv/ffmpeg/ffmpeg-customvsq-git20150116-static/ffmpeg', // current FFMpeg static build
+	// 'ffmpeg_alt'             => '/home/conv/ffmpeg/ffmpeg-customvsq-git20150116-static/ffmpeg', // current FFMpeg static build
 	'ffmpeg_loglevel'        => 25,               // Loglevel
 	'ffmpeg_threads'         => 0,                // Threads to use (0 - automatic)
 	'ffmpeg_async_frames'    => 10,               // Max. frames to skip when audio and video is out of sync (deprecated)
@@ -129,15 +129,15 @@ return array('config_jobs' => array(
 	'max_duration_error'     => 20,               // margin of error when comparing master and converted video lengths
 
 	// Thumbnails
-	'ffmpegthumbnailer'      => '/usr/bin/ffmpegthumbnailer-2.0.8', // ffmpegthumbnailer path
+	// 'ffmpegthumbnailer'      => '/usr/bin/ffmpegthumbnailer-2.0.8', // ffmpegthumbnailer path
 	// 'thumb_video_small'      => '220x130',         // Resolution of normal video thumbnails
 	// 'thumb_video_medium'     => '300x168',         // Resolution of wide video thumbnails
 	// 'thumb_video_large'      => '618x348',         // Resolution of wide video thumbnails
 	'thumb_video_numframes'  => 20,                // Number of video thumbnails generated per recording
 
 	// Ocr frames
-	'ocr_engine'             => 'cuneiform',       // Supported: cuneiform, tesseract
-	'ocr_alt'                => '/home/gergo/cf',  // Path to ocr binary
+	// 'ocr_engine'             => 'cuneiform',       // Supported: cuneiform, tesseract
+	// 'ocr_alt'                => '/home/gergo/cf',  // Path to ocr binary
 	'ocr_frame_distance'     => 1.0,               // Desired distance between frames (in seconds)
 	'ocr_threshold'          => 0.004,             // Max. difference between ocr frames 
 	

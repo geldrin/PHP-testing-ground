@@ -477,7 +477,7 @@ global $app, $jconf, $debug;
 		$filename_43      = $thumb_output_dir . $app->config['videothumbnailresolutions']['4:3'   ] ."/". $filename_basename;
 		$filename_highres = $thumb_output_dir . $app->config['videothumbnailresolutions']['player'] ."/". $filename_basename;
 
-		$command  = $jconf['nice_high'] . " " . $jconf['ffmpegthumbnailer'] . " -i " . $recording['master_filename'] . " -o " . $orig_thumb_filename . " -s0 -q8 -t" . secs2hms($position_sec) . " 2>&1";
+		$command  = $jconf['nice_high'] . " " . $app->config['ffmpegthumbnailer'] . " -i " . $recording['master_filename'] . " -o " . $orig_thumb_filename . " -s0 -q8 -t" . secs2hms($position_sec) . " 2>&1";
 
 		clearstatcache();
 
