@@ -201,7 +201,6 @@ global $jconf, $debug, $db, $app;
 	$db = db_maintain();
 
 	$node = $app->config['node_sourceip'];
-//	$node = "stream.videosquare.eu";
 
 	$query = "
 		SELECT
@@ -252,7 +251,6 @@ global $jconf, $debug, $db, $app;
 	$db = db_maintain();
 
 	$node = $app->config['node_sourceip'];
-//	$node = "stream.videosquare.eu";
 
 	// Get status = "converting" recordings with at least one "onstorage" recording version
 	$query = "
@@ -315,7 +313,7 @@ global $db, $debug, $jconf, $app;
 
 			for ( $i = 0; $i < count($profileset); $i++ ) {
 				
-				if ($profileset[$i]['mediatype'] == 'audio' && $mtype != 'videoonly') {
+				if ($profileset[$i]['mediatype'] == 'audio' && $recording['mediatype'] != 'videoonly') {
 					// If encprofile is audio-only, but the input has no audiochannel, skip inserting 'audio' rec. version
 					continue;
 				}
@@ -464,8 +462,6 @@ global $db, $debug, $jconf;
 			eg.disabled = 0 AND
 			ep.type = '" . $profile_type . "' AND " . $ep_filter;
 
-//echo $query . "\n";
-
 	try {
 		$profileset = $db->getArray($query);
 	} catch (exception $err) {
@@ -549,7 +545,6 @@ global $db, $app, $debug, $jconf;
 			( r." . $idx . "smilstatus IS NULL OR r." . $idx . "smilstatus = '" . $jconf['dbstatus_regenerate'] . "' )
 		ORDER BY
 			r.id";
-// r." . $idx . "mastermediatype <> 'audio' AND
 
 	try {
 		$recordings = $db->Execute($query);
@@ -727,8 +722,6 @@ global $db, $app, $debug, $jconf;
 		ORDER BY
 			lf.id, lfs.id";
 
-//echo $query . "\n";
-
 	try {
 		$livefeeds = $db->getArray($query);
 	} catch (exception $err) {
@@ -738,8 +731,6 @@ global $db, $app, $debug, $jconf;
 
 	// No pending SMILs
 	if ( count($livefeeds) < 1 ) return false;
-
-//var_dump($livefeeds);
 
 	// SMIL header and footer tags
 	$smil_header = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<smil>\n\t<head>\n\t</head>\n\t<body>\n\t\t<switch>\n";
@@ -771,8 +762,6 @@ global $db, $app, $debug, $jconf;
 		$q = 0;
 		while ( $livefeeds[$i]['id'] == $livefeeds[$i + $q]['id'] ) {
 
-//echo "ID(i): " . $livefeeds[$i]['id'] . " / ID(q): " . $livefeeds[$i + $q]['id'] . "\n";
-
 			// !!! bandwidth calculation: absolutely fake! (no way to calc, if the bitrate is not added on website - no GUI)
 			$smil .= sprintf("\t\t\t<video src=\"%s\" system-bitrate=\"%d\"/>\n", $livefeeds[$i + $q][$idx . 'keycode'], ( $q + 1 ) * 400000);
 
@@ -784,8 +773,6 @@ global $db, $app, $debug, $jconf;
 
 		// SMIL: close with footer
 		$smil .= $smil_footer;
-
-//echo "SMIL ready: " . $smil . "\n";
 
 		// Write SMIL content to a temporary file
 		$smil_filename = "/tmp/" . $livefeeds[$i]['id'] . $smil_filename_suffix . ".smil";
@@ -857,8 +844,6 @@ global $db, $app, $jconf, $debug;
 			ep.mediatype = '" . $mediatype . "'
 		ORDER BY
 			rv.bandwidth";
-
-//echo $query . "\n";
 
 	try {
 		$recording_versions = $db->Execute($query);
