@@ -93,7 +93,6 @@ $config = array(
   'categoryiconpath'      => $this->basepath . 'httpdocs_static/images/categories/',
   'relatedrecordingcount' => 6,
   // Converter related settings
-  'mplayer_identify'      => 'mplayer -ao null -vo null -frames 0 -identify %s 2>&1',
   'mediainfo_identify'    => 'mediainfo --full --output=XML %s 2>&1',
   'ffmpeg_alt'            => '/home/conv/ffmpeg/ffmpeg-customvsq-git20150116-static/ffmpeg', // current FFMpeg static build'
   'ffmpegthumbnailer'     => '/usr/bin/ffmpegthumbnailer-2.0.8',                             // Path to FFmpegThumbnailer
