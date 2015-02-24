@@ -16,22 +16,13 @@
   {if $needfancybox}
     <link rel="StyleSheet" type="text/css" href="{$STATIC_URI}js/fancybox/jquery.fancybox-1.3.4.css" media="screen"/>
   {/if}
-  <link rel="StyleSheet" type="text/css" href="{$STATIC_URI}css/style{$VERSION}.css" media="screen"/>
+  <link rel="StyleSheet" type="text/css" href="{$STATIC_URI}css/style.css?{$VERSION}" media="screen"/>
   {if $browser.mobile}
     <meta name="viewport" content="width=device-width, maximum-scale=1.0"/>
     <link rel="StyleSheet" type="text/css" href="{$STATIC_URI}css/style_mobile{$VERSION}.css" media="screen"/>
   {/if}
   {/csscombine}
-
-  {if $organization.linkcolor}
-    <style>
-      {if $organization.linkcolor}
-        a, #header a, #header .submitbutton {ldelim}
-          color: #{$organization.linkcolor};
-        {rdelim}
-      {/if}
-    </style>
-  {/if}
+  <link rel="StyleSheet" type="text/css" href="{$BASE_URI}contents/layoutcss?{$VERSION}" media="screen"/>
 
   <!--[if lte IE 8]>
   <link rel="StyleSheet" type="text/css" href="{$STATIC_URI}css/style_ie{$VERSION}.css" />
@@ -91,44 +82,9 @@
     <div id="header">
       <div id="headertop">
         {include file="Visitor/_login.tpl"}
-        
-        <div id="headerlogo">
-          {if ($language == 'hu' and $organization.logofilename) or ($language == 'en' and $organization.logofilenameen)}
-            <a href="{$BASE_URI}" title="{#sitename#}"><img src="{$STATIC_URI}files/organizations/{$organization.id}.{$language}.png"/></a>
-          {else}
-            <a href="{$BASE_URI}" title="{#sitename#}" class="basic"><span></span>{#sitename#}</a>
-          {/if}
-        </div>
-      </div>
-      <div id="headerbottom">
-        <div id="headersearch" class="rightbox">
-          
-          <form action="{$language}/search/all" method="get">
-            <input id="headersearchsubmit" type="image" src="{$STATIC_URI}images/header_searchimage.png"/>
-            <input class="inputtext inputbackground clearonclick" type="text" name="q" data-origval="{#sitewide_search_input#|escape:html}" value="{$smarty.request.q|default:#sitewide_search_input#|escape:html}"/>
-            <a href="{$language}/search/advanced" id="headersearcharrow" title="{#sitewide_search_advanced#}"></a>
-          </form>
-          <div id="headersearchlink"><a href="{$language}/search/all">{#sitewide_search#}</a></div>
-          <div id="languagewrap">
-            <div id="languageselector" class="inputbackground right">
-              {foreach from=$organization.languages key=languageid item=item}
-                {if $languageid == $language}
-                  <a href="{$FULL_URI|changelanguage:$language}" class="{$language} active">{l lov=headerlanguages key=$language}<span></span></a>
-                {/if}
-              {/foreach}
-              
-              <div id="languages">
-                {foreach from=$organization.languages key=languageid item=item}
-                  {if $languageid != $language}
-                    <a href="{$FULL_URI|changelanguage:$languageid}" class="{$languageid}">{l lov=headerlanguages key=$languageid}</a>
-                  {/if}
-                {/foreach}
-              </div>
-            </div>
-          </div>
-        </div>
-        
-        {include file="Visitor/_menu.tpl"}
+
+        {eval var=$layoutheader}
+
       </div>
     </div>
     

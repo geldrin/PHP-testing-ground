@@ -11,7 +11,13 @@ $config = Array(
     'type'  => 'inputHidden',
     'value' => '0',
   ),
-  
+
+  'lastmodifiedtimestamp' => Array(
+    'type'     => 'inputHidden',
+    'value'    => date('Y-m-d H:i:s'),
+    'readonly' => true,
+  ),
+
   'parentid' => Array(
     'displayname' => 'Szülő intézmény',
     'type'        => 'selectDynamic',
@@ -302,8 +308,47 @@ $config = Array(
     'values'      => $l->getLov('yesno'),
     'value'       => 0,
   ),
-  
+
+  'layoutfs' => array(
+    'legend' => 'Layout',
+    'type'   => 'fieldset',
+    'submit' => true,
+  ),
+
+  'layoutcss' => array(
+    'displayname' => 'CSS',
+    'type'        => 'textarea',
+    'html'        => 'style="width: 500px; height: 140px;"',
+  ),
+
+  'layoutwysywygcss' => array(
+    'displayname' => 'WYSYWYG mező CSS',
+    'type'        => 'textarea',
+    'html'        => 'style="width: 500px; height: 140px;"',
+  ),
+
+  'layoutheader' => array(
+    'displayname' => 'Header template',
+    'type'        => 'textarea',
+    'html'        => 'style="width: 500px; height: 140px;"',
+  ),
+
+  'layoutfooter' => array(
+    'displayname' => 'Footer template',
+    'type'        => 'textarea',
+    'html'        => 'style="width: 500px; height: 140px;"',
+  ),
+
 );
+
+foreach( array('header', 'footer') as $type ) {
+  $default = file_get_contents(
+    $this->bootstrap->config['templatepath'] . 'Visitor/' .
+    '_layout_' . $type . '.tpl'
+  );
+  $key = 'layout' . $type;
+  $config[ $key ]['value'] = $default;
+}
 
 $listconfig = Array(
   

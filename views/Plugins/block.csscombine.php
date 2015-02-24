@@ -10,7 +10,7 @@ function smarty_block_csscombine( $params, $content, $smarty ) {
   if ( !$bootstrap->config['combine']['css'] )
     return $content;
   
-  preg_match_all('/<link[^>]+href="(' . preg_quote( $staticuri, '/' ) . '[^>"]+\.css)"+[^>]*>/mi', $content, $results );
+  preg_match_all('/<link[^>]+href="(' . preg_quote( $staticuri, '/' ) . '[^>"]+\.css(\?_v[a-f0-9]+)?)"+[^>]*>/mi', $content, $results );
   
   if ( isset( $results[1] ) && count( $results[1] ) ) {
     
@@ -23,8 +23,8 @@ function smarty_block_csscombine( $params, $content, $smarty ) {
     
     $content .=
       '<link rel="StyleSheet" type="text/css" href="' .
-        $baseuri . $language .
-        '/combine/css?url[]=' . implode( '&url[]=', $out ) .
+        $baseuri .
+        'combine/css?url[]=' . implode( '&url[]=', $out ) .
       '" />'
     ;
     

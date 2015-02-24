@@ -457,6 +457,10 @@ class Controller extends \Springboard\Controller\Visitor {
 
   public function impersonateOrganization( &$organization ) {
 
+    $this->bootstrap->config['version'] = '_v' . md5(
+      $this->bootstrap->config['version'] . $organization['lastmodifiedtimestamp']
+    );
+
     $baseuri   = $this->bootstrap->scheme . $organization['domain'] . '/';
     $staticuri = $this->bootstrap->scheme . $organization['staticdomain'] . '/';
     
@@ -476,6 +480,29 @@ class Controller extends \Springboard\Controller\Visitor {
     $this->bootstrap->config['cookiedomain'] = $organization['cookiedomain'];
     $this->bootstrap->config['sessionidentifier'] = $organization['domain'];
 
+  }
+
+  public function fetchSmarty( $template ) {
+    if ( !isset( $this->toSmarty['layoutheader'] ) )
+      $this->toSmarty['layoutheader'] = $this->getLayoutDefault('header');
+
+    if ( !isset( $this->toSmarty['layoutfooter'] ) )
+      $this->toSmarty['layoutfooter'] = $this->getLayoutDefault('footer');
+
+    $smarty = $this->bootstrap->getSmarty();
+    $smarty->assign( $this->toSmarty );
+    return $smarty->fetch( $template );
+  }
+
+  private function getLayoutDefault( $type ) {
+    $layoutvar = 'layout' . $type;
+    $defaulttpl = '_layout_' . $type . '.tpl';
+    if ( $this->organization[ $layoutvar ] )
+      return $this->organization[ $layoutvar ];
+
+    return file_get_contents(
+      $this->bootstrap->config['templatepath'] . 'Visitor/' . $defaulttpl
+    );
   }
 
 }

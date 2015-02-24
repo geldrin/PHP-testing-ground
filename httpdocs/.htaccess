@@ -75,4 +75,4 @@ RewriteRule ^([a-zA-Z0-9_\-]+)/([a-zA-Z0-9_\-]+)/([0-9]+) index.php?module=$1&ac
 # versioning
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteCond %{REQUEST_FILENAME} !-f
-RewriteRule ^(.+)_v[0-9]+(.+)$ $1$2 [L,NS,QSA]
+RewriteRule ^(.+)_v[a-f0-9]+(.*)$ $1$2 [L,NS,QSA]
