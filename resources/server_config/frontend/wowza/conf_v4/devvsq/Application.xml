@@ -97,7 +97,7 @@
 			<!-- RTP/Authentication/[type]Methods defined in Authentication.xml. Default setup includes; none, basic, digest -->
 			<Authentication>
 				<PublishMethod>block</PublishMethod>
-				<PlayMethod>none</PlayMethod>
+				<PlayMethod>block</PlayMethod>
 			</Authentication>
 			<!-- RTP/AVSyncMethod. Valid values are: senderreport, systemclock, rtptimecode -->
 			<AVSyncMethod>senderreport</AVSyncMethod>
