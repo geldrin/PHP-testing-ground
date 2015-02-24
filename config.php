@@ -95,10 +95,10 @@ $config = array(
   // Converter related settings
   'mplayer_identify'      => 'mplayer -ao null -vo null -frames 0 -identify %s 2>&1',
   'mediainfo_identify'    => 'mediainfo --full --output=XML %s 2>&1',
-	'ffmpeg_alt'            => 'ffmpeg',            // current FFMpeg static build'
-	'ffmpegthumbnailer'     => 'ffmpegthumbnailer', // Path to FFmpegThumbnailer
-	'ocr_engine'            => 'cuneiform',         // Supported: cuneiform, tesseract
-	'ocr_alt'               => 'cuneiform',         // Path to ocr binary
+  'ffmpeg_alt'            => '/home/conv/ffmpeg/ffmpeg-customvsq-git20150116-static/ffmpeg', // current FFMpeg static build'
+  'ffmpegthumbnailer'     => '/usr/bin/ffmpegthumbnailer-2.0.8',                             // Path to FFmpegThumbnailer
+	'ocr_engine'            => 'cuneiform',                                                    // Supported: cuneiform, tesseract
+	'ocr_alt'               => 'cuneiform',                                                    // Path to ocr binary
   //----
   'combine' => array(
     'css'     => true,
