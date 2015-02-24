@@ -72,8 +72,14 @@ class Controller extends \Visitor\Controller {
   public function layoutcssAction() {
     $this->sendheaders = false;
     header('Content-Type: text/css; charset=UTF-8');
+
+    $content = str_replace(
+      'url(',
+      'url(' . $this->organization['staticuri'],
+      $this->organization['layoutcss']
+    );
     $this->output(
-      $this->organization['layoutcss'],
+      $content,
       false,
       true // preserve message
     );

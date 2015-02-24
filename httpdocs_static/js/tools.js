@@ -157,7 +157,15 @@ function setupCurrentUser( elem ) {
   });
   
   var fixCurrentUserMenu = function( elem ) {
-    elem.css({ height: elem.height() + 'px' });
+    var width = 0;
+    $j('#currentusermenu .column').each(function() {
+      width += $j(this).outerWidth(true);
+    });
+
+    elem.css({
+      width: width + 'px',
+      height: elem.height() + 'px'
+    });
   };
   
   runIfExists('#currentusermenu', fixCurrentUserMenu );
@@ -573,7 +581,7 @@ function setupHeaderLogin() {
     e.preventDefault();
     $j('#headerloginform, #headerloginactions').toggle();
   });
-  
+
 }
 
 function setupRateWidget() {

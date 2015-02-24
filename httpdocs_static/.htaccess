@@ -6,6 +6,12 @@
 XSendFile on
 </IfModule>
 
+<FilesMatch "\.(eot|ttf|svg|woff)$">
+  <IfModule mod_headers.c>
+  Header set Access-Control-Allow-Origin "*"
+  </IfModule>
+</FilesMatch>
+
 RewriteEngine On
 # verziokezeles
 RewriteCond %{REQUEST_FILENAME} !-d

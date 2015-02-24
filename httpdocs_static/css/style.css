@@ -811,6 +811,7 @@ a#currentusername span {
   font-style: italic;
   font-weight: bold;
   padding-left: 20px;
+  text-transform: uppercase;
 }
 #currentusermenu ul {
   margin: 0;
@@ -982,6 +983,10 @@ a#currentusername span {
   top: 0px;
   left: 0px;
   border: 0;
+  background: transparent url(images/header_searchimage.png);
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
 }
 
 /* body */
