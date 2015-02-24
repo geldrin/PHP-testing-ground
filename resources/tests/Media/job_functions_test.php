@@ -25,6 +25,7 @@ $debug->log($jconf['log_dir'], $myjobid . ".log", "Installation testing started"
 
 $logfile = $jconf['log_dir'] . date("Y-m-") . $myjobid . ".log";
 $summary_result = true;
+$isdb = true;
 
 // Check operating system - exit if Windows
 if ( iswindows() ) {
@@ -41,6 +42,7 @@ try {
 } catch (exception $err) {
 	$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Failed to connect to DB.", $sendmail = false);
 	$summary_result = false;
+    $isdb = false;
 }
 if ( is_resource($db->_connectionID) ) $debug->log($jconf['log_dir'], $myjobid . ".log", "[OK] Connected to DB.", $sendmail = false);
 
@@ -95,7 +97,7 @@ if ( $app->config['node_role'] == "converter" ) {
 
 // SSH testing
 if ( $app->config['node_role'] == "converter" ) {
-	$ssh_command = "ssh -i /home/conv/.ssh/id_dsa conv@" . $app->config['fallbackstreamingserver'] . " date";
+	$ssh_command = "ssh -i " . $app->config['ssh_key'] . " " . $app->config['ssh_user'] . "@" . $app->config['fallbackstreamingserver'] . " date";
 	exec($ssh_command, $output, $result);
 	$output_string = implode("\n", $output);
 	if ( $result != 0 ) {
@@ -107,14 +109,16 @@ if ( $app->config['node_role'] == "converter" ) {
 }
 
 // DB testing
-$err = getSomethingFromDB();
-if ( $err === false ) {
-	$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] DB query was not successful.", $sendmail = false);
-	$summary_result = false;
-} else {
-	$debug->log($jconf['log_dir'], $myjobid . ".log", "[OK] DB query result:\n" . print_r($err, true), $sendmail = false);
+if ( $isdb ) {
+    $err = getSomethingFromDB();
+    if ( $err === false ) {
+        $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] DB query was not successful.", $sendmail = false);
+        $summary_result = false;
+    } else {
+        $debug->log($jconf['log_dir'], $myjobid . ".log", "[OK] DB query result:\n" . print_r($err, true), $sendmail = false);
+    }
 }
-
+    
 // Send test mail
 $siteid = $app->config['siteid'];
 $debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Simple HTML mail send test.", $sendmail = false);
@@ -193,12 +197,12 @@ try {
 // ffmpegthumbnailer/PHP test
 $gdtestfile = "";
 if ( $app->config['node_role'] == "converter" ) {
-	if ( !file_exists($jconf['ffmpegthumbnailer']) ) {
-		$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] ffmpegthumbnailer not found: " . $jconf['ffmpegthumbnailer'], $sendmail = false);
+	if ( !file_exists($app->config['ffmpegthumbnailer']) ) {
+		$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] ffmpegthumbnailer not found: " . $app->config['ffmpegthumbnailer'], $sendmail = false);
 	} else {
 		$testfile = "andor_agnes.mp4";
 		$outfile = "output.png";
-		$command  = $jconf['nice_high'] . " " . $jconf['ffmpegthumbnailer'] . " -i " . $testfile . " -o " . $outfile . " -s0 -q8 -t 5";
+		$command  = $jconf['nice_high'] . " " . $app->config['ffmpegthumbnailer'] . " -i " . $testfile . " -o " . $outfile . " -s0 -q8 -t 5";
 		$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Executing ffmpegthumbnailer: " . $command, $sendmail = false);
 		$output = runExternal($command);
 		$output_string = $output['cmd_output'];
@@ -211,6 +215,13 @@ if ( $app->config['node_role'] == "converter" ) {
 			$debug->log($jconf['log_dir'], $myjobid . ".log", "[OK] ffmpegthumbnailer test finished.", $sendmail = false);
 			$gdtestfile = $outfile;
 		}
+	}
+}
+
+// ffmpeg exists?
+if ( $app->config['node_role'] == "converter" ) {
+	if ( !file_exists($app->config['ffmpeg_alt']) ) {
+		$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] ffmpeg not found: " . $app->config['ffmpeg_alt'], $sendmail = false);
 	}
 }
 
