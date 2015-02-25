@@ -94,10 +94,12 @@ $config = array(
   'relatedrecordingcount' => 6,
   // Converter related settings
   'mediainfo_identify'    => 'mediainfo --full --output=XML %s 2>&1',
-  'ffmpeg_alt'            => '/home/conv/ffmpeg/ffmpeg-customvsq-git20150116-static/ffmpeg', // current FFMpeg static build'
-  'ffmpegthumbnailer'     => '/usr/bin/ffmpegthumbnailer-2.0.8',                             // Path to FFmpegThumbnailer
-	'ocr_engine'            => 'cuneiform',                                                    // Supported: cuneiform, tesseract
-	'ocr_alt'               => 'cuneiform',                                                    // Path to ocr binary
+  // current FFMpeg static build'
+  'ffmpeg_alt'            => '/home/conv/ffmpeg/ffmpeg-customvsq-git20150116-static/ffmpeg',
+  // Path to FFmpegThumbnailer
+  'ffmpegthumbnailer'     => '/usr/bin/ffmpegthumbnailer-2.0.8',
+  'ocr_engine'            => 'cuneiform', // Supported: cuneiform, tesseract
+  'ocr_alt'               => 'cuneiform', // Path to ocr binary
   //----
   'combine' => array(
     'css'     => true,
@@ -274,6 +276,9 @@ $config = array(
   //-------
   // ldap belepeseket ennyi idonkent vegezzuk el ujra ha a user mar be van lepve
   'directoryreauthminutes' => 240, // default 4 ora
+  // a regex amibe kell hogy legyen egy "username" nevezetu subpattern ami a
+  // a felhasznalo nevet nyeri ki a kerberos remote_user-bol
+  'directoryusernameregex' => '/^(?<username>.+)@.*$/',
   //-------
   'apidebuglog' => false,
   'checkaccessdebuglog' => false,
@@ -283,7 +288,7 @@ $config = array(
   'sitemaintenanceflagpath'   => $this->basepath . 'SITEMAINTENANCE',
   'uploadmaintenanceflagpath' => $this->basepath . 'UPLOADMAINTENANCE',
   'dbunavailableflagpath'     => $this->basepath . 'DBUNAVAILABLE',
-  
+
   // VCR options
   'vcr' => array(
     'server'     => '',
@@ -293,10 +298,10 @@ $config = array(
   // API authentication data
   'api_user'     => 'support@videosqr.com',
   'api_password' => '',
-	
-	// SSH authentication data
-	'ssh_user'     => 'conv',
-	'ssh_key'      => '/home/conv/.ssh/id_rsa',
+
+  // SSH authentication data
+  'ssh_user'     => 'conv',
+  'ssh_key'      => '/home/conv/.ssh/id_rsa',
   
 );
 

@@ -5,10 +5,14 @@ class Ldap extends \AuthDirectories\Base {
 
   public function handle( $remoteuser ) {
 
+    $accountname = $remoteuser;
+    if ( preg_match( $this->bootstrap->config['directoryusernameregex'], $remoteuser, $match ) )
+      $accountname = $match['username'];
+
     $isadmin = false;
     $filter  =
-      '(&(objectClass=user)(objectCategory=person)(userPrincipalName=' .
-        \LDAP\LDAP::escape( $remoteuser ) .
+      '(&(objectClass=user)(objectCategory=person)(sAMAccountName=' .
+        \LDAP\LDAP::escape( $accountname ) .
       '))'
     ;
     $ldap    = $this->bootstrap->getLDAP( array(
