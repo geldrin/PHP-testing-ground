@@ -136,14 +136,28 @@
       <div id="languageselector" class="inputbackground right">
         {foreach from=$organization.languages key=languageid item=item}
           {if $languageid == $language}
-            <a href="{$FULL_URI|changelanguage:$language}" class="{$language} active">{l lov=headerlanguages key=$language}<span></span></a>
+            <a href="{$FULL_URI|changelanguage:$language}" class="{$language} active">
+              {if $languageid == 'hu'}
+                {#sitewide_language_hu#}
+              {elseif $languageid == 'en'}
+                {#sitewide_language_en#}
+              {/if}
+              <span></span>
+            </a>
           {/if}
         {/foreach}
         
         <div id="languages">
           {foreach from=$organization.languages key=languageid item=item}
             {if $languageid != $language}
-              <a href="{$FULL_URI|changelanguage:$languageid}" class="{$languageid}">{l lov=headerlanguages key=$languageid}</a>
+              <a href="{$FULL_URI|changelanguage:$languageid}" class="{$languageid}">
+                {if $languageid == 'hu'}
+                  {#sitewide_language_hu#}
+                {elseif $languageid == 'en'}
+                  {#sitewide_language_en#}
+                {/if}
+                <span></span>
+              </a>
             {/if}
           {/foreach}
         </div>
