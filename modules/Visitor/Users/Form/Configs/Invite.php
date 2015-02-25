@@ -2,7 +2,8 @@
 $tinymceconfig = $l->getLov('tinymcevisitor') + array(
   'content_css' =>
     $this->controller->toSmarty['STATIC_URI'] .
-    'css/style_tinymce_content' . $this->bootstrap->config['version'] . '.css'
+    'css/style_tinymce_content' . $this->bootstrap->config['version'] . '.css,' .
+    '/contents/layoutwysywygcss?' . $this->bootstrap->config['version']
   ,
   'init_instance_callback' => 'tinyMCEInstanceInit',
 );
