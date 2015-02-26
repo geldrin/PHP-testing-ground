@@ -81,10 +81,14 @@ class Ldap extends \AuthDirectories\Base {
       break;
     }
 
-    if ( !empty( $ret['user'] ) )
-      $ret['user']['isclientadmin'] = (int) $isadmin;
+    if ( !empty( $ret['user'] ) ) {
+      if ( $isadmin )
+        $ret['user']['isuploader'] = 1;
 
-    return $this->directoryuser = $ret;;
+      $ret['user']['isclientadmin'] = (int) $isadmin;
+    }
+
+    return $this->directoryuser = $ret;
   }
 
 }
