@@ -340,7 +340,8 @@ class Controller extends \Visitor\Controller {
         'contentsmilstatus' => 'regenerate',
       )
     );
-    $feedModel->delete( $feedModel->id );
+    $feedModel->markAsDeleted();
+
     $this->redirect(
       $this->application->getParameter(
         'forward',
@@ -367,7 +368,7 @@ class Controller extends \Visitor\Controller {
       $feedModel->row['channelid']
     );
 
-    $streamModel->delete( $streamModel->id );
+    $streamModel->markAsDeleted();
     $feedModel->updateRow( array(
         'smilstatus'        => 'regenerate',
         'contentsmilstatus' => 'regenerate',

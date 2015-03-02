@@ -113,4 +113,16 @@ class Livefeed_streams extends \Springboard\Model {
     ");
   }
 
+  public function markAsDeleted() {
+    
+    $this->ensureID();
+    $this->db->execute("
+      UPDATE livefeed_streams
+      SET status = 'markedfordeletion'
+      WHERE id = '" . $this->id . "'
+      LIMIT 1
+    ");
+
+  }
+
 }

@@ -24,7 +24,9 @@ class Livefeeds extends \Springboard\Model {
     $results = $this->db->getArray("
       SELECT DISTINCT *
       FROM livefeeds
-      WHERE channelid IN('" . implode("', '", $channelids ) . "')
+      WHERE
+        channelid IN('" . implode("', '", $channelids ) . "') AND
+        (status IS NULL OR status <> 'markedfordeletion')
     ");
     
     foreach( $results as $result )
@@ -65,7 +67,7 @@ class Livefeeds extends \Springboard\Model {
       WHERE
         (
           lf.status IS NOT NULL AND
-          lf.status   <> 'finished' AND
+          lf.status NOT IN('finished', 'markedfordeletion') AND
           lf.external  = '0'
         ) OR (
           lf.external       = '1' AND
@@ -88,10 +90,10 @@ class Livefeeds extends \Springboard\Model {
         nameenglish,
         external,
         status
-      FROM
-        livefeeds
+      FROM livefeeds
       WHERE
-        userid = " . $this->db->qstr( $userid ) . "
+        userid = " . $this->db->qstr( $userid ) . " AND
+        (status IS NULL OR status <> 'markedfordeletion')
     ");
     
   }
@@ -135,7 +137,9 @@ class Livefeeds extends \Springboard\Model {
         isioscompatible,
         timestamp
       FROM livefeed_streams
-      WHERE livefeedid = '" . $feedid . "'
+      WHERE
+        livefeedid = '" . $feedid . "' AND
+        (status IS NULL OR status <> 'markedfordeletion')
     ");
     
   }
@@ -296,8 +300,7 @@ class Livefeeds extends \Springboard\Model {
       foreach( $info['streams']['streams'] as $stream ) {
 
         if (
-             $info['streams']['defaultstream']['id'] == $stream['id'] or
-             $info['streams']['defaultstream']['quality'] == $stream['quality']
+             $info['streams']['defaultstream']['id'] == $stream['id']
            )
           continue;
 
@@ -494,7 +497,9 @@ class Livefeeds extends \Springboard\Model {
     return $this->db->getOne("
       SELECT recordinglinkid
       FROM livefeed_streams
-      WHERE livefeedid = '" . $this->id . "'
+      WHERE
+        livefeedid = '" . $this->id . "' AND
+        (status IS NULL OR status <> 'markedfordeletion')
       LIMIT 1
     ");
     
@@ -509,7 +514,7 @@ class Livefeeds extends \Springboard\Model {
         'recordinglinkid'     => $recordinglinkid,
         'name'                => 'VCR stream',
         'status'              => 'ready',
-        'quality'             => 1,
+        'quality'             => 'Default',
         'isdesktopcompatible' => 1,
         'isioscompatible'     => 1,
         'isandroidcompatible' => 1,
@@ -862,6 +867,7 @@ class Livefeeds extends \Springboard\Model {
           l.channelid = c.id
         )
       WHERE
+        (l.status IS NULL OR l.status <> 'markedfordeletion') AND
         l.name LIKE $searchterm AND
         (
           l.organizationid = '$organizationid' OR
@@ -1060,6 +1066,24 @@ class Livefeeds extends \Springboard\Model {
       UPDATE livefeeds
       SET numberofviewsthis" . $type . " = 0
       WHERE id = '" . $this->id . "'
+      LIMIT 1
+    ");
+
+  }
+
+  public function markAsDeleted() {
+    
+    $this->ensureID();
+    $this->db->execute("
+      UPDATE livefeeds
+      SET status = 'markedfordeletion'
+      WHERE id = '" . $this->id . "'
+      LIMIT 1
+    ");
+    $this->db->execute("
+      UPDATE livefeed_streams
+      SET status = 'markedfordeletion'
+      WHERE livefeedid = '" . $this->id . "'
       LIMIT 1
     ");
 

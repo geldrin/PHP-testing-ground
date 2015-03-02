@@ -691,7 +691,9 @@ class Channels extends \Springboard\Model {
     return $this->db->getOne("
       SELECT COUNT(*)
       FROM livefeeds
-      WHERE channelid = '" . $this->id . "'
+      WHERE
+        channelid = '" . $this->id . "' AND
+        (status IS NULL OR status <> 'markedfordeletion')
       LIMIT 1
     ");
     
@@ -814,7 +816,9 @@ class Channels extends \Springboard\Model {
         issecurestreamingforced,
         indexphotofilename
       FROM livefeeds
-      WHERE channelid IN('" . $this->id . "')
+      WHERE
+        channelid IN('" . $this->id . "') AND
+        (status IS NULL OR status <> 'markedfordeletion')
       ORDER BY name
     ");
     
@@ -830,6 +834,7 @@ class Channels extends \Springboard\Model {
       
       $streamObj->clearFilter();
       $streamObj->addFilter('livefeedid', $feed['id'] );
+      $streamObj->addTextFilter("status IS NULL OR status <> 'markedfordeletion'");
       $feeds[ $key ]['streams']   = $streamObj->getArray();
       $feeds[ $key ]['candelete'] = $feedModel->canDeleteFeed( $feed, $feeds[ $key ]['streams'] );
       
@@ -1027,7 +1032,9 @@ class Channels extends \Springboard\Model {
       $livefeedids = $this->db->getCol("
         SELECT id
         FROM livefeeds
-        WHERE channelid = '" . $this->id . "'
+        WHERE
+          channelid = '" . $this->id . "' AND
+          (status IS NULL OR status <> 'markedfordeletion')
       ");
     
     if ( empty( $livefeedids ) )
