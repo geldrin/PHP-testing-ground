@@ -3589,7 +3589,7 @@ class Recordings extends \Springboard\Model {
     $updatesec = $this->bootstrap->config['recordingpositionupdateseconds'];
     $extrasec  = $organization['viewsessionallowedextraseconds'];
     $ret       = array(
-      'success' => false,
+      'success' => true,
     );
 
     $row       = $this->db->getRow("
@@ -3625,6 +3625,7 @@ class Recordings extends \Springboard\Model {
 
     // ha a lastposition ennel nagyobb akkor nem csinalunk semmit
     if ( $row and $lastposition > $row['position'] + $updatesec + $extrasec ) {
+      $ret['success'] = false;
       $this->updateSession( $organization, $userid, $lastposition, $sessionid );
       $this->endTrans();
       return $ret;
@@ -3660,11 +3661,12 @@ class Recordings extends \Springboard\Model {
       // tul sok kimaradas volt, reseteljuk nullara a poziciot, kezdje elorol
       // ez updateli a timestamp-et is, ergo ujra kezdjuk a timeoutot is
 
+      $ret['success'] = false;
       $row['position'] = $record['position'] = 0;
       $progressModel->id  = $row['id'];
       $progressModel->updateRow( $record );
 
-    }
+    } // ami maradt hogy a jelentett ertek <= mint a jelenlegi ertek
 
     $ret['watchedpercent'] = round( ($row['position'] / $row['length']) * 100 );
     $ret['needpercent']    = $organization['elearningcoursecriteria'];
