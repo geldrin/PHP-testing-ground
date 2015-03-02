@@ -165,11 +165,6 @@ return array(
     ''              => '',
   ),
   
-  'quality' => array(
-    0 => 'Normál',
-    1 => 'HD',
-  ),
-  
   'live_compatibility' => array(
     'isdesktopcompatible' => 'Desktop',
     'isandroidcompatible' => 'Android',

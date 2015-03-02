@@ -178,7 +178,7 @@ class Livefeeds extends \Springboard\Model {
     if ( !$defaultstreamid ) {
       
       $defaultstream = reset( $narrowedstreams );
-      if ( $browser['mobile'] and $browser['tablet'] ) { // hq stream default ha tablet
+      if ( $browser['mobile'] and $browser['tablet'] ) {
         
         foreach( $narrowedstreams as $stream ) {
           
@@ -186,7 +186,7 @@ class Livefeeds extends \Springboard\Model {
                (
                  ( $browser['mobiledevice'] == 'iphone' and $stream['isioscompatible'] ) or
                  ( $browser['mobiledevice'] == 'android' and $stream['isandroidcompatible'] )
-               ) and $stream['quality']
+               )
              ) {
             
             $defaultstream = $stream;
@@ -266,12 +266,11 @@ class Livefeeds extends \Springboard\Model {
     foreach( $info['streams']['streams'] as $stream ) {
 
       if (
-           $info['streams']['defaultstream']['id'] == $stream['id'] or
-           $info['streams']['defaultstream']['quality'] == $stream['quality']
+           $info['streams']['defaultstream']['id'] == $stream['id']
          )
         continue;
 
-      $ret['labels'][]     = $stream['name'];
+      $ret['labels'][]     = $stream['quality'];
       $ret['parameters'][] = array(
         'livefeedstreamid' => $stream['id'],
         'viewsessionid'    => $this->generateViewSessionid( $stream['id'] ),

@@ -128,11 +128,6 @@ return array(
     ''              => '',
   ),
   
-  'quality' => array(
-    0 => 'Normal',
-    1 => 'HD',
-  ),
-  
   'live_compatibility' => array(
     'isdesktopcompatible' => 'Desktop',
     'isandroidcompatible' => 'Android',

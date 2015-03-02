@@ -33,9 +33,15 @@ $config = array(
   
   'quality' => array(
     'displayname' => $l('live', 'quality'),
-    'type'        => 'inputRadio',
-    'values'      => $l->getLov('quality'),
-    'value'       => 0,
+    'type'        => 'inputText',
+    'validation'  => array(
+      array(
+        'type'     => 'string',
+        'required' => true,
+        'minimum'  => 2,
+        'maximum'  => 50,
+      ),
+    ),
   ),
   
   'compatibility[]' => array(
