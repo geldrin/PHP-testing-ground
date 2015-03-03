@@ -11,6 +11,7 @@
     <th>{#live__streams#}</th>
   </tr>
   {foreach from=$feeds item=feed}
+  {assign var=currentviewers value=$feed.currentviewers|numberformat}
     {if $feed.issecurestreamingforced}
       {assign var=ingressurl value=$bootstrap->config.wowza.secliveingressurl3}
     {else}
@@ -22,6 +23,7 @@
     </td>
     <td class="feed">
       <a href="{$language}/live/view/{$feed.id},{$feed.name|filenameize}" class="left"><b>{$feed.name|mb_wordwrap:30|escape:html}</b></a>
+      <span class="currentviewers" data-pollurl="{$language}/live/viewers?livefeedid={$feed.id}" data-template="{#live__currentviewers#|escape:html}">{#live__currentviewers#|sprintf:$currentviewers}</span>
       <br/>
       <a href="{$language}/live/analytics/{$channel.id}?feedids[]={$feed.id}">{#live__analytics#}</a>
       {if $feed.feedtype != 'vcr' or $feed.candelete}

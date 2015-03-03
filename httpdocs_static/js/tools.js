@@ -28,6 +28,7 @@ $j(document).ready(function() {
   runIfExists('.liveembed', setupLiveEmbed );
   runIfExists('.livecompatibility', setupLiveCompatibility );
   runIfExists('.streambroadcastlink', setupBroadcastLink );
+  runIfExists('#feeds', setupManagefeeds );
   runIfExists('#feeds .needpoll', setupStreamPoll );
   runIfExists('#currentuser', setupCurrentUser );
   runIfExists('#search_advanced', setupSearch );
@@ -2312,4 +2313,32 @@ function setupGroups() {
     var shouldshow = $j(this).val() === '';
     $j('#name').parents('tr').toggle(shouldshow);
   }).change();
+}
+
+function setupManagefeeds() {
+  var interval = 60 * 1000;
+  $j('#feeds .currentviewers').each(function() {
+    setTimeout( refreshFeedViewerCount( $j(this), interval ), interval );
+  });
+}
+
+function refreshFeedViewerCount(elem, interval) {
+  var tpl = elem.attr('data-template'),
+      url = elem.attr('data-pollurl');
+
+  return function() {
+    $j.ajax({
+      url     : url,
+      type    : 'GET',
+      dataType: 'json',
+      cache   : false,
+      success : function(data) {
+        if (!data || !data.success)
+          return;
+
+        elem.text( tpl.replace('%s', data.data.formattedcurrentviewers ) );
+        setTimeout( refreshFeedViewerCount(elem, interval), interval );
+      }
+    });
+  };
 }

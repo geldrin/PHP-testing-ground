@@ -19,6 +19,7 @@ class Controller extends \Visitor\Controller {
     'modifystream'         => 'liveadmin|clientadmin',
     'deletestream'         => 'liveadmin|clientadmin',
     'managefeeds'          => 'liveadmin|clientadmin',
+    'viewers'              => 'liveadmin|clientadmin',
     'togglestream'         => 'liveadmin|clientadmin',
     'getstreamstatus'      => 'liveadmin|clientadmin',
     'checkstreamaccess'    => 'public',
@@ -835,6 +836,44 @@ class Controller extends \Visitor\Controller {
     }
 
     return $ret;
+  }
+
+  public function viewersAction() {
+    $livefeedid = $this->application->getNumericParameter('livefeedid');
+    $ret = array('success' => false);
+
+    if ( $livefeedid <= 0 )
+      $this->jsonOutput( $ret );
+
+    // 60 masodperces cache lejarat, nem nyelv specifikus
+    $cache = $this->bootstrap->getCache( "livefeed-viewers-$livefeedid", 60, true );
+    if ( $cache->expired() ) {
+      $feedModel = $this->bootstrap->getModel('livefeeds');
+      $feedModel->select( $livefeedid );
+
+      if ( // feedid invalid
+           !$feedModel->row or
+           $feedModel->row['organizationid'] != $this->organization['id']
+         )
+        return $ret;
+
+      include_once( $this->bootstrap->config['templatepath'] . 'Plugins/modifier.numberformat.php' );
+      $data = $feedModel->getViewers();
+      $cache->put( array(
+          'currentviewers'          => $data,
+          'formattedcurrentviewers' => smarty_modifier_numberformat( $data ),
+        )
+      );
+
+    }
+
+    $ret = array(
+      'success' => true,
+      'data'    => $cache->get(),
+    );
+
+    $this->jsonOutput( $ret );
+
   }
 
 }

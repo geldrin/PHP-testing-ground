@@ -2606,6 +2606,9 @@ a#currentusername span {
   margin-left: 5px;
   width: 300px;
 }
+#feeds .currentviewers {
+  margin-left: 5px;
+}
 
 #live_analytics .singlecolumn .inputtext {
   width: 105px;

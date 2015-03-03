@@ -1089,4 +1089,18 @@ class Livefeeds extends \Springboard\Model {
 
   }
 
+  public function getViewers() {
+    $this->ensureID();
+    if ( $this->row and isset( $this->row['currentviewers'] ) )
+      return $this->row['currentviewers'];
+
+    return $this->db->getOne("
+      SELECT currentviewers
+      FROM livefeeds
+      WHERE id = '" . $this->id . "'
+      LIMIT 1
+    ");
+
+  }
+
 }
