@@ -29,6 +29,8 @@
   <!--[if lte IE 6]>
   <link rel="StyleSheet" type="text/css" href="{$STATIC_URI}css/style_ie6{$VERSION}.css" />
   <![endif]-->
+  <link rel="StyleSheet" type="text/css" href="{$BASE_URI}contents/layoutcss?{$VERSION}" media="screen"/>
+
   {jscombine}
   <script type="text/javascript" src="{$STATIC_URI}js/jquery.min.js"></script>
   <script type="text/javascript" src="{$STATIC_URI}js/jquery-ui-1.9.2.custom.min.js"></script>
