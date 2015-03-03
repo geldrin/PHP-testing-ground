@@ -1,0 +1,1 @@
+ALTER TABLE  `livefeeds` ADD  `currentviewers` INT NOT NULL DEFAULT  '0';
