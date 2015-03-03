@@ -3674,8 +3674,8 @@ class Recordings extends \Springboard\Model {
       $ret['watchedpercent'] >= $organization['elearningcoursecriteria']
     ;
 
-    $this->endTrans();
     $this->updateSession( $organization, $userid, $lastposition, $sessionid );
+    $this->endTrans();
     return $ret;
 
   }
@@ -3696,10 +3696,13 @@ class Recordings extends \Springboard\Model {
         id,
         IF(timestampfrom < DATE_SUB($timestamp, INTERVAL $timeout MINUTE), 1, 0) AS expired
       FROM recording_view_sessions
-      WHERE sessionid = $sessionid
+      WHERE
+        sessionid   = $sessionid AND
+        recordingid = $recordingid
       ORDER BY id DESC
       LIMIT 1
     ");
+
     if ( !$existing ) {
       $this->db->execute("
         INSERT INTO recording_view_sessions
