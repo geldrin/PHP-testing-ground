@@ -2167,7 +2167,7 @@ class Recordings extends \Springboard\Model {
         rv.recordingid IN('" . implode("', '", $ids ) . "') AND
         rv.status = 'onstorage' AND
         ep.id     = rv.encodingprofileid
-      ORDER BY rv.encodingorder DESC
+      ORDER BY rv.encodingorder ASC
     ");
 
     $ret = array(
