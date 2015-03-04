@@ -92,14 +92,30 @@ $config = array(
   'recordings_seconds_minlength' => 3,
   'categoryiconpath'      => $this->basepath . 'httpdocs_static/images/categories/',
   'relatedrecordingcount' => 6,
+
   // Converter related settings
   'mediainfo_identify'    => 'mediainfo --full --output=XML %s 2>&1',
-  // current FFMpeg static build'
-  'ffmpeg_alt'            => '/home/conv/ffmpeg/ffmpeg-customvsq-git20150116-static/ffmpeg',
-  // Path to FFmpegThumbnailer
-  'ffmpegthumbnailer'     => '/usr/bin/ffmpegthumbnailer-2.0.8',
-  'ocr_engine'            => 'cuneiform', // Supported: cuneiform, tesseract
-  'ocr_alt'               => 'cuneiform', // Path to ocr binary
+  // FFmpeg
+  'ffmpeg_alt'            => '/home/conv/ffmpeg/ffmpeg-customvsq-git20150116-static/ffmpeg', // current FFMpeg static build'
+  'ffmpeg_loglevel'        => 25,          // Loglevel
+  'ffmpeg_threads'         => 0,           // Threads to use (0 - automatic)
+  'max_duration_error'     => 20,          // margin of error when comparing master and converted video lengths
+  // Thumbnailer
+  'ffmpegthumbnailer'     => '/usr/bin/ffmpegthumbnailer-2.0.8', // Path to FFmpegThumbnailer
+  'thumb_video_numframes'  => 20,          // Number of video thumbnails generated per recording
+  // OCR
+  'ocr_engine'            => 'cuneiform',  // Supported: cuneiform, tesseract
+  'ocr_alt'               => 'cuneiform',  // Path to ocr binary
+  'ocr_frame_distance'     => 1.0,         // Desired distance between frames (in seconds)
+  'ocr_threshold'          => 0.004,       // Max. difference between ocr frames 
+  // Converter restraints                  
+  'video_min_length'       => 3,           // Min. media length in seconds (unused!)
+  'video_res_modulo'       => 8,           // Rescaled video X/Y resolution modulo 0 divider (16 = F4V!)
+  'video_max_bw'           => 6500000,     // Maximum of video bandwidth (absolute limit)
+  'video_max_res'          => '4096x2160', // Max. resolution for uploaded video (otherwise fraud upload)
+  'video_max_fps'          => 60,          // Max. video FPS (unused!)
+  'video_default_fps'      => 25,          // Default video FPS
+
   //----
   'combine' => array(
     'css'     => true,
@@ -273,6 +289,19 @@ $config = array(
     ),
     'converter' => array(),
   ),
+  // Job priorities 
+  'nice'            => 'nice -n 19',  // General: lowest
+  'nice_high'       => 'nice -n 10',  // High
+  'nice_moderate'   => 'nice -n 14',  // Moderate
+  'encoding_nice'   => "nice -n 10",
+  
+  // Sleep duration - number of seconds to sleep after an operation
+  'sleep_media'     => 60,            // Media conversion
+  'sleep_short'     => 5,             // Short sleep
+  'sleep_long'      => 100,           // Long sleep
+  'sleep_vcr'       => 20,            // VCS job
+  'sleep_vcr_wait'  => 20,            // VCS job Cisco TCS wait timeout
+  'sleep_doc'       => 300,           // Document conversion
   //-------
   // ldap belepeseket ennyi idonkent vegezzuk el ujra ha a user mar be van lepve
   'directoryreauthminutes' => 240, // default 4 ora

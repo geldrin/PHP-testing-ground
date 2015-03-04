@@ -43,7 +43,7 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_vcr_control.stop' ) and !i
 	$app->watchdog();
 
 	$tcs_isconnected = false;
-	$sleep_length = $jconf['sleep_vcr'];
+	$sleep_length = $app->config['sleep_vcr'];
 
 	// Establish database connection
 	$db = db_maintain();

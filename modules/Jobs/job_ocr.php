@@ -37,9 +37,9 @@ $db = db_maintain();
 // $db = $app->bootstrap->getAdoDB();
 
 // OCR nice level
-$onice = $jconf['nice'];
+$onice = $app->config['nice'];
 $nicelevel = $tmp = null;
-$tmp = preg_match('/[-]?[\d]+$/', $jconf['encoding_nice'], $nicelevel);
+$tmp = preg_match('/[-]?[\d]+$/', $app->config['encoding_nice'], $nicelevel);
 if ($tmp === 1) {
 	if ((intval($nicelevel[0]) + 5) > 19)
 		$onice = "nice -n 19";
@@ -103,7 +103,7 @@ function Main() {
 		
 		$action = null;
 		$OCRduration = 0;
-		$sleep_duration = $jconf['sleep_long'];
+		$sleep_duration = $app->config['sleep_long'];
 		
 		try {
 			$action = 'PREPARING';
@@ -509,7 +509,7 @@ function convertOCR($rec) {
 	
 	// KEPKOCKAK KINYERESE //////////////////////////////////
 	$result['phase'] = "Extracting frames from video";
-	$cmd_explode = escapeshellcmd($onice ." ". $app->config['ffmpeg_alt'] ." -v ". $jconf['ffmpeg_loglevel'] ." -i ". $rec['contentmasterfile'] ." -filter_complex  'scale=w=320:h=180:force_original_aspect_ratio=decrease' -r ". $jconf['ocr_frame_distance'] ." -q:v 1 -f image2 ". $cmpdir ."%06d.jpg -r ". $jconf['ocr_frame_distance'] ." -q:v 1 -f image2 ". $wdir ."%06d.jpg");
+	$cmd_explode = escapeshellcmd($onice ." ". $app->config['ffmpeg_alt'] ." -v ". $app->config['ffmpeg_loglevel'] ." -i ". $rec['contentmasterfile'] ." -filter_complex  'scale=w=320:h=180:force_original_aspect_ratio=decrease' -r ". $app->config['ocr_frame_distance'] ." -q:v 1 -f image2 ". $cmpdir ."%06d.jpg -r ". $app->config['ocr_frame_distance'] ." -q:v 1 -f image2 ". $wdir ."%06d.jpg");
 	
 	$debug->log($logdir, $logfile, "Extracting frames from video. Command line:". PHP_EOL . $cmd_explode);
 	
@@ -563,12 +563,11 @@ function convertOCR($rec) {
 		$IMdiff = runExt4($cmdIMdiff);
 
 		if ($IMdiff['code'] !== 0) {
-			// $debug->log($logdir, $logfile, "[WARN] Comparing frames (". ($p2 - 1) ."/". $p2 .") failed! Message:". $IMdiff['cmd_output'] ."\n", false);
 			$numocrwarns++;
 			continue;
 		}	else {
 			$mean = floatval($IMdiff['cmd_output']);
-			if ($mean > $jconf['ocr_threshold']) {		// kulonbozik
+			if ($mean > $app->config['ocr_threshold']) {		// kulonbozik
 				$frames['transitions'][] = $p2;
 			}
 		}
@@ -609,8 +608,6 @@ function convertOCR($rec) {
 
 		foreach($motion as $movie_scene) {
 			$frames2remove += array_intersect($frames['transitions'], range(($movie_scene['start'] + 1), $movie_scene['stop']));
-
-// print_r("picking movie scene sample at ". (floor(abs($movie_scene['start'] - $movie_scene['stop']) / 2) + $movie_scene['start']) ." (between ". $movie_scene['start'] ."-". $movie_scene['stop'] .")". PHP_EOL);
 
 			// get frames from the middle of a scene (igoring poor quality frames right after keyframes/scene cuts)
 			$frames['sorted'][] = ( int ) floor(abs($movie_scene['start'] - $movie_scene['stop']) / 2) + $movie_scene['start'];
@@ -684,7 +681,7 @@ function convertOCR($rec) {
 	$result['phase'] = "Updating database";
 	$debug->log($logdir, $logfile, "Updating database.", false);
 	foreach ($frames['processed'] as $f) {
-		$updateocr = insertOCRdata($rec['id'], $f + 1, $frames['frames'][$f]['text'], $jconf['ocr_frame_distance'], $jconf['dbstatus_conv']);
+		$updateocr = insertOCRdata($rec['id'], $f + 1, $frames['frames'][$f]['text'], $app->config['ocr_frame_distance'], $jconf['dbstatus_conv']);
 		if ($updateocr['result'] === false) {
 			$msg = "[ERROR] " . $updateocr['message'];
 			$debug->log($logdir, $logfile, $msg, $sendmail = false);

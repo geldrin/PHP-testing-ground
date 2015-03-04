@@ -202,7 +202,7 @@ if ( $app->config['node_role'] == "converter" ) {
 	} else {
 		$testfile = "andor_agnes.mp4";
 		$outfile = "output.png";
-		$command  = $jconf['nice_high'] . " " . $app->config['ffmpegthumbnailer'] . " -i " . $testfile . " -o " . $outfile . " -s0 -q8 -t 5";
+		$command  = $app->config['nice_high'] . " " . $app->config['ffmpegthumbnailer'] . " -i " . $testfile . " -o " . $outfile . " -s0 -q8 -t 5";
 		$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Executing ffmpegthumbnailer: " . $command, $sendmail = false);
 		$output = runExternal($command);
 		$output_string = $output['cmd_output'];

@@ -52,7 +52,7 @@ while( !is_file( $app->config['datapath'] . 'jobs/' .$myjobid . '.stop' ) and !i
 		$db = null;
 		$db = db_maintain();
 
-		$converter_sleep_length = $jconf['sleep_media'];
+		$converter_sleep_length = $app->config['sleep_media'];
 
 		// Check if temp directory readable/writable
 		if ( !is_writable($jconf['doc_dir']) ) {

@@ -27,7 +27,7 @@ function ffmpegPrep($rec, $profile) {
 // PIP eseten:
 // > az alacsonyabb vagy a magasabb fps legyen az alap? -> magasabb!
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-global $jconf, $debug;
+global $app, $debug, $jconf;
 	$result = array(
 		'result'  => true,
 		'message' => "ok!",
@@ -66,7 +66,7 @@ global $jconf, $debug;
 		$encpars['videofps'] = $rec[$idx .'mastervideofps'];
 	
 		if ( empty($rec[$idx . 'mastervideofps']) ) {
-			$encpars['videofps'] = $jconf['video_default_fps'];
+			$encpars['videofps'] = $app->config['video_default_fps'];
 		} else {
 			// Max fps check
 			if ( $rec[$idx . 'mastervideofps'] > $profile['videomaxfps'] ) {
@@ -79,9 +79,9 @@ global $jconf, $debug;
 
 		// Max resolution check (fraud check)
 		$videores = explode('x', strtolower($rec[$idx .'mastervideores']), 2);
-		$maxres   = explode('x', strtolower($jconf['video_max_res']), 2);
+		$maxres   = explode('x', strtolower($app->config['video_max_res']), 2);
 		if (($videores[0] > $maxres[0]) || ($videores[1] > $maxres[1])) {
-			$msg = "[ERROR] Invalid video resolution: ". $rec[$idx .'mastervideores'] . " (max: " . $jconf['video_max_res'] . ")";
+			$msg = "[ERROR] Invalid video resolution: ". $rec[$idx .'mastervideores'] . " (max: " . $app->config['video_max_res'] . ")";
 			$debug->log($jconf['log_dir'], $jconf['jobid_media_convert'] .'.log', $msg, $sendmail = false);
 			$result['message'] = $msg;
 			$result['result' ] = false;
@@ -137,7 +137,7 @@ global $jconf, $debug;
 		$encpars['videofps_bps_normalized'] = $fps_bps_normalized;
 		$encpars['videobitrate'] = $encpars['videobpp'] * $encpars['resx'] * $encpars['resy'] * $fps_bps_normalized;
 		// Max bitrate check and clip
-		if ( $encpars['videobitrate'] > $jconf['video_max_bw'] ) $encpars['videobitrate'] = $jconf['video_max_bw'];
+		if ( $encpars['videobitrate'] > $app->config['video_max_bw'] ) $encpars['videobitrate'] = $app->config['video_max_bw'];
 
 		// Deinterlace
 		$encpars['deinterlace'] = ($rec[$idx .'mastervideoisinterlaced'] > 0) ? true : false;
@@ -221,8 +221,8 @@ global $app, $debug, $jconf;
 	$ffmpeg_input       = null; // input filename and options
 	$ffmpeg_payload     = null; // contains input option on normal encoding OR overlay filter on pip encoding
 	$ffmpeg_pass_prefix = null; // used with multipass encoding (passlogfiles will be written here, with the given prefix)
-	$ffmpeg_globals     = $jconf['encoding_nice'] ." ". $app->config['ffmpeg_alt'] ." -v ". $jconf['ffmpeg_loglevel'] ." -y";
-	$ffmpeg_output      = " -threads ". $jconf['ffmpeg_threads'] ." -f ". $profile['filecontainerformat'] ." ". $rec['output_file'];
+	$ffmpeg_globals     = $app->config['encoding_nice'] ." ". $app->config['ffmpeg_alt'] ." -v ". $app->config['ffmpeg_loglevel'] ." -y";
+	$ffmpeg_output      = " -threads ". $app->config['ffmpeg_threads'] ." -f ". $profile['filecontainerformat'] ." ". $rec['output_file'];
 	
 	$audio_filter = null;
 	$video_filter = null;
@@ -365,7 +365,7 @@ global $app, $debug, $jconf;
 		// first-pass
 		if (!file_exists($ffmpeg_passlogfile .".mbtree")) {
 			$cmd  = $ffmpeg_globals . $ffmpeg_input . $ffmpeg_payload ." -pass 1 -passlogfile ". $ffmpeg_pass_prefix . $ffmpeg_video . $ffmpeg_audio;
-			$cmd .= " -threads ". $jconf['ffmpeg_threads'] ." -f ". $profile['filecontainerformat'] ." /dev/null";
+			$cmd .= " -threads ". $app->config['ffmpeg_threads'] ." -f ". $profile['filecontainerformat'] ." /dev/null";
 			$command[1] = $cmd;
 		}
 		
@@ -412,8 +412,8 @@ global $app, $debug, $jconf;
 		$err['command'       ]  = $c;
 		$err['result'        ]  = $output['code'];
 		$err['command_output'] .= $output['cmd_output'];
-		if ($jconf['ffmpeg_loglevel'] == 0 || $jconf['ffmpeg_loglevel'] == 'quiet')
-			$err['command_output']= "( FFmpeg output was suppressed - loglevel: ". $jconf['ffmpeg_loglevel'] .". )";
+		if ($app->config['ffmpeg_loglevel'] == 0 || $app->config['ffmpeg_loglevel'] == 'quiet')
+			$err['command_output']= "( FFmpeg output was suppressed - loglevel: ". $app->config['ffmpeg_loglevel'] .". )";
 		$mins_taken = round( $err['duration'] / 60, 2);
 		
 		// Check results
@@ -448,7 +448,7 @@ global $app, $debug, $jconf;
 		$r->analyze($rec['output_file']);
 		// select media lenght for duration check if 'profile.type' is different than PIP.
 		if (!isset($target_length)) $target_length = $rec[$idx .'masterlength'];
-		if (abs($r->metadata['masterlength'] - $target_length) > $jconf['max_duration_error']) {
+		if (abs($r->metadata['masterlength'] - $target_length) > $app->config['max_duration_error']) {
 			$msg  = "[ERROR] Duration check failed on ". $rec['output_file'] ."!\n";
 			$msg .= "Output file's duration (". $r->metadata['masterlength'] ." sec) does not match with target duration (". $target_length ." sec)!\n";
 			$msg .= "Command output:\n";
@@ -641,7 +641,7 @@ function calculate_video_scaler($resx, $resy, $bboxx, $bboxy) {
 //	);
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-global $jconf;
+global $app;
 
 	$scaler = 1;
 	// Check if video is larger than bounding box
@@ -650,15 +650,15 @@ global $jconf;
 		$scaler_y = $bboxy / $resy;
 		// Select minimal scaler to fit bounding box
 		$scaler = min($scaler_x, $scaler_y);
-		$resx_new = (int) $jconf['video_res_modulo'] * round(($resx * $scaler) / $jconf['video_res_modulo'], 0, PHP_ROUND_HALF_DOWN);
-		$resy_new = (int) $jconf['video_res_modulo'] * round(($resy * $scaler) / $jconf['video_res_modulo'], 0, PHP_ROUND_HALF_DOWN);
+		$resx_new = (int) $app->config['video_res_modulo'] * round(($resx * $scaler) / $app->config['video_res_modulo'], 0, PHP_ROUND_HALF_DOWN);
+		$resy_new = (int) $app->config['video_res_modulo'] * round(($resy * $scaler) / $app->config['video_res_modulo'], 0, PHP_ROUND_HALF_DOWN);
 	} else {
 		// Recalculate resolution with codec modulo if needed (fix for odd resolutions)
 		$resx_new = $resx;
 		$resy_new = $resy;
-		if ( ( ( $resx % $jconf['video_res_modulo'] ) > 0 ) || ( ( $resy % $jconf['video_res_modulo'] ) > 0 ) ) {
-			$resx_new = (int) $jconf['video_res_modulo'] * round($resx / $jconf['video_res_modulo'], 0, PHP_ROUND_HALF_DOWN);
-			$resy_new = (int) $jconf['video_res_modulo'] * round($resy / $jconf['video_res_modulo'], 0, PHP_ROUND_HALF_DOWN);
+		if ( ( ( $resx % $app->config['video_res_modulo'] ) > 0 ) || ( ( $resy % $app->config['video_res_modulo'] ) > 0 ) ) {
+			$resx_new = (int) $app->config['video_res_modulo'] * round($resx / $app->config['video_res_modulo'], 0, PHP_ROUND_HALF_DOWN);
+			$resy_new = (int) $app->config['video_res_modulo'] * round($resy / $app->config['video_res_modulo'], 0, PHP_ROUND_HALF_DOWN);
 		}
 	}
 	$new_resolution = array (
@@ -684,7 +684,7 @@ function calculate_mobile_pip($mastervideores, $contentmastervideores, $profile)
 //	  o TRUE: encoding OK
 //	- $pip: calculated resolutions
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-	global $jconf;
+	global $app;
 	
 	$pip = array();
 	// Content resolution
@@ -701,8 +701,8 @@ function calculate_mobile_pip($mastervideores, $contentmastervideores, $profile)
 	$resy = $tmp[1];
 	$scaler_pip = $resy / $resx;
 	
-	$pip['pip_res_x'] = $jconf['video_res_modulo'] * round(($pip['res_x'] * $profile['pipsize']) / $jconf['video_res_modulo'], 0, PHP_ROUND_HALF_DOWN);
-	$pip['pip_res_y'] = $jconf['video_res_modulo'] * round(($pip['pip_res_x'] * $scaler_pip) / $jconf['video_res_modulo'], 0, PHP_ROUND_HALF_DOWN);
+	$pip['pip_res_x'] = $app->config['video_res_modulo'] * round(($pip['res_x'] * $profile['pipsize']) / $app->config['video_res_modulo'], 0, PHP_ROUND_HALF_DOWN);
+	$pip['pip_res_y'] = $app->config['video_res_modulo'] * round(($pip['pip_res_x'] * $scaler_pip) / $app->config['video_res_modulo'], 0, PHP_ROUND_HALF_DOWN);
 	// Calculate PiP position
 	$pip_align_x = ceil($pip['res_x'] * $profile['pipalign']);
 	$pip_align_y = ceil($pip['res_y'] * $profile['pipalign']);

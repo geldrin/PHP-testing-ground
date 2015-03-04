@@ -60,7 +60,7 @@ $app->watchdog();
 // Establish database connection
 $db = db_maintain();
 
-$converter_sleep_length = $jconf['sleep_media'];
+$converter_sleep_length = $app->config['sleep_media'];
 
 // Watchdog
 $app->watchdog();

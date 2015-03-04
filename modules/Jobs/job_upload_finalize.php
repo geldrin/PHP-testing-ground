@@ -49,7 +49,7 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_upload_finalize.stop' ) an
         // Establish database connection
         $db = db_maintain();
 
-        $sleep_length = $jconf['sleep_short'];
+        $sleep_length = $app->config['sleep_short'];
 
         // Initialize log total duration timer
         $start_time = time();

@@ -18,20 +18,6 @@ return array('config_jobs' => array(
 	'log_dir'         => $this->config['logpath'] . 'jobs/',
 	'wowza_log_dir'   => '/var/log/wowza/',
 
-	// Job priorities 
-	'nice'            => 'nice -n 19',  // General: lowest
-	'nice_high'       => 'nice -n 10',  // High
-	'nice_moderate'   => 'nice -n 14',  // Moderate
-	'encoding_nice'   => "nice -n 10",
-	
-	// Sleep duration - number of seconds to sleep after an operation
-	'sleep_media'     => 60,            // Media conversion
-	'sleep_short'     => 5,             // Short sleep
-	'sleep_long'      => 100,           // Long sleep
-	'sleep_vcr'       => 20,            // VCS job
-	'sleep_vcr_wait'  => 20,            // VCS job Cisco TCS wait timeout
-	'sleep_doc'       => 300,           // Document conversion
-
 	// Job identifiers
 	'jobid_media_convert'   => 'job_media_convert2',
 	'jobid_conv_control'    => 'job_conversion_control',
@@ -47,10 +33,6 @@ return array('config_jobs' => array(
 	'jobid_watcher'         => 'watcher',
 	'jobid_acc'             => 'job_accounting',
 	'jobid_live_thumb'      => 'job_live_thumbnail',
-
-	// SSH related settings
-	//'ssh_user'              => 'conv',
-	//'ssh_key'               => '/home/conv/.ssh/id_rsa',
 
 	// File system related settings
 	'file_owner'            => 'conv:vsq',  // conv:vsq
@@ -111,43 +93,6 @@ return array('config_jobs' => array(
 	'dbstatus_indexing_empty'    => 'empty',
 	'dbstatus_indexing_ok'       => 'completed',
 
-	// VCR options
-/*	'vcr_server'             => 'tcs.streamnet.hu',
-	'vcr_user'               => 'admin',
-	'vcr_password'           => 'BoRoKaBoGYo1980', */
-
-	// API authentication data
-/*	'api_user'               => 'support@videosqr.com',
-	'api_password'           => 'MekkElek123', */
-
-	// FFMpeg related
-	// 'ffmpeg_alt'             => '/home/conv/ffmpeg/ffmpeg-customvsq-git20150116-static/ffmpeg', // current FFMpeg static build
-	'ffmpeg_loglevel'        => 25,               // Loglevel
-	'ffmpeg_threads'         => 0,                // Threads to use (0 - automatic)
-	'ffmpeg_async_frames'    => 10,               // Max. frames to skip when audio and video is out of sync (deprecated)
-	'ffmpeg_h264_passes'     => 1,                // FFMpeg passes for H.264 (not operational!)
-	'max_duration_error'     => 20,               // margin of error when comparing master and converted video lengths
-
-	// Thumbnails
-	// 'ffmpegthumbnailer'      => '/usr/bin/ffmpegthumbnailer-2.0.8', // ffmpegthumbnailer path
-	// 'thumb_video_small'      => '220x130',         // Resolution of normal video thumbnails
-	// 'thumb_video_medium'     => '300x168',         // Resolution of wide video thumbnails
-	// 'thumb_video_large'      => '618x348',         // Resolution of wide video thumbnails
-	'thumb_video_numframes'  => 20,                // Number of video thumbnails generated per recording
-
-	// Ocr frames
-	// 'ocr_engine'             => 'cuneiform',       // Supported: cuneiform, tesseract
-	// 'ocr_alt'                => '/home/gergo/cf',  // Path to ocr binary
-	'ocr_frame_distance'     => 1.0,               // Desired distance between frames (in seconds)
-	'ocr_threshold'          => 0.004,             // Max. difference between ocr frames 
-	
-	// Constraints
-	'video_min_length'       => 3,                 // Min. media length in seconds
-	'video_res_modulo'       => 8,                 // Rescaled video X/Y resolution modulo 0 divider (16 = F4V!)
-	'video_max_bw'           => 6500000,           // Maximum of video bandwidth (absolute limit)
-	'video_max_res'          => '4096x2160',       // Max. resolution for uploaded video (otherwise fraud upload)
-	'video_max_fps'          => 60,                // Max. video FPS
-	'video_default_fps'      => 25,                // Default video FPS
 ));
 
 ?>

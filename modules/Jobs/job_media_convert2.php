@@ -48,7 +48,7 @@ while( !is_file( $app->config['datapath'] . 'jobs/' . $myjobid . '2.stop' ) and 
 		$db = null;
 		$db = db_maintain();
 
-		$converter_sleep_length = $jconf['sleep_media'];
+		$converter_sleep_length = $app->config['sleep_media'];
 
 		// Check if temp directory readable/writable
 		if ( !is_writable($jconf['media_dir']) ) {
@@ -443,7 +443,7 @@ global $app, $jconf, $debug;
 	}
 
 	// Calculate thumbnail step
-	$vthumbs_maxframes = $jconf['thumb_video_numframes'];
+	$vthumbs_maxframes = $app->config['thumb_video_numframes'];
 	if ( floor($playtime) < $vthumbs_maxframes ) $vthumbs_maxframes = floor($playtime);
 	$thumb_steps = floor($playtime) / $vthumbs_maxframes;
 
@@ -477,7 +477,7 @@ global $app, $jconf, $debug;
 		$filename_43      = $thumb_output_dir . $app->config['videothumbnailresolutions']['4:3'   ] ."/". $filename_basename;
 		$filename_highres = $thumb_output_dir . $app->config['videothumbnailresolutions']['player'] ."/". $filename_basename;
 
-		$command  = $jconf['nice_high'] . " " . $app->config['ffmpegthumbnailer'] . " -i " . $recording['master_filename'] . " -o " . $orig_thumb_filename . " -s0 -q8 -t" . secs2hms($position_sec) . " 2>&1";
+		$command  = $app->config['nice_high'] . " " . $app->config['ffmpegthumbnailer'] . " -i " . $recording['master_filename'] . " -o " . $orig_thumb_filename . " -s0 -q8 -t" . secs2hms($position_sec) . " 2>&1";
 
 		clearstatcache();
 
