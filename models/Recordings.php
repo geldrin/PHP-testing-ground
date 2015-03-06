@@ -2405,6 +2405,7 @@ class Recordings extends \Springboard\Model {
 
     $this->ensureObjectLoaded();
     $user = $info['member'];
+    $needreset = false;
 
     if ( !$this->row['isseekbardisabled'] or !$user or !$user['id'] )
       return array();
@@ -2446,16 +2447,8 @@ class Recordings extends \Springboard\Model {
         LIMIT 1
       ");
 
-      if ( $row and $row['expired'] ) {
-        // reset, kezdje elorol
-        $row['lastposition'] = 0;
-        $this->db->execute("
-          UPDATE recording_view_progress
-          SET position = 0
-          WHERE id = '" . $row['id'] . "'
-          LIMIT 1
-        ");
-      }
+      if ( $row and $row['expired'] )
+        $needreset = true;
 
     }
 
@@ -2470,6 +2463,18 @@ class Recordings extends \Springboard\Model {
     $needpercent     = $info['organization']['elearningcoursecriteria'];
     $watchedpercent  = round( ($row['lastposition'] / $length) * 100 );
     $seekbardisabled = ($watchedpercent >= $needpercent)? false: true;
+
+    // ha lejart de nem nezte meg akkor reset
+    if ($needreset and $watchedpercent < $needpercent) {
+      $row['lastposition'] = 0;
+      $seekbardisabled = true;
+      $this->db->execute("
+        UPDATE recording_view_progress
+        SET position = 0
+        WHERE id = '" . $row['id'] . "'
+        LIMIT 1
+      ");
+    }
 
     $options = array(
       'timeline_seekbarDisabled'          => $seekbardisabled,
@@ -3658,13 +3663,22 @@ class Recordings extends \Springboard\Model {
       $row['position'] = $lastposition;
 
     } elseif ( $row['expired'] ) { // reset
-      // tul sok kimaradas volt, reseteljuk nullara a poziciot, kezdje elorol
-      // ez updateli a timestamp-et is, ergo ujra kezdjuk a timeoutot is
 
-      $ret['success'] = false;
-      $row['position'] = $record['position'] = 0;
-      $progressModel->id  = $row['id'];
-      $progressModel->updateRow( $record );
+      $ret['watchedpercent'] = round( ($row['position'] / $row['length']) * 100 );
+      $ret['needpercent']    = $organization['elearningcoursecriteria'];
+      $ret['watched']        =
+        $ret['watchedpercent'] >= $organization['elearningcoursecriteria']
+      ;
+
+      // csak akkor resetelunk ha nem nezte vegig
+      if ( !$ret['watched'] ) {
+        // tul sok kimaradas volt, reseteljuk nullara a poziciot, kezdje elorol
+        // ez updateli a timestamp-et is, ergo ujra kezdjuk a timeoutot is
+        $ret['success'] = false;
+        $row['position'] = $record['position'] = 0;
+        $progressModel->id  = $row['id'];
+        $progressModel->updateRow( $record );
+      }
 
     } // ami maradt hogy a jelentett ertek <= mint a jelenlegi ertek
 
