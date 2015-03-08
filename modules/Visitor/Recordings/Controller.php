@@ -281,6 +281,7 @@ class Controller extends \Visitor\Controller {
     $this->toSmarty['needhistory']   = true;
     $this->toSmarty['height']        = $this->getPlayerHeight( $recordingsModel );
     $this->toSmarty['recording']     = $recordingsModel->addPresenters( true, $this->organization['id'] );
+    $this->toSmarty['attachments']   = $recordingsModel->getAttachments();
     $this->toSmarty['recordingdownloads'] = $recordingsModel->getDownloadInfo(
       $this->bootstrap->staticuri
     );
@@ -296,7 +297,6 @@ class Controller extends \Visitor\Controller {
 
     $this->toSmarty['flashdata']     = $this->getFlashParameters( $flashdata );
     $this->toSmarty['author']        = $recordingsModel->getAuthor();
-    $this->toSmarty['attachments']   = $recordingsModel->getAttachments();
     $this->toSmarty['canrate']       = ( $user['id'] and !$rating[ $recordingsModel->id ] );
     
     $this->toSmarty['opengraph']     = array(
