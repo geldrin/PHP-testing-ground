@@ -377,6 +377,7 @@ class Controller extends \Visitor\Controller {
     $this->toSmarty['member']    = $user;
     $this->toSmarty['ipaddress'] = $this->getIPAddress();
     $this->toSmarty['sessionid'] = session_id();
+    $this->toSmarty['attachments'] = $recordingsModel->getAttachments();
     $flashdata = $recordingsModel->getStructuredFlashData( $this->toSmarty );
     
     if ( $needauth ) {
@@ -704,6 +705,7 @@ class Controller extends \Visitor\Controller {
     $this->toSmarty['ipaddress']     = $this->getIPAddress();
     $this->toSmarty['member']        = $user;
     $this->toSmarty['sessionid']     = session_id();
+    $this->toSmarty['attachments']   = $recordingsModel->getAttachments();
 
     if ( $skipcontent )
       $this->toSmarty['skipcontent'] = true;
