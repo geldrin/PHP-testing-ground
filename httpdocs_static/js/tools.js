@@ -658,8 +658,8 @@ function setupRateWidget() {
           if ( !data || typeof data != 'object' )
             return;
           
-          if ( data.notloggedin )
-            return wantAjaxLogin( true );
+          if ( data.status == 'error' && data.reason )
+            return alert( l[data.reason] );
           
           var index = Math.round( parseFloat( data.rating, 10 ) ) - 1;
           

@@ -12,7 +12,7 @@ class Controller extends \Visitor\Controller {
     'getsubtitle'          => 'public',
     'newcomment'           => 'member',
     'moderatecomment'      => 'uploader|moderateduploader|editor|clientadmin',
-    'rate'                 => 'member',
+    'rate'                 => 'public',
     'upload'               => 'uploader|moderateduploader',
     'uploadcontent'        => 'uploader|moderateduploader',
     'uploadsubtitle'       => 'uploader|moderateduploader',
@@ -208,15 +208,29 @@ class Controller extends \Visitor\Controller {
     $rating      = $this->application->getNumericParameter('rating');
     $result      = array('status' => 'error');
     
+
     if ( !$recordingid or $rating < 1 or $rating > 5 ) {
       
       $result['reason'] = 'invalidparameters';
       $this->jsonOutput( $result );
       
     }
-    
+
+    $cookiekey = "rra_$recordingid";
     $session = $this->bootstrap->getSession('rating');
-    if ( $session[ $recordingid ] ) {
+    $user    = $this->bootstrap->getSession('user');
+    if ( !$this->organization['`isanonymousratingenabled'] and !$user['id'] ) {
+      $result['reason'] = 'upload_membersonly';
+      $this->jsonOutput( $result );
+    }
+
+    if (
+         $session[ $recordingid ] or
+         (
+           isset( $_COOKIE[ $cookiekey ] ) and
+           $_COOKIE[ $cookiekey ]
+         )
+       ) {
       
       $result['reason'] = 'alreadyvoted';
       $this->jsonOutput( $result );
@@ -228,7 +242,8 @@ class Controller extends \Visitor\Controller {
     
     if ( !$recordingsModel->addRating( $rating ) )
       $this->jsonOutput( $result );
-    
+
+    setcookie( $cookiekey, '1', strtotime('+4 months'), '/' );
     $session[ $recordingid ] = true;
     $result = array(
       'status'          => 'success',
@@ -297,7 +312,10 @@ class Controller extends \Visitor\Controller {
 
     $this->toSmarty['flashdata']     = $this->getFlashParameters( $flashdata );
     $this->toSmarty['author']        = $recordingsModel->getAuthor();
-    $this->toSmarty['canrate']       = ( $user['id'] and !$rating[ $recordingsModel->id ] );
+    $this->toSmarty['canrate']       = (
+      ( $user['id'] or $this->organization['isanonymousratingenabled'] ) and
+      ( !$rating[ $recordingsModel->id ] and !@$_COOKIE['rra_' . $recordingsModel->id ] )
+    );
     
     $this->toSmarty['opengraph']     = array(
       'type'        => 'video',

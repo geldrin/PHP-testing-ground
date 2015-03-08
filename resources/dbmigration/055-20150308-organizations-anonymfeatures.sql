@@ -1,0 +1,2 @@
+ALTER TABLE  `organizations` ADD  `isanonymousratingenabled` INT NOT NULL DEFAULT  '0' AFTER  `isrecommendationdisabled`;
+ALTER TABLE  `recordings` ADD  `isanonymouscommentsenabled` INT NOT NULL DEFAULT  '0' AFTER  `isintrooutro`;
