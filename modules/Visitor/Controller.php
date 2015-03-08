@@ -100,7 +100,8 @@ class Controller extends \Springboard\Controller\Visitor {
 
       try {
 
-        if ( $auth->handleType( $authtype, $this->module, $this->action ) ) {
+        $ret = $auth->handleType( $authtype, $this->module, $this->action );
+        if ( $ret === true ) {
           $user = $this->bootstrap->getSession('user');
           $this->toSmarty['member'] = $user->toArray();
           $this->logUserLogin( $authtype['type'] . '-LOGIN');

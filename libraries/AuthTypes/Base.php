@@ -9,7 +9,6 @@ abstract class Base {
 
   protected $skip = array(
     'users' => array(
-      'login'  => true,
       'logout' => true,
     ),
     'recordings' => array(

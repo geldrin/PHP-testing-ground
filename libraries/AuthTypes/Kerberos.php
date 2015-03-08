@@ -30,7 +30,7 @@ class Kerberos extends \AuthTypes\Base {
     // es nincsen fallback sima loginnal
     if ( !strlen( trim( $remoteuser ) ) ) {
       $e = new \AuthTypes\Exception("remote_user empty or not found");
-      $e->redirecturl     = 'users/login';
+      $e->redirecturl     = 'contents/ldapnoaccess';
       $e->redirectmessage = $l('users', 'kerberosloginfailed');
       $e->redirectparams  = array('error' => 'kerberosfailed');
       throw $e;
@@ -50,7 +50,7 @@ class Kerberos extends \AuthTypes\Base {
     // mert le van tiltva
     if ( $type['disabled'] > 0 ) {
       $e = new \AuthTypes\Exception("auth type disabled");
-      $e->redirecturl     = 'users/login';
+      $e->redirecturl     = 'contents/ldapnoaccess';
       $e->redirectmessage = $l('users', 'kerberosloginfailed');
       $e->redirectparams  = array('error' => 'typedisabled');
       throw $e;
@@ -66,7 +66,8 @@ class Kerberos extends \AuthTypes\Base {
 
     $user->clear(); // reseteljuk a usert a biztonsag kedveert
 
-    // ujra van user['id'] mert a findAndMarkUser regisztralja
+    // ujra van user['id'] mert a findAndMarkUser regisztralja, es be is lepteti
+    // ha letezik
     $valid = $this->findAndMarkUser( $type, $remoteuser );
     $userModel = $this->bootstrap->getModel('users');
 
@@ -80,12 +81,14 @@ class Kerberos extends \AuthTypes\Base {
         'source'     => 'kerberos',
       );
 
-      // nem talaltunk directoryt a usernek, szimplan beleptetjuk
+      // nem talaltunk directoryt a usernek => nem talaltuk meg ldap-ban vagy
+      // szimplan nem sikerult az ldap lekeres
       if ( $directoryuser and empty( $directoryuser['user'] ) ) {
         $e = new \AuthTypes\Exception("user found but not member of ldap group");
         $e->redirecturl     = 'contents/ldapnoaccess';
+        $e->redirectparams  = array('error' => 'nongroupmember');
         throw $e;
-      } elseif ( $directoryuser )
+      } elseif ( $directoryuser ) // van minden, csak adatbazisban nem letezik
         $newuser = array_merge( $newuser, $directoryuser['user'] );
 
       $userModel->insertExternal( $newuser,
@@ -115,6 +118,7 @@ class Kerberos extends \AuthTypes\Base {
           )
         );
 
+        $user->clear(); // mert beleptette a findAndMarkUser
         $e = new \AuthTypes\Exception("user found but no longer member of ldap group");
         $e->redirecturl     = 'contents/ldapnoaccess';
         $e->redirectparams  = array('error' => 'accessrevoked');
@@ -126,11 +130,13 @@ class Kerberos extends \AuthTypes\Base {
           // tiltottuk le
           $userModel->select( $user['id'] );
           // az if ota megvaltozhatott
-          if ( $userModel->row['disabled'] == $userModel::USER_DIRECTORYDISABLED )
+          if ( $userModel->row['disabled'] == $userModel::USER_DIRECTORYDISABLED ) {
             $userModel->updateRow( array(
                 'disabled' => $userModel::USER_VALIDATED,
               )
             );
+            $user['disabled'] = $userModel::USER_VALIDATED;
+          }
 
         }
 
