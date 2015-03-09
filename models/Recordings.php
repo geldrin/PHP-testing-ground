@@ -2473,6 +2473,9 @@ class Recordings extends \Springboard\Model {
 
     }
 
+    if ( !$row )
+      $row = array('lastposition' => 0);
+
     $watchedpercent  = round( ($row['lastposition'] / $length) * 100 );
     $seekbardisabled = ($watchedpercent >= $needpercent)? false: true;
 
@@ -2487,9 +2490,6 @@ class Recordings extends \Springboard\Model {
         LIMIT 1
       ");
     }
-
-    if ( !$row )
-      $row = array('lastposition' => 0);
 
     $options = array(
       'timeline_seekbarDisabled'          => $seekbardisabled,
