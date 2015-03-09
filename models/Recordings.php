@@ -3900,7 +3900,7 @@ class Recordings extends \Springboard\Model {
   }
 
   public function checkViewProgressTimeout( $organization, $userid ) {
-    $this->ensureID();
+    $this->ensureObjectLoaded();
     $timeout = $organization['viewsessiontimeoutminutes'];
     $row = $this->db->getRow("
       SELECT
@@ -3920,6 +3920,17 @@ class Recordings extends \Springboard\Model {
     ");
 
     if ( !$row )
+      return false;
+
+    $length         = max(
+      (int)$this->row['masterlength'],
+      (int)$this->row['contentmasterlength']
+    );
+    $watchedpercent = round( ($row['position'] / $length) * 100 );
+    $needpercent    = $info['organization']['elearningcoursecriteria'];
+    $watched        = $watchedpercent >= $needpercent;
+
+    if ( $watched ) // ha megnezte akkor nem resetelunk semmit, nincs problema
       return false;
 
     if ( $row['expired'] ) {
