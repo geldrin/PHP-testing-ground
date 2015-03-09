@@ -24,7 +24,7 @@ $myjobid = "job_ldap_cache";
 
 // Log related init
 $debug = Springboard\Debug::getInstance();
-$debug->log($jconf['log_dir'], $jconf['jobid_system_health'] . ".log", "*************************** Job: LDAP/AD cache started ***************************", $sendmail = false);
+$debug->log($jconf['log_dir'], $myjobid . ".log", "*************************** Job: LDAP/AD cache started ***************************", $sendmail = false);
 
 // Check operating system - exit if Windows
 if ( iswindows() ) {
@@ -36,6 +36,7 @@ if ( iswindows() ) {
 $db = db_maintain();
 
 // Config
+$isexecute = true;
 $synctimeseconds = 3600;
 
 // Get LDAP/AD directories for all organizations
@@ -72,7 +73,7 @@ var_dump($ldap_group);
             $ldap_groups->MoveNext();
             continue;
         }
-
+        
         ldap_set_option($ldap_dir['ldap_handler'], LDAP_OPT_REFERRALS, 0);
         ldap_set_option($ldap_dir['ldap_handler'], LDAP_OPT_PROTOCOL_VERSION, 3);
 
@@ -80,13 +81,14 @@ var_dump($ldap_group);
         try {
             $ldap_bind = ldap_bind($ldap_dir['ldap_handler'], $ldap_dir['user'], $ldap_dir['password']);
         } catch (exception $err) {
-            $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Skipping syncing " . $ldap_group['organizationdirectoryldapdn'] . ". Cannot authenticate to LDAP/AD server: " . $ldap_dir['user'] . "@" . $ldap_dir['server'] . "\n\nERROR:\n\n" . $err, $sendmail = false);
+            $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Skipping syncing " . $ldap_group['organizationdirectoryldapdn'] . ". Cannot authenticate to LDAP/AD server: " . $ldap_dir['user'] . "@" . $ldap_dir['server'] . " (orgdir#" . $ldap_group['organizationdirectoryid'] . ")\n\nERROR:\n\n" . $err, $sendmail = false);
             $ldap_groups->MoveNext();
             continue;
         }
         
         $ldap_dir['connected'] = true;
-        
+        $debug->log($jconf['log_dir'], $myjobid . ".log", "[OK] Connected to LDAP/AD server: " . $ldap_dir['server'] . " (orgdir#" . $ldap_group['organizationdirectoryid'] . ")", $sendmail = false);
+
     } else {
         
         if ( $ldap_dir['connected'] === false ) {
@@ -98,6 +100,9 @@ var_dump($ldap_group);
     }
 var_dump($ldap_dir);
 
+    // Log
+    $debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Synchronizing group: " . $ldap_group['organizationdirectoryldapdn'], $sendmail = false);
+
     // Request all members of nested group
     $filter = "memberOf:1.2.840.113556.1.4.1941:=" . $ldap_group['organizationdirectoryldapdn'];
 	$attr_filter = array("sAMAccountName", "userPrincipalName");
@@ -108,7 +113,7 @@ var_dump($ldap_dir);
         $ldap_groups->MoveNext();
         continue;
     }
-
+    
     // Collect users from LDAP result set
     $i = 0;
     $users = array();
@@ -125,63 +130,117 @@ var_dump($ldap_dir);
         $i++;
     } while ( $ldap_groups = ldap_next_entry($ldap_dir['ldap_handler'], $ldap_groups) );
 
-    //// Maintain database
+    // Log
+    $debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Users in LDAP/AD group: " . count($users), $sendmail = false);
     
+    //// Maintain database
     // Get members of this Videosquare group
     $vsq_group_members = getVSQGroupMembers($ldap_group['id']);
-echo "VSQ MEMBERS:\n";
+
+    // If groups_members.userexternalid is NULL, then update. Might happen with existing Kerberos originated users logged in before the first LDAP synch.
+    foreach ($vsq_group_members as $key => $vsq_user) {
+        if ( empty($vsq_user['userexternalid']) and !empty($vsq_user['userPrincipalName']) ) {
+            $err = updateGroupsMembersExternalID($ldap_group['id'], $vsq_user['userid'], $vsq_user['userPrincipalName']);
+            if ( $err === false ) {
+                $debug->log($jconf['log_dir'], $myjobid . ".log", "[WARN] Cannot update groups_members userexternalid for existing user#" . $vsq_user['userid'] . " (" . $vsq_user['userPrincipalName'] . ")", $sendmail = true);
+            } else {
+                $debug->log($jconf['log_dir'], $myjobid . ".log", "[OK] groups_members.userexternalid updated for existing user#" . $vsq_user['userid'] . " (" . $vsq_user['userPrincipalName'] . ")", $sendmail = false);
+                $vsq_group_members[$key]['userexternalid'] = $vsq_user['userPrincipalName'];
+                var_dump($vsq_user);
+            }
+        }
+    }
+
+    // Variables to track number of changes
+    $num_users_new = 0;
+    $num_users_remove = 0;
+
 var_dump($vsq_group_members);
-echo "LDAP/AD USERS:\n";
-var_dump($users);
-echo "-----------\n";
-  
+
     // Who is new?
 echo "NEW users:\n";
     $users2add = array();
+    $users2add_sql = array();
     foreach ($users as $key => $user) {
+        var_dump($user);
         $res = recursive_array_search($user['userPrincipalName'], $vsq_group_members);
+        echo "resid = " . $res . "\n";
         // New user in LDAP/AD
         if ( $res === false ) {
-            $user['isnew'] = true;
             echo $user['userPrincipalName'] . " is new.\n";
-            array_push($users2add, "(" . $ldap_group['id'] . ",'" . $user['userPrincipalName'] . "')");
+
+            $userid = "NULL";
+            // ... getUserIDByUserExternalID() - nezzuk meg letezik-e mar ez az externalid user es azzal szurjuk be!!!
+//            if ( !empty($vsq_group_members[$res]['userid']) ) $userid = $vsq_group_members[$res]['userid'];
+exit;
+
+            array_push($users2add, $user['userPrincipalName']);
+            array_push($users2add_sql, "(" . $ldap_group['id'] . "," . $userid . ",'" . $user['userPrincipalName'] . "')");
+
+            $users[$key]['isnew'] = true;
+            $num_users_new++;
         }
     }
-        
+exit;
+
     // Who is removed?
 echo "REMOVED users:\n";
     $users2remove = array();
+    $users2remove_sql = array();
     foreach ($vsq_group_members as $key => $vsq_user) {
-        $res = recursive_array_search($vsq_user['userPrincipalName'], $users);
-        echo $vsq_user['userPrincipalName'] . " searchres:\n";
+        $res = recursive_array_search($vsq_user['userexternalid'], $users);
+        echo $vsq_user['userexternalid'] . " searchres:\n";
         var_dump($res);
+// !!!
+/*if ( $vsq_user['userexternalid'] == "akovacs@streamnet.hu" ) {
+    var_dump($vsq_user);
+    $res = false;
+} */
         // Removed user from LDAP/AD
         if ( $res === false ) {
-            $vsq_user['isremoved'] = true;
-            echo $vsq_user['userPrincipalName'] . " removed.\n";
-            array_push($users2remove, "'" . $vsq_user['userPrincipalName'] . "'");
+            $vsq_group_members[$key]['isremoved'] = true;
+            $num_users_remove++;
+            echo $vsq_user['userexternalid'] . " removed.\n";
+            array_push($users2remove, $vsq_user['userexternalid']);
+            array_push($users2remove_sql, "'" . $vsq_user['userexternalid'] . "'");
         } else {
-            echo $vsq_user['userPrincipalName'] . " found.\n";
-            $vsq_user['isremoved'] = false;
+            echo $vsq_user['userexternalid'] . " found.\n";
+            $vsq_group_members[$key]['isremoved'] = false;
         }
-
-        var_dump($vsq_user);
     }
     
-    // Query: DELETE FROM groups_members WHERE groupid = $ldap_group['id'] AND userexternalid IN (...)
-//    $err = DeleteVSQGroupMembers($ldap_group['id'], $users2remove);
-    // Query: INSERT INTO groups_members VALUES ($ldap_group['id'], userexternalid),(...)
-    //INSERT INTO tbl_name (a,b,c) VALUES(1,2,3),(4,5,6),(7,8,9);
-    $users2add_flat = implode(",", $users2add);
-    $err = AddVSQGroupMembers($users2add_flat);
-
+var_dump($users2remove);
     
-/*var_dump($users2add);
-$a = implode(",", $users2add);
-echo $a . "\n";
+    // Remove users from group
+    $err = 0;
+    $msg = "";
+    if ( $isexecute and !empty($users2remove_sql) ) {
+        $users2remove_sql_flat = "(" . implode(",", $users2remove_sql) . ")";
+        $err = DeleteVSQGroupMembers($ldap_group['id'], $users2remove_sql_flat);
+    }        
+    if ( $err !== false ) {
+        // Log
+        if ( !empty($users2remove_sql) ) $msg = ". Users: " . implode(",", $users2remove);
+        $debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Users removed from group: " . $err . $msg, $sendmail = false);
+    } else {
+        $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Users NOT removed from group: " . $num_users_remove . ". Inconsistent group membership with LDAP/AD!", $sendmail = true);
+    }
 
-var_dump($users2remove); */
-
+    // Add new users to group
+    $err = 0;
+    $msg = "";
+    if ( $isexecute and !empty($users2add_sql) ) {
+        $users2add_sql_flat = implode(",", $users2add_sql);
+        $err = AddVSQGroupMembers($users2add_sql_flat);
+    }
+    if ( $err !== false ) {
+        // Log
+        if ( !empty($users2add_sql) ) $msg = ". Users: " . implode(",", $users2add);
+        $debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] New users added to this group: " . $err . $msg, $sendmail = false);
+    } else {
+        $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Users NOT added to group: " . $num_users_new . ". Inconsistent group membership with LDAP/AD! Users:\n" . $users2add_flat, $sendmail = true);
+    }
+    
 exit;
     $ldap_groups->MoveNext();
 }
@@ -191,6 +250,31 @@ if ( ( $db !== false ) and is_resource($db->_connectionID) ) $db->close();
 
 exit;
 
+function updateGroupsMembersExternalID($groupid, $userid, $userprincipalname) {
+global $db, $myjobid, $debug, $jconf;
+
+    if ( empty($userprincipalname) ) return false;
+    
+    $query = "
+        UPDATE
+            groups_members AS gm
+        SET
+            gm.userexternalid = '" . $userprincipalname . "'
+        WHERE
+            gm.userid = " . $userid . " AND
+            gm.groupid = " . $groupid;
+//echo $query . "\n";
+
+	try {
+		$rs = $db->Execute($query);
+	} catch (exception $err) {
+		$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] SQL query failed." . trim($query), $sendmail = true);
+		return false;
+	}
+
+    return $db->Affected_Rows();
+}
+
 function AddVSQGroupMembers($users2add) {
 global $db, $myjobid, $debug, $jconf;
 
@@ -198,13 +282,19 @@ global $db, $myjobid, $debug, $jconf;
 
     $query = "
         INSERT INTO
-            groups_members (groupid, userexternalid)
+            groups_members (groupid, userid, userexternalid)
         VALUES " . $users2add;
-    //INSERT INTO tbl_name (a,b,c) VALUES(1,2,3),(4,5,6),(7,8,9);
 
-echo $query . "\n";
-exit;
-        
+//echo $query . "\n";
+
+	try {
+		$rs = $db->Execute($query);
+	} catch (exception $err) {
+		$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] SQL query failed." . trim($query), $sendmail = true);
+		return false;
+	}
+
+    return $db->Affected_Rows();
 }
 
 function DeleteVSQGroupMembers($groupid, $users2remove) {
@@ -214,34 +304,42 @@ global $db, $myjobid, $debug, $jconf;
 
     $query = "
 		DELETE FROM
-            groups_members as gm
+            groups_members
 		WHERE
 			groupid = " . $groupid . " AND
             userexternalid IN " . $users2remove;
 
 echo $query . "\n";
-//exit;
-    // Query: DELETE FROM groups_members WHERE groupid = $ldap_group['id'] AND userexternalid IN (...)
+
+	try {
+		$rs = $db->Execute($query);
+	} catch (exception $err) {
+		$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] SQL query failed." . trim($query), $sendmail = true);
+		return false;
+	}
     
+    return $db->Affected_Rows();
 }
 
 function getVSQGroupMembers($groupid) {
 global $db, $myjobid, $debug, $jconf;
 
 	$query = "
-		SELECT
+        SELECT
            	g.id,
+            gm.userexternalid,
             gm.userid,
-            LOWER(u.externalid) AS userPrincipalName,
-            u.email
+            LOWER(u.externalid) AS userPrincipalName
 		FROM
 			groups AS g,
-            groups_members AS gm,
+            groups_members AS gm
+        LEFT JOIN
             users AS u
+        ON
+            gm.userid = u.id
 		WHERE
             gm.groupid = " . $groupid . " AND
-            gm.groupid = g.id AND
-            gm.userid = u.id
+            gm.groupid = g.id
     ";
 
     try {
