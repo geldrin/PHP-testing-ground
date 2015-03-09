@@ -2426,13 +2426,8 @@ class Recordings extends \Springboard\Model {
     // lekerjuk a globalis progresst, mert ha mar egyszer megnezett egy felvetelt
     // akkor onnantol nem erdekel minket semmi, barmit megnezhet ujra
     $timeout     = $info['organization']['viewsessiontimeoutminutes'];
-    $length      = max(
-      (int)$this->row['masterlength'],
-      (int)$this->row['contentmasterlength']
-    );
     $needreset   = false;
     $watched     = false;
-    $needpercent = $info['organization']['elearningcoursecriteria'];
     $row         = $this->db->getRow("
       SELECT
         id,
@@ -2451,9 +2446,8 @@ class Recordings extends \Springboard\Model {
     ");
 
     if ( $row ) {
-      $watchedpercent = round( ($row['lastposition'] / $length) * 100 );
-      $watched        = $watchedpercent >= $needpercent;
-      $needreset      = (bool)$row['expired'];
+      $watched   = $this->isRecordingWatched( $organization, $row['lastposition'] );
+      $needreset = (bool)$row['expired'];
 
       // ha lejart de nem nezte meg akkor reset
       if ($needreset and !$watched) {
@@ -2488,9 +2482,7 @@ class Recordings extends \Springboard\Model {
     if ( !$row )
       $row = array('lastposition' => 0);
 
-    $watchedpercent  = round( ($row['lastposition'] / $length) * 100 );
-    $seekbardisabled = ($watchedpercent >= $needpercent)? false: true;
-
+    $seekbardisabled = !$watched; // ha megnezte akkor nem kell seekbar
     $options = array(
       'timeline_seekbarDisabled'          => $seekbardisabled,
       'timeline_lastPlaybackPosition'     => (int) $row['lastposition'],
@@ -3621,10 +3613,8 @@ class Recordings extends \Springboard\Model {
           1,
           0
         ) AS expired,
-        GREATEST(
-          IFNULL(r.masterlength, 0),
-          IFNULL(r.contentmasterlength, 0)
-        ) AS length
+        r.masterlength,
+        r.contentmasterlength
       FROM
         recording_view_progress AS rvp,
         recordings AS r
@@ -3659,10 +3649,8 @@ class Recordings extends \Springboard\Model {
         SELECT
           '$lastposition' AS position,
           '0' AS expired,
-          GREATEST(
-            IFNULL(r.masterlength, 0),
-            IFNULL(r.contentmasterlength, 0)
-          ) AS length
+          r.masterlength,
+          r.contentmasterlength
         FROM recordings AS r
         WHERE r.id = '" . $this->id . "'
         LIMIT 1
@@ -3679,14 +3667,8 @@ class Recordings extends \Springboard\Model {
 
     } elseif ( $row['expired'] ) { // reset
 
-      $ret['watchedpercent'] = round( ($row['position'] / $row['length']) * 100 );
-      $ret['needpercent']    = $organization['elearningcoursecriteria'];
-      $ret['watched']        =
-        $ret['watchedpercent'] >= $organization['elearningcoursecriteria']
-      ;
-
       // csak akkor resetelunk ha nem nezte vegig
-      if ( !$ret['watched'] ) {
+      if ( !$this->isRecordingWatched( $organization, $row['position'], $row ) ) {
         // tul sok kimaradas volt, reseteljuk nullara a poziciot, kezdje elorol
         // ez updateli a timestamp-et is, ergo ujra kezdjuk a timeoutot is
         $ret['success'] = false;
@@ -3697,11 +3679,9 @@ class Recordings extends \Springboard\Model {
 
     } // ami maradt hogy a jelentett ertek <= mint a jelenlegi ertek
 
-    $ret['watchedpercent'] = round( ($row['position'] / $row['length']) * 100 );
-    $ret['needpercent']    = $organization['elearningcoursecriteria'];
-    $ret['watched']        =
-      $ret['watchedpercent'] >= $organization['elearningcoursecriteria']
-    ;
+    $ret['watched'] = $this->isRecordingWatched(
+      $organization, $row['position'], $row, $ret
+    );
 
     $this->updateSession( $organization, $userid, $lastposition, $sessionid );
     $this->endTrans();
@@ -3899,6 +3879,26 @@ class Recordings extends \Springboard\Model {
     return md5( $ts . $sessionid . $this->id . $extra );
   }
 
+  public function isRecordingWatched( $organization, $position, $row = null, &$info = null ) {
+    if ( !$row ) {
+      $this->ensureObjectLoaded();
+      $row = $this->row;
+    }
+
+    $length = max(
+      (int)$this->row['masterlength'],
+      (int)$this->row['contentmasterlength']
+    );
+    $watchedpercent = round( ($position / $length) * 100 );
+    $needpercent    = $organization['elearningcoursecriteria'];
+    if ( $info ) {
+      $info['watchedpercent'] = $watchedpercent;
+      $info['needpercent']    = $needpercent;
+    }
+
+    return $watchedpercent >= $needpercent;
+  }
+
   public function checkViewProgressTimeout( $organization, $userid ) {
     $this->ensureObjectLoaded();
     $timeout = $organization['viewsessiontimeoutminutes'];
@@ -3922,15 +3922,8 @@ class Recordings extends \Springboard\Model {
     if ( !$row )
       return false;
 
-    $length         = max(
-      (int)$this->row['masterlength'],
-      (int)$this->row['contentmasterlength']
-    );
-    $watchedpercent = round( ($row['position'] / $length) * 100 );
-    $needpercent    = $organization['elearningcoursecriteria'];
-    $watched        = $watchedpercent >= $needpercent;
-
-    if ( $watched ) // ha megnezte akkor nem resetelunk semmit, nincs problema
+    // ha megnezte akkor nem resetelunk semmit, nincs problema
+    if ( $this->isRecordingWatched( $organization, $row['position'] ) )
       return false;
 
     if ( $row['expired'] ) {
