@@ -3927,7 +3927,7 @@ class Recordings extends \Springboard\Model {
       (int)$this->row['contentmasterlength']
     );
     $watchedpercent = round( ($row['position'] / $length) * 100 );
-    $needpercent    = $info['organization']['elearningcoursecriteria'];
+    $needpercent    = $organization['elearningcoursecriteria'];
     $watched        = $watchedpercent >= $needpercent;
 
     if ( $watched ) // ha megnezte akkor nem resetelunk semmit, nincs problema
