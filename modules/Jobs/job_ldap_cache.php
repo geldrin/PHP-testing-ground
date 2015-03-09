@@ -147,10 +147,7 @@ echo "NEW users:\n";
             array_push($users2add, "(" . $ldap_group['id'] . ",'" . $user['userPrincipalName'] . "')");
         }
     }
-    
-    // Query: INSERT INTO groups_members VALUES ($ldap_group['id'], userexternalid),(...)
-    //INSERT INTO tbl_name (a,b,c) VALUES(1,2,3),(4,5,6),(7,8,9);
-    
+        
     // Who is removed?
 echo "REMOVED users:\n";
     $users2remove = array();
@@ -172,12 +169,18 @@ echo "REMOVED users:\n";
     }
     
     // Query: DELETE FROM groups_members WHERE groupid = $ldap_group['id'] AND userexternalid IN (...)
+//    $err = DeleteVSQGroupMembers($ldap_group['id'], $users2remove);
+    // Query: INSERT INTO groups_members VALUES ($ldap_group['id'], userexternalid),(...)
+    //INSERT INTO tbl_name (a,b,c) VALUES(1,2,3),(4,5,6),(7,8,9);
+    $users2add_flat = implode(",", $users2add);
+    $err = AddVSQGroupMembers($users2add_flat);
+
     
-var_dump($users2add);
+/*var_dump($users2add);
 $a = implode(",", $users2add);
 echo $a . "\n";
 
-var_dump($users2remove);
+var_dump($users2remove); */
 
 exit;
     $ldap_groups->MoveNext();
@@ -187,6 +190,40 @@ exit;
 if ( ( $db !== false ) and is_resource($db->_connectionID) ) $db->close();
 
 exit;
+
+function AddVSQGroupMembers($users2add) {
+global $db, $myjobid, $debug, $jconf;
+
+    if ( empty($users2add) ) return false;
+
+    $query = "
+        INSERT INTO
+            groups_members (groupid, userexternalid)
+        VALUES " . $users2add;
+    //INSERT INTO tbl_name (a,b,c) VALUES(1,2,3),(4,5,6),(7,8,9);
+
+echo $query . "\n";
+exit;
+        
+}
+
+function DeleteVSQGroupMembers($groupid, $users2remove) {
+global $db, $myjobid, $debug, $jconf;
+
+    if ( empty($users2remove) ) return false;
+
+    $query = "
+		DELETE FROM
+            groups_members as gm
+		WHERE
+			groupid = " . $groupid . " AND
+            userexternalid IN " . $users2remove;
+
+echo $query . "\n";
+//exit;
+    // Query: DELETE FROM groups_members WHERE groupid = $ldap_group['id'] AND userexternalid IN (...)
+    
+}
 
 function getVSQGroupMembers($groupid) {
 global $db, $myjobid, $debug, $jconf;
