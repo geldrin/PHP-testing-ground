@@ -2446,7 +2446,7 @@ class Recordings extends \Springboard\Model {
     ");
 
     if ( $row ) {
-      $watched   = $this->isRecordingWatched( $organization, $row['lastposition'] );
+      $watched   = $this->isRecordingWatched( $info['organization'], $row['lastposition'] );
       $needreset = (bool)$row['expired'];
 
       // ha lejart de nem nezte meg akkor reset
