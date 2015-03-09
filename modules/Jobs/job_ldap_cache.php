@@ -110,6 +110,7 @@ var_dump($ldap_dir);
     }
 
     // Collect users from LDAP result set
+    $i = 0;
     $users = array();
 	$ldap_groups = ldap_first_entry($ldap_dir['ldap_handler'], $result);
     do {      
@@ -117,23 +118,67 @@ var_dump($ldap_dir);
         $ldap_user = ldap_get_attributes($ldap_dir['ldap_handler'], $ldap_groups);
         if ( $ldap_user['sAMAccountName']['count'] > 1 ) $debug->log($jconf['log_dir'], $myjobid . ".log", "[WARN] Multiple sAMAccountName for user.\n\n" . print_r($ldap_user, true), $sendmail = false);
         
-        array_push($users, array($ldap_user['sAMAccountName'][0], $ldap_user['userPrincipalName'][0]));
-
+        $users[$i]['sAMAccountName'] = strtolower($ldap_user['sAMAccountName'][0]);
+        $users[$i]['userPrincipalName'] = strtolower($ldap_user['userPrincipalName'][0]);
+        $users[$i]['isnew'] = false;
+        
+        $i++;
     } while ( $ldap_groups = ldap_next_entry($ldap_dir['ldap_handler'], $ldap_groups) );
 
-    // Maintain database
-    $vsq_group_members = getVSQGroupMembers($ldap_group['id']);
-    while ( !$vsq_group_members->EOF ) {
-
-        $vsq_group_member = $vsq_group_members->fields;
-var_dump($vsq_group_member);
-
-        $vsq_group_members->MoveNext();
-    }
-exit;
-
-var_dump($users);
+    //// Maintain database
     
+    // Get members of this Videosquare group
+    $vsq_group_members = getVSQGroupMembers($ldap_group['id']);
+echo "VSQ MEMBERS:\n";
+var_dump($vsq_group_members);
+echo "LDAP/AD USERS:\n";
+var_dump($users);
+echo "-----------\n";
+  
+    // Who is new?
+echo "NEW users:\n";
+    $users2add = array();
+    foreach ($users as $key => $user) {
+        $res = recursive_array_search($user['userPrincipalName'], $vsq_group_members);
+        // New user in LDAP/AD
+        if ( $res === false ) {
+            $user['isnew'] = true;
+            echo $user['userPrincipalName'] . " is new.\n";
+            array_push($users2add, "(" . $ldap_group['id'] . ",'" . $user['userPrincipalName'] . "')");
+        }
+    }
+    
+    // Query: INSERT INTO groups_members VALUES ($ldap_group['id'], userexternalid),(...)
+    //INSERT INTO tbl_name (a,b,c) VALUES(1,2,3),(4,5,6),(7,8,9);
+    
+    // Who is removed?
+echo "REMOVED users:\n";
+    $users2remove = array();
+    foreach ($vsq_group_members as $key => $vsq_user) {
+        $res = recursive_array_search($vsq_user['userPrincipalName'], $users);
+        echo $vsq_user['userPrincipalName'] . " searchres:\n";
+        var_dump($res);
+        // Removed user from LDAP/AD
+        if ( $res === false ) {
+            $vsq_user['isremoved'] = true;
+            echo $vsq_user['userPrincipalName'] . " removed.\n";
+            array_push($users2remove, "'" . $vsq_user['userPrincipalName'] . "'");
+        } else {
+            echo $vsq_user['userPrincipalName'] . " found.\n";
+            $vsq_user['isremoved'] = false;
+        }
+
+        var_dump($vsq_user);
+    }
+    
+    // Query: DELETE FROM groups_members WHERE groupid = $ldap_group['id'] AND userexternalid IN (...)
+    
+var_dump($users2add);
+$a = implode(",", $users2add);
+echo $a . "\n";
+
+var_dump($users2remove);
+
 exit;
     $ldap_groups->MoveNext();
 }
@@ -150,7 +195,7 @@ global $db, $myjobid, $debug, $jconf;
 		SELECT
            	g.id,
             gm.userid,
-            u.externalid,
+            LOWER(u.externalid) AS userPrincipalName,
             u.email
 		FROM
 			groups AS g,
@@ -163,14 +208,14 @@ global $db, $myjobid, $debug, $jconf;
     ";
 
     try {
-		$rs = $db->Execute($query);
+		$rs = $db->getArray($query);
 	} catch (exception $err) {
 		$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] SQL query failed." . trim($query), $sendmail = true);
 		return false;
 	}
 
     // Check if any record returned
-	if ( $rs->RecordCount() < 1 ) return false;
+	if ( count($rs) < 1 ) return false;
 
     return $rs;
 }
@@ -263,6 +308,18 @@ global $db, $myjobid, $debug, $jconf;
     if ( count($rs) < 1 ) return false;
         
     return $rs;
+}
+
+function recursive_array_search($needle, $haystack) {
+    
+    foreach( $haystack as $key => $value ) {
+        $current_key = $key;
+        if ( $needle === $value OR ( is_array($value) && recursive_array_search($needle, $value) !== false ) ) {
+            return $current_key;
+        }
+    }
+
+    return false;
 }
 
 ?>
