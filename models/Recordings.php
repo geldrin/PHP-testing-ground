@@ -2419,15 +2419,47 @@ class Recordings extends \Springboard\Model {
 
     $this->ensureObjectLoaded();
     $user = $info['member'];
-    $needreset = false;
 
     if ( !$this->row['isseekbardisabled'] or !$user or !$user['id'] )
       return array();
 
-    if ( $info['organization']['iselearningcoursesessionbound'] ) {
+    // lekerjuk a globalis progresst, mert ha mar egyszer megnezett egy felvetelt
+    // akkor onnantol nem erdekel minket semmi, barmit megnezhet ujra
+    $timeout     = $info['organization']['viewsessiontimeoutminutes'];
+    $length      = max(
+      (int)$this->row['masterlength'],
+      (int)$this->row['contentmasterlength']
+    );
+    $needreset   = false;
+    $watched     = false;
+    $needpercent = $info['organization']['elearningcoursecriteria'];
+    $row         = $this->db->getRow("
+      SELECT
+        id,
+        position AS lastposition,
+        IF(
+          timestamp < DATE_SUB(NOW(), INTERVAL $timeout MINUTE),
+          1,
+          0
+        ) AS expired
+      FROM recording_view_progress
+      WHERE
+        userid      = '" . $user['id'] . "' AND
+        recordingid = '" . $this->id . "'
+      ORDER BY id DESC
+      LIMIT 1
+    ");
+
+    if ( $row ) {
+      $watchedpercent = round( ($row['lastposition'] / $length) * 100 );
+      $watched        = $watchedpercent >= $needpercent;
+      $needreset      = (bool)$row['expired'];
+    }
+
+    if ( !$watched and $info['organization']['iselearningcoursesessionbound'] ) {
 
       // ha session-bound akkor csak az adott sessionben allitjuk vissza
-      // a felvetel poziciojat
+      // a felvetel poziciojat, csak akkor ha nem nezte vegig
       $row = $this->db->getRow("
         SELECT positionuntil AS lastposition
         FROM recording_view_sessions
@@ -2439,47 +2471,13 @@ class Recordings extends \Springboard\Model {
         LIMIT 1
       ");
 
-    } else {
-
-      // amugy meg visszaalitjuk mindig az utolso poziciot ha van,
-      // es reseteljuk a progresst ha kifutott az idobol
-      $timeout = $info['organization']['viewsessiontimeoutminutes'];
-      $row = $this->db->getRow("
-        SELECT
-          id,
-          position AS lastposition,
-          IF(
-            timestamp < DATE_SUB(NOW(), INTERVAL $timeout MINUTE),
-            1,
-            0
-          ) AS expired
-        FROM recording_view_progress
-        WHERE
-          userid      = '" . $user['id'] . "' AND
-          recordingid = '" . $this->id . "'
-        ORDER BY id DESC
-        LIMIT 1
-      ");
-
-      if ( $row and $row['expired'] )
-        $needreset = true;
-
     }
 
-    if ( !$row )
-      $row = array('lastposition' => 0);
-
-    // teljesitette a felvetelt? mert akkor nem kell seekbar
-    $length          = max(
-      (int)$this->row['masterlength'],
-      (int)$this->row['contentmasterlength']
-    );
-    $needpercent     = $info['organization']['elearningcoursecriteria'];
     $watchedpercent  = round( ($row['lastposition'] / $length) * 100 );
     $seekbardisabled = ($watchedpercent >= $needpercent)? false: true;
 
     // ha lejart de nem nezte meg akkor reset
-    if ($needreset and $watchedpercent < $needpercent) {
+    if ($needreset and !$watched) {
       $row['lastposition'] = 0;
       $seekbardisabled = true;
       $this->db->execute("
@@ -2489,6 +2487,9 @@ class Recordings extends \Springboard\Model {
         LIMIT 1
       ");
     }
+
+    if ( !$row )
+      $row = array('lastposition' => 0);
 
     $options = array(
       'timeline_seekbarDisabled'          => $seekbardisabled,
