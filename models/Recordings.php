@@ -2454,6 +2454,18 @@ class Recordings extends \Springboard\Model {
       $watchedpercent = round( ($row['lastposition'] / $length) * 100 );
       $watched        = $watchedpercent >= $needpercent;
       $needreset      = (bool)$row['expired'];
+
+      // ha lejart de nem nezte meg akkor reset
+      if ($needreset and !$watched) {
+        $row['lastposition'] = 0;
+        $seekbardisabled = true;
+        $this->db->execute("
+          UPDATE recording_view_progress
+          SET position = 0
+          WHERE id = '" . $row['id'] . "'
+          LIMIT 1
+        ");
+      }
     }
 
     if ( !$watched and $info['organization']['iselearningcoursesessionbound'] ) {
@@ -2478,18 +2490,6 @@ class Recordings extends \Springboard\Model {
 
     $watchedpercent  = round( ($row['lastposition'] / $length) * 100 );
     $seekbardisabled = ($watchedpercent >= $needpercent)? false: true;
-
-    // ha lejart de nem nezte meg akkor reset
-    if ($needreset and !$watched) {
-      $row['lastposition'] = 0;
-      $seekbardisabled = true;
-      $this->db->execute("
-        UPDATE recording_view_progress
-        SET position = 0
-        WHERE id = '" . $row['id'] . "'
-        LIMIT 1
-      ");
-    }
 
     $options = array(
       'timeline_seekbarDisabled'          => $seekbardisabled,
