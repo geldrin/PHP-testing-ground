@@ -149,14 +149,14 @@ class Kerberos extends \AuthTypes\Base {
            ) {
           $e = new \AuthTypes\Exception("user found but is manually banned");
           $e->redirecturl     = 'contents/ldapnoaccess';
-          $e->redirectparams  = array('error' => 'banned');
+          $e->redirectparams  = array('error' => 'banned1');
           throw $e;
         }
 
       } elseif ( !$valid and empty( $directoryuser ) ) {
         $e = new \AuthTypes\Exception("user found but is manually banned");
         $e->redirecturl     = 'contents/ldapnoaccess';
-        $e->redirectparams  = array('error' => 'banned');
+        $e->redirectparams  = array('error' => 'banned2');
         throw $e;
       }
 
