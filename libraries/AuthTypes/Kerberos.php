@@ -70,10 +70,10 @@ class Kerberos extends \AuthTypes\Base {
     // ha letezik
     $valid = $this->findAndMarkUser( $type, $remoteuser );
     $userModel = $this->bootstrap->getModel('users');
+    $directoryuser = $this->handleAuthDirectory( $remoteuser );
 
     if ( $valid === null ) { // a null azt jelzi hogy nincs ilyen user
 
-      $directoryuser = $this->handleAuthDirectory( $remoteuser );
       $newuser       = array(
         'nickname'   => $uname,
         'namefirst'  => $uname,
@@ -102,14 +102,9 @@ class Kerberos extends \AuthTypes\Base {
         $this->ipaddresses
       );
       $userModel->registerForSession();
-      $this->markUser($type);
-
-      if ( $this->directory )
-        $this->directory->syncGroupsForUser( $user );
 
     } else {
 
-      $directoryuser = $this->handleAuthDirectory( $remoteuser );
       if ( $valid and empty( $directoryuser ) ) {
         // le lett tiltva a felhasznalo Directory-bol, de elotte valid volt
         $userModel->select( $user['id'] );
@@ -154,20 +149,21 @@ class Kerberos extends \AuthTypes\Base {
         }
 
       } elseif ( !$valid and empty( $directoryuser ) ) {
+        $user->clear();
         $e = new \AuthTypes\Exception("user found but is manually banned");
         $e->redirecturl     = 'contents/ldapnoaccess';
         $e->redirectparams  = array('error' => 'banned2');
         throw $e;
       }
 
-      if ( $this->directory ) {
-        // ha hirtelen modosult valami, itt synceljuk
-        $this->directory->syncWithUser( $user );
-      }
-
-      $this->markUser($type);
     }
 
+    if ( $this->directory ) {
+      // ha hirtelen modosult valami, itt synceljuk
+      $this->directory->syncWithUser( $user );
+    }
+
+    $this->markUser($type);
     return true;
   }
 
