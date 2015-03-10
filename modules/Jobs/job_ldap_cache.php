@@ -37,7 +37,8 @@ $db = db_maintain();
 
 // Config
 $isexecute = true;
-$synctimeseconds = 3600;
+$isdebug_ldap = true;
+$isdebug_user = true;
 
 // Get LDAP/AD directories for all organizations
 $ldap_dirs = getLDAPDirectories();
@@ -46,10 +47,18 @@ if ( $ldap_dirs === false ) {
     exit;
 }
 
-//var_dump($ldap_dirs);
+// Debug
+if ( $isdebug_ldap ) {
+    echo "*** LDAP directories:\n";
+    var_dump($ldap_dirs);
+    echo "---------------------\n";
+}
+
+// Basic DB LDAP/AD user maintenance: search for unconnected users in groups_members
+$err = updateUnconnectedGroupMembers();
 
 // Get LDAP/AD groups to be synchronized
-$ldap_groups = getLDAPGroups($synctimeseconds);
+$ldap_groups = getLDAPGroups($app->config['directorygroupnestedcachetimeout']);
 if ( $ldap_groups === false ) {
     $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Cannot query LDAP/AD groups. Exiting..." . trim($query), $sendmail = false);
     exit;
@@ -58,7 +67,13 @@ if ( $ldap_groups === false ) {
 while ( !$ldap_groups->EOF ) {
 
     $ldap_group = $ldap_groups->fields;
-var_dump($ldap_group);
+    
+    // Debug
+    if ( $isdebug_ldap ) {
+        echo "*** LDAP group processing started:\n";
+        var_dump($ldap_group);
+        echo "----------------------------------\n";
+    }
 
     $ldap_dir = searchLDAPDirectoriesByID($ldap_dirs, $ldap_group['organizationdirectoryid']);
 
@@ -98,7 +113,6 @@ var_dump($ldap_group);
         $ldap_groups->MoveNext();
         continue;
     }
-var_dump($ldap_dir);
 
     // Log
     $debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Synchronizing group: " . $ldap_group['organizationdirectoryldapdn'], $sendmail = false);
@@ -106,6 +120,8 @@ var_dump($ldap_dir);
     // Request all members of nested group
     $filter = "memberOf:1.2.840.113556.1.4.1941:=" . $ldap_group['organizationdirectoryldapdn'];
 	$attr_filter = array("sAMAccountName", "userPrincipalName");
+    // Debug
+    if ( $isdebug_user ) echo "*** LDAP query filter: " . $filter . "\nAttributes: " . print_r($attr_filter, true) . "\n";
     try {
         $result = ldap_search($ldap_dir['ldap_handler'], $ldap_dir['ldapusertreedn'], $filter, $attr_filter);
     } catch (exception $err) {
@@ -116,29 +132,40 @@ var_dump($ldap_dir);
     
     // Collect users from LDAP result set
     $i = 0;
-    $users = array();
-	$ldap_groups = ldap_first_entry($ldap_dir['ldap_handler'], $result);
+    $ldap_users = array();
+	$ldap_group_users = ldap_first_entry($ldap_dir['ldap_handler'], $result);
     do {      
 
-        $ldap_user = ldap_get_attributes($ldap_dir['ldap_handler'], $ldap_groups);
+        $ldap_user = ldap_get_attributes($ldap_dir['ldap_handler'], $ldap_group_users);
         if ( $ldap_user['sAMAccountName']['count'] > 1 ) $debug->log($jconf['log_dir'], $myjobid . ".log", "[WARN] Multiple sAMAccountName for user.\n\n" . print_r($ldap_user, true), $sendmail = false);
         
-        $users[$i]['sAMAccountName'] = strtolower($ldap_user['sAMAccountName'][0]);
-        $users[$i]['userPrincipalName'] = strtolower($ldap_user['userPrincipalName'][0]);
-        $users[$i]['isnew'] = false;
+        $ldap_users[$i]['sAMAccountName'] = strtolower($ldap_user['sAMAccountName'][0]);
+        $ldap_users[$i]['userPrincipalName'] = strtolower($ldap_user['userPrincipalName'][0]);
+        $ldap_users[$i]['isnew'] = false;
         
         $i++;
-    } while ( $ldap_groups = ldap_next_entry($ldap_dir['ldap_handler'], $ldap_groups) );
+    } while ( $ldap_group_users = ldap_next_entry($ldap_dir['ldap_handler'], $ldap_group_users) );
 
     // Log
-    $debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Users in LDAP/AD group: " . count($users), $sendmail = false);
+    $debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Users in LDAP/AD group: " . count($ldap_users), $sendmail = false);
     
-    //// Maintain database
     // Get members of this Videosquare group
     $vsq_group_members = getVSQGroupMembers($ldap_group['id']);
+    
+    // Debug
+    if ( $isdebug_user ) {
+        echo "*** VSQ group members:\n";
+        var_dump($vsq_group_members);
+        echo "----------------------\n";
+    }
+    if ( $isdebug_user ) {
+        echo "*** LDAP/AD group members:\n";
+        var_dump($ldap_users);
+        echo "----------------------\n";
+    }
 
     // If groups_members.userexternalid is NULL, then update. Might happen with existing Kerberos originated users logged in before the first LDAP synch.
-    foreach ($vsq_group_members as $key => $vsq_user) {
+/*    foreach ($vsq_group_members as $key => $vsq_user) {
         if ( empty($vsq_user['userexternalid']) and !empty($vsq_user['userPrincipalName']) ) {
             $err = updateGroupsMembersExternalID($ldap_group['id'], $vsq_user['userid'], $vsq_user['userPrincipalName']);
             if ( $err === false ) {
@@ -150,67 +177,67 @@ var_dump($ldap_dir);
             }
         }
     }
+*/
 
     // Variables to track number of changes
     $num_users_new = 0;
     $num_users_remove = 0;
 
-var_dump($vsq_group_members);
-
-    // Who is new?
-echo "NEW users:\n";
+    // Who has been added to LDAP/AD group?
+    if ( $isdebug_user ) echo "*** Search VSQ group member for LDAP users: NEW users\n";
     $users2add = array();
     $users2add_sql = array();
-    foreach ($users as $key => $user) {
-        var_dump($user);
-        $res = recursive_array_search($user['userPrincipalName'], $vsq_group_members);
-        echo "resid = " . $res . "\n";
-        // New user in LDAP/AD
-        if ( $res === false ) {
+    foreach ($ldap_users as $key => $user) {
+        $result = recursive_array_search($user['userPrincipalName'], $vsq_group_members);
+        if ( $isdebug_user ) echo "Searched: " . $user['userPrincipalName'] . " - result VSQ index = " . $result . "\n";
+        // Record new user from LDAP/AD to be added
+        if ( $result === false ) {
             echo $user['userPrincipalName'] . " is new.\n";
 
-            $userid = "NULL";
-            // ... getUserIDByUserExternalID() - nezzuk meg letezik-e mar ez az externalid user es azzal szurjuk be!!!
-//            if ( !empty($vsq_group_members[$res]['userid']) ) $userid = $vsq_group_members[$res]['userid'];
-exit;
-
             array_push($users2add, $user['userPrincipalName']);
-            array_push($users2add_sql, "(" . $ldap_group['id'] . "," . $userid . ",'" . $user['userPrincipalName'] . "')");
+            // gm.userid = NULL (we do not know userid) - it will be updated by updateUnconnectedGroupMembers()
+            array_push($users2add_sql, "(" . $ldap_group['id'] . ",NULL,'" . $user['userPrincipalName'] . "')");
 
-            $users[$key]['isnew'] = true;
+            $ldap_users[$key]['isnew'] = true;
             $num_users_new++;
         }
+        
+        if ( $isdebug_user ) var_dump($ldap_users[$key]);
     }
-exit;
-
-    // Who is removed?
-echo "REMOVED users:\n";
+    
+    // Who has been removed from LDAP/AD group?
+    if ( $isdebug_user ) echo "*** Search LDAP group members for VSQ group members: REMOVE users\n";
     $users2remove = array();
     $users2remove_sql = array();
     foreach ($vsq_group_members as $key => $vsq_user) {
-        $res = recursive_array_search($vsq_user['userexternalid'], $users);
-        echo $vsq_user['userexternalid'] . " searchres:\n";
-        var_dump($res);
+        $result = recursive_array_search($vsq_user['userexternalid'], $ldap_users);
+        if ( $isdebug_user ) echo "Searched: " . $vsq_user['userexternalid'] . " - result LDAP user index = " . $result . "\n";
 // !!!
 /*if ( $vsq_user['userexternalid'] == "akovacs@streamnet.hu" ) {
     var_dump($vsq_user);
-    $res = false;
+    $result = false;
 } */
-        // Removed user from LDAP/AD
-        if ( $res === false ) {
+        // Record user to be removed from LDAP/AD
+        if ( $result === false ) {
             $vsq_group_members[$key]['isremoved'] = true;
             $num_users_remove++;
-            echo $vsq_user['userexternalid'] . " removed.\n";
+            if ( $isdebug_user ) echo $vsq_user['userexternalid'] . " removed.\n";
             array_push($users2remove, $vsq_user['userexternalid']);
             array_push($users2remove_sql, "'" . $vsq_user['userexternalid'] . "'");
         } else {
-            echo $vsq_user['userexternalid'] . " found.\n";
+            if ( $isdebug_user ) echo $vsq_user['userexternalid'] . " found.\n";
             $vsq_group_members[$key]['isremoved'] = false;
         }
     }
-    
-var_dump($users2remove);
-    
+
+    // Debug
+    if ( $isdebug_user ) {
+        echo "*** Users2add SQL: ***\n";
+        var_dump($users2add_sql);
+        echo "*** Users2remove SQL: ***\n";
+        var_dump($users2remove_sql);
+    }
+
     // Remove users from group
     $err = 0;
     $msg = "";
@@ -227,7 +254,7 @@ var_dump($users2remove);
     }
 
     // Add new users to group
-    $err = 0;
+    $err = true;
     $msg = "";
     if ( $isexecute and !empty($users2add_sql) ) {
         $users2add_sql_flat = implode(",", $users2add_sql);
@@ -237,11 +264,11 @@ var_dump($users2remove);
         // Log
         if ( !empty($users2add_sql) ) $msg = ". Users: " . implode(",", $users2add);
         $debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] New users added to this group: " . $err . $msg, $sendmail = false);
+        $err = updateUnconnectedGroupMembers();
     } else {
         $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Users NOT added to group: " . $num_users_new . ". Inconsistent group membership with LDAP/AD! Users:\n" . $users2add_flat, $sendmail = true);
     }
     
-exit;
     $ldap_groups->MoveNext();
 }
     
@@ -249,6 +276,57 @@ exit;
 if ( ( $db !== false ) and is_resource($db->_connectionID) ) $db->close();
 
 exit;
+
+function updateUnconnectedGroupMembers() {
+global $db, $myjobid, $debug, $jconf;
+ 
+    // Update undefined (NULL) gm.userid from users table based on externalid (users that logged in using Kerberos and cached through LDAP/AD, but not yet connected)
+    $query = "
+        UPDATE
+            groups_members AS gm,
+            users AS u
+        SET
+            gm.userid = u.id
+        WHERE
+            gm.userid IS NULL AND
+            gm.userexternalid IS NOT NULL AND
+            gm.userexternalid = LOWER(u.externalid)";
+
+    //echo $query . "\n";
+            
+    try {
+        $rs = $db->Execute($query);
+    } catch (exception $err) {
+        $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] SQL query failed." . trim($query), $sendmail = true);
+        return false;
+    }
+
+    // Log
+    if ( ( $db->Affected_Rows() ) > 0 ) $debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Unconnected group members updated (gm.userid = NULL): " . $db->Affected_Rows(), $sendmail = false);
+
+    // Update undefined (NULL) gm.userexternalid from users table based on userid (users that logged in using Kerberos, but not yet cached from LDAP/AD)
+    $query = "  
+        UPDATE
+            groups_members AS gm,
+            users AS u
+        SET
+            gm.userexternalid = LOWER(u.externalid)
+        WHERE
+            gm.userexternalid IS NULL AND
+            gm.userid = u.id";
+
+    try {
+        $rs = $db->Execute($query);
+    } catch (exception $err) {
+        $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] SQL query failed." . trim($query), $sendmail = true);
+        return false;
+    }
+
+    // Log
+    if ( ( $db->Affected_Rows() ) > 0 ) $debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Unconnected group members updated (gm.userexternalid = NULL): " . $db->Affected_Rows(), $sendmail = false);
+ 
+    return true;
+}
 
 function updateGroupsMembersExternalID($groupid, $userid, $userprincipalname) {
 global $db, $myjobid, $debug, $jconf;
@@ -263,7 +341,6 @@ global $db, $myjobid, $debug, $jconf;
         WHERE
             gm.userid = " . $userid . " AND
             gm.groupid = " . $groupid;
-//echo $query . "\n";
 
 	try {
 		$rs = $db->Execute($query);
@@ -309,7 +386,7 @@ global $db, $myjobid, $debug, $jconf;
 			groupid = " . $groupid . " AND
             userexternalid IN " . $users2remove;
 
-echo $query . "\n";
+//echo $query . "\n";
 
 	try {
 		$rs = $db->Execute($query);
@@ -355,7 +432,7 @@ global $db, $myjobid, $debug, $jconf;
     return $rs;
 }
 
-function getLDAPGroups($synctimeseconds) {
+function getLDAPGroups($synctimemin) {
 global $db, $myjobid, $debug, $jconf;
 
 	$query = "
@@ -378,7 +455,7 @@ global $db, $myjobid, $debug, $jconf;
             g.organizationid AND o.id AND
             o.disabled = 0 AND
             od.disabled = 0 AND
-            ( g.organizationdirectoryuserslastsynchronized IS NULL OR TIMESTAMPADD(SECOND, " . $synctimeseconds . ", g.organizationdirectoryuserslastsynchronized) < NOW() )
+            ( g.organizationdirectoryuserslastsynchronized IS NULL OR TIMESTAMPADD(MINUTE, " . $synctimemin . ", g.organizationdirectoryuserslastsynchronized) < NOW() )
     ";
 
 //echo $query . "\n";
