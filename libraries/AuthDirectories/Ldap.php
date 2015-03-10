@@ -28,7 +28,7 @@ class Ldap extends \AuthDirectories\Base {
     ;
     $ldap    = $this->bootstrap->getLDAP( array(
         'server'   => $this->directory['server'],
-        'username' => $this->directory,
+        'username' => $this->directory['user'],
         'password' => $this->directory['password'],
       )
     );
