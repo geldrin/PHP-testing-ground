@@ -310,7 +310,7 @@ for ( $i = 0; $i < count($log_files); $i++ ) {
 		// Skip empty and comment lines
 		if ( empty($oneline) ) continue;
 		if ( preg_match('/^[\s]*#/', $oneline) ) {
-			if ( preg_match('/^[\s]*#Software: Wowza Media Server/', $oneline) ) {
+			if ( preg_match('/^[\s]*#Software: Wowza/', $oneline) ) {
 				$is_wowzalog = true;
 			}
 			continue;
