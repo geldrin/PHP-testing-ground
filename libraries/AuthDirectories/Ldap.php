@@ -2,14 +2,25 @@
 namespace AuthDirectories;
 
 class Ldap extends \AuthDirectories\Base {
+  public function syncWithUser( $user ) {
+    parent::syncWithUser( $user );
+
+    if ( !$this->directoryuser )
+      return;
+
+    $groupsModel = $this->bootstrap->getModel("groups");
+    $groupsModel->updateMembersFromExternalId(
+      $user['externalid'], $user['id']
+    );
+  }
 
   public function handle( $remoteuser ) {
-
+    $groupsModel = $this->bootstrap->getModel("groups");
     $accountname = $remoteuser;
     if ( preg_match( $this->bootstrap->config['directoryusernameregex'], $remoteuser, $match ) )
       $accountname = $match['username'];
 
-    $isadmin = false;
+    $isadmin = 0;
     $filter  =
       '(&(objectClass=user)(objectCategory=person)(sAMAccountName=' .
         \LDAP\LDAP::escape( $accountname ) .
@@ -17,14 +28,11 @@ class Ldap extends \AuthDirectories\Base {
     ;
     $ldap    = $this->bootstrap->getLDAP( array(
         'server'   => $this->directory['server'],
-        'username' => $this->directory['user'],
+        'username' => $this->directory,
         'password' => $this->directory['password'],
       )
     );
-    $ret     = array(
-      'user'   => array(),
-      'groups' => array(),
-    );
+    $ret     = array();
 
     $results = $ldap->search(
       $this->directory['ldapusertreedn'],
@@ -32,60 +40,41 @@ class Ldap extends \AuthDirectories\Base {
       array(
         "objectguid", "dn",
         "commonName", "sn", "givenName", "mail",
-        "memberOf", "sAMAccountName", "userPrincipalName"
+        "sAMAccountName", "userPrincipalName"
       )
     );
+    $access = $groupsModel->getDirectoryGroupsForExternalId(
+      $remoteuser, $this->directory
+    );
 
-    foreach( $results as $result ) {
-      $groups = isset( $result['memberOf'] )
-        ? $ldap::getArray( $result['memberOf'] )
-        : array()
-      ;
+    foreach( $results as $result ) { // csak egy result lesz
 
-      // ha nincs ldapgroupaccess akkor engedjuk
-      if (
-           empty( $groups ) or
-           (
-             $this->directory['ldapgroupaccess'] and
-             !in_array( $this->directory['ldapgroupaccess'], $groups )
-           )
-         )
+      // ha nincs ldapgroupaccess akkor nincs user
+      if ( !$access['hasaccess'] )
         continue;
 
-      if (
-           $this->directory['ldapgroupadmin'] and
-           in_array( $this->directory['ldapgroupadmin'], $groups )
-         )
-        $isadmin = true;
-      else
-        $isadmin = false;
-
-      // osszegyujtjuk a csoportokat, ez alapjan osztjuk ki a csoport hozzaferest
-      $ret['groups'] = array_merge(
-        $ret['groups'],
-        $groups
-      );
+      $isadmin = $access['isadmin'];
 
       // kotelezo, tobbi lehet hogy nincs
-      $ret['user']['nickname'] = $ldap::implodePossibleArray(' ', $result['sAMAccountName'] );
+      $ret['nickname'] = $ldap::implodePossibleArray(' ', $result['sAMAccountName'] );
 
       if ( isset( $result['mail'] ) )
-        $ret['user']['email'] = $ldap::implodePossibleArray(' ', $result['mail'] );
+        $ret['email'] = $ldap::implodePossibleArray(' ', $result['mail'] );
 
       if ( isset( $result['sn'] ) )
-        $ret['user']['namelast'] = $ldap::implodePossibleArray(' ', $result['sn'] );
+        $ret['namelast'] = $ldap::implodePossibleArray(' ', $result['sn'] );
 
       if ( isset( $result['givenName'] ) )
-        $ret['user']['namefirst'] = $ldap::implodePossibleArray(' ', $result['givenName'] );
+        $ret['namefirst'] = $ldap::implodePossibleArray(' ', $result['givenName'] );
 
       break;
     }
 
-    if ( !empty( $ret['user'] ) ) {
+    if ( !empty( $ret ) ) {
       if ( $isadmin )
-        $ret['user']['isuploader'] = 1;
+        $ret['isuploader'] = 1;
 
-      $ret['user']['isclientadmin'] = (int) $isadmin;
+      $ret['isclientadmin'] = (int) $isadmin;
     }
 
     return $this->directoryuser = $ret;

@@ -83,13 +83,13 @@ class Kerberos extends \AuthTypes\Base {
 
       // nem talaltunk directoryt a usernek => nem talaltuk meg ldap-ban vagy
       // szimplan nem sikerult az ldap lekeres
-      if ( $directoryuser and empty( $directoryuser['user'] ) ) {
+      if ( empty( $directoryuser ) ) {
         $e = new \AuthTypes\Exception("user found but not member of ldap group");
         $e->redirecturl     = 'contents/ldapnoaccess';
         $e->redirectparams  = array('error' => 'nongroupmember');
         throw $e;
       } elseif ( $directoryuser ) // van minden, csak adatbazisban nem letezik
-        $newuser = array_merge( $newuser, $directoryuser['user'] );
+        $newuser = array_merge( $newuser, $directoryuser );
 
       $userModel->insertExternal( $newuser,
         $this->organization
@@ -110,7 +110,7 @@ class Kerberos extends \AuthTypes\Base {
     } else {
 
       $directoryuser = $this->handleAuthDirectory( $remoteuser );
-      if ( $valid and $directoryuser and empty( $directoryuser['user'] ) ) {
+      if ( $valid and empty( $directoryuser ) ) {
         // le lett tiltva a felhasznalo Directory-bol, de elotte valid volt
         $userModel->select( $user['id'] );
         $userModel->updateRow( array(
@@ -124,7 +124,7 @@ class Kerberos extends \AuthTypes\Base {
         $e->redirectparams  = array('error' => 'accessrevoked');
         throw $e;
 
-      } elseif ( !$valid and $directoryuser and !empty( $directoryuser['user'] ) ) {
+      } elseif ( !$valid and !empty( $directoryuser ) ) {
         if ( $user['disabled'] == $userModel::USER_DIRECTORYDISABLED ) {
           // vigyazunk hogy csak akkor engedjuk vissza a felhasznalot ha mi
           // tiltottuk le
@@ -153,7 +153,7 @@ class Kerberos extends \AuthTypes\Base {
           throw $e;
         }
 
-      } elseif ( !$valid and $directoryuser and empty( $directoryuser['user'] ) ) {
+      } elseif ( !$valid and empty( $directoryuser ) ) {
         $e = new \AuthTypes\Exception("user found but is manually banned");
         $e->redirecturl     = 'contents/ldapnoaccess';
         $e->redirectparams  = array('error' => 'banned');
@@ -163,8 +163,6 @@ class Kerberos extends \AuthTypes\Base {
       if ( $this->directory ) {
         // ha hirtelen modosult valami, itt synceljuk
         $this->directory->syncWithUser( $user );
-        // valid, es van directoryuser, a groupokat synceljuk ha kell
-        $this->directory->syncGroupsForUser( $user );
       }
 
       $this->markUser($type);

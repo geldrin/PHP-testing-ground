@@ -18,6 +18,36 @@ class Groups extends \Springboard\Model {
 
   }
 
+  public function updateMembersFromExternalId( $externalid, $userid ) {
+    $externalid = $this->db->qstr( $externalid );
+    $this->db->query("
+      UPDATE groups_members
+      SET userid = '$userid'
+      WHERE userexternalid = $externalid
+    ");
+  }
+
+  public function getDirectoryGroupsForExternalId( $externalid, $directory ) {
+    $externalid = $this->db->qstr( $externalid );
+    $membersql  = "
+      SELECT COUNT(*)
+      FROM groups_members AS gm
+      WHERE
+        gm.userexternalid = $externalid AND
+        gm.groupid        = '%s'
+    ";
+
+    return $this->db->getRow("
+      SELECT
+        (
+          " . sprintf( $membersql, $directory['ldapgroupaccessid'] ) . "
+        ) AS hasaccess,
+        (
+          " . sprintf( $membersql, $directory['ldapgroupadminid'] ) . "
+        ) AS isadmin
+    ");
+  }
+
   public function getUserCount() {
     
     $this->ensureID();
