@@ -219,7 +219,7 @@ class Controller extends \Visitor\Controller {
     $cookiekey = "rra_$recordingid";
     $session = $this->bootstrap->getSession('rating');
     $user    = $this->bootstrap->getSession('user');
-    if ( !$this->organization['`isanonymousratingenabled'] and !$user['id'] ) {
+    if ( !$this->organization['isanonymousratingenabled'] and !$user['id'] ) {
       $result['reason'] = 'upload_membersonly';
       $this->jsonOutput( $result );
     }
