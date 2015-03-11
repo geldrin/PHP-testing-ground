@@ -51,7 +51,7 @@ class Form extends \Springboard\Controller\Admin\Form {
     $cachekeys = array(
       'organizations-' . $model->row['domain'],
       'organizations-' . $model->row['staticdomain'],
-      'organizations-' . $model->row['id'],
+      'organizationsbyid-' . $model->row['id'],
     );
     foreach( $cachekeys as $cachekey ) {
       $cache = $this->bootstrap->getCache( $cachekey, null );
