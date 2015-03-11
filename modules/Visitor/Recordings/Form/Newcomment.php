@@ -13,6 +13,13 @@ class Newcomment extends \Visitor\Form {
     );
     $this->controller->toSmarty['recording'] = $this->recordingsModel->row;
 
+    $user   = $this->bootstrap->getSession('user');
+    if (
+         !$this->recordingsModel->row['isanonymouscommentsenabled'] and
+         !$user['id']
+       )
+      return $this->controller->handleAccessFailure('member');
+
     parent::init();
     
   }
@@ -23,8 +30,14 @@ class Newcomment extends \Visitor\Form {
     $l      = $this->bootstrap->getLocalization();
     $user   = $this->bootstrap->getSession('user');
 
+    if ( $user['id'] )
+      $values['userid'] = $user['id'];
+    else {
+      // TODO anonymous_users-be check vagy insert
+      $values['anonymoususerid'] = $anonymModel->id;
+    }
+
     $values['timestamp'] = date('Y-m-d H:i:s');
-    $values['userid']    = $user['id'];
     $values['ipaddress'] = implode(', ', $this->controller->getIPAddress( true ) );
     
     $comment = $this->recordingsModel->insertComment(

@@ -246,7 +246,7 @@
   <div id="commentwrap">
     {$commentoutput.html}
   </div>
-  {if $member.id}
+  {if $member.id or $recording.isanonymouscommentsenabled}
     <div id="commentform">
       <div class="loading"></div>
       {$commentform}

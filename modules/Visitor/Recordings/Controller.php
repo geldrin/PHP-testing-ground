@@ -10,7 +10,7 @@ class Controller extends \Visitor\Controller {
     'getplayerconfig'      => 'public',
     'getcomments'          => 'public',
     'getsubtitle'          => 'public',
-    'newcomment'           => 'member',
+    'newcomment'           => 'public',
     'moderatecomment'      => 'uploader|moderateduploader|editor|clientadmin',
     'rate'                 => 'public',
     'upload'               => 'uploader|moderateduploader',

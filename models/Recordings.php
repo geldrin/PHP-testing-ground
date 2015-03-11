@@ -1438,19 +1438,26 @@ class Recordings extends \Springboard\Model {
         c.timestamp,
         c.text,
         c.userid,
-        u.nickname,
+        IF(
+            c.userid IS NOT NULL,
+            u.nickname,
+            CONCAT('anonymous_', au.id)
+        ) AS nickname,
         u.nameformat,
         u.nameprefix,
         u.namefirst,
         u.namelast,
         u.avatarstatus,
         u.avatarfilename
-      FROM
-        comments AS c,
-        users AS u
+      FROM comments AS c
+      LEFT JOIN users AS u ON (
+        c.userid = u.id
+      )
+      LEFT JOIN anonymous_users AS au ON(
+        c.anonymouseruserid = au.id
+      )
       WHERE
         c.recordingid = '" . $this->id . "' AND
-        c.userid      = u.id AND
         c.moderated   = '0'
       ORDER BY c.id ASC
       LIMIT $start, $limit

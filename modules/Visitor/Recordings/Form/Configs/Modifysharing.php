@@ -173,6 +173,15 @@ $config['isseekbardisabled'] = array(
   ),
 );
 
+$config['isanonymouscommentsenabled'] = array(
+  'type'        => 'inputRadio',
+  'displayname' => $l('recordings', 'isanonymouscommentsenabled'),
+  'values'      => $l->getLov('noyes'),
+  'value'       => 0,
+  'validation'  => array(
+  ),
+);
+
 if ( $user['isadmin'] or $user['isclientadmin'] or $user['iseditor'] ) {
 
   $config['isfeatured'] = array(
