@@ -24,7 +24,7 @@ $myjobid = "job_ldap_cache";
 
 // Log related init
 $debug = Springboard\Debug::getInstance();
-$debug->log($jconf['log_dir'], $myjobid . ".log", "*************************** Job: LDAP/AD cache started ***************************", $sendmail = false);
+//$debug->log($jconf['log_dir'], $myjobid . ".log", "*************************** Job: LDAP/AD cache started ***************************", $sendmail = false);
 
 // Check operating system - exit if Windows
 if ( iswindows() ) {
@@ -37,8 +37,8 @@ $db = db_maintain();
 
 // Config
 $isexecute = true;
-$isdebug_ldap = true;
-$isdebug_user = true;
+$isdebug_ldap = false;
+$isdebug_user = false;
 
 // Get LDAP/AD directories for all organizations
 $ldap_dirs = getLDAPDirectories();
