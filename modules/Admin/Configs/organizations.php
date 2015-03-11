@@ -302,6 +302,13 @@ $config = Array(
     ),
   ),
 
+  'isanonymousratingenabled' => array(
+    'displayname' => 'Felvételek anonym értékelhetők?',
+    'type'        => 'inputRadio',
+    'values'      => $l->getLov('yesno'),
+    'value'       => 0,
+  ),
+
   'disabled' => array(
     'displayname' => 'Kitiltva?',
     'type'        => 'inputRadio',
