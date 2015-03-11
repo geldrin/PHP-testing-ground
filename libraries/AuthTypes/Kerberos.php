@@ -149,7 +149,7 @@ class Kerberos extends \AuthTypes\Base {
         }
 
       } elseif ( !$valid and empty( $directoryuser ) ) {
-        $user->clear();
+        $user->clear(); // mert beleptette a findAndMarkUser
         $e = new \AuthTypes\Exception("user found but is manually banned");
         $e->redirecturl     = 'contents/ldapnoaccess';
         $e->redirectparams  = array('error' => 'banned2');

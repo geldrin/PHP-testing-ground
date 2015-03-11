@@ -5,7 +5,9 @@
       <ul class="actions">
         <li><a href="{$language}/groups/users/{$item.id},{$item.name|filenameize}">{#groups__users#}</a></li>
         <li><a href="{$language}/groups/modify/{$item.id}">{#groups__modify#}</a></li>
+        {if !$item.ispermanent}
         <li><a href="{$language}/groups/delete/{$item.id}" class="confirm">{#groups__delete#}</a></li>
+        {/if}
       </ul>
     {/if}
   </div>
