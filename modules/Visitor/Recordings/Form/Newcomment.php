@@ -4,7 +4,8 @@ class Newcomment extends \Visitor\Form {
   public $configfile = 'Newcomment.php';
   public $template   = 'Visitor/genericform.tpl';
   public $recordingsModel;
-  
+  private $anonUser;
+
   public function init() {
     
     $this->recordingsModel = $this->controller->modelIDCheck(
@@ -33,8 +34,34 @@ class Newcomment extends \Visitor\Form {
     if ( $user['id'] )
       $values['userid'] = $user['id'];
     else {
-      // TODO anonymous_users-be check vagy insert
-      $values['anonymoususerid'] = $anonymModel->id;
+
+      $this->anonUser = $this->bootstrap->getSession('anonuser');
+      if ( !$this->anonUser['id'] and $this->bootstrap->config['recaptchaenabled'] ) {
+
+        $challenge = @$_REQUEST['recaptcha_challenge_field'];
+        $response  = @$_REQUEST['recaptcha_response_field'];
+        if ( !$challenge or !$response )
+          $this->jsonOutput( array('status' => 'error', 'error' => 'captcharequired' ) );
+
+        include_once( $this->bootstrap->config['libpath'] . 'recaptchalib/recaptchalib.php' );
+        $answer = \recaptcha_check_answer(
+          $this->bootstrap->config['recaptchapriv'],
+          $_SERVER['REMOTE_ADDR'],
+          $challenge,
+          $response
+        );
+
+        if ( !$answer->is_valid )
+          $this->jsonOutput( array('status' => 'error', 'error' => 'captchaerror', 'errormessage' => $answer->error ) );
+
+      }
+
+      $anonymModel = $this->bootstrap->getModel('anonymous_users');
+      $this->anonUser = $anonymModel->getOrInsertUserFromToken();
+      $anonuser = $anonymModel->registerForSession();
+      $this->controller->toSmarty['anonuser'] = $anonuser->toArray();
+      $values['anonymoususerid'] = $anonuser['id'];
+
     }
 
     $values['timestamp'] = date('Y-m-d H:i:s');
@@ -76,9 +103,14 @@ class Newcomment extends \Visitor\Form {
 
     $l = $this->bootstrap->getLocalization();
     $this->controller->toSmarty['comment'] = $comment;
+
     $usersModel = $this->bootstrap->getModel('users');
-    $usersModel->select( $comment['userid'] );
-    $this->controller->toSmarty['commentuser'] = $usersModel->row;
+    if ( isset( $comment['userid'] ) ) {
+      $usersModel->select( $comment['userid'] );
+      $this->controller->toSmarty['commentuser'] = $usersModel->row;
+    } else
+      $this->controller->toSmarty['commentanonuser'] = $this->anonUser;
+
 
     if ( $comment['replyto'] ) {
 
@@ -86,7 +118,10 @@ class Newcomment extends \Visitor\Form {
       $commentModel->select( $comment['replyto'] );
 
       // ha sajat magunknak valaszolunk ne kuldjunk emailt
-      if ( $commentModel->row['userid'] != $comment['userid'] ) {
+      if (
+           $commentModel->row['userid'] and
+           $commentModel->row['userid'] != $comment['userid']
+         ) {
 
         $usersModel->select( $commentModel->row['userid'] );
         if ( !$usersModel->row['isusergenerated'] ) {
@@ -107,7 +142,10 @@ class Newcomment extends \Visitor\Form {
     }
 
     // sajat recordingukra valaszoltunk, ne kuldjunk emailt
-    if ( $comment['userid'] == $this->recordingsModel->row['userid'] )
+    if (
+         isset( $comment['userid'] ) and
+         $comment['userid'] == $this->recordingsModel->row['userid']
+       )
       return;
 
     $usersModel->select( $this->recordingsModel->row['userid'] );

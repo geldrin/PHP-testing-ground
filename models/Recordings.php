@@ -1454,7 +1454,7 @@ class Recordings extends \Springboard\Model {
         c.userid = u.id
       )
       LEFT JOIN anonymous_users AS au ON(
-        c.anonymouseruserid = au.id
+        c.anonymoususerid = au.id
       )
       WHERE
         c.recordingid = '" . $this->id . "' AND

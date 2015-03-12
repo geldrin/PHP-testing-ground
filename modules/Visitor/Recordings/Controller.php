@@ -281,11 +281,17 @@ class Controller extends \Visitor\Controller {
       'Plugins/modifier.indexphoto.php'
     );
     
-    if ( $user['id'] ) {
+    if ( $user['id'] )
       $this->toSmarty['channels']    = $recordingsModel->getChannelsForUser( $user );
+
+    if ( $user['id'] or $recordingsModel->row['isanonymouscommentsenabled'] )
       $this->toSmarty['commentform'] = $this->getCommentForm()->getHTML();
-    }
-    
+
+    if ( $recordingsModel->row['isanonymouscommentsenabled'] )
+      $this->toSmarty['anonuser']    =
+        $this->bootstrap->getSession('anonuser')->toArray()
+      ;
+
     $this->toSmarty['commentoutput'] = $this->getComments(
       $recordingsModel, $commentspage
     );

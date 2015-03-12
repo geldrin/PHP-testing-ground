@@ -2082,12 +2082,33 @@ function setupComments() {
 
   });
 
+
+  var needRecaptcha = $j('#commentform').attr('data-needrecaptcha') == '1';
+  var recaptchaShown = false;
   $j('#recordings_newcomment').submit(function(e) {
 
     if ( !check_recordings_newcomment() )
       return false;
 
     e.preventDefault();
+
+    if (needRecaptcha && !recaptchaShown) {
+
+      var options = RecaptchaOptions || {};
+      options.tabindex = 1;
+      options.callback = Recaptcha.focus_response_field;
+      options.theme    = 'clean';
+
+      Recaptcha.create(
+        $j('#recaptchacontainer').attr('data-recaptchapubkey'),
+        'recaptchacontainer',
+        options
+      );
+      $j('#recaptchacontainer').show()
+      recaptchaShown = true;
+      return;
+
+    }
 
     var data = $j(this).serializeArray();
     $j.ajax({
@@ -2099,6 +2120,9 @@ function setupComments() {
 
         if ( typeof( data ) != 'object' || !data.html )
           return;
+
+        if (needRecaptcha)
+          needRecaptcha = false;
 
         History.pushState({
             data: {
@@ -2119,6 +2143,14 @@ function setupComments() {
         $j('#comments .loading').hide();
       }
     });
+
+    if (recaptchaShown) {
+      Recaptcha.destroy();
+      $j('#recaptchacontainer').hide();
+      recaptchaShown = false;
+      $j('#text').focus();
+    }
+
   });
 
 }

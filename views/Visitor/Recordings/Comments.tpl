@@ -3,7 +3,7 @@
 <ul id="commentlist">
   {if !empty( $comments )}
     {foreach from=$comments item=item}
-      {if $member.id}
+      {if $member.id or $recording.isanonymouscommentsenabled}
         {capture assign=replylink}{$recordingurl}&focus={$item.sequenceid}{/capture}
       {else}
         {capture assign=replylink}{$language}/users/login?forward={$recordingurl|escape:url}{/capture}
@@ -16,7 +16,7 @@
         <div class="message">{if $item.moderated == 0}{$item|@commentlinkify:$recordingurl}{else}{#recordings__comment_moderated#}{/if}</div>
         <div class="actions">
           <ul>
-            <li><a href="{$replylink}" class="reply" data-commentid="{$item.sequenceid}" data-nick="{$item.nickname|escape:html}">{if $member.id}{#recordings__reply#}{else}{#recordings__logintoreply#}{/if}</a></li>
+            <li><a href="{$replylink}" class="reply" data-commentid="{$item.sequenceid}" data-nick="{$item.nickname|escape:html}">{if $member.id or $recording.isanonymouscommentsenabled}{#recordings__reply#}{else}{#recordings__logintoreply#}{/if}</a></li>
             {*}
             {if $recording|@userHasAccess}
               {if $item.moderated <= 0}

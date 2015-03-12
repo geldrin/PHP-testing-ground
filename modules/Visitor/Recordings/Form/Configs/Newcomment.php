@@ -17,7 +17,17 @@ $config = array(
     'type'  => 'inputHidden',
     'value' => $this->application->getNumericParameter('id'),
   ),
-  
+
+  'recaptcha' => array(
+    'type'      => 'text',
+    'rowlayout' => '<tr><td colspan="2">%element%</td></tr>',
+    'value'     =>
+      '<div id="recaptchacontainer" ' .
+      'data-recaptchapubkey="'. $this->bootstrap->config['recaptchapub'] . '" ' .
+      'style="display: none"></div>'
+    ,
+  ),
+
   'text' => array(
     'displayname' => $l('recordings', 'yourcomment'),
     'type'        => 'textarea',

@@ -2518,8 +2518,13 @@ a#currentusername span {
   position: absolute;
   width: 442px;
   height: 102px;
-  top: 50%;
   background-color: #fff;
+}
+#live_createchat #recaptchacontainer {
+  top: 50%;
+}
+#comments #recaptchacontainer {
+  bottom: 34px;
 }
 #moderationalertcontainer {
   position: absolute;
