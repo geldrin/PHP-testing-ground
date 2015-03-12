@@ -142,12 +142,12 @@ class Groups extends \Springboard\Model {
       SELECT
         g.*,
         COUNT(DISTINCT gm.userid) AS usercount
-      FROM
-        groups AS g,
-        groups_members AS gm
+      FROM groups AS g
+      LEFT JOIN groups_members AS gm ON(
+        gm.groupid = g.id
+      )
       WHERE
         $where
-        gm.groupid       = g.id AND
         g.organizationid = '$organizationid'
       GROUP BY g.id
       ORDER BY $orderby
