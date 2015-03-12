@@ -37,7 +37,7 @@ $db = db_maintain();
 // Config
 $isexecute = true;
 $isdebug_ldap = false;
-$isdebug_user = true;
+$isdebug_user = false;
 
 // Should we delete files or just testing?
 if ( !$isexecute ) {
@@ -182,7 +182,13 @@ while ( !$ldap_groups->EOF ) {
         if ( $ldap_user['sAMAccountName']['count'] > 1 ) $debug->log($jconf['log_dir'], $myjobid . ".log", "[WARN] Multiple sAMAccountName for user.\n\n" . print_r($ldap_user, true), $sendmail = false);
         
         $ldap_users[$i]['sAMAccountName'] = strtolower($ldap_user['sAMAccountName'][0]);
-        $ldap_users[$i]['userPrincipalName'] = strtolower($ldap_user['userPrincipalName'][0]);
+	// Normalize userPrincipalName (can be different with service accounts)
+	$tmp = explode("@", strtolower($ldap_user['userPrincipalName'][0]), 2);
+	if ( !empty($tmp[1]) ) {
+    	    $ldap_users[$i]['userPrincipalName'] = $ldap_users[$i]['sAMAccountName'] . "@" . $tmp[1];
+	} else {
+    	    $ldap_users[$i]['userPrincipalName'] = strtolower($ldap_user['userPrincipalName'][0]);
+	}
         $ldap_users[$i]['isnew'] = false;
         
         $i++;
@@ -304,13 +310,15 @@ while ( !$ldap_groups->EOF ) {
     $debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Users added / removed: " . $users_added . " / " . $users_removed . $users_added_list . $users_removed_list, $sendmail = false);
 
     // Update group last sync time
-    $values = array(
-		'organizationdirectoryuserslastsynchronized' => date("Y-m-d H:i:s")
+    if ( $isexecute ) {
+	$values = array(
+	    'organizationdirectoryuserslastsynchronized' => date("Y-m-d H:i:s")
 	);
 	$groupObj = $app->bootstrap->getModel('groups');
 	$groupObj->select($ldap_group['id']);
-    $groupObj->updateRow($values);
-    
+	$groupObj->updateRow($values);
+    }
+
     // Duration
     $debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Group sync finished in " . secs2hms(time() - $time_start), $sendmail = false);
 
