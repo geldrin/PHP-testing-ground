@@ -514,7 +514,7 @@ class Livefeeds extends \Springboard\Model {
         'recordinglinkid'     => $recordinglinkid,
         'name'                => 'VCR stream',
         'status'              => 'ready',
-        'quality'             => 'Default',
+        'quality'             => 'unknown',
         'isdesktopcompatible' => 1,
         'isioscompatible'     => 1,
         'isandroidcompatible' => 1,
