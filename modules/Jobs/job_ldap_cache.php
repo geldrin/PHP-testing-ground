@@ -19,8 +19,7 @@ $app = new Springboard\Application\Cli(BASE_PATH, PRODUCTION);
 // Load jobs configuration file
 $app->loadConfig('modules/Jobs/config_jobs.php');
 $jconf = $app->config['config_jobs'];
-//$myjobid = $jconf['jobid_ldap_cache'];
-$myjobid = "job_ldap_cache";
+$myjobid = $jconf['jobid_ldap_cache'];
 
 // Log related init
 $debug = Springboard\Debug::getInstance();
@@ -38,7 +37,12 @@ $db = db_maintain();
 // Config
 $isexecute = true;
 $isdebug_ldap = false;
-$isdebug_user = false;
+$isdebug_user = true;
+
+// Should we delete files or just testing?
+if ( !$isexecute ) {
+    $debug->log($jconf['log_dir'], $myjobid . ".log", "[WARNING] THIS IS A TEST RUN. NO DB RECORDS WILL BE UPDATED/REMOVED!", $sendmail = false);
+}
 
 // Get LDAP/AD directories for all organizations
 $ldap_dirs = getLDAPDirectories();
@@ -60,18 +64,13 @@ $err = updateUnconnectedGroupMembers();
 // Get LDAP/AD groups to be synchronized
 $ldap_groups = getLDAPGroups($app->config['directorygroupnestedcachetimeout']);
 if ( $ldap_groups === false ) {
-    $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Cannot query LDAP/AD groups. Exiting..." . trim($query), $sendmail = false);
+    $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Cannot query LDAP/AD groups. Exiting...", $sendmail = false);
     exit;
 }
-
-// !!!!
-/*do {
-    
-    $a = $ldap_groups->fields;
-  echo $a['id'] . "\n";  
-    $ldap_groups->MoveNext();
-} while ( $a['id'] != 20 );
-*/
+if ( $ldap_groups->RecordCount() < 1 ) {
+    $debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Nothing to update. Exiting...", $sendmail = false);
+    exit;
+}
 
 while ( !$ldap_groups->EOF ) {
 
@@ -90,7 +89,7 @@ while ( !$ldap_groups->EOF ) {
     $ldap_dir = searchLDAPDirectoriesByID($ldap_dirs, $ldap_group['organizationdirectoryid']);
 
     // Already connected to this LDAP/AD?
-    if ( !isset($ldap_dir['connected']) or ( $ldap_dir['connected'] === false ) ) {
+    if ( !isset($ldap_dir['connected']) ) {
 
         // Connect to LDAP/AD
         try {
@@ -151,14 +150,13 @@ while ( !$ldap_groups->EOF ) {
     $debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Synchronizing group: " . $ldap_group['organizationdirectoryldapdn'], $sendmail = false);
 
     // Request all members of nested group
-    $filter = "memberOf:1.2.840.113556.1.4.1941:=" . $ldap_group['organizationdirectoryldapdn'];
+    $filter = "(&(memberOf:1.2.840.113556.1.4.1941:=" . $ldap_group['organizationdirectoryldapdn'] . ")(objectClass=person)(objectClass=user))";
 	$attr_filter = array("sAMAccountName", "userPrincipalName");
     // Debug
     if ( $isdebug_user ) echo "*** LDAP query filter: " . $filter . "\nAttributes: " . print_r($attr_filter, true) . "\n";
     try {
         $result = ldap_search($ldap_dir['ldap_handler'], $ldap_dir['ldapusertreedn'], $filter, $attr_filter);
     } catch (exception $err) {
-        echo "kkkkkkkkkkkkkkk\n";
         $ldap_errno = ldap_errno($ldap_dir['ldap_handler']);
         $ldap_errmsg = ldap_err2str($ldap_errno);
         $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Not syncing " . $ldap_group['organizationdirectoryldapdn'] . ". LDAP/AD query failed at server: " . $ldap_dir['user'] . " at " . $ldap_dir['server'] . " [err code #" . $ldap_errno . " - " . $ldap_errmsg . "]. \n\nFilter: " . $filter . "\nAttribute filter: " . $attr_filter . "\n\nERROR: " . $err, $sendmail = true);
@@ -167,7 +165,6 @@ while ( !$ldap_groups->EOF ) {
     }
     // Handling errors
     if ( $result === false ) {
-        echo "33333\n";
         $ldap_errno = ldap_errno($ldap_dir['ldap_handler']);
         $ldap_errmsg = ldap_err2str($ldap_errno);
         $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Not syncing " . $ldap_group['organizationdirectoryldapdn'] . ". LDAP/AD query failed at server: " . $ldap_dir['user'] . " at " . $ldap_dir['server'] . " [err code #" . $ldap_errno . " - " . $ldap_errmsg . "]. \n\nFilter: " . $filter . "\nAttribute filter: " . $attr_filter, $sendmail = true);
@@ -222,7 +219,7 @@ while ( !$ldap_groups->EOF ) {
         if ( $isdebug_user ) echo "Searched: " . $user['userPrincipalName'] . " - result VSQ index = " . $result . "\n";
         // Record new user from LDAP/AD to be added
         if ( $result === false ) {
-            echo $user['userPrincipalName'] . " is new.\n";
+            if ( $isdebug_user ) echo $user['userPrincipalName'] . " is new.\n";
 
             array_push($users2add, $user['userPrincipalName']);
             // gm.userid = NULL (we do not know userid) - it will be updated by updateUnconnectedGroupMembers()
@@ -272,36 +269,39 @@ while ( !$ldap_groups->EOF ) {
 
     // Remove users from group
     $msg = "";
+    $users_removed = 0;
+    $users_removed_list = "";
     if ( $isexecute and !empty($users2remove_sql) ) {
         $users2remove_sql_flat = "(" . implode(",", $users2remove_sql) . ")";
-        $err = DeleteVSQGroupMembers($ldap_group['id'], $users2remove_sql_flat);
-        if ( $err !== false ) {
+        $users_removed = DeleteVSQGroupMembers($ldap_group['id'], $users2remove_sql_flat);
+        if ( $users_removed !== false ) {
             // Log
-            if ( !empty($users2remove_sql) ) $msg = ". Users: " . implode(",", $users2remove);
-            $debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Users removed from group: " . $err . $msg, $sendmail = false);
+            if ( !empty($users2remove_sql) ) $users_removed_list = "\nRemoved: " . implode(",", $users2remove);
         } else {
+            $users_removed = 0;
             $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Users NOT removed from group: " . $num_users_remove . ". Inconsistent group membership with LDAP/AD!", $sendmail = true);
         }
-    } else {
-        $debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] No user was removed from group.", $sendmail = false);
     }
 
     // Add new users to group
     $msg = "";
+    $users_added = 0;
+    $users_added_list = "";
     if ( $isexecute and !empty($users2add_sql) ) {
         $users2add_sql_flat = implode(",", $users2add_sql);
-        $err = AddVSQGroupMembers($users2add_sql_flat);
-        if ( $err !== false ) {
+        $users_added = AddVSQGroupMembers($users2add_sql_flat);
+        if ( $users_added !== false ) {
             // Log
-            if ( !empty($users2add_sql) ) $msg = ". Users: " . implode(",", $users2add);
-            $debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] New users added to this group: " . $err . $msg, $sendmail = false);
+            if ( !empty($users2add_sql) ) $users_added_list = "\nAdded: " . implode(",", $users2add);
             $err = updateUnconnectedGroupMembers();
         } else {
+            $users_added = 0;
             $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Users NOT added to group: " . $num_users_new . ". Inconsistent group membership with LDAP/AD! Users:\n" . $users2add_flat, $sendmail = true);
         }
-    } else {
-        $debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] No user was added to group.", $sendmail = false);
     }
+
+    // Log number of added / removed users
+    $debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Users added / removed: " . $users_added . " / " . $users_removed . $users_added_list . $users_removed_list, $sendmail = false);
 
     // Update group last sync time
     $values = array(
@@ -505,9 +505,6 @@ global $db, $myjobid, $debug, $jconf;
 		$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] SQL query failed." . trim($query), $sendmail = true);
 		return false;
 	}
-
-    // Check if any record returned
-	if ( $rs->RecordCount() < 1 ) return false;
         
     return $rs;
 }
