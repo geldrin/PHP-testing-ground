@@ -2516,6 +2516,7 @@ a#currentusername span {
 }
 #recaptchacontainer {
   position: absolute;
+  z-index: 9999;
 }
 #live_createchat #recaptchacontainer {
   top: 50%;
