@@ -251,7 +251,7 @@
     {if !$anonuser.id and $bootstrap->config.recaptchaenabled}
     <script src="https://www.google.com/recaptcha/api.js?render=explicit" async defer></script>
     {/if}
-    <div id="commentform" data-needrecaptcha="{if !$anonuser.id and $bootstrap->config.recaptchaenabled}1{else}0{/if}">
+    <div id="commentform" data-needrecaptcha="{if !$anonuser.id and !$member.id and $bootstrap->config.recaptchaenabled}1{else}0{/if}">
       <div class="loading"></div>
       {$commentform}
     </div>
