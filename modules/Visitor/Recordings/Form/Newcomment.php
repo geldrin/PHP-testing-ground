@@ -26,7 +26,7 @@ class Newcomment extends \Visitor\Form {
   }
   
   public function onComplete() {
-    
+
     $values = $this->form->getElementValues( 0 );
     $l      = $this->bootstrap->getLocalization();
     $user   = $this->bootstrap->getSession('user');
@@ -38,21 +38,24 @@ class Newcomment extends \Visitor\Form {
       $this->anonUser = $this->bootstrap->getSession('anonuser');
       if ( !$this->anonUser['id'] and $this->bootstrap->config['recaptchaenabled'] ) {
 
-        $challenge = @$_REQUEST['recaptcha_challenge_field'];
-        $response  = @$_REQUEST['recaptcha_response_field'];
-        if ( !$challenge or !$response )
+        if ( !$values['recaptcharesponse'] )
           $this->jsonOutput( array('status' => 'error', 'error' => 'captcharequired' ) );
 
-        include_once( $this->bootstrap->config['libpath'] . 'recaptchalib/recaptchalib.php' );
-        $answer = \recaptcha_check_answer(
-          $this->bootstrap->config['recaptchapriv'],
-          $_SERVER['REMOTE_ADDR'],
-          $challenge,
-          $response
+        $recaptcha = new \ReCaptcha\ReCaptcha(
+          $this->bootstrap->config['recaptchapriv']
+        );
+        $resp = $recaptcha->verify(
+          $values['recaptcharesponse'],
+          $this->controller->getIPAddress()
         );
 
-        if ( !$answer->is_valid )
-          $this->jsonOutput( array('status' => 'error', 'error' => 'captchaerror', 'errormessage' => $answer->error ) );
+        if ( !$resp->isSuccess() )
+          $this->jsonOutput( array(
+              'status'     => 'error',
+              'error'      => 'captchaerror',
+              'errorcodes' => $resp->getErrorCodes(),
+            )
+          );
 
       }
 

@@ -6,7 +6,12 @@ $config = array(
     'type'  => 'inputHidden',
     'value' => 'submitcreatechat'
   ),
-  
+
+  'recaptcharesponse' => array(
+    'type'  => 'inputHidden',
+    'value' => '',
+  ),
+
   'text' => array(
     'displayname' => $l('live', 'chat_text'),
     'type'        => 'inputText',

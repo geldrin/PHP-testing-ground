@@ -67,29 +67,29 @@ class Createchat extends \Visitor\HelpForm {
 
       if ( $this->bootstrap->config['recaptchaenabled'] ) {
 
-        $challenge = @$_REQUEST['recaptcha_challenge_field'];
-        $response  = @$_REQUEST['recaptcha_response_field'];
-        if ( !$challenge or !$response )
+        if ( !$values['recaptcharesponse'] )
           $this->jsonOutput( array('status' => 'error', 'error' => 'captcharequired' ) );
 
-        include_once( $this->bootstrap->config['libpath'] . 'recaptchalib/recaptchalib.php' );
-        $answer = \recaptcha_check_answer(
-          $this->bootstrap->config['recaptchapriv'],
-          $_SERVER['REMOTE_ADDR'],
-          $challenge,
-          $response
+        $recaptcha = new \ReCaptcha\ReCaptcha(
+          $this->bootstrap->config['recaptchapriv']
+        );
+        $resp = $recaptcha->verify(
+          $values['recaptcharesponse'],
+          $this->controller->getIPAddress()
         );
 
-        if ( $answer->is_valid ) {
-          $this->anonuser['id']        = $this->feedModel->getAnonUserID();
-          $this->anonuser['timestamp'] = date('Y-m-d H:i:s');
-        } else
-          $this->jsonOutput( array('status' => 'error', 'error' => 'captchaerror', 'errormessage' => $answer->error ) );
+        if ( !$resp->isSuccess() )
+          $this->jsonOutput( array(
+              'status'     => 'error',
+              'error'      => 'captchaerror',
+              'errorcodes' => $resp->getErrorCodes(),
+            )
+          );
 
-      } else {
-        $this->anonuser['id']        = $this->feedModel->getAnonUserID();
-        $this->anonuser['timestamp'] = date('Y-m-d H:i:s');
       }
+
+      $this->anonuser['id']        = $this->feedModel->getAnonUserID();
+      $this->anonuser['timestamp'] = date('Y-m-d H:i:s');
 
     }
 

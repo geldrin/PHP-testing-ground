@@ -249,7 +249,7 @@
 
   {if $member.id or $recording.isanonymouscommentsenabled}
     {if !$anonuser.id and $bootstrap->config.recaptchaenabled}
-    <script type="text/javascript" src="//www.google.com/recaptcha/api/js/recaptcha_ajax.js"></script>
+    <script src="https://www.google.com/recaptcha/api.js?render=explicit" async defer></script>
     {/if}
     <div id="commentform" data-needrecaptcha="{if !$anonuser.id and $bootstrap->config.recaptchaenabled}1{else}0{/if}">
       <div class="loading"></div>

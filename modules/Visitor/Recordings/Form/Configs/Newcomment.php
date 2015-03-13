@@ -18,6 +18,11 @@ $config = array(
     'value' => $this->application->getNumericParameter('id'),
   ),
 
+  'recaptcharesponse' => array(
+    'type'  => 'inputHidden',
+    'value' => '',
+  ),
+
   'recaptcha' => array(
     'type'      => 'text',
     'rowlayout' => '<tr><td colspan="2">%element%</td></tr>',

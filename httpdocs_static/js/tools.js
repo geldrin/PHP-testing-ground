@@ -1300,19 +1300,23 @@ livechat.prototype.onModerate = function( elem ) {
   
 };
 livechat.prototype.onSubmit = function() {
+  var self = this;
 
   if (this.needRecaptcha && !this.recaptchaShown) {
 
     var options = RecaptchaOptions || {};
     options.tabindex = 1;
-    options.callback = Recaptcha.focus_response_field;
-    options.theme    = 'clean';
+    options.sitekey  = $j('#recaptchacontainer').attr('data-recaptchapubkey');
+    options.callback = function() {
+      $j('#recaptcharesponse').val( grecaptcha.getResponse(self.recaptchaID) );
+      $j('#recaptchacontainer').hide();
+      $j('#text').focus();
+      needRecaptcha = false;
+      recaptchaShown = false;
+      self.onSubmit();
+    };
 
-    Recaptcha.create(
-      $j('#recaptchacontainer').attr('data-recaptchapubkey'),
-      'recaptchacontainer',
-      options
-    );
+    this.recaptchaID = grecaptcha.render('recaptchacontainer', options);
     $j('#recaptchacontainer').show()
     this.recaptchaShown = true;
     return;
@@ -1348,7 +1352,6 @@ livechat.prototype.onSubmit = function() {
   $j.ajax( this.submitOptions );
 
   if (this.recaptchaShown) {
-    Recaptcha.destroy();
     $j('#recaptchacontainer').hide();
     this.recaptchaShown = false;
     $j('#text').focus();
@@ -2083,42 +2086,53 @@ function setupComments() {
   });
 
 
-  var needRecaptcha = $j('#commentform').attr('data-needrecaptcha') == '1';
+  var needRecaptcha  = $j('#commentform').attr('data-needrecaptcha') == '1';
   var recaptchaShown = false;
-  $j('#recordings_newcomment').submit(function(e) {
+  var recaptchaID    = '';
+  var onSubmit       = function(e) {
 
     if ( !check_recordings_newcomment() )
       return false;
 
-    e.preventDefault();
+    if (e)
+      e.preventDefault();
 
     if (needRecaptcha && !recaptchaShown) {
 
       var options = RecaptchaOptions || {};
       options.tabindex = 1;
-      options.callback = Recaptcha.focus_response_field;
-      options.theme    = 'clean';
+      options.sitekey  = $j('#recaptchacontainer').attr('data-recaptchapubkey');
+      options.callback = function() {
+        $j('#recaptcharesponse').val( grecaptcha.getResponse(recaptchaID) );
+        $j('#recaptchacontainer').hide();
+        $j('#text').focus();
+        needRecaptcha = false;
+        recaptchaShown = false;
+        onSubmit();
+      };
 
-      Recaptcha.create(
-        $j('#recaptchacontainer').attr('data-recaptchapubkey'),
-        'recaptchacontainer',
-        options
-      );
+      recaptchaID = grecaptcha.render('recaptchacontainer', options);
       $j('#recaptchacontainer').show()
       recaptchaShown = true;
       return;
 
     }
 
-    var data = $j(this).serializeArray();
+    var data = $j('#recordings_newcomment').serializeArray();
     $j.ajax({
-      url: $j(this).attr('action'),
+      url: $j('#recordings_newcomment').attr('action'),
       type: 'POST',
       data: data,
       dataType: 'json',
       success: function( data ) {
 
-        if ( typeof( data ) != 'object' || !data.html )
+        if ( typeof( data ) != 'object' )
+          return;
+
+        if ( data.status && data.status == 'error' )
+          return alert( l[data.error] );
+
+        if ( !data.html )
           return;
 
         if (needRecaptcha)
@@ -2145,13 +2159,13 @@ function setupComments() {
     });
 
     if (recaptchaShown) {
-      Recaptcha.destroy();
       $j('#recaptchacontainer').hide();
       recaptchaShown = false;
       $j('#text').focus();
     }
 
-  });
+  };
+  $j('#recordings_newcomment').submit(onSubmit);
 
 }
 

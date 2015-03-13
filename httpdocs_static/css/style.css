@@ -2516,15 +2516,12 @@ a#currentusername span {
 }
 #recaptchacontainer {
   position: absolute;
-  width: 442px;
-  height: 102px;
-  background-color: #fff;
 }
 #live_createchat #recaptchacontainer {
   top: 50%;
 }
 #comments #recaptchacontainer {
-  bottom: 34px;
+  bottom: 38px;
 }
 #moderationalertcontainer {
   position: absolute;
