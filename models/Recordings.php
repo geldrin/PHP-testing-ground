@@ -1063,14 +1063,37 @@ class Recordings extends \Springboard\Model {
     // channels where the user must view all of the previous recordings
     // to be able to view this one
     $usercourses = $this->db->getCol("
-      SELECT ui.channelid
-      FROM
-        users_invitations AS ui
-      WHERE
-        ui.channelid IN('" . implode("', '", $coursechannelids ) . "') AND
+      SELECT DISTINCT c.id
+      FROM channels AS c
+      LEFT JOIN users_invitations AS ui ON (
         ui.registereduserid = '" . $user['id'] . "' AND
+        ui.channelid        = c.id AND
         ui.organizationid   = '" . $organization['id'] . "' AND
         ui.status           <> 'deleted'
+      )
+      LEFT JOIN access AS a ON (
+        a.channelid = c.id AND
+        (
+          a.departmentid IS NOT NULL OR
+          a.groupid IS NOT NULL
+        )
+      )
+      WHERE
+        c.channeltypeid     = '$coursetypeid' AND
+        c.organizationid    = '" . $organization['id'] . "' AND
+        (
+          ui.id IS NOT NULL OR
+          (
+            c.accesstype = 'departmentsorgroups' AND
+            a.groupid IN(
+              (
+                SELECT groupid
+                FROM groups_members
+                WHERE userid = '" . $user['id'] . "'
+              )
+            )
+          )
+        )
     ");
 
     // user not a member of the course, cannot watch
