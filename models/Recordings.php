@@ -2426,9 +2426,9 @@ class Recordings extends \Springboard\Model {
     if ( isset( $info['attachments'] ) and $info['attachments'] ) {
       include_once( $this->bootstrap->config['templatepath'] . 'Plugins/modifier.attachmenturl.php' );
 
-      $data['attachements_string'] = array();
+      $data['attachments_string'] = array();
       foreach( $info['attachments'] as $attachment )
-        $data['attachements_string'][] = array(
+        $data['attachments_string'][] = array(
           'title' => $attachment['title'],
           'url'   => smarty_modifier_attachmenturl(
             $attachment, $this->row, $info['STATIC_URI']
