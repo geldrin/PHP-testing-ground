@@ -886,7 +886,9 @@ class Users extends \Springboard\Model {
       FROM channels AS c
       LEFT JOIN users_invitations AS ui ON (
         ui.registereduserid = '" . $this->id . "' AND
-        ui.channelid        = c.id
+        ui.channelid        = c.id AND
+        ui.organizationid   = '" . $organization['id'] . "' AND
+        ui.status           <> 'deleted'
       )
       LEFT JOIN access AS a ON (
         a.channelid = c.id AND
