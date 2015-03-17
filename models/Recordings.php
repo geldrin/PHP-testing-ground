@@ -2429,8 +2429,9 @@ class Recordings extends \Springboard\Model {
       $data['attachments_string'] = array();
       foreach( $info['attachments'] as $attachment )
         $data['attachments_string'][] = array(
-          'title' => $attachment['title'],
-          'url'   => smarty_modifier_attachmenturl(
+          'title'    => $attachment['title'],
+          'filename' => $attachment['masterfilename'],
+          'url'      => smarty_modifier_attachmenturl(
             $attachment, $this->row, $info['STATIC_URI']
           ),
         );
