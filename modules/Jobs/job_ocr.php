@@ -97,7 +97,7 @@ function Main() {
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 	global $db, $app, $jconf, $debug, $logdir, $logfile, $myjobid;
 	
-	while(!is_file( $app->config['datapath'] .'jobs/'. $myjobid .'.stop') && !is_file($app->config['datapath'] .'jobs/all.stop')) {
+	while (!is_file( $app->config['datapath'] .'jobs/'. $myjobid .'.stop') && !is_file($app->config['datapath'] .'jobs/all.stop')) {
 		$db = db_maintain();
 		$app->watchdog();
 		
@@ -121,10 +121,11 @@ function Main() {
 					echo $tsk['message'] . PHP_EOL;
 					// no OCR task found, go to sleep
 					throw new OCRException('Nothing to do...', null, null, -1);
-				} else
+				} else {
 					// some error happened (whine about it then go to sleep)
 					$sleep_duration *= 10;
 					throw new OCRException($tsk['message'], var_export($tsk['output'], 1), null, -1);
+				}
 			}
 			
 			if ($recording['ocrstatus'] == $jconf['dbstatus_reconvert']) {
@@ -355,6 +356,7 @@ function Main() {
 			} else {
 				echo $ox->getMessage() ."\n";
 				$status = null;
+				$report = $action ." FAILED.\n";
 				
 				switch ($ox->getCode()) {
 					case OCR_PREP_FAILED:
@@ -369,11 +371,11 @@ function Main() {
 						break;
 					case OCR_OK:
 					default:
-						$status = null;
+						$status = 'NULL';
+						$report = "OCR PROCESS COMPLETE.\n";
 						break;
 				}
 				
-				$report = $action ." FAILED.\n";
 				if (isset($OCRresult)) $report .= " > Phase:". $OCRresult['phase'] ."\n";
 				if ($ox->getCommand()) $report .= " > Command: ". $ox->getCommand() ."\n";
 				if ($ox->getMessage()) $report .= " > Message: ". $ox->getMessage() ."\n";
@@ -384,7 +386,7 @@ function Main() {
 				$debug->log($logdir, $logfile, str_pad("[ CONVERSION END ]", 100, '-', STR_PAD_BOTH), false);
 			}
 		}
-		unset($msg, $OCRresult, $tsk, $recording); // cleanup junk
+		unset($msg, $OCRresult, $tsk, $recording, $status); // cleanup junk
 		echo "Sleeping.\n";
 		
 		$app->watchdog();
@@ -402,23 +404,6 @@ function convertOCR($rec) {
 // Description
 // goes
 // here.
-//
-// HIBAKEZELES:
-// - Legyen szigoru vagy a kisebb hibakat hagyja figyelmen kivul?
-// - Milyen hibauzeneteket adjon vissza a fuggveny? (Irassuk ki az osszes hibas frame-et, vagy
-//   vagy inkabb mindig az utolso esemenyt adjuk vissza?
-// - Legyen egy max. hibahatar, ami utan kilep a feldolgozasbol? ('numocrwarns')
-//
-// OPTIMALIZACIO:
-// - torles: ne egyenkent torolgesse a fajlokat, hanem egyszerre                              -> OK
-// - IM - parancsok osszelinkelese, ahol lehet                                                -> OK
-// - Redundancia ellenorzes pici kepeken??
-//       |`- 300px:  22.1 sec   !!!
-//        `- 1280px: 206.4 sec
-// - Monokrom (bilevel) kepek mentese OCRprep-nel (-10%!)                                     -> OK
-// - Atmerezezes csökkentese: 300% -> 200%
-//    -> ~35%-al gyorsabb, le kell tesztelni, hogy tetszik az OCR-nek!!!!
-// - Bulk DB update (mi a maximalis query length?) => SHOW VARIABLES LIKE 'max_allowed_packet';
 //
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 	global $app, $db, $debug, $jconf, $logdir, $logfile, $onice;
@@ -626,7 +611,7 @@ function convertOCR($rec) {
 	}
 
 	// SZOVEG KINYERESE FRAMEKBOL ///////////////////////////
-	$result['frames'] = "Extracting text";
+	$result['phase'] = "Extracting text";
 	$debug->log($logdir, $logfile, "Preparing frames for OCR.", false);
 	
 	$log_ocr_progress = '';
@@ -634,7 +619,6 @@ function convertOCR($rec) {
 	
 	foreach ($frames['sorted'] as $ptr) {
 		$image = $wdir . $frames['frames'][$ptr]['file'];
-
 		// FRAME ELOKESZITESE OCR-HEZ /////////////////////////
 		$prepare = prepareImage4OCR($image, $tempdir);
 		if ($prepare['result'] === false) {
@@ -653,29 +637,34 @@ function convertOCR($rec) {
 			continue;
 		}
 		$text = addslashes(trim($ocr['output']));
-
-		if (!empty($text)) {
+		
+		if (empty($text)) continue;
+		
+		// SZOVEGES ADATOK TISZTITASA /////////////////////////
+		$text = sanitizeOCRtext($text);
+		if ($text !== null || $text !== false) {
 			$frames['frames'][$ptr]['text'] = $text;
 			$frames['processed'][] = $ptr;
 		}
-		// Ellenorzes?? Pl.:
-		//  - van-e benne egyaltalan szoveges karakter?
-		//  - mekkora az aranya a specialis es szoveges karaktereknek?
-		//  - mekkora az aranya azoknak a szavaknak, amelyekben specialis karakterek is vannak?
-		//  - mekkora aranyban vannak a massalhangzok/maganhangzok?
-		// Charecter encoding?? (iconv)
 	}
 	
 	$log_ocr_progress .= count($frames['processed']) . " frames has been processed out of ". count($frames['sorted']) .".\nTotal number of warnings: " . $ocr_proc_errors .".";
 	$debug->log($logdir, $logfile, $log_ocr_progress, false);
-	unset($log_ocr_progress, $ocr_proc_errors);
 	
 	if (empty($frames['processed'])) {
 		$result['result'] = true;
 		$result['message'] = "[INFO] No frames to be updated to database, ending OCR process.";
+		
+		if ($ocr_proc_errors >= count($frames['sorted'])) {
+			$result['result']  = false; // if all frames failed, raise error
+			$result['message'] = "[ERROR] Failed to extract data from any frames!";
+		}
+		unset($log_ocr_progress, $ocr_proc_errors);
+		
 		$result['warnings'] = $numocrwarns;
 		return $result;
 	}
+	unset($log_ocr_progress, $ocr_proc_errors);
 	
 	// SZOVEG VISSZATOLTESE AZ ADATBAZISBA //////////////////
 	$result['phase'] = "Updating database";
@@ -728,16 +717,10 @@ function convertOCR($rec) {
 			return $result;
 		}
 	}
-	
-	////// UPDATE OCR_FRAMES.STATUS - SZUKSEGES?
-	////// -> dbstatus_copystorage(copyingtostorage)
-	
+
 	$result['result']    = true;
 	$result['output']    = $frames['frames'];
 	$result['message']   = "[OK] OCR process finished successfully!";
-	// if ($numocrwarns)
-		// $result['message'] .= PHP_EOL ."Total number of warnings: ". $numocrwarns;
-	// $result['message'] .= PHP_EOL ."Total number of processed frames: ". count($frames['processed']) .".";
 	$result['phase']     = "Complete";
 	$result['warnings']  = $numocrwarns;
 	$result['processed'] = count($frames['processed']);
@@ -819,6 +802,7 @@ function getOCRtext($image, $workdir, $lang, $textfile) {
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 global $app, $jconf, $onice;
 	$return_array = array(
+		'code'    => -1,
 		'result'  => false,
 		'message' => null,
 		'output'  => null,
@@ -850,6 +834,7 @@ global $app, $jconf, $onice;
 	}
 
 	$err = runExt4($cmd_ocr);
+	$return_array['code'] = $err['code'];
 	if ($err['code'] !== 0) {
 		$return_array['message'] = "Ocr conversion failed! Message:\n". $err['cmd_output'];
 		return $return_array;
@@ -876,6 +861,36 @@ global $app, $jconf, $onice;
 	$return_array['output'] = $OCRtext;
 	$return_array['message'] = "OK!";
 	return $return_array;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+function sanitizeOCRtext($text = null) {
+///////////////////////////////////////////////////////////////////////////////////////////////////
+//
+// A megadott szovegbol eltavolitja az ismetlodo szekvenciakat, es a specialis karaktereket.
+//
+// Visszateresi ertekek: string, hiba eseten NULL.
+//
+///////////////////////////////////////////////////////////////////////////////////////////////////
+	if ($text === null || empty($text)) return null;
+	
+	$patterns = array(
+	  // 'whitespaces' => array('p' => "/([\\n\\t\\b])+/",       's' => '\1'),
+		'specials'    => array('p' => "/([^[:punct:]\\w\\d\\s]|[^\\w\\d\\s\\.\\'\"@&#\\-\\(\\)\\[\\]\\{\\}\\/\\\\])+/", 's' => null),
+		'gibberish'   => array('p' => "/([^\\s\\w\\@\\']){2,}|(\\s[^\\w\\s\\@\\']\\s)/", 's' => null), // ne bantsuk az egy-karakteres csoportokat
+		// 'gibberish'   => array('p' => "/([^\\s\\w\\@\\']){2,}|(\\s.\\s)/", 's' => null),            // minden egykarakteres karaktercsoportot eltavolitunk
+		'duplicates'  => array('p' => "/\\b(.+?)(\\1{1,})\\b/", 's' => null),
+	  'whitespaces' => array('p' => "/(\\s+)/", 's' => ' '),
+	);
+	
+	reset($patterns);
+	do {
+		$ptrn = current($patterns);
+		$text = preg_replace($ptrn['p'], $ptrn['s'], $text);
+		if ($text === null) break;
+	} while(next($patterns));
+	
+	return trim($text);		
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1024,7 +1039,6 @@ function getLangCode($recordingid, $ocrengine) {
 	try {
 		$langcodes = $db->Prepare($query_langcode);
 		$langcodes = $db->Execute($query_langcode, array($recordingid));
-		if (isset($langcodes) && isset($langcodes->sql)) var_dump($langcodes->sql);
 		if ($langcodes->EOF) return null;
 		$ISO_639_2 = $langcodes->GetArray();
 		$ISO_639_2 = $ISO_639_2[0]["shortname"];
@@ -1058,37 +1072,36 @@ function getOCRtasks() {
 	try {
 		$query = "
 			SELECT
-				id,
-				title,
-				subtitle,
-				status,
-				ocrstatus,
-				contentmastervideofilename,
-				contentmastervideoextension,
-				contentmasterstatus,
-				contentmastersourceip,
-				languageid
+				`id`,
+				`title`,
+				`subtitle`,
+				`status`,
+				`ocrstatus`,
+				`contentmastervideofilename`,
+				`contentmastervideoextension`,
+				`contentmasterstatus`,
+				`contentmastersourceip`,
+				`languageid`
 			FROM
-				recordings
+				`recordings`
 			WHERE
-				(status = ". $db->Param('sta') ." AND contentmasterstatus REGEXP ". $db->Param('cms') .") AND
-				ocrstatus REGEXP ". $db->Param('os') .";";
+				`status` = ". $db->Param('sta') ." AND `contentmasterstatus` REGEXP ". $db->Param('cms') ." AND `ocrstatus` REGEXP ". $db->Param('os');
 		
 		$recordset = $db->Prepare($query);
 		$recordset = $db->execute($query, array(
 			$jconf['dbstatus_copystorage_ok'],
-			$jconf['dbstatus_copystorage_ok'] ."|". $jconf['dbstatus_uploaded'],
-			$jconf['dbstatus_reconvert'] ."|". $jconf['dbstatus_convert'])
+			'^'. $jconf['dbstatus_copystorage_ok'] ."|". $jconf['dbstatus_uploaded'] .'$',
+			'^'. $jconf['dbstatus_reconvert'] ."|". $jconf['dbstatus_convert'] ."|". $jconf['dbstatus_conv'] .'$')
 		);
-		if (isset($recordset) && isset($recordset->sql)) $result['query'] = $recordset->sql; 
-
+		if (isset($recordset) && isset($recordset->sql)) $result['query'] = $recordset->sql;
+		
 		if ($recordset->EOF) {
 			$result['message'] = "No recordings to be processed.";
 			$result['result']  = true;
 		} else {
 			$result['message'] = "Ok!";
 			$result['result']  = true;
-			$result['output']  = $recordset->getArray(); 
+			$result['output']  = $recordset->getArray();
 		}
 	} catch(Exception $e) {
 		$result['message'] = __FUNCTION__ ." failed! ". $e->getMessage();
