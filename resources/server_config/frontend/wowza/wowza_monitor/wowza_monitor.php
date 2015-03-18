@@ -172,7 +172,9 @@ $query = "
 	FROM
 		cdn_streaming_servers AS ss
 	WHERE
-		ss.disabled = 0
+		ss.disabled = 0 AND
+        adminuser IS NOT NULL AND
+        monitoringpassword IS NOT NULL
 ";
 
 try {
@@ -181,8 +183,6 @@ try {
 	echo "[ERROR]: Cannot query streaming servers.\n";
 	exit -1;
 }
-
-//var_dump($monitor_servers);
 
 // Munin: generate labels for munin plugin "config"
 $munin_labels = "";
