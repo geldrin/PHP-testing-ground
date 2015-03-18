@@ -289,7 +289,7 @@ class Controller extends \Visitor\Controller {
 
     if ( $recordingsModel->row['isanonymouscommentsenabled'] )
       $this->toSmarty['anonuser']    =
-        $this->bootstrap->getSession('anonuser')->toArray()
+        $this->bootstrap->getSession('recordings-anonuser')->toArray()
       ;
 
     $this->toSmarty['commentoutput'] = $this->getComments(

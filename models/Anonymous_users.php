@@ -68,7 +68,7 @@ class Anonymous_users extends \Springboard\Model {
   }
 
   public function registerForSession() {
-    $user = $this->bootstrap->getSession('anonuser');
+    $user = $this->bootstrap->getSession('recordings-anonuser');
     $user->setArray( $this->row );
     return $user;
   }

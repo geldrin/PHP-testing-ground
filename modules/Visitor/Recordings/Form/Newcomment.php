@@ -35,7 +35,7 @@ class Newcomment extends \Visitor\Form {
       $values['userid'] = $user['id'];
     else {
 
-      $this->anonUser = $this->bootstrap->getSession('anonuser');
+      $this->anonUser = $this->bootstrap->getSession('recordings-anonuser');
       if ( !$this->anonUser['id'] and $this->bootstrap->config['recaptchaenabled'] ) {
 
         if ( !$values['recaptcharesponse'] )
