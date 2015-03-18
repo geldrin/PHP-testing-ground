@@ -382,7 +382,8 @@ function checkFailedRecordings() {
 			`r`.`subtitle`,
 			`r`.`status`,
 			`r`.`masterstatus`,
-			`r`.`status`,
+			`r`.`contentstatus`,
+			`r`.`contentmasterstatus`,
 			`rv`.`recordingid`,
 			`rv`.`status` AS `rvstatus`,
 			`rv`.`timestamp`,
@@ -452,12 +453,14 @@ function checkFailedRecordings() {
 					'rstatus'              => $rv['status'],
 					'rmasterstatus'        => $rv['masterstatus'],
 					'rcontentmasterstatus' => $rv['contentmasterstatus'],
+					'title'                => $rv['title'],
+					'subtitle'             => $rv['subtitle'],
 					'recordings_versions'  => array()
 				);
 				$num_fldrecs++;
 			}
 			
-			$fldrecs[$rv['recordingid']]['recordings_versions'][] = array_diff_key($rv, $fldrecs[$rv['recordingid']]);	
+			$fldrecs[$rv['recordingid']]['recordings_versions'][] = array_diff_key($rv, $fldrecs[$rv['recordingid']]);
 		}
 		
 		unset($data_rv, $data_rec);
@@ -466,14 +469,13 @@ function checkFailedRecordings() {
 		$msg .= "  - Number of failed recordings: ". $num_fldrecs ."\n";
 		$msg .= "  - Number of failed conversions: ". $num_fldrvs .".\n";
 		$msg .= "Detailed list:\n" . str_pad("", 100, "-", STR_PAD_BOTH);
-		
 		foreach ($fldrecs as $rec => $fldrec) {
 			
 			$rstatus = " ". implode(', ',
 				array(
-					"status = ". (is_null($fldrec['status']) ? "NULL" : "'". $fldrec['status'] ."'"), 
-					"masterstatus = ". (is_null($fldrec['masterstatus']) ? "NULL" : "'". $fldrec['masterstatus'] ."'"),
-					"contentmasterstatus = ". (is_null($fldrec['contentmasterstatus']) ? "NULL" : "'". $fldrec['contentmasterstatus'] ."'"),
+					"status = ". (is_null($fldrec['rstatus']) ? "NULL" : "'". $fldrec['rstatus'] ."'"), 
+					"masterstatus = ". (is_null($fldrec['rmasterstatus']) ? "NULL" : "'". $fldrec['rmasterstatus'] ."'"),
+					"contentmasterstatus = ". (is_null($fldrec['rcontentmasterstatus']) ? "NULL" : "'". $fldrec['rcontentmasterstatus'] ."'"),
 				)
 			);
 			$rec_title = " \"". ($fldrec['title'] ? $fldrec['title'] : '-') . (is_null($fldrec['subtitle']) ? '' : " / ". $fldrec['subtitle']) ."\",";
