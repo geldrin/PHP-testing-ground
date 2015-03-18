@@ -1336,6 +1336,7 @@ livechat.prototype.onSubmit = function() {
           if (this.needRecaptcha)
             this.needRecaptcha = false;
 
+          $j('#recaptcharesponse').val('');
           $j('#text').val('');
         }
 
@@ -2147,6 +2148,7 @@ function setupComments() {
 
         $j('#commentwrap').html( data.html );
         tryFocus( data.focus );
+        $j('#recaptcharesponse').val('');
         $j('#text').val('');
 
       },
