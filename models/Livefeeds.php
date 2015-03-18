@@ -140,6 +140,7 @@ class Livefeeds extends \Springboard\Model {
       WHERE
         livefeedid = '" . $feedid . "' AND
         (status IS NULL OR status <> 'markedfordeletion')
+      ORDER BY weight, quality, id
     ");
     
   }
