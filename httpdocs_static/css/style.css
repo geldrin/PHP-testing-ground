@@ -2519,7 +2519,7 @@ a#currentusername span {
   z-index: 9999;
 }
 #live_createchat #recaptchacontainer {
-  top: 50%;
+  bottom: 40px;
 }
 #comments #recaptchacontainer {
   bottom: 38px;
