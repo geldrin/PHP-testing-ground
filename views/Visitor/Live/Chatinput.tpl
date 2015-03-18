@@ -4,6 +4,7 @@
 {/if}
   <form enctype="multipart/form-data" id="live_createchat" name="live_createchat" action="{$language}/live/createchat/{$feed.id}" method="post"{if !$member.id} data-ishuman="{if $anonuser.id or !$bootstrap->config.recaptchaenabled}true{else}false{/if}"{/if}>
     <input type="hidden" id="action" name="action" value="submitcreatechat"/>
+    <input type="hidden" id="recaptcharesponse" name="action" value=""/>
     <div id="recaptchacontainer" data-recaptchapubkey="{$bootstrap->config.recaptchapub}" style="display: none"></div>
     <label for="text">{#live__chat_message#}:</label>
     <div id="textcontainer">
