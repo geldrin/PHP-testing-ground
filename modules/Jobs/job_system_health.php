@@ -51,7 +51,7 @@ $mail_head .= "JOB: " . $myjobid . ".php\n";
 // Start an infinite loop - exit if any STOP file appears
 while( !is_file( $app->config['datapath'] . 'jobs/' . $myjobid . '.stop' ) and !is_file( $app->config['datapath'] . 'jobs/all.stop' ) ) {
 
-    echo "--- WOKE UP! ---: " . date("H:i:s") . "\n";
+    //echo "--- WOKE UP! ---: " . date("H:i:s") . "\n";
 
     clearstatcache();
 
@@ -59,7 +59,7 @@ while( !is_file( $app->config['datapath'] . 'jobs/' . $myjobid . '.stop' ) and !
 
     // Time: get minutes in the hour
     $minutes = date("i");
-    echo "min = " . $minutes . "\n";
+    //echo "min = " . $minutes . "\n";
     
     // Assume status is OK
     $node_status = "ok";
@@ -82,7 +82,7 @@ while( !is_file( $app->config['datapath'] . 'jobs/' . $myjobid . '.stop' ) and !
 
             $err = touch($db_unavailable_flag);
             if ( $err === false ) {
-                $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Cannot create DB unavailable flag file at " . $db_unavailable_flag . ". CHECK!", $sendmail = true);
+                $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Cannot create DB unavailable flag file at " . $db_unavailable_flag . ". CHECK!", $sendmail = false);
             } else {
                 $outage_time = time() - $db_outage_starttime;
                 $title = "[ERROR] DB has been unavailable for " . seconds2DaysHoursMinsSecs($outage_time) . " time. DBUNAVAILABLE flag created at " . $db_unavailable_flag . ". Job polls are blocked until DB comes back.";
@@ -107,8 +107,7 @@ while( !is_file( $app->config['datapath'] . 'jobs/' . $myjobid . '.stop' ) and !
         if ( file_exists($db_unavailable_flag) ) {
             $err = unlink($db_unavailable_flag);
             if ( $err === false ) {
-                // !!! sendmail = true eseten mail storm !!! ?
-                $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Cannot remove DB unavailable flag file at " . $db_unavailable_flag . ". Will prevent jobs from running. CHECK!", $sendmail = true);
+                $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Cannot remove DB unavailable flag file at " . $db_unavailable_flag . ". Will prevent jobs from running. CHECK!", $sendmail = false);
             } else {
                 $title = "[OK] DB is back after " . seconds2DaysHoursMinsSecs(time() - $db_outage_starttime) . " outage. DBUNAVAILABLE flag removed from " . $db_unavailable_flag . ". Job polls are now enabled.";
                 $body  = $mail_head . "\n" . $title . "\n";
@@ -124,7 +123,6 @@ while( !is_file( $app->config['datapath'] . 'jobs/' . $myjobid . '.stop' ) and !
     //// Get node information from DB
     if ( $usedb ) {
         if ( empty($node_info) or ( ( $minutes % 10 ) == 0 ) ) {
-            echo "getnodeinfo: " . date("H:i:s") . "\n";
             $node_info = getNodeByName($app->config['node_sourceip']);
             if ( $node_info === false ) {
                 $debug->log($jconf['log_dir'], $myjobid . ".log", "Node " . $app->config['node_sourceip'] . " is not defined in DB!", $sendmail = false);
@@ -136,8 +134,6 @@ while( !is_file( $app->config['datapath'] . 'jobs/' . $myjobid . '.stop' ) and !
     //// Directory check: do they exist?
     // Schedule: only once, when job started
     if ( $firstround ) {
-        
-        echo "dircheck: " . date("H:i:s") . "\n";
         
         // For both type of nodes
         $dirs2check = array(
@@ -207,7 +203,7 @@ while( !is_file( $app->config['datapath'] . 'jobs/' . $myjobid . '.stop' ) and !
     
     //// Storage free space check
     if ( $firstround or empty($node_info) or ( ( $minutes % 5 ) == 0 ) ) {
-        echo "storage: " . date("H:i:s") . "\n";
+        
         if ( $node_role == "converter" ) {
             $storages2check = array(
                 0   => array(
@@ -253,14 +249,14 @@ while( !is_file( $app->config['datapath'] . 'jobs/' . $myjobid . '.stop' ) and !
         );
         for ( $i = 0; $i < count($storages2check); $i++) {
             $diskinfo = checkDiskSpace($storages2check[$i]['path']);
-            if ( ( $diskinfo['free_percent'] >= $alarm_levels['warning'] ) and ( $diskinfo['free_percent'] < $alarm_levels['critical'] ) ) {
+            if ( ( $diskinfo['used_percent'] >= $alarm_levels['warning'] ) and ( $diskinfo['used_percent'] < $alarm_levels['critical'] ) ) {
                 $msg .= "File system free space for " . $storages2check[$i]['path'] . ": WARNING\n";
-                $msg .= "\tTotal: " . round($diskinfo['total'] / 1024 / 1024 / 1024, 2) . "GB Free: " . round($diskinfo['free'] / 1024 / 1024 / 1024, 2) . "GB (" . $diskinfo['free_percent'] . "%)\n";
+                $msg .= "\tTotal: " . round($diskinfo['total'] / 1024 / 1024 / 1024, 2) . "GB Free: " . round($diskinfo['free'] / 1024 / 1024 / 1024, 2) . "GB (" . $diskinfo['used_percent'] . "%)\n";
                 $msg .= "\t***** PLEASE CHECK *****\n\n";
             }
-            if ( $diskinfo['free_percent'] >= $alarm_levels['critical'] ) {
+            if ( $diskinfo['used_percent'] >= $alarm_levels['critical'] ) {
                 $msg .= "File system free space for " . $storages2check[$i]['path'] . ": CRITICAL\n";
-                $msg .= "\tTotal: " . round($diskinfo['total'] / 1024 / 1024 / 1024, 2) . "GB Free: " . round($diskinfo['free'] / 1024 / 1024 / 1024, 2) . "GB (" . $diskinfo['free_percent'] . "%)\n";
+                $msg .= "\tTotal: " . round($diskinfo['total'] / 1024 / 1024 / 1024, 2) . "GB Free: " . round($diskinfo['free'] / 1024 / 1024 / 1024, 2) . "GB (" . $diskinfo['used_percent'] . "%)\n";
                 $node_status = "disabledstoragelow";
                 
                 // ## Start quick cleanup of temp areas
@@ -298,7 +294,6 @@ while( !is_file( $app->config['datapath'] . 'jobs/' . $myjobid . '.stop' ) and !
     // SSH ping all frontends from converter
     if ( $firstround or ( $minutes % 5 ) == 0 ) {
         if ( ( $node_role == "converter" ) and $usedb ) {
-echo "sshping: " . date("H:i:s") . "\n";
             $mail_body = "";
             $ssh_all_ok = true;
             $ssh_status = "";
@@ -313,9 +308,7 @@ echo "sshping: " . date("H:i:s") . "\n";
 
                     $node_frontend = array();
                     $node_frontend = $node_frontends->fields;
-                    
-echo "ssh ping to: " . $node_frontend['server'] . "\n";
-                    
+                                        
                     $ssh_unavailable_flag = $app->config['sshunavailableflagpath'] . "." . $node_frontend['server'];
                     
                     $output = array();
@@ -323,9 +316,8 @@ echo "ssh ping to: " . $node_frontend['server'] . "\n";
                     exec($ssh_command, $output, $result);                    
                     $output_string = implode("\n", $output);
                     if ( $result != 0 ) {
-echo "res: err\n";
-echo $output_string . "\n";
-                        // SSH connection to front-end was not successful (problem first detected)
+
+                    // SSH connection to front-end was not successful (problem first detected)
                         if ( !file_exists($ssh_unavailable_flag) ) {
                         
                             $ssh_outage[$node_frontend['server']]['outage'] = true;
@@ -365,7 +357,6 @@ echo $output_string . "\n";
                         $ssh_all_ok = false;
                         
                     } else {
-                        echo "res: ok\n";
                         
                         if ( !isset($ssh_outage[$node_frontend['server']]) ) {
                             $ssh_outage[$node_frontend['server']]['outage'] = false;
@@ -403,14 +394,15 @@ echo $output_string . "\n";
             }
             
             if ( !empty($mail_body) ) {
-                sendHTMLEmail_errorWrapper("[ERROR] Front-end SSH ping issues", nl2br($mail_body));
                 $system_health_log .= "SSH frontend ping results:\n" . $mail_body . "\n\n";
             }
         }
     }
     
-    // ?????
-    //echo $system_health_log . "\n";
+    // Send HTML mail on error summary
+    if ( !empty($system_health_log) ) {
+        sendHTMLEmail_errorWrapper("[ERROR] System health check error report", nl2br($system_health_log));
+    }
     
     if ( $firstround ) $firstround = false;
 
@@ -429,7 +421,8 @@ function checkDiskSpace($dir) {
     $result['total'] = disk_total_space($dir);
     $result['free'] = disk_free_space($dir);
     $result['free_percent'] = round($result['free'] * 100 / $result['total'], 2);
-         
+    $result['used_percent'] = 100 - $result['free_percent'];
+    
     return $result;
 }
 
