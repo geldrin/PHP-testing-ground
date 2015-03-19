@@ -34,7 +34,7 @@ if ( iswindows() ) {
 
 //// Config
 // Alarm levels for storage free space
-$alarm_levels['warning'] = 20;
+$alarm_levels['warning'] = 80;
 $alarm_levels['critical'] = 90;
 // Sleep time between each check
 $sleep_time = 60;
@@ -209,7 +209,7 @@ while( !is_file( $app->config['datapath'] . 'jobs/' . $myjobid . '.stop' ) and !
         }
         if ( !empty($msg) ) {
             $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Directory check results:\n" . $msg, $sendmail = false);    
-            $system_health_log .= "[ERROR] Directory check results:\n" . $msg . "\n\n";
+            $system_health_log .= "[ERROR] Directory check results:\n" . $msg . "\n";
         }
     }
 
@@ -263,18 +263,21 @@ while( !is_file( $app->config['datapath'] . 'jobs/' . $myjobid . '.stop' ) and !
         $diskinfo = array();
         $values = array(
             'statusstorage'         => null,
-            'storagesystemtotal'    => 0,
-            'storagesystemfree'     => 0,
-            'storagetotal'          => 0,
-            'storagefree'           => 0,
-            'cpuusage'              => 0,
+            'storagesystemtotal'    => null,
+            'storagesystemfree'     => null,
+            'storagetotal'          => null,
+            'storagefree'           => null,
+            'cpuusage'              => null,
+            'cpuloadmin'            => null,
+            'cpuload5min'           => null,
+            'cpuload15min'          => null
         );
         for ( $i = 0; $i < count($storages2check); $i++) {
             $diskinfo = checkDiskSpace($storages2check[$i]['path']);
             if ( ( $diskinfo['used_percent'] >= $alarm_levels['warning'] ) and ( $diskinfo['used_percent'] < $alarm_levels['critical'] ) ) {
                 $msg .= "File system free space for " . $storages2check[$i]['path'] . ": WARNING\n";
                 $msg .= "\tTotal: " . round($diskinfo['total'] / 1024 / 1024 / 1024, 2) . "GB Free: " . round($diskinfo['free'] / 1024 / 1024 / 1024, 2) . "GB (" . $diskinfo['used_percent'] . "%)\n";
-                $msg .= "\t***** PLEASE CHECK *****\n\n";
+                $msg .= "\t***** PLEASE CHECK *****\n";
             }
             if ( $diskinfo['used_percent'] >= $alarm_levels['critical'] ) {
                 $msg .= "File system free space for " . $storages2check[$i]['path'] . ": CRITICAL\n";
@@ -288,7 +291,7 @@ while( !is_file( $app->config['datapath'] . 'jobs/' . $myjobid . '.stop' ) and !
                     $msg .= "\tQuick cleanup: " . round($err['size'] / 1024 / 1024, 2) . "MB (" . $err['value'] . " files) removed from " . $storages2check[$i]['cleanuppath'] . "\n";
                 }
                 
-                $msg .= "\t***** CHECK ASAP *****\n\n";
+                $msg .= "\t***** CHECK ASAP *****\n";
             }
             if ( !empty($storages2check[$i]['db']) ) {
                 $values[$storages2check[$i]['db'] . 'total'] = $diskinfo['total'];
@@ -312,10 +315,7 @@ while( !is_file( $app->config['datapath'] . 'jobs/' . $myjobid . '.stop' ) and !
             $msg .= "[INFO] DB is unreachable. Storage status information:\n" . print_r($values, true) . "\n";
         }
 
-        if ( !empty($msg) ) {
-            //$debug->log($jconf['log_dir'], $myjobid . ".log", "Storage check results:\n" . $msg, $sendmail = false);      
-            $system_health_log .= $msg . "\n\n";
-        }
+        if ( !empty($msg) ) $system_health_log .= "[ERROR] Storage free space issues:\n\n" . $msg . "\n";
     }
 
     // SSH ping all frontends from converter
@@ -415,7 +415,7 @@ while( !is_file( $app->config['datapath'] . 'jobs/' . $myjobid . '.stop' ) and !
             }
             
             if ( !empty($msg) ) {
-                $system_health_log .= "SSH frontend ping results:\n" . $msg . "\n\n";
+                $system_health_log .= "SSH frontend ping results:\n" . $msg . "\n";
             }
         }
     }
@@ -423,8 +423,9 @@ while( !is_file( $app->config['datapath'] . 'jobs/' . $myjobid . '.stop' ) and !
     // Send error summary (prevent repetition with md5 checksums)
     if ( !empty($system_health_log) ) {
         $md5 = md5($system_health_log);
+//echo "check 4: " . $md5 . "\n";
         if ( !isset($mail_hash[$md5]) ) {
-echo "no match!\n";
+//echo "no match!\n";
             // Send mail
             sendHTMLEmail_errorWrapper("[ERROR] System health check error report", nl2br($mail_head . "\n" . $system_health_log));
             $mail_hash[$md5]['sentmail'] = true;
@@ -433,16 +434,15 @@ echo "no match!\n";
             // Log summary
             $debug->log($jconf['log_dir'], $myjobid . ".log", $system_health_log, $sendmail = false);
         } else {
-echo "already sent? sec: " . (time() - $mail_hash[$md5]['sentmail_date']);
+//echo "already sent. sec ago: " . (time() - $mail_hash[$md5]['sentmail_date']) . "\n";
             if ( ( time() - $mail_hash[$md5]['sentmail_date'] ) > $mail_report_resend_timeout ) {
                 unset($mail_hash[$md5]);
-echo "zero! send again next time\n";
+//echo "zero! send again next time\n";
             } else {
-echo "found! not sending mail\n";
+//echo "found! not sending mail\n";
             }
         }
-        
-        var_dump($mail_hash);
+
     }
     
     // Maintain mail hash
@@ -452,6 +452,9 @@ echo "found! not sending mail\n";
             echo "idx: " . $idx . " cleaned up!\n";
         }
     }
+
+//    echo "post cleanup:\n";
+//    var_dump($mail_hash);
     
     if ( $firstround ) $firstround = false;
 
