@@ -297,8 +297,8 @@ while( !is_file( $app->config['datapath'] . 'jobs/' . $myjobid . '.stop' ) and !
         
     // SSH ping all frontends from converter
     if ( $firstround or ( $minutes % 5 ) == 0 ) {
-        echo "sshping: " . date("H:i:s") . "\n";
         if ( ( $node_role == "converter" ) and $usedb ) {
+echo "sshping: " . date("H:i:s") . "\n";
             $mail_body = "";
             $ssh_all_ok = true;
             $ssh_status = "";
