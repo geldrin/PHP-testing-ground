@@ -318,6 +318,7 @@ $config = array(
   'sitemaintenanceflagpath'   => $this->basepath . 'SITEMAINTENANCE',
   'uploadmaintenanceflagpath' => $this->basepath . 'UPLOADMAINTENANCE',
   'dbunavailableflagpath'     => $this->basepath . 'DBUNAVAILABLE',
+  'sshunavailableflagpath'    => $this->basepath . 'SSHUNAVAILABLE',
 
   // VCR options
   'vcr' => array(
