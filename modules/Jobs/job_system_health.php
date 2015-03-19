@@ -32,12 +32,24 @@ if ( iswindows() ) {
     exit;
 }
 
-// Config
-$alarm_levels['warning'] = 70;
+//// Config
+// Alarm levels for storage free space
+$alarm_levels['warning'] = 20;
 $alarm_levels['critical'] = 90;
-$node_role = $app->config['node_role'];
-$firstround = true;
+// Sleep time between each check
 $sleep_time = 60;
+// Node role: front-end/converter
+$node_role = $app->config['node_role'];
+// Massage resend timeout
+$mail_report_resend_timeout = 10*60;
+// DB alert repeat every N minutes
+$db_outage_alert_every_mins = 30;
+// Storage check every N minutes
+$storage_check_every_mins = 5;
+// SSH front-end ping every N minutes
+$ssh_check_every_mins = 5;
+// Helping variables
+$firstround = true;
 $db_outage = false;
 $db_outage_starttime = 0;
 $ssh_outage = array();
@@ -47,6 +59,9 @@ $mail_head  = "NODE: " . $app->config['node_sourceip'] . "\n";
 $mail_head .= "ROLE: " . $app->config['node_role'] . "\n";
 $mail_head .= "SITE: " . $app->config['baseuri'] . "\n";
 $mail_head .= "JOB: " . $myjobid . ".php\n";
+
+// MD5 mail hash to avoid repeating messages
+$mail_hash = array();
 
 // Start an infinite loop - exit if any STOP file appears
 while( !is_file( $app->config['datapath'] . 'jobs/' . $myjobid . '.stop' ) and !is_file( $app->config['datapath'] . 'jobs/all.stop' ) ) {
@@ -93,7 +108,7 @@ while( !is_file( $app->config['datapath'] . 'jobs/' . $myjobid . '.stop' ) and !
         } else {
             // Send notice in every additional 30 minutes
             $db_outage_minutes = floor( ( time() - $db_outage_starttime ) / 60 );
-            if ( ( $db_outage_minutes % 30 ) == 0 ) {
+            if ( ( $db_outage_minutes % $db_outage_alert_every_mins ) == 0 ) {
                 $outage_time = time() - $db_outage_starttime;
                 $title = "[ERROR] DB has been unavailable for " . seconds2DaysHoursMinsSecs($outage_time) . " time. DBUNAVAILABLE flag is in place at " . $db_unavailable_flag . ". Job polls are blocked until DB comes back.";
                 $body  = $mail_head . "\n" . $title . "\n";
@@ -125,7 +140,7 @@ while( !is_file( $app->config['datapath'] . 'jobs/' . $myjobid . '.stop' ) and !
         if ( empty($node_info) or ( ( $minutes % 10 ) == 0 ) ) {
             $node_info = getNodeByName($app->config['node_sourceip']);
             if ( $node_info === false ) {
-                $debug->log($jconf['log_dir'], $myjobid . ".log", "Node " . $app->config['node_sourceip'] . " is not defined in DB!", $sendmail = false);
+                $debug->log($jconf['log_dir'], $myjobid . ".log", "[WARN] Node " . $app->config['node_sourceip'] . " is not defined in DB!", $sendmail = false);
                 $usedb = false;
             }
         }
@@ -193,16 +208,23 @@ while( !is_file( $app->config['datapath'] . 'jobs/' . $myjobid . '.stop' ) and !
             }
         }
         if ( !empty($msg) ) {
-            $debug->log($jconf['log_dir'], $myjobid . ".log", "Directory check results:\n" . $msg, $sendmail = false);    
-            $system_health_log .= $msg . "\n\n";
+            $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Directory check results:\n" . $msg, $sendmail = false);    
+            $system_health_log .= "[ERROR] Directory check results:\n" . $msg . "\n\n";
         }
     }
 
-    //// CPU usage
-    $node_cpu = trim(`top -b -n 1 | grep "^%Cpu" | awk '{ print $2+$4+$6; }'`);
+    //// Performance indicators: CPU, load average
+    // CPU usage
+    $node_cpu = trim(`top -b -n 1 | grep "Cpu(s)" | awk '{ print $2+$4+$6; }'`);
+    // Load average
+    $load = trim(`cat /proc/loadavg | awk '{print $1 "#" $2 "#" $3}'`);
+    $tmp = explode("#", $load, 3);
+    $node_load['min'] = $tmp[0];
+    $node_load['min5'] = $tmp[1];
+    $node_load['min15'] = $tmp[2];
     
     //// Storage free space check
-    if ( $firstround or empty($node_info) or ( ( $minutes % 5 ) == 0 ) ) {
+    if ( $firstround or empty($node_info) or ( ( $minutes % $storage_check_every_mins ) == 0 ) ) {
         
         if ( $node_role == "converter" ) {
             $storages2check = array(
@@ -277,6 +299,11 @@ while( !is_file( $app->config['datapath'] . 'jobs/' . $myjobid . '.stop' ) and !
         // Update DB with disk data
         $values['statusstorage'] = $node_status;
         if ( is_numeric($node_cpu) ) $values['cpuusage'] = $node_cpu;
+        if ( isset($node_load) ) {
+            $values['cpuloadmin'] = $node_load['min'];
+            $values['cpuload5min'] = $node_load['min5'];
+            $values['cpuload15min'] = $node_load['min15'];
+        }
         if ( $usedb ) {
             $converterNodeObj = $app->bootstrap->getModel('infrastructure_nodes');
             $converterNodeObj->select($node_info['id']);
@@ -286,15 +313,15 @@ while( !is_file( $app->config['datapath'] . 'jobs/' . $myjobid . '.stop' ) and !
         }
 
         if ( !empty($msg) ) {
-            $debug->log($jconf['log_dir'], $myjobid . ".log", "Storage check results:\n" . $msg, $sendmail = false);      
+            //$debug->log($jconf['log_dir'], $myjobid . ".log", "Storage check results:\n" . $msg, $sendmail = false);      
             $system_health_log .= $msg . "\n\n";
         }
     }
-        
+
     // SSH ping all frontends from converter
-    if ( $firstround or ( $minutes % 5 ) == 0 ) {
+    if ( $firstround or ( $minutes % $ssh_check_every_mins ) == 0 ) {
         if ( ( $node_role == "converter" ) and $usedb ) {
-            $mail_body = "";
+            $msg = "";
             $ssh_all_ok = true;
             $ssh_status = "";
             $values = array('statusnetwork' => $node_info['statusnetwork']);
@@ -329,9 +356,7 @@ while( !is_file( $app->config['datapath'] . 'jobs/' . $myjobid . '.stop' ) and !
                                 $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Cannot create SSH unavailable flag file at " . $ssh_unavailable_flag . ". CHECK!", $sendmail = false);
                             } else {
                                 $outage_time = time() - $ssh_outage[$node_frontend['server']]['outage_starttime'];
-                                $msg = "[ERROR] Unsuccessful SSH ping to: " . $node_frontend['server'] . ". SSH has been unavailable for " . seconds2DaysHoursMinsSecs($outage_time) . " time.\n\tCommand: " . $ssh_command . "\n\tOutput: " . $output_string;
-                                $mail_body .= $msg . "\n\n";
-                                $debug->log($jconf['log_dir'], $myjobid . ".log", $msg, $sendmail = false);
+                                $msg .= "[ERROR] Unsuccessful SSH ping to: " . $node_frontend['server'] . ". SSH has been unavailable for " . seconds2DaysHoursMinsSecs($outage_time) . " time.\n\tCommand: " . $ssh_command . "\n\tOutput: " . $output_string . "\n\n";
                             }
 
                         } else {
@@ -345,9 +370,7 @@ while( !is_file( $app->config['datapath'] . 'jobs/' . $myjobid . '.stop' ) and !
                             $ssh_outage_minutes = floor( ( time() - $ssh_outage[$node_frontend['server']]['outage_starttime'] ) / 60 );
                             if ( ( $ssh_outage_minutes % 30 ) == 0 ) {
                                 $outage_time = time() - $ssh_outage[$node_frontend['server']]['outage_starttime'];
-                                $msg = "[ERROR] Unsuccessful SSH ping to: " . $node_frontend['server'] . ". SSH has been unavailable for " . seconds2DaysHoursMinsSecs($outage_time) . " time. \n\tCommand: " . $ssh_command . "\n\tOutput: " . $output_string;
-                                $mail_body .= $msg . "\n\n";
-                                $debug->log($jconf['log_dir'], $myjobid . ".log", $msg, $sendmail = false);
+                                $msg .= "[ERROR] Unsuccessful SSH ping to: " . $node_frontend['server'] . ". SSH has been unavailable for " . seconds2DaysHoursMinsSecs($outage_time) . " time. \n\tCommand: " . $ssh_command . "\n\tOutput: " . $output_string. "\n\n";
                             }               
                         }
 
@@ -370,9 +393,7 @@ while( !is_file( $app->config['datapath'] . 'jobs/' . $myjobid . '.stop' ) and !
                                 $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Cannot remove SSH unavailable flag file at " . $ssh_unavailable_flag . ". Will prevent jobs from download/upload. CHECK!", $sendmail = false);
                             } else {
                                 $outage_time = time() - $ssh_outage[$node_frontend['server']]['outage_starttime'];
-                                $msg = "[OK] Front-end " . $node_frontend['server'] . " is back after " . seconds2DaysHoursMinsSecs($outage_time);
-                                $mail_body .= $msg . "\n\n";
-                                $debug->log($jconf['log_dir'], $myjobid . ".log", $msg, $sendmail = false);
+                                $msg .= "[OK] Front-end " . $node_frontend['server'] . " is back after " . seconds2DaysHoursMinsSecs($outage_time) . "\n\n";
                             }
                         }
         
@@ -393,15 +414,43 @@ while( !is_file( $app->config['datapath'] . 'jobs/' . $myjobid . '.stop' ) and !
                 }
             }
             
-            if ( !empty($mail_body) ) {
-                $system_health_log .= "SSH frontend ping results:\n" . $mail_body . "\n\n";
+            if ( !empty($msg) ) {
+                $system_health_log .= "SSH frontend ping results:\n" . $msg . "\n\n";
             }
         }
     }
     
-    // Send HTML mail on error summary
+    // Send error summary (prevent repetition with md5 checksums)
     if ( !empty($system_health_log) ) {
-        sendHTMLEmail_errorWrapper("[ERROR] System health check error report", nl2br($system_health_log));
+        $md5 = md5($system_health_log);
+        if ( !isset($mail_hash[$md5]) ) {
+echo "no match!\n";
+            // Send mail
+            sendHTMLEmail_errorWrapper("[ERROR] System health check error report", nl2br($mail_head . "\n" . $system_health_log));
+            $mail_hash[$md5]['sentmail'] = true;
+            $mail_hash[$md5]['sentmail_date'] = time();
+            
+            // Log summary
+            $debug->log($jconf['log_dir'], $myjobid . ".log", $system_health_log, $sendmail = false);
+        } else {
+echo "already sent? sec: " . (time() - $mail_hash[$md5]['sentmail_date']);
+            if ( ( time() - $mail_hash[$md5]['sentmail_date'] ) > $mail_report_resend_timeout ) {
+                unset($mail_hash[$md5]);
+echo "zero! send again next time\n";
+            } else {
+echo "found! not sending mail\n";
+            }
+        }
+        
+        var_dump($mail_hash);
+    }
+    
+    // Maintain mail hash
+    foreach ($mail_hash as $idx => $value) {
+        if ( ( time() - $mail_hash[$idx]['sentmail_date'] ) > $mail_report_resend_timeout ) {
+            unset($mail_hash[$idx]);
+            echo "idx: " . $idx . " cleaned up!\n";
+        }
     }
     
     if ( $firstround ) $firstround = false;
