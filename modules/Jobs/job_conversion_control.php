@@ -313,19 +313,19 @@ global $db, $debug, $jconf, $app;
 
 			for ( $i = 0; $i < count($profileset); $i++ ) {
 				
-				if ($profileset[$i]['mediatype'] == 'audio' && $recording['mediatype'] != 'videoonly') {
+				if ($profileset[$i]['mediatype'] == 'audio' && $recording['mediatype'] == 'videoonly') {
 					// If encprofile is audio-only, but the input has no audiochannel, skip inserting 'audio' rec. version
 					continue;
 				}
 				
 				$values = array(
-					'timestamp'			=> date('Y-m-d H:i:s'),
-					'converternodeid'	=> $converternodeid,
-					'recordingid'		=> $recording['id'],
-					'encodingprofileid'	=> $profileset[$i]['id'],
-					'encodingorder'		=> $profileset[$i]['encodingorder'],
-					'iscontent'			=> 0,
-					'status'			=> $jconf['dbstatus_convert']
+					'timestamp'         => date('Y-m-d H:i:s'),
+					'converternodeid'   => $converternodeid,
+					'recordingid'       => $recording['id'],
+					'encodingprofileid' => $profileset[$i]['id'],
+					'encodingorder'     => $profileset[$i]['encodingorder'],
+					'iscontent'         => 0,
+					'status'            => $jconf['dbstatus_convert']
 				);
 
 				$recordingVersion = $app->bootstrap->getModel('recordings_versions');
