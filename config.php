@@ -81,7 +81,7 @@ $config = array(
   //----
   'allowedextensions' => array(
     'wmv', 'avi', 'mov', 'flv', 'mp4', 'asf', 'mp3', 'flac',
-    'ogg', 'wav', 'wma', 'mpg', 'mpeg', 'ogm', 'f4v', 'm4v', 'mkv', 'm2v',
+    'ogg', 'wav', 'wma', 'mpg', 'mpeg', 'ogm', 'f4v', 'm4v', 'mkv', 'm2v', 'webm',
   ),
   'uploadpath'            => '/srv/upload/videosquare.eu/',
   'chunkpath'             => '/srv/upload/videosquare.eu/recordings_chunks/',
