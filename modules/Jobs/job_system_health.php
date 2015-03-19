@@ -40,6 +40,7 @@ $firstround = true;
 $sleep_time = 60;
 $db_outage = false;
 $db_outage_starttime = 0;
+$ssh_outage = array();
 
 // Prepare possibly needed mail intro with site information
 $mail_head  = "NODE: " . $app->config['node_sourceip'] . "\n";
@@ -298,39 +299,117 @@ while( !is_file( $app->config['datapath'] . 'jobs/' . $myjobid . '.stop' ) and !
     if ( $firstround or ( $minutes % 5 ) == 0 ) {
         echo "sshping: " . date("H:i:s") . "\n";
         if ( ( $node_role == "converter" ) and $usedb ) {
-            $msg = "";
+            $mail_body = "";
+            $ssh_all_ok = true;
+            $ssh_status = "";
             $values = array('statusnetwork' => $node_info['statusnetwork']);
             $node_frontends = getNodesByType("frontend");
             if ( $node_frontends === false ) {
-                $debug->log($jconf['log_dir'], $myjobid . ".log", "No front-end defined in DB!", $sendmail = false);
+                $debug->log($jconf['log_dir'], $myjobid . ".log", "[WARN] No front-end defined in DB!", $sendmail = false);
             } else {
-                $ssh_all_ok = true;
+                
+                // SSH ping: Loop through front-ends
                 while ( !$node_frontends->EOF ) {
 
                     $node_frontend = array();
                     $node_frontend = $node_frontends->fields;
                     
-                    $ssh_command = "ssh -i " . $app->config['ssh_key'] . " " . $app->config['ssh_user'] . "@" . $node_frontend['server'] . " date";
-                    exec($ssh_command, $output, $result);
+echo "ssh ping to: " . $node_frontend['server'] . "\n";
+                    
+                    $ssh_unavailable_flag = $app->config['sshunavailableflagpath'] . "." . $node_frontend['server'];
+                    
+                    $output = array();
+                    $ssh_command = "ssh -i " . $app->config['ssh_key'] . " " . $app->config['ssh_user'] . "@" . $node_frontend['server'] . " date 2>&1";
+                    exec($ssh_command, $output, $result);                    
                     $output_string = implode("\n", $output);
                     if ( $result != 0 ) {
-                        updateInfrastructureNodeStatus($node_info['id'], "statusnetwork", "disabledfrontendunreachable:" . $node_frontend['server']);
-                        $msg .= "[ERROR] Unsuccessful SSH ping to: " . $node_frontend['server'] . ".\n\tCommand: " . $ssh_command . "\n\tOutput: " . $output_string;
+echo "res: err\n";
+echo $output_string . "\n";
+                        // SSH connection to front-end was not successful (problem first detected)
+                        if ( !file_exists($ssh_unavailable_flag) ) {
+                        
+                            $ssh_outage[$node_frontend['server']]['outage'] = true;
+                            $ssh_outage[$node_frontend['server']]['outage_starttime'] = time();
+                            
+                            // Log error
+                            $err = touch($ssh_unavailable_flag);
+                            if ( $err === false ) {
+                                $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Cannot create SSH unavailable flag file at " . $ssh_unavailable_flag . ". CHECK!", $sendmail = false);
+                            } else {
+                                $outage_time = time() - $ssh_outage[$node_frontend['server']]['outage_starttime'];
+                                $msg = "[ERROR] Unsuccessful SSH ping to: " . $node_frontend['server'] . ". SSH has been unavailable for " . seconds2DaysHoursMinsSecs($outage_time) . " time.\n\tCommand: " . $ssh_command . "\n\tOutput: " . $output_string;
+                                $mail_body .= $msg . "\n\n";
+                                $debug->log($jconf['log_dir'], $myjobid . ".log", $msg, $sendmail = false);
+                            }
+
+                        } else {
+
+                            if ( !isset($ssh_outage[$node_frontend['server']]) ) {
+                                $ssh_outage[$node_frontend['server']]['outage'] = true;
+                                $ssh_outage[$node_frontend['server']]['outage_starttime'] = time();
+                            }
+                        
+                            // Send notice in every additional 30 minutes
+                            $ssh_outage_minutes = floor( ( time() - $ssh_outage[$node_frontend['server']]['outage_starttime'] ) / 60 );
+                            if ( ( $ssh_outage_minutes % 30 ) == 0 ) {
+                                $outage_time = time() - $ssh_outage[$node_frontend['server']]['outage_starttime'];
+                                $msg = "[ERROR] Unsuccessful SSH ping to: " . $node_frontend['server'] . ". SSH has been unavailable for " . seconds2DaysHoursMinsSecs($outage_time) . " time. \n\tCommand: " . $ssh_command . "\n\tOutput: " . $output_string;
+                                $mail_body .= $msg . "\n\n";
+                                $debug->log($jconf['log_dir'], $myjobid . ".log", $msg, $sendmail = false);
+                            }               
+                        }
+
+                        $ssh_status .= "disabledfrontendunreachable:" . $node_frontend['server'];
+
+                        // At least one SSH connection problem is pending
                         $ssh_all_ok = false;
+                        
+                    } else {
+                        echo "res: ok\n";
+                        
+                        if ( !isset($ssh_outage[$node_frontend['server']]) ) {
+                            $ssh_outage[$node_frontend['server']]['outage'] = false;
+                            $ssh_outage[$node_frontend['server']]['outage_starttime'] = time();
+                        }
+                            
+                        // Remove SSHUNAVAILABLE flag if SSH was recovered
+                        if ( file_exists($ssh_unavailable_flag) ) {
+                            $err = unlink($ssh_unavailable_flag);
+                            if ( $err === false ) {
+                                $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Cannot remove SSH unavailable flag file at " . $ssh_unavailable_flag . ". Will prevent jobs from download/upload. CHECK!", $sendmail = false);
+                            } else {
+                                $outage_time = time() - $ssh_outage[$node_frontend['server']]['outage_starttime'];
+                                $msg = "[OK] Front-end " . $node_frontend['server'] . " is back after " . seconds2DaysHoursMinsSecs($outage_time);
+                                $mail_body .= $msg . "\n\n";
+                                $debug->log($jconf['log_dir'], $myjobid . ".log", $msg, $sendmail = false);
+                            }
+                        }
+        
+                        // Reinit flags
+                        $ssh_outage[$node_frontend['server']]['outage'] = false;
+                        $ssh_outage[$node_frontend['server']]['outage_starttime'] = 0;
+                        
                     }
                     
                     $node_frontends->MoveNext();
                 }
+                
                 // Status changed back to OK
-                if ( ( $ssh_all_ok ) and ( $node_info['statusnetwork'] != "ok" ) ) updateInfrastructureNodeStatus($node_info['id'], "statusnetwork", "ok");
+                if ( ( $ssh_all_ok ) and ( $node_info['statusnetwork'] != "ok" ) ) {
+                    updateInfrastructureNodeStatus($node_info['id'], "statusnetwork", "ok");
+                } else {
+                    updateInfrastructureNodeStatus($node_info['id'], "statusnetwork", $ssh_status);
+                }
             }
-            if ( !empty($msg) ) {
-                $debug->log($jconf['log_dir'], $myjobid . ".log", "SSH frontend ping results:\n" . $msg, $sendmail = false);      
-                $system_health_log .= "SSH frontend ping results:\n" . $msg . "\n\n";
+            
+            if ( !empty($mail_body) ) {
+                sendHTMLEmail_errorWrapper("[ERROR] Front-end SSH ping issues", nl2br($mail_body));
+                $system_health_log .= "SSH frontend ping results:\n" . $mail_body . "\n\n";
             }
         }
     }
     
+    // ?????
     //echo $system_health_log . "\n";
     
     if ( $firstround ) $firstround = false;
