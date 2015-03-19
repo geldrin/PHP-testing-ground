@@ -45,9 +45,9 @@ $mail_report_resend_timeout = 10*60;
 // DB alert repeat every N minutes
 $db_outage_alert_every_mins = 30;
 // Storage check every N minutes
-$storage_check_every_mins = 5;
+$storage_check_every_mins = 60;
 // SSH front-end ping every N minutes
-$ssh_check_every_mins = 5;
+$ssh_check_every_mins = 10;
 // Helping variables
 $firstround = true;
 $db_outage = false;
@@ -66,15 +66,12 @@ $mail_hash = array();
 // Start an infinite loop - exit if any STOP file appears
 while( !is_file( $app->config['datapath'] . 'jobs/' . $myjobid . '.stop' ) and !is_file( $app->config['datapath'] . 'jobs/all.stop' ) ) {
 
-    //echo "--- WOKE UP! ---: " . date("H:i:s") . "\n";
-
     clearstatcache();
 
     $system_health_log = "";
 
     // Time: get minutes in the hour
     $minutes = date("i");
-    //echo "min = " . $minutes . "\n";
     
     // Assume status is OK
     $node_status = "ok";
@@ -311,8 +308,6 @@ while( !is_file( $app->config['datapath'] . 'jobs/' . $myjobid . '.stop' ) and !
             $converterNodeObj = $app->bootstrap->getModel('infrastructure_nodes');
             $converterNodeObj->select($node_info['id']);
             $converterNodeObj->updateRow($values);
-        } else {
-            $msg .= "[INFO] DB is unreachable. Storage status information:\n" . print_r($values, true) . "\n";
         }
 
         if ( !empty($msg) ) $system_health_log .= "[ERROR] Storage free space issues:\n\n" . $msg . "\n";
