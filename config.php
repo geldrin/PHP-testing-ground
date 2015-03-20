@@ -1,6 +1,6 @@
 <?php
 $config = array(
-  'version'      => '_v20141216',
+  'version'      => '_v20150320',
   'charset'      => 'UTF-8',
   'cacheseconds' => 3600,
   'errormessage' => 'An unexpected error has occured, our staff has been notified. Sorry for the inconvenience and thanks for your understanding!',
@@ -315,10 +315,10 @@ $config = array(
   'livecheckaccessdebuglog' => false,
   //-------
   // csak letezniuk kell a file-oknak, kikapcsolashoz torolni kell oket
-  'sitemaintenanceflagpath'   => $this->basepath . 'SITEMAINTENANCE',
-  'uploadmaintenanceflagpath' => $this->basepath . 'UPLOADMAINTENANCE',
-  'dbunavailableflagpath'     => $this->basepath . 'DBUNAVAILABLE',
-  'sshunavailableflagpath'    => $this->basepath . 'SSHUNAVAILABLE',
+  'sitemaintenanceflagpath'   => $this->basepath . 'data/SITEMAINTENANCE',
+  'uploadmaintenanceflagpath' => $this->basepath . 'data/UPLOADMAINTENANCE',
+  'dbunavailableflagpath'     => $this->basepath . 'data/DBUNAVAILABLE',
+  'sshunavailableflagpath'    => $this->basepath . 'data/SSHUNAVAILABLE',
 
   // VCR options
   'vcr' => array(
