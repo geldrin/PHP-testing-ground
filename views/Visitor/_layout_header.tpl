@@ -112,6 +112,19 @@
         {#headerloginactions#|sprintf:"`$language`/users/login":"`$language`/users/signup"}
       {/if}
     </div>
+    <div id="headerloginform" class="hidden">
+      <form action="{$language}/users/login" method="post">
+        <input type="hidden" name="action" value="submitlogin"/>
+        <input type="hidden" name="welcome" value="{if $welcome}1{else}0{/if}"/>
+        <input type="hidden" name="forward" value="{$FULL_URI|escape:html}"/>
+        <input class="inputtext inputbackground clearonclick" type="text" name="email" data-origval="{#youremail#|escape:html}" value="{#youremail#|escape:html}" tabindex="1"/>
+        <input class="inputtext inputbackground clearonclick" type="password" name="password" data-origval="******" value="******" tabindex="2"/>
+        <input class="submitbutton" type="submit" value="login" tabindex="4"/><br/>
+        <div id="login_rememberme_wrap">
+          <input type="checkbox" tabindex="3" name="autologin" value="1" id="login_rememberme"/><label for="login_rememberme">{#login_rememberme#}</label>
+        </div>
+      </form>
+    </div>
   {/if}
 </div>
 
