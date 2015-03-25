@@ -827,16 +827,12 @@ class Channels extends \Springboard\Model {
   
   public function getFeedsWithStreams() {
     
-    $streamObj = $this->bootstrap->getModel('livefeed_streams');
     $feeds     = $this->getFeeds();
     $feedModel = $this->bootstrap->getModel('livefeeds');
     
     foreach ( $feeds as $key => $feed ) {
       
-      $streamObj->clearFilter();
-      $streamObj->addFilter('livefeedid', $feed['id'] );
-      $streamObj->addTextFilter("status IS NULL OR status <> 'markedfordeletion'");
-      $feeds[ $key ]['streams']   = $streamObj->getArray();
+      $feeds[ $key ]['streams']   = $feedModel->getStreams( $feed['id'] );
       $feeds[ $key ]['candelete'] = $feedModel->canDeleteFeed( $feed, $feeds[ $key ]['streams'] );
       
     }
