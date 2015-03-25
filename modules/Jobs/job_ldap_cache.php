@@ -583,12 +583,4 @@ function recursive_array_search($needle, $haystack) {
     return false;
 }
 
-?>alue) !== false ) ) {
-            return $current_key;
-        }
-    }
-
-    return false;
-}
-
 ?>
