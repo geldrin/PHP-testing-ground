@@ -256,7 +256,7 @@ class Livefeeds extends \Springboard\Model {
     $ret = array(
       'streams'    => array(),
       'labels'     => array(
-        $info['streams']['defaultstream']['name'],
+        $info['streams']['defaultstream']['quality'],
       ),
       'parameters' => array(
         array(
