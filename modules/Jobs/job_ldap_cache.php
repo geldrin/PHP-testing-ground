@@ -67,10 +67,8 @@ if ( $ldap_groups === false ) {
     $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Cannot query LDAP/AD groups. Exiting...", $sendmail = false);
     exit;
 }
-if ( $ldap_groups->RecordCount() < 1 ) {
-    $debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Nothing to update. Exiting...", $sendmail = false);
-    exit;
-}
+// Nothing to update, exit
+if ( $ldap_groups->RecordCount() < 1 ) exit;
 
 while ( !$ldap_groups->EOF ) {
 
@@ -578,6 +576,14 @@ function recursive_array_search($needle, $haystack) {
     foreach( $haystack as $key => $value ) {
         $current_key = $key;
         if ( $needle === $value OR ( is_array($value) && recursive_array_search($needle, $value) !== false ) ) {
+            return $current_key;
+        }
+    }
+
+    return false;
+}
+
+?>alue) !== false ) ) {
             return $current_key;
         }
     }
