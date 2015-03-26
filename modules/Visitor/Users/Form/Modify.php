@@ -43,6 +43,15 @@ class Modify extends \Visitor\HelpForm {
       $values['departments']
     );
 
+    // a kikapcsolt mezoket nem kuldi a browser, unset
+    foreach( $this->config as $field => $conf ) {
+      if ( $conf['html'] != 'disabled="disabled"' )
+        continue;
+
+      $field = trim( $field, '[]');
+      unset( $values[ $field ] );
+    }
+
     if ( !@$values['password'] )
       unset( $values['password'] );
     else
@@ -68,10 +77,12 @@ class Modify extends \Visitor\HelpForm {
       $values['avatarsourceip'] = $this->bootstrap->config['node_sourceip'];
       
     }
-    
-    $this->userModel->updateRow( $values );
+
+    if ( !empty( $values ) )
+      $this->userModel->updateRow( $values );
+
     $this->userModel->registerForSession();
-    
+
     $this->controller->redirectWithMessage('users/modify', $l('users', 'usermodified') );
     
   }
