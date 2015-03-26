@@ -45,7 +45,7 @@ class Modify extends \Visitor\HelpForm {
 
     // a kikapcsolt mezoket nem kuldi a browser, unset
     foreach( $this->config as $field => $conf ) {
-      if ( $conf['html'] != 'disabled="disabled"' )
+      if ( !isset( $conf['html'] ) or $conf['html'] != 'disabled="disabled"' )
         continue;
 
       $field = trim( $field, '[]');
