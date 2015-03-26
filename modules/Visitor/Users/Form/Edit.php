@@ -60,7 +60,16 @@ class Edit extends \Visitor\HelpForm {
     $values = $this->form->getElementValues( 0 );
     $crypt  = $this->bootstrap->getEncryption();
     $l      = $this->bootstrap->getLocalization();
-    
+
+    // a kikapcsolt mezoket nem kuldi a browser, unset
+    foreach( $this->config as $field => $conf ) {
+      if ( $conf['html'] != 'disabled="disabled"' )
+        continue;
+
+      $field = trim( $field, '[]');
+      unset( $values[ $field ] );
+    }
+
     // ezeket a user sohase valtoztathatja
     unset(
       $values['email'],
