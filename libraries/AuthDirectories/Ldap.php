@@ -55,17 +55,27 @@ class Ldap extends \AuthDirectories\Base {
 
       $isadmin = $access['isadmin'];
 
-      // kotelezo, tobbi lehet hogy nincs
+      // lehet hogy nincs, megprobaljuk tolteni abbol ami van
       $ret['nickname'] = $ldap::implodePossibleArray(' ', $result['sAMAccountName'] );
 
-      if ( isset( $result['mail'] ) )
+      if ( isset( $result['mail'] ) ) {
         $ret['email'] = $ldap::implodePossibleArray(' ', $result['mail'] );
 
-      if ( isset( $result['sn'] ) )
-        $ret['namelast'] = $ldap::implodePossibleArray(' ', $result['sn'] );
+        if ( !$ret['nickname'] )
+          $ret['nickname'] = substr( $ret['email'], 0, strpos( $ret['email'], '@') );
+      }
 
-      if ( isset( $result['givenName'] ) )
+      if ( isset( $result['givenName'] ) ) {
         $ret['namefirst'] = $ldap::implodePossibleArray(' ', $result['givenName'] );
+        if ( !$ret['nickname'] )
+          $ret['nickname'] = $ret['namefirst'];
+      }
+
+      if ( isset( $result['sn'] ) ) {
+        $ret['namelast'] = $ldap::implodePossibleArray(' ', $result['sn'] );
+        if ( !$ret['nickname'] )
+          $ret['nickname'] = $ret['namelast'];
+      }
 
       break;
     }
