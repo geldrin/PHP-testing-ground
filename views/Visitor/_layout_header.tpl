@@ -9,13 +9,13 @@
     {if $member.isnewseditor or $member.isclientadmin or $member.iseditor}
       {assign var=columncount value=$columncount+1}
     {/if}
-    
+
     {if ( $member.isuploader or $member.ismoderateduploader or $member.isclientadmin or $member.iseditor ) or ( $organization.islivestreamingenabled and $member.isliveadmin )}
       {assign var=columncount value=$columncount+1}
     {/if}
-    
+
     <div id="currentuser">
-      <div class="avatar">{if $member.avatarstatus == 'onstorage'}<img src="{$member|@avatarphoto}" width="36" height="36"/>{/if}</div>
+      <div class="avatar"><img src="{$member|@avatarphoto}" width="36" height="36"/></div>
       <div id="currentusercontent">
         <a id="currentusername" href="#">{$member.namefirst|escape:html}<span></span></a>
         <div id="currentusermenu" class="menulayer" style="width: {$columncount*216-216+241}px">
@@ -38,7 +38,7 @@
                 <div class="hr"></div>
             </div>
           {/if}
-          
+
           <div class="column{if $columncount != 4} first{/if}">
             {if $member.isclientadmin}
               <div class="title">{#usermenu_classification_title#}</div>
@@ -71,7 +71,7 @@
               <li><a href="{$language}/groups/create">{#usermenu_groups_create#}</a></li>
             </ul>
             <div class="hr"></div>
-            
+
             {if $member.isuploader or $member.ismoderateduploader or $member.isclientadmin or $member.iseditor}
               <div class="title">{#usermenu_recordings_title#}</div>
               <ul>
@@ -80,7 +80,7 @@
               </ul>
               <div class="hr"></div>
             {/if}
-            
+
             {if $organization.islivestreamingenabled and ( $member.isliveadmin or $member.isclientadmin)}
               <div class="title">{#usermenu_live_title#}</div>
               <ul>
@@ -138,7 +138,7 @@
 </div>
 <div id="headerbottom">
   <div id="headersearch" class="rightbox">
-    
+
     <form action="{$language}/search/all" method="get">
       <button id="headersearchsubmit" type="submit"></button>
       <input class="inputtext inputbackground clearonclick" type="text" name="q" data-origval="{#sitewide_search_input#|escape:html}" value="{$smarty.request.q|default:#sitewide_search_input#|escape:html}"/>
@@ -159,7 +159,7 @@
             </a>
           {/if}
         {/foreach}
-        
+
         <div id="languages">
           {foreach from=$organization.languages key=languageid item=item}
             {if $languageid != $language}
@@ -190,6 +190,6 @@
         <li{if $module == 'featured'} class="active"{/if}><a href="{$language}/recordings/featured/newest">{#sitewide_featured#}</a></li>
       </ul>
     </nav>
-    
+
   </div>
   <div class="clear"></div>
