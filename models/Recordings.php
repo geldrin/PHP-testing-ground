@@ -1085,11 +1085,19 @@ class Recordings extends \Springboard\Model {
           ui.id IS NOT NULL OR
           (
             c.accesstype = 'departmentsorgroups' AND
-            a.groupid IN(
-              (
-                SELECT groupid
-                FROM groups_members
-                WHERE userid = '" . $user['id'] . "'
+            (
+              a.groupid IN(
+                (
+                  SELECT groupid
+                  FROM groups_members
+                  WHERE userid = '" . $user['id'] . "'
+                )
+              ) OR a.departmentid IN(
+                (
+                  SELECT departmentid
+                  FROM users_departments
+                  WHERE userid = '". $user['id'] ."'
+                )
               )
             )
           )
