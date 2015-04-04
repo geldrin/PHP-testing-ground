@@ -2479,6 +2479,20 @@ a#currentusername span {
 #chatcontainer .actions {
   float: right;
 }
+#chatnewmessages {
+  position: absolute;
+  display: block;
+  bottom: 41px;
+  z-index: 10;
+  background: rgba(0,0,0,0.5);
+  width: 100%;
+  text-align: center;
+  color: #fff;
+  padding: 1px 0;
+}
+#chatnewmessages:hover, #chatnewmessages:focus {
+  text-decoration: none;
+}
 #chatlist {
   list-style-type: none;
   padding: 0;

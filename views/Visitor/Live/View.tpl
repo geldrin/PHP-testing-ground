@@ -55,6 +55,7 @@
   </script>
   
   <div id="chat">
+    <a href="#" id="chatnewmessages" style="display: none;">{#live__chatnewmessages#}</a>
     <div class="title">
       {#live__chat_title#}
     </div>

@@ -1196,13 +1196,14 @@ var livechat = function( container, pollurl, polltime ) {
   self.container = $j( container );
   self.pollurl   = pollurl;
   self.polltime  = polltime;
-  self.topposition = null;
   self.needRecaptcha = $j('#live_createchat').attr('data-ishuman') == 'false';
 
   if ( self.container.find('#chatlist').length == 0 )
     self.container.hide();
-  
+
   self.container.scrollTop( self.container.get(0).scrollHeight );
+  self.wasAtBottom = true;
+
   $j('a.moderate').live('click', function(e) {
     e.preventDefault();
     self.onModerate( $j(this) );
@@ -1211,12 +1212,33 @@ var livechat = function( container, pollurl, polltime ) {
     e.preventDefault();
     self.onSubmit();
   });
-  
+  $j('#chatnewmessages').live('click', function(e) {
+    e.preventDefault();
+    self.onScroll(true);
+  });
+  self.container.scroll( $j.proxy( self.onScroll, self ) );
+
   self.beforeSend = $j.proxy( self.beforeSend, self );
   self.onComplete = $j.proxy( self.onComplete, self );
   self.onPoll     = $j.proxy( self.onPoll, self );
   self.poll();
   
+};
+livechat.prototype.tryScroll = function() {
+  if (this.wasAtBottom) {
+    $j('#chatnewmessages').hide();
+    this.container.scrollTop( this.container.get(0).scrollHeight );
+  } else
+    $j('#chatnewmessages').show();
+};
+livechat.prototype.onScroll = function(force) {
+  if (typeof(force) == 'boolean' && force)
+    this.container.scrollTop( this.container.get(0).scrollHeight );
+
+  var scrollBottom = this.container.get(0).scrollTop + this.container.innerHeight();
+  this.wasAtBottom = scrollBottom == $j('#chatcontainer').get(0).scrollHeight;
+  if (this.wasAtBottom)
+    $j('#chatnewmessages').hide();
 };
 livechat.prototype.beforeSend = function() {
   $j('#spinner').show();
@@ -1271,11 +1293,7 @@ livechat.prototype.onPoll = function( data ) {
   this.container.attr('data-lastmodified', data.lastmodified );
   this.container.html( data.html );
 
-  if ( this.topposition !== null ) {
-    this.container.scrollTop( this.topposition );
-    this.topposition = null;
-  } else
-    this.container.scrollTop( this.container.get(0).scrollHeight );
+  this.tryScroll();
 
   if ( this.container.find('#chatlist').length == 0 )
     this.container.hide();
@@ -1294,7 +1312,6 @@ livechat.prototype.onModerate = function( elem ) {
       type      : 'GET'
     };
   
-  this.topposition = this.container.get(0).scrollTop;
   this.moderateOptions.url = elem.attr('href');
   $j.ajax( this.moderateOptions );
   
