@@ -501,6 +501,7 @@ class Controller extends \Visitor\Controller {
       $this->invitationcache['user-' . $invitation['userid'] ] =
         $db->getRow("
           SELECT
+            id,
             nameprefix,
             namefirst,
             namelast,
