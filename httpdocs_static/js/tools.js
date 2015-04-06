@@ -1235,8 +1235,9 @@ livechat.prototype.onScroll = function(force) {
   if (typeof(force) == 'boolean' && force)
     this.container.scrollTop( this.container.get(0).scrollHeight );
 
-  var scrollBottom = this.container.get(0).scrollTop + this.container.innerHeight();
-  this.wasAtBottom = scrollBottom == $j('#chatcontainer').get(0).scrollHeight;
+  var ctr = this.container.get(0);
+  var scrollBottom = ctr.scrollTop + this.container.innerHeight();
+  this.wasAtBottom = scrollBottom == ctr.scrollHeight;
   if (this.wasAtBottom)
     $j('#chatnewmessages').hide();
 };
