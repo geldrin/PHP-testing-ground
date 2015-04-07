@@ -775,6 +775,26 @@ class Livefeeds extends \Springboard\Model {
     
   }
   
+  public function getAllChat() {
+    $this->ensureID();
+    return $this->db->query("
+      SELECT
+        lc.*,
+        SUBSTRING_INDEX(lc.anonymoususer, '_', 1) AS anonuserid,
+        u.nickname,
+        u.nameformat,
+        u.nameprefix,
+        u.namefirst,
+        u.namelast
+      FROM livefeed_chat AS lc
+      LEFT JOIN users AS u ON(
+        lc.userid = u.id
+      )
+      WHERE lc.livefeedid = '" . $this->id . "'
+      ORDER BY lc.id ASC
+    ");
+  }
+
   public function getChat() {
     
     $this->ensureID();

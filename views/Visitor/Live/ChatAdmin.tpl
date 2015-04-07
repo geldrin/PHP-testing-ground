@@ -1,6 +1,7 @@
 {include file="Visitor/_header.tpl" islive=true}
 
 <div class="title">
+  <div class="actions"><a href="{$language}/live/chatexport/{$feed.id}">{#live__chatexport#}</a></div>
   <h1>{#live__chatadmin_title#}</h1>
   <h2><a href="{$language}/live/view/{$feed.id},{$feed.name|filenameize}">{$channel.title|escape:html|mb_wordwrap:25}</a></h2>
 </div>
