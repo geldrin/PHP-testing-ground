@@ -33,6 +33,7 @@
       {if !empty( $feed.streams )}
         | <a href="#" class="liveembed">{#live__embed#}</a>
       {/if}
+      | <a href="{$language}/live/chatadmin/{$feed.id}">{#live__chatadmin#}</a>
    </td>
     <td class="streamcolumn">
       <table class="stream">

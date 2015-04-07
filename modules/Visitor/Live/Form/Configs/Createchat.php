@@ -12,6 +12,13 @@ $config = array(
     'value' => '',
   ),
 
+  'isquestion' => array(
+    'displayname' => $l('live', 'chatquestion'),
+    'type'        => 'inputCheckbox',
+    'onvalue'     => 1,
+    'offvalue'    => 0,
+  ),
+
   'text' => array(
     'displayname' => $l('live', 'chat_text'),
     'type'        => 'inputText',

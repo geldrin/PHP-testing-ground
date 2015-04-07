@@ -2479,6 +2479,14 @@ a#currentusername span {
 #chatcontainer .actions {
   float: right;
 }
+#chatcontainer .actions .copypaste {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  position: relative;
+  top: 2px;
+  background-image: url(images/icons/clipboard.png);
+}
 #chatnewmessages {
   position: absolute;
   display: block;
@@ -2501,8 +2509,14 @@ a#currentusername span {
 #chatlist li {
   padding: 5px 10px 5px 5px;
 }
+#chatlist li.question {
+  background-color: #6FC7F2;
+}
 #chatlist li.self {
   background-color: #f7f7f7;
+}
+#chatlist li.self.question {
+  background-color: #A6D7EF;
 }
 #chatlist li.waitingforapproval {
   background-color: #FDFFC3;

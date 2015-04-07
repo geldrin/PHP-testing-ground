@@ -11,12 +11,13 @@
       <input type="text" name="text" id="text" value=""/>
       <div id="moderationalertcontainer" style="display: none">{#live__chat_alert_waitingforapproval#}</div>
     </div>
+    <input id="isquestion" name="isquestion" type="checkbox"><label for="isquestion">{#live__chatquestion#}</label>
     <input type="submit" value="{#live__chat_submit#}"/>
     <div id="spinnercontainer"><img src="{$STATIC_URI}images/spinner.gif" width="16" height="16" id="spinner"/></div>
     
   </form>
 {elseif $smarty.request.chromeless or $chromeless}
   <br/>
-  <a href="{$language}/users/login?chromeless=true&force=1&forward={$FULL_URI|escape:url}">{if $needauth}{#live__chatneedauth#}{else}{#live__logintochat#}{/if}</a>
+  <a href="{$language}/users/login?chromeless=true&amp;force=1&amp;forward={$FULL_URI|escape:url}">{if $needauth}{#live__chatneedauth#}{else}{#live__logintochat#}{/if}</a>
   <br/>
 {/if}

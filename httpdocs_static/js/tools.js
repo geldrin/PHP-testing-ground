@@ -1191,12 +1191,13 @@ function setupLiveChat() {
 }
 
 var livechat = function( container, pollurl, polltime ) {
-  
+
   var self       = this;
   self.container = $j( container );
   self.pollurl   = pollurl;
   self.polltime  = polltime;
   self.needRecaptcha = $j('#live_createchat').attr('data-ishuman') == 'false';
+  self.checkQuestionTimeout = null;
 
   if ( self.container.find('#chatlist').length == 0 )
     self.container.hide();
@@ -1204,6 +1205,8 @@ var livechat = function( container, pollurl, polltime ) {
   self.container.scrollTop( self.container.get(0).scrollHeight );
   self.wasAtBottom = true;
 
+  $j('#chatcontainer .actions .copypaste').live('click', this.copyPaste);
+  $j('#text').live('keypress', this.onKeyPress);
   $j('a.moderate').live('click', function(e) {
     e.preventDefault();
     self.onModerate( $j(this) );
@@ -1216,13 +1219,19 @@ var livechat = function( container, pollurl, polltime ) {
     e.preventDefault();
     self.onScroll(true);
   });
+
   self.container.scroll( $j.proxy( self.onScroll, self ) );
 
   self.beforeSend = $j.proxy( self.beforeSend, self );
   self.onComplete = $j.proxy( self.onComplete, self );
   self.onPoll     = $j.proxy( self.onPoll, self );
   self.poll();
-  
+
+};
+livechat.prototype.copyPaste = function(e) {
+  e.preventDefault();
+  text = $j(this).parents('li').find('.content').text();
+  window.prompt(l.chatcopypaste, text);
 };
 livechat.prototype.tryScroll = function() {
   if (this.wasAtBottom) {
@@ -1293,6 +1302,7 @@ livechat.prototype.onPoll = function( data ) {
   this.polltime = data.polltime;
   this.container.attr('data-lastmodified', data.lastmodified );
   this.container.html( data.html );
+  $j('#isquestion').attr('checked', false);
 
   this.tryScroll();
 
@@ -1316,6 +1326,16 @@ livechat.prototype.onModerate = function( elem ) {
   this.moderateOptions.url = elem.attr('href');
   $j.ajax( this.moderateOptions );
   
+};
+livechat.prototype.onKeyPress = function() {
+  if (this.checkQuestionTimeout)
+    clearTimeout(this.checkQuestionTimeout);
+
+  this.checkQuestionTimeout = setTimeout(function() {
+    var text = $j.trim( $j('#text').val() );
+    if (/\?$/.test(text))
+      $j('#isquestion').attr('checked', 'checked');
+  }, 300);
 };
 livechat.prototype.onSubmit = function() {
   var self = this;

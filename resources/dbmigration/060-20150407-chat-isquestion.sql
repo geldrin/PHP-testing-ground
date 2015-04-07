@@ -1,0 +1,1 @@
+ALTER TABLE  `livefeed_chat` ADD  `isquestion` INT NOT NULL DEFAULT  '0';
