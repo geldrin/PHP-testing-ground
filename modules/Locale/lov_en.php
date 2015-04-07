@@ -108,9 +108,9 @@ return array(
   ),
   
   'chatmoderation' => array(
-    -1 => 'Awaiting moderation',
-    0  => 'Accepted',
-    1  => 'Censored',
+    -1 => 'awaiting moderation',
+    0  => 'accepted',
+    1  => 'censored',
   ),
   
   'feedtype' => array(

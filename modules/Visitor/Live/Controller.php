@@ -352,16 +352,17 @@ class Controller extends \Visitor\Controller {
     header('Content-Type: application/octet-stream');
     header('Content-Disposition: attachment; filename=' . $filename );
 
+    $delim  = ";";
     $handle = fopen('php://output', 'w');
     $fields = array(
-      'timestamp',
-      'nick/anonymoususer',
-      'text',
-      'isquestion?',
-      'moderation status',
-      'ipaddress',
+      $l('live', 'chat_csv_timestamp'),
+      $l('live', 'chat_csv_nick'),
+      $l('live', 'chat_csv_text'),
+      $l('live', 'chat_csv_isquestion'),
+      $l('live', 'chat_csv_moderation'),
+      $l('live', 'chat_csv_ipaddress'),
     );
-    fputcsv( $handle, $fields );
+    fputcsv( $handle, $fields, $delim );
 
     foreach( $chatrs as $row ) {
       if ( $row['userid'] )
@@ -377,7 +378,7 @@ class Controller extends \Visitor\Controller {
         $l->getLov('chatmoderation', null, $row['moderated']),
         $row['ipaddress'],
       );
-      fputcsv( $handle, $data );
+      fputcsv( $handle, $data, $delim );
     }
 
     fclose( $handle );
