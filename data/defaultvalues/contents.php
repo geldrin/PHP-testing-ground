@@ -443,6 +443,16 @@ return array (
     'bodyen' => '<p>To view this recording preliminary recordings must be accomplished. Content owner demands linear progress.</p>',
     'body_stringid' => 0,
   ),
+  37 => 
+  array (
+    'title' => 'Jogosultság hiba',
+    'titleen' => 'Authorization error',
+    'shortname' => 'courserestricted',
+    'title_stringid' => 0,
+    'body' => '<p>Önnek nincs jogosultsága a kurzus felvételeihez.</p>',
+    'bodyen' => '<p>You are not authorized to play recordings in this course.</p>',
+    'body_stringid' => 0,
+  ),
 
 
 );
