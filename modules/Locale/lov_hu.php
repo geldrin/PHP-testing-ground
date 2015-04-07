@@ -145,9 +145,9 @@ return array(
   ),
 
   'chatmoderation' => array(
-    -1 => 'Moderálásra vár',
-    0  => 'Engedélyezve',
-    1  => 'Cenzúrázva',
+    -1 => 'moderálásra vár',
+    0  => 'engedélyezve',
+    1  => 'cenzúrázva',
   ),
   
   'feedtype' => array(
