@@ -113,7 +113,8 @@ for ($i = 0; $i < count($org_contracts); $i++ ) {
 			u.organizationid = " . $org_contracts[$i]['orgid'] . " AND
 			u.isusergenerated = 1 AND
 			u.firstloggedin > '" . $firstloggedin_startdate . "' AND
-			u.firstloggedin < '" . $firstloggedin_enddate . "'
+			u.firstloggedin < '" . $firstloggedin_enddate . "' AND
+            u.email REGEXP '^felh[0-9][0-9][0-9][0-9]@.+'
 		GROUP BY
 			u.id
 		ORDER BY
@@ -130,7 +131,6 @@ for ($i = 0; $i < count($org_contracts); $i++ ) {
 	
 	// User exist in DB, regenerate
 	if ( $users->RecordCount() < 1 ) {
-//		echo "No activated users found for this organization\n";
 		continue;
 	}
 	
