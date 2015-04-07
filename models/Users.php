@@ -997,10 +997,10 @@ class Users extends \Springboard\Model {
       'actual'   => $values[0]
     );
 
-    if ( !$crypt->hashEqual( $hashinfo ) or !$value[1] )
+    if ( !$crypt->hashEqual( $hashinfo ) or !$values[1] )
       return array();
 
-    $id = intval( $crypt->asciiDecrypt( $value[1] ) );
+    $id = intval( $crypt->asciiDecrypt( $values[1] ) );
     if ( !$id )
       return array();
 
