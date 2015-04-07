@@ -107,6 +107,12 @@ return array(
     'nochat'         => 'Chat disabled',
   ),
   
+  'chatmoderation' => array(
+    -1 => 'Awaiting moderation',
+    0  => 'Accepted',
+    1  => 'Censored',
+  ),
+  
   'feedtype' => array(
     'live' => 'Live recording',
     'vcr'  => 'Record videoconference',

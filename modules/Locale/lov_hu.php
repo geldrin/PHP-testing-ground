@@ -143,6 +143,12 @@ return array(
     'premoderation'  => 'Megjelenés előtt moderált hozzászólások',
     'nochat'         => 'Hozzászólások letiltva',
   ),
+
+  'chatmoderation' => array(
+    -1 => 'Moderálásra vár',
+    0  => 'Engedélyezve',
+    1  => 'Cenzúrázva',
+  ),
   
   'feedtype' => array(
     'live' => 'Élő felvétel',

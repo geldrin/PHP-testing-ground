@@ -34,6 +34,7 @@
         | <a href="#" class="liveembed">{#live__embed#}</a>
       {/if}
       | <a href="{$language}/live/chatadmin/{$feed.id}">{#live__chatadmin#}</a>
+      | <a href="{$language}/live/chatexport/{$feed.id}">{#live__chatexport#}</a>
    </td>
     <td class="streamcolumn">
       <table class="stream">

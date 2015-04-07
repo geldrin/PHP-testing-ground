@@ -20,6 +20,7 @@ class Controller extends \Visitor\Controller {
     'deletestream'         => 'liveadmin|clientadmin',
     'managefeeds'          => 'liveadmin|clientadmin',
     'chatadmin'            => 'liveadmin|clientadmin',
+    'chatexport'           => 'liveadmin|clientadmin',
     'viewers'              => 'liveadmin|clientadmin',
     'togglestream'         => 'liveadmin|clientadmin',
     'getstreamstatus'      => 'liveadmin|clientadmin',
@@ -327,7 +328,62 @@ class Controller extends \Visitor\Controller {
     $this->smartyOutput('Visitor/Live/ChatAdmin.tpl');
 
   }
-  
+
+  public function chatexportAction() {
+    $feedModel = $this->modelIDCheck(
+      'livefeeds',
+      $this->application->getNumericParameter('id')
+    );
+    $channelModel = $this->modelIDCheck('channels', $feedModel->row['channelid'] );
+    $l = $this->bootstrap->getLocalization();
+
+    $chatrs   = $feedModel->getAllChat();
+    $filename = sprintf(
+      "%s-%s-%s-chat.csv",
+      \Springboard\Filesystem::filenameize( $channelModel->row['title'] ),
+      $feedModel->row['channelid'],
+      $feedModel->id
+    );
+
+    include_once( $this->bootstrap->config['templatepath'] . 'Plugins/modifier.nickformat.php');
+
+    header("Pragma: ");
+    header("Cache-Control: ");
+    header('Content-Type: application/octet-stream');
+    header('Content-Disposition: attachment; filename=' . $filename );
+
+    $handle = fopen('php://output', 'w');
+    $fields = array(
+      'timestamp',
+      'nick/anonymoususer',
+      'text',
+      'isquestion?',
+      'moderation status',
+      'ipaddress',
+    );
+    fputcsv( $handle, $fields );
+
+    foreach( $chatrs as $row ) {
+      if ( $row['userid'] )
+        $nick = smarty_modifier_nickformat( $row );
+      else
+        $nick = $row['anonymoususer'];
+
+      $data = array(
+        $row['timestamp'],
+        $nick,
+        $row['text'],
+        $row['isquestion'],
+        $l->getLov('chatmoderation', null, $row['moderated']),
+        $row['ipaddress'],
+      );
+      fputcsv( $handle, $data );
+    }
+
+    fclose( $handle );
+
+  }
+
   public function deleteAction() {
 
     $channelModel = $this->modelOrganizationAndUserIDCheck(
