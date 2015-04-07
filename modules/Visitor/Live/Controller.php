@@ -19,6 +19,7 @@ class Controller extends \Visitor\Controller {
     'modifystream'         => 'liveadmin|clientadmin',
     'deletestream'         => 'liveadmin|clientadmin',
     'managefeeds'          => 'liveadmin|clientadmin',
+    'chatadmin'            => 'liveadmin|clientadmin',
     'viewers'              => 'liveadmin|clientadmin',
     'togglestream'         => 'liveadmin|clientadmin',
     'getstreamstatus'      => 'liveadmin|clientadmin',
@@ -300,6 +301,31 @@ class Controller extends \Visitor\Controller {
     $this->toSmarty['channel'] = $channelModel->row;
     $this->smartyOutput('Visitor/Live/Managefeeds.tpl');
     
+  }
+  
+  public function chatadminAction() {
+
+    $feedModel = $this->modelIDCheck(
+      'livefeeds',
+      $this->application->getNumericParameter('id')
+    );
+    $channelModel = $this->modelIDCheck('channels', $feedModel->row['channelid'] );
+
+    // access init, a ->getChat mindig elvarja hogy a session pre-authorized legyen
+    $user      = $this->bootstrap->getSession('user');
+    $access    = $this->bootstrap->getSession('liveaccess');
+    $accesskey = $feedModel->id . '-' . ( $feedModel->row['issecurestreamingforced']? '1': '0');
+    $access[ $accesskey ] = $feedModel->isAccessible( $user, $this->organization );
+
+    $this->toSmarty['liveadmin']    = true;
+    $this->toSmarty['chatitems']    = $feedModel->getChat();
+    $this->toSmarty['chat']         = $this->fetchSmarty('Visitor/Live/Chat.tpl');
+    $this->toSmarty['lastmodified'] = md5( $this->toSmarty['chat'] );
+    $this->toSmarty['feed']         = $feedModel->row;
+    $this->toSmarty['channel']      = $channelModel->row;
+    $this->toSmarty['chatpolltime'] = $this->bootstrap->config['chatpolltimems'];
+    $this->smartyOutput('Visitor/Live/ChatAdmin.tpl');
+
   }
   
   public function deleteAction() {
