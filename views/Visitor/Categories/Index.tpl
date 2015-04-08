@@ -4,13 +4,21 @@
 </div>
 
 <ul class="categorylist">
+{capture assign=imgbase}
+{if $organization.hascustomcategories}
+  {$STATIC_URI}files/organizations/{$organization.id}/
+{else}
+  {$STATIC_URI}images/
+{/if}
+{/capture}
+{assign var=imgbase value=$imgbase|trim}
 {foreach from=$categories item=category name=category}
   
   <li{if $smarty.foreach.category.last} class="last"{/if}>
     <div class="categoryname">
       <h2><a href="{$language}/categories/details/{$category.id},{$category.name|filenameize}" title="{$category.name|escape:html}">{$category.namehyphenated|default:$category.name|escape:html}</a></h2>
       <div class="numberofrecordings">({$category.numberofrecordings|default:0})</div>
-      <a href="{$language}/categories/details/{$category.id},{$category.name|filenameize}" class="categorypic"><img src="{$STATIC_URI}images/categories/114/{$category.iconfilename}" /></a>
+      <a href="{$language}/categories/details/{$category.id},{$category.name|filenameize}" class="categorypic"><img src="{$imgbase}categories/114/{$category.iconfilename}" /></a>
     </div>
     <ul class="subcategorylist">
       {foreach from=$category.children item=subcategory}
