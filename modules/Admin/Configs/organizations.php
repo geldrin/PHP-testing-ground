@@ -309,6 +309,13 @@ $config = Array(
     'value'       => 0,
   ),
 
+  'hascustomcategories' => array(
+    'displayname' => 'Egyedi ikonok használata a kategóriaoldalon',
+    'type'        => 'inputRadio',
+    'values'      => $l->getLov('yesno'),
+    'value'       => 0,
+  ),
+
   'disabled' => array(
     'displayname' => 'Kitiltva?',
     'type'        => 'inputRadio',
