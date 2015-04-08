@@ -130,10 +130,10 @@ global $app, $debug, $jconf;
 		$encpars['videobpp_source'] = $rec[$idx . 'mastervideobitrate'] / ( $videores[0] * $videores[1] * $rec[$idx . 'mastervideofps'] );
 		// BPP check and update: use input BPP if lower than profile BPP
 		$encpars['videobpp'] = $profile['videobpp'];
-		if ( $encpars['videobpp_source'] < $profile['videobpp'] ) $encpars['videobpp'] = $encpars['videobpp_source'];
+		// if ( $encpars['videobpp_source'] < $profile['videobpp'] ) $encpars['videobpp'] = $encpars['videobpp_source'];
 		// Over 30 fps, we does not calculate same bpp for all the frames. Compensate 50% for extra frames.
 		$fps_bps_normalized = $encpars['videofps'];
-		if ( $encpars['videofps'] > 30 ) $fps_bps_normalized = 30 + round( ( $encpars['videofps'] - 30 ) / 2 );
+		if ( $encpars['videofps'] > 25 ) $fps_bps_normalized = 25 + round( ( $encpars['videofps'] - 25 ) / 3 );
 		$encpars['videofps_bps_normalized'] = $fps_bps_normalized;
 		$encpars['videobitrate'] = $encpars['videobpp'] * $encpars['resx'] * $encpars['resy'] * $fps_bps_normalized;
 		// Max bitrate check and clip
