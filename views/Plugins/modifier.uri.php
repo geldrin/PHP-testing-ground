@@ -13,15 +13,15 @@ function smarty_modifier_uri( $organization, $type, $scheme = null ) {
   if ( $type == 'emaillogo' ) {
 
     $lang  = \Springboard\Language::get();
-    $index = 'logofilename';
+    $index = 'emaillogofilename';
     if ( $lang == 'en' )
       $index .= 'en';
 
     if ( @$organization[ $index ] )
       $url .= sprintf(
-        'files/organizations/%s_email.%s.png',
+        'files/organizations/%s/%s',
         $organization['id'],
-        $lang
+        $organization[ $index ]
       );
     else
       $url .= 'images/email_header.png';
