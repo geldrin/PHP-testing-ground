@@ -32,17 +32,7 @@ if ( iswindows() ) {
 	echo "ERROR: Non-Windows process started on Windows platform\n";
 	exit;
 }
-// DEBUG
-$recording = array(
-		'id' => 148,
-		'master_path' => null,
-		'mastervideoextension' => 'webm',
-	);
-$recording['master_path'] = $jconf['master_dir'] . $recording['id'] . "/";
-$err = directory_size($recording['master_path'] ."*.". $recording['mastervideoextension']);
-var_dump($err);
-exit;
-// DEBUG
+
 // Log buffer
 $log_buffer = array();
 
