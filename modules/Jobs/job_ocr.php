@@ -52,7 +52,6 @@ if ($tmp === 1) {
 unset($tmp, $nicelevel);
 
 /////////////////////////////////////////// LAUNCH AREA ///////////////////////////////////////////
-// test();die; // DEBUG
 
 $debug->log($logdir, $logfile, str_pad("[ OCR Job started ]", 100, '=', STR_PAD_BOTH), false);
 Main(); // Run main loop
@@ -88,29 +87,7 @@ class OCRException extends Exception {
 		return $this->command;
 	}
 }
-/*function test() { // DEBUG FUNCTION
-	global $app, $jconf;
-	try {
-		try {
-			$recording = array('id' => 9);
-			$srv = "stream.videosquare.eu";
-			$src = $jconf['ocr_dir'] . $recording['id'] ."/ocr/";
-			$dst = $app->config['recordingpath'] . ( $recording['id'] % 1000 ) .'/'. $recording['id'] .'/'; // $rec_base_dir_remote
 
-			$err_copy = ssh_filecopy2($srv, $src, $dst, false);
-			throw new Exception('! FAKE ERROR !'); // fake exception
-			var_dump($err_copy);
-		} catch (Exception $e) {
-			throw new OCRException($err_copy['message'], $err_copy['result'], $err_copy['command'], $err_copy['code'], $e);
-		}
-	} catch (OCRException $oe) {
-		$msg  = "OCRException CAUGHT!\n";
-		$msg .= " > Command: ". $oe->getCommand() ."\n";
-		$msg .= " > Message: ". $oe->getMessage() ."\n";
-		$msg .= " > Info: ".    $oe->getData()    ."\n";
-		var_dump($msg);
-	}
-}*/
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 function Main() {
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -376,31 +353,6 @@ function Main() {
 			} catch(Exception $e) {
 				throw new OCRException($e->getMessage(), $dat, $cmd, OCR_UPLOAD_FAILED);
 			}
-			
-			/*$files = array_slice(scandir($snapdir), 2);
-			
-			$msg = "Uploading OCR frames from '". $snapdir ."' to '". $ocr_dst_dir ."'.\n";
-
-			$copy_err = null;
-			foreach ($files as $f) {
-				$copy_err = ssh_filecopy2($server, $snapdir . $f, $ocr_dst_dir, $upload = false);
-				
-				if ($copy_err['code'] === false) {
-					$msg .= "[ERROR] Copying OCR snapshots to frontend has been failed!\nMESSAGE:\n". $copy_err['message'] ."\nRESULT:". $copy_err['result'];
-					
-					$sleep_duration *= 10;
-					throw new OCRException($msg, $copy_err['result'], $copy_err['command'], OCR_UPLOAD_FAILED);
-				}
-			}
-			
-			if ($copy_err['code'] === true) {
-				$msg = "OCR copying to frontend has been completed.\nMESSAGE: ". $copy_err['message'];
-				$debug->log($logdir, $logfile, $msg, false);
-				echo $msg;
-				updateOCRstatus($recording['id'], null, $jconf['dbstatus_copystorage_ok']);
-			} else {
-				throw new OCRException($msg, $copy_err['result'], $copy_err['command'], OCR_UPLOAD_FAILED);
-			}*/
 			
 			$report  = "OCR PROCESS WAS SUCCESSFUL!\n";
 			$report .= " > Total frames: ". $OCRresult['total'] ."\n";
