@@ -666,7 +666,8 @@ global $db, $app, $debug, $jconf;
 		}
 
 		// SSH: copy SMIL file to server
-		$smil_remote_filename = $app->config['recordingpath'] . ( $recording['id'] % 1000 ) . "/" . $recording['id'] . "/" . $recording['id'] . $smil_filename_suffix . ".smil";
+		$remotedir = $app->config['recordingpath'] . ( $recording['id'] % 1000 ) . "/" . $recording['id'] . "/";
+		$smil_remote_filename = $remotedir . $recording['id'] . $smil_filename_suffix . ".smil";
 
 		$err = ssh_filecopy2($recording[$idx . 'mastersourceip'], $smil_filename, $smil_remote_filename, false);
 		if ( !$err['code'] ) {
@@ -675,6 +676,21 @@ global $db, $app, $debug, $jconf;
 			continue;
 		} else {
 			$debug->log($jconf['log_dir'], $jconf['jobid_conv_control'] . ".log", "[INFO] SMIL file updated.\nCOMMAND: " . $err['command'], $sendmail = false);
+			
+			$err_fsize = null;
+			$err_fsize = ssh_filesize($recording[$idx . 'mastersourceip'], $remotedir);
+			
+			if (!$err_fsize['code'])
+				$msg = "[WARN] ssh_filesize() failed. Message: ". $err_fsize['message'];
+			
+			$update = array('recordingdatasize' => intval($err_fsize['value']));
+			$recDoc = $app->bootstrap->getModel('recordings');
+			$recDoc->select($recording['id']);
+			$recDoc->updateRow($update);
+			$msg = "[INFO] recording_datasize updated. Value: ". intval($err_fsize['value']);
+			
+			$debug->log($jconf['log_dir'], $jconf['jobid_conv_control'] .".log", $msg, false);
+			unset($msg, $err_fsize, $update, $recDoc);
 		}
 
 		// SSH: chmod new remote files

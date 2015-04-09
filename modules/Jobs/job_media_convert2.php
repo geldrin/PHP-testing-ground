@@ -32,7 +32,17 @@ if ( iswindows() ) {
 	echo "ERROR: Non-Windows process started on Windows platform\n";
 	exit;
 }
-
+// DEBUG
+$recording = array(
+		'id' => 148,
+		'master_path' => null,
+		'mastervideoextension' => 'webm',
+	);
+$recording['master_path'] = $jconf['master_dir'] . $recording['id'] . "/";
+$err = directory_size($recording['master_path'] ."*.". $recording['mastervideoextension']);
+var_dump($err);
+exit;
+// DEBUG
 // Log buffer
 $log_buffer = array();
 
@@ -732,21 +742,39 @@ function copyMediaToFrontEnd($recording, $profile) {
 	}
 
 	// Recording size: update database value
-	$err = ssh_filesize($recording[$idx .'mastersourceip'], $recording['recording_remote_path'] . "master/");
+	$msg = null;
 	$master_filesize = 0;
-	if ( $err['code'] ) $master_filesize = $err['value'];
-	$err = ssh_filesize($recording[$idx .'mastersourceip'], $recording['recording_remote_path']);
 	$recording_filesize = 0;
-	if ( $err['code'] ) $recording_filesize = $err['value'];
+	
+	if ($recording[$idx .'masterstatus'] == $jconf['dbstatus_uploaded']) {
+		$err = directory_size($recording['master_path']);
+	} else {
+		$err = ssh_filesize($recording[$idx .'mastersourceip'], $recording['recording_remote_path'] . "master/");
+	}
+	
+	if ( !$err['code']) {
+		$msg .= "[WARN] Master filesize cannot be acquired! Message:\n". $err['command_output'] ."\n";
+	} else {
+		$master_filesize = $err['value'];
+	}
+	
+	$err = ssh_filesize($recording[$idx .'mastersourceip'], $recording['recording_remote_path']);
+	if ( $err['code'] ) {
+		$recording_filesize = $err['value'];
+	} else {
+		$msg .= "[WARN] Recording filesize cannot be acquired! Message:\n". $err['command_output'] ."\n";
+	}
+	
 	// Update DB
 	$values = array(
-		'masterdatasize'	=> $master_filesize,
-		'recordingdatasize'	=> $recording_filesize
+		'masterdatasize'    => $master_filesize,
+		'recordingdatasize' => $recording_filesize,
 	);
 	$recDoc = $app->bootstrap->getModel('recordings');
 	$recDoc->select($recording['id']);
 	$recDoc->updateRow($values);
-	$debug->log($jconf['log_dir'], $jconf['jobid_media_convert'] . ".log", "[INFO] Recording filesize updated.\n\n" . print_r($values, true), $sendmail = false);
+	$debug->log($jconf['log_dir'], $jconf['jobid_media_convert'] . ".log", $msg ."[INFO] Recording filesize updated.\n\n" . print_r($values, true), $sendmail = false);
+	unset($err, $master_filesize, $msg, $recording_filesize);
 
 	// Remove temporary directory, no failure if not successful
 	$err = remove_file_ifexists($recording['temp_directory']);
