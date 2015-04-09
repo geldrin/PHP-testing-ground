@@ -114,7 +114,7 @@ for ($i = 0; $i < count($org_contracts); $i++ ) {
 			u.isusergenerated = 1 AND
 			u.firstloggedin > '" . $firstloggedin_startdate . "' AND
 			u.firstloggedin < '" . $firstloggedin_enddate . "' AND
-            u.email REGEXP '^felh[0-9][0-9][0-9][0-9]@.+'
+			u.email REGEXP '^felh[\d]+@.+'
 		GROUP BY
 			u.id
 		ORDER BY
