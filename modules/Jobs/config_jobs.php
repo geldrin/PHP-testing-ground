@@ -33,8 +33,9 @@ return array('config_jobs' => array(
 	'jobid_watcher'         => 'watcher',
 	'jobid_acc'             => 'job_accounting',
 	'jobid_live_thumb'      => 'job_live_thumbnail',
-    'jobid_ldap_cache'      => 'job_ldap_cache',
-    'jobid_live_counters'   => 'job_live_counters',
+	'jobid_ldap_cache'      => 'job_ldap_cache',
+	'jobid_live_counters'   => 'job_live_counters',
+	'jobid_stats_recseg'    => 'job_stats_recsegments',
 
 	// File system related settings
 	'file_owner'            => 'conv:vsq',  // conv:vsq
