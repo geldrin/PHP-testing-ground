@@ -311,30 +311,47 @@ function Main() {
 			unset($msg);
 			
 			// Konyvtarak feltoltese
-			$snapdir = $jconf['ocr_dir'] . $recording['id'] ."/ocr". DIRECTORY_SEPARATOR;
-			$files = array_slice(scandir($snapdir), 2);
+			$snapdir = $jconf['ocr_dir'] . $recording['id'] ."/ocr/";
+			$msg = "Uploading OCR frames from '". $snapdir ."' to '". $ocr_dst_dir ."'\n";
+			$dat = null;
+			$cmd = null;
 			
-			$msg = "Uploading OCR frames from '". $snapdir ."' to '". $ocr_dst_dir ."'.\n";
-
-			$copy_err = null;
-			foreach ($files as $f) {
-				$copy_err = ssh_filecopy2($server, $snapdir . $f, $ocr_dst_dir, $upload = false);
+			try {
+				$copy_err = $err_fsize = null;
+				$copy_err = ssh_filecopy2($server, $snapdir, $ocr_dst_dir, $upload = false);
 				
-				if ($copy_err['code'] === false) {
+				if (!$copy_err['code']) {
 					$msg .= "[ERROR] Copying OCR snapshots to frontend has been failed!\nMESSAGE:\n". $copy_err['message'] ."\nRESULT:". $copy_err['result'];
+					$dat  = $copy_err['result'];
+					$cmd  = $copy_err['command'];
 					
 					$sleep_duration *= 10;
-					throw new OCRException($msg, $copy_err['result'], $copy_err['command'], OCR_UPLOAD_FAILED);
+					throw new Exception($msg);
 				}
-			}
-			
-			if ($copy_err['code'] === true) {
-				$msg = "OCR copying to frontend has been completed.\nMESSAGE: ". $copy_err['message'];
+				$msg .= "OCR copying to frontend has been completed.\nMESSAGE: ". $copy_err['message'];
 				$debug->log($logdir, $logfile, $msg, false);
-				echo $msg;
+				
 				updateOCRstatus($recording['id'], null, $jconf['dbstatus_copystorage_ok']);
-			} else {
-				throw new OCRException($msg, $copy_err['result'], $copy_err['command'], OCR_UPLOAD_FAILED);
+				
+				$err_fsize = ssh_filesize($server, $rec_base_dir_remote);
+				
+				if (!$err_fsize['code']) {
+					$msg = "[WARN] ssh_filesize() failed. Message: ". $err_fsize['message'];
+					$debug->log($logdir, $logfile, $msg, false);
+				}
+				
+				$update = array('recordingdatasize' => intval($err_fsize['value']));
+				$recDoc = $app->bootstrap->getModel('recordings');
+				$recDoc->select($recording['id']);
+				$recDoc->updateRow($update);
+				
+				$msg = "[INFO] recording_datasize updated. Values: ". print_r($update, 1);
+				$debug->log($logdir, $logfile, $msg, false);
+					
+				unset($msg, $recDoc, $update);
+				
+			} catch(Exception $e) {
+				throw new OCRException($e->getMessage(), $dat, $cmd, OCR_UPLOAD_FAILED);
 			}
 			
 			$report  = "OCR PROCESS WAS SUCCESSFUL!\n";

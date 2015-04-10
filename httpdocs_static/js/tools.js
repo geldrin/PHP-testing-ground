@@ -485,7 +485,9 @@ function setupPlayer() {
   };
   
   adjustPageBGHeight();
-  
+  if ( $j('#currentusermenu').length == 0 )
+    return;
+
   $j('#currentusername').bind('menuopen.dam menuclose.dam', function(e) {
     
     var animationduration = 200;
