@@ -1,4 +1,5 @@
 {assign var=views value=$item.numberofviews|numberformat}
+{capture assign=recordingurl}{$language}/recordings/details/{$item.id},{$item.title|filenameize}{/capture}
 <li class="listitem">
   {if $order == 'channels' and $havemultiplechannels and $currentchannelid != $item.channelid}
     {php}
@@ -24,12 +25,12 @@
   {/if}
   <a name="rec{$item.id}"></a>
   <div class="recordingpic">
-    <a href="{$language}/recordings/details/{$item.id},{$item.title|filenameize}"><span class="playpic"></span><img src="{$item|@indexphoto}"/></a>
+    <a href="{$recordingurl}"><span class="playpic"></span><img src="{$item|@indexphoto}"/></a>
   </div>
   
   <div class="recordingcontent">
     <div class="title">
-      <h3><a href="{$language}/recordings/details/{$item.id},{$item.title|filenameize}">{$item.title|escape:html|mb_wordwrap:25}</a></h3>
+      <h3><a href="{$recordingurl}">{$item.title|escape:html|mb_wordwrap:25}</a></h3>
       {if $item.subtitle|stringempty}<h4>{$item.subtitle|escape:html|mb_wordwrap:25}</h4>{/if}
     </div>
     {if $item.approvalstatus != 'approved' and $item.status == 'onstorage' and $member.id}
@@ -57,7 +58,24 @@
         </div>
       </div>
     {/if}
-    
+
+    {if !empty( $item.slides )}
+    <div class="recordingslides">
+      <h3>{#recordings__slidesearchhits#}:</h3>
+      {foreach from=$item.slides item=slide name=slide}
+      {if $smarty.foreach.slide.iteration <= 12}
+      <div class="slide">
+          <a href="{$recordingurl}?start={$slide.positionsec}">
+            <img src="{$slide|@slidephoto:$STATIC_URI}" width="100"/>
+          </a>
+          <span>{$slide.positionsec|timeformat}</span>
+        </a>
+      </div>
+      {/if}
+      {/foreach}
+    </div>
+    {/if}
+
     {if $item|@userHasAccess}
     <div class="recordingactions">
       <ul>

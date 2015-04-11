@@ -50,6 +50,7 @@ $j(document).ready(function() {
   runIfExists('#livestatistics', setupLivestatistics );
   runIfExists('#recordingdownloads', setupRecordingDownloads );
   runIfExists('#groups_create, #groups_modify', setupGroups );
+  runIfExists('.recordingslides', setupSlideTooltip );
 
   if ( needping )
     setTimeout( setupPing, 1000 * pingsecs );
@@ -2429,4 +2430,29 @@ function refreshFeedViewerCount(elem, interval) {
       }
     });
   };
+}
+
+function setupSlideTooltip() {
+
+  $j('<div id="tooltip"><img width="400"/></div>').appendTo('body').hide();
+  $j('.recordingslides img').mouseenter( function() {
+
+    var newsrc = $j(this).attr('src').replace(/150x150\//, '');
+    if ( $j('#tooltip img').attr('src') != newsrc ) {
+      $j('#tooltip img').attr('src', '');
+      $j('#tooltip img').attr('src', $j(this).attr('src').replace(/150x150\//, '') );
+    }
+
+    $j('#tooltip').show();
+    $j('#tooltip').position({
+      of: this,
+      at: 'bottom',
+      my: 'top',
+      collision: 'flip flip',
+      offset: '0 15'
+    });
+
+  }).mouseleave( function() {
+    $j('#tooltip').hide();
+  });
 }

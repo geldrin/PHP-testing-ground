@@ -245,6 +245,7 @@ class Recordings extends \Springboard\Model {
       SELECT ocrtext
       FROM ocr_frames
       WHERE
+        status      = 'onstorage' AND
         recordingid = '" . $this->id . "' AND
         ocrtext IS NOT NULL AND
         LENGTH(ocrtext) > 0
@@ -3080,7 +3081,8 @@ class Recordings extends \Springboard\Model {
     if ( $start !== null )
       $query .= 'LIMIT ' . $start . ', ' . $limit;
     
-    return $this->db->getArray( $query );
+    $ret = $this->db->getArray( $query );
+    return $this->searchAddSlidesToArray( $searchterm, $ret );
     
   }
   
@@ -3355,9 +3357,12 @@ class Recordings extends \Springboard\Model {
     
     if ( $start !== null )
       $query .= 'LIMIT ' . $start . ', ' . $limit;
-    
-    return $this->db->getArray( $query );
-    
+
+    $ret = $this->db->getArray( $query );
+    if ( isset( $where['term'] ) )
+      $ret = $this->searchAddSlidesToArray( $where['term'], $ret );
+
+    return $ret;
   }
   
   public function hasSubtitle() {
@@ -3979,5 +3984,40 @@ class Recordings extends \Springboard\Model {
     }
 
     return (bool) $row['expired'];
+  }
+
+  public function searchAddSlidesToArray( $searchterm, &$arr ) {
+    // a $searchterm-et mar escapelve varjuk!!!
+    $recordingids = array();
+    $recidToIndex = array();
+    foreach( $arr as $key => $row ) {
+      if ( isset( $row['type'] ) and $row['type'] != 'recording' )
+        continue;
+
+      $recordingids[] = $row['id'];
+      $recidToIndex[ $row['id'] ] = $key;
+      $arr[ $key ]['slides'] = array();
+    }
+
+    if ( empty( $recordingids ) )
+      return $arr;
+
+    $slides = $this->db->query("
+      SELECT *
+      FROM ocr_frames
+      WHERE
+        status = 'onstorage' AND
+        recordingid IN('" . implode("', '", $recordingids ) . "') AND
+        ocrtext IS NOT NULL AND
+        LENGTH(ocrtext) > 0 AND
+        ocrtext LIKE $searchterm
+      ORDER BY recordingid, positionsec
+    ");
+    foreach( $slides as $row ) {
+      $key = $recidToIndex[ $row['recordingid'] ];
+      $arr[ $key ]['slides'][] = $row;
+    }
+
+    return $arr;
   }
 }
