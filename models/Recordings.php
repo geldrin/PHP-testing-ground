@@ -239,19 +239,18 @@ class Recordings extends \Springboard\Model {
   }
   
   public function assembleAdditionalFulltextCache() {
-    
+
     $this->ensureID();
-    /*
     $slides = $this->db->getCol("
-      SELECT slidecache
-      FROM slides_chapters
+      SELECT ocrtext
+      FROM ocr_frames
       WHERE
         recordingid = '" . $this->id . "' AND
-        timing IS NOT NULL
+        ocrtext IS NOT NULL AND
+        LENGTH(ocrtext) > 0
     ");
-    
-    $cache = implode( ' ', $slides );*/
-    $cache = '';
+
+    $cache = implode( ' ', $slides );
     $documents = $this->db->getCol("
       SELECT documentcache
       FROM attached_documents
@@ -260,11 +259,11 @@ class Recordings extends \Springboard\Model {
         status NOT IN('markedfordeletion', 'deleted') AND
         indexingstatus IN('completed', 'completedempty')
     ");
-    
+
     $cache .= implode( ' ', $documents );
-    
+
     return $cache;
-    
+
   }
   
   function updateChannelIndexPhotos() {
