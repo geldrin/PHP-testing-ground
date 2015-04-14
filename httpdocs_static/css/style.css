@@ -132,6 +132,7 @@ label {
 .formoverflowframe {
   clear: both;
   max-height: 200px;
+  max-width: 453px;
   white-space: nowrap;
   overflow: auto;
 }
