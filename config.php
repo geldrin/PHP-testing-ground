@@ -335,7 +335,7 @@ $config = array(
   'ssh_key'      => '/home/conv/.ssh/id_rsa',
   
   // Video + content synchronization (Flash Player)
-  'player_synchronization'           => true,
+  'player_synchronization'           => false,
   'player_synchronizationTimeMin'    => 1.5,    // Min. skew (sec, float)
   'player_synchronizationTimeMax'    => 30.0,   // Max. skew (sec, float)
   
