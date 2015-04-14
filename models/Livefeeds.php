@@ -134,7 +134,8 @@ class Livefeeds extends \Springboard\Model {
         isdesktopcompatible,
         isandroidcompatible,
         isioscompatible,
-        timestamp
+        timestamp,
+        weight
       FROM livefeed_streams
       WHERE
         livefeedid = '" . $feedid . "' AND

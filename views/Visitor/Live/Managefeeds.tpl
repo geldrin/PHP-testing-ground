@@ -45,6 +45,7 @@
               <a href="{$language}/live/view/{$feed.id},{$stream.id},{$feed.name|filenameize}"><b>{$stream.qualitytag|escape:html}</b></a>
             {/if}
           </td>
+          <td class="streamquality">{$stream.weight}</td>
           <td class="streamcompatibility nobr">
             {if $stream.isdesktopcompatible}<img src="{$STATIC_URI}images/icons/desktop.png" title="Desktop" alt="Desktop"/>{/if}
             {if $stream.isioscompatible}<img src="{$STATIC_URI}images/icons/ios.png" title="iOS" alt="iOS"/>{/if}
@@ -85,7 +86,7 @@
       {/foreach}
       {if $feed.feedtype != 'vcr'}
         <tr>
-          <td rowspan="2">
+          <td rowspan="3">
             <a href="{$language}/live/createstream/{$feed.id}"><b>+</b> {#live__addstream#}</a>
           </td>
         </tr>
