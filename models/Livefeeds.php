@@ -126,12 +126,11 @@ class Livefeeds extends \Springboard\Model {
       SELECT
         id AS streamid,
         id,
-        name,
         status,
         keycode,
         contentkeycode,
         recordinglinkid,
-        quality,
+        qualitytag,
         isdesktopcompatible,
         isandroidcompatible,
         isioscompatible,
@@ -140,7 +139,7 @@ class Livefeeds extends \Springboard\Model {
       WHERE
         livefeedid = '" . $feedid . "' AND
         (status IS NULL OR status <> 'markedfordeletion')
-      ORDER BY weight, quality, id
+      ORDER BY weight, id
     ");
     
   }
@@ -256,7 +255,7 @@ class Livefeeds extends \Springboard\Model {
     $ret = array(
       'streams'    => array(),
       'labels'     => array(
-        $info['streams']['defaultstream']['name'],
+        $info['streams']['defaultstream']['qualitytag'],
       ),
       'parameters' => array(
         array(
@@ -275,7 +274,7 @@ class Livefeeds extends \Springboard\Model {
          )
         continue;
 
-      $ret['labels'][]     = $stream['name'];
+      $ret['labels'][]     = $stream['qualitytag'];
       $ret['parameters'][] = array(
         'livefeedstreamid' => $stream['id'],
         'viewsessionid'    => $this->generateViewSessionid( $stream['id'] ),
@@ -513,9 +512,8 @@ class Livefeeds extends \Springboard\Model {
     $streamModel->insert( array(
         'livefeedid'          => $this->id,
         'recordinglinkid'     => $recordinglinkid,
-        'name'                => 'VCR stream',
+        'qualitytag'          => 'VCR stream',
         'status'              => 'ready',
-        'quality'             => 'unknown',
         'isdesktopcompatible' => 1,
         'isioscompatible'     => 1,
         'isandroidcompatible' => 1,

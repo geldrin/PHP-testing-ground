@@ -18,8 +18,8 @@ $config = array(
     'prefix' => '<span class="legendsubtitle">' . $l('live', 'createstream_subtitle') . '</span>',
   ),
   
-  'name' => array(
-    'displayname' => $l('live', 'streamname'),
+  'qualitytag' => array(
+    'displayname' => $l('live', 'quality'),
     'type'        => 'inputText',
     'validation'  => array(
       array(
@@ -31,15 +31,19 @@ $config = array(
     ),
   ),
   
-  'quality' => array(
-    'displayname' => $l('live', 'quality'),
+  'weight' => array(
+    'displayname' => $l('live', 'stream_weight'),
+    'postfix'     => '<div class="smallinfo">' . $l('live', 'stream_weight_postfix') . '</div>',
     'type'        => 'inputText',
+    'value'       => 100,
     'validation'  => array(
       array(
-        'type'     => 'string',
+        'type'     => 'number',
+        'help'     => $l('live', 'stream_weight_help'),
+        'real'     => 0,
         'required' => true,
-        'minimum'  => 2,
-        'maximum'  => 50,
+        'minimum'  => -PHP_INT_MAX,
+        'maximum'  => PHP_INT_MAX,
       ),
     ),
   ),

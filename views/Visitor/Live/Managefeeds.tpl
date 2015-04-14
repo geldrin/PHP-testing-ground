@@ -42,10 +42,9 @@
         <tr>
           <td class="streamname">
             {if $feed.feedtype != 'vcr'}
-              <a href="{$language}/live/view/{$feed.id},{$stream.id},{$feed.name|filenameize}"><b>{$stream.name|escape:html}</b></a>
+              <a href="{$language}/live/view/{$feed.id},{$stream.id},{$feed.name|filenameize}"><b>{$stream.qualitytag|escape:html}</b></a>
             {/if}
           </td>
-          <td class="streamquality">{$stream.quality|escape:html}</td>
           <td class="streamcompatibility nobr">
             {if $stream.isdesktopcompatible}<img src="{$STATIC_URI}images/icons/desktop.png" title="Desktop" alt="Desktop"/>{/if}
             {if $stream.isioscompatible}<img src="{$STATIC_URI}images/icons/ios.png" title="iOS" alt="iOS"/>{/if}
@@ -86,7 +85,7 @@
       {/foreach}
       {if $feed.feedtype != 'vcr'}
         <tr>
-          <td rowspan="3">
+          <td rowspan="2">
             <a href="{$language}/live/createstream/{$feed.id}"><b>+</b> {#live__addstream#}</a>
           </td>
         </tr>
@@ -116,7 +115,7 @@
           <label for="fullplayer_no_{$feed.id}">{#live__fullplayer_no#}</label>
         </div>
         {capture assign=liveembed}
-          <iframe width="950" height="{if $feed.moderationtype == 'nochat'}530{else}860{/if}" src="{$BASE_URI}live/view/{$feed.id},{$feed.name|filenameize}?chromeless=true{if $feed.moderationtype == 'nochat'}&chat=false{/if}" frameborder="0" allowfullscreen="allowfullscreen"></iframe>
+          <iframe width="950" height="{if $feed.moderationtype == 'nochat'}530{else}860{/if}" src="{$BASE_URI}live/view/{$feed.id},{$feed.name|filenameize}?chromeless=true{if $feed.moderationtype == 'nochat'}&amp;chat=false{/if}" frameborder="0" allowfullscreen="allowfullscreen"></iframe>
         {/capture}
         <textarea onclick="this.select();">{$liveembed|trim|escape:html}</textarea>
       </div>
