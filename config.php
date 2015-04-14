@@ -336,8 +336,8 @@ $config = array(
   
   // Video + content synchronization (Flash Player)
   'player_synchronization'           => true,
-  'player_synchronizationTimeMin'    => 1500,    // Min. skew (msec)
-  'player_synchronizationTimeMax'    => 30000,   // Max. skew (msec)
+  'player_synchronizationTimeMin'    => 1.5,    // Min. skew (sec, float)
+  'player_synchronizationTimeMax'    => 30.0,   // Max. skew (sec, float)
   
 );
 
