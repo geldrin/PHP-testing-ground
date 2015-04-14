@@ -2309,6 +2309,7 @@ class Recordings extends \Springboard\Model {
     }
 
     if ( $this->bootstrap->config['player_synchronization'] ) {
+      $data['recording_synchronization']        = true;
       $data['recording_synchronizationTimeMin'] = $this->bootstrap->config['player_synchronizationTimeMin'];
       $data['recording_synchronizationTimeMax'] = $this->bootstrap->config['player_synchronizationTimeMax'];
     }
