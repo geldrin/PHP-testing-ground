@@ -242,7 +242,7 @@ global $jconf, $debug, $db, $app, $myjobid;
 			lf.issecurestreamingforced,
 			lf.indexphotofilename,
 			lfs.id AS streamid,
-			lfs.name AS streamname,
+			lfs.qualitytag AS streamname,
 			lfs.keycode AS wowzastreamid,
 			lfs.contentkeycode AS wowzacontentstreamid
 		FROM

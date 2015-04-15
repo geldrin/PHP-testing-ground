@@ -448,7 +448,7 @@ global $db, $debug, $myjobid, $app, $jconf;
         vsl.timestampfrom,
         vsl.timestampuntil,
         lf.name AS feedname,
-        lfs.name AS streamname,
+        lfs.qualitytag AS streamname,
         lfs.keycode,
         lfs.contentkeycode  
     FROM

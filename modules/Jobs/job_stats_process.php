@@ -481,7 +481,7 @@ global $db, $debug, $myjobid, $app, $jconf, $kaka;
       css.clientplayer,
       lfs.id AS streamid,
       lfs.livefeedid,
-      lfs.name AS qualitytag,
+      lfs.qualitytag AS qualitytag,
       lfs.keycode,
       lfs.contentkeycode
     FROM
