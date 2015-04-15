@@ -427,7 +427,7 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_vcr_control.stop' ) and !i
 exit;
 
 function TCS_Connect() {
-global $app, $jconf, $myjobid;
+global $app, $jconf, $myjobid, $debug;
 
 	// SOAP related URLs
 	$vcr_wsdl = "http://" . $app->config['vcr']['server'] . "/tcs/Helium.wsdl";
@@ -465,7 +465,7 @@ global $app, $jconf, $myjobid;
 //	  o TRUE: job is available for conversion
 //	- $recording: recording_element DB record returned in global $recording variable
 function query_vcrrecording(&$vcr, &$vcr_user) {
-global $jconf, $db, $myjobid;
+global $jconf, $db, $myjobid, $debug;
 
 	$db = db_maintain();
 
@@ -473,7 +473,7 @@ global $jconf, $db, $myjobid;
 		SELECT
 			a.id,
 			a.livefeedid,
-			a.name,
+			a.qualitytag,
 			a.status,
 			a.recordinglinkid,
 			b.id as reclink_id,
@@ -554,7 +554,7 @@ global $jconf, $db, $myjobid;
 
 // Query VCR recording to upload
 function query_vcrupload(&$vcr_upload, &$vcr_user) {
-global $jconf, $db, $myjobid;
+global $jconf, $db, $myjobid, $debug;
 
 	$db = db_maintain();
 
@@ -562,7 +562,7 @@ global $jconf, $db, $myjobid;
 		SELECT
 			a.id,
 			a.livefeedid,
-			a.name,
+			a.qualitytag,
 			a.status,
 			a.vcrconferenceid as conf_id,
 			a.recordinglinkid,
@@ -626,7 +626,7 @@ global $jconf, $db, $myjobid;
 }
 
 function TCS_ReserveConfId($vcr) {
-global $soap_rs, $jconf, $myjobid;
+global $soap_rs, $jconf, $myjobid, $debug;
 
 	$err = array();
 
@@ -664,7 +664,7 @@ global $soap_rs, $jconf, $myjobid;
 }
 
 function TCS_Dial($vcr) {
-global $soap_rs, $jconf, $myjobid;
+global $soap_rs, $jconf, $myjobid, $debug;
 
 	$err = array();
 
@@ -752,7 +752,7 @@ global $soap_rs, $jconf, $myjobid;
 }
 
 function TCS_CallInfo($vcr) {
-global $soap_rs, $jconf, $myjobid;
+global $soap_rs, $jconf, $myjobid, $debug;
 
 	$err = array();
 
@@ -828,7 +828,7 @@ global $soap_rs, $jconf, $myjobid;
 }
 
 function TCS_GetConfInfo(&$vcr) {
-global $soap_rs, $jconf, $myjobid;
+global $soap_rs, $jconf, $myjobid, $debug;
 
 	$err = array();
 	$err['code_num'] = 0;
@@ -967,7 +967,7 @@ function TCS_GetStreamParams($conf_info) {
 }
 
 function TCS_Disconnect($vcr) {
-global $soap_rs, $jconf, $myjobid;
+global $soap_rs, $jconf, $myjobid, $debug;
 
 	$err = array();
 
@@ -998,7 +998,7 @@ global $soap_rs, $jconf, $myjobid;
 }
 
 function TCS_GetSystemHealth() {
-global $soap_rs, $jconf, $myjobid;
+global $soap_rs, $jconf, $myjobid, $debug;
 
 	$err = array();
 
@@ -1036,7 +1036,7 @@ global $soap_rs, $jconf, $myjobid;
 }
 
 function TCS_GetSystemInformation() {
-global $soap_rs, $jconf, $myjobid;
+global $soap_rs, $jconf, $myjobid, $debug;
 
 	$err = array();
 
@@ -1083,7 +1083,7 @@ global $soap_rs, $jconf, $myjobid;
 }
 
 function TCS_GetCallCapacity() {
-global $soap_rs, $jconf, $myjobid;
+global $soap_rs, $jconf, $myjobid, $debug;
 
 	$err = array();
 
