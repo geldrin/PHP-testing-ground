@@ -207,7 +207,7 @@ class Users extends \Springboard\Model {
       $sql .= ', lastloggedinipaddress = ' . $this->db->qstr( $ipaddress );
     }
 
-    if ( isset( $this->row['firstloggedin'] ) and !$this->row['firstloggedin'] )
+    if ( array_key_exists('firstloggedin',  $this->row ) and !$this->row['firstloggedin'] )
       $sql .= ', firstloggedin = ' . $this->db->qstr( date('Y-m-d H:i:s') );
 
     $this->db->query("
