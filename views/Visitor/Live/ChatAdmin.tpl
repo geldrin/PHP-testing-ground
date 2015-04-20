@@ -20,7 +20,7 @@
     {$chat}
   </div>
   <div id="chatinputcontainer">
-    &nbsp;
+    {include file=Visitor/Live/Chatinput.tpl}
   </div>
   <br/>
 </div>
