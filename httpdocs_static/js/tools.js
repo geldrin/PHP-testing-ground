@@ -2443,7 +2443,7 @@ function setupSlideTooltip() {
       $j('#tooltip img').attr('src', newsrc );
     }
 
-    $j('#tooltip').show();
+    $j('#tooltip').css('display', 'table-cell');
     $j('#tooltip').position({
       of: this,
       at: 'bottom',
