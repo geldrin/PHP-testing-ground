@@ -1,15 +1,16 @@
 <?php
 
 function smarty_modifier_slidephoto( $data, $staticuri, $type = null ) {
+  $bs = \Bootstrap::getInstance();
   switch( $type ) {
     case 'wide':
-      $replace = $bootstrap->config['videothumbnailresolutions']['wide'];
+      $replace = $bs->config['videothumbnailresolutions']['wide'];
       break;
     case 'player':
-      $replace = $bootstrap->config['videothumbnailresolutions']['player'];
+      $replace = $bs->config['videothumbnailresolutions']['player'];
       break;
     default:
-      $replace = $bootstrap->config['videothumbnailresolutions']['4:3'];
+      $replace = $bs->config['videothumbnailresolutions']['4:3'];
       break;
   }
   $pos = strpos( $replace, 'x');
