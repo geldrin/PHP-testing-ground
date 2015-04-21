@@ -3027,7 +3027,7 @@ a#currentusername span {
 #tooltip {
   display: none;
   height: auto;
-  min-height: 300px;
+  min-height: 200px;
   width: 400px;
   z-index: 1000;
   background-color: #fff;
