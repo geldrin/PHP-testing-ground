@@ -1577,6 +1577,7 @@ a#currentusername span {
   float: left;
   width: 100%;
   clear: both;
+  margin-top: 10px;
 }
 .recordinglist .recordingslides a:hover {
   text-decoration: none;
@@ -1593,7 +1594,8 @@ a#currentusername span {
 .recordinglist .presenterswrap {
   margin-top: 10px;
 }
-.recordinglist .presenterswrap .label {
+.recordinglist .presenterswrap .label,
+.recordinglist .recordingslides .label {
   font-weight: bold;
 }
 .recordinglist .presenters {
@@ -3026,6 +3028,7 @@ a#currentusername span {
 
 #tooltip {
   display: none;
+  position: absolute;
   height: auto;
   min-height: 200px;
   width: 400px;

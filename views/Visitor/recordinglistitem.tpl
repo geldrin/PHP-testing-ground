@@ -61,7 +61,7 @@
 
     {if !empty( $item.slides )}
     <div class="recordingslides">
-      <h3>{#recordings__slidesearchhits#}:</h3>
+      <div class="label">{#recordings__slidesearchhits#}:</div>
       {foreach from=$item.slides item=slide name=slide}
       {if $smarty.foreach.slide.iteration <= 12}
       <div class="slide">
