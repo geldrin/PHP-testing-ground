@@ -2437,10 +2437,10 @@ function setupSlideTooltip() {
   $j('<div id="tooltip"><img width="400"/></div>').appendTo('body').hide();
   $j('.recordingslides img').mouseenter( function() {
 
-    var newsrc = $j(this).attr('src').replace(/150x150\//, '');
+    var newsrc = $j(this).attr('src').replace(/220\//, '618/');
     if ( $j('#tooltip img').attr('src') != newsrc ) {
       $j('#tooltip img').attr('src', '');
-      $j('#tooltip img').attr('src', $j(this).attr('src').replace(/150x150\//, '') );
+      $j('#tooltip img').attr('src', newsrc );
     }
 
     $j('#tooltip').show();

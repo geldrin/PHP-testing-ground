@@ -1545,6 +1545,9 @@ a#currentusername span {
 .recordinglist .recordinginfo li.last {
   background-image: none;
 }
+.recordinglist .recordingactions {
+  clear: both;
+}
 .recordinglist .recordingactions li {
   margin-right: 15px;
   display: inline-block;
@@ -1571,6 +1574,7 @@ a#currentusername span {
   margin-left: 5px;
 }
 .recordinglist .recordingslides {
+  float: left;
   width: 100%;
   clear: both;
 }
