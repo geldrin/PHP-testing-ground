@@ -312,7 +312,6 @@ global $app, $db;
       if (array_key_exists('organizationid', $filter)) $checkqry .= " AND organizationid IN (". $_p .")";
       if (array_key_exists('isusergenerated', $filter)) $checkqry .= " AND isusergenerated = ". $db->Param('isusergenerated');
 
-      $params[] = date('Y-m-d H:i:s', $d['ts']);
       $stmnt = array_merge( array($uid), $params );
 
       $rs = $db->Prepare($checkqry);
