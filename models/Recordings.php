@@ -1123,8 +1123,8 @@ class Recordings extends \Springboard\Model {
 
     }
 
-    // should never arrive here
-    throw new \Exception('Cannot happen! ' . var_export( $coursechannelids, true ) );
+    // recording not a member of a channel the user has access to, disallow
+    return 'courserestricted';
 
   }
 
