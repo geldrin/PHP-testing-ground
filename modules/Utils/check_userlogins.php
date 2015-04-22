@@ -93,7 +93,7 @@ global $date_start, $date_stop, $out_dir, $logdir, $db, $app, $userIDs, $filters
     default:
       print_r("Listing data:\n");
       foreach($sortedlogins as $uid => $l) {
-        print_r("\tuserID=". $uid ." | email='". $l['email'] ."' | date='". $l['date'] ."' | ts=". $l['ts'] ."\n");
+        print_r("\tuserID=". $uid ." | email='". $l['email'] ."' | date='". $l['date'] ."' | ts=". $l['ts'] ." | db='". $l['dbdate'] ."'\n");
       }
       print_r(" > usercount: ". count($sortedlogins) ."\n");
       break;
@@ -305,15 +305,14 @@ global $app, $db;
       $dataset = null;
 
       $checkqry = "
-        SELECT id, email, organizationid
+        SELECT id, email, organizationid, firstloggedin, sessionlastupdated
         FROM users
         WHERE id = ". $db->Param('uid');
       
       if (array_key_exists('organizationid', $filter)) $checkqry .= " AND organizationid IN (". $_p .")";
       if (array_key_exists('isusergenerated', $filter)) $checkqry .= " AND isusergenerated = ". $db->Param('isusergenerated');
-      
-      $checkqry .= " AND firstloggedin IS NULL";
-      
+
+      $params[] = date('Y-m-d H:i:s', $d['ts']);
       $stmnt = array_merge( array($uid), $params );
 
       $rs = $db->Prepare($checkqry);
@@ -327,14 +326,19 @@ global $app, $db;
       }
 
       $dataset = $rs->getArray();
-      // var_dump($dataset);
-      
+
       if (empty($dataset)) {
         continue; // ha a felhasznalo nem illeszkedik a filterre, lepjunk tovabb
       }
 
-      $sorted[$uid] = $d;      
-      $sorted[$uid]['email'] = $dataset[0]['email'];
+      if (!empty($dataset[0]['firstloggedin']) && ($d['ts'] >= strtotime($dataset[0]['firstloggedin'])) === true) {
+        // ha a parse-olt login nagyobb vagy egyenlo, mint a db-ben tarolt ertek, akkor lepjunk tovabb
+        continue;
+      }
+
+      $sorted[$uid] = $d;
+      $sorted[$uid]['email']  = $dataset[0]['email'];
+      $sorted[$uid]['dbdate'] = $dataset[0]['firstloggedin'];
       
     } catch( Excetpion $e) {
       print_r("[ERROR] ". __FUNCTION__ ." failed! Message: ". $e->getMessage() . PHP_EOL);
@@ -361,7 +365,7 @@ function updateDBfirstLoggedin($user, $ts) {
     $updatequery = trim("
       UPDATE users 
       SET firstloggedin = ". $db->Param('firstloggedin') ."
-      WHERE id = ". $db->Param('id') ." AND firstloggedin IS NULL"
+      WHERE id = ". $db->Param('id')
     );
 
     $rs = $db->Prepare($updatequery);
