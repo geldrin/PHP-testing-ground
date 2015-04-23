@@ -244,13 +244,13 @@ class Bootstrap {
           
           $i--;
           if ( !$i )
-            throw new Exception( $db->ErrorMsg() );
+            throw new Exception( $db->ErrorNo() . ': ' . $db->ErrorMsg() );
           
           sleep(1);
           
         }
         else
-          throw new Exception( $db->ErrorMsg() );
+          throw new Exception( $db->ErrorNo() . ': ' . $db->ErrorMsg() );
         
       }
       
