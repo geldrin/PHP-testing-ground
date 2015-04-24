@@ -83,7 +83,20 @@ class Edit extends \Visitor\HelpForm {
       foreach( $this->basefields as $field )
         unset( $values[ $field ] );
 
+      
+    } else {
+
+      $this->userModel->clearDepartments();
+      if ( isset( $_REQUEST['departments'] ) and !empty( $values['departments'] ) )
+        $this->userModel->addDepartments( $values['departments'] );
+
+      $this->userModel->clearGroups();
+      if ( isset( $_REQUEST['groups'] ) and !empty( $values['groups'] ) )
+        $this->userModel->addGroups( $values['groups'] );
+
     }
+
+    unset( $values['departments'], $values['groups'] );
 
     foreach( $l->getLov('permissions') as $k => $v ) {
       
@@ -98,16 +111,6 @@ class Edit extends \Visitor\HelpForm {
       unset( $values['password'] );
     else
       $values['password'] = $crypt->getPasswordHash( $values['password'] );
-    
-    $this->userModel->clearDepartments();
-    if ( isset( $_REQUEST['departments'] ) and !empty( $values['departments'] ) )
-      $this->userModel->addDepartments( $values['departments'] );
-    
-    $this->userModel->clearGroups();
-    if ( isset( $_REQUEST['groups'] ) and !empty( $values['groups'] ) )
-      $this->userModel->addGroups( $values['groups'] );
-    
-    unset( $values['departments'], $values['groups'] );
     
     if ( !@$values['needtimestampdisabledafter'] )
       $values['timestampdisabledafter'] = null;

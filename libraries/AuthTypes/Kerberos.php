@@ -113,6 +113,11 @@ class Kerberos extends \AuthTypes\Base {
       if ( $valid and empty( $directoryuser ) ) {
         // le lett tiltva a felhasznalo Directory-bol, de elotte valid volt
         // vagy be sincs sorolva az ldap csoportba
+        $userModel->select( $user['id'] );
+        $userModel->updateRow( array(
+            'disabled' => $userModel::USER_DIRECTORYDISABLED,
+          )
+        );
 
         $user->clear(); // mert beleptette a findAndMarkUser
         $e = new \AuthTypes\Exception("user found but no longer member of ldap group");
