@@ -33,6 +33,7 @@ class Kerberos extends \AuthTypes\Base {
       $e->redirecturl     = 'contents/ldapnoaccess';
       $e->redirectmessage = $l('users', 'kerberosloginfailed');
       $e->redirectparams  = array('error' => 'kerberosfailed');
+      $e->info['type']    = $type;
       throw $e;
     }
 
@@ -53,6 +54,8 @@ class Kerberos extends \AuthTypes\Base {
       $e->redirecturl     = 'contents/ldapnoaccess';
       $e->redirectmessage = $l('users', 'kerberosloginfailed');
       $e->redirectparams  = array('error' => 'typedisabled');
+      $e->info['type']    = $type;
+      $e->info['remoteuser'] = $remoteuser;
       throw $e;
     }
 
@@ -87,6 +90,8 @@ class Kerberos extends \AuthTypes\Base {
         $e = new \AuthTypes\Exception("user found but not member of ldap group");
         $e->redirecturl     = 'contents/ldapnoaccess';
         $e->redirectparams  = array('error' => 'nongroupmember');
+        $e->info['type']    = $type;
+        $e->info['remoteuser'] = $remoteuser;
         throw $e;
       } elseif ( $directoryuser ) // van minden, csak adatbazisban nem letezik
         $newuser = array_merge( $newuser, $directoryuser );
@@ -117,6 +122,9 @@ class Kerberos extends \AuthTypes\Base {
         $e = new \AuthTypes\Exception("user found but no longer member of ldap group");
         $e->redirecturl     = 'contents/ldapnoaccess';
         $e->redirectparams  = array('error' => 'accessrevoked');
+        $e->info['type']    = $type;
+        $e->info['user']    = $userModel->row;
+        $e->info['remoteuser'] = $remoteuser;
         throw $e;
 
       } elseif ( !$valid and !empty( $directoryuser ) ) {
@@ -145,6 +153,10 @@ class Kerberos extends \AuthTypes\Base {
           $e = new \AuthTypes\Exception("user found but is manually banned");
           $e->redirecturl     = 'contents/ldapnoaccess';
           $e->redirectparams  = array('error' => 'banned1');
+          $e->info['type']    = $type;
+          $e->info['user']    = $userModel->row;
+          $e->info['remoteuser'] = $remoteuser;
+          $e->info['directoryuser'] = $directoryuser;
           throw $e;
         }
 
@@ -153,6 +165,9 @@ class Kerberos extends \AuthTypes\Base {
         $e = new \AuthTypes\Exception("user found but is manually banned");
         $e->redirecturl     = 'contents/ldapnoaccess';
         $e->redirectparams  = array('error' => 'banned2');
+        $e->info['type']    = $type;
+        $e->info['user']    = $userModel->row;
+        $e->info['remoteuser'] = $remoteuser;
         throw $e;
       }
 

@@ -109,6 +109,14 @@ class Controller extends \Springboard\Controller\Visitor {
 
       } catch( \AuthTypes\Exception $e ) {
 
+        $d    = \Springboard\Debug::getInstance();
+        $line =
+          $e->getMessage() . "\n" .
+          var_export( $e->info, true ) . "\n" .
+          \Springboard\Debug::formatBacktrace( $e->getTrace() ) . "\n"
+        ;
+        $d->log(false, 'ssologin.txt', $line);
+
         if ($e->redirectmessage)
           $this->redirectWithMessage(
             $e->redirecturl,
