@@ -30,8 +30,10 @@ $app = new Springboard\Application\Cli(BASE_PATH, false);
 $app->loadConfig('modules/Jobs/config_jobs.php');
 $jconf = $app->config['config_jobs'];
 $myjobid = $jconf['jobid_document_index'];
+$myjobpath = $jconf['job_dir'] . $myjobid . ".php";
 
 // Log related init
+$thisjobstarted = time();
 $debug = Springboard\Debug::getInstance();
 $debug->log($jconf['log_dir'], $myjobid . ".log", "*************************** Job: Document index ***************************" ."\n", $sendmail = false);
 
@@ -44,6 +46,13 @@ if ( iswindows() ) {
 while( !is_file( $app->config['datapath'] . 'jobs/' .$myjobid . '.stop' ) and !is_file( $app->config['datapath'] . 'jobs/all.stop' ) ) {
 
 	clearstatcache();
+    
+    // Check job file modification - if more fresh version is available, then restart
+    if ( filemtime($myjobpath) > $thisjobstarted ) {
+        $debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Seems like an updated version is available of me. Exiting...", $sendmail = false);
+        exit;
+    }
+
     while ( 1 ) {
 
 		$app->watchdog();
