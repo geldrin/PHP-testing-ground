@@ -178,6 +178,9 @@ while( !is_file( $app->config['datapath'] . 'jobs/' . $myjobid . '2.stop' ) and 
 			$debug->log($jconf['log_dir'], $jconf['jobid_media_convert'] . ".log", "[INFO] Recording conversion summary.\n\n" . $log_buffer[$recording['id']], $sendmail = true);
 			unset($log_buffer[$recording['id']]);
 		}
+    
+    $converter_sleep_length = 0;
+    break;
 	}	// End of while(1)
 	// Close DB connection if open
 	if ( is_resource($db->_connectionID) ) $db->close();
