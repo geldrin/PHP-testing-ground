@@ -4008,8 +4008,11 @@ class Recordings extends \Springboard\Model {
     if ( empty( $recordingids ) )
       return $arr;
 
+    // egyet kivonunk a positionsec-bol hogy biztosan lassuk a slidot
     $slides = $this->db->query("
-      SELECT *
+      SELECT
+        *,
+        IF(positionsec = 0, 0, positionsec -1) AS positionsec
       FROM ocr_frames
       WHERE
         status = 'onstorage' AND
