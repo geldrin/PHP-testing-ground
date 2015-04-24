@@ -141,15 +141,15 @@ global $app, $debug, $jconf;
 
 		// Deinterlace
 		$encpars['deinterlace'] = ($rec[$idx .'mastervideoisinterlaced'] > 0) ? true : false;
-    
-    // Keyframe distance
-    $encpars['goplength'] = null;
-    if (array_key_exists('video_enable_fixed_gop', $app->config) && $app->config['video_enable_fixed_gop']) {
-      $encpars['goplength'] = intval($encpars['videofps'] * ($app->config['video_gop_length_ms'] / 1000));
-      if (($app->config['video_gop_length_ms'] / 1000) > $rec[$idx .'masterlength']) {
-        $encpars['goplength'] = intval($rec[$idx .'masterlength']);
-      }
-    }
+		
+		// Keyframe distance
+		$encpars['goplength'] = null;
+		if (array_key_exists('video_enable_fixed_gop', $app->config) && $app->config['video_enable_fixed_gop']) {
+			$encpars['goplength'] = intval($encpars['videofps'] * ($app->config['video_gop_length_ms'] / 1000));
+			if (($app->config['video_gop_length_ms'] / 1000) > $rec[$idx .'masterlength']) {
+				$encpars['goplength'] = intval($rec[$idx .'masterlength']);
+			}
+		}
 	}
 
 	if (!($encpars['hasvideo'] || $encpars['hasaudio'])) {
@@ -229,7 +229,7 @@ global $app, $debug, $jconf;
 	$ffmpeg_video       = null;	// video encoding parameters
 	$ffmpeg_input       = null; // input filename and optionsú
 	$ffmpeg_payload     = null; // contains input option on normal encoding OR overlay filter on pip encoding
-  $ffmpeg_gop         = null; // fixed keyframe distance options
+	$ffmpeg_gop         = null; // fixed keyframe distance options
 	$ffmpeg_pass_prefix = null; // used with multipass encoding (passlogfiles will be written here, with the given prefix)
 	$ffmpeg_globals     = $app->config['encoding_nice'] ." ". $app->config['ffmpeg_alt'] ." -v ". $app->config['ffmpeg_loglevel'] ." -y";
 	$ffmpeg_output      = " -threads ". $app->config['ffmpeg_threads'] ." -f ". $profile['filecontainerformat'] ." ". $rec['output_file'];
@@ -237,18 +237,18 @@ global $app, $debug, $jconf;
 	$audio_filter = null;
 	$video_filter = null;
 
-  $gop_length = null;
-  if (array_key_exists('goplength', $main)) {
-    $debug->log($jconf['log_dir'], $jconf['jobid_media_convert'] .'.log', "goplength main = ". $main['goplength'] ."", false);
-    if (!is_null($overlay) && array_key_exists('goplength', $overlay)) {
-      $gop_length = min($main['goplength'], $overlay['goplength']);
-      $debug->log($jconf['log_dir'], $jconf['jobid_media_convert'] .'.log', "goplength = ". $overlay['goplength'] ." - min = ". $gop_length ."\n", false);
-    } else {
-      $gop_length = $main['goplength'];
-    }
-  }
-  if (!is_null($gop_length)) $ffmpeg_gop = " -g ". $gop_length ." -keyint_min ". $gop_length ." -sc_threshold 0";
-  unset($gop_length);
+	$gop_length = null;
+	if (array_key_exists('goplength', $main)) {
+		$debug->log($jconf['log_dir'], $jconf['jobid_media_convert'] .'.log', "goplength main = ". $main['goplength'] ."", false);
+		if (!is_null($overlay) && array_key_exists('goplength', $overlay)) {
+			$gop_length = min($main['goplength'], $overlay['goplength']);
+			$debug->log($jconf['log_dir'], $jconf['jobid_media_convert'] .'.log', "goplength = ". $overlay['goplength'] ." - min = ". $gop_length ."\n", false);
+		} else {
+			$gop_length = $main['goplength'];
+		}
+	}
+	if (!is_null($gop_length)) $ffmpeg_gop = " -g ". $gop_length ." -keyint_min ". $gop_length ." -sc_threshold 0";
+	unset($gop_length);
 
 	if ($profile['type'] == 'recording' || $profile['type'] == 'content' || ($profile['type'] == 'pip' && $overlay === null)) {
 	// SINGLE MEDIA //
