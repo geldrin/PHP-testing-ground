@@ -112,11 +112,7 @@ class Kerberos extends \AuthTypes\Base {
 
       if ( $valid and empty( $directoryuser ) ) {
         // le lett tiltva a felhasznalo Directory-bol, de elotte valid volt
-        $userModel->select( $user['id'] );
-        $userModel->updateRow( array(
-            'disabled' => $userModel::USER_DIRECTORYDISABLED,
-          )
-        );
+        // vagy be sincs sorolva az ldap csoportba
 
         $user->clear(); // mert beleptette a findAndMarkUser
         $e = new \AuthTypes\Exception("user found but no longer member of ldap group");
@@ -162,7 +158,7 @@ class Kerberos extends \AuthTypes\Base {
 
       } elseif ( !$valid and empty( $directoryuser ) ) {
         $user->clear(); // mert beleptette a findAndMarkUser
-        $e = new \AuthTypes\Exception("user found but is manually banned");
+        $e = new \AuthTypes\Exception("user found but is manually banned and not member of ldap group");
         $e->redirecturl     = 'contents/ldapnoaccess';
         $e->redirectparams  = array('error' => 'banned2');
         $e->info['type']    = $type;
