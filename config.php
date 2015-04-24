@@ -283,13 +283,34 @@ $config = array(
   // Job configuration template for frontend and converter nodes
   'jobs' => array(
     'frontend'  => array(
+      'job_system_health' => array(
+        'enabled'             => true,    // watcher to check or skip this job
+        'watchdogtimeoutsecs' => 5 * 60,  // watchdog timeout (stuck processes)
+        'supresswarnings'     => false    // do not send warnings (e.g. stop files)
+      ),
       'job_upload_finalize' => array(
-        'enabled'             => true,  // watcher to check or skip this job
-        'watchdogtimeoutsecs' => 60,    // watchdog timeout (stuck processes)
-        'supresswarnings'     => false  // do not send warnings (e.g. stop files)
+        'enabled'             => true,
+        'watchdogtimeoutsecs' => 60,
+        'supresswarnings'     => false
       )
     ),
-    'converter' => array(),
+    'converter' => array(
+      'job_system_health' => array(
+        'enabled'             => true,    // watcher to check or skip this job
+        'watchdogtimeoutsecs' => 5 * 60,  // watchdog timeout (stuck processes)
+        'supresswarnings'     => false    // do not send warnings (e.g. stop files)
+      ),
+      'job_media_convert2'	=> array(
+        'enabled'				=> true,
+        'watchdogtimeoutsecs'	=> 15 * 60,
+        'supresswarnings'		=> false
+      ),
+      'job_document_index'	=> array(
+        'enabled'				=> true,
+        'watchdogtimeoutsecs'	=> 5 * 60,
+        'supresswarnings'		=> false
+      ),
+    ),
   ),
   // Job priorities 
   'nice'            => 'nice -n 19',  // General: lowest
