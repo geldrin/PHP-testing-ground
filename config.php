@@ -295,10 +295,10 @@ $config = array(
       )
     ),
     'converter' => array(
-      'job_system_health' => array(
-        'enabled'             => true,    // watcher to check or skip this job
-        'watchdogtimeoutsecs' => 5 * 60,  // watchdog timeout (stuck processes)
-        'supresswarnings'     => false    // do not send warnings (e.g. stop files)
+      'job_system_health'   => array(
+        'enabled'               => true,     // watcher to check or skip this job
+        'watchdogtimeoutsecs'   => 15 * 60,  // watchdog timeout (stuck processes)
+        'supresswarnings'       => false     // do not send warnings (e.g. stop files)
       ),
       'job_media_convert2'	=> array(
         'enabled'				=> true,
@@ -307,7 +307,7 @@ $config = array(
       ),
       'job_document_index'	=> array(
         'enabled'				=> true,
-        'watchdogtimeoutsecs'	=> 5 * 60,
+        'watchdogtimeoutsecs'	=> 15 * 60,
         'supresswarnings'		=> false
       ),
     ),
