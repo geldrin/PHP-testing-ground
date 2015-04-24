@@ -63,10 +63,10 @@
     <div class="recordingslides">
       <div class="label">{#recordings__slidesearchhits#}:</div>
       {foreach from=$item.slides item=slide name=slide}
-      {if $smarty.foreach.slide.iteration <= 12}
+      {if $smarty.foreach.slide.iteration <= 9}
       <div class="slide">
           <a href="{$recordingurl}?start={$slide.positionsec}">
-            <img src="{$slide|@slidephoto:$STATIC_URI}" width="100"/>
+            <img src="{$slide|@slidephoto:$STATIC_URI}" width="192"/>
           </a>
           <span>{$slide.positionsec|timeformat}</span>
         </a>

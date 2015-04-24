@@ -11,6 +11,7 @@ $filters    = array(          // szuresi feltetelek. Az adott elemek elhagyhatok
   'organizations' => null,    // organization id-k tombje (null, arr)
   'isusergenerated' => true,  // (bool)
 );
+$mode   = null; // (null, str[list|update]) mukodesi mod.
 $logdir = null; // (str, null) a login.txt fajlok eleresi utvonala, amennyiben null, az alapertelmezett konyvtarban keres
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -42,11 +43,10 @@ function main() {
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-global $date_start, $date_stop, $out_dir, $logdir, $db, $app, $userIDs, $filters;
+global $date_start, $date_stop, $out_dir, $logdir, $db, $app, $userIDs, $filters, $mode;
   
   $logindata     = null;
   $logins_sorted = null;
-  $mode = null;
 
   if (!file_exists($out_dir)) {
     if (!mkdir($out_dir, 0755)) {
@@ -67,7 +67,7 @@ global $date_start, $date_stop, $out_dir, $logdir, $db, $app, $userIDs, $filters
 
   print_r("Analyze interval: ". $datetime_start ." - ". $datetime_stop .".\n");
 
-  $logindata = getFirstLogins($userIDs = null, $datetime_start, $datetime_stop, $logdir);
+  $logindata = getFirstLogins($userIDs, $datetime_start, $datetime_stop, $logdir);
 
   if (!$logindata) {
     print_r("Log file analization failed.\n");
@@ -374,7 +374,7 @@ function updateDBfirstLoggedin($user, $ts) {
       print_r("[ERROR] DB update failed! Error message:\n". $rs->errorMsg());
       return false;
     }
-    print_r(">". $rs->sql);
+    print_r(">". $updatequery ."\nparams: ". var_export($updateparams, 1));
     
   } catch (Exception $ex) {
     print_r( __FUNCTION__ ." failed! Errormessage: ". $ex->getMessage());
