@@ -1,0 +1,152 @@
+## Videosquare HTTP Edge site configuration
+
+server {
+
+  # Include server level configuration files
+  include /etc/nginx/conf.d/*.server.conf;
+
+  # Listen port
+  listen 80;                                # $VSQ_IP$ - if causes problem
+  keepalive_timeout 70;
+
+  ## SSL config
+  listen 443 ssl;                           # $VSQ_IP$ - if causes problem
+  server_name stream-edge1.videosquare.eu;  # $VSQ_FQDN$
+
+  ## Root www
+  root /var/www/nginx;
+
+  ## Proxy configuration for server
+
+  # Cache pool
+  proxy_cache edge-cache;
+
+  # HTTP version - keep alive
+  proxy_http_version 1.1;
+
+  ## Header manipulation
+  # Connection header: avoid that clients circumvent Keep-Alive.
+  proxy_set_header Connection "";
+  # Clean cookies.
+  proxy_set_header cookie "";
+  proxy_ignore_headers Set-Cookie;
+  # Remove the session cookie we might get. Since we cache the response, this would hand out the same session to many users.
+  proxy_hide_header Set-Cookie;
+  # Ignore Cache-Control + Expires headers
+  proxy_ignore_headers Cache-Control Expires;
+  ## Add headers (debug)
+  # Var: $upstream_cache_status
+  # Keeps the status of accessing a response cache (0.8.3). The status can be either
+  # "MISS", "BYPASS", "EXPIRED", "STALE", "UPDATING", "REVALIDATED" or "HIT".
+  #add_header X-Cache-Status $upstream_cache_status;
+  #add_header X-Handled-By $proxy_host;
+
+  location ~ \.(?:m3u8|f4m)$|crossdomain\.xml$ {
+    proxy_pass http://origins;
+    proxy_no_cache 1;
+    proxy_cache_bypass 1;
+  }
+
+  # On demand services: cache all files (HLS: .m3u8 playlist + .ts media segments | HDS: crossdomain.xml + Seg*-Frag*)
+  location ~ /(?:devvsq|vsq)/.*(?:\.ts|/Seg[0-9]*-Frag[0-9]*)$ {
+    # ez a valtozo hatarozza meg az access check url prefix-et
+    # tehat ehhez rakjuk hozza dinamikusan hogy accesscheck vagy secureaccesscheck
+    # es igy lesz belole /recordingsaccesscheck peldaul
+    set $accesscheckprefix '/recordings';
+    include accesscheck/accesscheck.conf;
+
+    # Origin server list
+    proxy_pass http://origins;
+
+    rewrite_log on;
+    proxy_redirect off;
+    proxy_cache_revalidate off;
+
+    # max-age: 3600 seconds
+    expires 60m;
+
+  } # On demand service
+
+  # Live services: cache all files (HLS: .m3u8 playlist + .ts media segments | HDS: crossdomain.xml + Seg*-Frag*)
+  location ~ /(?:devvsqlive|vsqlive)/.*(?:\.ts|/Seg[0-9]*-Frag[0-9]*)$ {
+    set $accesscheckprefix '/live';
+    include accesscheck/accesscheck.conf;
+
+    # Origin server list
+    proxy_pass http://origins;
+
+    rewrite_log on;
+    proxy_redirect off;
+    proxy_cache_revalidate off;
+
+    # max-age: 3600 seconds
+    expires 60m;
+
+  } # On demand service
+
+  # Live: do not cache playlists (HLS: .m3u8 | HDS: .f4m? )
+  location ~* /(devvsqlive|vsqlive)/.*(\.m3u8|\.f4m|\.abst)$ {
+    # TODO
+    # Origin server list
+    proxy_pass http://origins;
+
+    # Remove all URL parameters (?=....) - causing custom Wowza URLs for HDS
+    if ($args != '') {
+      #rewrite ^(.*) $1? permanent;
+      rewrite ^(.*) $1? ;
+    }
+
+    proxy_no_cache 1;
+    proxy_cache_bypass 1;
+
+  } # Live service
+
+  # belso locationok amit a lua hiv meg kizarolag mert nem tud kozvetlenul url-t hivni
+  location /recordingsaccesscheck {
+    internal; # nem elerheto kivulrol
+    proxy_pass http://vsqdev.streamnet.hu/recordings/checkstreamaccess;
+    # abszolut nem cacheljuk
+    proxy_no_cache 1;
+    proxy_cache_bypass 1;
+    # nehogy atmenjen barmi header amitol mondjuk gzippelnenk a requestet (mert akkor nem tudja beolvasni a lua egyszeruen)
+    proxy_pass_request_headers off;
+  }
+
+  # a location ha https-en keresztul jon a request, securenak tekintjuk
+  location /recordingssecureaccesscheck {
+    internal;
+    proxy_pass http://vsqdev.streamnet.hu/recordings/securecheckstreamaccess;
+    proxy_no_cache 1;
+    proxy_cache_bypass 1;
+    proxy_pass_request_headers off;
+  }
+
+  location /liveaccesscheck {
+    internal;
+    proxy_pass http://vsqdev.streamnet.hu/live/checkstreamaccess;
+    proxy_no_cache 1;
+    proxy_cache_bypass 1;
+    proxy_pass_request_headers off;
+  }
+
+  location /livesecureaccesscheck {
+    internal;
+    proxy_pass http://vsqdev.streamnet.hu/live/securecheckstreamaccess;
+    proxy_no_cache 1;
+    proxy_cache_bypass 1;
+    proxy_pass_request_headers off;
+  }
+
+  # NGINX status
+  location /nginx_status {
+    stub_status on;
+    access_log off;
+    allow 127.0.0.1;
+    # !!!
+    allow 91.120.59.241;
+    allow 172.19.0.0/16;
+    # !!!
+    deny all;
+  }
+
+} # Server config
