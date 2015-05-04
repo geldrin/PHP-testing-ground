@@ -239,10 +239,10 @@ global $app, $debug, $jconf;
 
 	$gop_length = null;
 	if (array_key_exists('goplength', $main)) {
-		$debug->log($jconf['log_dir'], $jconf['jobid_media_convert'] .'.log', "goplength main = ". $main['goplength'] ."", false);
+		$debug->log($jconf['log_dir'], $jconf['jobid_media_convert'] .'.log', "goplength main = ". (is_null($main['goplength']) ? "NULL" : print_r($main['goplength'], true)) ."", false);
 		if (!is_null($overlay) && array_key_exists('goplength', $overlay)) {
 			$gop_length = min($main['goplength'], $overlay['goplength']);
-			$debug->log($jconf['log_dir'], $jconf['jobid_media_convert'] .'.log', "goplength = ". $overlay['goplength'] ." - min = ". $gop_length ."\n", false);
+			$debug->log($jconf['log_dir'], $jconf['jobid_media_convert'] .'.log', "goplength = ". print_r($overlay['goplength'], true) ." - min = ". $gop_length ."\n", false);
 		} else {
 			$gop_length = $main['goplength'];
 		}
