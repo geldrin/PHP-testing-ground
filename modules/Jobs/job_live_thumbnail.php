@@ -90,7 +90,7 @@ for ( $i = 0; $i < count($channels); $i++ ) {
 	$rtmp_url = sprintf("rtmp://%s/" . $wowza_app . "/", $rtmp_server) . $channels[$i]['wowzastreamid'];
 
 	// ffmpeg log level
-	$ffmpeg_loglevel = $app->config['ffmpeg_loglevel'];
+	$ffmpeg_loglevel = '-v '. $app->config['ffmpeg_loglevel'];
 	if ( $debug_mode ) $ffmpeg_loglevel = '';
 	
 	$thumb_filename = "/tmp/" . $channels[$i]['streamid'] . "_" . rand(100000, 999999) . ".png";
