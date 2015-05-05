@@ -51,7 +51,7 @@ $scale_high  = $app->config['videothumbnailresolutions']['player'];
 
 $res_wide   = explode("x", $scale_wide, 2);
 $res_43     = explode("x", $scale_small, 2);
-$res_high	= explode("x", $scale_high, 2);
+$res_high   = explode("x", $scale_high, 2);
 
 clearstatcache();
 
@@ -82,7 +82,7 @@ for ( $i = 0; $i < count($channels); $i++ ) {
 	$rtmp_server = $app->config['fallbackstreamingserver'];
 
 	$wowza_app = "vsqlive";
-	if ( strpos($app->config['baseuri'], 'dev' )) $wowza_app = "dev" . $wowza_app;
+	if ( isset($app->config['production']) && $app->config['production'] === false ) $wowza_app = "dev" . $wowza_app;
 
 	$datetime = date("YmdHis");
 
@@ -90,11 +90,11 @@ for ( $i = 0; $i < count($channels); $i++ ) {
 	$rtmp_url = sprintf("rtmp://%s/" . $wowza_app . "/", $rtmp_server) . $channels[$i]['wowzastreamid'];
 
 	// ffmpeg log level
-	$ffmpeg_loglevel = '-v '. $app->config['ffmpeg_loglevel'];
+	$ffmpeg_loglevel = ' -v '. $app->config['ffmpeg_loglevel'];
 	if ( $debug_mode ) $ffmpeg_loglevel = '';
 	
 	$thumb_filename = "/tmp/" . $channels[$i]['streamid'] . "_" . rand(100000, 999999) . ".png";
-	$ffmpeg_command = $app->config['ffmpeg_alt'] .' ' . $ffmpeg_loglevel . '-i ' . $rtmp_url . ' -vf "thumbnail" -frames:v 1 ' . $thumb_filename;
+	$ffmpeg_command = $app->config['ffmpeg_alt'] . ' ' . $ffmpeg_loglevel . ' -i ' . $rtmp_url . ' -vf "thumbnail" -frames:v 1 ' . $thumb_filename;
 	$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] ffmpeg live thumb atempt for feed#" . $channels[$i]['locationid'] . "/stream#" . $channels[$i]['streamid'], $sendmail = false);
 
 	$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] ffmpeg command to be executed: " . $ffmpeg_command, $sendmail = false);

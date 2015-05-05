@@ -192,7 +192,7 @@ foreach( $monitor_servers as $server ) {
 
 // Wowza app: vsq or devvsq for on demand, vsqlive or devvsqlive for live analysis
 $wowza_app = "vsq";
-if ( stripos($app->config['baseuri'], "dev.videosquare.eu") !== FALSE ) $wowza_app = "dev" . $wowza_app;
+if ( isset($app->config['production']) && $app->config['production'] === false ) $wowza_app = "dev" . $wowza_app;
 
 // Wowza app: live or on demand config
 $islive = FALSE;

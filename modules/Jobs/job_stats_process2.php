@@ -74,7 +74,7 @@ $stats_config = array(
 
 // Wowza application to filter
 $wowza_app = $jconf['streaming_live_app'];
-if ( $app->config['baseuri'] == "dev.videosquare.eu/" ) $wowza_app = "dev" . $wowza_app;
+if ( isset($app->config['production']) && $app->config['production'] === false ) $wowza_app = "dev" . $wowza_app;
 
 // --- END OF CONFIG ---
 

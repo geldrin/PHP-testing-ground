@@ -11,6 +11,7 @@ $config = array(
   'adminuri'     => 'videosquare.eu/a2143/',
   'loginuri'     => 'users/login',
   'cookiedomain' => '.videosquare.eu',
+  'production'   => true, // eles = true, dev = false
   // a session id amivel kulon valasztjuk az organizationoket
   // nem kell kulon beallitani
   'sessionidentifier' => '',
