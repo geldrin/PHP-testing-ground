@@ -283,6 +283,9 @@ class Livefeeds extends \Springboard\Model {
 
     }
 
+    if ( empty( $ret['streams'] ) )
+      return $ret;
+
     if ( $this->isHDSEnabled( $prefix ) ) {
 
       $authorizecode = $this->getAuthorizeSessionid( $info );
