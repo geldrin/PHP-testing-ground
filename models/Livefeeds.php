@@ -283,9 +283,6 @@ class Livefeeds extends \Springboard\Model {
 
     }
 
-    if ( empty( $ret['streams'] ) )
-      return $ret;
-
     if ( $this->isHDSEnabled( $prefix ) ) {
 
       $authorizecode = $this->getAuthorizeSessionid( $info );
@@ -299,7 +296,8 @@ class Livefeeds extends \Springboard\Model {
 
     } else {
 
-      $ret['streams'][] = $info['streams']['defaultstream'][ $prefix . 'keycode'];
+      if ( isset( $info['streams']['defaultstream'][ $prefix . 'keycode'] ) )
+        $ret['streams'][] = $info['streams']['defaultstream'][ $prefix . 'keycode'];
 
       foreach( $info['streams']['streams'] as $stream ) {
 
