@@ -1,0 +1,1 @@
+ALTER TABLE  cdn_streaming_servers ADD  type TEXT CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL AFTER shortname;
