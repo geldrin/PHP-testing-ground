@@ -53,8 +53,8 @@ class Streamingservers extends \Springboard\Model {
     
   }
   
-  protected function getRandomArrayValue( &$array, $index ) {
-    return $array[ array_rand( $array ) ][ $index ];
+  protected function getRandomArrayValue( &$array ) {
+    return $array[ array_rand( $array ) ];
   }
   
   public function getDefaultServer( $types ) {
@@ -62,8 +62,7 @@ class Streamingservers extends \Springboard\Model {
     $defaultcacheindex = implode('-', $types );
     if ( isset( $this->defaultservers[ $defaultcacheindex ] ) )
       return $this->getRandomArrayValue(
-        $this->defaultservers[ $defaultcacheindex ],
-        'server'
+        $this->defaultservers[ $defaultcacheindex ]
       );
     
     $cache = $this->bootstrap->getCache(
@@ -80,7 +79,8 @@ class Streamingservers extends \Springboard\Model {
           ss.server,
           ss.serverip,
           ss.servicetype,
-          ss.default
+          ss.default,
+          LOWER( ss.type ) AS `type`
         FROM
           cdn_streaming_servers AS ss
         WHERE
@@ -116,8 +116,7 @@ class Streamingservers extends \Springboard\Model {
     
     $this->defaultservers[ $defaultcacheindex ] = $defaultservers;
     return $this->getRandomArrayValue(
-      $this->defaultservers[ $defaultcacheindex ],
-      'server'
+      $this->defaultservers[ $defaultcacheindex ]
     );
     
   }
