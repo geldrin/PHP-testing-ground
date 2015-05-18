@@ -617,7 +617,7 @@ class Livefeeds extends \Springboard\Model {
       
     }
     
-    return sprintf( $url, $this->streamingserver );
+    return sprintf( $url, $this->streamingserver['server'] );
     
   }
   
