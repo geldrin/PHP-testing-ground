@@ -369,6 +369,7 @@ $config = array(
     // 'recording_swRendering' => true,
 
     // Video + content synchronization (Flash Player)
+    'recording_synchronization'        => true,
     'recording_synchronizationTimeMin' => 1.5,    // Min. skew (sec, float)
     'recording_synchronizationTimeMax' => 30.0,   // Max. skew (sec, float)
   ),
