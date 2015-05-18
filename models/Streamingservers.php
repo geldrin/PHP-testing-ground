@@ -20,7 +20,8 @@ class Streamingservers extends \Springboard\Model {
         ss.id,
         ss.server,
         ss.serverip,
-        ss.servicetype
+        ss.servicetype,
+        LOWER( ss.type ) AS `type`
       FROM
         cdn_streaming_servers AS ss,
         cdn_client_networks   AS cn,
@@ -48,7 +49,7 @@ class Streamingservers extends \Springboard\Model {
     if ( empty( $serverselected ) )
       return $this->getDefaultServer( $types );
     
-    return $serverselected['server'];
+    return $serverselected;
     
   }
   
