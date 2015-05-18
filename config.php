@@ -226,8 +226,12 @@ $config = array(
 
   //----
   // alapból adatbázisban tároljuk a streaming servereket, ha nincs alapértelmezett
-  // akkor ez lesz használva
-  'fallbackstreamingserver' => 'stream.videosquare.eu',
+  // akkor ez lesz használva, asszociativ tomb, server es type kulcsnak lennie kell
+  // amugy a cdn_streaming_servers adatbazis tablat akarja utanozni
+  'fallbackstreamingserver' => array(
+    'server' => 'stream.videosquare.eu',
+    'type'   => 'wowza',
+  ),
   
   //----
   // adott userid-k minden egyes a frontend fele erkezo requestje logolasra kerul
