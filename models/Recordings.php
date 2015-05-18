@@ -2308,11 +2308,7 @@ class Recordings extends \Springboard\Model {
       $data['recording_checkTimeout'] = true; // nezzuk hogy timeoutolt e a felvetel
     }
 
-    if ( $this->bootstrap->config['player_synchronization'] ) {
-      $data['recording_synchronization']        = true;
-      $data['recording_synchronizationTimeMin'] = $this->bootstrap->config['player_synchronizationTimeMin'];
-      $data['recording_synchronizationTimeMax'] = $this->bootstrap->config['player_synchronizationTimeMax'];
-    }
+    $data = $data + $this->bootstrap->config['flashplayer_extraconfig'];
 
     $hds  = $this->isHDSEnabled();
     $data = $data + $this->getMediaServers( $info, $hds );

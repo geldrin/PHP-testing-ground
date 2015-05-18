@@ -362,11 +362,16 @@ $config = array(
   'ssh_user'     => 'conv',
   'ssh_key'      => '/home/conv/.ssh/id_rsa',
   
-  // Video + content synchronization (Flash Player)
-  'player_synchronization'           => false,
-  'player_synchronizationTimeMin'    => 1.5,    // Min. skew (sec, float)
-  'player_synchronizationTimeMax'    => 30.0,   // Max. skew (sec, float)
-  
+  // flash playernek atadott config valtozok, ha valamit nem kell atadni
+  // akkor szimplan torolni kell oket
+  'flashplayer_extraconfig' => array(
+    // software rendering, alapbol nem adjuk at, default erteke false
+    // 'recording_swRendering' => true,
+
+    // Video + content synchronization (Flash Player)
+    'recording_synchronizationTimeMin' => 1.5,    // Min. skew (sec, float)
+    'recording_synchronizationTimeMax' => 30.0,   // Max. skew (sec, float)
+  ),
 );
 
 $config['phpsettings'] = array(

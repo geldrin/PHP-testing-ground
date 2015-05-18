@@ -337,6 +337,8 @@ class Livefeeds extends \Springboard\Model {
       'user_checkWatchingConfirmationTimeout' => $info['checkwatchingconfirmationtimeout'],
     );
 
+    $flashdata = $flashdata + $this->bootstrap->config['flashplayer_extraconfig'];
+
     $streaminfo = $this->getStreamInfo( $info );
     $flashdata['media_streams']          = $streaminfo['streams'];
     $flashdata['media_streamLabels']     = $streaminfo['labels'];
