@@ -1,7 +1,7 @@
 <?php
 
 function smarty_modifier_timeformat( $seconds, $type = 'full' ) {
-  
+  $seconds = (int) $seconds; // in case we get a float
   $ret = '';
   $l   = \Bootstrap::getInstance()->getLocalization();
   
