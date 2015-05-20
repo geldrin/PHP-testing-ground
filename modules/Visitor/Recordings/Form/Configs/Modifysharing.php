@@ -120,7 +120,7 @@ $config = array_merge( $config, array(
   'isaudiodownloadable' => array(
     'displayname' => $l('recordings', 'isaudiodownloadable'),
     'type'        => 'inputRadio',
-    'value'       => 1,
+    'value'       => 0,
     'values'      => $l->getLov('noyes'),
   ),
   
