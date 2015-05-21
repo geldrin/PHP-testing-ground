@@ -337,6 +337,8 @@ class Livefeeds extends \Springboard\Model {
       'user_checkWatchingConfirmationTimeout' => $info['checkwatchingconfirmationtimeout'],
     );
 
+    $flashdata = $flashdata + $this->bootstrap->config['flashplayer_extraconfig'];
+
     $streaminfo = $this->getStreamInfo( $info );
     $flashdata['media_streams']          = $streaminfo['streams'];
     $flashdata['media_streamLabels']     = $streaminfo['labels'];
@@ -410,8 +412,21 @@ class Livefeeds extends \Springboard\Model {
       'live'
     );
 
+    if ( empty( $streamingserver ) )
+      throw new \Exception("No streaming server found, not even the default");
+
+    if ( $streamingserver['type'] == 'wowza' )
+      $data['media_serverType'] = 0;
+    else if ( $streamingserver['type'] == 'nginx' )
+      $data['media_serverType'] = 1;
+    else
+      throw new \Exception(
+        "Unhandled streaming server type: " .
+        var_export( $streamingserver['type'], true )
+      );
+
     foreach( $data['media_servers'] as $key => $url )
-      $data['media_servers'][ $key ] = sprintf( $url, $streamingserver );
+      $data['media_servers'][ $key ] = sprintf( $url, $streamingserver['server'] );
 
     $contenthds = $this->isHDSEnabled('content');
     if ( $hds == $contenthds ) {
@@ -440,7 +455,7 @@ class Livefeeds extends \Springboard\Model {
     }
 
     foreach( $data['media_secondaryServers'] as $key => $url )
-      $data['media_secondaryServers'][ $key ] = sprintf( $url, $streamingserver );
+      $data['media_secondaryServers'][ $key ] = sprintf( $url, $streamingserver['server'] );
 
     return $data;
 
@@ -604,7 +619,7 @@ class Livefeeds extends \Springboard\Model {
       
     }
     
-    return sprintf( $url, $this->streamingserver );
+    return sprintf( $url, $this->streamingserver['server'] );
     
   }
   

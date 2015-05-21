@@ -2308,11 +2308,7 @@ class Recordings extends \Springboard\Model {
       $data['recording_checkTimeout'] = true; // nezzuk hogy timeoutolt e a felvetel
     }
 
-    if ( $this->bootstrap->config['player_synchronization'] ) {
-      $data['recording_synchronization']        = true;
-      $data['recording_synchronizationTimeMin'] = $this->bootstrap->config['player_synchronizationTimeMin'];
-      $data['recording_synchronizationTimeMax'] = $this->bootstrap->config['player_synchronizationTimeMax'];
-    }
+    $data = $data + $this->bootstrap->config['flashplayer_extraconfig'];
 
     $hds  = $this->isHDSEnabled();
     $data = $data + $this->getMediaServers( $info, $hds );
@@ -2580,6 +2576,21 @@ class Recordings extends \Springboard\Model {
 
     }
 
+    // a getWowzaUrl beallitja, de azert menjunk biztosra
+    $streamingserver = $this->streamingserver;
+    if ( empty( $streamingserver ) )
+      throw new \Exception("No streaming server found, not even the default");
+
+    if ( $streamingserver['type'] == 'wowza' )
+      $data['media_serverType'] = 0;
+    else if ( $streamingserver['type'] == 'nginx' )
+      $data['media_serverType'] = 1;
+    else
+      throw new \Exception(
+        "Unhandled streaming server type: " .
+        var_export( $streamingserver['type'], true )
+      );
+
     return $data;
 
   }
@@ -2698,8 +2709,8 @@ class Recordings extends \Springboard\Model {
       );
       
     }
-    
-    return sprintf( $url, $this->streamingserver );
+
+    return sprintf( $url, $this->streamingserver['server'] );
     
   }
   
