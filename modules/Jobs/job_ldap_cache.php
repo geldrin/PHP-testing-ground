@@ -47,7 +47,7 @@ if ( !$isexecute ) {
 // Get LDAP/AD directories for all organizations
 $ldap_dirs = getLDAPDirectories();
 if ( $ldap_dirs === false ) {
-    $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Cannot query LDAP/AD servers. Exiting..." . trim($query), $sendmail = false);
+    $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Cannot query LDAP/AD servers. Exiting...", $sendmail = false);
     exit;
 }
 
