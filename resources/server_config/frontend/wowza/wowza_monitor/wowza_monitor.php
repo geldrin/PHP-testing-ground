@@ -38,6 +38,7 @@ $query = "
 		ss.servicetype,
 		ss.adminuser,
 		ss.monitoringpassword as password,
+        ss.monitoroverhttps,
 		ss.disabled
 	FROM
 		cdn_streaming_servers AS ss
@@ -46,7 +47,7 @@ $query = "
         ss.type = 'wowza' AND
         adminuser IS NOT NULL AND
         monitoringpassword IS NOT NULL
-";
+    ";
 
 try {
 	$monitor_servers = $db->getArray($query);
@@ -91,7 +92,11 @@ for ($i = 0; $i < count($monitor_servers); $i++ ) {
 
 	$curl = curl_init();
 
-	$wowza_url = "http://" . $monitor_servers[$i]['server'] . ":8086/connectioncounts";
+    $ishttpsenabled = false;
+    if ( $monitor_servers[$i]['monitoroverhttps'] > 0 ) {
+        $ishttpsenabled = true;
+    }
+	$wowza_url = ( $ishttpsenabled?"https":"http" ) . "://" . $monitor_servers[$i]['server'] . ":8086/connectioncounts";
 
 	curl_setopt($curl, CURLOPT_URL, $wowza_url); 
 	curl_setopt($curl, CURLOPT_PORT, 8086); 
@@ -99,6 +104,11 @@ for ($i = 0; $i < count($monitor_servers); $i++ ) {
 	curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1); 
 	curl_setopt($curl, CURLOPT_USERPWD, $monitor_servers[$i]['adminuser'] . ":" . $monitor_servers[$i]['password']);
 	curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_ANY);
+    if ( $ishttpsenabled ) {
+        curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, true);   // false: only for testing!
+        curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, 2);
+        //curl_setopt($ch, CURLOPT_CAINFO, "/CAcerts/BuiltinObjectToken-EquifaxSecureCA.crt"); // For self signed: point to root cert
+    }
 
 	$data = curl_exec($curl); 
 	if( curl_errno($curl) ){ 
