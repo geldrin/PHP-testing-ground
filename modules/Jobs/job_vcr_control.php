@@ -24,8 +24,10 @@ $app = new Springboard\Application\Cli(BASE_PATH, false);
 $app->loadConfig('modules/Jobs/config_jobs.php');
 $jconf = $app->config['config_jobs'];
 $myjobid = $jconf['jobid_vcr_control'];
+$myjobpath = $jconf['job_dir'] . $myjobid . ".php";
 
 // Log related init
+$thisjobstarted = time();
 $debug = Springboard\Debug::getInstance();
 $debug->log($jconf['log_dir'], $myjobid . ".log", "*************************** Job: VCR Control ***************************" ."\n", $sendmail = false);
 
@@ -39,6 +41,12 @@ if ( iswindows() ) {
 while( !is_file( $app->config['datapath'] . 'jobs/job_vcr_control.stop' ) and !is_file( $app->config['datapath'] . 'jobs/all.stop' ) ) {
 
 	clearstatcache();
+    
+    // Check job file modification - if more fresh version is available, then restart
+    if ( ( filemtime($myjobpath) > $thisjobstarted ) or ( filemtime(BASE_PATH . "config.php" ) > $thisjobstarted ) or ( filemtime(BASE_PATH . "config_local.php" ) > $thisjobstarted ) ) {
+        $debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Seems like an updated version is available of me. Exiting...", $sendmail = false);
+        exit;
+    }
 
 	$app->watchdog();
 
