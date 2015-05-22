@@ -22,7 +22,7 @@ $app = new Springboard\Application\Cli(BASE_PATH, PRODUCTION);
 $app->loadConfig('modules/Jobs/config_jobs.php');
 $jconf = $app->config['config_jobs'];
 $myjobid = $jconf['jobid_media_convert'];
-$myjobpath = $jconf['job_dir'] . $myjobid . ".php";
+$myjobpath = $jconf['job_dir'] . $myjobid . "2.php";
 
 // Log related init
 $thisjobstarted = time();
@@ -44,7 +44,7 @@ while( !is_file( $app->config['datapath'] . 'jobs/' . $myjobid . '2.stop' ) and 
 	clearstatcache();
     
     // Check job file modification - if more fresh version is available, then restart
-    if ( filemtime($myjobpath) > $thisjobstarted ) {
+    if ( ( filemtime($myjobpath) > $thisjobstarted ) or ( filemtime(BASE_PATH . "config.php" ) > $thisjobstarted ) or ( filemtime(BASE_PATH . "config_local.php" ) > $thisjobstarted ) ) {
         $debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Seems like an updated version is available of me. Exiting...", $sendmail = false);
         exit;
     }

@@ -48,8 +48,8 @@ while( !is_file( $app->config['datapath'] . 'jobs/' .$myjobid . '.stop' ) and !i
 	clearstatcache();
     
     // Check job file modification - if more fresh version is available, then restart
-    if ( filemtime($myjobpath) > $thisjobstarted ) {
-        $debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Seems like an updated version is available of me. Exiting...", $sendmail = false);
+    if ( ( filemtime($myjobpath) > $thisjobstarted ) or ( filemtime(BASE_PATH . "config.php" ) > $thisjobstarted ) or ( filemtime(BASE_PATH . "config_local.php" ) > $thisjobstarted ) ) {
+        $debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Seems like an updated version is available of me or config file has been changed. Exiting...", $sendmail = false);
         exit;
     }
 
