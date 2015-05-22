@@ -97,7 +97,7 @@ if ( $app->config['node_role'] == "converter" ) {
 
 // SSH testing
 if ( $app->config['node_role'] == "converter" ) {
-	$ssh_command = "ssh -i " . $app->config['ssh_key'] . " " . $app->config['ssh_user'] . "@" . $app->config['fallbackstreamingserver'] . " date";
+	$ssh_command = "ssh -i " . $app->config['ssh_key'] . " " . $app->config['ssh_user'] . "@" . $app->config['fallbackstreamingserver']['server'] . " date";
 	exec($ssh_command, $output, $result);
 	$output_string = implode("\n", $output);
 	if ( $result != 0 ) {
