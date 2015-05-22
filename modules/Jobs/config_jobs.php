@@ -36,6 +36,7 @@ return array('config_jobs' => array(
 	'jobid_ldap_cache'      => 'job_ldap_cache',
 	'jobid_live_counters'   => 'job_live_counters',
 	'jobid_stats_recseg'    => 'job_stats_recsegments',
+    'jobid_wowza_monitor'   => 'wowza_monitor',
 
 	// File system related settings
 	'file_owner'            => 'conv:vsq',  // conv:vsq
