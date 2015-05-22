@@ -802,7 +802,7 @@ global $db, $app, $debug, $jconf;
 		// SSH: copy SMIL file to server
 		$smil_remote_filename = $app->config['livestreampath'] . $livefeeds[$i]['id'] . $smil_filename_suffix . ".smil";
 
-		$err = ssh_filecopy2($app->config['fallbackstreamingserver'], $smil_filename, $smil_remote_filename, false);
+		$err = ssh_filecopy2($app->config['fallbackstreamingserver']['server'], $smil_filename, $smil_remote_filename, false);
 		if ( !$err['code'] ) {
 			$debug->log($jconf['log_dir'], $jconf['jobid_conv_control'] . ".log", "[ERROR] SMIL live file update failed.\nMSG: " . $err['message'] . "\nCOMMAND: " . $err['command'] . "\nRESULT: " . $err['result'], $sendmail = true);
 		} else {
@@ -810,7 +810,7 @@ global $db, $app, $debug, $jconf;
 		}
 
 		// SSH: chmod new remote files
-		$ssh_command = "ssh -i " . $app->config['ssh_key'] . " " . $app->config['ssh_user'] . "@" . $app->config['fallbackstreamingserver'] . " ";
+		$ssh_command = "ssh -i " . $app->config['ssh_key'] . " " . $app->config['ssh_user'] . "@" . $app->config['fallbackstreamingserver']['server'] . " ";
 		$command = $ssh_command . "\"" . "chmod -f " . $jconf['file_access'] . " " . $smil_remote_filename . "\"";
 		exec($command, $output, $result);
 		$output_string = implode("\n", $output);
