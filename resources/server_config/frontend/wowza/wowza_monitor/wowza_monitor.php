@@ -87,8 +87,6 @@ apptotal.label Total " . $wowza_app . "
 $total_currentconnections = 0;
 $total_currentconnections_perapp = 0;
 
-var_dump($monitor_servers);
-
 for ($i = 0; $i < count($monitor_servers); $i++ ) {
 
 	$curl = curl_init();
@@ -101,7 +99,6 @@ for ($i = 0; $i < count($monitor_servers); $i++ ) {
 	curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1); 
 	curl_setopt($curl, CURLOPT_USERPWD, $monitor_servers[$i]['adminuser'] . ":" . $monitor_servers[$i]['password']);
 	curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_ANY);
-echo $i . "\n";
 
 	$data = curl_exec($curl); 
 	if( curl_errno($curl) ){ 
