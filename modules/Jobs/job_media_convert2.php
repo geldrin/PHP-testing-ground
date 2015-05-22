@@ -22,7 +22,7 @@ $app = new Springboard\Application\Cli(BASE_PATH, PRODUCTION);
 $app->loadConfig('modules/Jobs/config_jobs.php');
 $jconf = $app->config['config_jobs'];
 $myjobid = $jconf['jobid_media_convert'];
-$myjobpath = $jconf['job_dir'] . $myjobid . "2.php";
+$myjobpath = $jconf['job_dir'] . $myjobid . ".php";
 
 // Log related init
 $thisjobstarted = time();
@@ -39,7 +39,7 @@ if ( iswindows() ) {
 $log_buffer = array();
 
 // Start an infinite loop - exit if any STOP file appears
-while( !is_file( $app->config['datapath'] . 'jobs/' . $myjobid . '2.stop' ) and !is_file( $app->config['datapath'] . 'jobs/all.stop' ) ) {
+while( !is_file( $app->config['datapath'] . 'jobs/' . $myjobid . '.stop' ) and !is_file( $app->config['datapath'] . 'jobs/all.stop' ) ) {
 
 	clearstatcache();
     
