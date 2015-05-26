@@ -21,7 +21,7 @@ $myjobid = "test_installation";
 
 // Log init
 $debug = Springboard\Debug::getInstance();
-$debug->log($jconf['log_dir'], $myjobid . ".log", "Installation testing started", $sendmail = false);
+$debug->log($jconf['log_dir'], $myjobid . ".log", "*************** Installation testing started ***************", $sendmail = false);
 
 $logfile = $jconf['log_dir'] . date("Y-m-") . $myjobid . ".log";
 $summary_result = true;
@@ -42,8 +42,10 @@ try {
 } catch (exception $err) {
 	$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Failed to connect to DB.", $sendmail = false);
 	$summary_result = false;
-    $isdb = false;
+	$isdb = false;
+	exit;
 }
+
 if ( is_resource($db->_connectionID) ) $debug->log($jconf['log_dir'], $myjobid . ".log", "[OK] Connected to DB.", $sendmail = false);
 
 // Check if directories readable/writable
@@ -267,7 +269,7 @@ exit;
 function getSomethingFromDB() {
 global $jconf, $debug, $db, $myjobid;
 
-	$query = "SELECT * FROM	organizations WHERE id >= 1 LIMIT 1";
+	$query = "SELECT id, name, nameshort, url, domain, staticdomain, cookiedomain  FROM organizations WHERE id >= 1 LIMIT 1";
 
 	$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Executing SQL query: " . trim($query), $sendmail = false);
 
