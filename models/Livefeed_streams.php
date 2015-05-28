@@ -79,7 +79,10 @@ class Livefeed_streams extends \Springboard\Model {
           lfs.indexphotofilename IS NOT NULL AND
           lfs.indexphotofilename <> '' AND
           lfs.livefeedid          = '" . $this->row['livefeedid'] . "' AND
-          lfs.status             <> 'markedfordeletion'
+          (
+            lfs.status           <> 'markedfordeletion' OR
+            lfs.status IS NULL
+          )
         ORDER BY lfs.id ASC
         LIMIT 1
       )
@@ -106,7 +109,10 @@ class Livefeed_streams extends \Springboard\Model {
           lf.indexphotofilename IS NOT NULL AND
           lf.indexphotofilename <> '' AND
           lf.channelid           = '$channelid' AND
-          lf.status             <> 'markedfordeletion'
+          (
+            lf.status           <> 'markedfordeletion' OR
+            lf.status IS NULL
+          )
         ORDER BY lf.id ASC
         LIMIT 1
       )
