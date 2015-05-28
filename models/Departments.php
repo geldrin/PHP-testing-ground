@@ -6,12 +6,12 @@ class Departments extends \Springboard\Model {
   // --------------------------------------------------------------------------
   public function delete( $id, $magic_quotes_gpc = 0 ) {
 
-    $this->query("
+    $this->db->query("
       DELETE FROM users_departments
       WHERE departmentid = " . $this->db->qstr( $id )
     );
 
-    $this->query("
+    $this->db->query("
       DELETE FROM access
       WHERE departmentid = " . $this->db->qstr( $id )
     );
