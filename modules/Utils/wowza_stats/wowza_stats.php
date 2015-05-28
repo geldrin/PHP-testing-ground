@@ -898,7 +898,7 @@ global $db, $app;
 			a.id as locationid,
 			a.name as locationname,
 			b.id as streamid,
-			b.name as streamname,
+			b.qualitytag as streamname,
 			b.keycode,
 			b.contentkeycode
 		FROM
