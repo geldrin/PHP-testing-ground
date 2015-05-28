@@ -20,10 +20,10 @@ abstract class Paging extends \Springboard\Controller\Paging {
   
   protected function needPager() {
     
-    if ( $this->perpageselector )
+    if ( $this->perpageselector and $this->itemcount )
       return true;
     
-    if ( $this->itemcount > $this->perpage )
+    if ( $this->itemcount > $this->perpage and $this->itemcount )
       return true;
     else
       return false;
