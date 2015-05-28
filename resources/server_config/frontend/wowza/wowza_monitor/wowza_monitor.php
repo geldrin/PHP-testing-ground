@@ -51,7 +51,7 @@ $query = "
 
 try {
 	$monitor_servers = $db->getArray($query);
-} catch ( \Exception $e ) {
+} catch ( \Exception $err ) {
     $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Cannot query streaming servers.\n" . $err, $sendmail = false);
 	exit -1;
 }
