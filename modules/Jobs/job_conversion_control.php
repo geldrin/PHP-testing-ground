@@ -672,6 +672,7 @@ global $db, $app, $debug, $jconf;
 		$err = ssh_filecopy2($recording[$idx . 'mastersourceip'], $smil_filename, $smil_remote_filename, false);
 		if ( !$err['code'] ) {
 			$debug->log($jconf['log_dir'], $jconf['jobid_conv_control'] . ".log", "[ERROR] SMIL file update failed.\nMSG: " . $err['message'] . "\nCOMMAND: " . $err['command'] . "\nRESULT: " . $err['result'], $sendmail = true);
+            updateRecordingStatus($recording['id'], $jconf['dbstatus_update_err'], $idx . "smil");
 			$recordings->MoveNext();
 			continue;
 		} else {
