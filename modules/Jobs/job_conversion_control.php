@@ -510,7 +510,7 @@ global $db, $debug, $jconf;
 
 
 function selectConverterNode() {
-global $debug, $jconf;
+global $debug, $jconf, $db, $app;
 
 	// Place for future code (multi-converter environment. Selection criterias might be:
 	// - Converter node reachability (watchdog mechanism to update DB field with last activity timestamp?)
@@ -518,9 +518,35 @@ global $debug, $jconf;
 	// - Converter node queue length
 	$nodeid = 1;
 
-	$debug->log($jconf['log_dir'], $jconf['jobid_conv_control'] . ".log", "[INFO] Converter node nodeid = " . $nodeid . " was selected.", $sendmail = false);
+    $query = "
+        SELECT
+            ins.id,
+            ins.server,
+            ins.cpuload15min,
+            ins.storageworkfree,
+            ins.statusstorage
+        FROM
+            infrastructure_nodes AS ins
+        WHERE
+            ( ins.type = 'converter' AND ins.statusstorage = 'ok' ) OR
+            ins.default = 1
+        ORDER BY
+            ins.cpuload15min ASC,
+            ins.storageworkfree DESC
+        LIMIT 1";
 
-	return $nodeid;
+    try {
+		$node = $db->Execute($query);
+	} catch (exception $err) {
+		$debug->log($jconf['log_dir'], $jconf['jobid_conv_control'] . ".log", "[ERROR] SQL query failed." . trim($query), $sendmail = true);
+		return false;
+	}
+
+	$node_info = $node->fields;
+        
+	$debug->log($jconf['log_dir'], $jconf['jobid_conv_control'] . ".log", "[INFO] Converter node nodeid = " . $node_info['id'] . " (" . $node_info['server'] . ") was selected.", $sendmail = false);
+
+	return $node_info['id'];
 }
 
 function generateRecordingSMILs($type = "recording") {
