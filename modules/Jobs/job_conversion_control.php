@@ -805,7 +805,10 @@ global $db, $app, $debug, $jconf;
 		$err = ssh_filecopy2($app->config['fallbackstreamingserver']['server'], $smil_filename, $smil_remote_filename, false);
 		if ( !$err['code'] ) {
 			$debug->log($jconf['log_dir'], $jconf['jobid_conv_control'] . ".log", "[ERROR] SMIL live file update failed.\nMSG: " . $err['message'] . "\nCOMMAND: " . $err['command'] . "\nRESULT: " . $err['result'], $sendmail = true);
-		} else {
+            updateLiveFeedSMILStatus($livefeeds[$i]['id'], $jconf['dbstatus_update_err'], $type);
+			$i = $i + $q;
+			continue;
+        } else {
 			$debug->log($jconf['log_dir'], $jconf['jobid_conv_control'] . ".log", "[INFO] SMIL live file updated.\nCOMMAND: " . $err['command'], $sendmail = false);
 		}
 
@@ -815,7 +818,7 @@ global $db, $app, $debug, $jconf;
 		exec($command, $output, $result);
 		$output_string = implode("\n", $output);
 		if ( $result != 0 ) {
-			$debug->log($jconf['log_dir'], $jconf['jobid_conv_control'] . ".log", "[WARN] Cannot chmod new remote files (SSH)\nCOMMAND: " . $command . "\nRESULT: " . $output_string, $sendmail = true);
+			$debug->log($jconf['log_dir'], $jconf['jobid_conv_control'] . ".log", "[WARN] Cannot chmod new remote files. (SSH)\nCOMMAND: " . $command . "\nRESULT: " . $output_string, $sendmail = true);
 		} else {
 			$debug->log($jconf['log_dir'], $jconf['jobid_conv_control'] . ".log", "[INFO] Remote chmod OK. (SSH)\nCOMMAND: " . $command, $sendmail = false);
 		}
