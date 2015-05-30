@@ -996,7 +996,7 @@ global $app, $jconf;
 	$output_string = implode("\n", $output);
 	if ( $result != 0 ) {
 		$err['code'] = false;
-		$err['message'] = "[ERROR] SCP " . ($isdownload?"download":"upload") . " failed.\n";
+		$err['message'] = "[ERROR] SCP " . ($isdownload?"download":"upload") . " failed.";
 		return $err;
 	}
 
