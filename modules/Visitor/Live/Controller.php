@@ -400,6 +400,14 @@ class Controller extends \Visitor\Controller {
       $this->redirect( $forward );
 
     $channelModel->markAsDeleted();
+
+    $feedModel = $this->bootstrap->getModel("livefeeds");
+    $feeds = $channelModel->getFeeds();
+    foreach( $feeds as $feed ) {
+      $feedModel->id = $feed['id'];
+      $feedModel->markAsDeleted();
+    }
+
     $this->redirect( $forward );
 
   }
