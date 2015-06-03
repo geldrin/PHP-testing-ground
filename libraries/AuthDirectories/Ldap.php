@@ -43,23 +43,20 @@ class Ldap extends \AuthDirectories\Base {
         "sAMAccountName", "userPrincipalName"
       )
     );
+    $access = $groupsModel->getDirectoryGroupsForExternalId(
+      $remoteuser, $this->directory
+    );
 
     foreach( $results as $result ) { // csak egy result lesz
-
-      $accountname = $ldap::implodePossibleArray(' ', $result['sAMAccountName'] );
-      if ( !$accountname ) // nincs accountname? instant elhasalunk
-        continue;
-
-      $access = $groupsModel->getDirectoryGroupsForExternalId(
-        $accountname, $this->directory
-      );
 
       // ha nincs ldapgroupaccess akkor nincs user
       if ( !$access['hasaccess'] )
         continue;
 
       $isadmin = $access['isadmin'];
-      $ret['nickname'] = $accountname;
+
+      // lehet hogy nincs, megprobaljuk tolteni abbol ami van
+      $ret['nickname'] = $ldap::implodePossibleArray(' ', $result['sAMAccountName'] );
 
       if ( isset( $result['mail'] ) ) {
         $ret['email'] = $ldap::implodePossibleArray(' ', $result['mail'] );
