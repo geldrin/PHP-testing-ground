@@ -499,7 +499,7 @@ global $db, $myjobid, $debug, $jconf;
 		WHERE
             g.source = 'directory' AND
             g.organizationdirectoryid = od.id AND
-            g.organizationid AND o.id AND
+            g.organizationid = o.id AND
             o.disabled = 0 AND
             od.disabled = 0 AND
             ( g.organizationdirectoryuserslastsynchronized IS NULL OR TIMESTAMPADD(MINUTE, " . $synctimemin . ", g.organizationdirectoryuserslastsynchronized) < NOW() )
