@@ -126,7 +126,7 @@ for ($i = 0; $i < count($monitor_servers); $i++ ) {
 		curl_close($curl); 
 		$monitor_servers[$i]['currentconnections'] = "0";		// Munin: undefined value
 		streamingServerUpdateDB($monitor_servers[$i]['id'], "autherror", 0);
-        $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] HTTP 401. Cannot authenticate to server " . $monitor_servers[$i]['server'] . ".\n" . $err, $sendmail = true);
+        $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] HTTP 401. Cannot authenticate to server " . $monitor_servers[$i]['server'], $sendmail = true);
 		continue;
 	}
 
