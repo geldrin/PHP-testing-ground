@@ -59,6 +59,7 @@ if ( $isdebug_ldap ) {
 }
 
 // Basic DB LDAP/AD user maintenance: search for unconnected users in groups_members
+// !!!! ez nem ok !!!!
 $err = updateUnconnectedGroupMembers();
 
 // Get LDAP/AD groups to be synchronized
@@ -176,17 +177,22 @@ while ( !$ldap_groups->EOF ) {
 	$ldap_group_users = ldap_first_entry($ldap_dir['ldap_handler'], $result);
     do {      
 
+        // Get user record
         $ldap_user = ldap_get_attributes($ldap_dir['ldap_handler'], $ldap_group_users);
         if ( $ldap_user['sAMAccountName']['count'] > 1 ) $debug->log($jconf['log_dir'], $myjobid . ".log", "[WARN] Multiple sAMAccountName for user.\n\n" . print_r($ldap_user, true), $sendmail = false);
         
+        // sAMAccountName
         $ldap_users[$i]['sAMAccountName'] = strtolower($ldap_user['sAMAccountName'][0]);
-	// Normalize userPrincipalName (can be different with service accounts)
-	$tmp = explode("@", strtolower($ldap_user['userPrincipalName'][0]), 2);
-	if ( !empty($tmp[1]) ) {
+        // userPrincipalName
+        $ldap_users[$i]['userPrincipalName'] = strtolower($ldap_user['userPrincipalName'][0]);
+        
+        // userPrincipalName - not necessary in user@domain.com form!
+        // Normalize userPrincipalName (can be different with service accounts)
+/*        $tmp = explode("@", strtolower($ldap_user['userPrincipalName'][0]), 2);
+        if ( !empty($tmp[1]) ) {
     	    $ldap_users[$i]['userPrincipalName'] = $ldap_users[$i]['sAMAccountName'] . "@" . $tmp[1];
-	} else {
-    	    $ldap_users[$i]['userPrincipalName'] = strtolower($ldap_user['userPrincipalName'][0]);
-	}
+        }
+*/
         $ldap_users[$i]['isnew'] = false;
         
         $i++;
@@ -219,15 +225,15 @@ while ( !$ldap_groups->EOF ) {
     $users2add = array();
     $users2add_sql = array();
     foreach ($ldap_users as $key => $user) {
-        $result = recursive_array_search($user['userPrincipalName'], $vsq_group_members);
-        if ( $isdebug_user ) echo "Searched: " . $user['userPrincipalName'] . " - result VSQ index = " . $result . "\n";
+        $result = recursive_array_search($user['sAMAccountName'], $vsq_group_members);
+        if ( $isdebug_user ) echo "Searched: " . $user['sAMAccountName'] . " - result VSQ index = " . $result . "\n";
         // Record new user from LDAP/AD to be added
         if ( $result === false ) {
-            if ( $isdebug_user ) echo $user['userPrincipalName'] . " is new.\n";
+            if ( $isdebug_user ) echo $user['sAMAccountName'] . " is new.\n";
 
-            array_push($users2add, $user['userPrincipalName']);
+            array_push($users2add, $user['sAMAccountName']);
             // gm.userid = NULL (we do not know userid) - it will be updated by updateUnconnectedGroupMembers()
-            array_push($users2add_sql, "(" . $ldap_group['id'] . ",NULL,'" . $user['userPrincipalName'] . "')");
+            array_push($users2add_sql, "(" . $ldap_group['id'] . ",NULL,'" . $user['sAMAccountName'] . "')");
 
             $ldap_users[$key]['isnew'] = true;
             $num_users_new++;
@@ -242,10 +248,10 @@ while ( !$ldap_groups->EOF ) {
     $users2remove_sql = array();
     if ( is_array($vsq_group_members) ) {
         foreach ($vsq_group_members as $key => $vsq_user) {
-            $result = recursive_array_search($vsq_user['userexternalid'], $ldap_users);
-            if ( $isdebug_user ) echo "Searched: " . $vsq_user['userexternalid'] . " - result LDAP user index = " . $result . "\n";
+            $result = recursive_array_search($vsq_user['member_externalid'], $ldap_users);
+            if ( $isdebug_user ) echo "Searched: " . $vsq_user['member_externalid'] . " - result LDAP user index = " . $result . "\n";
     // !!!
-    /*if ( $vsq_user['userexternalid'] == "akovacs@streamnet.hu" ) {
+    /*if ( $vsq_user['member_externalid'] == "akovacs@streamnet.hu" ) {
         var_dump($vsq_user);
         $result = false;
     } */
@@ -253,11 +259,11 @@ while ( !$ldap_groups->EOF ) {
             if ( $result === false ) {
                 $vsq_group_members[$key]['isremoved'] = true;
                 $num_users_remove++;
-                if ( $isdebug_user ) echo $vsq_user['userexternalid'] . " removed.\n";
-                array_push($users2remove, $vsq_user['userexternalid']);
-                array_push($users2remove_sql, "'" . $vsq_user['userexternalid'] . "'");
+                if ( $isdebug_user ) echo $vsq_user['member_externalid'] . " removed.\n";
+                array_push($users2remove, $vsq_user['member_externalid']);
+                array_push($users2remove_sql, "'" . $vsq_user['member_externalid'] . "'");
             } else {
-                if ( $isdebug_user ) echo $vsq_user['userexternalid'] . " found.\n";
+                if ( $isdebug_user ) echo $vsq_user['member_externalid'] . " found.\n";
                 $vsq_group_members[$key]['isremoved'] = false;
             }
         }
@@ -341,7 +347,8 @@ global $db, $myjobid, $debug, $jconf;
         WHERE
             gm.userid IS NULL AND
             gm.userexternalid IS NOT NULL AND
-            gm.userexternalid = LOWER(u.externalid)";
+            LOWER(u.externalid) REGEXP CONCAT('^', gm.userexternalid, '@.*')
+        ";
 
     //echo $query . "\n";
             
@@ -361,7 +368,7 @@ global $db, $myjobid, $debug, $jconf;
             groups_members AS gm,
             users AS u
         SET
-            gm.userexternalid = LOWER(u.externalid)
+            gm.userexternalid = SUBSTRING_INDEX(LOWER(u.externalid), '@', 1)
         WHERE
             gm.userexternalid IS NULL AND
             gm.userid = u.id";
@@ -379,6 +386,7 @@ global $db, $myjobid, $debug, $jconf;
     return true;
 }
 
+/*
 function updateGroupsMembersExternalID($groupid, $userid, $userprincipalname) {
 global $db, $myjobid, $debug, $jconf;
 
@@ -401,7 +409,7 @@ global $db, $myjobid, $debug, $jconf;
 	}
 
     return $db->Affected_Rows();
-}
+} */
 
 function AddVSQGroupMembers($users2add) {
 global $db, $myjobid, $debug, $jconf;
@@ -451,9 +459,9 @@ global $db, $myjobid, $debug, $jconf;
 	$query = "
         SELECT
            	g.id,
-            gm.userexternalid,
+            gm.userexternalid AS member_externalid,
             gm.userid,
-            LOWER(u.externalid) AS userPrincipalName
+            LOWER(u.externalid) AS user_externalid
 		FROM
 			groups AS g,
             groups_members AS gm
@@ -565,11 +573,6 @@ global $db, $myjobid, $debug, $jconf;
 }
 
 function recursive_array_search($needle, $haystack) {
-    
-/*    echo "RECURSIVE search params:\n";
-    var_dump($needle);
-    var_dump($haystack);
-    echo "-------------------------------\n"; */
     
     if ( !is_array($haystack) ) return false;
     
