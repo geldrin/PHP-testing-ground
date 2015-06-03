@@ -59,7 +59,6 @@ if ( $isdebug_ldap ) {
 }
 
 // Basic DB LDAP/AD user maintenance: search for unconnected users in groups_members
-// !!!! ez nem ok !!!!
 $err = updateUnconnectedGroupMembers();
 
 // Get LDAP/AD groups to be synchronized
