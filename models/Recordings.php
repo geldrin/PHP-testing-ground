@@ -3376,8 +3376,14 @@ class Recordings extends \Springboard\Model {
       $query .= 'LIMIT ' . $start . ', ' . $limit;
 
     $ret = $this->db->getArray( $query );
-    if ( isset( $where['term'] ) )
-      $ret = $this->searchAddSlidesToArray( $where['term'], $ret );
+    if ( isset( $where['term'] ) ) {
+      if ( strpos( $where['term'], 'LIKE ') === 0 )
+        $searchterm = substr( $where['term'], strlen('LIKE ') );
+      else
+        $searchterm = $where['term'];
+
+      $ret = $this->searchAddSlidesToArray( $searchterm, $ret );
+    }
 
     return $ret;
   }
