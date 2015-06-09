@@ -47,6 +47,8 @@ $config         = array(
     'type'        => 'inputRadio',
     'values'      => $l->getLov('search_wholeword'),
     'value'       => 0,
+    'divide'      => 1,
+    'divider'     => '<br/>',
     'validation'  => array(
     ),
     'rowlayout'   => '
