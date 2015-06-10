@@ -101,7 +101,7 @@ class Categories extends \Springboard\Model\Multilingual {
   // --------------------------------------------------------------------------
   public function delete( $id, $magic_quotes_gpc = 0 ) {
 
-    $this->query("
+    $this->db->query("
       DELETE FROM recordings_categories
       WHERE categoryid = " . $this->db->qstr( $id )
     );
