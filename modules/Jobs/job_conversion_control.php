@@ -528,8 +528,8 @@ global $debug, $jconf, $db, $app;
         FROM
             infrastructure_nodes AS ins
         WHERE
-            ( ins.type = 'converter' AND ins.statusstorage = 'ok' ) OR
-            ins.default = 1
+            ins.type = 'converter' AND
+            ( ins.statusstorage = 'ok' OR ins.default = 1 )
         ORDER BY
             ins.cpuload15min ASC,
             ins.storageworkfree DESC
