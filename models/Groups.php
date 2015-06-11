@@ -66,6 +66,7 @@ class Groups extends \Springboard\Model {
     return $this->db->getArray("
       SELECT
         u.id,
+        u.externalid,
         u.email,
         u.nameformat,
         u.nickname,
