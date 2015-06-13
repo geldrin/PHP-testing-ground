@@ -51,6 +51,7 @@ $j(document).ready(function() {
   runIfExists('#recordingdownloads', setupRecordingDownloads );
   runIfExists('#groups_create, #groups_modify', setupGroups );
   runIfExists('.recordingslides', setupSlideTooltip );
+  runIfExists('#analytics_accreditedrecordings', setupAnalytics );
 
   if ( needping )
     setTimeout( setupPing, 1000 * pingsecs );
@@ -2456,4 +2457,15 @@ function setupSlideTooltip() {
     $j('#tooltip img').attr('src', '');
     $j('#tooltip').hide();
   });
+}
+
+function setupAnalytics() {
+  
+  $j('.datetimepicker').datetimepicker({
+    dateFormat : 'yy-mm-dd',
+    changeMonth: true,
+    changeYear : true,
+    timeFormat : 'HH:mm'
+  });
+  
 }

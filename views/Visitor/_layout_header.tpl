@@ -36,6 +36,14 @@
                   {/if}
                 </ul>
                 <div class="hr"></div>
+                {if $member.isclientadmin}
+                  <div class="title">{#usermenu_analytics_title#}</div>
+                  <ul>
+                    {if $member.isclientadmin}
+                      <li><a href="{$language}/analytics/accreditedrecordings">{#usermenu_analytics_accreditedrecordings#}</a></li>
+                    {/if}
+                  </ul>
+                {/if}
             </div>
           {/if}
 
