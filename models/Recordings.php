@@ -639,8 +639,7 @@ class Recordings extends \Springboard\Model {
       var_dump( $output );
 			
 		libxml_use_internal_errors( true );
-    $coded = preg_replace_callback( '/(&#x?[0-9]+;)/', $_validateHTMLentities, $output );
-    // file_put_contents("/var/www/dev.videosquare.eu/data/logs/jobs/integrity_ck.log", $coded);
+    $coded = preg_replace_callback( '/(&#[xX]?[0-9]+;)/', $_validateHTMLentities, $output );
 		$xml = new \SimpleXMLElement( $coded );
     libxml_use_internal_errors( false );
 		
