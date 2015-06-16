@@ -617,7 +617,7 @@ class Recordings extends \Springboard\Model {
     $_validateHTMLentities = function( $html_ent ) {
       $valid = preg_replace(
         '/[^\x{0009}\x{000a}\x{000d}\x{0020}-\x{D7FF}\x{E000}-\x{FFFD}]+/u', '', mb_convert_encoding( $html_ent[0], 'utf-8', 'HTML-ENTITIES' ));
-
+    
       if ( preg_match( '/[\x{0022}\x{0026}\x{0027}\x{003e}\x{003e}]/u', mb_convert_encoding( $valid, 'utf-8', 'HTML-ENTITIES' ))) {
         $valid = htmlspecialchars( $valid, ENT_QUOTES | ENT_XML1, 'utf-8' );
       }
@@ -637,12 +637,12 @@ class Recordings extends \Springboard\Model {
     
     if ( $this->bootstrap->debug )
       var_dump( $output );
-			
-		libxml_use_internal_errors( true );
+    
+    libxml_use_internal_errors( true );
     $coded = preg_replace_callback( '/(&#[xX]?[0-9]+;)/', $_validateHTMLentities, $output );
-		$xml = new \SimpleXMLElement( $coded );
+    $xml = new \SimpleXMLElement( $coded );
     libxml_use_internal_errors( false );
-		
+    
     $general = current( $xml->xpath('File/track[@type="General"][1]') );
     $video   = current( $xml->xpath('File/track[@type="Video"][1]') );
     $audio   = current( $xml->xpath('File/track[@type="Audio"][1]') );
