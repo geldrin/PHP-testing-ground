@@ -27,14 +27,20 @@ $app = new Springboard\Application\Cli(BASE_PATH, DEBUG);
 
 // Load jobs configuration file
 $app->loadConfig('modules/Jobs/config_jobs.php');
-$jconf = $app->config['config_jobs'];
-$myjobid = $jconf['jobid_integrity_check'];
+$jconf   = $app->config['config_jobs'];
+$logdir  = $jconf['log_dir'];
+$logpath = $jconf['jobid_integrity_check'] .".log";
+
 
 // Log related init
 $debug = Springboard\Debug::getInstance();
-$debug->log($jconf['log_dir'], $myjobid . ".log", "Data integrity job started", $sendmail = FALSE);
+$debug->log($logdir, $logpath, "Data integrity job started", $sendmail = FALSE);
 $recordingsModel = $app->bootstrap->getModel('recordings');
-$num_errors = 0;
+
+$num_errors         = 0;
+$num_checked_recs   = 0;
+$num_onstorage_recs = 0;
+$num_recordings     = 0;
 
 // Check operating system - exit if Windows
 if ( iswindows() ) {
@@ -54,7 +60,7 @@ $db_close = TRUE;
 
 $log_summary  = "NODE: " . $app->config['node_sourceip'] . "\n";
 $log_summary .= "SITE: " . $app->config['baseuri'] . "\n";
-$log_summary .= "JOB: " . $myjobid . "\n\n";
+$log_summary .= "JOB: " . $jconf['jobid_integrity_check'] . "\n\n";
 
 $time_start = time();
 
@@ -62,7 +68,7 @@ $time_start = time();
 // Avatars: TODO
 //      !!  Not yet implemented in Videosquare  !!
 /*if ( check_contributor_images() === FALSE ) {
-  $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Data integrity check interrupted due to error. Manual restart is required.\nCheck log files.", $sendmail = FALSE);
+  $debug->log($logdir, $logpath, "[ERROR] Data integrity check interrupted due to error. Manual restart is required.\nCheck log files.", $sendmail = FALSE);
   exit;
 } */
 
@@ -107,12 +113,10 @@ try {
   $recordings = $db->Execute($query);
 } catch (exception $err) {
   $msg = "[ERROR] Data integrity check interrupted due to error. Manual restart is required.\nCheck log files.\n\n";
-  $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] No connection to DB (getAdoDB() failed). Error message:\n" . $err, $sendmail = TRUE);
+  $debug->log($logdir, $logpath, "[ERROR] No connection to DB (getAdoDB() failed). Error message:\n" . $err, $sendmail = TRUE);
   exit (1);
 }
 
-$num_checked_recs = 0;
-$num_onstorage_recs = 0;
 $num_recordings = $recordings->RecordCount();
 
 // MAIN CYCLE /////////////////////////////////////////////////////////////////////////////////////
@@ -163,8 +167,11 @@ while ( !$recordings->EOF ) {
     $tmp = getLength($master_record);
     if ($tmp['result'] === false) {
       $recording_summary .= "[ERROR] Master recording analyzation failed: ".  $tmp['message'] ."(". $master_record .")\n";
-      $debug->log($jconf['log_dir'], $recording_summary, $sendmail = false);
-      break(1);
+      $debug->log($logdir, $logpath, $recording_summary, $sendmail = false);
+      // break(1);
+      $num_errors++;
+      $recordings->MoveNext();
+      continue;
     }
     $mastervideolength = $tmp['length'];
     unset($tmp);
@@ -203,8 +210,11 @@ while ( !$recordings->EOF ) {
       $tmp = getLength($content_master);
       if ($tmp['result'] === false) {
         $recording_summary .= "[ERROR] Content master analyzation failed: ".  $tmp['message'] ."(". $content_master .")\n";
-        $debug->log($jconf['log_dir'], $recording_summary, $sendmail = false);
-        break(1);
+        $debug->log($logdir, $logpath, $recording_summary, $sendmail = false);
+        // break(1);
+        $num_errors++;
+        $recordings->MoveNext();
+        continue;
       }
       $mastercontentlength = $tmp['length'];
       $threshold = ( round($mastercontentlength * THRESHOLD) < 1.5 ? 1.5 : round($mastercontentlength * THRESHOLD) );
@@ -226,7 +236,7 @@ while ( !$recordings->EOF ) {
 
   $tmp = query($query);
   if ($tmp['result'] === false) {
-    $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Querying recording #". $rec_id ." failed. Error message:\n". $tmp['message'], $sendmail = TRUE);
+    $debug->log($logdir, $logpath, "[ERROR] Querying recording #". $rec_id ." failed. Error message:\n". $tmp['message'], $sendmail = TRUE);
     exit (1);
   }
   $recordings_versions = $tmp['data'];
@@ -243,23 +253,23 @@ while ( !$recordings->EOF ) {
       $msg = '';
       $tmp = getLength($recording_path . $rv['filename']);
       if ($tmp['result'] === false) {
-        $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] ". $tmp['message'] ."(recordings_version #". $rv['id'] .")" , $sendmail = false);
+        $debug->log($logdir, $logpath, "[ERROR] ". $tmp['message'] ."(recordings_version #". $rv['id'] .")" , $sendmail = false);
         break 2;
       }
       $duration = $tmp['length'];
       unset($tmp);
       switch($rv['type']) {
-      case('recording'):
-        $masterduration = $rec['masterlength'];
-      break;
-      
-      case('content'):
-        $masterduration = $rec['contentmasterlength'];
-      break;
-      
-      case('pip'):
-        $masterduration = max($rec['masterlength'], $rec['contentmasterlength']);
-      break;
+        case('recording'):
+          $masterduration = $rec['masterlength'];
+        break;
+        
+        case('content'):
+          $masterduration = $rec['contentmasterlength'];
+        break;
+        
+        case('pip'):
+          $masterduration = max($rec['masterlength'], $rec['contentmasterlength']);
+        break;
       }
       $threshold = ( round($masterduration * THRESHOLD) < 1.5 ? 1.5 : round($masterduration * THRESHOLD) );
       if (abs($masterduration - $duration) > $threshold) {
@@ -299,7 +309,7 @@ $log_summary .= "Number of faulty recordings: ". $num_errors ."\n\n";
 $duration = time() - $time_start;
 $log_summary .= "Check duration: " . secs2hms($duration) . "\n";
 
-$debug->log($jconf['log_dir'], ($myjobid . ".log"), "Data integrity check results:\n\n" . $log_summary, $sendmail = TRUE);
+$debug->log($logdir, $logpath, "Data integrity check results:\n\n" . $log_summary, $sendmail = TRUE);
 
 // Close DB connection if open
 if ( is_resource($db->_connectionID) ) $db->close();
@@ -405,7 +415,7 @@ function query($query) {
   try {
     $images = $db->Execute($query);
   } catch (exception $err) {
-    $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] SQL query failed. Query: \n" .  trim($query) . "\n\nError message: \n" . $err, $sendmail = TRUE);
+    $debug->log($logdir, $logpath, "[ERROR] SQL query failed. Query: \n" .  trim($query) . "\n\nError message: \n" . $err, $sendmail = TRUE);
     return FALSE;
   }
   
@@ -544,7 +554,7 @@ function query($query) {
   try {
     $attachments = $db->Execute($query);
   } catch (exception $err) {
-    $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] SQL query failed. Query: \n" .  trim($query) . "\n\nError message: \n" . $err, $sendmail = TRUE);
+    $debug->log($logdir, $logpath, "[ERROR] SQL query failed. Query: \n" .  trim($query) . "\n\nError message: \n" . $err, $sendmail = TRUE);
     return FALSE;
   }
   $num_attachments = 0;
