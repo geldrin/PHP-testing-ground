@@ -77,8 +77,15 @@
       </video>
     </div>
   {else}
+    {if $recording.mediatype == 'audio'}
+      {assign var=mobileurl value=$audiofileurl}
+    {elseif $bootstrap->config.ondemandandroidhls}
+      {assign var=mobileurl value=$mobilehttpurl}
+    {else}
+      {assign var=mobileurl value=$mobilertspurl}
+    {/if}
     <div id="mobileplayercontainer">
-      <a href="{if $recording.mediatype == 'audio'}{$audiofileurl}{else}{$mobilertspurl}{/if}"><img src="{$recording|@indexphoto}" width="{$width}" height="{$height}"/></a>
+      <a href="{$mobileurl}"><img src="{$recording|@indexphoto}" width="{$width}" height="{$height}"/></a>
     </div>
   {/if}
   {if count( $mobileversions ) > 1}
