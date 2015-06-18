@@ -1120,7 +1120,6 @@ class Livefeeds extends \Springboard\Model {
       UPDATE livefeed_streams
       SET status = 'markedfordeletion'
       WHERE livefeedid = '" . $this->id . "'
-      LIMIT 1
     ");
 
   }
