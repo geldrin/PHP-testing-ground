@@ -1,8 +1,10 @@
 <div class="title">
   <h1>{#groups__users_title#}</h1>
   <h2>{$group.name|escape:html}</h2>
-  <a href="{$language}/users/invite?groupid={$group.id}">{#groups__invite#}</a>
+  {if $member.source != 'kerberos' and ($member.isclientadmin or $member.isadmin)}
+    <a href="{$language}/users/invite?groupid={$group.id}">{#groups__invite#}</a>
   <br/>
+  {/if}
 </div>
 
 {if !$nosearch}
