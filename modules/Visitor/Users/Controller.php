@@ -14,7 +14,7 @@ class Controller extends \Visitor\Controller {
     'forgotpassword'       => 'public',
     'changepassword'       => 'public',
     'resend'               => 'public',
-    'invite'               => 'clientadmin',
+    'invite'               => 'clientadmin', // invite linkelunk groups/users-bol is
     'invitations'          => 'clientadmin',
     'validateinvite'       => 'public',
     'disable'              => 'clientadmin',
