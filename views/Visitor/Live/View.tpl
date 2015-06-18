@@ -33,7 +33,7 @@
       </div>
     {elseif $streamtype == 'android'}
       <div id="mobileplayercontainer">
-        <a href="{$livertspurl}"><img src="{$STATIC_URI}images/live_player_placeholder_small.png" width="220" height="130"/></a>
+        <a href="{if $bootstrap->config.liveandroidhls}{$livehttpurl}{else}{$livertspurl}{/if}"><img src="{$STATIC_URI}images/live_player_placeholder_small.png" width="220" height="130"/></a>
       </div>
     {else}
       <span class="warning">{#live__no_compatible_stream#}</span>
