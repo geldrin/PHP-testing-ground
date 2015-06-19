@@ -608,23 +608,31 @@ class Recordings extends \Springboard\Model {
       return intval( $elem ) * $scale;
     
   }
-  
+
+  private function normalizeHTMLEntitiesCallback( $matches ) {
+    // html entityket vissza alakitjuk majd toroljuk az invalid utf sequenceket
+    $valid = preg_replace(
+      '/[^\x{0009}\x{000a}\x{000d}\x{0020}-\x{D7FF}\x{E000}-\x{FFFD}]+/u',
+      '',
+      mb_convert_encoding( $matches[0], 'utf-8', 'HTML-ENTITIES' )
+    );
+
+    // html enttityt vissza, majd keresunk olyan utf sequencet amit muszaj
+    // escapelni
+    $needSpecialChars = preg_match(
+      '/[\x{0022}\x{0026}\x{0027}\x{003e}\x{003e}]/u',
+      mb_convert_encoding( $valid, 'utf-8', 'HTML-ENTITIES' )
+    );
+
+    if ( $needSpecialChars )
+      $valid = htmlspecialchars( $valid, ENT_QUOTES | ENT_XML1, 'utf-8' );
+
+    return $valid;
+  }
+
   public function analyze( $filename, $originalfilename = null ) {
-    
     $config = $this->bootstrap->config;
-    
-    // anonym function to eliminate any invalid htmlentities in Mediainfo's output
-    $_validateHTMLentities = function( $html_ent ) {
-      $valid = preg_replace(
-        '/[^\x{0009}\x{000a}\x{000d}\x{0020}-\x{D7FF}\x{E000}-\x{FFFD}]+/u', '', mb_convert_encoding( $html_ent[0], 'utf-8', 'HTML-ENTITIES' ));
-    
-      if ( preg_match( '/[\x{0022}\x{0026}\x{0027}\x{003e}\x{003e}]/u', mb_convert_encoding( $valid, 'utf-8', 'HTML-ENTITIES' ))) {
-        $valid = htmlspecialchars( $valid, ENT_QUOTES | ENT_XML1, 'utf-8' );
-      }
-      
-      return $valid;
-    };
-    
+
     if ( !$originalfilename )
       $originalfilename = $filename;
     
@@ -637,10 +645,16 @@ class Recordings extends \Springboard\Model {
     
     if ( $this->bootstrap->debug )
       var_dump( $output );
-    
+
+    // mediainfo invalid xmlt adhat vissza, itt tisztitjuk meg
+    $normalizedXML = preg_replace_callback(
+      '/(&#[xX]?[0-9]+;)/',
+      array( $this, 'normalizeHTMLEntitiesCallback' ),
+      $output
+    );
+
     libxml_use_internal_errors( true );
-    $coded = preg_replace_callback( '/(&#[xX]?[0-9]+;)/', $_validateHTMLentities, $output );
-    $xml = new \SimpleXMLElement( $coded );
+    $xml = new \SimpleXMLElement( $normalizedXML );
     libxml_use_internal_errors( false );
     
     $general = current( $xml->xpath('File/track[@type="General"][1]') );
