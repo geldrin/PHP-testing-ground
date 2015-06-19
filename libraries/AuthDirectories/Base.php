@@ -14,7 +14,7 @@ abstract class Base {
   }
 
   public function syncWithUser( $user ) {
-    if ( !$this->directoryuser )
+    if ( !$this->directoryuser or !$user )
       return;
 
     $userModel = $this->bootstrap->getModel('users');
