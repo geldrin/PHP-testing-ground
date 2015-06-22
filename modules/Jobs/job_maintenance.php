@@ -30,6 +30,11 @@ $log_summary .= "JOB: " . $myjobid . "\n\n";
 $debug = Springboard\Debug::getInstance();
 $debug->log($jconf['log_dir'], $myjobid . ".log", "Maintenance job started", $sendmail = false);
 
+if ( $app->config['node_role'] != 'frontend' ) {
+    $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Not a front-end node... exiting.", $sendmail = false);
+    exit;
+}
+
 // Check operating system - exit if Windows
 if ( iswindows() ) {
 	echo "ERROR: Non-Windows process started on Windows platform\n";
@@ -398,13 +403,13 @@ function checkFailedRecordings() {
 		LEFT JOIN
 			`encoding_profiles` AS `ep`
 		ON
-			`rv`.`encodingprofileid`=`ep`.`id`
+			`rv`.`encodingprofileid` = `ep`.`id`
 		LEFT JOIN
 			`recordings` AS `r`
 		ON
 			`rv`.`recordingid`=`r`.`id`
 		WHERE
-		`rv`.`status` LIKE '%failed%'";
+            `rv`.`status` LIKE '%failed%'";
 		
 	$qry_rec = "
 		SELECT
