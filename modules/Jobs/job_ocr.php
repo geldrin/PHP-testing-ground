@@ -508,6 +508,9 @@ function convertOCR($rec) {
 		$numocrwarns++;
 		$langcode = 'hun';
 	}
+	$msg = "[INFO] Selected language code is: '". $langcode ."'.";
+	$debug->log($logdir, $logfile, $msg, false);
+	unset($msg);
 	
 	// KEPKOCKAK KINYERESE //////////////////////////////////
 	$result['phase'] = "Extracting frames from video";
