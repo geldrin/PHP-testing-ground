@@ -253,7 +253,7 @@ class Recordings extends \Springboard\Model {
 
     $cache = implode( ' ', $slides );
     $documents = $this->db->getCol("
-      SELECT documentcache
+      SELECT CONCAT_WS(' ', title, masterfilename, documentcache)
       FROM attached_documents
       WHERE
         recordingid = '" . $this->id . "' AND
