@@ -29,7 +29,7 @@ class Controller extends \Visitor\Controller {
   public function indexAction() {
     
     $categoryModel = $this->bootstrap->getModel('categories');
-    $categories    = $categoryModel->cachedGetCategoryTree( $this->organization['id'] );
+    $categories    = $categoryModel->getCategoryTree( $this->organization['id'] );
     
     if ( $this->application->getParameter('module') == 'api' )
       return $categories;
