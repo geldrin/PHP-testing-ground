@@ -281,11 +281,8 @@ function Main() {
 					}
 					
 					echo " > OK.\n";
-				} elseif ($check_dst['code'] === 0) {
-					// directory is not empty
-				}
 					
-				/*} elseif ($check_dst['code'] === 0 && $recording['ocrstatus'] == $jconf['dbstatus_reconvert']) {
+				} elseif ($check_dst['code'] === 0 && $recording['ocrstatus'] == $jconf['dbstatus_reconvert']) {
 					// directory is not empty
 					$cmd_rmdir = $ssh_template . "rm -R ". $ocr_dst_dir ."*";
 					
@@ -305,20 +302,20 @@ function Main() {
 						$debug->log($logdir, $logfile, $msg, false);
 						echo $msg;
 					}
-				}*/
+				}
 			}
 			// we have the directory nice and clean
 			unset($msg);
 			
 			// Konyvtarak feltoltese
 			$snapdir = $jconf['ocr_dir'] . $recording['id'] ."/ocr/";
-			$msg = "Uploading OCR frames from '". $snapdir ."' to '". $ocr_dst_dir ."'\n";
+			$msg = "Uploading OCR frames from '". $snapdir ."' to '". $rec_base_dir_remote ."'\n";
 			$dat = null;
 			$cmd = null;
 			
 			try {
 				$copy_err = $err_fsize = null;
-				$copy_err = ssh_filecopy2($server, $snapdir, $ocr_dst_dir, $upload = false);
+				$copy_err = ssh_filecopy2($server, $snapdir, $rec_base_dir_remote, $upload = false);
 				
 				if (!$copy_err['code']) {
 					$msg .= "[ERROR] Copying OCR snapshots to frontend has been failed!\nMESSAGE:\n". $copy_err['message'] ."\nRESULT:". $copy_err['result'];
@@ -344,6 +341,7 @@ function Main() {
 				$recDoc = $app->bootstrap->getModel('recordings');
 				$recDoc->select($recording['id']);
 				$recDoc->updateRow($update);
+				$recDoc->updateFulltextCache();
 				
 				$msg = "[INFO] recording_datasize updated. Values: ". print_r($update, 1);
 				$debug->log($logdir, $logfile, $msg, false);
@@ -514,7 +512,7 @@ function convertOCR($rec) {
 	
 	// KEPKOCKAK KINYERESE //////////////////////////////////
 	$result['phase'] = "Extracting frames from video";
-	$cmd_explode = escapeshellcmd($onice ." ". $app->config['ffmpeg_alt'] ." -v ". $app->config['ffmpeg_loglevel'] ." -i ". $rec['contentmasterfile'] ." -filter_complex  'scale=w=320:h=180:force_original_aspect_ratio=decrease' -r ". $app->config['ocr_frame_distance'] ." -q:v 1 -f image2 ". $cmpdir ."%06d.jpg -r ". $app->config['ocr_frame_distance'] ." -q:v 1 -f image2 ". $wdir ."%06d.jpg");
+	$cmd_explode = escapeshellcmd($onice ." ". $app->config['ffmpeg_alt'] ." -v ". $app->config['ffmpeg_loglevel'] ." -i ". $rec['contentmasterfile'] ." -filter_complex  'scale=w=320:h=180:force_original_aspect_ratio=decrease' -r ". $app->config['ocr_frame_distance'] ." -q:v 1 -f image2 ". $cmpdir ."%06d.png -r ". $app->config['ocr_frame_distance'] ." -q:v 1 -f image2 ". $wdir ."%06d.jpg");
 	
 	$debug->log($logdir, $logfile, "Extracting frames from video. Command line:". PHP_EOL . $cmd_explode);
 	
@@ -538,6 +536,7 @@ function convertOCR($rec) {
 			foreach($files as $file) {
 				$frames['frames'][] = array(
 					'file' => pathinfo($file, PATHINFO_BASENAME),    // Basename of extracted frames
+					'flnm' => pathinfo($file, PATHINFO_FILENAME),    // Filename without extension
 					'text' => null,                                  // UTF-8 text extracted from image
 					'dbid' => null,                                  // OCR-hit's database id (required for thumbnail filenames!)
 				);
@@ -561,8 +560,8 @@ function convertOCR($rec) {
 		$p2 = $i + 1;
 		$mean = 0;
 		
-		$img1 = $cmpdir . $frames['frames'][$p1]['file'];
-		$img2 = $cmpdir . $frames['frames'][$p2]['file'];
+		$img1 = $cmpdir . $frames['frames'][$p1]['flnm'] .'.png';
+		$img2 = $cmpdir . $frames['frames'][$p2]['flnm'] .'.png';
 
 		$cmdIMdiff = $onice ." convert \"". $img1 ."\" \"". $img2 ."\" -compose difference -colorspace gray -composite png:- | identify -verbose -format %[fx:mean] png:-";
 		$IMdiff = runExt4($cmdIMdiff);
@@ -656,12 +655,14 @@ function convertOCR($rec) {
 			$ocr_proc_errors++;
 			continue;
 		}
-		$text = addslashes(trim($ocr['output']));
 		
 		if (empty($text)) continue;
+		$text = trim($ocr['output']);
 		
 		// SZOVEGES ADATOK TISZTITASA /////////////////////////
 		$text = sanitizeOCRtext($text);
+		$text = addslashes($text);
+		
 		if ($text !== null || $text !== false) {
 			$frames['frames'][$ptr]['text'] = $text;
 			$frames['processed'][] = $ptr;
@@ -895,12 +896,12 @@ function sanitizeOCRtext($text = null) {
 	if ($text === null || empty($text)) return null;
 	
 	$patterns = array(
-	  // 'whitespaces' => array('p' => "/([\\n\\t\\b])+/",       's' => '\1'),
-		'specials'    => array('p' => "/([^[:punct:]\\w\\d\\s]|[^\\w\\d\\s\\.\\'\"@&#\\-\\(\\)\\[\\]\\{\\}\\/\\\\])+/", 's' => null),
-		'gibberish'   => array('p' => "/([^\\s\\w\\@\\']){2,}|(\\s[^\\w\\s\\@\\']\\s)/", 's' => null), // ne bantsuk az egy-karakteres csoportokat
-		// 'gibberish'   => array('p' => "/([^\\s\\w\\@\\']){2,}|(\\s.\\s)/", 's' => null),            // minden egykarakteres karaktercsoportot eltavolitunk
-		'duplicates'  => array('p' => "/\\b(.+?)(\\1{1,})\\b/", 's' => null),
-	  'whitespaces' => array('p' => "/(\\s+)/", 's' => ' '),
+	  // 'whitespaces' => array('p' => "/([\\n\\t\\b])+/u",       's' => '\1'),
+		'specials'    => array('p' => "/([^[:punct:]\\w\\d\\s]|[^\\w\\d\\s\\.\\'\"@&#\\-\\(\\)\\[\\]\\{\\}\\/\\\\])+/u", 's' => null),
+		'gibberish'   => array('p' => "/([^\\s\\w\\@\\']){2,}|(\\s[^\\w\\s\\@\\']\\s)/u", 's' => null), // ne bantsuk az egy-karakteres csoportokat
+		// 'gibberish'   => array('p' => "/([^\\s\\w\\@\\']){2,}|(\\s.\\s)/u", 's' => null),            // minden egykarakteres karaktercsoportot eltavolitunk
+		'duplicates'  => array('p' => "/\\b(.+?)(\\1{1,})\\b/u", 's' => null),
+	  'whitespaces' => array('p' => "/(\\s+)/u", 's' => ' '),
 	);
 	
 	reset($patterns);
