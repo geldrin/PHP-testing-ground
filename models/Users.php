@@ -1010,7 +1010,10 @@ class Users extends \Springboard\Model {
 
     // a hash valtozzon ha a user passwordot valt, elfelejtette a passwordjet,
     // vagy kitiltjak
-    if ( empty( $row ) or md5( $row['password'] . $row['validationcode'] . $row['disabled'] ) != $values[2] )
+    if (
+         empty( $row ) or
+         md5( $row['password'] . $row['validationcode'] . $row['disabled'] ) != $values[2]
+       )
       return array();
 
     return $row;
