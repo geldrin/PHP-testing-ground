@@ -606,9 +606,9 @@ function convertOCR($rec) {
 
 	// HASZNOS FRAME-EK KIGYUJTESE //////////////////////////
 	$result['phase'] = "Collecting useful frames";
+  $frames2remove = array();
 	if (!empty($motion)) {
 		$debug->log($logdir, $logfile, "Removing motion scenes...", false);
-		$frames2remove = array();
 
 		foreach($motion as $movie_scene) {
 			$frames2remove += array_intersect($frames['transitions'], range(($movie_scene['start'] + 1), $movie_scene['stop']));
@@ -617,10 +617,10 @@ function convertOCR($rec) {
 			$frames['sorted'][] = ( int ) floor(abs($movie_scene['start'] - $movie_scene['stop']) / 2) + $movie_scene['start'];
 		}
 
-		$frames['sorted'] = array_diff($frames['transitions'], $frames2remove);
-		$frames['sorted'] = array_values($frames['sorted']);
-		unset($motion, $frames2remove);
 	}
+  $frames['sorted'] = array_diff($frames['transitions'], $frames2remove);
+  $frames['sorted'] = array_values($frames['sorted']);
+  unset($motion, $frames2remove);
 	
 	if (empty($frames['sorted'])) {
 		$result['result'] = true;
@@ -656,7 +656,7 @@ function convertOCR($rec) {
 			continue;
 		}
 		
-		if (empty($text)) continue;
+		if (empty($ocr['output'])) continue;
 		$text = trim($ocr['output']);
 		
 		// SZOVEGES ADATOK TISZTITASA /////////////////////////
