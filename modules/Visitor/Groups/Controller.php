@@ -26,7 +26,7 @@ class Controller extends \Visitor\Controller {
   
   public function deleteAction() {
     
-    $groupModel = $this->modelOrganizationAndIDCheck(
+    $groupModel = $this->modelOrganizationAndUserIDCheck(
       'groups',
       $this->application->getNumericParameter('id')
     );
@@ -48,11 +48,18 @@ class Controller extends \Visitor\Controller {
       $this->application->getNumericParameter('id')
     );
     $userid = $this->application->getNumericParameter('userid');
+    $user   = $this->bootstrap->getSession('user');
 
     if ( $userid <= 0 or $groupModel->row['source'] === 'directory' )
       $this->redirect( $this->application->getParameter('forward', 'groups') );
 
-    $groupModel->deleteUser( $userid );
+    if (
+         $userid == $user['id'] or
+         $user['id'] == $groupModel->row['userid'] or
+         $user['isclientadmin']
+       )
+      $groupModel->deleteUser( $userid );
+
     $this->redirect(
       $this->application->getParameter(
         'forward',
