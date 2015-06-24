@@ -656,12 +656,12 @@ function convertOCR($rec) {
       continue;
     }
     
-    if (empty($ocr['output'])) continue;
-    $text = trim($ocr['output']);
-    
     // SZOVEGES ADATOK TISZTITASA /////////////////////////
+    $text = trim($ocr['output']);
     $text = sanitizeOCRtext($text);
     $text = addslashes($text);
+    
+    if (empty($ocr['output'])) continue;
     
     if ($text !== null || $text !== false) {
       $frames['frames'][$ptr]['text'] = $text;
