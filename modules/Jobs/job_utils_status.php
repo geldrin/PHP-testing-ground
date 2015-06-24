@@ -341,10 +341,10 @@ global $app, $debug, $jconf, $myjobid;
 
 	if ( !empty($type) and ( $type != "indexingstatus" ) ) return false;
 
-	if ( empty($status) ) return false;
-
 	$idx = "";
 	if ( $type == "indexingstatus" ) $idx = "indexing";
+
+    if ( empty($status) ) $status = null;
 
 	$values = array(
 		$idx . 'status' => $status

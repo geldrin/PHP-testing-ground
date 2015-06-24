@@ -58,7 +58,6 @@ while( !is_file( $app->config['datapath'] . 'jobs/' .$myjobid . '.stop' ) and !i
 		$app->watchdog();
 
 		// Establish database connection
-		$db = null;
 		$db = db_maintain();
 
 		$converter_sleep_length = $app->config['sleep_media'];
@@ -113,7 +112,7 @@ while( !is_file( $app->config['datapath'] . 'jobs/' .$myjobid . '.stop' ) and !i
 		if ( !copy_attacheddoc_to_converter($attached_doc) ) break;
 
 		// Set status to indexing
-        updateAttachedDocumentStatus($attached_doc['id'], $jconf['dbstatus_indexing'], 'indexingstatus');
+        //updateAttachedDocumentStatus($attached_doc['id'], $jconf['dbstatus_indexing'], 'indexingstatus');
 
 		// Check file size
 		$attached_doc['filesize'] = filesize($attached_doc['source_file']);
@@ -182,15 +181,24 @@ while( !is_file( $app->config['datapath'] . 'jobs/' .$myjobid . '.stop' ) and !i
 			$content_pdf = $attached_doc['temp_directory'] . $attached_doc['id'] . ".pdf";
 
 			// Launch unoconv
-			$command = "unoconv -f pdf " . $attached_doc['source_file']. " 2>&1";
+            unset($output);
+			$command = "unoconv -n -v -f pdf " . $attached_doc['source_file'] . " 2>&1";
 			exec($command, $output, $result);
 			$output_string = implode("\n", $output);
-			// unoconv: sometimes it returns "Floating point exception", but result is produced. Maybe output is truncated?
-			if ( ( $result != 0 ) and ( stripos($output_string, "Floating point exception") === false ) ) {
-                updateAttachedDocumentStatus($attached_doc['id'], $jconf['dbstatus_indexing_err'], 'indexingstatus');
-				log_document_conversion($attached_doc['id'], $attached_doc['rec_id'], $jconf['jobid_document_index'], $jconf['dbstatus_indexing'], "[ERROR] unoconv conversion error.\n\n" . $output_string, $command, $result, 0, true);
-				break;
+			if ( $result != 0 ) {
+                // Normal unoconv error: permanent, report and stop processing
+                if ( ( stripos($output_string, "Floating point exception") === false ) and ( stripos($output_string, "Segmentation fault") === false ) ) {
+                    updateAttachedDocumentStatus($attached_doc['id'], $jconf['dbstatus_indexing_err'], 'indexingstatus');
+                    log_document_conversion($attached_doc['id'], $attached_doc['rec_id'], $jconf['jobid_document_index'], $jconf['dbstatus_indexing'], "[ERROR] unoconv conversion error.\n\n" . $output_string, $command, $result, 0, true);
+                    break;
+                } else {
+                    // Sometimes "Floating point exception" or "Segmentation fault" is returned. Maybe output is truncated, do not set an error. Start over in the next run until it goes through.
+                    updateAttachedDocumentStatus($attached_doc['id'], null, 'indexingstatus');
+                    log_document_conversion($attached_doc['id'], $attached_doc['rec_id'], $jconf['jobid_document_index'], $jconf['dbstatus_indexing'], "[ERROR] unoconv conversion temporary error. Will start over.\n\n" . $output_string, $command, $result, 0, false);
+                    break;
+                }
 			}
+            
 
 			$is_pres_pdf_source = true;
 		}
@@ -205,6 +213,7 @@ while( !is_file( $app->config['datapath'] . 'jobs/' .$myjobid . '.stop' ) and !i
 			$content_file = $attached_doc['temp_directory'] . $attached_doc['id'] . ".txt";
 
 			// Call pdftotext
+            unset($output);
 			$command = "pdftotext -q -nopgbrk -layout -enc UTF-8 " . $source_file;
 			exec($command, $output, $result);
 			$output_string = implode("\n", $output);
@@ -230,14 +239,22 @@ while( !is_file( $app->config['datapath'] . 'jobs/' .$myjobid . '.stop' ) and !i
 			$content_file = $attached_doc['temp_directory'] . $attached_doc['id'] . ".txt";
 
 			// Launch unoconv
-			$command = "unoconv -f txt " . $attached_doc['source_file']. " 2>&1";
+            unset($output);
+			$command = "unoconv -n -v -f txt " . $attached_doc['source_file'] . " 2>&1";
 			exec($command, $output, $result);
 			$output_string = implode("\n", $output);
-			// unoconv: sometimes it returns "Floating point exception", but result is produced. Maybe output is truncated.
-			if ( ( $result != 0 ) and ( $output_string != "Floating point exception" ) ) {
-                updateAttachedDocumentStatus($attached_doc['id'], $jconf['dbstatus_indexing_err'], 'indexingstatus');
-				log_document_conversion($attached_doc['id'], $attached_doc['rec_id'], $jconf['jobid_document_index'], $jconf['dbstatus_indexing'], "[ERROR] unoconv conversion error.\n\n" . $output_string, $command, $result, 0, true);
-				break;
+			if ( $result != 0 ) {
+                // Normal unoconv error: permanent, report and stop processing
+                if ( ( stripos($output_string, "Floating point exception") === false ) and ( stripos($output_string, "Segmentation fault") === false ) ) {
+                    updateAttachedDocumentStatus($attached_doc['id'], $jconf['dbstatus_indexing_err'], 'indexingstatus');
+                    log_document_conversion($attached_doc['id'], $attached_doc['rec_id'], $jconf['jobid_document_index'], $jconf['dbstatus_indexing'], "[ERROR] unoconv conversion error.\n\n" . $output_string, $command, $result, 0, true);
+                    break;
+                } else {
+                    // Sometimes "Floating point exception" or "Segmentation fault" is returned. Maybe output is truncated, do not set an error. Start over in the next run until it goes through.
+                    updateAttachedDocumentStatus($attached_doc['id'], null, 'indexingstatus');
+                    log_document_conversion($attached_doc['id'], $attached_doc['rec_id'], $jconf['jobid_document_index'], $jconf['dbstatus_indexing'], "[ERROR] unoconv conversion temporary error. Will start over.\n\n" . $output_string, $command, $result, 0, false);
+                    break;
+                }
 			}
 
 		}
@@ -303,6 +320,7 @@ exit;
 function file_identify($filename) {
  global $jconf;
 
+    unset($output);
 	$command = "file -z -b " . $filename;
 	exec($command, $output, $result);
 	$output_string = implode("\n", $output);
