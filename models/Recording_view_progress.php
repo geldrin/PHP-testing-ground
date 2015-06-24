@@ -10,14 +10,14 @@ class Recording_view_progress extends \Springboard\Model {
       SELECT
         rvp.userid,
         u.email,
-        rvp.recordingid,
+        rvs.recordingid,
         r.title,
-        GREATEST(r.masterlength, r.contentmasterlength) AS recordinglength,
+        ROUND( GREATEST(r.masterlength, r.contentmasterlength) ) AS recordinglength,
         ROUND(
           (
             rvp.position / GREATEST(r.masterlength, r.contentmasterlength)
           ) * 100
-        ) AS watchedpercent,
+        ) AS totalwatchedpercent,
         IF(
           ROUND(
             (
@@ -26,17 +26,34 @@ class Recording_view_progress extends \Springboard\Model {
           ) >= $needpercent,
           1,
           0
-        ) AS completed,
-        rvp.position
+        ) AS totalcompleted,
+        (rvs.positionuntil - rvs.positionfrom) AS sessionwatchedduration,
+        ROUND(
+          (
+            (rvs.positionuntil - rvs.positionfrom) /
+            GREATEST(r.masterlength, r.contentmasterlength)
+          ) * 100
+        ) AS sessionwatchedpercent,
+        rvs.positionfrom AS sessionwatchedfrom,
+        rvs.positionuntil AS sessionwatcheduntil,
+        rvs.timestampfrom AS sessionwatchedtimestampfrom,
+        rvs.timestampuntil AS sessionwatchedtimestampuntil
       FROM
+        recording_view_sessions AS rvs,
         recording_view_progress AS rvp,
         users AS u,
         recordings AS r
       WHERE
         u.id = rvp.userid AND
-        r.id = rvp.recordingid
+        u.id = rvs.userid AND
+        r.id = rvp.recordingid AND
+        r.id = rvs.recordingid AND
+        rvp.position > 0 -- resetelt a progress mert tul sok kimaradas volt, nem erdekes
         $where
-      ORDER BY rvp.recordingid, rvp.timestamp
+      ORDER BY
+        rvs.recordingid,
+        rvs.userid,
+        rvs.id
     ");
   }
 
@@ -45,7 +62,7 @@ class Recording_view_progress extends \Springboard\Model {
       return '';
 
     $where = array();
-    if ( isset( $filter['email'] ) )
+    if ( isset( $filter['email'] ) and $filter['email'] )
       $where[] = "u.email = " . $this->db->qstr( $filter['email'] );
 
     if ( isset( $filter['completed'] ) ) {

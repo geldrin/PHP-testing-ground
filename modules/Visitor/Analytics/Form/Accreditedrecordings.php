@@ -35,14 +35,19 @@ class Accreditedrecordings extends \Visitor\HelpForm {
     fputcsv(
       $f,
       array(
-        'userid',
-        'useremail',
-        'recordingid',
-        'recordingtitle',
-        'recordinglength',
-        'watchedpercent',
-        'completed',
-        'position',
+        'userId',
+        'userEmail',
+        'recordingId',
+        'recordingTitle',
+        'recordingLength',
+        'totalWatchedPercent',
+        'totalCompleted',
+        'sessionWatchedDurationSeconds',
+        'sessionWatchedPercent',
+        'sessionWatchedFromSeconds',
+        'sessionWatchedUntilSeconds',
+        'sessionWatchedFromTimestamp',
+        'sessionWatchedUntilTimestamp',
       ),
       $this->delimiter
     );
@@ -56,14 +61,21 @@ class Accreditedrecordings extends \Visitor\HelpForm {
           $row['recordingid'],
           $row['title'],
           $row['recordinglength'],
-          $row['watchedpercent'],
-          $row['completed'],
-          $row['position'],
+          $row['totalwatchedpercent'],
+          $row['totalcompleted'],
+          $row['sessionwatchedduration'],
+          $row['sessionwatchedpercent'],
+          $row['sessionwatchedfrom'],
+          $row['sessionwatcheduntil'],
+          $row['sessionwatchedtimestampfrom'],
+          $row['sessionwatchedtimestampuntil'],
         ),
         $this->delimiter
       );
 
     fclose( $f );
+    die();
+
   }
 
 }
