@@ -1,6 +1,6 @@
 <?php
 $config = array(
-  'version'      => '_v20150625',
+  'version'      => '_v20150421',
   'charset'      => 'UTF-8',
   'cacheseconds' => 3600,
   'errormessage' => 'An unexpected error has occured, our staff has been notified. Sorry for the inconvenience and thanks for your understanding!',
@@ -244,7 +244,7 @@ $config = array(
   
   //----
   'loadgoogleanalytics' => true,
-  'googleanalytics_trackingcode' => 'UA-34892054-1',
+  'googleanalytics_fallbacktrackingcode' => 'UA-34892054-1',
   'loadaddthis' => true,
   
   //----
