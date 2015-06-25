@@ -244,6 +244,7 @@ $config = array(
   
   //----
   'loadgoogleanalytics' => true,
+  'googleanalytics_trackingcode' => 'UA-34892054-1',
   'loadaddthis' => true,
   
   //----
