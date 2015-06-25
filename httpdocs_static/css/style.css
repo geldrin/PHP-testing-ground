@@ -1938,6 +1938,12 @@ a#currentusername span {
   width: 590px;
   background-image: url(images/infotoggle_gradient.png);
 }
+#metadata .attachments h3 {
+  line-height: 20px;
+  font-size: 16px;
+  font-weight: normal;
+  margin: 0 0 2px 0;
+}
 #metadata .attachments ul {
   margin: 0;
   padding-left: 20px;
