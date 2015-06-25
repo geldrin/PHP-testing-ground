@@ -12,7 +12,7 @@
 <script type="text/javascript">
 
   var _gaq = _gaq || [];
-  _gaq.push(['_setAccount', '{$bootstrap->config.googleanalytics_trackingcode}']);
+  _gaq.push(['_setAccount', '{$organization.googleanalyticstrackingcode|default:$bootstrap->config.googleanalytics_trackingcode}']);
   _gaq.push(['_trackPageview']);
 {literal}
   (function() {

@@ -135,7 +135,7 @@ $config = Array(
       ),
     ),
   ),
-  
+
   'supportemail' => array(
     'displayname' => 'Support e-mail cím',
     'type'        => 'inputText',
@@ -314,6 +314,19 @@ $config = Array(
     'type'        => 'inputRadio',
     'values'      => $l->getLov('yesno'),
     'value'       => 0,
+  ),
+
+  'googleanalyticstrackingcode' => array(
+    'displayname' => 'Google Analytics kód',
+    'type'        => 'inputText',
+    'validation'  => array(
+      array(
+        'type' => 'string',
+        'minimum'  => 2,
+        'maximum'  => 512,
+        'required' => false,
+      ),
+    ),
   ),
 
   'disabled' => array(
