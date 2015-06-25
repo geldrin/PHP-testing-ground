@@ -3385,6 +3385,8 @@ class Recordings extends \Springboard\Model {
       r.indexphotofilename,
       '0' AS channeltypeid,
       r.recordedtimestamp,
+      r.timestamp,
+      r.metadataupdatedtimestamp,
       r.numberofviews,
       r.rating,
       '0' AS numberofrecordings

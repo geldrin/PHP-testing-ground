@@ -3,9 +3,9 @@ namespace Visitor\Search\Paging;
 class All extends \Visitor\Paging {
   protected $orderkey = 'relevancy_desc';
   protected $sort = array(
-    'relevancy_desc'         => 'relevancy DESC',
-    'recordedtimestamp_desc' => 'recordedtimestamp DESC',
-    'recordedtimestamp'      => 'recordedtimestamp',
+    'relevancy_desc'             => 'relevancy DESC',
+    'recordedtimestamp_desc'     => 'recordedtimestamp DESC',
+    'recordedtimestamp'          => 'recordedtimestamp',
   );
   
   protected $insertbeforepager = Array( 'Visitor/Search/Paging/AllBeforepager.tpl' );

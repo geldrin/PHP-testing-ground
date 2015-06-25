@@ -2700,6 +2700,9 @@ a#currentusername span {
 }
 
 /* advanced search */
+.form.search {
+  margin: 0 0 5px 0;
+}
 .searchtable {
 }
 .searchtable td {

@@ -10,7 +10,7 @@
 </div>
 
 {if !empty( $items )}
-{capture assign=url}{$language}/search/all?q={$searchterm|escape:url}&order=%s{/capture}
+{capture assign=url}{$language}/search/all?q={$searchterm|escape:url}&amp;order=%s{/capture}
 
 <div class="sort">
   <div class="item">

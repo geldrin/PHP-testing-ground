@@ -3,11 +3,15 @@ namespace Visitor\Search\Paging;
 class Advanced extends \Visitor\Paging {
   protected $orderkey = 'relevancy_desc';
   protected $sort = array(
-    'relevancy_desc'         => 'relevancy DESC',
-    'recordedtimestamp_desc' => 'recordedtimestamp DESC',
-    'recordedtimestamp'      => 'recordedtimestamp',
+    'relevancy_desc'             => 'relevancy DESC',
+    'recordedtimestamp_desc'     => 'recordedtimestamp DESC',
+    'recordedtimestamp'          => 'recordedtimestamp',
+    'uploadedtimestamp'          => 'timestamp',
+    'uploadedtimestamp_desc'     => 'timestamp DESC',
+    'lastmodifiedtimestamp'      => 'metadataupdatedtimestamp',
+    'lastmodifiedtimestamp_desc' => 'metadataupdatedtimestamp DESC',
   );
-  
+
   protected $insertbeforepager = Array( 'Visitor/Search/Paging/AdvancedBeforepager.tpl' );
   protected $template = 'Visitor/Search/Paging/Advanced.tpl';
   protected $recordingsModel;
@@ -33,9 +37,12 @@ class Advanced extends \Visitor\Paging {
       $form->getHTML()
     ;
     parent::init();
-    
+
     $this->searchterms = $this->getSearchParams();
-    
+    $this->controller->toSmarty['searchurl'] =
+      $this->getUrl() . '?s=1&' . http_build_query( $this->searchterms )
+    ;
+
     if ( !$this->formvalid )
      $this->foreachelse = $l('search', 'search_minimum_3chars');
     
