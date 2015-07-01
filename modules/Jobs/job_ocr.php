@@ -457,6 +457,7 @@ function convertOCR($rec) {
 
   $errstr = "Function convertOCR(rec#". $rec['id'] .") failed!"; //// Megtarthato?????
   
+  $app->watchdog();
   $debug->log($logdir, $logfile, str_pad("[ Starting ocr process on recording #". $rec['id'] ." ]", 100, '-', STR_PAD_BOTH), false);
 
   // IDEIGLENES KONYVTARAK ELOKESZITESE ///////////////////
@@ -517,7 +518,8 @@ function convertOCR($rec) {
   $debug->log($logdir, $logfile, "Extracting frames from video. Command line:". PHP_EOL . $cmd_explode);
   
   $err = runExt4($cmd_explode);
-
+  $app->watchdog();
+  
   // $err['code'] = 0; //// DEBUG
   if ($err['code'] !== 0) {
     $msg = "[ERROR] Can't extract frames from video! Message:\n". $err['cmd_output'] ."Command:\n". $cmd_explode;
@@ -604,6 +606,7 @@ function convertOCR($rec) {
   
   $debug->log($logdir, $logfile, " > ". count($motion) ." motion sections have been detected.");
 
+
   // HASZNOS FRAME-EK KIGYUJTESE //////////////////////////
   $result['phase'] = "Collecting useful frames";
   $frames2remove = array();
@@ -621,6 +624,7 @@ function convertOCR($rec) {
   $frames['sorted'] = array_diff($frames['transitions'], $frames2remove);
   $frames['sorted'] = array_values($frames['sorted']);
   unset($motion, $frames2remove);
+  $app->watchdog();
   
   if (empty($frames['sorted'])) {
     $result['result'] = true;
@@ -669,6 +673,7 @@ function convertOCR($rec) {
     }
   }
   
+  $app->watchdog();
   $log_ocr_progress .= count($frames['processed']) . " frames has been processed out of ". count($frames['sorted']) .".\nTotal number of warnings: " . $ocr_proc_errors .".";
   $debug->log($logdir, $logfile, $log_ocr_progress, false);
   
@@ -715,6 +720,7 @@ function convertOCR($rec) {
       }
     }
   }
+  $app->watchdog();
   
   if ($result['message']) {
     $debug->log($logdir, $logfile, $result['message'], false);
@@ -729,7 +735,7 @@ function convertOCR($rec) {
     return $result;
   }
   
-  foreach($frames['sorted'] as $f) {
+  foreach($frames['processed'] as $f) {
     $src = $wdir . $frames['frames'][$f]['file'];
     $dst = $snapshotparams['folders']['original'] . DIRECTORY_SEPARATOR . $rec['id'] ."_". $frames['frames'][$f]['dbid'] .".jpg";
     if (!copy($src, $dst)) {
