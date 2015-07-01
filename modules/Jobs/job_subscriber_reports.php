@@ -20,7 +20,6 @@ $app = new Springboard\Application\Cli(BASE_PATH, PRODUCTION);
 // Load jobs configuration file
 $app->loadConfig('modules/Jobs/config_jobs.php');
 $jconf = $app->config['config_jobs'];
-//$myjobid = $jconf['jobid_subscriber_reports'];
 $myjobid = "job_subscriber_reports";
 
 // Log related init
@@ -31,7 +30,6 @@ $debug->log($jconf['log_dir'], $myjobid . ".log", "Subscriber reports job starte
 if ( is_file( $app->config['datapath'] . 'jobs/' . $myjobid . '.stop' ) or is_file( $app->config['datapath'] . 'jobs/all.stop' ) ) exit;
 
 // Establish database connection
-$db = null;
 $db = db_maintain();
 
 // Is organization specified on command line?
@@ -288,19 +286,36 @@ while ( !$org_contracts->EOF ) {
         if ( !empty($mail_body) )  $mail .= $mail_body;
         if ( !empty($mail_body2) ) $mail .= $mail_body2;
 
+        // Write results to CSV file
+        $output_file = "/tmp/vsq_accredited_" . $org['id'] . "_" . date("Y-m-d H:i:s") . ".csv";
+        $fh = fopen($output_file, "w");
+        $output_file_iswritten = false;
+        if ( fwrite($fh, $mail) === false ) {
+            $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Cannot write subscriber report CSV file: " . $output_file, $sendmail = true);
+        } else {
+            $output_file_iswritten = true;
+        }
+        fclose($fh);
+        
         // Send HTML mail
         $mail_list = explode(";", $org['reportemailaddresses']);
         $html_mail = nl2br($mail, true);
         for ($q = 0; $q < count($mail_list); $q++) {
             if (!filter_var($mail_list[$q], FILTER_VALIDATE_EMAIL)) {
-                $debug->log($jconf['log_dir'], ($myjobid . ".log"), "[ERROR] Mail address is not valid in organization_contracts DB table: " . $org['reportemailaddresses'], $sendmail = false);
+                $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Mail address is not valid in organization_contracts DB table: " . $org['reportemailaddresses'], $sendmail = false);
                 continue;
             }
-            
+
+            // Send e-mail
             $queue = $app->bootstrap->getMailqueue();
             $queue->instant = 1;
-            $queue->sendHTMLEmail($mail_list[$q], $subject, $html_mail);
+            //$queue->sendHTMLEmail($mail_list[$q], $subject, $html_mail);
+            $queue->put($mail_list[$q], null, $subject, "Tisztelt Ügyfelünk!\n\nA kreditpontos előrehaladást tartalmazó jelentést CSV formátumban mellékeltük.\n\nÜdvözlettel,\nsupport@videosqr.com", array('1' => $output_file), 'text/plain; charset="UTF-8"');
+
         }
+        
+        // Remove temp file
+        if ( $output_file_iswritten ) unlink($output_file);
         
         // Log outgoing message
         $debug->log($jconf['log_dir'], ($myjobid . ".log"), "[INFO] Information sent to subscriber: " . $org['reportemailaddresses'] . "\n\n" . $mail, $sendmail = false);
