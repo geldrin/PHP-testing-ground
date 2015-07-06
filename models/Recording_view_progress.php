@@ -12,16 +12,16 @@ class Recording_view_progress extends \Springboard\Model {
         u.email,
         rvs.recordingid,
         r.title,
-        ROUND( GREATEST(r.masterlength, r.contentmasterlength) ) AS recordinglength,
+        ROUND( GREATEST(r.masterlength, IFNULL(r.contentmasterlength, 0)) ) AS recordinglength,
         ROUND(
           (
-            rvp.position / GREATEST(r.masterlength, r.contentmasterlength)
+            rvp.position / GREATEST(r.masterlength, IFNULL(r.contentmasterlength, 0))
           ) * 100
         ) AS totalwatchedpercent,
         IF(
           ROUND(
             (
-              rvp.position / GREATEST(r.masterlength, r.contentmasterlength)
+              rvp.position / GREATEST(r.masterlength, IFNULL(r.contentmasterlength, 0))
             ) * 100
           ) >= $needpercent,
           1,
@@ -31,7 +31,7 @@ class Recording_view_progress extends \Springboard\Model {
         ROUND(
           (
             (rvs.positionuntil - rvs.positionfrom) /
-            GREATEST(r.masterlength, r.contentmasterlength)
+            GREATEST(r.masterlength, IFNULL(r.contentmasterlength, 0))
           ) * 100
         ) AS sessionwatchedpercent,
         rvs.positionfrom AS sessionwatchedfrom,
@@ -71,7 +71,7 @@ class Recording_view_progress extends \Springboard\Model {
       $where[]     = "
         ROUND(
           (
-            rvp.position / GREATEST(r.masterlength, r.contentmasterlength)
+            rvp.position / GREATEST(r.masterlength, IFNULL(r.contentmasterlength, 0))
           ) * 100
         ) $inequality $needpercent
       ";
