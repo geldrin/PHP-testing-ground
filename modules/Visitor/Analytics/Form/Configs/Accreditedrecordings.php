@@ -72,6 +72,12 @@ $config = array(
             email = <FORM.email> AND
             organizationid = '" . $this->controller->organization['id'] . "'
         ",
+        'anddepend' => array(
+          array(
+            'js'  => '<FORM.email> != ""',
+            'php' => '<FORM.email> != ""',
+          ),
+        ),
       ),
     ),
   ),
