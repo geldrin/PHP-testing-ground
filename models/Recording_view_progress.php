@@ -9,7 +9,11 @@ class Recording_view_progress extends \Springboard\Model {
     return $this->db->query("
       SELECT
         rvp.userid,
-        u.email,
+        IF(
+          u.externalid IS NOT NULL AND LENGTH(u.externalid) > 0,
+          u.externalid,
+          u.email
+        ) AS email,
         rvs.recordingid,
         r.title,
         ROUND( GREATEST(r.masterlength, IFNULL(r.contentmasterlength, 0)) ) AS recordinglength,
