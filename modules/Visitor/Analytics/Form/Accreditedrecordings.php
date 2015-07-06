@@ -23,6 +23,22 @@ class Accreditedrecordings extends \Visitor\HelpForm {
     $values = $this->form->getElementValues( 0 );
     $progressModel = $this->bootstrap->getModel('recording_view_progress');
 
+    if ( $values['email'] ) {
+      $userModel = $this->bootstrap->getModel('users');
+      $exists = $userModel->checkEmailAndDisabledStatus(
+        $values['email'], '0', $this->controller->organization['id']
+      );
+
+      if ( !$exists ) {
+        $l = $this->bootstrap->getLocalization();
+        $this->form->addMessage(
+          $l('analytics','accreditedrecordings_emailnotfoundhelp')
+        );
+        $this->form->invalidate();
+        return;
+      }
+    }
+
     $filename = 'videosquare-accreditrecordings-' . date('YmdHis') . '.csv';
     \Springboard\Browser::downloadHeaders( $filename, 'text/csv' );
 

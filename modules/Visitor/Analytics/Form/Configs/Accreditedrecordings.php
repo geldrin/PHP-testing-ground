@@ -59,26 +59,6 @@ $config = array(
         'regexp'   => CF_EMAIL,
         'help'     => $l('users', 'emailhelp')
       ),
-      array(
-        'type'     => 'database',
-        'help'     => $l('analytics','accreditedrecordings_emailnotfoundhelp'),
-        'required' => false,
-        'field'    => 'counter',
-        'value'    => '1',
-        'sql'      => "
-          SELECT count(*) as counter 
-          FROM users
-          WHERE
-            email = <FORM.email> AND
-            organizationid = '" . $this->controller->organization['id'] . "'
-        ",
-        'anddepend' => array(
-          array(
-            'js'  => '<FORM.email> != ""',
-            'php' => '<FORM.email> != ""',
-          ),
-        ),
-      ),
     ),
   ),
 
