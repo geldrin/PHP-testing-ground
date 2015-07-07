@@ -23,6 +23,10 @@ class Accreditedrecordings extends \Visitor\HelpForm {
     $values = $this->form->getElementValues( 0 );
     $progressModel = $this->bootstrap->getModel('recording_view_progress');
 
+    // hogy ne szerepeljen a filterbe -> mindent kiirunk
+    if ( $values['completed'] )
+      unset( $values['completed'] );
+
     if ( $values['email'] ) {
       $userModel = $this->bootstrap->getModel('users');
       $exists = $userModel->checkEmailAndDisabledStatus(

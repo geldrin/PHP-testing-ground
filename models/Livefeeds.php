@@ -796,6 +796,8 @@ class Livefeeds extends \Springboard\Model {
       SELECT
         lc.*,
         SUBSTRING_INDEX(lc.anonymoususer, '_', 1) AS anonuserid,
+        u.externalid,
+        u.email,
         u.nickname,
         u.nameformat,
         u.nameprefix,
@@ -818,6 +820,8 @@ class Livefeeds extends \Springboard\Model {
       SELECT
         lc.*,
         SUBSTRING_INDEX(lc.anonymoususer, '_', 1) AS anonuserid,
+        u.externalid,
+        u.email,
         u.nickname,
         u.nameformat,
         u.nameprefix,
