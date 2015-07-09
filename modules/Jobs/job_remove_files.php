@@ -142,7 +142,20 @@ if ( $recordings !== false ) {
             updateRecordingStatus($recording['id'], $jconf['dbstatus_deleted'], "recording");
             updateMasterRecordingStatus($recording['id'], $jconf['dbstatus_deleted'], "recording");
             updateRecordingStatus($recording['id'], $jconf['dbstatus_deleted'], "mobile");
-            $filter = $jconf['dbstatus_copystorage_ok'] . "|" . $jconf['dbstatus_conv'] . "|" . $jconf['dbstatus_convert'] . "|" . $jconf['dbstatus_stop'] . "|" . $jconf['dbstatus_copystorage'] . "|" . $jconf['dbstatus_copyfromfe'] . "|" . $jconf['dbstatus_copyfromfe_ok'] . "|" . $jconf['dbstatus_reconvert'] . "|" . $jconf['dbstatus_markedfordeletion'];
+            $filter = implode('|', array(
+              $jconf['dbstatus_conv'],
+              $jconf['dbstatus_convert'],
+              $jconf['dbstatus_conv_err'],
+              $jconf['dbstatus_reconvert'],
+              $jconf['dbstatus_copystorage_ok'],
+              $jconf['dbstatus_copyfromfe_ok'],
+              $jconf['dbstatus_copyfromfe_err'],
+              $jconf['dbstatus_copystorage'],
+              $jconf['dbstatus_copyfromfe'],
+              $jconf['dbstatus_copystorage_err'],
+              $jconf['dbstatus_stop'],
+              $jconf['dbstatus_markedfordeletion'],
+            ));
             updateRecordingVersionStatusApplyFilter($recording['id'], $jconf['dbstatus_deleted'], "all", $filter);
             updateRecordingStatus($recording['id'], null, "smil");
         }
@@ -306,7 +319,19 @@ if ( $recordings !== false ) {
             updateMasterRecordingStatus($recording['id'], $jconf['dbstatus_deleted'], "content");
             updateRecordingStatus($recording['id'], $jconf['dbstatus_deleted'], "content");
             // recordings_versions.status := "markedfordeletion" for all content surrogates (will be deleted in the next step, see below)
-            $filter = $jconf['dbstatus_copystorage_ok'] . "|" . $jconf['dbstatus_conv'] . "|" . $jconf['dbstatus_convert'] . "|" . $jconf['dbstatus_stop'] . "|" . $jconf['dbstatus_copystorage'] . "|" . $jconf['dbstatus_copyfromfe'] . "|" . $jconf['dbstatus_copyfromfe_ok'] . "|" . $jconf['dbstatus_reconvert'];
+            $filter = implode('|', array(
+              $jconf['dbstatus_conv'],
+              $jconf['dbstatus_convert'],
+              $jconf['dbstatus_conv_err'],
+              $jconf['dbstatus_reconvert'],
+              $jconf['dbstatus_copystorage_ok'],
+              $jconf['dbstatus_copyfromfe_ok'],
+              $jconf['dbstatus_copyfromfe_err'],
+              $jconf['dbstatus_copystorage'],
+              $jconf['dbstatus_copyfromfe'],
+              $jconf['dbstatus_copystorage_err'],
+              $jconf['dbstatus_stop'],
+            ));
             updateRecordingVersionStatusApplyFilter($recording['id'], $jconf['dbstatus_markedfordeletion'], "content|pip", $filter);
             // contentsmilstatus
             updateRecordingStatus($recording['id'], null, "contentsmil");
