@@ -143,6 +143,8 @@ if ( $recordings !== false ) {
             updateMasterRecordingStatus($recording['id'], $jconf['dbstatus_deleted'], "recording");
             updateRecordingStatus($recording['id'], $jconf['dbstatus_deleted'], "mobile");
             $filter = implode('|', array(
+              $jconf['dbstatus_init'],
+              $jconf['dbstatus_uploaded'],
               $jconf['dbstatus_conv'],
               $jconf['dbstatus_convert'],
               $jconf['dbstatus_conv_err'],
@@ -153,6 +155,7 @@ if ( $recordings !== false ) {
               $jconf['dbstatus_copystorage'],
               $jconf['dbstatus_copyfromfe'],
               $jconf['dbstatus_copystorage_err'],
+              $jconf['dbstatus_update_err'],
               $jconf['dbstatus_stop'],
               $jconf['dbstatus_markedfordeletion'],
             ));
@@ -320,6 +323,8 @@ if ( $recordings !== false ) {
             updateRecordingStatus($recording['id'], $jconf['dbstatus_deleted'], "content");
             // recordings_versions.status := "markedfordeletion" for all content surrogates (will be deleted in the next step, see below)
             $filter = implode('|', array(
+              $jconf['dbstatus_init'],
+              $jconf['dbstatus_uploaded'],
               $jconf['dbstatus_conv'],
               $jconf['dbstatus_convert'],
               $jconf['dbstatus_conv_err'],
@@ -330,6 +335,7 @@ if ( $recordings !== false ) {
               $jconf['dbstatus_copystorage'],
               $jconf['dbstatus_copyfromfe'],
               $jconf['dbstatus_copystorage_err'],
+              $jconf['dbstatus_update_err'],
               $jconf['dbstatus_stop'],
             ));
             updateRecordingVersionStatusApplyFilter($recording['id'], $jconf['dbstatus_markedfordeletion'], "content|pip", $filter);
