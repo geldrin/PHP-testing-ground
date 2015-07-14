@@ -386,9 +386,11 @@ function checkFailedRecordings() {
 			`r`.`title`,
 			`r`.`subtitle`,
 			`r`.`status`,
-			`r`.`masterstatus`,
 			`r`.`contentstatus`,
+			`r`.`masterstatus`,
 			`r`.`contentmasterstatus`,
+			`r`.`smilstatus`,
+			`r`.`contentsmilstatus`,
 			`rv`.`recordingid`,
 			`rv`.`status` AS `rvstatus`,
 			`rv`.`timestamp`,
@@ -409,22 +411,27 @@ function checkFailedRecordings() {
 		ON
 			`rv`.`recordingid`=`r`.`id`
 		WHERE
-            `rv`.`status` LIKE '%failed%'";
-		
+			`rv`.`status` LIKE '%failed%'";
+	
 	$qry_rec = "
 		SELECT
 			`r`.`id` AS `recordingid`,
 			`r`.`title`,
 			`r`.`subtitle`,
 			`r`.`status`,
+			`r`.`contentstatus`,
 			`r`.`masterstatus`,
-			`r`.`contentmasterstatus`
+			`r`.`contentmasterstatus`,
+			`r`.`smilstatus`,
+			`r`.`contentsmilstatus`
 		FROM
 			`recordings` AS `r`
 		WHERE
 			`r`.`status` LIKE '%failed%' OR
 			`r`.`masterstatus` LIKE '%failed%' OR
-			`r`.`contentmasterstatus` LIKE '%failed%'";
+			`r`.`contentmasterstatus` LIKE '%failed%' OR
+			`r`.`smilstatus` LIKE '%failed%' OR
+			`r`.`contentsmilstatus` LIKE '%failed%'";
 	
 	try {
 		$recordset_rv = $db->Execute($qry_rv);
@@ -456,8 +463,11 @@ function checkFailedRecordings() {
 				$fldrecs[$rv['recordingid']] = array(
 					'recordingid'          => $rv['recordingid'],
 					'rstatus'              => $rv['status'],
+					'rcontentstatus'       => $rv['contentstatus'],
 					'rmasterstatus'        => $rv['masterstatus'],
 					'rcontentmasterstatus' => $rv['contentmasterstatus'],
+					'smilstatus'           => $rv['smilstatus'],
+					'contentsmilstatus'    => $rv['contentsmilstatus'],
 					'title'                => $rv['title'],
 					'subtitle'             => $rv['subtitle'],
 					'recordings_versions'  => array()
@@ -476,17 +486,21 @@ function checkFailedRecordings() {
 		$msg .= "Detailed list:\n" . str_pad("", 100, "-", STR_PAD_BOTH);
 		foreach ($fldrecs as $rec => $fldrec) {
 			
-			$rstatus = " ". implode(', ',
-				array(
-					"status = ". (is_null($fldrec['rstatus']) ? "NULL" : "'". $fldrec['rstatus'] ."'"), 
-					"masterstatus = ". (is_null($fldrec['rmasterstatus']) ? "NULL" : "'". $fldrec['rmasterstatus'] ."'"),
-					"contentmasterstatus = ". (is_null($fldrec['rcontentmasterstatus']) ? "NULL" : "'". $fldrec['rcontentmasterstatus'] ."'"),
-				)
-			);
-			$rec_title = " \"". ($fldrec['title'] ? $fldrec['title'] : '-') . (is_null($fldrec['subtitle']) ? '' : " / ". $fldrec['subtitle']) ."\",";
+			$statusinfo = array();
+			$keys = array_keys($fldrec);
+			if ($keys === false) break;
 			
-			$msg .= "\n  Rec #". $rec . $rec_title . $rstatus ." - failed conversions: ". count($fldrec['recordings_versions']) ."\n";
+			foreach($keys as $k) {
+				if ( strpos($k, 'status') !== false && !is_null( $fldrec[$k] )) $statusinfo[] = $k ." = ". $fldrec[$k];
+			}
+			
+			$rstatus = implode(', ', $statusinfo);
+			unset($keys, $statusinfo);
+			
+			$rec_title = " \"". ($fldrec['title'] ? $fldrec['title'] : '-') . (is_null($fldrec['subtitle']) ? '' : " / ". $fldrec['subtitle']) ."\"";
+			$msg .= "\n  Rec #". $rec . implode(', ', array($rec_title, $rstatus)) ." - failed conversions: ". count($fldrec['recordings_versions']) ."\n";
 			$n = 1;
+			
 			foreach ($fldrec['recordings_versions'] as $fldrv) {
 				$recver   = "rec.version = #". $fldrv['id'];
 				$filename = "'". ($fldrv['filename'] === null ? ($rec ."_". $fldrv['id'] . $fldrv['filenamesuffix'] .".". $fldrv['filecontainerformat'] . "/null") : $fldrv['filename']) ."'";
@@ -497,6 +511,7 @@ function checkFailedRecordings() {
 				$msg .= "    ". $n++ .".) ". $recver .", ". $filename ." (". $type ."), ". $status .", ". $date ."\n";
 			}
 		}
+		
 		$msg .= "\nThis report was generated on ". date('Y-m-d H:i:s') .".";
 		$ret['message'] = $msg;
 		$ret['code'] = true;
