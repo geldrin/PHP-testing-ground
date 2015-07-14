@@ -155,7 +155,6 @@ if ( $recordings !== false ) {
               $jconf['dbstatus_copystorage'],
               $jconf['dbstatus_copyfromfe'],
               $jconf['dbstatus_copystorage_err'],
-              $jconf['dbstatus_update_err'],
               $jconf['dbstatus_stop'],
               $jconf['dbstatus_markedfordeletion'],
             ));
@@ -335,7 +334,6 @@ if ( $recordings !== false ) {
               $jconf['dbstatus_copystorage'],
               $jconf['dbstatus_copyfromfe'],
               $jconf['dbstatus_copystorage_err'],
-              $jconf['dbstatus_update_err'],
               $jconf['dbstatus_stop'],
             ));
             updateRecordingVersionStatusApplyFilter($recording['id'], $jconf['dbstatus_markedfordeletion'], "content|pip", $filter);
