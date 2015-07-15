@@ -221,7 +221,7 @@ global $app, $debug, $jconf;
 	$err['command_output'] = '-';
 	$err['message'       ] = '';
 	$err['encodingparams'] = '';
-  
+	
 	if (is_array($main)) $err['encodingparams'] = $main;
 	
 	// INIT COMMAND ASSEMBLY ////////////////////////////////////////////////////////////////////////
@@ -274,20 +274,20 @@ global $app, $debug, $jconf;
 			// H.264 profile
 			$ffmpeg_profile = " -profile:v " . $profile['ffmpegh264profile'] ." -pix_fmt yuv420p";
 			$ffmpeg_preset  = " -preset:v ". $profile['ffmpegh264preset'];
-      $ffmpeg_resize  = "";
-      
+			$ffmpeg_resize  = "";
+			
 			if (array_key_exists('ffmpeg_resize_filter', $app->config)) {
-        if ($app->config['ffmpeg_resize_filter'] === true ) {
-          $video_filter .= "[0:v] ". ($main['deinterlace'] ? "yadif, " : "");
-          $video_filter .= "scale=w=". $main['resx'] .":h=". $main['resy'] .":force_original_aspect_ratio=decrease:sws_flags=bicubic";
-        } else {
-          $ffmpeg_resize = " -s ". $main['resx'] ."x". $main['resy'];
-          $ffmpeg_aspect = null;
-          if ( !empty($main['DAR']) ) $ffmpeg_aspect = " -aspect " . $main['DAR'];
-          $ffmpeg_deint  = ($main['deinterlace'] === true) ? " -deinterlace " : null;
-        }
-      }
-      
+				if ($app->config['ffmpeg_resize_filter'] === true ) {
+					$video_filter .= "[0:v] ". ($main['deinterlace'] ? "yadif, " : "");
+					$video_filter .= "scale=w=". $main['resx'] .":h=". $main['resy'] .":force_original_aspect_ratio=decrease:sws_flags=bicubic";
+				} else {
+					$ffmpeg_resize = " -s ". $main['resx'] ."x". $main['resy'];
+					$ffmpeg_aspect = null;
+					if ( !empty($main['DAR']) ) $ffmpeg_aspect = " -aspect " . $main['DAR'];
+					$ffmpeg_deint  = ($main['deinterlace'] === true) ? " -deinterlace " : null;
+				}
+			}
+			
 			$ffmpeg_fps     = " -r ". $main['videofps'];
 			$ffmpeg_bitrate = " -b:v ". (10 * ceil($main['videobitrate'] / 10000)) . "k";
 			// ffmpeg video encoding parameters
