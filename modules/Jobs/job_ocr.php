@@ -128,7 +128,7 @@ function Main() {
         }
       }
       
-      if ($recording['ocrstatus'] == $jconf['dbstatus_reconvert']) {
+      if ( in_array($recording['ocrstatus'], array($jconf['dbstatus_reconvert'], $jconf['dbstatus_convert'], $jconf['dbstatus_conv'] ))) {
         $debug->log($logdir, $logfile, "[INFO] Marking previous ocr_frames elements for delete.\n", false);
         $err = updateOCRStatus($recording['id'], null, $jconf['dbstatus_markedfordeletion']);
         if ($err['result'] === false) {
@@ -228,6 +228,7 @@ function Main() {
       $mt_start = microtime($get_as_float = true);
       $OCRresult = convertOCR($recording);
       $OCRduration = round(microtime($get_as_float = true) - $mt_start, 3);
+      $debug->log($logdir, $logfile, var_export($OCRresult, 1), false); // DEBUG
       
       unset($mt_start);
       
