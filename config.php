@@ -95,18 +95,19 @@ $config = array(
   'relatedrecordingcount' => 6,
 
   // Converter related settings
-  'mediainfo_identify'    => 'mediainfo --full --output=XML %s 2>&1',
+  'mediainfo_identify'     => 'mediainfo --full --output=XML %s 2>&1',
   // FFmpeg
   'ffmpeg_alt'             => '/home/conv/ffmpeg/ffmpeg-git-20140623-64bit-static/ffmpeg', // current FFMpeg static build'
   'ffmpeg_loglevel'        => 25,          // Loglevel
   'ffmpeg_threads'         => 0,           // Threads to use (0 - automatic)
   'max_duration_error'     => 20,          // margin of error when comparing master and converted video lengths
+  'ffmpeg_resize_filter'   => false,       // use libav-filter's resize method?
   // Thumbnailer
-  'ffmpegthumbnailer'     => '/usr/bin/ffmpegthumbnailer-2.0.8', // Path to FFmpegThumbnailer
+  'ffmpegthumbnailer'      => '/usr/bin/ffmpegthumbnailer-2.0.8', // Path to FFmpegThumbnailer
   'thumb_video_numframes'  => 20,          // Number of video thumbnails generated per recording
   // OCR
-  'ocr_engine'            => 'cuneiform',  // Supported: cuneiform, tesseract
-  'ocr_alt'               => 'cuneiform',  // Path to ocr binary
+  'ocr_engine'             => 'cuneiform', // Supported: cuneiform, tesseract
+  'ocr_alt'                => 'cuneiform', // Path to ocr binary
   'ocr_frame_distance'     => 1.0,         // Desired distance between frames (in seconds)
   'ocr_threshold'          => 0.004,       // Max. difference between ocr frames 
   // Converter restraints                  

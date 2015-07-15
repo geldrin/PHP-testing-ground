@@ -221,13 +221,13 @@ global $app, $debug, $jconf;
 	$err['command_output'] = '-';
 	$err['message'       ] = '';
 	$err['encodingparams'] = '';
-	
+  
 	if (is_array($main)) $err['encodingparams'] = $main;
 	
 	// INIT COMMAND ASSEMBLY ////////////////////////////////////////////////////////////////////////
 	$ffmpeg_audio       = null; // audio encoding parameters
 	$ffmpeg_video       = null;	// video encoding parameters
-	$ffmpeg_input       = null; // input filename and optionsú
+	$ffmpeg_input       = null; // input filename and options
 	$ffmpeg_payload     = null; // contains input option on normal encoding OR overlay filter on pip encoding
 	$ffmpeg_gop         = null; // fixed keyframe distance options
 	$ffmpeg_pass_prefix = null; // used with multipass encoding (passlogfiles will be written here, with the given prefix)
@@ -272,13 +272,22 @@ global $app, $debug, $jconf;
 			$ffmpeg_video = " -vn";
 		} else {
 			// H.264 profile
-			// $video_filter .= "[0:v] scale=w=". $main['resx'] .":h=". $main['resy'] .":force_original_aspect_ratio=decrease:flags=sws_flags=bicubic"; // placeholder for filter based scaling/bounding box
 			$ffmpeg_profile = " -profile:v " . $profile['ffmpegh264profile'] ." -pix_fmt yuv420p";
 			$ffmpeg_preset  = " -preset:v ". $profile['ffmpegh264preset'];
-			$ffmpeg_resize  = " -s ". $main['resx'] ."x". $main['resy'];
-			$ffmpeg_aspect  = null;
-			if ( !empty($main['DAR']) ) $ffmpeg_aspect = " -aspect " . $main['DAR'];
-			$ffmpeg_deint   = ($main['deinterlace'] === true) ? " -deinterlace " : null;
+      $ffmpeg_resize  = "";
+      
+			if (array_key_exists('ffmpeg_resize_filter', $app->config)) {
+        if ($app->config['ffmpeg_resize_filter'] === true ) {
+          $video_filter .= "[0:v] ". ($main['deinterlace'] ? "yadif, " : "");
+          $video_filter .= "scale=w=". $main['resx'] .":h=". $main['resy'] .":force_original_aspect_ratio=decrease:sws_flags=bicubic";
+        } else {
+          $ffmpeg_resize = " -s ". $main['resx'] ."x". $main['resy'];
+          $ffmpeg_aspect = null;
+          if ( !empty($main['DAR']) ) $ffmpeg_aspect = " -aspect " . $main['DAR'];
+          $ffmpeg_deint  = ($main['deinterlace'] === true) ? " -deinterlace " : null;
+        }
+      }
+      
 			$ffmpeg_fps     = " -r ". $main['videofps'];
 			$ffmpeg_bitrate = " -b:v ". (10 * ceil($main['videobitrate'] / 10000)) . "k";
 			// ffmpeg video encoding parameters
