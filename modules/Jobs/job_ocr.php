@@ -228,7 +228,6 @@ function Main() {
       $mt_start = microtime($get_as_float = true);
       $OCRresult = convertOCR($recording);
       $OCRduration = round(microtime($get_as_float = true) - $mt_start, 3);
-      $debug->log($logdir, $logfile, var_export($OCRresult, 1), false); // DEBUG
       
       unset($mt_start);
       
