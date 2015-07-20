@@ -406,12 +406,15 @@ class Livefeeds extends \Springboard\Model {
 
     }
 
-    $streamingserverModel = $this->bootstrap->getModel('streamingservers');
-    $streamingserver      = $streamingserverModel->getServerByClientIP(
-      $info['ipaddress'],
-      'live'
-    );
+    if ( !$this->streamingserver ) {
+      $streamingserverModel  = $this->bootstrap->getModel('streamingservers');
+      $this->streamingserver = $streamingserverModel->getServerByClientIP(
+        $info['ipaddress'],
+        'live'
+      );
+    }
 
+    $streamingserver = $this->streamingserver;
     if ( empty( $streamingserver ) )
       throw new \Exception("No streaming server found, not even the default");
 

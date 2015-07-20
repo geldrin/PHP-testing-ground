@@ -92,7 +92,7 @@ class Streamingservers extends \Springboard\Model {
       try {
         $defaultservers = $this->db->getArray( $query );
       } catch ( \Exception $e ) {
-        return $this->bootstrap->config['fallbackstreamingserver'];
+        $defaultservers = array( $this->bootstrap->config['fallbackstreamingserver'] );
       }
       
       if ( empty( $defaultservers ) ) {
@@ -105,7 +105,7 @@ class Streamingservers extends \Springboard\Model {
           $this->bootstrap->production
         );
         
-        return $this->bootstrap->config['fallbackstreamingserver'];
+        $defaultservers = array( $this->bootstrap->config['fallbackstreamingserver'] );
         
       }
       
