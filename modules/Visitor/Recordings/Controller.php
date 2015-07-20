@@ -1240,24 +1240,25 @@ class Controller extends \Visitor\Controller {
   }
   
   public function canceluploadAction() {
-    
     $uploadModel = $this->modelUserAndIDCheck(
       'uploads',
       $this->application->getNumericParameter('id')
     );
-    
-    if ( $uploadModel->row['status'] != 'uploading' )
+
+    if (
+         $uploadModel->row['status'] != 'uploading' and
+         $uploadModel->row['status'] != 'handlechunk'
+       )
       $this->jsonOutput( array('status' => 'error', 'message' => 'Wrong status') );
-    
+
     $uploadModel->updateRow( array(
         'status' => 'markedfordeletion',
       )
     );
-    
+
     $this->redirect(
       $this->application->getParameter('forward')
     );
-    
   }
   
   public function linkcontributorAction() {
