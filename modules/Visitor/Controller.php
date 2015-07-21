@@ -205,6 +205,7 @@ class Controller extends \Springboard\Controller\Visitor {
     $this->impersonateOrganization( $organization );
     $this->organization = $organization;
 
+
   }
   
   public function handleAccessFailure( $permission ) {
@@ -504,14 +505,9 @@ class Controller extends \Springboard\Controller\Visitor {
   }
 
   private function getLayoutDefault( $type ) {
-    $layoutvar = 'layout' . $type;
-    $defaulttpl = '_layout_' . $type . '.tpl';
-    if ( $this->organization[ $layoutvar ] )
-      return $this->organization[ $layoutvar ];
+    if ( $this->organization[ 'layout' . $type ] )
+      return $this->organization[ 'layout' . $type ];
 
-    return file_get_contents(
-      $this->bootstrap->config['templatepath'] . 'Visitor/' . $defaulttpl
-    );
+    return 'Visitor/_layout_' . $type . '.tpl';
   }
-
 }

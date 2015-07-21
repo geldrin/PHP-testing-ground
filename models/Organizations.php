@@ -133,8 +133,23 @@ class Organizations extends \Springboard\Model\Multilingual {
         disabled       = 0
     ");
 
-    return $organization;
+    // smarty cachelest igenybe akarjuk venni, ez azt jelenti hogy a dinamikus
+    // layoutheader/footer-t kiirjuk egy fileba es a filenevet adjuk at a smartynak
+    // sporolunk igy memoriat is, es cachelhetove is valik
+    foreach( array('layoutheader', 'layoutfooter') as $layout ) {
+      if ( !$organization[ $layout ] )
+        continue;
 
+      $templatefile =
+        $this->bootstrap->config['cachepath'] .
+        'organization_' . $layout . '_' . $organization['id'] . '.tpl'
+      ;
+
+      file_put_contents( $templatefile, $organization[ $layout ] );
+      $organization[ $layout ] = $templatefile;
+    }
+
+    return $organization;
   }
 
   public function getOrganizationByDomain( $domain, $isstatic = false ) {

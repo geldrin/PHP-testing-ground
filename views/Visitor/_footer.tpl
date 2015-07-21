@@ -1,7 +1,7 @@
       <div class="clear"></div>
     </div>
     <div id="footer">
-      {eval var=$layoutfooter}
+      {include file=$layoutfooter}
     </div>
   </div>{*}wrap div{/*}
 </div>{*}pagecontainer div{/*}
