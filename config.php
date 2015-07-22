@@ -36,6 +36,7 @@ $config = array(
   'logemails'    => array(
     'hiba@videosqr.com',
   ),
+  'logtoconsole' => false,
   //-----
   'smtp'         => array(
     'auth'     => false,

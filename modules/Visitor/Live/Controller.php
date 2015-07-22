@@ -101,6 +101,7 @@ class Controller extends \Visitor\Controller {
       'livefeeds',
       $this->application->getNumericParameter('id')
     );
+    $streamingserverid = $this->application->getNumericParameter('streamingserverid');
 
     $l         = $this->bootstrap->getLocalization();
     $user      = $this->bootstrap->getSession('user');
@@ -137,8 +138,14 @@ class Controller extends \Visitor\Controller {
     if ( !count( $browserinfo ) )
       $browserinfo->setArray( \Springboard\Browser::getInfo() );
     
+    if (
+         $streamingserverid and
+         ( $user['isadmin'] or $user['isclientadmin'] )
+       )
+      $feedModel->forceMediaServer( $streamingserverid );
+
     $streams = $feedModel->getStreamsForBrowser( $browserinfo, $streamid );
-    
+
     if ( !$streams )
       $this->redirectToController('contents', 'http404');
 
@@ -297,6 +304,14 @@ class Controller extends \Visitor\Controller {
     $helpModel    = $this->bootstrap->getModel('help_contents');
     $helpModel->addFilter('shortname', 'live_managefeeds', false, false );
     
+    $user = $this->bootstrap->getSession('user');
+    if ( $user['isadmin'] or $user['isclientadmin'] )
+      $this->toSmarty['streamingservers'] =
+        $this->bootstrap->getModel('livefeeds')->getStreamingServers()
+      ;
+    else
+      $this->toSmarty['streamingservers'] = array();
+
     $this->toSmarty['help']    = $helpModel->getRow();
     $this->toSmarty['feeds']   = $channelModel->getFeedsWithStreams();
     $this->toSmarty['channel'] = $channelModel->row;

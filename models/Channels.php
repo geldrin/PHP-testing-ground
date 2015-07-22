@@ -840,7 +840,7 @@ class Channels extends \Springboard\Model {
     return $feeds;
     
   }
-  
+
   public function getTreeArray( $order = null, $parentid = 0 ) {
     
     if ( !$order )

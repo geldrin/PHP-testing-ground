@@ -437,7 +437,11 @@ class Bootstrap {
       $this->debug = true;
     
     error_reporting( E_ALL );
-    
+
+    // ha ures string akkor stderr-re megy, ezt akarjuk
+    if ( $this->config['logtoconsole'] )
+      ini_set('error_log', '');
+
     $debug = new Springboard\Debug( $this );
     $debug->setupErrorHandler();
     

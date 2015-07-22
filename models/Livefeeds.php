@@ -1145,4 +1145,23 @@ class Livefeeds extends \Springboard\Model {
 
   }
 
+  public function getStreamingServers() {
+    return $this->db->getArray("
+      SELECT *
+      FROM cdn_streaming_servers
+      WHERE
+        disabled = '0' AND
+        servicetype IN('live', 'live|ondemand')
+      ORDER BY location, shortname
+    ");
+  }
+
+  public function forceMediaServer( $id ) {
+    return $this->streamingserver = $this->db->getRow("
+      SELECT *
+      FROM cdn_streaming_servers
+      WHERE id = '$id'
+      LIMIT 1
+    ");
+  }
 }

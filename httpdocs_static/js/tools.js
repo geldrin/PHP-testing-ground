@@ -28,6 +28,7 @@ $j(document).ready(function() {
   runIfExists('.liveembed', setupLiveEmbed );
   runIfExists('.livecompatibility', setupLiveCompatibility );
   runIfExists('.streambroadcastlink', setupBroadcastLink );
+  runIfExists('.streamserverlink', setupServerLink );
   runIfExists('#feeds', setupManagefeeds );
   runIfExists('#feeds .needpoll', setupStreamPoll );
   runIfExists('#currentuser', setupCurrentUser );
@@ -227,16 +228,43 @@ function setupStreamPoll( elems ) {
 }
 
 function setupBroadcastLink( elems ) {
-  
   elems.click( function( e ) {
     e.preventDefault();
-    
+
     var wrap = $j(this).parents('tr').next('.streambroadcastwrap');
+    var force = undefined;
+    if ( !wrap.find('.broadcastlink').is(':visible') )
+      force = true;
+
     $j('.streambroadcastwrap').not( wrap ).hide();
-    wrap.toggle();
-    
+    $j('.serverlink').hide();
+    $j('.broadcastlink').show();
+    wrap.toggle( force );
   });
-  
+}
+
+function setupServerLink( elems ) {
+  elems.click( function( e ) {
+    e.preventDefault();
+
+    var wrap = $j(this).parents('tr').next('.streambroadcastwrap');
+    var force = undefined;
+    if ( !wrap.find('.serverlink').is(':visible') )
+      force = true;
+
+    $j('.streambroadcastwrap').not( wrap ).hide();
+    $j('.serverlink').show();
+    $j('.broadcastlink').hide();
+    wrap.toggle( force );
+  });
+  $j('.serverlink select').change(function(e) {
+    var urltpl = $j(this).attr('data-urltemplate');
+    var value  = $j(this).val();
+
+    var url = urltpl.replace('_ID_', value );
+    var win = window.open(url, '_blank');
+    win.focus();
+  });
 }
 
 function setupLiveCompatibility( elems ) {

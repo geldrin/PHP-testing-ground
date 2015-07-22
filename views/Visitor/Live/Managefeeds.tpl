@@ -56,6 +56,9 @@
               {if $feed.feedtype == 'vcr'}
                 {include file=Visitor/Live/Managefeeds_streamaction.tpl stream=$stream}
               {else}
+                {if $member.isadmin or $member.isclientadmin}
+                <a href="#" class="streamserverlink">{#live__streamserverlink#}</a> |
+                {/if}
                 <a href="#" class="streambroadcastlink">{#live__streambroadcastlink#}</a> |
                 <a href="{$language}/live/modifystream/{$stream.id}">{#live__live_edit#}</a> |
                 <a href="{$language}/live/deletestream/{$stream.id}" class="confirm" question="{#sitewide_areyousure#|escape:html}">{#live__live_delete#}</a>
@@ -74,6 +77,16 @@
                 <label for="broadcastlink-{$stream.id}-2">{#live__secondarystreambroadcastlink#}:</label>
                 <input id="broadcastlink-{$stream.id}-2" type="text" value="{$ingressurl|escape:html}{$stream.contentkeycode|escape:html}"/>
               </div>
+            {/if}
+            {if $member.isadmin or $member.isclientadmin}
+            <div class="serverlink">
+              <label for="serverlink-{$stream.id}">{#live__streamserverlink#}:</label>
+              <select id="serverlink-{$stream.id}" data-urltemplate="{$language}/live/view/{$feed.id},{$stream.id},{$feed.name|filenameize}?streamingserverid=_ID_">
+                {foreach from=$streamingservers item=server}
+                  <option value="{$server.id}">{$server.server|escape:html} ({$server.shortname|escape:html} - {$server.description|escape:html})</option>
+                {/foreach}
+              </select>
+            </div>
             {/if}
           </td>
         </tr>
