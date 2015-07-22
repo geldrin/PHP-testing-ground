@@ -296,9 +296,9 @@ class Bootstrap {
     if ( isset( $this->instances['smarty'] ) )
       return $this->instances['smarty'];
     
-    if ( !( @include_once( $this->config['libpath'] . 'smarty.2620/Smarty.class.php') ) )
+    if ( !( @include_once( $this->config['libpath'] . 'smarty.2629/Smarty.class.php') ) )
       // smarty not found under LIBPATH - try include_path location
-      include_once( 'smarty.2620/Smarty.class.php');
+      include_once( 'smarty.2629/Smarty.class.php');
     
     $this->instances['smarty'] = $smarty = new Smarty();
     

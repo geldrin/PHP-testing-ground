@@ -82,7 +82,7 @@
   <div id="wrap">
     <div id="header">
       <div id="headertop">
-        {eval var=$layoutheader}
+        {include file=$layoutheader}
       </div>
       <div class="clear"></div>
     </div>
