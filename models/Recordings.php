@@ -4103,4 +4103,18 @@ class Recordings extends \Springboard\Model {
 
     return $arr;
   }
+
+  public function getArray( $start = false, $limit = false, $where = false, $orderby = false ) {
+
+    if ( $where )
+      $this->addTextFilter( $where );
+
+    return $this->db->getArray("
+      SELECT " . self::getRecordingSelect() . "
+      FROM " . $this->table .
+      $this->getFilter() .
+      $this->sqlOrder( $orderby ) .
+      $this->sqlLimit( $start, $limit )
+    );
+  }
 }

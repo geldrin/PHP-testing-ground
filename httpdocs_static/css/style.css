@@ -1512,6 +1512,11 @@ a#currentusername span {
   margin-left: 20px;
   width: 738px;
 }
+.recordinglist .recordingcontent .featured.right {
+  margin-right: 10px;
+  color: #1EB51E;
+  font-weight: bold;
+}
 .recordinglist .recordinginfo {
   margin-top: 5px;
 }

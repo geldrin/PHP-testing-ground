@@ -30,14 +30,14 @@
   
   <div class="recordingcontent">
     <div class="title">
+      {if $item.currentlyfeatured and $item|@userHasAccess}
+        <a class="featured right" href="{$language}/recordings/modifysharing/{$item.id}?forward={$FULL_URI|escape:url}">{#recordings__currentlyfeatured#}</a>
+      {/if}
       <h3><a href="{$recordingurl}">{$item.title|escape:html|mb_wordwrap:25}</a></h3>
       {if $item.subtitle|stringempty}<h4>{$item.subtitle|escape:html|mb_wordwrap:25}</h4>{/if}
     </div>
     {if $item.approvalstatus != 'approved' and $item.status == 'onstorage' and $member.id}
       <span class="notpublished"><a href="{$language}/recordings/modifysharing/{$item.id}?forward={$FULL_URI|escape:url}">{#recordings__notpublished_warning#}</a></span>
-    {/if}
-    {if $item.currentlyfeatured and $item|@userHasAccess}
-      <span class="featured"><a href="{$language}/recordings/modifysharing/{$item.id}?forward={$FULL_URI|escape:url}">{#recordings__currentlyfeatured#}</a></span>
     {/if}
     <div class="recordinginfo">
       <ul>
