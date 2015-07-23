@@ -2990,7 +2990,8 @@ class Recordings extends \Springboard\Model {
       us.id AS userid,
       r.id,
       r.title,
-      r.indexphotofilename
+      r.indexphotofilename,
+      r.isfeatured
     ";
     
     $tables = "
@@ -3001,17 +3002,17 @@ class Recordings extends \Springboard\Model {
     $where = "
       us.id            = r.userid AND
       r.organizationid = '" . $organizationid . "' AND
-      r.isfeatured     = <> 0 AND
+      r.isfeatured     <> 0 AND
       (
         r.featureduntil IS NULL OR
         r.featureduntil >= NOW()
-      )
+      ) AND
       r.isintrooutro   = 0
     ";
     
     return $this->db->getArray(
       self::getUnionSelect( $user, $select, $tables, $where ) . "
-      ORDER BY r.isfeatured DESC, RAND()
+      ORDER BY isfeatured DESC, RAND()
       LIMIT $limit
     ");
     
