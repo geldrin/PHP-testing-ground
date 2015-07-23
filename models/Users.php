@@ -764,7 +764,7 @@ class Users extends \Springboard\Model {
     $ret        = array();
     $recordings = $this->db->getArray("
       SELECT DISTINCT
-        r.*,
+        " . \Model\Recordings::getRecordingSelect('r.') . ",
         (
           ROUND( ( IFNULL(rvp.position, 0) / GREATEST( IFNULL(r.masterlength, 0), IFNULL(r.contentmasterlength, 0) ) ) * 100 )
         ) AS positionpercent,

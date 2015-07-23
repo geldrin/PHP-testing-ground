@@ -1673,6 +1673,18 @@ function setupSharing() {
   
   setupDefaultDatePicker('.datepicker');
   
+  $j('input[name=isfeatured]').change(function(e) {
+    var shouldshow = $j('input[name=isfeatured]:checked').val() != '0';
+    var parents    = $j('#featureduntil').parents('tr');
+    parents.toggle( shouldshow )
+  }).change();
+
+  setupDefaultDateTimePicker('#featureduntil');
+  $j('.featureduntil .presettime').click(function(e) {
+    e.preventDefault();
+    $j('#featureduntil').datetimepicker('setDate', $j(this).attr('data-date') );
+  })
+  
 }
 
 function setupDefaultDatePicker( elem ) {

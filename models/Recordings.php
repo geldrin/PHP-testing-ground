@@ -1180,7 +1180,7 @@ class Recordings extends \Springboard\Model {
 
     return $this->db->getArray("
       SELECT
-        r.*,
+        " . self::getRecordingSelect('r.') . ",
         cr.channelid,
         (
           ROUND(
@@ -1236,10 +1236,25 @@ class Recordings extends \Springboard\Model {
     
   }
   
+  public static function getRecordingSelect( $prefix = '' ) {
+    return "
+      {$prefix}*,
+      IF(
+        {$prefix}isfeatured <> 0 AND
+        (
+          {$prefix}featureduntil IS NULL OR
+          {$prefix}featureduntil >= NOW()
+        ),
+        1,
+        0
+      ) AS currentlyfeatured
+    ";
+  }
+
   public static function getUnionSelect( $user, $select = null, $from = null, $where = null, $isintrooutro = '0' ) {
     
     if ( $select === null )
-      $select = 'r.*';
+      $select = self::getRecordingSelect('r.');
     if ( $from === null )
       $from = 'recordings AS r';
     
@@ -1946,7 +1961,7 @@ class Recordings extends \Springboard\Model {
     return $this->db->getOne("
       SELECT COUNT(*)
       FROM (
-        " . self::getUnionSelect( $user, 'r.*', $from, $where ) . "
+        " . self::getUnionSelect( $user, null, $from, $where ) . "
       ) AS count
     ");
     
@@ -1965,7 +1980,7 @@ class Recordings extends \Springboard\Model {
     ;
     
     return $this->db->getArray("
-      " . self::getUnionSelect( $user, 'r.*', $from, $where ) .
+      " . self::getUnionSelect( $user, null, $from, $where ) .
       ( strlen( $order ) ? 'ORDER BY ' . $order : '' ) . " " .
       ( is_numeric( $start ) ? 'LIMIT ' . $start . ', ' . $limit : "" )
     );
@@ -1996,7 +2011,7 @@ class Recordings extends \Springboard\Model {
     return $this->db->getOne("
       SELECT COUNT(*)
       FROM (
-        " . self::getUnionSelect( $user, 'r.*', $from, $where ) . "
+        " . self::getUnionSelect( $user, null, $from, $where ) . "
       ) AS count
     ");
     
@@ -2005,7 +2020,7 @@ class Recordings extends \Springboard\Model {
   public function getChannelRecordings( $user, $channelids, $start = false, $limit = false, $order = false ) {
     
     $select = "
-      r.*,
+      " . self::getRecordingSelect('r.') . ",
       c.title AS channeltitle,
       c.id AS channelid,
       c.weight AS channelweight,
@@ -2986,13 +3001,17 @@ class Recordings extends \Springboard\Model {
     $where = "
       us.id            = r.userid AND
       r.organizationid = '" . $organizationid . "' AND
-      r.isfeatured     = 1 AND
+      r.isfeatured     = <> 0 AND
+      (
+        r.featureduntil IS NULL OR
+        r.featureduntil >= NOW()
+      )
       r.isintrooutro   = 0
     ";
     
     return $this->db->getArray(
       self::getUnionSelect( $user, $select, $tables, $where ) . "
-      ORDER BY RAND()
+      ORDER BY r.isfeatured DESC, RAND()
       LIMIT $limit
     ");
     
@@ -3442,7 +3461,7 @@ class Recordings extends \Springboard\Model {
   public function getRecordingsWithUsers( $start, $limit, $extrawhere, $order, $user, $organizationid ){
     
     $select = "
-      r.*,
+      " . self::getRecordingSelect('r.') . ",
       usr.id AS userid,
       usr.nickname,
       usr.nameformat,
@@ -3674,7 +3693,7 @@ class Recordings extends \Springboard\Model {
     
     return $this->db->getArray("
       SELECT
-        r.*,
+        " . self::getRecordingSelect('r.') . ",
         a.id AS accessid
       FROM
         access AS a,
@@ -3866,7 +3885,16 @@ class Recordings extends \Springboard\Model {
         r.numberofviews,
         r.rating,
         r.status,
-        r.isfeatured
+        r.isfeatured,
+        IF(
+          r.isfeatured <> 0 AND
+          (
+            r.featureduntil IS NULL OR
+            r.featureduntil >= NOW()
+          ),
+          1,
+          0
+        ) AS currentlyfeatured
       FROM recordings AS r
       WHERE
         r.status NOT IN('markedfordeletion', 'deleted') AND

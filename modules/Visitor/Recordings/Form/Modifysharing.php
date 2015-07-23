@@ -22,7 +22,7 @@ class Modifysharing extends \Visitor\Recordings\ModifyForm {
       $this->values['visibleuntil'] = substr( $this->values['visibleuntil'], 0, 10 );
     else
       unset( $this->values['visibleuntil'] );
-    
+
   }
   
   public function onComplete() {
@@ -32,7 +32,10 @@ class Modifysharing extends \Visitor\Recordings\ModifyForm {
 
     if ( !$values['wanttimelimit'] )
       $values['visibleuntil'] = $values['visiblefrom'] = null;
-    
+
+    if ( !$values['isfeatured'] or !$values['featureduntil'] )
+      $values['featureduntil'] = null;
+
     $this->handleAccesstypeForModel( $this->recordingsModel, $values );
     unset( $values['departments'], $values['groups'] );
     $this->recordingsModel->updateRow( $values );

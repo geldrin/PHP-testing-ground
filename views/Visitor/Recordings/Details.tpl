@@ -121,7 +121,7 @@
       <div class="uploader">{$author|@nickformat|mb_wordwrap:20|escape:html}</div>
     </div>
   </div>
-  
+
   {if $recording.description|stringempty}
     <div class="recordingdescription">
       <p>{$recording.description|escape:html|autolink|nl2br}</p>
@@ -234,8 +234,14 @@
   {/if}
 </div>
 
+{if $recording|@userHasAccess}
+  <div id="recordingmodify">
+    <a class="submitbutton" href="{$language}/recordings/modifybasics/{$recording.id}?forward={$FULL_URI|escape:url}">{#recordings__editrecording#}</a>
+  </div>
+{/if}
+
 {if !empty( $recordingdownloads )}
-  <div id="recordingdownloads">
+  <div id="recordingdownloads"{if $recording|@userHasAccess} class="closer"{/if}>
     <a href="#" class="submitbutton">{#recordings__recordingdownloads#}</a>
     <ul>
       {foreach from=$recordingdownloads key=key item=item}

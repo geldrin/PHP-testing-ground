@@ -3014,10 +3014,18 @@ a#currentusername span {
   padding: 10px 0;
 }
 
+#recordingmodify {
+  float: right;
+  margin: 20px 20px 0 0;
+  width: 320px;
+}
 #recordingdownloads {
   float: right;
   margin: 20px 20px 0 0;
   width: 320px;
+}
+#recordingdownloads.closer {
+  margin-top: 10px;
 }
 #recordingdownloads ul {
   display: none;

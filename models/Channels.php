@@ -787,7 +787,7 @@ class Channels extends \Springboard\Model {
     // TODO
     $this->ensureObjectLoaded();
     return $this->db->getArray("
-      SELECT DISTINCT r.*
+      SELECT DISTINCT " . \Model\Recordings::getRecordingSelect('r.') . "
       FROM
         channels_recordings AS cr,
         recordings AS r

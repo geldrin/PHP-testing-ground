@@ -187,8 +187,37 @@ if ( $user['isadmin'] or $user['isclientadmin'] or $user['iseditor'] ) {
   $config['isfeatured'] = array(
     'displayname' => $l('recordings', 'isfeatured'),
     'type'        => 'inputRadio',
-    'value'       => 0,
-    'values'      => $l->getLov('noyes'),
+    'value'       => 1,
+    'values'      => $l->getLov('recordings_featurepriority'),
+    'divide'      => 1,
+    'divider'     => '<br/>',
   );
+
+  $config['featureduntil'] = array(
+    'displayname' => $l('recordings', 'featureduntil'),
+    'type'        => 'inputText',
+    'value'       => date('Y-m-d 23:59', strtotime('+1 week')),
+    'html'        =>
+      'class="inputtext inputbackground clearonclick datetimepicker margin"' .
+      'data-dateyearrange="' . date('Y') . ':' . ( date('Y') + 5 ) . '"' .
+      'data-datefrom="' . date('Y-m-d') . '"'
+    ,
+    'postfix'     => '
+      <br/><span class="featureduntil"><a href="#" class="presettime" data-date="' . date('Y-m-d 23:59', strtotime('+1 week') ) . '">' . $l('recordings', 'featureduntil_week') . '</a> |
+      <a href="#" class="presettime" data-date="' . date('Y-m-d 23:59', strtotime('+1 months') ) . '">' . $l('recordings', 'featureduntil_month') . '</a> |
+      <a href="#" class="presettime" data-date="' . date('Y-m-d 23:59', strtotime('+3 months') ) . '">' . $l('recordings', 'featureduntil_quarteryear') . '</a> |
+      <a href="#" class="presettime" data-date="' . date('Y-m-d 23:59', strtotime('+1 year') ) . '">' . $l('recordings', 'featureduntil_year') . '</a> |
+      <a href="#" class="presettime" data-date="">' . $l('recordings', 'featureduntil_eternity') . '</a></span>
+    ',
+    'validation'  => array(
+      array(
+        'type'     => 'date',
+        'required' => false,
+        'format'   => 'YYYY-MM-DD hh:mm',
+        'minimum'  => time(),
+        'help'     => $l('recordings', 'featureduntil_help'),
+      ),
+    ),
+);
 
 }

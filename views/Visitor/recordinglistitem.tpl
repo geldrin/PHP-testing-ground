@@ -36,6 +36,9 @@
     {if $item.approvalstatus != 'approved' and $item.status == 'onstorage' and $member.id}
       <span class="notpublished"><a href="{$language}/recordings/modifysharing/{$item.id}?forward={$FULL_URI|escape:url}">{#recordings__notpublished_warning#}</a></span>
     {/if}
+    {if $item.currentlyfeatured and $item|@userHasAccess}
+      <span class="featured"><a href="{$language}/recordings/modifysharing/{$item.id}?forward={$FULL_URI|escape:url}">{#recordings__currentlyfeatured#}</a></span>
+    {/if}
     <div class="recordinginfo">
       <ul>
         <li class="timestamp"><span></span>{$item.recordedtimestamp|date_format:#smarty_dateformat_long#}</li>

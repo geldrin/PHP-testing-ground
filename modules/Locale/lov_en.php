@@ -207,4 +207,11 @@ return array(
     ''          => $l('groups', 'source_default'),
     'directory' => $l('groups', 'source_directory'),
   ),
+
+  'recordings_featurepriority' => array(
+    0  => $l('recordings', 'featurepriority_none'),
+    1  => $l('recordings', 'featurepriority_normal'),
+    20 => $l('recordings', 'featurepriority_hight'),
+    30 => $l('recordings', 'featurepriority_maximum'),
+  ),
 );
