@@ -70,18 +70,38 @@ class Controller extends \Visitor\Controller {
     );
 
     $keysToFields = array(
+      'features' => array(
+        'live' => array(
+           'rtmp'  => true,
+           'rtmpt' => true,
+           'rtmps' => true,
+           'hls'   => true,
+           'hlss'  => true,
+           'hds'   => true,
+           'hdss'  => true
+        ),
+        'ondemand' => array(
+           'rtmp'  => true,
+           'rtmpt' => true,
+           'rtmps' => true,
+           'hls'   => true,
+           'hlss'  => true,
+           'hds'   => true,
+           'hdss'  => true,
+        ),
+      ),
       'network' => array(
-        'traffic_in'  => 'networktraffickin',
-        'traffic_out' => 'networktraffickout',
+        'traffic_in'  => true,
+        'traffic_out' => true,
       ),
       'load' => array(
         'cpu' => array(
-          'min5' => 'cpuload',
+          'min5' => true,
         ),
         'clients' => array(
-          'http'  => 'clientshttp',
-          'https' => 'clientshttps',
-          'rtmp'  => 'clientsrtmp',
+          'http'  => true,
+          'https' => true,
+          'rtmp'  => true,
         ),
       ),
     );
@@ -91,20 +111,23 @@ class Controller extends \Visitor\Controller {
     return true;
   }
 
-  public function fillRowFromInfoArray( $info, $keysToFields, &$row ) {
+  public function fillRowFromInfoArray( $info, $keysToFields, &$row, $field = '' ) {
     // vegig megyunk a $keysToFields tombon, ha stringet talalunk es van
     // az info tombben ilyen stringel ertek akkor at beirjuk a $row-ba
     // amugy egy al-tomb az ertek ami azt jelenti hogy megnezzuk hogy van e
     // ilyen kulccsal ertek az $info-ban, ha igen akkor ezt az erteket adjuk
     // at rekurzivan sajat magunknak igy haladunk befele
     foreach( $keysToFields as $key => $value ) {
+      $newfield = $field . '_' . $key;
+
       if (
-           gettype( $value ) === 'string' and
+           $value === true and
            isset( $info[ $key ] )
-         )
-        $row[ $value ] = $info[ $key ];
-      elseif ( is_array( $value ) and isset( $info[ $key ] ) ) {
-        $this->fillRowFromInfoArray( $info[ $key ], $value, $row );
+         ) {
+        $newfield = ltrim( $newfield, '_' );
+        $row[ $newfield ] = $info[ $key ];
+      } elseif ( is_array( $value ) and isset( $info[ $key ] ) ) {
+        $this->fillRowFromInfoArray( $info[ $key ], $value, $row, $newfield );
       }
     }
 
