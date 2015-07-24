@@ -121,4 +121,20 @@ class Streamingservers extends \Springboard\Model {
     
   }
   
+  public function getServerByHost( $server ) {
+    $server = $this->db->qstr( $server );
+    $ret    = $this->db->getRow("
+      SELECT *
+      FROM cdn_streaming_servers
+      WHERE server = $server
+      LIMIT 1
+    ");
+
+    if ( !empty( $ret ) ) {
+      $this->id = $ret['id'];
+      $this->row = $ret;
+    }
+
+    return $ret;
+  }
 }
