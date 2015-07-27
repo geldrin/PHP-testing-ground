@@ -15,21 +15,21 @@ class Controller extends \Visitor\Controller {
   public $apisignature = array(
     'updatestatus' => array(
       'loginrequired' => false,
+      'server' => array(
+        'type'        => 'string',
+        'required'    => true,
+        'shouldemail' => false,
       ),
-    'server' => array(
-      'type'        => 'string',
-      'required'    => true,
-      'shouldemail' => false,
-    ),
-    'hash' => array(
-      'type'        => 'string',
-      'required'    => true,
-      'shouldemail' => false,
-    ),
-    'reportsequencenum' => array(
-      'type'        => 'id',
-      'required'    => true,
-      'shouldemail' => false,
+      'hash' => array(
+        'type'        => 'string',
+        'required'    => true,
+        'shouldemail' => false,
+      ),
+      'reportsequencenum' => array(
+        'type'        => 'id',
+        'required'    => true,
+        'shouldemail' => false,
+      ),
     ),
   );
   
@@ -59,7 +59,7 @@ class Controller extends \Visitor\Controller {
       $serverModel->row['salt'] . $reportsequencenum
     );
 
-    if ( $hash === $datahash ) {
+    if ( $hash !== $datahash ) {
       throw new \Exception("hash check failed");
       return false;
     }
@@ -111,8 +111,8 @@ class Controller extends \Visitor\Controller {
     return true;
   }
 
-  public function fillRowFromInfoArray( $info, $keysToFields, &$row, $field = '' ) {
-    // vegig megyunk a $keysToFields tombon, ha stringet talalunk es van
+  private function fillRowFromInfoArray( $info, $keysToFields, &$row, $field = '' ) {
+    // vegig megyunk a $keysToFields tombon, ha bool truet talalunk es van
     // az info tombben ilyen stringel ertek akkor at beirjuk a $row-ba
     // amugy egy al-tomb az ertek ami azt jelenti hogy megnezzuk hogy van e
     // ilyen kulccsal ertek az $info-ban, ha igen akkor ezt az erteket adjuk

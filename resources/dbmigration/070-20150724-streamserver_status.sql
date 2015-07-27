@@ -1,5 +1,5 @@
     ALTER TABLE  `cdn_streaming_servers`
-    ADD  `lastreportid` INT NOT NULL DEFAULT  '0',
+    ADD  `reportsequencenum` INT NOT NULL DEFAULT  '0',
     ADD  `salt` text,
     ADD  `load_cpu_min5` DECIMAL( 4, 4 ) NOT NULL DEFAULT  '0',
     ADD  `load_clients_http` INT NOT NULL DEFAULT  '0',

@@ -4,7 +4,8 @@ namespace Model;
 class Streamingservers extends \Springboard\Model {
   public $cachetimeoutseconds = 300;
   public $defaultservers      = array();
-  
+  public $table = 'cdn_streaming_servers';
+
   public function getServerByClientIP( $ip, $type  ) {
     
     // TODO organizationid?
