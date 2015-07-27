@@ -44,7 +44,7 @@ class Controller extends \Visitor\Controller {
 
     if (
          $serverModel->row['reportsequencenum'] and
-         !$serverModel->row['reportsequencenum'] <= $reportsequencenum
+         $serverModel->row['reportsequencenum'] >= $reportsequencenum
        ) {
       // ha meg nincs bealitva server oldalon akkor engedjuk, ha kisebb akkor
       // nem engedjuk
