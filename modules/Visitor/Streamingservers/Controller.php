@@ -104,6 +104,7 @@ class Controller extends \Visitor\Controller {
           'http'  => true,
           'https' => true,
           'rtmp'  => true,
+          'rtsp'  => true,
         ),
       ),
     );
