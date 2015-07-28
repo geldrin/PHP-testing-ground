@@ -1,7 +1,7 @@
 <?php
 namespace Visitor\Analytics\Form;
-class Accreditedrecordings extends \Visitor\HelpForm {
-  public $configfile = 'Accreditedrecordings.php';
+class Statistics extends \Visitor\HelpForm {
+  public $configfile = 'Statistics.php';
   public $template   = 'Visitor/genericform.tpl';
   public $needdb     = true;
   private $delimiter = ';';
@@ -15,41 +15,15 @@ class Accreditedrecordings extends \Visitor\HelpForm {
   public function postSetupForm() {
     
     $l = $this->bootstrap->getLocalization();
-    $this->controller->toSmarty['title'] = $l('analytics', 'accreditrecordings_title');
+    $this->controller->toSmarty['title'] = $l('analytics', 'statistics_title');
     
   }
   
   public function onComplete() {
     $values = $this->form->getElementValues( 0 );
-    $progressModel = $this->bootstrap->getModel('recording_view_progress');
-
-    // hogy ne szerepeljen a filterbe -> mindent kiirunk
-    if ( $values['completed'] )
-      unset( $values['completed'] );
-
-    if ( $values['email'] ) {
-      $userModel = $this->bootstrap->getModel('users');
-      $exists = $userModel->checkEmailAndDisabledStatus(
-        $values['email'], '0', $this->controller->organization['id']
-      );
-
-      if ( !$exists ) {
-        $l = $this->bootstrap->getLocalization();
-        $this->form->addMessage(
-          $l('analytics','accreditedrecordings_emailnotfoundhelp')
-        );
-        $this->form->invalidate();
-        return;
-      }
-    }
-
-    $filename = 'videosquare-accreditrecordings-' . date('YmdHis') . '.csv';
+    
+    $filename = 'videosquare-statistics-' . date('YmdHis') . '.csv';
     \Springboard\Browser::downloadHeaders( $filename, 'text/csv' );
-
-    $data = $progressModel->getAccreditedDataCursor(
-      $this->controller->organization,
-      $values
-    );
 
     $f = fopen('php://output', 'w');
     fputcsv(
