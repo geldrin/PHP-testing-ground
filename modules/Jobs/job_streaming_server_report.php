@@ -1,114 +1,21 @@
 <?php
 
-// Csomagok: ifstat ethtool php5-cli php5-curl
+// Videosquare streaming server status report script
+// * Required packages (Debian): ifstat ethtool php5-cli php5-curl
 
-/* JSON példa
+set_time_limit(0);
+date_default_timezone_set("Europe/Budapest");
 
-{
-    "reportsequencenum": "13456789",
-    "hash": "b8e7ae12510bdfb1812e463a7f086122cf37e4f7",
-    "node_fqdn": "stream-edge1.videosquare.eu",
-    "node_ip": "172.19.1.8",   
-    "type": "nginx",                                     // v. wowza
-    "features": {
-        "live": {
-            "rtmp": true,
-            "rtmpt": false,
-            "rtmps": false,
-            "hls": true,
-            "hlss": true,
-            "hds": true,
-            "hdss": true
-        },
-        "ondemand": {
-            "rtmp": false,
-            "rtmpt": false,
-            "rtmps": false,
-            "hls": true,
-            "hlss": true,
-            "hds": true,
-            "hdss": true
-        }
-    },
-    "network": {
-        "interface_speed": 100,                         // Mbps
-        "traffic_in": 1324343,                          // bps
-        "traffic_out": 1232244                          // bps
-    
-    },
-    "load": {
-        "cpu": {
-            "current": 15,                              // %
-            "load_min": 0.96,                           // load  1 min
-            "load_min5": 0.58,                          // load  5 min
-            "load_min15": 0.30                          // load 15 min
-        },
-        "stream": {
-            "http": 0,
-            "https": 0,
-            "rtmp": 12
-        }
-    }
-    "upstream_ping": {
-        "stream.vsq.streamnet.hu": {
-            "ping_status": "OK",                        // ERR, stb.
-            "rtt": 10.108                               // RTT msec
-        
-        },
-        "stream-2.vsq.streamnet.hu": {
-        ...
-        }
-    }
+if ($argc < 2) {
+    echo "USAGE: Server settings has been not passed. Terminating.\n";
+    exit -1;
+} elseif (realpath($argv[1]) !== false) {
+	include_once $argv[1];
+} else {
+	echo "ERROR: '" . $argv[1] . "' not found! Terminating.\n";
+	exit -1;
 }
 
-*/
-
-
-// Config: remove from here!!!
-$config = array(
-    // Node basics
-    'hostname'              => 'stream-edge1.videosquare.eu',
-    'interface'             => 'eth0',
-    // Capacity
-    'max_streaming_load'    => 100,     // Max number of clients 
-    'max_network_load'      => 100,     // Max permitted network load
-    // Node
-    'node_type'             => "nginx",                             // nginx/wowza
-    'nginx_status_url'      => "http://localhost/nginx_status",
-    'nginx_status_port'     => 80,
-    // Upstream servers
-    'upstream_servers'      => array(
-                                'stream.vsq.streamnet.hu',
-                            ),                           
-    // Security
-    'hash_salt'             => "PGHOzVv1vyokz9oLtEiWkRA2tpsT0kX1",
-    // Features: supported protocols
-    'features' => array(
-        'live' => array(
-            'rtmp'  => true,
-            'rtmpt' => false,
-            'rtmps' => false,
-            'hls'   => true,
-            'hlss'  => false,
-            'hds'   => true,
-            'hdss'  => false
-        ),
-        'ondemand' => array(
-            'rtmp'  => false,
-            'rtmpt' => false,
-            'rtmps' => false,
-            'hls'   => true,
-            'hlss'  => false,
-            'hds'   => true,
-            'hdss'  => false
-        )
-    ),
-
-    // Other
-    'api_url'               => "https://dev.videosquare.eu/api",    // Videosquare API URL
-);
-
-    
 // General config
 $log_directory = "/var/log/videosquare";
 $myjobid = pathinfo($argv[0])['filename'];
@@ -121,7 +28,7 @@ if ( !file_exists($log_directory) ) {
 }
 
 // Read sequence number
-$sequence_number_file = $log_directory . "/" . $config['hostname'] . ".seq";
+$sequence_number_file = $log_directory . "/" . $config['server'] . ".seq";
 if ( !file_exists($sequence_number_file) ) {
     $reportsequencenum = rand(0, 999999);
     if ( $debug ) log_msg("[DEBUG] Previous sequence number not found. Initial sequence number generated: " . $reportsequencenum);
@@ -147,9 +54,9 @@ $api_report_data['features'] = $config['features'];
 // ## Network
 
 // Host name
-if ( empty($config['hostname']) ) $config['hostname'] = getMyFQDN();
-$api_report_data['hostname'] = $config['hostname'];
-if ( $debug ) log_msg("[DEBUG] Node FQDN is: " . $config['hostname']);
+if ( empty($config['server']) ) $config['server'] = getMyFQDN();
+$api_report_data['server'] = $config['server'];
+if ( $debug ) log_msg("[DEBUG] Node FQDN is: " . $config['server']);
 
 // Network interface check
 //$network_interfaces = getNetworkInterfaces();
@@ -180,67 +87,74 @@ $api_report_data['load']['cpu']['min5'] = $tmp[1];
 $api_report_data['load']['cpu']['min15'] = $tmp[2];
 if ( $debug ) log_msg("[DEBUG] CPU load information: " . print_r($api_report_data['load']['cpu'], true));
 
-// Streaming server listen IP for load measurement
-if ( $config["node_type"] == "nginx" ) {
-    $process = "nginx";
-} else {
-    $process = "java";
+// Streaming server load (NGINX)
+if ( $config['node_type'] == "nginx" ) {
+    $load = getNGINXLiveStreamingLoad();
+    $api_report_data['load']['clients'] = $load;
 }
 
-unset($output);
-$command = "netstat -n -p -l | grep '^tcp' | grep " . $process . " | awk '{print $4}'";
-exec($command, $output, $result);
-    
-if ( $result ) {
-    echo "error:\n";
-    var_dump($output);
-    exit;
-}
-
-$api_report_data['load']['clients'] = array(
-    'http'  => 0,
-    'https' => 0,
-    'rtmp'  => 0
-);
-    
-foreach ( $api_report_data['load']['clients'] as $protocol => $clients) {
-    switch ($protocol) {
-        case 'http':
-            $port = 80;
-            break;
-        case 'https':
-            $port = 443;
-            break;
-        case 'rtmp':
-            $port = 1935;
-            break;
-    }
-
-    unset($output);
-    $command = "netstat -n -p | grep " . $process . " | grep " . $api_report_data['network']['ip_address'] . ":" . $port . " | wc -l";
-    //echo $command . "\n";
-    exec($command, $output, $result);
-//var_dump($output);     
-//$command_output = implode("\n", $output);
-
-    if ( !$result ) {
-        $api_report_data['load']['clients'][$protocol] = $output[0];
-        if ( $debug ) log_msg("[DEBUG] Streaming load for " . $protocol . ": " . $api_report_data['load']['clients'][$protocol]);
-    }
-
-}
-
-// NGINX status
+// Ezt tudjuk használni a pontosabb statisztikákhoz???
 //nginxGetStatus();
 
-var_dump($api_report_data);
+// Streaming server load (WOWZA)
+//!!!!!!!!!!!
+/*$load = getWowzaLiveStreamingLoad();
+var_dump($load);
+exit;
+*/
 
+// ## CURL: commit data through Videosquare API
 $api_report_data_json = json_encode($api_report_data);
 $api_report_data_json_hash = hash_hmac('sha256', $api_report_data_json, $config['hash_salt'] . $reportsequencenum);
 
+if ( $debug ) {
+    log_msg("[DEBUG] Data to report:\n" . print_r($api_report_data, true));
+    log_msg("[DEBUG] JSON data to report:\n" . $api_report_data_json);
+    log_msg("[DEBUG] Data hash: " . $api_report_data_json_hash);
+}
+
+/*var_dump($api_report_data);
 echo $api_report_data_json . "\n";
 echo $api_report_data_json_hash . "\n";
+*/
 
+// Curl connection
+$ch = curl_init();
+$url  = $config['api_url'] . "?layer=controller&module=streamingservers&method=updatestatus";
+$url .= "&server=" . $config['server'];
+$url .= "&hash=" . $api_report_data_json_hash;
+$url .= "&reportsequencenum=" . $reportsequencenum;
+$url .= "&format=json";
+
+curl_setopt($ch, CURLOPT_URL, $url);
+curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "POST");                                                                     
+curl_setopt($ch, CURLOPT_POSTFIELDS, $api_report_data_json);
+curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+curl_setopt($ch, CURLOPT_HTTPHEADER, array(
+    'Content-Type: application/json',
+    'Content-Length: ' . strlen($api_report_data_json))
+);
+
+if ( $debug ) log_msg("[DEBUG] Calling API at: " . $url);
+
+$result = curl_exec($ch);
+
+// Handle connection error
+if( curl_errno($ch) ){ 
+    $err = curl_error($ch);
+    curl_close($ch);
+    log_msg("[ERROR] Server API " . $config['api_url'] . " is not reachable.");
+}
+
+// Check HTTP error code
+$header = curl_getinfo($ch);
+if ( $header['http_code'] >= 400 ) {
+    log_msg("[ERROR] Server error. HTTP error code: " . $header['http_code']);
+    curl_close($ch);
+}
+
+curl_close($ch);
 
 // Report sequence number: write to file
 $err = file_put_contents($sequence_number_file, $reportsequencenum);
@@ -296,12 +210,12 @@ function getNetworkInterfaceTraffic($iface_name) {
 	$command_output = implode("\n", $output);
     
     if ( $result ) {
-        echo "error:\n" . $command_output . "\n";
+        log_msg("[ERROR] Error running command: " . $command . "\nOutput:\n" . $command_output);
         return false;
     }
 
     $traffic_temp = preg_split('/\s+/', $output[2], -1, PREG_SPLIT_NO_EMPTY);
-    //var_dump($traffic_temp);
+
     $traffic = array(
         'traffic_in'    => intval(trim($traffic_temp[0]) * 1000),
         'traffic_out'   => intval(trim($traffic_temp[1]) * 1000)
@@ -320,7 +234,7 @@ function getNetworkInterfaceSpeed($iface_name) {
 	$command_output = implode("\n", $output);
     
     if ( $result ) {
-        echo "error:\n" . $command_output . "\n";
+        log_msg("[ERROR] Error running command: " . $command . "\nOutput:\n" . $command_output);
         return false;
     }
 
@@ -369,36 +283,171 @@ function pingAddress($ip) {
 function nginxGetStatus() {
  global $config;
 
-    $curl = curl_init();
+    $ch = curl_init();
 
 	$url = $config['nginx_status_url'];
 
-	curl_setopt($curl, CURLOPT_URL, $url); 
-	curl_setopt($curl, CURLOPT_PORT, $config['nginx_status_port']); 
-	curl_setopt($curl, CURLOPT_VERBOSE, 0); 
-	curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1); 
+	curl_setopt($ch, CURLOPT_URL, $url); 
+	curl_setopt($ch, CURLOPT_PORT, $config['nginx_status_port']); 
+	curl_setopt($ch, CURLOPT_VERBOSE, 0); 
+	curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1); 
 
-	$data = curl_exec($curl); 
-	if( curl_errno($curl) ){ 
-		$err = curl_error($curl);
-		curl_close($curl);
+	$data = curl_exec($ch); 
+	if( curl_errno($ch) ){ 
+		$err = curl_error($ch);
+		curl_close($ch);
         //$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Server " . $monitor_servers[$i]['server'] . " is unreachable.\n" . $err, $sendmail = true);
 		return false;
 	}
 
 	// Check if authentication failed
-	$header = curl_getinfo($curl);
+	$header = curl_getinfo($ch);
 	if ( $header['http_code'] == 401 ) {
-		curl_close($curl); 
+		curl_close($ch); 
         //$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] HTTP 401. Cannot authenticate to server " . $monitor_servers[$i]['server'], $sendmail = true);
 		return false;
 	}
 
-    var_dump($data);
-
-exit;    
+    curl_close($ch);
+    
     return true;
 
+}
+
+// This is quite limited.
+// RTMP live: count netstat connections. Empty content channel is counted...
+// HTTP live: nginx status interface?
+function getNGINXLiveStreamingLoad() {
+global $config, $api_report_data, $debug;
+
+    $load = array(
+        'rtmp'  => 0,
+        'http'  => 0,
+        'https' => 0,
+        'rtsp'  => 0
+    );
+    
+    foreach ( $load as $protocol => $clients) {
+
+        switch ($protocol) {
+            case 'http':
+                $port = 80;
+                break;
+            case 'https':
+                $port = 443;
+                break;
+            case 'rtsp':
+                $port = 554;
+                break;
+            case 'rtmp':
+                $port = 1935;
+                break;
+        }
+
+        unset($output);
+        $command = "netstat -n -p | grep nginx | grep " . $api_report_data['network']['ip_address'] . ":" . $port . " | wc -l";
+        exec($command, $output, $result);
+        
+        if ( $debug ) log_msg("[DEBUG] NGINX live load command for '" . $protocol . "': " . $command . " (Clients: " . $output[0] . ")");
+
+        $load['currentload'] = 0;
+        $load['appload'] = 0;
+        
+        if ( !$result ) if ( is_numeric($output[0]) ) {
+            $load[$protocol] = $output[0];
+            $load['currentload'] += $output[0];
+            $load['appload'] += $output[0];
+        }
+        
+    }
+
+    return $load;
+}
+
+function getWowzaLiveStreamingLoad() {
+global $config, $api_report_data, $debug;
+
+    $load = array(
+        'rtmp'  => 0,
+        'http'  => 0,
+        'https' => 0,
+        'rtsp'  => 0,
+        'currentload' => 0,
+        'appload' => 0
+    );
+
+	$ch = curl_init();
+
+	curl_setopt($ch, CURLOPT_URL, $config['wowza_status_url']);
+	curl_setopt($ch, CURLOPT_PORT, $config['wowza_status_port']);
+	curl_setopt($ch, CURLOPT_VERBOSE, 0); 
+	curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1); 
+	curl_setopt($ch, CURLOPT_USERPWD, $config['wowza_user'] . ":" . $config['wowza_password']);
+	curl_setopt($ch, CURLOPT_HTTPAUTH, CURLAUTH_ANY);
+    if ( stripos($config['wowza_status_url'], "https") !== false ) {
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 2);
+    }
+
+    $data = curl_exec($ch); 
+	if( curl_errno($ch) ){ 
+		$err = curl_error($ch);
+		curl_close($ch);
+        log_msg("[ERROR] Wowza server " . $config['wowza_status_url'] . " is not reachable.");
+		return false;
+	}
+
+	// Check if authentication failed
+	$header = curl_getinfo($ch);
+	if ( $header['http_code'] >= 400 ) {
+        curl_close($ch);
+        log_msg("[ERROR] HTTP 401. Cannot authenticate to server " . $config['wowza_status_url']);
+		return false;
+	}
+
+//$data = file_get_contents("wowza.xml");
+
+	// Process XML output
+    libxml_use_internal_errors(true);
+	$wowza_xml = simplexml_load_string($data);
+    
+    // Valid XML?
+    $xml = explode("\n", $data);
+    if ( $wowza_xml === false ) {
+        
+        $err = "";
+        foreach(libxml_get_errors() as $error) {
+            $err .= $error->message . "\t";
+        }
+        libxml_clear_errors();
+        
+        log_msg("[ERROR] Cannot parse XML returned by Wowza. Error:\n\n" . $err);
+        
+        return false;
+    }
+
+    // Total number of clients connected to server
+	$load['currentload'] = 0 + (string)$wowza_xml->ConnectionsCurrent;
+    
+	// Search for Wowza application and record number of connections
+	foreach ($wowza_xml->VHost as $w_vhost) {
+		foreach ($w_vhost->Application as $w_app) {
+			// Wowza load for specific app           
+			if ( strcmp($w_app->Name, $config['wowza_app_live'] ) == 0 ) {
+                $load['appload'] = 0 + (string)$w_app->ConnectionsCurrent;
+                $load['currentload'] += $load['appload'];
+                foreach ($w_app->ApplicationInstance as $w_appinst) {
+                    $load['rtmp'] += 0 + (string)$w_appinst->Stream->SessionsFlash;
+                    $load['http'] += 0 + (string)$w_appinst->Stream->SessionsCupertino + (string)$w_appinst->Stream->SessionsSanJose + (string)$w_appinst->Stream->SessionsSmooth + (string)$w_appinst->Stream->SessionsMPEGDash;
+                    $load['rtsp'] += 0 + (string)$w_appinst->Stream->SessionsRTSP;
+                }
+            }
+		}
+	}
+
+	curl_close($ch); 
+    
+    return $load;
 }
 
 function getMyFQDN() {
@@ -419,17 +468,17 @@ function log_msg($msg) {
     if ( empty($msg) ) return true;
     
     // Log file preparation
-    $vsq_sitename = parse_url($config["api_url"])["host"];
+    $vsq_sitename = parse_url($config['api_url'])['host'];
     $log_file = $log_directory. "/" . $vsq_sitename . "-" . date("Y-m") . "-" . $myjobid . ".log";
 
     if ( !file_exists($log_file) ) {
         if ( !touch($log_file) ) {
             echo "[ERROR] Cannot create log file " . $log_file . "\n";
-            return false;
+            exit;
         }
     }
 
-    $date = date("Y-m-d H:i:s.u");
+    $date = date("Y-m-d H:i:s");
     
     file_put_contents($log_file, $date . ": " . trim($msg) . "\n", FILE_APPEND | LOCK_EX);
     
