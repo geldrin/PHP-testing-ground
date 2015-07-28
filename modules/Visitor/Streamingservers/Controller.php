@@ -91,9 +91,10 @@ class Controller extends \Visitor\Controller {
         ),
       ),
       'network' => array(
-        'ip_address'  => true,
-        'traffic_in'  => true,
-        'traffic_out' => true,
+        'ip_address'      => true,
+        'interface_speed' => true,
+        'traffic_in'      => true,
+        'traffic_out'     => true,
       ),
       'load' => array(
         'cpu' => array(
