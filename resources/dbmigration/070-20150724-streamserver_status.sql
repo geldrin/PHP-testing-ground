@@ -5,8 +5,9 @@
     ADD  `load_clients_http` INT NOT NULL DEFAULT  '0',
     ADD  `load_clients_https` INT NOT NULL DEFAULT  '0',
     ADD  `load_clients_rtmp` INT NOT NULL DEFAULT  '0',
-    ADD  `network_traffick_in` INT NOT NULL DEFAULT  '0',
-    ADD  `network_traffick_out` INT NOT NULL DEFAULT  '0',
+    ADD  `network_ip_address` TEXT,
+    ADD  `network_traffic_in` INT NOT NULL DEFAULT  '0',
+    ADD  `network_traffic_out` INT NOT NULL DEFAULT  '0',
     ADD  `features_live_rtmp` INT NOT NULL DEFAULT  '0',
     ADD  `features_live_rtmpt` INT NOT NULL DEFAULT  '0',
     ADD  `features_live_rtmps` INT NOT NULL DEFAULT  '0',
@@ -20,4 +21,5 @@
     ADD  `features_ondemand_hls` INT NOT NULL DEFAULT  '0',
     ADD  `features_ondemand_hlss` INT NOT NULL DEFAULT  '0',
     ADD  `features_ondemand_hds` INT NOT NULL DEFAULT  '0',
-    ADD  `features_ondemand_hdss` INT NOT NULL DEFAULT  '0';
+    ADD  `features_ondemand_hdss` INT NOT NULL DEFAULT  '0',
+    ADD  `lastreporttimestamp` DATETIME NULL;

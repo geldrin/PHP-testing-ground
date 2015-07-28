@@ -91,6 +91,7 @@ class Controller extends \Visitor\Controller {
         ),
       ),
       'network' => array(
+        'ip_address'  => true,
         'traffic_in'  => true,
         'traffic_out' => true,
       ),
@@ -107,6 +108,7 @@ class Controller extends \Visitor\Controller {
     );
 
     $row = $this->fillRowFromInfoArray( $info, $keysToFields, $row );
+    $row['lastreporttimestamp'] = date('Y-m-d H:i:s');
     $serverModel->updateRow( $row );
     return true;
   }
