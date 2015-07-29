@@ -21,6 +21,31 @@ $config = array(
     'value' => ( $this->application->getParameter('forward') ?: '' )
   ),
 
+  'recordingids' => array(
+    'type'  => 'inputHidden',
+  ),
+
+  'livefeedids' => array(
+    'type'  => 'inputHidden',
+  ),
+
+  'groupids' => array(
+    'type'  => 'inputHidden',
+  ),
+
+  'userids' => array(
+    'type'  => 'inputHidden',
+  ),
+
+  'type' => array(
+    'displayname' => $l('analytics', 'statistics_type'),
+    'type'        => 'inputRadio',
+    'values'      => $l->getLov('statistics_type'),
+    'value'       => 'recordings',
+    'divide'      => 1,
+    'divider'     => '<br/>',
+  ),
+
   'datefrom' => array(
     'displayname' => $l('analytics', 'datefrom') . '<span class="required">*</span>',
     'type'        => 'inputText',
@@ -49,28 +74,60 @@ $config = array(
     ),
   ),
 
-  'email' => array(
-    'displayname' => $l('analytics', 'accreditedrecordings_email'),
-    'type'        => 'inputText',
-    'validation'  => array(
-      array(
-        'type'     => 'string',
-        'required' => false,
-        'regexp'   => CF_EMAIL,
-        'help'     => $l('users', 'emailhelp')
-      ),
-    ),
+  'searchrecordings' => array(
+    'type'        => 'select',
+    'displayname' => $l('analytics', 'searchrecordings'),
+    'html'        => 'multiple="multiple" data-searchurl="' . $language . '/analytics/searchrecordings"',
+    'rowlayout'   => '
+      <tr>
+        <td class="labelcolumn" colspan="2"><label for="%id%">%displayname%</label></td>
+      </tr>
+      <tr>
+        <td class="elementcolumn" colspan="2">%prefix%%element%%postfix%%errordiv%</td>
+      </tr>
+    ',
   ),
-
-  'completed' => array(
-    'displayname' => $l('analytics', 'accreditedrecordings_completed'),
-    'type'        => 'inputCheckbox',
-    'itemlayout'  => $this->checkboxitemlayout,
-    'onvalue'     => 1,
-    'offvalue'    => 0,
-    'value'       => 1,
-    'validation'  => array(
-    ),
+  
+  'searchlive' => array(
+    'type'        => 'select',
+    'displayname' => $l('analytics', 'searchlive'),
+    'html'        => 'multiple="multiple" data-searchurl="' . $language . '/analytics/searchlive"',
+    'rowlayout'   => '
+      <tr>
+        <td class="labelcolumn" colspan="2"><label for="%id%">%displayname%</label></td>
+      </tr>
+      <tr>
+        <td class="elementcolumn" colspan="2">%prefix%%element%%postfix%%errordiv%</td>
+      </tr>
+    ',
+  ),
+  
+  'searchgroups' => array(
+    'type'        => 'select',
+    'displayname' => $l('analytics', 'searchgroups'),
+    'html'        => 'multiple="multiple" data-searchurl="' . $language . '/analytics/searchgroups"',
+    'rowlayout'   => '
+      <tr>
+        <td class="labelcolumn" colspan="2"><label for="%id%">%displayname%</label></td>
+      </tr>
+      <tr>
+        <td class="elementcolumn" colspan="2">%prefix%%element%%postfix%%errordiv%</td>
+      </tr>
+    ',
+  ),
+  
+  'searchusers' => array(
+    'type'        => 'select',
+    'displayname' => $l('analytics', 'searchusers'),
+    'html'        => 'multiple="multiple" data-searchurl="' . $language . '/analytics/searchusers"',
+    'rowlayout'   => '
+      <tr>
+        <td class="labelcolumn" colspan="2"><label for="%id%">%displayname%</label></td>
+      </tr>
+      <tr>
+        <td class="elementcolumn" colspan="2">%prefix%%element%%postfix%%errordiv%</td>
+      </tr>
+    ',
   ),
   
 );

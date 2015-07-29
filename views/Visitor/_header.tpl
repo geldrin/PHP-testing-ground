@@ -16,6 +16,9 @@
   {if $needfancybox}
     <link rel="StyleSheet" type="text/css" href="{$STATIC_URI}js/fancybox/jquery.fancybox-1.3.4.css" media="screen"/>
   {/if}
+  {if $needselect2}
+    <link rel="StyleSheet" type="text/css" href="{$STATIC_URI}js/select2/select2.min.css" media="screen"/>
+  {/if}
   <link rel="StyleSheet" type="text/css" href="{$STATIC_URI}css/style.css?{$VERSION}" media="screen"/>
   {if $browser.mobile}
     <meta name="viewport" content="width=device-width, maximum-scale=1.0"/>
@@ -42,6 +45,10 @@
   <script type="text/javascript" src="{$bootstrap->scheme}{$bootstrap->config.baseuri}{$language}/contents/language"></script>
   {if $needfancybox}
     <script type="text/javascript" src="{$STATIC_URI}js/fancybox/jquery.fancybox-1.3.4.pack.js"></script>
+  {/if}
+  {if $needselect2}
+    <script type="text/javascript" src="{$STATIC_URI}js/select2/select2.min.js"></script>
+    <script type="text/javascript" src="{$STATIC_URI}js/select2/i18n/{$language}.js"></script>
   {/if}
   {if $needhistory}
     <script type="text/javascript" src="{$STATIC_URI}js/jquery.history.js"></script>

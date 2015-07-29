@@ -3861,6 +3861,68 @@ class Recordings extends \Springboard\Model {
 
   }
   
+  public function searchStatistics( $user, $searchterm, $organizationid, $start = 0, $limit = 20 ) {
+    
+    $searchterm  = str_replace( ' ', '%', $searchterm );
+    $searchterm  = $this->db->qstr( '%' . $searchterm . '%' );
+    $select = "
+      u.id AS userid,
+      u.externalid,
+      u.nickname,
+      u.email,
+      u.nameprefix,
+      u.namefirst,
+      u.namelast,
+      u.nameformat,
+      r.id,
+      r.title,
+      r.subtitle,
+      r.indexphotofilename,
+      r.timestamp,
+      r.recordedtimestamp,
+      r.mediatype,
+      GREATEST(r.masterlength, r.contentmasterlength) AS length,
+      (
+        1 +
+        IF( r.title LIKE $searchterm, 2, 0 ) +
+        IF( r.subtitle LIKE $searchterm, 1, 0 ) +
+        IF( r.description LIKE $searchterm, 1, 0 ) +
+        IF( r.primarymetadatacache LIKE $searchterm, 1, 0 )
+      ) AS relevancy,
+      IF(
+        r.isfeatured <> 0 AND
+        (
+          r.featureduntil IS NULL OR
+          r.featureduntil >= NOW()
+        ),
+        1,
+        0
+      ) AS currentlyfeatured
+    ";
+
+    $from = "
+      users AS u,
+      recordings AS r"
+    ;
+    
+    $where = "
+      r.userid = u.id AND
+      (
+        r.primarymetadatacache LIKE $searchterm OR
+        r.additionalcache LIKE $searchterm
+      )
+    ";
+
+    $ret = $this->db->getArray("
+      " . self::getUnionSelect( $user, $select, $from, $where ) . "
+      ORDER BY relevancy
+      LIMIT $start, $limit
+    ");
+
+    $this->addPresentersToArray( $ret, false, $organizationid );
+    return $ret;
+  }
+
   public function search( $searchterm, $userid, $organizationid ) {
     
     $searchterm  = str_replace( ' ', '%', $searchterm );

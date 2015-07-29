@@ -2,7 +2,7 @@
 namespace Visitor\Analytics\Form;
 class Statistics extends \Visitor\HelpForm {
   public $configfile = 'Statistics.php';
-  public $template   = 'Visitor/genericform.tpl';
+  public $template   = 'Visitor/Analytics/Statistics.tpl';
   public $needdb     = true;
   private $delimiter = ';';
 
