@@ -53,6 +53,7 @@ $j(document).ready(function() {
   runIfExists('#groups_create, #groups_modify', setupGroups );
   runIfExists('.recordingslides', setupSlideTooltip );
   runIfExists('#analytics_accreditedrecordings', setupAnalytics );
+  runIfExists('#analytics_statistics', setupStatistics );
 
   if ( needping )
     setTimeout( setupPing, 1000 * pingsecs );
@@ -2508,4 +2509,66 @@ function setupAnalytics() {
     timeFormat : 'HH:mm'
   });
   
+}
+
+function setupStatistics() {
+  setupDefaultDateTimePicker('.datetimepicker');
+
+  var elemStatus = {
+    'recordings': {
+      '#searchrecordings': true,
+      '#searchlive'      : false,
+    },
+    'live': {
+      '#searchrecordings': false,
+      '#searchlive'      : true,
+    }
+  };
+
+  $j('input[name=type]').change(function(e) {
+    var typ = $j('input[name=type]:checked').val();
+    $j.each(elemStatus[ typ ], function(key, value) {
+      var parent = $j(key).parents('tr');
+      parent.toggle(value);
+      parent.prev().toggle(value);
+    });
+  }).change();
+
+  var getSelectConfig = function(type) {
+    var tpl = $j.parseJSON( '"' + $j('#statisticsform').attr('data-' + type + 'tpl') + '"' );
+    var tplResult = function(result) {
+      var ret = tpl;
+      $j.each(result, function(key, value) {
+        if (!value)
+          value = '';
+
+        ret = ret.replace('__' + key.toUpperCase() + '__', value );
+      });
+      return ret;
+    };
+    var tplSelection = function(result) {
+      return result.text;
+    };
+
+    return {
+      language          : language,
+      minimumInputLength: 2,
+      templateResult    : tplResult,
+      templateSelection : tplSelection,
+      ajax              : {
+        url     : $j( '#search' + type ).attr('data-searchurl'),
+        cache   : false,
+        dataType: 'json',
+        delay   : 250,
+      },
+      escapeMarkup      : function (markup) {
+        return markup;
+      }
+    };
+  };
+
+  $j('#searchrecordings').select2( getSelectConfig('recordings') );
+  $j('#searchlive').select2( getSelectConfig('live') );
+  $j('#searchgroups').select2( getSelectConfig('groups') );
+  $j('#searchusers').select2( getSelectConfig('users') );
 }

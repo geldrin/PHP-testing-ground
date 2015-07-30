@@ -251,4 +251,9 @@ return array(
     20 => $l('recordings', 'featurepriority_hight'),
     30 => $l('recordings', 'featurepriority_maximum'),
   ),
+
+  'statistics_type' => array(
+    'recordings' => $l('analytics', 'statistis_type_recordings'),
+    'live'       => $l('analytics', 'statistis_type_live'),
+  ),
 );
