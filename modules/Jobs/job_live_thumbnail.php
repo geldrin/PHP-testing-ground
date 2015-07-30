@@ -20,216 +20,201 @@ $app = new Springboard\Application\Cli(BASE_PATH, PRODUCTION);
 
 // Load jobs configuration file
 $app->loadConfig('modules/Jobs/config_jobs.php');
-$jconf = $app->config['config_jobs'];
+$jconf   = $app->config['config_jobs'];
 $myjobid = $jconf['jobid_live_thumb'];
-
-// Check operating system - exit if Windows
-if ( iswindows() ) {
-	echo "ERROR: Non-Windows process started on Windows platform\n";
-	exit;
-}
-
-// Exit if any STOP file is present
-if ( is_file( $app->config['datapath'] . 'jobs/' . $myjobid . '.stop' ) or is_file( $app->config['datapath'] . 'jobs/all.stop' ) ) exit;
+$logdir  = $jconf['log_dir'];
+$logfile = $myjobid .'.log';
 
 // Log init
 $debug = Springboard\Debug::getInstance();
 $debug_mode = false;
 
+// Exit if any STOP file is present
+$stopfile = $app->config['datapath'] . 'jobs/' . $myjobid . '.stop';
+$globalstopfile = $app->config['datapath'] . 'jobs/all.stop';
+if ($debug_mode === false && (is_file($stopfile) || is_file($globalstopfile))) exit("Stopfile detected! Terminating.\n");
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
 // Runover check. Is this process already running? If yes, report and exit
-if ( !runOverControl($myjobid) ) exit;
+if ( !runOverControl($myjobid) ) exit("Runover detected! Terminating.");
 
-if ( !is_writable($jconf['livestreams_dir']) ) {
-	$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Temp directory " . $jconf['livestreams_dir'] . " is not writeable.", $sendmail = false);
-	exit;
-}
+// Run main loop
+$myexitcode = Main();
+die($myexitcode);
 
-// Thumb sizes
-$scale_wide  = $app->config['videothumbnailresolutions']['wide'];
-$scale_small = $app->config['videothumbnailresolutions']['4:3'];
-$scale_high  = $app->config['videothumbnailresolutions']['player'];
+///////////////////////////////////////////////////////////////////////////////////////////////////
+function Main() {
+///////////////////////////////////////////////////////////////////////////////////////////////////
+	global $app, $db, $debug, $debug_mode, $jconf, $logdir, $logfile, $myjobid;
 
-$res_wide   = explode("x", $scale_wide, 2);
-$res_43     = explode("x", $scale_small, 2);
-$res_high   = explode("x", $scale_high, 2);
-
-clearstatcache();
-
-$app->watchdog();
-
-// Establish database connection
-$db = db_maintain();
-
-$converter_sleep_length = $app->config['sleep_media'];
-
-// Watchdog
-$app->watchdog();
-
-// Query active channels
-$channels = getActiveChannels();
-if ( $channels === false ) {
-	// Close DB connection if open
-	if ( is_resource($db->_connectionID) ) $db->close();
-	exit;
-}
-
-for ( $i = 0; $i < count($channels); $i++ ) {
-
-	// Temp directory
-	$temp_dir = $jconf['livestreams_dir'] . $channels[$i]['streamid'] . "/";
-
-	// RTMP URL - Use fallback server always
-	$rtmp_server = $app->config['fallbackstreamingserver']['server'];
-
-	$wowza_app = "vsqlive";
-	if ( isset($app->config['production']) && $app->config['production'] === false ) $wowza_app = "dev" . $wowza_app;
-
-	$datetime = date("YmdHis");
-
-	// RTMP URL
-	$rtmp_url = sprintf("rtmp://%s/" . $wowza_app . "/", $rtmp_server) . $channels[$i]['wowzastreamid'];
-
-	// ffmpeg log level
-	$ffmpeg_loglevel = ' -v '. $app->config['ffmpeg_loglevel'];
-	if ( $debug_mode ) $ffmpeg_loglevel = '';
-	
-	$thumb_filename = "/tmp/" . $channels[$i]['streamid'] . "_" . rand(100000, 999999) . ".png";
-	$ffmpeg_command = $app->config['ffmpeg_alt'] . ' ' . $ffmpeg_loglevel . ' -i ' . $rtmp_url . ' -vf "thumbnail" -frames:v 1 ' . $thumb_filename;
-	$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] ffmpeg live thumb atempt for feed#" . $channels[$i]['locationid'] . "/stream#" . $channels[$i]['streamid'], $sendmail = false);
-
-	$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] ffmpeg command to be executed: " . $ffmpeg_command, $sendmail = false);
-
-	// Run ffmpeg
-	$err = runExt4($ffmpeg_command);
-
-	if ( is_readable($thumb_filename) and ( filesize($thumb_filename) > 0 ) ) {
-
-		$debug->log($jconf['log_dir'], $myjobid . ".log", "[OK] ffmpeg live thumb created. Error code = " . $err['code'] . ", feed#" . $channels[$i]['locationid'] . "/stream#" . $channels[$i]['streamid'] . ", ffmpeg command = \"" . $ffmpeg_command . "\"", $sendmail = false);
-
-		// ## Prepare working directories
-		// Base working directory
-		$err = create_remove_directory($temp_dir);
-		if ( !$err['code'] ) {
-			$debug->log($jconf['log_dir'], $myjobid . ".log", $err['message'] . "\n\nCOMMAND: " . $err['command'] . "\n\nRESULT: " . $err['result'], $sendmail = true);
-			exit -1;
-		}
-		// Wide frames
-		$err = create_remove_directory($temp_dir . $scale_wide . "/");
-		if ( !$err['code'] ) {
-			$debug->log($jconf['log_dir'], $myjobid . ".log", $err['message'] . "\n\nCOMMAND: " . $err['command'] . "\n\nRESULT: " . $err['result'], $sendmail = true);
-			exit -1;
-		}
-		// 4:3 frames
-		$err = create_remove_directory($temp_dir . $scale_small . "/");
-		if ( !$err['code'] ) {
-			$debug->log($jconf['log_dir'], $myjobid . ".log", $err['message'] . "\n\nCOMMAND: " . $err['command'] . "\n\nRESULT: " . $err['result'], $sendmail = true);
-			exit -1;
-		}
-		// High resolution wide frame
-		$err = create_remove_directory($temp_dir . $scale_high . "/");
-		if ( !$err['code'] ) {
-			$debug->log($jconf['log_dir'], $myjobid . ".log", $err['message'] . "\n\nCOMMAND: " . $err['command'] . "\n\nRESULT: " . $err['result'], $sendmail = true);
-			exit -1;
-		}
-
-		// Chmod local directory
-		$command = "chmod -f -R " . $jconf['directory_access'] . " " . $temp_dir . " 2>&1";
-		exec($command, $output, $result);
-		$output_string = implode("\n", $output);
-		if ( $result != 0 ) {
-			$debug->log($jconf['log_dir'], $myjobid . ".log", "[WARN] Chmod failed. Command: " . $command, $sendmail = false);
-		}
-
-	} else {
-
-		// ffmpeg error
-		$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] ffmpeg cannot get live thumb. Error code = " . $err['code'] . ", lifefeed_stream.id = " . $channels[$i]['streamid'] . ", ffmpeg command = " . $ffmpeg_command . ". Full output:\n" . $err['cmd_output'], $sendmail = false);
-		// No index photo update, keep existing
-		continue;
+	if ( !is_writable($jconf['livestreams_dir']) ) {
+		$debug->log($logdir, $logfile, "[ERROR] Temp directory " . $jconf['livestreams_dir'] . " is not writeable.", $sendmail = false);
+		return (1);
 	}
 
-	// Thumbnail OK: resize it
-	$filename = $channels[$i]['streamid'] . "_" . $datetime . ".png";
-	$filename_jpg = $channels[$i]['streamid'] . "_" . $datetime . ".jpg";
+	clearstatcache();
+	$app->watchdog();
 
-	$path_wide = $temp_dir . $scale_wide . "/";
-	$path_43 = $temp_dir . $scale_small . "/";
-	$path_highres = $temp_dir . $scale_high . "/";
+	// Establish database connection
+	$db = db_maintain();
 
-	if ( copy($thumb_filename, $path_wide . $filename) && copy($thumb_filename, $path_43 . $filename) && copy($thumb_filename, $path_highres . $filename) ) {
-
-		// Wide thumb
-		try {
-			\Springboard\Image::resizeAndCropImage($path_wide . $filename, $res_wide[0], $res_wide[1], 'top');
-			png2jpg($path_wide . $filename, $path_wide . $filename_jpg, 95);
-			unlink($path_wide . $filename);
-		} catch (exception $err) {
-			$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Cannot resize image. File = " . $path_wide . $filename . ".", $sendmail = false);
-		}
-
-		// 4:3 thumb
-		try {
-			\Springboard\Image::resizeAndCropImage($path_43 . $filename, $res_43[0], $res_43[1]);
-			png2jpg($path_43 . $filename, $path_43 . $filename_jpg, 95);
-			unlink($path_43 . $filename);
-		} catch (exception $err) {
-			$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Cannot resize image. File = " . $path_43 . $filename . ".", $sendmail = false);
-		}
-
-		// High resolution thumb
-		try {
-			\Springboard\Image::resizeAndCropImage($path_highres . $filename, $res_high[0], $res_high[1]);
-			png2jpg($path_highres . $filename, $path_highres . $filename_jpg, 95);
-			unlink($path_highres . $filename);
-		} catch (exception $err) {
-			$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Cannot resize image. File = " . $path_highres . $filename . ".", $sendmail = false);
-		}
-
-		unlink($thumb_filename);
-
-	} else {
-		$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Cannot copy image " . $thumb_filename . " to temp directories.\n", $sendmail = false);
-	}
-
-	// Copy images to server
-	$remote_path = $app->config['livestreampath'];
-	$err = ssh_filecopy2($app->config['fallbackstreamingserver']['server'], $temp_dir, $remote_path, false);
-	if ( !$err['code'] ) {
-		$debug->log($jconf['log_dir'], $myjobid . ".log", "MSG: " . $err['message'] . "\nCOMMAND: " . $err['command'] . "\nRESULT: " . $err['result'], $sendmail = false);
-		continue;
-	}
-
-	// SSH chmod/chown
-	$err = sshMakeChmodChown($app->config['fallbackstreamingserver']['server'], $remote_path . $channels[$i]['streamid'] . "/" . $scale_small . "/" . $filename_jpg, false);
-	if ( !$err['code'] ) $debug->log($jconf['log_dir'], $myjobid . ".log", "MSG: " . $err['message'] . "\nCOMMAND: " . $err['command'] . "\nRESULT: " . $err['result'], $sendmail = false);
-	$err = sshMakeChmodChown($app->config['fallbackstreamingserver']['server'], $remote_path . $channels[$i]['streamid'] . "/" . $scale_wide . "/" . $filename_jpg, false);
-	if ( !$err['code'] ) $debug->log($jconf['log_dir'], $myjobid . ".log", "MSG: " . $err['message'] . "\nCOMMAND: " . $err['command'] . "\nRESULT: " . $err['result'], $sendmail = false);
-	$err = sshMakeChmodChown($app->config['fallbackstreamingserver']['server'], $remote_path . $channels[$i]['streamid'] . "/" . $scale_high . "/" . $filename_jpg, false);
-	if ( !$err['code'] ) $debug->log($jconf['log_dir'], $myjobid . ".log", "MSG: " . $err['message'] . "\nCOMMAND: " . $err['command'] . "\nRESULT: " . $err['result'], $sendmail = false);
-
-	// Update index photo filename
-	$tmp = explode("/", $app->config['livestreampath']);
-	$indexphotofilename = $tmp[count($tmp)-2] . "/" . $channels[$i]['streamid'] . "/" . $scale_small . "/" . $filename_jpg;
-	updateLiveFeedStreamIndexPhoto($channels[$i]['streamid'], $indexphotofilename);
-	$debug->log($jconf['log_dir'], $myjobid . ".log", "[OK] Updated live thumbs published for livefeed_stream.id = " . $channels[$i]['streamid'] . " at " . $app->config['fallbackstreamingserver']['server'] . ":" . $remote_path, $sendmail = false);
+	$converter_sleep_length = $app->config['sleep_media'];
 
 	// Watchdog
 	$app->watchdog();
+
+	// Query active channels
+	$channels = getActiveChannels();
+	if ( $channels === false ) {
+		// Close DB connection if open
+		if ( is_resource($db->_connectionID) ) $db->close();
+		return 0;
+	}
+
+	for ( $i = 0; $i < count($channels); $i++ ) {
+		$filename = $ffmpeg_output = $ffmpeg_loglevel = $ffmpeg_filter = $ffmpeg_globals = $ffmpeg_load = null;
+		// Temp directory
+		$temp_dir = $jconf['livestreams_dir'] . $channels[$i]['streamid'] . "/";
+
+		// Destination directories
+		$path_43      = $temp_dir . $app->config['videothumbnailresolutions']['4:3'] . "/";
+		$path_wide    = $temp_dir . $app->config['videothumbnailresolutions']['wide'] . "/";
+		$path_highres = $temp_dir . $app->config['videothumbnailresolutions']['player'] . "/";
+
+		// RTMP URL - Use fallback server always
+		$rtmp_server = $app->config['fallbackstreamingserver']['server'];
+
+		$wowza_app = "vsqlive";
+		if ( isset($app->config['production']) && $app->config['production'] === false ) $wowza_app = "dev" . $wowza_app;
+
+		$filename        = $channels[$i]['streamid'] . "_" . date("YmdHis") . ".jpg";
+		$ffmpeg_loglevel = ($debug_mode) ? (null) : (' -v '. $app->config['ffmpeg_loglevel']);
+		$ffmpeg_globals  = $app->config['ffmpeg_alt'] . $ffmpeg_loglevel .' -y';
+		$ffmpeg_load     = ' -i '. sprintf("rtmp://%s/" . $wowza_app . "/", $rtmp_server) . $channels[$i]['wowzastreamid'];
+
+		$tmp = array();
+		$tmp[] = 'fps=fps=1, split=3[0][1][2]';
+		foreach (array_values($app->config['videothumbnailresolutions']) as $j => $res) {
+			$dim = explode('x', $res, 2);
+			$dst = $temp_dir . $res . DIRECTORY_SEPARATOR;
+			$tmp[] =  "[$j] scale=w=". $dim[0] .":h=". $dim[1] .":force_original_aspect_ratio=increase, crop=". $dim[0] .':'. $dim[1] ." [". $j ."_out]";
+			$ffmpeg_output .=  " -map [". $j ."_out] -frames:v 1 -an -f image2 ". $dst . $filename;
+		}
+		$ffmpeg_filter  = ' -filter_complex "'. implode(';', $tmp) .'"';
+		$ffmpeg_command = $ffmpeg_globals . $ffmpeg_load . $ffmpeg_filter . $ffmpeg_output;
+
+		try {
+			$cmd = $code = null;
+			$fatal = false;
+
+			// Prepare working directories
+			$directories = array($temp_dir, $path_wide, $path_43, $path_highres);
+
+			foreach($directories as $d) {
+				$err = create_remove_directory($d);
+				if ( !$err['code'] ) {
+					$cmd  = $err['command'];
+					$code = $err['result'] ? 1 : 0;
+					throw new Exception($err['message']);
+				}
+			}
+
+			// Chmod local directory
+			$errChmod = runExt4("chmod -f -R ". $jconf['directory_access'] ." ". $temp_dir);
+			$cmd  = $errChmod['cmd'];
+			$code = $errChmod['code'];
+
+			if ( $errChmod['code'] != 0 ) throw new Exception("Chmod failed. (". $errChmod['cmd_output'] .")");
+
+			// Run ffmpeg
+			$err  = runExt4($ffmpeg_command);
+			$cmd  = $err['cmd'];
+			$code = $err['code'];
+
+			if ($err['code'] != 0) {
+				if (strpos($err['cmd_output'], 'StreamNotFound') !== false) {
+					// there's no live stream available, don't complain about it
+					continue;
+				} else {
+					// ffmpeg error
+					throw new Exception("FFmpeg cannot get live thumbnail. (". $err['cmd_output'] .")");
+				}
+			} else {
+				if (!is_readable($path_43 . $filename) || !(filesize($path_43 . $filename) > 0))
+					throw new Exception("File is not readable.");
+			}
+			unset($err);
+
+			if ($debug_mode) {
+				$msg  = "[INFO] FFmpeg live thumbnail attempt for feed#". $channels[$i]['locationid'];
+				$msg .= " / stream#". $channels[$i]['streamid'] ." - OK.\nCommand: '$cmd' / return code: $code\n";
+				$debug->log($logdir, $logfile, $msg, false);
+			}
+		} catch (Exception $e) {
+			$msg  = "[ERROR] FFmpeg live thumbnail attempt for feed#". $channels[$i]['locationid'];
+			$msg .= " / stream#". $channels[$i]['streamid'] ." - Failed!\n". $e->getMessage() ."\nCommand: '$cmd' / return code: $code\n";
+			$debug->log($logdir, $logfile, $msg, false);
+			unset($cmd, $msg);
+
+			if ($fatal)	return $code; // which errors should be considered fatal?
+			
+			continue;
+		}
+
+		try {
+			// Copy images to server
+			$remote_path = $app->config['livestreampath'];
+			$err = ssh_filecopy2($app->config['fallbackstreamingserver']['server'], $temp_dir, $remote_path, false);
+			
+			if ($debug_mode) $debug->log($logdir, $logfile, "[INFO] Copying folder '". $temp_dir ."' > '". $remote_path ."'", false);			
+			if ($err['code'] === false)	throw new Exception($err['message'] ."\nCommand: ". $err['command'] ."\nResult: ". $err['result']);
+
+			// Chmod remote files
+			foreach ($app->config['videothumbnailresolutions'] as $res) {
+				$remote_file = $remote_path . $channels[$i]['streamid'] ."/". $res ."/". $filename;
+				if ($debug_mode) {
+					$msg = "[INFO] Setting file permission (". $jconf['file_owner'] ."/". $jconf['file_access'] .") on '". $remote_file ."'";
+					$debug->log($logdir, $logfile, $msg, false);
+				}
+
+				$err = sshMakeChmodChown($app->config['fallbackstreamingserver']['server'], $remote_file, false);
+				if ($err['code'] === false) throw new Exception("[ERROR] Failed to set permissions on: '". $remote_file ."'\nMSG: ". $err['message']);
+			}
+			unset($err);
+		} catch (Exception $e) {
+			$debug->log($logdir, $logfile, $e->getMessage(), false);
+			continue;
+		}
+
+		// Update index photo filename
+		$tmp = explode("/", $app->config['livestreampath']);
+		$indexphotofilename = $tmp[count($tmp) - 2] ."/". $channels[$i]['streamid'] ."/". $app->config['videothumbnailresolutions']['4:3'] ."/". $filename;
+		$err = @updateLiveFeedStreamIndexPhoto($channels[$i]['streamid'], $indexphotofilename);
+
+		if ($debug_mode) {
+			$msg  = "[OK] Updated live thumbs published for livefeed_stream.id = ". $channels[$i]['streamid'] ." at ". $app->config['fallbackstreamingserver']['server'] .":". $indexphotofilename ."\n";
+			$debug->log($logdir, $logfile, $msg, $sendmail = false);
+		}
+
+		$app->watchdog();
+	} // END OF MAIN LOOP //
+
+	if (is_resource($db->_connectionID)) $db->close();
 }
 
-// Close DB connection if open
-if ( is_resource($db->_connectionID) ) $db->close();
-
-exit;
-
-
+///////////////////////////////////////////////////////////////////////////////////////////////////
 function getActiveChannels() {
-global $jconf, $debug, $db, $app, $myjobid;
+///////////////////////////////////////////////////////////////////////////////////////////////////
+//
+// Returns all current live channels' livestream IDs as an array, and 
+// FALSE when encountering an error or no livestreams available.
+//
+///////////////////////////////////////////////////////////////////////////////////////////////////
+	global $jconf, $debug, $logdir, $logfile, $db, $app;
 
-	$db = db_maintain();
-
+	if (is_resource($db->_connectionID) === false ) $db = db_maintain();
+	
 	$now = date("Y-m-d H:i:s");
-
 	$query = "
 		SELECT
 			ch.id,
@@ -261,7 +246,7 @@ global $jconf, $debug, $db, $app, $myjobid;
 	try {
 		$channels = $db->getArray($query);
 	} catch (exception $err) {
-		$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] SQL query failed." . trim($query), $sendmail = false);
+		$debug->log($logdir, $logfile, "[ERROR] SQL query failed." . trim($query), $sendmail = false);
 		return false;
 	}
 
@@ -269,12 +254,6 @@ global $jconf, $debug, $db, $app, $myjobid;
 	if ( count($channels) < 1 ) return false;
 
 	return $channels;
-}
-
-function png2jpg($originalFile, $outputFile, $quality) {
-	$image = imagecreatefrompng($originalFile);
-	imagejpeg($image, $outputFile, $quality);
-	imagedestroy($image);;
 }
 
 ?>

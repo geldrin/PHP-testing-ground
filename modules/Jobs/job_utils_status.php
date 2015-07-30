@@ -564,7 +564,7 @@ global $app, $debug, $jconf, $myjobid;
 //--------------------
 
 function updateLiveFeedStreamIndexPhoto($streamid, $indexphotofilename) {
-global $app, $debug, $jconf, $myjobid;
+global $app;
 
 	if ( empty($indexphotofilename) ) return false;
 
@@ -574,11 +574,8 @@ global $app, $debug, $jconf, $myjobid;
 
 	$recordingVersionObj = $app->bootstrap->getModel('livefeed_streams');
 	$recordingVersionObj->select($streamid);
-    $recordingVersionObj->updateRow($values);
+	$recordingVersionObj->updateRow($values);
 	$recordingVersionObj->updateFeedThumbnail();
-
-	// Log index photo change
-	$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] livefeed_streams.id = " . $streamid . " index photo updated to " . $indexphotofilename, $sendmail = false);
 
 	return true;
 }
