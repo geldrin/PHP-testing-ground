@@ -1,7 +1,7 @@
 <?php
 $skipindexphotounset = true;
 include('Create.php');
-include_once( $this->bootstrap->config['templatepath'] . 'Plugins/modifier.nameformat.php');
+$this->bootstrap->includeTemplatePlugin('nameformat');
 $config['action'] = Array(
   'type'  => 'inputHidden',
   'value' => 'submitmodify'

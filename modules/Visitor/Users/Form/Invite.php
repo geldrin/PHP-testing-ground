@@ -91,10 +91,7 @@ class Invite extends \Visitor\HelpForm {
       $templateid = $template['id'];
 
     if ( !empty( $userids ) )
-      include_once(
-        $this->bootstrap->config['templatepath'] .
-        'Plugins/modifier.nameformat.php'
-      );
+      $this->bootstrap->includeTemplatePlugin('nameformat');
 
     foreach( $users as $email => $username ) {
 

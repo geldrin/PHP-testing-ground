@@ -15,10 +15,7 @@ class Details extends \Visitor\Paging {
   
   public function init() {
     
-    include_once(
-      $this->bootstrap->config['templatepath'] .
-      'Plugins/modifier.indexphoto.php'
-    );
+    $this->bootstrap->includeTemplatePlugin('indexphoto');
     
     $l                  = $this->bootstrap->getLocalization();
     $user               = $this->bootstrap->getSession('user');

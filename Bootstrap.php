@@ -648,4 +648,9 @@ class Bootstrap {
     return @unlink( $this->config[ $type . 'maintenanceflagpath'] );
   }
 
+  public function includeTemplatePlugin( $name ) {
+    return include_once(
+      $this->config['templatepath'] . 'Plugins/modifier.' . $name . '.php'
+    );
+  }
 }

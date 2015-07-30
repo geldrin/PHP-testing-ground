@@ -302,4 +302,27 @@ class Groups extends \Springboard\Model {
         organizationid = $organizationid
     ");
   }
+
+  public function searchStatistics( $user, $term, $organizationid, $start, $limit ) {
+
+    $searchterm = str_replace( ' ', '%', $term );
+    $searchterm = $this->db->qstr( '%' . $searchterm . '%' );
+    return $this->db->getArray("
+      SELECT
+        g.id,
+        g.name,
+        g.source,
+        COUNT(DISTINCT gm.userid) AS usercount
+      FROM groups AS g
+      LEFT JOIN groups_members AS gm ON(
+        gm.groupid = g.id
+      )
+      WHERE
+        g.name LIKE $searchterm AND
+        g.organizationid = '$organizationid'
+      GROUP BY g.id
+      ORDER BY g.name
+      LIMIT $start, $limit
+    ");
+  }
 }

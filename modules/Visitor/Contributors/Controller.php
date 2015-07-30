@@ -37,7 +37,7 @@ class Controller extends \Visitor\Controller {
     if ( empty( $results ) )
       $this->jsonoutput( $output );
     
-    include_once( $this->bootstrap->config['templatepath'] . 'Plugins/modifier.nameformat.php' );
+    $this->bootstrap->includeTemplatePlugin('nameformat');
     foreach( $results as $result ) {
       
       $data = array(

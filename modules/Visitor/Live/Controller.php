@@ -360,7 +360,7 @@ class Controller extends \Visitor\Controller {
       $feedModel->id
     );
 
-    include_once( $this->bootstrap->config['templatepath'] . 'Plugins/modifier.nickformat.php');
+    $this->bootstrap->includeTemplatePlugin('nickformat');
 
     header("Pragma: ");
     header("Cache-Control: ");
@@ -815,7 +815,7 @@ class Controller extends \Visitor\Controller {
       $this->jsonoutput( $output );
     
     $img = $this->bootstrap->staticuri . 'images/videothumb_wide_placeholder.png';
-    include_once( $this->bootstrap->config['templatepath'] . 'Plugins/modifier.shortdate.php');
+    $this->bootstrap->includeTemplatePlugin('shortdate');
 
     foreach( $results as $result ) {
 
@@ -963,7 +963,7 @@ class Controller extends \Visitor\Controller {
          )
         return $ret;
 
-      include_once( $this->bootstrap->config['templatepath'] . 'Plugins/modifier.numberformat.php' );
+      $this->bootstrap->includeTemplatePlugin('numberformat');
       $data = $feedModel->getViewers();
       $cache->put( array(
           'currentviewers'          => $data,

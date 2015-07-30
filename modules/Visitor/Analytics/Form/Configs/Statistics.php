@@ -21,22 +21,6 @@ $config = array(
     'value' => ( $this->application->getParameter('forward') ?: '' )
   ),
 
-  'recordingids' => array(
-    'type'  => 'inputHidden',
-  ),
-
-  'livefeedids' => array(
-    'type'  => 'inputHidden',
-  ),
-
-  'groupids' => array(
-    'type'  => 'inputHidden',
-  ),
-
-  'userids' => array(
-    'type'  => 'inputHidden',
-  ),
-
   'type' => array(
     'displayname' => $l('analytics', 'statistics_type'),
     'type'        => 'inputRadio',
@@ -74,7 +58,7 @@ $config = array(
     ),
   ),
 
-  'searchrecordings' => array(
+  'searchrecordings[]' => array(
     'type'        => 'select',
     'displayname' => $l('analytics', 'searchrecordings'),
     'html'        => 'multiple="multiple" data-searchurl="' . $language . '/analytics/searchrecordings"',
@@ -88,7 +72,7 @@ $config = array(
     ',
   ),
   
-  'searchlive' => array(
+  'searchlive[]' => array(
     'type'        => 'select',
     'displayname' => $l('analytics', 'searchlive'),
     'html'        => 'multiple="multiple" data-searchurl="' . $language . '/analytics/searchlive"',
@@ -102,7 +86,7 @@ $config = array(
     ',
   ),
   
-  'searchgroups' => array(
+  'searchgroups[]' => array(
     'type'        => 'select',
     'displayname' => $l('analytics', 'searchgroups'),
     'html'        => 'multiple="multiple" data-searchurl="' . $language . '/analytics/searchgroups"',
@@ -116,7 +100,7 @@ $config = array(
     ',
   ),
   
-  'searchusers' => array(
+  'searchusers[]' => array(
     'type'        => 'select',
     'displayname' => $l('analytics', 'searchusers'),
     'html'        => 'multiple="multiple" data-searchurl="' . $language . '/analytics/searchusers"',

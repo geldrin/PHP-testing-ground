@@ -62,7 +62,7 @@ if ( $this->invitationModel->row['channelid'] ) {
 
 if ( $this->invitationModel->row['livefeedid'] ) {
 
-  include_once( $this->bootstrap->config['templatepath'] . 'Plugins/modifier.shortdate.php');
+  $this->bootstrap->includeTemplatePlugin('shortdate');
   $id            = $this->invitationModel->row['livefeedid'];
   $livefeedModel = $this->controller->modelIDCheck(
     'livefeeds',

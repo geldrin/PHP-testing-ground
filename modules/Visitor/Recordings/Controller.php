@@ -276,10 +276,7 @@ class Controller extends \Visitor\Controller {
     );
     $this->handleUserAccess( $access[ $accesskey ] );
     
-    include_once(
-      $this->bootstrap->config['templatepath'] .
-      'Plugins/modifier.indexphoto.php'
-    );
+    $this->bootstrap->includeTemplatePlugin('indexphoto');
     
     if ( $user['id'] )
       $this->toSmarty['channels']    = $recordingsModel->getChannelsForUser( $user );

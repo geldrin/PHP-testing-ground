@@ -15,7 +15,7 @@ class Accreditedrecordings extends \Visitor\HelpForm {
   public function postSetupForm() {
     
     $l = $this->bootstrap->getLocalization();
-    $this->controller->toSmarty['title'] = $l('analytics', 'accreditrecordings_title');
+    $this->controller->toSmarty['title'] = $l('analytics', 'accreditedrecordings_title');
     
   }
   

@@ -403,7 +403,11 @@ class Users extends \Springboard\Model {
     ");
     
   }
-  
+
+  public function searchStatistics( $user, $term, $organization, $start, $limit ) {
+    return $this->getSearchArray( $term, $organization, $start, $limit, 'relevancy DESC');
+  }
+
   public function getSearchWhere( $searchterm, $organization, $prefix = '' ) {
     $searchterm = str_replace( ' ', '%', $searchterm );
     $searchterm = $this->db->qstr( '%' . $searchterm . '%' );

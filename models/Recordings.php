@@ -154,7 +154,7 @@ class Recordings extends \Springboard\Model {
     
     if ( !empty( $contributors ) ) {
       
-      include_once( $this->bootstrap->config['templatepath'] . 'Plugins/modifier.nameformat.php');
+      $this->bootstrap->includeTemplatePlugin('nameformat');
       foreach( $contributors as $contributor )
         $contributornames[] = \smarty_modifier_nameformat( $contributor );
       
@@ -2308,7 +2308,7 @@ class Recordings extends \Springboard\Model {
   public function getFlashData( $info ) {
     
     $this->ensureObjectLoaded();
-    include_once( $this->bootstrap->config['templatepath'] . 'Plugins/modifier.indexphoto.php' );
+    $this->bootstrap->includeTemplatePlugin('indexphoto');
     
     if ( isset( $info['versions'] ) )
       $versions = $info['versions'];
@@ -2476,7 +2476,7 @@ class Recordings extends \Springboard\Model {
     }
 
     if ( isset( $info['attachments'] ) and $info['attachments'] ) {
-      include_once( $this->bootstrap->config['templatepath'] . 'Plugins/modifier.attachmenturl.php' );
+      $this->bootstrap->includeTemplatePlugin('attachmenturl');
 
       $data['attachments_string'] = array();
       foreach( $info['attachments'] as $attachment )
@@ -3915,7 +3915,7 @@ class Recordings extends \Springboard\Model {
 
     $ret = $this->db->getArray("
       " . self::getUnionSelect( $user, $select, $from, $where ) . "
-      ORDER BY relevancy
+      ORDER BY relevancy DESC
       LIMIT $start, $limit
     ");
 

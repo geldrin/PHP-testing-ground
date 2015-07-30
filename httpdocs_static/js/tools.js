@@ -2516,12 +2516,12 @@ function setupStatistics() {
 
   var elemStatus = {
     'recordings': {
-      '#searchrecordings': true,
-      '#searchlive'      : false,
+      'select[name="searchrecordings[]"]': true,
+      'select[name="searchlive[]"]'      : false,
     },
     'live': {
-      '#searchrecordings': false,
-      '#searchlive'      : true,
+      'select[name="searchrecordings[]"]': false,
+      'select[name="searchlive[]"]'      : true,
     }
   };
 
@@ -2537,6 +2537,9 @@ function setupStatistics() {
   var getSelectConfig = function(type) {
     var tpl = $j.parseJSON( '"' + $j('#statisticsform').attr('data-' + type + 'tpl') + '"' );
     var tplResult = function(result) {
+      if (result.loading)
+        return result.text;
+
       var ret = tpl;
       $j.each(result, function(key, value) {
         if (!value)
@@ -2556,7 +2559,7 @@ function setupStatistics() {
       templateResult    : tplResult,
       templateSelection : tplSelection,
       ajax              : {
-        url     : $j( '#search' + type ).attr('data-searchurl'),
+        url     : $j( 'select[name="search' + type + '[]"]' ).attr('data-searchurl'),
         cache   : false,
         dataType: 'json',
         delay   : 250,
@@ -2567,8 +2570,8 @@ function setupStatistics() {
     };
   };
 
-  $j('#searchrecordings').select2( getSelectConfig('recordings') );
-  $j('#searchlive').select2( getSelectConfig('live') );
-  $j('#searchgroups').select2( getSelectConfig('groups') );
-  $j('#searchusers').select2( getSelectConfig('users') );
+  $j('select[name="searchrecordings[]"]').select2( getSelectConfig('recordings') );
+  $j('select[name="searchlive[]"]').select2( getSelectConfig('live') );
+  $j('select[name="searchgroups[]"]').select2( getSelectConfig('groups') );
+  $j('select[name="searchusers[]"]').select2( getSelectConfig('users') );
 }

@@ -19,7 +19,7 @@ class Controller extends \Visitor\Controller {
   public $paging = array(
   );
 
-  private $maxresults = 20;
+  private $maxresults = 10;
 
   private function getCursor( $page ) {
     $start = $page * $this->maxresults;
@@ -49,9 +49,9 @@ class Controller extends \Visitor\Controller {
     );
 
     if ( !empty( $data ) ) {
-      include_once( $this->bootstrap->config['templatepath'] . 'Plugins/modifier.nickformat.php' );
-      include_once( $this->bootstrap->config['templatepath'] . 'Plugins/modifier.mb_truncate.php' );
-      include_once( $this->bootstrap->config['templatepath'] . 'Plugins/modifier.indexphoto.php' );
+      $this->bootstrap->includeTemplatePlugin('nickformat');
+      $this->bootstrap->includeTemplatePlugin('mb_truncate');
+      $this->bootstrap->includeTemplatePlugin('indexphoto');
     }
 
     $ret['results'] = array();
@@ -75,17 +75,50 @@ class Controller extends \Visitor\Controller {
   }
 
   public function searchliveAction() {
-    $ret = array();
+    $ret  = array();
     $term = $this->application->getParameter('q');
     $page = $this->application->getNumericParameter('page');
     if ( mb_strlen( trim( $term ) ) < 2 )
        $this->jsonOutput( $ret );
 
-    $user   = $this->bootstrap->getSession('user');
-    $cursor = $this->getCursor( $page );
+    $user      = $this->bootstrap->getSession('user');
+    $cursor    = $this->getCursor( $page );
+    $feedModel = $this->bootstrap->getModel('livefeeds');
+    $results   = $feedModel->searchStatistics(
+      $user,
+      $term,
+      $this->organization['id'],
+      $cursor['start'],
+      $cursor['end']
+    );
 
+    if ( !empty( $results ) ) {
+      $this->bootstrap->includeTemplatePlugin('shortdate');
+      $this->bootstrap->includeTemplatePlugin('mb_truncate');
+    }
 
     $ret['results'] = array();
+    foreach( $results as $result ) {
+
+      if ( $result['starttimestamp'] )
+        $interval = smarty_modifier_shortdate(
+          '%Y. %B %e',
+          $result['starttimestamp'],
+          $result['endtimestamp']
+        );
+      else
+        $interval = '';
+
+      $name = $result['channeltitle'] . ' (' . $result['name'] . ')';
+      $ret['results'][] = array(
+        'id'          => $result['id'],
+        'name'        => $name,
+        'text'        => smarty_modifier_mb_truncate( $name, 20 ),
+        'interval'    => $interval,
+        'channeltype' => $result['channeltype'],
+      );
+    }
+
     $this->jsonOutput( $ret );
   }
 
@@ -96,8 +129,31 @@ class Controller extends \Visitor\Controller {
     if ( mb_strlen( trim( $term ) ) < 2 )
        $this->jsonOutput( $ret );
 
-    $user   = $this->bootstrap->getSession('user');
-    $cursor = $this->getCursor( $page );
+    $user       = $this->bootstrap->getSession('user');
+    $cursor     = $this->getCursor( $page );
+    $groupModel = $this->bootstrap->getModel('groups');
+    $results    = $groupModel->searchStatistics(
+      $user,
+      $term,
+      $this->organization['id'],
+      $cursor['start'],
+      $cursor['end']
+    );
+
+    if ( !empty( $results ) ) {
+      $this->bootstrap->includeTemplatePlugin('mb_truncate');
+      $this->bootstrap->includeTemplatePlugin('numberformat');
+    }
+
+    $ret['results'] = array();
+    foreach( $results as $result ) {
+      $ret['results'][] = array(
+        'id'        => $result['id'],
+        'name'      => $result['name'],
+        'text'      => smarty_modifier_mb_truncate( $result['name'], 20 ),
+        'usercount' => smarty_modifier_numberformat( $result['usercount'] ),
+      );
+    }
 
     $this->jsonOutput( $ret );
   }
@@ -109,10 +165,34 @@ class Controller extends \Visitor\Controller {
     if ( mb_strlen( trim( $term ) ) < 2 )
        $this->jsonOutput( $ret );
 
-    $user   = $this->bootstrap->getSession('user');
-    $cursor = $this->getCursor( $page );
+    $user      = $this->bootstrap->getSession('user');
+    $cursor    = $this->getCursor( $page );
+    $userModel = $this->bootstrap->getModel('users');
+    $results   = $userModel->searchStatistics(
+      $user,
+      $term,
+      $this->organization,
+      $cursor['start'],
+      $cursor['end']
+    );
+
+    if ( !empty( $results ) ) {
+      $this->bootstrap->includeTemplatePlugin('mb_truncate');
+      $this->bootstrap->includeTemplatePlugin('nickformat');
+      $this->bootstrap->includeTemplatePlugin('avatarphoto');
+    }
 
     $ret['results'] = array();
+    foreach( $results as $result ) {
+      $name = smarty_modifier_nickformat( $result );
+      $ret['results'][] = array(
+        'id'     => $result['id'],
+        'imgsrc' => smarty_modifier_avatarphoto( $result ),
+        'name'   => $name,
+        'text'   => smarty_modifier_mb_truncate( $name, 20 ),
+      );
+    }
+
     $this->jsonOutput( $ret );
   }
 }

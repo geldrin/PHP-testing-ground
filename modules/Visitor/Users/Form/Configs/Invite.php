@@ -11,7 +11,7 @@ $tinymceconfig = $l->getLov('tinymcevisitor') + array(
 $smarty = $this->bootstrap->getSmarty();
 include_once( $this->bootstrap->config['libpath'] . 'clonefish/constants.php');
 include_once( \SMARTY_DIR . 'plugins/modifier.date_format.php' );
-include_once( $this->bootstrap->config['templatepath'] . 'Plugins/modifier.jsonescape.php');
+$this->bootstrap->includeTemplatePlugin('jsonescape');
 $language  = \Springboard\Language::get();
 $userModel = $this->bootstrap->getModel('users');
 $templates = $userModel->getInviteTemplates( $this->controller->organization['id'] );

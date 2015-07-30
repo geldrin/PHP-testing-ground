@@ -76,10 +76,7 @@ class Newcomment extends \Visitor\Form {
     $this->handleEmail( $comment );
 
     if ( !$this->isAjaxRequest() ) {
-      include_once(
-        $this->bootstrap->config['templatepath'] .
-        'Plugins/modifier.filenameize.php'
-      );
+      $this->bootstrap->includeTemplatePlugin('filenameize');
 
       $this->controller->redirect(
         'recordings/details/' . $this->recordingsModel->id . ',' .

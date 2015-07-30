@@ -1164,4 +1164,57 @@ class Livefeeds extends \Springboard\Model {
       LIMIT 1
     ");
   }
+
+  public function searchStatistics( $user, $term, $organizationid, $start, $limit ) {
+    
+    $searchterm = str_replace( ' ', '%', $term );
+    $searchterm = $this->db->qstr( '%' . $searchterm . '%' );
+    $term       = $this->db->qstr( $term );
+    $lang       = \Springboard\Language::get();
+    $userid     = $user['id'];
+    $query      = "
+      SELECT
+        (
+          1 +
+          IF( l.name = $term, 2, 0 )
+        ) AS relevancy,
+        l.id,
+        l.userid,
+        l.organizationid,
+        l.name,
+        c.title AS channeltitle,
+        c.subtitle AS channelsubtitle,
+        c.ordinalnumber,
+        c.starttimestamp,
+        c.endtimestamp,
+        c.indexphotofilename,
+        s.value AS channeltype
+      FROM
+        livefeeds AS l LEFT JOIN channels AS c ON(
+          l.channelid = c.id
+        )
+        LEFT JOIN channel_types AS ct ON(
+          ct.id = c.channeltypeid
+        )
+        LEFT JOIN strings AS s ON(
+          s.translationof = ct.name_stringid AND
+          s.language      = '$lang'
+        )
+      WHERE
+        (l.status IS NULL OR l.status <> 'markedfordeletion') AND
+        l.name LIKE $searchterm AND
+        (
+          l.organizationid = '$organizationid' OR
+          (
+            l.userid         = '$userid' AND
+            l.organizationid = '$organizationid'
+          )
+        )
+      ORDER BY relevancy DESC
+      LIMIT $start, $limit
+    ";
+    
+    return $this->db->getArray( $query );
+    
+  }
 }
