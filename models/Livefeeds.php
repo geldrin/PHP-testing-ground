@@ -1217,4 +1217,55 @@ class Livefeeds extends \Springboard\Model {
     return $this->db->getArray( $query );
     
   }
+
+  public function getStatisticsData( $info ) {
+    $startts = $this->db->qstr( $info['datefrom'] );
+    $endts   = $this->db->qstr( $info['dateuntil'] );
+    $tables  = '';
+    $where   = array(
+      "vsl.timestampfrom >= $startts",
+      "vsl.timestampuntil <= $endts",
+    );
+
+    if ( !empty( $info['livefeedids'] ) )
+      $where[] = "vsl.livefeedid IN('" . implode("', '", $info['livefeedids'] ) . "')";
+
+    if ( !empty( $info['groupids'] ) ) {
+      $tables .= ", groups_members AS gm";
+      $where[] = "gm.groupid IN('" . implode("', '", $info['groupids'] ) . "')";
+      $where[] = "gm.userid = u.id";
+    }
+
+    if ( !empty( $info['userids'] ) )
+      $where[] = "vsl.vsquserid IN('" . implode("', '", $info['userids'] ) . "')";
+
+    $where = implode(" AND\n  ", $where );
+    return $this->db->query("
+      SELECT
+        u.id AS userid,
+        u.email,
+        u.externalid,
+        c.id AS channelid,
+        c.title,
+        c.starttimestamp,
+        c.endtimestamp,
+        vsl.timestampfrom AS timestamp,
+        vsl.timestampfrom AS watchstarttimestamp,
+        vsl.timestampuntil AS watchendtimestamp,
+        TIME_TO_SEC( TIMEDIFF(vsl.timestampuntil, vsl.timestampfrom) ) AS watchduration
+      FROM
+        view_statistis_live AS vsl,
+        users AS u,
+        channels AS c,
+        livefeeds AS lf
+        $tables
+      WHERE
+        vsl.timestampuntil IS NOT NULL AND
+        u.id = vsl.userid AND
+        lf.id = vsl.livefeedid AND
+        c.id = lf.channelid AND
+        $where
+      ORDER BY vsl.id DESC
+    ");
+  }
 }

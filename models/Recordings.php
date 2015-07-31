@@ -4180,4 +4180,59 @@ class Recordings extends \Springboard\Model {
       $this->sqlLimit( $start, $limit )
     );
   }
+
+  public function getStatistics( $info ) {
+    $startts = $this->db->qstr( $info['datefrom'] );
+    $endts   = $this->db->qstr( $info['dateuntil'] );
+    $tables  = '';
+    $where   = array(
+      "rvs.timestampfrom >= $startts",
+      "rvs.timestampuntil <= $endts",
+    );
+
+    if ( !empty( $info['recordingids'] ) )
+      $where[] = "rvs.recordingid IN('" . implode("', '", $info['recordingids'] ) . "')";
+
+    if ( !empty( $info['groupids'] ) ) {
+      $tables .= ", groups_members AS gm";
+      $where[] = "gm.groupid IN('" . implode("', '", $info['groupids'] ) . "')";
+      $where[] = "gm.userid = u.id";
+    }
+
+    if ( !empty( $info['userids'] ) )
+      $where[] = "u.id IN('" . implode("', '", $info['userids'] ) . "')";
+
+    $where = implode(" AND\n  ", $where );
+    return $this->db->query("
+      SELECT
+        u.id AS userid,
+        u.email,
+        u.externalid,
+        r.recordedtimestamp AS timestamp,
+        r.timestamp AS uploadedtimestamp,
+        r.title,
+        ROUND( GREATEST(r.masterlength, IFNULL(r.contentmasterlength, 0)) ) AS recordinglength,
+        (rvs.positionuntil - rvs.positionfrom) AS sessionwatchedduration,
+        ROUND(
+          (
+            (rvs.positionuntil - rvs.positionfrom) /
+            GREATEST(r.masterlength, IFNULL(r.contentmasterlength, 0))
+          ) * 100
+        ) AS sessionwatchedpercent,
+        rvs.positionfrom AS sessionwatchedfrom,
+        rvs.positionuntil AS sessionwatcheduntil,
+        rvs.timestampfrom AS sessionwatchedtimestampfrom,
+        rvs.timestampuntil AS sessionwatchedtimestampuntil
+      FROM
+        recording_view_sessions AS rvs,
+        users AS u,
+        recordings AS r
+        $tables
+      WHERE
+        u.id = rvs.userid AND
+        r.id = rvs.recordingid AND
+        $where
+      ORDER BY rvs.id
+    ");
+  }
 }

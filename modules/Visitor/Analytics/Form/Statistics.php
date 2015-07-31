@@ -21,51 +21,90 @@ class Statistics extends \Visitor\HelpForm {
   
   public function onComplete() {
     $values = $this->form->getElementValues( 0 );
-    
-    $filename = 'videosquare-statistics-' . date('YmdHis') . '.csv';
+
+    if ( !empty( $_REQUEST['searchrecordings'] ) )
+      $values['recordingids'] = $_REQUEST['searchrecordings'];
+    if ( !empty( $_REQUEST['searchlive'] ) )
+      $values['livefeedids'] = $_REQUEST['searchlive'];
+    if ( !empty( $_REQUEST['searchgroups'] ) )
+      $values['groupids'] = $_REQUEST['searchgroups'];
+    if ( !empty( $_REQUEST['searchusers'] ) )
+      $values['userids'] = $_REQUEST['searchusers'];
+
+    // sanitize
+    foreach( array('recordingids', 'livefeedids', 'groupids', 'userids') as $field ) {
+      foreach( $values[ $field ] as $key => $value ) {
+        $value = intval( $value );
+        if ( $value <= 0 )
+          unset( $values[ $field ][ $key ] );
+        else
+          $values[ $field ][ $key ] = $value;
+      }
+    }
+
+    $filename =
+      'videosquare-statistics-' . $values['type'] . '-' . date('YmdHis') . '.csv'
+    ;
     \Springboard\Browser::downloadHeaders( $filename, 'text/csv' );
 
-    $f = fopen('php://output', 'w');
-    fputcsv(
-      $f,
-      array(
-        'userId',
-        'userEmail',
-        'recordingId',
-        'recordingTitle',
-        'recordingLength',
-        'totalWatchedPercent',
-        'totalCompleted',
-        'sessionWatchedDurationSeconds',
-        'sessionWatchedPercent',
-        'sessionWatchedFromSeconds',
-        'sessionWatchedUntilSeconds',
-        'sessionWatchedFromTimestamp',
-        'sessionWatchedUntilTimestamp',
-      ),
-      $this->delimiter
+    $fields = array(
+      'timestamp'  => 'recordCreationTimestamp',
+      'userid'     => 'userId',
+      'email'      => 'userEmail',
+      'externalid' => 'userExternalId',
     );
 
-    foreach( $data as $row )
-      fputcsv(
-        $f,
-        array(
-          $row['userid'],
-          $row['email'],
-          $row['recordingid'],
-          $row['title'],
-          $row['recordinglength'],
-          $row['totalwatchedpercent'],
-          $row['totalcompleted'],
-          $row['sessionwatchedduration'],
-          $row['sessionwatchedpercent'],
-          $row['sessionwatchedfrom'],
-          $row['sessionwatcheduntil'],
-          $row['sessionwatchedtimestampfrom'],
-          $row['sessionwatchedtimestampuntil'],
-        ),
-        $this->delimiter
-      );
+    switch( $values['type'] ) {
+      case 'recordings':
+        $extrafields = array(
+          'recordingid'                  => 'recordingId',
+          'title'                        => 'recordingTitle',
+          'recordinglength'              => 'recordingLength',
+          'uploadedtimestamp'            => 'recordingUploadedTimestamp',
+          //'presenters'                   => 'recordingPresenters',
+          'sessionwatchedduration'       => 'sessionWatchedDurationSeconds',
+          'sessionwatchedpercent'        => 'sessionWatchedPercent',
+          'sessionwatchedfrom'           => 'sessionWatchedFromSeconds',
+          'sessionwatcheduntil'          => 'sessionWatchedUntilSeconds',
+          'sessionwatchedtimestampfrom'  => 'sessionWatchedFromTimestamp',
+          'sessionwatchedtimestampuntil' => 'sessionWatchedUntilTimestamp',
+        );
+        $fields = array_merge( $fields, $extrafields );
+
+        $recordingsModel = $this->bootstrap->getModel('recordings');
+
+        $data = $recordingsModel->getStatistics( $values );
+        break;
+      case 'live':
+        $extrafields = array(
+          'channelid'           => 'eventId',
+          'title'               => 'eventTitle',
+          'starttimestamp'      => 'eventStartTimestamp',
+          'endtimestamp'        => 'eventEndTimestamp',
+          'watchstarttimestamp' => 'watchStartTimestamp',
+          'watchendtimestamp'   => 'watchEndTimestamp',
+          'watchduration'       => 'watchDurationSeconds',
+        );
+        $fields = array_merge( $fields, $extrafields );
+
+        $livefeedModel = $this->bootstrap->getModel('livefeeds');
+        $data = $livefeedModel->getStatisticsData( $values );
+        break;
+      default:
+        throw new \Exception("Unknown type!");
+        break;
+    }
+
+    $f = fopen('php://output', 'w');
+    fputcsv( $f, array_values( $fields ), $this->delimiter );
+
+    foreach( $data as $row ) {
+      $csvdata = array();
+      foreach( $fields as $key => $field )
+        $csvdata[] = $row[ $key ];
+
+      fputcsv( $f, $csvdata, $this->delimiter );
+    }
 
     fclose( $f );
     die();
