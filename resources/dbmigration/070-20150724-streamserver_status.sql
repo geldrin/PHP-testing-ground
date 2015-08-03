@@ -7,7 +7,7 @@
     ADD  `load_clients_rtmp` INT NOT NULL DEFAULT  '0',
     ADD  `load_clients_rtsp` INT NOT NULL DEFAULT  '0',
     ADD  `network_ip_address` TEXT,
-    ADD  `network_interface_speed` INT NOT NULL DEFAULT  '0'
+    ADD  `network_interface_speed` INT NOT NULL DEFAULT  '0',
     ADD  `network_traffic_in` INT NOT NULL DEFAULT  '0',
     ADD  `network_traffic_out` INT NOT NULL DEFAULT  '0',
     ADD  `features_live_rtmp` INT NOT NULL DEFAULT  '0',
