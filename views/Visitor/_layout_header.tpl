@@ -41,6 +41,7 @@
                   <ul>
                     {if $member.isclientadmin}
                       <li><a href="{$language}/analytics/accreditedrecordings">{#usermenu_analytics_accreditedrecordings#}</a></li>
+                      <li><a href="{$language}/analytics/statistics">{#usermenu_analytics_statistics#}</a></li>
                     {/if}
                   </ul>
                 {/if}

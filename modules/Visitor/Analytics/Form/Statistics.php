@@ -22,14 +22,25 @@ class Statistics extends \Visitor\HelpForm {
   public function onComplete() {
     $values = $this->form->getElementValues( 0 );
 
-    if ( !empty( $_REQUEST['searchrecordings'] ) )
-      $values['recordingids'] = $_REQUEST['searchrecordings'];
-    if ( !empty( $_REQUEST['searchlive'] ) )
-      $values['livefeedids'] = $_REQUEST['searchlive'];
-    if ( !empty( $_REQUEST['searchgroups'] ) )
-      $values['groupids'] = $_REQUEST['searchgroups'];
-    if ( !empty( $_REQUEST['searchusers'] ) )
-      $values['userids'] = $_REQUEST['searchusers'];
+    $values['recordingids'] = !empty( $_REQUEST['searchrecordings'] )
+      ? $_REQUEST['searchrecordings']
+      : array()
+    ;
+
+    $values['livefeedids'] = !empty( $_REQUEST['searchlive'] )
+      ? $_REQUEST['searchlive']
+      : array()
+    ;
+
+    $values['groupids'] = !empty( $_REQUEST['searchgroups'] )
+      ? $_REQUEST['searchgroups']
+      : array()
+    ;
+
+    $values['userids'] = !empty( $_REQUEST['searchusers'] )
+      ? $_REQUEST['searchusers']
+      : array()
+    ;
 
     // sanitize
     foreach( array('recordingids', 'livefeedids', 'groupids', 'userids') as $field ) {

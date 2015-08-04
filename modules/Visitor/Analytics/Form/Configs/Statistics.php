@@ -44,7 +44,7 @@ $config = array(
     ),
   ),
 
-  'dateto' => array(
+  'dateuntil' => array(
     'displayname' => $l('analytics', 'dateto') . '<span class="required">*</span>',
     'type'        => 'inputText',
     'html'        => 'class="inputtext inputbackground clearonclick datetimepicker margin"',
