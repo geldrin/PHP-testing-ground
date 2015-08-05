@@ -22,14 +22,18 @@ $config = Array(
     'legend' => $l('recordings', 'modifyattachment_title'),
     'prefix' => '<span class="legendsubtitle">%s</span>',
   ),
-  
+
   'title' => array(
     'type'        => 'inputText',
-    'displayname' => $l('recordings', 'attachment_title'),
+    'displayname' => $l('recordings', 'attachment_title') . '<span class="required">*</span>',
     'validation'  => array(
+      Array(
+        'type'     => 'string',
+        'required' => true,
+      ),
     ),
   ),
-  
+
   'isdownloadable' => array(
     'type'        => 'inputRadio',
     'displayname' => $l('recordings', 'isdownloadable'),

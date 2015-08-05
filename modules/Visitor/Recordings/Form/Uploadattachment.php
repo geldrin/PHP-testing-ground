@@ -43,7 +43,10 @@ class Uploadattachment extends \Visitor\HelpForm {
       return;
       
     }
-    
+
+    if ( !$values['title'] )
+      $values['title'] = $_FILES['file']['name'];
+
     $attachmentModel           = $this->bootstrap->getModel('attached_documents');
     $values['masterfilename']  = $_FILES['file']['name'];
     $values['masterextension'] = \Springboard\Filesystem::getExtension( $_FILES['file']['name'] );
