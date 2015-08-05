@@ -63,6 +63,7 @@ class Statistics extends \Visitor\HelpForm {
       'userid'     => 'userId',
       'email'      => 'userEmail',
       'externalid' => 'userExternalId',
+      'viewsessionid' => 'sessionID',
     );
 
     switch( $values['type'] ) {
@@ -78,6 +79,11 @@ class Statistics extends \Visitor\HelpForm {
           'sessionwatcheduntil'     => 'sessionWatchedUntilSeconds',
           'sessionwatchedtimestamp' => 'sessionWatchedTimestamp',
         );
+        if ( $values['extrainfo'] ) {
+          $extrafields['sessionipaddress'] = 'sessionIPAddress';
+          $extrafields['sessionuseragent'] = 'sessionUserAgent';
+        }
+
         $fields = array_merge( $fields, $extrafields );
 
         $recordingsModel = $this->bootstrap->getModel('recordings');
@@ -94,6 +100,11 @@ class Statistics extends \Visitor\HelpForm {
           'watchendtimestamp'   => 'watchEndTimestamp',
           'watchduration'       => 'watchDurationSeconds',
         );
+        if ( $values['extrainfo'] ) {
+          $extrafields['sessionipaddress'] = 'sessionIPAddress';
+          $extrafields['sessionuseragent'] = 'sessionUserAgent';
+        }
+
         $fields = array_merge( $fields, $extrafields );
 
         $livefeedModel = $this->bootstrap->getModel('livefeeds');

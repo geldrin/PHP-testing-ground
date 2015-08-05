@@ -1227,6 +1227,13 @@ class Livefeeds extends \Springboard\Model {
       "vsl.timestampuntil <= $endts",
     );
 
+    $extraselect = '';
+    if ( $info['extrainfo'] )
+      $extraselect = "
+        vso.ipaddress AS sessionipaddress,
+        vso.useragent AS sessionuseragent,
+      ";
+
     if ( !empty( $info['livefeedids'] ) )
       $where[] = "vsl.livefeedid IN('" . implode("', '", $info['livefeedids'] ) . "')";
 
@@ -1249,15 +1256,14 @@ class Livefeeds extends \Springboard\Model {
         c.title,
         c.starttimestamp,
         c.endtimestamp,
+        $extraselect
         vsl.viewsessionid,
         vsl.startaction,
         vsl.stopaction,
         vsl.timestampfrom AS timestamp,
         vsl.timestampfrom AS watchstarttimestamp,
         vsl.timestampuntil AS watchendtimestamp,
-        TIME_TO_SEC( TIMEDIFF(vsl.timestampuntil, vsl.timestampfrom) ) AS watchduration,
-        vsl.ipaddress AS sessionipaddress,
-        vsl.useragent AS sessionuseragent
+        TIME_TO_SEC( TIMEDIFF(vsl.timestampuntil, vsl.timestampfrom) ) AS watchduration
       FROM
         view_statistics_live AS vsl,
         users AS u,

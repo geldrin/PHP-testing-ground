@@ -113,5 +113,14 @@ $config = array(
       </tr>
     ',
   ),
-  
+
+  'extrainfo' => array(
+    'displayname' => $l('analytics', 'statistics_extrainfo'),
+    'type'        => 'inputRadio',
+    'values'      => $l->getLov('statistics_extrainfo'),
+    'value'       => 0,
+    'divide'      => 1,
+    'divider'     => '<br/>',
+  ),
+
 );

@@ -4203,6 +4203,13 @@ class Recordings extends \Springboard\Model {
       "vso.timestamp <= $endts",
     );
 
+    $extraselect = '';
+    if ( $info['extrainfo'] )
+      $extraselect = "
+        vso.ipaddress AS sessionipaddress,
+        vso.useragent AS sessionuseragent,
+      ";
+
     if ( !empty( $info['recordingids'] ) )
       $where[] = "vso.recordingid IN('" . implode("', '", $info['recordingids'] ) . "')";
 
@@ -4233,14 +4240,13 @@ class Recordings extends \Springboard\Model {
             GREATEST(r.masterlength, IFNULL(r.contentmasterlength, 0))
           ) * 100
         ) AS sessionwatchedpercent,
+        $extraselect
         vso.startaction,
         vso.stopaction,
         vso.viewsessionid,
         vso.positionfrom AS sessionwatchedfrom,
         vso.positionuntil AS sessionwatcheduntil,
-        vso.timestamp AS sessionwatchedtimestamp,
-        vso.ipaddress AS sessionipaddress,
-        vso.useragent AS sessionuseragent
+        vso.timestamp AS sessionwatchedtimestamp
       FROM
         view_statistics_ondemand AS vso,
         users AS u,
