@@ -907,6 +907,9 @@ class Controller extends \Visitor\Controller {
       'userid'    => $user['id'],
     );
     $uploadModel = $this->bootstrap->getModel('uploads');
+    if ( !$uploadModel->isUploadingAllowed() )
+      jsonOutput( array('status' => 'error', 'reason' => 'notenoughspace') );
+
     $data        = $uploadModel->getFileResumeInfo( $info );
     
     if ( empty( $data ) )
