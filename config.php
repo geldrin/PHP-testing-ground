@@ -379,6 +379,14 @@ $config = array(
     'recording_synchronizationTimeMin' => 1.5,    // Min. skew (sec, float)
     'recording_synchronizationTimeMax' => 30.0,   // Max. skew (sec, float)
   ),
+
+  // a minimum szabad hely gigabyte-ban ami folott engedjuk a feltoltest
+  'upload_minimum_free_gigabytes' => 15,
+
+  // a jelenlegi node egyedi!! azonositoja
+  'node_sourceip' => '',
+  // a jelenlegi node szerepe, lehet frontend/converter
+  'node_role' => '',
 );
 
 $config['phpsettings'] = array(
