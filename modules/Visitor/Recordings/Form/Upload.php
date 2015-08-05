@@ -30,6 +30,9 @@ class Upload extends \Visitor\HelpForm {
       $this->controller->redirectToController('contents', 'nopermissionuploader');
     
     $uploadModel   = $this->bootstrap->getModel('uploads');
+    if ( !$uploadModel->isUploadingAllowed() )
+      $this->controller->redirectToController('contents', 'uploaddisabled');
+
     $this->uploads = $uploadModel->getUploads( $this->user );
     parent::init();
     

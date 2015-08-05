@@ -2,7 +2,26 @@
 namespace Model;
 
 class Uploads extends \Springboard\Model {
-  
+
+  public function isUploadingAllowed() {
+    $server   = $this->db->qstr( $this->bootstrap->config['node_sourceip'] );
+
+    // !!float lesz mert nagyobb mint egy int 32biten
+    $minbytes =
+      $this->bootstrap->config['upload_minimum_free_gigabytes'] * 1000000000
+    ;
+
+    return (bool)$this->db->getOne("
+      SELECT COUNT(*)
+      FROM infrastructure_nodes
+      WHERE
+        storageworkfree > '$minbytes' AND
+        storagefree     > '$minbytes' AND
+        server          = $server AND
+        type            = 'frontend'
+    ");
+  }
+
   public function getFileResumeInfo( $info ) {
     
     $this->clearFilter();
