@@ -220,8 +220,4 @@ return array(
     'live'       => $l('analytics', 'statistis_type_live'),
   ),
 
-  'statistics_extrainfo' => array(
-    0 => $l('analytics', 'statistics_extrainfo_no'),
-    1 => $l('analytics', 'statistics_extrainfo_yes'),
-  ),
 );

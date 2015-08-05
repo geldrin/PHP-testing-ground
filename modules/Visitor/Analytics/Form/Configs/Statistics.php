@@ -62,65 +62,30 @@ $config = array(
     'type'        => 'select',
     'displayname' => $l('analytics', 'searchrecordings'),
     'html'        => 'multiple="multiple" data-searchurl="' . $language . '/analytics/searchrecordings"',
-    'rowlayout'   => '
-      <tr>
-        <td class="labelcolumn" colspan="2"><label for="%id%">%displayname%</label></td>
-      </tr>
-      <tr>
-        <td class="elementcolumn" colspan="2">%prefix%%element%%postfix%%errordiv%</td>
-      </tr>
-    ',
   ),
   
   'searchlive[]' => array(
     'type'        => 'select',
     'displayname' => $l('analytics', 'searchlive'),
     'html'        => 'multiple="multiple" data-searchurl="' . $language . '/analytics/searchlive"',
-    'rowlayout'   => '
-      <tr>
-        <td class="labelcolumn" colspan="2"><label for="%id%">%displayname%</label></td>
-      </tr>
-      <tr>
-        <td class="elementcolumn" colspan="2">%prefix%%element%%postfix%%errordiv%</td>
-      </tr>
-    ',
   ),
   
   'searchgroups[]' => array(
     'type'        => 'select',
     'displayname' => $l('analytics', 'searchgroups'),
     'html'        => 'multiple="multiple" data-searchurl="' . $language . '/analytics/searchgroups"',
-    'rowlayout'   => '
-      <tr>
-        <td class="labelcolumn" colspan="2"><label for="%id%">%displayname%</label></td>
-      </tr>
-      <tr>
-        <td class="elementcolumn" colspan="2">%prefix%%element%%postfix%%errordiv%</td>
-      </tr>
-    ',
   ),
   
   'searchusers[]' => array(
     'type'        => 'select',
     'displayname' => $l('analytics', 'searchusers'),
     'html'        => 'multiple="multiple" data-searchurl="' . $language . '/analytics/searchusers"',
-    'rowlayout'   => '
-      <tr>
-        <td class="labelcolumn" colspan="2"><label for="%id%">%displayname%</label></td>
-      </tr>
-      <tr>
-        <td class="elementcolumn" colspan="2">%prefix%%element%%postfix%%errordiv%</td>
-      </tr>
-    ',
   ),
 
   'extrainfo' => array(
     'displayname' => $l('analytics', 'statistics_extrainfo'),
-    'type'        => 'inputRadio',
-    'values'      => $l->getLov('statistics_extrainfo'),
-    'value'       => 0,
-    'divide'      => 1,
-    'divider'     => '<br/>',
+    'postfix'     => $l('analytics', 'statistics_extrainfo_postfix'),
+    'type'        => 'inputCheckbox',
   ),
 
 );

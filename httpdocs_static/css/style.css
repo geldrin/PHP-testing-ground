@@ -3062,5 +3062,8 @@ a#currentusername span {
 }
 
 #statisticsform select {
-  width: 440px;
+  width: 445px;
+}
+#statisticsform .smallinfo {
+  display: inline-block;
 }

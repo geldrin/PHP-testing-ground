@@ -2530,7 +2530,6 @@ function setupStatistics() {
     $j.each(elemStatus[ typ ], function(key, value) {
       var parent = $j(key).parents('tr');
       parent.toggle(value);
-      parent.prev().toggle(value);
     });
   }).change();
 
