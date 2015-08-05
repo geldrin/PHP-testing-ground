@@ -68,17 +68,15 @@ class Statistics extends \Visitor\HelpForm {
     switch( $values['type'] ) {
       case 'recordings':
         $extrafields = array(
-          'recordingid'                  => 'recordingId',
-          'title'                        => 'recordingTitle',
-          'recordinglength'              => 'recordingLength',
-          'uploadedtimestamp'            => 'recordingUploadedTimestamp',
-          //'presenters'                   => 'recordingPresenters',
-          'sessionwatchedduration'       => 'sessionWatchedDurationSeconds',
-          'sessionwatchedpercent'        => 'sessionWatchedPercent',
-          'sessionwatchedfrom'           => 'sessionWatchedFromSeconds',
-          'sessionwatcheduntil'          => 'sessionWatchedUntilSeconds',
-          'sessionwatchedtimestampfrom'  => 'sessionWatchedFromTimestamp',
-          'sessionwatchedtimestampuntil' => 'sessionWatchedUntilTimestamp',
+          'recordingid'             => 'recordingId',
+          'title'                   => 'recordingTitle',
+          'recordinglength'         => 'recordingLength',
+          'uploadedtimestamp'       => 'recordingUploadedTimestamp',
+          'sessionwatchedduration'  => 'sessionWatchedDurationSeconds',
+          'sessionwatchedpercent'   => 'sessionWatchedPercent',
+          'sessionwatchedfrom'      => 'sessionWatchedFromSeconds',
+          'sessionwatcheduntil'     => 'sessionWatchedUntilSeconds',
+          'sessionwatchedtimestamp' => 'sessionWatchedTimestamp',
         );
         $fields = array_merge( $fields, $extrafields );
 

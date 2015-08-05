@@ -4199,12 +4199,12 @@ class Recordings extends \Springboard\Model {
     $endts   = $this->db->qstr( $info['dateuntil'] );
     $tables  = '';
     $where   = array(
-      "rvs.timestampfrom >= $startts",
-      "rvs.timestampuntil <= $endts",
+      "vso.timestamp >= $startts",
+      "vso.timestamp <= $endts",
     );
 
     if ( !empty( $info['recordingids'] ) )
-      $where[] = "rvs.recordingid IN('" . implode("', '", $info['recordingids'] ) . "')";
+      $where[] = "vso.recordingid IN('" . implode("', '", $info['recordingids'] ) . "')";
 
     if ( !empty( $info['groupids'] ) ) {
       $tables .= ", groups_members AS gm";
@@ -4221,31 +4221,36 @@ class Recordings extends \Springboard\Model {
         u.id AS userid,
         u.email,
         u.externalid,
+        r.id AS recordingid,
         r.recordedtimestamp AS timestamp,
         r.timestamp AS uploadedtimestamp,
         r.title,
         ROUND( GREATEST(r.masterlength, IFNULL(r.contentmasterlength, 0)) ) AS recordinglength,
-        (rvs.positionuntil - rvs.positionfrom) AS sessionwatchedduration,
+        (vso.positionuntil - vso.positionfrom) AS sessionwatchedduration,
         ROUND(
           (
-            (rvs.positionuntil - rvs.positionfrom) /
+            (vso.positionuntil - vso.positionfrom) /
             GREATEST(r.masterlength, IFNULL(r.contentmasterlength, 0))
           ) * 100
         ) AS sessionwatchedpercent,
-        rvs.positionfrom AS sessionwatchedfrom,
-        rvs.positionuntil AS sessionwatcheduntil,
-        rvs.timestampfrom AS sessionwatchedtimestampfrom,
-        rvs.timestampuntil AS sessionwatchedtimestampuntil
+        vso.startaction,
+        vso.stopaction,
+        vso.viewsessionid,
+        vso.positionfrom AS sessionwatchedfrom,
+        vso.positionuntil AS sessionwatcheduntil,
+        vso.timestamp AS sessionwatchedtimestamp,
+        vso.ipaddress AS sessionipaddress,
+        vso.useragent AS sessionuseragent
       FROM
-        recording_view_sessions AS rvs,
+        view_statistics_ondemand AS vso,
         users AS u,
         recordings AS r
         $tables
       WHERE
-        u.id = rvs.userid AND
-        r.id = rvs.recordingid AND
+        u.id = vso.userid AND
+        r.id = vso.recordingid AND
         $where
-      ORDER BY rvs.id
+      ORDER BY vso.id
     ");
   }
 }

@@ -1249,12 +1249,17 @@ class Livefeeds extends \Springboard\Model {
         c.title,
         c.starttimestamp,
         c.endtimestamp,
+        vsl.viewsessionid,
+        vsl.startaction,
+        vsl.stopaction,
         vsl.timestampfrom AS timestamp,
         vsl.timestampfrom AS watchstarttimestamp,
         vsl.timestampuntil AS watchendtimestamp,
-        TIME_TO_SEC( TIMEDIFF(vsl.timestampuntil, vsl.timestampfrom) ) AS watchduration
+        TIME_TO_SEC( TIMEDIFF(vsl.timestampuntil, vsl.timestampfrom) ) AS watchduration,
+        vsl.ipaddress AS sessionipaddress,
+        vsl.useragent AS sessionuseragent
       FROM
-        view_statistis_live AS vsl,
+        view_statistics_live AS vsl,
         users AS u,
         channels AS c,
         livefeeds AS lf
