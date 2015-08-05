@@ -3067,3 +3067,8 @@ a#currentusername span {
 #statisticsform .smallinfo {
   display: inline-block;
 }
+.select2-results .wrap.recordings img,
+.select2-results .wrap.users img {
+  max-width: 40px;
+  max-height: 30px;
+}
