@@ -1041,7 +1041,14 @@ class Controller extends \Visitor\Controller {
       $uploadModel->handleChunk( $file['tmp_name'] );
       
     } elseif ( $chunk == 0 ) {
-      
+      if ( !$uploadModel->isUploadingAllowed() )
+        $this->chunkResponseAndLog( array(
+            'status' => 'error',
+            'error'  => 'upload_unknownerror',
+          ), 'info: uploadModel->isUploadingAllowed() -> false',
+          false
+        );
+
       $uploadModel->insert( array(
           'recordingid'  => $this->application->getNumericParameter('id', 0 ),
           'iscontent'    => (int)$iscontent,
