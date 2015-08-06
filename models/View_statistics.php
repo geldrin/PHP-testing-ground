@@ -53,6 +53,8 @@ abstract class View_statistics extends \Springboard\Model {
       return $this->updateSlice( $values ); // akkor updateljuk, nem krealunk ujjat
     elseif ( // mar nyitottunk egy slice-ot, de a newslice csak kesobb esett be
              $lastslice and
+             $lastslice['stopaction'] != 'SEEK' and // mar lezart sliceot nem updatelunk
+             $lastslice['stopaction'] != 'STOP' and
              $lastslice['viewsessionid'] === $values['viewsessionid']
            )
       return $this->row; // ignore
