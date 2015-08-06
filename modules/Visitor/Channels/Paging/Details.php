@@ -74,8 +74,17 @@ class Details extends \Visitor\Paging {
     $this->controller->toSmarty['channeltree'] = $channeltree;
     $this->controller->toSmarty['havemultiplechannels'] = count( $this->channelids ) > 1;
     $this->controller->toSmarty['canaddrecording'] = $this->channelModel->isAccessible( $this->user, $organization, true );
+
+    if ( $this->user['id'] ) {
+      $userModel = $this->bootstrap->getModel('users');
+      $userModel->id = $this->user['id'];
+      $this->controller->toSmarty['subscribed'] =
+        $userModel->isSubscribedToChannel( $this->channelModel->id )
+      ;
+    }
+
     parent::init();
-    
+
   }
   
   protected function setupCount() {

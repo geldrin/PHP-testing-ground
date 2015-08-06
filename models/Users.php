@@ -1152,4 +1152,47 @@ class Users extends \Springboard\Model {
     return $this->insert( array_merge( $defaults, $data ) );
   }
 
+  public function isSubscribedToChannel( $channelid ) {
+    $this->ensureID();
+    $userid    = $this->db->qstr( $this->id );
+    $channelid = $this->db->qstr( $channelid );
+
+    return (bool)$this->db->getOne("
+      SELECT COUNT(*)
+      FROM subscriptions
+      WHERE
+        channelid = $channelid AND
+        userid    = $userid
+    ");
+  }
+
+  public function toggleSubscription( $channelid, $state ) {
+    $this->ensureID();
+    $userid    = $this->db->qstr( $this->id );
+    $channelid = $this->db->qstr( $channelid );
+
+    switch( $state ) {
+      case 'add':
+        $timestamp = $this->db->qstr( date('Y-m-d H:i:s') );
+        $this->db->query("
+          INSERT INTO subscriptions
+          (channelid, userid, timestamp) VALUES
+          ($channelid, $userid, $timestamp)
+        ");
+        break;
+      case 'del':
+        $this->db->query("
+          DELETE FROM subscriptions
+          WHERE
+            channelid = $channelid AND
+            userid    = $userid
+          LIMIT 1
+        ");
+        break;
+      default:
+        throw new \Exception("Unknown state to set for the subscription");
+        break;
+    }
+  }
+
 }

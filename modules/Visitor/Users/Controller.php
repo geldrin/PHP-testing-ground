@@ -26,6 +26,7 @@ class Controller extends \Visitor\Controller {
     'disableinvitation'    => 'clientadmin',
     'editinvite'           => 'clientadmin',
     'getinvitationtemplate' => 'clientadmin',
+    'togglesubscription'   => 'member',
   );
   
   public $forms = array(
@@ -663,6 +664,24 @@ class Controller extends \Visitor\Controller {
 
     $this->smartyOutput('Visitor/Users/Info.tpl');
 
+  }
+
+  public function togglesubscriptionAction() {
+    $channelid = $this->application->getNumericParameter('channelid');
+    $state = $this->application->getParameter('state');
+    if ( ( $state !== 'add' and $state !== 'del' ) or $channelid <= 0 )
+      return $this->redirect('');
+
+    $l         = $this->bootstrap->getLocalization();
+    $user      = $this->bootstrap->getSession('user');
+    $userModel = $this->bootstrap->getModel('users');
+    $userModel->id = $user['id'];
+
+    $userModel->togglesubscription( $channelid, $state );
+    $this->redirectWithMessage(
+      $this->application->getParameter('forward'),
+      $l('users', 'subscription_' . $state )
+    );
   }
 
 }

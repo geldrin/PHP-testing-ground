@@ -1,7 +1,8 @@
 <div class="heading categories title">
   {if !$channeltree[0].subtitle and $member.id and ($member.isuploader or $member.ismoderateduploader) and $canaddrecording}
   <div class="actions">
-    <a href="{$language}/recordings/upload?channelid={$channel.id}">{#channels__addrecording#}</a>
+    <a class="submitbutton" href="{$language}/recordings/upload?channelid={$channel.id}">{#channels__addrecording#}</a>
+    <a class="subscribe submitbutton" href="{$language}/users/togglesubscription?channelid={$channel.id}&amp;state={if $subscribed}del{else}add{/if}&amp;forward={$FULL_URI|escape:url}">{if $subscribed}{#users__unsubscribe#}{else}{#users__subscribe#}{/if}</a>
   </div>
   {/if}
   <h1>{$channeltree[0].title|escape:html|mb_wordwrap:25}</h1>
