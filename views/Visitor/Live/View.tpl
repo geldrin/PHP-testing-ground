@@ -60,7 +60,7 @@
       {#live__chat_title#}
     </div>
     
-    <div id="chatcontainer" data-lastmodified="{$lastmodified}">
+    <div id="chatcontainer" data-lastmodified="{$lastmodified}" data-ownnick="{if $member.id}{$member|@nickformat|escape:html}{else}{#live__chat_anonuser#|sprintf:$anonuser.anonuserid}{/if}">
       {$chat}
     </div>
     <div id="chatinputcontainer">

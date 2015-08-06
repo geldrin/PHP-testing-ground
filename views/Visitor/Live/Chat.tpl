@@ -14,6 +14,7 @@
               <a href="{$language}/live/moderatechat/{$chat.id}?moderate=1" class="moderate">{#live__moderate#}</a>
             {/if}
           {/if}
+          <a href="#" class="reply" title="{#live__chatreply#}"></a>
           <a href="#" class="copypaste" title="{#live__chatcopypaste#}"></a>
         </div>
 

@@ -1232,6 +1232,10 @@ var livechat = function( container, pollurl, polltime ) {
   self.needRecaptcha = $j('#live_createchat').attr('data-ishuman') == 'false';
   self.checkQuestionTimeout = null;
 
+  var selfNick = $j('#chatcontainer').attr('data-ownnick');
+  selfNick = selfNick.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, "\\$&"); 
+  self.replyRegex = new RegExp("(?:^| )@" + selfNick + "(?:$| )", "i");
+
   if ( self.container.find('#chatlist').length == 0 )
     self.container.hide();
 
@@ -1258,6 +1262,12 @@ var livechat = function( container, pollurl, polltime ) {
   self.beforeSend = $j.proxy( self.beforeSend, self );
   self.onComplete = $j.proxy( self.onComplete, self );
   self.onPoll     = $j.proxy( self.onPoll, self );
+  self.handleReplies = $j.proxy( self.handleReplies, self );
+  self.handleReplies();
+
+  self.onReply = $j.proxy( self.onReply, self );
+  $j('#chatcontainer .actions .reply').live('click', self.onReply);
+
   self.poll();
 
 };
@@ -1337,6 +1347,7 @@ livechat.prototype.onPoll = function( data ) {
   this.container.html( data.html );
   $j('#isquestion').attr('checked', false);
 
+  this.handleReplies();
   this.tryScroll();
 
   if ( this.container.find('#chatlist').length == 0 )
@@ -1344,6 +1355,25 @@ livechat.prototype.onPoll = function( data ) {
   else
     this.container.show();
   
+};
+livechat.prototype.onReply = function(e) {
+  e.preventDefault();
+  var replyText = ' @' + $j('#chatcontainer').attr('data-ownnick') + ' ';
+  var inputElem = $j('#text');
+  var currentText = inputElem.val();
+  inputElem.val( currentText + replyText );
+  inputElem.focus();
+};
+livechat.prototype.handleReplies = function() {
+  var self = this;
+  $j('#chatlist .content').each(function() {
+    var content = $j(this).text();
+    if (!self.replyRegex.test(content))
+      return;
+
+    var elem = $j(this).parent('li');
+    elem.addClass('reply');
+  });
 };
 livechat.prototype.onModerate = function( elem ) {
   

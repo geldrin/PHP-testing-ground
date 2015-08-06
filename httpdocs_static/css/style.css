@@ -2497,6 +2497,14 @@ a#currentusername span {
 #chatcontainer .actions {
   float: right;
 }
+#chatcontainer .actions .reply {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  position: relative;
+  top: 2px;
+  background-image: url(images/icons/reply.png);
+}
 #chatcontainer .actions .copypaste {
   display: inline-block;
   width: 16px;
@@ -2532,6 +2540,9 @@ a#currentusername span {
 }
 #chatlist li.self {
   background-color: #f7f7f7;
+}
+#chatlist li.reply {
+  background-color: #FFCACA;
 }
 #chatlist li.self.question {
   background-color: #A6D7EF;
