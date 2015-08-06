@@ -1265,14 +1265,15 @@ class Livefeeds extends \Springboard\Model {
         vsl.timestampuntil AS watchendtimestamp,
         TIME_TO_SEC( TIMEDIFF(vsl.timestampuntil, vsl.timestampfrom) ) AS watchduration
       FROM
-        view_statistics_live AS vsl,
-        users AS u,
+        view_statistics_live AS vsl
+        LEFT JOIN users AS u ON(
+          u.id = vsl.userid
+        ),
         channels AS c,
         livefeeds AS lf
         $tables
       WHERE
         vsl.timestampuntil IS NOT NULL AND
-        u.id = vsl.userid AND
         lf.id = vsl.livefeedid AND
         c.id = lf.channelid AND
         $where

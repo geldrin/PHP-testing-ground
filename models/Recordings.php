@@ -4248,12 +4248,13 @@ class Recordings extends \Springboard\Model {
         vso.positionuntil AS sessionwatcheduntil,
         vso.timestamp AS sessionwatchedtimestamp
       FROM
-        view_statistics_ondemand AS vso,
-        users AS u,
+        view_statistics_ondemand AS vso
+        LEFT JOIN users AS u ON(
+          u.id = vso.userid
+        ),
         recordings AS r
         $tables
       WHERE
-        u.id = vso.userid AND
         r.id = vso.recordingid AND
         $where
       ORDER BY vso.id
