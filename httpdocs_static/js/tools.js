@@ -1242,6 +1242,7 @@ var livechat = function( container, pollurl, polltime ) {
   self.container.scrollTop( self.container.get(0).scrollHeight );
   self.wasAtBottom = true;
 
+  $j('#chatcontainer .actions .reply').live('click', this.onReply);
   $j('#chatcontainer .actions .copypaste').live('click', this.copyPaste);
   $j('#text').live('keypress', this.onKeyPress);
   $j('a.moderate').live('click', function(e) {
@@ -1264,9 +1265,6 @@ var livechat = function( container, pollurl, polltime ) {
   self.onPoll     = $j.proxy( self.onPoll, self );
   self.handleReplies = $j.proxy( self.handleReplies, self );
   self.handleReplies();
-
-  self.onReply = $j.proxy( self.onReply, self );
-  $j('#chatcontainer .actions .reply').live('click', self.onReply);
 
   self.poll();
 
@@ -1358,7 +1356,8 @@ livechat.prototype.onPoll = function( data ) {
 };
 livechat.prototype.onReply = function(e) {
   e.preventDefault();
-  var replyText = ' @' + $j('#chatcontainer').attr('data-ownnick') + ' ';
+  var name = $j(this).parents('li').find('.name').text();
+  var replyText = ' @' + name.substring(0, name.length - 1)  + ' ';
   var inputElem = $j('#text');
   var currentText = inputElem.val();
   inputElem.val( currentText + replyText );
