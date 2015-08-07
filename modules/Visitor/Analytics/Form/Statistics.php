@@ -116,6 +116,7 @@ class Statistics extends \Visitor\HelpForm {
     }
 
     $f = fopen('php://output', 'w');
+    fwrite( $f, "\xEF\xBB\xBF"); // utf-8 bom excelnek
     fputcsv( $f, array_values( $fields ), $this->delimiter );
 
     foreach( $data as $row ) {
