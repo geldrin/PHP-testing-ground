@@ -1230,8 +1230,8 @@ class Livefeeds extends \Springboard\Model {
     $extraselect = '';
     if ( $info['extrainfo'] )
       $extraselect = "
-        vso.ipaddress AS sessionipaddress,
-        vso.useragent AS sessionuseragent,
+        vsl.ipaddress AS sessionipaddress,
+        vsl.useragent AS sessionuseragent,
       ";
 
     if ( !empty( $info['livefeedids'] ) )
