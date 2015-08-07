@@ -1561,7 +1561,8 @@ class Controller extends \Visitor\Controller {
     $user      = $this->bootstrap->getSession('user');
     $ipaddress = $this->getIPAddress();
     $sessionid = session_id();
-    $useragent .= "\n" . $_SERVER['HTTP_USER_AGENT'];
+    $useragent .= " " . $_SERVER['HTTP_USER_AGENT'];
+    $useragent = str_replace( array("\r", "\n"), " ", $useragent );
 
     $values = array(
       'userid'             => $user['id'],
