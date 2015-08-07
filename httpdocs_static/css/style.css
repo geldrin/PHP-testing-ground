@@ -3079,6 +3079,7 @@ a#currentusername span {
   display: inline-block;
 }
 .select2-results .wrap.recordings img,
+.select2-results .wrap.live img,
 .select2-results .wrap.users img {
   max-width: 40px;
   max-height: 30px;

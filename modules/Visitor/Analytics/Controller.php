@@ -95,6 +95,7 @@ class Controller extends \Visitor\Controller {
     if ( !empty( $results ) ) {
       $this->bootstrap->includeTemplatePlugin('shortdate');
       $this->bootstrap->includeTemplatePlugin('mb_truncate');
+      $this->bootstrap->includeTemplatePlugin('indexphoto');
     }
 
     $ret['results'] = array();
@@ -116,6 +117,7 @@ class Controller extends \Visitor\Controller {
         'text'        => smarty_modifier_mb_truncate( $name, 20 ),
         'interval'    => $interval,
         'channeltype' => $result['channeltype'],
+        'imgsrc'      => smarty_modifier_indexphoto( $result, 'live' ),
       );
     }
 
