@@ -134,10 +134,20 @@ class Form extends \Springboard\Controller\Form {
 
   public function handleTemplate( $userModel, &$values ) {
     $l              = $this->bootstrap->getLocalization();
+    $subject        = trim( $values['templatesubject'] );
+    $defaultsubject = trim( $l('users', 'templatesubject_default') );
+    $title          = trim( $values['templatetitle'] );
+    $defaulttitle   = trim( $l('users', 'templatetitle_default') );
     $prefix         = $this->sanitizeHTML( $values['templateprefix'] );
     $defaultprefix  = $l('users', 'templateprefix_default');
     $postfix        = $this->sanitizeHTML( $values['templatepostfix'] );
     $defaultpostfix = $l('users', 'templatepostfix_default');
+
+    if ( $subject == $defaultsubject )
+      $subject = '';
+
+    if ( $title == $defaulttitle )
+      $title = '';
 
     if ( $prefix == $defaultprefix )
       $prefix = '';
@@ -147,6 +157,8 @@ class Form extends \Springboard\Controller\Form {
 
     $template = array(
       'id'             => $values['templateid'],
+      'subject'        => $subject,
+      'title'          => $title,
       'prefix'         => $prefix,
       'postfix'        => $postfix,
       'timestamp'      => date('Y-m-d H:i:s'),

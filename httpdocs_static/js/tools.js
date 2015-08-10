@@ -1982,6 +1982,15 @@ function setupUserInvitation() {
           return;
 
         // default values
+        if ( !data.subject )
+          data.subject = $j.parseJSON(
+            '"' + $j('#templateid').attr('data-defaulttemplatesubject') + '"'
+          );
+        if ( !data.title )
+          data.title = $j.parseJSON(
+            '"' + $j('#templateid').attr('data-defaulttemplatetitle') + '"'
+          );
+
         if ( !data.prefix )
           data.prefix = $j.parseJSON(
             '"' + $j('#templateid').attr('data-defaulttemplateprefix') + '"'
@@ -1992,6 +2001,8 @@ function setupUserInvitation() {
             '"' + $j('#templateid').attr('data-defaulttemplatepostfix') + '"'
           );
 
+        $j('#templatesubject').val( data.subject );
+        $j('#templatetitle').val( data.title );
         tinyMCE.get('templateprefix').setContent( data.prefix );
         tinyMCE.get('templatepostfix').setContent( data.postfix );
 

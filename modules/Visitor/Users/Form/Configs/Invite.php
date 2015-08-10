@@ -335,10 +335,24 @@ $config = $config + array(
     'type'        => 'select',
     'html'        =>
       'data-templateurl="' . $language . '/users/getinvitationtemplate"' .
+      ' data-defaulttemplatesubject=' . smarty_modifier_jsonescape( $l('users', 'templatesubject_default') ) .
+      ' data-defaulttemplatetitle=' . smarty_modifier_jsonescape( $l('users', 'templatetitle_default') ) .
       ' data-defaulttemplateprefix=' . smarty_modifier_jsonescape( $l('users', 'templateprefix_default') ) .
       ' data-defaulttemplatepostfix=' . smarty_modifier_jsonescape( $l('users', 'templatepostfix_default') ),
     'postfix'     => '<div class="loading" style="display: none;"></div>',
     'values'      => $invitetemplates,
+  ),
+
+  'templatesubject' => array(
+    'type'        => 'inputText',
+    'displayname' => $l('users', 'templatesubject'),
+    'value'       => $l('users', 'templatesubject_default'),
+  ),
+
+  'templatetitle' => array(
+    'type'        => 'inputText',
+    'displayname' => $l('users', 'templatetitle'),
+    'value'       => $l('users', 'templatetitle_default'),
   ),
 
   'templateprefix' => array(

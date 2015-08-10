@@ -726,13 +726,15 @@ class Users extends \Springboard\Model {
       if ( empty( $template ) )
         throw new \Exception("Template with id: " . $values['id'] . ' not found!');
 
-      $hash         = md5( $values['prefix'] . $values['postfix'] );
-      $existinghash = md5( $template['prefix'] . $template['postfix'] );
+      $hash         = md5( $values['subject'] . $values['title'] . $values['prefix'] . $values['postfix'] );
+      $existinghash = md5( $template['subject'] . $values['title'] . $template['prefix'] . $template['postfix'] );
 
       if ( $hash != $existinghash )
         $needinsert = true;
 
     } elseif (
+               strlen( trim( $values['subject'] ) ) or
+               strlen( trim( $values['title'] ) ) or
                strlen( trim( $values['prefix'] ) ) or
                strlen( trim( $values['postfix'] ) )
              )

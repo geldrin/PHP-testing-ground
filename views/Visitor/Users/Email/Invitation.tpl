@@ -14,8 +14,7 @@ $departments
 {/*}
 
 {newsletter}
-{assign var=name value=$values.name|default:#users__email_invitation_namedefault#}
-<h1>{#users__email_invitation_title#|sprintf:$name},</h1>
+<h1>{$template.title|default:#users__templatetitle_default#|escape:html}</h1>
 
   {if $values.registereduserid}
     {assign var=url value="$BASE_URI$language/users/login"}

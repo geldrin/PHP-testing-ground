@@ -573,11 +573,15 @@ class Controller extends \Visitor\Controller {
 
     $invitation['id'] = $this->crypto->asciiEncrypt( $invitation['id'] );
     $this->toSmarty['values'] = $invitation;
-    
-    //$this->smartyOutput('Visitor/Users/Email/Invitation.tpl');
+
+    // DEBUG AID $this->smartyOutput('Visitor/Users/Email/Invitation.tpl');
+    $subject = $invitation['subject'];
+    if ( !strlen( trim( $subject ) ) )
+      $subject = $l('users', 'invitationmailsubject');
+
     $this->sendOrganizationHTMLEmail(
       $invitation['email'],
-      $l('users', 'invitationmailsubject'),
+      $subject,
       $this->fetchSmarty('Visitor/Users/Email/Invitation.tpl')
     );
     
@@ -638,6 +642,8 @@ class Controller extends \Visitor\Controller {
 
     $this->jsonOutput( array(
         'status'  => 'success',
+        'subject' => $template['subject'],
+        'title'   => $template['title'],
         'prefix'  => $template['prefix'],
         'postfix' => $template['postfix'],
       )
