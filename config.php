@@ -387,6 +387,10 @@ $config = array(
   'node_sourceip' => '',
   // a jelenlegi node szerepe, lehet frontend/converter
   'node_role' => '',
+
+  // streaming server utolso reportolasa utan ha ennel tobb perc telik el akkor
+  // halottnak tekintjuk a servert, ha nulla akkor nem nezzuk a reportolasi idot
+  'streamingserver_max_report_duration_minutes' => 0,
 );
 
 $config['phpsettings'] = array(

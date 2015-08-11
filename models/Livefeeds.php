@@ -1150,7 +1150,8 @@ class Livefeeds extends \Springboard\Model {
       SELECT *
       FROM cdn_streaming_servers
       WHERE
-        disabled = '0' AND
+        disabled     = '0' AND
+        serverstatus = 'ok' AND
         servicetype IN('live', 'live|ondemand')
       ORDER BY location, shortname
     ");

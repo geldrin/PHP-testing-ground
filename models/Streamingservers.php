@@ -12,6 +12,15 @@ class Streamingservers extends \Springboard\Model {
     if ( !$type )
       throw new \Exception("No type specified for the streaming servers!");
     
+    $extrawhere = '';
+    $duration = $this->bootstrap->config['streamingserver_max_report_duration_minutes'];
+    if ( $duration ) {
+      $extrawhere = "AND
+        ss.lastreporttimestamp IS NOT NULL AND
+        ss.lastreporttimestamp >= DATE_SUB(NOW(), INTERVAL $duration MINUTE)
+      ";
+    }
+
     $types   = array('live|ondemand');
     $types[] =  $type;
     $ip      = $this->db->qstr( $ip );
@@ -33,10 +42,15 @@ class Streamingservers extends \Springboard\Model {
         cn.id                        = sn.clientnetworkid AND
         sn.streamingserverid         = ss.id AND
         cn.disabled                  = 0 AND
+        ss.serverstatus              = 'ok'
         ss.disabled                  = 0 AND
         ss.servicetype IN('" . implode("', '", $types ) . "')
+        $extrawhere
       GROUP BY ss.server
-      ORDER BY RAND()
+      ORDER BY
+        ROUND( ( network_traffick_out / network_interface_speed ) * 100 ) ASC,
+        load_cpu_min5 ASC,
+        RAND()
       LIMIT 1
     ";
     
