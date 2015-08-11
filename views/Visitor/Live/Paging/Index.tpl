@@ -7,6 +7,7 @@
     <div class="title">
       <h3><a href="{$language}/live/details/{$item.id},{$item.title|filenameize}">{$item.title|escape:html|mb_wordwrap:25}</a></h3>
       {if $item.subtitle|stringempty}<h4>{$item.subtitle|escape:html|mb_wordwrap:25}</h4>{/if}
+      {if $item.relatedchannelid}<a class="relatedchannel" href="{$language}/channels/details/{$item.relatedchannelid},{$item.title|filenameize}">{#live__view_archive#}</a>{/if}
       {if $item.starttimestamp}
         <div class="channeltimestamp">{#channels__timestamp#} {"%Y. %B %e"|shortdate:$item.starttimestamp:$item.endtimestamp}</div>
       {/if}

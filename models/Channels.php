@@ -276,7 +276,7 @@ class Channels extends \Springboard\Model {
     
     $childrenids   = $this->findChildrenIDs( $id );
     $childrenids[] = $id;
-    
+
     $this->db->execute("
       DELETE FROM channels_recordings
       WHERE channelid IN('" . implode("', '", $childrenids ) . "')
@@ -1248,15 +1248,59 @@ class Channels extends \Springboard\Model {
   }
 
   public function markAsDeleted() {
-    
-    $this->ensureID();
+    $this->ensureObjectLoaded();
+
+    $channelid = $this->id;
+    if ( !$this->row['isliveevent'] ) {
+      // "ondemand" archivum torlesnel kinullazzuk a kozvetitesekbol a channelt
+      $this->db->execute("
+        UPDATE channels
+        SET relatedchannelid = NULL
+        WHERE
+          isliveevent      = '1' AND
+          relatedchannelid = '$channelid' AND
+          relatedchannelid IS NOT NULL
+      ");
+    }
+
     $this->db->execute("
       UPDATE channels
       SET isdeleted = '1'
-      WHERE id = '" . $this->id . "'
+      WHERE id = '$channelid'
       LIMIT 1
     ");
 
+  }
+
+  public function createArchiveChannel() {
+    $this->ensureObjectLoaded();
+
+    $l       = $this->bootstrap->getLocalization();
+    $postfix = ' (' . $l('live', 'archive_postfix') . ')';
+    $eventid = $this->id;
+    $values  = array(
+      'channeltypeid'      => $this->row['channeltypeid'],
+      'userid'             => $this->row['userid'],
+      'locationid'         => $this->row['locationid'],
+      'title'              => $this->row['title'] . $postfix,
+      'subtitle'           => $this->row['subtitle'],
+      'ordinalnumber'      => $this->row['ordinalnumber'],
+      'description'        => $this->row['description'],
+      'url'                => $this->row['url'],
+      'indexphotofilename' => $this->row['indexphotofilename'],
+      'organizationid'     => $this->row['organizationid'],
+      'accesstype'         => $this->row['accesstype'],
+    );
+
+    $this->startTrans();
+    $this->insert( $values );
+    $relatedid = $this->id;
+
+    $this->select( $eventid );
+    $this->updateRow( array('relatedchannelid' => $relatedid ) );
+    $this->endTrans();
+
+    return $relatedid;
   }
 
 }

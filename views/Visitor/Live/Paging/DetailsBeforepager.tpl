@@ -2,11 +2,21 @@
   <h1>{$channel.title|escape:html|mb_wordwrap:25}</h1>
   {if $member.id or $channel.subtitle}
     <h2>
-      {if $channel|@userHasAccess}
+      {if $channel|@userHasAccess or $channel.relatedchannelid}
         <div class="actions">
-          <a href="{$language}/live/modify/{$channel.id}">{#modify#}</a> |
-          <a href="{$language}/live/delete/{$channel.id}" class="confirm">{#live__live_delete#}</a> |
-          <a href="{$language}/live/managefeeds/{$channel.id}">{#live__managefeeds#}</a>
+          {if $channel|@userHasAccess}
+            <a href="{$language}/live/modify/{$channel.id}">{#modify#}</a> |
+            <a href="{$language}/live/delete/{$channel.id}" class="confirm">{#live__live_delete#}</a> |
+            <a href="{$language}/live/managefeeds/{$channel.id}">{#live__managefeeds#}</a>
+            {if !$channel.relatedchannelid}
+              | <a href="{$language}/live/archive/?channelid={$channel.id}&amp;forward={$FULL_URI|escape:url}" class="confirm">{#live__archive#}</a>
+            {else}
+              |
+            {/if}
+          {/if}
+          {if $channel.relatedchannelid}
+            <a href="{$language}/channels/details/{$channel.relatedchannelid},{$channel.title|filenameize}" >{#live__view_archive#}</a>
+          {/if}
         </div>
       {/if}
       {if $channel.subtitle}{$channel.subtitle|escape:html|mb_wordwrap:25}{else}&nbsp;{/if}

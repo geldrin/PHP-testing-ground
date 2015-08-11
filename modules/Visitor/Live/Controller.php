@@ -29,6 +29,7 @@ class Controller extends \Visitor\Controller {
     'search'               => 'member',
     'analytics'            => 'liveadmin|clientadmin',
     'delete'               => 'liveadmin|clientadmin',
+    'archive'              => 'liveadmin|clientadmin',
   );
   
   public $forms = array(
@@ -981,6 +982,20 @@ class Controller extends \Visitor\Controller {
 
     $this->jsonOutput( $ret );
 
+  }
+
+  public function archiveAction() {
+    $channelModel = $this->modelOrganizationAndUserIDCheck(
+      'channels',
+      $this->application->getNumericParameter('channelid')
+    );
+
+    // mar archivalva van
+    if ( $channelModel->row['relatedchannelid'] )
+      $this->redirect('');
+
+    $channelModel->createArchiveChannel();
+    $this->redirect( $this->application->getParameter('forward') );
   }
 
 }
