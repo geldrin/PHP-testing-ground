@@ -568,6 +568,9 @@ class Controller extends \Visitor\Controller {
         $this->organization['id']
       );
       $this->invitationcache['template-' . $invitation['templateid'] ] = $template;
+      if ( !strlen( trim( $template['subject'] ) ) )
+        $template['subject'] = $l('users', 'templatesubject_default');
+
       $this->toSmarty['template'] = $template;
     }
 
@@ -575,13 +578,9 @@ class Controller extends \Visitor\Controller {
     $this->toSmarty['values'] = $invitation;
 
     // DEBUG AID $this->smartyOutput('Visitor/Users/Email/Invitation.tpl');
-    $subject = $invitation['subject'];
-    if ( !strlen( trim( $subject ) ) )
-      $subject = $l('users', 'invitationmailsubject');
-
     $this->sendOrganizationHTMLEmail(
       $invitation['email'],
-      $subject,
+      $this->toSmarty['template']['subject'],
       $this->fetchSmarty('Visitor/Users/Email/Invitation.tpl')
     );
     

@@ -19,7 +19,7 @@ $templates = $userModel->getInviteTemplates( $this->controller->organization['id
 $invitetemplates = $l->getLov('invite_templates');
 foreach( $templates as $template ) {
 
-  $prefix = substr( trim( strip_tags( $template['prefix'] ) ), 0, 30 );
+  $prefix = mb_substr( trim( strip_tags( $template['prefix'] ) ), 0, 30 );
   $invitetemplates[ $template['id'] ] =
     smarty_modifier_date_format( $template['timestamp'], $l('', 'smarty_dateformat_longer') ) .
     ' | ' . $prefix . '...'
@@ -346,13 +346,19 @@ $config = $config + array(
   'templatesubject' => array(
     'type'        => 'inputText',
     'displayname' => $l('users', 'templatesubject'),
-    'value'       => $l('users', 'templatesubject_default'),
+    'value'       => $this->application->getParameter(
+      'templatesubject',
+      $l('users', 'templatesubject_default')
+    ),
   ),
 
   'templatetitle' => array(
     'type'        => 'inputText',
     'displayname' => $l('users', 'templatetitle'),
-    'value'       => $l('users', 'templatetitle_default'),
+    'value'       => $this->application->getParameter(
+      'templatetitle',
+      $l('users', 'templatetitle_default')
+    ),
   ),
 
   'templateprefix' => array(

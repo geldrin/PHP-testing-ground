@@ -100,6 +100,14 @@ if ( $this->invitationModel->row['templateid'] ) {
   if ( empty( $template ) )
     throw new \Exception("No template found for invitation!");
 
+  $config['templatesubject']['value']  =
+    $template['subject'] ?: $l('users', 'templatesubject_default')
+  ;
+
+  $config['templatetitle']['value']  =
+    $template['title'] ?: $l('users', 'templatetitle_default')
+  ;
+
   $config['templateprefix']['value']  =
     $template['prefix'] ?: $l('users', 'templateprefix_default')
   ;
