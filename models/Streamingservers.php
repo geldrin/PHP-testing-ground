@@ -13,7 +13,7 @@ class Streamingservers extends \Springboard\Model {
       throw new \Exception("No type specified for the streaming servers!");
     
     $extrawhere = '';
-    $duration = $this->bootstrap->config['streamingserver_max_report_duration_minutes'];
+    $duration = $this->bootstrap->config['streamingserver_report_expiration_minutes'];
     if ( $duration ) {
       $extrawhere = "AND
         ss.lastreporttimestamp IS NOT NULL AND
@@ -48,7 +48,7 @@ class Streamingservers extends \Springboard\Model {
         $extrawhere
       GROUP BY ss.server
       ORDER BY
-        ROUND( ( network_traffick_out / network_interface_speed ) * 100 ) ASC,
+        ROUND( ( network_traffick_out / (network_interface_speed * 1000000) ) * 100 ) ASC,
         load_cpu_min5 ASC,
         RAND()
       LIMIT 1
