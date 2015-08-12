@@ -48,8 +48,8 @@ class Streamingservers extends \Springboard\Model {
         $extrawhere
       GROUP BY ss.server
       ORDER BY
-        ROUND( ( network_traffick_out / (network_interface_speed * 1000000) ) * 100 ) ASC,
-        load_cpu_min5 ASC,
+        ROUND( ( ss.network_traffick_out / (ss.network_interface_speed * 1000000) ) * 100 ) ASC,
+        ss.load_cpu_min5 ASC,
         RAND()
       LIMIT 1
     ";
