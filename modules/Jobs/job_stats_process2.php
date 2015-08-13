@@ -106,7 +106,7 @@ $platforms_null = returnStreamingClientPlatformEmptyArray($platform_definitions)
 // Query media servers
 $media_servers = queryMediaServers();
 if ( $media_servers === false ) {
-    $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Cannot find media servers", $sendmail = true);
+    $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Cannot find media servers", $sendmail = false);
     exit;
 }
 
