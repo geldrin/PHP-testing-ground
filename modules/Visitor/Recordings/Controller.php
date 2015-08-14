@@ -274,8 +274,14 @@ class Controller extends \Visitor\Controller {
     $access[ $accesskey ] = $recordingsModel->userHasAccess(
       $user, null, $browserinfo['mobile'], $this->organization
     );
+    // nem ter vissza ha nincs permission
     $this->handleUserAccess( $access[ $accesskey ] );
-    
+
+    $this->bootstrap->getModel('usercontenthistory')->markRecording(
+      $recordingsModel,
+      $user
+    );
+
     $this->bootstrap->includeTemplatePlugin('indexphoto');
     
     if ( $user['id'] )
@@ -721,6 +727,13 @@ class Controller extends \Visitor\Controller {
       $needauth = true;
     elseif ( $access[ $accesskey ] !== true )
       $nopermission = true;
+
+    // hozzaferunk, log
+    if ( !$needauth and !$nopermission )
+      $this->bootstrap->getModel('usercontenthistory')->markRecording(
+        $recordingsModel,
+        $user
+      );
 
     $this->toSmarty['needauth']      = $needauth;
     $this->toSmarty['ipaddress']     = $this->getIPAddress();

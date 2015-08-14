@@ -135,7 +135,15 @@ class Controller extends \Visitor\Controller {
       $nopermission = true;
     else
       $this->handleUserAccess( $access[ $accesskey ] );
-    
+
+    // hozzaferunk, log
+    if ( !$needauth and !$nopermission )
+      $this->bootstrap->getModel('usercontenthistory')->markLivefeed(
+        $feedModel,
+        $user
+      );
+
+
     if ( !count( $browserinfo ) )
       $browserinfo->setArray( \Springboard\Browser::getInfo() );
     
