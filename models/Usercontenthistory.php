@@ -8,14 +8,30 @@ class Usercontenthistory extends \Springboard\Model {
 
     $feedModel->ensureObjectLoaded();
 
+    // session "lock", if we have already inserted in a session, dont insert again
+    $lock = $this->bootstrap->getSession('contenthistory-livefeedid');
+    if ( $lock[ $feedModel->id ] )
+      return;
+
+    $this->startTrans();
     $history     = array(
-      'userid'      => $userid,
-      'livefeedid'  => $feedModel->id,
-      'channelid'   => $feedModel->row['channelid'],
-      'timestamp'   => date('Y-m-d H:i:s'),
+      'userid'     => $userid,
+      'livefeedid' => $feedModel->id,
+      'timestamp'  => date('Y-m-d H:i:s'),
     );
     $this->insert( $history );
+    $historyid = $this->id;
 
+    $row = array(
+      'contenthistoryid' => $historyid,
+      'channelid'        => $feedModel->row['channelid'],
+      'timestamp'        => $history['timestamp'],
+    );
+    $historyChanModel = $this->bootstrap->getModel('usercontenthistory_channels');
+    $historyChanModel->insert( $row );
+
+    $lock[ $feedModel->id ] = true;
+    $this->endTrans();
   }
 
   public function markRecording( $recordingsModel, $user ) {
@@ -25,6 +41,11 @@ class Usercontenthistory extends \Springboard\Model {
     $recordingsModel->ensureID();
     $recordingid = $recordingsModel->id;
     $userid = $user['id'];
+
+    // session "lock", if we have already inserted in a session, dont insert again
+    $lock = $this->bootstrap->getSession('contenthistory-recordingid');
+    if ( $lock[ $recordingid ] )
+      return;
 
     // get the channels the user has access to and the recording is a member of
     // also contains the classifications, all-in-one query to cut down on
@@ -76,16 +97,66 @@ class Usercontenthistory extends \Springboard\Model {
     $history     = array(
       'userid'      => $userid,
       'recordingid' => $recordingid,
-      'channelid'   => null,
-      'categoryid'  => null,
-      'genreid'     => null,
       'timestamp'   => date('Y-m-d H:i:s'),
     );
+    $this->startTrans();
+    $this->insert( $history );
+    $historyid = $this->id;
 
-    foreach( $classification as $row )
-      $this->insertBatchCollect( array_merge( $history, $row ) );
+    $channels   = array();
+    $categories = array();
+    $genres     = array();
+    foreach( $classification as $row ) {
+      if ( $row['channelid'] )
+        $channels[] = $row['channelid'];
+      elseif ( $row['genreid'] )
+        $genres[] = $row['genreid'];
+      elseif ( $row['categoryid'] )
+        $categories = $row['categoryid'];
+      else {
+        $this->failTrans();
+        throw new \Exception("not possible for all values to be null: " . var_export( $classification, true ) );
+      }
+    }
 
+    $baserow = array(
+      'contenthistoryid' => $historyid,
+      'timestamp'        => $history['timestamp'],
+    );
+
+    // reset and save state
+    $savedtable = $this->table;
+    $this->batchrecords = array();
+
+    $this->table = 'usercontenthistory_channels';
+    foreach( $channels as $value ) {
+      $row = $baserow;
+      $row['channelid'] = $value;
+      $this->insertBatchCollect( $row );
+    }
     $this->flushBatchCollect();
+
+    $this->table = 'usercontenthistory_categories';
+    foreach( $categories as $value ) {
+      $row = $baserow;
+      $row['categoryid'] = $value;
+      $this->insertBatchCollect( $row );
+    }
+    $this->flushBatchCollect();
+
+    $this->table = 'usercontenthistory_genres';
+    foreach( $genres as $value ) {
+      $row = $baserow;
+      $row['genreid'] = $value;
+      $this->insertBatchCollect( $row );
+    }
+    $this->flushBatchCollect();
+
+    // restore state
+    $this->table = $savedtable;
+    $this->batchrecords = array();
+    $lock[ $recordingid ] = true;
+    $this->endTrans();
   }
 
 }
