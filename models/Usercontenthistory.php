@@ -112,7 +112,7 @@ class Usercontenthistory extends \Springboard\Model {
       elseif ( $row['genreid'] )
         $genres[] = $row['genreid'];
       elseif ( $row['categoryid'] )
-        $categories = $row['categoryid'];
+        $categories[] = $row['categoryid'];
       else {
         $this->failTrans();
         throw new \Exception("not possible for all values to be null: " . var_export( $classification, true ) );
