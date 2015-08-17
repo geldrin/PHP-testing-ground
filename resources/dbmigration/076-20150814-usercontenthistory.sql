@@ -3,6 +3,8 @@ CREATE TABLE `usercontenthistory` (
   `userid` int(10) unsigned NOT NULL,
   `recordingid` int(10) unsigned,
   `livefeedid` int(10) unsigned,
+  `recordingskeywords` text,
+  `numberofviews` int(10) unsigned,
   `timestamp` timestamp,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
@@ -27,6 +29,14 @@ CREATE TABLE `usercontenthistory_genres` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `contenthistoryid` int(10) unsigned NOT NULL,
   `genreid` int(10) unsigned NOT NULL,
+  `timestamp` timestamp,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
+
+CREATE TABLE `usercontenthistory_contributors` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `contenthistoryid` int(10) unsigned NOT NULL,
+  `contributorid` int(10) unsigned NOT NULL,
   `timestamp` timestamp,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;

@@ -279,7 +279,8 @@ class Controller extends \Visitor\Controller {
 
     $this->bootstrap->getModel('usercontenthistory')->markRecording(
       $recordingsModel,
-      $user
+      $user,
+      $this->organization
     );
 
     $this->bootstrap->includeTemplatePlugin('indexphoto');
@@ -732,7 +733,8 @@ class Controller extends \Visitor\Controller {
     if ( !$needauth and !$nopermission )
       $this->bootstrap->getModel('usercontenthistory')->markRecording(
         $recordingsModel,
-        $user
+        $user,
+        $this->organization
       );
 
     $this->toSmarty['needauth']      = $needauth;

@@ -140,7 +140,8 @@ class Controller extends \Visitor\Controller {
     if ( !$needauth and !$nopermission )
       $this->bootstrap->getModel('usercontenthistory')->markLivefeed(
         $feedModel,
-        $user
+        $user,
+        $this->organization
       );
 
 

@@ -2,7 +2,7 @@
 namespace Model;
 
 class Usercontenthistory extends \Springboard\Model {
-  public function markLivefeed( $feedModel, $user ) {
+  public function markLivefeed( $feedModel, $user, $organization ) {
     if ( !$user or !$user['id'] ) // nem belepett usernel nem erdekel minket
       return;
 
@@ -15,9 +15,10 @@ class Usercontenthistory extends \Springboard\Model {
 
     $this->startTrans();
     $history     = array(
-      'userid'     => $userid,
-      'livefeedid' => $feedModel->id,
-      'timestamp'  => date('Y-m-d H:i:s'),
+      'userid'        => $userid,
+      'livefeedid'    => $feedModel->id,
+      'numberofviews' => $feedModel->row['numberofviews'],
+      'timestamp'     => date('Y-m-d H:i:s'),
     );
     $this->insert( $history );
     $historyid = $this->id;
@@ -34,13 +35,14 @@ class Usercontenthistory extends \Springboard\Model {
     $this->endTrans();
   }
 
-  public function markRecording( $recordingsModel, $user ) {
+  public function markRecording( $recordingsModel, $user, $organization ) {
     if ( !$user or !$user['id'] ) // nem belepett usernel nem erdekel minket
       return;
 
-    $recordingsModel->ensureID();
-    $recordingid = $recordingsModel->id;
-    $userid = $user['id'];
+    $recordingsModel->ensureObjectLoaded();
+    $recordingid    = $recordingsModel->id;
+    $userid         = $user['id'];
+    $organizationid = $organization['id'];
 
     // session "lock", if we have already inserted in a session, dont insert again
     $lock = $this->bootstrap->getSession('contenthistory-recordingid');
@@ -55,7 +57,8 @@ class Usercontenthistory extends \Springboard\Model {
         SELECT
           cr.channelid,
           NULL as categoryid,
-          NULL as genreid
+          NULL as genreid,
+          NULL as contributorid
         FROM
           channels_recordings AS cr,
           users_invitations AS ui
@@ -68,7 +71,8 @@ class Usercontenthistory extends \Springboard\Model {
         SELECT
           cr.channelid,
           NULL as categoryid,
-          NULL as genreid
+          NULL as genreid,
+          NULL as contributorid
         FROM
           channels_recordings AS cr,
           channels AS c
@@ -81,31 +85,54 @@ class Usercontenthistory extends \Springboard\Model {
         SELECT
           NULL as channelid,
           NULL as categoryid,
-          rg.genreid
+          rg.genreid,
+          NULL as contributorid
         FROM recordings_genres AS rg
         WHERE rg.recordingid = '$recordingid'
       ) UNION DISTINCT (
         SELECT
           NULL as channelid,
           rc.categoryid,
-          NULL as genreid
+          NULL as genreid,
+          NULL as contributorid
         FROM recordings_categories AS rc
         WHERE rc.recordingid = '$recordingid'
+      ) UNION DISTINCT (
+        SELECT
+          NULL as channelid,
+          NULL as categoryid,
+          NULL as genreid,
+          cr.contributorid as contributorid
+        FROM contributors_roles AS cr
+        WHERE
+          cr.recordingid = '$recordingid' AND
+          cr.roleid IN(
+            (
+              SELECT r.id
+              FROM roles AS r
+              WHERE
+                r.organizationid = '$organizationid' AND
+                r.ispresenter    = '1'
+            )
+          )
       )
     ");
 
     $history     = array(
-      'userid'      => $userid,
-      'recordingid' => $recordingid,
-      'timestamp'   => date('Y-m-d H:i:s'),
+      'userid'             => $userid,
+      'recordingid'        => $recordingid,
+      'recordingskeywords' => $recordingsModel->row['keywords'],
+      'numberofviews'      => $recordingsModel->row['numberofviews'],
+      'timestamp'          => date('Y-m-d H:i:s'),
     );
     $this->startTrans();
     $this->insert( $history );
     $historyid = $this->id;
 
-    $channels   = array();
-    $categories = array();
-    $genres     = array();
+    $channels     = array();
+    $categories   = array();
+    $genres       = array();
+    $contributors = array();
     foreach( $classification as $row ) {
       if ( $row['channelid'] )
         $channels[] = $row['channelid'];
@@ -113,6 +140,8 @@ class Usercontenthistory extends \Springboard\Model {
         $genres[] = $row['genreid'];
       elseif ( $row['categoryid'] )
         $categories[] = $row['categoryid'];
+      elseif ( $row['contributorid'] )
+        $contributors[] = $row['contributorid'];
       else {
         $this->failTrans();
         throw new \Exception("not possible for all values to be null: " . var_export( $classification, true ) );
@@ -148,6 +177,14 @@ class Usercontenthistory extends \Springboard\Model {
     foreach( $genres as $value ) {
       $row = $baserow;
       $row['genreid'] = $value;
+      $this->insertBatchCollect( $row );
+    }
+    $this->flushBatchCollect();
+
+    $this->table = 'usercontenthistory_contributors';
+    foreach( $contributors as $value ) {
+      $row = $baserow;
+      $row['contributorid'] = $value;
       $this->insertBatchCollect( $row );
     }
     $this->flushBatchCollect();
