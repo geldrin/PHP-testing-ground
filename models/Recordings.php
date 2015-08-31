@@ -1136,7 +1136,7 @@ class Recordings extends \Springboard\Model {
       return 'courserestricted';
 
     $recordings = $this->getUserChannelRecordingsWithProgress(
-      $usercourses, $user, $organization, false // nem distinct, hogy csatornankent kulon legyen
+      $usercourses, $user, $organization
     );
 
     // levalogatjuk azokat a csatornakat amibe biztos hogy be van sorolva a
