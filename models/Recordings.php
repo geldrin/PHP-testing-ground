@@ -1139,20 +1139,7 @@ class Recordings extends \Springboard\Model {
       $usercourses, $user, $organization
     );
 
-    // levalogatjuk azokat a csatornakat amibe biztos hogy be van sorolva a
-    // felvetel, csak ezekbol a csatornakbol nezzuk kesobb a dependencieket
-    $recordingChannelIds = array();
     foreach( $recordings as $recording ) {
-      if ( $recording['id'] == $this->id )
-        $recordingChannelIds[ $recording['channelid'] ] = true;
-    }
-
-    foreach( $recordings as $recording ) {
-
-      // az eppen nezett recording nincsen benne az adott csatornaban ahol
-      // neznunk kellene a dependencieket
-      if ( !isset( $recordingChannelIds[ $recording['channelid'] ] ) )
-        continue;
 
       // if we arrived here, all dependencies were satisfied
       if ( $recording['id'] == $this->id )
