@@ -265,7 +265,7 @@ while ( !$org_contracts->EOF ) {
 
     }
 
-    if ( !empty($mail_body2) ) $mail_body2 = "*** Users NOT completed accredited courses and will be disabled in a " . round($user_disable_interval /3600 / 24 ) . " days from now. ***\n\n" . $mail_body2 . "\n";
+    if ( !empty($mail_body2) ) $mail_body2 = "*** Users NOT completed accredited courses and will be disabled in " . round($user_disable_interval /3600 / 24 ) . " days from now. ***\n\n" . $mail_body2 . "\n";
     
         // Header
     $header  = "Subscriber: " . $org['name'] . " (id: " . $org['id'] . ")\n";
