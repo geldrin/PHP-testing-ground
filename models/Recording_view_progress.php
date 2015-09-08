@@ -17,11 +17,7 @@ class Recording_view_progress extends \Springboard\Model {
         rvs.recordingid,
         r.title,
         ROUND( GREATEST(r.masterlength, IFNULL(r.contentmasterlength, 0)) ) AS recordinglength,
-        ROUND(
-          (
-            rvp.position / GREATEST(r.masterlength, IFNULL(r.contentmasterlength, 0))
-          ) * 100
-        ) AS totalwatchedpercent,
+        " . \Model\Recordings::getWatchedPositionPercentSQL('r.', 'rvp.', 'totalwatchedpercent') . ",
         IF(
           ROUND(
             (

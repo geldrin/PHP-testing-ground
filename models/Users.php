@@ -498,11 +498,12 @@ class Users extends \Springboard\Model {
         r.contentmasterlength,
         r.isintrooutro,
         r.approvalstatus,
-        rwp.position,
-        rwp.timestamp
+        " . \Model\Recordings::getWatchedPositionPercentSQL() . "
+        rvp.position,
+        rvp.timestamp
       FROM
         recordings AS r,
-        recording_view_progress AS rwp
+        recording_view_progress AS rvp
       WHERE
         rwp.userid       = '" . $this->id . "' AND
         rwp.recordingid  = r.id AND
@@ -517,13 +518,6 @@ class Users extends \Springboard\Model {
     $recordids = array();
     foreach( $recordings as $key => $recording ) {
       $recordids[] = $recording['id'];
-      $length      = max( $recording['masterlength'], $recording['contentmasterlength'] );
-      $recordings[ $key ]['positionpercent'] = round(
-        ( $recording['position'] / $length ) * 100
-      );
-      
-      if ( $recordings[ $key ]['positionpercent'] > 100 )
-        $recordings[ $key ]['positionpercent'] = 100;
 
       $recordings[ $key ]['viewedminutes'] = round( $recording['position'] / 60 );
     }
@@ -771,9 +765,7 @@ class Users extends \Springboard\Model {
     $recordings = $this->db->getArray("
       SELECT DISTINCT
         " . \Model\Recordings::getRecordingSelect('r.') . ",
-        (
-          ROUND( ( IFNULL(rvp.position, 0) / GREATEST( IFNULL(r.masterlength, 0), IFNULL(r.contentmasterlength, 0) ) ) * 100 )
-        ) AS positionpercent,
+        " . \Model\Recordings::getWatchedPositionPercentSQL() . ",
         IFNULL(rvp.position, 0) AS lastposition
       FROM
         recordings AS r

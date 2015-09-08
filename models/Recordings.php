@@ -1155,6 +1155,22 @@ class Recordings extends \Springboard\Model {
 
   }
 
+  public static function getWatchedPositionPercentSQL( $recprefix = 'r.', $progressprefix = 'rvp.', $alias = 'positionpercent' ) {
+    return "
+      (
+        FLOOR(
+          (
+            IFNULL( {$progressprefix}position, 0 ) /
+            GREATEST(
+              IFNULL({$recprefix}masterlength, 0),
+              IFNULL({$recprefix}contentmasterlength, 0)
+            )
+          ) * 100
+        )
+      ) AS {$alias}
+    ";
+  }
+
   public function getUserChannelRecordingsWithProgress( $channelids, $user, $organization, $distinct = true, $includeuser = false ) {
 
     if ( $includeuser ) {
@@ -1182,17 +1198,7 @@ class Recordings extends \Springboard\Model {
       SELECT
         " . self::getRecordingSelect('r.') . ",
         cr.channelid,
-        (
-          ROUND(
-            (
-              IFNULL( rvp.position, 0 ) /
-              GREATEST(
-                IFNULL(r.masterlength, 0),
-                IFNULL(r.contentmasterlength, 0)
-              )
-            ) * 100
-          )
-        ) AS positionpercent,
+        " . self::getWatchedPositionPercentSQL() . ",
         IFNULL(rvp.position, 0) AS lastposition
         $select
       FROM
