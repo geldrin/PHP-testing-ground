@@ -3,7 +3,16 @@ namespace Model;
 
 class Livefeeds extends \Springboard\Model {
   protected $streamingserver;
-  
+
+  private static $hdsFeatures = array(
+    'features_live_hds',
+    'features_live_hdss',
+  );
+  private static $hlsFeatures = array(
+    'features_live_hlss',
+    'features_live_hls',
+  );
+
   public function delete( $id, $magic_quotes_gpc = 0 ) {
     
     $this->db->execute("
@@ -1146,6 +1155,28 @@ class Livefeeds extends \Springboard\Model {
   }
 
   public function getStreamingServers() {
+    $where = array();
+    if ( $this->bootstrap->config['livehdsenabled'] ) {
+      $sql = array();
+      foreach( self::$hdsFeatures as $field )
+        $sql[] = "$field = '1'";
+
+      $where[] = "(" . implode(" OR ", $sql ) . ")";
+    }
+
+    if ( $this->bootstrap->config['liveandandroidhls'] ) {
+      $sql = array();
+      foreach( self::$hlsFeatures as $field )
+        $sql[] = "$field = '1'";
+
+      $where[] = "(" . implode(" OR ", $sql ) . ")";
+    }
+
+    if ( !empty( $where ) )
+      $where = " AND " . implode(" AND ", $where );
+    else
+      $where = "";
+
     return $this->db->getArray("
       SELECT *
       FROM cdn_streaming_servers
@@ -1153,6 +1184,7 @@ class Livefeeds extends \Springboard\Model {
         disabled     = '0' AND
         serverstatus = 'ok' AND
         servicetype IN('live', 'live|ondemand')
+        $where
       ORDER BY location, shortname
     ");
   }
