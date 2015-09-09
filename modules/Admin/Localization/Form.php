@@ -76,6 +76,9 @@ class Form extends \Springboard\Controller\Admin\Form {
     if ( isset( $this->hidenavigation ) )
       $this->controller->hidenavigation = $this->hidenavigation;
     
+    if ( isset( $this->hidenewrecordbutton ) )
+      $this->controller->hidenewrecordbutton = $this->hidenewrecordbutton;
+    
     if ( isset( $this->hideheading ) )
       $this->controller->hideheading = $this->hideheading;
     

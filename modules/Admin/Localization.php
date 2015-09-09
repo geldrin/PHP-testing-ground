@@ -1,7 +1,7 @@
 <?php
 namespace Admin;
 class Localization extends \Springboard\Controller\Admin {
-  public $hidenavigation = true;
+  public $hidenewrecordbutton = true;
   public $permissions    = array(
     'update' => 'admin',
     'modify' => 'admin',
