@@ -17,18 +17,17 @@ if ($argc < 2) {
 }
 
 // General config
-$log_directory = "/var/log/videosquare";
 $myjobid = pathinfo($argv[0])['filename'];
 $debug = true;
 
 // Log: check directory
-if ( !file_exists($log_directory) ) {
-    echo "[ERROR] Log directory . " . $log_directory . " does not exists!\n";
+if ( !file_exists($config['log_directory']) ) {
+    echo "[ERROR] Log directory . " . $config['log_directory'] . " does not exists!\n";
     exit -1;
 }
 
 // Read sequence number
-$sequence_number_file = $log_directory . "/" . $config['server'] . ".seq";
+$sequence_number_file = $config['log_directory'] . "/" . $config['server'] . ".seq";
 if ( !file_exists($sequence_number_file) ) {
     $reportsequencenum = rand(0, 999999);
     if ( $debug ) log_msg("[DEBUG] Previous sequence number not found. Initial sequence number generated: " . $reportsequencenum);
@@ -89,7 +88,7 @@ if ( $debug ) log_msg("[DEBUG] CPU load information: " . print_r($api_report_dat
 
 // Streaming server load (NGINX)
 if ( $config['node_type'] == "nginx" ) {
-    $load = getNGINXLiveStreamingLoad();
+    $load = getNGINXLiveStreamingLoad($api_report_data['network']['ip_address']);
     $api_report_data['load']['clients'] = $load;
 }
 
@@ -97,11 +96,10 @@ if ( $config['node_type'] == "nginx" ) {
 //nginxGetStatus();
 
 // Streaming server load (WOWZA)
-//!!!!!!!!!!!
-/*$load = getWowzaLiveStreamingLoad();
-var_dump($load);
-exit;
-*/
+if ( $config['node_type'] == "wowza" ) {
+    $load = getWowzaLiveStreamingLoad();
+    $api_report_data['load']['clients'] = $load;
+}
 
 // ## CURL: commit data through Videosquare API
 $api_report_data_json = json_encode($api_report_data);
@@ -377,14 +375,14 @@ global $config, $api_report_data, $debug;
     );
 
 	$ch = curl_init();
-
-	curl_setopt($ch, CURLOPT_URL, $config['wowza_status_url']);
+    $wowza_url = sprintf($config['wowza_status_url'], $config['server']);
+	curl_setopt($ch, CURLOPT_URL, $wowza_url);
 	curl_setopt($ch, CURLOPT_PORT, $config['wowza_status_port']);
-	curl_setopt($ch, CURLOPT_VERBOSE, 0); 
+	curl_setopt($ch, CURLOPT_VERBOSE, 0);
 	curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1); 
 	curl_setopt($ch, CURLOPT_USERPWD, $config['wowza_user'] . ":" . $config['wowza_password']);
 	curl_setopt($ch, CURLOPT_HTTPAUTH, CURLAUTH_ANY);
-    if ( stripos($config['wowza_status_url'], "https") !== false ) {
+    if ( stripos($wowza_url, "https") !== false ) {
         curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
         curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 2);
     }
@@ -393,7 +391,7 @@ global $config, $api_report_data, $debug;
 	if( curl_errno($ch) ){ 
 		$err = curl_error($ch);
 		curl_close($ch);
-        log_msg("[ERROR] Wowza server " . $config['wowza_status_url'] . " is not reachable.");
+        log_msg("[ERROR] Wowza server " . $wowza_url . " is not reachable.");
 		return false;
 	}
 
@@ -404,8 +402,6 @@ global $config, $api_report_data, $debug;
         log_msg("[ERROR] HTTP 401. Cannot authenticate to server " . $config['wowza_status_url']);
 		return false;
 	}
-
-//$data = file_get_contents("wowza.xml");
 
 	// Process XML output
     libxml_use_internal_errors(true);
@@ -463,13 +459,13 @@ function getMyFQDN() {
 }
 
 function log_msg($msg) {
- global $config, $log_directory, $myjobid;
+ global $config, $config, $myjobid;
  
     if ( empty($msg) ) return true;
     
     // Log file preparation
     $vsq_sitename = parse_url($config['api_url'])['host'];
-    $log_file = $log_directory. "/" . $vsq_sitename . "-" . date("Y-m") . "-" . $myjobid . ".log";
+    $log_file = $config['log_directory']. "/" . $vsq_sitename . "-" . date("Y-m") . "-" . $myjobid . ".log";
 
     if ( !file_exists($log_file) ) {
         if ( !touch($log_file) ) {
