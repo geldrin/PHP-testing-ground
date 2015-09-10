@@ -1297,7 +1297,13 @@ class Channels extends \Springboard\Model {
     $relatedid = $this->id;
 
     $this->select( $eventid );
-    $this->updateRow( array('relatedchannelid' => $relatedid ) );
+    $row = array('relatedchannelid' => $relatedid );
+
+    // ha a jovoben van az endtimestamp akkor modositjuk azt is
+    if ( strtotime( $this->row['endtimestamp'] ) > time() )
+      $row['endtimestamp'] = date('Y-m-d H:i:s');
+
+    $this->updateRow( $row );
     $this->endTrans();
 
     return $relatedid;
