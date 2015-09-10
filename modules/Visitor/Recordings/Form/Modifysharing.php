@@ -23,6 +23,11 @@ class Modifysharing extends \Visitor\Recordings\ModifyForm {
     else
       unset( $this->values['visibleuntil'] );
 
+    if ( $this->values['featureduntil'] )
+      $this->values['featureduntil'] = substr( $this->values['featureduntil'], 0, 16 );
+    else
+      unset( $this->values['featureduntil'] );
+
   }
   
   public function onComplete() {
