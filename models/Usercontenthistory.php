@@ -15,7 +15,7 @@ class Usercontenthistory extends \Springboard\Model {
 
     $this->startTrans();
     $history     = array(
-      'userid'        => $userid,
+      'userid'        => $user['id'],
       'livefeedid'    => $feedModel->id,
       'numberofviews' => $feedModel->row['numberofviews'],
       'timestamp'     => date('Y-m-d H:i:s'),
