@@ -301,7 +301,13 @@ global $db, $debug, $jconf, $app;
 	$converternodeid = selectConverterNode();
 
 	// Encoding group selection
-	$encodinggroupid = $recording['defaultencodingprofilegroupid'];
+    if ( empty($recording['encodinggroupid']) ) {
+        $encodinggroupid = $recording['defaultencodingprofilegroupid'];
+    } else {
+        $encodinggroupid = $recording['encodinggroupid'];
+    }
+
+    $debug->log($jconf['log_dir'], $jconf['jobid_conv_control'] . ".log", "[INFO] Selected encoding profile group: " . $encodinggroupid, $sendmail = false);
 
 	// Recording
 	$idx = "";
