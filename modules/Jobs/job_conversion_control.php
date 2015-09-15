@@ -201,7 +201,6 @@ global $jconf, $debug, $db, $app;
 	$db = db_maintain();
 
 	$node = $app->config['node_sourceip'];
-    $node = "stream.videosquare.eu";
 
 	$query = "
 		SELECT
@@ -254,7 +253,6 @@ global $jconf, $debug, $db, $app;
 	$db = db_maintain();
 
 	$node = $app->config['node_sourceip'];
-    $node = "stream.videosquare.eu";
 
 	// Get status = "converting" recordings with at least one "onstorage" recording version
 	$query = "
@@ -567,7 +565,6 @@ global $db, $app, $debug, $jconf;
 	if ( $type == "content" ) $idx = "content";
 
     $node = $app->config['node_sourceip'];
-    $node = "stream.videosquare.eu";
       
 	// SMILs to update
 	$query = "

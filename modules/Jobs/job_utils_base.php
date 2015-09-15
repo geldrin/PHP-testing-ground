@@ -1023,12 +1023,12 @@ global $app, $jconf;
 	exec($err['command'], $output, $result);
 	$output_string = implode("\n", $output);
 	if ( $result != 0 ) {
-		$err['message'] = "[WARN] Cannot stat " . $file . " file.\n";
+		$err['message'] = "[WARN] Cannot stat " . $file . " file.";
 		return $err;
 	}
 
 	$err['code'] = true;
-	$err['message'] = "[OK] Chmod/chown " . $file . " file.\n";
+	$err['message'] = "[OK] Chmod/chown " . $file . " file.";
 
 	return $err;
 }
@@ -1052,12 +1052,12 @@ global $app, $jconf;
 	exec($command, $output, $result);
 	$output_string = implode("\n", $output);
 	if ( $result != 0 ) {
-		$err['message'] = "[WARN] SCP cannot stat " . $app->config['ssh_user'] . "@" . $server . ":" . $file . " file.\n";
+		$err['message'] = "[WARN] SCP cannot stat " . $app->config['ssh_user'] . "@" . $server . ":" . $file . " file.";
 		return $err;
 	}
 
 	$err['code'] = true;
-	$err['message'] = "[OK] SCP stat " . $app->config['ssh_user'] . "@" . $server . ":" . $file . " file.\n";
+	$err['message'] = "[OK] SCP stat " . $app->config['ssh_user'] . "@" . $server . ":" . $file . " file.";
 
 	return $err;
 }
