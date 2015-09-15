@@ -1007,6 +1007,32 @@ global $app, $jconf;
 	return $err;
 }
 
+// chmod/chown local files
+function MakeChmodChown($file) {
+global $app, $jconf;
+
+	$err = array();
+	$err['code'] = false;
+	$err['value'] = 0;
+    $err['command'] = "";
+
+	$permissions = $jconf['file_access'];
+    if ( is_dir($file) ) $permissions = $jconf['directory_access'];
+
+    $err['command'] = "chmod -f -R " . $permissions . " " . $file . " 2>&1 ; chown -f -R " . $jconf['file_owner'] . " " . $file . " 2>&1";
+	exec($err['command'], $output, $result);
+	$output_string = implode("\n", $output);
+	if ( $result != 0 ) {
+		$err['message'] = "[WARN] Cannot stat " . $file . " file.\n";
+		return $err;
+	}
+
+	$err['code'] = true;
+	$err['message'] = "[OK] Chmod/chown " . $file . " file.\n";
+
+	return $err;
+}
+
 // SSH: chmod/chown remote files
 function sshMakeChmodChown($server, $file, $isdirectory) {
 global $app, $jconf;
