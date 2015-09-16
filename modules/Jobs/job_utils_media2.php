@@ -236,13 +236,15 @@ global $app, $debug, $jconf;
 
 	$audio_filter = null;
 	$video_filter = null;
-
+	
+	$filter_resize = (array_key_exists('ffmpeg_resize_filter', $app->config) && $app->config['ffmpeg_resize_filter'] === true) ? (true) : (false); 
+	
 	$gop_length = null;
 	if (array_key_exists('goplength', $main)) {
 		$debug->log($jconf['log_dir'], $jconf['jobid_media_convert'] .'.log', "goplength main = ". (is_null($main['goplength']) ? "NULL" : print_r($main['goplength'], true)) ."", false);
 		if (!is_null($overlay) && array_key_exists('goplength', $overlay)) {
 			$gop_length = min($main['goplength'], $overlay['goplength']);
-			$debug->log($jconf['log_dir'], $jconf['jobid_media_convert'] .'.log', "goplength = ". print_r($overlay['goplength'], true) ." - min = ". $gop_length ."\n", false);
+			$debug->log($jconf['log_dir'], $jconf['jobid_media_convert'] .'.log', "goplength overlay = ". print_r($overlay['goplength'], true) ." - min = ". $gop_length ."\n", false);
 		} else {
 			$gop_length = $main['goplength'];
 		}
@@ -274,14 +276,15 @@ global $app, $debug, $jconf;
 			// H.264 profile
 			$ffmpeg_profile = " -profile:v " . $profile['ffmpegh264profile'] ." -pix_fmt yuv420p";
 			$ffmpeg_preset  = " -preset:v ". $profile['ffmpegh264preset'];
-			$ffmpeg_resize  = "";
+			$ffmpeg_resize  = null;
+			$ffmpeg_deint   = null;
+			$ffmpeg_aspect  = null;
 			
-			if (array_key_exists('ffmpeg_resize_filter', $app->config) && $app->config['ffmpeg_resize_filter'] === true) {
+			if ($filter_resize) {
 				$video_filter .= "[0:v] ". ($main['deinterlace'] ? "yadif, " : "");
 				$video_filter .= "scale=w=". $main['resx'] .":h=". $main['resy'] .":force_original_aspect_ratio=decrease:sws_flags=bicubic";
 			} else {
 					$ffmpeg_resize = " -s ". $main['resx'] ."x". $main['resy'];
-					$ffmpeg_aspect = null;
 					if ( !empty($main['DAR']) ) $ffmpeg_aspect = " -aspect " . $main['DAR'];
 					$ffmpeg_deint  = ($main['deinterlace'] === true) ? " -deinterlace " : null;
 			}
@@ -472,7 +475,7 @@ global $app, $debug, $jconf;
 		unset($msg);
 	}
 	////////////////////////////////////////////////////////////////////// END OF ENCODING PROCESS //
-	// DURATION CHECK ///////////////////////////////////////////////////////////////////////////////
+	// METADATA CHECK ///////////////////////////////////////////////////////////////////////////////
 	try {
 		$r = $app->bootstrap->getModel('recordings');
 		$r->analyze($rec['output_file']);
@@ -487,19 +490,38 @@ global $app, $debug, $jconf;
 
 			$err['message'] = "[ERROR] FFmpeg conversion failed: conversion stopped unexpectedly!\n.";
 
-			unset($r, $msg);
+			unset($msg);
 			return $err;
 		}
-		$msg = "[INFO] Duration check finished on ". $rec['output_file'] ."\n";
+		
+		if ($profile['mediatype'] != "audio" && $filter_resize === true) {
+			$tmp = explode("x", $r->metadata['mastervideores'], 2);
+			$debug->log($jconf['log_dir'], $jconf['jobid_media_convert'] .'.log',
+				
+			if (!empty($tmp) && (abs($tmp[0] - $main['resx']) > 0 || abs($tmp[1] - $main['resy']) > 0)) {
+				$msg = "[INFO] Updating framesize on recording_version #". $rec['recordingversionid'] ." | resolution => ". $r->metadata['mastervideores'];
+				$debug->log($jconf['log_dir'], $jconf['jobid_media_convert'] .'.log', $msg, $sendmail = false);
+				
+				$values = array('resolution' => ($r->metadata['mastervideores']));
+				$recVersion = $app->bootstrap->getModel('recordings_versions');
+				$recVersion->select($rec['recordingversionid']);
+				$recVersion->updateRow($values);
+				
+				unset($msg, $values, $recVersion);
+			}
+			unset($tmp);
+		}
+		
+		$msg = "[INFO] Metadata check finished on ". $rec['output_file'] ."\n";
 		$debug->log($jconf['log_dir'], $jconf['jobid_media_convert'] .'.log', $msg, $sendmail = false);
 
-		unset($msg);
+		unset($msg, $r);
 	} catch (Exception $e) {
-		$msg = "[WARN] Mediainfo check failed after conversion.\nError message: ". $e->getMessage() ."\n";
+		$msg = "[WARN] Metadata check failed after conversion.\nError message: ". $e->getMessage() ."\n";
 
 		$debug->log($jconf['log_dir'], $jconf['jobid_media_convert'] .'.log', $msg, $sendmail = false);
 		unset($msg);
-	} ////////////////////////////////////////////////////////////////////// END OF DURATION CHECK //
+	} ////////////////////////////////////////////////////////////////////// END OF METADATA CHECK //
 
 	$full_duration  = round((time() - $start_time) / 60, 2);
 	$msg = "[OK] FFmpeg ". (
