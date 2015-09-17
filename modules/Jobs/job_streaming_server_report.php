@@ -3,6 +3,8 @@
 // Videosquare streaming server status report script
 // * Required packages (Debian): ifstat ethtool php5-cli php5-curl
 
+$myversion = "2015-09-17";
+
 set_time_limit(0);
 date_default_timezone_set("Europe/Budapest");
 
@@ -25,6 +27,8 @@ if ( !file_exists($config['log_directory']) ) {
     echo "[ERROR] Log directory . " . $config['log_directory'] . " does not exists!\n";
     exit -1;
 }
+
+if ( $debug ) log_msg("[DEBUG] Streaming server reporting script started. Version: " . $myversion);
 
 // Read sequence number
 $sequence_number_file = $config['log_directory'] . "/" . $config['server'] . ".seq";
@@ -111,11 +115,6 @@ if ( $debug ) {
     log_msg("[DEBUG] Data hash: " . $api_report_data_json_hash);
 }
 
-/*var_dump($api_report_data);
-echo $api_report_data_json . "\n";
-echo $api_report_data_json_hash . "\n";
-*/
-
 // Curl connection
 $ch = curl_init();
 $url  = $config['api_url'] . "?layer=controller&module=streamingservers&method=updatestatus";
@@ -154,12 +153,27 @@ if ( $header['http_code'] >= 400 ) {
 
 curl_close($ch);
 
+// Log API return value
+if ( $debug ) log_msg("[INFO] API returned value: " . $result);
+
+// Check return value
+$flag_save_sequence_number = true;
+$result_array = json_decode($result, true);
+if ( $result_array['result'] != "OK" ) {
+    log_msg("[ERROR] API reported an error: " . $result_array['result'] . " / Message: '" . $result_array['data'] . "'");
+    $flag_save_sequence_number = false;
+}
+
 // Report sequence number: write to file
-$err = file_put_contents($sequence_number_file, $reportsequencenum);
-if ( $err === false ) {
-    log_msg("[ERROR] Cannot write updated report session ID to file: " . $sequence_number_file);
+if ( $flag_save_sequence_number ) {
+    $err = file_put_contents($sequence_number_file, $reportsequencenum);
+    if ( $err === false ) {
+        log_msg("[ERROR] Cannot write updated sequence number to file: " . $sequence_number_file);
+    } else {
+        if ( $debug ) log_msg("[DEBUG] Report sequence number (" . $reportsequencenum . ") written to file: " . $sequence_number_file);
+    }
 } else {
-    if ( $debug ) log_msg("[DEBUG] Report sequence number (" . $reportsequencenum . ") written to file: " . $sequence_number_file);
+    if ( $debug ) log_msg("[INFO] Sequence number not written to file due to an error.");
 }
 
 exit;
