@@ -479,7 +479,7 @@ function log_msg($msg) {
     
     // Log file preparation
     $vsq_sitename = parse_url($config['api_url'])['host'];
-    $log_file = $config['log_directory']. "/" . $vsq_sitename . "-" . date("Y-m") . "-" . $myjobid . ".log";
+    $log_file = $config['log_directory']. "/" . date("Y-m") . "-" . $myjobid . "-" . $vsq_sitename . ".log";
 
     if ( !file_exists($log_file) ) {
         if ( !touch($log_file) ) {
