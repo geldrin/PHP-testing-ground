@@ -496,8 +496,7 @@ global $app, $debug, $jconf;
 		
 		if ($profile['mediatype'] != "audio" && $filter_resize === true) {
 			$tmp = explode("x", $r->metadata['mastervideores'], 2);
-			$debug->log($jconf['log_dir'], $jconf['jobid_media_convert'] .'.log',
-				
+
 			if (!empty($tmp) && (abs($tmp[0] - $main['resx']) > 0 || abs($tmp[1] - $main['resy']) > 0)) {
 				$msg = "[INFO] Updating framesize on recording_version #". $rec['recordingversionid'] ." | resolution => ". $r->metadata['mastervideores'];
 				$debug->log($jconf['log_dir'], $jconf['jobid_media_convert'] .'.log', $msg, $sendmail = false);
