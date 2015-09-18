@@ -20,7 +20,11 @@ if ($argc < 2) {
 
 // General config
 $myjobid = pathinfo($argv[0])['filename'];
-$debug = true;
+if ( isset($config['debug']) ) {
+    $debug = $config['debug'];
+} else {
+    $debug = false;
+}
 
 // Log: check directory
 if ( !file_exists($config['log_directory']) ) {

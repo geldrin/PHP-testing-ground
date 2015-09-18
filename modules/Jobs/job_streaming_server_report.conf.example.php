@@ -45,8 +45,9 @@ $config = array(
     ),
 
     // Other
-    'api_url'               => "https://vsqdev.streamnet.hu/hu/api",    // Videosquare API URL
-    'log_directory'         => "/var/www/dev.videosquare.eu/data/logs/jobs",                  // Log directory
+    'api_url'               => "https://vsqdev.streamnet.hu/hu/api",            // Videosquare API URL
+    'log_directory'         => "/var/www/dev.videosquare.eu/data/logs/jobs",    // Log directory
+    'debug'                 => false,
     
 );
 
