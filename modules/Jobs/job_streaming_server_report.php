@@ -137,11 +137,14 @@ if ( $debug ) log_msg("[DEBUG] Calling API at: " . $url);
 
 $result = curl_exec($ch);
 
+$flag_http_error = false;
+
 // Handle connection error
 if( curl_errno($ch) ){ 
     $err = curl_error($ch);
     curl_close($ch);
     log_msg("[ERROR] Server API " . $config['api_url'] . " is not reachable.");
+    exit;
 }
 
 // Check HTTP error code
@@ -149,6 +152,7 @@ $header = curl_getinfo($ch);
 if ( $header['http_code'] >= 400 ) {
     log_msg("[ERROR] Server error. HTTP error code: " . $header['http_code']);
     curl_close($ch);
+    exit;
 }
 
 curl_close($ch);
