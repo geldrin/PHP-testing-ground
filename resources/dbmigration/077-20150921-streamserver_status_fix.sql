@@ -1,0 +1,1 @@
+ALTER TABLE  `cdn_streaming_servers` CHANGE  `load_cpu_min5`  `load_cpu_min5` DECIMAL( 8, 4 ) NOT NULL DEFAULT  '0';
