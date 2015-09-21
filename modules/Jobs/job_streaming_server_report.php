@@ -58,6 +58,9 @@ $api_report_data['date'] = date("Y-m-d H:i:s");
 $api_report_data['reportsequencenum'] = $reportsequencenum;
 $api_report_data['features'] = $config['features'];
 
+// ## CPU cores
+$my_cpu_cores = getMyProcessingCores();
+
 // ## Network
 
 // Host name
@@ -89,10 +92,10 @@ $api_report_data['load']['cpu']['current'] = trim(`top -b -n 1 | grep "Cpu(s)" |
 // Load average
 $load = trim(`cat /proc/loadavg | awk '{print $1 "#" $2 "#" $3}'`);
 $tmp = explode("#", $load, 3);
-$api_report_data['load']['cpu']['min'] = $tmp[0];
-$api_report_data['load']['cpu']['min5'] = $tmp[1];
-$api_report_data['load']['cpu']['min15'] = $tmp[2];
-if ( $debug ) log_msg("[DEBUG] CPU load information: " . print_r($api_report_data['load']['cpu'], true));
+$api_report_data['load']['cpu']['min'] = $tmp[0] / $my_cpu_cores;
+$api_report_data['load']['cpu']['min5'] = $tmp[1] / $my_cpu_cores;
+$api_report_data['load']['cpu']['min15'] = $tmp[2] / $my_cpu_cores;
+if ( $debug ) log_msg("[DEBUG] Normalized CPU load information: " . print_r($api_report_data['load']['cpu'], true));
 
 // Streaming server load (NGINX)
 if ( $config['node_type'] == "nginx" ) {
@@ -479,6 +482,19 @@ function getMyFQDN() {
     
     return $output[0];
 }
+
+function getMyProcessingCores() {
+
+    $command = "nproc";
+    exec($command, $output, $result);
+    
+    if ( $result != 0 ) {
+        return false;
+    }
+    
+    return $output[0];
+}
+
 
 function log_msg($msg) {
  global $config, $config, $myjobid;
