@@ -7,6 +7,7 @@ $config = array(
     // Capacity
     'max_streaming_load'    => 1000,     // Max number of clients
     'max_network_load'      => 1000,     // Max permitted network load
+    //'interface_speed'       => 100,      // For interfaces with no speed
     // Node
 //    'node_type'             => "nginx",
 //    'nginx_status_url'      => "http://localhost/nginx_status",

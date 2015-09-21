@@ -3,7 +3,7 @@
 // Videosquare streaming server status report script
 // * Required packages (Debian): ifstat ethtool php5-cli php5-curl
 
-$myversion = "2015-09-17";
+$myversion = "2015-09-20 11:38:00";
 
 set_time_limit(0);
 date_default_timezone_set("Europe/Budapest");
@@ -60,6 +60,7 @@ $api_report_data['features'] = $config['features'];
 
 // ## CPU cores
 $my_cpu_cores = getMyProcessingCores();
+if ( $debug ) log_msg("[DEBUG] Number of CPU cores found: " . $my_cpu_cores);
 
 // ## Network
 
@@ -199,7 +200,11 @@ function getNetworkInterfaces($withV6 = false) {
         if ( !preg_match("/^lo/", $interface) ) {
             preg_match_all('/inet'.($withV6 ? '6?' : '').' addr: ?([^ ]+)/', `/sbin/ifconfig "$interface"`, $ips);
             $interfaces[$interface]['ip_addresses'] = $ips[1];
-            $interfaces[$interface]['traffic'] = getNetworkInterfaceTraffic($interface);
+            
+            // Traffic
+            $interfaces[$interface]['traffic'] = getNetworkInterfaceTraffic($interface);    
+            
+            // Interface speed
             $interfaces[$interface]['speed_mbps'] = getNetworkInterfaceSpeed($interface);
         }
     }    
@@ -208,14 +213,22 @@ function getNetworkInterfaces($withV6 = false) {
 }
 
 function getNetworkInterfaceInfo($interface, $withV6 = false) {
+global $config;
 
     if ( empty($interface) ) return false;
     
     $info = array();
     
+    // IP address
     preg_match_all('/inet'.($withV6 ? '6?' : '').' addr: ?([^ ]+)/', `/sbin/ifconfig "$interface"`, $ips);
     $info['ip_address'] = $ips[1][0];
+    
+    // Speed
     $info['interface_speed'] = getNetworkInterfaceSpeed($interface);
+    $info['interface_speed'] = false;
+    if ( !is_numeric($info['interface_speed']) ) $info['interface_speed'] = $config['interface_speed'];
+
+    // Traffic
     $traffic = getNetworkInterfaceTraffic($interface);
     $info['traffic_in'] = $traffic['traffic_in'];
     $info['traffic_out'] = $traffic['traffic_out'];
