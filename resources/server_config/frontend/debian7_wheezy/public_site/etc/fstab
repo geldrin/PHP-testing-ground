@@ -5,17 +5,21 @@
 # that works even if disks are added and removed. See fstab(5).
 #
 # <file system> <mount point>   <type>  <options>       <dump>  <pass>
-proc            /proc           proc    defaults        0       0
 # / was on /dev/sda1 during installation
-UUID=e3d0a094-bdbf-47d8-8875-2d3f3e26c170 		/				ext3			errors=remount-ro	0	1
+UUID=f7d3252f-5ac6-42e2-ae8a-0a93ea5acbac /               ext4    errors=remount-ro 0       1
 # swap was on /dev/sda5 during installation
-#UUID=5e3447c3-01ed-4cff-a1b4-1e6b5d3aa401		none			swap			sw					0	0
-#UUID=c3b14bf4-caa5-47f9-95b4-31ec76eed9fb		none			swap			sw					0	0
-/dev/scd0										/media/cdrom0	udf,iso9660		user,noauto			0	0
-/dev/fd0        /media/floppy0  auto    rw,user,noauto      0       0
+UUID=17d54e73-c4d2-4c31-8f18-8aeee4c08201 none            swap    sw              0       0
+/dev/sr0        /media/cdrom0   udf,iso9660 user,noauto     0       0
+#/dev/fd0        /media/floppy0  auto    rw,user,noauto  0       0
 
-# Videosquare storage
-UUID=f3234931-0c04-4617-8772-a00b699a4886		/srv/vsq			xfs				defaults			1	2
+## Videosquare
+# dev.videosquare.eu
+UUID=df14043f-d72a-4309-a3a9-f94dc2b65acd		/srv/vsqdev		xfs			defaults,noatime,nodiratime		1       2
 
-# Videosquare upload area (200GB)
-UUID=dad14ca0-c036-4333-aad7-bfadad05d647		/srv/upload			xfs				defaults			1	2
+# Upload
+UUID=dad14ca0-c036-4333-aad7-bfadad05d647		/srv/upload		xfs			defaults,noatime,nodiratime		1       2
+
+# Storage
+UUID=f3234931-0c04-4617-8772-a00b699a4886		/srv/vsq		xfs			defaults,noatime,nodiratime		1       2
+
+
