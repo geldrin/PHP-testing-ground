@@ -267,7 +267,7 @@
 			<!-- WOWZASTATS module -->
 			<Property>
 				<Name>WowzaStatsMySQLURL</Name>
-				<Value>jdbc:mysql://91.120.59.230/videosquare?user=vsq_stats&amp;password=Ne2uEEABGNNUxW6h</Value>
+				<Value>jdbc:mysql://91.120.59.230/videosquare?user=vsq_stats&amp;password=c6gfRtk7Bnv64fBe</Value>
 			</Property>
 			<Property>
 				<Name>WowzaStatsMySQLStatsTable</Name>

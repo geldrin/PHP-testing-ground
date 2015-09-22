@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Root version="2">
 	<Server>
-		<Name>Videosquare streaming server</Name>
+		<Name>Videosquare Streaming Server</Name>
 		<Description>Videosquare is a feature-rich, cloud based, enterprise YouTube solution. Videosquare helps to capture, deliver and manage any business related message, presentation or video.</Description>
 		<RESTInterface>
 			<Enable>true</Enable>

@@ -29,7 +29,7 @@
 		-->
 		<Streams>
 			<StreamType>live</StreamType>
-			<StorageDir>/srv/vsq/dev.videosquare.eu/livestreams</StorageDir>
+			<StorageDir>/srv/vsqdev/dev.videosquare.eu/livestreams</StorageDir>
 			<KeyDir>${com.wowza.wms.context.VHostConfigHome}/keys</KeyDir>
 			<!-- LiveStreamPacketizers (separate with commas): cupertinostreamingpacketizer, smoothstreamingpacketizer, sanjosestreamingpacketizer, mpegdashstreamingpacketizer, cupertinostreamingrepeater, smoothstreamingrepeater, sanjosestreamingrepeater, mpegdashstreamingrepeater, dvrstreamingpacketizer, dvrstreamingrepeater -->
 			<LiveStreamPacketizers>cupertinostreamingpacketizer, sanjosestreamingpacketizer</LiveStreamPacketizers>
@@ -106,7 +106,7 @@
 		<RTP>
 			<!-- RTP/Authentication/[type]Methods defined in Authentication.xml. Default setup includes; none, basic, digest -->
 			<Authentication>
-				<PublishMethod>digest</PublishMethod>
+				<PublishMethod>none</PublishMethod>
 				<PlayMethod>none</PlayMethod>
 			</Authentication>
 			<!-- RTP/AVSyncMethod. Valid values are: senderreport, systemclock, rtptimecode -->
@@ -303,21 +303,25 @@
 				<Description>WowzaStats</Description>
 				<Class>hu.videosquare.wowza.module.WowzaStats</Class>
 			</Module>
+			<Module>
+				<Name>ModuleSecureURLParams</Name>
+				<Description>ModuleSecureURLParams</Description>
+				<Class>com.wowza.wms.security.ModuleSecureURLParams</Class>
+			</Module>
 		</Modules>
 		<!-- Properties defined here will be added to the IApplication.getProperties() and IApplicationInstance.getProperties() collections -->
 		<Properties>
-			<Property>
-				<Name>securityPublishRequirePassword</Name>
-				<Value>true</Value>
-				<Type>Boolean</Type>
-			</Property>
 			<Property>
 				<Name>securityPublishBlockDuplicateStreamNames</Name>
 				<Value>true</Value>
 				<Type>Boolean</Type>
 			</Property>
+			<Property>
+				<Name>secureurlparams.publish</Name>
+				<Value>12345hello.doPublish</Value>
+			</Property>
 			<!-- CONNECT HANDLER CONFIG -->
-<!--			<Property>
+			<!--			<Property>
 				<Name>URLPlayHandler</Name>
 				<Value>http://dev.videosquare.eu/hu/live/checkstreamaccess</Value>
 			</Property> -->
@@ -336,7 +340,7 @@
 			<!-- WOWZASTATS -->
 			<Property>
 				<Name>WowzaStatsMySQLURL</Name>
-				<Value>jdbc:mysql://91.120.59.230/teleconnectdev?user=vsq_stats&amp;password=Ne2uEEABGNNUxW6h</Value>
+				<Value>jdbc:mysql://91.120.59.230/devvideosquare?user=vsq_stats&amp;password=c6gfRtk7Bnv64fBe</Value>
 			</Property>
 			<Property>
 				<Name>WowzaStatsMySQLStatsTable</Name>

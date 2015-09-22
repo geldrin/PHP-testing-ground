@@ -29,7 +29,7 @@
 		-->
 		<Streams>
 			<StreamType>default</StreamType>
-			<StorageDir>/srv/vsq/dev.videosquare.eu/recordings</StorageDir>
+			<StorageDir>/srv/vsqdev/dev.videosquare.eu/recordings</StorageDir>
 			<KeyDir>${com.wowza.wms.context.VHostConfigHome}/keys</KeyDir>
 			<!-- LiveStreamPacketizers (separate with commas): cupertinostreamingpacketizer, smoothstreamingpacketizer, sanjosestreamingpacketizer, mpegdashstreamingpacketizer, cupertinostreamingrepeater, smoothstreamingrepeater, sanjosestreamingrepeater, mpegdashstreamingrepeater, dvrstreamingpacketizer, dvrstreamingrepeater -->
 			<LiveStreamPacketizers></LiveStreamPacketizers>
@@ -75,7 +75,7 @@
 			</Properties>
 		</TimedText>
 		<!-- HTTPStreamers (separate with commas): cupertinostreaming, smoothstreaming, sanjosestreaming, mpegdashstreaming, dvrchunkstreaming -->
-		<HTTPStreamers>cupertinostreaming, sanjosestreaming</HTTPStreamers>
+		<HTTPStreamers>cupertinostreaming, sanjosestreaming, mpegdashstreaming</HTTPStreamers>
 		<MediaCache>
 			<MediaCacheSourceList></MediaCacheSourceList>
 		</MediaCache>
@@ -248,7 +248,7 @@
 		<!-- Properties defined here will be added to the IApplication.getProperties() and IApplicationInstance.getProperties() collections -->
 		<Properties>
 			<!-- CONNECT HANDLER CONFIG -->
-<!--			<Property>
+			<!--			<Property>
 				<Name>URLPlayHandler</Name>
 				<Value>http://dev.videosquare.eu/hu/recordings/checkstreamaccess</Value>
 			</Property> -->
@@ -267,7 +267,7 @@
 			<!-- WOWZASTATS -->
 			<Property>
 				<Name>WowzaStatsMySQLURL</Name>
-				<Value>jdbc:mysql://91.120.59.230/teleconnectdev?user=vsq_stats&amp;password=Ne2uEEABGNNUxW6h</Value>
+				<Value>jdbc:mysql://91.120.59.230/devvideosquare?user=vsq_stats&amp;password=c6gfRtk7Bnv64fBe</Value>
 			</Property>
 			<Property>
 				<Name>WowzaStatsMySQLStatsTable</Name>

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Root version="2">
 	<VHost>
-		<Description>Videosquare virtual host</Description>
+		<Description></Description>
 		<HostPortList>
 			<HostPort>
 				<Name>Default Admin</Name>
@@ -117,6 +117,60 @@
 				</HTTPProviders>
 			</HostPort>
 			<HostPort>
+				<Name>RTSP</Name>
+				<Port>554</Port>
+				<IpAddress>91.120.59.230</IpAddress>
+				<Type>Streaming</Type>
+				<ProcessorCount>${com.wowza.wms.TuningAuto}</ProcessorCount>
+				<HTTPIdent2Response></HTTPIdent2Response>
+				<SocketConfiguration>
+					<ReuseAddress>true</ReuseAddress>
+					<!-- suggested settings for video on demand applications -->
+					<ReceiveBufferSize>65000</ReceiveBufferSize>
+					<ReadBufferSize>65000</ReadBufferSize>
+					<SendBufferSize>65000</SendBufferSize>
+					<!-- suggest settings for low latency chat and video recording applications
+				<ReceiveBufferSize>32000</ReceiveBufferSize>
+				<ReadBufferSize>32000</ReadBufferSize>
+				<SendBufferSize>32000</SendBufferSize>
+				-->
+					<KeepAlive>true</KeepAlive>
+					<!-- <TrafficClass>0</TrafficClass> -->
+					<!-- <OobInline>false</OobInline> -->
+					<!-- <SoLingerTime>-1</SoLingerTime> -->
+					<!-- <TcpNoDelay>false</TcpNoDelay> -->
+					<AcceptorBackLog>100</AcceptorBackLog>
+				</SocketConfiguration>
+				<HTTPStreamerAdapterIDs>cupertinostreaming,smoothstreaming,sanjosestreaming,dvrchunkstreaming,mpegdashstreaming</HTTPStreamerAdapterIDs>
+				<HTTPProviders>
+					<HTTPProvider>
+						<BaseClass>com.wowza.wms.http.HTTPCrossdomain</BaseClass>
+						<RequestFilters>*crossdomain.xml</RequestFilters>
+						<AuthenticationMethod>none</AuthenticationMethod>
+					</HTTPProvider>
+					<HTTPProvider>
+						<BaseClass>com.wowza.wms.http.HTTPClientAccessPolicy</BaseClass>
+						<RequestFilters>*clientaccesspolicy.xml</RequestFilters>
+						<AuthenticationMethod>none</AuthenticationMethod>
+					</HTTPProvider>
+					<HTTPProvider>
+						<BaseClass>com.wowza.wms.http.HTTPProviderMediaList</BaseClass>
+						<RequestFilters>*jwplayer.rss|*jwplayer.smil|*medialist.smil|*manifest-rtmp.f4m</RequestFilters>
+						<AuthenticationMethod>none</AuthenticationMethod>
+					</HTTPProvider>
+					<HTTPProvider>
+						<BaseClass>com.wowza.wms.timedtext.http.HTTPProviderCaptionFile</BaseClass>
+						<RequestFilters>*.ttml|*.srt|*.scc|*.vtt</RequestFilters>
+						<AuthenticationMethod>none</AuthenticationMethod>
+					</HTTPProvider>
+					<HTTPProvider>
+						<BaseClass>com.wowza.wms.http.HTTPServerVersion</BaseClass>
+						<RequestFilters>*</RequestFilters>
+						<AuthenticationMethod>none</AuthenticationMethod>
+					</HTTPProvider>
+				</HTTPProviders>
+			</HostPort>
+			<HostPort>
 				<Name>HTTPS</Name>
 				<Port>443</Port>
 				<IpAddress>stream.videosquare.eu</IpAddress>
@@ -173,60 +227,6 @@
 					<KeyStorePath>${com.wowza.wms.context.VHostConfigHome}/keys/stream.videosquare.eu.jks</KeyStorePath>
 					<KeyStorePassword>kiskakukk123</KeyStorePassword>
 				</SSLConfig>
-			</HostPort>
-			<HostPort>
-				<Name>RTSP</Name>
-				<Port>554</Port>
-				<IpAddress>91.120.59.230</IpAddress>
-				<Type>Streaming</Type>
-				<ProcessorCount>${com.wowza.wms.TuningAuto}</ProcessorCount>
-				<HTTPIdent2Response></HTTPIdent2Response>
-				<SocketConfiguration>
-					<ReuseAddress>true</ReuseAddress>
-					<!-- suggested settings for video on demand applications -->
-					<ReceiveBufferSize>65000</ReceiveBufferSize>
-					<ReadBufferSize>65000</ReadBufferSize>
-					<SendBufferSize>65000</SendBufferSize>
-					<!-- suggest settings for low latency chat and video recording applications
-				<ReceiveBufferSize>32000</ReceiveBufferSize>
-				<ReadBufferSize>32000</ReadBufferSize>
-				<SendBufferSize>32000</SendBufferSize>
-				-->
-					<KeepAlive>true</KeepAlive>
-					<!-- <TrafficClass>0</TrafficClass> -->
-					<!-- <OobInline>false</OobInline> -->
-					<!-- <SoLingerTime>-1</SoLingerTime> -->
-					<!-- <TcpNoDelay>false</TcpNoDelay> -->
-					<AcceptorBackLog>100</AcceptorBackLog>
-				</SocketConfiguration>
-				<HTTPStreamerAdapterIDs>cupertinostreaming,smoothstreaming,sanjosestreaming,dvrchunkstreaming,mpegdashstreaming</HTTPStreamerAdapterIDs>
-				<HTTPProviders>
-					<HTTPProvider>
-						<BaseClass>com.wowza.wms.http.HTTPCrossdomain</BaseClass>
-						<RequestFilters>*crossdomain.xml</RequestFilters>
-						<AuthenticationMethod>none</AuthenticationMethod>
-					</HTTPProvider>
-					<HTTPProvider>
-						<BaseClass>com.wowza.wms.http.HTTPClientAccessPolicy</BaseClass>
-						<RequestFilters>*clientaccesspolicy.xml</RequestFilters>
-						<AuthenticationMethod>none</AuthenticationMethod>
-					</HTTPProvider>
-					<HTTPProvider>
-						<BaseClass>com.wowza.wms.http.HTTPProviderMediaList</BaseClass>
-						<RequestFilters>*jwplayer.rss|*jwplayer.smil|*medialist.smil|*manifest-rtmp.f4m</RequestFilters>
-						<AuthenticationMethod>none</AuthenticationMethod>
-					</HTTPProvider>
-					<HTTPProvider>
-						<BaseClass>com.wowza.wms.timedtext.http.HTTPProviderCaptionFile</BaseClass>
-						<RequestFilters>*.ttml|*.srt|*.scc|*.vtt</RequestFilters>
-						<AuthenticationMethod>none</AuthenticationMethod>
-					</HTTPProvider>
-					<HTTPProvider>
-						<BaseClass>com.wowza.wms.http.HTTPServerVersion</BaseClass>
-						<RequestFilters>*</RequestFilters>
-						<AuthenticationMethod>none</AuthenticationMethod>
-					</HTTPProvider>
-				</HTTPProviders>
 			</HostPort>
 		</HostPortList>
 		<HTTPStreamerAdapters>
