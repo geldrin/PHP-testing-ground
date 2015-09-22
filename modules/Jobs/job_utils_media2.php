@@ -72,10 +72,11 @@ global $app, $debug, $jconf;
 			if ( $rec[$idx . 'mastervideofps'] > $profile['videomaxfps'] ) {
 				$encpars['videofps'] = $profile['videomaxfps'];
 				// Falling back to closest rate 50 or 60
-				if ( ( round($rec[$idx . 'mastervideofps']) % 50 ) == 0 ) $encpars['videofps'] = 50;
-				if ( ( round($rec[$idx . 'mastervideofps']) % 60 ) == 0 ) $encpars['videofps'] = 60;
+				if ((round($rec[$idx .'mastervideofps']) % 50) == 0) $encpars['videofps'] = 50;
+				if ((round($rec[$idx .'mastervideofps']) % 60) == 0) $encpars['videofps'] = 60;
 			}
 		}
+		if ($encpars['videofps'] > $profile['videomaxfps']);
 
 		// Max resolution check (fraud check)
 		$videores = explode('x', strtolower($rec[$idx .'mastervideores']), 2);
@@ -363,7 +364,7 @@ global $app, $debug, $jconf;
 		$ffmpeg_input .= " -i ". $rec['contentmaster_filename'] ." -i ". $rec['master_filename'];
 		
 		$video_filter .= "[1:v]". ($main['deinterlace'] ? " yadif," : null) ." scale=w=". $main['resx'] .":h=". $main['resy'] .":sws_flags=bicubic [main];";
-		$video_filter .= " [2:v] ". ($overlay['deinterlace'] ? " yadif," : null) ." scale=w=". $pip['pip_res_x'] .":h=". $pip['pip_res_y'] .":sws_flags=bicubic [pip];";
+		$video_filter .= " [2:v]". ($overlay['deinterlace'] ? " yadif," : null) ." scale=w=". $pip['pip_res_x'] .":h=". $pip['pip_res_y'] .":sws_flags=bicubic [pip];";
 		$video_filter .= " [0:v][main] overlay=repeatlast=0 [bg];";
 		$video_filter .= " [bg][pip] overlay=x=". $pip['pip_x'] .":y=". $pip['pip_y'] .":repeatlast=0";
 		
