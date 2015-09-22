@@ -242,16 +242,19 @@ global $app, $debug, $jconf;
 	
 	$gop_length = null;
 	if (array_key_exists('goplength', $main)) {
-		$debug->log($jconf['log_dir'], $jconf['jobid_media_convert'] .'.log', "goplength main = ". (is_null($main['goplength']) ? "NULL" : print_r($main['goplength'], true)) ."", false);
+		$msg = "goplength main = ". (is_null($main['goplength']) ? "NULL" : print_r($main['goplength'], true));
+		$debug->log($jconf['log_dir'], $jconf['jobid_media_convert'] .'.log', $msg, false);
 		if (!is_null($overlay) && array_key_exists('goplength', $overlay)) {
 			$gop_length = min($main['goplength'], $overlay['goplength']);
-			$debug->log($jconf['log_dir'], $jconf['jobid_media_convert'] .'.log', "goplength overlay = ". print_r($overlay['goplength'], true) ." - min = ". $gop_length ."\n", false);
+			$msg  = "goplength overlay = ". (is_null($overlay['goplength']) ? "NULL" : print_r($overlay['goplength'], true));
+			$msg .= " - min = ". (is_null($gop_length) ? "NULL" : $gop_length) ."\n";
+			$debug->log($jconf['log_dir'], $jconf['jobid_media_convert'] .'.log', $msg, false);
 		} else {
 			$gop_length = $main['goplength'];
 		}
+		unset($msg);
 	}
 	if (!is_null($gop_length)) $ffmpeg_gop = " -g ". $gop_length ." -keyint_min ". $gop_length ." -sc_threshold 0";
-	unset($gop_length);
 
 	if ($profile['type'] == 'recording' || $profile['type'] == 'content' || ($profile['type'] == 'pip' && $overlay === null)) {
 	// SINGLE MEDIA //
@@ -393,11 +396,13 @@ global $app, $debug, $jconf;
 		
 	} elseif($profile['videopasses'] == 2) {
 	// Two-pass encoding
-		$ffmpeg_pass_prefix = $rec['master_path'] . $rec['id'] ."_". $profile['type'] ."_passlog";
+		$params = $profile;
+		$params['goplength'] = $gop_length; // KEY_INT length also relevant, but the parameters are missing from <$profile>
+		$ffmpeg_pass_prefix = $rec['master_path'] . $rec['id'] ."_". $profile['type'] ."_". getHashFromProfileParams($params, 6) ."_passlog";
 		$ffmpeg_passlogfile = $ffmpeg_pass_prefix ."-0.log"; // <prefix>-<#pass>-<N>.log (N=output-stream specifier)
 
 		// first-pass
-		if (!file_exists($ffmpeg_passlogfile .".mbtree") || $ffmpeg_gop !== null) {
+		if (!file_exists($ffmpeg_passlogfile .".mbtree")) {
 			$cmd  = $ffmpeg_globals . $ffmpeg_input . $ffmpeg_payload ." -pass 1 -passlogfile ". $ffmpeg_pass_prefix . $ffmpeg_video . $ffmpeg_audio;
 			$cmd .= " -threads ". $app->config['ffmpeg_threads'] ." -f ". $profile['filecontainerformat'] ." /dev/null";
 			$command[1] = $cmd;
@@ -407,7 +412,7 @@ global $app, $debug, $jconf;
 		$cmd  = $ffmpeg_globals . $ffmpeg_input . $ffmpeg_payload ." -pass 2 -passlogfile ". $ffmpeg_pass_prefix . $ffmpeg_video .  $ffmpeg_audio . $ffmpeg_output;
 		$command[2] = $cmd;
 	}
-	unset($cmd);
+	unset($cmd, $params);
 	////////////////////////////////////////////////////////////////////// END OF COMMAND ASSEMBLY //
 	// INITIATE ENCODING PROCESS ////////////////////////////////////////////////////////////////////
 	$full_duration = 0;
@@ -644,6 +649,36 @@ function runExt($cmd) {
 	$return_array['cmd_output'] = $output;
 
 	return $return_array;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+function getHashFromProfileParams($profile, $length = 32) {
+///////////////////////////////////////////////////////////////////////////////////////////////////
+// Generate md5 hash from encoding profile parameters - useful to detect differencies between two
+// encoding parameter sets.
+///////////////////////////////////////////////////////////////////////////////////////////////////
+	$keys = array(
+		'mediatype',
+		'videocodec',
+		'ffmpegh264profile',
+		'ffmpegh264preset',
+		'pipenabled',
+		'pipcodecprofile',
+		'pipposx',
+		'pipposy',
+		'pipalign',
+		'pipsize',
+		'goplength',
+	);
+	$dataset = null;
+	$tmp = array();
+	
+	foreach ($keys as $k) {
+		if (array_key_exists($k, $profile)) $tmp[] = $k ."=>". ($profile[$k]);
+	}
+	$dataset = implode(",", $tmp);
+	
+	return substr(md5($dataset), 0, ($length > 32 ? 32 : intval($length)));
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
