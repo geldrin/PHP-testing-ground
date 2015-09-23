@@ -369,7 +369,8 @@ class Controller extends \Visitor\Controller {
       );
       $output = $feedModel->getFlashData( $info );
 
-    }
+    } else
+      $output = array();
 
     return $this->getFlashParameters( $output );
     

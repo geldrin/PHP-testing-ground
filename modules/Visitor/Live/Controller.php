@@ -78,6 +78,20 @@ class Controller extends \Visitor\Controller {
         'type' => 'id',
       ),
     ),
+
+    // crestron api endpointok
+    'events' => array(
+    ),
+    'livefeeds' => array(
+      'eventid'   => array(
+        'type' => 'id',
+      ),
+    ),
+    'streams' => array(
+      'livefeedid'   => array(
+        'type' => 'id',
+      ),
+    ),
   );
   
   public function init() {
@@ -1007,4 +1021,42 @@ class Controller extends \Visitor\Controller {
     $this->redirect( $this->application->getParameter('forward') );
   }
 
+  public function eventsAction() {
+    $channelModel = $this->bootstrap->getModel('channels');
+    $items        = $channelModel->getLiveArray(
+      array(
+        'showall'        => false,
+        'organizationid' => $this->organization['id'],
+      ),
+      0, 30, 'starttimestamp DESC'
+    );
+
+    return $items;
+  }
+
+  public function livefeedsAction( $eventid ) {
+    $channelModel = $this->bootstrap->getModel('channels');
+    $channelModel->select( $eventid );
+    if ( !$channelModel->row )
+      throw new \Exception("Unknown channel with id $eventid");
+    
+    if ( !$channelModel->row['isliveevent'] )
+      throw new \Exception("Channel $eventid is not a live event");
+
+    $feeds = $channelModel->getFeeds();
+    // normalizaljuk sima tombre (alapbol livefeedid->livefeedAdat osszerendeles)
+    $feeds = array_values( $feeds );
+    return $feeds;
+  }
+
+  public function streamsAction( $livefeedid ) {
+    $feedModel = $this->bootstrap->getModel('livefeeds');
+    $feedModel->select( $livefeedid );
+    if ( !$feedModel->row )
+      throw new \Exception("Unknown livefeed with id $livefeedid");
+
+    $streams = $feedModel->getStreams();
+    $streams = array_values( $streams ); // normalizaljuk sima tombre
+    return $streams;
+  }
 }
