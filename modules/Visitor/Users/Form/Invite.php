@@ -8,6 +8,11 @@ class Invite extends \Visitor\HelpForm {
   protected $l;
   protected $crypto;
 
+  private $csvHandle;
+  private $csvDelimiter = ';';
+  private $userids; // hashmap email -> userinfoval
+  private $baseuri; // cache mezo csv meghivo urlhez
+
   public function postSetupForm() {
 
     $l = $this->bootstrap->getLocalization();
@@ -81,7 +86,7 @@ class Invite extends \Visitor\HelpForm {
     $timestamp   = date('Y-m-d H:i:s');
     $invitecount = 0;
     $emails      = array_keys( $users );
-    $userids     = $userModel->searchEmails(
+    $this->userids = $userModel->searchEmails(
       $emails,
       $this->controller->organization['id']
     );
@@ -90,8 +95,27 @@ class Invite extends \Visitor\HelpForm {
     if ( !empty( $template ) and $template['id'] )
       $templateid = $template['id'];
 
-    if ( !empty( $userids ) )
+    if ( !empty( $this->userids ) )
       $this->bootstrap->includeTemplatePlugin('nameformat');
+
+    // CHECK ERROR
+    $messages = $this->form->getMessages();
+
+    // KULSO KULDES, CSV AZ OUTPUT
+    $externalsend = $values['externalsend'] === 'external';
+    if ( $externalsend and empty( $this->form->getMessages() ) ) {
+      $this->crypto  = $this->bootstrap->getEncryption();
+      $this->baseuri =
+        $this->bootstrap->baseuri . \Springboard\Language::get() . '/users/'
+      ;
+
+      $filename = 'videosquare-userinvitation-' . date('YmdHis') . '.csv';
+      $this->csvHandle = \Springboard\Browser::initCSVHeaders(
+        $filename,
+        array('firstname', 'lastname', 'email', 'customurl', ),
+        $this->csvDelimeter
+      );
+    }
 
     foreach( $users as $email => $username ) {
 
@@ -127,25 +151,23 @@ class Invite extends \Visitor\HelpForm {
 
       }
 
-      if ( isset( $userids[ $email ] ) ) {
+      if ( isset( $this->userids[ $email ] ) ) {
 
-        $invite['registereduserid'] = $userids[ $email ]['id'];
+        $invite['registereduserid'] = $this->userids[ $email ]['id'];
         $invite['status']           = 'existing';
         $invite['name']             = smarty_modifier_nameformat(
-          $userids[ $email ]
+          $this->userids[ $email ]
         );
-        $userModel->id = $userids[ $email ]['id'];
+        $userModel->id = $this->userids[ $email ]['id'];
         $userModel->applyInvitationPermissions( $invite );
 
       }
 
       $invModel->insert( $invite );
-      $this->controller->sendInvitationEmail( $invModel->row );
+      $this->handleInvite( $externalsend, $invModel->row );
       $invitecount++;
 
     }
-
-    $messages = $this->form->getMessages();
 
     $thousandsseparator = ' ';
     if ( \Springboard\Language::get() == 'en' )
@@ -157,13 +179,16 @@ class Invite extends \Visitor\HelpForm {
     else
       $redirmessage = sprintf( $l('users', 'users_invited'), $invitecount );
 
-    if ( empty( $messages ) )
+    if ( empty( $messages ) and !$externalsend )
       $this->controller->redirectWithMessage(
         'users/invitations',
         $redirmessage
       );
 
     $this->controller->toSmarty['sessionmessage'] = $redirmessage;
+
+    if ( $externalsend and empty( $messages ) )
+      die();
 
   }
 
@@ -260,4 +285,36 @@ class Invite extends \Visitor\HelpForm {
 
   }
 
+  private function handleInvite( $externalsend, $invite ) {
+    if ( !$externalsend ) {
+      $this->controller->sendInvitationEmail( $invite );
+      return;
+    }
+
+    if ( isset( $invite['registereduserid'] ) )
+      $url = $this->baseuri . 'login';
+    else
+      $url =
+        $this->baseuri . 'validateinvite' .
+        $this->crypto->asciiEncrypt( $invite['id'] ) . ',' .
+        $invite['validationcode']
+      ;
+
+    $firstname = null;
+    $lastname = null;
+    if ( isset( $this->userids[ $invite['email'] ] ) ) {
+      $user = $this->userids[ $invite['email'] ];
+      $firstname = $user['namefirst'];
+      $lastname  = $user['namelast'];
+    }
+
+    $values = array(
+      $firstname,
+      $lastname,
+      $invite['email'],
+      $url,
+    );
+
+    fputcsv( $this->csvHandle, $values, $this->csvDelimiter );
+  }
 }

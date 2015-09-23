@@ -56,7 +56,6 @@ class Statistics extends \Visitor\HelpForm {
     $filename =
       'videosquare-statistics-' . $values['type'] . '-' . date('YmdHis') . '.csv'
     ;
-    \Springboard\Browser::downloadHeaders( $filename, 'text/csv' );
 
     $fields = array(
       'timestamp'  => 'recordCreationTimestamp',
@@ -115,9 +114,11 @@ class Statistics extends \Visitor\HelpForm {
         break;
     }
 
-    $f = fopen('php://output', 'w');
-    fwrite( $f, "\xEF\xBB\xBF"); // utf-8 bom excelnek
-    fputcsv( $f, array_values( $fields ), $this->delimiter );
+    $f = \Springboard\Browser::initCSVHeaders(
+      $filename,
+      array_values( $fields ),
+      $this->delimiter
+    );
 
     foreach( $data as $row ) {
       $csvdata = array();

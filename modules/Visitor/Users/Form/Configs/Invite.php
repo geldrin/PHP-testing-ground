@@ -48,6 +48,14 @@ $config    = array(
     'itemlayout'  => $this->radioitemlayout,
   ),
 
+  'externalsend' => array(
+    'type'        => 'inputRadio',
+    'displayname' => $l('users', 'invite_externalsend'),
+    'values'      => $l->getLov('users_invite_externalsend'),
+    'value'       => 'local',
+    'itemlayout'  => $this->radioitemlayout,
+  ),
+
   'email' => Array(
     'displayname' => $l('users', 'email'),
     'type'        => 'inputText',
