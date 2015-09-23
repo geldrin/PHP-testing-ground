@@ -397,7 +397,7 @@ global $app, $debug, $jconf;
 		
 	} elseif($profile['videopasses'] == 2) {
 	// Two-pass encoding
-		$ffmpeg_pass_prefix = $rec['master_path'] . $rec['id'] ."_". $profile['type'] ."_". getHashFromProfileParams($profile, 6) ."_passlog";
+		$ffmpeg_pass_prefix = $rec['master_path'] . $rec['id'] ."_". $profile['type'] ."_passlog_". getHashFromProfileParams($profile, 6);
 		$ffmpeg_passlogfile = $ffmpeg_pass_prefix ."-0.log"; // <prefix>-<#pass>-<N>.log (N=output-stream specifier)
 
 		// first-pass
