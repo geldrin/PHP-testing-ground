@@ -118,8 +118,6 @@ $config = array(
   'video_max_res'          => '4096x2160', // Max. resolution for uploaded video (otherwise fraud upload)
   'video_max_fps'          => 60,          // Max. video FPS (unused!)
   'video_default_fps'      => 25,          // Default video FPS
-  'video_enable_fixed_gop' => false,       // Enable/disable fixed keyframe length
-  'video_gop_length_ms'    => 4000,        // Set fixed keyframe length
 
   //----
   'combine' => array(
