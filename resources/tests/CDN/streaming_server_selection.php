@@ -28,7 +28,7 @@ echo "Streaming servers identified for test:\n";
 $nets = getStreamingServerClientNetworks();
 var_dump($nets);
 
-$ip_selection_manual = true;
+$ip_selection_manual = false;
 $ips = array('10.1.1.1', '128.12.1.1', '91.120.12.12', '8.8.8.8');
 
 echo "IP address subnets identified for test (from DB):\n";
@@ -61,13 +61,16 @@ do {
     echo "IP: " . $ip . " | Server selected: " . print_r($ss, true) . "\n";
    
     $sidxs = recursive_array_search($ss['server'], $nets);
+var_dump($sidxs);
     $found =  false;
-    for ( $q = 0; $q < count($sidxs); $q++) {
-        $i = $sidxs[$q];
-        $ip_long = ip2long($ip);
-//        echo "SEARCH:";
-//        var_dump($nets[$i]);
-        if ( ( ( ip2long($nets[$i]['ipaddressstart']) <= $ip_long ) and ( $ip_long <= ip2long($nets[$i]['ipaddressend']) ) ) or ( $nets[$i]['default'] == 1 ) ) $found = true;
+    if ( $sidxs !== false ) {
+        for ( $q = 0; $q < count($sidxs); $q++) {
+            $i = $sidxs[$q];
+            $ip_long = ip2long($ip);
+            echo "SEARCH:";
+            var_dump($nets[$i]);
+            if ( ( ( ip2long($nets[$i]['ipaddressstart']) <= $ip_long ) and ( $ip_long <= ip2long($nets[$i]['ipaddressend']) ) ) or ( $nets[$i]['default'] == 1 ) ) $found = true;
+        }
     }
     echo "Check result: ";
     if ( $found ) {
@@ -82,26 +85,6 @@ do {
 
 function getStreamingServerClientNetworks() {
 global $app, $db;
-
-/*	$query = "
-        SELECT
-            css.id,
-            css.server,
-            css.serverstatus,
-            css.default,
-            ccn.name,
-            ccn.ipaddressstart,
-            ccn.ipaddressend 
-        FROM
-            cdn_streaming_servers AS css,
-            cdn_client_networks AS ccn,
-            cdn_servers_networks AS csn
-        WHERE
-            css.disabled = 0 AND
-            ccn.disabled = 0 AND
-            ( ( css.id = csn.streamingserverid AND csn.clientnetworkid = ccn.id ) OR css.default = 1 )
-    ";
-*/
     
     $query = "
         SELECT
@@ -118,7 +101,7 @@ global $app, $db;
             cdn_servers_networks AS csn
         ON
             css.id = csn.streamingserverid
-        INNER JOIN
+        LEFT JOIN
             cdn_client_networks AS ccn
         ON
             csn.clientnetworkid = ccn.id
