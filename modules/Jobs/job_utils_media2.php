@@ -145,10 +145,10 @@ global $app, $debug, $jconf;
 		
 		// Keyframe distance
 		$encpars['goplength'] = null;
-		if (array_key_exists('video_enable_fixed_gop', $app->config) && $app->config['video_enable_fixed_gop']) {
-			$encpars['goplength'] = intval($encpars['videofps'] * ($app->config['video_gop_length_ms'] / 1000));
-			if (($app->config['video_gop_length_ms'] / 1000) > $rec[$idx .'masterlength']) {
-				$encpars['goplength'] = intval($rec[$idx .'masterlength']);
+		if (array_key_exists('fixedgopenabled', $profile) && $profile['fixedgopenabled'] && $profile['fixedgoplengthms']) {
+			$encpars['goplength'] = intval($encpars['videofps'] * ($profile['fixedgoplengthms'] / 1000));
+			if (($profile['fixedgoplengthms'] / 1000) > $rec[$idx .'masterlength']) {
+				$encpars['goplength'] = intval($rec[$idx .'masterlength'] * $encpars['videofps']);
 			}
 		}
 	}
@@ -241,13 +241,14 @@ global $app, $debug, $jconf;
 	$filter_resize = (array_key_exists('ffmpeg_resize_filter', $app->config) && $app->config['ffmpeg_resize_filter'] === true) ? (true) : (false); 
 	
 	$gop_length = null;
+	$debug->log($jconf['log_dir'], $jconf['jobid_media_convert'] .'.log', var_export($profile, true), false); // DEBUG
 	if (array_key_exists('goplength', $main)) {
 		$msg = "goplength main = ". (is_null($main['goplength']) ? "NULL" : print_r($main['goplength'], true));
 		$debug->log($jconf['log_dir'], $jconf['jobid_media_convert'] .'.log', $msg, false);
 		if (!is_null($overlay) && array_key_exists('goplength', $overlay)) {
 			$gop_length = min($main['goplength'], $overlay['goplength']);
 			$msg  = "goplength overlay = ". (is_null($overlay['goplength']) ? "NULL" : print_r($overlay['goplength'], true));
-			$msg .= " - min = ". (is_null($gop_length) ? "NULL" : $gop_length) ."\n";
+			$msg .= " - min = ". (is_null($gop_length) ? "NULL" : $gop_length);
 			$debug->log($jconf['log_dir'], $jconf['jobid_media_convert'] .'.log', $msg, false);
 		} else {
 			$gop_length = $main['goplength'];
@@ -396,9 +397,7 @@ global $app, $debug, $jconf;
 		
 	} elseif($profile['videopasses'] == 2) {
 	// Two-pass encoding
-		$params = $profile;
-		$params['goplength'] = $gop_length; // KEY_INT length also relevant, but the parameters are missing from <$profile>
-		$ffmpeg_pass_prefix = $rec['master_path'] . $rec['id'] ."_". $profile['type'] ."_". getHashFromProfileParams($params, 6) ."_passlog";
+		$ffmpeg_pass_prefix = $rec['master_path'] . $rec['id'] ."_". $profile['type'] ."_passlog_". getHashFromProfileParams($profile, 6);
 		$ffmpeg_passlogfile = $ffmpeg_pass_prefix ."-0.log"; // <prefix>-<#pass>-<N>.log (N=output-stream specifier)
 
 		// first-pass
@@ -412,7 +411,7 @@ global $app, $debug, $jconf;
 		$cmd  = $ffmpeg_globals . $ffmpeg_input . $ffmpeg_payload ." -pass 2 -passlogfile ". $ffmpeg_pass_prefix . $ffmpeg_video .  $ffmpeg_audio . $ffmpeg_output;
 		$command[2] = $cmd;
 	}
-	unset($cmd, $params);
+	unset($cmd);
 	////////////////////////////////////////////////////////////////////// END OF COMMAND ASSEMBLY //
 	// INITIATE ENCODING PROCESS ////////////////////////////////////////////////////////////////////
 	$full_duration = 0;
@@ -459,7 +458,7 @@ global $app, $debug, $jconf;
 		if ($output['code'] !== 0) {
 			// FFmpeg returned with a non-zero error code
 			$err['message'] = "[ERROR] FFmpeg conversion FAILED!";
-			$msg = $err['message'] ."\nExit code: ". $output['code'] .".\nConsole output:\n". $err['command_output'] ."\n";
+			$msg = $err['message'] ."\nExit code: ". $output['code'] .".\nConsole output:\n". $err['command_output'];
 			$debug->log($jconf['log_dir'], $jconf['jobid_media_convert'] .".log", $msg, false);
 			unset($msg);
 			return $err;
@@ -476,7 +475,7 @@ global $app, $debug, $jconf;
 			}
 		}	
 		
-		$msg = " [OK] FFmpeg encoding was successful! Exit code: ". $output['code'] ."\n";
+		$msg = " [OK] FFmpeg encoding was successful! Exit code: ". $output['code'];
 		$debug->log($jconf['log_dir'], $jconf['jobid_media_convert'] . ".log", $msg, $sendmail = false);
 		unset($msg);
 	}
@@ -517,7 +516,7 @@ global $app, $debug, $jconf;
 			unset($tmp);
 		}
 		
-		$msg = "[INFO] Metadata check finished on ". $rec['output_file'] ."\n";
+		$msg = "[INFO] Metadata check finished on ". $rec['output_file'];
 		$debug->log($jconf['log_dir'], $jconf['jobid_media_convert'] .'.log', $msg, $sendmail = false);
 
 		unset($msg, $r);
@@ -829,6 +828,8 @@ global $db, $jconf, $debug, $myjobid;
 			videobboxsizey,
 			videomaxfps,
 			videobpp,
+			fixedgopenabled,
+			fixedgoplengthms,
 			ffmpegh264profile,
 			ffmpegh264preset,
 			audiocodec,
