@@ -1313,4 +1313,12 @@ class Livefeeds extends \Springboard\Model {
       ORDER BY vsl.id DESC
     ");
   }
+
+  public function getIngressURL() {
+    $this->ensureObjectLoaded();
+    if ( $this->row['issecurestreamingforced'] )
+      return $this->bootstrap->config['wowza']['secliveingressurl3'];
+    else
+      return $this->bootstrap->config['wowza']['liveingressurl'];
+  }
 }

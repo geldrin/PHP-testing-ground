@@ -12,11 +12,7 @@
   </tr>
   {foreach from=$feeds item=feed}
   {assign var=currentviewers value=$feed.currentviewers|numberformat}
-    {if $feed.issecurestreamingforced}
-      {assign var=ingressurl value=$bootstrap->config.wowza.secliveingressurl3}
-    {else}
-      {assign var=ingressurl value=$bootstrap->config.wowza.liveingressurl}
-    {/if}
+  {assign var=ingressurl value=$feed|@getIngressURL}
   <tr>
     <td class="livefeedrow">
       <a href="{$language}/live/view/{$feed.id},{$feed.name|filenameize}" class="livefeed" title="{if $feed.status == 'live'}{#live__feedislive#}{else}{#live__feedistesting#}{/if}"></a>

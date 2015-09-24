@@ -78,7 +78,7 @@ class Controller extends \Visitor\Controller {
         'type' => 'id',
       ),
     ),
-    // crestron api endpointok
+    // crestron all-in-one api endpoint
     'events' => array(
     ),
   );
@@ -1041,7 +1041,19 @@ class Controller extends \Visitor\Controller {
     $feedModel = $this->bootstrap->getModel('livefeeds');
     foreach( $feeds as $key => $value ) {
       $feedModel->select( $value['id'] );
+      $ingressurl = $feedModel->getIngressURL();
       $streams = $feedModel->getStreams();
+      foreach( $streams as $key => $stream ) {
+        $streams[ $key ]['ingressurl']        =
+          $ingressurl . $stream['keycode']
+        ;
+
+        if ( $stream['contentkeycode'] )
+          $streams[ $key ]['contentingressurl'] =
+            $ingressurl . $stream['contentkeycode']
+          ;
+      }
+
       $value['streams'] = array_values( $streams );
       $feeds[ $key ] = $value;
     }
