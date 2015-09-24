@@ -113,7 +113,7 @@ class Invite extends \Visitor\HelpForm {
       $this->csvHandle = \Springboard\Browser::initCSVHeaders(
         $filename,
         array('firstname', 'lastname', 'email', 'customurl', ),
-        $this->csvDelimeter
+        $this->csvDelimiter
       );
     }
 
