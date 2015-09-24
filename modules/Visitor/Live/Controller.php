@@ -78,19 +78,8 @@ class Controller extends \Visitor\Controller {
         'type' => 'id',
       ),
     ),
-
     // crestron api endpointok
     'events' => array(
-    ),
-    'livefeeds' => array(
-      'eventid'   => array(
-        'type' => 'id',
-      ),
-    ),
-    'streams' => array(
-      'livefeedid'   => array(
-        'type' => 'id',
-      ),
     ),
   );
   
@@ -1030,33 +1019,33 @@ class Controller extends \Visitor\Controller {
       ),
       0, 30, 'starttimestamp DESC'
     );
+    $items = $this->addFeedsToEvents( $items );
 
     return $items;
   }
 
-  public function livefeedsAction( $eventid ) {
+  private function addFeedsToEvents( &$events ) {
     $channelModel = $this->bootstrap->getModel('channels');
-    $channelModel->select( $eventid );
-    if ( !$channelModel->row )
-      throw new \Exception("Unknown channel with id $eventid");
-    
-    if ( !$channelModel->row['isliveevent'] )
-      throw new \Exception("Channel $eventid is not a live event");
+    foreach( $events as $key => $value ) {
+      $channelModel->select( $value['id'] );
+      $feeds = $channelModel->getFeeds();
+      $value['feeds'] = array_values( $feeds );
+      $value['feeds'] = $this->addStreamsToFeeds( $value['feeds'] );
+      $events[ $key ] = $value;
+    }
 
-    $feeds = $channelModel->getFeeds();
-    // normalizaljuk sima tombre (alapbol livefeedid->livefeedAdat osszerendeles)
-    $feeds = array_values( $feeds );
-    return $feeds;
+    return $events;
   }
 
-  public function streamsAction( $livefeedid ) {
+  private function addStreamsToFeeds( &$feeds ) {
     $feedModel = $this->bootstrap->getModel('livefeeds');
-    $feedModel->select( $livefeedid );
-    if ( !$feedModel->row )
-      throw new \Exception("Unknown livefeed with id $livefeedid");
+    foreach( $feeds as $key => $value ) {
+      $feedModel->select( $value['id'] );
+      $streams = $feedModel->getStreams();
+      $value['streams'] = array_values( $streams );
+      $feeds[ $key ] = $value;
+    }
 
-    $streams = $feedModel->getStreams();
-    $streams = array_values( $streams ); // normalizaljuk sima tombre
-    return $streams;
+    return $feeds;
   }
 }
