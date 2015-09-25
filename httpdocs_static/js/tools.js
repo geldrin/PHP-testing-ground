@@ -1911,8 +1911,21 @@ function setupUserInvitation() {
     var type  = $j('input[name=usertype]:checked').val();
     var singleelems = $j('#email').parents('tr');
     var multielems  = $j('#invitefile, #encoding, #delimeter').parents('tr');
+    var externalsend = $j('input[name=externalsend]').parents('tr');
+
+    if ( type == 'single' )
+      $j('input[name=externalsend][value=local]').attr('checked', true);
+
     singleelems.toggle( type == 'single' );
+    externalsend.toggle( type == 'multiple' );
     multielems.toggle( type == 'multiple' );
+  }).change();
+
+  $j('input[name=externalsend]').change(function() {
+    var val  = $j('input[name=externalsend]:checked').val();
+    var tpl  = $j('#fs_template');
+
+    tpl.toggle( val == 'local' );
   }).change();
 
   $j('input[name=contenttype]').change(function() {
