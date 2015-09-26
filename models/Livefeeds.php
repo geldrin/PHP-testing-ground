@@ -1321,4 +1321,56 @@ class Livefeeds extends \Springboard\Model {
     else
       return $this->bootstrap->config['wowza']['liveingressurl'];
   }
+
+  public function handleStreamTemplate( $groupid ) {
+    $this->ensureObjectLoaded();
+    $streamModel = $this->bootstrap->getModel('livefeed_streams');
+
+    $profiles = $this->db->getArray("
+      SELECT
+        lsp.*,
+        lspg.weight
+      FROM livestream_profiles_groups AS lspg
+      LEFT JOIN livestream_profiles AS lsp ON(
+        lspg.livestreamprofileid = lsp.id
+      )
+      WHERE
+        lsp.disabled                  = '0' AND
+        lspg.livestreamprofilegroupid = '$groupid'
+      ORDER BY lspg.weight
+    ");
+
+    $streams = array();
+    foreach( $profiles as $profile ) {
+      if ( isset( $streams[ $profile['qualitytag'] ] ) )
+        $row = $streams[ $profile['qualitytag'] ];
+      else
+        $row = array(
+          'livefeedid'          => $this->id,
+          'qualitytag'          => $profile['qualitytag'],
+          'isdesktopcompatible' => $profile['isdesktopcompatible'],
+          'isandroidcompatible' => $profile['isandroidcompatible'],
+          'isioscompatible'     => $profile['isioscompatible'],
+          'weight'              => $profile['weight'],
+          'timestamp'           => date('Y-m-d H:i:s'),
+        );
+
+      $prefix = $profile['type'] === 'video'? '': 'content';
+      if (
+           $profile['isdynamic'] or
+           ( !$profile['isdynamic'] and !$profile['streamid'] )
+         )
+        $row[ $prefix . 'keycode' ] = $streamModel->generateUniqueKeycode();
+      else
+        $row[ $prefix . 'keycode' ] = $profile['streamid'];
+
+      $row[ $prefix . 'keycode' ] .= $profile['streamsuffix'];
+      $streams[ $profile['qualitytag'] ] = $row;
+    }
+
+    foreach( $streams as $stream )
+      $streamModel->insertBatchCollect( $stream );
+
+    $streamModel->flushBatchCollect();
+  }
 }

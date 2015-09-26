@@ -53,12 +53,31 @@ class Createfeed extends \Visitor\HelpForm {
     $user      = $this->bootstrap->getSession('user');
     $feedModel = $this->bootstrap->getModel('livefeeds');
     
-    $values['channelid']      = $this->channelModel->id;
-    $values['userid']         = $user['id'];
-    $values['organizationid'] = $this->controller->organization['id'];
-    unset( $values['id'] );
-    
-    $feedModel->insert( $values );
+    $row = array(
+      'name'                    => $values['name'],
+      'slideonright'            => $values['slideonright'],
+      'accesstype'              => $values['accesstype'],
+      'moderationtype'          => $values['moderationtype'],
+      'anonymousallowed'        => $values['anonymousallowed'],
+      'isnumberofviewspublic'   => $values['isnumberofviewspublic'],
+      'issecurestreamingforced' => $values['issecurestreamingforced'],
+      'feedtype'                => $values['feedtype'],
+      'channelid'               => $this->channelModel->id,
+      'userid'                  => $user['id'],
+      'organizationid'          => $this->controller->organization['id'],
+    );
+    $possiblefields = array(
+      'recordinglinkid',
+      'needrecording',
+      'introrecordingid',
+    );
+
+    foreach( $possiblefields as $field ) {
+      if ( isset( $values[ $field ] ) )
+        $row[ $field ] = $values[ $field ];
+    }
+
+    $feedModel->insert( $row );
     $this->handleAccesstypeForModel( $feedModel, $values, false );
     
     if ( $values['feedtype'] == 'vcr' ) {
@@ -67,11 +86,17 @@ class Createfeed extends \Visitor\HelpForm {
       $this->controller->redirect('live/managefeeds/' . $this->channelModel->id );
       
     }
-    
+
+    if ( $values['livestreamgroupid'] ) {
+      $default = 'live/managefeeds/' . $this->channelModel->id;
+      $feedModel->handleStreamTemplate( $values['livestreamgroupid'] );
+    } else
+      $default = 'live/createstream/' . $feedModel->id;
+
     $this->controller->redirect(
       $this->application->getParameter(
         'forward',
-        'live/createstream/' . $feedModel->id
+        $default
       )
     );
     

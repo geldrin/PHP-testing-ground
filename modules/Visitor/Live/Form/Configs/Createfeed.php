@@ -31,6 +31,17 @@ $config = array(
     ),
   ),
   
+  'livestreamgroupid' => array(
+    'displayname' => $l('live', 'livestreamgroupid'),
+    'type'        => 'selectDynamic',
+    'sql'         => "
+      SELECT id, name
+      FROM livestream_groups
+      WHERE disabled = '0'
+      ORDER BY name
+    ",
+    'values' => array( 0 => $l('live', 'livestreamgroupid_default') ),
+  ),
 );
 
 if ( $this->controller->organization['isvcrenabled'] ) {
@@ -82,6 +93,7 @@ if ( $this->controller->organization['isvcrenabled'] ) {
     'value'    => 'live',
     'readonly' => true,
   );
+
 
 if ( $this->controller->organization['issecurestreamingenabled'] )
   $config['issecurestreamingforced'] = array(
