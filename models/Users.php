@@ -498,7 +498,7 @@ class Users extends \Springboard\Model {
         r.contentmasterlength,
         r.isintrooutro,
         r.approvalstatus,
-        " . \Model\Recordings::getWatchedPositionPercentSQL() . "
+        " . \Model\Recordings::getWatchedPositionPercentSQL() . ",
         rvp.position,
         rvp.timestamp
       FROM
