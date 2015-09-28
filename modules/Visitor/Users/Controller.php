@@ -291,12 +291,16 @@ class Controller extends \Visitor\Controller {
     
     if ( $uservalid !== true ) {
       
-      $message = sprintf(
-        $l('users', 'accessdenied'),
-        $this->bootstrap->baseuri . \Springboard\Language::get() .
-        '/users/forgotpassword?email=' . rawurlencode( $email )
-      );
-      
+      if ( $uservalid === 'expired' ) {
+        $message = $l('users', 'timestampdisabled');
+      } else {
+        $message = sprintf(
+          $l('users', 'accessdenied'),
+          $this->bootstrap->baseuri . \Springboard\Language::get() .
+          '/users/forgotpassword?email=' . rawurlencode( $email )
+        );
+      }
+
       throw new \Visitor\Api\ApiException( $message, true, false );
       
     }
