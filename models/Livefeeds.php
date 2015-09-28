@@ -133,7 +133,7 @@ class Livefeeds extends \Springboard\Model {
     
     return $this->db->getAssoc("
       SELECT
-        id AS streamid,
+        id AS ix,
         id,
         status,
         streamid,
