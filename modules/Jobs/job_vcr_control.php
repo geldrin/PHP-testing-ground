@@ -75,7 +75,7 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_vcr_control.stop' ) and !i
 
 		// Start global log
 		$global_log .= "Live feed: " . $vcr['feed_name'] . " (ID = " . $vcr['feed_id'] . ")\n";
-		$global_log .= "Stream: " . $vcr['name'] . " (ID = " . $vcr['id'] . ")\n";
+		$global_log .= "Stream: " . $vcr['qualitytag'] . " (ID = " . $vcr['id'] . ")\n";
 		$global_log .= "User: " . $vcr_user['nickname'] . " (" . $vcr_user['email'] . ")\n";
 		$global_log .= "Recording link: " . $vcr['reclink_name'] . " (ID = " . $vcr['reclink_id'] . ")\n";
 		$global_log .= "Call: " . $vcr['calltype'] . ":" . $vcr['number'] . " @ " . $vcr['bitrate'] . "KBps\n";
@@ -479,39 +479,39 @@ global $jconf, $db, $myjobid, $debug;
 
 	$query = "
 		SELECT
-			a.id,
-			a.livefeedid,
-			a.qualitytag,
-			a.status,
-			a.recordinglinkid,
-			b.id as reclink_id,
-			b.name as reclink_name,
-			b.organizationid,
-			b.calltype,
-			b.number,
-			b.password,
-			b.bitrate,
-			b.alias,
-			b.aliassecure,
-			b.status as reclink_status,
-			b.conferenceid as conf_id,
-			c.id as feed_id,
-			c.userid,
-			c.channelid,
-			c.name as feed_name,
-			c.issecurestreamingforced,
-			c.needrecording
+			lfs.id,
+			lfs.livefeedid,
+			lfs.qualitytag,
+			lfs.status,
+			lfs.recordinglinkid,
+			rl.id AS reclink_id,
+			rl.name AS reclink_name,
+			rl.organizationid,
+			rl.calltype,
+			rl.number,
+			rl.password,
+			rl.bitrate,
+			rl.alias,
+			rl.aliassecure,
+			rl.status AS reclink_status,
+			rl.conferenceid AS conf_id,
+			lf.id AS feed_id,
+			lf.userid,
+			lf.channelid,
+			lf.name AS feed_name,
+			lf.issecurestreamingforced,
+			lf.needrecording
 		FROM
-			livefeed_streams as a,
-			recording_links as b,
-			livefeeds as c
+			livefeed_streams AS lfs,
+			recording_links AS rl,
+			livefeeds AS lf
 		WHERE
-			( ( a.status = '" . $jconf['dbstatus_vcr_start'] . "' AND b.status = '" . $jconf['dbstatus_vcr_ready'] . "') OR
-			  ( a.status = '" . $jconf['dbstatus_vcr_disc'] . "' AND b.status = '" . $jconf['dbstatus_vcr_recording'] . "') OR
-			  ( a.status = '" . $jconf['dbstatus_vcr_recording'] . "' AND b.status = '" . $jconf['dbstatus_vcr_recording'] . "') ) AND
-			a.recordinglinkid = b.id AND
-			b.disabled = 0 AND
-			a.livefeedid = c.id
+			( ( lfs.status = '" . $jconf['dbstatus_vcr_start'] . "' AND rl.status = '" . $jconf['dbstatus_vcr_ready'] . "') OR
+			  ( lfs.status = '" . $jconf['dbstatus_vcr_disc'] . "' AND rl.status = '" . $jconf['dbstatus_vcr_recording'] . "') OR
+			  ( lfs.status = '" . $jconf['dbstatus_vcr_recording'] . "' AND rl.status = '" . $jconf['dbstatus_vcr_recording'] . "') ) AND
+			lfs.recordinglinkid = rl.id AND
+			rl.disabled = 0 AND
+			lfs.livefeedid = lf.id
 		ORDER BY
 			id
 		LIMIT 1";
