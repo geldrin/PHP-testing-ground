@@ -66,12 +66,12 @@
           <td colspan="4" class="elementcolumn">
             <div class="broadcastlink">
               <label for="broadcastlink-{$stream.id}">{#live__streambroadcastlink#}:</label>
-              <input id="broadcastlink-{$stream.id}" type="text" value="{$ingressurl|escape:html}{$stream.keycode|escape:html}"/>
+              <input id="broadcastlink-{$stream.id}" type="text" value="{$ingressurl|escape:html}{$stream.streamid|escape:html}"/>
             </div>
-            {if $stream.contentkeycode}
+            {if $stream.contentstreamid}
               <div class="broadcastlink">
                 <label for="broadcastlink-{$stream.id}-2">{#live__secondarystreambroadcastlink#}:</label>
-                <input id="broadcastlink-{$stream.id}-2" type="text" value="{$ingressurl|escape:html}{$stream.contentkeycode|escape:html}"/>
+                <input id="broadcastlink-{$stream.id}-2" type="text" value="{$ingressurl|escape:html}{$stream.contentstreamid|escape:html}"/>
               </div>
             {/if}
             {if $member.isadmin or $member.isclientadmin}

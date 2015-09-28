@@ -3,44 +3,44 @@ namespace Model;
 
 class Livefeed_streams extends \Springboard\Model {
   
-  public function checkUniqueKeycode( $keycode, $existingkeycode = null ) {
+  public function checkUniqueStreamid( $streamid, $existingstreamid = null ) {
     
     $found = $this->db->getOne("
       SELECT COUNT(*)
       FROM livefeed_streams
       WHERE
-        keycode = " . $this->db->qstr( $keycode ) . " OR
-        contentkeycode = " . $this->db->qstr( $keycode ) . "
+        streamid = " . $this->db->qstr( $streamid ) . " OR
+        contentstreamid = " . $this->db->qstr( $streamid ) . "
     ");
     
-    if ( $found or $keycode == $existingkeycode )
-      $keycode = $this->generateUniqueKeycode( $existingkeycode );
+    if ( $found or $streamid == $existingstreamid )
+      $streamid = $this->generateUniqueStreamid( $existingstreamid );
     
-    return $keycode;
+    return $streamid;
     
   }
   
-  public function generateUniqueKeycode( $existingkeycode = null ) {
+  public function generateUniqueStreamid( $existingstreamid = null ) {
     
     $found = true;
     while( $found ) {
       
-      $keycode = mt_rand( 100000, 999999 );
+      $streamid = mt_rand( 100000, 999999 );
       
-      if ( $keycode == $existingkeycode )
+      if ( $streamid == $existingstreamid )
         continue;
       
       $found = $this->db->getOne("
         SELECT COUNT(*)
         FROM livefeed_streams
         WHERE
-          keycode = '" . $keycode . "' OR
-          contentkeycode = '" . $keycode . "'
+          streamid = '" . $streamid . "' OR
+          contentstreamid = '" . $streamid . "'
       ");
       
     }
     
-    return $keycode;
+    return $streamid;
     
   }
   

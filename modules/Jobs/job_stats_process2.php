@@ -260,8 +260,8 @@ for ( $statsidx = 0; $statsidx < count($stats_config); $statsidx++ ) {
 
         $streamid = $stat['livefeedstreamid'];          // livefeeds_stream.id
         $qualitytag = $stat['streamname'];              // SD, HD, etc.
-        $streamname = $stat['keycode'];                 // Wowza stream name (e.g. 123456)
-        $contentstreamname = $stat['contentkeycode'];   // Wowza content stream name
+        $streamname = $stat['streamid'];                 // Wowza stream name (e.g. 123456)
+        $contentstreamname = $stat['contentstreamid'];   // Wowza content stream name
 
         // User agent
         $platform = findStreamingClientPlatform($stat['useragent']);
@@ -449,8 +449,8 @@ global $db, $debug, $myjobid, $app, $jconf;
         vsl.timestampuntil,
         lf.name AS feedname,
         lfs.qualitytag AS streamname,
-        lfs.keycode,
-        lfs.contentkeycode  
+        lfs.streamid,
+        lfs.contentstreamid  
     FROM
         view_statistics_live as vsl,
         livefeeds AS lf,

@@ -808,7 +808,7 @@ global $db, $app, $debug, $jconf;
 			lf.id,
 			lf." . $idx . "smilstatus,
 			lfs.id AS streamid,
-			lfs." . $idx . "keycode,
+			lfs." . $idx . "streamid,
 			lfs.status
 		FROM
 			livefeeds as lf,
@@ -861,7 +861,7 @@ global $db, $app, $debug, $jconf;
 		while ( $livefeeds[$i]['id'] == $livefeeds[$i + $q]['id'] ) {
 
 			// !!! bandwidth calculation: absolutely fake! (no way to calc, if the bitrate is not added on website - no GUI)
-			$smil .= sprintf("\t\t\t<video src=\"%s\" system-bitrate=\"%d\"/>\n", $livefeeds[$i + $q][$idx . 'keycode'], ( $q + 1 ) * 400000);
+			$smil .= sprintf("\t\t\t<video src=\"%s\" system-bitrate=\"%d\"/>\n", $livefeeds[$i + $q][$idx . 'streamid'], ( $q + 1 ) * 400000);
 
 			$q++;
 

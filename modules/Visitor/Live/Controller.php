@@ -251,12 +251,12 @@ class Controller extends \Visitor\Controller {
     ;
     $this->toSmarty['livehttpurl'] = $feedModel->getMediaUrl(
       'livehttp',
-      $currentstream['keycode'],
+      $currentstream['streamid'],
       $info
     );
     $this->toSmarty['livertspurl'] = $feedModel->getMediaUrl(
       'livertsp',
-      $currentstream['keycode'],
+      $currentstream['streamid'],
       $info
     );
     
@@ -1045,12 +1045,12 @@ class Controller extends \Visitor\Controller {
       $streams = $feedModel->getStreams();
       foreach( $streams as $key => $stream ) {
         $streams[ $key ]['ingressurl']        =
-          $ingressurl . $stream['keycode']
+          $ingressurl . $stream['streamid']
         ;
 
-        if ( $stream['contentkeycode'] )
+        if ( $stream['contentstreamid'] )
           $streams[ $key ]['contentingressurl'] =
-            $ingressurl . $stream['contentkeycode']
+            $ingressurl . $stream['contentstreamid']
           ;
       }
 

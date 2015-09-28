@@ -518,14 +518,14 @@ global $app, $debug, $jconf, $myjobid;
 }
 
 // update_db_stream_params
-function updateVCRLiveStreamParams($id, $keycode, $conferenceid) {
+function updateVCRLiveStreamParams($id, $streamid, $conferenceid) {
 global $app, $debug, $jconf, $myjobid;
 
-	if ( empty($keycode) ) return false;
+	if ( empty($streamid) ) return false;
 	if ( empty($conferenceid) ) $conferenceid = "NULL";
 
     $values = array(
-        'keycode'           => $keycode,
+        'streamid'           => $streamid,
         'vcrconferenceid'   => $conferenceid
 	);
 
@@ -534,7 +534,7 @@ global $app, $debug, $jconf, $myjobid;
     $converterNodeObj->updateRow($values);
     
 	// Log status change
-	$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Live stream id#" . $id . " params updated with keycode = " . $keycode . ", vcrconferenceid = " . $conferenceid . ".", $sendmail = false);
+	$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Live stream id#" . $id . " params updated with streamid = " . $streamid . ", vcrconferenceid = " . $conferenceid . ".", $sendmail = false);
 
 	return true;
 }

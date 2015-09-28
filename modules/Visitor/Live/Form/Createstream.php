@@ -44,8 +44,8 @@ class Createstream extends \Visitor\HelpForm {
     
     $values['livefeedid']     = $this->feedModel->id;
     $values['timestamp']      = date('Y-m-d H:i:s');
-    $values['keycode']        = $this->streamModel->generateUniqueKeycode();
-    $values['contentkeycode'] = $this->streamModel->generateUniqueKeycode();
+    $values['streamid']        = $this->streamModel->generateUniqueStreamid();
+    $values['contentstreamid'] = $this->streamModel->generateUniqueStreamid();
     
     if ( !isset( $values['compatibility'] ) or !is_array( $values['compatibility'] ) )
       $values['compatibility'] = array();
