@@ -103,7 +103,7 @@ class Invite extends \Visitor\HelpForm {
 
     // KULSO KULDES, CSV AZ OUTPUT
     $externalsend = $values['externalsend'] === 'external';
-    if ( $externalsend and empty( $this->form->getMessages() ) ) {
+    if ( $externalsend and empty( $messages ) ) {
       $this->crypto  = $this->bootstrap->getEncryption();
       $this->baseuri =
         $this->bootstrap->baseuri . \Springboard\Language::get() . '/users/'
