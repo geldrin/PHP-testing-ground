@@ -258,7 +258,7 @@ for ( $statsidx = 0; $statsidx < count($stats_config); $statsidx++ ) {
             continue;
         }
 
-        $streamid = $stat['livefeedstreamid'];          // livefeeds_stream.id
+        $livefeedstreamid = $stat['livefeedstreamid'];          // livefeeds_stream.id
         $qualitytag = $stat['streamname'];              // SD, HD, etc.
         $streamname = $stat['keycode'];                 // Wowza stream name (e.g. 123456)
         $contentstreamname = $stat['contentkeycode'];   // Wowza content stream name
@@ -287,7 +287,7 @@ for ( $statsidx = 0; $statsidx < count($stats_config); $statsidx++ ) {
         
         //// Statistics records filtered
         // Build array index
-        $idx = $streamid . "_" . $country . "_" . $server_idx;
+        $idx = $livefeedstreamid . "_" . $country . "_" . $server_idx;
         // Initialize (if record is not yet open)
         if ( !isset($stats_f[$feedid][$idx]) ) {
             $stats_f[$feedid][$idx] = $platforms_null;
@@ -299,7 +299,7 @@ for ( $statsidx = 0; $statsidx < count($stats_config); $statsidx++ ) {
         }
         // Add livefeedstreamid
         if ( !isset($stats_f[$feedid][$idx]['livefeedstreamid']) ) {
-            $stats_f[$feedid][$idx]['livefeedstreamid'] = $streamid;
+            $stats_f[$feedid][$idx]['livefeedstreamid'] = $livefeedstreamid;
         }
         // Add country
         if ( !isset($stats_f[$feedid][$idx]['country']) ) {

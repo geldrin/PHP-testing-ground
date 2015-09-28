@@ -74,7 +74,7 @@ function Main() {
 	for ( $i = 0; $i < count($channels); $i++ ) {
 		$filename = $ffmpeg_output = $ffmpeg_loglevel = $ffmpeg_filter = $ffmpeg_globals = $ffmpeg_load = null;
 		// Temp directory
-		$temp_dir = $jconf['livestreams_dir'] . $channels[$i]['streamid'] . "/";
+		$temp_dir = $jconf['livestreams_dir'] . $channels[$i]['livefeedstreamid'] . "/";
 
 		// Destination directories
 		$path_43      = $temp_dir . $app->config['videothumbnailresolutions']['4:3'] . "/";
@@ -87,10 +87,10 @@ function Main() {
 		$wowza_app = "vsqlive";
 		if ( isset($app->config['production']) && $app->config['production'] === false ) $wowza_app = "dev" . $wowza_app;
 
-		$filename        = $channels[$i]['streamid'] . "_" . date("YmdHis") . ".jpg";
+		$filename        = $channels[$i]['livefeedstreamid'] . "_" . date("YmdHis") . ".jpg";
 		$ffmpeg_loglevel = ($debug_mode) ? (null) : (' -v '. $app->config['ffmpeg_loglevel']);
 		$ffmpeg_globals  = $app->config['ffmpeg_alt'] . $ffmpeg_loglevel .' -y';
-		$ffmpeg_load     = ' -i '. sprintf("rtmp://%s/" . $wowza_app . "/", $rtmp_server) . $channels[$i]['wowzastreamid'];
+		$ffmpeg_load     = ' -i '. sprintf("rtmp://%s/" . $wowza_app . "/", $rtmp_server) . $channels[$i]['streamid'];
 
 		$tmp = array();
 		$tmp[] = 'fps=fps=1, split=3[0][1][2]';
@@ -147,12 +147,12 @@ function Main() {
 
 			if ($debug_mode) {
 				$msg  = "[INFO] FFmpeg live thumbnail attempt for feed#". $channels[$i]['locationid'];
-				$msg .= " / stream#". $channels[$i]['streamid'] ." - OK.\nCommand: '$cmd' / return code: $code\n";
+				$msg .= " / stream#". $channels[$i]['livefeedstreamid'] ." - OK.\nCommand: '$cmd' / return code: $code\n";
 				$debug->log($logdir, $logfile, $msg, false);
 			}
 		} catch (Exception $e) {
 			$msg  = "[ERROR] FFmpeg live thumbnail attempt for feed#". $channels[$i]['locationid'];
-			$msg .= " / stream#". $channels[$i]['streamid'] ." - Failed!\n". $e->getMessage() ."\nCommand: '$cmd' / return code: $code\n";
+			$msg .= " / stream#". $channels[$i]['livefeedstreamid'] ." - Failed!\n". $e->getMessage() ."\nCommand: '$cmd' / return code: $code\n";
 			$debug->log($logdir, $logfile, $msg, false);
 			unset($cmd, $msg);
 
@@ -171,7 +171,7 @@ function Main() {
 
 			// Chmod remote files
 			foreach ($app->config['videothumbnailresolutions'] as $res) {
-				$remote_file = $remote_path . $channels[$i]['streamid'] ."/". $res ."/". $filename;
+				$remote_file = $remote_path . $channels[$i]['livefeedstreamid'] ."/". $res ."/". $filename;
 				if ($debug_mode) {
 					$msg = "[INFO] Setting file permission (". $jconf['file_owner'] ."/". $jconf['file_access'] .") on '". $remote_file ."'";
 					$debug->log($logdir, $logfile, $msg, false);
@@ -188,11 +188,11 @@ function Main() {
 
 		// Update index photo filename
 		$tmp = explode("/", $app->config['livestreampath']);
-		$indexphotofilename = $tmp[count($tmp) - 2] ."/". $channels[$i]['streamid'] ."/". $app->config['videothumbnailresolutions']['4:3'] ."/". $filename;
-		$err = @updateLiveFeedStreamIndexPhoto($channels[$i]['streamid'], $indexphotofilename);
+		$indexphotofilename = $tmp[count($tmp) - 2] ."/". $channels[$i]['livefeedstreamid'] ."/". $app->config['videothumbnailresolutions']['4:3'] ."/". $filename;
+		$err = @updateLiveFeedStreamIndexPhoto($channels[$i]['livefeedstreamid'], $indexphotofilename);
 
 		if ($debug_mode) {
-			$msg  = "[OK] Updated live thumbs published for livefeed_stream.id = ". $channels[$i]['streamid'] ." at ". $app->config['fallbackstreamingserver']['server'] .":". $indexphotofilename ."\n";
+			$msg  = "[OK] Updated live thumbs published for livefeed_stream.id = ". $channels[$i]['livefeedstreamid'] ." at ". $app->config['fallbackstreamingserver']['server'] .":". $indexphotofilename ."\n";
 			$debug->log($logdir, $logfile, $msg, $sendmail = false);
 		}
 
@@ -226,10 +226,10 @@ function getActiveChannels() {
 			lf.name AS locationname,
 			lf.issecurestreamingforced,
 			lf.indexphotofilename,
-			lfs.id AS streamid,
+			lfs.id AS livefeedstreamid,
 			lfs.qualitytag AS streamname,
-			lfs.keycode AS wowzastreamid,
-			lfs.contentkeycode AS wowzacontentstreamid
+			lfs.keycode AS streamid,
+			lfs.contentkeycode AS contentstreamid
 		FROM
 			channels AS ch,
 			livefeeds AS lf,

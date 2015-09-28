@@ -807,7 +807,7 @@ global $db, $app, $debug, $jconf;
 		SELECT
 			lf.id,
 			lf." . $idx . "smilstatus,
-			lfs.id AS streamid,
+			lfs.id AS livefeedstreamid,
 			lfs." . $idx . "keycode,
 			lfs.status
 		FROM
