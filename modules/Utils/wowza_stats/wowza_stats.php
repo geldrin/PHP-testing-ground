@@ -233,16 +233,15 @@ if ( $islivestats ) {
 
 		$tmp = array(
 			'locationid'		=> $stream['locationid'],
-			'streamid'			=> $stream['streamid'],
+			'livefeedstreamid'	=> $stream['livefeedstreamid'],
 			'streamname'		=> $stream['streamname'],
-			'keycode'			=> $stream['keycode'],
-			'contentkeycode'	=> $stream['contentkeycode'],
+			'streamid'			=> $stream['streamid'],
+			'contentstreamid'	=> $stream['contentstreamid'],
 			'locationname'		=> $stream['locationname'],
 			'eventduration'		=> $event_duration,
 			'publishedfirst'	=> ""							// First time during that day the stream was published
 		);
 		array_push($location_info[$locationid], $tmp);
-
 
 		$live_streams->MoveNext();
 	}
@@ -257,17 +256,17 @@ if ( $islivestats ) {
 		$rec_path = ( $rec['id'] % 1000 ) . "/" . $rec['id'] . "/" . $rec['id'] . "_";
 
 		// Stream IDs: build array from selected surrogates
-		$streamids = array();
-		array_push($streamids, $rec_path . "video_lq.mp4");
-		array_push($streamids, $rec_path . "video_hq.mp4");
-		array_push($streamids, $rec_path . "mobile_hq.mp4");
-		array_push($streamids, $rec_path . "mobile_hq.mp4");
+		$recording_files = array();
+		array_push($recording_files, $rec_path . "video_lq.mp4");
+		array_push($recording_files, $rec_path . "video_hq.mp4");
+		array_push($recording_files, $rec_path . "mobile_hq.mp4");
+		array_push($recording_files, $rec_path . "mobile_hq.mp4");
 
 		$tmp = array(
 			'recordingid'		=> $rec['id'],
 			'title'				=> $rec['title'],
 			'recordedtime'		=> $rec['recordedtimestamp'],
-			'streamids'			=> $streamids,
+			'streamids'			=> $recording_files,
 		);
 		array_push($recording_info, $tmp);
 
@@ -407,21 +406,21 @@ for ( $i = 0; $i < count($log_files); $i++ ) {
 
 			if ( $islivestats ) {
 				// Find Wowza stream ID in location information array
-				$retval = location_info_search_keycode($location_info, $log_feedid);
+				$retval = location_info_search_streamid($location_info, $log_feedid);
 				// Not found: not relevant stream information was found
-				if ( $retval === FALSE ) continue;
+				if ( $retval === false ) continue;
 			} else {
 				// Find Wowza stream ID in recording information array
 				$retval = recording_info_search_streamid($recording_info, $log_feedid);
 				// Not found: not relevant stream information was found
-				if ( $retval === FALSE ) continue;
+				if ( $retval === false ) continue;
 				// !!!!!!!!!!!!!!!!!!!!
 				continue;
 			}
 
 			// Stream ID match: add this data to overall statistics
 			$locationid = $retval['locationid'];
-			$streamid = $retval['streamid'];
+			$livefeedstreamid = $retval['livefeedstreamid'];
 
 			// Client IP
 			$cip = trim($log_line[16]);
@@ -430,14 +429,14 @@ for ( $i = 0; $i < count($log_files); $i++ ) {
 			// Client ID
 			$clientid = trim($log_line[20]);
 			// Wowza stream ID
-			$keycode = $location_info[$locationid][$streamid]['keycode'];
+			$streamid = $location_info[$locationid][$livefeedstreamid]['streamid'];
 			// Date and time
 			$date = trim($log_line[0]) . " " . trim($log_line[1]);
 			$date_timestamp = strtotime($date);
 
 			// Date of first publish
-			if ( $x_event == "publish" and empty($location_info[$locationid][$streamid]['publishedfirst']) ) {
-				$location_info[$locationid][$streamid]['publishedfirst'] = $date_timestamp;
+			if ( $x_event == "publish" and empty($location_info[$locationid][$livefeedstreamid]['publishedfirst']) ) {
+				$location_info[$locationid][$livefeedstreamid]['publishedfirst'] = $date_timestamp;
 			}
 
 			$tmp = explode("&", $csession);
@@ -489,11 +488,11 @@ for ( $i = 0; $i < count($log_files); $i++ ) {
 			// New stream: nothing recorded yet
 			if ( empty($viewers[$cip][$uid]['streams']) ) $viewers[$cip][$uid]['streams'] = array();
 
-			if ( empty($viewers[$cip][$uid]['streams'][$keycode]) ) {
-				$viewers[$cip][$uid]['streams'][$keycode] = array();
-				$viewers[$cip][$uid]['streams'][$keycode]['duration'] = 0;
-				$viewers[$cip][$uid]['streams'][$keycode]['locationid'] = $locationid;
-				$viewers[$cip][$uid]['streams'][$keycode]['streamid'] = $streamid;
+			if ( empty($viewers[$cip][$uid]['streams'][$streamid]) ) {
+				$viewers[$cip][$uid]['streams'][$streamid] = array();
+				$viewers[$cip][$uid]['streams'][$streamid]['duration'] = 0;
+				$viewers[$cip][$uid]['streams'][$streamid]['locationid'] = $locationid;
+				$viewers[$cip][$uid]['streams'][$streamid]['livefeedstreamid'] = $livefeedstreamid;
 			}
 
 			// New client ID: nothing recorded yet, init data structures
@@ -528,7 +527,7 @@ for ( $i = 0; $i < count($log_files); $i++ ) {
 
 				// Update location and stream ID
 				$viewers[$cip][$uid]['clients'][$clientid]['locationid'] = $locationid;
-				$viewers[$cip][$uid]['clients'][$clientid]['streamid'] = $streamid;
+				$viewers[$cip][$uid]['clients'][$clientid]['livefeedstreamid'] = $livefeedstreamid;
 
 				// Set PLAY status, reset the rest
 				$viewers[$cip][$uid]['clients'][$clientid]['play'] = TRUE;
@@ -537,7 +536,7 @@ for ( $i = 0; $i < count($log_files); $i++ ) {
 
 				// Start date and time
 				$playnum = $viewers[$cip][$uid]['clients'][$clientid]['playnum'];
-				$viewers[$cip][$uid]['clients'][$clientid]['playsessions'][$playnum]['startedas'] = $keycode;
+				$viewers[$cip][$uid]['clients'][$clientid]['playsessions'][$playnum]['startedas'] = $streamid;
 				$viewers[$cip][$uid]['clients'][$clientid]['playsessions'][$playnum]['started_timestamp'] = $date_timestamp;
 				$viewers[$cip][$uid]['clients'][$clientid]['playsessions'][$playnum]['started_datetime'] = $date;
 
@@ -689,8 +688,8 @@ foreach ($location_info as $loc_id => $streams ) {
 		$tmp_content = "";
 		$published_first = "-";
 		if ( !empty($location_info[$loc_id][$str_id]['publishedfirst']) ) $published_first = date("Y-m-d H:i:s", $location_info[$loc_id][$str_id]['publishedfirst']);
-		if ( !empty($location_info[$loc_id][$str_id]['contentkeycode']) ) $tmp_content = " / " . $location_info[$loc_id][$str_id]['contentkeycode'];
-		$msg .= "#    " . $location_info[$loc_id][$str_id]['locationname'] . " / " . $location_info[$loc_id][$str_id]['streamname'] . ": " . $location_info[$loc_id][$str_id]['keycode'] . $tmp_content . " (started: " . $published_first . ")\n";
+		if ( !empty($location_info[$loc_id][$str_id]['contentstreamid']) ) $tmp_content = " / " . $location_info[$loc_id][$str_id]['contentstreamid'];
+		$msg .= "#    " . $location_info[$loc_id][$str_id]['locationname'] . " / " . $location_info[$loc_id][$str_id]['streamname'] . ": " . $location_info[$loc_id][$str_id]['streamid'] . $tmp_content . " (started: " . $published_first . ")\n";
 
 		$column_guide[$loc_id][$str_id] = $columns_num;
 		$columns_num++;
@@ -744,14 +743,14 @@ foreach ($viewers as $cip => $client_ip) {
 		$columns['eventduration'] = array();
 		$duration_full = 0;
 		if ( $debug_duration ) echo "Watched DUR: " . $duration_full . "\n";
-		foreach ($viewers[$cip][$uid]['streams'] as $keycode => $keycode_data ) {
-			$loc_id = $keycode_data['locationid'];
-			$str_id = $keycode_data['streamid'];
+		foreach ($viewers[$cip][$uid]['streams'] as $streamid => $streamid_data ) {
+			$loc_id = $streamid_data['locationid'];
+			$str_id = $streamid_data['livefeedstreamid'];
 			$num = $column_guide[$loc_id][$str_id];
 			$columns['eventduration'][$num] = $location_info[$loc_id][$str_id]['eventduration'];
-			if ( $keycode_data['duration'] > 1 ) $columns['duration'][$num] = $keycode_data['duration'];
-			$duration_full += $keycode_data['duration'];
-			if ( ( $analyze_perconnection == FALSE ) and $debug_duration ) echo "Watched DUR: added " . $keycode_data['duration'] . " secs. Full: " . secs2hms($duration_full) . "\n";
+			if ( $streamid_data['duration'] > 1 ) $columns['duration'][$num] = $streamid_data['duration'];
+			$duration_full += $streamid_data['duration'];
+			if ( ( $analyze_perconnection == FALSE ) and $debug_duration ) echo "Watched DUR: added " . $streamid_data['duration'] . " secs. Full: " . secs2hms($duration_full) . "\n";
 		}
 
 		if ( $debug_duration ) echo "All per stream DUR: " . secs2hms($duration_full) . "\n";
@@ -775,7 +774,7 @@ foreach ($viewers as $cip => $client_ip) {
 					if ( $duration < $min_duration ) continue;
 
 					$loc_id = $client_data['locationid'];
-					$str_id = $client_data['streamid'];
+					$str_id = $client_data['livefeedstreamid'];
 
 					// Debug: print real play time
 					if ( $debug_duration ) echo "PLAY: " . date($datetemplate, $playsession['started_timestamp']) . " - " . date($datetemplate, $playsession['ended_timestamp']) . "\n";
@@ -895,15 +894,15 @@ global $db, $app;
 		SELECT
 			a.channelid,
 			a.userid,
-			a.id as locationid,
-			a.name as locationname,
-			b.id as streamid,
-			b.qualitytag as streamname,
-			b.keycode,
-			b.contentkeycode
+			a.id AS locationid,
+			a.name AS locationname,
+			b.id AS livefeedstreamid,
+			b.qualitytag AS streamname,
+			b.keycode AS streamid,
+			b.contentkeycode AS contentstreamid
 		FROM
-			livefeeds as a,
-			livefeed_streams as b
+			livefeeds AS a,
+			livefeed_streams AS b
 		WHERE
 			a.channelid = " . $channelid . " AND
 			a.id = b.livefeedid
@@ -991,23 +990,23 @@ global $db, $app;
 	return TRUE;
 }
 
-function location_info_search_keycode($location_info, $keycode) {
+function location_info_search_streamid($location_info, $streamid) {
 
 	$retval = array();
 
 	foreach ($location_info as $key => $value) {
 		$locationid = $key;
 		foreach ($location_info[$locationid] as $skey => $svalue) {
-			$streamid = $skey;
-			if ( $location_info[$locationid][$streamid]['keycode'] == $keycode ) {
+			$livefeedstreamid = $skey;
+			if ( $location_info[$locationid][$livefeedstreamid]['streamid'] == $streamid ) {
 				$retval['locationid'] = $locationid;
-				$retval['streamid'] = $streamid;
+				$retval['livefeedstreamid'] = $livefeedstreamid;
 				return $retval;
 			}
 		}
 	}
 
-	return FALSE;
+	return false;
 }
 
 // Search recording_info array for recording ID based on stream ID from Wowza log
@@ -1027,7 +1026,7 @@ function recording_info_search_streamid($recording_info, $streamid) {
 		}
 	}
 
-	return FALSE;
+	return false;
 }
 
 function check_date_validity($date) {
