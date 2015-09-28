@@ -136,8 +136,8 @@ class Livefeeds extends \Springboard\Model {
         id AS ix,
         id,
         status,
-        streamid,
-        contentstreamid,
+        keycode,
+        contentkeycode,
         recordinglinkid,
         qualitytag,
         isdesktopcompatible,
@@ -305,8 +305,8 @@ class Livefeeds extends \Springboard\Model {
 
     } else {
 
-      if ( isset( $info['streams']['defaultstream'][ $prefix . 'streamid'] ) )
-        $ret['streams'][] = $info['streams']['defaultstream'][ $prefix . 'streamid'];
+      if ( isset( $info['streams']['defaultstream'][ $prefix . 'keycode'] ) )
+        $ret['streams'][] = $info['streams']['defaultstream'][ $prefix . 'keycode'];
 
       foreach( $info['streams']['streams'] as $stream ) {
 
@@ -315,7 +315,7 @@ class Livefeeds extends \Springboard\Model {
            )
           continue;
 
-        $ret['streams'][] = $stream[ $prefix . 'streamid'];
+        $ret['streams'][] = $stream[ $prefix . 'keycode'];
 
       }
 
@@ -1354,13 +1354,13 @@ class Livefeeds extends \Springboard\Model {
       foreach( array('', 'content') as $prefix ) {
         if (
              $profile['isdynamic'] or
-             ( !$profile['isdynamic'] and !$profile[ $prefix . 'streamid' ] )
+             ( !$profile['isdynamic'] and !$profile[ $prefix . 'keycode' ] )
            )
-          $row[ $prefix . 'streamid' ] = $streamModel->generateUniqueStreamid();
+          $row[ $prefix . 'keycode' ] = $streamModel->generateUniqueStreamid();
         else
-          $row[ $prefix . 'streamid' ] = $profile[ $prefix . 'streamid' ];
+          $row[ $prefix . 'keycode' ] = $profile[ $prefix . 'keycode' ];
 
-        $row[ $prefix . 'streamid' ] .= $profile[ $prefix . 'streamsuffix' ];
+        $row[ $prefix . 'keycode' ] .= $profile[ $prefix . 'streamsuffix' ];
       }
 
       $streamModel->insertBatchCollect( $row );

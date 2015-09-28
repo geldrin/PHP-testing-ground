@@ -228,8 +228,8 @@ function getActiveChannels() {
 			lf.indexphotofilename,
 			lfs.id AS streamid,
 			lfs.qualitytag AS streamname,
-			lfs.streamid AS wowzastreamid,
-			lfs.contentstreamid AS wowzacontentstreamid
+			lfs.keycode AS wowzastreamid,
+			lfs.contentkeycode AS wowzacontentstreamid
 		FROM
 			channels AS ch,
 			livefeeds AS lf,

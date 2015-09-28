@@ -267,8 +267,8 @@ for ( $statsidx = 0; $statsidx < count($stats_config); $statsidx++ ) {
 
       $streamid = $stat['streamid'];    // livefeeds_stream.id
       $qualitytag = $stat['qualitytag'];  // SD, HD, etc.
-      $streamname = $stat['streamid'];   // Wowza stream name (e.g. 123456)
-      $contentstreamname = $stat['contentstreamid'];
+      $streamname = $stat['keycode'];   // Wowza stream name (e.g. 123456)
+      $contentstreamname = $stat['contentkeycode'];
 
       $platform = findStreamingClientPlatform($stat['clientplayer']);
 
@@ -293,10 +293,10 @@ for ( $statsidx = 0; $statsidx < count($stats_config); $statsidx++ ) {
 
       // Is content?
 /*      $iscontent = 0;
-      if ( $stat['wowzalocalstreamname'] == $stat['contentstreamid'] ) {
+      if ( $stat['wowzalocalstreamname'] == $stat['contentkeycode'] ) {
         $iscontent = 1;
-      } elseif ( $stat['wowzalocalstreamname'] != $stat['streamid'] ) {
-        $debug->log($jconf['log_dir'], $myjobid . ".log", "[WARN] No video/content match. Wowza says: " . $stat['wowzalocalstreamname'] . " / db streamid: " . $stat['streamid'] . "(record id: " . $stat['id'] . ")", $sendmail = false);
+      } elseif ( $stat['wowzalocalstreamname'] != $stat['keycode'] ) {
+        $debug->log($jconf['log_dir'], $myjobid . ".log", "[WARN] No video/content match. Wowza says: " . $stat['wowzalocalstreamname'] . " / db keycode: " . $stat['keycode'] . "(record id: " . $stat['id'] . ")", $sendmail = false);
       }
 */
 
@@ -482,8 +482,8 @@ global $db, $debug, $myjobid, $app, $jconf, $kaka;
       lfs.id AS streamid,
       lfs.livefeedid,
       lfs.qualitytag AS qualitytag,
-      lfs.streamid,
-      lfs.contentstreamid
+      lfs.keycode,
+      lfs.contentkeycode
     FROM
       cdn_streaming_stats AS css,
       livefeed_streams AS lfs,
@@ -497,12 +497,12 @@ global $db, $debug, $myjobid, $app, $jconf, $kaka;
       ( css.starttime <= '" . $end_interval_datetime . "' AND css.endtime IS NULL ) OR                  # Open record
       ( css.starttime < '" . $start_interval_datetime . "' AND css.endtime > '" . $end_interval_datetime . "' ) ) AND   # Record covering the whole interval
       ( ( css.vsqrecordingfeed IS NOT NULL AND css.vsqrecordingfeed = lfs.livefeedid ) OR ( css.vsqrecordingfeed IS NULL AND css.vsqsessionid IS NULL) )
-      AND ( css.wowzalocalstreamname = lfs.streamid OR css.wowzalocalstreamname = lfs.contentstreamid )
+      AND ( css.wowzalocalstreamname = lfs.keycode OR css.wowzalocalstreamname = lfs.contentkeycode )
     GROUP BY
       css.vsqsessionid, css.wowzalocalstreamname, css.vsqrecordingfeed";
 
-// Ez a VCR-es izeket kicsinálja!!!! streamid változik!
-//AND ( css.wowzalocalstreamname = lfs.streamid OR css.wowzalocalstreamname = lfs.contentstreamid )
+// Ez a VCR-es izeket kicsinálja!!!! keycode változik!
+//AND ( css.wowzalocalstreamname = lfs.keycode OR css.wowzalocalstreamname = lfs.contentkeycode )
 
 //echo $query . "\n";
 $kaka = $query;

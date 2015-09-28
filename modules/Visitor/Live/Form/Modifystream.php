@@ -52,11 +52,11 @@ class Modifystream extends \Visitor\HelpForm {
     $values = $this->form->getElementValues( 0 );
     $l      = $this->bootstrap->getLocalization();
     
-    if ( !$this->streamModel->row['streamid'] )
-      $values['streamid'] = $this->streamModel->generateUniqueStreamid();
+    if ( !$this->streamModel->row['keycode'] )
+      $values['keycode'] = $this->streamModel->generateUniqueKeycode();
     
-    if ( !$this->streamModel->row['contentstreamid'] )
-      $values['contentstreamid'] = $this->streamModel->generateUniqueStreamid();
+    if ( !$this->streamModel->row['contentkeycode'] )
+      $values['contentkeycode'] = $this->streamModel->generateUniqueKeycode();
     
     if ( !isset( $values['compatibility'] ) or !is_array( $values['compatibility'] ) )
       $values['compatibility'] = array();
