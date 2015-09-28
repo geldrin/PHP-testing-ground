@@ -77,6 +77,7 @@ class Invite extends \Visitor\HelpForm {
     if ( !empty( $values['groups'] ) )
       $groups      = implode('|', $values['groups'] );
 
+    $externalsend  = $values['externalsend'] === 'external';
     $userid        = $user['id'];
     $disabledafter = ( $values['needtimestampdisabledafter'] )
       ? $values['timestampdisabledafter']
@@ -95,6 +96,12 @@ class Invite extends \Visitor\HelpForm {
     if ( !empty( $template ) and $template['id'] )
       $templateid = $template['id'];
 
+    // default template allitas
+    if ( !$templateid and !$externalsend )
+      $this->controller->toSmarty['template'] = array(
+        'subject' => $l('users', 'templatesubject_default'),
+      );
+
     if ( !empty( $this->userids ) )
       $this->bootstrap->includeTemplatePlugin('nameformat');
 
@@ -102,7 +109,6 @@ class Invite extends \Visitor\HelpForm {
     $messages = $this->form->getMessages();
 
     // KULSO KULDES, CSV AZ OUTPUT
-    $externalsend = $values['externalsend'] === 'external';
     if ( $externalsend and empty( $messages ) ) {
       $this->crypto  = $this->bootstrap->getEncryption();
       $this->baseuri =
