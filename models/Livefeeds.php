@@ -1340,36 +1340,31 @@ class Livefeeds extends \Springboard\Model {
       ORDER BY lspg.weight
     ");
 
-    $streams = array();
     foreach( $profiles as $profile ) {
-      if ( isset( $streams[ $profile['qualitytag'] ] ) )
-        $row = $streams[ $profile['qualitytag'] ];
-      else
-        $row = array(
-          'livefeedid'          => $this->id,
-          'qualitytag'          => $profile['qualitytag'],
-          'isdesktopcompatible' => $profile['isdesktopcompatible'],
-          'isandroidcompatible' => $profile['isandroidcompatible'],
-          'isioscompatible'     => $profile['isioscompatible'],
-          'weight'              => $profile['weight'],
-          'timestamp'           => date('Y-m-d H:i:s'),
-        );
+      $row = array(
+        'livefeedid'          => $this->id,
+        'qualitytag'          => $profile['qualitytag'],
+        'isdesktopcompatible' => $profile['isdesktopcompatible'],
+        'isandroidcompatible' => $profile['isandroidcompatible'],
+        'isioscompatible'     => $profile['isioscompatible'],
+        'weight'              => $profile['weight'],
+        'timestamp'           => date('Y-m-d H:i:s'),
+      );
 
-      $prefix = $profile['type'] === 'video'? '': 'content';
-      if (
-           $profile['isdynamic'] or
-           ( !$profile['isdynamic'] and !$profile['streamid'] )
-         )
-        $row[ $prefix . 'streamid' ] = $streamModel->generateUniqueStreamid();
-      else
-        $row[ $prefix . 'streamid' ] = $profile['streamid'];
+      foreach( array('', 'content') as $prefix ) {
+        if (
+             $profile['isdynamic'] or
+             ( !$profile['isdynamic'] and !$profile[ $prefix . 'streamid' ] )
+           )
+          $row[ $prefix . 'streamid' ] = $streamModel->generateUniqueStreamid();
+        else
+          $row[ $prefix . 'streamid' ] = $profile[ $prefix . 'streamid' ];
 
-      $row[ $prefix . 'streamid' ] .= $profile['streamsuffix'];
-      $streams[ $profile['qualitytag'] ] = $row;
+        $row[ $prefix . 'streamid' ] .= $profile[ $prefix . 'streamsuffix' ];
+      }
+
+      $streamModel->insertBatchCollect( $row );
     }
-
-    foreach( $streams as $stream )
-      $streamModel->insertBatchCollect( $stream );
 
     $streamModel->flushBatchCollect();
   }
