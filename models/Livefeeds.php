@@ -154,7 +154,7 @@ class Livefeeds extends \Springboard\Model {
     
   }
   
-  public function getStreamsForBrowser( $browser, $defaultstreamid = null ) {
+  public function getStreamsForBrowser( $browser, $defaultKeycode = null ) {
     
     $streams         = $this->getStreams();
     $narrowedstreams = array();
@@ -189,7 +189,7 @@ class Livefeeds extends \Springboard\Model {
       
     }
     
-    if ( !$defaultstreamid ) {
+    if ( !$defaultKeycode ) {
       
       $defaultstream = reset( $narrowedstreams );
       if ( $browser['mobile'] and $browser['tablet'] ) {
@@ -212,10 +212,10 @@ class Livefeeds extends \Springboard\Model {
         
       }
       
-    } elseif ( $defaultstreamid and !isset( $narrowedstreams[ $defaultstreamid ] ) )
+    } elseif ( $defaultKeycode and !isset( $narrowedstreams[ $defaultKeycode ] ) )
       return false;
     else
-      $defaultstream = $narrowedstreams[ $defaultstreamid ];
+      $defaultstream = $narrowedstreams[ $defaultKeycode ];
     
     if ( // ha nem mobil vagy nem ismert mobil device, de a stream desktop kompat
          ( !$browser['mobile'] and $defaultstream['isdesktopcompatible'] ) or
@@ -269,7 +269,7 @@ class Livefeeds extends \Springboard\Model {
       ),
       'parameters' => array(
         array(
-          'livefeedstreamid' => $info['streams']['defaultstream']['id'],
+          'livefeedKeycode' => $info['streams']['defaultstream']['id'],
           'viewsessionid'    => $this->generateViewSessionid(
             $info['streams']['defaultstream']['id']
           ),
@@ -286,7 +286,7 @@ class Livefeeds extends \Springboard\Model {
 
       $ret['labels'][]     = $stream['qualitytag'];
       $ret['parameters'][] = array(
-        'livefeedstreamid' => $stream['id'],
+        'livefeedKeycode' => $stream['id'],
         'viewsessionid'    => $this->generateViewSessionid( $stream['id'] ),
       );
 
@@ -1019,7 +1019,7 @@ class Livefeeds extends \Springboard\Model {
         $table AS s,
         livefeed_streams AS ls
       WHERE
-        s.livefeedstreamid = ls.id AND
+        s.livefeedKeycode = ls.id AND
         s.iscontent        = '0'
     ";
 
@@ -1356,7 +1356,7 @@ class Livefeeds extends \Springboard\Model {
              $profile['isdynamic'] or
              ( !$profile['isdynamic'] and !$profile[ $prefix . 'keycode' ] )
            )
-          $row[ $prefix . 'keycode' ] = $streamModel->generateUniqueStreamid();
+          $row[ $prefix . 'keycode' ] = $streamModel->generateUniqueKeycode();
         else
           $row[ $prefix . 'keycode' ] = $profile[ $prefix . 'keycode' ];
 
