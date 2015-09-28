@@ -1335,8 +1335,8 @@ class Livefeeds extends \Springboard\Model {
         lspg.livestreamprofileid = lsp.id
       )
       WHERE
-        lsp.disabled                  = '0' AND
-        lspg.livestreamprofilegroupid = '$groupid'
+        lsp.disabled           = '0' AND
+        lspg.livestreamgroupid = '$groupid'
       ORDER BY lspg.weight
     ");
 
