@@ -505,8 +505,8 @@ class Users extends \Springboard\Model {
         recordings AS r,
         recording_view_progress AS rvp
       WHERE
-        rwp.userid       = '" . $this->id . "' AND
-        rwp.recordingid  = r.id AND
+        rvp.userid       = '" . $this->id . "' AND
+        rvp.recordingid  = r.id AND
         r.organizationid = '$organizationid' AND
         r.status NOT IN('markedfordeletion', 'deleted')
     ");
