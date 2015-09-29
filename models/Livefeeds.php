@@ -1351,14 +1351,15 @@ class Livefeeds extends \Springboard\Model {
         'timestamp'           => date('Y-m-d H:i:s'),
       );
 
+      // TODO streamid -> keycode
       foreach( array('', 'content') as $prefix ) {
         if (
              $profile['isdynamic'] or
-             ( !$profile['isdynamic'] and !$profile[ $prefix . 'keycode' ] )
+             ( !$profile['isdynamic'] and !$profile[ $prefix . 'streamid' ] )
            )
           $row[ $prefix . 'keycode' ] = $streamModel->generateUniqueKeycode();
         else
-          $row[ $prefix . 'keycode' ] = $profile[ $prefix . 'keycode' ];
+          $row[ $prefix . 'keycode' ] = $profile[ $prefix . 'streamid' ];
 
         $row[ $prefix . 'keycode' ] .= $profile[ $prefix . 'streamsuffix' ];
       }
