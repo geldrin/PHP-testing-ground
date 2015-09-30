@@ -22,7 +22,7 @@ class Invite extends \Visitor\HelpForm {
   }
 
   public function onComplete() {
-
+    $this->bootstrap->includeTemplatePlugin('nameformat');
     $values       = $this->form->getElementValues( 0 );
     $user         = $this->bootstrap->getSession('user');
     $userModel    = $this->bootstrap->getModel('users');
@@ -102,7 +102,40 @@ class Invite extends \Visitor\HelpForm {
         'subject' => $l('users', 'templatesubject_default'),
       );
 
-    $this->bootstrap->includeTemplatePlugin('nameformat');
+    $module     = '';
+    $forwardurl = '';
+    switch( $values['contenttype'] ) {
+      case 'recordingid':
+        $module = 'recordings/details/';
+        $obj = $this->bootstrap->getModel('recordings');
+        break;
+      case 'livefeedid':
+        $module = 'live/details/';
+        $obj = $this->bootstrap->getModel('livefeeds');
+        break;
+      case 'channelid':
+        $module = 'channels/details/';
+        $obj = $this->bootstrap->getModel('channels');
+        break;
+    }
+
+    if ( $module ) {
+      $forwardurl =
+        \Springboard\Language::get() . '/' . $module .
+        $values[ $values['contenttype'] ] . '-'
+      ;
+
+      if ( $externalsend ) {
+        $obj->select( $values[ $values['contenttype'] ] );
+        $title = '';
+        if ( isset( $obj->row['title'] ) )
+          $title = $obj->row['title'];
+        elseif ( isset( $obj->row['name'] ) )
+          $title = $obj->row['name'];
+
+        $forwardurl .= \Springboard\Filesystem::filenameize( $title );
+      }
+    }
 
     // CHECK ERROR
     $messages = $this->form->getMessages();
@@ -143,21 +176,11 @@ class Invite extends \Visitor\HelpForm {
         'invitationvaliduntil'   => $values['invitationvaliduntil'],
       );
 
-      $module     = '';
-      $forwardurl = '';
       // mert a contenttype nocontent|recordingid|livefeedid|channelid lehet
       switch( $values['contenttype'] ) {
         case 'recordingid':
-          $module = $module ?: 'recordings/details/';
         case 'livefeedid':
-          $module = $module ?: 'live/details/';
         case 'channelid':
-          $module     = $module ?: 'channels/details/';
-          $forwardurl =
-            \Springboard\Language::get() . '/' . $module .
-            $values[ $values['contenttype'] ]
-          ;
-
           $invite[ $values['contenttype'] ] = $values[ $values['contenttype'] ];
           break;
         case 'nocontent':
