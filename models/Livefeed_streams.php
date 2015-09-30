@@ -2,9 +2,9 @@
 namespace Model;
 
 class Livefeed_streams extends \Springboard\Model {
-  
+
   public function checkUniqueKeycode( $keycode, $existingkeycode = null ) {
-    
+
     $found = $this->db->getOne("
       SELECT COUNT(*)
       FROM livefeed_streams
@@ -12,24 +12,31 @@ class Livefeed_streams extends \Springboard\Model {
         keycode = " . $this->db->qstr( $keycode ) . " OR
         contentkeycode = " . $this->db->qstr( $keycode ) . "
     ");
-    
+
     if ( $found or $keycode == $existingkeycode )
       $keycode = $this->generateUniqueKeycode( $existingkeycode );
-    
+
     return $keycode;
-    
+
   }
-  
-  public function generateUniqueKeycode( $existingkeycode = null ) {
-    
+
+  public function generateUniqueKeycode( $existingkeycode = null, $length = 6 ) {
+
     $found = true;
     while( $found ) {
-      
-      $keycode = mt_rand( 100000, 999999 );
-      
+
+      $keycode = '';
+      while (true) {
+        $keycode .= mt_rand( 100000, 999999 );
+        $keycode = substr( $keycode, 0, $length );
+
+        if ( strlen( $keycode ) == $length )
+          break;
+      }
+
       if ( $keycode == $existingkeycode )
         continue;
-      
+
       $found = $this->db->getOne("
         SELECT COUNT(*)
         FROM livefeed_streams
@@ -37,36 +44,36 @@ class Livefeed_streams extends \Springboard\Model {
           keycode = '" . $keycode . "' OR
           contentkeycode = '" . $keycode . "'
       ");
-      
+
     }
-    
+
     return $keycode;
-    
+
   }
-  
+
   public function getStatusForIDs( $ids ) {
-    
+
     if ( !$ids or !is_array( $ids ) or empty( $ids ) or count( $ids ) > 200 )
       return array();
-    
+
     foreach ( $ids as $key => $value ) {
-      
+
       $value = intval( $value );
       if ( !$value )
         return array();
-      
+
       $ids[ $key ] = $this->db->qstr( $value );
-      
+
     }
-    
+
     return $this->db->getArray("
       SELECT id, status
       FROM livefeed_streams
       WHERE id IN(" . implode(", ", $ids ) . ")
     ");
-    
+
   }
-  
+
   public function updateFeedThumbnail() {
     $this->ensureObjectLoaded();
     // befrissítjuk a livefeedet, nem problema ha NULL-ozzuk
@@ -122,7 +129,7 @@ class Livefeed_streams extends \Springboard\Model {
   }
 
   public function markAsDeleted() {
-    
+
     $this->ensureID();
     $this->db->execute("
       UPDATE livefeed_streams

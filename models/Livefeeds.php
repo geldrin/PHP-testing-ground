@@ -1356,18 +1356,18 @@ class Livefeeds extends \Springboard\Model {
 
       if ( $profile['type'] == 'groupdynamic' ) {
         if ( !$streamid )
-          $streamid = $streamModel->generateUniqueKeycode();
+          $streamid = $streamModel->generateUniqueKeycode( null, $profile['streamidlength'] );
 
-        if ( $profile['needcontent'] and !$contentstreamid )
-          $contentstreamid = $streamModel->generateUniqueKeycode();
+        if ( $profile['iscontentenabled'] and !$contentstreamid )
+          $contentstreamid = $streamModel->generateUniqueKeycode( null, $profile['contentstreamidlength'] );
 
         $row['keycode' ] = $streamid;
-        if ( $profile['needcontent'] )
+        if ( $profile['iscontentenabled'] )
           $row['contentkeycode' ] = $contentstreamid;
       }
 
       $prefixes = array('');
-      if ( $profile['needcontent'] )
+      if ( $profile['iscontentenabled'] )
         $prefixes[] = 'content';
 
       foreach( $prefixes as $prefix ) {
@@ -1376,7 +1376,9 @@ class Livefeeds extends \Springboard\Model {
             $row[ $prefix . 'keycode' ] = $profile[ $prefix . 'streamid' ];
             break;
           case 'dynamic':
-            $row[ $prefix . 'keycode' ] = $streamModel->generateUniqueKeycode();
+            $row[ $prefix . 'keycode' ] = $streamModel->generateUniqueKeycode(
+              null, $profile[ $prefix . 'streamidlength']
+            );
             break;
         }
 
