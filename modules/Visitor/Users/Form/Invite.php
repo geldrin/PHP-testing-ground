@@ -102,8 +102,7 @@ class Invite extends \Visitor\HelpForm {
         'subject' => $l('users', 'templatesubject_default'),
       );
 
-    if ( !empty( $this->userids ) )
-      $this->bootstrap->includeTemplatePlugin('nameformat');
+    $this->bootstrap->includeTemplatePlugin('nameformat');
 
     // CHECK ERROR
     $messages = $this->form->getMessages();
@@ -123,10 +122,13 @@ class Invite extends \Visitor\HelpForm {
       );
     }
 
-    foreach( $users as $email => $username ) {
+    foreach( $users as $email => $name ) {
 
-      $invite = array(
+      $username = \smarty_modifier_nameformat( $name );
+      $invite   = array(
         'email'                  => $email,
+        'namefirst'              => $name['namefirst'],
+        'namelast'               => $name['namelast'],
         'name'                   => $username, // null lesz ha meg nincs ilyen emaillel user es non-csv az invite
         'userid'                 => $userid,
         'groups'                 => $groups,
@@ -141,11 +143,21 @@ class Invite extends \Visitor\HelpForm {
         'invitationvaliduntil'   => $values['invitationvaliduntil'],
       );
 
+      $module     = '';
+      $forwardurl = '';
       // mert a contenttype nocontent|recordingid|livefeedid|channelid lehet
       switch( $values['contenttype'] ) {
         case 'recordingid':
+          $module = $module ?: 'recordings/details/';
         case 'livefeedid':
+          $module = $module ?: 'live/details/';
         case 'channelid':
+          $module     = $module ?: 'channels/details/';
+          $forwardurl =
+            \Springboard\Language::get() . '/' . $module .
+            $values[ $values['contenttype'] ]
+          ;
+
           $invite[ $values['contenttype'] ] = $values[ $values['contenttype'] ];
           break;
         case 'nocontent':
@@ -161,7 +173,7 @@ class Invite extends \Visitor\HelpForm {
 
         $invite['registereduserid'] = $this->userids[ $email ]['id'];
         $invite['status']           = 'existing';
-        $invite['name']             = smarty_modifier_nameformat(
+        $invite['name']             = \smarty_modifier_nameformat(
           $this->userids[ $email ]
         );
         $userModel->id = $this->userids[ $email ]['id'];
@@ -170,7 +182,7 @@ class Invite extends \Visitor\HelpForm {
       }
 
       $invModel->insert( $invite );
-      $this->handleInvite( $externalsend, $invModel->row );
+      $this->handleInvite( $externalsend, $invModel->row, $forwardurl );
       $invitecount++;
 
     }
@@ -243,11 +255,12 @@ class Invite extends \Visitor\HelpForm {
     $fhandle = fopen( $file, 'rb' );
     $line    = 0;
     $users   = array();
+    $nameformat = \Springboard\Language::get() == 'hu'? 'straight': 'reverse';
 
     while( ( $row = fgetcsv( $fhandle, 0, $delimeter ) ) !== false ) {
 
       $line++;
-      if ( empty( $row )  or count( $row ) != 2 ) {
+      if ( empty( $row )  or count( $row ) != 3 ) {
 
         $this->form->addMessage( $l('users', 'invitefileinvalid') );
         $this->form->invalidate();
@@ -255,8 +268,9 @@ class Invite extends \Visitor\HelpForm {
 
       }
 
-      $username = trim( $row[0] ); // elso oszlop a nev
-      $email    = trim( $row[1] ); // masodik email
+      $firstname = trim( $row[0] ); // elso oszlop a keresztnev
+      $lastname  = trim( $row[1] ); // masodik a csaladnev
+      $email     = trim( $row[2] ); // harmadik email
       $lineerror = false;
 
       if ( !preg_match( CF_EMAIL, $email ) ) {
@@ -283,7 +297,12 @@ class Invite extends \Visitor\HelpForm {
       }
 
       if ( !$lineerror )
-        $users[ $email ] = $username;
+        $users[ $email ] = array(
+          'nameprefix' => '',
+          'nameformat' => $nameformat,
+          'namefirst'  => $firstname,
+          'namelast'   => $lastname,
+        );
 
     }
 
@@ -291,7 +310,7 @@ class Invite extends \Visitor\HelpForm {
 
   }
 
-  private function handleInvite( $externalsend, $invite ) {
+  private function handleInvite( $externalsend, $invite, $forwardurl ) {
     if ( !$externalsend ) {
       $this->controller->sendInvitationEmail( $invite );
       return;
@@ -301,13 +320,16 @@ class Invite extends \Visitor\HelpForm {
       $url = $this->baseuri . 'login';
     else
       $url =
-        $this->baseuri . 'validateinvite' .
-        $this->crypto->asciiEncrypt( $invite['id'] ) . ',' .
+        $this->baseuri . 'validateinvite/' .
+        $this->crypto->asciiEncrypt( $invite['id'] ) . '-' .
         $invite['validationcode']
       ;
 
-    $firstname = null;
-    $lastname = null;
+    if ( $forwardurl )
+      $url .= '?forward=' . rawurlencode( $forwardurl );
+
+    $firstname = $invite['namefirst'];
+    $lastname  = $invite['namelast'];
     if ( isset( $this->userids[ $invite['email'] ] ) ) {
       $user = $this->userids[ $invite['email'] ];
       $firstname = $user['namefirst'];
