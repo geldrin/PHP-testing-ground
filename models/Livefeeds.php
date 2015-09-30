@@ -909,6 +909,7 @@ class Livefeeds extends \Springboard\Model {
         l.userid,
         l.organizationid,
         l.name,
+        l.indexphotofilename,
         c.title AS channeltitle,
         c.subtitle AS channelsubtitle,
         c.ordinalnumber,

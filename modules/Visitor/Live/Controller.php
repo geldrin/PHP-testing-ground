@@ -31,7 +31,7 @@ class Controller extends \Visitor\Controller {
     'delete'               => 'liveadmin|clientadmin',
     'archive'              => 'liveadmin|clientadmin',
   );
-  
+
   public $forms = array(
     'create'               => 'Visitor\\Live\\Form\\Create',
     'modify'               => 'Visitor\\Live\\Form\\Modify',
@@ -42,12 +42,12 @@ class Controller extends \Visitor\Controller {
     'createchat'           => 'Visitor\\Live\\Form\\Createchat',
     'analytics'            => 'Visitor\\Live\\Form\\Analytics',
   );
-  
+
   public $paging = array(
     'index'   => 'Visitor\\Live\\Paging\\Index',
     'details' => 'Visitor\\Live\\Paging\\Details',
   );
-  
+
   public $apisignature = array(
     'logview' => array(
       'loginrequired' => false,
@@ -82,15 +82,15 @@ class Controller extends \Visitor\Controller {
     'events' => array(
     ),
   );
-  
+
   public function init() {
-    
+
     parent::init();
     if ( !$this->organization['islivestreamingenabled'] ) {
-      
+
       header('HTTP/1.0 403 Forbidden');
       $this->redirectToController('contents', 'nopermissionlivestreaming');
-      
+
     }
 
     $this->toSmarty['defaultimage'] =
@@ -98,9 +98,9 @@ class Controller extends \Visitor\Controller {
     ;
 
   }
-  
+
   public function viewAction() {
-    
+
     $feedModel = $this->modelIDCheck(
       'livefeeds',
       $this->application->getNumericParameter('id')
@@ -113,9 +113,9 @@ class Controller extends \Visitor\Controller {
     $views     = $this->bootstrap->getSession('livefeed-views');
     $access    = $this->bootstrap->getSession('liveaccess');
     $accesskey = $feedModel->id . '-' . ( $feedModel->row['issecurestreamingforced']? '1': '0');
-    
+
     $access[ $accesskey ] = $feedModel->isAccessible( $user, $this->organization );
-    
+
     $channelModel = $this->modelIDCheck('channels', $feedModel->row['channelid'] );
     $streamid     = $this->application->getNumericParameter('streamid');
     $browserinfo  = $this->bootstrap->getSession('browser');
@@ -150,7 +150,7 @@ class Controller extends \Visitor\Controller {
 
     if ( !count( $browserinfo ) )
       $browserinfo->setArray( \Springboard\Browser::getInfo() );
-    
+
     if (
          $streamingserverid and
          ( $user['isadmin'] or $user['isclientadmin'] )
@@ -182,70 +182,70 @@ class Controller extends \Visitor\Controller {
       'checkwatchingconfirmationtimeout' => $this->organization['presencecheckconfirmationtime'],
     );
     $flashdata     = $feedModel->getFlashData( $info );
-    
+
     $this->toSmarty['playerwidth']  = 950;
     $this->toSmarty['playerheight'] = 530;
     $this->toSmarty['anonuser']     = $anonuser;
 
     if ( $feedModel->row['moderationtype'] == 'nochat' )
       $displaychat = false;
-    
+
     if ( $chromeless ) {
-      
+
       $flashdata['layout_logo'] = $this->toSmarty['STATIC_URI'] . 'images/player_overlay_logo.png';
       $flashdata['layout_logoOrientation'] = 'TR';
-      
+
       if ( $this->organization['isplayerlogolinkenabled'] )
         $flashdata['layout_logoDestination'] =
           $this->toSmarty['BASE_URI'] . \Springboard\Language::get() .
           '/live/view/' . $feedModel->id . ',' . $currentstream['id'] . ',' .
           \Springboard\Filesystem::filenameize( $feedModel->row['name'] )
         ;
-      
+
       $fullplayer = $this->application->getParameter('fullplayer');
       $chat       = $this->application->getParameter('chat');
-      
+
       $urlparams['chromeless'] = 'true';
       if ( $chat == 'false' ) {
-        
+
         $displaychat = false;
         $urlparams['chat'] = 'false';
-        
+
       }
-      
+
       if ( $fullplayer == 'false' ) {
-        
+
         $urlparams['fullplayer'] = 'false';
         $fullplayer = false;
         $this->toSmarty['playerwidth']  = 480;
         $this->toSmarty['playerheight'] = 385;
-        
+
       }
-      
+
     }
-    
+
     if ( $flashdata['language'] != 'en' )
       $flashdata['locale'] =
         $this->toSmarty['STATIC_URI'] .
         'js/flash_locale_' . $flashdata['language'] . '.json'
       ;
-    
+
     if ( $needauth ) {
       $flashdata['authorization_need']      = true;
       $flashdata['authorization_loginForm'] = true;
     }
-    
+
     if ( $nopermission ) {
-      
+
       $flashdata['authorization_need']      = true;
       $flashdata['authorization_loginForm'] = false;
       $flashdata['authorization_message']   = $l('recordings', 'nopermission');
-      
+
     }
-    
+
     if ( $chromeless and $displaychat )
       $flashdata['authorization_callback'] = 'onLiveFlashLogin';
-    
+
     $this->toSmarty['flashdata']   =
       $this->getFlashParameters( $flashdata )
     ;
@@ -259,30 +259,30 @@ class Controller extends \Visitor\Controller {
       $currentstream['keycode'],
       $info
     );
-    
+
     if ( $displaychat ) {
-      
+
       if ( !$this->acl ) {
-        
+
         $this->acl = $this->bootstrap->getAcl();
         $this->acl->usersessionkey = $this->usersessionkey;
-        
+
       }
-      
+
       $this->toSmarty['needauth']      = $needauth;
       $this->toSmarty['liveadmin']     = $this->acl->hasPermission('liveadmin|clientadmin');
       // ha liveadmin akkor kiirjuk a moderalasra varo commenteket
       $this->toSmarty['chatitems']     = $feedModel->getChat();
-      
+
       if ( $access[ $accesskey ] !== true ) {
         $this->toSmarty['chat']        = '&nbsp;';
       } else
         $this->toSmarty['chat']        = $this->fetchSmarty('Visitor/Live/Chat.tpl');
-      
+
       $this->toSmarty['lastmodified']  = md5( $this->toSmarty['chat'] );
-      
+
     }
-    
+
     $this->toSmarty['needauth']      = $needauth;
     $this->toSmarty['needping']      = true;
     $this->toSmarty['chromeless']    = $chromeless;
@@ -294,7 +294,7 @@ class Controller extends \Visitor\Controller {
     $this->toSmarty['currentstream'] = $currentstream;
     $this->toSmarty['liveurl']       = $this->bootstrap->config['wowza']['liveurl'];
     $this->toSmarty['chatpolltime']  = $this->bootstrap->config['chatpolltimems'];
-    
+
     $this->toSmarty['title'] = sprintf(
       $l('live', 'view_title'),
       $channelModel->row['title'],
@@ -303,20 +303,20 @@ class Controller extends \Visitor\Controller {
 
     if ( !empty( $urlparams ) )
       $this->toSmarty['urlparams'] = '?' . http_build_query( $urlparams );
-    
+
     $this->smartyOutput('Visitor/Live/View.tpl');
-    
+
   }
-  
+
   public function managefeedsAction() {
-    
+
     $channelModel = $this->modelOrganizationAndUserIDCheck(
       'channels',
       $this->application->getNumericParameter('id')
     );
     $helpModel    = $this->bootstrap->getModel('help_contents');
     $helpModel->addFilter('shortname', 'live_managefeeds', false, false );
-    
+
     $user = $this->bootstrap->getSession('user');
     if ( $user['isadmin'] or $user['isclientadmin'] )
       $this->toSmarty['streamingservers'] =
@@ -329,9 +329,9 @@ class Controller extends \Visitor\Controller {
     $this->toSmarty['feeds']   = $channelModel->getFeedsWithStreams();
     $this->toSmarty['channel'] = $channelModel->row;
     $this->smartyOutput('Visitor/Live/Managefeeds.tpl');
-    
+
   }
-  
+
   public function chatadminAction() {
 
     $feedModel = $this->modelIDCheck(
@@ -439,22 +439,22 @@ class Controller extends \Visitor\Controller {
     $this->redirect( $forward );
 
   }
-  
+
   public function deletefeedAction() {
-    
+
     $feedModel    = $this->modelIDCheck(
       'livefeeds',
       $this->application->getNumericParameter('id')
     );
-    
+
     $channelModel = $this->modelOrganizationAndUserIDCheck(
       'channels',
       $feedModel->row['channelid']
     );
-    
+
     if ( $feedModel->row['feedtype'] == 'vcr' and !$feedModel->canDeleteFeed() )
       throw new \Exception("VCR helszín törles nem lehetséges!");
-    
+
     $feedModel->updateRow( array(
         'smilstatus'        => 'regenerate',
         'contentsmilstatus' => 'regenerate',
@@ -468,21 +468,21 @@ class Controller extends \Visitor\Controller {
         'live/managefeeds/' . $channelModel->id
       )
     );
-    
+
   }
-  
+
   public function deletestreamAction() {
-    
+
     $streamModel   = $this->modelIDCheck(
       'livefeed_streams',
       $this->application->getNumericParameter('id')
     );
-    
+
     $feedModel    = $this->modelIDCheck(
       'livefeeds',
       $streamModel->row['livefeedid']
     );
-    
+
     $channelModel = $this->modelOrganizationAndUserIDCheck(
       'channels',
       $feedModel->row['channelid']
@@ -501,47 +501,47 @@ class Controller extends \Visitor\Controller {
         'live/managefeeds/' . $channelModel->id
       )
     );
-    
+
   }
-  
+
   public function togglestreamAction() {
-    
+
     $streamModel   = $this->modelIDCheck(
       'livefeed_streams',
       $this->application->getNumericParameter('id')
     );
-    
+
     $feedModel    = $this->modelIDCheck(
       'livefeeds',
       $streamModel->row['livefeedid']
     );
-    
+
     $channelModel = $this->modelOrganizationAndUserIDCheck(
       'channels',
       $feedModel->row['channelid']
     );
-    
+
     if ( $this->application->getNumericParameter('start') == '1' ) {
-      
+
       if ( $streamModel->row['status'] != 'ready' ) {
         \Springboard\Debug::getInstance()->log( false, false, 'Stream nem tudott indulni: ' . var_export( $stream, true ), true );
         $this->redirectToController('contents', 'livestream_invalidtransition_start');
       }
-      
+
       $status = 'start';
-      
+
     } elseif ( $this->application->getNumericParameter('start') == '0' ) {
-      
+
       if ( $streamModel->row['status'] != 'recording' ) {
         \Springboard\Debug::getInstance()->log( false, false, 'Stream nem tudott leallni: ' . var_export( $stream, true ), true );
         $this->redirectToController('contents', 'livestream_invalidtransition_stop');
       }
-      
+
       $status = 'disconnect';
-      
+
     } else
       throw new \Exception('Invalid start argument');
-    
+
     $streamModel->updateRow( array(
         'status' => $status,
       )
@@ -558,110 +558,110 @@ class Controller extends \Visitor\Controller {
         'live/managefeeds/' . $channelModel->id
       )
     );
-    
+
   }
-  
+
   public function getchatAction( $livefeedid = null, $ret = array() ) {
-    
+
     if ( !$livefeedid )
       $livefeedid = $this->application->getNumericParameter('id');
-    
+
     if ( !$livefeedid or $livefeedid < 0 )
       $this->jsonOutput( array('status' => 'error') );
-    
+
     $access = $this->bootstrap->getSession('liveaccess');
-    
+
     if ( $access[ $livefeedid . '-0' ] === true or $access[ $livefeedid . '-1' ] === true ) {
-      
+
       if ( !$this->acl ) {
-        
+
         $this->acl = $this->bootstrap->getAcl();
         $this->acl->usersessionkey = $this->usersessionkey;
-        
+
       }
-      
+
       $liveadmin = $this->acl->hasPermission('liveadmin|clientadmin');
       $cache     = $this->getChatCache( $livefeedid );
-      
+
       if ( $cache->expired() ) {
-        
+
         $feedModel = $this->modelIDCheck( 'livefeeds', $livefeedid );
         $chat      = $feedModel->getChat();
-        
+
         $cache->put( $chat );
-        
+
       } else
         $chat = $cache->get();
-      
+
       $this->toSmarty['anonuser']  = $this->bootstrap->getSession('anonuser');
       $this->toSmarty['liveadmin'] = $liveadmin;
       $this->toSmarty['chatitems'] = $chat;
       $data                        = array('html' => $this->fetchSmarty('Visitor/Live/Chat.tpl') );
       $data['lastmodified']        = md5( $data['html'] );
-      
+
     } else {
-      
+
       $data = array( 'html' => '&nbsp;' );
       $data['lastmodified'] = md5( $data['html'] );
-      
+
     }
-    
+
     if ( $this->application->getParameter('lastmodified') == $data['lastmodified'] ) {
-      
+
       header('HTTP/1.1 204 No Content');
       die();
-      
+
     }
-    
+
     $ret['status']       = 'success';
     $ret['lastmodified'] = $data['lastmodified'];
     $ret['html']         = $data['html'];
     $ret['polltime']     = $this->bootstrap->config['chatpolltimems'];
     $this->jsonOutput( $ret );
-    
+
   }
-  
+
   public function expireChatCache( $livefeedid ) {
     $this->getChatCache( $livefeedid )->expire();
   }
-  
+
   public function getChatCache( $livefeedid ) {
-    
+
     return $this->bootstrap->getCache(
       sprintf('livefeed_chat-%d', $livefeedid ),
       null,
       true
     );
-    
+
   }
-  
+
   public function moderatechatAction() {
-    
+
     $moderated = $this->application->getNumericParameter('moderate');
-    
+
     if ( $moderated != 0 and $moderated != 1 )
       $this->redirect('');
-    
+
     $chatModel = $this->modelIDCheck(
       'livefeed_chat',
       $this->application->getNumericParameter('id')
     );
-    
+
     $feedModel = $this->modelOrganizationAndUserIDCheck(
       'livefeeds',
       $chatModel->row['livefeedid']
     );
-    
+
     $chatModel->updateRow( array(
         'moderated' => $moderated,
       )
     );
-    
+
     $this->expireChatCache( $feedModel->id );
     return $this->getchatAction( $feedModel->id );
-    
+
   }
-  
+
   public function checkstreamaccessAction( $secure = false ) {
 
     $ip    = $this->application->getParameter('IP');
@@ -695,10 +695,10 @@ class Controller extends \Visitor\Controller {
 
     $ips = $this->bootstrap->config['allowedstreamips'];
     if ( $ip and $ips and in_array( $ip, $ips ) ) {
-      
+
       $result  = '1';
       $matched = false;
-      
+
     }
 
     if ( $matched ) {
@@ -715,7 +715,7 @@ class Controller extends \Visitor\Controller {
         $this->debugLogUsers();
         $access    = $this->bootstrap->getSession('liveaccess');
         $accesskey = $matches['feedid'] . '-' . (int)$secure;
-        
+
         if ( $access[ $accesskey ] !== true ) {
 
           $user      = $this->bootstrap->getSession('user');
@@ -731,7 +731,7 @@ class Controller extends \Visitor\Controller {
               $result = '1';
 
           }
-          
+
         } else
           $result = '1';
 
@@ -756,51 +756,51 @@ class Controller extends \Visitor\Controller {
         <success>' . $result . '</success>
       </result>'
     ;
-    
+
     die();
-    
+
   }
-  
+
   public function securecheckstreamaccessAction() {
     return $this->checkstreamaccessAction( true );
   }
-  
+
   public function getstreamstatusAction() {
-    
+
     $streamModel = $this->bootstrap->getModel('livefeed_streams');
     $statuses    = $streamModel->getStatusForIDs(
       $this->application->getParameter('id')
     );
-    
+
     $data = array();
     foreach( $statuses as $key => $value ) {
-      
+
       $this->toSmarty['stream'] = $data[ $key ] = $value;
       $data[ $key ]['html']     =
         $this->fetchSmarty('Visitor/Live/Managefeeds_streamaction.tpl')
       ;
-      
+
     }
-    
+
     $this->jsonOutput( array(
         'status'     => 'success',
         'data'       => $data,
         'polltimems' => 5000,
       )
     );
-    
+
   }
-  
+
   public function refreshchatinputAction() {
-    
+
     $feedModel = $this->modelIDCheck(
       'livefeeds',
       $this->application->getNumericParameter('id')
     );
-    
+
     if ( $feedModel->row['accesstype'] != 'registrations' )
       $this->toSmarty['needauth'] = true;
-    
+
     $this->toSmarty['feed']       = $feedModel->row;
     $this->toSmarty['chromeless'] = true;
     $this->jsonOutput( array(
@@ -808,26 +808,27 @@ class Controller extends \Visitor\Controller {
         'html'   => $this->fetchSmarty('Visitor/Live/Chatinput.tpl'),
       )
     );
-    
+
   }
-  
+
   public function searchAction() {
-    
+
     $term   = $this->application->getParameter('term');
     $output = array(
     );
-    
+
     if ( !$term )
       $this->jsonoutput( $output );
-    
+
     $user          = $this->bootstrap->getSession('user');
     $livefeedModel = $this->bootstrap->getModel('livefeeds');
     $results       = $livefeedModel->search( $term, $user['id'], $this->organization['id'] );
-    
+
     if ( empty( $results ) )
       $this->jsonoutput( $output );
-    
-    $img = $this->bootstrap->staticuri . 'images/videothumb_wide_placeholder.png';
+
+    $imgbase = $this->bootstrap->staticuri . 'files/';
+    $imgdef  = $this->bootstrap->staticuri . 'images/videothumb_wide_placeholder.png';
     $this->bootstrap->includeTemplatePlugin('shortdate');
 
     foreach( $results as $result ) {
@@ -840,20 +841,25 @@ class Controller extends \Visitor\Controller {
           $result['endtimestamp']
         );
 
+      if ( $result['indexphotofilename'] )
+        $img = $imgbase . $result['indexphotofilename'];
+      else
+        $img = $imgdef;
+
       $data = array(
         'value' => $result['id'],
         'label' => $label,
         'img'   => $img,
       );
-      
+
       $output[] = $data;
-      
+
     }
-    
+
     $this->jsonoutput( $output );
-    
+
   }
-  
+
   public function transformStatistics( $data ) {
 
     $l          = $this->bootstrap->getLocalization();
@@ -909,7 +915,7 @@ class Controller extends \Visitor\Controller {
   }
 
   public function logviewAction( $livefeedid, $livefeedstreamid, $viewsessionid, $action, $streamurl, $useragent = '' ) {
-    
+
     $statModel = $this->bootstrap->getModel('view_statistics_live');
     $user      = $this->bootstrap->getSession('user');
     $ipaddress = $this->getIPAddress();
