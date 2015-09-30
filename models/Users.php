@@ -9,7 +9,7 @@ class Users extends \Springboard\Model {
   const USER_DISABLED    = 1; // letiltva adminisztracios oldalrol
   const USER_DIRECTORYDISABLED = 2; // letiltva LDAP-bol (nem tagja a csoportnak), automatikusan viszacsinaljuk
   protected $registeredSessionKey;
-  
+
   protected function checkUser( &$user, $organizationid ) {
 
     if ( $user['organizationid'] != $organizationid and !$user['isadmin'] )
@@ -26,21 +26,21 @@ class Users extends \Springboard\Model {
   }
 
   public function selectAndCheckUserValid( $organizationid, $email, $password, $isadmin = null ) {
-    
+
     $crypto = $this->bootstrap->getEncryption();
     $where  = array(
       'email    = ' . $this->db->qstr( $email ),
       'disabled = ' . $this->db->qstr( self::USER_VALIDATED ),
     );
-    
+
     $adminwhere = implode(" AND ", $where ) . ' AND isadmin = 1';
-    
+
     if ( $organizationid !== null )
       $where[] = 'organizationid = ' . $this->db->qstr( $organizationid );
-    
+
     if ( $isadmin )
       $where[] = 'isadmin = 1';
-    
+
     $where = implode(" AND ", $where );
     $user  = $this->db->getRow("
       SELECT *
@@ -77,70 +77,70 @@ class Users extends \Springboard\Model {
 
     } else
       return false;
-    
+
   }
-  
+
   public function selectAndCheckAPIUserValid( $organizationid, $email, $password, $currentip ) {
-    
+
     $uservalid = $this->selectAndCheckUserValid( $organizationid, $email, $password );
-    
+
     if ( $uservalid !== true )
       return false;
-    
+
     if ( !$this->row['isapienabled'] )
       return false;
-    
+
     if ( $this->row['apiaddresses'] and $currentip ) {
-      
+
       $found       = false;
       $addresses = explode(',', $this->row['apiaddresses'] );
-      
+
       foreach ( $addresses as $ip ) {
-        
+
         $ip = trim( $ip );
         if ( !$ip )
           continue;
-        
+
         // ha csillaggal vegzodik akkor range match
         if ( substr( $ip, -1, 1 ) == '*' and $ip != '*' ) {
-          
+
           if ( strpos( $currentip, substr( $ip, 0, -1 ) ) === 0 ) {
-            
+
             $found = true;
             break;
-            
+
           }
-          
+
         } elseif ( $ip == $currentip or $ip == '*' ) {
-          
+
           $found = true;
           break;
-          
+
         }
-        
+
       }
-      
+
       return $found;
-      
+
     }
-    
+
     return true;
-    
+
   }
-  
+
   public function registerForSession( $sessionkey = 'user' ) {
-    
+
     $user = $this->bootstrap->getSession( $sessionkey );
     $user->setArray( $this->row );
     $this->registeredSessionKey = $sessionkey;
     return $user;
-    
+
   }
 
   public function updateSessionInformation( $sessionkey = 'user' ) {
-  
+
     $this->ensureObjectLoaded();
-    
+
     if ( strlen( $this->registeredSessionKey ) )
       $sessionkey = $this->registeredSessionKey;
 
@@ -154,28 +154,28 @@ class Users extends \Springboard\Model {
       else
         throw new \Exception('registeredSessionKey is missing in a Users instance');
     }
-    
+
   }
-  
+
   public function checkSingleLoginUsers() {
 
     $this->ensureObjectLoaded();
 
-    return  
+    return
       !$this->row['issingleloginenforced']
       ||
       (
         $this->row['issingleloginenforced'] &&
-        ( 
+        (
           // a felhasznalo be van lepve, megfelelo a sessionje es
           // sessiontimeouton belul van
-          ( 
-            $this->row['sessionid'] == 
-            $this->bootstrap->getSession('user')->getSessionID() 
+          (
+            $this->row['sessionid'] ==
+            $this->bootstrap->getSession('user')->getSessionID()
           ) &&
           strlen( $this->row['sessionlastupdated'] ) &&
           (
-            time() - strtotime( $this->row['sessionlastupdated'] ) < 
+            time() - strtotime( $this->row['sessionlastupdated'] ) <
             $this->bootstrap->config['sessiontimeout']
           )
         )
@@ -190,9 +190,9 @@ class Users extends \Springboard\Model {
     ;
 
   }
-  
+
   public function updateLastLogin( $diagnostics = null, $ipaddresses = array() ) {
-    
+
     $this->ensureObjectLoaded();
 
     $sql = '';
@@ -203,7 +203,7 @@ class Users extends \Springboard\Model {
       $ipaddress = '';
       foreach( $ipaddresses as $key => $value )
         $ipaddress .= ' ' . $key . ': ' . $value;
-      
+
       $sql .= ', lastloggedinipaddress = ' . $this->db->qstr( $ipaddress );
     }
 
@@ -211,132 +211,132 @@ class Users extends \Springboard\Model {
       $sql .= ', firstloggedin = ' . $this->db->qstr( date('Y-m-d H:i:s') );
 
     $this->db->query("
-      UPDATE LOW_PRIORITY users 
+      UPDATE LOW_PRIORITY users
       SET
         lastloggedin = NOW()
          $sql
-      WHERE 
+      WHERE
         id = '" . $this->id . "'"
     );
-    
+
   }
-  
+
   public function checkEmailAndDisabledStatus( $email, $disabled, $organizationid ) {
-    
+
     $this->addFilter('email', $email, false, false);
     $this->addFilter('disabled', $disabled );
     $this->addFilter('organizationid', $organizationid );
 
     $user = $this->getRow();
-    
+
     if ( empty( $user ) )
       return false;
-    
+
     $this->id  = $user['id'];
     $this->row = $user;
-    
+
     return true;
-    
+
   }
-  
+
   public function checkEmailAndUpdateValidationCode( $email, $code, $organizationid ) {
-    
+
     if ( !$this->checkEmailAndDisabledStatus( $email, self::USER_VALIDATED, $organizationid ) )
       return false;
-    
+
     $this->updateRow( array(
         'validationcode' => $code
       )
     );
-    
+
     return true;
-    
+
   }
-  
+
   public function checkIDAndValidationCode( $id, $code ) {
-    
+
     $crypt = $this->bootstrap->getEncryption();
     $id    = intval( $crypt->asciiDecrypt( $id ) );
-    
+
     if ( $id <= 0 or !$code )
       return false;
-    
+
     $this->select( $id );
-    
+
     if ( $this->row and $this->row['validationcode'] == $code )
       return true;
-    
+
     return false;
-    
+
   }
-  
+
   public function getGroupCount() {
-    
+
     $this->ensureID();
     return $this->db->getOne("
       SELECT COUNT(*)
       FROM groups_members
       WHERE userid = '" . $this->id . "'
     ");
-    
+
   }
-  
+
   public function canUploadAvatar( $status = null ) {
-    
+
     if ( $status === null ) {
-      
+
       $this->ensureObjectLoaded();
       $status = $this->row['avatarstatus'];
-      
+
     }
-    
+
     if (
          in_array( $status, array( '', 'markedfordeletion', 'deleted', 'onstorage') ) or
          preg_match( '/^failed/', $status )
        )
       return true;
-    
+
     return false;
-    
+
   }
-  
+
   protected function insertMultipleIDs( $ids, $table, $field ) {
-    
+
     $this->ensureID();
-    
+
     $values = array();
     foreach( $ids as $id )
       $values[] = "('" . intval( $id ) . "', '" . $this->id . "')";
-    
+
     $this->db->execute("
       INSERT INTO $table ($field, userid)
       VALUES " . implode(', ', $values ) . "
     ");
-    
+
   }
-  
+
   public function clearDepartments() {
-    
+
     $this->ensureID();
-    
+
     $this->db->execute("
       DELETE FROM users_departments
       WHERE userid = '" . $this->id . "'
     ");
-    
+
   }
-  
+
   public function clearGroups() {
-    
+
     $this->ensureID();
-    
+
     $this->db->execute("
       DELETE FROM groups_members
       WHERE userid = '" . $this->id . "'
     ");
-    
+
   }
-  
+
   public function clearFromGroups( $groupids ) {
 
     $this->ensureID();
@@ -347,13 +347,13 @@ class Users extends \Springboard\Model {
         userid = '" . $this->id . "' AND
         groupid IN('" . implode("', '", $groupids ) . "')
     ");
-    
+
   }
 
   public function addDepartments( $departmentids ) {
     $this->insertMultipleIDs( $departmentids, 'users_departments', 'departmentid');
   }
-  
+
   public function addGroups( $groupids ) {
     $this->insertMultipleIDs( $groupids, 'groups_members', 'groupid');
   }
@@ -375,9 +375,9 @@ class Users extends \Springboard\Model {
         g.organizationid = '$organizationid'
     ");
   }
-  
+
   public function search( $email, $organizationid ) {
-    
+
     $email = str_replace( ' ', '%', $email );
     $email = $this->db->qstr( '%' . $email . '%' );
     return $this->db->getArray("
@@ -388,11 +388,11 @@ class Users extends \Springboard\Model {
         isadmin        = '0' AND
         email LIKE $email
     ");
-    
+
   }
-  
+
   public function emailExists( $email, $organizationid ) {
-    
+
     $email = $this->db->qstr( $email );
     return !!$this->db->getOne("
       SELECT COUNT(*)
@@ -401,7 +401,7 @@ class Users extends \Springboard\Model {
         email          = $email AND
         organizationid = '$organizationid'
     ");
-    
+
   }
 
   public function searchStatistics( $user, $term, $organization, $start, $limit ) {
@@ -593,7 +593,7 @@ class Users extends \Springboard\Model {
   }
 
   public function invitationRegistered( $invitationid ) {
-    
+
     $this->db->execute("
       UPDATE users_invitations
       SET
@@ -601,11 +601,11 @@ class Users extends \Springboard\Model {
         status           = 'registered'
       WHERE id = '$invitationid'
     ");
-    
+
   }
 
   public function searchEmails( &$emails, $organizationid ) {
-    
+
     $ret = array();
     while( !empty( $emails ) ) {
 
@@ -639,8 +639,10 @@ class Users extends \Springboard\Model {
     $this->ensureID();
 
     $values = array();
-    foreach( explode('|', $invitation['permissions'] ) as $permission )
-      $values[ $permission ] = 1;
+    foreach( explode('|', $invitation['permissions'] ) as $permission ) {
+      if ( $permission )
+        $values[ $permission ] = 1;
+    }
 
     $departments = array();
     foreach( explode('|', $invitation['departments'] ) as $id ) {
@@ -648,7 +650,7 @@ class Users extends \Springboard\Model {
       $id = intval( $id );
       if ( $id )
         $departments[] = $id;
-      
+
     }
 
     $groups      = array();
@@ -659,15 +661,17 @@ class Users extends \Springboard\Model {
         $groups[] = $id;
 
     }
-    
+
     if (
          isset( $invitation['timestampdisabledafter'] ) and
          $invitation['timestampdisabledafter']
        )
       $values['timestampdisabledafter'] = $invitation['timestampdisabledafter'];
 
-    if ( !empty( $values ) )
+    if ( !empty( $values ) ) {
+      unset( $this->row['id'] );
       $this->updateRow( $values );
+    }
 
     if ( !empty( $departments ) )
       $this->addDepartments( $departments );
@@ -1019,7 +1023,7 @@ class Users extends \Springboard\Model {
   }
 
   public function loginFromCookie( $organizationid, $ipaddresses ) {
-    
+
     $row = $this->validateAutoLoginCookie();
     if ( !$row )
       return false;
