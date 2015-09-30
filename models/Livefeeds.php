@@ -14,22 +14,22 @@ class Livefeeds extends \Springboard\Model {
   );
 
   public function delete( $id, $magic_quotes_gpc = 0 ) {
-    
+
     $this->db->execute("
       DELETE FROM livefeed_streams
       WHERE livefeedid = " . $this->db->qstr( $id ) . "
     ");
-    
+
     return parent::delete( $id, $magic_quotes_gpc );
-    
+
   }
-  
+
   public function getFeedsFromChannelTree( $channeltree ) {
-    
+
     $channelids = $this->getIdsFromTree( $channeltree );
     $channelids = array_unique( $channelids );
     $ret        = array();
-    
+
     $results = $this->db->getArray("
       SELECT DISTINCT *
       FROM livefeeds
@@ -37,31 +37,31 @@ class Livefeeds extends \Springboard\Model {
         channelid IN('" . implode("', '", $channelids ) . "') AND
         (status IS NULL OR status <> 'markedfordeletion')
     ");
-    
+
     foreach( $results as $result )
       $ret[ $result['id'] ] = $result;
-    
+
     return $ret;
-    
+
   }
-  
+
   protected function getIdsFromTree( $channeltree ) {
-    
+
     $channelids = array();
     foreach( $channeltree as $channel ) {
-      
+
       $channelids[] = $channel['id'];
       if ( !empty( $channel['children'] ) )
         $channelids = array_merge( $channelids, $this->getIdsFromTree( $channel['children'] ) );
-      
+
     }
-    
+
     return $channelids;
-    
+
   }
-  
+
   public function getAssocLivefeeds() {
-    
+
     return $this->db->getAssoc("
       SELECT
         lf.channelid,
@@ -86,11 +86,11 @@ class Livefeeds extends \Springboard\Model {
           c.endtimestamp   >= NOW()
         )
     ");
-    
+
   }
-  
+
   public function getAssocUserLivefeeds( $userid ) {
-    
+
     return $this->db->getAssoc("
       SELECT
         channelid,
@@ -104,33 +104,33 @@ class Livefeeds extends \Springboard\Model {
         userid = " . $this->db->qstr( $userid ) . " AND
         (status IS NULL OR status <> 'markedfordeletion')
     ");
-    
+
   }
-  
+
   protected function getBrowserCompatibleWhere( $prefix = '', $browser ) {
-    
+
     if ( !$browser or !$browser['mobile'] )
       return " AND {$prefix}isdesktopcompatible <> '0' ";
-    
+
     if ( $browser['mobiledevice'] != 'android' and $browser['mobiledevice'] != 'iphone' )
       return '';
-    
+
     if ( $browser['mobiledevice'] == 'android' )
       return " AND {$prefix}isandroidcompatible <> '0' ";
     elseif ( $browser['mobiledevice'] == 'iphone' )
       return " AND {$prefix}isioscompatible <> '0' ";
-    
+
   }
-  
+
   public function getStreams( $feedid = null ) {
-    
+
     if ( !$feedid ) {
-      
+
       $this->ensureID();
       $feedid = $this->id;
-      
+
     }
-    
+
     return $this->db->getAssoc("
       SELECT
         id AS ix,
@@ -151,15 +151,15 @@ class Livefeeds extends \Springboard\Model {
         (status IS NULL OR status <> 'markedfordeletion')
       ORDER BY weight, id
     ");
-    
+
   }
-  
+
   public function getStreamsForBrowser( $browser, $defaultKeycode = null ) {
-    
+
     $streams         = $this->getStreams();
     $narrowedstreams = array();
     $defaultstream   = null;
-    
+
     if (
          $browser['mobile'] and
          $browser['mobiledevice'] != 'iphone' and
@@ -168,9 +168,9 @@ class Livefeeds extends \Springboard\Model {
       $unknown = true;
     else
       $unknown = false;
-    
+
     foreach( $streams as $stream ) {
-      
+
       if (
            ( !$browser['mobile'] and $stream['isdesktopcompatible'] ) or
            ( $browser['mobiledevice'] == 'iphone' and $stream['isioscompatible'] ) or
@@ -178,45 +178,45 @@ class Livefeeds extends \Springboard\Model {
            $unknown
          )
         $narrowedstreams[ $stream['id'] ] = $stream;
-      
+
     }
-    
+
     // nem talaltunk streamet ami raillik a browserre igy minden stream lehetseges, a default az elso lesz
     if ( empty( $narrowedstreams ) ) {
-      
+
       foreach( $streams as $stream )
         $narrowedstreams[ $stream['id'] ] = $stream;
-      
+
     }
-    
+
     if ( !$defaultKeycode ) {
-      
+
       $defaultstream = reset( $narrowedstreams );
       if ( $browser['mobile'] and $browser['tablet'] ) {
-        
+
         foreach( $narrowedstreams as $stream ) {
-          
+
           if (
                (
                  ( $browser['mobiledevice'] == 'iphone' and $stream['isioscompatible'] ) or
                  ( $browser['mobiledevice'] == 'android' and $stream['isandroidcompatible'] )
                )
              ) {
-            
+
             $defaultstream = $stream;
             break;
-            
+
           }
-          
+
         }
-        
+
       }
-      
+
     } elseif ( $defaultKeycode and !isset( $narrowedstreams[ $defaultKeycode ] ) )
       return false;
     else
       $defaultstream = $narrowedstreams[ $defaultKeycode ];
-    
+
     if ( // ha nem mobil vagy nem ismert mobil device, de a stream desktop kompat
          ( !$browser['mobile'] and $defaultstream['isdesktopcompatible'] ) or
          ( $defaultstream['isdesktopcompatible'] and $unknown )
@@ -251,15 +251,15 @@ class Livefeeds extends \Springboard\Model {
         "Unhandled stream type: mobile device: " . $browser['mobiledevice'] .
         " defaultstream: " . var_export( $defaultstream, true )
       );
-    
+
     return array(
       'streams'       => $narrowedstreams,
       'defaultstream' => $defaultstream,
       'streamtype'    => $streamtype,
     );
-    
+
   }
-  
+
   private function getStreamInfo( $info, $prefix = '' ) {
 
     $ret = array(
@@ -373,7 +373,7 @@ class Livefeeds extends \Springboard\Model {
     return $flashdata;
 
   }
-  
+
   public function isHDSEnabled( $prefix = '' ) {
     return
       $this->bootstrap->config['livehdsenabled'] and
@@ -474,7 +474,7 @@ class Livefeeds extends \Springboard\Model {
   }
 
   public function getPlaceholderFlashdata( &$info ) {
-    
+
     $this->ensureObjectLoaded();
     if ( !$this->row['introrecordingid'] )
       return array();
@@ -509,19 +509,19 @@ class Livefeeds extends \Springboard\Model {
     return $data;
 
   }
-  
+
   public function deleteStreams() {
-    
+
     $this->ensureID();
     $this->db->execute("
       DELETE FROM livefeed_streams
       WHERE livefeedid = '" . $this->id . "'
     ");
-    
+
   }
-  
+
   public function getVCRReclinkID() {
-    
+
     $this->ensureID();
     return $this->db->getOne("
       SELECT recordinglinkid
@@ -531,11 +531,11 @@ class Livefeeds extends \Springboard\Model {
         (status IS NULL OR status <> 'markedfordeletion')
       LIMIT 1
     ");
-    
+
   }
-  
+
   public function createVCRStream( $recordinglinkid ) {
-    
+
     $this->ensureID();
     $streamModel = $this->bootstrap->getModel('livefeed_streams');
     $streamModel->insert( array(
@@ -549,13 +549,13 @@ class Livefeeds extends \Springboard\Model {
         'timestamp'           => date('Y-m-d H:i:s'),
       )
     );
-    
+
     return $streamModel->id;
-    
+
   }
-  
+
   public function modifyVCRStream( $recordinglinkid ) {
-    
+
     $this->ensureID();
     $recordinglinkid = $this->db->qstr( $recordinglinkid );
     $this->db->execute("
@@ -566,11 +566,11 @@ class Livefeeds extends \Springboard\Model {
         status IS NULL
       LIMIT 1
     ");
-    
+
     return $this->db->Affected_Rows();
-    
+
   }
-  
+
   protected function getAuthorizeSessionid( &$info ) {
 
     if (
@@ -592,9 +592,9 @@ class Livefeeds extends \Springboard\Model {
     return $ret;
 
   }
-  
+
   public function getMediaUrl( $type, $streamcode, $info ) {
-    
+
     $url = $this->bootstrap->config['wowza'][ $type . 'url' ] . $streamcode;
     $sessionid = $info['sessionid'];
     if ( isset( $info['member'] ) )
@@ -603,38 +603,38 @@ class Livefeeds extends \Springboard\Model {
       $user = null;
 
     switch( $type ) {
-      
+
       case 'livehttp':
         //http://stream.videosquare.eu/devvsqlive/123456/playlist.m3u8
         $url .=
           '/playlist.m3u8' .
           $this->getAuthorizeSessionid( $info )
         ;
-        
+
         break;
-      
+
       case 'livertsp':
         //rtsp://stream.videosquare.eu/devvsqlive/123456
         $url .= $this->getAuthorizeSessionid( $info );
-        
+
         break;
-      
+
     }
-    
+
     if ( !$this->streamingserver ) {
-      
+
       $streamingserverModel  = $this->bootstrap->getModel('streamingservers');
       $this->streamingserver = $streamingserverModel->getServerByClientIP(
         $info['ipaddress'],
         'live'
       );
-      
+
     }
-    
+
     return sprintf( $url, $this->streamingserver['server'] );
-    
+
   }
-  
+
   public function isAccessibleByInvitation( $user, $organization ) {
 
     if ( !$user['id'] )
@@ -655,9 +655,9 @@ class Livefeeds extends \Springboard\Model {
   }
 
   public function isAccessible( $user, $organization, $secure = null ) {
-    
+
     $this->ensureObjectLoaded();
-    
+
     if (
          isset( $user['id'] ) and
          (
@@ -673,34 +673,34 @@ class Livefeeds extends \Springboard\Model {
          )
        )
       return true;
-    
+
     if ( $this->isAccessibleByInvitation( $user, $organization ) )
       return true;
 
     switch( $this->row['accesstype'] ) {
-      
+
       case 'public':
         break;
-      
+
       case 'registrations':
-        
+
         if ( !isset( $user['id'] ) )
           return 'registrationrestricted';
-        
+
         break;
-      
+
       case 'departmentsorgroups':
-        
+
         if ( !isset( $user['id'] ) )
           return 'registrationrestricted';
         elseif ( $user['id'] == $this->row['userid'] )
           return true;
         elseif ( $user['iseditor'] and $user['organizationid'] == $this->row['organizationid'] )
           return true;
-        
+
         $feedid = "'" . $this->row['id'] . "'";
         $userid = "'" . $user['id'] . "'";
-        
+
         $hasaccess = $this->db->getOne("
           SELECT (
             SELECT COUNT(*)
@@ -724,84 +724,84 @@ class Livefeeds extends \Springboard\Model {
             LIMIT 1
           ) AS count
         ");
-        
+
         if ( !$hasaccess )
           return 'departmentorgrouprestricted';
-        
+
         break;
-      
+
       default:
         throw new \Exception('Unknown accesstype ' . $this->row['accesstype'] );
         break;
-      
+
     }
-    
+
     return true;
-    
+
   }
-  
+
   public function clearAccess() {
-    
+
     $this->ensureID();
-    
+
     $this->db->execute("
       DELETE FROM access
       WHERE livefeedid = '" . $this->id . "'
     ");
-    
+
   }
-  
+
   protected function insertMultipleIDs( $ids, $table, $field ) {
-    
+
     $this->ensureID();
-    
+
     $values = array();
     foreach( $ids as $id )
       $values[] = "('" . intval( $id ) . "', '" . $this->id . "')";
-    
+
     $this->db->execute("
       INSERT INTO $table ($field, livefeedid)
       VALUES " . implode(', ', $values ) . "
     ");
-    
+
   }
-  
+
   public function restrictDepartments( $departmentids ) {
     $this->insertMultipleIDs( $departmentids, 'access', 'departmentid');
   }
-  
+
   public function restrictGroups( $groupids ) {
     $this->insertMultipleIDs( $groupids, 'access', 'groupid');
   }
-  
+
   public function cloneChannelAccess() {
-    
+
     $this->ensureObjectLoaded();
     if ( !$this->row['channelid'] )
       throw new \Exception('Channelid is not set: ' . var_export( $this->row, true ) );
-    
+
     $accessModel   = $this->bootstrap->getModel('access');
     $channelModel  = $this->bootstrap->getModel('channels');
     $rootchannelid = $channelModel->findRootID( $this->row['channelid'] );
     if ( !$rootchannelid )
       $rootchannelid = $this->row['channelid'];
-    
+
     $accesses = $this->db->getArray("
       SELECT *
       FROM access
       WHERE channelid = '$rootchannelid'
     ");
-    
+
     foreach( $accesses as $access ) {
-      
+
       unset( $access['channelid'] );
       $access['livefeedid'] = $this->id;
       $accessModel->insert( $access );
-      
+
     }
-    
+
   }
-  
+
   public function getAllChat() {
     $this->ensureID();
     return $this->db->query("
@@ -825,9 +825,9 @@ class Livefeeds extends \Springboard\Model {
   }
 
   public function getChat() {
-    
+
     $this->ensureID();
-    
+
     $ret = $this->db->getArray("
       SELECT
         lc.*,
@@ -852,34 +852,34 @@ class Livefeeds extends \Springboard\Model {
     return $ret;
 
   }
-  
+
   public function canDeleteFeed( $feed = null, $streams = null ) {
-    
+
     if ( !$feed ) {
-      
+
       $this->ensureObjectLoaded();
       $feed = $this->row;
-      
+
     }
-    
+
     if ( $feed['feedtype'] != 'vcr' )
       return true;
-    
+
     if ( !$streams )
       $streams = $this->getStreams( $feed['id'] );
-    
+
     if ( count( $streams ) != 1 )
       throw new \Exception("VCR Helyszinhez tobb mint egy stream tartozik! " . var_export( $streams, true ) );
-    
+
     $stream  = reset( $streams );
-    
+
     if ( $stream['status'] and $stream['status'] != 'ready' )
       return false;
     else
       return true;
-    
+
   }
-  
+
   public function getAnonUserID() {
     return $this->bootstrap->getRedis()->incr( $this->getAnonUserIDKey() );
   }
@@ -894,7 +894,7 @@ class Livefeeds extends \Springboard\Model {
   }
 
   public function search( $term, $userid, $organizationid ) {
-    
+
     $searchterm  = str_replace( ' ', '%', $term );
     $searchterm  = $this->db->qstr( '%' . $searchterm . '%' );
     $term        = $this->db->qstr( $term );
@@ -931,9 +931,9 @@ class Livefeeds extends \Springboard\Model {
       ORDER BY relevancy DESC
       LIMIT 20
     ";
-    
+
     return $this->db->getArray( $query );
-    
+
   }
 
   public function getMinStep( $startts, $endts ) {
@@ -1124,7 +1124,7 @@ class Livefeeds extends \Springboard\Model {
   }
 
   public function markAsDeleted() {
-    
+
     $this->ensureID();
     $this->db->execute("
       UPDATE livefeeds
@@ -1199,7 +1199,7 @@ class Livefeeds extends \Springboard\Model {
   }
 
   public function searchStatistics( $user, $term, $organizationid, $start, $limit ) {
-    
+
     $searchterm = str_replace( ' ', '%', $term );
     $searchterm = $this->db->qstr( '%' . $searchterm . '%' );
     $term       = $this->db->qstr( $term );
@@ -1246,9 +1246,9 @@ class Livefeeds extends \Springboard\Model {
       ORDER BY relevancy DESC
       LIMIT $start, $limit
     ";
-    
+
     return $this->db->getArray( $query );
-    
+
   }
 
   public function getStatisticsData( $info ) {
@@ -1340,6 +1340,8 @@ class Livefeeds extends \Springboard\Model {
       ORDER BY lspg.weight
     ");
 
+    $streamid = null;
+    $contentstreamid = null;
     foreach( $profiles as $profile ) {
       $row = array(
         'livefeedid'          => $this->id,
@@ -1351,16 +1353,33 @@ class Livefeeds extends \Springboard\Model {
         'timestamp'           => date('Y-m-d H:i:s'),
       );
 
-      // TODO streamid -> keycode
-      foreach( array('', 'content') as $prefix ) {
-        if (
-             $profile['isdynamic'] or
-             ( !$profile['isdynamic'] and !$profile[ $prefix . 'streamid' ] )
-           )
-          $row[ $prefix . 'keycode' ] = $streamModel->generateUniqueKeycode();
-        else
-          $row[ $prefix . 'keycode' ] = $profile[ $prefix . 'streamid' ];
+      if ( $profile['type'] == 'groupdynamic' ) {
+        if ( !$streamid )
+          $streamid = $streamModel->generateUniqueKeycode();
 
+        if ( $profile['needcontent'] and !$contentstreamid )
+          $contentstreamid = $streamModel->generateUniqueKeycode();
+
+        $row['keycode' ] = $streamid;
+        if ( $profile['needcontent'] )
+          $row['contentkeycode' ] = $contentstreamid;
+      }
+
+      $prefixes = array('');
+      if ( $profile['needcontent'] )
+        $prefixes[] = 'content';
+
+      foreach( $prefixes as $prefix ) {
+        switch( $profile['type'] ) {
+          case 'static':
+            $row[ $prefix . 'keycode' ] = $profile[ $prefix . 'streamid' ];
+            break;
+          case 'dynamic':
+            $row[ $prefix . 'keycode' ] = $streamModel->generateUniqueKeycode();
+            break;
+        }
+
+        // itt kapja meg a groupdynamic is a suffixot
         $row[ $prefix . 'keycode' ] .= $profile[ $prefix . 'streamsuffix' ];
       }
 
