@@ -1,5 +1,11 @@
 ALTER TABLE  `livestream_groups` ADD  `default` INT( 10 ) UNSIGNED NOT NULL DEFAULT  '0' AFTER  `description`;
 
+TRUNCATE TABLE `livestream_groups`;
+
+TRUNCATE TABLE `livestream_profiles`;
+
+TRUNCATE TABLE `livestream_profiles_groups`;
+
 INSERT INTO `livestream_groups` (`id`, `timestamp`, `name`, `description`, `default`, `slideonright`, `accesstype`, `anonymousallowed`, `moderationtype`, `feedtype`, `istranscoderencoded`, `transcoderid`, `disabled`) VALUES
 (1, '2015-09-23 00:00:00', 'Videosquare SD + HD', 'SD + HD streams', 1, 0, NULL, 0, NULL, 'live', 0, NULL, 0);
 
