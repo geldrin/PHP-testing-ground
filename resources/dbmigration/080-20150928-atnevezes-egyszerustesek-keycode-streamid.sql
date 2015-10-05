@@ -1,5 +1,5 @@
-ALTER TABLE  `livestream_profiles` ADD  `contentkeycode` TEXT NULL AFTER  `streamsuffix` ,
-ADD  `contentstreamsuffix` TEXT NOT NULL AFTER  `contentkeycode`;
+ALTER TABLE  `livestream_profiles` ADD  `contentstreamid` TEXT NULL AFTER  `streamsuffix` ,
+ADD  `contentstreamsuffix` TEXT NOT NULL AFTER  `contentstreamid`;
 
 ALTER TABLE  `livestream_profiles` DROP  `type`;
 
