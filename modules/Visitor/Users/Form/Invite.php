@@ -110,16 +110,8 @@ class Invite extends \Visitor\HelpForm {
         $obj = $this->bootstrap->getModel('recordings');
         break;
       case 'livefeedid':
-        $module = 'live/details/';
+        $module = 'live/view/';
         $obj = $this->bootstrap->getModel('livefeeds');
-        if ( $externalsend ) {
-          $obj->select( $values[ $values['contenttype'] ] );
-          if ( $obj->row ) {
-            $channelid = $obj->row['channelid'];
-            $obj = $this->bootstrap->getModel('channels');
-            $obj->select( $channelid );
-          }
-        }
         break;
       case 'channelid':
         $module = 'channels/details/';
@@ -134,9 +126,7 @@ class Invite extends \Visitor\HelpForm {
       ;
 
       if ( $externalsend ) {
-        if ( !$obj->row )
-          $obj->select( $values[ $values['contenttype'] ] );
-
+        $obj->select( $values[ $values['contenttype'] ] );
         $title = '';
         if ( isset( $obj->row['title'] ) )
           $title = $obj->row['title'];
@@ -368,8 +358,8 @@ class Invite extends \Visitor\HelpForm {
     }
 
     $values = array(
-      $firstname,
-      $lastname,
+      trim($firstname),
+      trim($lastname),
       $invite['email'],
       $url,
     );
