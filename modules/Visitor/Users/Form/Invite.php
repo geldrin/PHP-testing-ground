@@ -112,6 +112,14 @@ class Invite extends \Visitor\HelpForm {
       case 'livefeedid':
         $module = 'live/details/';
         $obj = $this->bootstrap->getModel('livefeeds');
+        if ( $externalsend ) {
+          $obj->select( $values[ $values['contenttype'] ] );
+          if ( $obj->row ) {
+            $channelid = $obj->row['channelid'];
+            $obj = $this->bootstrap->getModel('channels');
+            $obj->select( $channelid );
+          }
+        }
         break;
       case 'channelid':
         $module = 'channels/details/';
@@ -126,7 +134,9 @@ class Invite extends \Visitor\HelpForm {
       ;
 
       if ( $externalsend ) {
-        $obj->select( $values[ $values['contenttype'] ] );
+        if ( !$obj->row )
+          $obj->select( $values[ $values['contenttype'] ] );
+
         $title = '';
         if ( isset( $obj->row['title'] ) )
           $title = $obj->row['title'];
@@ -237,8 +247,6 @@ class Invite extends \Visitor\HelpForm {
 
     include_once( $this->bootstrap->config['libpath'] . 'clonefish/constants.php');
     $l              = $this->l;
-    $organizationid = $this->controller->organization['id'];
-    $usersModel     = $this->bootstrap->getModel('users');
 
     if ( filesize( $file ) > 5242880 ) { // nagyobb mint 5 mega
 
@@ -259,7 +267,7 @@ class Invite extends \Visitor\HelpForm {
     );
 
     // BOM torles
-    foreach( $boms as $bomencoding => $bom ) {
+    foreach( $boms as $bom ) {
 
       if ( substr( $data, 0, strlen( $bom ) ) == $bom ) {
 
