@@ -42,7 +42,7 @@ class Controller extends \Visitor\Controller {
     'uploadchunk'          => 'uploader|moderateduploader',
     'cancelupload'         => 'uploader|moderateduploader',
   );
-  
+
   public $forms = array(
     'upload'               => 'Visitor\\Recordings\\Form\\Upload',
     'uploadcontent'        => 'Visitor\\Recordings\\Form\\Uploadcontent',
@@ -56,12 +56,12 @@ class Controller extends \Visitor\Controller {
     'newcomment'           => 'Visitor\\Recordings\\Form\\Newcomment',
     'modifyattachment'     => 'Visitor\\Recordings\\Form\\Modifyattachment',
   );
-  
+
   public $paging = array(
     'myrecordings' => 'Visitor\\Recordings\\Paging\\Myrecordings',
     'featured'     => 'Visitor\\Recordings\\Paging\\Featured',
   );
-  
+
   public $apisignature = array(
     'modifyrecording' => array(
       'id' => array(
@@ -186,34 +186,34 @@ class Controller extends \Visitor\Controller {
       ),
     ),
   );
-  
+
   public function init() {
-    
+
     $action = str_replace('submit', '', $this->action );
-    
+
     if ( $action == 'upload' or $action == 'uploadcontent' )
       $this->bootstrap->setupSession( true );
-    
+
     parent::init();
-    
+
   }
-  
+
   public function indexAction() {
     $this->redirect('recordings/myrecordings');
   }
-  
+
   public function rateAction() {
-    
+
     $recordingid = $this->application->getNumericParameter('id');
     $rating      = $this->application->getNumericParameter('rating');
     $result      = array('status' => 'error');
-    
+
 
     if ( !$recordingid or $rating < 1 or $rating > 5 ) {
-      
+
       $result['reason'] = 'invalidparameters';
       $this->jsonOutput( $result );
-      
+
     }
 
     $cookiekey = "rra_$recordingid";
@@ -231,15 +231,15 @@ class Controller extends \Visitor\Controller {
            $_COOKIE[ $cookiekey ]
          )
        ) {
-      
+
       $result['reason'] = 'alreadyvoted';
       $this->jsonOutput( $result );
-      
+
     }
-    
+
     $recordingsModel = $this->bootstrap->getModel('recordings');
     $recordingsModel->id = $recordingid;
-    
+
     if ( !$recordingsModel->addRating( $rating ) )
       $this->jsonOutput( $result );
 
@@ -250,13 +250,13 @@ class Controller extends \Visitor\Controller {
       'rating'          => $recordingsModel->row['rating'],
       'numberofratings' => $recordingsModel->row['numberofratings'],
     );
-    
+
     $this->jsonOutput( $result );
-    
+
   }
-  
+
   public function detailsAction() {
-    
+
     $recordingsModel = $this->modelOrganizationAndIDCheck(
       'recordings',
       $this->application->getNumericParameter('id')
@@ -270,7 +270,7 @@ class Controller extends \Visitor\Controller {
     $rating      = $this->bootstrap->getSession('rating');
     $access      = $this->bootstrap->getSession('recordingaccess');
     $accesskey   = $recordingsModel->id . '-' . (int)$recordingsModel->row['issecurestreamingforced'];
-    
+
     $access[ $accesskey ] = $recordingsModel->userHasAccess(
       $user, null, $browserinfo['mobile'], $this->organization
     );
@@ -284,7 +284,7 @@ class Controller extends \Visitor\Controller {
     );
 
     $this->bootstrap->includeTemplatePlugin('indexphoto');
-    
+
     if ( $user['id'] )
       $this->toSmarty['channels']    = $recordingsModel->getChannelsForUser( $user );
 
@@ -326,7 +326,7 @@ class Controller extends \Visitor\Controller {
       ( $user['id'] or $this->organization['isanonymousratingenabled'] ) and
       ( !$rating[ $recordingsModel->id ] and !@$_COOKIE['rra_' . $recordingsModel->id ] )
     );
-    
+
     $this->toSmarty['opengraph']     = array(
       'type'        => 'video',
       'image'       => smarty_modifier_indexphoto( $recordingsModel->row, 'player' ),
@@ -386,35 +386,35 @@ class Controller extends \Visitor\Controller {
   }
 
   public function getplayerconfigAction() {
-    
+
     $recordingsModel = $this->modelIDCheck(
       'recordings',
       $this->application->getNumericParameter('id')
     );
-    
+
     $user      = $this->bootstrap->getSession('user');
     $access    = $this->bootstrap->getSession('recordingaccess');
     $accesskey = $recordingsModel->id . '-' . (int)$recordingsModel->row['issecurestreamingforced'];
     $needauth  = false;
-    
+
     $access[ $accesskey ] = $recordingsModel->userHasAccess( $user, null, false, $this->organization );
-    
+
     if ( $access[ $accesskey ] === 'registrationrestricted' )
       $needauth = true;
-    
+
     $this->toSmarty['member']    = $user;
     $this->toSmarty['ipaddress'] = $this->getIPAddress();
     $this->toSmarty['sessionid'] = session_id();
     $this->toSmarty['attachments'] = $recordingsModel->getAttachments();
     $flashdata = $recordingsModel->getStructuredFlashData( $this->toSmarty );
-    
+
     if ( $needauth ) {
-      
+
       $flashdata['authorization']            = array();
       $flashdata['authorization']['need']    = true;
-      
+
     }
-    
+
     $flashdata['share']                 = array();
     $flashdata['share']['quickEmbed']   =
       '<iframe width="480" height="303" src="' .
@@ -425,127 +425,127 @@ class Controller extends \Visitor\Controller {
       $this->bootstrap->baseuri . \Springboard\Language::get() . '/recordings/details/' .
       $recordingsModel->id . ',' . \Springboard\Filesystem::filenameize( $recordingsModel->row['title'] )
     ;
-    
+
     $this->jsonOutput( $this->getFlashParameters( $flashdata ) );
-    
+
   }
-  
+
   public function deleteattachmentAction() {
-    
+
     $attachmentModel = $this->modelIDCheck(
       'attached_documents',
       $this->application->getNumericParameter('id')
     );
-    
-    $recordingsModel = $this->modelOrganizationAndUserIDCheck(
+
+    $this->modelOrganizationAndUserIDCheck(
       'recordings',
       $attachmentModel->row['recordingid']
     );
-    
+
     $attachmentModel->updateRow( array(
         'status' => 'markedfordeletion',
       )
     );
-    
+
     $this->redirect(
       $this->application->getParameter('forward', 'recordings/myrecordings')
     );
-    
+
   }
-  
+
   public function deletesubtitleAction() {
-    
+
     $subtitleModel   = $this->modelIDCheck(
       'subtitles',
       $this->application->getNumericParameter('id')
     );
-    
-    $recordingsModel = $this->modelOrganizationAndUserIDCheck(
+
+    $this->modelOrganizationAndUserIDCheck(
       'recordings',
       $subtitleModel->row['recordingid']
     );
-    
+
     $subtitleModel->delete( $subtitleModel->id );
     $this->redirect(
       $this->application->getParameter('forward', 'recordings/myrecordings')
     );
-    
+
   }
-  
+
   public function getsubtitleAction() {
-    
+
     header('Content-Type: text/plain; charset=UTF-8');
     $subtitleid = $this->application->getNumericParameter('id');
     $cache      = $this->bootstrap->getCache('subtitle_' . $subtitleid, null, true );
-    
+
     if ( $cache->expired() ) {
-      
+
       $subtitleModel = $this->modelIDCheck('subtitles', $subtitleid );
       $subtitle      = $subtitleModel->row['subtitle'];
       $cache->put( $subtitle );
       unset( $subtitleModel );
-      
+
     } else
       $subtitle = $cache->get();
-    
+
     $this->sendheaders = false;
     $this->output( $subtitle, true, true );
-    
+
   }
-  
+
   public function deleteAction() {
-    
+
     $recordingModel = $this->modelOrganizationAndUserIDCheck(
       'recordings',
       $this->application->getNumericParameter('id')
     );
-    
+
     if ( preg_match( '/^onstorage$|^failed.*$/', $recordingModel->row['status'] ) )
       $recordingModel->markAsDeleted();
-    
+
     $this->redirect(
       $this->application->getParameter('forward', 'recordings/myrecordings')
     );
-    
+
   }
-  
+
   public function deletecontentAction() {
-    
+
     $recordingModel = $this->modelOrganizationAndUserIDCheck(
       'recordings',
       $this->application->getNumericParameter('id')
     );
-    
+
     if ( preg_match( '/^onstorage$|^failed.*$/', $recordingModel->row['contentstatus'] ) )
       $recordingModel->markContentAsDeleted();
-    
+
     $this->redirect(
       $this->application->getParameter('forward', 'recordings/myrecordings')
     );
-    
+
   }
-  
+
   public function trackAction( $recordingid ) {
-    
+
     $views          = $this->bootstrap->getSession('views');
     $recordingModel = $this->modelIDCheck(
       'recordings',
       $recordingid,
       false
     );
-    
+
     if ( !$recordingModel )
       return false;
-    
+
     if ( !$views[ $recordingModel->id ] ) {
-      
+
       $recordingModel->incrementViewCounters();
       $views[ $recordingModel->id ] = true;
-      
+
     }
-    
+
     return true;
-    
+
   }
 
   public function checkstreamaccessAction( $secure = false ) {
@@ -572,7 +572,7 @@ class Controller extends \Visitor\Controller {
     $matched =
       preg_match(
         '/(?P<organizationid>\d+)_' .
-        '(?P<sessionid>[a-z0-9]{32})_' .
+        '(?P<sessionid>' . \Springboard\Session::SESSIONID_RE . ')_' .
         '(?P<recordingid>\d+)/',
         $param,
         $matches
@@ -581,12 +581,12 @@ class Controller extends \Visitor\Controller {
 
     $ips = $this->bootstrap->config['allowedstreamips'];
     if ( $ip and $ips and in_array( $ip, $ips ) ) {
-      
+
       $result  = '1';
       $matched = false;
-      
+
     }
-    
+
     if ( $matched ) {
 
       $orgModel     = $this->bootstrap->getModel('organizations');
@@ -644,22 +644,22 @@ class Controller extends \Visitor\Controller {
         <success>' . $result . '</success>
       </result>'
     ;
-    
+
     die();
-    
+
   }
-  
+
   public function securecheckstreamaccessAction() {
     return $this->checkstreamaccessAction( true );
   }
 
   public function modifyrecordingAction( $id ) {
-    
+
     $recordingModel = $this->modelUserAndIDCheck('recordings', $id, false );
-    
+
     if ( !$recordingModel )
       throw new \Exception('No recording found with that ID');
-    
+
     $values = $this->application->getParameters();
     unset( // TODO inkabb whitelistet mint blacklistet
       $values['id'],
@@ -670,39 +670,39 @@ class Controller extends \Visitor\Controller {
       $values['language'],
       $values['_module']
     );
-    
+
     $recordingModel->updateRow( $values );
     return $recordingModel->row;
-    
+
   }
-  
+
   protected function getPlayerHeight( $recordingsModel, $fullscale = false ) {
-    
+
     if ( $fullscale and $recordingsModel->row['mastermediatype'] == 'audio' and $recordingsModel->hasSubtitle() )
       return '140';
     elseif ( $fullscale and $recordingsModel->row['mastermediatype'] == 'audio' )
       return '60';
     elseif ( $fullscale )
       return '530';
-    
+
     if ( $recordingsModel->row['mastermediatype'] == 'audio' and $recordingsModel->hasSubtitle() )
       $height = '120';
     elseif ( $recordingsModel->row['mastermediatype'] == 'audio' )
       $height = '60';
     else
       $height = '385';
-    
+
     return $height;
-    
+
   }
-  
+
   public function embedAction() {
-    
+
     $recordingsModel = $this->modelIDCheck(
       'recordings',
       $this->application->getNumericParameter('id')
     );
-    
+
     $start        = $this->application->getParameter('start');
     $autoplay     = $this->application->getParameter('autoplay');
     $fullscale    = $this->application->getParameter('fullscale');
@@ -715,9 +715,9 @@ class Controller extends \Visitor\Controller {
     $needauth     = false;
     $nopermission = false;
     $l            = $this->bootstrap->getLocalization();
-    
+
     $access[ $accesskey ] = $recordingsModel->userHasAccess( $user, null, false, $this->organization );
-    
+
     if (
          in_array( $access[ $accesskey ], array(
              'registrationrestricted',
@@ -747,7 +747,7 @@ class Controller extends \Visitor\Controller {
       $this->toSmarty['skipcontent'] = true;
 
     $flashdata = $recordingsModel->getFlashData( $this->toSmarty );
-    
+
     $quality        = $this->application->getParameter('quality');
     $mobileversion  = array_pop( $versions['master']['mobile'] );
     $mobileversions = array();
@@ -792,59 +792,59 @@ class Controller extends \Visitor\Controller {
 
     if ( preg_match( '/^\d{1,2}h\d{1,2}m\d{1,2}s$|^\d+$/', $start ) )
       $flashdata['timeline_startPosition'] = $start;
-    
+
     if ( $autoplay )
       $flashdata['timeline_autoPlay'] = true;
-    
+
     if ( $needauth ) {
       $flashdata['authorization_need']      = true;
       $flashdata['authorization_loginForm'] = true;
     }
-    
+
     if ( $nopermission ) {
-      
+
       $flashdata['authorization_need']      = true;
       $flashdata['authorization_loginForm'] = false;
       $flashdata['authorization_message']   = $l('recordings', 'nopermission');
-      
+
     }
-    
+
     if ( $fullscale )
       $this->toSmarty['width']     = '950';
     else
       $this->toSmarty['width']     = '480';
-    
+
     $this->toSmarty['height']      = $this->getPlayerHeight( $recordingsModel, $fullscale );
     $this->toSmarty['containerid'] = 'vsq_' . rand();
     $this->toSmarty['recording']   = $recordingsModel->row;
     $this->toSmarty['flashdata']   = $this->getFlashParameters( $flashdata );
-    
+
     $this->smartyoutput('Visitor/Recordings/Embed.tpl');
-    
+
   }
-  
+
   public function addtochannelAction( $recordingid = null, $channelid = null ) {
-    
+
     if ( $recordingid and $channelid )
       $api = true;
     else {
-      
+
       $recordingid = $this->application->getNumericParameter('id');
       $channelid   = $this->application->getNumericParameter('channel');
       $api         = false;
-      
+
     }
-    
+
     $user            = $this->bootstrap->getSession('user');
     $recordingsModel = $this->checkOrganizationAndUseridWithApi( $api, 'recordings', $recordingid );
     $channelsModel   = $this->checkOrganizationAndUseridWithApi( $api, 'channels', $channelid );
-    
+
     $recordingsModel->addToChannel( $channelsModel->id, $user );
-    
+
     $this->toSmarty['level']     = 1;
     $this->toSmarty['recording'] = $recordingsModel->row;
     $this->toSmarty['channels']  = $recordingsModel->getChannelsForUser( $user );
-    
+
     if ( !$api )
       $this->jsonOutput( array(
           'status' => 'success',
@@ -853,31 +853,31 @@ class Controller extends \Visitor\Controller {
       );
     else
       return true;
-    
+
   }
-  
+
   public function removefromchannelAction( $recordingid = null, $channelid = null ) {
-    
+
     if ( $recordingid and $channelid )
       $api = true;
     else {
-      
+
       $recordingid = $this->application->getNumericParameter('id');
       $channelid   = $this->application->getNumericParameter('channel');
       $api         = false;
-      
+
     }
-    
+
     $user            = $this->bootstrap->getSession('user');
     $recordingsModel = $this->checkOrganizationAndUseridWithApi( $api, 'recordings', $recordingid );
     $channelsModel   = $this->checkOrganizationAndUseridWithApi( $api, 'channels', $channelid );
-    
+
     $recordingsModel->removeFromChannel( $channelsModel->id, $user );
-    
+
     $this->toSmarty['level']     = 1;
     $this->toSmarty['recording'] = $recordingsModel->row;
     $this->toSmarty['channels']  = $recordingsModel->getChannelsForUser( $user );
-    
+
     if ( !$api )
       $this->jsonOutput( array(
           'status' => 'success',
@@ -886,35 +886,35 @@ class Controller extends \Visitor\Controller {
       );
     else
       return true;
-    
+
   }
-  
+
   protected function checkOrganizationAndUseridWithApi( $api, $table, $id ) {
-    
+
     $model = $this->modelOrganizationAndUserIDCheck( $table, $id, false );
-    
+
     if ( $api and !$model )
       throw new \Exception('No record found, ID#' . $id . ', table: ' . $table );
     elseif ( !$model )
       $this->redirect('');
     else
       return $model;
-    
+
   }
-  
+
   public function checkfileresumeasuserAction( $file, $userid ) {
     return $this->checkfileresumeAction();
   }
-  
+
   public function checkfileresumeAction() {
-    
+
     $filename  = trim( $this->application->getParameter('name') );
     $filesize  = $this->application->getNumericParameter('size', null, true );
     $user      = $this->bootstrap->getSession('user');
-    
+
     if ( !$filename or !$filesize )
       jsonOutput( array('status' => 'error') );
-    
+
     $info        = array(
       'filename'  => $filename,
       'filesize'  => $filesize,
@@ -926,30 +926,30 @@ class Controller extends \Visitor\Controller {
       jsonOutput( array('status' => 'error', 'reason' => 'notenoughspace') );
 
     $data        = $uploadModel->getFileResumeInfo( $info );
-    
+
     if ( empty( $data ) )
       $startfromchunk = 0;
     else
       $startfromchunk = $data['currentchunk'] + 1;
-    
+
     $this->jsonOutput( array(
         'status'         => 'success',
         'startfromchunk' => $startfromchunk,
       )
     );
-    
+
   }
-  
-  
+
+
   public function uploadchunkasuserAction() {
     return $this->uploadchunkAction();
   }
-  
+
   public function uploadchunkAction() {
-    
+
     if ( $this->bootstrap->inMaintenance('upload') )
       $this->jsonOutput( array('status' => 'error', 'error'  => 'upload_unknownerror') );
-    
+
     if (
          !isset( $_REQUEST['name'] ) or
          (
@@ -957,17 +957,17 @@ class Controller extends \Visitor\Controller {
            !intval( $_REQUEST['chunks'] )
          )
        ) {
-      
+
       $this->chunkResponseAndLog( array(
           'status' => 'error',
           'error'  => 'upload_uploaderror',
         ), 'Parameter validation failed: ' . var_export( $_REQUEST, true )
       );
-      
+
     }
-    
+
     if ( !isset( $_FILES['file'] ) ) {
-      
+
       $data = file_get_contents("php://input");
       if ( strlen( $data ) != $_SERVER['CONTENT_LENGTH'] )
         $this->chunkResponseAndLog( array(
@@ -975,20 +975,20 @@ class Controller extends \Visitor\Controller {
             'error'  => 'upload_uploaderror',
           ), 'Data length was not the same as the content_length!'
         );
-      
+
       $file = array(
         'tmp_name' => tempnam( null, 'uploadchunk_'),
       );
-      
+
       if ( !file_put_contents( $file['tmp_name'], $data ) )
         $this->jsonOutput( array(
             'status' => 'error',
             'error'  => 'upload_uploaderror',
           )
         );
-      
+
       unset( $data );
-      
+
     } elseif ( $_FILES['file']['error'] != 0 )
       $this->chunkResponseAndLog( array(
           'status' => 'error',
@@ -997,7 +997,7 @@ class Controller extends \Visitor\Controller {
       );
     else
       $file = $_FILES['file'];
-    
+
     $filename    = trim( $this->application->getParameter('name') );
     $chunk       = $this->application->getNumericParameter('chunk');
     $chunks      = $this->application->getNumericParameter('chunks');
@@ -1020,27 +1020,27 @@ class Controller extends \Visitor\Controller {
       'userid'    => $user['id'],
     );
     $info        = $uploadModel->getFileResumeInfo( $chunkinfo );
-    
+
     if ( !$chunks ) // nem kotelezo, nem lesz megadva ha a file merete kisebb mint a chunk merete
       $chunks = 1;
-    
+
     if (
          !empty( $info ) and
          $info['chunkcount'] == $chunks and // sanity checks
          $chunk == ( $info['currentchunk'] + 1 )
        ) {
-      
+
       $sleptfor = 0;
       while ( $info['status'] == 'handlechunk' and $sleptfor < 30 ) {
-        
+
         sleep(1);
         $info = $uploadModel->getFileResumeInfo( $chunkinfo );
         $sleptfor++;
-        
+
       }
-      
+
       if ( $info['status'] == 'handlechunk' ) {
-        
+
         header('HTTP/1.1 500 Internal Server Error');
         $this->chunkResponseAndLog( array(
             'status' => 'error',
@@ -1048,13 +1048,13 @@ class Controller extends \Visitor\Controller {
           ), 'After 30 seconds, upload is in status=handlechunk! info: ' . var_export( $info , true ),
           true
         );
-        
+
       }
-      
+
       $uploadModel->id  = $info['id'];
       $uploadModel->row = $info;
       $uploadModel->handleChunk( $file['tmp_name'] );
-      
+
     } elseif ( $chunk == 0 ) {
       if ( !$uploadModel->isUploadingAllowed() )
         $this->chunkResponseAndLog( array(
@@ -1076,30 +1076,30 @@ class Controller extends \Visitor\Controller {
           'timestamp'    => date('Y-m-d H:i:s'),
         )
       );
-      
+
       $uploadModel->handleChunk( $file['tmp_name'] );
       $uploadModel->updateRow( array(
           'status' => 'uploading',
         )
       );
-      
+
       @unlink( $file['tmp_name'] );
       $info = $uploadModel->row;
-      
+
     } else {
-      
+
       // a chunk nem vart sorrendben erkezett, nem tudunk vele kezdeni semmit
       $this->jsonOutput( array(
           'status' => 'error',
           'error'  => 'upload_unknownerror',
         )
       );
-      
+
     }
-    
+
     // chunk count is 0 based
     if ( $chunk + 1 == $chunks ) {
-      
+
       $filepath = $uploadModel->getChunkPath();
       $uploadModel->updateRow( array(
           'currentchunk' => $chunk,
@@ -1115,53 +1115,53 @@ class Controller extends \Visitor\Controller {
         'user'       => $user,
         'isintrooutro' => $isintrooutro,
       );
-      
+
       try {
-        
+
         if ( $info['iscontent'] ) {
-          
+
           $recordingModel = $this->modelOrganizationAndUserIDCheck(
             'recordings',
             $this->application->getNumericParameter('id'), // recordingid
             false
           );
-          
+
           if ( !$recordingModel )
             $this->chunkResponseAndLog( array(
                 'error' => 'upload_membersonly',
               )
             );
-          
+
         } else {
-          
+
           $recordingModel = $this->bootstrap->getModel('recordings');
           $languageModel  = $this->bootstrap->getModel('languages');
           $languages      = $languageModel->getAssoc('id', 'shortname', false, false, false, 'weight');
           $language       = $this->application->getNumericParameter('videolanguage');
           $textlanguage   = $this->application->getParameter('textlanguage');
-          
+
           if ( !$language and $textlanguage ) {
-            
+
             foreach( $languages as $id => $lang ) {
-              
+
               if ( $lang == $textlanguage ) {
-                
+
                 $language = $id;
                 break;
-                
+
               }
-              
+
             }
-            
+
           }
-          
+
           if ( !isset( $languages[ $language ] ) )
             $this->jsonOutput( array('status' => 'error', 'error' => 'upload_securityerror') );
-          
+
           $info['language'] = $language;
-          
+
         }
-        
+
         $recordingModel->upload( $info );
         $uploadModel->updateRow( array(
             'recordingid' => $recordingModel->id,
@@ -1169,23 +1169,23 @@ class Controller extends \Visitor\Controller {
         );
         $channelid = $this->application->getNumericParameter('channelid');
         if ( !$info['iscontent'] and $channelid ) {
-          
+
           $channelModel = $this->modelOrganizationAndUserIDCheck(
             'channels',
             $channelid,
             false
           );
-          
+
           if ( !$channelModel ) {
-            
+
             $error = 'upload_invalidchannel';
             $message = $l('recordings', 'invalidchannel');
-            
+
           } else
             $channelModel->insertIntoChannel( $recordingModel->id, $user );
-          
+
         }
-        
+
       } catch( \Model\InvalidFileTypeException $e ) {
         $error   = 'upload_invalidfiletype';
         $message = $e->getMessage();
@@ -1202,7 +1202,7 @@ class Controller extends \Visitor\Controller {
         $error   = 'upload_unkownerror';
         $message = $e->getMessage();
       }
-      
+
       if ( isset( $error ) )
         $this->chunkResponseAndLog( array(
             'status' => 'error',
@@ -1211,56 +1211,56 @@ class Controller extends \Visitor\Controller {
           "Recording upload (iscontent: $iscontent) failed with exception message: $message \n\n" .
           'Metadata: ' . var_export( $recordingModel->metadata, true )
         );
-      
+
       if ( $iscontent )
         $url = $this->getUrlFromFragment('contents/uploadcontentsuccessfull');
       else
         $url = $this->getUrlFromFragment('contents/uploadsuccessfull');
-      
+
       $this->jsonOutput( array(
           'status' => 'success',
           'url'    => $url,
           'id'     => $recordingModel->id,
         )
       );
-      
+
     } else {
-      
+
       $uploadModel->updateRow( array(
           'status'       => 'uploading',
           'currentchunk' => $chunk,
         )
       );
       @unlink( $file['tmp_name'] );
-      
+
       $this->jsonOutput( array(
           'status' => 'continue',
         )
       );
-      
+
     }
-    
+
     $this->jsonOutput( array(
         'status' => 'continue',
       )
     );
-    
+
   }
-  
+
   protected function chunkResponseAndLog( $response, $log = false, $shouldemail = false ) {
-    
+
     if ( $log ) {
-      
+
       $log  .= "\n" . var_export( $_SERVER, true );
       $debug = \Springboard\Debug::getInstance();
       $debug->log( false, 'chunkupload.txt', $log, $shouldemail );
-      
+
     }
-    
+
     $this->jsonOutput( $response, true );
-    
+
   }
-  
+
   public function canceluploadAction() {
     $uploadModel = $this->modelUserAndIDCheck(
       'uploads',
@@ -1282,9 +1282,9 @@ class Controller extends \Visitor\Controller {
       $this->application->getParameter('forward')
     );
   }
-  
+
   public function linkcontributorAction() {
-    
+
     $recordingsModel   = $this->modelOrganizationAndUserIDCheck(
       'recordings',
       $this->application->getNumericParameter('id')
@@ -1297,14 +1297,14 @@ class Controller extends \Visitor\Controller {
       'roles',
       $this->application->getNumericParameter('contributorrole')
     );
-    
+
     $recordingsModel->linkContributor( array(
         'contributorid'  => $contributorModel->id,
         'organizationid' => $this->organization['id'],
         'roleid'         => $roleModel->id,
       )
     );
-    
+
     $this->toSmarty['contributors'] = $recordingsModel->getContributorsWithRoles();
     $this->toSmarty['recordingid']  = $recordingsModel->id;
     $this->jsonOutput( array(
@@ -1312,11 +1312,11 @@ class Controller extends \Visitor\Controller {
         'html'   => $this->fetchSmarty('Visitor/Recordings/Contributors.tpl'),
       )
     );
-    
+
   }
-  
+
   public function deletecontributorAction() {
-    
+
     $contribroleModel = $this->modelIDCheck(
       'contributors_roles',
       $this->application->getNumericParameter('id')
@@ -1325,9 +1325,9 @@ class Controller extends \Visitor\Controller {
       'recordings',
       $contribroleModel->row['recordingid']
     );
-    
+
     $contribroleModel->delete( $contribroleModel->id );
-    
+
     $this->toSmarty['contributors'] = $recordingsModel->getContributorsWithRoles();
     $this->toSmarty['recordingid']  = $recordingsModel->id;
     $this->jsonOutput( array(
@@ -1335,11 +1335,11 @@ class Controller extends \Visitor\Controller {
         'html'   => $this->fetchSmarty('Visitor/Recordings/Contributors.tpl'),
       )
     );
-    
+
   }
-  
+
   public function swapcontributorAction() {
-    
+
     $whatcontribroleModel = $this->modelIDCheck(
       'contributors_roles',
       $this->application->getNumericParameter('what')
@@ -1348,18 +1348,18 @@ class Controller extends \Visitor\Controller {
       'contributors_roles',
       $this->application->getNumericParameter('where')
     );
-    
+
     if (
          $whatcontribroleModel->row['recordingid'] != $wherecontribroleModel->row['recordingid'] or
          $whatcontribroleModel->row['weight'] == $wherecontribroleModel->row['weight']
        )
       $this->redirect();
-    
+
     $recordingsModel  = $this->modelOrganizationAndUserIDCheck(
       'recordings',
       $whatcontribroleModel->row['recordingid']
     );
-    
+
     $whatweight = $whatcontribroleModel->row['weight'];
     $whatcontribroleModel->updateRow( array(
         'weight' => $wherecontribroleModel->row['weight'],
@@ -1369,7 +1369,7 @@ class Controller extends \Visitor\Controller {
         'weight' => $whatweight,
       )
     );
-    
+
     $this->toSmarty['contributors'] = $recordingsModel->getContributorsWithRoles();
     $this->toSmarty['recordingid']  = $recordingsModel->id;
     $this->jsonOutput( array(
@@ -1377,7 +1377,7 @@ class Controller extends \Visitor\Controller {
         'html'   => $this->fetchSmarty('Visitor/Recordings/Contributors.tpl'),
       )
     );
-    
+
   }
 
   public function checktimeoutAction( $recordingid ) {
@@ -1398,7 +1398,7 @@ class Controller extends \Visitor\Controller {
   }
 
   public function updatepositionAction( $recordingid, $lastposition ) {
-    
+
     $d = \Springboard\Debug::getInstance();
     $user            = $this->bootstrap->getSession('user');
     $recordingsModel = $this->modelIDCheck(
@@ -1417,10 +1417,10 @@ class Controller extends \Visitor\Controller {
 
     if ( !$user or !$user['id'] )
       throw new \Visitor\Api\ApiException('User not logged in', false, false );
-    
+
     if ( !$recordingsModel )
       throw new \Visitor\Api\ApiException('Recording not found', false, false );
-    
+
     $ret = $recordingsModel->updateLastPosition(
       $this->organization, $user['id'], $lastposition, session_id()
     );
@@ -1428,25 +1428,25 @@ class Controller extends \Visitor\Controller {
     return $ret;
 
   }
-  
+
   public function searchAction() {
-    
+
     $term   = $this->application->getParameter('term');
     $output = array(
     );
-    
+
     if ( !$term )
       $this->jsonoutput( $output );
-    
+
     $user           = $this->bootstrap->getSession('user');
     $recordingModel = $this->bootstrap->getModel('recordings');
     $results        = $recordingModel->search( $term, $user['id'], $this->organization['id'] );
-    
+
     if ( empty( $results ) )
       $this->jsonoutput( $output );
-    
+
     foreach( $results as $result ) {
-      
+
       $title = $result['title'];
       if ( strlen( trim( $result['subtitle'] ) ) )
         $title .= '<br/>' . $result['subtitle'];
@@ -1456,20 +1456,20 @@ class Controller extends \Visitor\Controller {
         'label' => $title,
         'img'   => $this->bootstrap->staticuri,
       );
-      
+
       if ( $result['indexphotofilename'] )
         $data['img'] .= 'files/' . $result['indexphotofilename'];
       else
         $data['img'] .= 'images/videothumb_audio_placeholder.png';
-      
+
       $output[] = $data;
-      
+
     }
-    
+
     $this->jsonoutput( $output );
-    
+
   }
-  
+
   public function getCommentForm() {
 
     $l    = $this->bootstrap->getLocalization();
@@ -1487,7 +1487,7 @@ class Controller extends \Visitor\Controller {
     $form->layouts['tabular']['container']  =
       "<table cellpadding=\"0\" cellspacing=\"0\">\n%s\n</table>\n"
     ;
-    
+
     $form->layouts['tabular']['element'] =
       '<tr %errorstyle%>' .
         '<td class="labelcolumn">' .
@@ -1496,21 +1496,21 @@ class Controller extends \Visitor\Controller {
         '<td class="elementcolumn">%prefix%%element%%postfix%%errordiv%</td>' .
       '</tr>'
     ;
-    
+
     $form->layouts['tabular']['buttonrow'] =
       '<tr class="buttonrow"><td>%s</td></tr>'
     ;
-    
+
     $form->layouts['tabular']['button'] =
       '<input type="submit" value="%s" class="submitbutton" />'
     ;
-    
+
     $form->layouts['rowbyrow']['errordiv'] =
       '<div id="%divid%" style="display: none; visibility: hidden; ' .
       'padding: 2px 5px 2px 5px; background-color: #d03030; color: white;' .
       'clear: both;"></div>'
     ;
-    
+
     include(
       $this->bootstrap->config['modulepath'] .
       'Visitor/Recordings/Form/Configs/Newcomment.php'
@@ -1521,12 +1521,12 @@ class Controller extends \Visitor\Controller {
   }
 
   public function moderatecommentAction() {
-    
+
     $recordingsModel = $this->modelOrganizationAndUserIDCheck(
       'recordings',
       $this->application->getNumericParameter('id')
     );
-    
+
   }
 
   public function getComments( $recordingsModel, $page ) {
@@ -1554,10 +1554,10 @@ class Controller extends \Visitor\Controller {
   }
 
   public function getcommentsAction() {
-    
+
     $recordingid = $this->application->getNumericParameter('id');
     $page        = $this->application->getNumericParameter('page');
-    
+
     if ( $recordingid <= 0 )
       $this->redirect('index');
 
@@ -1569,9 +1569,9 @@ class Controller extends \Visitor\Controller {
     $this->jsonOutput( $comments );
 
   }
-  
+
   public function logviewAction( $recordingid, $recordingversionid, $viewsessionid, $action, $streamurl, $positionfrom = null, $positionuntil = null, $useragent = '' ) {
-    
+
     $statModel = $this->bootstrap->getModel('view_statistics_ondemand');
     $user      = $this->bootstrap->getSession('user');
     $ipaddress = $this->getIPAddress();

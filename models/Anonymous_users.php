@@ -42,7 +42,7 @@ class Anonymous_users extends \Springboard\Model {
   public function getOrInsertUserFromToken() {
     if (
          !isset( $_COOKIE['anontok'] ) or
-         !preg_match('/^[0-9a-f]{32}$/', $_COOKIE['anontok'] )
+         !preg_match('/^' . \Springboard\Tools::SESSIONID_RE . '$/', $_COOKIE['anontok'] )
        ) {
       $insert = true;
     } else {

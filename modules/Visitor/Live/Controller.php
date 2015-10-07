@@ -686,7 +686,7 @@ class Controller extends \Visitor\Controller {
     $matched =
       preg_match(
         '/(?P<organizationid>\d+)_' .
-        '(?P<sessionid>[a-z0-9]{32})_' .
+        '(?P<sessionid>' . \Springboard\Session::SESSIONID_RE . ')_' .
         '(?P<feedid>\d+)/',
         $param,
         $matches
