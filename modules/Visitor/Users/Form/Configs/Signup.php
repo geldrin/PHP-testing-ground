@@ -4,13 +4,13 @@ include_once( $this->bootstrap->config['libpath'] . 'clonefish/constants.php');
 $language = \Springboard\Language::get();
 
 $config = array(
-  
+
   'fs1' => array(
     'type'   => 'fieldset',
     'legend' => $l('users', 'register_title'),
     'prefix' => '<span class="legendsubtitle">' . $l('users', 'register_subtitle') . '</span>',
   ),
-  
+
   'action' => array(
     'type'  => 'inputHidden',
     'value' => 'submitsignup'
@@ -34,7 +34,7 @@ $config = array(
         'type' => 'database',
         'help' => $l('users','emailregisteredhelp'),
         'sql'  =>  "
-          SELECT count(*) as counter 
+          SELECT count(*) as counter
           FROM users
           WHERE
             email = <FORM.email> AND
@@ -58,7 +58,7 @@ $config = array(
       )
     )
   ),
-  
+
   'confirmpassword' => Array(
     'displayname' => $l('users', 'verifypassword'),
     'type'        => 'inputPassword',
@@ -69,7 +69,7 @@ $config = array(
       )
     )
   ),
-  
+
   'nameprefix' => array(
     'displayname' => $l('users', 'nameprefix'),
     'type'        => 'select',
@@ -78,7 +78,7 @@ $config = array(
       array( 'type' => 'required' )
     ),
   ),
-  
+
   'namefirst' => array(
     'displayname' => $l('users', 'firstname'),
     'type'        => 'inputText',
@@ -86,7 +86,7 @@ $config = array(
       array( 'type' => 'required' ),
     ),
   ),
-  
+
   'namelast' => array(
     'displayname' => $l('users', 'lastname'),
     'type'        => 'inputText',
@@ -94,7 +94,7 @@ $config = array(
       array( 'type' => 'required' ),
     ),
   ),
-  
+
   'nameformat' => array(
     'displayname' => $l('users', 'nameformat'),
     'type'        => 'select',
@@ -107,7 +107,7 @@ $config = array(
       array( 'type' => 'required' ),
     ),
   ),
-  
+
   'nickname' => array(
     'displayname' => $l('users', 'username'),
     'type'        => 'inputText',
@@ -136,7 +136,7 @@ $config = array(
       )
     ),
   ),
-  
+
   'newsletter' => array(
     'displayname' => $l('users', 'newsletter'),
     'type'        => 'inputCheckbox',
@@ -147,7 +147,7 @@ $config = array(
     'validation'  => array(
     ),
   ),
-  
+
   'tos' => array(
     'displayname' => $l('', 'userstos'),
     'type'        => 'inputCheckbox',
@@ -163,12 +163,13 @@ $config = array(
       )
     ),
   ),
-  
+
 );
 
 $userinvitationSession = $this->bootstrap->getSession('userinvitation');
-if ( $userinvitationSession['invitation']['name'] )
-  $config['namefirst']['value'] = $userinvitationSession['invitation']['name'];
-
+if ( $userinvitationSession['invitation']['namefirst'] )
+  $config['namefirst']['value'] = $userinvitationSession['invitation']['namefirst'];
+if ( $userinvitationSession['invitation']['namelast'] )
+  $config['namelast']['value'] = $userinvitationSession['invitation']['namelast'];
 if ( $userinvitationSession['invitation']['email'] )
   $config['email']['value'] = $userinvitationSession['invitation']['email'];

@@ -28,7 +28,7 @@ class Controller extends \Visitor\Controller {
     'getinvitationtemplate' => 'clientadmin',
     'togglesubscription'   => 'member',
   );
-  
+
   public $forms = array(
     'login'          => 'Visitor\\Users\\Form\\Login',
     'signup'         => 'Visitor\\Users\\Form\\Signup',
@@ -41,12 +41,12 @@ class Controller extends \Visitor\Controller {
     'resetsession'   => 'Visitor\\Users\\Form\\Resetsession',
     'editinvite'     => 'Visitor\\Users\\Form\\Editinvite',
   );
-  
+
   public $paging = array(
     'admin'       => 'Visitor\\Users\\Paging\\Admin',
     'invitations' => 'Visitor\\Users\\Paging\\Invitations',
   );
-  
+
   public $apisignature = array(
     'authenticate' => array(
       'loginrequired' => false,
@@ -90,7 +90,7 @@ class Controller extends \Visitor\Controller {
       'hashrequired'  => false,
     ),
   );
-  
+
   protected $l;
   protected $crypto;
   protected $invitationcache;
@@ -98,15 +98,15 @@ class Controller extends \Visitor\Controller {
   public function indexAction() {
     echo 'Nothing here yet';
   }
-  
+
   public function welcomeAction() {
-    
+
     $l           = $this->bootstrap->getLocalization();
     $uploadModel = $this->bootstrap->getModel('uploads');
     $userModel   = $this->bootstrap->getModel('users');
     $user        = $this->bootstrap->getSession('user');
     $uploads     = $uploadModel->getUploads( $this->bootstrap->getSession('user') );
-    
+
     $userModel->id  = $user['id'];
     $userModel->row = $user->toArray();
     $this->toSmarty['channels'] = $userModel->getCourses(
@@ -129,51 +129,51 @@ class Controller extends \Visitor\Controller {
         $l('recordings', 'continueupload'),
         \Springboard\Language::get() . '/recordings/upload'
       );
-    
+
     $this->smartyoutput('Visitor/Users/Welcome.tpl');
-    
+
   }
-  
+
   public function validateresetsessionAction() {
-    
+
     $userModel = $this->bootstrap->getModel('users');
     $uservalid = $userModel->checkIDAndValidationCode(
       $this->application->getParameter('a'),
       $this->application->getParameter('b')
     );
-    
+
     if ( !$uservalid )
       $this->redirect('contents/signupvalidationfailed');
-    
+
     $userModel->registerForSession();
     $userModel->updateSessionInformation();
     $this->logUserLogin('RESETSESSION LOGIN');
-    
+
     $this->redirectToController('contents', 'sessionreset');
-    
+
   }
-  
+
   public function validateAction() {
-    
+
     $access    = $this->bootstrap->getSession('recordingaccess');
     $userModel = $this->bootstrap->getModel('users');
     $uservalid = $userModel->checkIDAndValidationCode(
       $this->application->getParameter('a'),
       $this->application->getParameter('b')
     );
-    
+
     if ( !$uservalid )
       $this->redirect('contents/signupvalidationfailed');
-    
+
     $userModel->updateRow( array(
         'disabled' => 0,
       )
     );
-    
+
     $userModel->registerForSession();
     $access->clear();
     $this->logUserLogin('VALIDATED LOGIN');
-    
+
     // ha users_invite-bol regisztralt a user akkor validalas utan itt lokjuk at
     // kozvetlenul
     $inviteforwardSession = $this->bootstrap->getSession('inviteforward');
@@ -184,24 +184,24 @@ class Controller extends \Visitor\Controller {
     }
 
     $this->redirectToController('contents', 'signupvalidated');
-    
+
   }
-  
+
   public function validateinviteAction() {
-    
+
     $crypt = $this->bootstrap->getEncryption();
     $id    = intval( $crypt->asciiDecrypt( $this->application->getParameter('a') ) );
     $validationcode = $this->application->getParameter('b');
-    
+
     if ( $id <= 0 or !$validationcode )
       $this->redirect('contents/invitationvalidationfailed');
-    
+
     $invitationModel = $this->bootstrap->getModel('users_invitations');
     $invitationModel->select( $id );
-    
+
     if ( !$invitationModel->row or $invitationModel->row['validationcode'] !== $validationcode )
       $this->redirectToController('contents', 'invitationvalidationfailed');
-    
+
     if ( $invitationModel->isExpired() )
       $this->redirectToController('contents', 'invitationvalidationexpired');
 
@@ -228,11 +228,11 @@ class Controller extends \Visitor\Controller {
 
     // elküldeni regisztrálni
     $this->redirectToController('contents', 'invitationvalidated');
-    
+
   }
-  
+
   public function logoutAction() {
-    
+
     $l    = $this->bootstrap->getLocalization();
     $user = $this->bootstrap->getSession('user');
 
@@ -248,39 +248,39 @@ class Controller extends \Visitor\Controller {
     $user->clear();
     $this->regenerateSessionID();
     $this->redirectWithMessage('index', $l('users', 'loggedout') );
-    
+
   }
-  
+
   public function disableAction() {
-    
+
     $userid = $this->application->getNumericParameter('id');
     if ( !$userid )
       $this->redirect('index');
-    
+
     $forward   = $this->application->getParameter('forward', 'users/admin');
     $l         = $this->bootstrap->getLocalization();
     $user      = $this->bootstrap->getSession('user');
-    
+
     if ( $user['id'] == $userid )
       $this->redirectWithMessage( $forward, $l('users', 'cantdisableself') );
-    
+
     $userModel = $this->bootstrap->getModel('users');
     $userModel->select( $userid );
     $userModel->updateRow( array(
         'disabled' => $userModel::USER_DISABLED,
       )
     );
-    
+
     $this->redirectWithMessage( $forward, $l('users', 'userdisabled') );
-    
+
   }
-  
+
   // pure api hivas, nem erheto el apin kivulrol (mert nincs a permission tombbe)
   public function authenticateAction( $email, $password, $recordingid = null, $feedid = null ) {
-    
+
     if ( !$email or !$password )
       return false;
-    
+
     $l         = $this->bootstrap->getLocalization();
     $userModel = $this->bootstrap->getModel('users');
     $uservalid = $userModel->selectAndCheckUserValid(
@@ -288,9 +288,9 @@ class Controller extends \Visitor\Controller {
       $email,
       $password
     );
-    
+
     if ( $uservalid !== true ) {
-      
+
       if ( $uservalid === 'expired' ) {
         $message = $l('users', 'timestampdisabled');
       } else {
@@ -302,35 +302,35 @@ class Controller extends \Visitor\Controller {
       }
 
       throw new \Visitor\Api\ApiException( $message, true, false );
-      
+
     }
-    
+
     if ( !$userModel->checkSingleLoginUsers() ) {
-      
+
       $message = sprintf(
         $l('users','login_apisessionerror'),
         \Springboard\Language::get() . '/users/resetsession?email=' . rawurlencode( $email )
       );
-      
+
       throw new \Visitor\Api\ApiException( $message, true, false );
-      
+
     }
-    
+
     if ( $userModel->row['isadmin'] )
       $userModel->row['organizationid'] = $this->organization['id']; // a registerforsession miatt
-    
+
     $userModel->registerForSession();
     $userModel->updateSessionInformation();
     $userModel->updateLastlogin( null, $this->getIPAddress(true) );
     $this->logUserLogin('APILOGIN');
-    
+
     if ( $recordingid ) {
-      
+
       $recordingsModel = $this->modelIDCheck( 'recordings', $recordingid, false );
-      
+
       if ( !$recordingsModel )
         throw new \Visitor\Api\ApiException( $l('recordings', 'norecording'), true, false );
-      
+
       $browserinfo     = $this->bootstrap->getBrowserInfo();
       $user            = $this->bootstrap->getSession('user');
       $access          = $this->bootstrap->getSession('recordingaccess');
@@ -346,18 +346,18 @@ class Controller extends \Visitor\Controller {
       $this->toSmarty['ipaddress'] = $this->getIPAddress();
       $this->toSmarty['sessionid'] = session_id();
       $output = $recordingsModel->getFlashData( $this->toSmarty );
-      
+
     } elseif ( $feedid ) {
-      
+
       $feedModel = $this->modelIDCheck( 'livefeeds', $feedid, false );
-      
+
       if ( !$feedModel )
         throw new \Visitor\Api\ApiException( $l('live', 'nofeed'), true, false );
-      
+
       $user      = $this->bootstrap->getSession('user');
       $access    = $this->bootstrap->getSession('liveaccess');
       $accesskey = $feedModel->id . '-' . ( $feedModel->row['issecurestreamingforced']? '1': '0');
-      
+
       $access[ $accesskey ] = $feedModel->isAccessible( $user, $this->organization );
 
       $info = array(
@@ -377,57 +377,57 @@ class Controller extends \Visitor\Controller {
       $output = array();
 
     return $this->getFlashParameters( $output );
-    
+
   }
-  
+
   public function pingAction() {
-    
+
     $user = $this->bootstrap->getSession('user');
     if ( !$user['id'] )
       return false;
-    
+
     $userModel = $this->bootstrap->getModel('users');
     $userModel->select( $user['id'] );
-    
+
     if ( !$userModel->row )
       return false;
-    
+
     if ( !$userModel->checkSingleLoginUsers() ) {
-      
+
       $user->clear();
       $l = $this->bootstrap->getLocalization();
       $this->addMessage( $l('users', 'loggedout_sessionexpired') );
       return false;
-      
+
     }
-    
+
     $userModel->updateSessionInformation();
     return true;
-    
+
   }
-  
+
   public function setuserfieldAction( $userid, $field, $value ) {
-    
+
     $userModel = $this->bootstrap->getModel('users');
     $userModel->select( $userid );
-    
+
     if ( !$userModel->row )
       throw new \Visitor\Api\ApiException("User with id: $userid not found", true, false );
-    
+
     if ( !isset( $userModel->row[ $field ] ) )
       throw new \Visitor\Api\ApiException("Field: $field not found", true, false );
-    
+
     $userModel->updateRow( array(
         $field => @$_REQUEST['value'],
       )
     );
-    
+
     return $userModel->row;
-    
+
   }
-  
+
   public function sendInvitationEmail( &$invitation ) {
-    
+
     if ( !$this->l )
       $this->l = $this->bootstrap->getLocalization();
 
@@ -588,7 +588,7 @@ class Controller extends \Visitor\Controller {
       $this->toSmarty['template']['subject'],
       $this->fetchSmarty('Visitor/Users/Email/Invitation.tpl')
     );
-    
+
   }
 
   public function resendinvitationAction() {

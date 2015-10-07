@@ -157,12 +157,10 @@ class Invite extends \Visitor\HelpForm {
 
     foreach( $users as $email => $name ) {
 
-      $username = \smarty_modifier_nameformat( $name );
       $invite   = array(
         'email'                  => $email,
         'namefirst'              => $name['namefirst'],
         'namelast'               => $name['namelast'],
-        'name'                   => $username, // null lesz ha meg nincs ilyen emaillel user es non-csv az invite
         'userid'                 => $userid,
         'groups'                 => $groups,
         'departments'            => $departments,
@@ -196,9 +194,8 @@ class Invite extends \Visitor\HelpForm {
 
         $invite['registereduserid'] = $this->userids[ $email ]['id'];
         $invite['status']           = 'existing';
-        $invite['name']             = \smarty_modifier_nameformat(
-          $this->userids[ $email ]
-        );
+        $invite['namefirst']        = $this->userids[ $email ]['namefirst'];
+        $invite['namelast']         = $this->userids[ $email ]['namelast'];
         $userModel->id = $this->userids[ $email ]['id'];
         $userModel->applyInvitationPermissions( $invite );
 
