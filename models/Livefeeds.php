@@ -269,7 +269,7 @@ class Livefeeds extends \Springboard\Model {
       ),
       'parameters' => array(
         array(
-          'livefeedKeycode' => $info['streams']['defaultstream']['id'],
+          'livefeedstreamid' => $info['streams']['defaultstream']['id'],
           'viewsessionid'    => $this->generateViewSessionid(
             $info['streams']['defaultstream']['id']
           ),
@@ -286,7 +286,7 @@ class Livefeeds extends \Springboard\Model {
 
       $ret['labels'][]     = $stream['qualitytag'];
       $ret['parameters'][] = array(
-        'livefeedKeycode' => $stream['id'],
+        'livefeedstreamid' => $stream['id'],
         'viewsessionid'    => $this->generateViewSessionid( $stream['id'] ),
       );
 
@@ -1020,7 +1020,7 @@ class Livefeeds extends \Springboard\Model {
         $table AS s,
         livefeed_streams AS ls
       WHERE
-        s.livefeedKeycode = ls.id AND
+        s.livefeedstreamid = ls.id AND
         s.iscontent        = '0'
     ";
 
