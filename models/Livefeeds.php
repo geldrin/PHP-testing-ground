@@ -355,6 +355,7 @@ class Livefeeds extends \Springboard\Model {
 
     $streaminfo = $this->getStreamInfo( $info, 'content');
     $flashdata['media_secondaryStreams'] = $streaminfo['streams'];
+    $flashdata['content_streamLabels'] = $streaminfo['labels'];
 
     if ( $info['member'] and $info['member']['id'] ) {
       $flashdata['user_id']          = $info['member']['id'];
