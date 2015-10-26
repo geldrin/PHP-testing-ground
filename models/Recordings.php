@@ -2392,6 +2392,8 @@ class Recordings extends \Springboard\Model {
         );
         if ( $version['dimensions'] )
           $data['media_streamDimensions'][] = $version['dimensions'];
+        else
+          $data['recording_autoQuality'] = false;
 
         if ( !$hds )
           $data['media_streams'][]        =
@@ -2424,6 +2426,8 @@ class Recordings extends \Springboard\Model {
         $data['content_streamLabels'][] = $version['qualitytag'];
         if ( $version['dimensions'] )
           $data['content_streamDimensions'][] = $version['dimensions'];
+        else
+          $data['recording_autoQuality'] = false;
 
         if ( !$hds )
           $data['content_streams'][]      =
