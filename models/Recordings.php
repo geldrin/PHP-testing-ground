@@ -14,64 +14,64 @@ class Recordings extends \Springboard\Model {
       ),
     ),
   );
-  
+
   public $metadata = array();
   protected $searchadvancedwhere;
   protected $streamingserver;
-  
+
   public function getLength() {
     $this->ensureObjectLoaded();
     return max( $this->row['masterlength'], $this->row['contentmasterlength'] );
   }
 
   public function resetStats() {
-    
+
     $fields        = array();
     $elementfields = array();
-    
+
     if ( date('N') === '1' ) { // ISO-8601 numeric representation of the day of the week (added   PHP 5.1.0)
-      
+
       $fields[] = 'numberofcommentsthisweek';
       $fields[] = 'numberofviewsthisweek';
-      
+
       $fields[] = 'ratingthisweek';
       $fields[] = 'sumofratingthisweek';
       $fields[] = 'numberofratingsthisweek';
-      
+
     }
-    
+
     if ( date('j') === '1' ) { // Day of the month without leading zeros
-      
+
       $fields[] = 'numberofcommentsthismonth';
       $fields[] = 'numberofviewsthismonth';
-      
+
       $fields[] = 'ratingthismonth';
       $fields[] = 'sumofratingthismonth';
       $fields[] = 'numberofratingsthismonth';
-      
+
     }
-    
+
     $sql = implode( " = '0', ", $fields );
-    
+
     if ( !strlen( $sql ) )
       return false;
-    
+
     $sql .= " = '0' ";
     $sql = "UPDATE recordings SET $sql";
-    
+
     $this->db->execute($sql);
-    
+
     return true;
-    
+
   }
-  
+
   public function resetViewCounters( $type ) {
-    
+
     $this->ensureID();
-    
+
     if ( $type != 'week' and $type != 'month' )
       throw new \Exception('Invalid type passed, expecting "week" or "month"');
-    
+
     $this->db->execute("
       UPDATE recordings
       SET
@@ -79,11 +79,11 @@ class Recordings extends \Springboard\Model {
       WHERE id = '" . $this->id . "'
       LIMIT 1
     ");
-    
+
   }
-  
+
   public function incrementViewCounters() {
-    
+
     $this->ensureID();
     $this->db->execute("
       UPDATE recordings
@@ -94,44 +94,44 @@ class Recordings extends \Springboard\Model {
       WHERE id = '" . $this->id . "'
       LIMIT 1
     ");
-    
+
   }
-  
+
   public function updateMetadataTimestamps( $ids ) {
-    
+
     if ( empty( $ids ) )
       return false;
-    
+
     if ( !is_array( $ids ) )
       $ids = array( $ids );
-    
+
     return $this->db->execute("
       UPDATE recordings
       SET metadataupdatedtimestamp = '" . date('Y-m-d H:i:s') . "'
       WHERE id IN('" . implode("', '", $ids ) . "')
     ");
-    
+
   }
-  
+
   public function updateFulltextCache( $updatemetadata = false ) {
-    
+
     $this->ensureObjectLoaded();
     $values = array(
       'primarymetadatacache' => $this->assemblePrimaryFulltextCache(),
       'additionalcache'      => $this->assembleAdditionalFulltextCache(),
     );
-    
+
     if ( $updatemetadata )
       $values['metadataupdatedtimestamp'] = date('Y-m-d H:i:s');
-    
+
     $this->updateRow( $values );
-    
+
   }
-  
+
   public function assemblePrimaryFulltextCache( $values = array() ) {
-    
+
     $this->ensureObjectLoaded();
-    
+
     if ( empty( $values ) )
       $cache = array(
         @$this->row['title'],
@@ -148,20 +148,20 @@ class Recordings extends \Springboard\Model {
         @$values['technicalnote'],
         @$values['keywords'],
       );
-    
+
     $contributors     = $this->getContributorsWithRoles();
     $contributornames = array();
-    
+
     if ( !empty( $contributors ) ) {
-      
+
       $this->bootstrap->includeTemplatePlugin('nameformat');
       foreach( $contributors as $contributor )
         $contributornames[] = \smarty_modifier_nameformat( $contributor );
-      
+
     }
-    
+
     $contributornames = array_unique( $contributornames );
-    
+
     $genres = $this->db->getCol("
       SELECT s.value
       FROM
@@ -173,7 +173,7 @@ class Recordings extends \Springboard\Model {
         g.id            = rg.genreid AND
         s.translationof = g.name_stringid
     ");
-    
+
     $categories = $this->db->getCol("
       SELECT s.value
       FROM
@@ -185,18 +185,18 @@ class Recordings extends \Springboard\Model {
         c.id            = rc.categoryid AND
         s.translationof = c.name_stringid
     ");
-    
+
     $cache = array_merge( $cache, $contributornames, $genres, $categories );
-    
+
     return implode( ' ', $cache );
-    
+
   }
-  
+
   public function getContributorsWithRoles( $wantjobgroups = false, $language = null ) {
-    
+
     if ( !$language )
       $language = \Springboard\Language::get();
-    
+
     $contributors = $this->db->getArray("
       SELECT
         cr.id,
@@ -220,24 +220,24 @@ class Recordings extends \Springboard\Model {
         s.language      = '$language'
       ORDER BY cr.weight
     ");
-    
+
     if ( $wantjobgroups ) {
-      
+
       $contributorModel = $this->bootstrap->getModel('contributors');
-      
+
       foreach( $contributors as $key => $contributor ) {
-        
+
         $contributorModel->id = $contributor['contributorid'];
         $contributors[ $key ]['jobgroups'] = $contributorModel->getJobGroups();
-        
+
       }
-      
+
     }
-    
+
     return $contributors;
-    
+
   }
-  
+
   public function assembleAdditionalFulltextCache() {
 
     $this->ensureID();
@@ -266,19 +266,19 @@ class Recordings extends \Springboard\Model {
     return $cache;
 
   }
-  
+
   function updateChannelIndexPhotos() {
-    
+
     $this->ensureObjectLoaded();
-    
+
     $indexPhotoDone = Array();
-    
+
     if (
          $this->row === null or // toroltek
          $this->row['status'] != 'onstorage' or // nincs onstorage eleme
          $this->row['approvalstatus'] != 'approved' // nincs metaadata vagy kikapcsolva
        ) {
-      
+
       // indexphoto
       $rs = $this->db->query("
         SELECT id
@@ -289,81 +289,81 @@ class Recordings extends \Springboard\Model {
           indexphotofilename LIKE
             'images/videothumb\_audio\_placeholder.png?rid=" . $this->id . "&reid=%'
       ");
-      
+
       $channel = $this->bootstrap->getModel('channels');
-      
+
       foreach( $rs as $fields ) {
-        
+
         $channel->select( $fields['id'] );
         $channel->updateIndexFilename( true );
         $indexPhotoDone[] = $fields['id'];
-        
+
       }
     }
-    
+
     // felvetelszamlalok
     $rs = $this->db->query("
       SELECT channelid
       FROM channels_recordings
       WHERE recordingid = '" . $this->id . "'
     ");
-    
+
     $defaultindexphoto = $this->row['indexphotofilename'];
     if ( !isset( $channel ) )
       $channel = $this->bootstrap->getModel('channels');
-    
+
     foreach( $rs as $fields ) {
-      
+
       $channel->select( $fields['channelid'] );
       $channel->updateVideoCounters();
-      
+
       // ha az elozo korben meg nem erintettuk a csatornat,
       // es meg nincs indexkepe, akkor keszitsunk neki
-      if ( 
+      if (
            !strlen( $channel->row['indexphotofilename'] ) and
            !in_array( $fields['channelid'], $indexPhotoDone )
          )
         $channel->updateIndexFilename( false, $defaultindexphoto );
-      
+
     }
-    
+
   }
-  
+
   public function updateCategoryCounters( $categoryids = null ) {
-    
+
     if ( $categoryids === null ) {
-      
+
       $this->ensureID();
-      
+
       $categoryids = $this->db->getCol("
         SELECT categoryid
         FROM recordings_categories
         WHERE recordingid = '" . $this->id . "'
       ");
-      
+
     }
-    
+
     $category = $this->bootstrap->getModel('categories');
-    
+
     foreach( $categoryids as $categoryid ) {
-      
+
       $category->select( $categoryid );
       $category->updateVideoCounters();
-      
+
     }
-    
+
   }
-  
+
   public function getIndexPhotoFromChannels( $channelids = array(), $needpublic = null ) {
-    
+
     if ( empty( $channelids ) )
       return '';
-    
+
     $where = '';
-    
+
     if ( $needpublic )
       $where = " AND r.accesstype = 'public' ";
-    
+
     return $this->db->getOne("
       SELECT
         r.indexphotofilename
@@ -378,11 +378,11 @@ class Recordings extends \Springboard\Model {
       ORDER BY r.timestamp DESC
       LIMIT 1
     ");
-    
+
   }
-  
+
   public function userHasAccess( $user, $secure = null, $mobile = false, $organization = null ) {
-    
+
     $this->ensureObjectLoaded();
     /*
       tehat a logika a kovetkezo:
@@ -445,7 +445,7 @@ class Recordings extends \Springboard\Model {
   }
 
   public function insertUploadingRecording( $userid, $organizationid, $languageid, $title, $sourceip, $isintrooutro = 0 ) {
-    
+
     $recording = array(
       'userid'          => $userid,
       'organizationid'  => $organizationid,
@@ -462,82 +462,82 @@ class Recordings extends \Springboard\Model {
       'recordedtimestamp' => date('Y-m-d H:i:s'),
       'metadataupdatedtimestamp' => date('Y-m-d H:i:s'),
     ) + $this->metadata;
-    
+
     if ( $isintrooutro ) {
-      
+
       $recording['approvalstatus'] = 'approved';
-      
+
     }
-    
+
     return $this->insert( $recording );
-    
+
   }
-  
+
   public function handleFile( $source, $handlefile = 'upload', $postfix = null ) {
-    
+
     $this->ensureObjectLoaded();
-    
+
     if ( !$this->metadata )
       throw new HandleFileException('No metadata for the video found, please ->analyize() it beforehand!');
-    
+
     if ( $postfix === null ) {
-      
+
       if ( $this->metadata['mastermediatype'] == 'audio' )
         $postfix = '_audio';
       else
         $postfix = '_video';
-      
+
     }
-    
+
     $target =
       $this->bootstrap->config['uploadpath'] . 'recordings/' . $this->id .
       $postfix . '.' . $this->metadata['mastervideoextension']
     ;
-    
+
     switch ( $handlefile ) {
       case 'copy':   $ret = copy( $source, $target ); break;
       case 'upload': $ret = move_uploaded_file( $source, $target ); break;
       case 'rename': $ret = rename( $source, $target ); break;
       default: throw new HandleFileException('unsupported operation: ' . $handlefile ); break;
     }
-    
+
     if ( !$ret )
       throw new HandleFileException( $handlefile . ' failed from ' . $source . ' to ' . $target );
-    
+
     return $ret;
-    
+
   }
-  
+
   public function upload( &$info ) {
-    
+
     if ( !isset( $info['filepath'] ) or !isset( $info['filename'] ) or !isset( $info['handlefile'] ) )
       throw new \Exception("No filepath and filename passed!");
-    
+
     $iscontent = ( isset( $info['iscontent'] ) and $info['iscontent'] );
     $postfix   = $iscontent? '_content': null;
-    
+
     if ( $iscontent ) {
-      
+
       $this->ensureObjectLoaded();
       $statusfield = 'contentstatus';
-      
+
       if ( !$this->canUploadContentVideo() )
         throw new \Exception(
           'Uploading a content video is denied at this point: ' .
           var_export( $this->row, true )
         );
-      
+
       $this->analyze( $info['filepath'], $info['filename'] );
       $this->addContentRecording(
         null,
         $this->bootstrap->config['node_sourceip']
       );
-      
+
     } else {
-      
+
       if ( !isset( $info['user'] ) or !$info['user']['id'] or !isset( $info['language'] ) )
         throw new \Exception('No language or user passed!');
-      
+
       $isintrooutro = 0;
       if (
            isset( $info['isintrooutro'] ) and
@@ -548,7 +548,7 @@ class Recordings extends \Springboard\Model {
            )
          )
         $isintrooutro = 1;
-      
+
       $statusfield = 'masterstatus';
       $this->analyze( $info['filepath'], $info['filename'] );
       $this->insertUploadingRecording(
@@ -559,54 +559,54 @@ class Recordings extends \Springboard\Model {
         $this->bootstrap->config['node_sourceip'],
         $isintrooutro
       );
-      
+
     }
-  
+
     try {
-      
+
       $this->handleFile( $info['filepath'], $info['handlefile'], $postfix );
-      
+
     } catch( \Exception $e ) {
-      
+
       $this->updateRow( array(
           $statusfield => 'failedmovinguploadedfile',
         )
       );
-      
+
       throw $e;
-      
+
     }
-    
+
     if ( $iscontent ) {
-      
+
       $this->markContentRecordingUploaded();
-      
+
     } else {
-      
+
       $this->updateRow( array(
           'masterstatus' => 'uploaded',
           'status'       => 'uploaded',
         )
       );
-      
+
     }
-    
+
     return true;
-    
+
   }
-  
+
   protected function getMediainfoNumericValue( $elem, $isfloat = false, $scale = 1 ) {
-    
+
     $elem = strval( $elem );
     if ( !$elem )
       return null;
-    
+
     $elem = str_replace( ' ', '', $elem );
     if ( $isfloat )
       return floatval( $elem ) * $scale;
     else
       return intval( $elem ) * $scale;
-    
+
   }
 
   private function normalizeHTMLEntitiesCallback( $matches ) {
@@ -635,14 +635,14 @@ class Recordings extends \Springboard\Model {
 
     if ( !$originalfilename )
       $originalfilename = $filename;
-    
+
     $cmd = sprintf( $config['mediainfo_identify'], escapeshellarg( $filename ) );
     exec( $cmd, $output, $return );
     $output = implode("\n", $output );
-    
+
     if ( $return )
       throw new \Exception('Mediainfo returned non-zero exit code, output was: ' . $output, $return );
-    
+
     if ( $this->bootstrap->debug )
       var_dump( $output );
 
@@ -656,14 +656,14 @@ class Recordings extends \Springboard\Model {
     libxml_use_internal_errors( true );
     $xml = new \SimpleXMLElement( $normalizedXML );
     libxml_use_internal_errors( false );
-    
+
     $general = current( $xml->xpath('File/track[@type="General"][1]') );
     $video   = current( $xml->xpath('File/track[@type="Video"][1]') );
     $audio   = current( $xml->xpath('File/track[@type="Audio"][1]') );
-    
+
     if ( !$general or ( !$video and !$audio ) )
       throw new InvalidFileTypeException('Unrecognized file, output was: ' . $output );
-    
+
     if ( $video and $audio )
       $mediatype = 'video';
     elseif ( !$video and $audio )
@@ -672,7 +672,7 @@ class Recordings extends \Springboard\Model {
       $mediatype = 'videoonly';
     else
       throw new \Exception("Cannot happen wtf, output was: " . $output );
-    
+
     $extension         = \Springboard\Filesystem::getExtension( $originalfilename )?: null;
     $videocontainer    = $general->Format?: $extension;
     $videostreamid     = null;
@@ -691,7 +691,7 @@ class Recordings extends \Springboard\Model {
     $audioquality      = null;
     $audiofreq         = null;
     $audiobitrate      = null;
-    
+
     if ( property_exists( $general, 'Duration' ))
       $videolength = $this->getMediainfoNumericValue( $general->Duration[0], $isfloat = true );
     elseif ( property_exists( $video, 'Duration' ))
@@ -700,27 +700,27 @@ class Recordings extends \Springboard\Model {
       $videolength = $this->getMediainfoNumericValue( $audio->Duration[0], $isfloat = true );
     else
       throw new InvalidLengthException('Length not found for the media, output was ' . $output );
-    
+
     $videolength = round($videolength / 1000, 2, PHP_ROUND_HALF_UP); // mert milisec
-    
+
     if ( $videolength <= $config['recordings_seconds_minlength'] )
       throw new InvalidLengthException('Recording length was less than ' . $config['recordings_seconds_minlength'] );
-    
+
     if ( $video ) {
       $videostreamid  = $this->getMediainfoNumericValue( $video->ID[0] );
       $videocodec     = $video->Format;
-      
+
       if ( $video->Frame_rate )
         $videofps = $this->getMediainfoNumericValue( $video->Frame_rate[0], true );
       else
         $videofps = 25.0;
       // $videofps       = $this->getMediainfoNumericValue( $video->Frame_rate, true );
-      
+
       if ( $video->Format_Info )
         $videocodec  .= ' (' . $video->Format_Info . ')';
       if ( $video->Format_profile )
         $videocodec  .= ' / ' . $video->Format_profile;
-      
+
       if ( $video->Bit_rate_mode ) {
         if ( is_array( $video->Bit_rate_mode ) ) {
           // sometimes it's placed inside of a subarray, sometimes not, needs to be checked every time.
@@ -732,21 +732,21 @@ class Recordings extends \Springboard\Model {
         $videobitratemode = null;
       }
       if ( $video->Width and $video->Height ) {
-        
+
         $videores = sprintf(
           '%sx%s',
           $this->getMediainfoNumericValue( $video->Width ),
           $this->getMediainfoNumericValue( $video->Height )
         );
-        
+
         if ( $video->Display_aspect_ratio )
           $videodar = $this->getMediainfoNumericValue( $video->Display_aspect_ratio, true );
-        
+
         $videobitrate =
           $this->getMediainfoNumericValue( $video->Bit_rate )?:
           $this->getMediainfoNumericValue( $general->Overall_bit_rate )
         ;
-        
+
         if ( $video->Scan_type )
           $videoisinterlaced = $video->Scan_type[1] == 'Progressive' ? 0 : 1;
         elseif ( $video->Interlacement )
@@ -754,30 +754,30 @@ class Recordings extends \Springboard\Model {
         else
           $videoisinterlaced = 0;
       }
-      
+
     }
-    
+
     if ( $audio ) {
-      
+
       $audiocodec    = $audio->Format;
       if ( $audio->Format_Info )
         $audiocodec .= ' ( ' . $audio->Format_Info . ' ) ';
       if ( $audio->Format_profile )
         $audiocodec .= ' / ' . $audio->Format_profile;
-      
+
       $audiostreamid = $this->getMediainfoNumericValue( $audio->ID[0] );
       $audiofreq     = $this->getMediainfoNumericValue( $audio->Sampling_rate[0] );
       $audiobitrate  = $this->getMediainfoNumericValue( $audio->Bit_rate[0] );
       $audiochannels = $this->getMediainfoNumericValue( $audio->Channel_s_[1] );
       $audiomode     = current( $audio->Bit_rate_mode )?: null;
-      
+
       if ( $audio->Compression_mode[0] == 'Lossy' )
         $audioquality = 'lossy';
       elseif ( $audio->Compression_mode[0] == 'Lossless' )
         $audioquality = 'lossless';
-      
+
     }
-    
+
     $info = array(
       'mastermediatype'            => $mediatype,
       'mastervideostreamselected'  => $videostreamid,
@@ -800,89 +800,89 @@ class Recordings extends \Springboard\Model {
       'masteraudiofreq'            => $audiofreq,
       'masteraudiobitrate'         => $audiobitrate,
     );
-    
+
     foreach( $info as $key => $value )
       $info[ $key ] = gettype( $value ) == 'object' ? strval( $value ): $value;
-    
+
     return $this->metadata = $info;
-    
+
   }
-  
+
   public function clearGenres() {
-    
+
     $this->ensureID();
-    
+
     $this->db->execute("
       DELETE FROM recordings_genres
       WHERE recordingid = '" . $this->id . "'
     ");
-    
+
   }
-  
+
   public function clearCategories() {
-    
+
     $this->ensureID();
-    
+
     $categoryids = $this->db->getCol("
       SELECT categoryid
       FROM recordings_categories
       WHERE recordingid = '" . $this->id . "'
     ");
-    
+
     $this->db->execute("
       DELETE FROM recordings_categories
       WHERE recordingid = '" . $this->id . "'
     ");
-    
+
     $this->updateCategoryCounters( $categoryids );
-    
+
   }
-  
+
   public function addCategories( $categoryids ) {
     $this->insertMultipleIDs( $categoryids, 'recordings_categories', 'categoryid');
     $this->updateCategoryCounters();
   }
-  
+
   public function addGenres( $genreids ) {
     $this->insertMultipleIDs( $genreids, 'recordings_genres', 'genreid');
   }
-  
+
   protected function insertMultipleIDs( $ids, $table, $field ) {
-    
+
     $this->ensureID();
-    
+
     $values = array();
     foreach( $ids as $id )
       $values[] = "('" . intval( $id ) . "', '" . $this->id . "')";
-    
+
     $this->db->execute("
       INSERT INTO $table ($field, recordingid)
       VALUES " . implode(', ', $values ) . "
     ");
-    
+
   }
-  
+
   public function clearAccess() {
-    
+
     $this->ensureID();
-    
+
     $this->db->execute("
       DELETE FROM access
       WHERE recordingid = '" . $this->id . "'
     ");
-    
+
   }
-  
+
   public function restrictDepartments( $departmentids ) {
     $this->insertMultipleIDs( $departmentids, 'access', 'departmentid');
   }
-  
+
   public function restrictGroups( $groupids ) {
     $this->insertMultipleIDs( $groupids, 'access', 'groupid');
   }
-  
+
   public function isAccessibleByStatus( $user, $mobile = false ) {
-    
+
     $this->ensureObjectLoaded();
     $statuses = array(
       'deleted'           => 'recordingdeleted',
@@ -896,15 +896,15 @@ class Recordings extends \Springboard\Model {
          ( !$mobile and $this->row['status'] != 'onstorage' ) or
          ( $mobile and $this->row['mobilestatus'] != 'onstorage' )
        ) {
-      
+
       $status = $mobile? $this->row['mobilestatus']: $this->row['status'];
       if ( preg_match( '/^failed.+/i', $status ) )
         return 'recordingerrorconverting';
       else
         return $mobile? 'mobileunavailable': 'recordingconverting';
-      
+
     }
-    
+
     if (
          isset( $user['id'] ) and
          (
@@ -922,9 +922,9 @@ class Recordings extends \Springboard\Model {
       return true;
     elseif ( $this->row['approvalstatus'] != 'approved' )
       return 'recordingisnotpublished';
-    
+
     return true;
-    
+
   }
 
   public function isAccessibleByInvitation( $user, $organization ) {
@@ -947,37 +947,37 @@ class Recordings extends \Springboard\Model {
   }
 
   public function isAccessibleBySettings( $user ) {
-    
+
     $this->ensureObjectLoaded();
-    
+
     $timefailed = false;
     if ( $this->row['visibleuntil'] ) {
-      
+
       $visiblefrom  = strtotime( $this->row['visiblefrom'] );
       $visibleuntil = strtotime( $this->row['visibleuntil'] );
       $now          = strtotime( date('Y-m-d', time() ) );
-      
+
       if ( $visiblefrom > $now or $visibleuntil < $now )
         $timefailed = true;
-      
+
     }
-    
+
     switch( $this->row['accesstype'] ) {
-      
+
       case 'public':
         if ( $timefailed )
           return 'publicrestricted_timefailed';
         break;
-      
+
       case 'registrations':
-        
+
         if ( !isset( $user['id'] ) )
           return 'registrationrestricted';
         elseif ( $timefailed )
           return 'registrationrestricted_timefailed';
-        
+
         break;
-      
+
       case 'departmentsorgroups':
 
         if ( !isset( $user['id'] ) )
@@ -986,10 +986,10 @@ class Recordings extends \Springboard\Model {
           return true;
         elseif ( ( $user['iseditor'] or $user['isclientadmin'] ) and $user['organizationid'] == $this->row['organizationid'] )
           return true;
-        
+
         $recordingid = "'" . $this->id . "'";
         $userid      = "'" . $user['id'] . "'";
-        
+
         $hasaccess = $this->db->getOne("
           SELECT (
             SELECT COUNT(*)
@@ -1014,24 +1014,24 @@ class Recordings extends \Springboard\Model {
             LIMIT 1
           ) AS count
         ");
-        
+
         if ( !$hasaccess )
           return 'departmentorgrouprestricted';
         elseif ( $timefailed )
           return 'departmentorgrouprestricted_timefailed';
-        
+
         break;
-      
+
       default:
         throw new \Exception('Unknown accesstype ' . $this->row['accesstype'] );
         break;
-      
+
     }
-    
+
     return true;
-    
+
   }
-  
+
   public function isAccessibleByCourseCompletion( $user, $organization ) {
 
     $this->ensureObjectLoaded();
@@ -1224,7 +1224,7 @@ class Recordings extends \Springboard\Model {
   }
 
   public static function getPublicRecordingWhere( $prefix = '', $isintrooutro = '0', $accesstype = 'public' ) {
-    
+
     return "
       {$prefix}status       = 'onstorage' AND
       {$prefix}approvalstatus = 'approved' AND
@@ -1237,11 +1237,11 @@ class Recordings extends \Springboard\Model {
           {$prefix}visiblefrom  <= CURRENT_DATE() AND
           {$prefix}visibleuntil >= CURRENT_DATE()
         )
-      ) 
+      )
     ";
-    
+
   }
-  
+
   public static function getRecordingSelect( $prefix = '' ) {
     return "
       {$prefix}*,
@@ -1258,18 +1258,18 @@ class Recordings extends \Springboard\Model {
   }
 
   public static function getUnionSelect( $user, $select = null, $from = null, $where = null, $isintrooutro = '0' ) {
-    
+
     if ( $select === null )
       $select = self::getRecordingSelect('r.');
     if ( $from === null )
       $from = 'recordings AS r';
-    
+
     if ( !isset( $user['id'] ) ) {
-      
+
       $publicwhere = self::getPublicRecordingWhere('r.', $isintrooutro );
       if ( $where )
         $publicwhere = ' AND ' . $publicwhere;
-      
+
       return "
         (
           SELECT $select
@@ -1277,13 +1277,13 @@ class Recordings extends \Springboard\Model {
           WHERE $where $publicwhere
         )
       ";
-      
+
     }
-    
+
     $isadmin = false;
     if ( $user['isadmin'] or $user['isclientadmin'] or $user['iseditor'] )
       $isadmin = true;
-    
+
     $generalwhere = "
       r.status       = 'onstorage' AND
       r.isintrooutro = '$isintrooutro' AND
@@ -1300,10 +1300,10 @@ class Recordings extends \Springboard\Model {
         )
       )
     ";
-    
+
     if ( $where )
       $generalwhere = ' AND ' . $generalwhere;
-    
+
     $sql = "
       (
         SELECT $select
@@ -1364,15 +1364,15 @@ class Recordings extends \Springboard\Model {
           ui.status          <> 'deleted'
       )
     ";
-    
+
     return $sql;
-    
+
   }
-  
+
   public function addRating( $rating ) {
-    
+
     $this->ensureID();
-    
+
     $this->db->execute("
       UPDATE recordings
       SET
@@ -1388,19 +1388,19 @@ class Recordings extends \Springboard\Model {
       WHERE
         id = '" . $this->id . "'
     ");
-    
+
     if ( $this->db->Affected_Rows() ) {
-      
+
       $this->select( $this->id );
       return true;
-      
+
     } else
       return false;
-    
+
   }
-  
+
   public function incrementCommentCount() {
-    
+
     $this->ensureID();
     $this->db->execute("
       UPDATE recordings
@@ -1411,9 +1411,9 @@ class Recordings extends \Springboard\Model {
       WHERE
         id = '" . $this->id . "'
     ");
-    
+
     return (bool)$this->db->Affected_Rows();
-    
+
   }
 
   public function insertComment( $comment, $perpage ) {
@@ -1494,7 +1494,7 @@ class Recordings extends \Springboard\Model {
         $nicknametoids[ $nick ][ count( $nicknametoids[ $nick ] ) - 1 ]
       ;
     elseif( // ellenorizzuk hogy a replyto megfelel a valosagnak
-            $comment['replyto'] and 
+            $comment['replyto'] and
             ( // nincs ilyen nick vagy nincs ilyen commentid
               !isset( $nicknametoids[ $nick ] ) or
               !isset( $validids[ $comment['replyto'] ] )
@@ -1557,9 +1557,9 @@ class Recordings extends \Springboard\Model {
   }
 
   public function getCommentsCount() {
-    
+
     $this->ensureID();
-    
+
     return $this->db->getOne("
       SELECT COUNT(*)
       FROM comments
@@ -1567,7 +1567,7 @@ class Recordings extends \Springboard\Model {
         moderated   = '0' AND
         recordingid = '" . $this->id . "'
     ");
-    
+
   }
 
   public function getCommentsPageCount( $perpage ) {
@@ -1683,27 +1683,27 @@ class Recordings extends \Springboard\Model {
     return $ret;
 
   }
-  
+
   public function getRelatedVideosByKeywords( $limit, $user, $organization ){
-    
+
     $this->ensureObjectLoaded();
     if ( !strlen( trim( $this->row['keywords'] ) ) )
       return array();
-    
+
     $keywords     = explode(',', $this->row['keywords'] );
     $keywordwhere = array();
-    
+
     foreach( $keywords as $key => $value ) {
-      
+
       $value = trim( $value );
       if ( !$value )
         continue;
-      
+
       $keyword = $this->db->qstr( '%' . $value . '%' );
       $keywordwhere[] = 'r.keywords LIKE ' . $keyword;
-      
+
     }
-    
+
     $select = "
       r.id AS arraykey,
       r.id,
@@ -1720,44 +1720,44 @@ class Recordings extends \Springboard\Model {
       usr.namefirst,
       usr.namelast
     ";
-    
+
     $from = "
       recordings AS r,
       users AS usr"
     ;
-    
+
     $where = "
       usr.id = r.userid AND
       r.id <> '" . $this->id . "' AND
       r.organizationid = '" . $organization['id'] . "'"
     ;
-    
+
     if ( !empty( $keywordwhere ) )
       $where .= " AND ( " . implode(' OR ', $keywordwhere ) . " )";
-    
+
     return $this->db->getAssoc(
       self::getUnionSelect( $user, $select, $from, $where ) . "
       ORDER BY RAND()
       LIMIT $limit
     ");
-    
+
   }
-  
+
   public function getRelatedVideosByChannel( $limit, $user, $organization, $channelids = null ) {
-    
+
     $this->ensureID();
     $dontrecurse = true;
     if ( $channelids === null ) {
-      
+
       $dontrecurse = false;
       $channelids  = $this->db->getCol("
         SELECT channelid
         FROM channels_recordings
         WHERE recordingid = '" . $this->id . "'
       ");
-      
+
     }
-    
+
     $select = "
       r.id AS arraykey,
       r.id,
@@ -1774,13 +1774,13 @@ class Recordings extends \Springboard\Model {
       usr.namefirst,
       usr.namelast
     ";
-    
+
     $from = "
       recordings AS r,
       users AS usr,
       channels_recordings AS cr"
     ;
-    
+
     $where = "
       cr.channelid IN('" . implode("', '", $channelids ) . "') AND
       r.id = cr.recordingid AND
@@ -1788,38 +1788,38 @@ class Recordings extends \Springboard\Model {
       r.id <> '" . $this->id . "' AND
       r.organizationid = '" . $organization['id'] . "'"
     ;
-    
+
     $return = $this->db->getAssoc(
       self::getUnionSelect( $user, $select, $from, $where ) . "
       ORDER BY RAND()
       LIMIT $limit
     ");
-    
+
     if ( count( $return ) < $limit and !$dontrecurse ) {
-      
+
       $parentids    = array();
       $channelModel = $this->bootstrap->getModel('channels');
       foreach( $channelids as $channelid ) {
-        
+
         $parents   = $channelModel->findParents( $channelid );
         $parents[] = $channelid;
         $parentids = array_merge( $parentids, $parents );
-        
+
       }
-      
+
       $parentids = array_unique( $parentids );
       $return = $return + $this->getRelatedVideosByChannel( $limit - count( $return ), $user, $organization, $parentids );
-      
+
     }
-    
+
     return $return;
-    
+
   }
-  
+
   public function getRelatedVideosRandom( $limit, $user, $organization ) {
-    
+
     $this->ensureID();
-    
+
     $select = "
       r.id AS arraykey,
       r.id,
@@ -1836,52 +1836,52 @@ class Recordings extends \Springboard\Model {
       usr.namefirst,
       usr.namelast
     ";
-    
+
     $from = "
       recordings AS r,
       users AS usr"
     ;
-    
+
     $where = "
       usr.id = r.userid AND
       r.id <> '" . $this->id . "' AND
       r.organizationid = '" . $organization['id'] . "'"
     ;
-    
+
     return $this->db->getAssoc(
       self::getUnionSelect( $user, $select, $from, $where ) . "
       ORDER BY RAND()
       LIMIT $limit
     ");
-    
-    
+
+
   }
-  
+
   public function getRelatedVideos( $count, $user, $organization ) {
-    
+
     $this->ensureObjectLoaded();
-    
+
     $return = $this->getRelatedVideosByCourse( $count, $user, $organization );
     if ( !empty( $return ) ) // ha kurzusba tartozik  akkor csak azokat adjuk vissza
       return $return;
 
     if ( count( $return ) < $count )
       $return = $return + $this->getRelatedVideosByChannel( $count - count( $return ), $user, $organization );
-    
+
     if ( count( $return ) < $count )
       $return = $return + $this->getRelatedVideosByKeywords( $count - count( $return ), $user, $organization );
-    
+
     if ( count( $return ) < $count )
       $return = $return + $this->getRelatedVideosRandom( $count - count( $return ), $user, $organization );
-    
+
     return $return;
-    
+
   }
-  
+
   public function canUploadContentVideo() {
-    
+
     $this->ensureObjectLoaded();
-    
+
     if (
          (
            !$this->row['contentstatus'] or
@@ -1892,70 +1892,70 @@ class Recordings extends \Springboard\Model {
       return true;
     else
       return false;
-    
+
   }
-  
+
   public function addContentRecording( $isinterlaced = 0, $sourceip ) {
-    
+
     $this->ensureObjectLoaded();
-    
+
     if ( !$this->metadata )
       throw new \Exception('No metadata for the video found, please ->analyize() it beforehand!');
-    
+
     if ( $this->metadata['mastermediatype'] == 'audio' )
       throw new InvalidFileTypeException('The file provided contains only audio, that is not supported');
-    
+
     $values = array(
       'contentstatus'            => 'uploading',
       'contentvideoisinterlaced' => $isinterlaced,
       'contentmastersourceip'    => $sourceip,
     );
-    
+
     foreach( $this->metadata as $key => $value ) {
-      
+
       $key = str_replace('master', 'contentmaster', $key );
       $values[ $key ] = $value;
-      
+
     }
-    
+
     $this->oldcontentstatuses = array(
       'contentstatus'       => $this->row['contentstatus'],
       'contentmasterstatus' => $this->row['contentmasterstatus'],
     );
-    
+
     return $this->updateRow( $values );
-    
+
   }
-  
+
   public function markContentRecordingUploaded() {
-    
+
     $this->ensureObjectLoaded();
     if ( empty( $this->oldcontentstatuses ) )
       throw new \Exception('No oldcontentstatuses found, was there an addContentRecording before this?');
-    
+
     // uj feltoltes
     $contentstatus = array(
       'contentstatus'       => 'uploaded',
       'contentmasterstatus' => 'uploaded',
     );
-    
+
     $this->updateRow( $contentstatus );
-    
+
   }
-  
+
   public function getCategoryRecordingsCount( $user, $categoryids ) {
-    
+
     $from = "
       recordings_categories AS rc,
       recordings AS r"
     ;
-    
+
     $where =
       "rc.categoryid IN ('" . implode("', '", $categoryids ) . "') AND
       r.id = rc.recordingid"
     ;
-    
-    if ( !isset( $user['id'] ) ) 
+
+    if ( !isset( $user['id'] ) )
       return $this->db->getOne("
         SELECT DISTINCT COUNT(r.id)
         FROM $from
@@ -1963,49 +1963,49 @@ class Recordings extends \Springboard\Model {
           $where AND
           " . self::getPublicRecordingWhere('r.')
     );
-    
+
     return $this->db->getOne("
       SELECT COUNT(*)
       FROM (
         " . self::getUnionSelect( $user, null, $from, $where ) . "
       ) AS count
     ");
-    
+
   }
-  
+
   public function getCategoryRecordings( $user, $categoryids, $start = false, $limit = false, $order = false ) {
-    
+
     $from = "
       recordings_categories AS rc,
       recordings AS r"
     ;
-    
+
     $where =
       "rc.categoryid IN ('" . implode("', '", $categoryids ) . "') AND
       r.id = rc.recordingid"
     ;
-    
+
     return $this->db->getArray("
       " . self::getUnionSelect( $user, null, $from, $where ) .
       ( strlen( $order ) ? 'ORDER BY ' . $order : '' ) . " " .
       ( is_numeric( $start ) ? 'LIMIT ' . $start . ', ' . $limit : "" )
     );
-    
+
   }
-  
+
   public function getChannelRecordingsCount( $user, $channelids ) {
-    
+
     $from = "
       channels_recordings AS cr,
       recordings AS r"
     ;
-    
+
     $where =
       "cr.channelid IN ('" . implode("', '", $channelids ) . "') AND
       r.id = cr.recordingid"
     ;
-    
-    if ( !isset( $user['id'] ) ) 
+
+    if ( !isset( $user['id'] ) )
       return $this->db->getOne("
         SELECT DISTINCT COUNT(r.id)
         FROM $from
@@ -2013,18 +2013,18 @@ class Recordings extends \Springboard\Model {
           $where AND
           " . self::getPublicRecordingWhere('r.')
     );
-    
+
     return $this->db->getOne("
       SELECT COUNT(*)
       FROM (
         " . self::getUnionSelect( $user, null, $from, $where ) . "
       ) AS count
     ");
-    
+
   }
-  
+
   public function getChannelRecordings( $user, $channelids, $start = false, $limit = false, $order = false ) {
-    
+
     $select = "
       " . self::getRecordingSelect('r.') . ",
       c.title AS channeltitle,
@@ -2032,30 +2032,30 @@ class Recordings extends \Springboard\Model {
       c.weight AS channelweight,
       cr.weight AS channelrecordingweight
     ";
-    
+
     $from = "
       channels AS c,
       channels_recordings AS cr,
       recordings AS r"
     ;
-    
+
     $where =
       "cr.channelid IN ('" . implode("', '", $channelids ) . "') AND
       c.id        = cr.channelid AND
       c.isdeleted = '0' AND
       r.id        = cr.recordingid"
     ;
-    
+
     return $this->db->getArray("
       " . self::getUnionSelect( $user, $select, $from, $where ) .
       ( strlen( $order ) ? 'ORDER BY ' . $order : '' ) . " " .
       ( is_numeric( $start ) ? 'LIMIT ' . $start . ', ' . $limit : "" )
     );
-    
+
   }
-  
+
   public function addPresenters( $withjobs = true, $organizationid ) {
-    
+
     $this->ensureObjectLoaded();
     $this->row['presenters'] = $this->db->getArray("
       SELECT
@@ -2073,32 +2073,32 @@ class Recordings extends \Springboard\Model {
         cr.roleid IN( (SELECT r.id FROM roles AS r WHERE r.organizationid = '$organizationid' AND r.ispresenter = '1') )
       ORDER BY cr.weight
     ");
-    
+
     if ( $withjobs )
       $this->row['presenters'] = $this->addJobsToContributors( $this->row['presenters'], $organizationid );
-    
+
     return $this->row;
-    
+
   }
-  
+
   public function addPresentersToArray( &$recordings, $withjobs = true, $organizationid ) {
-    
+
     $idtoindexmap = array();
     foreach( $recordings as $key => $recording ) {
-      
+
       if ( isset( $recording['type'] ) and $recording['type'] != 'recording' )
         continue;
-      
+
       // store the index of the recordings in an array keyed by the recordingid
       // so as not to re-index the array
       if ( isset( $recording['id'] ) )
         $idtoindexmap[ $recording['id'] ] = $key;
-      
+
     }
-    
+
     if ( empty( $idtoindexmap ) )
       return $recordings;
-    
+
     $contributors = $this->db->getArray("
       SELECT
         c.*,
@@ -2115,28 +2115,28 @@ class Recordings extends \Springboard\Model {
         cr.roleid IN( (SELECT r.id FROM roles AS r WHERE r.organizationid = '$organizationid' AND r.ispresenter = '1') )
       ORDER BY cr.weight
     ");
-    
+
     if ( $withjobs )
       $contributors = $this->addJobsToContributors( $contributors, $organizationid );
-    
+
     foreach( $contributors as $contributor ) {
-      
+
       $key = $idtoindexmap[ $contributor['recordingid'] ];
       if ( !isset( $recordings[ $key ]['presenters'] ) )
         $recordings[ $key ]['presenters'] = array();
-      
+
       $recordings[ $key ]['presenters'][] = $contributor;
-      
+
     }
-    
+
     return $recordings;
-    
+
   }
-  
+
   public function addJobsToContributors( &$contributors, $organizationid ) {
-    
+
     foreach( $contributors as $key => $contributor ) {
-      
+
       $contributors[ $key ]['jobs'] = $this->db->getArray("
         SELECT
           cj.*,
@@ -2149,55 +2149,55 @@ class Recordings extends \Springboard\Model {
           cj.jobgroupid    = '" . $contributor['jobgroupid'] . "' AND
           cj.contributorid = '" . $contributor['contributorid'] . "'
       ");
-      
+
     }
-    
+
     return $contributors;
-    
+
   }
-  
+
   public function getChannelsForUser( $user, $channeltype = null ) {
-    
+
     $this->ensureID();
     $channelModel = $this->bootstrap->getModel('channels');
     $where        = array(
       "c.isliveevent = '0'"
     );
-    
+
     if ( !$user['id'] )
       throw new \Exception("No user given");
-    
+
     if ( !$user['isadmin'] and !$user['isclientadmin'] and !$user['iseditor'] )
       $where[] = "c.userid = '" . $user['id'] . "'"; // csak a sajat csatornait
-    
+
     if ( !empty( $where ) )
       $where  = '( ' . implode(" OR ", $where ) . " ) AND ";
     else
       $where  = '';
-    
+
     $where .= "c.organizationid = '" . $user['organizationid'] . "'";
-    
+
     if ( $channeltype ) {
-      
+
       $typeids = $channelModel->cachedGetIDsByType( $channeltype );
-      
+
       if ( !empty( $typeids ) ) {
-        
+
         if ( $where )
           $where = "( $where ) AND ";
-        
+
         $where .= " c.channeltypeid IN('" . implode("', '", $typeids ) . "')";
-        
+
       }
-      
+
     }
-    
+
     $channels = $channelModel->getChannelTree(
       false,
       false,
       $where
     );
-    
+
     $activechannelids = $this->db->getCol("
       SELECT channelid
       FROM channels_recordings
@@ -2208,30 +2208,30 @@ class Recordings extends \Springboard\Model {
         : ""
       )
     );
-    
+
     $channels = $this->markChannelsActive( $channels, $activechannelids );
     return $channels;
-    
+
   }
-  
+
   protected function markChannelsActive( &$channels, &$activechannelids ) {
-    
+
     if ( empty( $activechannelids ) )
       return $channels;
-    
+
     foreach( $channels as $key => $channel ) {
-      
+
       $channels[ $key ]['active'] = in_array( $channel['id'], $activechannelids );
-      
+
       if ( !empty( $channel['children'] ) )
         $channels[ $key ]['children'] =
           $this->markChannelsActive( $channel['children'], $activechannelids );
         ;
-      
+
     }
-    
+
     return $channels;
-    
+
   }
 
   public function getVersions( $ids = array() ) {
@@ -2272,6 +2272,11 @@ class Recordings extends \Springboard\Model {
     $pipversions = array();
 
     foreach( $rs as $version ) {
+      if ( $version['resolution'] ) {
+        $res = explode('x', strtolower( $version['resolution'] ));
+        $version['dimensions'] = $res[0] * $res[1];
+      } else
+        $version['dimensions'] = 0;
 
       if ( $version['encodingshortname'] == 'audio' ) {
         $ret['audio'][] = $version;
@@ -2312,10 +2317,10 @@ class Recordings extends \Springboard\Model {
   }
 
   public function getFlashData( $info ) {
-    
+
     $this->ensureObjectLoaded();
     $this->bootstrap->includeTemplatePlugin('indexphoto');
-    
+
     if ( isset( $info['versions'] ) )
       $versions = $info['versions'];
     else
@@ -2364,14 +2369,15 @@ class Recordings extends \Springboard\Model {
     // default bal oldalon van a video, csak akkor allitsuk be ha kell
     if ( !$this->row['slideonright'] )
       $data['layout_videoOrientation'] = 'right';
-    
+
     if ( $data['language'] != 'en' )
       $data['locale'] = $info['STATIC_URI'] . 'js/flash_locale_' . $data['language'] . '.json';
-    
+
     if ( !empty( $versions['master']['desktop'] ) ) {
       $data['media_streams']          = array();
       $data['media_streamLabels']     = array();
       $data['media_streamParameters'] = array();
+      $data['media_streamDimensions'] = array();
 
       if ( $hds )
         $data['media_streams'][]      =
@@ -2384,6 +2390,8 @@ class Recordings extends \Springboard\Model {
           'recordingversionid' => $version['id'],
           'viewsessionid'      => $this->generateViewSessionid( $version['id'] ),
         );
+        if ( $version['dimensions'] )
+          $data['media_streamDimensions'][] = $version['dimensions'];
 
         if ( !$hds )
           $data['media_streams'][]        =
@@ -2406,6 +2414,7 @@ class Recordings extends \Springboard\Model {
 
       $data['content_streams']      = array();
       $data['content_streamLabels'] = array();
+      $data['content_streamDimensions'] = array();
       if ( $hds )
         $data['content_streams'][]    =
           $this->getMediaUrl('contentsmil', null, $info )
@@ -2413,6 +2422,8 @@ class Recordings extends \Springboard\Model {
 
       foreach( $versions['content']['desktop'] as $version ) {
         $data['content_streamLabels'][] = $version['qualitytag'];
+        if ( $version['dimensions'] )
+          $data['content_streamDimensions'][] = $version['dimensions'];
 
         if ( !$hds )
           $data['content_streams'][]      =
@@ -2433,26 +2444,26 @@ class Recordings extends \Springboard\Model {
 
     $subtitles = $this->getSubtitleLanguages();
     if ( !empty( $subtitles ) ) {
-      
+
       $defaultsubtitle = $this->getDefaultSubtitleLanguage();
       if ( $defaultsubtitle ) {
-        
+
         $data['subtitle_autoShow'] = true;
         $data['subtitle_default']  = $defaultsubtitle;
-        
+
       }
-      
+
       $data['subtitle_files'] = array();
       foreach( $subtitles as $subtitle ) {
-        
+
         $data['subtitle_files'][ $subtitle['languagecode'] ] =
           $recordingbaseuri . 'getsubtitle/' . $subtitle['id']
         ;
-        
+
       }
-      
+
     }
-    
+
     if ( !$info['organization']['isrecommendationdisabled'] ) {
 
       if ( isset( $info['relatedvideos'] ) )
@@ -2466,7 +2477,7 @@ class Recordings extends \Springboard\Model {
 
       $data['recommendatory_string'] = array();
       foreach( $relatedvideos as $video ) {
-        
+
         $data['recommendatory_string'][] = array(
           'title'       => $video['title'],
           'subtitle'    => $video['subtitle'],
@@ -2476,7 +2487,7 @@ class Recordings extends \Springboard\Model {
             \Springboard\Filesystem::filenameize( $video['title'] )
           ,
         );
-        
+
       }
 
     }
@@ -2498,9 +2509,9 @@ class Recordings extends \Springboard\Model {
 
     if ( $this->row['isseekbardisabled'] and @$info['member'] and $info['member']['id'] )
       $data = array_merge( $data, $this->getSeekbarOptions( $info ) );
-    
+
     return $data;
-    
+
   }
 
   // csak a getflashdata hivja
@@ -2593,7 +2604,7 @@ class Recordings extends \Springboard\Model {
     return $options;
 
   }
-  
+
   public function isHDSEnabled() {
     return
       $this->bootstrap->config['ondemandhdsenabled'] and
@@ -2644,11 +2655,11 @@ class Recordings extends \Springboard\Model {
   }
 
   public function getIntroOutroFlashdata( $info, $hds = null ) {
-    
+
     $this->ensureObjectLoaded();
     if ( !$this->row['introrecordingid'] and !$this->row['outrorecordingid'] )
       return array();
-    
+
     if ( $hds === null )
       $hds   = $this->isHDSEnabled();
 
@@ -2656,19 +2667,19 @@ class Recordings extends \Springboard\Model {
     $data    = array();
     $introid = 0;
     $outroid = 0;
-    
+
     if ( $this->row['introrecordingid'] ) {
-      
+
       $ids[]   = $this->row['introrecordingid'];
       $introid = $this->row['introrecordingid'];
-      
+
     }
-    
+
     if ( $this->row['outrorecordingid'] ) {
-      
+
       $ids[]   = $this->row['outrorecordingid'];
       $outroid = $this->row['outrorecordingid'];
-      
+
     }
 
     $versions = $this->getVersions( $ids );
@@ -2677,7 +2688,7 @@ class Recordings extends \Springboard\Model {
 
     $type = $hds? 'smil': 'default';
     foreach( $versions['master']['desktop'] as $version ) {
-      
+
       if ( $version['recordingid'] == $introid )
         $key = 'intro_streams';
       else if ( $version['recordingid'] == $outroid )
@@ -2694,50 +2705,50 @@ class Recordings extends \Springboard\Model {
     return $data;
 
   }
-  
+
   public function getStructuredFlashData( $info ) {
-    
+
     $flashdata = $this->transformFlashData(
       $this->getFlashData( $info )
     );
-    
+
     $flashdata['recommendatory'] = $flashdata['recommendatory']['string'];
-    
+
     return $flashdata;
-    
+
   }
-  
+
   protected function transformFlashData( $data ) {
-    
+
     $flashdata = array();
     foreach( $data as $key => $value ) {
-      
+
       $key = explode('_', $key );
       if ( is_array( $value ) )
         $value = $this->transformFlashData( $value );
-      
+
       if ( count( $key ) == 1 )
         $flashdata[ $key[0] ] = $value;
       elseif ( count( $key ) == 2 ) {
-        
+
         if ( !isset( $flashdata[ $key[0] ] ) )
           $flashdata[ $key[0] ] = array();
-        
+
         $flashdata[ $key[0] ][ $key[1] ] = $value;
-        
+
       } else
         throw new \Exception('key with more then two underscores!');
-      
+
     }
-    
+
     return $flashdata;
-    
+
   }
-  
+
   public function getWowzaUrl( $type, $needextraparam = false, $info = null ) {
-    
+
     $url = $this->bootstrap->config['wowza'][ $type ];
-    
+
     if ( $needextraparam ) {
 
       $this->ensureID();
@@ -2749,19 +2760,19 @@ class Recordings extends \Springboard\Model {
     }
 
     if ( !$this->streamingserver ) {
-      
+
       $streamingserverModel  = $this->bootstrap->getModel('streamingservers');
       $this->streamingserver = $streamingserverModel->getServerByClientIP(
         $info['ipaddress'],
         'ondemand'
       );
-      
+
     }
 
     return sprintf( $url, $this->streamingserver['server'] );
-    
+
   }
-  
+
   protected function getAuthorizeSessionid( &$info ) {
 
     $ret = sprintf('?sessionid=%s_%s_%s',
@@ -2776,7 +2787,7 @@ class Recordings extends \Springboard\Model {
     return $ret;
 
   }
-  
+
   public function getMediaUrl( $type, $version, $info, $id = null ) {
 
     $this->ensureObjectLoaded();
@@ -2820,7 +2831,7 @@ class Recordings extends \Springboard\Model {
           $authtoken .
           $extratoken
         ;
-        
+
         break;
 
       case 'mobilertsp':
@@ -2831,7 +2842,7 @@ class Recordings extends \Springboard\Model {
           $authtoken .
           $extratoken
         ;
-        
+
         break;
 
       case 'direct':
@@ -2872,7 +2883,7 @@ class Recordings extends \Springboard\Model {
   }
 
   public function getAuthor() {
-    
+
     $this->ensureObjectLoaded();
     return $this->db->getRow("
       SELECT
@@ -2888,11 +2899,11 @@ class Recordings extends \Springboard\Model {
       WHERE id = '" . $this->row['userid'] . "'
       LIMIT 1
     ");
-    
+
   }
-  
+
   public function getSubtitleLanguages() {
-    
+
     $this->ensureID();
     return $this->db->getArray("
       SELECT
@@ -2910,11 +2921,11 @@ class Recordings extends \Springboard\Model {
         l.id            = st.languageid
       GROUP BY st.languageid
     ");
-    
+
   }
-  
+
   public function getDefaultSubtitleLanguage() {
-    
+
     $this->ensureID();
     return $this->db->getOne("
       SELECT l.shortname AS languagecode
@@ -2928,11 +2939,11 @@ class Recordings extends \Springboard\Model {
       GROUP BY st.languageid
       LIMIT 1
     ");
-    
+
   }
-  
+
   public function markAsDeleted() {
-    
+
     $this->ensureObjectLoaded();
 
     $this->updateRow( array(
@@ -2966,25 +2977,25 @@ class Recordings extends \Springboard\Model {
     $this->updateChannelIndexPhotos();
     $this->updateCategoryCounters();
     return true;
-    
+
   }
-  
+
   public function markContentAsDeleted() {
-    
+
     $this->ensureObjectLoaded();
-    
+
     $this->updateRow( array(
         'contentstatus'           => 'markedfordeletion',
         'contentdeletedtimestamp' => date('Y-m-d H:i:s'),
       )
     );
-    
+
     return true;
-    
+
   }
-  
+
   public function getRandomRecordings( $limit, $organizationid, $user ) {
-    
+
     $select = "
       us.nickname,
       us.nameformat,
@@ -2999,12 +3010,12 @@ class Recordings extends \Springboard\Model {
       r.indexphotofilename,
       r.isfeatured
     ";
-    
+
     $tables = "
       recordings AS r,
       users AS us
     ";
-    
+
     $where = "
       us.id            = r.userid AND
       r.organizationid = '" . $organizationid . "' AND
@@ -3015,17 +3026,17 @@ class Recordings extends \Springboard\Model {
       ) AND
       r.isintrooutro   = 0
     ";
-    
+
     return $this->db->getArray(
       self::getUnionSelect( $user, $select, $tables, $where ) . "
       ORDER BY isfeatured DESC, RAND()
       LIMIT $limit
     ");
-    
+
   }
-  
+
   public function getSearchAllCount( $user, $organizationid, $searchterm ) {
-    
+
     $searchterm  = str_replace( ' ', '%', $searchterm );
     $searchterm  = $this->db->qstr( '%' . $searchterm . '%' );
     $where   = "
@@ -3035,7 +3046,7 @@ class Recordings extends \Springboard\Model {
       ) AND
       r.organizationid = '$organizationid'
     ";
-    
+
     $query   = "
       SELECT
       (
@@ -3062,13 +3073,13 @@ class Recordings extends \Springboard\Model {
         ) AS subcount
       ) AS count
     ";
-    
+
     return $this->db->getOne( $query );
-    
+
   }
-  
+
   public function getSearchAllArray( $user, $organizationid, $searchterm, $start, $limit, $order ) {
-    
+
     $searchterm  = str_replace( ' ', '%', $searchterm );
     $searchterm  = $this->db->qstr( '%' . $searchterm . '%' );
     $select = "
@@ -3104,7 +3115,7 @@ class Recordings extends \Springboard\Model {
       ) AND
       r.organizationid = '$organizationid'
     ";
-    
+
     $query   = "
       (
         SELECT
@@ -3147,25 +3158,25 @@ class Recordings extends \Springboard\Model {
       " . self::getUnionSelect( $user, $select, 'recordings AS r', $where ) . "
       ORDER BY $order
     ";
-    
+
     if ( $start !== null )
       $query .= 'LIMIT ' . $start . ', ' . $limit;
-    
+
     $ret = $this->db->getArray( $query );
     return $this->searchAddSlidesToArray( $searchterm, $ret );
-    
+
   }
-  
+
   public function getSearchAdvancedWhere( $organizationid, $search ) {
-    
+
     if ( $this->searchadvancedwhere )
       return $this->searchadvancedwhere;
-    
+
     $where = array();
     if ( strlen( $search['q'] ) ) {
-      
+
       if ( $search['wholeword'] ) {
-        
+
         $term  = preg_quote( $search['q'] );
         $trans = array(
           'a' => '[aá]',
@@ -3199,14 +3210,14 @@ class Recordings extends \Springboard\Model {
         );
         $term = strtr( $term, $trans );
         $term = "REGEXP " . $this->db->qstr( '[[:<:]]' . $term . '[[:>:]]' );
-        
+
       } else {
-        
+
         $term = str_replace( ' ', '%', $search['q'] );
         $term = 'LIKE ' . $this->db->qstr( '%' . $term . '%' );
-        
+
       }
-      
+
       $where[] = "
         (
            r.title       $term OR
@@ -3214,33 +3225,33 @@ class Recordings extends \Springboard\Model {
            r.description $term
         )
       ";
-      
+
     }
-    
+
     if ( strlen( $search['uploaddatefrom'] ) )
       $where[] = "r.timestamp >= " . $this->db->qstr( $search['uploaddatefrom'] );
-    
+
     if ( strlen( $search['uploaddateto'] ) )
       $where[] = "r.timestamp <= " . $this->db->qstr( $search['uploaddateto'] );
-    
+
     if ( strlen( $search['createdatefrom'] ) )
       $where[] = "r.recordedtimestamp >= " . $this->db->qstr( $search['createdatefrom'] );
-    
+
     if ( strlen( $search['createdateto'] ) )
       $where[] = "r.recordedtimestamp <= " . $this->db->qstr( $search['createdateto'] );
-    
+
     if ( intval( $search['languages'] ) ) {
-      
+
       $languageid = $this->db->qstr( intval( $search['languages'] ) );
       $where[]    = "r.languageid = $languageid";
-      
+
     }
-    
+
     if ( strlen( $search['contributorname'] ) ) {
-      
+
       $contributorname = $this->db->qstr( '%' . $search['contributorname'] . '%' );
       if ( strlen( $search['contributorjob'] ) ) {
-        
+
         $contributorjob = $this->db->qstr( '%' . $search['contributorjob'] . '%' );
         $contributorids = $this->db->getCol("
           SELECT DISTINCT c.id
@@ -3260,7 +3271,7 @@ class Recordings extends \Springboard\Model {
             c.id = cj.contributorid AND
             c.organizationid = '$organizationid'
         ");
-        
+
       } else
         $contributorids = $this->db->getCol("
           SELECT id
@@ -3272,12 +3283,12 @@ class Recordings extends \Springboard\Model {
             ) LIKE $contributorname AND
             organizationid = '$organizationid'
         ");
-      
+
     } else
       $contributorids = array();
-    
+
     if ( strlen( $search['contributororganization'] ) ) {
-      
+
       $contributororg  = str_replace( ' ', '%', $search['contributororganization'] );
       $contributororg  = $this->db->qstr( '%' . $contributororg . '%' );
       $organizationids = $this->db->getCol("
@@ -3287,9 +3298,9 @@ class Recordings extends \Springboard\Model {
           name LIKE $contributororg OR
           nameshort LIKE $contributororg
       ");
-      
+
       if ( !empty( $organizationids ) ) {
-        
+
         $contributorids = $this->db->getCol("
           SELECT id
           FROM contributors
@@ -3300,75 +3311,75 @@ class Recordings extends \Springboard\Model {
             " AND id IN('" . implode("', '", $contributorids ) . "'"
           )
         );
-        
+
       }
-      
+
     }
-    
+
     $recordingids = array();
     if ( !empty( $contributorids ) ) {
-      
+
       $recordingids = $this->db->getCol("
         SELECT DISTINCT recordingid
         FROM contributors_roles
         WHERE
           contributorid IN ('" . implode("', '", $contributorids ) . "')
       ");
-      
+
     }
-    
+
     if ( $search['category'] ) {
-      
+
       $recordingids = array_merge( $recordingids, $this->db->getCol("
         SELECT DISTINCT recordingid
         FROM recordings_categories
         WHERE categoryid = '" . intval( $search['category'] ) . "'
       ") );
-      
+
     }
-    
+
     if ( $search['department'] ) {
-      
+
       $recordingids = array_merge( $recordingids, $this->db->getCol("
         SELECT DISTINCT recordingid
         FROM access
         WHERE departmentid = '" . intval( $search['department'] ) . "'
       ") );
-      
+
     }
-    
-    
+
+
     if ( !empty( $recordingids ) ) {
       $recordingids = array_unique( $recordingids );
       $where[] = "r.id IN('" . implode("', '", $recordingids ) . "')";
     }
-    
+
     $where = implode(' AND ', $where );
     $ret   = array(
       'where' => $where,
       'empty' => false,
     );
-    
+
     if ( isset( $term ) )
       $ret['term'] = $term;
     elseif ( empty( $recordingids ) )
       $ret['empty'] = true;
-    
+
     return $this->searchadvancedwhere = $ret;
-    
+
   }
-  
+
   public function getSearchAdvancedCount( $user, $organizationid, $search ) {
-    
+
     $where  = $this->getSearchAdvancedWhere( $organizationid, $search );
     if ( $where['empty'] )
       return 0;
-    
+
     if ( strlen( trim( $where['where'] ) ) )
       $where['where'] .= ' AND ';
-    
+
     $where['where'] .= "r.organizationid = '$organizationid'";
-    
+
     $query = "(
         SELECT COUNT(*) FROM
         (
@@ -3376,17 +3387,17 @@ class Recordings extends \Springboard\Model {
         ) AS subcount
       )
     ";
-    
+
     return $this->db->getOne( $query );
-    
+
   }
-  
+
   public function getSearchAdvancedArray( $user, $organizationid, $search, $start, $limit, $order ) {
-    
+
     $where  = $this->getSearchAdvancedWhere( $organizationid, $search );
     if ( $where['empty'] )
       return array();
-    
+
     $select = "
       'recording' AS type,
       (
@@ -3417,16 +3428,16 @@ class Recordings extends \Springboard\Model {
       r.rating,
       '0' AS numberofrecordings
     ";
-    
+
     if ( strlen( trim( $where['where'] ) ) )
       $where['where'] .= ' AND ';
-    
+
     $where['where'] .= "r.organizationid = '$organizationid'";
-    
+
     $query = self::getUnionSelect( $user, $select, 'recordings AS r', $where['where'] ) . "
       ORDER BY $order
     ";
-    
+
     if ( $start !== null )
       $query .= 'LIMIT ' . $start . ', ' . $limit;
 
@@ -3442,31 +3453,31 @@ class Recordings extends \Springboard\Model {
 
     return $ret;
   }
-  
+
   public function hasSubtitle() {
-    
+
     $this->ensureID();
     return $this->db->getOne("
       SELECT COUNT(*)
       FROM subtitles
       WHERE recordingid = '" . $this->id . "'
     ");
-    
+
   }
-  
+
   public function getRecordingsCount( $where, $user ) {
-    
+
     return $this->db->getOne("
       SELECT COUNT(*)
       FROM (
         " . self::getUnionSelect( $user, null, null, $where ) . "
       ) AS count
     ");
-    
+
   }
-  
+
   public function getRecordingsWithUsers( $start, $limit, $extrawhere, $order, $user, $organizationid ){
-    
+
     $select = "
       " . self::getRecordingSelect('r.') . ",
       usr.id AS userid,
@@ -3476,43 +3487,43 @@ class Recordings extends \Springboard\Model {
       usr.namefirst,
       usr.namelast
     ";
-    
+
     $from = "
       recordings AS r,
       users AS usr" // azert nem 'u' mert az unionselectben mar van egy 'u'
     ;
-    
+
     $where = "
       usr.id = r.userid AND
       r.organizationid = '$organizationid'
     ";
-    
+
     if ( $extrawhere )
       $where .= " AND ( $extrawhere )";
-    
+
     return $this->db->getArray("
       " . self::getUnionSelect( $user, $select, $from, $where ) .
       ( strlen( $order ) ? 'ORDER BY ' . $order : '' ) . " " .
       ( is_numeric( $start ) ? 'LIMIT ' . $start . ', ' . $limit : "" )
     );
-    
+
   }
-  
+
   public function getAttachments( $publiconly = true ) {
-    
+
     $this->ensureObjectLoaded();
     $where = array(
       "recordingid = '" . $this->id . "'",
       "status NOT IN('markedfordeletion', 'deleted')",
     );
-    
+
     if ( $publiconly ) {
-      
+
       $where[] = "status = 'onstorage'";
       $where[] = "isdownloadable = '1'";
-      
+
     }
-    
+
     $where = implode(' AND ', $where );
     return $this->db->getArray("
       SELECT *
@@ -3520,47 +3531,47 @@ class Recordings extends \Springboard\Model {
       WHERE $where
       ORDER BY title
     ");
-    
+
   }
-  
+
   public function linkContributor( $data ) {
-    
+
     $this->ensureID();
     $this->db->query("
       INSERT INTO contributors_roles (contributorid, recordingid, roleid )
       VALUES ('" . $data['contributorid'] . "', '" . $this->id . "', '" . $data['roleid'] . "')
     ");
-    
+
     $insertid = $this->db->Insert_ID();
     if ( !$insertid )
       return;
-    
+
     $this->db->query("
       UPDATE contributors_roles
       SET weight = '$insertid'
       WHERE id = '$insertid'
       LIMIT 1
     ");
-    
+
   }
-  
+
   public function clearDefaultSubtitle() {
-    
+
     $this->ensureID();
     $this->db->query("
       UPDATE subtitles
       SET isdefault = '0'
       WHERE recordingid = '" . $this->id . "'
     ");
-    
+
   }
-  
+
   public function clearSubtitleWithLanguage( $languageid ) {
-    
+
     $languageid = intval( $languageid );
     if ( !$languageid )
       throw new \Exception("Invalid languageid passed!");
-    
+
     $this->ensureID();
     $this->db->query("
       DELETE FROM subtitles
@@ -3568,11 +3579,11 @@ class Recordings extends \Springboard\Model {
         recordingid = '" . $this->id . "' AND
         languageid  = '" . $languageid . "'
     ");
-    
+
   }
-  
+
   public function addToChannel( $channelid, $user ) {
-    
+
     $this->ensureID();
     $existingid = $this->db->getOne("
       SELECT id
@@ -3585,7 +3596,7 @@ class Recordings extends \Springboard\Model {
         : ""
       )
     );
-    
+
     if ( $existingid )
       return false;
     else {
@@ -3601,7 +3612,7 @@ class Recordings extends \Springboard\Model {
         LIMIT 1
       ");
     }
-    
+
     $this->updateChannelIndexPhotos();
     $this->updateCategoryCounters();
 
@@ -3610,11 +3621,11 @@ class Recordings extends \Springboard\Model {
     $channelModel->updateModification();
 
     return true;
-    
+
   }
-  
+
   public function removeFromChannel( $channelid, $user ) {
-    
+
     $this->ensureID();
     $this->db->query("
       DELETE FROM channels_recordings
@@ -3626,7 +3637,7 @@ class Recordings extends \Springboard\Model {
         : ""
       )
     );
-    
+
     $this->updateChannelIndexPhotos();
     $this->updateCategoryCounters();
 
@@ -3635,20 +3646,20 @@ class Recordings extends \Springboard\Model {
     $channelModel->updateModification();
 
   }
-  
+
   public function getIntroOutroCount( $organizationid ) {
-    
+
     return $this->db->getOne("
       SELECT COUNT(*)
       FROM recordings
       WHERE " . self::getPublicRecordingWhere('', '1') . " AND
         organizationid = '$organizationid'
     ");
-    
+
   }
-  
+
   public function getIntroOutroAssoc( $organizationid ) {
-    
+
     return $this->db->getAssoc("
       SELECT id, title
       FROM recordings
@@ -3656,33 +3667,33 @@ class Recordings extends \Springboard\Model {
         organizationid = '$organizationid'
       ORDER BY title
     ");
-    
+
   }
-  
+
   public function getIndexPhotos() {
-    
+
     $this->ensureObjectLoaded();
     $indexphotos = array();
-    
+
     if ( !$this->row['numberofindexphotos'] )
       return $indexphotos;
-    
+
     for( $i = 1; $i <= $this->row['numberofindexphotos']; $i++ ) {
-      
+
       $indexphotos[] = preg_replace(
         '/_\d+\.jpg$/',
         '_' . $i . '.jpg',
         $this->row['indexphotofilename']
       );
-      
+
     }
-    
+
     return $indexphotos;
-    
+
   }
-  
+
   public function getGroupRecordingsCount( $groupid ) {
-    
+
     return $this->db->getOne("
       SELECT COUNT(*)
       FROM
@@ -3693,11 +3704,11 @@ class Recordings extends \Springboard\Model {
         r.id          = a.recordingid AND
         " . self::getPublicRecordingWhere('r.', '0', 'groups')
     );
-    
+
   }
-  
+
   public function getGroupRecordings( $groupid, $start = false, $limit = false, $order = false ) {
-    
+
     return $this->db->getArray("
       SELECT
         " . self::getRecordingSelect('r.') . ",
@@ -3712,11 +3723,11 @@ class Recordings extends \Springboard\Model {
       ORDER BY $order
       LIMIT $start, $limit
     ");
-    
+
   }
-  
+
   public function updateLastPosition( $organization, $userid, $lastposition, $sessionid ) {
-    
+
     $this->ensureID();
     $timeout   = $organization['viewsessiontimeoutminutes'];
     $updatesec = $this->bootstrap->config['recordingpositionupdateseconds'];
@@ -3745,7 +3756,7 @@ class Recordings extends \Springboard\Model {
         r.id            = rvp.recordingid
       LIMIT 1
     ");
-    
+
     $progressModel = $this->bootstrap->getModel('recording_view_progress');
     $record        = array(
       'recordingid' => $this->id,
@@ -3866,9 +3877,9 @@ class Recordings extends \Springboard\Model {
     }
 
   }
-  
+
   public function searchStatistics( $user, $searchterm, $organizationid, $start = 0, $limit = 20 ) {
-    
+
     $searchterm  = str_replace( ' ', '%', $searchterm );
     $searchterm  = $this->db->qstr( '%' . $searchterm . '%' );
     $select = "
@@ -3910,7 +3921,7 @@ class Recordings extends \Springboard\Model {
       users AS u,
       recordings AS r"
     ;
-    
+
     $where = "
       r.userid = u.id AND
       (
@@ -3930,10 +3941,10 @@ class Recordings extends \Springboard\Model {
   }
 
   public function search( $searchterm, $userid, $organizationid ) {
-    
+
     $searchterm  = str_replace( ' ', '%', $searchterm );
     $searchterm  = $this->db->qstr( '%' . $searchterm . '%' );
-    
+
     $query   = "
       SELECT
         (
@@ -3981,11 +3992,11 @@ class Recordings extends \Springboard\Model {
       ORDER BY relevancy DESC
       LIMIT 20
     ";
-    
+
     return $this->db->getArray( $query );
-    
+
   }
-  
+
   public function getDownloadInfo( $staticuri ) {
     $this->ensureObjectLoaded();
     if ( !$this->row['isdownloadable'] and !$this->row['isaudiodownloadable'] )
