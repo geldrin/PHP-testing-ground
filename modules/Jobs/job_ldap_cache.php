@@ -59,7 +59,8 @@ if ( $isdebug_ldap ) {
 }
 
 // Basic DB LDAP/AD user maintenance: search for unconnected users in groups_members
-$err = updateUnconnectedGroupMembers();
+// !!! removed due to long run
+//$err = updateUnconnectedGroupMembers();
 
 // Get LDAP/AD groups to be synchronized
 $ldap_groups = getLDAPGroups($app->config['directorygroupnestedcachetimeout']);
@@ -302,7 +303,8 @@ while ( !$ldap_groups->EOF ) {
         if ( $users_added !== false ) {
             // Log
             if ( !empty($users2add_sql) ) $users_added_list = "\nAdded: " . implode(",", $users2add);
-            $err = updateUnconnectedGroupMembers();
+            // !!! removed due to long run
+            //$err = updateUnconnectedGroupMembers();
         } else {
             $users_added = 0;
             $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Users NOT added to group: " . $num_users_new . ". Inconsistent group membership with LDAP/AD! Users:\n" . $users2add_flat, $sendmail = true);
@@ -348,8 +350,6 @@ global $db, $myjobid, $debug, $jconf;
             gm.userexternalid IS NOT NULL AND
             LOWER(u.externalid) REGEXP CONCAT('^', gm.userexternalid, '@.*')
         ";
-
-    //echo $query . "\n";
             
     try {
         $rs = $db->Execute($query);
