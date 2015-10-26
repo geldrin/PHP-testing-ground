@@ -340,6 +340,7 @@ class Livefeeds extends \Springboard\Model {
       'feed_id'                => $this->id,
       'recording_title'        => $this->row['name'],
       'recording_type'         => 'live',
+      'recording_autoQuality'  => false, // nincs stream resolution adat; off
       'timeline_autoPlay'      => true,
       'user_checkWatching'     => (bool)$info['member']['ispresencecheckforced'],
       'user_checkWatchingTimeInterval' => $info['checkwatchingtimeinterval'],
