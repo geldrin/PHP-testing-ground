@@ -225,8 +225,11 @@ global $config;
     
     // Speed
     $info['interface_speed'] = getNetworkInterfaceSpeed($interface);
-    $info['interface_speed'] = false;
-    if ( !is_numeric($info['interface_speed']) ) $info['interface_speed'] = $config['interface_speed'];
+    if ( !is_numeric($info['interface_speed']) and isset($config['interface_speed']) ) {
+        $info['interface_speed'] = $config['interface_speed'];
+    } else {
+        $info['interface_speed'] = 100;
+    }
 
     // Traffic
     $traffic = getNetworkInterfaceTraffic($interface);
@@ -247,7 +250,7 @@ function getNetworkInterfaceTraffic($iface_name) {
     
     if ( $result ) {
         log_msg("[ERROR] Error running command: " . $command . "\nOutput:\n" . $command_output);
-        return false;
+        exit;
     }
 
     $traffic_temp = preg_split('/\s+/', $output[2], -1, PREG_SPLIT_NO_EMPTY);
@@ -271,7 +274,7 @@ function getNetworkInterfaceSpeed($iface_name) {
     
     if ( $result ) {
         log_msg("[ERROR] Error running command: " . $command . "\nOutput:\n" . $command_output);
-        return false;
+        exit;
     }
 
     preg_match("|\d+|", $command_output, $tmp);
