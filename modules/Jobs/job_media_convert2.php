@@ -494,9 +494,10 @@ global $app, $jconf, $debug;
 
 		clearstatcache();
 
-		$output = runExt4($command);
-		$output_string = $output['cmd_output'];
-		$result = $output['code'];
+		$job_thumbnail = new runExt($command);
+		$job_thumbnail->run();
+		$output_string = $job_thumbnail->getOutput();
+		$result = $job_thumbnail->getCode();
 		if ( $result < 0 ) $result = 0;
 
 		if ( ( $result != 0 ) || !file_exists($orig_thumb_filename) || ( filesize($orig_thumb_filename) < 1 ) ) {

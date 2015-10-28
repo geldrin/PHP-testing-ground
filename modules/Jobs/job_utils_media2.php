@@ -187,6 +187,36 @@ class runExt {
 
 } // end of RunExtV class
 
+function runExt4($cmd) {
+///////////////////////////////////////////////////////////////////////////////////////////////////
+//
+// RunExt v4
+//
+// Favago modszer exec() + echo $? paranccsal.
+// Az echo kiirja az elozoleg futtatott parancs exitcode-jat az utolso sorba, amit az exec()
+// fuggveny ouput valtozo utolso eleme tartalmaz.
+//
+///////////////////////////////////////////////////////////////////////////////////////////////////
+	$return_array = array(
+		'code'       => -1,
+		'cmd'        => null,
+		'cmd_output' => null,
+	);
+	
+	$cmd .= " 2>&1; echo $?";
+	$return_array['cmd'] = $cmd;
+	
+	$output = array();
+	$code = -1;
+	
+	exec($cmd, $output, $code);
+	
+	$return_array['code'] = intval(array_pop($output));
+	$return_array['cmd_output'] = implode(PHP_EOL, $output);
+	
+	return $return_array;
+}
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 function ffmpegPrep($rec, $profile) {
 ///////////////////////////////////////////////////////////////////////////////////////////////////
