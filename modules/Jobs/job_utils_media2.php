@@ -175,15 +175,17 @@ class runExt {
 	
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-	function getCode()     { return (int) $this->code; }
-	
-	function getDuration() { return (double) $this->duration; }
+	function getCode()      { return (int) $this->code; }
 
-	function getMessage()  { return $this->msg; }
+	function getDuration()  { return (double) $this->duration; }
 
-	function getOutput()   { return $this->output; }
+	function getMessage()   { return $this->msg; }
 
-	function getPid()      { return $this->pid; }
+	function getOutput()    { return implode(PHP_EOL, $this->output); }
+
+	function getOutputArr() { return $this->output; }
+
+	function getPid()       { return $this->pid; }
 
 } // end of RunExtV class
 

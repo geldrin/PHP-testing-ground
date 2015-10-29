@@ -262,8 +262,9 @@ function Main() {
       echo $msg;
       $check_dst = new runExt($cmd_check_dst);
 			$check_dst->run();
+			$output = $check_dst->getOutput();
       
-      if (!empty($check_dst->getOutput())) {
+      if (!empty($output)) {
       // not empty or error
         if ($check_dst->getCode() !== 0) {
           // directory does not exist / inaccessible
@@ -306,7 +307,7 @@ function Main() {
         }
       }
       // we have the directory nice and clean
-      unset($msg);
+      unset($msg, $output);
       
       // Konyvtarak feltoltese
       $snapdir = $jconf['ocr_dir'] . $recording['id'] ."/ocr/";
