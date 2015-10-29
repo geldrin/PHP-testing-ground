@@ -388,7 +388,7 @@ function Main() {
             break;
           case OCR_OK:
           default:
-            $status = 'NULL';
+            $status = NULL;
             $report = "OCR PROCESS COMPLETE.\n";
             break;
         }
@@ -399,7 +399,7 @@ function Main() {
         if ($ox->getData())    $report .= " > Info: ". $ox->getData() ."\n";
         
         updateRecordingStatus($recording['id'], $status, $type = 'ocr');
-        log_recording_conversion($recording['id'], $myjobid, $action, $status, $ox->getCommand(), $report, $OCRduration, true);
+        log_recording_conversion($recording['id'], $myjobid, $action, ($status === null ? 'NULL' : $status), $ox->getCommand(), $report, $OCRduration, true);
         $debug->log($logdir, $logfile, str_pad("[ CONVERSION END ]", 100, '-', STR_PAD_BOTH), false);
       }
     }
@@ -408,7 +408,6 @@ function Main() {
     
     $app->watchdog();
     sleep($sleep_duration);
-    
   } // Main cycle
 
   if (is_resource($db->_connectionID)) $db->close();
@@ -517,7 +516,7 @@ function convertOCR($rec) {
   
   // KEPKOCKAK KINYERESE //////////////////////////////////
   $result['phase'] = "Extracting frames from video";
-  $cmd_explode = escapeshellcmd($onice ." ". $app->config['ffmpeg_alt'] ." -v ". $app->config['ffmpeg_loglevel'] ." -i ". $rec['contentmasterfile'] ." -filter_complex  'scale=w=320:h=180:force_original_aspect_ratio=decrease' -r ". $app->config['ocr_frame_distance'] ." -q:v 1 -f image2 ". $cmpdir ."%06d.png -r ". $app->config['ocr_frame_distance'] ." -q:v 1 -f image2 ". $wdir ."%06d.jpg");
+  $cmd_explode = escapeshellcmd($onice ." ". $app->config['ffmpeg_alt'] ." -v ". $app->config['ffmpeg_loglevel'] ." -i ". $rec['contentmasterfile'] ." -filter_complex 'scale=w=320:h=180:force_original_aspect_ratio=decrease' -r ". $app->config['ocr_frame_distance'] ." -q:v 1 -f image2 ". $cmpdir ."%06d.png -r ". $app->config['ocr_frame_distance'] ." -q:v 1 -f image2 ". $wdir ."%06d.jpg");
   
   $debug->log($logdir, $logfile, "Extracting frames from video. Command line:". PHP_EOL . $cmd_explode);
   
@@ -526,7 +525,7 @@ function convertOCR($rec) {
   
   // $err['code'] = 0; //// DEBUG
   if ($worker->getCode() !== 0) {
-    $msg = "[ERROR] Can't extract frames from video! Message:\n". $worker->getOutput() ."Command:\n". $cmd_explode;
+    $msg = "[ERROR] Can't extract frames from video! Message:\n". $worker->getOutput() ."\nCommand:\n". $cmd_explode ."\nReturn code: ". $worker->getCode();
     $debug->log($logdir, $logfile, $msg, $sendmail = false);
     $result['message'] = $msg;
     return $result;
@@ -570,7 +569,7 @@ function convertOCR($rec) {
     $img2 = $cmpdir . $frames['frames'][$p2]['flnm'] .'.png';
 
     $cmdIMdiff = $onice ." convert \"". $img1 ."\" \"". $img2 ."\" -compose difference -colorspace gray -composite png:- | identify -verbose -format %[fx:mean] png:-";
-		$worker->run($cmdIMdiff);
+		$worker->run($cmdIMdiff, 20);
 
     if ($worker->getCode() !== 0) {
       $numocrwarns++;

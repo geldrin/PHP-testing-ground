@@ -52,12 +52,14 @@ class runExt {
 		$timeout = false;
 		$lastactive = 0;
 		
+		$this->clearVariables();
+		
 		if ($command !== null) $this->command = $command;
 		if ($timeoutsec !== null && is_numeric($timeoutsec)) $this->timeoutsec = floatval($timeoutsec);
 		if ($callback !== null && is_callable($callback)) $this->callback = $callback;
 		
 		if (empty($this->command)) {
-			$this->message = "[ERROR] no command to be executed!";
+			$this->msg = "[ERROR] no command to be executed!";
 			return false;
 		}
 		
@@ -96,7 +98,7 @@ class runExt {
 
 			if ($ready === false ) { // error
 				$err = error_get_last();
-				$this->message = $err['message'];
+				$this->msg = $err['message'];
 				restore_error_handler();
 				break;
 			} elseif ($ready > 0) {
@@ -151,6 +153,20 @@ class runExt {
 			}
 		}
 		return true;
+	}
+	
+///////////////////////////////////////////////////////////////////////////////////////////////////
+	private function clearVariables() {
+///////////////////////////////////////////////////////////////////////////////////////////////////
+		$this->start        = 0;
+		$this->duration     = 0;
+		$this->code         = -1;
+		$this->output       = array();
+		$this->pid          = null;
+		$this->masterpid    = null;
+		$this->msg          = null;
+		$this->callback     = null;
+		$this->polling_usec = 50000;
 	}
 	
 ///////////////////////////////////////////////////////////////////////////////////////////////////
