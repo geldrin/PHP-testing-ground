@@ -188,7 +188,7 @@ while ( !$org_contracts->EOF ) {
         }
         
         // Is recording playback completed?
-        if ( $user['sessionpositionpercent'] > $org['elearningcoursecriteria'] ) {
+        if ( $user['sessionpositionpercent'] >= $org['elearningcoursecriteria'] ) {
             // Completed
             $users_summary[$idx]['recordings_finished']++;
             $users_summary[$idx]['session_info_completed'][$user['recordingid']] = userRecordingViewSessionCSV($user);
