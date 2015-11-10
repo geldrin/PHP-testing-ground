@@ -955,7 +955,7 @@ class Livefeeds extends \Springboard\Model {
   }
 
   public function getStatistics( $filter ) {
-
+    $organizationid = $filter['organizationid'];
     $table = 'statistics_live_5min';
     $ret   = array(
       'step'           => 300, // 5perc
@@ -1020,8 +1020,11 @@ class Livefeeds extends \Springboard\Model {
         SUM( s.numberofipad )       AS numberofipad
       FROM
         $table AS s,
-        livefeed_streams AS ls
+        livefeed_streams AS ls,
+        livefeeds AS lf
       WHERE
+        lf.id              = ls.livefeedid AND
+        lf.organizationid  = '$organizationid' AND
         s.livefeedstreamid = ls.id AND
         s.iscontent        = '0'
     ";
@@ -1255,12 +1258,14 @@ class Livefeeds extends \Springboard\Model {
   }
 
   public function getStatisticsData( $info ) {
+    $organizationid = $info['organizationid'];
     $startts = $this->db->qstr( $info['datefrom'] );
     $endts   = $this->db->qstr( $info['dateuntil'] );
     $tables  = '';
     $where   = array(
       "vsl.timestampfrom >= $startts",
       "vsl.timestampuntil <= $endts",
+      "lf.organizationid = '$organizationid'",
     );
 
     $extraselect = '';
