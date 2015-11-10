@@ -4244,7 +4244,11 @@ class Recordings extends \Springboard\Model {
         r.timestamp AS uploadedtimestamp,
         r.title,
         ROUND( GREATEST(r.masterlength, IFNULL(r.contentmasterlength, 0)) ) AS recordinglength,
-        (vso.positionuntil - vso.positionfrom) AS sessionwatchedduration,
+        IF(
+          vso.positionuntil - vso.positionfrom < 0,
+          0,
+          vso.positionuntil - vso.positionfrom
+        ) AS sessionwatchedduration,
         ROUND(
           (
             (vso.positionuntil - vso.positionfrom) /
