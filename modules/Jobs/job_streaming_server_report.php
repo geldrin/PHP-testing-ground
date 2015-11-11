@@ -3,7 +3,7 @@
 // Videosquare streaming server status report script
 // * Required packages (Debian): ifstat ethtool php5-cli php5-curl
 
-$myversion = "2015-09-20 11:38:00";
+$myversion = "2015-11-11 14:10:00";
 
 set_time_limit(0);
 date_default_timezone_set("Europe/Budapest");
@@ -35,7 +35,7 @@ if ( !file_exists($config['log_directory']) ) {
 if ( $debug ) log_msg("[DEBUG] Streaming server reporting script started. Version: " . $myversion);
 
 // Read sequence number
-$sequence_number_file = $config['log_directory'] . "/" . $config['server'] . ".seq";
+$sequence_number_file = $config['log_directory'] . "/" . parse_url($config['api_url'])['host'] . ".seq";
 if ( !file_exists($sequence_number_file) ) {
     $reportsequencenum = rand(0, 999999);
     if ( $debug ) log_msg("[DEBUG] Previous sequence number not found. Initial sequence number generated: " . $reportsequencenum);
