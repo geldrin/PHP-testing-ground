@@ -3927,6 +3927,7 @@ class Recordings extends \Springboard\Model {
     ;
 
     $where = "
+      r.organizationid = '$organizationid' AND
       r.userid = u.id AND
       (
         r.primarymetadatacache LIKE $searchterm OR
@@ -4203,12 +4204,14 @@ class Recordings extends \Springboard\Model {
   }
 
   public function getStatistics( $info ) {
+    $organizationid = $info['organizationid'];
     $startts = $this->db->qstr( $info['datefrom'] );
     $endts   = $this->db->qstr( $info['dateuntil'] );
     $tables  = '';
     $where   = array(
       "vso.timestamp >= $startts",
       "vso.timestamp <= $endts",
+      "r.organizationid = '$organizationid'",
     );
 
     $extraselect = '';
@@ -4241,7 +4244,11 @@ class Recordings extends \Springboard\Model {
         r.timestamp AS uploadedtimestamp,
         r.title,
         ROUND( GREATEST(r.masterlength, IFNULL(r.contentmasterlength, 0)) ) AS recordinglength,
-        (vso.positionuntil - vso.positionfrom) AS sessionwatchedduration,
+        IF(
+          vso.positionuntil - vso.positionfrom < 0,
+          0,
+          vso.positionuntil - vso.positionfrom
+        ) AS sessionwatchedduration,
         ROUND(
           (
             (vso.positionuntil - vso.positionfrom) /

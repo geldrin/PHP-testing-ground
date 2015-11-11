@@ -7,21 +7,22 @@ class Statistics extends \Visitor\HelpForm {
   private $delimiter = ';';
 
   public function init() {
-    
+
     $this->controller->toSmarty['helpclass'] = 'rightbox halfbox';
     parent::init();
   }
-  
+
   public function postSetupForm() {
-    
+
     $l = $this->bootstrap->getLocalization();
     $this->controller->toSmarty['title'] = $l('analytics', 'statistics_title');
-    
+
   }
-  
+
   public function onComplete() {
     $values = $this->form->getElementValues( 0 );
 
+    $values['organizationid'] = $this->controller->organization['id'];
     $values['recordingids'] = !empty( $_REQUEST['searchrecordings'] )
       ? $_REQUEST['searchrecordings']
       : array()

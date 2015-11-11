@@ -572,10 +572,25 @@ class Controller extends \Visitor\Controller {
         $invitation['templateid'],
         $this->organization['id']
       );
-      $this->invitationcache['template-' . $invitation['templateid'] ] = $template;
+
       if ( !strlen( trim( $template['subject'] ) ) )
         $template['subject'] = $l('users', 'templatesubject_default');
 
+      $this->invitationcache['template-' . $invitation['templateid'] ] = $template;
+      $this->toSmarty['template'] = $template;
+    } elseif ( !$invitation['templateid'] and !isset( $this->invitationcache['template'] ) ) {
+
+      $template = array(
+        'id'             => null,
+        'subject'        => $l('users', 'templatesubject_default'),
+        'title'          => '',
+        'prefix'         => '',
+        'postfix'        => '',
+        'timestamp'      => date('Y-m-d H:i:s'),
+        'organizationid' => $this->organization['id'],
+      );
+
+      $this->invitationcache['template'] = $template;
       $this->toSmarty['template'] = $template;
     }
 
