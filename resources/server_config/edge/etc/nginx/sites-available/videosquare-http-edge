@@ -10,8 +10,8 @@ server {
   keepalive_timeout 70;
 
   ## SSL config
-#  listen 443 ssl;                           # $VSQ_IP$ - if causes problem
-#  server_name stream-edge1.videosquare.eu;  # $VSQ_FQDN$
+  # listen 443 ssl;                           # $VSQ_IP$ - if causes problem
+  # server_name vsq-edge-bud-haladas1.t-system.co.hu;  # $VSQ_FQDN$
 
   ## Root www
   root /var/www/nginx;
@@ -104,7 +104,7 @@ server {
   # belso locationok amit a lua hiv meg kizarolag mert nem tud kozvetlenul url-t hivni
   location /recordingsaccesscheck {
     internal; # nem elerheto kivulrol
-    proxy_pass http://vsqdev.streamnet.hu/recordings/checkstreamaccess;
+    proxy_pass http://vsq.t-systems.co.hu/recordings/checkstreamaccess;
     # abszolut nem cacheljuk
     proxy_no_cache 1;
     proxy_cache_bypass 1;
@@ -115,7 +115,7 @@ server {
   # a location ha https-en keresztul jon a request, securenak tekintjuk
   location /recordingssecureaccesscheck {
     internal;
-    proxy_pass http://vsqdev.streamnet.hu/recordings/securecheckstreamaccess;
+    proxy_pass http://vsq.t-systems.co.hu/recordings/securecheckstreamaccess;
     proxy_no_cache 1;
     proxy_cache_bypass 1;
     proxy_pass_request_headers off;
@@ -123,7 +123,7 @@ server {
 
   location /liveaccesscheck {
     internal;
-    proxy_pass http://vsqdev.streamnet.hu/live/checkstreamaccess;
+    proxy_pass http://vsq.t-systems.co.hu/live/checkstreamaccess;
     proxy_no_cache 1;
     proxy_cache_bypass 1;
     proxy_pass_request_headers off;
@@ -131,7 +131,7 @@ server {
 
   location /livesecureaccesscheck {
     internal;
-    proxy_pass http://vsqdev.streamnet.hu/live/securecheckstreamaccess;
+    proxy_pass http://vsq.t-systems.co.hu/live/securecheckstreamaccess;
     proxy_no_cache 1;
     proxy_cache_bypass 1;
     proxy_pass_request_headers off;
