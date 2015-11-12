@@ -21,9 +21,11 @@ $app->loadConfig('modules/Jobs/config_jobs.php');
 $jconf = $app->config['config_jobs'];
 $myjobid = $jconf['jobid_ldap_cache'];
 
+// Check stop files
+if ( is_file( $app->config['datapath'] . 'jobs/job_upload_finalize.stop' ) or is_file( $app->config['datapath'] . 'jobs/all.stop' ) ) exit;
+
 // Log related init
 $debug = Springboard\Debug::getInstance();
-//$debug->log($jconf['log_dir'], $myjobid . ".log", "*************************** Job: LDAP/AD cache started ***************************", $sendmail = false);
 
 // Check operating system - exit if Windows
 if ( iswindows() ) {
