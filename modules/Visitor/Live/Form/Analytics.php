@@ -81,6 +81,7 @@ class Analytics extends \Visitor\HelpForm {
       'resolution'     => $this->application->getNumericParameter('resolution',
         $this->feedModel->getMinStep( $starttime, $endtime )
       ),
+      'organizationid' => $this->controller->organization['id'],
     );
     $data   = $this->feedModel->getStatistics( $filter );
 
