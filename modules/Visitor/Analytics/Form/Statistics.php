@@ -59,7 +59,6 @@ class Statistics extends \Visitor\HelpForm {
     ;
 
     $fields = array(
-      'timestamp'  => 'recordCreationTimestamp',
       'userid'     => 'userId',
       'email'      => 'userEmail',
       'externalid' => 'userExternalId',
@@ -72,9 +71,7 @@ class Statistics extends \Visitor\HelpForm {
           'recordingid'             => 'recordingId',
           'title'                   => 'recordingTitle',
           'recordinglength'         => 'recordingLength',
-          'uploadedtimestamp'       => 'recordingUploadedTimestamp',
           'sessionwatchedduration'  => 'sessionWatchedDurationSeconds',
-          'sessionwatchedpercent'   => 'sessionWatchedPercent',
           'sessionwatchedfrom'      => 'sessionWatchedFromSeconds',
           'sessionwatcheduntil'     => 'sessionWatchedUntilSeconds',
           'sessionwatchedtimestamp' => 'sessionWatchedTimestamp',
