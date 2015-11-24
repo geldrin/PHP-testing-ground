@@ -83,7 +83,6 @@ class Edit extends \Visitor\HelpForm {
       foreach( $this->basefields as $field )
         unset( $values[ $field ] );
 
-      
     } else {
 
       $this->userModel->clearDepartments();

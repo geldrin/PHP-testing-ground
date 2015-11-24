@@ -393,7 +393,9 @@ class Controller extends \Visitor\Controller {
     fputcsv( $handle, $fields, $delim );
 
     foreach( $chatrs as $row ) {
-      if ( $row['userid'] )
+      if ( $row['externalid'] )
+        $nick = $row['externalid'];
+      elseif ( $row['userid'] )
         $nick = smarty_modifier_nickformat( $row );
       else
         $nick = $row['anonymoususer'];
