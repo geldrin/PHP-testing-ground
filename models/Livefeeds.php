@@ -1241,7 +1241,11 @@ class Livefeeds extends \Springboard\Model {
         )
       WHERE
         (l.status IS NULL OR l.status <> 'markedfordeletion') AND
-        l.name LIKE $searchterm AND
+        (
+          l.name LIKE $searchterm OR
+          c.title LIKE $searchterm OR
+          c.subtitle LIKE $searchterm
+        ) AND
         (
           l.organizationid = '$organizationid' OR
           (
