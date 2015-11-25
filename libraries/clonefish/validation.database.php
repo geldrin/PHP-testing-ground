@@ -17,7 +17,8 @@
  * @subpackage validationTypes
  */
 class databaseValidation extends validation {
- 
+
+  var $required = null;
   var $sql;
   var $condition = 'and';
   var $minrows = false;
@@ -31,14 +32,48 @@ class databaseValidation extends validation {
 
   // settings coming from the settings array
 
-  var $form;         // form 
-  
+  var $form;         // form
+
+  function getJSCode() {
+    if ( !$this->required )
+      return '';
+
+    $fieldvalue = $this->getJSValue();
+
+    $code = 
+      'errors.addIf( \'' . $this->element->_getHTMLId() . '\', ' . $fieldvalue . '.match(/[\s]*/m) != 
+        ' . $fieldvalue . ', "' . 
+        $this->_jsescape( sprintf(
+          $this->selecthelp( $this->element, CF_STR_REQUIRED_TEXT ),
+          $this->element->getDisplayName()
+        ) ) .
+      '" );' . "\n"
+      ;
+
+    return $this->injectDependencyJS( $code );
+
+  }
+
   // -------------------------------------------------------------------------
   function isValid() {
 
     $results = Array();
 
     if ( $this->checkDependencyPHP() ) {
+
+      if ( $this->required === false and strlen( $this->element->getValue( 0 ) ) === 0 )
+        return $results;
+
+      if ( $this->required === true and strlen( trim( $this->element->getValue( 0 ) ) ) === 0 ) {
+
+        $message = sprintf(
+          $this->selecthelp( $this->element, CF_STR_REQUIRED_TEXT ),
+          $this->element->getDisplayName()
+        );
+        $results[] = $message;
+        $this->element->addMessage( $message );
+        return $results;
+      }
 
     if ( strlen( $this->sql ) ) {
 
