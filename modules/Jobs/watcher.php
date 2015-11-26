@@ -19,6 +19,9 @@ $app = new Springboard\Application\Cli(BASE_PATH, PRODUCTION);
 $app->loadConfig('modules/Jobs/config_jobs.php');
 $jconf = $app->config['config_jobs'];
 
+// Exit if all.stop file exists
+if ( is_file( $app->config['datapath'] . 'jobs/all.stop' ) ) exit;
+
 // Log related init
 $debug = Springboard\Debug::getInstance();
 
@@ -34,20 +37,23 @@ clearstatcache();
 // Watchdog
 $app->watchdog();
 
-// ## OS/HW related information
-// CPU information
-$command = "cat /proc/cpuinfo > " . $jconf['temp_dir'] . "cpuinfo";
-exec($command, $output, $result);
-// Memory information
-$command = "cat /proc/meminfo > " . $jconf['temp_dir'] . "meminfo";
-exec($command, $output, $result);
-// Uptime
-$uptime = `uptime 2>&1`;
-file_put_contents($jconf['temp_dir'] . 'uptime', $uptime);
+// ## Dump OS/HW related information
 // Processes
 $processes = `ps uax | egrep "job_|watcher" | grep -v "grep" 2>&1`;
-file_put_contents($jconf['temp_dir'] . 'processids', $processes);
-
+if ( file_exists($jconf['temp_dir']) ) {
+    // CPU information
+    $command = "cat /proc/cpuinfo > " . $jconf['temp_dir'] . "cpuinfo";
+    exec($command, $output, $result);
+    // Memory information
+    $command = "cat /proc/meminfo > " . $jconf['temp_dir'] . "meminfo";
+    exec($command, $output, $result);
+    // Uptime
+    $uptime = `uptime 2>&1`;
+    file_put_contents($jconf['temp_dir'] . 'uptime', $uptime);
+    // Processes
+    file_put_contents($jconf['temp_dir'] . 'processids', $processes);
+}
+    
 // Jobs configuration
 $jobs = $app->config['jobs'];
 $node_role = $app->config['node_role'];
@@ -67,7 +73,7 @@ $head .= "WATCHER PROCESSID: " . PROCESSID . "\n";
 $head .= "TIME: " . date("Y-m-d G:i:s");
 $body = "";
 
-// ## Check if all.stop file is present blocking all the jobs
+// ## Check if all.stop file is present blocking the jobs
 $stop_file = $app->config['datapath'] . 'jobs/all.stop';
 if ( file_exists($stop_file) ) {
 	$msg = "WARNING: jobs are not running. See stop file:\n\n" . $stop_file . "\n\nRemove it to start all jobs. This message is sent once every day.";
@@ -115,7 +121,7 @@ if ( isset($output[0]) ) if ( $output[0] > 0 ) $isrunning_mediaconv = true;
 // ## List and log all running jobs
 $grep_target = "php.*" . $jconf['job_dir'];
 $processes = `ps uax | egrep "$grep_target(job_|watcher)" | grep -v "grep" 2>&1`;
-file_put_contents($jconf['temp_dir'] . 'processids', $processes);
+if ( file_exists($jconf['temp_dir']) ) file_put_contents($jconf['temp_dir'] . 'processids', $processes);
 if ( empty($processes) ) $processes = "-";
 
 foreach ( $jobs[$node_role] as $job => $job_info ) {
