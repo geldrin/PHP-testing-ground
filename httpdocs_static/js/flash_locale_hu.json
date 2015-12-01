@@ -207,6 +207,7 @@
     "paused": "A média lejátszása leállt.",
 	"seek": "Ugrás [TIME]-ra",
 	"live": "ÉLŐ",
+    "auto": "Auto",
     "tryReconnect": "Folytatom"
   }
 }
