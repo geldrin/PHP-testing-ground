@@ -325,4 +325,5 @@ class Groups extends \Springboard\Model {
       LIMIT $start, $limit
     ");
   }
+
 }

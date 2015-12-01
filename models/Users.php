@@ -303,6 +303,8 @@ class Users extends \Springboard\Model {
   protected function insertMultipleIDs( $ids, $table, $field ) {
 
     $this->ensureID();
+    if ( empty( $ids ) )
+      return;
 
     $values = array();
     foreach( $ids as $id )
@@ -335,6 +337,19 @@ class Users extends \Springboard\Model {
       WHERE userid = '" . $this->id . "'
     ");
 
+  }
+
+  public function clearLocalGroups( $localgroups ) {
+    $this->ensureID();
+    if ( empty( $localgroups ) )
+      return;
+
+    $this->db->execute("
+      DELETE FROM groups_members
+      WHERE
+        userid = '" . $this->id . "' AND
+        groupid IN('" . implode("', '", $localgroups ) . "')
+    ");
   }
 
   public function clearFromGroups( $groupids ) {
@@ -1193,4 +1208,22 @@ class Users extends \Springboard\Model {
     }
   }
 
+  public function getGroups( $organizationid ) {
+    $this->ensureID();
+
+    return $this->db->getArray("
+      SELECT
+        g.id,
+        g.name,
+        g.source,
+        gm.id AS memberid
+      FROM
+        groups AS g LEFT JOIN groups_members AS gm ON(
+          gm.userid  = '" . $this->id . "' AND
+          gm.groupid = g.id
+        )
+      WHERE organizationid = '$organizationid'
+      ORDER BY name DESC
+    ");
+  }
 }

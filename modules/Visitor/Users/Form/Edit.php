@@ -8,9 +8,13 @@ class Edit extends \Visitor\HelpForm {
   public $user;
   public $basefields = array(
     'nickname', 'nameprefix', 'namefirst', 'namelast', 'nameformat',
-    'password', 'confirmpassword', 'externalid', 'groups', 'departments',
+    'password', 'confirmpassword', 'externalid', 'departments',
     'needtimestampdisabledafter', 'timestampdisabledafter',
   );
+
+  // a non-directory csoportok az organizationtol, a config/Edit.php-bol toltodik
+  // egy lookup table, a kulcsai group.id az ertekei boolean
+  public $localGroups = array();
 
   public function init() {
     
@@ -31,9 +35,9 @@ class Edit extends \Visitor\HelpForm {
       
       if ( $this->values[ $k ] )
         $this->values['permissions'][] = $k;
-      
+
     }
-    
+
     if ( $this->values['timestampdisabledafter'] ) {
       $this->values['needtimestampdisabledafter'] = 1;
       $this->values['timestampdisabledafter']     =
@@ -89,10 +93,17 @@ class Edit extends \Visitor\HelpForm {
       if ( isset( $_REQUEST['departments'] ) and !empty( $values['departments'] ) )
         $this->userModel->addDepartments( $values['departments'] );
 
-      $this->userModel->clearGroups();
-      if ( isset( $_REQUEST['groups'] ) and !empty( $values['groups'] ) )
-        $this->userModel->addGroups( $values['groups'] );
+    }
 
+    $this->userModel->clearLocalGroups( array_keys( $this->localGroups ) );
+    if ( isset( $_REQUEST['groups'] ) and !empty( $values['groups'] ) ) {
+      foreach( $values['groups'] as $key => $groupid ) {
+        if ( !isset( $this->localGroups[ $groupid ] ) )
+          unset( $values['groups'][ $key ] );
+      }
+
+      // lekezeli ha ures a tomb
+      $this->userModel->addGroups( $values['groups'] );
     }
 
     unset( $values['departments'], $values['groups'] );

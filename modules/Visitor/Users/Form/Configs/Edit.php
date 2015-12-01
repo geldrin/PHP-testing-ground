@@ -164,20 +164,6 @@ $config = array(
   'groups[]' => array(
     'displayname' => $l('users', 'groups'),
     'type'        => 'inputCheckboxDynamic',
-    'itemlayout'  => $this->checkboxitemlayout,
-    'sql'         => "
-      SELECT id, name
-      FROM groups
-      WHERE
-        organizationid = '" . $this->controller->organization['id'] . "'
-      ORDER BY name DESC
-    ",
-    'valuesql' => "
-      SELECT groupid
-      FROM groups_members
-      WHERE
-        userid = '" . $this->userModel->row['id'] . "'
-    ",
     'validation'  => array(
     ),
   ),
@@ -192,11 +178,93 @@ $departmentModel->addFilter('organizationid', $this->controller->organization['i
 if ( $departmentModel->getCount() == 0 )
   unset( $config['departments[]'] );
 
-$groupModel = $this->bootstrap->getModel('groups');
-$groupModel->addFilter('organizationid', $this->controller->organization['id'] );
-
-if ( $groupModel->getCount() == 0 )
+$groups = $this->userModel->getGroups( $this->controller->organization['id'] );
+if ( empty( $groups ) )
   unset( $config['groups[]'] );
+else {
+  $groupValues = array(); // ahol a user tag
+  $groupAssoc  = array(); // groupid -> groupnev hashmap
+  $groupHTML   = array(); // checkboxok
+  $usedids     = array(); // a checkbox random id-k
+
+  foreach( $groups as $group ) {
+    // disabled az adott checkbox ha non-lokalis a group (activedirectorybol jon)
+    if ( $group['source'] == 'directory' )
+      $groupDisabled = 'disabled="disabled"';
+    else {
+      $this->localGroups[ $group['id'] ] = true;
+      $groupDisabled = '';
+    }
+
+    // ha tagja a csoportnak akkor jeloljuk
+    if ( $group['memberid'] ) {
+      $groupValues[ $group['id'] ] = true;
+      $groupChecked = 'checked="checked"';
+    } else
+      $groupChecked = '';
+
+    // adjuk at clonefishnek a biztonsag kedveert, de manualisan generaljuk a htmlt
+    $groupAssoc[ $group['id'] ] = $group['name'];
+    while(true) {
+      $randomid = mt_rand( 10000, 20000 ); // az intervallum nem fedi a CF-t
+      if ( isset( $usedids[ $randomid ] ) )
+        continue;
+
+      $usedids[ $randomid ] = true;
+      break;
+    }
+
+    $checkbox = strtr(
+      '<input %disabled%%checked% id="checkbox%randomid%" type="checkbox" ' .
+      'name="groups[%value%]" value="%value%"/>',
+      array(
+        '%disabled%' => $groupDisabled,
+        '%checked%'  => $groupChecked,
+        '%randomid%' => $randomid,
+        '%value%'    =>
+          // paranoidsagbol
+          htmlspecialchars( $group['id'], ENT_QUOTES, 'UTF-8', true )
+        ,
+      )
+    );
+    $title = htmlspecialchars( $group['name'], ENT_QUOTES, 'UTF-8', true );
+    $label = '<label for="checkbox' . $randomid . '">' . $title . '</label>';
+    $groupHTML[] = strtr(
+      $this->checkboxitemlayout,
+      array(
+        '%level%'           => '1', // ez egy szintu mindig
+        '%indent%'          => '',  // ergo indent sincs
+        '%checkbox%'        => $checkbox,
+        '%valuehtmlescape%' => $title,
+        '%label%'           => $label,
+      )
+    );
+  }
+
+  $config['groups[]']['values']    = $groupAssoc;
+  $config['groups[]']['value']     = array_keys( $groupValues );
+  $config['groups[]']['rowlayout'] = strtr('
+      <tr %errorstyle%>
+        <td class="labelcolumn">
+          <label for="%id%">%displayname%</label>
+        </td>
+        <td class="elementcolumn">%prefix%%CUSTOMHTML%%postfix%%errordiv%</td>
+      </tr>
+    ',
+    array(
+      '%CUSTOMHTML%' => implode( "\n", $groupHTML ),
+    )
+  );
+
+  // takaritunk magunk utan
+  unset(
+    $groupHTML,
+    $groupAssoc,
+    $groupValues,
+    $usedids,
+    $groups
+  );
+}
 
 $config['lastloggedin'] = array(
   'displayname' => $l('users', 'lastloggedin'),
