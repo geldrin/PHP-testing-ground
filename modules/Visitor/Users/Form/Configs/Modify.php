@@ -191,15 +191,13 @@ $config = array(
     'sql'         => "
       SELECT id, name
       FROM groups
-      WHERE
-        organizationid = '" . $this->controller->organization['id'] . "'
+      WHERE organizationid = '" . $this->controller->organization['id'] . "'
       ORDER BY name DESC
     ",
     'valuesql' => "
       SELECT groupid
       FROM groups_members
-      WHERE
-        userid = '" . $this->userModel->row['id'] . "'
+      WHERE userid = '" . $this->userModel->row['id'] . "'
     ",
     'validation'  => array(
     ),
