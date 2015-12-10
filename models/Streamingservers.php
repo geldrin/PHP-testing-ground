@@ -54,11 +54,7 @@ class Streamingservers extends \Springboard\Model {
       LIMIT 1
     ";
 
-    try {
-      $serverselected = $this->db->getRow( $query );
-    } catch ( \Exception $e ) {
-      return $this->getDefaultServer( $types );
-    }
+    $serverselected = $this->db->getRow( $query );
 
     // No specific streaming server was found for source IP. Return default server
     if ( empty( $serverselected ) )
