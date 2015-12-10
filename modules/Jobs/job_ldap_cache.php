@@ -22,7 +22,7 @@ $jconf = $app->config['config_jobs'];
 $myjobid = $jconf['jobid_ldap_cache'];
 
 // Check stop files
-if ( is_file( $app->config['datapath'] . 'jobs/' . $myjobdid . '.stop' ) or is_file( $app->config['datapath'] . 'jobs/all.stop' ) ) exit;
+if ( is_file( $app->config['datapath'] . 'jobs/' . $myjobid . '.stop' ) or is_file( $app->config['datapath'] . 'jobs/all.stop' ) ) exit;
 
 // Log related init
 $debug = Springboard\Debug::getInstance();
