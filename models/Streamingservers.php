@@ -42,24 +42,24 @@ class Streamingservers extends \Springboard\Model {
         cn.id                        = sn.clientnetworkid AND
         sn.streamingserverid         = ss.id AND
         cn.disabled                  = 0 AND
-        ss.serverstatus              = 'ok'
+        ss.serverstatus              = 'ok' AND
         ss.disabled                  = 0 AND
         ss.servicetype IN('" . implode("', '", $types ) . "')
         $extrawhere
       GROUP BY ss.server
       ORDER BY
-        ROUND( ( ss.network_traffick_out / (ss.network_interface_speed * 1000000) ) * 100 ) ASC,
+        ROUND( ( ss.network_traffic_out / (ss.network_interface_speed * 1000000) ) * 100 ) ASC,
         ss.load_cpu_min5 ASC,
         RAND()
       LIMIT 1
     ";
-    
+
     try {
       $serverselected = $this->db->getRow( $query );
     } catch ( \Exception $e ) {
       return $this->getDefaultServer( $types );
     }
-    
+
     // No specific streaming server was found for source IP. Return default server
     if ( empty( $serverselected ) )
       return $this->getDefaultServer( $types );
