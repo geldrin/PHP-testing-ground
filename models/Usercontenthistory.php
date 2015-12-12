@@ -79,7 +79,6 @@ class Usercontenthistory extends \Springboard\Model {
         WHERE
           cr.recordingid = '$recordingid' AND
           cr.channelid   = c.id AND
-          c.accesstype   = 'public' AND
           c.isdeleted    = '0'
       ) UNION DISTINCT (
         SELECT
