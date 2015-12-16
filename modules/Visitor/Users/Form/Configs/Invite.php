@@ -138,6 +138,13 @@ $config    = array(
       ),
     ),
   ),
+
+  'fs_accessconfig' => array(
+    'type'   => 'fieldset',
+    'legend' => $l('users', 'invite_accessconfig'),
+    'prefix' => '<span class="legendsubtitle"></span>',
+  ),
+
 );
 
 include( $this->bootstrap->config['modulepath'] . 'Visitor/Form/Configs/Timestampdisabledafter.php');
@@ -148,6 +155,26 @@ $config['invitationvaliduntil']['postfix']     = str_replace(
   'class="timestampdisabledafter"',
   'class="invitationvaliduntil"',
   $config['invitationvaliduntil']['postfix']
+);
+
+$config = \Springboard\Tools::insertAfterKey(
+  $config,
+  array(
+    'customforwardurl' => Array(
+      'displayname' => $l('users', 'customforwardurl'),
+      'postfix'     => $l('users', 'customforwardurl_postfix'),
+      'type'        => 'inputText',
+      'validation'  => Array(
+        Array(
+          'type'     => 'string',
+          'regexp'   => CF_URL,
+          'help'     => $l('users', 'customforwardurl_help'),
+          'required' => false,
+        ),
+      ),
+    ),
+  ),
+  'needtimestampdisabledafter'
 );
 
 $config = $config + array(

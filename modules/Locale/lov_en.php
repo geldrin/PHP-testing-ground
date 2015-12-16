@@ -220,4 +220,8 @@ return array(
     'live'       => $l('analytics', 'statistis_type_live'),
   ),
 
+  'users_invite_externalsend' => array(
+    'local'    => $l('users', 'invite_externalsend_local'),
+    'external' => $l('users', 'invite_externalsend_external'),
+  ),
 );

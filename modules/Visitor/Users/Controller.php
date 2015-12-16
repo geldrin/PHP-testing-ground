@@ -205,11 +205,21 @@ class Controller extends \Visitor\Controller {
     if ( $invitationModel->isExpired() )
       $this->redirectToController('contents', 'invitationvalidationexpired');
 
-    $user                 = $this->bootstrap->getSession('user');
-    $forward              = $this->application->getParameter('forward');
+    if ( $invitationModel->row['customforwardurl'] )
+      $forward = $invitationModel->row['customforwardurl'];
+    else
+      $forward = $this->application->getParameter('forward');
+
+    $user = $this->bootstrap->getSession('user');
+
+    // invitation session - ide taroljuk az eppeni invitaciot,
+    // a signup oldal olvassa, es torli majd 
     $invitationSession    = $this->bootstrap->getSession('userinvitation');
-    $inviteforwardSession = $this->bootstrap->getSession('inviteforward');
     $invitationSession['invitation'] = $invitationModel->row;
+
+    // a forward session pedig a signup validation (this::validateAction())
+    // hasznalja es torli ha sikeres volt a validacio
+    $inviteforwardSession = $this->bootstrap->getSession('inviteforward');
     $inviteforwardSession['forward'] = $forward;
 
     if (

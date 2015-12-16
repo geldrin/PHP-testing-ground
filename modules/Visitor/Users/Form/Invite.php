@@ -119,7 +119,7 @@ class Invite extends \Visitor\HelpForm {
         break;
     }
 
-    if ( $module ) {
+    if ( $module and !$values['customforwardurl'] ) {
       $forwardurl =
         \Springboard\Language::get() . '/' . $module .
         $values[ $values['contenttype'] ] . '-'
@@ -136,6 +136,9 @@ class Invite extends \Visitor\HelpForm {
         $forwardurl .= \Springboard\Filesystem::filenameize( $title );
       }
     }
+
+    if ( $values['customforwardurl'] )
+      $forwardurl = $values['customforwardurl'];
 
     // CHECK ERROR
     $messages = $this->form->getMessages();
@@ -172,6 +175,7 @@ class Invite extends \Visitor\HelpForm {
         'timestamp'              => $timestamp,
         'templateid'             => $templateid,
         'invitationvaliduntil'   => $values['invitationvaliduntil'],
+        'customforwardurl'       => $forwardurl,
       );
 
       // mert a contenttype nocontent|recordingid|livefeedid|channelid lehet
