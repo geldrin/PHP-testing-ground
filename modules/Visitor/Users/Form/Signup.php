@@ -81,7 +81,11 @@ class Signup extends \Visitor\HelpForm {
 
     $userModel->row['id'] = $crypto->asciiEncrypt( $userModel->id );
     $this->controller->toSmarty['values'] = $userModel->row;
-    
+
+    $emailsubject = @$this->controller->organization['signupvalidationemailsubject'];
+    if ( !$emailsubject )
+      $l('users', 'validationemailsubject');
+
     $this->controller->sendOrganizationHTMLEmail(
       $userModel->row['email'],
       $l('users', 'validationemailsubject'),

@@ -2,7 +2,7 @@
 namespace Model;
 
 class Organizations extends \Springboard\Model\Multilingual {
-  public $multistringfields = array( 'introduction', );
+  public $multistringfields = array( 'introduction', 'signupvalidationemailsubject', );
   
   public function checkDomain( $domain, $isstatic = false ) {
     

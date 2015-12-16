@@ -76,7 +76,21 @@ $config = Array(
     'validation'  => Array(
     )
   ),
-  
+
+  'signupvalidationemailsubject_stringid' => array(
+    'displayname' => 'Megerősítő e-mail téma',
+    'postfix'     => '
+      <div class="info">
+        Regisztrációt megerősítő e-mail témája (subject). Alapértelmezett téma:<br/>
+        ' . htmlentities( $l('users', 'validationemailsubject'), ENT_QUOTES, 'utf-8' ) . '
+      </div>
+    ',
+    'type'        => 'inputTextMultiLanguage',
+    'languages'   => $l->getLov('languages'),
+    'validation'  => array(
+    ),
+  ),
+
   'url' => array(
     'displayname' => 'URL',
     'type'        => 'inputText',
