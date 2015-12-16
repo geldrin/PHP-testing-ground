@@ -3819,7 +3819,18 @@ class Recordings extends \Springboard\Model {
       $organization, $row['position'], $row, $ret
     );
 
-    $this->updateSession( $organization, $userid, $lastposition, $sessionid );
+    $success = $this->updateSession( $organization, $userid, $lastposition, $sessionid );
+    if ( !$success and !$ret['watched'] ) {
+      // lejart a view_session, mig a view_progress nem es nem nezte vegig a user
+      // akkor tortenhet ha a browser megnyitva marad es ugyanaz marad a 
+      // viewsessionid is napokig
+      // megintcsak tul sok kimaradas volt, reset nullara
+      $ret['success'] = false;
+      $row['position'] = $record['position'] = 0;
+      $progressModel->id  = $row['id'];
+      $progressModel->updateRow( $record );
+    }
+
     $this->endTrans();
     return $ret;
 
@@ -3878,8 +3889,10 @@ class Recordings extends \Springboard\Model {
         WHERE id = '" . $existing['id'] . "'
         LIMIT 1
       ");
-    }
+    } elseif ( $existing['expired'] )
+      return false;
 
+    return true;
   }
 
   public function searchStatistics( $user, $searchterm, $organizationid, $start = 0, $limit = 20 ) {
