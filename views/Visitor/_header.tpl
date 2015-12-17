@@ -88,9 +88,7 @@
 <div id="pagecontainer">
   <div id="wrap">
     <div id="header">
-      <div id="headertop">
-        {include file=$layoutheader}
-      </div>
+      {include file=$layoutheader}
       <div class="clear"></div>
     </div>
     
