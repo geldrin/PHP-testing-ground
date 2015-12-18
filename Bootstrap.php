@@ -164,10 +164,12 @@ class Bootstrap {
     
   }
   
-  public function getAdoDB( $errorhandler = true ) {
-    
-    if ( isset( $this->instances['adodb'] ) and is_resource( $this->instances['adodb']->_connectionID ) )
-      return $this->instances['adodb'];
+  public function getAdoDB( $errorhandler = true, $dbSettings = 'database' ) {
+    if ( !isset( $this->instances['adodb'] ) )
+      $this->instances['adodb'] = array();
+
+    if ( isset( $this->instances['adodb'][ $dbSettings ] ) and is_resource( $this->instances['adodb'][ $dbSettings ]->_connectionID ) )
+      return $this->instances['adodb'][ $dbSettings ];
     
     if ( !defined('ADODB_OUTP') )
       define('ADODB_OUTP', 'Springboard\\adoDBDebugPrint'); // adodb debug print func( $msg, $newline )
@@ -216,10 +218,10 @@ class Bootstrap {
 
     try {
       
-      $i = $this->config['database']['maxretries'];
+      $i = $this->config[ $dbSettings ]['maxretries'];
       while ( $i ) {
         
-        $db = ADONewConnection( $this->config['database']['type'] );
+        $db = ADONewConnection( $this->config[ $dbSettings ]['type'] );
         
         if ( $this->debug )
           $db->debug = 1;
@@ -232,15 +234,15 @@ class Bootstrap {
         }
 
         $rs = @$db->Connect(
-          $this->config['database']['host'],
-          $this->config['database']['username'],
-          $this->config['database']['password'],
-          $this->config['database']['database']
+          $this->config[ $dbSettings ]['host'],
+          $this->config[ $dbSettings ]['username'],
+          $this->config[ $dbSettings ]['password'],
+          $this->config[ $dbSettings ]['database']
         );
         
         if ( $rs )
           break;
-        elseif ( $db->ErrorMsg() == 'Too many connections' and $this->config['database']['reconnectonbusy'] ) {
+        elseif ( $db->ErrorMsg() == 'Too many connections' and $this->config[ $dbSettings ]['reconnectonbusy'] ) {
           
           $i--;
           if ( !$i )
@@ -287,7 +289,7 @@ class Bootstrap {
     $db->query("SET NAMES " . str_replace( '-', '', $this->config['charset'] ) );
     $db->SetFetchMode( ADODB_FETCH_ASSOC );
     
-    return $this->instances['adodb'] = $db;
+    return $this->instances['adodb'][ $dbSettings ] = $db;
     
   }
   
