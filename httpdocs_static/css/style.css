@@ -38,7 +38,7 @@ img {
 
 /* main blocks */
 body {
-  background-color: #ebebeb;
+  background-color: #fff;
 }
 body > pre {
   z-index: 9999;
@@ -53,8 +53,6 @@ label {
 #wrap {
   width: 950px;
   margin: 0 auto;
-  position: relative;
-  z-index: 2;
 }
 .rightbox {
   float: right;
@@ -540,7 +538,7 @@ a.submitbutton:hover, .form a.submitbutton:hover {
   min-width: 950px;
   height: 72px;
   background-color: #29abe2;
-  margin-bottom: -109px;
+  margin-bottom: -72px;
   z-index: 1;
   position: absolute;
   left: 0;
@@ -621,11 +619,13 @@ a.submitbutton:hover, .form a.submitbutton:hover {
 }
 /* headerlogo */
 #headerlogo {
-  float: left;
-  height: 58px;
+  position: relative;
+  display: inline-block;
+  vertical-align: top;
+  z-index: 2;
+  height: 72px;
   width: 175px;
   padding-left: 13px;
-  padding-top: 4px;
 }
 #headerlogo a, #headerlogo a.basic span {
   display: inline-block;
@@ -633,13 +633,15 @@ a.submitbutton:hover, .form a.submitbutton:hover {
 }
 #headerlogo a.basic, #headerlogo a.basic span {
   width:  171px;
-  height: 51px;
+  height: 72px;
 }
 #headerlogo img {
   max-height: 51px;
 }
 #headerlogo a.basic span {
   background-image: url(images/header_logo.png);
+  background-repeat: no-repeat;
+  background-position: center center;
 }
 
 /* avatar */
@@ -862,6 +864,15 @@ a#currentusername span {
   margin-bottom: 5px;
 }
 /* headermenu */
+#headermenu {
+  display: inline-block;
+  vertical-align: top;
+  position: relative;
+  z-index: 2;
+}
+#headermenu nav {
+  display: inline-block;
+}
 #headermenu ul {
   list-style-type: none;
   margin: 0;
@@ -869,6 +880,7 @@ a#currentusername span {
 }
 #headermenu li {
   display: inline-block;
+  margin: 0 10px;
 }
 #headermenu a {
   display: inline-block;
@@ -896,33 +908,63 @@ a#currentusername span {
 }
 #headersearch {
   position: absolute;
+  z-index: 3;
   width: 100%;
-  height: 74px;
+  height: 72px;
   left: 0px;
   background-color: #fff;
+  border-bottom: 1px solid #d7d7d7;
+  border-top: 1px solid #fff;
 }
 #headersearch form {
-  display: inline-block;
+  display: block;
+  display: flex;
+  width: 950px;
+  margin: 0 auto;
 }
-#headersearcharrow {
+#headersearchadvanced {
   display: inline-block;
-  position: absolute;
-  top: 6px;
-  left: 165px;
-  width: 25px;
-  height: 18px;
-  border-left: 1px solid #010101;
-  background-image: url(images/arrow_down.png);
+  width: 52px;
+  height: 72px;
+  background-image: url(images/header_searchadvanced.png);
   background-repeat: no-repeat;
-  background-position: 5px 4px;
+  background-position: center center;
+  line-height: 72px;
+}
+#headersearch .inputtext {
+  width: 300px;
+  height: 72px;
+  line-height: 72px;
+  vertical-align: top;
+  padding: 0 0 0 20px;
+  border: 0;
+  margin: 0 20px 0 0;
+  color: #333333;
+  font-size: 30px;
+  flex-grow: 3;
+}
+#headersearch .inputtext:hover,
+#headersearch .inputtext:focus {
+  color: #ccc;
+}
+#headersearchsubmit {
+  width: 35px;
+  height: 72px;
+  line-height: 72px;
+  vertical-align: top;
+  border: 0;
+  padding: 0;
+  margin: 0;
+  background: transparent url(images/header_searchimage.png);
+  background-repeat: no-repeat;
+  background-position: center center;
+  cursor: pointer;
 }
 
 #languageselector {
+  display: inline-block;
   width: 103px;
   height: 26px;
-  position: absolute;
-  right: 0px;
-  top: 0px;
   z-index: 298;
 }
 #languageselector.active {
@@ -970,30 +1012,6 @@ a#currentusername span {
   display: inline-block;
   
 }
-#headersearch .inputtext {
-  width: 120px;
-  height: 26px;
-  padding: 0px 35px 0px 35px;
-  color: #888;
-  font-size: 13px;
-  line-height: 26px;
-}
-#headersearch .inputtext:hover,  
-#headersearch .inputtext:focus {
-  color: #ccc;
-}
-#headersearchsubmit {
-  width: 35px;
-  height: 30px;
-  position: absolute;
-  top: 0px;
-  left: 0px;
-  border: 0;
-  background: transparent url(images/header_searchimage.png);
-  padding: 0;
-  margin: 0;
-  cursor: pointer;
-}
 
 /* body */
 #body {
@@ -1033,18 +1051,18 @@ a#currentusername span {
   float: left;
   width: 100%;
   min-width: 950px;
-  background-image: url(images/bg_dotted.png), url(images/footer_bg.jpg);
-  background-position: 50% top;
-  /*background-color: #2e2e33;*/
-  height: 180px;
-  margin-top: -180px;
+  background-color: #f0f0f0;
+  height: 120px;
+  margin-top: -120px;
   z-index: 1;
   position: absolute;
   left: 0;
 }
 #footer {
+  position: relative;
+  z-index: 2;
   clear: both;
-  height: 155px;
+  height: 95px;
   width: 100%;
   padding-top: 25px;
   margin: 20px 0px 0px 0px;
