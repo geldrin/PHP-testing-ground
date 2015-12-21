@@ -576,6 +576,15 @@ function setupInfoToggle() {
 }
 
 function setupHeaderSearch() {
+  $j('#headersearchlink').on('click', function(e) {
+    e.preventDefault();
+    if ( $j('#headersearch').hasClass('active') ) {
+      $j('#headersearch').slideUp(200).removeClass('active');
+    } else {
+      $j('#headersearch').slideDown(200).addClass('active');
+    }
+    
+  });
 
   $j('#languageselector a.active').on('click', function( e ) {
     e.preventDefault();

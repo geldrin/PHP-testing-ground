@@ -3012,7 +3012,11 @@ class Recordings extends \Springboard\Model {
       r.id,
       r.title,
       r.indexphotofilename,
-      r.isfeatured
+      r.isfeatured,
+      r.masterlength,
+      r.contentmasterlength,
+      r.timestamp,
+      r.recordedtimestamp
     ";
 
     $tables = "

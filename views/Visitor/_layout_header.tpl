@@ -143,14 +143,18 @@
 <div id="headermenu"{if $pagebgclass} class="black"{/if}>
   <nav>
     <ul>
+      {*}
       <li class="{if $module == 'index'}active {/if}first"><a href="{$BASE_URI}">{#sitewide_home#}</a></li>
+      {/*}
       <li{if $module == 'categories'} class="active"{/if}><a href="{$language}/categories">{#sitewide_categories#}</a></li>
       {if $organization.islivestreamingenabled}
         <li{if $module == 'live'} class="active"{/if}><a href="{$language}/live">{#sitewide_live#}</a></li>
       {/if}
       <li{if $module == 'channels'} class="active"{/if}><a href="{$language}/channels">{#sitewide_channels#}</a></li>
+      {*}
       <li{if $module == 'featured'} class="active"{/if}><a href="{$language}/recordings/featured/newest">{#sitewide_featured#}</a></li>
-      <li id="headersearchlink"><a href="{$language}/search/all">{#sitewide_search#}</a></li>
+      {/*}
+      <li id="headersearchlink"><a href="{$language}/search/all"><span></span>{#sitewide_search#}</a></li>
       <li id="languageselectorlink">
         {foreach from=$organization.languages key=languageid item=item}
           {if $languageid == $language}

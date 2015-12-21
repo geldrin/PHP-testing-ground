@@ -3,74 +3,49 @@
 {if !empty( $recordings )}
   <div id="indexcontainer">
     <div class="leftdoublebox">
-      {assign var=recording value=$recordings[0]}
-      <a class="imageinfo wlarge" href="{$language}/recordings/details/{$recording.id},{$recording.title|filenameize}" title="{$recording.title|escape:html}">
-        <img src="{$recording|@indexphoto:player}"/>
-        <div class="playpic"></div>
+      {assign var=item value=$recordings[0]}
+      <a class="imageinfo wlarge" href="{$language}/recordings/details/{$item.id},{$item.title|filenameize}" title="{$item.title|escape:html}">
+        <img src="{$item|@indexphoto:player}"/>
         <div class="imageinfowrap">
           <div class="content">
-            <h1>{$recording.title|mb_truncate:60|escape:html}</h1>
-            <h2>{$recording.presenters|@contributorformat:false|mb_truncate:60|escape:html}</h2>
+            <div class="presenter">{$item.presenters|@contributorformat:false|mb_truncate:60|escape:html}</div>
+            <div class="timestamp">{$item.recordedtimestamp|default:$item.timestamp|date_format:#smarty_dateformat_long#}</div>
+            <h1>{$item.title|mb_truncate:60|escape:html}</h1>
           </div>
+          <div class="length">{$item|@recordinglength|timeformat:minimal}</div>
         </div>
       </a>
       
     </div>
     
     <div class="rightbox">
-      {if isset( $recordings[1] )}
-        {assign var=recording value=$recordings[1]}
-        <a class="imageinfo wwide first" href="{$language}/recordings/details/{$recording.id},{$recording.title|filenameize}" title="{$recording.title|escape:html}">
-          <img src="{$recording|@indexphoto:wide}"/>
-          <div class="imageinfowrap">
-            <div class="content">
-              <h1>{$recording.title|mb_truncate:23|escape:html}</h1>
-              <h2>{$recording.presenters|@contributorformat:false|mb_truncate:60|escape:html}</h2>
+      <ul>
+      {*} skip the first recording as we have already printed it above {/*}
+      {section name=rightbox start=1 loop=$recordings}
+        {assign var=item value=$recordings[rightbox]}
+        {capture assign=recordingurl}{$language}/recordings/details/{$item.id},{$item.title|filenameize}{/capture}
+        <li>
+          <a class="imageinfo wwide" href="{$recordingurl}" title="{$item.title|escape:html}">
+            <img src="{$item|@indexphoto:wide}"/>
+            <div class="imageinfowrap">
+              <div class="length">{$item|@recordinglength|timeformat:minimal}</div>
+            </div>
+          </a>
+          <div class="recordingcontent">
+            <div class="presenter">{$item.presenters|@contributorformat:false|mb_truncate:60|escape:html}</div>
+            <div class="timestamp">{$item.recordedtimestamp|default:$item.timestamp|date_format:#smarty_dateformat_long#}</div>
+            <div class="title">
+              <a href="{$recordingurl}">{$item.title|escape:html|mb_wordwrap:25}</a>
             </div>
           </div>
-        </a>
-      {/if}
-      {if isset( $recordings[2] )}
-        {assign var=recording value=$recordings[2]}
-        <a class="imageinfo wwide" href="{$language}/recordings/details/{$recording.id},{$recording.title|filenameize}" title="{$recording.title|escape:html}">
-          <img src="{$recording|@indexphoto:wide}"/>
-          <div class="imageinfowrap">
-            <div class="content">
-              <h1>{$recording.title|mb_truncate:23|escape:html}</h1>
-              <h2>{$recording.presenters|@contributorformat:false|mb_truncate:60|escape:html}</h2>
-            </div>
-          </div>
-        </a>
-      {/if}
+        </li>
+      {/section}
+      </ul>
     </div>
     <div class="clear"></div>
   </div>
 {/if}
 
-<div class="leftdoublebox indexnews">
-  {if !empty( $news )}
-    <div class="title">
-      <h1>{#index__news#}</h1>
-    </div>
-    <ul class="newslist">
-    {foreach from=$news item=item name=news}
-      <li class="listingitem{if $smarty.foreach.news.last} last{/if}">
-        <h2><a href="{$language}/organizations/newsdetails/{$item.id},{$item.title|filenameize}">{$item.title|mb_wordwrap:55|escape:html}</a><span class="subtitle">{$item.starts|date_format:#smarty_dateformat_long#}</span></h2>
-        <p>{$item.lead|escape:html|nl2br}</p>
-        <a href="{$language}/organizations/newsdetails/{$item.id},{$item.title|filenameize}" class="more">{#index__more#}</a>
-      </li>
-    {/foreach}
-    </ul>
-    <div class="morenews">
-      <a href="{$language}/organizations/listnews">{#index__morenews#}</a>
-    </div>
-  {/if}
-</div>
-
-<div class="rightbox">
-  <div class="title"><h1>{#sitewide_welcome_bare#}</h1></div>
-  {$introduction}
-</div>
 
 
 {include file="Visitor/_footer.tpl"}

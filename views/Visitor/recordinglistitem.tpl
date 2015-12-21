@@ -25,7 +25,10 @@
   {/if}
   <a name="rec{$item.id}"></a>
   <div class="recordingpic">
-    <a href="{$recordingurl}"><span class="playpic"></span><img src="{$item|@indexphoto}"/></a>
+    <a href="{$recordingurl}">
+      <div class="length">{$item|@recordinglength|timeformat:minimal}</div>
+      <img src="{$item|@indexphoto}"/>
+    </a>
   </div>
   
   <div class="recordingcontent">

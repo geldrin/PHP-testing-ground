@@ -879,34 +879,66 @@ a#currentusername span {
   padding: 0;
 }
 #headermenu li {
-  display: inline-block;
-  margin: 0 10px;
+  float: left;
+  margin: 0;
+  transition:
+    box-shadow .2s cubic-bezier(.4,0,1,1),
+    background-color .2s cubic-bezier(.4,0,.2,1),
+    color .2s cubic-bezier(.4,0,.2,1)
+  ;
+  will-change: box-shadow,transform;
+  outline: none;
+  overflow: hidden;
+  border: 1px solid #29abe2;
+  border-top: 3px solid #29abe2;
+  border-bottom: 3px solid #29abe2;
+}
+#headermenu li.active,
+#headermenu li:hover,
+#headermenu li:focus {
+  border-style: solid;
+  border-width: 1px;
+  border-top: 3px solid #29abe2;
+  border-bottom: 3px solid #fff;
+}
+#headermenu li:hover,
+#headermenu li:focus {
+  border-top-color: #2499ca;
+  background-color: #2499ca;
 }
 #headermenu a {
   display: inline-block;
   color: #fff;
   height: 66px;
+  padding: 0 6px;
   line-height: 66px;
   font-size: 16px;
   font-weight: bold;
 }
-#headermenu li.active , #headermenu li:hover {
-  border-style: solid;
-  border-width: 0;
-  border-top-width: 3px;
-  border-top-color: #29abe2;
-  border-bottom-width: 3px;
-  border-bottom-color: #fff;
-}
-#headermenu.black li.active a {
-  
+#headermenu li a:hover,
+#headermenu li a:focus {
+  text-decoration: none;
 }
 
 /* headersearch */
-#headersearchlink {
-  display: none;
+li#headersearchlink {
+  border-left: 1px solid #2389b5;
+  border-right: 1px solid #2389b5;
+}
+#headersearchlink a,
+#headersearchlink a span {
+  display: inline-block;
+  width: 68px;
+  height: 61px;
+  overflow: hidden;
+}
+#headersearchlink a span {
+  background-repeat: no-repeat;
+  background-position: center center;
+  background-image: url(images/header_searchimage.png);
 }
 #headersearch {
+  display: none;
   position: absolute;
   z-index: 3;
   width: 100%;
@@ -915,6 +947,10 @@ a#currentusername span {
   background-color: #fff;
   border-bottom: 1px solid #d7d7d7;
   border-top: 1px solid #fff;
+}
+#headersearch.active {
+  display: block;
+  transition: top 300ms cubic-bezier(0.17, 0.04, 0.03, 0.94);
 }
 #headersearch form {
   display: block;
@@ -961,6 +997,9 @@ a#currentusername span {
   cursor: pointer;
 }
 
+li#languageselectorlink {
+
+}
 #languageselector {
   display: inline-block;
   width: 103px;
@@ -1067,49 +1106,38 @@ a#currentusername span {
   padding-top: 25px;
   margin: 20px 0px 0px 0px;
 }
-#footerlogo {
-  float: right;
+#footer .footerinfowrap {
+  width: 300px;
+  float: left;
 }
-#footer .leftbox {
-  width: 230px;
+#footer .footerlinkswrap {
+  width: 450px;
+  float: left;
 }
-#footer .footercontent h2 {
-  font-size: 15px;
+#footer .footersocialwrap {
+  width: 170px;
+  float: left;
+}
+#footer .footerlinkswrap h3 {
+  display: inline-block;
+  font-size: 13px;
   font-weight: normal;
-  margin: 0px 0px 10px 0px;
+  margin: 0;
   padding: 0;
-  color: #cccccc;
-  text-shadow: 0px 1px 0px rgba(0, 0, 0, 0.75);
+  color: #a1a1a6;
 }
-#footer .footercontent p {
-  color: #858585;
-  font-size: 12px;
-}
-#footer .footerlinks {
-  margin: 0px 0px 8px 0px;
+#footer .footerlinks,
+#footer .footersocial {
+  display: inline-block;
+  margin: 0;
   padding: 0;
   list-style-type: none;
 }
-#footer .footerlinks li {
-  margin-bottom: 2px;
+#footer .footerlinks li,
+#footer .footersocial li {
+  color: #535353;
+  display: inline-block;
   font-size: 12px;
-  text-shadow: 0px 1px 0px rgba(0, 0, 0, 0.75);
-}
-#footer .hr {
-  background-color: #171718;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
-  width: 100%;
-  height: 1px;
-  clear: both;
-}
-#footer .bottom {
-  color: #666;
-  text-shadow: 0px 1px 0px rgba(0, 0, 0, 0.75);
-  font-size: 12px;
-  margin-top: 8px;
-}
-#footer .bottom a {
-  color: #666;
 }
 
 /* timeline */
@@ -1730,16 +1758,9 @@ a#currentusername span {
 
 /* indexcontainer */
 #indexcontainer {
-  background-color: rgba(255, 255, 255, 0.2);
   float: left;
   padding: 5px 4px 5px 6px;
   margin: 0px -4px 0px -6px;
-  -moz-box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.3), inset 0 1px 3px rgba(0, 0, 0, 0.41);
-  -webkit-box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.3), inset 0 1px 3px rgba(0, 0, 0, 0.41);
-  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.3), inset 0 1px 3px rgba(0, 0, 0, 0.41);
-  -moz-border-radius: 10px;
-  -webkit-border-radius: 10px;
-  border-radius: 10px;
 }
 #indexcontainer .leftdoublebox {
   height: 348px;
@@ -1748,9 +1769,6 @@ a#currentusername span {
   margin-bottom: 11px;
 }
 #indexcontainer .rightbox .imageinfo {
-  -moz-box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
-  -webkit-box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
 }
 #indexcontainer .wwide img {
   max-width: 300px;
@@ -1811,21 +1829,10 @@ a#currentusername span {
   display: block;
 }
 .imageinfo, .imageinfo img {
-  -moz-border-radius: 5px;
-  -webkit-border-radius: 5px;
-  border-radius: 5px;
+
 }
 .imageinfo:hover {
   text-decoration: none;
-}
-.imageinfo .playpic {
-  width: 122px;
-  height: 88px;
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  background-image: url(images/playbutton_large.png);
-  margin: -44px 0px 0px -61px;
 }
 .imageinfo .imageinfowrap {
   height: 67px;
@@ -1835,15 +1842,6 @@ a#currentusername span {
   position: absolute;
   bottom: 0px;
   left: 0px;
-  background-color: rgba(0, 0, 0, 0.4);
-  -moz-border-bottom-left-radius: 5px;
-  -moz-border-radius-bottomleft: 5px;
-  -webkit-border-bottom-left-radius: 5px;
-  border-bottom-left-radius: 5px;
-  -moz-border-bottom-right-radius: 5px;
-  -moz-border-radius-bottomright: 5px;
-  -webkit-border-bottom-right-radius: 5px;
-  border-bottom-right-radius: 5px;
 }
 .imageinfo .imageinfowrap .avatar {
   float: left;
@@ -1854,7 +1852,9 @@ a#currentusername span {
 .imageinfo .imageinfowrap .content {
   padding-left: 10px;
 }
-.imageinfo .imageinfowrap .content h1, .imageinfo .imageinfowrap .content h2 {
+.imageinfo .imageinfowrap .content h1,
+.imageinfo .imageinfowrap .content h2,
+.imageinfo .imageinfowrap .length {
   text-shadow: 0px 1px 3px rgba(0, 0, 0, 0.75);
   white-space: nowrap;
 }
@@ -1872,6 +1872,12 @@ a#currentusername span {
   color: #ccc;
   font-weight: normal;
   margin: 0;
+}
+.imageinfo .imageinfowrap .length {
+  color: #fff;
+  position: absolute;
+  bottom: 15%;
+  right: 5%;
 }
 
 /* recording metadata */
