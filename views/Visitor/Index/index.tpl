@@ -46,6 +46,15 @@
   </div>
 {/if}
 
-
+<div class=" active">
+  <h2><a href="#"></a></h2>
+  <ul>
+  {*}
+    {section name= loop=}
+      {include file="Visitor/recordinglistitem.tpl" item=}
+    {/section}
+  {/*}
+  </ul>
+</div>
 
 {include file="Visitor/_footer.tpl"}

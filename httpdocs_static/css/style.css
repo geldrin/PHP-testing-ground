@@ -903,6 +903,8 @@ a#currentusername span {
 }
 #headermenu li:hover,
 #headermenu li:focus {
+  border-left-color: #2499ca;
+  border-right-color: #2499ca;
   border-top-color: #2499ca;
   background-color: #2499ca;
 }
