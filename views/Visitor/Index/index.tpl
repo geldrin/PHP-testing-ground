@@ -2,7 +2,7 @@
 
 {if !empty( $recordings )}
   <div id="indexcontainer">
-    <div class="leftdoublebox">
+    <div class="indexleft">
       {assign var=item value=$recordings[0]}
       <a class="imageinfo wlarge" href="{$language}/recordings/details/{$item.id},{$item.title|filenameize}" title="{$item.title|escape:html}">
         <img src="{$item|@indexphoto:player}"/>
@@ -18,7 +18,7 @@
       
     </div>
     
-    <div class="rightbox">
+    <div class="indexright">
       <ul>
       {*} skip the first recording as we have already printed it above {/*}
       {section name=rightbox start=1 loop=$recordings}
@@ -46,14 +46,31 @@
   </div>
 {/if}
 
-<div class=" active">
-  <h2><a href="#"></a></h2>
+<div class="clear"></div>
+<div class="accordion active">
+  <h2><a href="#">{#index__mostviewed#}</a></h2>
   <ul>
-  {*}
-    {section name= loop=}
-      {include file="Visitor/recordinglistitem.tpl" item=}
-    {/section}
-  {/*}
+    {foreach from=$mostviewed item=item}
+      {include file="Visitor/recordinglistitem.tpl"}
+    {/foreach}
+  </ul>
+</div>
+
+<div class="accordion">
+  <h2><a href="#">{#index__newest#}</a></h2>
+  <ul>
+    {foreach from=$newest item=item}
+      {include file="Visitor/recordinglistitem.tpl"}
+    {/foreach}
+  </ul>
+</div>
+
+<div class="accordion">
+  <h2><a href="#">{#index__featured#}</a></h2>
+  <ul>
+    {foreach from=$featured item=item}
+      {include file="Visitor/recordinglistitem.tpl"}
+    {/foreach}
   </ul>
 </div>
 
