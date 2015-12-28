@@ -54,6 +54,7 @@ $j(document).ready(function() {
   runIfExists('.recordingslides', setupSlideTooltip );
   runIfExists('#analytics_accreditedrecordings', setupAnalytics );
   runIfExists('#analytics_statistics', setupStatistics );
+  runIfExists('.accordion', setupAccordion );
 
   if ( needping )
     setTimeout( setupPing, 1000 * pingsecs );
@@ -103,6 +104,14 @@ function handleFlashLoad(e) {
 
   alert( l.flashloaderror );
 
+}
+
+function setupAccordion(elems) {
+  elems.click(function(e) {
+    e.preventDefault();
+    $j(this).find('> ul').toggle();
+    $j(this).toggleClass('active');
+  });
 }
 
 function setupSearch() {
