@@ -107,10 +107,11 @@ function handleFlashLoad(e) {
 }
 
 function setupAccordion(elems) {
-  elems.click(function(e) {
+  elems.find('h2 a').click(function(e) {
     e.preventDefault();
-    $j(this).find('> ul').toggle();
-    $j(this).toggleClass('active');
+    var parent = $j(this).parents('.accordion');
+    parent.find('> ul').toggle();
+    parent.toggleClass('active');
   });
 }
 
@@ -513,18 +514,6 @@ function setupPlayer() {
   if ( $j('#pagebg').length == 0 )
     return; // embedded
 
-  var adjustPageBGHeight = function() {
-
-    var playerbgheight =
-      ( $j('#player').offset().top - $j('#pagebg').offset().top ) +
-      $j('#player').outerHeight(true) + 10
-    ;
-
-    $j('#pagebg').css('height', playerbgheight + 'px');
-
-  };
-
-  adjustPageBGHeight();
   if ( $j('#currentusermenu').length == 0 )
     return;
 
@@ -544,7 +533,7 @@ function setupPlayer() {
 
       menu.css('opacity', 0);
       menu.animate({ opacity: 1 }, animationduration );
-      $j('.title.recording').animate({ marginTop: margintop }, animationduration, adjustPageBGHeight);
+      $j('.title.recording').animate({ marginTop: margintop }, animationduration );
 
     } else {
 
@@ -552,7 +541,6 @@ function setupPlayer() {
       menu.animate({ opacity: 0 }, animationduration );
       $j('.title.recording').animate({ marginTop: '0' }, animationduration, function() {
 
-        adjustPageBGHeight();
         $j('#currentuser').removeClass('active');
 
       });

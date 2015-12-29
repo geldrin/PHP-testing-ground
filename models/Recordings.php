@@ -1862,8 +1862,10 @@ class Recordings extends \Springboard\Model {
     $this->ensureObjectLoaded();
 
     $return = $this->getRelatedVideosByCourse( $count, $user, $organization );
-    if ( !empty( $return ) ) // ha kurzusba tartozik  akkor csak azokat adjuk vissza
+    if ( !empty( $return ) ) {// ha kurzusba tartozik  akkor csak azokat adjuk vissza
+      $return = $this->addPresentersToArray( $return, true, $organization['id'] );
       return $return;
+    }
 
     if ( count( $return ) < $count )
       $return = $return + $this->getRelatedVideosByChannel( $count - count( $return ), $user, $organization );
@@ -1874,6 +1876,7 @@ class Recordings extends \Springboard\Model {
     if ( count( $return ) < $count )
       $return = $return + $this->getRelatedVideosRandom( $count - count( $return ), $user, $organization );
 
+    $return = $this->addPresentersToArray( $return, true, $organization['id'] );
     return $return;
 
   }

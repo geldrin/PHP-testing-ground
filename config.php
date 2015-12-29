@@ -93,7 +93,7 @@ $config = array(
   'livestreampath'        => '/srv/vsq/videosquare.eu/livestreams/',
   'recordings_seconds_minlength' => 3,
   'categoryiconpath'      => $this->basepath . 'httpdocs_static/images/categories/',
-  'relatedrecordingcount' => 6,
+  'relatedrecordingcount' => 8,
 
   // Converter related settings
   'mediainfo_identify'     => 'mediainfo --full --output=XML %s 2>&1',

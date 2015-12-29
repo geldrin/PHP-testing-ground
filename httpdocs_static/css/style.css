@@ -1280,7 +1280,7 @@ li#languageselectorlink {
 }
 #comments .widepager {
   border-top: 1px solid #a5a5a5;
-  width: 590px;
+  width: 980px;
   margin-bottom: 10px;
 }
 #comments .widepager .currentpage {
@@ -1964,42 +1964,6 @@ li#languageselectorlink {
   text-overflow: ellipsis;
 }
 
-/* newslist */
-.newslist {
-  list-style-type: none;
-  margin: 0;
-  padding: 0;
-}
-.newslist h2 {
-  overflow: hidden;
-}
-.newslist .listingitem h2 a {
-  font-weight: bold;
-  font-size: 15px;
-  color: #333;
-}
-.newslist .listingitem h2 .subtitle {
-  color: #999;
-  font-size: 12px;
-  font-weight: normal;
-  margin-left: 15px;
-}
-.newslist .more {
-  padding-right: 15px;
-  background-image: url(images/arrow_right.png);
-  background-repeat: no-repeat;
-  background-position: right 4px;
-}
-.newslist .listingitem {
-  border-bottom: 1px solid #d0d0d0;
-  box-shadow: 0 1px 1px #fff;
-  padding-bottom: 10px;
-}
-.newslist .listingitem.last {
-  border-bottom: 0px;
-  box-shadow: none;
-}
-
 /* imageinfo */
 .wlarge {
   width: 558px;
@@ -2063,118 +2027,36 @@ li#languageselectorlink {
 }
 
 /* recording metadata */
+#infobar {
+  border-bottom: 1px solid #c6c6c6;
+}
+
+#attachments,
+#embed,
+#info,
+#channels,
+#share,
+#recordingdownloads,
+#comments {
+  background-color: #f6f6f6;
+  border-bottom: 1px solid #d2d2d2;
+  padding: 15px 0px 15px 0px;
+  position: relative;
+  /* TODO inner dropshadow 1px ebebeb*/
+}
+
 #pagebg {
   position: absolute;
   z-index: 1;
-  top: 108px;
+  top: 72px;
   width: 100%;
-  height: 590px;
-  background-color: #050505;
-  background-image: -webkit-linear-gradient(top, #050505 20%, #171717 60%);
-  background-image: -moz-linear-gradient(top, #050505 20%, #171717 60%);
-  background-image: -ms-linear-gradient(top, #050505 20%, #171717 60%);
-  background-image: -o-linear-gradient(top, #050505 20%, #171717 60%);
-  background-image: linear-gradient(top, #050505 20%, #171717 60%);
+  height: 530px;
+  background-color: #000;
 }
-#metadata {
-  margin: 20px 20px 0px 0px;
-  float: left;
-  width: 590px;
-}
-#metadata h3, #metadatatable .labelcolumn {
-  font-size: 12px;
-  font-weight: bold;
-  padding: 0;
-  margin: 0;
-}
-#metadata .ratewidget h3 {
-  margin: 0 0 0 1px;
-}
-#metadata #recordingviews {
-  float: right;
-  margin: 0 10px 0 0;
-  padding: 0 10px 0 0;
-  font-weight: bold;
-  font-size: 40px;
-  line-height: 45px;
-  border-right: 1px solid #c0c0c0;
-}
-.recordinginfo .rating {
-  margin-top: -2px;
-}
-#metadatatable {
-  display: none;
-}
-#metadatatable .labelcolumn {
-  padding-right: 30px;
-}
-#metadata #infotoggle {
-  position: relative;
-  text-align: center;
-  margin-top: 45px;
-}
-#metadata #infotoggle ul {
-  position: absolute;
-  margin: 0;
-  padding: 0;
-  bottom: 25px;
-  right: 0px;
-}
-#metadata #infotoggle li {
-  display: inline-block;
-}
-#metadata #infotoggle ul a, #metadata #infotoggle ul a span {
-  display: block;
-  overflow: hidden;
-  width: 45px;
-  height: 31px;
-}
-#metadata #infotoggle li#embedlink a span {
-  background-image: url(images/icon_player_embed.png);
-}
-#metadata #infotoggle li#embedlink a:hover span, #metadata #infotoggle li#embedlink.active a span {
-  background-image: url(images/icon_player_embed_hover.png);
-}
-#metadata #infotoggle li#channellink a span {
-  background-image: url(images/icon_addtochannel.png);
-}
-#metadata #infotoggle li#channellink a:hover span, #metadata #infotoggle li#channellink.active a span {
-  background-image: url(images/icon_addtochannel_hover.png);
-}
-#metadata #infotoggle a {
-  font-weight: bold;
-  display: block;
-}
-#metadata #infotoggle #gradient {
-  position: absolute;
-  z-index: -10;
-  bottom: 18px;
-  height: 60px;
-  top: -60px;
-  width: 590px;
-  background-image: url(images/infotoggle_gradient.png);
-}
-#metadata .attachments h3 {
-  line-height: 20px;
-  font-size: 16px;
-  font-weight: normal;
-  margin: 0 0 2px 0;
-}
-#metadata .attachments ul {
-  margin: 0;
-  padding-left: 20px;
-}
-/* metadata channels */
-#channels, #availableuploads {
+
+#availableuploads {
   background-color: #ddd;
-  -moz-border-radius: 5px;
-  -webkit-border-radius: 5px;
-  border-radius: 5px;
-  padding: 15px 0px 15px 0px;
   position: relative;
-}
-#metadata #channel {
-  display: none;
 }
 #channels h3, #availableuploads h3 {
   font-size: 12px;
@@ -2248,137 +2130,15 @@ li#languageselectorlink {
 }
 /* recommendatory */
 #recommendatory {
-  width: 340px;
-  float: right;
+  
 }
 #recommendatory h2 {
-  color: #333;
+  margin: 15px 0 15px 0;
+  color: #7f7f7f;
   font-size: 18px;
   font-weight: bold;
 }
-#recommendatory ul {
-  list-style-type: none;
-  margin: 0;
-  padding: 0;
-}
-#recommendatory li {
-  display: inline-block;
-  width: 340px;
-  height: 95px;
-  margin-bottom: 15px;
-}
-#recommendatory li .recordingpic {
-  display: inline-block;
-  margin-right: 10px;
-  position: relative;
-}
-#recommendatory li .recordingpic .length {
-  position: absolute;
-  top: 66px;
-  right: 6px;
-  background-color: #333;
-  background-color: rgba(0, 0, 0, 0.6);
-  height: 18px;
-  color: #fff;
-  font-size: 12px;
-  padding: 2px 5px 2px 5px;
-}
-#recommendatory li .content {
-  display: inline-block;
-  vertical-align: top;
-  width: 170px;
-  height: 92px;
-  padding: 3px 5px 0px 0px;
-}
-#recommendatory li .content h3 {
-  font-size: 15px;
-  font-weight: bold;
-  display: inline-block;
-  width: 100%;
-  max-height: 55px;
-  padding: 0;
-  margin: 0;
-}
-#recommendatory li .content h3 a {
-  display: block;
-}
-#recommendatory li .content h4 {
-  font-size: 12px;
-  padding: 0;
-  margin: 0;
-  display: inline-block;
-  width: 100%;
-  height: 18px;
-}
-#recommendatory li .content .views {
-  font-size: 12px;
-  color: #333;
-}
-#recommendatory li .content .author {
-  font-weight: bold;
-  margin-top: 10px;
-  height: 18px;
-}
-.recommendatory h2 {
-  color: #333;
-  font-size: 18px;
-  font-weight: bold;
-}
-.recommendatory ul {
-  list-style-type: none;
-  margin: 0;
-  padding: 0;
-}
-.recommendatory li {
-  display: inline-block;
-  width: 470px;
-  margin-bottom: 15px;
-}
-.recommendatory li .recordingpic {
-  display: inline-block;
-  margin-right: 10px;
-  position: relative;
-}
-.recommendatory li .recordingpic .length {
-  position: absolute;
-  background-color: #333;
-  background-color: rgba(0, 0, 0, 0.6);
-  height: 18px;
-  color: #fff;
-  font-size: 12px;
-  padding: 2px 5px 2px 5px;
-  top: 66px;
-  right: 6px;
-}
-.recommendatory li .content {
-  display: inline-block;
-  vertical-align: top;
-  width: 291px;
-  padding: 3px 5px 0px 0px;
-}
-.recommendatory li .content h3 {
-  font-size: 15px;
-  font-weight: bold;
-  padding: 0;
-  margin: 0;
-  display: inline-block;
-  width: 100%;
-}
-.recommendatory li .content h4 {
-  font-size: 12px;
-  padding: 0;
-  margin: 0;
-  display: inline-block;
-  width: 100%;
-}
-.recommendatory li .content .author {
-  font-weight: bold;
-  margin-top: 5px;
-}
-.recommendatory li .content .views {
-  font-size: 12px;
-  color: #333;
-}
+
 /* recordinguploader */
 #metadata .recordinguploader {
   display: inline-block;
@@ -2922,6 +2682,9 @@ li#languageselectorlink {
 .liveiframe #player, .contribiframe #player {
   display: inline-block;
 }
+#player {
+  margin-top: -20px;
+}
 #player .warning {
   color: red;
 }
@@ -3172,7 +2935,7 @@ li#languageselectorlink {
 #comments {
   float: left;
   clear: left;
-  width: 590px;
+  width: 100%;
   position: relative;
 }
 #body #comments .title {

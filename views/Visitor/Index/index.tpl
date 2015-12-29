@@ -5,7 +5,7 @@
     <div class="indexleft">
       <ul>
         {assign var=item value=$recordings[0]}
-        {include file="Visitor/Index/recordinglistitem.tpl"}
+        {include file="Visitor/minirecordinglistitem.tpl"}
       </ul>
     </div>
     
@@ -14,7 +14,7 @@
       {*} skip the first recording as we have already printed it above {/*}
       {section name=rightbox start=1 loop=$recordings}
         {assign var=item value=$recordings[rightbox]}
-        {include file="Visitor/Index/recordinglistitem.tpl"}
+        {include file="Visitor/minirecordinglistitem.tpl"}
       {/section}
       </ul>
     </div>
@@ -27,7 +27,7 @@
   <h2><a href="#">{#index__mostviewed#}</a></h2>
   <ul>
     {foreach from=$mostviewed item=item}
-      {include file="Visitor/Index/recordinglistitem.tpl"}
+      {include file="Visitor/minirecordinglistitem.tpl"}
     {/foreach}
   </ul>
 </div>
@@ -37,7 +37,7 @@
   <h2><a href="#">{#index__newest#}</a></h2>
   <ul>
     {foreach from=$newest item=item}
-      {include file="Visitor/Index/recordinglistitem.tpl"}
+      {include file="Visitor/minirecordinglistitem.tpl"}
     {/foreach}
   </ul>
 </div>
@@ -47,7 +47,7 @@
   <h2><a href="#">{#index__featured#}</a></h2>
   <ul>
     {foreach from=$featured item=item}
-      {include file="Visitor/Index/recordinglistitem.tpl"}
+      {include file="Visitor/minirecordinglistitem.tpl"}
     {/foreach}
   </ul>
 </div>
