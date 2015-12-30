@@ -51,10 +51,7 @@
 
 <div class="title recording">
   <h1>{$recording.title|escape:html|mb_wordwrap:25}</h1>
-
-  {if $recording.subtitle|stringempty}
-    <h2>{$recording.subtitle|escape:html|mb_wordwrap:25}</h2>
-  {/if}
+  <h2><span class="timestamp">{$recording.timestamp|date_format:#smarty_dateformat_long#}</span> {$recording.subtitle|escape:html|mb_wordwrap:25}</h2>
 
   {if $recording.approvalstatus != 'approved'}
     <center><a href="{$language}/recordings/modifysharing/{$recording.id}">{#recordings__notpublished_warning#}</a></center>
@@ -63,7 +60,7 @@
 </div>
 
 <div id="infobar">
-  <ul>
+  <ul class="left">
     <li id="recordinguploader">
       <div class="avatar">
         <img src="{$author|@avatarphoto}" width="36" height="36"/>
@@ -73,13 +70,13 @@
         <div class="timestamp" title="{#recordings__details_recordedtimestamp#}">{$recording.recordedtimestamp|date_format:#smarty_dateformat_long#}</div>
       </div>
     </li>
-    <li id="recordingviews" title="{#recordings__metadata_views#}">
+    <li id="recordingviews">
       <div class="views">{$recording.numberofviews|numberformat}</div>
       <div class="label">{#recordings__numberofviews#}</div>
     </li>
     <li id="rating">
       {assign var=numberofratings value=$recording.numberofratings|numberformat}
-      <div class="ratewidget right" data-canrate="{$canrate}">
+      <div class="ratewidget" data-canrate="{$canrate}">
         <span class="spinner"></span>
         <ul>
           <li{if $recording.rating > 0} class="full"{/if}><a href="{$language}/recordings/rate/{$recording.id}?rating=1"><span></span>1</a></li>
@@ -91,11 +88,13 @@
       </div>
       <div class="label">{#recordings__ratewidgetheading#|sprintf:$numberofratings}</div>
     </li>
-    <li id="infolink"><a href="#">{#recordings__info#}</a></li>
+  </ul>
+  <ul class="right">
+    <li id="infolink" class="active"><a href="#">{#recordings__info#}</a></li>
     {if $member.id}
       <li id="channellink"><a href="#"><span></span>{#recordings__addtochannel#}</a></li>
     {/if}
-    <li id="commentslink"><a href="#" data-commentcount="{$commentcount}">{#recordings__comments#}</a></li>
+    <li id="commentslink"><a href="#" data-commentcount="{$commentcount}"><span></span>{#recordings__comments#}</a></li>
     <li id="sharelink"><a href="#" title="{#recordings__share#}"><span></span>{#recordings__share#}</a></li>
     <li id="embedlink"><a href="#" title="{#recordings__embed#}"><span></span>{#recordings__embed#}</a></li>
 
@@ -189,12 +188,12 @@
 </div>
 
 {if $member.id}
-  <div id="channels">
-    <h3>{#recordings__addtochannel_title#}</h3>
-    <ul id="channelslist">
-      {include file=Visitor/Recordings/Details_channels.tpl level=1}
-    </ul>
-  </div>
+<div id="channels">
+  <h3>{#recordings__addtochannel_title#}</h3>
+  <ul id="channelslist">
+    {include file=Visitor/Recordings/Details_channels.tpl level=1}
+  </ul>
+</div>
 {/if}
 
 <div id="share">
@@ -213,16 +212,16 @@
 </div>
 
 {if !empty( $recordingdownloads )}
-  <div id="recordingdownloads"{if $recording|@userHasAccess} class="closer"{/if}>
-    <a href="#" class="submitbutton">{#recordings__recordingdownloads#}</a>
-    <ul>
-      {foreach from=$recordingdownloads key=key item=item}
-        {assign var=localekey value="recordingdownloads_$key"}
-        {assign var=itemlocale value=$l->get('recordings', $localekey, $language)}
-        <li><a href="{$item.url}">{$itemlocale|sprintf:$item.qualitytag}</a></li>
-      {/foreach}
-    </ul>
-  </div>
+<div id="recordingdownloads"{if $recording|@userHasAccess} class="closer"{/if}>
+  <a href="#" class="submitbutton">{#recordings__recordingdownloads#}</a>
+  <ul>
+    {foreach from=$recordingdownloads key=key item=item}
+      {assign var=localekey value="recordingdownloads_$key"}
+      {assign var=itemlocale value=$l->get('recordings', $localekey, $language)}
+      <li><a href="{$item.url}">{$itemlocale|sprintf:$item.qualitytag}</a></li>
+    {/foreach}
+  </ul>
+</div>
 {/if}
 
 <div id="comments">
