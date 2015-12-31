@@ -2047,7 +2047,7 @@ li#languageselectorlink {
 #infobar > ul > li {
   float: left;
   height: 40px;
-  margin: 4px 10px -4px 10px;
+  margin: 1px 10px -1px 10px;
   padding: 0 0 20px 0;
   vertical-align: top;
 }
@@ -2095,7 +2095,10 @@ li#languageselectorlink {
 #infobar #sharelink a,
 #infobar #embedlink a,
 #infobar #recordingmodify a {
+  display: inline-block;
+  height: 40px;
   line-height: 40px;
+  overflow: hidden;
   color: #333;
 }
 #infobar #infolink a:focus, #infobar #infolink a:hover,
@@ -2118,11 +2121,25 @@ li#languageselectorlink {
 #share,
 #recordingdownloads,
 #comments {
+  display: none;
   background-color: #f6f6f6;
   border-bottom: 1px solid #d2d2d2;
   padding: 15px 0px 15px 0px;
   position: relative;
   /* TODO inner dropshadow 1px ebebeb*/
+}
+#info {
+  display: block;
+}
+
+#attachments.active,
+#embed.active,
+#info.active,
+#channels.active,
+#share.active,
+#recordingdownloads.active,
+#comments.active {
+  display: block;
 }
 
 #pagebg {

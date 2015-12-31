@@ -97,12 +97,6 @@
     <li id="commentslink"><a href="#" data-commentcount="{$commentcount}"><span></span>{#recordings__comments#}</a></li>
     <li id="sharelink"><a href="#" title="{#recordings__share#}"><span></span>{#recordings__share#}</a></li>
     <li id="embedlink"><a href="#" title="{#recordings__embed#}"><span></span>{#recordings__embed#}</a></li>
-
-    {if $recording|@userHasAccess}
-      <li id="recordingmodify">
-        <a target="_blank" href="{$language}/recordings/modifybasics/{$recording.id}?forward={$FULL_URI|escape:url}">{#recordings__editrecording#}</a>
-      </li>
-    {/if}
   </ul>
   <div class="clear"></div>
 </div>
@@ -148,6 +142,10 @@
 </div>
 
 <div id="info">
+  {if $recording|@userHasAccess}
+    <a id="recordingmodify" target="_blank" href="{$language}/recordings/modifybasics/{$recording.id}?forward={$FULL_URI|escape:url}">{#recordings__editrecording#}</a>
+  {/if}
+
   <div id="presenters">
     {if !empty( $recording.presenters )}
       {include file=Visitor/presenters.tpl presenters=$recording.presenters}

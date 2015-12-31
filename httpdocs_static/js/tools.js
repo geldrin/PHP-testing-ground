@@ -55,6 +55,7 @@ $j(document).ready(function() {
   runIfExists('#analytics_accreditedrecordings', setupAnalytics );
   runIfExists('#analytics_statistics', setupStatistics );
   runIfExists('.accordion', setupAccordion );
+  runIfExists('#infobar', setupInfoBar );
 
   if ( needping )
     setTimeout( setupPing, 1000 * pingsecs );
@@ -104,6 +105,26 @@ function handleFlashLoad(e) {
 
   alert( l.flashloaderror );
 
+}
+
+function setupInfoBar(elem) {
+  elem = elem.find('> ul.right');
+  elem.find('> li').click(function(e) {
+    e.preventDefault();
+    var old    = elem.find('> li.active');
+    var parent = $j(this);
+
+    if (parent.attr('id') === old.attr('id'))
+      return;
+
+    old.removeClass('active');
+    var oldid  = old.attr('id').replace(/link$/, '');
+    $j('#' + oldid ).hide();
+
+    parent.addClass('active');
+    var newid  = parent.attr('id').replace(/link$/, '');
+    $j('#' + newid ).show();
+  });
 }
 
 function setupAccordion(elems) {
@@ -322,13 +343,6 @@ function setupChannels() {
     });
 
   };
-
-  $j('#channellink').click(function(e) {
-    e.preventDefault();
-
-    $j(this).toggleClass('active');
-    $j('#channels').toggle();
-  });
 
   fixmargins();
 
@@ -731,13 +745,6 @@ function setupEmbed() {
 
   var embedcode = $j('#embedcode').val();
   var url       = embedcode.match(/src="(.*?)"/)[1];
-
-  $j('#embedlink').click(function(e) {
-    e.preventDefault();
-
-    $j(this).toggleClass('active');
-    $j('#embed').toggle();
-  });
 
   $j('#embed input').bind('change keyup blur', function( e ) {
 
