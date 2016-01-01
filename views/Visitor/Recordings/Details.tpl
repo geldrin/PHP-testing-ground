@@ -90,33 +90,24 @@
     </li>
   </ul>
   <ul class="right">
-    <li id="infolink" class="active"><a href="#">{#recordings__info#}</a></li>
+    <li id="infolink" class="active"><a href="#"><span></span>{#recordings__info#}</a></li>
     {if $member.id}
-      <li id="channellink"><a href="#"><span></span>{#recordings__addtochannel#}</a></li>
+      <li id="channelslink"><a href="#"><span></span>{#recordings__addtochannel#}</a></li>
     {/if}
-    <li id="commentslink"><a href="#" data-commentcount="{$commentcount}"><span></span>{#recordings__comments#}</a></li>
+    <li id="commentslink"><a href="#"><span data-commentcount="{$commentcount|default:'0'}">{$commentcount|default:'0'}</span> {#recordings__comments#}</a></li>
+    {if $bootstrap->config.loadaddthis}
     <li id="sharelink"><a href="#" title="{#recordings__share#}"><span></span>{#recordings__share#}</a></li>
+    {/if}
     <li id="embedlink"><a href="#" title="{#recordings__embed#}"><span></span>{#recordings__embed#}</a></li>
   </ul>
   <div class="clear"></div>
 </div>
 
-{if !empty( $attachments )}
-<div id="attachments">
-  <h3>{#recordings__manageattachments_title#}</h3>
-  <ul>
-    {foreach from=$attachments item=attachment}
-      <li><a href="{$attachment|@attachmenturl:$recording:$STATIC_URI}">{$attachment.title|escape:html}</a></li>
-    {/foreach}
-  </ul>
-</div>
-{/if}
-
 <div id="embed">
   {capture assign=embed}
     <iframe width="480" height="{$height}" src="{$BASE_URI}recordings/embed/{$recording.id}" frameborder="0" allowfullscreen="allowfullscreen"></iframe>
   {/capture}
-  <label for="embedcode">{#recordings__embedcode#}:</label>
+  <label for="embedcode">{#recordings__embedcode#}:</label><br/>
   <textarea id="embedcode" data-fullscaleheight="{$flashheight}" data-normalheight="{$height}">{$embed|trim|escape:html}</textarea>
   <div class="settings">{#recordings__embedsettings#}:</div>
   <div class="settingrow">
@@ -152,14 +143,22 @@
     {/if}
   </div>
 
-  {if $recording.description|stringempty}
-    <div class="recordingdescription">
-      <p>{$recording.description|escape:html|autolink|nl2br}</p>
+  {if !empty( $attachments )}
+    <div id="attachments">
+      <h3>{#recordings__manageattachments_title#}</h3>
+      <ul>
+        {foreach from=$attachments item=attachment}
+          <li><a href="{$attachment|@attachmenturl:$recording:$STATIC_URI}">{$attachment.title|escape:html}</a></li>
+        {/foreach}
+      </ul>
     </div>
   {/if}
-  <a id="detaillink" href="#" data-show="{#recordings__showdetails#|escape:html}" data-hide="{#recordings__hidedetails#|escape:html}">{#recordings__showdetails#}</a>
 
-  <div class="copyright">
+  {if $recording.description|stringempty}
+    <p id="recordingdescription">{$recording.description|escape:html|autolink|nl2br}</p>
+  {/if}
+
+  <div id="copyright">
     <p>{$recording.copyright|escape:html|default:#recordings__nocopyright#}</p>
   </div>
 
@@ -183,6 +182,8 @@
       <td>{$recording.timestamp|date_format:#smarty_dateformat_long#}</td>
     </tr>
   </table>
+
+  <a id="detaillink" href="#" data-show="{#recordings__showdetails#|escape:html}" data-hide="{#recordings__hidedetails#|escape:html}">{#recordings__showdetails#}</a>
 </div>
 
 {if $member.id}
@@ -194,8 +195,8 @@
 </div>
 {/if}
 
+{if $bootstrap->config.loadaddthis}
 <div id="share">
-  {if $bootstrap->config.loadaddthis}
   <br/>
   <div class="addthis_toolbox addthis_default_style addthis_32x32_style">
     <a class="addthis_button_preferred_1"></a>
@@ -206,8 +207,8 @@
     <a class="addthis_counter addthis_bubble_style"></a>
   </div>
   <script type="text/javascript" src="//s7.addthis.com/js/250/addthis_widget.js#pubid=xa-5045da4260dfe0a6"></script>
-  {/if}
 </div>
+{/if}
 
 {if !empty( $recordingdownloads )}
 <div id="recordingdownloads"{if $recording|@userHasAccess} class="closer"{/if}>

@@ -2032,6 +2032,7 @@ li#languageselectorlink {
   font-size: 13px;
 }
 
+/* infobar */
 #infobar {
   border-bottom: 1px solid #c6c6c6;
 }
@@ -2052,7 +2053,7 @@ li#languageselectorlink {
   vertical-align: top;
 }
 #infobar > ul > li.active {
-  background-image: url(images/recordingdetails_uparrow.png);
+  background-image: url(images/recordingsdetails_uparrow.png);
   background-repeat: no-repeat;
   background-position: bottom center;
 }
@@ -2090,31 +2091,94 @@ li#languageselectorlink {
   color: #333333;
 }
 #infobar #infolink a,
-#infobar #channellink a,
+#infobar #channelslink a,
 #infobar #commentslink a,
 #infobar #sharelink a,
 #infobar #embedlink a,
 #infobar #recordingmodify a {
   display: inline-block;
   height: 40px;
+  width: 100%;
   line-height: 40px;
   overflow: hidden;
   color: #333;
+  white-space: nowrap;
 }
 #infobar #infolink a:focus, #infobar #infolink a:hover,
-#infobar #channellink a:focus, #infobar #channellink a:hover,
+#infobar #channelslink a:focus, #infobar #channelslink a:hover,
 #infobar #commentslink a:focus, #infobar #commentslink a:hover,
 #infobar #sharelink a:focus, #infobar #sharelink a:hover,
 #infobar #embedlink a:focus, #infobar #embedlink a :hover,
 #infobar #recordingmodify a:focus, #infobar #recordingmodify a:hover {
   text-decoration: none;
 }
-#infobar #channellink,
+#infobar #channelslink,
 #infobar #recordingmodify {
   width: 50px;
 }
+#infobar #infolink a span {
+  display: inline-block;
+  width: 22px;
+  height: 22px;
+  margin: 0 5px 0 0;
+  background: url(images/recordingsdetails_info.png) no-repeat;
+  vertical-align: middle;
+}
+#infobar #channelslink a span {
+  display: inline-block;
+  width: 22px;
+  height: 22px;
+  margin: 0 5px 0 0;
+  background: url(images/recordingsdetails_share.png) no-repeat;
+  vertical-align: middle;
+}
+#infobar #commentslink a span:after {
+  content: attr(data-commentcount);
+  display: inline-block;
+  width: 100%;
+  padding: 0 1px 0 0;
+  position: absolute;
+  right: -1px;
+  top: 2px;
+  line-height: 15px;
+  font-size: 10px;
+  text-align: center;
+  color: #fff;
+  background-color: #29abe2;
+  border-radius: 3px;
+}
+#infobar #commentslink a span {
+  position: relative;
+  top: -3px;
+  display: inline-block;
+  height: 22px;
+  padding: 0 5px 0 4px;
+  margin: 0 5px 0 0;
+  line-height: 15px;
+  font-size: 10px;
+  color: #fff;
+  background-color: #fff;
+  background-image: url(images/recordingsdetails_comments.png);
+  background-repeat: no-repeat;
+  background-position: right 2px bottom;
+}
+#infobar #sharelink a span {
+  display: inline-block;
+  width: 22px;
+  height: 22px;
+  margin: 0 5px 0 0;
+  background: url(images/recordingsdetails_share.png) no-repeat;
+  vertical-align: middle;
+}
+#infobar #embedlink a span {
+  display: inline-block;
+  width: 22px;
+  height: 22px;
+  margin: 0 5px 0 0;
+  background: url(images/recordingsdetails_share.png) no-repeat;
+  vertical-align: middle;
+}
 
-#attachments,
 #embed,
 #info,
 #channels,
@@ -2124,15 +2188,10 @@ li#languageselectorlink {
   display: none;
   background-color: #f6f6f6;
   border-bottom: 1px solid #d2d2d2;
-  padding: 15px 0px 15px 0px;
+  padding: 15px 30px;
   position: relative;
   /* TODO inner dropshadow 1px ebebeb*/
 }
-#info {
-  display: block;
-}
-
-#attachments.active,
 #embed.active,
 #info.active,
 #channels.active,
@@ -2142,6 +2201,43 @@ li#languageselectorlink {
   display: block;
 }
 
+
+#info {
+  display: block;
+}
+#info #attachments,
+#info #copyright,
+#info #metadatatable {
+  display: none;
+}
+#info.more #attachments,
+#info.more #copyright,
+#info.more #metadatatable {
+  display: block;
+}
+#info #recordingdescription {
+  display: inline-block;
+  margin: 0;
+  padding: 0;
+  width: 70%;
+  height: 20px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+#info.more #recordingdescription {
+  display: block;
+  margin: 0 0 5px 0;
+  width: auto;
+  height: auto;
+  white-space: normal;
+}
+#info #detaillink {
+  vertical-align: top;
+}
+#info #metadatatable {
+  margin: 0 0 10px 0;
+}
 #pagebg {
   position: absolute;
   z-index: 1;
@@ -2154,6 +2250,9 @@ li#languageselectorlink {
 #availableuploads {
   background-color: #ddd;
   position: relative;
+}
+#channels {
+  padding: 15px 0;
 }
 #channels h3, #availableuploads h3 {
   font-size: 12px;
@@ -2510,12 +2609,6 @@ li#languageselectorlink {
 /* embed */
 #embed {
   display: none;
-  margin: 20px 0;
-  padding: 10px;
-  background: #ddd;
-  -webkit-border-radius: 5px;
-  -moz-border-radius: 5px;
-  border-radius: 5px;
 }
 #embed .settings {
   font-weight: bold;
@@ -2530,7 +2623,7 @@ li#languageselectorlink {
   border-radius: 5px;
   margin: 10px 0;
   border: 1px solid #d0d0d0;
-  background-color: #f7f7f7;
+  background-color: #fff;
 }
 #embed .inputtext {
   padding: 2px;
@@ -3075,6 +3168,9 @@ li#languageselectorlink {
   width: 16px;
   height: 16px;
   background-image: url(images/spinner.gif);
+}
+#commentform {
+
 }
 #commentform .labelcolumn {
   padding: 5px 0;

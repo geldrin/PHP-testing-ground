@@ -124,6 +124,18 @@ function setupInfoBar(elem) {
     parent.addClass('active');
     var newid  = parent.attr('id').replace(/link$/, '');
     $j('#' + newid ).show();
+    console.log(oldid, newid);
+  });
+
+  $j('#detaillink').click(function(e) {
+    e.preventDefault();
+    var elem = $j(this);
+    if ( elem.text() == elem.attr('data-show') )
+      elem.text( elem.attr('data-hide') );
+    else
+      elem.text( elem.attr('data-show') );
+
+    $j('#info').toggleClass('more');
   });
 }
 
