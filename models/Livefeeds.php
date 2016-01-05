@@ -1253,7 +1253,7 @@ class Livefeeds extends \Springboard\Model {
             l.organizationid = '$organizationid'
           )
         )
-      ORDER BY relevancy DESC
+      ORDER BY relevancy DESC, c.starttimestamp DESC
       LIMIT $start, $limit
     ";
 
