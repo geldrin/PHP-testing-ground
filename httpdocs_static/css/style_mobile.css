@@ -5,7 +5,7 @@
   display: none;
 }
 
-@media all and (max-width: 950px) {
+@media all and (max-width: 980px) {
   body {
     -webkit-text-size-adjust: none;
   }
@@ -77,37 +77,43 @@
   /* index contaner */
   #indexcontainer {
     float: none;
-    width: 924px;
-  }
-  #indexcontainer img {
-    width: 100%;
-  }
-  #indexcontainer .avatar img {
     width: auto;
   }
-  #indexcontainer .playpic {
-    -webkit-background-size: 100% auto;
-    background-size: 100% auto;
-    background-repeat: no-repeat;
-    background-position: center center;
+  #indexcontainer li,
+  #indexcontainer li.first {
+    float: none;
+    width: 100%;
+    height: auto;
+    margin: 0;
   }
-  #indexcontainer .leftdoublebox {
-    width: 592px;
-    height: 333px;
-    float: left;
+  #indexcontainer img,
+  #indexcontainer li.first img {
+    width: 33%;
+    height: auto;
   }
-  #indexcontainer .rightbox {
-    width: 293px;
-    float: right;
+  #indexcontainer li a {
+
   }
-  #indexcontainer .wlarge {
-    width: 592px;
-    height: 333px;
+  #indexcontainer .recordingcontent,
+  #indexcontainer li.first .recordingcontent {
+    position: static;
+    float: none;
+    padding: 0;
+    width: auto;
+    height: auto;
   }
-  #indexcontainer .wwide {
-    width: 288px;
-    height: 161px;
+
+  .accordion ul,
+  .accordion li {
+    float: none;
+    width: 100%;
+    height: auto;
   }
+  .accordion .recordingpic img {
+    width: 33%;
+    height: auto;
+  }
+
   
   /* recording details */
   #channels .actions {

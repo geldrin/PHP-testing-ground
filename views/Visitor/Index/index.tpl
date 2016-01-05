@@ -1,28 +1,17 @@
 {include file="Visitor/_header.tpl" module="index"}
 
 {if !empty( $recordings )}
-  <div id="indexcontainer">
-    <div class="indexleft">
-      <ul>
-        {assign var=item value=$recordings[0]}
-        {include file="Visitor/minirecordinglistitem.tpl"}
-      </ul>
-    </div>
-    
-    <div class="indexright">
-      <ul>
-      {*} skip the first recording as we have already printed it above {/*}
-      {section name=rightbox start=1 loop=$recordings}
-        {assign var=item value=$recordings[rightbox]}
-        {include file="Visitor/minirecordinglistitem.tpl"}
-      {/section}
-      </ul>
-    </div>
-    <div class="clear"></div>
-  </div>
+<div id="indexcontainer">
+  <ul>
+    {foreach from=$recordings item=item name=recordings}
+      {include file="Visitor/minirecordinglistitem.tpl" isfirst=$smarty.foreach.recordings.first}
+    {/foreach}
+  </ul>
+</div>
+<div class="clear"></div>
 {/if}
 
-<div class="clear"></div>
+{if !empty( $mostviewed )}
 <div class="accordion active">
   <h2><a href="#">{#index__mostviewed#}</a></h2>
   <ul>
@@ -32,7 +21,9 @@
   </ul>
 </div>
 <div class="clear"></div>
+{/if}
 
+{if !empty( $newest )}
 <div class="accordion">
   <h2><a href="#">{#index__newest#}</a></h2>
   <ul>
@@ -42,7 +33,9 @@
   </ul>
 </div>
 <div class="clear"></div>
+{/if}
 
+{if !empty( $featured )}
 <div class="accordion">
   <h2><a href="#">{#index__featured#}</a></h2>
   <ul>
@@ -52,4 +45,6 @@
   </ul>
 </div>
 <div class="clear"></div>
+{/if}
+
 {include file="Visitor/_footer.tpl"}

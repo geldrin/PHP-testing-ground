@@ -1,5 +1,5 @@
 {capture assign=recordingurl}{$language}/recordings/details/{$item.id},{$item.title|filenameize}{/capture}
-<li class="listitem">
+<li class="listitem{if $isfirst} first{/if}">
   <a href="{$recordingurl}">
     <div class="recordingpic">
       <div class="length">{$item|@recordinglength|timeformat:minimal}</div>
