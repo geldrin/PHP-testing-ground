@@ -53,7 +53,7 @@ $ssh_check_every_mins = 10;
 // Helping variables
 $firstround = true;
 $db_outage = false;
-$db_outage_starttime = 0;
+$db_outage_starttime = time();
 $ssh_outage = array();
 
 // Prepare possibly needed mail intro with site information
