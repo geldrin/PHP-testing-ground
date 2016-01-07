@@ -373,8 +373,6 @@ class Controller extends \Visitor\Controller {
       $feedModel->id
     );
 
-    $this->bootstrap->includeTemplatePlugin('nickformat');
-
     header("Pragma: ");
     header("Cache-Control: ");
     header('Content-Type: application/octet-stream');
@@ -396,7 +394,7 @@ class Controller extends \Visitor\Controller {
       if ( $row['externalid'] )
         $nick = $row['externalid'];
       elseif ( $row['userid'] )
-        $nick = smarty_modifier_nickformat( $row );
+        $nick = $row['email'];
       else
         $nick = $row['anonymoususer'];
 
