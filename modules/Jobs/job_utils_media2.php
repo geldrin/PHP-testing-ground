@@ -117,13 +117,13 @@ class runExt {
 				$timeout = ((microtime(true) - $lastactive) > $this->timeoutsec);
 				usleep($this->polling_usec);
 			}
-		} while(($proc_status['exitcode'] < 0) && !$timeout && !$EOF);
+		} while($proc_status['running'] && !$timeout && !$EOF);
 		
 		if ($timeout) {
 			$this->msg = "[WARN] Timeout Exceeded, sending SIGKILL to process (pid=". $this->pid .")";
 			$this->duration = (microtime(true) - $this->start);
-		
-			if ($proc_status['running'] && proc_terminate($process, SIGKILL) === false) {
+			
+			if (posix_kill($this->pid, SIGKILL) === false && $proc_status['running']) {
 				throw new Exception("[ERROR] Failed to shut down process!");
 			}
 			
@@ -133,8 +133,10 @@ class runExt {
 			
 			if ($proc_status['running']) $proc_status = proc_get_status($process);
 			$this->code = $proc_status['exitcode'];
+			posix_kill($this->pid, SIGKILL);
 			foreach ($pipes as $p) { fclose($p); }
-			proc_terminate($process, SIGTERM);
+			proc_close($process);
+			
 			if (gettype($process) == "resource") { /*ERROR - process wasn't closed properly*/ }
 			$this->duration = (microtime(true) - $this->start);
 			
@@ -163,30 +165,9 @@ class runExt {
 		$this->code         = -1;
 		$this->output       = array();
 		$this->pid          = null;
-		$this->masterpid    = null;
 		$this->msg          = null;
 		$this->callback     = null;
 		$this->polling_usec = 50000;
-	}
-	
-///////////////////////////////////////////////////////////////////////////////////////////////////
-	private function installSigHandlers() {
-///////////////////////////////////////////////////////////////////////////////////////////////////
-		// if (!declared('ticks')) declare(ticks = 1);
-		// return pcntl_signal($signal, 'handleSignal');
-	}
-	
-///////////////////////////////////////////////////////////////////////////////////////////////////
-	private function handleSignal($signal) {
-///////////////////////////////////////////////////////////////////////////////////////////////////
-		switch ($signal) {
-		
-		case SIGTERM:
-		default:
-			// KILL WORKER PROCESS
-			die(0);
-			break;
-		}
 	}
 	
 ///////////////////////////////////////////////////////////////////////////////////////////////////
