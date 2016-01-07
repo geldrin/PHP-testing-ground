@@ -85,14 +85,7 @@
     width: 100%;
     height: auto;
     margin: 0;
-  }
-  #indexcontainer img,
-  #indexcontainer li.first img {
-    width: 33%;
-    height: auto;
-  }
-  #indexcontainer li a {
-
+    padding: 10px 0;
   }
   #indexcontainer .recordingcontent,
   #indexcontainer li.first .recordingcontent {
@@ -102,15 +95,53 @@
     width: auto;
     height: auto;
   }
+  #indexcontainer .first .recordingcontent .title,
+  #indexcontainer .first .recordingcontent .presenter {
+    color: #000;
+    text-shadow: none;
+  }
 
+  .accordion ul {
+    margin: 0;
+  }
+  .accordion li {
+    padding: 10px 0;
+  }
+  .accordion li:hover,
+  .accordion li:focus {
+    border: 1px solid #fff;
+    box-shadow: none;
+  }
   .accordion ul,
   .accordion li {
     float: none;
     width: 100%;
     height: auto;
+    box-sizing: border-box;
   }
+  #indexcontainer li a,
+  .accordion li a {
+    display: flex;
+  }
+  #indexcontainer .recordingpic,
+  .accordion .recordingpic {
+    float: none;
+    margin: 0;
+    flex: 1;
+    padding-right: 5%;
+  }
+  #indexcontainer .recordingpic .length,
+  .accordion .recordingpic .length {
+    right: 20%;
+  }
+  #indexcontainer .recordingcontent,
+  .accordion .recordingcontent {
+    flex: 2;
+  }
+  #indexcontainer img,
+  #indexcontainer li.first img,
   .accordion .recordingpic img {
-    width: 33%;
+    width: 100%;
     height: auto;
   }
 
