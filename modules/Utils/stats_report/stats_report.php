@@ -76,7 +76,6 @@ while ( $year <= date("Y") ) {
         $start_date = $year . "-" . sprintf("%02d", $i) . "-01 00:00:00";
         $end_date = $year . "-" . sprintf("%02d", $i) . "-" . sprintf("%02d", $month_days) . " 23:59:59";
         $recs_view_by_date = getRecordingsAllPlaybacksByDate($start_date, $end_date);
-        //var_dump($recs_view_by_date);
         $csv_line = array(
             'date'              => date("Y. M.", strtotime($start_date)),
             'numviewsessions'   => $recs_view_by_date['numviewsessions'],
@@ -104,7 +103,6 @@ while ( $year <= date("Y") ) {
         $start_date = $year . "-" . sprintf("%02d", $i) . "-01 00:00:00";
         $end_date = $year . "-" . sprintf("%02d", $i) . "-" . sprintf("%02d", $month_days) . " 23:59:59";
         $live_view_by_date = getLiveAllPlaybacksByDate($start_date, $end_date);
-        //var_dump($recs_view_by_date);
         $csv_line = array(
             'date'              => date("Y. M.", strtotime($start_date)),
             'numviewsessions'   => $live_view_by_date['numviewsessions'],
@@ -121,7 +119,7 @@ fclose($fp);
 
 // Livefeed concurrent users
 $fp = fopen('livefeed_views.csv', 'w');
-fputcsv($fp, array('Channel title', 'Channel ID', 'Date', 'Livefeed' , 'Livefeed ID', 'Number of views', 'Number of all views', 'All playback duration', 'Max. concurrent viewers'));
+fputcsv($fp, array('Channel title', 'Channel ID', 'Date', 'Livefeed' , 'Livefeed ID', 'Number of views', 'Number of all views', 'All playback duration [sec]', 'All playback duration', 'Max. concurrent viewers'));
 
 $livefeeds = getLiveFeeds($organizationid);
 if ( $livefeeds !== false ) {
@@ -138,27 +136,26 @@ if ( $livefeeds !== false ) {
             4 => $livefeed['id'],
             5 => $livefeed['numberofviews']
         );
-    
-    //var_dump($livefeed);
+
         $viewers = getLiveFeedPlaybacksByID($livefeed['id']);
         if ( $viewers !== false ) {
             $csv_line[6] = $viewers['numberofallviewers'];
             $csv_line[7] = $viewers['allviewsduration'];
+            $csv_line[8] = secs2hms($viewers['allviewsduration']);
         } else {
             $csv_line[6] = 0;
             $csv_line[7] = 0;
+            $csv_line[8] = 0;
         }
 
         $viewers = getLiveFeedMaxConcurrentViewers($livefeed['id']);
         
         if ( $viewers !== false ) {
-            $csv_line[8] = $viewers['numberofconcurrentviewers'];
+            $csv_line[9] = $viewers['numberofconcurrentviewers'];
         } else {
-            $csv_line[8] = 0;
+            $csv_line[9] = 0;
         }
-        
-        var_dump($csv_line);  
-     
+             
         fputcsv($fp, $csv_line);
         
         $livefeeds->MoveNext();
@@ -357,15 +354,18 @@ global $db, $jobid, $debug, $jconf;
 
 	$query = "
         SELECT
-            s5.timestamp AS concurrentviewerstimestamp,
-            ( s5.numberofflashwin + s5.numberofflashmac + s5.numberofflashlinux + s5.numberofandroid + s5.numberofiphone + s5.numberofipad + s5.numberofunknown ) AS numberofconcurrentviewers
+            s5.timestamp,
+            SUM( s5.numberofflashwin + s5.numberofflashmac + s5.numberofflashlinux + s5.numberofandroid + s5.numberofiphone + s5.numberofipad + s5.numberofunknown ) AS numberofconcurrentviewers
         FROM
             statistics_live_5min AS s5
         WHERE
             s5.livefeedid = " . $livefeedid . "
+        GROUP BY
+            s5.timestamp
         ORDER BY
             numberofconcurrentviewers DESC
-        LIMIT 1";
+        LIMIT 1 
+        ";
 
 	try {
 		$rs = $db->getArray($query);
