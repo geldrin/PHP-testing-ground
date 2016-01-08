@@ -12,6 +12,10 @@
   #headerbg, #footerbg {
     min-width: 0px;
   }
+  #headersearchlink a,
+  #headersearchlink a span {
+    height: 66px;
+  }
   #headersearchlink {
     display: inline-block;
     text-align: right;
@@ -308,8 +312,8 @@
   }
 }
 
+/*
 @media all and (max-width: 944px) {
-  
   #headermenu .first {
     display: none;
   }
@@ -350,13 +354,13 @@
     margin-right: 2px;
     padding: 6px 2px 0px 2px;
   }
-  
+
   .categorylist .categoryname .categorypic img {
     width: auto;
     height: 70px;
     padding-left: 10px;
   }
-  
+
   .widepager, .recordview .widepager {
     text-align: left;
   }
@@ -407,6 +411,7 @@
     display: none;
   }
 }
+*/
 @media all and (max-width: 660px) {
   .sort {
     height: auto;

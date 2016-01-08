@@ -34,8 +34,8 @@
 </div>
 <div class="footersocialwrap">
   <ul class="footersocial">
-    <li><a href="#"><span></span>twitter</a></li>
-    <li><a href="#"><span></span>facebook</a></li>
-    <li><a href="#"><span></span>google+</a></li>
+    <li><a href="#TODO" class="twitter" title="{#footer_twitter#}"><span></span>{#footer_twitter#}</a></li>
+    <li><a href="#TODO" class="facebook" title="{#footer_facebook#}"><span></span>{#footer_facebook#}</a></li>
+    <li><a href="#TODO" class="gplus" title="{#footer_gplus#}"><span></span>{#footer_gplus#}</a></li>
   </ul>
 </div>
