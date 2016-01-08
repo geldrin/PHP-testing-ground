@@ -343,9 +343,8 @@ global $db, $myjobid, $debug, $jconf;
         UPDATE
             groups_members AS gm,
             users AS u
-        FROM
-            groups_members AS gm,
-            users AS u
+        SET
+            gm.userid = u.id
         WHERE
             gm.userid IS NULL AND
             gm.userexternalid IS NOT NULL AND
