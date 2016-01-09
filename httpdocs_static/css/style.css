@@ -1854,6 +1854,7 @@ li#languageselectorlink {
 
 /* indexcontainer */
 #indexcontainer {
+  margin: 25px 0 0 0;
   float: left;
   width: 980px;
 }
