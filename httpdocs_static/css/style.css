@@ -80,7 +80,7 @@ a span {
   cursor: pointer;
 }
 a {
-  color: #4385e5;
+  color: #43b5e5;
   text-decoration: none;
 }
 a:hover, a:focus {
@@ -606,7 +606,6 @@ a.submitbutton:hover, .form a.submitbutton:hover {
 }
 #header {
   clear: both;
-  margin-bottom: 20px;
   width: 100%;
 }
 #headertop {
@@ -1326,7 +1325,6 @@ li#languageselectorlink {
   width: 980px;
   text-align: center;
   position: relative;
-  border-bottom: 1px solid #a5a5a5;
   padding: 6px 0px 8px 0px;
   clear: both;
   z-index: 100;
@@ -1347,17 +1345,19 @@ li#languageselectorlink {
   float: none;
   display: inline-block;
 }
+.widepager li a {
+}
 .widepager li a, .widepager .currentpage {
   display: inline-block;
   padding: 3px 14px 3px 14px;
   font-weight: bold;
 }
 .widepager li a:hover {
-  color: #585858;
+  color: #000;
   text-decoration: none;
 }
 .currentpage {
-  color: #585858;
+  color: #000;
 }
 .widepager .previous {
   position: absolute;
@@ -1365,13 +1365,9 @@ li#languageselectorlink {
   top: 6px;
   padding-left: 20px;
   margin-right: 30px;
-  background-image: url(images/arrow_left.png);
+  background-image: url(images/pagerarrow_left.png);
   background-repeat: no-repeat;
   background-position: left 50%;
-}
-.widepager .previous:hover, .widepager .next:hover {
-  text-decoration: underline;
-  color: #1e97d4;
 }
 .widepager .next {
   position: absolute;
@@ -1379,7 +1375,7 @@ li#languageselectorlink {
   top: 6px;
   padding-right: 20px;
   margin-left: 30px;
-  background-image: url(images/arrow_right.png);
+  background-image: url(images/pagerarrow_right.png);
   background-repeat: no-repeat;
   background-position: right 50%;
 }
@@ -1496,9 +1492,9 @@ li#languageselectorlink {
   display: inline-block;
   vertical-align: top;
   border: 1px solid #fff;
-  border: 1px solid rgba(255, 255, 255, 0.);
-  line-height: 15px;
-  height: 28px;
+  border: 1px solid rgba(255, 255, 255, 0);
+  line-height: 30px;
+  height: 30px;
   overflow: hidden;
   -moz-border-radius: 5px;
   -webkit-border-radius: 5px;
@@ -1508,7 +1504,8 @@ li#languageselectorlink {
   display: block;
   color: #7f7f7f;
   text-decoration: none;
-  padding: 6px 10px 7px 10px;
+  padding: 0 10px;
+  line-height: 30px;
 }
 .sort .item a img {
   margin-left: 5px;
@@ -1531,11 +1528,11 @@ li#languageselectorlink {
 }
 .sort .item .title {
   border-bottom: 1px solid transparent;
-  padding-bottom: 6px;
 }
 .sort .item:hover .title,
 .sort .item.hover .title {
   border-bottom: 1px solid #1c79a0;
+  background-color: #2499ca;
 }
 .sort .item:hover ul,
 .sort .item.hover ul {
@@ -1546,7 +1543,7 @@ li#languageselectorlink {
   border-bottom: 1px solid #1f7194;
 }
 .sort .item li:last-child {
-  border-bottom: 1px solid rgba(0, 0, 0, 0);
+  border-bottom: 1px solid transparent;
 }
 .sort .item li:hover {
   background-color: #2499ca;
@@ -1588,12 +1585,8 @@ li#languageselectorlink {
 .recordinglist .listitem {
   width: 980px;
   display: inline-block;
-  border-bottom: 1px solid #a5a5a5;
-  -moz-box-shadow: 0 1px 0 #f5f5f5;
-  -webkit-box-shadow: 0 1px 0 #f5f5f5;
-  box-shadow: 0 1px 0 #f5f5f5;
   margin: 10px 0px 10px 0px;
-  padding: 0px 0px 20px 0px;
+  padding: 0;
 }
 .recordinglist {
   text-shadow: 0px 1px 0px #fff;
@@ -1601,6 +1594,9 @@ li#languageselectorlink {
 #body .recordinglist .title {
   border: 0;
   padding-top: 0px;
+}
+#body .recordinglist .listitem.channel .title {
+  margin-top: 10px;
 }
 .recordinglist .title h3 {
   font-size: 16px;
@@ -1627,24 +1623,18 @@ li#languageselectorlink {
 .recordinglist .recordingpic {
   float: left;
   height: 100%;
+  position: relative;
 }
 .recordinglist .recordingpic img {
-  border-radius: 5px;
-  -moz-border-radius: 5px;
   width: 192px;
 }
-.recordinglist .recordingpic .playpic, #relatedvideos a .playpic {
-  float: left;
-  width: 85px;
-  height: 44px;
-  margin-bottom: -44px;
-  margin-right: -85px;
-  position: relative;
-  top: 60px;
-  left: 100px;
-  background-image: url(images/playbutton.png);
-  display: inline;
-  background-repeat: no-repeat;
+.recordinglist .recordingpic .length, #relatedvideos a .length {
+  color: #fff;
+  line-height: 13px;
+  text-shadow: 0px 1px 3px rgba(0, 0, 0, 0.75);
+  position: absolute;
+  bottom: 12px;
+  right: 15px;
 }
 .recordinglist .listitem.channel .recordingpic {
   background-image: url(images/channel_bg.png);
@@ -1656,8 +1646,6 @@ li#languageselectorlink {
   position: relative;
   left: 9px;
   top: 7px;
-  border-radius: 0px;
-  -moz-border-radius: 5px;
   width: 172px;
   height: auto;
 }
@@ -1675,10 +1663,6 @@ li#languageselectorlink {
   text-shadow: none;
   padding: 0 2px;
 }
-#relatedvideos a .playpic {
-  top: 93px;
-  left: 211px;
-}
 .recordinglist .recordingcontent {
   float: left;
   margin-left: 20px;
@@ -1690,37 +1674,29 @@ li#languageselectorlink {
   font-weight: bold;
 }
 .recordinglist .recordinginfo {
-  margin-top: 5px;
+  display: flex;
+  align-items: center;
 }
-.recordinglist .recordinginfo ul {
-  margin: 0;
-  padding: 0;
-  list-style-type: none;
+.recordinglist .recordinginfo .timestamp,
+.recordinglist .recordinginfo .views {
+  float: left;
+  color: #7a7a7a;
+  white-space: nowrap;
+  text-overflow: clip;
 }
-.recordinglist .recordinginfo li {
-  display: inline-block;
-  vertical-align: top;
-  color: #666;
-  padding: 0px 8px 0px 2px;
-  font-size: 12px;
-  background-image: url(images/recordinginfo_border.png);
-  background-repeat: no-repeat;
-  background-position: right 3px;
+.recordinglist .recordinginfo .timestamp {
+}
+.recordinglist .recordinginfo .views {
+  flex: 1;
+  text-align: center;
+  color: #000;
+}
+.recordinglist .recordinginfo .rating {
+  float: right;
+  min-width: 85px;
 }
 .recordinglist .recordinginfo li.progress {
   padding-left: 0;
-}
-.recordinglist .recordinginfo li.timestamp span {
-  background-image: url(images/recordinginfo_timestamp.png);
-  display: inline-block;
-  width: 10px;
-  height: 10px;
-  margin: 0px 3px 0px 0px;
-  position: relative;
-  top: 1px;
-}
-.recordinglist .recordinginfo li.last {
-  background-image: none;
 }
 .recordinglist .recordingactions {
   clear: both;
@@ -1739,7 +1715,7 @@ li#languageselectorlink {
 }
 .recordinglist .recordingactions ul {
   width: 100%;
-  padding: 10px 0px 10px 0px;
+  padding: 0 0 10px 0;
 }
 .recordinglist .recordingactions li {
   width: auto !important;
@@ -1995,7 +1971,7 @@ li#languageselectorlink {
 /* accordion */
 .accordion {
   background-repeat: no-repeat;
-  background-position: right 15px top 15px;
+  background-position: right 15px center;
   background-image: url(images/arrow_right_hover.png);
 }
 .accordion.active {
@@ -2520,17 +2496,32 @@ li#languageselectorlink {
   margin-left: 5px;
   list-style-type: none;
 }
-.ratewidget a, .ratewidget a span, .recordinglist .recordinginfo .rating div, .recordinglist .recordinginfo .rating span {
+.ratewidget a, .ratewidget a span {
   display: inline-block;
   width: 21px;
   height: 20px;
   overflow: hidden;
 }
-.ratewidget a span, .recordinglist .recordinginfo .rating span {
+.ratewidget a span {
   background-image: url(images/star_empty.png);
 }
-.ratewidget li.full span, .recordinglist .recordinginfo .rating .full span {
+.ratewidget li.full span {
   background-image: url(images/star_full.png);
+}
+.recordinglist .recordinginfo .rating div,
+.recordinglist .recordinginfo .rating span {
+  float: left;
+  width: 16px;
+  height: 20px;
+  overflow: hidden;
+  background-repeat: no-repeat;
+  background-position: center center;
+}
+.recordinglist .recordinginfo .rating span {
+  background-image: url(images/star_small_empty.png);
+}
+.recordinglist .recordinginfo .rating .full span {
+  background-image: url(images/star_small_full.png);
 }
 .ratewidget .spinner {
   display: inline-block;
@@ -2543,7 +2534,55 @@ li#languageselectorlink {
   display: none;
 }
 
-/* temp live channellist */
+#channelheader {
+  min-height: 180px;
+  position: relative;
+}
+#channelheader img {
+  width: 980px;
+  height: auto;
+}
+#channelheader .channelinfowrap {
+  position: absolute;
+  bottom: 0px;
+  width: 100%;
+  text-align: center;
+  padding-bottom: 40px;
+}
+#channelheader h1,
+#channelheader h2 {
+  margin: 0;
+}
+#channelheader h2 {
+  margin-bottom: 10px;
+}
+#channelheader h1,
+#channelheader h2,
+#channelheader .channeltype {
+  color: #fff;
+  text-shadow: 0px 1px 3px rgba(0, 0, 0, 0.75);
+}
+#channelheader .channeltype {
+  margin-bottom: 10px;
+}
+#channelheader .channelinfo {
+  color: #888;
+  text-shadow: 0px 1px 3px rgba(0, 0, 0, 0.75);
+}
+#body .heading.categories.title {
+  border-bottom: 1px solid #d7d7d7;
+  margin-bottom: 0;
+}
+.channelgradient {
+  width: 980px;
+  height: 20px;
+  margin-bottom: -20px;
+  background: #f1f1f1;
+  background: -webkit-linear-gradient(top, #f1f1f1 0%,#ffffff 100%);
+  background: -moz-linear-gradient(top, #f1f1f1 0%, #ffffff 100%);
+  background: linear-gradient(to bottom, #f1f1f1 0%,#ffffff 100%);
+  filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#f1f1f1', endColorstr='#ffffff',GradientType=0 );
+}
 .channellist {
   list-style-type: none;
   margin: 10px 0 0 0;
@@ -3016,7 +3055,6 @@ li#languageselectorlink {
   display: inline-block;
 }
 #player {
-  margin-top: -20px;
 }
 #player .warning {
   color: red;
