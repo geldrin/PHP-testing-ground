@@ -13,7 +13,7 @@ class Advanced extends \Visitor\Paging {
   );
 
   protected $insertbeforepager = Array( 'Visitor/Search/Paging/AdvancedBeforepager.tpl' );
-  protected $template = 'Visitor/Search/Paging/Advanced.tpl';
+  protected $template = 'Visitor/recordinglistitem.tpl';
   protected $recordingsModel;
   protected $user;
   

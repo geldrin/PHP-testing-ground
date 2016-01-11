@@ -1484,7 +1484,7 @@ li#languageselectorlink {
   position: relative;
   height: 35px;
   z-index: 200;
-  text-align: right;
+  text-align: left;
   clear: both;
 }
 .sort .item {

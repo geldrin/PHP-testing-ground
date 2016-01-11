@@ -41,10 +41,30 @@ class Featured extends \Visitor\Paging {
       
       case 'highestrated':
         $this->orderkey = 'rating';
+        $this->ignoreSortKeys = array(
+          'timestamp_desc'       => true,
+          'timestamp'            => true,
+          'rating_desc'          => true,
+          'rating'               => true,
+          'ratingthisweek_desc'  => true,
+          'ratingthisweek'       => true,
+          'ratingthismonth_desc' => true,
+          'ratingthismonth'      => true,
+        );
       break;
       
       case 'mostviewed':
         $this->orderkey = 'views_desc';
+        $this->ignoreSortKeys = array(
+          'timestamp_desc'      => true,
+          'timestamp'           => true,
+          'views_desc'          => true,
+          'views'               => true,
+          'viewsthisweek_desc'  => true,
+          'viewsthisweek'       => true,
+          'viewsthismonth_desc' => true,
+          'viewsthismonth'      => true,
+        );
       break;
       
       case 'featured':

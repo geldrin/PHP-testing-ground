@@ -3117,7 +3117,9 @@ class Recordings extends \Springboard\Model {
       r.rating,
       '0' AS numberofrecordings,
       r.status,
-      r.approvalstatus
+      r.approvalstatus,
+      r.masterlength,
+      r.contentmasterlength
     ";
     $where  = "
       (
@@ -3152,7 +3154,9 @@ class Recordings extends \Springboard\Model {
           '0' AS rating,
           numberofrecordings,
           '' AS status,
-          'approved' AS approvalstatus
+          'approved' AS approvalstatus,
+          '0' AS masterlength,
+          '0' AS contentmasterlength
         FROM channels
         WHERE
           " . \Model\Channels::getWhere( $user ) . " AND
@@ -3437,6 +3441,8 @@ class Recordings extends \Springboard\Model {
       r.metadataupdatedtimestamp,
       r.numberofviews,
       r.rating,
+      r.masterlength,
+      r.contentmasterlength,
       '0' AS numberofrecordings
     ";
 
