@@ -55,7 +55,7 @@ class Categories extends \Springboard\Model\Multilingual {
 
   public function getCategoryTree( $organizationid, $parentid = 0, $maxlevel = 2, $currentlevel = 0 ) {
     
-    if ( $currentlevel >= $maxlevel )
+    if ( $currentlevel >= $maxlevel and $maxlevel > 0 )
       return array();
     
     $currentlevel++;
@@ -125,7 +125,7 @@ class Categories extends \Springboard\Model\Multilingual {
     $category = $this->getCategoryTree(
       $organizationid,
       0,
-      PHP_INT_MAX // no maxlevel
+      0 // no maxlevel
     );
 
     $cache->put( $category );
@@ -157,6 +157,33 @@ class Categories extends \Springboard\Model\Multilingual {
     }
 
     return $categories;
+  }
+
+  public function getCategoryTreeBreadcrumb( $organizationid, $categoryid ) {
+    $categories = $this->cachedGetCategoryTree( $organizationid );
+    $ret = array();
+    // a faban egy elt keresunk, az elen vegigjarva belerakjuk a tombbe
+    // forditott sorrendben a node-okat
+    $this->assembleCategoryTreeBreadcrumb( $categories, $ret, $categoryid );
+
+    return array_reverse( $ret );
+  }
+
+  private function assembleCategoryTreeBreadcrumb( &$categories, &$edge, $categoryid ) {
+    foreach( $categories as $category ) {
+      if (
+           $category['id'] == $categoryid or
+           $this->assembleCategoryTreeBreadcrumb(
+            $category['children'], $edge, $categoryid
+           )
+         ) {
+        unset( $category['children'] );
+        $edge[] = $category;
+        return true;
+      }
+    }
+
+    return false;
   }
 
 }
