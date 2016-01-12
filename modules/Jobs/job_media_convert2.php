@@ -328,7 +328,7 @@ global $app, $jconf, $debug;
 	} elseif ( $recording[$idx . 'masterstatus'] == $jconf['dbstatus_copystorage_ok'] ) {
 		$uploadpath = $app->config['recordingpath'] . ( $recording['id'] % 1000 ) . "/" . $recording['id'] . "/master/";
 	} else {
-		$debug->log($jconf['log_dir'], $jconf['jobid_media_convert'] . ".log", "Cannot locate master file:\n\nrecID = " . $recording['id'] . " | status = " . $recording[$idx . 'masterstatus'] . " | type = " . ($idx?"recording":$idx), $sendmail = true);
+		$debug->log($jconf['log_dir'], $jconf['jobid_media_convert'] . ".log", "Cannot locate master file. Failed status for master. Info: recID = " . $recording['id'] . " | status = " . $recording[$idx . 'masterstatus'] . " | type = " . ($idx?"recording":$idx), $sendmail = true);
 		return false;
 	}
 
