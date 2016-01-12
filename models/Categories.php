@@ -4,9 +4,11 @@ namespace Model;
 class Categories extends \Springboard\Model\Multilingual {
   public $multistringfields = array( 'name', 'namehyphenated' );
   
-  public function updateVideoCounters() {
+  public function updateVideoCounters( $clearCache = true ) {
 
     $this->ensureObjectLoaded();
+    if ( $clearCache )
+      $this->expireCategoryTreeCache( $this->row['organizationid'] );
 
     $childrenids   = $this->cachedFindChildrenIDs( $this->id );
     $childrenids[] = $this->id;
@@ -43,7 +45,7 @@ class Categories extends \Springboard\Model\Multilingual {
       $parent = $this->bootstrap->getModel('categories');
       while ( $row['parentid'] ) {
         $parent->select( $row['parentid'] );
-        $parent->updateVideoCounters();
+        $parent->updateVideoCounters( false );
         $row = $parent->row;
       }
 
@@ -108,6 +110,53 @@ class Categories extends \Springboard\Model\Multilingual {
 
     return parent::delete( $id, $magic_quotes_gpc );
 
+  }
+
+  public function cachedGetCategoryTree( $organizationid ) {
+    // 1 week expiration, org specific, language specific
+    $cache = $this->bootstrap->getCache(
+      'categorytree-orgid' . $organizationid,
+      7* 24 * 60 * 60
+    );
+
+    if ( !$cache->expired() )
+      return $cache->get();
+
+    $category = $this->getCategoryTree(
+      $organizationid,
+      0,
+      PHP_INT_MAX // no maxlevel
+    );
+
+    $cache->put( $category );
+    return $category;
+  }
+
+  public function expireCategoryTreeCache( $organizationid ) {
+    foreach( $this->bootstrap->config['languages'] as $lang ) {
+      $cache = $this->bootstrap->getCache(
+        $lang . '-categorytree-orgid' . $organizationid,
+        7* 24 * 60 * 60,
+        true
+      );
+      $cache->expire();
+    }
+  }
+
+  public function markCategoryTreeActive( $organizationid, $categoryid, &$categories = null ) {
+    if ( $categories === null )
+      $categories = $this->cachedGetCategoryTree( $organizationid );
+
+    foreach( $categories as $key => $value ) {
+      $categories[ $key ]['isactive'] = ( $value['id'] == $categoryid );
+      $categories[ $key ]['children'] = $this->markCategoryTreeActive(
+        $organizationid,
+        $categoryid,
+        $categories[ $key ]['children']
+      );
+    }
+
+    return $categories;
   }
 
 }
