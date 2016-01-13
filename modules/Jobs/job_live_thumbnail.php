@@ -106,6 +106,7 @@ function Main() {
 		try {
 			$cmd = $code = null;
 			$fatal = false;
+      $wrkr = new runExt();
 
 			// Prepare working directories
 			$directories = array($temp_dir, $path_wide, $path_43, $path_highres);
@@ -120,41 +121,39 @@ function Main() {
 			}
 
 			// Chmod local directory
-			$errChmod = runExt4("chmod -f -R ". $jconf['directory_access'] ." ". $temp_dir);
-			$cmd  = $errChmod['cmd'];
-			$code = $errChmod['code'];
-
-			if ( $errChmod['code'] != 0 ) throw new Exception("Chmod failed. (". $errChmod['cmd_output'] .")");
+			$cmd = "chmod -f -R ". $jconf['directory_access'] ." ". $temp_dir;
+			if (!$wrkr->run($cmd)) throw new Exception("Chmod failed. (". $wrkr->getOutput() .")");
 
 			// Run ffmpeg
-			$err  = runExt4($ffmpeg_command);
-			$cmd  = $err['cmd'];
-			$code = $err['code'];
-
-			if ($err['code'] != 0) {
-				if (strpos($err['cmd_output'], 'StreamNotFound') !== false) {
+			if (!$wrkr->run($ffmpeg_command)) {
+				if (strpos($wrkr->getOutput(), 'StreamNotFound') !== false) {
 					// there's no live stream available, don't complain about it
 					continue;
 				} else {
 					// ffmpeg error
-					throw new Exception("FFmpeg cannot get live thumbnail. (". $err['cmd_output'] .")");
+					throw new Exception("FFmpeg cannot get live thumbnail. (". $wrkr->getOutput() .")");
 				}
-			} else {
-				if (!is_readable($path_43 . $filename) || !(filesize($path_43 . $filename) > 0))
-					throw new Exception("File is not readable.");
+			} elseif (!is_readable($path_43 . $filename) || !(filesize($path_43 . $filename) > 0)) {
+        throw new Exception("File is not readable.");
 			}
-			unset($err);
 
 			if ($debug_mode) {
 				$msg  = "[INFO] FFmpeg live thumbnail attempt for feed#". $channels[$i]['locationid'];
-				$msg .= " / stream#". $channels[$i]['livefeedstreamid'] ." - OK.\nCommand: '$cmd' / return code: $code\n";
+				$msg .= " / stream#". $channels[$i]['livefeedstreamid'] ." - OK.\nCommand: '". $wrkr->command ."' / return code: ". $wrkr->getCode() ."\n";
 				$debug->log($logdir, $logfile, $msg, false);
 			}
-		} catch (Exception $e) {
+			unset($cmd, $code, $err, $msg, $wrkr);
+		
+    } catch (Exception $e) {
+      if ($wrkr->getCode() !== 0) {
+        $cmd  = $wrkr->command;
+        $code = $wrkr->getCode();
+      }
 			$msg  = "[ERROR] FFmpeg live thumbnail attempt for feed#". $channels[$i]['locationid'];
-			$msg .= " / stream#". $channels[$i]['livefeedstreamid'] ." - Failed!\n". $e->getMessage() ."\nCommand: '$cmd' / return code: $code\n";
+			$msg .= " / stream#". $channels[$i]['livefeedstreamid'] ." - Failed!\n". $e->getMessage();
+      $msg .= "\nCommand: '". $cmd ."' / return code: ". $code ."\n";
 			$debug->log($logdir, $logfile, $msg, false);
-			unset($cmd, $msg);
+			unset($cmd, $err, $msg, $wrkr);
 
 			if ($fatal)	return $code; // which errors should be considered fatal?
 			
