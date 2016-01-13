@@ -1,6 +1,222 @@
 <?php
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
+class runExt {
+///////////////////////////////////////////////////////////////////////////////////////////////////
+//
+// RunExternal v5 ( runExtV ):
+// Ugly, mutated version of the previous runExt4() function.
+//
+// Additions:
+//   - configurable timeout with a default value of 10s
+//   - callbacks can be defined
+//   - support for retrieving regular bash command's return values
+//
+///////////////////////////////////////////////////////////////////////////////////////////////////
+	var $command     = null;
+	var $envvars     = null; // not implemented yet!!
+	var $timeoutsec  = null;
+	var $close_stdin = false;
+	
+	private $start        = 0;
+	private $duration     = 0;
+	private $code         = -1;
+	private $output       = array();
+	private $pid          = null;
+	private $masterpid    = null;
+	private $msg          = null;
+	private $callback     = null;
+	private $polling_usec = 50000;
+	
+///////////////////////////////////////////////////////////////////////////////////////////////////
+	function __construct($command = null, $timeoutsec = null, $callback = null, $envvar = null) {
+///////////////////////////////////////////////////////////////////////////////////////////////////
+		$this->masterpid  = intval(posix_getpid());
+		$this->command    = $command;
+		$this->timeoutsec = 10.0;
+		
+		if ($timeoutsec !== null && is_numeric($timeoutsec)) $this->timeoutsec = floatval($timeoutsec);
+		if ($callback !== null && is_callable($callback)) $this->callback = $callback;
+		if (is_array($envvar)) $this->env = $envvar;
+	}
+	
+///////////////////////////////////////////////////////////////////////////////////////////////////
+	function run($command = null, $timeoutsec = null, $callback = null) {
+///////////////////////////////////////////////////////////////////////////////////////////////////
+		$pipes   = array();
+		$process = null;
+		$write   = null;
+		$excl    = null;
+		$ready   = null;
+		$EOF     = false;
+		$timeout = false;
+		$lastactive = 0;
+		
+		$this->clearVariables();
+		
+		if ($command !== null) $this->command = $command;
+		if ($timeoutsec !== null && is_numeric($timeoutsec)) $this->timeoutsec = floatval($timeoutsec);
+		if ($callback !== null && is_callable($callback)) $this->callback = $callback;
+		
+		if (empty($this->command)) {
+			$this->msg = "[ERROR] no command to be executed!";
+			return false;
+		}
+		
+		$desc = array(
+			0 => array('pipe', 'r'),
+			1 => array('pipe', 'w'),
+			2 => array('pipe', 'w'),
+		);
+		
+		$this->start = microtime(true);
+		$process = proc_open($this->command, $desc, $pipes);
+		
+		if ($process === false || !is_resource($process)) {
+			$this->msg = "[ERROR] Failed to open process!";
+			return false;
+		}
+		
+		if ($this->close_stdin) {
+			fclose($pipes[0]);
+			unset($pipes[0]);
+		}
+
+		$proc_status = proc_get_status($process);
+		$this->pid = $proc_status['pid'];
+		
+		foreach($pipes as $p) { stream_set_blocking($p, 0); }
+		
+		$lastactive = microtime(true);
+		
+		do {
+			$read = $pipes;
+			$tmp  = null;
+			
+			$ready = stream_select($read, $write, $excl, 0, $this->polling_usec);
+			$proc_status = proc_get_status($process);
+
+			if ($ready === false ) { // error
+				$err = error_get_last();
+				$this->msg = $err['message'];
+				restore_error_handler();
+				break;
+			} elseif ($ready > 0) {
+				foreach($read as $r) {
+					$tmp .= stream_get_contents($r);
+					if (feof($r)) $EOF = true;
+				}
+				
+				if (!empty($tmp)) {
+					$lastactive = microtime(true);
+					$this->output[] = $tmp;
+					if ($this->callback) call_user_func($this->callback, $tmp);
+					continue;
+				}
+			} else {
+				$timeout = ((microtime(true) - $lastactive) > $this->timeoutsec);
+				usleep($this->polling_usec);
+			}
+		} while($proc_status['running'] && !$timeout && !$EOF);
+		
+		if ($timeout) {
+			$this->msg = "[WARN] Timeout Exceeded, sending SIGKILL to process (pid=". $this->pid .")";
+			$this->duration = (microtime(true) - $this->start);
+			
+			if (posix_kill($this->pid, SIGKILL) === false && $proc_status['running']) {
+				throw new Exception("[ERROR] Failed to shut down process!");
+			}
+			
+			return false;
+			
+		} else {
+			
+			if ($proc_status['running']) $proc_status = proc_get_status($process);
+			$this->code = $proc_status['exitcode'];
+			posix_kill($this->pid, SIGKILL);
+			foreach ($pipes as $p) { fclose($p); }
+			proc_close($process);
+			
+			if (gettype($process) == "resource") { /*ERROR - process wasn't closed properly*/ }
+			$this->duration = (microtime(true) - $this->start);
+			
+			if ($proc_status['signaled']) {
+				$this->msg = "[WARN] Process has been terminated by an uncaught signal(". $proc_status['termsig'] .").";
+				return false;
+			} elseif ($proc_status['stopped']) {
+				$this->msg = "[WARN] Process stopped after recieving signal(". $proc_status['stopsig'] .").";
+			} else {
+				if ($this->code === 0) {
+					$this->msg = "[OK]";
+				} else {
+					$this->msg = "[WARN] Process failed (exitcode = ". $this->code .").";
+					return false;
+				}
+			}
+		}
+		return true;
+	}
+	
+///////////////////////////////////////////////////////////////////////////////////////////////////
+	private function clearVariables() {
+///////////////////////////////////////////////////////////////////////////////////////////////////
+		$this->start        = 0;
+		$this->duration     = 0;
+		$this->code         = -1;
+		$this->output       = array();
+		$this->pid          = null;
+		$this->msg          = null;
+		$this->callback     = null;
+		$this->polling_usec = 50000;
+	}
+	
+///////////////////////////////////////////////////////////////////////////////////////////////////
+
+	function getCode()      { return (int) $this->code; }
+
+	function getDuration()  { return (double) $this->duration; }
+
+	function getMessage()   { return $this->msg; }
+
+	function getOutput()    { return implode(PHP_EOL, $this->output); }
+
+	function getOutputArr() { return $this->output; }
+
+	function getPid()       { return $this->pid; }
+
+} // end of RunExtV class
+
+function runExt4($cmd) {
+///////////////////////////////////////////////////////////////////////////////////////////////////
+//
+// RunExt v4
+//
+// Favago modszer exec() + echo $? paranccsal.
+// Az echo kiirja az elozoleg futtatott parancs exitcode-jat az utolso sorba, amit az exec()
+// fuggveny ouput valtozo utolso eleme tartalmaz.
+//
+///////////////////////////////////////////////////////////////////////////////////////////////////
+	$return_array = array(
+		'code'       => -1,
+		'cmd'        => null,
+		'cmd_output' => null,
+	);
+	
+	$cmd .= " 2>&1; echo $?";
+	$return_array['cmd'] = $cmd;
+	
+	$output = array();
+	$code = -1;
+	
+	exec($cmd, $output, $code);
+	
+	$return_array['code'] = intval(array_pop($output));
+	$return_array['cmd_output'] = implode(PHP_EOL, $output);
+	
+	return $return_array;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
 function ffmpegPrep($rec, $profile) {
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 // Description
@@ -438,29 +654,29 @@ global $app, $debug, $jconf;
 			$msg = "[ERROR] Multipass encoding failed! ". $msg ." (". $ffmpeg_passlogfile .")";
 			$debug->log($jconf['log_dir'], $jconf['jobid_media_convert'] . ".log", $msg, $sendmail = false);
 
-			$err['message'] = $msg;	
+			$err['message'] = $msg;
 			return $err;
 		}
 		
 		// EXECUTE FFMPEG COMMAND
-		$start 	= time();
-		$output = runExt4($c);
+		$conv = new runExt($c, 14400);
+		$conv->run();
 		
-		$err['duration'      ]  = time() - $start;
+		$err['duration'      ]  = $conv->getDuration();
 		$err['command'       ]  = $c;
-		$err['result'        ]  = $output['code'];
-		$err['command_output'] .= $output['cmd_output'];
+		$err['result'        ]  = $conv->getCode();
+		$err['command_output'] .= $conv->getOutput();
 		if ($app->config['ffmpeg_loglevel'] == 0 || $app->config['ffmpeg_loglevel'] == 'quiet')
 			$err['command_output']= "( FFmpeg output was suppressed - loglevel: ". $app->config['ffmpeg_loglevel'] .". )";
 		$mins_taken = round( $err['duration'] / 60, 2);
 		
 		// Check results
-		if ($output['code'] !== 0) {
+		if ($conv->getCode() !== 0) {
 			// FFmpeg returned with a non-zero error code
 			$err['message'] = "[ERROR] FFmpeg conversion FAILED!";
-			$msg = $err['message'] ."\nExit code: ". $output['code'] .".\nConsole output:\n". $err['command_output'];
+			$msg = $err['message'] ."\nExit code: ". $conv->getCode() .".\nConsole output:\n". $conv->getOutput();
 			$debug->log($jconf['log_dir'], $jconf['jobid_media_convert'] .".log", $msg, false);
-			unset($msg);
+			unset($conv, $msg);
 			return $err;
 		}
 		
@@ -475,9 +691,9 @@ global $app, $debug, $jconf;
 			}
 		}	
 		
-		$msg = " [OK] FFmpeg encoding was successful! Exit code: ". $output['code'];
+		$msg = " [OK] FFmpeg encoding was successful! Exit code: ". $conv->getCode();
 		$debug->log($jconf['log_dir'], $jconf['jobid_media_convert'] . ".log", $msg, $sendmail = false);
-		unset($msg);
+		unset($conv, $msg);
 	}
 	////////////////////////////////////////////////////////////////////// END OF ENCODING PROCESS //
 	// METADATA CHECK ///////////////////////////////////////////////////////////////////////////////
@@ -538,116 +754,6 @@ global $app, $debug, $jconf;
 	unset($msg);
 
 	return $err;
-}
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
-function runExt4($cmd) {
-///////////////////////////////////////////////////////////////////////////////////////////////////
-//
-// RunExt v4
-//
-// Favago modszer exec() + echo $? paranccsal.
-// Az echo kiirja az elozoleg futtatott parancs exitcode-jat az utolso sorba, amit az exec()
-// fuggveny ouput valtozo utolso eleme tartalmaz.
-//
-///////////////////////////////////////////////////////////////////////////////////////////////////
-	$return_array = array(
-		'code'       => -1,
-		'cmd'        => null,
-		'cmd_output' => null,
-	);
-	
-	$cmd .= " 2>&1; echo $?";
-	$return_array['cmd'] = $cmd;
-	
-	$output = array();
-	$code = -1;
-	
-	exec($cmd, $output, $code);
-	
-	$return_array['code'] = intval(array_pop($output));
-	$return_array['cmd_output'] = implode(PHP_EOL, $output);
-	
-	return $return_array;
-}
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
-function runExt($cmd) {
-///////////////////////////////////////////////////////////////////////////////////////////////////
-//
-// Description...
-//
-// => A Job_utils_base run_external() fuggvenye ROSSZ, LE KELL CSERELNI ERRE A VERZIORA!!!!
-//  TODO: ELLENORIZNI KELL FMPEG THUMBNAILER-REL!!                                           -> OK!
-///////////////////////////////////////////////////////////////////////////////////////////////////
-	$cmd .= "; echo $? 1>&3";	// Echo previous command's exit code to file descriptor #3.
-
-	$return_array = array();
-	$return_array['pid'] = 1;
-	$return_array['code'] = -1;
-	$return_array['cmd_output'] = "";
-
-	$descriptorspec = array(
-		0 => array("pipe", "r"),  // stdin is a pipe that the child will read from
-		1 => array("pipe", "w"),  // stdout is a pipe that the child will write to
-		2 => array("pipe", "w"),  // stderr is a file to write to
-		3 => array("pipe", "w"),   // pipe for child process (used to capture exit code)
-	);
-
-	$pipes = array();
-	$process = proc_open($cmd, $descriptorspec, $pipes);
-
-	// Terminate if process cannot be initated.
-	if ( !is_resource($process) ) return $return_array;
-
-	// close child's input imidiately
-	fclose($pipes[0]);
-	
-	for ($i = 1; $i < 2; $i++) {
-		stream_set_blocking($pipes[$i], false);
-	}
-	
-	$exitcode = $return_array['code'];
-	$output = "";
-	while( !feof($pipes[1]) || !feof($pipes[2]) || !feof($pipes[3])) {
-		$read = array();
-		if( !feof($pipes[1]) ) $read[1]= $pipes[1];
-		if( !feof($pipes[2]) ) $read[2]= $pipes[2];
-		if (!feof($pipes[3])) {
-			$readcode = rtrim(fgets($pipes[3]), "\n");
-			$read[3] = $pipes[3];
-			if (strlen($readcode)) $exitcode = intval($readcode);
-		}
-		// $exitcode = stream_get_line($pipes[3], 1024, "\n"); // Does not always works :'(
-
-		$write = NULL;
-		$ex = NULL;
-		// Check pipelines in array 'read', and wait until somthing apperars on them, and put them back to 'read'
-		$ready = stream_select($read, $write, $ex, 1);
-		if ( $ready === FALSE ) {
-			break; // should never happen - something died
-		}
-		// Copy data from the previously selected piplines
-		foreach ($read as $k => $r) {
-			$s = fgets($r, 1024);
-			$output .= $s;
-		}
-	}
-	// Close all handle objects
-	fclose($pipes[1]);
-	fclose($pipes[2]);
-	fclose($pipes[3]);
-	
-	// Get process PID
-	$tmp = proc_get_status($process);
-	proc_close($process);
-
-	$return_array = array();
-	$return_array['pid'] = $tmp['pid'];
-	$return_array['code'] = $exitcode;
-	$return_array['cmd_output'] = $output;
-
-	return $return_array;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
