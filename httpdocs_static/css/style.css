@@ -1480,13 +1480,8 @@ li#languageselectorlink {
 }
 
 /* sorter */
-#itemcount, #perpage, .perpagelabel {
-  line-height: 31px;
-}
-.perpagelabel {
-  margin: 0 8px 0 0;
-}
 #itemcount {
+  line-height: 30px;
   float: left;
   color: #000;
   font-weight: bold;
