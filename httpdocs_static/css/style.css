@@ -1480,7 +1480,22 @@ li#languageselectorlink {
 }
 
 /* sorter */
+#itemcount, #perpage, .perpagelabel {
+  line-height: 31px;
+}
+.perpagelabel {
+  margin: 0 8px 0 0;
+}
+#itemcount {
+  float: left;
+  color: #000;
+  font-weight: bold;
+}
+#perpageselector {
+  float: right;
+}
 .sort {
+  float: right;
   position: relative;
   height: 35px;
   z-index: 200;
@@ -1505,6 +1520,7 @@ li#languageselectorlink {
   text-decoration: none;
   padding: 0 10px;
   line-height: 30px;
+  white-space: nowrap;
 }
 .sort .item a img {
   margin-left: 5px;
@@ -1557,6 +1573,25 @@ li#languageselectorlink {
 .sort .item a:hover,
 .sort .item.hover a {
   text-decoration: none;
+}
+.sortarrow {
+  display: inline;
+  background-repeat: no-repeat;
+  background-position: bottom 3px center;
+  padding: 0 13px 0 0;
+  margin: 0 0 0 5px;
+}
+.sortarrow.sortarrow-up {
+  background-image: url(images/arrow_up_small.png);
+}
+.sortarrow.sortarrow-down {
+  background-image: url(images/arrow_down_small.png);
+}
+.sortarrow.sortarrow-up.sortarrow-active {
+  background-image: url(images/arrow_up_small_red.png);
+}
+.sortarrow.sortarrow-down.sortarrow-active {
+  background-image: url(images/arrow_down_small_red.png);
 }
 
 .recordingpic img {

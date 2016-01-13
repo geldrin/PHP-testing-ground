@@ -4,6 +4,7 @@ abstract class Paging extends \Springboard\Controller\Paging {
   protected $pagestoshow = 5;
   protected $ignoreSortKeys = array();
   protected $sortLocaleModule;
+  protected $perpageselector = false;
 
   public function redirectToMainDomain() {}
   

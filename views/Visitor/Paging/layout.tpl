@@ -7,9 +7,21 @@
   {/foreach}
 
 {/if}
-{if $pager}
-  {$pager}
-{/if}
+
+{assign var=itemcount value=$itemcount|numberformat}
+<div id="itemcount">{#paging_itemcount#|sprintf:$itemcount}</div>
+
+<div id="perpageselector">
+  <form id="perpageform" method="GET">
+    {hiddenurlparams}
+    <select id="perpage" name="perpage" onchange="this.form.submit();">
+      {foreach from=$validperpages item=page}
+        <option{if $page == $perpage} selected="selected"{/if} value="{$page}">{$page}</option>
+      {/foreach}
+    </select>
+    <label for="perpage" class="perpagelabel">{#paging_itemsperpage#}</label>
+  </form>
+</div>
 
 {foreach from=$insertbefore item=insertitem}
   {include file=$insertitem}
