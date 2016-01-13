@@ -12,15 +12,20 @@
 <div id="itemcount">{#paging_itemcount#|sprintf:$itemcount}</div>
 
 <div id="perpageselector">
-  <form id="perpageform" method="GET">
-    {hiddenurlparams}
-    <select id="perpage" name="perpage" onchange="this.form.submit();">
+  <div class="sort">
+    <div class="item">
       {foreach from=$validperpages item=page}
-        <option{if $page == $perpage} selected="selected"{/if} value="{$page}">{$page}</option>
+        {if $page == $perpage}
+          <a class="title" href="{perpageurlparam perpage=$page}">{$page} {#paging_itemsperpage#} <div class="sortarrow sortarrow-down"></div></a>
+        {/if}
       {/foreach}
-    </select>
-    <label for="perpage" class="perpagelabel">{#paging_itemsperpage#}</label>
-  </form>
+      <ul>
+      {foreach from=$validperpages item=page}
+        <li><a href="{perpageurlparam perpage=$page}">{$page} {#paging_itemsperpage#}</a></li>
+      {/foreach}
+      </ul>
+    </div>
+  </div>
 </div>
 
 {foreach from=$insertbefore item=insertitem}
