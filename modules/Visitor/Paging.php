@@ -15,7 +15,7 @@ abstract class Paging extends \Springboard\Controller\Paging {
     if ( $this->pager ) {
       
       $this->pager->perpageformmethod = 'get';
-      $this->pager->divider = ' <span class="divider">|</span>';
+      $this->pager->divider = ' <span class="divider"></span>';
       
     }
     
