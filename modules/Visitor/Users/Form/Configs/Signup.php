@@ -2,7 +2,6 @@
 
 include_once( $this->bootstrap->config['libpath'] . 'clonefish/constants.php');
 $language = \Springboard\Language::get();
-
 $config = array(
 
   'fs1' => array(
@@ -18,7 +17,12 @@ $config = array(
 
   'forward' => array(
     'type'  => 'inputHidden',
-    'value' => ( $this->application->getParameter('forward') ?: '' )
+    'value' => ( $this->application->getParameter('forward') ?: '' ),
+  ),
+
+  'inviteid' => array(
+    'type'  => 'inputHidden',
+    'value' => ( $this->invite and $this->invite['id'] )? $this->invite['id']: '',
   ),
 
   'email' => array(
@@ -166,10 +170,14 @@ $config = array(
 
 );
 
-$userinvitationSession = $this->bootstrap->getSession('userinvitation');
-if ( $userinvitationSession['invitation']['namefirst'] )
-  $config['namefirst']['value'] = $userinvitationSession['invitation']['namefirst'];
-if ( $userinvitationSession['invitation']['namelast'] )
-  $config['namelast']['value'] = $userinvitationSession['invitation']['namelast'];
-if ( $userinvitationSession['invitation']['email'] )
-  $config['email']['value'] = $userinvitationSession['invitation']['email'];
+
+if ( $this->invite ) {
+  if ( $this->invite['namefirst'] )
+    $config['namefirst']['value'] = $this->invite['namefirst'];
+
+  if ( $this->invite['namelast'] )
+    $config['namelast']['value'] = $this->invite['namelast'];
+
+  if ( $this->invite['email'] )
+    $config['email']['value'] = $this->invite['email'];
+}

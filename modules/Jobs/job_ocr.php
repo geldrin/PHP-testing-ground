@@ -260,29 +260,31 @@ function Main() {
       $msg = "[INFO] Moving files.\n > Checking remote directory '". $ocr_dst_dir ."'\n COMMAND: '". $cmd_check_dst ."'";
       $debug->log($logdir, $logfile, $msg, false);
       echo $msg;
-      $check_dst = runExt4($cmd_check_dst);
+      $check_dst = new runExt($cmd_check_dst);
+			$check_dst->run();
+			$output = $check_dst->getOutput();
       
-      if (!empty($check_dst['cmd_output'])) {
+      if (!empty($output)) {
       // not empty or error
-        if ($check_dst['code'] !== 0) {
+        if ($check_dst->getCode() !== 0) {
           // directory does not exist / inaccessible
           $cmd_create_dir =  $ssh_template . "mkdir -m ". $jconf['directory_access'] ." -p ". $ocr_dst_dir;
           $msg = "Creating remote directory '". $ocr_dst_dir ."'\n COMMAND: '". $cmd_create_dir ."'\n";
           $debug->log($logdir, $logfile, $msg, false);
           echo $msg;
           
-          $create_dir = runExt4($cmd_create_dir);
+          $create_dir = new runExt($cmd_create_dir);
           
-          if ($create_dir['code'] !== 0) {
-            $msg = "[ERROR] Remote directory cannot be created!\nCOMMAND OUTPUT:\n". $create_dir['cmd_output'];
+          if (!$create_dir->run()) {
+            $msg = "[ERROR] Remote directory cannot be created!\nCOMMAND OUTPUT:\n". $create_dir->getOutput();
             echo $msg;
             
-            throw new OCRException($msg, $create_dir['cmd_output'], $cmd_create_dir, OCR_UPLOAD_FAILED);
+            throw new OCRException($msg, $create_dir->getOutput(), $cmd_create_dir, OCR_UPLOAD_FAILED);
           }
           
           echo " > OK.\n";
           
-        } elseif ($check_dst['code'] === 0 && $recording['ocrstatus'] == $jconf['dbstatus_reconvert']) {
+        } elseif ($check_dst->getCode() === 0 && $recording['ocrstatus'] == $jconf['dbstatus_reconvert']) {
           // directory is not empty
           $cmd_rmdir = $ssh_template . "rm -R ". $ocr_dst_dir ."*";
           
@@ -290,22 +292,22 @@ function Main() {
           $debug->log($logdir, $logfile, $msg, false);
           echo $msg;
           
-          $rmdir = runExt4($cmd_rmdir);
+          $rmdir = new runExt($cmd_rmdir);
           
-          if ($rmdir['code'] !== 0) {
-            $msg = "[ERROR] Failed to delete the contents of remote directory!\nCOMMAND OUTPUT:\n". $rmdir['cmd_output'] ."\n";
+          if (!$rmdir->run()) {
+            $msg = "[ERROR] Failed to delete the contents of remote directory!\nCOMMAND OUTPUT:\n". $rmdir->getOutput() ."\n";
             echo $msg;
             
-            throw new OCRException($msg, $rmdir['cmd_output'], $cmd_rmdir, OCR_UPLOAD_FAILED);
+            throw new OCRException($msg, $rmdir->getOutput(), $cmd_rmdir, OCR_UPLOAD_FAILED);
           } else {
-            $msg = "Result:\n". $rmdir['cmd_output'] ."\n";
+            $msg = "Result:\n". $rmdir->getOutput() ."\n";
             $debug->log($logdir, $logfile, $msg, false);
             echo $msg;
           }
         }
       }
       // we have the directory nice and clean
-      unset($msg);
+      unset($msg, $output);
       
       // Konyvtarak feltoltese
       $snapdir = $jconf['ocr_dir'] . $recording['id'] ."/ocr/";
@@ -386,7 +388,7 @@ function Main() {
             break;
           case OCR_OK:
           default:
-            $status = 'NULL';
+            $status = NULL;
             $report = "OCR PROCESS COMPLETE.\n";
             break;
         }
@@ -397,7 +399,7 @@ function Main() {
         if ($ox->getData())    $report .= " > Info: ". $ox->getData() ."\n";
         
         updateRecordingStatus($recording['id'], $status, $type = 'ocr');
-        log_recording_conversion($recording['id'], $myjobid, $action, $status, $ox->getCommand(), $report, $OCRduration, true);
+        log_recording_conversion($recording['id'], $myjobid, $action, ($status === null ? 'NULL' : $status), $ox->getCommand(), $report, $OCRduration, true);
         $debug->log($logdir, $logfile, str_pad("[ CONVERSION END ]", 100, '-', STR_PAD_BOTH), false);
       }
     }
@@ -406,7 +408,6 @@ function Main() {
     
     $app->watchdog();
     sleep($sleep_duration);
-    
   } // Main cycle
 
   if (is_resource($db->_connectionID)) $db->close();
@@ -455,6 +456,8 @@ function convertOCR($rec) {
     'processed'   => array(), // pointers to 'frames' which could be updated to database
   );
 
+	$worker = new runExt();
+	
   $errstr = "Function convertOCR(rec#". $rec['id'] .") failed!"; //// Megtarthato?????
   
   $app->watchdog();
@@ -479,13 +482,13 @@ function convertOCR($rec) {
   $result['phase'] = "Checking 3rd party utilites";
   $cmd_test_imagick = "convert -version";
   $cmd_test_ocr = "type \"". $app->config['ocr_alt'] ."\"";
-  $imtest = runExt4($cmd_test_imagick);
-  $ocrtest = runExt4($cmd_test_ocr);
-  if ($imtest['code'] !== 0 ) {
+  $imtest  = new runExt($cmd_test_imagick);
+  $ocrtest = new runExt($cmd_test_ocr);
+  if (!$imtest->run()) {
     $result['message'] = $errstr ." Imagick utility missing!";
     $debug->log($logdir, $logfile, $result['message'], $sendmail = false);
     return $result;
-  } elseif ($ocrtest['code'] !== 0) {
+  } elseif (!$ocrtest->run()) {
     $result['message'] = $errstr ." OCR engine cannot be found!";
     $debug->log($logdir, $logfile, $result['message'], $sendmail = false);
     return $result;
@@ -513,16 +516,16 @@ function convertOCR($rec) {
   
   // KEPKOCKAK KINYERESE //////////////////////////////////
   $result['phase'] = "Extracting frames from video";
-  $cmd_explode = escapeshellcmd($onice ." ". $app->config['ffmpeg_alt'] ." -v ". $app->config['ffmpeg_loglevel'] ." -i ". $rec['contentmasterfile'] ." -filter_complex  'scale=w=320:h=180:force_original_aspect_ratio=decrease' -r ". $app->config['ocr_frame_distance'] ." -q:v 1 -f image2 ". $cmpdir ."%06d.png -r ". $app->config['ocr_frame_distance'] ." -q:v 1 -f image2 ". $wdir ."%06d.jpg");
+  $cmd_explode = escapeshellcmd($onice ." ". $app->config['ffmpeg_alt'] ." -v ". $app->config['ffmpeg_loglevel'] ." -i ". $rec['contentmasterfile'] ." -filter_complex 'scale=w=320:h=180:force_original_aspect_ratio=decrease' -r ". $app->config['ocr_frame_distance'] ." -q:v 1 -f image2 ". $cmpdir ."%06d.png -r ". $app->config['ocr_frame_distance'] ." -q:v 1 -f image2 ". $wdir ."%06d.jpg");
   
   $debug->log($logdir, $logfile, "Extracting frames from video. Command line:". PHP_EOL . $cmd_explode);
   
-  $err = runExt4($cmd_explode);
+	$worker->run($cmd_explode);
   $app->watchdog();
   
   // $err['code'] = 0; //// DEBUG
-  if ($err['code'] !== 0) {
-    $msg = "[ERROR] Can't extract frames from video! Message:\n". $err['cmd_output'] ."Command:\n". $cmd_explode;
+  if ($worker->getCode() !== 0) {
+    $msg = "[ERROR] Can't extract frames from video! Message:\n". $worker->getOutput() ."\nCommand:\n". $cmd_explode ."\nReturn code: ". $worker->getCode();
     $debug->log($logdir, $logfile, $msg, $sendmail = false);
     $result['message'] = $msg;
     return $result;
@@ -566,13 +569,13 @@ function convertOCR($rec) {
     $img2 = $cmpdir . $frames['frames'][$p2]['flnm'] .'.png';
 
     $cmdIMdiff = $onice ." convert \"". $img1 ."\" \"". $img2 ."\" -compose difference -colorspace gray -composite png:- | identify -verbose -format %[fx:mean] png:-";
-    $IMdiff = runExt4($cmdIMdiff);
+		$worker->run($cmdIMdiff, 20);
 
-    if ($IMdiff['code'] !== 0) {
+    if ($worker->getCode() !== 0) {
       $numocrwarns++;
       continue;
     } else {
-      $mean = floatval($IMdiff['cmd_output']);
+      $mean = floatval($worker->getOutput());
       if ($mean > $app->config['ocr_threshold']) {    // kulonbozik
         $frames['transitions'][] = $p2;
       }
@@ -794,29 +797,31 @@ global $onice;
   $out_img = $destpath . pathinfo($image, PATHINFO_FILENAME) .".png";
   
   $cmd_identify = $onice ." identify -verbose -format %[fx:mean] ". $imagepath;
-  $err = runExt4($cmd_identify);
+	$identify = new runExt($cmd_identify, 10.0);
+  $identify->run();
   
-  if ($err['code'] !== 0) {
-    $return_array['message'] = $strmethoderr ." Imagemagick command failed. Messge: '". trim($err['cmd_output']) ."'";
+  if ($identify->getCode() !== 0) {
+    $return_array['message'] = $strmethoderr ." Imagemagick command failed. Messge: '". trim($identify->getOutput()) ."'";
     $return_array['code'] = 3;
     return $return_array;
   }
   
-  $mean = (float) $err['cmd_output'];
-  unset ($err);
+  $mean = (float) $identify->getOutput();
+	unset($identify);
     
   $invert = null;
   if ($mean < .5) $invert = " -negate"; // ha a kep tobbsegeben sotet, akkor invert
   $cmd_convert = $onice ." convert ". $imagepath . $invert ." -colorspace gray +repage -auto-level -resize 200% -threshold 35% -type bilevel -trim PNG:". $out_img;
-  $err = runExt4($cmd_convert);
+  $imginvert = new runExt($cmd_convert, 10.0);
   
-  if ($err['code'] !== 0) {
-    $return_array['message'] = $strmethoderr ." Imagemagick command failed. Messge: '". trim($err['cmd_output']) ."'";
+  if (!$imginvert->run()) {
+    $return_array['message'] = $strmethoderr ." Imagemagick command failed. Messge: '". trim($imginvert->getOutput()) ."'";
     $return_array['code'] = 4;
   } else {
     $return_array['result'] = true;
     $return_array['output'] = $out_img;
   }
+	unset($imginvert);
   return $return_array;
 }
 
@@ -859,11 +864,12 @@ global $app, $jconf, $onice;
       $cmd_ocr = $onice ." ". $app->config['ocr_alt']." --fax -l ". $lang ." -f text -o ". $textpath ." ". $imagepath;
       break;
   }
-
-  $err = runExt4($cmd_ocr);
-  $return_array['code'] = $err['code'];
-  if ($err['code'] !== 0) {
-    $return_array['message'] = "Ocr conversion failed! Message:\n". $err['cmd_output'];
+	
+  $job_ocr = new runExt($cmd_ocr, 10.0);
+	$job_ocr->run();
+  $return_array['code'] = $job_ocr->getCode();
+  if ($job_ocr->getCode() !== 0) {
+    $return_array['message'] = "Ocr conversion failed! Message:\n". $job_ocr->getOutput();
     return $return_array;
   } elseif (!file_exists($textpath)) {
     $return_array['message'] = "Ocr result file ('". $textpath ."') cannot be found.\n";
@@ -948,6 +954,8 @@ function createOCRsnapshots($recordingid, $images, $snapshotparams, $source) {
   
   $rid = $recordingid;
   $snapshotsdone = 0;
+	
+	$job = new runExt();
   
   foreach($images['processed'] as $frameid) {
     $img2resize = $images['frames'][$frameid];
@@ -965,11 +973,12 @@ function createOCRsnapshots($recordingid, $images, $snapshotparams, $source) {
     } while (1);
     
     $cmdresize = trim($cmdresize);
-    $resize = runExt4($cmdresize);
+    $job->run($cmdresize, 10.0);
     
-    if ($resize['code'] !== 0) {
-      $return['message'] = "Function ". __FUNCTION__ ." failed!". PHP_EOL . $resize['cmd_output'] ."\nCommand: ". $cmdresize;
+    if ($job->getCode() !== 0) {
+      $return['message'] = "Function ". __FUNCTION__ ." failed!". PHP_EOL . $job->getOutput() ."\nCommand: ". $cmdresize;
       $return['output'] = $snapshotsdone;
+			unset($job);
       return $return;
     }
     $snapshotsdone++;
@@ -977,6 +986,7 @@ function createOCRsnapshots($recordingid, $images, $snapshotparams, $source) {
   
   $return['output'] = $snapshotsdone;
   $return['result'] = true;
+	unset($job);
   return $return;
 }
 
@@ -1136,5 +1146,6 @@ function getOCRtasks() {
   }
   
   return $result;
-} 
+}
+
 ?>

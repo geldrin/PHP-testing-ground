@@ -174,13 +174,22 @@ class Controller extends \Visitor\Controller {
     $access->clear();
     $this->logUserLogin('VALIDATED LOGIN');
 
-    // ha users_invite-bol regisztralt a user akkor validalas utan itt lokjuk at
-    // kozvetlenul
-    $inviteforwardSession = $this->bootstrap->getSession('inviteforward');
-    if ( $inviteforwardSession['forward'] ) {
-      $forward = $inviteforwardSession['forward'];
-      $inviteforwardSession->clear();
-      $this->redirect( $forward );
+
+    $invitationid = $this->application->getParameter('c');
+    if ( $invitationid ) {
+      $crypto = $this->bootstrap->getEncryption();
+      $invitationid = intval( $crypto->asciiDecrypt( $invitationid ) );
+      if ( $invitationid <= 0 )
+        throw new \Exception("Invalid invitationid: $invitationid");
+
+      $invitationModel = $this->bootstrap->getModel('users_invitations');
+      $invitationModel->select( $invitationid );
+
+      if (
+           $invitationModel->row and
+           $invitationModel->row['customforwardurl']
+         )
+        $this->redirect( $invitationModel->row['customforwardurl'] );
     }
 
     $this->redirectToController('contents', 'signupvalidated');
@@ -188,7 +197,6 @@ class Controller extends \Visitor\Controller {
   }
 
   public function validateinviteAction() {
-
     $crypt = $this->bootstrap->getEncryption();
     $id    = intval( $crypt->asciiDecrypt( $this->application->getParameter('a') ) );
     $validationcode = $this->application->getParameter('b');
@@ -212,16 +220,6 @@ class Controller extends \Visitor\Controller {
 
     $user = $this->bootstrap->getSession('user');
 
-    // invitation session - ide taroljuk az eppeni invitaciot,
-    // a signup oldal olvassa, es torli majd 
-    $invitationSession    = $this->bootstrap->getSession('userinvitation');
-    $invitationSession['invitation'] = $invitationModel->row;
-
-    // a forward session pedig a signup validation (this::validateAction())
-    // hasznalja es torli ha sikeres volt a validacio
-    $inviteforwardSession = $this->bootstrap->getSession('inviteforward');
-    $inviteforwardSession['forward'] = $forward;
-
     if (
          $forward and
          $invitationModel->row['registereduserid']
@@ -232,13 +230,26 @@ class Controller extends \Visitor\Controller {
       if ( $user['id'] and $invitationModel->row['registereduserid'] == $user['id'] )
         $this->redirect( $forward );
       else // amugy eloszor leptessuk be es utana iranyitsuk at kozvetlenul
-        $this->redirect('users/login', array('forward' => $forward ) );
+        $this->redirect(
+          'users/login',
+          array(
+            'forward'  => $forward,
+            'inviteid' => $invitationModel->row['id'],
+          )
+        );
 
     }
 
+    $l = $this->bootstrap->getLocalization();
     // elküldeni regisztrálni
-    $this->redirectToController('contents', 'invitationvalidated');
-
+    $this->redirectWithMessage(
+      'users/signup',
+      $l('users', 'invitationvalidated'),
+      array(
+        'forward'  => $forward,
+        'inviteid' => $invitationModel->row['id'],
+      )
+    );
   }
 
   public function logoutAction() {

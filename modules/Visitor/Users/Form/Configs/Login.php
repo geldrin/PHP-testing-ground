@@ -35,6 +35,11 @@ $config = Array(
     'value' => $this->application->getParameter('forward'),
   ),
   
+  'inviteid' => Array(
+    'type'  => 'inputHidden',
+    'value' => $this->application->getNumericParameter('inviteid'),
+  ),
+  
   'welcome' => Array(
     'type'  => 'inputHidden',
     'value' => $this->application->getParameter('welcome'),
@@ -44,7 +49,11 @@ $config = Array(
     'displayname' => $l('users', 'email'),
     'type'        => 'inputText',
     'validation'  => Array(
-      Array( 'type' => 'string', 'regexp' => CF_EMAIL, 'help' => $l('users', 'emailhelp') ),
+      Array(
+        'type'   => 'string',
+        'regexp' => CF_EMAIL,
+        'help'   => $l('users', 'emailhelp'),
+      ),
     )
   ),
   
