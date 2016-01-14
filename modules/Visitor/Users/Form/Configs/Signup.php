@@ -173,11 +173,11 @@ $config = array(
 
 if ( $this->invite ) {
   if ( $this->invite['namefirst'] )
-    $config['namefirst']['value'] = $invitationModel->row['namefirst'];
+    $config['namefirst']['value'] = $this->invite['namefirst'];
 
   if ( $this->invite['namelast'] )
-    $config['namelast']['value'] = $invitationModel->row['namelast'];
+    $config['namelast']['value'] = $this->invite['namelast'];
 
   if ( $this->invite['email'] )
-    $config['email']['value'] = $invitationModel->row['email'];
+    $config['email']['value'] = $this->invite['email'];
 }
