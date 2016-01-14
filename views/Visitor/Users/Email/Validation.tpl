@@ -5,6 +5,9 @@
 <p>
   {assign var=BASE_URI value=$organization|@uri:base}
   {assign var=url value="$BASE_URI$language/users/validate/`$values.id`,`$values.validationcode`"}
+  {if $invitationid}
+    {assign var=url value=$url|cat:",`$invitationid`"}
+  {/if}
   {#users__email_validation_body#|sprintf:$url}
 </p>
 <p>

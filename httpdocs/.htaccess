@@ -26,7 +26,7 @@ RewriteRule ^([a-z]{2,4})/live/view/([0-9]+)[,-]([0-9]+)[,-](.*)$ index.php?modu
 
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
-RewriteRule ^([a-z]{2})/users/(changepassword|validate.*)/(.+)[,-](.+)$ index.php?language=$1&module=users&action=$2&a=$3&b=$4 [L,QSA]
+RewriteRule ^([a-z]{2})/users/(changepassword|validate.*)/([^,-]+)[,-]([^,-]+)(?:[,-]([^,-]+))?$ index.php?language=$1&module=users&action=$2&a=$3&b=$4&c=$5 [L,QSA]
 
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
