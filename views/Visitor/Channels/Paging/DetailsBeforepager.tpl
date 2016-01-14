@@ -43,8 +43,6 @@
   {/if}
 </div>
 <div class="channelgradient"></div>
-{capture assign=url}{$language}/{$module}/details/{$channel.id},{$channel.title|filenameize}?order=%order%{/capture}
-{include file=Visitor/_sort.tpl url=$url}
 <br/>
 
 <div class="events">
@@ -68,3 +66,6 @@
   </div>
   
   <div class="channelrecordings">
+
+  {capture assign=url}{$language}/{$module}/details/{$channel.id},{$channel.title|filenameize}?order=%order%{/capture}
+  {include file=Visitor/_sort.tpl url=$url}
