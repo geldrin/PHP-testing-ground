@@ -1,13 +1,13 @@
 <?php
 
 function smarty_function_perpageurlparam( $params, $smarty ) {
+  $getparams = array();
   $pos = strpos( $_SERVER['REQUEST_URI'], '?' );
-  if ( $pos === false ) {
+
+  if ( $pos === false )
     $ret = $_SERVER['REQUEST_URI'] . '?';
-    $getparams = array();
-  } else {
+  else {
     $ret = substr( $_SERVER['REQUEST_URI'], 0, $pos + 1 );
-    $getparams = array();
     parse_str( substr( $_SERVER['REQUEST_URI'], $pos + 1 ), $getparams );
   }
 

@@ -3,7 +3,8 @@ namespace Model;
 
 class Categories extends \Springboard\Model\Multilingual {
   public $multistringfields = array( 'name', 'namehyphenated' );
-  
+  private $treecache = array();
+
   public function updateVideoCounters( $clearCache = true ) {
 
     $this->ensureObjectLoaded();
@@ -113,6 +114,9 @@ class Categories extends \Springboard\Model\Multilingual {
   }
 
   public function cachedGetCategoryTree( $organizationid ) {
+    if ( isset( $this->treecache[ $organizationid ] ) )
+      return $this->treecache[ $organizationid ];
+
     // 1 week expiration, org specific, language specific
     $cache = $this->bootstrap->getCache(
       'categorytree-orgid' . $organizationid,
@@ -129,7 +133,7 @@ class Categories extends \Springboard\Model\Multilingual {
     );
 
     $cache->put( $category );
-    return $category;
+    return $this->treecache[ $organizationid ] = $category;
   }
 
   public function expireCategoryTreeCache( $organizationid ) {
@@ -184,6 +188,38 @@ class Categories extends \Springboard\Model\Multilingual {
     }
 
     return false;
+  }
+
+  public function getChildrenIDsFromCategoryTree( $category, &$ids = null ) {
+    if ( $ids === null )
+      $ids = array( $category['id'] );
+
+    foreach( $category['children'] as $category ) {
+      $ids[] = $category['id'];
+      $this->getChildrenIDsFromCategoryTree( $category, $ids );
+    }
+
+    return $ids;
+  }
+
+  public function searchCategoryTree( $organizationid, $categoryid, &$categories = null ) {
+    if ( $categories === null)
+      $categories = $this->cachedGetCategoryTree( $organizationid );
+
+    $ret = array();
+    foreach( $categories as $category ) {
+      if ( $category['id'] == $categoryid )
+        return $category;
+
+      $ret = $this->searchCategoryTree(
+        $organizationid, $categoryid, $category['children']
+      );
+
+      if ( $ret )
+        return $ret;
+    }
+
+    return $ret;
   }
 
 }
