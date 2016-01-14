@@ -136,8 +136,8 @@ return array (
     'titleen' => 'Registration validation',
     'shortname' => 'needvalidation',
     'title_stringid' => 0,
-    'body' => '<p>Köszönjük regisztrációját!</p><p>Utolsó lépésként a megadott e-mail címre elküldtünk egy ellenőrző levelet. Kérjük, a levélben található hivatkozásra kattintva erősítse meg regisztrációjának érvényességét.</p>',
-    'bodyen' => '<p>Thank you for signing up!</p><p>We\'ve just sent an e-mail to the address provided, which should arrive in a few minutes. Please open the e-mail and click on the link included to confirm your registration.</p>',
+    'body' => '<p>Köszönjük regisztrációját!</p><p>A megadott e-mail címre egy levelet küldtünk Önnek. Kérjük, hogy a levélben található hivatkozásra kattintva erősítse meg regisztrációját!</p>',
+    'bodyen' => '<p>Thank you for signing up!</p><p>We have just sent an e-mail to your address. Please confirm your registration by clicking the link in this e-mail.</p>',
     'body_stringid' => 0,
   ),
   14 => 

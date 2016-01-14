@@ -61,8 +61,7 @@ if ( $isdebug_ldap ) {
 }
 
 // Basic DB LDAP/AD user maintenance: search for unconnected users in groups_members
-// !!! removed due to long run
-//$err = updateUnconnectedGroupMembers();
+$err = updateUnconnectedGroupMembers();
 
 // Get LDAP/AD groups to be synchronized
 $ldap_groups = getLDAPGroups($app->config['directorygroupnestedcachetimeout']);
@@ -305,8 +304,7 @@ while ( !$ldap_groups->EOF ) {
         if ( $users_added !== false ) {
             // Log
             if ( !empty($users2add_sql) ) $users_added_list = "\nAdded: " . implode(",", $users2add);
-            // !!! removed due to long run
-            //$err = updateUnconnectedGroupMembers();
+            $err = updateUnconnectedGroupMembers();
         } else {
             $users_added = 0;
             $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Users NOT added to group: " . $num_users_new . ". Inconsistent group membership with LDAP/AD! Users:\n" . $users2add_flat, $sendmail = true);
@@ -350,9 +348,23 @@ global $db, $myjobid, $debug, $jconf;
         WHERE
             gm.userid IS NULL AND
             gm.userexternalid IS NOT NULL AND
+            LOWER(u.externalid) LIKE CONCAT(gm.userexternalid, '@%')
+        ";
+
+/* Old query, fucking slow due to REGEXP?
+    $query = "
+        UPDATE
+            groups_members AS gm,
+            users AS u
+        SET
+            gm.userid = u.id
+        WHERE
+            gm.userid IS NULL AND
+            gm.userexternalid IS NOT NULL AND
             LOWER(u.externalid) REGEXP CONCAT('^', gm.userexternalid, '@.*')
         ";
-            
+*/
+        
     try {
         $rs = $db->Execute($query);
     } catch (exception $err) {
