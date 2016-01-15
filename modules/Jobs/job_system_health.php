@@ -279,6 +279,10 @@ while( !is_file( $app->config['datapath'] . 'jobs/' . $myjobid . '.stop' ) and !
         );
         for ( $i = 0; $i < count($storages2check); $i++) {
             $diskinfo = checkDiskSpace($storages2check[$i]['path']);
+            if ( $diskinfo === false ) {
+                $msg .= "Cannot find storage path: " . $storages2check[$i]['path'] . ". PLEASE CHECK!\n";
+                continue;
+            }
             if ( ( $diskinfo['used_percent'] >= $alarm_levels['warning'] ) and ( $diskinfo['used_percent'] < $alarm_levels['critical'] ) ) {
                 $msg .= "File system free space for " . $storages2check[$i]['path'] . ": WARNING\n";
                 $msg .= "\tTotal: " . round($diskinfo['total'] / 1024 / 1024 / 1024, 2) . "GB Free: " . round($diskinfo['free'] / 1024 / 1024 / 1024, 2) . "GB (" . $diskinfo['used_percent'] . "%)\n";
@@ -470,6 +474,8 @@ while( !is_file( $app->config['datapath'] . 'jobs/' . $myjobid . '.stop' ) and !
 exit;
 
 function checkDiskSpace($dir) {
+
+    if ( !file_exists($dir) ) return false;
 
     $result = array();
 
