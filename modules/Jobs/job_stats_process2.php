@@ -117,45 +117,40 @@ for ( $statsidx = 0; $statsidx < count($stats_config); $statsidx++ ) {
     $status_filename = $jconf['temp_dir'] . $myjobid . "." . $stats_config[$statsidx]['label'] . ".status";
 
     // Status file: read last processed record time
-    if ( file_exists($status_filename) ) {
+    if ( is_readable($status_filename) ) {
 
-        // Is readable?
-        if ( !is_readable($status_filename) ) {
+        $fh = fopen($status_filename, "r");
 
-            $debug->log($jconf['log_dir'], $myjobid . ".log", "[WARN] Stats status file: " . $status_filename . " does not exist. Restarting from VSQ EPOCH (" . date("Y-m-d H:i:s", $vsq_epoch) . ").", $sendmail = true);
-            $stats_config[$statsidx]['lastprocessedtime'] = $vsq_epoch;
+        while( !feof($fh) ) {
 
-        } else {
+            // Read one line from descriptor file
+            $line = fgets($fh);
+            $line = trim($line);
 
-            $fh = fopen($status_filename, "r");
+            // Skip empty lines
+            if ( empty($line) ) continue;
 
-            while( !feof($fh) ) {
+            $line_split = explode("=", $line);
+            $key = explode("_", $line_split[0]);
 
-                // Read one line from descriptor file
-                $line = fgets($fh);
-                $line = trim($line);
-
-                // Skip empty lines
-                if ( empty($line) ) continue;
-
-                $line_split = explode("=", $line);
-                $key = explode("_", $line_split[0]);
-
-                $idx = recursive_array_search($key[1], $stats_config);
-                $timestamp = strtotime($line_split[1]);
-                if ( $timestamp === false ) {
-                  $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Stats status file: not a datetime value ('". $line . "')", $sendmail = true);
-                  exit;
-                }
-                $stats_config[$idx]['lastprocessedtime'] = $timestamp;
-                $debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Last processed timestamp from status file (" . $stats_config[$idx]['label'] . "): " . $line_split[1], $sendmail = false);
+            $idx = recursive_array_search($key[1], $stats_config);
+            $timestamp = strtotime($line_split[1]);
+            if ( $timestamp === false ) {
+              $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Stats status file: not a datetime value ('". $line . "')", $sendmail = true);
+              exit;
             }
-
-            fclose($fh);
+            $stats_config[$idx]['lastprocessedtime'] = $timestamp;
+            $debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Last processed timestamp from status file (" . $stats_config[$idx]['label'] . "): " . $line_split[1], $sendmail = false);
         }
 
+        fclose($fh);
+        
+    } else {
+        $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Stats status file: " . $status_filename . " does not exist. Exiting...", $sendmail = true);
+        $stats_config[$statsidx]['lastprocessedtime'] = $vsq_epoch;
+        exit;
     }
-
+    
     // Get last processed record from stats_live_* tables to cross check last processed record. - NOT NEEDED TO CROSS CHECK?
 /*    $ltime = getLastStatsRecordFrom($stats_config[$statsidx]['sqltablename']);
     if ( $ltime === false ) {
