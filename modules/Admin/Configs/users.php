@@ -88,6 +88,11 @@ $config = Array(
     'type'        => 'inputText',
   ),
   
+  'organizationaffiliation' => array(
+    'displayname' => 'Organization Affiliation',
+    'type'        => 'inputText',
+  ),
+  
   'organizationid' => array(
     'displayname' => 'Organization',
     'type'        => 'selectDynamic',

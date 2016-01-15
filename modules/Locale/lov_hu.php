@@ -261,4 +261,10 @@ return array(
     'local'    => $l('users', 'invite_externalsend_local'),
     'external' => $l('users', 'invite_externalsend_external'),
   ),
+
+  'organizations_displaynametype' => array(
+    'shownickname' => 'Becenév mutatása',
+    'showfullname' => 'Teljes név mutatása',
+    'hidenickname' => 'Becenév rejtése',
+  ),
 );
