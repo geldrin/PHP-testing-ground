@@ -1176,7 +1176,11 @@ class Recordings extends \Springboard\Model {
     if ( $includeuser ) {
       $select = ",
         usr.id AS userid,
-        usr.nickname,
+        IF(
+          usr.nickname IS NULL OR LENGTH(usr.nickname) = 0,
+          CONCAT(usr.namelast, '.', usr.namefirst),
+          usr.nickname
+        ) AS nickname,
         usr.nameformat,
         usr.nameprefix,
         usr.namefirst,
@@ -1463,7 +1467,11 @@ class Recordings extends \Springboard\Model {
     $rs = $this->db->execute("
       SELECT
         c.sequenceid,
-        u.nickname
+        IF(
+          u.nickname IS NULL OR LENGTH(u.nickname) = 0,
+          CONCAT(u.namelast, '.', u.namefirst),
+          u.nickname
+        ) AS nickname
       FROM
         comments AS c,
         users AS u
@@ -1519,7 +1527,11 @@ class Recordings extends \Springboard\Model {
         c.userid,
         IF(
             c.userid IS NOT NULL,
-            u.nickname,
+            IF(
+              u.nickname IS NULL OR LENGTH(u.nickname) = 0,
+              CONCAT(u.namelast, '.', u.namefirst),
+              u.nickname
+            ),
             CONCAT('anonymous_', au.id)
         ) AS nickname,
         u.nameformat,
@@ -1714,7 +1726,11 @@ class Recordings extends \Springboard\Model {
       r.contentmasterlength,
       r.numberofviews,
       usr.id AS userid,
-      usr.nickname,
+      IF(
+        usr.nickname IS NULL OR LENGTH(usr.nickname) = 0,
+        CONCAT(usr.namelast, '.', usr.namefirst),
+        usr.nickname
+      ) AS nickname,
       usr.nameformat,
       usr.nameprefix,
       usr.namefirst,
@@ -1768,7 +1784,11 @@ class Recordings extends \Springboard\Model {
       r.contentmasterlength,
       r.numberofviews,
       usr.id AS userid,
-      usr.nickname,
+      IF(
+        usr.nickname IS NULL OR LENGTH(usr.nickname) = 0,
+        CONCAT(usr.namelast, '.', usr.namefirst),
+        usr.nickname
+      ) AS nickname,
       usr.nameformat,
       usr.nameprefix,
       usr.namefirst,
@@ -1830,7 +1850,11 @@ class Recordings extends \Springboard\Model {
       r.contentmasterlength,
       r.numberofviews,
       usr.id AS userid,
-      usr.nickname,
+      IF(
+        usr.nickname IS NULL OR LENGTH(usr.nickname) = 0,
+        CONCAT(usr.namelast, '.', usr.namefirst),
+        usr.nickname
+      ) AS nickname,
       usr.nameformat,
       usr.nameprefix,
       usr.namefirst,
@@ -2899,7 +2923,11 @@ class Recordings extends \Springboard\Model {
         namefirst,
         namelast,
         nameformat,
-        nickname,
+        IF(
+          nickname IS NULL OR LENGTH(nickname) = 0,
+          CONCAT(namelast, '.', namefirst),
+          nickname
+        ) AS nickname,
         avatarstatus,
         avatarfilename
       FROM users
@@ -3004,7 +3032,11 @@ class Recordings extends \Springboard\Model {
   public function getRandomRecordings( $limit, $organizationid, $user ) {
 
     $select = "
-      us.nickname,
+      IF(
+        us.nickname IS NULL OR LENGTH(us.nickname) = 0,
+        CONCAT(us.namelast, '.', us.namefirst),
+        us.nickname
+      ) AS nickname,
       us.nameformat,
       us.nameprefix,
       us.namefirst,
@@ -3498,7 +3530,11 @@ class Recordings extends \Springboard\Model {
     $select = "
       " . self::getRecordingSelect('r.') . ",
       usr.id AS userid,
-      usr.nickname,
+      IF(
+        usr.nickname IS NULL OR LENGTH(usr.nickname) = 0,
+        CONCAT(usr.namelast, '.', usr.namefirst),
+        usr.nickname
+      ) AS nickname,
       usr.nameformat,
       usr.nameprefix,
       usr.namefirst,
@@ -3915,7 +3951,11 @@ class Recordings extends \Springboard\Model {
     $select = "
       u.id AS userid,
       u.externalid,
-      u.nickname,
+      IF(
+        u.nickname IS NULL OR LENGTH(u.nickname) = 0,
+        CONCAT(u.namelast, '.', u.namefirst),
+        u.nickname
+      ) AS nickname,
       u.email,
       u.nameprefix,
       u.namefirst,

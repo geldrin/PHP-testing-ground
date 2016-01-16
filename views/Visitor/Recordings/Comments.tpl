@@ -4,11 +4,11 @@
   {if !empty( $comments )}
     {foreach from=$comments item=item}
       {if $member.id or $recording.isanonymouscommentsenabled}
-        {capture assign=replylink}{$recordingurl}&focus={$item.sequenceid}{/capture}
+        {capture assign=replylink}{$recordingurl}&amp;focus={$item.sequenceid}{/capture}
       {else}
         {capture assign=replylink}{$language}/users/login?forward={$recordingurl|escape:url}{/capture}
       {/if}
-      <li class="commentlistitem nick-{$item.nickname|escape:html}{if $commentfocus == $item.sequenceid} highlight{/if}" id="comment-{$item.sequenceid}">
+      <li class="commentlistitem{if $commentfocus == $item.sequenceid} highlight{/if}" id="comment-{$item.sequenceid}" data-nick="{$item.nickname|escape:html}">
         <div class="user">
           <div class="avatar"><img src="{$item|@avatarphoto|escape:html}" width="36" height="36"/></div>
           <div class="name" >{$item|@nickformat|escape:html}</div>
@@ -20,10 +20,10 @@
             {*}
             {if $recording|@userHasAccess}
               {if $item.moderated <= 0}
-                <li class="moderate"><a href="{$language}/recordings/moderate/{$recording.id}?commentid={$item.sequenceid}&moderate=1">{#recordings__moderate_block#}</a></li>
+                <li class="moderate"><a href="{$language}/recordings/moderate/{$recording.id}?commentid={$item.sequenceid}&amp;moderate=1">{#recordings__moderate_block#}</a></li>
               {/if}
               {if $item.moderated < 0 or $item.moderated > 0}
-                <li class="moderate"><a href="{$language}/recordings/moderate/{$recording.id}?commentid={$item.sequenceid}&moderate=0">{#recordings__moderate_allow#}</a></li>
+                <li class="moderate"><a href="{$language}/recordings/moderate/{$recording.id}?commentid={$item.sequenceid}&amp;moderate=0">{#recordings__moderate_allow#}</a></li>
               {/if}
             {/if}
             {/*}

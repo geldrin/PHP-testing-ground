@@ -79,7 +79,21 @@ $config = array(
       array( 'type' => 'required' ),
     ),
   ),
-  
+
+  'organizationaffiliation' => array(
+    'displayname' => $l('users', 'organizationaffiliation'),
+    'type'        => 'inputText',
+    'validation'  => array(
+      array(
+        'type'      => 'string',
+        'required'  => true,
+        'minimum'   => 3,
+        'maximum'   => 100,
+        'help'      => $l('users', 'organizationaffiliationhelp'),
+      ),
+    ),
+  ),
+
   'newsletter' => array(
     'displayname' => $l('users', 'newsletter'),
     'type'        => 'inputCheckbox',
@@ -204,6 +218,9 @@ $config = array(
   ),
   
 );
+
+if ( $this->controller->organization['displaynametype'] == 'hidenickname' )
+  unset( $config['nickname'] );
 
 if ( !$this->userModel->canUploadAvatar() )
   unset( $config['avatarfilename'] );

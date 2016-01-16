@@ -175,6 +175,9 @@ global $db, $app, $jconf, $debug;
 	$chunkpath = $app->config['chunkpath'];
 
 	$uploadids = array();
+    
+    if ( !file_exists($chunkpath) ) return false;
+    
 	// vegig nezzuk a konyvtarban levo osszes filet
 	foreach (new \DirectoryIterator( $chunkpath ) as $fileinfo ) {
 
@@ -248,7 +251,6 @@ global $db, $app, $jconf, $debug;
 	}
 
 	return true;
-
 }
 
 function users_setvalidity() {

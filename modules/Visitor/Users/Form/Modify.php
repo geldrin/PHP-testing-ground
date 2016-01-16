@@ -8,7 +8,7 @@ class Modify extends \Visitor\HelpForm {
   public $user;
   public $basefields = array(
     'nickname', 'nameprefix', 'namefirst', 'namelast', 'nameformat',
-    'password', 'confirmpassword',
+    'password', 'confirmpassword', 'organizationaffiliation',
   );
 
   public function init() {

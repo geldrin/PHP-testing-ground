@@ -122,16 +122,8 @@ for ( $statsidx = 0; $statsidx < count($stats_config); $statsidx++ ) {
   $status_filename = $jconf['temp_dir'] . $myjobid . "." . $stats_config[$statsidx]['label'] . ".status";
 
   // Status file: read last processed record time
-  if ( file_exists($status_filename) ) {
-
-    // Is readable?
-    if ( !is_readable($status_filename) ) {
-
-      $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Stats status file: " . $status_filename . ".", $sendmail = true);
-      $stats_config[$statsidx]['lastprocessedtime'] = $vsq_epoch;
+  if ( is_readable($status_filename) ) {
       
-    } else {
-
       $fh = fopen($status_filename, "r");
 
       while( !feof($fh) ) {
@@ -152,13 +144,17 @@ for ( $statsidx = 0; $statsidx < count($stats_config); $statsidx++ ) {
           $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Stats status file: not a datetime value ('". $line . "')", $sendmail = true);
           exit;
         }
+        
         $stats_config[$idx]['lastprocessedtime'] = $timestamp;
         $debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Last processed timestamp from status file (" . $stats_config[$idx]['label'] . "): " . $line_split[1], $sendmail = false);
       }
 
       fclose($fh);
-    }
-
+      
+  } else {
+      $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Stats status file: " . $status_filename . ". Exiting...", $sendmail = true);
+      $stats_config[$statsidx]['lastprocessedtime'] = $vsq_epoch;
+      exit;
   }
 
   // Get last processed record to determine last processing time
@@ -185,9 +181,6 @@ for ( $statsidx = 0; $statsidx < count($stats_config); $statsidx++ ) {
   $processing_started = time();
   //  Loop through the full time period until. Exit when right end is in future.
   while ( ( $start_interval + $stats_config[$statsidx]['interval'] ) < time() ) {
-
-// !!! DEBUG
-//if ( $start_interval > strtotime("2014-07-04 15:00:00") ) break;
 
     // Set end of interval
     $end_interval = $start_interval + $stats_config[$statsidx]['interval'] - 1;
@@ -227,14 +220,14 @@ for ( $statsidx = 0; $statsidx < count($stats_config); $statsidx++ ) {
 
       // Timeline grid: first left from next active record time
       $next_active_left = getTimelineGridSeconds($next_active_record, "left", $stats_config[$statsidx]['interval']);
-//      $start_interval = $next_active_left - $stats_config[$statsidx]['interval'];
       $start_interval = $next_active_left;
       $end_interval = $next_active_left + $stats_config[$statsidx]['interval'] - 1;
 
       // Query finally selected interval with record(s)
       $stats = queryStatsForInterval($start_interval, $end_interval, $wowza_app);
       if ( $stats === false ) {
-        $debug->log($jconf['log_dir'], $myjobid . ".log", "[WARN] Unexpected. No record(s) to process. Interval: " . date("Y-m-d H:i:s", $start_interval) . " - " . date("Y-m-d H:i:s", $end_interval) . "\n\nDEBUG:\n\ngetFirstWowzaRecordFromInterval(): " . $kaka2 . "\n\nqueryStatsForInterval(): " . $kaka, $sendmail = false);
+//        $debug->log($jconf['log_dir'], $myjobid . ".log", "[WARN] Unexpected. No record(s) to process. Interval: " . date("Y-m-d H:i:s", $start_interval) . " - " . date("Y-m-d H:i:s", $end_interval) . "\n\nDEBUG:\n\ngetFirstWowzaRecordFromInterval(): " . $kaka2 . "\n\nqueryStatsForInterval(): " . $kaka, $sendmail = false);
+        $debug->log($jconf['log_dir'], $myjobid . ".log", "[WARN] Unexpected. No record(s) to process. Interval: " . date("Y-m-d H:i:s", $start_interval) . " - " . date("Y-m-d H:i:s", $end_interval), $sendmail = false);
         // Update last processed interval. Next active record will be found in next round.
         $stats_config[$statsidx]['lastprocessedtime'] = $end_interval;
         $start_interval = $start_interval + $stats_config[$statsidx]['interval'];
@@ -330,9 +323,6 @@ for ( $statsidx = 0; $statsidx < count($stats_config); $statsidx++ ) {
         $stats_f[$feedid][$idx][$platform]++;
       }
 
-//echo "DEBUG: processed record\n";
-//var_dump($stats_f);
-
       $records_processed++;
       $stats->MoveNext();
     } // End of stats while loop
@@ -346,11 +336,9 @@ for ( $statsidx = 0; $statsidx < count($stats_config); $statsidx++ ) {
     if ( count($stats_f) > 0 ) {
 
       $records_committed = 0;
-//echo "DB:\n";
       foreach ( $stats_f as $feedid => $feed_array ) {
         foreach ( $feed_array as $idx => $stat_record ) {
           insertStatRecord($stat_record, $stats_config[$statsidx]['sqltablename']);
-//var_dump($stat_record);
           $records_committed++;
         }
       }

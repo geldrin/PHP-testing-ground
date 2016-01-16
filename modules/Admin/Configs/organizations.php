@@ -195,11 +195,11 @@ $config = Array(
     ),
   ),
   
-  'fullnames' => array(
-    'displayname' => 'Feltöltő teljes nevének kiírása?',
-    'type'        => 'inputRadio',
-    'values'      => $l->getLov('yesno'),
-    'value'       => 0,
+  'displaynametype' => array(
+    'displayname' => 'Név megjelenítés',
+    'type'        => 'select',
+    'values'      => $l->getLov('organizations_displaynametype'),
+    'value'       => 'shownickname',
   ),
   
   'issubscriber' => array(

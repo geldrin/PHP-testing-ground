@@ -10,6 +10,7 @@ class Edit extends \Visitor\HelpForm {
     'nickname', 'nameprefix', 'namefirst', 'namelast', 'nameformat',
     'password', 'confirmpassword', 'externalid', 'departments',
     'needtimestampdisabledafter', 'timestampdisabledafter',
+    'organizationaffiliation',
   );
 
   // a non-directory csoportok az organizationtol, a config/Edit.php-bol toltodik
