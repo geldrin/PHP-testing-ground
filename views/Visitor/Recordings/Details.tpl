@@ -225,7 +225,7 @@
 
 <div id="comments">
   <div class="loading"></div>
-  <div class="title"><h2>{#recordings__comments#}</h2></div>
+  <div class="title"><h3>{#recordings__comments#}</h3></div>
   <div id="commentwrap">
     {$commentoutput.html}
   </div>
