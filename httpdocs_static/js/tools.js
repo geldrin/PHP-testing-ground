@@ -124,7 +124,6 @@ function setupInfoBar(elem) {
     parent.addClass('active');
     var newid  = parent.attr('id').replace(/link$/, '');
     $j('#' + newid ).show();
-    console.log(oldid, newid);
   });
 
   $j('#detaillink').click(function(e) {

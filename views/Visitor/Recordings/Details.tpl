@@ -134,10 +134,11 @@
 
 <div id="info">
   {if $recording|@userHasAccess}
-    <a id="recordingmodify" target="_blank" href="{$language}/recordings/modifybasics/{$recording.id}?forward={$FULL_URI|escape:url}">{#recordings__editrecording#}</a>
+    <a id="recordingmodify" class="submitbutton" target="_blank" href="{$language}/recordings/modifybasics/{$recording.id}?forward={$FULL_URI|escape:url}">{#recordings__editrecording#}</a>
   {/if}
 
   <div id="presenters">
+    <h3>{#recordings__presenters#}</h3>
     {if !empty( $recording.presenters )}
       {include file=Visitor/presenters.tpl presenters=$recording.presenters}
     {/if}

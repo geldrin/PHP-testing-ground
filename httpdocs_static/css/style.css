@@ -259,7 +259,7 @@ textarea {
   text-align: right;
 }
 .form .submitbutton {
-  width: 120px;
+  width: auto;
 }
 .form .submitbutton, .submitbutton {
   display: inline-block;
@@ -273,7 +273,8 @@ textarea {
   border-radius: 5px;
   -moz-border-radius: 5px;
   -webkit-border-radius: 5px;
-  padding: 0 15px;
+  padding: 0 25px;
+  font-weight: bold;
 }
 .submitbutton:active,
 a.submitbutton:active,
@@ -284,10 +285,9 @@ a.submitbutton:active,
 }
 a.submitbutton, .form a.submitbutton {
   width: auto;
-  padding: 6px 10px 5px 10px;
+  padding: 6px 25px 5px 25px;
   height: 17px;
   color: #fff;
-  font-weight: bold;
   text-decoration: none;
 }
 .submitbutton:hover,
@@ -389,14 +389,6 @@ a.submitbutton:hover,
 }
 
 /* record upload form */
-#uploadrow .submitbutton {
-  width: auto;
-  padding: 0px 15px;
-  font-weight: normal;
-  line-height: 30px;
-  color: #000;
-  height: 30px;
-}
 .changeindexphotoitem {
   display: inline-block;
 }
@@ -1128,9 +1120,9 @@ li#languageselectorlink {
 }
 #body div.title {
   clear: both;
-  border-bottom: 1px solid #a5a5a5;
-  margin-bottom: 10px;
-  padding: 10px 0px 0px 0px;
+  border-bottom: 1px solid #d7d7d7;
+  margin: 0;
+  padding: 0;
 }
 #body div.title a {
   display: block;
@@ -1252,7 +1244,7 @@ li#languageselectorlink {
 .timeline {
   width: 980px;
   border: 1px solid #bdcad1;
-  margin-bottom: 20px;
+  margin: 10px 0 0 0;
   clear: both;
   height: 40px;
   text-align: center;
@@ -1262,7 +1254,6 @@ li#languageselectorlink {
   -moz-box-shadow: 0px 1px 1px 0px #fff, inset 0px 1px 1px rgba(0, 0, 0, 0.3);
   -webkit-box-shadow: 0px 1px 1px 0px #fff, inset 0px 1px 1px rgba(0, 0, 0, 0.3);
   box-shadow: 0px 1px 1px 0px #fff;
-  
 }
 .timeline ul {
   height: 40px;
@@ -1282,31 +1273,26 @@ li#languageselectorlink {
   background-position: 0px 0px;
 }
 .timeline li a {
-  padding: 12px 10px 10px 10px;
   display: block;
-  background: #cad8df;
+  background: #2c7899;
   font-weight: bold;
   font-size: 15px;
-  color: #648190;
-  text-shadow: 0px 1px 0px #fff;
+  line-height: 40px;
+  color: #fff;
 }
 .timeline li:nth-child(n+2) a {
-  background: url(images/timeline_bg_inactiveright.png) left no-repeat, #cad8df;
+  background: url(images/timeline_bg_inactiveright.png) left no-repeat, #2c7899;
 }
 .timeline li.active a {
-  color: #29617e;
-  -pie-background: url(images/timeline_bg_activeleft.png) left no-repeat, linear-gradient(left, #b4d2e1, #78c2e7);
-  background: url(images/timeline_bg_activeleft.png) left no-repeat, -moz-linear-gradient(left, #b4d2e1, #78c2e7);
-  background: url(images/timeline_bg_activeleft.png) left no-repeat, -o-linear-gradientleftt, #b4d2e1, #78c2e7);
-  background: url(images/timeline_bg_activeleft.png) left no-repeat, -webkit-linear-gradient(left, #b4d2e1, #78c2e7);
-  background: url(images/timeline_bg_activeleft.png) left no-repeat, linear-gradient(left, #b4d2e1, #78c2e7);
+  color: #fff;
+  -pie-background: url(images/timeline_bg_activeleft.png) left no-repeat, #29abe2;
+  background: url(images/timeline_bg_activeleft.png) left no-repeat, #29abe2;
+  background: url(images/timeline_bg_activeleft.png) left no-repeat, #29abe2;
+  background: url(images/timeline_bg_activeleft.png) left no-repeat, #29abe2;
+  background: url(images/timeline_bg_activeleft.png) left no-repeat, #29abe2;
 }
 .timeline li:nth-child(1).active a {
-  -pie-background: linear-gradient(left, #b4d2e1, #78c2e7);
-  background: -moz-linear-gradient(left, #b4d2e1, #78c2e7);
-  background: -o-linear-gradientleftt, #b4d2e1, #78c2e7);
-  background: -webkit-linear-gradient(left, #b4d2e1, #78c2e7);
-  background: linear-gradient(left, #b4d2e1, #78c2e7);
+  background: #29abe2;
 }
 .timeline li.active + li {
   background-image: url(images/timeline_bg_activeright.png);
@@ -1459,7 +1445,7 @@ li#languageselectorlink {
 }
 .heading.categorydetails .arrow {
   display: inline;
-  margin: 0 5px 0 0;
+  margin: 0 10px 0 5px;
   padding: 0 9px 0 0;
   background-repeat: no-repeat;
   background-position: bottom 8px center;
@@ -2288,8 +2274,7 @@ li#languageselectorlink {
 #infobar #channelslink a,
 #infobar #commentslink a,
 #infobar #sharelink a,
-#infobar #embedlink a,
-#infobar #recordingmodify a {
+#infobar #embedlink a {
   display: inline-block;
   height: 40px;
   width: 100%;
@@ -2302,13 +2287,8 @@ li#languageselectorlink {
 #infobar #channelslink a:focus, #infobar #channelslink a:hover,
 #infobar #commentslink a:focus, #infobar #commentslink a:hover,
 #infobar #sharelink a:focus, #infobar #sharelink a:hover,
-#infobar #embedlink a:focus, #infobar #embedlink a :hover,
-#infobar #recordingmodify a:focus, #infobar #recordingmodify a:hover {
+#infobar #embedlink a:focus, #infobar #embedlink a :hover {
   text-decoration: none;
-}
-#infobar #channelslink,
-#infobar #recordingmodify {
-  width: 50px;
 }
 #infobar #infolink a span {
   display: inline-block;
@@ -2431,6 +2411,12 @@ li#languageselectorlink {
 
 #info {
   display: block;
+}
+#info #recordingmodify {
+  float: right;
+}
+#info #presenters h3 {
+  margin: 0 0 10px 0;
 }
 #info #attachments,
 #info #copyright,
@@ -2675,6 +2661,7 @@ li#languageselectorlink {
 #body .heading.categories.title {
   border-bottom: 1px solid #d7d7d7;
   margin-bottom: 0;
+  padding: 0;
 }
 .channelgradient {
   width: 980px;
@@ -2739,6 +2726,13 @@ li#languageselectorlink {
 .channelrecordings {
   float: right;
   width: 550px;
+}
+.channelrecordings > .channeltitle {
+  color: #000;
+  font-size: 20px;
+  font-weight: 500;
+  line-height: 24px;
+  margin: 0 0 20px 0;
 }
 .channelrecordings .recordinglist, .livelist.recordinglist {
   width: 550px;
@@ -2940,7 +2934,8 @@ li#languageselectorlink {
   font-weight: bold;
   display: inline-block;
 }
-#chatcontainer .actions {
+#chatcontainer .actions,
+.categories.actions {
   float: right;
 }
 #chatcontainer .actions .reply {
@@ -3180,7 +3175,6 @@ li#languageselectorlink {
   text-align: center;
 }
 .searchtable .buttonrow .submitbutton {
-  width: 120px;
 }
 .searchtable select.inputbackground {
   padding-right: 0px;
@@ -3240,7 +3234,7 @@ li#languageselectorlink {
   width: 590px;
 }
 #contributors li {
-  min-height: 24px;
+  min-height: 25px;
 }
 #contributors .iconplaceholder {
   display: inline-block;
