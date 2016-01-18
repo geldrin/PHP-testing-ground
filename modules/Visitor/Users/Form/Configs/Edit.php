@@ -192,6 +192,13 @@ $config = array(
   
 );
 
+if ( \Springboard\Language::get() == 'hu' ) {
+  $namefirst = array( $config['namefirst'] );
+  unset( $config['namefirst'] );
+
+  $config = \Springboard\Tools::insertAfterKey( $config, $namefirst, 'namelast' );
+}
+
 include( $this->bootstrap->config['modulepath'] . 'Visitor/Form/Configs/Timestampdisabledafter.php');
 
 $departmentModel = $this->bootstrap->getModel('departments');
