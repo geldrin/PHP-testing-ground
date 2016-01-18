@@ -142,7 +142,7 @@ $config = array(
   ),
 
   'organizationaffiliation' => array(
-    'displayname' => $l('users', 'organizationaffiliation'),
+    'displayname' => $l('users', 'organizationaffiliation') . ' <span class="required">*</span>',
     'type'        => 'inputText',
     'validation'  => array(
       array(
