@@ -185,7 +185,7 @@ $config = array(
 );
 
 if ( \Springboard\Language::get() == 'hu' ) {
-  $namefirst = array( $config['namefirst'] );
+  $namefirst = array( 'namefirst' => $config['namefirst'], );
   unset( $config['namefirst'] );
 
   $config = \Springboard\Tools::insertAfterKey( $config, $namefirst, 'namelast' );
