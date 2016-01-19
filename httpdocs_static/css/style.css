@@ -2730,6 +2730,7 @@ li#languageselectorlink {
   float: right;
   height: 30px;
   padding-right: 25px;
+  margin: 0 10px 0 0;
   background-repeat: no-repeat;
   background-position: right 0px bottom 10px;
   background-image: url(images/arrow_back.png);
