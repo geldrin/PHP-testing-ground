@@ -2704,28 +2704,54 @@ li#languageselectorlink {
 .channellist .channeltimestamp {
   margin: 5px 0 0 0;
 }
-.treeview {
-  float: left;
-  width: 380px;
-  margin-right: 20px;
-}
-.treeview h2 {
-  font-size: 14px;
-  margin: 4px 0;
-}
-.treeview h2 a.active {
-  font-weight: bold;
-  text-decoration: underline;
-}
-.treeview .children {
-  padding-left: 20px;
-}
 #channelinfo {
   margin-bottom: 10px;
 }
-.channelrecordings {
+#channeldescription {
+  padding: 0 0 0 25px;
+}
+#channellist {
+  width: 369px;
+  float: left;
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+}
+#channellist li {
+  margin: 0;
+  padding: 15px 0 15px 25px;
+  border-bottom: 1px solid #ccc;
+  line-height: 20px;
+}
+#channellist li.back a {
+  display: block;
+}
+#channellist a .back {
   float: right;
-  width: 550px;
+  height: 30px;
+  padding-right: 25px;
+  background-repeat: no-repeat;
+  background-position: right 0px bottom 10px;
+  background-image: url(images/arrow_back.png);
+}
+#channellist li.active {
+  background-color: #ededed;
+}
+#channellist a {
+  color: #000;
+  font-weight: bold;
+}
+#channellist .numberofrecordings {
+  color: #777;
+}
+.channelrecordings {
+  float: left;
+  padding: 25px 0 0 0;
+}
+.channelrecordings.halfwidth {
+  width: 580px;
+  padding-left: 30px;
+  border-left: 1px solid #dcdcdc;
 }
 .channelrecordings > .channeltitle {
   color: #000;
@@ -2734,13 +2760,13 @@ li#languageselectorlink {
   line-height: 24px;
   margin: 0 0 20px 0;
 }
-.channelrecordings .recordinglist, .livelist.recordinglist {
-  width: 550px;
+.channelrecordings.halfwidth .recordinglist, .livelist.recordinglist {
+  width: 580px;
 }
-.channelrecordings .listitem, .livelist.recordinglist .listitem {
-  width: 550px;
+.channelrecordings.halfwidth .listitem, .livelist.recordinglist .listitem {
+  width: 580px;
 }
-.channelrecordings .recordingcontent, .livelist.recordinglist .recordingcontent {
+.channelrecordings.halfwidth .recordingcontent, .livelist.recordinglist .recordingcontent {
   margin-left: 20px;
   width: 338px;
 }

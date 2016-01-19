@@ -54,26 +54,35 @@ class Details extends \Visitor\Paging {
     
     if ( $this->channelModel->isAccessible( $this->user, $this->controller->organization ) !== true )
       $this->controller->redirectToController('contents', 'nopermission');
-    
+
     $this->channelids = array_merge(
       array( $this->channelModel->id ),
       $this->channelModel->findChildrenIDs()
     );
-    
+
     $this->channelModel->clearFilter();
     $rootid = $this->channelModel->id;
     if ( $this->channelModel->row['parentid'] )
       $rootid = $this->channelModel->findRootID( $this->channelModel->row['parentid'] );
-    
+
     $this->channelModel->addFilter('isliveevent', 0 );
     $channeltree = $this->channelModel->getSingleChannelTree( $rootid );
 
     $this->title                               = $this->channelModel->row['title'];
     $this->controller->toSmarty['listclass']   = 'recordinglist';
-    $this->controller->toSmarty['channel']     = $this->channelModel->row;
-    $this->controller->toSmarty['channeltree'] = $channeltree;
     $this->controller->toSmarty['havemultiplechannels'] = count( $this->channelids ) > 1;
     $this->controller->toSmarty['canaddrecording'] = $this->channelModel->isAccessible( $this->user, $organization, true );
+
+    $this->controller->toSmarty['channel']     = $this->channelModel->row;
+    $this->controller->toSmarty['channelroot'] = reset( $channeltree );
+    $this->controller->toSmarty['channelparent'] = $this->channelModel->getParentFromChannelTree(
+      $channeltree,
+      $this->channelModel->id
+    );
+    $this->controller->toSmarty['channelchildren'] = $this->channelModel->getChildrenFromChannelTree(
+      $channeltree,
+      $this->channelModel->id
+    );
 
     if ( $this->user['id'] ) {
       $userModel = $this->bootstrap->getModel('users');

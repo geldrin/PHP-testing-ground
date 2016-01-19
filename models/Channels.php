@@ -342,7 +342,33 @@ class Channels extends \Springboard\Model {
     return $channels;
     
   }
-  
+
+  public function getParentFromChannelTree( $channeltree, $currentid, $parent = null ) {
+    foreach( $channeltree as $channel ) {
+      if ( $channel['id'] == $currentid )
+        return $parent;
+
+      $ret = $this->getParentFromChannelTree( $channel['children'], $currentid, $channel );
+      if ( $ret )
+        return $ret;
+    }
+
+    return array();
+  }
+
+  public function getChildrenFromChannelTree( $channeltree, $currentid ) {
+    foreach( $channeltree as $channel ) {
+      if ( $channel['id'] == $currentid )
+        return $channel['children'];
+
+      $ret = $this->getChildrenFromChannelTree( $channel['children'], $currentid );
+      if ( $ret )
+        return $ret;
+    }
+
+    return array();
+  }
+
   function findIDInChildren( $channeltree ) {
     
     if ( empty( $channeltree ) )
