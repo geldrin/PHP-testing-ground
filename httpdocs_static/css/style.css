@@ -2735,6 +2735,9 @@ li#languageselectorlink {
   background-position: right 0px bottom 10px;
   background-image: url(images/arrow_back.png);
 }
+#channellist a:hover .back {
+  background-image: url(images/arrow_back_hover.png);
+}
 #channellist li.active {
   background-color: #ededed;
 }
@@ -2743,6 +2746,7 @@ li#languageselectorlink {
   font-weight: bold;
 }
 #channellist .numberofrecordings {
+  margin: 0 0 0 5px;
   color: #777;
 }
 .channelrecordings {
@@ -2769,7 +2773,7 @@ li#languageselectorlink {
 }
 .channelrecordings.halfwidth .recordingcontent, .livelist.recordinglist .recordingcontent {
   margin-left: 20px;
-  width: 338px;
+  width: 368px;
 }
 .eventfeeds .recordingpic {
   display: inline-block;
