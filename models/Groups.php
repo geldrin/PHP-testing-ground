@@ -262,7 +262,7 @@ class Groups extends \Springboard\Model {
         (
           1 +
           IF( u.email     = $term, 3, 0 ) +
-          " . ( $organization['fullnames']
+          " . ( $organization['displaynametype'] != 'shownickname'
             ? "
               IF( u.namefirst = $term, 2, 0 ) +
               IF( u.namelast  = $term, 2, 0 ) +

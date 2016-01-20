@@ -426,7 +426,7 @@ class Users extends \Springboard\Model {
   public function getSearchWhere( $searchterm, $organization, $prefix = '' ) {
     $searchterm = str_replace( ' ', '%', $searchterm );
     $searchterm = $this->db->qstr( '%' . $searchterm . '%' );
-    if ( $organization['fullnames'] )
+    if ( $organization['displaynametype'] != 'shownickname' )
       $where = "
         {$prefix}namefirst LIKE $searchterm OR
         {$prefix}namelast  LIKE $searchterm OR
@@ -469,7 +469,7 @@ class Users extends \Springboard\Model {
           1 +
           IF( email     = $term, 3, 0 ) +
           IF( externalid = $term, 3, 0 ) +
-          " . ( $organization['fullnames']
+          " . ( $organization['displaynametype'] != 'shownickname'
             ? "
               IF( namefirst = $term, 2, 0 ) +
               IF( namelast  = $term, 2, 0 ) +

@@ -262,6 +262,7 @@ return array(
     'external' => $l('users', 'invite_externalsend_external'),
   ),
 
+  // adminon jelenik meg
   'organizations_displaynametype' => array(
     'shownickname' => 'Becenév mutatása',
     'showfullname' => 'Teljes név mutatása',
