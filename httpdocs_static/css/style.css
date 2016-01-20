@@ -1306,6 +1306,9 @@ li#languageselectorlink {
 }
 
 /* pager */
+.foreachelse {
+  clear: both;
+}
 .widepager {
   width: 980px;
   text-align: center;
