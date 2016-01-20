@@ -21,18 +21,17 @@
     {/if}
   </div>
 </div>
-{if $member.id and ($member.isuploader or $member.ismoderateduploader) and $canaddrecording}
-<div class="clear"></div><br/>
-<div class="categories actions">
-  <a class="submitbutton" href="{$language}/recordings/upload?channelid={$channel.id}">{#channels__addrecording#}</a>
-  <a class="submitbutton" href="{$language}/channels/orderrecordings/{$channel.id}?forward={$FULL_URI|escape:url}">{#channels__orderrecordings#}</a>
-  <a class="subscribe submitbutton" href="{$language}/users/togglesubscription?channelid={$channel.id}&amp;state={if $subscribed}del{else}add{/if}&amp;forward={$FULL_URI|escape:url}">{if $subscribed}{#users__unsubscribe#}{else}{#users__subscribe#}{/if}</a>
-</div>
 
-{/if}
-
-{if $channelroot.description}
+{if $channelroot.description or ( $member.id and ($member.isuploader or $member.ismoderateduploader) and $canaddrecording )}
   <div id="channeldescription">
+    {if $member.id and ($member.isuploader or $member.ismoderateduploader) and $canaddrecording}
+    <div class="categories actions">
+      <a class="submitbutton" href="{$language}/recordings/upload?channelid={$channel.id}">{#channels__addrecording#}</a>
+      <a class="submitbutton" href="{$language}/channels/orderrecordings/{$channel.id}?forward={$FULL_URI|escape:url}">{#channels__orderrecordings#}</a>
+      <a class="subscribe submitbutton" href="{$language}/users/togglesubscription?channelid={$channel.id}&amp;state={if $subscribed}del{else}add{/if}&amp;forward={$FULL_URI|escape:url}">{if $subscribed}{#users__unsubscribe#}{else}{#users__subscribe#}{/if}</a>
+    </div>
+    {/if}
+
     <p>{$channelroot.description|escape:html|nl2br}</p>
   </div>
 {/if}
@@ -41,19 +40,14 @@
 <div class="channelgradient"></div>
 
 <div class="events">
-  {if !empty( $channelroot.children )}
+  {if !empty( $channelchildren )}
     <ul id="channellist">
       {if $channel.id != $channelroot.id}
         <li class="back">
-          <a href="{$language}/channels/details/{$channelparent.id},{$channelparent.title|filenameize}">{$channelparent.title|escape:html|mb_wordwrap:25} <span class="back">{#sitewide_back#|lower}</span></a>
+          <a class="back" href="{$language}/channels/details/{$channelparent.id},{$channelparent.title|filenameize}">{#sitewide_back#|lower}</a>
+          <div class="clear"></div>
         </li>
       {/if}
-
-      <li class="active">
-        <a href="{$language}/channels/details/{$channel.id},{$channel.title|filenameize}">{$channel.title|escape:html|mb_wordwrap:25}</a>
-          {assign var=count value=$channel.numberofrecordings|default:0|numberformat}
-          <span class="numberofrecordings">{#categories__numberofrecordings#|sprintf:$count}</span>
-      </li>
 
       {foreach from=$channelchildren item=item}
         <li>
@@ -64,9 +58,17 @@
       {/foreach}
     </ul>
   {/if}
-  <div class="channelrecordings{if !empty( $channelroot.children )} halfwidth{/if}">
+  <div class="channelrecordings{if !empty( $channelchildren )} halfwidth{/if}">
     {if !empty( $channelroot.children )}
+      {if empty( $channelchildren )}
+        <a class="back" href="{$language}/channels/details/{$channelparent.id},{$channelparent.title|filenameize}">{#sitewide_back#|lower}</a>
+      {/if}
       <div class="channeltitle">{$channel.title|escape:html}</div>
+      {*}
+        vannak a csatorna faban felvetelek, nem egy szingli csatorna,
+        viszont a csatornanak nincsenek gyerekei
+      {/*}
+      
     {/if}
 
     {capture assign=url}{$language}/{$module}/details/{$channel.id},{$channel.title|filenameize}?order=%order%{/capture}

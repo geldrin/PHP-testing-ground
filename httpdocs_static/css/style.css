@@ -2710,6 +2710,9 @@ li#languageselectorlink {
 #channeldescription {
   padding: 0 0 0 25px;
 }
+#channeldescription p {
+  margin: 25px 0;
+}
 #channellist {
   width: 369px;
   float: left;
@@ -2725,17 +2728,25 @@ li#languageselectorlink {
 }
 #channellist li.back a {
   display: block;
+  text-align: right;
 }
-#channellist a .back {
+#channellist a.back,
+.channelrecordings .back {
+  font-weight: bold;
   float: right;
   height: 30px;
   padding-right: 25px;
   margin: 0 10px 0 0;
   background-repeat: no-repeat;
-  background-position: right 0px bottom 10px;
+  background-position: right 0px bottom 8px;
   background-image: url(images/arrow_back.png);
 }
-#channellist a:hover .back {
+#channellist a.back {
+  height: auto;
+  background-position: right 0px bottom 0px;
+}
+#channellist a:hover.back,
+.channelrecordings .back:hover {
   background-image: url(images/arrow_back_hover.png);
 }
 #channellist li.active {
