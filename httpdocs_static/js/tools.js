@@ -56,6 +56,7 @@ $j(document).ready(function() {
   runIfExists('#analytics_statistics', setupStatistics );
   runIfExists('.accordion', setupAccordion );
   runIfExists('#infobar', setupInfoBar );
+  runIfExists('.channelrecordings.halfwidth', setupChannelRecordings );
 
   if ( needping )
     setTimeout( setupPing, 1000 * pingsecs );
@@ -105,6 +106,16 @@ function handleFlashLoad(e) {
 
   alert( l.flashloaderror );
 
+}
+
+function setupChannelRecordings(elem) {
+  var chanheight = $j('#channellist').outerHeight(true);
+  var recheight = elem.outerHeight(true);
+  console.log(chanheight, recheight);
+  if ( chanheight <= recheight )
+    return;
+
+  elem.height((chanheight - 25) + 'px');
 }
 
 function setupInfoBar(elem) {
