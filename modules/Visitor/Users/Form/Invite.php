@@ -289,7 +289,7 @@ class Invite extends \Visitor\HelpForm {
     $line    = 0;
     $users   = array();
     $nameformat = \Springboard\Language::get() == 'hu'? 'straight': 'reverse';
-
+    $fatalerror = false;
     while( ( $row = fgetcsv( $fhandle, 0, $delimeter ) ) !== false ) {
 
       $line++;
@@ -316,6 +316,7 @@ class Invite extends \Visitor\HelpForm {
         );
 
         $lineerror = true;
+        $fatalerror = true;
 
       }
 
@@ -338,6 +339,9 @@ class Invite extends \Visitor\HelpForm {
         );
 
     }
+
+    if ( $fatalerror )
+      return false;
 
     return $users;
 
