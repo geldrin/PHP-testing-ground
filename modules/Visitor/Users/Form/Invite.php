@@ -365,6 +365,20 @@ class Invite extends \Visitor\HelpForm {
       $url,
     );
 
-    fputcsv( $this->csvHandle, $values, $this->csvDelimiter );
+    if ( $this->csvHandle ) {
+      $success = fputcsv( $this->csvHandle, $values, $this->csvDelimiter );
+      if ( $success !== false )
+        return;
+
+      // nem sikerult kiirni a csv-t, kuldjunk rola emailt
+      $d = \Springboard\Debug::getInstance();
+      $d->log(
+        false,
+        false,
+        "Failed to putcsv!\n" .
+        \Springboard\Debug::getRequestInformation(),
+        true
+      );
+    }
   }
 }
