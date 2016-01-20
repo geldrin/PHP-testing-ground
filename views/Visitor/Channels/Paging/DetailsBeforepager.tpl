@@ -25,7 +25,7 @@
 {if $channelroot.description or ( $member.id and ($member.isuploader or $member.ismoderateduploader) and $canaddrecording )}
   <div id="channeldescription">
     {if $member.id and ($member.isuploader or $member.ismoderateduploader) and $canaddrecording}
-    <div class="categories actions">
+    <div class="actions">
       <a class="submitbutton" href="{$language}/recordings/upload?channelid={$channel.id}">{#channels__addrecording#}</a>
       <a class="submitbutton" href="{$language}/channels/orderrecordings/{$channel.id}?forward={$FULL_URI|escape:url}">{#channels__orderrecordings#}</a>
       <a class="subscribe submitbutton" href="{$language}/users/togglesubscription?channelid={$channel.id}&amp;state={if $subscribed}del{else}add{/if}&amp;forward={$FULL_URI|escape:url}">{if $subscribed}{#users__unsubscribe#}{else}{#users__subscribe#}{/if}</a>

@@ -2708,10 +2708,13 @@ li#languageselectorlink {
   margin-bottom: 10px;
 }
 #channeldescription {
-  padding: 0 0 0 25px;
+}
+#channeldescription .actions {
+  float: right;
+  margin: 0 0 10px 10px;
 }
 #channeldescription p {
-  margin: 25px 0;
+  margin: 25px;
 }
 #channellist {
   width: 369px;
