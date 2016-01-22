@@ -218,6 +218,8 @@ if ( $recordings !== false ) {
             'recordingdatasize' => 0,
             'masterdatasize'    => 0
         );
+        
+        // Update DB
         if ( $isexecute ) {
             $recDoc = $app->bootstrap->getModel('recordings');
             $recDoc->select($recording['id']);
@@ -345,32 +347,30 @@ if ( $recordings !== false ) {
         $debug->log($jconf['log_dir'], $myjobid . ".log", "[OK] Content master was removed: id = " . $recording['id'] . ", filename = " . $remove_filename . ", size = " . round($size_toremove / 1024 / 1024, 2) . "MB.", $sendmail = false);
 
         // ## Update recording and master size
+        $master_dir_size = 0;
+        $recording_dir_size = 0;
         if ( $isexecute ) {
-            $err = directory_size($remove_path);
-            if ( $err['code'] === true ) {
-                $recording_dir_size = $err['size'];
+            $err = directory_size($remove_path);            
+            if ( $err['code'] ) {
+                $recording_dir_size = $err['value'];
             } else {
-                $recording_dir_size = 0;
                 $debug->log($jconf['log_dir'], $myjobid . ".log", "[WARN] Cannot get recording directory size. Truncated to 0.", $sendmail = false);
             }
             // Master directory is not yet on storage
             if ( $recording['masterstatus'] == $jconf['dbstatus_uploaded'] ) {
                 $suffix = "video";
-                $master_dir_size = 0;
                 if ( $recording['mastermediatype'] == "audio" ) $suffix = "audio";
                 $master_filename = $app->config['uploadpath'] . "recordings/" . $recording['id'] . "_" . $suffix . "." . $recording['mastervideoextension'];
                 if ( file_exists($master_filename) ) {
                     $master_dir_size = filesize($master_filename);
                 } else {
-                    $master_dir_size = 0;
                     $debug->log($jconf['log_dir'], $myjobid . ".log", "[WARN] Master is not present in upload area: " . $master_filename, $sendmail = true);
                 }
             } else {
                 $err = directory_size($remove_path . "master/");
-                if ( $err['code'] === true ) {
-                    $master_dir_size = $err['size'];
+                if ( $err['code'] ) {
+                    $master_dir_size = $err['value'];
                 } else {
-                    $master_dir_size = 0;
                     $debug->log($jconf['log_dir'], $myjobid . ".log", "[WARN] Cannot get master directory size. Truncated to 0.", $sendmail = false);
                 }
             }

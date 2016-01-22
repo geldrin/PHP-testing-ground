@@ -750,21 +750,10 @@ function copyMediaToFrontEnd($recording, $profile) {
 	$master_filesize = 0;
 	$recording_filesize = 0;
 
-// !!!!!!!!!!!!!!!!!!!!!!!!!
     // Get master storage directory size (does not exist if a recording is first processed)
     $err = ssh_filesize($recording[$idx .'mastersourceip'], $recording['recording_remote_path'] . "master/");
 	if ( $err['code'] ) $master_filesize =+ $err['value'];
-	
-    // This master file is at upload area?
-	if ($recording[$idx .'masterstatus'] == $jconf['dbstatus_uploaded']) {
-		$err = directory_size($recording['master_path']);
-        if ( !$err['code'] ) {
-            $msg .= "[WARN] Master filesize in upload area cannot be retrieved. Message:\n". $err['command_output'] ."\n";
-        } else {
-            $master_filesize =+ $err['value'];
-        }
-	}
-	
+		
     // Recording directory size
 	$err = ssh_filesize($recording[$idx .'mastersourceip'], $recording['recording_remote_path']);
 	if ( $err['code'] ) {

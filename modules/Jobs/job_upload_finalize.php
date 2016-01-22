@@ -97,20 +97,31 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_upload_finalize.stop' ) an
 					updateAttachedDocumentStatus($doc['id'], $jconf['dbstatus_copystorage_ok']);
 
 					// Update recording size
+                    $master_filesize = 0;
+                    $recording_filesize = 0;
+                    
 					$recording_directory = $app->config['recordingpath'] . ( $doc['recordingid'] % 1000 ) . "/" . $doc['recordingid'] . "/";
-					$err = directory_size($recording_directory . "master/");
-					$master_filesize = 0;
-
-					if ( $err['code'] ) $master_filesize = $err['value'];
+                    
+					// Master size
+                    $err = directory_size($recording_directory . "master/");
+                    if ( !$err['code'] ) {
+                        $debug->log($jconf['log_dir'], $myjobid ."log", "Directory_size() failed. Message:\n". $err['command_output'], 0);
+                    } else {
+                        $master_filesize = intval($err['value']);
+                    }
+                    
+                    // Recording size
 					$err = directory_size($recording_directory);
-
-					$recording_filesize = 0;
-					
-					if ( $err['code'] ) $recording_filesize = $err['value'];
+                    if ( !$err['code'] ) {
+                        $debug->log($jconf['log_dir'], $myjobid ."log", "Directory_size() failed. Message:\n". $err['command_output'], 0);
+                    } else {
+                        $recording_filesize = intval($err['value']);
+                    }
+                    
 					// Update DB
 					$update = array(
-							'masterdatasize'    => $master_filesize,
-							'recordingdatasize' => $recording_filesize
+                        'masterdatasize'    => $master_filesize,
+                        'recordingdatasize' => $recording_filesize
 					);
 
 					$recDoc = $app->bootstrap->getModel('recordings');
@@ -254,6 +265,7 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_upload_finalize.stop' ) an
 				$recording = $recordings->fields;
 
 				$destination_path = $app->config['recordingpath'] . ( $recording['id'] % 1000 ) . "/" . $recording['id'] . "/master/";
+				$recording_path = $app->config['recordingpath'] . ( $recording['id'] % 1000 ) . "/" . $recording['id'] . "/";
 
 				$debug->log($jconf['log_dir'], $myjobid . ".log", "Recording finalization for id = " . $recording['id'] . " started.", $sendmail = false);
 
@@ -269,20 +281,36 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_upload_finalize.stop' ) an
 				// Content: finalize
 				if ( $recording['contentmasterstatus'] == $jconf['dbstatus_uploaded'] ) $err = moveMediaFileToStorage($recording, "content");
 
+                // Update recording and master data size
+                $master_filesize = 0;
+                $recording_filesize = 0;
+                
+                unset($err);
 				$err = directory_size($destination_path);
-
-				if (!$err['code']) {
+				if ( !$err['code'] ) {
 					$debug->log($jconf['log_dir'], $myjobid ."log", "Directory_size() failed. Message:\n". $err['command_output'], 0);
 				} else {
-					$update = array(
-						'masterdatasize' => intval($err['value']),
-					);
-					$recDoc = $app->bootstrap->getModel('recordings');
-					$recDoc->select($recording['id']);
-					$recDoc->updateRow($update);
-					$debug->log($jconf['log_dir'], $myjobid .".log", "[INFO] Masterdatasize updated. Values: ". $update['masterdatasize'], false);
-					unset($err, $recDoc, $update);
-				}
+                    $master_filesize = intval($err['value']);
+                }
+
+                unset($err);
+				$err = directory_size($recording_path);
+				if ( !$err['code'] ) {
+					$debug->log($jconf['log_dir'], $myjobid ."log", "Directory_size() failed. Message:\n". $err['command_output'], 0);
+				} else {
+                    $recording_filesize = intval($err['value']);
+                }
+
+                $update = array(
+                    'masterdatasize' => $master_filesize,
+                    'recordingdatasize' => $recording_filesize
+                );
+                
+                $recDoc = $app->bootstrap->getModel('recordings');
+                $recDoc->select($recording['id']);
+                $recDoc->updateRow($update);
+                $debug->log($jconf['log_dir'], $myjobid .".log", "[INFO] Master and recording data size updated. Values: " . print_r($update, true), false);
+                unset($err, $recDoc, $update);
 
 				$app->watchdog();
 				$recordings->MoveNext();
