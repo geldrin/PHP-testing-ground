@@ -1,5 +1,4 @@
 <?php
-// Job: maintenance 2012/08/28
 
 define('BASE_PATH',	realpath( __DIR__ . '/../..' ) . '/' );
 define('PRODUCTION', false );
@@ -91,15 +90,16 @@ exit;
 function mailqueue_cleanup() {
 global $db, $jconf;
 
-	$mail_time = date("Y-m-d H:i:00", time() - (60 * 60 * 24 * 30));
+	$mail_time = date("Y-m-d H:i:s", strtotime(' -1 month'));
+	$mail_time_fullcleanup = date("Y-m-d H:i:s", strtotime(' -1 year'));
 
 	$query = "
 		DELETE FROM
 			mailqueue
 		WHERE
-			status = \"sent\" AND
-			timesent < \"" . $mail_time . "\"";
-
+			( status = 'sent' AND timesent < '" . $mail_time . "' ) OR
+            timesent < '" . $mail_time_fullcleanup . "'";
+            
 	try {
 		$rs = $db->Execute($query);
 	} catch (exception $err) {
