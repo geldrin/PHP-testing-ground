@@ -83,6 +83,8 @@ $mail_report_resend_timeout = 10*60;
 $db_outage_alert_every_mins = 30;
 // Storage check every N minutes
 $storage_check_every_mins = 60;
+// DB configuration check every N minutes
+$dbconfig_check_every_mins = 60;
 // SSH front-end ping every N minutes
 $ssh_check_every_mins = 10;
 // Helping variables
@@ -338,7 +340,19 @@ while( !is_file( $app->config['datapath'] . 'jobs/' . $myjobid . '.stop' ) and !
         if ( !empty($msg) ) $system_health_log .= "[INFO] Storage issue summary:\n" . $msg . "\n";
     }
 
-    // SSH ping all frontends from converter
+    // ## Check infrastructure description from DB: are front-ends and converters defined?
+    if ( $firstround or ( $minutes % $dbconfig_check_every_mins ) == 0 ) {
+        $node_frontends = getNodesByType("frontend");
+        if ( $node_frontends === false ) {
+            $debug->log($jconf['log_dir'], $myjobid . ".log", "[WARN] No front-end defined in DB!", $sendmail = false);
+        }
+        $node_converters = getNodesByType("converter");
+        if ( $node_converters === false ) {
+            $debug->log($jconf['log_dir'], $myjobid . ".log", "[WARN] No front-end defined in DB!", $sendmail = false);
+        }
+    }
+    
+    // ## SSH ping all frontends from converter
     if ( $firstround or ( $minutes % $ssh_check_every_mins ) == 0 ) {
         if ( ( $node_role == "converter" ) and $usedb ) {
             $msg = "";
@@ -346,9 +360,7 @@ while( !is_file( $app->config['datapath'] . 'jobs/' . $myjobid . '.stop' ) and !
             $ssh_status = "";
             $values = array('statusnetwork' => $node_info['statusnetwork']);
             $node_frontends = getNodesByType("frontend");
-            if ( $node_frontends === false ) {
-                $debug->log($jconf['log_dir'], $myjobid . ".log", "[WARN] No front-end defined in DB!", $sendmail = false);
-            } else {
+            if ( $node_frontends ) {
                 
                 // SSH ping: Loop through front-ends
                 while ( !$node_frontends->EOF ) {
@@ -364,7 +376,7 @@ while( !is_file( $app->config['datapath'] . 'jobs/' . $myjobid . '.stop' ) and !
                     $output_string = implode("\n", $output);
                     if ( $result != 0 ) {
 
-                    // SSH connection to front-end was not successful (problem first detected)
+                        // SSH connection to front-end was not successful (problem first detected)
                         if ( !file_exists($ssh_unavailable_flag) ) {
                         
                             $ssh_outage[$node_frontend['server']]['outage'] = true;
