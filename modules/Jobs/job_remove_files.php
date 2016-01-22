@@ -450,20 +450,23 @@ if ( $recversions !== false ) {
             $debug->log($jconf['log_dir'], $myjobid . ".log", "[OK] Recording version removed recver#" . $recversion['id'] . ", rec#" . $recversion['recordingid'] . ", filename = " . $recversion_filename . ", size = " . round($size_toremove / 1024 / 1024, 2) . "MB.", $sendmail = false);
 
             // ## Update recording and master size
+            $recording_dir_size = 0;
             $err = directory_size($remove_path);
-            if ( $err['code'] === true ) {
-                $recording_dir_size = $err['size'];
+            if ( $err['code'] ) {
+                $recording_dir_size = $err['value'];
             } else {
-                $recording_dir_size = 0;
                 $debug->log($jconf['log_dir'], $myjobid . ".log", "[WARN] Cannot get recording directory size. Truncated to 0.", $sendmail = false);
             }
+            
+            // Update DB
             $values = array(
                 'recordingdatasize' => $recording_dir_size
             );
+            
             $recDoc = $app->bootstrap->getModel('recordings');
             $recDoc->select($recversion['recordingid']);
             $recDoc->updateRow($values);
-            $debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Recording data size updated: " . round($recording_dir_size / 1024 / 1024, 2) . "MB", $sendmail = false);
+            $debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Recording data size updated: " . $recording_dir_size, $sendmail = false);
 
         } // End of recording version removal
 
@@ -516,21 +519,25 @@ if ( $attachments !== false ) {
             // Update attached document cache to NULL
             updateAttachedDocumentCache($attached_doc['id'], null);
 
-            // ## Update recording and master size
+            // ## Update recording size
+            $recording_dir_size = 0;
             $err = directory_size($remove_path);
-            if ( $err['code'] === true ) {
-                $recording_dir_size = $err['size'];
+            if ( $err['code'] ) {
+                $recording_dir_size = $err['value'];
             } else {
-                $recording_dir_size = 0;
                 $debug->log($jconf['log_dir'], $myjobid . ".log", "[WARN] Cannot get recording directory size. Truncated to 0.", $sendmail = false);
             }
+            
+            // Update DB
             $values = array(
                 'recordingdatasize' => $recording_dir_size
+            
             );
+            
             $recDoc = $app->bootstrap->getModel('recordings');
             $recDoc->select($attached_doc['rec_id']);
             $recDoc->updateRow($values);
-            $debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Recording data size updated: " . round($recording_dir_size / 1024 / 1024, 2) . "MB", $sendmail = false);
+            $debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Recording data size updated: " . $recording_dir_size, $sendmail = false);
 
         } // End of file removal
 
