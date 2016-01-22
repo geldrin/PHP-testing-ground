@@ -51,10 +51,8 @@ $db = db_maintain();
 // Check failed conversions
 $err = checkFailedRecordings();
 
-if ($err['code'] && is_array($err['result'])) {
+if ( $err['code'] && is_array($err['result']) ) {
 	$debug->log($jconf['log_dir'], $jconf['jobid_maintenance'] . ".log", $log_summary . $err['message'], $sendmail = true);
-	// print_r("MESSAGE:\n\n". $log_summary . $err['message'] ."\n");
-	print_r("REPORT SENT.\n");
 }
 
 // User validity: maintain for generated users
@@ -90,15 +88,15 @@ exit;
 function mailqueue_cleanup() {
 global $db, $jconf;
 
-	$mail_time = date("Y-m-d H:i:s", strtotime(' -1 month'));
-	$mail_time_fullcleanup = date("Y-m-d H:i:s", strtotime(' -1 year'));
+	$date_month_ago = date("Y-m-d H:i:s", strtotime(' -1 month'));
+	$date_year_ago = date("Y-m-d H:i:s", strtotime(' -1 year'));
 
 	$query = "
 		DELETE FROM
 			mailqueue
 		WHERE
-			( status = 'sent' AND timesent < '" . $mail_time . "' ) OR
-            timesent < '" . $mail_time_fullcleanup . "'";
+			( status = 'sent' AND timestamp < '" . $date_month_ago . "' ) OR
+            timestamp < '" . $date_year_ago . "'";
             
 	try {
 		$rs = $db->Execute($query);
