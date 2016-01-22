@@ -253,73 +253,66 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_upload_finalize.stop' ) an
 		break;
 	} // End of while(1)
 
-	// Recordings: finalize masters (once daily, after midnight)
-	$start_time = time();
-	$inwhichhour = 0;
-	if ( ( date("G") == $inwhichhour ) and ( empty($finalizedonelasttime) or ( ( $start_time - $finalizedonelasttime ) > 3600 * 24 ) ) ) {
+	// Recordings: finalize masters
+    $recordings = getRecordingMastersToFinalize();
+    if ( $recordings !== false ) {
 
-		$recordings = getRecordingMastersToFinalize();
-		if ( $recordings !== false ) {
+        while ( !$recordings->EOF ) {
+            $recording = $recordings->fields;
 
-			while ( !$recordings->EOF ) {
-				$recording = $recordings->fields;
+            $destination_path = $app->config['recordingpath'] . ( $recording['id'] % 1000 ) . "/" . $recording['id'] . "/master/";
+            $recording_path = $app->config['recordingpath'] . ( $recording['id'] % 1000 ) . "/" . $recording['id'] . "/";
 
-				$destination_path = $app->config['recordingpath'] . ( $recording['id'] % 1000 ) . "/" . $recording['id'] . "/master/";
-				$recording_path = $app->config['recordingpath'] . ( $recording['id'] % 1000 ) . "/" . $recording['id'] . "/";
+            $debug->log($jconf['log_dir'], $myjobid . ".log", "Recording finalization for id = " . $recording['id'] . " started.", $sendmail = false);
 
-				$debug->log($jconf['log_dir'], $myjobid . ".log", "Recording finalization for id = " . $recording['id'] . " started.", $sendmail = false);
+            $err = create_directory($destination_path);
+            if ( !$err['code'] ) {
+                $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Cannot create directory " . $destination_path, $sendmail = true);
+                $recordings->MoveNext();
+                continue;
+            }
 
-				$err = create_directory($destination_path);
-				if ( !$err['code'] ) {
-					$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Cannot create directory " . $destination_path, $sendmail = true);
-					$recordings->MoveNext();
-					continue;
-				}
+            // Recording: finalize
+            if ( $recording['masterstatus'] == $jconf['dbstatus_uploaded'] ) $err = moveMediaFileToStorage($recording, "recording");
+            // Content: finalize
+            if ( $recording['contentmasterstatus'] == $jconf['dbstatus_uploaded'] ) $err = moveMediaFileToStorage($recording, "content");
+            
+            // Update recording and master data size
+            $master_filesize = 0;
+            $recording_filesize = 0;
+            
+            unset($err);
+            $err = directory_size($destination_path);
+            if ( !$err['code'] ) {
+                $debug->log($jconf['log_dir'], $myjobid ."log", "Directory_size() failed. Message:\n". $err['command_output'], 0);
+            } else {
+                $master_filesize = intval($err['value']);
+            }
 
-				// Recording: finalize
-				if ( $recording['masterstatus'] == $jconf['dbstatus_uploaded'] ) $err = moveMediaFileToStorage($recording, "recording");
-				// Content: finalize
-				if ( $recording['contentmasterstatus'] == $jconf['dbstatus_uploaded'] ) $err = moveMediaFileToStorage($recording, "content");
+            unset($err);
+            $err = directory_size($recording_path);
+            if ( !$err['code'] ) {
+                $debug->log($jconf['log_dir'], $myjobid ."log", "Directory_size() failed. Message:\n". $err['command_output'], 0);
+            } else {
+                $recording_filesize = intval($err['value']);
+            }
 
-                // Update recording and master data size
-                $master_filesize = 0;
-                $recording_filesize = 0;
-                
-                unset($err);
-				$err = directory_size($destination_path);
-				if ( !$err['code'] ) {
-					$debug->log($jconf['log_dir'], $myjobid ."log", "Directory_size() failed. Message:\n". $err['command_output'], 0);
-				} else {
-                    $master_filesize = intval($err['value']);
-                }
+            $update = array(
+                'masterdatasize' => $master_filesize,
+                'recordingdatasize' => $recording_filesize
+            );
+            
+            $recDoc = $app->bootstrap->getModel('recordings');
+            $recDoc->select($recording['id']);
+            $recDoc->updateRow($update);
+            $debug->log($jconf['log_dir'], $myjobid .".log", "[INFO] Master and recording data size updated. Values: " . print_r($update, true), false);
+            unset($err, $recDoc, $update);
 
-                unset($err);
-				$err = directory_size($recording_path);
-				if ( !$err['code'] ) {
-					$debug->log($jconf['log_dir'], $myjobid ."log", "Directory_size() failed. Message:\n". $err['command_output'], 0);
-				} else {
-                    $recording_filesize = intval($err['value']);
-                }
+            $app->watchdog();
+            $recordings->MoveNext();
+        }
 
-                $update = array(
-                    'masterdatasize' => $master_filesize,
-                    'recordingdatasize' => $recording_filesize
-                );
-                
-                $recDoc = $app->bootstrap->getModel('recordings');
-                $recDoc->select($recording['id']);
-                $recDoc->updateRow($update);
-                $debug->log($jconf['log_dir'], $myjobid .".log", "[INFO] Master and recording data size updated. Values: " . print_r($update, true), false);
-                unset($err, $recDoc, $update);
-
-				$app->watchdog();
-				$recordings->MoveNext();
-			}
-
-		// Log finalization last time
-		$finalizedonelasttime = time();
-		}
-	}
+    }
 
 	// Close DB connection if open
 	if ( is_resource($db->_connectionID) ) $db->close();
