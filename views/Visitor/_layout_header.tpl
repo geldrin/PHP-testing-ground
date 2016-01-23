@@ -137,15 +137,13 @@
   {/if}
 </div>
 
+<a href="#" id="mobilemenu"></a>
 <div id="headerlogo">
   <a href="{$BASE_URI}" title="{#sitename#}" class="basic"><span></span>{#sitename#}</a>
 </div>
 <div id="headermenu"{if $pagebgclass} class="black"{/if}>
   <nav>
     <ul>
-      {*}
-      <li class="{if $module == 'index'}active {/if}first"><a href="{$BASE_URI}">{#sitewide_home#}</a></li>
-      {/*}
       <li{if $module == 'categories'} class="active"{/if}><a href="{$language}/categories">{#sitewide_categories#}</a></li>
       {if $organization.islivestreamingenabled}
         <li{if $module == 'live'} class="active"{/if}><a href="{$language}/live">{#sitewide_live#}</a></li>

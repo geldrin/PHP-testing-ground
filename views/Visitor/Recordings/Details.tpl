@@ -94,7 +94,7 @@
     {if $member.id}
       <li id="channelslink"><a href="#"><span></span>{#recordings__addtochannel#}</a></li>
     {/if}
-    <li id="commentslink"><a href="#"><span data-commentcount="{$commentcount|default:'0'}">{$commentcount|default:'0'}</span> {#recordings__comments#}</a></li>
+    <li id="commentslink"><a href="#"><span data-commentcount="{$commentcount|default:'0'}">{$commentcount|default:'0'}</span> <span id="commentslinktext">{#recordings__comments#}</span></a></li>
     {if $bootstrap->config.loadaddthis}
     <li id="sharelink"><a href="#" title="{#recordings__share#}"><span></span>{#recordings__share#}</a></li>
     {/if}

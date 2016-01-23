@@ -675,23 +675,24 @@ a.submitbutton:hover,
   vertical-align: top;
   z-index: 2;
   height: 72px;
-  width: 190px;
+  width: 134px;
+  margin-right: 56px;
 }
 #headerlogo a, #headerlogo a.basic span {
   display: inline-block;
   overflow: hidden;
 }
 #headerlogo a.basic, #headerlogo a.basic span {
-  width: 190px;
+  width: 134px;
   height: 72px;
-}
-#headerlogo img {
-  max-height: 51px;
 }
 #headerlogo a.basic span {
   background-image: url(images/header_logo.png);
   background-repeat: no-repeat;
   background-position: left 5px center;
+}
+#mobilemenu {
+  display: none;
 }
 
 /* avatar */

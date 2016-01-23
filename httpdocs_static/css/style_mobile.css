@@ -5,7 +5,7 @@
   display: none;
 }
 
-@media all and (max-width: 980px) {
+@media all and (max-width: 1000px) {
   body {
     -webkit-text-size-adjust: none;
   }
@@ -149,13 +149,41 @@
     height: auto;
   }
 
-  
+  #channelheader {
+    background-color: #000;
+  }
+  #channelheader img {
+    width: 100%;
+    height: auto;
+  }
+  #channelheader .channelinfowrap {
+    padding: 0;
+  }
+  #channeldescription .submitbutton {
+    margin: 0 10px 10px 0;
+  }
+
   /* recording details */
+  #infobar #infolink,
+  #infobar #channelslink,
+  #infobar #embedlink {
+    width: 22px;
+  }
+  #infobar #commentslink #commentslinktext {
+    display: none;
+  }
+  #embed textarea {
+    width: 100%;
+    min-height: 54px;
+    height: auto;
+  }
   #channels .actions {
     right: -10px;
   }
   #channels .channelname {
     padding-right: 15px;
+    white-space: nowrap;
+    text-overflow: ellipsis;
   }
   #metadata {
     width: 100%;
@@ -310,6 +338,26 @@
   #systemmessage {
     width: auto;
   }
+
+  #footer {
+    text-align: center;
+    height: 96px;
+  }
+  #footerbg {
+    height: 148px;
+  }
+  #footer .footerlinkswrap,
+  #footer .footerinfowrap .title {
+    display: none;
+  }
+  #footer .footersocialwrap,
+  #footer .footerinfowrap {
+    float: none;
+    width: 100%;
+  }
+  #footer .footersocialwrap {
+    margin-top: 15px;
+  }
 }
 
 /*
@@ -413,19 +461,64 @@
 }
 */
 @media all and (max-width: 660px) {
+  #header {
+    text-align: center;
+  }
+  #headerlogo {
+    margin: 0;
+  }
+  #headermenu {
+    position: static;
+  }
+  #headermenu li {
+    display: none;
+  }
+  #headermenu #headersearchlink {
+    display: inline-block;
+    position: absolute;
+    z-index: 3;
+    top: 0px;
+    right: 5px;
+    border: 0;
+  }
+  #headermenu #headersearchlink a,
+  #headermenu #headersearchlink a span {
+    width: 48px;
+  }
+  #headermenu #headersearchlink:focus,
+  #headermenu #headersearchlink:hover {
+    background: none;
+  }
+  #mobilemenu {
+    display: block;
+    position: absolute;
+    left: 5px;
+    top: 0px;
+    z-index: 3;
+    width: 48px;
+    height: 72px;
+    background-repeat: no-repeat;
+    background-position: center center;
+    background-image: url(images/mobilemenu.png);
+  }
+  #mobilemenu:hover,
+  #mobilemenu:focus {
+    background-image: url(images/mobilemenu_hover.png);
+  }
+  #mobilemenu.active {
+    background-image: url(images/mobilemenu_active.png);
+  }
+
+  #perpageselector,
   .sort {
     height: auto;
-  }
-  .sort .item {
-    display: block;
-    border-bottom-left-radius: 0px;
-    border-bottom-right-radius: 0px;
+    float: none;
   }
   .sort .item ul {
     display: none;
     position: absolute;
     left: 0px;
-    background-color: #F5F5F5;
+    background-color: #000;
     width: 100%;
     border: 1px solid #999;
     border-top: 0px;
@@ -438,89 +531,22 @@
   .sort .item.hover ul {
     display: block;
   }
-  
-  #footerbg {
-    height: 140px;
-    margin-top: -140px;
-  }
-  #footer {
-    height: 125px;
-    padding-top: 15px;
-  }
-  .footercontent.leftbox:nth-child(2), .footercontent.leftbox:nth-child(3) {
-    display: none;
-  }
-  #footer .footerlinks li {
-    display: inline;
-  }
-  
+
   .leftdoublebox, .rightbox, .halfbox {
     float: none;
     width: auto;
-  }
-  
-  #header .rightbox {
-    float: right;
-  }
-  
-  #indexcontainer .wlarge {
-    width: 100%;
   }
 
   .widepager .itemsperpagecontainer {
     display: none;
   }
-  
 }
 @media all and (max-width: 460px) {
-  
-  #headerbg {
-    height: 55px;
+  #indexcontainer .recordingpic .length {
+    bottom: 22px;
   }
-  #headerloginactions, #headersearch {
-    margin-top: 2px;
-  }
-  #headersearchlink, #headerloginactions, #headerloginactions a {
-    font-size: 12px;
-  }
-  #headerlogo a.basic, #headerlogo a.basic span {
-    width: 78px;
-    height: 22px;
-  }
-  #headerlogo img {
-    max-height: 29px;
-  }
-  #headertop, #headerlogo {
-    height: 29px;
-  }
-  #headerlogo {
-    height: 26px;
-  }
-  #headerbottom {
-    height: 24px;
-  }
-  #headermenu a span {
-    display: none;
-  }
-  #headermenu a {
-    height: 19px;
-    font-size: 11px;
-    margin-right: 0px;
-    padding: 3px 0px 2px 0px;
-  }
-  #headermenu li.active a {
-    -webkit-background-size: 8px auto;
-    background-size: 8px auto;
-  }
+
   .form.search .submitbutton {
     width: 70px;
   }
-  #pagebg {
-    top: 55px;
-  }
-  
-  .treeview {
-    width: 100%;
-  }
-  
 }
