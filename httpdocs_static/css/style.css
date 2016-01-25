@@ -1993,6 +1993,8 @@ li#languageselectorlink {
   position: absolute;
   bottom: 0px;
   padding: 0 10px;
+  float: none;
+  width: auto;
 }
 #indexcontainer .recordingcontent .presenter,
 #indexcontainer .recordingcontent .timestamp {
