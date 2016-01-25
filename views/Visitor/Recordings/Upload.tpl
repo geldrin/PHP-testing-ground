@@ -7,6 +7,11 @@
   var uploadchunkurl = "{$BASE_URI}{$language}/recordings/uploadchunk";
   var checkresumeurl = "{$BASE_URI}{$language}/recordings/checkfileresume";
 </script>
+<div id="categoryheading">
+  <h1>{#recordings__upload_title#}</h1>
+</div>
+<div class="channelgradient"></div>
+<br/>
 
 <div id="videoupload" class="leftdoublebox form">
   <noscript id="noscriptcontainer">

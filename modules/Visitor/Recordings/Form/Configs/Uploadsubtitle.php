@@ -9,8 +9,6 @@ $config = Array(
   
   'fs1' => array(
     'type'   => 'fieldset',
-    'legend' => $l('recordings', 'uploadsubtitle_title'),
-    'prefix' => '<span class="legendsubtitle">' . $l('recordings', 'uploadsubtitle_subtitle') . '</span>',
   ),
 
   'recordingid' => Array(
@@ -53,3 +51,6 @@ $config = Array(
   ),
   
 );
+
+if ( $l('recordings', 'uploadsubtitle_subtitle') )
+  $config['prefix'] = '<span class="legendsubtitle">' . $l('recordings', 'uploadsubtitle_subtitle') . '</span>';

@@ -268,7 +268,7 @@ textarea {
   height: 30px;
   line-height: 15px;
   text-align: center;
-  vertical-align: middle;
+  vertical-align: top;
   border: 0;
   color: #fff;
   background-color: #29abe2;
@@ -1125,9 +1125,15 @@ li#languageselectorlink {
 }
 #body div.title {
   clear: both;
-  border-bottom: 1px solid #d7d7d7;
+  padding: 0 0 0 10px;
+  width: 100%;
+  border-top; 1px solid #fff;
+  border-bottom: 1px solid #d8d8d8;
+  box-sizing: border-box;
+}
+#body div.title h1 {
   margin: 0;
-  padding: 0;
+  line-height: 70px;
 }
 #body div.title a {
   display: block;
@@ -1393,7 +1399,6 @@ li#languageselectorlink {
 .heading.categorydetails {
   padding: 0 0 0 10px;
   width: 100%;
-  background-color: #fff;
   border-top; 1px solid #fff;
   border-bottom: 1px solid #d8d8d8;
   box-sizing: border-box;
@@ -1462,15 +1467,21 @@ li#languageselectorlink {
 .heading.categorydetails a:hover {
   color: #43b5e5;
 }
-.heading.categorydetails .back {
+.heading.categorydetails .back,
+#categoryheading .back {
   float: right;
   padding-right: 25px;
   background-repeat: no-repeat;
   background-position: right 0px bottom 10px;
   background-image: url(images/arrow_back.png);
 }
-.heading.categorydetails .back:hover {
+.heading.categorydetails .back:hover,
+#categoryheading .back:hover {
   background-image: url(images/arrow_back_hover.png);
+}
+#categoryheading .back {
+  line-height: 70px;
+  background-position: right 0px bottom 25px;
 }
 
 /* paging search */

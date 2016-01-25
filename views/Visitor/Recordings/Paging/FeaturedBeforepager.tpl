@@ -1,6 +1,8 @@
-<div class="heading">
+<div id="categoryheading">
   <h1>{$title|escape:html}</h1>
 </div>
+<div class="channelgradient"></div>
+<br/>
 
 <ul class="featuredlist">
   <li{if $type == 'featured'} class="active"{/if}><a href="{$language}/recordings/featured">{#recordings__featured_featured#}</a></li>

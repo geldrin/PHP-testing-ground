@@ -1,7 +1,9 @@
-<div class="title">
+<div id="categoryheading">
+  <a class="back" href="{$back|escape:html}">{#sitewide_back#}</a>
   <h1>{#recordings__manageattachments_title#} - {$recording.title|escape:html}</h1>
-  <h2><a href="{$back|escape:html}">{#sitewide_back#}</a></h2>
 </div>
+<div class="channelgradient"></div>
+<br/>
 
 <ul>
   {foreach from=$attachments item=attachment}

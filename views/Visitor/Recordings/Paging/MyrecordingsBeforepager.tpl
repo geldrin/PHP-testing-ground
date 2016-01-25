@@ -1,7 +1,9 @@
-<div class="heading">
+<div id="categoryheading">
   <h1>{#recordings__myrecordings_title#}</h1>
-  <h2>{#recordings__myrecordings_subtitle#}</h2>
 </div>
+<div class="channelgradient"></div>
+<br/>
+<h2>{#recordings__myrecordings_subtitle#}</h2>
 
 {if !$nosearch}
 <div id="myrecordingsquicksearch" class="form pagingsearch">

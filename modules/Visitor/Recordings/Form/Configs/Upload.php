@@ -14,7 +14,6 @@ $config = Array(
   
   'fs1' => array(
     'type'   => 'fieldset',
-    'legend' => $l('recordings', 'upload_title'),
     'prefix' => '<span class="legendsubtitle">' . $l('recordings', 'upload_subtitle') . '</span>',
   ),
   

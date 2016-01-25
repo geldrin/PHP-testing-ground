@@ -7,6 +7,12 @@
 
 {if $insertbefore}
   {include file=$insertbefore}
+{elseif $title}
+<div id="categoryheading">
+  <h1>{$title|escape:html}</h1>
+</div>
+<div class="channelgradient"></div>
+<br/>
 {/if}
 
 <div class="form {$formclass|default:"halfbox left"}">
