@@ -648,7 +648,7 @@ class Recordings extends \Springboard\Model {
 
     // mediainfo invalid xmlt adhat vissza, itt tisztitjuk meg
     $normalizedXML = preg_replace_callback(
-      '/(&#[xX]?[0-9]+;)/',
+      '/(&#[xX]?[0-9a-fA-F]+;)/',
       array( $this, 'normalizeHTMLEntitiesCallback' ),
       $output
     );
