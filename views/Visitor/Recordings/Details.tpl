@@ -1,14 +1,11 @@
 {if $recording.mediatype == 'audio' and isset( $flashdata.subtitle_files )}
 {assign var=flashheight value=140}
-{assign var=pagebgclass value=mediumheight}
 {elseif $recording.mediatype == 'audio'}
 {assign var=flashheight value=60}
-{assign var=pagebgclass value=minheight}
 {else}
 {assign var=flashheight value=530}
-{assign var=pagebgclass value=fullheight}
 {/if}
-{include file="Visitor/_header.tpl" title=$recording.title pagebgclass=$pagebgclass}
+{include file="Visitor/_header.tpl" title=$recording.title}
 
 <div id="player"{if !$browser.mobile} style="height: {$flashheight}px;"{/if}>
   
@@ -94,7 +91,7 @@
     {if $member.id}
       <li id="channelslink"><a href="#"><span></span>{#recordings__addtochannel#}</a></li>
     {/if}
-    <li id="commentslink"><a href="#"><span data-commentcount="{$commentcount|default:'0'}">{$commentcount|default:'0'}</span> <span id="commentslinktext">{#recordings__comments#}</span></a></li>
+    <li id="commentslink"><a href="#"><span id="commentcount" data-commentcount="{$commentcount|default:'0'}">{$commentcount|default:'0'}</span> <span id="commentslinktext">{#recordings__comments#}</span></a></li>
     {if $bootstrap->config.loadaddthis}
     <li id="sharelink"><a href="#" title="{#recordings__share#}"><span></span>{#recordings__share#}</a></li>
     {/if}

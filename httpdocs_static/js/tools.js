@@ -75,6 +75,7 @@ $j(document).ready(function() {
 
   });
 
+  setupMobileMenu();
 });
 
 function runIfExists( selector, func ) {
@@ -106,6 +107,17 @@ function handleFlashLoad(e) {
 
   alert( l.flashloaderror );
 
+}
+
+function setupMobileMenu() {
+  $j('#mobilemenu').click(function(e) {
+    e.preventDefault();
+
+    if ( $j('#headersearch').is(':visible') )
+      $j('#headersearch').hide();
+
+    $j('#headermenu').toggleClass('shown');
+  });
 }
 
 function setupChannelRecordings(elem) {

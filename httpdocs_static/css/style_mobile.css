@@ -12,17 +12,10 @@
   #headerbg, #footerbg {
     min-width: 0px;
   }
-  #headersearchlink a,
-  #headersearchlink a span {
-    height: 66px;
-  }
   #headersearchlink {
     display: inline-block;
     text-align: right;
     vertical-align: top;
-  }
-  #headersearch form {
-    display: none;
   }
   #headerlogin {
     margin-top: 10px;
@@ -468,10 +461,29 @@
     margin: 0;
   }
   #headermenu {
-    position: static;
+    position: fixed;
+    width: 250px;
+    height: 100%;
+    left: -250px;
+    box-sizing: border-box;
+    margin: 0;
+    padding: 60px 10px 10px 15px;
+    text-align: left;
+    background-color: #000;
+    z-index: 2;
+    -webkit-transition: all 200ms cubic-bezier(0.455, 0.03, 0.515, 0.955);
+    transition: all 200ms cubic-bezier(0.455, 0.03, 0.515, 0.955);
+  }
+  #headermenu.shown {
+    left: 0px;
   }
   #headermenu li {
-    display: none;
+    float: none;
+    border: 0;
+  }
+  #headermenu li:focus,
+  #headermenu li:hover {
+    border: 0;
   }
   #headermenu #headersearchlink {
     display: inline-block;
@@ -491,7 +503,7 @@
   }
   #mobilemenu {
     display: block;
-    position: absolute;
+    position: fixed;
     left: 5px;
     top: 0px;
     z-index: 3;
