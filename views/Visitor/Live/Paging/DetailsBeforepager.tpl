@@ -1,5 +1,9 @@
-<div class="title">
+<div id="categoryheading">
   <h1>{$channel.title|escape:html|mb_wordwrap:25}</h1>
+</div>
+<div class="channelgradient"></div>
+<br/>
+<div class="title">
   {if $member.id or $channel.subtitle}
     <h2>
       {if $channel|@userHasAccess or $channel.relatedchannelid}
