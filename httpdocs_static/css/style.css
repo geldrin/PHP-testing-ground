@@ -669,18 +669,43 @@ a.submitbutton:hover,
 }
 #headerloginform input {
   display: block;
-  width: 100%;
-  border: 1px solid #000;
+  width: 90%;
+  margin: 0 auto 2px auto;
+  border: 1px solid #2389b5;
   border-radius: 0;
   box-sizing: border-box;
+  padding: 6px;
+  font-size: 14px;
 }
-#headerloginform a {
-  
+#headerloginform input[type=submit] {
+  background-color: white;
+  color: #29ABE2;
+  border: none;
+  border-radius: 3px;
+  width: auto;
+  clear: both;
+  margin-top: 15px;
 }
-#headermenu #headerloginform a {
+#headerloginform #login_rememberme {
+  display: inline;
+  clear: left;
+  float: left;
+  margin: 8px 10px 10px 12px;
+  width: auto;
+}
+#headerloginform label {
+  float: left;
+  clear: right;
+  margin: 3px 0 10px 0;
+  color: white;
+}
+#headermenu li#headeruserlink #headerloginform a.signuplink {
   color: #fff;
   width: auto;
   height: auto;
+  margin-top: 10px;
+  padding: 8px 0 5px 0;
+  line-height: normal;
 }
 #headermenu #currentusermenu {
   text-align: left;

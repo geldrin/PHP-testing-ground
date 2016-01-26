@@ -141,8 +141,7 @@
                   <div id="login_rememberme_wrap">
                     <input type="checkbox" tabindex="3" name="autologin" value="1" id="login_rememberme"/><label for="login_rememberme">{#login_rememberme#}</label>
                   </div>
-                  <input class="submitbutton" type="submit" value="{#sitewide_login#}" tabindex="4"/><br/>
-
+                  <input class="submitbutton" type="submit" value="{#sitewide_login#}" tabindex="4"/>
                   {if $organization.registrationtype != 'closed'}
                     <a class="signuplink" href="{$language}/users/signup">{#sitewide_signup#}</a>
                   {/if}
