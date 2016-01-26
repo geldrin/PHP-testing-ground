@@ -129,7 +129,7 @@ while( !is_file( $app->config['datapath'] . 'jobs/' . $myjobid . '.stop' ) and !
 		$app->watchdog();
 
 		// Video thumbnail generation (when first video is converted)
-		if ( empty($encoding_profile['parentid']) and ( $encoding_profile['type'] == "recording" ) and ( $encoding_profile['mediatype'] == "video" ) ) {
+        if ( ( $encoding_profile['generatethumbnails'] == 1 ) and ( $encoding_profile['type'] == "recording" ) and ( $encoding_profile['mediatype'] == "video" ) ) { 
 			$err = convertVideoThumbnails($recording);
 			// Check if we need to stop conversion
 			if ( checkRecordingVersionToStop($recording) ) break;
