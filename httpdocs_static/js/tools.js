@@ -12,7 +12,7 @@ $j(document).ready(function() {
   $j.timepicker.setDefaults($j.timepicker.regional[ language ]);
 
   runIfExists('#headerlogin', setupHeaderLogin );
-  runIfExists('#headersearch', setupHeaderSearch );
+  runIfExists('#headermenu', setupHeaderMenu );
   runIfExists('.ratewidget', setupRateWidget );
   runIfExists('#uploadrow', setupVideoUpload );
   runIfExists('.categoryiconitem', setupCategoryIconSelector );
@@ -620,7 +620,12 @@ function setupInfoToggle() {
 
 }
 
-function setupHeaderSearch() {
+function setupHeaderMenu() {
+  $j('#headeruserlink > a').on('click', function(e) {
+    e.preventDefault();
+    $j('#headerlogin').toggle();
+  });
+
   $j('#headersearchlink').on('click', function(e) {
     e.preventDefault();
     if ( $j('#headersearch').hasClass('active') ) {
