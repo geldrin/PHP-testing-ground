@@ -240,11 +240,11 @@ label {
   padding: 0px 10px 0px 10px;
 }
 textarea {
-  font-family: "Arial", "sans-serif";
+  font-family: "Exo 2", "Arial", "sans-serif";
   width: 260px;
   height: 80px;
   padding: 6px 10px 3px 10px;
-  font-size: 13px;
+  font-size: 14px;
 }
 .inputbackground, .form textarea, .form input[type=text], .form input[type=password], .form .inputtext {
   color: #333;
@@ -568,7 +568,7 @@ a.submitbutton:hover,
   padding: 10px 20px 10px 20px;
   width: 940px;
   clear: both;
-  margin: 0px 0px 20px 0px;
+  margin: 20px 0px;
 }
 #systemmessageclose {
   float: right;
@@ -649,7 +649,7 @@ a.submitbutton:hover,
 
 /* headerlogin */
 #headerlogin {
-  display: block;
+  display: none;
   position: absolute;
 }
 #headerloginactions {
@@ -678,6 +678,10 @@ a.submitbutton:hover,
   padding: 6px;
   font-size: 14px;
 }
+#headerloginform input:focus,
+#headerloginform input:hover {
+  border: 1px solid #d8d8d8;
+}
 #headerloginform input[type=submit] {
   background-color: white;
   color: #29ABE2;
@@ -685,6 +689,11 @@ a.submitbutton:hover,
   border-radius: 3px;
   width: auto;
   clear: both;
+}
+#headerloginform input[type=submit]:hover,
+#headerloginform input[type=submit]:focus {
+  background: #4ac9ff;
+  color: #fff;
 }
 #headerloginform #login_rememberme {
   display: inline;
@@ -704,8 +713,12 @@ a.submitbutton:hover,
   color: #fff;
   width: auto;
   height: auto;
-  margin: 10px 0 5px 0;
+  margin: 15px 0 10px 0;
   line-height: normal;
+}
+#headermenu li#headeruserlink #headerloginform a.signuplink:focus,
+#headermenu li#headeruserlink #headerloginform a.signuplink:hover {
+  text-decoration: underline;
 }
 #headermenu #currentusermenu {
   text-align: left;
@@ -767,6 +780,9 @@ a.submitbutton:hover,
   margin-bottom: 5px;
 }
 #headermenu #currentusermenu li {
+  border: 0;
+  transition: none;
+  float: none;
   margin: 0 0 2px 1px;
 }
 #headermenu #currentusermenu .column.first li {
@@ -783,7 +799,8 @@ a.submitbutton:hover,
   line-height: 24px;
   padding: 2px 0px 3px 20px;
   color: #ccc;
-  font-weight: bold;
+  font-weight: normal;
+  font-size: 14px;
   display: inline-block;
   width: 100%;
   height: auto;
@@ -812,7 +829,7 @@ a.submitbutton:hover,
   display: inline-block;
   vertical-align: top;
   position: relative;
-  z-index: 2;
+  z-index: 300; /* .sort folott */
   height: 72px;
 }
 #headermenu nav {
@@ -966,6 +983,7 @@ li#headeruserlink {
 li#headeruserlink img {
   vertical-align: middle;
   margin-bottom: 4px;
+  border-radius: 5px;
 }
 li#headeruserlink {
   border-right: 1px solid #2389b5;

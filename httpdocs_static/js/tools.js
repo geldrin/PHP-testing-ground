@@ -623,6 +623,7 @@ function setupInfoToggle() {
 function setupHeaderMenu() {
   $j('#headeruserlink > a').on('click', function(e) {
     e.preventDefault();
+    $j(this).toggleClass('active');
     $j('#headerlogin').toggle();
   });
 
