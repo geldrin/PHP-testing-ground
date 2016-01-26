@@ -11,7 +11,6 @@ $j(document).ready(function() {
   $j.datepicker.setDefaults($j.datepicker.regional[ language ]);
   $j.timepicker.setDefaults($j.timepicker.regional[ language ]);
 
-  runIfExists('#headerlogin', setupHeaderLogin );
   runIfExists('#headermenu', setupHeaderMenu );
   runIfExists('.ratewidget', setupRateWidget );
   runIfExists('#uploadrow', setupVideoUpload );
@@ -31,7 +30,7 @@ $j(document).ready(function() {
   runIfExists('.streamserverlink', setupServerLink );
   runIfExists('#feeds', setupManagefeeds );
   runIfExists('#feeds .needpoll', setupStreamPoll );
-  runIfExists('#currentuser', setupCurrentUser );
+  runIfExists('#currentusermenu', setupCurrentUser );
   runIfExists('#search_advanced', setupSearch );
   runIfExists('#recordings_modifycontributors', setupContributors );
   runIfExists('#contributors_create, #contributors_modify', setupContributorEdit );
@@ -624,11 +623,13 @@ function setupHeaderMenu() {
   $j('#headeruserlink > a').on('click', function(e) {
     e.preventDefault();
     $j(this).toggleClass('active');
-    $j('#headerlogin').toggle();
+    $j('#headerloginactions, #currentusermenu').toggle();
   });
 
-  $j('#headersearchlink').on('click', function(e) {
+  $j('#headersearchlink a').on('click', function(e) {
     e.preventDefault();
+    $j(this).toggleClass('active');
+
     if ( $j('#headersearch').hasClass('active') ) {
       $j('#headersearch').slideUp(200).removeClass('active');
     } else {
@@ -662,18 +663,6 @@ function setupHeaderMenu() {
       $j('#languageselector').toggleClass('active', false );
     }, 1750 );
 
-  });
-
-}
-
-function setupHeaderLogin() {
-
-  if ( BROWSER.mobile && !BROWSER.tablet )
-    return;
-
-  $j('#headerloginactionlink').on('click', function( e ) {
-    e.preventDefault();
-    $j('#headerloginform, #headerloginactions').toggle();
   });
 
 }

@@ -649,10 +649,10 @@ a.submitbutton:hover,
 
 /* headerlogin */
 #headerlogin {
-  display: none;
   position: absolute;
 }
 #headerloginactions {
+  display: none;
   padding: 14px 0 0 0;
   width: 225px;
   margin: 14px 0 0 -72px;
@@ -722,15 +722,14 @@ a.submitbutton:hover,
   text-decoration: underline;
 }
 #headermenu #currentusermenu {
+  display: none;
   text-align: left;
   width: auto;
   overflow: hidden;
   position: absolute;
   right: 0px;
-  background-color: #333333;
-  background-color: rgba(51,51,51,0.9);
-  border: 1px solid #1f1f1f;
-  border: 1px solid rgba(0, 0, 0, 0.5);
+  background-color: #29abe2;
+  border: 1px solid #d8d8d8;
   -moz-border-radius: 5px;
   -webkit-border-radius: 5px;
   border-radius: 5px;
@@ -744,10 +743,7 @@ a.submitbutton:hover,
   width: 215px;
   height: 100%;
   vertical-align: top;
-  border-right: 1px solid #333;
-  -moz-box-shadow: 1px 0px 1px #585858;
-  -webkit-box-shadow: 1px 0px 1px #585858;
-  box-shadow: 1px 0px 1px #585858;
+  border-right: 1px solid #d8d8d8;
   overflow: hidden;
 }
 #headermenu #currentusermenu .column.last {
@@ -758,15 +754,12 @@ a.submitbutton:hover,
 #headermenu #currentusermenu .column.last .placeholder {
   width: 240px;
   height: 45px;
-  border-bottom: 1px solid #333;
-  -moz-box-shadow: 0px 1px 1px #585858;
-  -webkit-box-shadow: 0px 1px 1px #585858;
-  box-shadow: 0px 1px 1px #585858;
+  border-bottom: 1px solid #d8d8d8;
   margin-bottom: 10px;
 }
 #headermenu #currentusermenu .title {
-  color: #999;
-  font-size: 11px;
+  color: #fff;
+  font-size: 12px;
   font-style: italic;
   font-weight: bold;
   padding-left: 20px;
@@ -784,24 +777,21 @@ a.submitbutton:hover,
   border: 0;
   transition: none;
   float: none;
-  margin: 0 0 2px 1px;
+  margin: 0 0 0 1px;
+  height: 28px;
 }
 #headermenu #currentusermenu .column.first li {
   margin-left: 0px;
 }
 #headermenu #currentusermenu li:hover {
-  background-color: #666;
-  background-color: rgba(0, 0, 0, 0.5);
-  -moz-box-shadow: inset 0px 1px 5px rgba(0, 0, 0, 0.75);
-  -webkit-box-shadow: inset 0px 1px 5px rgba(0, 0, 0, 0.75);
-  box-shadow: inset 0px 1px 5px rgba(0, 0, 0, 0.75);
+  background-color: #2499ca;
 }
 #headermenu #currentusermenu li a {
   line-height: 24px;
   padding: 2px 0px 3px 20px;
-  color: #ccc;
+  color: #fff;
   font-weight: normal;
-  font-size: 14px;
+  font-size: 13px;
   display: inline-block;
   width: 100%;
   height: auto;
@@ -811,7 +801,7 @@ a.submitbutton:hover,
   box-sizing: border-box;
 }
 #headermenu #currentusermenu li:hover a {
-  color: #fff;
+  font-weight: bold;
   text-decoration: none;
   background-image: url(images/arrow_right_white.png);
   background-repeat: no-repeat;
@@ -821,8 +811,7 @@ a.submitbutton:hover,
   display: inline-block;
   width: 100%;
   height: 1px;
-  background-color: #333;
-  border-bottom: 1px solid #585858;
+  border-bottom: 1px solid #d8d8d8;
   margin-bottom: 5px;
 }
 /* headermenu */

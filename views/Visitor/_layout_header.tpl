@@ -34,7 +34,7 @@
               {assign var=columncount value=$columncount+1}
             {/if}
 
-            <div id="currentusermenu" class="menulayer" style="width: {$columncount*216-216+241}px">
+            <div id="currentusermenu" style="width: {$columncount*216-216+241}px">
               {if $member.isnewseditor or $member.isclientadmin or $member.iseditor}
                 <div class="column first">
                     <div class="title">{#usermenu_organizations_title#}</div>
