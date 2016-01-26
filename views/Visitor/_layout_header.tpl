@@ -140,6 +140,7 @@
                   <input class="inputtext inputbackground clearonclick" type="password" name="password" data-origval="******" value="******" tabindex="2"/>
                   <div id="login_rememberme_wrap">
                     <input type="checkbox" tabindex="3" name="autologin" value="1" id="login_rememberme"/><label for="login_rememberme">{#login_rememberme#}</label>
+                    <div class="clear"></div>
                   </div>
                   <input class="submitbutton" type="submit" value="{#sitewide_login#}" tabindex="4"/>
                   {if $organization.registrationtype != 'closed'}

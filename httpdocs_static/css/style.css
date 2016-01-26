@@ -666,11 +666,12 @@ a.submitbutton:hover,
 }
 #headerloginform form {
   padding: 10px 0;
+  text-align: center;
 }
 #headerloginform input {
-  display: block;
+  display: inline-block;
   width: 90%;
-  margin: 0 auto 2px auto;
+  margin: 0 0 2px 0;
   border: 1px solid #2389b5;
   border-radius: 0;
   box-sizing: border-box;
@@ -684,7 +685,6 @@ a.submitbutton:hover,
   border-radius: 3px;
   width: auto;
   clear: both;
-  margin-top: 15px;
 }
 #headerloginform #login_rememberme {
   display: inline;
@@ -700,11 +700,11 @@ a.submitbutton:hover,
   color: white;
 }
 #headermenu li#headeruserlink #headerloginform a.signuplink {
+  display: block;
   color: #fff;
   width: auto;
   height: auto;
-  margin-top: 10px;
-  padding: 8px 0 5px 0;
+  margin: 10px 0 5px 0;
   line-height: normal;
 }
 #headermenu #currentusermenu {
