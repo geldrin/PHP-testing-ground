@@ -655,7 +655,7 @@ a.submitbutton:hover,
 #headerloginactions {
   padding: 14px 0 0 0;
   width: 225px;
-  margin: 15px 0 0 -72px;
+  margin: 14px 0 0 -72px;
   background-repeat: no-repeat;
   background-position: top 0px center;
   background-image: url(images/header_arrow_up.png);
@@ -713,8 +713,9 @@ a.submitbutton:hover,
   color: #fff;
   width: auto;
   height: auto;
-  margin: 15px 0 10px 0;
-  line-height: normal;
+  margin: 15px 0 5px 0;
+  line-height: inherit;
+  font-size: 14px;
 }
 #headermenu li#headeruserlink #headerloginform a.signuplink:focus,
 #headermenu li#headeruserlink #headerloginform a.signuplink:hover {
