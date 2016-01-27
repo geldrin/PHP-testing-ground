@@ -33,8 +33,8 @@
             {if ( $member.isuploader or $member.ismoderateduploader or $member.isclientadmin or $member.iseditor ) or ( $organization.islivestreamingenabled and $member.isliveadmin )}
               {assign var=columncount value=$columncount+1}
             {/if}
-
-            <div id="currentusermenu" style="width: {$columncount*216-216+241}px">
+            <div class="arrow"></div>
+            <div id="currentusermenu" class="hidden" style="width: {$columncount*216-216+241}px">
               {if $member.isnewseditor or $member.isclientadmin or $member.iseditor}
                 <div class="column first">
                     <div class="title">{#usermenu_organizations_title#}</div>
@@ -116,7 +116,6 @@
               </div>
               {/if}
               <div class="column last">
-                <div class="placeholder"></div>
                 <div class="title">{#usermenu_users_title#}</div>
                 <ul>
                   <li><a href="{$language}/users/welcome">{#usermenu_users_welcome#}</a></li>

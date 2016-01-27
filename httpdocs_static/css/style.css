@@ -721,13 +721,15 @@ a.submitbutton:hover,
 #headermenu li#headeruserlink #headerloginform a.signuplink:hover {
   text-decoration: underline;
 }
+#headerlogin {
+  padding: 10px 0 0 0;
+}
 #headermenu #currentusermenu {
   display: none;
   text-align: left;
   width: auto;
   overflow: hidden;
   position: absolute;
-  right: 0px;
   background-color: #29abe2;
   border: 1px solid #d8d8d8;
   -moz-border-radius: 5px;
@@ -736,6 +738,18 @@ a.submitbutton:hover,
   z-index: 499;
   padding: 0 0 10px 0;
   margin: 15px 0 0 0;
+}
+#headerlogin .arrow {
+  display: none;
+  position: relative;
+  height: 14px;
+  width: 25px;
+  margin-bottom: -14px;
+  top: 2px;
+  left: 28px;
+  background-repeat: no-repeat;
+  background-image: url(images/header_arrow_up.png);
+  z-index: 500;
 }
 #headermenu #currentusermenu .column {
   float: left;
@@ -750,12 +764,6 @@ a.submitbutton:hover,
   width: 240px;
   border: 0;
   box-shadow: none;
-}
-#headermenu #currentusermenu .column.last .placeholder {
-  width: 240px;
-  height: 45px;
-  border-bottom: 1px solid #d8d8d8;
-  margin-bottom: 10px;
 }
 #headermenu #currentusermenu .title {
   color: #fff;

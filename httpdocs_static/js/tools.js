@@ -231,7 +231,10 @@ function setupCurrentUser( elem ) {
       width += $j(this).outerWidth(true);
     });
 
+    var left = -1 * (width - 323);
     elem.css({
+      display: 'none',
+      left: left + 'px',
       width: width + 'px',
       height: elem.height() + 'px'
     });
@@ -623,7 +626,7 @@ function setupHeaderMenu() {
   $j('#headeruserlink > a').on('click', function(e) {
     e.preventDefault();
     $j(this).toggleClass('active');
-    $j('#headerloginactions, #currentusermenu').toggle();
+    $j('#headerloginactions, #currentusermenu, #headerlogin .arrow').toggle();
   });
 
   $j('#headersearchlink a').on('click', function(e) {
