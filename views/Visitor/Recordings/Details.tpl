@@ -39,7 +39,7 @@
     {else}
       {if $recording.mediatype == 'audio'}
         {assign var=mobileurl value=$audiofileurl}
-      {elseif $bootstrap->config.ondemandandroidhls}
+      {elseif $bootstrap->config.ondemandhlsenabledandroid}
         {assign var=mobileurl value=$mobilehttpurl}
       {else}
         {assign var=mobileurl value=$mobilertspurl}
