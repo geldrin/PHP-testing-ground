@@ -4,7 +4,7 @@
 </div>
 <div id="headermenu"{if $pagebgclass} class="black"{/if}>
   <nav>
-    <ul>
+    <ul class="text">
       <li{if $module == 'categories'} class="active"{/if}><a href="{$language}/categories">{#sitewide_categories#}</a></li>
       {if $organization.islivestreamingenabled}
         <li{if $module == 'live'} class="active"{/if}><a href="{$language}/live">{#sitewide_live#}</a></li>
@@ -13,6 +13,8 @@
       {*}
       <li{if $module == 'featured'} class="active"{/if}><a href="{$language}/recordings/featured/newest">{#sitewide_featured#}</a></li>
       {/*}
+    </ul>
+    <ul class="icons">
       <li id="headersearchlink"><a href="{$language}/search/all"><span></span>{#sitewide_search#}</a></li>
       <li id="headeruserlink">
         <a href="#"{if $member.id} title="{$member.namefirst|escape:html}"{/if}>
@@ -157,40 +159,37 @@
         {foreach from=$organization.languages key=languageid item=item}
           {if $languageid == $language}
             <a href="{$FULL_URI|changelanguage:$language}" class="{$language} active">
-              {if $languageid == 'hu'}
-                {#sitewide_language_hu#}
-              {elseif $languageid == 'en'}
-                {#sitewide_language_en#}
-              {/if}
+              {$languageid}
               <span></span>
             </a>
           {/if}
         {/foreach}
+
+        <div id="languages">
+          <ul>
+          {foreach from=$organization.languages key=languageid item=item}
+            <li class="{$languageid}">
+              <a href="{$FULL_URI|changelanguage:$languageid}">
+                {if $languageid == 'hu'}
+                  {#sitewide_language_hu#}
+                {elseif $languageid == 'en'}
+                  {#sitewide_language_en#}
+                {/if}
+              </a>
+            </li>
+          {/foreach}
+          </ul>
+        </div>
       </li>
     </ul>
   </nav>
-</div>
-
-<div id="languages">
-  
-  {foreach from=$organization.languages key=languageid item=item}
-    {if $languageid != $language}
-      <a href="{$FULL_URI|changelanguage:$languageid}" class="{$languageid}">
-        {if $languageid == 'hu'}
-          {#sitewide_language_hu#}
-        {elseif $languageid == 'en'}
-          {#sitewide_language_en#}
-        {/if}
-        <span></span>
-      </a>
-    {/if}
-  {/foreach}
 </div>
 
 <div id="headersearch">
   <form action="{$language}/search/all" method="get">
     <button id="headersearchsubmit" type="submit"></button>
     <input class="inputtext clearonclick" type="text" name="q" data-origval="{#sitewide_search_input#|escape:html}" value="{$smarty.request.q|default:#sitewide_search_input#|escape:html}"/>
-    <a href="{$language}/search/advanced" id="headersearchadvanced" title="{#sitewide_search_advanced#}"></a>
+    <a href="{$language}/search/advanced" id="headersearchadvanced" title="{#sitewide_search_advanced#}"><span></span>{#sitewide_search_advanced#}</a>
+    <a href="#" id="headersearchclear" title="{#sitewide_search_clear#}"><span></span>{#sitewide_search_clear#}</a>
   </form>
 </div>
