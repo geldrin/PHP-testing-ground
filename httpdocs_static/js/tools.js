@@ -631,6 +631,7 @@ function setupHeaderMenu() {
 
   $j('#headersearchlink a').on('click', function(e) {
     e.preventDefault();
+    $j('#headersearchlink').toggleClass('active');
     $j(this).toggleClass('active');
 
     if ( $j('#headersearch').hasClass('active') ) {
@@ -640,10 +641,16 @@ function setupHeaderMenu() {
     }
     
   });
-
-  $j('#languageselector a.active').on('click', function( e ) {
+  $j('#headersearchclear').on('click', function(e) {
     e.preventDefault();
-    $j('#languageselector').toggleClass('active');
+
+    $j('#headersearch input[type=text]').val('');
+  });
+
+  $j('#languageselectorlink a.active').on('click', function( e ) {
+    e.preventDefault();
+    $j('#languageselectorlink').toggleClass('active');
+    $j('#languages').toggle();
   });
 
   var languageselectortimeout;

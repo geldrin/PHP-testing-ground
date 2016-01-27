@@ -655,7 +655,7 @@ a.submitbutton:hover,
   display: none;
   padding: 14px 0 0 0;
   width: 225px;
-  margin: 14px 0 0 -72px;
+  margin: 4px 0 0 -72px;
   background-repeat: no-repeat;
   background-position: top 0px center;
   background-image: url(images/header_arrow_up.png);
@@ -832,11 +832,16 @@ a.submitbutton:hover,
 }
 #headermenu nav {
   display: inline-block;
+  width: 786px;
 }
 #headermenu ul {
   list-style-type: none;
   margin: 0;
   padding: 0;
+  float: left;
+}
+#headermenu ul.icons {
+  float: right;
 }
 #headermenu li {
   float: left;
@@ -848,7 +853,6 @@ a.submitbutton:hover,
   ;
   will-change: box-shadow,transform;
   outline: none;
-  overflow: hidden;
   border: 1px solid #29abe2;
   border-top: 3px solid #29abe2;
   border-bottom: 3px solid #29abe2;
@@ -877,12 +881,19 @@ a.submitbutton:hover,
   font-size: 16px;
   font-weight: bold;
 }
+#headermenu .text a {
+  padding: 0 20px;
+}
 #headermenu li a:hover,
 #headermenu li a:focus {
   text-decoration: none;
 }
 
 /* headersearch */
+li#headersearchlink.active {
+  background: #fff;
+  border-top-color: #fff;
+}
 li#headersearchlink {
   border-left: 1px solid #2389b5;
   border-right: 1px solid #2389b5;
@@ -933,14 +944,31 @@ li#headeruserlink a span {
   width: 980px;
   margin: 0 auto;
 }
-#headersearchadvanced {
+#headersearchadvanced,
+#headersearchadvanced span,
+#headersearchclear,
+#headersearchclear span {
   display: inline-block;
   width: 52px;
   height: 72px;
-  background-image: url(images/header_searchadvanced.png);
   background-repeat: no-repeat;
   background-position: center center;
   line-height: 72px;
+  overflow: hidden;
+}
+#headersearchadvanced span {
+  background-image: url(images/header_searchadvanced.png);
+}
+#headersearchadvanced:focus span,
+#headersearchadvanced:hover span {
+  background-image: url(images/header_searchadvanced_hover.png);
+}
+#headersearchclear span {
+  background-image: url(images/header_search_clear.png);
+}
+#headersearchclear:focus span,
+#headersearchclear:hover span {
+  background-image: url(images/header_search_clear_hover.png);
 }
 #headersearch .inputtext {
   width: 300px;
@@ -999,58 +1027,59 @@ li#headeruserlink a span {
 }
 
 li#languageselectorlink {
-
-}
-#languageselector {
-  display: inline-block;
-  width: 103px;
-  height: 26px;
-  z-index: 298;
-}
-#languageselector.active {
-  height: auto;
-  background-color: #272729;
-}
-#languageselector a {
-  font-weight: bold;
-  color: #666;
-  display: block;
-  padding: 4px 23px 3px 35px;
   background-repeat: no-repeat;
-  background-position: 5px 1px;
-  position: relative;
-  outline: none;
+  background-image: url(images/header_language.png);
+  background-position: center left;
 }
-#languageselector a:hover {
-  color: #ccc;
-  text-decoration: none;
-}
-#languageselector a.active span {
-  position: absolute;
+li#languageselectorlink span {
   display: inline-block;
-  height: 13px;
   width: 13px;
-  right: 6px;
-  top: 8px;
-  background-image: url(images/arrow_down.png);
+  height: 9px;
+  background-repeat: no-repeat;
+  background-image: url(images/arrow_down_small_bold_white.png);
+  background-position: center left;
 }
-#languageselector a.hu {
-  background-image: url(images/flags/hu.png);
-}
-#languageselector a.de {
-  background-image: url(images/flags/de.png);
-}
-#languageselector a.en {
-  background-image: url(images/flags/uk.png);
+#languageselectorlink a.active {
+  padding: 0 10px 0 38px;
 }
 #languages {
-  width: 100%;
   display: none;
-  padding-bottom: 2px;
+  width: 100px;
+  position: absolute;
+  left: -5px;
+  margin: 12px 0 0 0;
+  padding: 14px 0 0 0;
+  z-index: 600;
+  background-repeat: no-repeat;
+  background-image: url(images/header_arrow_up.png);
+  background-position: top center;
 }
-#languageselector.active #languages {
-  display: inline-block;
-  
+#languages ul {
+  list-style-type: none;
+  margin: 0;
+  padding: 10px 0;
+  background-color: #29abe2;
+  border-radius: 5px;
+  width: 100%;
+}
+#languages li {
+  border: 0;
+  float: none;
+  width: auto;
+  height: auto;
+  text-align: center;
+}
+#languages li:focus,
+#languages li:hover {
+  border: 0;
+}
+#languages li a {
+  display: block;
+  padding: 0 10px 2px 10px;
+  color: #fff;
+  height: auto;
+  width: auto;
+  line-height: 30px;
 }
 
 /* body */

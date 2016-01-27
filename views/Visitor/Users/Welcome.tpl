@@ -71,33 +71,40 @@
 {if !empty( $accreditedrecordings )}
   <h2>{#users__welcomepage_accreditedrecordings#}</h2>
   <ul class="recordinglist recordingprogress">
-    {foreach from=$accreditedrecordings item=recording}
-      {assign var=views value=$recording.numberofviews|numberformat}
+    {foreach from=$accreditedrecordings item=item}
+      {assign var=views value=$item.numberofviews|numberformat}
+      {capture assign=recordingurl}{$language}/recordings/details/{$item.id},{$item.title|filenameize}{/capture}
       <li class="listitem">
         <div class="recordingpic">
-          <a href="{$language}/recordings/details/{$recording.id},{$recording.title|filenameize}"><span class="playpic"></span><img src="{$recording|@indexphoto}"/><span class="playprogress" title="{#recordings__progress#}: {$recording.positionpercent}% ({$recording.viewedminutes} {#recordings__embedmin#})">{$recording.positionpercent}%</span></a>
+          <a href="{$recordingurl}">
+            <img src="{$item|@indexphoto}"/>
+            <span class="playprogress" title="{#recordings__progress#}: {$item.positionpercent}% ({$item.viewedminutes} {#recordings__embedmin#})">{$item.positionpercent}%</span>
+          </a>
         </div>
+
         <div class="recordingcontent">
-          <div class="title">
-            <h3><a href="{$language}/recordings/details/{$recording.id},{$recording.title|filenameize}">{$recording.title|escape:html}</a></h3>
-            {if $recording.subtitle|stringempty}<h4>{$recording.subtitle|escape:html}</h4>{/if}
-          </div>
-          {if $recording|@userHasAccess and $recording.approvalstatus != 'approved' and $recording.status == 'onstorage'}
-            <span class="notpublished"><a href="{$language}/recordings/modifysharing/{$recording.id}?forward={$FULL_URI|escape:url}">{#recordings__notpublished_warning#}</a></span>
-          {/if}
           <div class="recordinginfo">
-            <ul>
-              <li class="timestamp"><span></span>{$recording.recordedtimestamp|date_format:#smarty_dateformat_long#}</li>
-              <li class="views">{#recordings__recording_views#|sprintf:$views}</li>
-              <li class="rating last">
-                <div{if $recording.rating > 0} class="full"{/if}><span></span>1</div>
-                <div{if $recording.rating > 1.5} class="full"{/if}><span></span>2</div>
-                <div{if $recording.rating > 2.5} class="full"{/if}><span></span>3</div>
-                <div{if $recording.rating > 3.5} class="full"{/if}><span></span>4</div>
-                <div{if $recording.rating > 4.5} class="full"{/if}><span></span>5</div>
-              </li>
-            </ul>
+            <div class="timestamp">{$item.recordedtimestamp|date_format:#smarty_dateformat_long#}</div>
+            <div class="views">{#recordings__recording_views#|sprintf:$views}</div>
+            <div class="rating">
+              <div{if $item.rating > 0} class="full"{/if}><span></span>1</div>
+              <div{if $item.rating > 1.5} class="full"{/if}><span></span>2</div>
+              <div{if $item.rating > 2.5} class="full"{/if}><span></span>3</div>
+              <div{if $item.rating > 3.5} class="full"{/if}><span></span>4</div>
+              <div{if $item.rating > 4.5} class="full"{/if}><span></span>5</div>
+            </div>
           </div>
+
+          <div class="title">
+            {if $item.currentlyfeatured and $item|@userHasAccess}
+              <a class="featured right" href="{$language}/recordings/modifysharing/{$item.id}?forward={$FULL_URI|escape:url}">{#recordings__currentlyfeatured#}</a>
+            {/if}
+            <h3><a href="{$recordingurl}">{$item.title|escape:html|mb_wordwrap:25}</a></h3>
+            {if $item.subtitle|stringempty}<h4>{$item.subtitle|escape:html|mb_wordwrap:25}</h4>{/if}
+          </div>
+          {if $item.approvalstatus != 'approved' and $item.status == 'onstorage' and $member.id}
+            <span class="notpublished"><a href="{$language}/recordings/modifysharing/{$item.id}?forward={$FULL_URI|escape:url}">{#recordings__notpublished_warning#}</a></span>
+          {/if}
         </div>
       </li>
     {/foreach}
