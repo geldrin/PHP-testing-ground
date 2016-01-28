@@ -1208,4 +1208,18 @@ function isIpPrivate($ip) {
     return false;
 }
 
+function adoDBResourceSetToArray($rs) {
+
+    if ( empty($rs) ) return false;
+    
+    $rs_array = array();
+    while ( !$rs->EOF ) {
+        $r = $rs->fields;
+        array_push($rs_array, $r);
+        $rs->MoveNext();
+    }
+    
+    return $rs_array;
+}
+
 ?>
