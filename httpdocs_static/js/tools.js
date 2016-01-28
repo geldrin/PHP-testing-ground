@@ -156,9 +156,13 @@ function setupMobileMenu() {
 }
 
 function setupChannelRecordings(elem) {
+
+  if ( BROWSER.mobile && !BROWSER.tablet )
+    return;
+
   var chanheight = $j('#channellist').outerHeight(true);
   var recheight = elem.outerHeight(true);
-  console.log(chanheight, recheight);
+
   if ( chanheight <= recheight )
     return;
 
@@ -683,32 +687,36 @@ function setupHeaderMenu() {
     $j('#headerloginactions, #currentusermenu, #headerlogin .arrow').hide();
   });
 
-  $j('#headersearchlink a').on('click', function(e) {
-    e.preventDefault();
-    closeComponents(e);
-    $j('#headersearchlink').toggleClass('active');
-    $j(this).toggleClass('active');
+  if ( !BROWSER.mobile || BROWSER.tablet ) {
 
-    if ( $j('#headersearch').hasClass('active') ) {
-      $j('#headersearch').slideUp(200).removeClass('active');
-    } else {
-      $j('#headersearch').slideDown(200).addClass('active');
-    }
-    
-  });
-  $j('#headersearchclear').on('click', function(e) {
-    e.preventDefault();
+    $j('#headersearchlink a').on('click', function(e) {
+      e.preventDefault();
+      closeComponents(e);
+      $j('#headersearchlink').toggleClass('active');
+      $j(this).toggleClass('active');
 
-    $j('#headersearch input[type=text]').val('');
-  });
+      if ( $j('#headersearch').hasClass('active') ) {
+        $j('#headersearch').slideUp(200).removeClass('active');
+      } else {
+        $j('#headersearch').slideDown(200).addClass('active');
+      }
+      
+    });
+    $j('#headersearchclear').on('click', function(e) {
+      e.preventDefault();
 
-  $j(document).on('idleclick', function(e) {
-    if ( eventUnder(e, '#headersearch') )
-      return;
+      $j('#headersearch input[type=text]').val('');
+    });
 
-    $j('#headersearch').slideUp(200);
-    $j('#headersearchlink, #headersearchlink a, #headersearch').removeClass('active');
-  });
+    $j(document).on('idleclick', function(e) {
+      if ( eventUnder(e, '#headersearch') )
+        return;
+
+      $j('#headersearch').slideUp(200);
+      $j('#headersearchlink, #headersearchlink a, #headersearch').removeClass('active');
+    });
+
+  }
 
   $j('#languageselectorlink a.active').on('click', function( e ) {
     e.preventDefault();

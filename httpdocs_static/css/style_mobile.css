@@ -270,6 +270,12 @@
     left: 53.6875%;
     position: absolute;
   }
+  .channelrecordings.halfwidth .recordinglist,
+  .livelist.recordinglist,
+  .channelrecordings.halfwidth .listitem,
+  .livelist.recordinglist .listitem {
+    width: auto;
+  }
   .recordinglist .recordingcontent,
   .livelist.recordinglist .recordingcontent {
     width: 80%;
@@ -277,6 +283,10 @@
   .recordinglist .recordingcontent,
   .livelist.recordinglist .recordingcontent {
     margin-left: 0px;
+  }
+  .channelrecordings.halfwidth .recordingcontent,
+  .livelist.recordinglist .recordingcontent {
+    width: 70%;
   }
   
   .leftdoublebox {
@@ -364,6 +374,13 @@
     margin: 0;
   }
   #headermenu {
+    position: absolute;
+    top: 0;
+    right: 0;
+  }
+  #headermenu .text,
+  #headermenu #headeruserlink,
+  #headermenu #languageselectorlink {
     display: none;
   }
   #headermenu li {
@@ -378,7 +395,7 @@
     display: inline-block;
     position: absolute;
     z-index: 3;
-    top: 0px;
+    top: 5px;
     right: 5px;
     border: 0;
   }
@@ -483,11 +500,20 @@
   .widepager .itemsperpagecontainer {
     display: none;
   }
+  .channelrecordings.halfwidth {
+    padding-left: 0;
+    border-left: 0;
+    width: auto;
+  }
 }
 
 @media all and (max-width: 460px) {
   #indexcontainer .recordingpic .length {
     bottom: 22px;
+  }
+
+  .accordion .recordingpic .length {
+    bottom: 42px;
   }
 
   .form.search .submitbutton {
