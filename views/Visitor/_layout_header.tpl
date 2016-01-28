@@ -9,12 +9,6 @@
     {*}
     <li{if $module == 'featured'} class="active"{/if}><a href="{$language}/recordings/featured/newest">{#sitewide_featured#}</a></li>
     {/*}
-    {if !$member or !$member.id}
-    <li{if $loginactive} class="active"{/if}><a href="{$language}/users/login?forward={$FULL_URI|escape:uri}&amp;welcome={if $welcome}1{else}0{/if}">{#sitewide_login#}</a></li>
-    {/if}
-    {if $organization.registrationtype != 'closed'}
-    <li{if $signupactive} class="active"{/if}><a href="{$language}/users/signup">{#sitewide_signup#}</a></li>
-    {/if}
     {foreach from=$organization.languages key=languageid item=item}
       {if $languageid != $language}
       <li class="{$languageid}">

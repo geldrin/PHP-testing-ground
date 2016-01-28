@@ -21,7 +21,6 @@ class Signup extends \Visitor\HelpForm {
       $this->controller->redirectToController('contents', 'noregistration');
     
     $this->controller->toSmarty['helpclass'] = 'rightbox halfbox';
-    $this->controller->toSmarty['signupactive'] = true;
     parent::init();
   }
 

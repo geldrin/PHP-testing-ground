@@ -118,18 +118,39 @@ function setupIdleClick() {
     if ( $j(e.target).parents('a').length > 0)
       return;
 
-    $j(document).trigger('idleclick', [e]);
+    e.type = 'idleclick';
+    $j(document).trigger(e);
   });
+}
+
+function eventUnder(e, selector) {
+  var elem = $j(e.target);
+  if (elem.is(selector))
+    return true;
+
+  return elem.parents(selector).length != 0;
+}
+
+function closeComponents(e) {
+  if (!e)
+    e = jQuery.Event('idleclick');
+  else
+    e.type = 'idleclick';
+
+  $j(document).trigger(e);
 }
 
 function setupMobileMenu() {
   $j('#mobilemenu .menulabel').on('click tap', function(e) {
     e.preventDefault();
-
+    closeComponents(e);
     $j('#mobilemenu').toggleClass('active');
   });
 
-  $j(document).on('idleclick', function() {
+  $j(document).on('idleclick', function(e) {
+    if ($j(e.target).is('#mobilemenu .menulabel'))
+      return;
+
     $j('#mobilemenu').removeClass('active');
   });
 }
@@ -649,17 +670,22 @@ function setupInfoToggle() {
 function setupHeaderMenu() {
   $j('#headeruserlink > a').on('click', function(e) {
     e.preventDefault();
+    closeComponents(e);
     $j(this).toggleClass('active');
     $j('#headerloginactions, #currentusermenu, #headerlogin .arrow').toggle();
   });
 
-  $j(document).on('idleclick', function() {
+  $j(document).on('idleclick', function(e) {
+    if ( eventUnder(e, '#headeruserlink') )
+      return;
+
     $j('#headeruserlink > a').removeClass('active');
     $j('#headerloginactions, #currentusermenu, #headerlogin .arrow').hide();
   });
 
   $j('#headersearchlink a').on('click', function(e) {
     e.preventDefault();
+    closeComponents(e);
     $j('#headersearchlink').toggleClass('active');
     $j(this).toggleClass('active');
 
@@ -676,18 +702,25 @@ function setupHeaderMenu() {
     $j('#headersearch input[type=text]').val('');
   });
 
-  $j(document).on('idleclick', function() {
+  $j(document).on('idleclick', function(e) {
+    if ( eventUnder(e, '#headersearch') )
+      return;
+
     $j('#headersearch').slideUp(200);
     $j('#headersearchlink, #headersearchlink a, #headersearch').removeClass('active');
   });
 
   $j('#languageselectorlink a.active').on('click', function( e ) {
     e.preventDefault();
+    closeComponents(e);
     $j('#languageselectorlink').toggleClass('active');
     $j('#languages').toggle();
   });
 
-  $j(document).on('idleclick', function() {
+  $j(document).on('idleclick', function(e) {
+    if ( eventUnder(e, '#languages') )
+      return;
+
     $j('#languageselectorlink').removeClass('active');
     $j('#languages').hide();
   });

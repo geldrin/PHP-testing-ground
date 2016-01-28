@@ -5,11 +5,6 @@ class Login extends \Visitor\Form {
   public $template = 'Visitor/Users/Login.tpl';
   public $xsrfprotect = false; // hogy mukodjon a fooldali gyors belepes
 
-  public function init() {
-    $this->controller->toSmarty['loginactive'] = true;
-    return parent::init();
-  }
-
   public function postSetupForm() {
     
     $l = $this->bootstrap->getLocalization();
