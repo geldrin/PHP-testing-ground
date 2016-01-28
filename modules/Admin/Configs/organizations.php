@@ -354,7 +354,7 @@ $config = Array(
 
 
   'streamsettingsfs' => array(
-    'legend' => 'Stream settings',
+    'legend' => 'Stream beállítások',
     'type'   => 'fieldset',
     'submit' => true,
   ),
@@ -374,14 +374,14 @@ $config = Array(
   ),
 
   'ondemandhlsenabledandroid' => array(
-    'displayname' => 'Android on-demand HDS bekapcsolva?',
+    'displayname' => 'Android on-demand HLS bekapcsolva?',
     'type'        => 'inputRadio',
     'values'      => $l->getLov('noyes'),
     'value'       => 0,
   ),
 
   'livehlsenabledandroid' => array(
-    'displayname' => 'Android live HDS bekapcsolva?',
+    'displayname' => 'Android live HLS bekapcsolva?',
     'type'        => 'inputRadio',
     'values'      => $l->getLov('noyes'),
     'value'       => 0,
