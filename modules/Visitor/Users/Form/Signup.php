@@ -7,7 +7,6 @@ class Signup extends \Visitor\HelpForm {
   public $invite; // akkor kap erteket ha az invitacio letezik
 
   public function init() {
-
     $inviteid = $this->application->getNumericParameter('inviteid');
     if ( $inviteid ) {
       $invitationModel = $this->bootstrap->getModel('users_invitations');
@@ -22,9 +21,10 @@ class Signup extends \Visitor\HelpForm {
       $this->controller->redirectToController('contents', 'noregistration');
     
     $this->controller->toSmarty['helpclass'] = 'rightbox halfbox';
+    $this->controller->toSmarty['signupactive'] = true;
     parent::init();
   }
-  
+
   public function postSetupForm() {
     
     $l = $this->bootstrap->getLocalization();
