@@ -809,7 +809,6 @@ a.submitbutton:hover,
   box-sizing: border-box;
 }
 #headermenu #currentusermenu li:hover a {
-  font-weight: bold;
   text-decoration: none;
   background-image: url(images/arrow_right_white.png);
   background-repeat: no-repeat;
