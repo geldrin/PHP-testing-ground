@@ -1,7 +1,9 @@
 {include file="Visitor/_header.tpl" title=#organizations__accountstatus_title#|sprintf:$organization.name pagebgclass=$pagebgclass}
-<div class="title">
+<div id="pagetitle">
   <h1>{#organizations__accountstatus_title#|sprintf:$organization.name|escape:html}</h1>
 </div>
+<div class="channelgradient"></div>
+<br/>
 
 <table id="accountstatus">
   <tr>

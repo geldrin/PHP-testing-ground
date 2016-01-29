@@ -35,6 +35,12 @@
   </div>
 {/capture}
 
+<div id="pagetitle">
+  <h1>{#analytics__statistics_title#}</h1>
+</div>
+<div class="channelgradient"></div>
+<br/>
+
 <div id="statisticsform" class="form leftdoublebox" data-recordingstpl="{$recordingshtml|trim|jsonescape:false:true}" data-livetpl="{$livehtml|trim|jsonescape:false:true}" data-groupstpl="{$groupshtml|trim|jsonescape:false:true}" data-userstpl="{$usershtml|trim|jsonescape:false:true}">
 {$form}
 </div>

@@ -1,13 +1,7 @@
 <?php
 
 $config = array(
-  
-  'fs1' => array(
-    'type'   => 'fieldset',
-    'legend' => $l('users', 'modify_title'),
-    'prefix' => '<span class="legendsubtitle">' . $l('users', 'modify_subtitle') . '</span>',
-  ),
-  
+
   'action' => array(
     'type'  => 'inputHidden',
     'value' => 'submitmodify'

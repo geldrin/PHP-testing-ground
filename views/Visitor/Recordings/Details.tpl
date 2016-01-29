@@ -3,7 +3,7 @@
 {elseif $recording.mediatype == 'audio'}
 {assign var=flashheight value=60}
 {else}
-{assign var=flashheight value=530}
+{assign var=flashheight value=550}
 {/if}
 {include file="Visitor/_header.tpl" title=$recording.title}
 
@@ -41,7 +41,7 @@
   {else}
     <div id="playercontainer{if $recording.mediatype == 'audio'}audio{/if}">{#recordings__noflash#}</div>
     <script type="text/javascript">
-      swfobject.embedSWF('flash/VSQPlayer.swf?v={$VERSION}', 'playercontainer{if $recording.mediatype == 'audio'}audio{if isset( $flashdata.subtitle_files )}subtitle{/if}{/if}', '950', '{$flashheight}', '11.1.0', 'flash/swfobject/expressInstall.swf', {$flashdata|@jsonescape:true}, flashdefaults.params, null, handleFlashLoad );
+      swfobject.embedSWF('flash/VSQPlayer.swf?v={$VERSION}', 'playercontainer{if $recording.mediatype == 'audio'}audio{if isset( $flashdata.subtitle_files )}subtitle{/if}{/if}', '980', '{$flashheight}', '11.1.0', 'flash/swfobject/expressInstall.swf', {$flashdata|@jsonescape:true}, flashdefaults.params, null, handleFlashLoad );
     </script>
   {/if}
 </div>

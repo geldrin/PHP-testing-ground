@@ -480,8 +480,8 @@ function setupLiveEmbed( elems ) {
     var url  = root.attr('data-embedurl');
     var txt  = root.find('textarea').val();
     var addextraheight = true;
-    var width  = 950;
-    var height = 980;
+    var width  = 980;
+    var height = 1000;
 
     if ( needchat == '0' ) {
 
@@ -494,7 +494,7 @@ function setupLiveEmbed( elems ) {
 
       url   += '&fullplayer=false';
       width  = 480;
-      height = 860;
+      height = 880;
 
     }
 
@@ -709,7 +709,7 @@ function setupHeaderMenu() {
     });
 
     $j(document).on('idleclick', function(e) {
-      if ( eventUnder(e, '#headersearch') )
+      if ( eventUnder(e, '#headersearch, #headersearchlink') )
         return;
 
       $j('#headersearch').slideUp(200);

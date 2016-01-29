@@ -1,9 +1,9 @@
 {include file="Visitor/_header.tpl" title=#channels__orderrecordings_title#}
 
-<div class="heading">
-  <h1>{#channels__orderrecordings_title#}</h1>
-  <h2><a href="{$language}/channels/details/{$channel.id},{$channel|@title:name|filenameize}" class="active">{$channel|@title:name|escape:html}</a></h2>
+<div id="pagetitle">
+  <h1>{#channels__orderrecordings_title#} <a class="back" href="{$language}/channels/details/{$channel.id},{$channel.title|filenameize}">{#sitewide_back#|lower}</a></h1>
 </div>
+<div class="channelgradient"></div>
 
 <div id="orderrecordings" data-channelid="{$channel.id}">
 
