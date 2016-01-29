@@ -1,4 +1,4 @@
-<div id="categoryheading">
+<div id="pagetitle">
   <h1>{#search__advanced_title#}</h1>
 </div>
 <div class="channelgradient"></div>

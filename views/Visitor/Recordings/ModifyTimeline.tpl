@@ -1,4 +1,4 @@
-<div id="categoryheading">
+<div id="pagetitle">
   <h1>{$recording.title|escape:html|mb_wordwrap:25}</h1>
 </div>
 <div class="channelgradient"></div>

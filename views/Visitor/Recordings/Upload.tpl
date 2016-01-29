@@ -7,8 +7,8 @@
   var uploadchunkurl = "{$BASE_URI}{$language}/recordings/uploadchunk";
   var checkresumeurl = "{$BASE_URI}{$language}/recordings/checkfileresume";
 </script>
-<div id="categoryheading">
-  <h1>{#recordings__upload_title#}</h1>
+<div id="pagetitle">
+  <h1>{$title|escape:html}</h1>
 </div>
 <div class="channelgradient"></div>
 <br/>

@@ -7,7 +7,7 @@
   {/foreach}
 {/capture}
 
-<div class="heading categorydetails">
+<div id="categorytitle">
   <h1>
     <a href="{$language}/{$module}">{#categories__categories_title#}</a>
     {$bcrumb|trim}

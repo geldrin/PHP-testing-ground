@@ -34,12 +34,6 @@ $config = Array(
     'value' => '0',
   ),
   
-  'fs1' => array(
-    'type'   => 'fieldset',
-    'legend' => $l('organizations', 'createnews_title'),
-    'prefix' => '<span class="legendsubtitle">' . $l('organizations', 'createnews_subtitle') . '</span>',
-  ),
-  
   'starts' => Array(
     'displayname' => $l('organizations', 'news_starts'),
     'type'        => 'inputText',

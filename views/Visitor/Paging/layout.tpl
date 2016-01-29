@@ -27,6 +27,7 @@
     </div>
   </div>
 </div>
+<div class="clear"></div>
 
 {foreach from=$insertbefore item=insertitem}
   {include file=$insertitem}

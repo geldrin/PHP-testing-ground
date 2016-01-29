@@ -1,5 +1,5 @@
 {include file="Visitor/_header.tpl" title=#categories__categories_title#}
-<div id="categoryheading">
+<div id="pagetitle">
   <h1>{#categories__categories_title#}</h1>
 </div>
 <div class="channelgradient"></div>

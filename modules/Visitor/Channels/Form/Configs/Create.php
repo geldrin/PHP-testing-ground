@@ -12,12 +12,6 @@ $config = array(
     'value' => $this->application->getNumericParameter('parent'),
   ),
 
-  'fs1' => array(
-    'type'   => 'fieldset',
-    'legend' => $l('channels', 'create_title'),
-    'prefix' => '<span class="legendsubtitle">' . $l('channels', 'create_subtitle') . '</span>',
-  ),
-  
   'title' => array(
     'displayname' => $l('channels', 'nameoriginal'),
     'type'        => 'inputText',

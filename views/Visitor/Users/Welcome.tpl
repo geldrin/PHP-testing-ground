@@ -1,7 +1,11 @@
 {include file="Visitor/_header.tpl"}
-<div id="contentsbody">
-<h1>{#users__welcomepage_welcome#} {$member|@nickformat|escape:html}!</h1>
+<div id="pagetitle">
+  <h1>{#users__welcomepage_welcome#} {$member|@nickformat|escape:html}!</h1>
+</div>
+<div class="channelgradient"></div>
+<br/>
 
+<div id="contentsbody">
 <p>{#users__welcomepage_intro#}</p>
 
 {if !empty( $channels )}

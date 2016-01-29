@@ -1,4 +1,30 @@
-<a href="#" id="mobilemenu"></a>
+<div id="mobilemenu">
+  <span class="menulabel">{#sitewide_menu#}</span>
+  <ul>
+    <li{if $module == 'categories'} class="active"{/if}><a href="{$language}/categories">{#sitewide_categories#}</a></li>
+    {if $organization.islivestreamingenabled}
+      <li{if $module == 'live'} class="active"{/if}><a href="{$language}/live">{#sitewide_live#}</a></li>
+    {/if}
+    <li{if $module == 'channels'} class="active"{/if}><a href="{$language}/channels">{#sitewide_channels#}</a></li>
+    {*}
+    <li{if $module == 'featured'} class="active"{/if}><a href="{$language}/recordings/featured/newest">{#sitewide_featured#}</a></li>
+    {/*}
+    {foreach from=$organization.languages key=languageid item=item}
+      {if $languageid != $language}
+      <li class="{$languageid}">
+        <a href="{$FULL_URI|changelanguage:$languageid}">
+          {if $languageid == 'hu'}
+            {#sitewide_switchto_hu#}
+          {elseif $languageid == 'en'}
+            {#sitewide_switchto_en#}
+          {/if}
+        </a>
+      </li>
+      {/if}
+    {/foreach}
+  </ul>
+</div>
+
 <div id="headerlogo">
   <a href="{$BASE_URI}" title="{#sitename#}" class="basic"><span></span>{#sitename#}</a>
 </div>
