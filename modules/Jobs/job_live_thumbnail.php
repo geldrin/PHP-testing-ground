@@ -27,25 +27,24 @@ $logfile = $myjobid .'.log';
 
 // Log init
 $debug = Springboard\Debug::getInstance();
-$debug_mode = false;
+$debug_mode = true;
 
 // Exit if any STOP file is present
 $stopfile = $app->config['datapath'] . 'jobs/' . $myjobid . '.stop';
 $globalstopfile = $app->config['datapath'] . 'jobs/all.stop';
-if ($debug_mode === false && (is_file($stopfile) || is_file($globalstopfile))) exit("Stopfile detected! Terminating.\n");
+// !!! FIX PLZ !!!
+//if ($debug_mode === false && (is_file($stopfile) || is_file($globalstopfile))) exit("Stopfile detected! Terminating.\n");
 
-///////////////////////////////////////////////////////////////////////////////////////////////////
 // Runover check. Is this process already running? If yes, report and exit
+// !!! FIX PLZ !!!
 if ( !runOverControl($myjobid) ) exit("Runover detected! Terminating.");
 
 // Run main loop
 $myexitcode = Main();
 die($myexitcode);
 
-///////////////////////////////////////////////////////////////////////////////////////////////////
 function Main() {
-///////////////////////////////////////////////////////////////////////////////////////////////////
-	global $app, $db, $debug, $debug_mode, $jconf, $logdir, $logfile, $myjobid;
+	global $app, $debug, $debug_mode, $jconf, $logdir, $logfile, $myjobid;
 
 	if ( !is_writable($jconf['livestreams_dir']) ) {
 		$debug->log($logdir, $logfile, "[ERROR] Temp directory " . $jconf['livestreams_dir'] . " is not writeable.", $sendmail = false);
@@ -53,10 +52,6 @@ function Main() {
 	}
 
 	clearstatcache();
-	$app->watchdog();
-
-	// Establish database connection
-	$db = db_maintain();
 
 	$converter_sleep_length = $app->config['sleep_media'];
 
@@ -65,14 +60,12 @@ function Main() {
 
 	// Query active channels
 	$channels = getActiveChannels();
-	if ( $channels === false ) {
-		// Close DB connection if open
-		if ( is_resource($db->_connectionID) ) $db->close();
-		return 0;
-	}
+	if ( $channels === false ) return false;
 
 	for ( $i = 0; $i < count($channels); $i++ ) {
+    
 		$filename = $ffmpeg_output = $ffmpeg_loglevel = $ffmpeg_filter = $ffmpeg_globals = $ffmpeg_load = null;
+        
 		// Temp directory
 		$temp_dir = $jconf['livestreams_dir'] . $channels[$i]['livefeedstreamid'] . "/";
 
@@ -106,7 +99,7 @@ function Main() {
 		try {
 			$cmd = $code = null;
 			$fatal = false;
-      $wrkr = new runExt();
+            $wrkr = new runExt();
 
 			// Prepare working directories
 			$directories = array($temp_dir, $path_wide, $path_43, $path_highres);
@@ -134,7 +127,7 @@ function Main() {
 					throw new Exception("FFmpeg cannot get live thumbnail. (". $wrkr->getOutput() .")");
 				}
 			} elseif (!is_readable($path_43 . $filename) || !(filesize($path_43 . $filename) > 0)) {
-        throw new Exception("File is not readable.");
+                throw new Exception("File is not readable.");
 			}
 
 			if ($debug_mode) {
@@ -151,7 +144,7 @@ function Main() {
       }
 			$msg  = "[ERROR] FFmpeg live thumbnail attempt for feed#". $channels[$i]['locationid'];
 			$msg .= " / stream#". $channels[$i]['livefeedstreamid'] ." - Failed!\n". $e->getMessage();
-      $msg .= "\nCommand: '". $cmd ."' / return code: ". $code ."\n";
+            $msg .= "\nCommand: '". $cmd ."' / return code: ". $code ."\n";
 			$debug->log($logdir, $logfile, $msg, false);
 			unset($cmd, $err, $msg, $wrkr);
 
@@ -198,21 +191,15 @@ function Main() {
 		$app->watchdog();
 	} // END OF MAIN LOOP //
 
-	if (is_resource($db->_connectionID)) $db->close();
 }
 
-///////////////////////////////////////////////////////////////////////////////////////////////////
-function getActiveChannels() {
-///////////////////////////////////////////////////////////////////////////////////////////////////
-//
 // Returns all current live channels' livestream IDs as an array, and 
 // FALSE when encountering an error or no livestreams available.
-//
-///////////////////////////////////////////////////////////////////////////////////////////////////
-	global $jconf, $debug, $logdir, $logfile, $db, $app;
+function getActiveChannels() {
+ global $jconf, $debug, $logdir, $logfile, $app;
 
-	if (is_resource($db->_connectionID) === false ) $db = db_maintain();
-	
+    $model = $app->bootstrap->getModel('channels');
+
 	$now = date("Y-m-d H:i:s");
 	$query = "
 		SELECT
@@ -243,15 +230,16 @@ function getActiveChannels() {
 			ch.id";
 
 	try {
-		$channels = $db->getArray($query);
+        $rs_channels = $model->safeExecute($query);
 	} catch (exception $err) {
 		$debug->log($logdir, $logfile, "[ERROR] SQL query failed." . trim($query), $sendmail = false);
 		return false;
 	}
 
 	// Check if any record returned
-	if ( count($channels) < 1 ) return false;
-
+    if ( $rs_channels->RecordCount() < 1 ) return false;
+    
+    $channels = adoDBResourceSetToArray($rs_channels);
 	return $channels;
 }
 
