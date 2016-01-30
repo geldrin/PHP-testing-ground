@@ -1090,18 +1090,6 @@ li#languageselectorlink span {
   clear: both;
   width: 100%;
 }
-#body div.title {
-  clear: both;
-  padding: 0 0 0 10px;
-  width: 100%;
-  border-top; 1px solid #fff;
-  border-bottom: 1px solid #d8d8d8;
-  box-sizing: border-box;
-}
-#body div.title h1 {
-  margin: 0;
-  line-height: 70px;
-}
 #body div.title a {
   display: block;
 }
