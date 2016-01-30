@@ -39,6 +39,10 @@ class Signup extends \Visitor\HelpForm {
     $crypto    = $this->bootstrap->getEncryption();
     $l         = $this->bootstrap->getLocalization();
 
+    // sec vuln
+    if ( $values['forward'] and parse_url( $values['forward'] ) !== false )
+      $this->toSmarty['forwardurl'] = $values['forward'];
+
     $values['timestamp']      = date('Y-m-d H:i:s');
     $values['lastloggedin']   = $values['timestamp'];
     $values['browser']        = $_SERVER['HTTP_USER_AGENT'];

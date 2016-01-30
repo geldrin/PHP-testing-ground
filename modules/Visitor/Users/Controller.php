@@ -161,6 +161,8 @@ class Controller extends \Visitor\Controller {
       $this->application->getParameter('a'),
       $this->application->getParameter('b')
     );
+    $invitationid = $this->application->getParameter('c');
+    $forward = $this->application->getParameter('forward');
 
     if ( !$uservalid )
       $this->redirect('contents/signupvalidationfailed');
@@ -174,8 +176,6 @@ class Controller extends \Visitor\Controller {
     $access->clear();
     $this->logUserLogin('VALIDATED LOGIN');
 
-
-    $invitationid = $this->application->getParameter('c');
     if ( $invitationid ) {
       $crypto = $this->bootstrap->getEncryption();
       $invitationid = intval( $crypto->asciiDecrypt( $invitationid ) );
@@ -191,6 +191,10 @@ class Controller extends \Visitor\Controller {
          )
         $this->redirect( $invitationModel->row['customforwardurl'] );
     }
+
+    // sec vuln
+    if ( parse_url( $forward ) !== false )
+      $this->redirect( $forward );
 
     $this->redirectToController('contents', 'signupvalidated');
 
