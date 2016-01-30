@@ -91,7 +91,9 @@
     {if $member.id}
       <li id="channelslink"><a href="#"><span></span>{#recordings__addtochannel#}</a></li>
     {/if}
+    {if $recording.commentsenabled}
     <li id="commentslink"><a href="#"><span id="commentcount" data-commentcount="{$commentcount|default:'0'}">{$commentcount|default:'0'}</span> <span id="commentslinktext">{#recordings__comments#}</span></a></li>
+    {/if}
     {if $bootstrap->config.loadaddthis}
     <li id="sharelink"><a href="#" title="{#recordings__share#}"><span></span>{#recordings__share#}</a></li>
     {/if}
@@ -221,6 +223,7 @@
 </div>
 {/if}
 
+{if $recording.commentsenabled}
 <div id="comments">
   <div class="loading"></div>
   <div class="title"><h3>{#recordings__comments#}</h3></div>
@@ -239,6 +242,7 @@
   {/if}
 </div>
 <div class="clear"></div>
+{/if}
 
 {if !empty( $relatedvideos )}
 <div class="accordion active" id="recommendatory">

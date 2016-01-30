@@ -1811,6 +1811,14 @@ function setupSharing() {
 
   }).change();
 
+  $j('input[name=commentsenabled]').change(function(e) {
+
+    var wantcomments = $j('input[name=commentsenabled]:checked').val() == '1';
+    var parent       = $j('input[name=isanonymouscommentsenabled]').parents('tr');
+    parent.toggle( wantcomments );
+
+  }).change();
+
   setupDefaultDatePicker('.datepicker');
 
   $j('input[name=isfeatured]').change(function(e) {
