@@ -33,9 +33,9 @@ class Details extends \Visitor\Paging {
   protected $user;
   protected $perpageselector = false;
   protected $pagestoshow = 3;
-  
+
   public function init() {
-    
+
     $l                  = $this->bootstrap->getLocalization();
     $this->user         = $this->bootstrap->getSession('user');
     $this->foreachelse  = $l('channels', 'listrecordings_foreachelse');
@@ -44,7 +44,15 @@ class Details extends \Visitor\Paging {
       'channels',
       $this->application->getNumericParameter('id')
     );
-    
+
+    // ha nem talaltunk akkor hagyjuk azt ami itt be van allitva alapbol
+    // ergo default case -> default rendezes, do nothing
+    switch( $organization['channelorder'] ) {
+      case 'recordtimestamp_desc':
+        $this->orderkey = 'timestamp_desc';
+        break;
+    }
+
     if (
          $this->channelModel->row['organizationid'] != $organization['id'] or
          $this->channelModel->row['isliveevent'] != '0' or

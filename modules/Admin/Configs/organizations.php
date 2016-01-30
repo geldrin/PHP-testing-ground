@@ -209,6 +209,12 @@ $config = Array(
     ),
   ),
 
+  'channelorder' => array(
+    'displayname' => 'Csatornák alapértelmezett rendezése',
+    'type'        => 'select',
+    'values'      => $l->getLov('organizations_channelorders'),
+  ),
+
   'subscriberpermissionfs' => array(
     'legend' => 'Előfizetői jogosultságok',
     'type'   => 'fieldset',
