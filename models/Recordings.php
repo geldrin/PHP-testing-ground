@@ -2109,6 +2109,8 @@ class Recordings extends \Springboard\Model {
   }
 
   public function addPresentersToArray( &$recordings, $withjobs = true, $organizationid ) {
+    if ( empty( $recordings ) )
+      return $recordings;
 
     $idtoindexmap = array();
     foreach( $recordings as $key => $recording ) {

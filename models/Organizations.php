@@ -151,6 +151,18 @@ class Organizations extends \Springboard\Model\Multilingual {
       $organization[ $layout ] = $templatefile;
     }
 
+    if (
+         !isset( $organization['frontpageblockorder'] ) or
+         !$organization['frontpageblockorder']
+       )
+      $organization['frontpageblockorder'] = 'kiemelt,legujabb,legnezettebb';
+
+    $organization['blockorder'] = array();
+    foreach( explode(',', $organization['frontpageblockorder'] ) as $block ) {
+      $block = trim( mb_strtolower( $block ) );
+      $organization['blockorder'][ $block ] = true;
+    }
+
     return $organization;
   }
 

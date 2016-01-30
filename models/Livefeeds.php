@@ -1404,4 +1404,39 @@ class Livefeeds extends \Springboard\Model {
 
     $streamModel->flushBatchCollect();
   }
+
+  public function getFeatured( $organizationid, $language ) {
+    return $this->db->getRow("
+      SELECT
+        c.id AS channelid,
+        c.title,
+        c.subtitle,
+        c.ordinalnumber,
+        c.url,
+        c.indexphotofilename AS channelindexphotofilename,
+        '' AS location,
+        c.starttimestamp,
+        c.endtimestamp,
+        s.value AS channeltype,
+        lf.id AS livefeedid,
+        lf.name AS feedname,
+        lf.indexphotofilename AS feedindexphotofilename
+      FROM livefeeds AS lf
+      LEFT JOIN channels AS c ON(
+        c.id = lf.channelid
+      )
+      LEFT JOIN channel_types AS ct ON(
+        ct.id = c.channeltypeid
+      )
+      LEFT JOIN strings AS s ON(
+        s.translationof = ct.name_stringid AND
+        s.language = '$language'
+      )
+      WHERE
+        lf.isfeatured     = '1' AND
+        lf.organizationid = '$organizationid'
+      ORDER BY lf.id DESC
+      LIMIT 1
+    ");
+  }
 }

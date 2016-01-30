@@ -8,15 +8,8 @@ class Controller extends \Visitor\Controller {
 
   private $maxRecordings = 4;
   private $recordingTypes = array(
-    'featured' => array(
-      'order'  => 'timestamp DESC',
-      'filter' => " AND r.isfeatured = '1'",
-    ),
     'mostviewed' => array(
       'order'  => 'numberofviews DESC',
-    ),
-    'highestrated' => array(
-      'order'  => 'rating, numberofratings DESC',
     ),
     'newest' => array(
       'order'  => 'timestamp DESC',
@@ -30,23 +23,15 @@ class Controller extends \Visitor\Controller {
     $this->toSmarty['defaultimage'] =
       $this->bootstrap->staticuri . 'images/header_logo.png'
     ;
-    $this->toSmarty['welcome']      = true;
-    $this->toSmarty['recordings']   = $this->recordingsModel->getRandomRecordings(
-      $this->maxRecordings,
-      $this->organization['id'],
-      $user
-    );
+    $this->toSmarty['welcome'] = true;
 
-    $this->recordingsModel->addPresentersToArray(
-      $this->toSmarty['recordings'],
-      true,
-      $this->organization['id']
-    );
+    $blocks = array();
+    foreach( $this->organization['blockorder'] as $block => $value ) {
+      $method = 'getBlock' . ucfirst( $block );
+      $blocks[ $block ] = $this->$method( $user );
+    }
 
-    $keys = array_keys( $this->recordingTypes );
-    foreach( $keys as $key )
-      $this->getRecordings( $key, $user );
-
+    $this->toSmarty['blocks'] = $blocks;
     $this->smartyoutput('Visitor/Index/index.tpl');
   }
 
@@ -55,7 +40,7 @@ class Controller extends \Visitor\Controller {
     if ( isset( $this->recordingTypes[ $type ]['filter'] ) )
       $filter .= $this->recordingTypes[ $type ]['filter'];
 
-    $this->toSmarty[ $type ] = $this->recordingsModel->getRecordingsWithUsers(
+    $ret = $this->recordingsModel->getRecordingsWithUsers(
       0,
       $this->maxRecordings,
       $filter,
@@ -65,10 +50,43 @@ class Controller extends \Visitor\Controller {
     );
 
     $this->recordingsModel->addPresentersToArray(
-      $this->toSmarty[ $type ],
+      $ret,
       true,
       $this->organization['id']
     );
+
+    return $ret;
   }
 
+  private function getBlockKiemelt( $user ) {
+    $ret = $this->recordingsModel->getRandomRecordings(
+      $this->maxRecordings,
+      $this->organization['id'],
+      $user
+    );
+
+    $this->recordingsModel->addPresentersToArray(
+      $ret,
+      true,
+      $this->organization['id']
+    );
+
+    return $ret;
+  }
+
+  private function getBlockLegujabb( $user ) {
+    return $this->getRecordings( 'newest', $user );
+  }
+
+  private function getBlockLegnezettebb( $user ) {
+    return $this->getRecordings( 'mostviewed', $user );
+  }
+
+  private function getBlockEloadas( $user ) {
+    $livefeedModel = $this->bootstrap->getModel('livefeeds');
+    return $livefeedModel->getFeatured(
+      $this->organization['id'],
+      \Springboard\Language::get()
+    );
+  }
 }
