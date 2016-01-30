@@ -142,7 +142,7 @@ $config = array(
   ),
 
   'organizationaffiliation' => array(
-    'displayname' => $l('users', 'organizationaffiliation'),
+    'displayname' => $l('users', 'organizationaffiliation') . ' <span class="required">*</span>',
     'type'        => 'inputText',
     'validation'  => array(
       array(
@@ -183,6 +183,13 @@ $config = array(
   ),
 
 );
+
+if ( \Springboard\Language::get() == 'hu' ) {
+  $namefirst = array( 'namefirst' => $config['namefirst'], );
+  unset( $config['namefirst'] );
+
+  $config = \Springboard\Tools::insertAfterKey( $config, $namefirst, 'namelast' );
+}
 
 if ( $this->controller->organization['displaynametype'] == 'hidenickname' )
   unset( $config['nickname'] );

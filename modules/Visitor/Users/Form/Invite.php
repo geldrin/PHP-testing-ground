@@ -29,6 +29,7 @@ class Invite extends \Visitor\HelpForm {
     $invModel     = $this->bootstrap->getModel('users_invitations');
     $l = $this->l = $this->bootstrap->getLocalization();
     $this->crypto = $this->bootstrap->getEncryption();
+    $externalsend = $values['externalsend'] === 'external';
 
     switch( $values['usertype'] ) {
       case 'single':
@@ -59,7 +60,16 @@ class Invite extends \Visitor\HelpForm {
           $values['delimeter']
         );
 
-        if ( !$this->form->validate() ) // a parseInviteFile hibat talalt es invalidalta a formot
+        // fatal hiba tortent, mindenkeppen irunk ki hibat
+        if ( $users === false ) {
+          $this->form->addMessage( $l('users', 'invite_fatalerror') );
+          return;
+        }
+
+        // a parseInviteFile hibat talalt es invalidalta a formot
+        // de csak akkor adunk hibauzenetet ha nem csv export,
+        // vagy nincs kinek kuldeni emailt
+        if ( !$this->form->validate() and ( !$externalsend or empty( $users ) ) )
           return;
 
         break;
@@ -77,7 +87,6 @@ class Invite extends \Visitor\HelpForm {
     if ( !empty( $values['groups'] ) )
       $groups      = implode('|', $values['groups'] );
 
-    $externalsend  = $values['externalsend'] === 'external';
     $userid        = $user['id'];
     $disabledafter = ( $values['needtimestampdisabledafter'] )
       ? $values['timestampdisabledafter']
@@ -91,6 +100,8 @@ class Invite extends \Visitor\HelpForm {
       $emails,
       $this->controller->organization['id']
     );
+    unset( $emails );
+
     $template    = $this->handleTemplate( $userModel, $values );
     $templateid  = null;
     if ( !empty( $template ) and $template['id'] )
@@ -144,7 +155,7 @@ class Invite extends \Visitor\HelpForm {
     $messages = $this->form->getMessages();
 
     // KULSO KULDES, CSV AZ OUTPUT
-    if ( $externalsend and empty( $messages ) ) {
+    if ( $externalsend ) {
       $this->crypto  = $this->bootstrap->getEncryption();
       $this->baseuri =
         $this->bootstrap->baseuri . \Springboard\Language::get() . '/users/'
@@ -210,6 +221,7 @@ class Invite extends \Visitor\HelpForm {
       $invitecount++;
 
     }
+    unset( $users );
 
     $thousandsseparator = ' ';
     if ( \Springboard\Language::get() == 'en' )
@@ -229,7 +241,8 @@ class Invite extends \Visitor\HelpForm {
 
     $this->controller->toSmarty['sessionmessage'] = $redirmessage;
 
-    if ( $externalsend and empty( $messages ) )
+    // ha csv kuldes es kuldtunk is valamit akkor elhalunk
+    if ( $externalsend and $invitecount )
       die();
 
   }
@@ -237,13 +250,13 @@ class Invite extends \Visitor\HelpForm {
   public function parseInviteFile( $file, $encoding, $delimeter ) {
 
     include_once( $this->bootstrap->config['libpath'] . 'clonefish/constants.php');
-    $l              = $this->l;
+    $l = $this->l;
 
     if ( filesize( $file ) > 5242880 ) { // nagyobb mint 5 mega
 
       $this->form->addMessage( $l('users', 'invitefiletoobig') );
       $this->form->invalidate();
-      return;
+      return false;
 
     }
 
@@ -278,7 +291,7 @@ class Invite extends \Visitor\HelpForm {
     $line    = 0;
     $users   = array();
     $nameformat = \Springboard\Language::get() == 'hu'? 'straight': 'reverse';
-
+    $fatalerror = false;
     while( ( $row = fgetcsv( $fhandle, 0, $delimeter ) ) !== false ) {
 
       $line++;
@@ -286,7 +299,7 @@ class Invite extends \Visitor\HelpForm {
 
         $this->form->addMessage( $l('users', 'invitefileinvalid') );
         $this->form->invalidate();
-        return;
+        return false;
 
       }
 
@@ -301,10 +314,15 @@ class Invite extends \Visitor\HelpForm {
           continue;
 
         $this->form->addMessage(
-          sprintf( $l('users', 'invitefileinvalidemail'), $line )
+          sprintf(
+            $l('users', 'invitefileinvalidemail'),
+            htmlspecialchars( '"' . $email . '"', ENT_QUOTES, 'UTF-8' ),
+            $line
+          )
         );
 
         $lineerror = true;
+        $fatalerror = true;
 
       }
 
@@ -327,6 +345,9 @@ class Invite extends \Visitor\HelpForm {
         );
 
     }
+
+    if ( $fatalerror )
+      return false;
 
     return $users;
 
@@ -365,6 +386,20 @@ class Invite extends \Visitor\HelpForm {
       $url,
     );
 
-    fputcsv( $this->csvHandle, $values, $this->csvDelimiter );
+    if ( $this->csvHandle ) {
+      $success = fputcsv( $this->csvHandle, $values, $this->csvDelimiter );
+      if ( $success !== false )
+        return;
+
+      // nem sikerult kiirni a csv-t, kuldjunk rola emailt
+      $d = \Springboard\Debug::getInstance();
+      $d->log(
+        false,
+        false,
+        "Failed to putcsv!\n" .
+        \Springboard\Debug::getRequestInformation(),
+        true
+      );
+    }
   }
 }

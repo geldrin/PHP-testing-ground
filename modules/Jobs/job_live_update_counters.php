@@ -1,5 +1,5 @@
 <?php
-// Videosquare live thumbnail job
+// Videosquare live update counters job
 
 define('BASE_PATH',	realpath( __DIR__ . '/../..' ) . '/' );
 define('PRODUCTION', false );

@@ -648,7 +648,7 @@ class Recordings extends \Springboard\Model {
 
     // mediainfo invalid xmlt adhat vissza, itt tisztitjuk meg
     $normalizedXML = preg_replace_callback(
-      '/(&#[xX]?[0-9]+;)/',
+      '/(&#[xX]?[0-9a-fA-F]+;)/',
       array( $this, 'normalizeHTMLEntitiesCallback' ),
       $output
     );
@@ -2390,7 +2390,7 @@ class Recordings extends \Springboard\Model {
 
     $data = $data + $this->bootstrap->config['flashplayer_extraconfig'];
 
-    $hds  = $this->isHDSEnabled();
+    $hds  = $this->isHDSEnabled( $info );
     $data = $data + $this->getMediaServers( $info, $hds );
 
     // default bal oldalon van a video, csak akkor allitsuk be ha kell
@@ -2636,9 +2636,9 @@ class Recordings extends \Springboard\Model {
 
   }
 
-  public function isHDSEnabled() {
+  public function isHDSEnabled( $info ) {
     return
-      $this->bootstrap->config['ondemandhdsenabled'] and
+      $info['organization']['ondemandhdsenabled'] and
       in_array( $this->row['smilstatus'], array('onstorage', 'regenerate') )
     ;
   }
@@ -2652,7 +2652,7 @@ class Recordings extends \Springboard\Model {
 
     $prefix = $this->row['issecurestreamingforced']? 'sec': '';
     if ( $hds === null )
-      $hds = $this->isHDSEnabled();
+      $hds = $this->isHDSEnabled( $info );
 
     if ( $hds ) {
       $data['media_servers'][] = $this->getWowzaUrl( $prefix . 'smilurl', false, $info );
@@ -2692,7 +2692,7 @@ class Recordings extends \Springboard\Model {
       return array();
 
     if ( $hds === null )
-      $hds   = $this->isHDSEnabled();
+      $hds   = $this->isHDSEnabled( $info );
 
     $ids     = array();
     $data    = array();

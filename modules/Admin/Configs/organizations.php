@@ -1,5 +1,6 @@
 <?php
 include_once( $this->bootstrap->config['libpath'] . 'clonefish/constants.php');
+
 $config = Array(
    
   'action' => Array(
@@ -349,6 +350,44 @@ $config = Array(
     'values'      => $l->getLov('yesno'),
     'value'       => 0,
   ),
+
+
+
+  'streamsettingsfs' => array(
+    'legend' => 'Stream beállítások',
+    'type'   => 'fieldset',
+    'submit' => true,
+  ),
+
+  'ondemandhdsenabled' => array(
+    'displayname' => 'On-demand HDS bekapcsolva?',
+    'type'        => 'inputRadio',
+    'values'      => $l->getLov('noyes'),
+    'value'       => 0,
+  ),
+
+  'livehdsenabled' => array(
+    'displayname' => 'Live HDS bekapcsolva?',
+    'type'        => 'inputRadio',
+    'values'      => $l->getLov('noyes'),
+    'value'       => 0,
+  ),
+
+  'ondemandhlsenabledandroid' => array(
+    'displayname' => 'Android on-demand HLS bekapcsolva?',
+    'type'        => 'inputRadio',
+    'values'      => $l->getLov('noyes'),
+    'value'       => 0,
+  ),
+
+  'livehlsenabledandroid' => array(
+    'displayname' => 'Android live HLS bekapcsolva?',
+    'type'        => 'inputRadio',
+    'values'      => $l->getLov('noyes'),
+    'value'       => 0,
+  ),
+
+
 
   'layoutfs' => array(
     'legend' => 'Layout',

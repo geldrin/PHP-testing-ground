@@ -135,11 +135,6 @@ $config = array(
     'player' => '618x348',
   ),
   //----
-  'ondemandhdsenabled' => false,
-  'livehdsenabled' => false,
-  // ha false akkor rtsp-t kuldunk androidnak
-  'ondemandandroidhls' => false,
-  'liveandandroidhls' => false,
   'wowza'      => array(
     
     'httpurl'           => 'http://%s/vsq/_definst_/',

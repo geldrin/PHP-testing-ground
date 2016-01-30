@@ -213,6 +213,13 @@ $config = array(
   
 );
 
+if ( \Springboard\Language::get() == 'hu' ) {
+  $namefirst = array( 'namefirst' => $config['namefirst'], );
+  unset( $config['namefirst'] );
+
+  $config = \Springboard\Tools::insertAfterKey( $config, $namefirst, 'namelast' );
+}
+
 if ( $this->controller->organization['displaynametype'] == 'hidenickname' )
   unset( $config['nickname'] );
 

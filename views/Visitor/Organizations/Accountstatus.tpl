@@ -39,7 +39,7 @@
   {/if}
   <tr>
     <td>{#organizations__accountstatus_fullnames#}:</td>
-    <td>{if $organization.fullnames}{#organizations__accountstatus_fullnames_yes#}{else}{#organizations__accountstatus_fullnames_no#}{/if}</td>
+    <td>{if $organization.displaynametype != "shownickname"}{#organizations__accountstatus_fullnames_yes#}{else}{#organizations__accountstatus_fullnames_no#}{/if}</td>
   </tr>
   <tr>
     <th colspan="2">{#organizations__accountstatus_subscription#}</th>

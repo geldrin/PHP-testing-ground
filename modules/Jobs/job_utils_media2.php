@@ -923,6 +923,7 @@ global $db, $jconf, $debug, $myjobid;
 			shortname,
 			type,
 			mediatype,
+            generatethumbnails,
 			isdesktopcompatible,
 			isioscompatible,
 			isandroidcompatible,

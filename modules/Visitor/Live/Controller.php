@@ -320,7 +320,9 @@ class Controller extends \Visitor\Controller {
     $user = $this->bootstrap->getSession('user');
     if ( $user['isadmin'] or $user['isclientadmin'] )
       $this->toSmarty['streamingservers'] =
-        $this->bootstrap->getModel('livefeeds')->getStreamingServers()
+        $this->bootstrap->getModel('livefeeds')->getStreamingServers(
+          $this->organization
+        )
       ;
     else
       $this->toSmarty['streamingservers'] = array();

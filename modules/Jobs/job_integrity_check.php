@@ -18,7 +18,6 @@ include_once(BASE_PATH . 'libraries/Springboard/Application/Cli.php');
 include_once(BASE_PATH . 'modules/Jobs/job_utils_base.php');
 include_once(BASE_PATH . 'modules/Jobs/job_utils_log.php');
 include_once(BASE_PATH . 'modules/Jobs/job_utils_status.php');
-include_once(BASE_PATH . 'modules/Jobs/job_utils_media.php');
 
 set_time_limit(0);
 
@@ -254,7 +253,8 @@ while ( !$recordings->EOF ) {
       $tmp = getLength($recording_path . $rv['filename']);
       if ($tmp['result'] === false) {
         $debug->log($logdir, $logpath, "[ERROR] ". $tmp['message'] ."(recordings_version #". $rv['id'] .")" , $sendmail = false);
-        break 2;
+        $recording_summary .= "[ERROR] failed to analyze recordings_version #". $rv['id'];
+        continue;
       }
       $duration = $tmp['length'];
       unset($tmp);
