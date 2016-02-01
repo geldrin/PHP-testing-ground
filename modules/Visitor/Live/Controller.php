@@ -321,7 +321,7 @@ class Controller extends \Visitor\Controller {
     if ( $user['isadmin'] or $user['isclientadmin'] )
       $this->toSmarty['streamingservers'] =
         $this->bootstrap->getModel('livefeeds')->getStreamingServers(
-          $this->organization
+          array('organization' => $this->organization )
         )
       ;
     else
