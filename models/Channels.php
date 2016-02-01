@@ -1368,4 +1368,31 @@ class Channels extends \Springboard\Model {
       LIMIT 1
     ");
   }
+
+  public function selectWithType( $id, $organizationid, $language ) {
+    $ret = $this->db->getRow("
+      SELECT
+        c.*,
+        s.value AS channeltype
+      FROM channels AS c
+      LEFT JOIN channel_types AS ct ON(
+        ct.id = c.channeltypeid
+      )
+      LEFT JOIN strings AS s ON(
+        s.translationof = ct.name_stringid AND
+        s.language = '$language'
+      )
+      WHERE
+        c.organizationid = '$organizationid' AND
+        c.id = '$id'
+      LIMIT 1
+    ");
+
+    if ( $ret ) {
+      $this->row = $ret;
+      $this->id = $ret['id'];
+    }
+
+    return $ret;
+  }
 }

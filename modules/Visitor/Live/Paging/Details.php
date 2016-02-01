@@ -20,10 +20,13 @@ class Details extends \Visitor\Paging {
     $l                  = $this->bootstrap->getLocalization();
     $user               = $this->bootstrap->getSession('user');
     $this->foreachelse  = '';
-    $this->channelModel = $this->controller->modelIDCheck(
-      'channels',
-      $this->application->getNumericParameter('id')
+    $this->channelModel = $this->bootstrap->getModel('channels');
+    $this->channelModel->selectWithType(
+      $this->application->getNumericParameter('id'),
+      $this->controller->organization['id'],
+      \Springboard\Language::get()
     );
+
     $this->title        = sprintf(
       $l('live','details_title'),
       $this->channelModel->row['title']
