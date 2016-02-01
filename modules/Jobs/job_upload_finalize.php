@@ -1,7 +1,5 @@
 <?php
-// Upload finalize job handling:
-// - Uploaded documents (attached documents)
-// - User avatar images
+// Upload finalize job
 
 define('BASE_PATH', realpath( __DIR__ . '/../..' ) . '/' );
 define('PRODUCTION', false );
@@ -50,9 +48,6 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_upload_finalize.stop' ) an
 	while ( 1 ) {
 
 		$app->watchdog();
-
-		// Establish database connection
-		//$db = db_maintain();
 
 		$sleep_length = $app->config['sleep_short'];
 
@@ -311,9 +306,6 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_upload_finalize.stop' ) an
 
     }
 
-	// Close DB connection if open
-	//if ( is_resource($db->_connectionID) ) $db->close();
-
 	// Watchdog
 	$app->watchdog();
 
@@ -377,9 +369,8 @@ global $app, $debug, $myjobid, $jconf;
 // *************************************************************************
 // Description: queries next uploaded document from attached_documents
 function getUploadedAttachments() {
-global $jconf, $app, $debug, $myjobid; // $db
+global $jconf, $app, $debug, $myjobid;
 
-	//$db = db_maintain();
     $model = $app->bootstrap->getModel('attached_documents');
 
 	$node = $app->config['node_sourceip'];
@@ -408,7 +399,6 @@ global $jconf, $app, $debug, $myjobid; // $db
 			b.organizationid = c.id";
 
 	try {
-		//$rs = $db->Execute($query);
         $rs = $model->safeExecute($query);
 	} catch (exception $err) {
 		$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] SQL query failed.\n" . trim($query), $sendmail = true);
@@ -426,9 +416,8 @@ global $jconf, $app, $debug, $myjobid; // $db
 // *************************************************************************
 // Description: queries pending user avatars
 function getUploadedAvatars() {
-global $jconf, $app, $debug, $myjobid; // $db
+global $jconf, $app, $debug, $myjobid;
 
-	//$db = db_maintain();
     $model = $app->bootstrap->getModel('users');
     
 	$node = $app->config['node_sourceip'];
@@ -452,7 +441,6 @@ global $jconf, $app, $debug, $myjobid; // $db
 			a.organizationid = b.id";
 
 	try {
-		//$rs = $db->Execute($query);
         $rs = $model->safeExecute($query);
 	} catch (exception $err) {
 		$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] SQL query failed.\n" . trim($query), $sendmail = true);
@@ -466,9 +454,8 @@ global $jconf, $app, $debug, $myjobid; // $db
 }
 
 function getSelectedContributorImages() {
-global $jconf, $app, $debug, $myjobid; // $db
+global $jconf, $app, $debug, $myjobid;
 
-	//$db = db_maintain();
     $model = $app->bootstrap->getModel('recordings');
 
 	$query = "
@@ -482,7 +469,6 @@ global $jconf, $app, $debug, $myjobid; // $db
 			indexphotofilename LIKE '%recordings%'";
 
 	try {
-		//$rs = $db->Execute($query);
         $rs = $model->safeExecute($query);
 	} catch (exception $err) {
 		$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] SQL query failed.\n" . trim($query), $sendmail = true);
@@ -496,9 +482,8 @@ global $jconf, $app, $debug, $myjobid; // $db
 }
 
 function getRecordingMastersToFinalize() {
-global $jconf, $debug, $app, $myjobid; // $db
+global $jconf, $debug, $app, $myjobid;
 
-	//$db = db_maintain();
     $model = $app->bootstrap->getModel('recordings');
 
 	$node = $app->config['node_sourceip'];
@@ -527,7 +512,6 @@ global $jconf, $debug, $app, $myjobid; // $db
 			r.id";
 
 	try {
-		//$rs = $db->Execute($query);
         $rs = $model->safeExecute($query);
 	} catch (exception $err) {
 		$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] SQL query failed.\n" . trim($query), $sendmail = true);
