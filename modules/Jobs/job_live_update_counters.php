@@ -44,12 +44,6 @@ clearstatcache();
 // Watchdog
 $app->watchdog();
 
-// Establish database connection
-$db = db_maintain();
-
-// Watchdog
-$app->watchdog();
-
 // List of active livefeedids
 $livefeedids = array();
 
@@ -59,17 +53,18 @@ if ( $live_feeds !== false ) {
     
     for ( $i = 0; $i < count($live_feeds); $i++ ) {
 
-        $values = array(
-            'currentviewers'    => $live_feeds[$i]['currentviewers']
-        );
-
-        //var_dump($live_feeds[$i]);
-        
         // Update livefeed currentviewers counter
         try {
             $liveFeedObj = $app->bootstrap->getModel('livefeeds');
-            $liveFeedObj->select($live_feeds[$i]['livefeedid']);
-            $liveFeedObj->updateRow($values);
+            $query = "
+                UPDATE
+                    livefeeds
+                SET
+                    currentviewers = " . $live_feeds[$i]['currentviewers'] . "
+                WHERE
+                    id = " . $live_feeds[$i]['livefeedid'];
+
+            $rs = $liveFeedObj->safeExecute($query);
         } catch (exception $err) {
             $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Cannot update currentviewers for livefeedid#" . $live_feeds[$i]['livefeedid'] . "\n\n" . $err, $sendmail = false);
             return false;
@@ -81,18 +76,15 @@ if ( $live_feeds !== false ) {
     
 }
     
-// Set all currentviewers > 0 to zero (no active livefeeds any more)
+// Set all currentviewers > 0 to zero (no active livefeeds anymore)
 $err = setLiveFeedViewersToZero($livefeedids);
-
-// Close DB connection if open
-if ( is_resource($db->_connectionID) ) $db->close();
 
 exit;
 
 function getLiveViewersForFeeds() {
-global $jconf, $debug, $db, $app, $myjobid;
+global $jconf, $debug, $app, $myjobid;
 
-	$db = db_maintain();
+    $model = $app->bootstrap->getModel('view_statistics_live');
 
 	$now = date("Y-m-d H:i:s");
 
@@ -108,22 +100,25 @@ global $jconf, $debug, $db, $app, $myjobid;
             vsl.livefeedid";
 
 	try {
-		$rs = $db->getArray($query);
+        $rs = $model->safeExecute($query);
 	} catch (exception $err) {
 		$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] SQL query failed. " . trim($query), $sendmail = false);
 		return false;
 	}
 
 	// Check if any record returned
-	if ( count($rs) < 1 ) return false;
+    if ( $rs->RecordCount() < 1 ) return false;
 
-	return $rs;
+    // Convert AdoDB resource to array
+    $rs_array = adoDBResourceSetToArray($rs);
+
+	return $rs_array;
 }
 
 function setLiveFeedViewersToZero($livefeedids) {
-global $jconf, $debug, $db, $app, $myjobid;
+global $jconf, $debug, $app, $myjobid;
 
-	$db = db_maintain();
+    $model = $app->bootstrap->getModel('livefeeds');
 
     $in = "";
     
@@ -138,7 +133,7 @@ global $jconf, $debug, $db, $app, $myjobid;
             lf.currentviewers > 0 " . $in;
     
 	try {
-		$rs = $db->Execute($query);
+        $rs = $model->safeExecute($query);
 	} catch (exception $err) {
 		$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] SQL query failed. " . trim($query), $sendmail = false);
 		return false;
