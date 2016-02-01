@@ -41,7 +41,7 @@ class Signup extends \Visitor\HelpForm {
 
     // sec vuln
     if ( $values['forward'] and parse_url( $values['forward'] ) !== false )
-      $this->toSmarty['forwardurl'] = $values['forward'];
+      $this->controller->toSmarty['forwardurl'] = $values['forward'];
 
     $values['timestamp']      = date('Y-m-d H:i:s');
     $values['lastloggedin']   = $values['timestamp'];
