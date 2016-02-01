@@ -6,8 +6,8 @@ class Details extends \Visitor\Paging {
   protected $sort     = Array(
     'timestamp_desc'       => 'timestamp DESC',
     'timestamp'            => 'timestamp',
-    'title_desc'           => 'titleoriginal DESC',
-    'title'                => 'titleoriginal',
+    'title_desc'           => 'title DESC',
+    'title'                => 'title',
     'views_desc'           => 'numberofviews DESC',
     'views'                => 'numberofviews',
     'viewsthisweek_desc'   => 'numberofviewsthisweek DESC',
