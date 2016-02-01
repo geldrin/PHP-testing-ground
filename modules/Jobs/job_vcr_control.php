@@ -53,9 +53,6 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_vcr_control.stop' ) and !i
 	$tcs_isconnected = false;
 	$sleep_length = $app->config['sleep_vcr'];
 
-	// Establish database connection
-	//$db = db_maintain();
-
 	// VCR: start, maintain and stop recording
     while ( 1 ) {
 
@@ -438,9 +435,6 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_vcr_control.stop' ) and !i
 
 	}
 
-	// Close DB connection if open
-	//if ( is_resource($db->_connectionID) ) $db->close();
-
 	$app->watchdog();
 
 	sleep($sleep_length);
@@ -488,11 +482,8 @@ global $app, $jconf, $myjobid, $debug;
 //	  o TRUE: job is available for conversion
 //	- $recording: recording_element DB record returned in global $recording variable
 function getVCRLiveRecording() {
-global $jconf, $app, $myjobid, $debug; // $db
+global $jconf, $app, $myjobid, $debug;
 
-    $vcr = array();
-
-	//$db = db_maintain();
     $model = $app->bootstrap->getModel('livefeed_streams');
 
 	$query = "
@@ -536,7 +527,6 @@ global $jconf, $app, $myjobid, $debug; // $db
 // LIMIT 1???? Mi lesz ha tobb stream tartozik egy felvetelhez? TODO
 
 	try {
-		//$rs = $db->Execute($query);
         $rs = $model->safeExecute($query);
 	} catch (exception $err) {
         $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Cannot query next VCR job. SQL query failed.\n\n" . trim($query) . "\n\nError:\n\n" . $err, $sendmail = true);
@@ -569,7 +559,6 @@ function getUser($userid) {
 			id = " . $userid;
 
 	try {
-		//$rs = $db->Execute($query);
         $rs = $model->safeExecute($query);
 	} catch (exception $err) {
         $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Cannot query next VCR job. SQL query failed.\n\n" . trim($query) . "\n\nError:\n\n" . $err, $sendmail = true);
@@ -588,7 +577,6 @@ function getUser($userid) {
 function getVCRUpload() {
 global $jconf, $app, $myjobid, $debug;
 
-	//$db = db_maintain();
     $model = $app->bootstrap->getModel('livefeed_streams');
 
 	$query = "
@@ -616,7 +604,6 @@ global $jconf, $app, $myjobid, $debug;
 		LIMIT 1";
 
 	try {
-		//$rs = $db->Execute($query);
         $rs = $model->safeExecute($query);
 	} catch (exception $err) {
         $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Cannot query next recording to upload. SQL query failed.\n\n" . trim($query) . "\n\nError:\n\n" . $err, $sendmail = true);
@@ -627,34 +614,6 @@ global $jconf, $app, $myjobid, $debug;
 	if ( $rs->RecordCount() < 1 ) return false;
 
 	$vcr_upload = $rs->fields;
-
-    /*
-	$query = "
-		SELECT
-			id,
-			nickname,
-			email,
-			language,
-			organizationid
-		FROM
-			users
-		WHERE
-			id = " . $vcr_upload['userid'];
-
-	try {
-		$rs2 = $db->Execute($query);
-	} catch (exception $err) {
-        $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Cannot query user to VCR. SQL query failed.\n\n" . trim($query) . "\n\nError:\n\n" . $err, $sendmail = true);
-		return false;
-	}
-
-	// Check if user exsits to media
-	if ( $rs2->RecordCount() < 1 ) {
-		return false;
-	}
-
-	$vcr_user = $rs2->fields;
-*/
     
 	return $vcr_upload;
 }
