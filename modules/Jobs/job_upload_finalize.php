@@ -36,9 +36,6 @@ if ( iswindows() ) {
 	exit;
 }
 
-// Recording finalization last time
-$finalizedonelasttime = null;
-
 // Start an infinite loop - exit if any STOP file appears
 while( !is_file( $app->config['datapath'] . 'jobs/job_upload_finalize.stop' ) and !is_file( $app->config['datapath'] . 'jobs/all.stop' ) ) {
 
@@ -55,7 +52,7 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_upload_finalize.stop' ) an
 		$app->watchdog();
 
 		// Establish database connection
-		$db = db_maintain();
+		//$db = db_maintain();
 
 		$sleep_length = $app->config['sleep_short'];
 
@@ -315,7 +312,7 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_upload_finalize.stop' ) an
     }
 
 	// Close DB connection if open
-	if ( is_resource($db->_connectionID) ) $db->close();
+	//if ( is_resource($db->_connectionID) ) $db->close();
 
 	// Watchdog
 	$app->watchdog();
@@ -380,9 +377,10 @@ global $app, $debug, $myjobid, $jconf;
 // *************************************************************************
 // Description: queries next uploaded document from attached_documents
 function getUploadedAttachments() {
-global $jconf, $db, $app, $debug, $myjobid;
+global $jconf, $app, $debug, $myjobid; // $db
 
-	$db = db_maintain();
+	//$db = db_maintain();
+    $model = $app->bootstrap->getModel('attached_documents');
 
 	$node = $app->config['node_sourceip'];
 
@@ -404,25 +402,23 @@ global $jconf, $db, $app, $debug, $myjobid;
 			users as b,
 			organizations as c
 		WHERE
-			status = \"" . $jconf['dbstatus_uploaded'] . "\" AND
+			status = '" . $jconf['dbstatus_uploaded'] . "' AND
 			a.sourceip = '" . $node . "' AND
 			a.userid = b.id AND
-			b.organizationid = c.id
-	";
+			b.organizationid = c.id";
 
 	try {
-		$docs = $db->Execute($query);
+		//$rs = $db->Execute($query);
+        $rs = $model->safeExecute($query);
 	} catch (exception $err) {
-		$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] SQL query failed." . trim($query), $sendmail = true);
+		$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] SQL query failed.\n" . trim($query), $sendmail = true);
 		return false;
 	}
 
 	// Check if pending job exsits
-	if ( $docs->RecordCount() < 1 ) {
-		return false;
-	}
+	if ( $rs->RecordCount() < 1 ) return false;
 
-	return $docs;
+	return $rs;
 }
 
 // *************************************************************************
@@ -430,9 +426,11 @@ global $jconf, $db, $app, $debug, $myjobid;
 // *************************************************************************
 // Description: queries pending user avatars
 function getUploadedAvatars() {
-global $jconf, $db, $app, $debug, $myjobid;
+global $jconf, $app, $debug, $myjobid; // $db
 
-	$db = db_maintain();
+	//$db = db_maintain();
+    $model = $app->bootstrap->getModel('users');
+    
 	$node = $app->config['node_sourceip'];
 
 	$query = "
@@ -451,28 +449,27 @@ global $jconf, $db, $app, $debug, $myjobid;
 		WHERE
 			a.avatarstatus = '" . $jconf['dbstatus_uploaded'] . "' AND
 			a.avatarsourceip = '" . $node . "' AND
-			a.organizationid = b.id
-	";
+			a.organizationid = b.id";
 
 	try {
-		$avatars = $db->Execute($query);
+		//$rs = $db->Execute($query);
+        $rs = $model->safeExecute($query);
 	} catch (exception $err) {
 		$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] SQL query failed.\n" . trim($query), $sendmail = true);
 		return false;
 	}
 
 	// Check if pending job exsits
-	if ( $avatars->RecordCount() < 1 ) {
-		return false;
-	}
+	if ( $rs->RecordCount() < 1 ) return false;
 
-	return $avatars;
+	return $rs;
 }
 
 function getSelectedContributorImages() {
-global $jconf, $db, $app, $debug, $myjobid;
+global $jconf, $app, $debug, $myjobid; // $db
 
-	$db = db_maintain();
+	//$db = db_maintain();
+    $model = $app->bootstrap->getModel('recordings');
 
 	$query = "
 		SELECT
@@ -485,24 +482,24 @@ global $jconf, $db, $app, $debug, $myjobid;
 			indexphotofilename LIKE '%recordings%'";
 
 	try {
-		$cimages = $db->Execute($query);
+		//$rs = $db->Execute($query);
+        $rs = $model->safeExecute($query);
 	} catch (exception $err) {
 		$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] SQL query failed.\n" . trim($query), $sendmail = true);
 		return false;
 	}
 
 	// Check if pending job exsits
-	if ( $cimages->RecordCount() < 1 ) {
-		return false;
-	}
+	if ( $rs->RecordCount() < 1 ) return false;
 
-	return $cimages;
+	return $rs;
 }
 
 function getRecordingMastersToFinalize() {
-global $jconf, $debug, $db, $app, $myjobid;
+global $jconf, $debug, $app, $myjobid; // $db
 
-	$db = db_maintain();
+	//$db = db_maintain();
+    $model = $app->bootstrap->getModel('recordings');
 
 	$node = $app->config['node_sourceip'];
 
@@ -530,7 +527,8 @@ global $jconf, $debug, $db, $app, $myjobid;
 			r.id";
 
 	try {
-		$rs = $db->Execute($query);
+		//$rs = $db->Execute($query);
+        $rs = $model->safeExecute($query);
 	} catch (exception $err) {
 		$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] SQL query failed.\n" . trim($query), $sendmail = true);
 		return false;
