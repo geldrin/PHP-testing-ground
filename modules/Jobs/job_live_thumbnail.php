@@ -27,17 +27,18 @@ $logfile = $myjobid .'.log';
 
 // Log init
 $debug = Springboard\Debug::getInstance();
-$debug_mode = true;
+
+$debug_mode = false;
+if (isset($app->config['jobs']['converter']['job_live_thumbnail']['debug_mode']))
+  $debug_mode = (bool) $app->config['jobs']['converter']['job_live_thumbnail']['debug_mode'];
 
 // Exit if any STOP file is present
 $stopfile = $app->config['datapath'] . 'jobs/' . $myjobid . '.stop';
 $globalstopfile = $app->config['datapath'] . 'jobs/all.stop';
-// !!! FIX PLZ !!!
-//if ($debug_mode === false && (is_file($stopfile) || is_file($globalstopfile))) exit("Stopfile detected! Terminating.\n");
+if (is_file($stopfile) || is_file($globalstopfile)) exit();
 
 // Runover check. Is this process already running? If yes, report and exit
-// !!! FIX PLZ !!!
-if ( !runOverControl($myjobid) ) exit("Runover detected! Terminating.");
+if ( !runOverControl($myjobid) ) exit();
 
 // Run main loop
 $myexitcode = Main();
@@ -63,9 +64,9 @@ function Main() {
 	if ( $channels === false ) return false;
 
 	for ( $i = 0; $i < count($channels); $i++ ) {
-    
+
 		$filename = $ffmpeg_output = $ffmpeg_loglevel = $ffmpeg_filter = $ffmpeg_globals = $ffmpeg_load = null;
-        
+
 		// Temp directory
 		$temp_dir = $jconf['livestreams_dir'] . $channels[$i]['livefeedstreamid'] . "/";
 
@@ -99,7 +100,7 @@ function Main() {
 		try {
 			$cmd = $code = null;
 			$fatal = false;
-            $wrkr = new runExt();
+			$wrkr = new runExt();
 
 			// Prepare working directories
 			$directories = array($temp_dir, $path_wide, $path_43, $path_highres);
@@ -120,31 +121,30 @@ function Main() {
 			// Run ffmpeg
 			if (!$wrkr->run($ffmpeg_command)) {
 				if (strpos($wrkr->getOutput(), 'StreamNotFound') !== false) {
-					// there's no live stream available, don't complain about it
+					// there's no live stream available, don't complain about it unless we're debugging
+					if ($debug_mode) throw new Exception("Stream not found!");
 					continue;
 				} else {
 					// ffmpeg error
 					throw new Exception("FFmpeg cannot get live thumbnail. (". $wrkr->getOutput() .")");
 				}
 			} elseif (!is_readable($path_43 . $filename) || !(filesize($path_43 . $filename) > 0)) {
-                throw new Exception("File is not readable.");
+				throw new Exception("File is not readable.");
 			}
 
-			if ($debug_mode) {
-				$msg  = "[INFO] FFmpeg live thumbnail attempt for feed#". $channels[$i]['locationid'];
-				$msg .= " / stream#". $channels[$i]['livefeedstreamid'] ." - OK.\nCommand: '". $wrkr->command ."' / return code: ". $wrkr->getCode() ."\n";
-				$debug->log($logdir, $logfile, $msg, false);
-			}
+			$msg  = "[INFO] FFmpeg live thumbnail attempt for feed#". $channels[$i]['locationid'];
+			$msg .= " / stream#". $channels[$i]['livefeedstreamid'] ." - OK.\nCommand: '". $wrkr->command ."' / return code: ". $wrkr->getCode() ."\n";
+			$debug->log($logdir, $logfile, $msg, false);
 			unset($cmd, $code, $err, $msg, $wrkr);
-		
-    } catch (Exception $e) {
-      if ($wrkr->getCode() !== 0) {
-        $cmd  = $wrkr->command;
-        $code = $wrkr->getCode();
-      }
+
+		} catch (Exception $e) {
+			if ($wrkr->getCode() !== 0) {
+				$cmd  = $wrkr->command;
+				$code = $wrkr->getCode();
+			}
 			$msg  = "[ERROR] FFmpeg live thumbnail attempt for feed#". $channels[$i]['locationid'];
 			$msg .= " / stream#". $channels[$i]['livefeedstreamid'] ." - Failed!\n". $e->getMessage();
-            $msg .= "\nCommand: '". $cmd ."' / return code: ". $code ."\n";
+			$msg .= "\nCommand: '". $cmd ."' / return code: ". $code ."\n";
 			$debug->log($logdir, $logfile, $msg, false);
 			unset($cmd, $err, $msg, $wrkr);
 
@@ -193,12 +193,12 @@ function Main() {
 
 }
 
+function getActiveChannels() {
 // Returns all current live channels' livestream IDs as an array, and 
 // FALSE when encountering an error or no livestreams available.
-function getActiveChannels() {
  global $jconf, $debug, $logdir, $logfile, $app;
 
-    $model = $app->bootstrap->getModel('channels');
+	$model = $app->bootstrap->getModel('channels');
 
 	$now = date("Y-m-d H:i:s");
 	$query = "
@@ -230,16 +230,16 @@ function getActiveChannels() {
 			ch.id";
 
 	try {
-        $rs_channels = $model->safeExecute($query);
+		$rs_channels = $model->safeExecute($query);
 	} catch (exception $err) {
 		$debug->log($logdir, $logfile, "[ERROR] SQL query failed." . trim($query), $sendmail = false);
 		return false;
 	}
 
 	// Check if any record returned
-    if ( $rs_channels->RecordCount() < 1 ) return false;
-    
-    $channels = adoDBResourceSetToArray($rs_channels);
+		if ( $rs_channels->RecordCount() < 1 ) return false;
+
+		$channels = adoDBResourceSetToArray($rs_channels);
 	return $channels;
 }
 

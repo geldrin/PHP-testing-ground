@@ -296,23 +296,29 @@ $config = array(
         'enabled'             => true,
         'watchdogtimeoutsecs' => 60,
         'supresswarnings'     => false
-      )
+      ),
     ),
     'converter' => array(
-      'job_system_health'   => array(
-        'enabled'               => true,     // watcher to check or skip this job
-        'watchdogtimeoutsecs'   => 15 * 60,  // watchdog timeout (stuck processes)
-        'supresswarnings'       => false     // do not send warnings (e.g. stop files)
+      'job_system_health' => array(
+        'enabled'             => true,     // watcher to check or skip this job
+        'watchdogtimeoutsecs' => 15 * 60,  // watchdog timeout (stuck processes)
+        'supresswarnings'     => false     // do not send warnings (e.g. stop files)
       ),
-      'job_media_convert2'	=> array(
-        'enabled'				=> true,
-        'watchdogtimeoutsecs'	=> 15 * 60,
-        'supresswarnings'		=> false
+      'job_media_convert2' => array(
+        'enabled'             => true,
+        'watchdogtimeoutsecs' => 15 * 60,
+        'supresswarnings'     => false
       ),
-      'job_document_index'	=> array(
-        'enabled'				=> true,
-        'watchdogtimeoutsecs'	=> 15 * 60,
-        'supresswarnings'		=> false
+      'job_document_index' => array(
+        'enabled'             => true,
+        'watchdogtimeoutsecs' => 15 * 60,
+        'supresswarnings'     => false
+      ),
+      'job_live_thumbnail' => array(
+        'enabled'             => true,
+        'watchdogtimeoutsecs' => 15 * 60,
+        'supresswarnings'     => false,
+        'debug_mode'          => false,
       ),
     ),
   ),
