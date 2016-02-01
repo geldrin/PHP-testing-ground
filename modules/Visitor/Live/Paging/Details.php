@@ -27,6 +27,9 @@ class Details extends \Visitor\Paging {
       \Springboard\Language::get()
     );
 
+    if ( !$this->channelModel->row )
+      $this->controller->redirect('');
+
     $this->title        = sprintf(
       $l('live','details_title'),
       $this->channelModel->row['title']
