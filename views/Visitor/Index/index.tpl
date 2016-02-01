@@ -2,9 +2,9 @@
 
 {foreach from=$blocks key=block item=items}
   {if $block == "eloadas" and !empty( $items )}
-    <div id="channelheader">
+    <a id="channelheader" href="{$language}/live/details/{$items.id},{$items.title|filenameize}">
       <div class="channelimage">
-        <img src="{$STATIC_URI|escape:html}files/{$items.channelindexphotofilename|escape:html}"/>
+        <img src="{$items|@indexphoto}"/>
       </div>
       <div class="channelinfowrap">
         <h1>{$items.title|escape:html|mb_wordwrap:50}</h1>
@@ -24,7 +24,7 @@
         </div>
         {/if}
       </div>
-    </div>
+    </a>
   {/if}
 
   {if $block == "kiemelt" and !empty( $items )}

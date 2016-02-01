@@ -1335,4 +1335,37 @@ class Channels extends \Springboard\Model {
     return $relatedid;
   }
 
+  public function getFeatured( $organizationid, $language ) {
+    return $this->db->getRow("
+      SELECT
+        c.id,
+        c.title,
+        c.subtitle,
+        c.ordinalnumber,
+        c.url,
+        c.indexphotofilename AS indexphotofilename,
+        '' AS location,
+        c.starttimestamp,
+        c.endtimestamp,
+        s.value AS channeltype,
+        lf.id AS livefeedid,
+        lf.name AS feedname
+      FROM channels AS c
+      LEFT JOIN livefeeds AS lf ON(
+        c.id = lf.channelid
+      )
+      LEFT JOIN channel_types AS ct ON(
+        ct.id = c.channeltypeid
+      )
+      LEFT JOIN strings AS s ON(
+        s.translationof = ct.name_stringid AND
+        s.language = '$language'
+      )
+      WHERE
+        c.isfeatured     = '1' AND
+        c.organizationid = '$organizationid'
+      ORDER BY c.id DESC
+      LIMIT 1
+    ");
+  }
 }

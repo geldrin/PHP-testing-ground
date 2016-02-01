@@ -2598,6 +2598,7 @@ li#languageselectorlink span {
 }
 
 #channelheader {
+  display: block;
   min-height: 180px;
   position: relative;
 }

@@ -83,8 +83,8 @@ class Controller extends \Visitor\Controller {
   }
 
   private function getBlockEloadas( $user ) {
-    $livefeedModel = $this->bootstrap->getModel('livefeeds');
-    return $livefeedModel->getFeatured(
+    $channelModel = $this->bootstrap->getModel('channels');
+    return $channelModel->getFeatured(
       $this->organization['id'],
       \Springboard\Language::get()
     );

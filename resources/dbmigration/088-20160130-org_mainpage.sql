@@ -1,5 +1,5 @@
 ALTER TABLE `organizations`
 ADD `frontpageblockorder` text;
 
-ALTER TABLE `livefeeds`
+ALTER TABLE `channels`
 ADD `isfeatured` int(11) NOT NULL DEFAULT '0';
