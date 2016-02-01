@@ -23,7 +23,11 @@ function smarty_modifier_nickformat( $name ) {
       return smarty_modifier_nameformat( $name );
       break;
     case 'hidenickname':
-      return mb_strtolower( $name['namelast'] . '.' . $name['namefirst'] );
+      // ha nincs nev akkor lastname . firstname formatumban
+      if ( strlen( trim( $name['namefirst'] ) ) == 0 )
+        return mb_strtolower( $name['namelast'] . '.' . $name['namefirst'] );
+
+      return smarty_modifier_nameformat( $name );
       break;
     default:
       throw new \Exception(
