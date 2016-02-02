@@ -83,9 +83,6 @@ clearstatcache();
 // Watchdog
 $app->watchdog();
 
-// Establish database connection
-//$db = db_maintain();
-
 // Check GeoIP database
 $geoip = true;
 if ( !geoip_db_avail(GEOIP_COUNTRY_EDITION) ) {
@@ -364,9 +361,6 @@ for ( $statsidx = 0; $statsidx < count($stats_config); $statsidx++ ) {
 
 } // End of 5min, hourly, daily cycles
 
-// Close DB connection if open
-//if ( is_resource($db->_connectionID) ) $db->close();
-
 // Watchdog
 $app->watchdog();
 
@@ -392,7 +386,6 @@ global $debug, $myjobid, $app, $jconf;
         ";
 
     try {
-        //$rs = $db->getArray($query);
         $rs = $model->safeExecute($query);
     } catch (exception $err) {
         $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] SQL query failed." . trim($query), $sendmail = true);
@@ -467,7 +460,6 @@ global $debug, $myjobid, $app, $jconf;
             AND vsl.livefeedstreamid = lfs.id";
 
     try {
-        //$rs = $db->Execute($query);
         $rs = $model->safeExecute($query);
     } catch (exception $err) {
         $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] SQL query failed." . trim($query), $sendmail = false); // TRUE!!!
@@ -507,7 +499,6 @@ function getFirstLiveStatRecordFromInterval($from_timestamp, $to_timestamp, $str
     ";
 
     try {
-        //$rs = $db->getArray($query);
         $rs = $model->safeExecute($query);
     } catch (exception $err) {
         $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] SQL query failed." . trim($query), $sendmail = true);
@@ -539,7 +530,6 @@ global $debug, $myjobid, $app, $jconf;
         LIMIT 1";
 
     try {
-        //$rs = $db->getArray($query);
         $rs = $model->safeExecute($query);
     } catch (exception $err) {
         $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] SQL query failed." . trim($query), $sendmail = true);
@@ -660,7 +650,6 @@ function removeStatsAll($stats_config, $isexec) {
         $query = "TRUNCATE TABLE " . $stats_config[$statsidx]['sqltablename'];
 
         try {
-            //$rs = $db->Execute($query);
             $rs = $model->safeExecute($query);
         } catch (exception $err) {
             $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] SQL query failed." . trim($query), $sendmail = true);
