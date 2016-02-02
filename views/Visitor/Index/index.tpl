@@ -25,43 +25,30 @@
         {/if}
       </div>
     </a>
-  {/if}
-
-  {if $block == "kiemelt" and !empty( $items )}
+  {elseif $block == "kiemelt" and !empty( $items )}
     <div id="indexcontainer">
       <ul>
         {foreach from=$items item=item name=recordings}
           {include file="Visitor/minirecordinglistitem.tpl" isfirst=$smarty.foreach.recordings.first}
         {/foreach}
       </ul>
+      <div class="clear"></div>
+      <a href="{$language}/recordings/featured/{$blocksToTypes[$block]}" class="more">{#sitewide_go#}</a>
     </div>
     <div class="clear"></div>
-  {/if}
-
-  {if $block == "legujabb" and !empty( $items )}
-    <div class="accordion active">
-      <h2><a href="#">{#index__newest#}</a></h2>
+  {elseif !empty( $items )}
+    <div class="accordion active persist" id="accordion_{$block}">
+      <h2><a href="#">{$labels[$block]|escape:html}</a></h2>
       <ul>
         {foreach from=$items item=item}
           {include file="Visitor/minirecordinglistitem.tpl"}
         {/foreach}
       </ul>
+      <div class="clear"></div>
+      <a href="{$language}/recordings/featured/{$blocksToTypes[$block]}" class="more">{#sitewide_go#}</a>
     </div>
     <div class="clear"></div>
   {/if}
-
-  {if $block == "legnezettebb" and !empty( $items )}
-    <div class="accordion active">
-      <h2><a href="#">{#index__mostviewed#}</a></h2>
-      <ul>
-        {foreach from=$items item=item}
-          {include file="Visitor/minirecordinglistitem.tpl"}
-        {/foreach}
-      </ul>
-    </div>
-    <div class="clear"></div>
-  {/if}
-
 {/foreach}
 
 {include file="Visitor/_footer.tpl"}

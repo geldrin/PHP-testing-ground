@@ -1,4 +1,35 @@
+jQuery.cookie = function( name, value, seconds ) {
+  
+  // -1 seconds to unset, no support for non-string values
+  if ( value === undefined ) {
+    
+    var valuematch = new RegExp( name + "=([^;]+)").exec( document.cookie );
+    return valuematch ? valuematch[1] : null;
+    
+  }
+  
+  if ( seconds ) {
+    
+    var d = new Date();
+    d.setTime( d.getTime() + ( seconds * 1000 ) );
+    var expiry = d.toGMTString();
+    
+  } else
+    var expiry = null;
+  
+  var tmp = [];
+  tmp.push( name + '=' + value );
+  
+  if ( expiry )
+    tmp.push( 'expires=' + expiry );
+  
+  tmp.push('path=/');
+  document.cookie = tmp.join('; ');
+  return value;
+  
+};
 var $j = jQuery.noConflict();
+
 $j(document).ready(function() {
 
   $j('#systemmessageclose a').click( function() {
@@ -201,11 +232,43 @@ function setupInfoBar(elem) {
 }
 
 function setupAccordion(elems) {
+  elems.each(function() {
+    var elem = $j(this);
+    if ( !elem.hasClass('persist') )
+      return;
+
+    if ( !elem.attr('id') )
+      return;
+
+    var id = elem.attr('id');
+    var status = $j.cookie(id);
+
+    if ( status === null )
+      return;
+
+    var toggle = status === 'open';
+    elem.toggleClass('active', toggle );
+  });
+
+  $j(document).on('accordionclick', function(e) {
+    e.preventDefault();
+    var elem = $j(e.target);
+    var id = elem.attr('id');
+    var twomonths = 5256000;
+
+    var status = elem.hasClass('active')? 'open': 'closed';
+    $j.cookie(id, status, twomonths);
+  });
+
   elems.find('h2 a').click(function(e) {
     e.preventDefault();
     var parent = $j(this).parents('.accordion');
     parent.find('> ul').toggle();
     parent.toggleClass('active');
+
+    var e = jQuery.Event('accordionclick');
+    e.target = parent;
+    $j(document).trigger(e);
   });
 }
 

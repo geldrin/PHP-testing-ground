@@ -7,13 +7,12 @@ class Controller extends \Visitor\Controller {
   );
 
   private $maxRecordings = 4;
-  private $recordingTypes = array(
-    'mostviewed' => array(
-      'order'  => 'numberofviews DESC',
-    ),
-    'newest' => array(
-      'order'  => 'timestamp DESC',
-    ),
+  private $blocksToTypes = array(
+    'kiemelt'            => 'featured',
+    'legujabb'           => 'newest',
+    'legnezettebb'       => 'mostviewed',
+    'legjobb'            => 'best',
+    'csatornafelvetelek' => 'subscriptions',
   );
 
   public function indexAction() {
@@ -25,12 +24,31 @@ class Controller extends \Visitor\Controller {
     ;
     $this->toSmarty['welcome'] = true;
 
+    $l = $this->bootstrap->getLocalization();
+    $labels = array();
     $blocks = array();
     foreach( $this->organization['blockorder'] as $block => $value ) {
-      $method = 'getBlock' . ucfirst( $block );
-      $blocks[ $block ] = $this->$method( $user );
+      if ( $block != 'eloadas' and $block != 'kiemelt' )
+        $labels[ $block ] = $l('index', 'block_' . $block );
+
+      if ( isset( $this->blocksToTypes[ $block ] ) ) {
+        $type = $this->blocksToTypes[ $block ];
+        $blocks[ $block ] = \Visitor\Recordings\Paging\Featured::getRecItems(
+          $this->organization['id'],
+          $user,
+          $type,
+          0,
+          $this->maxRecordings
+        );
+      } else {
+        $method = 'getBlock' . ucfirst( $block );
+        if ( method_exists( $this, $method ) )
+          $blocks[ $block ] = $this->$method( $user );
+      }
     }
 
+    $this->toSmarty['blocksToTypes'] = $this->blocksToTypes;
+    $this->toSmarty['labels'] = $labels;
     $this->toSmarty['blocks'] = $blocks;
     $this->smartyoutput('Visitor/Index/index.tpl');
   }
@@ -56,30 +74,6 @@ class Controller extends \Visitor\Controller {
     );
 
     return $ret;
-  }
-
-  private function getBlockKiemelt( $user ) {
-    $ret = $this->recordingsModel->getRandomRecordings(
-      $this->maxRecordings,
-      $this->organization['id'],
-      $user
-    );
-
-    $this->recordingsModel->addPresentersToArray(
-      $ret,
-      true,
-      $this->organization['id']
-    );
-
-    return $ret;
-  }
-
-  private function getBlockLegujabb( $user ) {
-    return $this->getRecordings( 'newest', $user );
-  }
-
-  private function getBlockLegnezettebb( $user ) {
-    return $this->getRecordings( 'mostviewed', $user );
   }
 
   private function getBlockEloadas( $user ) {

@@ -3527,7 +3527,7 @@ class Recordings extends \Springboard\Model {
 
   }
 
-  public function getRecordingsWithUsers( $start, $limit, $extrawhere, $order, $user, $organizationid ){
+  private function getRecordingsSQL( $organizationid ) {
 
     $select = "
       " . self::getRecordingSelect('r.') . ",
@@ -3553,11 +3553,22 @@ class Recordings extends \Springboard\Model {
       r.organizationid = '$organizationid'
     ";
 
+    return array(
+      'select' => $select,
+      'from'   => $from,
+      'where'  => $where,
+    );
+  }
+
+  public function getRecordingsWithUsers( $start, $limit, $extrawhere, $order, $user, $organizationid ){
+
+    $sql = $this->getRecordingsSQL( $organizationid );
+
     if ( $extrawhere )
-      $where .= " AND ( $extrawhere )";
+      $sql['where'] .= " AND ( $extrawhere )";
 
     return $this->db->getArray("
-      " . self::getUnionSelect( $user, $select, $from, $where ) .
+      " . self::getUnionSelect( $user, $sql['select'], $sql['from'], $sql['where'] ) .
       ( strlen( $order ) ? 'ORDER BY ' . $order : '' ) . " " .
       ( is_numeric( $start ) ? 'LIMIT ' . $start . ', ' . $limit : "" )
     );
@@ -4342,5 +4353,59 @@ class Recordings extends \Springboard\Model {
         $where
       ORDER BY vso.id
     ");
+  }
+
+  private function getSQLFromChannelSubscriptions( $user, $organizationid ) {
+    $sql = $this->getRecordingsSQL( $organizationid );
+    $sql['select'] .= ",
+      c.id AS channelid,
+      c.title AS channeltitle
+    ";
+    $sql['from'] .= ",
+      channels_recordings AS cr,
+      subscriptions AS sub,
+      channels AS c
+    ";
+    $sql['where'] .= " AND
+      cr.recordingid = r.id AND
+      cr.channelid = c.id AND
+      c.id = sub.channelid AND
+      sub.userid = '" . $user['id'] . "'
+      GROUP BY r.id
+    ";
+
+    return $sql;
+  }
+
+  public function getCountFromChannelSubscriptions( $user, $organizationid ) {
+    if ( !$user['id'] )
+      return 0;
+
+    $sql = $this->getSQLFromChannelSubscriptions( $user, $organizationid );
+    $sql['select'] = 'COUNT(r.id) AS count';
+    return $this->db->getOne("
+      SELECT " . $sql['select'] . "
+      FROM " . $sql['from'] . "
+      WHERE ". $sql['where'] . "
+      LIMIT 1
+    ");
+  }
+
+  public function getArrayFromChannelSubscriptions( $start, $limit, $order, $user, $organizationid ) {
+    if ( !$user['id'] )
+      return array();
+
+    if ( !$order )
+      $order = 'cr.id DESC';
+
+    $sql = $this->getSQLFromChannelSubscriptions( $user, $organizationid );
+    return $this->db->getArray("
+      SELECT " . $sql['select'] . "
+      FROM " . $sql['from'] . "
+      WHERE " . $sql['where'] . "
+      ORDER BY $order " .
+      ( is_numeric( $start ) ? 'LIMIT ' . $start . ', ' . $limit : "" )
+    );
+
   }
 }

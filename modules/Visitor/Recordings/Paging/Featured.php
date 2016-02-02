@@ -18,6 +18,10 @@ class Featured extends \Visitor\Paging {
     'ratingthisweek'       => 'ratingthisweek, numberofratings DESC',
     'ratingthismonth_desc' => 'ratingthismonth DESC, numberofratings DESC',
     'ratingthismonth'      => 'ratingthismonth, numberofratings DESC',
+    'hiddennull'           => null,
+  );
+  protected $ignoreSortKeys = array(
+    'hiddennull' => true,
   );
   protected $template = 'Visitor/recordinglistitem.tpl';
   protected $insertbeforepager = Array( 'Visitor/Recordings/Paging/FeaturedBeforepager.tpl' );
@@ -25,7 +29,103 @@ class Featured extends \Visitor\Paging {
   protected $filter = '';
   protected $type   = '';
   protected $user;
-  
+
+  private static $recModel;
+  private static $types = array(
+    'featured' => array(
+      'filter' => "r.isfeatured = '1'",
+      'order'  => 'timestamp DESC',
+    ),
+    'highestrated' => array(
+      'order' => 'rating',
+    ),
+    'mostviewed' => array(
+      'order'  => 'numberofviews DESC',
+    ),
+    'newest' => array(
+      'order'  => 'timestamp DESC',
+    ),
+    'best' => array(
+      'order'  => '
+        (
+          rating *
+          ( 100 * numberofratings / numberofviewsthisweek ) *
+          numberofviewsthisweek
+        )
+      ',
+    ),
+  );
+
+  private static function getFilterForType( $organizationid, $type ) {
+    $filter = "r.organizationid = '$organizationid'";
+    if ( isset( self::$types[ $type ] ) and isset( self::$types[ $type ]['filter'] ) )
+      $filter .= " AND " . self::$types[ $type ]['filter'];
+
+    return $filter;
+  }
+
+  private static function getOrderForType( $type ) {
+    if ( isset( self::$types[ $type ] ) )
+      return self::$types[ $type ]['order'];
+
+    return '';
+  }
+
+  public static function getRecCount( $organizationid, $user, $type ) {
+    if ( !self::$recModel )
+      self::$recModel = \Bootstrap::getInstance()->getModel('recordings');
+
+    switch( $type ) {
+      case 'subscriptions':
+        $count = self::$recModel->getCountFromChannelSubscriptions(
+          $user, $organizationid
+        );
+        break;
+
+      default:
+        $filter = self::getFilterForType( $organizationid, $type );
+        $count = self::$recModel->getRecordingsCount(
+          $filter, $user, $organizationid
+        );
+        break;
+    }
+
+    return $count;
+  }
+
+  public static function getRecItems( $organizationid, $user, $type, $start, $limit, $order = null ) {
+    if ( !self::$recModel )
+      self::$recModel = \Bootstrap::getInstance()->getModel('recordings');
+
+    if ( $order === null )
+      $order = self::getOrderForType( $type );
+
+    switch ( $type ) {
+      case 'subscriptions':
+        $items = self::$recModel->getArrayFromChannelSubscriptions(
+          $start, $limit, $order,
+          $user, $organizationid
+        );
+        break;
+
+      default:
+        $filter = self::getFilterForType( $organizationid, $type );
+        $items = self::$recModel->getRecordingsWithUsers(
+          $start, $limit, $filter, $order,
+          $user, $organizationid
+        );
+        break;
+    }
+
+    self::$recModel->addPresentersToArray(
+      $items,
+      true,
+      $organizationid
+    );
+
+    return $items;
+  }
+
   public function init() {
     
     $l                 = $this->bootstrap->getLocalization();
@@ -50,6 +150,7 @@ class Featured extends \Visitor\Paging {
           'ratingthisweek'       => true,
           'ratingthismonth_desc' => true,
           'ratingthismonth'      => true,
+          'hiddennull'           => true,
         );
       break;
       
@@ -64,9 +165,25 @@ class Featured extends \Visitor\Paging {
           'viewsthisweek'       => true,
           'viewsthismonth_desc' => true,
           'viewsthismonth'      => true,
+          'hiddennull'          => true,
         );
       break;
       
+      case 'subscriptions':
+        $this->ignoreSortKeys = array();
+        foreach( array_keys( $this->sort ) as $key )
+          $this->ignoreSortKeys[ $key ] = true;
+
+        break;
+
+      case 'best':
+        $this->orderkey = 'hiddennull';
+        $this->ignoreSortKeys = array();
+        foreach( array_keys( $this->sort ) as $key )
+          $this->ignoreSortKeys[ $key ] = true;
+
+        break;
+
       case 'featured':
       default:
         $this->type    = 'featured';
@@ -79,30 +196,25 @@ class Featured extends \Visitor\Paging {
     $this->controller->toSmarty['listclass'] = 'recordinglist';
     $this->controller->toSmarty['type']      = $this->type;
     $this->controller->toSmarty['module']    = 'featured';
-    if ( $this->type == 'featured' ) {
-      //$this->controller->toSmarty['form']    = $this->getSearchForm()->getHTML();
-    }
     parent::init();
     
   }
   
   protected function setupCount() {
-    
-    $this->recordingsModel = $this->bootstrap->getModel('recordings');
-    $this->itemcount = $this->recordingsModel->getRecordingsCount(
-      $this->filter, $this->user, $this->controller->organization['id']
+    return $this->itemcount = self::getRecCount(
+      $this->controller->organization['id'],
+      $this->user,
+      $this->type
     );
-    
   }
   
   protected function getItems( $start, $limit, $orderby ) {
-    
-    $items = $this->recordingsModel->getRecordingsWithUsers(
-      $start, $limit, $this->filter, $orderby,
-      $this->user, $this->controller->organization['id']
+    return self::getRecItems(
+      $this->controller->organization['id'],
+      $this->user,
+      $this->type,
+      $start, $limit, $orderby
     );
-    return $items;
-    
   }
   
   protected function getUrl() {
@@ -110,64 +222,5 @@ class Featured extends \Visitor\Paging {
       $this->controller->getUrlFromFragment( $this->module . '/' . $this->action ) .
       '/' . $this->type
     ;
-  }
-  
-  protected function getSearchForm() {
-
-    $l    = $this->bootstrap->getLocalization();
-    $form = $this->bootstrap->getForm(
-      'recordingssearchform',
-      \Springboard\Language::get() . '/recordings/togglefeatured',
-      'post'
-    );
-    
-    $form->jspath =
-      $this->controller->toSmarty['STATIC_URI'] . 'js/clonefish.js'
-    ;
-    
-    $form->messagecontainerlayout =
-      '<div class="formerrors"><ul>%s</ul></div>'
-    ;
-    
-    $form->messageprefix = '';
-    $form->layouts['tabular']['container']  =
-      "<table cellpadding=\"0\" cellspacing=\"0\" class=\"formtable\">\n%s\n</table>\n"
-    ;
-    
-    $form->layouts['tabular']['element'] =
-      '<tr %errorstyle%>' .
-        '<td class="labelcolumn">' .
-          '<label for="%id%">%displayname%</label>' .
-        '</td>' .
-        '<td class="elementcolumn">%prefix%%element%%postfix%%errordiv%</td>' .
-      '</tr>'
-    ;
-    
-    $form->layouts['tabular']['buttonrow'] =
-      '<tr class="buttonrow"><td colspan="2">%s</td></tr>'
-    ;
-    
-    $form->layouts['tabular']['button'] =
-      '<input type="submit" value="%s" class="submitbutton" />'
-    ;
-    
-    $form->layouts['rowbyrow']['errordiv'] =
-      '<div id="%divid%" style="display: none; visibility: hidden; ' .
-      'padding: 2px 5px 2px 5px; background-color: #d03030; color: white;' .
-      'clear: both;"></div>'
-    ;
-    
-    $configfile =
-      $this->application->config['modulepath'] .
-      'Visitor/Recordings/Form/Configs/Recordingssearch.php'
-    ;
-    
-    $values = $this->application->getParameters();
-    include( $configfile ); // innen jon a $config
-    
-    $form->addElements( $config, $values, false );
-    
-    return $form;
-    
   }
 }

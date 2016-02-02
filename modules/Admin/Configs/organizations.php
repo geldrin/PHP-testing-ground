@@ -201,7 +201,7 @@ $config = Array(
     'postfix'     =>
       '<br/><div class="info">
         A blokkok vesszővel vannak elválasztva, végig kisbetűvel és ékezetek nélkül írandók.<br/>
-        Lehetséges blokkok: &quot;eloadas&quot;, &quot;kiemelt&quot;, &quot;legujabb&quot;, &quot;legnezettebb&quot;<br/>
+        Lehetséges blokkok: &quot;csatornafelvetelek&quot;, &quot;eloadas&quot;, &quot;kiemelt&quot;, &quot;legujabb&quot;, &quot;legnezettebb&quot;, &quot;legjobb&quot;<br/>
         Példa: <pre>kiemelt,legujabb,legnezettebb</pre> (ez egyben az alapértelmezett érték ha nincs kitöltve a mező)
       </div>',
     'type'        => 'inputText',
