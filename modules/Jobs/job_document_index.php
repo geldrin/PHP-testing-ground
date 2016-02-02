@@ -58,7 +58,7 @@ while( !is_file( $app->config['datapath'] . 'jobs/' .$myjobid . '.stop' ) and !i
 		$app->watchdog();
 
 		// Establish database connection
-		$db = db_maintain();
+		//$db = db_maintain();
 
 		$converter_sleep_length = $app->config['sleep_media'];
 
@@ -79,9 +79,8 @@ while( !is_file( $app->config['datapath'] . 'jobs/' .$myjobid . '.stop' ) and !i
 		}
 
 		// Query next job
-		unset($attached_doc);
-		$attached_doc = array();
-		if ( !query_nextjob($attached_doc) ) break;
+		$attached_doc = getNextAttachedDocumentJob();
+		if ( $attached_doc === false ) break;
 
 		// Get indexing start time
 		$total_duration = time();
@@ -307,7 +306,7 @@ while( !is_file( $app->config['datapath'] . 'jobs/' .$myjobid . '.stop' ) and !i
     }
 
 	// Close DB connection if open
-	if ( is_resource($db->_connectionID) ) $db->close();
+	//if ( is_resource($db->_connectionID) ) $db->close();
 
     $app->watchdog();
 
@@ -335,7 +334,7 @@ function file_identify($filename) {
 }
 
 // *************************************************************************
-// *			function query_nextjob()			   *
+// *			function getNextAttachedDocumentJob()       			   *
 // *************************************************************************
 // Description: queries next job from database slideconversion table
 // INPUTS:
@@ -345,52 +344,49 @@ function file_identify($filename) {
 //	  o FALSE: no pending job for conversion
 //	  o TRUE: job is available for conversion
 //	- $slide: slideconversion table DB record returned in global variable
-function query_nextjob(&$attached_doc) {
- global $db, $app, $jconf;
+function getNextAttachedDocumentJob() {
+ global $app, $jconf;
 
-  $query = "
-    SELECT
-		a.id,
-		a.title,
-		a.masterfilename,
-		a.masterextension,
-		a.isdownloadable,
-		a.status,
-		a.sourceip,
-		a.recordingid as rec_id,
-		a.userid,
-		b.nickname,
-		b.email,
-		b.language
-	FROM
-		attached_documents as a,
-		users as b
-    WHERE
-		a.status = \"" . $jconf['dbstatus_copystorage_ok'] . "\" AND
-		( a.masterextension IN (\"txt\", \"csv\", \"xml\", \"htm\", \"html\", \"doc\", \"docx\", \"odt\", \"ott\", \"sxw\", \"pdf\", \"ppt\", \"pptx\", \"pps\", \"odp\") ) AND
-		( a.indexingstatus IS NULL OR a.indexingstatus = \"\" ) AND
-		a.userid = b.id
-    LIMIT 1";
+    $model = $app->bootstrap->getModel('attached_documents');
+ 
+    $query = "
+        SELECT
+            a.id,
+            a.title,
+            a.masterfilename,
+            a.masterextension,
+            a.isdownloadable,
+            a.status,
+            a.sourceip,
+            a.recordingid AS rec_id,
+            a.userid,
+            b.nickname,
+            b.email,
+            b.language
+        FROM
+            attached_documents AS a,
+            users AS b
+        WHERE
+            a.status = '" . $jconf['dbstatus_copystorage_ok'] . "' AND
+            ( a.masterextension IN ('txt', 'csv', 'xml', 'htm', 'html', 'doc', 'docx', 'odt', 'ott', 'sxw', 'pdf', 'ppt', 'pptx', 'pps', 'odp') ) AND
+            ( a.indexingstatus IS NULL OR a.indexingstatus = '' ) AND
+            a.userid = b.id
+        LIMIT 1";
 
-//echo $query . "\n";
+    try {
+        //$rs = $db->Execute($query);
+        $rs = $model->safeExecute($query);
+    } catch (exception $err) {
+        log_document_conversion(0, 0, $jconf['jobid_document_index'], $jconf['dbstatus_init'], "[ERROR] SQL query failed", trim($query), $err, 0, true);
+        return false;
+    }
 
-  try {
-    $rs = $db->Execute($query);
-  } catch (exception $err) {
-    log_document_conversion(0, 0, $jconf['jobid_document_index'], $jconf['dbstatus_init'], "[ERROR] SQL query failed", trim($query), $err, 0, true);
-    return false;
-  }
+    if ( $rs->RecordCount() < 1 ) return false;
 
-//echo "recs: " . $rs->RecordCount() . "\n";
-
-  // Check if pending job exists
-  if ( $rs->RecordCount() < 1 ) {
-    return false;
-  }
-
-  $attached_doc = $rs->fields;
-
-  return true;
+    $attached_doc = array();
+    $attached_doc = $rs->fields;
+    
+    return $attached_doc;
 }
 
 function copy_attacheddoc_to_converter(&$attached_doc) {
