@@ -57,9 +57,6 @@ while( !is_file( $app->config['datapath'] . 'jobs/' .$myjobid . '.stop' ) and !i
 
 		$app->watchdog();
 
-		// Establish database connection
-		//$db = db_maintain();
-
 		$converter_sleep_length = $app->config['sleep_media'];
 
 		// Check if temp directory readable/writable
@@ -305,9 +302,6 @@ while( !is_file( $app->config['datapath'] . 'jobs/' .$myjobid . '.stop' ) and !i
 		break;
     }
 
-	// Close DB connection if open
-	//if ( is_resource($db->_connectionID) ) $db->close();
-
     $app->watchdog();
 
 	sleep($converter_sleep_length);	
@@ -337,8 +331,7 @@ function file_identify($filename) {
 // *			function getNextAttachedDocumentJob()       			   *
 // *************************************************************************
 // Description: queries next job from database slideconversion table
-// INPUTS:
-//	- AdoDB DB link in $db global variable
+// INPUTS: $app
 // OUTPUTS:
 //	- Boolean:
 //	  o FALSE: no pending job for conversion
@@ -374,7 +367,6 @@ function getNextAttachedDocumentJob() {
         LIMIT 1";
 
     try {
-        //$rs = $db->Execute($query);
         $rs = $model->safeExecute($query);
     } catch (exception $err) {
         log_document_conversion(0, 0, $jconf['jobid_document_index'], $jconf['dbstatus_init'], "[ERROR] SQL query failed", trim($query), $err, 0, true);
@@ -390,7 +382,7 @@ function getNextAttachedDocumentJob() {
 }
 
 function copy_attacheddoc_to_converter(&$attached_doc) {
- global $db, $app, $jconf;
+ global $app, $jconf;
 
 	// Update watchdog timer
 	$app->watchdog();
@@ -437,7 +429,5 @@ function copy_attacheddoc_to_converter(&$attached_doc) {
 
 	return true;
 }
-
-
 
 ?>
