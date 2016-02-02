@@ -56,9 +56,9 @@ class Featured extends \Visitor\Paging {
       $filter .= " AND " . self::$types[ $type ]['filter'];
 
     if ( $type === 'best' )
-      $filter .= "r.timestamp >= DATE_SUB(NOW(), INTERVAL " .
-        $this->bootstrap->config['combinedratingcutoffdays'] .
-      " DAYS)";
+      $filter .= " AND r.timestamp >= DATE_SUB(NOW(), INTERVAL " .
+        \Bootstrap::getInstance()->config['combinedratingcutoffdays'] .
+      " DAY)";
 
     return $filter;
   }

@@ -4412,7 +4412,7 @@ class Recordings extends \Springboard\Model {
 
   }
 
-  public function getCombinedRatingSQL() {
+  private function getCombinedRatingSQL() {
     return "
       combinedratingpermonth = (
         ratingthismonth  *
