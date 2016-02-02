@@ -189,7 +189,7 @@ if ( $recordings !== false ) {
             }
         }
 
-        // Update attached documents: of removed recording: status, delete document cache
+        // Update attached documents of removed recording: status, delete document cache
         $query = "
             UPDATE
                 attached_documents
@@ -202,7 +202,9 @@ if ( $recordings !== false ) {
 
         if ( $isexecute ) {
             try {
-                $rs = $db->Execute($query);
+                $model = $app->bootstrap->getModel('attached_documents');
+                //$rs = $db->Execute($query);
+                $rs = $model->safeExecute($query);
             } catch (exception $err) {
                 $debug->log($jconf['log_dir'], $jconf['jobid_file_remove'] . ".log", "[ERROR] SQL query failed.\n" . trim($query), $sendmail = true);
                 $recordings->MoveNext();
@@ -651,7 +653,7 @@ if (is_array($OCRframes)) {
 }
 
 // Close DB connection if open
-if ( is_resource($db->_connectionID) ) $db->close();
+//if ( is_resource($db->_connectionID) ) $db->close();
 
 // Watchdog
 $app->watchdog();
@@ -663,7 +665,7 @@ exit;
 // *************************************************************************
 // Description: queries next uploaded document from attached_documents
 function queryRecordingsToRemove($type = null) {
-global $jconf, $db, $app, $debug;
+global $jconf, $app, $debug;
 
     if ( empty($type) or ( $type != "recording" ) and ( $type != "content" ) ) return false;
 
@@ -671,6 +673,8 @@ global $jconf, $db, $app, $debug;
     if ( $type == "content" ) $idx = "content";
 
     $node = $app->config['node_sourceip'];
+    
+    $model = $app->bootstrap->getModel('recordings');
 
     $query = "
         SELECT
@@ -708,28 +712,27 @@ global $jconf, $db, $app, $debug;
             r.userid = u.id AND
             r.organizationid = o.id";
 
-//echo $query . "\n";
-
     try {
-        $recordings = $db->Execute($query);
+        $rs = $model->safeExecute($query);
+        //$rs = $db->Execute($query);
     } catch (exception $err) {
         $debug->log($jconf['log_dir'], $jconf['jobid_remove_files'] . ".log", "[ERROR] SQL query failed.\n\n" . trim($query), $sendmail = true);
         return false;
     }
 
     // Check if pending job exsits
-    if ( $recordings->RecordCount() < 1 ) {
-        return false;
-    }
+    if ( $rs->RecordCount() < 1 ) return false;
 
-    return $recordings;
+    return $rs;
 }
 
 function queryRecordingsVersionsToRemove() {
-global $jconf, $db, $app, $debug;
+global $jconf, $app, $debug;
 
     $node = $app->config['node_sourceip'];
 // Multinode: csak azokat torolhessuk, amiket az erre a node-ra feltett file-bol generaltunk???
+
+    $model = $app->bootstrap->getModel('recordings_versions');
 
     $query = "
         SELECT
@@ -758,24 +761,25 @@ global $jconf, $db, $app, $debug;
             rv.encodingprofileid = ep.id";
 
     try {
-        $recversions = $db->Execute($query);
+        //$rs = $db->Execute($query);
+        $rs = $model->safeExecute($query);
     } catch (exception $err) {
         $debug->log($jconf['log_dir'], $jconf['jobid_remove_files'] . ".log", "[ERROR] SQL query failed.\n\n" . trim($query), $sendmail = true);
         return false;
     }
 
     // Check if pending job exsits
-    if ( $recversions->RecordCount() < 1 ) {
-        return false;
-    }
+    if ( $rs->RecordCount() < 1 ) return false;
 
-    return $recversions;
+    return $rs;
 }
 
 function queryAttachmentsToRemove() {
-global $jconf, $db, $app, $debug;
+global $jconf, $app, $debug;
 
     $node = $app->config['node_sourceip'];
+    
+    $model = $app->bootstrap->getModel('attached_documents');
 
     $query = "
         SELECT
@@ -802,18 +806,17 @@ global $jconf, $db, $app, $debug;
     ";
 
     try {
-        $attachments = $db->Execute($query);
+        //$rs = $db->Execute($query);
+        $rs = $model->safeExecute($query);
     } catch (exception $err) {
         $debug->log($jconf['log_dir'], $jconf['jobid_remove_files'] . ".log", "[ERROR] SQL query failed.\n\n" . trim($query), $sendmail = true);
         return false;
     }
 
     // Check if pending job exists
-    if ( $attachments->RecordCount() < 1 ) {
-        return false;
-    }
+    if ( $rs->RecordCount() < 1 ) return false;
 
-    return $attachments;
+    return $rs;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -831,10 +834,12 @@ function queryOCRdataToRemove() {
 	$logfile = $jconf['jobid_remove_files'] .".log";
 	
 	$result = false;
+    
+    $model = $app->bootstrap->getModel('recordings');
 	
 	try {
 		
-		if (!is_resource($db->_connectionID)) $db = db_maintain();
+		//if (!is_resource($db->_connectionID)) $db = db_maintain();
 		
 		$qry_rec = "
 		SELECT
@@ -854,13 +859,15 @@ function queryOCRdataToRemove() {
 			`o`.`status` LIKE '". $jconf['dbstatus_markedfordeletion'] ."'
 		GROUP BY `r`.`id`;";
 		
-		$rs_rec = $db->Execute($qry_rec);
+		//$rs_rec = $db->Execute($qry_rec);
+        $rs_rec = $model->safeExecute($qry_rec);
 		
 		if ($rs_rec->RecordCount() > 0) {
 			$junk = $rs_rec->GetArray();
 			unset($rs_rec);
 			
 			foreach ($junk AS $cur => $rec) {
+                $model = $app->bootstrap->getModel('ocr_frames');
 				$qry_frames = "
 				SELECT
 					`o`.`id`
@@ -869,7 +876,8 @@ function queryOCRdataToRemove() {
 				WHERE
 					`o`.`recordingid` = ". $rec['recordingid'] ." AND
 					`o`.`status` = '". $jconf['dbstatus_markedfordeletion'] ."';";
-				$rs_frames = $db->Execute($qry_frames);
+				//$rs_frames = $db->Execute($qry_frames);
+                $rs_frames = $model->safeExecute($qry_frames);
 				$junk[$cur]['ocrframes2del'] = $rs_frames->GetArray();
 				
 				$qry_count = "
@@ -881,7 +889,8 @@ function queryOCRdataToRemove() {
 					`o`.`status` NOT REGEXP 'failed|delete' AND
 					`o`.`recordingid` = ". $rec['recordingid'] ."
 				GROUP BY `o`.`recordingid`;";
-				$rs_count = $db->Execute($qry_count);
+				//$rs_count = $db->Execute($qry_count);
+                $rs_count = $model->safeExecute($qry_count);
 				$junk[$cur]['ocrcount'] = $rs_count->Fields('ocrcount');
 				unset($qry_frames, $rs_frames, $qry_count, $rs_count);
 			}
@@ -909,7 +918,6 @@ function safeCheckPath($remove_path) {
         exit;
     }
 
-//  $debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Path safe check OK. Path: " . $remove_path, $sendmail = false);
     return true;
 }
 
