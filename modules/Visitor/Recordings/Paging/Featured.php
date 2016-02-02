@@ -33,7 +33,7 @@ class Featured extends \Visitor\Paging {
   private static $recModel;
   private static $types = array(
     'featured' => array(
-      'filter' => "r.isfeatured = '1'",
+      'filter' => "r.isfeatured = '1' AND (r.featureduntil IS NULL OR r.featureduntil >= NOW())",
       'order'  => 'timestamp DESC',
     ),
     'highestrated' => array(
@@ -46,13 +46,7 @@ class Featured extends \Visitor\Paging {
       'order'  => 'timestamp DESC',
     ),
     'best' => array(
-      'order'  => '
-        (
-          rating *
-          ( 100 * numberofratings / numberofviewsthisweek ) *
-          numberofviewsthisweek
-        )
-      ',
+      'order'  => 'combinedratingpermonth',
     ),
   );
 
@@ -60,6 +54,11 @@ class Featured extends \Visitor\Paging {
     $filter = "r.organizationid = '$organizationid'";
     if ( isset( self::$types[ $type ] ) and isset( self::$types[ $type ]['filter'] ) )
       $filter .= " AND " . self::$types[ $type ]['filter'];
+
+    if ( $type === 'best' )
+      $filter .= "r.timestamp >= DATE_SUB(NOW(), INTERVAL " .
+        $this->bootstrap->config['combinedratingcutoffdays'] .
+      " DAYS)";
 
     return $filter;
   }

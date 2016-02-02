@@ -75,7 +75,8 @@ class Recordings extends \Springboard\Model {
     $this->db->execute("
       UPDATE recordings
       SET
-        numberofviewsthis" . $type . " = 0
+        numberofviewsthis" . $type . " = 0,
+        combinedratingper" . $type . " = 0
       WHERE id = '" . $this->id . "'
       LIMIT 1
     ");
@@ -90,7 +91,8 @@ class Recordings extends \Springboard\Model {
       SET
         numberofviews = numberofviews + 1,
         numberofviewsthisweek = numberofviewsthisweek + 1,
-        numberofviewsthismonth = numberofviewsthismonth + 1
+        numberofviewsthismonth = numberofviewsthismonth + 1,
+        " . $this->getCombinedRatingSQL() . "
       WHERE id = '" . $this->id . "'
       LIMIT 1
     ");
@@ -1388,7 +1390,8 @@ class Recordings extends \Springboard\Model {
         sumofratingthismonth = sumofratingthismonth + " . $rating . ",
         rating = sumofrating / numberofratings,
         ratingthisweek = sumofratingthisweek / numberofratingsthisweek,
-        ratingthismonth = sumofratingthismonth / numberofratingsthismonth
+        ratingthismonth = sumofratingthismonth / numberofratingsthismonth,
+        " . $this->getCombinedRatingSQL() . "
       WHERE
         id = '" . $this->id . "'
     ");
@@ -4407,5 +4410,20 @@ class Recordings extends \Springboard\Model {
       ( is_numeric( $start ) ? 'LIMIT ' . $start . ', ' . $limit : "" )
     );
 
+  }
+
+  public function getCombinedRatingSQL() {
+    return "
+      combinedratingpermonth = (
+        ratingthismonth  *
+        ( 100 * numberofratingsthismonth / numberofviewsthismonth ) *
+        numberofviewsthismonth
+      ),
+      combinedratingperweek = (
+        ratingthisweek *
+        ( 100 * numberofratingsthisweek / numberofviewsthisweek ) *
+        numberofviewsthisweek
+      )
+    ";
   }
 }
