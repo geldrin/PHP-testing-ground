@@ -48,9 +48,6 @@ if ( !runOverControl($myjobid) ) exit;
 // Watchdog
 $app->watchdog();
 
-// Establish database connection
-$db = db_maintain();
-
 // Should we delete files or just testing?
 if ( !$isexecute ) {
     $debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] THIS IS A TEST RUN. NO FILES WILL BE REMOVED + DB WILL BE NOT MODIFIED!", $sendmail = false);
@@ -203,7 +200,6 @@ if ( $recordings !== false ) {
         if ( $isexecute ) {
             try {
                 $model = $app->bootstrap->getModel('attached_documents');
-                //$rs = $db->Execute($query);
                 $rs = $model->safeExecute($query);
             } catch (exception $err) {
                 $debug->log($jconf['log_dir'], $jconf['jobid_file_remove'] . ".log", "[ERROR] SQL query failed.\n" . trim($query), $sendmail = true);
@@ -652,9 +648,6 @@ if (is_array($OCRframes)) {
 	$app->Watchdog();
 }
 
-// Close DB connection if open
-//if ( is_resource($db->_connectionID) ) $db->close();
-
 // Watchdog
 $app->watchdog();
     
@@ -714,7 +707,6 @@ global $jconf, $app, $debug;
 
     try {
         $rs = $model->safeExecute($query);
-        //$rs = $db->Execute($query);
     } catch (exception $err) {
         $debug->log($jconf['log_dir'], $jconf['jobid_remove_files'] . ".log", "[ERROR] SQL query failed.\n\n" . trim($query), $sendmail = true);
         return false;
@@ -761,7 +753,6 @@ global $jconf, $app, $debug;
             rv.encodingprofileid = ep.id";
 
     try {
-        //$rs = $db->Execute($query);
         $rs = $model->safeExecute($query);
     } catch (exception $err) {
         $debug->log($jconf['log_dir'], $jconf['jobid_remove_files'] . ".log", "[ERROR] SQL query failed.\n\n" . trim($query), $sendmail = true);
@@ -806,7 +797,6 @@ global $jconf, $app, $debug;
     ";
 
     try {
-        //$rs = $db->Execute($query);
         $rs = $model->safeExecute($query);
     } catch (exception $err) {
         $debug->log($jconf['log_dir'], $jconf['jobid_remove_files'] . ".log", "[ERROR] SQL query failed.\n\n" . trim($query), $sendmail = true);
@@ -829,7 +819,7 @@ function queryOCRdataToRemove() {
 // ad vissza. Hiba soran a fuggveny FALSE ertekkel ter vissza.
 //
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-	global $app, $db, $debug, $jconf;
+	global $app, $debug, $jconf;
 	$logdir = $jconf['log_dir'];
 	$logfile = $jconf['jobid_remove_files'] .".log";
 	
@@ -838,9 +828,7 @@ function queryOCRdataToRemove() {
     $model = $app->bootstrap->getModel('recordings');
 	
 	try {
-		
-		//if (!is_resource($db->_connectionID)) $db = db_maintain();
-		
+				
 		$qry_rec = "
 		SELECT
 			`r`.`id` AS 'recordingid',
@@ -859,7 +847,6 @@ function queryOCRdataToRemove() {
 			`o`.`status` LIKE '". $jconf['dbstatus_markedfordeletion'] ."'
 		GROUP BY `r`.`id`;";
 		
-		//$rs_rec = $db->Execute($qry_rec);
         $rs_rec = $model->safeExecute($qry_rec);
 		
 		if ($rs_rec->RecordCount() > 0) {
@@ -876,7 +863,6 @@ function queryOCRdataToRemove() {
 				WHERE
 					`o`.`recordingid` = ". $rec['recordingid'] ." AND
 					`o`.`status` = '". $jconf['dbstatus_markedfordeletion'] ."';";
-				//$rs_frames = $db->Execute($qry_frames);
                 $rs_frames = $model->safeExecute($qry_frames);
 				$junk[$cur]['ocrframes2del'] = $rs_frames->GetArray();
 				
@@ -889,7 +875,6 @@ function queryOCRdataToRemove() {
 					`o`.`status` NOT REGEXP 'failed|delete' AND
 					`o`.`recordingid` = ". $rec['recordingid'] ."
 				GROUP BY `o`.`recordingid`;";
-				//$rs_count = $db->Execute($qry_count);
                 $rs_count = $model->safeExecute($qry_count);
 				$junk[$cur]['ocrcount'] = $rs_count->Fields('ocrcount');
 				unset($qry_frames, $rs_frames, $qry_count, $rs_count);
