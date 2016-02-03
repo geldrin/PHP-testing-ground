@@ -42,9 +42,6 @@ if ( !runOverControl($myjobid) ) exit;
 
 // Watchdog
 $app->watchdog();
-	
-// Establish database connection
-$db = db_maintain();
 
 // Query new uploads and insert recording versions
 $recordings = getNewUploads();
@@ -230,7 +227,6 @@ global $jconf, $debug, $app;
 			r.id";
 			
 	try {
-		//$rs = $db->Execute($query);
         $model = $app->bootstrap->getModel('recordings');
         $rs = $model->safeExecute($query);
 	} catch (exception $err) {
@@ -277,7 +273,6 @@ global $jconf, $debug, $app;
 			r.id";
 
 	try {
-		//$rs = $db->Execute($query);
         $model = $app->bootstrap->getModel('recordings');
         $rs = $model->safeExecute($query);
 	} catch (exception $err) {
@@ -464,7 +459,6 @@ global $debug, $jconf, $app;
 			ep.type = '" . $profile_type . "' AND " . $ep_filter;
 
 	try {
-		//$rs = $db->getArray($query);
         $model = $app->bootstrap->getModel('encoding_groups');
         $rs = $model->safeExecute($query);
 	} catch (exception $err) {
@@ -500,7 +494,6 @@ global $app, $debug, $jconf;
 	try {
         $model = $app->bootstrap->getModel('encoding_groups');
         $rs = $model->safeExecute($query);
-		//$encoding_group = $db->getArray($query);
 	} catch (exception $err) {
 		$debug->log($jconf['log_dir'], $jconf['jobid_conv_control'] . ".log", "[ERROR] Cannot query encoding group. SQL query failed.\n" . trim($query), $sendmail = true);
 		return false;
@@ -540,7 +533,6 @@ global $debug, $jconf, $app;
         LIMIT 1";
 
     try {
-		//$node = $db->Execute($query);
         $model = $app->bootstrap->getModel('infrastructure_nodes');
         $rs = $model->safeExecute($query);
 	} catch (exception $err) {
@@ -582,7 +574,6 @@ global $app, $debug, $jconf;
 			r.id";
 
 	try {
-		//$recordings = $db->Execute($query);
         $model = $app->bootstrap->getModel('recordings');
         $recordings = $model->safeExecute($query);
 	} catch (exception $err) {
@@ -795,7 +786,7 @@ global $app, $debug, $jconf;
 }
 
 function generateLiveSMILs($type = "video") {
-global $db, $app, $debug, $jconf;
+global $app, $debug, $jconf;
 
 	if ( ( $type != "video" ) and ( $type != "content" ) ) return false;
 
@@ -821,7 +812,6 @@ global $db, $app, $debug, $jconf;
 			lf.id, lfs.id";
 
 	try {
-		//$livefeeds = $db->getArray($query);
         $model = $app->bootstrap->getModel('livefeeds');
         $rs = $model->safeExecute($query);
 	} catch (exception $err) {
@@ -979,7 +969,6 @@ global $app, $jconf, $debug;
 	try {
         $model = $app->bootstrap->getModel('recordings_versions');
         $rs = $model->safeExecute($query);
-		//$rs = $db->Execute($query);
 	} catch (exception $err) {
 		$debug->log($jconf['log_dir'], $jconf['jobid_conv_control'] . ".log", "[ERROR] SQL query failed." . trim($query), $sendmail = true);
 		return false;
