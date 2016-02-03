@@ -4374,7 +4374,6 @@ class Recordings extends \Springboard\Model {
       cr.channelid = c.id AND
       c.id = sub.channelid AND
       sub.userid = '" . $user['id'] . "'
-      GROUP BY r.id
     ";
 
     return $sql;
@@ -4385,7 +4384,7 @@ class Recordings extends \Springboard\Model {
       return 0;
 
     $sql = $this->getSQLFromChannelSubscriptions( $user, $organizationid );
-    $sql['select'] = 'COUNT(r.id) AS count';
+    $sql['select'] = 'COUNT(DISTINCT r.id) AS count';
     return $this->db->getOne("
       SELECT " . $sql['select'] . "
       FROM " . $sql['from'] . "
@@ -4406,6 +4405,7 @@ class Recordings extends \Springboard\Model {
       SELECT " . $sql['select'] . "
       FROM " . $sql['from'] . "
       WHERE " . $sql['where'] . "
+      GROUP BY r.id
       ORDER BY $order " .
       ( is_numeric( $start ) ? 'LIMIT ' . $start . ', ' . $limit : "" )
     );
