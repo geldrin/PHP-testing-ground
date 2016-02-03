@@ -2003,7 +2003,7 @@ li#languageselectorlink span {
 /* accordion */
 .accordion {
   background-repeat: no-repeat;
-  background-position: right 15px center;
+  background-position: right 15px top 18px;
   background-image: url(images/arrow_right_hover.png);
 }
 .accordion.active {
@@ -2104,6 +2104,19 @@ li#languageselectorlink span {
   vertical-align: top;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+#body .accordion .more {
+  display: none;
+}
+#body .accordion.active .more {
+  margin: 10px 0 0 0;
+  display: block;
+  clear: both;
+  float: right;
+}
+#body .accordion.active .more:focus,
+#body .accordion.active .more:hover {
+  text-decoration: underline;
 }
 
 /* imageinfo */
