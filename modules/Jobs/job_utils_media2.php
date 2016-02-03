@@ -913,8 +913,6 @@ function getEncodingProfile($encodingprofileid) {
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 global $app, $jconf, $debug, $myjobid;
 
-	//$db = db_maintain();
-
 	$query = "
 		SELECT
 			id,
@@ -956,7 +954,6 @@ global $app, $jconf, $debug, $myjobid;
 			disabled = 0";
 
 	try {
-		//$rs_array = $db->getArray($query);
         $model = $app->bootstrap->getModel('encoding_profiles');
         $rs = $model->safeExecute($query);
 	} catch (exception $err) {
@@ -973,8 +970,6 @@ global $app, $jconf, $debug, $myjobid;
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 function getRecordingCreator($recordingid) {
 global $app, $jconf, $debug, $myjobid;
-
-	//$db = db_maintain();
 
 	$query = "
 		SELECT
@@ -995,7 +990,6 @@ global $app, $jconf, $debug, $myjobid;
 			a.organizationid = c.id";
 
 	try {
-		//$user = $db->getArray($query);
         $model = $app->bootstrap->getModel('recordings');
         $rs = $model->safeExecute($query);
 	} catch (exception $err) {
@@ -1019,8 +1013,6 @@ global $app, $jconf, $debug, $myjobid;
 	if ( $type == "content" ) $iscontent_filter = " AND iscontent = 1";
 	if ( $type == "all" ) $iscontent_filter = "";
 
-	//$db = db_maintain();
-
 	$query = "
 		SELECT
 			id,
@@ -1041,7 +1033,6 @@ global $app, $jconf, $debug, $myjobid;
 			id";
 
 	try {
-		//$rs = $db->Execute($query);
         $model = $app->bootstrap->getModel('recordings_versions');
         $rs = $model->safeExecute($query);
 	} catch (exception $err) {

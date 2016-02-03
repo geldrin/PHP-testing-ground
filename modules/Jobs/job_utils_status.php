@@ -172,8 +172,6 @@ global $app, $debug, $jconf, $myjobid;
 	if ( $type == "content" ) $iscontent_filter = " AND rv.iscontent = 1";
 	if ( $type == "all" ) $iscontent_filter = "";
 
-	//$db = db_maintain();
-
 	$query = "
 		UPDATE
 			recordings_versions AS rv
@@ -185,7 +183,6 @@ global $app, $debug, $jconf, $myjobid;
 	try {
         $model = $app->bootstrap->getModel('recordings_versions');
         $rs = $model->safeExecute($query);
-		//$rs = $db->Execute($query);
 	} catch (exception $err) {
 		$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] SQL query failed.\n" . trim(substr($query, 1, 255)) . "\n\nERR:\n" . trim(substr($err, 1, 255)), $sendmail = true);
 		return false;
@@ -236,8 +233,6 @@ global $app, $debug, $jconf, $myjobid;
 		$sql_statusfilter = " AND rv.status IN (" . $sql_statusfilter . ")";
 	}
 
-	//$db = db_maintain();
-
 	$query = "
 		UPDATE
 			recordings_versions AS rv,
@@ -249,7 +244,6 @@ global $app, $debug, $jconf, $myjobid;
 			rv.encodingprofileid = ep.id" . $sql_typefilter . $sql_statusfilter;
 
 	try {
-		//$rs = $db->Execute($query);
         $model = $app->bootstrap->getModel('recordings_versions');
         $rs = $model->safeExecute($query);
 	} catch (exception $err) {
@@ -282,8 +276,6 @@ global $app, $debug, $jconf, $myjobid;
 		$sql_statusfilter = " AND rv.status IN (" . $sql_statusfilter . ")";
 	}
 
-	//$db = db_maintain();
-
 	$query = "
 		SELECT
 			rv.id,
@@ -304,7 +296,6 @@ global $app, $debug, $jconf, $myjobid;
 			rv.recordingid = " . $recordingid . $iscontent_filter . $sql_statusfilter;
 
 	try {
-		//$rs = $db->Execute($query);
         $model = $app->bootstrap->getModel('recordings_versions');
         $rs = $model->safeExecute($query);
 	} catch (exception $err) {
@@ -374,8 +365,6 @@ global $app, $debug, $jconf, $myjobid;
 
 function updateAttachedDocumentCache($attachmentid, $documentcache) {
 global $app, $debug, $jconf, $myjobid;
-
-	//$db = db_maintain();
 
     $AttachmentObj = $app->bootstrap->getModel('attached_documents');
     
@@ -614,8 +603,6 @@ function updateOCRstatus($recordingid, $id = null, $status) {
 		'output'  => null,  // a beszurt ocr_frames utolso ID-je
 	);
 	
-	//if (!is_resource($db)) $db = db_maintain(); 
-	
 	if ($recordingid === null && $id === null) {
 		$result['message'] = "[ERROR] ". __FUNCTION__ ." has been called without 'recordingid' nor 'id'.";
 		return $result;
@@ -646,7 +633,6 @@ function updateOCRstatus($recordingid, $id = null, $status) {
 		
 		$result['command'] = $updatequery;
         
-		//$db->Execute($updatequery);        
         $model = $app->bootstrap->getModel('ocr_frames');
         $rs = $model->safeExecute($updatequery);
 	} catch (Exception $ex) {
