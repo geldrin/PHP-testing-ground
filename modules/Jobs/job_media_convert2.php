@@ -54,8 +54,7 @@ while( !is_file( $app->config['datapath'] . 'jobs/' . $myjobid . '.stop' ) and !
 		$app->watchdog();
 	
 		// Establish database connection
-		$db = null;
-		$db = db_maintain();
+		//$db = db_maintain();
 
 		$converter_sleep_length = $app->config['sleep_media'];
 
@@ -193,7 +192,7 @@ while( !is_file( $app->config['datapath'] . 'jobs/' . $myjobid . '.stop' ) and !
 	}	// End of while(1)
 
 	// Close DB connection if open
-	if ( is_resource($db->_connectionID) ) $db->close();
+	//if ( is_resource($db->_connectionID) ) $db->close();
 
 	$app->watchdog();
 
@@ -210,9 +209,7 @@ exit;
 // *************************************************************************
 // Description: queries next job from recordings_versions database table
 function getNextConversionJob() {
-global $jconf, $debug, $db, $app;
-
-	$db = db_maintain();
+global $jconf, $debug, $app;
 
 	$node = $app->config['node_sourceip'];
 
@@ -287,16 +284,19 @@ global $jconf, $debug, $db, $app;
 			rv.recordingid
 		LIMIT 1";
 	try {
-		$recording = $db->getArray($query);
+		//$rs = $db->getArray($query);
+        $model = $app->bootstrap->getModel('recordings_versions');
+        $rs = $model->safeExecute($query);
 	} catch (exception $err) {
 		$debug->log($jconf['log_dir'], $jconf['jobid_media_convert'] . ".log", "[ERROR] SQL query failed." . trim($query), $sendmail = true);
 		return false;
 	}
 
-	// Check if any record returned
-	if ( count($recording) < 1 ) return false;
+    if ( $rs->RecordCount() < 1 ) return false;
 
-	return $recording[0];
+    $jobs = adoDBResourceSetToArray($rs);  
+
+	return $jobs[0];
 }
 
 
@@ -306,8 +306,6 @@ global $jconf, $debug, $db, $app;
 // Description: download media from converter
 function copyMediaToConverter(&$recording) {
 global $app, $jconf, $debug;
-
-    $db = db_maintain();
 
 	// STATUS: copyingfromfrontend
 	updateRecordingVersionStatus($recording['recordingversionid'], $jconf['dbstatus_copyfromfe']);
@@ -589,8 +587,6 @@ global $app, $jconf, $debug;
 function convertMedia(&$recording, $profile) {
 global $app, $jconf, $global_log;
 
-    $db = db_maintain();
-
 	// STATUS: converting
 	updateRecordingVersionStatus($recording['recordingversionid'], $jconf['dbstatus_conv']);
 	// Output filename
@@ -669,8 +665,6 @@ global $app, $jconf, $global_log;
 // Description: Copy (SCP) media file back to front-end server
 function copyMediaToFrontEnd($recording, $profile) {
  global $app, $jconf, $debug;
-
-    $db = db_maintain();
  
 	// STATUS: copyingtostorage
 	updateRecordingVersionStatus($recording['recordingversionid'], $jconf['dbstatus_copystorage']);
@@ -782,8 +776,6 @@ function copyMediaToFrontEnd($recording, $profile) {
 
 function checkRecordingVersionToStop($recording) {
 global $jconf, $debug, $myjobid;
-
-    $db = db_maintain();
 
 	// Is it recording or content? Get appropriate status.
 	$type = "recording";
