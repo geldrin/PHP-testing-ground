@@ -911,9 +911,9 @@ function getEncodingProfile($encodingprofileid) {
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-global $db, $jconf, $debug, $myjobid;
+global $app, $jconf, $debug, $myjobid;
 
-	$db = db_maintain();
+	//$db = db_maintain();
 
 	$query = "
 		SELECT
@@ -956,28 +956,25 @@ global $db, $jconf, $debug, $myjobid;
 			disabled = 0";
 
 	try {
-		$profile = $db->getArray($query);
+		//$rs_array = $db->getArray($query);
+        $model = $app->bootstrap->getModel('encoding_profiles');
+        $rs = $model->safeExecute($query);
 	} catch (exception $err) {
 		$debug->log($jconf['log_dir'], $jconf['jobid_media_convert'] . ".log", "[ERROR] Cannot query encoding profile. SQL query failed." . trim($query), $sendmail = true);
 		return false;
 	}
 
-	// Check if any record returned
-	if ( count($profile) < 1 ) {
-		return false;
-	}
+    // Convert AdoDB resource to array
+    $rs_array = adoDBResourceSetToArray($rs);
 
-	return $profile[0];
+	return $rs_array[0];
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 function getRecordingCreator($recordingid) {
-///////////////////////////////////////////////////////////////////////////////////////////////////
-//
-///////////////////////////////////////////////////////////////////////////////////////////////////
-global $db, $jconf, $debug, $myjobid;
+global $app, $jconf, $debug, $myjobid;
 
-	$db = db_maintain();
+	//$db = db_maintain();
 
 	$query = "
 		SELECT
@@ -989,35 +986,32 @@ global $db, $jconf, $debug, $myjobid;
 			c.domain,
 			c.supportemail
 		FROM
-			recordings as a,
-			users as b,
-			organizations as c
+			recordings AS a,
+			users AS b,
+			organizations AS c
 		WHERE
 			a.userid = b.id AND
 			a.id = " . $recordingid . " AND
 			a.organizationid = c.id";
 
 	try {
-		$user = $db->getArray($query);
+		//$user = $db->getArray($query);
+        $model = $app->bootstrap->getModel('recordings');
+        $rs = $model->safeExecute($query);
 	} catch (exception $err) {
 		$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Cannot query recording creator. SQL query failed." . trim($query), $sendmail = true);
 		return false;
 	}
 
-	// Check if any record returned
-	if ( count($user) < 1 ) {
-		return false;
-	}
+    // Convert AdoDB resource to array
+    $rs_array = adoDBResourceSetToArray($rs);
 
-	return $user[0];
+	return $rs_array[0];
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 function getRecordingVersions($recordingid, $status, $type = "recording") {
-///////////////////////////////////////////////////////////////////////////////////////////////////
-//
-///////////////////////////////////////////////////////////////////////////////////////////////////
-global $db, $jconf, $debug, $myjobid;
+global $app, $jconf, $debug, $myjobid;
 
 	if ( ( $type != "recording" ) and ( $type != "content" ) and ( $type != "all" ) ) return false;
 
@@ -1025,7 +1019,7 @@ global $db, $jconf, $debug, $myjobid;
 	if ( $type == "content" ) $iscontent_filter = " AND iscontent = 1";
 	if ( $type == "all" ) $iscontent_filter = "";
 
-	$db = db_maintain();
+	//$db = db_maintain();
 
 	$query = "
 		SELECT
@@ -1047,18 +1041,17 @@ global $db, $jconf, $debug, $myjobid;
 			id";
 
 	try {
-		$recordings_versions = $db->Execute($query);
+		//$rs = $db->Execute($query);
+        $model = $app->bootstrap->getModel('recordings_versions');
+        $rs = $model->safeExecute($query);
 	} catch (exception $err) {
 		$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] SQL query failed.\n" . trim($query), $sendmail = true);
 		return false;
 	}
 
-	// Check if any record returned
-	if ( count($recordings_versions) < 1 ) {
-		return false;
-	}
+    if ( $rs->RecordCount() < 1 ) return false;
 
-	return $recordings_versions;
+	return $rs;
 }
 
 ?>

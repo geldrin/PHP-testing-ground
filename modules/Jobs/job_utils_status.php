@@ -162,7 +162,7 @@ global $app, $debug, $jconf, $myjobid;
 }
 
 function updateRecordingVersionStatusAll($recordingid, $status, $type = "recording") {
-global $app, $debug, $jconf, $myjobid, $db;
+global $app, $debug, $jconf, $myjobid;
 
 	if ( ( $type != "recording" ) and ( $type != "content" ) and ( $type != "all" ) ) return false;
 
@@ -172,18 +172,20 @@ global $app, $debug, $jconf, $myjobid, $db;
 	if ( $type == "content" ) $iscontent_filter = " AND rv.iscontent = 1";
 	if ( $type == "all" ) $iscontent_filter = "";
 
-	$db = db_maintain();
+	//$db = db_maintain();
 
 	$query = "
 		UPDATE
-			recordings_versions as rv
+			recordings_versions AS rv
 		SET
 			rv.status = '" . $status . "'
 		WHERE
 			rv.recordingid = " . $recordingid . $iscontent_filter;
 
 	try {
-		$rs = $db->Execute($query);
+        $model = $app->bootstrap->getModel('recordings_versions');
+        $rs = $model->safeExecute($query);
+		//$rs = $db->Execute($query);
 	} catch (exception $err) {
 		$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] SQL query failed.\n" . trim(substr($query, 1, 255)) . "\n\nERR:\n" . trim(substr($err, 1, 255)), $sendmail = true);
 		return false;
@@ -200,7 +202,7 @@ global $app, $debug, $jconf, $myjobid, $db;
 // all recording version statuses to "markedfordeletion" blindly. This would affect recording versions
 // with undesired statuses such as "deleted" (removed earlier), going back to "markedfordeletion" again.
 function updateRecordingVersionStatusApplyFilter($recordingid, $status, $typefilter, $statusfilter) {
-global $app, $debug, $jconf, $myjobid, $db;
+global $app, $debug, $jconf, $myjobid;
 
 	// Check parameters
 	if ( empty($status) ) {
@@ -234,11 +236,12 @@ global $app, $debug, $jconf, $myjobid, $db;
 		$sql_statusfilter = " AND rv.status IN (" . $sql_statusfilter . ")";
 	}
 
-	$db = db_maintain();
+	//$db = db_maintain();
 
 	$query = "
 		UPDATE
-			recordings_versions as rv, encoding_profiles as ep
+			recordings_versions AS rv,
+            encoding_profiles AS ep
 		SET
 			rv.status = '" . $status . "'
 		WHERE
@@ -246,7 +249,9 @@ global $app, $debug, $jconf, $myjobid, $db;
 			rv.encodingprofileid = ep.id" . $sql_typefilter . $sql_statusfilter;
 
 	try {
-		$rs = $db->Execute($query);
+		//$rs = $db->Execute($query);
+        $model = $app->bootstrap->getModel('recordings_versions');
+        $rs = $model->safeExecute($query);
 	} catch (exception $err) {
 		$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] SQL query failed.\n" . trim(substr($query, 1, 255)) . "\n\nERR:\n" . trim(substr($err, 1, 255)), $sendmail = true);
 		return false;
@@ -277,7 +282,7 @@ global $app, $debug, $jconf, $myjobid;
 		$sql_statusfilter = " AND rv.status IN (" . $sql_statusfilter . ")";
 	}
 
-	$db = db_maintain();
+	//$db = db_maintain();
 
 	$query = "
 		SELECT
@@ -294,12 +299,14 @@ global $app, $debug, $jconf, $myjobid;
 			rv.isdesktopcompatible,
 			rv.ismobilecompatible
 		FROM
-			recordings_versions as rv
+			recordings_versions AS rv
 		WHERE
 			rv.recordingid = " . $recordingid . $iscontent_filter . $sql_statusfilter;
 
 	try {
-		$rs = $db->Execute($query);
+		//$rs = $db->Execute($query);
+        $model = $app->bootstrap->getModel('recordings_versions');
+        $rs = $model->safeExecute($query);
 	} catch (exception $err) {
 		$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] SQL query failed.\n" . trim(substr($query, 1, 255)) . "\n\nERR:\n" . trim(substr($err, 1, 255)), $sendmail = true);
 		return false;
@@ -368,10 +375,12 @@ global $app, $debug, $jconf, $myjobid;
 function updateAttachedDocumentCache($attachmentid, $documentcache) {
 global $app, $debug, $jconf, $myjobid;
 
-	$db = db_maintain();
+	//$db = db_maintain();
 
+    $AttachmentObj = $app->bootstrap->getModel('attached_documents');
+    
 	if ( !empty($documentcache) ) {
-		$documentcache_escaped = $db->qstr($documentcache);
+		$documentcache_escaped = $AttachmentObj->db->qstr($documentcache);
 	} else {
 		$documentcache_escaped = null;
 	}
@@ -381,7 +390,6 @@ global $app, $debug, $jconf, $myjobid;
 	);
 
 	try {
-		$AttachmentObj = $app->bootstrap->getModel('attached_documents');
 		$AttachmentObj->select($attachmentid);
 		$AttachmentObj->updateRow($values);
 	} catch (exception $err) {
@@ -598,7 +606,7 @@ function updateOCRstatus($recordingid, $id = null, $status) {
 // status      = statusmezo
 //
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-	global $db;
+	global $app;
 	$result = array(
 		'result'  => false, // sikerult/nem sikerult
 		'message' => null,  // hibauzenet
@@ -606,7 +614,7 @@ function updateOCRstatus($recordingid, $id = null, $status) {
 		'output'  => null,  // a beszurt ocr_frames utolso ID-je
 	);
 	
-	if (!is_resource($db)) $db = db_maintain(); 
+	//if (!is_resource($db)) $db = db_maintain(); 
 	
 	if ($recordingid === null && $id === null) {
 		$result['message'] = "[ERROR] ". __FUNCTION__ ." has been called without 'recordingid' nor 'id'.";
@@ -637,13 +645,16 @@ function updateOCRstatus($recordingid, $id = null, $status) {
 		}
 		
 		$result['command'] = $updatequery;
-		$db->Execute($updatequery);
+        
+		//$db->Execute($updatequery);        
+        $model = $app->bootstrap->getModel('ocr_frames');
+        $rs = $model->safeExecute($updatequery);
 	} catch (Exception $ex) {
 		$result['message'] = __FUNCTION__ ." failed! Errormessage: ". $ex->getMessage();
 		return $result;
 	}
 	$result['result'] = true;
-	$result['output'] = ( int ) $db->Insert_ID();
+	$result['output'] = ( int ) $model->db->Insert_ID();
 	return $result;
 }
 
