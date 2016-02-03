@@ -33,9 +33,6 @@ if ( iswindows() ) {
     exit;
 }
 
-// DB
-//$db = db_maintain();
-
 // Config
 $isexecute = true;
 $isdebug_ldap = false;
@@ -330,9 +327,6 @@ while ( !$ldap_groups->EOF ) {
     $ldap_groups->MoveNext();
 }
     
-// Close DB connection if open
-//if ( ( $db !== false ) and is_resource($db->_connectionID) ) $db->close();
-
 exit;
 
 function updateUnconnectedGroupMembers() {
@@ -360,7 +354,7 @@ global $myjobid, $debug, $jconf, $app;
     }
 
     // Log
-    //if ( ( $db->Affected_Rows() ) > 0 ) $debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Unconnected group members updated (gm.userid = NULL): " . $db->Affected_Rows(), $sendmail = false);
+    if ( ( $model->db->Affected_Rows() ) > 0 ) $debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Unconnected group members updated (gm.userid = NULL): " . $model->db->Affected_Rows(), $sendmail = false);
 
     // Update undefined (NULL) gm.userexternalid from users table based on userid (users that logged in using Kerberos, but not yet cached from LDAP/AD)
     $query = "  
@@ -383,7 +377,7 @@ global $myjobid, $debug, $jconf, $app;
     }
 
     // Log
-    //if ( ( $db->Affected_Rows() ) > 0 ) $debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Unconnected group members updated (gm.userexternalid = NULL): " . $db->Affected_Rows(), $sendmail = false);
+    if ( ( $model->db->Affected_Rows() ) > 0 ) $debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Unconnected group members updated (gm.userexternalid = NULL): " . $model->db->Affected_Rows(), $sendmail = false);
  
     return true;
 }
@@ -407,8 +401,7 @@ global $myjobid, $debug, $jconf;
 		return false;
 	}
 
-    //return $db->Affected_Rows();
-    return true;
+    return $model->db->Affected_Rows();
 }
 
 function DeleteVSQGroupMembers($groupid, $users2remove) {
@@ -432,8 +425,7 @@ global $myjobid, $debug, $jconf;
 		return false;
 	}
     
-    //return $db->Affected_Rows();
-    return true;
+    return $model->db->Affected_Rows();
 }
 
 function getVSQGroupMembers($groupid) {
