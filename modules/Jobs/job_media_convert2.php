@@ -52,10 +52,7 @@ while( !is_file( $app->config['datapath'] . 'jobs/' . $myjobid . '.stop' ) and !
 	while ( 1 ) {
 
 		$app->watchdog();
-	
-		// Establish database connection
-		//$db = db_maintain();
-
+        
 		$converter_sleep_length = $app->config['sleep_media'];
 
 		// Check if temp directory readable/writable
@@ -191,9 +188,6 @@ while( !is_file( $app->config['datapath'] . 'jobs/' . $myjobid . '.stop' ) and !
         break;
 	}	// End of while(1)
 
-	// Close DB connection if open
-	//if ( is_resource($db->_connectionID) ) $db->close();
-
 	$app->watchdog();
 
 	sleep($converter_sleep_length);
@@ -284,7 +278,6 @@ global $jconf, $debug, $app;
 			rv.recordingid
 		LIMIT 1";
 	try {
-		//$rs = $db->getArray($query);
         $model = $app->bootstrap->getModel('recordings_versions');
         $rs = $model->safeExecute($query);
 	} catch (exception $err) {
