@@ -50,6 +50,7 @@
       {/if}
       <h3><a href="{$recordingurl}">{$item.title|escape:html|mb_wordwrap:25}</a></h3>
       {if $item.subtitle|stringempty}<h4>{$item.subtitle|escape:html|mb_wordwrap:25}</h4>{/if}
+      {if $item.description|stringempty}<p>{$item.description|escape:html|nl2br}</p>{/if}
     </div>
     {if $item.approvalstatus != 'approved' and $item.status == 'onstorage' and $member.id}
       <span class="notpublished"><a href="{$language}/recordings/modifysharing/{$item.id}?forward={$FULL_URI|escape:url}">{#recordings__notpublished_warning#}</a></span>

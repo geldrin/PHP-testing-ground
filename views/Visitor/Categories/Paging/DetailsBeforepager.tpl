@@ -13,6 +13,7 @@
     {$bcrumb|trim}
     <a class="back" href="{if $prev}{$language}/{$module}/details/{$prev.id},{$prev.name|filenameize}{else}{$language}/{$module}{/if}">{#sitewide_back#|lower}</a>
   </h1>
+  <div class="clear"></div>
 </div>
 <div class="channelgradient"></div><br/>
 

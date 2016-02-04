@@ -1170,6 +1170,7 @@ li#languageselectorlink span {
 #footer .footerlinks .label {
   color: #7f7f7f;
   padding-right: 20px;
+  text-align: right;
 }
 #footer .footerlinks .links a {
   color: #000;
@@ -1419,6 +1420,7 @@ li#languageselectorlink span {
 }
 #pagetitle .back,
 #categorytitle .back {
+  margin: 0 0 0 5px;
   color: #000;
   float: right;
   line-height: 70px;
@@ -1688,6 +1690,9 @@ li#languageselectorlink span {
   float: left;
   margin-left: 20px;
   width: 738px;
+}
+.recordinglist .recordingcontent .status {
+  margin: 10px 0 0 0;
 }
 .recordinglist .recordingcontent .featured.right {
   margin-right: 10px;

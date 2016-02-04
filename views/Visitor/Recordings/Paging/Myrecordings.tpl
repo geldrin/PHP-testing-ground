@@ -35,19 +35,19 @@
       <span class="notpublished"><a href="{$language}/recordings/modifysharing/{$item.id}?forward={$FULL_URI|escape:url}">{#recordings__notpublished_warning#}</a></span>
     {/if}
 
+    <div class="status"><span class="bold">{#recordings__recording_status#}:</span>
+    {if $item.approvalstatus != 'approved' and $item.status == 'onstorage'}
+      {#recordings__waitingforpublish#}&nbsp;(<span class="status-{$item.status}">{l lov=recordingstatus key=$item.status}</span>)
+    {elseif preg_match( '/^converting/', $item.status )}
+      <span class="status-{$item.status}">{l lov=recordingstatus key=unavailable}</span>
+    {elseif preg_match( '/^failed.*$/', $item.status )}
+      <span class="status-failed">{l lov=recordingstatus key=failed}</span>
+    {else}
+      <span class="status-{$item.status}">{l lov=recordingstatus key=$item.status}</span>
+    {/if}
+    </div>
     <div class="recordingactions">
       <ul>
-        <li class="status"><span class="bold">{#recordings__recording_status#}:</span>
-        {if $item.approvalstatus != 'approved' and $item.status == 'onstorage'}
-          {#recordings__waitingforpublish#}&nbsp;(<span class="status-{$item.status}">{l lov=recordingstatus key=$item.status}</span>)
-        {elseif preg_match( '/^converting/', $item.status )}
-          <span class="status-{$item.status}">{l lov=recordingstatus key=unavailable}</span>
-        {elseif preg_match( '/^failed.*$/', $item.status )}
-          <span class="status-failed">{l lov=recordingstatus key=failed}</span>
-        {else}
-          <span class="status-{$item.status}">{l lov=recordingstatus key=$item.status}</span>
-        {/if}
-        </li>
         {if $item.isintrooutro}
           <li>{#recordings__introoutrorecording#}</li>
         {/if}
