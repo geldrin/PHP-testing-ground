@@ -1,0 +1,9 @@
+.submitbutton,
+a#currentusername {
+  behavior: url(/css/PIE.htc);
+}
+
+.recordinglist .recordinginfo .timestamp,
+.recordinglist .recordinginfo .views {
+  margin: 0 5px;
+}
