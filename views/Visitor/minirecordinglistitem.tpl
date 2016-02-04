@@ -1,9 +1,10 @@
 {capture assign=recordingurl}{$language}/recordings/details/{$item.id},{$item.title|filenameize}{/capture}
+{if $isfirst}{assign var=type value="player"}{/if}
 <li class="listitem{if $isfirst} first{/if}">
   <a href="{$recordingurl}">
     <div class="recordingpic">
       <div class="length">{$item|@recordinglength|timeformat:minimal}</div>
-      <img src="{$item|@indexphoto}"/>
+      <img src="{$item|@indexphoto:$type}"/>
     </div>
     <div class="recordingcontent">
       <div class="wrap">

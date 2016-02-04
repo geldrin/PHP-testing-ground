@@ -4,7 +4,7 @@
   {if $block == "eloadas" and !empty( $items )}
     <a id="channelheader" href="{$language}/live/details/{$items.id},{$items.title|filenameize}">
       <div class="channelimage">
-        <img src="{$items|@indexphoto}"/>
+        <img src="{$items|@indexphoto:player}"/>
       </div>
       <div class="channelinfowrap">
         <h1>{$items.title|escape:html|mb_wordwrap:50}</h1>

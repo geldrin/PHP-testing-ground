@@ -1,6 +1,6 @@
 <div id="channelheader">
   <div class="channelimage">
-    <img src="{$channelroot|@indexphoto}"/>
+    <img src="{$channelroot|@indexphoto:player}"/>
   </div>
   <div class="channelinfowrap">
     <h1>{$channelroot.title|escape:html|mb_wordwrap:50}</h1>
