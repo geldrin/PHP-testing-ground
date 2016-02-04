@@ -108,13 +108,6 @@ $config = array(
     'displayname' => $l('users', 'organizationaffiliation'),
     'type'        => 'inputText',
     'validation'  => array(
-      array(
-        'type'      => 'string',
-        'required'  => true,
-        'minimum'   => 3,
-        'maximum'   => 100,
-        'help'      => $l('users', 'organizationaffiliationhelp'),
-      ),
     ),
   ),
 
