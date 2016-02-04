@@ -4414,16 +4414,16 @@ class Recordings extends \Springboard\Model {
 
   private function getCombinedRatingSQL() {
     return "
-      combinedratingpermonth = (
+      combinedratingpermonth = IFNULL((
         ratingthismonth  *
         ( 100 * numberofratingsthismonth / numberofviewsthismonth ) *
         numberofviewsthismonth
-      ),
-      combinedratingperweek = (
+      ), 0),
+      combinedratingperweek = IFNULL((
         ratingthisweek *
         ( 100 * numberofratingsthisweek / numberofviewsthisweek ) *
         numberofviewsthisweek
-      )
+      ), 0)
     ";
   }
 }
