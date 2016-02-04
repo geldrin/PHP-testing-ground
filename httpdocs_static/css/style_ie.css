@@ -7,3 +7,8 @@ a#currentusername {
 .recordinglist .recordinginfo .views {
   margin: 0 5px;
 }
+
+.accordion {
+  background-position-y: 18px;
+  background-position-x: 955px;
+}
