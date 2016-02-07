@@ -288,7 +288,8 @@ function setupCurrentUser( elem ) {
   if ( BROWSER.mobile && !BROWSER.tablet )
     return;
 
-  elem.show();
+  if (elem.is(':not(.donttouch)'))
+    elem.show();
 
   $j('#currentusername').on('click', function( e ) {
     e.preventDefault();
@@ -329,6 +330,9 @@ function setupCurrentUser( elem ) {
   });
 
   var fixCurrentUserMenu = function( elem ) {
+    if (elem.length == 0)
+      return;
+
     var width = 0;
     $j('#currentusermenu .column').each(function() {
       width += $j(this).outerWidth(true);
@@ -341,7 +345,7 @@ function setupCurrentUser( elem ) {
       ((headerwidth/2) - (width/2))
     ;
 
-    if (-left > width)
+    if (-left > width || $j('#currentusermenu').offset().left + width > $j('#header').offset().left + headerwidth)
       left = -menuleft + (headerwidth - width);
 
     elem.css({
@@ -352,8 +356,7 @@ function setupCurrentUser( elem ) {
     });
   };
 
-  runIfExists('#currentusermenu', fixCurrentUserMenu );
-
+  runIfExists('#currentusermenu:not(.donttouch)', fixCurrentUserMenu );
 }
 
 function setupStreamPoll( elems ) {
@@ -758,10 +761,10 @@ function setupHeaderMenu() {
       $j('#headersearchlink').toggleClass('active');
       $j(this).toggleClass('active');
 
-      if ( $j('#headersearch').hasClass('active') ) {
-        $j('#headersearch').slideUp(200).removeClass('active');
+      if ( $j('#headersearch:not(.donttouch)').hasClass('active') ) {
+        $j('#headersearch:not(.donttouch)').slideUp(200).removeClass('active');
       } else {
-        $j('#headersearch').slideDown(200).addClass('active');
+        $j('#headersearch:not(.donttouch)').slideDown(200).addClass('active');
       }
       
     });
@@ -775,7 +778,7 @@ function setupHeaderMenu() {
       if ( eventUnder(e, '#headersearch, #headersearchlink') )
         return;
 
-      $j('#headersearch').slideUp(200);
+      $j('#headersearch:not(.donttouch)').slideUp(200);
       $j('#headersearchlink, #headersearchlink a, #headersearch').removeClass('active');
     });
 
