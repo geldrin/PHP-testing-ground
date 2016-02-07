@@ -789,7 +789,7 @@ function setupHeaderMenu() {
   });
 
   $j(document).on('idleclick', function(e) {
-    if ( eventUnder(e, '#languages') )
+    if ( eventUnder(e, '#languages, #languageselectorlink') )
       return;
 
     $j('#languageselectorlink').removeClass('active');
