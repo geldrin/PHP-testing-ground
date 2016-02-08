@@ -178,14 +178,13 @@ class Bootstrap {
       define('ADODB_ERROR_LOG_DEST', $this->config['logpath'] . date("Y-m-" ) . 'database.txt' );
       define('ADODB_ERROR_LOG_TYPE', 3 /* 0-syslog, 1-email, 2-debugger, 3-file */ );
     }
-    
-    if ( !defined('ADODB_FORCE_NULLS') )
-      define('ADODB_FORCE_NULLS', 1 );
-    
+
     $GLOBALS['ADODB_CACHE_DIR']  = $this->config['cachepath'];
     $GLOBALS['ADODB_COUNTRECS']  = false;
-    $GLOBALS['ADODB_FORCE_TYPE'] = 1; // force null
-    
+    $GLOBALS['ADODB_FORCE_TYPE'] = 3;
+    // 3 = force value. Value is left as it is. Php null and string 'null' are set
+    // to sql NULL values and empty fields '' are set to empty '' sql values.
+
     if ( $errorhandler ) {
 
       // when adodb errorhandler needed
@@ -285,10 +284,10 @@ class Bootstrap {
         throw $e; // rethrow, commonerrorhandler megjeleniti szepen
       
     }
-    
+
     $db->query("SET NAMES " . str_replace( '-', '', $this->config['charset'] ) );
     $db->SetFetchMode( ADODB_FETCH_ASSOC );
-    
+
     return $this->instances['adodb'][ $dbSettings ] = $db;
     
   }
