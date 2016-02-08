@@ -65,6 +65,7 @@ $j(document).ready(function() {
   runIfExists('#feeds', setupManagefeeds );
   runIfExists('#feeds .needpoll', setupStreamPoll );
   runIfExists('#currentusermenu', setupCurrentUser );
+  runIfExists('#headerloginform, #currentusername', setupHeaderLogin );
   runIfExists('#search_advanced', setupSearch );
   runIfExists('#recordings_modifycontributors', setupContributors );
   runIfExists('#contributors_create, #contributors_modify', setupContributorEdit );
@@ -179,7 +180,7 @@ function setupMobileMenu() {
   });
 
   $j(document).on('idleclick', function(e) {
-    if ($j(e.target).is('#mobilemenu .menulabel'))
+    if (eventUnder(e, '#mobilemenu .menulabel'))
       return;
 
     $j('#mobilemenu').removeClass('active');
@@ -357,6 +358,20 @@ function setupCurrentUser( elem ) {
   };
 
   runIfExists('#currentusermenu:not(.donttouch)', fixCurrentUserMenu );
+}
+
+function setupHeaderLogin( elem ) {
+  $j('#currentusername').on('click', function( e ) {
+    e.preventDefault();
+    $j('#headerloginform.menulayer').toggle();
+  });
+
+  $j(document).on('idleclick', function(e) {
+    if (eventUnder(e, '#currentusername, #headerloginform'))
+      return;
+
+    $j('#headerloginform.menulayer').hide();
+  });
 }
 
 function setupStreamPoll( elems ) {
@@ -742,7 +757,7 @@ function setupHeaderMenu() {
     e.preventDefault();
     closeComponents(e);
     $j(this).toggleClass('active');
-    $j('#headerloginactions, #currentusermenu, #headerlogin .arrow').toggle();
+    $j('#headerloginactions, #currentusermenu:not(.donttouch), #headerlogin .arrow').toggle();
   });
 
   $j(document).on('idleclick', function(e) {
@@ -750,7 +765,7 @@ function setupHeaderMenu() {
       return;
 
     $j('#headeruserlink > a').removeClass('active');
-    $j('#headerloginactions, #currentusermenu, #headerlogin .arrow').hide();
+    $j('#headerloginactions, #currentusermenu:not(.donttouch), #headerlogin .arrow').hide();
   });
 
   if ( !BROWSER.mobile || BROWSER.tablet ) {
