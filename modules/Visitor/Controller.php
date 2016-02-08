@@ -23,7 +23,7 @@ class Controller extends \Springboard\Controller\Visitor {
          $this->bootstrap->config['forcesecuremaxage']
        )
       $this->headeroptions['Strict-Transport-Security'] =
-        '"max-age=' . $this->bootstrap->config['forcesecuremaxage'] . '"'
+        'max-age=' . $this->bootstrap->config['forcesecuremaxage']
       ;
 
     if ( in_array( $this->module, array('api', 'jsonapi') ) ) // az api ->authenticate mindig kezeli
