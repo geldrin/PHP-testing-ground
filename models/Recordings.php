@@ -1219,7 +1219,7 @@ class Recordings extends \Springboard\Model {
         r.id             = cr.recordingid AND
         r.isintrooutro   = '0' AND
         r.approvalstatus = 'approved' AND
-        r.status         = 'onstorage' AND -- TODO live?
+        r.status         = 'onstorage' AND -- TODO live
         r.organizationid = '" . $organization['id'] . "' AND
         r.status         = 'onstorage'
       " . ( $distinct? "GROUP BY r.id": "") . "

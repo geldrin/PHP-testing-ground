@@ -1180,7 +1180,7 @@ class Channels extends \Springboard\Model {
         r.id             = cr.recordingid AND
         r.isintrooutro   = '0' AND
         r.organizationid = '$organizationid' AND
-        r.status         = 'onstorage' -- TODO live?
+        r.status         = 'onstorage' -- TODO live
       GROUP BY r.id
       ORDER BY cr.weight
     ");
@@ -1199,7 +1199,7 @@ class Channels extends \Springboard\Model {
           r.id             = cr.recordingid AND
           r.isintrooutro   = '0' AND
           r.organizationid = '$organizationid' AND
-          r.status         = 'onstorage' -- TODO live?
+          r.status         = 'onstorage' -- TODO live
         GROUP BY r.id
         ORDER BY cr.weight
     ");
