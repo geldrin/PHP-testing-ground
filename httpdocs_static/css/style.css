@@ -2011,6 +2011,9 @@ li#languageselectorlink span {
   background-position: right 15px top 18px;
   background-image: url(images/arrow_right_hover.png);
 }
+#recommendatory.accordion {
+  background: none;
+}
 .accordion.active {
   background-image: url(images/arrow_down_hover.png);
 }
@@ -2290,7 +2293,8 @@ li#languageselectorlink span {
   background: url(images/recordingsdetails_info.png) no-repeat;
   vertical-align: middle;
 }
-#infobar #infolink.active a span {
+#infobar #infolink.active a span,
+#infobar #infolink:hover a span {
   background: url(images/recordingsdetails_info_active.png) no-repeat;
 }
 #infobar #channelslink a span {
@@ -2301,10 +2305,8 @@ li#languageselectorlink span {
   background: url(images/recordingsdetails_channels.png) no-repeat;
   vertical-align: middle;
 }
+#infobar #channelslink.active a span,
 #infobar #channelslink:hover a span {
-  background: url(images/recordingsdetails_channels_hover.png) no-repeat;
-}
-#infobar #channelslink.active a span {
   background: url(images/recordingsdetails_channels_active.png) no-repeat;
 }
 #infobar #commentslink a #commentcount:after {
@@ -2338,19 +2340,14 @@ li#languageselectorlink span {
   background-repeat: no-repeat;
   background-position: right 4px bottom;
 }
-#infobar #commentslink:hover a #commentcount:after {
-  color: #fff;
-  background-color: #29abe2;
-}
+#infobar #commentslink:hover a #commentcount:after,
 #infobar #commentslink.active a #commentcount:after,
 #infobar #commentslink.active:hover a #commentcount:after {
   color: #000;
   background-color: #fff;
   border: 2px solid #000;
 }
-#infobar #commentslink:hover a #commentcount {
-  background-image: url(images/recordingsdetails_comments_hover.png);
-}
+#infobar #commentslink:hover a #commentcount,
 #infobar #commentslink.active a #commentcount,
 #infobar #commentslink.active:hover a #commentcount {
   background-image: url(images/recordingsdetails_comments_active.png);
@@ -2363,7 +2360,8 @@ li#languageselectorlink span {
   background: url(images/recordingsdetails_share.png) no-repeat;
   vertical-align: middle;
 }
-#infobar #sharelink.active a span {
+#infobar #sharelink.active a span,
+#infobar #sharelink:hover a span {
   background: url(images/recordingsdetails_share_active.png) no-repeat;
 }
 #infobar #embedlink a span {
@@ -2374,7 +2372,8 @@ li#languageselectorlink span {
   background: url(images/recordingsdetails_share.png) no-repeat;
   vertical-align: middle;
 }
-#infobar #embedlink.active a span {
+#infobar #embedlink.active a span,
+#infobar #embedlink:hover a span {
   background: url(images/recordingsdetails_share_active.png) no-repeat;
 }
 

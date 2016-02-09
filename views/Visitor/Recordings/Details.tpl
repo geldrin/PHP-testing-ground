@@ -6,6 +6,12 @@
 {assign var=flashheight value=550}
 {/if}
 {include file="Visitor/_header.tpl" title=$recording.title}
+<div id="pagetitle">
+  <h1>{$recording.title|escape:html|mb_wordwrap:25}</h1>
+</div>
+<div class="channelgradient"></div>
+{if $recording.subtitle|stringempty}<h2>{$recording.subtitle|escape:html|mb_wordwrap:25}</h2>{else}<br/>{/if}
+<br/>
 
 <div id="player"{if !$browser.mobile} style="height: {$flashheight}px;"{/if}>
   
@@ -47,8 +53,6 @@
 </div>
 
 <div class="title recording">
-  <h1>{$recording.title|escape:html|mb_wordwrap:25}</h1>
-  <h2><span class="timestamp">{$recording.timestamp|date_format:#smarty_dateformat_long#}</span> {$recording.subtitle|escape:html|mb_wordwrap:25}</h2>
 
   {if $recording.approvalstatus != 'approved'}
     <center><a href="{$language}/recordings/modifysharing/{$recording.id}">{#recordings__notpublished_warning#}</a></center>
