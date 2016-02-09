@@ -183,8 +183,8 @@ class Controller extends \Visitor\Controller {
     );
     $flashdata     = $feedModel->getFlashData( $info );
 
-    $this->toSmarty['playerwidth']  = 950;
-    $this->toSmarty['playerheight'] = 530;
+    $this->toSmarty['playerwidth']  = 980;
+    $this->toSmarty['playerheight'] = 550;
     $this->toSmarty['anonuser']     = $anonuser;
 
     if ( $feedModel->row['moderationtype'] == 'nochat' )
