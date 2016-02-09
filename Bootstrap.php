@@ -170,7 +170,7 @@ class Bootstrap {
 
     if ( isset( $this->instances['adodb'][ $dbSettings ] ) and is_resource( $this->instances['adodb'][ $dbSettings ]->_connectionID ) )
       return $this->instances['adodb'][ $dbSettings ];
-    
+
     if ( !defined('ADODB_OUTP') )
       define('ADODB_OUTP', 'Springboard\\adoDBDebugPrint'); // adodb debug print func( $msg, $newline )
     
@@ -285,6 +285,7 @@ class Bootstrap {
       
     }
 
+    $db->debug = $this->debug;
     $db->query("SET NAMES " . str_replace( '-', '', $this->config['charset'] ) );
     $db->SetFetchMode( ADODB_FETCH_ASSOC );
 

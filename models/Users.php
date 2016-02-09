@@ -795,7 +795,7 @@ class Users extends \Springboard\Model {
       WHERE
         r.isintrooutro      = '0' AND
         r.approvalstatus    = 'approved' AND
-        r.status            = 'onstorage' AND -- TODO live?
+        r.status            = 'onstorage' AND -- TODO live
         r.organizationid    = '$organizationid' AND
         r.status            = 'onstorage' AND
         r.isseekbardisabled = '1'
