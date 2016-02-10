@@ -91,6 +91,7 @@ $j(document).ready(function() {
   runIfExists('.accordion', setupAccordion );
   runIfExists('#infobar', setupInfoBar );
   runIfExists('.channelrecordings.halfwidth', setupChannelRecordings );
+  runIfExists('#users_signup', setupSignup );
 
   if ( needping )
     setTimeout( setupPing, 1000 * pingsecs );
@@ -184,6 +185,14 @@ function setupMobileMenu() {
       return;
 
     $j('#mobilemenu').removeClass('active');
+  });
+}
+
+function setupSignup(elem) {
+  $j('select').select2({
+    language: language,
+    minimumResultsForSearch: -1,
+    width: 290
   });
 }
 

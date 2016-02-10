@@ -1,6 +1,6 @@
 <?php
 namespace Visitor\Users\Form;
-class Signup extends \Visitor\HelpForm {
+class Signup extends \Visitor\Form {
   public $configfile = 'Signup.php';
   public $template   = 'Visitor/genericform.tpl';
   public $needdb     = true;
@@ -20,13 +20,17 @@ class Signup extends \Visitor\HelpForm {
        )
       $this->controller->redirectToController('contents', 'noregistration');
     
-    $this->controller->toSmarty['helpclass'] = 'rightbox halfbox';
+    $this->controller->toSmarty['formclass'] = 'halfbox centerformwrap';
+    $this->controller->toSmarty['titleclass'] = 'center';
+    $this->controller->toSmarty['needselect2'] = true;
     parent::init();
   }
 
   public function postSetupForm() {
     
     $l = $this->bootstrap->getLocalization();
+    // submit legyen a title
+    $this->form->submit =
     $this->controller->toSmarty['title'] = $l('users', 'register_title');
     
   }

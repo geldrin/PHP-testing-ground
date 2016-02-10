@@ -2,13 +2,16 @@
 
 include_once( $this->bootstrap->config['libpath'] . 'clonefish/constants.php');
 $language = \Springboard\Language::get();
-$config = array(
-
-  'fs1' => array(
-    'type'   => 'fieldset',
-    'legend' => $l('users', 'register_title'),
-    'prefix' => '<span class="legendsubtitle">' . $l('users', 'register_subtitle') . '</span>',
+$toslabel = str_replace(
+  '_TOSLINK_',
+  htmlspecialchars(
+    $language . '/contents/userstos',
+    ENT_QUOTES, 'UTF-8', true
   ),
+  $l('', 'userstos')
+);
+
+$config = array(
 
   'action' => array(
     'type'  => 'inputHidden',
@@ -159,6 +162,15 @@ $config = array(
     'displayname' => $l('users', 'newsletter'),
     'type'        => 'inputCheckbox',
     'itemlayout'  => $this->checkboxitemlayout,
+    'rowlayout'   => '
+      <tr %errorstyle% class="noborder">
+        <td class="labelcolumn center" colspan="2">
+          %prefix%%element%%postfix%
+          <label for="%id%">%displayname%</label>
+          %errordiv%
+        </td>
+      </tr>
+    ',
     'onvalue'     => 1,
     'offvalue'    => 0,
     'value'       => 1,
@@ -167,13 +179,18 @@ $config = array(
   ),
 
   'tos' => array(
-    'displayname' => $l('', 'userstos'),
+    'displayname' => $toslabel,
     'type'        => 'inputCheckbox',
     'itemlayout'  => $this->checkboxitemlayout,
-    'postfix'     =>
-      '<a href="' . $language . '/contents/userstos' .
-      '" id="termsofservice" target="_blank">' . $l('', 'userstospostfix') . '</a>'
-    ,
+    'rowlayout'   => '
+      <tr %errorstyle% class="noborder">
+        <td class="labelcolumn center" colspan="2">
+          %prefix%%element%%postfix%
+          <label for="%id%">%displayname%</label>
+          %errordiv%
+        </td>
+      </tr>
+    ',
     'validation'  => array(
       array(
         'type' => 'required',

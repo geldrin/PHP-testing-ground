@@ -1359,6 +1359,9 @@ li#languageselectorlink span {
   border-bottom: 1px solid #d8d8d8;
   box-sizing: border-box;
 }
+#pagetitle.center {
+  text-align: center;
+}
 #pagetitle h1,
 #categorytitle h1 {
   margin: 0;
@@ -1409,6 +1412,10 @@ li#languageselectorlink span {
 #categorytitle a {
   color: #000;
   text-decoration: none;
+}
+#categorytitle a:hover,
+#categorytitle a:focus {
+  color #43b5e5;
 }
 #categorytitle .arrow {
   display: inline;
@@ -3617,4 +3624,107 @@ li#languageselectorlink span {
 .newslist .listingitem.last {
   border-bottom: 0px;
   box-shadow: none;
+}
+
+/* special forms */
+.form.centerformwrap,
+.form.centerformwrap {
+  margin: 20px auto;
+}
+.form.centerformwrap input[type=checkbox] {
+  visibility: hidden;
+}
+.form.centerformwrap input[type=checkbox] + label {
+  display: inline-block;
+  min-height: 24px;
+  padding-left: 30px;
+  background: url(images/icons/checkbox.png) left center no-repeat;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+.form.centerformwrap input[type=checkbox] + label:hover,
+.form.centerformwrap input[type=checkbox] + label:focus {
+  background-image: url(images/icons/checkbox_hover.png);
+}
+.form.centerformwrap input[type=checkbox]:checked + label {
+  background-image: url(images/icons/checkbox_checked.png);
+}
+.form.centerformwrap input[type=checkbox]:checked + label:hover,
+.form.centerformwrap input[type=checkbox]:checked + label:focus {
+  background-image: url(images/icons/checkbox_checked_hover.png);
+}
+
+.form.centerformwrap input[type=text],
+.form.centerformwrap input[type=password] {
+  width: 100%;
+  height: 46px;
+  line-height: 46px;
+  text-align: right;
+  font-family: 'Exo 2', "Arial", "sans-serif";
+  font-weight: 500;
+  border: 0;
+  box-shadow: none;
+  box-sizing: border-box;
+  padding: 0 20px 0 0;
+}
+.form.centerformwrap td.center {
+  text-align: center;
+}
+.form.centerformwrap input:-webkit-autofill {
+  background: #fff;
+}
+.form.centerformwrap .formtable {
+  border-spacing: 20px;
+  border-spacing: 0 20px;
+  border-collapse: separate;
+}
+.form.centerformwrap .formtable tr {
+  border: 1px solid #ccc;
+  border-radius: 5px;
+}
+.form.centerformwrap .formtable td {
+  padding: 0;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  vertical-align: middle;
+}
+.form.centerformwrap .formtable tr.noborder td {
+  border: 0;
+}
+.form.centerformwrap .formtable td.labelcolumn {
+  border-right: 0;
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+  color: #999;
+  padding: 0 0 0 20px;
+}
+.form.centerformwrap .formtable td.elementcolumn {
+  border-left: 0;
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+}
+.form.centerformwrap .buttonrow td {
+  border: 0;
+}
+.form.centerformwrap .submitbutton {
+  width: 100%;
+  height: 46px;
+  line-height: 46px;
+  font-size: 16px;
+  padding: 0;
+}
+.form.centerformwrap .select2-container--default .select2-selection--single {
+  border: 0;
+  height: 46px;
+}
+.form.centerformwrap .select2-container--default .select2-selection--single .select2-selection__rendered {
+  line-height: 46px;
+  text-align: right;
+}
+.form.centerformwrap .select2-container--default .select2-selection--single .select2-selection__arrow {
+  top: 10px;
 }
