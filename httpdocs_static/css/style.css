@@ -2095,6 +2095,7 @@ li#languageselectorlink span {
 #body .accordion .presenter {
   color: #000;
   font-size: 11px;
+  font-weight: 500;
 }
 #body .accordion .timestamp {
   color: #7a7a7a;
@@ -2102,6 +2103,8 @@ li#languageselectorlink span {
   text-align: right;
 }
 #body .accordion .title {
+  font-weight: bold;
+  font-size: 16px;
   width: 100%;
   height: 57px;
   margin: 15px 0 0 0;
