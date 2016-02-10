@@ -48,6 +48,9 @@ class Details extends \Visitor\Paging {
       $this->application->getNumericParameter('id')
     );
 
+    if ( !$this->category )
+      $this->controller->redirect('categories');
+
     // not possible
     if ( $this->category['organizationid'] != $organization['id'] )
       $this->controller->redirect('index');
