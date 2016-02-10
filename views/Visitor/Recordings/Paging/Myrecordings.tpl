@@ -45,13 +45,12 @@
     {else}
       <span class="status-{$item.status}">{l lov=recordingstatus key=$item.status}</span>
     {/if}
+    {if $item.isintrooutro}
+      <span class="isintrooutro">{#recordings__introoutrorecording#}</span>
+    {/if}
     </div>
     <div class="recordingactions">
       <ul>
-        {if $item.isintrooutro}
-          <li>{#recordings__introoutrorecording#}</li>
-        {/if}
-
         {if $item.status == 'onstorage'}
           <li><a href="{$language}/recordings/modifybasics/{$item.id}?forward={$FULL_URI|escape:url}">{#recordings__editrecording#}</a></li>
           {if !$item.isintrooutro}

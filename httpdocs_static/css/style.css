@@ -1744,7 +1744,12 @@ li#languageselectorlink span {
   
 }
 .recordinglist .recordingactions a {
-  font-weight: bold;
+  color: #333;
+}
+.recordinglist .recordingactions a:hover,
+.recordinglist .recordingactions a:focus {
+  color: #4ac9ff;
+  text-decoration: underline;
 }
 .recordinglist .recordingactions ul {
   width: 100%;
