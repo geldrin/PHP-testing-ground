@@ -77,7 +77,7 @@
           {/if}
           <span class="status-{$item.status}">{$contentstatus}</span>
           {if $item.contentstatus == 'onstorage' or preg_match( '/^onstorage$|^failed.*$/', $item.contentstatus )}
-            <a href="{$language}/recordings/deletecontent/{$item.id}?forward={$FULL_URI|escape:url}" class="confirm delete">{#recordings__deletecontent#}</a>
+            - <a href="{$language}/recordings/deletecontent/{$item.id}?forward={$FULL_URI|escape:url}" class="confirm delete">{#recordings__deletecontent#}</a>
           {/if}
           </li>
         </ul>
