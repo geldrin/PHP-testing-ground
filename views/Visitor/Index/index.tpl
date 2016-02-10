@@ -32,7 +32,6 @@
           {include file="Visitor/minirecordinglistitem.tpl" isfirst=$smarty.foreach.recordings.first}
         {/foreach}
       </ul>
-      <a href="{$language}/recordings/featured/{$blocksToTypes[$block]}" class="more">{#sitewide_go#}</a>
       <div class="clear"></div>
     </div>
     <div class="clear"></div>
