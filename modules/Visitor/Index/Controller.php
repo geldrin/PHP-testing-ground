@@ -8,7 +8,6 @@ class Controller extends \Visitor\Controller {
 
   private $maxRecordings = 4;
   private $blocksToTypes = array(
-    'kiemelt'            => 'featured',
     'legujabb'           => 'newest',
     'legnezettebb'       => 'mostviewed',
     'legjobb'            => 'best',
@@ -74,6 +73,14 @@ class Controller extends \Visitor\Controller {
     );
 
     return $ret;
+  }
+
+  private function getBlockKiemelt( $user ) {
+    return $this->recordingsModel->getRandomRecordings(
+      4,
+      $this->organization['id'],
+      $user
+    );
   }
 
   private function getBlockEloadas( $user ) {
