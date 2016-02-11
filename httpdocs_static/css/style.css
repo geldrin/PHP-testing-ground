@@ -3655,6 +3655,7 @@ li#languageselectorlink span {
 .form.centerformwrap input[type=checkbox] + label {
   display: inline-block;
   min-height: 24px;
+  line-height: 24px;
   padding-left: 30px;
   background: url(images/icons/checkbox.png) left center no-repeat;
   -webkit-touch-callout: none;
