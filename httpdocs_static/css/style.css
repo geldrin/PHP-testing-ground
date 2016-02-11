@@ -190,6 +190,13 @@ label {
   border-bottom: 1px solid #a5a5a5;
   padding-bottom: 10px;
 }
+.form .formerrordiv {
+  display: none;
+  padding: 2px 5px 2px 5px;
+  background-color: #d03030;
+  color: white;
+  clear: both;
+}
 .formoverflowframe {
   clear: both;
   max-height: 200px;
@@ -201,6 +208,10 @@ label {
   border-collapse: collapse;
   width: 100%;
   border: 0;
+}
+.formtable tr.formerror td {
+  background-color: #e95724;
+  color: #000;
 }
 .formtable td {
   padding: 5px 5px 10px 5px;
@@ -644,6 +655,7 @@ a.submitbutton:hover,
 #headerlogo a.basic span {
   background-image: url(images/header_logo.png);
   background-repeat: no-repeat;
+  background-position: left center;
   background-position: left 5px center;
 }
 #mobilemenu {
@@ -660,7 +672,7 @@ a.submitbutton:hover,
   width: 225px;
   margin: 4px 0 0 -72px;
   background-repeat: no-repeat;
-  background-position: top 0px center;
+  background-position: top center;
   background-image: url(images/header_arrow_up.png);
 }
 #headerloginform {
@@ -1030,6 +1042,7 @@ li#headeruserlink a span {
 }
 
 li#languageselectorlink {
+  position: relative;
   background-repeat: no-repeat;
   background-image: url(images/header_language.png);
   background-position: center left;
@@ -1422,6 +1435,7 @@ li#languageselectorlink span {
   margin: 0 10px 0 5px;
   padding: 0 9px 0 0;
   background-repeat: no-repeat;
+  background-position: center;
   background-position: bottom 8px center;
   background-image: url(images/arrow_right_smallbold.png);
 }
@@ -1433,6 +1447,7 @@ li#languageselectorlink span {
   line-height: 70px;
   padding-right: 25px;
   background-repeat: no-repeat;
+  background-position: right center;
   background-position: right 0px bottom 22px;
   background-image: url(images/arrow_back.png);
 }
@@ -1573,6 +1588,7 @@ li#languageselectorlink span {
 .sortarrow {
   display: inline;
   background-repeat: no-repeat;
+  background-position: center;
   background-position: bottom 3px center;
   padding: 0 13px 0 0;
   margin: 0 0 0 5px;
@@ -1624,6 +1640,7 @@ li#languageselectorlink span {
 #body .recordinglist .title {
   border: 0;
   padding-top: 0px;
+  clear: both;
 }
 #body .recordinglist .listitem.channel .title {
   margin-top: 10px;
@@ -2023,6 +2040,7 @@ li#languageselectorlink span {
 /* accordion */
 .accordion {
   background-repeat: no-repeat;
+  background-position: right top;
   background-position: right 15px top 18px;
   background-image: url(images/arrow_right_hover.png);
 }
@@ -3627,9 +3645,8 @@ li#languageselectorlink span {
 }
 
 /* special forms */
-.form.centerformwrap,
 .form.centerformwrap {
-  margin: 20px auto;
+  margin: 0 auto;
 }
 .form.centerformwrap input[type=checkbox] {
   visibility: hidden;
@@ -3657,7 +3674,6 @@ li#languageselectorlink span {
 .form.centerformwrap input[type=checkbox]:checked + label:focus {
   background-image: url(images/icons/checkbox_checked_hover.png);
 }
-
 .form.centerformwrap input[type=text],
 .form.centerformwrap input[type=password] {
   width: 100%;
@@ -3682,15 +3698,15 @@ li#languageselectorlink span {
   border-spacing: 0 20px;
   border-collapse: separate;
 }
-.form.centerformwrap .formtable tr {
-  border: 1px solid #ccc;
-  border-radius: 5px;
-}
 .form.centerformwrap .formtable td {
   padding: 0;
   border: 1px solid #ccc;
   border-radius: 5px;
   vertical-align: middle;
+  box-sizing: border-box;
+}
+.form.centerformwrap .formtable tr.formerror td {
+  border-color: #e95724;
 }
 .form.centerformwrap .formtable tr.noborder td {
   border: 0;
@@ -3702,7 +3718,11 @@ li#languageselectorlink span {
   color: #999;
   padding: 0 0 0 20px;
 }
+.formtable tr.formerror td {
+  background: #fff;
+}
 .form.centerformwrap .formtable td.elementcolumn {
+  overflow: hidden;
   border-left: 0;
   border-top-left-radius: 0;
   border-bottom-left-radius: 0;

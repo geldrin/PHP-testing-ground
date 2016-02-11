@@ -192,7 +192,7 @@ function setupSignup(elem) {
   $j('select').select2({
     language: language,
     minimumResultsForSearch: -1,
-    width: 290
+    width: '100%'
   });
 }
 
