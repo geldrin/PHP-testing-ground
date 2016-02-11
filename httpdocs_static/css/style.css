@@ -3650,6 +3650,7 @@ li#languageselectorlink span {
 }
 .form.centerformwrap input[type=checkbox] {
   visibility: hidden;
+  margin: 0 -20px 0 0;
 }
 .form.centerformwrap input[type=checkbox] + label {
   display: inline-block;
