@@ -165,7 +165,7 @@ class element {
    * @return void    
    * @access public  
    */
-  function element( $name, $configvalues ) {
+  function __construct( $name, $configvalues ) {
 
     $this->name           = $name;
     foreach ( $configvalues as $key => $value ) 

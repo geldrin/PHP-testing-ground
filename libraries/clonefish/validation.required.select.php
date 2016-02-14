@@ -21,13 +21,12 @@ class selectRequired extends validation {
   var $form;
 
   // -------------------------------------------------------------------------
-  function selectRequired( $settings, &$element, &$form ) {
+  function __construct( $settings, &$element, &$form ) {
 
     // call parent constructor
-    $parent_class_name = get_parent_class( $this );
-    $this->$parent_class_name( $settings, $element );
+    parent::__construct( $settings, $element );
     
-    $this->form = &$form;
+    $this->form = $form;
     
   }
 

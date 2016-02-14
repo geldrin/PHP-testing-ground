@@ -336,7 +336,9 @@ class Bootstrap {
     $smarty->assign('REQUEST_URI',      @$_SERVER['REQUEST_URI'] );
     
     $smarty->assign('language',         Springboard\Language::get() );
-    $smarty->assign('module',           @$_REQUEST['module'] );
+    if ( isset( $_REQUEST['module'] ) )
+      $smarty->assign('module',         $_REQUEST['module'] );
+
     $smarty->assign('supportemail',     $this->config['mail']['fromemail'] );
     $smarty->assign('l',                $this->getLocalization() );
     

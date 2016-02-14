@@ -41,11 +41,10 @@ class fileValidation extends validation {
     // both channels are set with 'jpg'
 
   // -------------------------------------------------------------------------
-  function fileValidation( &$settings, &$element ) {
+  function __construct( &$settings, &$element ) {
 
     // call parent constructor
-    $parent_class_name = get_parent_class( $this );
-    $this->$parent_class_name( $settings, $element );
+    parent::__construct( $settings, $element );
 
     $inisize = ini_get('upload_max_filesize');
     if ( preg_match( '/^([0-9]+)M$/i', $inisize, $results ) ) 

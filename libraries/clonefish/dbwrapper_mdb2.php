@@ -58,7 +58,7 @@ class DBWrapperMDB2 {
    *
    * @param object MDB2 connection object
    */
-  function DBWrapperMDB2( &$db ) {
+  function __construct( &$db ) {
 
     if ( is_subclass_of( $db, 'MDB2_Driver_Common' ) ) {
       $this->link = &$db;

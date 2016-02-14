@@ -58,7 +58,7 @@ class DBWrapperPDO {
    *
    * @param object PDO connection object
    */
-  function DBWrapperPDO( &$db ) {
+  function __construct( &$db ) {
 
     if ( is_object( $db ) && ( get_class( $db ) == 'PDO' ) )
       $this->link = &$db;
