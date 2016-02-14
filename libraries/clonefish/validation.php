@@ -26,7 +26,7 @@ class validation {
   var $ordepend  = Array();
 
   // -------------------------------------------------------------------------
-  function validation( $settings, &$element ) {
+  function __construct( $settings, &$element ) {
 
     if ( is_object( $element ) )
       $this->element = &$element;

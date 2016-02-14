@@ -23,7 +23,7 @@ class select extends element {
   var $_valueIsArray = false;
 
   // --------------------------------------------------------------------------
-  function select( $name, $configvalues ) {
+  function __construct( $name, $configvalues ) {
 
     $this->name           = $name;
 

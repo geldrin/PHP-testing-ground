@@ -304,7 +304,7 @@ class dateValidation extends validation {
     if ( !$this->$attribute )
       return;
 
-    $otherelement =& $this->form->getElementByName( $this->$attribute );
+    $otherelement = $this->form->getElementByName( $this->$attribute );
 
     if ( $otherelement->validating ){
       // we're avoiding recursive loops when elements are

@@ -47,11 +47,10 @@ class selectFile extends select {
   // mustn't be removed, makes the script run into an infinite cycle
 
   // --------------------------------------------------------------------------
-  function selectFile( $key, $configvalues ) {
+  function __construct( $key, $configvalues ) {
 
     // call parent constructor
-    $parent_class_name = get_parent_class( $this );
-    $this->$parent_class_name( $key, $configvalues );
+    parent::__construct( $key, $configvalues );
 
     if ( is_dir( $this->directory ) ) {
       while ( substr( $this->directory, -1, 1 ) == '/' ) 

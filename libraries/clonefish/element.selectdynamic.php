@@ -60,7 +60,7 @@ class selectDynamic extends select {
     $parent_class_name = get_parent_class( $this );
     $this->$parent_class_name( $key, $configvalues );
     
-    $this->db = &$db;
+    $this->db = $db;
 
     $this->getValuesFromSQL();
 

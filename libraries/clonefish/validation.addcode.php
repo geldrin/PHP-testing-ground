@@ -23,7 +23,7 @@ class addcodeValidation extends validation {
       $jstemplate = $this->js;
       foreach ( $templatevars as $match ) {
 
-        $element = &$this->form->getElementByName( $match[ 1 ] );
+        $element = $this->form->getElementByName( $match[ 1 ] );
         $replaceto = 
           $this->getJSField( $element ) . '.value';
 

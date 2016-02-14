@@ -25,7 +25,7 @@ class inputRadio extends element {
   var $divide;
 
   // --------------------------------------------------------------------------
-  function inputRadio( $name, $configvalues ) {
+  function __construct( $name, $configvalues ) {
 
     $this->name           = $name;
 

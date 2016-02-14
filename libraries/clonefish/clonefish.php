@@ -436,7 +436,7 @@ class clonefish {
    * @return void    
    * @access public  
    */
-  function clonefish( $name, $action, $method, $db = null, $dbtype = 'mysql', $refid = null ) {
+  function __construct( $name, $action, $method, $db = null, $dbtype = 'mysql', $refid = null ) {
 
     $this->name   = $name;
     $this->id     = $name;

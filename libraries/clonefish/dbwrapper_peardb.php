@@ -58,7 +58,7 @@ class DBWrapperPearDB {
    *
    * @param object PEAR DB connection object
    */
-  function DBWrapperPearDB( &$db ) {
+  function __construct( &$db ) {
 
     if ( is_subclass_of( $db, 'db_common' ) ) {
       $this->link = &$db;

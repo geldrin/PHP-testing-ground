@@ -34,7 +34,7 @@ class inputCheckboxDynamic extends element {
   var $treestartinclusive = true;
 
   // -------------------------------------------------------------------------
-  function inputCheckboxDynamic( $name, $configvalues, &$db, $id ) {
+  function __construct( $name, $configvalues, &$db, $id ) {
 
     $this->name = $name;
     foreach ( $configvalues as $key => $value )
