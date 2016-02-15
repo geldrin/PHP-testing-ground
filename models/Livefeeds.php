@@ -160,6 +160,9 @@ class Livefeeds extends \Springboard\Model {
     $narrowedstreams = array();
     $defaultstream   = null;
 
+    if ( empty( $streams ) )
+      return false;
+
     if (
          $browser['mobile'] and
          $browser['mobiledevice'] != 'iphone' and
