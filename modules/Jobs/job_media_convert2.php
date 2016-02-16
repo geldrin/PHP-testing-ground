@@ -62,13 +62,17 @@ while( !is_file( $app->config['datapath'] . 'jobs/' . $myjobid . '.stop' ) and !
 			$converter_sleep_length = 60 * 60;
 			break;
 		}
-
+        
 		// Query next job
 		$recording = getNextConversionJob();
 		if ( $recording === false ) break;
+        
+        // Clean up converter temporary storage
+        $err = cleanUpConverterTemporaryStorage();
+        if ( !$err ) $debug->log($jconf['log_dir'], $jconf['jobid_media_convert'] . ".log", "[WARNING] Converter temporary storage cleanup error.", $sendmail = false);
 
 		// Log job information
-		$debug->log($jconf['log_dir'], $jconf['jobid_media_convert'] . ".log", "[INFO] Recording id = " . $recording['id'] . " selected for conversion. Recording information:\n" . print_r($recording, true), $sendmail = false);
+        $debug->log($jconf['log_dir'], $jconf['jobid_media_convert'] . ".log", "[INFO] Recording id = " . $recording['id'] . " selected for conversion. Recording information:\n" . print_r($recording, true), $sendmail = false);
 
 		// Query recording creator
 		$uploader_user = getRecordingCreator($recording['id']);

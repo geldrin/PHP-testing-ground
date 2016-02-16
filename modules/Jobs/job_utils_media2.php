@@ -4,6 +4,7 @@
 function cleanUpConverterTemporaryStorage() {
 global $app, $jconf, $debug, $myjobid;
 
+    // Select recording versions that are being converted or failed (processing is in progress)
     $query = "
         SELECT
             rv.recordingid
@@ -45,6 +46,7 @@ global $app, $jconf, $debug, $myjobid;
         
         for ( $i = 0; $i < count($files); $i++ ) {
 
+            // Get recording id from path
             $tmp = str_replace($dir, "", $files[$i]['name']);
             $recid = str_replace(array("/","\\"), "", $tmp);
             
