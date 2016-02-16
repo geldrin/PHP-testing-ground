@@ -48,7 +48,7 @@ class Recording extends Job {
         $recordingVersionObj->updateRow($values);
 
         // Update index photos
-        if ( ( $status == $this->config['jobs']['dbstatus_copystorage_ok'] ) and ( $type == "recording" ) ) {
+        if ( ( $status == $this->config_jobs['dbstatus_copystorage_ok'] ) and ( $type == "recording" ) ) {
             $recordingObj = $this->app->bootstrap->getModel('recordings');
             $recordingObj->select($recordingid);
             $recordingObj->updateChannelIndexPhotos();
