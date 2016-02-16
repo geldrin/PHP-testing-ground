@@ -9,19 +9,11 @@ include_once( BASE_PATH . 'libraries/Springboard/Application/Cli.php');
 
 // Utils
 include_once('job_utils_base.php');
-include_once('job_utils_log.php');
-include_once('job_utils_status.php');
-include_once('job_utils_media2.php');
+include_once('job.live.class.php');
 
 set_time_limit(0);
 
-// Init
-$app = new Springboard\Application\Cli(BASE_PATH, PRODUCTION);
-
-// Load jobs configuration file
-$app->loadConfig('modules/Jobs/config_jobs.php');
-$jconf = $app->config['config_jobs'];
-$myjobid = $jconf['jobid_live_counters'];
+$live = new Live('jobid_live_counters');
 
 // Check operating system - exit if Windows
 if ( iswindows() ) {
@@ -30,46 +22,27 @@ if ( iswindows() ) {
 }
 
 // Exit if any STOP file is present
-if ( is_file( $app->config['datapath'] . 'jobs/' . $myjobid . '.stop' ) or is_file( $app->config['datapath'] . 'jobs/all.stop' ) ) exit;
-
-// Log init
-$debug = Springboard\Debug::getInstance();
-$debug_mode = false;
+if ( is_file( $live->app->config['datapath'] . 'jobs/' . $live->jobid . '.stop' ) or is_file( $live->app->config['datapath'] . 'jobs/all.stop' ) ) exit;
 
 // Runover check. Is this process already running? If yes, report and exit
-if ( !runOverControl($myjobid) ) exit;
+if ( !$live->runOverControl() ) exit;
 
 clearstatcache();
 
 // Watchdog
-$app->watchdog();
+$live->watchdog();
 
 // List of active livefeedids
 $livefeedids = array();
 
 // Query live viewers to each channels
-$live_feeds = getLiveViewersForFeeds();
+$live_feeds = $live->getLiveViewerCountersForAllFeeds();
 if ( $live_feeds !== false ) {
     
     for ( $i = 0; $i < count($live_feeds); $i++ ) {
 
-        // Update livefeed currentviewers counter
-        try {
-            $liveFeedObj = $app->bootstrap->getModel('livefeeds');
-            $query = "
-                UPDATE
-                    livefeeds
-                SET
-                    currentviewers = " . $live_feeds[$i]['currentviewers'] . "
-                WHERE
-                    id = " . $live_feeds[$i]['livefeedid'];
-
-            $rs = $liveFeedObj->safeExecute($query);
-        } catch (exception $err) {
-            $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Cannot update currentviewers for livefeedid#" . $live_feeds[$i]['livefeedid'] . "\n\n" . $err, $sendmail = false);
-            return false;
-        }
-        
+        $live->updateLiveFeedViewCounter($live_feeds[$i]['livefeedid'], $live_feeds[$i]['currentviewers']);
+            
         // Log livefeed IDs to update non-active livefeeds to zero
         array_push($livefeedids, $live_feeds[$i]['livefeedid']);
     }
@@ -77,69 +50,8 @@ if ( $live_feeds !== false ) {
 }
     
 // Set all currentviewers > 0 to zero (no active livefeeds anymore)
-$err = setLiveFeedViewersToZero($livefeedids);
+$err = $live->setLiveFeedViewCountersToZero($livefeedids);
 
 exit;
-
-function getLiveViewersForFeeds() {
-global $jconf, $debug, $app, $myjobid;
-
-    $model = $app->bootstrap->getModel('view_statistics_live');
-
-	$now = date("Y-m-d H:i:s");
-
-	$query = "
-        SELECT
-            vsl.livefeedid,
-            COUNT(vsl.id) AS currentviewers
-        FROM
-            view_statistics_live AS vsl
-        WHERE
-            vsl.timestampuntil >= DATE_SUB(NOW(), INTERVAL 1 MINUTE)
-        GROUP BY
-            vsl.livefeedid";
-
-	try {
-        $rs = $model->safeExecute($query);
-	} catch (exception $err) {
-		$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] SQL query failed. " . trim($query), $sendmail = false);
-		return false;
-	}
-
-	// Check if any record returned
-    if ( $rs->RecordCount() < 1 ) return false;
-
-    // Convert AdoDB resource to array
-    $rs_array = adoDBResourceSetToArray($rs);
-
-	return $rs_array;
-}
-
-function setLiveFeedViewersToZero($livefeedids) {
-global $jconf, $debug, $app, $myjobid;
-
-    $model = $app->bootstrap->getModel('livefeeds');
-
-    $in = "";
-    
-    if ( !empty($livefeedids) ) $in = " AND lf.id NOT IN (" . implode(", ", $livefeedids) . ")";
-
-	$query = "
-        UPDATE
-            livefeeds AS lf
-        SET
-            lf.currentviewers = 0
-        WHERE
-            lf.currentviewers > 0 " . $in;
-    
-	try {
-        $rs = $model->safeExecute($query);
-	} catch (exception $err) {
-		$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] SQL query failed. " . trim($query), $sendmail = false);
-		return false;
-	}
-
-	return $rs->RecordCount();
-}
 
 ?>
