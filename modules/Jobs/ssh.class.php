@@ -21,13 +21,24 @@ class SSH {
     private $connection;
     // SSH connection status
     private $connected = false;
+    // Command
+    private $command = null;
     // Command return code
     private $command_return_code = null;
-    // Error message
+    // Command error message
     private $command_error_message = null;
+    // Command execution start timer
+    private $command_timer_start = null;
+    // Command execution duration
+    private $command_duration = null;
    
     public function __construct($ssh_host, $ssh_port, $ssh_user, $ssh_pass, $ssh_auth_pub = null, $ssh_auth_priv = null, $ssh_fp = null) {
         
+        // Is extension loaded
+        if ( !extension_loaded('ssh2') ) {
+            throw new Exception('[ERROR] SSH2 extension is not loaded!');
+        }
+            
         if ( !isset($ssh_host) ) {
             throw new Exception('[ERROR] No host name provided');
         } else {
@@ -98,12 +109,16 @@ class SSH {
     
     public function exec($command) {
         
-        $this->command_return_code = null;
-        $this->command_error_message = null;
+        $this->initCommand();
         
         if ( !$this->connected ) throw new Exception('[ERROR] Cannot exec command. Not connected to server');
 
         if ( empty($command) ) return false;
+        
+        $this->command = $command;
+        
+        // Start command timer
+        $this->command_timer_start = time();
         
         if ( !( $stream = ssh2_exec($this->connection, $command . ';echo "[return_code:$?]"') ) ) {
             throw new Exception('[ERROR] SSH command failed'); 
@@ -118,6 +133,9 @@ class SSH {
 
         fclose($stream); 
 
+        // Calculate command execution duration
+        $this->command_duration = time() - $this->command_timer_start;
+        
         // Match return code
         preg_match('/\[return_code:(.*?)\]/', $data, $match);
         if ( isset($match[1]) ) {
@@ -146,11 +164,82 @@ class SSH {
         return $data; 
     }
     
-    public function SCPCopyFromServer($remote_file, $local_file) {
+    public function copyFromServer($remote_file, $local_file) {
+                
+        if ( empty($remote_file) or empty($local_file) ) return false;
         
-        if ( !ssh2_scp_recv($this->connection, $remote_file, $local_file) ) {
+        $pathinfo_local = pathinfo($local_file);
+
+        // Check file size before start copying
+        $filesize = $this->getFilesize($remote_file);
+        if ( !$filesize ) return false;
+
+        $this->initCommand();
+        
+        // Start command timer
+        $this->command_timer_start = time();
+        
+        // Check available disk space (remote file size * 2 required)
+        $filesize_ratio = 1.5;      // TODO: take from configuration?
+		$available_disk = floor(disk_free_space($pathinfo_local['dirname']));
+		if ( $available_disk < $filesize * $filesize_ratio ) {
+            $this->command_return_code = 1;
+			$this->command_error_message = "[ERROR] Not enough free space to start copying (available: " . ceil($available_disk / 1024 / 1024) . "Mb, filesize: " . ceil($filesize / 1024 / 1024) . "). Minimum " . $filesize_ratio . "x needed as the size of remote file.";
+			return false;
+		}
+
+        // Executing shell SCP command beacause ssh2_scp_recv() is:
+        // o slow and not capable of copying very large files
+        // o not capable of copying entire directories
+        /* if ( !ssh2_scp_recv($this->connection, $remote_file, $local_file) ) {
             throw new Exception('[ERROR] Cannot copy remote file');
+        } */
+        $this->command = "scp -B -r -i " . $this->ssh_auth_priv . " " . $this->ssh_auth_user . "@" . $this->ssh_host . ":" . $remote_file . " " . $local_file . " 2>&1";
+        exec($this->command, $output, $this->command_return_code);
+
+        // Calculate command execution duration
+        $this->command_duration = time() - $this->command_timer_start;
+        
+        if ( $this->getLastCommandReturnCode() != 0 ) {
+            $this->command_error_message = "[ERROR] SCP download failed.\nCOMMAND: " . $this->command . "\nOUTPUT: " . implode("\n", $output);
+            return false;
         }
+
+        $this->command_error_message = "[OK] SCP download finished (in " . 	round( $this->command_duration / 60, 2) . " mins)";
+
+        return true;
+    }
+
+    public function copyToServer($local_file, $remote_file) {
+    
+        if ( empty($local_file) or empty($remote_file) ) return false;
+
+        $this->initCommand();
+        
+        if ( !file_exists($local_file) ) {
+            $this->command_return_code = 1;
+            $this->command_error_message = "[ERROR] Local file " . $local_file . " does not exist.";
+            return false;
+        }
+
+        $this->initCommand();
+        
+        // Start command timer
+        $this->command_timer_start = time();
+
+        // Executing shell SCP command
+        $this->command = "scp -B -r -i " . $this->ssh_auth_priv . " " . $local_file . " " . $this->ssh_auth_user . "@" . $this->ssh_host . ":" . $remote_file . " 2>&1";
+        exec($this->command, $output, $this->command_return_code);
+        
+        // Calculate command execution duration
+        $this->command_duration = time() - $this->command_timer_start;
+        
+        if ( $this->getLastCommandReturnCode() != 0 ) {
+            $this->command_error_message = "[ERROR] SCP upload failed.\nCOMMAND: " . $this->command . "\nOUTPUT: " . implode("\n", $output);
+            return false;
+        }
+                
+        $this->command_error_message = "[OK] SCP upload finished (in " . 	round( $this->command_duration / 60, 2) . " mins)";
         
         return true;
     }
@@ -163,25 +252,42 @@ class SSH {
         }
     } 
 
-    public function getCommandReturnCode() {
+    public function getLastCommandReturnCode() {
         return $this->command_return_code;
     }
 
-    public function getCommandErrorMessage() {
+    public function getLastCommandErrorMessage() {
         return $this->command_error_message;
     }
 
+    public function getLastCommand() {
+        return $this->command;
+    }
+
+    public function getLastCommandDuration() {
+        return $this->command_duration;
+    }
+
+    // Init command related variables
+    private function initCommand() {
+        $this->command = "";
+        $this->command_return_code = 0;
+        $this->command_error_message = "";
+        $this->command_timer_start = null;
+        $this->command_duration = 0;
+        return true;
+    }
+    
     public function getFileSize($file) {
 
-        $this->command_return_code = 0;
-        $this->command_error_message = null;
+        $this->initCommand();
     
         if ( empty($file) ) return false;
     
         $command = "du -sb " . $file . " 2>&1";
         $command_output = $this->exec($command);
 
-        if ( $this->getCommandReturnCode() != 0 ) return false;
+        if ( $this->getLastCommandReturnCode() != 0 ) return false;
         
         // Parse output
         $tmp = preg_split('/\s+/', $command_output);
@@ -200,15 +306,14 @@ class SSH {
     
     public function getFileModificationTime($file) {
 
-        $this->command_return_code = 0;
-        $this->command_error_message = null;
-    
+        $this->initCommand();
+
         if ( empty($file) ) return false;
         
         $command = "stat -c %Y " . $file . " 2>&1";
         $command_output = $this->exec($command);
 
-        if ( $this->getCommandReturnCode() != 0 ) return false;
+        if ( $this->getLastCommandReturnCode() != 0 ) return false;
         
         // Parse output
         $tmp = preg_split('/\s+/', $command_output);
@@ -227,8 +332,7 @@ class SSH {
 
     public function compareRemoteAndLocaleFileMTime($remote_file, $local_file) {
 
-        $this->command_return_code = 0;
-        $this->command_error_message = null;
+        $this->initCommand();
     
         // File already exists in temp area
         if ( !file_exists($local_file) ) {
@@ -244,10 +348,10 @@ class SSH {
         
         // Get remote filesize
         $remote_filesize = $this->getFileSize($remote_file);
-        if ( $this->getCommandReturnCode() != 0 ) return false;
+        if ( $this->getLastCommandReturnCode() != 0 ) return false;
         // Get remote file mtime
         $remote_filemtime = $this->getFileModificationTime($remote_file);
-        if ( $this->getCommandReturnCode() != 0 ) return false;
+        if ( $this->getLastCommandReturnCode() != 0 ) return false;
         
         $msg  = "Local file: " . $local_file . " (size = " . $local_filesize . ", mtime = " . date("Y-m-d H:i:s", $local_filemtime) . ")\n";
         $msg .= "Remote file: " . $remote_file . " (size = " . $remote_filesize . ", mtime = " . date("Y-m-d H:i:s", $remote_filemtime) . ")";
@@ -260,6 +364,31 @@ class SSH {
         }            
             
         $this->command_error_message = "[OK] Local file is up to date.\n" . $msg;
+
+        return true;
+    }
+
+    // Chmod and chown remote file(s)
+    public function doChmodChown($file, $permissions = null, $owners = null) {
+
+        $this->initCommand();
+
+        $command = "";
+        if ( !empty($permissions) ) $command .= "chmod -f -R " . $permissions . " " . $file . " 2>&1";
+        
+        if ( !empty($owners) ) {
+            if ( !empty($command) ) $command .= " ; ";
+            $command .= "chown -f -R " . $owners . " " . $file . " 2>&1";
+        }
+        
+        $command_output = $this->exec($command);
+
+        if ( $this->getLastCommandReturnCode() != 0 ) {
+            $this->command_error_message = "[WARN] SCP cannot stat " . $this->ssh_auth_user . "@" . $this->ssh_host . ":" . $file . " file.";
+            return false;
+        }
+        
+        $this->command_error_message = "[OK] SCP stat " . $this->ssh_auth_user . "@" . $this->ssh_host . ":" . $file . " file.";
 
         return true;
     }
