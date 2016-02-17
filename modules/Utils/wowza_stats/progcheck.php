@@ -41,7 +41,7 @@ $options = getopt(
   's::d::h::?::',
   array("sessions", "date-start::", "help")
 );
-var_dump($options);
+
 if ($argc > 1) {
   if (isset($options['s']) || isset($options['sessions'])) {
     $sessioncheck = true;
