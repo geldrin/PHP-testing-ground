@@ -1,5 +1,7 @@
 ﻿<?php
 
+include_once('ssh.class.php');
+
 class Job {
     public $app;
     public $debug;
