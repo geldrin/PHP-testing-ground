@@ -334,7 +334,7 @@ $config = array(
   'sleep_long'      => 100,           // Long sleep
   'sleep_vcr'       => 20,            // VCS job
   'sleep_vcr_wait'  => 20,            // VCS job Cisco TCS wait timeout
-  'sleep_doc'       => 30,            // Document conversion
+  'sleep_doc'       => 60,            // Document conversion
   //-------
   // ldap belepeseket ennyi idonkent vegezzuk el ujra ha a user mar be van lepve
   'directoryreauthminutes'           => 240, // default 4 ora
