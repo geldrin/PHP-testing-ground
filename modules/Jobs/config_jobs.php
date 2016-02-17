@@ -23,6 +23,7 @@ return array('config_jobs' => array(
 	'jobid_conv_control'    => 'job_conversion_control',
 	'jobid_ocr_convert'     => 'job_ocr',
 	'jobid_document_index'  => 'job_document_index',
+    'jobid_document_index2'  => 'job_document_index2',
 	'jobid_vcr_control'     => 'job_vcr_control',
 	'jobid_maintenance'     => 'job_maintenance',
 	'jobid_system_health'   => 'job_system_health',

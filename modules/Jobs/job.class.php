@@ -1,12 +1,17 @@
 ﻿<?php
 
 class Job {
-    public  $app;
-    public  $debug;
+    public $app;
+    public $debug;
 
-    public  $config = null;
-    private $timejobstarted = null;
+    public $config = null;
+    public $config_jobs = null;
+    public $timejobstarted = null;
     public $jobid = null;
+    public $jobpath = null;
+   
+    public $debug_mode = false;
+    public $node_role = null;
     
     // Init Job class: connect to DB, get debug class, load configuration, set init values
     public function __construct($jobid) {
@@ -25,16 +30,33 @@ class Job {
         // Load configuration
         $this->app->loadConfig('modules/Jobs/config_jobs.php');
         $this->config = $this->app->config;
-        $this->config['jobs'] = $this->app->config['config_jobs'];
+        $this->config_jobs = $this->app->config['config_jobs'];
         
         // Job ID
-        if ( !isset($this->config['jobs'][$jobid]) ) {
+        if ( !isset($this->config_jobs[$jobid]) ) {
             return false;
         } else {
-            $this->jobid = $this->config['jobs'][$jobid];
+            $this->jobid = $this->config_jobs[$jobid];
+        }
+        
+        // Job script path
+        $this->jobpath = $this->config_jobs['job_dir'] . $this->jobid . ".php";
+        
+        // Debug mode
+        if ( isset($this->config['jobs'][$this->config['node_role']][$this->jobid]) ) {
+            $this->debug_mode = $this->config['jobs'][$this->config['node_role']][$this->jobid]['debug_mode'];
         }
         
         return true;
+    }
+
+    // Config changed?
+    public function configChangeOccured() {
+
+        // Have this job or config changed?
+        if ( ( filemtime($this->jobpath) > $this->timejobstarted ) or ( filemtime(BASE_PATH . "config.php" ) > $this->timejobstarted ) or ( filemtime(BASE_PATH . "config_local.php" ) > $this->timejobstarted ) ) return true;
+        
+        return false;
     }
     
     // Check if this job already running. Most jobs should not run over each other.
@@ -42,7 +64,7 @@ class Job {
 
         $goahead = true;
 
-        $processes = checkProcessStartTime("php.*" . $this->config['jobs']['job_dir'] . $this->jobid . ".php");
+        $processes = checkProcessStartTime("php.*" . $this->config_jobs['job_dir'] . $this->jobid . ".php");
         if ( count($processes) > 1 ) {
         
             $process_longest = 0;
@@ -67,7 +89,7 @@ class Job {
     // Log debug message for this specific job's log file
     public function debugLog($msg, $sendmail = false) {
  
-        $this->debug->log($this->config['jobs']['log_dir'], $this->jobid . ".log", $msg, $sendmail); 
+        $this->debug->log($this->config_jobs['log_dir'], $this->jobid . ".log", $msg, $sendmail); 
 
         return true;
     }
