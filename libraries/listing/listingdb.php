@@ -2,7 +2,7 @@
 
 class listingdb {
 
-  function listingdb( &$db ) {
+  function __construct( &$db ) {
     $this->db &= $db;
   }
 

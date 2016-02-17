@@ -35,7 +35,7 @@ class listing {
   var $listingobject;
 
   // -------------------------------------------------------------------------
-  function listing( &$db, &$config, $url = false ) {
+  function __construct( &$db, &$config, $url = false ) {
 
     if ( !$url ) 
       $this->url = $_SERVER['PHP_SELF'];

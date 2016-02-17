@@ -18,7 +18,7 @@ class listingpager {
   var $bookmark = '#listing_of_items';
 
   // --------------------------------------------------------------------------
-  function listingpager( 
+  function __construct( 
     $script, $all = 0, $start = 0 , $perpage = 10, 
     $linkparameters        = '',
     $currentpageparameters = 'STYLE="padding: 5px; background-color: #606060; color: white;"',

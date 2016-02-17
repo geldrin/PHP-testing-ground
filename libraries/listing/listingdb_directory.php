@@ -25,7 +25,7 @@ class listingdb_directory extends listingdb {
     );
     
   // --------------------------------------------------------------------------
-  function listingdb_directory( $config ) {
+  function __construct( $config ) {
 
     foreach ( $config as $key => $value ) 
       $this->$key = $value;

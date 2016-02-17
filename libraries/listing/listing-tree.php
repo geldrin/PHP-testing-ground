@@ -57,7 +57,7 @@ class listing_tree extends listing {
   var $allrecords = 0;
 
   // -------------------------------------------------------------------------
-  function listing_tree( &$db, &$config ) {
+  function __construct( &$db, &$config ) {
 
     include_once( LISTING_DIR . 'listingdb.php');
     include_once( LISTING_DIR . 'listingdb_adodb.php');
