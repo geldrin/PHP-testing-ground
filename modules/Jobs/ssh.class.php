@@ -26,7 +26,7 @@ class SSH {
     // Command return code
     private $command_return_code = null;
     // Command error message
-    private $command_error_message = null;
+    private $message = null;
     // Command execution start timer
     private $command_timer_start = null;
     // Command execution duration
@@ -113,7 +113,7 @@ class SSH {
         
         if ( !$this->connected ) throw new Exception('[ERROR] Cannot exec command. Not connected to server');
 
-        if ( empty($command) ) return false;
+        if ( empty($command) ) throw new Exception("[ERROR] Empty SSH command.");
         
         $this->command = $command;
         
@@ -152,13 +152,12 @@ class SSH {
 
             // Handle shell file/directory does not exist error here
             if ( strpos($data, "No such file or directory") > 0 ) {
-                $this->command_error_message = "[ERROR] Input file/directory does not exist.\nCOMMAND: " . $command . "\nOUTPUT: " . $data;
-            } else {
-                // Other error: return all command output
-                $this->command_error_message = "[ERROR] SSH command failed.\nCOMMAND: " . $command . "\nOUTPUT: " . $data;
+                throw new Exception("[ERROR] Input file/directory does not exist.\nCOMMAND: " . $command . "\nOUTPUT: " . $data);                 
             }
+
+            // Other error: return all command output
+            throw new Exception("[ERROR] SSH command failed.\nCOMMAND: " . $command . "\nOUTPUT: " . $data);
             
-            return false;
         }
 
         return $data; 
@@ -166,13 +165,13 @@ class SSH {
     
     public function copyFromServer($remote_file, $local_file) {
                 
-        if ( empty($remote_file) or empty($local_file) ) return false;
+        if ( empty($remote_file) or empty($local_file) ) throw new Exception("[ERROR] Empty remote/local file name detected.");
         
         $pathinfo_local = pathinfo($local_file);
 
         // Check file size before start copying
         $filesize = $this->getFilesize($remote_file);
-        if ( !$filesize ) return false;
+        if ( !$filesize ) throw new Exception("[ERROR] Cannot get remote filesize.");
 
         $this->initCommand();
         
@@ -184,8 +183,7 @@ class SSH {
 		$available_disk = floor(disk_free_space($pathinfo_local['dirname']));
 		if ( $available_disk < $filesize * $filesize_ratio ) {
             $this->command_return_code = 1;
-			$this->command_error_message = "[ERROR] Not enough free space to start copying (available: " . ceil($available_disk / 1024 / 1024) . "Mb, filesize: " . ceil($filesize / 1024 / 1024) . "). Minimum " . $filesize_ratio . "x needed as the size of remote file.";
-			return false;
+            throw new Exception("[ERROR] Not enough free space to start copying (available: " . ceil($available_disk / 1024 / 1024) . "Mb, filesize: " . ceil($filesize / 1024 / 1024) . "). Minimum " . $filesize_ratio . "x needed as the size of remote file.");
 		}
 
         // Executing shell SCP command beacause ssh2_scp_recv() is:
@@ -200,12 +198,9 @@ class SSH {
         // Calculate command execution duration
         $this->command_duration = time() - $this->command_timer_start;
         
-        if ( $this->getLastCommandReturnCode() != 0 ) {
-            $this->command_error_message = "[ERROR] SCP download failed.\nCOMMAND: " . $this->command . "\nOUTPUT: " . implode("\n", $output);
-            return false;
-        }
+        if ( $this->getLastCommandReturnCode() != 0 ) throw new Exception("[ERROR] SCP download failed.\nCOMMAND: " . $this->command . "\nOUTPUT: " . implode("\n", $output));
 
-        $this->command_error_message = "[OK] SCP download finished (in " . 	round( $this->command_duration / 60, 2) . " mins)";
+        $this->message = "[OK] SCP download finished (in " . round( $this->command_duration / 60, 2) . " mins). Remote " . $this->ssh_auth_user . "@" . $this->ssh_host . ":" . $remote_file . " was download to " . $local_file;
 
         return true;
     }
@@ -218,8 +213,7 @@ class SSH {
         
         if ( !file_exists($local_file) ) {
             $this->command_return_code = 1;
-            $this->command_error_message = "[ERROR] Local file " . $local_file . " does not exist.";
-            return false;
+            throw new Exception("[ERROR] Local file " . $local_file . " does not exist.");
         }
 
         $this->initCommand();
@@ -234,12 +228,9 @@ class SSH {
         // Calculate command execution duration
         $this->command_duration = time() - $this->command_timer_start;
         
-        if ( $this->getLastCommandReturnCode() != 0 ) {
-            $this->command_error_message = "[ERROR] SCP upload failed.\nCOMMAND: " . $this->command . "\nOUTPUT: " . implode("\n", $output);
-            return false;
-        }
-                
-        $this->command_error_message = "[OK] SCP upload finished (in " . 	round( $this->command_duration / 60, 2) . " mins)";
+        if ( $this->getLastCommandReturnCode() != 0 ) throw new Exception("[ERROR] SCP upload failed.\nCOMMAND: " . $this->command . "\nOUTPUT: " . implode("\n", $output));
+
+        $this->message = "[OK] SCP upload finished (in " . 	round( $this->command_duration / 60, 2) . " mins). Local " . $local_file . " was uploaded to " . $this->ssh_auth_user . "@" . $this->ssh_host . ":" . $remote_file . ".";
         
         return true;
     }
@@ -256,8 +247,8 @@ class SSH {
         return $this->command_return_code;
     }
 
-    public function getLastCommandErrorMessage() {
-        return $this->command_error_message;
+    public function getLastCommandMessage() {
+        return $this->message;
     }
 
     public function getLastCommand() {
@@ -272,7 +263,7 @@ class SSH {
     private function initCommand() {
         $this->command = "";
         $this->command_return_code = 0;
-        $this->command_error_message = "";
+        $this->message = "";
         $this->command_timer_start = null;
         $this->command_duration = 0;
         return true;
@@ -287,19 +278,17 @@ class SSH {
         $command = "du -sb " . $file . " 2>&1";
         $command_output = $this->exec($command);
 
-        if ( $this->getLastCommandReturnCode() != 0 ) return false;
+        if ( $this->getLastCommandReturnCode() != 0 ) throw new Exception("[ERROR] Cannot get filesize.");
         
         // Parse output
         $tmp = preg_split('/\s+/', $command_output);
         $filesize = $tmp[0];
         if ( !is_numeric($filesize) ) {
             $this->command_return_code = 1;
-            $this->command_error_message = "[ERROR] File length invalid: " . $this->ssh_auth_user . "@" . $this->ssh_host . ":" . $file . "\nCOMMAND OUTPUT: " . $filesize;
-            return false;
+            throw new Exception("[ERROR] File length invalid: " . $this->ssh_auth_user . "@" . $this->ssh_host . ":" . $file . "\nCOMMAND OUTPUT: " . $filesize);
         }
 
-        $this->command_return_code = 0;
-        $this->command_error_message = null;
+        $this->message = "[OK] Remote " . $this->ssh_auth_user . "@" . $this->ssh_host . ":" . $file . " size is: " . $filesize;
         
         return intval($filesize);
     }
@@ -313,19 +302,17 @@ class SSH {
         $command = "stat -c %Y " . $file . " 2>&1";
         $command_output = $this->exec($command);
 
-        if ( $this->getLastCommandReturnCode() != 0 ) return false;
+        if ( $this->getLastCommandReturnCode() != 0 ) throw new Exception("[ERROR] Cannot get mtime of remote file. Does not exist?");
         
         // Parse output
         $tmp = preg_split('/\s+/', $command_output);
         $filemtime = $tmp[0];
         if ( !is_numeric($filemtime) ) {
             $this->command_return_code = 1;
-            $this->command_error_message = "[ERROR] Input file/directory mtime invalid: " . $this->ssh_auth_user . "@" . $this->ssh_host . ":" . $file . "\nCOMMAND OUTPUT: " . $filemtime;
-            return false;
+            throw new Exception("[ERROR] Input file/directory mtime invalid: " . $this->ssh_auth_user . "@" . $this->ssh_host . ":" . $file . "\nCOMMAND OUTPUT: " . $filemtime);
         }
-
-        $this->command_return_code = 0;
-        $this->command_error_message = null;
+        
+        $this->message = "[OK] Remote file " . $this->ssh_auth_user . "@" . $this->ssh_host . ":" . $file . " mtime is: " . $filemtime;
         
         return intval($filemtime);
     }
@@ -335,10 +322,7 @@ class SSH {
         $this->initCommand();
     
         // File already exists in temp area
-        if ( !file_exists($local_file) ) {
-            $this->command_error_message = "[INFO] Local file " . $local_file . " does not exist.";
-            return false;
-        }
+        if ( !file_exists($local_file) ) throw new Exception("[ERROR] Local file " . $local_file . " does not exist.");
 
         // ## Filesize and file mtime check
         // Get local filesize
@@ -348,22 +332,21 @@ class SSH {
         
         // Get remote filesize
         $remote_filesize = $this->getFileSize($remote_file);
-        if ( $this->getLastCommandReturnCode() != 0 ) return false;
+        if ( $this->getLastCommandReturnCode() != 0 ) throw new Exception("[ERROR] Cannot get remote file size.");
         // Get remote file mtime
         $remote_filemtime = $this->getFileModificationTime($remote_file);
-        if ( $this->getLastCommandReturnCode() != 0 ) return false;
+        if ( $this->getLastCommandReturnCode() != 0 ) throw new Exception("[ERROR] Cannot get remote file mtime.");
         
         $msg  = "Local file: " . $local_file . " (size = " . $local_filesize . ", mtime = " . date("Y-m-d H:i:s", $local_filemtime) . ")\n";
         $msg .= "Remote file: " . $remote_file . " (size = " . $remote_filesize . ", mtime = " . date("Y-m-d H:i:s", $remote_filemtime) . ")";
             
         // File size match and file mtime check: do they different?
-        //if ( ( $local_filesize == $remote_filesize ) and ( $local_filemtime >= $remote_filemtime ) ) {
         if ( ( $local_filesize != $remote_filesize ) or ( $local_filemtime < $remote_filemtime ) ) {
-            $this->command_error_message  = "[INFO] Local file is NOT up to date.\n" . $msg;
+            $this->message  = "[INFO] Local file is NOT up to date.\n" . $msg;
             return false;
         }            
             
-        $this->command_error_message = "[OK] Local file is up to date.\n" . $msg;
+        $this->message = "[OK] Local file is up to date.\n" . $msg;
 
         return true;
     }
@@ -371,6 +354,8 @@ class SSH {
     // Chmod and chown remote file(s)
     public function doChmodChown($file, $permissions = null, $owners = null) {
 
+        if ( empty($permissions) and empty($owners) ) throw new Exception("[ERROR] Parameters are empty. Nothing to do.");
+    
         $this->initCommand();
 
         $command = "";
@@ -383,12 +368,9 @@ class SSH {
         
         $command_output = $this->exec($command);
 
-        if ( $this->getLastCommandReturnCode() != 0 ) {
-            $this->command_error_message = "[WARN] SCP cannot stat " . $this->ssh_auth_user . "@" . $this->ssh_host . ":" . $file . " file.";
-            return false;
-        }
+        if ( $this->getLastCommandReturnCode() != 0 ) throw new Exception("[WARN] SCP cannot stat " . $this->ssh_auth_user . "@" . $this->ssh_host . ":" . $file . " file.");
         
-        $this->command_error_message = "[OK] SCP stat " . $this->ssh_auth_user . "@" . $this->ssh_host . ":" . $file . " file.";
+        $this->message = "[OK] SCP stat " . $this->ssh_auth_user . "@" . $this->ssh_host . ":" . $file . " file.";
 
         return true;
     }
