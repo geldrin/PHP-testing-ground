@@ -364,8 +364,11 @@ $config = array(
   'api_password' => '',
 
   // SSH authentication data
-  'ssh_user'     => 'conv',
-  'ssh_key'      => '/home/conv/.ssh/id_rsa',
+  'ssh_user'        => 'conv',
+  'ssh_password'    => null,    // Password for user OR private ket file
+  'ssh_key'         => '/home/conv/.ssh/id_rsa',
+  'ssh_pubkey'      => '/home/conv/.ssh/id_rsa.pub',
+  'ssh_fingerprint' => null,    // Server fingerprint to check (32x hex: 4904741c63e5a63d68578f6e52774e01)
   
   // flash playernek atadott config valtozok, ha valamit nem kell atadni
   // akkor szimplan torolni kell oket
