@@ -334,7 +334,13 @@ class Attachment extends Job {
             return false;
         }
         if ( $this->debug_mode) $this->debugLog("[DEBUG] SCP copy has finished successfuly.", false);
-
+        // SSH disconnect
+        try {
+            $ssh->disconnect();
+        } catch (Exception $err) {
+            $this->debugLog("Caught exception: ",  $err->getMessage(), true);
+        }
+        
         // Input file does not exist in temp directory
         if ( !file_exists($this->doc['source_file']) ) {
             $this->updateAttachedDocumentStatus($this->config_jobs['dbstatus_copyfromfe_err'], 'indexingstatus');
