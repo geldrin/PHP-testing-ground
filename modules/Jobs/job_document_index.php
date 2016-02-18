@@ -9,10 +9,10 @@
 //	  - soffice.bin --headless --accept=\"socket,host=127.0.0.1,port=8100;urp;\" --nofirststartwizard & > /dev/null 2>&1
 //	o Others:
 //	  - ghostscript, poppler-utils (pdftotext)
-
 define('BASE_PATH',	realpath( __DIR__ . '/../..' ) . '/' );
 define('PRODUCTION', false );
 define('DEBUG', false );
+define('JOB_FILE', __FILE__);
 
 include_once( BASE_PATH . 'libraries/Springboard/Application/Cli.php');
 
@@ -23,7 +23,7 @@ include_once('job.attachment.class.php');
 set_time_limit(0);
 
 // Init
-$attachedDoc = new Attachment('jobid_document_index');
+$attachedDoc = new Attachment();
 
 // WORKAROUND!!!
 $app = $attachedDoc->app;

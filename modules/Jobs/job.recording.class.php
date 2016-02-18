@@ -4,10 +4,35 @@ include_once('job.class.php');
 
 class Recording extends Job {
 
+    private $recordingid;
+    private $recordingversionid;
+    
+    public $recording = null;
+
     // RECORDING status functions get/set
 
+    // Select recording
+    public function selectRecording($recordingid) {
+    
+        if ( empty($recordingid) ) return false;
+        
+        $this->recordingid = $recordingid;
+        
+        return true;
+    }
+
+    // Select recording version
+    public function selectRecordingVersion($recordingversionid) {
+    
+        if ( empty($recordingversionid) ) return false;
+        
+        $this->recordingversionid = $recordingversionid;
+        
+        return true;
+    }
+    
     // Get recording status
-    public function getRecordingStatus($recordingid, $type = "recording") {
+    public function getRecordingStatus($type = "recording") {
 
         if ( ( $type != "recording" ) and ( $type != "content" ) ) return false;
 
@@ -15,18 +40,18 @@ class Recording extends Job {
         if ( $type == "content" ) $idx = "content";
 
         $recordingObj = $this->app->bootstrap->getModel('recordings');
-        $recordingObj->select($recordingid);
+        $recordingObj->select($this->recordingid);
         $recording = $recordingObj->getRow();
 
         return $recording[$idx . 'status'];
     }
 
     // Update recording status
-    public function updateRecordingStatus($recordingid, $status, $type = "recording") {
+    public function updateRecordingStatus($status, $type = "recording") {
         
         $allowed_types = array('recording', 'content', 'mobile', 'ocr', 'smil', 'contentsmil');
 
-        if (!in_array($type, $allowed_types, $strict = true)) return false;
+        if ( !in_array($type, $allowed_types, $strict = true) ) return false;
         if ( empty($status) ) return false;
 
         $idx = null;
@@ -44,24 +69,24 @@ class Recording extends Job {
         }
 
         $recordingVersionObj = $this->app->bootstrap->getModel('recordings');
-        $recordingVersionObj->select($recordingid);
+        $recordingVersionObj->select($this->recordingid);
         $recordingVersionObj->updateRow($values);
 
         // Update index photos
         if ( ( $status == $this->config_jobs['dbstatus_copystorage_ok'] ) and ( $type == "recording" ) ) {
             $recordingObj = $this->app->bootstrap->getModel('recordings');
-            $recordingObj->select($recordingid);
+            $recordingObj->select($this->recordingid);
             $recordingObj->updateChannelIndexPhotos();
         }
 
         // Log status change
-        $this->debugLog("[INFO] Recording id = " . $recordingid . " " . $type . " status has been changed to '" . $status . "'.", false);
+        $this->debugLog("[INFO] Recording id = " . $this->recordingid . " " . $type . " status has been changed to '" . $status . "'.", false);
 
         return true;
     }
 
     // Update master recording status
-    public function updateMasterRecordingStatus($recordingid, $status, $type = "recording") {
+    public function updateMasterRecordingStatus($status, $type = "recording") {
 
         if ( ( $type != "recording" ) and ( $type != "content" ) ) return false;
 
@@ -75,11 +100,11 @@ class Recording extends Job {
         );
 
         $recordingVersionObj = $this->app->bootstrap->getModel('recordings');
-        $recordingVersionObj->select($recordingid);
+        $recordingVersionObj->select($this->recordingid);
         $recordingVersionObj->updateRow($values);
 
         // Log status change
-        $this->debugLog("[INFO] Recording id = " . $recordingid . " " . $type . " master status has been changed to '" . $status . "'.", false);
+        $this->debugLog("[INFO] Recording id = " . $this->recordingid . " " . $type . " master status has been changed to '" . $status . "'.", false);
 
         return true;
     }
@@ -87,17 +112,17 @@ class Recording extends Job {
     // RECORDING VERSION status functions get/set
     
     // Get recording version status
-    function getRecordingVersionStatus($recordingversionid) {
+    function getRecordingVersionStatus() {
 
         $recordingVersionObj = $this->app->bootstrap->getModel('recordings_versions');
-        $recordingVersionObj->select($recordingversionid);
+        $recordingVersionObj->select($this->recordingversionid);
         $recversion = $recordingVersionObj->getRow();
 
         return $recversion['status'];
     }
     
     // Update recording version status
-    public function updateRecordingVersionStatus($recordingversionid, $status) {
+    public function updateRecordingVersionStatus($status) {
 
         if ( empty($status) ) return false;
 
@@ -106,17 +131,17 @@ class Recording extends Job {
         );
 
         $recordingVersionObj = $this->app->bootstrap->getModel('recordings_versions');
-        $recordingVersionObj->select($recordingversionid);
+        $recordingVersionObj->select($this->recordingversionid);
         $recordingVersionObj->updateRow($values);
 
         // Log status change
-        $this->debugLog("[INFO] Recording version id = " . $recordingversionid . " status has been changed to '" . $status . "'.", false);
+        $this->debugLog("[INFO] Recording version id = " . $this->recordingversionid . " status has been changed to '" . $status . "'.", false);
 
         return true;
     }
 
     // Update status of all recording versions of a recording
-    public function updateRecordingVersionStatusAll($recordingid, $status, $type = "recording") {
+    public function updateRecordingVersionStatusAll($status, $type = "recording") {
 
         if ( ( $type != "recording" ) and ( $type != "content" ) and ( $type != "all" ) ) return false;
 
@@ -132,7 +157,7 @@ class Recording extends Job {
             SET
                 rv.status = '" . $status . "'
             WHERE
-                rv.recordingid = " . $recordingid . $iscontent_filter;
+                rv.recordingid = " . $this->recordingid . $iscontent_filter;
 
         try {
             $model = $this->app->bootstrap->getModel('recordings_versions');
@@ -143,13 +168,13 @@ class Recording extends Job {
         }
 
         // Log status change
-        $this->debugLog("[INFO] All recording versions for recording id = " . $recordingid . " have been changed to '" . $status . "' status.", false);
+        $this->debugLog("[INFO] All recording versions for recording id = " . $this->recordingid . " have been changed to '" . $status . "' status.", false);
 
         return true;
     }
 
     // Get recording versions of a recording with specific status filter
-    public function getRecordingVersionsApplyStatusFilter($recordingid, $type = "recording", $statusfilter) {
+    public function getRecordingVersionsApplyStatusFilter($type = "recording", $statusfilter) {
 
         if ( ( $type != "recording" ) and ( $type != "content" ) and ( $type != "all" ) ) return false;
 
@@ -184,7 +209,7 @@ class Recording extends Job {
             FROM
                 recordings_versions AS rv
             WHERE
-                rv.recordingid = " . $recordingid . $iscontent_filter . $sql_statusfilter;
+                rv.recordingid = " . $this->recordingid . $iscontent_filter . $sql_statusfilter;
 
         try {
             $model = $this->app->bootstrap->getModel('recordings_versions');
@@ -204,7 +229,7 @@ class Recording extends Job {
     // # Important: When especially deleting recordings and recording versions, we cannot set
     // # all recording version statuses to "markedfordeletion" blindly. This would affect recording versions
     // # with undesired statuses such as "deleted" (removed earlier), going back to "markedfordeletion" again.
-    public function updateRecordingVersionStatusApplyFilter($recordingid, $status, $typefilter, $statusfilter) {
+    public function updateRecordingVersionStatusApplyFilter($status, $typefilter, $statusfilter) {
 
         // Check parameters
         if ( empty($status) ) {
@@ -245,7 +270,7 @@ class Recording extends Job {
             SET
                 rv.status = '" . $status . "'
             WHERE
-                rv.recordingid = " . $recordingid . " AND
+                rv.recordingid = " . $this->recordingid . " AND
                 rv.encodingprofileid = ep.id" . $sql_typefilter . $sql_statusfilter;
 
         try {
@@ -257,7 +282,7 @@ class Recording extends Job {
         }
 
         // Log status change
-        $this->debugLog("[INFO] All recording versions with status filter = '" . $statusfilter . "' and type filter = '" . $typefilter . "' for recording id = " . $recordingid . " have been changed to '" . $status . "' status.", false);
+        $this->debugLog("[INFO] All recording versions with status filter = '" . $statusfilter . "' and type filter = '" . $typefilter . "' for recording id = " . $this->recordingid . " have been changed to '" . $status . "' status.", false);
 
         return true;
     }
@@ -265,7 +290,7 @@ class Recording extends Job {
     // ENCODING PROFILES
 
     // Update recording encoding profile group for a recording
-    public function updateRecordingEncodingProfile($recordingid, $encodinggroupid) {
+    public function updateRecordingEncodingProfile($encodinggroupid) {
 
         if ( empty($encodinggroupid) ) return false;
 
@@ -274,55 +299,55 @@ class Recording extends Job {
         );
 
         $recordingVersionObj = $this->app->bootstrap->getModel('recordings');
-        $recordingVersionObj->select($recordingid);
+        $recordingVersionObj->select($this->recordingid);
         $recordingVersionObj->updateRow($values);
 
         // Log change
-        $this->debugLog("[INFO] Recording id = " . $recordingid . " encoding group changed to '" . $encodinggroupid . "'.", false);
+        $this->debugLog("[INFO] Recording id = " . $this->recordingid . " encoding group changed to '" . $encodinggroupid . "'.", false);
 
         return true;
     }
 
     // MEDIA INFO
     
-    public function updateMediaInfo($recording, $profile) {
+    public function updateMediaInfo($profile) {
 
         $values = array(
             'qualitytag'			=> $profile['shortname'],
-            'filename'				=> $recording['output_basename'],
+            'filename'				=> $this->recording['output_basename'],
             'isdesktopcompatible'	=> $profile['isdesktopcompatible'],
             'ismobilecompatible'	=> max($profile['isioscompatible'], $profile['isandroidcompatible'])
         );
 
-        if ( !empty($recording['encodingparams']['resx']) and !empty($recording['encodingparams']['resy']) ) {
-            $values['resolution'] = $recording['encodingparams']['resx'] . "x" . $recording['encodingparams']['resy'];
+        if ( !empty($this->recording['encodingparams']['resx']) and !empty($this->recording['encodingparams']['resy']) ) {
+            $values['resolution'] = $this->recording['encodingparams']['resx'] . "x" . $this->recording['encodingparams']['resy'];
         }
 
         $values['bandwidth'] = 0;
-        if ( !empty($recording['encodingparams']['audiobitrate']) ) $values['bandwidth'] += $recording['encodingparams']['audiobitrate'];
-        if ( !empty($recording['encodingparams']['videobitrate']) ) $values['bandwidth'] += $recording['encodingparams']['videobitrate'];
+        if ( !empty($this->recording['encodingparams']['audiobitrate']) ) $values['bandwidth'] += $this->recording['encodingparams']['audiobitrate'];
+        if ( !empty($this->recording['encodingparams']['videobitrate']) ) $values['bandwidth'] += $this->recording['encodingparams']['videobitrate'];
 
         $recordingVersionObj = $this->app->bootstrap->getModel('recordings_versions');
-        $recordingVersionObj->select($recording['recordingversionid']);
+        $recordingVersionObj->select($this->recordingversionid);
         $recordingVersionObj->updateRow($values);
 
         // Log status change
-        $this->debugLog("[INFO] Recording version id = " . $recording['recordingversionid'] . " media information has been updated.\n" . print_r($values, true), false);
+        $this->debugLog("[INFO] Recording version id = " . $this->recordingversionid . " media information has been updated.\n" . print_r($values, true), false);
 
         // Video thumbnails: update if generated
-        if ( !empty($recording['thumbnail_numberofindexphotos']) and !empty($recording['thumbnail_indexphotofilename']) ) {
+        if ( !empty($this->recording['thumbnail_numberofindexphotos']) and !empty($this->recording['thumbnail_indexphotofilename']) ) {
 
             $values = array(
-                'indexphotofilename'	=> $recording['thumbnail_indexphotofilename'],
-                'numberofindexphotos'	=> $recording['thumbnail_numberofindexphotos']
+                'indexphotofilename'	=> $this->recording['thumbnail_indexphotofilename'],
+                'numberofindexphotos'	=> $this->recording['thumbnail_numberofindexphotos']
             );
 
             $recordingObj = $this->app->bootstrap->getModel('recordings');
-            $recordingObj->select($recording['id']);
+            $recordingObj->select($this->recordingid);
             $recordingObj->updateRow($values);
 
             // Log status change
-            $this->debugLog("[INFO] Recording id = " . $recording['id'] . " thumbnail information has been updated.\n" . print_r($values, true), false);
+            $this->debugLog("[INFO] Recording id = " . $this->recordingid . " thumbnail information has been updated.\n" . print_r($values, true), false);
         }
 
         return true;

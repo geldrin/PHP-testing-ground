@@ -1,9 +1,9 @@
 <?php
 // Videosquare live update counters job
-
 define('BASE_PATH',	realpath( __DIR__ . '/../..' ) . '/' );
 define('PRODUCTION', false );
 define('DEBUG', false );
+define('JOB_FILE', __FILE__);
 
 include_once( BASE_PATH . 'libraries/Springboard/Application/Cli.php');
 
@@ -13,7 +13,7 @@ include_once('job.live.class.php');
 
 set_time_limit(0);
 
-$live = new Live('jobid_live_counters');
+$live = new Live();
 
 // Check operating system - exit if Windows
 if ( iswindows() ) {

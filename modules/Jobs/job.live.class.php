@@ -1,8 +1,6 @@
 ﻿<?php
 
-include_once('job.class.php');
-
-class Live extends Job {
+class Live {
 
     private $livefeedid = null;
     private $livefeedstreamid = null;

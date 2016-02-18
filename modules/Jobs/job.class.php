@@ -16,9 +16,7 @@ class Job {
     public $node_role = null;
     
     // Init Job class: connect to DB, get debug class, load configuration, set init values
-    public function __construct($jobid) {
-
-        if ( empty($jobid) ) return false;
+    public function __construct() {
     
         // Start time
         $this->timejobstarted = time();
@@ -35,11 +33,10 @@ class Job {
         $this->config_jobs = $this->app->config['config_jobs'];
         
         // Job ID
-        if ( !isset($this->config_jobs[$jobid]) ) {
-            return false;
-        } else {
-            $this->jobid = $this->config_jobs[$jobid];
-        }
+        $job_file = JOB_FILE;
+        if ( empty($job_file) ) return false;
+        $pathinfo = pathinfo($job_file);
+        $this->jobid = $pathinfo['filename'];
         
         // Job script path
         $this->jobpath = $this->config_jobs['job_dir'] . $this->jobid . ".php";
