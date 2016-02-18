@@ -327,7 +327,7 @@ class Attachment extends Job {
         if ( $this->debug_mode) $this->debugLog("[DEBUG] Connected to SSH server. Information: " . print_r($ssh, true), false);
         // Copy file
         try {
-            $ssh->SCPCopyFromServer($this->doc['remote_filename'], $this->doc['source_file']);
+            $ssh->copyFromServer($this->doc['remote_filename'], $this->doc['source_file']);
         } catch (Exception $err) {
             $this->debugLog("Caught exception: ",  $err->getMessage(), true);
             $this->updateAttachedDocumentStatus($this->config_jobs['dbstatus_copyfromfe_err'], 'indexingstatus');
