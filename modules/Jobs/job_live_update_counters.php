@@ -41,7 +41,8 @@ if ( $live_feeds !== false ) {
     
     for ( $i = 0; $i < count($live_feeds); $i++ ) {
 
-        $live->updateLiveFeedViewCounter($live_feeds[$i]['livefeedid'], $live_feeds[$i]['currentviewers']);
+        $live->selectLiveFeed($live_feeds[$i]['livefeedid']);
+        $live->updateLiveFeedViewCounter($live_feeds[$i]['currentviewers']);
             
         // Log livefeed IDs to update non-active livefeeds to zero
         array_push($livefeedids, $live_feeds[$i]['livefeedid']);
