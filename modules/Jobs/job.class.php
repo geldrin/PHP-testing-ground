@@ -14,6 +14,9 @@ class Job {
    
     public $debug_mode = false;
     public $node_role = null;
+
+    public $stopfile_mine;
+    public $stopfile_all;
     
     // Init Job class: connect to DB, get debug class, load configuration, set init values
     public function __construct() {
@@ -32,15 +35,16 @@ class Job {
         $this->config = $this->app->config;
         $this->config_jobs = $this->app->config['config_jobs'];
         
-        // Job ID
-        $job_file = JOB_FILE;
-        if ( empty($job_file) ) return false;
-        $pathinfo = pathinfo($job_file);
+        // Job path and ID
+        $this->jobpath = JOB_FILE;
+        if ( empty($this->jobpath) ) return false;
+        $pathinfo = pathinfo($this->jobpath);
         $this->jobid = $pathinfo['filename'];
-        
-        // Job script path
-        $this->jobpath = $this->config_jobs['job_dir'] . $this->jobid . ".php";
-        
+
+        // Stop files
+        $this->stopfile_mine = $this->config['datapath'] . 'jobs/' . $this->jobid . '.stop';
+        $this->stopfile_all  = $this->config['datapath'] . 'jobs/all.stop';
+
         // Debug mode
         if ( isset($this->config['jobs'][$this->config['node_role']][$this->jobid]) ) {
             $this->debug_mode = $this->config['jobs'][$this->config['node_role']][$this->jobid]['debug_mode'];

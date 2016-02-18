@@ -1,6 +1,6 @@
 ﻿<?php
 
-class Live {
+class Live extends Job {
 
     private $livefeedid = null;
     private $livefeedstreamid = null;
