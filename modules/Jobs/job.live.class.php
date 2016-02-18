@@ -4,10 +4,99 @@ include_once('job.class.php');
 
 class Live extends Job {
 
-    // LIVEFEED
+    private $livefeedid = null;
+    private $livefeedstreamid = null;
+    
+    // ## Select object for further operations
+    
+    // Select live feed
+    public function selectLiveFeed($livefeedid) {
+    
+        if ( empty($livefeedid) ) return false;
+        
+        $this->livefeedid = $livefeedid;
+        
+        return true;
+    }
+
+    // Select live feed stream
+    public function selectLiveFeedStream($livefeedstreamid) {
+    
+        if ( empty($livefeedstreamid) ) return false;
+        
+        $this->livefeedstreamid = $livefeedstreamid;
+        
+        return true;
+    }
+    
+    // ## Status update functions
+    
+    // Update livefeed SMIL status
+    public function updateLiveFeedSMILStatus($status, $type = "video") {
+
+        if ( ( $type != "video" ) and ( $type != "content" ) ) return false;
+
+        if ( empty($status) ) return false;
+
+        $idx = "";
+        if ( $type == "content" ) $idx = "content";
+
+        $values = array(
+            $idx . 'smilstatus' => $status
+        );
+
+        $recordingVersionObj = $this->app->bootstrap->getModel('livefeeds');
+        $recordingVersionObj->select($this->livefeedid);
+        $recordingVersionObj->updateRow($values);
+
+        // Log status change
+        $this->debugLog("[INFO] Livefeed id = " . $this->livefeedid . " " . $type . " status has been changed to '" . $status . "'.", false);
+
+        return true;
+    }
+
+    // Update live stream status
+    public function updateLiveStreamStatus($status) {
+
+        if ( empty($status) ) return false;
+
+        $values = array(
+            'status' => $status
+        );
+
+        $converterNodeObj = $this->app->bootstrap->getModel('livefeed_streams');
+        $converterNodeObj->select($this->livefeedstreamid);
+        $converterNodeObj->updateRow($values);
+        
+        // Log status change
+        $this->debugLog("[INFO] Live stream id#" . $this->livefeedstreamid . " status changed to '" . $status . "'.", false);
+        
+        return true;
+    }
+
+    ## Live thumbnail related
+    
+    // Update livefeed index photo
+    public function updateLiveFeedStreamIndexPhoto($indexphotofilename) {
+
+        if ( empty($indexphotofilename) ) return false;
+
+        $values = array(
+            'indexphotofilename'	=> $indexphotofilename
+        );
+
+        $recordingVersionObj = $this->app->bootstrap->getModel('livefeed_streams');
+        $recordingVersionObj->select($this->livefeedstreamid);
+        $recordingVersionObj->updateRow($values);
+        $recordingVersionObj->updateFeedThumbnail();
+
+        return true;
+    }
+    
+    // ## Other
 
     // Get a list of live feeds with number of current viewers active in the last minute
-    function getLiveViewerCountersForAllFeeds() {
+    public function getLiveViewerCountersForAllFeeds() {
 
         $now = date("Y-m-d H:i:s");
 
@@ -40,7 +129,7 @@ class Live extends Job {
     }
 
     // Update currentviewers counter for specified livefeed
-    public function updateLiveFeedViewCounter($livefeedid, $currentviewers) {
+    public function updateLiveFeedViewCounter($currentviewers) {
         
         // Update livefeed currentviewers counter
         $query = "
@@ -49,13 +138,13 @@ class Live extends Job {
             SET
                 currentviewers = " . $currentviewers. "
             WHERE
-                id = " . $livefeedid;
+                id = " . $this->livefeedid;
 
         try {
             $model = $this->app->bootstrap->getModel('livefeeds');
             $rs = $model->safeExecute($query);
         } catch (exception $err) {
-            $this->debugLog("[ERROR] Cannot update currentviewers for livefeedid#" . $livefeedid . "\n\n" . $err, false);
+            $this->debugLog("[ERROR] Cannot update currentviewers for livefeedid#" . $this->livefeedid . "\n\n" . $err, false);
             return false;
         }
         
@@ -88,65 +177,6 @@ class Live extends Job {
         return $model->db->Affected_Rows();
     }
 
-    // Update livefeed SMIL status
-    public function updateLiveFeedSMILStatus($livefeedid, $status, $type = "video") {
-
-        if ( ( $type != "video" ) and ( $type != "content" ) ) return false;
-
-        if ( empty($status) ) return false;
-
-        $idx = "";
-        if ( $type == "content" ) $idx = "content";
-
-        $values = array(
-            $idx . 'smilstatus' => $status
-        );
-
-        $recordingVersionObj = $this->app->bootstrap->getModel('livefeeds');
-        $recordingVersionObj->select($livefeedid);
-        $recordingVersionObj->updateRow($values);
-
-        // Log status change
-        $this->debugLog("[INFO] Livefeed id = " . $livefeedid . " " . $type . " status has been changed to '" . $status . "'.", false);
-
-        return true;
-    }
-
-    // Update live stream status
-    public function updateLiveStreamStatus($livefeedstreamid, $status) {
-
-        if ( empty($status) ) return false;
-
-        $values = array(
-            'status' => $status
-        );
-
-        $converterNodeObj = $this->app->bootstrap->getModel('livefeed_streams');
-        $converterNodeObj->select($livefeedstreamid);
-        $converterNodeObj->updateRow($values);
-        
-        // Log status change
-        $this->debugLog("[INFO] Live stream id#" . $id . " status changed to '" . $status . "'.", false);
-        
-        return true;
-    }
-    
-    // Update livefeed index photo
-    public function updateLiveFeedStreamIndexPhoto($streamid, $indexphotofilename) {
-
-        if ( empty($indexphotofilename) ) return false;
-
-        $values = array(
-            'indexphotofilename'	=> $indexphotofilename
-        );
-
-        $recordingVersionObj = $this->app->bootstrap->getModel('livefeed_streams');
-        $recordingVersionObj->select($streamid);
-        $recordingVersionObj->updateRow($values);
-        $recordingVersionObj->updateFeedThumbnail();
-
-        return true;
-    }
     
 }
 
