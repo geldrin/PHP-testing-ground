@@ -146,6 +146,11 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_vcr_control.stop' ) and !i
                 $debug->log($jconf['log_dir'], $myjobid . ".log", $err['message'], $sendmail = false);
 				// Recording link: indicate recording status
 				updateVCRReclinkStatus($vcr['reclink_id'], $jconf['dbstatus_vcr_recording']);
+                // Update recording link: ConferenceID
+                updateVCRReclinkParams($vcr['reclink_id'], $vcr['conf_id']);
+                // Update live stream: ConferenceID
+                updateVCRLiveStreamParams($vcr['id'], null, $vcr['conf_id']);
+
 			} else {
                 $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] VCR call cannot be established. Info:\n\n" . $err['message'], $sendmail = true);
 				break;
@@ -165,8 +170,8 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_vcr_control.stop' ) and !i
 
 				if ( $err['code'] and !empty($vcr['rtmp_streamid']) ) {
 
-					// Update feed: stream ID, aspect ratio, conference ID
-					updateVCRLiveStreamParams($vcr['id'], $vcr['rtmp_streamid'], $vcr['conf_id']);
+					// Update feed: stream ID
+					updateVCRLiveStreamParams($vcr['id'], $vcr['rtmp_streamid'], null);
 					// Update recording link: recording link with TCS conference ID
 					updateVCRReclinkParams($vcr['reclink_id'], $vcr['conf_id']);
 					// Update stream status: playable
@@ -230,7 +235,7 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_vcr_control.stop' ) and !i
 
 		// DISCONNECT: a recording needs to be stopped
 		if ( ( $vcr['status'] == $jconf['dbstatus_vcr_disc'] ) and ( $vcr['reclink_status'] == $jconf['dbstatus_vcr_recording'] ) ) {
-
+       
 			// TCS: disconnect call
 			$err = array();
 			$err = TCS_Disconnect($vcr);
