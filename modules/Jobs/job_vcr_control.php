@@ -171,6 +171,8 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_vcr_control.stop' ) and !i
 					updateVCRReclinkParams($vcr['reclink_id'], $vcr['conf_id']);
 					// Update stream status: playable
 					updateLiveStreamStatus($vcr['id'], $jconf['dbstatus_vcr_recording']);
+                    // Regenerate SMIL file for HTTP streaming
+                    updateLiveFeedSMILStatus($vcr['livefeedid'], $jconf['dbstatus_regenerate'], "video");
 
 					// We have live streaming URL
 					$is_streamready = true;
