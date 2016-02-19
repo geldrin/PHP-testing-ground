@@ -1,7 +1,9 @@
 <?php
 include_once( $this->bootstrap->config['libpath'] . 'clonefish/constants.php');
+$this->addfieldset = false;
+
 $config = Array(
-   
+
   'action' => Array(
     'type'  => 'inputHidden',
     'value' => 'insert'
@@ -16,6 +18,12 @@ $config = Array(
     'type'     => 'inputHidden',
     'value'    => date('Y-m-d H:i:s'),
     'readonly' => true,
+  ),
+
+  'basicsfs' => array(
+    'legend' => 'Alapadatok',
+    'type'   => 'fieldset',
+    'submit' => true,
   ),
 
   'parentid' => Array(
@@ -38,7 +46,7 @@ $config = Array(
     'treeparent'  => 'parentid',
     'treestart'   => '0',
   ),
-  
+
   'languages[]' => array(
     'displayname' => 'Támogatott nyelvek',
     'type'        => 'select',
@@ -48,7 +56,7 @@ $config = Array(
     'validation'  => array(
     ),
   ),
-  
+
   'name_stringid' => array(
     'displayname' => 'Név',
     'type'        => 'inputTextMultiLanguage',
@@ -56,7 +64,7 @@ $config = Array(
     'validation'  => array(
     ),
   ),
-  
+
   'nameshort_stringid' => array(
     'displayname' => 'Rövid név',
     'type'        => 'inputTextMultiLanguage',
@@ -64,7 +72,7 @@ $config = Array(
     'validation'  => array(
     ),
   ),
-  
+
   'introduction_stringid' => Array(
     'displayname' => 'Üdvözlő szöveg',
     'type'        => 'tinymceMultiLanguage',
@@ -75,6 +83,12 @@ $config = Array(
     'config'      => $l->getLov('tinymceadmin'),
     'validation'  => Array(
     )
+  ),
+
+  'emailfs' => array(
+    'legend' => 'E-mail',
+    'type'   => 'fieldset',
+    'submit' => true,
   ),
 
   'signupvalidationemailsubject_stringid' => array(
@@ -91,6 +105,38 @@ $config = Array(
     ),
   ),
 
+  'supportemail' => array(
+    'displayname' => 'Support e-mail cím',
+    'type'        => 'inputText',
+    'validation'  => array(
+      array(
+        'type'     => 'string',
+        'regexp'   => CF_EMAIL,
+        'help'     => $l('users', 'emailhelp'),
+        'required' => false,
+      ),
+    ),
+  ),
+
+  'mailerrorto' => array(
+    'displayname' => 'Küldési hiba e-mail cím (Errors-To:)',
+    'type'        => 'inputText',
+    'validation'  => array(
+      array(
+        'type'     => 'string',
+        'regexp'   => CF_EMAIL,
+        'help'     => $l('users', 'emailhelp'),
+        'required' => false,
+      ),
+    ),
+  ),
+
+  'subscriberfs' => array(
+    'legend' => 'Előfizető aldomain beállítások',
+    'type'   => 'fieldset',
+    'submit' => true,
+  ),
+
   'url' => array(
     'displayname' => 'URL',
     'type'        => 'inputText',
@@ -103,7 +149,7 @@ $config = Array(
       ),
     ),
   ),
-  
+
   'domain' => array(
     'displayname' => 'Domain',
     'type'        => 'inputText',
@@ -123,7 +169,7 @@ $config = Array(
       ),
     ),
   ),
-  
+
   'staticdomain' => array(
     'displayname' => 'File kiszolgáló domain',
     'type'        => 'inputText',
@@ -136,7 +182,7 @@ $config = Array(
       ),
     ),
   ),
-  
+
   'cookiedomain' => array(
     'displayname' => 'Cookie domain (ami lefedi az összes többi domaint)',
     'type'        => 'inputText',
@@ -150,60 +196,82 @@ $config = Array(
     ),
   ),
 
-  'supportemail' => array(
-    'displayname' => 'Support e-mail cím',
-    'type'        => 'inputText',
-    'validation'  => array(
-      array(
-        'type'     => 'string',
-        'regexp'   => CF_EMAIL,
-        'help'     => $l('users', 'emailhelp'),
-        'required' => false,
-      ),
-    ),
+  'subscriberpermissionfs' => array(
+    'legend' => 'Előfizetői jogosultságok',
+    'type'   => 'fieldset',
+    'submit' => true,
   ),
-  
-  'mailerrorto' => array(
-    'displayname' => 'Küldési hiba e-mail cím (Errors-To:)',
-    'type'        => 'inputText',
-    'validation'  => array(
-      array(
-        'type'     => 'string',
-        'regexp'   => CF_EMAIL,
-        'help'     => $l('users', 'emailhelp'),
-        'required' => false,
-      ),
-    ),
+
+  'issubscriber' => array(
+    'displayname' => 'Előfizető?',
+    'type'        => 'inputRadio',
+    'values'      => $l->getLov('yesno'),
+    'value'       => 0,
   ),
-  
-  'linkcolor' => array(
-    'displayname' => 'Linkek színe',
-    'type'        => 'inputText',
-    'postfix'     => '
-      <div class="info">
-        Hat karakteres hexadecimális kód, például: f1f1f1
-      </div>
-    ',
-    'validation'  => array(
-      array(
-        'type' => 'string',
-        'minimum'  => 6,
-        'maximum'  => 6,
-        'required' => false,
-        'help'     => 'A link színét hat karakteres hexadecimális kódként várjuk!',
-      ),
-    ),
+
+  'isvcrenabled' => array(
+    'displayname' => 'VCR funkcionalitás?',
+    'type'        => 'inputRadio',
+    'values'      => $l->getLov('yesno'),
+    'value'       => 0,
   ),
-  
+
+  'issecurestreamingenabled' => array(
+    'displayname' => 'Biztonságos streamelés?',
+    'type'        => 'inputRadio',
+    'values'      => $l->getLov('yesno'),
+    'value'       => 0,
+  ),
+
+  'islivestreamingenabled' => array(
+    'displayname' => 'Élő közvetítés?',
+    'type'        => 'inputRadio',
+    'values'      => $l->getLov('yesno'),
+    'value'       => 0,
+  ),
+
+  'subscriberotherfs' => array(
+    'legend' => 'Egyéb előfizetői beállítások',
+    'type'   => 'fieldset',
+    'submit' => true,
+  ),
+
+  'registrationtype' => array(
+    'displayname' => 'Regisztráció típusa',
+    'type'        => 'select',
+    'values'      => $l->getLov('registrationtype'),
+  ),
+
+  'isnicknamehidden' => array(
+    'displayname' => 'Becenév mező elrejtése?',
+    'type'        => 'inputRadio',
+    'values'      => $l->getLov('yesno'),
+    'value'       => 0,
+  ),
+
+  'isorganizationaffiliationrequired' => array(
+    'displayname' => 'Cégnév mező kötelező?',
+    'type'        => 'inputRadio',
+    'values'      => $l->getLov('yesno'),
+    'value'       => 0,
+  ),
+
   'displaynametype' => array(
-    'displayname' => 'Név megjelenítés',
+    'displayname' => 'Felhasználó nevének kíírása',
     'type'        => 'select',
     'values'      => $l->getLov('organizations_displaynametype'),
     'value'       => 'shownickname',
   ),
-  
-  'issubscriber' => array(
-    'displayname' => 'Előfizető?',
+
+  'isrecommendationdisabled' => array(
+    'displayname' => 'Flash ajánló letiltása?',
+    'type'        => 'inputRadio',
+    'values'      => $l->getLov('yesno'),
+    'value'       => 0,
+  ),
+
+  'isanonymousratingenabled' => array(
+    'displayname' => 'Felvételek anonym értékelhetők?',
     'type'        => 'inputRadio',
     'values'      => $l->getLov('yesno'),
     'value'       => 0,
@@ -215,41 +283,47 @@ $config = Array(
     'values'      => $l->getLov('yesno'),
     'value'       => 1,
   ),
-  
-  'isvcrenabled' => array(
-    'displayname' => 'VCR funkcionalitás?',
-    'type'        => 'inputRadio',
-    'values'      => $l->getLov('yesno'),
-    'value'       => 0,
-  ),
-  
-  'issecurestreamingenabled' => array(
-    'displayname' => 'Biztonságos streamelés?',
-    'type'        => 'inputRadio',
-    'values'      => $l->getLov('yesno'),
-    'value'       => 0,
-  ),
-  
-  'islivestreamingenabled' => array(
-    'displayname' => 'Élő közvetítés?',
-    'type'        => 'inputRadio',
-    'values'      => $l->getLov('yesno'),
-    'value'       => 0,
-  ),
-  
+
   'issessionvalidationenabled' => array(
     'displayname' => 'Felhasználók IP címének és böngésző azonosítójának ellenőrzése?',
     'type'        => 'inputRadio',
     'values'      => $l->getLov('yesno'),
     'value'       => 0,
   ),
-  
-  'registrationtype' => array(
-    'displayname' => 'Regisztráció típusa',
-    'type'        => 'select',
-    'values'      => $l->getLov('registrationtype'),
+
+  'hascustomcategories' => array(
+    'displayname' => 'Egyedi ikonok használata a kategóriaoldalon',
+    'type'        => 'inputRadio',
+    'values'      => $l->getLov('yesno'),
+    'value'       => 0,
   ),
-  
+
+  'googleanalyticstrackingcode' => array(
+    'displayname' => 'Google Analytics kód',
+    'type'        => 'inputText',
+    'validation'  => array(
+      array(
+        'type' => 'string',
+        'minimum'  => 2,
+        'maximum'  => 512,
+        'required' => false,
+      ),
+    ),
+  ),
+
+  'disabled' => array(
+    'displayname' => 'Kitiltva?',
+    'type'        => 'inputRadio',
+    'values'      => $l->getLov('yesno'),
+    'value'       => 0,
+  ),
+
+  'coursesettingsfs' => array(
+    'legend' => 'Kurzusok',
+    'type'   => 'fieldset',
+    'submit' => true,
+  ),
+
   'elearningcoursecriteria' => array(
     'displayname' => 'Kurzusokban a felvételek ennyi százaléket muszáj végignézni mielőtt a következő felvételre engedjük.',
     'type'        => 'inputText',
@@ -274,13 +348,6 @@ $config = Array(
         ' lépett ki, stb...)<br/>' .
         'Alapértelmezve pedig mindig visszaállítjuk a poziciót.' .
       '</div>',
-    'type'        => 'inputRadio',
-    'values'      => $l->getLov('yesno'),
-    'value'       => 0,
-  ),
-
-  'isrecommendationdisabled' => array(
-    'displayname' => 'Flash ajánló letiltása?',
     'type'        => 'inputRadio',
     'values'      => $l->getLov('yesno'),
     'value'       => 0,
@@ -316,42 +383,42 @@ $config = Array(
     ),
   ),
 
-  'isanonymousratingenabled' => array(
-    'displayname' => 'Felvételek anonym értékelhetők?',
+  'streamsettingsfs' => array(
+    'legend' => 'Stream beállítások',
+    'type'   => 'fieldset',
+    'submit' => true,
+  ),
+
+  'ondemandhdsenabled' => array(
+    'displayname' => 'On-demand HDS bekapcsolva?',
     'type'        => 'inputRadio',
-    'values'      => $l->getLov('yesno'),
+    'values'      => $l->getLov('noyes'),
     'value'       => 0,
   ),
 
-  'hascustomcategories' => array(
-    'displayname' => 'Egyedi ikonok használata a kategóriaoldalon',
+  'livehdsenabled' => array(
+    'displayname' => 'Live HDS bekapcsolva?',
     'type'        => 'inputRadio',
-    'values'      => $l->getLov('yesno'),
+    'values'      => $l->getLov('noyes'),
     'value'       => 0,
   ),
 
-  'googleanalyticstrackingcode' => array(
-    'displayname' => 'Google Analytics kód',
-    'type'        => 'inputText',
-    'validation'  => array(
-      array(
-        'type' => 'string',
-        'minimum'  => 2,
-        'maximum'  => 512,
-        'required' => false,
-      ),
-    ),
+  'ondemandhlsenabledandroid' => array(
+    'displayname' => 'Android on-demand HLS bekapcsolva?',
+    'type'        => 'inputRadio',
+    'values'      => $l->getLov('noyes'),
+    'value'       => 0,
   ),
 
-  'disabled' => array(
-    'displayname' => 'Kitiltva?',
+  'livehlsenabledandroid' => array(
+    'displayname' => 'Android live HLS bekapcsolva?',
     'type'        => 'inputRadio',
-    'values'      => $l->getLov('yesno'),
+    'values'      => $l->getLov('noyes'),
     'value'       => 0,
   ),
 
   'layoutfs' => array(
-    'legend' => 'Layout',
+    'legend' => 'Kinézet',
     'type'   => 'fieldset',
     'submit' => true,
   ),
@@ -392,12 +459,12 @@ foreach( array('header', 'footer') as $type ) {
 }
 
 $listconfig = Array(
-  
+
   'treeid'             => 'o.id',
   'treestart'          => '0',
   'treeparent'         => 'o.parentid',
   'treestartinclusive' => true,
-  
+
   'type'      => 'tree',
   'table'     => '
     organizations AS o
@@ -408,47 +475,47 @@ $listconfig = Array(
   ',
   'order'     => Array( 'o.id DESC' ),
   'modify'    => 'o.id',
-  
+
   'fields' => Array(
-    
+
     Array(
       'field'       => 'o.id',
       'displayname' => 'ID',
     ),
-    
+
     Array(
       'field'       => 'domain',
       'displayname' => 'Domain',
     ),
-    
+
     Array(
       'field'       => 'sname.value',
       'displayname' => 'Eredeti név',
     ),
-    
+
     Array(
       'field'       => 'sshort.value',
       'displayname' => 'Rövid név',
     ),
-    
+
     Array(
       'field'       => 'issubscriber',
       'displayname' => $config['issubscriber']['displayname'],
       'lov'         => $l->getLov('yes')
     ),
-    
+
     Array(
       'field'       => 'isvcrenabled',
       'displayname' => $config['isvcrenabled']['displayname'],
       'lov'         => $l->getLov('yes')
     ),
-    
+
     Array(
       'field'       => 'issecurestreamingenabled',
       'displayname' => $config['issecurestreamingenabled']['displayname'],
       'lov'         => $l->getLov('yes')
     ),
-    
+
   ),
-  
+
 );
