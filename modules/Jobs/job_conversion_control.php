@@ -807,7 +807,7 @@ global $app, $debug, $jconf;
 		WHERE
 			( lf." . $idx . "smilstatus IS NULL OR lf." . $idx . "smilstatus = '" . $jconf['dbstatus_regenerate'] . "' ) AND
 			lf.id = lfs.livefeedid AND
-			( lfs.status IS NULL OR lfs.status = '" . $jconf['dbstatus_vcr_ready'] . "' )
+			( lfs.status IS NULL OR lfs.status = '" . $jconf['dbstatus_vcr_recording'] . "' )
 		ORDER BY
 			lf.id, lfs.id";
 
