@@ -258,5 +258,45 @@ jQuery(document).ready(function() {
   jQuery('#input').submit( function() {
     jQuery('#input input, #input textarea, #input select').removeAttr('disabled');
   });
-  
+
+  runIfExists('#organizations_modify, #organizations_new', setupOrganization );
 });
+
+function applyVisibilityToForm( data ) {
+  
+  for ( var key in data ) {
+    
+    if ( !data.hasOwnProperty( key ) )
+      continue;
+    
+    $j( key ).parents('tr').toggle( data[ key ] );
+    
+  }
+  
+}
+
+function runIfExists( selector, func ) {
+  
+  var elem = $j( selector );
+  if ( elem.length > 0 )
+    func( elem );
+  
+}
+
+function setupOrganization() {
+
+  var nicknamehidden = {
+    '0': {
+      'input[name=isorganizationaffiliationrequired]': false,
+    },
+    '1': {
+      'input[name=isorganizationaffiliationrequired]': true,
+    },
+  }
+  
+  $j('input[name=isnicknamehidden]').change(function() {
+    var value = $j('input[name=isnicknamehidden]:checked').val();
+    applyVisibilityToForm( nicknamehidden[ value ] );
+  }).change();
+  
+}
