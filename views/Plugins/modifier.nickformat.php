@@ -13,19 +13,12 @@ function smarty_modifier_nickformat( $name ) {
 
   switch( $organization['displaynametype'] ) {
     case 'shownickname':
-      return $name['nickname'];
+      return getNickname( $name, $organization );
       break;
     case 'showfullname':
       // ha nincs nev akkor nickname fallback
       if ( strlen( trim( $name['namefirst'] ) ) == 0 )
-        return $name['nickname'];
-
-      return smarty_modifier_nameformat( $name );
-      break;
-    case 'hidenickname':
-      // ha nincs nev akkor lastname . firstname formatumban
-      if ( strlen( trim( $name['namefirst'] ) ) == 0 )
-        return mb_strtolower( $name['namelast'] . '.' . $name['namefirst'] );
+        return getNickname( $name, $organization );
 
       return smarty_modifier_nameformat( $name );
       break;
@@ -37,4 +30,15 @@ function smarty_modifier_nickformat( $name ) {
       );
       break;
   }
+}
+
+function getNickname( $name, $organization ) {
+  if ( $organization['isnicknamehidden'] ) {
+    if ( strlen( trim( $name['namefirst'] ) ) == 0 )
+      return mb_strtolower( $name['namelast'] . '.' . $name['namefirst'] );
+
+    return smarty_modifier_nameformat( $name );
+  }
+
+  return $name['nickname'];
 }

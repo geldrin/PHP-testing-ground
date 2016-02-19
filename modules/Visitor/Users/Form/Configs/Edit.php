@@ -197,7 +197,7 @@ include( $this->bootstrap->config['modulepath'] . 'Visitor/Form/Configs/Timestam
 $departmentModel = $this->bootstrap->getModel('departments');
 $departmentModel->addFilter('organizationid', $this->controller->organization['id'] );
 
-if ( $this->controller->organization['displaynametype'] == 'hidenickname' )
+if ( $this->controller->organization['isnicknamehidden'] )
   unset( $config['nickname'] );
 
 if ( $departmentModel->getCount() == 0 )

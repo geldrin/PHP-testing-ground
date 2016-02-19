@@ -266,7 +266,6 @@ return array(
   'organizations_displaynametype' => array(
     'shownickname' => 'Becenév mutatása',
     'showfullname' => 'Teljes név mutatása',
-    'hidenickname' => 'Becenév rejtése',
   ),
   // adminon 
   'organizations_channelorders' => array(

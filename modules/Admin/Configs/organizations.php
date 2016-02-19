@@ -261,8 +261,22 @@ $config = Array(
     'values'      => $l->getLov('registrationtype'),
   ),
 
+  'isnicknamehidden' => array(
+    'displayname' => 'Becenév mező elrejtése?',
+    'type'        => 'inputRadio',
+    'values'      => $l->getLov('yesno'),
+    'value'       => 0,
+  ),
+
+  'isorganizationaffiliationrequired' => array(
+    'displayname' => 'Cégnév mező kötelező?',
+    'type'        => 'inputRadio',
+    'values'      => $l->getLov('yesno'),
+    'value'       => 0,
+  ),
+
   'displaynametype' => array(
-    'displayname' => 'Név megjelenítés',
+    'displayname' => 'Felhasználó nevének kíírása',
     'type'        => 'select',
     'values'      => $l->getLov('organizations_displaynametype'),
     'value'       => 'shownickname',
