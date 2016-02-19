@@ -443,7 +443,7 @@ global $app, $debug, $jconf, $myjobid;
     $recordingVersionObj->updateRow($values);
 
 	// Log status change
-	$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Livefeed id = " . $livefeedid . " " . $type . " status has been changed to '" . $status . "'.", $sendmail = false);
+	$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Livefeed id#" . $livefeedid . " type#" . $type . " SMIL status has been changed to '" . $status . "'.", $sendmail = false);
 
 	return true;
 }
