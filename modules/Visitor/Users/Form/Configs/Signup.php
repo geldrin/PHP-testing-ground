@@ -188,8 +188,8 @@ if ( $this->controller->organization['isnicknamehidden'] )
   unset( $config['nickname'] );
 
 if ( $this->controller->organization['isorganizationaffiliationrequired'] ) {
-  $options['organizationaffiliation']['title'] .= ' <span class="required">*</span>';
-  $options['organizationaffiliation']['validation'][] = array(
+  $config['organizationaffiliation']['title'] .= ' <span class="required">*</span>';
+  $config['organizationaffiliation']['validation'][] = array(
     'type'      => 'string',
     'required'  => true,
     'minimum'   => 3,
