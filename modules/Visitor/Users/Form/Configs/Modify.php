@@ -217,7 +217,7 @@ if ( $this->controller->organization['isnicknamehidden'] )
   unset( $config['nickname'] );
 
 if ( $this->controller->organization['isorganizationaffiliationrequired'] ) {
-  $config['organizationaffiliation']['title'] .= ' <span class="required">*</span>';
+  $config['organizationaffiliation']['displayname'] .= ' <span class="required">*</span>';
   $config['organizationaffiliation']['validation'][] = array(
     'type'      => 'string',
     'required'  => true,
