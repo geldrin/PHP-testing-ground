@@ -627,7 +627,7 @@ class Users extends \Springboard\Model {
       $chunk = array_splice( $emails, 0, 50 );
       $users = $this->db->getAssoc("
         SELECT
-          email AS arraykey,
+          LOWER(email) AS arraykey,
           id,
           email,
           nameprefix,

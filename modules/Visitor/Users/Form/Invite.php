@@ -304,6 +304,7 @@ class Invite extends \Visitor\HelpForm {
       $firstname = trim( $row[0] ); // elso oszlop a keresztnev
       $lastname  = trim( $row[1] ); // masodik a csaladnev
       $email     = trim( $row[2] ); // harmadik email
+      $email     = mb_strtolower( $email ); // mindig kisbetus legyen
       $lineerror = false;
 
       if ( !preg_match( CF_EMAIL, $email ) ) {
