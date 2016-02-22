@@ -196,25 +196,6 @@ $config = Array(
     ),
   ),
 
-  'frontpageblockorder' => array(
-    'displayname' => 'Főoldali blokkok sorrendje',
-    'postfix'     =>
-      '<br/><div class="info">
-        A blokkok vesszővel vannak elválasztva, végig kisbetűvel és ékezetek nélkül írandók.<br/>
-        Lehetséges blokkok: &quot;csatornafelvetelek&quot;, &quot;eloadas&quot;, &quot;kiemelt&quot;, &quot;legujabb&quot;, &quot;legnezettebb&quot;, &quot;legjobb&quot;<br/>
-        Példa: <pre>kiemelt,legujabb,legnezettebb</pre> (ez egyben az alapértelmezett érték ha nincs kitöltve a mező)
-      </div>',
-    'type'        => 'inputText',
-    'validation'  => array(
-    ),
-  ),
-
-  'channelorder' => array(
-    'displayname' => 'Csatornák alapértelmezett rendezése',
-    'type'        => 'select',
-    'values'      => $l->getLov('organizations_channelorders'),
-  ),
-
   'subscriberpermissionfs' => array(
     'legend' => 'Előfizetői jogosultságok',
     'type'   => 'fieldset',
