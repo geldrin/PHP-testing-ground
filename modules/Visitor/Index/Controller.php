@@ -66,7 +66,7 @@ class Controller extends \Visitor\Controller {
       $this->organization['id']
     );
 
-    $this->recordingsModel->addPresentersToArray(
+    $ret = $this->recordingsModel->addPresentersToArray(
       $ret,
       true,
       $this->organization['id']
@@ -76,11 +76,19 @@ class Controller extends \Visitor\Controller {
   }
 
   private function getBlockKiemelt( $user ) {
-    return $this->recordingsModel->getRandomRecordings(
+    $ret = $this->recordingsModel->getRandomRecordings(
       4,
       $this->organization['id'],
       $user
     );
+
+    $ret = $this->recordingsModel->addPresentersToArray(
+      $ret,
+      true,
+      $this->organization['id']
+    );
+
+    return $ret;
   }
 
   private function getBlockEloadas( $user ) {

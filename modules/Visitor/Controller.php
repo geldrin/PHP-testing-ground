@@ -205,7 +205,6 @@ class Controller extends \Springboard\Controller\Visitor {
     $this->impersonateOrganization( $organization );
     $this->organization = $organization;
 
-
   }
   
   public function handleAccessFailure( $permission ) {
