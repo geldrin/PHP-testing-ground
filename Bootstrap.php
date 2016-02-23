@@ -394,7 +394,20 @@ class Bootstrap {
     return new $class( $this, $model );
 
   }
-  
+
+  public function getVSQModel( $model ) {
+
+    $loader = Springboard\Autoloader::getInstance();
+    $class  = $loader->findExistingClass(
+      'Videosquare\\Model\\' . ucfirst( $model ),
+      'Model\\' . ucfirst( $model ),
+      'Springboard\\Model'
+    );
+
+    return new $class( $this, $model );
+
+  }
+
   public function getMailqueue( $nodb = false ) {
     
     $queue = new Springboard\Mailqueue( $this, $nodb );
