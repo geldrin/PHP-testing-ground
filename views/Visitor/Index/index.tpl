@@ -47,8 +47,8 @@
   </div>
 {/if}
 
-<div class="leftdoublebox indexnews">
-  {if !empty( $news )}
+{if !empty( $news )}
+  <div class="leftdoublebox indexnews">
     <div class="title">
       <h1>{#index__news#}</h1>
     </div>
@@ -64,13 +64,11 @@
     <div class="morenews">
       <a href="{$language}/organizations/listnews">{#index__morenews#}</a>
     </div>
-  {/if}
-</div>
+  </div>
+{/if}
 
-<div class="rightbox">
-  <div class="title"><h1>{#sitewide_welcome_bare#}</h1></div>
+<div id="welcomebox" class="{if empty( $news )}fullwidth{else}rightbox{/if}">
   {$introduction}
 </div>
-
 
 {include file="Visitor/_footer.tpl"}
