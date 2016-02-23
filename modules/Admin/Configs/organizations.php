@@ -2,6 +2,11 @@
 include_once( $this->bootstrap->config['libpath'] . 'clonefish/constants.php');
 $this->addfieldset = false;
 
+$introconfig = $l->getLov('tinymceadmin');
+$introconfig['content_css'] .= ',' .
+  '../css/style_tinymce_indexpage' . $this->bootstrap->config['version'] . '.css'
+;
+
 $config = Array(
 
   'action' => Array(
@@ -80,7 +85,7 @@ $config = Array(
     'value'       => 0,
     'width'       => 305,
     'height'      => 500,
-    'config'      => $l->getLov('tinymceadmin'),
+    'config'      => $introconfig,
     'validation'  => Array(
     )
   ),
