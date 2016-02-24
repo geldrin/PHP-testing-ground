@@ -196,12 +196,6 @@ $config = Array(
     ),
   ),
 
-  'channelorder' => array(
-    'displayname' => 'Csatornák alapértelmezett rendezése',
-    'type'        => 'select',
-    'values'      => $l->getLov('organizations_channelorders'),
-  ),
-
   'subscriberpermissionfs' => array(
     'legend' => 'Előfizetői jogosultságok',
     'type'   => 'fieldset',
@@ -429,6 +423,12 @@ $config = Array(
     'submit' => true,
   ),
 
+  'channelorder' => array(
+    'displayname' => 'Csatornák alapértelmezett rendezése',
+    'type'        => 'select',
+    'values'      => $l->getLov('organizations_channelorders'),
+  ),
+
   'indextemplate' => array(
     'displayname' => 'Főoldal kinézet',
     'html'        => 'style="min-height: 220px;"',
@@ -438,9 +438,9 @@ $config = Array(
         Lehetséges blokk változók: &quot;ajanlo_csatornafelvetelek&quot;, &quot;ajanlo_eloadas&quot;, &quot;ajanlo_kiemelt&quot;, &quot;ajanlo_legujabb&quot;, &quot;ajanlo_legnezettebb&quot;, &quot;ajanlo_legjobb&quot;<br/>
         További hasznos változók:<br/>
         &nbsp;&nbsp;&quot;organization&quot; (a jelenlegi intezmény, lehetséges mezői az &quot;organizations&quot; adatbázis táblában található oszlopok nevei, például: &quot;$organization.introduction&quot;);<br/>
+        &nbsp;&nbsp;&quot;member&quot; (a bejelentkezett felhasználó, mezői az adatbázis &quot;users&quot; táblájának oszlop nevei, például: &quot;$member.isadmin&quot;);<br/>
         &nbsp;&nbsp;&quot;BASE_URI&quot; (a jelenlegi domain a megfelelő protokol prefixel például: &quot;https://videosquare.eu&quot;);<br/>
         &nbsp;&nbsp;&quot;language&quot; (jelenlegi nyelv azonosító, például: &quot;hu&quot;);<br/>
-        &nbsp;&nbsp;&quot;member&quot; (a bejelentkezett felhasználó, mezői az adatbázis &quot;users&quot; táblájának oszlop nevei, például: &quot;member.isadmin&quot;)<br/>
         Az alapértelmezett sablon visszaállításához üresen kell hagyni a mezőt.
       </div>',
     'type'        => 'textarea',
