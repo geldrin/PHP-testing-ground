@@ -5,6 +5,11 @@ include_once( BASE_PATH . 'libraries/Springboard/Application/Job.php');
 
 class Job extends \Springboard\Application\Job {
 
+    // Extra config
+    private $needsRunOverControl    = true;
+    private $watchConfigChangeExit  = true;
+    
+    // Class variables
     private $job_id = null;
     private $job_filename = null;
 
@@ -20,10 +25,10 @@ class Job extends \Springboard\Application\Job {
         
         // Job id and path
         $this->job_id = basename($_SERVER["PHP_SELF"], ".php");
-        $this->job_filename = $this->bootstrap->config['config_jobs']['job_dir'] . basename($_SERVER["PHP_SELF"]);
+        $this->job_filename = $this->bootstrap->config['jobpath'] . basename($_SERVER["PHP_SELF"]);
         
         // Debug mode
-        if ( isset($this->bootstrap->config['jobs'][$this->bootstrap->config['node_role']][$this->job_id]) ) {
+        if ( isset($this->bootstrap->config['job'][$this->bootstrap->config['node_role']][$this->job_id]) ) {
             $this->debug_mode = $this->bootstrap->config['jobs'][$this->bootstrap->config['node_role']][$this->job_id]['debug_mode'];
         }
 
@@ -31,6 +36,16 @@ class Job extends \Springboard\Application\Job {
 
     }
 
+    // Springboard Job redefined preRun()
+    protected function preRun() {
+
+        $this->handleLock();
+        $this->startTimestamp = time();
+        
+        $this->isConfigChangeOccured();
+        
+    }
+    
     // Wrapper for debug log
     public function debugLog($msg, $sendmail = false) {
 
@@ -38,12 +53,16 @@ class Job extends \Springboard\Application\Job {
         
     }
     
+    public function getMyName() {
+        
+        return $this->job_id;
+    }
+    
     protected function process() {
         echo "...abstract method and must therefore be declared...\n";    
         return true;
     }
 
-/*
     // Number of processes by name (regexp)
     private function checkProcessExists($processName) {
         exec("ps uax | grep -i '$processName' | grep -v grep", $pids);
@@ -53,7 +72,9 @@ class Job extends \Springboard\Application\Job {
     // Check if this job already running. Most jobs should not run over each other.
     public function runOverControl() {
 
-        $processes = $this->checkProcessStartTime("php.*" . $this->job_filename);
+        if ( $this->needsRunOverControl ) return true;
+    
+        $processes = $this->checkProcessExists("php.*" . $this->job_filename);
         
         if ( count($processes) <= 1 ) return true;
         
@@ -72,9 +93,16 @@ class Job extends \Springboard\Application\Job {
             
         return false;
     }
-*/
+    
+    // Config changed?
+    public function isConfigChangeOccured() {
+
+        if ( !$this->watchConfigChangeExit ) return false; 
+        
+        // Have this job or config changed?
+        if ( ( filemtime($this->job_filename) > $this->startTimestamp ) or ( filemtime(BASE_PATH . "config.php" ) > $this->startTimestamp ) or ( filemtime(BASE_PATH . "config_local.php" ) > $this->startTimestamp ) ) return true;
+        
+        return false;
+    }
 
 }
-
-
-?>

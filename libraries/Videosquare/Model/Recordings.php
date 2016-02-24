@@ -80,5 +80,3 @@ class Recordings extends \Springboard\Model {
 
     
 }
-
-?>

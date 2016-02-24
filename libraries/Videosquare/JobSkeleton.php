@@ -9,26 +9,39 @@ include_once('./Job/Job.php');
 
 class JobSkeleton extends \Videosquare\Job\Job {
 
-    protected $needsLoop        = true;
+    // Job level config
+    protected $needsLoop            = true;     // Looped job?
 
-    protected $signalReceived   = false;
+    protected $signalReceived       = false;    // Watch for signals?
+
+    protected $needsSleep          = true;      // Do we sleep?
+    protected $closeDbOnSleep      = true;      // Close DB connection on sleep?
+
+    protected $sleepSeconds         = 1;        // Sleep start duration
+    protected $maxSleepSeconds      = 30;       // Sleep max duration (sleeps sleepSeconds * 2 in every round)
+
+    // Videosquare job specific config options
+    protected $needsRunOverControl      = true;
+    protected $needsConfigChangeExit    = true;
     
-    protected $sleepSeconds     = 10;
-    protected $maxSleepSeconds  = 180;
-
+    // REWRITE this function to implement job processing
     protected function process() {
-        echo "myJob is processing...\n";
         
-        try {
-            $model = $this->bootstrap->getVSQModel("Recordings");
-            //var_dump($model);
-            $model->selectRecording(12);
-            echo $model->getRecordingStatus() . "\n";
-        } catch( Exception $err ) {
-            $this->log( 'run() exception: ' . $err->getMessage(), false );
-        }
+        echo $this->getMyName() . " is processing...\n";
 
+        // Get model
+        $model = $this->bootstrap->getVSQModel("Recordings");
+        
+        // Get status of recording id#12
+        $recid = 12;
+        $model->selectRecording($recid);
+        echo "Recording status (id#" . $recid . "): " . $model->getRecordingStatus() . "\n";
+            
         $this->debugLog("[DEBUG] This is a debug message.", false);
+        
+        // We did not do anything, sleep longer and longer. Reset sleep seconds only if $needSleep = false;
+        $this->needsSleep = true;
+        if ( !$this->needsSleep ) $this->currentSleepSeconds = 1;
         
         echo "sleep: " . $this->currentSleepSeconds . "\n";
         
@@ -43,10 +56,9 @@ unlink("/home/conv/dev.videosquare.eu/data/watchdog/JobSkeleton.php.watchdog");
 $job = new JobSkeleton(BASE_PATH, PRODUCTION);
 
 try {
-  $job->run();
+    $job->run();
 } catch( Exception $err ) {
-  $job->log( 'run() exception: ' . $err->getMessage(), false );
-  throw $err;
+    $job->debugLog( '[EXCEPTION] run(): ' . $err->getMessage(), false );
+    throw $err;
 }
 
-?>
