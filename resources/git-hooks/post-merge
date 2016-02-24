@@ -1,0 +1,25 @@
+#!/usr/bin/env php
+<?php
+define('PRODUCTION', false );
+define('BASE_PATH',  realpath( dirname( __FILE__ ) . '/../..' ) . '/' );
+error_reporting(E_ALL);
+ini_set('display_errors', true);
+
+include_once( BASE_PATH . 'libraries/Springboard/Application/Cli.php');
+$app = new Springboard\Application\Cli( BASE_PATH, false );
+$bs = $app->bootstrap;
+
+$redis = $bs->getRedis();
+// Model\Organizations::getOrganizationByDomain cache key:
+// $lang-organizations-$domain
+// $lang-organizationsbyid-$id
+$cacheKeys = $redis->keys('*-organizations*');
+$delCount = $redis->delete( $cacheKeys );
+if ( $delCount != count( $cacheKeys ) ) {
+	echo "\nCould not delete all cache keys!\n";
+	exit(1);
+}
+
+echo "Cache cleared!\n";
+exit(0);
+
