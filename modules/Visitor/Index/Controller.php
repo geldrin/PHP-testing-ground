@@ -49,6 +49,26 @@ class Controller extends \Visitor\Controller {
     $this->toSmarty['blocksToTypes'] = $this->blocksToTypes;
     $this->toSmarty['labels'] = $labels;
     $this->toSmarty['blocks'] = $blocks;
+
+    $smarty = $this->bootstrap->getSmarty();
+    $this->fetchSmarty('Visitor/Index/index_blocks.tpl');
+    foreach( $blocks as $block => $v ) {
+      $key   = 'ajanlo_' . $block;
+      $value = $smarty->get_template_vars( $key );
+      $this->toSmarty[ $key ] = trim( $value );
+    }
+
+    unset(
+      $this->toSmarty['blocksToTypes'],
+      $this->toSmarty['labels'],
+      $this->toSmarty['blocks'],
+      $labels,
+      $blocks
+    );
+
+    $content = $this->fetchSmarty( $this->organization['indextemplate'] );
+    $this->toSmarty['content'] = $content;
+
     $this->smartyoutput('Visitor/Index/index.tpl');
   }
 

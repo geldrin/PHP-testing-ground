@@ -196,15 +196,20 @@ $config = Array(
     ),
   ),
 
-  'frontpageblockorder' => array(
-    'displayname' => 'Főoldali blokkok sorrendje',
+  'indextemplate' => array(
+    'displayname' => 'Főoldal kinézet',
+    'html'        => 'style="height: 300px;"',
     'postfix'     =>
       '<br/><div class="info">
-        A blokkok vesszővel vannak elválasztva, végig kisbetűvel és ékezetek nélkül írandók.<br/>
-        Lehetséges blokkok: &quot;csatornafelvetelek&quot;, &quot;eloadas&quot;, &quot;kiemelt&quot;, &quot;legujabb&quot;, &quot;legnezettebb&quot;, &quot;legjobb&quot;<br/>
-        Példa: <pre>kiemelt,legujabb,legnezettebb</pre> (ez egyben az alapértelmezett érték ha nincs kitöltve a mező)
+        A használt sablonozási nyelv a <a href="http://www.smarty.net/docsv2/en/" target="_blank">smarty v2</a>.<br/>
+        Lehetséges blokk változók: &quot;ajanlo_csatornafelvetelek&quot;, &quot;ajanlo_eloadas&quot;, &quot;ajanlo_kiemelt&quot;, &quot;ajanlo_legujabb&quot;, &quot;ajanlo_legnezettebb&quot;, &quot;ajanlo_legjobb&quot;<br/>
+        További hasznos változók:<br/>
+        &nbsp;&nbsp;&quot;organization&quot; (a jelenlegi intezmény, lehetséges mezői az adatbázis táblában található oszlopok nevei, például: &quot;$organization.introduction&quot;);<br/>
+        &nbsp;&nbsp;&quot;BASE_URI&quot; (a jelenlegi domain a megfelelő protokol prefixel például: &quot;https://videosquare.eu&quot;);<br/>
+        &nbsp;&nbsp;&quot;language&quot; (jelenlegi nyelv azonosító, például: &quot;hu&quot;)<br/>
+        Az alapértelmezett sablon visszaállításához üresen kell hagyni a mezőt.
       </div>',
-    'type'        => 'inputText',
+    'type'        => 'textarea',
     'validation'  => array(
     ),
   ),
