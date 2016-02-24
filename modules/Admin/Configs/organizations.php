@@ -196,24 +196,6 @@ $config = Array(
     ),
   ),
 
-  'indextemplate' => array(
-    'displayname' => 'Főoldal kinézet',
-    'html'        => 'style="height: 300px;"',
-    'postfix'     =>
-      '<br/><div class="info">
-        A használt sablonozási nyelv a <a href="http://www.smarty.net/docsv2/en/" target="_blank">smarty v2</a>.<br/>
-        Lehetséges blokk változók: &quot;ajanlo_csatornafelvetelek&quot;, &quot;ajanlo_eloadas&quot;, &quot;ajanlo_kiemelt&quot;, &quot;ajanlo_legujabb&quot;, &quot;ajanlo_legnezettebb&quot;, &quot;ajanlo_legjobb&quot;<br/>
-        További hasznos változók:<br/>
-        &nbsp;&nbsp;&quot;organization&quot; (a jelenlegi intezmény, lehetséges mezői az adatbázis táblában található oszlopok nevei, például: &quot;$organization.introduction&quot;);<br/>
-        &nbsp;&nbsp;&quot;BASE_URI&quot; (a jelenlegi domain a megfelelő protokol prefixel például: &quot;https://videosquare.eu&quot;);<br/>
-        &nbsp;&nbsp;&quot;language&quot; (jelenlegi nyelv azonosító, például: &quot;hu&quot;)<br/>
-        Az alapértelmezett sablon visszaállításához üresen kell hagyni a mezőt.
-      </div>',
-    'type'        => 'textarea',
-    'validation'  => array(
-    ),
-  ),
-
   'channelorder' => array(
     'displayname' => 'Csatornák alapértelmezett rendezése',
     'type'        => 'select',
@@ -445,6 +427,25 @@ $config = Array(
     'legend' => 'Kinézet',
     'type'   => 'fieldset',
     'submit' => true,
+  ),
+
+  'indextemplate' => array(
+    'displayname' => 'Főoldal kinézet',
+    'html'        => 'style="min-height: 220px;"',
+    'postfix'     =>
+      '<br/><div class="info">
+        A használt sablonozási nyelv a <a href="http://www.smarty.net/docsv2/en/" target="_blank">smarty v2</a>.<br/>
+        Lehetséges blokk változók: &quot;ajanlo_csatornafelvetelek&quot;, &quot;ajanlo_eloadas&quot;, &quot;ajanlo_kiemelt&quot;, &quot;ajanlo_legujabb&quot;, &quot;ajanlo_legnezettebb&quot;, &quot;ajanlo_legjobb&quot;<br/>
+        További hasznos változók:<br/>
+        &nbsp;&nbsp;&quot;organization&quot; (a jelenlegi intezmény, lehetséges mezői az &quot;organizations&quot; adatbázis táblában található oszlopok nevei, például: &quot;$organization.introduction&quot;);<br/>
+        &nbsp;&nbsp;&quot;BASE_URI&quot; (a jelenlegi domain a megfelelő protokol prefixel például: &quot;https://videosquare.eu&quot;);<br/>
+        &nbsp;&nbsp;&quot;language&quot; (jelenlegi nyelv azonosító, például: &quot;hu&quot;);<br/>
+        &nbsp;&nbsp;&quot;member&quot; (a bejelentkezett felhasználó, mezői az adatbázis &quot;users&quot; táblájának oszlop nevei, például: &quot;member.isadmin&quot;)<br/>
+        Az alapértelmezett sablon visszaállításához üresen kell hagyni a mezőt.
+      </div>',
+    'type'        => 'textarea',
+    'validation'  => array(
+    ),
   ),
 
   'layoutcss' => array(
