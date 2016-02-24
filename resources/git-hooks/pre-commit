@@ -1,0 +1,36 @@
+#!/usr/bin/php
+<?php
+$files = array();
+exec('git diff-index --cached --diff-filter=ACMRTUXB --name-only HEAD', $files );
+$exitcode = 0;
+
+$redirect = '';
+// dont redirect stderr to stdin, we will get the errors twice, redirect it to dev/null
+if ( PHP_OS == 'WINNT' )
+  $redirect = ' 2> NUL';
+
+$errors = array();
+foreach( $files as $file ) {
+  
+  if ( !preg_match('/\.php$/i', $file ) or !is_file( $file ) )
+    continue;
+  
+  exec('php -l ' . escapeshellarg( $file ) . $redirect, $output, $return );
+  
+  array_shift( $output ); // pop the last error
+  foreach( $output as $line => $value )
+    if ( !trim( $value ) )
+      unset( $output[ $line ] );
+  
+  array_pop( $output ); // the last message is always "Errors parsing httpdocs/test.php or No syntax errors"
+  
+  if ( !$return ) // php -l gives a 0 error code if everything went well
+    continue;
+  
+  $exitcode = 1; // abort the commit
+  $errors = array_merge( $errors, $output );
+  
+}
+
+echo implode("\n", array_unique( $errors ) ), "\n";
+exit( $exitcode );
