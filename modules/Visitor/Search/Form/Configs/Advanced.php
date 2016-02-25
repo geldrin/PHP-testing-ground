@@ -41,12 +41,13 @@ $config         = array(
     'rowlayout'   => '
       <tr>
         <td colspan="3" id="advancedsearchrow">
-          <div>
+          <div class="wrap">
             <button id="searchadvancedsubmit" type="submit"></button>
             %prefix%%element%%postfix%
-            <a href="' . $advancedURL . '" id="searchadvanced" title="' . $advancedLabel . '"><span></span>' . $advancedLabel . '</a>
+
             <a href="#" id="searchadvancedclear" title="' . $advancedClearLabel . '"><span></span>' . $advancedClearLabel . '</a>
           </div>
+          <div class="channelgradient"></div>
           %errordiv%
         </td>
       </tr>

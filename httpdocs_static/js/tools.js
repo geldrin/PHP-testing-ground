@@ -291,6 +291,12 @@ function setupAccordion(elems) {
 }
 
 function setupSearch() {
+  $j('select').select2({
+    language: language,
+    minimumResultsForSearch: -1,
+    width: '280px'
+  });
+
   $j('#searchadvancedclear').on('click', function(e) {
     e.preventDefault();
 

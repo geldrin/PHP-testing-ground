@@ -3247,10 +3247,11 @@ li#languageselectorlink span {
 
 /* advanced search */
 .form.search {
-  margin: 0 0 5px 0;
+  margin: 0;
 }
 .searchtable {
   width: 100%;
+  border-bottom: 1px solid #d8d8d8;
 }
 .searchtable td {
   vertical-align: top;
@@ -3268,6 +3269,13 @@ li#languageselectorlink span {
   text-align: center;
 }
 .searchtable .buttonrow .submitbutton {
+  margin: 10px 0;
+  padding: 6px;
+  font-family: Arial, sans-serif;
+  font-size: 14px;
+  font-weight: bold;
+  border-radius: 3px;
+  width: auto;
 }
 .searchtable select.inputbackground {
   padding: 0px;
@@ -3279,10 +3287,13 @@ li#languageselectorlink span {
 .form .searchtable .inputbackground {
   box-shadow: none;
 }
+.searchtable .select2-container--default,
 .form .searchtable .inputtext {
   font-family: 'Exo 2', "Arial", "sans-serif";
   font-size: 16px;
   color: #777;
+}
+.form .searchtable .inputtext {
   border: 0;
   padding: 0;
   box-sizing: border-box;
@@ -3295,11 +3306,18 @@ li#languageselectorlink span {
   font-weight: 500;
   border: 0;
 }
-.searchtable #advancedsearchrow div {
+.searchtable #advancedsearchrow .wrap {
   display: flex;
+  border-top; 1px solid #fff;
+  border-bottom: 1px solid #d8d8d8;
+}
+.searchtable #advancedsearchrow .formerrordiv {
+  display: block;
+  visibility: hidden;
+  height: 24px;
 }
 .form .searchtable .element {
-  margin: 10px 0;
+  margin: 18px 0;
 }
 .form .searchtable .radio {
   display: inline-block;
@@ -3337,6 +3355,9 @@ li#languageselectorlink span {
 .form .searchtable input[type=radio]:checked + label:hover,
 .form .searchtable input[type=radio]:checked + label:focus {
   background-image: url(images/icons/radio_checked_hover.png);
+}
+.searchtable .select2-container--default .select2-selection--single {
+  border: 0;
 }
 
 /* contributor modify */
