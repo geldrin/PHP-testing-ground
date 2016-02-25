@@ -258,6 +258,7 @@ textarea {
   font-size: 14px;
 }
 .inputbackground, .form textarea, .form input[type=text], .form input[type=password], .form .inputtext {
+  font-family: 'Exo 2', "Arial", "sans-serif";
   color: #333;
   border: 1px solid #ccc;
   -webkit-border-radius: 5px;
@@ -1007,6 +1008,7 @@ li#headeruserlink a span {
   color: #333333;
   font-size: 30px;
   flex-grow: 3;
+  font-family: 'Exo 2', "Arial", "sans-serif";
 }
 #headersearch .inputtext:hover,
 #headersearch .inputtext:focus,
