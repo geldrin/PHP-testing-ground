@@ -894,8 +894,9 @@ a.submitbutton:hover,
   height: 66px;
   padding: 0 6px;
   line-height: 66px;
-  font-size: 16px;
-  font-weight: bold;
+  font-size: 19px;
+  font-weight: 500;
+  letter-spacing: -0.02em;
 }
 #headermenu .text a {
   padding: 0 20px;
