@@ -1445,7 +1445,7 @@ li#languageselectorlink span {
 }
 #categorytitle a:hover,
 #categorytitle a:focus {
-  color #43b5e5;
+  color: #43b5e5;
 }
 #categorytitle .arrow {
   display: inline;
@@ -1459,9 +1459,10 @@ li#languageselectorlink span {
 #pagetitle .back,
 #categorytitle .back {
   margin: 0 0 0 5px;
-  color: #000;
+  color: #43b5e5;
   float: right;
   line-height: 70px;
+  font-size: 20px;
   padding-right: 25px;
   background-repeat: no-repeat;
   background-position: right center;
@@ -1472,9 +1473,7 @@ li#languageselectorlink span {
 #pagetitle .back:hover,
 #categorytitle .back:hover,
 #categorytitle .back:focus {
-  color: #43b5e5;
   text-decoration: none;
-  background-image: url(images/arrow_back_hover.png);
 }
 
 /* paging search */
