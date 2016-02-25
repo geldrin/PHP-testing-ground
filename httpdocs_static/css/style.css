@@ -1313,6 +1313,8 @@ li#languageselectorlink span {
   padding: 6px 0px 8px 0px;
   clear: both;
   z-index: 100;
+  font-size: 18px;
+  font-weight: 300;
 }
 .widepager .divider {
   background-color: #bbb;
@@ -1336,7 +1338,6 @@ li#languageselectorlink span {
 .widepager li a, .widepager .currentpage {
   display: inline-block;
   padding: 3px 14px 3px 14px;
-  font-weight: bold;
 }
 .widepager li a:hover {
   color: #000;
@@ -1344,6 +1345,11 @@ li#languageselectorlink span {
 }
 .currentpage {
   color: #000;
+}
+.widepager .previous,
+.widepager .next {
+  font-size: 16px;
+  font-weight: 500;
 }
 .widepager .previous {
   position: absolute;
@@ -1396,6 +1402,7 @@ li#languageselectorlink span {
 #categorytitle h1 {
   margin: 0;
   line-height: 70px;
+  font-size: 26px;
 }
 .categorylist {
   display: inline-block;
@@ -1435,9 +1442,14 @@ li#languageselectorlink span {
 .categorylist h3 {
   margin: 0;
   color: #000;
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 28px;
 }
 .categorylist .numberofrecordings {
   color: #7d7d7d;
+  font-size: 20px;
+  font-weight: 400;
 }
 #categorytitle a {
   color: #000;
@@ -1516,7 +1528,8 @@ li#languageselectorlink span {
   line-height: 30px;
   float: left;
   color: #000;
-  font-weight: bold;
+  font-size: 18px;
+  font-weight: 500;
 }
 #perpageselector {
   float: right;
@@ -1548,6 +1561,8 @@ li#languageselectorlink span {
   padding: 0 10px;
   line-height: 30px;
   white-space: nowrap;
+  font-size: 16px;
+  font-weight: 500;
 }
 .sort .item a img {
   margin-left: 5px;
@@ -1605,7 +1620,7 @@ li#languageselectorlink span {
   display: inline;
   background-repeat: no-repeat;
   background-position: center;
-  background-position: bottom 3px center;
+  background-position: bottom 5px center;
   padding: 0 13px 0 0;
   margin: 0 0 0 5px;
 }
@@ -1662,7 +1677,7 @@ li#languageselectorlink span {
   margin-top: 10px;
 }
 .recordinglist .title h3 {
-  font-size: 16px;
+  font-size: 20px;
   font-weight: bold;
   font-style: normal;
   margin: 0;
@@ -1749,6 +1764,7 @@ li#languageselectorlink span {
 .recordinglist .recordinginfo {
   display: flex;
   align-items: center;
+  font-size: 12px;
 }
 .recordinglist .recordinginfo .timestamp,
 .recordinglist .recordinginfo .views {
