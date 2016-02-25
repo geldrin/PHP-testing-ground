@@ -100,13 +100,21 @@ $j(document).ready(function() {
 
   $j('.clearonclick').on('focusin', function() {
 
-    if ( $j(this).val() == $j(this).attr('data-origval') )
+    if ( $j(this).val() == $j(this).attr('data-origval') ) {
+      $j(this).removeClass('changed');
       $j(this).val('');
+    } else {
+      $j(this).addClass('changed');
+    }
 
   }).on('focusout', function() {
 
-    if ( !$j(this).val() )
+    if ( !$j(this).val() ) {
       $j(this).val( $j(this).attr('data-origval') );
+      $j(this).removeClass('changed');
+    } else {
+      $j(this).addClass('changed');
+    }
 
   });
 
@@ -283,6 +291,11 @@ function setupAccordion(elems) {
 }
 
 function setupSearch() {
+  $j('#searchadvancedclear').on('click', function(e) {
+    e.preventDefault();
+
+    $j('#searchadvanced input[type=text]').val('');
+  });
 
   $j('.datepicker').datepicker({
     dateFormat: 'yy-mm-dd',
