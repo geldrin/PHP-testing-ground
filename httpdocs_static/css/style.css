@@ -2719,7 +2719,7 @@ li#languageselectorlink span {
   margin-bottom: 10px;
 }
 #channelheader .channelinfo {
-  color: #888;
+  color: #999;
   text-shadow: 0px 1px 3px rgba(0, 0, 0, 0.75);
 }
 #body .heading.categories.title {
@@ -2781,6 +2781,9 @@ li#languageselectorlink span {
   margin: 0 0 10px 10px;
 }
 #channeldescription p {
+  font-size: 20px;
+  font-weight: 400;
+  line-height: 30px;
   margin: 25px;
 }
 #channellist {
@@ -2792,7 +2795,7 @@ li#languageselectorlink span {
 }
 #channellist li {
   margin: 0;
-  padding: 15px 0 15px 25px;
+  padding: 15px 10px 15px 25px;
   border-bottom: 1px solid #ccc;
   line-height: 20px;
 }
@@ -2824,9 +2827,12 @@ li#languageselectorlink span {
 }
 #channellist a {
   color: #000;
-  font-weight: bold;
+  font-weight: 500;
+  font-size: 18px;
+  line-height: 40px;
 }
 #channellist .numberofrecordings {
+  font-size: 20px;
   margin: 0 0 0 5px;
   color: #777;
 }
