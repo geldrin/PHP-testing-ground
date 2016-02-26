@@ -2719,7 +2719,7 @@ li#languageselectorlink span {
   margin-bottom: 10px;
 }
 #channelheader .channelinfo {
-  color: #999;
+  color: #aaa;
   text-shadow: 0px 1px 3px rgba(0, 0, 0, 0.75);
 }
 #body .heading.categories.title {
@@ -2777,8 +2777,8 @@ li#languageselectorlink span {
 #channeldescription {
 }
 #channeldescription .actions {
-  float: right;
-  margin: 0 0 10px 10px;
+  text-align: right;
+  margin: 10px 0 -10px 0;
 }
 #channeldescription p {
   font-size: 20px;
