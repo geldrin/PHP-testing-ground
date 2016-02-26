@@ -18,7 +18,7 @@ class Modify extends \Visitor\HelpForm {
   public function postSetupForm() {
     
     $l = $this->bootstrap->getLocalization();
-    $this->controller->toSmarty['title'] = $l('categories', 'create_title');
+    $this->controller->toSmarty['title'] = $l('categories', 'modify_title');
     $this->controller->toSmarty['helpclass'] = 'fullwidth left';
     
   }
@@ -27,8 +27,7 @@ class Modify extends \Visitor\HelpForm {
     
     $values = $this->form->getElementValues( 0 );
     $this->categoryModel->updateRow( $values );
-    $this->categoryModel->expireCache(
-      'GetCategoryTree',
+    $this->categoryModel->expireCategoryTreeCache(
       $this->controller->organization['id']
     );
     
