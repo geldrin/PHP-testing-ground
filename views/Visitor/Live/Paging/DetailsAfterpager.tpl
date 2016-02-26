@@ -1,2 +1,0 @@
-  </div>{*} recordview {/*}
-</div>{*} events {/*}
