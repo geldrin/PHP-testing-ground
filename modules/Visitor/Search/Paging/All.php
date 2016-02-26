@@ -42,7 +42,7 @@ class All extends \Visitor\Paging {
   protected function setupCount() {
     
     if ( !$this->searchterm )
-      return $this->itemcount = 0;
+      return $this->itemcount = null;
     
     $this->recordingsModel = $this->bootstrap->getModel('recordings');
     
