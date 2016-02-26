@@ -4,5 +4,5 @@
 <div class="channelgradient"></div>
 <br/>
 
-{capture assign=url}{$language}/{$module}?order=%s{/capture}
+{capture assign=url}{$language}/{$module}?order=%order%{/capture}
 {include file=Visitor/_sort.tpl url=$url}
