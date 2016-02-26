@@ -181,7 +181,7 @@ label {
   padding: 5px 0px 5px 0px;
   display: block;
   font-size: 18px;
-  font-weight: bold;
+  font-weight: 500;
   color: black;
 }
 .form fieldset .legendsubtitle {
@@ -249,6 +249,10 @@ label {
   height: 29px;
   line-height: 29px;
   padding: 0px 10px 0px 10px;
+}
+select,
+input[type=file] {
+  font-family: "Exo 2", "Arial", "sans-serif";
 }
 textarea {
   font-family: "Exo 2", "Arial", "sans-serif";
@@ -2733,6 +2737,9 @@ li#languageselectorlink span {
   background: linear-gradient(to bottom, #f1f1f1 0%,#ffffff 100%);
   filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#f1f1f1', endColorstr='#ffffff',GradientType=0 );
 }
+.nolayout .channelgradient {
+  display: none;
+}
 .channellist {
   list-style-type: none;
   margin: 10px 0 0 0;
@@ -3400,10 +3407,10 @@ li#languageselectorlink span {
   height: 16px;
 }
 #contributors h2 {
-  padding: 5px 0 15px 0;
+  padding: 10px 0 15px 0;
   color: #000;
   font-size: 18px;
-  font-weight: bold;
+  font-weight: 500;
   border-bottom: 1px solid #a5a5a5;
   width: 625px;
 }

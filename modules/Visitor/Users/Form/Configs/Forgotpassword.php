@@ -6,12 +6,6 @@ $lang         = \Springboard\Language::get();
 
 $config = Array(
 
-  'fs1' => array(
-    'type'   => 'fieldset',
-    'legend' => $l('users', 'forgotpass_title'),
-    'prefix' => '<span class="legendsubtitle">' . $l('users', 'forgotpass_subtitle') . '</span>',
-  ),
-
   'action' => Array(
     'type'  => 'inputHidden',
     'value' => 'submitforgotpassword'

@@ -12,12 +12,6 @@ $config = array(
     'value' => $this->application->getNumericParameter('id'),
   ),
   
-  'fs1' => array(
-    'type'   => 'fieldset',
-    'legend' => $l('live', 'createfeed_title'),
-    'prefix' => '<span class="legendsubtitle">' . $l('live', 'createfeed_subtitle') . '</span>',
-  ),
-  
   'name' => array(
     'displayname' => $l('live', 'feedname'),
     'type'        => 'inputText',

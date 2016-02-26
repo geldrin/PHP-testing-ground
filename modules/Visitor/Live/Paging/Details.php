@@ -34,6 +34,7 @@ class Details extends \Visitor\Paging {
       $l('live','details_title'),
       $this->channelModel->row['title']
     );
+
     $this->controller->toSmarty['opengraph']     = array(
       'image'       => smarty_modifier_indexphoto( $this->channelModel->row, 'live' ),
       'description' => $this->channelModel->row['description'],
@@ -82,7 +83,7 @@ class Details extends \Visitor\Paging {
   
   protected function setupCount() {
     
-    return $this->itemcount = 0;
+    return $this->itemcount = null;
     
   }
   

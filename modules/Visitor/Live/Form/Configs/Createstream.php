@@ -12,12 +12,6 @@ $config = array(
     'value' => $this->application->getNumericParameter('id'),
   ),
   
-  'fs1' => array(
-    'type'   => 'fieldset',
-    'legend' => $l('live', 'createstream_title'),
-    'prefix' => '<span class="legendsubtitle">' . $l('live', 'createstream_subtitle') . '</span>',
-  ),
-  
   'qualitytag' => array(
     'displayname' => $l('live', 'quality'),
     'type'        => 'inputText',

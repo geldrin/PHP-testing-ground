@@ -47,6 +47,7 @@ class Edit extends \Visitor\HelpForm {
       ;
     }
 
+    $this->controller->toSmarty['title'] = $l('users', 'modify_title');
     $this->controller->toSmarty['channels'] =
       $this->userModel->getRecordingsProgressWithChannels(
         $this->controller->organization['id']
