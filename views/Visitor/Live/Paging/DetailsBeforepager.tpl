@@ -38,8 +38,8 @@
           <a href="{$language}/channels/details/{$channel.relatedchannelid},{$channel.title|filenameize}" class="submitbutton">{#live__view_archive#}</a>
         {/if}
       </div>
+      <div class="clear"></div>
     {/if}
-    <div class="clear"></div>
     <p>{$channel.description|escape:html|nl2br}</p>
   </div>
 {/if}
