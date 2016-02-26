@@ -147,25 +147,6 @@
     {/if}
   </div>
 
-  {if !empty( $attachments )}
-    <div id="attachments">
-      <h3>{#recordings__manageattachments_title#}</h3>
-      <ul>
-        {foreach from=$attachments item=attachment}
-          <li><a href="{$attachment|@attachmenturl:$recording:$STATIC_URI}">{$attachment.title|escape:html}</a></li>
-        {/foreach}
-      </ul>
-    </div>
-  {/if}
-
-  {if $recording.description|stringempty}
-    <p id="recordingdescription">{$recording.description|escape:html|autolink|nl2br}</p>
-  {/if}
-
-  <div id="copyright">
-    <p>{$recording.copyright|escape:html|default:#recordings__nocopyright#}</p>
-  </div>
-
   <table id="metadatatable">
     {if $recording.keywords|stringempty}
       <tr>
@@ -186,6 +167,25 @@
       <td>{$recording.timestamp|date_format:#smarty_dateformat_long#}</td>
     </tr>
   </table>
+
+  {if $recording.description|stringempty}
+    <p id="recordingdescription">{$recording.description|escape:html|autolink|nl2br}</p>
+  {/if}
+
+  {if !empty( $attachments )}
+    <div id="attachments">
+      <h3>{#recordings__manageattachments_title#}</h3>
+      <ul>
+        {foreach from=$attachments item=attachment}
+          <li><a href="{$attachment|@attachmenturl:$recording:$STATIC_URI}">{$attachment.title|escape:html}</a></li>
+        {/foreach}
+      </ul>
+    </div>
+  {/if}
+
+  <div id="copyright">
+    <p>{$recording.copyright|escape:html|default:#recordings__nocopyright#}</p>
+  </div>
 
   <a id="detaillink" href="#" data-show="{#recordings__showdetails#|escape:html}" data-hide="{#recordings__hidedetails#|escape:html}">{#recordings__showdetails#}</a>
 </div>
