@@ -39,7 +39,7 @@
         {/if}
       </div>
     {/if}
-
+    <div class="clear"></div>
     <p>{$channel.description|escape:html|nl2br}</p>
   </div>
 {/if}
