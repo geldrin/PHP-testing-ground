@@ -18,6 +18,7 @@ class Recordings extends \Springboard\Model {
   public $metadata = array();
   protected $searchadvancedwhere;
   protected $streamingserver;
+  protected $commentcount = array();
 
   public function getLength() {
     $this->ensureObjectLoaded();
@@ -1559,13 +1560,8 @@ class Recordings extends \Springboard\Model {
 
     $ret = array();
 
-    foreach( $rs as $value ) {
-
+    foreach( $rs as $value )
       $ret[] = $value;
-      $idtokey[ $value['id'] ] = count( $ret ) - 1;
-      $nicknametoid[ $value['nickname'] ] = $value['id'];
-
-    }
 
     return $ret;
 
@@ -1574,8 +1570,10 @@ class Recordings extends \Springboard\Model {
   public function getCommentsCount() {
 
     $this->ensureID();
+    if ( isset( $this->commentcount[ $this->id ] ) )
+      return $this->commentcount[ $this->id ];
 
-    return $this->db->getOne("
+    return $this->commentcount[ $this->id ] = $this->db->getOne("
       SELECT COUNT(*)
       FROM comments
       WHERE

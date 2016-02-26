@@ -302,10 +302,14 @@ class Controller extends \Visitor\Controller {
         $this->bootstrap->getSession('recordings-anonuser')->toArray()
       ;
 
-    if ( $recordingsModel->row['commentsenabled'] )
+    if ( $recordingsModel->row['commentsenabled'] ) {
       $this->toSmarty['commentoutput'] = $this->getComments(
         $recordingsModel, $commentspage
       );
+      $this->toSmarty['commentcount'] = $this->getCommentCount(
+        $recordingsModel
+      );
+    }
 
     $this->toSmarty['ipaddress']     = $this->getIPAddress();
     $this->toSmarty['member']        = $user;
@@ -1559,6 +1563,10 @@ class Controller extends \Visitor\Controller {
       'html'       => $this->fetchSmarty('Visitor/Recordings/Comments.tpl'),
     );
 
+  }
+
+  private function getCommentCount( $recordingsModel ) {
+    return $recordingsModel->getCommentsCount();
   }
 
   public function getcommentsAction() {

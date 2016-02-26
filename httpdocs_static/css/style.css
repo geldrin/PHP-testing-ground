@@ -1383,12 +1383,6 @@ li#languageselectorlink span {
   width: auto;
   margin-bottom: 10px;
 }
-#comments .widepager .currentpage {
-  padding: 3px 0 0 14px;
-}
-#comments .widepager .currentpage .divider {
-  padding: 0 0 0 18px;
-}
 
 /* categories list */
 #pagetitle,
@@ -3628,7 +3622,25 @@ li#languageselectorlink span {
 }
 #comments .user .avatar {
   float: left;
-  margin: 0 10px 0 0;
+  margin: 4px 10px 0 0;
+}
+#comments .commentlistitem .avatar img {
+  border-radius: 5px;
+}
+#comments .commentlistitem .name {
+  display: inline-block;
+  font-size: 16px;
+  font-weight: 500;
+  color: #000;
+}
+#comments .commentlistitem .timestamp {
+  display: inline-block;
+  margin: 0 0 0 2px;
+  color: #ccc;
+}
+#comments .commentlistitem .message {
+  font-weight: 400;
+  color: #000;
 }
 #comments .commentlistitem .actions {
   margin: 5px 0 0 0;
