@@ -2847,9 +2847,9 @@ li#languageselectorlink span {
 }
 .channelrecordings > .channeltitle {
   color: #000;
-  font-size: 20px;
+  font-size: 26px;
   font-weight: 500;
-  line-height: 24px;
+  line-height: 30px;
   margin: 0 0 20px 0;
 }
 .channelrecordings.halfwidth .recordinglist, .livelist.recordinglist {
