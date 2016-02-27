@@ -64,7 +64,7 @@
   <ul class="left">
     <li id="recordinguploader">
       <div class="avatar">
-        <img src="{$author|@avatarphoto}" width="36" height="36"/>
+        <img src="{$author|@avatarphoto}" width="45" height="45"/>
       </div>
       <div class="content">
         <div class="uploader">{$author|@nickformat|mb_wordwrap:20|escape:html}</div>

@@ -2287,7 +2287,7 @@ li#languageselectorlink span {
 }
 #infobar > ul > li {
   float: left;
-  height: 40px;
+  height: 50px;
   margin: 1px 10px -1px 10px;
   padding: 0 0 20px 0;
   vertical-align: top;
@@ -2299,9 +2299,17 @@ li#languageselectorlink span {
 }
 #infobar #recordinguploader .uploader,
 #infobar #recordingviews .views {
+  font-size: 16px;
   font-weight: bold;
   line-height: 25px;
   color: #000;
+}
+#infobar #recordinguploader .timestamp,
+#infobar #recordingviews .label,
+#infobar #rating .label {
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 15px;
 }
 #infobar #recordinguploader {
   margin-left: 0px;
@@ -2309,6 +2317,10 @@ li#languageselectorlink span {
 #infobar #recordinguploader .avatar {
   float: left;
   width: 50px;
+  margin: 0 7px 0 0;
+}
+#infobar #recordinguploader .avatar img {
+  border-radius: 5px;
 }
 #infobar #recordinguploader .content {
   float: left;
@@ -2339,9 +2351,9 @@ li#languageselectorlink span {
 #infobar #sharelink a,
 #infobar #embedlink a {
   display: inline-block;
-  height: 40px;
+  height: 50px;
   width: 100%;
-  line-height: 40px;
+  line-height: 50px;
   overflow: hidden;
   color: #333;
   white-space: nowrap;
@@ -2539,6 +2551,7 @@ li#languageselectorlink span {
   list-style-type: none;
 }
 #channels .actions {
+  display: block;
   float: right;
   position: relative;
   right: -40px;
