@@ -2472,17 +2472,20 @@ li#languageselectorlink span {
 #info #recordingmodify {
   float: right;
 }
-#info #presenters h3 {
+#info #presenters h3,
+#info #presenters {
   margin: 0 0 10px 0;
 }
+#info #presenters ul {
+  margin: 0;
+  padding: 0 0 0 17px;
+}
 #info #attachments,
-#info #copyright,
-#info #metadatatable {
+#info #copyright {
   display: none;
 }
 #info.more #attachments,
-#info.more #copyright,
-#info.more #metadatatable {
+#info.more #copyright {
   display: block;
 }
 #info #recordingdescription {
@@ -2504,6 +2507,7 @@ li#languageselectorlink span {
 }
 #info #detaillink {
   vertical-align: top;
+  font-weight: 500;
 }
 #info #metadatatable {
   margin: 0 0 10px 0;

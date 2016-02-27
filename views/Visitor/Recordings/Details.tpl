@@ -93,7 +93,7 @@
   <ul class="right">
     <li id="infolink" class="active"><a href="#"><span></span>{#recordings__info#}</a></li>
     {if $member.id}
-      <li id="channelslink"><a href="#"><span></span>{#recordings__addtochannel#}</a></li>
+      <li id="channelslink"><a href="#" title="{#recordings__addtochannel_verbose#}"><span></span>{#recordings__addtochannel#}</a></li>
     {/if}
     {if $recording.commentsenabled}
     <li id="commentslink"><a href="#"><span id="commentcount" data-commentcount="{$commentcount|default:'0'}">{$commentcount|default:'0'}</span> <span id="commentslinktext">{#recordings__comments#}</span></a></li>
@@ -115,17 +115,25 @@
   <div class="settings">{#recordings__embedsettings#}:</div>
   <div class="settingrow">
     <label for="embedautoplay">{#recordings__embedautoplay#}:</label>
-    <input type="radio" name="embedautoplay" id="embedautoplay_no" checked="checked" value="0"/>
-    <label for="embedautoplay_no">{#no#}</label>
-    <input type="radio" name="embedautoplay" id="embedautoplay_yes" value="1"/>
-    <label for="embedautoplay_yes">{#yes#}</label>
+    <span class="nobr">
+      <input type="radio" name="embedautoplay" id="embedautoplay_no" checked="checked" value="0"/>
+      <label for="embedautoplay_no">{#no#}</label>
+    </span>
+    <span class="nobr">
+      <input type="radio" name="embedautoplay" id="embedautoplay_yes" value="1"/>
+      <label for="embedautoplay_yes">{#yes#}</label>
+    </span>
   </div>
   <div class="settingrow">
     <label for="embedfullscale">{#recordings__embedfullscale#}:</label>
-    <input type="radio" name="embedfullscale" id="embedfullscale_no" checked="checked" value="0"/>
-    <label for="embedfullscale_no">{#no#}</label>
-    <input type="radio" name="embedfullscale" id="embedfullscale_yes" value="1"/>
-    <label for="embedfullscale_yes">{#yes#}</label>
+    <span class="nobr">
+      <input type="radio" name="embedfullscale" id="embedfullscale_no" checked="checked" value="0"/>
+      <label for="embedfullscale_no">{#no#}</label>
+    </span>
+    <span class="nobr">
+      <input type="radio" name="embedfullscale" id="embedfullscale_yes" value="1"/>
+      <label for="embedfullscale_yes">{#yes#}</label>
+    </span>
   </div>
   <div class="settingrow">
     <label for="embedstart">{#recordings__embedstart#}:</label>
@@ -140,20 +148,18 @@
     <a id="recordingmodify" class="submitbutton" target="_blank" href="{$language}/recordings/modifybasics/{$recording.id}?forward={$FULL_URI|escape:url}">{#recordings__editrecording#}</a>
   {/if}
 
+  {if !empty( $recording.presenters )}
   <div id="presenters">
     <h3>{#recordings__presenters#}</h3>
-    {if !empty( $recording.presenters )}
-      {include file=Visitor/presenters.tpl presenters=$recording.presenters}
-    {/if}
+    <ul>
+      <li>
+        {include file=Visitor/presenters.tpl presenters=$recording.presenters presenterdelimiter="</li><li>"}
+      </li>
+    </ul>
   </div>
+  {/if}
 
   <table id="metadatatable">
-    {if $recording.keywords|stringempty}
-      <tr>
-        <td class="labelcolumn">{#recordings__keywords#}:</td>
-        <td>{$recording.keywords|escape:html}</td>
-      </tr>
-    {/if}
     <tr>
       <td class="labelcolumn">{#recordings__recordlength#}:</td>
       <td>{$recording|@recordinglength|timeformat}</td>
@@ -166,6 +172,12 @@
       <td class="labelcolumn">{#recordings__details_uploadtimestamp#}:</td>
       <td>{$recording.timestamp|date_format:#smarty_dateformat_long#}</td>
     </tr>
+    {if $recording.keywords|stringempty}
+      <tr>
+        <td class="labelcolumn">{#recordings__keywords#}:</td>
+        <td>{$recording.keywords|escape:html}</td>
+      </tr>
+    {/if}
   </table>
 
   {if $recording.description|stringempty}
