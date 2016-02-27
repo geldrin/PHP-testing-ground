@@ -158,7 +158,6 @@
   }
 
   #channelheader {
-    background-color: #000;
   }
   #channelheader img {
     width: 100%;
@@ -166,6 +165,7 @@
   }
   #channelheader .channelinfowrap {
     padding: 0;
+    bottom: 10%;
   }
   #channeldescription .submitbutton {
     margin: 0 10px 10px 0;
