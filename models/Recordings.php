@@ -1689,6 +1689,8 @@ class Recordings extends \Springboard\Model {
         'nameprefix'          => $recording['nameprefix'],
         'namefirst'           => $recording['namefirst'],
         'namelast'            => $recording['namelast'],
+        'timestamp'           => $recording['timestamp'],
+        'recordedtimestamp'   => $recording['recordedtimestamp'],
       );
 
     }
@@ -1726,6 +1728,8 @@ class Recordings extends \Springboard\Model {
       r.masterlength,
       r.contentmasterlength,
       r.numberofviews,
+      r.timestamp,
+      r.recordedtimestamp,
       usr.id AS userid,
       IF(
         usr.nickname IS NULL OR LENGTH(usr.nickname) = 0,
@@ -1784,6 +1788,8 @@ class Recordings extends \Springboard\Model {
       r.masterlength,
       r.contentmasterlength,
       r.numberofviews,
+      r.timestamp,
+      r.recordedtimestamp,
       usr.id AS userid,
       IF(
         usr.nickname IS NULL OR LENGTH(usr.nickname) = 0,
@@ -1850,6 +1856,8 @@ class Recordings extends \Springboard\Model {
       r.masterlength,
       r.contentmasterlength,
       r.numberofviews,
+      r.timestamp,
+      r.recordedtimestamp,
       usr.id AS userid,
       IF(
         usr.nickname IS NULL OR LENGTH(usr.nickname) = 0,

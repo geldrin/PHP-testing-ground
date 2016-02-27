@@ -1,6 +1,9 @@
 <div id="mobilemenu">
   <span class="menulabel">{#sitewide_menu#}</span>
   <ul>
+    {if !$member or !$member.id}
+      <li><a href="{$language}/users/login{if $module == 'index'}?welcome=1{/if}">{#sitewide_login#}</a></li>
+    {/if}
     <li{if $module == 'categories'} class="active"{/if}><a href="{$language}/categories">{#sitewide_categories#}</a></li>
     {if $organization.islivestreamingenabled}
       <li{if $module == 'live'} class="active"{/if}><a href="{$language}/live">{#sitewide_live#}</a></li>
@@ -9,6 +12,9 @@
     {*}
     <li{if $module == 'featured'} class="active"{/if}><a href="{$language}/recordings/featured/newest">{#sitewide_featured#}</a></li>
     {/*}
+    {if $member.id}
+      <li><a href="{$language}/users/logout">{#usermenu_users_logout#}</a></li>
+    {/if}
     {foreach from=$organization.languages key=languageid item=item}
       {if $languageid != $language}
       <li class="{$languageid}">

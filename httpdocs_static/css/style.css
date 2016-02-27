@@ -2120,7 +2120,7 @@ li#languageselectorlink span {
   line-height: 13px;
   text-shadow: 0px 1px 3px rgba(0, 0, 0, 0.75);
   position: absolute;
-  bottom: 12px;
+  bottom: 20px;
   right: 15px;
 }
 .accordion .recordingpic img {
@@ -2135,7 +2135,7 @@ li#languageselectorlink span {
   color: #7f7f7f;
   font-size: 26px;
   line-height: 30px;
-  padding: 10px 30px 10px 0;
+  padding: 10px 45px 10px 0;
   border-bottom: 1px solid #ccc;
 }
 .accordion.active h2 a {

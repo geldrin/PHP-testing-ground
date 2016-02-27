@@ -1,7 +1,11 @@
 #player {
   text-align: center;
 }
-#currentuser {
+
+#recordingmodify,
+#currentuser,
+.actions,
+.recordingactions {
   display: none;
 }
 
@@ -518,6 +522,5 @@
   }
 
   .form.search .submitbutton {
-    width: 70px;
   }
 }
