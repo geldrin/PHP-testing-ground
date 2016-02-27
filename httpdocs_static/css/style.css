@@ -1387,8 +1387,10 @@ li#languageselectorlink span {
 /* categories list */
 #pagetitle,
 #categorytitle {
+  display: table;
   padding: 0;
   width: 100%;
+  min-height: 70px;
   border-top; 1px solid #fff;
   border-bottom: 1px solid #d8d8d8;
   box-sizing: border-box;
@@ -1398,8 +1400,10 @@ li#languageselectorlink span {
 }
 #pagetitle h1,
 #categorytitle h1 {
+  display: table-cell;
+  vertical-align: middle;
   margin: 0;
-  line-height: 70px;
+  line-height: 35px;
   font-size: 26px;
 }
 .categorylist {
@@ -1471,12 +1475,10 @@ li#languageselectorlink span {
   margin: 0 0 0 5px;
   color: #43b5e5;
   float: right;
-  line-height: 70px;
   font-size: 20px;
   padding-right: 25px;
   background-repeat: no-repeat;
   background-position: right center;
-  background-position: right 0px bottom 22px;
   background-image: url(images/arrow_back.png);
 }
 #pagetitle .back:focus,
