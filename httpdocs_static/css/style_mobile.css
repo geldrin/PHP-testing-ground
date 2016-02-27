@@ -13,6 +13,12 @@
   body {
     -webkit-text-size-adjust: none;
   }
+  #indexcontainer li a:hover,
+  #indexcontainer li a:focus,
+  .accordion li a:hover,
+  .accordion li a:focus {
+    text-decoration: none;
+  }
   #headerbg, #footerbg {
     min-width: 0px;
   }
@@ -514,11 +520,13 @@
 
 @media all and (max-width: 460px) {
   #indexcontainer .recordingpic .length {
-    bottom: 22px;
+    bottom: auto;
+    top: 20px;
   }
 
   .accordion .recordingpic .length {
-    bottom: 42px;
+    bottom: auto;
+    top: 20px;
   }
 
   .form.search .submitbutton {
