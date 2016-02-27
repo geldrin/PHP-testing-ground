@@ -269,6 +269,7 @@
     width: 83%;
     max-width: 172px;
   }
+
   .recordinglist .recordingpic .playpic {
     -webkit-background-size: 100% auto;
     background-size: 100% auto;
@@ -522,6 +523,14 @@
   .widepager .next {
     position: static;
     margin: 0;
+  }
+
+  .recordinglist .listitem.channel .recordingpic {
+    width: 33%;
+  }
+  .recordinglist .recordingcontent,
+  .livelist.recordinglist .recordingcontent {
+    width: 63%;
   }
 }
 @media all and (max-width: 460px) {
