@@ -517,7 +517,13 @@
     width: auto;
   }
 }
-
+@media all and (max-width: 600px) {
+  .widepager .previous,
+  .widepager .next {
+    position: static;
+    margin: 0;
+  }
+}
 @media all and (max-width: 460px) {
   #indexcontainer .recordingpic .length {
     bottom: auto;
