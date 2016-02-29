@@ -1,35 +1,93 @@
+@font-face {
+  font-family: 'Exo 2';
+  font-style: normal;
+  font-weight: 300;
+  src: url(exo2/exo-2-v3-latin_latin-ext-300.eot);
+  src: local('Exo 2 Light'), local('Exo2-Light'),
+       url(exo2/exo-2-v3-latin_latin-ext-300.eot?#iefix) format('embedded-opentype'),
+       url(exo2/exo-2-v3-latin_latin-ext-300.woff2) format('woff2'),
+       url(exo2/exo-2-v3-latin_latin-ext-300.woff) format('woff'),
+       url(exo2/exo-2-v3-latin_latin-ext-300.ttf) format('truetype'),
+       url(exo2/exo-2-v3-latin_latin-ext-300.svg#Exo2) format('svg');
+}
+@font-face {
+  font-family: 'Exo 2';
+  font-style: normal;
+  font-weight: 400;
+  src: url(exo2/exo-2-v3-latin_latin-ext-regular.eot);
+  src: local('Exo 2'), local('Exo2-Regular'),
+       url(exo2/exo-2-v3-latin_latin-ext-regular.eot?#iefix) format('embedded-opentype'),
+       url(exo2/exo-2-v3-latin_latin-ext-regular.woff2) format('woff2'),
+       url(exo2/exo-2-v3-latin_latin-ext-regular.woff) format('woff'),
+       url(exo2/exo-2-v3-latin_latin-ext-regular.ttf) format('truetype'),
+       url(exo2/exo-2-v3-latin_latin-ext-regular.svg#Exo2) format('svg');
+}
+@font-face {
+  font-family: 'Exo 2';
+  font-style: normal;
+  font-weight: 500;
+  src: url(exo2/exo-2-v3-latin_latin-ext-500.eot);
+  src: local('Exo 2 Medium'), local('Exo2-Medium'),
+       url(exo2/exo-2-v3-latin_latin-ext-500.eot?#iefix) format('embedded-opentype'),
+       url(exo2/exo-2-v3-latin_latin-ext-500.woff2) format('woff2'),
+       url(exo2/exo-2-v3-latin_latin-ext-500.woff) format('woff'),
+       url(exo2/exo-2-v3-latin_latin-ext-500.ttf) format('truetype'),
+       url(exo2/exo-2-v3-latin_latin-ext-500.svg#Exo2) format('svg');
+}
+@font-face {
+  font-family: 'Exo 2';
+  font-style: normal;
+  font-weight: 700;
+  src: url(exo2/exo-2-v3-latin_latin-ext-700.eot);
+  src: local('Exo 2 Bold'), local('Exo2-Bold'),
+       url(exo2/exo-2-v3-latin_latin-ext-700.eot?#iefix) format('embedded-opentype'),
+       url(exo2/exo-2-v3-latin_latin-ext-700.woff2) format('woff2'),
+       url(exo2/exo-2-v3-latin_latin-ext-700.woff) format('woff'),
+       url(exo2/exo-2-v3-latin_latin-ext-700.ttf) format('truetype'),
+       url(exo2/exo-2-v3-latin_latin-ext-700.svg#Exo2) format('svg');
+}
+
 body {
-  font-family: "Arial", "sans-serif";
-  line-height: 18px;
-  font-size: 13px;
+  font-family: 'Exo 2', "Arial", "sans-serif";
+  font-weight: 300;
+  line-height: 24px;
+  font-size: 14px;
   color: #333;
-  background-color: #ebebeb;
+  background-color: #fff;
 }
 h1 {
+  font-size: 30px;
+  font-weight: 500;
+  line-height: 46px;
+}
+h2, h3, h4 {
   font-size: 20px;
-  font-weight: normal;
+  font-weight: 500;
+  line-height: 24px;
 }
-h2 {
+h5 {
+  font-size: 18px;
+  font-weight: 500;
+  line-height: 24px;
+}
+h6 {
   font-size: 16px;
-  font-weight: normal;
-}
-h3 {
-  font-size: 15px;
-  font-weight: normal;
-}
-h4 {
-  font-size: 13px;
-  font-weight: normal;
+  font-weight: 500;
+  line-height: 24px;
 }
 a span {
   cursor: pointer;
 }
 a {
-  color: #1e97d4;
+  color: #43b5e5;
   text-decoration: none;
 }
-a:hover {
+a:hover, a:focus {
+  color: #4ac9ff;
   text-decoration: underline;
+}
+a:active {
+  color: #2c7899;
 }
 img {
   border: 0;

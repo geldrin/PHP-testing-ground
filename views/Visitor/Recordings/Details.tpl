@@ -151,7 +151,7 @@
   {if !empty( $recording.presenters )}
   <div id="presenters">
     <h3>{#recordings__presenters#}</h3>
-    {include file=Visitor/presenters.tpl presenters=$recording.presenters}
+    {include file=Visitor/presenters.tpl presenters=$recording.presenters skippresenterbolding=false}
   </div>
   {/if}
 
