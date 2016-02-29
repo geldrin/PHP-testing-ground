@@ -183,13 +183,35 @@
   }
 
   /* recording details */
+  #infobar #recordinguploader .content {
+    width: auto;
+    max-width: 190px;
+  }
   #infobar #infolink,
   #infobar #channelslink,
   #infobar #embedlink {
     width: 22px;
   }
+  #infobar > ul,
+  #infobar > ul.right {
+    float: none;
+    display: inline;
+  }
+  #infobar .ratewidget {
+    line-height: 58px;
+  }
+  .ratewidget a,
+  .ratewidget a span {
+    line-height: 20px;
+  }
+  #infobar #rating .label {
+    display: none;
+  }
   #infobar #commentslink #commentslinktext {
     display: none;
+  }
+  #infobar > ul > li {
+    margin-bottom: -3px;
   }
   #embed textarea {
     width: 100%;
