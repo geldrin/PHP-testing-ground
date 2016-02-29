@@ -3,6 +3,8 @@
   <ul>
     {if !$member or !$member.id}
       <li><a href="{$language}/users/login{if $module == 'index'}?welcome=1{/if}">{#sitewide_login#}</a></li>
+    {else}
+      <li><a href="{$language}/users/welcome">{#usermenu_users_welcome#}</a></li>
     {/if}
     <li{if $module == 'categories'} class="active"{/if}><a href="{$language}/categories">{#sitewide_categories#}</a></li>
     {if $organization.islivestreamingenabled}
