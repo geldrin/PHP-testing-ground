@@ -151,14 +151,11 @@
   {if !empty( $recording.presenters )}
   <div id="presenters">
     <h3>{#recordings__presenters#}</h3>
-    <ul>
-      <li>
-        {include file=Visitor/presenters.tpl presenters=$recording.presenters presenterdelimiter="</li><li>"}
-      </li>
-    </ul>
+    {include file=Visitor/presenters.tpl presenters=$recording.presenters}
   </div>
   {/if}
 
+  <h3 id="metadatalabel">{#recordings__info#}</h3>
   <table id="metadatatable">
     <tr>
       <td class="labelcolumn">{#recordings__recordlength#}:</td>
@@ -181,17 +178,16 @@
   </table>
 
   {if $recording.description|stringempty}
+    <h3 id="recordingdescriptionlabel">{#recordings__description_title#}</h3>
     <p id="recordingdescription">{$recording.description|escape:html|autolink|nl2br}</p>
   {/if}
 
   {if !empty( $attachments )}
     <div id="attachments">
       <h3>{#recordings__manageattachments_title#}</h3>
-      <ul>
-        {foreach from=$attachments item=attachment}
-          <li><a href="{$attachment|@attachmenturl:$recording:$STATIC_URI}">{$attachment.title|escape:html}</a></li>
-        {/foreach}
-      </ul>
+      {foreach from=$attachments item=attachment}
+        <a href="{$attachment|@attachmenturl:$recording:$STATIC_URI}">{$attachment.title|escape:html}</a>
+      {/foreach}
     </div>
   {/if}
 

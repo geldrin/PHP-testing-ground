@@ -2486,13 +2486,19 @@ li#languageselectorlink span {
 #info #recordingmodify {
   float: right;
 }
-#info #presenters h3,
-#info #presenters {
+#info #presenters h3 {
   margin: 0 0 10px 0;
+}
+#info #metadatalabel,
+#info #recordingdescriptionlabel {
+  margin: 10px 0;
 }
 #info #presenters ul {
   margin: 0;
   padding: 0 0 0 17px;
+}
+#info #attachments a {
+  display: block;
 }
 #info #attachments,
 #info #copyright {
