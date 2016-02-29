@@ -406,6 +406,8 @@ a.submitbutton:hover,
 }
 .form .checkboxlabel,
 .form .radiolabel {
+  -webkit-flex: 0 1 auto;
+  -ms-flex: 0 1 auto;
   flex: 0 1 auto;
 }
 
@@ -961,6 +963,8 @@ li#headeruserlink a span {
 }
 #headersearch form {
   display: block;
+  display: -ms-flexbox;
+  display: -webkit-flex;
   display: flex;
   width: 980px;
   margin: 0 auto;
@@ -1012,6 +1016,7 @@ li#headeruserlink a span {
   margin: 0 20px 0 0;
   color: #333333;
   font-size: 30px;
+  -webkit-flex-grow: 3;
   flex-grow: 3;
   font-family: 'Exo 2', "Arial", "sans-serif";
 }
@@ -1411,12 +1416,22 @@ li#languageselectorlink span {
   margin: 0;
   padding: 0;
   list-style-type: none;
+  display: -ms-flexbox;
+  display: -webkit-flex;
   display: flex;
+  -webkit-flex-direction: row;
+  -ms-flex-direction: row;
+  flex-direction: row;
+  -webkit-align-content: flex-start;
+  -ms-flex-line-pack: start;
   align-content: flex-start;
   flex-flow: row wrap;
+  -webkit-justify-content: flex-start;
   justify-content: flex-start;
 }
 .categorylist li {
+  -webkit-flex: 0 1 196px;
+  -ms-flex: 0 1 196px;
   flex: 0 1 196px;
   float: left;
   min-width: 170px;
@@ -1762,6 +1777,8 @@ li#languageselectorlink span {
   margin-top: 3px;
 }
 .recordinglist .recordinginfo {
+  display: -ms-flexbox;
+  display: -webkit-flex;
   display: flex;
   align-items: center;
   font-size: 12px;
@@ -1776,6 +1793,8 @@ li#languageselectorlink span {
 .recordinglist .recordinginfo .timestamp {
 }
 .recordinglist .recordinginfo .views {
+  -webkit-flex: 1;
+  -ms-flex: 1;
   flex: 1;
   text-align: center;
   color: #000;
@@ -2017,6 +2036,8 @@ li#languageselectorlink span {
   height: 338px;
 }
 #indexcontainer .recordingcontent .wrap {
+  display: -ms-flexbox;
+  display: -webkit-flex;
   display: flex;
 }
 #indexcontainer li.first .recordingcontent {
@@ -2029,6 +2050,8 @@ li#languageselectorlink span {
 #indexcontainer .recordingcontent .presenter,
 #indexcontainer .recordingcontent .timestamp {
   display: inline-block;
+  -webkit-flex: 1 auto;
+  -ms-flex: 1 auto;
   flex: 1 auto;
   width: auto;
   height: 20px;
@@ -2044,6 +2067,7 @@ li#languageselectorlink span {
   font-size: 11px;
 }
 #indexcontainer .recordingcontent .timestamp {
+  -webkit-flex-grow: 2;
   flex-grow: 2;
   color: #7a7a7a;
   font-size: 12px;
@@ -2144,11 +2168,15 @@ li#languageselectorlink span {
   color: #000;
 }
 .accordion .recordingcontent .wrap {
+  display: -ms-flexbox;
+  display: -webkit-flex;
   display: flex;
 }
 #body .accordion .presenter,
 #body .accordion .timestamp {
   display: inline-block;
+  -webkit-flex: 1 auto;
+  -ms-flex: 1 auto;
   flex: 1 auto;
   width: auto;
   height: 20px;
@@ -3357,6 +3385,8 @@ li#languageselectorlink span {
   border: 0;
 }
 .searchtable #advancedsearchrow .wrap {
+  display: -ms-flexbox;
+  display: -webkit-flex;
   display: flex;
   border-top; 1px solid #fff;
   border-bottom: 1px solid #d8d8d8;
