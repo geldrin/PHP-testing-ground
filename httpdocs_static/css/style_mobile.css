@@ -15,6 +15,9 @@
   body {
     -webkit-text-size-adjust: none;
   }
+  .submitbutton {
+    -webkit-appearance: none;
+  }
   #indexcontainer li a:hover,
   #indexcontainer li a:focus,
   .accordion li a:hover,
