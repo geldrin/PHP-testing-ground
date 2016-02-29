@@ -248,11 +248,6 @@ while ( !$ldap_groups->EOF ) {
         foreach ($vsq_group_members as $key => $vsq_user) {
             $result = recursive_array_search($vsq_user['member_externalid'], $ldap_users);
             if ( $isdebug_user ) echo "Searched: " . $vsq_user['member_externalid'] . " - result LDAP user index = " . $result . "\n";
-    // !!!
-    /*if ( $vsq_user['member_externalid'] == "akovacs@streamnet.hu" ) {
-        var_dump($vsq_user);
-        $result = false;
-    } */
             // Record user to be removed from LDAP/AD
             if ( $result === false ) {
                 $vsq_group_members[$key]['isremoved'] = true;
@@ -345,7 +340,6 @@ global $myjobid, $debug, $jconf, $app;
             LOWER(u.externalid) LIKE CONCAT(gm.userexternalid, '@%')";
         
     try {
-        //$rs = $db->Execute($query);
         $model = $app->bootstrap->getModel('groups_members');
         $rs = $model->safeExecute($query);
     } catch (exception $err) {
@@ -368,7 +362,6 @@ global $myjobid, $debug, $jconf, $app;
             gm.userid = u.id";
 
     try {
-        //$rs = $db->Execute($query);
         $model = $app->bootstrap->getModel('groups_members');
         $rs = $model->safeExecute($query);
     } catch (exception $err) {
@@ -383,7 +376,7 @@ global $myjobid, $debug, $jconf, $app;
 }
 
 function AddVSQGroupMembers($users2add) {
-global $myjobid, $debug, $jconf;
+global $myjobid, $debug, $jconf, $app;
 
     if ( empty($users2add) ) return false;
 
@@ -393,7 +386,6 @@ global $myjobid, $debug, $jconf;
         VALUES " . $users2add;
 
 	try {
-		//$rs = $db->Execute($query);
         $model = $app->bootstrap->getModel('groups_members');
         $rs = $model->safeExecute($query);
 	} catch (exception $err) {
@@ -405,7 +397,7 @@ global $myjobid, $debug, $jconf;
 }
 
 function DeleteVSQGroupMembers($groupid, $users2remove) {
-global $myjobid, $debug, $jconf;
+global $myjobid, $debug, $jconf, $app;
 
     if ( empty($users2remove) ) return false;
 
@@ -417,7 +409,6 @@ global $myjobid, $debug, $jconf;
             userexternalid IN " . $users2remove;
 
 	try {
-		//$rs = $db->Execute($query);
         $model = $app->bootstrap->getModel('groups_members');
         $rs = $model->safeExecute($query);
 	} catch (exception $err) {
@@ -429,7 +420,7 @@ global $myjobid, $debug, $jconf;
 }
 
 function getVSQGroupMembers($groupid) {
-global $myjobid, $debug, $jconf;
+global $myjobid, $debug, $jconf, $app;
 
 	$query = "
         SELECT
@@ -450,7 +441,6 @@ global $myjobid, $debug, $jconf;
     ";
 
     try {
-		//$rs = $db->getArray($query);
         $model = $app->bootstrap->getModel('groups');
         $rs = $model->safeExecute($query);
 	} catch (exception $err) {
@@ -466,7 +456,7 @@ global $myjobid, $debug, $jconf;
 }
 
 function getLDAPGroups($synctimemin) {
-global $myjobid, $debug, $jconf;
+global $myjobid, $debug, $jconf, $app;
 
 	$query = "
 		SELECT
@@ -491,7 +481,6 @@ global $myjobid, $debug, $jconf;
             ( g.organizationdirectoryuserslastsynchronized IS NULL OR TIMESTAMPADD(MINUTE, " . $synctimemin . ", g.organizationdirectoryuserslastsynchronized) < NOW() )";
 
 	try {
-		//$rs = $db->Execute($query);
         $model = $app->bootstrap->getModel('groups');
         $rs = $model->safeExecute($query);
 	} catch (exception $err) {
@@ -560,6 +549,15 @@ function recursive_array_search($needle, $haystack) {
     foreach( $haystack as $key => $value ) {
         $current_key = $key;
         if ( $needle === $value OR ( is_array($value) && recursive_array_search($needle, $value) !== false ) ) {
+            return $current_key;
+        }
+    }
+
+    return false;
+}
+
+?>
+  if ( $needle === $value OR ( is_array($value) && recursive_array_search($needle, $value) !== false ) ) {
             return $current_key;
         }
     }
