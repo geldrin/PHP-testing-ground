@@ -512,7 +512,7 @@ function searchLDAPDirectoriesByID($ldap_dirs, $id) {
 }
 
 function getLDAPDirectories() {
-global $myjobid, $debug, $jconf;
+global $myjobid, $debug, $jconf, $app;
 
 	$query = "
 		SELECT
@@ -539,7 +539,6 @@ global $myjobid, $debug, $jconf;
     ";
     
 	try {
-		//$rs = $db->getArray($query);
         $model = $app->bootstrap->getModel('organizations_directories');
         $rs = $model->safeExecute($query);
 	} catch (exception $err) {
