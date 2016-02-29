@@ -38,7 +38,8 @@ if ( iswindows() ) {
 }
 
 // Start an infinite loop - exit if any STOP file appears
-while( !is_file( $attachedDoc->config['datapath'] . 'jobs/' . $attachedDoc->jobid . '.stop' ) and !is_file( $attachedDoc->config['datapath'] . 'jobs/all.stop' ) ) {
+//while( !is_file( $attachedDoc->config['datapath'] . 'jobs/' . $attachedDoc->jobid . '.stop' ) and !is_file( $attachedDoc->config['datapath'] . 'jobs/all.stop' ) ) {
+while( 1 ) {
 
 	clearstatcache();
     

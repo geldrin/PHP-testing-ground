@@ -46,6 +46,8 @@ class Job {
         $this->stopfile_all  = $this->config['datapath'] . 'jobs/all.stop';
 
         // Debug mode
+        //$err = isset($this->config['jobs'][$this->config['node_role']][$this->jobid]['debug_mode']);
+        //var_dump($err);
         if ( isset($this->config['jobs'][$this->config['node_role']][$this->jobid]['debug_mode']) ) {
             $this->debug_mode = $this->config['jobs'][$this->config['node_role']][$this->jobid]['debug_mode'];
         }
