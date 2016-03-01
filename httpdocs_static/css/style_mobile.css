@@ -213,6 +213,18 @@
   }
   #infobar > ul > li {
     margin-bottom: -10px;
+    height: 40px;
+  }
+  #infobar > ul.right > li {
+    height: 30px;
+  }
+  #infobar #infolink a,
+  #infobar #channelslink a,
+  #infobar #commentslink a,
+  #infobar #sharelink a,
+  #infobar #embedlink a {
+    height: 30px;
+    line-height: 30px;
   }
   #embed textarea {
     width: 100%;
@@ -266,8 +278,12 @@
   #recordingdownloads {
     float: none;
   }
-  #comments, #comments .widepager, #commentform textarea {
+  #comments,
+  #comments .widepager,
+  #commentform table,
+  #commentform textarea {
     width: 100%;
+    box-sizing: border-box;
   }
 
   /* recordinglist auto-size */
