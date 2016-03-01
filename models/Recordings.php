@@ -1279,7 +1279,7 @@ class Recordings extends \Springboard\Model {
 
       return "
         (
-          SELECT $select
+          SELECT DISTINCT $select
           FROM $from
           WHERE $where $publicwhere
         )
@@ -1993,7 +1993,7 @@ class Recordings extends \Springboard\Model {
 
     if ( !isset( $user['id'] ) )
       return $this->db->getOne("
-        SELECT DISTINCT COUNT(r.id)
+        SELECT COUNT(DISTINCT r.id)
         FROM $from
         WHERE
           $where AND
