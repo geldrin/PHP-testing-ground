@@ -287,6 +287,12 @@
   }
 
   /* recordinglist auto-size */
+  .recordinglist.recordingprogress .recordingpic .playprogress {
+    top: 0;
+    left: 0;
+    font-size: 16px;
+    line-height: 24px;
+  }
   .recordinglist,
   .recordinglist .listitem,
   .livelist.recordinglist .listitem {
