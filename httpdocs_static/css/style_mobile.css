@@ -292,8 +292,15 @@
   .livelist.recordinglist .listitem {
     width: 100%;
   }
+  .recordinglist .listitem,
+  .livelist.recordinglist .listitem {
+    display: -ms-flexbox;
+    display: -webkit-flex;
+    display: flex;
+  }
   .recordinglist .recordingpic {
     width: 16.66666%;
+    min-width: 100px;
     margin-right: 3.333333%;
     position: relative;
   }
