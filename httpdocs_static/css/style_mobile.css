@@ -189,13 +189,14 @@
   }
   #infobar #infolink,
   #infobar #channelslink,
-  #infobar #embedlink {
+  #infobar #embedlink,
+  #infobar #sharelink {
     width: 22px;
   }
   #infobar > ul,
   #infobar > ul.right {
     float: none;
-    display: inline;
+    display: inline-block;
   }
   #infobar .ratewidget {
     line-height: 58px;
@@ -211,7 +212,7 @@
     display: none;
   }
   #infobar > ul > li {
-    margin-bottom: -3px;
+    margin-bottom: -10px;
   }
   #embed textarea {
     width: 100%;
