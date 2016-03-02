@@ -1,5 +1,12 @@
+body {
+  -webkit-text-size-adjust: none;
+}
 #player {
   text-align: center;
+}
+.submitbutton,
+input[type=submit] {
+  -webkit-appearance: none;
 }
 
 @media all and (max-width: 1000px) {
@@ -13,12 +20,6 @@
     display: none;
   }
 
-  body {
-    -webkit-text-size-adjust: none;
-  }
-  .submitbutton {
-    -webkit-appearance: none;
-  }
   #indexcontainer li a:hover,
   #indexcontainer li a:focus,
   .accordion li a:hover,

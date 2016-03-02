@@ -796,7 +796,7 @@ function setupHeaderMenu() {
     $j('#headerloginactions, #currentusermenu:not(.donttouch), #headerlogin .arrow').hide();
   });
 
-  if ( !BROWSER.mobile || BROWSER.tablet ) {
+  if ( !BROWSER.mobile ) {
 
     $j('#headersearchlink a').on('click', function(e) {
       e.preventDefault();
