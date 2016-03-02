@@ -59,13 +59,23 @@ class Job extends \Springboard\Application\Job {
         if ( $this->isWindowsJob ) $retval = false;
     
         if ( stripos(PHP_OS, "WIN") === false ) {
-            if ( $this->isWindowsJob ) throw new Exception('[EXCEPTION] Windows OS is required.');
+            if ( $this->isWindowsJob ) throw new \Videosquare\Model\Exception('[EXCEPTION] Windows OS is required.', 100);
         } else {
-            if ( !$this->isWindowsJob ) throw new Exception('[EXCEPTION] Linux OS is required.');
+            if ( !$this->isWindowsJob ) throw new \Videosquare\Model\Exception('[EXCEPTION] Linux OS is required.', 100);
         }
 
         return true;
     }
+    
+    public function isLibreOfficeRunning() {
+
+        $command = "ps uax | grep \"^" . $this->bootstrap->config['ssh_user'] . "\" | grep \"soffice.bin\" | grep -v \"grep\"";
+        exec($command, $output, $result);
+        if ( isset($output[0]) ) return true;
+
+        return false;
+    }
+
     
     // Wrapper for debug log
     public function debugLog($msg, $sendmail = false) {

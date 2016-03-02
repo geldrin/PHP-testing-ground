@@ -16,7 +16,7 @@ class LiveUpdateCounters extends Job {
     protected $needsSleep               = false;
 
     // Videosquare job specific config options
-    protected $removeLockOnStart        = true;
+    protected $removeLockOnStart        = false;
             
     // Process job task
     protected function process() {

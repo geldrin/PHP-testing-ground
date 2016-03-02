@@ -8,8 +8,9 @@ class Recordings extends \Springboard\Model {
     
     // Select recording
     public function selectRecording($recordingid) {
-    
-        if ( empty($recordingid) ) return false;
+
+        if ( empty($recordingid) ) throw new \Videosquare\Model\Exception('Recording ID is empty.');
+        
         $this->recordingid = $recordingid;
         
     }
@@ -17,7 +18,7 @@ class Recordings extends \Springboard\Model {
     // Select recording version
     public function selectRecordingVersion($recordingversionid) {
     
-        if ( empty($recordingversionid) ) return false;
+        if ( empty($recordingversionid) ) throw new \Videosquare\Model\Exception('Recording version ID is empty.');
         
         $this->recordingversionid = $recordingversionid;
         
@@ -27,12 +28,12 @@ class Recordings extends \Springboard\Model {
     // Get recording status
     public function getRecordingStatus($type = "recording") {
 
-        if ( ( $type != "recording" ) and ( $type != "content" ) ) return false;
+        if ( ( $type != "recording" ) and ( $type != "content" ) ) throw new \Videosquare\Model\Exception('Status type is not valid. Type: ' . $type);
 
         $idx = "";
         if ( $type == "content" ) $idx = "content";
 
-        $recordingObj = $this->bootstrap->getModel('recordings');
+        $recordingObj = $this->bootstrap->getVSQModel('recordings');
         $recordingObj->select($this->recordingid);
         $recording = $recordingObj->getRow();
 
@@ -61,13 +62,13 @@ class Recordings extends \Springboard\Model {
             );
         }
 
-        $recordingVersionObj = $this->bootstrap->getModel('recordings');
+        $recordingVersionObj = $this->bootstrap->getVSQModel('recordings');
         $recordingVersionObj->select($this->recordingid);
         $recordingVersionObj->updateRow($values);
 
         // Update index photos
         if ( ( $status == $this->bootstrap->config['config_jobs']['dbstatus_copystorage_ok'] ) and ( $type == "recording" ) ) {
-            $recordingObj = $this->bootstrap->getModel('recordings');
+            $recordingObj = $this->bootstrap->getVSQModel('recordings');
             $recordingObj->select($this->recordingid);
             $recordingObj->updateChannelIndexPhotos();
         }
