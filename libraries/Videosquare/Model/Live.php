@@ -8,34 +8,47 @@ class Live extends \Springboard\Model {
     
     // ## Select object for further operations
     
-    // Select live feed
+    // Select livefeed id
     public function selectLiveFeed($livefeedid) {
     
-        if ( empty($livefeedid) ) return false;
+        if ( empty($livefeedid) ) throw new \Videosquare\Model\Exception('Empty livefeed ID.');
         
         $this->livefeedid = $livefeedid;
         
-        return true;
     }
 
-    // Select live feed stream
+    // Select livefeedstream id
     public function selectLiveFeedStream($livefeedstreamid) {
     
-        if ( empty($livefeedstreamid) ) return false;
+        if ( empty($livefeedstreamid) ) throw new \Videosquare\Model\Exception('Empty livefeedstream ID.');
         
         $this->livefeedstreamid = $livefeedstreamid;
-        
-        return true;
+
     }
+
+    // Get livefeed id
+    public function getLiveFeed() {
+
+        return $this->livefeedid;
+        
+    }
+
+    // Get livefeedstream id
+    public function getLiveFeedStream() {
+        
+        return $this->livefeedstreamid;
+
+    }
+
     
     // ## Status update functions
     
     // Update livefeed SMIL status
     public function updateLiveFeedSMILStatus($status, $type = "video") {
 
-        if ( ( $type != "video" ) and ( $type != "content" ) ) return false;
+        if ( ( $type != "video" ) and ( $type != "content" ) ) throw new \Videosquare\Model\Exception('Invalid livefeed type to set SMIL staus.');
 
-        if ( empty($status) ) return false;
+        if ( empty($status) ) throw new \Videosquare\Model\Exception('Empty livefeed SMIL status.');
 
         $idx = "";
         if ( $type == "content" ) $idx = "content";
@@ -44,33 +57,31 @@ class Live extends \Springboard\Model {
             $idx . 'smilstatus' => $status
         );
 
-        $recordingVersionObj = $this->bootstrap->getModel('livefeeds');
+        $recordingVersionObj = $this->bootstrap->getVSQModel('livefeeds');
         $recordingVersionObj->select($this->livefeedid);
         $recordingVersionObj->updateRow($values);
 
         // Log status change
-        $this->debugLog("[INFO] Livefeed id = " . $this->livefeedid . " " . $type . " status has been changed to '" . $status . "'.", false);
+        //$this->debugLog("[INFO] Livefeed id = " . $this->livefeedid . " " . $type . " status has been changed to '" . $status . "'.", false);
 
-        return true;
     }
 
     // Update live stream status
     public function updateLiveStreamStatus($status) {
 
-        if ( empty($status) ) return false;
+        if ( empty($status) ) throw new \Videosquare\Model\Exception('Empty status to set livefeedstream status.');
 
         $values = array(
             'status' => $status
         );
 
-        $converterNodeObj = $this->bootstrap->getModel('livefeed_streams');
+        $converterNodeObj = $this->bootstrap->getVSQModel('livefeed_streams');
         $converterNodeObj->select($this->livefeedstreamid);
         $converterNodeObj->updateRow($values);
         
         // Log status change
-        $this->debugLog("[INFO] Live stream id#" . $this->livefeedstreamid . " status changed to '" . $status . "'.", false);
+        //$this->debugLog("[INFO] Live stream id#" . $this->livefeedstreamid . " status changed to '" . $status . "'.", false);
         
-        return true;
     }
 
     ## Live thumbnail related
@@ -78,18 +89,17 @@ class Live extends \Springboard\Model {
     // Update livefeed index photo
     public function updateLiveFeedStreamIndexPhoto($indexphotofilename) {
 
-        if ( empty($indexphotofilename) ) return false;
+        if ( empty($indexphotofilename) ) throw new \Videosquare\Model\Exception('Empty index photo filename.');
 
         $values = array(
             'indexphotofilename'	=> $indexphotofilename
         );
 
-        $recordingVersionObj = $this->bootstrap->getModel('livefeed_streams');
+        $recordingVersionObj = $this->bootstrap->getVSQModel('livefeed_streams');
         $recordingVersionObj->select($this->livefeedstreamid);
         $recordingVersionObj->updateRow($values);
         $recordingVersionObj->updateFeedThumbnail();
 
-        return true;
     }
     
     // ## Other
@@ -110,13 +120,8 @@ class Live extends \Springboard\Model {
             GROUP BY
                 vsl.livefeedid";
 
-        try {
-            $model = $this->bootstrap->getModel('view_statistics_live');
-            $rs = $model->safeExecute($query);
-        } catch (exception $err) {
-            $this->debugLog("[ERROR] SQL query failed.\n" . trim($query), false);
-            return false;
-        }
+        $model = $this->bootstrap->getVSQModel('view_statistics_live');
+        $rs = $model->safeExecute($query);
 
         // Check if any record returned
         if ( $rs->RecordCount() < 1 ) return false;
@@ -130,6 +135,8 @@ class Live extends \Springboard\Model {
     // Update currentviewers counter for specified livefeed
     public function updateLiveFeedViewCounter($currentviewers) {
         
+        if ( empty($currentviewers) ) throw new \Videosquare\Model\Exception('Number of current livefeed viewers is empty.');
+        
         // Update livefeed currentviewers counter
         $query = "
             UPDATE
@@ -139,14 +146,9 @@ class Live extends \Springboard\Model {
             WHERE
                 id = " . $this->livefeedid;
 
-        try {
-            $model = $this->bootstrap->getModel('livefeeds');
-            $rs = $model->safeExecute($query);
-        } catch (exception $err) {
-            $this->debugLog("[ERROR] Cannot update currentviewers for livefeedid#" . $this->livefeedid . "\n\n" . $err, false);
-            return false;
-        }
-        
+        $model = $this->bootstrap->getVSQModel('livefeeds');
+        $rs = $model->safeExecute($query);
+
         return $model->db->Affected_Rows();
     }
     
@@ -165,13 +167,8 @@ class Live extends \Springboard\Model {
             WHERE
                 lf.currentviewers > 0 " . $in;
         
-        try {
-            $model = $this->bootstrap->getModel('livefeeds');
-            $rs = $model->safeExecute($query);
-        } catch (exception $err) {
-            $this->debugLog("[ERROR] SQL query failed.\n" . trim($query), false);
-            return false;
-        }
+        $model = $this->bootstrap->getVSQModel('livefeeds');
+        $rs = $model->safeExecute($query);
 
         return $model->db->Affected_Rows();
     }

@@ -24,7 +24,7 @@ class JobSkeleton extends Job {
     protected $isWindowsJob             = false;    // Running on Windows?
     protected $needsRunOverControl      = false;
     protected $needsConfigChangeExit    = true;
-    protected $removeLockOnStart        = true;
+    protected $removeLockOnStart        = false;
     
     // Job specific variables
     public $recid = null;

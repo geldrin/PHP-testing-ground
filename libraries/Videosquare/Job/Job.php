@@ -6,9 +6,10 @@ include_once( BASE_PATH . 'libraries/Springboard/Application/Job.php');
 class Job extends \Springboard\Application\Job {
 
     // Extra config
-    protected $needsRunOverControl    = true;
-    protected $watchConfigChangeExit  = true;
-    protected $removeLockOnStart      = false;    // Remove lock file on start? Be aware it can cause problems!
+    protected $isWindowsJob           = false;      // Running on Windows?
+    protected $needsRunOverControl    = true;       // Needs to check if the process is running? (in addition to watchdog file)
+    protected $watchConfigChangeExit  = true;       // If config or job file has changed then exit
+    protected $removeLockOnStart      = false;      // Remove lock file on start? Be aware it can cause problems!
     
     // Class variables
     protected $job_id = null;
@@ -29,10 +30,10 @@ class Job extends \Springboard\Application\Job {
         $this->job_filename = $this->bootstrap->config['jobpath'] . basename($_SERVER["PHP_SELF"]);
         
         // Debug mode
-        if ( isset($this->bootstrap->config['job'][$this->bootstrap->config['node_role']][$this->job_id]) ) {
+        if ( isset($this->bootstrap->config['jobs'][$this->bootstrap->config['node_role']][$this->job_id]) ) {
             $this->debug_mode = $this->bootstrap->config['jobs'][$this->bootstrap->config['node_role']][$this->job_id]['debug_mode'];
         }
-
+        
     }
 
     // Springboard Job redefined preRun()
@@ -54,6 +55,7 @@ class Job extends \Springboard\Application\Job {
     protected function checkOS() {
 
         $retval = true;
+        
         if ( $this->isWindowsJob ) $retval = false;
     
         if ( stripos(PHP_OS, "WIN") === false ) {
