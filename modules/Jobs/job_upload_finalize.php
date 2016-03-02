@@ -456,7 +456,7 @@ global $jconf, $app, $debug, $myjobid;
 function getSelectedContributorImages() {
 global $jconf, $app, $debug, $myjobid;
 
-    $model = $app->bootstrap->getModel('recordings');
+    $model = $app->bootstrap->getModel('contributor_images');
 
 	$query = "
 		SELECT
