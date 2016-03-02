@@ -6,14 +6,15 @@ include_once( BASE_PATH . 'libraries/Springboard/Application/Job.php');
 class Job extends \Springboard\Application\Job {
 
     // Extra config
-    private $needsRunOverControl    = true;
-    private $watchConfigChangeExit  = true;
+    protected $needsRunOverControl    = true;
+    protected $watchConfigChangeExit  = true;
+    protected $removeLockOnStart      = false;    // Remove lock file on start? Be aware it can cause problems!
     
     // Class variables
-    private $job_id = null;
-    private $job_filename = null;
+    protected $job_id = null;
+    protected $job_filename = null;
 
-    private $debug_mode = false;
+    protected $debug_mode = false;
     
     public function __construct() {
         
@@ -32,13 +33,13 @@ class Job extends \Springboard\Application\Job {
             $this->debug_mode = $this->bootstrap->config['jobs'][$this->bootstrap->config['node_role']][$this->job_id]['debug_mode'];
         }
 
-//var_dump($this);
-
     }
 
     // Springboard Job redefined preRun()
     protected function preRun() {
 
+        if ( $this->removeLockOnStart ) $this->releaseLock();
+    
         $this->checkOS();
     
         clearstatcache();
@@ -50,7 +51,7 @@ class Job extends \Springboard\Application\Job {
         
     }
     
-    private function checkOS() {
+    protected function checkOS() {
 
         $retval = true;
         if ( $this->isWindowsJob ) $retval = false;
@@ -77,18 +78,18 @@ class Job extends \Springboard\Application\Job {
     }
     
     protected function process() {
-        echo "...abstract method and must therefore be declared...\n";    
+        // Abstract method and must therefore be declared...
         return true;
     }
 
     // Number of processes by name (regexp)
-    private function checkProcessExists($processName) {
+    protected function checkProcessExists($processName) {
         exec("ps uax | grep -i '$processName' | grep -v grep", $pids);
         return count($pids);
     }
 
     // Check if this job already running. Most jobs should not run over each other.
-    public function runOverControl() {
+    protected function runOverControl() {
 
         if ( $this->needsRunOverControl ) return true;
     
