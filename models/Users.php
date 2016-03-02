@@ -1212,7 +1212,7 @@ class Users extends \Springboard\Model {
     $this->ensureID();
 
     return $this->db->getArray("
-      SELECT DISTINCT
+      SELECT
         g.id,
         g.name,
         g.source,
@@ -1222,8 +1222,9 @@ class Users extends \Springboard\Model {
           gm.userid  = '" . $this->id . "' AND
           gm.groupid = g.id
         )
-      WHERE organizationid = '$organizationid'
-      ORDER BY name DESC
+      WHERE g.organizationid = '$organizationid'
+      GROUP BY g.id
+      ORDER BY g.name DESC
     ");
   }
 }
