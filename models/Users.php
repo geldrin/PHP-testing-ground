@@ -1212,7 +1212,7 @@ class Users extends \Springboard\Model {
     $this->ensureID();
 
     return $this->db->getArray("
-      SELECT
+      SELECT DISTINCT
         g.id,
         g.name,
         g.source,
