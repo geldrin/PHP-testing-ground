@@ -39,11 +39,29 @@ class Job extends \Springboard\Application\Job {
     // Springboard Job redefined preRun()
     protected function preRun() {
 
+        $this->checkOS();
+    
+        clearstatcache();
+    
         $this->handleLock();
         $this->startTimestamp = time();
         
         $this->isConfigChangeOccured();
         
+    }
+    
+    private function checkOS() {
+
+        $retval = true;
+        if ( $this->isWindowsJob ) $retval = false;
+    
+        if ( stripos(PHP_OS, "WIN") === false ) {
+            if ( $this->isWindowsJob ) throw new Exception('[EXCEPTION] Windows OS is required.');
+        } else {
+            if ( !$this->isWindowsJob ) throw new Exception('[EXCEPTION] Linux OS is required.');
+        }
+
+        return true;
     }
     
     // Wrapper for debug log
