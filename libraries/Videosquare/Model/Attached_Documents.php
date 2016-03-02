@@ -383,4 +383,42 @@ class Attached_Documents extends \Springboard\Model {
         return true;
     }
     
+    // ATTACHED DOCUMENT
+
+    // Get attached documents by status for this specific front-end
+    function getAttachmentsByStatus($status) {
+
+        if ( empty($status) ) throw new \Videosquare\Model\Exception('[ERROR] Cannot get attached documents list. Status is empty.');
+
+        $query = "
+            SELECT
+                a.id,
+                a.recordingid,
+                a.userid,
+                a.title,
+                a.masterfilename,
+                a.masterextension,
+                a.status,
+                a.sourceip,
+                b.email,
+                c.id as organizationid,
+                c.domain
+            FROM
+                attached_documents as a,
+                users as b,
+                organizations as c
+            WHERE
+                status = '" . $status . "' AND
+                a.sourceip = '" . $this->bootstrap->config['node_sourceip'] . "' AND
+                a.userid = b.id AND
+                b.organizationid = c.id";
+
+        $model = $this->bootstrap->getVSQModel('attached_documents');
+        $rs = $model->safeExecute($query);
+
+        if ( $rs->RecordCount() < 1 ) return false;
+
+        return $rs;
+    }
+    
 }
