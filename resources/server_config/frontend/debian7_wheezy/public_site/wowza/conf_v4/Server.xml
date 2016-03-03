@@ -99,6 +99,11 @@
 		</Manager>
 		<!-- Properties defined here will be added to the IServer.getProperties() collection -->
 		<Properties>
+			<Property>
+				<Name>sslLogProtocolInfo</Name>
+				<Value>true</Value>
+				<Type>Boolean</Type>
+			</Property>
 		</Properties>
 	</Server>
 </Root>
