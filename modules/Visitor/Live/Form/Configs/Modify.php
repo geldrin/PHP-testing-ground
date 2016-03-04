@@ -2,8 +2,6 @@
 include('Create.php');
 
 $config['action']['value'] = 'submitmodify';
-$config['fs1']['legend']   = $l('live', 'modify_title');
-$config['fs1']['prefix']   = '<span class="legendsubtitle"></span>';
 
 $config['indexphotofilename'] = array(
   'type'        => 'inputradio',

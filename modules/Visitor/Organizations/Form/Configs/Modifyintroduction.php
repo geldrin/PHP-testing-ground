@@ -19,12 +19,6 @@ $config = Array(
     'value' => $this->application->getParameter('forward'),
   ),
   
-  'fs1' => array(
-    'type'   => 'fieldset',
-    'legend' => $l('organizations', 'modifyintroduction_title'),
-    'prefix' => '<span class="legendsubtitle">' . $l('organizations', 'modifyintroduction_subtitle') . '</span>',
-  ),
-  
   'introduction_stringid' => Array(
     'displayname' => $l('organizations', 'introduction'),
     'type'        => 'tinyMCEMultiLanguage2',

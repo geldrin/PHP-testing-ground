@@ -5,12 +5,6 @@ $language = \Springboard\Language::get();
 
 $config = array(
   
-  'fs1' => array(
-    'type'   => 'fieldset',
-    'legend' => $l('analytics', 'statistics_title'),
-    'prefix' => '<span class="legendsubtitle">' . $l('analytics', 'statistics_subtitle') . '</span>',
-  ),
-  
   'action' => array(
     'type'  => 'inputHidden',
     'value' => 'submitstatistics',

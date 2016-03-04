@@ -1,7 +1,7 @@
 <?php
 
 function smarty_modifier_avatarphoto( $data ) {
-  
+
   $avatar = 'images/avatar_placeholder.png';
   if ( isset( $data['avatarstatus'] ) and $data['avatarstatus'] == 'onstorage' ) {
     
@@ -13,7 +13,7 @@ function smarty_modifier_avatarphoto( $data ) {
     $avatar =
       'files/users/' .
       \Springboard\Filesystem::getTreeDir( $id ) . '/avatar/' .
-      $id . '.' . \Springboard\Filesystem::getExtension( $data['avatarfilename'] )
+      $id . '.' . \Springboard\Filesystem::getExtension( $data['avatarfilename'], 'jpg' )
     ;
     
   }

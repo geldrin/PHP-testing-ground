@@ -7,8 +7,28 @@
   {/foreach}
 
 {/if}
-{if $pager}
-  {$pager}
+
+{if $itemcount !== null}
+  {assign var=itemcount value=$itemcount|numberformat}
+  <div id="itemcount">{#paging_itemcount#|sprintf:$itemcount}</div>
+
+  <div id="perpageselector">
+    <div class="sort">
+      <div class="item">
+        {foreach from=$validperpages item=page}
+          {if $page == $perpage}
+            <a class="title" href="{perpageurlparam perpage=$page}">{$page} {#paging_itemsperpage#} <div class="sortarrow sortarrow-down"></div></a>
+          {/if}
+        {/foreach}
+        <ul>
+        {foreach from=$validperpages item=page}
+          <li><a href="{perpageurlparam perpage=$page}">{$page} {#paging_itemsperpage#}</a></li>
+        {/foreach}
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="clear"></div>
 {/if}
 
 {foreach from=$insertbefore item=insertitem}

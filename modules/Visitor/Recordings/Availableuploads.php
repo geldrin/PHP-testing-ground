@@ -46,6 +46,6 @@ if ( !empty( $this->uploads ) ) {
     '<ul><li>' . implode( $html, '</li><li>' ) . '</li></ul>'
   ;
   
-  $config = \Springboard\Tools::insertAfterKey( $config, $availableuploads, 'fs1' );
+  $config = \Springboard\Tools::insertAfterKey( $config, $availableuploads, 'action' );
   
 }

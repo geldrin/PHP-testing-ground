@@ -27,6 +27,7 @@ class Modify extends \Visitor\HelpForm {
         $this->values['permissions'][] = $k;
       
     }
+    $this->controller->toSmarty['title'] = $l('users', 'modify_title');
     
   }
   

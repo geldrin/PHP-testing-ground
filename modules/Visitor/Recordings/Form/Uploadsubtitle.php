@@ -8,6 +8,8 @@ class Uploadsubtitle extends \Visitor\Recordings\ModifyForm {
   public function init() {
     parent::init();
     unset( $this->controller->toSmarty['insertbefore'] );
+    $l = $this->bootstrap->getLocalization();
+    $this->controller->toSmarty['title'] = $l('recordings', 'uploadsubtitle_title');
   }
   
   public function onComplete() {

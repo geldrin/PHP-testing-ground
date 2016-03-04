@@ -94,7 +94,7 @@ $config = array(
   'livestreampath'        => '/srv/vsq/videosquare.eu/livestreams/',
   'recordings_seconds_minlength' => 3,
   'categoryiconpath'      => $this->basepath . 'httpdocs_static/images/categories/',
-  'relatedrecordingcount' => 6,
+  'relatedrecordingcount' => 8,
 
   // Converter related settings
   'mediainfo_identify'     => 'mediainfo --full --output=XML %s 2>&1',
@@ -395,6 +395,11 @@ $config = array(
   // halottnak tekintjuk a servert
   // ha nulla akkor nem nezzuk a reportolasi idot
   'streamingserver_report_expiration_minutes' => 0,
+
+  // a combinedrating szerint rendezzuk a felveteleket a "legjobb felvetelek"
+  // listaban, ez a szam mondja meg hogy hany napnal korabbi felvetelek
+  // kerulhetnek a listaba
+  'combinedratingcutoffdays' => 180,
 );
 
 $config['phpsettings'] = array(

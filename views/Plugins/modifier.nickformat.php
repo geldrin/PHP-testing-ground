@@ -1,15 +1,16 @@
 <?php
 include_once('modifier.nameformat.php');
 
-function smarty_modifier_nickformat( $name ) {
+function smarty_modifier_nickformat( $name, $org = null ) {
   if ( empty( $name ) )
     return '';
 
   static $organization;
-  if ( !$organization ) {
+  if ( !$organization and !$org ) {
     $smarty       = \Bootstrap::getInstance()->getSmarty();
     $organization = $smarty->get_template_vars('organization');
-  }
+  } elseif ( !$organization and $org )
+    $organization = $org;
 
   switch( $organization['displaynametype'] ) {
     case 'shownickname':

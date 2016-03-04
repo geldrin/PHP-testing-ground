@@ -1,5 +1,5 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml" lang="{$language}" xml:lang="{$language}">
+<!doctype html>
+<html lang="{$language}">
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
   <meta http-equiv="imagetoolbar" content="no" />
@@ -82,15 +82,10 @@
   <a class="openinlayer" target="_blank" href="{$BASE_URI}{$language}/tools/updateyourbrowser" id="browserAlert">{#sitewide_updateyourbrowser#}</a>
 {/if}
 <div id="headerbg"></div>
-{if $pagebgclass}
-  <div id="pagebg" class="{$pagebgclass}"></div>
-{/if}
 <div id="pagecontainer">
   <div id="wrap">
     <div id="header">
-      <div id="headertop">
-        {include file=$layoutheader}
-      </div>
+      {include file=$layoutheader}
       <div class="clear"></div>
     </div>
     

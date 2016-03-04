@@ -6,7 +6,7 @@
 XSendFile on
 </IfModule>
 
-<FilesMatch "\.(eot|ttf|svg|woff)$">
+<FilesMatch "\.(eot|ttf|svg|woff|woff2)$">
   <IfModule mod_headers.c>
   Header set Access-Control-Allow-Origin "*"
   </IfModule>

@@ -1,7 +1,9 @@
-<div class="heading">
+<div id="pagetitle">
   <h1>{#recordings__myrecordings_title#}</h1>
-  <h2>{#recordings__myrecordings_subtitle#}</h2>
 </div>
+<div class="channelgradient"></div>
+<br/>
+<h2>{#recordings__myrecordings_subtitle#}</h2>
 
 {if !$nosearch}
 <div id="myrecordingsquicksearch" class="form pagingsearch">
@@ -58,24 +60,7 @@
 {/if}
 
 {if !empty( $items )}
-{capture assign=url}{$language}/{$module}/myrecordings?order=%s&start={$smarty.get.start|escape:uri}&perpage={$smarty.get.perpage|escape:uri}&myrecordingsq={$smarty.get.myrecordingsq|escape:uri}&status={$smarty.get.status|escape:uri}&publishstatus={$smarty.get.publishstatus|escape:uri}&publicstatus={$smarty.get.publicstatus|escape:uri}{/capture}
+{capture assign=url}{$language}/{$module}/myrecordings?order=%order%&amp;start={$smarty.get.start|escape:uri}&amp;perpage={$smarty.get.perpage|escape:uri}&amp;myrecordingsq={$smarty.get.myrecordingsq|escape:uri}&amp;status={$smarty.get.status|escape:uri}&amp;publishstatus={$smarty.get.publishstatus|escape:uri}&amp;publicstatus={$smarty.get.publicstatus|escape:uri}{/capture}
 
-<div class="sort">
-  <div class="item">
-    <a class="title" href="{$url|activesortlink:timestamp:$order}">{#recordings__myrecordings_timestamp#|activesortarrow:timestamp:$order}</a>
-    <ul>
-      <li><a href="{$url|replace:'%s':timestamp}">{#recordings__myrecordings_timestamp#|sortarrows:null:timestamp:$order}</a></li>
-      <li><a href="{$url|replace:'%s':timestamp_desc}">{#recordings__myrecordings_timestamp_desc#|sortarrows:null:timestamp_desc:$order}</a></li>
-    </ul>
-  </div>
-  <div class="item">
-    <a class="title" href="{$url|activesortlink:recordedtimestamp:$order}">{#recordings__myrecordings_recordedtimestamp#|activesortarrow:recordedtimestamp:$order}</a>
-    <ul>
-      <li><a href="{$url|replace:'%s':recordedtimestamp}">{#recordings__myrecordings_recordedtimestamp#|sortarrows:null:recordedtimestamp:$order}</a></li>
-      <li>
-        <a href="{$url|replace:'%s':recordedtimestamp_desc}">{#recordings__myrecordings_recordedtimestamp_desc#|sortarrows:null:recordedtimestamp_desc:$order}</a>
-      </li>
-    </ul>
-  </div>
-</div>
+{include file=Visitor/_sort.tpl url=$url}
 {/if}

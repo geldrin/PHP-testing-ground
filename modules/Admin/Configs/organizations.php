@@ -2,11 +2,6 @@
 include_once( $this->bootstrap->config['libpath'] . 'clonefish/constants.php');
 $this->addfieldset = false;
 
-$introconfig = $l->getLov('tinymceadmin');
-$introconfig['content_css'] .= ',' .
-  '../css/style_tinymce_indexpage' . $this->bootstrap->config['version'] . '.css'
-;
-
 $config = Array(
 
   'action' => Array(
@@ -426,6 +421,31 @@ $config = Array(
     'legend' => 'Kinézet',
     'type'   => 'fieldset',
     'submit' => true,
+  ),
+
+  'channelorder' => array(
+    'displayname' => 'Csatornák alapértelmezett rendezése',
+    'type'        => 'select',
+    'values'      => $l->getLov('organizations_channelorders'),
+  ),
+
+  'indextemplate' => array(
+    'displayname' => 'Főoldal kinézet',
+    'html'        => 'style="min-height: 220px;"',
+    'postfix'     =>
+      '<br/><div class="info">
+        A használt sablonozási nyelv a <a href="http://www.smarty.net/docsv2/en/" target="_blank">smarty v2</a>.<br/>
+        Lehetséges blokk változók: &quot;ajanlo_csatornafelvetelek&quot;, &quot;ajanlo_eloadas&quot;, &quot;ajanlo_kiemelt&quot;, &quot;ajanlo_legujabb&quot;, &quot;ajanlo_legnezettebb&quot;, &quot;ajanlo_legjobb&quot;<br/>
+        További hasznos változók:<br/>
+        &nbsp;&nbsp;&quot;organization&quot; (a jelenlegi intezmény, lehetséges mezői az &quot;organizations&quot; adatbázis táblában található oszlopok nevei, például: &quot;$organization.introduction&quot;);<br/>
+        &nbsp;&nbsp;&quot;member&quot; (a bejelentkezett felhasználó, mezői az adatbázis &quot;users&quot; táblájának oszlop nevei, például: &quot;$member.isadmin&quot;);<br/>
+        &nbsp;&nbsp;&quot;BASE_URI&quot; (a jelenlegi domain a megfelelő protokol prefixel például: &quot;https://videosquare.eu&quot;);<br/>
+        &nbsp;&nbsp;&quot;language&quot; (jelenlegi nyelv azonosító, például: &quot;hu&quot;);<br/>
+        Az alapértelmezett sablon visszaállításához üresen kell hagyni a mezőt.
+      </div>',
+    'type'        => 'textarea',
+    'validation'  => array(
+    ),
   ),
 
   'layoutcss' => array(

@@ -31,10 +31,14 @@ class Form extends \Springboard\Controller\Admin\Form {
 
         $data[ $key ] = $default;
       }
+
+      $data['indextemplate'] = file_get_contents(
+        $this->bootstrap->config['templatepath'] .
+        'Visitor/Index/default_index.tpl'
+      );
     }
 
     return $data;
-    
   }
   
   protected function updateAction() {
@@ -87,6 +91,16 @@ class Form extends \Springboard\Controller\Admin\Form {
       if ( $val == $default )
         unset( $values[ $key ] );
     }
+
+    $defaultIndexTpl = file_get_contents(
+      $this->bootstrap->config['templatepath'] .
+      'Visitor/Index/default_index.tpl'
+    );
+
+    $indexTpl = str_replace( "\r\n", "\n", trim( $values['indextemplate'] ) );
+    $defaultIndexTpl = str_replace( "\r\n", "\n", trim( $defaultIndexTpl ) );
+    if ( $indexTpl == $defaultIndexTpl )
+      unset( $values['indextemplate'] );
 
     return $values;
   }

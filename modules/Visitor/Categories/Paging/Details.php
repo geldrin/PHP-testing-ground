@@ -25,9 +25,9 @@ class Details extends \Visitor\Paging {
   );
   protected $insertbeforepager = Array( 'Visitor/Categories/Paging/DetailsBeforepager.tpl' );
   protected $template = 'Visitor/recordinglistitem.tpl';
+  protected $category;
   protected $categoryids;
   protected $recordingsModel;
-  protected $categoryModel;
   protected $user;
   
   public function init() {
@@ -37,23 +37,39 @@ class Details extends \Visitor\Paging {
     $this->foreachelse   = $l('categories', 'categories_foreachelse');
     $this->title         = $l('categories', 'categories_title');
     $organization        = $this->controller->organization;
-    $this->categoryModel = $this->controller->modelIDCheck(
-      'categories',
+
+    $categoryModel = $this->bootstrap->getModel('categories');
+    $categories    = $categoryModel->cachedGetCategoryTree(
+      $organization['id']
+    );
+
+    $this->category = $categoryModel->searchCategoryTree(
+      $organization['id'],
       $this->application->getNumericParameter('id')
     );
-    
-    if ( $this->categoryModel->row['organizationid'] != $organization['id'] )
+
+    if ( !$this->category )
+      $this->controller->redirect('categories');
+
+    // not possible
+    if ( $this->category['organizationid'] != $organization['id'] )
       $this->controller->redirect('index');
-    
-    $this->categoryids = array_merge(
-      array( $this->categoryModel->id ),
-      $this->categoryModel->findChildrenIDs()
+
+    $this->categoryids = $categoryModel->getChildrenIDsFromCategoryTree(
+      $this->category
     );
-    
-    $this->controller->toSmarty['category']  = $this->categoryModel->row;
-    $this->controller->toSmarty['listclass'] = 'recordinglist';
+
+    $breadcrumb = $categoryModel->getCategoryTreeBreadcrumb(
+      $organization['id'],
+      $this->category['id']
+    );
+
+    $this->controller->toSmarty['breadcrumb'] = $breadcrumb;
+    $this->controller->toSmarty['category']   = $this->category;
+    $this->controller->toSmarty['categories'] = $this->category['children'];
+    $this->controller->toSmarty['listclass']  = 'recordinglist';
     parent::init();
-    
+
   }
   
   protected function setupCount() {
@@ -91,7 +107,7 @@ class Details extends \Visitor\Paging {
     return
       $this->controller->getUrlFromFragment( $this->module . '/' . $this->action ) .
       '/' . $this->application->getNumericParameter('id') . ',' .
-      \Springboard\Filesystem::filenameize( $this->categoryModel->row['name'] )
+      \Springboard\Filesystem::filenameize( $this->category['name'] )
     ;
   }
   

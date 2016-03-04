@@ -1,3 +1,8 @@
+<div id="pagetitle">
+  <h1>{$recording.title|escape:html|mb_wordwrap:25}</h1>
+</div>
+<div class="channelgradient"></div>
+<br/>
 
 <div class="timeline">
   <ul>
@@ -17,8 +22,4 @@
       <a href="{$language}/recordings/modifysharing/{$recording.id}?forward={$smarty.request.forward|escape:url}">{#recordings__timeline_modifysharing#}</a>
     </li>
   </ul>
-</div>
-
-<div class="title">
-  <h1>{$recording.title|escape:html|mb_wordwrap:25}</h1>
 </div>

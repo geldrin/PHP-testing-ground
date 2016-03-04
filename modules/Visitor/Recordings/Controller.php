@@ -288,17 +288,29 @@ class Controller extends \Visitor\Controller {
     if ( $user['id'] )
       $this->toSmarty['channels']    = $recordingsModel->getChannelsForUser( $user );
 
-    if ( $user['id'] or $recordingsModel->row['isanonymouscommentsenabled'] )
+    if (
+         $recordingsModel->row['commentsenabled'] and
+         ( $user['id'] or $recordingsModel->row['isanonymouscommentsenabled'] )
+       )
       $this->toSmarty['commentform'] = $this->getCommentForm()->getHTML();
 
-    if ( $recordingsModel->row['isanonymouscommentsenabled'] )
+    if (
+         $recordingsModel->row['commentsenabled'] and
+         $recordingsModel->row['isanonymouscommentsenabled']
+       )
       $this->toSmarty['anonuser']    =
         $this->bootstrap->getSession('recordings-anonuser')->toArray()
       ;
 
-    $this->toSmarty['commentoutput'] = $this->getComments(
-      $recordingsModel, $commentspage
-    );
+    if ( $recordingsModel->row['commentsenabled'] ) {
+      $this->toSmarty['commentoutput'] = $this->getComments(
+        $recordingsModel, $commentspage
+      );
+      $this->toSmarty['commentcount'] = $this->getCommentCount(
+        $recordingsModel
+      );
+    }
+
     $this->toSmarty['ipaddress']     = $this->getIPAddress();
     $this->toSmarty['member']        = $user;
     $this->toSmarty['sessionid']     = session_id();
@@ -683,7 +695,7 @@ class Controller extends \Visitor\Controller {
     elseif ( $fullscale and $recordingsModel->row['mastermediatype'] == 'audio' )
       return '60';
     elseif ( $fullscale )
-      return '530';
+      return '550';
 
     if ( $recordingsModel->row['mastermediatype'] == 'audio' and $recordingsModel->hasSubtitle() )
       $height = '120';
@@ -1553,6 +1565,10 @@ class Controller extends \Visitor\Controller {
 
   }
 
+  private function getCommentCount( $recordingsModel ) {
+    return $recordingsModel->getCommentsCount();
+  }
+
   public function getcommentsAction() {
 
     $recordingid = $this->application->getNumericParameter('id');
@@ -1564,6 +1580,9 @@ class Controller extends \Visitor\Controller {
     $recordingsModel = $this->modelIDCheck(
       'recordings', $recordingid
     );
+
+    if ( !$recordingsModel->row['commentsenabled'] )
+      $this->jsonOutput( array('success' => false) );
 
     $comments = $this->getComments( $recordingsModel, $page );
     $this->jsonOutput( $comments );

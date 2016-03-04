@@ -30,6 +30,8 @@ class Form extends \Springboard\Controller\Form {
   
   public function postGetForm() {
     
+    $this->form->errorstyle = ' class="formerror"';
+    $this->form->jsalert = false;
     $this->form->jspath =
       $this->controller->toSmarty['STATIC_URI'] . 'js/clonefish.js'
     ;
@@ -43,14 +45,14 @@ class Form extends \Springboard\Controller\Form {
       "<table cellpadding=\"0\" cellspacing=\"0\" class=\"formtable\">\n%s\n</table>\n"
     ;
     
-    $this->form->layouts['tabular']['element'] =
-      '<tr %errorstyle%>' .
-        '<td class="labelcolumn">' .
-          '<label for="%id%">%displayname%</label>' .
-        '</td>' .
-        '<td class="elementcolumn">%prefix%%element%%postfix%%errordiv%</td>' .
-      '</tr>'
-    ;
+    $this->form->layouts['tabular']['element'] = '
+      <tr%errorstyle%>
+        <td class="labelcolumn">
+          <label for="%id%">%displayname%</label>
+        </td>
+        <td class="elementcolumn">%prefix%%element%%postfix%%errordiv%</td>
+      </tr>
+    ';
     
     $this->form->layouts['tabular']['buttonrow'] =
       '<tr class="buttonrow"><td colspan="2">%s</td></tr>'
@@ -60,11 +62,10 @@ class Form extends \Springboard\Controller\Form {
       '<input type="submit" value="%s" class="submitbutton" />'
     ;
     
-    $this->form->layouts['rowbyrow']['errordiv'] =
-      '<div id="%divid%" style="display: none; visibility: hidden; ' .
-      'padding: 2px 5px 2px 5px; background-color: #d03030; color: white;' .
-      'clear: both;"></div>'
-    ;
+    $this->form->layouts['tabular']['errordiv'] = '
+      <div id="%divid%" class="formerrordiv"></div>
+      <div class="clear"></div>
+    ';
     
   }
   

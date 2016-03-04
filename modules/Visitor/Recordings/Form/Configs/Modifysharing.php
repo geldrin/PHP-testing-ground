@@ -173,6 +173,15 @@ $config['isseekbardisabled'] = array(
   ),
 );
 
+$config['commentsenabled'] = array(
+  'type'        => 'inputRadio',
+  'displayname' => $l('recordings', 'commentsenabled'),
+  'values'      => $l->getLov('noyes'),
+  'value'       => 0,
+  'validation'  => array(
+  ),
+);
+
 $config['isanonymouscommentsenabled'] = array(
   'type'        => 'inputRadio',
   'displayname' => $l('recordings', 'isanonymouscommentsenabled'),
@@ -214,10 +223,9 @@ if ( $user['isadmin'] or $user['isclientadmin'] or $user['iseditor'] ) {
         'type'     => 'date',
         'required' => false,
         'format'   => 'YYYY-MM-DD hh:mm',
-        'minimum'  => time(),
         'help'     => $l('recordings', 'featureduntil_help'),
       ),
     ),
-);
+  );
 
 }

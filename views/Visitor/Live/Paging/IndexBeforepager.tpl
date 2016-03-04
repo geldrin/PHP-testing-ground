@@ -1,6 +1,8 @@
-<div class="title">
+<div id="pagetitle">
   <h1>{#sitewide_live#}</h1>
 </div>
+<div class="channelgradient"></div>
+<br/>
 
 {if $showsearch}
 <div id="livequicksearch" class="form pagingsearch">

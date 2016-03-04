@@ -17,7 +17,7 @@ class Modify extends \Visitor\Groups\Form\Create {
   public function postSetupForm() {
     
     $l = $this->bootstrap->getLocalization();
-    $this->controller->toSmarty['title'] = $l('groups', 'create_title');
+    $this->controller->toSmarty['title'] = $l('groups', 'modify_title');
     
   }
   

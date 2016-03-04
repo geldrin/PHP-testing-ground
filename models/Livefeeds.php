@@ -1407,4 +1407,5 @@ class Livefeeds extends \Springboard\Model {
 
     $streamModel->flushBatchCollect();
   }
+
 }

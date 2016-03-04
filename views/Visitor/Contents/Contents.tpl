@@ -1,7 +1,8 @@
 {include file="Visitor/_header.tpl" module="contents"}
-<div class="title">
+<div id="pagetitle">
   <h1>{$content.title}{if $missingcontent} ({$missingcontent}){/if}</h1>
 </div>
+<div class="channelgradient"></div>
 <br/>
 
 {$content.body}

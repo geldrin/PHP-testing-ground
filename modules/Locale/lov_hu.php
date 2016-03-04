@@ -267,4 +267,9 @@ return array(
     'shownickname' => 'Becenév mutatása',
     'showfullname' => 'Teljes név mutatása',
   ),
+  // adminon 
+  'organizations_channelorders' => array(
+    '' => 'Alapértelmezett (csatorna rendezés szerint)',
+    'recordtimestamp_desc' => 'Legfrissebb felvételtől a legrégebbiig',
+  ),
 );

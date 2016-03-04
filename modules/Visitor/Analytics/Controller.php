@@ -63,7 +63,7 @@ class Controller extends \Visitor\Controller {
         'timestamp'         => $value['timestamp'],
         'recordedtimestamp' => $value['recordedtimestamp'],
         'imgsrc'            => smarty_modifier_indexphoto( $value, 'player' ),
-        'user'              => smarty_modifier_nickformat( $value ),
+        'user'              => smarty_modifier_nickformat( $value, $this->organization ),
         'text'              => smarty_modifier_mb_truncate(
           $value['title'] . ( strlen( trim( $value['subtitle'] ) )? ' (' . $value['subtitle'] . ')': '' ),
           20
