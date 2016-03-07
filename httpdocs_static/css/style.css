@@ -2476,15 +2476,15 @@ li#languageselectorlink span {
 }
 #infobar #embedlink a span {
   display: inline-block;
-  width: 22px;
-  height: 22px;
+  width: 20px;
+  height: 18px;
   margin: 0 5px 0 0;
-  background: url(images/recordingsdetails_share.png) no-repeat;
+  background: url(images/recordingsdetails_embed.png) no-repeat;
   vertical-align: middle;
 }
 #infobar #embedlink.active a span,
 #infobar #embedlink:hover a span {
-  background: url(images/recordingsdetails_share_active.png) no-repeat;
+  background: url(images/recordingsdetails_embed_active.png) no-repeat;
 }
 
 #embed,
