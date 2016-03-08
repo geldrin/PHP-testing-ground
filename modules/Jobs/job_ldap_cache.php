@@ -173,6 +173,13 @@ while ( !$ldap_groups->EOF ) {
     $i = 0;
     $ldap_users = array();
 	$ldap_group_users = ldap_first_entry($ldap_dir['ldap_handler'], $result);
+    if ( $ldap_group_users === false ) {
+        $debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] No users found based for this group. Debug info:\nFilter: " . $filter . "\nAttribute filter: " . $attr_filter, $sendmail = false);
+        $ldap_groups->MoveNext();
+        continue;
+    }
+    
+    // Loop through users
     do {      
 
         // Get user record
