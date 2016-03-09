@@ -3277,6 +3277,9 @@ li#languageselectorlink span {
 #feeds .currentviewers {
   margin-left: 5px;
 }
+#feeds .serverlink select {
+  max-width: 200px;
+}
 
 #live_analytics .singlecolumn .inputtext {
   width: 105px;
