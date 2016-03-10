@@ -9,6 +9,7 @@ include_once( BASE_PATH . 'libraries/Springboard/Application/Cli.php');
 
 // Utils
 include_once('../../../modules/Jobs/job_utils_base.php');
+include_once('../../../modules/Jobs/job_utils_media2.php');
 include_once('../../../modules/Jobs/job_utils_log.php');
 
 // Init
