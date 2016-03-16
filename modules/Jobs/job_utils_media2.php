@@ -75,6 +75,7 @@ class runExt {
 //
 // Additions:
 //   - configurable timeout with a default value of 10s
+//   - kills running process and it's subprocesses on timeout
 //   - callbacks can be defined
 //   - support for retrieving regular bash command's return values
 //
@@ -83,17 +84,20 @@ class runExt {
 	var $envvars     = null; // not implemented yet!!
 	var $timeoutsec  = null;
 	var $close_stdin = false;
-	
+
 	private $start        = 0;
 	private $duration     = 0;
 	private $code         = -1;
 	private $output       = array();
 	private $pid          = null;
 	private $masterpid    = null;
+	private $groupid      = null;
 	private $msg          = null;
 	private $callback     = null;
 	private $polling_usec = 50000;
-	
+	private $process      = null;
+	private $pipes        = array();
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 	function __construct($command = null, $timeoutsec = null, $callback = null, $envvar = null) {
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -105,20 +109,20 @@ class runExt {
 		if ($callback !== null && is_callable($callback)) $this->callback = $callback;
 		if (is_array($envvar)) $this->env = $envvar;
 	}
-	
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 	function run($command = null, $timeoutsec = null, $callback = null) {
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-		$pipes   = array();
-		$process = null;
-		$write   = null;
-		$excl    = null;
-		$ready   = null;
-		$EOF     = false;
-		$timeout = false;
+		$write      = null;
+		$excl       = null;
+		$ready      = null;
+		$EOF        = false;
+		$timeout    = false;
 		$lastactive = 0;
 		
 		$this->clearVariables();
+		$this->pipes    = array();
+		$this->proceess = null;
 		
 		if ($command !== null) $this->command = $command;
 		if ($timeoutsec !== null && is_numeric($timeoutsec)) $this->timeoutsec = floatval($timeoutsec);
@@ -136,32 +140,32 @@ class runExt {
 		);
 		
 		$this->start = microtime(true);
-		$process = proc_open($this->command, $desc, $pipes);
+		$lastactive = $this->start;
+		$this->process = proc_open($this->command, $desc, $this->pipes);
 		
-		if ($process === false || !is_resource($process)) {
+		if ($this->process === false || !is_resource($this->process)) {
 			$this->msg = "[ERROR] Failed to open process!";
 			return false;
 		}
 		
 		if ($this->close_stdin) {
-			fclose($pipes[0]);
-			unset($pipes[0]);
+			fclose($this->pipes[0]);
+			unset($this->pipes[0]);
 		}
-
-		$proc_status = proc_get_status($process);
+		
+		foreach($this->pipes as $p) { stream_set_blocking($p, 0); }
+		
+		$proc_status = proc_get_status($this->process);
 		$this->pid = $proc_status['pid'];
-		
-		foreach($pipes as $p) { stream_set_blocking($p, 0); }
-		
-		$lastactive = microtime(true);
+		$this->groupid = posix_getpgid($this->pid);
 		
 		do {
-			$read = $pipes;
+			$read = $this->pipes;
 			$tmp  = null;
 			
 			$ready = stream_select($read, $write, $excl, 0, $this->polling_usec);
-			$proc_status = proc_get_status($process);
-
+			$proc_status = proc_get_status($this->process);
+			
 			if ($ready === false ) { // error
 				$err = error_get_last();
 				$this->msg = $err['message'];
@@ -186,43 +190,81 @@ class runExt {
 		} while($proc_status['running'] && !$timeout && !$EOF);
 		
 		if ($timeout) {
+			$proc_status = proc_get_status($this->process);
 			$this->msg = "[WARN] Timeout Exceeded, sending SIGKILL to process (pid=". $this->pid .")";
 			$this->duration = (microtime(true) - $this->start);
 			
-			if (posix_kill($this->pid, SIGKILL) === false && $proc_status['running']) {
-				throw new Exception("[ERROR] Failed to shut down process!");
+			if (is_resource($this->process) && $proc_status['running']) {
+				$this->killProc();
 			}
 			
 			return false;
-			
-		} else {
-			
-			if ($proc_status['running']) $proc_status = proc_get_status($process);
+		}
+		
+		if ($proc_status['running']) {
+			$this->killProc();
+			$proc_status = proc_get_status($this->process);
 			$this->code = $proc_status['exitcode'];
-			posix_kill($this->pid, SIGKILL);
-			foreach ($pipes as $p) { fclose($p); }
-			proc_close($process);
-			
-			if (gettype($process) == "resource") { /*ERROR - process wasn't closed properly*/ }
-			$this->duration = (microtime(true) - $this->start);
-			
-			if ($proc_status['signaled']) {
-				$this->msg = "[WARN] Process has been terminated by an uncaught signal(". $proc_status['termsig'] .").";
-				return false;
-			} elseif ($proc_status['stopped']) {
-				$this->msg = "[WARN] Process stopped after recieving signal(". $proc_status['stopsig'] .").";
+		}
+		
+		$this->code = $proc_status['exitcode'];
+		$this->duration = (microtime(true) - $this->start);
+		
+		if ($proc_status['signaled']) {
+			$this->msg = "[WARN] Process has been terminated by an uncaught signal(". $proc_status['termsig'] .").";
+			return false;
+		} elseif ($proc_status['stopped']) {
+			$this->msg = "[WARN] Process stopped after recieving signal(". $proc_status['stopsig'] .").";
+		} else {
+			if ($this->code === 0) {
+				$this->msg = "[OK]";
 			} else {
-				if ($this->code === 0) {
-					$this->msg = "[OK]";
-				} else {
-					$this->msg = "[WARN] Process failed (exitcode = ". $this->code .").";
-					return false;
-				}
+				$this->msg = "[WARN] Process failed (exitcode = ". $this->code .").";
+				return false;
 			}
 		}
+		
 		return true;
 	}
-	
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+	private function killProc($PID = null) {
+///////////////////////////////////////////////////////////////////////////////////////////////////
+		$status       = null;
+		$subprocesses = null;
+		$proc2kill    = null;
+
+		$proc2kill = $PID === null ? $this->pid : $PID;
+		$subprocesses = array_reverse($this->getSubprocesses($proc2kill));
+
+		foreach ($this->pipes as $p) { fclose($p); }
+
+		if (!is_resource($this->process)) return true;
+
+		$status = proc_get_status($this->process);
+
+		if ($status['running']) {
+			foreach ($subprocesses as $subp) {
+				if (!posix_kill($subp, 0)) {
+					continue;
+				}
+
+				posix_kill($subp, SIGKILL);
+			}
+		}
+
+		return true;
+	}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+	private function getSubprocesses() {
+///////////////////////////////////////////////////////////////////////////////////////////////////
+		$tmp = [];
+		exec("pstree -p ". $this->pid ." | grep -o '([0-9]\+)' | grep -o '[0-9]\+' | grep -v ". $this->pid, $tmp);
+
+		return($tmp);
+	}
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 	private function clearVariables() {
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -235,7 +277,7 @@ class runExt {
 		$this->callback     = null;
 		$this->polling_usec = 50000;
 	}
-	
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 	function getCode()      { return (int) $this->code; }
@@ -248,7 +290,11 @@ class runExt {
 
 	function getOutputArr() { return $this->output; }
 
-	function getPid()       { return $this->pid; }
+	function getPID()       { return $this->pid; }
+
+	function getGroupID()   { return $this->groupid; }
+
+	function getMasterPID() { return $this->masterpid; }
 
 } // end of RunExtV class
 
