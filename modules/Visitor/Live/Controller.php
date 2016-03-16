@@ -110,7 +110,6 @@ class Controller extends \Visitor\Controller {
     $l         = $this->bootstrap->getLocalization();
     $user      = $this->bootstrap->getSession('user');
     $anonuser  = $this->bootstrap->getSession('anonuser');
-    $views     = $this->bootstrap->getSession('livefeed-views');
     $access    = $this->bootstrap->getSession('liveaccess');
     $accesskey = $feedModel->id . '-' . ( $feedModel->row['issecurestreamingforced']? '1': '0');
 
@@ -162,11 +161,7 @@ class Controller extends \Visitor\Controller {
     if ( !$streams )
       $this->redirectToController('contents', 'http404');
 
-    // counters
-    if ( !$views[ $feedModel->id ] ) {
-      $feedModel->incrementViewCounters();
-      $views[ $feedModel->id ] = true;
-    }
+    $feedModel->incrementViewCounters();
 
     $currentstream = $streams['defaultstream'];
     $streamtype    = $streams['streamtype'];

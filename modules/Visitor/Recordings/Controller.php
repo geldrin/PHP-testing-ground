@@ -539,7 +539,6 @@ class Controller extends \Visitor\Controller {
 
   public function trackAction( $recordingid ) {
 
-    $views          = $this->bootstrap->getSession('views');
     $recordingModel = $this->modelIDCheck(
       'recordings',
       $recordingid,
@@ -549,13 +548,7 @@ class Controller extends \Visitor\Controller {
     if ( !$recordingModel )
       return false;
 
-    if ( !$views[ $recordingModel->id ] ) {
-
-      $recordingModel->incrementViewCounters();
-      $views[ $recordingModel->id ] = true;
-
-    }
-
+    $recordingModel->incrementViewCounters();
     return true;
 
   }
