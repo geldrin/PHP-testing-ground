@@ -518,8 +518,8 @@ function convertOCR($rec) {
   $result['phase'] = "Extracting frames from video";
   
   $loglevel = $app->config['ffmpeg_loglevel'];
-  if ((is_integer($loglevel + 0) && $loglevel < 25) || in_array($loglevel, array('warning', 'error', 'fatal', 'panic', 'quiet'))) {
-    $loglevel = 25;
+  if ((is_integer($loglevel + 0) && $loglevel < 32) || in_array($loglevel, array('warning', 'error', 'fatal', 'panic', 'quiet'))) {
+    $loglevel = 32;
   }
   $cmd_explode = escapeshellcmd($onice ." ". $app->config['ffmpeg_alt'] ." -v ". $loglevel ." -i ". $rec['contentmasterfile'] ." -filter_complex 'scale=w=320:h=180:force_original_aspect_ratio=decrease' -r ". $app->config['ocr_frame_distance'] ." -q:v 1 -f image2 ". $cmpdir ."%06d.png -r ". $app->config['ocr_frame_distance'] ." -q:v 1 -f image2 ". $wdir ."%06d.jpg");
   
