@@ -315,12 +315,6 @@ $config = array(
         'watchdogtimeoutsecs' => 15 * 60,
         'supresswarnings'     => false
       ),
-      'job_live_thumbnail' => array(
-        'enabled'             => true,
-        'watchdogtimeoutsecs' => 15 * 60,
-        'supresswarnings'     => false,
-        'debug_mode'          => false,
-      ),
     ),
   ),
   // Job priorities 
