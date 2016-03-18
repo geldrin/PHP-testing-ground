@@ -6,13 +6,7 @@ $config = Array(
     'type'  => 'inputHidden',
     'value' => 'submituploadcontent'
   ),
-  
-  'fs1' => array(
-    'type'   => 'fieldset',
-    'legend' => $l('recordings', 'uploadcontent_title'),
-    'prefix' => '<span class="legendsubtitle">' . $l('recordings', 'uploadcontent_subtitle') . '</span>',
-  ),
-  
+
   'id' => array(
     'type'  => 'inputHidden',
     'value' => $this->application->getNumericParameter('id'),

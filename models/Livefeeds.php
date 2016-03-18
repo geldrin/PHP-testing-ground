@@ -295,7 +295,7 @@ class Livefeeds extends \Springboard\Model {
 
     }
 
-    if ( $this->isHDSEnabled( $prefix ) ) {
+    if ( $this->isHDSEnabled( $prefix, $info ) ) {
 
       $authorizecode = $this->getAuthorizeSessionid( $info );
       $smilurl       = 'smil:%s.smil/manifest.f4m%s';
@@ -379,9 +379,9 @@ class Livefeeds extends \Springboard\Model {
 
   }
 
-  public function isHDSEnabled( $prefix = '' ) {
+  public function isHDSEnabled( $prefix = '', $info ) {
     return
-      $this->bootstrap->config['livehdsenabled'] and
+      $info['organization']['livehdsenabled'] and
       in_array( $this->row[ $prefix . 'smilstatus'], array('onstorage', 'regenerate') )
     ;
   }
@@ -397,7 +397,7 @@ class Livefeeds extends \Springboard\Model {
     $authorizecode = $this->getAuthorizeSessionid( $info );
     $prefix        = $this->row['issecurestreamingforced']? 'sec': '';
     if ( $hds === null )
-      $hds = $this->isHDSEnabled();
+      $hds = $this->isHDSEnabled( '', $info );
 
     $prefix = $this->row['issecurestreamingforced']? 'sec': '';
     if ( $hds ) {
@@ -445,7 +445,7 @@ class Livefeeds extends \Springboard\Model {
     foreach( $data['media_servers'] as $key => $url )
       $data['media_servers'][ $key ] = sprintf( $url, $streamingserver['server'] );
 
-    $contenthds = $this->isHDSEnabled('content');
+    $contenthds = $this->isHDSEnabled('content', $info );
     if ( $hds == $contenthds ) {
 
       $data['media_secondaryServers'] = $data['media_servers'];
@@ -495,7 +495,9 @@ class Livefeeds extends \Springboard\Model {
       throw new \Exception("The placeholder does not have desktopcompatible recordings!");
 
     $recordingsModel->row['issecurestreamingforced'] = $this->row['issecurestreamingforced'];
-    $server = $recordingsModel->getMediaServers( $info, $this->isHDSEnabled() );
+    $server = $recordingsModel->getMediaServers(
+      $info, $this->isHDSEnabled( '', $info )
+    );
     $data['livePlaceholder_servers'] = $server['media_servers'];
     unset( $server );
 
@@ -1163,9 +1165,9 @@ class Livefeeds extends \Springboard\Model {
 
   }
 
-  public function getStreamingServers() {
+  public function getStreamingServers( $info ) {
     $where = array();
-    if ( $this->bootstrap->config['livehdsenabled'] ) {
+    if ( $info['organization']['livehdsenabled'] ) {
       $sql = array();
       foreach( self::$hdsFeatures as $field )
         $sql[] = "$field = '1'";
@@ -1173,7 +1175,7 @@ class Livefeeds extends \Springboard\Model {
       $where[] = "(" . implode(" OR ", $sql ) . ")";
     }
 
-    if ( $this->bootstrap->config['liveandandroidhls'] ) {
+    if ( $info['organization']['livehlsenabledandroid'] ) {
       $sql = array();
       foreach( self::$hlsFeatures as $field )
         $sql[] = "$field = '1'";
@@ -1405,4 +1407,5 @@ class Livefeeds extends \Springboard\Model {
 
     $streamModel->flushBatchCollect();
   }
+
 }

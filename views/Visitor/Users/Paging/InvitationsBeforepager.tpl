@@ -1,8 +1,11 @@
-<div class="title">
+<div id="pagetitle">
   <h1>{#users__invitations_title#}</h1>
-  <a href="{$language}/users/invite">{#users__invite#}</a>
-  <br/>
 </div>
+<div class="channelgradient"></div>
+<br/>
+
+<a href="{$language}/users/invite">{#users__invite#}</a>
+<br/>
 
 {if !$nosearch}
 <div id="useradminquicksearch" class="form pagingsearch">

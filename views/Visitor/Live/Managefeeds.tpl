@@ -125,7 +125,7 @@
           <label for="fullplayer_no_{$feed.id}">{#live__fullplayer_no#}</label>
         </div>
         {capture assign=liveembed}
-          <iframe width="950" height="{if $feed.moderationtype == 'nochat'}530{else}860{/if}" src="{$BASE_URI}live/view/{$feed.id},{$feed.name|filenameize}?chromeless=true{if $feed.moderationtype == 'nochat'}&amp;chat=false{/if}" frameborder="0" allowfullscreen="allowfullscreen"></iframe>
+          <iframe width="980" height="{if $feed.moderationtype == 'nochat'}550{else}880{/if}" src="{$BASE_URI}live/view/{$feed.id},{$feed.name|filenameize}?chromeless=true{if $feed.moderationtype == 'nochat'}&amp;chat=false{/if}" frameborder="0" allowfullscreen="allowfullscreen"></iframe>
         {/capture}
         <textarea onclick="this.select();">{$liveembed|trim|escape:html}</textarea>
       </div>

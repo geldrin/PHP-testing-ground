@@ -17,14 +17,7 @@ $httpInfo =
 include_once( $this->bootstrap->config['libpath'] . 'clonefish/constants.php');
 
 $config = Array(
-  
-  'fs1' => array(
-    'type'   => 'fieldset',
-    'legend' => $l('users', 'login_title'),
-    'prefix' => '<span class="legendsubtitle">' . $l('users', 'login_subtitle') . '</span>',
-    
-  ),
-  
+
   'action' => Array(
     'type'  => 'inputHidden',
     'value' => 'submitlogin'
@@ -69,10 +62,24 @@ $config = Array(
     'displayname' => $l('users', 'autologin'),
     'type'        => 'inputCheckbox',
     'value'       => isset( $_COOKIE['autologin'] ),
+    'rowlayout'   => '
+      <tr %errorstyle% class="noborder">
+        <td class="labelcolumn center" colspan="2">
+          %prefix%%element%%postfix%
+          <label for="%id%">%displayname%</label>
+          %errordiv%
+        </td>
+      </tr>
+    ',
   ),
   
   'diagnostics' => Array(
     'type'  => 'text',
+    'rowlayout' => '
+      <tr class="hidden">
+        <td class="elementcolumn singlecolumn">%element%</td>
+      </tr>
+    ',
     'value' => '
 
     <textarea style="display: none" name="diaginfo" id="diaginfo">' .

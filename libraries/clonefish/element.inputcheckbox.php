@@ -23,7 +23,7 @@ class inputCheckbox extends element {
   var $value;
 
   // -------------------------------------------------------------------------
-  function inputCheckbox( $name, $configvalues ) {
+  function __construct( $name, $configvalues ) {
 
     $this->name = $name;
     foreach ( $configvalues as $key => $value )

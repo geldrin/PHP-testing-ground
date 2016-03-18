@@ -61,8 +61,10 @@ class Invite extends \Visitor\HelpForm {
         );
 
         // fatal hiba tortent, mindenkeppen irunk ki hibat
-        if ( $users === false )
+        if ( $users === false ) {
+          $this->form->addMessage( $l('users', 'invite_fatalerror') );
           return;
+        }
 
         // a parseInviteFile hibat talalt es invalidalta a formot
         // de csak akkor adunk hibauzenetet ha nem csv export,
@@ -313,7 +315,11 @@ class Invite extends \Visitor\HelpForm {
           continue;
 
         $this->form->addMessage(
-          sprintf( $l('users', 'invitefileinvalidemail'), $line )
+          sprintf(
+            $l('users', 'invitefileinvalidemail'),
+            htmlspecialchars( '"' . $email . '"', ENT_QUOTES, 'UTF-8' ),
+            $line
+          )
         );
 
         $lineerror = true;

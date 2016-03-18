@@ -44,7 +44,7 @@ class selectDynamic extends select {
   }
 
   // --------------------------------------------------------------------------
-  function selectDynamic( $key, $configvalues, &$db, $refid ) {
+  function __construct( $key, $configvalues, &$db, $refid ) {
 
     // Passing a reference ID (refid) is the supported way of 
     // passing some kind of record ID to Clonefish in the 
@@ -57,10 +57,9 @@ class selectDynamic extends select {
     // will make it an object property too.
 
     // call parent constructor
-    $parent_class_name = get_parent_class( $this );
-    $this->$parent_class_name( $key, $configvalues );
+    parent::__construct( $key, $configvalues );
     
-    $this->db = &$db;
+    $this->db = $db;
 
     $this->getValuesFromSQL();
 

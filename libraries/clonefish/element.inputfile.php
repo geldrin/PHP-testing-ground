@@ -35,7 +35,7 @@ class inputFile extends element {
   var $thumbnaillayout = '<img src="%thumbnail%" border=0 alt="%text%" />';
 
   // --------------------------------------------------------------------------
-  function inputFile( $name, $configvalues ) {
+  function __construct( $name, $configvalues ) {
 
     // 1) without validation: 
     //     a) defined value
@@ -54,10 +54,7 @@ class inputFile extends element {
 
     // call parent constructor
     // may override the value set by submission
-    $parent_class_name = get_parent_class( $this );
-    $this->$parent_class_name(
-      $name, $configvalues
-    );
+    parent::__construct( $name, $configvalues );
 
   }
 

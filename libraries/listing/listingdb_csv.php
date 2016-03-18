@@ -30,7 +30,7 @@ class listingdb_csv extends listingdb {
     );
     
   // --------------------------------------------------------------------------
-  function listingdb_csv( $config ) {
+  function __construct( $config ) {
     foreach ( $config as $key => $value ) 
       $this->$key = $value;
 

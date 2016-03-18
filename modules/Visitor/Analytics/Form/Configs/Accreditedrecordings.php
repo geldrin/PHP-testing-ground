@@ -4,13 +4,6 @@ include_once( $this->bootstrap->config['libpath'] . 'clonefish/constants.php');
 $language = \Springboard\Language::get();
 
 $config = array(
-  
-  'fs1' => array(
-    'type'   => 'fieldset',
-    'legend' => $l('analytics', 'accreditedrecordings_title'),
-    'prefix' => '<span class="legendsubtitle">' . $l('analytics', 'accreditedrecordings_subtitle') . '</span>',
-  ),
-  
   'action' => array(
     'type'  => 'inputHidden',
     'value' => 'submitaccreditedrecordings',

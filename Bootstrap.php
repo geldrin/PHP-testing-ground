@@ -170,7 +170,7 @@ class Bootstrap {
 
     if ( isset( $this->instances['adodb'][ $dbSettings ] ) and is_resource( $this->instances['adodb'][ $dbSettings ]->_connectionID ) )
       return $this->instances['adodb'][ $dbSettings ];
-    
+
     if ( !defined('ADODB_OUTP') )
       define('ADODB_OUTP', 'Springboard\\adoDBDebugPrint'); // adodb debug print func( $msg, $newline )
     
@@ -188,30 +188,30 @@ class Bootstrap {
     if ( $errorhandler ) {
 
       // when adodb errorhandler needed
-      if ( !( @include_once( $this->config['libpath'] . 'adodb.515/adodb-exceptions.inc.php') ) ) {
+      if ( !( @include_once( $this->config['libpath'] . 'adodb.520/adodb-exceptions.inc.php') ) ) {
         // adodb not found under LIBPATH - try include_path location
-        include_once('adodb.515/adodb-exceptions.inc.php');
-        include_once('adodb.515/adodb-errorhandler.inc.php');
-        include_once('adodb.515/adodb.inc.php');
+        include_once('adodb.520/adodb-exceptions.inc.php');
+        include_once('adodb.520/adodb-errorhandler.inc.php');
+        include_once('adodb.520/adodb.inc.php');
       }
       else {
         // adodb found under LIBPATH - continue this way
-        include_once( $this->config['libpath'] . 'adodb.515/adodb-errorhandler.inc.php');
-        include_once( $this->config['libpath'] . 'adodb.515/adodb.inc.php');
+        include_once( $this->config['libpath'] . 'adodb.520/adodb-errorhandler.inc.php');
+        include_once( $this->config['libpath'] . 'adodb.520/adodb.inc.php');
       }
     }
     else {
 
       // adodb errorhandler unnecessary
 
-      if ( !( @include_once( $this->config['libpath'] . 'adodb.515/adodb-exceptions.inc.php') ) ) {
+      if ( !( @include_once( $this->config['libpath'] . 'adodb.520/adodb-exceptions.inc.php') ) ) {
         // adodb not found under LIBPATH - try include_path location
-        include_once('adodb.515/adodb-exceptions.inc.php');
-        include_once('adodb.515/adodb.inc.php');
+        include_once('adodb.520/adodb-exceptions.inc.php');
+        include_once('adodb.520/adodb.inc.php');
       }
       else {
         // adodb found under LIBPATH - continue this way
-        include_once( $this->config['libpath'] . 'adodb.515/adodb.inc.php');
+        include_once( $this->config['libpath'] . 'adodb.520/adodb.inc.php');
       }
     }
 
@@ -285,6 +285,7 @@ class Bootstrap {
       
     }
 
+    $db->debug = $this->debug;
     $db->query("SET NAMES " . str_replace( '-', '', $this->config['charset'] ) );
     $db->SetFetchMode( ADODB_FETCH_ASSOC );
 
@@ -335,7 +336,9 @@ class Bootstrap {
     $smarty->assign('REQUEST_URI',      @$_SERVER['REQUEST_URI'] );
     
     $smarty->assign('language',         Springboard\Language::get() );
-    $smarty->assign('module',           @$_REQUEST['module'] );
+    if ( isset( $_REQUEST['module'] ) )
+      $smarty->assign('module',         $_REQUEST['module'] );
+
     $smarty->assign('supportemail',     $this->config['mail']['fromemail'] );
     $smarty->assign('l',                $this->getLocalization() );
     
@@ -391,7 +394,20 @@ class Bootstrap {
     return new $class( $this, $model );
 
   }
-  
+
+  public function getVSQModel( $model ) {
+
+    $loader = Springboard\Autoloader::getInstance();
+    $class  = $loader->findExistingClass(
+      'Videosquare\\Model\\' . ucfirst( $model ),
+      'Model\\' . ucfirst( $model ),
+      'Springboard\\Model'
+    );
+
+    return new $class( $this, $model );
+
+  }
+
   public function getMailqueue( $nodb = false ) {
     
     $queue = new Springboard\Mailqueue( $this, $nodb );

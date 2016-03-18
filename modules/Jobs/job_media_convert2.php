@@ -52,11 +52,7 @@ while( !is_file( $app->config['datapath'] . 'jobs/' . $myjobid . '.stop' ) and !
 	while ( 1 ) {
 
 		$app->watchdog();
-	
-		// Establish database connection
-		$db = null;
-		$db = db_maintain();
-
+        
 		$converter_sleep_length = $app->config['sleep_media'];
 
 		// Check if temp directory readable/writable
@@ -66,13 +62,17 @@ while( !is_file( $app->config['datapath'] . 'jobs/' . $myjobid . '.stop' ) and !
 			$converter_sleep_length = 60 * 60;
 			break;
 		}
-
+        
 		// Query next job
 		$recording = getNextConversionJob();
 		if ( $recording === false ) break;
+        
+        // Clean up converter temporary storage
+        $err = cleanUpConverterTemporaryStorage();
+        if ( !$err ) $debug->log($jconf['log_dir'], $jconf['jobid_media_convert'] . ".log", "[WARNING] Converter temporary storage cleanup error.", $sendmail = false);
 
 		// Log job information
-		$debug->log($jconf['log_dir'], $jconf['jobid_media_convert'] . ".log", "[INFO] Recording id = " . $recording['id'] . " selected for conversion. Recording information:\n" . print_r($recording, true), $sendmail = false);
+        $debug->log($jconf['log_dir'], $jconf['jobid_media_convert'] . ".log", "[INFO] Recording id = " . $recording['id'] . " selected for conversion. Recording information:\n" . print_r($recording, true), $sendmail = false);
 
 		// Query recording creator
 		$uploader_user = getRecordingCreator($recording['id']);
@@ -129,7 +129,7 @@ while( !is_file( $app->config['datapath'] . 'jobs/' . $myjobid . '.stop' ) and !
 		$app->watchdog();
 
 		// Video thumbnail generation (when first video is converted)
-		if ( empty($encoding_profile['parentid']) and ( $encoding_profile['type'] == "recording" ) and ( $encoding_profile['mediatype'] == "video" ) ) {
+        if ( ( $encoding_profile['generatethumbnails'] == 1 ) and ( $encoding_profile['type'] == "recording" ) and ( $encoding_profile['mediatype'] == "video" ) ) { 
 			$err = convertVideoThumbnails($recording);
 			// Check if we need to stop conversion
 			if ( checkRecordingVersionToStop($recording) ) break;
@@ -192,9 +192,6 @@ while( !is_file( $app->config['datapath'] . 'jobs/' . $myjobid . '.stop' ) and !
         break;
 	}	// End of while(1)
 
-	// Close DB connection if open
-	if ( is_resource($db->_connectionID) ) $db->close();
-
 	$app->watchdog();
 
 	sleep($converter_sleep_length);
@@ -210,9 +207,7 @@ exit;
 // *************************************************************************
 // Description: queries next job from recordings_versions database table
 function getNextConversionJob() {
-global $jconf, $debug, $db, $app;
-
-	$db = db_maintain();
+global $jconf, $debug, $app;
 
 	$node = $app->config['node_sourceip'];
 
@@ -287,16 +282,18 @@ global $jconf, $debug, $db, $app;
 			rv.recordingid
 		LIMIT 1";
 	try {
-		$recording = $db->getArray($query);
+        $model = $app->bootstrap->getModel('recordings_versions');
+        $rs = $model->safeExecute($query);
 	} catch (exception $err) {
 		$debug->log($jconf['log_dir'], $jconf['jobid_media_convert'] . ".log", "[ERROR] SQL query failed." . trim($query), $sendmail = true);
 		return false;
 	}
 
-	// Check if any record returned
-	if ( count($recording) < 1 ) return false;
+    if ( $rs->RecordCount() < 1 ) return false;
 
-	return $recording[0];
+    $jobs = adoDBResourceSetToArray($rs);  
+
+	return $jobs[0];
 }
 
 
@@ -306,8 +303,6 @@ global $jconf, $debug, $db, $app;
 // Description: download media from converter
 function copyMediaToConverter(&$recording) {
 global $app, $jconf, $debug;
-
-    $db = db_maintain();
 
 	// STATUS: copyingfromfrontend
 	updateRecordingVersionStatus($recording['recordingversionid'], $jconf['dbstatus_copyfromfe']);
@@ -589,8 +584,6 @@ global $app, $jconf, $debug;
 function convertMedia(&$recording, $profile) {
 global $app, $jconf, $global_log;
 
-    $db = db_maintain();
-
 	// STATUS: converting
 	updateRecordingVersionStatus($recording['recordingversionid'], $jconf['dbstatus_conv']);
 	// Output filename
@@ -669,8 +662,6 @@ global $app, $jconf, $global_log;
 // Description: Copy (SCP) media file back to front-end server
 function copyMediaToFrontEnd($recording, $profile) {
  global $app, $jconf, $debug;
-
-    $db = db_maintain();
  
 	// STATUS: copyingtostorage
 	updateRecordingVersionStatus($recording['recordingversionid'], $jconf['dbstatus_copystorage']);
@@ -749,19 +740,12 @@ function copyMediaToFrontEnd($recording, $profile) {
 	$msg = null;
 	$master_filesize = 0;
 	$recording_filesize = 0;
-	
-	if ($recording[$idx .'masterstatus'] == $jconf['dbstatus_uploaded']) {
-		$err = directory_size($recording['master_path']);
-	} else {
-		$err = ssh_filesize($recording[$idx .'mastersourceip'], $recording['recording_remote_path'] . "master/");
-	}
-	
-	if ( !$err['code']) {
-		$msg .= "[WARN] Master filesize cannot be acquired! Message:\n". $err['command_output'] ."\n";
-	} else {
-		$master_filesize = $err['value'];
-	}
-	
+
+    // Get master storage directory size (does not exist if a recording is first processed)
+    $err = ssh_filesize($recording[$idx .'mastersourceip'], $recording['recording_remote_path'] . "master/");
+	if ( $err['code'] ) $master_filesize =+ $err['value'];
+		
+    // Recording directory size
 	$err = ssh_filesize($recording[$idx .'mastersourceip'], $recording['recording_remote_path']);
 	if ( $err['code'] ) {
 		$recording_filesize = $err['value'];
@@ -789,8 +773,6 @@ function copyMediaToFrontEnd($recording, $profile) {
 
 function checkRecordingVersionToStop($recording) {
 global $jconf, $debug, $myjobid;
-
-    $db = db_maintain();
 
 	// Is it recording or content? Get appropriate status.
 	$type = "recording";

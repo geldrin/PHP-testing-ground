@@ -16,54 +16,83 @@ $app = new Springboard\Application\Cli(BASE_PATH, PRODUCTION);
 $app->loadConfig('modules/Jobs/config_jobs.php');
 $jconf = $app->config['config_jobs'];
 
-$recordings = array();
-$users = array();
+$recordings   = array();
+$users        = array();
 $sessioncheck = false;
+$date_start   = false;
+$options      = null;
+$org          = null;
+$org_id       = null;
 
 $msg  = "# Videosquare ondemand statistics report\n\n";
 $msg .= "# Log analization started: " . date("Y-m-d H:i:s") . "\n";
-//$msg .= "# Customer: " . $event_info['name'] . " - " . $event_info['url'] . "\n";
-//$msg .= "# Domain: " . $event_info['domain'] . "\n#\n";
 $msg .= "# Locations (location / stream name): (*) = encoder\n";
 
 try {
   $db = $app->bootstrap->getAdoDB();
 } catch (exception $err) {
   // Send mail alert
-  $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] No connection to DB (getAdoDB() failed). Error message:\n" . $err, $sendmail = TRUE);
+  $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] No connection to DB (getAdoDB() failed). Error message:\n" . $err, $sendmail = FALSE);
   exit;
 }
 
-$org_id = null;
-$input = null;
 // get organization id from user/argument
-if ($argc > 1) {
-  $input = end($argv);
-  if ($input !== false && preg_match('/^\d+$/', $input) === 1) {
-    $input = array_pop($argv); // trim down the last argument if it's a number
-    $data = db_query("SELECT id, name FROM organizations WHERE id=". intval($input));
-    if ($data['success'] === true && $data['returnvalue'] !== false) {
-      $org_id = intval($data['returnvalue']['id']);
-      print_r("Organization name = ". $data['returnvalue']['name'] ." (". $input .")\n");
-    } else {
-      print_r($data['message']);
-      exit -1;
-    }
-  }
+$options = getopt(
+  's::d::h::?::',
+  array("sessions", "date-start::", "help")
+);
 
-  $i = 0;
-  while(array_key_exists(++$i, $argv) === true) {
-    if (preg_match('/-\w+/', $argv[$i]) === 1) {
-      switch ($argv[$i]) {
-        case '-s':
-          $sessioncheck = true;
-          print_r("Analizing sessions...\n");
-          break;
-        default:
-          print_r($argv[$i] ." is not a valid option!\n");
-          exit;
+if ($argc > 1) {
+  if (isset($options['s']) || isset($options['sessions'])) {
+    $sessioncheck = true;
+  }
+  if (isset($options['d']) || isset($options['date-start'])) {
+    $tmp = null;
+    if (array_key_exists('d', $options)) {
+      $tmp = $options['d'];
+    } elseif(array_key_exists('date-start', $options)) {
+      $tmp = $options['date-start'];
+    } else {
+      print_r("No parameter passed for \"date-start\"! See strtotime() function for proper syntax.\n");
+    }
+
+    if ($tmp) {
+      $date_start = strtotime($tmp, time());
+      if ($date_start === false) {
+        print_r("Parameter cannot be parsed as date(". $tmp ."). See strtotime() function for proper syntax.\n");
       }
     }
+  }
+  if (isset($options['h']) || isset($options['help'])) {
+    print_r(
+      "\nSyntax:\n".
+      "php progcheck.php [-[h,s,d=<date>] [--help] [--sessions] [--date-start] <organization_id>]\n".
+      "For interactive menu, omit all arguments.".
+      "Options:\n".
+      " -h, --help: print this help.\n".
+      " -d, --date-start=<date>: get from this date. Check strtotime() for more info.\n".
+      " -s, --sessions: do session check too.\n\n".
+      "E.g.:\n".
+      " $ php progcheck.php - interactive mode.\n".
+      " $ php progcheck.php 123 - check organization with id 123.\n".
+      " $ php progcheck.php --sessions -d=\"-2 months\" 123 - check the users deactivated in the last two months.\n\n"
+    );
+  }
+  
+  $org = end($argv);
+  if ($org && preg_match('/^\d+$/', $org) === 1) {
+    $org = validateOrganization($org);
+    
+    if ($org === false) {
+      print_r("Organization does not exist!");
+      exit;
+    }
+    
+    $org_id = $org['id'];
+    print_r("Organization name = ". $org['name'] ." (". $org_id .")\n");
+  } else {
+    print_r("Failed to parse organization ID!\n");
+    exit;
   }
 }
 
@@ -74,16 +103,50 @@ if ($org_id === null) {
     $input = fgets(STDIN);
     if (!preg_match('/[A-Za-z.#\\-$]/', $input)) {
       $input = intval($input);
-      $data = db_query("SELECT id, name FROM organizations WHERE id=". intval($input));
-      if ($data['success'] === true) {
-        $org_id = intval($data['returnvalue']['id']);
-        print_r("Organization name = ". $data['returnvalue']['name'] ." (". $input .")\n");
+      $org = validateOrganization($input);
+      if ($org) {
+        $org_id = intval($org['id']);
+        print_r("Organization name = ". $org['name'] ." (". $org_id .")\n");
         break;
-      } elseif ($data['returnvalue'] === false) {
+      } else {
         print_r("Organization does not exist! Please type again.\n");
       }
     }
     print_r('Invalid value! Please type again: ');
+  }
+  
+  print_r("Date-start (optional):\n");
+  while (true) {
+    print_r(" > ");
+    $input = trim(fgets(STDIN));
+    
+    if (empty($input)) {
+      $date_start = false;
+      break;
+    }
+    
+    $date_start = strtotime(trim($input));
+    if ($date_start === false) {
+      print_r('Invalid value! Please type again: ');
+    } else {
+      break;
+    }
+  }
+  
+  print_r("Session check? [y/n]:\n");
+  while (true) {
+    print_r(" > ");
+    $input = trim(fgets(STDIN));
+    
+    if ($input == 'y') {
+      $sessioncheck = true;
+      break;
+    } elseif($input == 'n') {
+      $sessioncheck = false;
+      break;
+    } else {
+      print_r('Invalid value! Please type again: ');
+    }
   }
 }
 
@@ -92,7 +155,6 @@ if ($sessioncheck === false)
 else
   $msg .= "# Legend: (email, watched duration, total duration, total percent,  session started, session started from, session terminated, session stopped at, session duration, session percent)\n";
 $msg .= "\n";
-// $msg .= $checktimestamps === true ? (",last activity,first login)\n") : (")\n");
 
 // query database
 $query = "
@@ -107,8 +169,6 @@ $query = "
   ORDER BY
     ch.starttimestamp
   ";
-
-//echo $query . "\n";
 
 try {
   $org_channels = $db->getArray($query);
@@ -150,6 +210,7 @@ foreach ($org_channels as $ch) {
   // Prepare channel log message
   $msg_ch = toUpper($ch['title']) . " (" . $ch['starttimestamp'] . ") [ID=" . $ch['id'] . "]:\n\n";
 
+  $durationcheck = $date_start ? ("users.sessionlastupdated >= '". date('Y-m-d H:i:s', $date_start) ."' AND\n") : ('');
   foreach ($recs as $rec) {
     $query = array(
       'progress' => "SELECT
@@ -165,7 +226,7 @@ foreach ($org_channels as $ch) {
         WHERE
           prog.recordingid = " . $rec['id'] . " AND
           prog.userid = u.id AND
-          u.organizationid = $org_id",
+          ". $durationcheck ."u.organizationid = $org_id",
 
       'sessions' => "SELECT
           session.userid,
@@ -181,14 +242,12 @@ foreach ($org_channels as $ch) {
           recording_view_progress AS prog,
           users
         WHERE
-          (users.id = session.userid AND
+          (". $durationcheck ."users.id = session.userid AND
           users.organizationid = $org_id AND
           session.recordingid = ". $rec['id'] .") AND (
           prog.userid = session.userid AND
           prog.recordingid = session.recordingid)"
     );
-
-// var_dump($query);
 
     try {
       if ($sessioncheck === true) {
@@ -208,17 +267,14 @@ foreach ($org_channels as $ch) {
     $user_added = false;
     foreach ($user_progress as $up) {
       if (array_key_exists('positionfrom', $up)) {
-				// var_dump($up['timestampfrom']);
-				// var_dump($up['timestampuntil']);
+        
         $session_watched = abs($up['positionuntil'] - $up['positionfrom']);
-				$session_duration = abs(strtotime($up['timestampfrom']) - strtotime($up['timestampuntil']));
-				// var_dump(strtotime($up['timestampfrom']));
-				// var_dump(strtotime($up['timestampuntil']));
-				// var_dump($session_duration);
+        $session_duration = abs(strtotime($up['timestampfrom']) - strtotime($up['timestampuntil']));
+        
         if ($session_watched > 0 === false) continue; // Skip headers if the session length was 0.
       }
       $row = '';
-			$tmp = array();
+      $tmp = array();
       // Log channel header for this recording
       if ( !empty($msg_ch) ) {
         $msg .= $msg_ch;
@@ -232,41 +288,39 @@ foreach ($org_channels as $ch) {
       }
 
       $position_percent = round( ( 100 / $rec['masterlength'] ) * $up['position'], 2);
-			if ( $position_percent > 100 ) $position_percent = 100;
-			if ( $up['position'] > $rec['masterlength'] ) $up['position'] = $rec['masterlength'];
+      if ( $position_percent > 100 ) $position_percent = 100;
+      if ( $up['position'] > $rec['masterlength'] ) $up['position'] = $rec['masterlength'];
 
-			$tmp[] = $up['email'];
-			$tmp[] = secs2hms($rec['masterlength']);
-			$tmp[] = secs2hms($up['position']);
-			$tmp[] = $position_percent ."%";
+      $tmp[] = $up['email'];
+      $tmp[] = secs2hms($rec['masterlength']);
+      $tmp[] = secs2hms($up['position']);
+      $tmp[] = $position_percent ."%";
 
-			if ($sessioncheck === true) { // when checking sessions, append the following data to the log:
-				$session_percent = $session_watched / $rec['masterlength'] * 100;
+      if ($sessioncheck === true) { // when checking sessions, append the following data to the log:
+        $session_percent = $session_watched / $rec['masterlength'] * 100;
 
         $tmp[] = $up['timestampfrom'];
-				$tmp[] = secs2hms($up['positionfrom']);
-				$tmp[] = $up['timestampuntil'];
-				$tmp[] = secs2hms($up['positionuntil']);
-				$tmp[] = secs2hms($session_duration);
-				$tmp[] = round($session_percent, 2) ."%";
+        $tmp[] = secs2hms($up['positionfrom']);
+        $tmp[] = $up['timestampuntil'];
+        $tmp[] = secs2hms($up['positionuntil']);
+        $tmp[] = secs2hms($session_duration);
+        $tmp[] = round($session_percent, 2) ."%";
 
-				unset($session_percent, $session_duration, $position_percent, $session_watched);
+        unset($session_percent, $session_duration, $position_percent, $session_watched);
       }
-			
-			$row = implode(";", $tmp) . PHP_EOL;
-			// echo $row;
+      
+      $row = implode(";", $tmp) . PHP_EOL;
+      // echo $row;
       $msg .= $row;
       $user_added = true;
-			
-			unset($tmp);
+      
+      unset($tmp);
     }
 
     if ( $user_added ) $msg .= "\n";
 
   }
 }
-
-//echo $msg;
 
 // Open log file
 $result_file = "vsq_ondemand_statsh_" . date("Y-m-d") . ".txt";
@@ -297,17 +351,37 @@ function db_query($qry) {
   try {
     $arr = $db->getArray($qry);
     $returnarray['returnvalue'] = !empty($arr) ? $arr[0] : false;
-    $returnarray['message'] = !$returnarray['returnvalue'] ? "Database query failed!\nQuery:\n". $qry ."\n" : "Success.\n";
+    $returnarray['message'] = !$returnarray['returnvalue'] ? "Database query failed!\nQuery:\n". $qry ."\n" : "Success.";
     if ($returnarray['returnvalue'] === false) {
-      $returnarray['message'] = "[ERROR] The query returned an empty array.\n";
+      $returnarray['message'] = "The query returned an empty array.";
       return $returnarray;
     }
     $returnarray['success'] = true;
   } catch (Exception $ex) {
-    $returnarray['returnvalue'] = "Database query failed!\nQuery:\n". $qry ."\n";
-    $returnarray['message'] = "Database query failed!\nQuery:\n". $qry ."\n";
+    $returnarray['returnvalue'] = false;
+    $returnarray['message'] = "Database query failed!\nQuery:\n". $qry;
   }
   return $returnarray;
+}
+
+function validateOrganization($aString = null) {
+// return FALSE when the organization doesn't exist, or an array with it's ID and name
+  $orgInfo = array(
+    'id'   => null,
+    'name' => null,
+  );
+  
+  if ($aString && preg_match('/^\d+$/', $aString) === 1) {
+    $data = db_query("SELECT id, name FROM organizations WHERE id=". intval($aString));
+    if ($data['success'] === true && $data['returnvalue'] !== false) {
+      $orgInfo['id'  ] = intval($data['returnvalue']['id']);
+      $orgInfo['name'] = $data['returnvalue']['name'];
+      return $orgInfo;
+    } else {
+      print_r("[ERROR] ". $data['message'] . PHP_EOL);
+    }
+  }
+  return false;
 }
 
 ?>

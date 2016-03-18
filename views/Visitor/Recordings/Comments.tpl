@@ -12,6 +12,7 @@
         <div class="user">
           <div class="avatar"><img src="{$item|@avatarphoto|escape:html}" width="36" height="36"/></div>
           <div class="name" >{$item|@nickformat|escape:html}</div>
+          <div class="timestamp" >{$item.timestamp|date_format:#smarty_dateformat_longer#}</div>
         </div>
         <div class="message">{if $item.moderated == 0}{$item|@commentlinkify:$recordingurl}{else}{#recordings__comment_moderated#}{/if}</div>
         <div class="actions">
@@ -51,13 +52,17 @@
         {assign var=currentpage value=false}
       {/if}
       {if $smarty.section.pagecount.index+1 == $maxpage or $smarty.section.pagecount.index+1 == $minpage}
-        <li><a href="{$language}/recordings/details/{$recording.id},{$recording.title|filenameize}?commentspage={$smarty.section.pagecount.index+1}" data-pageid="{$smarty.section.pagecount.index+1}">...</a>{if $smarty.section.pagecount.index+1 == $maxpage}<span class="divider">|</span>{/if}
+        <li>
+          <a href="{$language}/recordings/details/{$recording.id},{$recording.title|filenameize}?commentspage={$smarty.section.pagecount.index+1}" data-pageid="{$smarty.section.pagecount.index+1}">...</a>
+        </li>
+        {if $smarty.section.pagecount.index+1 == $maxpage}<span class="divider"></span>{/if}
       {elseif $minpage and $smarty.section.pagecount.index+1 < $minpage}
       {elseif $maxpage and $smarty.section.pagecount.index+1 > $maxpage}
       {else}
         <li {if $currentpage}class="currentpage"{/if}>
-          {if !$currentpage}<a href="{$language}/recordings/details/{$recording.id},{$recording.title|filenameize}?commentspage={$smarty.section.pagecount.index+1}" data-pageid="{$smarty.section.pagecount.index+1}">{/if}{$smarty.section.pagecount.index+1}{if !$currentpage}</a>{/if}{if !$smarty.section.pagecount.last}<span class="divider">|</span>{/if}
+          {if !$currentpage}<a href="{$language}/recordings/details/{$recording.id},{$recording.title|filenameize}?commentspage={$smarty.section.pagecount.index+1}" data-pageid="{$smarty.section.pagecount.index+1}">{/if}{$smarty.section.pagecount.index+1}{if !$currentpage}</a>{/if}
         </li>
+        {if !$smarty.section.pagecount.last}<span class="divider"></span>{/if}
       {/if}
     {/section}
   </ul>

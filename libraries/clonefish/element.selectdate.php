@@ -107,7 +107,7 @@ class selectDate extends element {
   var $sec       = null;
 
   // --------------------------------------------------------------------------
-  function selectDate( $name, $configvalues ) {
+  function __construct( $name, $configvalues ) {
 
     $this->name = $name;
 

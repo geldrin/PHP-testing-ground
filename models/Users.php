@@ -795,7 +795,7 @@ class Users extends \Springboard\Model {
       WHERE
         r.isintrooutro      = '0' AND
         r.approvalstatus    = 'approved' AND
-        r.status            = 'onstorage' AND -- TODO live?
+        r.status            = 'onstorage' AND -- TODO live
         r.organizationid    = '$organizationid' AND
         r.status            = 'onstorage' AND
         r.isseekbardisabled = '1'
@@ -1222,8 +1222,9 @@ class Users extends \Springboard\Model {
           gm.userid  = '" . $this->id . "' AND
           gm.groupid = g.id
         )
-      WHERE organizationid = '$organizationid'
-      ORDER BY name DESC
+      WHERE g.organizationid = '$organizationid'
+      GROUP BY g.id
+      ORDER BY g.name DESC
     ");
   }
 }

@@ -83,9 +83,6 @@ clearstatcache();
 // Watchdog
 $app->watchdog();
 
-// Establish database connection
-$db = db_maintain();
-
 // Check GeoIP database
 $geoip = true;
 if ( !geoip_db_avail(GEOIP_COUNTRY_EDITION) ) {
@@ -364,9 +361,6 @@ for ( $statsidx = 0; $statsidx < count($stats_config); $statsidx++ ) {
 
 } // End of 5min, hourly, daily cycles
 
-// Close DB connection if open
-if ( is_resource($db->_connectionID) ) $db->close();
-
 // Watchdog
 $app->watchdog();
 
@@ -374,7 +368,9 @@ exit;
 
 // Query media servers
 function queryMediaServers() {
-global $db, $debug, $myjobid, $app, $jconf;
+global $debug, $myjobid, $app, $jconf;
+
+    $model = $app->bootstrap->getModel('cdn_streaming_servers');
 
     $query = "
         SELECT
@@ -384,21 +380,23 @@ global $db, $debug, $myjobid, $app, $jconf;
             css.servicetype,
             css.disabled
         FROM
-            cdn_streaming_servers as css
+            cdn_streaming_servers AS css
         WHERE
             css.id > 0
         ";
 
     try {
-        $media_servers = $db->getArray($query);
+        $rs = $model->safeExecute($query);
     } catch (exception $err) {
         $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] SQL query failed." . trim($query), $sendmail = true);
         return false;
     }
 
-    if ( count($media_servers) < 1 ) return false;        
+    if ( $rs->RecordCount() < 1 ) return false;
 
-    return $media_servers;
+    $rs_array = adoDBResourceSetToArray($rs);
+    
+    return $rs_array;
 }
 
 // Find media server
@@ -420,75 +418,77 @@ function findMediaServers($media_servers, $server_fqdn) {
 
 // Query active stream records from database in a time interval
 function queryStatsForInterval($start_interval, $end_interval, $streaming_server_app) {
-global $db, $debug, $myjobid, $app, $jconf;
+global $debug, $myjobid, $app, $jconf;
 
-  $start_interval_datetime = date("Y-m-d H:i:s", $start_interval);
-  $end_interval_datetime = date("Y-m-d H:i:s", $end_interval);
+    $start_interval_datetime = date("Y-m-d H:i:s", $start_interval);
+    $end_interval_datetime = date("Y-m-d H:i:s", $end_interval);
 
-  $query = "
-    SELECT
-        vsl.id,
-        vsl.userid,
-        vsl.livefeedid,
-        vsl.livefeedstreamid,
-        vsl.sessionid,
-        vsl.viewsessionid,
-        vsl.startaction,
-        vsl.stopaction,
-        vsl.streamscheme,
-        vsl.streamserver,
-        vsl.streamurl,
-        vsl.ipaddress,
-        vsl.useragent,
-        vsl.timestampfrom,
-        vsl.timestampuntil,
-        lf.name AS feedname,
-        lfs.qualitytag AS streamname,
-        lfs.keycode,
-        lfs.contentkeycode  
-    FROM
-        view_statistics_live as vsl,
-        livefeeds AS lf,
-        livefeed_streams AS lfs
-    WHERE
-        vsl.streamurl LIKE '/" . $streaming_server_app . "%'
-        AND (
-        ( vsl.timestampfrom >= '" . $start_interval_datetime . "' AND vsl.timestampfrom <= '" . $end_interval_datetime . "' ) OR
-        ( vsl.timestampuntil >= '" . $start_interval_datetime . "' AND vsl.timestampuntil <= '" . $end_interval_datetime . "' ) OR
-        ( vsl.timestampfrom < '" . $start_interval_datetime . "' AND vsl.timestampuntil > '" . $end_interval_datetime . "' ) )
-        AND vsl.livefeedid = lf.id
-        AND vsl.livefeedstreamid = lfs.id
-    ";
+    $model = $app->bootstrap->getModel('view_statistics_live');
 
-  try {
-    $stats = $db->Execute($query);
-  } catch (exception $err) {
-    $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] SQL query failed." . trim($query), $sendmail = false); // TRUE!!!
-    return false;
-  }
+    $query = "
+        SELECT
+            vsl.id,
+            vsl.userid,
+            vsl.livefeedid,
+            vsl.livefeedstreamid,
+            vsl.sessionid,
+            vsl.viewsessionid,
+            vsl.startaction,
+            vsl.stopaction,
+            vsl.streamscheme,
+            vsl.streamserver,
+            vsl.streamurl,
+            vsl.ipaddress,
+            vsl.useragent,
+            vsl.timestampfrom,
+            vsl.timestampuntil,
+            lf.name AS feedname,
+            lfs.qualitytag AS streamname,
+            lfs.keycode,
+            lfs.contentkeycode  
+        FROM
+            view_statistics_live AS vsl,
+            livefeeds AS lf,
+            livefeed_streams AS lfs
+        WHERE
+            vsl.streamurl LIKE '/" . $streaming_server_app . "%'
+            AND (
+                ( vsl.timestampfrom >= '" . $start_interval_datetime . "' AND vsl.timestampfrom <= '" . $end_interval_datetime . "' ) OR
+                ( vsl.timestampuntil >= '" . $start_interval_datetime . "' AND vsl.timestampuntil <= '" . $end_interval_datetime . "' ) OR
+                ( vsl.timestampfrom < '" . $start_interval_datetime . "' AND vsl.timestampuntil > '" . $end_interval_datetime . "' ) )
+            AND vsl.livefeedid = lf.id
+            AND vsl.livefeedstreamid = lfs.id";
 
-  // No records
-  if ( $stats->RecordCount() < 1 ) return false;
+    try {
+        $rs = $model->safeExecute($query);
+    } catch (exception $err) {
+        $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] SQL query failed." . trim($query), $sendmail = false); // TRUE!!!
+        return false;
+    }
 
-  return $stats;
+    if ( $rs->RecordCount() < 1 ) return false;
+
+    return $rs;
 }
 
 // Get next live statistics record timestamp (to help jumping empty time slots)
 // WARNING: does not check for active records
 function getFirstLiveStatRecordFromInterval($from_timestamp, $to_timestamp, $streaming_server_app) {
- global $db, $debug, $myjobid, $app, $jconf;
+ global $debug, $myjobid, $app, $jconf;
 
-  if ( empty($from_timestamp) ) $from_timestamp = 0;
+    if ( empty($from_timestamp) ) $from_timestamp = 0;
 
-  $from_datetime = date("Y-m-d H:i:s", $from_timestamp);
-  $to_datetime = date("Y-m-d H:i:s", $to_timestamp);
+    $from_datetime = date("Y-m-d H:i:s", $from_timestamp);
+    $to_datetime = date("Y-m-d H:i:s", $to_timestamp);
 
-  $query = "
+    $model = $app->bootstrap->getModel('view_statistics_live');
+
+    $query = "
     SELECT
         vsl.id,
         vsl.timestampfrom
     FROM
-        view_statistics_live as vsl
+        view_statistics_live AS vsl
     WHERE
         vsl.timestampfrom >= '" . $from_datetime . "' AND
         vsl.timestampfrom <= '" . $to_datetime . "' AND
@@ -497,57 +497,57 @@ function getFirstLiveStatRecordFromInterval($from_timestamp, $to_timestamp, $str
         vsl.timestampfrom
     LIMIT 1
     ";
-  
-  try {
-    $stats = $db->getArray($query);
-  } catch (exception $err) {
-    $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] SQL query failed." . trim($query), $sendmail = true);
-    return false;
-  }
 
-  // No records in database
-  if ( count($stats) < 1 ) return false;
+    try {
+        $rs = $model->safeExecute($query);
+    } catch (exception $err) {
+        $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] SQL query failed." . trim($query), $sendmail = true);
+        return false;
+    }
 
-  $starttime = strtotime($stats[0]['timestampfrom']);
+    if ( $rs->RecordCount() < 1 ) return false;
 
-  return $starttime;
+    $rs_array = adoDBResourceSetToArray($rs);
+    
+    $starttime = strtotime($rs_array[0]['timestampfrom']);
+
+    return $starttime;
 }
 
 function getLastStatsRecordFrom($db_stats_table) {
-global $db, $debug, $myjobid, $app, $jconf;
+global $debug, $myjobid, $app, $jconf;
 
-  $query = "
-    SELECT
-      id,
-      timestamp
-    FROM
-      " . $db_stats_table . "
-    ORDER BY
-      timestamp DESC
-    LIMIT 1";
+    $model = $app->bootstrap->getModel($db_stats_table);
 
-//echo $query . "\n";
+    $query = "
+        SELECT
+            id,
+            timestamp
+        FROM
+            " . $db_stats_table . "
+        ORDER BY
+            timestamp DESC
+        LIMIT 1";
 
-  try {
-    $stats = $db->getArray($query);
-  } catch (exception $err) {
-    $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] SQL query failed." . trim($query), $sendmail = true);
-    return false;
-  }
+    try {
+        $rs = $model->safeExecute($query);
+    } catch (exception $err) {
+        $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] SQL query failed." . trim($query), $sendmail = true);
+        return false;
+    }
 
-  // No records in database
-  if ( count($stats) < 1 ) return false;
+    if ( $rs->RecordCount() < 1 ) return false;
 
-  $starttime = strtotime($stats[0]['timestamp']);
+    $rs_array = adoDBResourceSetToArray($rs);
 
-  return $starttime;
+    $starttime = strtotime($rs_array[0]['timestamp']);
+
+    return $starttime;
 }
 
 function getTimelineGridSeconds($timestamp, $direction = "left", $timeresolution) {
 
   if ( ( $timeresolution != 5 * 60 ) and ( $timeresolution != 60 * 60 ) and ( $timeresolution != 60 * 60 * 24 ) ) return false;
-
-//  echo "debug: res = " . $timeresolution . "\n";
 
   if ( ( $timeresolution == 5 * 60 ) or ( $timeresolution == 60 * 60 ) ) {
 
@@ -559,15 +559,11 @@ function getTimelineGridSeconds($timestamp, $direction = "left", $timeresolution
       $timestamp_grid = $timestamp - $mod + $timeresolution;
     }
 
-//    echo "debug: mod = " . $mod . "\n";
-
   } else {
 
     $timestamp_grid = strtotime(date("Y-m-d 00:00:00", $timestamp));
 
   }
-
-//  echo "debug: input = " . date("Y-m-d H:i:s (e)", $timestamp) . " | grid = " . date("Y-m-d H:i:s (e)", $timestamp_grid) . "\n";
 
   return $timestamp_grid;
 }
@@ -599,33 +595,31 @@ function returnStreamingClientPlatformEmptyArray($platform_definitions) {
 function insertStatRecord($stat_record, $db_stats_table) {
 global $debug, $app, $jconf, $myjobid;
 
-  $values = array(
-    'timestamp'             => $stat_record['timestamp'],
-    'livefeedid'            => $stat_record['livefeedid'],
-    'livefeedstreamid'      => $stat_record['livefeedstreamid'],
-    'streamingserverid'     => $stat_record['streamserver'],
-    'iscontent'             => 0,
-    'country'               => $stat_record['country'],
-    'numberofflashwin'      => $stat_record['flashwin'],
-    'numberofflashmac'      => $stat_record['flashmac'],
-    'numberofflashlinux'    => $stat_record['flashlinux'],
-    'numberofandroid'       => $stat_record['android'],
-    'numberofiphone'        => $stat_record['iphone'],
-    'numberofipad'          => $stat_record['ipad'],
-    'numberofunknown'       => $stat_record['unknown'],
-  );
+    $values = array(
+        'timestamp'             => $stat_record['timestamp'],
+        'livefeedid'            => $stat_record['livefeedid'],
+        'livefeedstreamid'      => $stat_record['livefeedstreamid'],
+        'streamingserverid'     => $stat_record['streamserver'],
+        'iscontent'             => 0,
+        'country'               => $stat_record['country'],
+        'numberofflashwin'      => $stat_record['flashwin'],
+        'numberofflashmac'      => $stat_record['flashmac'],
+        'numberofflashlinux'    => $stat_record['flashlinux'],
+        'numberofandroid'       => $stat_record['android'],
+        'numberofiphone'        => $stat_record['iphone'],
+        'numberofipad'          => $stat_record['ipad'],
+        'numberofunknown'       => $stat_record['unknown'],
+    );
 
-//var_dump($values);
+    try {
+        $liveStats = $app->bootstrap->getModel($db_stats_table);
+        $liveStats->insert($values);
+    } catch (exception $err) {
+        $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] SQL operation failed." . print_r($values, true), $sendmail = false); // TRUE!!!!
+        return false;
+    }
 
-  try {
-    $liveStats = $app->bootstrap->getModel($db_stats_table);
-    $liveStats->insert($values);
-  } catch (exception $err) {
-    $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] SQL operation failed." . print_r($values, true), $sendmail = false); // TRUE!!!!
-    return false;
-  }
-
-  return true;
+    return true;
 }
 
 function recursive_array_search($needle,$haystack) {
@@ -641,35 +635,36 @@ function recursive_array_search($needle,$haystack) {
 }
 
 function removeStatsAll($stats_config, $isexec) {
- global $db, $debug, $myjobid, $app, $jconf;
+ global $debug, $myjobid, $app, $jconf;
 
-  if ( !$isexec ) return true;
+    if ( !$isexec ) return true;
+    
+    // Log
+    $debug->log($jconf['log_dir'], $myjobid . ".log", "[WARN] Removing all statistics information", $sendmail = false);
 
-  // Log
-  $debug->log($jconf['log_dir'], $myjobid . ".log", "[WARN] Removing all statistics information", $sendmail = false);
+    for ( $statsidx = 0; $statsidx < count($stats_config); $statsidx++ ) {
 
-  for ( $statsidx = 0; $statsidx < count($stats_config); $statsidx++ ) {
+        $model = $app->bootstrap->getModel($stats_config[$statsidx]['sqltablename']);
+    
+        // Truncate table
+        $query = "TRUNCATE TABLE " . $stats_config[$statsidx]['sqltablename'];
 
-    // Truncate table
-    $query = "TRUNCATE TABLE " . $stats_config[$statsidx]['sqltablename'];
+        try {
+            $rs = $model->safeExecute($query);
+        } catch (exception $err) {
+            $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] SQL query failed." . trim($query), $sendmail = true);
+            return false;
+        }
 
-    try {
-      $rs = $db->Execute($query);
-    } catch (exception $err) {
-      $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] SQL query failed." . trim($query), $sendmail = true);
-      return false;
+        // Remove status file
+        $status_filename = $jconf['temp_dir'] . $myjobid . "." . $stats_config[$statsidx]['label'] . ".status";
+        if ( file_exists($status_filename ) ) unlink($status_filename);
+
+        // Log
+        $debug->log($jconf['log_dir'], $myjobid . ".log", "[OK] Stats table " . $stats_config[$statsidx]['sqltablename'] . " cleaned. Status file removed: " . $status_filename, $sendmail = false);
     }
 
-    // Remove status file
-    $status_filename = $jconf['temp_dir'] . $myjobid . "." . $stats_config[$statsidx]['label'] . ".status";
-    if ( file_exists($status_filename ) ) unlink($status_filename);
-
-    // Log
-    $debug->log($jconf['log_dir'], $myjobid . ".log", "[OK] Stats table " . $stats_config[$statsidx]['sqltablename'] . " cleaned. Status file removed: " . $status_filename, $sendmail = false);
-  }
-  
-  return true;
+    return true;
 }
-
 
 ?>

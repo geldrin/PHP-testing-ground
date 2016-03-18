@@ -13,13 +13,7 @@ $config = Array(
     'value'    => $organizationid,
     'readonly' => true,
   ),
-  
-  'fs1' => array(
-    'type'   => 'fieldset',
-    'legend' => $l('departments', 'create_title'),
-    'prefix' => '<span class="legendsubtitle">' . $l('departments', 'create_subtitle') . '</span>',
-  ),
-  
+
   'name' => Array(
     'displayname' => $l('departments', 'name'),
     'type'        => 'inputText',

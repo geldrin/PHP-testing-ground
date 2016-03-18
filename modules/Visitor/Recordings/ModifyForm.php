@@ -5,7 +5,8 @@ class ModifyForm extends \Visitor\HelpForm {
   public $recordingsModel;
   
   public function init() {
-    
+
+    $l = $this->bootstrap->getLocalization();
     $recordingsModel = $this->controller->modelOrganizationAndUserIDCheck(
       'recordings',
       $this->application->getNumericParameter('id')
@@ -23,6 +24,10 @@ class ModifyForm extends \Visitor\HelpForm {
         )
       )
     ;
+
+    $name = str_replace('modify', '', $this->controller->toSmarty['step'] );
+    $this->controller->toSmarty['title'] = $l('recordings', $name . '_title');
+
     $this->controller->toSmarty['formclass']    = 'leftdoublebox';
     $this->controller->toSmarty['helpclass']    = 'small right';
     

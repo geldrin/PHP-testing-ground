@@ -1,6 +1,9 @@
 <?php
 $language       = \Springboard\Language::get();
 $organizationid = $this->controller->organization['id'];
+$advancedURL = $language . '/search/advanced';
+$advancedLabel  = $l('', 'sitewide_search_advanced');
+$advancedClearLabel = $l('', 'sitewide_search_clear');
 $config         = array(
   
   // submitted = true, if set -> form was submitted
@@ -37,8 +40,19 @@ $config         = array(
     ),
     'rowlayout'   => '
       <tr>
-        <td>
-          <div class="element">%prefix%%element%%postfix%%errordiv%</div>
+        <td colspan="3" id="advancedsearchrow">
+          <div class="wrap">
+            <button id="searchadvancedsubmit" type="submit"></button>
+            %prefix%%element%%postfix%
+
+            <a href="#" id="searchadvancedclear" title="' . $advancedClearLabel . '"><span></span>' . $advancedClearLabel . '</a>
+          </div>
+          <div class="channelgradient"></div>
+          %errordiv%
+        </td>
+      </tr>
+      <tr>
+        <td class="first">
     ',
   ),
   
@@ -48,11 +62,13 @@ $config         = array(
     'values'      => $l->getLov('search_wholeword'),
     'value'       => 0,
     'divide'      => 1,
-    'divider'     => '<br/>',
+    'divider'     => '</div><div class="radio last">',
     'validation'  => array(
     ),
     'rowlayout'   => '
-      <div class="element wholewordcontainer">%prefix%%element%%postfix%%errordiv%</div>
+      <div class="element wholewordcontainer">
+        <div class="radio">%prefix%%element%%postfix%%errordiv%</div>
+      </div>
     ',
   ),
   
@@ -103,7 +119,7 @@ $config         = array(
     'rowlayout'   => '
           <div class="element">%prefix%%element%%postfix%%errordiv%</div>
         </td>
-        <td class="middle">
+        <td class="second">
     ',
   ),
   
@@ -155,7 +171,7 @@ $config         = array(
     'rowlayout'   => '
           <div class="element">%prefix%%element%%postfix%%errordiv%</div>
         </td>
-        <td>
+        <td class="third">
     ',
   ),
   

@@ -21,7 +21,7 @@ class Admin extends \Visitor\Paging {
   }
   
   protected function setupCount() {
-    return $this->itemcount = 1;
+    return $this->itemcount = null;
   }
   
   protected function getItems( $start, $limit, $orderby ) {

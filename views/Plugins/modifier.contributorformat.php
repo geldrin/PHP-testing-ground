@@ -5,10 +5,10 @@ function smarty_modifier_contributorformat( $presenters, $withjobs = true ) {
   
   if ( empty( $presenters ) )
     return '';
-  
+
   $names    = array();
   $language = \Springboard\Language::get();
-  
+
   foreach( $presenters as $presenter ) {
     
     $name = smarty_modifier_nameformat( $presenter, true );

@@ -668,125 +668,6 @@ global $jconf;
 	return $err;
 }
 
-
-function ssh_filecopy_from($server, $file, $destination) {
-global $app;
-
-	$err = array();
-
-	$command = "scp -B -i " . $app->config['ssh_key'] . " " . $app->config['ssh_user'] . "@" . $server . ":" . $file . " " . $destination . " 2>&1";
-	$time_start = time();
-	exec($command, $output, $result);
-	$duration = time() - $time_start;
-	$mins_taken = round( $duration / 60, 2);
-	$err['command'] = $command;
-    $err['result'] = $result;
-	$output_string = implode("\n", $output);
-	if ( $result != 0 ) {
-		$err['code'] = FALSE;
-		$err['message'] = "[ERROR] SCP copy failed from: " . $file;
-		return $err;
-	}
-
-	$err['code'] = TRUE;
-	$err['value'] = $duration;
-	$err['message'] = "[OK] SCP copy finished (in " . $mins_taken . " mins)";
-
-	return $err;
-}
-
-function ssh_filerename($server, $from, $to) {
-global $app;
-
-	$err = array();
-
-	$ssh_command = "ssh -i " . $app->config['ssh_key'] . " " . $app->config['ssh_user'] . "@" . $server . " ";
-
-	$command = $ssh_command . "mv -f " . $from . " " . $to . " 2>&1";
-	exec($command, $output, $result);
-	$err['command'] = $command;
-    $err['result'] = $result;
-	$output_string = implode("\n", $output);
-	if ( $result != 0 ) {
-		$err['code'] = FALSE;
-		$err['message'] = "[ERROR] SSH file rename failed: " . $from;
-		return $err;
-	}
-
-	$err['code'] = TRUE;
-	$err['message'] = "[OK] SSH file renamed to: " . $to;
-
-	return $err;
-}
-
-function ssh_fileremove($server, $file_toremove) {
-global $app;
-
-	$err = array();
-
-	$ssh_command = "ssh -i " . $app->config['ssh_key'] . " " . $app->config['ssh_user'] . "@" . $server . " ";
-
-	$command = $ssh_command . "rm -f " . $file_toremove . " 2>&1";
-	exec($command, $output, $result);
-	$err['command'] = $command;
-    $err['result'] = $result;
-	$output_string = implode("\n", $output);
-	if ( $result != 0 ) {
-		$err['code'] = FALSE;
-		$err['message'] = "[ERROR] SSH file removal failed: " . $file_toremove;
-		return $err;
-	}
-
-	$err['code'] = TRUE;
-	$err['message'] = "[OK] SSH file removed: " . $file_toremove;
-
-	return $err;
-}
-
-// download only
-function ssh_filecopy($server, $file_src, $file_dst) {
-global $app, $jconf;
-
-	// SSH check file size before start copying
-	$err = ssh_filesize($server, $file_src);
-	if ( !$err['code'] ) {
-		return $err;
-	}
-	$filesize = $err['value'];
-
-	$err = array();
-
-	// Check available disk space (input media file size * 5 is the minimum)
-	$available_disk = floor(disk_free_space($jconf['media_dir']));
-	if ( $available_disk < $filesize * 5 ) {
-		$err['command'] = "php: disk_free_space(" . $jconf['media_dir'] . ")";
-		$err['result'] = $available_disk;
-		$err['code'] = FALSE;
-		$err['message'] = "[ERROR] Not enough free space to start conversion (available: " . ceil($available_disk / 1024 / 1024) . "Mb, filesize: " . ceil($filesize / 1024 / 1024) . ")";
-		return $err;
-	}
-
-	$command = "scp -B -i " . $app->config['ssh_key'] . " " . $app->config['ssh_user'] . "@" . $server . ":" . $file_src . " " . $file_dst . " 2>&1";
-	$time_start = time();
-	exec($command, $output, $result);
-	$duration = time() - $time_start;
-	$mins_taken = round( $duration / 60, 2);
-	$err['command'] = $command;
-    $err['result'] = $result;
-	$output_string = implode("\n", $output);
-	if ( $result != 0 ) {
-		$err['code'] = FALSE;
-		$err['message'] = "[ERROR] SCP copy failed from: " . $file_src;
-		return $err;
-	}
-
-	$err['code'] = TRUE;
-	$err['value'] = $duration;
-	$err['message'] = "[OK] SCP copy finished (in " . $mins_taken . " mins)";
-
-	return $err;
-}
-
 // new: download or upload
 function ssh_filecopy2($server, $file_src, $file_dst, $isdownload = true) {
 global $app, $jconf;
@@ -891,33 +772,6 @@ global $app, $jconf;
 	$err['code'] = true;
 	$err['message'] = "[OK] SCP stat " . $app->config['ssh_user'] . "@" . $server . ":" . $file . " file.";
 
-	return $err;
-}
-
-function string_to_file($file, $str) {
-
-	$err['command'] = "php: remove_file_ifexists()";
-
-	$e = remove_file_ifexists($file);
-	if ( $e['code'] == FALSE ) {
-		$err['code'] == FALSE;
-		$err['message'] = $e['message'];
-		return $err;
-	}
-
-	$err['command'] = "php: fwrite()";
-
-	$fh = fopen($file, 'w');
-	$res = fwrite($fh, $str);
-	$err['result'] = $res;
-	if ( $res === FALSE ) {
-		$err['code'] = FALSE;
-		$err['message'] = "[ERROR] Cannot write file " . $file;
-		return $err;
-	}
-	fclose($fh);
-
-	$err['code'] = TRUE;
 	return $err;
 }
 
@@ -1206,6 +1060,20 @@ function isIpPrivate($ip) {
     }
 
     return false;
+}
+
+function adoDBResourceSetToArray($rs) {
+
+    if ( empty($rs) ) return false;
+    
+    $rs_array = array();
+    while ( !$rs->EOF ) {
+        $r = $rs->fields;
+        array_push($rs_array, $r);
+        $rs->MoveNext();
+    }
+    
+    return $rs_array;
 }
 
 ?>

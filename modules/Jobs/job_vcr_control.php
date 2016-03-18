@@ -53,9 +53,6 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_vcr_control.stop' ) and !i
 	$tcs_isconnected = false;
 	$sleep_length = $app->config['sleep_vcr'];
 
-	// Establish database connection
-	$db = db_maintain();
-
 	// VCR: start, maintain and stop recording
     while ( 1 ) {
 
@@ -63,11 +60,19 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_vcr_control.stop' ) and !i
 		$global_log = "";
 		$start_time = time();
 
-		$vcr = array();
+        $vcr = array();
 		$vcr_user = array();
 
-		// Query next job - exit if none
-		if ( !query_vcrrecording($vcr, $vcr_user) ) break;
+		// Query live recording
+        $vcr = getVCRLiveRecording();
+		if ( $vcr === false ) break;
+        
+        // Query live recording user
+        $vcr_user = getUser($vcr['userid']);
+        if ( $vcr_user === false ) {
+            $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] User not found for VCR live recording.\n" . print_r($vcr, true), $sendmail = true);
+            break;
+        }
 
 		// Alias: choose normal or secure
 		$vcr['aliasused'] = $vcr['alias'];
@@ -141,6 +146,11 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_vcr_control.stop' ) and !i
                 $debug->log($jconf['log_dir'], $myjobid . ".log", $err['message'], $sendmail = false);
 				// Recording link: indicate recording status
 				updateVCRReclinkStatus($vcr['reclink_id'], $jconf['dbstatus_vcr_recording']);
+                // Update recording link: ConferenceID
+                updateVCRReclinkParams($vcr['reclink_id'], $vcr['conf_id']);
+                // Update live stream: ConferenceID
+                updateVCRLiveStreamParams($vcr['id'], null, $vcr['conf_id']);
+
 			} else {
                 $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] VCR call cannot be established. Info:\n\n" . $err['message'], $sendmail = true);
 				break;
@@ -160,12 +170,14 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_vcr_control.stop' ) and !i
 
 				if ( $err['code'] and !empty($vcr['rtmp_streamid']) ) {
 
-					// Update feed: stream ID, aspect ratio, conference ID
-					updateVCRLiveStreamParams($vcr['id'], $vcr['rtmp_streamid'], $vcr['conf_id']);
+					// Update feed: stream ID
+					updateVCRLiveStreamParams($vcr['id'], $vcr['rtmp_streamid'], null);
 					// Update recording link: recording link with TCS conference ID
 					updateVCRReclinkParams($vcr['reclink_id'], $vcr['conf_id']);
 					// Update stream status: playable
 					updateLiveStreamStatus($vcr['id'], $jconf['dbstatus_vcr_recording']);
+                    // Regenerate SMIL file for HTTP streaming
+                    updateLiveFeedSMILStatus($vcr['livefeedid'], $jconf['dbstatus_regenerate'], "video");
 
 					// We have live streaming URL
 					$is_streamready = true;
@@ -223,7 +235,7 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_vcr_control.stop' ) and !i
 
 		// DISCONNECT: a recording needs to be stopped
 		if ( ( $vcr['status'] == $jconf['dbstatus_vcr_disc'] ) and ( $vcr['reclink_status'] == $jconf['dbstatus_vcr_recording'] ) ) {
-
+       
 			// TCS: disconnect call
 			$err = array();
 			$err = TCS_Disconnect($vcr);
@@ -266,7 +278,14 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_vcr_control.stop' ) and !i
 		$vcr_upload = array();
 		$vcr_user = array();
 
-		if ( !query_vcrupload($vcr_upload, $vcr_user) ) break;
+        $vcr_upload = getVCRUpload();
+		if ( $vcr_upload === false ) break;
+        
+        $vcr_user = getUser($vcr_upload['userid']);
+		if ( $vcr_user === false ) {
+            $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] User not found for finished VCR recording queried for upload.\n" . print_r($vcr_upload, true), $sendmail = true);
+            break;
+        }
 
 		// Temporary directory check
 		if ( !is_writable($jconf['vcr_dir']) ) {
@@ -423,9 +442,6 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_vcr_control.stop' ) and !i
 
 	}
 
-	// Close DB connection if open
-	if ( is_resource($db->_connectionID) ) $db->close();
-
 	$app->watchdog();
 
 	sleep($sleep_length);
@@ -462,9 +478,9 @@ global $app, $jconf, $myjobid, $debug;
 
 
 // *************************************************************************
-// *						function query_nextjob()					   *
+// *						function query()					           *
 // *************************************************************************
-// Description: queries next job from database recording_elements table
+// Description: 
 // INPUTS:
 //	- AdoDB DB link in $db global variable
 // OUTPUTS:
@@ -472,10 +488,10 @@ global $app, $jconf, $myjobid, $debug;
 //	  o FALSE: no pending job for conversion
 //	  o TRUE: job is available for conversion
 //	- $recording: recording_element DB record returned in global $recording variable
-function query_vcrrecording(&$vcr, &$vcr_user) {
-global $jconf, $db, $myjobid, $debug;
+function getVCRLiveRecording() {
+global $jconf, $app, $myjobid, $debug;
 
-	$db = db_maintain();
+    $model = $app->bootstrap->getModel('livefeed_streams');
 
 	$query = "
 		SELECT
@@ -518,18 +534,24 @@ global $jconf, $db, $myjobid, $debug;
 // LIMIT 1???? Mi lesz ha tobb stream tartozik egy felvetelhez? TODO
 
 	try {
-		$rs = $db->Execute($query);
+        $rs = $model->safeExecute($query);
 	} catch (exception $err) {
         $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Cannot query next VCR job. SQL query failed.\n\n" . trim($query) . "\n\nError:\n\n" . $err, $sendmail = true);
 		return false;
 	}
 
 	// Check if pending job exsits
-	if ( $rs->RecordCount() < 1 ) {
-		return false;
-	}
+	if ( $rs->RecordCount() < 1 ) return false;
 
 	$vcr = $rs->fields;
+    
+	return $vcr;
+}
+
+function getUser($userid) {
+ global $jconf, $app, $myjobid, $debug;
+
+    $model = $app->bootstrap->getModel('users');
 
 	$query = "
 		SELECT
@@ -541,30 +563,28 @@ global $jconf, $db, $myjobid, $debug;
 		FROM
 			users
 		WHERE
-			id = " . $vcr['userid'];
+			id = " . $userid;
 
 	try {
-		$rs2 = $db->Execute($query);
+        $rs = $model->safeExecute($query);
 	} catch (exception $err) {
         $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Cannot query next VCR job. SQL query failed.\n\n" . trim($query) . "\n\nError:\n\n" . $err, $sendmail = true);
 		return false;
 	}
 
 	// Check if user exsits to media
-	if ( $rs2->RecordCount() < 1 ) {
-		return false;
-	}
+	if ( $rs->RecordCount() < 1 ) return false;
 
-	$vcr_user = $rs2->fields;
+    $vcr_user = $rs->fields;
 
-	return true;
+    return $vcr_user;
 }
 
 // Query VCR recording to upload
-function query_vcrupload(&$vcr_upload, &$vcr_user) {
-global $jconf, $db, $myjobid, $debug;
+function getVCRUpload() {
+global $jconf, $app, $myjobid, $debug;
 
-	$db = db_maintain();
+    $model = $app->bootstrap->getModel('livefeed_streams');
 
 	$query = "
 		SELECT
@@ -591,46 +611,18 @@ global $jconf, $db, $myjobid, $debug;
 		LIMIT 1";
 
 	try {
-		$rs = $db->Execute($query);
+        $rs = $model->safeExecute($query);
 	} catch (exception $err) {
         $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Cannot query next recording to upload. SQL query failed.\n\n" . trim($query) . "\n\nError:\n\n" . $err, $sendmail = true);
 		return false;
 	}
 
 	// Check if pending job exsits
-	if ( $rs->RecordCount() < 1 ) {
-		return false;
-	}
+	if ( $rs->RecordCount() < 1 ) return false;
 
 	$vcr_upload = $rs->fields;
-
-	$query = "
-		SELECT
-			id,
-			nickname,
-			email,
-			language,
-			organizationid
-		FROM
-			users
-		WHERE
-			id = " . $vcr_upload['userid'];
-
-	try {
-		$rs2 = $db->Execute($query);
-	} catch (exception $err) {
-        $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Cannot query user to VCR. SQL query failed.\n\n" . trim($query) . "\n\nError:\n\n" . $err, $sendmail = true);
-		return false;
-	}
-
-	// Check if user exsits to media
-	if ( $rs2->RecordCount() < 1 ) {
-		return false;
-	}
-
-	$vcr_user = $rs2->fields;
-
-	return true;
+    
+	return $vcr_upload;
 }
 
 function TCS_ReserveConfId($vcr) {

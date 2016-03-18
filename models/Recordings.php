@@ -18,6 +18,7 @@ class Recordings extends \Springboard\Model {
   public $metadata = array();
   protected $searchadvancedwhere;
   protected $streamingserver;
+  protected $commentcount = array();
 
   public function getLength() {
     $this->ensureObjectLoaded();
@@ -75,7 +76,8 @@ class Recordings extends \Springboard\Model {
     $this->db->execute("
       UPDATE recordings
       SET
-        numberofviewsthis" . $type . " = 0
+        numberofviewsthis" . $type . " = 0,
+        combinedratingper" . $type . " = 0
       WHERE id = '" . $this->id . "'
       LIMIT 1
     ");
@@ -90,7 +92,8 @@ class Recordings extends \Springboard\Model {
       SET
         numberofviews = numberofviews + 1,
         numberofviewsthisweek = numberofviewsthisweek + 1,
-        numberofviewsthismonth = numberofviewsthismonth + 1
+        numberofviewsthismonth = numberofviewsthismonth + 1,
+        " . $this->getCombinedRatingSQL() . "
       WHERE id = '" . $this->id . "'
       LIMIT 1
     ");
@@ -648,7 +651,7 @@ class Recordings extends \Springboard\Model {
 
     // mediainfo invalid xmlt adhat vissza, itt tisztitjuk meg
     $normalizedXML = preg_replace_callback(
-      '/(&#[xX]?[0-9]+;)/',
+      '/(&#[xX]?[0-9a-fA-F]+;)/',
       array( $this, 'normalizeHTMLEntitiesCallback' ),
       $output
     );
@@ -1219,7 +1222,7 @@ class Recordings extends \Springboard\Model {
         r.id             = cr.recordingid AND
         r.isintrooutro   = '0' AND
         r.approvalstatus = 'approved' AND
-        r.status         = 'onstorage' AND -- TODO live?
+        r.status         = 'onstorage' AND -- TODO live
         r.organizationid = '" . $organization['id'] . "' AND
         r.status         = 'onstorage'
       " . ( $distinct? "GROUP BY r.id": "") . "
@@ -1276,7 +1279,7 @@ class Recordings extends \Springboard\Model {
 
       return "
         (
-          SELECT $select
+          SELECT DISTINCT $select
           FROM $from
           WHERE $where $publicwhere
         )
@@ -1388,7 +1391,8 @@ class Recordings extends \Springboard\Model {
         sumofratingthismonth = sumofratingthismonth + " . $rating . ",
         rating = sumofrating / numberofratings,
         ratingthisweek = sumofratingthisweek / numberofratingsthisweek,
-        ratingthismonth = sumofratingthismonth / numberofratingsthismonth
+        ratingthismonth = sumofratingthismonth / numberofratingsthismonth,
+        " . $this->getCombinedRatingSQL() . "
       WHERE
         id = '" . $this->id . "'
     ");
@@ -1556,13 +1560,8 @@ class Recordings extends \Springboard\Model {
 
     $ret = array();
 
-    foreach( $rs as $value ) {
-
+    foreach( $rs as $value )
       $ret[] = $value;
-      $idtokey[ $value['id'] ] = count( $ret ) - 1;
-      $nicknametoid[ $value['nickname'] ] = $value['id'];
-
-    }
 
     return $ret;
 
@@ -1571,8 +1570,10 @@ class Recordings extends \Springboard\Model {
   public function getCommentsCount() {
 
     $this->ensureID();
+    if ( isset( $this->commentcount[ $this->id ] ) )
+      return $this->commentcount[ $this->id ];
 
-    return $this->db->getOne("
+    return $this->commentcount[ $this->id ] = $this->db->getOne("
       SELECT COUNT(*)
       FROM comments
       WHERE
@@ -1688,6 +1689,8 @@ class Recordings extends \Springboard\Model {
         'nameprefix'          => $recording['nameprefix'],
         'namefirst'           => $recording['namefirst'],
         'namelast'            => $recording['namelast'],
+        'timestamp'           => $recording['timestamp'],
+        'recordedtimestamp'   => $recording['recordedtimestamp'],
       );
 
     }
@@ -1725,6 +1728,8 @@ class Recordings extends \Springboard\Model {
       r.masterlength,
       r.contentmasterlength,
       r.numberofviews,
+      r.timestamp,
+      r.recordedtimestamp,
       usr.id AS userid,
       IF(
         usr.nickname IS NULL OR LENGTH(usr.nickname) = 0,
@@ -1783,6 +1788,8 @@ class Recordings extends \Springboard\Model {
       r.masterlength,
       r.contentmasterlength,
       r.numberofviews,
+      r.timestamp,
+      r.recordedtimestamp,
       usr.id AS userid,
       IF(
         usr.nickname IS NULL OR LENGTH(usr.nickname) = 0,
@@ -1849,6 +1856,8 @@ class Recordings extends \Springboard\Model {
       r.masterlength,
       r.contentmasterlength,
       r.numberofviews,
+      r.timestamp,
+      r.recordedtimestamp,
       usr.id AS userid,
       IF(
         usr.nickname IS NULL OR LENGTH(usr.nickname) = 0,
@@ -1984,7 +1993,7 @@ class Recordings extends \Springboard\Model {
 
     if ( !isset( $user['id'] ) )
       return $this->db->getOne("
-        SELECT DISTINCT COUNT(r.id)
+        SELECT COUNT(DISTINCT r.id)
         FROM $from
         WHERE
           $where AND
@@ -2109,6 +2118,8 @@ class Recordings extends \Springboard\Model {
   }
 
   public function addPresentersToArray( &$recordings, $withjobs = true, $organizationid ) {
+    if ( empty( $recordings ) )
+      return $recordings;
 
     $idtoindexmap = array();
     foreach( $recordings as $key => $recording ) {
@@ -2390,7 +2401,7 @@ class Recordings extends \Springboard\Model {
 
     $data = $data + $this->bootstrap->config['flashplayer_extraconfig'];
 
-    $hds  = $this->isHDSEnabled();
+    $hds  = $this->isHDSEnabled( $info );
     $data = $data + $this->getMediaServers( $info, $hds );
 
     // default bal oldalon van a video, csak akkor allitsuk be ha kell
@@ -2636,9 +2647,9 @@ class Recordings extends \Springboard\Model {
 
   }
 
-  public function isHDSEnabled() {
+  public function isHDSEnabled( $info ) {
     return
-      $this->bootstrap->config['ondemandhdsenabled'] and
+      $info['organization']['ondemandhdsenabled'] and
       in_array( $this->row['smilstatus'], array('onstorage', 'regenerate') )
     ;
   }
@@ -2652,7 +2663,7 @@ class Recordings extends \Springboard\Model {
 
     $prefix = $this->row['issecurestreamingforced']? 'sec': '';
     if ( $hds === null )
-      $hds = $this->isHDSEnabled();
+      $hds = $this->isHDSEnabled( $info );
 
     if ( $hds ) {
       $data['media_servers'][] = $this->getWowzaUrl( $prefix . 'smilurl', false, $info );
@@ -2692,7 +2703,7 @@ class Recordings extends \Springboard\Model {
       return array();
 
     if ( $hds === null )
-      $hds   = $this->isHDSEnabled();
+      $hds   = $this->isHDSEnabled( $info );
 
     $ids     = array();
     $data    = array();
@@ -3525,7 +3536,7 @@ class Recordings extends \Springboard\Model {
 
   }
 
-  public function getRecordingsWithUsers( $start, $limit, $extrawhere, $order, $user, $organizationid ){
+  private function getRecordingsSQL( $organizationid ) {
 
     $select = "
       " . self::getRecordingSelect('r.') . ",
@@ -3551,11 +3562,22 @@ class Recordings extends \Springboard\Model {
       r.organizationid = '$organizationid'
     ";
 
+    return array(
+      'select' => $select,
+      'from'   => $from,
+      'where'  => $where,
+    );
+  }
+
+  public function getRecordingsWithUsers( $start, $limit, $extrawhere, $order, $user, $organizationid ){
+
+    $sql = $this->getRecordingsSQL( $organizationid );
+
     if ( $extrawhere )
-      $where .= " AND ( $extrawhere )";
+      $sql['where'] .= " AND ( $extrawhere )";
 
     return $this->db->getArray("
-      " . self::getUnionSelect( $user, $select, $from, $where ) .
+      " . self::getUnionSelect( $user, $sql['select'], $sql['from'], $sql['where'] ) .
       ( strlen( $order ) ? 'ORDER BY ' . $order : '' ) . " " .
       ( is_numeric( $start ) ? 'LIMIT ' . $start . ', ' . $limit : "" )
     );
@@ -4340,5 +4362,74 @@ class Recordings extends \Springboard\Model {
         $where
       ORDER BY vso.id
     ");
+  }
+
+  private function getSQLFromChannelSubscriptions( $user, $organizationid ) {
+    $sql = $this->getRecordingsSQL( $organizationid );
+    $sql['select'] .= ",
+      c.id AS channelid,
+      c.title AS channeltitle
+    ";
+    $sql['from'] .= ",
+      channels_recordings AS cr,
+      subscriptions AS sub,
+      channels AS c
+    ";
+    $sql['where'] .= " AND
+      cr.recordingid = r.id AND
+      cr.channelid = c.id AND
+      c.id = sub.channelid AND
+      sub.userid = '" . $user['id'] . "'
+    ";
+
+    return $sql;
+  }
+
+  public function getCountFromChannelSubscriptions( $user, $organizationid ) {
+    if ( !$user['id'] )
+      return 0;
+
+    $sql = $this->getSQLFromChannelSubscriptions( $user, $organizationid );
+    $sql['select'] = 'COUNT(DISTINCT r.id) AS count';
+    return $this->db->getOne("
+      SELECT " . $sql['select'] . "
+      FROM " . $sql['from'] . "
+      WHERE ". $sql['where'] . "
+      LIMIT 1
+    ");
+  }
+
+  public function getArrayFromChannelSubscriptions( $start, $limit, $order, $user, $organizationid ) {
+    if ( !$user['id'] )
+      return array();
+
+    if ( !$order )
+      $order = 'cr.id DESC';
+
+    $sql = $this->getSQLFromChannelSubscriptions( $user, $organizationid );
+    return $this->db->getArray("
+      SELECT " . $sql['select'] . "
+      FROM " . $sql['from'] . "
+      WHERE " . $sql['where'] . "
+      GROUP BY r.id
+      ORDER BY $order " .
+      ( is_numeric( $start ) ? 'LIMIT ' . $start . ', ' . $limit : "" )
+    );
+
+  }
+
+  private function getCombinedRatingSQL() {
+    return "
+      combinedratingpermonth = IFNULL((
+        ratingthismonth  *
+        ( 100 * numberofratingsthismonth / numberofviewsthismonth ) *
+        numberofviewsthismonth
+      ), 0),
+      combinedratingperweek = IFNULL((
+        ratingthisweek *
+        ( 100 * numberofratingsthisweek / numberofviewsthisweek ) *
+        numberofviewsthisweek
+      ), 0)
+    ";
   }
 }

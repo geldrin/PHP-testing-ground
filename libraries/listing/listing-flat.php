@@ -69,7 +69,7 @@ class listing_flat extends listing {
   var $datasource;
 
   // -------------------------------------------------------------------------
-  function listing_flat( &$db, &$config ) {
+  function __construct( &$db, &$config ) {
 
     foreach ( $config as $key => $value )
       $this->$key = $value;

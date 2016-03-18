@@ -84,8 +84,8 @@ class pager {
   var $linkformat = '%sstart=%s';
 
   // --------------------------------------------------------------------------
-  function pager( 
-    $script, $all = 0, $start = 0 , $perpage = 10, 
+  function __construct(
+    $script, $all = 0, $start = 0 , $perpage = 10,
     $linkparameters        = '',
     $currentpageparameters = 'class="currentpage"',
     $firstlinkparameters = null, 

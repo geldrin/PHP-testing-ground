@@ -17,6 +17,12 @@
   </div>
 {/capture}
 
+<div id="pagetitle">
+  <h1>{$title|escape:html}</h1>
+</div>
+<div class="channelgradient"></div>
+<br/>
+
 <div id="usersinvitewrap" class="form {$formclass|default:"halfbox left"}" data-listitemhtml="{$listitemhtml|trim|jsonescape:false:true}">
 {$form}
 </div>

@@ -110,7 +110,6 @@ class Controller extends \Visitor\Controller {
     $l         = $this->bootstrap->getLocalization();
     $user      = $this->bootstrap->getSession('user');
     $anonuser  = $this->bootstrap->getSession('anonuser');
-    $views     = $this->bootstrap->getSession('livefeed-views');
     $access    = $this->bootstrap->getSession('liveaccess');
     $accesskey = $feedModel->id . '-' . ( $feedModel->row['issecurestreamingforced']? '1': '0');
 
@@ -162,11 +161,7 @@ class Controller extends \Visitor\Controller {
     if ( !$streams )
       $this->redirectToController('contents', 'http404');
 
-    // counters
-    if ( !$views[ $feedModel->id ] ) {
-      $feedModel->incrementViewCounters();
-      $views[ $feedModel->id ] = true;
-    }
+    $feedModel->incrementViewCounters();
 
     $currentstream = $streams['defaultstream'];
     $streamtype    = $streams['streamtype'];
@@ -183,8 +178,8 @@ class Controller extends \Visitor\Controller {
     );
     $flashdata     = $feedModel->getFlashData( $info );
 
-    $this->toSmarty['playerwidth']  = 950;
-    $this->toSmarty['playerheight'] = 530;
+    $this->toSmarty['playerwidth']  = 980;
+    $this->toSmarty['playerheight'] = 550;
     $this->toSmarty['anonuser']     = $anonuser;
 
     if ( $feedModel->row['moderationtype'] == 'nochat' )
@@ -320,7 +315,9 @@ class Controller extends \Visitor\Controller {
     $user = $this->bootstrap->getSession('user');
     if ( $user['isadmin'] or $user['isclientadmin'] )
       $this->toSmarty['streamingservers'] =
-        $this->bootstrap->getModel('livefeeds')->getStreamingServers()
+        $this->bootstrap->getModel('livefeeds')->getStreamingServers(
+          array('organization' => $this->organization )
+        )
       ;
     else
       $this->toSmarty['streamingservers'] = array();

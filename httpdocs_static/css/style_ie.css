@@ -1,11 +1,14 @@
-.submitbutton, a#currentusername, #header .inputbackground {
+.submitbutton,
+a#currentusername {
   behavior: url(/css/PIE.htc);
 }
-#headerbg {
-  background-image: url(../images/header_bg_allinone.jpg);
-  
+
+.recordinglist .recordinginfo .timestamp,
+.recordinglist .recordinginfo .views {
+  margin: 0 5px;
 }
-#footerbg {
-  background-image: url(../images/footer_bg_allinone.jpg);
-  
+
+.accordion {
+  background-position-y: 18px;
+  background-position-x: 955px;
 }

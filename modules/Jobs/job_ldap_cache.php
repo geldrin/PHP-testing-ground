@@ -33,9 +33,6 @@ if ( iswindows() ) {
     exit;
 }
 
-// DB
-$db = db_maintain();
-
 // Config
 $isexecute = true;
 $isdebug_ldap = false;
@@ -176,6 +173,13 @@ while ( !$ldap_groups->EOF ) {
     $i = 0;
     $ldap_users = array();
 	$ldap_group_users = ldap_first_entry($ldap_dir['ldap_handler'], $result);
+    if ( $ldap_group_users === false ) {
+        $debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] No users found based for this group. Debug info:\nFilter: " . $filter . "\nAttribute filter: " . $attr_filter, $sendmail = false);
+        $ldap_groups->MoveNext();
+        continue;
+    }
+    
+    // Loop through users
     do {      
 
         // Get user record
@@ -251,11 +255,6 @@ while ( !$ldap_groups->EOF ) {
         foreach ($vsq_group_members as $key => $vsq_user) {
             $result = recursive_array_search($vsq_user['member_externalid'], $ldap_users);
             if ( $isdebug_user ) echo "Searched: " . $vsq_user['member_externalid'] . " - result LDAP user index = " . $result . "\n";
-    // !!!
-    /*if ( $vsq_user['member_externalid'] == "akovacs@streamnet.hu" ) {
-        var_dump($vsq_user);
-        $result = false;
-    } */
             // Record user to be removed from LDAP/AD
             if ( $result === false ) {
                 $vsq_group_members[$key]['isremoved'] = true;
@@ -330,13 +329,10 @@ while ( !$ldap_groups->EOF ) {
     $ldap_groups->MoveNext();
 }
     
-// Close DB connection if open
-if ( ( $db !== false ) and is_resource($db->_connectionID) ) $db->close();
-
 exit;
 
 function updateUnconnectedGroupMembers() {
-global $db, $myjobid, $debug, $jconf;
+global $myjobid, $debug, $jconf, $app;
  
     // Update undefined (NULL) gm.userid from users table based on externalid (users that logged in using Kerberos and cached through LDAP/AD, but not yet connected)
     $query = "
@@ -348,32 +344,18 @@ global $db, $myjobid, $debug, $jconf;
         WHERE
             gm.userid IS NULL AND
             gm.userexternalid IS NOT NULL AND
-            LOWER(u.externalid) LIKE CONCAT(gm.userexternalid, '@%')
-        ";
-
-/* Old query, fucking slow due to REGEXP?
-    $query = "
-        UPDATE
-            groups_members AS gm,
-            users AS u
-        SET
-            gm.userid = u.id
-        WHERE
-            gm.userid IS NULL AND
-            gm.userexternalid IS NOT NULL AND
-            LOWER(u.externalid) REGEXP CONCAT('^', gm.userexternalid, '@.*')
-        ";
-*/
+            LOWER(u.externalid) LIKE CONCAT(gm.userexternalid, '@%')";
         
     try {
-        $rs = $db->Execute($query);
+        $model = $app->bootstrap->getModel('groups_members');
+        $rs = $model->safeExecute($query);
     } catch (exception $err) {
         $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] SQL query failed." . trim($query), $sendmail = true);
         return false;
     }
 
     // Log
-    if ( ( $db->Affected_Rows() ) > 0 ) $debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Unconnected group members updated (gm.userid = NULL): " . $db->Affected_Rows(), $sendmail = false);
+    if ( ( $model->db->Affected_Rows() ) > 0 ) $debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Unconnected group members updated (gm.userid = NULL): " . $model->db->Affected_Rows(), $sendmail = false);
 
     // Update undefined (NULL) gm.userexternalid from users table based on userid (users that logged in using Kerberos, but not yet cached from LDAP/AD)
     $query = "  
@@ -387,45 +369,21 @@ global $db, $myjobid, $debug, $jconf;
             gm.userid = u.id";
 
     try {
-        $rs = $db->Execute($query);
+        $model = $app->bootstrap->getModel('groups_members');
+        $rs = $model->safeExecute($query);
     } catch (exception $err) {
         $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] SQL query failed." . trim($query), $sendmail = true);
         return false;
     }
 
     // Log
-    if ( ( $db->Affected_Rows() ) > 0 ) $debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Unconnected group members updated (gm.userexternalid = NULL): " . $db->Affected_Rows(), $sendmail = false);
+    if ( ( $model->db->Affected_Rows() ) > 0 ) $debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Unconnected group members updated (gm.userexternalid = NULL): " . $model->db->Affected_Rows(), $sendmail = false);
  
     return true;
 }
 
-/*
-function updateGroupsMembersExternalID($groupid, $userid, $userprincipalname) {
-global $db, $myjobid, $debug, $jconf;
-
-    if ( empty($userprincipalname) ) return false;
-    
-    $query = "
-        UPDATE
-            groups_members AS gm
-        SET
-            gm.userexternalid = '" . $userprincipalname . "'
-        WHERE
-            gm.userid = " . $userid . " AND
-            gm.groupid = " . $groupid;
-
-	try {
-		$rs = $db->Execute($query);
-	} catch (exception $err) {
-		$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] SQL query failed." . trim($query), $sendmail = true);
-		return false;
-	}
-
-    return $db->Affected_Rows();
-} */
-
 function AddVSQGroupMembers($users2add) {
-global $db, $myjobid, $debug, $jconf;
+global $myjobid, $debug, $jconf, $app;
 
     if ( empty($users2add) ) return false;
 
@@ -435,17 +393,18 @@ global $db, $myjobid, $debug, $jconf;
         VALUES " . $users2add;
 
 	try {
-		$rs = $db->Execute($query);
+        $model = $app->bootstrap->getModel('groups_members');
+        $rs = $model->safeExecute($query);
 	} catch (exception $err) {
 		$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] SQL query failed." . trim($query), $sendmail = true);
 		return false;
 	}
 
-    return $db->Affected_Rows();
+    return $model->db->Affected_Rows();
 }
 
 function DeleteVSQGroupMembers($groupid, $users2remove) {
-global $db, $myjobid, $debug, $jconf;
+global $myjobid, $debug, $jconf, $app;
 
     if ( empty($users2remove) ) return false;
 
@@ -457,17 +416,18 @@ global $db, $myjobid, $debug, $jconf;
             userexternalid IN " . $users2remove;
 
 	try {
-		$rs = $db->Execute($query);
+        $model = $app->bootstrap->getModel('groups_members');
+        $rs = $model->safeExecute($query);
 	} catch (exception $err) {
 		$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] SQL query failed." . trim($query), $sendmail = true);
 		return false;
 	}
     
-    return $db->Affected_Rows();
+    return $model->db->Affected_Rows();
 }
 
 function getVSQGroupMembers($groupid) {
-global $db, $myjobid, $debug, $jconf;
+global $myjobid, $debug, $jconf, $app;
 
 	$query = "
         SELECT
@@ -488,20 +448,22 @@ global $db, $myjobid, $debug, $jconf;
     ";
 
     try {
-		$rs = $db->getArray($query);
+        $model = $app->bootstrap->getModel('groups');
+        $rs = $model->safeExecute($query);
 	} catch (exception $err) {
 		$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] SQL query failed." . trim($query), $sendmail = true);
 		return false;
 	}
 
-    // Check if any record returned
-	if ( count($rs) < 1 ) return false;
+    if ( $rs->RecordCount() < 1 ) return false;
 
-    return $rs;
+    $rs_array = adoDBResourceSetToArray($rs);    
+
+    return $rs_array;
 }
 
 function getLDAPGroups($synctimemin) {
-global $db, $myjobid, $debug, $jconf;
+global $myjobid, $debug, $jconf, $app;
 
 	$query = "
 		SELECT
@@ -523,11 +485,11 @@ global $db, $myjobid, $debug, $jconf;
             g.organizationid = o.id AND
             o.disabled = 0 AND
             od.disabled = 0 AND
-            ( g.organizationdirectoryuserslastsynchronized IS NULL OR TIMESTAMPADD(MINUTE, " . $synctimemin . ", g.organizationdirectoryuserslastsynchronized) < NOW() )
-    ";
+            ( g.organizationdirectoryuserslastsynchronized IS NULL OR TIMESTAMPADD(MINUTE, " . $synctimemin . ", g.organizationdirectoryuserslastsynchronized) < NOW() )";
 
 	try {
-		$rs = $db->Execute($query);
+        $model = $app->bootstrap->getModel('groups');
+        $rs = $model->safeExecute($query);
 	} catch (exception $err) {
 		$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] SQL query failed." . trim($query), $sendmail = true);
 		return false;
@@ -546,7 +508,7 @@ function searchLDAPDirectoriesByID($ldap_dirs, $id) {
 }
 
 function getLDAPDirectories() {
-global $db, $myjobid, $debug, $jconf;
+global $myjobid, $debug, $jconf, $app;
 
 	$query = "
 		SELECT
@@ -573,16 +535,18 @@ global $db, $myjobid, $debug, $jconf;
     ";
     
 	try {
-		$rs = $db->getArray($query);
+        $model = $app->bootstrap->getModel('organizations_directories');
+        $rs = $model->safeExecute($query);
 	} catch (exception $err) {
 		$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] SQL query failed." . trim($query), $sendmail = true);
 		return false;
 	}
 
-    // Check if any record returned
-    if ( count($rs) < 1 ) return false;
+    if ( $rs->RecordCount() < 1 ) return false;
+
+    $rs_array = adoDBResourceSetToArray($rs);    
         
-    return $rs;
+    return $rs_array;
 }
 
 function recursive_array_search($needle, $haystack) {
@@ -592,6 +556,15 @@ function recursive_array_search($needle, $haystack) {
     foreach( $haystack as $key => $value ) {
         $current_key = $key;
         if ( $needle === $value OR ( is_array($value) && recursive_array_search($needle, $value) !== false ) ) {
+            return $current_key;
+        }
+    }
+
+    return false;
+}
+
+?>
+  if ( $needle === $value OR ( is_array($value) && recursive_array_search($needle, $value) !== false ) ) {
             return $current_key;
         }
     }

@@ -42,9 +42,6 @@ if ( !runOverControl($myjobid) ) exit;
 
 // Watchdog
 $app->watchdog();
-	
-// Establish database connection
-$db = db_maintain();
 
 // Query new uploads and insert recording versions
 $recordings = getNewUploads();
@@ -187,18 +184,13 @@ $err = generateRecordingSMILs("content");
 $err = generateLiveSMILs("video");
 $err = generateLiveSMILs("content");
 
-// Close DB connection if open
-if ( is_resource($db->_connectionID) ) $db->close();
-
 // Watchdog
 $app->watchdog();
 
 exit;
 
 function getNewUploads() {
-global $jconf, $debug, $db, $app;
-
-	$db = db_maintain();
+global $jconf, $debug, $app;
 
 	$node = $app->config['node_sourceip'];
 
@@ -235,22 +227,20 @@ global $jconf, $debug, $db, $app;
 			r.id";
 			
 	try {
-		$rs = $db->Execute($query);
+        $model = $app->bootstrap->getModel('recordings');
+        $rs = $model->safeExecute($query);
 	} catch (exception $err) {
 		$debug->log($jconf['log_dir'], $jconf['jobid_conv_control'] . ".log", "[ERROR] SQL query failed." . trim($query), $sendmail = true);
 		return false;
 	}
 
-	// Check if any record returned
 	if ( $rs->RecordCount() < 1 ) return false;
 
 	return $rs;
 }
 
 function getReadyConversions() {
-global $jconf, $debug, $db, $app;
-
-	$db = db_maintain();
+global $jconf, $debug, $app;
 
 	$node = $app->config['node_sourceip'];
 
@@ -283,13 +273,13 @@ global $jconf, $debug, $db, $app;
 			r.id";
 
 	try {
-		$rs = $db->Execute($query);
+        $model = $app->bootstrap->getModel('recordings');
+        $rs = $model->safeExecute($query);
 	} catch (exception $err) {
 		$debug->log($jconf['log_dir'], $jconf['jobid_conv_control'] . ".log", "[ERROR] SQL query failed." . trim($query), $sendmail = true);
 		return false;
 	}
 
-	// Check if any record returned
 	if ( $rs->RecordCount() < 1 ) return false;
 
 	return $rs;
@@ -297,7 +287,7 @@ global $jconf, $debug, $db, $app;
 
 
 function insertRecordingVersions($recording) {
-global $db, $debug, $jconf, $app;
+global $debug, $jconf, $app;
 
 	// Converter node selection
 	$converternodeid = selectConverterNode();
@@ -417,7 +407,7 @@ global $db, $debug, $jconf, $app;
 }
 
 function getEncodingProfileSet($profile_type, $resolution, $encodinggroupid) {
-global $db, $debug, $jconf;
+global $debug, $jconf, $app;
 
 	if ( !empty($resolution) ) {
 		$tmp = explode("x", $resolution, 2);
@@ -435,8 +425,6 @@ global $db, $debug, $jconf;
 	} else {
 		$eg_filter = "eg.default = 1";
 	}
-
-	$db = db_maintain();
 
 	$query = "
 		SELECT
@@ -471,25 +459,25 @@ global $db, $debug, $jconf;
 			ep.type = '" . $profile_type . "' AND " . $ep_filter;
 
 	try {
-		$profileset = $db->getArray($query);
+        $model = $app->bootstrap->getModel('encoding_groups');
+        $rs = $model->safeExecute($query);
 	} catch (exception $err) {
 		$debug->log($jconf['log_dir'], $jconf['jobid_conv_control'] . ".log", "[ERROR] Cannot query next job. SQL query failed." . trim($query), $sendmail = true);
 		return false;
 	}
 
-	// Check if any record returned
-	if ( count($profileset) < 1 ) return false;
+    if ( $rs->RecordCount() < 1 ) return false;
 
-	return $profileset;
+    $rs_array = adoDBResourceSetToArray($rs);    
+
+	return $rs_array;
 }
 
 function getEncodingProfileGroup($encodinggroupid) {
-global $db, $debug, $jconf;
+global $app, $debug, $jconf;
 
 	// Encoding group filter: choose default if invalid value
 	if ( empty($encodinggroupid) ) return false;
-
-	$db = db_maintain();
 
 	$query = "
 		SELECT
@@ -504,21 +492,23 @@ global $db, $debug, $jconf;
 			eg.id = " . $encodinggroupid . " AND eg.disabled = 0";
 
 	try {
-		$encoding_group = $db->getArray($query);
+        $model = $app->bootstrap->getModel('encoding_groups');
+        $rs = $model->safeExecute($query);
 	} catch (exception $err) {
 		$debug->log($jconf['log_dir'], $jconf['jobid_conv_control'] . ".log", "[ERROR] Cannot query encoding group. SQL query failed.\n" . trim($query), $sendmail = true);
 		return false;
 	}
 
-	// Check if any record returned
-	if ( count($encoding_group) < 1 ) return false;
+    if ( $rs->RecordCount() < 1 ) return false;
 
-	return $encoding_group[0];
+    $rs_array = adoDBResourceSetToArray($rs);  
+
+	return $rs_array[0];
 }
 
 
 function selectConverterNode() {
-global $debug, $jconf, $db, $app;
+global $debug, $jconf, $app;
 
 	// Place for future code (multi-converter environment. Selection criterias might be:
 	// - Converter node reachability (watchdog mechanism to update DB field with last activity timestamp?)
@@ -543,13 +533,14 @@ global $debug, $jconf, $db, $app;
         LIMIT 1";
 
     try {
-		$node = $db->Execute($query);
+        $model = $app->bootstrap->getModel('infrastructure_nodes');
+        $rs = $model->safeExecute($query);
 	} catch (exception $err) {
 		$debug->log($jconf['log_dir'], $jconf['jobid_conv_control'] . ".log", "[ERROR] SQL query failed." . trim($query), $sendmail = true);
 		return false;
 	}
 
-	$node_info = $node->fields;
+	$node_info = $rs->fields;
         
 	$debug->log($jconf['log_dir'], $jconf['jobid_conv_control'] . ".log", "[INFO] Converter node nodeid = " . $node_info['id'] . " (" . $node_info['server'] . ") was selected.", $sendmail = false);
 
@@ -557,7 +548,7 @@ global $debug, $jconf, $db, $app;
 }
 
 function generateRecordingSMILs($type = "recording") {
-global $db, $app, $debug, $jconf;
+global $app, $debug, $jconf;
 
 	if ( ( $type != "recording" ) and ( $type != "content" ) ) return false;
 
@@ -583,7 +574,8 @@ global $db, $app, $debug, $jconf;
 			r.id";
 
 	try {
-		$recordings = $db->Execute($query);
+        $model = $app->bootstrap->getModel('recordings');
+        $recordings = $model->safeExecute($query);
 	} catch (exception $err) {
 		$debug->log($jconf['log_dir'], $jconf['jobid_conv_control'] . ".log", "[ERROR] SQL query failed." . trim($query), $sendmail = true);
 		return false;
@@ -647,7 +639,6 @@ global $db, $app, $debug, $jconf;
 				</switch>
 			</body>
 		</smil>
-
 	*/
 
 	// SMIL header and footer tags
@@ -795,7 +786,7 @@ global $db, $app, $debug, $jconf;
 }
 
 function generateLiveSMILs($type = "video") {
-global $db, $app, $debug, $jconf;
+global $app, $debug, $jconf;
 
 	if ( ( $type != "video" ) and ( $type != "content" ) ) return false;
 
@@ -811,24 +802,28 @@ global $db, $app, $debug, $jconf;
 			lfs." . $idx . "keycode,
 			lfs.status
 		FROM
-			livefeeds as lf,
-			livefeed_streams as lfs
+			livefeeds AS lf,
+			livefeed_streams AS lfs
 		WHERE
 			( lf." . $idx . "smilstatus IS NULL OR lf." . $idx . "smilstatus = '" . $jconf['dbstatus_regenerate'] . "' ) AND
 			lf.id = lfs.livefeedid AND
-			( lfs.status IS NULL OR lfs.status = '" . $jconf['dbstatus_vcr_ready'] . "' )
+			( lfs.status IS NULL OR lfs.status = '" . $jconf['dbstatus_vcr_recording'] . "' )
 		ORDER BY
 			lf.id, lfs.id";
 
 	try {
-		$livefeeds = $db->getArray($query);
+        $model = $app->bootstrap->getModel('livefeeds');
+        $rs = $model->safeExecute($query);
 	} catch (exception $err) {
 		$debug->log($jconf['log_dir'], $jconf['jobid_conv_control'] . ".log", "[ERROR] SQL query failed." . trim($query), $sendmail = true);
 		return false;
 	}
 
 	// No pending SMILs
-	if ( count($livefeeds) < 1 ) return false;
+    if ( $rs->RecordCount() < 1 ) return false;
+
+    // Convert AdoDB resource to array
+    $livefeeds = adoDBResourceSetToArray($rs);    
 
 	// SMIL header and footer tags
 	$smil_header = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<smil>\n\t<head>\n\t</head>\n\t<body>\n\t\t<switch>\n";
@@ -939,7 +934,7 @@ global $db, $app, $debug, $jconf;
 }
 
 function getRecordingVersionsForRecording($recordingid, $type = "recording", $filteraudioonly = false) {
-global $db, $app, $jconf, $debug;
+global $app, $jconf, $debug;
 
 	if ( ( $type != "recording" ) and ( $type != "content" ) ) return false;
 
@@ -972,16 +967,17 @@ global $db, $app, $jconf, $debug;
 			rv.bandwidth";
 
 	try {
-		$recording_versions = $db->Execute($query);
+        $model = $app->bootstrap->getModel('recordings_versions');
+        $rs = $model->safeExecute($query);
 	} catch (exception $err) {
 		$debug->log($jconf['log_dir'], $jconf['jobid_conv_control'] . ".log", "[ERROR] SQL query failed." . trim($query), $sendmail = true);
 		return false;
 	}
 
 	// No pending SMILs
-	if ( $recording_versions->RecordCount() < 1 ) return false;
+	if ( $rs->RecordCount() < 1 ) return false;
 
-	return $recording_versions;
+	return $rs;
 }
 
 ?>

@@ -1,13 +1,30 @@
+body {
+  -webkit-text-size-adjust: none;
+}
 #player {
   text-align: center;
 }
-#currentuser {
-  display: none;
+.submitbutton,
+input[type=submit] {
+  -webkit-appearance: none;
 }
 
-@media all and (max-width: 950px) {
-  body {
-    -webkit-text-size-adjust: none;
+@media all and (max-width: 1000px) {
+
+  #headerlogin .arrow,
+  #currentusermenu,
+  #recordingmodify,
+  #currentuser,
+  .actions,
+  .recordingactions {
+    display: none;
+  }
+
+  #indexcontainer li a:hover,
+  #indexcontainer li a:focus,
+  .accordion li a:hover,
+  .accordion li a:focus {
+    text-decoration: none;
   }
   #headerbg, #footerbg {
     min-width: 0px;
@@ -16,9 +33,6 @@
     display: inline-block;
     text-align: right;
     vertical-align: top;
-  }
-  #headersearch form {
-    display: none;
   }
   #headerlogin {
     margin-top: 10px;
@@ -70,51 +84,162 @@
   .channelrecordings,
   .channelrecordings .widepager,
   .channelrecordings .recordinglist,
-  .livelist.recordinglist {
+  .livelist.recordinglist,
+  .channelgradient {
     width: auto;
+  }
+  .heading.categorydetails .back {
+    float: none;
+    margin: 0 0 0 10px;
   }
   
   /* index contaner */
   #indexcontainer {
     float: none;
-    width: 924px;
-  }
-  #indexcontainer img {
-    width: 100%;
-  }
-  #indexcontainer .avatar img {
     width: auto;
   }
-  #indexcontainer .playpic {
-    -webkit-background-size: 100% auto;
-    background-size: 100% auto;
-    background-repeat: no-repeat;
-    background-position: center center;
+  #indexcontainer li,
+  #indexcontainer li.first {
+    float: none;
+    width: 100%;
+    height: auto;
+    margin: 0;
+    padding: 10px 0;
   }
-  #indexcontainer .leftdoublebox {
-    width: 592px;
-    height: 333px;
-    float: left;
+  #indexcontainer .recordingcontent,
+  #indexcontainer li.first .recordingcontent {
+    position: static;
+    float: none;
+    padding: 0;
+    width: auto;
+    height: auto;
   }
-  #indexcontainer .rightbox {
-    width: 293px;
-    float: right;
+  #indexcontainer .first .recordingcontent .title,
+  #indexcontainer .first .recordingcontent .presenter {
+    color: #000;
+    text-shadow: none;
   }
-  #indexcontainer .wlarge {
-    width: 592px;
-    height: 333px;
+
+  .accordion ul {
+    margin: 0;
   }
-  #indexcontainer .wwide {
-    width: 288px;
-    height: 161px;
+  .accordion li {
+    padding: 10px 0;
   }
-  
+  .accordion li:hover,
+  .accordion li:focus {
+    border: 1px solid #fff;
+    box-shadow: none;
+  }
+  .accordion ul,
+  .accordion li {
+    float: none;
+    width: 100%;
+    height: auto;
+    box-sizing: border-box;
+  }
+  #indexcontainer li a,
+  .accordion li a {
+    display: -ms-flexbox;
+  display: -webkit-flex;
+  display: flex;
+  }
+  #indexcontainer .recordingpic,
+  .accordion .recordingpic {
+    float: none;
+    margin: 0;
+    -webkit-flex: 1;
+    -ms-flex: 1;
+    flex: 1;
+    padding-right: 5%;
+  }
+  #indexcontainer .recordingpic .length,
+  .accordion .recordingpic .length {
+    right: 20%;
+  }
+  #indexcontainer .recordingcontent,
+  .accordion .recordingcontent {
+    -webkit-flex: 2;
+    -ms-flex: 2;
+    flex: 2;
+  }
+  #indexcontainer img,
+  #indexcontainer li.first img,
+  .accordion .recordingpic img {
+    width: 100%;
+    height: auto;
+  }
+
+  #channelheader {
+  }
+  #channelheader img {
+    width: 100%;
+    height: auto;
+  }
+  #channelheader .channelinfowrap {
+    padding: 0;
+    bottom: 10%;
+  }
+  #channeldescription .submitbutton {
+    margin: 0 10px 10px 0;
+  }
+
   /* recording details */
+  #infobar #recordinguploader .content {
+    width: auto;
+    max-width: 190px;
+  }
+  #infobar #infolink,
+  #infobar #channelslink,
+  #infobar #embedlink,
+  #infobar #sharelink {
+    width: 22px;
+  }
+  #infobar > ul,
+  #infobar > ul.right {
+    float: none;
+    display: inline-block;
+  }
+  #infobar .ratewidget {
+    line-height: 58px;
+  }
+  .ratewidget a,
+  .ratewidget a span {
+    line-height: 20px;
+  }
+  #infobar #rating .label {
+    display: none;
+  }
+  #infobar #commentslink #commentslinktext {
+    display: none;
+  }
+  #infobar > ul > li {
+    margin-bottom: -10px;
+    height: 40px;
+  }
+  #infobar > ul.right > li {
+    height: 30px;
+  }
+  #infobar #infolink a,
+  #infobar #channelslink a,
+  #infobar #commentslink a,
+  #infobar #sharelink a,
+  #infobar #embedlink a {
+    height: 30px;
+    line-height: 30px;
+  }
+  #embed textarea {
+    width: 100%;
+    min-height: 54px;
+    height: auto;
+  }
   #channels .actions {
     right: -10px;
   }
   #channels .channelname {
     padding-right: 15px;
+    white-space: nowrap;
+    text-overflow: ellipsis;
   }
   #metadata {
     width: 100%;
@@ -155,18 +280,35 @@
   #recordingdownloads {
     float: none;
   }
-  #comments, #comments .widepager, #commentform textarea {
+  #comments,
+  #comments .widepager,
+  #commentform table,
+  #commentform textarea {
     width: 100%;
+    box-sizing: border-box;
   }
 
   /* recordinglist auto-size */
+  .recordinglist.recordingprogress .recordingpic .playprogress {
+    top: 0;
+    left: 0;
+    font-size: 16px;
+    line-height: 24px;
+  }
   .recordinglist,
   .recordinglist .listitem,
   .livelist.recordinglist .listitem {
     width: 100%;
   }
+  .recordinglist .listitem,
+  .livelist.recordinglist .listitem {
+    display: -ms-flexbox;
+    display: -webkit-flex;
+    display: flex;
+  }
   .recordinglist .recordingpic {
     width: 16.66666%;
+    min-width: 100px;
     margin-right: 3.333333%;
     position: relative;
   }
@@ -192,6 +334,7 @@
     width: 83%;
     max-width: 172px;
   }
+
   .recordinglist .recordingpic .playpic {
     -webkit-background-size: 100% auto;
     background-size: 100% auto;
@@ -203,6 +346,12 @@
     left: 53.6875%;
     position: absolute;
   }
+  .channelrecordings.halfwidth .recordinglist,
+  .livelist.recordinglist,
+  .channelrecordings.halfwidth .listitem,
+  .livelist.recordinglist .listitem {
+    width: auto;
+  }
   .recordinglist .recordingcontent,
   .livelist.recordinglist .recordingcontent {
     width: 80%;
@@ -210,6 +359,10 @@
   .recordinglist .recordingcontent,
   .livelist.recordinglist .recordingcontent {
     margin-left: 0px;
+  }
+  .channelrecordings.halfwidth .recordingcontent,
+  .livelist.recordinglist .recordingcontent {
+    width: 70%;
   }
   
   .leftdoublebox {
@@ -269,126 +422,145 @@
   #systemmessage {
     width: auto;
   }
-}
 
-@media all and (max-width: 944px) {
-  
-  #headermenu .first {
+  #footer {
+    text-align: center;
+    height: 96px;
+  }
+  #footerbg {
+    height: 148px;
+  }
+  #footer .footerlinkswrap,
+  #footer .footerinfowrap .title {
     display: none;
   }
-  #headerlogin {
-    margin-top: 5px;
+  #footer .footersocialwrap,
+  #footer .footerinfowrap {
+    float: none;
+    width: 100%;
   }
-  #headerbg {
-    height: 76px;
+  #footer .footersocialwrap {
+    margin-top: 15px;
   }
-  #headersearch.rightbox {
-    width: auto;
-  }
-  #headerlogo a.basic, #headerlogo a.basic span {
-    width: 114px;
-    height: 34px;
-  }
-  #headerlogo img {
-    max-height: 34px;
-  }
-  #headertop, #headerlogo {
-    height: 41px;
+
+  #header {
+    text-align: center;
   }
   #headerlogo {
-    padding-top: 3px;
-    padding-left: 0px;
-    height: 38px;
+    margin: 0;
+    z-index: 599;
   }
-  #headerlogo a.basic span {
-    -webkit-background-size: 100% auto;
-    background-size: 100% auto;
+  #headermenu {
+    position: absolute;
+    top: 0;
+    right: 0;
   }
-  #headerbottom {
-    height: 37px;
+  #headermenu .text,
+  #headermenu #headeruserlink,
+  #headermenu #languageselectorlink {
+    display: none;
   }
-  #headermenu a {
-    height: 27px;
-    font-size: 14px;
-    margin-right: 2px;
-    padding: 6px 2px 0px 2px;
+  #headermenu li {
+    float: none;
+    border: 0;
   }
-  
-  .categorylist .categoryname .categorypic img {
-    width: auto;
-    height: 70px;
-    padding-left: 10px;
+  #headermenu li:focus,
+  #headermenu li:hover {
+    border: 0;
   }
-  
-  .widepager, .recordview .widepager {
+  #headermenu #headersearchlink {
+    display: inline-block;
+    position: absolute;
+    z-index: 3;
+    top: 5px;
+    right: 5px;
+    border: 0;
+  }
+  #headermenu #headersearchlink a,
+  #headermenu #headersearchlink a span {
+    width: 48px;
+  }
+  #headermenu #headersearchlink:focus,
+  #headermenu #headersearchlink:hover {
+    background: none;
+  }
+  #mobilemenu {
+    display: block;
+    position: absolute;
+    box-sizing: border-box;
+    left: -205px;
+    top: 0px;
+    z-index: 600;
+    width: 258px;
+    height: 72px;
+    overflow: hidden;
+    background-repeat: no-repeat;
+    background-position: right center;
+    background-image: url(images/mobilemenu.png);
+    -webkit-transition: left 200ms cubic-bezier(0.455, 0.03, 0.515, 0.955);
+    transition: left 200ms cubic-bezier(0.455, 0.03, 0.515, 0.955);
+  }
+  #mobilemenu:hover,
+  #mobilemenu:focus {
+    background-image: url(images/mobilemenu_hover.png);
+  }
+  #mobilemenu.active {
+    position: fixed;
+    left: 0px;
+    width: 205px;
+    height: 100%;
+    background: #222;
+  }
+  #mobilemenu .menulabel {
+    cursor: pointer;
+    display: block;
+    color: #fff;
+    text-align: left;
+    font-size: 20px;
+    line-height: 72px;
+    padding: 0 0 0 48px;
+  }
+  #mobilemenu.active .menulabel {
+    line-height: 71px;
+    background: #101010;
+    background-repeat: no-repeat;
+    background-position: left center;
+    background-image: url(images/mobilemenu.png);
+  }
+  #mobilemenu ul {
+    display: none;
+    margin: 0;
+    padding: 0;
+    list-style-type: none;
+  }
+  #mobilemenu.active ul {
+    display: block;
+  }
+  #mobilemenu li {
+    border-top: 1px solid #3c3c3c;
     text-align: left;
   }
-  .widepager form {
-    margin-left: 10px;
-  }
-  .widepager .next, .recordview .widepager .next {
-    position: static;
+  #mobilemenu li a {
     display: block;
-    padding-left: 0;
-    margin: 0px 0px 0px 10px;
-    text-align: right;
+    padding: 0 0 0 25px;
+    line-height: 53px;
+    color: #6f6f6f;
+    font-weight: 500;
   }
-  .widepager .previous, .recordview .widepager .previous {
-    position: static;
-    margin: 0px 10px 0px 0px;
-    display: block;
+  #mobilemenu li a:focus,
+  #mobilemenu li a:hover {
+    text-decoration: none;
+    background-color: #101010;
+    color: #fff;
   }
-  #pagebg {
-    top: 76px;
-  }
-  #indexcontainer {
-    width: 100%;
-  }
-  #indexcontainer .avatar {
-    display: none;
-  }
-  #indexcontainer .content {
-    padding-left: 10px;
-  }
-  #indexcontainer .leftdoublebox {
-    width: 100%;
-    height: auto;
-    float: none;
-    margin-bottom: 10px;
-  }
-  #indexcontainer .rightbox {
-    width: 100%;
-    float: none;
-  }
-  #indexcontainer .wlarge, #indexcontainer .wwide {
-    height: auto;
-  }
-  .rightbox {
-    margin: 0;
-  }
-  .footercontent.leftbox:nth-child(4) {
-    display: none;
-  }
-}
-@media all and (max-width: 660px) {
+
+  #perpageselector,
   .sort {
     height: auto;
-  }
-  .sort .item {
-    display: block;
-    border-bottom-left-radius: 0px;
-    border-bottom-right-radius: 0px;
+    float: none;
   }
   .sort .item ul {
-    display: none;
-    position: absolute;
-    left: 0px;
-    background-color: #F5F5F5;
     width: 100%;
-    border: 1px solid #999;
-    border-top: 0px;
-    border-bottom-left-radius: 5px;
-    border-bottom-right-radius: 5px;
   }
   .sort .item.hover {
     overflow: visible;
@@ -396,89 +568,47 @@
   .sort .item.hover ul {
     display: block;
   }
-  
-  #footerbg {
-    height: 140px;
-    margin-top: -140px;
-  }
-  #footer {
-    height: 125px;
-    padding-top: 15px;
-  }
-  .footercontent.leftbox:nth-child(2), .footercontent.leftbox:nth-child(3) {
-    display: none;
-  }
-  #footer .footerlinks li {
-    display: inline;
-  }
-  
+
   .leftdoublebox, .rightbox, .halfbox {
     float: none;
     width: auto;
-  }
-  
-  #header .rightbox {
-    float: right;
-  }
-  
-  #indexcontainer .wlarge {
-    width: 100%;
   }
 
   .widepager .itemsperpagecontainer {
     display: none;
   }
-  
+  .channelrecordings.halfwidth {
+    padding-left: 0;
+    border-left: 0;
+    width: auto;
+  }
+}
+@media all and (max-width: 600px) {
+  .widepager .previous,
+  .widepager .next {
+    position: static;
+    margin: 0;
+  }
+
+  .recordinglist .listitem.channel .recordingpic {
+    width: 33%;
+  }
+  .recordinglist .recordingcontent,
+  .livelist.recordinglist .recordingcontent {
+    width: 63%;
+  }
 }
 @media all and (max-width: 460px) {
-  
-  #headerbg {
-    height: 55px;
+  #indexcontainer .recordingpic .length {
+    bottom: auto;
+    top: 20px;
   }
-  #headerloginactions, #headersearch {
-    margin-top: 2px;
+
+  .accordion .recordingpic .length {
+    bottom: auto;
+    top: 20px;
   }
-  #headersearchlink, #headerloginactions, #headerloginactions a {
-    font-size: 12px;
-  }
-  #headerlogo a.basic, #headerlogo a.basic span {
-    width: 78px;
-    height: 22px;
-  }
-  #headerlogo img {
-    max-height: 29px;
-  }
-  #headertop, #headerlogo {
-    height: 29px;
-  }
-  #headerlogo {
-    height: 26px;
-  }
-  #headerbottom {
-    height: 24px;
-  }
-  #headermenu a span {
-    display: none;
-  }
-  #headermenu a {
-    height: 19px;
-    font-size: 11px;
-    margin-right: 0px;
-    padding: 3px 0px 2px 0px;
-  }
-  #headermenu li.active a {
-    -webkit-background-size: 8px auto;
-    background-size: 8px auto;
-  }
+
   .form.search .submitbutton {
-    width: 70px;
   }
-  #pagebg {
-    top: 55px;
-  }
-  
-  .treeview {
-    width: 100%;
-  }
-  
 }

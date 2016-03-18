@@ -13,7 +13,7 @@ class Advanced extends \Visitor\Paging {
   );
 
   protected $insertbeforepager = Array( 'Visitor/Search/Paging/AdvancedBeforepager.tpl' );
-  protected $template = 'Visitor/Search/Paging/Advanced.tpl';
+  protected $template = 'Visitor/recordinglistitem.tpl';
   protected $recordingsModel;
   protected $user;
   
@@ -32,6 +32,7 @@ class Advanced extends \Visitor\Paging {
       $this->formvalid = false;
     }
     
+    $this->controller->toSmarty['needselect2'] = true;
     $this->controller->toSmarty['listclass'] = 'recordinglist';
     $this->controller->toSmarty['form']      =
       $form->getHTML()
@@ -63,7 +64,7 @@ class Advanced extends \Visitor\Paging {
   protected function setupCount() {
     
     if ( !$this->formvalid )
-      return $this->itemcount = 0;
+      return $this->itemcount = null;
     
     $this->recordingsModel = $this->bootstrap->getModel('recordings');
     
@@ -107,9 +108,8 @@ class Advanced extends \Visitor\Paging {
       $this->bootstrap->getAdoDB(),
       'adodb'
     );
-    
-    $form->jspath = 'js/clonefish.js';
-    
+
+    $form->jsalert = false;
     $form->jspath =
       $this->controller->toSmarty['STATIC_URI'] . 'js/clonefish.js'
     ;
@@ -136,6 +136,12 @@ class Advanced extends \Visitor\Paging {
     $form->layouts['tabular']['button'] =
       '<input type="submit" value="%s" class="submitbutton" />'
     ;
+    
+    $form->errorstyle = ' class="formerror"';
+    $form->layouts['tabular']['errordiv'] = '
+      <div id="%divid%" class="formerrordiv"></div>
+      <div class="clear"></div>
+    ';
     
     $configfile =
       $this->application->config['modulepath'] .

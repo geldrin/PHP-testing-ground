@@ -29,7 +29,7 @@ class listingdb_adodb extends listingdb {
     );
     
   // --------------------------------------------------------------------------
-  function listingdb_adodb( &$db, $source, $fields ) {
+  function __construct( &$db, $source, $fields ) {
     $this->db     = &$db;
     $this->table  = $source;
     $this->fields = $fields;

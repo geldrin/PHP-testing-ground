@@ -1,0 +1,31 @@
+# OpenSSL configuration to generate a new key with signing requst for a x509v3 
+[ req ]
+prompt             = no
+encrypt_key        = no
+
+# base request
+distinguished_name = req_distinguished_name
+
+# extensions
+req_extensions     = v3_req
+
+# distinguished_name
+[ req_distinguished_name ]
+countryName            = "HU"                           # C=
+stateOrProvinceName    = "Budapest"                     # ST=
+localityName           = "Budapest"                     # L=
+postalCode             = "1014"                         # L/postalcode=
+streetAddress          = "Uri utca 21."                 # L/street=
+organizationName       = "PA Alapitvany"                # O=
+organizationalUnitName = "Videosquare"                  # OU=
+commonName             = "pallasvideo.hu"               # CN=
+emailAddress           = "pada@videosqr.com"            # CN/emailAddress=
+
+# req_extensions
+[ v3_req ]
+# The subject alternative name extension allows various literal values to be 
+# included in the configuration file
+# http://www.openssl.org/docs/apps/x509v3_config.html
+#subjectAltName  = DNS:www.example.com,DNS:www2.example.com # multidomain certificate
+
+# vim:ft=config

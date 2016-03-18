@@ -5,36 +5,117 @@ class Controller extends \Visitor\Controller {
   public $permissions = array(
     'index'  => 'public',
   );
-  
+
+  private $maxRecordings = 4;
+  private $blocksToTypes = array(
+    'legujabb'           => 'newest',
+    'legnezettebb'       => 'mostviewed',
+    'legjobb'            => 'best',
+    'csatornafelvetelek' => 'subscriptions',
+  );
+
   public function indexAction() {
-    
-    $recordingsModel = $this->bootstrap->getModel('recordings');
-    $newsModel       = $this->bootstrap->getModel('organizations_news');
-    $user            = $this->bootstrap->getSession('user');
-    
+    $this->recordingsModel = $this->bootstrap->getModel('recordings');
+    $user = $this->bootstrap->getSession('user');
+
     $this->toSmarty['defaultimage'] =
       $this->bootstrap->staticuri . 'images/header_logo.png'
     ;
-    $this->toSmarty['welcome']      = true;
-    $this->toSmarty['introduction'] = $this->organization['introduction'];
-    $this->toSmarty['recordings']   = $recordingsModel->getRandomRecordings(
-      3,
-      $this->organization['id'],
-      $user
+    $this->toSmarty['welcome'] = true;
+
+    $l = $this->bootstrap->getLocalization();
+    $labels = array();
+    $blocks = array();
+    foreach( $this->organization['blockorder'] as $block => $value ) {
+      if ( $block != 'eloadas' and $block != 'kiemelt' )
+        $labels[ $block ] = $l('index', 'block_' . $block );
+
+      if ( isset( $this->blocksToTypes[ $block ] ) ) {
+        $type = $this->blocksToTypes[ $block ];
+        $blocks[ $block ] = \Visitor\Recordings\Paging\Featured::getRecItems(
+          $this->organization['id'],
+          $user,
+          $type,
+          0,
+          $this->maxRecordings
+        );
+      } else {
+        $method = 'getBlock' . ucfirst( $block );
+        if ( method_exists( $this, $method ) )
+          $blocks[ $block ] = $this->$method( $user );
+      }
+    }
+
+    $this->toSmarty['blocksToTypes'] = $this->blocksToTypes;
+    $this->toSmarty['labels'] = $labels;
+    $this->toSmarty['blocks'] = $blocks;
+
+    $smarty = $this->bootstrap->getSmarty();
+    $this->fetchSmarty('Visitor/Index/index_blocks.tpl');
+    foreach( $blocks as $block => $v ) {
+      $key   = 'ajanlo_' . $block;
+      $value = $smarty->get_template_vars( $key );
+      $this->toSmarty[ $key ] = trim( $value );
+    }
+
+    unset(
+      $this->toSmarty['blocksToTypes'],
+      $this->toSmarty['labels'],
+      $this->toSmarty['blocks'],
+      $labels,
+      $blocks
     );
-    $this->toSmarty['news']         = $newsModel->getRecentNews(
-      5,
+
+    $content = $this->fetchSmarty( $this->organization['indextemplate'] );
+    $this->toSmarty['content'] = $content;
+
+    $this->smartyoutput('Visitor/Index/index.tpl');
+  }
+
+  private function getRecordings( $type, $user ) {
+    $filter = "r.organizationid = '" . $this->organization['id'] . "'";
+    if ( isset( $this->recordingTypes[ $type ]['filter'] ) )
+      $filter .= $this->recordingTypes[ $type ]['filter'];
+
+    $ret = $this->recordingsModel->getRecordingsWithUsers(
+      0,
+      $this->maxRecordings,
+      $filter,
+      $this->recordingTypes[ $type ]['order'],
+      $user,
       $this->organization['id']
     );
-    
-    $recordingsModel->addPresentersToArray(
-      $this->toSmarty['recordings'],
+
+    $ret = $this->recordingsModel->addPresentersToArray(
+      $ret,
       true,
       $this->organization['id']
     );
-    
-    $this->smartyoutput('Visitor/Index/index.tpl');
-    
+
+    return $ret;
   }
-  
+
+  private function getBlockKiemelt( $user ) {
+    $ret = $this->recordingsModel->getRandomRecordings(
+      4,
+      $this->organization['id'],
+      $user
+    );
+
+    $ret = $this->recordingsModel->addPresentersToArray(
+      $ret,
+      true,
+      $this->organization['id']
+    );
+
+    return $ret;
+  }
+
+  private function getBlockEloadas( $user ) {
+    $channelModel = $this->bootstrap->getModel('channels');
+    return $channelModel->getFeatured(
+      $this->organization['id'],
+      \Springboard\Language::get()
+    );
+  }
 }

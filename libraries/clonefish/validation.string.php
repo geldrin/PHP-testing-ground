@@ -47,7 +47,7 @@ class stringValidation extends validation {
     
     if ( strlen( $this->equals ) ) {
     
-        $equalfield = &$this->form->getElementByName( $this->equals );
+        $equalfield = $this->form->getElementByName( $this->equals );
 	
         if ( !is_object( $equalfield ) )
           die(
@@ -75,7 +75,7 @@ class stringValidation extends validation {
     
     if ( strlen( $this->differs ) ) {
     
-        $differfield = &$this->form->getElementByName( $this->differs );
+        $differfield = $this->form->getElementByName( $this->differs );
 	
         if ( !is_object( $differfield ) )
           die(

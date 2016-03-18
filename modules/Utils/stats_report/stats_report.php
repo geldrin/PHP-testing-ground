@@ -75,7 +75,7 @@ while ( $year <= date("Y") ) {
         $month_days = cal_days_in_month(CAL_GREGORIAN, $i, $year);
         $start_date = $year . "-" . sprintf("%02d", $i) . "-01 00:00:00";
         $end_date = $year . "-" . sprintf("%02d", $i) . "-" . sprintf("%02d", $month_days) . " 23:59:59";
-        $recs_view_by_date = getRecordingsAllPlaybacksByDate($start_date, $end_date);
+        $recs_view_by_date = getRecordingsAllPlaybacksByDate($organizationid, $start_date, $end_date);
         $csv_line = array(
             'date'              => date("Y. M.", strtotime($start_date)),
             'numviewsessions'   => $recs_view_by_date['numviewsessions'],
@@ -102,7 +102,7 @@ while ( $year <= date("Y") ) {
         $month_days = cal_days_in_month(CAL_GREGORIAN, $i, $year);
         $start_date = $year . "-" . sprintf("%02d", $i) . "-01 00:00:00";
         $end_date = $year . "-" . sprintf("%02d", $i) . "-" . sprintf("%02d", $month_days) . " 23:59:59";
-        $live_view_by_date = getLiveAllPlaybacksByDate($start_date, $end_date);
+        $live_view_by_date = getLiveAllPlaybacksByDate($organizationid, $start_date, $end_date);
         $csv_line = array(
             'date'              => date("Y. M.", strtotime($start_date)),
             'numviewsessions'   => $live_view_by_date['numviewsessions'],
@@ -230,7 +230,7 @@ global $db, $jobid, $debug, $jconf;
     return $rs;
 }
 
-function getRecordingsAllPlaybacksByDate($start_date, $end_date) {
+function getRecordingsAllPlaybacksByDate($organizationid, $start_date, $end_date) {
 global $db, $jobid, $debug, $jconf;
 
 	$query = "
@@ -238,11 +238,14 @@ global $db, $jobid, $debug, $jconf;
             COUNT(vso.id) AS numviewsessions,
             SUM(vso.positionuntil - vso.positionfrom) AS duration
         FROM
-            view_statistics_ondemand AS vso
+            view_statistics_ondemand AS vso,
+            recordings AS r
         WHERE
             vso.timestamp >= '" . $start_date . "' AND
             vso.timestamp <= '" . $end_date . "' AND
-            (vso.positionuntil - vso.positionfrom) > 0";
+            (vso.positionuntil - vso.positionfrom) > 0 AND
+            vso.recordingid = r.id AND
+            r.organizationid = " . $organizationid;
 
 	try {
 		$rs = $db->getArray($query);
@@ -259,7 +262,7 @@ global $db, $jobid, $debug, $jconf;
     return $rs[0];
 }
 
-function getLiveAllPlaybacksByDate($start_date, $end_date) {
+function getLiveAllPlaybacksByDate($organizationid, $start_date, $end_date) {
 global $db, $jobid, $debug, $jconf;
 
 	$query = "
@@ -267,11 +270,14 @@ global $db, $jobid, $debug, $jconf;
             COUNT(vsl.viewsessionid) AS numviewsessions,
             SUM(TIMESTAMPDIFF(SECOND, vsl.timestampfrom, vsl.timestampuntil)) AS duration
         FROM
-            view_statistics_live AS vsl
+            view_statistics_live AS vsl,
+            livefeeds AS lf
         WHERE
             vsl.timestampfrom > '" . $start_date . "' AND
             vsl.timestampuntil <= '" . $end_date . "' AND
-            TIMESTAMPDIFF(SECOND, vsl.timestampfrom, vsl.timestampuntil) > 0";
+            TIMESTAMPDIFF(SECOND, vsl.timestampfrom, vsl.timestampuntil) > 0 AND
+            vsl.livefeedid = lf.id AND
+            lf.organizationid = " . $organizationid;
 
 	try {
 		$rs = $db->getArray($query);
@@ -332,7 +338,8 @@ global $db, $jobid, $debug, $jconf;
             channels AS c
         WHERE
             lf.organizationid = " . $organizationid . " AND
-            lf.channelid = c.id
+            lf.channelid = c.id AND
+            ( lf.status IS NULL OR lf.status <> 'markedfordeletion')
         ORDER BY
             c.starttimestamp";
 

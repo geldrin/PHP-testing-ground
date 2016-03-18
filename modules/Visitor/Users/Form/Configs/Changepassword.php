@@ -2,12 +2,6 @@
 
 $config = Array(
 
-  'fs1' => array(
-    'type'   => 'fieldset',
-    'legend' => $l('users', 'changepass_title'),
-    'prefix' => '<span class="legendsubtitle">' . $l('users', 'changepass_subtitle') . '</span>',
-  ),
-
   'action' => Array(
     'type'  => 'inputHidden',
     'value' => 'submitchangepassword'

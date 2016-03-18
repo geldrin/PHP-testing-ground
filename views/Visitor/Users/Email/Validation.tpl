@@ -8,6 +8,10 @@
   {if $invitationid}
     {assign var=url value=$url|cat:",`$invitationid`"}
   {/if}
+  {if $forwardurl}
+    {assign var=forwardurl value=$forwardurl|escape:url}
+    {assign var=url value=$url|cat:"?forward=`$forwardurl`"}
+  {/if}
   {#users__email_validation_body#|sprintf:$url}
 </p>
 <p>

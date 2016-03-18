@@ -6,12 +6,12 @@ server {
   # include     /etc/nginx/conf.d/*.server.conf;
 
   # No SSL
-  # listen      8086;
-  # server_name stream-edge1.videosquare.eu;  # $VSQ_FQDN$
+  listen      8086;
+  server_name vsq-edge-1.videosquare.eu;
 
   # SSL
   # listen      8086 ssl;
-  # server_name stream-edge1.videosquare.eu;  # $VSQ_FQDN$
+  # server_name vsq-edge-1.videosquare.eu;
 
   listen 127.0.0.1;
   server_name localhost;

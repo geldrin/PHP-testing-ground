@@ -342,7 +342,33 @@ class Channels extends \Springboard\Model {
     return $channels;
     
   }
-  
+
+  public function getParentFromChannelTree( $channeltree, $currentid, $parent = null ) {
+    foreach( $channeltree as $channel ) {
+      if ( $channel['id'] == $currentid )
+        return $parent;
+
+      $ret = $this->getParentFromChannelTree( $channel['children'], $currentid, $channel );
+      if ( $ret )
+        return $ret;
+    }
+
+    return array();
+  }
+
+  public function getChildrenFromChannelTree( $channeltree, $currentid ) {
+    foreach( $channeltree as $channel ) {
+      if ( $channel['id'] == $currentid )
+        return $channel['children'];
+
+      $ret = $this->getChildrenFromChannelTree( $channel['children'], $currentid );
+      if ( $ret )
+        return $ret;
+    }
+
+    return array();
+  }
+
   function findIDInChildren( $channeltree ) {
     
     if ( empty( $channeltree ) )
@@ -1180,7 +1206,7 @@ class Channels extends \Springboard\Model {
         r.id             = cr.recordingid AND
         r.isintrooutro   = '0' AND
         r.organizationid = '$organizationid' AND
-        r.status         = 'onstorage' -- TODO live?
+        r.status         = 'onstorage' -- TODO live
       GROUP BY r.id
       ORDER BY cr.weight
     ");
@@ -1199,7 +1225,7 @@ class Channels extends \Springboard\Model {
           r.id             = cr.recordingid AND
           r.isintrooutro   = '0' AND
           r.organizationid = '$organizationid' AND
-          r.status         = 'onstorage' -- TODO live?
+          r.status         = 'onstorage' -- TODO live
         GROUP BY r.id
         ORDER BY cr.weight
     ");
@@ -1309,4 +1335,64 @@ class Channels extends \Springboard\Model {
     return $relatedid;
   }
 
+  public function getFeatured( $organizationid, $language ) {
+    return $this->db->getRow("
+      SELECT
+        c.id,
+        c.title,
+        c.subtitle,
+        c.ordinalnumber,
+        c.url,
+        c.indexphotofilename AS indexphotofilename,
+        '' AS location,
+        c.starttimestamp,
+        c.endtimestamp,
+        s.value AS channeltype,
+        lf.id AS livefeedid,
+        lf.name AS feedname
+      FROM channels AS c
+      LEFT JOIN livefeeds AS lf ON(
+        c.id = lf.channelid
+      )
+      LEFT JOIN channel_types AS ct ON(
+        ct.id = c.channeltypeid
+      )
+      LEFT JOIN strings AS s ON(
+        s.translationof = ct.name_stringid AND
+        s.language = '$language'
+      )
+      WHERE
+        c.isfeatured     = '1' AND
+        c.organizationid = '$organizationid'
+      ORDER BY c.id DESC
+      LIMIT 1
+    ");
+  }
+
+  public function selectWithType( $id, $organizationid, $language ) {
+    $ret = $this->db->getRow("
+      SELECT
+        c.*,
+        s.value AS channeltype
+      FROM channels AS c
+      LEFT JOIN channel_types AS ct ON(
+        ct.id = c.channeltypeid
+      )
+      LEFT JOIN strings AS s ON(
+        s.translationof = ct.name_stringid AND
+        s.language = '$language'
+      )
+      WHERE
+        c.organizationid = '$organizationid' AND
+        c.id = '$id'
+      LIMIT 1
+    ");
+
+    if ( $ret ) {
+      $this->row = $ret;
+      $this->id = $ret['id'];
+    }
+
+    return $ret;
+  }
 }

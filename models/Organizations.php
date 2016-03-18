@@ -151,6 +151,32 @@ class Organizations extends \Springboard\Model\Multilingual {
       $organization[ $layout ] = $templatefile;
     }
 
+    // szemelyre szabott fooldal
+    if ( $organization['indextemplate'] ) {
+      $templatefile =
+        $this->bootstrap->config['cachepath'] .
+        'organization_' . $organization['id'] . '_indextemplate.tpl'
+      ;
+      file_put_contents( $templatefile, $organization['indextemplate'] );
+      $organization['indextemplate'] = $templatefile;
+    } else // alapertelmezett fooldal
+      $organization['indextemplate'] =
+        $this->bootstrap->config['templatepath'] .
+        'Visitor/Index/default_index.tpl'
+      ;
+
+    if (
+         !isset( $organization['frontpageblockorder'] ) or
+         !$organization['frontpageblockorder']
+       )
+      $organization['frontpageblockorder'] = 'kiemelt,legujabb,legnezettebb';
+
+    $organization['blockorder'] = array();
+    foreach( explode(',', $organization['frontpageblockorder'] ) as $block ) {
+      $block = trim( mb_strtolower( $block ) );
+      $organization['blockorder'][ $block ] = true;
+    }
+
     return $organization;
   }
 

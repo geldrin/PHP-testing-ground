@@ -7,8 +7,8 @@ class Details extends \Visitor\Paging {
     'channels'             => 'channelweight, channelid, channelrecordingweight, recordedtimestamp',
     'timestamp_desc'       => 'recordedtimestamp DESC',
     'timestamp'            => 'recordedtimestamp',
-    'title_desc'           => 'titleoriginal DESC',
-    'title'                => 'titleoriginal',
+    'title_desc'           => 'title DESC',
+    'title'                => 'title',
     'views_desc'           => 'numberofviews DESC',
     'views'                => 'numberofviews',
     'viewsthisweek_desc'   => 'numberofviewsthisweek DESC',
@@ -33,9 +33,9 @@ class Details extends \Visitor\Paging {
   protected $user;
   protected $perpageselector = false;
   protected $pagestoshow = 3;
-  
+
   public function init() {
-    
+
     $l                  = $this->bootstrap->getLocalization();
     $this->user         = $this->bootstrap->getSession('user');
     $this->foreachelse  = $l('channels', 'listrecordings_foreachelse');
@@ -44,7 +44,15 @@ class Details extends \Visitor\Paging {
       'channels',
       $this->application->getNumericParameter('id')
     );
-    
+
+    // ha nem talaltunk akkor hagyjuk azt ami itt be van allitva alapbol
+    // ergo default case -> default rendezes, do nothing
+    switch( $organization['channelorder'] ) {
+      case 'recordtimestamp_desc':
+        $this->orderkey = 'timestamp_desc';
+        break;
+    }
+
     if (
          $this->channelModel->row['organizationid'] != $organization['id'] or
          $this->channelModel->row['isliveevent'] != '0' or
@@ -54,26 +62,35 @@ class Details extends \Visitor\Paging {
     
     if ( $this->channelModel->isAccessible( $this->user, $this->controller->organization ) !== true )
       $this->controller->redirectToController('contents', 'nopermission');
-    
+
     $this->channelids = array_merge(
       array( $this->channelModel->id ),
       $this->channelModel->findChildrenIDs()
     );
-    
+
     $this->channelModel->clearFilter();
     $rootid = $this->channelModel->id;
     if ( $this->channelModel->row['parentid'] )
       $rootid = $this->channelModel->findRootID( $this->channelModel->row['parentid'] );
-    
+
     $this->channelModel->addFilter('isliveevent', 0 );
     $channeltree = $this->channelModel->getSingleChannelTree( $rootid );
 
     $this->title                               = $this->channelModel->row['title'];
     $this->controller->toSmarty['listclass']   = 'recordinglist';
-    $this->controller->toSmarty['channel']     = $this->channelModel->row;
-    $this->controller->toSmarty['channeltree'] = $channeltree;
     $this->controller->toSmarty['havemultiplechannels'] = count( $this->channelids ) > 1;
     $this->controller->toSmarty['canaddrecording'] = $this->channelModel->isAccessible( $this->user, $organization, true );
+
+    $this->controller->toSmarty['channel']     = $this->channelModel->row;
+    $this->controller->toSmarty['channelroot'] = reset( $channeltree );
+    $this->controller->toSmarty['channelparent'] = $this->channelModel->getParentFromChannelTree(
+      $channeltree,
+      $this->channelModel->id
+    );
+    $this->controller->toSmarty['channelchildren'] = $this->channelModel->getChildrenFromChannelTree(
+      $channeltree,
+      $this->channelModel->id
+    );
 
     if ( $this->user['id'] ) {
       $userModel = $this->bootstrap->getModel('users');

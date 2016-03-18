@@ -20,14 +20,21 @@ class Details extends \Visitor\Paging {
     $l                  = $this->bootstrap->getLocalization();
     $user               = $this->bootstrap->getSession('user');
     $this->foreachelse  = '';
-    $this->channelModel = $this->controller->modelIDCheck(
-      'channels',
-      $this->application->getNumericParameter('id')
+    $this->channelModel = $this->bootstrap->getModel('channels');
+    $this->channelModel->selectWithType(
+      $this->application->getNumericParameter('id'),
+      $this->controller->organization['id'],
+      \Springboard\Language::get()
     );
+
+    if ( !$this->channelModel->row )
+      $this->controller->redirect('');
+
     $this->title        = sprintf(
       $l('live','details_title'),
       $this->channelModel->row['title']
     );
+
     $this->controller->toSmarty['opengraph']     = array(
       'image'       => smarty_modifier_indexphoto( $this->channelModel->row, 'live' ),
       'description' => $this->channelModel->row['description'],
@@ -76,7 +83,7 @@ class Details extends \Visitor\Paging {
   
   protected function setupCount() {
     
-    return $this->itemcount = 0;
+    return $this->itemcount = null;
     
   }
   

@@ -1,7 +1,5 @@
 <?php
-// Upload finalize job handling:
-// - Uploaded documents (attached documents)
-// - User avatar images
+// Upload finalize job
 
 define('BASE_PATH', realpath( __DIR__ . '/../..' ) . '/' );
 define('PRODUCTION', false );
@@ -36,9 +34,6 @@ if ( iswindows() ) {
 	exit;
 }
 
-// Recording finalization last time
-$finalizedonelasttime = null;
-
 // Start an infinite loop - exit if any STOP file appears
 while( !is_file( $app->config['datapath'] . 'jobs/job_upload_finalize.stop' ) and !is_file( $app->config['datapath'] . 'jobs/all.stop' ) ) {
 
@@ -53,9 +48,6 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_upload_finalize.stop' ) an
 	while ( 1 ) {
 
 		$app->watchdog();
-
-		// Establish database connection
-		$db = db_maintain();
 
 		$sleep_length = $app->config['sleep_short'];
 
@@ -97,20 +89,31 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_upload_finalize.stop' ) an
 					updateAttachedDocumentStatus($doc['id'], $jconf['dbstatus_copystorage_ok']);
 
 					// Update recording size
+                    $master_filesize = 0;
+                    $recording_filesize = 0;
+                    
 					$recording_directory = $app->config['recordingpath'] . ( $doc['recordingid'] % 1000 ) . "/" . $doc['recordingid'] . "/";
-					$err = directory_size($recording_directory . "master/");
-					$master_filesize = 0;
-
-					if ( $err['code'] ) $master_filesize = $err['value'];
+                    
+					// Master size
+                    $err = directory_size($recording_directory . "master/");
+                    if ( !$err['code'] ) {
+                        $debug->log($jconf['log_dir'], $myjobid ."log", "Directory_size() failed. Message:\n". $err['command_output'], 0);
+                    } else {
+                        $master_filesize = intval($err['value']);
+                    }
+                    
+                    // Recording size
 					$err = directory_size($recording_directory);
-
-					$recording_filesize = 0;
-					
-					if ( $err['code'] ) $recording_filesize = $err['value'];
+                    if ( !$err['code'] ) {
+                        $debug->log($jconf['log_dir'], $myjobid ."log", "Directory_size() failed. Message:\n". $err['command_output'], 0);
+                    } else {
+                        $recording_filesize = intval($err['value']);
+                    }
+                    
 					// Update DB
 					$update = array(
-							'masterdatasize'    => $master_filesize,
-							'recordingdatasize' => $recording_filesize
+                        'masterdatasize'    => $master_filesize,
+                        'recordingdatasize' => $recording_filesize
 					);
 
 					$recDoc = $app->bootstrap->getModel('recordings');
@@ -242,59 +245,66 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_upload_finalize.stop' ) an
 		break;
 	} // End of while(1)
 
-	// Recordings: finalize masters (once daily, after midnight)
-	$start_time = time();
-	$inwhichhour = 0;
-	if ( ( date("G") == $inwhichhour ) and ( empty($finalizedonelasttime) or ( ( $start_time - $finalizedonelasttime ) > 3600 * 24 ) ) ) {
+	// Recordings: finalize masters
+    $recordings = getRecordingMastersToFinalize();
+    if ( $recordings !== false ) {
 
-		$recordings = getRecordingMastersToFinalize();
-		if ( $recordings !== false ) {
+        while ( !$recordings->EOF ) {
+            $recording = $recordings->fields;
 
-			while ( !$recordings->EOF ) {
-				$recording = $recordings->fields;
+            $destination_path = $app->config['recordingpath'] . ( $recording['id'] % 1000 ) . "/" . $recording['id'] . "/master/";
+            $recording_path = $app->config['recordingpath'] . ( $recording['id'] % 1000 ) . "/" . $recording['id'] . "/";
 
-				$destination_path = $app->config['recordingpath'] . ( $recording['id'] % 1000 ) . "/" . $recording['id'] . "/master/";
+            $debug->log($jconf['log_dir'], $myjobid . ".log", "Recording finalization for id = " . $recording['id'] . " started.", $sendmail = false);
 
-				$debug->log($jconf['log_dir'], $myjobid . ".log", "Recording finalization for id = " . $recording['id'] . " started.", $sendmail = false);
+            $err = create_directory($destination_path);
+            if ( !$err['code'] ) {
+                $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Cannot create directory " . $destination_path, $sendmail = true);
+                $recordings->MoveNext();
+                continue;
+            }
 
-				$err = create_directory($destination_path);
-				if ( !$err['code'] ) {
-					$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Cannot create directory " . $destination_path, $sendmail = true);
-					$recordings->MoveNext();
-					continue;
-				}
+            // Recording: finalize
+            if ( $recording['masterstatus'] == $jconf['dbstatus_uploaded'] ) $err = moveMediaFileToStorage($recording, "recording");
+            // Content: finalize
+            if ( $recording['contentmasterstatus'] == $jconf['dbstatus_uploaded'] ) $err = moveMediaFileToStorage($recording, "content");
+            
+            // Update recording and master data size
+            $master_filesize = 0;
+            $recording_filesize = 0;
+            
+            unset($err);
+            $err = directory_size($destination_path);
+            if ( !$err['code'] ) {
+                $debug->log($jconf['log_dir'], $myjobid ."log", "Directory_size() failed. Message:\n". $err['command_output'], 0);
+            } else {
+                $master_filesize = intval($err['value']);
+            }
 
-				// Recording: finalize
-				if ( $recording['masterstatus'] == $jconf['dbstatus_uploaded'] ) $err = moveMediaFileToStorage($recording, "recording");
-				// Content: finalize
-				if ( $recording['contentmasterstatus'] == $jconf['dbstatus_uploaded'] ) $err = moveMediaFileToStorage($recording, "content");
+            unset($err);
+            $err = directory_size($recording_path);
+            if ( !$err['code'] ) {
+                $debug->log($jconf['log_dir'], $myjobid ."log", "Directory_size() failed. Message:\n". $err['command_output'], 0);
+            } else {
+                $recording_filesize = intval($err['value']);
+            }
 
-				$err = directory_size($destination_path);
+            $update = array(
+                'masterdatasize' => $master_filesize,
+                'recordingdatasize' => $recording_filesize
+            );
+            
+            $recDoc = $app->bootstrap->getModel('recordings');
+            $recDoc->select($recording['id']);
+            $recDoc->updateRow($update);
+            $debug->log($jconf['log_dir'], $myjobid .".log", "[INFO] Master and recording data size updated. Values: " . print_r($update, true), false);
+            unset($err, $recDoc, $update);
 
-				if (!$err['code']) {
-					$debug->log($jconf['log_dir'], $myjobid ."log", "Directory_size() failed. Message:\n". $err['command_output'], 0);
-				} else {
-					$update = array(
-						'masterdatasize' => intval($err['value']),
-					);
-					$recDoc = $app->bootstrap->getModel('recordings');
-					$recDoc->select($recording['id']);
-					$recDoc->updateRow($update);
-					$debug->log($jconf['log_dir'], $myjobid .".log", "[INFO] Masterdatasize updated. Values: ". $update['masterdatasize'], false);
-					unset($err, $recDoc, $update);
-				}
+            $app->watchdog();
+            $recordings->MoveNext();
+        }
 
-				$app->watchdog();
-				$recordings->MoveNext();
-			}
-
-		// Log finalization last time
-		$finalizedonelasttime = time();
-		}
-	}
-
-	// Close DB connection if open
-	if ( is_resource($db->_connectionID) ) $db->close();
+    }
 
 	// Watchdog
 	$app->watchdog();
@@ -359,9 +369,9 @@ global $app, $debug, $myjobid, $jconf;
 // *************************************************************************
 // Description: queries next uploaded document from attached_documents
 function getUploadedAttachments() {
-global $jconf, $db, $app, $debug, $myjobid;
+global $jconf, $app, $debug, $myjobid;
 
-	$db = db_maintain();
+    $model = $app->bootstrap->getModel('attached_documents');
 
 	$node = $app->config['node_sourceip'];
 
@@ -383,25 +393,22 @@ global $jconf, $db, $app, $debug, $myjobid;
 			users as b,
 			organizations as c
 		WHERE
-			status = \"" . $jconf['dbstatus_uploaded'] . "\" AND
+			status = '" . $jconf['dbstatus_uploaded'] . "' AND
 			a.sourceip = '" . $node . "' AND
 			a.userid = b.id AND
-			b.organizationid = c.id
-	";
+			b.organizationid = c.id";
 
 	try {
-		$docs = $db->Execute($query);
+        $rs = $model->safeExecute($query);
 	} catch (exception $err) {
-		$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] SQL query failed." . trim($query), $sendmail = true);
+		$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] SQL query failed.\n" . trim($query), $sendmail = true);
 		return false;
 	}
 
 	// Check if pending job exsits
-	if ( $docs->RecordCount() < 1 ) {
-		return false;
-	}
+	if ( $rs->RecordCount() < 1 ) return false;
 
-	return $docs;
+	return $rs;
 }
 
 // *************************************************************************
@@ -409,9 +416,10 @@ global $jconf, $db, $app, $debug, $myjobid;
 // *************************************************************************
 // Description: queries pending user avatars
 function getUploadedAvatars() {
-global $jconf, $db, $app, $debug, $myjobid;
+global $jconf, $app, $debug, $myjobid;
 
-	$db = db_maintain();
+    $model = $app->bootstrap->getModel('users');
+    
 	$node = $app->config['node_sourceip'];
 
 	$query = "
@@ -430,28 +438,25 @@ global $jconf, $db, $app, $debug, $myjobid;
 		WHERE
 			a.avatarstatus = '" . $jconf['dbstatus_uploaded'] . "' AND
 			a.avatarsourceip = '" . $node . "' AND
-			a.organizationid = b.id
-	";
+			a.organizationid = b.id";
 
 	try {
-		$avatars = $db->Execute($query);
+        $rs = $model->safeExecute($query);
 	} catch (exception $err) {
 		$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] SQL query failed.\n" . trim($query), $sendmail = true);
 		return false;
 	}
 
 	// Check if pending job exsits
-	if ( $avatars->RecordCount() < 1 ) {
-		return false;
-	}
+	if ( $rs->RecordCount() < 1 ) return false;
 
-	return $avatars;
+	return $rs;
 }
 
 function getSelectedContributorImages() {
-global $jconf, $db, $app, $debug, $myjobid;
+global $jconf, $app, $debug, $myjobid;
 
-	$db = db_maintain();
+    $model = $app->bootstrap->getModel('contributor_images');
 
 	$query = "
 		SELECT
@@ -464,24 +469,22 @@ global $jconf, $db, $app, $debug, $myjobid;
 			indexphotofilename LIKE '%recordings%'";
 
 	try {
-		$cimages = $db->Execute($query);
+        $rs = $model->safeExecute($query);
 	} catch (exception $err) {
 		$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] SQL query failed.\n" . trim($query), $sendmail = true);
 		return false;
 	}
 
 	// Check if pending job exsits
-	if ( $cimages->RecordCount() < 1 ) {
-		return false;
-	}
+	if ( $rs->RecordCount() < 1 ) return false;
 
-	return $cimages;
+	return $rs;
 }
 
 function getRecordingMastersToFinalize() {
-global $jconf, $debug, $db, $app, $myjobid;
+global $jconf, $debug, $app, $myjobid;
 
-	$db = db_maintain();
+    $model = $app->bootstrap->getModel('recordings');
 
 	$node = $app->config['node_sourceip'];
 
@@ -509,7 +512,7 @@ global $jconf, $debug, $db, $app, $myjobid;
 			r.id";
 
 	try {
-		$rs = $db->Execute($query);
+        $rs = $model->safeExecute($query);
 	} catch (exception $err) {
 		$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] SQL query failed.\n" . trim($query), $sendmail = true);
 		return false;

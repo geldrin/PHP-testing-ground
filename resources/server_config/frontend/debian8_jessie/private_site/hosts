@@ -1,0 +1,18 @@
+127.0.0.1	localhost vsq-stream
+
+## Videosquare
+10.1.8.2    vsq-stream.pallasvideo.hu vsq-stream
+10.1.8.3    pallasvideo.hu
+10.1.8.4    vsq-static.pallasvideo.hu vsq-static
+10.1.8.5    vsq-conv.pallasvideo.hu vsq-conv
+# External IPs
+#86.101.232.67   vsq-stream.pallasvideo.hu
+#86.101.232.68   pallasvideo.hu
+#86.101.232.69   vsq-static.pallasvideo.hu
+#86.101.232.70   vsq-conv.pallasvideo.hu
+## Videosquare config ENDS
+
+# The following lines are desirable for IPv6 capable hosts
+::1     localhost ip6-localhost ip6-loopback
+ff02::1 ip6-allnodes
+ff02::2 ip6-allrouters

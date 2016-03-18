@@ -1,6 +1,6 @@
 <?php
 $config = array(
-  'version'      => '_v20160223',
+  'version'      => '_v20160307',
   'charset'      => 'UTF-8',
   'cacheseconds' => 3600,
   'errormessage' => 'An unexpected error has occured, our staff has been notified. Sorry for the inconvenience and thanks for your understanding!',
@@ -24,6 +24,7 @@ $config = array(
   'templatepath' => $this->basepath . 'views/',
   'modelpath'    => $this->basepath . 'models/',
   'convpath'     => $this->basepath . 'data/temp/',
+  'jobpath'      => $this->basepath . 'libraries/Videosquare/',
   'storagepath'  => '/srv/vsq/videosquare.eu/', // always absolute!
   // szoljunk e azert mert a bongeszo elavult?
   'warnobsoletebrowser' => true,
@@ -93,7 +94,7 @@ $config = array(
   'livestreampath'        => '/srv/vsq/videosquare.eu/livestreams/',
   'recordings_seconds_minlength' => 3,
   'categoryiconpath'      => $this->basepath . 'httpdocs_static/images/categories/',
-  'relatedrecordingcount' => 6,
+  'relatedrecordingcount' => 8,
 
   // Converter related settings
   'mediainfo_identify'     => 'mediainfo --full --output=XML %s 2>&1',
@@ -135,11 +136,6 @@ $config = array(
     'player' => '618x348',
   ),
   //----
-  'ondemandhdsenabled' => false,
-  'livehdsenabled' => false,
-  // ha false akkor rtsp-t kuldunk androidnak
-  'ondemandandroidhls' => false,
-  'liveandandroidhls' => false,
   'wowza'      => array(
     
     'httpurl'           => 'http://%s/vsq/_definst_/',
@@ -301,23 +297,29 @@ $config = array(
         'enabled'             => true,
         'watchdogtimeoutsecs' => 60,
         'supresswarnings'     => false
-      )
+      ),
     ),
     'converter' => array(
-      'job_system_health'   => array(
-        'enabled'               => true,     // watcher to check or skip this job
-        'watchdogtimeoutsecs'   => 15 * 60,  // watchdog timeout (stuck processes)
-        'supresswarnings'       => false     // do not send warnings (e.g. stop files)
+      'job_system_health' => array(
+        'enabled'             => true,     // watcher to check or skip this job
+        'watchdogtimeoutsecs' => 15 * 60,  // watchdog timeout (stuck processes)
+        'supresswarnings'     => false     // do not send warnings (e.g. stop files)
       ),
-      'job_media_convert2'	=> array(
-        'enabled'				=> true,
-        'watchdogtimeoutsecs'	=> 15 * 60,
-        'supresswarnings'		=> false
+      'job_media_convert2' => array(
+        'enabled'             => true,
+        'watchdogtimeoutsecs' => 15 * 60,
+        'supresswarnings'     => false
       ),
-      'job_document_index'	=> array(
-        'enabled'				=> true,
-        'watchdogtimeoutsecs'	=> 15 * 60,
-        'supresswarnings'		=> false
+      'job_document_index' => array(
+        'enabled'             => true,
+        'watchdogtimeoutsecs' => 15 * 60,
+        'supresswarnings'     => false
+      ),
+      'job_live_thumbnail' => array(
+        'enabled'             => true,
+        'watchdogtimeoutsecs' => 15 * 60,
+        'supresswarnings'     => false,
+        'debug_mode'          => false,
       ),
     ),
   ),
@@ -333,7 +335,7 @@ $config = array(
   'sleep_long'      => 100,           // Long sleep
   'sleep_vcr'       => 20,            // VCS job
   'sleep_vcr_wait'  => 20,            // VCS job Cisco TCS wait timeout
-  'sleep_doc'       => 300,           // Document conversion
+  'sleep_doc'       => 60,            // Document conversion
   //-------
   // ldap belepeseket ennyi idonkent vegezzuk el ujra ha a user mar be van lepve
   'directoryreauthminutes'           => 240, // default 4 ora
@@ -363,8 +365,11 @@ $config = array(
   'api_password' => '',
 
   // SSH authentication data
-  'ssh_user'     => 'conv',
-  'ssh_key'      => '/home/conv/.ssh/id_rsa',
+  'ssh_user'        => 'conv',
+  'ssh_password'    => null,    // Password for user OR private ket file
+  'ssh_key'         => '/home/conv/.ssh/id_rsa',
+  'ssh_pubkey'      => '/home/conv/.ssh/id_rsa.pub',
+  'ssh_fingerprint' => null,    // Server fingerprint to check (32x hex: 4904741c63e5a63d68578f6e52774e01)
   
   // flash playernek atadott config valtozok, ha valamit nem kell atadni
   // akkor szimplan torolni kell oket
@@ -390,6 +395,11 @@ $config = array(
   // halottnak tekintjuk a servert
   // ha nulla akkor nem nezzuk a reportolasi idot
   'streamingserver_report_expiration_minutes' => 0,
+
+  // a combinedrating szerint rendezzuk a felveteleket a "legjobb felvetelek"
+  // listaban, ez a szam mondja meg hogy hany napnal korabbi felvetelek
+  // kerulhetnek a listaba
+  'combinedratingcutoffdays' => 180,
 );
 
 $config['phpsettings'] = array(

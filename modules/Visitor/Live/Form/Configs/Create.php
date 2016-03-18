@@ -18,12 +18,6 @@ $config = array(
     'readonly' => true,
   ),
   
-  'fs1' => array(
-    'type'   => 'fieldset',
-    'legend' => $l('live', 'create_title'),
-    'prefix' => '<span class="legendsubtitle">' . $l('live', 'create_subtitle') . '</span>',
-  ),
-  
   'title' => array(
     'displayname' => $l('live', 'title'),
     'type'        => 'inputText',

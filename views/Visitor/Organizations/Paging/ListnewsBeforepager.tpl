@@ -1,5 +1,8 @@
-<div class="title">
+<div id="pagetitle">
   <h1>{#organizations__listnews_title#}</h1>
-  <a href="{$language}/organizations/createnews">{#organizations__createnews#}</a>
-  <br/>
 </div>
+<div class="channelgradient"></div>
+<br/>
+
+<a href="{$language}/organizations/createnews">{#organizations__createnews#}</a>
+<br/>

@@ -60,7 +60,7 @@ class DBWrapperAdoDB {
    *
    * @param object AdoDB connection object
    */
-  function DBWrapperAdoDB( &$db ) {
+  function __construct( &$db ) {
 
     if ( is_subclass_of( $db, 'adoconnection' ) )
       $this->db = &$db;

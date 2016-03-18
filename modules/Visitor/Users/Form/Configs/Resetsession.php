@@ -6,12 +6,6 @@ $lang         = \Springboard\Language::get();
 
 $config = Array(
 
-  'fs1' => array(
-    'type'   => 'fieldset',
-    'legend' => $l('users', 'resetsession_title'),
-    'prefix' => '<span class="legendsubtitle">' . $l('users', 'resetsession_subtitle') . '</span>',
-  ),
-
   'action' => Array(
     'type'  => 'inputHidden',
     'value' => 'submitresetsession'

@@ -14,12 +14,6 @@ $config = Array(
     'readonly' => true,
   ),
 
-  'fs1' => array(
-    'type'   => 'fieldset',
-    'legend' => $l('groups', 'create_title'),
-    'prefix' => '<span class="legendsubtitle">' . $l('groups', 'create_subtitle') . '</span>',
-  ),
-
   'name' => Array(
     'displayname' => $l('groups', 'name'),
     'type'        => 'inputText',

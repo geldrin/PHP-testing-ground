@@ -52,7 +52,7 @@ class DBWrapperMySQL {
    *
    * @param resource MySQL link resources
    */
-  function DBWrapperMySQL( &$db ) {
+  function __construct( &$db ) {
     if ( is_resource( $db ) )
       if ( 
            ( get_resource_type( $db ) == 'mysql link' ) ||

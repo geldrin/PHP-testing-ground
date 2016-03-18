@@ -21,11 +21,10 @@ include_once( CLONEFISH_DIR . 'element.inputradio.php');
 class inputRadioDynamic extends inputRadio {
 
   // --------------------------------------------------------------------------
-  function inputRadioDynamic( $key, $configvalues, &$db ) {
+  function __construct( $key, $configvalues, &$db ) {
 
     // call parent constructor
-    $parent_class_name = get_parent_class( $this );
-    $this->$parent_class_name( $key, $configvalues );
+    parent::__construct( $key, $configvalues );
 
     $this->db = &$db;
 
