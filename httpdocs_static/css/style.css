@@ -2768,8 +2768,8 @@ li#languageselectorlink span {
   margin-bottom: 10px;
 }
 #channelheader .channelinfo {
-  color: #aaa;
-  text-shadow: 0px 1px 3px rgba(0, 0, 0, 0.75);
+  color: #fff;
+  text-shadow: 0px 1px 3px rgba(0, 0, 0, 1);
 }
 #body .heading.categories.title {
   border-bottom: 1px solid #d7d7d7;
