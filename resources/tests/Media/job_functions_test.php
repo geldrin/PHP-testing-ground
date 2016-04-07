@@ -207,9 +207,10 @@ if ( $app->config['node_role'] == "converter" ) {
 		$outfile = "output.png";
 		$command  = $app->config['nice_high'] . " " . $app->config['ffmpegthumbnailer'] . " -i " . $testfile . " -o " . $outfile . " -s0 -q8 -t 5";
 		$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Executing ffmpegthumbnailer: " . $command, $sendmail = false);
-		$output = runExternal($command);
-		$output_string = $output['cmd_output'];
-		$result = $output['code'];
+		$output = new runExt($command);
+		$output->run();
+		$output_string = $output->getOutput();
+		$result = $output->getCode();
 		$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] ffmpegthumbnailer return code = " . $result . "\nOutput: " . $output_string, $sendmail = false);
 		if ( $result > 0 ) {
 			$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] ffmpegthumbnailer error. CHECK.", $sendmail = false);
