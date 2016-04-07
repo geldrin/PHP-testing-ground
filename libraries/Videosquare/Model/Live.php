@@ -75,9 +75,9 @@ class Live extends \Springboard\Model {
             'status' => $status
         );
 
-        $converterNodeObj = $this->bootstrap->getVSQModel('livefeed_streams');
-        $converterNodeObj->select($this->livefeedstreamid);
-        $converterNodeObj->updateRow($values);
+        $model = $this->bootstrap->getVSQModel('livefeed_streams');
+        $model->select($this->livefeedstreamid);
+        $model->updateRow($values);
         
         // Log status change
         //$this->debugLog("[INFO] Live stream id#" . $this->livefeedstreamid . " status changed to '" . $status . "'.", false);

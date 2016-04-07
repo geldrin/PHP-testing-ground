@@ -336,7 +336,7 @@ class Attached_Documents extends \Springboard\Model {
         // ## SSH: Copy attached document from remote location
         try {
             
-            $ssh = new \Videosquare\Job\SSH($this->doc['sourceip'], 22, $this->bootstrap->config['ssh_user'], null, $this->bootstrap->config['ssh_pubkey'], $this->bootstrap->config['ssh_key'], $this->bootstrap->config['ssh_fingerprint']);
+            $ssh = new \Videosquare\Modules\SSH($this->doc['sourceip'], 22, $this->bootstrap->config['ssh_user'], null, $this->bootstrap->config['ssh_pubkey'], $this->bootstrap->config['ssh_key'], $this->bootstrap->config['ssh_fingerprint']);
             
             // Authenticate to SSH server
             // !!! TODO: block SSH when no connection, wait until not coming back!

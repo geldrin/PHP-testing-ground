@@ -24,7 +24,7 @@ $config = array(
   'templatepath' => $this->basepath . 'views/',
   'modelpath'    => $this->basepath . 'models/',
   'convpath'     => $this->basepath . 'data/temp/',
-  'jobpath'      => $this->basepath . 'libraries/Videosquare/',
+  'jobpath'      => $this->basepath . 'libraries/Videosquare/Job/',
   'storagepath'  => '/srv/vsq/videosquare.eu/', // always absolute!
   // szoljunk e azert mert a bongeszo elavult?
   'warnobsoletebrowser' => true,
@@ -314,12 +314,6 @@ $config = array(
         'enabled'             => true,
         'watchdogtimeoutsecs' => 15 * 60,
         'supresswarnings'     => false
-      ),
-      'job_live_thumbnail' => array(
-        'enabled'             => true,
-        'watchdogtimeoutsecs' => 15 * 60,
-        'supresswarnings'     => false,
-        'debug_mode'          => false,
       ),
     ),
   ),
