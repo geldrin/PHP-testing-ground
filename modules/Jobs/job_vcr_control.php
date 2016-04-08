@@ -530,7 +530,7 @@ global $jconf, $app, $myjobid, $debug;
 			rl.disabled = 0 AND
 			lfs.livefeedid = lf.id
 		ORDER BY
-			id
+			lfs.id
 		LIMIT 1";
 // LIMIT 1???? Mi lesz ha tobb stream tartozik egy felvetelhez? TODO
 
