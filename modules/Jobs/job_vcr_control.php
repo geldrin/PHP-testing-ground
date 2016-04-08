@@ -522,6 +522,7 @@ global $jconf, $app, $myjobid, $debug;
 			recording_links AS rl,
 			livefeeds AS lf
 		WHERE
+            rl.type = 'ciscotcs' AND
 			( ( lfs.status = '" . $jconf['dbstatus_vcr_start'] . "' AND rl.status = '" . $jconf['dbstatus_vcr_ready'] . "') OR
 			  ( lfs.status = '" . $jconf['dbstatus_vcr_disc'] . "' AND rl.status = '" . $jconf['dbstatus_vcr_recording'] . "') OR
 			  ( lfs.status = '" . $jconf['dbstatus_vcr_recording'] . "' AND rl.status = '" . $jconf['dbstatus_vcr_recording'] . "') ) AND
