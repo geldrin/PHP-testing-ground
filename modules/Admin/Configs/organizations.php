@@ -6,6 +6,7 @@ $introconfig = $l->getLov('tinymceadmin');
 $introconfig['content_css'] .= ',' .
   '../css/style_tinymce_indexpage' . $this->bootstrap->config['version'] . '.css'
 ;
+
 $config = Array(
 
   'action' => Array(
