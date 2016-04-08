@@ -102,7 +102,7 @@ global $app, $debug, $jconf, $myjobid;
 */
 
     // Get live recordings requires to be handled
-    public function getPendingLiveRecordings($livefeedstatus, $recordinglinkstatus) {
+    public function getPendingLiveRecordings($type, $livefeedstatus, $recordinglinkstatus) {
 
         $query = "
             SELECT
@@ -111,8 +111,11 @@ global $app, $debug, $jconf, $myjobid;
                 lfs.qualitytag,
                 lfs.status,
                 lfs.recordinglinkid,
-                rl.id AS reclink_id,
-                rl.name AS reclink_name,
+                lfs.qualitytag,
+                lfs.keycode,
+                lfs.contentkeycode,
+                rl.id AS recordinglinkid,
+                rl.name AS recordinglinkname,
                 rl.organizationid,
                 rl.calltype,
                 rl.number,
@@ -120,36 +123,62 @@ global $app, $debug, $jconf, $myjobid;
                 rl.bitrate,
                 rl.alias,
                 rl.aliassecure,
-                rl.status AS reclink_status,
-                rl.conferenceid AS conf_id,
+                rl.status AS recordinglinkstatus,
+                rl.conferenceid,
+                rl.apiserver,
+                rl.apiport,
+                rl.apiuser,
+                rl.apipassword,
+                rl.apiishttpsenabled,
+                rl.pexiplocation,
+                rl.livestreamgroupid,
                 lf.id AS feed_id,
                 lf.userid,
                 lf.channelid,
-                lf.name AS feed_name,
+                lf.name AS livefeedname,
                 lf.issecurestreamingforced,
-                lf.needrecording
+                lf.needrecording,
+                lsg.id AS livestreamgroupid,
+                lsg.name AS livestreamgroupname,
+                lsg.istranscoderencoded,
+                lsg.transcoderid,
+                lst.id AS livestreamtranscoderid,
+                lst.name AS livestreamtranscodername,
+                lst.type AS livestreamtranscodertype,
+                lst.server AS livestreamtranscoderserver,
+                lst.ingressurl AS livestreamtranscoderingressurl
             FROM
                 livefeed_streams AS lfs,
-                recording_links AS rl,
-                livefeeds AS lf
+                livefeeds AS lf,
+                recording_links AS rl
+            LEFT JOIN livestream_groups AS lsg
+                ON lsg.id = rl.livestreamgroupid
+            LEFT JOIN livestream_transcoders AS lst
+                ON lst.id = lsg.transcoderid
             WHERE
+                rl.type = '" . $type . "' AND
                 lfs.status = '" . $livefeedstatus . "' AND
                 rl.status = '" . $recordinglinkstatus . "' AND
                 lfs.recordinglinkid = rl.id AND
-                rl.disabled = 0 AND
-                lfs.livefeedid = lf.id
+                lfs.livefeedid = lf.id AND
+                rl.disabled = 0
             ORDER BY
-                id
-            LIMIT 1";
-// LIMIT 1???? Mi lesz ha tobb stream tartozik egy felvetelhez? TODO
+                lfs.id";
 
         $model = $this->bootstrap->getVSQModel('livefeed_streams');
         $rs = $model->safeExecute($query);
         
-        // Check if pending job exsits
-        if ( count($rs->getArray()) < 1 ) return false;
+        // $rs->getArray() does not work!
+        $rs_array = array();
+        while ( !$rs->EOF ) {
+            array_push($rs_array, $rs->fields);
+            $rs->moveNext();
+        }
+                
+        if ( count($rs_array) < 1 ) return false;
     
-        return $rs->fields;
+        return $rs_array;
     }
 
 }
+

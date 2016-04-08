@@ -6,6 +6,7 @@ define('PRODUCTION', false );
 define('DEBUG', false );
 
 include_once('Job.php');
+include_once('../Modules/pexip.php');
 include_once('../../../modules/Jobs/job_utils_base.php');
 
 class PexipJob extends Job {
@@ -24,11 +25,53 @@ class PexipJob extends Job {
         $vcrObj = $this->bootstrap->getVSQModel("VCR");
 
         // Get recordings to start (with 'ready' recording links)
-        $err = $vcrObj->getPendingLiveRecordings($this->bootstrap->config['config_jobs']['dbstatus_vcr_start'], $this->bootstrap->config['config_jobs']['dbstatus_vcr_ready']);
+        $recLinks = $vcrObj->getPendingLiveRecordings("pexip", $this->bootstrap->config['config_jobs']['dbstatus_vcr_start'], $this->bootstrap->config['config_jobs']['dbstatus_vcr_ready']);
     
-    //var_dump($err);
+var_dump($recLinks);
+exit;
     
-        echo "kaka\n";
+        if ( $recLinks !== false ) {
+            
+            foreach ( $recLinks as $recLink ) {
+
+                $pexip = new Pexip($recLink['apiserver'], $recLink['apiport'], $recLink['apiuser'], $recLink['apipassword'], $recLink['apiishttpsenabled'], $recLink['pexiplocation']);
+
+                $pexip->addStreamingParticipant($recLink['alias'], $recLink['livestreamtranscoderingressurl'] . '/' . 'pexipp', $recLink['livestreamtranscoderingressurl'] . '/' . 'pexipc');
+                
+                sleep(10);
+                
+                $err = $pexip->getStreamingParticipantStatus();
+                if ( !$err ) echo "Participant does not exist...\n";
+                
+                sleep(60);
+
+                echo "DISCONNECT...\n";
+
+                $err = $pexip->disconnectStreamingParticipant();
+                if ( !$err ) echo "Participant does not exists...\n";
+
+                
+/*    ["istranscoderencoded"]=>
+    string(1) "1"
+    ["transcoderid"]=>
+    string(1) "1"
+    ["livestreamtranscoderid"]=>
+    string(1) "1"
+    ["livestreamtranscodername"]=>
+    string(16) "NGINX transcoder"
+    ["livestreamtranscodertype"]=>
+    string(5) "nginx"
+    ["livestreamtranscoderserver"]=>
+    string(25) "transcoder.videosquare.eu"
+    ["livestreamtranscoderingressurl"]=>
+    string(53) "rtmp://transcoder.videosquare.eu:1935/devvsqlivetrans"
+*/
+            
+            }
+            
+        }
+
+    
         exit;
         
     }
