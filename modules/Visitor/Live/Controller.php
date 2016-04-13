@@ -503,25 +503,15 @@ class Controller extends \Visitor\Controller {
 
   public function togglestreamAction() {
 
-    $streamModel   = $this->modelIDCheck(
-      'livefeed_streams',
-      $this->application->getNumericParameter('id')
-    );
-
     $feedModel    = $this->modelIDCheck(
       'livefeeds',
-      $streamModel->row['livefeedid']
-    );
-
-    $channelModel = $this->modelOrganizationAndUserIDCheck(
-      'channels',
-      $feedModel->row['channelid']
+      $this->application->getNumericParameter('id')
     );
 
     if ( $this->application->getNumericParameter('start') == '1' ) {
 
-      if ( $streamModel->row['status'] != 'ready' ) {
-        \Springboard\Debug::getInstance()->log( false, false, 'Stream nem tudott indulni: ' . var_export( $stream, true ), true );
+      if ( $feedModel->row['status'] != 'ready' ) {
+        \Springboard\Debug::getInstance()->log( false, false, 'Feed nem tudott indulni: ' . var_export( $feedModel->row, true ), true );
         $this->redirectToController('contents', 'livestream_invalidtransition_start');
       }
 
@@ -529,8 +519,8 @@ class Controller extends \Visitor\Controller {
 
     } elseif ( $this->application->getNumericParameter('start') == '0' ) {
 
-      if ( $streamModel->row['status'] != 'recording' ) {
-        \Springboard\Debug::getInstance()->log( false, false, 'Stream nem tudott leallni: ' . var_export( $stream, true ), true );
+      if ( $feedModel->row['status'] != 'recording' ) {
+        \Springboard\Debug::getInstance()->log( false, false, 'Feed nem tudott leallni: ' . var_export( $feedModel->row, true ), true );
         $this->redirectToController('contents', 'livestream_invalidtransition_stop');
       }
 
@@ -539,11 +529,8 @@ class Controller extends \Visitor\Controller {
     } else
       throw new \Exception('Invalid start argument');
 
-    $streamModel->updateRow( array(
-        'status' => $status,
-      )
-    );
     $feedModel->updateRow( array(
+        'status'            => $status,
         'smilstatus'        => 'regenerate',
         'contentsmilstatus' => 'regenerate',
       )
@@ -552,7 +539,7 @@ class Controller extends \Visitor\Controller {
     $this->redirect(
       $this->application->getParameter(
         'forward',
-        'live/managefeeds/' . $channelModel->id
+        'live/managefeeds/' . $feedModel->row['channelid']
       )
     );
 
