@@ -320,7 +320,9 @@ class Controller extends \Visitor\Controller {
     $this->toSmarty['recording']     = $recordingsModel->addPresenters( true, $this->organization['id'] );
     $this->toSmarty['attachments']   = $recordingsModel->getAttachments();
     $this->toSmarty['recordingdownloads'] = $recordingsModel->getDownloadInfo(
-      $this->bootstrap->staticuri
+      $this->bootstrap->staticuri,
+      $user,
+      $this->organization
     );
     $this->toSmarty['relatedvideos'] = $recordingsModel->getRelatedVideos(
       $this->application->config['relatedrecordingcount'],

@@ -99,7 +99,7 @@ if (
     
   }
   
-  if ( is_readable( PATH_PREFIX . $file ) and checkAccess( $results[2], $config ) ) {
+  if ( is_readable( PATH_PREFIX . $file ) and checkAccess( $results[2], $config, true ) ) {
     
     $_GET['filename'] =
       filenameize( mb_substr( $results[5], 0, 45 ) ) .
@@ -185,7 +185,7 @@ function filenameize( $filename ) {
 
 }
 
-function checkAccess( $recordingid, &$config ) {
+function checkAccess( $recordingid, &$config, $isDownload = false ) {
   
   switch( $config['cache']['type'] ) {
     
@@ -224,7 +224,7 @@ function checkAccess( $recordingid, &$config ) {
   
   session_start();
   
-  if ( DEBUG or !isset( $_SESSION[ $sessionkey ]['recordingaccess'][ $recordingid ] ) ) {
+  if ( DEBUG or $isDownload or !isset( $_SESSION[ $sessionkey ]['recordingaccess'][ $recordingid ] ) ) {
     
     $application->bootstrap->sessionstarted = true;
     $application->bootstrap->config['cookiedomain'] = $cookiedomain;
@@ -257,6 +257,30 @@ function checkAccess( $recordingid, &$config ) {
   //   eleri a bongeszot, mivel parhuzamos szalaknak szukseguk
   //   lehet ra
   session_write_close();
+
+  // ha ez egy file letoltes es engednenk, extra checkkek
+  if ( $isDownload and $result ) {
+
+    // van hozzaferese, default engedjuk
+    if (
+         $organization['caneditordownloadrecordings'] and
+         $user and
+         ( $user['iseditor'] or $user['isadmin'] or $user['isclientadmin'] )
+       )
+      return true;
+
+    // amugy ha le van tiltva a letoltes akkor abszolut nem engedjuk
+    if (
+         !$recordingsModel->row['isdownloadable'] and
+         !$recordingsModel->row['isaudiodownloadable']
+       )
+      return false;
+
+    // mivel nem tudjuk hogy ez egy audio vagy non-audio letoltes de valamelyik
+    // engedve van, ugyhogy engedjuk, ezt lehetne szigoritani de amig filepath
+    // parameter alapon dolgozunk nem biztos hogy megeri mert hamisithato
+  }
+
   return $result;
   
 }

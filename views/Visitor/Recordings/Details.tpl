@@ -148,6 +148,20 @@
     <a id="recordingmodify" class="submitbutton" target="_blank" href="{$language}/recordings/modifybasics/{$recording.id}?forward={$FULL_URI|escape:url}">{#recordings__editrecording#}</a>
   {/if}
 
+  {if !empty( $recordingdownloads )}
+  <div id="recordingdownloads"{if $recording|@userHasAccess} class="closer"{/if}>
+    <a href="#" class="submitbutton">{#recordings__recordingdownloads#}</a>
+    <div class="clear"></div>
+    <ul>
+      {foreach from=$recordingdownloads key=key item=item}
+        {assign var=localekey value="recordingdownloads_$key"}
+        {assign var=itemlocale value=$l->get('recordings', $localekey, $language)}
+        <li><a href="{$item.url}">{$itemlocale|sprintf:$item.qualitytag}</a></li>
+      {/foreach}
+    </ul>
+  </div>
+  {/if}
+
   {if !empty( $recording.presenters )}
   <div id="presenters">
     <h3>{#recordings__presenters#}</h3>
@@ -219,19 +233,6 @@
     <a class="addthis_counter addthis_bubble_style"></a>
   </div>
   <script type="text/javascript" src="//s7.addthis.com/js/250/addthis_widget.js#pubid=xa-5045da4260dfe0a6"></script>
-</div>
-{/if}
-
-{if !empty( $recordingdownloads )}
-<div id="recordingdownloads"{if $recording|@userHasAccess} class="closer"{/if}>
-  <a href="#" class="submitbutton">{#recordings__recordingdownloads#}</a>
-  <ul>
-    {foreach from=$recordingdownloads key=key item=item}
-      {assign var=localekey value="recordingdownloads_$key"}
-      {assign var=itemlocale value=$l->get('recordings', $localekey, $language)}
-      <li><a href="{$item.url}">{$itemlocale|sprintf:$item.qualitytag}</a></li>
-    {/foreach}
-  </ul>
 </div>
 {/if}
 

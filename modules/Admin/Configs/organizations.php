@@ -261,6 +261,13 @@ $config = Array(
     'value'       => 0,
   ),
 
+  'caneditordownloadrecordings' => array(
+    'displayname' => 'Szerkesztő letöltheti a felvételek eredeti verzióját?',
+    'type'        => 'inputRadio',
+    'values'      => $l->getLov('yesno'),
+    'value'       => 0,
+  ),
+
   'displaynametype' => array(
     'displayname' => 'Felhasználó nevének kíírása',
     'type'        => 'select',

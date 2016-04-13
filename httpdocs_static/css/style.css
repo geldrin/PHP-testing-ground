@@ -2491,7 +2491,6 @@ li#languageselectorlink span {
 #info,
 #channels,
 #share,
-#recordingdownloads,
 #comments {
   display: none;
   background-color: #f6f6f6;
@@ -2504,7 +2503,6 @@ li#languageselectorlink span {
 #info.active,
 #channels.active,
 #share.active,
-#recordingdownloads.active,
 #comments.active {
   display: block;
 }
@@ -3747,9 +3745,11 @@ li#languageselectorlink span {
 }
 
 #recordingdownloads {
+  clear: both;
   float: right;
-  margin: 20px 20px 0 0;
-  width: 320px;
+}
+#recordingdownloads .submitbutton {
+  float: right;
 }
 #recordingdownloads.closer {
   margin-top: 10px;

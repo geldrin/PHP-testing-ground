@@ -4090,9 +4090,21 @@ class Recordings extends \Springboard\Model {
 
   }
 
-  public function getDownloadInfo( $staticuri ) {
+  public function getDownloadInfo( $staticuri, $user, $organization ) {
     $this->ensureObjectLoaded();
-    if ( !$this->row['isdownloadable'] and !$this->row['isaudiodownloadable'] )
+    $canDownload = false;
+
+    if (
+         $organization['caneditordownloadrecordings'] and
+         $user and
+         ( $user['iseditor'] or $user['isadmin'] or $user['isclientadmin'] )
+       )
+      $canDownload = true;
+
+    if (
+         !$this->row['isdownloadable'] and !$this->row['isaudiodownloadable'] and
+         !$canDownload
+       )
       return array();
 
     $ret      = array();
@@ -4103,9 +4115,7 @@ class Recordings extends \Springboard\Model {
         rv.filename,
         rv.qualitytag,
         rv.iscontent,
-        ep.type,
-        ep.shortname,
-        ep.pipenabled
+        ep.type
       FROM
         recordings_versions AS rv,
         encoding_profiles AS ep
@@ -4116,7 +4126,27 @@ class Recordings extends \Springboard\Model {
       ORDER BY rv.bandwidth DESC
     ");
 
-    if ( $this->row['isaudiodownloadable'] ) {
+    // ha letolthet a user akkor a tomb elejere rakjuk a master fileokat
+    if ( $canDownload ) {
+      array_unshift( $versions, array(
+          'filename'   => $this->row['mastervideofilename'],
+          'qualitytag' => 'original',
+          'iscontent'  => '0',
+          'type'       => 'recording',
+        )
+      );
+
+      if ( $this->row['contentmastervideofilename'] )
+        array_unshift( $versions, array(
+            'filename'   => $this->row['mastervideofilename'],
+            'qualitytag' => 'original',
+            'iscontent'  => '1',
+            'type'       => 'recording',
+          )
+        );
+    }
+
+    if ( $canDownload or $this->row['isaudiodownloadable'] ) {
 
       foreach( $versions as $version ) {
         if ( $version['qualitytag'] != 'audio' )
@@ -4135,7 +4165,7 @@ class Recordings extends \Springboard\Model {
 
     }
 
-    if ( $this->row['isdownloadable'] ) {
+    if ( $canDownload or $this->row['isdownloadable'] ) {
 
       foreach( $versions as $version ) {
 
