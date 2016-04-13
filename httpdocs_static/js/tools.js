@@ -2130,6 +2130,11 @@ function setupLiveFeed() {
     elem.toggle( modtype != 'nochat' );
   }).change();
 
+  $j('input[name=feedtype]').change(function() {
+    var feedtype = $j('input[name=feedtype]:checked').val();
+    $j('#livestreamgroupid').parents('tr').toggle( feedtype !== 'vcr' );
+  });
+
 }
 
 function setupUserInvitation() {
