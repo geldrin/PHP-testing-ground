@@ -4128,8 +4128,10 @@ class Recordings extends \Springboard\Model {
 
     // ha letolthet a user akkor a tomb elejere rakjuk a master fileokat
     if ( $canDownload ) {
+      // 111_video.mp4
+      // 111_audio.mp3
       array_unshift( $versions, array(
-          'filename'   => $this->row['mastervideofilename'],
+          'filename'   => 'master/' . $this->row['mastervideofilename'],
           'qualitytag' => 'original',
           'iscontent'  => '0',
           'type'       => 'recording',
@@ -4137,8 +4139,9 @@ class Recordings extends \Springboard\Model {
       );
 
       if ( $this->row['contentmastervideofilename'] )
+        // 111_content.mp4
         array_unshift( $versions, array(
-            'filename'   => $this->row['mastervideofilename'],
+            'filename'   => 'master/' . $this->row['contentmastervideofilename'],
             'qualitytag' => 'original',
             'iscontent'  => '1',
             'type'       => 'recording',

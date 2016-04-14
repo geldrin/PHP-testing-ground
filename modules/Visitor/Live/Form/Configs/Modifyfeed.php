@@ -2,7 +2,7 @@
 include('Createfeed.php');
 unset( $config['livestreamgroupid'] );
 
-$config['action']['value']             = 'submitmodifyfeed';
+$config['action']['value']           = 'submitmodifyfeed';
 
 $config['departments[]']['valuesql'] = "
   SELECT departmentid
@@ -11,7 +11,7 @@ $config['departments[]']['valuesql'] = "
     livefeedid = " . $this->application->getNumericParameter('id') . " AND
     departmentid IS NOT NULL
 ";
-$config['groups[]']['valuesql']        = "
+$config['groups[]']['valuesql']      = "
   SELECT groupid
   FROM access
   WHERE

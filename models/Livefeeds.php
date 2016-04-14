@@ -529,53 +529,34 @@ class Livefeeds extends \Springboard\Model {
 
   public function getVCRReclinkID() {
 
-    $this->ensureID();
-    return $this->db->getOne("
-      SELECT recordinglinkid
-      FROM livefeed_streams
-      WHERE
-        livefeedid = '" . $this->id . "' AND
-        (status IS NULL OR status <> 'markedfordeletion')
-      LIMIT 1
-    ");
+    $this->ensureObjectLoaded();
+    if ( $this->row['status'] === 'markedfordeletion' )
+      return null;
 
+    return $this->row['recordinglinkid'];
   }
 
   public function createVCRStream( $recordinglinkid ) {
 
     $this->ensureID();
-    $streamModel = $this->bootstrap->getModel('livefeed_streams');
-    $streamModel->insert( array(
-        'livefeedid'          => $this->id,
-        'recordinglinkid'     => $recordinglinkid,
-        'qualitytag'          => 'VCR stream',
-        'status'              => 'ready',
-        'isdesktopcompatible' => 1,
-        'isioscompatible'     => 1,
-        'isandroidcompatible' => 1,
-        'timestamp'           => date('Y-m-d H:i:s'),
-      )
-    );
-
-    return $streamModel->id;
-
-  }
-
-  public function modifyVCRStream( $recordinglinkid ) {
-
-    $this->ensureID();
-    $recordinglinkid = $this->db->qstr( $recordinglinkid );
-    $this->db->execute("
-      UPDATE livefeed_streams
-      SET recordinglinkid = $recordinglinkid
-      WHERE
-        livefeedid = '" . $this->id . "' AND
-        status IS NULL
+    $link = $this->db->getRow("
+      SELECT *
+      FROM recording_links
+      WHERE id = '$recordinglinkid'
       LIMIT 1
     ");
 
-    return $this->db->Affected_Rows();
+    if ( !$link )
+      throw new \Exception("recording_links row with id $recordinglinkid not found for feed #" . $this->id );
 
+    if ( !$link['livestreamgroupid'] )
+      throw new \Exception("recording_links row with id $recordinglinkid does not contain a valid livestreamgroupid for feed #" . $this->id );
+
+    $this->handleStreamTemplate( $link['livestreamgroupid'] );
+  }
+
+  public function modifyVCRStream( $recordinglinkid ) {
+    throw new \Exception("this functionality is now invalid");
   }
 
   protected function getAuthorizeSessionid( &$info ) {
@@ -860,7 +841,7 @@ class Livefeeds extends \Springboard\Model {
 
   }
 
-  public function canDeleteFeed( $feed = null, $streams = null ) {
+  public function canDeleteFeed( $feed = null ) {
 
     if ( !$feed ) {
 
@@ -872,15 +853,7 @@ class Livefeeds extends \Springboard\Model {
     if ( $feed['feedtype'] != 'vcr' )
       return true;
 
-    if ( !$streams )
-      $streams = $this->getStreams( $feed['id'] );
-
-    if ( count( $streams ) != 1 )
-      throw new \Exception("VCR Helyszinhez tobb mint egy stream tartozik! " . var_export( $streams, true ) );
-
-    $stream  = reset( $streams );
-
-    if ( $stream['status'] and $stream['status'] != 'ready' )
+    if ( $feed['status'] and $feed['status'] != 'ready' )
       return false;
     else
       return true;

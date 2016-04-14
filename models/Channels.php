@@ -859,7 +859,7 @@ class Channels extends \Springboard\Model {
     foreach ( $feeds as $key => $feed ) {
       
       $feeds[ $key ]['streams']   = $feedModel->getStreams( $feed['id'] );
-      $feeds[ $key ]['candelete'] = $feedModel->canDeleteFeed( $feed, $feeds[ $key ]['streams'] );
+      $feeds[ $key ]['candelete'] = $feedModel->canDeleteFeed( $feed );
       
     }
     
