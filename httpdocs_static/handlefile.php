@@ -85,11 +85,20 @@ if (
   // recordings/106/106/master/106_video,eurosport.mpg
   // recordings/106/106/master/106_content,eurosportcontent.avi
   // recordings/106/106/106_286_audio,eurosport.mp3
-  $file =
-    'recordings/' . $results[1] . '/' . $results[2] . '/' . $results[3] .
-    $results[4] . '.' . $results[6]
-  ;
-  
+  if ( $results[3] == 'master/' ) {
+    $isMaster = true;
+    $file =
+      'recordings/' . $results[1] . '/' . $results[2] . '/' . $results[3] .
+      $results[2] . '_' . $results[4] . '.' . $results[6]
+    ;
+  } else {
+    $isMaster = false;
+    $file =
+      'recordings/' . $results[1] . '/' . $results[2] . '/' . $results[3] .
+      $results[4] . '.' . $results[6]
+    ;
+  }
+
   if ( DEBUG ) {
     
     echo
@@ -99,7 +108,7 @@ if (
     
   }
   
-  if ( is_readable( PATH_PREFIX . $file ) and checkAccess( $results[2], $config, true, $results[3] == 'master/' ) ) {
+  if ( is_readable( PATH_PREFIX . $file ) and checkAccess( $results[2], $config, true, $isMaster ) ) {
     
     $_GET['filename'] =
       filenameize( mb_substr( $results[5], 0, 45 ) ) .
