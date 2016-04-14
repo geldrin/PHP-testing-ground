@@ -99,7 +99,7 @@ if (
     
   }
   
-  if ( is_readable( PATH_PREFIX . $file ) and checkAccess( $results[2], $config, true ) ) {
+  if ( is_readable( PATH_PREFIX . $file ) and checkAccess( $results[2], $config, true, $results[3] == 'master/' ) ) {
     
     $_GET['filename'] =
       filenameize( mb_substr( $results[5], 0, 45 ) ) .
@@ -185,7 +185,7 @@ function filenameize( $filename ) {
 
 }
 
-function checkAccess( $recordingid, &$config, $isDownload = false ) {
+function checkAccess( $recordingid, &$config, $isDownload = false, $isMaster = false ) {
   
   switch( $config['cache']['type'] ) {
     
@@ -268,6 +268,10 @@ function checkAccess( $recordingid, &$config, $isDownload = false ) {
          ( $user['iseditor'] or $user['isadmin'] or $user['isclientadmin'] )
        )
       return true;
+
+    // ha eddig nem engedtuk, es a master filet akarja letolteni akkor most se
+    if ( $isMaster )
+      return false;
 
     // amugy ha le van tiltva a letoltes akkor abszolut nem engedjuk
     if (
