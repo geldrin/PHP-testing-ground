@@ -50,7 +50,7 @@
           <td class="streamactions{if $feed.feedtype == 'vcr'} needpoll" id="stream{$stream.id}" data-streamid="{$stream.id}" data-streamstatus="{$stream.status|escape:html}{/if}">
             <span class="nobr">
               {if $feed.feedtype == 'vcr'}
-                {include file=Visitor/Live/Managefeeds_streamaction.tpl stream=$stream}
+                {include file=Visitor/Live/Managefeeds_streamaction.tpl feed=$feed}
               {else}
                 {if $member.isadmin or $member.isclientadmin}
                 <a href="#" class="streamserverlink">{#live__streamserverlink#}</a> |

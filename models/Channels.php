@@ -841,7 +841,11 @@ class Channels extends \Springboard\Model {
         moderationtype,
         issecurestreamingforced,
         indexphotofilename,
-        currentviewers
+        currentviewers,
+        status,
+        recordinglinkid,
+        vcrconferenceid,
+        vcrparticipantid
       FROM livefeeds
       WHERE
         channelid IN('" . $this->id . "') AND
