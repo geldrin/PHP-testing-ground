@@ -4149,8 +4149,7 @@ class Recordings extends \Springboard\Model {
         )
       );
 
-
-      if ( $this->row['contentmastervideofilename'] )
+      if ( $this->row['contentmastervideofilename'] ) {
         // 111_content.mp4
         $urlData['<ext>'] = $this->row['contentmastervideoextension'];
         $urlData['<filename>'] = $this->row['contentmastervideofilename'];
@@ -4163,6 +4162,7 @@ class Recordings extends \Springboard\Model {
             'type'       => 'recording',
           )
         );
+      }
     }
 
     if ( $canDownload or $this->row['isaudiodownloadable'] ) {
