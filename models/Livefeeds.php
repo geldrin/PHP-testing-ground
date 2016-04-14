@@ -147,7 +147,7 @@ class Livefeeds extends \Springboard\Model {
         weight
       FROM livefeed_streams
       WHERE
-        livefeedid = '" . $feedid . "' AND
+        livefeedid = '$feedid' AND
         (status IS NULL OR status <> 'markedfordeletion')
       ORDER BY weight, id
     ");
@@ -552,7 +552,7 @@ class Livefeeds extends \Springboard\Model {
     if ( !$link['livestreamgroupid'] )
       throw new \Exception("recording_links row with id $recordinglinkid does not contain a valid livestreamgroupid for feed #" . $this->id );
 
-    $this->handleStreamTemplate( $link['livestreamgroupid'] );
+    $this->handleStreamTemplate( $link['livestreamgroupid'], $recordinglinkid );
   }
 
   public function modifyVCRStream( $recordinglinkid ) {
@@ -1312,7 +1312,7 @@ class Livefeeds extends \Springboard\Model {
       return $this->bootstrap->config['wowza']['liveingressurl'];
   }
 
-  public function handleStreamTemplate( $groupid ) {
+  public function handleStreamTemplate( $groupid, $linkid = null ) {
     $this->ensureObjectLoaded();
     $streamModel = $this->bootstrap->getModel('livefeed_streams');
 
@@ -1342,6 +1342,9 @@ class Livefeeds extends \Springboard\Model {
         'weight'              => $profile['weight'],
         'timestamp'           => date('Y-m-d H:i:s'),
       );
+
+      if ( $linkid )
+        $row['recordinglinkid'] = $linkid;
 
       if ( $profile['type'] == 'groupdynamic' ) {
         if ( !$streamid )
