@@ -4130,7 +4130,7 @@ class Recordings extends \Springboard\Model {
     if ( $canDownload ) {
       // 111_video.mp4
       // 111_audio.mp3
-      $urlTemplate = "master/<id>_<type>.<ext>,<filename>";
+      $urlTemplate = "master/<id>_<type>,<filename>";
       $urlData = array(
         '<id>'       => $this->id,
         '<type>'     => 'video',
