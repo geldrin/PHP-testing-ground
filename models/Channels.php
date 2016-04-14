@@ -866,9 +866,9 @@ class Channels extends \Springboard\Model {
       $feeds[ $key ]['candelete'] = $feedModel->canDeleteFeed( $feed );
       
     }
-    
+
     return $feeds;
-    
+
   }
 
   public function getTreeArray( $order = null, $parentid = 0 ) {

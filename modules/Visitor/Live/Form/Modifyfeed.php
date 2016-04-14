@@ -48,6 +48,7 @@ class Modifyfeed extends \Visitor\HelpForm {
       // minden streamet torlunk, valtozott a feedtype
       $this->feedModel->deleteStreams();
       if ( $values['feedtype'] == 'vcr' ) {
+        $values['status'] = 'ready';
         $this->feedModel->createVCRStream( $values['recordinglinkid'] );
       } else
         $createstream = true; // es ha elo streamre valtotta at akkor elkuldjuk streamet csinalni

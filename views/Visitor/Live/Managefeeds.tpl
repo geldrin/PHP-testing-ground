@@ -42,9 +42,7 @@
       {foreach from=$feed.streams item=stream}
         <tr>
           <td class="streamname">
-            {if $feed.feedtype != 'vcr'}
-              <a href="{$language}/live/view/{$feed.id},{$stream.id},{$feed.name|filenameize}"><b>{$stream.qualitytag|escape:html}</b></a>
-            {/if}
+            <a href="{$language}/live/view/{$feed.id},{$stream.id},{$feed.name|filenameize}"><b>{$stream.qualitytag|escape:html}</b></a>
           </td>
           <td class="streamquality">{$stream.weight}</td>
           <td class="streamcompatibility nobr">

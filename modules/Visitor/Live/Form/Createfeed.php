@@ -76,6 +76,8 @@ class Createfeed extends \Visitor\HelpForm {
       if ( isset( $values[ $field ] ) )
         $row[ $field ] = $values[ $field ];
     }
+    if ( $values['feedtype'] == 'vcr' )
+      $values['status'] = 'ready';
 
     $feedModel->insert( $row );
     $this->handleAccesstypeForModel( $feedModel, $values, false );
