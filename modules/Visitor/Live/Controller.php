@@ -23,7 +23,7 @@ class Controller extends \Visitor\Controller {
     'chatexport'           => 'liveadmin|clientadmin',
     'viewers'              => 'liveadmin|clientadmin',
     'togglestream'         => 'liveadmin|clientadmin',
-    'getstreamstatus'      => 'liveadmin|clientadmin',
+    'getfeedstatus'        => 'liveadmin|clientadmin',
     'checkstreamaccess'    => 'public',
     'securecheckstreamaccess' => 'public',
     'search'               => 'member',
