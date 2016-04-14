@@ -22,7 +22,7 @@ class Controller extends \Visitor\Controller {
     'chatadmin'            => 'liveadmin|clientadmin',
     'chatexport'           => 'liveadmin|clientadmin',
     'viewers'              => 'liveadmin|clientadmin',
-    'togglestream'         => 'liveadmin|clientadmin',
+    'togglefeed'         => 'liveadmin|clientadmin',
     'getfeedstatus'        => 'liveadmin|clientadmin',
     'checkstreamaccess'    => 'public',
     'securecheckstreamaccess' => 'public',
@@ -501,7 +501,7 @@ class Controller extends \Visitor\Controller {
 
   }
 
-  public function togglestreamAction() {
+  public function togglefeedAction() {
 
     $feedModel    = $this->modelIDCheck(
       'livefeeds',
@@ -761,7 +761,7 @@ class Controller extends \Visitor\Controller {
 
       $this->toSmarty['feed'] = $data[ $key ] = $value;
       $data[ $key ]['html']   =
-        $this->fetchSmarty('Visitor/Live/Managefeeds_streamaction.tpl')
+        $this->fetchSmarty('Visitor/Live/Managefeeds_feedaction.tpl')
       ;
 
     }
