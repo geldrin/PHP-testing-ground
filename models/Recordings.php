@@ -4130,12 +4130,11 @@ class Recordings extends \Springboard\Model {
     if ( $canDownload ) {
       // 111_video.mp4
       // 111_audio.mp3
-      $urlTemplate = "master/<id>_<type>,<filename>";
+      $urlTemplate = "master/<id>_<type>";
       $urlData = array(
         '<id>'       => $this->id,
         '<type>'     => 'video',
         '<ext>'      => $this->row['mastervideoextension'],
-        '<filename>' => $this->row['mastervideofilename'],
       );
 
       if ( $this->row['mastermediatype'] == 'audio' )
@@ -4152,7 +4151,6 @@ class Recordings extends \Springboard\Model {
       if ( $this->row['contentmastervideofilename'] ) {
         // 111_content.mp4
         $urlData['<ext>'] = $this->row['contentmastervideoextension'];
-        $urlData['<filename>'] = $this->row['contentmastervideofilename'];
         $urlData['<type>'] = 'content';
 
         array_unshift( $versions, array(
