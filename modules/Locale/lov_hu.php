@@ -160,7 +160,7 @@ return array(
     1 => 'Titkosított streaming',
   ),
   
-  'streamstatus' => array(
+  'feedstatus' => array(
     'start'         => 'Felvétel indítása folyamatban...',
     'starting'      => 'Felvétel indítása folyamatban...',
     'recording'     => 'Felvétel folyamatban...',

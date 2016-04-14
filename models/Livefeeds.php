@@ -1381,4 +1381,27 @@ class Livefeeds extends \Springboard\Model {
     $streamModel->flushBatchCollect();
   }
 
+
+  public function getStatusForIDs( $ids ) {
+
+    if ( !$ids or !is_array( $ids ) or empty( $ids ) or count( $ids ) > 200 )
+      return array();
+
+    foreach ( $ids as $key => $value ) {
+
+      $value = intval( $value );
+      if ( !$value )
+        return array();
+
+      $ids[ $key ] = $this->db->qstr( $value );
+
+    }
+
+    return $this->db->getArray("
+      SELECT id, status
+      FROM livefeeds
+      WHERE id IN(" . implode(", ", $ids ) . ")
+    ");
+  }
+
 }

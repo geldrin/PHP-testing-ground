@@ -51,29 +51,6 @@ class Livefeed_streams extends \Springboard\Model {
 
   }
 
-  public function getStatusForIDs( $ids ) {
-
-    if ( !$ids or !is_array( $ids ) or empty( $ids ) or count( $ids ) > 200 )
-      return array();
-
-    foreach ( $ids as $key => $value ) {
-
-      $value = intval( $value );
-      if ( !$value )
-        return array();
-
-      $ids[ $key ] = $this->db->qstr( $value );
-
-    }
-
-    return $this->db->getArray("
-      SELECT id, status
-      FROM livefeed_streams
-      WHERE id IN(" . implode(", ", $ids ) . ")
-    ");
-
-  }
-
   public function updateFeedThumbnail() {
     $this->ensureObjectLoaded();
     // befrissítjuk a livefeedet, nem problema ha NULL-ozzuk

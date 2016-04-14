@@ -123,7 +123,7 @@ return array(
     1 => 'Encrypted',
   ),
   
-  'streamstatus' => array(
+  'feedstatus' => array(
     'start'         => 'Recording initiation...',
     'starting'      => 'Recording initiation...',
     'recording'     => 'Recording in progress...',

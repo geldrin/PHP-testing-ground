@@ -63,7 +63,7 @@ $j(document).ready(function() {
   runIfExists('.streambroadcastlink', setupBroadcastLink );
   runIfExists('.streamserverlink', setupServerLink );
   runIfExists('#feeds', setupManagefeeds );
-  runIfExists('#feeds .needpoll', setupStreamPoll );
+  runIfExists('#feeds .needpoll', setupFeedPoll );
   runIfExists('#currentusermenu', setupCurrentUser );
   runIfExists('#headerloginform, #currentusername', setupHeaderLogin );
   runIfExists('#search_advanced', setupSearch );
@@ -402,13 +402,13 @@ function setupHeaderLogin( elem ) {
   });
 }
 
-function setupStreamPoll( elems ) {
+function setupFeedPoll( elems ) {
 
   var polldata = {id: []};
-  var pollurl  = language + '/live/getstreamstatus';
+  var pollurl  = language + '/live/getfeedstatus';
   elems.each(function() {
 
-    var id = $j(this).attr('data-streamid');
+    var id = $j(this).attr('data-feedid');
     if ( id )
       polldata.id.push( id );
 
@@ -421,14 +421,14 @@ function setupStreamPoll( elems ) {
 
     for (var i = data.data.length - 1; i >= 0; i--) {
 
-      var stream = data.data[i];
-      var elem   = $j('#stream' + stream.id );
+      var feed = data.data[i];
+      var elem   = $j('#feed' + feed.id );
 
-      if ( elem.attr('data-streamstatus') == stream.status )
+      if ( elem.attr('data-feedstatus') == feed.status )
         continue;
 
-      elem.attr('data-streamstatus', stream.status );
-      elem.html( stream.html );
+      elem.attr('data-feedstatus', feed.status );
+      elem.html( feed.html );
 
     };
 

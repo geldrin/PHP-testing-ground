@@ -749,18 +749,18 @@ class Controller extends \Visitor\Controller {
     return $this->checkstreamaccessAction( true );
   }
 
-  public function getstreamstatusAction() {
+  public function getfeedstatusAction() {
 
-    $streamModel = $this->bootstrap->getModel('livefeed_streams');
-    $statuses    = $streamModel->getStatusForIDs(
+    $feedModel = $this->bootstrap->getModel('livefeeds');
+    $statuses  = $feedModel->getStatusForIDs(
       $this->application->getParameter('id')
     );
 
     $data = array();
     foreach( $statuses as $key => $value ) {
 
-      $this->toSmarty['stream'] = $data[ $key ] = $value;
-      $data[ $key ]['html']     =
+      $this->toSmarty['feed'] = $data[ $key ] = $value;
+      $data[ $key ]['html']   =
         $this->fetchSmarty('Visitor/Live/Managefeeds_streamaction.tpl')
       ;
 

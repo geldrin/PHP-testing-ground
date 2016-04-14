@@ -31,6 +31,11 @@
       {/if}
       | <a href="{$language}/live/chatadmin/{$feed.id}">{#live__chatadmin#}</a>
       | <a href="{$language}/live/chatexport/{$feed.id}">{#live__chatexport#}</a>
+      {if $feed.feedtype == 'vcr'}
+      <div id="feed{$feed.id}" data-feedid="{$feed.id}" data-feedstatus="{$feed.status|escape:html}{/if}" class="nobr needpoll">
+        {include file=Visitor/Live/Managefeeds_feedaction.tpl}
+      </div>
+      {/if}
    </td>
     <td class="streamcolumn">
       <table class="stream">
@@ -47,11 +52,9 @@
             {if $stream.isioscompatible}<img src="{$STATIC_URI}images/icons/ios.png" title="iOS" alt="iOS"/>{/if}
             {if $stream.isandroidcompatible}<img src="{$STATIC_URI}images/icons/android.png" title="Android" alt="Android"/>{/if}
           </td>
-          <td class="streamactions{if $feed.feedtype == 'vcr'} needpoll" id="stream{$stream.id}" data-streamid="{$stream.id}" data-streamstatus="{$stream.status|escape:html}{/if}">
+          <td class="streamactions" >
             <span class="nobr">
-              {if $feed.feedtype == 'vcr'}
-                {include file=Visitor/Live/Managefeeds_streamaction.tpl feed=$feed}
-              {else}
+              {if $feed.feedtype != 'vcr'}
                 {if $member.isadmin or $member.isclientadmin}
                 <a href="#" class="streamserverlink">{#live__streamserverlink#}</a> |
                 {/if}
