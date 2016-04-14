@@ -494,7 +494,7 @@ global $app, $debug, $jconf, $myjobid;
 	return true;
 }
 
-// VCR: update recording link - update_db_stream_status
+// VCR: update live stream status
 function updateLiveStreamStatus($id, $status) {
 global $app, $debug, $jconf, $myjobid;
 
@@ -514,16 +514,35 @@ global $app, $debug, $jconf, $myjobid;
 	return true;
 }
 
-// update_db_stream_params
-function updateVCRLiveStreamParams($id, $streamid = null, $conferenceid = null) {
+// VCR: update live stream status
+function updateLiveFeedStatus($id, $status) {
 global $app, $debug, $jconf, $myjobid;
 
+	if ( empty($status) ) return false;
+
+    $values = array(
+		'status' => $status
+	);
+
+    $converterNodeObj = $app->bootstrap->getModel('livefeeds');
+    $converterNodeObj->select($id);
+    $converterNodeObj->updateRow($values);
+    
+	// Log status change
+	$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Livefeed id#" . $id . " status changed to '" . $status . "'.", $sendmail = false);
+    
+	return true;
+}
+
+// update_db_stream_params
+function updateVCRLiveStreamParams($id, $streamid = null) {
+global $app, $debug, $jconf, $myjobid;
+
+	if ( empty($streamid) ) return false;
+
     $values = array();
-
-	if ( !empty($streamid) ) $values['keycode'] = $streamid;
-	if ( !empty($conferenceid) ) $values['vcrconferenceid'] = $conferenceid;
-
-    if ( empty($values) ) return false;
+    
+    $values['keycode'] = $streamid;
 
     $converterNodeObj = $app->bootstrap->getModel('livefeed_streams');
     $converterNodeObj->select($id);
@@ -534,6 +553,27 @@ global $app, $debug, $jconf, $myjobid;
 
 	return true;
 }
+
+// update_db_stream_params
+function updateVCRLiveFeedParams($id, $conferenceid = null) {
+global $app, $debug, $jconf, $myjobid;
+
+    if ( empty($conferenceid) ) return false;
+
+    $values = array();
+
+	$values['vcrconferenceid'] = $conferenceid;
+
+    $converterNodeObj = $app->bootstrap->getModel('livefeeds');
+    $converterNodeObj->select($id);
+    $converterNodeObj->updateRow($values);
+    
+	// Log status change
+	$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] VCR livefeed id#" . $id . " params updated:\n" . print_r($values, true), $sendmail = false);
+
+	return true;
+}
+
 
 // update_db_vcr_reclink_params
 function updateVCRReclinkParams($id, $conf_id) {

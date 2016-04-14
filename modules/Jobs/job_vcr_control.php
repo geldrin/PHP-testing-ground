@@ -127,7 +127,7 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_vcr_control.stop' ) and !i
 			}
 
 			// Starting recording
-			updateLiveStreamStatus($vcr['id'], $jconf['dbstatus_vcr_starting']);
+			updateLiveFeedStatus($vcr['feed_id'], $jconf['dbstatus_vcr_starting']);
 
 			// TCS: reserve ConferenceID
 			$err = array();
@@ -148,8 +148,8 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_vcr_control.stop' ) and !i
 				updateVCRReclinkStatus($vcr['reclink_id'], $jconf['dbstatus_vcr_recording']);
                 // Update recording link: ConferenceID
                 updateVCRReclinkParams($vcr['reclink_id'], $vcr['conf_id']);
-                // Update live stream: ConferenceID
-                updateVCRLiveStreamParams($vcr['id'], null, $vcr['conf_id']);
+                // Update live stream: streamID (wowza keycode) + ConferenceID
+                updateVCRLiveFeedParams($vcr['id'], $vcr['conf_id']);
 
 			} else {
                 $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] VCR call cannot be established. Info:\n\n" . $err['message'], $sendmail = true);
@@ -171,11 +171,11 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_vcr_control.stop' ) and !i
 				if ( $err['code'] and !empty($vcr['rtmp_streamid']) ) {
 
 					// Update feed: stream ID
-					updateVCRLiveStreamParams($vcr['id'], $vcr['rtmp_streamid'], null);
+					updateVCRLiveStreamParams($vcr['id'], $vcr['rtmp_streamid']);
 					// Update recording link: recording link with TCS conference ID
 					updateVCRReclinkParams($vcr['reclink_id'], $vcr['conf_id']);
 					// Update stream status: playable
-					updateLiveStreamStatus($vcr['id'], $jconf['dbstatus_vcr_recording']);
+					updateLiveFeedStatus($vcr['feed_id'], $jconf['dbstatus_vcr_recording']);
                     // Regenerate SMIL file for HTTP streaming
                     updateLiveFeedSMILStatus($vcr['livefeedid'], $jconf['dbstatus_regenerate'], "video");
 
@@ -190,7 +190,7 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_vcr_control.stop' ) and !i
 			if ( !$is_streamready ) {
                 $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] This recording has no movies to play. Cannot determine live streaming URL. TCS cannot send stream to Wowza? Tried 3x times for 30 seconds. Info:\n\n" . print_r($vcr, true), $sendmail = true);
 				// Update stream status: disconnect (call is connected, but live streaming URL was not provided)
-				updateLiveStreamStatus($vcr['id'], $jconf['dbstatus_vcr_disc']);
+				updateLiveFeedStatus($vcr['feed_id'], $jconf['dbstatus_vcr_disc']);
 				// Skip uploading this very short recording???
 				break;
 			}
@@ -214,7 +214,7 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_vcr_control.stop' ) and !i
 				if ( $err['data']['callstate'] != "IN_CALL" ) {
                     $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] VCR call was disconnected unexpectedly. Info:\n\n" . $err['message'] . "\n\nDump:\n\n" . print_r($vcr, true) . "\n\nData:\n\n" . print_r($err['data'], true), $sendmail = true);
 					// Indicate error on stream
-					updateLiveStreamStatus($vcr['id'], $jconf['dbstatus_vcr_recording_err']);
+					updateLiveFeedStatus($vcr['feed_id'], $jconf['dbstatus_vcr_recording_err']);
 					// Permanent error on recording link?
 					updateVCRReclinkStatus($vcr['reclink_id'], $jconf['dbstatus_vcr_recording_err']);
 					break;
@@ -223,7 +223,7 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_vcr_control.stop' ) and !i
 				if ( ( $err['data']['mediastate'] != "RECORDING" ) and ( $err['data']['writerstatus'] != "OK" ) ) {
                     $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Unexpected VCR recording error. Info:\n\n" . $err['message'] . "\n\nDump:\n\n" . print_r($vcr, true) . "\n\nData:\n\n" . print_r($err['data'], true), $sendmail = true);
 					// Indicate error on stream
-					updateLiveStreamStatus($vcr['id'], $jconf['dbstatus_vcr_recording_err']);
+					updateLiveFeedStatus($vcr['feed_id'], $jconf['dbstatus_vcr_recording_err']);
 					// Permanent error on recording link?
 					updateVCRReclinkStatus($vcr['reclink_id'], $jconf['dbstatus_vcr_recording_err']);
 					break;
@@ -245,9 +245,9 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_vcr_control.stop' ) and !i
 				updateVCRReclinkStatus($vcr['reclink_id'], $jconf['dbstatus_vcr_ready']);
 				updateVCRReclinkParams($vcr['reclink_id'], null);
 				if ( $vcr['needrecording'] == 1 ) {
-					updateLiveStreamStatus($vcr['id'], $jconf['dbstatus_vcr_upload']);
+					updateLiveFeedStatus($vcr['feed_id'], $jconf['dbstatus_vcr_upload']);
 				} else {
-					updateLiveStreamStatus($vcr['id'], $jconf['dbstatus_vcr_ready']);
+					updateLiveFeedStatus($vcr['feed_id'], $jconf['dbstatus_vcr_ready']);
 				}
 			} else {
                 $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] VCR call cannot be disconnected. Check recording link! Info:\n\n" . $err['message'] . "\n\nDump:\n\n" . print_r($vcr, true), $sendmail = true);
@@ -318,7 +318,7 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_vcr_control.stop' ) and !i
 			}
 			if ( $err['code_num'] == -2 ) {
                 $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] VCR download failed. Did not find TCS Conference ID (" . $vcr_upload['conf_id'] . ").VCR info:\n\n" . print_r($vcr_upload, true), $sendmail = true);
-				updateLiveStreamStatus($vcr_upload['id'], $jconf['dbstatus_vcr_upload_err']);
+				updateLiveFeedStatus($vcr_upload['feed_id'], $jconf['dbstatus_vcr_upload_err']);
 				break;
 			}
 		}
@@ -329,7 +329,7 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_vcr_control.stop' ) and !i
 		if ( !empty($vcr_upload['download_url']) ) {
 
 			// Update stream status
-			updateLiveStreamStatus($vcr_upload['id'], $jconf['dbstatus_vcr_uploading']);
+			updateLiveFeedStatus($vcr_upload['feed_id'], $jconf['dbstatus_vcr_uploading']);
 
 			// Get MP4 filename from URL
 			$tmp = parse_url($vcr_upload['download_url']);
@@ -348,14 +348,14 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_vcr_control.stop' ) and !i
 			$mins_taken = round( $duration / 60, 2);
 			if ( $result != 0 ) {
                 $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] VCR download failed. URL:\n\n" . $vcr_upload['download_url'] . "\n\nInfo:\n\n" . print_r($vcr_upload, true) . "\n\nCommand:\n\n" . $command . "\n\nOutput:\n\n" . $output_string, $sendmail = true);
-				updateLiveStreamStatus($vcr_upload['id'], $jconf['dbstatus_vcr_upload_err']);
+				updateLiveFeedStatus($vcr_upload['feed_id'], $jconf['dbstatus_vcr_upload_err']);
 				break;
 			}
 	
 			$media_filename = $temp_directory . $filename;
 			if ( !file_exists($media_filename) ) {
                 $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Cannot find downloaded VCR recording. File:\n\n" . $media_filename . "\n\nInfo:\n\n" . print_r($vcr_upload, true), $sendmail = true);
-				updateLiveStreamStatus($vcr_upload['id'], $jconf['dbstatus_vcr_upload_err']);
+				updateLiveFeedStatus($vcr_upload['feed_id'], $jconf['dbstatus_vcr_upload_err']);
 				break;
 			}
 
@@ -366,7 +366,7 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_vcr_control.stop' ) and !i
 		} else {
 			// VCR download URL is not yet available (we are just after disconnect)
 			// Stream status: revert to "upload" (try later)
-			updateLiveStreamStatus($vcr_upload['id'], $jconf['dbstatus_vcr_upload']);
+			updateLiveFeedStatus($vcr_upload['feed_id'], $jconf['dbstatus_vcr_upload']);
             $debug->log($jconf['log_dir'], $myjobid . ".log", "[WARNING] Cannot find VCR download URL. Will be trying later. Info:\n\n" . $print_r($vcr_upload, true), $sendmail = false);
 			break;
 		}
@@ -376,7 +376,7 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_vcr_control.stop' ) and !i
 			$api = new Api($jconf['api_user'], $jconf['api_password']);
 		} catch (exception $err) {
 			// Stream status: revert to "upload" (try later)
-			updateLiveStreamStatus($vcr_upload['id'], $jconf['dbstatus_vcr_upload']);
+			updateLiveFeedStatus($vcr_upload['feed_id'], $jconf['dbstatus_vcr_upload']);
             $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Cannot connect to Videosquare API. Will be trying later. User: " .  $jconf['api_user'] . "\n\nError:\n\n" . $err, $sendmail = true);
 			break;
 		}
@@ -404,7 +404,7 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_vcr_control.stop' ) and !i
 		} catch (exception $err) {
 			// API: cannot add recording. We log error and will try later.
 			// Stream status: revert to "upload" (try later)
-			updateLiveStreamStatus($vcr_upload['id'], $jconf['dbstatus_vcr_upload']);
+			updateLiveFeedStatus($vcr_upload['feed_id'], $jconf['dbstatus_vcr_upload']);
             $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Cannot add recording to Videosquare. Info:\n\nFilename: " . $media_filename . "\n\nMetadata:\n" . print_r($metadata, true), $sendmail = true);
 			break;
 		}
@@ -424,12 +424,12 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_vcr_control.stop' ) and !i
 			}
 
 			// Stream status: revert to "ready" (next recording is possible)
-			updateLiveStreamStatus($vcr_upload['id'], $jconf['dbstatus_vcr_ready']);
+			updateLiveFeedStatus($vcr_upload['feed_id'], $jconf['dbstatus_vcr_ready']);
             $debug->log($jconf['log_dir'], $myjobid . ".log", "[OK] VCR recording added. Info:\n\nFilename: " . $media_filename . "\n\nMetadata:\n" . print_r($metadata, true), $sendmail = true);
 
 		} else {
 			// Stream status: revert to "upload" (try later)
-			updateLiveStreamStatus($vcr_upload['id'], $jconf['dbstatus_vcr_ready']);
+			updateLiveFeedStatus($vcr_upload['feed_id'], $jconf['dbstatus_vcr_ready']);
             $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Cannot find recording ID in array returned by API. Recording might be added, but metadata did not. Info:\n\nFilename: " . $media_filename . "\n\nRecording array:\n\n" . print_r($recording, true) . "\n\nMetadata:\n" . print_r($metadata, true), $sendmail = true);
 			break;
 		}
@@ -498,8 +498,8 @@ global $jconf, $app, $myjobid, $debug;
 			lfs.id,
 			lfs.livefeedid,
 			lfs.qualitytag,
-			lfs.status,
-			lfs.recordinglinkid,
+			lf.status,
+			lf.recordinglinkid,
 			rl.id AS reclink_id,
 			rl.name AS reclink_name,
 			rl.organizationid,
@@ -523,14 +523,14 @@ global $jconf, $app, $myjobid, $debug;
 			livefeeds AS lf
 		WHERE
             rl.type = 'ciscotcs' AND
-			( ( lfs.status = '" . $jconf['dbstatus_vcr_start'] . "' AND rl.status = '" . $jconf['dbstatus_vcr_ready'] . "') OR
-			  ( lfs.status = '" . $jconf['dbstatus_vcr_disc'] . "' AND rl.status = '" . $jconf['dbstatus_vcr_recording'] . "') OR
-			  ( lfs.status = '" . $jconf['dbstatus_vcr_recording'] . "' AND rl.status = '" . $jconf['dbstatus_vcr_recording'] . "') ) AND
-			lfs.recordinglinkid = rl.id AND
+			( ( lf.status = '" . $jconf['dbstatus_vcr_start'] . "' AND rl.status = '" . $jconf['dbstatus_vcr_ready'] . "') OR
+			  ( lf.status = '" . $jconf['dbstatus_vcr_disc'] . "' AND rl.status = '" . $jconf['dbstatus_vcr_recording'] . "') OR
+			  ( lf.status = '" . $jconf['dbstatus_vcr_recording'] . "' AND rl.status = '" . $jconf['dbstatus_vcr_recording'] . "') ) AND
+			lf.recordinglinkid = rl.id AND
 			rl.disabled = 0 AND
 			lfs.livefeedid = lf.id
 		ORDER BY
-			lfs.id
+			lf.id
 		LIMIT 1";
 // LIMIT 1???? Mi lesz ha tobb stream tartozik egy felvetelhez? TODO
 
@@ -592,9 +592,9 @@ global $jconf, $app, $myjobid, $debug;
 			a.id,
 			a.livefeedid,
 			a.qualitytag,
-			a.status,
-			a.vcrconferenceid as conf_id,
-			a.recordinglinkid,
+			b.status,
+			b.vcrconferenceid as conf_id,
+			b.recordinglinkid,
 			b.id as feed_id,
 			b.userid,
 			b.channelid,
@@ -604,7 +604,7 @@ global $jconf, $app, $myjobid, $debug;
 			livefeed_streams as a,
 			livefeeds as b
 		WHERE
-			a.status = '" . $jconf['dbstatus_vcr_upload'] . "' AND
+			b.status = '" . $jconf['dbstatus_vcr_upload'] . "' AND
 			a.livefeedid = b.id AND
 			b.needrecording = 1
 		ORDER BY
