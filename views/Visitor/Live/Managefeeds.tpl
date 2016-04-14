@@ -32,7 +32,7 @@
       | <a href="{$language}/live/chatadmin/{$feed.id}">{#live__chatadmin#}</a>
       | <a href="{$language}/live/chatexport/{$feed.id}">{#live__chatexport#}</a>
       {if $feed.feedtype == 'vcr'}
-      <div id="feed{$feed.id}" data-feedid="{$feed.id}" data-feedstatus="{$feed.status|escape:html}{/if}" class="nobr needpoll">
+      <div id="feed{$feed.id}" data-feedid="{$feed.id}" data-feedstatus="{$feed.status|escape:html}" class="nobr needpoll">
         {include file=Visitor/Live/Managefeeds_feedaction.tpl}
       </div>
       {/if}
