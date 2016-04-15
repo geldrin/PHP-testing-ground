@@ -13,6 +13,10 @@ class Controller extends \Visitor\Controller {
     'legjobb'            => 'best',
     'csatornafelvetelek' => 'subscriptions',
   );
+  private $blocks = array(
+    'eloadas', 'kiemelt',
+    'legujabb', 'legnezettebb', 'legjobb', 'csatornafelvetelek',
+  );
 
   public function indexAction() {
     $this->recordingsModel = $this->bootstrap->getModel('recordings');
@@ -26,7 +30,7 @@ class Controller extends \Visitor\Controller {
     $l = $this->bootstrap->getLocalization();
     $labels = array();
     $blocks = array();
-    foreach( $this->organization['blockorder'] as $block => $value ) {
+    foreach( $this->blocks as $block ) {
       if ( $block != 'eloadas' and $block != 'kiemelt' )
         $labels[ $block ] = $l('index', 'block_' . $block );
 
