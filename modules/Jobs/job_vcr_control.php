@@ -149,7 +149,7 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_vcr_control.stop' ) and !i
                 // Update recording link: ConferenceID
                 updateVCRReclinkParams($vcr['reclink_id'], $vcr['conf_id']);
                 // Update live stream: streamID (wowza keycode) + ConferenceID
-                updateVCRLiveFeedParams($vcr['id'], $vcr['conf_id']);
+                updateVCRLiveFeedParams($vcr['feed_id'], $vcr['conf_id']);
 
 			} else {
                 $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] VCR call cannot be established. Info:\n\n" . $err['message'], $sendmail = true);
