@@ -4157,7 +4157,7 @@ class Recordings extends \Springboard\Model {
             'filename'   => strtr( $urlTemplate, $urlData ),
             'qualitytag' => 'original',
             'iscontent'  => '1',
-            'type'       => 'recording',
+            'type'       => 'content',
           )
         );
       }
