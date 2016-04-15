@@ -690,7 +690,7 @@ class Controller extends \Visitor\Controller {
     elseif ( $fullscale and $recordingsModel->row['mastermediatype'] == 'audio' )
       return '60';
     elseif ( $fullscale )
-      return '550';
+      return '530';
 
     if ( $recordingsModel->row['mastermediatype'] == 'audio' and $recordingsModel->hasSubtitle() )
       $height = '120';
