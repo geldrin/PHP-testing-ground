@@ -4200,7 +4200,7 @@ class Recordings extends \Springboard\Model {
         if ( $version['type'] == 'recording' and !isset( $ret['master'] ) ) {
           $ret['master'] = $data;
         } elseif ( $version['type'] == 'content' and !isset( $ret['content'] ) ) {
-          $ret['contentmaster'] = $data;
+          $ret['content'] = $data;
         } elseif ( $version['type'] == 'pip' and !isset( $ret['pip'] ) ) {
           $ret['pip'] = $data;
         }
