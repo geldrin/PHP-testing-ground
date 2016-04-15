@@ -4114,7 +4114,6 @@ class Recordings extends \Springboard\Model {
       SELECT
         rv.filename,
         rv.qualitytag,
-        rv.iscontent,
         ep.type
       FROM
         recordings_versions AS rv,
@@ -4128,39 +4127,40 @@ class Recordings extends \Springboard\Model {
 
     // ha letolthet a user akkor a tomb elejere rakjuk a master fileokat
     if ( $canDownload ) {
-      // 111_video.mp4
-      // 111_audio.mp3
       $urlTemplate = "master/<id>_<type>.<ext>";
       $urlData = array(
         '<id>'       => $this->id,
-        '<type>'     => 'video',
-        '<ext>'      => $this->row['mastervideoextension'],
-      );
-
-      if ( $this->row['mastermediatype'] == 'audio' )
-        $urlData['<type>'] = 'audio';
-
-      array_unshift( $versions, array(
-          'filename'   => strtr( $urlTemplate, $urlData ),
-          'qualitytag' => 'original',
-          'iscontent'  => '0',
-          'type'       => 'recording',
-        )
+        '<type>'     => 'content',
+        '<ext>'      => $this->row['contentmastervideoextension'],
       );
 
       if ( $this->row['contentmastervideofilename'] ) {
         // 111_content.mp4
-        $urlData['<ext>'] = $this->row['contentmastervideoextension'];
-        $urlData['<type>'] = 'content';
 
         array_unshift( $versions, array(
             'filename'   => strtr( $urlTemplate, $urlData ),
             'qualitytag' => 'original',
-            'iscontent'  => '1',
             'type'       => 'content',
           )
         );
       }
+
+      // 111_video.mp4
+      // 111_audio.mp3
+      $urlData['<ext>'] = $this->row['mastervideoextension'];
+
+      if ( $this->row['mastermediatype'] == 'audio' )
+        $urlData['<type>'] = 'audio';
+      else
+        $urlData['<type>'] = 'video';
+
+      array_unshift( $versions, array(
+          'filename'   => strtr( $urlTemplate, $urlData ),
+          'qualitytag' => 'original',
+          'type'       => 'recording',
+        )
+      );
+
     }
 
     if ( $canDownload or $this->row['isaudiodownloadable'] ) {
