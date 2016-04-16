@@ -34,6 +34,17 @@
       <div class="clear"></div>
     </div>
     <div class="clear"></div>
+  {elseif $block == "ujranezes" and !empty( $items )}
+    <div class="accordion active persist" id="accordion_{$block}">
+      <h2><a href="#">{$labels[$block]|escape:html}</a></h2>
+      <ul>
+        {foreach from=$items item=item}
+          {include file="Visitor/minirecordinglistitem.tpl"}
+        {/foreach}
+      </ul>
+      <div class="clear"></div>
+    </div>
+    <div class="clear"></div>
   {elseif !empty( $items )}
     <div class="accordion active persist" id="accordion_{$block}">
       <h2><a href="#">{$labels[$block]|escape:html}</a></h2>
