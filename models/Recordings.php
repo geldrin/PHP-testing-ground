@@ -4479,4 +4479,29 @@ class Recordings extends \Springboard\Model {
       ), 0)
     ";
   }
+
+  public function getUsersHistory( $user, $organizationid, $start, $limit, $order ) {
+    if ( !$user or !$user['id'] )
+      throw new \Exception("Non-valid user passed");
+
+    $select = self::getRecordingSelect('r.') . ",
+      ch.timestamp AS contenthistorytimestamp
+    ";
+    $from = "
+      usercontenthistory AS ch,
+      recordings AS r
+    ";
+    $where = "
+      r.organizationid = '$organizationid' AND
+      r.id = ch.recordingid AND
+      ch.userid = '" . $user['id'] . "' AND
+      ch.recordingid IS NOT NULL
+    ";
+
+    return $this->db->getArray(
+      self::getUnionSelect( $user, $select, $from, $where ) . "
+      ORDER BY $order
+      LIMIT $start, $limit
+    ");
+  }
 }

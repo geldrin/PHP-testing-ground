@@ -14,7 +14,7 @@ class Controller extends \Visitor\Controller {
     'csatornafelvetelek' => 'subscriptions',
   );
   private $blocks = array(
-    'eloadas', 'kiemelt',
+    'eloadas', 'kiemelt', 'ujranezes',
     'legujabb', 'legnezettebb', 'legjobb', 'csatornafelvetelek',
   );
 
@@ -45,8 +45,14 @@ class Controller extends \Visitor\Controller {
         );
       } else {
         $method = 'getBlock' . ucfirst( $block );
-        if ( method_exists( $this, $method ) )
+        if ( method_exists( $this, $method ) ) {
           $blocks[ $block ] = $this->$method( $user );
+          $blocks[ $block ] = $this->recordingsModel->addPresentersToArray(
+            $blocks[ $block ],
+            true,
+            $this->organization['id']
+          );
+        }
       }
     }
 
@@ -76,43 +82,12 @@ class Controller extends \Visitor\Controller {
     $this->smartyoutput('Visitor/Index/index.tpl');
   }
 
-  private function getRecordings( $type, $user ) {
-    $filter = "r.organizationid = '" . $this->organization['id'] . "'";
-    if ( isset( $this->recordingTypes[ $type ]['filter'] ) )
-      $filter .= $this->recordingTypes[ $type ]['filter'];
-
-    $ret = $this->recordingsModel->getRecordingsWithUsers(
-      0,
-      $this->maxRecordings,
-      $filter,
-      $this->recordingTypes[ $type ]['order'],
-      $user,
-      $this->organization['id']
-    );
-
-    $ret = $this->recordingsModel->addPresentersToArray(
-      $ret,
-      true,
-      $this->organization['id']
-    );
-
-    return $ret;
-  }
-
   private function getBlockKiemelt( $user ) {
-    $ret = $this->recordingsModel->getRandomRecordings(
+    return $this->recordingsModel->getRandomRecordings(
       4,
       $this->organization['id'],
       $user
     );
-
-    $ret = $this->recordingsModel->addPresentersToArray(
-      $ret,
-      true,
-      $this->organization['id']
-    );
-
-    return $ret;
   }
 
   private function getBlockEloadas( $user ) {
@@ -120,6 +95,17 @@ class Controller extends \Visitor\Controller {
     return $channelModel->getFeatured(
       $this->organization['id'],
       \Springboard\Language::get()
+    );
+  }
+
+  private function getBlockUjranezes( $user ) {
+    if ( !$user or !$user['id'] )
+      return array();
+
+    return $this->recordingsModel->getUsersHistory(
+      $user,
+      $this->organization['id'],
+      0, 4, "contenthistorytimestamp DESC"
     );
   }
 }
