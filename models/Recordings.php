@@ -4496,6 +4496,7 @@ class Recordings extends \Springboard\Model {
       r.id = ch.recordingid AND
       ch.userid = '" . $user['id'] . "' AND
       ch.recordingid IS NOT NULL
+      GROUP BY r.id
     ";
 
     return $this->db->getArray(

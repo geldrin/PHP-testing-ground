@@ -447,7 +447,7 @@ $config = Array(
     'postfix'     =>
       '<br/><div class="info">
         A használt sablonozási nyelv a <a href="http://www.smarty.net/docsv2/en/" target="_blank">smarty v2</a>.<br/>
-        Lehetséges blokk változók: &quot;ajanlo_csatornafelvetelek&quot;, &quot;ajanlo_eloadas&quot;, &quot;ajanlo_kiemelt&quot;, &quot;ajanlo_legujabb&quot;, &quot;ajanlo_legnezettebb&quot;, &quot;ajanlo_legjobb&quot;<br/>
+        Lehetséges blokk változók: &quot;ajanlo_csatornafelvetelek&quot;, &quot;ajanlo_eloadas&quot;, &quot;ajanlo_kiemelt&quot;, &quot;ajanlo_legujabb&quot;, &quot;ajanlo_legnezettebb&quot;, &quot;ajanlo_legjobb&quot;, &quot;ajanlo_ujranezes&quot;<br/>
         További hasznos változók:<br/>
         &nbsp;&nbsp;&quot;organization&quot; (a jelenlegi intezmény, lehetséges mezői az &quot;organizations&quot; adatbázis táblában található oszlopok nevei, például: &quot;$organization.introduction&quot;);<br/>
         &nbsp;&nbsp;&quot;member&quot; (a bejelentkezett felhasználó, mezői az adatbázis &quot;users&quot; táblájának oszlop nevei, például: &quot;$member.isadmin&quot;);<br/>
