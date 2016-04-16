@@ -11,3 +11,4 @@
 {$ajanlo_legujabb}
 {$ajanlo_legnezettebb}
 {$ajanlo_legjobb}
+{$ajanlo_ujranezes}
