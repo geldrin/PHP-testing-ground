@@ -126,6 +126,11 @@ class PexipJob extends Job {
 
                 $result = $pexip->getStreamingParticipantStatus($liveFeed[0]['vcrparticipantid']);
                 if ( !$result ) {
+                    // Update recording link status ("ready")
+                    $vcrObj->updateRecordingLinkStatus($this->bootstrap->config['config_jobs']['dbstatus_vcr_ready']);
+                    // Update livefeed status ("ready")
+                    $vcrObj->updateLiveFeedStatus($this->bootstrap->config['config_jobs']['dbstatus_vcr_ready']);
+                    
                     // Exception?
                     $this->debugLog("[ERROR] Participant id#" . $liveFeed[0]['vcrparticipantid'] . " not in call anymore:\n" . print_r($result, true), false);
                     // Set status to disconnected, report error!
