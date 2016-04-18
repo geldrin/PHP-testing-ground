@@ -17,6 +17,7 @@ class Pexip {
     // Curl related
     private $curl_auth                 = CURLAUTH_BASIC;
     private $curl_lasthttpstatuscode   = null;
+    private $curl_verbose              = 0;
     
     // Pexip session related
     private $streaming_participantid   = null;
@@ -79,7 +80,7 @@ class Pexip {
         curl_setopt($curl, CURLOPT_PORT, $this->pexip_port); 
         curl_setopt($curl, CURLOPT_HTTPAUTH, $this->curl_auth);
         curl_setopt($curl, CURLOPT_USERPWD, $this->pexip_user . ":" . $this->pexip_passwd);
-        curl_setopt($curl, CURLOPT_VERBOSE, 1); 
+        curl_setopt($curl, CURLOPT_VERBOSE, $this->curl_verbose); 
         curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
 
         if ( $ispost ) {
@@ -89,7 +90,6 @@ class Pexip {
             if ( !empty($data) ) {
 
                 $data_string = json_encode($data);
-                echo "[DATA] " . $data_string . "\n";
             
                 curl_setopt($curl, CURLOPT_POSTFIELDS, $data_string);                                                                                                                               
                 curl_setopt($curl, CURLOPT_HTTPHEADER, array(                                                                          
@@ -157,13 +157,10 @@ class Pexip {
             'system_location'   => $this->pexip_location
         );
         
-        var_dump($data);
-        
         $url = $this->pexip_url . $this->api['participant_dial'];
         $result = $this->httpCURLWrapper($url, true, $data);
-        var_dump($result);
         
-        if ( !is_array($result) ) throw new \Exception('[ERROR] Participant cannot be dialed. Pexip output is: ' . var_dump($result));
+        if ( !is_array($result) ) throw new \Exception('[ERROR] Participant cannot be dialed. Pexip output is: ' . print_r($result, true));
 
         if ( isset($result['status']) ) $this->lastapistatus = $result['status'];
         if ( isset($result['data']['participant_id']) ) $this->streaming_participantid = $result['data']['participant_id'];
@@ -173,13 +170,16 @@ class Pexip {
         return $result;
     }
     
-    public function disconnectStreamingParticipant() {
-    
+    public function disconnectStreamingParticipant($streaming_participantid = null) {
+        
         $this->laststatus = null;
         $this->lastapidatareturned = null;
     
+        if ( empty($streaming_participantid) ) throw new \Exception('[ERROR] Participant ID is empty');
+        
+        $this->streaming_participantid = $streaming_participantid;
+    
         $url = $this->pexip_url . $this->api['participant_disconnect'];
-        echo "diconnecturl: " . $url . "\n";
         
         $data = array(
             'participant_id'    => $this->streaming_participantid
@@ -193,24 +193,23 @@ class Pexip {
         
         if ( isset($result['status']) ) $this->lastapistatus = $result['status'];
         if ( isset($result['disconnect']['participant_id']) ) {
-            if ( strpos($result['disconnect']['participant_id'][0], "Failed") !== false ) {
-                echo "no party to disconnect\n";
-                return false;
-            }
+            if ( strpos($result['disconnect']['participant_id'][0], "Failed") !== false ) return false;
         }
         $this->streaming_isconnected = false;
         
-        var_dump($result);
         return $result;
     }
     
-    public function getStreamingParticipantStatus() {
+    public function getStreamingParticipantStatus($streaming_participantid = null) {
         
         $this->lastapistatus = null;
         $this->lastapidatareturned = null;
         
+        if ( empty($streaming_participantid) ) throw new \Exception('[ERROR] Participant ID is empty');
+        
+        $this->streaming_participantid = $streaming_participantid;
+        
         $url = $this->pexip_url . sprintf($this->api['participant_status'], $this->streaming_participantid);
-        echo "Participant status url: " . $url . "\n";
         
         $result = $this->httpCURLWrapper($url, false, null);
         
@@ -221,7 +220,6 @@ class Pexip {
         $this->lastapistatus = "success";
         $this->streaming_isconnected = true;
         
-        var_dump($result);
         return $result;
     }
 

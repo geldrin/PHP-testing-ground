@@ -3,7 +3,9 @@ namespace Videosquare\Model;
 
 class VCR extends \Videosquare\Model\Live {
 
+    private $livefeedid = null;
     private $recordinglinkid = null;
+    private $vcrparticipantid = null;
 
     // Logging: EZ ELÉG RANDA!!!
     
@@ -15,7 +17,7 @@ class VCR extends \Videosquare\Model\Live {
         
     }
     
-    public function initLog($debug_mode) {
+    public function initLog($debug_mode = false) {
 
         // Debug object
         $this->d = \Springboard\Debug::getInstance();
@@ -48,7 +50,7 @@ class VCR extends \Videosquare\Model\Live {
             'status' => $status
         );
 
-        $model = $app->bootstrap->getVSQModel('recording_links');
+        $model = $this->bootstrap->getVSQModel('recording_links');
         $model->select($this->recordinglinkid);
         $model->updateRow($values);
         
@@ -56,64 +58,84 @@ class VCR extends \Videosquare\Model\Live {
         $this->debugLog("[INFO] Recording link id#" . $this->recordinglinkid . " status changed to '" . $status . "'.", $sendmail = false);
 
     }
+    
+    // Select livefeed
+    public function selectLiveFeed($livefeedid) {
 
-/*
-    // update_db_stream_params
-    function updateVCRLiveStreamParams($id, $streamid = null, $conferenceid = null) {
-    global $app, $debug, $jconf, $myjobid;
-
-        $values = array();
-
-        if ( !empty($streamid) ) $values['keycode'] = $streamid;
-        if ( !empty($conferenceid) ) $values['vcrconferenceid'] = $conferenceid;
-
-        if ( empty($values) ) return false;
-
-        $converterNodeObj = $app->bootstrap->getModel('livefeed_streams');
-        $converterNodeObj->select($id);
-        $converterNodeObj->updateRow($values);
+        if ( empty($livefeedid) ) throw new \Exception('[ERROR] Livefeed ID is empty.');
         
-        // Log status change
-        $debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] VCR live stream id#" . $id . " params updated:\n" . print_r($values, true), $sendmail = false);
+        $this->livefeedid = $livefeedid;
+        
+    }
+    
+    // Set Pexip participant ID
+    public function setParticipantID($participantid) {
 
-        return true;
+        if ( empty($participantid) ) throw new \Exception('[ERROR] Participant ID is empty.');
+        
+        $this->vcrparticipantid = $participantid;
+        
+    }
+    
+    public function updateLiveFeedStatus($status) {
+
+        if ( empty($status) ) throw new \Exception('[ERROR] Recording Link status.');
+
+        $values = array(
+            'status' => $status
+        );
+
+        $model = $this->bootstrap->getVSQModel('livefeeds');
+        $model->select($this->livefeedid);
+        $model->updateRow($values);
+        
+        $this->debugLog("[INFO] Livefeed id#" . $this->livefeedid . " status changed to '" . $status . "'.", $sendmail = false);
+
     }
 
-// update_db_vcr_reclink_params
-function updateVCRReclinkParams($id, $conf_id) {
-global $app, $debug, $jconf, $myjobid;
+    function updateLiveFeedParams($vcrparticipantid) {
 
-	if ( empty($conf_id) ) return false;
-
-    $values = array(
-        'conferenceid'  => $conf_id
-	);
-
-    $converterNodeObj = $app->bootstrap->getModel('recording_links');
-    $converterNodeObj->select($id);
-    $converterNodeObj->updateRow($values);
+        if ( empty($vcrparticipantid) ) return false;
     
-	// Log status change
-	$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] VCR recording link id#" . $id . " params updated with conferenceid = " . $conf_id . ".", $sendmail = false);
+        $values = array();
+        $values['vcrparticipantid'] = $vcrparticipantid;
 
-	return true;
-}
+        $converterNodeObj = $this->bootstrap->getModel('livefeeds');
+        $converterNodeObj->select($this->livefeedid);
+        $converterNodeObj->updateRow($values);
 
-*/
+        $this->debugLog("[INFO] Livefeed id#" . $this->livefeedid . " Pexip participant ID changed to: " . $vcrparticipantid, $sendmail = false);
+
+    }
+
+    function updateRecordingLinkParams($vcrparticipantid) {
+
+        if ( empty($vcrparticipantid) ) return false;
+    
+        $values = array();
+        $values['conferenceid'] = $vcrparticipantid;
+
+        $converterNodeObj = $this->bootstrap->getModel('recording_links');
+        $converterNodeObj->select($this->recordinglinkid);
+        $converterNodeObj->updateRow($values);
+
+        $this->debugLog("[INFO] Recording link id#" . $this->recordinglinkid . " Pexip participant ID changed to: " . $vcrparticipantid, $sendmail = false);
+
+    }
 
     // Get live recordings requires to be handled
     public function getPendingLiveRecordings($type, $livefeedstatus, $recordinglinkstatus) {
 
         $query = "
             SELECT
-                lfs.id,
-                lfs.livefeedid,
-                lfs.qualitytag,
-                lfs.status,
-                lfs.recordinglinkid,
-                lfs.qualitytag,
-                lfs.keycode,
-                lfs.contentkeycode,
+                lf.id,
+                lf.userid,
+                lf.channelid,
+                lf.name,
+                lf.issecurestreamingforced,
+                lf.needrecording,
+                lf.recordinglinkid,
+                lf.status,
                 rl.id AS recordinglinkid,
                 rl.name AS recordinglinkname,
                 rl.organizationid,
@@ -132,12 +154,6 @@ global $app, $debug, $jconf, $myjobid;
                 rl.apiishttpsenabled,
                 rl.pexiplocation,
                 rl.livestreamgroupid,
-                lf.id AS feed_id,
-                lf.userid,
-                lf.channelid,
-                lf.name AS livefeedname,
-                lf.issecurestreamingforced,
-                lf.needrecording,
                 lsg.id AS livestreamgroupid,
                 lsg.name AS livestreamgroupname,
                 lsg.istranscoderencoded,
@@ -148,7 +164,6 @@ global $app, $debug, $jconf, $myjobid;
                 lst.server AS livestreamtranscoderserver,
                 lst.ingressurl AS livestreamtranscoderingressurl
             FROM
-                livefeed_streams AS lfs,
                 livefeeds AS lf,
                 recording_links AS rl
             LEFT JOIN livestream_groups AS lsg
@@ -157,13 +172,12 @@ global $app, $debug, $jconf, $myjobid;
                 ON lst.id = lsg.transcoderid
             WHERE
                 rl.type = '" . $type . "' AND
-                lfs.status = '" . $livefeedstatus . "' AND
+                lf.status = '" . $livefeedstatus . "' AND
                 rl.status = '" . $recordinglinkstatus . "' AND
-                lfs.recordinglinkid = rl.id AND
-                lfs.livefeedid = lf.id AND
+                lf.recordinglinkid = rl.id AND
                 rl.disabled = 0
             ORDER BY
-                lfs.id";
+                lf.id";
 
         $model = $this->bootstrap->getVSQModel('livefeed_streams');
         $rs = $model->safeExecute($query);
@@ -180,5 +194,75 @@ global $app, $debug, $jconf, $myjobid;
         return $rs_array;
     }
 
+    public function getStreamsForLivefeed() {
+
+        $query = "
+            SELECT
+                lfs.id,
+                lfs.livefeedid,
+                lfs.qualitytag,
+                lfs.keycode,
+                lfs.contentkeycode,
+                lfs.isdesktopcompatible,
+                lfs.isioscompatible,
+                lfs.isandroidcompatible
+            FROM
+                livefeed_streams AS lfs
+            WHERE
+                lfs.livefeedid = " . $this->livefeedid;
+
+        $model = $this->bootstrap->getVSQModel('livefeed_streams');
+        $rs = $model->safeExecute($query);
+        
+        // $rs->getArray() does not work!
+        $rs_array = array();
+        while ( !$rs->EOF ) {
+            array_push($rs_array, $rs->fields);
+            $rs->moveNext();
+        }
+                
+        if ( count($rs_array) < 1 ) return false;
+    
+        return $rs_array;
+    }
+
+    public function getLiveFeed() {
+
+        $query = "
+            SELECT
+                lf.id,
+                lf.organizationid,
+                lf.userid,
+                lf.channelid,
+                lf.name,
+                lf.slideonright,
+                lf.hascontent,
+                lf.feedtype,
+                lf.needrecording,
+                lf.recordinglinkid,
+                lf.vcrconferenceid,
+                lf.vcrparticipantid,
+                lf.status
+            FROM
+                livefeeds AS lf
+            WHERE
+                lf.id = " . $this->livefeedid;
+
+        $model = $this->bootstrap->getVSQModel('livefeeds');
+        $rs = $model->safeExecute($query);
+        
+        // $rs->getArray() does not work!
+        $rs_array = array();
+        while ( !$rs->EOF ) {
+            array_push($rs_array, $rs->fields);
+            $rs->moveNext();
+        }
+                
+        if ( count($rs_array) < 1 ) return false;
+    
+        return $rs_array;
+    }
+
+    
 }
 
