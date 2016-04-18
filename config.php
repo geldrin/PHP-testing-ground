@@ -26,6 +26,7 @@ $config = array(
   'convpath'     => $this->basepath . 'data/temp/',
   'jobpath'      => $this->basepath . 'libraries/Videosquare/Job/',
   'storagepath'  => '/srv/vsq/videosquare.eu/', // always absolute!
+  'recpath'      => '/srv/vsq_temp/videosquare.eu/recorder/',
   // szoljunk e azert mert a bongeszo elavult?
   'warnobsoletebrowser' => true,
   //-----
