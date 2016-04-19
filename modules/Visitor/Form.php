@@ -105,7 +105,7 @@ class Form extends \Springboard\Controller\Form {
         break;
 
       default:
-        throw new \Exception('Unhandled accesstype');
+        throw new \Exception('Unhandled accesstype: ' . $values['accesstype'] );
         break;
       
     }
