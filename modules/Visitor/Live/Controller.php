@@ -450,7 +450,7 @@ class Controller extends \Visitor\Controller {
     );
 
     if ( $feedModel->row['feedtype'] == 'vcr' and !$feedModel->canDeleteFeed() )
-      throw new \Exception("VCR helszín törles nem lehetséges!");
+      throw new \Exception("VCR helyszín törles nem lehetséges!");
 
     $feedModel->updateRow( array(
         'smilstatus'        => 'regenerate',
