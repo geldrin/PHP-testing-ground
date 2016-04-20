@@ -1264,12 +1264,14 @@ class Recordings extends \Springboard\Model {
     ";
   }
 
-  public static function getUnionSelect( $user, $select = null, $from = null, $where = null, $isintrooutro = '0' ) {
+  public static function getUnionSelect( $user, $select = null, $from = null, $where = null, $isintrooutro = null, $group = '' ) {
 
     if ( $select === null )
       $select = self::getRecordingSelect('r.');
     if ( $from === null )
       $from = 'recordings AS r';
+    if ( $isintrooutro === null )
+      $isintrooutro = '0';
 
     if ( !isset( $user['id'] ) ) {
 
@@ -1319,6 +1321,7 @@ class Recordings extends \Springboard\Model {
           $where
           $generalwhere " . ( $isadmin? '': " AND
           r.accesstype IN('public', 'registrations')" ) . "
+        $group
       ) UNION DISTINCT (
         SELECT $select
         FROM
@@ -1332,6 +1335,7 @@ class Recordings extends \Springboard\Model {
           a.recordingid = r.id AND
           a.groupid     = gm.groupid AND
           gm.userid     = '" . $user['id'] . "'
+        $group
       ) UNION DISTINCT (
         SELECT $select
         FROM
@@ -1345,6 +1349,7 @@ class Recordings extends \Springboard\Model {
           a.recordingid  = r.id AND
           a.departmentid = ud.departmentid AND
           ud.userid      = '" . $user['id'] . "'
+        $group
       ) UNION DISTINCT ( -- a hozzaferheto csatornak felveteleit is
         SELECT $select
         FROM
@@ -1358,6 +1363,7 @@ class Recordings extends \Springboard\Model {
           ccr.recordingid     = r.id AND
           ui.registereduserid = '" . $user['id'] . "' AND
           ui.status          <> 'deleted'
+        $group
       ) UNION DISTINCT (
         SELECT $select
         FROM
@@ -1369,6 +1375,7 @@ class Recordings extends \Springboard\Model {
           r.id                = ui.recordingid AND
           ui.registereduserid = '" . $user['id'] . "' AND
           ui.status          <> 'deleted'
+        $group
       )
     ";
 
@@ -4496,11 +4503,10 @@ class Recordings extends \Springboard\Model {
       r.id = ch.recordingid AND
       ch.userid = '" . $user['id'] . "' AND
       ch.recordingid IS NOT NULL
-      GROUP BY r.id
     ";
 
     return $this->db->getArray(
-      self::getUnionSelect( $user, $select, $from, $where ) . "
+      self::getUnionSelect( $user, $select, $from, $where, '0', 'GROUP BY r.id' ) . "
       ORDER BY $order
       LIMIT $start, $limit
     ");
