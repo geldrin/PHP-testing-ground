@@ -1,11 +1,26 @@
 <?php
 namespace Videosquare\Model;
 
+/*
+CREATE TABLE `livefeed_recordings` (
+ `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+ `livefeedid` int(10) unsigned DEFAULT NULL,
+ `userid` int(10) unsigned NOT NULL,
+ `livestreamtranscoderid` int(10) unsigned NOT NULL,
+ `starttimestamp` datetime NOT NULL,
+ `endtimestamp` datetime DEFAULT NULL,
+ `vcrconferenceid` text,
+ `status` text,
+ PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8
+*/
+
 class VCR extends \Videosquare\Model\Live {
 
     private $livefeedid = null;
     private $recordinglinkid = null;
     private $vcrparticipantid = null;
+    private $livefeedrecordingid = null;
 
     // Logging: EZ ELÉG RANDA!!!
     
@@ -263,6 +278,77 @@ class VCR extends \Videosquare\Model\Live {
         return $rs_array;
     }
 
+    // Get finished livefeed recordings (ready to be uploaded)
+    public function getFinishedRecordedFeeds($server) {
+
+        $query = "
+            SELECT
+                lfr.id,
+                lfr.livefeedid,
+                lfr.userid,
+                lfr.livestreamtranscoderid,
+                lfr.starttimestamp,
+                lfr.endtimestamp,
+                lfr.vcrconferenceid,
+                lfr.status,
+                lst.server,
+                u.email,
+                o.id AS organizationid,
+                o.domain
+            FROM
+                livefeed_recordings AS lfr,
+                livestream_transcoders AS lst,
+                users AS u,
+                organizations AS o
+            WHERE
+                lst.server = '" . $server . "' AND
+                lst.id = lfr.livestreamtranscoderid AND
+                lfr.status = 'finished' AND
+                lfr.userid = u.id AND
+                u.organizationid = o.id";
+        
+        $model = $this->bootstrap->getVSQModel('livefeed_recordings');
+        $rs = $model->safeExecute($query);
+        
+        // $rs->getArray() does not work!
+        $rs_array = array();
+        while ( !$rs->EOF ) {
+            array_push($rs_array, $rs->fields);
+            $rs->moveNext();
+        }
+                
+        if ( count($rs_array) < 1 ) return false;
+    
+        return $rs_array;
+    }
+    
+    // Select livefeed recording
+    public function selectLiveFeedRecording($livefeedrecordingid) {
+
+        if ( empty($livefeedrecordingid) ) throw new \Exception('[ERROR] Livefeed recording ID is empty.');
+        
+        $this->livefeedrecordingid = $livefeedrecordingid;
+        
+    }
+
+    // Update livefeed_recording status
+    public function updateLiveFeedRecordingStatus($status) {
+
+        if ( empty($status) ) throw new \Exception('[ERROR] Livefeed recording status empty');
+
+        $values = array(
+            'status' => $status
+        );
+
+        $model = $this->bootstrap->getVSQModel('livefeed_recording');
+        $model->select($this->livefeedrecordingid);
+        $model->updateRow($values);
+        
+        // Log status change
+        $this->debugLog("[INFO] Livefeed recording id#" . $this->livefeedrecordingid . " status changed to '" . $status . "'.", $sendmail = false);
+
+    }
+    
     
 }
 
