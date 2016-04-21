@@ -18,14 +18,11 @@ class Api {
     CURLOPT_CONNECTTIMEOUT => 1,
     CURLOPT_USERAGENT      => 'teleconnect api client',
   );
-  
+  private $userchecked = false;
   
   public function __construct( $email, $password ) {
     $this->email    = $email;
     $this->password = $password;
-
-    if ( !$this->checkUserPassword() )
-      throw new \Exception("User/password invalid");
   }
 
   public function setDomain( $domain ) {
@@ -152,7 +149,13 @@ class Api {
     
   }
   
-  private function executeCall( $options, $action ) {
+  private function executeCall( $options, $action, $skipUserCheck = false ) {
+    if ( !$skipUserCheck and !$this->userchecked ) {
+      if ( !$this->checkUserPassword() )
+        throw new \Exception("User/password invalid");
+      else
+        $this->userchecked = true;
+    }
 
     $this->initCurl( $options );
     $json = curl_exec( $this->curl );
@@ -331,8 +334,8 @@ class Api {
       CURLOPT_URL => $this->getURL('controller', 'users', 'authenticate', $parameters ),
     );
 
-    $result = $this->executeCall( $options, "USERAUTHENTICATE" );
-    if ( !$result or !isset( $result['data'] ) )
+    $result = $this->executeCall( $options, "USERAUTHENTICATE", true );
+    if ( !$result or !isset( $result['data'] ) or $result['result'] === 'ERR' )
       return false;
 
     return $result['data'] !== false;
