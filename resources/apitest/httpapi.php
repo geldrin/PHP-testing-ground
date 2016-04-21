@@ -23,7 +23,9 @@ class Api {
   public function __construct( $email, $password ) {
     $this->email    = $email;
     $this->password = $password;
-    
+
+    if ( !$this->checkUserPassword() )
+      throw new \Exception("User/password invalid");
   }
 
   public function setDomain( $domain ) {
@@ -320,4 +322,19 @@ class Api {
     
   }
   
+  private function checkUserPassword() {
+    $parameters = array(
+      'email'    => $this->email,
+      'password' => $this->password,
+    );
+    $options    = array(
+      CURLOPT_URL => $this->getURL('controller', 'users', 'authenticate', $parameters ),
+    );
+
+    $result = $this->executeCall( $options, "USERAUTHENTICATE" );
+    if ( !$result or !isset( $result['data'] ) )
+      return false;
+
+    return $result['data'] !== false;
+  }
 }
