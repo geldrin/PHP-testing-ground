@@ -1407,4 +1407,65 @@ class Livefeeds extends \Springboard\Model {
     ");
   }
 
+  public function handleVCRExtraInfo( $start, $userid ) {
+    $this->ensureObjectLoaded();
+    $row = array(
+      'livefeedid' => $this->id,
+    );
+
+    if ( !$this->row['recordinglinkid'] )
+      throw new \Exception("recordinglinkid invalid for feed #" . $this->id );
+
+    if ( $start ) {
+      $transcoderid = $this->db->getOne("
+        SELECT lg.transcoderid
+        FROM
+          recording_links AS rl,
+          livestream_groups AS lg
+        WHERE
+          rl.id = '" . $this->row['recordinglinkid'] . "' AND
+          lg.id = rl.livestreamgroupid
+        LIMIT 1
+      ");
+
+      if ( !$transcoderid )
+        throw new \Exception(
+          "transcoderid invalid for feed #" . $this->id . ", linkid #" .
+          $this->row['recordinglinkid']
+        );
+
+      $row['userid'] = $userid;
+      $row['starttimestamp'] = date('Y-m-d H:i:s');
+      $row['livestreamtranscoderid'] = $transcoderid;
+      $row['status'] = 'started';
+    } else {
+      if ( !$this->row['vcrconferenceid'] )
+        throw new \Exception("vcrconferenceid invalid for feed #" . $this->id );
+
+      $row['endtimestamp'] = date('Y-m-d H:i:s');
+      $row['recordinglinkid'] = $this->row['recordinglinkid'];
+      $row['vcrconferenceid'] = $this->row['vcrconferenceid'];
+      $row['status'] = 'finished';
+    }
+
+    $columns = array();
+    $values  = array();
+    $update  = array();
+    foreach( $row as $column => $value ) {
+      $value = $this->db->qstr( $value );
+      $columns[] = $column;
+      $values[] = $value;
+      $update[] = $column . ' = ' . $value;
+    }
+
+    $sql = "
+      INSERT INTO livefeed_recordings
+      (" . implode(", ", $columns ) . ") VALUES
+      (" . implode(", ", $values ) . ")
+      ON DUPLICATE KEY UPDATE
+      " . implode(", ", $update ) . "
+    ";
+
+    $this->db->query( $sql );
+  }
 }
