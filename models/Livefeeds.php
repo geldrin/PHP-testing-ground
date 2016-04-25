@@ -1409,12 +1409,12 @@ class Livefeeds extends \Springboard\Model {
 
   public function handleVCRExtraInfo( $start, $userid ) {
     $this->ensureObjectLoaded();
-    $row = array(
-      'livefeedid' => $this->id,
-    );
+    $row = array();
 
     if ( !$this->row['recordinglinkid'] )
       throw new \Exception("recordinglinkid invalid for feed #" . $this->id );
+
+    $liveRecModel = $this->bootstrap->getModel('livefeed_recordings');
 
     if ( $start ) {
       $transcoderid = $this->db->getOne("
@@ -1434,38 +1434,43 @@ class Livefeeds extends \Springboard\Model {
           $this->row['recordinglinkid']
         );
 
+      if ( $this->row['livefeedrecordingid'] )
+        throw new \Exception("livefeedrecordingsid set for starting feed #" . $this->id );
+
+      $row['livefeedid'] = $this->id;
       $row['userid'] = $userid;
       $row['starttimestamp'] = date('Y-m-d H:i:s');
       $row['livestreamtranscoderid'] = $transcoderid;
       $row['status'] = 'started';
+
+      $liveRecModel->insert( $row );
+      $this->updateRow( array(
+          'livefeedrecordingid' => $liveRecModel->id,
+        )
+      );
+
     } else {
       if ( !$this->row['vcrconferenceid'] )
         throw new \Exception("vcrconferenceid invalid for feed #" . $this->id );
+
+      if ( !$this->row['livefeedrecordingid'] )
+        throw new \Exception("livefeedrecordingid invalid for feed #" . $this->id );
 
       $row['endtimestamp'] = date('Y-m-d H:i:s');
       $row['recordinglinkid'] = $this->row['recordinglinkid'];
       $row['vcrconferenceid'] = $this->row['vcrconferenceid'];
       $row['status'] = 'finished';
+
+      $liveRecModel->select( $this->row['livefeedrecordingid'] );
+      if ( !$liveRecModel->row )
+        throw new \Exception("livefeed_recordings.id not found for feed #" . $this->id );
+
+      $liveRecModel->updateRow( $row );
+      $this->updateRow( array(
+          'livefeedrecordingid' => null,
+        )
+      );
+
     }
-
-    $columns = array();
-    $values  = array();
-    $update  = array();
-    foreach( $row as $column => $value ) {
-      $value = $this->db->qstr( $value );
-      $columns[] = $column;
-      $values[] = $value;
-      $update[] = $column . ' = ' . $value;
-    }
-
-    $sql = "
-      INSERT INTO livefeed_recordings
-      (" . implode(", ", $columns ) . ") VALUES
-      (" . implode(", ", $values ) . ")
-      ON DUPLICATE KEY UPDATE
-      " . implode(", ", $update ) . "
-    ";
-
-    $this->db->query( $sql );
   }
 }
