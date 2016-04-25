@@ -1456,7 +1456,7 @@ class Livefeeds extends \Springboard\Model {
       $row['endtimestamp'] = date('Y-m-d H:i:s');
       $row['recordinglinkid'] = $this->row['recordinglinkid'];
       $row['vcrconferenceid'] = $this->row['vcrconferenceid'];
-      $row['status'] = 'finished';
+      $row['status'] = 'finishing';
 
       $liveRecModel->select( $this->row['livefeedrecordingid'] );
       if ( !$liveRecModel->row )
