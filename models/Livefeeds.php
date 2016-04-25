@@ -1467,7 +1467,7 @@ class Livefeeds extends \Springboard\Model {
 
       $liveRecModel->updateRow( $row );
       $this->updateRow( array(
-          'livefeedrecordingid' => null,
+          'livefeedrecordingid' => '',
         )
       );
 
