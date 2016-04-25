@@ -1,20 +1,6 @@
 <?php
 namespace Videosquare\Model;
 
-/*
-CREATE TABLE `livefeed_recordings` (
- `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
- `livefeedid` int(10) unsigned DEFAULT NULL,
- `userid` int(10) unsigned NOT NULL,
- `livestreamtranscoderid` int(10) unsigned NOT NULL,
- `starttimestamp` datetime NOT NULL,
- `endtimestamp` datetime DEFAULT NULL,
- `vcrconferenceid` text,
- `status` text,
- PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8
-*/
-
 class VCR extends \Videosquare\Model\Live {
 
     private $livefeedid = null;
@@ -139,7 +125,7 @@ class VCR extends \Videosquare\Model\Live {
     }
 
     // Get live recordings requires to be handled
-    public function getPendingLiveRecordings($type, $livefeedstatus, $recordinglinkstatus) {
+    public function getPendingLiveFeeds($type, $livefeedstatus, $recordinglinkstatus) {
 
         $query = "
             SELECT
@@ -151,6 +137,7 @@ class VCR extends \Videosquare\Model\Live {
                 lf.needrecording,
                 lf.recordinglinkid,
                 lf.status,
+                lf.livefeedrecordingid,
                 rl.id AS recordinglinkid,
                 rl.name AS recordinglinkname,
                 rl.organizationid,
@@ -257,6 +244,7 @@ class VCR extends \Videosquare\Model\Live {
                 lf.recordinglinkid,
                 lf.vcrconferenceid,
                 lf.vcrparticipantid,
+                lf.livefeedrecordingid,
                 lf.status
             FROM
                 livefeeds AS lf
@@ -321,6 +309,66 @@ class VCR extends \Videosquare\Model\Live {
     
         return $rs_array;
     }
+
+    // Get livefeed recording by ID
+    public function getLiveFeedRecording($id = null, $livefeedid = null, $status = null, $server = null) {
+
+        $filter = array();
+        
+        if ( !empty($id) ) array_push($filter, "lfr.id = " . $id);
+        
+        if ( !empty($livefeedid) ) array_push($filter, "lfr.livefeedid = " . $livefeedid);
+        
+        if ( !empty($status) ) array_push($filter, "lfr.status = '" . $status . "'");
+        
+        if ( !empty($server) ) array_push($filter, "lst.server = '" . $server . "'");
+        
+        $sql_filter = "";
+        if ( count($filter) > 0 ) $sql_filter = " AND " . implode(" AND ", $filter);
+    
+        $query = "
+            SELECT
+                lfr.id,
+                lfr.livefeedid,
+                lfr.userid,
+                lfr.livestreamtranscoderid,
+                lfr.starttimestamp,
+                lfr.endtimestamp,
+                lfr.vcrconferenceid,
+                lfr.status,
+                lst.server,
+                u.email,
+                o.id AS organizationid,
+                o.domain
+            FROM
+                livefeed_recordings AS lfr,
+                livestream_transcoders AS lst,
+                users AS u,
+                organizations AS o
+            WHERE
+                lfr.livestreamtranscoderid = lst.id AND
+                lfr.userid = u.id AND
+                u.organizationid = o.id" . $sql_filter . "
+            ORDER BY
+                lfr.starttimestamp DESC";
+
+        echo $query . "\n";
+                
+        $model = $this->bootstrap->getVSQModel('livefeed_recordings');
+        $rs = $model->safeExecute($query);
+        
+        // $rs->getArray() does not work!
+        $rs_array = array();
+        while ( !$rs->EOF ) {
+            array_push($rs_array, $rs->fields);
+            $rs->moveNext();
+        }
+                
+        if ( count($rs_array) < 1 ) return false;
+    
+        return $rs_array;
+    }
+
     
     // Select livefeed recording
     public function selectLiveFeedRecording($livefeedrecordingid) {
@@ -332,20 +380,20 @@ class VCR extends \Videosquare\Model\Live {
     }
 
     // Update livefeed_recording status
-    public function updateLiveFeedRecordingStatus($status) {
+    public function updateLiveFeedRecording($status = null, $starttimestamp = null, $endtimestamp = null) {
 
-        if ( empty($status) ) throw new \Exception('[ERROR] Livefeed recording status empty');
+        if ( empty($status) and empty($starttimestamp) and empty($endtimestamp) ) throw new \Exception('[ERROR] Livefeed recording status and start and end time empty');
 
-        $values = array(
-            'status' => $status
-        );
+        if ( !empty($status) ) $values['status'] = $status;
+        if ( !empty($starttimestamp) ) $values['starttimestamp'] = $starttimestamp;
+        if ( !empty($endtimestamp) ) $values['endtimestamp'] = $endtimestamp;
 
-        $model = $this->bootstrap->getVSQModel('livefeed_recording');
+        $model = $this->bootstrap->getVSQModel('livefeed_recordings');
         $model->select($this->livefeedrecordingid);
         $model->updateRow($values);
         
         // Log status change
-        $this->debugLog("[INFO] Livefeed recording id#" . $this->livefeedrecordingid . " status changed to '" . $status . "'.", $sendmail = false);
+        $this->debugLog("[INFO] Livefeed recording id#" . $this->livefeedrecordingid . " updated with:\n" . print_r($values, true), $sendmail = false);
 
     }
     

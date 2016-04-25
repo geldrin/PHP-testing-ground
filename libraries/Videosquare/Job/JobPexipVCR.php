@@ -24,6 +24,10 @@ class PexipJob extends Job {
     protected $needsLoop                = true;
     protected $signalReceived           = false;
     protected $needsSleep               = true;
+    protected $closeDbOnSleep           = true;
+    
+    protected $sleepSeconds             = 10;
+    protected $maxSleepSeconds          = 20;
 
     // Videosquare job specific config options
     protected $removeLockOnStart        = true;
@@ -36,7 +40,7 @@ class PexipJob extends Job {
         $vcrObj = $this->bootstrap->getVSQModel("VCR");
 
         // Get recordings to start (with 'ready' recording links)
-        $recLinks = $vcrObj->getPendingLiveRecordings("pexip", $this->bootstrap->config['config_jobs']['dbstatus_vcr_start'], $this->bootstrap->config['config_jobs']['dbstatus_vcr_ready']);
+        $recLinks = $vcrObj->getPendingLiveFeeds("pexip", $this->bootstrap->config['config_jobs']['dbstatus_vcr_start'], $this->bootstrap->config['config_jobs']['dbstatus_vcr_ready']);
     
         if ( $recLinks !== false ) {
             
@@ -45,6 +49,9 @@ class PexipJob extends Job {
                 // Select objects
                 $vcrObj->selectLiveFeed($recLink['id']);
                 $vcrObj->selectRecordingLink($recLink['recordinglinkid']);
+                if ( $recLink['needrecording'] == 1 ) {
+                    $vcrObj->selectLiveFeedRecording($recLink['livefeedrecordingid']);
+                }
                 
                 if ( $this->debug_mode ) $this->debugLog("[DEBUG] START Pexip recording:\n" . print_r($recLink, true), false);
                 
@@ -91,6 +98,10 @@ class PexipJob extends Job {
                     $vcrObj->updateLiveFeedParams($result['data']['participant_id']);
                     // Update recording link Pexip participant ID
                     $vcrObj->updateRecordingLinkParams($result['data']['participant_id']);
+                    // Update livefeed recording start date
+                    if ( $recLink['needrecording'] == 1 ) {
+                        $vcrObj->updateLiveFeedRecording(null, date("Y-m-d H:i:s"));
+                    }
                 }
 
                 unset($pexip);
@@ -102,7 +113,7 @@ class PexipJob extends Job {
         sleep(2);
         
         // CHECK: check if participant is connected
-        $recLinks = $vcrObj->getPendingLiveRecordings("pexip", $this->bootstrap->config['config_jobs']['dbstatus_vcr_recording'], $this->bootstrap->config['config_jobs']['dbstatus_vcr_recording']);
+        $recLinks = $vcrObj->getPendingLiveFeeds("pexip", $this->bootstrap->config['config_jobs']['dbstatus_vcr_recording'], $this->bootstrap->config['config_jobs']['dbstatus_vcr_recording']);
         if ( $recLinks !== false ) {
             
             foreach ( $recLinks as $recLink ) {
@@ -112,7 +123,10 @@ class PexipJob extends Job {
                 // Select objects
                 $vcrObj->selectLiveFeed($recLink['id']);
                 $vcrObj->selectRecordingLink($recLink['recordinglinkid']);
-            
+                if ( $recLink['needrecording'] == 1 ) {
+                    $vcrObj->selectLiveFeedRecording($recLink['livefeedrecordingid']);
+                }
+                
                 // Pexip
                 $pexip = new Pexip($recLink['apiserver'], $recLink['apiport'], $recLink['apiuser'], $recLink['apipassword'], $recLink['apiishttpsenabled'], $recLink['pexiplocation']);
 
@@ -130,6 +144,10 @@ class PexipJob extends Job {
                     $vcrObj->updateRecordingLinkStatus($this->bootstrap->config['config_jobs']['dbstatus_vcr_ready']);
                     // Update livefeed status ("ready")
                     $vcrObj->updateLiveFeedStatus($this->bootstrap->config['config_jobs']['dbstatus_vcr_ready']);
+                    // Update livefeed recording end date
+                    if ( $recLink['needrecording'] == 1 ) {
+                        $vcrObj->updateLiveFeedRecording("interrupted", null, date("Y-m-d H:i:s"));
+                    }
                     
                     // Log
                     $this->debugLog("[ERROR] Participant id#" . $liveFeed[0]['vcrparticipantid'] . " not in call anymore:\n" . print_r($result, true), false);
@@ -145,7 +163,7 @@ class PexipJob extends Job {
         }
         
         // DISCONNECT: Get recordings to stop
-        $recLinks = $vcrObj->getPendingLiveRecordings("pexip", $this->bootstrap->config['config_jobs']['dbstatus_vcr_disc'], $this->bootstrap->config['config_jobs']['dbstatus_vcr_recording']);
+        $recLinks = $vcrObj->getPendingLiveFeeds("pexip", $this->bootstrap->config['config_jobs']['dbstatus_vcr_disc'], $this->bootstrap->config['config_jobs']['dbstatus_vcr_recording']);
 
         if ( $recLinks !== false ) {
             
@@ -170,6 +188,7 @@ class PexipJob extends Job {
                 
                 // Disconnect participant
                 $result = $pexip->disconnectStreamingParticipant($liveFeed[0]['vcrparticipantid']);
+                $now = date("Y-m-d H:i:s");
                 if ( !$result ) {
                     // Exception?
                     $this->debugLog("[ERROR] Participant id#" . $liveFeed[0]['vcrparticipantid'] . " cannot be disconnected:\n" . print_r($result, true), false);
@@ -184,6 +203,16 @@ class PexipJob extends Job {
                     $vcrObj->updateRecordingLinkStatus($this->bootstrap->config['config_jobs']['dbstatus_vcr_ready']);
                     // Update livefeed status ("ready")
                     $vcrObj->updateLiveFeedStatus($this->bootstrap->config['config_jobs']['dbstatus_vcr_ready']);
+                    // Update livefeed recording end date
+                    echo "1\n";
+                    if ( $recLink['needrecording'] == 1 ) {
+                        echo "2\n";
+                        $liveFeedRecordings = $vcrObj->getLiveFeedRecording(null, $recLink['id'], "started", null);
+                        if ( count($liveFeedRecordings) > 1 ) $this->debugLog("[WARN] More livefeed recordings are in progress. Using the latest. Livefeed recording in progress:\n" . print_r($liveFeedRecordings, true), false);
+                        var_dump($liveFeedRecordings);
+                        $vcrObj->selectLiveFeedRecording($liveFeedRecordings[0]['id']);
+                        $vcrObj->updateLiveFeedRecording("finished", null, $now);
+                    }
                 }
                 
                 unset($pexip);
