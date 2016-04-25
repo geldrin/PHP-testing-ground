@@ -509,7 +509,7 @@ class Controller extends \Visitor\Controller {
     );
 
     $start = $this->application->getNumericParameter('start');
-    if ( $start === '1' ) {
+    if ( $start === 1 ) {
 
       if ( $feedModel->row['status'] != 'ready' ) {
         \Springboard\Debug::getInstance()->log( false, false, 'Feed nem tudott indulni: ' . var_export( $feedModel->row, true ), true );
@@ -518,7 +518,7 @@ class Controller extends \Visitor\Controller {
 
       $status = 'start';
 
-    } elseif ( $start === '0' ) {
+    } elseif ( $start === 0 ) {
 
       if ( $feedModel->row['status'] != 'recording' ) {
         \Springboard\Debug::getInstance()->log( false, false, 'Feed nem tudott leallni: ' . var_export( $feedModel->row, true ), true );
@@ -542,7 +542,7 @@ class Controller extends \Visitor\Controller {
          $feedModel->row['needrecording'] == '1'
        ) {
       $user = $this->bootstrap->getSession('user');
-      $feedModel->handleVCRExtraInfo( $start === '1', $user['id'] );
+      $feedModel->handleVCRExtraInfo( $start, $user['id'] );
     }
 
     $this->redirect(
