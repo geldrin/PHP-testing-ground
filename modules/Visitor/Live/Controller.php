@@ -507,6 +507,7 @@ class Controller extends \Visitor\Controller {
       'livefeeds',
       $this->application->getNumericParameter('id')
     );
+    $feedModel->startTrans();
 
     $start = $this->application->getNumericParameter('start');
     if ( $start === 1 ) {
@@ -544,6 +545,8 @@ class Controller extends \Visitor\Controller {
       $user = $this->bootstrap->getSession('user');
       $feedModel->handleVCRExtraInfo( $start, $user['id'] );
     }
+
+    $feedModel->endTrans();
 
     $this->redirect(
       $this->application->getParameter(
