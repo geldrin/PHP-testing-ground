@@ -204,14 +204,15 @@ class PexipJob extends Job {
                     // Update livefeed status ("ready")
                     $vcrObj->updateLiveFeedStatus($this->bootstrap->config['config_jobs']['dbstatus_vcr_ready']);
                     // Update livefeed recording end date
-                    echo "1\n";
                     if ( $recLink['needrecording'] == 1 ) {
-                        echo "2\n";
-                        $liveFeedRecordings = $vcrObj->getLiveFeedRecording(null, $recLink['id'], "started", null);
+                        $liveFeedRecordings = $vcrObj->getLiveFeedRecordings(null, $recLink['id'], "finishing", null);
+                        if ( count($liveFeedRecordings) > 0 ) {
+                            $vcrObj->selectLiveFeedRecording($liveFeedRecordings[0]['id']);
+                            $vcrObj->updateLiveFeedRecording("finished", null, $now);
+                        } else {
+                            $this->debugLog("[ERROR] No livefeed recording found for this recording session.", true);
+                        }
                         if ( count($liveFeedRecordings) > 1 ) $this->debugLog("[WARN] More livefeed recordings are in progress. Using the latest. Livefeed recording in progress:\n" . print_r($liveFeedRecordings, true), false);
-                        var_dump($liveFeedRecordings);
-                        $vcrObj->selectLiveFeedRecording($liveFeedRecordings[0]['id']);
-                        $vcrObj->updateLiveFeedRecording("finished", null, $now);
                     }
                 }
                 

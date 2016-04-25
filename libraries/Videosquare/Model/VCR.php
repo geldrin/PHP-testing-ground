@@ -311,7 +311,7 @@ class VCR extends \Videosquare\Model\Live {
     }
 
     // Get livefeed recording by ID
-    public function getLiveFeedRecording($id = null, $livefeedid = null, $status = null, $server = null) {
+    public function getLiveFeedRecordings($id = null, $livefeedid = null, $status = null, $server = null) {
 
         $filter = array();
         
@@ -351,8 +351,6 @@ class VCR extends \Videosquare\Model\Live {
                 u.organizationid = o.id" . $sql_filter . "
             ORDER BY
                 lfr.starttimestamp DESC";
-
-        echo $query . "\n";
                 
         $model = $this->bootstrap->getVSQModel('livefeed_recordings');
         $rs = $model->safeExecute($query);
