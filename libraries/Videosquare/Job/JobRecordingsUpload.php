@@ -56,10 +56,6 @@ class RecordingsUploadJob extends Job {
                 }
 
             }
-
-            $starttimestamp = strtotime($liveFeedRecording['starttimestamp']);
-            $starttime = date("Y-m-d", $starttimestamp);
-            echo $starttime . "\n";
             
             // Search video channel recording
             $recordingVideo = $this->findFileByClosestOffset($streamVideo, $liveFeedRecording['starttimestamp']);
@@ -68,8 +64,47 @@ class RecordingsUploadJob extends Job {
                         
             if ( $recordingVideo === false ) {
                 $this->debugLog("[ERROR] No recorded video file found for livefeed id#" . $liveFeedRecording['livefeedid'], false);
-                /*$vcrObj->selectLiveFeedRecording($liveFeedRecording['id']);
-                $vcrObj->updateLiveFeedRecording("notfound", null, null);*/
+                $vcrObj->selectLiveFeedRecording($liveFeedRecording['id']);
+                $vcrObj->updateLiveFeedRecording("notfound", null, null);
+            } else {
+                // Upload using Videosquare API
+                try {
+                    $api = new \Api($this->bootstrap->config['api_user'], $this->bootstrap->config['api_password']);
+                    
+                    $api->setDomain($liveFeedRecording['domain']);
+                    
+                    // Upload recording
+                    $time_start = time();
+                    //$recording = $api->uploadRecording($filename, "hun", $liveFeedRecording['userid'], 0);
+                    $recording = $api->uploadRecording($this->bootstrap->config['recpath'] . $recordingVideo['file'], "hun");
+                    $duration = time() - $time_start;
+                    $mins_taken = round($duration / 60, 2);
+                    
+                    var_dump($recording);
+                    
+                    echo "Successful upload in " . $mins_taken . " mins.\n";
+                                
+                    $metadata = array(
+                        'title'					=> "Videoconference recording: " . $liveFeedRecording['starttimestamp'],
+                        'recordedtimestamp'		=> $liveFeedRecording['starttimestamp'],
+                        'copyright'				=> 'Minden jog fenntartva. A felvétel egészének vagy bármely részének újrafelhasználása kizárólag a szerző(k) engedélyével lehetséges.',
+                        'slideonright'			=> 1,
+                        'accesstype'			=> 'public',
+                        'ispublished'			=> 0,
+                        'isdownloadable'		=> 0,
+                        'isaudiodownloadable'	=> 0,
+                        'isembedable'			=> 1
+                    );
+        
+                    $api->modifyRecording($recording['data']['id'], $metadata);
+                    
+                } catch ( \Exception $err ) {
+                    
+                    $this->debugLog( '[EXCEPTION] run(): ' . $err->getMessage(), false );
+                    echo $err->getMessage() . "\n";
+                    
+                }
+                
             }
 
             // Search content channel recording
@@ -77,59 +112,11 @@ class RecordingsUploadJob extends Job {
             echo "Content found:\n";
             var_dump($recordingContent);
                         
-            if ( $recordingContent === false ) {
-                $this->debugLog("[INFO] No recorded content file found for livefeed id#" . $liveFeedRecording['livefeedid'], false);
-//                $vcrObj->selectLiveFeedRecording($liveFeedRecording['id']);
-//                $vcrObj->updateLiveFeedRecording("notfound", null, null);
-            }
-            
-            
-continue;
+            if ( $recordingContent === false ) $this->debugLog("[INFO] No recorded content file found for livefeed id#" . $liveFeedRecording['livefeedid'], false);
 
-
-
-            // Connect Videosquare API
             exit;
-            try {
-                $api = new \Api($this->bootstrap->config['api_user'], $this->bootstrap->config['api_password']);
-                // !!!
-                //$api->apiurl = 'https://dev.videosquare.eu/hu/api';
-                $api->setDomain($liveFeedRecording['domain']);
-                
-                // Upload recording
-                $time_start = time();
-                $recording = $api->uploadRecording($filename, "hun", $liveFeedRecording['userid'], 0);
-                $duration = time() - $time_start;
-                $mins_taken = round( $duration / 60, 2);
-                
-                var_dump($recording);
-                
-                echo "Successful upload in " . $mins_taken . " mins.\n";
-                            
-                $metadata = array(
-                    'title'					=> "Videoconference recording: " . $recordDate,
-                    'recordedtimestamp'		=> $recordDate,
-                    'copyright'				=> 'Minden jog fenntartva. A felvétel egészének vagy bármely részének újrafelhasználása kizárólag a szerző(k) engedélyével lehetséges.',
-                    'slideonright'			=> 1,
-                    'accesstype'			=> 'public',
-                    'ispublished'			=> 0,
-                    'isdownloadable'		=> 0,
-                    'isaudiodownloadable'	=> 0,
-                    'isembedable'			=> 1
-                );
-    
-                $api->modifyRecording($recording['data']['id'], $metadata);
-                
-            } catch ( \Exception $err ) {
-                
-                $this->debugLog( '[EXCEPTION] run(): ' . $err->getMessage(), false );
-                echo $err->getMessage() . "\n";
-                
-            }
         
         }
-        
-        exit;
         
 /*         $cacheindex = 'nginxrecordings-' . $hostname;
         
