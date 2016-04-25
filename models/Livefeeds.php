@@ -1450,9 +1450,6 @@ class Livefeeds extends \Springboard\Model {
       );
 
     } else {
-      if ( !$this->row['vcrconferenceid'] )
-        throw new \Exception("vcrconferenceid invalid for feed #" . $this->id );
-
       if ( !$this->row['livefeedrecordingid'] )
         throw new \Exception("livefeedrecordingid invalid for feed #" . $this->id );
 
@@ -1467,7 +1464,7 @@ class Livefeeds extends \Springboard\Model {
 
       $liveRecModel->updateRow( $row );
       $this->updateRow( array(
-          'livefeedrecordingid' => null,
+          'livefeedrecordingid' => '',
         )
       );
 
