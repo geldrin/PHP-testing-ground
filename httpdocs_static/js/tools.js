@@ -92,6 +92,7 @@ $j(document).ready(function() {
   runIfExists('#infobar', setupInfoBar );
   runIfExists('.channelrecordings.halfwidth', setupChannelRecordings );
   runIfExists('#users_signup', setupSignup );
+  runIfExists('#myrecordingsquicksearch', setupMyRecordings );
 
   if ( needping )
     setTimeout( setupPing, 1000 * pingsecs );
@@ -2858,4 +2859,47 @@ function setupStatistics() {
   $j('select[name="searchlive[]"]').select2( getSelectConfig('live') );
   $j('select[name="searchgroups[]"]').select2( getSelectConfig('groups') );
   $j('select[name="searchusers[]"]').select2( getSelectConfig('users') );
+}
+
+function setupMyRecordings() {
+  var ids = [];
+  $j('ul.recordinglist > .listitem').each(function(k, v) {
+    ids.push(parseInt($j(v).attr('data-recordingid'), 10));
+  });
+
+  var url = language + '/recordings/conversioninfo';
+
+  var updateInfo = function( id, data ) {
+    var item = $j('#rec' + id);
+    if (item.length == 0)
+      return;
+
+    // TODO
+  };
+
+  var getInfo = function() {
+    $j.ajax({
+      cache: false,
+      complete: function() {
+        setTimeout( getInfo, 30 * 1000 );
+      },
+      data: {
+        ids: ids
+      },
+      dataType: 'json',
+      type: 'POST',
+      success: function(data) {
+        if (!data || !data.success)
+          return;
+
+        for (var i = data.data.length - 1; i >= 0; i--) {
+          var row = data.data[i];
+          updateInfo( row['recordingid'], data );
+        }
+      },
+      url: url
+    });
+  };
+
+  setTimeout( getInfo, 30 * 1000 );
 }

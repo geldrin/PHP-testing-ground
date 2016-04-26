@@ -41,6 +41,8 @@ class Controller extends \Visitor\Controller {
     'checkfileresume'      => 'uploader|moderateduploader',
     'uploadchunk'          => 'uploader|moderateduploader',
     'cancelupload'         => 'uploader|moderateduploader',
+    // ugyanaz mint myrecordingsba
+    'conversioninfo'        => 'uploader|moderateduploader|editor|clientadmin',
   );
 
   public $forms = array(
@@ -1639,4 +1641,30 @@ class Controller extends \Visitor\Controller {
     return $ret;
   }
 
+  public function conversioninfoAction() {
+    if ( !isset( $_REQUEST['ids'] ) or !is_array( $_REQUEST['ids'] ) )
+      $this->jsonOutput( array('success' => false, 'reason' => 'wrong ids passed'));
+
+    // sanitize
+    $ids = array();
+    foreach( $_REQUEST['ids'] as $value ) {
+      $id = intval( $value );
+      if ( $id > 0 )
+        $ids[] = $id;
+    }
+    $ids = array_unique( $ids );
+
+    $recModel = $this->bootstrap->getModel('recordings');
+    $info = $recModel->getConversionInformation(
+      $ids,
+      $this->bootstrap->getSession('user'),
+      $this->organization['id']
+    );
+
+    $this->jsonOutput( array(
+        'success' => true,
+        'data'    => $info,
+      )
+    );
+  }
 }

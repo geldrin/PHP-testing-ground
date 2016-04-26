@@ -4511,4 +4511,79 @@ class Recordings extends \Springboard\Model {
       LIMIT $start, $limit
     ");
   }
+
+  public function getConversionInformation( $ids, $user, $organizationid ) {
+    if ( empty( $ids ) )
+      return array();
+
+    $extrawhere = '';
+    // normal user, ellenorizzuk hogy ove e minden
+    if ( !$user['iseditor'] and !$user['isclientadmin'] and !$user['isadmin'] ) {
+      $extrawhere = "AND
+        r.userid = '" . $user['id'] . "'
+      ";
+    }
+
+    $limit = count( $ids );
+    $rows = $this->db->getArray("
+      SELECT
+        rv.recordingid,
+        rv.status
+      FROM
+        recordings_versions AS rv,
+        recordings AS r
+      WHERE
+        rv.recordingid IN('" . implode("', '", $ids ) . "') AND
+        r.id = rv.recordingid AND
+        r.organizationid = '$organizationid'
+        $extrawhere
+      LIMIT $limit
+    ");
+
+    $byRecording = array();
+    foreach( $rows as $row ) {
+      if ( !isset( $byRecording[ $row['recordingid'] ] ) )
+        $byRecording[ $row['recordingid'] ] = array();
+
+      $byRecording[ $row['recordingid'] ][] = $row;
+    }
+
+    $ret = array();
+    foreach( $byRecording as $recid => $rows ) {
+      $n = count( $rows );
+      $foundOnstorage = 0;
+      $foundFailed = 0;
+
+      foreach( $rows as $row ) {
+        if ( $row['status'] == 'onstorage' ) {
+          $foundOnstorage++;
+          continue;
+        }
+
+        if ( substr( $row['status'], 0, strlen('failed') ) !== 'failed' )
+          continue;
+
+        $foundFailed++;
+      }
+
+      $percent = floor( ( $foundOnstorage / $n ) * 100 );
+
+      if ( $n != 0 and $n == $foundFailed ) // minden elhasalt
+        $status = 'failed';
+      elseif ( $n != 0 and $foundFailed == 0 ) // minden rendben
+        $status = 'ok';
+      elseif ( $n != 0 and $foundFailed > 0 and $foundOnstorage > 0 )
+        $status = 'partialfail'; // van ami elhasalt, de van ami lejatszhato
+      else // amugy se nincs hiba, se nem jatszhato le
+        $status = 'pending';
+
+      $ret[] = array(
+        'recordingid' => $recid,
+        'percent'     => $percent,
+        'status'      => $status,
+      );
+    }
+
+    return $ret;
+  }
 }

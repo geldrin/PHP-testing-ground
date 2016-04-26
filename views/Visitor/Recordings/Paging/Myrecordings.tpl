@@ -1,5 +1,5 @@
 {assign var=views value=$item.numberofviews|numberformat}
-<li class="listitem">
+<li class="listitem" id="rec{$item.id}" data-recordingid="{$item.id}">
   <a name="rec{$item.id}"></a>
   <div class="recordingpic">
     <a href="{$recordingurl}">
