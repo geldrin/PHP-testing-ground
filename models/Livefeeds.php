@@ -1464,7 +1464,7 @@ class Livefeeds extends \Springboard\Model {
 
       $liveRecModel->updateRow( $row );
       $this->db->query("
-        UDPATE livefeeds
+        UPDATE livefeeds
         SET livefeedrecordingid = NULL
         WHERE id = '" . $this->id . "'
         LIMIT 1
