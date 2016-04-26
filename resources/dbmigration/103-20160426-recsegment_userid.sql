@@ -1,0 +1,1 @@
+ALTER TABLE statistics_recordings_segments_users DROP COLUMN userid;
