@@ -27,6 +27,7 @@ class Controller extends \Visitor\Controller {
     'editinvite'           => 'clientadmin',
     'getinvitationtemplate' => 'clientadmin',
     'togglesubscription'   => 'member',
+    'exportinvites'        => 'clientadmin',
   );
 
   public $forms = array(
@@ -734,4 +735,73 @@ class Controller extends \Visitor\Controller {
     );
   }
 
+  public function exportinvitesActions() {
+    $invModel = $this->bootstrap->getModel('users_invitations');
+    $invModel->addFilter('organizationid', $this->controller->organization['id'] );
+    $invModel->addTextFilter("status <> 'deleted'");
+    $rs = $invModel->db->query("
+      SELECT
+        id,
+        permissions,
+        departments,
+        groups,
+        recordingid,
+        livefeedid,
+        channelid,
+        registereduserid,
+        status,
+        userid,
+        email,
+        namefirst,
+        namelast,
+        validationcode,
+        timestampdisabledafter,
+        templateid,
+        timestamp,
+        invitationvaliduntil,
+        customforwardurl
+      FROM users_invitations " .
+      $invModel->getFilter() . "
+      ORDER BY id ASC
+    ");
+
+    $delim = ';';
+    $filename = 'videosquare-invitations-' . date('YmdHis') . '.csv';
+
+    // TODO szebb column neveket?
+    $header = array(
+      'id'                     => 'id',
+      'permissions'            => 'permissions',
+      'departments'            => 'departments',
+      'groups'                 => 'groups',
+      'recordingid'            => 'recordingid',
+      'livefeedid'             => 'livefeedid',
+      'channelid'              => 'channelid',
+      'registereduserid'       => 'registereduserid',
+      'status'                 => 'status',
+      'userid'                 => 'userid',
+      'email'                  => 'email',
+      'namefirst'              => 'namefirst',
+      'namelast'               => 'namelast',
+      'validationcode'         => 'validationcode',
+      'timestampdisabledafter' => 'timestampdisabledafter',
+      'templateid'             => 'templateid',
+      'timestamp'              => 'timestamp',
+      'invitationvaliduntil'   => 'invitationvaliduntil',
+      'customforwardurl'       => 'customforwardurl',
+    );
+
+    $f = \Springboard\Browser::initCSVHeaders(
+      $filename,
+      array_values( $header ),
+      $delim
+    );
+
+    foreach( $rs as $row )
+      fputcsv( $f, array_values( $row ), $delim );
+
+    fclose( $f );
+    die();
+
+  }
 }
