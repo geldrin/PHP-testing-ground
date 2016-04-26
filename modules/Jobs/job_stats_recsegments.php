@@ -30,7 +30,7 @@ if ( iswindows() ) {
 }
 
 // Exit if any STOP file appears
-//if ( is_file( $app->config['datapath'] . 'jobs/' . $myjobid . '.stop' ) or is_file( $app->config['datapath'] . 'jobs/all.stop' ) ) exit;
+if ( is_file( $app->config['datapath'] . 'jobs/' . $myjobid . '.stop' ) or is_file( $app->config['datapath'] . 'jobs/all.stop' ) ) exit;
 
 // Runover check. Is this process already running? If yes, report and exit
 if ( !runOverControl($myjobid) ) exit;
@@ -39,7 +39,7 @@ $vsq_epoch = strtotime("2012-11-01 00:00:00");
 
 $stats_config = array(
     'label'             => "stats_recsegments",
-    'sqltablename'      => "statistics_recording_segments_users",
+    'sqltablename'      => "statistics_recording_segments",
     'segmentlengthsecs' => 60,
     'lastprocessedtime' => $vsq_epoch           // statistics records processed until
 );
@@ -105,10 +105,7 @@ $stats_config['lastprocessedtime'] = $interval_end;
 $processing_started = time();
 
 $stats = queryViewStatsOnDemandForInterval($interval_start, $interval_end);
-if ( $stats === false ) {
-    // Nothing to process
-    exit;
-}
+if ( $stats === false ) exit;
 
 $records_processed = 0;
 $records_committed = 0;
@@ -119,34 +116,26 @@ while ( !$stats->EOF ) {
 
     $stat = $stats->fields;
 
-//var_dump($stat);
-
     $recid = $stat["recordingid"];
-    $userid = $stat["userid"];
-    if ( empty($userid) ) $userid = 0;
     
     // Calculate segment
-    if ( !isset($stats_p[$recid][$userid]) ) {
-        $stats_p[$recid][$userid] = array();
+    if ( !isset($stats_p[$recid]) ) {
+        $stats_p[$recid] = array();
     }
 
     // Index recording segments between positionfrom - positionuntil
     $segment_from = floor($stat['positionfrom'] / $stats_config['segmentlengthsecs']);
     $segment_to = floor(min($stat['positionuntil'], $stat['recordinglength']) / $stats_config['segmentlengthsecs']);
-//echo "dbpos: " . $stat['positionfrom'] . " - " . $stat['positionuntil'] . "\n";
-//echo "segidx: " . $segment_from . " - " . $segment_to . "\n";
 
     for ( $i = $segment_from; $i <= $segment_to; $i++) {
         
-        if ( !isset($stats_p[$recid][$userid][$i]) ) {
-            $stats_p[$recid][$userid][$i] = 1;
+        if ( !isset($stats_p[$recid][$i]) ) {
+            $stats_p[$recid][$i] = 1;
         } else {
-            $stats_p[$recid][$userid][$i] += 1;
+            $stats_p[$recid][$i] += 1;
         }
 
     }
-
-//if ( $records_processed > 10 ) break;
 
     $records_processed++;
     $stats->MoveNext();
@@ -155,53 +144,36 @@ while ( !$stats->EOF ) {
 //var_dump($stats_p);
 
 // Insert records to DB
-foreach ($stats_p as $recid => $users) {
-    //echo "recid: " . $recid . "\n";
-    foreach ($users as $userid => $recuser_segments) {
-        //echo "userid: " . $userid . "\n";
-        $stats_db = queryStatsRecordingsSegments($recid, $userid);
-        //$stats_db = queryStatsRecordingsSegments(20, 15);
+foreach ($stats_p as $recid => $recsegments) {
 
-        echo "Segments for: rec = " . $recid . " / userid = " . $userid . "\n";
-        
-        //echo "DB already contains:\n";
-        //var_dump($stats_db);
-        
-        //echo "To be UPDATED: rec = " . $recid . " / userid = " . $userid . "\n";
-        //var_dump($recuser_segments);
-        
-        $sql_insert = array();            
-        foreach ($recuser_segments as $recsegment => $viewcounter) {
-            //echo "recseg = " . $recsegment . " / vc = " . $viewcounter . "\n";
+    $stats_db = queryStatsRecordingsSegments($recid);
             
-            // Find this recording and user in existing DB records              
-            $insert_id = searchForStatsRecordInArray($stats_db, $recsegment);
-            array_push($sql_insert, "(" . (($insert_id == false)?"NULL":$insert_id) . "," . $recid . "," . (($userid == 0)?"NULL":$userid) . "," . $recsegment . "," . $viewcounter . ")");
+    $sql_insert = array();            
+    foreach ($recsegments as $recsegment => $viewcounter) {
+      
+        // Find this recording and user in existing DB records              
+        $insert_id = searchForStatsRecordInArray($stats_db, $recsegment);
+        array_push($sql_insert, "(" . (($insert_id == false)?"NULL":$insert_id) . "," . $recid . "," . $recsegment . "," . $viewcounter . ")");
+    }
+
+    if ( !empty($sql_insert) ) {
+        $sql_insert_string = implode(",", $sql_insert);
+        
+        $query = "
+            INSERT INTO
+                statistics_recordings_segments (id, recordingid, recordingsegment, viewcounter)
+            VALUES " . $sql_insert_string . "
+            ON DUPLICATE KEY UPDATE
+                viewcounter = viewcounter + VALUES(viewcounter)";
+ 
+        try {
+            $rs = $db->Execute($query);
+        } catch (exception $err) {
+            $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] SQL query failed. Processing IS BROKEN! SQL error:\n" . trim($query), $sendmail = true);
+            exit;
         }
-       
-        //var_dump($sql_insert);
-        if ( !empty($sql_insert) ) {
-            $sql_insert_string = implode(",", $sql_insert);
-            
-            $query = "
-                INSERT INTO
-                    statistics_recordings_segments_users (id, recordingid, userid, recordingsegment, viewcounter)
-                VALUES " . $sql_insert_string . "
-                ON DUPLICATE KEY UPDATE
-                    viewcounter = viewcounter + VALUES(viewcounter)";
-        
-            //echo $query . "\n";
-     
-            try {
-                $rs = $db->Execute($query);
-            } catch (exception $err) {
-                $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] SQL query failed. Processing IS BROKEN! SQL error:\n" . trim($query), $sendmail = true);
-                exit;
-            }
-        
-            $records_committed += count($sql_insert);
-        }
-        
+    
+        $records_committed += count($sql_insert);
     }
 
 }
@@ -280,25 +252,21 @@ global $db, $debug, $myjobid, $app, $jconf;
   return $stats;
 }
 
-function queryStatsRecordingsSegments($recordingid, $userid) {
+function queryStatsRecordingsSegments($recordingid) {
 global $db, $debug, $myjobid, $app, $jconf;
 
     $query = "
         SELECT
-            srsu.id,
-            srsu.recordingid,
-            srsu.userid,
-            srsu.recordingsegment,
-            srsu.viewcounter
+            srs.id,
+            srs.recordingid,
+            srs.recordingsegment,
+            srs.viewcounter
         FROM
-            statistics_recordings_segments_users AS srsu
+            statistics_recordings_segments AS srs
         WHERE
-            srsu.recordingid = " . $recordingid . " AND
-            srsu.userid " . (($userid == 0)?"IS NULL":"= " . $userid) . "
+            srs.recordingid = " . $recordingid . "
         ORDER BY
-            srsu.recordingsegment";
-
-//echo $query . "\n";
+            srs.recordingsegment";
         
   try {
     $stats = $db->getAssoc($query);
@@ -313,13 +281,12 @@ global $db, $debug, $myjobid, $app, $jconf;
 }
 
 function searchForStatsRecordInArray($stats_db, $recsegment) {
-
+    
+    //var_dump($stats_db);
+    //exit;
+    
     foreach( $stats_db as $id => $record ) {
-        //echo "s: id = " . $id . " / recseg = " . $record['recordingsegment'] . "\n";
-        if ( $record['recordingsegment'] == $recsegment ) {
-            //echo "*** found = " . $id . "\n";
-            return $id;
-        }
+        if ( $record['recordingsegment'] == $recsegment ) return $id;
     }
 
     return false;
