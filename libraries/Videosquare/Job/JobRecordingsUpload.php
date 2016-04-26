@@ -16,12 +16,15 @@ class RecordingsUploadJob extends Job {
     protected $needsLoop                = true;
     protected $signalReceived           = false;
     protected $needsSleep               = true;
-
+    protected $closeDbOnSleep           = true;
+    protected $sleepSeconds             = 10;
+    protected $maxSleepSeconds          = 20;
+    
     // Videosquare job specific config options
     protected $removeLockOnStart        = true;
     
     protected $debug_mode               = true;
-    protected $cachetimeoutseconds      = 300;
+    //protected $cachetimeoutseconds      = 300;
             
     protected $temp = array();
     
@@ -31,6 +34,8 @@ class RecordingsUploadJob extends Job {
         $vcrObj = $this->bootstrap->getVSQModel("VCR");
         
         $liveFeedRecordings = $vcrObj->getLiveFeedRecordings($id = null, $livefeedid = null, "finished", $this->bootstrap->config['node_sourceip']);
+        
+        if ( $liveFeedRecordings === false ) return;
         
         foreach ( $liveFeedRecordings as $liveFeedRecording ) {
             
@@ -87,7 +92,7 @@ class RecordingsUploadJob extends Job {
                     // Upload recording
                     $time_start = time();
                     //$recording = $api->uploadRecording($filename, "hun", $liveFeedRecording['userid'], 0);
-                    $recording = $api->uploadRecording($this->bootstrap->config['recpath'] . $recordingVideo['file'], "hun");
+                    $recording = $api->uploadRecording($this->bootstrap->config['recpath'] . "temp/" . $recordingVideo['file'], "hun");
                     $duration = time() - $time_start;
                     $mins_taken = round($duration / 60, 2);
 
@@ -115,27 +120,35 @@ class RecordingsUploadJob extends Job {
                     // Set livefeed recording status
                     $vcrObj->updateLiveFeedRecording("uploaded", null, null);
                     
+                    // Search content channel recording
+                    $recordingContent = $this->findFileByClosestOffset($streamContent, $liveFeedRecording['starttimestamp']);
+                                
+                    if ( $recordingContent === false ) {
+                        $this->debugLog("[INFO] No recorded content file found for livefeed id#" . $liveFeedRecording['livefeedid'], false);
+                    } else {
+                        if ( $this->debug_mode ) $this->debugLog("[DEBUG] Recorded content for livefeed id#" . $liveFeedRecording['livefeedid'] . ":\n" . print_r($recordingContent, true), false);
+                        
+                        // Index FLV using yamdi
+                        $this->indexFLVFile($this->bootstrap->config['recpath'] . $recordingContent['file'], $this->bootstrap->config['recpath'] . "temp/" . $recordingContent['file']);
+
+                        $time_start = time();
+                        $content = $api->uploadContent($recording['data']['id'], $this->bootstrap->config['recpath'] . "temp/" . $recordingContent['file']);
+                        $duration = time() - $time_start;
+                        $mins_taken = round($duration / 60, 2);
+                        
+                        // Debug
+                        $this->debugLog("[INFO] Videosquare API content upload completed in " . $mins_taken . "mins. API returned values:\n" . print_r($content, true), false);
+                    
+                    }
+                    
                 } catch ( \Exception $err ) {
                     
-                    $this->debugLog('[EXCEPTION] run(): ' . $err->getMessage(), false);
+                    $this->debugLog('[EXCEPTION] run(): ' . $err->getMessage(), true);
                     echo $err->getMessage() . "\n";
                     
                 }
                 
             }
-
-            // Search content channel recording
-            $recordingContent = $this->findFileByClosestOffset($streamContent, $liveFeedRecording['starttimestamp']);
-                        
-            if ( $recordingContent === false ) {
-                $this->debugLog("[INFO] No recorded content file found for livefeed id#" . $liveFeedRecording['livefeedid'], false);
-            } else {
-                if ( $this->debug_mode ) $this->debugLog("[DEBUG] Recorded content for livefeed id#" . $liveFeedRecording['livefeedid'] . ":\n" . print_r($recordingContent, true), false);   
-            }
-
-
-            
-            exit;
         
         }
         
