@@ -1463,10 +1463,12 @@ class Livefeeds extends \Springboard\Model {
         throw new \Exception("livefeed_recordings.id not found for feed #" . $this->id );
 
       $liveRecModel->updateRow( $row );
-      $this->updateRow( array(
-          'livefeedrecordingid' => '',
-        )
-      );
+      $this->db->query("
+        UDPATE livefeeds
+        SET livefeedrecordingid = NULL
+        WHERE id = '" . $this->id . "'
+        LIMIT 1
+      ");
 
     }
   }
