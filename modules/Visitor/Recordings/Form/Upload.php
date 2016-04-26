@@ -9,6 +9,7 @@ class Upload extends \Visitor\HelpForm {
   public $languages    = array();
   public $uploads      = array();
   public $user;
+  public $needdb = true;
   
   public function init() {
 

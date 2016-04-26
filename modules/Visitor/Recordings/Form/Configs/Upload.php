@@ -81,6 +81,34 @@ $config = Array(
         </div>
     ',
   ),
+
+  'advanced' => array(
+    'type'   => 'text',
+    'rowlayout' => '
+      </tr>
+      <tr>
+        <td colspan="2" id="advancedrow">
+          <span class="label"></span>
+          <div class="element">
+            %element%
+          </div>
+        </td>
+      </tr>
+    ',
+    'value' => $l('recordings', 'upload_advanced'),
+  ),
+
+  'encodinggroupid' => array(
+    'type'        => 'selectDynamic',
+    'displayname' => $l('recordings', 'upload_encodinggroupid'),
+    'sql'         => "
+      SELECT id, name
+      FROM encoding_groups
+      WHERE disabled = '0'
+      ORDER BY `default` DESC, name
+    ",
+    'value' => $this->controller->organization['defaultencodingprofilegroupid'],
+  ),
   
 );
 
