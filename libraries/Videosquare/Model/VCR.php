@@ -395,6 +395,5 @@ class VCR extends \Videosquare\Model\Live {
 
     }
     
-    
 }
 

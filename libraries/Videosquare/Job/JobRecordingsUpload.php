@@ -7,6 +7,7 @@ define('DEBUG', false );
 
 include_once('Job.php');
 include_once('../Modules/Filesystem.php');
+include_once('../Modules/runext.php');
 include_once( BASE_PATH . 'resources/apitest/httpapi.php');
 
 class RecordingsUploadJob extends Job {
@@ -33,12 +34,16 @@ class RecordingsUploadJob extends Job {
         
         foreach ( $liveFeedRecordings as $liveFeedRecording ) {
             
-            echo "livefeedrecording processed:\n";
-            var_dump($liveFeedRecording);
+            if ( $this->debug_mode ) $this->debugLog("[DEBUG] Livefeed recording processed:\n" . print_r($liveFeedRecording, true), false);
             
+            // Select objects
             $vcrObj->selectLiveFeed($liveFeedRecording['livefeedid']);
+            $vcrObj->selectLiveFeedRecording($liveFeedRecording['id']);
             
+            // Get live streams to identify stream ID for filename search
             $liveStreams = $vcrObj->getStreamsForLivefeed();
+            
+            if ( $this->debug_mode ) $this->debugLog("[DEBUG] Livefeed streams:\n" . print_r($liveStreams, true), false);
             
             // Get stream IDs for this recording (for filename filtering)
             $streamVideo = null;
@@ -59,19 +64,25 @@ class RecordingsUploadJob extends Job {
             
             // Search video channel recording
             $recordingVideo = $this->findFileByClosestOffset($streamVideo, $liveFeedRecording['starttimestamp']);
-            echo "Video found:\n";
-            var_dump($recordingVideo);
+            if ( $this->debug_mode ) $this->debugLog("[DEBUG] Recorded video for livefeed id#" . $liveFeedRecording['livefeedid'] . ":\n" . print_r($recordingVideo, true), false);
                         
             if ( $recordingVideo === false ) {
                 $this->debugLog("[ERROR] No recorded video file found for livefeed id#" . $liveFeedRecording['livefeedid'], false);
-                $vcrObj->selectLiveFeedRecording($liveFeedRecording['id']);
                 $vcrObj->updateLiveFeedRecording("notfound", null, null);
             } else {
+                
+                // Index FLV using yamdi
+                $this->indexFLVFile($this->bootstrap->config['recpath'] . $recordingVideo['file'], $this->bootstrap->config['recpath'] . "temp/" . $recordingVideo['file']);
+                
                 // Upload using Videosquare API
                 try {
-                    $api = new \Api($this->bootstrap->config['api_user'], $this->bootstrap->config['api_password']);
                     
+                    // API init
+                    $api = new \Api($this->bootstrap->config['api_user'], $this->bootstrap->config['api_password']);
                     $api->setDomain($liveFeedRecording['domain']);
+
+                    // Debug
+                    if ( $this->debug_mode ) $this->debugLog("[DEBUG] Videosquare API init: user = " . $this->bootstrap->config['api_user'] . " | domain = " . $liveFeedRecording['domain'], false);
                     
                     // Upload recording
                     $time_start = time();
@@ -79,11 +90,11 @@ class RecordingsUploadJob extends Job {
                     $recording = $api->uploadRecording($this->bootstrap->config['recpath'] . $recordingVideo['file'], "hun");
                     $duration = time() - $time_start;
                     $mins_taken = round($duration / 60, 2);
-                    
-                    var_dump($recording);
-                    
-                    echo "Successful upload in " . $mins_taken . " mins.\n";
-                                
+
+                    // Debug
+                    $this->debugLog("[INFO] Videosquare API upload completed in " . $mins_taken . "mins. API returned values:\n" . print_r($recording, true), false);
+
+                    // Update video metadata
                     $metadata = array(
                         'title'					=> "Videoconference recording: " . $liveFeedRecording['starttimestamp'],
                         'recordedtimestamp'		=> $liveFeedRecording['starttimestamp'],
@@ -98,9 +109,15 @@ class RecordingsUploadJob extends Job {
         
                     $api->modifyRecording($recording['data']['id'], $metadata);
                     
+                    // Debug
+                    $this->debugLog("[INFO] Videosquare API metadata updated:\n" . print_r($metadata, true), false);
+                    
+                    // Set livefeed recording status
+                    $vcrObj->updateLiveFeedRecording("uploaded", null, null);
+                    
                 } catch ( \Exception $err ) {
                     
-                    $this->debugLog( '[EXCEPTION] run(): ' . $err->getMessage(), false );
+                    $this->debugLog('[EXCEPTION] run(): ' . $err->getMessage(), false);
                     echo $err->getMessage() . "\n";
                     
                 }
@@ -109,11 +126,15 @@ class RecordingsUploadJob extends Job {
 
             // Search content channel recording
             $recordingContent = $this->findFileByClosestOffset($streamContent, $liveFeedRecording['starttimestamp']);
-            echo "Content found:\n";
-            var_dump($recordingContent);
                         
-            if ( $recordingContent === false ) $this->debugLog("[INFO] No recorded content file found for livefeed id#" . $liveFeedRecording['livefeedid'], false);
+            if ( $recordingContent === false ) {
+                $this->debugLog("[INFO] No recorded content file found for livefeed id#" . $liveFeedRecording['livefeedid'], false);
+            } else {
+                if ( $this->debug_mode ) $this->debugLog("[DEBUG] Recorded content for livefeed id#" . $liveFeedRecording['livefeedid'] . ":\n" . print_r($recordingContent, true), false);   
+            }
 
+
+            
             exit;
         
         }
@@ -173,6 +194,37 @@ class RecordingsUploadJob extends Job {
         if ( !isset($hitFile['file']) ) return false;
 
         return $hitFile;
+    }
+    
+    public function indexFLVFile($src, $dst) {
+
+        if ( file_exists($dst) ) {
+            $err = unlink($dst);
+            if ( $err === false ) throw new \Exception("[ERROR] Cannot remove file " . $dst);
+        }
+    
+        $command = $this->bootstrap->config['yamdi'] . " -i " . $src . " -o " . $dst;
+
+        // Run command
+        $output = new runExt($command);
+        $output->run();
+        
+        if ( $this->debug_mode ) $this->debugLog("[DEBUG] yamdi command executed:\n" . $command . ".\nResult: " . $output->getCode() . "\nOutput: " . $output->getOutput(), false);
+        
+        if ( $output->getCode() > 0 ) {
+            
+            $this->debugLog("[ERROR] yamdi conversion error. Return code: " . $output->getCode() . ". Output:\n" . $output->getOutput(), false);
+            
+        } else {
+            
+            $this->debugLog("[OK] yamdi conversion ready. Resulting file: " . $dst, false);
+            
+            if ( !file_exists($dst) ) $this->debugLog("[ERROR] yamdi returned no error, but output file does not exists: " . $dst, false);
+            
+            if ( filesize($dst) == 0 ) $this->debugLog("[ERROR] yamdi returned no error, but output file has zero size: " . $dst, false);
+            
+        }
+    
     }
 
 }
