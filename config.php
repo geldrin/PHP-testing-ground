@@ -120,6 +120,8 @@ $config = array(
   'video_max_res'          => '4096x2160', // Max. resolution for uploaded video (otherwise fraud upload)
   'video_max_fps'          => 60,          // Max. video FPS (unused!)
   'video_default_fps'      => 25,          // Default video FPS
+  // Yamdi (for FLV indexing)
+  'yamdi'                  => '/usr/bin/yamdi',
 
   //----
   'combine' => array(
