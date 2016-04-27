@@ -105,7 +105,7 @@ for ($i = 0; $i < count($monitor_servers); $i++ ) {
 	curl_setopt($curl, CURLOPT_USERPWD, $monitor_servers[$i]['adminuser'] . ":" . $monitor_servers[$i]['password']);
 	curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_ANY);
     if ( $ishttpsenabled ) {
-        curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, true);   // false: only for testing!
+        curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);   // false: only for testing!
         curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, 2);
         //curl_setopt($ch, CURLOPT_CAINFO, "/CAcerts/BuiltinObjectToken-EquifaxSecureCA.crt"); // For self signed: point to root cert
     }
