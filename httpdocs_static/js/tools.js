@@ -2883,7 +2883,10 @@ function setupMyRecordings() {
     if (item.length == 0)
       return;
 
-    // TODO
+    item.find('.progress').css('width', data.percent + '%');
+    var label = item.find('.status-label');
+    label.text(data.status);
+    label.attr('class', 'status-label status-' + data.status);
   };
 
   var getInfo = function() {

@@ -60,8 +60,26 @@ class Myrecordings extends \Visitor\Paging {
     if ( empty( $this->passparams ) and empty( $items ) )
       $this->controller->toSmarty['nosearch'] = true;
     
+    $ids = array();
+    $idsToKeys = array();
+    $conversionStatuses = array(
+      'onstorage' => true,
+      'markedfordeletion' => true,
+    );
+
     foreach( $items as $key => $item ) {
-      
+
+      $status = $item['status'];
+      if (
+           $status != 'onstorage' and
+           $status != 'markedfordeletion' and
+           strlen( $status ) > strlen('failed') and
+           substr( $status, 0, strlen('failed') ) != 'failed'
+         ) {
+        $ids[] = $item['id'];
+        $idsToKeys[ $item['id'] ] = $key;
+      }
+
       if ( $item['isintrooutro'] )
         continue;
       
@@ -74,6 +92,16 @@ class Myrecordings extends \Visitor\Paging {
       
     }
     
+    $convInfo = $this->recordingsModel->getConversionInformation(
+      $ids,
+      $this->bootstrap->getSession('user'),
+      $this->controller->organization['id']
+    );
+    foreach( $convInfo as $info ) {
+      $key = $idsToKeys[ $info['recordingid'] ];
+      $items[ $key ]['conversioninfo'] = $info;
+    }
+
     return $items;
     
   }
