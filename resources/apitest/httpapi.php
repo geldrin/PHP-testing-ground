@@ -26,7 +26,13 @@ class Api {
   }
 
   public function setDomain( $domain ) {
-    $this->apiurl = "https://$domain/hu/api";
+      
+    if ( stripos( $domain, "http" ) === false ) {
+        $this->apiurl = "https://$domain/hu/api";
+    } else {
+        $this->apiurl = "$domain/hu/api";
+    }
+    
   }
 
   protected function initCurl( $options ) {

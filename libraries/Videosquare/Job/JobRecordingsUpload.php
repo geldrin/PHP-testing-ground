@@ -84,7 +84,11 @@ class RecordingsUploadJob extends Job {
                     
                     // API init
                     $api = new \Api($this->bootstrap->config['api_user'], $this->bootstrap->config['api_password']);
-                    $api->setDomain($liveFeedRecording['domain']);
+                    
+                    // API URL domain, set http/https
+                    $protocol = "https://";
+                    if ( !$this->bootstrap->config['forcesecureapiurl'] ) $protocol = "http://";
+                    $api->setDomain($protocol . $liveFeedRecording['domain']);
 
                     // Debug
                     if ( $this->debug_mode ) $this->debugLog("[DEBUG] Videosquare API init: user = " . $this->bootstrap->config['api_user'] . " | domain = " . $liveFeedRecording['domain'], false);
@@ -169,8 +173,6 @@ class RecordingsUploadJob extends Job {
             echo "Cache expired!!!!\n";
         } */
         
-        echo "Sleep...\n";
-        
     }
     
     private function findFileByClosestOffset($streamID, $starttime) {
@@ -181,8 +183,6 @@ class RecordingsUploadJob extends Job {
         $filePattern = $streamID . "*_" . date("Y-m-d", $starttimestamp) . "_*.flv";
         $files = \Videosquare\Modules\Filesystem::findFilesByPattern($this->bootstrap->config['recpath'], "f", $filePattern);
         asort($files);
-        
-        var_dump($files);
         
         $hitFile['offset'] = 3600;
         foreach ( $files as $file ) {
