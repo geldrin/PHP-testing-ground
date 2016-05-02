@@ -380,13 +380,14 @@ class VCR extends \Videosquare\Model\Live {
     }
 
     // Update livefeed_recording status
-    public function updateLiveFeedRecording($status = null, $starttimestamp = null, $endtimestamp = null) {
+    public function updateLiveFeedRecording($status = null, $starttimestamp = null, $endtimestamp = null, $recordingid = null) {
 
-        if ( empty($status) and empty($starttimestamp) and empty($endtimestamp) ) throw new \Exception('[ERROR] Livefeed recording status and start and end time empty');
+        if ( empty($status) and empty($starttimestamp) and empty($endtimestamp) and empty($recordingid) ) throw new \Exception('[ERROR] Livefeed recording status and start and end time empty');
 
         if ( !empty($status) ) $values['status'] = $status;
         if ( !empty($starttimestamp) ) $values['starttimestamp'] = $starttimestamp;
         if ( !empty($endtimestamp) ) $values['endtimestamp'] = $endtimestamp;
+        if ( !empty($recordingid) ) $values['recordingid'] = $recordingid;
 
         $model = $this->bootstrap->getVSQModel('livefeed_recordings');
         $model->select($this->livefeedrecordingid);

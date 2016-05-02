@@ -122,7 +122,7 @@ class RecordingsUploadJob extends Job {
                     $this->debugLog("[INFO] Videosquare API metadata updated:\n" . print_r($metadata, true), false);
                     
                     // Set livefeed recording status
-                    $vcrObj->updateLiveFeedRecording("uploaded", null, null);
+                    $vcrObj->updateLiveFeedRecording("uploaded", null, null, $recording['data']['id']);
                     
                     // Search content channel recording
                     $recordingContent = $this->findFileByClosestOffset($streamContent, $liveFeedRecording['starttimestamp']);
