@@ -202,7 +202,7 @@ class Api {
       $filename, $size, $iscontent, $userid
     );
     
-    if ( $resumeinfo and $resumeinfo['status'] == 'success' )
+    if ( $resumeinfo and isset( $resumeinfo['status'] ) and $resumeinfo['status'] === 'success' )
       $currentchunk = $resumeinfo['startfromchunk'];
     
     if ( $size > $this->chunksize )
