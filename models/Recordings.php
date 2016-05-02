@@ -4528,7 +4528,8 @@ class Recordings extends \Springboard\Model {
     $rows = $this->db->getArray("
       SELECT
         rv.recordingid,
-        rv.status
+        rv.status,
+        r.status AS recordingstatus
       FROM
         recordings_versions AS rv,
         recordings AS r
@@ -4567,15 +4568,7 @@ class Recordings extends \Springboard\Model {
       }
 
       $percent = floor( ( $foundOnstorage / $n ) * 100 );
-
-      if ( $n != 0 and $n == $foundFailed ) // minden elhasalt
-        $status = 'failed';
-      elseif ( $n != 0 and $foundFailed == 0 ) // minden rendben
-        $status = 'ok';
-      elseif ( $n != 0 and $foundFailed > 0 and $foundOnstorage > 0 )
-        $status = 'partialfail'; // van ami elhasalt, de van ami lejatszhato
-      else // amugy se nincs hiba, se nem jatszhato le
-        $status = 'pending';
+      $status = $row['recordingstatus']; // a $row az utolso row, foreach itthagyta
 
       $ret[] = array(
         'recordingid' => $recid,
