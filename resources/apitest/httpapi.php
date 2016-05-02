@@ -297,12 +297,14 @@ class Api {
     if ( $parameters['userid'] )
       $method  .= 'asuser';
     
+    $fieldValue = '@' . $file;
+    if ( class_exists("\CURLFile") )
+      $fieldValue = new \CURLFile( $file );
+
     $options    = array(
       CURLOPT_URL        => $this->getURL('controller', 'recordings', $method, $parameters ),
       CURLOPT_POST       => true,
-      CURLOPT_POSTFIELDS => array(
-        'file' => '@' . $file,
-      ),
+      CURLOPT_POSTFIELDS => array('file' => $fieldValue ),
     );
     
     return $this->executeCall( $options, "UPLOAD" );
