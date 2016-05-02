@@ -133,3 +133,24 @@ if (
   $config['ispublic']['postfix'] = $l('live', 'ispublic_disabled');
   
 }
+
+$user = $this->bootstrap->getSession('user');
+if ( $user['iseditor'] or $user['isclientadmin'] or $user['isadmin'] ) {
+
+  $config['isfeatured'] = array(
+    'displayname' => $l('live', 'isfeatured'),
+    'itemlayout'  => $this->radioitemlayout,
+    'type'        => 'inputRadio',
+    'value'       => '0',
+    'values'      => $l->getLov('noyes'),
+    'rowlayout'   => '
+      <tr %errorstyle%>
+        <td class="labelcolumn" style="width: 170px;">
+          <label for="%id%">%displayname%</label>
+        </td>
+        <td class="elementcolumn">%prefix%%element%%postfix%%errordiv%</td>
+      </tr>
+    ',
+  );
+
+}
