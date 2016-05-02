@@ -78,13 +78,15 @@ class VCR extends \Videosquare\Model\Live {
         
     }
     
-    public function updateLiveFeedStatus($status) {
+    public function updateLiveFeed($status, $livefeedrecordingid = false) {
 
         if ( empty($status) ) throw new \Exception('[ERROR] Recording Link status.');
 
         $values = array(
-            'status' => $status
+            'status'                => $status
         );
+        
+        if ( $livefeedrecordingid !== false ) $values['livefeedrecordingid'] = null;
 
         $model = $this->bootstrap->getVSQModel('livefeeds');
         $model->select($this->livefeedid);

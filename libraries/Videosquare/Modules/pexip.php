@@ -23,7 +23,7 @@ class Pexip {
     private $streaming_participantid   = null;
     private $streaming_isconnected     = false;
     private $laststatus                = null;
-    private $lastapidatareturned       = null;
+    public $lastapidatareturned       = null;
     
     // API commands
     private $api = array(
