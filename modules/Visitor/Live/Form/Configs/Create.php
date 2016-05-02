@@ -135,7 +135,12 @@ if (
 }
 
 $user = $this->bootstrap->getSession('user');
-if ( $user['iseditor'] or $user['isclientadmin'] or $user['isadmin'] ) {
+if (
+     $user['iseditor'] or
+     $user['isclientadmin'] or
+     $user['isliveadmin'] or
+     $user['isadmin']
+   ) {
 
   $config['isfeatured'] = array(
     'displayname' => $l('live', 'isfeatured'),
