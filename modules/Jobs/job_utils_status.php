@@ -289,11 +289,14 @@ global $app, $debug, $jconf, $myjobid;
 			rv.resolution,
 			rv.bandwidth,
 			rv.isdesktopcompatible,
-			rv.ismobilecompatible
+			rv.ismobilecompatible,
+            ep.type
 		FROM
-			recordings_versions AS rv
+			recordings_versions AS rv,
+            encoding_profiles AS ep
 		WHERE
-			rv.recordingid = " . $recordingid . $iscontent_filter . $sql_statusfilter;
+			rv.recordingid = " . $recordingid . " AND
+            rv.encodingprofileid = ep.id" . $iscontent_filter . $sql_statusfilter;
 
 	try {
         $model = $app->bootstrap->getModel('recordings_versions');
@@ -306,7 +309,7 @@ global $app, $debug, $jconf, $myjobid;
 	// Check if any record returned
 	if ( $rs->RecordCount() < 1 ) return false;
 
-	return true;
+	return $rs;
 }
 
 // Update recording encoding profile group

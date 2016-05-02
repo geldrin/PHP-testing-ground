@@ -172,9 +172,49 @@ if ( $recordings !== false ) {
 	}
 }
 
-// Fail recordings:
-// - Ha a recversion meghal, attol meg lehet jo a kovetkezo?
-// - Hasonloan a getReadyConversions()-hez lekerdezni a hibas recversion listat es ha mind elfailelt, akkor kuldeni a usernak valami hibauzenetet? 
+// Failed recordings: get failed recording versions and set "failed" status on recording level
+$failedRecordings = getFailedRecordingVersions();
+if ( $failedRecordings !== false ) {
+    
+    $failedRecording = $failedRecordings->fields;
+
+    // Get all recording versions
+    $recVersionsOK = 0;
+    $recVersions = getRecordingVersionsApplyStatusFilter($failedRecording['id'], $failedRecording['type'], null);
+    if ( $recVersions !== false ) {
+
+        while ( !$recVersions->EOF ) {
+
+            $recVersion = $recVersions->fields;
+
+            // Count specific type of media files with "onstorage" status
+            if ( $recVersion['status'] == $jconf['dbstatus_copystorage_ok'] ) $recVersionsOK++;
+
+            // Next
+            $recVersions->MoveNext();
+        }
+        
+    }
+    
+    // ## Are there any serviceable media files available?
+    // Is there at least a playable recording?
+    if ( ( $recVersion['type'] == "recording" ) and ( $recVersionsOK == 0 ) ) {
+        $debug->log($jconf['log_dir'], $jconf['jobid_conv_control'] . ".log", "[ERROR] Recording id#" . $failedRecording['id'] . " has no serviceable video instances.", true);
+        updateRecordingStatus($failedRecording['id'], $jconf['dbstatus_conv_err'], 'recording');
+    }
+    // Is there at least a single playable content?
+    if ( ( $recVersion['type'] == "content" ) and ( $recVersionsOK == 0 ) ) {
+        $debug->log($jconf['log_dir'], $jconf['jobid_conv_control'] . ".log", "[ERROR] Recording id#" . $failedRecording['id'] . " has no serviceable content instances.", true);
+        updateRecordingStatus($failedRecording['id'], $jconf['dbstatus_conv_err'], 'content');
+    }
+    // Is there at least a single pip content?
+    if ( ( $recVersion['type'] == "pip" ) and ( $recVersionsOK == 0 ) ) {
+        $debug->log($jconf['log_dir'], $jconf['jobid_conv_control'] . ".log", "[ERROR] Recording id#" . $failedRecording['id'] . " has no serviceable pip instances.", true);
+        updateRecordingStatus($failedRecording['id'], $jconf['dbstatus_conv_err'], 'mobile');
+    }
+    
+    $failedRecordings->MoveNext();
+}
 
 // SMIL: generate new SMIL files
 $err = generateRecordingSMILs("recording");
@@ -285,6 +325,52 @@ global $jconf, $debug, $app;
 	return $rs;
 }
 
+function getFailedRecordingVersions() {
+global $jconf, $debug, $app;
+
+    $node = $app->config['node_sourceip'];
+
+    $query = "
+        SELECT
+            r.id,
+            COUNT(r.id) AS numberoffails,
+            r.status,
+            r.masterstatus,
+            r.mastersourceip,
+            r.mastervideofilename,
+            r.contentstatus,
+            r.contentmasterstatus,
+            r.contentmastersourceip,
+            r.contentmastervideofilename,
+            rv.status AS recordingversionstatus,
+            rv.ismobilecompatible,
+            ep.type
+        FROM
+            recordings AS r,
+            recordings_versions AS rv,
+            encoding_profiles AS ep
+        WHERE
+            r.id = rv.recordingid AND
+            rv.status LIKE 'failed%' AND
+            rv.encodingprofileid = ep.id AND
+            ( ep.mediatype = 'video' OR ( r.mastermediatype = 'audio' AND ep.mediatype = 'audio' ) ) AND
+            ( ( r.status = '" . $jconf['dbstatus_conv'] . "' AND ep.type = 'recording' AND r.mastersourceip = '" . $node . "' ) OR
+              ( r.contentstatus = '" . $jconf['dbstatus_conv'] . "' AND ep.type = 'content' AND r.contentmastersourceip = '" . $node . "' ) )
+        GROUP BY
+            r.id, ep.type";
+            
+	try {
+        $model = $app->bootstrap->getModel('recordings');
+        $rs = $model->safeExecute($query);
+	} catch (exception $err) {
+		$debug->log($jconf['log_dir'], $jconf['jobid_conv_control'] . ".log", "[ERROR] SQL query failed." . trim($query), $sendmail = true);
+		return false;
+	}
+    
+    if ( $rs->RecordCount() < 1 ) return false;
+
+	return $rs;        
+}
 
 function insertRecordingVersions($recording) {
 global $debug, $jconf, $app;
