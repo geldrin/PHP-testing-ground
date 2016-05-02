@@ -1884,9 +1884,10 @@ function setupLiveAccessCheck() {
       return true;
 
     var newaccess = [];
-    root.find('input[type=checkbox]:checked').each(function() {
-      newaccess.push( $j(this).val() );
-    });
+    if (root)
+      root.find('input[type=checkbox]:checked').each(function() {
+        newaccess.push( $j(this).val() );
+      });
 
     if ( newaccess.length != origaccess.length )
       return true;
