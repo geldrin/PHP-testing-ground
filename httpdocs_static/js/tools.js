@@ -1368,6 +1368,14 @@ recordingUpload.prototype.formatTime = function( seconds ) {
 };
 
 function setupVideoUpload() {
+  $j('#advancedrow').click(function(e) {
+    e.preventDefault();
+    
+    $j('.advanceditem').each(function(k, v) {
+      var item = $j(v).parents('tr').eq(0);
+      item.toggle();
+    });
+  });
 
   $j('#file').parents('tr').hide();
   var uploader = new recordingUpload({

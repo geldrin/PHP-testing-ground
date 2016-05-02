@@ -38,6 +38,43 @@ $config = Array(
     ),
   ),
   
+  'advanced' => array(
+    'type'   => 'text',
+    'rowlayout' => '
+      </tr>
+      <tr>
+        <td colspan="2" id="advancedrow">
+          <span class="label"></span>
+          <div class="element">
+            <a href="#" >%element%</a>
+          </div>
+        </td>
+      </tr>
+    ',
+    'value' => $l('recordings', 'upload_advanced'),
+  ),
+
+  'encodinggroupid' => array(
+    'type'        => 'selectDynamic',
+    'displayname' => $l('recordings', 'upload_encodinggroupid'),
+    'html'        => 'class="advanceditem"',
+    'sql'         => "
+      SELECT id, name
+      FROM encoding_groups
+      WHERE disabled = '0'
+      ORDER BY `default` DESC, name
+    ",
+    'value' => $this->controller->organization['defaultencodingprofilegroupid'],
+    'rowlayout' => '
+      <tr class="hidden">
+        <td class="labelcolumn">
+          <label for="%id%">%displayname%</label>
+        </td>
+        <td class="elementcolumn">%prefix%%element%%postfix%%errordiv%</td>
+      </tr>
+    '
+  ),
+  
   'file' => Array(
     'type'       => 'inputFile',
     'validation' => Array(
@@ -82,34 +119,6 @@ $config = Array(
     ',
   ),
 
-  'advanced' => array(
-    'type'   => 'text',
-    'rowlayout' => '
-      </tr>
-      <tr>
-        <td colspan="2" id="advancedrow">
-          <span class="label"></span>
-          <div class="element">
-            %element%
-          </div>
-        </td>
-      </tr>
-    ',
-    'value' => $l('recordings', 'upload_advanced'),
-  ),
-
-  'encodinggroupid' => array(
-    'type'        => 'selectDynamic',
-    'displayname' => $l('recordings', 'upload_encodinggroupid'),
-    'sql'         => "
-      SELECT id, name
-      FROM encoding_groups
-      WHERE disabled = '0'
-      ORDER BY `default` DESC, name
-    ",
-    'value' => $this->controller->organization['defaultencodingprofilegroupid'],
-  ),
-  
 );
 
 if ( $this->user['iseditor'] or $this->user['isadmin'] or $this->user['isclientadmin'] ) {
@@ -123,7 +132,7 @@ if ( $this->user['iseditor'] or $this->user['isadmin'] or $this->user['isclienta
     )
   );
   
-  $config = \Springboard\Tools::insertAfterKey( $config, $introoutro, 'file' );
+  $config = \Springboard\Tools::insertAfterKey( $config, $introoutro, 'tos' );
   
 } else {
   
