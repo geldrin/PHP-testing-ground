@@ -9,11 +9,13 @@ class Controller extends \Visitor\Controller {
     'searchlive'           => 'clientadmin',
     'searchgroups'         => 'clientadmin',
     'searchusers'          => 'clientadmin',
+    'recording'            => 'clientadmin',
   );
 
   public $forms = array(
     'accreditedrecordings' => 'Visitor\\Analytics\\Form\\Accreditedrecordings',
     'statistics'           => 'Visitor\\Analytics\\Form\\Statistics',
+    'recording'            => 'Visitor\\Analytics\\Form\\Recording',
   );
 
   public $paging = array(

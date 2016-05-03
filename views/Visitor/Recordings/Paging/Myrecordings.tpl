@@ -66,6 +66,9 @@
               <li><a href="{$language}/recordings/uploadcontent/{$item.id}?forward={$FULL_URI|escape:url}">{#recordings__uploadcontentvideo#}</a></li>
             {/if}
           {/if}
+          {if $member.isadmin or $member.isclientadmin}
+            <li><a href="{$language}/analytics/recording/{$item.id}?forward={$FULL_URI|escape:url}">{#recordings__recording_analytics#}</a></li>
+          {/if}
         {/if}
       </ul>
     </div>

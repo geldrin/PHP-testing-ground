@@ -4580,4 +4580,42 @@ class Recordings extends \Springboard\Model {
 
     return $ret;
   }
+
+  public function getSegmentAnalytics() {
+    $this->ensureObjectLoaded();
+
+    // egy szegmens ~60 masodperc, felfele kerekitve
+    $numSegments = ceil( max( $this->row['masterlength'], $this->row['contentmasterlength'] ) / 60 );
+
+    // ha nincs adatbazisban olyan szegmens akkor ott nulla nezes volt, init
+    $segments = array();
+    for ( $i = 0; $i < $numSegments; ++$i )
+      $segments[ $i ] = 0;
+
+    $rs = $this->db->query("
+      SELECT
+        srs.recordingsegment,
+        srs.viewcounter
+      FROM statistics_recordings_segments AS srs
+      WHERE srs.recordingid = '" . $this->id . "'
+      ORDER BY srs.recordingsegment
+    ");
+
+    foreach( $rs as $row )
+      $segments[ $row['recordingsegment'] ] = intval( $row['viewcounter'] );
+
+    $rs->close();
+
+    $ret = array();
+    foreach( $segments as $segment => $viewcount ) {
+      $data = array(
+        'timestamp' => $segment * 60,
+        'views'     => $viewcount,
+      );
+
+      $ret[] = $data;
+    }
+
+    return $ret;
+  }
 }
