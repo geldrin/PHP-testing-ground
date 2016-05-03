@@ -61,7 +61,9 @@ $config = Array(
     'sql'         => "
       SELECT id, name
       FROM encoding_groups
-      WHERE disabled = '0'
+      WHERE
+        islegacy = '0' AND
+        disabled = '0'
       ORDER BY `default` DESC, name
     ",
     'value' => $this->controller->organization['defaultencodingprofilegroupid'],
