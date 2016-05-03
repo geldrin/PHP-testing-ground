@@ -2900,7 +2900,7 @@ function setupMyRecordings() {
       },
       step: function(state, bar, attachment) {
         var now = Date.now();
-        if (lastUpdate > now - 1000)
+        if (lastUpdate > now - 300)
           return;
 
         lastUpdate = now;
