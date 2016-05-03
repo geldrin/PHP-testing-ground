@@ -1,3 +1,9 @@
+if (!Date.now) {
+  Date.now = function now() {
+    return new Date().getTime();
+  };
+}
+
 jQuery.cookie = function( name, value, seconds ) {
   
   // -1 seconds to unset, no support for non-string values
@@ -2871,21 +2877,63 @@ function setupStatistics() {
 }
 
 function setupMyRecordings() {
+  var refreshDelay = 30 * 1000;
   var ids = [];
   $j('ul.recordinglist > .listitem').each(function(k, v) {
     ids.push(parseInt($j(v).attr('data-recordingid'), 10));
   });
 
   var url = language + '/recordings/conversioninfo';
+  var progressBars = {};
+  $j('.progress-wrap').each(function(k, v) {
+    var item = $j(v);
+    var recordingid = item.parents('li.listitem').attr('data-recordingid');
+    var lastUpdate = Date.now();
+    var bar = new ProgressBar.Line(v, {
+      color: '#f2663b',
+      strokeWidth: 5,
+      trailWidth: 2,
+      duration: refreshDelay,
+      text: {
+        value: item.attr('data-progress') + '%',
+        style: null
+      },
+      step: function(state, bar, attachment) {
+        var now = Date.now();
+        if (lastUpdate > now - 1000)
+          return;
+
+        lastUpdate = now;
+        var text = Math.floor(bar.value() * 100) + '%';
+        $j(bar.text).text(text);
+      }
+    });
+    bar.set(item.attr('data-progress') / 100);
+    progressBars[recordingid] = bar;
+  });
 
   var updateInfo = function( id, data ) {
     var item = $j('#rec' + id);
     if (item.length == 0)
       return;
 
-    item.find('.progress').css('width', data.percent + '%');
+    if (
+        data.status === 'onstorage' ||
+        (
+          data.status.length >= 'failed'.length &&
+          data.status.substring(0, 'failed'.length) === 'failed'
+        )
+       ) {
+      item.find('.progress-wrap').hide();
+      return;
+    }
+
+    var bar = progressBars[id];
+    if (bar && Math.floor(bar.value() * 100) != data.percent)
+      bar.animate(data.percent/100);
+
     var label = item.find('.status-label');
-    label.text(data.status);
+    label.text(data.statusLabel);
     label.attr('class', 'status-label status-' + data.status);
   };
 
@@ -2893,7 +2941,7 @@ function setupMyRecordings() {
     $j.ajax({
       cache: false,
       complete: function() {
-        setTimeout( getInfo, 30 * 1000 );
+        setTimeout( getInfo, refreshDelay );
       },
       data: {
         ids: ids
@@ -2906,12 +2954,12 @@ function setupMyRecordings() {
 
         for (var i = data.data.length - 1; i >= 0; i--) {
           var row = data.data[i];
-          updateInfo( row['recordingid'], data );
+          updateInfo( row['recordingid'], row );
         }
       },
       url: url
     });
   };
 
-  setTimeout( getInfo, 30 * 1000 );
+  setTimeout( getInfo, refreshDelay );
 }

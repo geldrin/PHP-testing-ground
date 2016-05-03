@@ -56,6 +56,9 @@
   {if $needanalytics}
     <script type="text/javascript" src="{$STATIC_URI}js/analytics/dygraph-combined.js"></script>
   {/if}
+  {if $needprogressbar}
+    <script type="text/javascript" src="{$STATIC_URI}js/progressbar.min.js"></script>
+  {/if}
   <script type="text/javascript" src="{$STATIC_URI}js/tools{$VERSION}.js"></script>
   {/jscombine}
   <script type="text/javascript">

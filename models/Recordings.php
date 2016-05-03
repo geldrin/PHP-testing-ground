@@ -4538,7 +4538,6 @@ class Recordings extends \Springboard\Model {
         r.id = rv.recordingid AND
         r.organizationid = '$organizationid'
         $extrawhere
-      LIMIT $limit
     ");
 
     $byRecording = array();
@@ -4550,6 +4549,7 @@ class Recordings extends \Springboard\Model {
     }
 
     $ret = array();
+    $l = $this->bootstrap->getLocalization();
     foreach( $byRecording as $recid => $rows ) {
       $n = count( $rows );
       $foundOnstorage = 0;
@@ -4574,6 +4574,7 @@ class Recordings extends \Springboard\Model {
         'recordingid' => $recid,
         'percent'     => $percent,
         'status'      => $status,
+        'statusLabel' => $l->getLov( 'recordingstatus', null, $status ),
       );
     }
 

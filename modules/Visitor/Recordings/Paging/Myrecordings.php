@@ -19,6 +19,7 @@ class Myrecordings extends \Visitor\Paging {
     $this->foreachelse = $l('', 'foreachelse');
     $this->title       = $l('recordings', 'myrecordings_title');
     $this->controller->toSmarty['listclass'] = 'recordinglist';
+    $this->controller->toSmarty['needprogressbar'] = true;
     parent::init();
     
   }

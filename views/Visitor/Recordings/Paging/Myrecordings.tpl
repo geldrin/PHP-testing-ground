@@ -49,9 +49,7 @@
         {/if}
       </div>
       {if $item.conversioninfo}
-        <div id="progress-wrap">
-          <div id="progress" style="width: {$item.conversioninfo.percent}%;"></div>
-        </div>
+        <div class="progress-wrap" data-progress="{$item.conversioninfo.percent}"></div>
       {/if}
     {if $item.isintrooutro}
       <span class="isintrooutro">{#recordings__introoutrorecording#}</span>

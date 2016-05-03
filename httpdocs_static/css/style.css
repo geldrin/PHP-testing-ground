@@ -1765,7 +1765,47 @@ li#languageselectorlink span {
 }
 .recordinglist .recordingcontent .status {
   margin: 10px 0 0 0;
+  height: 25px;
+  line-height: 25px;
 }
+.recordinglist .recordingcontent .status .label {
+  display: inline-block;
+}
+.recordinglist .recordingcontent .status-failed,
+.recordinglist .recordingcontent .status-converting {
+  padding: 1px 3px 2px 3px;
+  box-sizing: border-box;
+  border-radius: 3px;
+  color: #fff;
+  text-shadow: none;
+}
+.recordinglist .recordingcontent .status-converting {
+  background-color: #f2663b;
+}
+.recordinglist .recordingcontent .status-failed {
+  background-color: #f23b3b;
+}
+.recordinglist .recordingcontent .status .progress-wrap {
+  margin: 0 0 0 20px;
+  float: right;
+  width: 500px;
+  height: 25px;
+  position: relative;
+}
+.recordinglist .recordingcontent .status .progress-wrap > svg {
+  border-radius: 5px;
+}
+.recordinglist .recordingcontent .status .progress-wrap .progressbar-text {
+  color: #fff;
+  text-shadow: none;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  padding: 0px;
+  margin: 0px;
+  transform: translate(-50%, -50%);
+}
+
 .recordinglist .recordingcontent .featured.right {
   margin-right: 10px;
   color: #FFF;
