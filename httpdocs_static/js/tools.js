@@ -2893,7 +2893,7 @@ function setupMyRecordings() {
       color: '#f2663b',
       strokeWidth: 5,
       trailWidth: 2,
-      duration: refreshDelay,
+      duration: 800,
       text: {
         value: item.attr('data-progress') + '%',
         style: null

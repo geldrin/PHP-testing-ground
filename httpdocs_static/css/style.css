@@ -1773,9 +1773,9 @@ li#languageselectorlink span {
 }
 .recordinglist .recordingcontent .status-failed,
 .recordinglist .recordingcontent .status-converting {
-  padding: 1px 3px 2px 3px;
+  padding: 4px 20px 4px 20px; 
   box-sizing: border-box;
-  border-radius: 3px;
+  border-radius: 5px;
   color: #fff;
   text-shadow: none;
 }
@@ -1786,7 +1786,7 @@ li#languageselectorlink span {
   background-color: #f23b3b;
 }
 .recordinglist .recordingcontent .status .progress-wrap {
-  margin: 0 0 0 20px;
+  margin: 0 0 0 10px;
   float: right;
   width: 500px;
   height: 25px;
