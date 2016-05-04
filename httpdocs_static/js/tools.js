@@ -2804,11 +2804,8 @@ function setupRecordingStatistics( elem ) {
           ticks = [];
           
           for ( sec = 0; sec < b; sec = sec + tickspacing * 60 )
-            ticks.push({v: sec});
+            ticks.push({ v: sec, label: formatDuration( sec ) });
           
-          for ( i = 0; i < ticks.length; i++ )
-            ticks[i].label = formatDuration( ticks[i].v );
-            
           return ticks;
 
         },
@@ -2820,6 +2817,12 @@ function setupRecordingStatistics( elem ) {
         }
       },
       y: {
+        axisLabelFormatter: function(v) {
+          if ( v % 1 === 0 )
+            return v + '';
+          else
+            return '';
+        }
       }
     }
   });
