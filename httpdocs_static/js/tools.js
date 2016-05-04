@@ -2764,8 +2764,12 @@ function setupRecordingStatistics( elem ) {
 
   // analyticsdata global
   var graphdata = prepareData( analyticsdata );
-  if (graphdata.length == 1)
-    graphdata.push([60, 0]);
+
+  if ( graphdata.length ) {
+    // rightpadding graph data to always include last minute
+    lastSec = graphdata[graphdata.length - 1][0];
+    graphdata.push( [ lastSec + 60, 0] );
+  }
 
   var lastclick     = null;
   var isdoubleclick = null;
@@ -2774,6 +2778,7 @@ function setupRecordingStatistics( elem ) {
     labels           : analyticsdata.labels,
     showRangeSelector: false,
     stackedGraph     : false,
+    xAxisLabelWidth  : 60,
     stepPlot         : true,
     fillGraph        : true,
     strokeWidth      : 2,
@@ -2786,6 +2791,27 @@ function setupRecordingStatistics( elem ) {
     ],
     axes: {
       x: {
+        ticker: function (a, b, pixels, opts, dygraph, vals) {
+        
+          minutes = Math.round( b / 60 );
+
+          // put 10 gridlines on x axis
+          tickspacing = Math.round( minutes / 10 );
+
+          if ( tickspacing < 1 )
+            tickspacing = 1;
+         
+          ticks = [];
+          
+          for ( sec = 0; sec < b; sec = sec + tickspacing * 60 )
+            ticks.push({v: sec});
+          
+          for ( i = 0; i < ticks.length; i++ )
+            ticks[i].label = formatDuration( ticks[i].v );
+            
+          return ticks;
+
+        },
         axisLabelFormatter: function(s) {
           return formatDuration(s);
         },
