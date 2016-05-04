@@ -1410,6 +1410,7 @@ li#languageselectorlink span {
   margin: 0;
   line-height: 35px;
   font-size: 26px;
+  padding: 16px 0;
 }
 .categorylist {
   display: inline-block;
@@ -3332,7 +3333,8 @@ li#languageselectorlink span {
 #analyticscontainer .buttonrow td {
   text-align: left;
 }
-#livestatistics {
+#livestatistics,
+#recordingstatistics {
   float: right;
   width: 700px;
   height: 400px;
@@ -3340,6 +3342,10 @@ li#languageselectorlink span {
   -moz-user-select: none;
   -o-user-select: none;
   user-select: none;
+}
+#recordingstatistics {
+  float: none;
+  width: 980px;
 }
 #zoomer {
   float: right;

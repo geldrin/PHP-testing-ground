@@ -41,8 +41,10 @@ class Controller extends \Visitor\Controller {
     'checkfileresume'      => 'uploader|moderateduploader',
     'uploadchunk'          => 'uploader|moderateduploader',
     'cancelupload'         => 'uploader|moderateduploader',
-    // ugyanaz mint myrecordingsba
+    // ugyanazok a permissionok mint myrecordingsnal
     'conversioninfo'        => 'uploader|moderateduploader|editor|clientadmin',
+    'analytics'            => 'clientadmin',
+    'analyticsexport'      => 'clientadmin',
   );
 
   public $forms = array(
@@ -1666,5 +1668,77 @@ class Controller extends \Visitor\Controller {
         'data'    => $info,
       )
     );
+  }
+
+  public function analyticsAction() {
+    $recordingsModel = $this->modelOrganizationAndUserIDCheck(
+      'recordings',
+      $this->application->getNumericParameter('id')
+    );
+    $l = $this->bootstrap->getLocalization();
+
+    $data = array(
+      'data'   => $recordingsModel->getSegmentAnalytics(),
+      'labels' => array(
+        $l('recordings', 'analytics_timestamp'),
+        $l('recordings', 'analytics_views'),
+      ),
+    );
+
+    $defaultBack = \Springboard\Language::get() . '/recordings/myrecordings';
+
+    $back = $this->application->getParameter('forward', $defaultBack );
+    $info = parse_url( $back );
+    if (
+         isset( $info['host'] ) and
+         $info['host'] !== $this->organization['domain']
+       )
+      $back = $defaultBack;
+
+    $this->toSmarty['back']          = $back;
+    $this->toSmarty['recording']     = $recordingsModel->row;
+    $this->toSmarty['analyticsdata'] = $data;
+    $this->toSmarty['needanalytics'] = true;
+    $this->smartyOutput('Visitor/Recordings/Analytics.tpl');
+  }
+
+  public function analyticsexportAction() {
+    $recordingsModel = $this->modelOrganizationAndUserIDCheck(
+      'recordings',
+      $this->application->getNumericParameter('id')
+    );
+
+    $segments = $recordingsModel->getSegmentAnalytics();
+
+    $delim = ';';
+    $filename =
+      'videosquare-recordingstatistics-' .
+      $recordingsModel->id . '_' . \Springboard\Filesystem::filenameize(
+        mb_substr( $recordingsModel->row['title'], 0, 20 )
+      ) . '-' .
+      date('YmdHis') . '.csv'
+    ;
+
+    $header = array(
+      'timestamp' => 'timestampSeconds',
+      'views'     => 'numberOfViews',
+    );
+
+    $f = \Springboard\Browser::initCSVHeaders(
+      $filename,
+      array_values( $header ),
+      $delim
+    );
+
+    foreach( $segments as $segment ) {
+      $data = array(
+        'timestamp' => $segment['timestamp'],
+        'views'     => $segment['views'],
+      );
+      fputcsv( $f, array_values( $data ), $delim );
+    }
+
+    fclose( $f );
+    die();
   }
 }

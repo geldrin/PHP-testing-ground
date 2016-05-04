@@ -67,7 +67,7 @@
             {/if}
           {/if}
           {if $member.isadmin or $member.isclientadmin}
-            <li><a href="{$language}/analytics/recording/{$item.id}?forward={$FULL_URI|escape:url}">{#recordings__recording_analytics#}</a></li>
+            <li><a href="{$language}/recordings/analytics/{$item.id}?forward={$FULL_URI|escape:url}">{#recordings__recording_analytics#}</a></li>
           {/if}
         {/if}
       </ul>

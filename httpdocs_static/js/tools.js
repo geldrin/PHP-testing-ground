@@ -88,7 +88,8 @@ $j(document).ready(function() {
   runIfExists('#orderrecordings', setupOrderRecordings );
   runIfExists('.togglesmallrecordings', setupToggleRecordings );
   runIfExists('#comments', setupComments );
-  runIfExists('#livestatistics', setupLivestatistics );
+  runIfExists('#livestatistics', setupLiveStatistics );
+  runIfExists('#recordingstatistics', setupRecordingStatistics );
   runIfExists('#recordingdownloads', setupRecordingDownloads );
   runIfExists('#groups_create, #groups_modify', setupGroups );
   runIfExists('.recordingslides', setupSlideTooltip );
@@ -2555,7 +2556,7 @@ function setupComments() {
 
 }
 
-function setupLivestatistics( elem ) {
+function setupLiveStatistics( elem ) {
   setupDefaultDateTimePicker('#starttimestamp');
   setupDefaultDateTimePicker('#endtimestamp');
 
@@ -2727,6 +2728,73 @@ function setupLivestatistics( elem ) {
     refreshData(analyticsdata.origstartts, analyticsdata.origendts)();
   });
 
+}
+function formatDuration(s) {
+  var hours   = Math.floor(s / 3600);
+  var minutes = Math.floor((s - (hours * 3600)) / 60);
+  var seconds = s - (hours * 3600) - (minutes * 60);
+
+  var ret = "";
+  if (hours > 0)
+    ret += hours + 'h ';
+
+  if (minutes > 0)
+    ret += minutes + 'm ';
+
+  if (seconds > 0)
+    ret += seconds + 's';
+
+  ret = $j.trim(ret);
+  if (ret.length == 0)
+    ret = '0s';
+
+  return ret;
+}
+
+function setupRecordingStatistics( elem ) {
+
+  var prepareData = function( data ) {
+    var graphdata = [];
+    for (var i = 0; i < data.data.length; i++) {
+      var row = data.data[i];
+      graphdata.push([row.timestamp, row.views]);
+    }
+    return graphdata;
+  };
+
+  // analyticsdata global
+  var graphdata = prepareData( analyticsdata );
+
+  var lastclick     = null;
+  var isdoubleclick = null;
+  var graph = new Dygraph( elem.get(0), graphdata, {
+    visibility       : [true, true],
+    labels           : analyticsdata.labels,
+    showRangeSelector: false,
+    stackedGraph     : false,
+    stepPlot         : true,
+    fillGraph        : true,
+    strokeWidth      : 2,
+    colors           : [
+      '#00cc00', '#0066b3', '#ff8000', '#ffcc00', '#330099', '#990099',
+      '#ccff00', '#ff0000', '#808080', '#008f00', '#00487d', '#b35a00',
+      '#b38f00', '#6b006b', '#8fb300', '#b30000', '#bebebe', '#80ff80',
+      '#80c9ff', '#ffc080', '#ffe680', '#aa80ff', '#ee00cc', '#ff8080',
+      '#666600', '#ffbfff', '#00ffcc', '#cc6699', '#999900'
+    ],
+    axes: {
+      x: {
+        axisLabelFormatter: function(s) {
+          return formatDuration(s);
+        },
+        valueFormatter: function(s) {
+          return analyticsdata.labels[0] + ': ' + formatDuration(s);
+        }
+      },
+      y: {
+      }
+    }
+  });
 }
 
 function setupRecordingDownloads() {
