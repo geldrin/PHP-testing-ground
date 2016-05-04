@@ -2764,6 +2764,8 @@ function setupRecordingStatistics( elem ) {
 
   // analyticsdata global
   var graphdata = prepareData( analyticsdata );
+  if (graphdata.length == 1)
+    graphdata.push([60, 0]);
 
   var lastclick     = null;
   var isdoubleclick = null;
