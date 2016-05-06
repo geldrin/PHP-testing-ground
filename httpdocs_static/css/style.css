@@ -1790,18 +1790,19 @@ li#languageselectorlink span {
   margin: 0 0 0 10px;
   float: right;
   width: 500px;
-  height: 25px;
+  height: 19px;
+  padding: 6px 0 0 0;
   position: relative;
 }
 .recordinglist .recordingcontent .status .progress-wrap > svg {
   border-radius: 5px;
 }
 .recordinglist .recordingcontent .status .progress-wrap .progressbar-text {
-  color: #fff;
-  text-shadow: none;
+  color: #000;
+  text-shadow: 1px 0px 1px #fff;
   position: absolute;
-  left: 50%;
-  top: 50%;
+  right: 0;
+  top: 10px;
   padding: 0px;
   margin: 0px;
   transform: translate(-50%, -50%);

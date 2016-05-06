@@ -2989,8 +2989,13 @@ function setupMyRecordings() {
     var recordingid = item.parents('li.listitem').attr('data-recordingid');
     var lastUpdate = Date.now();
     var bar = new ProgressBar.Line(v, {
-      color: '#f2663b',
-      strokeWidth: 5,
+      from: {
+        color: '#f2663b'
+      },
+      to: {
+        color: '#00AB0D'
+      },
+      strokeWidth: 2,
       trailWidth: 2,
       duration: 800,
       text: {
@@ -2998,6 +3003,7 @@ function setupMyRecordings() {
         style: null
       },
       step: function(state, bar, attachment) {
+        bar.path.setAttribute('stroke', state.color);
         var now = Date.now();
         if (lastUpdate > now - 300)
           return;
@@ -3007,7 +3013,7 @@ function setupMyRecordings() {
         $j(bar.text).text(text);
       }
     });
-    bar.set(item.attr('data-progress') / 100);
+    bar.animate(item.attr('data-progress') / 100);
     progressBars[recordingid] = bar;
   });
 
