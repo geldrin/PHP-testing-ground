@@ -687,6 +687,7 @@ class Recordings extends \Springboard\Model {
     $videobitratemode  = null;
     $videoisinterlaced = null; // nem adunk neki erteket sose, torolni kene?
     $videolength       = null;
+    $videodelay        = null;
     $audiostreamid     = null;
     $audiocodec        = null;
     $audiochannels     = null;
@@ -703,7 +704,7 @@ class Recordings extends \Springboard\Model {
       $videolength = $this->getMediainfoNumericValue( $audio->Duration[0], $isfloat = true );
     else
       throw new InvalidLengthException('Length not found for the media, output was ' . $output );
-
+    
     $videolength = round($videolength / 1000, 2, PHP_ROUND_HALF_UP); // mert milisec
 
     if ( $videolength <= $config['recordings_seconds_minlength'] )
@@ -757,6 +758,8 @@ class Recordings extends \Springboard\Model {
         else
           $videoisinterlaced = 0;
       }
+      
+      if ( $video->Delay ) $videodelay = (int) $video->Delay[0];
 
     }
 
@@ -778,9 +781,19 @@ class Recordings extends \Springboard\Model {
         $audioquality = 'lossy';
       elseif ( $audio->Compression_mode[0] == 'Lossless' )
         $audioquality = 'lossless';
-
+      
+      if ( $audio->Delay || $audio->Delay_relative_to_video ) {
+        $adelay     = (int) isset($audio->Delay[0]) ? $audio->Delay[0] : .0;
+        $rel_adelay = (int) isset($audio->Delay_relative_to_video[0]) ? $audio->Delay_relative_to_video[0] : .0;
+        
+        $videodelay = max($videodelay, $adelay, $rel_adelay);
+        unset($adelay, $rel_adelay);
+      }
     }
-
+    
+    $videodelay = round($videodelay / 1000, 2, PHP_ROUND_HALF_UP);
+    if ($videodelay > 0) $videolength -= $videodelay;
+    
     $info = array(
       'mastermediatype'            => $mediatype,
       'mastervideostreamselected'  => $videostreamid,
@@ -795,6 +808,7 @@ class Recordings extends \Springboard\Model {
       'mastervideobitratemode'     => $videobitratemode,
       'mastervideoisinterlaced'    => $videoisinterlaced,
       'masterlength'               => $videolength,
+      'videodelay'                 => $videodelay,
       'masteraudiostreamselected'  => $audiostreamid,
       'masteraudiocodec'           => $audiocodec,
       'masteraudiochannels'        => $audiochannels,
