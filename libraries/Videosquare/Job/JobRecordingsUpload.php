@@ -77,7 +77,12 @@ class RecordingsUploadJob extends Job {
             } else {
                 
                 // Index FLV using yamdi
-                $this->indexFLVFile($this->bootstrap->config['recpath'] . $recordingVideo['file'], $this->bootstrap->config['recpath'] . "temp/" . $recordingVideo['file']);
+                //$this->indexFLVFile($this->bootstrap->config['recpath'] . $recordingVideo['file'], $this->bootstrap->config['recpath'] . "temp/" . $recordingVideo['file']);
+
+                // Convert FLV to MP4 (overcome NGINX's junky FLV output)
+                $tmp = pathinfo($recordingVideo['file']);
+                $dstFileName = $tmp['filename'] . ".mp4";
+                $this->convertFLV2MP4($this->bootstrap->config['recpath'] . $recordingVideo['file'], $this->bootstrap->config['recpath'] . "temp/" . $dstFileName);
                 
                 // Upload using Videosquare API
                 try {
@@ -96,7 +101,7 @@ class RecordingsUploadJob extends Job {
                     // Upload recording
                     $time_start = time();
                     //$recording = $api->uploadRecording($filename, "hun", $liveFeedRecording['userid'], 0);
-                    $recording = $api->uploadRecording($this->bootstrap->config['recpath'] . "temp/" . $recordingVideo['file'], "hun");
+                    $recording = $api->uploadRecording($this->bootstrap->config['recpath'] . "temp/" . $dstFileName, "hun");
                     $duration = time() - $time_start;
                     $mins_taken = round($duration / 60, 2);
 
@@ -133,10 +138,15 @@ class RecordingsUploadJob extends Job {
                         if ( $this->debug_mode ) $this->debugLog("[DEBUG] Recorded content for livefeed id#" . $liveFeedRecording['livefeedid'] . ":\n" . print_r($recordingContent, true), false);
                         
                         // Index FLV using yamdi
-                        $this->indexFLVFile($this->bootstrap->config['recpath'] . $recordingContent['file'], $this->bootstrap->config['recpath'] . "temp/" . $recordingContent['file']);
+                        //$this->indexFLVFile($this->bootstrap->config['recpath'] . $recordingContent['file'], $this->bootstrap->config['recpath'] . "temp/" . $recordingContent['file']);
 
+                        // Convert FLV to MP4 (overcome NGINX's junky FLV output)
+                        $tmp = pathinfo($recordingVideo['file']);
+                        $dstFileName = $tmp['filename'] . ".mp4";
+                        $this->convertFLV2MP4($this->bootstrap->config['recpath'] . $recordingVideo['file'], $this->bootstrap->config['recpath'] . "temp/" . $dstFileName);
+                        
                         $time_start = time();
-                        $content = $api->uploadContent($recording['data']['id'], $this->bootstrap->config['recpath'] . "temp/" . $recordingContent['file']);
+                        $content = $api->uploadContent($recording['data']['id'], $this->bootstrap->config['recpath'] . "temp/" . $dstFileName);
                         $duration = time() - $time_start;
                         $mins_taken = round($duration / 60, 2);
                         
@@ -207,6 +217,37 @@ class RecordingsUploadJob extends Job {
         if ( !isset($hitFile['file']) ) return false;
 
         return $hitFile;
+    }
+
+    public function convertFLV2MP4($src, $dst) {
+
+        if ( file_exists($dst) ) {
+            $err = unlink($dst);
+            if ( $err === false ) throw new \Exception("[ERROR] Cannot remove file " . $dst);
+        }
+    
+        $command = "nice -19 " . $this->bootstrap->config['ffmpeg_alt'] . " -i " . $src . " -c copy -copyts " . $dst;
+        
+        // Run command
+        $output = new runExt($command);
+        $output->run();
+        
+        if ( $this->debug_mode ) $this->debugLog("[DEBUG] ffmpeg command executed:\n" . $command . ".\nResult: " . $output->getCode() . "\nOutput: " . $output->getOutput(), false);
+        
+        if ( $output->getCode() > 0 ) {
+            
+            $this->debugLog("[ERROR] ffmpeg conversion error. Return code: " . $output->getCode() . ". Output:\n" . $output->getOutput(), false);
+            
+        } else {
+            
+            $this->debugLog("[OK] ffmpeg FLV->MP4 conversion ready. Resulting file: " . $dst, false);
+            
+            if ( !file_exists($dst) ) $this->debugLog("[ERROR] ffmpeg returned no error, but output file does not exists: " . $dst, false);
+            
+            if ( filesize($dst) == 0 ) $this->debugLog("[ERROR] ffmpeg returned no error, but output file has zero size: " . $dst, false);
+            
+        }
+        
     }
     
     public function indexFLVFile($src, $dst) {
