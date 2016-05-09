@@ -83,7 +83,7 @@ return array(
   'recordingstatus' => array(
     'uploading'             => 'Uploading',
     'uploaded'              => 'Uploaded',
-    'onstorage'             => 'Converted',
+    'onstorage'             => 'Available',
     'copyingtoconverter'    => 'Converting',
     'markedfordeletion'     => 'Marked for deletion',
     'deleted'               => 'Deleted',
