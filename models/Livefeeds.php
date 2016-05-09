@@ -1314,6 +1314,20 @@ class Livefeeds extends \Springboard\Model {
 
   public function handleStreamTemplate( $groupid, $linkid = null ) {
     $this->ensureObjectLoaded();
+
+    $transcoderid = $this->db->getOne("
+      SELECT transcoderid
+      FROM livestream_groups
+      WHERE id = '$groupid'
+      LIMIT 1
+    ");
+
+    $this->updateRow( array(
+        'livestreamgroupid' => $groupid,
+        'transcoderid'      => $transcoderid,
+      )
+    );
+
     $streamModel = $this->bootstrap->getModel('livefeed_streams');
 
     $profiles = $this->db->getArray("

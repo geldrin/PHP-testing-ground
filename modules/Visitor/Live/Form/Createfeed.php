@@ -83,12 +83,14 @@ class Createfeed extends \Visitor\HelpForm {
     $this->handleAccesstypeForModel( $feedModel, $values, false );
     
     if ( $values['feedtype'] == 'vcr' ) {
+      // beallitja a livestreamgroupidt es transcoderidt
       $feedModel->createVCRStream( $values['recordinglinkid'] );
       $this->controller->redirect('live/managefeeds/' . $this->channelModel->id );
     }
 
     if ( $values['feedtype'] != 'vcr' and $values['livestreamgroupid'] ) {
       $default = 'live/managefeeds/' . $this->channelModel->id;
+      // beallitja a livestreamgroupidt es transcoderidt
       $feedModel->handleStreamTemplate( $values['livestreamgroupid'] );
     } else
       $default = 'live/createstream/' . $feedModel->id;
