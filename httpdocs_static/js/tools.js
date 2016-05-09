@@ -3023,11 +3023,8 @@ function setupMyRecordings() {
       return;
 
     if (
-        data.status === 'onstorage' ||
-        (
-          data.status.length >= 'failed'.length &&
-          data.status.substring(0, 'failed'.length) === 'failed'
-        )
+        data.status.length >= 'failed'.length &&
+        data.status.substring(0, 'failed'.length) === 'failed'
        ) {
       item.find('.progress-wrap').hide();
       return;

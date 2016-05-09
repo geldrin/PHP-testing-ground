@@ -4582,7 +4582,7 @@ class Recordings extends \Springboard\Model {
       }
 
       $percent = floor( ( $foundOnstorage / $n ) * 100 );
-      $status = $row['recordingstatus']; // a $row az utolso row, foreach itthagyta
+      $status = $row['recordingstatus']; // a $row az utolso row, foreach itthagyta, minden row-ban ugyanaz
 
       $ret[] = array(
         'recordingid' => $recid,
