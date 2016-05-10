@@ -3,6 +3,7 @@ namespace Model;
 
 class Livefeeds extends \Springboard\Model {
   protected $streamingserver;
+  private $transcoderCache = array();
 
   private static $hdsFeatures = array(
     'features_live_hds',
@@ -1306,6 +1307,24 @@ class Livefeeds extends \Springboard\Model {
 
   public function getIngressURL() {
     $this->ensureObjectLoaded();
+    if ( $this->row['transcoderid'] ) {
+
+      $trid = $this->row['transcoderid'];
+      if ( isset( $this->transcoderCache[ $trid ] ) )
+        return $this->transcoderCache[ $trid ];
+
+      $url = $this->db->getOne("
+        SELECT ingressurl
+        FROM livestream_transcoders
+        WHERE id = '$trid'
+        LIMIT 1
+      ");
+      // biztosra megyunk hogy van a vegen per
+      $url = rtrim( $url, '/' );
+      $url .= '/';
+      return $this->transcoderCache[ $trid ] = $url;
+    }
+
     if ( $this->row['issecurestreamingforced'] )
       return $this->bootstrap->config['wowza']['secliveingressurl3'];
     else
