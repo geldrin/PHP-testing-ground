@@ -4549,6 +4549,7 @@ class Recordings extends \Springboard\Model {
         recordings AS r
       WHERE
         rv.recordingid IN('" . implode("', '", $ids ) . "') AND
+        rv.status NOT IN('deleted', 'markedfordeletion') AND
         r.id = rv.recordingid AND
         r.organizationid = '$organizationid'
         $extrawhere
