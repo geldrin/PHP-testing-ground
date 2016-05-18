@@ -2987,7 +2987,6 @@ function setupMyRecordings() {
   $j('.progress-wrap').each(function(k, v) {
     var item = $j(v);
     var recordingid = item.parents('li.listitem').attr('data-recordingid');
-    var lastUpdate = Date.now();
     var bar = new ProgressBar.Line(v, {
       from: {
         color: '#f2663b'
@@ -3004,11 +3003,6 @@ function setupMyRecordings() {
       },
       step: function(state, bar, attachment) {
         bar.path.setAttribute('stroke', state.color);
-        var now = Date.now();
-        if (lastUpdate > now - 300 && bar.value() != 1)
-          return;
-
-        lastUpdate = now;
         var text = Math.floor(bar.value() * 100) + '%';
         $j(bar.text).text(text);
       }
