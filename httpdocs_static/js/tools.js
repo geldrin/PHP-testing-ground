@@ -3031,7 +3031,13 @@ function setupMyRecordings() {
       return;
     } else {
 
-      if (wrap.is(':hidden') && wrap.attr('data-progress') !== '100' )
+      var shouldshow =
+        wrap.is(':hidden') &&
+        wrap.attr('data-progress') !== '100' &&
+        data.percent != 100
+      ;
+
+      if (shouldshow)
         item.find('.progress-wrap').show();
 
     }
@@ -3043,6 +3049,12 @@ function setupMyRecordings() {
     var label = item.find('.status-label');
     label.text(data.statusLabel);
     label.attr('class', 'status-label status-' + data.status);
+
+    var contentinfo = item.find('.recordingcontentinfo .status');
+    if (contentinfo && contentinfo.length != 0) {
+      contentinfo.attr('class', 'status status-' + data.contentstatus);
+      contentinfo.text(data.contentstatusLabel);
+    }
   };
 
   var getInfo = function() {

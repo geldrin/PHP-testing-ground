@@ -4545,7 +4545,8 @@ class Recordings extends \Springboard\Model {
       SELECT
         rv.recordingid,
         rv.status,
-        r.status AS recordingstatus
+        r.status AS recordingstatus,
+        r.contentstatus AS contentstatus
       FROM
         recordings_versions AS rv,
         recordings AS r
@@ -4586,12 +4587,15 @@ class Recordings extends \Springboard\Model {
 
       $percent = floor( ( $foundOnstorage / $n ) * 100 );
       $status = $row['recordingstatus']; // a $row az utolso row, foreach itthagyta, minden row-ban ugyanaz
+      $contentstatus = $row['contentstatus'];
 
       $ret[] = array(
         'recordingid' => $recid,
         'percent'     => $percent,
         'status'      => $status,
         'statusLabel' => $l->getLov( 'recordingstatus', null, $status ),
+        'contentstatus' => $contentstatus,
+        'constantstatusLabel' => $l->getLov( 'recordingstatus', null, $contentstatus ),
       );
     }
 
