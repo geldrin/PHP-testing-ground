@@ -4595,7 +4595,7 @@ class Recordings extends \Springboard\Model {
         'status'      => $status,
         'statusLabel' => $l->getLov( 'recordingstatus', null, $status ),
         'contentstatus' => $contentstatus,
-        'constantstatusLabel' => $l->getLov( 'recordingstatus', null, $contentstatus ),
+        'contentstatusLabel' => $l->getLov( 'recordingstatus', null, $contentstatus ),
       );
     }
 

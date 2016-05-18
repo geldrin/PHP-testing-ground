@@ -3033,9 +3033,11 @@ function setupMyRecordings() {
 
       var shouldshow =
         wrap.is(':hidden') &&
-        wrap.attr('data-progress') !== '100' &&
-        data.percent != 100
+        wrap.attr('data-progress') !== '100'
       ;
+
+      if ( !shouldshow && data.percent != 100 )
+        shouldshow = true;
 
       if (shouldshow)
         item.find('.progress-wrap').show();
