@@ -3986,3 +3986,9 @@ li#languageselectorlink span {
 .form.centerformwrap .select2-container--default .select2-selection--single .select2-selection__arrow {
   top: 10px;
 }
+
+input.datetimepicker,
+input.datepicker {
+  position: relative;
+  z-index: 2;
+}
