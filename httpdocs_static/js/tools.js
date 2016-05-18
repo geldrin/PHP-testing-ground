@@ -3022,14 +3022,19 @@ function setupMyRecordings() {
     if (item.length == 0)
       return;
 
+    var wrap = item.find('.progress-wrap');
     if (
         data.status.length >= 'failed'.length &&
         data.status.substring(0, 'failed'.length) === 'failed'
        ) {
-      item.find('.progress-wrap').hide();
+      wrap.hide();
       return;
-    } else if ( item.find('.progress-wrap').is(':hidden') )
-      item.find('.progress-wrap').show();
+    } else {
+
+      if (wrap.is(':hidden') && wrap.attr('data-progress') !== '100' )
+        item.find('.progress-wrap').show();
+
+    }
 
     var bar = progressBars[id];
     if (bar && Math.floor(bar.value() * 100) != data.percent)
