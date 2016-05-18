@@ -1320,6 +1320,10 @@ class Livefeeds extends \Springboard\Model {
         LIMIT 1
       ");
       // biztosra megyunk hogy van a vegen per
+      $pos = strrpos( $url, '_' );
+      if ( $pos !== false )
+        $url = substr( $url, 0, $pos );
+
       $url = rtrim( $url, '/' );
       $url .= '/';
       return $this->transcoderCache[ $trid ] = $url;
