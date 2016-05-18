@@ -3005,7 +3005,7 @@ function setupMyRecordings() {
       step: function(state, bar, attachment) {
         bar.path.setAttribute('stroke', state.color);
         var now = Date.now();
-        if (lastUpdate > now - 300)
+        if (lastUpdate > now - 300 && bar.value() != 1)
           return;
 
         lastUpdate = now;
