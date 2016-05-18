@@ -48,9 +48,7 @@
           <span class="status-label status-{$item.status}">{l lov=recordingstatus key=$item.status}</span>
         {/if}
       </div>
-      {if $item.conversioninfo and $item.conversioninfo.percent < 100}
-        <div class="progress-wrap" data-progress="{$item.conversioninfo.percent}"></div>
-      {/if}
+      <div class="{if !$item.conversioninfo or $item.conversioninfo.percent >= 100}hidden {/if}progress-wrap" data-progress="{$item.conversioninfo.percent}"></div>
     {if $item.isintrooutro}
       <span class="isintrooutro">{#recordings__introoutrorecording#}</span>
     {/if}

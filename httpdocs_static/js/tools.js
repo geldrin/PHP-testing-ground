@@ -3028,7 +3028,8 @@ function setupMyRecordings() {
        ) {
       item.find('.progress-wrap').hide();
       return;
-    }
+    } else if ( item.find('.progress-wrap').is(':hidden') )
+      item.find('.progress-wrap').show();
 
     var bar = progressBars[id];
     if (bar && Math.floor(bar.value() * 100) != data.percent)
