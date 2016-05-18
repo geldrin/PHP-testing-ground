@@ -116,6 +116,10 @@ class Controller extends \Visitor\Controller {
       'language' => array(
         'type' => 'string',
       ),
+      'encodinggroupid' => array(
+        'type' => 'id',
+        'required' => false,
+      ),
     ),
     'uploadchunkasuser' => array(
       'file' => array(
@@ -128,6 +132,10 @@ class Controller extends \Visitor\Controller {
         'type'                     => 'user',
         'permission'               => 'admin',
         'impersonatefromparameter' => 'userid',
+      ),
+      'encodinggroupid' => array(
+        'type' => 'id',
+        'required' => false,
       ),
     ),
     'track' => array(
@@ -1009,6 +1017,7 @@ class Controller extends \Visitor\Controller {
     else
       $file = $_FILES['file'];
 
+    $encodinggroupid = $this->application->getNumericParameter('encodinggroupid');
     $filename    = trim( $this->application->getParameter('name') );
     $chunk       = $this->application->getNumericParameter('chunk');
     $chunks      = $this->application->getNumericParameter('chunks');
@@ -1125,6 +1134,7 @@ class Controller extends \Visitor\Controller {
         'filename'   => $info['filename'],
         'user'       => $user,
         'isintrooutro' => $isintrooutro,
+        'encodinggroupid' => $encodinggroupid,
       );
 
       try {

@@ -447,7 +447,7 @@ class Recordings extends \Springboard\Model {
 
   }
 
-  public function insertUploadingRecording( $userid, $organizationid, $languageid, $title, $sourceip, $isintrooutro = 0 ) {
+  public function insertUploadingRecording( $userid, $organizationid, $languageid, $title, $sourceip, $isintrooutro = 0, $encodinggroupid = null ) {
 
     $recording = array(
       'userid'          => $userid,
@@ -464,6 +464,7 @@ class Recordings extends \Springboard\Model {
       'timestamp'       => date('Y-m-d H:i:s'),
       'recordedtimestamp' => date('Y-m-d H:i:s'),
       'metadataupdatedtimestamp' => date('Y-m-d H:i:s'),
+      'encodinggroupid' => $encodinggroupid,
     ) + $this->metadata;
 
     if ( $isintrooutro ) {
@@ -560,7 +561,8 @@ class Recordings extends \Springboard\Model {
         $info['language'],
         $info['filename'],
         $this->bootstrap->config['node_sourceip'],
-        $isintrooutro
+        $isintrooutro,
+        $info['encodinggroupid']
       );
 
     }
