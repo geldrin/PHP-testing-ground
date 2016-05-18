@@ -2976,7 +2976,7 @@ function setupStatistics() {
 }
 
 function setupMyRecordings() {
-  var refreshDelay = 30 * 1000;
+  var refreshDelay = 5 * 1000;
   var ids = [];
   $j('ul.recordinglist > .listitem').each(function(k, v) {
     ids.push(parseInt($j(v).attr('data-recordingid'), 10));
