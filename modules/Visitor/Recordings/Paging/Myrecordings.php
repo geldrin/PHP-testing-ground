@@ -71,8 +71,9 @@ class Myrecordings extends \Visitor\Paging {
     foreach( $items as $key => $item ) {
 
       $status = $item['status'];
+      // onstorage-re is kivancsiak vagyunk mert lehet hogy a felvetel
+      // onstorage viszont meg a recordingverziok nem konvertalodtak le mind
       if (
-           $status != 'onstorage' and
            $status != 'markedfordeletion' and
            strlen( $status ) > strlen('failed') and
            substr( $status, 0, strlen('failed') ) != 'failed'

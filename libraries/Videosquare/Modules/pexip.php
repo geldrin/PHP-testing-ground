@@ -154,7 +154,8 @@ class Pexip {
             'protocol'          => 'rtmp',
             'presentation_url'  => $presentation_url,
             'streaming'         => 'yes',
-            'system_location'   => $this->pexip_location
+            'system_location'   => $this->pexip_location,
+            'role'              => 'chair'
         );
         
         $url = $this->pexip_url . $this->api['participant_dial'];

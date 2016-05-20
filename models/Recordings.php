@@ -447,7 +447,7 @@ class Recordings extends \Springboard\Model {
 
   }
 
-  public function insertUploadingRecording( $userid, $organizationid, $languageid, $title, $sourceip, $isintrooutro = 0 ) {
+  public function insertUploadingRecording( $userid, $organizationid, $languageid, $title, $sourceip, $isintrooutro = 0, $encodinggroupid = null ) {
 
     $recording = array(
       'userid'          => $userid,
@@ -464,6 +464,7 @@ class Recordings extends \Springboard\Model {
       'timestamp'       => date('Y-m-d H:i:s'),
       'recordedtimestamp' => date('Y-m-d H:i:s'),
       'metadataupdatedtimestamp' => date('Y-m-d H:i:s'),
+      'encodinggroupid' => $encodinggroupid,
     ) + $this->metadata;
 
     if ( $isintrooutro ) {
@@ -560,7 +561,8 @@ class Recordings extends \Springboard\Model {
         $info['language'],
         $info['filename'],
         $this->bootstrap->config['node_sourceip'],
-        $isintrooutro
+        $isintrooutro,
+        $info['encodinggroupid']
       );
 
     }
@@ -4543,12 +4545,14 @@ class Recordings extends \Springboard\Model {
       SELECT
         rv.recordingid,
         rv.status,
-        r.status AS recordingstatus
+        r.status AS recordingstatus,
+        r.contentstatus AS contentstatus
       FROM
         recordings_versions AS rv,
         recordings AS r
       WHERE
         rv.recordingid IN('" . implode("', '", $ids ) . "') AND
+        rv.status NOT IN('deleted', 'markedfordeletion') AND
         r.id = rv.recordingid AND
         r.organizationid = '$organizationid'
         $extrawhere
@@ -4583,12 +4587,15 @@ class Recordings extends \Springboard\Model {
 
       $percent = floor( ( $foundOnstorage / $n ) * 100 );
       $status = $row['recordingstatus']; // a $row az utolso row, foreach itthagyta, minden row-ban ugyanaz
+      $contentstatus = $row['contentstatus'];
 
       $ret[] = array(
         'recordingid' => $recid,
         'percent'     => $percent,
         'status'      => $status,
         'statusLabel' => $l->getLov( 'recordingstatus', null, $status ),
+        'contentstatus' => $contentstatus,
+        'contentstatusLabel' => $l->getLov( 'recordingstatus', null, $contentstatus ),
       );
     }
 

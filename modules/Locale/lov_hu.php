@@ -121,7 +121,7 @@ return array(
   'recordingstatus' => array(
     'uploading'             => 'Feltöltés alatt',
     'uploaded'              => 'Feltöltve',
-    'onstorage'             => 'Konvertálás kész',
+    'onstorage'             => 'Elérhető',
     'copyingtoconverter'    => 'Feldolgozásra vár',
     'markedfordeletion'     => 'Törölve',
     'deleted'               => 'Törölve',

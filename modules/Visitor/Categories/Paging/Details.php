@@ -10,18 +10,8 @@ class Details extends \Visitor\Paging {
     'title'                => 'title',
     'views_desc'           => 'numberofviews DESC',
     'views'                => 'numberofviews',
-    'viewsthisweek_desc'   => 'numberofviewsthisweek DESC',
-    'viewsthisweek'        => 'numberofviewsthisweek',
-    'viewsthismonth_desc'  => 'numberofviewsthismonth DESC',
-    'viewsthismonth'       => 'numberofviewsthismonth',
-    'comments_desc'        => 'numberofcomments DESC',
-    'comments'             => 'numberofcomments',
     'rating_desc'          => 'rating DESC, numberofratings DESC',
     'rating'               => 'rating, numberofratings DESC',
-    'ratingthisweek_desc'  => 'ratingthisweek DESC, numberofratings DESC',
-    'ratingthisweek'       => 'ratingthisweek, numberofratings DESC',
-    'ratingthismonth_desc' => 'ratingthismonth DESC, numberofratings DESC',
-    'ratingthismonth'      => 'ratingthismonth, numberofratings DESC',
   );
   protected $insertbeforepager = Array( 'Visitor/Categories/Paging/DetailsBeforepager.tpl' );
   protected $template = 'Visitor/recordinglistitem.tpl';

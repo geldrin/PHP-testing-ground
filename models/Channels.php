@@ -845,7 +845,8 @@ class Channels extends \Springboard\Model {
         status,
         recordinglinkid,
         vcrconferenceid,
-        vcrparticipantid
+        vcrparticipantid,
+        transcoderid
       FROM livefeeds
       WHERE
         channelid IN('" . $this->id . "') AND

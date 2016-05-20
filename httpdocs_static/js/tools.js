@@ -2976,7 +2976,7 @@ function setupStatistics() {
 }
 
 function setupMyRecordings() {
-  var refreshDelay = 30 * 1000;
+  var refreshDelay = 5 * 1000;
   var ids = [];
   $j('ul.recordinglist > .listitem').each(function(k, v) {
     ids.push(parseInt($j(v).attr('data-recordingid'), 10));
@@ -2987,7 +2987,6 @@ function setupMyRecordings() {
   $j('.progress-wrap').each(function(k, v) {
     var item = $j(v);
     var recordingid = item.parents('li.listitem').attr('data-recordingid');
-    var lastUpdate = Date.now();
     var bar = new ProgressBar.Line(v, {
       from: {
         color: '#f2663b'
@@ -3004,11 +3003,6 @@ function setupMyRecordings() {
       },
       step: function(state, bar, attachment) {
         bar.path.setAttribute('stroke', state.color);
-        var now = Date.now();
-        if (lastUpdate > now - 300)
-          return;
-
-        lastUpdate = now;
         var text = Math.floor(bar.value() * 100) + '%';
         $j(bar.text).text(text);
       }
@@ -3022,12 +3016,26 @@ function setupMyRecordings() {
     if (item.length == 0)
       return;
 
+    var wrap = item.find('.progress-wrap');
     if (
         data.status.length >= 'failed'.length &&
         data.status.substring(0, 'failed'.length) === 'failed'
        ) {
-      item.find('.progress-wrap').hide();
+      wrap.hide();
       return;
+    } else {
+
+      var shouldshow =
+        wrap.is(':hidden') &&
+        wrap.attr('data-progress') !== '100'
+      ;
+
+      if ( !shouldshow && data.percent != 100 )
+        shouldshow = true;
+
+      if (shouldshow)
+        item.find('.progress-wrap').show();
+
     }
 
     var bar = progressBars[id];
@@ -3037,6 +3045,12 @@ function setupMyRecordings() {
     var label = item.find('.status-label');
     label.text(data.statusLabel);
     label.attr('class', 'status-label status-' + data.status);
+
+    var contentinfo = item.find('.recordingcontentinfo .status');
+    if (contentinfo && contentinfo.length != 0) {
+      contentinfo.attr('class', 'status status-' + data.contentstatus);
+      contentinfo.text(data.contentstatusLabel);
+    }
   };
 
   var getInfo = function() {
