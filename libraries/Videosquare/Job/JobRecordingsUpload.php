@@ -143,7 +143,7 @@ class RecordingsUploadJob extends Job {
                         // Convert FLV to MP4 (overcome NGINX's junky FLV output)
                         $tmp = pathinfo($recordingVideo['file']);
                         $dstFileName = $tmp['filename'] . ".mp4";
-                        $this->convertFLV2MP4($this->bootstrap->config['recpath'] . $recordingVideo['file'], $this->bootstrap->config['recpath'] . "temp/" . $dstFileName);
+                        $this->convertFLV2MP4($this->bootstrap->config['recpath'] . $recordingContent['file'], $this->bootstrap->config['recpath'] . "temp/" . $dstFileName);
                         
                         $time_start = time();
                         $content = $api->uploadContent($recording['data']['id'], $this->bootstrap->config['recpath'] . "temp/" . $dstFileName);
