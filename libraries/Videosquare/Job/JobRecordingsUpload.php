@@ -226,7 +226,7 @@ class RecordingsUploadJob extends Job {
             if ( $err === false ) throw new \Exception("[ERROR] Cannot remove file " . $dst);
         }
     
-        $command = "nice -19 " . $this->bootstrap->config['ffmpeg_alt'] . " -i " . $src . " -c copy -copyts " . $dst;
+        $command = "nice -19 " . $this->bootstrap->config['ffmpeg_alt'] . " -i " . $src . " -c copy -copyts -timecode 00:00:00:00 " . $dst;
         
         // Run command
         $output = new runExt($command);
