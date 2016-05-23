@@ -698,11 +698,11 @@ class Recordings extends \Springboard\Model {
     $audiofreq         = null;
     $audiobitrate      = null;
 
-    if ( property_exists( $general, 'Duration' ))
+    if ( $general and property_exists( $general, 'Duration' ))
       $videolength = $this->getMediainfoNumericValue( $general->Duration[0], $isfloat = true );
-    elseif ( property_exists( $video, 'Duration' ))
+    elseif ( $video and property_exists( $video, 'Duration' ))
       $videolength = $this->getMediainfoNumericValue( $video->Duration[0], $isfloat = true );
-    elseif ( property_exists( $audio, 'Duration' ))
+    elseif ( $audio and property_exists( $audio, 'Duration' ))
       $videolength = $this->getMediainfoNumericValue( $audio->Duration[0], $isfloat = true );
     else
       throw new InvalidLengthException('Length not found for the media, output was ' . $output );
