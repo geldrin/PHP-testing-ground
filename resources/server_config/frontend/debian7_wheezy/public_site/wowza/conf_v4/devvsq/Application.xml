@@ -97,7 +97,7 @@
 			<!-- RTP/Authentication/[type]Methods defined in Authentication.xml. Default setup includes; none, basic, digest -->
 			<Authentication>
 				<PublishMethod>block</PublishMethod>
-				<PlayMethod>block</PlayMethod>
+				<PlayMethod>none</PlayMethod>
 			</Authentication>
 			<!-- RTP/AVSyncMethod. Valid values are: senderreport, systemclock, rtptimecode -->
 			<AVSyncMethod>senderreport</AVSyncMethod>
@@ -155,27 +155,27 @@
 				</Property>
 				<Property>
 					<Name>cupertinoCacheControlPlaylist</Name>
-					<Value>max-age=1</Value>
+					<Value>max-age=3600</Value>
 					<Type>String</Type>
 				</Property>
 				<Property>
 					<Name>cupertinoCacheControlMediaChunk</Name>
-					<Value>max-age=3600</Value>
+					<Value>max-age=604800</Value>
 					<Type>String</Type>
 				</Property>
 				<Property>
 					<Name>smoothCacheControlPlaylist</Name>
-					<Value>max-age=1</Value>
+					<Value>max-age=3600</Value>
 					<Type>String</Type>
 				</Property>
 				<Property>
 					<Name>smoothCacheControlMediaChunk</Name>
-					<Value>max-age=3600</Value>
+					<Value>max-age=604800</Value>
 					<Type>String</Type>
 				</Property>
 				<Property>
 					<Name>smoothCacheControlDataChunk</Name>
-					<Value>max-age=3600</Value>
+					<Value>max-age=604800</Value>
 					<Type>String</Type>
 				</Property>
 				<Property>
@@ -185,22 +185,22 @@
 				</Property>
 				<Property>
 					<Name>sanjoseCacheControlPlaylist</Name>
-					<Value>max-age=1</Value>
+					<Value>max-age=3600</Value>
 					<Type>String</Type>
 				</Property>
 				<Property>
 					<Name>sanjoseCacheControlMediaChunk</Name>
-					<Value>max-age=3600</Value>
+					<Value>max-age=604800</Value>
 					<Type>String</Type>
 				</Property>
 				<Property>
 					<Name>mpegdashCacheControlPlaylist</Name>
-					<Value>max-age=1</Value>
+					<Value>max-age=3600</Value>
 					<Type>String</Type>
 				</Property>
 				<Property>
 					<Name>mpegdashCacheControlMediaChunk</Name>
-					<Value>max-age=3600</Value>
+					<Value>max-age=604800</Value>
 					<Type>String</Type>
 				</Property>
 			</Properties>
