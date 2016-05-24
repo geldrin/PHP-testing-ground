@@ -143,7 +143,7 @@ class RecordingsUploadJob extends Job {
                         // Convert FLV to MP4 (overcome NGINX's junky FLV output)
                         $tmp = pathinfo($recordingVideo['file']);
                         $dstFileName = $tmp['filename'] . ".mp4";
-                        $this->convertFLV2MP4($this->bootstrap->config['recpath'] . $recordingVideo['file'], $this->bootstrap->config['recpath'] . "temp/" . $dstFileName);
+                        $this->convertFLV2MP4($this->bootstrap->config['recpath'] . $recordingContent['file'], $this->bootstrap->config['recpath'] . "temp/" . $dstFileName);
                         
                         $time_start = time();
                         $content = $api->uploadContent($recording['data']['id'], $this->bootstrap->config['recpath'] . "temp/" . $dstFileName);
@@ -225,8 +225,9 @@ class RecordingsUploadJob extends Job {
             $err = unlink($dst);
             if ( $err === false ) throw new \Exception("[ERROR] Cannot remove file " . $dst);
         }
-    
-        $command = "nice -19 " . $this->bootstrap->config['ffmpeg_alt'] . " -i " . $src . " -c copy -copyts " . $dst;
+
+        // ffmpeg command
+        $command = $this->bootstrap->config['nice'] . " " . $this->bootstrap->config['ffmpeg_alt'] . " -v ". $this->bootstrap->config['ffmpeg_loglevel'] ." -y -i " . $src . " -c copy -timecode 00:00:00:00 " . $dst;
         
         // Run command
         $output = new runExt($command);

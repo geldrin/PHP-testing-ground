@@ -725,7 +725,7 @@ global $app, $debug, $jconf;
 		
 	} elseif($profile['videopasses'] == 2) {
 	// Two-pass encoding
-		$ffmpeg_pass_prefix = $rec['master_path'] . $rec['id'] ."_". $profile['type'] ."_passlog_". getHashFromProfileParams($profile, 6);
+		$ffmpeg_pass_prefix = $rec['master_path'] . $rec['id'] ."_". $profile['type'] ."_passlog_". getHashFromProfileParams($profile, 6, $ffmpeg_input);
 		$ffmpeg_passlogfile = $ffmpeg_pass_prefix ."-0.log"; // <prefix>-<#pass>-<N>.log (N=output-stream specifier)
 
 		// first-pass
@@ -869,7 +869,7 @@ global $app, $debug, $jconf;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-function getHashFromProfileParams($profile, $length = 32) {
+function getHashFromProfileParams($profile, $length = 32, $additional = null) {
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 // Generate md5 hash from encoding profile parameters - useful to detect differencies between two
 // encoding parameter sets.
@@ -889,13 +889,20 @@ function getHashFromProfileParams($profile, $length = 32) {
 	);
 	$dataset = null;
 	$tmp = array();
+  
+  if (isset($additional)) {
+    if (is_array($additional))
+      $tmp[] = implode(",", $additional);
+    else
+      $tmp[] = $additional;
+  }
 	
 	foreach ($keys as $k) {
 		if (array_key_exists($k, $profile)) $tmp[] = $k ."=>". ($profile[$k]);
 	}
 	$dataset = implode(",", $tmp);
 	
-	return substr(md5($dataset), 0, ($length > 32 ? 32 : intval($length)));
+	return substr(md5($dataset), 0, ($length > 32 ? 32 : (int) $length));
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
