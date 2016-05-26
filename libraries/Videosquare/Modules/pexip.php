@@ -21,9 +21,8 @@ class Pexip {
     
     // Pexip session related
     private $streaming_participantid   = null;
-    private $streaming_isconnected     = false;
     private $laststatus                = null;
-    public $lastapidatareturned       = null;
+    public  $lastapidatareturned       = null;
     
     // API commands
     private $api = array(
@@ -139,24 +138,33 @@ class Pexip {
         return $retval;
     }
 
-    public function addStreamingParticipant($conference_alias, $video_url, $presentation_url) {
+    public function addParticipant($conference_alias, $destination, $presentation_url = null, $protocol, $role = 'chair', $remote_display_name = null) {
         
         $this->laststatus = null;
         $this->lastapidatareturned = null;
         
         if ( empty($conference_alias) ) throw new \Exception('[ERROR] Conference name is not provided');
-
-        if ( $this->streaming_isconnected ) return;
+        
+        if ( empty($destination) ) throw new \Exception('[ERROR] Destination is not provided');
+        
+        if ( empty($protocol) ) throw new \Exception('[ERROR] Protocol is not provided');
         
         $data = array(
             'conference_alias'  => $conference_alias,
-            'destination'       => $video_url,
-            'protocol'          => 'rtmp',
+            'destination'       => $destination,
+            'protocol'          => $protocol,
             'presentation_url'  => $presentation_url,
             'streaming'         => 'yes',
             'system_location'   => $this->pexip_location,
-            'role'              => 'chair'
+            'role'              => $role
         );
+        
+        if ( !empty($remote_display_name) ) $data['remote_display_name'] = $remote_display_name;
+/*
+
+'system_location': 'StreamNet LAN',
+
+*/
         
         $url = $this->pexip_url . $this->api['participant_dial'];
         $result = $this->httpCURLWrapper($url, true, $data);
@@ -165,8 +173,6 @@ class Pexip {
 
         if ( isset($result['status']) ) $this->lastapistatus = $result['status'];
         if ( isset($result['data']['participant_id']) ) $this->streaming_participantid = $result['data']['participant_id'];
-        
-        $this->streaming_isconnected = true;
         
         return $result;
     }
@@ -183,7 +189,7 @@ class Pexip {
         $url = $this->pexip_url . $this->api['participant_disconnect'];
         
         $data = array(
-            'participant_id'    => $this->streaming_participantid
+            'participant_id' => $this->streaming_participantid
         );
         
         $result = $this->httpCURLWrapper($url, true, $data);
@@ -196,7 +202,6 @@ class Pexip {
         if ( isset($result['disconnect']['participant_id']) ) {
             if ( strpos($result['disconnect']['participant_id'][0], "Failed") !== false ) return false;
         }
-        $this->streaming_isconnected = false;
         
         return $result;
     }
@@ -219,7 +224,6 @@ class Pexip {
         if ( !$result and ( $this->curl_lasthttpstatuscode == 404 ) ) return false;
         
         $this->lastapistatus = "success";
-        $this->streaming_isconnected = true;
         
         return $result;
     }

@@ -96,33 +96,31 @@ class VCR extends \Videosquare\Model\Live {
 
     }
 
-    function updateLiveFeedParams($vcrparticipantid) {
+    function updateLiveFeedParams($values) {
 
-        if ( empty($vcrparticipantid) ) return false;
-    
-        $values = array();
-        $values['vcrparticipantid'] = $vcrparticipantid;
-
+        if ( empty($values) ) return false;
+                
         $converterNodeObj = $this->bootstrap->getModel('livefeeds');
         $converterNodeObj->select($this->livefeedid);
         $converterNodeObj->updateRow($values);
 
-        $this->debugLog("[INFO] Livefeed id#" . $this->livefeedid . " Pexip participant ID changed to: " . $vcrparticipantid, $sendmail = false);
+        $this->debugLog("[INFO] Livefeed id#" . $this->livefeedid . " properties changed to: " . print_r($values, true), $sendmail = false);
 
     }
 
     function updateRecordingLinkParams($vcrparticipantid) {
 
-        if ( empty($vcrparticipantid) ) return false;
-    
         $values = array();
-        $values['conferenceid'] = $vcrparticipantid;
+    
+        if ( !empty($vcrparticipantid) ) $values['conferenceid'] = $vcrparticipantid;
+        
+        if ( empty($values) ) return false;
 
         $converterNodeObj = $this->bootstrap->getModel('recording_links');
         $converterNodeObj->select($this->recordinglinkid);
         $converterNodeObj->updateRow($values);
 
-        $this->debugLog("[INFO] Recording link id#" . $this->recordinglinkid . " Pexip participant ID changed to: " . $vcrparticipantid, $sendmail = false);
+        $this->debugLog("[INFO] Recording link id#" . $this->recordinglinkid . " VCR participant ID changed to: " . $vcrparticipantid, $sendmail = false);
 
     }
 
@@ -158,6 +156,9 @@ class VCR extends \Videosquare\Model\Live {
                 rl.apiishttpsenabled,
                 rl.pexiplocation,
                 rl.livestreamgroupid,
+                rl.autodialparticipant,
+                rl.autodialparticipantprotocol,
+                rl.autodialparticipantdisplayname,
                 lsg.id AS livestreamgroupid,
                 lsg.name AS livestreamgroupname,
                 lsg.istranscoderencoded,
@@ -246,6 +247,7 @@ class VCR extends \Videosquare\Model\Live {
                 lf.recordinglinkid,
                 lf.vcrconferenceid,
                 lf.vcrparticipantid,
+                lf.autodialparticipantid,
                 lf.livefeedrecordingid,
                 lf.status
             FROM
