@@ -1,4 +1,5 @@
 {assign var=views value=$item.numberofviews|numberformat}
+{capture assign="recordingurl"}{$language}/recordings/details/{$item.id},{$item.title|filenameize}{/capture}
 <li class="listitem" id="rec{$item.id}" data-recordingid="{$item.id}">
   <a name="rec{$item.id}"></a>
   <div class="recordingpic">
@@ -28,7 +29,7 @@
       {if $item.currentlyfeatured and $item|@userHasAccess}
         <a class="featured right" href="{$language}/recordings/modifysharing/{$item.id}?forward={$FULL_URI|escape:url}">{#recordings__currentlyfeatured#}</a>
       {/if}
-      <h3><a href="{$language}/recordings/details/{$item.id},{$item.title|filenameize}">{$item.title|escape:html|mb_wordwrap:25}</a></h3>
+      <h3><a href="{$recordingurl}">{$item.title|escape:html|mb_wordwrap:25}</a></h3>
       {if $item.subtitle|stringempty}<h4>{$item.subtitle|escape:html|mb_wordwrap:25}</h4>{/if}
     </div>
     {if $item.approvalstatus != 'approved' and $item.status == 'onstorage'}

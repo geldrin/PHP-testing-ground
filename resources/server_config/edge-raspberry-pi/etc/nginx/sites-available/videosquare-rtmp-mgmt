@@ -3,18 +3,15 @@
 server {
 
   # Include server level configuration files
-  # include     /etc/nginx/conf.d/*.server.conf;
+  include     /etc/nginx/conf.d/*.server.conf;
 
   # No SSL
-  # listen      8086;
-  # server_name stream-edge1.videosquare.eu;  # $VSQ_FQDN$
+  listen 8086;
+  server_name vsq-edge-test.bonafarm.hu;
 
   # SSL
-  # listen      8086 ssl;
-  # server_name stream-edge1.videosquare.eu;  # $VSQ_FQDN$
-
-  listen 127.0.0.1:80;
-  server_name localhost;
+#  listen 8086 ssl;
+#  server_name vsq-conv.bonafarm.hu;
 
   location / {
     root  /var/www/nginx;
@@ -36,7 +33,7 @@ server {
   }
 
   location /nginx_status {
-    stub_status on;
+#    stub_status on;
     access_log off;
     allow 127.0.0.1;
     deny all;
