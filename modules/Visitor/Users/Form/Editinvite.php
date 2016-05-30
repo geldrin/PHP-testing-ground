@@ -44,6 +44,8 @@ class Editinvite extends \Visitor\HelpForm {
       ;
     }
 
+    $this->controller->toSmarty['title'] = $l('users', 'invitation_modify');
+
   }
   
   public function onComplete() {
