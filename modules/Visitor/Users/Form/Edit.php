@@ -215,6 +215,7 @@ class Edit extends \Visitor\HelpForm {
 
   // override
   public function displayForm( $submitted ) {
+    $this->assignHelp();
     if ( strtolower( $this->exportmethod ) == 'getvars' )
       $this->controller->toSmarty['form'] = $this->form->getVars();
     else
