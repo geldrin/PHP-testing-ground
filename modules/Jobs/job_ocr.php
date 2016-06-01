@@ -101,8 +101,9 @@ function Main() {
     $db = db_maintain();
     $app->watchdog();
     
-    $action = null;
-    $OCRduration = 0;
+    $action         = null;
+    $OCRresult      = null;
+    $OCRduration    = 0;
     $sleep_duration = $app->config['sleep_long'];
     
     try {
@@ -111,7 +112,7 @@ function Main() {
 
       if( $tsk['result'] === true && !empty($tsk['output']) ) {
         $recording = $tsk['output'][0];
-        $msg = "[INFO] Recording #". $recording['id'];
+        $msg  = "[INFO] Recording #". $recording['id'];
         $msg .= " (". $recording['title'] . (!empty($recording['subtitle']) ? " / ". $recording['subtitle'] : null) .")";
         $msg .= " has been selected for OCR process.";
         $debug->log($logdir, $logfile, $msg, false);
@@ -388,7 +389,7 @@ function Main() {
             break;
           case OCR_OK:
           default:
-            $status = NULL;
+            $status = 'NULL';
             $report = "OCR PROCESS COMPLETE.\n";
             break;
         }
@@ -399,7 +400,8 @@ function Main() {
         if ($ox->getData())    $report .= " > Info: ". $ox->getData() ."\n";
         
         updateRecordingStatus($recording['id'], $status, $type = 'ocr');
-        log_recording_conversion($recording['id'], $myjobid, $action, ($status === null ? 'NULL' : $status), $ox->getCommand(), $report, $OCRduration, true);
+        if ($app->config['jobs'][$app->config['node_role']][$myjobid]['supresswarnings'] == false)
+          log_recording_conversion($recording['id'], $myjobid, $action, ($status === null ? 'NULL' : $status), $ox->getCommand(), $report, $OCRduration, true);
         $debug->log($logdir, $logfile, str_pad("[ CONVERSION END ]", 100, '-', STR_PAD_BOTH), false);
       }
     }
@@ -673,9 +675,7 @@ function convertOCR($rec) {
     $text = sanitizeOCRtext($text);
     $text = addslashes($text);
     
-    if (empty($ocr['output'])) continue;
-    
-    if ($text !== null || $text !== false) {
+    if (!empty($text)) {
       $frames['frames'][$ptr]['text'] = $text;
       $frames['processed'][] = $ptr;
     }
@@ -1132,8 +1132,8 @@ function getOCRtasks() {
     $recordset = $db->Prepare($query);
     $recordset = $db->execute($query, array(
       $jconf['dbstatus_copystorage_ok'],
-      '^'. $jconf['dbstatus_copystorage_ok'] ."|". $jconf['dbstatus_uploaded'] .'$',
-      '^'. $jconf['dbstatus_reconvert'] ."|". $jconf['dbstatus_convert'] ."|". $jconf['dbstatus_conv'] .'$')
+      '^('. $jconf['dbstatus_copystorage_ok'] ."|". $jconf['dbstatus_uploaded'] .')$',
+      '^('. $jconf['dbstatus_reconvert'] ."|". $jconf['dbstatus_convert'] ."|". $jconf['dbstatus_conv'] .')$')
     );
     if (isset($recordset) && isset($recordset->sql)) $result['query'] = $recordset->sql;
     

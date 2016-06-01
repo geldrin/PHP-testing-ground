@@ -13,6 +13,7 @@ global $app, $debug, $jconf, $myjobid;
 
 	if (!in_array($type, $allowed_types, $strict = true)) return false;
 	if ( empty($status) ) return false;
+  if ( $status == 'NULL' ) $status = null;
 
 	$idx = null;
 	if ( $type === 'recording' ) $idx = '';
@@ -40,7 +41,7 @@ global $app, $debug, $jconf, $myjobid;
 	}
 
 	// Log status change
-	$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Recording id = " . $recordingid . " " . $type . " status has been changed to '" . $status . "'.", $sendmail = false);
+	$debug->log($jconf['log_dir'], $myjobid .".log", "[INFO] Recording id = ". $recordingid ." ". $type ." status has been changed to ". var_export($status, 1) .".", false);
 
 	return true;
 }
