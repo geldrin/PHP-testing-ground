@@ -2926,8 +2926,9 @@ li#languageselectorlink span {
 }
 #channellist .numberofrecordings {
   font-size: 20px;
-  margin: 0 0 0 5px;
+  margin: 0;
   color: #777;
+  display: block;
 }
 .channelrecordings {
   float: left;
