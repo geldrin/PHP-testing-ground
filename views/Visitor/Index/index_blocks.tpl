@@ -1,29 +1,29 @@
 {foreach from=$blocks key=block item=items}
 {capture assign="ajanlo_"|cat:$block}
   {if $block == "eloadas" and !empty( $items )}
-    <a id="channelheader" href="{$language}/live/details/{$items.id},{$items.title|filenameize}">
-      <div class="channelimage">
-        <img src="{$items|@indexphoto:player}"/>
-      </div>
-      <div class="channelinfowrap">
-        <h1>{$items.title|escape:html|mb_wordwrap:50}</h1>
-        {if $items.subtitle}
-          <h2>{$items.subtitle|escape:html|mb_wordwrap:50}</h2>
-        {/if}
-        <div class="channeltype">{$items.channeltype|escape:html}</div>
-        {if $items.starttimestamp or $items.location}
-        <div class="channelinfo">
-          {if $items.starttimestamp}
-            {"%Y. %B %e"|shortdate:$items.starttimestamp:$items.endtimestamp}
-          {/if}
-          {if $items.location}
-            {if $items.starttimestamp},{/if}
-            {$items.location|escape:html}
-          {/if}
-        </div>
-        {/if}
-      </div>
-    </a>
+    <div class="accordion active persist" id="accordion_{$block}">
+      <h2><a href="#">{$labels[$block]|escape:html}</a></h2>
+      <ul>
+        <li class="listitem first">
+          <a href="{$language}/live/details/{$items.id},{$items.title|filenameize}">
+            <div class="recordingpic">
+              <img src="{$items|@indexphoto}"/>
+            </div>
+            <div class="recordingcontent">
+              <div class="presenter">{$items.channeltype|escape:html}</div>
+              {if $items.starttimestamp}
+                <div class="timestamp" title="{"%Y. %B %e"|shortdate:$items.starttimestamp:$items.endtimestamp}">
+                  {"%Y. %B %e"|shortdate:$items.starttimestamp:$items.endtimestamp}
+                </div>
+              {/if}
+              <div class="title" title="{$items.title|escape:html}">{$items.title|escape:html|mb_wordwrap:25}</div>
+            </div>
+          </a>
+        </li>
+      </ul>
+      <div class="clear"></div>
+    </div>
+    <div class="clear"></div>
   {elseif $block == "kiemelt" and !empty( $items )}
     <div id="indexcontainer">
       <ul>

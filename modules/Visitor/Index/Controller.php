@@ -31,7 +31,7 @@ class Controller extends \Visitor\Controller {
     $labels = array();
     $blocks = array();
     foreach( $this->blocks as $block ) {
-      if ( $block != 'eloadas' and $block != 'kiemelt' )
+      if ( $block != 'kiemelt' )
         $labels[ $block ] = $l('index', 'block_' . $block );
 
       if ( isset( $this->blocksToTypes[ $block ] ) ) {
