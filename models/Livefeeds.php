@@ -268,25 +268,11 @@ class Livefeeds extends \Springboard\Model {
 
     $ret = array(
       'streams'    => array(),
-      'labels'     => array(
-        $info['streams']['defaultstream']['qualitytag'],
-      ),
-      'parameters' => array(
-        array(
-          'livefeedstreamid' => $info['streams']['defaultstream']['id'],
-          'viewsessionid'    => $this->generateViewSessionid(
-            $info['streams']['defaultstream']['id']
-          ),
-        ),
-      ),
+      'labels'     => array(),
+      'parameters' => array(),
     );
 
     foreach( $info['streams']['streams'] as $stream ) {
-
-      if (
-           $info['streams']['defaultstream']['id'] == $stream['id']
-         )
-        continue;
 
       $ret['labels'][]     = $stream['qualitytag'];
       $ret['parameters'][] = array(
@@ -309,19 +295,8 @@ class Livefeeds extends \Springboard\Model {
 
     } else {
 
-      if ( isset( $info['streams']['defaultstream'][ $prefix . 'keycode'] ) )
-        $ret['streams'][] = $info['streams']['defaultstream'][ $prefix . 'keycode'];
-
-      foreach( $info['streams']['streams'] as $stream ) {
-
-        if (
-             $info['streams']['defaultstream']['id'] == $stream['id']
-           )
-          continue;
-
+      foreach( $info['streams']['streams'] as $stream )
         $ret['streams'][] = $stream[ $prefix . 'keycode'];
-
-      }
 
     }
 
