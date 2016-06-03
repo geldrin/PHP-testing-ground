@@ -278,6 +278,15 @@ class Controller extends \Visitor\Controller {
 
     }
 
+    $this->bootstrap->includeTemplatePlugin('indexphoto');
+    $this->toSmarty['opengraph']     = array(
+      'type'        => 'video',
+      'image'       => smarty_modifier_indexphoto( $feedModel->row, 'live' ),
+      'title'       => $channelModel->row['title'],
+      'subtitle'    => $channelModel->row['subtitle'],
+      'description' => $channelModel->row['description'],
+    );
+
     $this->toSmarty['needauth']      = $needauth;
     $this->toSmarty['needping']      = true;
     $this->toSmarty['chromeless']    = $chromeless;
