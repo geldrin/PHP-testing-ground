@@ -1,5 +1,5 @@
 <?php
-function smarty_modifier_shortdate( $format, $startdate, $enddate = null ) {
+function smarty_modifier_shortdate( $format, $startdate, $enddate = null, $enddot = true ) {
   
   if ( !$startdate )
     return '';
@@ -62,7 +62,7 @@ function smarty_modifier_shortdate( $format, $startdate, $enddate = null ) {
         if ( !strlen( $value ) )
           unset( $start[ $key ] );
       
-      if ( ( count( $start ) <= 3 ) && !$enddaymissing )
+      if ( ( count( $start ) <= 3 ) && !$enddaymissing and $enddot )
         $out .= '.';
 
     }

@@ -1340,8 +1340,8 @@ class Channels extends \Springboard\Model {
     return $relatedid;
   }
 
-  public function getFeatured( $organizationid, $language ) {
-    return $this->db->getRow("
+  public function getFeatured( $organizationid, $language, $max ) {
+    return $this->db->getArray("
       SELECT
         c.id,
         c.title,
@@ -1367,10 +1367,11 @@ class Channels extends \Springboard\Model {
         s.language = '$language'
       )
       WHERE
-        c.isfeatured     = '1' AND
+        c.isfeatured    <> '0' AND
         c.organizationid = '$organizationid'
-      ORDER BY c.id DESC
-      LIMIT 1
+      GROUP BY c.id
+      ORDER BY c.isfeatured, c.id DESC
+      LIMIT $max
     ");
   }
 

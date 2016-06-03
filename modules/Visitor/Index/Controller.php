@@ -31,8 +31,7 @@ class Controller extends \Visitor\Controller {
     $labels = array();
     $blocks = array();
     foreach( $this->blocks as $block ) {
-      if ( $block != 'kiemelt' )
-        $labels[ $block ] = $l('index', 'block_' . $block );
+      $labels[ $block ] = $l('index', 'block_' . $block );
 
       if ( isset( $this->blocksToTypes[ $block ] ) ) {
         $type = $this->blocksToTypes[ $block ];
@@ -94,7 +93,8 @@ class Controller extends \Visitor\Controller {
     $channelModel = $this->bootstrap->getModel('channels');
     return $channelModel->getFeatured(
       $this->organization['id'],
-      \Springboard\Language::get()
+      \Springboard\Language::get(),
+      4
     );
   }
 
