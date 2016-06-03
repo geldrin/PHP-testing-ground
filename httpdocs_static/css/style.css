@@ -3330,6 +3330,9 @@ li#languageselectorlink span {
   text-align: right;
   display: none;
 }
+#feeds tr.streambroadcastwrap.nohide {
+  display: table-row;
+}
 #feeds tr.streambroadcastwrap .broadcastlink {
   margin: 3px 0;
 }

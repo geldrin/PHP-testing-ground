@@ -13,6 +13,11 @@
   {foreach from=$feeds item=feed}
   {assign var=currentviewers value=$feed.currentviewers|numberformat}
   {assign var=ingressurl value=$feed|@getIngressURL}
+  {if $feed.transcoderid}
+    {assign var=hastranscoder value=true}
+  {else}
+    {assign var=hastranscoder value=false}
+  {/if}
   <tr>
     <td class="livefeedrow">
       <a href="{$language}/live/view/{$feed.id},{$feed.name|filenameize}" class="livefeed" title="{if $feed.status == 'live'}{#live__feedislive#}{else}{#live__feedistesting#}{/if}"></a>
@@ -56,13 +61,16 @@
                 {if $member.isadmin or $member.isclientadmin}
                 <a href="#" class="streamserverlink">{#live__streamserverlink#}</a> |
                 {/if}
-                <a href="#" class="streambroadcastlink">{#live__streambroadcastlink#}</a> |
+                {if $hastranscoder == false}
+                  <a href="#" class="streambroadcastlink">{#live__streambroadcastlink#}</a> |
+                {/if}
                 <a href="{$language}/live/modifystream/{$stream.id}">{#live__live_edit#}</a> |
                 <a href="{$language}/live/deletestream/{$stream.id}" class="confirm" question="{#sitewide_areyousure#|escape:html}">{#live__live_delete#}</a>
               {/if}
             </span>
           </td>
         </tr>
+        {if $hastranscoder == false}
         <tr class="streambroadcastwrap form">
           <td colspan="4" class="elementcolumn">
             <div class="broadcastlink">
@@ -87,6 +95,7 @@
             {/if}
           </td>
         </tr>
+        {/if}
       {foreachelse}
         <tr>
           <td rowspan="1">
@@ -94,6 +103,22 @@
           </td>
         </tr>
       {/foreach}
+      {if $hastranscoder}
+        <tr class="streambroadcastwrap form nohide">
+          <td colspan="4" class="elementcolumn">
+            <div class="broadcastlink">
+              <label for="broadcastlink-feed-{$feed.id}">{#live__streambroadcastlink#}:</label>
+              <input id="broadcastlink-feed-{$feed.id}" type="text" value="{$ingressurl|escape:html}{$feed.keycode|escape:html}"/>
+            </div>
+            {if $feed.contentkeycode}
+              <div class="broadcastlink">
+                <label for="broadcastlink-feed-{$feed.id}-2">{#live__secondarystreambroadcastlink#}:</label>
+                <input id="broadcastlink-feed-{$feed.id}-2" type="text" value="{$ingressurl|escape:html}{$feed.contentkeycode|escape:html}"/>
+              </div>
+            {/if}
+          </td>
+        </tr>
+      {/if}
       {if $feed.feedtype != 'vcr'}
         <tr>
           <td rowspan="3">

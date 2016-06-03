@@ -470,7 +470,7 @@ function setupBroadcastLink( elems ) {
     if ( !wrap.find('.broadcastlink').is(':visible') )
       force = true;
 
-    $j('.streambroadcastwrap').not( wrap ).hide();
+    $j('.streambroadcastwrap:not(.nohide)').not( wrap ).hide();
     $j('.serverlink').hide();
     $j('.broadcastlink').show();
     wrap.toggle( force );
