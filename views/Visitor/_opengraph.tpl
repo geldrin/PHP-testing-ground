@@ -12,6 +12,13 @@
 {if !empty( $opengraph )}
 
   <meta property="og:image"     content="{$opengraph.image|escape:html|default:"`$STATIC_URI`images/header_logo.png"}"/>
+  {if $opengraph.imagetype}
+    {assign var=dim value=$bootstrap->config.videothumbnailresolutions[$opengraph.imagetype]}
+    {assign var=dim value="x"|explode:$dim}
+    <meta property="og:image:width" content="{$dim[0]}"/>
+    <meta property="og:image:height" content="{$dim[1]}"/>
+  {/if}
+
   {if $opengraph.type}
     <meta property="og:type"    content="{$opengraph.type|escape:html}"/>
   {/if}

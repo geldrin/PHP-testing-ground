@@ -356,6 +356,7 @@ class Controller extends \Visitor\Controller {
     $this->toSmarty['opengraph']     = array(
       'type'        => 'video',
       'image'       => smarty_modifier_indexphoto( $recordingsModel->row, 'player' ),
+      'imagetype'   => 'player',
       'description' => $recordingsModel->row['description'],
       'title'       => $recordingsModel->row['title'],
       'subtitle'    => $recordingsModel->row['subtitle'],

@@ -282,6 +282,7 @@ class Controller extends \Visitor\Controller {
     $this->toSmarty['opengraph']     = array(
       'type'        => 'video',
       'image'       => smarty_modifier_indexphoto( $feedModel->row, 'live' ),
+      'imagetype'   => 'player',
       'title'       => $channelModel->row['title'],
       'subtitle'    => $channelModel->row['subtitle'],
       'description' => $channelModel->row['description'],
