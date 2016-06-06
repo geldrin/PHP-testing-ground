@@ -704,7 +704,7 @@ function convertOCR($rec) {
   $result['phase'] = "Updating database";
   $debug->log($logdir, $logfile, "Updating database.", false);
   foreach ($frames['processed'] as $f) {
-    $updateocr = insertOCRdata($rec['id'], $f + 1, $frames['frames'][$f]['text'], $app->config['ocr_frame_distance'], $jconf['dbstatus_conv']);
+    $updateocr = insertOCRdata($rec['id'], $f + 1, $jconf['dbstatus_conv'], $frames['frames'][$f]['text'], $app->config['ocr_frame_distance']);
     if ($updateocr['result'] === false) {
       $msg = "[ERROR] " . $updateocr['message'];
       $debug->log($logdir, $logfile, $msg, $sendmail = false);
@@ -969,9 +969,9 @@ function createOCRsnapshots($recordingid, $images, $snapshotparams, $source) {
     do {
       $size = $snapshotparams['resize'][$i];
       $folder = $snapshotparams['folders'][$i] . DIRECTORY_SEPARATOR;
-      $cmdresize .= " \( +clone -resize ". $size ."^ -gravity center -extent ". $size ." -write \"". $folder . $rid ."_". $img2resize['dbid'] .".jpg\" +delete \)";
+      $cmdresize .= " \( +clone -resize {$size} -write \"{$folder}{$rid}_{$img2resize['dbid']}.jpg\" +delete \)";
       if ($i >= (count($snapshotparams['resize']) - 1)) {
-        $cmdresize .= " -resize ". $size ."^ -gravity center -extent ". $size ." \"". $folder . $rid ."_". $img2resize['dbid'] .".jpg\"";
+        $cmdresize .= " -resize {$size} \"{$folder}{$rid}_{$img2resize['dbid']}.jpg\"";
         break;
       }
       $i++;
@@ -996,7 +996,7 @@ function createOCRsnapshots($recordingid, $images, $snapshotparams, $source) {
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-function insertOCRdata($recordingid, $framepos, $text = '', $timebase = 1.0, $status) {
+function insertOCRdata($recordingid, $framepos, $status, $text = '', $timebase = 1.0) {
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //
 // Beszurja az OCR-rel nyert szoveget az 'ocr_frames' tablaba, amit a 'text' valtozoban
