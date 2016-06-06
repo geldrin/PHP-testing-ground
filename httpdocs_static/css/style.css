@@ -2218,6 +2218,7 @@ li#languageselectorlink span {
 .accordion .recordingpic img {
   width: auto;
   height: auto;
+  max-width: 226px;
 }
 .accordion h2 {
   margin: 5px 0 10px 0;

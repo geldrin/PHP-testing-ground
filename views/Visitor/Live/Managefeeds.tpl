@@ -103,17 +103,19 @@
           </td>
         </tr>
       {/foreach}
-      {if $hastranscoder}
+      {assign var=keycode value=$stream.keycode|getNumericKeycode}
+      {if $hastranscoder and $keycode}
         <tr class="streambroadcastwrap form nohide">
           <td colspan="4" class="elementcolumn">
             <div class="broadcastlink">
               <label for="broadcastlink-feed-{$feed.id}">{#live__streambroadcastlink#}:</label>
-              <input id="broadcastlink-feed-{$feed.id}" type="text" value="{$ingressurl|escape:html}{$feed.keycode|escape:html}"/>
+              <input id="broadcastlink-feed-{$feed.id}" type="text" value="{$ingressurl|escape:html}{$keycode|escape:html}"/>
             </div>
-            {if $feed.contentkeycode}
+            {assign var=contentkeycode value=$stream.contentkeycode|getNumericKeycode}
+            {if $contentkeycode}
               <div class="broadcastlink">
                 <label for="broadcastlink-feed-{$feed.id}-2">{#live__secondarystreambroadcastlink#}:</label>
-                <input id="broadcastlink-feed-{$feed.id}-2" type="text" value="{$ingressurl|escape:html}{$feed.contentkeycode|escape:html}"/>
+                <input id="broadcastlink-feed-{$feed.id}-2" type="text" value="{$ingressurl|escape:html}{$contentkeycode|escape:html}"/>
               </div>
             {/if}
           </td>
