@@ -633,7 +633,7 @@ global $debug, $jconf, $app;
 	return $node_info['id'];
 }
 
-function generateRecordingSMILs($type = "recording") {
+function generateRecordingSMILs($type = "recording", $filtercompatibility = "desktop") {
 global $app, $debug, $jconf;
 
 	if ( ( $type != "recording" ) and ( $type != "content" ) ) return false;
@@ -744,7 +744,7 @@ global $app, $debug, $jconf;
 		}
 
 		// Get all recording versions for this recording (or content)
-		$recording_versions = getRecordingVersionsForRecording($recording['id'], $type, $isaudio);
+		$recording_versions = getRecordingVersionsForRecording($recording['id'], $type, $isaudio, $filtercompatibility);
 		if ( $recording_versions === false ) {
 			$debug->log($jconf['log_dir'], $jconf['jobid_conv_control'] . ".log", "[WARNING] No recording versions for SMIL found for " . $type . " id = " . $recording['id'], $sendmail = false);
 			// recording.(content)smilstatus = null
@@ -756,6 +756,7 @@ global $app, $debug, $jconf;
 		// SMIL: add header
 		$smil = $smil_header;
 
+        // SMIL: add video source lines
 		while ( !$recording_versions->EOF ) {
 
 			$recording_version = $recording_versions->fields;
@@ -764,6 +765,8 @@ global $app, $debug, $jconf;
 
 			$recording_versions->MoveNext();
 		}
+        
+        // SMIL: add footer
 		$smil .= $smil_footer;
 
 		$smil_filename_suffix = "";
@@ -782,85 +785,41 @@ global $app, $debug, $jconf;
 		$remotedir = $app->config['recordingpath'] . ( $recording['id'] % 1000 ) . "/" . $recording['id'] . "/";
         $smil_remote_filename = $remotedir . $recording['id'] . $smil_filename_suffix . ".smil";
 
-        if ( $app->config['node_role'] == "converter" ) {
+        // Move SMIL file to its final destination
+        $err = rename($smil_filename, $smil_remote_filename);
+        if ( $err === false ) {
+            $debug->log($jconf['log_dir'], $jconf['jobid_conv_control'] . ".log", "[ERROR] SMIL file update failed.\nCOMMAND: php: rename(" . $smil_filename . ", " . $smil_remote_filename . ")\nRESULT: " . $err, $sendmail = true);
+            updateRecordingStatus($recording['id'], $jconf['dbstatus_update_err'], $idx . "smil");
+            $recordings->MoveNext();
+            continue;
+        } else {
+            $debug->log($jconf['log_dir'], $jconf['jobid_conv_control'] . ".log", "[INFO] SMIL file updated.", $sendmail = false);
+            
+            // Update recording directory size
+            $err_fsize = null;
+            $err_fsize = directory_size($remotedir);
 
-            // SSH: copy SMIL file to server - !!!to be removed if migrated to front-end!!!
-            $err = ssh_filecopy2($recording[$idx . 'mastersourceip'], $smil_filename, $smil_remote_filename, false);
-            if ( !$err['code'] ) {
-                $debug->log($jconf['log_dir'], $jconf['jobid_conv_control'] . ".log", "[ERROR] SMIL file update failed.\nMSG: " . $err['message'] . "\nCOMMAND: " . $err['command'] . "\nRESULT: " . $err['result'], $sendmail = true);
-                updateRecordingStatus($recording['id'], $jconf['dbstatus_update_err'], $idx . "smil");
-                $recordings->MoveNext();
-                continue;
+            if ( !$err_fsize['code'] ) {
+                $msg = "[WARN] directory_size(" . $remotedir . ") failed. Message: ". $err_fsize['message'];
             } else {
-                $debug->log($jconf['log_dir'], $jconf['jobid_conv_control'] . ".log", "[INFO] SMIL file updated.\nCOMMAND: " . $err['command'], $sendmail = false);
+                $update = array('recordingdatasize' => intval($err_fsize['value']));
+                $recDoc = $app->bootstrap->getModel('recordings');
+                $recDoc->select($recording['id']);
+                $recDoc->updateRow($update);
+                $msg = "[INFO] Recording datasize updated. Value: " . intval($err_fsize['value']);
+            }
                 
-                $err_fsize = null;
-                $err_fsize = ssh_filesize($recording[$idx . 'mastersourceip'], $remotedir);
-                
-                if (!$err_fsize['code']) {
-                    $msg = "[WARN] ssh_filesize() failed. Message: ". $err_fsize['message'];
-                } else {
-                    $update = array('recordingdatasize' => intval($err_fsize['value']));
-                    $recDoc = $app->bootstrap->getModel('recordings');
-                    $recDoc->select($recording['id']);
-                    $recDoc->updateRow($update);
-                    $msg = "[INFO] recording_datasize updated. Value: ". intval($err_fsize['value']);
-                }
-                
-                $debug->log($jconf['log_dir'], $jconf['jobid_conv_control'] .".log", $msg, false);
-                unset($msg, $err_fsize, $update, $recDoc);
-
-                // SSH: chmod new remote files
-                $ssh_command = "ssh -i " . $app->config['ssh_key'] . " " . $app->config['ssh_user'] . "@" . $recording[$idx . 'mastersourceip'] . " ";
-                $command = $ssh_command . "\"" . "chmod -f " . $jconf['file_access'] . " " . $smil_remote_filename . "\"";
-                exec($command, $output, $result);
-                $output_string = implode("\n", $output);
-                if ( $result != 0 ) {
-                    $debug->log($jconf['log_dir'], $jconf['jobid_conv_control'] . ".log", "[WARN] Cannot chmod new remote files (SSH)\nCOMMAND: " . $command . "\nRESULT: " . $output_string, $sendmail = true);
-                } else {
-                    $debug->log($jconf['log_dir'], $jconf['jobid_conv_control'] . ".log", "[INFO] Remote chmod OK. (SSH)\nCOMMAND: " . $command, $sendmail = false);
-                }
-
+            $debug->log($jconf['log_dir'], $jconf['jobid_conv_control'] . ".log", $msg, false);
+            
+            // Chmod/chown new file
+            $err_stat = MakeChmodChown($smil_remote_filename);
+            if ( !$err_stat['code'] ) {
+                $debug->log($jconf['log_dir'], $jconf['jobid_conv_control'] . ".log", $err_stat['message'] . "\nCOMMAND: " . $err_stat['command'] . "\nRESULT: " . $err_stat['code'], $sendmail = true);
+            } else {
+                $debug->log($jconf['log_dir'], $jconf['jobid_conv_control'] . ".log", $err_stat['message'] . "\nCOMMAND: " . $err_stat['command'], $sendmail = false);
             }
             
-        } else {
-
-            $err = rename($smil_filename, $smil_remote_filename);
-            if ( $err === false ) {
-                $debug->log($jconf['log_dir'], $jconf['jobid_conv_control'] . ".log", "[ERROR] SMIL file update failed.\nCOMMAND: php: rename(" . $smil_filename . ", " . $smil_remote_filename . ")\nRESULT: " . $err, $sendmail = true);
-                updateRecordingStatus($recording['id'], $jconf['dbstatus_update_err'], $idx . "smil");
-                $recordings->MoveNext();
-                continue;
-            } else {
-                $debug->log($jconf['log_dir'], $jconf['jobid_conv_control'] . ".log", "[INFO] SMIL file updated.", $sendmail = false);
-                
-                // Update recording directory size
-                $err_fsize = null;
-                $err_fsize = directory_size($remotedir);
-
-                if ( !$err_fsize['code'] ) {
-                    $msg = "[WARN] directory_size(" . $remotedir . ") failed. Message: ". $err_fsize['message'];
-                } else {
-                    $update = array('recordingdatasize' => intval($err_fsize['value']));
-                    $recDoc = $app->bootstrap->getModel('recordings');
-                    $recDoc->select($recording['id']);
-                    $recDoc->updateRow($update);
-                    $msg = "[INFO] Recording datasize updated. Value: " . intval($err_fsize['value']);
-                }
-                    
-                $debug->log($jconf['log_dir'], $jconf['jobid_conv_control'] . ".log", $msg, false);
-                
-                // Chmod/chown new file
-                $err_stat = MakeChmodChown($smil_remote_filename);
-                if ( !$err_stat['code'] ) {
-                    $debug->log($jconf['log_dir'], $jconf['jobid_conv_control'] . ".log", $err_stat['message'] . "\nCOMMAND: " . $err_stat['command'] . "\nRESULT: " . $err_stat['code'], $sendmail = true);
-                } else {
-                    $debug->log($jconf['log_dir'], $jconf['jobid_conv_control'] . ".log", $err_stat['message'] . "\nCOMMAND: " . $err_stat['command'], $sendmail = false);
-                }
-                
-                unset($msg, $err_fsize, $err_stat, $update, $recDoc);
-            }
-
+            unset($msg, $err_fsize, $err_stat, $update, $recDoc);
         }
         
 		updateRecordingStatus($recording['id'], $jconf['dbstatus_copystorage_ok'], $idx . "smil");
@@ -871,13 +830,18 @@ global $app, $debug, $jconf;
 	return true;
 }
 
-function generateLiveSMILs($type = "video") {
+function generateLiveSMILs($type = "video", $filtercompatibility = "desktop") {
 global $app, $debug, $jconf;
 
 	if ( ( $type != "video" ) and ( $type != "content" ) ) return false;
 
+    // Content index
 	$idx = "";
 	if ( $type == "content" ) $idx = "content";
+    
+    // Filter for compatibility
+    if ( $filtercompatibility == "desktop" ) $filter_compat = " AND lfs.isdesktopcompatible = 1 ";
+    if ( $filtercompatibility == "mobile" )  $filter_compat = " AND lfs.isioscompatible = 1 AND lfs.isandroidcompatible = 1 ";
 
 	// SMILs to update
 	$query = "
@@ -894,8 +858,9 @@ global $app, $debug, $jconf;
 			( lf." . $idx . "smilstatus IS NULL OR lf." . $idx . "smilstatus = '" . $jconf['dbstatus_regenerate'] . "' ) AND
 			lf.id = lfs.livefeedid AND
 			( lfs.status IS NULL OR lfs.status = '" . $jconf['dbstatus_vcr_recording'] . "' )
+            " . $filter_compat . "
 		ORDER BY
-			lf.id, lfs.id";
+			lf.id, lfs.weight";
 
 	try {
         $model = $app->bootstrap->getModel('livefeeds');
@@ -923,25 +888,13 @@ global $app, $debug, $jconf;
 	$i = 0;
 	while ( $i < count($livefeeds) ) {
 
-		// Live SMIL example
-		/* <smil>
-			<head>
-			</head>
-			<body>
-				<switch>
-					<video src="111111" system-bitrate="500000"/>
-					<video src="222222" system-bitrate="900000"/>
-				</switch>
-			</body>
-		</smil> */
-
 		// SMIL: start a new file, add header first
 		$smil = $smil_header;
 
 		$q = 0;
 		while ( $livefeeds[$i]['id'] == $livefeeds[$i + $q]['id'] ) {
 
-			// !!! bandwidth calculation: absolutely fake! (no way to calc, if the bitrate is not added on website - no GUI)
+			// NOTE: Bandwidth calculation is fake! (no way to calc, if the bitrate is not added on website - no GUI)
 			$smil .= sprintf("\t\t\t<video src=\"%s\" system-bitrate=\"%d\"/>\n", $livefeeds[$i + $q][$idx . 'keycode'], ( $q + 1 ) * 400000);
 
 			$q++;
@@ -964,52 +917,27 @@ global $app, $debug, $jconf;
 
         $smil_remote_filename = $app->config['livestreampath'] . $livefeeds[$i]['id'] . $smil_filename_suffix . ".smil";
 
-        if ( $app->config['node_role'] == "converter" ) {
-        
-            // SSH: copy SMIL file to server - !!!to be removed if migrated to front-end!!!
-            $err = ssh_filecopy2($app->config['fallbackstreamingserver']['server'], $smil_filename, $smil_remote_filename, false);
-            if ( !$err['code'] ) {
-                $debug->log($jconf['log_dir'], $jconf['jobid_conv_control'] . ".log", "[ERROR] SMIL live file update failed.\nMSG: " . $err['message'] . "\nCOMMAND: " . $err['command'] . "\nRESULT: " . $err['result'], $sendmail = true);
-                updateLiveFeedSMILStatus($livefeeds[$i]['id'], $jconf['dbstatus_update_err'], $type);
-                $i = $i + $q;
-                continue;
-            } else {
-                $debug->log($jconf['log_dir'], $jconf['jobid_conv_control'] . ".log", "[INFO] SMIL live file updated.\nCOMMAND: " . $err['command'], $sendmail = false);
-            }
-
-            // SSH: chmod new remote files
-            $ssh_command = "ssh -i " . $app->config['ssh_key'] . " " . $app->config['ssh_user'] . "@" . $app->config['fallbackstreamingserver']['server'] . " ";
-            $command = $ssh_command . "\"" . "chmod -f " . $jconf['file_access'] . " " . $smil_remote_filename . "\"";
-            exec($command, $output, $result);
-            $output_string = implode("\n", $output);
-            if ( $result != 0 ) {
-                $debug->log($jconf['log_dir'], $jconf['jobid_conv_control'] . ".log", "[WARN] Cannot chmod new remote files. (SSH)\nCOMMAND: " . $command . "\nRESULT: " . $output_string, $sendmail = true);
-            } else {
-                $debug->log($jconf['log_dir'], $jconf['jobid_conv_control'] . ".log", "[INFO] Remote chmod OK. (SSH)\nCOMMAND: " . $command, $sendmail = false);
-            }
-            
+        // Move SMIL file to its final location
+        $err = rename($smil_filename, $smil_remote_filename);
+        if ( $err === false ) {
+            $debug->log($jconf['log_dir'], $jconf['jobid_conv_control'] . ".log", "[ERROR] SMIL file update failed.\nCOMMAND: php: rename(" . $smil_filename . ", " . $smil_remote_filename . ")\nRESULT: " . $err, $sendmail = true);
+            updateRecordingStatus($recording['id'], $jconf['dbstatus_update_err'], $idx . "smil");
+            $recordings->MoveNext();
+            continue;
         } else {
+            
+            $debug->log($jconf['log_dir'], $jconf['jobid_conv_control'] . ".log", "[INFO] SMIL file updated.", $sendmail = false);
 
-            $err = rename($smil_filename, $smil_remote_filename);
-            if ( $err === false ) {
-                $debug->log($jconf['log_dir'], $jconf['jobid_conv_control'] . ".log", "[ERROR] SMIL file update failed.\nCOMMAND: php: rename(" . $smil_filename . ", " . $smil_remote_filename . ")\nRESULT: " . $err, $sendmail = true);
-                updateRecordingStatus($recording['id'], $jconf['dbstatus_update_err'], $idx . "smil");
-                $recordings->MoveNext();
-                continue;
+            // Chmod/chown new file
+            $err_stat = MakeChmodChown($smil_remote_filename);
+            if ( !$err_stat['code'] ) {
+                $debug->log($jconf['log_dir'], $jconf['jobid_conv_control'] . ".log", $err_stat['message'] . "\nCOMMAND: " . $err_stat['command'] . "\nRESULT: " . $err_stat['code'], $sendmail = true);
             } else {
-                $debug->log($jconf['log_dir'], $jconf['jobid_conv_control'] . ".log", "[INFO] SMIL file updated.", $sendmail = false);
-
-                // Chmod/chown new file
-                $err_stat = MakeChmodChown($smil_remote_filename);
-                if ( !$err_stat['code'] ) {
-                    $debug->log($jconf['log_dir'], $jconf['jobid_conv_control'] . ".log", $err_stat['message'] . "\nCOMMAND: " . $err_stat['command'] . "\nRESULT: " . $err_stat['code'], $sendmail = true);
-                } else {
-                    $debug->log($jconf['log_dir'], $jconf['jobid_conv_control'] . ".log", $err_stat['message'] . "\nCOMMAND: " . $err_stat['command'], $sendmail = false);
-                }
+                $debug->log($jconf['log_dir'], $jconf['jobid_conv_control'] . ".log", $err_stat['message'] . "\nCOMMAND: " . $err_stat['command'], $sendmail = false);
             }
-                
-            unset($msg, $err_stat);
         }
+            
+        unset($msg, $err_stat);
             
 		updateLiveFeedSMILStatus($livefeeds[$i]['id'], $jconf['dbstatus_copystorage_ok'], $type);
 
@@ -1019,15 +947,20 @@ global $app, $debug, $jconf;
 	return true;
 }
 
-function getRecordingVersionsForRecording($recordingid, $type = "recording", $filteraudioonly = false) {
+function getRecordingVersionsForRecording($recordingid, $type = "recording", $filteraudioonly = false, $filtercompatibility = "desktop") {
 global $app, $jconf, $debug;
 
 	if ( ( $type != "recording" ) and ( $type != "content" ) ) return false;
-
-	$iscontent = 0;
+    
 	$mediatype = "video";
 	if ( $filteraudioonly ) $mediatype = "audio";
+    
+    $iscontent = 0;
 	if ( $type == "content" ) $iscontent = 1;
+
+    // Filter for compatibility    
+    if ( $filtercompatibility == "desktop" ) $filter_compat = " AND rv.isdesktopcompatible = 1 ";
+    if ( $filtercompatibility == "mobile" )  $filter_compat = " AND rv.ismobilecompatible = 1 ";
 
 	$query = "
 		SELECT
@@ -1037,18 +970,19 @@ global $app, $jconf, $debug;
 			rv.filename,
 			rv.iscontent,
 			rv.bandwidth,
-			rv.isdesktopcompatible
+			rv.isdesktopcompatible,
+            rv.ismobilecompatible
 		FROM
 			recordings_versions AS rv,
 			encoding_profiles AS ep
 		WHERE
 			rv.recordingid = " . $recordingid . " AND
 			rv.iscontent = " . $iscontent . " AND
-			rv.isdesktopcompatible = 1 AND
 			rv.status = '" . $jconf['dbstatus_copystorage_ok'] . "' AND
 			rv.encodingprofileid = ep.id AND
 			ep.type = '" . $type . "' AND
 			ep.mediatype = '" . $mediatype . "'
+            " . $filter_compat . "
 		ORDER BY
 			rv.bandwidth";
 
