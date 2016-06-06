@@ -8,7 +8,7 @@
         <li class="listitem{if $smarty.foreach.live.first} first{/if}">
           <a href="{$language}/live/details/{$item.id},{$item.title|filenameize}">
             <div class="recordingpic">
-              <img src="{$item|@indexphoto:player}"/>
+              <img src="{$item|@indexphoto:live}"/>
             </div>
             <div class="recordingcontent">
               <div class="wrap">
@@ -43,7 +43,11 @@
         {foreach from=$items item=item name=recordings}
           {capture assign=recordingurl}{$language}/recordings/details/{$item.id},{$item.title|filenameize}{/capture}
           {assign var=isfirst value=$smarty.foreach.recordings.first}
-          {if $isfirst}{assign var=type value="player"}{/if}
+          {if $isfirst}
+            {assign var=type value="player"}
+          {else}
+            {assign var=type value=""}
+          {/if}
           <li class="listitem{if $isfirst} first{/if}">
             <a href="{$recordingurl}">
               <div class="recordingpic">
@@ -62,7 +66,6 @@
               </div>
             </a>
           </li>
-
         {/foreach}
       </ul>
       <div class="clear"></div>
