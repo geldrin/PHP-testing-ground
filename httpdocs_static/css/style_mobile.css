@@ -20,8 +20,8 @@ input[type=submit] {
     display: none;
   }
 
-  #indexcontainer li a:hover,
-  #indexcontainer li a:focus,
+  .featuredcontainer li a:hover,
+  .featuredcontainer li a:focus,
   .accordion li a:hover,
   .accordion li a:focus {
     text-decoration: none;
@@ -94,28 +94,28 @@ input[type=submit] {
   }
   
   /* index contaner */
-  #indexcontainer {
+  .featuredcontainer {
     float: none;
     width: auto;
   }
-  #indexcontainer li,
-  #indexcontainer li.first {
+  .featuredcontainer li,
+  .featuredcontainer li.first {
     float: none;
     width: 100%;
     height: auto;
     margin: 0;
     padding: 10px 0;
   }
-  #indexcontainer .recordingcontent,
-  #indexcontainer li.first .recordingcontent {
+  .featuredcontainer .recordingcontent,
+  .featuredcontainer li.first .recordingcontent {
     position: static;
     float: none;
     padding: 0;
     width: auto;
     height: auto;
   }
-  #indexcontainer .first .recordingcontent .title,
-  #indexcontainer .first .recordingcontent .presenter {
+  .featuredcontainer .first .recordingcontent .title,
+  .featuredcontainer .first .recordingcontent .presenter {
     color: #000;
     text-shadow: none;
   }
@@ -138,13 +138,13 @@ input[type=submit] {
     height: auto;
     box-sizing: border-box;
   }
-  #indexcontainer li a,
+  .featuredcontainer li a,
   .accordion li a {
     display: -ms-flexbox;
   display: -webkit-flex;
   display: flex;
   }
-  #indexcontainer .recordingpic,
+  .featuredcontainer .recordingpic,
   .accordion .recordingpic {
     float: none;
     margin: 0;
@@ -153,18 +153,18 @@ input[type=submit] {
     flex: 1;
     padding-right: 5%;
   }
-  #indexcontainer .recordingpic .length,
+  .featuredcontainer .recordingpic .length,
   .accordion .recordingpic .length {
     right: 20%;
   }
-  #indexcontainer .recordingcontent,
+  .featuredcontainer .recordingcontent,
   .accordion .recordingcontent {
     -webkit-flex: 2;
     -ms-flex: 2;
     flex: 2;
   }
-  #indexcontainer img,
-  #indexcontainer li.first img,
+  .featuredcontainer img,
+  .featuredcontainer li.first img,
   .accordion .recordingpic img {
     width: 100%;
     height: auto;
@@ -599,7 +599,7 @@ input[type=submit] {
   }
 }
 @media all and (max-width: 460px) {
-  #indexcontainer .recordingpic .length {
+  .featuredcontainer .recordingpic .length {
     bottom: auto;
     top: 20px;
   }
