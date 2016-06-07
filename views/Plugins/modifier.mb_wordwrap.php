@@ -1,6 +1,6 @@
 <?php
 
-function smarty_modifier_mb_wordwrap( $string, $length, $separator = ' ' ) {
+function smarty_modifier_mb_wordwrap( $string, $length, $separator = "\xc2\xad" ) {
   
   if ( mb_strlen( $string ) <= $length )
     return $string;   
