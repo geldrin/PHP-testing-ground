@@ -150,7 +150,7 @@ class runExt {
 		$EOF        = false;
 		$timeout    = false;
 		$lastactive = 0;
-		var_dump($this->callbacks);
+		
 		clearstatcache();
 		$this->clearVariables();
 		$this->pipes    = array();
