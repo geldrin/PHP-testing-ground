@@ -1,6 +1,6 @@
 <?php
 $config = array(
-  'version'      => '_v20160607',
+  'version'      => '_v20160608',
   'charset'      => 'UTF-8',
   'cacheseconds' => 3600,
   'errormessage' => 'An unexpected error has occured, our staff has been notified. Sorry for the inconvenience and thanks for your understanding!',
@@ -137,6 +137,7 @@ $config = array(
     '4:3'    => '220x130',
     'wide'   => '300x168',
     'player' => '618x348',
+    'live'   => '980x550',
   ),
   //----
   'wowza'      => array(

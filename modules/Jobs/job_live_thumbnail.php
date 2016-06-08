@@ -69,42 +69,69 @@ function Main() {
 
 		// Temp directory
 		$temp_dir = $jconf['livestreams_dir'] . $channels[$i]['livefeedstreamid'] . "/";
-
-		// Destination directories
-		$path_43      = $temp_dir . $app->config['videothumbnailresolutions']['4:3'] . "/";
-		$path_wide    = $temp_dir . $app->config['videothumbnailresolutions']['wide'] . "/";
-		$path_highres = $temp_dir . $app->config['videothumbnailresolutions']['player'] . "/";
-
+		
 		// RTMP URL - Use fallback server always
 		$rtmp_server = $app->config['fallbackstreamingserver']['server'];
 
 		$wowza_app = "vsqlive";
 		if ( isset($app->config['production']) && $app->config['production'] === false ) $wowza_app = "dev" . $wowza_app;
-
+    
 		$filename        = $channels[$i]['livefeedstreamid'] . "_" . date("YmdHis") . ".jpg";
 		$ffmpeg_loglevel = ($debug_mode) ? (null) : (' -v '. $app->config['ffmpeg_loglevel']);
 		$ffmpeg_globals  = $app->config['ffmpeg_alt'] . $ffmpeg_loglevel .' -y';
 		$ffmpeg_load     = ' -i '. sprintf("rtmp://%s/" . $wowza_app . "/", $rtmp_server) . $channels[$i]['streamid'];
+    
+    $thumbnail_obj = array(
+      'res'    => null,
+      'local'  => null,
+      'remote' => null,
+      'filter' => null,
+      'output' => null,
+    );
+    
+    $resolutions = array_intersect_key($app->config['videothumbnailresolutions'], array_flip(array('4:3','wide','player','live')));
+    foreach (array_values($resolutions) as $j => $res) {
+      $dim = explode('x', $res);
+      $dst = $temp_dir . $res . DIRECTORY_SEPARATOR;
+      
+      $thumbnail_obj['res'][]    = $res;
+      $thumbnail_obj['local'][]  = $dst;
+      $thumbnail_obj['remote'][] = "{$app->config['livestreampath']}{$channels[$i]['livefeedstreamid']}/{$res}/{$filename}";
+      $thumbnail_obj['filter'][] = "[{$j}] scale=w={$dim[0]}:h={$dim[1]}:force_original_aspect_ratio=increase, crop={$dim[0]}:{$dim[1]} [{$j}_out]";
+      $thumbnail_obj['output'][] = " -map [{$j}_out] -frames:v 1 -an -f image2 {$dst}{$filename}";
+      
+      unset($dim, $dst);
+    }
+    
+    $n = count($thumbnail_obj['res']);
+    $thumbnail_obj['res'][]    = null;
+    $thumbnail_obj['local'][]  = $temp_dir .'original'. DIRECTORY_SEPARATOR;
+    $thumbnail_obj['remote'][] = "{$app->config['livestreampath']}{$channels[$i]['livefeedstreamid']}/original/{$filename}";
+    $thumbnail_obj['filter'][] = "[{$n}] crop=iw:ih [{$n}]";
+    $thumbnail_obj['output'][] = " -map [{$n}] -frames:v 1 -an -f image2 {$temp_dir}original/{$filename}";
 
-		$tmp = array();
-		$tmp[] = 'fps=fps=1, split=3[0][1][2]';
-		foreach (array_values($app->config['videothumbnailresolutions']) as $j => $res) {
-			$dim = explode('x', $res, 2);
-			$dst = $temp_dir . $res . DIRECTORY_SEPARATOR;
-			$tmp[] =  "[$j] scale=w=". $dim[0] .":h=". $dim[1] .":force_original_aspect_ratio=increase, crop=". $dim[0] .':'. $dim[1] ." [". $j ."_out]";
-			$ffmpeg_output .=  " -map [". $j ."_out] -frames:v 1 -an -f image2 ". $dst . $filename;
-		}
-		$ffmpeg_filter  = ' -filter_complex "'. implode(';', $tmp) .'"';
-		$ffmpeg_command = $ffmpeg_globals . $ffmpeg_load . $ffmpeg_filter . $ffmpeg_output;
-
-		try {
+    $filter_bits = array("fps=fps=1, split=". count($thumbnail_obj['res']) ."[". implode('][', array_keys($thumbnail_obj['res'])) ."]");
+    $filter_bits = array_merge($filter_bits, $thumbnail_obj['filter']);
+    
+    $ffmpeg_filter = " -filter_complex '". implode(';', $filter_bits) ."'";
+    $ffmpeg_output = implode(null, $thumbnail_obj['output']);
+    $ffmpeg_command = $ffmpeg_globals . $ffmpeg_load . $ffmpeg_filter . $ffmpeg_output;
+    
+    unset($n, $filter_bits);
+    
+    // init runExternal object
+    $wrkr = new runExt();
+		
+    try {
 			$cmd = $code = null;
-			$fatal = false;
-			$wrkr = new runExt();
 
 			// Prepare working directories
-			$directories = array($temp_dir, $path_wide, $path_43, $path_highres);
-
+      $directories = array();
+      $directories[] = $temp_dir;
+      $directories = $thumbnail_obj['local'];
+      
+      //var_dump($directories);
+      
 			foreach($directories as $d) {
 				$err = create_remove_directory($d);
 				if ( !$err['code'] ) {
@@ -113,12 +140,12 @@ function Main() {
 					throw new Exception($err['message']);
 				}
 			}
-
+      
 			// Chmod local directory
 			$cmd = "chmod -f -R ". $jconf['directory_access'] ." ". $temp_dir;
 			if (!$wrkr->run($cmd)) throw new Exception("Chmod failed. (". $wrkr->getOutput() .")");
-
-			// Run ffmpeg
+      
+      // Run ffmpeg
 			if (!$wrkr->run($ffmpeg_command)) {
 				if (strpos($wrkr->getOutput(), 'StreamNotFound') !== false) {
 					// there's no live stream available, don't complain about it unless we're debugging
@@ -128,15 +155,15 @@ function Main() {
 					// ffmpeg error
 					throw new Exception("FFmpeg cannot get live thumbnail. (". $wrkr->getOutput() .")");
 				}
-			} elseif (!is_readable($path_43 . $filename) || !(filesize($path_43 . $filename) > 0)) {
+			} elseif (!is_readable(reset($thumbnail_obj['local']) . $filename) || !(reset($thumbnail_obj['local']) . $filename) > 0) {
 				throw new Exception("File is not readable.");
 			}
-
+      
 			$msg  = "[INFO] FFmpeg live thumbnail attempt for feed#". $channels[$i]['locationid'];
 			$msg .= " / stream#". $channels[$i]['livefeedstreamid'] ." - OK.\nCommand: '". $wrkr->command ."' / return code: ". $wrkr->getCode() ."\n";
 			$debug->log($logdir, $logfile, $msg, false);
 			unset($cmd, $code, $err, $msg, $wrkr);
-
+      
 		} catch (Exception $e) {
 			if ($wrkr->getCode() !== 0) {
 				$cmd  = $wrkr->command;
@@ -147,8 +174,6 @@ function Main() {
 			$msg .= "\nCommand: '". $cmd ."' / return code: ". $code ."\n";
 			$debug->log($logdir, $logfile, $msg, false);
 			unset($cmd, $err, $msg, $wrkr);
-
-			if ($fatal)	return $code; // which errors should be considered fatal?
 			
 			continue;
 		}
@@ -162,17 +187,18 @@ function Main() {
 			if ($err['code'] === false)	throw new Exception($err['message'] ."\nCommand: ". $err['command'] ."\nResult: ". $err['result']);
 
 			// Chmod remote files
-			foreach ($app->config['videothumbnailresolutions'] as $res) {
-				$remote_file = $remote_path . $channels[$i]['livefeedstreamid'] ."/". $res ."/". $filename;
-				if ($debug_mode) {
-					$msg = "[INFO] Setting file permission (". $jconf['file_owner'] ."/". $jconf['file_access'] .") on '". $remote_file ."'";
+      foreach ($thumbnail_obj['remote'] as $r) {
+        if ($debug_mode) {
+          $msg = "[INFO] Setting file permission (". $jconf['file_owner'] ."/". $jconf['file_access'] .") on '". $r ."'";
 					$debug->log($logdir, $logfile, $msg, false);
-				}
-
-				$err = sshMakeChmodChown($app->config['fallbackstreamingserver']['server'], $remote_file, false);
-				if ($err['code'] === false) throw new Exception("[ERROR] Failed to set permissions on: '". $remote_file ."'\nMSG: ". $err['message']);
-			}
-			unset($err);
+        }
+        
+        $err = sshMakeChmodChown($app->config['fallbackstreamingserver']['server'], $r, false);
+        
+        if ($err['code'] === false)
+          throw new Exception("[ERROR] Failed to set permissions on: '{$r}'\nMSG: {$err['message']}");
+      }
+      
 		} catch (Exception $e) {
 			$debug->log($logdir, $logfile, $e->getMessage(), false);
 			continue;
