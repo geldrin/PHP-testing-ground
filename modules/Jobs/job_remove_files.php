@@ -597,7 +597,11 @@ if (is_array($OCRframes)) {
 				
 				$files2remove[] = $basepath ."original". DIRECTORY_SEPARATOR . $filename;
 				
-				foreach ($app->config['videothumbnailresolutions'] as $tres) {
+        $resolutions2removed = array_intersect_key(
+          $app->config['videothumbnailresolutions'],
+          array_flip(array('4:3', 'wide', 'player'))
+        );
+				foreach ($resolutions2removed as $tres) {
 					$tmp = explode("x", $tres);
 					$files2remove[] = $basepath . $tmp[0] . DIRECTORY_SEPARATOR . $filename;
 				}
