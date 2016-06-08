@@ -94,6 +94,7 @@ class runExt {
 	private $groupid      = null;
 	private $msg          = array();
 	private $callbacks    = null;
+	private $polling_sec  = 0;
 	private $polling_usec = 50000;
 	private $process      = null;
 	private $pipes        = array();
@@ -110,16 +111,24 @@ class runExt {
 	}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-	function setPollingRate($pollingrate) {
+	function setPollingRate($pollrate_usec = 50000, $pollrate_sec = 0) {
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-		if (isset($pollingrate) && is_numeric($pollingrate))
-			$this->polling_usec = ((int) $pollingrate) < 1000 ? 1000 : (int) $pollingrate;
+		if (isset($pollrate_sec) && is_numeric($pollrate_sec)) $this->polling_sec = (int) $pollrate_sec;
+
+		if (isset($pollrate_usec) && is_numeric($pollrate_usec)) {
+			$this->polling_sec += (int) ($pollrate_usec / 1000000);
+			$pollrate_usec = $pollrate_usec % 1000000;
+			if ($pollrate_sec == 0 && $pollrate_usec < 1000) {
+					$pollrate_usec = 1000;
+			}
+			$this->polling_usec = (int) $pollrate_usec;
+		}
 	}
 	
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 	function addCallback($aCallback, $param = null) {
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-		if (empty($aCallback) || !isCallable($aCallback)) return false;
+		if (empty($aCallback) || !is_callable($aCallback)) return false;
 		
 		$tmp = array('callback' => null, 'param' => null);
 		$tmp['callback'] = $aCallback;
@@ -189,8 +198,9 @@ class runExt {
 		do {
 			$read = $this->pipes;
 			$tmp  = null;
+			$ready = 0;
 			
-			$ready = stream_select($read, $write, $excl, 0, $this->polling_usec);
+			$ready = stream_select($read, $write, $excl, $this->polling_sec, $this->polling_usec);
 			$proc_status = proc_get_status($this->process);
 			
 			if ($ready === false ) { // error
@@ -204,18 +214,16 @@ class runExt {
 					if (feof($r)) $EOF = true;
 				}
 				
-				// if ($this->callback) call_user_func($this->callback, $tmp);
-				if (!empty($this->callbacks)) $this->doCallbacks();
-				
 				if (!empty($tmp)) {
 					$lastactive = microtime(true);
 					$this->output[] = $tmp;
-					continue;
 				}
-			} else {
+			} else {	
 				$timeout = ((microtime(true) - $lastactive) > $this->timeoutsec);
-				usleep($this->polling_usec);
 			}
+			
+			if (isset($this->callbacks)) $this->doCallbacks($tmp);
+			
 		} while($proc_status['running'] && !$timeout && !$EOF);
 		
 		if ($timeout) {
@@ -257,11 +265,11 @@ class runExt {
 	}
 	
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-	private function doCallbacks() {
+	private function doCallbacks($data = null) {
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 		foreach ($this->callbacks as $c) {
 			try {
-				call_user_func($c['callback'], $c['param']);
+				call_user_func($c['callback'], $data, $c['param']);
 			} catch (Exception $ex) {
 				$this->msg[] = "[WARN] Caught exception during callback: {$c['callback']}()\nMessage:". $ex->getMessage();
 			}
@@ -315,27 +323,27 @@ class runExt {
 		$this->output       = array();
 		$this->pid          = null;
 		$this->msg          = array();
-		$this->callback     = array();
-		$this->polling_usec = 50000;
 	}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-	function getCode()      { return (int) $this->code; }
+	function getCode()        { return (int) $this->code; }
 
-	function getDuration()  { return (double) $this->duration; }
+	function getDuration()    { return (double) $this->duration; }
 
-	function getMessage()   { return implode(PHP_EOL, $this->msg); }
+	function getMessage()     { return implode(PHP_EOL, $this->msg); }
 
-	function getOutput()    { return implode(PHP_EOL, $this->output); }
+	function getOutput()      { return implode(PHP_EOL, $this->output); }
 
-	function getOutputArr() { return $this->output; }
+	function getOutputArr()   { return $this->output; }
 
-	function getPID()       { return $this->pid; }
+	function getPID()         { return $this->pid; }
 
-	function getGroupID()   { return $this->groupid; }
+	function getGroupID()     { return $this->groupid; }
 
-	function getMasterPID() { return $this->masterpid; }
+	function getMasterPID()   { return $this->masterpid; }
+	
+	function clearCallbacks() { $this->callback = null; }
 
 } // end of RunExtV class
 
