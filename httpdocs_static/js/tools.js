@@ -486,9 +486,9 @@ function setupServerLink( elems ) {
     if ( !wrap.find('.serverlink').is(':visible') )
       force = true;
 
-    $j('.streambroadcastwrap').not( wrap ).hide();
+    $j('.streambroadcastwrap:not(.nohide)').not( wrap ).hide();
     $j('.serverlink').show();
-    $j('.broadcastlink').hide();
+    $j('.broadcastlink').not('.streambroadcastwrap.nohide .broadcastlink').hide();
     wrap.toggle( force );
   });
   $j('.serverlink select').change(function(e) {

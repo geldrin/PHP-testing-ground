@@ -70,18 +70,20 @@
             </span>
           </td>
         </tr>
-        {if $hastranscoder == false}
+        
         <tr class="streambroadcastwrap form">
           <td colspan="4" class="elementcolumn">
-            <div class="broadcastlink">
-              <label for="broadcastlink-{$stream.id}">{#live__streambroadcastlink#}:</label>
-              <input id="broadcastlink-{$stream.id}" type="text" value="{$ingressurl|escape:html}{$stream.keycode|escape:html}"/>
-            </div>
-            {if $stream.contentkeycode}
+            {if $hastranscoder == false}
               <div class="broadcastlink">
-                <label for="broadcastlink-{$stream.id}-2">{#live__secondarystreambroadcastlink#}:</label>
-                <input id="broadcastlink-{$stream.id}-2" type="text" value="{$ingressurl|escape:html}{$stream.contentkeycode|escape:html}"/>
+                <label for="broadcastlink-{$stream.id}">{#live__streambroadcastlink#}:</label>
+                <input id="broadcastlink-{$stream.id}" type="text" value="{$ingressurl|escape:html}{$stream.keycode|escape:html}"/>
               </div>
+              {if $stream.contentkeycode}
+                <div class="broadcastlink">
+                  <label for="broadcastlink-{$stream.id}-2">{#live__secondarystreambroadcastlink#}:</label>
+                  <input id="broadcastlink-{$stream.id}-2" type="text" value="{$ingressurl|escape:html}{$stream.contentkeycode|escape:html}"/>
+                </div>
+              {/if}
             {/if}
             {if $member.isadmin or $member.isclientadmin}
             <div class="serverlink">
@@ -95,7 +97,6 @@
             {/if}
           </td>
         </tr>
-        {/if}
       {foreachelse}
         <tr>
           <td rowspan="1">
