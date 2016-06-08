@@ -36,7 +36,7 @@ function smarty_modifier_indexphoto( $data, $type = '', $staticuri = null ) {
       break;
     
     case 'live':
-      $replace = $bootstrap->config['videothumbnailresolutions']['player'];
+      $replace = $bootstrap->config['videothumbnailresolutions']['live'];
       $default = $staticuri . 'images/live_player_placeholder.png';
       break;
     
