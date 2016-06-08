@@ -424,7 +424,7 @@ function convertOCR($rec) {
 // here.
 //
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-  global $app, $db, $debug, $jconf, $logdir, $logfile, $onice;
+  global $app, $debug, $jconf, $logdir, $logfile, $onice;
   
   $result = array(
     'result'         => false,                                                     // success
@@ -443,8 +443,13 @@ function convertOCR($rec) {
   $tempdir = $jconf['ocr_dir'] . $rec['id'] ."/temp". DIRECTORY_SEPARATOR;         // folder for prepared frames
   $snapdir = $jconf['ocr_dir'] . $rec['id'] ."/ocr". DIRECTORY_SEPARATOR;          // output directory
   
+  $resolutions2used = array_intersect_key(
+    $app->config['videothumbnailresolutions'],
+    array_flip(array('4:3', 'wide', 'player'))
+  ); // pick resolutions
+  
   $snapshotparams = array('resize' => array(), 'folders' => array());              // resize values and destination folders for ocr-snashots
-  foreach ($app->config['videothumbnailresolutions'] as $tres) {                   // foldernames are derived from thumbnailresolutions + original
+  foreach ($resolutions2used as $tres) {                   // foldernames are derived from thumbnailresolutions + original
     $tmp = explode("x", $tres);
     $snapshotparams['resize' ][] = $tres;
     $snapshotparams['folders'][] = $snapdir . $tmp[0];
