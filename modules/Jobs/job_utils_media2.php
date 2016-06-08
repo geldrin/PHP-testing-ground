@@ -816,6 +816,10 @@ global $app, $debug, $jconf;
 		
 		// EXECUTE FFMPEG COMMAND
 		$conv = new runExt($c, 14400);
+		$conv->setPollingRate(250000);
+		
+		if (function_exists('callWatchdog')) $conv->addCallback('callWatchdog', 60);
+		
 		$conv->run();
 		
 		$err['duration'      ]  = $conv->getDuration();
@@ -912,9 +916,15 @@ global $app, $debug, $jconf;
 	return $err;
 }
 
-function callWatchDog($delay = 100) {
+function callWatchdog($_, $watchdogtimeout) {
+	global $app;
+	static $last_call = 0;
 	
+	$now = time();
+	if (isset($watchdogtimeout) && ($now - $last_call) > $watchdogtimeout) {
+		@$app->watchdog();
 	}
+}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 function getHashFromProfileParams($profile, $length = 32, $additional = null) {
