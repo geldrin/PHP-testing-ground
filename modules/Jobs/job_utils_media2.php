@@ -4,64 +4,64 @@
 function cleanUpConverterTemporaryStorage() {
 global $app, $jconf, $debug, $myjobid;
 
-    // Select recording versions that are being converted or failed (processing is in progress)
-    $query = "
-        SELECT
-            rv.recordingid
-        FROM
-            recordings_versions AS rv
-        WHERE
-            rv.status = '" . $jconf['dbstatus_conv'] . "' OR
-            rv.status = '" . $jconf['dbstatus_convert'] . "' OR
-            rv.status LIKE 'failed%'
-        GROUP BY
-            rv.recordingid";
-    
-    try {
-        $model = $app->bootstrap->getModel('recordings_versions');
-        $rs = $model->safeExecute($query);
+		// Select recording versions that are being converted or failed (processing is in progress)
+		$query = "
+				SELECT
+						rv.recordingid
+				FROM
+						recordings_versions AS rv
+				WHERE
+						rv.status = '" . $jconf['dbstatus_conv'] . "' OR
+						rv.status = '" . $jconf['dbstatus_convert'] . "' OR
+						rv.status LIKE 'failed%'
+				GROUP BY
+						rv.recordingid";
+		
+		try {
+				$model = $app->bootstrap->getModel('recordings_versions');
+				$rs = $model->safeExecute($query);
 	} catch (exception $err) {
 		$debug->log($jconf['log_dir'], $jconf['jobid_media_convert'] . ".log", "[ERROR] SQL query failed." . trim($query), $sendmail = true);
 		return false;
 	}
 
-    // Index unfinished recordings
-    $recordings_unfinished = array();
-    while ( !$rs->EOF ) {
-        $recording = $rs->fields;
-        $recordings_unfinished[$recording['recordingid']] = true;
-        $rs->MoveNext();
-    }
-    
-    $dirs = array(
-        $jconf['master_dir'],
-        $jconf['media_dir'],
-        $jconf['content_dir']
-    );
+		// Index unfinished recordings
+		$recordings_unfinished = array();
+		while ( !$rs->EOF ) {
+				$recording = $rs->fields;
+				$recordings_unfinished[$recording['recordingid']] = true;
+				$rs->MoveNext();
+		}
+		
+		$dirs = array(
+				$jconf['master_dir'],
+				$jconf['media_dir'],
+				$jconf['content_dir']
+		);
 
-    foreach ( $dirs as $key => $dir) {
-        
-        $files = getFileList($dir);
-        if ( empty($files) ) continue;
-        
-        for ( $i = 0; $i < count($files); $i++ ) {
+		foreach ( $dirs as $key => $dir) {
+				
+				$files = getFileList($dir);
+				if ( empty($files) ) continue;
+				
+				for ( $i = 0; $i < count($files); $i++ ) {
 
-            // Get recording id from path
-            $tmp = str_replace($dir, "", $files[$i]['name']);
-            $recid = str_replace(array("/","\\"), "", $tmp);
-            
-            if ( !is_numeric($recid) ) continue;
-            
-            if ( !isset($recordings_unfinished[$recid]) ) {
-                $err = remove_file_ifexists($files[$i]['name']);
-                if ( !$err['code'] ) {
-                    $debug->log($jconf['log_dir'], $myjobid, $err['message'] . "\nCOMMAND: " . $err['command'] . "\nRESULT: " . $err['result'], $sendmail = false);
-                } else {
-                    $debug->log($jconf['log_dir'], $myjobid, "[INFO] Converter temp directory removed (conversion ready): " . $files[$i]['name'], $sendmail = false);
-                }
-            }
-        }
-    }
+						// Get recording id from path
+						$tmp = str_replace($dir, "", $files[$i]['name']);
+						$recid = str_replace(array("/","\\"), "", $tmp);
+						
+						if ( !is_numeric($recid) ) continue;
+						
+						if ( !isset($recordings_unfinished[$recid]) ) {
+								$err = remove_file_ifexists($files[$i]['name']);
+								if ( !$err['code'] ) {
+										$debug->log($jconf['log_dir'], $myjobid, $err['message'] . "\nCOMMAND: " . $err['command'] . "\nRESULT: " . $err['result'], $sendmail = false);
+								} else {
+										$debug->log($jconf['log_dir'], $myjobid, "[INFO] Converter temp directory removed (conversion ready): " . $files[$i]['name'], $sendmail = false);
+								}
+						}
+				}
+		}
 
 	return true;
 }
@@ -92,26 +92,53 @@ class runExt {
 	private $pid          = null;
 	private $masterpid    = null;
 	private $groupid      = null;
-	private $msg          = null;
-	private $callback     = null;
+	private $msg          = array();
+	private $callbacks    = null;
 	private $polling_usec = 50000;
 	private $process      = null;
 	private $pipes        = array();
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-	function __construct($command = null, $timeoutsec = null, $callback = null, $envvar = null) {
+	function __construct($command = null, $timeoutsec = null, $envvar = null) {
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 		$this->masterpid  = intval(posix_getpid());
 		$this->command    = $command;
 		$this->timeoutsec = 10.0;
 		
 		if ($timeoutsec !== null && is_numeric($timeoutsec)) $this->timeoutsec = floatval($timeoutsec);
-		if ($callback !== null && is_callable($callback)) $this->callback = $callback;
 		if (is_array($envvar)) $this->env = $envvar;
 	}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-	function run($command = null, $timeoutsec = null, $callback = null) {
+	function setPollingRate($pollingrate) {
+///////////////////////////////////////////////////////////////////////////////////////////////////
+		if (isset($pollingrate) && is_numeric($pollingrate))
+			$this->polling_usec = ((int) $pollingrate) < 1000 ? 1000 : (int) $pollingrate;
+	}
+	
+///////////////////////////////////////////////////////////////////////////////////////////////////
+	function addCallback($aCallback, $param = null) {
+///////////////////////////////////////////////////////////////////////////////////////////////////
+		if (empty($aCallback) || !isCallable($aCallback)) return false;
+		
+		$tmp = array('callback' => null, 'param' => null);
+		$tmp['callback'] = $aCallback;
+		
+		if (isset($param)) {
+			if (is_array($param) && !empty($param))
+				$tmp['param'] = $param;
+			else
+				$tmp['param'] = array($param);
+		}
+		
+		$this->callbacks[] = $tmp;
+		unset($tmp);
+		
+		return true;
+	}
+	
+///////////////////////////////////////////////////////////////////////////////////////////////////
+	function run($command = null, $timeoutsec = null) {
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 		$write      = null;
 		$excl       = null;
@@ -120,16 +147,16 @@ class runExt {
 		$timeout    = false;
 		$lastactive = 0;
 		
+		clearstatcache();
 		$this->clearVariables();
 		$this->pipes    = array();
 		$this->proceess = null;
 		
 		if ($command !== null) $this->command = $command;
 		if ($timeoutsec !== null && is_numeric($timeoutsec)) $this->timeoutsec = floatval($timeoutsec);
-		if ($callback !== null && is_callable($callback)) $this->callback = $callback;
 		
 		if (empty($this->command)) {
-			$this->msg = "[ERROR] no command to be executed!";
+			$this->msg[] = "[ERROR] no command to be executed!";
 			return false;
 		}
 		
@@ -144,7 +171,7 @@ class runExt {
 		$this->process = proc_open($this->command, $desc, $this->pipes);
 		
 		if ($this->process === false || !is_resource($this->process)) {
-			$this->msg = "[ERROR] Failed to open process!";
+			$this->msg[] = "[ERROR] Failed to open process!";
 			return false;
 		}
 		
@@ -168,7 +195,7 @@ class runExt {
 			
 			if ($ready === false ) { // error
 				$err = error_get_last();
-				$this->msg = $err['message'];
+				$this->msg[] = $err['message'];
 				restore_error_handler();
 				break;
 			} elseif ($ready > 0) {
@@ -177,10 +204,12 @@ class runExt {
 					if (feof($r)) $EOF = true;
 				}
 				
+				// if ($this->callback) call_user_func($this->callback, $tmp);
+				if (!empty($this->callbacks)) $this->doCallbacks();
+				
 				if (!empty($tmp)) {
 					$lastactive = microtime(true);
 					$this->output[] = $tmp;
-					if ($this->callback) call_user_func($this->callback, $tmp);
 					continue;
 				}
 			} else {
@@ -191,7 +220,7 @@ class runExt {
 		
 		if ($timeout) {
 			$proc_status = proc_get_status($this->process);
-			$this->msg = "[WARN] Timeout Exceeded, sending SIGKILL to process (pid=". $this->pid .")";
+			$this->msg[] = "[WARN] Timeout Exceeded, sending SIGKILL to process (pid=". $this->pid .")";
 			$this->duration = (microtime(true) - $this->start);
 			
 			if (is_resource($this->process) && $proc_status['running']) {
@@ -211,22 +240,34 @@ class runExt {
 		$this->duration = (microtime(true) - $this->start);
 		
 		if ($proc_status['signaled']) {
-			$this->msg = "[WARN] Process has been terminated by an uncaught signal(". $proc_status['termsig'] .").";
+			$this->msg[] = "[WARN] Process has been terminated by an uncaught signal(". $proc_status['termsig'] .").";
 			return false;
 		} elseif ($proc_status['stopped']) {
-			$this->msg = "[WARN] Process stopped after recieving signal(". $proc_status['stopsig'] .").";
+			$this->msg[] = "[WARN] Process stopped after recieving signal(". $proc_status['stopsig'] .").";
 		} else {
 			if ($this->code === 0) {
-				$this->msg = "[OK]";
+				$this->msg[] = "[OK]";
 			} else {
-				$this->msg = "[WARN] Process failed (exitcode = ". $this->code .").";
+				$this->msg[] = "[WARN] Process failed (exitcode = ". $this->code .").";
 				return false;
 			}
 		}
 		
 		return true;
 	}
-
+	
+///////////////////////////////////////////////////////////////////////////////////////////////////
+	private function doCallbacks() {
+///////////////////////////////////////////////////////////////////////////////////////////////////
+		foreach ($this->callbacks as $c) {
+			try {
+				call_user_func($c['callback'], $c['param']);
+			} catch (Exception $ex) {
+				$this->msg[] = "[WARN] Caught exception during callback: {$c['callback']}()\nMessage:". $ex->getMessage();
+			}
+		}
+	}
+	
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 	private function killProc($PID = null) {
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -273,8 +314,8 @@ class runExt {
 		$this->code         = -1;
 		$this->output       = array();
 		$this->pid          = null;
-		$this->msg          = null;
-		$this->callback     = null;
+		$this->msg          = array();
+		$this->callback     = array();
 		$this->polling_usec = 50000;
 	}
 
@@ -284,7 +325,7 @@ class runExt {
 
 	function getDuration()  { return (double) $this->duration; }
 
-	function getMessage()   { return $this->msg; }
+	function getMessage()   { return implode(PHP_EOL, $this->msg); }
 
 	function getOutput()    { return implode(PHP_EOL, $this->output); }
 
@@ -868,6 +909,10 @@ global $app, $debug, $jconf;
 	return $err;
 }
 
+function callWatchDog($delay = 100) {
+
+}
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 function getHashFromProfileParams($profile, $length = 32, $additional = null) {
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -889,13 +934,13 @@ function getHashFromProfileParams($profile, $length = 32, $additional = null) {
 	);
 	$dataset = null;
 	$tmp = array();
-  
-  if (isset($additional)) {
-    if (is_array($additional))
-      $tmp[] = implode(",", $additional);
-    else
-      $tmp[] = $additional;
-  }
+	
+	if (isset($additional)) {
+		if (is_array($additional))
+			$tmp[] = implode(",", $additional);
+		else
+			$tmp[] = $additional;
+	}
 	
 	foreach ($keys as $k) {
 		if (array_key_exists($k, $profile)) $tmp[] = $k ."=>". ($profile[$k]);
@@ -1040,7 +1085,7 @@ global $app, $jconf, $debug, $myjobid;
 			shortname,
 			type,
 			mediatype,
-            generatethumbnails,
+						generatethumbnails,
 			isdesktopcompatible,
 			isioscompatible,
 			isandroidcompatible,
@@ -1073,15 +1118,15 @@ global $app, $jconf, $debug, $myjobid;
 			disabled = 0";
 
 	try {
-        $model = $app->bootstrap->getModel('encoding_profiles');
-        $rs = $model->safeExecute($query);
+				$model = $app->bootstrap->getModel('encoding_profiles');
+				$rs = $model->safeExecute($query);
 	} catch (exception $err) {
 		$debug->log($jconf['log_dir'], $jconf['jobid_media_convert'] . ".log", "[ERROR] Cannot query encoding profile. SQL query failed." . trim($query), $sendmail = true);
 		return false;
 	}
 
-    // Convert AdoDB resource to array
-    $rs_array = adoDBResourceSetToArray($rs);
+		// Convert AdoDB resource to array
+		$rs_array = adoDBResourceSetToArray($rs);
 
 	return $rs_array[0];
 }
@@ -1109,15 +1154,15 @@ global $app, $jconf, $debug, $myjobid;
 			a.organizationid = c.id";
 
 	try {
-        $model = $app->bootstrap->getModel('recordings');
-        $rs = $model->safeExecute($query);
+				$model = $app->bootstrap->getModel('recordings');
+				$rs = $model->safeExecute($query);
 	} catch (exception $err) {
 		$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Cannot query recording creator. SQL query failed." . trim($query), $sendmail = true);
 		return false;
 	}
 
-    // Convert AdoDB resource to array
-    $rs_array = adoDBResourceSetToArray($rs);
+		// Convert AdoDB resource to array
+		$rs_array = adoDBResourceSetToArray($rs);
 
 	return $rs_array[0];
 }
@@ -1152,14 +1197,14 @@ global $app, $jconf, $debug, $myjobid;
 			id";
 
 	try {
-        $model = $app->bootstrap->getModel('recordings_versions');
-        $rs = $model->safeExecute($query);
+				$model = $app->bootstrap->getModel('recordings_versions');
+				$rs = $model->safeExecute($query);
 	} catch (exception $err) {
 		$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] SQL query failed.\n" . trim($query), $sendmail = true);
 		return false;
 	}
 
-    if ( $rs->RecordCount() < 1 ) return false;
+		if ( $rs->RecordCount() < 1 ) return false;
 
 	return $rs;
 }
