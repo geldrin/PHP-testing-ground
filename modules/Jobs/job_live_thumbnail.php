@@ -141,9 +141,12 @@ function Main() {
 				}
 			}
       
-			// Chmod local directory
-			$cmd = "chmod -f -R ". $jconf['directory_access'] ." ". $temp_dir;
-			if (!$wrkr->run($cmd)) throw new Exception("Chmod failed. (". $wrkr->getOutput() .")");
+			// Chmod local directory recursively     
+      $iterator = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($temp_dir));
+      foreach($iterator as $item) {
+        chmod($item, octdec($jconf['directory_access']));
+      }
+      unset($iterator);
       
       // Run ffmpeg
 			if (!$wrkr->run($ffmpeg_command)) {
