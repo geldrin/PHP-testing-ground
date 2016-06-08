@@ -16,12 +16,22 @@ class Createstream extends \Visitor\HelpForm {
       'livefeeds',
       $this->application->getNumericParameter('id')
     );
-    
+
     $this->channelModel = $this->controller->modelOrganizationAndUserIDCheck(
       'channels',
       $this->feedModel->row['channelid']
     );
-    
+
+    // van transcoderid, nem lehet letrehozni streamet VAGY
+    // a feed VCR, akkor se lehet letrehozni
+    if (
+         $this->feedModel->row['transcoderid'] or
+         $this->feedModel->row['feedtype'] === 'vcr'
+       )
+      $this->controller->redirect(
+        'live/managefeeds/' . $this->channelModel->id
+      );
+
     $this->streamModel  = $this->bootstrap->getModel('livefeed_streams');
     parent::init();
     

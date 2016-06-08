@@ -122,7 +122,7 @@
           </td>
         </tr>
       {/if}
-      {if $feed.feedtype != 'vcr'}
+      {if $feed.feedtype != 'vcr' and !$hastranscoder}
         <tr>
           <td rowspan="3">
             <a href="{$language}/live/createstream/{$feed.id}"><b>+</b> {#live__addstream#}</a>
