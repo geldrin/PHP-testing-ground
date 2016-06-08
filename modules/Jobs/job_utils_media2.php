@@ -133,12 +133,7 @@ class runExt {
 		$tmp = array('callback' => null, 'param' => null);
 		$tmp['callback'] = $aCallback;
 		
-		if (isset($param)) {
-			if (is_array($param) && !empty($param))
-				$tmp['param'] = $param;
-			else
-				$tmp['param'] = array($param);
-		}
+		if (isset($param)) $tmp['param'] = $param;
 		
 		$this->callbacks[] = $tmp;
 		unset($tmp);
@@ -155,7 +150,7 @@ class runExt {
 		$EOF        = false;
 		$timeout    = false;
 		$lastactive = 0;
-		
+		var_dump($this->callbacks);
 		clearstatcache();
 		$this->clearVariables();
 		$this->pipes    = array();
@@ -918,8 +913,8 @@ global $app, $debug, $jconf;
 }
 
 function callWatchDog($delay = 100) {
-
-}
+	
+	}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 function getHashFromProfileParams($profile, $length = 32, $additional = null) {
