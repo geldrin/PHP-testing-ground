@@ -1,5 +1,5 @@
 <?php
-// Videosquare live statistics process job 2
+// Videosquare on-demand statistics processing (recording segments count)
 
 define('BASE_PATH', realpath( __DIR__ . '/../..' ) . '/' );
 define('PRODUCTION', false );
@@ -141,21 +141,29 @@ while ( !$stats->EOF ) {
     $stats->MoveNext();
 } // End of interval processing while
 
-//var_dump($stats_p);
+// Debug information for logging
+$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Player statistics records to be processed: " . $records_processed, false);
 
 // Insert records to DB
 foreach ($stats_p as $recid => $recsegments) {
 
+    // Get existing recsegment records from DB
+    unset($stats_db);
     $stats_db = queryStatsRecordingsSegments($recid);
-            
-    $sql_insert = array();            
+
+    // SQL query insert data: assemble into an array
+    $rec_updated = 0;
+    $sql_insert = array();         
     foreach ($recsegments as $recsegment => $viewcounter) {
       
         // Find this recording and user in existing DB records              
         $insert_id = searchForStatsRecordInArray($stats_db, $recsegment);
-        array_push($sql_insert, "(" . (($insert_id == false)?"NULL":$insert_id) . "," . $recid . "," . $recsegment . "," . $viewcounter . ")");
+        array_push($sql_insert, "(" . (($insert_id === false)?"NULL":$insert_id) . "," . $recid . "," . $recsegment . "," . $viewcounter . ")");
+        
+        $rec_updated++;
     }
 
+    // INSERT/UPDATE recsegment DB record
     if ( !empty($sql_insert) ) {
         $sql_insert_string = implode(",", $sql_insert);
         
@@ -169,13 +177,16 @@ foreach ($stats_p as $recid => $recsegments) {
         try {
             $rs = $db->Execute($query);
         } catch (exception $err) {
-            $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] SQL query failed. Processing IS BROKEN! SQL error:\n" . trim($query), $sendmail = true);
+            $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] SQL query failed. Processing IS BROKEN! SQL error:\n" . trim($query), true);
             exit;
         }
     
+        // Debug
+        $debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Recording id#" . $recid . " recsegments inserted or updated: " . $rec_updated, false);
+    
         $records_committed += count($sql_insert);
     }
-
+    
 }
 
 // Watchdog
@@ -185,7 +196,7 @@ $app->watchdog();
 $processing_time = time() - $processing_started;
 
 // Debug information for logging
-$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Statistics records processed and recording segment records inserted/updated: " . $records_processed . " / " . $records_committed, $sendmail = false);
+$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Player statistics records processed: " . $records_processed, $sendmail = false);
 
 // Log number of committed records to DB
 $debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] " . $stats_config['label'] . " processing finished in " . secs2hms($processing_time) . ".", $sendmail = false);
@@ -232,12 +243,8 @@ global $db, $debug, $myjobid, $app, $jconf;
         vso.recordingid = r.id
     WHERE
         vso.timestamp >= '" . $start_interval_datetime . "' AND
-        vso.timestamp < '" . $end_interval_datetime . "'
-    ";
-
-//AND vso.recordingid = 20
-    
-//echo $query . "\n";
+        vso.timestamp < '" . $end_interval_datetime . "' AND
+        ( vso.positionuntil - vso.positionfrom ) > 0";
         
   try {
     $stats = $db->Execute($query);
@@ -282,13 +289,10 @@ global $db, $debug, $myjobid, $app, $jconf;
 
 function searchForStatsRecordInArray($stats_db, $recsegment) {
     
-    //var_dump($stats_db);
-    //exit;
-    
     foreach( $stats_db as $id => $record ) {
         if ( $record['recordingsegment'] == $recsegment ) return $id;
     }
-
+    
     return false;
 }
 
