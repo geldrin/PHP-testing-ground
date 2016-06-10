@@ -8,7 +8,7 @@
         <li class="listitem{if $smarty.foreach.live.first} first{/if}">
           <a href="{$language}/live/details/{$item.id},{$item.title|filenameize}">
             <div class="recordingpic">
-              <img src="{$item|@indexphoto:"player"}"/>
+              <img src="{$item|@indexphoto:"livethumb"}"/>
             </div>
             <div class="recordingcontent">
               <div class="wrap">

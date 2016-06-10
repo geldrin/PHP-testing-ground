@@ -1,6 +1,6 @@
 <li class="listitem channel">
   <div class="recordingpic">
-    <a href="{$language}/live/details/{$item.id},{$item.title|filenameize}"><img src="{$item|@indexphoto:'live'}"/></a>
+    <a href="{$language}/live/details/{$item.id},{$item.title|filenameize}"><img src="{$item|@indexphoto:'livethumb'}"/></a>
   </div>
   
   <div class="recordingcontent">
