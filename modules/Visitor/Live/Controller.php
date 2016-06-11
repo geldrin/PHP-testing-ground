@@ -1051,12 +1051,12 @@ class Controller extends \Visitor\Controller {
 
   private function addStreamsToFeeds( &$feeds ) {
     $feedModel = $this->bootstrap->getModel('livefeeds');
-    foreach( $feeds as $key => $value ) {
+    foreach( $feeds as $feedkey => $value ) {
       $feedModel->select( $value['id'] );
       $ingressurl = $feedModel->getIngressURL();
       $streams = $feedModel->getStreams();
       foreach( $streams as $key => $stream ) {
-        $streams[ $key ]['ingressurl']        =
+        $streams[ $key ]['ingressurl'] =
           $ingressurl . $stream['keycode']
         ;
 
@@ -1067,7 +1067,7 @@ class Controller extends \Visitor\Controller {
       }
 
       $value['streams'] = array_values( $streams );
-      $feeds[ $key ] = $value;
+      $feeds[ $feedkey ] = $value;
     }
 
     return $feeds;
