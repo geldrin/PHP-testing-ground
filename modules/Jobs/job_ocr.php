@@ -445,11 +445,11 @@ function convertOCR($rec) {
   
   $resolutions2used = array_intersect_key(
     $app->config['videothumbnailresolutions'],
-    array_flip(array('4:3', 'wide', 'player'))
+    array_flip(array('4:3', 'wide', 'player', 'live'))
   ); // pick resolutions
   
   $snapshotparams = array('resize' => array(), 'folders' => array());              // resize values and destination folders for ocr-snashots
-  foreach ($resolutions2used as $tres) {                   // foldernames are derived from thumbnailresolutions + original
+  foreach ($resolutions2used as $tres) { // foldernames are derived from thumbnailresolutions + original
     $tmp = explode("x", $tres);
     $snapshotparams['resize' ][] = $tres;
     $snapshotparams['folders'][] = $snapdir . $tmp[0];
@@ -955,7 +955,7 @@ function createOCRsnapshots($recordingid, $images, $snapshotparams, $source) {
 // <RECORDINGS.ID>_<OCR_FRAMES.ID>.jpg
 // 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-  global $app, $onice;
+  global $onice;
   $return = array(
     'result'  => false,
     'message' => null,
@@ -974,9 +974,9 @@ function createOCRsnapshots($recordingid, $images, $snapshotparams, $source) {
     do {
       $size = $snapshotparams['resize'][$i];
       $folder = $snapshotparams['folders'][$i] . DIRECTORY_SEPARATOR;
-      $cmdresize .= " \( +clone -resize {$size} -write \"{$folder}{$rid}_{$img2resize['dbid']}.jpg\" +delete \)";
+      $cmdresize .= " \( +clone -resize ". $size ."^ -gravity center -extent ". $size ." -write \"". $folder . $rid ."_". $img2resize['dbid'] .".jpg\" +delete \)";
       if ($i >= (count($snapshotparams['resize']) - 1)) {
-        $cmdresize .= " -resize {$size} \"{$folder}{$rid}_{$img2resize['dbid']}.jpg\"";
+        $cmdresize .= " -resize ". $size ."^ -gravity center -extent ". $size ." \"". $folder . $rid ."_". $img2resize['dbid'] .".jpg\"";
         break;
       }
       $i++;
