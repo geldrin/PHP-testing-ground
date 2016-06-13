@@ -445,7 +445,7 @@ function convertOCR($rec) {
   
   $resolutions2used = array_intersect_key(
     $app->config['videothumbnailresolutions'],
-    array_flip(array('4:3', 'wide', 'player', 'live'))
+    array_flip(array('4:3', 'wide', 'player'))
   ); // pick resolutions
   
   $snapshotparams = array('resize' => array(), 'folders' => array());              // resize values and destination folders for ocr-snashots
