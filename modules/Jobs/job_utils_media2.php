@@ -1088,7 +1088,7 @@ function getEncodingProfile($encodingprofileid) {
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-global $app, $jconf, $debug, $myjobid;
+global $app, $jconf, $debug;
 
 	$query = "
 		SELECT
@@ -1098,7 +1098,7 @@ global $app, $jconf, $debug, $myjobid;
 			shortname,
 			type,
 			mediatype,
-						generatethumbnails,
+			generatethumbnails,
 			isdesktopcompatible,
 			isioscompatible,
 			isandroidcompatible,
