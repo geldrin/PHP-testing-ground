@@ -151,10 +151,9 @@ class runExt {
 		$timeout    = false;
 		$lastactive = 0;
 		
-		clearstatcache();
 		$this->clearVariables();
-		$this->pipes    = array();
-		$this->proceess = null;
+		$this->pipes   = array();
+		$this->process = null;
 		
 		if ($command !== null) $this->command = $command;
 		if ($timeoutsec !== null && is_numeric($timeoutsec)) $this->timeoutsec = floatval($timeoutsec);
@@ -191,16 +190,19 @@ class runExt {
 		$this->groupid = posix_getpgid($this->pid);
 		
 		do {
-			$read = $this->pipes;
-			$tmp  = null;
+			$read  = $this->pipes;
+			$tmp   = null;
 			$ready = 0;
 			
 			$ready = stream_select($read, $write, $excl, $this->polling_sec, $this->polling_usec);
-			$proc_status = proc_get_status($this->process);
+			
+			if ($proc_status['running']) $proc_status = proc_get_status($this->process);
+			
+			$this->code = $proc_status['exitcode'];
 			
 			if ($ready === false ) { // error
 				$err = error_get_last();
-				$this->msg[] = $err['message'];
+				$this->msg[] = "Stream_select() error: {$err['message']}";
 				restore_error_handler();
 				break;
 			} elseif ($ready > 0) {
@@ -234,12 +236,15 @@ class runExt {
 		}
 		
 		if ($proc_status['running']) {
+			$this->msg[] = "[WARN] Forcing process #{$this->pid} to shut down";
 			$this->killProc();
+		}
+		
+		if ($this->code < 0) {
 			$proc_status = proc_get_status($this->process);
 			$this->code = $proc_status['exitcode'];
 		}
 		
-		$this->code = $proc_status['exitcode'];
 		$this->duration = (microtime(true) - $this->start);
 		
 		if ($proc_status['signaled']) {
@@ -274,7 +279,6 @@ class runExt {
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 	private function killProc($PID = null) {
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-		$status       = null;
 		$subprocesses = null;
 		$proc2kill    = null;
 
@@ -285,17 +289,17 @@ class runExt {
 
 		if (!is_resource($this->process)) return true;
 
-		$status = proc_get_status($this->process);
-
-		if ($status['running']) {
-			foreach ($subprocesses as $subp) {
-				if (!posix_kill($subp, 0)) {
-					continue;
-				}
-
-				posix_kill($subp, SIGKILL);
+		foreach ($subprocesses as $subp) {
+			// force process down by killing subprocesses
+			if (!posix_kill($subp, 0)) {
+				continue;
 			}
+
+			posix_kill($subp, SIGKILL);
 		}
+		
+		// kill main process if still running
+		if (posix_kill($this->pid, 0)) posix_kill($this->pid, SIGKILL);
 
 		return true;
 	}
@@ -318,6 +322,8 @@ class runExt {
 		$this->output       = array();
 		$this->pid          = null;
 		$this->msg          = array();
+		
+		clearstatcache();
 	}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
