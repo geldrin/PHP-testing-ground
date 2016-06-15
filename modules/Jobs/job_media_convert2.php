@@ -134,7 +134,7 @@ while( !is_file( $app->config['datapath'] . 'jobs/' . $myjobid . '.stop' ) and !
 			// Check if we need to stop conversion
 			if ( checkRecordingVersionToStop($recording) ) break;
 		}
-
+		
 		// Watchdog
 		$app->watchdog();
 
@@ -395,7 +395,19 @@ global $app, $jconf, $debug;
 // *************************************************************************
 // Description: generate video thumbnails
 function convertVideoThumbnails(&$recording) {
-global $app, $jconf, $debug;
+	global $app, $jconf, $debug;
+
+	$iserror      = false;
+	$playtime     = 0;
+	$frame_number = 0;
+	$thumb_output_dir = null;
+	$directories      = array();
+
+	$logd = $jconf['log_dir']; // log directory
+	$logf = $jconf['jobid_media_convert'] .".log"; // log file
+
+	$errors = array('messages' => null, 'commands' => null, 'data' => null);
+	$resolutions_used = array('4:3', 'wide', 'player', 'live');
 
 	// Initiate recording thumbnail attributes
 	$recording['thumbnail_size'] = 0;
@@ -414,40 +426,20 @@ global $app, $jconf, $debug;
 
 	$playtime = floor($recording['masterlength']);
 
-	// Creating thumbnail directories under ./indexpics/
 	$thumb_output_dir = $recording['temp_directory'] . "indexpics/";
-	$err = create_remove_directory($thumb_output_dir);
-	if ( !$err['code'] ) {
-		$debug->log($jconf['log_dir'], $jconf['jobid_media_convert'] . ".log", "MSG: " . $err['message'] . "\nCOMMAND: " . $err['command'] . "\nRESULT: " . $err['result'], $sendmail = true);
-		return false;
+
+	$directories[] = $thumb_output_dir;              // thumbnail directories under ./indexpics/
+	$directories[] = $thumb_output_dir ."original/"; // original frame size
+
+	foreach ($resolutions_used as $res) {            // configured frame sizes
+		$directories[] = "{$thumb_output_dir}{$app->config['videothumbnailresolutions'][$res]}/";
 	}
 
-	// Full sized frame
-	$err = create_remove_directory($thumb_output_dir . "original/");
-	if ( !$err['code'] ) {
-		$debug->log($jconf['log_dir'], $jconf['jobid_media_convert'] . ".log", "MSG: " . $err['message'] . "\nCOMMAND: " . $err['command'] . "\nRESULT: " . $err['result'], $sendmail = true);
-		return false;
-	}
-
-	// Wide frames
-	$err = create_remove_directory($thumb_output_dir . $app->config['videothumbnailresolutions']['wide'] ."/");
-	if ( !$err['code'] ) {
-		$debug->log($jconf['log_dir'], $jconf['jobid_media_convert'] . ".log", "MSG: " . $err['message'] . "\nCOMMAND: " . $err['command'] . "\nRESULT: " . $err['result'], $sendmail = true);
-		return false;
-	}
-
-	// 4:3 frames
-	$err = create_remove_directory($thumb_output_dir . $app->config['videothumbnailresolutions']['4:3'] ."/");
-	if ( !$err['code'] ) {
-		$debug->log($jconf['log_dir'], $jconf['jobid_media_convert'] . ".log", "MSG: " . $err['message'] . "\nCOMMAND: " . $err['command'] . "\nRESULT: " . $err['result'], $sendmail = true);
-		return false;
-	}
-
-	// High resolution wide frame
-	$err = create_remove_directory($thumb_output_dir . $app->config['videothumbnailresolutions']['player'] ."/");
-	if ( !$err['code'] ) {
-		$debug->log($jconf['log_dir'], $jconf['jobid_media_convert'] . ".log", "MSG: " . $err['message'] . "\nCOMMAND: " . $err['command'] . "\nRESULT: " . $err['result'], $sendmail = true);
-		return false;
+	// create directories
+	foreach ($directories as $directory) {
+		$err = create_remove_directory($directory);
+		if ( !$err['code'] )
+			$debug->log($logd, $logf, "MSG: {$err['message']}\nCOMMAND: {$err['command']}\nRESULT: {$err['result']}", true );
 	}
 
 	// Calculate thumbnail step
@@ -460,104 +452,66 @@ global $app, $jconf, $debug;
 		$vthumbs_maxframes = floor($playtime);
 	}
 
-	$log_msg = "[INFO] Video thumbnail generation summary:\nStep: " . $thumb_steps . " sec\nNumber of thumbs: " . $vthumbs_maxframes . "\nResolutions: " . $app->config['videothumbnailresolutions']['wide'] . ", " . $app->config['videothumbnailresolutions']['4:3'] . ", " . $app->config['videothumbnailresolutions']['player'];
+	$log_msg  = "[INFO] Video thumbnail generation summary:\nStep: {$thumb_steps} sec\nNumber of thumbs: {$vthumbs_maxframes}\n";
+	$log_msg .= "Resolutions: ". implode(', ', $app->config['videothumbnailresolutions']);
 	$time_start = time();
 
-	// Thumbnail generation under ./indexpics by each recording element
-	$res_wide   = explode("x", $app->config['videothumbnailresolutions']['wide'  ], 2);
-	$res_43     = explode("x", $app->config['videothumbnailresolutions']['4:3'   ], 2);
-	$res_high	  = explode("x", $app->config['videothumbnailresolutions']['player'], 2);
-	$filename_prefix = $recording['id'] . "_";
-	$frame_number = 0;
-	$iserror = false;
-	$errors['messages'] = "";
-	$errors['commands'] = "";
-	$errors['data'] = "";
-	$recording['thumbnail_size'] = 0;
-	$recording['thumbnail_indexphotofilename'] = "";
-	$recording['thumbnail_numberofindexphotos'] = 0;
 	for ( $i = 0; $i < $vthumbs_maxframes; $i++ ) {
-		$position_sec = floor($i * $thumb_steps);
-		// Set filenames
-		$filename_basename = $filename_prefix . sprintf("%d", $frame_number + 1) . ".jpg";
-		$orig_thumb_filename = $thumb_output_dir . "original/" . $filename_basename;
-		$filename_wide    = $thumb_output_dir . $app->config['videothumbnailresolutions']['wide'  ] ."/". $filename_basename;
-		$filename_43      = $thumb_output_dir . $app->config['videothumbnailresolutions']['4:3'   ] ."/". $filename_basename;
-		$filename_highres = $thumb_output_dir . $app->config['videothumbnailresolutions']['player'] ."/". $filename_basename;
-
-		$command  = $app->config['nice_high'] . " " . $app->config['ffmpegthumbnailer'] . " -i " . $recording['master_filename'] . " -o " . $orig_thumb_filename . " -s0 -q8 -t" . secs2hms($position_sec) . " 2>&1";
+		$is_error_now = false;
 
 		clearstatcache();
 
-		$job_thumbnail = new runExt($command);
-		$job_thumbnail->run();
-		$output_string = $job_thumbnail->getOutput();
-		$result = $job_thumbnail->getCode();
-		if ( $result < 0 ) $result = 0;
+		$position_sec = floor($i * $thumb_steps);
+		$filename_basename = "{$recording['id']}_". sprintf("%d", $frame_number + 1) .".jpg";
+		$orig_thumb_filename = $thumb_output_dir . "original/" . $filename_basename;
 
-		if ( ( $result != 0 ) || !file_exists($orig_thumb_filename) || ( filesize($orig_thumb_filename) < 1 ) ) {
-			// If ffmpeg error, we log messages to an array and jump to first frame
-			$errors['messages'] .= "[ERROR] ffmpeg failed (frame: " . $i . ", position: " . $position_sec . "sec).\n";
-			$errors['commands'] .= "Frame " . $i . " command:\n" . $command . "\n\n";
-			if ( strlen($output_string) > 500 ) {
-				$output_len = strlen($output_string);
-				$output_normalized = substr($output_string, 0, 250) . "\n...\n" . substr($output_string, $output_len - 250, $output_len);
-			} else {
-				$output_normalized = $output_string;
-			}
-			$errors['data'] .= "Frame " . $i . " output: " . $output_normalized . "\n\n";
+		$cmd = "{$app->config['nice_high']} {$app->config['ffmpegthumbnailer']
+			} -i {$recording['master_filename']} -o {$orig_thumb_filename
+			} -s0 -q8 -t". secs2hms($position_sec) ." 2>&1";
+
+		$job_thumbnail = new runExt($cmd);
+		$job_thumbnail->run();
+
+		if ( $job_thumbnail->getCode() != 0 || !file_exists($orig_thumb_filename) || filesize($orig_thumb_filename) < 1 ) {
+			$msg = "[ERROR] FFmpeg failed to generate thumbnail #{$i}! Error message: ". $job_thumbnail->getMessage();
+
+			if ( strlen($job_thumbnail->getMessage()) > 500 )
+				$errors['messages'] .= substr($msg, 0, 250) ." (...) ". substr($msg, -250, 0);
+			else
+				$errors['messages'] .= $msg;
+
+			unset($msg);
+			$errors['commands'] .= "Failed command: ". $job_thumbnail->command ."\n";
+			$errors['data'] .= "Ouput: ". $job_thumbnail->getOutput() ."\n";
 			$iserror = true;
+
 			continue;
 		}
 
-		if ( file_exists($orig_thumb_filename) && ( filesize($orig_thumb_filename) > 0 ) ) {
-			// Copy required instances for resize
-			if ( copy($orig_thumb_filename, $filename_wide) && copy($orig_thumb_filename, $filename_43) && copy($orig_thumb_filename, $filename_highres) ) {
+		foreach ($resolutions_used as $r) {
+			$resolution = $app->config['videothumbnailresolutions'][$r]; 
+			$thmb_res = explode('x', strtolower($resolution), 2);
+			$filename   = "{$thumb_output_dir}{$resolution}/{$filename_basename}";
 
-				$is_error_now = false;
-
-				// Resize images according to thumbnail requirements. If one of them fails we cancel all the others.
-				// Wide thumb
-				try {
-					\Springboard\Image::resizeAndCropImage($filename_wide, $res_wide[0], $res_wide[1], 'top');
-				} catch (exception $err) {
-					$errors['messages'] .= "[ERROR] File " . $filename_wide . " resizeAndCropImage() failed to " . $res_wide[0] . "x" . $res_wide[1] . ".\n";
-					$iserror = $is_error_now = true;
-				}
-				// 4:3 thumb
-				try {
-					\Springboard\Image::resizeAndCropImage($filename_43, $res_43[0], $res_43[1]);
-				} catch (exception $err) {
-					$errors['messages'] .= "[ERROR] File " . $filename_43 . " resizeAndCropImage() failed to " . $res_43[0] . "x" . $res_43[1] . ".\n";
-					$iserror = $is_error_now = true;
-				}
-				// High resolution thumb
-				try {
-					\Springboard\Image::resizeAndCropImage($filename_highres, $res_high[0], $res_high[1]);
-				} catch (exception $err) {
-					$errors['messages'] .= "[ERROR] File " . $filename_highres . " resizeAndCropImage() failed to " . $res_high[0] . "x" . $res_high[1] . ".\n";
-					$iserror = $is_error_now = true;
+			try {
+				if (!copy($orig_thumb_filename, $filename)) {
+					$errors['messages'] .= "[ERROR] failed to copy thumbnail to {$filename}!\n";
+					$iserror = true;
 				}
 
-				if ( !$is_error_now ) {
-
-					// We have a valid frame here
-					$frame_number++;
-					// Select thumbnails with highest filesize (best automatic selection is supposed)
-					if ( filesize($filename_43) > $recording['thumbnail_size'] ) {
-						$recording['thumbnail_size'] = filesize($filename_43);
-						$recording['thumbnail_indexphotofilename'] = "recordings/" . ( $recording['id'] % 1000 ) . "/" . $recording['id'] . "/indexpics/" . $app->config['videothumbnailresolutions']['4:3'] . "/" . $filename_basename;
-					}
-				}
-
-			} else {
-
-				// Rename or copy operation(s) was/were not successful
-				$errors['messages'] .= "[ERROR] Cannot copy file (" . $orig_thumb_filename . ").\n";
-				$iserror = true;
+				\Springboard\Image::resizeAndCropImage($filename, $thmb_res[0], $thmb_res[1]);
+			} catch ( Exception $ex ) {
+				$errors['messages'] .= "[ERROR] File " . $filename . " resizeAndCropImage() failed to " . $thmb_res[0] . "x" . $thmb_res[1] . ".\n";
+				$iserror = $is_error_now = true;
 			}
 		}
-	}	// for loop
+
+		if ( $is_error_now === false ) {
+			$frame_number++;
+			$recording['thumbnail_size'] = filesize("{$thumb_output_dir}{$app->config['videothumbnailresolutions']['4:3']}/{$filename_basename}");
+			$recording['thumbnail_indexphotofilename'] = "recordings/". ( $recording['id'] % 1000 ) ."/{$recording['id']}/indexpics/{$app->config['videothumbnailresolutions']['4:3']}/{$filename_basename}";
+		}
+	}
 
 	$recording['thumbnail_numberofindexphotos'] = $frame_number;
 
@@ -570,7 +524,7 @@ global $app, $jconf, $debug;
 	if ( $iserror ) {
 		log_recording_conversion($recording['id'], $jconf['jobid_media_convert'], $jconf['dbstatus_conv_thumbs'], "[WARNINGS] " . $frame_number . " thumbnails generated (in " . $mins_taken . " mins) with the following errors:\n" . $errors['messages'] . "\n\n" . $log_msg, $errors['commands'], $errors['data'], $duration, true);
 	} else {
-		log_recording_conversion($recording['id'], $jconf['jobid_media_convert'], $jconf['dbstatus_conv_thumbs'], "[OK] ffmpegthumbnailer conversion OK (in " . $mins_taken . " mins)\n\n" . $log_msg, $command, "-", $duration, false);
+		log_recording_conversion($recording['id'], $jconf['jobid_media_convert'], $jconf['dbstatus_conv_thumbs'], "[OK] ffmpegthumbnailer conversion OK (in " . $mins_taken . " mins)\n\n" . $log_msg, null, null, $duration, false);
 	}
 
 	return true;
@@ -582,7 +536,7 @@ global $app, $jconf, $debug;
 // *************************************************************************
 // Description: convert media file based on encoding profile
 function convertMedia(&$recording, $profile) {
-global $app, $jconf, $global_log;
+global $jconf, $global_log;
 
 	// STATUS: converting
 	updateRecordingVersionStatus($recording['recordingversionid'], $jconf['dbstatus_conv']);
@@ -793,5 +747,3 @@ global $jconf, $debug, $myjobid;
 
 	return false;
 }
-
-?>
