@@ -488,7 +488,7 @@ function convertOCR($rec) {
   // 3RD PARTY UTILITY-K ELLENORZESE //////////////////////
   $result['phase'] = "Checking 3rd party utilites";
   $cmd_test_imagick = "convert -version";
-  $cmd_test_ocr = "type \"". $app->config['ocr_alt'] ."\"";
+  $cmd_test_ocr = $app->config['ocr_alt'];
   $imtest  = new runExt($cmd_test_imagick);
   $ocrtest = new runExt($cmd_test_ocr);
   if (!$imtest->run()) {
