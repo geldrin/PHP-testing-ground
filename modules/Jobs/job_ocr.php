@@ -970,19 +970,19 @@ function createOCRsnapshots($recordingid, $images, $snapshotparams, $source) {
   foreach($images['processed'] as $frameid) {
     $img2resize = $images['frames'][$frameid];
     $cmdresize = $onice ." convert \"". $source . $img2resize['file'] ."\"";
-    $i = 0;
-    do {
-      $size = $snapshotparams['resize'][$i];
-      $folder = $snapshotparams['folders'][$i] . DIRECTORY_SEPARATOR;
-      $cmdresize .= " \( +clone -resize ". $size ."^ -gravity center -extent ". $size ." -write \"". $folder . $rid ."_". $img2resize['dbid'] .".jpg\" +delete \)";
-      if ($i >= (count($snapshotparams['resize']) - 1)) {
-        $cmdresize .= " -resize ". $size ."^ -gravity center -extent ". $size ." \"". $folder . $rid ."_". $img2resize['dbid'] .".jpg\"";
-        break;
-      }
-      $i++;
-    } while (1);
     
-    $cmdresize = trim($cmdresize);
+		$cmdparts = array();
+		$cmdparts[] = "{$onice} convert \"{$source}{$img2resize['file']}\"";
+		
+		for ( $i = 0; $i < count($snapshotparams['resize']); $i++ ) {
+			$size   = $snapshotparams['resize' ][$i];
+			$folder = $snapshotparams['folders'][$i];
+			$output = $folder . $rid ."_". $img2resize['dbid'] .".jpg";
+			$cmdparts[] = "\( +clone -background black -resize {$size}^ -gravity center -extent {$size} -write \"{$output}\" +delete \)";
+		}
+		
+		$cmdparts[] = "null:";
+    $cmdresize = implode(' ', $cmdparts);
     $job->run($cmdresize, 10.0);
     
     if ($job->getCode() !== 0) {
