@@ -2619,7 +2619,7 @@ function setupLiveStatistics( elem ) {
     fillGraph        : true,
     strokeWidth      : 2,
     colors           : [
-      '#00cc00', '#0066b3', '#ff8000', '#ffcc00', '#330099', '#990099',
+      '#00cc00', '#ff8000', '#0066b3', '#ffcc00', '#330099', '#990099',
       '#ccff00', '#ff0000', '#808080', '#008f00', '#00487d', '#b35a00',
       '#b38f00', '#6b006b', '#8fb300', '#b30000', '#bebebe', '#80ff80',
       '#80c9ff', '#ffc080', '#ffe680', '#aa80ff', '#ee00cc', '#ff8080',

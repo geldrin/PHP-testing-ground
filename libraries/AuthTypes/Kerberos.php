@@ -38,8 +38,13 @@ class Kerberos extends \AuthTypes\Base {
     }
 
     $pos    = strpos( $remoteuser, '@' );
-    $uname  = substr( $remoteuser, 0, $pos );
-    $domain = substr( $remoteuser, $pos + 1 );
+    if ( $pos === false ) {
+      $uname = $remoteuser;
+      $domain = '';
+    } else {
+      $uname  = substr( $remoteuser, 0, $pos );
+      $domain = substr( $remoteuser, $pos + 1 );
+    }
 
     // a domain nincs a vart domain-u loginok kozott
     // ez azzal jar hogy ha nincsen letrehozva megfelelo organizations.authtypes
@@ -186,7 +191,11 @@ class Kerberos extends \AuthTypes\Base {
   protected function handleAuthDirectory( $externalid ) {
 
     $pos    = strpos( $externalid, '@' );
-    $domain = strtolower( substr( $externalid, $pos + 1 ) );
+    if ( $pos === false )
+      $domain = '';
+    else
+      $domain = strtolower( substr( $externalid, $pos + 1 ) );
+
     $found  = false;
     foreach( $this->organization['authdirectories'] as $directory ) {
       $domains = explode(',', strtolower( $directory['domains'] ) );
