@@ -464,6 +464,8 @@ function convertOCR($rec) {
   );
 
 	$worker = new runExt();
+	$worker->setPollingRate(1.0);
+	$worker->addCallback('callWatchdog', 120);
 	
   $errstr = "Function convertOCR(rec#". $rec['id'] .") failed!"; //// Megtarthato?????
   
