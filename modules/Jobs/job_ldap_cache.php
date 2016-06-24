@@ -174,7 +174,7 @@ while ( !$ldap_groups->EOF ) {
     $ldap_users = array();
 	$ldap_group_users = ldap_first_entry($ldap_dir['ldap_handler'], $result);
     if ( $ldap_group_users === false ) {
-        $debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] No users found based for this group. Debug info:\nFilter: " . $filter . "\nAttribute filter: " . $attr_filter, $sendmail = false);
+        $debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] No users found based for this group. Debug info:\nFilter: " . $filter . "\nAttribute filter: " . print_r($attr_filter, false), $sendmail = false);
         $ldap_groups->MoveNext();
         continue;
     }

@@ -2770,6 +2770,11 @@ function setupRecordingStatistics( elem ) {
     lastSec = graphdata[graphdata.length - 1][0];
     graphdata.push( [ lastSec + 60, 0] );
   }
+  
+  if ( graphdata.length < 20 ) {
+    for ( i = graphdata.length; graphdata.length < 20; i++ )
+      graphdata.push( [ i * 60, 0 ] );
+  }
 
   var lastclick     = null;
   var isdoubleclick = null;
@@ -2800,7 +2805,7 @@ function setupRecordingStatistics( elem ) {
 
           if ( tickspacing < 1 )
             tickspacing = 1;
-         
+
           ticks = [];
           
           for ( sec = 0; sec < b; sec = sec + tickspacing * 60 )
