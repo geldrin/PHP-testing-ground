@@ -111,20 +111,19 @@ class runExt {
 	}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-	function setPollingRate($pollrate_usec = 50000, $pollrate_sec = 0) {
+	function setPollingRate($pollrate_sec = .0) {
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-		if (isset($pollrate_sec) && is_numeric($pollrate_sec)) $this->polling_sec = (int) $pollrate_sec;
-
-		if (isset($pollrate_usec) && is_numeric($pollrate_usec)) {
-			$this->polling_sec += (int) ($pollrate_usec / 1000000);
-			$pollrate_usec = $pollrate_usec % 1000000;
-			if ($pollrate_sec == 0 && $pollrate_usec < 1000) {
-					$pollrate_usec = 1000;
+		if (isset($pollrate_sec) && is_numeric($pollrate_sec)) {
+			if ($pollrate_sec < 0.001) {
+				$this->polling_sec  = 0;
+				$this->polling_usec = 1000; // max. polling rate is 1ms
+			} else {
+				$this->polling_sec  = (int) $pollrate_sec;
+				$this->polling_usec = ($pollrate_sec - $this->polling_sec) * 1000000;
 			}
-			$this->polling_usec = (int) $pollrate_usec;
 		}
 	}
-	
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 	function addCallback($aCallback, $param = null) {
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -822,9 +821,9 @@ global $app, $debug, $jconf;
 		
 		// EXECUTE FFMPEG COMMAND
 		$conv = new runExt($c, 14400);
-		$conv->setPollingRate(250000);
+		$conv->setPollingRate(1.0);
 		
-		if (function_exists('callWatchdog')) $conv->addCallback('callWatchdog', 60);
+		if (function_exists('callWatchdog')) $conv->addCallback('callWatchdog', 120);
 		
 		$conv->run();
 		
@@ -922,12 +921,21 @@ global $app, $debug, $jconf;
 	return $err;
 }
 
-function callWatchdog($_, $watchdogtimeout) {
+/**
+ * Callback function to update watchdog file in parallel with system calls executed via runExt().
+ * Useful when the external command has longer execution time than the watchdog timeout.
+ * 
+ * @global obj $app instance of Springboard App object
+ * @param null $_ -unused-
+ * @param int/float $watchdogseconds interval of watchdog calls
+ */
+
+function callWatchdog($_, $watchdogseconds) {
 	global $app;
 	static $last_call = 0;
 	
 	$now = time();
-	if (isset($watchdogtimeout) && ($now - $last_call) > $watchdogtimeout) {
+	if (isset($watchdogseconds) && ($now - $last_call) > $watchdogseconds) {
 		@$app->watchdog();
 	}
 }
