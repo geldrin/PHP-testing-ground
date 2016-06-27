@@ -10,7 +10,26 @@
   <title>{if $title}{$title|strip_tags|escape:html|titleescape} | {/if}{#sitename#}</title>
   {include file="Visitor/_opengraph.tpl"}
   {if $metadescription}{include file="Visitor/Recordings/Metadescription.tpl"}{/if}
-  <link rel="icon" type="image/png" href="{$STATIC_URI}images/favicon.png"/>
+  <link rel="shortcut icon" href="{$STATIC_URI}images/favicons/vsq_favicon_inverted.ico">
+	<link rel="icon" sizes="16x16 32x32 64x64" href="{$STATIC_URI}images/favicons/vsq_favicon_inverted.ico">
+	<link rel="icon" type="image/png" sizes="196x196" href="{$STATIC_URI}images/favicons/vsq_favicon_inverted-192.png">
+	<link rel="icon" type="image/png" sizes="160x160" href="{$STATIC_URI}images/favicons/vsq_favicon_inverted-160.png">
+	<link rel="icon" type="image/png" sizes="96x96" href="{$STATIC_URI}images/favicons/vsq_favicon_inverted-96.png">
+	<link rel="icon" type="image/png" sizes="64x64" href="{$STATIC_URI}images/favicons/vsq_favicon_inverted-64.png">
+	<link rel="icon" type="image/png" sizes="32x32" href="{$STATIC_URI}images/favicons/vsq_favicon_inverted-32.png">
+	<link rel="icon" type="image/png" sizes="16x16" href="{$STATIC_URI}images/favicons/vsq_favicon_inverted-16.png">
+	<link rel="apple-touch-icon" href="{$STATIC_URI}images/favicons/vsq_favicon_inverted-57.png">
+	<link rel="apple-touch-icon" sizes="114x114" href="{$STATIC_URI}images/favicons/vsq_favicon_inverted-114.png">
+	<link rel="apple-touch-icon" sizes="72x72" href="{$STATIC_URI}images/favicons/vsq_favicon_inverted-72.png">
+	<link rel="apple-touch-icon" sizes="144x144" href="{$STATIC_URI}images/favicons/vsq_favicon_inverted-144.png">
+	<link rel="apple-touch-icon" sizes="60x60" href="{$STATIC_URI}images/favicons/vsq_favicon_inverted-60.png">
+	<link rel="apple-touch-icon" sizes="120x120" href="{$STATIC_URI}images/favicons/vsq_favicon_inverted-120.png">
+	<link rel="apple-touch-icon" sizes="76x76" href="{$STATIC_URI}images/favicons/vsq_favicon_inverted-76.png">
+	<link rel="apple-touch-icon" sizes="152x152" href="{$STATIC_URI}images/favicons/vsq_favicon_inverted-152.png">
+	<link rel="apple-touch-icon" sizes="180x180" href="{$STATIC_URI}images/favicons/vsq_favicon_inverted-180.png">
+	<meta name="msapplication-TileColor" content="#FFFFFF">
+	<meta name="msapplication-TileImage" content="{$STATIC_URI}images/favicons/vsq_favicon_inverted-144.png">
+	<meta name="msapplication-config" content="{$STATIC_URI}browserconfig.xml">
   {csscombine}
   <link rel="StyleSheet" type="text/css" href="{$STATIC_URI}css/custom-theme/jquery-ui-1.9.2.custom.min.css" media="screen"/>
   {if $needfancybox}
