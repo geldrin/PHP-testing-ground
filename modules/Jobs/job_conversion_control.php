@@ -367,8 +367,8 @@ global $jconf, $debug, $app;
 			encoding_profiles AS ep
 		WHERE
 			r.mastersourceip = '" . $node . "' AND
-			r.status = '" . $jconf['dbstatus_onstorage'] . "' AND
-			( r.mobilestatus IS NULL OR r.mobilestatus <> '" . $jconf['dbstatus_onstorage'] . "' ) AND
+			r.status = '" . $jconf['dbstatus_copystorage_ok'] . "' AND
+			( r.mobilestatus IS NULL OR r.mobilestatus <> '" . $jconf['dbstatus_copystorage_ok'] . "' ) AND
 			r.id = rv.recordingid AND
 			rv.status = '" . $jconf['dbstatus_copystorage_ok'] . "' AND
 			rv.ismobilecompatible = 1 AND
