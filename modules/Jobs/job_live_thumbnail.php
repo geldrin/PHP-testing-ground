@@ -125,7 +125,7 @@ function Main() {
 			// Prepare working directories
       $directories = array();
       $directories[] = $temp_dir;
-      $directories = $thumbnail_obj['local'];
+      $directories += $thumbnail_obj['local'];
       
       //var_dump($directories);
       
