@@ -678,6 +678,7 @@ global $debug, $jconf, $app;
             infrastructure_nodes AS ins
         WHERE
             ins.type = 'converter' AND
+            ins.disabled = 0 AND
             ( ins.statusstorage = 'ok' OR ins.default = 1 )
         ORDER BY
             ins.cpuload15min ASC,
