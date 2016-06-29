@@ -2,66 +2,69 @@
 
 // Clean up converter's temp directory
 function cleanUpConverterTemporaryStorage() {
-global $app, $jconf, $debug, $myjobid;
+	global $app, $jconf, $debug, $myjobid;
 
-		// Select recording versions that are being converted or failed (processing is in progress)
-		$query = "
-				SELECT
-						rv.recordingid
-				FROM
-						recordings_versions AS rv
-				WHERE
-						rv.status = '" . $jconf['dbstatus_conv'] . "' OR
-						rv.status = '" . $jconf['dbstatus_convert'] . "' OR
-						rv.status LIKE 'failed%'
-				GROUP BY
-						rv.recordingid";
-		
-		try {
-				$model = $app->bootstrap->getModel('recordings_versions');
-				$rs = $model->safeExecute($query);
+	$ldir = $jconf['log_dir'];
+	$lfile = "{$myjobid}.log";
+	
+	// Select recording versions that are being converted or failed (processing is in progress)
+	$query = "
+		SELECT
+		rv.recordingid
+		FROM
+		recordings_versions AS rv
+		WHERE
+		rv.status = '" . $jconf['dbstatus_conv'] . "' OR
+		rv.status = '" . $jconf['dbstatus_convert'] . "' OR
+		rv.status LIKE 'failed%'
+		GROUP BY
+		rv.recordingid";
+
+	try {
+		$model = $app->bootstrap->getModel('recordings_versions');
+		$rs = $model->safeExecute($query);
 	} catch (exception $err) {
-		$debug->log($jconf['log_dir'], $jconf['jobid_media_convert'] . ".log", "[ERROR] SQL query failed." . trim($query), $sendmail = true);
+		$debug->log($ldir, $lfile, "[ERROR] SQL query failed." . trim($query), $sendmail = true);
 		return false;
 	}
 
-		// Index unfinished recordings
-		$recordings_unfinished = array();
-		while ( !$rs->EOF ) {
-				$recording = $rs->fields;
-				$recordings_unfinished[$recording['recordingid']] = true;
-				$rs->MoveNext();
-		}
-		
-		$dirs = array(
-				$jconf['master_dir'],
-				$jconf['media_dir'],
-				$jconf['content_dir']
-		);
+	// Index unfinished recordings
+	$recordings_unfinished = array();
+	while ( !$rs->EOF ) {
+		$recording = $rs->fields;
+		$recordings_unfinished[$recording['recordingid']] = true;
+		$rs->MoveNext();
+	}
 
-		foreach ( $dirs as $key => $dir) {
-				
-				$files = getFileList($dir);
-				if ( empty($files) ) continue;
-				
-				for ( $i = 0; $i < count($files); $i++ ) {
+	$dirs = array(
+		$jconf['master_dir'],
+		$jconf['media_dir'],
+		$jconf['content_dir']
+	);
 
-						// Get recording id from path
-						$tmp = str_replace($dir, "", $files[$i]['name']);
-						$recid = str_replace(array("/","\\"), "", $tmp);
-						
-						if ( !is_numeric($recid) ) continue;
-						
-						if ( !isset($recordings_unfinished[$recid]) ) {
-								$err = remove_file_ifexists($files[$i]['name']);
-								if ( !$err['code'] ) {
-										$debug->log($jconf['log_dir'], $myjobid, $err['message'] . "\nCOMMAND: " . $err['command'] . "\nRESULT: " . $err['result'], $sendmail = false);
-								} else {
-										$debug->log($jconf['log_dir'], $myjobid, "[INFO] Converter temp directory removed (conversion ready): " . $files[$i]['name'], $sendmail = false);
-								}
-						}
+	foreach ( $dirs as $key => $dir) {
+
+		$files = getFileList($dir);
+		if ( empty($files) ) continue;
+
+		for ( $i = 0; $i < count($files); $i++ ) {
+
+			// Get recording id from path
+			$tmp = str_replace($dir, "", $files[$i]['name']);
+			$recid = str_replace(array("/","\\"), "", $tmp);
+
+			if ( !is_numeric($recid) ) continue;
+
+			if ( !isset($recordings_unfinished[$recid]) ) {
+				$err = remove_file_ifexists($files[$i]['name']);
+				if ( !$err['code'] ) {
+					$debug->log($ldir, $lfile, $err['message'] . "\nCOMMAND: " . $err['command'] . "\nRESULT: " . $err['result'], $sendmail = false);
+				} else {
+					$debug->log($ldir, $lfile, "[INFO] Converter temp directory removed (conversion ready): " . $files[$i]['name'], $sendmail = false);
 				}
+			}
 		}
+	}
 
 	return true;
 }
