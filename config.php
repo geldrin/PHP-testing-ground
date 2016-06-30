@@ -264,12 +264,21 @@ $config = array(
         'perms' => 'a+w',
       ),
       array(
+        'dir'   => $this->basepath . 'data/watchdog',
+        'user'  => 'conv',
+        'perms' => 'a+w',
+      ),
+      array(
         'dir'   => $this->basepath . 'modules/Locale',
         'perms' => 'a+w',
       ),
       array(
         'dir'   => $this->basepath . 'modules/**/**/Locale',
         'perms' => 'a+w',
+      ),
+      array(
+        'dir'   => $this->basepath . 'libraries/Videosquare',
+        'user' => 'conv',
       ),
     ),
   ),
