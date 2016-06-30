@@ -121,13 +121,10 @@ function Main() {
 		
     try {
 			$cmd = $code = null;
-
+			
 			// Prepare working directories
       $directories = array();
-      $directories[] = $temp_dir;
-      $directories += $thumbnail_obj['local'];
-      
-      //var_dump($directories);
+      $directories = array_merge(array($temp_dir), $thumbnail_obj['local']);
       
 			foreach($directories as $d) {
 				$err = create_remove_directory($d);
