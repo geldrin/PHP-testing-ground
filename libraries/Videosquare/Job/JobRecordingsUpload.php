@@ -209,7 +209,7 @@ class RecordingsUploadJob extends Job {
         }
 
         // ffmpeg command
-        $command = $this->bootstrap->config['nice'] . " " . $this->bootstrap->config['ffmpeg_alt'] . " -v ". $this->bootstrap->config['ffmpeg_loglevel'] ." -y -i " . $src . " -c copy -timecode 00:00:00:00 " . $dst;
+				$command = "{$this->bootstrap->config['nice']} {$this->bootstrap->config['ffmpeg_alt']} -v {$this->bootstrap->config['ffmpeg_loglevel']} -y -i {$src} -c copy -copyts -start_at_zero {$dst}";
 		
         // Run command
         $output = new runExt($command);
