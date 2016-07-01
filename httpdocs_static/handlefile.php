@@ -47,14 +47,14 @@ if (
       break;
 
     case 'recordings':
-      
+
       if ( preg_match('/^\d+\/\d+\/indexpics\/\d+x\d+\/.*$/', $parts[1] ) )
         exitWithContentHeaders( $_GET['file'] );
-      
+
       if ( preg_match('/^\d+\/(\d+)\/.*$/', $parts[1], $results ) ) {
-        
+
         $result = checkAccess( $results[1], $config );
-        
+
         if ( $result )
           exitWithContentHeaders( $_GET['file'] );
 
@@ -74,14 +74,14 @@ if (
       $parts[0] == 'recordings' and
       preg_match('/^(\d+)\/(\d+)\/(master\/)?(\d+(?:_.+)?),(.*)\.(.+)$/', $parts[1], $results )
    ) {
-  
+
   // 1 mod
   // 2 recordingid
   // 3 subdir
   // 4 elementid
   // 5 title
   // 6 extension
-  
+
   // recordings/106/106/master/106_video,eurosport.mpg
   // recordings/106/106/master/106_content,eurosportcontent.avi
   // recordings/106/106/106_286_audio,eurosport.mp3
@@ -96,28 +96,28 @@ if (
   ;
 
   if ( DEBUG ) {
-    
+
     echo
       "<br/>filename: <b>", PATH_PREFIX . $file, "</b>",
       " and is_readable: <b>", (int)is_readable( PATH_PREFIX . $file ), "</b><br/>"
     ;
-    
+
   }
-  
+
   if ( is_readable( PATH_PREFIX . $file ) and checkAccess( $results[2], $config, true, $isMaster ) ) {
-    
+
     $_GET['filename'] =
       filenameize( mb_substr( $results[5], 0, 45 ) ) .
       '-' . $results[4] . '-videosquare.' . $results[6]
     ;
-    
+
     if ( DEBUG )
       echo "<br/>Sending file with filename: ", $_GET['filename'], "<br/>";
-    
+
     exitWithContentHeaders( $file );
-    
+
   }
-  
+
 }
 
 // vegso fallback: nem kapott hozzaferest
@@ -126,16 +126,16 @@ headerOutput("Status: 404 Not Found"); // FastCGI alternative
 exitWithContentHeaders( BASE_PATH . 'httpdocs_static/images/accessdenied.png', '' );
 
 function exitWithContentHeaders( $file, $prefix = PATH_PREFIX ) {
-  
+
   $sendattachment = false;
   $filename = basename( $file );
   if ( isset( $_GET['filename'] ) ) {
-    
+
     $filename = basename( $_GET['filename'] );
     $sendattachment = true;
-    
+
   }
-  
+
   // az attachmentek kivetelevel szinte mindig jpg lesz
   $extension = substr( $filename, -4 );
 
@@ -150,7 +150,7 @@ function exitWithContentHeaders( $file, $prefix = PATH_PREFIX ) {
     case '.xls': headerOutput('Content-Type: application/vnd.ms-excel'); break;
     default:     headerOutput('Content-Type: application/octet-stream'); break;
   }
-  
+
   if ( $sendattachment ) // content-type utan kellene legyen
     headerOutput('Content-Disposition: attachment; filename="' . $filename . '"');
 
@@ -191,33 +191,33 @@ function filenameize( $filename ) {
 }
 
 function checkAccess( $recordingid, &$config, $isDownload = false, $isMaster = false ) {
-  
+
   switch( $config['cache']['type'] ) {
-    
+
     case 'file':
       $file  = 'File.php';
       $class = 'Springboard\\Cache\\File';
       break;
-    
+
     case 'redis':
       $file  = 'Redis.php';
       $class = 'Springboard\\Cache\\Redis';
       break;
-    
+
     case 'memcache':
       $file  = 'Memcached.php';
       $class = 'Springboard\\Cache\\Memcached';
       break;
-    
+
   }
-  
+
   include_once( $config['libpath'] . 'Springboard/Cache/CacheInterface.php' );
   include_once( $config['libpath'] . 'Springboard/Cache.php' );
   include_once( $config['libpath'] . 'Springboard/Cache/' . $file );
-  
+
   if ( !isset( $application ) )
     $application = setupApp();
-  
+
   $host         = $_SERVER['SERVER_NAME'];
   $orgModel     = $application->bootstrap->getModel('organizations');
   $organization = $orgModel->getOrganizationByDomain( $host, true );
@@ -226,11 +226,11 @@ function checkAccess( $recordingid, &$config, $isDownload = false, $isMaster = f
   ini_set('session.cookie_domain',    $cookiedomain );
   session_set_cookie_params( 0 , '/', $cookiedomain );
   $sessionkey = $application->bootstrap->config['siteid'] . '-' . $organization['domain'];
-  
+
   session_start();
-  
+
   if ( DEBUG or $isDownload or !isset( $_SESSION[ $sessionkey ]['recordingaccess'][ $recordingid ] ) ) {
-    
+
     $application->bootstrap->sessionstarted = true;
     $application->bootstrap->config['cookiedomain'] = $cookiedomain;
     $application->bootstrap->config['sessionidentifier'] = $organization['domain'];
@@ -238,9 +238,9 @@ function checkAccess( $recordingid, &$config, $isDownload = false, $isMaster = f
     $user            = $application->bootstrap->getSession('user');
     $recordingsModel = $application->bootstrap->getModel('recordings');
     $access          = $application->bootstrap->getSession('recordingaccess');
-    
+
     $recordingsModel->select( $recordingid );
-    
+
     if ( $recordingsModel->row ) {
 
       $access[ $recordingsModel->id ] = $recordingsModel->userHasAccess(
@@ -251,13 +251,13 @@ function checkAccess( $recordingid, &$config, $isDownload = false, $isMaster = f
         $result = true;
       else
         $result = false;
-      
+
     } else
       $result = false;
-    
+
   } else
     $result = $_SESSION[ $sessionkey ]['recordingaccess'][ $recordingid ] === true;
-  
+
   // - ne lockoljuk a sessiont arra az idore sem, mig az allomany
   //   eleri a bongeszot, mivel parhuzamos szalaknak szukseguk
   //   lehet ra
@@ -291,51 +291,51 @@ function checkAccess( $recordingid, &$config, $isDownload = false, $isMaster = f
   }
 
   return $result;
-  
+
 }
 
 function handleSendfile( $path, $handlerange = false ) {
-  
+
   if ( !$handlerange or !isset( $_SERVER['HTTP_RANGE'] ) )
     headerOutput('X-Sendfile: ' . $path );
   else {
-    
+
     // csak 1 byte range-t supportolunk, es mindig a legvegeig kuldjuk a filet
     $range = substr( stristr( trim( $_SERVER['HTTP_RANGE'] ), 'bytes=' ), 6 );
     $range = substr( $range, 0, strpos( $range, '-') + 1 );
     $path  = str_replace( ',', '%2c', urlencode( $path ) ); // sima urlencode mert azt irja a lighttpd doksi
-    
+
     headerOutput( 'X-Sendfile2: ' . $path . ' ' . $range );
-    
+
   }
-  
+
 }
 
 function setupApp() {
-  
+
   include_once( BASE_PATH . 'libraries/Springboard/Application.php');
   $application = new Springboard\Application( BASE_PATH, PRODUCTION, $_REQUEST );
   $application->loadConfig('config.php');
   $application->loadConfig('config_local.php');
   $application->bootstrap();
   return $application;
-  
+
 }
 
 class ConfigLoader {
-  
+
   public function __construct() {
     $this->basepath   = BASE_PATH;
     $this->production = PRODUCTION;
   }
-  
+
   public function load() {
-    
+
     $config = include( BASE_PATH . 'config.php' );
     $config = array_merge( $config, include( BASE_PATH . 'config_local.php') );
-    
+
     return $config;
-    
+
   }
-  
+
 }

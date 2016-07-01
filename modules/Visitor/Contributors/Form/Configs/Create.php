@@ -5,29 +5,29 @@ if ( !isset( $skipindexphotounset ) )
   $skipindexphotounset = false; // a modify.php ezzel jelzi hogy ne unsetteljuk
 
 $config         = array(
-  
+
   'action' => array(
     'type'     => 'inputHidden',
     'value'    => 'submitcreate',
     'readonly' => true,
   ),
-  
+
   'recordingid' => array(
     'type'     => 'inputHidden',
     'value'    => $this->application->getNumericParameter('recordingid'),
     'readonly' => true,
   ),
-  
+
   'orgid' => array(
     'type' => 'inputHidden',
   ),
-  
+
   'fs1' => array(
     'type'   => 'fieldset',
     'legend' => $l('contributors', 'create_title'),
     'prefix' => '<span class="legendsubtitle">' . $l('contributors', 'create_subtitle') . '</span>',
   ),
-  
+
   'indexphotofilename' => Array(
     'type'        => 'inputradio',
     'displayname' => $l('contributors', 'indexphoto'),
@@ -50,7 +50,7 @@ $config         = array(
     'validation' => Array(
     )
   ),
-  
+
   'nameprefix' => array(
     'displayname' => $l('contributors', 'nameprefix'),
     'type'        => 'select',
@@ -59,7 +59,7 @@ $config         = array(
       array( 'type' => 'required' )
     ),
   ),
-  
+
   'namefirst' => array(
     'displayname' => $l('contributors', 'firstname'),
     'type'        => 'inputText',
@@ -67,7 +67,7 @@ $config         = array(
       array( 'type' => 'required' ),
     ),
   ),
-  
+
   'namelast' => array(
     'displayname' => $l('contributors', 'lastname'),
     'type'        => 'inputText',
@@ -75,7 +75,7 @@ $config         = array(
       array( 'type' => 'required' ),
     ),
   ),
-  
+
   'nameformat' => array(
     'displayname' => $l('contributors', 'nameformat'),
     'type'        => 'select',
@@ -88,7 +88,7 @@ $config         = array(
       array( 'type' => 'required' ),
     ),
   ),
-  
+
   'contributorrole' => array(
     'type'        => 'selectDynamic',
     'displayname' => $l('contributors', 'contributorrole'),
@@ -108,7 +108,7 @@ $config         = array(
     'type'        => 'inputText',
     'displayname' => $l('contributors', 'organization'),
   ),
-  
+
   'selectedorganization' => array(
     'type'      => 'text',
     'value'     => $l('contributors', 'selectedorganization'),
@@ -131,20 +131,20 @@ $config         = array(
 );
 
 if ( $this->recordingsModel and !$this->recordingsModel->row['isintrooutro'] ) {
-  
+
   $staticuri   = $this->controller->organization['staticuri'] . 'files/';
   $indexphotos = $this->recordingsModel->getIndexPhotos();
   foreach( $indexphotos as $filename ) {
-    
-    $config['indexphotofilename']['values'][ $filename ] = 
+
+    $config['indexphotofilename']['values'][ $filename ] =
       '<img src="' . $staticuri . $filename . '" />';
     ;
-    
+
   }
-  
+
   if ( empty( $indexphotos ) and !$skipindexphotounset )
     unset( $config['indexphotofilename'] );
-  
+
 } elseif ( !$skipindexphotounset )
   unset(
     $config['indexphotofilename']
