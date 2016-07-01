@@ -54,8 +54,6 @@ function Main() {
 
 	clearstatcache();
 
-	$converter_sleep_length = $app->config['sleep_media'];
-
 	// Watchdog
 	$app->watchdog();
 
@@ -65,7 +63,7 @@ function Main() {
 
 	for ( $i = 0; $i < count($channels); $i++ ) {
 
-		$filename = $ffmpeg_output = $ffmpeg_loglevel = $ffmpeg_filter = $ffmpeg_globals = $ffmpeg_load = null;
+		$filename = $ffmpeg_output = $ffmpeg_filter = $ffmpeg_globals = $ffmpeg_load = null;
 
 		// Temp directory
 		$temp_dir = $jconf['livestreams_dir'] . $channels[$i]['livefeedstreamid'] . "/";
@@ -76,10 +74,9 @@ function Main() {
 		$wowza_app = "vsqlive";
 		if ( isset($app->config['production']) && $app->config['production'] === false ) $wowza_app = "dev" . $wowza_app;
     
-		$filename        = $channels[$i]['livefeedstreamid'] . "_" . date("YmdHis") . ".jpg";
-		$ffmpeg_loglevel = ($debug_mode) ? (null) : (' -v '. $app->config['ffmpeg_loglevel']);
-		$ffmpeg_globals  = $app->config['ffmpeg_alt'] . $ffmpeg_loglevel .' -y';
-		$ffmpeg_load     = ' -i '. sprintf("rtmp://%s/" . $wowza_app . "/", $rtmp_server) . $channels[$i]['streamid'];
+		$filename       = "{$channels[$i]['livefeedstreamid']}_" . date("YmdHis") . ".jpg";
+		$ffmpeg_globals = "{$app->config['ffmpeg_alt']} -y";
+		$ffmpeg_load    = ' -i '. sprintf("rtmp://%s/{$wowza_app}/", $rtmp_server) . $channels[$i]['streamid'];
     
     $thumbnail_obj = array(
       'res'    => null,
@@ -124,13 +121,10 @@ function Main() {
 		
     try {
 			$cmd = $code = null;
-
+			
 			// Prepare working directories
       $directories = array();
-      $directories[] = $temp_dir;
-      $directories = $thumbnail_obj['local'];
-      
-      //var_dump($directories);
+      $directories = array_merge(array($temp_dir), $thumbnail_obj['local']);
       
 			foreach($directories as $d) {
 				$err = create_remove_directory($d);

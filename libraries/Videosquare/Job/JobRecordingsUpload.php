@@ -81,9 +81,9 @@ class RecordingsUploadJob extends Job {
 
                 // Convert FLV to MP4 (overcome NGINX's junky FLV output)
                 $tmp = pathinfo($recordingVideo['file']);
-                $dstFileName = $tmp['filename'] . ".mp4";
-                $this->convertFLV2MP4($this->bootstrap->config['recpath'] . $recordingVideo['file'], $this->bootstrap->config['recpath'] . "temp/" . $dstFileName);
-                
+                $dstFileName = $this->bootstrap->config['recpath'] . "temp/" . $tmp['filename'] . ".mp4";
+                $this->convertFLV2MP4($this->bootstrap->config['recpath'] . $recordingVideo['file'], $dstFileName);
+				
                 // Upload using Videosquare API
                 try {
                     
@@ -100,8 +100,8 @@ class RecordingsUploadJob extends Job {
                     
                     // Upload recording
                     $time_start = time();
-                    //$recording = $api->uploadRecording($filename, "hun", $liveFeedRecording['userid'], 0);
-                    $recording = $api->uploadRecording($this->bootstrap->config['recpath'] . "temp/" . $dstFileName, "hun");
+                    //$recording = $api->uploadRecording($dstFileName, "hun", $liveFeedRecording['userid'], 0);
+                    $recording = $api->uploadRecording($dstFileName, "hun");
                     $duration = time() - $time_start;
                     $mins_taken = round($duration / 60, 2);
 
@@ -141,12 +141,12 @@ class RecordingsUploadJob extends Job {
                         //$this->indexFLVFile($this->bootstrap->config['recpath'] . $recordingContent['file'], $this->bootstrap->config['recpath'] . "temp/" . $recordingContent['file']);
 
                         // Convert FLV to MP4 (overcome NGINX's junky FLV output)
-                        $tmp = pathinfo($recordingVideo['file']);
-                        $dstFileName = $tmp['filename'] . ".mp4";
-                        $this->convertFLV2MP4($this->bootstrap->config['recpath'] . $recordingContent['file'], $this->bootstrap->config['recpath'] . "temp/" . $dstFileName);
+                        $tmp = pathinfo($recordingContent['file']);
+                        $dstFileName = $this->bootstrap->config['recpath'] . "temp/" . $tmp['filename'] . ".mp4";
+                        $this->convertFLV2MP4($this->bootstrap->config['recpath'] . $recordingContent['file'], $dstFileName);
                         
                         $time_start = time();
-                        $content = $api->uploadContent($recording['data']['id'], $this->bootstrap->config['recpath'] . "temp/" . $dstFileName);
+                        $content = $api->uploadContent($recording['data']['id'], $dstFileName);
                         $duration = time() - $time_start;
                         $mins_taken = round($duration / 60, 2);
                         
@@ -156,32 +156,14 @@ class RecordingsUploadJob extends Job {
                     }
                     
                 } catch ( \Exception $err ) {
-                    
+
                     $this->debugLog('[EXCEPTION] run(): ' . $err->getMessage(), true);
-                    echo $err->getMessage() . "\n";
                     
-                }
+                } // try
                 
             }
         
-        }
-        
-/*         $cacheindex = 'nginxrecordings-' . $hostname;
-        
-        $cache = $this->bootstrap->getCache($cacheindex, $this->cachetimeoutseconds, true);
-
-        $tmp = $cache->get();
-        echo "Cache content:\n";
-        var_dump($tmp);
-
-        array_push($this->temp, date("Y-m-d H:i:s"));
-        echo "Put to cache:\n" . print_r($this->temp, true) . "\n";
-
-        $cache->put($this->temp);
-        
-        if ( $cache->expired() ) {
-            echo "Cache expired!!!!\n";
-        } */
+        } // foreach
         
     }
     
@@ -227,8 +209,8 @@ class RecordingsUploadJob extends Job {
         }
 
         // ffmpeg command
-        $command = $this->bootstrap->config['nice'] . " " . $this->bootstrap->config['ffmpeg_alt'] . " -v ". $this->bootstrap->config['ffmpeg_loglevel'] ." -y -i " . $src . " -c copy -timecode 00:00:00:00 " . $dst;
-        
+				$command = "{$this->bootstrap->config['nice']} {$this->bootstrap->config['ffmpeg_alt']} -v {$this->bootstrap->config['ffmpeg_loglevel']} -y -i {$src} -c copy -copyts -start_at_zero {$dst}";
+		
         // Run command
         $output = new runExt($command);
         $output->run();
@@ -243,11 +225,11 @@ class RecordingsUploadJob extends Job {
             
             $this->debugLog("[OK] ffmpeg FLV->MP4 conversion ready. Resulting file: " . $dst, false);
             
-            if ( !file_exists($dst) ) $this->debugLog("[ERROR] ffmpeg returned no error, but output file does not exists: " . $dst, false);
-            
-            if ( filesize($dst) == 0 ) $this->debugLog("[ERROR] ffmpeg returned no error, but output file has zero size: " . $dst, false);
-            
         }
+		
+		if ( !file_exists($dst) ) throw new \Exception("[ERROR] ffmpeg not created an output file at: " . $dst);
+        
+		if ( filesize($dst) < 500 ) throw new \Exception("[ERROR] ffmpeg output size is " . filesize($dst) . " bytes for file " . $dst . ". Assuming failed output!");
         
     }
     
@@ -288,7 +270,7 @@ $job = new RecordingsUploadJob(BASE_PATH, PRODUCTION);
 
 try {
     $job->run();
-} catch( Exception $err ) {
+} catch( \Exception $err ) {
     $job->debugLog( '[EXCEPTION] run(): ' . $err->getMessage(), false );
     throw $err;
 }

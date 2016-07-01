@@ -172,6 +172,24 @@ if ( $recordings !== false ) {
 	}
 }
 
+// Get additional ready mobile versions if mobilestatus != "onstorage" (non-mobile compatible desktop version - above - will not trigger mobilestatus := "onstorage")
+$recordings = getReadyMobileConversions();
+if ( $recordings !== false ) {
+
+	while ( !$recordings->EOF ) {
+
+		$recording = array();
+		$recording = $recordings->fields;
+		
+		$debug->log($jconf['log_dir'], $jconf['jobid_conv_control'] . ".log", "[INFO] Mobile compatible version for recid#" . $recording['id'] . " become ready.", false);
+		
+		updateRecordingStatus($recording['id'], $jconf['dbstatus_copystorage_ok'], "mobile");
+
+		$recordings->MoveNext();
+	}
+}
+
+
 // Failed recordings: get failed recording versions and set "failed" status on recording level
 $failedRecordings = getFailedRecordingVersions();
 if ( $failedRecordings !== false ) {
@@ -309,6 +327,54 @@ global $jconf, $debug, $app;
 			( ep.mediatype = 'video' OR ( r.mastermediatype = 'audio' AND ep.mediatype = 'audio' ) ) AND
 			( ( r.status = '" . $jconf['dbstatus_conv'] . "' AND ep.type = 'recording' AND r.mastersourceip = '" . $node . "' ) OR
 			  ( r.contentstatus = '" . $jconf['dbstatus_conv'] . "' AND ep.type = 'content' AND r.contentmastersourceip = '" . $node . "' ) )
+		GROUP BY
+			r.id";
+
+	try {
+        $model = $app->bootstrap->getModel('recordings');
+        $rs = $model->safeExecute($query);
+	} catch (exception $err) {
+		$debug->log($jconf['log_dir'], $jconf['jobid_conv_control'] . ".log", "[ERROR] SQL query failed." . trim($query), $sendmail = true);
+		return false;
+	}
+
+	if ( $rs->RecordCount() < 1 ) return false;
+
+	return $rs;
+}
+
+// For encoding profiles that generate different versions for desktop players and mobile devices.
+// In this case, we set status := "onstorage" when first (desktop only) version is ready. Since it is not
+// mobile compatible mobilestatus := "onstorage" never executed.
+function getReadyMobileConversions() {
+global $jconf, $debug, $app;
+
+	$node = $app->config['node_sourceip'];
+
+	// Get status = "onstorage" AND mobilestatus = NULL recordings with at least one "onstorage" mobile compatible recording version
+	$query = "
+		SELECT
+			r.id,
+			r.status,
+			r.masterstatus,
+			r.mastersourceip,
+			r.mastervideofilename,
+			rv.status AS recordingversionstatus,
+			rv.ismobilecompatible
+		FROM
+			recordings AS r,
+			recordings_versions AS rv,
+			encoding_profiles AS ep
+		WHERE
+			r.mastersourceip = '" . $node . "' AND
+			r.status = '" . $jconf['dbstatus_copystorage_ok'] . "' AND
+			( r.mobilestatus IS NULL OR r.mobilestatus <> '" . $jconf['dbstatus_copystorage_ok'] . "' ) AND
+			r.id = rv.recordingid AND
+			rv.status = '" . $jconf['dbstatus_copystorage_ok'] . "' AND
+			rv.ismobilecompatible = 1 AND
+			rv.encodingprofileid = ep.id AND
+			ep.type = 'recording' AND
+			( ep.mediatype = 'video' OR ( r.mastermediatype = 'audio' AND ep.mediatype = 'audio' ) )
 		GROUP BY
 			r.id";
 
@@ -612,6 +678,7 @@ global $debug, $jconf, $app;
             infrastructure_nodes AS ins
         WHERE
             ins.type = 'converter' AND
+            ins.disabled = 0 AND
             ( ins.statusstorage = 'ok' OR ins.default = 1 )
         ORDER BY
             ins.cpuload15min ASC,

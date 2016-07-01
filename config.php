@@ -112,8 +112,8 @@ $config = array(
   'ocr_engine'             => 'cuneiform', // Supported: cuneiform, tesseract
   'ocr_alt'                => 'cuneiform', // Path to ocr binary
   'ocr_frame_distance'     => 1.0,         // Desired distance between frames (in seconds)
-  'ocr_threshold'          => 0.004,       // Max. difference between ocr frames 
-  // Converter restraints                  
+  'ocr_threshold'          => 0.004,       // Max. difference between ocr frames
+  // Converter restraints
   'video_min_length'       => 3,           // Min. media length in seconds (unused!)
   'video_res_modulo'       => 8,           // Rescaled video X/Y resolution modulo 0 divider (16 = F4V!)
   'video_max_bw'           => 6500000,     // Maximum of video bandwidth (absolute limit)
@@ -141,7 +141,7 @@ $config = array(
   ),
   //----
   'wowza'      => array(
-    
+
     'httpurl'           => 'http://%s/vsq/_definst_/',
     'sechttpurl'        => 'https://%s/vsq/_definst_/',
 
@@ -154,53 +154,53 @@ $config = array(
     'rtmpurl'           => 'rtmp://%s:1935/vsq/',
     'secrtmpsurl'       => 'rtmps://%s/vsqsec/',
     'secrtmpurl'        => 'rtmpe://%s:1935/vsqsec/',
-    
+
     'rtmpturl'          => 'rtmpt://%s:80/vsq/',
     'secrtmpturl'       => 'rtmpte://%s:80/vsqsec/',
-    
+
     'rtspurl'           => 'rtsp://%s/vsq/_definst_/',
     'secrtspurl'        => 'rtsp://%s/vsqsec/_definst_/',
-    
+
     'liveingressurl'     => 'rtmp://stream.videosquare.eu:1935/vsqlive/',
     'secliveingressurl'  => 'rtmps://stream.videosquare.eu:1935/vsqlivesec/',
     'secliveingressurl2' => 'rtmpe://stream.videosquare.eu:1935/vsqlivesec/',
     'secliveingressurl3' => 'rtmp://stream.videosquare.eu:1935/vsqlivesec/', // ahova feltöltenek, rtmp szigoruan de sec application
-    
+
     'liveurl'           => 'rtmpt://%s:80/vsqlive/',
     'secliveurl'        => 'rtmpte://%s:80/vsqlivesec/',
-    
+
     'livehttpurl'       => 'http://%s/vsqlive/',
     'seclivehttpurl'    => 'https://%s/vsqlivesec/',
-    
+
     'livertspurl'       => 'rtsp://%s/vsqlive/',
     'seclivertspurl'    => 'rtsp://%s/vsqlivesec/',
-    
+
     'livertmpurl'       => 'rtmp://%s:1935/vsqlive/',
     'seclivertmpsurl'   => 'rtmps://%s:1935/vsqlivesec/',
     'seclivertmpeurl'   => 'rtmpe://%s:1935/vsqlivesec/',
     'seclivertmpurl'    => 'rtmp://%s:1935/vsqlivesec/',
-    
+
   ),
   //----
   // lehet ures is ha nem akarjuk redirectelni a usert, ilyenkor
   // siman die()-ol az applikacio
   'organizationfallbackurl' => 'http://videosquare.eu',
   'chatpolltimems'          => 1000,
-  
+
   //----
   // Az users.issingleloginenforced=1 tipusu usereknel
-  // annak az idonek a hossza masodpercekben, amig a usert 
+  // annak az idonek a hossza masodpercekben, amig a usert
   // belepettnek tekintjuk ujabb oldal letoltese nelkul. Maximum ennyi
   // ideig nem tud belepni a user megegyszer, ha pl. lezarta a bongeszojet,
   // es elvesztette a sessionazonositojat.
-  // 
-  // Ha egy felhasznalo elkezd nezni egy kozvetitest, es kozben lejar ez az 
-  // idoablak, akkor masik felhasznalo be tud lepni 
+  //
+  // Ha egy felhasznalo elkezd nezni egy kozvetitest, es kozben lejar ez az
+  // idoablak, akkor masik felhasznalo be tud lepni
   // parhuzamosan: ennek elkerulesere ajax "ping" funkcio hasznalhato, ami
   // hiba eseten akar ki is dobhatja a felhasznalot.
   'sessiontimeout' => 135,
   'sessionpingseconds' => 60,
-  
+
   //----
   // Az itt felsorolt IP cimeknel nem ellenorizunk semmit, rogton jova
   // hagyjuk a live/checkstreamaccess hivasnal (lehet ipv4/ipv6, nem szamit)
@@ -209,7 +209,7 @@ $config = array(
     '91.120.59.241',  // stream2.videosquare.eu
     '91.120.59.236'   // conv-1.videosquare.eu
   ),
-  
+
   //----
   // Felvetelhez tartozo utolso megtekintett pozicionak frissitese ennyi
   // masodpercenkent tortenik
@@ -218,7 +218,7 @@ $config = array(
   //----
   // A flash altal is hasznalt kozos seed amivel a hasheket hasznaljuk.
   'flashhashseed' => 'ï!½Õz]Â7}h=ÎádÎ¶WâRì5mÂgà-ôZõ»',
-  
+
   //----
   // Ha true akkor https-re forcoljuk az api urlt, amugy automata attol fuggoen
   // hogy milyen a site
@@ -235,18 +235,18 @@ $config = array(
     'server' => 'stream.videosquare.eu',
     'type'   => 'wowza',
   ),
-  
+
   //----
   // adott userid-k minden egyes a frontend fele erkezo requestje logolasra kerul
   // a data/logs/userdebuglog.txt -ben
   'debugloguserids' => array(
   ),
-  
+
   //----
   'loadgoogleanalytics' => true,
   'googleanalytics_fallbacktrackingcode' => 'UA-34892054-1',
   'loadaddthis' => true,
-  
+
   //----
   'setupdirs' => array(
     'user'            => 'dam', // a user/group amire chown -R eljuk az egesz konyvtarat
@@ -264,12 +264,21 @@ $config = array(
         'perms' => 'a+w',
       ),
       array(
+        'dir'   => $this->basepath . 'data/watchdog',
+        'user'  => 'conv',
+        'perms' => 'a+w',
+      ),
+      array(
         'dir'   => $this->basepath . 'modules/Locale',
         'perms' => 'a+w',
       ),
       array(
         'dir'   => $this->basepath . 'modules/**/**/Locale',
         'perms' => 'a+w',
+      ),
+      array(
+        'dir'   => $this->basepath . 'libraries/Videosquare',
+        'user' => 'conv',
       ),
     ),
   ),
@@ -321,12 +330,12 @@ $config = array(
       ),
     ),
   ),
-  // Job priorities 
+  // Job priorities
   'nice'            => 'nice -n 19',  // General: lowest
   'nice_high'       => 'nice -n 10',  // High
   'nice_moderate'   => 'nice -n 14',  // Moderate
   'encoding_nice'   => "nice -n 10",
-  
+
   // Sleep duration - number of seconds to sleep after an operation
   'sleep_media'     => 60,            // Media conversion
   'sleep_short'     => 5,             // Short sleep
@@ -368,7 +377,7 @@ $config = array(
   'ssh_key'         => '/home/conv/.ssh/id_rsa',
   'ssh_pubkey'      => '/home/conv/.ssh/id_rsa.pub',
   'ssh_fingerprint' => null,    // Server fingerprint to check (32x hex: 4904741c63e5a63d68578f6e52774e01)
-  
+
   // flash playernek atadott config valtozok, ha valamit nem kell atadni
   // akkor szimplan torolni kell oket
   'flashplayer_extraconfig' => array(

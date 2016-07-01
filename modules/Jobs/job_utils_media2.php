@@ -2,66 +2,69 @@
 
 // Clean up converter's temp directory
 function cleanUpConverterTemporaryStorage() {
-global $app, $jconf, $debug, $myjobid;
+	global $app, $jconf, $debug, $myjobid;
 
-		// Select recording versions that are being converted or failed (processing is in progress)
-		$query = "
-				SELECT
-						rv.recordingid
-				FROM
-						recordings_versions AS rv
-				WHERE
-						rv.status = '" . $jconf['dbstatus_conv'] . "' OR
-						rv.status = '" . $jconf['dbstatus_convert'] . "' OR
-						rv.status LIKE 'failed%'
-				GROUP BY
-						rv.recordingid";
-		
-		try {
-				$model = $app->bootstrap->getModel('recordings_versions');
-				$rs = $model->safeExecute($query);
+	$ldir = $jconf['log_dir'];
+	$lfile = "{$myjobid}.log";
+	
+	// Select recording versions that are being converted or failed (processing is in progress)
+	$query = "
+		SELECT
+		rv.recordingid
+		FROM
+		recordings_versions AS rv
+		WHERE
+		rv.status = '" . $jconf['dbstatus_conv'] . "' OR
+		rv.status = '" . $jconf['dbstatus_convert'] . "' OR
+		rv.status LIKE 'failed%'
+		GROUP BY
+		rv.recordingid";
+
+	try {
+		$model = $app->bootstrap->getModel('recordings_versions');
+		$rs = $model->safeExecute($query);
 	} catch (exception $err) {
-		$debug->log($jconf['log_dir'], $jconf['jobid_media_convert'] . ".log", "[ERROR] SQL query failed." . trim($query), $sendmail = true);
+		$debug->log($ldir, $lfile, "[ERROR] SQL query failed." . trim($query), $sendmail = true);
 		return false;
 	}
 
-		// Index unfinished recordings
-		$recordings_unfinished = array();
-		while ( !$rs->EOF ) {
-				$recording = $rs->fields;
-				$recordings_unfinished[$recording['recordingid']] = true;
-				$rs->MoveNext();
-		}
-		
-		$dirs = array(
-				$jconf['master_dir'],
-				$jconf['media_dir'],
-				$jconf['content_dir']
-		);
+	// Index unfinished recordings
+	$recordings_unfinished = array();
+	while ( !$rs->EOF ) {
+		$recording = $rs->fields;
+		$recordings_unfinished[$recording['recordingid']] = true;
+		$rs->MoveNext();
+	}
 
-		foreach ( $dirs as $key => $dir) {
-				
-				$files = getFileList($dir);
-				if ( empty($files) ) continue;
-				
-				for ( $i = 0; $i < count($files); $i++ ) {
+	$dirs = array(
+		$jconf['master_dir'],
+		$jconf['media_dir'],
+		$jconf['content_dir']
+	);
 
-						// Get recording id from path
-						$tmp = str_replace($dir, "", $files[$i]['name']);
-						$recid = str_replace(array("/","\\"), "", $tmp);
-						
-						if ( !is_numeric($recid) ) continue;
-						
-						if ( !isset($recordings_unfinished[$recid]) ) {
-								$err = remove_file_ifexists($files[$i]['name']);
-								if ( !$err['code'] ) {
-										$debug->log($jconf['log_dir'], $myjobid, $err['message'] . "\nCOMMAND: " . $err['command'] . "\nRESULT: " . $err['result'], $sendmail = false);
-								} else {
-										$debug->log($jconf['log_dir'], $myjobid, "[INFO] Converter temp directory removed (conversion ready): " . $files[$i]['name'], $sendmail = false);
-								}
-						}
+	foreach ( $dirs as $key => $dir) {
+
+		$files = getFileList($dir);
+		if ( empty($files) ) continue;
+
+		for ( $i = 0; $i < count($files); $i++ ) {
+
+			// Get recording id from path
+			$tmp = str_replace($dir, "", $files[$i]['name']);
+			$recid = str_replace(array("/","\\"), "", $tmp);
+
+			if ( !is_numeric($recid) ) continue;
+
+			if ( !isset($recordings_unfinished[$recid]) ) {
+				$err = remove_file_ifexists($files[$i]['name']);
+				if ( !$err['code'] ) {
+					$debug->log($ldir, $lfile, $err['message'] . "\nCOMMAND: " . $err['command'] . "\nRESULT: " . $err['result'], $sendmail = false);
+				} else {
+					$debug->log($ldir, $lfile, "[INFO] Converter temp directory removed (conversion ready): " . $files[$i]['name'], $sendmail = false);
 				}
+			}
 		}
+	}
 
 	return true;
 }
@@ -111,20 +114,19 @@ class runExt {
 	}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-	function setPollingRate($pollrate_usec = 50000, $pollrate_sec = 0) {
+	function setPollingRate($pollrate_sec = .0) {
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-		if (isset($pollrate_sec) && is_numeric($pollrate_sec)) $this->polling_sec = (int) $pollrate_sec;
-
-		if (isset($pollrate_usec) && is_numeric($pollrate_usec)) {
-			$this->polling_sec += (int) ($pollrate_usec / 1000000);
-			$pollrate_usec = $pollrate_usec % 1000000;
-			if ($pollrate_sec == 0 && $pollrate_usec < 1000) {
-					$pollrate_usec = 1000;
+		if (isset($pollrate_sec) && is_numeric($pollrate_sec)) {
+			if ($pollrate_sec < 0.001) {
+				$this->polling_sec  = 0;
+				$this->polling_usec = 1000; // max. polling rate is 1ms
+			} else {
+				$this->polling_sec  = (int) $pollrate_sec;
+				$this->polling_usec = ($pollrate_sec - $this->polling_sec) * 1000000;
 			}
-			$this->polling_usec = (int) $pollrate_usec;
 		}
 	}
-	
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 	function addCallback($aCallback, $param = null) {
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -822,9 +824,9 @@ global $app, $debug, $jconf;
 		
 		// EXECUTE FFMPEG COMMAND
 		$conv = new runExt($c, 14400);
-		$conv->setPollingRate(250000);
+		$conv->setPollingRate(1.0);
 		
-		if (function_exists('callWatchdog')) $conv->addCallback('callWatchdog', 60);
+		if (function_exists('callWatchdog')) $conv->addCallback('callWatchdog', 120);
 		
 		$conv->run();
 		
@@ -922,12 +924,21 @@ global $app, $debug, $jconf;
 	return $err;
 }
 
-function callWatchdog($_, $watchdogtimeout) {
+/**
+ * Callback function to update watchdog file in parallel with system calls executed via runExt().
+ * Useful when the external command has longer execution time than the watchdog timeout.
+ * 
+ * @global obj $app instance of Springboard App object
+ * @param null $_ -unused-
+ * @param int/float $watchdogseconds interval of watchdog calls
+ */
+
+function callWatchdog($_, $watchdogseconds) {
 	global $app;
 	static $last_call = 0;
 	
 	$now = time();
-	if (isset($watchdogtimeout) && ($now - $last_call) > $watchdogtimeout) {
+	if (isset($watchdogseconds) && ($now - $last_call) > $watchdogseconds) {
 		@$app->watchdog();
 	}
 }

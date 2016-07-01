@@ -6,7 +6,7 @@ class Controller extends \Visitor\Controller {
     'index'          => 'public',
     'browser'        => 'public',
   );
-  
+
   public function browserAction() {
     $info = $this->bootstrap->getSession('browser');
     $info['mobile'] = (bool)$this->application->getParameter('mobile');
@@ -14,7 +14,7 @@ class Controller extends \Visitor\Controller {
     $info['mobiledevice'] = $this->application->getParameter('device');
     $info['tablet'] = (bool)$this->application->getParameter('tablet');
   }
-  
+
   public function indexAction() {
     die("");
   }

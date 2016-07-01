@@ -1,0 +1,42 @@
+## Videosquare RTMP management interface
+
+server {
+
+  # Include server level configuration files
+  include     /etc/nginx/conf.d/*.server.conf;
+
+  # No SSL
+  listen 10.10.3.174:8086;
+  server_name vsq-conv.bonafarm.hu;
+
+  # SSL
+#  listen 8086 ssl;
+#  server_name vsq-conv.bonafarm.hu;
+
+  location / {
+    root  /var/www/nginx;
+    index index.html;
+  }
+
+  location /stat {
+    rtmp_stat all;
+    rtmp_stat_stylesheet stat.xsl;
+  }
+
+  location /stat.xsl {
+    root /var/www/nginx;
+  }
+
+  location /control {
+    rtmp_control all;
+    deny all;
+  }
+
+  location /nginx_status {
+#    stub_status on;
+    access_log off;
+    allow 127.0.0.1;
+    deny all;
+  }
+
+} # server
