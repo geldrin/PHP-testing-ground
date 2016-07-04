@@ -1512,8 +1512,10 @@ class Livefeeds extends \Springboard\Model {
   }
 
   private function generatePIN() {
-    // csak 4 karakter!!!
-    return mt_rand(1000, 9999);
+    $len = $this->bootstrap->config['livepinlength'];
+    $min = pow( 10, $len - 1 );
+    $max = pow( 10, $len ) - 1;
+    return mt_rand( $min, $max );
   }
 
   public function regeneratePIN( $pin = 0 ) {

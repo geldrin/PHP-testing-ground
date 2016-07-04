@@ -407,6 +407,9 @@ $config = array(
   // listaban, ez a szam mondja meg hogy hany napnal korabbi felvetelek
   // kerulhetnek a listaba
   'combinedratingcutoffdays' => 180,
+
+  // PIN hossza karakterben
+  'livepinlength' => 6,
 );
 
 $config['phpsettings'] = array(
