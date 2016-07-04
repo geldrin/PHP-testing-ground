@@ -1482,31 +1482,89 @@ class Livefeeds extends \Springboard\Model {
     }
   }
 
-  public function insert( $values ) {
-    $i = 10;
-    while( $i ) {
-      $i--;
+  private function tryExecuteUniqueSQL( $callback, $args ) {
+    // elso arg a mienk, garantaljuk
+    array_unshift( $args, 0 );
 
-      if ( !isset( $values['pin'] ) or !$values['pin'] )
-        // csak 4 karakter!!!
-        $values['pin'] = mt_rand(1000, 9999);
+    $i = 0;
+    while( $i <= 10 ) {
+      $i++;
 
       try {
-        return parent::insert( $values );
+        $args[0] = $i;
+        $sql = call_user_func_array( $callback, $args );
+        $ret = $this->db->execute( $sql );
       } catch( \Exception $e ) {
 
         $errno = $this->db->ErrorNo();
         // mysql unique constraint error code 1586/1062/893
-        if ( $errno == 1586 or $errno == 1062 or $errno == 893 ) {
-          unset( $values['pin'] );
-          continue;
-        } else // valami mas hiba, re-throw
+        if ( $errno == 1586 or $errno == 1062 or $errno == 893 )
+          continue; // re-try
+        else // valami mas hiba, re-throw
           throw $e;
 
       }
+
+      return $ret;
     }
 
-    throw new \Exception('could not generate a unique pin in 9 tries');
+    throw new \Exception('could not execute query in 10 tries: ' . $sql );
+  }
+
+  private function generatePIN() {
+    // csak 4 karakter!!!
+    return mt_rand(1000, 9999);
+  }
+
+  public function regeneratePIN( $pin = 0 ) {
+    $this->ensureID();
+    $id = $this->id;
+
+    if ( !$pin )
+      $pin = $this->generatePIN();
+
+    $this->tryExecuteUniqueSQL(
+      array( $this, '_regenPINCallback'),
+      array( $id, $pin )
+    );
+  }
+
+  private function _regenPINCallback( $trynum, $id, $pin ) {
+    if ( $trynum !== 1 )
+      $pin = $this->generatePIN();
+
+    return "
+      UPDATE livefeeds
+      SET pin = '$pin'
+      WHERE id = '$id'
+      LIMIT 1
+    ";
+  }
+
+  public function insert( $values ) {
+    if ( !isset( $values['pin'] ) or !$values['pin'] )
+      $values['pin'] = $this->generatePIN();
+
+    $this->rs  = $this->select( -1 );
+
+    $rs = $this->tryExecuteUniqueSQL(
+      array( $this, '_insertCallback'),
+      array( $values )
+    );
+
+    $this->rs  = null;
+    $this->id  = $this->sqlInsertID( $rs );
+    $this->row = $values;
+    $this->row[ $this->primarykey ] = $this->id;
+
+    return $this->row;
+  }
+
+  private function _insertCallback( $trynum, $values ) {
+    if ( $trynum !== 1 )
+      $values['pin'] = $this->generatePIN();
+
+    return $this->sqlInsert( $values );
   }
 
   public function selectByPIN( $pin ) {
