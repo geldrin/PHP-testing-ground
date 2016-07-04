@@ -1508,4 +1508,21 @@ class Livefeeds extends \Springboard\Model {
 
     throw new \Exception('could not generate a unique pin in 9 tries');
   }
+
+  public function selectByPIN( $pin ) {
+    $pin = $this->db->qstr( $pin );
+    $ret = $this->db->getRow("
+      SELECT *
+      FROM livefeeds
+      WHERE pin = $pin
+      LIMIT 1
+    ");
+
+    if ( !empty( $ret ) ) {
+      $this->row = $ret;
+      $this->id = $ret['id'];
+    }
+
+    return $ret;
+  }
 }

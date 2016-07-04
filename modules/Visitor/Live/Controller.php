@@ -81,6 +81,12 @@ class Controller extends \Visitor\Controller {
     // crestron all-in-one api endpoint
     'events' => array(
     ),
+    // crestron livefeed lekeres pin alapjan
+    'getfeedbypin' => array(
+      'pin' => array(
+        'type' => 'id',
+      ),
+    ),
   );
 
   public function init() {
@@ -1034,6 +1040,21 @@ class Controller extends \Visitor\Controller {
     $items = $this->addFeedsToEvents( $items );
 
     return $items;
+  }
+
+  public function getfeedbypinAction( $pin ) {
+    if ( !$this->organization['islivepinenabled'] )
+      throw new \Visitor\Api\ApiException('PINs disabled for the organization', false, false );
+
+    $feedModel = $this->bootstrap->getModel('livefeeds');
+    $feed = $feedModel->selectByPIN( $pin );
+    if ( empty( $feed ) )
+      throw new \Visitor\Api\ApiException('No feed for the PIN', false, false );
+
+    $feeds = array( $feed );
+    $this->addStreamsToFeeds( $feeds );
+    $feed = $feeds[0];
+    return $feed;
   }
 
   private function addFeedsToEvents( &$events ) {
