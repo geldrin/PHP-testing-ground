@@ -1481,4 +1481,31 @@ class Livefeeds extends \Springboard\Model {
 
     }
   }
+
+  public function insert( $values ) {
+    $i = 10;
+    while( $i ) {
+      $i--;
+
+      if ( !isset( $values['pin'] ) or !$values['pin'] )
+        // csak 4 karakter!!!
+        $values['pin'] = mt_rand(1000, 9999);
+
+      try {
+        return parent::insert( $values );
+      } catch( \Exception $e ) {
+
+        $errno = $this->db->ErrorNo();
+        // mysql unique constraint error code 1586/1062/893
+        if ( $errno == 1586 or $errno == 1062 or $errno == 893 ) {
+          unset( $values['pin'] );
+          continue;
+        } else // valami mas hiba, re-throw
+          throw $e;
+
+      }
+    }
+
+    throw new \Exception('could not generate a unique pin in 9 tries');
+  }
 }
