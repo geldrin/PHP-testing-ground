@@ -1583,4 +1583,24 @@ class Livefeeds extends \Springboard\Model {
 
     return $ret;
   }
+
+  public function getTeacherCount() {
+    $this->ensureID();
+    // TODO
+  }
+
+  public function getTeacherArray( $start, $limit, $order ) {
+    $this->ensureID();
+    // TODO
+    return array();
+  }
+
+  public function insertTeacher( $values ) {
+    // TODO
+  }
+
+  public function deleteTeacher( $teacherid ) {
+    $this->ensureID();
+    // TODO
+  }
 }
