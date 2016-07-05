@@ -245,12 +245,14 @@ class Invite extends \Visitor\HelpForm {
   }
 
   // az alap forward url, lehet ures
+  // arra a contentre visz amire meghivtak a usert (ha van)
   private function getBaseForwardURL( &$values ) {
     if ( $values['customforwardurl'] )
       return $values['customforwardurl'];
 
     $module     = '';
     $forwardurl = '';
+    // mert a contenttype nocontent|recordingid|livefeedid|channelid lehet
     switch( $values['contenttype'] ) {
       case 'recordingid':
         $module = 'recordings/details/';
@@ -264,24 +266,28 @@ class Invite extends \Visitor\HelpForm {
         $module = 'channels/details/';
         $obj = $this->bootstrap->getModel('channels');
         break;
+      case 'nocontent':
+        return '';
+        break;
+      default:
+        throw new \Exception('Unhandled contenttype: ' . $values['contenttype'] );
+        break;
     }
 
-    if ( $module ) {
-      $forwardurl =
-        \Springboard\Language::get() . '/' . $module .
-        $values[ $values['contenttype'] ] . '-'
-      ;
+    $forwardurl =
+      \Springboard\Language::get() . '/' . $module .
+      $values[ $values['contenttype'] ] . '-'
+    ;
 
-      if ( $values['externalsend'] === 'external' ) {
-        $obj->select( $values[ $values['contenttype'] ] );
-        $title = '';
-        if ( isset( $obj->row['title'] ) )
-          $title = $obj->row['title'];
-        elseif ( isset( $obj->row['name'] ) )
-          $title = $obj->row['name'];
+    if ( $values['externalsend'] === 'external' ) {
+      $obj->select( $values[ $values['contenttype'] ] );
+      $title = '';
+      if ( isset( $obj->row['title'] ) )
+        $title = $obj->row['title'];
+      elseif ( isset( $obj->row['name'] ) )
+        $title = $obj->row['name'];
 
-        $forwardurl .= \Springboard\Filesystem::filenameize( $title );
-      }
+      $forwardurl .= \Springboard\Filesystem::filenameize( $title );
     }
 
     return $forwardurl;
@@ -293,7 +299,7 @@ class Invite extends \Visitor\HelpForm {
 
     // ha mar van user-je akkor be kell lepjen,
     // amugy regisztralas utan kell elkuldenunk a forwardurl-re ha van
-    if ( isset( $invite['registereduserid'] ) )
+    if ( isset( $invite['registereduserid'] ) and $invite['registereduserid'] )
       $url = $this->baseuri . 'login';
     else
       $url =
