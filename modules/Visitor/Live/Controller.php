@@ -30,6 +30,7 @@ class Controller extends \Visitor\Controller {
     'analytics'            => 'liveadmin|clientadmin',
     'delete'               => 'liveadmin|clientadmin',
     'archive'              => 'liveadmin|clientadmin',
+    'regeneratepin'        => 'member',
   );
 
   public $forms = array(
@@ -1092,5 +1093,33 @@ class Controller extends \Visitor\Controller {
     }
 
     return $feeds;
+  }
+
+  public function regeneratepinAction() {
+    if ( !$this->organization['islivepinenabled'] )
+      $this->redirect('');
+
+    $feedModel = $this->modelOrganizationAndUserIDCheck(
+      'livefeeds',
+      $this->application->getNumericParameter('id')
+    );
+    $feedModel->regeneratePIN();
+
+    if ( $this->isAjaxRequest() ) {
+      // refresh, az uj pin miatt
+      $feedModel->select( $feedModel->id );
+      $this->jsonOutput( array(
+          'success' => true,
+          'pin' => $feedModel->row['pin'],
+        )
+      );
+    }
+
+    $this->redirect(
+      $this->application->getParameter(
+        'forward',
+        'live/managefeeds/' . $feedModel->row['channelid']
+      )
+    );
   }
 }

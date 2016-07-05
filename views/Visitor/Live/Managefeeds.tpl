@@ -26,7 +26,9 @@
       <a href="{$language}/live/view/{$feed.id},{$feed.name|filenameize}" class="left"><b>{$feed.name|mb_wordwrap:30|escape:html}</b></a>
       <span class="currentviewers" data-pollurl="{$language}/live/viewers?livefeedid={$feed.id}" data-template="{#live__currentviewers#|escape:html}">{#live__currentviewers#|sprintf:$currentviewers}</span>
       {if $organization.islivepinenabled}
-        <span class="livepin">{#live__currentpin#|sprintf:$feed.pin}</span>
+        {capture assign=regeneratePINURL}{$language}/live/regeneratepin/{$feed.id}?forward={$FULL_URI|escape:url}{/capture}
+        {assign var=regeneratePINURL value=$regeneratePINURL|escape:html}
+        <span class="livepin">{#live__currentpin#|sprintf:$feed.pin:$regeneratePINURL}</span>
       {/if}
       <br/>
       <a href="{$language}/live/analytics/{$channel.id}?feedids[]={$feed.id}">{#live__analytics#}</a>
