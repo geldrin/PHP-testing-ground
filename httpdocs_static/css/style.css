@@ -3347,7 +3347,15 @@ li#languageselectorlink span {
 #feeds .serverlink select {
   max-width: 200px;
 }
-
+#feeds .livepin {
+  float: right;
+}
+#feeds .livepin a {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  background: #0ff; /* TODO gear icon */
+}
 #live_analytics .singlecolumn .inputtext {
   width: 105px;
 }

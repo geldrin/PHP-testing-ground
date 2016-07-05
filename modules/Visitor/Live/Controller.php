@@ -31,6 +31,8 @@ class Controller extends \Visitor\Controller {
     'delete'               => 'liveadmin|clientadmin',
     'archive'              => 'liveadmin|clientadmin',
     'regeneratepin'        => 'member',
+    'teacherinvites'       => 'member',
+    'inviteteachers'       => 'member',
   );
 
   public $forms = array(
@@ -42,11 +44,13 @@ class Controller extends \Visitor\Controller {
     'modifystream'         => 'Visitor\\Live\\Form\\Modifystream',
     'createchat'           => 'Visitor\\Live\\Form\\Createchat',
     'analytics'            => 'Visitor\\Live\\Form\\Analytics',
+    'inviteteachers'        => 'Visitor\\Live\\Form\\Inviteteachers',
   );
 
   public $paging = array(
     'index'   => 'Visitor\\Live\\Paging\\Index',
     'details' => 'Visitor\\Live\\Paging\\Details',
+    'teacherinvites' => 'Visitor\\Live\\Paging\\Teacherinvites',
   );
 
   public $apisignature = array(
@@ -516,6 +520,26 @@ class Controller extends \Visitor\Controller {
       )
     );
 
+  }
+
+  public function deleteteacherAction() {
+    if ( !$this->organization['islivepinenabled'] )
+      $this->redirect('');
+
+    $feedModel = $this->controller->modelOrganizationAndUserIDCheck(
+      'livefeeds',
+      $this->application->getNumericParameter('id')
+    );
+    $teacherid = $this->application->getNumericParameter('livefeedteacherid');
+
+    $feedModel->deleteTeacher( $teacherid );
+
+    $this->redirect(
+      $this->application->getParameter(
+        'forward',
+        'live/managefeeds/' . $channelModel->id
+      )
+    );
   }
 
   public function togglefeedAction() {

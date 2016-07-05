@@ -1585,4 +1585,75 @@ class Livefeeds extends \Springboard\Model {
 
     return $ret;
   }
+
+  public function getInviteCount() {
+    $this->ensureID();
+    $id = $this->id;
+    return $this->db->getOne("
+      SELECT COUNT(*)
+      FROM livefeed_teacherinvites
+      WHERE livefeedid = '$id'
+      LIMIT 1
+    ");
+  }
+
+  public function getInviteArray( $start, $limit, $order ) {
+    $this->ensureID();
+    $id = $this->id;
+
+    $ret = $this->db->getArray("
+      SELECT *
+      FROM livefeed_teacherinvites
+      WHERE livefeedid = '$id'
+      ORDER BY $order
+      LIMIT $start, $limit
+    ");
+
+    if ( empty( $ret ) )
+      return $ret;
+
+    foreach( $ret as $key => $row )
+      $this->getInviteInfo( $ret[ $key ] );
+
+    return $ret;
+  }
+
+  public function getInviteInfo( &$row ) {
+    $emails = array();
+
+    $userids = \Springboard\Tools::explodeIDs(',', $row['userids'] );
+    if ( !empty( $userids ) ) {
+      $row['users'] = $this->db->getArray("
+        SELECT
+          usr.id,
+          IF(
+            usr.nickname IS NULL OR LENGTH(usr.nickname) = 0,
+            CONCAT(usr.namelast, '.', usr.namefirst),
+            usr.nickname
+          ) AS nickname,
+          usr.nameformat,
+          usr.nameprefix,
+          usr.namefirst,
+          usr.namelast.
+          usr.email
+        FROM users
+        WHERE id IN('" . implode("', '", $userids ) . "')
+      ");
+
+      foreach( $row['users'] as $user )
+        $emails[ $user['email'] ] = true;
+    }
+
+    $row['emails'] = \Springboard\Tools::explodeAndTrim(
+      ',', $row['emails']
+    );
+
+    if ( !empty( $row['emails'] ) ) {
+      foreach( $row['emails'] as $email )
+        $emails[ $email ] = true;
+    }
+
+    $row['emailcount'] = count( $emails );
+    return $emails;
+  }
 }

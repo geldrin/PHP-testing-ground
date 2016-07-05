@@ -26,9 +26,9 @@
       <a href="{$language}/live/view/{$feed.id},{$feed.name|filenameize}" class="left"><b>{$feed.name|mb_wordwrap:30|escape:html}</b></a>
       <span class="currentviewers" data-pollurl="{$language}/live/viewers?livefeedid={$feed.id}" data-template="{#live__currentviewers#|escape:html}">{#live__currentviewers#|sprintf:$currentviewers}</span>
       {if $organization.islivepinenabled}
-        {capture assign=regeneratePINURL}{$language}/live/regeneratepin/{$feed.id}?forward={$FULL_URI|escape:url}{/capture}
-        {assign var=regeneratePINURL value=$regeneratePINURL|escape:html}
-        <span class="livepin">{#live__currentpin#|sprintf:$feed.pin:$regeneratePINURL}</span>
+        {capture assign=inviteURL}{$language}/live/inviteteachers/{$feed.id}?forward={$FULL_URI|escape:url}{/capture}
+        {assign var=inviteURL value=$inviteURL|escape:html}
+        <span class="livepin">{#live__currentpin#|sprintf:$feed.pin:$inviteURL}</span>
       {/if}
       <br/>
       <a href="{$language}/live/analytics/{$channel.id}?feedids[]={$feed.id}">{#live__analytics#}</a>
@@ -38,6 +38,9 @@
       {/if}
       {if !empty( $feed.streams )}
         | <a href="#" class="liveembed">{#live__embed#}</a>
+      {/if}
+      {if $organization.islivepinenabled}
+        | <a href="{$language}/live/teachers/{$feed.id}">{#live__teachers#}</a>
       {/if}
       | <a href="{$language}/live/chatadmin/{$feed.id}">{#live__chatadmin#}</a>
       | <a href="{$language}/live/chatexport/{$feed.id}">{#live__chatexport#}</a>
