@@ -34,12 +34,8 @@ flush();
 
 $pins = array();
 
-foreach( $rs as $row ) {
-  if ( $row['pin'] )
-    continue;
-
+foreach( $rs as $row )
   $pins[ $row['id'] ] = mt_rand( $min, $max );
-}
 
 $rs->close();
 
@@ -56,6 +52,8 @@ foreach( $pins as $id => $pin ) {
         WHERE id = '$id'
         LIMIT 1
       ");
+      echo ".";
+      flush();
       break;
     } catch( \Exception $e ) {
       $errno = $this->db->ErrorNo();
