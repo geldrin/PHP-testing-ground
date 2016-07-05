@@ -10,7 +10,7 @@ class Invite extends \Visitor\HelpForm {
 
   private $csvHandle;
   private $csvDelimiter = ';';
-  private $userids; // hashmap email -> userinfoval
+  private $userids; // lookup table email => userinfoval
   private $baseuri; // cache mezo csv meghivo urlhez
 
   public function postSetupForm() {
@@ -24,16 +24,72 @@ class Invite extends \Visitor\HelpForm {
   public function onComplete() {
     $this->bootstrap->includeTemplatePlugin('nameformat');
     $values       = $this->form->getElementValues( 0 );
-    $user         = $this->bootstrap->getSession('user');
     $userModel    = $this->bootstrap->getModel('users');
-    $invModel     = $this->bootstrap->getModel('users_invitations');
-    $l = $this->l = $this->bootstrap->getLocalization();
     $this->crypto = $this->bootstrap->getEncryption();
+    $l = $this->l = $this->bootstrap->getLocalization();
     $externalsend = $values['externalsend'] === 'external';
 
-    switch( $values['usertype'] ) {
+    // non-authoritative lookup table: email => user(ha van)
+    $emails = $this->getEmailsByType( $values['usertype'], $values );
+    if ( $emails === null ) // hiba, a form mar invalidalva
+      return;
+
+    // authoritative lookup table: email => user
+    $this->userids = $this->emailsToUsers( $emails );
+    // a handleTemplate a \Visitor\Form -bol
+    $template = $this->handleTemplate( $userModel, $values );
+
+    $templateid  = null;
+    if ( !empty( $template ) and $template['id'] )
+      $templateid = $template['id'];
+
+    // default template allitas
+    if ( !$templateid and !$externalsend )
+      $this->controller->toSmarty['template'] = array(
+        'subject' => $l('users', 'templatesubject_default'),
+      );
+
+    // error check
+    $messages = $this->form->getMessages();
+
+    if ( $externalsend )
+      $this->initCSVOutput( $values );
+
+    // kuldes
+    $invitecount = $this->insertInvitations( $emails, $values, $templateid );
+
+    // user feedback
+    $invitecount = $this->formatInviteCount( $invitecount );
+    if ( $invitecount == '1' )
+      $redirmessage = $l('users', 'user_invited');
+    else
+      $redirmessage = sprintf( $l('users', 'users_invited'), $invitecount );
+
+    // ha nincs csv kuldes akkor rogton redirect
+    if ( empty( $messages ) and !$externalsend )
+      $this->controller->redirectWithMessage(
+        'users/invitations',
+        $redirmessage
+      );
+
+    // amugy ki kell kuldjuk a csv-t es utana ha betoltodik
+    // az oldal mutatjuk az uzenetet
+    $this->controller->toSmarty['sessionmessage'] = $redirmessage;
+
+    // ha csv kuldes es kuldtunk is valamit akkor elhalunk
+    if ( $externalsend and $invitecount )
+      die();
+  }
+
+  // duplikatumok nelkuli email lookup tablet ad vissza,
+  // email => userinfo(ha van, amugy null)
+  // nem authoritative a userinfo, kesobb biztosra megyunk
+  private function getEmailsByType( $type, &$values ) {
+    $l = $this->l;
+
+    switch( $type ) {
       case 'single':
-        $users = array(
+        $emails = array(
           $values['email'] => null,
         );
         break;
@@ -50,68 +106,148 @@ class Invite extends \Visitor\HelpForm {
 
           $this->form->addMessage( $l('users', 'invitefile_help') );
           $this->form->invalidate();
-          return;
+          return null;
 
         }
 
-        $users = $this->parseInviteFile(
+        $emails = $this->parseInviteFile(
           $_FILES['invitefile']['tmp_name'],
           $values['encoding'],
           $values['delimeter']
         );
 
         // fatal hiba tortent, mindenkeppen irunk ki hibat
-        if ( $users === false ) {
+        if ( $emails === false ) {
           $this->form->addMessage( $l('users', 'invite_fatalerror') );
-          return;
+          return null;
         }
 
         // a parseInviteFile hibat talalt es invalidalta a formot
         // de csak akkor adunk hibauzenetet ha nem csv export,
         // vagy nincs kinek kuldeni emailt
-        if ( !$this->form->validate() and ( !$externalsend or empty( $users ) ) )
-          return;
+        $externalsend = $values['externalsend'] === 'external';
+        if (
+            !$this->form->validate() and
+            ( !$externalsend or empty( $emails ) )
+           )
+          return null;
 
         break;
 
     }
 
-    $permissions = $departments = $groups = '';
+    return $emails;
+  }
 
-    if ( !empty( $values['permissions'] ) )
-      $permissions = implode('|', $values['permissions'] );
-
-    if ( !empty( $values['departments'] ) )
-      $departments = implode('|', $values['departments'] );
-
-    if ( !empty( $values['groups'] ) )
-      $groups      = implode('|', $values['groups'] );
-
-    $userid        = $user['id'];
-    $disabledafter = ( $values['needtimestampdisabledafter'] )
-      ? $values['timestampdisabledafter']
-      : null
-    ;
-
-    $timestamp   = date('Y-m-d H:i:s');
-    $invitecount = 0;
-    $emails      = array_keys( $users );
-    $this->userids = $userModel->searchEmails(
-      $emails,
+  // adott emailekkel rendelkezu userek kereses, es
+  // lookup table keszitese: email => userinfo
+  // ez mar authoritative info
+  private function emailsToUsers( &$emails ) {
+    $onlyemails = array_keys( $emails );
+    $userModel  = $this->bootstrap->getModel('users');
+    return $userModel->searchEmails(
+      $onlyemails,
       $this->controller->organization['id']
     );
-    unset( $emails );
+  }
 
-    $template    = $this->handleTemplate( $userModel, $values );
-    $templateid  = null;
-    if ( !empty( $template ) and $template['id'] )
-      $templateid = $template['id'];
+  // a kozos invite ami mindenkinel ugyanaz
+  private function assembleBaseInvite( &$values, $templateid ) {
+    $user       = $this->bootstrap->getSession('user');
+    $baseInvite = array(
+      'groups'                 => !empty( $values['groups'] )
+        ? implode('|', $values['groups'] )
+        : ''
+      ,
+      'departments'            => !empty( $values['departments'] )
+        ? implode('|', $values['departments'] )
+        : ''
+      ,
+      'permissions'            => !empty( $values['permissions'] )
+        ? implode('|', $values['permissions'] )
+        : ''
+      ,
+      'timestampdisabledafter' => $values['needtimestampdisabledafter']
+        ? $values['timestampdisabledafter']
+        : null
+      ,
+      'userid'                 => $user['id'], // a meghivo felhasznalo
+      'status'                 => 'invited',
+      'organizationid'         => $this->controller->organization['id'],
+      'timestamp'              => date('Y-m-d H:i:s'),
+      'templateid'             => $templateid,
+      'invitationvaliduntil'   => $values['invitationvaliduntil'],
+      'customforwardurl'       => $this->getBaseForwardURL( $values ),
+    );
 
-    // default template allitas
-    if ( !$templateid and !$externalsend )
-      $this->controller->toSmarty['template'] = array(
-        'subject' => $l('users', 'templatesubject_default'),
+    return $baseInvite;
+  }
+
+  // db insert, es email kuldes / csv output a feleloseg
+  // a konkret emailt a controller kuldi ki, a csv-ket helybe intezzuk
+  private function insertInvitations( &$emails, &$values, $templateid ) {
+    $invModel    = $this->bootstrap->getModel('users_invitations');
+    $userModel   = $this->bootstrap->getModel('users');
+    $baseInvite  = $this->assembleBaseInvite( $values, $templateid );
+    $invitecount = 0;
+
+    $externalsend = $values['externalsend'] === 'external';
+    $forwardurl   = $baseInvite['customforwardurl'];
+    foreach( $emails as $email => $name ) {
+      $invite = array_merge(
+        $baseInvite,
+        array(
+          'email'          => $email,
+          'namefirst'      => $name['namefirst'],
+          'namelast'       => $name['namelast'],
+          'validationcode' => $this->crypto->randomPassword( 10 ),
+        )
       );
+
+      // mert a contenttype nocontent|recordingid|livefeedid|channelid lehet
+      switch( $values['contenttype'] ) {
+        case 'recordingid':
+        case 'livefeedid':
+        case 'channelid':
+          $invite[ $values['contenttype'] ] = $values[ $values['contenttype'] ];
+          break;
+        case 'nocontent':
+          break;
+
+        default:
+          throw new \Exception('Unhandled contenttype: ' . $values['contenttype'] );
+          break;
+      }
+
+      // letezik user ezzel az email-el, pontos adatokat tole
+      if ( isset( $this->userids[ $email ] ) ) {
+
+        $invite['registereduserid'] = $this->userids[ $email ]['id'];
+        $invite['status']           = 'existing';
+        $invite['namefirst']        = $this->userids[ $email ]['namefirst'];
+        $invite['namelast']         = $this->userids[ $email ]['namelast'];
+        $userModel->id = $this->userids[ $email ]['id'];
+        $userModel->applyInvitationPermissions( $invite );
+
+      }
+
+      $invModel->insert( $invite );
+
+      if ( !$externalsend )
+        $this->controller->sendInvitationEmail( $invModel->row );
+      else
+        $this->handleCSVOutput( $invModel->row, $forwardurl );
+
+      $invitecount++;
+    }
+
+    return $invitecount;
+  }
+
+  // az alap forward url, lehet ures
+  private function getBaseForwardURL( &$values ) {
+    if ( $values['customforwardurl'] )
+      return $values['customforwardurl'];
 
     $module     = '';
     $forwardurl = '';
@@ -130,13 +266,13 @@ class Invite extends \Visitor\HelpForm {
         break;
     }
 
-    if ( $module and !$values['customforwardurl'] ) {
+    if ( $module ) {
       $forwardurl =
         \Springboard\Language::get() . '/' . $module .
         $values[ $values['contenttype'] ] . '-'
       ;
 
-      if ( $externalsend ) {
+      if ( $values['externalsend'] === 'external' ) {
         $obj->select( $values[ $values['contenttype'] ] );
         $title = '';
         if ( isset( $obj->row['title'] ) )
@@ -148,103 +284,28 @@ class Invite extends \Visitor\HelpForm {
       }
     }
 
-    if ( $values['customforwardurl'] )
-      $forwardurl = $values['customforwardurl'];
+    return $forwardurl;
+  }
 
-    // CHECK ERROR
-    $messages = $this->form->getMessages();
+  // user, csv specific forward url ahol mindenkeppen muszaj hogy legyen
+  private function getForwardURL( &$invite ) {
+    $forwardurl = $invite['customforwardurl'];
 
-    // KULSO KULDES, CSV AZ OUTPUT
-    if ( $externalsend ) {
-      $this->crypto  = $this->bootstrap->getEncryption();
-      $this->baseuri =
-        $this->bootstrap->baseuri . \Springboard\Language::get() . '/users/'
+    // ha mar van user-je akkor be kell lepjen,
+    // amugy regisztralas utan kell elkuldenunk a forwardurl-re ha van
+    if ( isset( $invite['registereduserid'] ) )
+      $url = $this->baseuri . 'login';
+    else
+      $url =
+        $this->baseuri . 'validateinvite/' .
+        $this->crypto->asciiEncrypt( $invite['id'] ) . '-' .
+        $invite['validationcode']
       ;
 
-      $filename = 'videosquare-userinvitation-' . date('YmdHis') . '.csv';
-      $this->csvHandle = \Springboard\Browser::initCSVHeaders(
-        $filename,
-        array('firstname', 'lastname', 'email', 'customurl', ),
-        $this->csvDelimiter
-      );
-    }
+    if ( $forwardurl )
+      $url .= '?forward=' . rawurlencode( $forwardurl );
 
-    foreach( $users as $email => $name ) {
-
-      $invite   = array(
-        'email'                  => $email,
-        'namefirst'              => $name['namefirst'],
-        'namelast'               => $name['namelast'],
-        'userid'                 => $userid,
-        'groups'                 => $groups,
-        'departments'            => $departments,
-        'permissions'            => $permissions,
-        'validationcode'         => $this->crypto->randomPassword( 10 ),
-        'timestampdisabledafter' => $disabledafter,
-        'status'                 => 'invited',
-        'organizationid'         => $this->controller->organization['id'],
-        'timestamp'              => $timestamp,
-        'templateid'             => $templateid,
-        'invitationvaliduntil'   => $values['invitationvaliduntil'],
-        'customforwardurl'       => $forwardurl,
-      );
-
-      // mert a contenttype nocontent|recordingid|livefeedid|channelid lehet
-      switch( $values['contenttype'] ) {
-        case 'recordingid':
-        case 'livefeedid':
-        case 'channelid':
-          $invite[ $values['contenttype'] ] = $values[ $values['contenttype'] ];
-          break;
-        case 'nocontent':
-          break;
-
-        default:
-          throw new \Exception('Unhandled contenttype: ' . $values['contenttype'] );
-          break;
-
-      }
-
-      if ( isset( $this->userids[ $email ] ) ) {
-
-        $invite['registereduserid'] = $this->userids[ $email ]['id'];
-        $invite['status']           = 'existing';
-        $invite['namefirst']        = $this->userids[ $email ]['namefirst'];
-        $invite['namelast']         = $this->userids[ $email ]['namelast'];
-        $userModel->id = $this->userids[ $email ]['id'];
-        $userModel->applyInvitationPermissions( $invite );
-
-      }
-
-      $invModel->insert( $invite );
-      $this->handleInvite( $externalsend, $invModel->row, $forwardurl );
-      $invitecount++;
-
-    }
-    unset( $users );
-
-    $thousandsseparator = ' ';
-    if ( \Springboard\Language::get() == 'en' )
-      $thousandsseparator = ',';
-
-    $invitecount = number_format( $invitecount, 0, '.', $thousandsseparator );
-    if ( $invitecount == '1' )
-      $redirmessage = $l('users', 'user_invited');
-    else
-      $redirmessage = sprintf( $l('users', 'users_invited'), $invitecount );
-
-    if ( empty( $messages ) and !$externalsend )
-      $this->controller->redirectWithMessage(
-        'users/invitations',
-        $redirmessage
-      );
-
-    $this->controller->toSmarty['sessionmessage'] = $redirmessage;
-
-    // ha csv kuldes es kuldtunk is valamit akkor elhalunk
-    if ( $externalsend and $invitecount )
-      die();
-
+    return $url;
   }
 
   public function parseInviteFile( $file, $encoding, $delimeter ) {
@@ -351,56 +412,58 @@ class Invite extends \Visitor\HelpForm {
       return false;
 
     return $users;
-
   }
 
-  private function handleInvite( $externalsend, $invite, $forwardurl ) {
-    if ( !$externalsend ) {
-      $this->controller->sendInvitationEmail( $invite );
+  private function initCSVOutput( &$values ) {
+    // nem tortenhet meg
+    if ( $values['externalsend'] !== 'external' )
+      throw new \Exception('initCSVOutput called for non-external invite');
+
+    $this->baseuri =
+      $this->bootstrap->baseuri . \Springboard\Language::get() . '/users/'
+    ;
+
+    $filename = 'videosquare-userinvitation-' . date('YmdHis') . '.csv';
+    $this->csvHandle = \Springboard\Browser::initCSVHeaders(
+      $filename,
+      array('firstname', 'lastname', 'email', 'customurl', ),
+      $this->csvDelimiter
+    );
+  }
+
+  private function handleCSVOutput( $invite, $forwardurl ) {
+    // nincs hova irni? megszakadt a tcp kapcsolat
+    if ( !$this->csvHandle )
       return;
-    }
 
-    if ( isset( $invite['registereduserid'] ) )
-      $url = $this->baseuri . 'login';
-    else
-      $url =
-        $this->baseuri . 'validateinvite/' .
-        $this->crypto->asciiEncrypt( $invite['id'] ) . '-' .
-        $invite['validationcode']
-      ;
-
-    if ( $forwardurl )
-      $url .= '?forward=' . rawurlencode( $forwardurl );
-
-    $firstname = $invite['namefirst'];
-    $lastname  = $invite['namelast'];
-    if ( isset( $this->userids[ $invite['email'] ] ) ) {
-      $user = $this->userids[ $invite['email'] ];
-      $firstname = $user['namefirst'];
-      $lastname  = $user['namelast'];
-    }
-
+    // sorrend fontos, lasd initCSVOutput!
     $values = array(
-      trim($firstname),
-      trim($lastname),
+      trim( $invite['namefirst'] ),
+      trim( $invite['namelast'] ),
       $invite['email'],
-      $url,
+      $this->getForwardURL( $invite ),
     );
 
-    if ( $this->csvHandle ) {
-      $success = fputcsv( $this->csvHandle, $values, $this->csvDelimiter );
-      if ( $success !== false )
-        return;
+    $success = fputcsv( $this->csvHandle, $values, $this->csvDelimiter );
+    if ( $success !== false )
+      return;
 
-      // nem sikerult kiirni a csv-t, kuldjunk rola emailt
-      $d = \Springboard\Debug::getInstance();
-      $d->log(
-        false,
-        false,
-        "Failed to putcsv!\n" .
-        \Springboard\Debug::getRequestInformation(),
-        true
-      );
-    }
+    // nem sikerult kiirni a csv-t, kuldjunk rola emailt
+    $d = \Springboard\Debug::getInstance();
+    $d->log(
+      false,
+      false,
+      "Failed to putcsv!\n" .
+      \Springboard\Debug::getRequestInformation(),
+      true
+    );
+  }
+
+  private function formatInviteCount( $invitecount ) {
+    $thousandsseparator = ' ';
+    if ( \Springboard\Language::get() == 'en' )
+      $thousandsseparator = ',';
+
+    return number_format( $invitecount, 0, '.', $thousandsseparator );
   }
 }

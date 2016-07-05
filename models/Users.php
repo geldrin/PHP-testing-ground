@@ -739,10 +739,22 @@ class Users extends \Springboard\Model {
       if ( empty( $template ) )
         throw new \Exception("Template with id: " . $values['id'] . ' not found!');
 
-      $hash         = md5( $values['subject'] . $values['title'] . $values['prefix'] . $values['postfix'] );
-      $existinghash = md5( $template['subject'] . $values['title'] . $template['prefix'] . $template['postfix'] );
+      $hashctx = hash_init('md5');
+      hash_update( $hashctx, $values['subject'] );
+      hash_update( $hashctx, $values['title'] );
+      hash_update( $hashctx, $values['prefix'] );
+      hash_update( $hashctx, $values['postfix'] );
+      $hash = hash_final( $hashctx );
 
-      if ( $hash != $existinghash )
+      $hashctx = hash_init('md5');
+      hash_update( $hashctx, $template['subject'] );
+      hash_update( $hashctx, $template['title'] );
+      hash_update( $hashctx, $template['prefix'] );
+      hash_update( $hashctx, $template['postfix'] );
+      $existinghash = hash_final( $hashctx );
+      unset( $hashctx );
+
+      if ( $hash !== $existinghash )
         $needinsert = true;
 
     } elseif (
@@ -763,7 +775,6 @@ class Users extends \Springboard\Model {
     }
 
     return $values;
-
   }
 
   public function getTemplate( $templateid, $organizationid ) {

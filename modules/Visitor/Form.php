@@ -27,24 +27,24 @@ class Form extends \Springboard\Controller\Form {
   ';
 
   public function redirectToMainDomain() {}
-  
+
   public function postGetForm() {
-    
+
     $this->form->errorstyle = ' class="formerror"';
     $this->form->jsalert = false;
     $this->form->jspath =
       $this->controller->toSmarty['STATIC_URI'] . 'js/clonefish.js'
     ;
-    
+
     $this->form->messagecontainerlayout =
       '<div class="formerrors"><ul>%s</ul></div>'
     ;
-    
+
     $this->form->messageprefix = '';
     $this->form->layouts['tabular']['container']  =
       "<table cellpadding=\"0\" cellspacing=\"0\" class=\"formtable\">\n%s\n</table>\n"
     ;
-    
+
     $this->form->layouts['tabular']['element'] = '
       <tr%errorstyle%>
         <td class="labelcolumn">
@@ -53,47 +53,47 @@ class Form extends \Springboard\Controller\Form {
         <td class="elementcolumn">%prefix%%element%%postfix%%errordiv%</td>
       </tr>
     ';
-    
+
     $this->form->layouts['tabular']['buttonrow'] =
       '<tr class="buttonrow"><td colspan="2">%s</td></tr>'
     ;
-    
+
     $this->form->layouts['tabular']['button'] =
       '<input type="submit" value="%s" class="submitbutton" />'
     ;
-    
+
     $this->form->layouts['tabular']['errordiv'] = '
       <div id="%divid%" class="formerrordiv"></div>
       <div class="clear"></div>
     ';
-    
+
   }
-  
+
   public function handleAccesstypeForModel( $model, &$values, $shouldclear = true ) {
-    
+
     $model->clearAccess();
     switch( $values['accesstype'] ) {
-      
+
       case 'public':
       case 'registrations':
         // kiuritettuk mar elobb az `access`-t az adott recordinghoz
         // itt nincs tobb dolgunk
         break;
-      
+
       case 'departments':
-        
+
         if ( isset( $_REQUEST['departments'] ) and !empty( $values['departments'] ) )
           $model->restrictDepartments( $values['departments'] );
-        
+
         break;
-      
+
       case 'groups':
-        
+
         if ( isset( $_REQUEST['groups'] ) and !empty( $values['groups'] ) )
           $model->restrictGroups( $values['groups'] );
-        
+
         break;
-      
+
       case 'departmentsorgroups':
 
         if ( isset( $_REQUEST['departments'] ) and !empty( $values['departments'] ) )
@@ -107,9 +107,9 @@ class Form extends \Springboard\Controller\Form {
       default:
         throw new \Exception('Unhandled accesstype: ' . $values['accesstype'] );
         break;
-      
+
     }
-    
+
   }
 
   public function sanitizeHTML( $html ) {
