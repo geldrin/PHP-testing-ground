@@ -133,6 +133,9 @@ class Inviteteachers extends \Visitor\HelpForm {
   }
 
   public function getEmails() {
+    if ( !$this->invModel )
+      return array();
+
     $emails = \Springboard\Tools::explodeAndTrim(
       "\n",
       $this->invModel->row['emails']
@@ -146,6 +149,9 @@ class Inviteteachers extends \Visitor\HelpForm {
   }
 
   public function getUsers() {
+    if ( !$this->invModel )
+      return array();
+
     $this->bootstrap->includeTemplatePlugin('nickformat');
     $userids = \Springboard\Tools::explodeIDs(
       ',',
