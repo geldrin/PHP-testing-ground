@@ -3096,7 +3096,6 @@ function setupInviteTeachers() {
       id: '-1',
       text: userPlaceholder
     },
-    data: defaultUsers,
     language: language,
     width: '100%',
     allowClear: true,

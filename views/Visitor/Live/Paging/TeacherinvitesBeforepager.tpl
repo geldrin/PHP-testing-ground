@@ -12,5 +12,5 @@ TODO
 <br/>
 {/*}
 
-<a href="{$language}/live/teacherinvites/{$feed.id},{$feed.title|filenameize}">{#sitewide_back#}</a>
+<a href="{$language}/live/managefeeds/{$feed.channelid},{$feed.title|filenameize}">{#sitewide_back#}</a>
 <br/>

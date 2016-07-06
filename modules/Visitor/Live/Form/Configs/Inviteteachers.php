@@ -22,6 +22,8 @@ $pinText = '
   </div>
 ';
 
+$users = $this->getUsers();
+$emails = $this->getEmails();
 $config = array(
 
   'action' => array(
@@ -48,7 +50,9 @@ $config = array(
   'userids[]' => array(
     'displayname' => $l('live', 'teacher_user'),
     'type'        => 'select',
-    'html'        => 'data-searchurl="' . $searchURL . '"',
+    'html'        => 'data-searchurl="' . $searchURL . '" multiple="multiple"',
+    'values'      => $users,
+    'value'       => array_keys( $users ),
     'validation'  => array(
     ),
   ),
@@ -56,6 +60,9 @@ $config = array(
   'emails[]' => array(
     'displayname' => $l('live', 'teacher_email'),
     'type'        => 'select',
+    'html'        => 'multiple="multiple"',
+    'values'      => $emails,
+    'value'       => array_keys( $emails ),
     'validation'  => array(
     ),
   ),

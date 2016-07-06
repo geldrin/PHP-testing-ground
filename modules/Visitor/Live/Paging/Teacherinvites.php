@@ -1,7 +1,7 @@
 <?php
 namespace Visitor\Categories\Paging;
 
-class Admin extends \Visitor\Paging {
+class Teacherinvites extends \Visitor\Paging {
   protected $orderkey = 'creation_desc';
   protected $sort = array(
     'creation'      => 'id',
@@ -24,6 +24,7 @@ class Admin extends \Visitor\Paging {
     $this->foreachelse = $l('live', 'teacher_foreachelse');
     $this->title       = $l('live', 'teacher_invites');
     $this->controller->toSmarty['listclass'] = 'treeadminlist';
+    $this->controller->toSmarty['feed'] = $this->feedModel->row;
 
     parent::init();
 

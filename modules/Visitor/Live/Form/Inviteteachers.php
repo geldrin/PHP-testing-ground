@@ -33,19 +33,18 @@ class Inviteteachers extends \Visitor\HelpForm {
     }
 
     $l = $this->bootstrap->getLocalization();
-    $this->controller->toSmarty['needselect2'] = true;
     $this->controller->toSmarty['title'] = $l('live', 'inviteteachers');
-    $this->controller->toSmarty['insertbefore'] = 'Visitor/Live/Inviteteachers_before.tpl';
+
+    $this->controller->toSmarty['feed'] = $this->feedModel->row;
+    $this->controller->toSmarty['needselect2'] = true;
     $this->controller->toSmarty['formclass'] = 'leftdoublebox';
     $this->controller->toSmarty['helpclass'] = 'rightbox';
+    $this->controller->toSmarty['insertbefore'] = 'Visitor/Live/Inviteteachers_before.tpl';
 
     $this->pin = $this->feedModel->row['pin'];
 
-    if ( $this->invModel ) {
+    if ( $this->invModel )
       $this->pin = $this->invModel->row['pin'];
-      $this->controller->toSmarty['emailjson'] = $this->getEmailJSON();
-      $this->controller->toSmarty['userjson'] = $this->getUserJSON();
-    }
 
     parent::init();
   }
@@ -58,10 +57,10 @@ class Inviteteachers extends \Visitor\HelpForm {
       'timestamp' => date('Y-m-d H:i:s'),
     );
 
-    $emails = $this->getEmails();
+    $emails = $this->validateAndGetEmails();
     $row['emails'] = implode("\n", $emails );
 
-    $users = $this->getUsers( $emails );
+    $users = $this->validateAndGetUsers( $emails );
     $userids = array();
     foreach( $users as $user ) {
       $userids[] = $user['id'];
@@ -76,12 +75,12 @@ class Inviteteachers extends \Visitor\HelpForm {
     $this->redirect(
       $this->application->getParameter(
         'forward',
-        'live/managefeeds/' . $this->feedModel->row['channelid']
+        'live/teacherinvites/' . $this->feedModel->id
       )
     );
   }
 
-  private function getEmails() {
+  private function validateAndGetEmails() {
     $ret = array();
     if ( empty( $_REQUEST['emails'] ) )
       return $ret;
@@ -100,7 +99,7 @@ class Inviteteachers extends \Visitor\HelpForm {
 
   // ha mar van egy user meghivva adott email-el akkor
   // toroljuk az emails tombbol
-  private function getUsers( &$emails ) {
+  private function validateAndGetUsers( &$emails ) {
     $ret = array();
     if ( empty( $_REQUEST['userids'] ) )
       return $ret;
@@ -133,7 +132,7 @@ class Inviteteachers extends \Visitor\HelpForm {
     return $users;
   }
 
-  private function getEmailJSON() {
+  public function getEmails() {
     $emails = \Springboard\Tools::explodeAndTrim(
       "\n",
       $this->invModel->row['emails']
@@ -141,15 +140,12 @@ class Inviteteachers extends \Visitor\HelpForm {
 
     $emaildata = array();
     foreach( $emails as $email )
-      $emaildata = array(
-        'id' => $email,
-        'text' => $email,
-      );
+      $emaildata[ $email ] = $email;
 
-    return json_encode( $emaildata );
+    return $emaildata;
   }
 
-  private function getUserJSON() {
+  public function getUsers() {
     $this->bootstrap->includeTemplatePlugin('nickformat');
     $userids = \Springboard\Tools::explodeIDs(
       ',',
@@ -163,22 +159,20 @@ class Inviteteachers extends \Visitor\HelpForm {
 
     $userdata = array();
     foreach( $users as $user )
-      $userdata[] = array(
-        'id' => $user['id'],
-        'text' =>
-          smarty_modifier_nickformat( $user ) .
-          ' (' . $user['email'] . ')'
-        ,
-      );
+      $userdata[ $user['id'] ] =
+        smarty_modifier_nickformat(
+          $user, $this->controller->organization
+        ) . ' (' . $user['email'] . ')'
+      ;
 
-    return json_encode( $userdata );
+    return $userdata;
   }
 
   private function sendEmails( $pin, $emails ) {
     $l = $this->bootstrap->getLocalization();
     $this->controller->toSmarty['pin'] = $pin;
 
-    $subject = $l('live', 'invitesubject');
+    $subject = $l('live', 'inviteemail_subject');
     $body = $this->controller->fetchSmarty(
       'Visitor/Live/Inviteemail.tpl'
     );
