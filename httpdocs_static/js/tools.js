@@ -3097,7 +3097,7 @@ function setupInviteTeachers() {
       text: userPlaceholder
     },
     language: language,
-    width: '100%',
+    width: '447px',
     allowClear: true,
     multiple: true,
     minimumResultsForSearch: 0,
