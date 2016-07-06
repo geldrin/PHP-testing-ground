@@ -13,3 +13,10 @@
 
 <a href="{$language}/live/teacherinvites/{$feed.id},{$feed.title|filenameize}?forward={$FULL_URI|escape:url}">{#live__teacher_invites#}</a>
 <br/>
+
+<script>
+var userPlaceholder = '{#live__teacher_userplaceholder#}';
+var emailPlaceholder = '{#live__teacher_emailplaceholder#}';
+var defaultUsers = {$userjson|jsonescape};
+var defaultEmails = {$emailjson|jsonescape};
+</script>

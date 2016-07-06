@@ -66,7 +66,7 @@
     <script type="text/javascript" src="{$STATIC_URI}js/fancybox/jquery.fancybox-1.3.4.pack.js"></script>
   {/if}
   {if $needselect2}
-    <script type="text/javascript" src="{$STATIC_URI}js/select2/select2.min.js"></script>
+    <script type="text/javascript" src="{$STATIC_URI}js/select2/select2.full.min.js"></script>
     <script type="text/javascript" src="{$STATIC_URI}js/select2/i18n/{$language}.js"></script>
   {/if}
   {if $needhistory}

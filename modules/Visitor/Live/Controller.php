@@ -30,9 +30,10 @@ class Controller extends \Visitor\Controller {
     'analytics'            => 'liveadmin|clientadmin',
     'delete'               => 'liveadmin|clientadmin',
     'archive'              => 'liveadmin|clientadmin',
-    'regeneratepin'        => 'member',
-    'teacherinvites'       => 'member',
-    'inviteteachers'       => 'member',
+    'regeneratepin'        => 'liveadmin|clientadmin',
+    'teacherinvites'       => 'liveadmin|clientadmin',
+    'inviteteachers'       => 'liveadmin|clientadmin',
+    'searchuser'           => 'liveadmin|clientadmin',
   );
 
   public $forms = array(
@@ -1143,6 +1144,42 @@ class Controller extends \Visitor\Controller {
       $this->application->getParameter(
         'forward',
         'live/managefeeds/' . $feedModel->row['channelid']
+      )
+    );
+  }
+
+  public function searchuserAction() {
+    if ( !$this->organization['islivepinenabled'] )
+      $this->redirect('');
+
+    $this->modelOrganizationAndUserIDCheck(
+      'livefeeds',
+      $this->application->getNumericParameter('id')
+    );
+
+    $userModel = $this->bootstrap->getModel('users');
+    $users = $userModel->getSearchArray(
+      $this->application->getParameter('term'),
+      $this->organization,
+      0,
+      10,
+      'relevancy DESC'
+    );
+
+    $this->bootstrap->includeTemplatePlugin('nickformat');
+    $data = array();
+    foreach( $users as $user )
+      $data[] = array(
+        'id'    => $user['id'],
+        'email' => $user['email'],
+        'name'  => smarty_modifier_nickformat(
+          $user, $this->organization
+        ),
+      );
+
+    $this->jsonOutput( array(
+        'success' => true,
+        'data' => $data,
       )
     );
   }

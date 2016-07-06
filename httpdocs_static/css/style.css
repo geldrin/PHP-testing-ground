@@ -3356,6 +3356,7 @@ li#languageselectorlink span {
   height: 16px;
   background: #0ff; /* TODO gear icon */
 }
+
 #live_analytics .singlecolumn .inputtext {
   width: 105px;
 }
@@ -4026,4 +4027,12 @@ input.datetimepicker,
 input.datepicker {
   position: relative;
   z-index: 2;
+}
+
+#live_inviteteachers select {
+  
+}
+#pin span {
+  font-weight: bold;
+  padding: 0 10px 0 0;
 }

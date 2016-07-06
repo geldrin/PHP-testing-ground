@@ -1,10 +1,17 @@
 <?php
-include_once( $this->bootstrap->config['libpath'] . 'clonefish/constants.php');
+$lang = \Springboard\Language::get();
+$currentURL =
+  $lang . '/live/inviteteachers/' .
+  $this->feedModel->id . '?forward=' .
+  rawurlencode( $this->application->getParameter('forward') )
+;
 
 $regenURL =
-  \Springboard\Language::get() . '/live/regeneratepin/' .
-  $this->feedModel->id
+  $lang . '/live/regeneratepin/' .
+  $this->feedModel->id . '?forward=' . rawurlencode( $currentURL )
 ;
+
+$searchURL = $lang . '/live/searchuser/' . $this->feedModel->id;
 
 $pinText = '
   <div id="pin">
@@ -38,16 +45,17 @@ $config = array(
     'value'       => $pinText,
   ),
 
-  'userids' => array(
+  'userids[]' => array(
     'displayname' => $l('live', 'teacher_user'),
-    'type'        => 'inputText',
+    'type'        => 'select',
+    'html'        => 'data-searchurl="' . $searchURL . '"',
     'validation'  => array(
     ),
   ),
 
-  'emails' => array(
+  'emails[]' => array(
     'displayname' => $l('live', 'teacher_email'),
-    'type'        => 'textarea',
+    'type'        => 'select',
     'validation'  => array(
     ),
   ),

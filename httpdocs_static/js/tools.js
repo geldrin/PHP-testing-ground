@@ -5,34 +5,34 @@ if (!Date.now) {
 }
 
 jQuery.cookie = function( name, value, seconds ) {
-  
+
   // -1 seconds to unset, no support for non-string values
   if ( value === undefined ) {
-    
+
     var valuematch = new RegExp( name + "=([^;]+)").exec( document.cookie );
     return valuematch ? valuematch[1] : null;
-    
+
   }
-  
+
   if ( seconds ) {
-    
+
     var d = new Date();
     d.setTime( d.getTime() + ( seconds * 1000 ) );
     var expiry = d.toGMTString();
-    
+
   } else
     var expiry = null;
-  
+
   var tmp = [];
   tmp.push( name + '=' + value );
-  
+
   if ( expiry )
     tmp.push( 'expires=' + expiry );
-  
+
   tmp.push('path=/');
   document.cookie = tmp.join('; ');
   return value;
-  
+
 };
 var $j = jQuery.noConflict();
 
@@ -100,6 +100,7 @@ $j(document).ready(function() {
   runIfExists('.channelrecordings.halfwidth', setupChannelRecordings );
   runIfExists('#users_signup', setupSignup );
   runIfExists('#myrecordingsquicksearch', setupMyRecordings );
+  runIfExists('#live_inviteteachers', setupInviteTeachers )
 
   if ( needping )
     setTimeout( setupPing, 1000 * pingsecs );
@@ -817,7 +818,7 @@ function setupHeaderMenu() {
       } else {
         $j('#headersearch:not(.donttouch)').slideDown(200).addClass('active');
       }
-      
+
     });
     $j('#headersearchclear').on('click', function(e) {
       e.preventDefault();
@@ -1377,7 +1378,7 @@ recordingUpload.prototype.formatTime = function( seconds ) {
 function setupVideoUpload() {
   $j('#advancedrow').click(function(e) {
     e.preventDefault();
-    
+
     $j('.advanceditem').each(function(k, v) {
       var item = $j(v).parents('tr').eq(0);
       item.toggle();
@@ -2770,7 +2771,7 @@ function setupRecordingStatistics( elem ) {
     lastSec = graphdata[graphdata.length - 1][0];
     graphdata.push( [ lastSec + 60, 0] );
   }
-  
+
   if ( graphdata.length < 20 ) {
     for ( i = graphdata.length; graphdata.length < 20; i++ )
       graphdata.push( [ i * 60, 0 ] );
@@ -2797,7 +2798,7 @@ function setupRecordingStatistics( elem ) {
     axes: {
       x: {
         ticker: function (a, b, pixels, opts, dygraph, vals) {
-        
+
           minutes = Math.round( b / 60 );
 
           // put 10 gridlines on x axis
@@ -2807,10 +2808,10 @@ function setupRecordingStatistics( elem ) {
             tickspacing = 1;
 
           ticks = [];
-          
+
           for ( sec = 0; sec < b; sec = sec + tickspacing * 60 )
             ticks.push({ v: sec, label: formatDuration( sec ) });
-          
+
           return ticks;
 
         },
@@ -3083,4 +3084,71 @@ function setupMyRecordings() {
   };
 
   setTimeout( getInfo, refreshDelay );
+}
+
+function setupInviteTeachers() {
+  // placeholderek globalokbol (before template)
+  var userElem = $j('select[name="userids[]"]');
+  var emailElem = $j('select[name="emails[]"]');
+
+  userElem.select2({
+    placeholder: {
+      id: '-1',
+      text: userPlaceholder
+    },
+    data: defaultUsers,
+    language: language,
+    width: '100%',
+    allowClear: true,
+    multiple: true,
+    minimumResultsForSearch: 0,
+    minimumInputLength: 2,
+    ajax: {
+      dataType: 'json',
+      delay: 250,
+      url: userElem.attr('data-searchurl'),
+      processResults: function (data) {
+        if (!data.success)
+          return {results: []};
+
+        var items = [];
+        var users = data.data;
+        for(var i = 0; i < users.length; i++) {
+          var user = users[i];
+          items.push({
+            id: user.id,
+            text: user.name + ' (' + user.email + ')'
+          })
+        }
+
+        return {
+          results: items
+        };
+      }
+    }
+  });
+
+  emailElem.select2({
+    language  : language,
+    width     : '100%',
+    allowClear: true,
+    multiple  : true,
+    minimumResultsForSearch: Infinity,
+    placeholder: {
+      id: '-1',
+      text: emailPlaceholder
+    },
+    tags: true,
+    createTag: function (params) {
+      var term = $j.trim(params.term);
+      var isEmail = !!term.match(/^[\._0-9A-Za-z-+]+@[0-9A-Za-z][-0-9A-Za-z\.]*\.[a-zA-Z]{2,4}$/);
+      if (term === '' || !isEmail)
+        return null;
+
+      return {
+        id: term,
+        text: term
+      };
+    }
+  });
 }

@@ -1238,4 +1238,25 @@ class Users extends \Springboard\Model {
       ORDER BY g.name DESC
     ");
   }
+
+  public function getUsersByIDs( $ids, $organizationid, $select = '*' ) {
+    $ret = array();
+
+    while( !empty( $ids ) ) {
+      $chunk = array_splice( $ids, 0, 50 );
+      $users = $this->db->getArray("
+        SELECT $select
+        FROM users
+        WHERE
+          id IN('" . implode("', '", $chunk ) . "') AND
+          organizationid = '$organizationid'
+        LIMIT 50
+      ");
+
+      $ret = array_merge( $ret, $users );
+    }
+
+    return $ret;
+  }
+
 }
