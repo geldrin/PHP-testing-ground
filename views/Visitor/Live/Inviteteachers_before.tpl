@@ -16,5 +16,4 @@
 
 <script type="text/javascript">
 var userPlaceholder = '{#live__teacher_userplaceholder#}';
-var emailPlaceholder = '{#live__teacher_emailplaceholder#}';
 </script>
