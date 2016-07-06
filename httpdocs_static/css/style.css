@@ -4029,9 +4029,11 @@ input.datepicker {
   z-index: 2;
 }
 
-#live_inviteteachers select {
-  
+.select2-container--default .select2-selection--multiple .select2-selection__clear,
+.select2-container--default .select2-selection--multiple .select2-selection__choice__remove {
+  font-family: Arial;
 }
+
 #pin span {
   font-weight: bold;
   padding: 0 10px 0 0;
