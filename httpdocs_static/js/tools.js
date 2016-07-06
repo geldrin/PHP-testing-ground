@@ -3127,27 +3127,4 @@ function setupInviteTeachers() {
     }
   });
 
-  emailElem.select2({
-    language  : language,
-    width     : '100%',
-    allowClear: true,
-    multiple  : true,
-    minimumResultsForSearch: Infinity,
-    placeholder: {
-      id: '-1',
-      text: emailPlaceholder
-    },
-    tags: true,
-    createTag: function (params) {
-      var term = $j.trim(params.term);
-      var isEmail = !!term.match(/^[\._0-9A-Za-z-+]+@[0-9A-Za-z][-0-9A-Za-z\.]*\.[a-zA-Z]{2,4}$/);
-      if (term === '' || !isEmail)
-        return null;
-
-      return {
-        id: term,
-        text: term
-      };
-    }
-  });
 }

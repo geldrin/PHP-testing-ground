@@ -23,7 +23,11 @@ $pinText = '
 ';
 
 $users = $this->getUsers();
-$emails = $this->getEmails();
+if ( !$this->invModel )
+  $emails = '';
+else
+  $emails = $this->invModel->row['emails'];
+
 $config = array(
 
   'action' => array(
@@ -57,12 +61,10 @@ $config = array(
     ),
   ),
 
-  'emails[]' => array(
+  'emails' => array(
     'displayname' => $l('live', 'teacher_email'),
-    'type'        => 'select',
-    'html'        => 'multiple="multiple"',
-    'values'      => $emails,
-    'value'       => array_keys( $emails ),
+    'type'        => 'textarea',
+    'value'       => $emails,
     'validation'  => array(
     ),
   ),
