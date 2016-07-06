@@ -63,6 +63,11 @@ $config = array(
 
   'emails' => array(
     'displayname' => $l('live', 'teacher_email'),
+    'postfix'     => '
+      <div class="smallinfo">' .
+        $l('live', 'teacher_email_postfix') .
+      '</div>'
+    ,
     'type'        => 'textarea',
     'value'       => $emails,
     'validation'  => array(
