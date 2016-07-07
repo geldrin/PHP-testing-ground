@@ -1316,8 +1316,10 @@ class Livefeeds extends \Springboard\Model {
         // video: ingressurl + keycode _ előtti része
         $pos = strpos( $stream['keycode'], '_' );
         if ( $pos === false )
-          throw new Exception('keycode did not contain an underscore!');
-        $keycode = substr( $stream['keycode'], 0, $pos );
+          $keycode = $stream['keycode'];
+        else
+          $keycode = substr( $stream['keycode'], 0, $pos );
+
         $ret['video'] = $ingressurl . $keycode;
       }
 
@@ -1325,9 +1327,10 @@ class Livefeeds extends \Springboard\Model {
         // prezi: ingressurl + contentkeycode _ előtti része
         strpos( $stream['contentkeycode'], '_' );
         if ( $pos === false )
-          throw new Exception('contentkeycode did not contain an underscore!');
+          $keycode = $stream['contentkeycode'];
+        else
+          $keycode = substr( $stream['contentkeycode'], 0, $pos );
 
-        $keycode = substr( $stream['contentkeycode'], 0, $pos );
         $ret['presentation'] = $ingressurl . $keycode;
       }
 
@@ -1670,10 +1673,10 @@ class Livefeeds extends \Springboard\Model {
           usr.nameformat,
           usr.nameprefix,
           usr.namefirst,
-          usr.namelast.
+          usr.namelast,
           usr.email
-        FROM users
-        WHERE id IN('" . implode("', '", $userids ) . "')
+        FROM users AS usr
+        WHERE usr.id IN('" . implode("', '", $userids ) . "')
       ");
 
       foreach( $row['users'] as $user )
@@ -1681,13 +1684,11 @@ class Livefeeds extends \Springboard\Model {
     }
 
     $row['emails'] = \Springboard\Tools::explodeAndTrim(
-      ',', $row['emails']
+      "\n", $row['emails']
     );
 
-    if ( !empty( $row['emails'] ) ) {
-      foreach( $row['emails'] as $email )
-        $emails[ $email ] = true;
-    }
+    foreach( $row['emails'] as $email )
+      $emails[ $email ] = true;
 
     $row['emailcount'] = count( $emails );
     return $emails;

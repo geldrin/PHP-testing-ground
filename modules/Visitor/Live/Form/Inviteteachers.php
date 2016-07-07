@@ -48,6 +48,11 @@ class Inviteteachers extends \Visitor\HelpForm {
 
     parent::init();
   }
+  public function postGetForm() {
+    parent::postGetForm();
+    $l = $this->bootstrap->getLocalization();
+    $this->form->submit = $l('live', 'teacher_submit');
+  }
 
   public function onComplete() {
     $values = $this->form->getElementValues( 0 );

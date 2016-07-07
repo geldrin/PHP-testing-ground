@@ -1,5 +1,5 @@
 <?php
-namespace Visitor\Categories\Paging;
+namespace Visitor\Live\Paging;
 
 class Teacherinvites extends \Visitor\Paging {
   protected $orderkey = 'creation_desc';
@@ -9,6 +9,7 @@ class Teacherinvites extends \Visitor\Paging {
   );
   protected $insertbeforepager = Array( 'Visitor/Live/Paging/TeacherinvitesBeforepager.tpl' );
   protected $template = 'Visitor/Live/Paging/Teacherinvites.tpl';
+  protected $maintemplate = 'Visitor/Paging/tablelayout.tpl';
   protected $feedModel;
 
   public function init() {
@@ -23,7 +24,7 @@ class Teacherinvites extends \Visitor\Paging {
     $l                 = $this->bootstrap->getLocalization();
     $this->foreachelse = $l('live', 'teacher_foreachelse');
     $this->title       = $l('live', 'teacher_invites');
-    $this->controller->toSmarty['listclass'] = 'treeadminlist';
+    $this->controller->toSmarty['listclass'] = 'invitelist';
     $this->controller->toSmarty['feed'] = $this->feedModel->row;
 
     parent::init();

@@ -3354,7 +3354,11 @@ li#languageselectorlink span {
   display: inline-block;
   width: 16px;
   height: 16px;
-  background: #0ff; /* TODO gear icon */
+  background-image: url(images/icons/gear.png);
+  background-repeat: no-repeat;
+  position: relative;
+  top: 3px;
+  margin: 0 0 0 5px;
 }
 
 #live_analytics .singlecolumn .inputtext {
@@ -4037,4 +4041,33 @@ input.datepicker {
 #pin span {
   font-weight: bold;
   padding: 0 10px 0 0;
+}
+.recordingcontent .pin {
+  display: inline-block;
+  float: right;
+  line-height: 29px;
+  margin: 0 10px 0 0;
+}
+table.paging {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  border-collapse: collapse;
+}
+table.paging th {
+  padding: 5px;
+  font-weight: bold;
+  text-align: left;
+}
+table.paging td {
+  padding: 5px;
+  vertical-align: top;
+  text-align: left;
+}
+table.paging .pin {
+  font-weight: bold;
+}
+table.paging tr.even {
+  background-color: #f4f4f4;
 }
