@@ -28,7 +28,7 @@ class Controller extends \Springboard\Controller\Visitor {
 
     if ( in_array( $this->module, array('api', 'jsonapi') ) ) // az api ->authenticate mindig kezeli
       return parent::init();
-    
+
     $skipsinglelogincheck = array(
       'users' => array(
         'ping' => true,
@@ -46,24 +46,24 @@ class Controller extends \Springboard\Controller\Visitor {
         'js'  => true,
       ),
     );
-    
+
     foreach( $skipsinglelogincheck as $module => $actions ) {
-      
+
       if ( $this->module == $module and isset( $actions[ $this->action ] ) )
         return parent::init();
-      
+
     }
-    
+
     $this->handleLogin();
     $this->handleAutologin();
     $this->debugLogUsers();
     $this->handleSingleLoginUsers();
     parent::init();
-    
+
   }
 
   public function handleAutologin() {
-    
+
     if ( !isset( $_COOKIE['autologin'] ) )
       return;
 
@@ -95,7 +95,7 @@ class Controller extends \Springboard\Controller\Visitor {
       if ( $authtype['type'] === 'local' )
         continue;
 
-      $class = "\\AuthTypes\\" . ucfirst( $authtype['type'] );
+      $class = "\\AuthTypes\\" . ucfirst( strtolower( $authtype['type'] ) );
       $auth = new $class( $this->bootstrap, $this->organization, $ipaddresses );
 
       try {
@@ -136,7 +136,7 @@ class Controller extends \Springboard\Controller\Visitor {
   }
 
   public function handleSingleLoginUsers() {
-    
+
     $user = $this->bootstrap->getSession('user');
 
     if ( $user['id'] and !$user['isadmin'] ) {
@@ -147,20 +147,20 @@ class Controller extends \Springboard\Controller\Visitor {
       // nem sikerulne
       $userModel = $this->bootstrap->getModel('users');
       $userModel->select( $user['id'] );
-      
+
       if (
            $userModel->row['timestampdisabledafter'] and
            strtotime( $userModel->row['timestampdisabledafter'] ) < time()
          ) {
-        
+
         $user->clear();
         $this->regenerateSessionID();
 
         $l = $this->bootstrap->getLocalization();
         $this->redirectWithMessage('users/login', $l('users', 'timestampdisabled') );
-        
+
       }
-      
+
       if ( $userModel->row['issingleloginenforced'] ) {
 
         if ( !$userModel->checkSingleLoginUsers() ) {
@@ -180,13 +180,13 @@ class Controller extends \Springboard\Controller\Visitor {
       }
 
     }
-  
+
   }
 
   public function redirectToMainDomain() {}
-  
+
   public function setupOrganization() {
-    
+
     $host         = $_SERVER['SERVER_NAME'];
     $orgModel     = $this->bootstrap->getModel('organizations');
     $organization = $orgModel->getOrganizationByDomain( $host, false );
@@ -194,7 +194,7 @@ class Controller extends \Springboard\Controller\Visitor {
     if ( !$organization ) {
 
       $fallbackurl = @$this->bootstrap->config['organizationfallbackurl'];
-      
+
       if ( !$fallbackurl )
         die();
       else
@@ -206,66 +206,66 @@ class Controller extends \Springboard\Controller\Visitor {
     $this->organization = $organization;
 
   }
-  
+
   public function handleAccessFailure( $permission ) {
-    
+
     if ( $permission == 'member' )
       return parent::handleAccessFailure( $permission );
-    
+
     $pos = strpos( $permission, '|' );
     if ( $pos !== false )
       $permission = substr( $permission, 0, $pos );
-    
+
     header('HTTP/1.0 403 Forbidden');
     $this->redirectToController('contents', 'nopermission' . $permission );
-    
+
   }
-  
+
   public function modelOrganizationAndIDCheck( $table, $id, $redirectto = 'index' ) {
-    
+
     if ( $id <= 0 ) {
-      
+
       if ( $redirectto !== false )
         $this->redirect( $redirectto );
       else
         return false;
-      
+
     }
-    
+
     $model = $this->bootstrap->getModel( $table );
     $model->addFilter('id', $id );
     $model->addFilter('organizationid', $this->organization['id'] );
-    
+
     $row = $model->getRow();
-    
+
     if ( empty( $row ) and $redirectto !== false )
       $this->redirect( $redirectto );
     elseif ( empty( $row ) )
       return false;
-    
+
     $model->id  = $row['id'];
     $model->row = $row;
-    
+
     return $model;
-    
+
   }
-  
+
   public function modelOrganizationAndUserIDCheck( $table, $id, $redirectto = 'index' ) {
-    
+
     $user = $this->bootstrap->getSession('user');
-    
+
     if ( $id <= 0 or !isset( $user['id'] ) ) {
-      
+
       if ( $redirectto !== false )
         $this->redirect( $redirectto );
       else
         return false;
-      
+
     }
-    
+
     $model = $this->bootstrap->getModel( $table );
     $model->addFilter('id', $id );
-    
+
     if ( $user['iseditor'] or $user['isclientadmin'] )
       $model->addTextFilter("
         userid = '" . $user['id'] . "' OR
@@ -273,41 +273,41 @@ class Controller extends \Springboard\Controller\Visitor {
       ");
     else
       $model->addFilter('userid', $user['id'] );
-    
+
     $row = $model->getRow();
-    
+
     if ( empty( $row ) and $redirectto !== false )
       $this->redirect( $redirectto );
     elseif ( empty( $row ) )
       return false;
-    
+
     $model->id  = $row['id'];
     $model->row = $row;
-    
+
     return $model;
-    
+
   }
-  
+
   public function output( $string, $disablegzip = false, $disablekill = false ) {
-    
+
     if ( $this->bootstrap->overridedisablegzip !== null )
       $disablegzip = $this->bootstrap->overridedisablegzip;
-    
+
     parent::output( $string, $disablegzip, $disablekill );
-    
+
   }
-  
+
   protected function getBaseURI( $withschema = true ) {
-    
+
     $url = $this->organization['domain'] . '/';
-    
+
     if ( $withschema )
       $url = $this->bootstrap->scheme . $url;
-    
+
     return $url;
-    
+
   }
-  
+
   public function getHashForFlash( $string ) {
     // azert nem hmac (mert amugy message authenticity-t nezunk) mert a flash
     // a kliens oldalan generalja, igy mindenfele keppen meg tudja hamisitani
@@ -315,55 +315,55 @@ class Controller extends \Springboard\Controller\Visitor {
     // pont emiatt
     return md5( $string . $this->bootstrap->config['flashhashseed'] );
   }
-  
+
   public function checkHashFromFlash( $string, $hash ) {
     $actualhash = $this->getHashForFlash( $string );
     return $hash == $actualhash;
   }
-  
+
   public function getFlashParameters( $parameters ) {
-    
+
     $ret = array(
       'parameters' => json_encode( $parameters, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT ),
     );
-    
+
     $ret['hash'] = $this->getHashForFlash( $ret['parameters'] );
     return $ret;
-    
+
   }
-  
+
   public function getIPAddress( $extended = null ) {
-    
+
     if ( $extended ) {
-      
+
       $ipaddresses = array(
         'REMOTE_ADDR' => $_SERVER['REMOTE_ADDR'],
       );
-      
+
       if ( @$_SERVER['HTTP_VIA'] )
         $ipaddresses['VIA'] = $_SERVER['HTTP_VIA'];
       if ( @$_SERVER['HTTP_X_FORWARDED_FOR'] )
         $ipaddresses['FORWARDED_FOR'] = $_SERVER['HTTP_X_FORWARDED_FOR'];
-      
+
       return $ipaddresses;
-      
+
     }
-    
+
     return $_SERVER['REMOTE_ADDR'];
-    
+
   }
-  
+
   public function debugLogUsers() {
-    
+
     $user = $this->bootstrap->getSession('user');
     if ( !$user or !$user['id'] )
       return;
-    
+
     foreach( $this->bootstrap->config['debugloguserids'] as $userid ) {
-      
+
       if ( $user['id'] != $userid )
         continue;
-      
+
       $d = \Springboard\Debug::getInstance();
       $d->log(
         false,
@@ -372,56 +372,56 @@ class Controller extends \Springboard\Controller\Visitor {
         \Springboard\Debug::getRequestInformation(2)
       );
       break;
-      
+
     }
-    
+
   }
-  
+
   public function handleUserAccess( $access ) {
-    
+
     if ( $access === true )
       return;
-    
+
     $errors = array(
       'registrationrestricted',
       'departmentorgrouprestricted',
     );
-    
+
     $user = $this->bootstrap->getSession('user');
     if ( $user['id'] or !in_array( $access, $errors, true ) )
       $this->redirectToController('contents', $access );
-    
+
     $l = $this->bootstrap->getLocalization();
     $this->redirectWithMessage(
       'users/login',
       $l('', 'nopermission_message_' . $access ),
       array('forward' => $_SERVER['REQUEST_URI'] )
     );
-    
+
   }
-  
+
   public function logUserLogin( $ident, $ipaddress = null ) {
-    
+
     if ( !$ipaddress ) {
-      
+
       $ipaddresses = $this->getIPAddress(true);
       $ipaddress   = '';
       foreach( $ipaddresses as $key => $value )
         $ipaddress .= ' ' . $key . ': ' . $value;
-      
+
     }
-    
+
     $d = \Springboard\Debug::getInstance();
     $d->log(
       false,
       'login.txt',
       $ident . ' SESSIONID: ' . session_id() . ' IPADDRESS:' . $ipaddress
     );
-    
+
   }
-  
+
   public function sendOrganizationHTMLEmail( $email, $subject, $body, $values = array() ) {
-    
+
     $olderrorsto = $this->bootstrap->config['mail']['errorsto'];
     $this->bootstrap->config['mail']['errorsto'] = $this->organization['mailerrorto'];
     if ( !$this->queue )
@@ -472,10 +472,10 @@ class Controller extends \Springboard\Controller\Visitor {
 
     $baseuri   = $this->bootstrap->scheme . $organization['domain'] . '/';
     $staticuri = $this->bootstrap->scheme . $organization['staticdomain'] . '/';
-    
+
     $this->application->config['combine']['domains'][] = $organization['domain'];
     $this->application->config['combine']['domains'][] = $organization['staticdomain'];
-    
+
     $this->toSmarty['supportemail'] = $this->bootstrap->config['mail']['fromemail'] =
       $this->application->config['mail']['fromemail'] = $organization['supportemail']
     ;

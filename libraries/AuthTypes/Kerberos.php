@@ -2,6 +2,7 @@
 namespace AuthTypes;
 
 class Kerberos extends \AuthTypes\Base {
+  protected $source = 'kerberos';
 
   public function handle($type) {
 
@@ -66,7 +67,7 @@ class Kerberos extends \AuthTypes\Base {
 
     if (
          $user['id'] and
-         $user['source'] === 'kerberos' and
+         $user['source'] === $this->source and
          $user['externalid'] === $remoteuser and
          !$this->shouldReauth( $type )
        )
@@ -86,7 +87,7 @@ class Kerberos extends \AuthTypes\Base {
         'nickname'   => $uname,
         'namefirst'  => $uname,
         'externalid' => $remoteuser,
-        'source'     => 'kerberos',
+        'source'     => $this->source,
       );
 
       // nem talaltunk directoryt a usernek => nem talaltuk meg ldap-ban vagy
@@ -107,7 +108,7 @@ class Kerberos extends \AuthTypes\Base {
 
       $userModel->updateSessionInformation();
       $userModel->updateLastlogin(
-        "(Kerberos auto-login)\n" .
+        "({$this->source} auto-login)\n" .
         \Springboard\Debug::getRequestInformation( 0, false ),
         $this->ipaddresses
       );
