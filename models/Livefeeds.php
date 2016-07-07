@@ -1307,6 +1307,33 @@ class Livefeeds extends \Springboard\Model {
       return $this->bootstrap->config['wowza']['liveingressurl'];
   }
 
+  public function getAllIngressURLs( $stream ) {
+    $ingressurl = $this->getIngressURL();
+
+    // video: ingressurl + keycode _ előtti része
+    $pos = strpos( $stream['keycode'], '_' );
+    if ( $pos === false )
+      throw new Exception('keycode did not contain an underscore!');
+    $keycode = substr( $stream['keycode'], 0, $pos );
+
+    // mobile: ingressurl + keycode UTOLSÓ _ előtti része
+    $pos = strrpos( $stream['keycode'], '_' );
+    $mobilecode = substr( $stream['keycode'], 0, $pos );
+
+    // prezi: ingressurl + contentkeycode _ előtti része
+    strpos( $stream['contentkeycode'], '_' );
+    if ( $pos === false )
+      throw new Exception('contentkeycode did not contain an underscore!');
+
+    $contentkeycode = substr( $stream['contentkeycode'], 0, $pos );
+
+    return array(
+      'video'        => $ingressurl . $keycode,
+      'presentation' => $ingressurl . $contentkeycode,
+      'mobile'       => $ingressurl . $mobilecode,
+    );
+  }
+
   public function handleStreamTemplate( $groupid, $linkid = null ) {
     $this->ensureObjectLoaded();
 

@@ -866,6 +866,9 @@ class Channels extends \Springboard\Model {
 
       $feeds[ $key ]['streams']   = $feedModel->getStreams( $feed['id'] );
       $feeds[ $key ]['candelete'] = $feedModel->canDeleteFeed( $feed );
+      $feeds[ $key ]['ingressurls'] = $feedModel->getAllIngressURLs(
+        reset( $feeds[ $key ]['streams'] )
+      );
 
     }
 

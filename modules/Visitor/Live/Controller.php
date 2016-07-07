@@ -1080,6 +1080,9 @@ class Controller extends \Visitor\Controller {
     $feeds = array( $feed );
     $this->addStreamsToFeeds( $feeds );
     $feed = $feeds[0];
+    $feed['ingressurls'] = $feedModel->getAllIngressURLs(
+      reset( $feed['streams'] )
+    );
     return $feed;
   }
 
@@ -1148,6 +1151,8 @@ class Controller extends \Visitor\Controller {
     );
   }
 
+  // user kereses, sajnos ezzel az osszes usert le lehet kerdezni
+  // az adott organizationhoz ha valaki akarja
   public function searchuserAction() {
     if ( !$this->organization['islivepinenabled'] )
       $this->redirect('');
