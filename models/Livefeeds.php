@@ -1307,31 +1307,40 @@ class Livefeeds extends \Springboard\Model {
       return $this->bootstrap->config['wowza']['liveingressurl'];
   }
 
-  public function getAllIngressURLs( $stream ) {
+  public function getAllIngressURLs( $streams ) {
     $ingressurl = $this->getIngressURL();
+    $ret = array();
 
-    // video: ingressurl + keycode _ előtti része
-    $pos = strpos( $stream['keycode'], '_' );
-    if ( $pos === false )
-      throw new Exception('keycode did not contain an underscore!');
-    $keycode = substr( $stream['keycode'], 0, $pos );
+    foreach( $streams as $stream ) {
+      if ( !isset( $ret['video'] ) and $stream['isdesktopcompatible'] ) {
+        // video: ingressurl + keycode _ előtti része
+        $pos = strpos( $stream['keycode'], '_' );
+        if ( $pos === false )
+          throw new Exception('keycode did not contain an underscore!');
+        $keycode = substr( $stream['keycode'], 0, $pos );
+        $ret['video'] = $ingressurl . $keycode;
+      }
 
-    // mobile: ingressurl + keycode UTOLSÓ _ előtti része
-    $pos = strrpos( $stream['keycode'], '_' );
-    $mobilecode = substr( $stream['keycode'], 0, $pos );
+      if ( !isset( $ret['presentation'] ) and $stream['isdesktopcompatible'] ) {
+        // prezi: ingressurl + contentkeycode _ előtti része
+        strpos( $stream['contentkeycode'], '_' );
+        if ( $pos === false )
+          throw new Exception('contentkeycode did not contain an underscore!');
 
-    // prezi: ingressurl + contentkeycode _ előtti része
-    strpos( $stream['contentkeycode'], '_' );
-    if ( $pos === false )
-      throw new Exception('contentkeycode did not contain an underscore!');
+        $keycode = substr( $stream['contentkeycode'], 0, $pos );
+        $ret['presentation'] = $ingressurl . $keycode;
+      }
 
-    $contentkeycode = substr( $stream['contentkeycode'], 0, $pos );
+      // mobil streamet keresunk (non-desktop)
+      if ( !isset( $ret['mobile'] ) and !$stream['isdesktopcompatible'] ) {
+        // mobile: ingressurl + keycode UTOLSÓ _ előtti része
+        $pos = strrpos( $stream['keycode'], '_' );
+        $keycode = substr( $stream['keycode'], 0, $pos );
+        $ret['mobile'] = $ingressurl . $keycode;
+      }
+    }
 
-    return array(
-      'video'        => $ingressurl . $keycode,
-      'presentation' => $ingressurl . $contentkeycode,
-      'mobile'       => $ingressurl . $mobilecode,
-    );
+    return $ret;
   }
 
   public function handleStreamTemplate( $groupid, $linkid = null ) {

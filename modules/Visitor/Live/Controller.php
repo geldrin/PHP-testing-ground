@@ -1081,7 +1081,7 @@ class Controller extends \Visitor\Controller {
     $this->addStreamsToFeeds( $feeds );
     $feed = $feeds[0];
     $feed['ingressurls'] = $feedModel->getAllIngressURLs(
-      reset( $feed['streams'] )
+      $feed['streams']
     );
     return $feed;
   }
