@@ -2463,7 +2463,10 @@ class Recordings extends \Springboard\Model {
         else
           $data['recording_autoQuality'] = false;
 
-        if ( $version['isadaptive'] )
+        if (
+             !$info['organization']['isadaptivestreamingdisabled'] and
+             $version['isadaptive']
+           )
           $data['recording_autoQuality'] = true;
 
         if ( !$hds )

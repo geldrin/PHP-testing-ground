@@ -123,7 +123,10 @@ class Livefeeds extends \Springboard\Model {
 
   }
 
-  public function isAdaptive() {
+  public function isAdaptive( $organization ) {
+    if ( $organization['isadaptivestreamingdisabled'] )
+      return false;
+
     $this->ensureObjectLoaded();
     if ( !$this->row['livestreamgroupid'] )
       return false;
@@ -340,7 +343,7 @@ class Livefeeds extends \Springboard\Model {
       'user_checkWatchingConfirmationTimeout' => $info['checkwatchingconfirmationtimeout'],
     );
 
-    if ( $this->isAdaptive() )
+    if ( $this->isAdaptive( $info['organization'] ) )
       $flashdata['recording_autoQuality'] = true;
 
     $flashdata = $flashdata + $this->bootstrap->config['flashplayer_extraconfig'];
