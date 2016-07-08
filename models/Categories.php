@@ -2,7 +2,7 @@
 namespace Model;
 
 class Categories extends \Springboard\Model\Multilingual {
-  public $multistringfields = array( 'name', 'namehyphenated' );
+  public $multistringfields = array( 'name' );
   private $treecache = array();
 
   public function updateVideoCounters( $clearCache = true ) {
@@ -55,17 +55,17 @@ class Categories extends \Springboard\Model\Multilingual {
   }
 
   public function getCategoryTree( $organizationid, $parentid = 0, $maxlevel = 2, $currentlevel = 0 ) {
-    
+
     if ( $currentlevel >= $maxlevel and $maxlevel > 0 )
       return array();
-    
+
     $currentlevel++;
     $this->clearFilter();
     $this->addFilter('parentid',       $parentid );
     $this->addFilter('organizationid', $organizationid );
-    
+
     $items = $this->getArray( false, false, false, 'weight, s1.value');
-    
+
     foreach( $items as $key => $value )
       $items[ $key ]['children'] = $this->getCategoryTree(
         $organizationid,
@@ -73,34 +73,34 @@ class Categories extends \Springboard\Model\Multilingual {
         $maxlevel,
         $currentlevel
       );
-    
+
     return $items;
-    
+
   }
-  
+
   public function findChildrenIDs( $parentid = null ) {
-    
+
     if ( !$parentid ) {
-      
+
       $this->ensureID();
       $parentid = $this->id;
-      
+
     }
-    
+
     $children = $this->db->getCol("
       SELECT id
       FROM categories
-      WHERE 
+      WHERE
         parentid = " . $this->db->qstr( $parentid )
     );
-    
+
     foreach( $children as $child )
       $children = array_merge( $children, $this->findChildrenIDs( $child ) );
-    
+
     return $children;
-   
+
   }
-  
+
   // --------------------------------------------------------------------------
   public function delete( $id, $magic_quotes_gpc = 0 ) {
 

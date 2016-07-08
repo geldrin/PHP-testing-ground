@@ -2,12 +2,12 @@
 
 $organizationid = $this->controller->organization['id'];
 $config = Array(
-  
+
   'action' => Array(
     'type'  => 'inputHidden',
     'value' => 'submitcreate'
   ),
-  
+
   'organizationid' => Array(
     'type'     => 'inputHidden',
     'value'    => $organizationid,
@@ -19,23 +19,17 @@ $config = Array(
     'type'        => 'inputTextMultilanguage',
     'languages'   => $l->getLov('languages'),
   ),
-  
-  'namehyphenated_stringid' => Array(
-    'displayname' => $l('categories', 'namehyphenated'),
-    'type'        => 'inputTextMultilanguage',
-    'languages'   => $l->getLov('languages'),
-  ),
-  
+
   'parentid' => Array(
     'displayname' => $l('categories', 'parentid'),
     'type'        => 'selectDynamic',
     'values'      => Array( 0 => $l('categories', 'noparent') ),
     'sql'         => "
-      SELECT 
+      SELECT
         c.id, s.value
-      FROM 
+      FROM
         categories c, strings s
-      WHERE 
+      WHERE
         c.name_stringid = s.translationof AND
         s.language = 'hu' AND
         c.organizationid = '" . $organizationid . "' AND
@@ -46,7 +40,7 @@ $config = Array(
     'treestart'   => '0',
     'value'       => $this->application->getNumericParameter('parentid'),
   ),
-  
+
   'iconfilename' => Array(
     'type' => 'inputradio',
     'displayname' => $l('categories', 'icon'),
@@ -56,7 +50,7 @@ $config = Array(
       Array( 'type' => 'required' )
     )
   ),
-  
+
   'weight' => Array(
     'displayname' => $l('', 'weight'),
     'type'        => 'inputText',
@@ -65,20 +59,20 @@ $config = Array(
       Array( 'type' => 'number' )
     )
   ),
-  
+
 );
 
 $uri     = $this->bootstrap->staticuri . 'images/categories/';
 $files   = scandir( $this->bootstrap->config['categoryiconpath'] );
 
 foreach( $files as $filename ) {
-  
+
   if ( preg_match( '/\.png$/i', $filename ) ) {
-    
+
     $config['iconfilename']['values'][ $filename ] =
       '<img src="' . $uri . $filename . '" />';
     ;
-    
+
   }
-  
+
 }
