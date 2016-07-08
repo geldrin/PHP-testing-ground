@@ -123,6 +123,20 @@ class Livefeeds extends \Springboard\Model {
 
   }
 
+  public function isAdaptive() {
+    $this->ensureObjectLoaded();
+    if ( !$this->row['livestreamgroupid'] )
+      return false;
+
+    $groupid = $this->db->qstr( $this->row['livestreamgroupid'] );
+    return (bool)$this->db->getOne("
+      SELECT lg.isadaptive
+      FROM livestream_groups AS lg
+      WHERE lg.id = $groupid
+      LIMIT 1
+    ");
+  }
+
   public function getStreams( $feedid = null ) {
 
     if ( !$feedid ) {
@@ -325,6 +339,9 @@ class Livefeeds extends \Springboard\Model {
       'user_checkWatchingTimeInterval' => $info['checkwatchingtimeinterval'],
       'user_checkWatchingConfirmationTimeout' => $info['checkwatchingconfirmationtimeout'],
     );
+
+    if ( $this->isAdaptive() )
+      $flashdata['recording_autoQuality'] = true;
 
     $flashdata = $flashdata + $this->bootstrap->config['flashplayer_extraconfig'];
 
