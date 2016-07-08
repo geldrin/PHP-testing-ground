@@ -10,7 +10,7 @@
   {assign var=imgbase value=$imgbase|trim}
   {foreach from=$categories item=category name=category}
     <li{if $smarty.foreach.category.last} class="last"{/if}>
-      <a href="{$language}/categories/details/{$category.id},{$category.name|filenameize}" title="{$category.name|escape:html}">
+      <a href="{$language}/categories/details/{$category.id},{$category|@categoryname:''|filenameize}" title="{$category|@categoryname:''|escape:html}">
         <img src="{$imgbase}categories/114/{$category.iconfilename|default:'default.png'}" />
         <h3>{$category|@categoryname}</h3>
         {assign var=count value=$category.numberofrecordings|default:0|numberformat}

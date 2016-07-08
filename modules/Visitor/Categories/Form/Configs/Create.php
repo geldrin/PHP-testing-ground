@@ -26,7 +26,7 @@ $config = Array(
     'values'      => Array( 0 => $l('categories', 'noparent') ),
     'sql'         => "
       SELECT
-        c.id, s.value
+        c.id, REPLACE(s.value, '_', '')
       FROM
         categories c, strings s
       WHERE
