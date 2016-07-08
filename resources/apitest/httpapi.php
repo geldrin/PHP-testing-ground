@@ -3,7 +3,7 @@
 class Api {
   public $apiurl = 'https://videosquare.eu/hu/api';
   public $debug = false;
-  
+
   protected $curl;
   protected $email;
   protected $password;
@@ -19,57 +19,57 @@ class Api {
     CURLOPT_USERAGENT      => 'teleconnect api client',
   );
   private $userchecked = false;
-  
+
   public function __construct( $email, $password ) {
     $this->email    = $email;
     $this->password = $password;
   }
 
   public function setDomain( $domain ) {
-      
+
     if ( stripos( $domain, "http" ) === false ) {
         $this->apiurl = "https://$domain/hu/api";
     } else {
         $this->apiurl = "$domain/hu/api";
     }
-    
+
   }
 
   protected function initCurl( $options ) {
-    
+
     if ( $this->curl )
       curl_close( $this->curl );
-    
+
     $this->curl = curl_init();
-    
+
     $opts = $this->options;
     foreach( $options as $key => $value )
       $opts[ $key ] = $value;
-    
+
     if ( $this->debug ) {
-      
+
       $defines = get_defined_constants();
       $options = array();
       foreach( $defines as $key => $value ) {
-        
+
         if ( substr( $key, 0, 8 ) != 'CURLOPT_' )
           continue;
-        
+
         if ( isset( $opts[ $value ] ) )
           $options[ $key ] = $opts[ $value ];
-        
+
       }
-      
+
       var_dump( $options );
-      
+
     }
-    
+
     curl_setopt_array( $this->curl, $opts );
-    
+
   }
-  
+
   protected function getURL( $layer, $module, $method, $parameters = array() ) {
-    
+
     $params = array(
       'format'   => 'json',
       'email'    => $this->email,
@@ -78,9 +78,9 @@ class Api {
       'method'   => $method,
       'module'   => $module,
     );
-    
+
     return $this->apiurl . '?' . http_build_query( array_merge( $params, $parameters ) );
-    
+
   }
 
   private function isUTF8( $string ) {
@@ -108,25 +108,33 @@ class Api {
     }
   }
 
-  public function modifyRecording( $id, $values ) {
-    
+  public function modifyRecording( $id, $values, $userid ) {
+
     if ( empty( $values ) or !is_array( $values ) )
       throw new \Exception('Nothing to modify');
 
     $this->checkArrayValidUTF8( $values );
 
     // nem szamit hogy az url-ben vagy POST parameterekkent erkeznek a parameterek
-    $parameters = array('id' => $id );
+    $parameters = array(
+      'id' => $id,
+      'userid' => $userid,
+    );
+
+    $method = 'modifyrecording';
+    if ( $userid )
+      $method .= 'asuser';
+
     $options    = array(
-      CURLOPT_URL        => $this->getURL('controller', 'recordings', 'modifyrecording', $parameters ),
+      CURLOPT_URL        => $this->getURL('controller', 'recordings', $method, $parameters ),
       CURLOPT_POST       => true,
       CURLOPT_POSTFIELDS => $values,
     );
-    
+
     return $this->executeCall( $options, "MODIFY" );
-    
+
   }
-  
+
   public function addRecordingToChannel( $recordingid, $channelid ) {
 
     return $this->recordingChannelOperation( 'addtochannel', $recordingid, $channelid );
@@ -135,7 +143,7 @@ class Api {
 
   public function removeRecordingFromChannel( $recordingid, $channelid ) {
 
-    return $this->recordingChannelOperation( 'removefromchannel', $recordingid, $channelid );  
+    return $this->recordingChannelOperation( 'removefromchannel', $recordingid, $channelid );
 
   }
 
@@ -150,11 +158,11 @@ class Api {
       CURLOPT_POST       => true,
       CURLOPT_POSTFIELDS => Array(),
     );
-    
+
     return $this->executeCall( $options, strtoupper( $action ) );
-    
+
   }
-  
+
   private function executeCall( $options, $action, $skipUserCheck = false ) {
     if ( !$skipUserCheck and !$this->userchecked ) {
       if ( !$this->checkUserPassword() )
@@ -187,16 +195,16 @@ class Api {
     }
 
   }
-  
+
   public function uploadContent( $id, $file, $userid = null ) {
     return $this->uploadRecording( $file, '', $userid, 1, $id );
   }
-  
+
   public function uploadRecording( $file, $language, $userid = 0, $iscontent = 0, $recordingid = 0 ) {
-    
+
     if ( !isset( $file ) or !is_readable( $file ) )
       throw new \Exception("Unreadable file: " . $file );
-    
+
     $filename     = basename( $file );
     $size         = filesize( $file );
     if ( $size < 0 )
@@ -207,18 +215,18 @@ class Api {
     $resumeinfo   = $this->getResumeInfo(
       $filename, $size, $iscontent, $userid
     );
-    
+
     if ( $resumeinfo and isset( $resumeinfo['status'] ) and $resumeinfo['status'] === 'success' )
       $currentchunk = $resumeinfo['startfromchunk'];
-    
+
     if ( $size > $this->chunksize )
       $chunkcount = ceil( $size / $this->chunksize );
-    
+
     if ( $currentchunk >= $chunkcount )
       $currentchunk = 0;
-    
+
     while( $currentchunk < $chunkcount ) {
-      
+
       $tmpfile   = $this->getChunk( $file, $currentchunk );
       $chunkinfo = $this->uploadChunk( $tmpfile, array(
           'name'         => $filename,
@@ -231,24 +239,24 @@ class Api {
           'id'           => $recordingid,
         )
       );
-      
+
       unlink( $tmpfile );
       if ( !$chunkinfo or !isset( $chunkinfo['status'] ) or $chunkinfo['status'] == 'error' )
         throw new \Exception(
           "Failed uploading chunk($tmpfile) #$currentchunk out of $chunkcount: " .
           var_export( $chunkinfo, true )
         );
-      
+
       $currentchunk++;
-      
+
     }
-    
+
     return array('result' => 'OK', 'data' => array( 'id' => $chunkinfo['id'] ) );
-    
+
   }
-  
+
   private function getResumeInfo( $filename, $size, $iscontent, $userid ) {
-    
+
     $method     = 'checkfileresume';
     $parameters = array(
       'name'      => $filename,
@@ -256,53 +264,53 @@ class Api {
       'iscontent' => $iscontent,
       'userid'    => $userid,
     );
-    
+
     if ( $parameters['userid'] )
       $method  .= 'asuser';
-    
+
     $options    = array(
       CURLOPT_URL        => $this->getURL('controller', 'recordings', $method, $parameters ),
     );
-    
+
     return $this->executeCall( $options, "RESUMEINFO" );
-    
+
   }
-  
+
   private function getChunk( $file, $currentchunk ) {
-    
+
     $tmpfile    = __DIR__ . '/.currentchunk';
     if (
          ( file_exists( $tmpfile ) and !is_writable( $tmpfile ) ) or
          !is_writable( dirname( $tmpfile ) )
        )
       throw new \Exception("Temporary file: $tmpfile is not writable!");
-      
+
     $tmphandle  = fopen( $tmpfile , 'wb' ); // open for writing only and truncate to zero
     $filehandle = fopen( $file, 'rb' );
     $dataread   = 0;
     $offset     = $currentchunk * $this->chunksize;
-    
+
     fseek( $filehandle, $offset );
     while( $dataread < $this->chunksize and !feof( $filehandle ) ) {
-      
+
       $data     = fread( $filehandle, 8192 );
       $dataread += fwrite( $tmphandle, $data );
-      
+
     }
-    
+
     fclose( $tmphandle );
     fclose( $filehandle );
     return $tmpfile;
-    
+
   }
-  
+
   private function uploadChunk( $file, $parameters ) {
-    
+
     $method     = 'uploadchunk';
-    
+
     if ( $parameters['userid'] )
       $method  .= 'asuser';
-    
+
     $fieldValue = '@' . $file;
     if ( class_exists("\CURLFile") )
       $fieldValue = new \CURLFile( $file );
@@ -312,27 +320,27 @@ class Api {
       CURLOPT_POST       => true,
       CURLOPT_POSTFIELDS => array('file' => $fieldValue ),
     );
-    
+
     return $this->executeCall( $options, "UPLOAD" );
-    
+
   }
-  
+
   public function setUserField( $userid, $field, $value ) {
-    
+
     $parameters = array(
       'userid' => $userid,
       'field'  => $field,
       'value'  => $value,
     );
-    
+
     $options    = array(
       CURLOPT_URL => $this->getURL('controller', 'users', 'setuserfield', $parameters ),
     );
-    
+
     return $this->executeCall( $options, "SETUSERFIELD" );
-    
+
   }
-  
+
   private function checkUserPassword() {
     $parameters = array(
       'email'    => $this->email,

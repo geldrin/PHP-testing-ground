@@ -72,6 +72,16 @@ class Controller extends \Visitor\Controller {
         'type' => 'id',
       ),
     ),
+    'modifyrecordingasuser' => array(
+      'id' => array(
+        'type' => 'id',
+      ),
+      'user' => array(
+        'type'                     => 'user',
+        'permission'               => 'admin',
+        'impersonatefromparameter' => 'userid',
+      ),
+    ),
     'addtochannel' => array(
       'recordingid' => array(
         'type' => 'id',
@@ -694,6 +704,10 @@ class Controller extends \Visitor\Controller {
     $recordingModel->updateRow( $values );
     return $recordingModel->row;
 
+  }
+
+  public function modifyrecordingasuserAction( $id ) {
+    return $this->modifyrecording( $id );
   }
 
   protected function getPlayerHeight( $recordingsModel, $fullscale = false ) {
