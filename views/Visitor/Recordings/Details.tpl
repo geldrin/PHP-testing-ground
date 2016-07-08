@@ -14,7 +14,7 @@
 <br/>
 
 <div id="player"{if !$browser.mobile} style="height: {$flashheight}px;"{/if}>
-  
+
   {if $browser.mobile}
     {if $browser.mobiledevice == 'iphone'}
       <div id="mobileplayercontainer">

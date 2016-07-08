@@ -38,6 +38,17 @@
     {else}
       <span class="warning">{#live__no_compatible_stream#}</span>
     {/if}
+
+    {if count( $streams ) > 1}
+      <div id="qualitychooser">
+        <ul>
+          {foreach from=$streams item=stream}
+            <li{if $currentstream.id == $stream.id} class="active"{/if}><a href="{$language}/live/view/{$feed.id},{$stream.id},{$feed.name|filenameize}">{$stream.qualitytag|escape:html}</a></li>
+          {/foreach}
+        </ul>
+      </div>
+    {/if}
+
   </center>
 {/if}
 </div>
