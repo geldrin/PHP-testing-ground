@@ -1,12 +1,20 @@
 {include file="Visitor/Email/_header.tpl"}
 
 {newsletter}
-<h1>{#live__inviteemail_title#}</h1>
+{if $user}
+{assign var=name value=$user|@nickformat|escape:html}
+{assign var=title value=#live__inviteemail_title#}
+{assign var=title value=$title|sprintf:$name}
+{else}
+{assign var=title value=#users__templatetitle_default#}
+{/if}
+{assign var=supportemail value=$organization.supportemail|default:$organization.name|escape:html}
+{assign var=event value=$channel.title|escape:html}
+{assign var=feedname value=$feed.name|escape:html}
+<h1>{$title}</h1>
 <p>
-  {assign var=BASE_URI value=$organization|@uri:base}
-  {#live__inviteemail_body#|sprintf:$pin}
+  {#live__inviteemail_body#|sprintf:$event:$feedname:$pin:$supportemail:$supportemail}
 </p>
-<br/>
 <br/>
 {/newsletter}
 

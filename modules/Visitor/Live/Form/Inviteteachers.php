@@ -70,16 +70,15 @@ class Inviteteachers extends \Visitor\HelpForm {
 
     $users = $this->validateAndGetUsers( $emails );
     $userids = array();
-    foreach( $users as $user ) {
+    foreach( $users as $user )
       $userids[] = $user['id'];
-      $emails[] = $user['email'];
-    }
+
     $row['userids'] = implode(',', $userids );
 
     $invModel = $this->bootstrap->getModel('livefeed_teacherinvites');
     $invModel->insert( $row );
 
-    $this->sendEmails( $row['pin'], $emails );
+    $this->sendEmails( $row['pin'], $users, $emails );
     $this->redirect(
       $this->application->getParameter(
         'forward',
@@ -138,8 +137,7 @@ class Inviteteachers extends \Visitor\HelpForm {
     $userModel = $this->bootstrap->getModel('users');
     $users = $userModel->getUsersByIDs(
       $userids,
-      $this->controller->organization['id'],
-      'id, email'
+      $this->controller->organization['id']
     );
     unset( $userids );
 
@@ -181,8 +179,12 @@ class Inviteteachers extends \Visitor\HelpForm {
     return $userdata;
   }
 
-  private function sendEmails( $pin, $emails ) {
+  private function sendEmails( $pin, $users, $emails ) {
     $l = $this->bootstrap->getLocalization();
+    $chanModel = $this->bootstrap->getModel('channels');
+    $chanModel->select( $this->feedModel->row['channelid'] );
+    $this->controller->toSmarty['channel'] = $chanModel->row;
+    $this->controller->toSmarty['feed'] = $this->feedModel->row;
     $this->controller->toSmarty['pin'] = $pin;
 
     $subject = $l('live', 'inviteemail_subject');
@@ -196,5 +198,18 @@ class Inviteteachers extends \Visitor\HelpForm {
         $subject,
         $body
       );
+
+    foreach( $users as $user ) {
+      $this->controller->toSmarty['user'] = $user;
+      $body = $this->controller->fetchSmarty(
+        'Visitor/Live/Inviteemail.tpl'
+      );
+
+      $this->controller->sendOrganizationHTMLEmail(
+        $user['email'],
+        $subject,
+        $body
+      );
+    }
   }
 }
