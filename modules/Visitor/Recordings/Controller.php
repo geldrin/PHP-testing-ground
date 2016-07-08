@@ -333,6 +333,7 @@ class Controller extends \Visitor\Controller {
       );
     }
 
+    $this->toSmarty['versions']      = $versions;
     $this->toSmarty['ipaddress']     = $this->getIPAddress();
     $this->toSmarty['member']        = $user;
     $this->toSmarty['sessionid']     = session_id();
@@ -771,6 +772,7 @@ class Controller extends \Visitor\Controller {
         $this->organization
       );
 
+    $this->toSmarty['versions']      = $versions;
     $this->toSmarty['needauth']      = $needauth;
     $this->toSmarty['ipaddress']     = $this->getIPAddress();
     $this->toSmarty['member']        = $user;
