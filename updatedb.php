@@ -26,8 +26,16 @@ class UpdateDB {
   public function __construct( $app, $argv ) {
     $this->application = $app;
     $this->bootstrap = $app->bootstrap;
-    $this->debug = $this->bootstrap->debug;
-    $this->debug = true; // TODO
+
+    $debug = false;
+    foreach( $argv as $arg ) {
+      if ( stripos( $arg, 'debug' ) !== false ) {
+        $debug = true;
+        break;
+      }
+    }
+
+    $this->debug = $this->bootstrap->debug = $debug;
 
     // egyelore hardcoded
     $table = 'help_contents';
@@ -44,10 +52,12 @@ class UpdateDB {
     // ha az a hash szerepel a history-ban talalhato hashek kozott
     // akkor az a sor updatelheto a jelenlegi ertekekkel
     // mert tudjuk hogy nem irjuk felul a user sajat valtozasait
+    // itt ellenorizzuk hogy a defaultvalues ertekek ugyanazok e
+    // mint amik az adatbazisban vannak
     $this->initWhatToUpdate( $table );
 
-    // az eppeni defaultvaluesban talalhato ertekekkel feltoltjuk
-    // azokat a rekordokat amiket updatelhetunk
+    // az eppeni defaultvaluesban talalhato ertekeket megjeloljuk
+    // frissitesre az elozo lepesek szerint
     $this->initUpdateValues( $table );
 
     // konkretan updateljuk az adatbazist
