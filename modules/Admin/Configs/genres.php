@@ -1,17 +1,17 @@
 <?php
 
 $config = Array(
-  
+
   'action' => Array(
     'type'  => 'inputHidden',
     'value' => 'insert'
   ),
-  
+
   'id' => Array(
     'type'  => 'inputHidden',
     'value' => '0'
   ),
-  
+
   'organizationid' => Array(
     'displayname' => 'Intézmény',
     'type'        => 'selectDynamic',
@@ -31,7 +31,7 @@ $config = Array(
     'treeparent'  => 'parentid',
     'treestart'   => '0',
   ),
-  
+
   'name_stringid' => Array(
     'displayname' => $l('recordings', 'genres'),
     'type'        => 'inputTextMultilanguage',
@@ -39,17 +39,17 @@ $config = Array(
     'validation'  => Array(
     )
   ),
-  
+
   'parentid' => Array(
     'displayname' => 'A következő alfaja:',
     'type'        => 'selectDynamic',
     'values'      => Array( 0 => '--- legkülső szintű műfaj ---' ),
     'sql'         => "
-      SELECT 
+      SELECT
         g.id, s.value
-      FROM 
+      FROM
         genres g, strings s
-      WHERE 
+      WHERE
         g.name_stringid = s.translationof AND
         s.language = 'hu' AND
         %s
@@ -78,7 +78,7 @@ $listconfig = Array(
     LEFT JOIN
       strings s
     ON
-      g.name_stringid = s.translationof AND 
+      g.name_stringid = s.translationof AND
       s.language = 'hu'
   ",
 
@@ -88,7 +88,7 @@ $listconfig = Array(
   'treestart'          => '0',
   'treeparent'         => 'parentid',
   'treestartinclusive' => true,
-  
+
   'deletesql'  => Array("
     SELECT count(*)
     FROM genres
@@ -99,14 +99,14 @@ $listconfig = Array(
   'type'       => 'tree',
   'modify'     => 'g.id',
   'delete'     => 'g.id',
-  
+
   'fields' => Array(
-  
+
     Array(
       'field' => 's.value',
       'displayname' => 'Megnevezés',
     ),
-    
+
     Array(
       'displayname' => $l('admin', 'id'),
       'field' => 'g.id',

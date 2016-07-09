@@ -15,20 +15,20 @@ class Controller extends \Visitor\Controller {
     'orderrecordings'     => 'uploader|moderateduploader|editor|clientadmin',
     'setorder'            => 'uploader|moderateduploader|editor|clientadmin',
   );
-  
+
   public $forms = array(
     'create' => 'Visitor\\Channels\\Form\\Create',
     'modify' => 'Visitor\\Channels\\Form\\Modify',
   );
-  
+
   public $paging = array(
     'index'          => 'Visitor\\Channels\\Paging\\Index',
     'details'        => 'Visitor\\Channels\\Paging\\Details',
     'mychannels'     => 'Visitor\\Channels\\Paging\\Mychannels',
   );
-  
+
   public function deleteAction() {
-    
+
     $channelModel = $this->modelOrganizationAndIDCheck(
       'channels',
       $this->application->getNumericParameter('id')
@@ -47,27 +47,27 @@ class Controller extends \Visitor\Controller {
       $this->application->getParameter('forward', 'channels/mychannels'),
       $message
     );
-    
+
   }
-  
+
   public function searchAction() {
-    
+
     $term   = $this->application->getParameter('term');
     $output = array(
     );
-    
+
     if ( !$term )
       $this->jsonoutput( $output );
-    
+
     $user         = $this->bootstrap->getSession('user');
     $channelModel = $this->bootstrap->getModel('channels');
     $results      = $channelModel->search( $term, $user['id'], $this->organization['id'] );
-    
+
     if ( empty( $results ) )
       $this->jsonoutput( $output );
-    
+
     foreach( $results as $result ) {
-      
+
       $title = $result['title'];
       if ( strlen( trim( $result['subtitle'] ) ) )
         $title .= '<br/>' . $result['subtitle'];
@@ -77,20 +77,20 @@ class Controller extends \Visitor\Controller {
         'label' => $title,
         'img'   => $this->bootstrap->staticuri,
       );
-      
+
       if ( $result['indexphotofilename'] )
         $data['img'] .= 'files/' . $result['indexphotofilename'];
       else
         $data['img'] .= 'images/videothumb_audio_placeholder.png';
-      
+
       $output[] = $data;
-      
+
     }
-    
+
     $this->jsonoutput( $output );
-    
+
   }
-  
+
   public function orderrecordingsAction() {
 
     $channelModel = $this->modelOrganizationAndUserIDCheck(
@@ -106,10 +106,7 @@ class Controller extends \Visitor\Controller {
       $items, true, $this->organization['id']
     );
 
-    $helpModel = $this->bootstrap->getModel('help_contents');
-    $helpModel->addFilter('shortname', 'channels_orderrecordings', false, false );
-    
-    $this->toSmarty['help']    = $helpModel->getRow();
+    $this->toSmarty['help']    = $this->getHelp('channels_orderrecordings');
     $this->toSmarty['items']   = $items;
     $this->toSmarty['channel'] = $channelModel->row;
     $this->toSmarty['forward'] = $this->application->getParameter(

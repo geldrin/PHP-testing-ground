@@ -331,8 +331,6 @@ class Controller extends \Visitor\Controller {
       'channels',
       $this->application->getNumericParameter('id')
     );
-    $helpModel    = $this->bootstrap->getModel('help_contents');
-    $helpModel->addFilter('shortname', 'live_managefeeds', false, false );
 
     $user = $this->bootstrap->getSession('user');
     if ( $user['isadmin'] or $user['isclientadmin'] )
@@ -344,7 +342,7 @@ class Controller extends \Visitor\Controller {
     else
       $this->toSmarty['streamingservers'] = array();
 
-    $this->toSmarty['help']    = $helpModel->getRow();
+    $this->toSmarty['help']    = $this->getHelp('live_managefeeds');
     $this->toSmarty['feeds']   = $channelModel->getFeedsWithStreams();
     $this->toSmarty['channel'] = $channelModel->row;
     $this->smartyOutput('Visitor/Live/Managefeeds.tpl');

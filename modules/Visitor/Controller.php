@@ -509,4 +509,16 @@ class Controller extends \Springboard\Controller\Visitor {
 
     return 'Visitor/_layout_' . $type . '.tpl';
   }
+
+  public function getHelp( $helpkey, $language = null ) {
+    if ( $language === null )
+      $language = \Springboard\Language::get();
+
+    $helpModel = $this->bootstrap->getModel('help_contents');
+    return $helpModel->selectByShortname(
+      $helpkey,
+      $language,
+      $this->organization['id']
+    );
+  }
 }
