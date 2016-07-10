@@ -223,12 +223,16 @@ class UpdateDB {
             if (
                  isset( $this->current[ $helpkey ] ) and
                  $this->current[ $helpkey ][ $field ] === $hash
-               )
+               ) {
+              echo "Skipping ", $helpkey, " because it did not change\n";
               continue;
+            }
 
             // vagy a historyban nincs benne ergo ez custom help content
-            if ( !$this->isInHistory( $table, $helpkey, $field, $hash ) )
+            if ( !$this->isInHistory( $table, $helpkey, $field, $hash ) ) {
+              echo "Skipping ", $helpkey, " because it is customized (value not in git history)\n";
               continue;
+            }
 
             $toUpdate[ $field ] = '';
             break;
