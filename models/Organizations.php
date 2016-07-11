@@ -3,60 +3,60 @@ namespace Model;
 
 class Organizations extends \Springboard\Model\Multilingual {
   public $multistringfields = array( 'introduction', 'signupvalidationemailsubject', );
-  
+
   public function checkDomain( $domain, $isstatic = false ) {
-    
+
     $this->clearFilter();
     if ( $isstatic )
       $this->addFilter('staticdomain', $domain, false, false );
     else
       $this->addFilter('domain', $domain, false, false );
-    
+
     $this->addFilter('disabled', 0 );
     $organization = $this->getRow();
-    
+
     if ( !$organization )
       return false;
-    
+
     $this->id  = $organization['id'];
     $this->row = $organization;
-    
+
     return true;
-    
+
   }
-  
+
   public function findChildrenIDs( $parentid = null ) {
-    
+
     if ( $parentid === null )
       $this->ensureID();
-    
+
     if ( !$parentid )
       $parentid = $this->db->qstr( $this->id );
     else
       $parentid = $this->db->qstr( $parentid );
-    
+
     $children = $this->db->getCol("
       SELECT id
       FROM organizations
       WHERE parentid = " . $parentid
     );
-    
+
     foreach( $children as $parentid )
       $children = array_merge( $children, $this->findChildrenIDs( $parentid ) );
-    
+
     return $children;
-    
+
   }
-  
+
   public function setup() {
-    
+
     $this->ensureObjectLoaded();
     $this->updateRow( array('organizationid' => $this->id ) );
-    
+
   }
-  
+
   public function search( $term, $organizationid ) {
-    
+
     $term     = $this->db->qstr( '%' . $term . '%' );
     $language = \Springboard\Language::get();
     $results  = $this->db->getArray("
@@ -81,30 +81,30 @@ class Organizations extends \Springboard\Model\Multilingual {
         )
       LIMIT 20
     ");
-    
+
     return $results;
-    
+
   }
-  
+
   public function getName( $organization = null ) {
-    
+
     if ( !$organization ) {
-      
+
       $this->ensureObjectLoaded();
       $organization = $this->row;
-      
+
     }
-    
+
     $name = trim( $organization['name'] );
     $nameshort = trim( $organization['nameshort'] );
-    
+
     if ( $name and $nameshort )
       return $name . ' (' . $nameshort . ')';
     elseif ( $name )
       return $name;
     elseif ( $nameshort )
       return $nameshort;
-    
+
   }
 
   public function addExtraData() {

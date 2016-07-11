@@ -25,6 +25,10 @@ class Users extends \Springboard\Model {
 
   }
 
+  // lehetseges viszateresi ertekek:
+  // true -> belepes sikeres
+  // barmi mas mint true -> belepes sikertelen, de konkretabban:
+  // Users::checkUser viszateresi ertekei (organizationinvalid, expired)
   public function selectAndCheckUserValid( $organizationid, $email, $password, $isadmin = null ) {
 
     $crypto = $this->bootstrap->getEncryption();

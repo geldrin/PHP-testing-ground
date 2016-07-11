@@ -92,7 +92,7 @@ class Controller extends \Springboard\Controller\Visitor {
 
     $ipaddresses = $this->getIPAddress(true);
     foreach( $this->organization['authtypes'] as $authtype ) {
-      if ( $authtype['type'] === 'local' )
+      if ( $authtype['type'] === 'local' or $authtype['isuserinitiated'] )
         continue;
 
       $class = "\\AuthTypes\\" . ucfirst( strtolower( $authtype['type'] ) );

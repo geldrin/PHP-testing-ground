@@ -22,22 +22,22 @@ $config = Array(
     'type'  => 'inputHidden',
     'value' => 'submitlogin'
   ),
-  
+
   'forward' => Array(
     'type'  => 'inputHidden',
     'value' => $this->application->getParameter('forward'),
   ),
-  
+
   'inviteid' => Array(
     'type'  => 'inputHidden',
     'value' => $this->application->getNumericParameter('inviteid'),
   ),
-  
+
   'welcome' => Array(
     'type'  => 'inputHidden',
     'value' => $this->application->getParameter('welcome'),
   ),
-  
+
   'email' => Array(
     'displayname' => $l('users', 'email'),
     'type'        => 'inputText',
@@ -49,7 +49,7 @@ $config = Array(
       ),
     )
   ),
-  
+
   'password' => Array(
     'displayname' => $l('users', 'password'),
     'type'        => 'inputPassword',
@@ -57,7 +57,7 @@ $config = Array(
       Array( 'type' => 'required' ),
     )
   ),
-  
+
   'autologin' => Array(
     'displayname' => $l('users', 'autologin'),
     'type'        => 'inputCheckbox',
@@ -72,7 +72,7 @@ $config = Array(
       </tr>
     ',
   ),
-  
+
   'diagnostics' => Array(
     'type'  => 'text',
     'rowlayout' => '
@@ -91,16 +91,16 @@ $config = Array(
     '</textarea>
 
     <script type="text/javascript">
-      var flashVersion     = swfobject.getFlashPlayerVersion(); 
-      var flashVersionText = 
-        flashVersion.major + "." + 
-        flashVersion.minor + "." + 
+      var flashVersion     = swfobject.getFlashPlayerVersion();
+      var flashVersionText =
+        flashVersion.major + "." +
+        flashVersion.minor + "." +
         flashVersion.release
       ;
 
       $j("#diaginfo").val(
         \'Browser:\n' . @$_SERVER['HTTP_USER_AGENT'] . '\n\n\' +
-        \'JavaScript:           ENABLED\n\' + 
+        \'JavaScript:           ENABLED\n\' +
         \'Flash version:        \' + flashVersionText + \'\n\' +
         \'' .
         // create a multiline JS expression with quotes as needed

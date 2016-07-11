@@ -24,5 +24,6 @@ abstract class Base {
   }
 
   abstract public function handle($directory);
+  abstract public function handleLogin( $user, $password );
 
 }

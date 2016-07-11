@@ -4,7 +4,7 @@ namespace AuthTypes;
 class Kerberos extends \AuthTypes\Base {
   protected $source = 'kerberos';
 
-  public function handle($type) {
+  public function handle( $type, $module, $action ) {
 
     // a tipus teljesen ignoralni akarjuk, mintha torolve lenne
     if ( $type['disabled'] < 0 )
@@ -75,11 +75,66 @@ class Kerberos extends \AuthTypes\Base {
 
     $user->clear(); // reseteljuk a usert a biztonsag kedveert
 
+    // megkeressuk a usert az auth directoryban
+    $directoryuser = $this->handleAuthDirectory( $remoteuser );
+
+    // ha nincs user inserteljuk, es ha hiba van exceptionoket dobunk
+    $this->handleUser( $type, $remoteuser, $directoryuser );
+
+    // ha volt akkor updateljuk a usert
+    if ( $this->directory ) {
+      // ha hirtelen modosult valami, itt synceljuk
+      $this->directory->syncWithUser( $user );
+    }
+
+    $this->markUser( $type );
+    return true;
+  }
+
+  protected function handleAuthDirectory( $externalid ) {
+
+    $pos    = strpos( $externalid, '@' );
+    if ( $pos === false )
+      $domain = '';
+    else
+      $domain = strtolower( substr( $externalid, $pos + 1 ) );
+
+    $found  = false;
+    foreach( $this->organization['authdirectories'] as $directory ) {
+      $domains = explode(',', strtolower( $directory['domains'] ) );
+
+      if ( !in_array( $domain, $domains ) )
+        continue;
+
+      $found = true;
+      break;
+    }
+
+    if ( !$found )
+      return false;
+
+    $this->directory = $this->getDirectory( $directory );
+    return $this->directory->handle( $externalid );
+
+  }
+
+  // megfelelo exceptionoket dob es insertalja a usert, elokesziti a
+  // sessiont
+  protected function handleUser( $type, $remoteuser, $directoryuser ) {
+    $userModel = $this->bootstrap->getModel('users');
+
     // ujra van user['id'] mert a findAndMarkUser regisztralja, es be is lepteti
     // ha letezik
     $valid = $this->findAndMarkUser( $type, $remoteuser );
-    $userModel = $this->bootstrap->getModel('users');
-    $directoryuser = $this->handleAuthDirectory( $remoteuser );
+
+    $pos = strpos( $remoteuser, '@' );
+    if ( $pos === false ) {
+      $uname = $remoteuser;
+      $domain = '';
+    } else {
+      $uname  = substr( $remoteuser, 0, $pos );
+      $domain = substr( $remoteuser, $pos + 1 );
+    }
 
     if ( $valid === null ) { // a null azt jelzi hogy nincs ilyen user
 
@@ -180,40 +235,5 @@ class Kerberos extends \AuthTypes\Base {
 
     }
 
-    if ( $this->directory ) {
-      // ha hirtelen modosult valami, itt synceljuk
-      $this->directory->syncWithUser( $user );
-    }
-
-    $this->markUser($type);
-    return true;
   }
-
-  protected function handleAuthDirectory( $externalid ) {
-
-    $pos    = strpos( $externalid, '@' );
-    if ( $pos === false )
-      $domain = '';
-    else
-      $domain = strtolower( substr( $externalid, $pos + 1 ) );
-
-    $found  = false;
-    foreach( $this->organization['authdirectories'] as $directory ) {
-      $domains = explode(',', strtolower( $directory['domains'] ) );
-
-      if ( !in_array( $domain, $domains ) )
-        continue;
-
-      $found = true;
-      break;
-    }
-
-    if ( !$found )
-      return false;
-
-    $this->directory = $this->getDirectory( $directory );
-    return $this->directory->handle( $externalid );
-
-  }
-
 }

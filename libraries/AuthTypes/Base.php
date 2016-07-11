@@ -35,14 +35,13 @@ abstract class Base {
   }
 
   protected function shouldSkip( $type, $module, $action ) {
-    foreach( $this->skip as $currmodule => $curractions ) {
+    if ( isset( $this->skip[ $module ] ) ) {
+      $actions = $this->skip[ $module ];
 
-      if ( $module == $currmodule and isset( $curractions[ $action ] ) )
+      // adott modul adott actionje, vagy wildcard minden action
+      if ( isset( $actions[ $action ] ) or isset( $actions['*'] ) )
         return true;
 
-      // wildcard
-      if ( $module == $currmodule and isset( $curractions['*'] ) )
-        return true;
     }
 
     $user = $this->bootstrap->getSession('user');
@@ -88,11 +87,19 @@ abstract class Base {
   }
 
   // viszateresi ertek azt akarja jelezni hogy tortent e beleptetes vagy nem
-  public function handleType($authtype, $module, $action) {
+  public function handleType( $authtype, $module, $action ) {
     if ( $this->shouldSkip( $authtype['type'], $module, $action ) )
       return false;
 
-    return $this->handle( $authtype );
+    return $this->handle( $authtype, $module, $action );
+  }
+
+  // csak userinitiated authtype-ok eseten hivodik meg a
+  // users/login form onComplete-ben
+  // non-null return value -> handle-elve lett az authtype
+  // true -> be lett leptetve
+  public function handleForm( $authtype, $form ) {
+    throw new \Exception("handleForm not implemented for $authtype");
   }
 
   protected function getDirectory( $directory ) {
@@ -100,7 +107,7 @@ abstract class Base {
     return new $class( $this->bootstrap, $this->organization, $directory );
   }
 
-  abstract public function handle($authtype);
-  abstract protected function handleAuthDirectory($externalid);
+  abstract public function handle( $authtype );
+  abstract protected function handleAuthDirectory( $externalid );
 
 }
