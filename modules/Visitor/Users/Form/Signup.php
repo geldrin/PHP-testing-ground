@@ -55,6 +55,7 @@ class Signup extends \Visitor\Form {
     $values['language']       = \Springboard\Language::get();
     $values['organizationid'] = $this->controller->organization['id'];
     $values['source']         = 'local';
+    $values['userroleid']     = $userModel->getRoleIDByName('member');
 
     if ( $this->invite ) {
 

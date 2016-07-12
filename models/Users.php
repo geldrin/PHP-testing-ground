@@ -656,7 +656,7 @@ class Users extends \Springboard\Model {
   public function applyInvitationPermissions( $invitation ) {
 
     $this->ensureID();
-
+    // TODO userrole support
     $values = array();
     foreach( explode('|', $invitation['permissions'] ) as $permission ) {
       if ( $permission )
@@ -1175,6 +1175,7 @@ class Users extends \Springboard\Model {
       'newsletter'            => 0,
       'disabled'              => self::USER_VALIDATED,
       'issingleloginenforced' => 0,
+      'userroleid'            => $this->getRoleIDByName('member'),
     );
 
     return $this->insert( array_merge( $defaults, $data ) );
