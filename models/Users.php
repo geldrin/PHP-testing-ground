@@ -1263,4 +1263,46 @@ class Users extends \Springboard\Model {
     return $ret;
   }
 
+  public function getPrivileges() {
+    $this->ensureObjectLoaded();
+    if ( !$this->row['roleid'] )
+      return array();
+
+    $cache = $this->bootstrap->getCache(
+      'roles-' . $this->row['userroleid'],
+      60 * 60 * 24 * 7,
+      true
+    );
+
+    if ( $cache->expired() ) {
+      $roleid = $this->db->qstr( $this->row['userroleid'] );
+      $data = $this->db->getAssoc("
+        SELECT
+         pr.name,
+         '1' AS value
+        FROM
+          userroles_privileges AS urp,
+          privileges AS pr
+        WHERE
+          urp.userroleid = $roleid AND
+          pr.id = urp.privilegeid
+        ORDER BY pr.name
+      ");
+
+      $cache->put( $data );
+    } else
+      $data = $cache->get();
+
+    return $data;
+  }
+
+  public function getRoleIDByName( $name ) {
+    $name = $this->db->qstr( $name );
+    return $this->db->getOne("
+      SELECT ur.id
+      FROM userroles AS ur
+      WHERE name = $name
+      LIMIT 1
+    ");
+  }
 }

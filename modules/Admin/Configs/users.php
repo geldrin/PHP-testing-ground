@@ -5,7 +5,7 @@ foreach( $this->application->config['languages'] as $language )
   $interfacelanguages[ $language ] = $language;
 
 $config = Array(
-  
+
   'target' => Array(
     'type'  => 'inputHidden',
     'value' => 'insert'
@@ -44,7 +44,7 @@ $config = Array(
     'validation'  => Array(
       Array(
         'type' => 'date',
-        'format' => 'YYYY-MM-DD hh:mm:ss' 
+        'format' => 'YYYY-MM-DD hh:mm:ss'
       ),
     ),
   ),
@@ -68,38 +68,38 @@ $config = Array(
     'validation'  => Array(
       Array(
         'type' => 'date',
-        'format' => 'YYYY-MM-DD hh:mm:ss' 
+        'format' => 'YYYY-MM-DD hh:mm:ss'
       ),
     ),
   ),
-  
+
   'nickname' => array(
     'displayname' => 'Nick Name',
     'type'        => 'inputText',
   ),
-  
+
   'namefirst' => array(
     'displayname' => 'First Name',
     'type'        => 'inputText',
   ),
-  
+
   'namelast' => array(
     'displayname' => 'Last Name',
     'type'        => 'inputText',
   ),
-  
+
   'organizationaffiliation' => array(
     'displayname' => 'Organization Affiliation',
     'type'        => 'inputText',
   ),
-  
+
   'organizationid' => array(
     'displayname' => 'Organization',
     'type'        => 'selectDynamic',
     'sql'         => "
-      SELECT 
+      SELECT
         o.id, CONCAT( s.value, ' - ', o.id )
-      FROM 
+      FROM
         organizations AS o,
         strings AS s
       WHERE
@@ -113,18 +113,18 @@ $config = Array(
     'treestart'   => '0',
     'treeparent'  => 'parentid',
   ),
-  
+
   'browser' => array(
     'displayname' => 'Browser',
     'type'        => 'textarea',
     'html'        => 'rows="10" cols="150"',
   ),
-  
+
   'validationcode' => array(
     'displayname' => 'Validation code',
     'type'        => 'inputText',
   ),
-  
+
   'nameformat' => array(
     'displayname' => 'Name Format',
     'type'        => 'select',
@@ -133,67 +133,82 @@ $config = Array(
       'reverse'  => 'Reverse - FN LN',
     ),
   ),
-  
+
   'language' => array(
     'displayname' => 'Interface language',
     'type'        => 'select',
     'values'      => $interfacelanguages,
   ),
-  
+
   'newsletter' => array(
     'displayname' => 'Recieving newsletter?',
     'type'        => 'inputRadio',
     'values'      => $l->getLov('yesno'),
   ),
-  
+
+  'userroleid' => array(
+    'displayname' => 'Szerep',
+    'type'        => 'selectDynamic',
+    'values'      => array(
+      0 => '--- Nincs szerep (nem érhet el semmit) ---',
+    ),
+    'sql'         => "
+      SELECT
+        ur.id, CONCAT( ur.name, ' - ', ur.id )
+      FROM userroles AS ur
+      ORDER BY ur.name
+    ",
+    'value'       => '0',
+  ),
+
   'isadmin' => array(
     'displayname' => 'Adminsztrátor?',
     'type'        => 'inputRadio',
     'values'      => $l->getLov('yesno'),
   ),
-  
+
   'isclientadmin' => array(
     'displayname' => 'Ügyfél adminsztrátor?',
     'type'        => 'inputRadio',
     'values'      => $l->getLov('yesno'),
   ),
-  
+
   'isliveadmin' => array(
     'displayname' => 'Élő közvetítés szerkesztő?',
     'type'        => 'inputRadio',
     'values'      => $l->getLov('yesno'),
   ),
-  
+
   'iseditor' => array(
     'displayname' => 'Szerkesztő?',
     'type'        => 'inputRadio',
     'values'      => $l->getLov('yesno'),
   ),
-  
+
   'isnewseditor' => array(
     'displayname' => 'Hírszerkesztő?',
     'type'        => 'inputRadio',
     'values'      => $l->getLov('yesno'),
   ),
-  
+
   'isuploader' => array(
     'displayname' => 'Feltöltő?',
     'type'        => 'inputRadio',
     'values'      => $l->getLov('yesno'),
   ),
-  
+
   'ismoderateduploader' => array(
     'displayname' => 'Moderált feltöltő?',
     'type'        => 'inputRadio',
     'values'      => $l->getLov('yesno'),
   ),
-  
+
   'isapienabled' => array(
     'displayname' => 'API használatának engedélyezése?',
     'type'        => 'inputRadio',
     'values'      => $l->getLov('yesno'),
   ),
-  
+
   'apiaddresses' => Array(
     'displayname' => 'API hozzáférésére jogosult IP címek',
     'html'        => 'style="width: 400px"',
@@ -214,7 +229,7 @@ $config = Array(
       ),
     )
   ),
-  
+
   'disabled' => array(
     'displayname' => 'Banned?',
     'type'        => 'inputRadio',
@@ -224,12 +239,17 @@ $config = Array(
 );
 
 if ( $this->action == 'new' or $this->action == 'insert' ) {
-  
+
   $config['password']['validation'] = array(
     array( 'type' => 'required' )
   );
-  
+
 }
+
+$GLOBALS['privilegebutton'] = $this->newWindow(
+  'Jogosultságok',
+  'userroles/modify?id=%roleid%'
+);
 
 $listconfig = Array(
 
@@ -237,7 +257,7 @@ $listconfig = Array(
   'modify'    => 'u.id',
   'delete'    => 'u.id',
   'order'     => Array('u.id DESC' ),
-  
+
   'fields' => Array(
 
     Array(
@@ -250,9 +270,9 @@ $listconfig = Array(
       'displayname' => 'E-mail',
       'phptrigger' => '
          "<VALUE><br />" .
-         "<a target=\"_blank\" " . 
+         "<a target=\"_blank\" " .
            "href=\"users/loginas/?id=" . $fields["u.id"] . "\">".
-         "<img style=\"vertical-align: middle; margin: 5px 0px; width: 18px\" " . 
+         "<img style=\"vertical-align: middle; margin: 5px 0px; width: 18px\" " .
            "src=\"images/sekkyumu/user.png\">Belépés</a>"
        ',
     ),
@@ -318,6 +338,12 @@ $listconfig = Array(
     Array(
       'field' => 'u.lastloggedin',
       'displayname' => 'Utolsó belépés',
+    ),
+
+    Array(
+      'field' => 'u.userroleid',
+      'displayname' => '',
+      'phptrigger' => '"<VALUE>" ? str_replace("%roleid%", "<VALUE>", $GLOBALS["privilegebutton"] ) : ""'
     ),
 
   ),
