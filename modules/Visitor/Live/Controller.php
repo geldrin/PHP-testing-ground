@@ -1081,6 +1081,11 @@ class Controller extends \Visitor\Controller {
     $feed['ingressurls'] = $feedModel->getAllIngressURLs(
       $feed['streams']
     );
+
+    $channelModel = $this->bootstrap->getModel('channels');
+    $channelModel->select( $feed['channelid'] );
+    $feed['channel'] = $channelModel->row;
+
     return $feed;
   }
 
