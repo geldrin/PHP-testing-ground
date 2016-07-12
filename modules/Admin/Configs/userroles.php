@@ -30,6 +30,13 @@ $config = Array(
       FROM privileges
       ORDER BY name
     ",
+    'handlers' => array(
+      'clearcache' => array(
+        array(
+          'glob' => 'roles-*',
+        ),
+      ),
+    ),
   ),
 );
 
