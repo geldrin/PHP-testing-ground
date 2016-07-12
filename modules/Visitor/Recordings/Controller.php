@@ -933,7 +933,7 @@ class Controller extends \Visitor\Controller {
     $user      = $this->bootstrap->getSession('user');
 
     if ( !$filename or !$filesize )
-      jsonOutput( array('status' => 'error') );
+      $this->jsonOutput( array('status' => 'error') );
 
     $info        = array(
       'filename'  => $filename,
@@ -943,7 +943,7 @@ class Controller extends \Visitor\Controller {
     );
     $uploadModel = $this->bootstrap->getModel('uploads');
     if ( !$uploadModel->isUploadingAllowed() )
-      jsonOutput( array('status' => 'error', 'reason' => 'notenoughspace') );
+      $this->jsonOutput( array('status' => 'error', 'reason' => 'notenoughspace') );
 
     $data        = $uploadModel->getFileResumeInfo( $info );
 
