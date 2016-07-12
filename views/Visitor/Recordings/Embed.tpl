@@ -45,7 +45,7 @@
   </style>
 
 </head>
-<body>
+<body style="overflow: hidden;">
 {if $bootstrap->production and $bootstrap->config.loadgoogleanalytics}
 {literal}
 <script type="text/javascript">
