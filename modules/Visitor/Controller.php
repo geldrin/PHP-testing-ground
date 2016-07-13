@@ -62,6 +62,72 @@ class Controller extends \Springboard\Controller\Visitor {
 
   }
 
+  public function route() {
+
+    $action  = str_replace('submit', '', $this->action );
+    $method  = $action . 'Action';
+    $found   = '';
+
+    if ( method_exists( $this, $method ) )
+      $found = 'method';
+    elseif ( array_key_exists( $action, $this->forms ) )
+      $found = 'form';
+    elseif ( array_key_exists( $action, $this->paging ) )
+      $found = 'paging';
+    else
+      return $this->redirectToController('contents', 'http404');
+
+    if ( $found and !isset( $this->permissions[ $action ] ) )
+      throw new \Springboard\Exception('No permission setting found for action: ' . $action );
+
+    $this->toSmarty['module'] = $this->module;
+    $this->toSmarty['action'] = $action;
+
+    // TODO modositani uj privilegium rendszerhez
+    $this->checkAccess( $this->permissions[ $action ] );
+
+    switch( $found ) {
+
+      case 'method':
+
+        if ( $this->bootstrap->debug )
+          \Springboard\Debug::d('Routing in controller to method', $method );
+
+        $this->$method();
+        break;
+
+      case 'form':
+
+        if ( $this->bootstrap->debug )
+          \Springboard\Debug::d('Routing in controller to form', $this->forms[ $action ] );
+
+        $formcontroller = $this->forms[ $action ];
+        if ( is_string( $formcontroller ) )
+          $formcontroller = new $formcontroller(
+            $this->bootstrap, $this
+          );
+
+        $formcontroller->route();
+        break;
+
+      case 'paging':
+
+        if ( $this->bootstrap->debug )
+          \Springboard\Debug::d('Routing in controller to paging', $this->paging[ $action ] );
+
+        $pagingcontroller = $this->paging[ $action ];
+        if ( is_string( $pagingcontroller ) )
+          $pagingcontroller = new $pagingcontroller(
+            $this->bootstrap, $this
+          );
+
+        $pagingcontroller->route();
+        break;
+
+    }
+
+  }
+
   public function handleAutologin() {
 
     if ( !isset( $_COOKIE['autologin'] ) )
