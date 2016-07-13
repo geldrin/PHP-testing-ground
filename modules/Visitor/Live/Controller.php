@@ -30,6 +30,10 @@ class Controller extends \Visitor\Controller {
     'analytics'            => 'liveadmin|clientadmin',
     'delete'               => 'liveadmin|clientadmin',
     'archive'              => 'liveadmin|clientadmin',
+    'regeneratepin'        => 'liveadmin|clientadmin',
+    'teacherinvites'       => 'liveadmin|clientadmin',
+    'inviteteachers'       => 'liveadmin|clientadmin',
+    'searchuser'           => 'liveadmin|clientadmin',
   );
 
   public $forms = array(
@@ -41,11 +45,13 @@ class Controller extends \Visitor\Controller {
     'modifystream'         => 'Visitor\\Live\\Form\\Modifystream',
     'createchat'           => 'Visitor\\Live\\Form\\Createchat',
     'analytics'            => 'Visitor\\Live\\Form\\Analytics',
+    'inviteteachers'        => 'Visitor\\Live\\Form\\Inviteteachers',
   );
 
   public $paging = array(
     'index'   => 'Visitor\\Live\\Paging\\Index',
     'details' => 'Visitor\\Live\\Paging\\Details',
+    'teacherinvites' => 'Visitor\\Live\\Paging\\Teacherinvites',
   );
 
   public $apisignature = array(
@@ -80,6 +86,12 @@ class Controller extends \Visitor\Controller {
     ),
     // crestron all-in-one api endpoint
     'events' => array(
+    ),
+    // crestron livefeed lekeres pin alapjan
+    'getfeedbypin' => array(
+      'pin' => array(
+        'type' => 'id',
+      ),
     ),
   );
 
@@ -319,8 +331,6 @@ class Controller extends \Visitor\Controller {
       'channels',
       $this->application->getNumericParameter('id')
     );
-    $helpModel    = $this->bootstrap->getModel('help_contents');
-    $helpModel->addFilter('shortname', 'live_managefeeds', false, false );
 
     $user = $this->bootstrap->getSession('user');
     if ( $user['isadmin'] or $user['isclientadmin'] )
@@ -332,7 +342,7 @@ class Controller extends \Visitor\Controller {
     else
       $this->toSmarty['streamingservers'] = array();
 
-    $this->toSmarty['help']    = $helpModel->getRow();
+    $this->toSmarty['help']    = $this->getHelp('live_managefeeds');
     $this->toSmarty['feeds']   = $channelModel->getFeedsWithStreams();
     $this->toSmarty['channel'] = $channelModel->row;
     $this->smartyOutput('Visitor/Live/Managefeeds.tpl');
@@ -509,6 +519,26 @@ class Controller extends \Visitor\Controller {
       )
     );
 
+  }
+
+  public function deleteteacherAction() {
+    if ( !$this->organization['islivepinenabled'] )
+      $this->redirect('');
+
+    $feedModel = $this->controller->modelOrganizationAndUserIDCheck(
+      'livefeeds',
+      $this->application->getNumericParameter('id')
+    );
+    $teacherid = $this->application->getNumericParameter('livefeedteacherid');
+
+    $feedModel->deleteTeacher( $teacherid );
+
+    $this->redirect(
+      $this->application->getParameter(
+        'forward',
+        'live/managefeeds/' . $channelModel->id
+      )
+    );
   }
 
   public function togglefeedAction() {
@@ -1036,6 +1066,29 @@ class Controller extends \Visitor\Controller {
     return $items;
   }
 
+  public function getfeedbypinAction( $pin ) {
+    if ( !$this->organization['islivepinenabled'] )
+      throw new \Visitor\Api\ApiException('PINs disabled for the organization', false, false );
+
+    $feedModel = $this->bootstrap->getModel('livefeeds');
+    $feed = $feedModel->selectByPIN( $pin );
+    if ( empty( $feed ) )
+      throw new \Visitor\Api\ApiException('No feed for the PIN', false, false );
+
+    $feeds = array( $feed );
+    $this->addStreamsToFeeds( $feeds );
+    $feed = $feeds[0];
+    $feed['ingressurls'] = $feedModel->getAllIngressURLs(
+      $feed['streams']
+    );
+
+    $channelModel = $this->bootstrap->getModel('channels');
+    $channelModel->select( $feed['channelid'] );
+    $feed['channel'] = $channelModel->row;
+
+    return $feed;
+  }
+
   private function addFeedsToEvents( &$events ) {
     $channelModel = $this->bootstrap->getModel('channels');
     foreach( $events as $key => $value ) {
@@ -1071,5 +1124,71 @@ class Controller extends \Visitor\Controller {
     }
 
     return $feeds;
+  }
+
+  public function regeneratepinAction() {
+    if ( !$this->organization['islivepinenabled'] )
+      $this->redirect('');
+
+    $feedModel = $this->modelOrganizationAndUserIDCheck(
+      'livefeeds',
+      $this->application->getNumericParameter('id')
+    );
+    $feedModel->regeneratePIN();
+
+    if ( $this->isAjaxRequest() ) {
+      // refresh, az uj pin miatt
+      $feedModel->select( $feedModel->id );
+      $this->jsonOutput( array(
+          'success' => true,
+          'pin' => $feedModel->row['pin'],
+        )
+      );
+    }
+
+    $this->redirect(
+      $this->application->getParameter(
+        'forward',
+        'live/managefeeds/' . $feedModel->row['channelid']
+      )
+    );
+  }
+
+  // user kereses, sajnos ezzel az osszes usert le lehet kerdezni
+  // az adott organizationhoz ha valaki akarja
+  public function searchuserAction() {
+    if ( !$this->organization['islivepinenabled'] )
+      $this->redirect('');
+
+    $this->modelOrganizationAndUserIDCheck(
+      'livefeeds',
+      $this->application->getNumericParameter('id')
+    );
+
+    $userModel = $this->bootstrap->getModel('users');
+    $users = $userModel->getSearchArray(
+      $this->application->getParameter('term'),
+      $this->organization,
+      0,
+      10,
+      'relevancy DESC'
+    );
+
+    $this->bootstrap->includeTemplatePlugin('nickformat');
+    $data = array();
+    foreach( $users as $user )
+      $data[] = array(
+        'id'    => $user['id'],
+        'email' => $user['email'],
+        'name'  => smarty_modifier_nickformat(
+          $user, $this->organization
+        ),
+      );
+
+    $this->jsonOutput( array(
+        'success' => true,
+        'data' => $data,
+      )
+    );
   }
 }

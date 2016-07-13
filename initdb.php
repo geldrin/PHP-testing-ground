@@ -25,136 +25,136 @@ class Initdb {
     'roles',
     'channel_types',
   );
-  
+
   public $uniquetables = array(
     'help_contents',
     'contents',
     'languages',
   );
-  
+
   public function __construct( $app, $argv ) {
     $this->application = $app;
     $this->bootstrap = $app->bootstrap;
-    
+
     $this->checkArguments( $argv );
-    
+
   }
-  
+
   public function checkArguments( $argv ) {
-    
+
     if ( count( $argv ) == 1 )
       throw new Exception("Organizationid argument not specified! Expecting a simple integer with the organizationid");
-    
+
     $orgid = intval( $argv[1] );
     if ( !$orgid )
       throw new Exception("Invalid organizationid passed! Expecting a simple integer");
-    
+
     $this->orgModel = $this->bootstrap->getModel('organizations');
     $this->orgModel->select( $orgid );
-    
+
     if ( !$this->orgModel->row )
       throw new Exception("Invalid organizationid passed! No record exists with that id: " . $orgid );
-    
+
   }
-  
+
   public function setupTable( $table ) {
-    
+
     echo "Now setting up $table\n";
     $file = sprintf(
       BASE_PATH . 'data/defaultvalues/%s.php',
       $table
     );
-    
+
     if ( !file_exists( $file ) )
       throw new Exception("Defaultvalues for table $table does not exist: " . $file );
-    
+
     $values = include( $file );
     $this->loadMultiStrings( $table, $values );
-    
+
   }
-  
+
   public function setupMultistring() {
-    
+
     foreach( $this->multistringtables as $table )
       $this->setupTable( $table );
-    
+
   }
-  
+
   public function setupUniqueTables() {
-    
+
     foreach ( $this->uniquetables as $table ) {
-      
+
       $model = $this->bootstrap->getModel( $table );
       if ( !$model->getCount() )
         $this->setupTable( $table );
       else
         echo "Skipping $table because the table contains unique values and it is not empty - this is not an error\n";
-      
+
     }
-    
+
   }
-  
+
   public function loadMultiStrings( $table, $values ) {
-    
+
     $model    = $this->bootstrap->getModel( $table );
     $parentid = '0';
     $orgid    = $this->orgModel->id;
     $origidtonewid = array();
-    
+
     foreach( $values as $id => $data ) {
-      
+
       if ( empty( $data ) )
         continue;
-      
+
       $strings = array();
       if ( isset( $data['name'] ) ) {
-        
+
         $strings['name_stringid'] = array(
           'hu' => $data['namehungarian'],
           'en' => $data['nameenglish'],
         );
-        
+
       }
-      
+
       if ( isset( $data['title'] ) ) {
-        
+
         $strings['title_stringid'] = array(
           'hu' => $data['title'],
           'en' => $data['titleen'],
         );
-        
+
       }
-      
+
       if ( isset( $data['body'] ) ) {
-        
+
         $strings['body_stringid'] = array(
           'hu' => $data['body'],
           'en' => $data['bodyen'],
         );
-        
+
       }
-      
+
       // nem szamit ha nincsenek ilyen mezok
       $data['organizationid'] = $orgid;
-      
+
       if ( !@$data['weight'] )
         $data['weight'] = 100;
-      
+
       if ( isset( $data['origparentid'] ) and !$data['origparentid'] )
         $data['parentid'] = $parentid;
       elseif ( isset( $data['origparentid'] ) and isset( $origidtonewid[ $data['origparentid'] ] ) )
         $data['parentid'] = $origidtonewid[ $data['origparentid'] ];
       elseif ( !isset( $data['origparentid'] ) )
         $data['parentid'] = 0;
-      
+
       $row = $model->insert( $data, $strings, false );
       $origidtonewid[ $id ] = $row['id'];
-      
+
       if ( isset( $data['origparentid'] ) and !$data['origparentid'] )
         $data['parentid'] = $row['id'];
-      
+
     }
-    
+
   }
-  
+
 }

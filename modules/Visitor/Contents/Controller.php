@@ -2,8 +2,11 @@
 namespace Visitor\Contents;
 
 class Controller extends \Visitor\Controller {
-  
+
   public function route() {
+
+    if ( $this->bootstrap->config['usedynamicprivileges'] )
+      $this->checkControllerPrivilege( $this->module, 'all' );
 
     switch ( $this->action ) {
       case 'language':
@@ -16,18 +19,18 @@ class Controller extends \Visitor\Controller {
 
     $contentsModel = $this->bootstrap->getModel('contents');
     $language      = \Springboard\Language::get();
-    
+
     $content = $contentsModel->getContent( $this->action, $language );
-    
+
     if ( empty( $content ) ) {
-      
+
       $this->toSmarty['missingcontent'] = $this->action;
       $content = $contentsModel->getContent( 'http404', $language );
-      
+
     }
-    
+
     if ( !headers_sent() ) {
-      
+
       switch( $content['shortname'] ) {
         case 'http404':
           header("HTTP/1.1 404 Not Found");
@@ -37,18 +40,18 @@ class Controller extends \Visitor\Controller {
           header('HTTP/1.1 403 Forbidden');
           break;
       }
-      
+
     }
-    
+
     $this->toSmarty['content'] = $content;
     $this->smartyoutput('Visitor/Contents/Contents.tpl');
-    
+
   }
-  
+
   public function languageAction() {
-    
+
     $l = $this->bootstrap->getLocalization();
-    
+
     $this->toSmarty['localization']     =
       json_encode( $l->get('contents'), JSON_HEX_TAG )
     ;
@@ -56,7 +59,7 @@ class Controller extends \Visitor\Controller {
       ',',
       $this->bootstrap->config['allowedextensions']
     );
-    
+
     $output = $this->fetchSmarty('Visitor/Contents/Language.tpl');
 
     $this->sendheaders = false;
@@ -66,7 +69,7 @@ class Controller extends \Visitor\Controller {
       false,
       true // preserve message
     );
-    
+
   }
 
   public function layoutcssAction() {

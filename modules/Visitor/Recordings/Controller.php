@@ -72,6 +72,16 @@ class Controller extends \Visitor\Controller {
         'type' => 'id',
       ),
     ),
+    'modifyrecordingasuser' => array(
+      'id' => array(
+        'type' => 'id',
+      ),
+      'user' => array(
+        'type'                     => 'user',
+        'permission'               => 'admin',
+        'impersonatefromparameter' => 'userid',
+      ),
+    ),
     'addtochannel' => array(
       'recordingid' => array(
         'type' => 'id',
@@ -323,6 +333,7 @@ class Controller extends \Visitor\Controller {
       );
     }
 
+    $this->toSmarty['versions']      = $versions;
     $this->toSmarty['ipaddress']     = $this->getIPAddress();
     $this->toSmarty['member']        = $user;
     $this->toSmarty['sessionid']     = session_id();
@@ -696,6 +707,10 @@ class Controller extends \Visitor\Controller {
 
   }
 
+  public function modifyrecordingasuserAction( $id ) {
+    return $this->modifyrecording( $id );
+  }
+
   protected function getPlayerHeight( $recordingsModel, $fullscale = false ) {
 
     if ( $fullscale and $recordingsModel->row['mastermediatype'] == 'audio' and $recordingsModel->hasSubtitle() )
@@ -757,6 +772,7 @@ class Controller extends \Visitor\Controller {
         $this->organization
       );
 
+    $this->toSmarty['versions']      = $versions;
     $this->toSmarty['needauth']      = $needauth;
     $this->toSmarty['ipaddress']     = $this->getIPAddress();
     $this->toSmarty['member']        = $user;

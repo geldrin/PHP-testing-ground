@@ -706,7 +706,7 @@ class Recordings extends \Springboard\Model {
       $videolength = $this->getMediainfoNumericValue( $audio->Duration[0], $isfloat = true );
     else
       throw new InvalidLengthException('Length not found for the media, output was ' . $output );
-    
+
     $videolength = round($videolength / 1000, 2, PHP_ROUND_HALF_UP); // mert milisec
 
     if ( $videolength <= $config['recordings_seconds_minlength'] )
@@ -760,7 +760,7 @@ class Recordings extends \Springboard\Model {
         else
           $videoisinterlaced = 0;
       }
-      
+
       if ( $video->Delay ) $videodelay = (int) $video->Delay[0];
 
     }
@@ -783,19 +783,19 @@ class Recordings extends \Springboard\Model {
         $audioquality = 'lossy';
       elseif ( $audio->Compression_mode[0] == 'Lossless' )
         $audioquality = 'lossless';
-      
+
       if ( $audio->Delay || $audio->Delay_relative_to_video ) {
         $adelay     = (int) isset($audio->Delay[0]) ? $audio->Delay[0] : .0;
         $rel_adelay = (int) isset($audio->Delay_relative_to_video[0]) ? $audio->Delay_relative_to_video[0] : .0;
-        
+
         $videodelay = max($videodelay, $adelay, $rel_adelay);
         unset($adelay, $rel_adelay);
       }
     }
-    
+
     $videodelay = round($videodelay / 1000, 2, PHP_ROUND_HALF_UP);
     if ($videodelay > 0) $videolength -= $videodelay;
-    
+
     $info = array(
       'mastermediatype'            => $mediatype,
       'mastervideostreamselected'  => $videostreamid,
@@ -2306,10 +2306,17 @@ class Recordings extends \Springboard\Model {
         rv.*,
         ep.shortname AS encodingshortname,
         ep.mediatype,
-        ep.type AS encodingtype
+        ep.type AS encodingtype,
+        eg.isadaptive
       FROM
         recordings_versions AS rv,
         encoding_profiles AS ep
+      LEFT JOIN encoding_profiles_groups AS epg ON(
+        epg.encodingprofileid = ep.id
+      )
+      LEFT JOIN encoding_groups AS eg ON(
+        eg.id = epg.encodingprofilegroupid
+      )
       WHERE
         rv.recordingid IN('" . implode("', '", $ids ) . "') AND
         rv.status = 'onstorage' AND
@@ -2455,6 +2462,12 @@ class Recordings extends \Springboard\Model {
           $data['media_streamDimensions'][] = $version['dimensions'];
         else
           $data['recording_autoQuality'] = false;
+
+        if (
+             !$info['organization']['isadaptivestreamingdisabled'] and
+             $version['isadaptive']
+           )
+          $data['recording_autoQuality'] = true;
 
         if ( !$hds )
           $data['media_streams'][]        =
@@ -3916,7 +3929,7 @@ class Recordings extends \Springboard\Model {
     $success = $this->updateSession( $organization, $userid, $lastposition, $sessionid );
     if ( !$success and !$ret['watched'] ) {
       // lejart a view_session, mig a view_progress nem es nem nezte vegig a user
-      // akkor tortenhet ha a browser megnyitva marad es ugyanaz marad a 
+      // akkor tortenhet ha a browser megnyitva marad es ugyanaz marad a
       // viewsessionid is napokig
       // megintcsak tul sok kimaradas volt, reset nullara
       $ret['success'] = false;

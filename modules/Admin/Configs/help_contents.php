@@ -1,7 +1,7 @@
 <?php
 
 $config = Array(
- 
+
   'action' => Array(
     'type'  => 'inputHidden',
     'value' => 'insert'
@@ -10,6 +10,29 @@ $config = Array(
   'id' => Array(
     'type'  => 'inputHidden',
     'value' => '0'
+  ),
+
+  'organizationid' => Array(
+    'displayname' => 'Intézmény',
+    'type'        => 'selectDynamic',
+    'sql'         => "
+      SELECT
+        o.id, CONCAT( s.value, ' - ', o.id )
+      FROM
+        organizations AS o,
+        strings AS s
+      WHERE
+        s.translationof = o.name_stringid AND
+        s.language = 'hu' AND
+        %s
+      ORDER BY s.value
+    ",
+    'values' => array(
+      '0' => '--- Nincs intézmény (globális) ---',
+    ),
+    'treeid'      => 'id',
+    'treeparent'  => 'parentid',
+    'treestart'   => '0',
   ),
 
   'shortname' => Array(
@@ -45,15 +68,28 @@ $config = Array(
 
 $listconfig = Array(
 
-  'table'     => 'help_contents c, strings s',
-  'where'     => 'c.title_stringid = s.translationof AND language = "hu"',
-  'modify'    => 'c.id',
-  'delete'    => 'c.id',
-
+  'table'     => '
+    help_contents hc
+    LEFT JOIN organizations AS o ON(
+      o.id = hc.organizationid
+    )
+    LEFT JOIN strings AS s ON(
+      hc.title_stringid = s.translationof AND
+      s.language = "hu"
+    )
+  ',
+  'modify'    => 'hc.id',
+  'delete'    => 'hc.id',
+  'order'     => array('hc.organizationid ASC', 's.value'),
+  // 'order'     => array('s.value', 'hc.organizationid ASC',),
   'fields' => Array(
-
     Array(
-      'field' => 'c.shortname',
+      'field' => 'o.name',
+      'displayname' => 'Intézmény',
+      'phptrigger' => '"<VALUE>" ?: "-- Globális --"',
+    ),
+    Array(
+      'field' => 'hc.shortname',
       'displayname' => 'ID',
     ),
     Array(

@@ -3,7 +3,7 @@
   {foreach from=$breadcrumb item=item name=breadcrumb}
     {if !$smarty.foreach.breadcrumb.last}{assign var=prev value=$item}{/if}
     <span class="arrow"></span>
-    <a href="{$language}/{$module}/details/{$item.id},{$item.name|filenameize}">{$item.name|escape:html}</a>
+    <a href="{$language}/{$module}/details/{$item.id},{$item|@categoryname:''|filenameize}">{$item|@categoryname}</a>
   {/foreach}
 {/capture}
 
@@ -11,7 +11,7 @@
   <h1>
     <a href="{$language}/{$module}">{#categories__categories_title#}</a>
     {$bcrumb|trim}
-    <a class="back" href="{if $prev}{$language}/{$module}/details/{$prev.id},{$prev.name|filenameize}{else}{$language}/{$module}{/if}">{#sitewide_back#|lower}</a>
+    <a class="back" href="{if $prev}{$language}/{$module}/details/{$prev.id},{$prev|@categoryname:''|filenameize}{else}{$language}/{$module}{/if}">{#sitewide_back#|lower}</a>
   </h1>
   <div class="clear"></div>
 </div>
@@ -19,5 +19,5 @@
 
 {include file=Visitor/Categories/_categorylist.tpl}
 
-{capture assign=url}{$language}/{$module}/details/{$category.id},{$category.name|filenameize}?order=%order%{/capture}
+{capture assign=url}{$language}/{$module}/details/{$category.id},{$category|@categoryname:''|filenameize}?order=%order%{/capture}
 {include file=Visitor/_sort.tpl url=$url}

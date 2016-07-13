@@ -123,6 +123,23 @@ class Livefeeds extends \Springboard\Model {
 
   }
 
+  public function isAdaptive( $organization ) {
+    if ( $organization['isadaptivestreamingdisabled'] )
+      return false;
+
+    $this->ensureObjectLoaded();
+    if ( !$this->row['livestreamgroupid'] )
+      return false;
+
+    $groupid = $this->db->qstr( $this->row['livestreamgroupid'] );
+    return (bool)$this->db->getOne("
+      SELECT lg.isadaptive
+      FROM livestream_groups AS lg
+      WHERE lg.id = $groupid
+      LIMIT 1
+    ");
+  }
+
   public function getStreams( $feedid = null ) {
 
     if ( !$feedid ) {
@@ -325,6 +342,9 @@ class Livefeeds extends \Springboard\Model {
       'user_checkWatchingTimeInterval' => $info['checkwatchingtimeinterval'],
       'user_checkWatchingConfirmationTimeout' => $info['checkwatchingconfirmationtimeout'],
     );
+
+    if ( $this->isAdaptive( $info['organization'] ) )
+      $flashdata['recording_autoQuality'] = true;
 
     $flashdata = $flashdata + $this->bootstrap->config['flashplayer_extraconfig'];
 
@@ -1307,6 +1327,45 @@ class Livefeeds extends \Springboard\Model {
       return $this->bootstrap->config['wowza']['liveingressurl'];
   }
 
+  public function getAllIngressURLs( $streams ) {
+    $ingressurl = $this->getIngressURL();
+    $ret = array();
+
+    foreach( $streams as $stream ) {
+      if ( !isset( $ret['video'] ) and $stream['isdesktopcompatible'] ) {
+        // video: ingressurl + keycode _ előtti része
+        $pos = strpos( $stream['keycode'], '_' );
+        if ( $pos === false )
+          $keycode = $stream['keycode'];
+        else
+          $keycode = substr( $stream['keycode'], 0, $pos );
+
+        $ret['video'] = $ingressurl . $keycode;
+      }
+
+      if ( !isset( $ret['presentation'] ) and $stream['isdesktopcompatible'] ) {
+        // prezi: ingressurl + contentkeycode _ előtti része
+        strpos( $stream['contentkeycode'], '_' );
+        if ( $pos === false )
+          $keycode = $stream['contentkeycode'];
+        else
+          $keycode = substr( $stream['contentkeycode'], 0, $pos );
+
+        $ret['presentation'] = $ingressurl . $keycode;
+      }
+
+      // mobil streamet keresunk (non-desktop)
+      if ( !isset( $ret['mobile'] ) and !$stream['isdesktopcompatible'] ) {
+        // mobile: ingressurl + keycode UTOLSÓ _ előtti része
+        $pos = strrpos( $stream['keycode'], '_' );
+        $keycode = substr( $stream['keycode'], 0, $pos );
+        $ret['mobile'] = $ingressurl . $keycode;
+      }
+    }
+
+    return $ret;
+  }
+
   public function handleStreamTemplate( $groupid, $linkid = null ) {
     $this->ensureObjectLoaded();
 
@@ -1480,5 +1539,178 @@ class Livefeeds extends \Springboard\Model {
       ");
 
     }
+  }
+
+  private function tryExecuteUniqueSQL( $callback, $args ) {
+    // elso arg a mienk, garantaljuk
+    array_unshift( $args, 0 );
+
+    $i = 0;
+    while( $i <= 10 ) {
+      $i++;
+
+      try {
+        $args[0] = $i;
+        $sql = call_user_func_array( $callback, $args );
+        $ret = $this->db->execute( $sql );
+      } catch( \Exception $e ) {
+
+        $errno = $this->db->ErrorNo();
+        // mysql unique constraint error code 1586/1062/893
+        if ( $errno == 1586 or $errno == 1062 or $errno == 893 )
+          continue; // re-try
+        else // valami mas hiba, re-throw
+          throw $e;
+
+      }
+
+      return $ret;
+    }
+
+    throw new \Exception('could not execute query in 10 tries: ' . $sql );
+  }
+
+  private function generatePIN() {
+    $len = $this->bootstrap->config['livepinlength'];
+    $min = pow( 10, $len - 1 );
+    $max = pow( 10, $len ) - 1;
+    return mt_rand( $min, $max );
+  }
+
+  public function regeneratePIN( $pin = 0 ) {
+    $this->ensureID();
+    $id = $this->id;
+
+    if ( !$pin )
+      $pin = $this->generatePIN();
+
+    $this->tryExecuteUniqueSQL(
+      array( $this, '_regenPINCallback'),
+      array( $id, $pin )
+    );
+  }
+
+  private function _regenPINCallback( $trynum, $id, $pin ) {
+    if ( $trynum !== 1 )
+      $pin = $this->generatePIN();
+
+    return "
+      UPDATE livefeeds
+      SET pin = '$pin'
+      WHERE id = '$id'
+      LIMIT 1
+    ";
+  }
+
+  public function insert( $values ) {
+    if ( !isset( $values['pin'] ) or !$values['pin'] )
+      $values['pin'] = $this->generatePIN();
+
+    $this->rs  = $this->select( -1 );
+
+    $rs = $this->tryExecuteUniqueSQL(
+      array( $this, '_insertCallback'),
+      array( $values )
+    );
+
+    $this->rs  = null;
+    $this->id  = $this->sqlInsertID( $rs );
+    $this->row = $values;
+    $this->row[ $this->primarykey ] = $this->id;
+
+    return $this->row;
+  }
+
+  private function _insertCallback( $trynum, $values ) {
+    if ( $trynum !== 1 )
+      $values['pin'] = $this->generatePIN();
+
+    return $this->sqlInsert( $values );
+  }
+
+  public function selectByPIN( $pin ) {
+    $pin = $this->db->qstr( $pin );
+    $ret = $this->db->getRow("
+      SELECT *
+      FROM livefeeds
+      WHERE pin = $pin
+      LIMIT 1
+    ");
+
+    if ( !empty( $ret ) ) {
+      $this->row = $ret;
+      $this->id = $ret['id'];
+    }
+
+    return $ret;
+  }
+
+  public function getInviteCount() {
+    $this->ensureID();
+    $id = $this->id;
+    return $this->db->getOne("
+      SELECT COUNT(*)
+      FROM livefeed_teacherinvites
+      WHERE livefeedid = '$id'
+      LIMIT 1
+    ");
+  }
+
+  public function getInviteArray( $start, $limit, $order ) {
+    $this->ensureID();
+    $id = $this->id;
+
+    $ret = $this->db->getArray("
+      SELECT *
+      FROM livefeed_teacherinvites
+      WHERE livefeedid = '$id'
+      ORDER BY $order
+      LIMIT $start, $limit
+    ");
+
+    if ( empty( $ret ) )
+      return $ret;
+
+    foreach( $ret as $key => $row )
+      $this->getInviteInfo( $ret[ $key ] );
+
+    return $ret;
+  }
+
+  public function getInviteInfo( &$row ) {
+    $emails = array();
+
+    $userids = \Springboard\Tools::explodeIDs(',', $row['userids'] );
+    if ( !empty( $userids ) ) {
+      $row['users'] = $this->db->getArray("
+        SELECT
+          usr.id,
+          IF(
+            usr.nickname IS NULL OR LENGTH(usr.nickname) = 0,
+            CONCAT(usr.namelast, '.', usr.namefirst),
+            usr.nickname
+          ) AS nickname,
+          usr.nameformat,
+          usr.nameprefix,
+          usr.namefirst,
+          usr.namelast,
+          usr.email
+        FROM users AS usr
+        WHERE usr.id IN('" . implode("', '", $userids ) . "')
+      ");
+
+      foreach( $row['users'] as $user )
+        $emails[ $user['email'] ] = true;
+    }
+
+    $row['emails'] = \Springboard\Tools::explodeAndTrim(
+      "\n", $row['emails']
+    );
+
+    foreach( $row['emails'] as $email )
+      $emails[ $email ] = true;
+
+    $row['emailcount'] = count( $emails );
+    return $emails;
   }
 }

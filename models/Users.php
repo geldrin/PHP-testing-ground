@@ -25,6 +25,10 @@ class Users extends \Springboard\Model {
 
   }
 
+  // lehetseges viszateresi ertekek:
+  // true -> belepes sikeres
+  // barmi mas mint true -> belepes sikertelen, de konkretabban:
+  // Users::checkUser viszateresi ertekei (organizationinvalid, expired)
   public function selectAndCheckUserValid( $organizationid, $email, $password, $isadmin = null ) {
 
     $crypto = $this->bootstrap->getEncryption();
@@ -652,7 +656,7 @@ class Users extends \Springboard\Model {
   public function applyInvitationPermissions( $invitation ) {
 
     $this->ensureID();
-
+    // TODO userrole support
     $values = array();
     foreach( explode('|', $invitation['permissions'] ) as $permission ) {
       if ( $permission )
@@ -739,10 +743,22 @@ class Users extends \Springboard\Model {
       if ( empty( $template ) )
         throw new \Exception("Template with id: " . $values['id'] . ' not found!');
 
-      $hash         = md5( $values['subject'] . $values['title'] . $values['prefix'] . $values['postfix'] );
-      $existinghash = md5( $template['subject'] . $values['title'] . $template['prefix'] . $template['postfix'] );
+      $hashctx = hash_init('md5');
+      hash_update( $hashctx, $values['subject'] );
+      hash_update( $hashctx, $values['title'] );
+      hash_update( $hashctx, $values['prefix'] );
+      hash_update( $hashctx, $values['postfix'] );
+      $hash = hash_final( $hashctx );
 
-      if ( $hash != $existinghash )
+      $hashctx = hash_init('md5');
+      hash_update( $hashctx, $template['subject'] );
+      hash_update( $hashctx, $template['title'] );
+      hash_update( $hashctx, $template['prefix'] );
+      hash_update( $hashctx, $template['postfix'] );
+      $existinghash = hash_final( $hashctx );
+      unset( $hashctx );
+
+      if ( $hash !== $existinghash )
         $needinsert = true;
 
     } elseif (
@@ -763,7 +779,6 @@ class Users extends \Springboard\Model {
     }
 
     return $values;
-
   }
 
   public function getTemplate( $templateid, $organizationid ) {
@@ -1160,6 +1175,7 @@ class Users extends \Springboard\Model {
       'newsletter'            => 0,
       'disabled'              => self::USER_VALIDATED,
       'issingleloginenforced' => 0,
+      'userroleid'            => $this->getRoleIDByName('member'),
     );
 
     return $this->insert( array_merge( $defaults, $data ) );
@@ -1225,6 +1241,75 @@ class Users extends \Springboard\Model {
       WHERE g.organizationid = '$organizationid'
       GROUP BY g.id
       ORDER BY g.name DESC
+    ");
+  }
+
+  public function getUsersByIDs( $ids, $organizationid, $select = '*' ) {
+    $ret = array();
+
+    while( !empty( $ids ) ) {
+      $chunk = array_splice( $ids, 0, 50 );
+      $users = $this->db->getArray("
+        SELECT $select
+        FROM users
+        WHERE
+          id IN('" . implode("', '", $chunk ) . "') AND
+          organizationid = '$organizationid'
+        LIMIT 50
+      ");
+
+      $ret = array_merge( $ret, $users );
+    }
+
+    return $ret;
+  }
+
+  public function getPrivileges() {
+    $this->ensureObjectLoaded();
+    return self::_getPrivileges( $this->row['userroleid'] );
+  }
+
+  public static function getPrivilegesForRoleID( $roleid ) {
+    if ( !$roleid )
+      return array();
+
+    $bs = \Bootstrap::getInstance();
+    $cache = $bs->getCache(
+      'roles-' . $roleid,
+      60 * 60 * 24 * 7,
+      true
+    );
+
+    if ( $cache->expired() ) {
+      $db = $bs->getAdoDB();
+      $roleid = $db->qstr( $roleid );
+      $data = $db->getAssoc("
+        SELECT
+         pr.name,
+         '1' AS value
+        FROM
+          userroles_privileges AS urp,
+          privileges AS pr
+        WHERE
+          urp.userroleid = $roleid AND
+          pr.id = urp.privilegeid
+        ORDER BY pr.name
+      ");
+
+      $cache->put( $data );
+    } else
+      $data = $cache->get();
+
+    return $data;
+  }
+
+  public function getRoleIDByName( $name ) {
+    $name = $this->db->qstr( $name );
+    return $this->db->getOne("
+      SELECT ur.id
+      FROM userroles AS ur
+      WHERE name = $name
+      LIMIT 1
     ");
   }
 }

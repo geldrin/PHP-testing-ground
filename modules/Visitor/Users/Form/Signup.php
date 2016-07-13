@@ -19,7 +19,7 @@ class Signup extends \Visitor\Form {
          $this->controller->organization['registrationtype'] == 'closed'
        )
       $this->controller->redirectToController('contents', 'noregistration');
-    
+
     $this->controller->toSmarty['formclass'] = 'halfbox centerformwrap';
     $this->controller->toSmarty['titleclass'] = 'center';
     $this->controller->toSmarty['needselect2'] = true;
@@ -27,22 +27,22 @@ class Signup extends \Visitor\Form {
   }
 
   public function postSetupForm() {
-    
+
     $l = $this->bootstrap->getLocalization();
     // submit legyen a title
     $this->form->submit =
     $this->controller->toSmarty['title'] = $l('users', 'register_title');
-    
+
   }
-  
+
   public function onComplete() {
-    
+
     $values    = $this->form->getElementValues( 0 );
     $userModel = $this->bootstrap->getModel('users');
     $crypto    = $this->bootstrap->getEncryption();
     $l         = $this->bootstrap->getLocalization();
 
-    // sec vuln
+    // TODO sec vuln
     if ( $values['forward'] and parse_url( $values['forward'] ) !== false )
       $this->controller->toSmarty['forwardurl'] = $values['forward'];
 
@@ -55,6 +55,7 @@ class Signup extends \Visitor\Form {
     $values['language']       = \Springboard\Language::get();
     $values['organizationid'] = $this->controller->organization['id'];
     $values['source']         = 'local';
+    $values['userroleid']     = $userModel->getRoleIDByName('member');
 
     if ( $this->invite ) {
 
@@ -113,9 +114,9 @@ class Signup extends \Visitor\Form {
       $l('users', 'validationemailsubject'),
       $this->controller->fetchSmarty('Visitor/Users/Email/Validation.tpl')
     );
-    
+
     $this->controller->redirect('contents/needvalidation');
-    
+
   }
-  
+
 }

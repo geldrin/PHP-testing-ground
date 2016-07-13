@@ -235,6 +235,20 @@ $config = Array(
     'value'       => 0,
   ),
 
+  'islivepinenabled' => array(
+    'displayname' => 'Élő közvetítés PIN kód használat?',
+    'type'        => 'inputRadio',
+    'values'      => $l->getLov('yesno'),
+    'value'       => 0,
+  ),
+
+  'isadaptivestreamingdisabled' => array(
+    'displayname' => 'Adaptív streamelés letiltása?',
+    'type'        => 'inputRadio',
+    'values'      => $l->getLov('yesno'),
+    'value'       => 0,
+  ),
+
   'subscriberotherfs' => array(
     'legend' => 'Egyéb előfizetői beállítások',
     'type'   => 'fieldset',

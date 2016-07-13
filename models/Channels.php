@@ -3,19 +3,19 @@ namespace Model;
 
 class Channels extends \Springboard\Model {
   var $channelroots = array();
-  
+
   /*
    *
-   * A metodust akkor hivjuk meg a checkIndexPhotoFilename-bol, ha egy csatornahoz rendelt 
+   * A metodust akkor hivjuk meg a checkIndexPhotoFilename-bol, ha egy csatornahoz rendelt
    * video valamilyen modon torlodott, letiltasra kerult, statusza valtozott.
    *
    * EKkor az adott csatornanak kell a videoszamlalojat modositani, valamint az osszes szulojenek
    * hasonlokeppen.
    *
    */
-  
+
   public static function getWhere( $user, $prefix = '' ) {
-    
+
     if ( !$user or !$user['id'] ) {
 
       return "
@@ -155,7 +155,7 @@ class Channels extends \Springboard\Model {
     }
 
     // ha az adott csatornanak van indexfotoja, vagy
-    // ha nincs szuloje, vagy annak ki volt toltve a fileneve, 
+    // ha nincs szuloje, vagy annak ki volt toltve a fileneve,
     // akkor az aktualis csatorna a legkulso updatelendo.
     return $channel;
 
@@ -167,14 +167,14 @@ class Channels extends \Springboard\Model {
    */
 
   function findChildrenIDs( $parentid = null, $ispublic = null ) {
-    
+
     $this->ensureID();
 
     if ( !$parentid )
       $parentid = $this->db->qstr( $this->id );
     else
       $parentid = $this->db->qstr( $parentid );
-    
+
     $sql = "
       SELECT id
       FROM channels
@@ -182,22 +182,22 @@ class Channels extends \Springboard\Model {
         parentid  = " . $parentid . " AND
         isdeleted = '0'
     ";
-    
+
     if ( $ispublic )
       $sql .= " AND accesstype = 'public'";
-    
+
     $sql .= "ORDER BY weight";
     $children = $this->db->getCol( $sql );
-    
+
     foreach( $children as $parentid )
       $children = array_merge( $children, $this->findChildrenIDs( $parentid ) );
-    
+
     return $children;
-   
+
   }
-  
+
   function findParents( $id = null ) {
-    
+
     if ( !$id ) {
       $this->ensureID();
       $id = $this->db->qstr( $this->id );
@@ -212,23 +212,23 @@ class Channels extends \Springboard\Model {
         isdeleted = '0'
       ORDER BY weight
     ");
-    
+
     foreach( $parents as $parentid => $id ) {
-      
+
       if ( !$parentid )
         continue;
-      
+
       $parents = array_merge( $parents, $this->findParents( $parentid ) );
-      
+
     }
-    
+
     return $parents;
-    
+
   }
 
   /*
    * A metodus celja, hogy egy csatorna szamara talaljon megfelelo
-   * indexphotofilename erteket. Az egesz csatornaag csucsat probalja 
+   * indexphotofilename erteket. Az egesz csatornaag csucsat probalja
    * ellatni ilyen ertekkel. Ha az adott csatornanak mar van ilyenje,
    * akkor nincs teendo.
    *
@@ -255,25 +255,25 @@ class Channels extends \Springboard\Model {
     $parentid = $parent->id;
 
     // a children csatornak felol keresunk egyetlen videot
-    $indexphotofilename = $this->bootstrap->getModel('recordings')->getIndexPhotoFromChannels( 
+    $indexphotofilename = $this->bootstrap->getModel('recordings')->getIndexPhotoFromChannels(
       array_merge( array( $parentid ), $children ),
       $parent->row['accesstype']
     );
-    
+
     if ( !$indexphotofilename and $default )
       $parent->row['indexphotofilename'] = $default;
     else
       $parent->row['indexphotofilename'] = $indexphotofilename;
-    
+
     $parent->updateRow();
 
   }
 
   function delete( $id, $magic_quotes_gpc = 0 ) {
-    
+
     if ( !@$this->row['id'] != $id )
       $this->select( $id );
-    
+
     $childrenids   = $this->findChildrenIDs( $id );
     $childrenids[] = $id;
 
@@ -281,27 +281,27 @@ class Channels extends \Springboard\Model {
       DELETE FROM channels_recordings
       WHERE channelid IN('" . implode("', '", $childrenids ) . "')
     ");
-    
+
     $this->db->execute("
       DELETE FROM access
       WHERE channelid IN('" . implode("', '", $childrenids ) . "')
     ");
-    
+
     $this->updateVideoCounters();
     $ret = $this->db->execute("
       DELETE FROM channels
       WHERE id IN('" . implode("', '", $childrenids ) . "')
     ");
-    
+
     return $ret;
-    
+
   }
-  
+
   function getArray( $start = false, $limit = false, $where = false, $orderby = false ) {
-    
+
     if ( $where )
       $this->addTextFilter( $where );
-    
+
     return
       $this->db->getArray(
         "SELECT
@@ -312,9 +312,9 @@ class Channels extends \Springboard\Model {
         ( strlen( $orderby ) ? 'ORDER BY ' . $orderby : '' ) . " " .
         ( is_numeric( $start ) ? 'LIMIT ' . $start . ', ' . $limit : "" )
       );
-    
+
   }
-  
+
   function getSingleChannelTree( $rootid, $orderby = null, $parentid = 0, $ispublic = null ) {
 
     $this->addFilter('c.isdeleted', 0, true, false, 'isdeleted');
@@ -327,20 +327,20 @@ class Channels extends \Springboard\Model {
 
     if ( $parentid !== null )
       $this->addFilter('c.parentid', $parentid, true, false, 'parentid');
-    
+
     if ( $ispublic )
       $this->addFilter('c.accesstype', 'public', false, false, 'accesstype');
-    
+
     $this->addTextFilter('c.channeltypeid = ct.id', 'channeltype');
-    
+
     $channels = $this->getChannelArray( false, false, false, $orderby );
     $this->clearFilter('rootid');
-    
+
     foreach( $channels as $key => $channel )
       $channels[ $key ]['children'] = $this->getSingleChannelTree( false, $orderby, $channel['id'] );
-    
+
     return $channels;
-    
+
   }
 
   public function getParentFromChannelTree( $channeltree, $currentid, $parent = null ) {
@@ -370,31 +370,31 @@ class Channels extends \Springboard\Model {
   }
 
   function findIDInChildren( $channeltree ) {
-    
+
     if ( empty( $channeltree ) )
       return false;
-    
+
     foreach( $channeltree as $channel ) {
-      
+
       if ( $channel['id'] == $this->id )
         return true;
-      
+
       if ( $this->findIDInChildren( @$channel['children'] ) )
         return true;
-      
+
     }
-    
+
     return false;
-    
+
   }
-  
+
   function getChannelCount( $where = false ) {
-    
+
     $this->addTextFilter('c.channeltypeid = ct.id', 'channeltype');
-    
+
     if ( $where )
       $this->addTextFilter( $where );
-    
+
     $ret = $this->db->getOne("
       SELECT COUNT(*)
       FROM
@@ -402,30 +402,30 @@ class Channels extends \Springboard\Model {
         channel_types AS ct " .
       $this->getFilter()
     );
-    
+
     $this->clearFilter('channeltype'); // pop the c.channeltypeid = ct.id
-    
+
     return $ret;
-    
+
   }
-  
+
   function getChannelTree( $start = false, $limit = false, $where = false, $orderby = 'c.weight, c.title', $parentid = 0 ) {
-    
+
     if ( $parentid !== null )
       $this->addFilter('c.parentid', $parentid, true, false, 'parentid');
 
     $this->addTextFilter('c.channeltypeid = ct.id', 'channeltype');
-    
+
     $channels = $this->getChannelArray( $start, $limit, $where, $orderby );
     foreach( $channels as $key => $channel )
       $channels[ $key ]['children'] = $this->getChannelTree( false, false, $where, $orderby, $channel['id'] );
-    
+
     return $channels;
-    
+
   }
-  
+
   function getChannelArray( $start, $limit, $where, $orderby ) {
-    
+
     if ( $where )
       $this->addTextFilter( $where );
 
@@ -437,11 +437,11 @@ class Channels extends \Springboard\Model {
         "SELECT
           c.*,
           s.value AS channeltype,
-          ( 
-            SELECT count(*) 
-            FROM channels_recordings 
-            WHERE 
-              channelid = c.id 
+          (
+            SELECT count(*)
+            FROM channels_recordings
+            WHERE
+              channelid = c.id
           ) AS recordcount
          FROM
            channels AS c,
@@ -451,25 +451,25 @@ class Channels extends \Springboard\Model {
         ( strlen( $orderby ) ? 'ORDER BY ' . $orderby : '' ) . " " .
         ( is_numeric( $start ) ? 'LIMIT ' . $start . ', ' . $limit : "" )
       );
-    
+
     $this->clearFilter('channeltype');
     $this->clearFilter('channeltypestring');
     return $ret;
-    
+
   }
-  
+
   function getUsersChannels( $userid, $organizationids = null ) {
 
     if ( !$userid )
       return array();
-    
+
     $where = "c.userid = '$userid'";
     if ( !empty( $organizationids ) )
       $where = "(
         c.userid = '" . $userid . "' OR
         c.organizationid IN('" . implode("', '", $organizationids ) . "')
       )";
-    
+
     $where .= " AND c.isdeleted = '0'";
 
     // az eventeket is belevesszuk a channelokba mert ez jelenik meg a
@@ -486,44 +486,44 @@ class Channels extends \Springboard\Model {
     ");
 
   }
-  
+
   // this function serves the addtochannel function of the recordings module
   // it returns a channel tree with the users recordings
   // if a recording is present in the channel it's signalled so we can
   // show it to the user
   function addChannelStateToArray( $recordingid, &$array, $recordingschannels = null ) {
-    
+
     if ( !$recordingschannels ) {
-      
+
       $recordingschannels = $this->db->getAssoc("
         SELECT channelid, id
         FROM channels_recordings
         WHERE
           recordingid = " . $this->db->qstr( $recordingid ) . "
       ");
-      
+
     }
-    
+
     foreach( $array as $key => $value ) {
-      
+
       if ( array_key_exists( $value['id'], $recordingschannels ) ) {
-        
+
         $array[ $key ]['active'] = true;
         $array[ $key ]['channelsrecordingsid'] = $recordingschannels[ $value['id'] ];
-        
+
       }
-      
+
       if ( !empty( $value['children'] ) )
         $this->addChannelStateToArray( $recordingid, $array[ $key ]['children'], $recordingschannels );
-      
+
     }
-    
+
     return $array;
-    
+
   }
-  
+
   function getValidYearsForIDs( $ids ) {
-    
+
     return $this->db->getCol("
       SELECT DISTINCT YEAR( starttimestamp )
       FROM channels
@@ -534,11 +534,11 @@ class Channels extends \Springboard\Model {
       ORDER BY
         starttimestamp DESC
     ");
-    
+
   }
-  
+
   function getValidYearsForChannels() {
-    
+
     return $this->db->getCol("
       SELECT DISTINCT YEAR( c.starttimestamp )
       FROM channels c, channel_types ct
@@ -546,7 +546,7 @@ class Channels extends \Springboard\Model {
         c.channeltypeid = ct.id AND
         ct.isfavorite = 0 AND
         ct.isevent = 0 AND
-        ( 
+        (
           ct.ispersonal = 0 OR
           ( ct.ispersonal = 1 AND c.accesstype = 'public' )
         ) AND
@@ -556,17 +556,17 @@ class Channels extends \Springboard\Model {
         c.numberofrecordings > 0
       ORDER BY c.starttimestamp DESC
     ");
-    
+
   }
-  
+
   function findRoot( $channel, $ispublic = null ) {
-    
+
     if ( !$channel['parentid'] )
       return $this->channelroots[ $channel['id'] ] = $channel;
-    
+
     if ( isset( $this->channelroots[ $channel['id'] ] ) )
       return $this->channelroots[ $channel['id'] ];
-    
+
     $where  = $ispublic? "AND c.accesstype = 'public'": '';
     $parent = $this->db->getRow("
       SELECT
@@ -584,24 +584,24 @@ class Channels extends \Springboard\Model {
         c.id            = '" . $channel['parentid'] . "'
         $where
     ");
-    
+
     if ( empty( $parent ) )
       return $this->channelroots[ $channel['id'] ] = $channel;
-    
+
     $this->channelroots[ $channel['id'] ] = $parent;
     return $this->findRoot( $parent, $ispublic );
-    
+
   }
-  
+
   function findRootID( $parentid = null, $ispublic = null ) {
-    
+
     if ( !$parentid ) {
-      
+
       $this->ensureID();
       $parentid = $this->id;
-      
+
     }
-    
+
     $sql = "
       SELECT id, parentid
       FROM channels
@@ -609,36 +609,36 @@ class Channels extends \Springboard\Model {
         id        = '" . $parentid . "' AND
         isdeleted = 0
     ";
-    
+
     if ( $ispublic )
       $sql .= " AND accesstype = 'public'";
-    
+
     $parent = $this->db->getRow( $sql );
-    
+
     if ( empty( $parent ) )
       return $parentid;
     elseif ( $parent['parentid'] )
       return $this->findRootID( $parent['parentid'] );
     else
       return $parent['id'];
-    
+
   }
-  
+
   function findChannelInTree( $channeltree, $channelid ) {
-    
+
     foreach( $channeltree as $key => $value ) {
-      
+
       if ( $value['id'] == $channelid )
         return $channeltree[ $key ];
       elseif( !empty( $value['children'] ) )
         return $this->findChannelInTree( $value['children'], $channelid );
-      
+
     }
-    
+
   }
-  
+
   function getChannelWithChanneltype( $channelid ) {
-    
+
     return $this->db->getRow("
       SELECT c.*, s.value AS channeltype
       FROM
@@ -651,68 +651,68 @@ class Channels extends \Springboard\Model {
         s.translationof = ct.name_stringid AND
         s.language      = '" . \Springboard\Language::get() . "'
     ");
-    
+
   }
-  
+
   public function insertIntoChannel( $recordingid, $user, $adjustweight = false, $channelid = null ) {
-    
+
     if ( $channelid === null ) {
-      
+
       $this->ensureID();
       $channelid = $this->id;
-      
+
     }
-    
+
     if ( !$user or !isset( $user['id'] ) )
       throw new \Exception('Invalid user specified');
-    
+
     $channelrecordingsModel = $this->bootstrap->getModel('channels_recordings');
     $channelrecordingsModel->addFilter('userid', $user['id'] );
     $channelrecordingsModel->addFilter('channelid', $this->id );
     $channelrecordingsModel->addFilter('recordingid', $recordingid );
-    
+
     $channelrecording = $channelrecordingsModel->getRow();
     if ( !empty( $channelrecording ) ) // already inserted, nothing to do
       return false;
-    
+
     $channelrecordingsModel->insert( array(
         'userid'      => $user['id'],
         'channelid'   => $channelid,
         'recordingid' => $recordingid,
       )
     );
-    
+
     if ( $adjustweight )
       $channelrecordingsModel->updateRow( array(
           'weight' => $channelrecordingsModel->id,
         )
       );
-    
+
     return true;
-    
+
   }
-  
+
   public function getRecordingsIndexphotos() {
-    
+
     $this->ensureID();
-    
+
     $recordings = $this->db->getArray("
-      SELECT 
-        r.title, 
+      SELECT
+        r.title,
         r.indexphotofilename
       FROM recordings r, channels_recordings cr
-      WHERE 
+      WHERE
         cr.channelid = '" . $this->id . "' AND
         r.status = 'onstorage' AND
         cr.recordingid = r.id
     ");
-    
+
     return $recordings;
-    
+
   }
-  
+
   public function getLiveFeedCountForChannel() {
-    
+
     $this->ensureID();
     return $this->db->getOne("
       SELECT COUNT(*)
@@ -722,9 +722,9 @@ class Channels extends \Springboard\Model {
         (status IS NULL OR status <> 'markedfordeletion')
       LIMIT 1
     ");
-    
+
   }
-  
+
   private function getLiveSQL( $filters ) {
     $ret = array(
       'order' => '',
@@ -734,7 +734,7 @@ class Channels extends \Springboard\Model {
         "parentid    = '0'",
       ),
     );
-    
+
     $ret['where'][] = "organizationid = '" . $filters['organizationid'] . "'";
     if ( isset( $filters['term'] ) and $filters['term'] ) {
 
@@ -766,7 +766,7 @@ class Channels extends \Springboard\Model {
   }
 
   public function getLiveCount( $filters ) {
-    
+
     $sql = $this->getLiveSQL( $filters );
     return $this->db->getOne("
       SELECT COUNT(*)
@@ -774,9 +774,9 @@ class Channels extends \Springboard\Model {
       WHERE " . $sql['where'] . "
       LIMIT 1
     ");
-    
+
   }
-  
+
   public function getLiveArray( $filters, $start, $limit, $orderby ) {
 
     $sql = $this->getLiveSQL( $filters );
@@ -787,11 +787,11 @@ class Channels extends \Springboard\Model {
       ORDER BY " . $sql['order'] . " $orderby
       LIMIT $start, $limit
     ");
-    
+
   }
-  
+
   public function getLiveRecordingCount() {
-    
+
     // TODO
     $this->ensureObjectLoaded();
     return $this->db->getOne("
@@ -805,11 +805,11 @@ class Channels extends \Springboard\Model {
         r.approvalstatus = 'approved' AND
         r.mediatype   = 'live'
     ");
-    
+
   }
-  
+
   public function getLiveRecordingArray( $start, $limit, $orderby ) {
-    
+
     // TODO
     $this->ensureObjectLoaded();
     return $this->db->getArray("
@@ -823,11 +823,11 @@ class Channels extends \Springboard\Model {
         r.approvalstatus = 'approved' AND
         r.mediatype   = 'live'
     ");
-    
+
   }
-  
+
   public function getFeeds() {
-    
+
     $this->ensureObjectLoaded();
     return $this->db->getAssoc("
       SELECT
@@ -846,26 +846,33 @@ class Channels extends \Springboard\Model {
         recordinglinkid,
         vcrconferenceid,
         vcrparticipantid,
-        transcoderid
+        transcoderid,
+        pin
       FROM livefeeds
       WHERE
         channelid IN('" . $this->id . "') AND
         (status IS NULL OR status <> 'markedfordeletion')
       ORDER BY name
     ");
-    
+
   }
-  
+
   public function getFeedsWithStreams() {
-    
+
     $feeds     = $this->getFeeds();
     $feedModel = $this->bootstrap->getModel('livefeeds');
-    
+
     foreach ( $feeds as $key => $feed ) {
-      
+
       $feeds[ $key ]['streams']   = $feedModel->getStreams( $feed['id'] );
       $feeds[ $key ]['candelete'] = $feedModel->canDeleteFeed( $feed );
-      
+
+      $feedModel->row = $feed;
+      $feedModel->id = $feed['id'];
+      $feeds[ $key ]['ingressurls'] = $feedModel->getAllIngressURLs(
+        $feeds[ $key ]['streams']
+      );
+
     }
 
     return $feeds;
@@ -873,27 +880,27 @@ class Channels extends \Springboard\Model {
   }
 
   public function getTreeArray( $order = null, $parentid = 0 ) {
-    
+
     if ( !$order )
       $order = 'weight, title';
-    
+
     $this->addFilter('parentid', $parentid, true, true, 'treearray' );
     $this->addFilter('isdeleted', 0, true, true, 'isdeleted' );
-    
+
     $items = $this->db->getArray("
       SELECT *
       FROM channels
       " . $this->getFilter() . "
       ORDER BY $order
     ");
-    
+
     foreach( $items as $key => $value )
       $items[ $key ]['children'] = $this->getTreeArray( $order, $value['id'] );
-    
+
     return $items;
-    
+
   }
-  
+
   public function isAccessibleByInvitation( $user, $channelid, $organization ) {
 
     if ( !$user['id'] )
@@ -914,13 +921,13 @@ class Channels extends \Springboard\Model {
   }
 
   public function isAccessible( $user, $organization, $skipaccesstypecheck = false ) {
-    
+
     $this->ensureObjectLoaded();
-    
+
     $channel = $this->row;
     if ( $channel['parentid'] != 0 )
       $channel = $this->findRoot( $channel );
-    
+
     if (
          isset( $user['id'] ) and
          (
@@ -932,7 +939,7 @@ class Channels extends \Springboard\Model {
          )
        )
       return true;
-    
+
     // ezt csatorna hozzaadas-hoz valo permission checknel hasznaljuk,
     // ez utan nezzunk minden mast ami csak a csatorna megnezesehez kell
     if ( $skipaccesstypecheck or $channel['isdeleted'] )
@@ -942,26 +949,26 @@ class Channels extends \Springboard\Model {
       return true;
 
     switch( $channel['accesstype'] ) {
-      
+
       case '':
-        
+
         // idaig nem jutunk el ha a user hozzafer a csatornahoz, nem kell nezni
         // ha nem publikus
         if ( $channel['accesstype'] )
           return true;
-        
+
         break;
-      
+
       case 'public':
         break;
-      
+
       case 'registrations':
-        
+
         if ( !isset( $user['id'] ) )
           return 'registrationrestricted';
-        
+
         break;
-      
+
       case 'departmentsorgroups':
 
         if ( !isset( $user['id'] ) )
@@ -970,10 +977,10 @@ class Channels extends \Springboard\Model {
           return true;
         elseif ( $user['iseditor'] and $user['organizationid'] == $channel['organizationid'] )
           return true;
-        
+
         $channelid = "'" . $channel['id'] . "'";
         $userid    = "'" . $user['id'] . "'";
-        
+
         $hasaccess = $this->db->getOne("
           SELECT (
             SELECT COUNT(*)
@@ -997,65 +1004,65 @@ class Channels extends \Springboard\Model {
             LIMIT 1
           ) AS count
         ");
-        
+
         if ( !$hasaccess )
           return 'departmentorgrouprestricted';
-        
+
         break;
-      
+
       default:
         throw new \Exception('Unknown accesstype ' . $channel['accesstype'] );
         break;
-      
+
     }
-    
+
     return true;
-    
+
   }
-  
+
   public function clearAccess() {
-    
+
     $this->ensureID();
-    
+
     $this->db->execute("
       DELETE FROM access
       WHERE channelid = '" . $this->id . "'
     ");
-    
+
   }
-  
+
   protected function insertMultipleIDs( $ids, $table, $field, $secondvalue = null, $secondfield = 'channelid' ) {
-    
+
     $this->ensureID();
-    
+
     if ( $secondvalue == null )
       $secondvalue = $this->id;
-    
+
     $values = array();
     foreach( $ids as $id )
       $values[] = "('" . intval( $id ) . "', '" . $secondvalue . "')";
-    
+
     $this->db->execute("
       INSERT INTO $table ($field, $secondfield)
       VALUES " . implode(', ', $values ) . "
     ");
-    
+
   }
-  
+
   public function restrictDepartments( $departmentids ) {
     $this->insertMultipleIDs( $departmentids, 'access', 'departmentid');
   }
-  
+
   public function restrictGroups( $groupids ) {
     $this->insertMultipleIDs( $groupids, 'access', 'groupid');
   }
-  
+
   public function syncAccessWithFeeds( $livefeedids = null ) {
-    
+
     $this->ensureObjectLoaded();
     if ( $this->row['parentid'] )
       throw new \Exception('Parentid nem nulla!');
-    
+
     if ( $livefeedids === null )
       $livefeedids = $this->db->getCol("
         SELECT id
@@ -1064,15 +1071,15 @@ class Channels extends \Springboard\Model {
           channelid = '" . $this->id . "' AND
           (status IS NULL OR status <> 'markedfordeletion')
       ");
-    
+
     if ( empty( $livefeedids ) )
       return;
-    
+
     $this->db->execute("
       DELETE FROM access
       WHERE livefeedid IN('" . implode("', '", $livefeedids ) . "')
     ");
-    
+
     $this->db->execute("
       UPDATE livefeeds
       SET
@@ -1081,11 +1088,11 @@ class Channels extends \Springboard\Model {
         contentsmilstatus = 'regenerate'
       WHERE id IN('" . implode("', '", $livefeedids ) . "')
     ");
-    
+
     switch ( $this->row['accesstype'] ) {
-      
+
       case 'departmentsorgroups':
-        
+
         $ids = $this->db->getCol("
           SELECT departmentid
           FROM access
@@ -1093,12 +1100,12 @@ class Channels extends \Springboard\Model {
             channelid = '" . $this->id . "' AND
             departmentid IS NOT NULL
         ");
-        
+
         if ( !empty( $ids ) ) {
 
           foreach( $livefeedids as $livefeedid )
             $this->insertMultipleIDs( $ids, 'access', 'departmentid', $livefeedid, 'livefeedid' );
-          
+
         }
 
         $ids = $this->db->getCol("
@@ -1108,27 +1115,27 @@ class Channels extends \Springboard\Model {
             channelid = '" . $this->id . "' AND
             groupid IS NOT NULL
         ");
-        
+
         if ( !empty( $ids ) ) {
-          
+
           foreach( $livefeedids as $livefeedid )
             $this->insertMultipleIDs( $ids, 'access', 'groupid', $livefeedid, 'livefeedid' );
-          
+
         }
 
         return true;
         break;
-      
+
       default:
         return true;
         break;
-      
+
     }
-    
+
   }
-  
+
   public function search( $term, $userid, $organizationid ) {
-    
+
     $searchterm  = str_replace( ' ', '%', $term );
     $searchterm  = $this->db->qstr( '%' . $searchterm . '%' );
     $term        = $this->db->qstr( $term );
@@ -1168,13 +1175,13 @@ class Channels extends \Springboard\Model {
       ORDER BY relevancy DESC
       LIMIT 20
     ";
-    
+
     return $this->db->getArray( $query );
-    
+
   }
-  
+
   public function updateModification() {
-    
+
     $this->ensureID();
     $channelids   = $this->findParents();
     $channelids[] = $this->id;

@@ -15,24 +15,31 @@ class Ldap extends \AuthDirectories\Base {
   }
 
   public function handle( $remoteuser ) {
-    $groupsModel = $this->bootstrap->getModel("groups");
     $accountname = $remoteuser;
     if ( preg_match( $this->bootstrap->config['directoryusernameregex'], $remoteuser, $match ) )
       $accountname = $match['username'];
 
-    $isadmin = 0;
-    $filter  =
-      '(&(objectClass=user)(objectCategory=person)(sAMAccountName=' .
-        \LDAP\LDAP::escape( $accountname ) .
-      '))'
-    ;
     $ldap    = $this->bootstrap->getLDAP( array(
         'server'   => $this->directory['server'],
         'username' => $this->directory['user'],
         'password' => $this->directory['password'],
       )
     );
+
+    return $this->directoryuser = $this->getAccountInfo(
+      $ldap, $accountname
+    );
+  }
+
+  private function getAccountInfo( $ldap, $accountname ) {
+    $groupsModel = $this->bootstrap->getModel("groups");
+    $isadmin = 0;
     $ret     = array();
+    $filter  =
+      '(&(objectClass=user)(objectCategory=person)(sAMAccountName=' .
+        \LDAP\LDAP::escape( $accountname ) .
+      '))'
+    ;
 
     $results = $ldap->search(
       $this->directory['ldapusertreedn'],
@@ -65,7 +72,9 @@ class Ldap extends \AuthDirectories\Base {
         $ret['email'] = $ldap::implodePossibleArray(' ', $result['mail'] );
 
         if ( !$ret['nickname'] )
-          $ret['nickname'] = substr( $ret['email'], 0, strpos( $ret['email'], '@') );
+          $ret['nickname'] = substr(
+            $ret['email'], 0, strpos( $ret['email'], '@')
+          );
       }
 
       if ( isset( $result['givenName'] ) ) {
@@ -88,6 +97,26 @@ class Ldap extends \AuthDirectories\Base {
         $ret['isuploader'] = 1;
 
       $ret['isclientadmin'] = (int) $isadmin;
+    }
+
+    return $ret;
+  }
+
+  public function handleLogin( $user, $password ) {
+    $ret = array();
+
+    try {
+
+      // TODO escapek tuti kellenek?
+      $ldap = $this->bootstrap->getLDAP( array(
+          'server'   => $this->directory['server'],
+          'username' => \LDAP\LDAP::escape( $user, true ),
+          'password' => \LDAP\LDAP::escape( $password, true ),
+        )
+      );
+      $ret = $this->getAccountInfo( $ldap, $user );
+    } catch( \Exception $e ) {
+      // valami rosz, vagy a user/pw vagy az ldap server
     }
 
     return $this->directoryuser = $ret;

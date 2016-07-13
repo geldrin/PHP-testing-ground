@@ -1,17 +1,17 @@
 <?php
 
 $config = Array(
-  
+
   'action' => Array(
     'type'  => 'inputHidden',
     'value' => 'insert'
   ),
-  
+
   'id' => Array(
     'type'  => 'inputHidden',
     'value' => '0'
   ),
-  
+
   'organizationid' => Array(
     'displayname' => 'Intézmény',
     'type'        => 'selectDynamic',
@@ -31,17 +31,9 @@ $config = Array(
     'treeparent'  => 'parentid',
     'treestart'   => '0',
   ),
-  
+
   'name_stringid' => Array(
     'displayname' => $l('recordings', 'categories'),
-    'type'        => 'inputTextMultilanguage',
-    'languages'   => $l->getLov('languages'),
-    'validation'  => Array(
-    )
-  ),
-  
-  'namehyphenated_stringid' => Array(
-    'displayname' => 'Kategória neve kötőjelekkel',
     'type'        => 'inputTextMultilanguage',
     'languages'   => $l->getLov('languages'),
     'validation'  => Array(
@@ -54,11 +46,11 @@ $config = Array(
     'type'        => 'selectDynamic',
     'values'      => Array( 0 => '--- legkülső szintű kategória ---' ),
     'sql'         => "
-      SELECT 
+      SELECT
         c.id, s.value
-      FROM 
+      FROM
         categories c, strings s
-      WHERE 
+      WHERE
         c.name_stringid = s.translationof AND
         s.language = 'hu' AND
         %s
@@ -87,7 +79,7 @@ $listconfig = Array(
     LEFT JOIN
       strings s
     ON
-      c.name_stringid = s.translationof AND 
+      c.name_stringid = s.translationof AND
       s.language = 'hu'
   ",
 
@@ -108,14 +100,14 @@ $listconfig = Array(
   'type'       => 'tree',
   'modify'     => 'c.id',
   'delete'     => 'c.id',
-  
+
   'fields' => Array(
-  
+
     Array(
       'field' => 's.value',
       'displayname' => 'Megnevezés',
     ),
-    
+
     Array(
       'displayname' => $l('admin', 'id'),
       'field' => 'c.id',
