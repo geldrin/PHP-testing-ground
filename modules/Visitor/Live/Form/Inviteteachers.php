@@ -48,6 +48,7 @@ class Inviteteachers extends \Visitor\HelpForm {
 
     parent::init();
   }
+
   public function postGetForm() {
     parent::postGetForm();
     $l = $this->bootstrap->getLocalization();
@@ -65,7 +66,8 @@ class Inviteteachers extends \Visitor\HelpForm {
     $emails = $this->validateAndGetEmails();
     $row['emails'] = implode("\n", $emails );
 
-    if ( !empty( $this->form->getMessages() ) )
+    $errors = $this->form->getMessages();
+    if ( !empty( $errors ) )
       return;
 
     $users = $this->validateAndGetUsers( $emails );
