@@ -84,7 +84,10 @@ class Controller extends \Springboard\Controller\Visitor {
     $this->toSmarty['action'] = $action;
 
     // TODO modositani uj privilegium rendszerhez
-    $this->checkAccess( $this->permissions[ $action ] );
+    if ( $this->bootstrap->config['usedynamicprivileges'] )
+      $this->checkControllerPrivilege( $this->module, $action );
+    else
+      $this->checkAccess( $this->permissions[ $action ] );
 
     switch( $found ) {
 
@@ -126,6 +129,35 @@ class Controller extends \Springboard\Controller\Visitor {
 
     }
 
+  }
+
+  public function checkControllerPrivilege( $module, $action ) {
+    if ( !\Springboard\Session::exists() ) {
+      $roleid = $this->getPublicRoleID();
+    } else {
+      $user = $this->bootstrap->getSession('user');
+      if ( $user['userroleid'] ) // be van lepve es van roleid
+        $roleid = $user['userroleid'];
+      elseif ( $user['id'] ) // be van lepve de nincs roleid
+        throw new \Exception('invalid userroleid for user ' . $user['id'] );
+      else // nincs belepve
+        $roleid = $this->getPublicRoleID();
+    }
+
+    $privileges = \Model\Users::getPrivilegesForRoleID( $roleid );
+    $key = $module . '_' . $action;
+    if ( isset( $privileges[ $key ] ) )
+      return true;
+
+    // TODO eldonteni mi tortenjen ha nincs privilegium
+    // hogy redirectelunk loginra?
+  }
+
+  private function getPublicRoleID() {
+    $userModel = $this->bootstrap->getModel('users');
+    $roleid = $userModel->getRoleIDByName('public');
+    if ( !$roleid )
+      throw new \Exception('no public role exists');
   }
 
   public function handleAutologin() {

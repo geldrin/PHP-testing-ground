@@ -410,6 +410,9 @@ $config = array(
 
   // PIN hossza karakterben
   'livepinlength' => 6,
+
+  // a dinamikus privilegiumokat hasznaljuk e
+  'usedynamicprivileges' => true,
 );
 
 $config['phpsettings'] = array(

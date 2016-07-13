@@ -1266,17 +1266,21 @@ class Users extends \Springboard\Model {
 
   public function getPrivileges() {
     $this->ensureObjectLoaded();
-    if ( !$this->row['roleid'] )
+    return self::_getPrivileges( $this->row['userroleid'] );
+  }
+
+  public static function getPrivilegesForRoleID( $roleid ) {
+    if ( !$roleid )
       return array();
 
     $cache = $this->bootstrap->getCache(
-      'roles-' . $this->row['userroleid'],
+      'roles-' . $roleid,
       60 * 60 * 24 * 7,
       true
     );
 
     if ( $cache->expired() ) {
-      $roleid = $this->db->qstr( $this->row['userroleid'] );
+      $roleid = $this->db->qstr( $roleid );
       $data = $this->db->getAssoc("
         SELECT
          pr.name,
