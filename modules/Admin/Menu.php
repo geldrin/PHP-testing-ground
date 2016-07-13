@@ -26,6 +26,12 @@ class Menu {
       ),
 
       array(
+        'link'   => 'privileges',
+        'icon'   => 'images/sekkyumu/write_document.png',
+        'text'   => 'Jogok',
+      ),
+
+      array(
         'link'   => 'organizations',
         'icon'   => 'images/sekkyumu/write_document.png',
         'text'   => 'Intézmények',
