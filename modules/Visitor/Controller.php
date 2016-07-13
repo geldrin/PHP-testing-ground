@@ -132,32 +132,48 @@ class Controller extends \Springboard\Controller\Visitor {
   }
 
   public function checkControllerPrivilege( $module, $action ) {
-    if ( !\Springboard\Session::exists() ) {
+    $userLoggedIn = false;
+    if ( !\Springboard\Session::exists() )
       $roleid = $this->getPublicRoleID();
-    } else {
+    else {
       $user = $this->bootstrap->getSession('user');
-      if ( $user['userroleid'] ) // be van lepve es van roleid
+      if ( $user['id'] ) {
+        $userLoggedIn = true;
         $roleid = $user['userroleid'];
-      elseif ( $user['id'] ) // be van lepve de nincs roleid
-        throw new \Exception('invalid userroleid for user ' . $user['id'] );
-      else // nincs belepve
+        if ( !$roleid )
+          throw new \Exception('invalid userroleid for user ' . $user['id'] );
+      } else // nincs belepve
         $roleid = $this->getPublicRoleID();
     }
 
     $privileges = \Model\Users::getPrivilegesForRoleID( $roleid );
     $key = $module . '_' . $action;
+
+    if ( $this->bootstrap->debug )
+      \Springboard\Debug::d("checking role #$roleid for privilege $key", $privileges);
+
     if ( isset( $privileges[ $key ] ) )
       return true;
 
-    // TODO eldonteni mi tortenjen ha nincs privilegium
-    // hogy redirectelunk loginra?
+    // nincs privilegium, de be sincs lepve, eloszor lepjen be
+    if ( !$userLoggedIn )
+      $this->redirect( $this->application->config['loginuri'], array(
+          'forward' => @$_SERVER['REQUEST_URI']
+        )
+      );
+
+    // nincs privilegium, de be van lepve, hiba oldal
+    $this->toSmarty['privilege'] = $key;
+    $this->smartyOutput('Visitor/privilegeerror.tpl');
   }
 
   private function getPublicRoleID() {
     $userModel = $this->bootstrap->getModel('users');
-    $roleid = $userModel->getRoleIDByName('public');
+    $roleid = $userModel->cachedGetRoleIDByName('public');
     if ( !$roleid )
       throw new \Exception('no public role exists');
+
+    return $roleid;
   }
 
   public function handleAutologin() {

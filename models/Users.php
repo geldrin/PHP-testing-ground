@@ -1273,15 +1273,17 @@ class Users extends \Springboard\Model {
     if ( !$roleid )
       return array();
 
-    $cache = $this->bootstrap->getCache(
+    $bs = \Bootstrap::getInstance();
+    $cache = $bs->getCache(
       'roles-' . $roleid,
       60 * 60 * 24 * 7,
       true
     );
 
     if ( $cache->expired() ) {
-      $roleid = $this->db->qstr( $roleid );
-      $data = $this->db->getAssoc("
+      $db = $bs->getAdoDB();
+      $roleid = $db->qstr( $roleid );
+      $data = $db->getAssoc("
         SELECT
          pr.name,
          '1' AS value

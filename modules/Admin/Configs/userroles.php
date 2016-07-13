@@ -23,10 +23,10 @@ $config = Array(
   'privileges[]' => array(
     'type'        => 'inputCheckboxDynamic',
     'displayname' => 'Jogok',
+    'prefix'      => '<a href="#" id="toggleprivileges">Minden jog kiválasztása/törlése</a><br/>',
     'divide'      => 1,
-    'divider'     => '<br/>',
     'sql'         => "
-      SELECT id, CONCAT(name, ' (', comment, ')') AS value
+      SELECT id, CONCAT(name, ' (', IFNULL(comment, ''), ')') AS value
       FROM privileges
       ORDER BY name
     ",
@@ -34,6 +34,9 @@ $config = Array(
       'clearcache' => array(
         array(
           'glob' => 'roles-*',
+        ),
+        array(
+          'key' => 'roles-%id%',
         ),
       ),
     ),

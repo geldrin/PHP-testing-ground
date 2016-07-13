@@ -412,7 +412,7 @@ $config = array(
   'livepinlength' => 6,
 
   // a dinamikus privilegiumokat hasznaljuk e
-  'usedynamicprivileges' => true,
+  'usedynamicprivileges' => false,
 );
 
 $config['phpsettings'] = array(

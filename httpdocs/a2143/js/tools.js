@@ -1,9 +1,9 @@
 function setupFancybox() {
 
   jQuery(document).ready(function() {
-    
+
     jQuery(".fancybox").each( function() {
-      
+
       jQuery(this).fancybox({
        'hideOnContentClick': true,
        'type': 'iframe',
@@ -11,21 +11,21 @@ function setupFancybox() {
        'width': parseInt( jQuery(this).attr('boxwidth') || 900, 10 ),
        'overlayOpacity': 0.8
       });
-      
+
     });
-    
+
   });
 
 }
 
-Event.observe( document,"dom:loaded", function() { 
+Event.observe( document,"dom:loaded", function() {
   CMSsetupDeleteMultiple();
-  CMSrunClock(); 
+  CMSrunClock();
   CMSsetupSessionKeepAlive();
   CMSsetupClipboard();
-  
+
   $$("a").each( function(link) {
-    if ( link.title.length > 0 ) 
+    if ( link.title.length > 0 )
       new Tooltip( link, { mouseFollow: false, backgroundColor: '#333', textColor: '#fff', opacity: .9 });
   });
 } );
@@ -37,15 +37,15 @@ function CMSrunClock() {
   var h = today.getHours();
   var m = today.getMinutes();
   var s = today.getSeconds();
-  
+
   m = m < 10 ? "0" + m : m;
   s = s < 10 ? "0" + s : s;
 
   if ( $('CMSclock') ) {
-    // may not be present when we're in a popup 
+    // may not be present when we're in a popup
     $('CMSclock').update( h + ":" + m + ":" + s );
     t = setTimeout('CMSrunClock()', 500 );
-  
+
   }
 
 }
@@ -74,14 +74,14 @@ values = '';
 function CMScopyToClipboard( thisEvent ) {
 
   thisEvent.stop(); // avoid including "#" href in browser history
-        
+
   if ( typeof( document.forms['input'] ) != 'undefined' ) {
 
     if ( typeof( FCKeditorAPI ) != 'undefined' ) {
 
       for ( name in FCKeditorAPI.__Instances ) {
         oEditor = FCKeditorAPI.GetInstance( name );
-        oEditor.UpdateLinkedField(); 
+        oEditor.UpdateLinkedField();
       }
 
     }
@@ -94,7 +94,7 @@ function CMScopyToClipboard( thisEvent ) {
       { 'method': 'get' }
     );
   }
-    
+
 }
 
 // ----------------------------------------------------------------------------
@@ -105,13 +105,13 @@ function CMSpasteFromClipboard( thisEvent ) {
   if ( typeof( document.forms['input'] ) != 'undefined' ) {
 
     new Ajax.Request('index.php?target=retrieveClipboard', {
-      
+
       onComplete: function( transport ) {
 
         if ( 200 == transport.status ) {
 
           inputvalues = transport.responseText.toQueryParams();
-          
+
           $( document.forms.input ).getElements().each( function( e ) {
 
             if ( typeof( inputvalues[ e.name ] ) != 'undefined' ) {
@@ -139,8 +139,8 @@ function CMSpasteFromClipboard( thisEvent ) {
 //                  if ( current != e.checked )
   //                  new Effect.Highlight( e.up() );
                   break;
-                case 'radio':                                      
-                  if ( typeof( inputvalues[ e.name ] ) != 'undefined' ) 
+                case 'radio':
+                  if ( typeof( inputvalues[ e.name ] ) != 'undefined' )
                     if ( e.value == inputvalues[ e.name ] ) {
                       current   = e.checked;
                       e.checked = true;
@@ -160,7 +160,7 @@ function CMSpasteFromClipboard( thisEvent ) {
                     }
                   }
                   break;
-              
+
               }
             }
 
@@ -206,7 +206,7 @@ function CMSsetupDeleteMultiple( thisEvent ) {
 // ----------------------------------------------------------------------------
 function CMSshowMultiDeleteControls( thisEvent ) {
 
-  thisEvent.stop(); 
+  thisEvent.stop();
 
   $$('#listcontainer .deletecheckbox').each(function(e){
     e.show();
@@ -228,17 +228,17 @@ function CMShideMultiDeleteControls() {
 }
 
 function setupAjaxFileManager( options ) {
-  
+
   if ( !tinyMCE )
     return;
-  
+
   options.file_browser_callback = onFileBrowse;
   tinyMCE.init( options );
-    
+
 }
 
 function onFileBrowse( id, url, type, window ) {
-  
+
   tinyMCE.activeEditor.windowManager.open({
     url: "../../../../js/tiny_mce/plugins/ajaxfilemanager/ajaxfilemanager.php",
     width: 782,
@@ -249,38 +249,39 @@ function onFileBrowse( id, url, type, window ) {
     window : window,
     input : id
   });
-  
+
 }
 
 jQuery(document).ready(function() {
-  
+
   // a disabled mezoket is submitoljuk
   jQuery('#input').submit( function() {
     jQuery('#input input, #input textarea, #input select').removeAttr('disabled');
   });
 
   runIfExists('#organizations_modify, #organizations_new', setupOrganization );
+  runIfExists('#toggleprivileges', setupPrivileges );
 });
 
 function applyVisibilityToForm( data ) {
-  
+
   for ( var key in data ) {
-    
+
     if ( !data.hasOwnProperty( key ) )
       continue;
-    
+
     $j( key ).parents('tr').toggle( data[ key ] );
-    
+
   }
-  
+
 }
 
 function runIfExists( selector, func ) {
-  
+
   var elem = $j( selector );
   if ( elem.length > 0 )
     func( elem );
-  
+
 }
 
 function setupOrganization() {
@@ -293,10 +294,22 @@ function setupOrganization() {
       'input[name=isorganizationaffiliationrequired]': true,
     },
   }
-  
+
   $j('input[name=isnicknamehidden]').change(function() {
     var value = $j('input[name=isnicknamehidden]:checked').val();
     applyVisibilityToForm( nicknamehidden[ value ] );
   }).change();
-  
+
+}
+
+function setupPrivileges() {
+  $j('#toggleprivileges').click(function(e) {
+    e.preventDefault();
+
+    var elems = $j('input[name^="privileges"');
+    if ( elems.is(':checked') )
+      elems.attr('checked', false );
+    else
+      elems.attr('checked', 'checked');
+  })
 }
