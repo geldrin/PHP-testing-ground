@@ -107,7 +107,7 @@ abstract class Base {
     return new $class( $this->bootstrap, $this->organization, $directory );
   }
 
-  abstract public function handle( $authtype );
+  abstract public function handle( $authtype, $module, $action );
   abstract protected function handleAuthDirectory( $externalid );
 
 }

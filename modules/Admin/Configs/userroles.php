@@ -38,6 +38,9 @@ $config = Array(
         array(
           'key' => 'roles-%id%',
         ),
+        array(
+          'key' => 'rolenametoid-%name%',
+        ),
       ),
     ),
   ),

@@ -1266,50 +1266,8 @@ class Users extends \Springboard\Model {
 
   public function getPrivileges() {
     $this->ensureObjectLoaded();
-    return self::_getPrivileges( $this->row['userroleid'] );
-  }
-
-  public static function getPrivilegesForRoleID( $roleid ) {
-    if ( !$roleid )
-      return array();
-
-    $bs = \Bootstrap::getInstance();
-    $cache = $bs->getCache(
-      'roles-' . $roleid,
-      60 * 60 * 24 * 7,
-      true
+    return \Model\Userroles::getPrivilegesForRoleID(
+      $this->row['userroleid']
     );
-
-    if ( $cache->expired() ) {
-      $db = $bs->getAdoDB();
-      $roleid = $db->qstr( $roleid );
-      $data = $db->getAssoc("
-        SELECT
-         pr.name,
-         '1' AS value
-        FROM
-          userroles_privileges AS urp,
-          privileges AS pr
-        WHERE
-          urp.userroleid = $roleid AND
-          pr.id = urp.privilegeid
-        ORDER BY pr.name
-      ");
-
-      $cache->put( $data );
-    } else
-      $data = $cache->get();
-
-    return $data;
-  }
-
-  public function getRoleIDByName( $name ) {
-    $name = $this->db->qstr( $name );
-    return $this->db->getOne("
-      SELECT ur.id
-      FROM userroles AS ur
-      WHERE name = $name
-      LIMIT 1
-    ");
   }
 }
