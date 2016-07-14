@@ -105,6 +105,31 @@ class Controller extends \Springboard\Controller\Visitor {
     $this->smartyOutput('Visitor/privilegeerror.tpl');
   }
 
+  public function userHasPrivilege( $privilege ) {
+    $user = $this->bootstrap->getSession('user');
+    if ( !$user['id'] )
+      return false;
+
+    if ( !$this->bootstrap->config['usedynamicprivileges'] ) {
+      $args = func_get_args();
+      foreach( $args as $key => $permission ) {
+        if ( $key === 0 ) // skip privilege
+          continue;
+
+        if ( !$user[ $permission ] )
+          return false;
+      }
+
+      return true;
+    }
+
+    $userModel = $this->bootstrap->getModel('users');
+    $userModel->id = $user['id'];
+    $userModel->row = $user->toArray();
+
+    return $userModel->hasPrivilege( $privilege );
+  }
+
   private function getPublicRoleID() {
     $roleid = \Model\Userroles::getRoleIDByName('public');
     if ( !$roleid )

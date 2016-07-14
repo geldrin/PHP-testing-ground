@@ -164,7 +164,9 @@ class Controller extends \Visitor\Controller {
 
     if (
          $streamingserverid and
-         ( $user['isadmin'] or $user['isclientadmin'] )
+         $this->userHasPrivilege(
+           'live_forcemediaserver', 'isadmin', 'isclientadmin'
+         )
        )
       $feedModel->forceMediaServer( $streamingserverid );
 

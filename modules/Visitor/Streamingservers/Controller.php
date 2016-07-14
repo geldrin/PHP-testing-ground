@@ -5,13 +5,13 @@ class Controller extends \Visitor\Controller {
   public $permissions = array(
     // ures minden, csak api-ra hasznaljuk az egeszet
   );
-  
+
   public $forms = array(
   );
-  
+
   public $paging = array(
   );
-  
+
   public $apisignature = array(
     'updatestatus' => array(
       'loginrequired' => false,
@@ -32,7 +32,7 @@ class Controller extends \Visitor\Controller {
       ),
     ),
   );
-  
+
   public function updatestatusAction( $server, $hash, $reportsequencenum ) {
     $serverModel = $this->bootstrap->getModel('streamingservers');
     $d           = \Springboard\Debug::getInstance();

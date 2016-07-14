@@ -79,6 +79,7 @@ class Controller extends \Visitor\Controller {
       'user' => array(
         'type'                     => 'user',
         'permission'               => 'admin',
+        'privilege'                => 'recordings_modifyrecordingasuser',
         'impersonatefromparameter' => 'userid',
       ),
     ),
@@ -116,6 +117,7 @@ class Controller extends \Visitor\Controller {
       'user' => array(
         'type'                     => 'user',
         'permission'               => 'admin',
+        'privilege'                => 'recordings_checkfileresumeasuser',
         'impersonatefromparameter' => 'userid',
       ),
     ),
@@ -141,6 +143,7 @@ class Controller extends \Visitor\Controller {
       'user' => array(
         'type'                     => 'user',
         'permission'               => 'admin',
+        'privilege'                => 'recordings_uploadchunkasuser',
         'impersonatefromparameter' => 'userid',
       ),
       'encodinggroupid' => array(

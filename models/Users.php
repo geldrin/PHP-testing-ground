@@ -9,6 +9,7 @@ class Users extends \Springboard\Model {
   const USER_DISABLED    = 1; // letiltva adminisztracios oldalrol
   const USER_DIRECTORYDISABLED = 2; // letiltva LDAP-bol (nem tagja a csoportnak), automatikusan viszacsinaljuk
   protected $registeredSessionKey;
+  private $privileges = array();
 
   protected function checkUser( &$user, $organizationid ) {
 
@@ -1269,5 +1270,40 @@ class Users extends \Springboard\Model {
     return \Model\Userroles::getPrivilegesForRoleID(
       $this->row['userroleid']
     );
+  }
+
+  public function hasPrivilege( $name ) {
+    if ( !$this->row or !$this->row['userroleid'] )
+      return false;
+
+    $this->ensureObjectLoaded();
+    if ( !$this->privileges )
+      $this->privileges = $this->getPrivileges();
+
+    return isset( $this->privileges[ $name ] );
+  }
+
+  public function hasRole( $name ) {
+
+    if ( !$this->bootstrap->config['usedynamicprivileges'] ) {
+      if ( $name == 'member' )
+        return (bool)$this->id;
+
+      $this->ensureObjectLoaded();
+      return (bool)$this->row['is' . $name ];
+    }
+
+    $this->ensureObjectLoaded();
+
+    $roleid = $this->row['userroleid'];
+    $name = $this->db->qstr( $name );
+    return (bool)$this->db->getOne("
+      SELECT COUNT(*)
+      FROM userroles
+      WHERE
+        id = '$roleid' AND
+        name = $name
+      LIMIT 1
+    ");
   }
 }

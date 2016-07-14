@@ -6,9 +6,9 @@ class Editinvite extends \Visitor\HelpForm {
   public $needdb = true;
   public $invitationModel;
   public $user;
-  
+
   public function init() {
-    
+
     parent::init();
     $l               = $this->bootstrap->getLocalization();
     $this->invitationModel = $this->controller->modelOrganizationAndIDCheck(
@@ -18,6 +18,7 @@ class Editinvite extends \Visitor\HelpForm {
     $this->values    = $this->invitationModel->row;
     unset( $this->values['password'] );
 
+    // TODO dinamikus privilegiumok rework
     $this->values['permissions'] = explode('|', $this->values['permissions'] );
     $this->values['departments'] = explode('|', $this->values['departments'] );
     $this->values['groups']      = explode('|', $this->values['groups'] );
@@ -47,9 +48,9 @@ class Editinvite extends \Visitor\HelpForm {
     $this->controller->toSmarty['title'] = $l('users', 'invitation_modify');
 
   }
-  
+
   public function onComplete() {
-    
+
     $values = $this->form->getElementValues( 0 );
     $crypt  = $this->bootstrap->getEncryption();
     $l      = $this->bootstrap->getLocalization();

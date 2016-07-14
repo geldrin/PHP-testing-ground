@@ -12,31 +12,32 @@ class Modify extends \Visitor\HelpForm {
   );
 
   public function init() {
-    
+
     parent::init();
     $l               = $this->bootstrap->getLocalization();
     $this->user      = $this->bootstrap->getSession('user');
     $this->userModel = $this->controller->modelIDCheck('users', $this->user['id'] );
     $this->values    = $this->userModel->row;
     unset( $this->values['password'] );
-    
+
+    // TODO dinamikus privilegiumok rework
     $this->values['permissions'] = array();
     foreach( $l->getLov('permissions') as $k => $v ) {
-      
+
       if ( $this->values[ $k ] )
         $this->values['permissions'][] = $k;
-      
+
     }
     $this->controller->toSmarty['title'] = $l('users', 'modify_title');
-    
+
   }
-  
+
   public function onComplete() {
-    
+
     $values = $this->form->getElementValues( 0 );
     $crypt  = $this->bootstrap->getEncryption();
     $l      = $this->bootstrap->getLocalization();
-    
+
     // nem itt valtoztatjuk a jogosultsagokat, csak mutatjuk oket a usernek
     unset(
       $values['permissions'],
@@ -57,26 +58,26 @@ class Modify extends \Visitor\HelpForm {
       unset( $values['password'] );
     else
       $values['password'] = $crypt->getPasswordHash( $values['password'] );
-    
+
     if (
          isset( $_FILES['avatarfilename'] ) and
          $_FILES['avatarfilename']['error'] == 0 and
          $this->userModel->canUploadAvatar()
        ) {
-      
+
       $values['avatarfilename'] = $_FILES['avatarfilename']['name'];
       $dest =
         $this->bootstrap->config['useravatarpath'] .
         $this->userModel->id . '.' .
         \Springboard\Filesystem::getExtension( $values['avatarfilename'] )
       ;
-      
+
       if ( !move_uploaded_file( $_FILES['avatarfilename']['tmp_name'], $dest ) )
         throw new \Exception("Failed moving avatarfile: " . var_export( $_FILES, true ) );
-      
+
       $values['avatarstatus']   = 'uploaded';
       $values['avatarsourceip'] = $this->bootstrap->config['node_sourceip'];
-      
+
     }
 
     if ( !empty( $values ) )
@@ -85,7 +86,7 @@ class Modify extends \Visitor\HelpForm {
     $this->userModel->registerForSession();
 
     $this->controller->redirectWithMessage('users/modify', $l('users', 'usermodified') );
-    
+
   }
-  
+
 }

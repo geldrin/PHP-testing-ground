@@ -11,22 +11,22 @@ class Listnews extends \Visitor\Paging {
   protected $template = 'Visitor/Organizations/Paging/Listnews.tpl';
   protected $newsModel;
   protected $user;
-  
+
   public function init() {
-    
+
     $l                 = $this->bootstrap->getLocalization();
     $this->foreachelse = $l('organizations', 'listnews_foreachelse');
     $this->title       = $l('organizations', 'listnews_title');
     $this->controller->toSmarty['listclass'] = 'newslist';
     parent::init();
-    
+
   }
-  
+
   protected function setupCount() {
-    
+
     $this->user      = $this->bootstrap->getSession('user');
     $this->newsModel = $this->bootstrap->getModel('organizations_news');
-    
+
     if (
          (
            $this->user['iseditor'] or
@@ -37,18 +37,18 @@ class Listnews extends \Visitor\Paging {
          $this->user['organizationid'] == $this->controller->organization['id']
        )
       $this->controller->toSmarty['canadminister'] = true;
-    
+
     return $this->itemcount = $this->newsModel->getNewsCount(
       $this->controller->organization['id'],
       $this->user
     );
-    
+
   }
-  
+
   protected function getItems( $start, $limit, $orderby ) {
     return $this->newsModel->getNewsArray(
       $start, $limit, $orderby, $this->controller->organization['id'], $this->user
     );
   }
-  
+
 }

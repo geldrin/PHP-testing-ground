@@ -84,6 +84,7 @@ class Controller extends \Visitor\Controller {
       'user' => array(
         'type'       => 'user',
         'permission' => 'admin',
+        'privilege'  => 'users_setuserfield',
       ),
     ),
     'ping' => array(
@@ -193,7 +194,7 @@ class Controller extends \Visitor\Controller {
         $this->redirect( $invitationModel->row['customforwardurl'] );
     }
 
-    // sec vuln
+    // sec vuln (3rd party redirect miatt)
     if ( parse_url( $forward ) !== false )
       $this->redirect( $forward );
 
@@ -203,7 +204,10 @@ class Controller extends \Visitor\Controller {
 
   public function validateinviteAction() {
     $crypt = $this->bootstrap->getEncryption();
-    $id    = intval( $crypt->asciiDecrypt( $this->application->getParameter('a') ) );
+    $id    = intval(
+      $crypt->asciiDecrypt( $this->application->getParameter('a') ),
+      10
+    );
     $validationcode = $this->application->getParameter('b');
 
     if ( $id <= 0 or !$validationcode )
@@ -298,7 +302,6 @@ class Controller extends \Visitor\Controller {
     );
 
     $this->redirectWithMessage( $forward, $l('users', 'userdisabled') );
-
   }
 
   // pure api hivas, nem erheto el apin kivulrol (mert nincs a permission tombbe)
@@ -342,7 +345,7 @@ class Controller extends \Visitor\Controller {
 
     }
 
-    if ( $userModel->row['isadmin'] )
+    if ( $userModel->hasRole('admin') )
       $userModel->row['organizationid'] = $this->organization['id']; // a registerforsession miatt
 
     $userModel->registerForSession();
@@ -577,6 +580,7 @@ class Controller extends \Visitor\Controller {
     }
 
     $l = $this->l;
+    // TODO dinamikus privilegiumok rework
     if ( !isset( $this->invitationcache['permissions-' . $invitation['permissions'] ] ) ) {
 
       $permissions = array();
@@ -768,7 +772,7 @@ class Controller extends \Visitor\Controller {
     $delim = ';';
     $filename = 'videosquare-invitations-' . date('YmdHis') . '.csv';
 
-    // TODO szebb column neveket?
+    // TODO dinamikus privilegiumok rework
     $header = array(
       'id'                     => 'id',
       'permissions'            => 'permissions',
