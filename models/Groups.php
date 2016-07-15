@@ -180,7 +180,8 @@ class Groups extends \Springboard\Model {
          $this->row['userid'] == $user['id'] or
          \Model\Userroles::userHasPrivilege(
            'general_ignoreAccessRestrictions',
-           'isclientadmin', 'iseditor'
+           'or',
+           'isclientadmin', 'iseditor', 'isadmin'
          )
        )
       return true;

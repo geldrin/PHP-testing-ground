@@ -835,7 +835,8 @@ class Users extends \Springboard\Model {
     if (
          \Model\Userroles::userHasPrivilege(
            'general_ignoreAccessRestrictions',
-           'isclientadmin', 'iseditor'
+           'or',
+           'isclientadmin', 'iseditor', 'isadmin'
          )
        )
       return $recordings;
