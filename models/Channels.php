@@ -929,13 +929,10 @@ class Channels extends \Springboard\Model {
       $channel = $this->findRoot( $channel );
 
     if (
-         isset( $user['id'] ) and
-         (
-           $channel['userid'] == $user['id'] or
-           (
-             ( $user['isclientadmin'] ) and
-             $user['organizationid'] == $channel['organizationid']
-           )
+         $channel['userid'] == $user['id'] or
+         \Model\Userroles::userHasPrivilege(
+           'general_ignoreAccessRestrictions',
+           'isclientadmin', 'iseditor'
          )
        )
       return true;
@@ -975,7 +972,13 @@ class Channels extends \Springboard\Model {
           return 'registrationrestricted';
         elseif ( $user['id'] == $channel['userid'] )
           return true;
-        elseif ( $user['iseditor'] and $user['organizationid'] == $channel['organizationid'] )
+        elseif (
+                 \Model\Userroles::userHasPrivilege(
+                   'general_accessDepartmentOrGroupObjects',
+                   'iseditor'
+                 ) and
+                 $user['organizationid'] == $channel['organizationid']
+               )
           return true;
 
         $channelid = "'" . $channel['id'] . "'";

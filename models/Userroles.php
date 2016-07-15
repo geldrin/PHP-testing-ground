@@ -143,7 +143,7 @@ class Userroles extends \Springboard\Model {
           return true;
       }
 
-      return true;
+      return $returnOnNoPermission;
     }
 
     if ( $user['userroleid'] )

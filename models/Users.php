@@ -13,7 +13,10 @@ class Users extends \Springboard\Model {
 
   protected function checkUser( &$user, $organizationid ) {
 
-    if ( $user['organizationid'] != $organizationid and !$user['isadmin'] )
+    if (
+         $user['organizationid'] != $organizationid and
+         !$this->isAdminLogin( $user )
+       )
       return 'organizationinvalid';
 
     if (
@@ -23,7 +26,6 @@ class Users extends \Springboard\Model {
       return 'expired';
 
     return true;
-
   }
 
   // lehetseges viszateresi ertekek:
@@ -63,7 +65,7 @@ class Users extends \Springboard\Model {
       if ( $valid !== true )
         return $valid;
 
-      if ( $user['isadmin'] );
+      if ( $this->isAdminLogin( $user ) )
         $user['organizationid'] = $organizationid;
 
       $this->id  = $user['id'];
@@ -82,7 +84,14 @@ class Users extends \Springboard\Model {
 
     } else
       return false;
+  }
 
+  private function isAdminLogin( $row ) {
+    if ( !$this->bootstrap->config['usedynamicprivileges'] )
+      return (bool)$row['isadmin'];
+
+    $privileges = $this->getPrivileges( $row['userroleid'] );
+    return isset( $privileges['users_globallogin'] );
   }
 
   public function selectAndCheckAPIUserValid( $organizationid, $email, $password, $currentip ) {
@@ -414,7 +423,7 @@ class Users extends \Springboard\Model {
   public function emailExists( $email, $organizationid ) {
 
     $email = $this->db->qstr( $email );
-    return !!$this->db->getOne("
+    return (bool)$this->db->getOne("
       SELECT COUNT(*)
       FROM users
       WHERE
@@ -445,7 +454,6 @@ class Users extends \Springboard\Model {
 
     return "
       {$prefix}organizationid = '" . $organization['id'] . "' AND
-      {$prefix}isadmin        = '0' AND
       (
         {$prefix}email LIKE $searchterm OR
         {$prefix}externalid LIKE $searchterm OR
@@ -824,7 +832,12 @@ class Users extends \Springboard\Model {
           unset( $recordings[ $key ] );
       }
 
-    if ( $this->row['isadmin'] or $this->row['iseditor'] or $this->row['isclientadmin'] )
+    if (
+         \Model\Userroles::userHasPrivilege(
+           'general_ignoreAccessRestrictions',
+           'isclientadmin', 'iseditor'
+         )
+       )
       return $recordings;
 
     $ids = array();
@@ -994,6 +1007,7 @@ class Users extends \Springboard\Model {
 
   }
 
+  // TODO dinamikus privilegium rework
   public function getUsersWithPermission( $permission, $filteruserid, $organizationid ) {
     return $this->db->getArray("
       SELECT *
@@ -1059,7 +1073,7 @@ class Users extends \Springboard\Model {
     if ( !$row )
       return false;
 
-    if ( $row['isadmin'] )
+    if ( $this->isAdminLogin( $row ) )
       $row['organizationid'] = $organizationid;
 
     $valid     = $this->checkUser( $row, $organizationid );
@@ -1132,7 +1146,7 @@ class Users extends \Springboard\Model {
     if ( $row['disabled'] != self::USER_VALIDATED )
       return false;
 
-    if ( $row['isadmin'] )
+    if ( $this->isAdminLogin( $row ) )
       $row['organizationid'] = $organizationid;
 
     $valid = $this->checkUser( $row, $organizationid );
@@ -1234,11 +1248,11 @@ class Users extends \Springboard\Model {
         g.name,
         g.source,
         gm.id AS memberid
-      FROM
-        groups AS g LEFT JOIN groups_members AS gm ON(
-          gm.userid  = '" . $this->id . "' AND
-          gm.groupid = g.id
-        )
+      FROM groups AS g
+      LEFT JOIN groups_members AS gm ON(
+        gm.userid  = '" . $this->id . "' AND
+        gm.groupid = g.id
+      )
       WHERE g.organizationid = '$organizationid'
       GROUP BY g.id
       ORDER BY g.name DESC
@@ -1265,11 +1279,13 @@ class Users extends \Springboard\Model {
     return $ret;
   }
 
-  public function getPrivileges() {
-    $this->ensureObjectLoaded();
-    return \Model\Userroles::getPrivilegesForRoleID(
-      $this->row['userroleid']
-    );
+  public function getPrivileges( $roleid = null ) {
+    if ( $roleid === null ) {
+      $this->ensureObjectLoaded();
+      $roleid = $this->row['userroleid'];
+    }
+
+    return \Model\Userroles::getPrivilegesForRoleID( $roleid );
   }
 
   public function hasPrivilege( $name ) {

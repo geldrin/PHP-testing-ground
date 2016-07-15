@@ -314,7 +314,7 @@ class Controller extends \Springboard\Controller\Visitor {
 
     if (
          \Model\Userroles::userHasPrivilege(
-           'manageOrganizationObjects',
+           'general_manageOrganizationObjects',
            'or',
            'iseditor', 'isclientadmin'
          )

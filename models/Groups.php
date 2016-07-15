@@ -2,7 +2,7 @@
 namespace Model;
 
 class Groups extends \Springboard\Model {
-  
+
   // --------------------------------------------------------------------------
   public function delete( $id, $magic_quotes_gpc = 0 ) {
 
@@ -49,7 +49,7 @@ class Groups extends \Springboard\Model {
   }
 
   public function getUserCount() {
-    
+
     $this->ensureID();
     return $this->db->getOne("
       SELECT COUNT(*)
@@ -57,11 +57,11 @@ class Groups extends \Springboard\Model {
       WHERE gm.groupid = '" . $this->id . "'
       GROUP BY gm.userid
     ");
-    
+
   }
-  
+
   public function getUserArray( $start, $limit, $orderby ) {
-    
+
     $this->ensureID();
     return $this->db->getArray("
       SELECT
@@ -85,11 +85,11 @@ class Groups extends \Springboard\Model {
       ORDER BY $orderby
       LIMIT $start, $limit
     ");
-    
+
   }
-  
+
   public function deleteUser( $userid ) {
-    
+
     $this->ensureID();
     $this->db->query("
       DELETE FROM groups_members
@@ -97,21 +97,15 @@ class Groups extends \Springboard\Model {
         groupid = '" . $this->id . "' AND
         userid  = " . $this->db->qstr( $userid ) . "
     ");
-    
-  }
-  
-  private function canSeeGroups( $user ) {
-    if (
-         $user['isadmin'] or
-         $user['isclientadmin'] or
-         $user['isuploader'] or
-         $user['ismoderateduploader'] or
-         $user['isliveadmin'] or
-         $user['iseditor']
-       )
-      return true;
 
-    return false;
+  }
+
+  private function canSeeGroups( $user ) {
+    return \Model\Userroles::userHasPrivilege(
+      'groups_visible',
+      'or',
+      'isadmin', 'isclientadmin', 'isuploader', 'ismoderateduploader', 'isliveadmin', 'iseditor'
+    );
   }
 
   public function getGroupCount( $user, $organizationid ) {
@@ -129,11 +123,11 @@ class Groups extends \Springboard\Model {
         organizationid = '$organizationid'
       LIMIT 1
     ");
-    
+
   }
-  
+
   public function getGroupArray( $start, $limit, $orderby, $user, $organizationid ) {
-    
+
     if ( $this->canSeeGroups( $user ) )
       $where = '';
     else
@@ -154,43 +148,43 @@ class Groups extends \Springboard\Model {
       ORDER BY $orderby
       LIMIT $start, $limit
     ");
-    
+
   }
-  
+
   protected function insertMultipleIDs( $ids, $table, $field ) {
-    
+
     $this->ensureID();
-    
+
     $values = array();
     foreach( $ids as $id )
       $values[] = "('" . intval( $id ) . "', '" . $this->id . "')";
-    
+
     $this->db->execute("
       INSERT INTO $table ($field, groupid)
       VALUES " . implode(', ', $values ) . "
     ");
-    
+
   }
-  
+
   public function addUsers( $userids ) {
     $this->insertMultipleIDs( $userids, 'groups_members', 'userid');
   }
-  
+
   public function isMember( $user ) {
-    
+
     if ( !$user or !$user['id'] )
       return false;
-    
+
     $this->ensureObjectLoaded();
     if (
-         $this->row['organizationid'] == $user['organizationid'] and
-         (
-           $user['isadmin'] or $user['isclientadmin'] or $user['iseditor'] or
-           $this->row['userid'] == $user['id']
+         $this->row['userid'] == $user['id'] or
+         \Model\Userroles::userHasPrivilege(
+           'general_ignoreAccessRestrictions',
+           'isclientadmin', 'iseditor'
          )
        )
       return true;
-    
+
     return (bool)$this->db->getOne("
       SELECT COUNT(*)
       FROM groups_members
@@ -199,11 +193,11 @@ class Groups extends \Springboard\Model {
         userid  = '" . $user['id'] . "'
       LIMIT 1
     ");
-    
+
   }
-  
+
   public function isValidUser( $userid, $organizationid ) {
-    
+
     $userid = intval( $userid );
     $user   = array(
       'id'             => $userid,
@@ -212,10 +206,10 @@ class Groups extends \Springboard\Model {
       'isclientadmin'  => false,
       'iseditor'       => false,
     );
-    
+
     if ( $this->isMember( $user ) )
       return false;
-    
+
     return (bool)$this->db->getOne("
       SELECT COUNT(*)
       FROM users
@@ -224,9 +218,9 @@ class Groups extends \Springboard\Model {
         id             = '$userid'
       LIMIT 1
     ");
-    
+
   }
-  
+
   public function getSearchCount( $searchterm, $organization, $userModel ) {
     $this->ensureID();
     return $this->db->getOne("

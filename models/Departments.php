@@ -2,7 +2,7 @@
 namespace Model;
 
 class Departments extends \Springboard\Model {
-  
+
   // --------------------------------------------------------------------------
   public function delete( $id, $magic_quotes_gpc = 0 ) {
 
@@ -21,10 +21,10 @@ class Departments extends \Springboard\Model {
   }
 
   public function getDepartmentTree( $organizationid, $orderby, $parentid = 0, $maxlevel = 2, $currentlevel = 0 ) {
-    
+
     if ( $currentlevel >= $maxlevel )
       return array();
-    
+
     $currentlevel++;
     $items = $this->db->getArray("
       SELECT
@@ -40,7 +40,7 @@ class Departments extends \Springboard\Model {
       GROUP BY d.id
       ORDER BY $orderby
     ");
-    
+
     foreach( $items as $key => $value )
       $items[ $key ]['children'] = $this->getDepartmentTree(
         $organizationid,
@@ -49,35 +49,35 @@ class Departments extends \Springboard\Model {
         $maxlevel,
         $currentlevel
       );
-    
+
     return $items;
-    
+
   }
-  
+
   public function findChildrenIDs( $parentid = null ) {
-    
+
     if ( !$parentid ) {
-      
+
       $this->ensureID();
       $parentid = $this->id;
-      
+
     }
-    
+
     $children = $this->db->getCol("
       SELECT id
       FROM departments
       WHERE parentid = " . $this->db->qstr( $parentid )
     );
-    
+
     foreach( $children as $child )
       $children = array_merge( $children, $this->findChildrenIDs( $child ) );
-    
+
     return $children;
-   
+
   }
-  
+
   public function getUserCount() {
-    
+
     $this->ensureID();
     return $this->db->getOne("
       SELECT COUNT(*)
@@ -89,11 +89,11 @@ class Departments extends \Springboard\Model {
         u.id            = ud.userid AND
         u.disabled      = '0'
     ");
-    
+
   }
-  
+
   public function getUserArray( $start, $limit, $orderby ) {
-    
+
     $this->ensureID();
     return $this->db->getArray("
       SELECT
@@ -116,11 +116,11 @@ class Departments extends \Springboard\Model {
       ORDER BY $orderby
       LIMIT $start, $limit
     ");
-    
+
   }
-  
+
   public function deleteUser( $userid ) {
-    
+
     $this->ensureID();
     $this->db->query("
       DELETE FROM users_departments
@@ -129,9 +129,9 @@ class Departments extends \Springboard\Model {
         userid  = " . $this->db->qstr( $userid ) . "
       LIMIT 1
     ");
-    
+
   }
-  
+
   public function getSearchCount( $searchterm, $organization, $userModel ) {
     $this->ensureID();
     return $this->db->getOne("

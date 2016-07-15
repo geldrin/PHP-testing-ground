@@ -6,12 +6,11 @@ class Streamingservers extends \Springboard\Model {
   public $defaultservers      = array();
   public $table = 'cdn_streaming_servers';
 
-  public function getServerByClientIP( $ip, $type  ) {
-    
-    // TODO organizationid?
+  public function getServerByClientIP( $ip, $type ) {
+
     if ( !$type )
       throw new \Exception("No type specified for the streaming servers!");
-    
+
     $extrawhere = '';
     $duration = $this->bootstrap->config['streamingserver_report_expiration_minutes'];
     if ( $duration ) {
@@ -59,31 +58,31 @@ class Streamingservers extends \Springboard\Model {
     // No specific streaming server was found for source IP. Return default server
     if ( empty( $serverselected ) )
       return $this->getDefaultServer( $types );
-    
+
     return $serverselected;
-    
+
   }
-  
+
   protected function getRandomArrayValue( &$array ) {
     return $array[ array_rand( $array ) ];
   }
-  
+
   public function getDefaultServer( $types ) {
-    
+
     $defaultcacheindex = implode('-', $types );
     if ( isset( $this->defaultservers[ $defaultcacheindex ] ) )
       return $this->getRandomArrayValue(
         $this->defaultservers[ $defaultcacheindex ]
       );
-    
+
     $cache = $this->bootstrap->getCache(
       'defaultstreamingservers-' . $defaultcacheindex,
       $this->cachetimeoutseconds,
       true
     );
-    
+
     if ( $cache->expired() ) {
-      
+
       $query = "
         SELECT
           ss.id,
@@ -99,15 +98,15 @@ class Streamingservers extends \Springboard\Model {
           ss.disabled = 0 AND
           ss.servicetype IN('" . implode("', '", $types ) . "')
       ";
-      
+
       try {
         $defaultservers = $this->db->getArray( $query );
       } catch ( \Exception $e ) {
         $defaultservers = array( $this->bootstrap->config['fallbackstreamingserver'] );
       }
-      
+
       if ( empty( $defaultservers ) ) {
-        
+
         $d = \Springboard\Debug::getInstance();
         $d->log(
           false,
@@ -115,23 +114,23 @@ class Streamingservers extends \Springboard\Model {
           'No default streaming servers for types: ' . $defaultcacheindex,
           $this->bootstrap->production
         );
-        
+
         $defaultservers = array( $this->bootstrap->config['fallbackstreamingserver'] );
-        
+
       }
-      
+
       $cache->put( $defaultservers );
-      
+
     } else
       $defaultservers = $cache->get();
-    
+
     $this->defaultservers[ $defaultcacheindex ] = $defaultservers;
     return $this->getRandomArrayValue(
       $this->defaultservers[ $defaultcacheindex ]
     );
-    
+
   }
-  
+
   public function getServerByHost( $server ) {
     $server = $this->db->qstr( $server );
     $ret    = $this->db->getRow("

@@ -925,17 +925,10 @@ class Recordings extends \Springboard\Model {
     }
 
     if (
-         isset( $user['id'] ) and
-         (
-           $this->row['userid'] == $user['id'] or
-           (
-             $user['iseditor'] and
-             $user['organizationid'] == $this->row['organizationid']
-           ) or
-           (
-             $user['isclientadmin'] and
-             $user['organizationid'] == $this->row['organizationid']
-           )
+         $this->row['userid'] == $user['id'] or
+         \Model\Userroles::userHasPrivilege(
+           'general_ignoreAccessRestrictions',
+           'isclientadmin', 'iseditor'
          )
        )
       return true;
@@ -1003,7 +996,13 @@ class Recordings extends \Springboard\Model {
           return 'registrationrestricted';
         elseif ( $user['id'] == $this->row['userid'] )
           return true;
-        elseif ( ( $user['iseditor'] or $user['isclientadmin'] ) and $user['organizationid'] == $this->row['organizationid'] )
+        elseif (
+                 \Model\Userroles::userHasPrivilege(
+                   'general_accessDepartmentOrGroupObjects',
+                   'iseditor', 'isclientadmin'
+                 ) and
+                 $user['organizationid'] == $this->row['organizationid']
+               )
           return true;
 
         $recordingid = "'" . $this->id . "'";
@@ -1068,17 +1067,10 @@ class Recordings extends \Springboard\Model {
 
     // replicating the check from isAccessibleByStatus
     if (
-         isset( $user['id'] ) and
-         (
-           $this->row['userid'] == $user['id'] or
-           (
-             $user['iseditor'] and
-             $user['organizationid'] == $this->row['organizationid']
-           ) or
-           (
-             $user['isclientadmin'] and
-             $user['organizationid'] == $this->row['organizationid']
-           )
+         $this->row['userid'] == $user['id'] or
+         \Model\Userroles::userHasPrivilege(
+           'general_ignoreAccessRestrictions',
+           'isclientadmin', 'iseditor'
          )
        )
       return true;
