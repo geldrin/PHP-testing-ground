@@ -12,17 +12,17 @@ $groupSelect = array(
 );
 
 $config = array(
-  
+
   'action' => array(
     'type'  => 'inputHidden',
     'value' => 'submitcreatefeed'
   ),
-  
+
   'id' => array(
     'type'  => 'inputHidden',
     'value' => $this->application->getNumericParameter('id'),
   ),
-  
+
   'name' => array(
     'displayname' => $l('live', 'feedname'),
     'type'        => 'inputText',
@@ -35,11 +35,11 @@ $config = array(
       ),
     ),
   ),
-  
+
 );
 
 if ( $this->controller->organization['isvcrenabled'] ) {
-  
+
   $config['feedtype'] = array(
     'type'        => 'inputRadio',
     'displayname' => $l('live', 'feedtype'),
@@ -48,7 +48,7 @@ if ( $this->controller->organization['isvcrenabled'] ) {
   );
 
   $config['livestreamgroupid'] = $groupSelect;
-  
+
   $config['recordinglinkid'] = array(
     'type'        => 'selectDynamic',
     'displayname' => $l('live', 'recordinglinkid'),
@@ -75,14 +75,14 @@ if ( $this->controller->organization['isvcrenabled'] ) {
       ),
     ),
   );
-  
+
   $config['needrecording'] = array(
     'displayname' => $l('live', 'needrecording'),
     'type'        => 'inputRadio',
     'values'      => $l->getLov('yesno'),
     'value'       => 0,
   );
-  
+
 } else {
   $config['feedtype'] = array(
     'type'     => 'inputHidden',

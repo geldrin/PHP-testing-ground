@@ -10,24 +10,24 @@ $config = array(
     'type'  => 'inputHidden',
     'value' => $this->application->getNumericParameter('id'),
   ),
-  
+
   'forward' => array(
     'type'  => 'inputHidden',
     'value' => $this->application->getParameter('forward'),
   ),
-  
+
   'fs1' => array(
     'type'   => 'fieldset',
     'legend' => $l('recordings', 'basics_title'),
     'prefix' => '<span class="legendsubtitle">' . $l('recordings', 'basics_subtitle') . '</span>',
   ),
-  
+
   'languageid' => array(
     'type'        => 'select',
     'displayname' => $l('recordings', 'language'),
     'values'      => $this->bootstrap->getModel('languages')->getAssoc('id', 'name'),
   ),
-  
+
   'title' => array(
     'displayname' => $l('recordings', 'title'),
     'type'        => 'inputText',
@@ -39,7 +39,7 @@ $config = array(
       ),
     ),
   ),
-  
+
   'subtitle' => array(
     'displayname' => $l('recordings', 'subtitle'),
     'type'        => 'inputText',
@@ -51,7 +51,7 @@ $config = array(
       ),
     ),
   ),
-  
+
   'slideonright' => array(
     'displayname' => $l('recordings', 'slideonright'),
     'type'        => 'inputRadio',
@@ -62,7 +62,7 @@ $config = array(
       1 => $l('recordings', 'slideright'),
     ),
   ),
-  
+
   'indexphotofilename' => Array(
     'type' => 'inputradio',
     'displayname' => $l('recordings', 'modifyindexphoto_select'),
@@ -79,30 +79,30 @@ $config = array(
       Array( 'type' => 'required' )
     )
   ),
-  
+
 );
 
 if ( !$this->recordingsModel->row['isintrooutro'] ) {
-  
+
   $staticuri   = $this->controller->organization['staticuri'] . 'files/';
   $indexphotos = $this->recordingsModel->getIndexPhotos();
   foreach( $indexphotos as $filename ) {
-    
-    $config['indexphotofilename']['values'][ $filename ] = 
+
+    $config['indexphotofilename']['values'][ $filename ] =
       '<img src="' . $staticuri . $filename . '" />';
     ;
-    
+
   }
-  
+
   if ( empty( $indexphotos ) )
     unset( $config['indexphotofilename'] );
-  
+
   if ( $this->recordingsModel->getIntroOutroCount( $this->controller->organization['id'] ) ) {
-    
+
     $recordings =
       $this->recordingsModel->getIntroOutroAssoc( $this->controller->organization['id'] )
     ;
-    
+
     $introoutro = array(
       'introrecordingid' => array(
         'displayname' => $l('recordings', 'introrecordingid'),
@@ -115,11 +115,11 @@ if ( !$this->recordingsModel->row['isintrooutro'] ) {
         'values'      => array('' => $l('recordings', 'nooutro') ) + $recordings,
       ),
     );
-    
+
     $config = \Springboard\Tools::insertAfterKey( $config, $introoutro, 'slideonright' );
-    
+
   }
-  
+
 } else
   unset(
     $config['languageid'],

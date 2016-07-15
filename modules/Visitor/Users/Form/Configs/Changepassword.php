@@ -6,17 +6,17 @@ $config = Array(
     'type'  => 'inputHidden',
     'value' => 'submitchangepassword'
   ),
-  
+
   'a' => Array(
     'type'  => 'inputHidden',
     'value' => $this->application->getParameter('a'),
   ),
-  
+
   'b' => Array(
     'type'  => 'inputHidden',
     'value' => $this->application->getParameter('b'),
   ),
-  
+
   'password' => Array(
     'displayname' => $l('users', 'changepass_newpassword'),
     'type'        => 'inputPassword',

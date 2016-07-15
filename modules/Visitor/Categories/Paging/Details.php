@@ -19,9 +19,9 @@ class Details extends \Visitor\Paging {
   protected $categoryids;
   protected $recordingsModel;
   protected $user;
-  
+
   public function init() {
-    
+
     $l                   = $this->bootstrap->getLocalization();
     $this->user          = $this->bootstrap->getSession('user');
     $this->foreachelse   = $l('categories', 'categories_foreachelse');
@@ -61,20 +61,20 @@ class Details extends \Visitor\Paging {
     parent::init();
 
   }
-  
+
   protected function setupCount() {
-    
+
     $this->recordingsModel = $this->bootstrap->getModel('recordings');
     $this->itemcount =
       $this->recordingsModel->getCategoryRecordingsCount(
         $this->user,
         $this->categoryids
       );
-    
+
   }
-  
+
   protected function getItems( $start, $limit, $orderby ) {
-    
+
     $items = $this->recordingsModel->getCategoryRecordings(
       $this->user,
       $this->categoryids,
@@ -82,17 +82,17 @@ class Details extends \Visitor\Paging {
       $limit,
       $orderby
     );
-    
+
     $items = $this->recordingsModel->addPresentersToArray(
       $items,
       true,
       $this->controller->organization['id']
     );
-    
+
     return $items;
-    
+
   }
-  
+
   protected function getUrl() {
     return
       $this->controller->getUrlFromFragment( $this->module . '/' . $this->action ) .
@@ -100,5 +100,5 @@ class Details extends \Visitor\Paging {
       \Springboard\Filesystem::filenameize( $this->category['name'] )
     ;
   }
-  
+
 }

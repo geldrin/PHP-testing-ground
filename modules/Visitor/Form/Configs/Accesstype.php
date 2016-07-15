@@ -10,10 +10,10 @@ $groupsexist =
 ;
 
 if ( !isset( $departmentModel ) ) {
-  
+
   $departmentModel = $this->bootstrap->getModel('departments');
   $departmentModel->addFilter('organizationid', $this->controller->organization['id'] );
-  
+
 }
 
 $departmentsexist = $departmentModel->getCount();

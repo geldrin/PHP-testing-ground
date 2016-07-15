@@ -28,12 +28,12 @@ foreach( $templates as $template ) {
 }
 
 $config    = array(
-  
+
   'action' => array(
     'type'  => 'inputHidden',
     'value' => 'submitinvite'
   ),
-  
+
   'fs_user' => array(
     'type'   => 'fieldset',
     'legend' => $l('users', 'invite_user'),
@@ -73,7 +73,7 @@ $config    = array(
       ),
     ),
   ),
-  
+
   'invitefile' => Array(
     'displayname' => $l('users', 'invitefile'),
     'type'        => 'inputFile',
@@ -93,7 +93,7 @@ $config    = array(
       )
     )
   ),
-  
+
   'encoding' => Array(
     'displayname' => $l('users', 'encoding'),
     'type'        => 'select',
@@ -116,7 +116,7 @@ $config    = array(
       ),
     ),
   ),
-  
+
   'delimeter' => Array(
     'displayname' => $l('users', 'delimeter'),
     'type'        => 'select',
@@ -183,7 +183,7 @@ $config = $config + array(
     'legend' => $l('users', 'invite_permission'),
     'prefix' => '<span class="legendsubtitle"></span>',
   ),
-  
+
   'permissions[]' => array(
     'displayname' => $l('users', 'permissions'),
     'type'        => 'inputCheckboxDynamic',
@@ -192,7 +192,7 @@ $config = $config + array(
     'validation' => array(
     ),
   ),
-  
+
   'fs_content' => array(
     'type'   => 'fieldset',
     'legend' => $l('users', 'invite_content'),
@@ -320,7 +320,7 @@ $config = $config + array(
     'legend' => $l('users', 'invite_group'),
     'prefix' => '<span class="legendsubtitle"></span>',
   ),
-  
+
   'departments[]' => array(
     'displayname' => $l('users', 'departments'),
     'type'        => 'inputCheckboxDynamic',
@@ -339,7 +339,7 @@ $config = $config + array(
     'validation' => array(
     ),
   ),
-  
+
   'groups[]' => array(
     'displayname' => $l('users', 'groups'),
     'type'        => 'inputCheckboxDynamic',
@@ -410,7 +410,7 @@ $config = $config + array(
     'validation'  => Array(
     ),
   ),
-  
+
   'templatepostfix' => array(
     'displayname' => $l('users', 'templatepostfix'),
     'type'        => 'tinyMCE',
@@ -425,7 +425,7 @@ $config = $config + array(
     'validation'  => Array(
     )
   ),
-  
+
 );
 
 $groupid = $this->application->getNumericParameter('groupid');

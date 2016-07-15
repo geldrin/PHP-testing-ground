@@ -26,8 +26,13 @@ $config = Array(
 
 );
 
-$user = $this->bootstrap->getSession('user');
-if ( $user['isadmin'] or $user['isclientadmin'] ) {
+if (
+     \Model\Userroles::userHasPrivilege(
+       'groups_remotegroups',
+       'or',
+       'isadmin', 'isclientadmin'
+     )
+   ) {
   $depend = Array(
     Array(
       'js'  => '<FORM.source> == "directory"',

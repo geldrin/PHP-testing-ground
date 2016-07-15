@@ -271,15 +271,13 @@ class Controller extends \Visitor\Controller {
 
     if ( $displaychat ) {
 
-      if ( !$this->acl ) {
-
-        $this->acl = $this->bootstrap->getAcl();
-        $this->acl->usersessionkey = $this->usersessionkey;
-
-      }
-
       $this->toSmarty['needauth']      = $needauth;
-      $this->toSmarty['liveadmin']     = $this->acl->hasPermission('liveadmin|clientadmin');
+      $this->toSmarty['liveadmin']     = \Model\Userroles::userHasPrivilege(
+        'live_moderatechat',
+        'or',
+        'isclientadmin', 'isliveadmin'
+      );
+
       // ha liveadmin akkor kiirjuk a moderalasra varo commenteket
       $this->toSmarty['chatitems']     = $feedModel->getChat();
 
@@ -334,8 +332,13 @@ class Controller extends \Visitor\Controller {
       $this->application->getNumericParameter('id')
     );
 
-    $user = $this->bootstrap->getSession('user');
-    if ( $user['isadmin'] or $user['isclientadmin'] )
+    if (
+         \Model\Userroles::userHasPrivilege(
+           'live_forcemediaserver',
+           'or',
+           'isadmin', 'isclientadmin'
+         )
+       )
       $this->toSmarty['streamingservers'] =
         $this->bootstrap->getModel('livefeeds')->getStreamingServers(
           array('organization' => $this->organization )
@@ -611,14 +614,11 @@ class Controller extends \Visitor\Controller {
 
     if ( $access[ $livefeedid . '-0' ] === true or $access[ $livefeedid . '-1' ] === true ) {
 
-      if ( !$this->acl ) {
-
-        $this->acl = $this->bootstrap->getAcl();
-        $this->acl->usersessionkey = $this->usersessionkey;
-
-      }
-
-      $liveadmin = $this->acl->hasPermission('liveadmin|clientadmin');
+      $liveadmin = \Model\Userroles::userHasPrivilege(
+        'live_moderatechat',
+        'or',
+        'isliveadmin', 'isclientadmin'
+      );
       $cache     = $this->getChatCache( $livefeedid );
 
       if ( $cache->expired() ) {

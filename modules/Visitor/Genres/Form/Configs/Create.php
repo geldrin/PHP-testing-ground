@@ -2,12 +2,12 @@
 
 $organizationid = $this->controller->organization['id'];
 $config = Array(
-  
+
   'action' => Array(
     'type'  => 'inputHidden',
     'value' => 'submitcreate'
   ),
-  
+
   'organizationid' => Array(
     'type'     => 'inputHidden',
     'value'    => $organizationid,
@@ -21,17 +21,17 @@ $config = Array(
     'validation'  => Array(
     )
   ),
-  
+
   'parentid' => Array(
     'displayname' => $l('genres', 'parentid'),
     'type'        => 'selectDynamic',
     'values'      => Array( 0 => $l('genres', 'noparent') ),
     'sql'         => "
-      SELECT 
+      SELECT
         g.id, s.value
-      FROM 
+      FROM
         genres g, strings s
-      WHERE 
+      WHERE
         g.name_stringid = s.translationof AND
         s.language = 'hu' AND
         g.organizationid = '" . $organizationid . "' AND
@@ -41,7 +41,7 @@ $config = Array(
     'treeparent'  => 'parentid',
     'treestart'   => '0',
   ),
-  
+
   'weight' => Array(
     'displayname' => $l('', 'weight'),
     'type'        => 'inputText',

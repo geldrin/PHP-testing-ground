@@ -26,11 +26,11 @@ $config['crid'] = array(
 $config['indexphotofilename']['value'] = $this->contributorModel->getCurrentIndexPhoto();
 $staticuri = $this->controller->organization['staticuri'] . 'files/';
 foreach( $this->contributorModel->getIndexPhotos() as $photo ) {
-  
+
   $config['indexphotofilename']['values'][ $photo['indexphotofilename'] ] =
     '<img src="' . $staticuri . $photo['indexphotofilename'] . '" />';
   ;
-  
+
 }
 
 if ( empty( $config['indexphotofilename']['values'] ) )

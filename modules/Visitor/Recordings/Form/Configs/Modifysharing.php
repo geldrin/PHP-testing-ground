@@ -3,16 +3,28 @@
 if ( !isset( $user ) )
   $user = $this->bootstrap->getSession('user');
 
-if ( $user['isadmin'] or $user['isclientadmin'] or $user['iseditor'] )
+if (
+     \Model\Userroles::userHasPrivilege(
+       'recordings_approveduploader',
+       'or',
+       'isadmin', 'isclientadmin', 'iseditor'
+     )
+   )
   $approvalstatuses = $l->getLov('recordings_approvalstatus_full');
 elseif (
-         $user['ismoderateduploader'] and
+         \Model\Userroles::userHasPrivilege(
+           'recordings_moderateduploader',
+           'ismoderateduploader'
+         ) and
          $this->recordingsModel->row['approvalstatus'] != 'approved'
        )
   $approvalstatuses = $l->getLov('recordings_approvalstatus_min');
 // ha mar engedve van akkor mindent mutatunk
 elseif (
-         $user['ismoderateduploader'] and
+         \Model\Userroles::userHasPrivilege(
+           'recordings_moderateduploader',
+           'ismoderateduploader'
+         ) and
          $this->recordingsModel->row['approvalstatus'] == 'approved'
        )
   $approvalstatuses = $l->getLov('recordings_approvalstatus_full');
@@ -30,18 +42,18 @@ $config = array(
     'type'  => 'inputHidden',
     'value' => $this->application->getNumericParameter('id'),
   ),
-  
+
   'forward' => array(
     'type'  => 'inputHidden',
     'value' => $this->application->getParameter('forward'),
   ),
-  
+
   'fs1' => array(
     'type'   => 'fieldset',
     'legend' => $l('recordings', 'sharing_title'),
     'prefix' => '<span class="legendsubtitle">' . $l('recordings', 'sharing_subtitle') . '</span>',
   ),
-  
+
 );
 
 include( $this->bootstrap->config['modulepath'] . 'Visitor/Form/Configs/Accesstype.php');
@@ -71,7 +83,7 @@ $config = array_merge( $config, array(
     'value'       => 0,
     'values'      => $l->getLov('noyes'),
   ),
-  
+
   'visiblefrom' => array(
     'displayname' => $l('recordings', 'visiblefrom'),
     'type'        => 'inputText',
@@ -90,7 +102,7 @@ $config = array_merge( $config, array(
       )
     ),
   ),
-  
+
   'visibleuntil' => array(
     'displayname' => $l('recordings', 'visibleuntil'),
     'type'        => 'inputText',
@@ -109,28 +121,28 @@ $config = array_merge( $config, array(
       )
     ),
   ),
-  
+
   'isdownloadable' => array(
     'displayname' => $l('recordings', 'isdownloadable'),
     'type'        => 'inputRadio',
     'value'       => 1,
     'values'      => $l->getLov('noyes'),
   ),
-  
+
   'isaudiodownloadable' => array(
     'displayname' => $l('recordings', 'isaudiodownloadable'),
     'type'        => 'inputRadio',
     'value'       => 0,
     'values'      => $l->getLov('noyes'),
   ),
-  
+
   'isembedable' => array(
     'displayname' => $l('recordings', 'isembedable'),
     'type'        => 'inputRadio',
     'value'       => 1,
     'values'      => $l->getLov('noyes'),
   ),
-  
+
   'approvalstatus' => array(
     'displayname' => $l('recordings', 'approvalstatus'),
     'postfix'     => '<div class="smallinfo">' . $l('recordings', 'approvalstatus_postfix') . '</div>',
@@ -191,7 +203,13 @@ $config['isanonymouscommentsenabled'] = array(
   ),
 );
 
-if ( $user['isadmin'] or $user['isclientadmin'] or $user['iseditor'] ) {
+if (
+     \Model\Userroles::userHasPrivilege(
+       'recordings_feature',
+       'or',
+       'isadmin', 'isclientadmin', 'iseditor'
+     )
+   ) {
 
   $config['isfeatured'] = array(
     'displayname' => $l('recordings', 'isfeatured'),

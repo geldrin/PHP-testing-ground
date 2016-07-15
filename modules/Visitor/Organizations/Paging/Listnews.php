@@ -28,13 +28,11 @@ class Listnews extends \Visitor\Paging {
     $this->newsModel = $this->bootstrap->getModel('organizations_news');
 
     if (
-         (
-           $this->user['iseditor'] or
-           $this->user['isnewseditor'] or
-           $this->user['isclientadmin'] or
-           $this->user['isadmin']
-         ) and
-         $this->user['organizationid'] == $this->controller->organization['id']
+         \Model\Userroles::userHasPrivilege(
+           'organizations_newsadmin',
+           'or',
+           'iseditor', 'isnewseditor', 'isclientadmin', 'isadmin'
+         )
        )
       $this->controller->toSmarty['canadminister'] = true;
 

@@ -5,7 +5,7 @@ class Analytics extends \Visitor\HelpForm {
   public $configfile = 'Analytics.php';
   public $template   = 'Visitor/Live/Analytics.tpl';
   public $needdb     = true;
-  
+
   protected $channelModel;
   protected $feedModel;
   protected $feedids = array();
@@ -95,9 +95,9 @@ class Analytics extends \Visitor\HelpForm {
     parent::init();
 
   }
-  
+
   public function postSetupForm() {
-    
+
     $l = $this->bootstrap->getLocalization();
     $this->controller->toSmarty['title'] = $l('live', 'analytics_title');
     $this->form->method = 'GET';
@@ -109,7 +109,7 @@ class Analytics extends \Visitor\HelpForm {
     ';
 
   }
-  
+
   public function onComplete() {
 
     $values   = $this->form->getElementValues( 0 );

@@ -5,20 +5,20 @@ class Create extends \Visitor\HelpForm {
   public $configfile = 'Create.php';
   public $template   = 'Visitor/genericform.tpl';
   public $needdb     = true;
-  
+
   public function postSetupForm() {
-    
+
     $l = $this->bootstrap->getLocalization();
     $this->controller->toSmarty['title'] = $l('groups', 'create_title');
-    
+
   }
-  
+
   public function onComplete() {
-    
+
     $values     = $this->form->getElementValues( 0 );
     $groupModel = $this->bootstrap->getModel('groups');
     $user       = $this->bootstrap->getSession('user');
-    
+
     $values = $this->checkDirectory( $values );
     if ( !$values )
       return;
@@ -27,7 +27,7 @@ class Create extends \Visitor\HelpForm {
     $values['userid']    = $user['id'];
     $groupModel->insert( $values );
     $groupModel->addUsers( array( $user['id'] ) );
-    
+
     $this->controller->redirect(
       $this->application->getParameter(
         'forward',
@@ -35,14 +35,18 @@ class Create extends \Visitor\HelpForm {
         \Springboard\Filesystem::filenameize( $groupModel->row['name'] )
       )
     );
-    
+
   }
-  
+
   public function checkDirectory( &$values, $skipname = false ) {
     $user = $this->bootstrap->getSession('user');
     if (
-         ( !$user['isadmin'] and !$user['isclientadmin'] ) or
-         $values['source'] === '' // non-directory, skip
+         $values['source'] === '' or // non-directory, skip
+         !\Model\Userroles::userHasPrivilege(
+           'groups_remotegroups',
+           'or',
+           'isadmin', 'isclientadmin'
+         )
        )
       return $values;
 
@@ -56,7 +60,6 @@ class Create extends \Visitor\HelpForm {
       'username' => $dir->row['user'],
       'password' => $dir->row['password']
     );
-
 
     // csak az elso dologra vagyunk kivancsiak
     $error = true;
@@ -92,7 +95,6 @@ class Create extends \Visitor\HelpForm {
     }
 
     return $values;
-
   }
 
 }

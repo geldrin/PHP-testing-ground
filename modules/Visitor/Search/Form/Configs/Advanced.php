@@ -5,13 +5,13 @@ $advancedURL = $language . '/search/advanced';
 $advancedLabel  = $l('', 'sitewide_search_advanced');
 $advancedClearLabel = $l('', 'sitewide_search_clear');
 $config         = array(
-  
+
   // submitted = true, if set -> form was submitted
   's' => array(
     'type'  => 'inputHidden',
     'value' => 1,
   ),
-  
+
   'q' => array(
     'displayname' => $l('search', 'q'),
     'type'        => 'inputText',
@@ -55,7 +55,7 @@ $config         = array(
         <td class="first">
     ',
   ),
-  
+
   'wholeword' => array(
     'displayname' => $l('search', 'wholeword'),
     'type'        => 'inputRadio',
@@ -71,7 +71,7 @@ $config         = array(
       </div>
     ',
   ),
-  
+
   'category' => array(
     'displayname' => $l('search', 'category'),
     'type'        => 'selectDynamic',
@@ -95,7 +95,7 @@ $config         = array(
     'validation'  => array(
     ),
   ),
-  
+
   'languages' => array(
     'type'        => 'selectDynamic',
     'html'        => 'class="inputtext inputbackground margin"',
@@ -122,7 +122,7 @@ $config         = array(
         <td class="second">
     ',
   ),
-  
+
   'department' => array(
     'displayname' => $l('search', 'department'),
     'type'        => 'selectDynamic',
@@ -142,7 +142,7 @@ $config         = array(
     'validation'  => array(
     ),
   ),
-  
+
   'contributorname' => array(
     'displayname' => $l('search', 'contributorname'),
     'type'        => 'inputText',
@@ -151,7 +151,7 @@ $config         = array(
     'validation'  => array(
     ),
   ),
-  
+
   'contributorjob' => array(
     'displayname' => $l('search', 'contributorjob'),
     'type'        => 'inputText',
@@ -160,7 +160,7 @@ $config         = array(
     'validation'  => array(
     ),
   ),
-  
+
   'contributororganization' => array(
     'displayname' => $l('search', 'contributororganization'),
     'type'        => 'inputText',
@@ -174,7 +174,7 @@ $config         = array(
         <td class="third">
     ',
   ),
-  
+
   'createdatefrom' => array(
     'displayname' => $l('search', 'createdatefrom'),
     'type'        => 'inputText',
@@ -195,7 +195,7 @@ $config         = array(
       ),
     ),
   ),
-  
+
   'createdateto' => array(
     'displayname' => $l('search', 'createdateto'),
     'type'        => 'inputText',
@@ -216,7 +216,7 @@ $config         = array(
       ),
     ),
   ),
-  
+
   'uploaddatefrom' => array(
     'displayname' => $l('search', 'uploaddatefrom'),
     'type'        => 'inputText',
@@ -237,7 +237,7 @@ $config         = array(
       ),
     ),
   ),
-  
+
   'uploaddateto' => array(
     'displayname' => $l('search', 'uploaddateto'),
     'type'        => 'inputText',
@@ -263,7 +263,7 @@ $config         = array(
       </tr>
     ',
   ),
-  
+
 );
 
 $GLOBALS['formcontroller'] = $this;

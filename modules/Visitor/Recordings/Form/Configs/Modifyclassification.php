@@ -1,28 +1,28 @@
 <?php
 $organizationid = $this->controller->organization['id'];
 $config = array(
-  
+
   'action' => array(
     'type'  => 'inputHidden',
     'value' => 'submitmodifyclassification'
   ),
-  
+
   'id' => array(
     'type'  => 'inputHidden',
     'value' => $this->application->getNumericParameter('id'),
   ),
-  
+
   'forward' => array(
     'type'  => 'inputHidden',
     'value' => $this->application->getParameter('forward'),
   ),
-  
+
   'fs1' => array(
     'type'   => 'fieldset',
     'legend' => $l('recordings', 'classification_title'),
     'prefix' => '<span class="legendsubtitle">' . $l('recordings', 'classification_subtitle') . '</span>',
   ),
-  
+
   'categories[]' => array(
     'type'        => 'inputCheckboxDynamic',
     'displayname' => $l('recordings', 'categories'),
@@ -30,10 +30,10 @@ $config = array(
     'sql'         => "
       SELECT
         c.id, s.value as name
-      FROM 
-        categories AS c, strings s 
+      FROM
+        categories AS c, strings s
       WHERE
-        c.name_stringid  = s.translationof AND 
+        c.name_stringid  = s.translationof AND
         s.language       = '" . \Springboard\Language::get() . "' AND
         c.organizationid = '$organizationid' AND
         %s
@@ -51,7 +51,7 @@ $config = array(
       Array( 'type' => 'required' )
     ),
   ),
-  
+
   'genres[]' => array(
     'type'        => 'inputCheckboxDynamic',
     'displayname' => $l('recordings', 'genres'),
@@ -59,10 +59,10 @@ $config = array(
     'sql'         => "
       SELECT
         g.id, s.value as name
-      FROM 
-        genres AS g, strings s 
+      FROM
+        genres AS g, strings s
       WHERE
-        g.name_stringid  = s.translationof AND 
+        g.name_stringid  = s.translationof AND
         s.language       = '" . \Springboard\Language::get() . "' AND
         g.organizationid = '$organizationid' AND
         %s
@@ -85,13 +85,13 @@ $config = array(
       Array( 'type' => 'required' )
     ),
   ),
-  
+
   'keywords' => array(
     'type'        => 'inputText',
     'displayname' => $l('recordings', 'keywords'),
     'postfix'     => '<div class="smallinfo">' . $l('recordings', 'keywordshelp') . '</div>',
   ),
-  
+
   'channels' => array(
     'type'      => 'text',
     'rowlayout' => '<tr><td colspan="2">%element%</td></tr>',
@@ -104,6 +104,6 @@ $config = array(
     </div>
     ',
   ),
-  
+
 );
 

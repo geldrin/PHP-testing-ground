@@ -38,22 +38,22 @@ foreach ( $recordings as $recording ) {
     htmlspecialchars( $recording['title'], ENT_QUOTES, $this->application->config['charset'] ) . '" ' .
     'src="' . $staticuri . $recording['indexphotofilename'] . '" />';
   ;
-  
+
 }
 
 if ( !count( @$config['indexphotofilename']['values'] ) )
   unset( $config['indexphotofilename'] );
 
 if ( $this->channelModel->row['parentid'] ) {
-  
+
   $parent = $this->controller->modelIDCheck('channels', $this->channelModel->row['parentid'] );
   if ( !$parent->row['ispublic'] ) {
-    
+
     $config['ispublic']['html']    = 'disabled="disabled"';
     $config['ispublic']['postfix'] = $l('channels', 'ispublic_disabled');
-    
+
   }
-  
+
 }
 
 $config['accesstype']['validation'] = array(

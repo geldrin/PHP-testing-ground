@@ -20,7 +20,7 @@ $config['groups[]']['valuesql']      = "
 ";
 
 if ( $this->feedModel->row['feedtype'] == 'live' ) {
-  
+
   $config['feedtype']['validation'] = array(
     array(
       'type' => 'custom',
@@ -28,13 +28,13 @@ if ( $this->feedModel->row['feedtype'] == 'live' ) {
       'js'   => '(<FORM.feedtype> != "live")? confirm(' . json_encode( $l('live', 'feedtypechange') ) . '): true',
     ),
   );
-  
+
 } elseif ( $this->feedModel->row['feedtype'] == 'vcr' ) {
-  
+
   if ( !$this->feedModel->canDeleteFeed() )
     unset(
       $config['feedtype'], // nem változtatható
       $config['recordinglinkid']['validation'][0]['anddepend']
     );
-  
+
 }

@@ -1,7 +1,7 @@
 <?php
 
 $config = Array(
-  
+
   'action' => Array(
     'type'  => 'inputHidden',
     'value' => 'submituploadcontent'
@@ -11,12 +11,12 @@ $config = Array(
     'type'  => 'inputHidden',
     'value' => $this->application->getNumericParameter('id'),
   ),
-  
+
   'iscontent' => array(
     'type'        => 'inputHidden',
     'value'       => '1',
   ),
-  
+
   'tos' => array(
     'displayname' => $l('', 'recordingstos'),
     'type'        => 'inputCheckbox',
@@ -32,19 +32,19 @@ $config = Array(
       )
     ),
   ),
-  
+
   'file' => Array(
     'type'       => 'inputFile',
     'validation' => Array(
       Array(
-        'type'       => 'file', 
+        'type'       => 'file',
         'extensions' => $this->bootstrap->config['allowedextensions'],
         'required'   => true,
         'help'       => $l('recordings', 'file_help'),
       ),
     ),
   ),
-  
+
   'customhtml' => array(
     'type' => 'text',
     'rowlayout' => '
@@ -76,7 +76,7 @@ $config = Array(
         </div>
     ',
   ),
-  
+
 );
 
 include( $this->bootstrap->config['modulepath'] . 'Visitor/Recordings/Availableuploads.php' );

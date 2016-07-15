@@ -31,7 +31,9 @@ class Signup extends \Visitor\Form {
     $l = $this->bootstrap->getLocalization();
     // submit legyen a title
     $this->form->submit =
-    $this->controller->toSmarty['title'] = $l('users', 'register_title');
+      $this->controller->toSmarty['title'] =
+        $l('users', 'register_title')
+    ;
 
   }
 
@@ -42,7 +44,7 @@ class Signup extends \Visitor\Form {
     $crypto    = $this->bootstrap->getEncryption();
     $l         = $this->bootstrap->getLocalization();
 
-    // TODO sec vuln
+    // TODO sec vuln 3rd party redirect miatt
     if ( $values['forward'] and parse_url( $values['forward'] ) !== false )
       $this->controller->toSmarty['forwardurl'] = $values['forward'];
 

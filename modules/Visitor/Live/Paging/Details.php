@@ -3,7 +3,7 @@ namespace Visitor\Live\Paging;
 class Details extends \Visitor\Paging {
   protected $orderkey = 'createtime_desc';
   protected $sort = array(
-    
+
     'createtime_desc' => 'id DESC',
     'createtime'      => 'id',
   );
@@ -12,11 +12,11 @@ class Details extends \Visitor\Paging {
   protected $insertafterpager = Array( 'Visitor/Live/Paging/DetailsAfterpager.tpl' );
   protected $channelModel;
   protected $perpageselector = false;
-  
+
   public function init() {
-    
+
     $this->bootstrap->includeTemplatePlugin('indexphoto');
-    
+
     $l                  = $this->bootstrap->getLocalization();
     $user               = $this->bootstrap->getSession('user');
     $this->foreachelse  = '';
@@ -48,26 +48,29 @@ class Details extends \Visitor\Paging {
         \Springboard\Filesystem::filenameize( $this->channelModel->row['title'] )
       );
 
-    $isadmin =
-      $user['id'] and
-      ( $user['isadmin'] or $user['isliveadmin'] or $user['isclientadmin'] )
-    ;
     // admin mindig eleri
-    if ( !$isadmin and $this->channelModel->row['endtimestamp'] ) {
-      
+    if (
+         !\Model\Userroles::userHasPrivilege(
+           'live_ignoreeventend',
+           'or',
+           'isadmin', 'isliveadmin', 'isclientadmin'
+         ) and
+         $this->channelModel->row['endtimestamp']
+       ) {
+
       $endtime = strtotime( $this->channelModel->row['endtimestamp'] );
       if ( strtotime('+3 days', $endtime ) < time() )
         $this->controller->redirect(
           'channels/details/' .$this->channelModel->id . ',' .
           \Springboard\Filesystem::filenameize( $this->channelModel->row['title'] )
         );
-      
+
     }
-    
+
     $this->controller->toSmarty['listclass']   = 'recordinglist livelist';
     $this->controller->toSmarty['feeds']       = $this->channelModel->getFeeds();
     $this->controller->toSmarty['channel']     = $this->channelModel->row;
-    
+
     $this->controller->toSmarty['streamingactive'] =
       ( strtotime( $this->channelModel->row['starttimestamp'] ) <= time() ) and
       (
@@ -76,21 +79,21 @@ class Details extends \Visitor\Paging {
         ( strtotime( $this->channelModel->row['endtimestamp'] ) >= time() )
       )
     ;
-    
+
     parent::init();
-    
+
   }
-  
+
   protected function setupCount() {
-    
+
     return $this->itemcount = null;
-    
+
   }
-  
+
   protected function getItems( $start, $limit, $orderby ) {
-    
+
     return $this->controller->toSmarty['feeds'];
-    
+
   }
-  
+
 }

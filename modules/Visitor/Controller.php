@@ -181,51 +181,52 @@ class Controller extends \Springboard\Controller\Visitor {
   }
 
   public function handleSingleLoginUsers() {
+    if (
+         \Model\Userroles::userHasPrivilege(
+           'users_ignoresinglelogin', 'isadmin'
+         )
+       )
+      return;
 
     $user = $this->bootstrap->getSession('user');
 
-    if ( $user['id'] and !$user['isadmin'] ) {
+    // mindig adatbazisbol kerdezzuk le a usert, mivel
+    // elofordulhat, hogy menetkozben akarjuk a usert
+    // kitiltani, az pedig a session alapu ellenorzesnel
+    // nem sikerulne
+    $userModel = $this->bootstrap->getModel('users');
+    $userModel->select( $user['id'] );
 
-      // mindig adatbazisbol kerdezzuk le a usert, mivel
-      // elofordulhat, hogy menetkozben akarjuk a usert
-      // kitiltani, az pedig a session alapu ellenorzesnel
-      // nem sikerulne
-      $userModel = $this->bootstrap->getModel('users');
-      $userModel->select( $user['id'] );
+    if (
+         $userModel->row['timestampdisabledafter'] and
+         strtotime( $userModel->row['timestampdisabledafter'] ) < time()
+       ) {
 
-      if (
-           $userModel->row['timestampdisabledafter'] and
-           strtotime( $userModel->row['timestampdisabledafter'] ) < time()
-         ) {
+      $user->clear();
+      $this->regenerateSessionID();
+
+      $l = $this->bootstrap->getLocalization();
+      $this->redirectWithMessage('users/login', $l('users', 'timestampdisabled') );
+
+    }
+
+    if ( $userModel->row['issingleloginenforced'] ) {
+
+      if ( !$userModel->checkSingleLoginUsers() ) {
 
         $user->clear();
         $this->regenerateSessionID();
 
         $l = $this->bootstrap->getLocalization();
-        $this->redirectWithMessage('users/login', $l('users', 'timestampdisabled') );
-
+        $this->redirectWithMessage('users/login', sprintf(
+          $l('users', 'loggedout_sessionexpired'),
+          ceil( $this->bootstrap->config['sessiontimeout'] / 60 )
+        ) );
       }
-
-      if ( $userModel->row['issingleloginenforced'] ) {
-
-        if ( !$userModel->checkSingleLoginUsers() ) {
-
-          $user->clear();
-          $this->regenerateSessionID();
-
-          $l = $this->bootstrap->getLocalization();
-          $this->redirectWithMessage('users/login', sprintf(
-            $l('users', 'loggedout_sessionexpired'),
-            ceil( $this->bootstrap->config['sessiontimeout'] / 60 )
-          ) );
-        }
-        else
-          $userModel->updateSessionInformation();
-
-      }
+      else
+        $userModel->updateSessionInformation();
 
     }
-
   }
 
   public function redirectToMainDomain() {}
@@ -299,7 +300,7 @@ class Controller extends \Springboard\Controller\Visitor {
 
     $user = $this->bootstrap->getSession('user');
 
-    if ( $id <= 0 or !isset( $user['id'] ) ) {
+    if ( $id <= 0 or !$user['id'] ) {
 
       if ( $redirectto !== false )
         $this->redirect( $redirectto );
@@ -311,7 +312,13 @@ class Controller extends \Springboard\Controller\Visitor {
     $model = $this->bootstrap->getModel( $table );
     $model->addFilter('id', $id );
 
-    if ( $user['iseditor'] or $user['isclientadmin'] )
+    if (
+         \Model\Userroles::userHasPrivilege(
+           'manageOrganizationObjects',
+           'or',
+           'iseditor', 'isclientadmin'
+         )
+       )
       $model->addTextFilter("
         userid = '" . $user['id'] . "' OR
         organizationid = '" . $user['organizationid'] . "'
@@ -330,7 +337,6 @@ class Controller extends \Springboard\Controller\Visitor {
     $model->row = $row;
 
     return $model;
-
   }
 
   public function output( $string, $disablegzip = false, $disablekill = false ) {

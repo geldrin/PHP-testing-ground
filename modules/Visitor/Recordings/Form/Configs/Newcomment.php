@@ -1,18 +1,18 @@
 <?php
 
 $config = array(
-  
+
   'action' => array(
     'type'     => 'inputHidden',
     'value'    => 'submitnewcomment',
     'readonly' => true,
   ),
-  
+
   'replyto' => array(
     'type'  => 'inputHidden',
     'value' => $this->application->getNumericParameter('replyto'),
   ),
-  
+
   'recordingid' => array(
     'type'  => 'inputHidden',
     'value' => $this->application->getNumericParameter('id'),
@@ -54,5 +54,5 @@ $config = array(
       ),
     ),
   ),
-  
+
 );

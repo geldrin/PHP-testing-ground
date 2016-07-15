@@ -27,7 +27,7 @@ if ( $this->invitationModel->row['recordingid'] ) {
     'recordings',
     $id
   );
-  
+
   $title = $recordingsModel->row['title'];
   if ( strlen( trim( $recordingsModel->row['subtitle'] ) ) )
     $title .= '<br/>' . $recordingsModel->row['subtitle'];
@@ -47,7 +47,7 @@ if ( $this->invitationModel->row['channelid'] ) {
     'channels',
     $id
   );
-  
+
   $title = $channelModel->row['title'];
   if ( strlen( trim( $channelModel->row['subtitle'] ) ) )
     $title .= '<br/>' . $channelModel->row['subtitle'];

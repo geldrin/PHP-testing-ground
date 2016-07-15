@@ -14,17 +14,17 @@ class Index extends \Visitor\Paging {
   protected $template          = 'Visitor/channellistitem.tpl';
   protected $insertbeforepager = Array( 'Visitor/Channels/Paging/IndexBeforepager.tpl' );
   protected $channelModel;
-  
+
   public function init() {
-    
+
     $l                 = $this->bootstrap->getLocalization();
     $this->foreachelse = $l('channels', 'foreachelse');
     $this->title       = $l('channels', 'title');
     $this->controller->toSmarty['listclass'] = 'recordinglist';
     parent::init();
-    
+
   }
-  
+
   protected function setupCount() {
     $this->channelModel = $this->bootstrap->getModel('channels');
     $this->channelModel->addFilter('parentid', 0 );
@@ -32,11 +32,11 @@ class Index extends \Visitor\Paging {
     $this->channelModel->addFilter('isdeleted', 0 );
     $this->channelModel->addFilter('organizationid', $this->controller->organization['id'] );
     return $this->itemcount = $this->channelModel->getCount();
-    
+
   }
-  
+
   protected function getItems( $start, $limit, $orderby ) {
     return $this->channelModel->getArray( $start, $limit, false, $orderby );
   }
-  
+
 }

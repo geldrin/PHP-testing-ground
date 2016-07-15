@@ -2,12 +2,12 @@
 
 $organizationid = $this->controller->organization['id'];
 $config = Array(
-  
+
   'action' => Array(
     'type'  => 'inputHidden',
     'value' => 'submitcreate'
   ),
-  
+
   'organizationid' => Array(
     'type'     => 'inputHidden',
     'value'    => $organizationid,
@@ -21,12 +21,12 @@ $config = Array(
       array('type' => 'required'),
     ),
   ),
-  
+
   'nameshort' => Array(
     'displayname' => $l('departments', 'nameshort'),
     'type'        => 'inputText',
   ),
-  
+
   'parentid' => Array(
     'displayname' => $l('departments', 'parentid'),
     'type'        => 'selectDynamic',
@@ -44,7 +44,7 @@ $config = Array(
     'treestart'   => '0',
     'value'       => $this->application->getNumericParameter('parentid'),
   ),
-  
+
   'weight' => Array(
     'displayname' => $l('', 'weight'),
     'type'        => 'inputText',
@@ -53,5 +53,5 @@ $config = Array(
       Array( 'type' => 'number' )
     )
   ),
-  
+
 );

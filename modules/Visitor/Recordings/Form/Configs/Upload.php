@@ -1,27 +1,27 @@
 <?php
 
 $config = Array(
-  
+
   'action' => Array(
     'type'  => 'inputHidden',
     'value' => 'submitupload'
   ),
-  
+
   'channelid' => Array(
     'type'  => 'inputHidden',
     'value' => $this->application->getNumericParameter('channelid'),
   ),
-  
+
   'fs1' => array(
     'type'   => 'fieldset',
     'prefix' => '<span class="legendsubtitle">' . $l('recordings', 'upload_subtitle') . '</span>',
   ),
-  
+
   'videolanguage' => array(
     'type'        => 'select',
     'displayname' => $l('recordings', 'language'),
   ),
-  
+
   'tos' => array(
     'displayname' => $l('', 'recordingstos'),
     'type'        => 'inputCheckbox',
@@ -37,7 +37,7 @@ $config = Array(
       )
     ),
   ),
-  
+
   'advanced' => array(
     'type'   => 'text',
     'rowlayout' => '
@@ -76,19 +76,19 @@ $config = Array(
       </tr>
     '
   ),
-  
+
   'file' => Array(
     'type'       => 'inputFile',
     'validation' => Array(
       Array(
-        'type'       => 'file', 
+        'type'       => 'file',
         'extensions' => $this->bootstrap->config['allowedextensions'],
         'required'   => true,
         'help'       => $l('recordings', 'file_help'),
       ),
     ),
   ),
-  
+
   'customhtml' => array(
     'type' => 'text',
     'rowlayout' => '
@@ -123,8 +123,14 @@ $config = Array(
 
 );
 
-if ( $this->user['iseditor'] or $this->user['isadmin'] or $this->user['isclientadmin'] ) {
-  
+if (
+     \Model\Userroles::userHasPrivilege(
+       'recordings_createintrooutro',
+       'or',
+       'iseditor', 'isadmin', 'isclientadmin'
+     )
+   ) {
+
   $introoutro = array(
     'isintrooutro' => array(
       'displayname' => $l('recordings', 'isintrooutro'),
@@ -133,17 +139,17 @@ if ( $this->user['iseditor'] or $this->user['isadmin'] or $this->user['isclienta
       'value'       => 0,
     )
   );
-  
+
   $config = \Springboard\Tools::insertAfterKey( $config, $introoutro, 'tos' );
-  
+
 } else {
-  
+
   $config['isintrooutro'] = array(
     'type'     => 'inputHidden',
     'value'    => 0,
     'readonly' => true,
   );
-  
+
 }
 
 include( $this->bootstrap->config['modulepath'] . 'Visitor/Recordings/Availableuploads.php' );

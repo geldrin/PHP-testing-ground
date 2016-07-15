@@ -126,18 +126,18 @@ class Featured extends \Visitor\Paging {
   }
 
   public function init() {
-    
+
     $l                 = $this->bootstrap->getLocalization();
     $this->foreachelse = $l('recordings', 'foreachelse');
     $this->filter      = "r.organizationid = '" . $this->controller->organization['id'] . "'";
     $this->user        = $this->bootstrap->getSession('user');
-    
+
     $this->type = $this->application->getParameter('subaction', 'featured');
     switch( $this->type ) {
       case 'newest':
         $this->orderkey = 'timestamp_desc';
       break;
-      
+
       case 'highestrated':
         $this->orderkey = 'rating';
         $this->ignoreSortKeys = array(
@@ -152,7 +152,7 @@ class Featured extends \Visitor\Paging {
           'hiddennull'           => true,
         );
       break;
-      
+
       case 'mostviewed':
         $this->orderkey = 'views_desc';
         $this->ignoreSortKeys = array(
@@ -167,7 +167,7 @@ class Featured extends \Visitor\Paging {
           'hiddennull'          => true,
         );
       break;
-      
+
       case 'subscriptions':
         $this->ignoreSortKeys = array();
         foreach( array_keys( $this->sort ) as $key )
@@ -188,17 +188,17 @@ class Featured extends \Visitor\Paging {
         $this->type    = 'featured';
         $this->filter .= " AND r.isfeatured = '1'";
         break;
-      
+
     }
-    
+
     $this->title = $l('recordings', 'featured_' . $this->type );
     $this->controller->toSmarty['listclass'] = 'recordinglist';
     $this->controller->toSmarty['type']      = $this->type;
     $this->controller->toSmarty['module']    = 'featured';
     parent::init();
-    
+
   }
-  
+
   protected function setupCount() {
     return $this->itemcount = self::getRecCount(
       $this->controller->organization['id'],
@@ -206,7 +206,7 @@ class Featured extends \Visitor\Paging {
       $this->type
     );
   }
-  
+
   protected function getItems( $start, $limit, $orderby ) {
     return self::getRecItems(
       $this->controller->organization['id'],
@@ -215,7 +215,7 @@ class Featured extends \Visitor\Paging {
       $start, $limit, $orderby
     );
   }
-  
+
   protected function getUrl() {
     return
       $this->controller->getUrlFromFragment( $this->module . '/' . $this->action ) .

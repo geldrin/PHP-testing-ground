@@ -5,7 +5,7 @@ class Modify extends \Visitor\HelpForm {
   public $configfile = 'Modify.php';
   public $template   = 'Visitor/genericform.tpl';
   public $needdb     = true;
-  
+
   public function init() {
     $this->genreModel = $this->controller->modelIDCheck(
       'genres',
@@ -13,7 +13,7 @@ class Modify extends \Visitor\HelpForm {
     );
     $this->values     = $this->genreModel->row;
   }
-  
+
   public function postSetupForm() {
 
     $l = $this->bootstrap->getLocalization();
@@ -21,16 +21,16 @@ class Modify extends \Visitor\HelpForm {
     $this->controller->toSmarty['helpclass'] = 'rightbox small';
 
   }
-  
+
   public function onComplete() {
-    
+
     $values = $this->form->getElementValues( 0 );
     $this->genreModel->updateRow( $values );
-    
+
     $this->controller->redirect(
       $this->application->getParameter('forward', 'genres/admin' )
     );
-    
+
   }
-  
+
 }

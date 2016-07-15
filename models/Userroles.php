@@ -107,6 +107,14 @@ class Userroles extends \Springboard\Model {
   }
 
   // variadic func
+  // az elso argumentum utan levo argumentumok:
+  // ha a masodik argumentum egy 'or' string akkor
+  // az utana kovetkezo mezok kozul ha van permissionje a
+  // usernek azonnal viszaterunk pozitiv valasszal
+  // ha a masodik argumentum nem 'or' string akkor
+  // minden nem-elso argumentum egy permission ami
+  // be kell hogy legyen allitva ahhoz hogy pozitiv valasszal
+  // terjunk vissza
   public static function userHasPrivilege( $privilege ) {
     self::setupDependencies();
     $user = self::$sbootstrap->getSession('user');
@@ -116,12 +124,23 @@ class Userroles extends \Springboard\Model {
          func_num_args() > 1
        ) {
       $args = func_get_args();
+      $returnOnNoPermission = true;
       foreach( $args as $key => $permission ) {
         if ( $key === 0 ) // skip privilege
           continue;
 
-        if ( !$user[ $permission ] )
+        if ( $key === 1 and $permission === 'or' ) {
+          $returnOnNoPermission = false;
+          continue;
+        }
+
+        // amint nincs egy permission mar elhalunk
+        if ( $returnOnNoPermission and !$user[ $permission ] )
           return false;
+
+        // amint van egy permission mar elfogadjuk
+        if ( !$returnOnNoPermission and $user[ $permission ] )
+          return true;
       }
 
       return true;
