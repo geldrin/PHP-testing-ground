@@ -71,8 +71,10 @@ class Controller extends \Springboard\Controller\Visitor {
 
   public function checkControllerPrivilege( $module, $action ) {
     $userLoggedIn = false;
+    // ugyelni akarunk itt ra hogy ne inditsunk sessiont ha meg nincs inditva
+    // a Model\Userroles::userHasPrivilege open-coded valtozata gyk.
     if ( !\Springboard\Session::exists() ) // nincs belepve
-      $roleid = $this->getPublicRoleID();
+      $roleid = \Model\Userroles::getRoleIDByName('public');
     else {
       $user = $this->bootstrap->getSession('user');
       if ( $user['id'] ) {
@@ -81,7 +83,7 @@ class Controller extends \Springboard\Controller\Visitor {
         if ( !$roleid )
           throw new \Exception('invalid userroleid for user ' . $user['id'] );
       } else // nincs belepve
-        $roleid = $this->getPublicRoleID();
+        $roleid = \Model\Userroles::getRoleIDByName('public');
     }
 
     $privileges = \Model\Userroles::getPrivilegesForRoleID( $roleid );
@@ -103,39 +105,6 @@ class Controller extends \Springboard\Controller\Visitor {
     // nincs privilegium, de be van lepve, hiba oldal
     $this->toSmarty['privilege'] = $key;
     $this->smartyOutput('Visitor/privilegeerror.tpl');
-  }
-
-  public function userHasPrivilege( $privilege ) {
-    $user = $this->bootstrap->getSession('user');
-    if ( !$user['id'] )
-      return false;
-
-    if ( !$this->bootstrap->config['usedynamicprivileges'] ) {
-      $args = func_get_args();
-      foreach( $args as $key => $permission ) {
-        if ( $key === 0 ) // skip privilege
-          continue;
-
-        if ( !$user[ $permission ] )
-          return false;
-      }
-
-      return true;
-    }
-
-    $userModel = $this->bootstrap->getModel('users');
-    $userModel->id = $user['id'];
-    $userModel->row = $user->toArray();
-
-    return $userModel->hasPrivilege( $privilege );
-  }
-
-  private function getPublicRoleID() {
-    $roleid = \Model\Userroles::getRoleIDByName('public');
-    if ( !$roleid )
-      throw new \Exception('no public role exists');
-
-    return $roleid;
   }
 
   public function handleAutologin() {

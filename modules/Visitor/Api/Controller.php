@@ -236,26 +236,20 @@ class Controller extends \Visitor\Controller {
         $configuration['shouldemail']
       );
 
-    if ( $configuration['permission'] == 'public' )
-      return true;
-
     $user = $this->bootstrap->getSession('user');
-    $userModel = $this->bootstrap->getModel('users');
-    if ( $user['id'] ) {
-      $userModel->id = $user['id'];
-      $userModel->row = $user->toArray();
-    }
 
     if (
          isset( $configuration['privilege'] ) and
          $this->bootstrap->config['usedynamicprivileges']
        )
-      $this->userHasPrivilege( $configuration, $userModel );
-    else if (
-         isset( $configuration['permission'] ) and
-         $this->userHasPermission( $configuration, $userModel )
-       )
-      return $user;
+      $this->userHasPrivilege( $configuration );
+    else if ( isset( $configuration['permission'] ) ) {
+      $ret = $this->userHasPermission( $configuration, $user );
+      // csak akkor engedjuk tovabb a kodot ha a permission nem
+      // public vagy member, az impersonatehez magasabb perm kell
+      if ( $ret !== false )
+        return $ret;
+    }
 
     if ( isset( $configuration['impersonatefromparameter'] ) ) {
 
@@ -279,18 +273,17 @@ class Controller extends \Visitor\Controller {
     return $user;
   }
 
-  protected function userHasPermission( $configuration, $userModel ) {
-    if (
-         $configuration['permission'] == 'member' and
-         $userModel->hasRole('member')
-       )
+  protected function userHasPermission( $configuration, $user ) {
+    if ( $configuration['permission'] === 'public' )
       return true;
 
     if (
-         !$userModel->hasRole(
-           strtolower( $configuration['permission'] )
-         )
+         $configuration['permission'] === 'member' and
+         $user['id']
        )
+      return $user;
+
+    if ( !$user['is' . $configuration['permission'] ] )
       throw new ApiException(
         'Access denied, not enough permission',
         $configuration['shouldlog'],
@@ -300,8 +293,8 @@ class Controller extends \Visitor\Controller {
     return false;
   }
 
-  protected function userHasPrivilege( $configuration, $userModel ) {
-    if ( !$userModel->hasPrivilege( $configuration['privilege'] ) )
+  protected function userHasPrivilege( $configuration ) {
+    if ( !\Model\Userroles::userHasPrivilege( $configuration['privilege'] ) )
       throw new ApiException(
         'Access denied, privilege not found: ' . $configuration['privilege'],
         $configuration['shouldlog'],

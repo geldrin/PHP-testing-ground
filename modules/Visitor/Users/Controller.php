@@ -345,7 +345,7 @@ class Controller extends \Visitor\Controller {
 
     }
 
-    if ( $userModel->hasRole('admin') )
+    if ( \Model\Userroles::userHasPrivilege('users_impersonateorganization', 'isadmin') )
       $userModel->row['organizationid'] = $this->organization['id']; // a registerforsession miatt
 
     $userModel->registerForSession();

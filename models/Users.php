@@ -1282,28 +1282,4 @@ class Users extends \Springboard\Model {
 
     return isset( $this->privileges[ $name ] );
   }
-
-  public function hasRole( $name ) {
-
-    if ( !$this->bootstrap->config['usedynamicprivileges'] ) {
-      if ( $name == 'member' )
-        return (bool)$this->id;
-
-      $this->ensureObjectLoaded();
-      return (bool)$this->row['is' . $name ];
-    }
-
-    $this->ensureObjectLoaded();
-
-    $roleid = $this->row['userroleid'];
-    $name = $this->db->qstr( $name );
-    return (bool)$this->db->getOne("
-      SELECT COUNT(*)
-      FROM userroles
-      WHERE
-        id = '$roleid' AND
-        name = $name
-      LIMIT 1
-    ");
-  }
 }

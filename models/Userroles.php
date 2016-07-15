@@ -105,4 +105,34 @@ class Userroles extends \Springboard\Model {
 
     return self::$roleNameToID[ $name ] = $data;
   }
+
+  // variadic func
+  public static function userHasPrivilege( $privilege ) {
+    self::setupDependencies();
+    $user = self::$sbootstrap->getSession('user');
+
+    if (
+         !self::$sbootstrap->config['usedynamicprivileges'] and
+         func_num_args() > 1
+       ) {
+      $args = func_get_args();
+      foreach( $args as $key => $permission ) {
+        if ( $key === 0 ) // skip privilege
+          continue;
+
+        if ( !$user[ $permission ] )
+          return false;
+      }
+
+      return true;
+    }
+
+    if ( $user['userroleid'] )
+      $roleid = $user['userroleid'];
+    else
+      $roleid = self::getRoleIDByName('public');
+
+    $privileges = self::getPrivilegesForRoleID( $roleid );
+    return isset( $privileges[ $privilege ] );
+  }
 }
