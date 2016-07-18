@@ -270,7 +270,12 @@ function checkAccess( $recordingid, &$config, $isDownload = false, $isMaster = f
     if (
          $organization['caneditordownloadrecordings'] and
          $user and
-         ( $user['iseditor'] or $user['isadmin'] or $user['isclientadmin'] )
+         \Model\Userroles::userHasPrivilege(
+           $user,
+           'general_ignoreAccessRestrictions',
+           'or',
+           'isclientadmin', 'iseditor', 'isadmin'
+         )
        )
       return true;
 

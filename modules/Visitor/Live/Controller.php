@@ -165,7 +165,10 @@ class Controller extends \Visitor\Controller {
     if (
          $streamingserverid and
          $this->userHasPrivilege(
-           'live_forcemediaserver', 'isadmin', 'isclientadmin'
+           $user,
+           'live_forcemediaserver',
+           'or',
+           'isadmin', 'isclientadmin'
          )
        )
       $feedModel->forceMediaServer( $streamingserverid );
@@ -273,6 +276,7 @@ class Controller extends \Visitor\Controller {
 
       $this->toSmarty['needauth']      = $needauth;
       $this->toSmarty['liveadmin']     = \Model\Userroles::userHasPrivilege(
+        $user,
         'live_moderatechat',
         'or',
         'isclientadmin', 'isliveadmin'
@@ -334,6 +338,7 @@ class Controller extends \Visitor\Controller {
 
     if (
          \Model\Userroles::userHasPrivilege(
+           null,
            'live_forcemediaserver',
            'or',
            'isadmin', 'isclientadmin'
@@ -615,6 +620,7 @@ class Controller extends \Visitor\Controller {
     if ( $access[ $livefeedid . '-0' ] === true or $access[ $livefeedid . '-1' ] === true ) {
 
       $liveadmin = \Model\Userroles::userHasPrivilege(
+        null,
         'live_moderatechat',
         'or',
         'isliveadmin', 'isclientadmin'

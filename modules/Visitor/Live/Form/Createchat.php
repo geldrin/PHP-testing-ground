@@ -52,6 +52,7 @@ class Createchat extends \Visitor\HelpForm {
       // ha nem admin akkor mutatjuk az alertet
       if (
            !\Model\Userroles::userHasPrivilege(
+             null,
              'live_moderatechat',
              'or',
              'isclientadmin', 'isliveadmin'

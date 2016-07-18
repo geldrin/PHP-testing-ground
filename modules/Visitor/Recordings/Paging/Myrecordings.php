@@ -31,6 +31,7 @@ class Myrecordings extends \Visitor\Paging {
 
     if (
          \Model\Userroles::userHasPrivilege(
+           $user,
            'recordings_listallrecordings',
            'or',
            'iseditor', 'isclientadmin'

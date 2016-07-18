@@ -5,6 +5,7 @@ if ( !isset( $user ) )
 
 if (
      \Model\Userroles::userHasPrivilege(
+       $user,
        'recordings_approveduploader',
        'or',
        'isadmin', 'isclientadmin', 'iseditor'
@@ -13,6 +14,7 @@ if (
   $approvalstatuses = $l->getLov('recordings_approvalstatus_full');
 elseif (
          \Model\Userroles::userHasPrivilege(
+           $user,
            'recordings_moderateduploader',
            'ismoderateduploader'
          ) and
@@ -22,6 +24,7 @@ elseif (
 // ha mar engedve van akkor mindent mutatunk
 elseif (
          \Model\Userroles::userHasPrivilege(
+           $user,
            'recordings_moderateduploader',
            'ismoderateduploader'
          ) and
@@ -205,6 +208,7 @@ $config['isanonymouscommentsenabled'] = array(
 
 if (
      \Model\Userroles::userHasPrivilege(
+       $user,
        'recordings_feature',
        'or',
        'isadmin', 'isclientadmin', 'iseditor'

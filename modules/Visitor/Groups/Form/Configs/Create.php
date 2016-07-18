@@ -28,6 +28,7 @@ $config = Array(
 
 if (
      \Model\Userroles::userHasPrivilege(
+       null,
        'groups_remotegroups',
        'or',
        'isadmin', 'isclientadmin'

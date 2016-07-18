@@ -32,6 +32,7 @@ class Mychannels extends \Visitor\Paging {
     $channelModel->addFilter('isliveevent', 0 );
     if (
          !\Model\Userroles::userHasPrivilege(
+           null,
            'channels_listallchannels',
            'or',
            'isadmin', 'iseditor', 'isclientadmin'

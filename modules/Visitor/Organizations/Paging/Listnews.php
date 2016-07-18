@@ -29,6 +29,7 @@ class Listnews extends \Visitor\Paging {
 
     if (
          \Model\Userroles::userHasPrivilege(
+           $this->user,
            'organizations_newsadmin',
            'or',
            'iseditor', 'isnewseditor', 'isclientadmin', 'isadmin'

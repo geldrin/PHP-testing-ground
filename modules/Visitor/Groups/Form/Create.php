@@ -39,10 +39,10 @@ class Create extends \Visitor\HelpForm {
   }
 
   public function checkDirectory( &$values, $skipname = false ) {
-    $user = $this->bootstrap->getSession('user');
     if (
          $values['source'] === '' or // non-directory, skip
          !\Model\Userroles::userHasPrivilege(
+           null,
            'groups_remotegroups',
            'or',
            'isadmin', 'isclientadmin'

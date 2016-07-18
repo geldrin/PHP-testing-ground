@@ -55,6 +55,7 @@ class Index extends \Visitor\Paging {
     $this->filters['organizationid'] = $this->controller->organization['id'];
     if (
          \Model\Userroles::userHasPrivilege(
+           null,
            'live_search',
            'or',
            'isadmin', 'isclientadmin', 'isliveadmin'

@@ -136,6 +136,7 @@ if (
 
 if (
      \Model\Userroles::userHasPrivilege(
+       null,
        'live_feature',
        'or',
        'iseditor', 'isclientadmin', 'isliveadmin', 'isadmin'

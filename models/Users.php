@@ -40,13 +40,34 @@ class Users extends \Springboard\Model {
       'disabled = ' . $this->db->qstr( self::USER_VALIDATED ),
     );
 
-    $adminwhere = implode(" AND ", $where ) . ' AND isadmin = 1';
+    if ( !$this->bootstrap->config['usedynamicprivileges'] )
+      $adminwhere = implode(" AND ", $where ) . ' AND isadmin = 1';
+    else {
+
+      $rolewhere = "
+        userroleid IN(
+          (
+            SELECT urp.userroleid
+            FROM
+              userroles_privileges AS urp,
+              privileges AS pr
+            WHERE
+              pr.name = 'users_globallogin' AND
+              urp.privilegeid = pr.id
+          )
+        )
+      ";
+      $adminwhere = implode(" AND ", $where ) . " AND $rolewhere";
+
+    }
 
     if ( $organizationid !== null )
       $where[] = 'organizationid = ' . $this->db->qstr( $organizationid );
 
-    if ( $isadmin )
+    if ( $isadmin and !$this->bootstrap->config['usedynamicprivileges'] )
       $where[] = 'isadmin = 1';
+    else if ( $isadmin )
+      $where[] = $rolewhere;
 
     $where = implode(" AND ", $where );
     $user  = $this->db->getRow("
@@ -406,7 +427,6 @@ class Users extends \Springboard\Model {
       FROM users
       WHERE
         organizationid = '$organizationid' AND
-        isadmin        = '0' AND
         email LIKE $email
     ");
 

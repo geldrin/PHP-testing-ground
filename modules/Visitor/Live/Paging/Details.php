@@ -51,6 +51,7 @@ class Details extends \Visitor\Paging {
     // admin mindig eleri
     if (
          !\Model\Userroles::userHasPrivilege(
+           $user,
            'live_ignoreeventend',
            'or',
            'isadmin', 'isliveadmin', 'isclientadmin'

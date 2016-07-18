@@ -294,7 +294,7 @@ class Controller extends \Visitor\Controller {
   }
 
   protected function userHasPrivilege( $configuration ) {
-    if ( !\Model\Userroles::userHasPrivilege( $configuration['privilege'] ) )
+    if ( !\Model\Userroles::userHasPrivilege( null, $configuration['privilege'] ) )
       throw new ApiException(
         'Access denied, privilege not found: ' . $configuration['privilege'],
         $configuration['shouldlog'],

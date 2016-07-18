@@ -51,6 +51,7 @@ class Ldap extends \AuthDirectories\Base {
       )
     );
 
+    // TODO jogosultsag synceles
     foreach( $results as $result ) { // csak egy result lesz
 
       $accountname = $ldap::implodePossibleArray(' ', $result['sAMAccountName'] );

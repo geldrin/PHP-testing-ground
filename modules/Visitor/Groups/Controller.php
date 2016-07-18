@@ -57,7 +57,9 @@ class Controller extends \Visitor\Controller {
          $userid == $user['id'] or
          $user['id'] == $groupModel->row['userid'] or
          \Model\Userroles::userHasPrivilege(
-           'groups_deleteanyuser', 'isclientadmin'
+           $user,
+           'groups_deleteanyuser',
+           'isclientadmin'
          )
        )
       $groupModel->deleteUser( $userid );

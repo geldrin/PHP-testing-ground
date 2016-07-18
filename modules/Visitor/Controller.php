@@ -183,7 +183,9 @@ class Controller extends \Springboard\Controller\Visitor {
   public function handleSingleLoginUsers() {
     if (
          \Model\Userroles::userHasPrivilege(
-           'users_ignoresinglelogin', 'isadmin'
+           null,
+           'users_ignoresinglelogin',
+           'isadmin'
          )
        )
       return;
@@ -314,6 +316,7 @@ class Controller extends \Springboard\Controller\Visitor {
 
     if (
          \Model\Userroles::userHasPrivilege(
+           $user,
            'general_manageOrganizationObjects',
            'or',
            'iseditor', 'isclientadmin'

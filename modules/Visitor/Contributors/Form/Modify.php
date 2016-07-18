@@ -29,6 +29,7 @@ class Modify extends \Visitor\Contributors\Form\Create {
     if (
          $this->contributorModel->row['createdby'] != $user['id'] and
          !\Model\Userroles::userHasPrivilege(
+           $user,
            'contributors_modifyanycontributor',
            'or',
            'isclientadmin', 'isadmin', 'iseditor'

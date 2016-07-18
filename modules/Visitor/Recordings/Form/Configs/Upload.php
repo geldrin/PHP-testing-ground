@@ -125,6 +125,7 @@ $config = Array(
 
 if (
      \Model\Userroles::userHasPrivilege(
+       null,
        'recordings_createintrooutro',
        'or',
        'iseditor', 'isadmin', 'isclientadmin'
