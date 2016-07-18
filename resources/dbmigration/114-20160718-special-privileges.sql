@@ -26,8 +26,7 @@ INSERT INTO `privileges` (`id`, `name`, `comment`) VALUES
 (24,	'live_search',	'kereshetoek a kozvetitesek'),
 (25,	'organizations_newsadmin',	'organizations_newsadmin -- organizations/listnews-nal admin linkeket megjeleniti, es hasznalhatja\r\n'),
 (26,	'groups_visible',	'minden csoport latszik e a usernek vagy csak a sajatjai'),
-(27,	'groups_deleteuser',	'csak a sajat csoportjabol tud alapbol torolni a user'),
-(28,	'groups_deleteanyuser',	'barmilyen usert tud torolni barmilyen csoportbol (adminoknak)'),
-(29,	'groups_remotegroups',	'csoportot letrehozni/modositani ami ldap alapu'),
-(30,	'contributors_modifyanycontributor',	'barmilyen contributort modosithat a user nem csak a sajat maga altal letrehozottakat'),
-(31,	'channels_listallchannels',	'channels/mychannels alatt minden csatorna listazasa nem csak a user altal letrehozottak');
+(27,	'groups_deleteanyuser',	'barmilyen usert tud torolni barmilyen csoportbol (adminoknak)'),
+(28,	'groups_remotegroups',	'csoportot letrehozni/modositani ami ldap alapu'),
+(29,	'contributors_modifyanycontributor',	'barmilyen contributort modosithat a user nem csak a sajat maga altal letrehozottakat'),
+(30,	'channels_listallchannels',	'channels/mychannels alatt minden csatorna listazasa nem csak a user altal letrehozottak');
