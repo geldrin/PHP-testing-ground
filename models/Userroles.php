@@ -115,21 +115,23 @@ class Userroles extends \Springboard\Model {
   // minden nem-elso argumentum egy permission ami
   // be kell hogy legyen allitva ahhoz hogy pozitiv valasszal
   // terjunk vissza
-  public static function userHasPrivilege( $privilege ) {
+  public static function userHasPrivilege( $user, $privilege ) {
     self::setupDependencies();
-    $user = self::$sbootstrap->getSession('user');
+
+    if ( $user === null )
+      $user = self::$sbootstrap->getSession('user');
 
     if (
          !self::$sbootstrap->config['usedynamicprivileges'] and
-         func_num_args() > 1
+         func_num_args() > 2
        ) {
       $args = func_get_args();
       $returnOnNoPermission = true;
       foreach( $args as $key => $permission ) {
-        if ( $key === 0 ) // skip privilege
+        if ( $key === 0 or $key === 1 ) // skip user and privilege
           continue;
 
-        if ( $key === 1 and $permission === 'or' ) {
+        if ( $key === 2 and $permission === 'or' ) {
           $returnOnNoPermission = false;
           continue;
         }
@@ -147,11 +149,13 @@ class Userroles extends \Springboard\Model {
     }
 
     if ( $user['userroleid'] )
-      $roleid = $user['userroleid'];
+      $roleid =  $user['userroleid'];
     else
       $roleid = self::getRoleIDByName('public');
 
     $privileges = self::getPrivilegesForRoleID( $roleid );
     return isset( $privileges[ $privilege ] );
   }
+
+
 }

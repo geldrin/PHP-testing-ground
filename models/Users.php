@@ -86,14 +86,6 @@ class Users extends \Springboard\Model {
       return false;
   }
 
-  private function isAdminLogin( $row ) {
-    if ( !$this->bootstrap->config['usedynamicprivileges'] )
-      return (bool)$row['isadmin'];
-
-    $privileges = $this->getPrivileges( $row['userroleid'] );
-    return isset( $privileges['users_globallogin'] );
-  }
-
   public function selectAndCheckAPIUserValid( $organizationid, $email, $password, $currentip ) {
 
     $uservalid = $this->selectAndCheckUserValid( $organizationid, $email, $password );
@@ -834,6 +826,7 @@ class Users extends \Springboard\Model {
 
     if (
          \Model\Userroles::userHasPrivilege(
+           $this->row,
            'general_ignoreAccessRestrictions',
            'or',
            'isclientadmin', 'iseditor', 'isadmin'
@@ -1280,23 +1273,15 @@ class Users extends \Springboard\Model {
     return $ret;
   }
 
-  public function getPrivileges( $roleid = null ) {
-    if ( $roleid === null ) {
-      $this->ensureObjectLoaded();
-      $roleid = $this->row['userroleid'];
-    }
+  private function isAdminLogin( $row ) {
+    if ( !$this->bootstrap->config['usedynamicprivileges'] )
+      return (bool)$row['isadmin'];
 
-    return \Model\Userroles::getPrivilegesForRoleID( $roleid );
-  }
-
-  public function hasPrivilege( $name ) {
-    if ( !$this->row or !$this->row['userroleid'] )
-      return false;
-
-    $this->ensureObjectLoaded();
-    if ( !$this->privileges )
-      $this->privileges = $this->getPrivileges();
-
-    return isset( $this->privileges[ $name ] );
+    $ret = \Model\Userroles::userHasPrivilege(
+      $row,
+      'users_globallogin',
+      'isadmin'
+    );
+    return $ret;
   }
 }

@@ -931,6 +931,7 @@ class Channels extends \Springboard\Model {
     if (
          $channel['userid'] == $user['id'] or
          \Model\Userroles::userHasPrivilege(
+           $user,
            'general_ignoreAccessRestrictions',
            'or',
            'isclientadmin', 'iseditor', 'isadmin'
@@ -975,6 +976,7 @@ class Channels extends \Springboard\Model {
           return true;
         elseif (
                  \Model\Userroles::userHasPrivilege(
+                   $user,
                    'general_accessDepartmentOrGroupObjects',
                    'iseditor'
                  ) and

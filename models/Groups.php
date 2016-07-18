@@ -102,6 +102,7 @@ class Groups extends \Springboard\Model {
 
   private function canSeeGroups( $user ) {
     return \Model\Userroles::userHasPrivilege(
+      $user,
       'groups_visible',
       'or',
       'isadmin', 'isclientadmin', 'isuploader', 'ismoderateduploader', 'isliveadmin', 'iseditor'
@@ -179,6 +180,7 @@ class Groups extends \Springboard\Model {
     if (
          $this->row['userid'] == $user['id'] or
          \Model\Userroles::userHasPrivilege(
+           $user,
            'general_ignoreAccessRestrictions',
            'or',
            'isclientadmin', 'iseditor', 'isadmin'

@@ -67,7 +67,9 @@ class Organizations_news extends \Springboard\Model\Multilingual {
     $where = '';
     if (
          !\Model\Userroles::userHasPrivilege(
+            $user,
             'organizations_newsadmin',
+            'or',
             'iseditor', 'isnewseditor'
           )
        ) {
@@ -109,7 +111,9 @@ class Organizations_news extends \Springboard\Model\Multilingual {
 
     if (
          \Model\Userroles::userHasPrivilege(
+           $user,
            'organizations_newsadmin',
+           'or',
            'iseditor', 'isnewseditor'
          )
        )

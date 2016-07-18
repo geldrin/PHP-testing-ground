@@ -645,6 +645,7 @@ class Livefeeds extends \Springboard\Model {
     if (
          $this->row['userid'] == $user['id'] or
          \Model\Userroles::userHasPrivilege(
+           $user,
            'general_ignoreAccessRestrictions',
            'or',
            'isclientadmin', 'iseditor', 'isadmin'
@@ -675,6 +676,7 @@ class Livefeeds extends \Springboard\Model {
           return true;
         elseif (
                  \Model\Userroles::userHasPrivilege(
+                   $user,
                    'general_accessDepartmentOrGroupObjects',
                    'iseditor'
                  ) and

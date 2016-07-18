@@ -547,8 +547,12 @@ class Recordings extends \Springboard\Model {
            isset( $info['isintrooutro'] ) and
            $info['isintrooutro'] and
            (
-             $info['user']['iseditor'] or $info['user']['isadmin'] or
-             $info['user']['isclientadmin']
+             \Model\Userroles::userHasPrivilege(
+               $info['user'],
+               'recordings_createintrooutro',
+               'or',
+               'iseditor', 'isadmin', 'isclientadmin'
+             )
            )
          )
         $isintrooutro = 1;
@@ -927,6 +931,7 @@ class Recordings extends \Springboard\Model {
     if (
          $this->row['userid'] == $user['id'] or
          \Model\Userroles::userHasPrivilege(
+           $user,
            'general_ignoreAccessRestrictions',
            'or',
            'isclientadmin', 'iseditor', 'isadmin'
@@ -999,6 +1004,7 @@ class Recordings extends \Springboard\Model {
           return true;
         elseif (
                  \Model\Userroles::userHasPrivilege(
+                   $user,
                    'general_accessDepartmentOrGroupObjects',
                    'iseditor', 'isclientadmin'
                  ) and
@@ -1070,6 +1076,7 @@ class Recordings extends \Springboard\Model {
     if (
          $this->row['userid'] == $user['id'] or
          \Model\Userroles::userHasPrivilege(
+           $user,
            'general_ignoreAccessRestrictions',
            'or',
            'isclientadmin', 'iseditor', 'isadmin'
@@ -1299,9 +1306,12 @@ class Recordings extends \Springboard\Model {
 
     }
 
-    $isadmin = false;
-    if ( $user['isadmin'] or $user['isclientadmin'] or $user['iseditor'] )
-      $isadmin = true;
+    $isadmin = \Model\Userroles::userHasPrivilege(
+      $user,
+      'general_ignoreAccessRestrictions',
+      'or',
+      'isclientadmin', 'iseditor', 'isadmin'
+    );
 
     $generalwhere = "
       r.status       = 'onstorage' AND
@@ -1912,7 +1922,7 @@ class Recordings extends \Springboard\Model {
     $this->ensureObjectLoaded();
 
     $return = $this->getRelatedVideosByCourse( $count, $user, $organization );
-    if ( !empty( $return ) ) {// ha kurzusba tartozik  akkor csak azokat adjuk vissza
+    if ( !empty( $return ) ) { // ha kurzusba tartozik  akkor csak azokat adjuk vissza
       $return = $this->addPresentersToArray( $return, true, $organization['id'] );
       return $return;
     }
@@ -2222,7 +2232,14 @@ class Recordings extends \Springboard\Model {
     if ( !$user['id'] )
       throw new \Exception("No user given");
 
-    if ( !$user['isadmin'] and !$user['isclientadmin'] and !$user['iseditor'] )
+    $isadmin = \Model\Userroles::userHasPrivilege(
+      $user,
+      'general_ignoreAccessRestrictions',
+      'or',
+      'isclientadmin', 'iseditor', 'isadmin'
+    );
+
+    if ( !$isadmin )
       $where[] = "c.userid = '" . $user['id'] . "'"; // csak a sajat csatornait
 
     if ( !empty( $where ) )
@@ -2258,7 +2275,7 @@ class Recordings extends \Springboard\Model {
       FROM channels_recordings
       WHERE
         recordingid = '" . $this->id . "'" . (
-        ( !$user['isadmin'] and !$user['isclientadmin'] and !$user['iseditor'] )
+        ( !$isadmin )
         ? " AND userid      = '" . $user['id'] . "'"
         : ""
       )
@@ -2665,10 +2682,11 @@ class Recordings extends \Springboard\Model {
 
     if (
          $seekbardisabled and
-         (
-           $user['isadmin'] or
-           $user['isclientadmin'] or
-           $user['iseditor']
+         \Model\Userroles::userHasPrivilege(
+           $user,
+           'general_ignoreAccessRestrictions',
+           'or',
+           'isclientadmin', 'iseditor', 'isadmin'
          )
        )
       $options['timeline_seekbarVisible'] = true;
@@ -3690,13 +3708,19 @@ class Recordings extends \Springboard\Model {
   public function addToChannel( $channelid, $user ) {
 
     $this->ensureID();
+    $isadmin = \Model\Userroles::userHasPrivilege(
+      $user,
+      'general_ignoreAccessRestrictions',
+      'or',
+      'isclientadmin', 'iseditor', 'isadmin'
+    );
     $existingid = $this->db->getOne("
       SELECT id
       FROM channels_recordings
       WHERE
         channelid   = '$channelid' AND
         recordingid = '" . $this->id . "'" . (
-        ( !$user['isadmin'] and !$user['isclientadmin'] and !$user['iseditor'] )
+        ( !$isadmin )
         ? " AND userid      = '" . $user['id'] . "'"
         : ""
       )
@@ -3732,12 +3756,18 @@ class Recordings extends \Springboard\Model {
   public function removeFromChannel( $channelid, $user ) {
 
     $this->ensureID();
+    $isadmin = \Model\Userroles::userHasPrivilege(
+      $user,
+      'general_ignoreAccessRestrictions',
+      'or',
+      'isclientadmin', 'iseditor', 'isadmin'
+    );
     $this->db->query("
       DELETE FROM channels_recordings
       WHERE
         channelid   = '$channelid' AND
         recordingid = '" . $this->id . "'" . (
-        ( !$user['isadmin'] and !$user['isclientadmin'] and !$user['iseditor'] )
+        ( !$isadmin )
         ? " AND userid      = '" . $user['id'] . "'"
         : ""
       )
@@ -4124,10 +4154,16 @@ class Recordings extends \Springboard\Model {
     $this->ensureObjectLoaded();
     $canDownload = false;
 
+    $isadmin = \Model\Userroles::userHasPrivilege(
+      $user,
+      'general_ignoreAccessRestrictions',
+      'or',
+      'isclientadmin', 'iseditor', 'isadmin'
+    );
     if (
          $organization['caneditordownloadrecordings'] and
          $user and
-         ( $user['iseditor'] or $user['isadmin'] or $user['isclientadmin'] )
+         $isadmin
        )
       $canDownload = true;
 
@@ -4540,8 +4576,14 @@ class Recordings extends \Springboard\Model {
       return array();
 
     $extrawhere = '';
+    $isadmin = \Model\Userroles::userHasPrivilege(
+      $user,
+      'general_ignoreAccessRestrictions',
+      'or',
+      'isclientadmin', 'iseditor', 'isadmin'
+    );
     // normal user, ellenorizzuk hogy ove e minden
-    if ( !$user['iseditor'] and !$user['isclientadmin'] and !$user['isadmin'] ) {
+    if ( !$isadmin ) {
       $extrawhere = "AND
         r.userid = '" . $user['id'] . "'
       ";
