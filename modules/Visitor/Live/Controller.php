@@ -164,7 +164,7 @@ class Controller extends \Visitor\Controller {
 
     if (
          $streamingserverid and
-         $this->userHasPrivilege(
+         \Model\Userroles::userHasPrivilege(
            $user,
            'live_forcemediaserver',
            'or',
