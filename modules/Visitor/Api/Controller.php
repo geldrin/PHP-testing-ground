@@ -242,9 +242,9 @@ class Controller extends \Visitor\Controller {
          isset( $configuration['privilege'] ) and
          $this->bootstrap->config['usedynamicprivileges']
        )
-      $this->userHasPrivilege( $configuration );
+      $this->userHasAPIPrivilege( $configuration );
     else if ( isset( $configuration['permission'] ) ) {
-      $ret = $this->userHasPermission( $configuration, $user );
+      $ret = $this->userHasAPIPermission( $configuration, $user );
       // csak akkor engedjuk tovabb a kodot ha a permission nem
       // public vagy member, az impersonatehez magasabb perm kell
       if ( $ret !== false )
@@ -273,7 +273,7 @@ class Controller extends \Visitor\Controller {
     return $user;
   }
 
-  protected function userHasPermission( $configuration, $user ) {
+  protected function userHasAPIPermission( $configuration, $user ) {
     if ( $configuration['permission'] === 'public' )
       return true;
 
@@ -293,7 +293,7 @@ class Controller extends \Visitor\Controller {
     return false;
   }
 
-  protected function userHasPrivilege( $configuration ) {
+  protected function userHasAPIPrivilege( $configuration ) {
     if ( !\Model\Userroles::userHasPrivilege( null, $configuration['privilege'] ) )
       throw new ApiException(
         'Access denied, privilege not found: ' . $configuration['privilege'],
