@@ -36,7 +36,7 @@ class Login extends \Visitor\Form {
     );
 
     if ( $uservalid !== true ) {
-      $uservalid = $this->handleAuthTypes();
+      $uservalid = $this->controller->handleLogin( true, $this->form );
       $autologinAllowed = false;
     }
 
@@ -106,60 +106,4 @@ class Login extends \Visitor\Form {
       $this->controller->redirect( $forward );
 
   }
-
-  private function handleAuthTypes() {
-    $organization = $this->controller->organization;
-    if ( empty( $organization['authtypes'] ) )
-      return false;
-
-    $ipaddresses = $this->controller->getIPAddress(true);
-    foreach( $organization['authtypes'] as $authtype ) {
-      if ( $authtype['type'] === 'local' or !$authtype['isuserinitiated'] )
-        continue;
-
-      $class = "\\AuthTypes\\" . ucfirst( strtolower( $authtype['type'] ) );
-      $auth = new $class( $this->bootstrap, $this->organization, $ipaddresses );
-
-      try {
-
-        $ret = $auth->handleForm( $authtype, $this->form );
-        if ( $ret === true ) {
-          $user = $this->bootstrap->getSession('user');
-          $this->controller->toSmarty['member'] = $user->toArray();
-          $this->controller->logUserLogin(
-            $authtype['type'] . '-USERINIT-LOGIN'
-          );
-        }
-
-        if ( $ret !== null )
-          return true;
-
-      } catch( \AuthTypes\Exception $e ) {
-
-        $d    = \Springboard\Debug::getInstance();
-        $line =
-          $e->getMessage() . "\n" .
-          var_export( $e->info, true ) . "\n" .
-          \Springboard\Debug::formatBacktrace( $e->getTrace() ) . "\n"
-        ;
-        $d->log(false, 'ssologin.txt', $line);
-
-        if ($e->redirectmessage)
-          $this->controller->redirectWithMessage(
-            $e->redirecturl,
-            $e->redirectmessage,
-            $e->redirectparams
-          );
-        else
-          $this->controller->redirect(
-            $e->redirecturl,
-            $e->redirectparams
-          );
-      }
-    }
-
-    // ha ide eljutottunk nem lett handle-elve
-    return false;
-  }
-
 }

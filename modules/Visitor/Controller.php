@@ -54,7 +54,9 @@ class Controller extends \Springboard\Controller\Visitor {
 
     }
 
-    $this->handleLogin();
+    // non-userinitiated login
+    $this->handleLogin( false );
+
     $this->handleAutologin();
     $this->debugLogUsers();
     $this->handleSingleLoginUsers();
@@ -130,14 +132,17 @@ class Controller extends \Springboard\Controller\Visitor {
 
   }
 
-  public function handleLogin() {
+  public function handleLogin( $userinitiated, $form = null ) {
 
     if ( empty( $this->organization['authtypes'] ) )
       return;
 
     $ipaddresses = $this->getIPAddress(true);
     foreach( $this->organization['authtypes'] as $authtype ) {
-      if ( $authtype['type'] === 'local' or $authtype['isuserinitiated'] )
+      if (
+           $authtype['type'] === 'local' or
+           $authtype['isuserinitiated'] != $userinitiated
+         )
         continue;
 
       $class = "\\AuthTypes\\" . ucfirst( strtolower( $authtype['type'] ) );
@@ -145,12 +150,21 @@ class Controller extends \Springboard\Controller\Visitor {
 
       try {
 
-        $ret = $auth->handleType( $authtype, $this->module, $this->action );
+        if ( $userinitiated )
+          $ret = $auth->handleForm( $authtype, $form );
+        else
+          $ret = $auth->handleType(
+            $authtype, $this->module, $this->action
+          );
+
         if ( $ret === true ) {
           $user = $this->bootstrap->getSession('user');
           $this->toSmarty['member'] = $user->toArray();
           $this->logUserLogin( $authtype['type'] . '-LOGIN');
         }
+
+        if ( $ret !== null )
+          return true;
 
       } catch( \AuthTypes\Exception $e ) {
 
@@ -175,9 +189,9 @@ class Controller extends \Springboard\Controller\Visitor {
           );
 
       }
-
     }
 
+    return false;
   }
 
   public function handleSingleLoginUsers() {
