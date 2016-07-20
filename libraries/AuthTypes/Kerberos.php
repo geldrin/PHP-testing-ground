@@ -122,6 +122,7 @@ class Kerberos extends \AuthTypes\Base {
   // sessiont
   protected function handleUser( $type, $remoteuser, $directoryuser ) {
     $userModel = $this->bootstrap->getModel('users');
+    $user = $this->bootstrap->getSession('user');
 
     // ujra van user['id'] mert a findAndMarkUser regisztralja, es be is lepteti
     // ha letezik
