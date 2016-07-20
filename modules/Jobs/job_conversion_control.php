@@ -679,7 +679,9 @@ global $debug, $jconf, $app;
         WHERE
             ins.type = 'converter' AND
             ins.disabled = 0 AND
-            ( ins.statusstorage = 'ok' OR ins.default = 1 )
+            ( (ins.statusstorage = 'ok' AND
+			ins.statusnetwork = 'ok' AND
+			ins.cpuload15min IS NOT NULL ) OR ins.default = 1 )
         ORDER BY
             ins.cpuload15min ASC,
             ins.storageworkfree DESC
