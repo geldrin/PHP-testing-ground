@@ -40,11 +40,11 @@ class Ldap extends \AuthTypes\Kerberos {
 
   private function handleDirectoryLogin( $user, $password ) {
 
-    $pos    = strpos( $externalid, '@' );
+    $pos    = strpos( $user, '@' );
     if ( $pos === false )
       $domain = '';
     else
-      $domain = strtolower( substr( $externalid, $pos + 1 ) );
+      $domain = strtolower( substr( $user, $pos + 1 ) );
 
     $found  = false;
     foreach( $this->organization['authdirectories'] as $directory ) {
