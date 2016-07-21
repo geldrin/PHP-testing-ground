@@ -63,15 +63,25 @@ class Uploads extends \Springboard\Model {
 
     if ( !file_exists( $dest ) ) {
 
-      if ( !rename( $chunkpath, $dest ) )
+      if ( !rename( $chunkpath, $dest ) ) {
+        $this->updateRow( array(
+            'status' => 'error_handlechunk_rename',
+          )
+        );
         return false;
+      }
 
       $this->setPermissions( $dest );
 
     } else {
 
-      if ( !$this->append( $chunkpath, $dest ) )
+      if ( !$this->append( $chunkpath, $dest ) ) {
+        $this->updateRow( array(
+            'status' => 'error_handlechunk_append',
+          )
+        );
         return false;
+      }
 
     }
 
@@ -133,6 +143,23 @@ class Uploads extends \Springboard\Model {
     $this->addTextFilter("status IN('uploading', 'handlechunk')");
     return $this->getArray( false, false, false, 'id DESC');
 
+  }
+
+  public function filesizeMatches() {
+    $this->ensureObjectLoaded();
+    $path = $this->getChunkPath();
+    $path = escapeshellarg( $path );
+    $command = "stat --printf=\"%s\" $path";
+
+    $size = exec( $command, $output, $exitcode );
+    if ( $exitcode != 0 )
+      throw new \Exception(
+        "size command returned non-0 exit code: $exitcode, " .
+        "command: " . $command . " " .
+        "output: " . implode("\n", $output )
+      );
+
+    return $this->row['size'] == $size;
   }
 
 }

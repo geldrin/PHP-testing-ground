@@ -1020,10 +1020,10 @@ class Controller extends \Visitor\Controller {
       );
 
       if ( !file_put_contents( $file['tmp_name'], $data ) )
-        $this->jsonOutput( array(
+        $this->chunkResponseAndLog( array(
             'status' => 'error',
             'error'  => 'upload_uploaderror',
-          )
+          ), 'Could not move temporary file!'
         );
 
       unset( $data );
@@ -1137,8 +1137,24 @@ class Controller extends \Visitor\Controller {
 
     }
 
-    // chunk count is 0 based
+    // chunk count is 0 based, vegso chunk, handleChunk mar lefutott
     if ( $chunk + 1 == $chunks ) {
+
+      // ha ez elfailel akkor nagyobb hibak vannak
+      // muszaj megegyeznie az adatbazisban tarolt file meretnek
+      // a konkret file meretevel
+      if ( !$uploadModel->filesizeMatches() ) {
+        $uploadModel->updateRow( array(
+            'status'       => 'error_filesizemismatch',
+          )
+        );
+
+        $this->chunkResponseAndLog( array(
+            'status' => 'error',
+            'error'  => 'upload_unknownerror',
+          ), 'info: uploadModel->filesizeMatches() -> false'
+        );
+      }
 
       $filepath = $uploadModel->getChunkPath();
       $uploadModel->updateRow( array(
