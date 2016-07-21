@@ -117,6 +117,13 @@ class Ldap extends \AuthDirectories\Base {
           'password' => $password,
         )
       );
+
+      // sAMAccountName mindig domain nelkuli, nyerjuk ki domain nelkul
+      // ha ugy jonne
+      $pos = strpos( $user, '@');
+      if ( $pos !== false )
+        $user = substr( $user, 0, $pos );
+
       $ret = $this->getAccountInfo( $ldap, $user );
     } catch( \Exception $e ) {
       // valami rosz, vagy a user/pw vagy az ldap server
