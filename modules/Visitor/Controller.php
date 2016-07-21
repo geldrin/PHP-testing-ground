@@ -132,10 +132,14 @@ class Controller extends \Springboard\Controller\Visitor {
 
   }
 
+  // return values:
+  // - null, nem tortent belepes
+  // - false, probaltuk de nem sikerult
+  // - true, probaltuk es sikerult
   public function handleLogin( $userinitiated, $form = null ) {
 
     if ( empty( $this->organization['authtypes'] ) )
-      return false;
+      return null;
 
     $ipaddresses = $this->getIPAddress(true);
     foreach( $this->organization['authtypes'] as $authtype ) {
@@ -164,7 +168,7 @@ class Controller extends \Springboard\Controller\Visitor {
         }
 
         if ( $ret !== null )
-          return true;
+          return $ret;
 
       } catch( \AuthTypes\Exception $e ) {
 

@@ -6,7 +6,7 @@ class Ldap extends \AuthTypes\Kerberos {
 
   public function handleForm( $type, $form ) {
     if ( $type['disabled'] < 0 )
-      return false;
+      return null;
 
     $sessionUser = $this->bootstrap->getSession('user');
     $l = $this->bootstrap->getLocalization();
