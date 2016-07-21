@@ -36,9 +36,9 @@ class Ldap extends \AuthDirectories\Base {
     $isadmin = 0;
     $ret     = array();
     $filter  =
-      '(sAMAccountName=' .
+      '(&(objectCategory=person)(objectClass=user)(sAMAccountName=' .
         \LDAP\LDAP::escape( $accountname ) .
-      ')'
+      '))'
     ;
 
     $results = $ldap->search(
