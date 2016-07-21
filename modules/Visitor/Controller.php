@@ -135,7 +135,7 @@ class Controller extends \Springboard\Controller\Visitor {
   public function handleLogin( $userinitiated, $form = null ) {
 
     if ( empty( $this->organization['authtypes'] ) )
-      return;
+      return false;
 
     $ipaddresses = $this->getIPAddress(true);
     foreach( $this->organization['authtypes'] as $authtype ) {
