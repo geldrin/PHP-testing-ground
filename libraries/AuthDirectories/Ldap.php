@@ -111,11 +111,10 @@ class Ldap extends \AuthDirectories\Base {
 
     try {
 
-      // TODO escapek tuti kellenek?
       $ldap = $this->bootstrap->getLDAP( array(
           'server'   => $this->directory['server'],
-          'username' => \LDAP\LDAP::escape( $user, true ),
-          'password' => \LDAP\LDAP::escape( $password, true ),
+          'username' => $user,
+          'password' => $password,
         )
       );
       $ret = $this->getAccountInfo( $ldap, $user );
