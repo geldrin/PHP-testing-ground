@@ -106,6 +106,9 @@ class Ldap extends \AuthDirectories\Base {
   public function handleLogin( $user, $password ) {
     $ret = array();
 
+    if ( preg_match( $this->bootstrap->config['directoryusernameregex'], $user, $match ) )
+      $user = $match['username'];
+
     try {
 
       // TODO escapek tuti kellenek?
