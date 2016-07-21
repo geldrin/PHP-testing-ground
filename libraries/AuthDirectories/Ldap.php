@@ -51,6 +51,12 @@ class Ldap extends \AuthDirectories\Base {
       )
     );
 
+    if ( $results === false )
+      throw new \Exception(
+        "LDAP user search for $accountname failed, " .
+        "org_directory was: " . var_export( $this->directory, true )
+      );
+
     // TODO jogosultsag synceles
     foreach( $results as $result ) { // csak egy result lesz
 
