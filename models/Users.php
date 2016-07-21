@@ -1175,7 +1175,7 @@ class Users extends \Springboard\Model {
       'newsletter'            => 0,
       'disabled'              => self::USER_VALIDATED,
       'issingleloginenforced' => 0,
-      'userroleid'            => $this->getRoleIDByName('member'),
+      'userroleid'            => \Model\Userroles::getRoleIDByName('member'),
     );
 
     return $this->insert( array_merge( $defaults, $data ) );
