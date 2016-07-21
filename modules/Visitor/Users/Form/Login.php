@@ -38,6 +38,10 @@ class Login extends \Visitor\Form {
     if ( $uservalid !== true ) {
       $uservalid = $this->controller->handleLogin( true, $this->form );
       $autologinAllowed = false;
+      if ( $uservalid === true ) {
+        $user = $this->bootstrap->getSession('user');
+        $userModel->select( $user['id'] );
+      }
     }
 
     // single login location check
