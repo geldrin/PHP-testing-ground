@@ -71,7 +71,7 @@
             {/if}
             <div class="arrow"></div>
             <div id="currentusermenu" class="hidden" style="width: {$columncount*216-216+241}px">
-              {if $member|userHasPrivilege:'organizations_newsadmin':'or':'isnewseditor:'isclientadmin':'iseditor'}
+              {if $member|userHasPrivilege:'organizations_newsadmin':'or':'isnewseditor':'isclientadmin':'iseditor'}
                 <div class="column first">
                     <div class="title">{#usermenu_organizations_title#}</div>
                     <ul>
@@ -79,7 +79,7 @@
                         <li><a href="{$language}/organizations/accountstatus">{#usermenu_organizations_accountstatus#}</a></li>
                       {/if}
                       <li><a href="{$language}/organizations/listnews">{#usermenu_organizations_news#}</a></li>
-                      {if $member|@userHasprivilege:'organizations_modifyintroduction':'isclientadmin'}
+                      {if $member|@userHasPrivilege:'organizations_modifyintroduction':'isclientadmin'}
                         <li><a href="{$language}/organizations/modifyintroduction">{#usermenu_organizations_introduction#}</a></li>
                       {/if}
                       {if $member|@userHasPrivilege:'users_admin':'or':'isnewseditor':'isclientadmin'}
