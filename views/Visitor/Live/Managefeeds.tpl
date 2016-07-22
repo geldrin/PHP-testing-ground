@@ -66,7 +66,7 @@
           <td class="streamactions" >
             <span class="nobr">
               {if $feed.feedtype != 'vcr'}
-                {if $member.isadmin or $member.isclientadmin}
+                {if $member|@userHasPrivilege:'live_modifystream':'isadmin':'isclientadmin'}
                 <a href="#" class="streamserverlink">{#live__streamserverlink#}</a> |
                 {/if}
                 {if $hastranscoder == false}
@@ -78,7 +78,7 @@
             </span>
           </td>
         </tr>
-        
+
         <tr class="streambroadcastwrap form">
           <td colspan="4" class="elementcolumn">
             {if $hastranscoder == false}
@@ -93,7 +93,7 @@
                 </div>
               {/if}
             {/if}
-            {if $member.isadmin or $member.isclientadmin}
+            {if $member|@userHasPrivilege:'live_modifystream':'isadmin':'isclientadmin'}
             <div class="serverlink">
               <label for="serverlink-{$stream.id}">{#live__streamserverlink#}:</label>
               <select id="serverlink-{$stream.id}" data-urltemplate="{$language}/live/view/{$feed.id},{$stream.id},{$feed.name|filenameize}?streamingserverid=_ID_">

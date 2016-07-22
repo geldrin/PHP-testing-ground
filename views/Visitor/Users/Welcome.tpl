@@ -16,7 +16,7 @@
         <div class="recordingpic">
           <a href="{$language}/channels/details/{$item.id},{$item.title|filenameize}"><img src="{$item|@indexphoto}"/></a>
         </div>
-        
+
         <div class="recordingcontent">
           <div class="title">
             <h3><a href="{$language}/channels/details/{$item.id},{$item.title|filenameize}">{$item.title|escape:html|mb_wordwrap:25}</a></h3>
@@ -125,7 +125,7 @@
   {/if}
 </ul>
 
-{if $member.isuploader or $member.ismoderateduploader}
+{if $member|@userHasPrivilege:'recordings_upload':'or':'isuploader':'ismoderateduploader'}
   <h2>{#users__welcomepage_manage#}</h2>
   <p>{#users__welcomepage_manage_intro#}</p>
   <ul>
@@ -135,15 +135,14 @@
   </ul>
 {/if}
 
-{if $member.isnewseditor or $member.isclientadmin}
+{if $member|@userHasPrivilege:'organizations_newsadmin':'or':'isnewseditor':'isclientadmin'}
   <h2>{#users__welcomepage_admin_features#}</h2>
   <p>{#users__welcomepage_admin_intro#}</p>
   <ul>
-    {if $member.isnewseditor or $member.isclientadmin}
-      <li><a href="{$language}/organizations/createnews">{#users__welcomepage_create_news#}</a></li>
-      <li><a href="{$language}/organizations/listnews">{#users__welcomepage_list_news#}</a></li>
-    {/if}
-    {if $member.isclientadmin}
+    <li><a href="{$language}/organizations/createnews">{#users__welcomepage_create_news#}</a></li>
+    <li><a href="{$language}/organizations/listnews">{#users__welcomepage_list_news#}</a></li>
+
+    {if $member|@userHasPrivilege:'genres_admin':'isclientadmin'}
       <li><a href="{$language}/organizations/modifyintroduction">{#users__welcomepage_org_intro#}</a></li>
       <li><a href="{$language}/users/admin">{#users__welcomepage_user_admin#}</a></li>
       <li><a href="{$language}/departments/admin">{#users__welcomepage_departments_admin#}</a></li>
