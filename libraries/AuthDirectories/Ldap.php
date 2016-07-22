@@ -32,12 +32,21 @@ class Ldap extends \AuthDirectories\Base {
   }
 
   private function getAccountInfo( $ldap, $accountname ) {
+
+    // sAMAccountName mindig domain nelkuli, nyerjuk ki domain nelkul
+    // ha ugy jonne
+    $pos = strpos( $accountname, '@');
+    if ( $pos !== false )
+      $user = substr( $accountname, 0, $pos );
+    else
+      $user = $accountname;
+
     $groupsModel = $this->bootstrap->getModel("groups");
     $isadmin = 0;
     $ret     = array();
     $filter  =
       '(&(objectCategory=person)(objectClass=user)(sAMAccountName=' .
-        \LDAP\LDAP::escape( $accountname ) .
+        \LDAP\LDAP::escape( $user ) .
       '))'
     ;
 
@@ -123,12 +132,6 @@ class Ldap extends \AuthDirectories\Base {
           'password' => $password,
         )
       );
-
-      // sAMAccountName mindig domain nelkuli, nyerjuk ki domain nelkul
-      // ha ugy jonne
-      $pos = strpos( $user, '@');
-      if ( $pos !== false )
-        $user = substr( $user, 0, $pos );
 
       $ret = $this->getAccountInfo( $ldap, $user );
     } catch( \Exception $e ) {

@@ -57,6 +57,7 @@ abstract class Base {
   protected function markUser( $authtype ) {
     $user = $this->bootstrap->getSession('user');
     $user[ $authtype['type'] . 'login' ] = time();
+    $user['isuserinitiated'] = $authtype['isuserinitiated'];
   }
 
   protected function shouldReauth( $authtype ) {
