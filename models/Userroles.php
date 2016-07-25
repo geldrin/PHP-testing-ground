@@ -154,8 +154,14 @@ class Userroles extends \Springboard\Model {
       $roleid = self::getRoleIDByName('public');
 
     $privileges = self::getPrivilegesForRoleID( $roleid );
+
+    if ( self::$sbootstrap->debug )
+      \Springboard\Debug::d(
+        "PRIVILEGE CHECK: role #$roleid privilege $privilege",
+        isset( $privileges[ $privilege ] )? 'true': 'false'
+      );
+
     return isset( $privileges[ $privilege ] );
   }
-
 
 }

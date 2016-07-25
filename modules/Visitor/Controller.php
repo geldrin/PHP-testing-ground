@@ -89,12 +89,15 @@ class Controller extends \Springboard\Controller\Visitor {
     }
 
     $privileges = \Model\Userroles::getPrivilegesForRoleID( $roleid );
-    $key = $module . '_' . $action;
+    $privilege = $module . '_' . $action;
 
     if ( $this->bootstrap->debug )
-      \Springboard\Debug::d("checking role #$roleid for privilege $key", $privileges);
+      \Springboard\Debug::d(
+        "PRIVILEGE CHECK: role #$roleid privilege $privilege",
+        isset( $privileges[ $privilege ] )? 'true': 'false'
+      );
 
-    if ( isset( $privileges[ $key ] ) )
+    if ( isset( $privileges[ $privilege ] ) )
       return true;
 
     // nincs privilegium, de be sincs lepve, eloszor lepjen be
@@ -105,7 +108,7 @@ class Controller extends \Springboard\Controller\Visitor {
       );
 
     // nincs privilegium, de be van lepve, hiba oldal
-    $this->toSmarty['privilege'] = $key;
+    $this->toSmarty['privilege'] = $privilege;
     $this->smartyOutput('Visitor/privilegeerror.tpl');
   }
 
