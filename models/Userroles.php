@@ -6,6 +6,7 @@ class Userroles extends \Springboard\Model {
   private static $sbootstrap;
   private static $sdb;
   private static $roleNameToID = array();
+  private static $roleidToPrivileges = array();
 
   public function setPrivileges( $privilegeids ) {
     $this->ensureID();
@@ -49,6 +50,9 @@ class Userroles extends \Springboard\Model {
     if ( !$roleid )
       return array();
 
+    if ( isset( self::$roleidToPrivileges[ $roleid ] ) )
+      return self::$roleidToPrivileges[ $roleid ];
+
     self::setupDependencies();
 
     $cache = self::$sbootstrap->getCache(
@@ -76,7 +80,7 @@ class Userroles extends \Springboard\Model {
     } else
       $data = $cache->get();
 
-    return $data;
+    return self::$roleidToPrivileges[ $roleid ] = $data;
   }
 
   public static function getRoleIDByName( $name ) {
