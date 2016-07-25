@@ -62,7 +62,7 @@
         <div id="headerlogin">
           {if $member.id}
             {assign var=columncount value=2}
-            {if $member|userHasPrivilege:'general_ignoreAccessRestrictions':'or':'isnewseditor':'isclientadmin':'iseditor'}
+            {if $member|@userHasPrivilege:'general_ignoreAccessRestrictions':'or':'isnewseditor':'isclientadmin':'iseditor'}
               {assign var=columncount value=$columncount+1}
             {/if}
 
@@ -71,7 +71,7 @@
             {/if}
             <div class="arrow"></div>
             <div id="currentusermenu" class="hidden" style="width: {$columncount*216-216+241}px">
-              {if $member|userHasPrivilege:'organizations_newsadmin':'or':'isnewseditor':'isclientadmin':'iseditor'}
+              {if $member|@userHasPrivilege:'organizations_newsadmin':'or':'isnewseditor':'isclientadmin':'iseditor'}
                 <div class="column first">
                     <div class="title">{#usermenu_organizations_title#}</div>
                     <ul>
