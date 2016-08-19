@@ -780,12 +780,16 @@ class Channels extends \Springboard\Model {
   public function getLiveArray( $filters, $start, $limit, $orderby ) {
 
     $sql = $this->getLiveSQL( $filters );
+    $limitsql = '';
+    if ( $start or $limit )
+      $limitsql = "LIMIT $start, $limit";
+
     return $this->db->getArray("
       SELECT *
       FROM channels
       WHERE " . $sql['where'] . "
       ORDER BY " . $sql['order'] . " $orderby
-      LIMIT $start, $limit
+      $limitsql
     ");
 
   }
