@@ -37,7 +37,7 @@ class Controller extends \Visitor\Controller {
   );
 
   public function getdetailsAction( $id ) {
-    $user = array(); // TODO
+    $user = $this->bootstrap->getSession('user');
     $channelModel = $this->modelOrganizationAndIDCheck(
       'channels',
       $id
