@@ -2,6 +2,25 @@
 namespace AuthDirectories;
 
 class Ldap extends \AuthDirectories\Base {
+  public function __construct( $bootstrap, $organization, $directory ) {
+    parent::__construct( $bootstrap, $organization, $directory );
+
+    // default ertekeket biztositsunk
+    $this->setDirectoryKeyIfEmpty(
+      'ldapuserquery',
+      '(&(objectCategory=person)(objectClass=user)(sAMAccountName=%USERNAME%))'
+    );
+    $this->setDirectoryKeyIfEmpty(
+      'directoryusernameregex',
+      '/^(?<username>.+)@.*$/'
+    );
+  }
+
+  private function setDirectoryKeyIfEmpty( $key, $value ) {
+    if ( !isset( $this->directory[ $key ] ) or !$this->directory[ $key ] )
+      $this->directory[ $key ] = $value;
+  }
+
   public function syncWithUser( $user ) {
     parent::syncWithUser( $user );
 
@@ -44,11 +63,13 @@ class Ldap extends \AuthDirectories\Base {
     $groupsModel = $this->bootstrap->getModel("groups");
     $isadmin = 0;
     $ret     = array();
-    $filter  =
-      '(&(objectCategory=person)(objectClass=user)(sAMAccountName=' .
-        \LDAP\LDAP::escape( $user ) .
-      '))'
-    ;
+    $filter  = strtr( $this->directory['ldapuserquery'], array(
+        '%ACCOUNTNAME%'           => \LDAP\LDAP::escape( $accountname ),
+        '%UNESCAPED_ACCOUNTNAME%' => $accountname,
+        '%USERNAME%'              => \LDAP\LDAP::escape( $user ),
+        '%UNESCAPED_USERNAME%'    => $user,
+      )
+    );
 
     $results = $ldap->search(
       $this->directory['ldapusertreedn'],
@@ -66,7 +87,6 @@ class Ldap extends \AuthDirectories\Base {
         "org_directory was: " . var_export( $this->directory, true )
       );
 
-    // TODO jogosultsag synceles
     foreach( $results as $result ) { // csak egy result lesz
 
       $accountname = $ldap::implodePossibleArray(' ', $result['sAMAccountName'] );
@@ -121,7 +141,7 @@ class Ldap extends \AuthDirectories\Base {
   public function handleLogin( $user, $password ) {
     $ret = array();
 
-    if ( preg_match( $this->bootstrap->config['directoryusernameregex'], $user, $match ) )
+    if ( preg_match( $this->directory['ldapusernameregex'], $user, $match ) )
       $user = $match['username'];
 
     try {
