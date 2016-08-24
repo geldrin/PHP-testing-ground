@@ -38,10 +38,12 @@ class Controller extends \Visitor\Controller {
 
   public function getdetailsAction( $id ) {
     $user = $this->bootstrap->getSession('user');
-    $channelModel = $this->modelOrganizationAndIDCheck(
+    $channelModel = $this->checkOrganizationAndIDWithApi(
+      true,
       'channels',
       $id
     );
+
     $ret = $channelModel->row;
 
     $recModel = $this->bootstrap->getModel('recordings');
