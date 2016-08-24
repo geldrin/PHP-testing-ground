@@ -11,7 +11,7 @@ class Ldap extends \AuthDirectories\Base {
       '(&(objectCategory=person)(objectClass=user)(sAMAccountName=%USERNAME%))'
     );
     $this->setDirectoryKeyIfEmpty(
-      'directoryusernameregex',
+      'ldapusernameregex',
       '/^(?<username>.+)@.*$/'
     );
   }
