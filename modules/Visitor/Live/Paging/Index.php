@@ -26,7 +26,7 @@ class Index extends \Visitor\Paging {
     parent::init();
 
   }
-  
+
   protected function setupCount() {
 
     $this->channelModel = $this->bootstrap->getModel('channels');
@@ -53,10 +53,13 @@ class Index extends \Visitor\Paging {
   protected function handleSearch() {
 
     $this->filters['organizationid'] = $this->controller->organization['id'];
-    $user = $this->bootstrap->getSession('user');
     if (
-         $user['id'] and
-         ( $user['isadmin'] or $user['isclientadmin'] or $user['isliveadmin'] )
+         \Model\Userroles::userHasPrivilege(
+           null,
+           'live_search',
+           'or',
+           'isadmin', 'isclientadmin', 'isliveadmin'
+         )
        ) {
       $this->controller->toSmarty['showsearch'] = true;
     } else
@@ -75,5 +78,4 @@ class Index extends \Visitor\Paging {
     }
 
   }
-
 }

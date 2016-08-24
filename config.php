@@ -346,9 +346,6 @@ $config = array(
   //-------
   // ldap belepeseket ennyi idonkent vegezzuk el ujra ha a user mar be van lepve
   'directoryreauthminutes'           => 240, // default 4 ora
-  // a regex amibe kell hogy legyen egy "username" nevezetu subpattern ami a
-  // a felhasznalo nevet nyeri ki a kerberos remote_user-bol
-  'directoryusernameregex'           => '/^(?<username>.+)@.*$/',
   'directorygroupnestedcachetimeout' => 60, // Nested group user cache refresh timeout (job_ldap_cache) in mins
   //-------
   'apidebuglog' => false,

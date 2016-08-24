@@ -4,7 +4,7 @@
 <div class="channelgradient"></div>
 <br/>
 
-{if $member.isuploader or $member.ismoderateduploader}
+{if $member|@userHasPrivilege:'recordings_upload':'or':'isuploader':'ismoderateduploader'}
   <a href="{$language}/channels/create?forward={$FULL_URI|escape:url}">{#channels__create#}</a>
   <br/>
 {/if}

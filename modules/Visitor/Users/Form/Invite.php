@@ -152,6 +152,7 @@ class Invite extends \Visitor\HelpForm {
   }
 
   // a kozos invite ami mindenkinel ugyanaz
+  // TODO dinamikus privilegiumok rework
   private function assembleBaseInvite( &$values, $templateid ) {
     $user       = $this->bootstrap->getSession('user');
     $baseInvite = array(

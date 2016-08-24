@@ -2,6 +2,25 @@
 namespace AuthDirectories;
 
 class Ldap extends \AuthDirectories\Base {
+  public function __construct( $bootstrap, $organization, $directory ) {
+    parent::__construct( $bootstrap, $organization, $directory );
+
+    // default ertekeket biztositsunk
+    $this->setDirectoryKeyIfEmpty(
+      'ldapuserquery',
+      '(&(objectCategory=person)(objectClass=user)(sAMAccountName=%USERNAME%))'
+    );
+    $this->setDirectoryKeyIfEmpty(
+      'directoryusernameregex',
+      '/^(?<username>.+)@.*$/'
+    );
+  }
+
+  private function setDirectoryKeyIfEmpty( $key, $value ) {
+    if ( !isset( $this->directory[ $key ] ) or !$this->directory[ $key ] )
+      $this->directory[ $key ] = $value;
+  }
+
   public function syncWithUser( $user ) {
     parent::syncWithUser( $user );
 
@@ -32,14 +51,25 @@ class Ldap extends \AuthDirectories\Base {
   }
 
   private function getAccountInfo( $ldap, $accountname ) {
+
+    // sAMAccountName mindig domain nelkuli, nyerjuk ki domain nelkul
+    // ha ugy jonne
+    $pos = strpos( $accountname, '@');
+    if ( $pos !== false )
+      $user = substr( $accountname, 0, $pos );
+    else
+      $user = $accountname;
+
     $groupsModel = $this->bootstrap->getModel("groups");
     $isadmin = 0;
     $ret     = array();
-    $filter  =
-      '(&(objectClass=user)(objectCategory=person)(sAMAccountName=' .
-        \LDAP\LDAP::escape( $accountname ) .
-      '))'
-    ;
+    $filter  = strtr( $this->directory['ldapuserquery'], array(
+        '%ACCOUNTNAME%'           => \LDAP\LDAP::escape( $accountname ),
+        '%UNESCAPED_ACCOUNTNAME%' => $accountname,
+        '%USERNAME%'              => \LDAP\LDAP::escape( $user ),
+        '%UNESCAPED_USERNAME%'    => $user,
+      )
+    );
 
     $results = $ldap->search(
       $this->directory['ldapusertreedn'],
@@ -50,6 +80,12 @@ class Ldap extends \AuthDirectories\Base {
         "sAMAccountName", "userPrincipalName"
       )
     );
+
+    if ( $results === false )
+      throw new \Exception(
+        "LDAP user search for $accountname failed, " .
+        "org_directory was: " . var_export( $this->directory, true )
+      );
 
     foreach( $results as $result ) { // csak egy result lesz
 
@@ -105,15 +141,18 @@ class Ldap extends \AuthDirectories\Base {
   public function handleLogin( $user, $password ) {
     $ret = array();
 
+    if ( preg_match( $this->directory['ldapusernameregex'], $user, $match ) )
+      $user = $match['username'];
+
     try {
 
-      // TODO escapek tuti kellenek?
       $ldap = $this->bootstrap->getLDAP( array(
           'server'   => $this->directory['server'],
-          'username' => \LDAP\LDAP::escape( $user, true ),
-          'password' => \LDAP\LDAP::escape( $password, true ),
+          'username' => $user,
+          'password' => $password,
         )
       );
+
       $ret = $this->getAccountInfo( $ldap, $user );
     } catch( \Exception $e ) {
       // valami rosz, vagy a user/pw vagy az ldap server

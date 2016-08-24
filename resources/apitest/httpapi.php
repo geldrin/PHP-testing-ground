@@ -1,5 +1,12 @@
 <?php
 
+class UploadException extends Exception {}
+
+class UploadAuthException   extends UploadException {}
+class UploadChunkException  extends UploadException {}
+class UploadCurlException   extends UploadException {}
+class UploadFileIOException extends UploadException {}
+
 class Api {
   public $apiurl = 'https://videosquare.eu/hu/api';
   public $debug = false;
@@ -100,7 +107,7 @@ class Api {
   protected function checkArrayValidUTF8( &$data ) {
     foreach( $data as $key => $value ) {
       if ( is_string( $value ) and !$this->isUTF8( $value ) )
-        throw new \Exception("The value of array member $key is not valid UTF8: $value\n");
+        throw new \UploadException("The value of array member $key is not valid UTF8: $value\n");
 
       if ( is_array( $value ) and !empty( $value ) )
         $this->checkArrayValidUTF8( $data[ $key ] );
@@ -111,7 +118,7 @@ class Api {
   public function modifyRecording( $id, $values, $userid ) {
 
     if ( empty( $values ) or !is_array( $values ) )
-      throw new \Exception('Nothing to modify');
+      throw new \UploadException('Nothing to modify');
 
     $this->checkArrayValidUTF8( $values );
 
@@ -166,7 +173,7 @@ class Api {
   private function executeCall( $options, $action, $skipUserCheck = false ) {
     if ( !$skipUserCheck and !$this->userchecked ) {
       if ( !$this->checkUserPassword() )
-        throw new \Exception("User/password invalid");
+        throw new \UploadAuthException("User/password invalid");
       else
         $this->userchecked = true;
     }
@@ -176,7 +183,7 @@ class Api {
 
     if ( $json === false )
 
-      throw new \Exception(
+      throw new \UploadCurlException(
         'videosquare HTTP API call CURL error: ' . curl_error( $this->curl )
       );
 
@@ -203,12 +210,12 @@ class Api {
   public function uploadRecording( $file, $language, $userid = 0, $iscontent = 0, $recordingid = 0 ) {
 
     if ( !isset( $file ) or !is_readable( $file ) )
-      throw new \Exception("Unreadable file: " . $file );
+      throw new \UploadFileIOException("Unreadable file: " . $file );
 
     $filename     = basename( $file );
     $size         = filesize( $file );
     if ( $size < 0 )
-      throw new \Exception("Filesize is negative, your PHP cannot handle large files");
+      throw new \UploadFileIOException("Filesize is negative, your PHP cannot handle large files");
 
     $chunkcount   = 1;
     $currentchunk = 0;
@@ -242,7 +249,7 @@ class Api {
 
       unlink( $tmpfile );
       if ( !$chunkinfo or !isset( $chunkinfo['status'] ) or $chunkinfo['status'] == 'error' )
-        throw new \Exception(
+        throw new \UploadChunkException(
           "Failed uploading chunk($tmpfile) #$currentchunk out of $chunkcount: " .
           var_export( $chunkinfo, true )
         );
@@ -269,7 +276,7 @@ class Api {
       $method  .= 'asuser';
 
     $options    = array(
-      CURLOPT_URL        => $this->getURL('controller', 'recordings', $method, $parameters ),
+      CURLOPT_URL => $this->getURL('controller', 'recordings', $method, $parameters),
     );
 
     return $this->executeCall( $options, "RESUMEINFO" );
@@ -283,7 +290,7 @@ class Api {
          ( file_exists( $tmpfile ) and !is_writable( $tmpfile ) ) or
          !is_writable( dirname( $tmpfile ) )
        )
-      throw new \Exception("Temporary file: $tmpfile is not writable!");
+      throw new \UploadFileIOException("Temporary file: $tmpfile is not writable!");
 
     $tmphandle  = fopen( $tmpfile , 'wb' ); // open for writing only and truncate to zero
     $filehandle = fopen( $file, 'rb' );

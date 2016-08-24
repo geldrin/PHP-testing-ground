@@ -4,7 +4,7 @@ include_once( $this->bootstrap->config['libpath'] . 'clonefish/constants.php');
 $language = \Springboard\Language::get();
 
 $config = array(
-  
+
   'action' => array(
     'type'  => 'inputHidden',
     'value' => 'submitstatistics',
@@ -57,19 +57,19 @@ $config = array(
     'displayname' => $l('analytics', 'searchrecordings'),
     'html'        => 'multiple="multiple" data-searchurl="' . $language . '/analytics/searchrecordings"',
   ),
-  
+
   'searchlive[]' => array(
     'type'        => 'select',
     'displayname' => $l('analytics', 'searchlive'),
     'html'        => 'multiple="multiple" data-searchurl="' . $language . '/analytics/searchlive"',
   ),
-  
+
   'searchgroups[]' => array(
     'type'        => 'select',
     'displayname' => $l('analytics', 'searchgroups'),
     'html'        => 'multiple="multiple" data-searchurl="' . $language . '/analytics/searchgroups"',
   ),
-  
+
   'searchusers[]' => array(
     'type'        => 'select',
     'displayname' => $l('analytics', 'searchusers'),

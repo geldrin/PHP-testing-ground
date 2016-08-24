@@ -117,7 +117,8 @@ class LDAP {
     if (!$this->config['password'])
       $this->config['password'] = null;
 
-    if ( !\ldap_bind($this->conn, $this->config['username'], $this->config['password'] ) )
+    // squelch mert warningot dob ha rosz a username/password...
+    if ( !@\ldap_bind($this->conn, $this->config['username'], $this->config['password'] ) )
       throw new \Exception("Bind failed with user " . $this->config['username'] );
 
   }

@@ -62,46 +62,44 @@
         <div id="headerlogin">
           {if $member.id}
             {assign var=columncount value=2}
-            {if $member.isnewseditor or $member.isclientadmin or $member.iseditor}
+            {if $member|@userHasPrivilege:'general_ignoreAccessRestrictions':'or':'isnewseditor':'isclientadmin':'iseditor'}
               {assign var=columncount value=$columncount+1}
             {/if}
 
-            {if ( $member.isuploader or $member.ismoderateduploader or $member.isclientadmin or $member.iseditor ) or ( $organization.islivestreamingenabled and $member.isliveadmin )}
+            {if $member|@userHasPrivilege:'recordings_upload':'or':'isuploader':'ismoderateduploader':'isclientadmin':'iseditor' or ($organization.islivestreamingenabled and $member|@userHasPrivilege:'live_managefeeds':'isliveadmin')}
               {assign var=columncount value=$columncount+1}
             {/if}
             <div class="arrow"></div>
             <div id="currentusermenu" class="hidden" style="width: {$columncount*216-216+241}px">
-              {if $member.isnewseditor or $member.isclientadmin or $member.iseditor}
+              {if $member|@userHasPrivilege:'organizations_newsadmin':'or':'isnewseditor':'isclientadmin':'iseditor'}
                 <div class="column first">
                     <div class="title">{#usermenu_organizations_title#}</div>
                     <ul>
-                      {if $member.isclientadmin}
+                      {if $member|@userHasPrivilege:'organizations_accountstatus':'isclientadmin'}
                         <li><a href="{$language}/organizations/accountstatus">{#usermenu_organizations_accountstatus#}</a></li>
                       {/if}
                       <li><a href="{$language}/organizations/listnews">{#usermenu_organizations_news#}</a></li>
-                      {if $member.isclientadmin}
+                      {if $member|@userHasPrivilege:'organizations_modifyintroduction':'isclientadmin'}
                         <li><a href="{$language}/organizations/modifyintroduction">{#usermenu_organizations_introduction#}</a></li>
                       {/if}
-                      {if $member.isnewseditor or $member.isclientadmin}
+                      {if $member|@userHasPrivilege:'users_admin':'or':'isnewseditor':'isclientadmin'}
                         <li><a href="{$language}/users/admin">{#usermenu_organizations_admin#}</a></li>
                         <li><a href="{$language}/users/invitations">{#usermenu_invitations#}</a></li>
                       {/if}
                     </ul>
                     <div class="hr"></div>
-                    {if $member.isclientadmin}
+                    {if $member|@userHasPrivilege:'analytics_statistics':'isclientadmin'}
                       <div class="title">{#usermenu_analytics_title#}</div>
                       <ul>
-                        {if $member.isclientadmin}
-                          <li><a href="{$language}/analytics/accreditedrecordings">{#usermenu_analytics_accreditedrecordings#}</a></li>
-                          <li><a href="{$language}/analytics/statistics">{#usermenu_analytics_statistics#}</a></li>
-                        {/if}
+                        <li><a href="{$language}/analytics/accreditedrecordings">{#usermenu_analytics_accreditedrecordings#}</a></li>
+                        <li><a href="{$language}/analytics/statistics">{#usermenu_analytics_statistics#}</a></li>
                       </ul>
                     {/if}
                 </div>
               {/if}
 
               <div class="column{if $columncount != 4} first{/if}">
-                {if $member.isclientadmin}
+                {if $member|@userHasPrivilege:'genres_admin':'isclientadmin'}
                   <div class="title">{#usermenu_classification_title#}</div>
                   <ul>
                     <li><a href="{$language}/genres/admin">{#usermenu_genres_admin#}</a></li>
@@ -113,10 +111,10 @@
                 <div class="title">{#usermenu_channels_title#}</div>
                 <ul>
                   <li><a href="{$language}/channels/mychannels">{#usermenu_channels_mychannels#}</a></li>
-                  {if $member.isuploader or $member.ismoderateduploader or $member.isclientadmin or $member.iseditor}<li><a href="{$language}/channels/create">{#usermenu_channels_create#}</a></li>{/if}
+                  {if $member|@userHasPrivilege:'channels_create':'isuploader':'ismoderateduploader':'isclientadmin':'iseditor'}<li><a href="{$language}/channels/create">{#usermenu_channels_create#}</a></li>{/if}
                 </ul>
               </div>
-              {if ( $member.isuploader or $member.ismoderateduploader or $member.isclientadmin or $member.iseditor) or ( $organization.islivestreamingenabled and $member.isliveadmin )}
+              {if $member|@userHasPrivilege:'recordings_upload':'or':'isuploader':'ismoderateduploader':'isclientadmin':'iseditor' or ( $organization.islivestreamingenabled and $member|@userHasPrivilege:'events_create':'isliveadmin' )}
               <div class="column">
                 {*}
                 <div class="title">{#usermenu_events_title#}</div>
@@ -133,16 +131,16 @@
                 </ul>
                 <div class="hr"></div>
 
-                {if $member.isuploader or $member.ismoderateduploader or $member.isclientadmin or $member.iseditor}
+                {if $member|@userHasPrivilege:'recordings_upload':'isuploader':'ismoderateduploader':'isclientadmin':'iseditor'}
                   <div class="title">{#usermenu_recordings_title#}</div>
                   <ul>
                     <li><a href="{$language}/recordings/myrecordings">{#usermenu_recordings_myrecordings#}</a></li>
-                    {if $member.isuploader or $member.ismoderateduploader}<li><a href="{$language}/recordings/upload">{#usermenu_recordings_upload#}</a></li>{/if}
+                    <li><a href="{$language}/recordings/upload">{#usermenu_recordings_upload#}</a></li>
                   </ul>
                   <div class="hr"></div>
                 {/if}
 
-                {if $organization.islivestreamingenabled and ( $member.isliveadmin or $member.isclientadmin)}
+                {if $organization.islivestreamingenabled and $member|@userHasPrivilege:'live_create':'or':'isliveadmin':'isclientadmin'}
                   <div class="title">{#usermenu_live_title#}</div>
                   <ul>
                     <li><a href="{$language}/live">{#usermenu_live_list#}</a></li>
@@ -156,7 +154,7 @@
                 <ul>
                   <li><a href="{$language}/users/welcome">{#usermenu_users_welcome#}</a></li>
                   <li><a href="{$language}/users/modify">{#usermenu_users_modify#}</a></li>
-                  {if !$member.source or $member.source == 'local'}
+                  {if !$member.source or $member.source == 'local' or $member.isuserinitiated}
                     <li><a href="{$language}/users/logout">{#usermenu_users_logout#}</a></li>
                   {/if}
                 </ul>

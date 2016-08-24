@@ -6,6 +6,7 @@ class Userroles extends \Springboard\Model {
   private static $sbootstrap;
   private static $sdb;
   private static $roleNameToID = array();
+  private static $roleidToPrivileges = array();
 
   public function setPrivileges( $privilegeids ) {
     $this->ensureID();
@@ -49,6 +50,9 @@ class Userroles extends \Springboard\Model {
     if ( !$roleid )
       return array();
 
+    if ( isset( self::$roleidToPrivileges[ $roleid ] ) )
+      return self::$roleidToPrivileges[ $roleid ];
+
     self::setupDependencies();
 
     $cache = self::$sbootstrap->getCache(
@@ -76,7 +80,7 @@ class Userroles extends \Springboard\Model {
     } else
       $data = $cache->get();
 
-    return $data;
+    return self::$roleidToPrivileges[ $roleid ] = $data;
   }
 
   public static function getRoleIDByName( $name ) {
@@ -105,4 +109,63 @@ class Userroles extends \Springboard\Model {
 
     return self::$roleNameToID[ $name ] = $data;
   }
+
+  // variadic func
+  // az elso argumentum utan levo argumentumok:
+  // ha a masodik argumentum egy 'or' string akkor
+  // az utana kovetkezo mezok kozul ha van permissionje a
+  // usernek azonnal viszaterunk pozitiv valasszal
+  // ha a masodik argumentum nem 'or' string akkor
+  // minden nem-elso argumentum egy permission ami
+  // be kell hogy legyen allitva ahhoz hogy pozitiv valasszal
+  // terjunk vissza
+  public static function userHasPrivilege( $user, $privilege ) {
+    self::setupDependencies();
+
+    if ( $user === null )
+      $user = self::$sbootstrap->getSession('user');
+
+    if (
+         !self::$sbootstrap->config['usedynamicprivileges'] and
+         func_num_args() > 2
+       ) {
+      $args = func_get_args();
+      $returnOnNoPermission = true;
+      foreach( $args as $key => $permission ) {
+        if ( $key === 0 or $key === 1 ) // skip user and privilege
+          continue;
+
+        if ( $key === 2 and $permission === 'or' ) {
+          $returnOnNoPermission = false;
+          continue;
+        }
+
+        // amint nincs egy permission mar elhalunk
+        if ( $returnOnNoPermission and !$user[ $permission ] )
+          return false;
+
+        // amint van egy permission mar elfogadjuk
+        if ( !$returnOnNoPermission and $user[ $permission ] )
+          return true;
+      }
+
+      return $returnOnNoPermission;
+    }
+
+    if ( $user['userroleid'] )
+      $roleid =  $user['userroleid'];
+    else
+      $roleid = self::getRoleIDByName('public');
+
+    $privileges = self::getPrivilegesForRoleID( $roleid );
+
+    if ( self::$sbootstrap->debug )
+      \Springboard\Debug::d(
+        "PRIVILEGE CHECK: role #$roleid privilege $privilege",
+        isset( $privileges[ $privilege ] )? 'true': 'false'
+      );
+
+    return isset( $privileges[ $privilege ] );
+  }
+
 }

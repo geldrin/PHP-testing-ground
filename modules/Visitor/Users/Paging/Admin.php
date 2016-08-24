@@ -17,7 +17,7 @@ class Admin extends \Visitor\Paging {
   protected $searchterm;
 
   public function init() {
-    
+
     $l                 = $this->bootstrap->getLocalization();
     $this->foreachelse = $l('users', 'foreachelse' );
     $this->title       = $l('users', 'admin_title');
@@ -29,9 +29,9 @@ class Admin extends \Visitor\Paging {
     }
 
   }
-  
+
   protected function setupCount() {
-    
+
     $this->usersModel = $this->bootstrap->getModel('users');
 
     if ( $this->searchterm ) {
@@ -42,11 +42,10 @@ class Admin extends \Visitor\Paging {
     }
 
     $this->usersModel->addFilter('organizationid', $this->controller->organization['id'] );
-    $this->usersModel->addFilter('isadmin', 0 );
     return $this->itemcount = $this->usersModel->getCount();
-    
+
   }
-  
+
   protected function getItems( $start, $limit, $orderby ) {
 
     if ( $this->searchterm ) {
@@ -59,5 +58,5 @@ class Admin extends \Visitor\Paging {
 
     return $this->usersModel->getArray( $start, $limit, false, $orderby );
   }
-  
+
 }

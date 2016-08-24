@@ -6,7 +6,7 @@ $config = array(
     'type'  => 'inputHidden',
     'value' => 'submitmodify'
   ),
-  
+
   'nickname' => array(
     'displayname' => $l('users', 'username'),
     'type'        => 'inputText',
@@ -36,7 +36,7 @@ $config = array(
       )
     ),
   ),
-  
+
   'nameprefix' => array(
     'displayname' => $l('users', 'nameprefix'),
     'type'        => 'select',
@@ -44,7 +44,7 @@ $config = array(
     'validation'  => array(
     ),
   ),
-  
+
   'namefirst' => array(
     'displayname' => $l('users', 'firstname'),
     'type'        => 'inputText',
@@ -52,7 +52,7 @@ $config = array(
       array( 'type' => 'required' ),
     ),
   ),
-  
+
   'namelast' => array(
     'displayname' => $l('users', 'lastname'),
     'type'        => 'inputText',
@@ -60,7 +60,7 @@ $config = array(
       array( 'type' => 'required' ),
     ),
   ),
-  
+
   'nameformat' => array(
     'displayname' => $l('users', 'nameformat'),
     'type'        => 'select',
@@ -91,7 +91,7 @@ $config = array(
     'validation'  => array(
     ),
   ),
-  
+
   'nameformat' => array(
     'displayname' => $l('users', 'nameformat'),
     'type'        => 'select',
@@ -104,7 +104,7 @@ $config = array(
       array( 'type' => 'required' ),
     ),
   ),
-  
+
   'password' => array(
     'displayname' => $l('users', 'newpassword'),
     'type'        => 'inputPassword',
@@ -117,7 +117,7 @@ $config = array(
       )
     )
   ),
-  
+
   'confirmpassword' => Array(
     'displayname' => $l('users', 'verifynewpassword'),
     'type'        => 'inputPassword',
@@ -128,7 +128,7 @@ $config = array(
       )
     )
   ),
-  
+
   'avatarfilename' => Array(
     'displayname' => $l('users', 'avatarfilename'),
     'type'        => 'inputFile',
@@ -158,7 +158,7 @@ $config = array(
     'validation'  => array(
     ),
   ),
-  
+
   'departments[]' => array(
     'displayname' => $l('users', 'departments'),
     'type'        => 'inputCheckboxDynamic',
@@ -183,7 +183,7 @@ $config = array(
     'validation' => array(
     ),
   ),
-  
+
   'groups[]' => array(
     'displayname' => $l('users', 'groups'),
     'type'        => 'inputCheckboxDynamic',
@@ -203,7 +203,7 @@ $config = array(
     'validation'  => array(
     ),
   ),
-  
+
 );
 
 if ( \Springboard\Language::get() == 'hu' ) {

@@ -643,17 +643,12 @@ class Livefeeds extends \Springboard\Model {
     $this->ensureObjectLoaded();
 
     if (
-         isset( $user['id'] ) and
-         (
-           $this->row['userid'] == $user['id'] or
-           (
-             $user['iseditor'] and
-             $user['organizationid'] == $this->row['organizationid']
-           ) or
-           (
-             $user['isclientadmin'] and
-             $user['organizationid'] == $this->row['organizationid']
-           )
+         $this->row['userid'] == $user['id'] or
+         \Model\Userroles::userHasPrivilege(
+           $user,
+           'general_ignoreAccessRestrictions',
+           'or',
+           'isclientadmin', 'iseditor', 'isadmin'
          )
        )
       return true;
@@ -679,7 +674,14 @@ class Livefeeds extends \Springboard\Model {
           return 'registrationrestricted';
         elseif ( $user['id'] == $this->row['userid'] )
           return true;
-        elseif ( $user['iseditor'] and $user['organizationid'] == $this->row['organizationid'] )
+        elseif (
+                 \Model\Userroles::userHasPrivilege(
+                   $user,
+                   'general_accessDepartmentOrGroupObjects',
+                   'iseditor'
+                 ) and
+                 $user['organizationid'] == $this->row['organizationid']
+               )
           return true;
 
         $feedid = "'" . $this->row['id'] . "'";

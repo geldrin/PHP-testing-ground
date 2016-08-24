@@ -1,17 +1,17 @@
 <?php
 
 $config = array(
-  
+
   'action' => array(
     'type'  => 'inputHidden',
     'value' => 'submitedit'
   ),
-  
+
   'forward' => array(
     'type'  => 'inputHidden',
     'value' => $this->application->getParameter('forward'),
   ),
-  
+
   'email' => array(
     'displayname' => $l('users', 'email'),
     'type'        => 'inputText',
@@ -47,7 +47,7 @@ $config = array(
       )
     ),
   ),
-  
+
   'nameprefix' => array(
     'displayname' => $l('users', 'nameprefix'),
     'type'        => 'select',
@@ -55,7 +55,7 @@ $config = array(
     'validation'  => array(
     ),
   ),
-  
+
   'namefirst' => array(
     'displayname' => $l('users', 'firstname'),
     'type'        => 'inputText',
@@ -63,7 +63,7 @@ $config = array(
       array( 'type' => 'required' ),
     ),
   ),
-  
+
   'namelast' => array(
     'displayname' => $l('users', 'lastname'),
     'type'        => 'inputText',
@@ -71,7 +71,7 @@ $config = array(
       array( 'type' => 'required' ),
     ),
   ),
-  
+
   'nameformat' => array(
     'displayname' => $l('users', 'nameformat'),
     'type'        => 'select',
@@ -84,7 +84,7 @@ $config = array(
       array( 'type' => 'required' ),
     ),
   ),
-  
+
   'nameformat' => array(
     'displayname' => $l('users', 'nameformat'),
     'type'        => 'select',
@@ -117,7 +117,7 @@ $config = array(
       )
     )
   ),
-  
+
   'confirmpassword' => Array(
     'displayname' => $l('users', 'verifynewpassword'),
     'type'        => 'inputPassword',
@@ -128,7 +128,7 @@ $config = array(
       )
     )
   ),
-  
+
   'permissions[]' => array(
     'displayname' => $l('users', 'permissions'),
     'type'        => 'inputCheckboxDynamic',
@@ -137,7 +137,7 @@ $config = array(
     'validation' => array(
     ),
   ),
-  
+
   'departments[]' => array(
     'displayname' => $l('users', 'departments'),
     'type'        => 'inputCheckboxDynamic',
@@ -161,7 +161,7 @@ $config = array(
     'validation' => array(
     ),
   ),
-  
+
   'groups[]' => array(
     'displayname' => $l('users', 'groups'),
     'type'        => 'inputCheckboxDynamic',
@@ -176,7 +176,7 @@ $config = array(
     'validation'  => array(
     ),
   ),
-  
+
 );
 
 if ( \Springboard\Language::get() == 'hu' ) {

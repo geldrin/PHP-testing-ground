@@ -1,15 +1,15 @@
 <?php
 $config = array(
-  
+
   'action' => array(
     'type'  => 'inputHidden',
     'value' => 'togglefeatured'
   ),
-  
+
   'recordingid' => array(
     'type' => 'inputHidden',
   ),
-  
+
   'term' => array(
     'type'        => 'inputText',
     'displayname' => $l('recordings', 'searchrecording'),
@@ -20,5 +20,5 @@ $config = array(
       </tr>
     ',
   ),
-  
+
 );

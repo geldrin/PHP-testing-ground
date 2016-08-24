@@ -2,28 +2,28 @@
 $language       = \Springboard\Language::get();
 $organizationid = $this->controller->organization['id'];
 $config = array(
-  
+
   'action' => array(
     'type'  => 'inputHidden',
     'value' => 'submitmodifycontributors'
   ),
-  
+
   'id' => array(
     'type'  => 'inputHidden',
     'value' => $this->application->getNumericParameter('id'),
   ),
-  
+
   'forward' => array(
     'type'  => 'inputHidden',
     'value' => $this->application->getParameter('forward'),
   ),
-  
+
   'fs1' => array(
     'type'   => 'fieldset',
     'legend' => $l('recordings', 'newcontributor_title'),
     'prefix' => '<span class="legendsubtitle">' . $l('recordings', 'contributors_subtitle') . '</span>',
   ),
-  
+
   'searchterm' => array(
     'type'        => 'inputText',
     'displayname' => $l('recordings', 'searchcontributor'),
@@ -36,11 +36,11 @@ $config = array(
       </tr>
     ',
   ),
-  
+
   'contributorid' => array(
     'type' => 'inputHidden',
   ),
-  
+
   'contributorrole' => array(
     'type'        => 'selectDynamic',
     'displayname' => $l('recordings', 'contributorrole'),
@@ -69,7 +69,7 @@ $config = array(
       </a>
     ',
   ),
-  
+
   'createcontributor' => array(
     'type' => 'text',
     'rowlayout' => '
@@ -82,5 +82,5 @@ $config = array(
       </tr>
     ',
   ),
-  
+
 );

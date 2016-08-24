@@ -54,7 +54,9 @@ class Controller extends \Springboard\Controller\Visitor {
 
     }
 
-    $this->handleLogin();
+    // non-userinitiated login
+    $this->handleLogin( false );
+
     $this->handleAutologin();
     $this->debugLogUsers();
     $this->handleSingleLoginUsers();
@@ -71,8 +73,10 @@ class Controller extends \Springboard\Controller\Visitor {
 
   public function checkControllerPrivilege( $module, $action ) {
     $userLoggedIn = false;
+    // ugyelni akarunk itt ra hogy ne inditsunk sessiont ha meg nincs inditva
+    // a Model\Userroles::userHasPrivilege open-coded valtozata gyk.
     if ( !\Springboard\Session::exists() ) // nincs belepve
-      $roleid = $this->getPublicRoleID();
+      $roleid = \Model\Userroles::getRoleIDByName('public');
     else {
       $user = $this->bootstrap->getSession('user');
       if ( $user['id'] ) {
@@ -81,16 +85,19 @@ class Controller extends \Springboard\Controller\Visitor {
         if ( !$roleid )
           throw new \Exception('invalid userroleid for user ' . $user['id'] );
       } else // nincs belepve
-        $roleid = $this->getPublicRoleID();
+        $roleid = \Model\Userroles::getRoleIDByName('public');
     }
 
     $privileges = \Model\Userroles::getPrivilegesForRoleID( $roleid );
-    $key = $module . '_' . $action;
+    $privilege = $module . '_' . $action;
 
     if ( $this->bootstrap->debug )
-      \Springboard\Debug::d("checking role #$roleid for privilege $key", $privileges);
+      \Springboard\Debug::d(
+        "PRIVILEGE CHECK: role #$roleid privilege $privilege",
+        isset( $privileges[ $privilege ] )? 'true': 'false'
+      );
 
-    if ( isset( $privileges[ $key ] ) )
+    if ( isset( $privileges[ $privilege ] ) )
       return true;
 
     // nincs privilegium, de be sincs lepve, eloszor lepjen be
@@ -101,16 +108,8 @@ class Controller extends \Springboard\Controller\Visitor {
       );
 
     // nincs privilegium, de be van lepve, hiba oldal
-    $this->toSmarty['privilege'] = $key;
+    $this->toSmarty['privilege'] = $privilege;
     $this->smartyOutput('Visitor/privilegeerror.tpl');
-  }
-
-  private function getPublicRoleID() {
-    $roleid = \Model\Userroles::getRoleIDByName('public');
-    if ( !$roleid )
-      throw new \Exception('no public role exists');
-
-    return $roleid;
   }
 
   public function handleAutologin() {
@@ -136,14 +135,21 @@ class Controller extends \Springboard\Controller\Visitor {
 
   }
 
-  public function handleLogin() {
+  // return values:
+  // - null, nem tortent belepes
+  // - false, probaltuk de nem sikerult
+  // - true, probaltuk es sikerult
+  public function handleLogin( $userinitiated, $form = null ) {
 
     if ( empty( $this->organization['authtypes'] ) )
-      return false;
+      return null;
 
     $ipaddresses = $this->getIPAddress(true);
     foreach( $this->organization['authtypes'] as $authtype ) {
-      if ( $authtype['type'] === 'local' or $authtype['isuserinitiated'] )
+      if (
+           $authtype['type'] === 'local' or
+           $authtype['isuserinitiated'] != $userinitiated
+         )
         continue;
 
       $class = "\\AuthTypes\\" . ucfirst( strtolower( $authtype['type'] ) );
@@ -151,12 +157,21 @@ class Controller extends \Springboard\Controller\Visitor {
 
       try {
 
-        $ret = $auth->handleType( $authtype, $this->module, $this->action );
+        if ( $userinitiated )
+          $ret = $auth->handleForm( $authtype, $form );
+        else
+          $ret = $auth->handleType(
+            $authtype, $this->module, $this->action
+          );
+
         if ( $ret === true ) {
           $user = $this->bootstrap->getSession('user');
           $this->toSmarty['member'] = $user->toArray();
           $this->logUserLogin( $authtype['type'] . '-LOGIN');
         }
+
+        if ( $ret !== null )
+          return $ret;
 
       } catch( \AuthTypes\Exception $e ) {
 
@@ -181,57 +196,60 @@ class Controller extends \Springboard\Controller\Visitor {
           );
 
       }
-
     }
 
+    return false;
   }
 
   public function handleSingleLoginUsers() {
+    if (
+         \Model\Userroles::userHasPrivilege(
+           null,
+           'users_ignoresinglelogin',
+           'isadmin'
+         )
+       )
+      return;
 
     $user = $this->bootstrap->getSession('user');
 
-    if ( $user['id'] and !$user['isadmin'] ) {
+    // mindig adatbazisbol kerdezzuk le a usert, mivel
+    // elofordulhat, hogy menetkozben akarjuk a usert
+    // kitiltani, az pedig a session alapu ellenorzesnel
+    // nem sikerulne
+    $userModel = $this->bootstrap->getModel('users');
+    $userModel->select( $user['id'] );
 
-      // mindig adatbazisbol kerdezzuk le a usert, mivel
-      // elofordulhat, hogy menetkozben akarjuk a usert
-      // kitiltani, az pedig a session alapu ellenorzesnel
-      // nem sikerulne
-      $userModel = $this->bootstrap->getModel('users');
-      $userModel->select( $user['id'] );
+    if (
+         $userModel->row['timestampdisabledafter'] and
+         strtotime( $userModel->row['timestampdisabledafter'] ) < time()
+       ) {
 
-      if (
-           $userModel->row['timestampdisabledafter'] and
-           strtotime( $userModel->row['timestampdisabledafter'] ) < time()
-         ) {
+      $user->clear();
+      $this->regenerateSessionID();
+
+      $l = $this->bootstrap->getLocalization();
+      $this->redirectWithMessage('users/login', $l('users', 'timestampdisabled') );
+
+    }
+
+    if ( $userModel->row['issingleloginenforced'] ) {
+
+      if ( !$userModel->checkSingleLoginUsers() ) {
 
         $user->clear();
         $this->regenerateSessionID();
 
         $l = $this->bootstrap->getLocalization();
-        $this->redirectWithMessage('users/login', $l('users', 'timestampdisabled') );
-
+        $this->redirectWithMessage('users/login', sprintf(
+          $l('users', 'loggedout_sessionexpired'),
+          ceil( $this->bootstrap->config['sessiontimeout'] / 60 )
+        ) );
       }
-
-      if ( $userModel->row['issingleloginenforced'] ) {
-
-        if ( !$userModel->checkSingleLoginUsers() ) {
-
-          $user->clear();
-          $this->regenerateSessionID();
-
-          $l = $this->bootstrap->getLocalization();
-          $this->redirectWithMessage('users/login', sprintf(
-            $l('users', 'loggedout_sessionexpired'),
-            ceil( $this->bootstrap->config['sessiontimeout'] / 60 )
-          ) );
-        }
-        else
-          $userModel->updateSessionInformation();
-
-      }
+      else
+        $userModel->updateSessionInformation();
 
     }
-
   }
 
   public function redirectToMainDomain() {}
@@ -305,7 +323,7 @@ class Controller extends \Springboard\Controller\Visitor {
 
     $user = $this->bootstrap->getSession('user');
 
-    if ( $id <= 0 or !isset( $user['id'] ) ) {
+    if ( $id <= 0 or !$user['id'] ) {
 
       if ( $redirectto !== false )
         $this->redirect( $redirectto );
@@ -317,7 +335,14 @@ class Controller extends \Springboard\Controller\Visitor {
     $model = $this->bootstrap->getModel( $table );
     $model->addFilter('id', $id );
 
-    if ( $user['iseditor'] or $user['isclientadmin'] )
+    if (
+         \Model\Userroles::userHasPrivilege(
+           $user,
+           'general_manageOrganizationObjects',
+           'or',
+           'iseditor', 'isclientadmin'
+         )
+       )
       $model->addTextFilter("
         userid = '" . $user['id'] . "' OR
         organizationid = '" . $user['organizationid'] . "'
@@ -336,7 +361,6 @@ class Controller extends \Springboard\Controller\Visitor {
     $model->row = $row;
 
     return $model;
-
   }
 
   public function output( $string, $disablegzip = false, $disablekill = false ) {

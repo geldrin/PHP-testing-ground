@@ -3,10 +3,10 @@ namespace Model;
 
 class Organizations_news extends \Springboard\Model\Multilingual {
   public $multistringfields = array( 'title', 'lead', 'body' );
-  
+
   public function getStringsForLanguage( $language ) {
     $this->ensureID();
-    
+
     return $this->db->getRow("
       SELECT
         slead.value AS lead,
@@ -27,12 +27,12 @@ class Organizations_news extends \Springboard\Model\Multilingual {
         sbody.language       = '$language'
     ");
   }
-  
+
   protected static function getNewsSringsSQL( $language = null, $skipselect = false ) {
-    
+
     if ( !$language )
       $language = \Springboard\Language::get();
-    
+
     if ( $skipselect )
       $sql = '';
     else
@@ -41,7 +41,7 @@ class Organizations_news extends \Springboard\Model\Multilingual {
         stitle.value AS title,
         sbody.value  AS body
       ";
-    
+
     return $sql . "
       FROM
         organizations_news AS orgn,
@@ -59,27 +59,34 @@ class Organizations_news extends \Springboard\Model\Multilingual {
         stitle.value         <> '' AND
         sbody.value          <> ''
     ";
-    
+
   }
-  
+
   protected static function getNewsUserWhere( $organizationid, $user ) {
-    
+
     $where = '';
-    if ( !$user['iseditor'] or $user['organizationid'] != $organizationid ) {
-      
+    if (
+         !\Model\Userroles::userHasPrivilege(
+            $user,
+            'organizations_newsadmin',
+            'or',
+            'iseditor', 'isnewseditor'
+          )
+       ) {
+
       $where = " AND
         orgn.disabled = '0' AND
         orgn.starts <= NOW() AND orgn.ends >= NOW()
       ";
-      
+
     }
-    
+
     return $where;
-    
+
   }
-  
+
   public function getRecentNews( $limit, $organizationid ) {
-    
+
     $items = $this->db->getArray("
       SELECT orgn.*,
       " . self::getNewsSringsSQL() . " AND
@@ -89,20 +96,27 @@ class Organizations_news extends \Springboard\Model\Multilingual {
       ORDER BY weight, starts DESC
       LIMIT 0, $limit
     ");
-    
+
     return $items;
-    
+
   }
-  
+
   public function selectAccessibleNews( $id, $organizationid, $user, $language = null ) {
-    
+
     if ( $id <= 0 )
       return false;
-    
+
     if ( !$language )
       $language = \Springboard\Language::get();
-    
-    if ( $user['isnewseditor'] and $user['organizationid'] == $organizationid )
+
+    if (
+         \Model\Userroles::userHasPrivilege(
+           $user,
+           'organizations_newsadmin',
+           'or',
+           'iseditor', 'isnewseditor'
+         )
+       )
       $where = "orgn.id = '" . $id . "'";
     else
       $where = "
@@ -111,7 +125,7 @@ class Organizations_news extends \Springboard\Model\Multilingual {
         orgn.starts <= NOW() AND orgn.ends >= NOW() AND
         orgn.id = '" . $id . "'
       ";
-    
+
     $data = $this->db->getRow("
       SELECT
         orgn.id,
@@ -120,19 +134,19 @@ class Organizations_news extends \Springboard\Model\Multilingual {
       " . self::getNewsSringsSQL( $language ) . " AND
         $where
     ");
-    
+
     if ( !empty( $data ) ) {
-      
+
       $this->id  = $data['id'];
       return $data;
-      
+
     } else
       return false;
-    
+
   }
-  
+
   public function getNewsCount( $organizationid, $user ) {
-    
+
     return $this->db->getOne("
       SELECT COUNT(*)
         " . self::getNewsSringsSQL( null, true ) . " AND
@@ -140,11 +154,11 @@ class Organizations_news extends \Springboard\Model\Multilingual {
         " . self::getNewsUserWhere( $organizationid, $user ) . "
       LIMIT 1
     ");
-    
+
   }
-  
+
   public function getNewsArray( $start, $limit, $orderby, $organizationid, $user ) {
-    
+
     return $this->db->getArray("
       SELECT orgn.*,
         " . self::getNewsSringsSQL() . " AND
@@ -153,7 +167,7 @@ class Organizations_news extends \Springboard\Model\Multilingual {
       ORDER BY $orderby
       LIMIT $start, $limit
     ");
-    
+
   }
-  
+
 }

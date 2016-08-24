@@ -41,7 +41,7 @@
           <option value="private"{if $smarty.get.publicstatus == "private"} selected="selected"{/if}>{#recordings__myrecordings_publicstatus_private#}</option>
         </select>
       </div>
-      {if false and ( $member.isadmin or $member.iseditor or $member.isclientadmin )}
+      {if false and $member|@userHasPrivilege:'recordings_createintrooutro':'or':'isadmin':'iseditor':'isclientadmin'}
         <div class="elem">
           <label for="isintrooutro">{#recordings__myrecordings_isintrooutro#}:</label>
           <select name="isintrooutro" id="isintrooutro">

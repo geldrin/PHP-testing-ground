@@ -31,9 +31,9 @@ class Recordings extends \Visitor\Paging {
   protected $user;
   protected $perpageselector = false;
   protected $pagestoshow = 3;
-  
+
   public function init() {
-    
+
     $l                  = $this->bootstrap->getLocalization();
     $this->user         = $this->bootstrap->getSession('user');
     $this->foreachelse  = $l('groups', 'listrecordings_foreachelse');
@@ -41,46 +41,46 @@ class Recordings extends \Visitor\Paging {
       'groups',
       $this->application->getNumericParameter('id')
     );
-    
+
     if ( $this->groupModel->isMember( $this->user ) !== true )
       $this->controller->redirectToController('contents', 'nopermission');
-    
+
     $this->title                             = $this->groupModel->row['name'];
     $this->controller->toSmarty['listclass'] = 'recordinglist';
     $this->controller->toSmarty['group']     = $this->groupModel->row;
     parent::init();
-    
+
   }
-  
+
   protected function setupCount() {
-    
+
     $this->recordingsModel = $this->bootstrap->getModel('recordings');
     $this->itemcount =
       $this->recordingsModel->getGroupRecordingsCount(
         $this->groupModel->id
       );
-    
+
   }
-  
+
   protected function getItems( $start, $limit, $orderby ) {
-    
+
     $items = $this->recordingsModel->getGroupRecordings(
       $this->groupModel->id,
       $start,
       $limit,
       $orderby
     );
-    
+
     $items = $this->recordingsModel->addPresentersToArray(
       $items,
       true,
       $this->controller->organization['id']
     );
-    
+
     return $items;
-    
+
   }
-  
+
   protected function getUrl() {
     return
       $this->controller->getUrlFromFragment( $this->module . '/' . $this->action ) .
@@ -88,9 +88,9 @@ class Recordings extends \Visitor\Paging {
       \Springboard\Filesystem::filenameize( $this->groupModel->row['name'] )
     ;
   }
-  
+
   protected function setupPager() {
     parent::setupPager();
   }
-  
+
 }

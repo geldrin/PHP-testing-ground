@@ -6,7 +6,7 @@ $config = array(
     'type'  => 'inputHidden',
     'value' => 'submitcreate'
   ),
-  
+
   'parent' => array(
     'type'  => 'inputHidden',
     'value' => $this->application->getNumericParameter('parent'),
@@ -24,7 +24,7 @@ $config = array(
       ),
     ),
   ),
-  
+
   'subtitle' => array(
     'displayname' => $l('channels', 'subtitleoriginal'),
     'type'        => 'inputText',
@@ -37,7 +37,7 @@ $config = array(
       ),
     ),
   ),
-  
+
   'description' => array(
     'displayname' => $l('channels', 'descriptionoriginal'),
     'type'        => 'textarea',
@@ -49,7 +49,7 @@ $config = array(
       ),
     ),
   ),
-  
+
   'channeltypeid' => array(
     'displayname' => $l('channels', 'channeltype'),
     'type'        => 'selectDynamic',
@@ -83,13 +83,13 @@ include( $this->bootstrap->config['modulepath'] . 'Visitor/Form/Configs/Accessty
 if (
      $this->parentchannelModel and $this->parentchannelModel->id
    ) {
-  
+
   $config['accesstype']['postfix']    = $l('channels', 'accesstype_disabled');
   $config['departments[]']['postfix'] = '';
   $config['accesstype']['html']       = 'disabled="disabled"';
   $config['departments[]']['html']    = 'disabled="disabled"';
   $config['groups[]']['html']         = 'disabled="disabled"';
-  
+
   $channelid = $this->channelroot['id'];
   $config['departments[]']['valuesql'] = "
     SELECT departmentid

@@ -8,17 +8,17 @@ $tinymceconfig = $l->getLov('tinymcevisitor') + array(
 );
 
 $config = Array(
-  
+
   'action' => Array(
     'type'  => 'inputHidden',
     'value' => 'submitmodifyintroduction'
   ),
-  
+
   'forward' => Array(
     'type'  => 'inputHidden',
     'value' => $this->application->getParameter('forward'),
   ),
-  
+
   'introduction_stringid' => Array(
     'displayname' => $l('organizations', 'introduction'),
     'type'        => 'tinyMCEMultiLanguage2',
@@ -30,5 +30,5 @@ $config = Array(
     'validation'  => Array(
     )
   ),
-  
+
 );

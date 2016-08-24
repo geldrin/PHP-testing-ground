@@ -6,18 +6,18 @@ $config = array(
     'type'  => 'inputHidden',
     'value' => 'submitcreate'
   ),
-  
+
   'parent' => array(
     'type'  => 'inputHidden',
     'value' => $this->application->getNumericParameter('parent'),
   ),
-  
+
   'isliveevent' => array(
     'type'     => 'inputHidden',
     'value'    => '1',
     'readonly' => true,
   ),
-  
+
   'title' => array(
     'displayname' => $l('live', 'title'),
     'type'        => 'inputText',
@@ -30,7 +30,7 @@ $config = array(
       ),
     ),
   ),
-  
+
   'subtitle' => array(
     'displayname' => $l('live', 'subtitle'),
     'type'        => 'inputText',
@@ -43,7 +43,7 @@ $config = array(
       ),
     ),
   ),
-  
+
   'description' => array(
     'displayname' => $l('live', 'description'),
     'type'        => 'textarea',
@@ -55,7 +55,7 @@ $config = array(
       ),
     ),
   ),
-  
+
   'channeltypeid' => array(
     'displayname' => $l('live', 'channelsubtype'),
     'type'        => 'selectDynamic',
@@ -82,7 +82,7 @@ $config = array(
       */
     ),
   ),
-  
+
   'starttimestamp' => array(
     'displayname' => $l('live', 'starttimestamp'),
     'type'        => 'inputText',
@@ -101,7 +101,7 @@ $config = array(
       )
     ),
   ),
-  
+
   'endtimestamp' => array(
     'displayname' => $l('live', 'endtimestamp'),
     'type'        => 'inputText',
@@ -128,18 +128,19 @@ if (
      $this->parentchannelModel and $this->parentchannelModel->id and
      !$this->parentchannelModel->row['ispublic']
    ) {
-  
+
   $config['ispublic']['html']    = 'disabled="disabled"';
   $config['ispublic']['postfix'] = $l('live', 'ispublic_disabled');
-  
+
 }
 
-$user = $this->bootstrap->getSession('user');
 if (
-     $user['iseditor'] or
-     $user['isclientadmin'] or
-     $user['isliveadmin'] or
-     $user['isadmin']
+     \Model\Userroles::userHasPrivilege(
+       null,
+       'live_feature',
+       'or',
+       'iseditor', 'isclientadmin', 'isliveadmin', 'isadmin'
+     )
    ) {
 
   $config['isfeatured'] = array(

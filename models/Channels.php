@@ -780,12 +780,16 @@ class Channels extends \Springboard\Model {
   public function getLiveArray( $filters, $start, $limit, $orderby ) {
 
     $sql = $this->getLiveSQL( $filters );
+    $limitsql = '';
+    if ( $start or $limit )
+      $limitsql = "LIMIT $start, $limit";
+
     return $this->db->getArray("
       SELECT *
       FROM channels
       WHERE " . $sql['where'] . "
       ORDER BY " . $sql['order'] . " $orderby
-      LIMIT $start, $limit
+      $limitsql
     ");
 
   }
@@ -929,13 +933,12 @@ class Channels extends \Springboard\Model {
       $channel = $this->findRoot( $channel );
 
     if (
-         isset( $user['id'] ) and
-         (
-           $channel['userid'] == $user['id'] or
-           (
-             ( $user['isclientadmin'] ) and
-             $user['organizationid'] == $channel['organizationid']
-           )
+         $channel['userid'] == $user['id'] or
+         \Model\Userroles::userHasPrivilege(
+           $user,
+           'general_ignoreAccessRestrictions',
+           'or',
+           'isclientadmin', 'iseditor', 'isadmin'
          )
        )
       return true;
@@ -975,7 +978,14 @@ class Channels extends \Springboard\Model {
           return 'registrationrestricted';
         elseif ( $user['id'] == $channel['userid'] )
           return true;
-        elseif ( $user['iseditor'] and $user['organizationid'] == $channel['organizationid'] )
+        elseif (
+                 \Model\Userroles::userHasPrivilege(
+                   $user,
+                   'general_accessDepartmentOrGroupObjects',
+                   'iseditor'
+                 ) and
+                 $user['organizationid'] == $channel['organizationid']
+               )
           return true;
 
         $channelid = "'" . $channel['id'] . "'";

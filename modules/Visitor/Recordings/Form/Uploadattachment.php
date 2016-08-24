@@ -6,14 +6,14 @@ class Uploadattachment extends \Visitor\HelpForm {
   public $configfile   = 'Uploadattachment.php';
   public $template     = 'Visitor/genericform.tpl';
   public $recordingModel;
-  
+
   public function init() {
-    
+
     $this->recordingModel = $this->controller->modelOrganizationAndUserIDCheck(
       'recordings',
       $this->application->getNumericParameter('id')
     );
-    
+
     $back =
       $this->application->getParameter(
         'forward',
@@ -27,21 +27,21 @@ class Uploadattachment extends \Visitor\HelpForm {
       $this->recordingModel->getAttachments( false )
     ;
     parent::init();
-    
+
   }
-  
+
   public function onComplete() {
-    
+
     $l      = $this->bootstrap->getLocalization();
     $user   = $this->bootstrap->getSession('user');
     $values = $this->form->getElementValues( 0 );
-    
+
     if ( $_FILES['file']['error'] != 0 ) {
-      
+
       $this->form->addMessage( $l('recordings', 'attachment_help') . ' (#' . $_FILES['file']['error'] . ')' );
       $this->form->invalidate();
       return;
-      
+
     }
 
     if ( !$values['title'] )
@@ -55,34 +55,34 @@ class Uploadattachment extends \Visitor\HelpForm {
     $values['sourceip']        = $this->bootstrap->config['node_sourceip'];
     $values['recordingid']     = $this->recordingModel->id;
     $values['userid']          = $user['id'];
-    
+
     $attachmentModel->insert( $values );
     $destination =
       $this->bootstrap->config['uploadpath'] . 'attachments/' .
       $attachmentModel->id . '.' . $values['masterextension']
     ;
-    
+
     if ( !move_uploaded_file( $_FILES['file']['tmp_name'],  $destination ) ) {
-      
+
       $attachmentModel->updateRow( array(
           'status' => 'failedmove',
         )
       );
-      
+
       $this->form->addMessage('System error');
       $this->form->invalidate();
       return;
-      
+
     } else
       $attachmentModel->updateRow( array(
           'status' => 'uploaded',
         )
       );
-    
+
     $this->controller->toSmarty['attachments']  =
       $this->recordingModel->getAttachments( false )
     ;
-    
+
   }
-  
+
 }

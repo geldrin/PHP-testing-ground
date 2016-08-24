@@ -12,20 +12,20 @@ class Controller extends \Visitor\Controller {
     'recordings' => 'member',
     'searchuser' => 'member',
   );
-  
+
   public $forms = array(
     'create' => 'Visitor\\Groups\\Form\\Create',
     'modify' => 'Visitor\\Groups\\Form\\Modify',
   );
-  
+
   public $paging = array(
     'index'      => 'Visitor\\Groups\\Paging\\Index',
     'users'      => 'Visitor\\Groups\\Paging\\Users',
     'recordings' => 'Visitor\\Groups\\Paging\\Recordings',
   );
-  
+
   public function deleteAction() {
-    
+
     $groupModel = $this->modelOrganizationAndUserIDCheck(
       'groups',
       $this->application->getNumericParameter('id')
@@ -38,11 +38,11 @@ class Controller extends \Visitor\Controller {
     $this->redirect(
       $this->application->getParameter('forward', 'groups/index' )
     );
-    
+
   }
-  
+
   public function deleteuserAction() {
-    
+
     $groupModel = $this->modelOrganizationAndIDCheck(
       'groups',
       $this->application->getNumericParameter('id')
@@ -56,7 +56,11 @@ class Controller extends \Visitor\Controller {
     if (
          $userid == $user['id'] or
          $user['id'] == $groupModel->row['userid'] or
-         $user['isclientadmin']
+         \Model\Userroles::userHasPrivilege(
+           $user,
+           'groups_deleteanyuser',
+           'isclientadmin'
+         )
        )
       $groupModel->deleteUser( $userid );
 
@@ -67,36 +71,36 @@ class Controller extends \Visitor\Controller {
         \Springboard\Filesystem::filenameize( $groupModel->row['name'] )
       )
     );
-    
+
   }
-  
+
   public function searchuserAction() {
-    
+
     $term   = $this->application->getParameter('term');
     $output = array(
     );
-    
+
     if ( !$term )
       $this->jsonoutput( $output );
-    
+
     $userModel = $this->bootstrap->getModel('users');
     $results   = $userModel->search(
       $term,
       $this->organization['id']
     );
-    
+
     if ( empty( $results ) )
       $this->jsonoutput( $output );
-    
+
     $this->bootstrap->includeTemplatePlugin('nameformat');
     foreach( $results as $result ) {
-      
+
       $data = array(
         'value' => $result['id'],
         'label' => smarty_modifier_nameformat( $result ),
         'img'   => $this->bootstrap->staticuri,
       );
-      
+
       if ( $result['avatarstatus'] == 'onstorage' )
         $data['img'] .= sprintf(
           'files/users/%s/avatar/%s.jpg',
@@ -105,13 +109,13 @@ class Controller extends \Visitor\Controller {
         );
       else
         $data['img'] .= 'images/avatar_placeholder.png';
-      
+
       $output[] = $data;
-      
+
     }
-    
+
     $this->jsonoutput( $output );
-    
+
   }
-  
+
 }

@@ -6,12 +6,12 @@ $config = array(
     'type'  => 'inputHidden',
     'value' => 'submitcreatestream'
   ),
-  
+
   'id' => array(
     'type'  => 'inputHidden',
     'value' => $this->application->getNumericParameter('id'),
   ),
-  
+
   'qualitytag' => array(
     'displayname' => $l('live', 'quality'),
     'type'        => 'inputText',
@@ -24,7 +24,7 @@ $config = array(
       ),
     ),
   ),
-  
+
   'weight' => array(
     'displayname' => $l('live', 'stream_weight'),
     'postfix'     => '<div class="smallinfo">' . $l('live', 'stream_weight_postfix') . '</div>',
@@ -41,7 +41,7 @@ $config = array(
       ),
     ),
   ),
-  
+
   'compatibility[]' => array(
     'displayname' => $l('live', 'compatibility'),
     'type'        => 'inputCheckboxDynamic',
@@ -58,5 +58,5 @@ $config = array(
       ),
     ),
   ),
-  
+
 );

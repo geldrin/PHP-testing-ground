@@ -27,6 +27,62 @@ class Controller extends \Visitor\Controller {
     'mychannels'     => 'Visitor\\Channels\\Paging\\Mychannels',
   );
 
+  public $apisignature = array(
+    // crestron livefeed lekeres pin alapjan
+    'getdetails' => array(
+      'id' => array(
+        'type' => 'id',
+      ),
+    ),
+  );
+
+  public function getdetailsAction( $id ) {
+    $user = $this->bootstrap->getSession('user');
+    $channelModel = $this->modelOrganizationAndIDCheck(
+      'channels',
+      $id
+    );
+    $ret = $channelModel->row;
+
+    $recModel = $this->bootstrap->getModel('recordings');
+
+    $channelids = array_merge(
+      array( $channelModel->id ),
+      $channelModel->findChildrenIDs()
+    );
+
+    $ret['recordings'] = array(
+      'count' => $recModel->getChannelRecordingsCount(
+        $user,
+        $channelids
+      ),
+      'data' => $recModel->getChannelRecordings(
+        $user,
+        $channelids,
+        false,
+        false,
+        false
+      )
+    );
+    $ret['recordings']['data'] = $recModel->addPresentersToArray(
+      $ret['recordings']['data'],
+      true,
+      $this->organization['id']
+    );
+
+    $filters = array(
+      'organizationid' => $this->organization['id'],
+      'showall' => '1',
+    );
+    $ret['livefeeds'] = array(
+      'count' => 0,
+      'data'  => $channelModel->getFeedsWithStreams(),
+    );
+    $ret['livefeeds']['count'] = count( $ret['livefeeds']['data'] );
+
+    return $ret;
+  }
+
   public function deleteAction() {
 
     $channelModel = $this->modelOrganizationAndIDCheck(

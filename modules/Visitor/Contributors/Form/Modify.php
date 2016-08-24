@@ -4,15 +4,15 @@ class Modify extends \Visitor\Contributors\Form\Create {
   public $configfile = 'Modify.php';
   public $template   = 'Visitor/genericform.tpl';
   public $needdb     = true;
-  
+
   protected $contribroleModel;
   protected $contributorModel;
-  
+
   public function init() {
-    
+
     parent::init();
     $user = $this->bootstrap->getSession('user');
-    
+
     $this->contribroleModel = $this->controller->modelIDCheck(
       'contributors_roles',
       $this->application->getNumericParameter('crid')
@@ -25,43 +25,45 @@ class Modify extends \Visitor\Contributors\Form\Create {
       'contributors',
       $this->contribroleModel->row['contributorid']
     );
-    
+
     if (
          $this->contributorModel->row['createdby'] != $user['id'] and
-         (
-           ( !$user['isclientadmin'] and !$user['isadmin'] and !$user['iseditor'] ) or
-           $user['organizationid'] != $this->contributorModel->row['organizationid']
+         !\Model\Userroles::userHasPrivilege(
+           $user,
+           'contributors_modifyanycontributor',
+           'or',
+           'isclientadmin', 'isadmin', 'iseditor'
          )
        )
       $this->controller->redirect('');
-    
+
     foreach( $this->contribvalues as $value )
       $this->values[ $value ] = $this->contributorModel->row[ $value ];
-    
+
     $this->values['contributorrole']  = $this->contribroleModel->row['roleid'];
-    
+
   }
-  
+
   public function onComplete() {
-    
+
     $values = $this->form->getElementValues( 0 );
     $l      = $this->bootstrap->getLocalization();
     $user   = $this->bootstrap->getSession('user');
-    
+
     $role = array(
       'roleid' => $values['contributorrole'],
     );
-    
+
     $contributor = array();
     foreach( $this->contribvalues as $value )
       $contributor[ $value ] = $values[ $value ];
-    
+
     $this->contributorModel->updateRow( $contributor );
     $this->contribroleModel->updateRow( $role );
-    
+
     if ( isset( $values['indexphotofilename'] ) and $values['indexphotofilename'] )
       $this->contributorModel->insertAndUpdateIndexPhoto( $values['indexphotofilename'] );
-    
+
     $this->controller->toSmarty['recordingid']  = $this->recordingsModel->id;
     $this->controller->toSmarty['contributors'] =
       $this->recordingsModel->getContributorsWithRoles()
@@ -71,7 +73,7 @@ class Modify extends \Visitor\Contributors\Form\Create {
         'html'   => $this->controller->fetchSmarty('Visitor/Recordings/Contributors.tpl'),
       )
     );
-    
+
   }
-  
+
 }

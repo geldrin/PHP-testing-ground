@@ -8,32 +8,32 @@ $tinymceconfig = $l->getLov('tinymcevisitor') + array(
 );
 
 $config = Array(
-  
+
   'action' => Array(
     'type'  => 'inputHidden',
     'value' => 'submitcreatenews'
   ),
-  
+
   'forward' => Array(
     'type'  => 'inputHidden',
     'value' => $this->application->getParameter('forward'),
   ),
-  
+
   'title_stringid' => Array(
     'type'  => 'inputHidden',
     'value' => '0',
   ),
-  
+
   'lead_stringid' => Array(
     'type'  => 'inputHidden',
     'value' => '0',
   ),
-  
+
   'body_stringid' => Array(
     'type'  => 'inputHidden',
     'value' => '0',
   ),
-  
+
   'starts' => Array(
     'displayname' => $l('organizations', 'news_starts'),
     'type'        => 'inputText',
@@ -51,7 +51,7 @@ $config = Array(
       ),
     ),
   ),
-  
+
   'ends' => Array(
     'displayname' => $l('organizations', 'news_ends'),
     'type'        => 'inputText',
@@ -69,7 +69,7 @@ $config = Array(
       ),
     ),
   ),
-  
+
   'title' => Array(
     'displayname' => $l('organizations', 'news_title'),
     'type'        => 'text',
@@ -84,7 +84,7 @@ $config = Array(
 );
 
 foreach( $this->bootstrap->config['languages'] as $language ) {
-  
+
   $config['title_' . $language ] = Array(
     'type'        => 'inputText',
     'prefix'      => $l->getlov('languages', null, $language ) . ':',
@@ -92,7 +92,7 @@ foreach( $this->bootstrap->config['languages'] as $language ) {
     'validation'  => Array(
     )
   );
-  
+
 }
 
 $config['lead'] = Array(
@@ -112,7 +112,7 @@ $config['lead'] = Array(
 );
 
 foreach( $this->bootstrap->config['languages'] as $language ) {
-  
+
   $config['lead_' . $language ] = Array(
     'type'        => 'textarea',
     'prefix'      => $l->getlov('languages', null, $language ) . ':',
@@ -120,7 +120,7 @@ foreach( $this->bootstrap->config['languages'] as $language ) {
     'validation'  => Array(
     )
   );
-  
+
 }
 
 $config['body'] = Array(
@@ -138,7 +138,7 @@ $config['body'] = Array(
 );
 
 foreach( $this->bootstrap->config['languages'] as $language ) {
-  
+
   $config['body_' . $language ] = Array(
     'rowlayout'   => '%prefix%%element%%postfix%%errordiv%<br/>',
     'prefix'      => $l->getlov('languages', null, $language ) . ':',
@@ -150,7 +150,7 @@ foreach( $this->bootstrap->config['languages'] as $language ) {
     'validation'  => Array(
     )
   );
-  
+
 }
 
 $config['weight'] = Array(

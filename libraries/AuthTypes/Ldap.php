@@ -6,7 +6,7 @@ class Ldap extends \AuthTypes\Kerberos {
 
   public function handleForm( $type, $form ) {
     if ( $type['disabled'] < 0 )
-      return false;
+      return null;
 
     $sessionUser = $this->bootstrap->getSession('user');
     $l = $this->bootstrap->getLocalization();
@@ -40,11 +40,11 @@ class Ldap extends \AuthTypes\Kerberos {
 
   private function handleDirectoryLogin( $user, $password ) {
 
-    $pos    = strpos( $externalid, '@' );
+    $pos    = strpos( $user, '@' );
     if ( $pos === false )
       $domain = '';
     else
-      $domain = strtolower( substr( $externalid, $pos + 1 ) );
+      $domain = strtolower( substr( $user, $pos + 1 ) );
 
     $found  = false;
     foreach( $this->organization['authdirectories'] as $directory ) {

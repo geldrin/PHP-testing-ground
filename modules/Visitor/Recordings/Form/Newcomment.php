@@ -7,7 +7,7 @@ class Newcomment extends \Visitor\Form {
   private $anonUser;
 
   public function init() {
-    
+
     $this->recordingsModel = $this->controller->modelIDCheck(
       'recordings',
       $this->application->getNumericParameter('id')
@@ -22,9 +22,9 @@ class Newcomment extends \Visitor\Form {
       return $this->controller->handleAccessFailure('member');
 
     parent::init();
-    
+
   }
-  
+
   public function onComplete() {
 
     $values = $this->form->getElementValues( 0 );
@@ -69,7 +69,7 @@ class Newcomment extends \Visitor\Form {
 
     $values['timestamp'] = date('Y-m-d H:i:s');
     $values['ipaddress'] = implode(', ', $this->controller->getIPAddress( true ) );
-    
+
     $comment = $this->recordingsModel->insertComment(
       $values, $this->controller->commentsperpage
     );
@@ -95,7 +95,7 @@ class Newcomment extends \Visitor\Form {
     $this->controller->jsonoutput( $output );
 
   }
-  
+
   private function handleEmail( $comment ) {
 
     if ( !$this->recordingsModel->row['notifyaboutcomments'] )

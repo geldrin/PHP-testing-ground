@@ -5,19 +5,19 @@ class Modifysharing extends \Visitor\Recordings\ModifyForm {
   public $configfile   = 'Modifysharing.php';
   public $template     = 'Visitor/genericform.tpl';
   public $needdb       = true;
-  
+
   public function init() {
-    
+
     parent::init();
-    
+
     if ( $this->recordingsModel->row['visiblefrom'] )
       $this->values['wanttimelimit'] = 1;
-    
+
     if ( $this->values['visiblefrom'] )
       $this->values['visiblefrom']  = substr( $this->values['visiblefrom'], 0, 10 );
     else
       unset( $this->values['visiblefrom'] );
-    
+
     if ( $this->values['visibleuntil'] )
       $this->values['visibleuntil'] = substr( $this->values['visibleuntil'], 0, 10 );
     else
@@ -29,9 +29,9 @@ class Modifysharing extends \Visitor\Recordings\ModifyForm {
       unset( $this->values['featureduntil'] );
 
   }
-  
+
   public function onComplete() {
-    
+
     $values = $this->form->getElementValues( 0 );
     $oldapprovalstatus = $this->recordingsModel->row['approvalstatus'];
 
@@ -47,7 +47,7 @@ class Modifysharing extends \Visitor\Recordings\ModifyForm {
     $this->recordingsModel->updateFulltextCache( true );
     $this->recordingsModel->updateChannelIndexPhotos(); // a channel szamlalok miatt
     $this->recordingsModel->updateCategoryCounters();
-    
+
     if (
          $oldapprovalstatus != $this->recordingsModel->row['approvalstatus'] and
          $this->recordingsModel->row['approvalstatus'] == 'pending'
@@ -77,7 +77,7 @@ class Modifysharing extends \Visitor\Recordings\ModifyForm {
     $this->controller->redirect(
       $this->application->getParameter('forward', 'recordings/myrecordings')
     );
-    
+
   }
-  
+
 }

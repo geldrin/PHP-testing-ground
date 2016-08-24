@@ -22,7 +22,7 @@ class Users extends \Visitor\Paging {
       'groups',
       $this->application->getNumericParameter('id')
     );
-    
+
     $this->controller->toSmarty['group'] = $this->groupModel->row;
     $this->controller->toSmarty['listclass'] = 'treeadminlist';
     $term = trim( $this->application->getParameter('term') );
@@ -33,7 +33,7 @@ class Users extends \Visitor\Paging {
     }
 
   }
-  
+
   protected function getUrl() {
     return
       $this->controller->getUrlFromFragment( $this->module . '/' . $this->action ) .
@@ -41,7 +41,7 @@ class Users extends \Visitor\Paging {
       \Springboard\Filesystem::filenameize( $this->groupModel->row['name'] )
     ;
   }
-  
+
   protected function setupCount() {
 
     if ( $this->searchterm ) {
@@ -54,7 +54,7 @@ class Users extends \Visitor\Paging {
 
     return $this->itemcount = $this->groupModel->getUserCount();
   }
-  
+
   protected function getItems( $start, $limit, $orderby ) {
 
     if ( $this->searchterm ) {
@@ -68,5 +68,5 @@ class Users extends \Visitor\Paging {
 
     return $this->groupModel->getUserArray( $start, $limit, $orderby );
   }
-  
+
 }

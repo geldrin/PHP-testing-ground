@@ -1,22 +1,22 @@
 <?php
 
 $config = Array(
-  
+
   'action' => Array(
     'type'  => 'inputHidden',
     'value' => 'submitmodifyattachment'
   ),
-  
+
   'id' => Array(
     'type'  => 'inputHidden',
     'value' => $this->application->getNumericParameter('id'),
   ),
-  
+
   'forward' => Array(
     'type'  => 'inputHidden',
     'value' => $this->application->getParameter('forward'),
   ),
-  
+
   'fs1' => array(
     'type'   => 'fieldset',
     'legend' => $l('recordings', 'modifyattachment_title'),
@@ -40,5 +40,5 @@ $config = Array(
     'values'      => $l->getLov('noyes'),
     'value'       => '1',
   ),
-  
+
 );

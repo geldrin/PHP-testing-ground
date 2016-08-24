@@ -9,10 +9,14 @@ class Users extends \Springboard\Model {
   const USER_DISABLED    = 1; // letiltva adminisztracios oldalrol
   const USER_DIRECTORYDISABLED = 2; // letiltva LDAP-bol (nem tagja a csoportnak), automatikusan viszacsinaljuk
   protected $registeredSessionKey;
+  private $privileges = array();
 
   protected function checkUser( &$user, $organizationid ) {
 
-    if ( $user['organizationid'] != $organizationid and !$user['isadmin'] )
+    if (
+         $user['organizationid'] != $organizationid and
+         !$this->isAdminLogin( $user )
+       )
       return 'organizationinvalid';
 
     if (
@@ -22,7 +26,6 @@ class Users extends \Springboard\Model {
       return 'expired';
 
     return true;
-
   }
 
   // lehetseges viszateresi ertekek:
@@ -37,13 +40,34 @@ class Users extends \Springboard\Model {
       'disabled = ' . $this->db->qstr( self::USER_VALIDATED ),
     );
 
-    $adminwhere = implode(" AND ", $where ) . ' AND isadmin = 1';
+    if ( !$this->bootstrap->config['usedynamicprivileges'] )
+      $adminwhere = implode(" AND ", $where ) . ' AND isadmin = 1';
+    else {
+
+      $rolewhere = "
+        userroleid IN(
+          (
+            SELECT urp.userroleid
+            FROM
+              userroles_privileges AS urp,
+              privileges AS pr
+            WHERE
+              pr.name = 'users_globallogin' AND
+              urp.privilegeid = pr.id
+          )
+        )
+      ";
+      $adminwhere = implode(" AND ", $where ) . " AND $rolewhere";
+
+    }
 
     if ( $organizationid !== null )
       $where[] = 'organizationid = ' . $this->db->qstr( $organizationid );
 
-    if ( $isadmin )
+    if ( $isadmin and !$this->bootstrap->config['usedynamicprivileges'] )
       $where[] = 'isadmin = 1';
+    else if ( $isadmin )
+      $where[] = $rolewhere;
 
     $where = implode(" AND ", $where );
     $user  = $this->db->getRow("
@@ -62,7 +86,7 @@ class Users extends \Springboard\Model {
       if ( $valid !== true )
         return $valid;
 
-      if ( $user['isadmin'] );
+      if ( $this->isAdminLogin( $user ) )
         $user['organizationid'] = $organizationid;
 
       $this->id  = $user['id'];
@@ -81,7 +105,6 @@ class Users extends \Springboard\Model {
 
     } else
       return false;
-
   }
 
   public function selectAndCheckAPIUserValid( $organizationid, $email, $password, $currentip ) {
@@ -404,7 +427,6 @@ class Users extends \Springboard\Model {
       FROM users
       WHERE
         organizationid = '$organizationid' AND
-        isadmin        = '0' AND
         email LIKE $email
     ");
 
@@ -413,7 +435,7 @@ class Users extends \Springboard\Model {
   public function emailExists( $email, $organizationid ) {
 
     $email = $this->db->qstr( $email );
-    return !!$this->db->getOne("
+    return (bool)$this->db->getOne("
       SELECT COUNT(*)
       FROM users
       WHERE
@@ -444,7 +466,6 @@ class Users extends \Springboard\Model {
 
     return "
       {$prefix}organizationid = '" . $organization['id'] . "' AND
-      {$prefix}isadmin        = '0' AND
       (
         {$prefix}email LIKE $searchterm OR
         {$prefix}externalid LIKE $searchterm OR
@@ -823,7 +844,14 @@ class Users extends \Springboard\Model {
           unset( $recordings[ $key ] );
       }
 
-    if ( $this->row['isadmin'] or $this->row['iseditor'] or $this->row['isclientadmin'] )
+    if (
+         \Model\Userroles::userHasPrivilege(
+           $this->row,
+           'general_ignoreAccessRestrictions',
+           'or',
+           'isclientadmin', 'iseditor', 'isadmin'
+         )
+       )
       return $recordings;
 
     $ids = array();
@@ -993,6 +1021,7 @@ class Users extends \Springboard\Model {
 
   }
 
+  // TODO dinamikus privilegium rework
   public function getUsersWithPermission( $permission, $filteruserid, $organizationid ) {
     return $this->db->getArray("
       SELECT *
@@ -1058,7 +1087,7 @@ class Users extends \Springboard\Model {
     if ( !$row )
       return false;
 
-    if ( $row['isadmin'] )
+    if ( $this->isAdminLogin( $row ) )
       $row['organizationid'] = $organizationid;
 
     $valid     = $this->checkUser( $row, $organizationid );
@@ -1131,7 +1160,7 @@ class Users extends \Springboard\Model {
     if ( $row['disabled'] != self::USER_VALIDATED )
       return false;
 
-    if ( $row['isadmin'] )
+    if ( $this->isAdminLogin( $row ) )
       $row['organizationid'] = $organizationid;
 
     $valid = $this->checkUser( $row, $organizationid );
@@ -1233,11 +1262,11 @@ class Users extends \Springboard\Model {
         g.name,
         g.source,
         gm.id AS memberid
-      FROM
-        groups AS g LEFT JOIN groups_members AS gm ON(
-          gm.userid  = '" . $this->id . "' AND
-          gm.groupid = g.id
-        )
+      FROM groups AS g
+      LEFT JOIN groups_members AS gm ON(
+        gm.userid  = '" . $this->id . "' AND
+        gm.groupid = g.id
+      )
       WHERE g.organizationid = '$organizationid'
       GROUP BY g.id
       ORDER BY g.name DESC
@@ -1264,10 +1293,15 @@ class Users extends \Springboard\Model {
     return $ret;
   }
 
-  public function getPrivileges() {
-    $this->ensureObjectLoaded();
-    return \Model\Userroles::getPrivilegesForRoleID(
-      $this->row['userroleid']
+  private function isAdminLogin( $row ) {
+    if ( !$this->bootstrap->config['usedynamicprivileges'] )
+      return (bool)$row['isadmin'];
+
+    $ret = \Model\Userroles::userHasPrivilege(
+      $row,
+      'users_globallogin',
+      'isadmin'
     );
+    return $ret;
   }
 }

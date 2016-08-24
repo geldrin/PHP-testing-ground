@@ -8,7 +8,7 @@
       <div class="length">{$item|@recordinglength|timeformat:minimal}</div>
     </a>
   </div>
-  
+
   <div class="recordingcontent">
     <div class="recordinginfo">
       <div class="timestamp">{$item.recordedtimestamp|date_format:#smarty_dateformat_long#}</div>
@@ -65,7 +65,7 @@
               <li><a href="{$language}/recordings/uploadcontent/{$item.id}?forward={$FULL_URI|escape:url}">{#recordings__uploadcontentvideo#}</a></li>
             {/if}
           {/if}
-          {if $member.isadmin or $member.isclientadmin}
+          {if $member|@userHasPrivilege:'recordings_analytics':'or':'isadmin':'isclientadmin'}
             <li><a href="{$language}/recordings/analytics/{$item.id}?forward={$FULL_URI|escape:url}">{#recordings__recording_analytics#}</a></li>
           {/if}
         {/if}

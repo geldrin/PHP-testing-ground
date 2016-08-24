@@ -8,7 +8,7 @@ class View_statistics_ondemand extends \Model\View_statistics {
   );
 
   public function log( $values ) {
-    
+
     $values = $this->populateStreamInfo( $values );
     $values['timestamp'] = date('Y-m-d H:i:s');
 

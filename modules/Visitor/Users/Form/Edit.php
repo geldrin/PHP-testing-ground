@@ -19,7 +19,7 @@ class Edit extends \Visitor\HelpForm {
   private $groupHTML = '';
 
   public function init() {
-    
+
     parent::init();
     $l               = $this->bootstrap->getLocalization();
     $this->userModel = $this->controller->modelOrganizationAndIDCheck(
@@ -31,10 +31,11 @@ class Edit extends \Visitor\HelpForm {
       str_replace( 'REMOTE_ADDR:', '', $this->values['lastloggedinipaddress'] )
     );
     unset( $this->values['password'] );
-    
+
+    // TODO dinamikus privilegiumok rework
     $this->values['permissions'] = array();
     foreach( $l->getLov('permissions') as $k => $v ) {
-      
+
       if ( $this->values[ $k ] )
         $this->values['permissions'][] = $k;
 
@@ -53,7 +54,7 @@ class Edit extends \Visitor\HelpForm {
         $this->controller->organization['id']
       )
     ;
-    
+
     $this->controller->toSmarty['invitations'] =
       $this->userModel->getInvitations(
         $this->controller->organization['id']
@@ -61,9 +62,9 @@ class Edit extends \Visitor\HelpForm {
     ;
 
   }
-  
+
   public function onComplete() {
-    
+
     $values = $this->form->getElementValues( 0 );
     $crypt  = $this->bootstrap->getEncryption();
     $l      = $this->bootstrap->getLocalization();
@@ -112,29 +113,29 @@ class Edit extends \Visitor\HelpForm {
     unset( $values['departments'], $values['groups'] );
 
     foreach( $l->getLov('permissions') as $k => $v ) {
-      
+
       if ( isset( $_REQUEST['permissions'][ $k ] ) and in_array( $k, $values['permissions'] ) )
         $values[ $k ] = 1;
       else
         $values[ $k ] = 0;
-      
+
     }
 
     if ( !@$values['password'] )
       unset( $values['password'] );
     else
       $values['password'] = $crypt->getPasswordHash( $values['password'] );
-    
+
     if ( !@$values['needtimestampdisabledafter'] )
       $values['timestampdisabledafter'] = null;
 
     $this->userModel->updateRow( $values );
-    
+
     $forward = $this->application->getParameter('forward', 'users/admin');
     $this->controller->redirectWithMessage( $forward, $l('users', 'usermodified') );
-    
+
   }
-  
+
   public function setupConfig( &$config ) {
     $groups = $this->userModel->getGroups( $this->controller->organization['id'] );
 

@@ -49,7 +49,7 @@ class Details extends \Visitor\Paging {
          $this->channelModel->row['isdeleted']
        )
       $this->controller->redirect('index');
-    
+
     if ( $this->channelModel->isAccessible( $this->user, $this->controller->organization ) !== true )
       $this->controller->redirectToController('contents', 'nopermission');
 
@@ -93,20 +93,20 @@ class Details extends \Visitor\Paging {
     parent::init();
 
   }
-  
+
   protected function setupCount() {
-    
+
     $this->recordingsModel = $this->bootstrap->getModel('recordings');
     $this->itemcount =
       $this->recordingsModel->getChannelRecordingsCount(
         $this->user,
         $this->channelids
       );
-    
+
   }
-  
+
   protected function getItems( $start, $limit, $orderby ) {
-    
+
     $items = $this->recordingsModel->getChannelRecordings(
       $this->user,
       $this->channelids,
@@ -114,17 +114,17 @@ class Details extends \Visitor\Paging {
       $limit,
       $orderby
     );
-    
+
     $items = $this->recordingsModel->addPresentersToArray(
       $items,
       true,
       $this->controller->organization['id']
     );
-    
+
     return $items;
-    
+
   }
-  
+
   protected function getUrl() {
     return
       $this->controller->getUrlFromFragment( $this->module . '/' . $this->action ) .
@@ -132,9 +132,9 @@ class Details extends \Visitor\Paging {
       \Springboard\Filesystem::filenameize( $this->channelModel->row['title'] )
     ;
   }
-  
+
   protected function setupPager() {
     parent::setupPager();
   }
-  
+
 }

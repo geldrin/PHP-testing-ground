@@ -56,7 +56,7 @@ foreach ( $recordings as $recording ) {
     htmlspecialchars( $recording['title'], ENT_QUOTES, $this->application->config['charset'] ),
     $recording['indexphotofilename']
   );
-  
+
 }
 
 if ( !count( @$config['indexphotofilename']['values'] ) )
@@ -65,11 +65,11 @@ if ( !count( @$config['indexphotofilename']['values'] ) )
 if (
      $this->parentchannelModel and $this->parentchannelModel->id
    ) {
-  
+
   $config['accesstype']['postfix']    = $l('channels', 'accesstype_disabled');
   $config['departments[]']['postfix'] = '';
   $config['accesstype']['html']       = 'disabled="disabled"';
   $config['departments[]']['html']    = 'disabled="disabled"';
   $config['groups[]']['html']         = 'disabled="disabled"';
-  
+
 }

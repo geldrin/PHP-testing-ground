@@ -11,18 +11,18 @@ $config = array(
     'type'  => 'inputHidden',
     'value' => $this->application->getNumericParameter('id'),
   ),
-  
+
   'forward' => array(
     'type'  => 'inputHidden',
     'value' => $this->application->getParameter('forward'),
   ),
-  
+
   'fs1' => array(
     'type'   => 'fieldset',
     'legend' => $l('recordings', 'description_title'),
     'prefix' => '<span class="legendsubtitle">' . $l('recordings', 'description_subtitle') . '</span>',
   ),
-  
+
   'recordedtimestamp' => array(
     'displayname' => $l('recordings', 'recordedtimestamp'),
     'type'        => 'inputText',
@@ -39,7 +39,7 @@ $config = array(
       ),
     ),
   ),
-  
+
   'description' => array(
     'displayname' => $l('recordings', 'description'),
     'type'        => 'textarea',
@@ -51,7 +51,7 @@ $config = array(
       ),
     ),
   ),
-  
+
   'copyright' => array(
     'displayname' => $l('recordings', 'copyright'),
     'type'        => 'textarea',
@@ -63,7 +63,7 @@ $config = array(
       ),
     ),
   ),
-  
+
   'technicalnote' => array(
     'displayname' => $l('recordings', 'technicalnote'),
     'type'        => 'textarea',
@@ -75,5 +75,5 @@ $config = array(
       ),
     ),
   ),
-  
+
 );
