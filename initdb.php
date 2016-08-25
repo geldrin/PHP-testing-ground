@@ -27,7 +27,6 @@ class Initdb {
   );
 
   public $uniquetables = array(
-    'help_contents',
     'contents',
     'languages',
   );
