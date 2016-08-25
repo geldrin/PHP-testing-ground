@@ -928,32 +928,6 @@ class Controller extends \Visitor\Controller {
 
   }
 
-  protected function checkOrganizationAndUseridWithApi( $api, $table, $id ) {
-
-    $model = $this->modelOrganizationAndUserIDCheck( $table, $id, false );
-
-    if ( $api and !$model )
-      throw new \Exception('No record found, ID#' . $id . ', table: ' . $table );
-    elseif ( !$model )
-      $this->redirect('');
-    else
-      return $model;
-
-  }
-
-  protected function checkOrganizationAndIDWithApi( $api, $table, $id ) {
-
-    $model = $this->modelOrganizationAndIDCheck( $table, $id, false );
-
-    if ( $api and !$model )
-      throw new \Exception('No record found, ID#' . $id . ', table: ' . $table );
-    elseif ( !$model )
-      $this->redirect('');
-    else
-      return $model;
-
-  }
-
   public function checkfileresumeasuserAction( $file, $userid ) {
     return $this->checkfileresumeAction();
   }
