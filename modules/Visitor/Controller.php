@@ -290,12 +290,12 @@ class Controller extends \Springboard\Controller\Visitor {
 
   }
 
-  protected function checkOrganizationAndUseridWithApi( $api, $table, $id ) {
+  protected function checkOrganizationAndUseridWithApi( $api, $table, $id, $shouldEmailOnFailure = false ) {
 
     $model = $this->modelOrganizationAndUserIDCheck( $table, $id, false );
 
     if ( $api and !$model )
-      throw new \Exception('No record found, ID#' . $id . ', table: ' . $table );
+      throw new \Visitor\Api\ApiException('No record found, ID#' . $id . ', table: ' . $table, false, $shouldEmailOnFailure );
     elseif ( !$model )
       $this->redirect('');
     else
@@ -303,12 +303,12 @@ class Controller extends \Springboard\Controller\Visitor {
 
   }
 
-  protected function checkOrganizationAndIDWithApi( $api, $table, $id ) {
+  protected function checkOrganizationAndIDWithApi( $api, $table, $id, $shouldEmailOnFailure = false ) {
 
     $model = $this->modelOrganizationAndIDCheck( $table, $id, false );
 
     if ( $api and !$model )
-      throw new \Exception('No record found, ID#' . $id . ', table: ' . $table );
+      throw new \Visitor\Api\ApiException('No record found, ID#' . $id . ', table: ' . $table, false, $shouldEmailOnFailure );
     elseif ( !$model )
       $this->redirect('');
     else
