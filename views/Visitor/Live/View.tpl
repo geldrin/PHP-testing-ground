@@ -43,7 +43,7 @@
       <div id="qualitychooser">
         <ul>
           {foreach from=$streams item=stream}
-            <li{if $currentstream.id == $stream.id} class="active"{/if}><a href="{$language}/live/view/{$feed.id},{$stream.id},{$feed.name|filenameize}">{$stream.qualitytag|escape:html}</a></li>
+            <li{if $currentstream.id == $stream.id} class="active"{/if}><a href="{$language}/live/view/{$feed.id},{$stream.id},{$feed.name|filenameize}{$urlparams}">{$stream.qualitytag|escape:html}</a></li>
           {/foreach}
         </ul>
       </div>
