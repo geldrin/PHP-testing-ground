@@ -93,6 +93,10 @@ class Ldap extends \AuthDirectories\Base {
 
     foreach( $results as $result ) { // csak egy result lesz
 
+      $this->l(
+        "directory/ldap::getAccountInfo, filter result: \n" . var_export( $result, true )
+      );
+
       $accountname = $ldap::implodePossibleArray(' ', $result['sAMAccountName'] );
       if ( !$accountname ) // nincs accountname? instant elhasalunk
         continue;
