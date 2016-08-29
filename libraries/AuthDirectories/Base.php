@@ -24,6 +24,7 @@ abstract class Base {
     if ( !$this->debug )
       return;
 
+    $line .= "\nSID: " . session_id();
     $this->d->log(
       false,
       'authdebug.txt',
