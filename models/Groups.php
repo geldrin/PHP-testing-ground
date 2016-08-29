@@ -37,7 +37,7 @@ class Groups extends \Springboard\Model {
         gm.groupid        = '%s'
     ";
 
-    return $this->db->getRow("
+    $sql = "
       SELECT
         (
           " . sprintf( $membersql, $directory['ldapgroupaccessid'] ) . "
@@ -45,7 +45,25 @@ class Groups extends \Springboard\Model {
         (
           " . sprintf( $membersql, $directory['ldapgroupadminid'] ) . "
         ) AS isadmin
-    ");
+    ";
+    $ret = $this->db->getRow( $sql );
+
+    if ( $this->bootstrap->config['debugauth'] ) {
+      $line  = "models/groups::getDirectoryGroupsForExternalId az externalid '$externalid' keressuk a directoryhoz tartozo csoportban, az sql:\n$sql\n\neredmenye:\n" . var_export( $ret, true );
+      $line .= "\nSID: " . session_id();
+
+      $d = \Springboard\Debug::getInstance();
+      $d->log(
+        false,
+        'authdebug.txt',
+        $line,
+        false,
+        true,
+        true
+      );
+    }
+
+    return $ret;
   }
 
   public function getUserCount() {

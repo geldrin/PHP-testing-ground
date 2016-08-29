@@ -98,16 +98,24 @@ class Ldap extends \AuthDirectories\Base {
       );
 
       $accountname = $ldap::implodePossibleArray(' ', $result['sAMAccountName'] );
-      if ( !$accountname ) // nincs accountname? instant elhasalunk
+      if ( !$accountname ) { // nincs accountname? instant elhasalunk
+        $this->l(
+          "directory/ldap::getAccountInfo, filter nem talalt sAMAccountName-et ami kotelezo hogy legyen"
+        );
         continue;
+      }
 
       $access = $groupsModel->getDirectoryGroupsForExternalId(
         $accountname, $this->directory
       );
 
       // ha nincs ldapgroupaccess akkor nincs user
-      if ( !$access['hasaccess'] )
+      if ( !$access['hasaccess'] ) {
+        $this->l(
+          "directory/ldap::getAccountInfo, sAMAccountName alapjan nem tagja a csoportnak"
+        );
         continue;
+      }
 
       $isadmin = $access['isadmin'];
       $ret['nickname'] = $accountname;
