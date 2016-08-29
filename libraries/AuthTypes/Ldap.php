@@ -24,8 +24,10 @@ class Ldap extends \AuthTypes\Kerberos {
       return false; // false mert nem tortent bejelentkeztetes
 
     $directoryUser = $this->handleDirectoryLogin( $username, $password );
-    if ( empty( $directoryUser ) ) // nem tudtunk belepni
+    if ( empty( $directoryUser ) ) { // nem tudtunk belepni
+      $this->l("types/ldap::handleForm directory nem tudta beleptetni");
       return false;
+    }
 
     $this->handleUser( $type, $username, $directoryUser );
 
@@ -57,12 +59,14 @@ class Ldap extends \AuthTypes\Kerberos {
       break;
     }
 
-    if ( !$found )
+    if ( !$found ) {
+      $this->l("types/ldap::handleDirectoryLogin no directory found for domain $domain");
       return false;
+    }
+
+    $this->l("types/ldap::handleDirectoryLogin found directory for domain $domain directory: \n" . var_export( $directory, true ) );
 
     $this->directory = $this->getDirectory( $directory );
     return $this->directory->handleLogin( $user, $password );
-
   }
-
 }

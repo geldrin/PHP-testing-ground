@@ -95,19 +95,42 @@ class LDAP {
     if (!empty($config))
       $this->config = array_merge($this->config, $config);
 
+    if ( $bootstrap->config['debugauth'] ) {
+      $this->debug = true;
+      $this->d = \Springboard\Debug::getInstance();
+    }
+
     $this->init();
+  }
+
+  protected function l( $line ) {
+    if ( !$this->debug )
+      return;
+
+    $this->d->log(
+      false,
+      'authdebug.txt',
+      $line,
+      false,
+      true,
+      true
+    );
   }
 
   protected function init() {
     $this->conn = \ldap_connect( $this->config['server'] );
-    if (!$this->conn)
+    if ( !$this->conn ) {
+      $this->l('ldap/ldap::init ldap_connect failed with server: ' . $this->config['server'] );
       throw new \Exception("Could not connect to LDAP server");
+    }
 
     foreach($this->config['options'] as $option => $value ) {
 
       $success = \ldap_set_option( $this->conn, $option, $value );
-      if (!$success)
+      if (!$success) {
+        $this->l("ldap/ldap::init ldap_set_option failed, option: $option value: $value");
         throw new \Exception("Could not set option $option to value $value");
+      }
 
     }
 
@@ -118,12 +141,17 @@ class LDAP {
       $this->config['password'] = null;
 
     // squelch mert warningot dob ha rosz a username/password...
-    if ( !@\ldap_bind($this->conn, $this->config['username'], $this->config['password'] ) )
+    if ( !@\ldap_bind($this->conn, $this->config['username'], $this->config['password'] ) ) {
+      $this->l("ldap/ldap::init ldap_bind failed with username: {$this->config['username']} password: {$this->config['password']}");
       throw new \Exception("Bind failed with user " . $this->config['username'] );
+    } else {
+      $this->l("ldap/ldap::init ldap_bind success with username: {$this->config['username']} password: {$this->config['password']}");
+    }
 
   }
 
   public function search( $basedn, $filter, $attributes = null, $attrsonly = null, $sizelimit = null, $timelimit = null, $deref = null ) {
+
     // squelch mert ha kap egy invalid DN-t akkor dob WARNING-ot
     $result = @\ldap_search(
       $this->conn,
@@ -135,6 +163,8 @@ class LDAP {
       $timelimit,
       $deref
     );
+
+    $this->l("ldap/ldap::search ldap_search basedn: {$basedn} filter: {$filter}");
 
     if ( !$result )
       return $result;

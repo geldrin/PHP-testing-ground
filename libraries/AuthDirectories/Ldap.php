@@ -35,8 +35,12 @@ class Ldap extends \AuthDirectories\Base {
 
   public function handle( $remoteuser ) {
     $accountname = $remoteuser;
-    if ( preg_match( $this->bootstrap->config['directoryusernameregex'], $remoteuser, $match ) )
+    if ( preg_match( $this->directory['ldapusernameregex'], $remoteuser, $match ) )
       $accountname = $match['username'];
+
+    $this->l(
+      "directory/ldap::handle, remoteuser: $remoteuser, after regex accountname: $accountname"
+    );
 
     $ldap    = $this->bootstrap->getLDAP( array(
         'server'   => $this->directory['server'],
@@ -135,11 +139,19 @@ class Ldap extends \AuthDirectories\Base {
       $ret['isclientadmin'] = (int) $isadmin;
     }
 
+    $this->l(
+      "directory/ldap::getAccountInfo, result: \n" . var_export( $ret, true )
+    );
+
     return $ret;
   }
 
   public function handleLogin( $user, $password ) {
     $ret = array();
+
+    $this->l(
+      "directory/ldap::handleLogin, user: $user, password: $password"
+    );
 
     if ( preg_match( $this->directory['ldapusernameregex'], $user, $match ) )
       $user = $match['username'];

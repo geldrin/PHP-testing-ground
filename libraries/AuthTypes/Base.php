@@ -6,6 +6,8 @@ abstract class Base {
   protected $organization;
   protected $ipaddresses;
   protected $directory; // az AuthDirectory ami kotodik az adott AuthTypehoz
+  protected $debug = false;
+  protected $d;
 
   protected $skip = array(
     'users' => array(
@@ -32,6 +34,25 @@ abstract class Base {
     $this->bootstrap    = $bootstrap;
     $this->organization = $organization;
     $this->ipaddresses  = $ipaddresses;
+
+    if ( $bootstrap->config['debugauth'] ) {
+      $this->debug = true;
+      $this->d = \Springboard\Debug::getInstance();
+    }
+  }
+
+  protected function l( $line ) {
+    if ( !$this->debug )
+      return;
+
+    $this->d->log(
+      false,
+      'authdebug.txt',
+      $line,
+      false,
+      true,
+      true
+    );
   }
 
   protected function shouldSkip( $type, $module, $action ) {
@@ -39,8 +60,10 @@ abstract class Base {
       $actions = $this->skip[ $module ];
 
       // adott modul adott actionje, vagy wildcard minden action
-      if ( isset( $actions[ $action ] ) or isset( $actions['*'] ) )
+      if ( isset( $actions[ $action ] ) or isset( $actions['*'] ) ) {
+        $this->l("types/base::shouldSkip skipping $type for module: $module action: $action");
         return true;
+      }
 
     }
 
@@ -48,8 +71,12 @@ abstract class Base {
 
     // ha be van lepve a user, de nem az adott tipus leptette be akkor valoszinu
     // hogy a fallback metodus leptette be, engedjuk
-    if ( $user['id'] and !$user[ $type . 'login' ] )
+    if ( $user['id'] and !$user[ $type . 'login' ] ) {
+      $this->l("types/base::shouldSkip user already logged in but not by type $type for module: $module action: $action");
       return true;
+    }
+
+    $this->l("types/base::shouldSkip not skipping for type $type for module: $module action: $action");
 
     return false;
   }

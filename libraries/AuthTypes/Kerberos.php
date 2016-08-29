@@ -35,6 +35,7 @@ class Kerberos extends \AuthTypes\Base {
       $e->redirectmessage = $l('users', 'kerberosloginfailed');
       $e->redirectparams  = array('error' => 'kerberosfailed');
       $e->info['type']    = $type;
+      $this->l("types/kerberos::handle error: nincs remoteuser");
       throw $e;
     }
 
@@ -50,8 +51,12 @@ class Kerberos extends \AuthTypes\Base {
     // a domain nincs a vart domain-u loginok kozott
     // ez azzal jar hogy ha nincsen letrehozva megfelelo organizations.authtypes
     // akkor a site elerheto lesz
-    if ( !isset( $domains[ $domain ] ) )
+    if ( !isset( $domains[ $domain ] ) ) {
+      $this->l("types/kerberos::handle error: az authtype domainjei kozott nem talaltuk meg a belepo domaint: $domain; az authtype: \n" .
+        var_export( $type, true )
+      );
       return false;
+    }
 
     // az adott tipushoz tartozik es az adott tipusnal hibat akarunk kiiratni
     // mert le van tiltva
@@ -62,6 +67,9 @@ class Kerberos extends \AuthTypes\Base {
       $e->redirectparams  = array('error' => 'typedisabled');
       $e->info['type']    = $type;
       $e->info['remoteuser'] = $remoteuser;
+      $this->l("types/kerberos::handle error: az authtype valid a domainre de le van tiltva az authtype: \n" .
+        var_export( $type, true )
+      );
       throw $e;
     }
 
@@ -70,8 +78,10 @@ class Kerberos extends \AuthTypes\Base {
          $user['source'] === $this->source and
          $user['externalid'] === $remoteuser and
          !$this->shouldReauth( $type )
-       )
+       ) {
+      $this->l("types/kerberos::handle bejelentkezes nem tortent mert valid az elozo belepes userid #" . $user['id'] );
       return false; // false mert nem tortent bejelentkeztetes
+    }
 
     $user->clear(); // reseteljuk a usert a biztonsag kedveert
 
@@ -110,8 +120,12 @@ class Kerberos extends \AuthTypes\Base {
       break;
     }
 
-    if ( !$found )
+    if ( !$found ) {
+      $this->l("types/ldap::handleAuthDirectory no directory found for domain $domain externalid: $externalid");
       return false;
+    }
+
+    $this->l("types/ldap::handleAuthDirectory directory found for domain $domain externalid: $externalid, directory: \n" . var_export( $directory, true ) );
 
     $this->directory = $this->getDirectory( $directory );
     return $this->directory->handle( $externalid );
@@ -154,6 +168,7 @@ class Kerberos extends \AuthTypes\Base {
         $e->redirectparams  = array('error' => 'nongroupmember');
         $e->info['type']    = $type;
         $e->info['remoteuser'] = $remoteuser;
+        $this->l("types/ldap::handleUser error: usert megtalaltuk, de nem tagja a csoportnak");
         throw $e;
       } elseif ( $directoryuser ) // van minden, csak adatbazisban nem letezik
         $newuser = array_merge( $newuser, $directoryuser );
@@ -161,6 +176,7 @@ class Kerberos extends \AuthTypes\Base {
       $userModel->insertExternal( $newuser,
         $this->organization
       );
+      $this->l("types/ldap::handleUser usert megtalaltuk, inserteltuk, userid #" . $userModel->id );
 
       $userModel->updateSessionInformation();
       $userModel->updateLastlogin(
@@ -188,6 +204,7 @@ class Kerberos extends \AuthTypes\Base {
         $e->info['type']    = $type;
         $e->info['user']    = $userModel->row;
         $e->info['remoteuser'] = $remoteuser;
+        $this->l("types/ldap::handleUser error: usert megtalaltuk externalid alapjan ($remoteuser), de le lett tiltva a directorybol vagy nincs az ldap csoportban");
         throw $e;
 
       } elseif ( !$valid and !empty( $directoryuser ) ) {
@@ -220,6 +237,7 @@ class Kerberos extends \AuthTypes\Base {
           $e->info['user']    = $userModel->row;
           $e->info['remoteuser'] = $remoteuser;
           $e->info['directoryuser'] = $directoryuser;
+          $this->l("types/ldap::handleUser error: usert megtalaltuk externalid alapjan ($remoteuser), de le lett tiltva manualisan users.disabled != 0 userid #" . $userModel->id );
           throw $e;
         }
 
@@ -231,10 +249,12 @@ class Kerberos extends \AuthTypes\Base {
         $e->info['type']    = $type;
         $e->info['user']    = $userModel->row;
         $e->info['remoteuser'] = $remoteuser;
+        $this->l("types/ldap::handleUser error: usert megtalaltuk externalid alapjan ($remoteuser), de le lett tiltva manualisan es ldapbol is");
         throw $e;
       }
 
     }
 
+    $this->l("types/ldap::handleUser usert megtalaltuk externalid alapjan ($remoteuser), minden rendben, userid #" . $user['id'] );
   }
 }

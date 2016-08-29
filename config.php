@@ -1,6 +1,6 @@
 <?php
 $config = array(
-  'version'      => '_v20160608',
+  'version'      => '_v20160825',
   'charset'      => 'UTF-8',
   'cacheseconds' => 3600,
   'errormessage' => 'An unexpected error has occured, our staff has been notified. Sorry for the inconvenience and thanks for your understanding!',
@@ -410,6 +410,9 @@ $config = array(
 
   // a dinamikus privilegiumokat hasznaljuk e
   'usedynamicprivileges' => false,
+
+  // ldap es egyeb 3rd party auth-ok debugja, log file: authdebug.txt
+  'debugauth' => false,
 );
 
 $config['phpsettings'] = array(
