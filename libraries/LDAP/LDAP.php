@@ -132,7 +132,7 @@ class LDAP {
 
       $success = \ldap_set_option( $this->conn, $option, $value );
       if (!$success) {
-        $this->l("ldap/ldap::init ldap_set_option failed, option: $option value: $value");
+        $this->l("ldap/ldap::init ldap_set_option failed, option: $option value: $value error: " . \ldap_error( $this->conn ));
         throw new \Exception("Could not set option $option to value $value");
       }
 
@@ -146,7 +146,7 @@ class LDAP {
 
     // squelch mert warningot dob ha rosz a username/password...
     if ( !@\ldap_bind($this->conn, $this->config['username'], $this->config['password'] ) ) {
-      $this->l("ldap/ldap::init ldap_bind failed with username: {$this->config['username']}");
+      $this->l("ldap/ldap::init ldap_bind failed with username: {$this->config['username']} error: " . \ldap_error( $this->conn ));
       throw new \Exception("Bind failed with user " . $this->config['username'] );
     } else {
       $this->l("ldap/ldap::init ldap_bind success with username: {$this->config['username']}");
