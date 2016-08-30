@@ -94,7 +94,7 @@
   var BROWSER    = {ldelim}
     mobile: {if $browser.mobile}true{else}false{/if},
     tablet: {if $browser.tablet}true{else}false{/if},
-    obsolete: {if $browser.obsolete}true{else}false{/if} 
+    obsolete: {if $browser.obsolete}true{else}false{/if}
   {rdelim};
   </script>
   <link rel="alternate" type="application/rss+xml" title="{#rss_news#|sprintf:$organization.name|escape:html}" href="{$language}/organizations/newsrss" />
@@ -110,9 +110,9 @@
       {include file=$layoutheader}
       <div class="clear"></div>
     </div>
-    
+
     {if $sessionmessage and !$skipsessionmessage}
       {include file="Visitor/_message.tpl" message=$sessionmessage}
     {/if}
-    
+
     <div id="body">
