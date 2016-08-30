@@ -122,7 +122,7 @@ class Controller extends \Visitor\Controller {
     $embed =
       '<iframe width="980" height="*HEIGHT*" src="' .
       $this->bootstrap->baseuri . 'live/view/*FEEDID*,*FEEDNAMEIZED*' .
-      '?chromeless=true&amp;chat=*NEEDCHAT*" frameborder="0" '.
+      '?chromeless=true&amp;chat=*NEEDCHAT*&amp;token=***TOKEN***" frameborder="0" '.
       'allowfullscreen="allowfullscreen"></iframe>'
     ;
 
