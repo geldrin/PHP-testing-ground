@@ -342,7 +342,7 @@ class Controller extends \Visitor\Controller {
     $this->toSmarty['sessionid']     = session_id();
     $this->toSmarty['needping']      = true;
     $this->toSmarty['needhistory']   = true;
-    $this->toSmarty['height']        = $this->getPlayerHeight( $recordingsModel );
+    $this->toSmarty['height']        = $recordingsModel->getPlayerHeight();
     $this->toSmarty['recording']     = $recordingsModel->addPresenters( true, $this->organization['id'] );
     $this->toSmarty['attachments']   = $recordingsModel->getAttachments();
     $this->toSmarty['recordingdownloads'] = $recordingsModel->getDownloadInfo(
