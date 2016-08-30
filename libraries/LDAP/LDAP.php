@@ -78,6 +78,9 @@ if (!function_exists('ldap_escape')) {
 }
 
 class LDAP {
+  protected $debug;
+  protected $d;
+
   protected $conn;
   protected $bootstrap;
   protected $config = array(
@@ -143,10 +146,10 @@ class LDAP {
 
     // squelch mert warningot dob ha rosz a username/password...
     if ( !@\ldap_bind($this->conn, $this->config['username'], $this->config['password'] ) ) {
-      $this->l("ldap/ldap::init ldap_bind failed with username: {$this->config['username']} password: {$this->config['password']}");
+      $this->l("ldap/ldap::init ldap_bind failed with username: {$this->config['username']}");
       throw new \Exception("Bind failed with user " . $this->config['username'] );
     } else {
-      $this->l("ldap/ldap::init ldap_bind success with username: {$this->config['username']} password: {$this->config['password']}");
+      $this->l("ldap/ldap::init ldap_bind success with username: {$this->config['username']}");
     }
 
   }

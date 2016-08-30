@@ -162,7 +162,7 @@ class Ldap extends \AuthDirectories\Base {
     $ret = array();
 
     $this->l(
-      "directory/ldap::handleLogin, user: $user, password: $password"
+      "directory/ldap::handleLogin, user: $user"
     );
 
     if ( preg_match( $this->directory['ldapusernameregex'], $user, $match ) )
