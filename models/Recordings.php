@@ -4689,4 +4689,25 @@ class Recordings extends \Springboard\Model {
 
     return $ret;
   }
+
+  public function getPlayerHeight( $fullscale = false ) {
+    $this->ensureObjectLoaded();
+
+    if ( $fullscale and $this->row['mastermediatype'] == 'audio' and $this->hasSubtitle() )
+      return '140';
+    elseif ( $fullscale and $this->row['mastermediatype'] == 'audio' )
+      return '60';
+    elseif ( $fullscale )
+      return '530';
+
+    if ( $this->row['mastermediatype'] == 'audio' and $this->hasSubtitle() )
+      $height = '120';
+    elseif ( $this->row['mastermediatype'] == 'audio' )
+      $height = '60';
+    else
+      $height = '385';
+
+    return $height;
+  }
+
 }

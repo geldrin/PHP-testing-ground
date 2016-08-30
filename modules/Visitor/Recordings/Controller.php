@@ -714,26 +714,6 @@ class Controller extends \Visitor\Controller {
     return $this->modifyrecording( $id );
   }
 
-  protected function getPlayerHeight( $recordingsModel, $fullscale = false ) {
-
-    if ( $fullscale and $recordingsModel->row['mastermediatype'] == 'audio' and $recordingsModel->hasSubtitle() )
-      return '140';
-    elseif ( $fullscale and $recordingsModel->row['mastermediatype'] == 'audio' )
-      return '60';
-    elseif ( $fullscale )
-      return '530';
-
-    if ( $recordingsModel->row['mastermediatype'] == 'audio' and $recordingsModel->hasSubtitle() )
-      $height = '120';
-    elseif ( $recordingsModel->row['mastermediatype'] == 'audio' )
-      $height = '60';
-    else
-      $height = '385';
-
-    return $height;
-
-  }
-
   public function embedAction() {
 
     $recordingsModel = $this->modelIDCheck(
@@ -853,7 +833,7 @@ class Controller extends \Visitor\Controller {
     else
       $this->toSmarty['width']     = '480';
 
-    $this->toSmarty['height']      = $this->getPlayerHeight( $recordingsModel, $fullscale );
+    $this->toSmarty['height']      = $recordingsModel->getPlayerHeight( $fullscale );
     $this->toSmarty['containerid'] = 'vsq_' . rand();
     $this->toSmarty['recording']   = $recordingsModel->row;
     $this->toSmarty['flashdata']   = $this->getFlashParameters( $flashdata );

@@ -28,7 +28,6 @@ class Controller extends \Visitor\Controller {
   );
 
   public $apisignature = array(
-    // crestron livefeed lekeres pin alapjan
     'getdetails' => array(
       'id' => array(
         'type' => 'id',
@@ -72,6 +71,11 @@ class Controller extends \Visitor\Controller {
       $this->organization['id']
     );
 
+    $ret['recordings']['data'] = $this->addEmbedToRecordings(
+      $ret['recordings']['data']
+    );
+
+
     $filters = array(
       'organizationid' => $this->organization['id'],
       'showall' => '1',
@@ -82,7 +86,58 @@ class Controller extends \Visitor\Controller {
     );
     $ret['livefeeds']['count'] = count( $ret['livefeeds']['data'] );
 
+    $ret['livefeeds']['data'] = $this->addEmbedToLive(
+      $ret['livefeeds']['data']
+    );
+
     return $ret;
+  }
+
+  private function addEmbedToRecordings( &$data ) {
+    $embed =
+      '<iframe width="480" height="*HEIGHT*" src="' .
+      $this->bootstrap->baseuri . 'recordings/' .
+      'embed/*RECORDINGID*?token=***TOKEN***" frameborder="0"' .
+      ' allowfullscreen="allowfullscreen"></iframe>'
+    ;
+
+    $recModel = $this->bootstrap->getModel('recordings');
+    foreach( $data as $key => $row ) {
+      $recModel->row = $row;
+      $recModel->id  = $row['id'];
+
+      // legyen mindig fullscale, valszeg kene ra parameter TODO
+      $data[ $key ]['embed'] = strtr( $embed, array(
+          '*HEIGHT*'      => $recModel->getPlayerHeight( true ),
+          '*RECORDINGID*' => $row['id'],
+        )
+      );
+    }
+
+    return $data;
+  }
+
+  private function addEmbedToLive( &$data ) {
+    $this->bootstrap->includeTemplatePlugin('filenameize');
+    $embed =
+      '<iframe width="980" height="*HEIGHT*" src="' .
+      $this->bootstrap->baseuri . 'live/view/*FEEDID*,*FEEDNAMEIZED*' .
+      '?chromeless=true&amp;chat=*NEEDCHAT*" frameborder="0" '.
+      'allowfullscreen="allowfullscreen"></iframe>'
+    ;
+
+    foreach( $data as $key => $row ) {
+      $needchat = $row['moderationtype'] != 'nochat';
+      $data[ $key ]['embed'] = strtr( $embed, array(
+          '*HEIGHT*'       => $needchat? '880': '550',
+          '*FEEDID*'       => $row['id'],
+          '*FEEDNAMEIZED*' => smarty_modifier_filenameize( $row['name'] ),
+          '*NEEDCHAT*'     => $needchat? 'true': 'false',
+        )
+      );
+    }
+
+    return $data;
   }
 
   public function deleteAction() {
