@@ -645,7 +645,6 @@ class Bootstrap {
       $redis->select( $this->config['redis']['database'] );
 
     return $this->instances['redis'] = $redis;
-
   }
 
   public function getLDAP( $config ) {
