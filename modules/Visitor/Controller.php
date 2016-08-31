@@ -681,6 +681,8 @@ class Controller extends \Springboard\Controller\Visitor {
     return false;
   }
 
+  // ha konfiguralhatova tesszuk a cache key-t akkor el kell rakni
+  // azt is valahova hogy mi szerepeljen benne
   private function getTokenCacheValue( $recordingid, $livefeedid ) {
     $user = $this->bootstrap->getSession('user');
     return "rec:$recordingid|live:$livefeedid|uid:" . $user['id'];

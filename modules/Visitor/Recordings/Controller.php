@@ -725,6 +725,7 @@ class Controller extends \Visitor\Controller {
     $autoplay     = $this->application->getParameter('autoplay');
     $fullscale    = $this->application->getParameter('fullscale');
     $skipcontent  = $this->application->getParameter('skipcontent');
+    $token        = $this->application->getParameter('token');
     $versions     = $recordingsModel->getVersions();
     $browserinfo  = $this->bootstrap->getBrowserInfo();
     $user         = $this->bootstrap->getSession('user');
@@ -732,23 +733,29 @@ class Controller extends \Visitor\Controller {
     $accesskey    = $recordingsModel->id . '-' . (int)$recordingsModel->row['issecurestreamingforced'];
     $needauth     = false;
     $nopermission = false;
+    $tokenValid   = false;
     $l            = $this->bootstrap->getLocalization();
 
-    $access[ $accesskey ] = $recordingsModel->userHasAccess( $user, null, false, $this->organization );
+    if ( !$token ) {
 
-    if (
-         in_array( $access[ $accesskey ], array(
-             'registrationrestricted',
-             'departmentorgrouprestricted',
-           ), true // strict = true
+      $access[ $accesskey ] = $recordingsModel->userHasAccess( $user, null, false, $this->organization );
+
+      if (
+           in_array( $access[ $accesskey ], array(
+               'registrationrestricted',
+               'departmentorgrouprestricted',
+             ), true // strict = true
+           )
          )
-       )
-      $needauth = true;
-    elseif ( $access[ $accesskey ] !== true )
-      $nopermission = true;
+        $needauth = true;
+      elseif ( $access[ $accesskey ] !== true )
+        $nopermission = true;
+
+    } else
+      $tokenValid = $this->tokenValid( $token, $recordingsModel->id );
 
     // hozzaferunk, log
-    if ( !$needauth and !$nopermission )
+    if ( !$needauth and !$nopermission and $tokenValid )
       $this->bootstrap->getModel('usercontenthistory')->markRecording(
         $recordingsModel,
         $user,
@@ -825,6 +832,14 @@ class Controller extends \Visitor\Controller {
       $flashdata['authorization_need']      = true;
       $flashdata['authorization_loginForm'] = false;
       $flashdata['authorization_message']   = $l('recordings', 'nopermission');
+
+    }
+
+    if ( !$tokenValid ) {
+
+      $flashdata['authorization_need']      = true;
+      $flashdata['authorization_loginForm'] = false;
+      $flashdata['authorization_message']   = $l('recordings', 'token_invalid');
 
     }
 
