@@ -131,7 +131,7 @@
                 </ul>
                 <div class="hr"></div>
 
-                {if $member|@userHasPrivilege:'recordings_upload':'isuploader':'ismoderateduploader':'isclientadmin':'iseditor'}
+                {if $member|@userHasPrivilege:'recordings_upload':'or':isuploader':'ismoderateduploader':'isclientadmin':'iseditor'}
                   <div class="title">{#usermenu_recordings_title#}</div>
                   <ul>
                     <li><a href="{$language}/recordings/myrecordings">{#usermenu_recordings_myrecordings#}</a></li>
