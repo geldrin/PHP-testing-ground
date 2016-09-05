@@ -100,8 +100,8 @@ class RecordingsUploadJob extends Job {
 
           // Upload recording
           $time_start = time();
-          //$recording = $api->uploadRecording($dstFileName, "hun", $liveFeedRecording['userid'], 0);
-          $recording = $api->uploadRecording($dstFileName, "hun");
+          $recording = $api->uploadRecording($dstFileName, "hun", $liveFeedRecording['userid'], 0);
+          //$recording = $api->uploadRecording($dstFileName, "hun");
           $duration = time() - $time_start;
           $mins_taken = round($duration / 60, 2);
 
@@ -121,10 +121,10 @@ class RecordingsUploadJob extends Job {
             'isembedable'         => 1
           );
 
-          $api->modifyRecording($recording['data']['id'], $metadata);
+          $api->modifyRecording($recording['data']['id'], $metadata, $liveFeedRecording['userid']);
 
           // Debug
-          $this->debugLog("[INFO] Videosquare API metadata updated:\n" . print_r($metadata, true), false);
+          $this->debugLog("[INFO] Videosquare API metadata updated (on behalf of user id#" . $liveFeedRecording['userid'] . "):\n" . print_r($metadata, true), false);
 
           // Set livefeed recording status
           $vcrObj->updateLiveFeedRecording("uploaded", null, null, $recording['data']['id']);
