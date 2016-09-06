@@ -249,6 +249,26 @@ $config = Array(
     'value'       => 0,
   ),
 
+  'istokenverifyenabled' => array(
+    'displayname' => 'Token hitelesítés használata?',
+    'type'        => 'inputRadio',
+    'values'      => $l->getLov('yesno'),
+    'value'       => 0,
+  ),
+
+  'tokenverifyurl' => array(
+    'displayname' => 'Token hitelesítő URL',
+    'type'        => 'inputText',
+    'validation'  => array(
+      array(
+        'type'     => 'string',
+        'regexp'   => CF_URL,
+        'help'     => 'Az URL nem jól formázott (pl.: https://domain.hu/verifytoken)',
+        'required' => false,
+      ),
+    ),
+  ),
+
   'subscriberotherfs' => array(
     'legend' => 'Egyéb előfizetői beállítások',
     'type'   => 'fieldset',
