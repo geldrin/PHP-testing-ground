@@ -711,7 +711,7 @@ class Controller extends \Visitor\Controller {
   }
 
   public function modifyrecordingasuserAction( $id ) {
-    return $this->modifyrecording( $id );
+    return $this->modifyrecordingAction( $id );
   }
 
   public function embedAction() {
