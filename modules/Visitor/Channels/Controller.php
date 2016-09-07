@@ -32,10 +32,35 @@ class Controller extends \Visitor\Controller {
       'id' => array(
         'type' => 'id',
       ),
+      'liveembedwithchat' => array(
+        'type'        => 'id',
+        'required'    => false,
+        'shouldemail' => false,
+      ),
+      'liveembedfullwidth' => array(
+        'type'        => 'id',
+        'required'    => false,
+        'shouldemail' => false,
+      ),
+      'recordingembedfullwidth' => array(
+        'type'        => 'id',
+        'required'    => false,
+        'shouldemail' => false,
+      ),
+      'recordingembedautoplay' => array(
+        'type'        => 'id',
+        'required'    => false,
+        'shouldemail' => false,
+      ),
+      'recordingembedstart' => array(
+        'type'        => 'string',
+        'required'    => false,
+        'shouldemail' => false,
+      ),
     ),
   );
 
-  public function getdetailsAction( $id ) {
+  public function getdetailsAction( $id, $liveembedwithchat, $liveembedfullwidth, $recordingembedfullwidth, $recordingembedautoplay, $recordingembedstart ) {
     $user = $this->bootstrap->getSession('user');
     $channelModel = $this->checkOrganizationAndIDWithApi(
       true,
@@ -72,7 +97,10 @@ class Controller extends \Visitor\Controller {
     );
 
     $ret['recordings']['data'] = $this->addEmbedToRecordings(
-      $ret['recordings']['data']
+      $ret['recordings']['data'],
+      $recordingembedfullwidth,
+      $recordingembedautoplay,
+      $recordingembedstart
     );
 
 
@@ -87,17 +115,38 @@ class Controller extends \Visitor\Controller {
     $ret['livefeeds']['count'] = count( $ret['livefeeds']['data'] );
 
     $ret['livefeeds']['data'] = $this->addEmbedToLive(
-      $ret['livefeeds']['data']
+      $ret['livefeeds']['data'],
+      $liveembedwithchat,
+      $liveembedfullwidth
     );
 
     return $ret;
   }
 
-  private function addEmbedToRecordings( &$data ) {
+  private function addEmbedToRecordings( &$data, $recordingembedfullwidth, $recordingembedautoplay, $recordingembedstart ) {
+    $params = array(
+      'autoplay' => $recordingembedautoplay? 'yes': 'no',
+      'fullscale' => $recordingembedfullwidth? 'yes': 'no',
+    );
+
+    if ( !$recordingembedfullwidth )
+      $width = '950';
+    else
+      $width = '480';
+
+    if ( preg_match( '/^\d{1,2}h\d{1,2}m\d{1,2}s$|^\d+$/', $recordingembedstart ) )
+      $params['start'] = $recordingembedstart;
+
+    $query = htmlspecialchars(
+      http_build_query( $params ),
+      ENT_QUOTES,
+      'UTF-8'
+    );
+
     $embed =
-      '<iframe width="480" height="*HEIGHT*" src="' .
+      '<iframe width="' . $width . '" height="*HEIGHT*" src="' .
       $this->bootstrap->baseuri . 'recordings/' .
-      'embed/*RECORDINGID*?token=***TOKEN***" frameborder="0"' .
+      'embed/*RECORDINGID*?' . $query . '&amp;token=***TOKEN***" frameborder="0"' .
       ' allowfullscreen="allowfullscreen"></iframe>'
     ;
 
@@ -108,7 +157,7 @@ class Controller extends \Visitor\Controller {
 
       // legyen mindig fullscale, valszeg kene ra parameter TODO
       $data[ $key ]['embed'] = strtr( $embed, array(
-          '*HEIGHT*'      => $recModel->getPlayerHeight( true ),
+          '*HEIGHT*'      => $recModel->getPlayerHeight( $recordingembedfullwidth ),
           '*RECORDINGID*' => $row['id'],
         )
       );
@@ -117,22 +166,60 @@ class Controller extends \Visitor\Controller {
     return $data;
   }
 
-  private function addEmbedToLive( &$data ) {
+  private function addEmbedToLive( &$data, $liveembedwithchat, $liveembedfullwidth ) {
     $this->bootstrap->includeTemplatePlugin('filenameize');
+    $params = array(
+      'chromeless' => 'true',
+      'chat' => '-NEEDCHAT-', // mert a * htmlspecialchar es escapelodik
+    );
+
+    if ( !$liveembedfullwidth )
+      $params['fullplayer'] = 'false';
+
+    if ( $liveembedfullwidth )
+      $width = '980';
+    else
+      $width = '480';
+
     $embed =
-      '<iframe width="980" height="*HEIGHT*" src="' .
-      $this->bootstrap->baseuri . 'live/view/*FEEDID*,*FEEDNAMEIZED*' .
-      '?chromeless=true&amp;chat=*NEEDCHAT*&amp;token=***TOKEN***" frameborder="0" '.
-      'allowfullscreen="allowfullscreen"></iframe>'
+      '<iframe width="' . $width . '" height="*HEIGHT*" src="' .
+      $this->bootstrap->baseuri . 'live/view/*FEEDID*,*FEEDNAMEIZED*?*QUERY*&amp;token=***TOKEN***"' .
+      ' frameborder="0" allowfullscreen="allowfullscreen"></iframe>'
     ;
 
+    $query = htmlspecialchars(
+      http_build_query( $params ),
+      ENT_QUOTES,
+      'UTF-8'
+    );
+
+    $embed = str_replace('*QUERY*', $query, $embed );
+
     foreach( $data as $key => $row ) {
-      $needchat = $row['moderationtype'] != 'nochat';
+      $needchat = $liveembedwithchat;
+      if ( $row['moderationtype'] == 'nochat' )
+        $needchat = false;
+
+      if ( $liveembedfullwidth ) {
+
+        if ( $needchat )
+          $height = '1000';
+        else
+          $height = '670';
+
+      } else {
+
+        if ( $needchat )
+          $height = '670';
+        else
+          $height = '550';
+      }
+
       $data[ $key ]['embed'] = strtr( $embed, array(
-          '*HEIGHT*'       => $needchat? '880': '550',
+          '*HEIGHT*'       => $height,
           '*FEEDID*'       => $row['id'],
           '*FEEDNAMEIZED*' => smarty_modifier_filenameize( $row['name'] ),
-          '*NEEDCHAT*'     => $needchat? 'true': 'false',
+          '-NEEDCHAT-'     => $needchat? 'true': 'false',
         )
       );
     }
