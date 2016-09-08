@@ -40,7 +40,7 @@
         | <a href="#" class="liveembed">{#live__embed#}</a>
       {/if}
       {if $organization.islivepinenabled}
-        | <a href="{$language}/live/teachers/{$feed.id}">{#live__teachers#}</a>
+        | <a href="{$language}/live/inviteteachers/{$feed.id}">{#live__teachers#}</a>
       {/if}
       | <a href="{$language}/live/chatadmin/{$feed.id}">{#live__chatadmin#}</a>
       | <a href="{$language}/live/chatexport/{$feed.id}">{#live__chatexport#}</a>
