@@ -238,11 +238,13 @@ class Ldap extends \AuthDirectories\Base {
         \Springboard\Debug::varDump( $result )
       );
 
+      if ( !isset( $result['dn'] ) ) // nem talaltunk usert
+        return $dn;
+
       $dn = $ldap::implodePossibleArray(' ', $result['dn'] );
       break;
     }
 
-    unset( $ldap );
     return $dn;
   }
 }
