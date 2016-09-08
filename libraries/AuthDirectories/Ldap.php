@@ -158,14 +158,15 @@ class Ldap extends \AuthDirectories\Base {
     return $ret;
   }
 
-  public function handleLogin( $user, $password ) {
+  public function handleLogin( $username, $password ) {
     $ret = array();
 
     $this->l(
-      "directory/ldap::handleLogin, user: $user"
+      "directory/ldap::handleLogin, username: $username"
     );
 
-    if ( preg_match( $this->directory['ldapusernametransformregexp'], $user, $match ) )
+    $user = $username;
+    if ( preg_match( $this->directory['ldapusernametransformregexp'], $username, $match ) )
       $user = $match['username'];
 
     $user = $this->getUserDNFromUsername( $user );
@@ -181,7 +182,8 @@ class Ldap extends \AuthDirectories\Base {
         )
       );
 
-      $ret = $this->getAccountInfo( $ldap, $user );
+      // itt az eredeti username-et adjuk at
+      $ret = $this->getAccountInfo( $ldap, $username );
     } catch( \Exception $e ) {
       // valami rosz, vagy a user/pw vagy az ldap server
     }
