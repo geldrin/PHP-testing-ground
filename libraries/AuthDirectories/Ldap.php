@@ -222,7 +222,7 @@ class Ldap extends \AuthDirectories\Base {
     $results = $ldap->search(
       $this->directory['ldapusertreedn'],
       $filter,
-      array('dn') // kizarolag a DN-re vagyunk kivancsiak
+      array('dn', 'distinguishedName') // kizarolag a DN-re vagyunk kivancsiak
     );
 
     if ( $results === false )
@@ -238,10 +238,12 @@ class Ldap extends \AuthDirectories\Base {
         \Springboard\Debug::varDump( $result )
       );
 
-      if ( !isset( $result['distinguishedName'] ) ) // nem talaltunk usert
-        return $dn;
+      if ( isset( $result['dn'] ) )
+        $dn = $ldap::implodePossibleArray(' ', $result['dn'] );
 
-      $dn = $ldap::implodePossibleArray(' ', $result['distinguishedName'] );
+      if ( isset( $result['distinguishedName'] ) ) // nem talaltunk usert
+        $dn = $ldap::implodePossibleArray(' ', $result['distinguishedName'] );
+
       break;
     }
 
