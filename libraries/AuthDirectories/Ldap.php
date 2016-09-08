@@ -11,7 +11,7 @@ class Ldap extends \AuthDirectories\Base {
       '(&(objectCategory=person)(objectClass=user)(sAMAccountName=%USERNAME%))'
     );
     $this->setDirectoryKeyIfEmpty(
-      'ldapusernameregex',
+      'ldapusernametransformregexp',
       '/^(?<username>.+)@.*$/'
     );
   }
@@ -35,7 +35,7 @@ class Ldap extends \AuthDirectories\Base {
 
   public function handle( $remoteuser ) {
     $accountname = $remoteuser;
-    if ( preg_match( $this->directory['ldapusernameregex'], $remoteuser, $match ) )
+    if ( preg_match( $this->directory['ldapusernametransformregexp'], $remoteuser, $match ) )
       $accountname = $match['username'];
 
     $this->l(
@@ -88,13 +88,13 @@ class Ldap extends \AuthDirectories\Base {
     if ( $results === false )
       throw new \Exception(
         "LDAP user search for $accountname failed, " .
-        "org_directory was: " . var_export( $this->directory, true )
+        "org_directory was: " . \Springboard\Debug::varDump( $this->directory )
       );
 
     foreach( $results as $result ) { // csak egy result lesz
 
       $this->l(
-        "directory/ldap::getAccountInfo, filter result: \n" . var_export( $result, true )
+        "directory/ldap::getAccountInfo, filter result: \n" . \Springboard\Debug::varDump( $result )
       );
 
       $accountname = $ldap::implodePossibleArray(' ', $result['sAMAccountName'] );
@@ -152,21 +152,26 @@ class Ldap extends \AuthDirectories\Base {
     }
 
     $this->l(
-      "directory/ldap::getAccountInfo, result: \n" . var_export( $ret, true )
+      "directory/ldap::getAccountInfo, result: \n" . \Springboard\Debug::varDump( $ret )
     );
 
     return $ret;
   }
 
-  public function handleLogin( $user, $password ) {
+  public function handleLogin( $username, $password ) {
     $ret = array();
 
     $this->l(
-      "directory/ldap::handleLogin, user: $user"
+      "directory/ldap::handleLogin, username: $username"
     );
 
-    if ( preg_match( $this->directory['ldapusernameregex'], $user, $match ) )
+    $user = $username;
+    if ( preg_match( $this->directory['ldapusernametransformregexp'], $username, $match ) )
       $user = $match['username'];
+
+    $user = $this->getUserDNFromUsername( $user );
+    if ( !$user ) // csak akkor ha nem talaltuk meg a usert a pre-checkel
+      return $ret;
 
     try {
 
@@ -177,7 +182,8 @@ class Ldap extends \AuthDirectories\Base {
         )
       );
 
-      $ret = $this->getAccountInfo( $ldap, $user );
+      // itt az eredeti username-et adjuk at
+      $ret = $this->getAccountInfo( $ldap, $username );
     } catch( \Exception $e ) {
       // valami rosz, vagy a user/pw vagy az ldap server
     }
@@ -185,4 +191,64 @@ class Ldap extends \AuthDirectories\Base {
     return $this->directoryuser = $ret;
   }
 
+  // admin userre bindolunk, megkeressuk a user DN-jet es arra probalunk ujra bindolni
+  // http://david-latham.blogspot.com/2010/10/use-php-to-perform-ldap-bind-to-windows.html
+  protected function getUserDNFromUsername( $username ) {
+
+    // nincs pre-check, hasznaljuk eredetiben
+    if (
+         !isset( $this->directory['ldapuserprecheckquery'] ) or
+         !$this->directory['ldapuserprecheckquery']
+       )
+      return $username;
+
+    // ennek mukodnie kell, nem try-catchelunk
+    $ldap = $this->bootstrap->getLDAP( array(
+        'server'   => $this->directory['server'],
+        'username' => $this->directory['user'],
+        'password' => $this->directory['password'],
+      )
+    );
+
+    if ( !$ldap )
+      $this->l("directory/ldap::getUserDNFromUsername, admin bind failed");
+
+    $filter = strtr( $this->directory['ldapuserprecheckquery'], array(
+        '%USERNAME%'              => \LDAP\LDAP::escape( $username ),
+        '%UNESCAPED_USERNAME%'    => $username,
+      )
+    );
+
+    $this->l("directory/ldap::getUserDNFromUsername, pre-check with filter: $filter");
+
+    $results = $ldap->search(
+      $this->directory['ldapusertreedn'],
+      $filter,
+      array('dn', 'distinguishedName') // kizarolag a DN-re vagyunk kivancsiak
+    );
+
+    if ( $results === false )
+      throw new \Exception(
+        "LDAP user pre-check search for $username failed, " .
+        "org_directory was: " . \Springboard\Debug::varDump( $this->directory )
+      );
+
+    $dn = '';
+    foreach( $results as $result ) {
+      $this->l(
+        "directory/ldap::getUserDNFromUsername, filter result: \n" .
+        \Springboard\Debug::varDump( $result )
+      );
+
+      if ( isset( $result['dn'] ) )
+        $dn = $ldap::implodePossibleArray(' ', $result['dn'] );
+
+      if ( isset( $result['distinguishedName'] ) ) // nem talaltunk usert
+        $dn = $ldap::implodePossibleArray(' ', $result['distinguishedName'] );
+
+      break;
+    }
+
+    return $dn;
+  }
 }
