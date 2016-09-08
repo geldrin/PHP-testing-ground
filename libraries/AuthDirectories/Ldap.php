@@ -168,7 +168,7 @@ class Ldap extends \AuthDirectories\Base {
     if ( preg_match( $this->directory['ldapusernametransformregexp'], $user, $match ) )
       $user = $match['username'];
 
-    $user = $this->getUserDNFromUsername( $username );
+    $user = $this->getUserDNFromUsername( $user );
     if ( !$user ) // csak akkor ha nem talaltuk meg a usert a pre-checkel
       return $ret;
 
