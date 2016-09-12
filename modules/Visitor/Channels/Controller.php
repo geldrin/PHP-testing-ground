@@ -58,7 +58,42 @@ class Controller extends \Visitor\Controller {
         'shouldemail' => false,
       ),
     ),
+    'list' => array(
+      'start' => array(
+        'type'        => 'id',
+        'required'    => false,
+        'shouldemail' => false,
+      ),
+      'limit' => array(
+        'type'        => 'id',
+        'required'    => false,
+        'shouldemail' => false,
+      ),
+    ),
   );
+
+  public function listAction( $start, $limit ) {
+    if ( $start < 0 )
+      $start = 0;
+    if ( $limit <= 0 )
+      $limit = 30;
+
+    $chanModel = $this->bootstrap->getModel('channels');
+
+    $ret = array(
+      'total' => (float)$chanModel->getListCount( $this->organization['id'] ),
+      'start' => $start,
+      'limit' => $limit,
+      'data'  => $chanModel->getList(
+        $this->organization['id'],
+        \Springboard\Language::get(),
+        $start,
+        $limit
+      ),
+    );
+
+    return $ret;
+  }
 
   public function getdetailsAction( $id, $liveembedwithchat, $liveembedfullwidth, $recordingembedfullwidth, $recordingembedautoplay, $recordingembedstart ) {
     $user = $this->bootstrap->getSession('user');
