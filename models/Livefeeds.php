@@ -638,7 +638,7 @@ class Livefeeds extends \Springboard\Model {
 
   }
 
-  public function isAccessible( $user, $organization, $secure = null ) {
+  public function isAccessible( $user, $organization, $secure = null, $token = null ) {
 
     $this->ensureObjectLoaded();
 
@@ -652,6 +652,18 @@ class Livefeeds extends \Springboard\Model {
          )
        )
       return true;
+
+    // van token! validalni
+    if ( $token !== null ) {
+      $auth = $this->bootstrap->getTokenAuth( $organization );
+      $tokenValid = $auth->tokenValid( $token );
+      if ( $tokenValid === false )
+        return 'tokeninvalid';
+      else if ( $tokenValid )
+        return true;
+
+      // ha null lenne akkor szimplan tovabb megyunk a checkkekkel
+    }
 
     if ( $this->isAccessibleByInvitation( $user, $organization ) )
       return true;

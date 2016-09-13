@@ -122,10 +122,13 @@ class Controller extends \Visitor\Controller {
     $l         = $this->bootstrap->getLocalization();
     $user      = $this->bootstrap->getSession('user');
     $anonuser  = $this->bootstrap->getSession('anonuser');
+    $token     = $this->application->getParameter('token', null );
     $access    = $this->bootstrap->getSession('liveaccess');
     $accesskey = $feedModel->id . '-' . ( $feedModel->row['issecurestreamingforced']? '1': '0');
 
-    $access[ $accesskey ] = $feedModel->isAccessible( $user, $this->organization );
+    $access[ $accesskey ] = $feedModel->isAccessible(
+      $user, $this->organization, null, $token
+    );
 
     $channelModel = $this->modelIDCheck('channels', $feedModel->row['channelid'] );
     $streamid     = $this->application->getNumericParameter('streamid');
@@ -136,6 +139,7 @@ class Controller extends \Visitor\Controller {
     $nopermission = false;
     $fullplayer   = true;
     $urlparams    = array();
+    $tokenValid   = true;
 
     if (
          $chromeless and in_array( $access[ $accesskey ], array(
@@ -145,13 +149,15 @@ class Controller extends \Visitor\Controller {
          )
        )
       $needauth = true;
+    elseif ( $chromeless and $access[ $accesskey ] === 'tokeninvalid')
+      $tokenValid = false;
     elseif ( $chromeless and $access[ $accesskey ] !== true )
       $nopermission = true;
     else
       $this->handleUserAccess( $access[ $accesskey ] );
 
     // hozzaferunk, log
-    if ( !$needauth and !$nopermission )
+    if ( !$needauth and !$nopermission and $tokenValid )
       $this->bootstrap->getModel('usercontenthistory')->markLivefeed(
         $feedModel,
         $user,
@@ -252,6 +258,14 @@ class Controller extends \Visitor\Controller {
       $flashdata['authorization_need']      = true;
       $flashdata['authorization_loginForm'] = false;
       $flashdata['authorization_message']   = $l('recordings', 'nopermission');
+
+    }
+
+    if ( !$tokenValid ) {
+
+      $flashdata['authorization_need']      = true;
+      $flashdata['authorization_loginForm'] = false;
+      $flashdata['authorization_message']   = $l('recordings', 'token_invalid');
 
     }
 

@@ -384,7 +384,7 @@ class Recordings extends \Springboard\Model {
 
   }
 
-  public function userHasAccess( $user, $secure = null, $mobile = false, $organization = null ) {
+  public function userHasAccess( $user, $secure = null, $mobile = false, $organization = null, $token = null ) {
 
     $this->ensureObjectLoaded();
     /*
@@ -394,6 +394,18 @@ class Recordings extends \Springboard\Model {
     */
     if ( $secure !== null and $this->row['issecurestreamingforced'] != $secure )
       return 'securerestricted';
+
+    // van token! validalni
+    if ( $token !== null ) {
+      $auth = $this->bootstrap->getTokenAuth( $organization );
+      $tokenValid = $auth->tokenValid( $token );
+      if ( $tokenValid === false )
+        return 'tokeninvalid';
+      else if ( $tokenValid )
+        return true;
+
+      // ha null lenne akkor szimplan tovabb megyunk a checkkekkel
+    }
 
     /*
       ha nincs lekonvertalva vagy meg vazlat allapotban van akkor tiltjuk rogton
