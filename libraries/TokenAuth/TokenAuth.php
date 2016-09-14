@@ -115,18 +115,37 @@ class TokenAuth {
       return false;
     }
 
+    $expectedValue = $this->getTokenValue();
+    if ( $value != $expectedValue ) {
+      $this->l(
+        "Token valid but does not have the right value, key: $tokenKey" .
+        " expected: $expectedValue actual: $value"
+      );
+      return false;
+    }
+
     // ha a cache tovabbra is el, es a megfelelo erteke van, tuti jo
     $this->l("Token valid and cached: $tokenKey");
     return true;
   }
 
-  // ha tobb felvetelhez azonos tokennel sikeres valaszt kapunk, igy
-  // tamogatjuk, igy az onus a token apit implementalo rendszeren van
+  // ha tobb felvetelhez azonos tokennel sikeres valaszt kapunk, igy tamogatjuk
   private function getTokenKey( $token, $recordingid, $livefeedid ) {
     // mindent int-re hogy ha null-at adnak at akkor stringkent jelenjen is meg
     $recordingid = intval( $recordingid );
     $livefeedid  = intval( $livefeedid );
     return "token:$token|rec:$recordingid|live:$livefeedid";
+  }
+
+  private function getTokenValue() {
+    /* TODO?
+    $sid = session_id();
+    if ( !$sid )
+      $sid = '1';
+
+    return $sid;
+    */
+    return '1';
   }
 
   // az egyetlen hely ami a redisbe ir a megfelelo token key-re
@@ -158,7 +177,7 @@ class TokenAuth {
 
     $redis = $this->bootstrap->getRedis();
     $tokenKey = $this->getTokenKey( $token, $recordingid, $livefeedid );
-    $redis->setex( $tokenKey, $ttlSeconds, '1' );
+    $redis->setex( $tokenKey, $ttlSeconds, $this->getTokenValue() );
 
     return true;
   }
