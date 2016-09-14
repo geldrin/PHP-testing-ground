@@ -27,6 +27,32 @@ class TokenAuth {
     );
   }
 
+  public static function tokenAccessCheck( $token, $organization, $row ) {
+    // ha nincs token
+    if ( $token === null )
+      return null;
+
+    // ha teljesen publikus a felvetel
+    if ( $row['accesstype'] === 'public' )
+      return null;
+
+    // ha a felvetel nem akar token checket
+    if ( !$row['istokenrequired'] )
+      return null;
+
+    $auth = new TokenAuth( \Bootstrap::getInstance(), $organization );
+    $tokenValid = $auth->tokenValid( $token );
+    if ( $tokenValid === false )
+      return 'tokeninvalid';
+    else if ( $tokenValid )
+      return true;
+
+    // ha tokenValid null lenne akkor szimplan tovabb megyunk a checkkekkel
+    // null akkor lehet ha nincs organization szinten bekapcsolva a token check
+    // (nincs tokenverifyurl)
+    return null;
+  }
+
   // null viszateresi ertek azt jelzi hogy a token nem letezik, nem szabad nezni
   // hogy valid e
   public function tokenValid( $token, $recordingid = 0, $livefeedid = 0 ) {
@@ -74,18 +100,23 @@ class TokenAuth {
       $value = $redis->get( $token );
     }
 
-    if ( !$value )
+    if ( !$value ) {
+      $this->l("Token expired, invalid: $token");
       return false;
+    }
 
     $expectedValue = $this->getTokenCacheValue(
       $recordingid, $livefeedid
     );
 
     // ha a cache tovabbra is el, es a megfelelo erteke van, tuti jo
-    if ( $value === $expectedValue )
+    if ( $value === $expectedValue ) {
+      $this->l("Token valid and cached: $token");
       return true;
+    }
 
     // minden mas esetben nem jo
+    $this->l("Token not valid: $token");
     return false;
   }
 
@@ -93,10 +124,12 @@ class TokenAuth {
   // azt is valahova hogy mi szerepeljen benne
   private function getTokenCacheValue( $recordingid, $livefeedid ) {
     $user = $this->bootstrap->getSession('user');
+    $recordingid = intval( $recordingid );
+    $livefeedid  = intval( $livefeedid );
     return "rec:$recordingid|live:$livefeedid|uid:" . $user['id'];
   }
 
-  private function checkTokenURL( $token, $recordingid, $livefeeid ) {
+  private function checkTokenURL( $token, $recordingid, $livefeedid ) {
     $user = $this->bootstrap->getSession('user');
 
     $curl = new \Springboard\CURL( $this->bootstrap );

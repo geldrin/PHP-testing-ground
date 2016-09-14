@@ -1,26 +1,26 @@
 <?php
 
 return array(
-  
+
   'languages' => array(
     'hu' => 'magyar',
     'en' => 'angol',
   ),
-  
+
   'mailqueueerrors' => array(
     ''          => '<b>küldésre vár</b>',
     'sent'      => '<font color="green"><b>elküldve</b></font>',
     'error'     => '<font color="red"><b>hiba a küldés során</font>',
     'cancelled' => '<font color="brown">leállítva</font>',
   ),
-  
+
   'mailqueueerrors_plain' => array(
     ''          => 'küldésre vár',
     'sent'      => 'elküldve',
     'error'     => 'hiba a küldés során',
     'cancelled' => 'leállítva',
   ),
-  
+
   'tinymceadmin' => array(
     'language' => \Springboard\Language::get(),
     'theme' => "advanced",
@@ -44,7 +44,7 @@ return array(
     //'relative_urls' => false, // atirja az urleket relativera (ha in-site link), akar jo otlet is lehet
     'entity_encoding' => 'raw',
   ),
-  
+
   'tinymcevisitor' => array(
     'language' => \Springboard\Language::get(),
     'theme' => "advanced",
@@ -65,12 +65,12 @@ return array(
     'entity_encoding' => 'raw',
     'extended_valid_elements' => 'b/strong,i/em', // strongot <b>re, em-et <i>re
   ),
-  
+
   'headerlanguages' => array(
     'hu' => 'HU',
     'en' => 'EN',
   ),
-  
+
   'title' => array(
     'Dr.'        => 'Dr.',
     'BSc.'       => 'BSc.',
@@ -81,34 +81,34 @@ return array(
     'Sir'        => 'Sir',
     'DLA'        => 'DLA',
   ),
-  
+
   'yes' => array(
     0 => '',
     1 => '<font color="green"><b>igen</b></font>',
   ),
-  
+
   'yesno' => array(
     1 => 'igen',
     0 => 'nem',
   ),
-  
+
   'noyes' => array(
     0 => 'nem',
     1 => 'igen',
   ),
-  
+
   'registrationtype' => array(
     'open' => 'open',
     'closed' => 'closed',
     'restricted' => 'restricted',
   ),
-  
+
   'accesstype' => array(
     'public'        => 'publikus (ajánlott)',
     'registrations' => 'regisztráció szükséges',
     'departmentsorgroups' => 'szervezeti egységek vagy saját csoportom számára',
   ),
-  
+
   'permissions' => array(
     'iseditor'      => 'Szerkesztő',
     'isnewseditor'  => 'Hír szerkesztő',
@@ -117,7 +117,7 @@ return array(
     'ismoderateduploader' => 'Moderált feltöltő',
     'isliveadmin'   => 'Live adminisztrátor',
   ),
-  
+
   'recordingstatus' => array(
     'uploading'             => 'Feltöltés alatt',
     'uploaded'              => 'Feltöltve',
@@ -137,7 +137,7 @@ return array(
     'converting3video'      => 'Feldolgozás alatt',
     'failed'                => 'Konvertálás sikertelen',
   ),
-  
+
   'moderationtype' => array(
     'postmoderation' => 'Utólagos moderálás',
     'premoderation'  => 'Megjelenés előtt moderált hozzászólások',
@@ -149,17 +149,17 @@ return array(
     0  => 'engedélyezve',
     1  => 'cenzúrázva',
   ),
-  
+
   'feedtype' => array(
     'live' => 'Élő felvétel',
     'vcr'  => 'Videókonferencia felvétele',
   ),
-  
+
   'encryption' => array(
     0 => 'Nincs titkosítás',
     1 => 'Titkosított streaming',
   ),
-  
+
   'feedstatus' => array(
     'start'         => 'Felvétel indítása folyamatban...',
     'starting'      => 'Felvétel indítása folyamatban...',
@@ -170,23 +170,23 @@ return array(
     'ready'         => 'Felvétel feldolgozása folyamatban...',
     ''              => '',
   ),
-  
+
   'live_compatibility' => array(
     'isdesktopcompatible' => 'Desktop',
     'isandroidcompatible' => 'Android',
     'isioscompatible'     => 'iOS',
   ),
-  
+
   'isintrooutro' => array(
     0 => 'felvétel',
     1 => 'intro/outro',
   ),
-  
+
   'search_wholeword' => array(
     0 => 'bármelyik szóra',
     1 => 'pontos kifejezésre',
   ),
-  
+
   'invite_contenttype' => array(
     'nocontent'   => 'Nem konkrét tartalomra küldök meghívót',
     'recordingid' => 'Felvétel',
@@ -267,9 +267,14 @@ return array(
     'shownickname' => 'Becenév mutatása',
     'showfullname' => 'Teljes név mutatása',
   ),
-  // adminon 
+  // adminon
   'organizations_channelorders' => array(
     '' => 'Alapértelmezett (csatorna rendezés szerint)',
     'recordtimestamp_desc' => 'Legfrissebb felvételtől a legrégebbiig',
+  ),
+
+  'istokenrequired' => array(
+    '0' => $l('recordings', 'istokenrequired_no'),
+    '1' => $l('recordings', 'istokenrequired_yes'),
   ),
 );

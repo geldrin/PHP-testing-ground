@@ -669,14 +669,4 @@ class Bootstrap {
       $this->config['templatepath'] . 'Plugins/modifier.' . $name . '.php'
     );
   }
-
-  public function getTokenAuth( $organization ) {
-    $key = 'tokenauth-' . $organization['id'];
-
-    if ( isset( $this->instances[ $key ] ) and $this->instances[ $key ] )
-      return $this->instances[ $key ];
-
-    $ret = new \TokenAuth\TokenAuth( $this, $organization );
-    return $this->instances[ $key ] = $ret;
-  }
 }

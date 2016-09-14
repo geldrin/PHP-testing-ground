@@ -653,20 +653,18 @@ class Livefeeds extends \Springboard\Model {
        )
       return true;
 
-    // van token! validalni
-    if ( $token !== null ) {
-      $auth = $this->bootstrap->getTokenAuth( $organization );
-      $tokenValid = $auth->tokenValid( $token );
-      if ( $tokenValid === false )
-        return 'tokeninvalid';
-      else if ( $tokenValid )
-        return true;
-
-      // ha null lenne akkor szimplan tovabb megyunk a checkkekkel
-    }
-
     if ( $this->isAccessibleByInvitation( $user, $organization ) )
       return true;
+
+    /*
+      megnezzuk hogy a token valid e, ha a tokennek nincs ertelme eppen akkor
+      null-t ad vissza, ha van ertelme akkor vagy true-t vagy 'tokeninvalid'-ot
+    */
+    $bytoken = \TokenAuth\TokenAuth::tokenAccessCheck(
+      $token, $organization, $this->row
+    );
+    if ( $bytoken !== null )
+      return $bytoken;
 
     switch( $this->row['accesstype'] ) {
 
