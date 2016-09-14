@@ -106,7 +106,7 @@ $config['groups[]'] = array(
   ),
 );
 
-if ( $this->controller->organization['tokenverifyurl'] )
+if ( $this->controller->organization['tokenverifyurl'] and !isset( $tokenDisabled ) )
   $config['istokenrequired'] = array(
     'displayname' => $l('recordings', 'istokenrequired'),
     'itemlayout'  => $this->radioitemlayout,
