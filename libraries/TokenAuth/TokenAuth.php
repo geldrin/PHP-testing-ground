@@ -68,67 +68,68 @@ class TokenAuth {
 
     // ervenyes e meg a token idoben?
     $redis = $this->bootstrap->getRedis();
-    $value = $redis->get( $token );
+    $tokenKey = $this->getTokenKey( $token, $recordingid, $livefeedid );
+    $value = $redis->get( $tokenKey );
+
+    // meg sose lattuk vagy lejart, ujra ellenorizzuk
     if ( !$value ) {
-      // meg sose lattuk vagy lejart, ujra ellenorizzuk
-      $lockKey = $token . '-lock';
+      $lockKey = $tokenKey . '-lock';
       $locked = $redis->setnx( $lockKey, 1 );
+      // sikerult lockolni, a mi requestunket eri a megtiszteltetes hogy
+      // validalja a tokent es mindenki masnak elmondja mi tortent
       if ( $locked ) {
+        // baj eseten ne legyen a lock permanens, 60 masodperc a lejarat
         $redis->expire( $lockKey, 60 );
 
+        // ez fog redisbe irni a getTokenKey altal viszaadott kulcsra
         $result = $this->checkTokenURL(
           $token, $recordingid, $livefeedid
         );
 
+        // mehet mindenki aki vart rank hogy checkeljuk a tokent
         $redis->del( $lockKey );
+
+        // mi tudjuk a valaszt is, rogton vissza is terunk
         return $result;
       }
 
       // lockolva volt, varunk amig elengedik a lockot
-      $i = 1200; // 1200 * 50ms = 60sec
+      $i = 1210; // 1200 * 50ms = 60sec, kicsit tobbet alszunk just in case
       while( $redis->exists( $lockKey ) and $i > 0 ) {
         $i--;
         usleep( 50000 ); // 50 milisecet alszunk
       }
 
       // ha tenyleg 60secig aludtunk akkor valami baj volt
-      // toroljuk a lockot
+      // toroljuk a lockot, nem szabadna megtortennie, de menjunk biztosra
       if ( $i <= 0 )
         $redis->del( $lockKey );
 
-      // ha itt se talaljuk a tokent akkor valami nem mukodik
-      $value = $redis->get( $token );
+      // itt kapjuk vissza hogy mi tortent a lock-ot tarto requesttol
+      // ha itt se talaljuk a tokent akkor nem sikerult validalni a tokent
+      $value = $redis->get( $tokenKey );
     }
 
     if ( !$value ) {
-      $this->l("Token expired, invalid: $token");
+      $this->l("Token expired or invalid: $tokenKey");
       return false;
     }
 
-    $expectedValue = $this->getTokenCacheValue(
-      $recordingid, $livefeedid
-    );
-
     // ha a cache tovabbra is el, es a megfelelo erteke van, tuti jo
-    if ( $value === $expectedValue ) {
-      $this->l("Token valid and cached: $token");
-      return true;
-    }
-
-    // minden mas esetben nem jo
-    $this->l("Token not valid: $token");
-    return false;
+    $this->l("Token valid and cached: $tokenKey");
+    return true;
   }
 
-  // ha konfiguralhatova tesszuk a cache key-t akkor el kell rakni
-  // azt is valahova hogy mi szerepeljen benne
-  private function getTokenCacheValue( $recordingid, $livefeedid ) {
-    $user = $this->bootstrap->getSession('user');
+  // ha tobb felvetelhez azonos tokennel sikeres valaszt kapunk, igy
+  // tamogatjuk, igy az onus a token apit implementalo rendszeren van
+  private function getTokenKey( $token, $recordingid, $livefeedid ) {
+    // mindent int-re hogy ha null-at adnak at akkor stringkent jelenjen is meg
     $recordingid = intval( $recordingid );
     $livefeedid  = intval( $livefeedid );
-    return "rec:$recordingid|live:$livefeedid|uid:" . $user['id'];
+    return "token:$token|rec:$recordingid|live:$livefeedid";
   }
 
+  // az egyetlen hely ami a redisbe ir a megfelelo token key-re
   private function checkTokenURL( $token, $recordingid, $livefeedid ) {
     $user = $this->bootstrap->getSession('user');
 
@@ -156,8 +157,8 @@ class TokenAuth {
     $ttlSeconds = intval( $verifyResult['ttlSeconds'] );
 
     $redis = $this->bootstrap->getRedis();
-    $value = $this->getTokenCacheValue( $recordingid, $livefeedid );
-    $redis->setex( $token, $ttlSeconds, $value );
+    $tokenKey = $this->getTokenKey( $token, $recordingid, $livefeedid );
+    $redis->setex( $tokenKey, $ttlSeconds, '1' );
 
     return true;
   }
