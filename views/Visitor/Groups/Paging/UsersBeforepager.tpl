@@ -1,7 +1,7 @@
 <div class="title">
   <h1>{#groups__users_title#}</h1>
   <h2>{$group.name|escape:html}</h2>
-  {if $member.source != 'kerberos' and $member.source != 'ldap' and $member|@userHasPrivilege:'users_invite':'or':'isclientadmin':'isadmin'}
+  {if $caninvite}
     <a href="{$language}/users/invite?groupid={$group.id}">{#groups__invite#}</a>
   <br/>
   {/if}
