@@ -105,3 +105,20 @@ $config['groups[]'] = array(
     ),
   ),
 );
+
+if ( $this->controller->organization['tokenverifyurl'] and !isset( $tokenDisabled ) )
+  $config['istokenrequired'] = array(
+    'displayname' => $l('recordings', 'istokenrequired'),
+    'itemlayout'  => $this->radioitemlayout,
+    'type'        => 'inputRadio',
+    'value'       => '1',
+    'values'      => $l->getLov('istokenrequired'),
+    'rowlayout'   => '
+      <tr %errorstyle%>
+        <td class="labelcolumn" style="width: 170px;">
+          <label for="%id%">%displayname%</label>
+        </td>
+        <td class="elementcolumn">%prefix%%element%%postfix%%errordiv%</td>
+      </tr>
+    ',
+  );

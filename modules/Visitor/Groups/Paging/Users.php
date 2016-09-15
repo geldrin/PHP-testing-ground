@@ -32,6 +32,14 @@ class Users extends \Visitor\Paging {
       $this->usersModel = $this->bootstrap->getModel('users');
     }
 
+    $user = $this->bootstrap->getSession('user');
+    $caninvite = \Model\Userroles::userHasPrivilege(
+      $user, 'users_invite', 'or', 'isclientadmin', 'isadmin'
+    );
+    if ( !\Model\Userroles::isLocal( $user ) )
+      $caninvite = false;
+
+    $this->controller->toSmarty['caninvite'] = $caninvite;
   }
 
   protected function getUrl() {

@@ -122,6 +122,7 @@ $config = array(
   ),
 );
 
+$tokenDisabled = true;
 include( $this->bootstrap->config['modulepath'] . 'Visitor/Form/Configs/Accesstype.php');
 
 if (

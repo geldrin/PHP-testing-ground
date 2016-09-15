@@ -168,4 +168,14 @@ class Userroles extends \Springboard\Model {
     return isset( $privileges[ $privilege ] );
   }
 
+  public static function isLocal( $user ) {
+    if (
+         !$user['id'] or // nincs is user
+         !$user['source'] or // nincs kitoltve akkor "regi" implicit local
+         $user['source'] === 'local' // konkret local
+       )
+      return true;
+
+    return false;
+  }
 }

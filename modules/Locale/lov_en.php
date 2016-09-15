@@ -1,12 +1,12 @@
 <?php
 
 return array(
-  
+
   'languages' => array(
     'hu' => 'hungarian',
     'en' => 'english',
   ),
-  
+
   'tinymcevisitor' => array(
     'language' => \Springboard\Language::get(),
     'theme' => "advanced",
@@ -27,12 +27,12 @@ return array(
     'entity_encoding' => 'raw',
     'extended_valid_elements' => 'b/strong,i/em', // strongot <b>re, em-et <i>re
   ),
-  
+
   'headerlanguages' => array(
     'hu' => 'HU',
     'en' => 'EN',
   ),
-  
+
   'title' => array(
     'Dr.'        => 'Dr.',
     'BSc.'       => 'BSc.',
@@ -43,34 +43,34 @@ return array(
     'Sir'        => 'Sir',
     'DLA'        => 'DLA',
   ),
-  
+
   'yes' => array(
     0 => '',
     1 => '<font color="green"><b>yes</b></font>',
   ),
-  
+
   'yesno' => array(
     1 => 'yes',
     0 => 'no',
   ),
-  
+
   'noyes' => array(
     0 => 'no',
     1 => 'yes',
   ),
-  
+
   'registrationtype' => array(
     'open' => 'open',
     'closed' => 'closed',
     'restricted' => 'restricted',
   ),
-  
+
   'accesstype' => array(
     'public'        => 'public (recommended)',
     'registrations' => 'requires registration',
     'departmentsorgroups' => 'group of departments or my own groups',
   ),
-  
+
   'permissions' => array(
     'iseditor'      => 'Editor',
     'isnewseditor'  => 'News editor',
@@ -79,7 +79,7 @@ return array(
     'ismoderateduploader' => 'Moderated uploader',
     'isliveadmin'   => 'Live administrator',
   ),
-  
+
   'recordingstatus' => array(
     'uploading'             => 'Uploading',
     'uploaded'              => 'Uploaded',
@@ -100,29 +100,29 @@ return array(
     'converting3video'      => 'Converting',
     'failed'                => 'Conversion failed',
   ),
-  
+
   'moderationtype' => array(
     'postmoderation' => 'Post moderation',
     'premoderation'  => 'Explicit moderation',
     'nochat'         => 'Chat disabled',
   ),
-  
+
   'chatmoderation' => array(
     -1 => 'awaiting moderation',
     0  => 'accepted',
     1  => 'censored',
   ),
-  
+
   'feedtype' => array(
     'live' => 'Live recording',
     'vcr'  => 'Record videoconference',
   ),
-  
+
   'encryption' => array(
     0 => 'Unencrypted',
     1 => 'Encrypted',
   ),
-  
+
   'feedstatus' => array(
     'start'         => 'Recording initiation...',
     'starting'      => 'Recording initiation...',
@@ -133,23 +133,23 @@ return array(
     'ready'         => 'Recording processing...',
     ''              => '',
   ),
-  
+
   'live_compatibility' => array(
     'isdesktopcompatible' => 'Desktop',
     'isandroidcompatible' => 'Android',
     'isioscompatible'     => 'iOS',
   ),
-  
+
   'isintrooutro' => array(
     0 => 'recording',
     1 => 'intro/outro',
   ),
-  
+
   'search_wholeword' => array(
     0 => 'any word',
     1 => 'whole word',
   ),
-  
+
   'invite_contenttype' => array(
     'nocontent'   => 'Invitation without specifying content',
     'recordingid' => 'Recording',
@@ -223,5 +223,10 @@ return array(
   'users_invite_externalsend' => array(
     'local'    => $l('users', 'invite_externalsend_local'),
     'external' => $l('users', 'invite_externalsend_external'),
+  ),
+
+  'istokenrequired' => array(
+    '0' => $l('recordings', 'istokenrequired_no'),
+    '1' => $l('recordings', 'istokenrequired_yes'),
   ),
 );
