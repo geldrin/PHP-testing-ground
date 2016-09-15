@@ -385,6 +385,9 @@ $config = array(
     // software rendering, alapbol nem adjuk at, default erteke false
     // 'recording_swRendering' => true,
 
+    // Adaptive streaming
+    'recording_autoQuality' => false,
+
     // Video + content synchronization (Flash Player)
     'recording_synchronization'        => true,
     'recording_synchronizationTimeMin' => 1.5,    // Min. skew (sec, float)
