@@ -92,6 +92,12 @@ class Controller extends \Visitor\Controller {
       ),
     );
 
+    $this->bootstrap->includeTemplatePlugin('indexphoto');
+    foreach( $ret['data'] as $key => $row )
+      $ret['data'][ $key ]['indexphotourl'] =
+        smarty_modifier_indexphoto( $row )
+      ;
+
     return $ret;
   }
 
@@ -103,9 +109,9 @@ class Controller extends \Visitor\Controller {
       $id
     );
 
-    $ret = $channelModel->row;
-
+    $this->bootstrap->includeTemplatePlugin('indexphoto');
     $recModel = $this->bootstrap->getModel('recordings');
+    $ret = $channelModel->row;
 
     $channelids = array_merge(
       array( $channelModel->id ),
@@ -196,6 +202,9 @@ class Controller extends \Visitor\Controller {
           '*RECORDINGID*' => $row['id'],
         )
       );
+      $data[ $key ]['indexphotourl'] = smarty_modifier_indexphoto(
+        $row, 'player'
+      );
     }
 
     return $data;
@@ -256,6 +265,9 @@ class Controller extends \Visitor\Controller {
           '*FEEDNAMEIZED*' => smarty_modifier_filenameize( $row['name'] ),
           '-NEEDCHAT-'     => $needchat? 'true': 'false',
         )
+      );
+      $data[ $key ]['indexphotourl'] = smarty_modifier_indexphoto(
+        $row, 'live'
       );
     }
 

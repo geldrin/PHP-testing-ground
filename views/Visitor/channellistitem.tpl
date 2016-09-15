@@ -2,7 +2,7 @@
   <div class="recordingpic">
     <a href="{$language}/channels/details/{$item.id},{$item.title|filenameize}"><img src="{$item|@indexphoto}"/></a>
   </div>
-  
+
   <div class="recordingcontent">
     <div class="title">
       <h3><a href="{$language}/channels/details/{$item.id},{$item.title|filenameize}">{$item.title|escape:html|mb_wordwrap:25}</a></h3>
