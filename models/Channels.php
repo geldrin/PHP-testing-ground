@@ -1418,4 +1418,52 @@ class Channels extends \Springboard\Model {
 
     return $ret;
   }
+
+  public function getListCount( $organizationid ) {
+    return $this->db->getOne("
+      SELECT COUNT(*)
+      FROM channels AS c
+      WHERE
+        c.isdeleted      = '0' AND
+        c.organizationid = '$organizationid'
+      LIMIT 1
+    ");
+  }
+
+  public function getList( $organizationid, $language, $start, $limit ) {
+    return $this->db->getArray("
+      SELECT
+        c.id,
+        c.parentid,
+        c.userid,
+        c.title,
+        c.subtitle,
+        c.ordinalnumber,
+        c.url,
+        c.indexphotofilename AS indexphotofilename,
+        c.starttimestamp,
+        c.endtimestamp,
+        s.value AS channeltype,
+        c.isliveevent,
+        c.numberofrecordings,
+        c.recordingslength,
+        c.accesstype,
+        c.isfeatured,
+        c.weight
+      FROM channels AS c
+      LEFT JOIN channel_types AS ct ON(
+        ct.id = c.channeltypeid
+      )
+      LEFT JOIN strings AS s ON(
+        s.translationof = ct.name_stringid AND
+        s.language = '$language'
+      )
+      WHERE
+        c.isdeleted      = '0' AND
+        c.organizationid = '$organizationid'
+      GROUP BY c.id
+      ORDER BY c.id DESC
+      LIMIT $start, $limit
+    ");
+  }
 }

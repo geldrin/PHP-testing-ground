@@ -384,7 +384,7 @@ class Recordings extends \Springboard\Model {
 
   }
 
-  public function userHasAccess( $user, $secure = null, $mobile = false, $organization = null ) {
+  public function userHasAccess( $user, $secure = null, $mobile = false, $organization = null, $token = null ) {
 
     $this->ensureObjectLoaded();
     /*
@@ -408,6 +408,16 @@ class Recordings extends \Springboard\Model {
       hogy engedve van e, meg nem dontunk a visszateresi ertekrol egyelore
     */
     $bysettings = $this->isAccessibleBySettings( $user );
+
+    /*
+      megnezzuk hogy a token valid e, ha a tokennek nincs ertelme eppen akkor
+      null-t ad vissza, ha van ertelme akkor vagy true-t vagy 'tokeninvalid'-ot
+    */
+    $bytoken = \TokenAuth\TokenAuth::tokenAccessCheck(
+      $token, $organization, $this->row
+    );
+    if ( $bytoken !== null )
+      return $bytoken;
 
     /*
       ha nem fer hozza beallitas alapjan akkor megnezzuk hogy invitacio alapjan

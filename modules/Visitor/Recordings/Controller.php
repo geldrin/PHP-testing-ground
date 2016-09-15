@@ -725,7 +725,7 @@ class Controller extends \Visitor\Controller {
     $autoplay     = $this->application->getParameter('autoplay');
     $fullscale    = $this->application->getParameter('fullscale');
     $skipcontent  = $this->application->getParameter('skipcontent');
-    $token        = $this->application->getParameter('token');
+    $token        = $this->application->getParameter('token', null );
     $versions     = $recordingsModel->getVersions();
     $browserinfo  = $this->bootstrap->getBrowserInfo();
     $user         = $this->bootstrap->getSession('user');
@@ -736,23 +736,23 @@ class Controller extends \Visitor\Controller {
     $tokenValid   = false;
     $l            = $this->bootstrap->getLocalization();
 
-    if ( !$token ) {
+    $access[ $accesskey ] = $recordingsModel->userHasAccess(
+      $user, null, false, $this->organization, $token
+    );
 
-      $access[ $accesskey ] = $recordingsModel->userHasAccess( $user, null, false, $this->organization );
-
-      if (
-           in_array( $access[ $accesskey ], array(
-               'registrationrestricted',
-               'departmentorgrouprestricted',
-             ), true // strict = true
-           )
+    if (
+         in_array( $access[ $accesskey ], array(
+             'registrationrestricted',
+             'departmentorgrouprestricted',
+           ), true // strict = true
          )
-        $needauth = true;
-      elseif ( $access[ $accesskey ] !== true )
-        $nopermission = true;
+       )
+      $needauth = true;
+    elseif ( $access[ $accesskey ] !== true )
+      $nopermission = true;
 
-    } else
-      $tokenValid = $this->tokenValid( $token, $recordingsModel->id );
+    if ( $access[ $accesskey ] !== 'tokeninvalid' )
+      $tokenValid = true;
 
     // hozzaferunk, log
     if ( !$needauth and !$nopermission and $tokenValid )

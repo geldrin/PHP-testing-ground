@@ -1023,6 +1023,12 @@ function setupAccesstype( elem ) {
   elem.change(function() {
 
     var elemvalue = elem.filter(':checked').val();
+    if ( elemvalue === 'public' ) {
+      $j('input[name=istokenrequired]').parents('tr').hide();
+    } else {
+      $j('input[name=istokenrequired]').parents('tr').show();
+    }
+
     switch( elemvalue ) {
       case 'public':
       case 'registrations':

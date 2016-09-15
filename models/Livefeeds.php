@@ -638,7 +638,7 @@ class Livefeeds extends \Springboard\Model {
 
   }
 
-  public function isAccessible( $user, $organization, $secure = null ) {
+  public function isAccessible( $user, $organization, $secure = null, $token = null ) {
 
     $this->ensureObjectLoaded();
 
@@ -655,6 +655,16 @@ class Livefeeds extends \Springboard\Model {
 
     if ( $this->isAccessibleByInvitation( $user, $organization ) )
       return true;
+
+    /*
+      megnezzuk hogy a token valid e, ha a tokennek nincs ertelme eppen akkor
+      null-t ad vissza, ha van ertelme akkor vagy true-t vagy 'tokeninvalid'-ot
+    */
+    $bytoken = \TokenAuth\TokenAuth::tokenAccessCheck(
+      $token, $organization, $this->row
+    );
+    if ( $bytoken !== null )
+      return $bytoken;
 
     switch( $this->row['accesstype'] ) {
 

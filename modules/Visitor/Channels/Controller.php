@@ -58,7 +58,48 @@ class Controller extends \Visitor\Controller {
         'shouldemail' => false,
       ),
     ),
+    'list' => array(
+      'start' => array(
+        'type'        => 'id',
+        'required'    => false,
+        'shouldemail' => false,
+      ),
+      'limit' => array(
+        'type'        => 'id',
+        'required'    => false,
+        'shouldemail' => false,
+      ),
+    ),
   );
+
+  public function listAction( $start, $limit ) {
+    if ( $start < 0 )
+      $start = 0;
+    if ( $limit <= 0 )
+      $limit = 30;
+
+    $chanModel = $this->bootstrap->getModel('channels');
+
+    $ret = array(
+      'total' => (float)$chanModel->getListCount( $this->organization['id'] ),
+      'start' => $start,
+      'limit' => $limit,
+      'data'  => $chanModel->getList(
+        $this->organization['id'],
+        \Springboard\Language::get(),
+        $start,
+        $limit
+      ),
+    );
+
+    $this->bootstrap->includeTemplatePlugin('indexphoto');
+    foreach( $ret['data'] as $key => $row )
+      $ret['data'][ $key ]['indexphotourl'] =
+        smarty_modifier_indexphoto( $row )
+      ;
+
+    return $ret;
+  }
 
   public function getdetailsAction( $id, $liveembedwithchat, $liveembedfullwidth, $recordingembedfullwidth, $recordingembedautoplay, $recordingembedstart ) {
     $user = $this->bootstrap->getSession('user');
@@ -68,9 +109,9 @@ class Controller extends \Visitor\Controller {
       $id
     );
 
-    $ret = $channelModel->row;
-
+    $this->bootstrap->includeTemplatePlugin('indexphoto');
     $recModel = $this->bootstrap->getModel('recordings');
+    $ret = $channelModel->row;
 
     $channelids = array_merge(
       array( $channelModel->id ),
@@ -161,6 +202,9 @@ class Controller extends \Visitor\Controller {
           '*RECORDINGID*' => $row['id'],
         )
       );
+      $data[ $key ]['indexphotourl'] = smarty_modifier_indexphoto(
+        $row, 'player'
+      );
     }
 
     return $data;
@@ -221,6 +265,9 @@ class Controller extends \Visitor\Controller {
           '*FEEDNAMEIZED*' => smarty_modifier_filenameize( $row['name'] ),
           '-NEEDCHAT-'     => $needchat? 'true': 'false',
         )
+      );
+      $data[ $key ]['indexphotourl'] = smarty_modifier_indexphoto(
+        $row, 'live'
       );
     }
 
