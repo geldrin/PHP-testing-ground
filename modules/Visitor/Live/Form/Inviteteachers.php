@@ -77,6 +77,14 @@ class Inviteteachers extends \Visitor\HelpForm {
 
     $row['userids'] = implode(',', $userids );
 
+    if ( empty( $row['emails'] ) and empty( $row['userids'] ) ) {
+      $l = $this->bootstrap->getLocalization();
+      $this->form->invalidate();
+      $this->form->addMessage( $l('live', 'invite_help') );
+      return;
+    }
+
+
     $invModel = $this->bootstrap->getModel('livefeed_teacherinvites');
     $invModel->insert( $row );
 
