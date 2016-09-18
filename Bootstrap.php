@@ -164,7 +164,86 @@ class Bootstrap {
 
   }
 
+  public function getPDOadoDB( $errorhandler = true, $dbSettings = 'database' ) {
+    if ( !isset( $this->instances['adodb'] ) )
+      $this->instances['adodb'] = array();
+
+    if ( isset( $this->instances['adodb'][ $dbSettings ] ) and is_resource( $this->instances['adodb'][ $dbSettings ]->_connectionID ) )
+      return $this->instances['adodb'][ $dbSettings ];
+
+    $i = $this->config[ $dbSettings ]['maxretries'];
+    while ( $i ) {
+
+      try {
+
+        $db = new PDOadoDB(
+          $this->config[ $dbSettings ]['host'] .
+          ';dbname=' . $this->config[ $dbSettings ]['database'] .
+          ';charset=' . str_replace( '-', '', $this->config['charset'] ),
+          $this->config[ $dbSettings ]['username'],
+          $this->config[ $dbSettings ]['password']
+        );
+        break;
+
+      } catch ( \PDOException $e ) {
+
+        $msg = $e->getMessage();
+
+        // reconnect when busy
+        if (
+             stripos( $msg, 'too many connections' ) !== false and
+             $this->config[ $dbSettings ]['reconnectonbusy']
+           ) {
+
+          $i--;
+          if ( $i == 0 )
+            throw $e;
+
+          sleep(1);
+          continue;
+        }
+
+        $queue = $this->getMailQueue( true );
+        $queue->instant = 1;
+
+        foreach ( $this->config['logemails'] as $email )
+          $queue->put(
+            $email,
+            $email,
+            '[' . $this->config['siteid'] . '] DB error: ' . $e->getMessage(),
+            \Springboard\Debug::varDump( $e->errorInfo ),
+            false,
+            'text/plain'
+          );
+
+        if ( !ISCLI ) {
+
+          $smarty = $this->getSmarty();
+
+          $smarty->assign('error',      $msg );
+          $smarty->assign('BASE_URI',   $this->config['baseuri'] );
+          $smarty->assign('STATIC_URI', $this->config['staticuri'] );
+          $smarty->display('errorpage.tpl');
+          die();
+
+        } else
+          throw $e; // rethrow, commonerrorhandler megjeleniti szepen
+
+      }
+    }
+
+    $db->debug( $this->debug );
+    $db->SetFetchMode( ADODB_FETCH_ASSOC );
+    return $this->instances['adodb'][ $dbSettings ] = $db;
+  }
+
   public function getAdoDB( $errorhandler = true, $dbSettings = 'database' ) {
+    if (
+         isset( $this->config[ $dbSettings ]['useadodb'] ) and
+         !$this->config[ $dbSettings ]['useadodb']
+       )
+      return $this->getPDOadoDB( $errorhandler, $dbSettings );
+
     if ( !isset( $this->instances['adodb'] ) )
       $this->instances['adodb'] = array();
 
