@@ -16,7 +16,6 @@ class adoconnection {}
 class PDOadoDB extends adoconnection {
   public $pdo;
   public $fetchMode = PDO::FETCH_ASSOC;
-  private $skipCount = 0; // debug backtrace skip count
 
   public $databaseType; // adoDB compat
   private $failedTrans = false;
@@ -419,9 +418,6 @@ class PDOAdoDBStatement {
 
   // proxy to pdo statement
   public function __call( $name, $arguments ) {
-    if ( strpos( $name, 'bind' ) !== 0 )
-      $this->stmt->execute();
-
     $func = array( $this->stmt, $name );
     if (
          !method_exists( $this->stmt, $name ) or
