@@ -176,13 +176,7 @@ class Bootstrap {
 
       try {
 
-        $db = new PDOadoDB(
-          $this->config[ $dbSettings ]['host'] .
-          ';dbname=' . $this->config[ $dbSettings ]['database'] .
-          ';charset=' . str_replace( '-', '', $this->config['charset'] ),
-          $this->config[ $dbSettings ]['username'],
-          $this->config[ $dbSettings ]['password']
-        );
+        $db = new \Springboard\PDOadoDB( $this->config[ $dbSettings ] );
         break;
 
       } catch ( \PDOException $e ) {
@@ -233,7 +227,6 @@ class Bootstrap {
     }
 
     $db->debug( $this->debug );
-    $db->SetFetchMode( ADODB_FETCH_ASSOC );
     return $this->instances['adodb'][ $dbSettings ] = $db;
   }
 
