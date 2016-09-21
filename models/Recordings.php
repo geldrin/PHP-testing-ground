@@ -2564,7 +2564,12 @@ class Recordings extends \Springboard\Model {
 
     }
 
-    if ( !$info['organization']['isrecommendationdisabled'] ) {
+    $needrecommendation = !$info['organization']['isrecommendationdisabled'];
+    // ha tokenauth akkor nincs ajanlo
+    if ( $needrecommendation and isset( $info['tokenauth'] ) and $info['tokenauth'] )
+      $needrecommendation = false;
+
+    if ( $needrecommendation ) {
 
       if ( isset( $info['relatedvideos'] ) )
         $relatedvideos = $info['relatedvideos'];

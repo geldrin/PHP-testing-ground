@@ -772,6 +772,8 @@ class Controller extends \Visitor\Controller {
     if ( $skipcontent )
       $this->toSmarty['skipcontent'] = true;
 
+    // kikapcsolni az ajanlot ha token auth van
+    $this->toSmarty['tokenauth'] = $token and $tokenValid;
     $flashdata = $recordingsModel->getFlashData( $this->toSmarty );
 
     $quality        = $this->application->getParameter('quality');
