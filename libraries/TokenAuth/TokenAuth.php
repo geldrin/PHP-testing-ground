@@ -156,6 +156,7 @@ class TokenAuth {
     $data = $curl->get(
       $this->organization['tokenverifyurl'],
       array(
+        'token'       => $token,
         'recordingid' => $recordingid,
         'livefeedid'  => $livefeedid,
         'userid'      => $user['id'],
