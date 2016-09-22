@@ -605,9 +605,10 @@ class Controller extends \Visitor\Controller {
     $result  = '0';
     $matched =
       preg_match(
-        '/(?P<organizationid>\d+)_' .
+        '/^(?P<organizationid>\d+)_' .
         '(?P<sessionid>' . \Springboard\Session::SESSIONID_RE . ')_' .
-        '(?P<recordingid>\d+)/',
+        '(?P<recordingid>\d+)' .
+        '(?:_(?P<token>.+))?$/',
         $param,
         $matches
       )
@@ -645,8 +646,12 @@ class Controller extends \Visitor\Controller {
 
           if ( $recordingsModel ) {
 
+            $token = null;
+            if ( isset( $matches['token'] ) and $matches['token'] )
+              $token = $matches['token'];
+
             $access[ $accesskey ] = $recordingsModel->userHasAccess(
-              $user, $secure, false, $organization
+              $user, $secure, false, $organization, $token
             );
 
             if ( $access[ $accesskey ] === true )
@@ -774,6 +779,7 @@ class Controller extends \Visitor\Controller {
 
     // kikapcsolni az ajanlot ha token auth van
     $this->toSmarty['tokenauth'] = $token and $tokenValid;
+    $this->toSmarty['token'] = $token;
     $flashdata = $recordingsModel->getFlashData( $this->toSmarty );
 
     $quality        = $this->application->getParameter('quality');

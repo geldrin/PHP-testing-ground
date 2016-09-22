@@ -2887,6 +2887,9 @@ class Recordings extends \Springboard\Model {
       $this->id
     );
 
+    if ( isset( $info['tokenauth'] ) and $info['tokenauth'] )
+      $ret .= '_' . $info['token'];
+
     if ( isset( $info['member'] ) and $info['member']['id'] )
       $ret .= '&uid=' . $info['member']['id'];
 

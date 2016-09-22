@@ -199,6 +199,8 @@ class Controller extends \Visitor\Controller {
       'checkwatchingtimeinterval' => $this->organization['presencechecktimeinterval'],
       'checkwatchingconfirmationtimeout' => $this->organization['presencecheckconfirmationtime'],
     );
+    $info['tokenauth'] = $token and $tokenValid;
+    $info['token'] = $token;
     $flashdata     = $feedModel->getFlashData( $info );
 
     $this->toSmarty['playerwidth']  = 980;
@@ -743,9 +745,10 @@ class Controller extends \Visitor\Controller {
     $result  = '0';
     $matched =
       preg_match(
-        '/(?P<organizationid>\d+)_' .
+        '/^(?P<organizationid>\d+)_' .
         '(?P<sessionid>' . \Springboard\Session::SESSIONID_RE . ')_' .
-        '(?P<feedid>\d+)/',
+        '(?P<feedid>\d+)' .
+        '(?:_(?P<token>.+))?$/',
         $param,
         $matches
       )
@@ -781,8 +784,12 @@ class Controller extends \Visitor\Controller {
 
           if ( $feedModel ) {
 
+            $token = null;
+            if ( isset( $matches['token'] ) and $matches['token'] )
+              $token = $matches['token'];
+
             $access[ $accesskey ] = $feedModel->isAccessible(
-              $user, $organization, $secure
+              $user, $organization, $secure, $token
             );
 
             if ( $access[ $accesskey ] === true )
