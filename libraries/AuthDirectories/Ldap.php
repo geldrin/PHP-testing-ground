@@ -109,8 +109,9 @@ class Ldap extends \AuthDirectories\Base {
         $accountname, $this->directory
       );
 
-      // ha nincs ldapgroupaccess akkor nincs user
-      if ( !$access['hasaccess'] ) {
+      // ha nincs ldapgroupaccess  akkor nincs user
+      // (de csak akkor, ha kell is vagyis non-false erteku az ldapgroupaccessid)
+      if ( !$access['hasaccess'] and $this->directory['ldapgroupaccessid'] ) {
         $this->l(
           "directory/ldap::getAccountInfo, sAMAccountName alapjan nem tagja a csoportnak"
         );
