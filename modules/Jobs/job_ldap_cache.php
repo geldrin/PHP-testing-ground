@@ -35,7 +35,9 @@ if ( iswindows() ) {
 
 // Config
 $isexecute = true;
+// Debug LDAP level
 $isdebug_ldap = false;
+// Debug user and DB manipulation
 $isdebug_user = false;
 
 // Should we delete files or just testing?
@@ -51,11 +53,7 @@ if ( $ldap_dirs === false ) {
 }
 
 // Debug
-if ( $isdebug_ldap ) {
-    echo "*** LDAP directories:\n";
-    var_dump($ldap_dirs);
-    echo "---------------------\n";
-}
+if ( $isdebug_ldap ) $debug->log($jconf['log_dir'], $myjobid . ".log", "[DEBUG] LDAP directories found:\n" . var_export($ldap_dirs, true), $sendmail = false);
 
 // Basic DB LDAP/AD user maintenance: search for unconnected users in groups_members
 $err = updateUnconnectedGroupMembers();
@@ -77,11 +75,7 @@ while ( !$ldap_groups->EOF ) {
     $time_start = time();
     
     // Debug
-    if ( $isdebug_ldap ) {
-        echo "*** LDAP group processing started:\n";
-        var_dump($ldap_group);
-        echo "----------------------------------\n";
-    }
+    if ( $isdebug_ldap ) $debug->log($jconf['log_dir'], $myjobid . ".log", "[DEBUG] LDAP group processing started:\n" . var_export($ldap_group, true), $sendmail = false);
 
     $ldap_dir = searchLDAPDirectoriesByID($ldap_dirs, $ldap_group['organizationdirectoryid']);
 
@@ -147,10 +141,14 @@ while ( !$ldap_groups->EOF ) {
     $debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Synchronizing group: " . $ldap_group['organizationdirectoryldapdn'], $sendmail = false);
 
     // Request all members of nested group
-    $filter = "(&(memberOf:1.2.840.113556.1.4.1941:=" . $ldap_group['organizationdirectoryldapdn'] . ")(objectClass=person)(objectClass=user))";
+	$filter = "(&(memberOf:1.2.840.113556.1.4.1941:=" . $ldap_group['organizationdirectoryldapdn'] . ")(objectClass=person)(objectClass=user))";
+	if ( !empty($ldap_dir['ldapusergroupquery']) ) {
+		$filter = str_replace("%GROUP_DN%", $ldap_group['organizationdirectoryldapdn'], $ldap_dir['ldapusergroupquery']);
+		if ( $isdebug_ldap ) $debug->log($jconf['log_dir'], $myjobid . ".log", "[DEBUG] Using LDAP group member filter template from DB: " . $ldap_dir['ldapusergroupquery'], $sendmail = false);
+	}
 	$attr_filter = array("sAMAccountName", "userPrincipalName");
     // Debug
-    if ( $isdebug_user ) echo "*** LDAP query filter: " . $filter . "\nAttributes: " . print_r($attr_filter, true) . "\n";
+    if ( $isdebug_ldap ) $debug->log($jconf['log_dir'], $myjobid . ".log", "[DEBUG] LDAP group member query filter: " . $filter . "\nAttributes: " . print_r($attr_filter, true), $sendmail = false);
     try {
         $result = ldap_search($ldap_dir['ldap_handler'], $ldap_dir['ldapusertreedn'], $filter, $attr_filter);
     } catch (exception $err) {
@@ -210,16 +208,8 @@ while ( !$ldap_groups->EOF ) {
     $debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Users in LDAP/AD vs. VSQ group: " . count($ldap_users) . " / " . count($vsq_group_members), $sendmail = false);
         
     // Debug
-    if ( $isdebug_user ) {
-        echo "*** VSQ group members:\n";
-        var_dump($vsq_group_members);
-        echo "----------------------\n";
-    }
-    if ( $isdebug_user ) {
-        echo "*** LDAP/AD group members:\n";
-        var_dump($ldap_users);
-        echo "----------------------\n";
-    }
+    if ( $isdebug_user ) $debug->log($jconf['log_dir'], $myjobid . ".log", "[DEBUG] VSQ group members:\n" . var_export($vsq_group_members, true), $sendmail = false);
+    if ( $isdebug_user ) $debug->log($jconf['log_dir'], $myjobid . ".log", "[DEBUG] LDAP/AD group members:\n" . var_export($ldap_users, true), $sendmail = false);
 
     // Variables to track number of changes
     $num_users_new = 0;
@@ -244,7 +234,8 @@ while ( !$ldap_groups->EOF ) {
             $num_users_new++;
         }
         
-        if ( $isdebug_user ) var_dump($ldap_users[$key]);
+        if ( $isdebug_user ) $debug->log($jconf['log_dir'], $myjobid . ".log", "[DEBUG] LDAP/AD user data:\n" . var_export($ldap_users[$key], true), $sendmail = false);
+
     }
     
     // Who has been removed from LDAP/AD group?
@@ -271,10 +262,8 @@ while ( !$ldap_groups->EOF ) {
     
     // Debug
     if ( $isdebug_user ) {
-        echo "*** Users2add SQL: ***\n";
-        var_dump($users2add_sql);
-        echo "*** Users2remove SQL: ***\n";
-        var_dump($users2remove_sql);
+		$debug->log($jconf['log_dir'], $myjobid . ".log", "[DEBUG] *** Users to add SQL: ***:\n" . var_export($users2add_sql, true), $sendmail = false);
+		$debug->log($jconf['log_dir'], $myjobid . ".log", "[DEBUG] *** Users to remove SQL: ***:\n" . var_export($users2remove_sql, true), $sendmail = false);
     }
 
     // Remove users from group
@@ -523,7 +512,8 @@ global $myjobid, $debug, $jconf, $app;
             od.name,
             od.ldapusertreedn,
             od.ldapgroupaccess,
-            od.ldapgroupadmin
+            od.ldapgroupadmin,
+			od.ldapusergroupquery
 		FROM
 			organizations_directories AS od,
             organizations AS o
@@ -531,8 +521,7 @@ global $myjobid, $debug, $jconf, $app;
 			od.type = 'ldap' AND
             od.disabled = 0 AND
             od.organizationid = o.id AND
-            o.disabled = 0
-    ";
+            o.disabled = 0";
     
 	try {
         $model = $app->bootstrap->getModel('organizations_directories');
