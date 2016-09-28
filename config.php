@@ -308,7 +308,17 @@ $config = array(
       'job_system_health' => array(
         'enabled'             => true,    // watcher to check or skip this job
         'watchdogtimeoutsecs' => 5 * 60,  // watchdog timeout (stuck processes)
-        'supresswarnings'     => false    // do not send warnings (e.g. stop files)
+        'supresswarnings'     => false,   // do not send warnings (e.g. stop files)
+		'config'			  => array(	  // All are optional, see job $config array
+			'storage_alarm_warning'	  	=> 80,	  // Free space warning [%]
+			'storage_alarm_critical'  	=> 90,	  // Free space critical [%]
+			'report_resend_timeout' 	=> 10*60, // [mins]
+			'db_alert_mins' 			=> 30,    // DB alert repeat every N minutes [mins]
+			'storage_check_mins'		=> 60,    // Storage check every N minutes [mins]
+			'db_check_mins'				=> 60,	  // DB configuration check every N minutes [mins]
+			'ssh_check_mins'			=> 10,	  // SSH front-end ping every N minutes [mins]
+			'sleep_time'				=> 60	  // [mins]
+		),
       ),
       'job_upload_finalize' => array(
         'enabled'             => true,
@@ -320,7 +330,7 @@ $config = array(
       'job_system_health' => array(
         'enabled'             => true,     // watcher to check or skip this job
         'watchdogtimeoutsecs' => 15 * 60,  // watchdog timeout (stuck processes)
-        'supresswarnings'     => false     // do not send warnings (e.g. stop files)
+        'supresswarnings'     => false    // do not send warnings (e.g. stop files)
       ),
       'job_media_convert2' => array(
         'enabled'             => true,

@@ -17,11 +17,13 @@ set_time_limit(0);
 // Init
 $app = new Springboard\Application\Cli(BASE_PATH, PRODUCTION);
 
-// Load jobs configuration file
+//// Load jobs configuration file
 $app->loadConfig('modules/Jobs/config_jobs.php');
 $jconf = $app->config['config_jobs'];
 $myjobid = $jconf['jobid_system_health'];
 $myjobpath = $jconf['job_dir'] . $myjobid . ".php";
+// Node role: front-end/converter
+$node_role = $app->config['node_role'];
 
 // Log related init
 $thisjobstarted = time();
@@ -34,10 +36,35 @@ if ( iswindows() ) {
     exit;
 }
 
-//// Config
-// Alarm levels for storage free space
-$alarm_levels['warning'] = 80;
-$alarm_levels['critical'] = 90;
+// Default configuration
+$config = array(
+	'storage_alarm_warning'	  	=> 80,	  // Free space warning [%]
+	'storage_alarm_critical'  	=> 90,	  // Free space critical [%]
+	'report_resend_timeout' 	=> 10*60, // [mins]
+	'db_alert_mins' 			=> 30,    // DB alert repeat every N [mins]
+	'storage_check_mins'		=> 60,    // Storage check every N [mins]
+	'db_check_mins'				=> 60,	  // DB configuration check every N [mins]
+	'ssh_check_mins'			=> 10,	  // SSH front-end ping every N [mins]
+	'sleep_time'				=> 60	  // Sleep time between each check [sec]
+);
+
+// Load job configuration from config.php and overwrite chosen options
+if ( isset( $app->config['jobs'][$app->config['node_role']][$jconf['jobid_system_health']]['config']) ) {
+
+	$config_user = $app->config['jobs'][$app->config['node_role']][$jconf['jobid_system_health']]['config'];
+	foreach ($config_user as $config_option => $config_value) {
+		
+		if ( isset($config[$config_option]) ) {
+			$config[$config_option] = $config_value;
+		} else {
+			$debug->log($jconf['log_dir'], $myjobid . ".log", "[WARN] config.php option is unknown: " . $config_option, $sendmail = false);
+		}
+		
+	}
+
+}
+
+//// Storage path configuration
 $storages2check = array(
     'converter' => array(
         0 => array(
@@ -73,20 +100,7 @@ $storages2check = array(
             )    
     )
 );
-// Sleep time between each check
-$sleep_time = 60;
-// Node role: front-end/converter
-$node_role = $app->config['node_role'];
-// Massage resend timeout
-$mail_report_resend_timeout = 10*60;
-// DB alert repeat every N minutes
-$db_outage_alert_every_mins = 30;
-// Storage check every N minutes
-$storage_check_every_mins = 60;
-// DB configuration check every N minutes
-$dbconfig_check_every_mins = 60;
-// SSH front-end ping every N minutes
-$ssh_check_every_mins = 10;
+
 // Helping variables
 $firstround = true;
 $db_outage = false;
@@ -150,7 +164,7 @@ while( !is_file( $app->config['datapath'] . 'jobs/' . $myjobid . '.stop' ) and !
         } else {
             // Send notice in every additional 30 minutes
             $db_outage_minutes = floor( ( time() - $db_outage_starttime ) / 60 );
-            if ( ( $db_outage_minutes % $db_outage_alert_every_mins ) == 0 ) {
+            if ( ( $db_outage_minutes % $config['db_alert_mins'] ) == 0 ) {
                 $outage_time = time() - $db_outage_starttime;
                 $title = "[ERROR] DB has been unavailable for " . seconds2DaysHoursMinsSecs($outage_time) . " time. DBUNAVAILABLE flag is in place at " . $db_unavailable_flag . ". Job polls are blocked until DB comes back.";
                 $body  = $mail_head . "\n" . $title . "\n";
@@ -266,7 +280,7 @@ while( !is_file( $app->config['datapath'] . 'jobs/' . $myjobid . '.stop' ) and !
     $node_load['min15'] = $tmp[2];
     
     //// Storage free space check
-    if ( $firstround or empty($node_info) or ( ( $minutes % $storage_check_every_mins ) == 0 ) ) {
+    if ( $firstround or empty($node_info) or ( ( $minutes % $config['storage_check_mins'] ) == 0 ) ) {
         
         $msg = "";
         $diskinfo = array();
@@ -290,12 +304,12 @@ while( !is_file( $app->config['datapath'] . 'jobs/' . $myjobid . '.stop' ) and !
                 $storages2check[$node_role][$i]['status'] = "CRITICAL";
                 continue;
             }
-            if ( ( $diskinfo['used_percent'] >= $alarm_levels['warning'] ) and ( $diskinfo['used_percent'] < $alarm_levels['critical'] ) ) {
+            if ( ( $diskinfo['used_percent'] >= $config['storage_alarm_warning'] ) and ( $diskinfo['used_percent'] < $config['storage_alarm_critical'] ) ) {
                 $msg .= "File system free space for " . $storages2check[$node_role][$i]['path'] . ": WARNING\n";
                 $msg .= "\tTotal: " . round($diskinfo['total'] / 1024 / 1024 / 1024, 2) . "GB Free: " . round($diskinfo['free'] / 1024 / 1024 / 1024, 2) . "GB (" . $diskinfo['used_percent'] . "%)\n";
                 $msg .= "\t***** PLEASE CHECK *****\n";
                 $storages2check[$node_role][$i]['status'] = "WARNING";
-            } elseif ( $diskinfo['used_percent'] >= $alarm_levels['critical'] ) {
+            } elseif ( $diskinfo['used_percent'] >= $config['storage_alarm_critical'] ) {
                 $msg .= "File system free space for " . $storages2check[$node_role][$i]['path'] . ": CRITICAL\n";
                 $msg .= "\tTotal: " . round($diskinfo['total'] / 1024 / 1024 / 1024, 2) . "GB Free: " . round($diskinfo['free'] / 1024 / 1024 / 1024, 2) . "GB (" . $diskinfo['used_percent'] . "%)\n";
                 $node_status = "disabledstoragelow";
@@ -341,7 +355,7 @@ while( !is_file( $app->config['datapath'] . 'jobs/' . $myjobid . '.stop' ) and !
     }
 
     // ## Check infrastructure description from DB: are front-ends and converters defined?
-    if ( $firstround or ( $minutes % $dbconfig_check_every_mins ) == 0 ) {
+    if ( $firstround or ( $minutes % $config['db_check_mins'] ) == 0 ) {
         $node_frontends = getNodesByType("frontend");
         if ( $node_frontends === false ) {
             $debug->log($jconf['log_dir'], $myjobid . ".log", "[WARN] No front-end defined in DB!", $sendmail = false);
@@ -353,7 +367,7 @@ while( !is_file( $app->config['datapath'] . 'jobs/' . $myjobid . '.stop' ) and !
     }
     
     // ## SSH ping all frontends from converter
-    if ( $firstround or ( $minutes % $ssh_check_every_mins ) == 0 ) {
+    if ( $firstround or ( $minutes % $config['ssh_check_mins'] ) == 0 ) {
         if ( ( $node_role == "converter" ) and $usedb ) {
             $msg = "";
             $ssh_all_ok = true;
@@ -464,7 +478,7 @@ while( !is_file( $app->config['datapath'] . 'jobs/' . $myjobid . '.stop' ) and !
             // Log summary
             $debug->log($jconf['log_dir'], $myjobid . ".log", $system_health_log, $sendmail = false);
         } else {
-            if ( ( time() - $mail_hash[$md5]['sentmail_date'] ) > $mail_report_resend_timeout ) {
+            if ( ( time() - $mail_hash[$md5]['sentmail_date'] ) > $config['report_resend_timeout'] ) {
                 unset($mail_hash[$md5]);
             }
         }
@@ -472,7 +486,7 @@ while( !is_file( $app->config['datapath'] . 'jobs/' . $myjobid . '.stop' ) and !
     
     // Maintain mail hash
     foreach ($mail_hash as $idx => $value) {
-        if ( ( time() - $mail_hash[$idx]['sentmail_date'] ) > $mail_report_resend_timeout ) {
+        if ( ( time() - $mail_hash[$idx]['sentmail_date'] ) > $config['report_resend_timeout'] ) {
             unset($mail_hash[$idx]);
             echo "idx: " . $idx . " cleaned up!\n";
         }
@@ -483,7 +497,7 @@ while( !is_file( $app->config['datapath'] . 'jobs/' . $myjobid . '.stop' ) and !
     // Close DB connection if open
     if ( ( $db !== false ) and is_resource($db->_connectionID) ) $db->close();
 
-    sleep($sleep_time);
+    sleep($config['sleep_time']);
 }
 
 exit;
