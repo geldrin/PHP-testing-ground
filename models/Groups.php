@@ -37,10 +37,17 @@ class Groups extends \Springboard\Model {
         gm.groupid        = '%s'
     ";
 
+    if ( $directory['ldapgroupaccessid'] )
+      $accesssql = sprintf( $membersql, $directory['ldapgroupaccessid'] );
+    else
+      $accesssql = "-- no ldapgroupaccessid specified, auto allowing
+          1
+      ";
+
     $sql = "
       SELECT
         (
-          " . sprintf( $membersql, $directory['ldapgroupaccessid'] ) . "
+          " . $accesssql . "
         ) AS hasaccess,
         (
           " . sprintf( $membersql, $directory['ldapgroupadminid'] ) . "
