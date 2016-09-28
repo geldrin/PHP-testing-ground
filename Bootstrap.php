@@ -200,12 +200,15 @@ class Bootstrap {
         $queue = $this->getMailQueue( true );
         $queue->instant = 1;
 
+        $msg = "errorInfo: " . \Springboard\Debug::varDump( $e->errorInfo );
+        $msg .= trim( \Springboard\Debug::formatBacktrace( debug_backtrace() ) );
+
         foreach ( $this->config['logemails'] as $email )
           $queue->put(
             $email,
             $email,
             '[' . $this->config['siteid'] . '] DB error: ' . $e->getMessage(),
-            \Springboard\Debug::varDump( $e->errorInfo ),
+            $msg,
             false,
             'text/plain'
           );
