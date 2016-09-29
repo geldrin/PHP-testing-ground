@@ -938,7 +938,8 @@ function callWatchdog($_, $watchdogseconds) {
 	static $last_call = 0;
 	
 	$now = time();
-	if (isset($watchdogseconds) && ($now - $last_call) > $watchdogseconds) {
+	if (isset($watchdogseconds) && (($now - $last_call) > $watchdogseconds)) {
+    $last_call = $now;
 		@$app->watchdog();
 	}
 }
