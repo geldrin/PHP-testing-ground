@@ -452,7 +452,7 @@ function convertOCR($rec) {
   foreach ($resolutions2used as $tres) { // foldernames are derived from thumbnailresolutions + original
     $tmp = explode("x", $tres);
     $snapshotparams['resize' ][] = $tres;
-    $snapshotparams['folders'][] = $snapdir . $tmp[0];
+    $snapshotparams['folders'][] = $snapdir . $tmp[0] . DIRECTORY_SEPARATOR;
   }
   $snapshotparams['folders']['original'] = $snapdir .'original'. DIRECTORY_SEPARATOR;
   
