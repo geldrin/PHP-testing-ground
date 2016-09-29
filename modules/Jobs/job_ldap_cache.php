@@ -64,8 +64,12 @@ if ( $ldap_groups === false ) {
     $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Cannot query LDAP/AD groups. Exiting...", $sendmail = false);
     exit;
 }
+
 // Nothing to update, exit
-if ( $ldap_groups->RecordCount() < 1 ) exit;
+if ( $ldap_groups->RecordCount() < 1 ) {
+    if ( $isdebug_ldap ) $debug->log($jconf['log_dir'], $myjobid . ".log", "[DEBUG] No LDAP group(s) found for sync.", $sendmail = false);
+	exit;
+}
 
 while ( !$ldap_groups->EOF ) {
 
@@ -154,7 +158,7 @@ while ( !$ldap_groups->EOF ) {
     } catch (exception $err) {
         $ldap_errno = ldap_errno($ldap_dir['ldap_handler']);
         $ldap_errmsg = ldap_err2str($ldap_errno);
-        $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Not syncing " . $ldap_group['organizationdirectoryldapdn'] . ". LDAP/AD query failed at server: " . $ldap_dir['user'] . " at " . $ldap_dir['server'] . " [err code #" . $ldap_errno . " - " . $ldap_errmsg . "]. \n\nFilter: " . $filter . "\nAttribute filter: " . $attr_filter . "\n\nERROR: " . $err, $sendmail = true);
+        $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Not syncing " . $ldap_group['organizationdirectoryldapdn'] . ". LDAP/AD query failed at server: " . $ldap_dir['user'] . " at " . $ldap_dir['server'] . " [err code #" . $ldap_errno . " - " . $ldap_errmsg . "]. \n\nFilter: " . $filter . "\nAttribute filter: " . print_r($attr_filter, true) . "\n\nERROR: " . $err, $sendmail = true);
         $ldap_groups->MoveNext();
         continue;
     }
