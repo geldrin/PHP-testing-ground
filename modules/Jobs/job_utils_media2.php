@@ -933,13 +933,13 @@ global $app, $debug, $jconf;
  * @param int/float $watchdogseconds interval of watchdog calls
  */
 
-function callWatchdog($_, $watchdogseconds) {
+function callWatchdog($_ = null, $watchdogseconds = 0) {
 	global $app;
 	static $last_call = 0;
 	
 	$now = time();
 	if (isset($watchdogseconds) && (($now - $last_call) > $watchdogseconds)) {
-    $last_call = $now;
+		$last_call = $now;
 		@$app->watchdog();
 	}
 }
