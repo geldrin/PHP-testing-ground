@@ -76,7 +76,8 @@ function GCD($a, $b) {
 function soffice_isrunning() {
  global $app;
 
-	$command = "ps uax | grep \"^" . $app->config['ssh_user'] . "\" | grep \"soffice.bin\" | grep -v \"grep\"";
+//	$command = "ps uax | grep \"^" . $app->config['ssh_user'] . "\" | grep \"soffice.bin\" | grep -v \"grep\"";
+	$command = "ps uax | grep \"soffice.bin\" | grep -v \"grep\"";
 	exec($command, $output, $result);
 	if ( isset($output[0]) ) {
 		return TRUE;

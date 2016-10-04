@@ -41,13 +41,20 @@ if ( iswindows() ) {
 while( !is_file( $attachedDoc->config['datapath'] . 'jobs/' . $attachedDoc->jobid . '.stop' ) and !is_file( $attachedDoc->config['datapath'] . 'jobs/all.stop' ) ) {
 
 	clearstatcache();
+	
+	// Check if OpenOffice listener is running
+	if ( !soffice_isrunning() ) {
+		$attachedDoc->debugLog("[ERROR] OpenOffice is not running. Indexing postponed.", true);
+		$converter_sleep_length = 15 * 60;
+		break;
+	}
     
     // Check job file modification - if more fresh version is available, then restart
     if ( $attachedDoc->configChangeOccured() ) {
         $attachedDoc->debugLog("[INFO] Seems like an updated version is available of me or config file has been changed. Exiting...", false);
         exit;
     }
-
+	
     while ( 1 ) {
 
 		$attachedDoc->watchdog();
@@ -65,13 +72,6 @@ while( !is_file( $attachedDoc->config['datapath'] . 'jobs/' . $attachedDoc->jobi
 		// Query next job
 		$attachedDocJobs = $attachedDoc->getAttachedDocumentJobs();
 		if ( $attachedDocJobs === false ) break;
-
-        // Check if OpenOffice listener is running
-        if ( !soffice_isrunning() ) {
-            $attachedDoc->debugLog("[ERROR] OpenOffice is not running. Indexing postponed.", true);
-            $converter_sleep_length = 15 * 60;
-            break;
-        }
         
         while ( !$attachedDocJobs->EOF ) {
 
