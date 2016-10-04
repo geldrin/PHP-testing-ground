@@ -313,7 +313,7 @@ class Attachment extends Job {
         try {
             $ssh = new SSH($this->doc['sourceip'], 22, $this->config['ssh_user'], null, $this->config['ssh_pubkey'], $this->config['ssh_key'], $this->config['ssh_fingerprint']);
         } catch (Exception $err) {
-            $this->debugLog("Caught exception: ",  $err->getMessage(), true);
+            $this->debugLog("Caught exception (SSH): " . $err->getMessage(), true);
             return false;
         }
         // Authenticate to SSH server
@@ -321,7 +321,7 @@ class Attachment extends Job {
         try {
             $ssh->connect();
         } catch (Exception $err) {
-            $this->debugLog("Caught exception: ",  $err->getMessage(), true);
+            $this->debugLog("Caught exception (SSH): " . $err->getMessage(), true);
             return false;
         }
         if ( $this->debug_mode) $this->debugLog("[DEBUG] Connected to SSH server. Information: " . print_r($ssh, true), false);
@@ -338,7 +338,7 @@ class Attachment extends Job {
         try {
             $ssh->disconnect();
         } catch (Exception $err) {
-            $this->debugLog("Caught exception: ",  $err->getMessage(), true);
+            $this->debugLog("Caught exception (SSH): " . $err->getMessage(), true);
         }
         
         // Input file does not exist in temp directory

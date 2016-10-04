@@ -91,9 +91,7 @@ class Job {
 
     // Log debug message for this specific job's log file
     public function debugLog($msg, $sendmail = false) {
- 
         $this->debug->log($this->config_jobs['log_dir'], $this->jobid . ".log", $msg, $sendmail); 
-
         return true;
     }
     
