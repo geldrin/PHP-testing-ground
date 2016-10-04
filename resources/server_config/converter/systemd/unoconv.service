@@ -1,0 +1,12 @@
+[Unit]
+Description=Unoconv document conversion service
+After=network.target
+
+[Service]
+Type=simple
+Environment="UNO_PATH=/usr/lib/libreoffice/program"
+ExecStart=/usr/bin/unoconv --listener
+
+[Install]
+WantedBy=multi-user.target
+
