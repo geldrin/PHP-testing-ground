@@ -83,10 +83,7 @@ class SSH {
         // Check server fingerprint
         if ( !empty($this->ssh_server_fp) ) {
             $fingerprint = ssh2_fingerprint($this->connection, SSH2_FINGERPRINT_MD5 | SSH2_FINGERPRINT_HEX);
-            if ( strcmp($this->ssh_server_fp, $fingerprint) !== 0 ) { 
-            echo $fingerprint . "\n";
-                throw new Exception('[ERROR] Unable to verify server identity!'); 
-            } else { echo "FP is OK!"; }
+            if ( strcmp($this->ssh_server_fp, $fingerprint) !== 0 ) throw new Exception('[ERROR] Unable to verify server identity!');
         }
         
         // Connect
