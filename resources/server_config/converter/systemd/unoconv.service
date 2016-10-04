@@ -6,6 +6,8 @@ After=network.target
 Type=simple
 Environment="UNO_PATH=/usr/lib/libreoffice/program"
 ExecStart=/usr/bin/unoconv --listener
+Restart=always
+RestartSec=10
 
 [Install]
 WantedBy=multi-user.target
