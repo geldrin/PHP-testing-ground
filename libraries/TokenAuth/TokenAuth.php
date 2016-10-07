@@ -130,8 +130,10 @@ class TokenAuth {
   }
 
   // ha tobb felvetelhez azonos tokennel sikeres valaszt kapunk, igy tamogatjuk
+  // a recordingid es livefeedid parameterek kozul csak az egyiknek szabad
+  // nem nullanak lennie
   private function getTokenKey( $token, $recordingid, $livefeedid ) {
-    // mindent int-re hogy ha null-at adnak at akkor stringkent jelenjen is meg
+    // mindent int-re hogy ha null-at adnak at akkor stringkent 0 jelenjen meg
     $recordingid = intval( $recordingid );
     $livefeedid  = intval( $livefeedid );
     return "token:$token|rec:$recordingid|live:$livefeedid";
