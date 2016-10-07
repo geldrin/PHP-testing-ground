@@ -2444,6 +2444,15 @@ class Recordings extends \Springboard\Model {
     if ( $this->row['mastermediatype'] == 'audio' )
       $data['recording_isAudio'] = true;
 
+    $data['user_pingParameters'] = array(
+      'recordingid' => $this->id,
+    );
+
+    if ( isset( $info['tokenauth'] ) and $info['tokenauth'] ) {
+      $data['user_needPing'] = true;
+      $data['user_pingParameters']['token'] = $data['token'];
+    }
+
     if ( isset( $info['member'] ) and $info['member']['id'] ) {
       $data['user_id']          = $info['member']['id'];
       $data['user_needPing']    = true;

@@ -415,30 +415,55 @@ class Controller extends \Visitor\Controller {
 
   }
 
-  public function pingAction() {
-
+  private function checkAndUpdateUserSession() {
     $user = $this->bootstrap->getSession('user');
+    $l = $this->bootstrap->getLocalization();
     if ( !$user['id'] )
-      return false;
+      throw new \Visitor\Api\ApiException( $l('users', 'loginfailed'), false, false );
 
     $userModel = $this->bootstrap->getModel('users');
     $userModel->select( $user['id'] );
 
     if ( !$userModel->row )
-      return false;
+      throw new \Visitor\Api\ApiException( $l('users', 'loginfailed'), false, false );
 
     if ( !$userModel->checkSingleLoginUsers() ) {
 
       $user->clear();
-      $l = $this->bootstrap->getLocalization();
       $this->addMessage( $l('users', 'loggedout_sessionexpired') );
-      return false;
+      throw new \Visitor\Api\ApiException( $l('users', 'loggedout_sessionexpired'), false, false );
 
     }
 
     $userModel->updateSessionInformation();
     return true;
+  }
 
+  public function pingAction() {
+
+    $token = $this->application->getParameter('token');
+
+    // ha nincs token akkor ellenorizzuk a singlelogint
+    if ( !$token )
+      return $this->checkAndUpdateUserSession();
+
+    // de van token, kell hogy legyen recordingid vagy livefeedid is
+    $recordingid = $this->application->getNumericParameter('recordingid', 0 );
+    $livefeedid = $this->application->getNumericParameter('livefeedid', 0 );
+
+    // nem szabadna ilyen tortenjen normalis operacioban sose
+    if ( !$recordingid and !$livefeedid )
+      throw new \Visitor\Api\ApiException("Got token, but no recordingid or livefeedid", true, false );
+
+    // nem akarunk adatbazis lekerest, ha volt token akkor biztos hogy
+    // tokenautholni kell, igy szimplan megnezzuk hogy valid e a token
+    $auth = new \TokenAuth\TokenAuth( $this->bootstrap, $this->organization );
+    $valid = $auth->tokenValid( $token, $recordingid, $livefeedid );
+    if ( $valid )
+      return true;
+
+    $l = $this->bootstrap->getLocalization();
+    throw new \Visitor\Api\ApiException( $l('users', 'tokeninvalid'), false, false );
   }
 
   public function setuserfieldAction( $userid, $field, $value ) {

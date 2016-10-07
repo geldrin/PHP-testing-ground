@@ -357,6 +357,15 @@ class Livefeeds extends \Springboard\Model {
     $flashdata['media_secondaryStreams'] = $streaminfo['streams'];
     $flashdata['content_streamLabels'] = $streaminfo['labels'];
 
+    $data['user_pingParameters'] = array(
+      'livefeedid' => $this->id,
+    );
+
+    if ( isset( $info['tokenauth'] ) and $info['tokenauth'] ) {
+      $data['user_needPing'] = true;
+      $data['user_pingParameters']['token'] = $data['token'];
+    }
+
     if ( $info['member'] and $info['member']['id'] ) {
       $flashdata['user_id']          = $info['member']['id'];
       $flashdata['user_needPing']    = true;
