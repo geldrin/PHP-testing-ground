@@ -26,7 +26,8 @@ class Controller extends \Springboard\Controller\Visitor {
         'max-age=' . $this->bootstrap->config['forcesecuremaxage']
       ;
 
-    if ( in_array( $this->module, array('api', 'jsonapi') ) ) // az api ->authenticate mindig kezeli
+    // az api ->authenticate mindig kezeli
+    if ( $this->module === 'api' or $this->module === 'jsonapi' )
       return parent::init();
 
     $skipsinglelogincheck = array(

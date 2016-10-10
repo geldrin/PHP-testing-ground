@@ -90,6 +90,20 @@ class Controller extends \Visitor\Controller {
     'ping' => array(
       'loginrequired' => false,
       'hashrequired'  => false,
+      'recordingid' => array(
+        'type'     => 'id',
+        'required' => false,
+        'shouldemail' => false,
+      ),
+      'feedid' => array(
+        'type'     => 'id',
+        'required' => false,
+        'shouldemail' => false,
+      ),
+      'token'         => array(
+        'type' => 'string',
+        'required' => false,
+      ),
     ),
   );
 
@@ -439,17 +453,11 @@ class Controller extends \Visitor\Controller {
     return true;
   }
 
-  public function pingAction() {
-
-    $token = $this->application->getParameter('token');
+  public function pingAction( $recordingid, $livefeedid, $token ) {
 
     // ha nincs token akkor ellenorizzuk a singlelogint
     if ( !$token )
       return $this->checkAndUpdateUserSession();
-
-    // de van token, kell hogy legyen recordingid vagy livefeedid is
-    $recordingid = $this->application->getNumericParameter('recordingid', 0 );
-    $livefeedid = $this->application->getNumericParameter('livefeedid', 0 );
 
     // nem szabadna ilyen tortenjen normalis operacioban sose
     if ( !$recordingid and !$livefeedid )
