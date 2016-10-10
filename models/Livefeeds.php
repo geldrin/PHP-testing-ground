@@ -363,7 +363,7 @@ class Livefeeds extends \Springboard\Model {
 
     if ( isset( $info['tokenauth'] ) and $info['tokenauth'] ) {
       $data['user_needPing'] = true;
-      $data['user_pingParameters']['token'] = $data['token'];
+      $data['user_pingParameters']['token'] = $info['token'];
     }
 
     if ( $info['member'] and $info['member']['id'] ) {
