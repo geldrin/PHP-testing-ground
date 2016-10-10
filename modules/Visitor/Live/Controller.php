@@ -80,8 +80,12 @@ class Controller extends \Visitor\Controller {
     ),
     'checkaccess' => array(
       'loginrequired' => false,
-      'livefeedid'   => array(
+      'livefeedid'    => array(
         'type' => 'id',
+      ),
+      'token'         => array(
+        'type' => 'string',
+        'required' => false,
       ),
     ),
     // crestron all-in-one api endpoint
@@ -1005,7 +1009,7 @@ class Controller extends \Visitor\Controller {
 
   }
 
-  public function checkaccessAction( $livefeedid ) {
+  public function checkaccessAction( $livefeedid, $token ) {
     $user        = $this->bootstrap->getSession('user');
     $ret         = array(
       'hasaccess' => false,
@@ -1017,7 +1021,7 @@ class Controller extends \Visitor\Controller {
     if ( !$feedModel->row )
       return $ret;
 
-    $access = $feedModel->isAccessible( $user, $this->organization );
+    $access = $feedModel->isAccessible( $user, $this->organization, null, $token );
 
     if ( $access === true )
       $ret['hasaccess'] = true;

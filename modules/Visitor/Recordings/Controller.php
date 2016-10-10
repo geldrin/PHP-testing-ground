@@ -203,6 +203,10 @@ class Controller extends \Visitor\Controller {
       'recordingid'   => array(
         'type' => 'id',
       ),
+      'token'         => array(
+        'type' => 'string',
+        'required' => false,
+      ),
     ),
     'checktimeout' => array(
       'loginrequired' => false,
@@ -1652,7 +1656,7 @@ class Controller extends \Visitor\Controller {
 
   }
 
-  public function checkaccessAction( $recordingid ) {
+  public function checkaccessAction( $recordingid, $token ) {
     $browserinfo = $this->bootstrap->getBrowserInfo();
     $user        = $this->bootstrap->getSession('user');
     $ret         = array(
@@ -1666,7 +1670,7 @@ class Controller extends \Visitor\Controller {
       return $ret;
 
     $access = $recordingsModel->userHasAccess(
-      $user, null, $browserinfo['mobile'], $this->organization
+      $user, null, $browserinfo['mobile'], $this->organization, $token
     );
 
     if ( $access === true )
