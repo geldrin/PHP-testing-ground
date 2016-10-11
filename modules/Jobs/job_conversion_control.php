@@ -608,6 +608,7 @@ global $debug, $jconf, $app;
 		WHERE
 			" . $eg_filter . " AND
 			eg.disabled = 0 AND
+			ep.disabled = 0 AND
 			ep.type = '" . $profile_type . "' AND " . $ep_filter;
 
 	try {
