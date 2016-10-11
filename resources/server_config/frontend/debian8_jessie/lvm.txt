@@ -1,0 +1,69 @@
+ntp: 10.182.1.158 10.182.1.187 10.162.69.68
+
+nameserver 10.182.1.158
+nameserver 10.182.1.187
+nameserver 10.162.69.68
+search kpmg.hu
+
+LVM diszkek létrehozása egy fizikai területen:
+
+apt-get install lvm2 dmsetup mdadm reiserfsprogs xfsprogs
+
+server1:~# fdisk -l
+
+Disk /dev/sda: 21.4 GB, 21474836480 bytes
+255 heads, 63 sectors/track, 2610 cylinders
+Units = cylinders of 16065 * 512 = 8225280 bytes
+
+   Device Boot      Start         End      Blocks   Id  System
+/dev/sda1   *           1          18      144553+  83  Linux
+/dev/sda2              19        2450    19535040   83  Linux
+/dev/sda4            2451        2610     1285200   82  Linux swap / Solaris
+
+...
+
+server1:~# fdisk /dev/sdb
+
+Command (m for help): <-- n
+Command action
+   e   extended
+   p   primary partition (1-4)
+<-- p
+Partition number (1-4): <-- 1
+First cylinder (1-10443, default 1): <-- <ENTER> 
+Using default value 1
+Last cylinder or +size or +sizeM or +sizeK (1-10443, default 10443): <-- +25000M
+
+Command (m for help): <-- t
+Selected partition 1
+Hex code (type L to list codes): <-- L
+...
+8e  Linux LVM
+...
+Hex code (type L to list codes): <-- 8e
+Changed system type of partition 1 to 8e (Linux LVM)
+
+Command (m for help): <-- w
+The partition table has been altered!
+
+server1:~# fdisk -l
+
+Disk /dev/sda: 21.4 GB, 21474836480 bytes
+255 heads, 63 sectors/track, 2610 cylinders
+Units = cylinders of 16065 * 512 = 8225280 bytes
+
+   Device Boot      Start         End      Blocks   Id  System
+/dev/sda1   *           1          18      144553+  83  Linux
+/dev/sda2              19        2450    19535040   83  Linux
+/dev/sda4            2451        2610     1285200   82  Linux swap / Solaris
+
+pvcreate /dev/sdc1
+pvcreate /dev/sdb1
+vgcreate vsqupload /dev/sdc1
+vgcreate vsq /dev/sdb1
+
+lvcreate --name lv_vsqupload -l 100%FREE vsqupload
+lvcreate --name lv_vsq -l 100%FREE vsq
+
+mkfs.ext4 /dev/vsqupload/lv_vsqupload
+mkfs.ext4 /dev/vsq/lv_vsq
