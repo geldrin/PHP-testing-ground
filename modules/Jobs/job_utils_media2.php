@@ -1145,8 +1145,7 @@ global $app, $jconf, $debug;
 		FROM
 			encoding_profiles
 		WHERE
-			id = " . $encodingprofileid . " AND
-			disabled = 0";
+			id = " . $encodingprofileid;
 
 	try {
 				$model = $app->bootstrap->getModel('encoding_profiles');
@@ -1156,8 +1155,8 @@ global $app, $jconf, $debug;
 		return false;
 	}
 
-		// Convert AdoDB resource to array
-		$rs_array = adoDBResourceSetToArray($rs);
+	// Convert AdoDB resource to array
+	$rs_array = adoDBResourceSetToArray($rs);
 
 	return $rs_array[0];
 }
