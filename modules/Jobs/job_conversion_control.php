@@ -178,7 +178,6 @@ if ( $recordings !== false ) {
 
 	while ( !$recordings->EOF ) {
 
-		$recording = array();
 		$recording = $recordings->fields;
 		
 		$debug->log($jconf['log_dir'], $jconf['jobid_conv_control'] . ".log", "[INFO] Mobile compatible version for recid#" . $recording['id'] . " become ready.", false);
@@ -189,49 +188,51 @@ if ( $recordings !== false ) {
 	}
 }
 
-
 // Failed recordings: get failed recording versions and set "failed" status on recording level
 $failedRecordings = getFailedRecordingVersions();
 if ( $failedRecordings !== false ) {
+
+	while ( !$failedRecordings->EOF ) {
     
-    $failedRecording = $failedRecordings->fields;
+		$failedRecording = $failedRecordings->fields;
 
-    // Get all recording versions
-    $recVersionsOK = 0;
-    $recVersions = getRecordingVersionsApplyStatusFilter($failedRecording['id'], $failedRecording['type'], null);
-    if ( $recVersions !== false ) {
+		// Get all recording versions
+		$recVersionsOK = 0;
+		$recVersions = getRecordingVersionsApplyStatusFilter($failedRecording['id'], $failedRecording['type'], null);
+		if ( $recVersions !== false ) {
 
-        while ( !$recVersions->EOF ) {
+			while ( !$recVersions->EOF ) {
 
-            $recVersion = $recVersions->fields;
+				$recVersion = $recVersions->fields;
 
-            // Count specific type of media files with "onstorage" status
-            if ( $recVersion['status'] == $jconf['dbstatus_copystorage_ok'] ) $recVersionsOK++;
+				// Count specific type of media files with "onstorage" status
+				if ( ( $recVersion['status'] == $jconf['dbstatus_copystorage_ok'] ) or ( stripos($recVersion['status'], "convert") !== false ) ) $recVersionsOK++;
 
-            // Next
-            $recVersions->MoveNext();
-        }
-        
-    }
+				// Next
+				$recVersions->MoveNext();
+			}
+			
+		}
+		
+		// ## Are there any serviceable media files available?
+		// Is there at least a playable recording?
+		if ( ( $recVersion['type'] == "recording" ) and ( $recVersionsOK == 0 ) ) {
+			$debug->log($jconf['log_dir'], $jconf['jobid_conv_control'] . ".log", "[ERROR] Recording id#" . $failedRecording['id'] . " has no serviceable video instances.", true);
+			updateRecordingStatus($failedRecording['id'], $jconf['dbstatus_conv_err'], 'recording');
+		}
+		// Is there at least a single playable content?
+		if ( ( $recVersion['type'] == "content" ) and ( $recVersionsOK == 0 ) ) {
+			$debug->log($jconf['log_dir'], $jconf['jobid_conv_control'] . ".log", "[ERROR] Recording id#" . $failedRecording['id'] . " has no serviceable content instances.", true);
+			updateRecordingStatus($failedRecording['id'], $jconf['dbstatus_conv_err'], 'content');
+		}
+		// Is there at least a single pip content?
+		if ( ( $recVersion['type'] == "pip" ) and ( $recVersionsOK == 0 ) ) {
+			$debug->log($jconf['log_dir'], $jconf['jobid_conv_control'] . ".log", "[ERROR] Recording id#" . $failedRecording['id'] . " has no serviceable pip instances.", true);
+			updateRecordingStatus($failedRecording['id'], $jconf['dbstatus_conv_err'], 'mobile');
+		}
     
-    // ## Are there any serviceable media files available?
-    // Is there at least a playable recording?
-    if ( ( $recVersion['type'] == "recording" ) and ( $recVersionsOK == 0 ) ) {
-        $debug->log($jconf['log_dir'], $jconf['jobid_conv_control'] . ".log", "[ERROR] Recording id#" . $failedRecording['id'] . " has no serviceable video instances.", true);
-        updateRecordingStatus($failedRecording['id'], $jconf['dbstatus_conv_err'], 'recording');
-    }
-    // Is there at least a single playable content?
-    if ( ( $recVersion['type'] == "content" ) and ( $recVersionsOK == 0 ) ) {
-        $debug->log($jconf['log_dir'], $jconf['jobid_conv_control'] . ".log", "[ERROR] Recording id#" . $failedRecording['id'] . " has no serviceable content instances.", true);
-        updateRecordingStatus($failedRecording['id'], $jconf['dbstatus_conv_err'], 'content');
-    }
-    // Is there at least a single pip content?
-    if ( ( $recVersion['type'] == "pip" ) and ( $recVersionsOK == 0 ) ) {
-        $debug->log($jconf['log_dir'], $jconf['jobid_conv_control'] . ".log", "[ERROR] Recording id#" . $failedRecording['id'] . " has no serviceable pip instances.", true);
-        updateRecordingStatus($failedRecording['id'], $jconf['dbstatus_conv_err'], 'mobile');
-    }
-    
-    $failedRecordings->MoveNext();
+		$failedRecordings->MoveNext();
+	}
 }
 
 // SMIL: generate new SMIL files
@@ -608,6 +609,7 @@ global $debug, $jconf, $app;
 		WHERE
 			" . $eg_filter . " AND
 			eg.disabled = 0 AND
+			ep.disabled = 0 AND
 			ep.type = '" . $profile_type . "' AND " . $ep_filter;
 
 	try {
