@@ -55,7 +55,7 @@ class StreamingServers extends \Springboard\Model {
 				css.lastreporttimestamp
 			FROM
 				cdn_streaming_servers AS css
-			WHERE 1";
+			WHERE css.id = 19";
 
         $model = $this->bootstrap->getVSQModel('cdn_streaming_servers');
         $rs = $model->safeExecute($query);

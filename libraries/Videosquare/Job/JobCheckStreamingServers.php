@@ -7,6 +7,7 @@ define('PRODUCTION', false );
 define('DEBUG', false );
 
 include_once('Job.php');
+include_once('../Modules/SSH.php');
 
 class CheckStreamingServersJob extends Job {
 	
@@ -15,8 +16,8 @@ class CheckStreamingServersJob extends Job {
 	protected $signalReceived           = false;
 	protected $needsSleep               = true;
 	protected $closeDbOnSleep           = true;
-	protected $sleepSeconds             = 10;
-	protected $maxSleepSeconds          = 20;
+	protected $sleepSeconds             = 30;
+	protected $maxSleepSeconds          = 60;
 
 	// Videosquare job specific config options
 	protected $removeLockOnStart        = true;
@@ -26,21 +27,23 @@ class CheckStreamingServersJob extends Job {
     // Process job task
     protected function process() {
     
-        $SSObj = $this->bootstrap->getVSQModel("StreamingServers");
+        $model = $this->bootstrap->getVSQModel("StreamingServers");
 
         // Get all streaming servers
-        $StreamingServers = $SSObj->getStreamingServers();
+        $StreamingServers = $model->getStreamingServers();
     
+		$server_num = 0;
         if ( $StreamingServers !== false ) {
             
 			// Loop through servers
             foreach ( $StreamingServers as $StreamingServer ) {
-				
-				if ( $this->debug_mode ) $this->debugLog("[DEBUG] Server id#" . $StreamingServer['id'] . " (" . $StreamingServer['server'] . ") information:\n" . print_r($StreamingServer, true), false);
+
+				$this->debugLog("[INFO] Server id#" . $StreamingServer['id'] . " (" . $StreamingServer['server'] . ") test started.", false);			
+				if ( $this->debug_mode ) $this->debugLog("[DEBUG] Server information:\n" . print_r($StreamingServer, true), false);
 	
 				// Skip disabled server
 				if ( $StreamingServer['disabled'] == 1 ) {
-					$this->debugLog("[INFO] Server is administrative disabled. Skipping.", false);
+					$this->debugLog("[INFO] Server is administratively disabled. Skipping.", false);
 					$server_num++;
 					continue;
 				}
@@ -66,17 +69,72 @@ class CheckStreamingServersJob extends Job {
 				// Server ping test
 				$ping = $this->pingAddress($StreamingServer['serverip']);
 				if ( $ping['status'] === false ) {
-					$this->debugLog("[ERROR] Ping test. Server does not answer.", false);
+					$this->debugLog("[ERROR] Ping test. Server does not answer. Skipping the rest.", false);
+					$server_num++;
+					continue;
 				} else {
-					$this->debugLog("[OK] Ping test. RTT avg is " . $ping['rtt_avg'] . "ms. Packet loss is " . $ping['packet_loss'] . "/" . $ping['packets_sent'] . ".", false);
-				}
 					
+					$this->debugLog("[OK] Ping test. RTT avg is " . $ping['rtt_avg'] . "ms. Packet loss is " . $ping['packet_loss'] . "/" . $ping['packets_sent'] . ".", false);
+				
+					if ( $StreamingServer['type'] == "nginx" ) {
+				
+						// ## SSH: get cache free space
+						try {
+							
+							$ssh = new SSH($StreamingServer['server'], 22, "support", null, "/home/conv/.ssh/id_dsa.pub-support", "/home/conv/.ssh/id_dsa-support", null);
+							
+							// Authenticate to SSH server
+							$ssh->connect();
+							
+							// Debug
+							//if ( $this->debug_mode ) $this->debugLog("[DEBUG] Connected to SSH server. Information: " . print_r($ssh, true), false);
+							
+							// Get cache free size
+							$cache_path = "/srv/nginx_cache";
+							$return = $ssh->exec("df " . $cache_path);
+							$tmp = preg_split("/\r\n|\n|\r/", trim($return));
+							$tmp2 = preg_split('/[\s]+/', trim($tmp[1]));
+							$cache_info['path'] = $tmp2[0];
+							$cache_info['used'] = $tmp2[2] * 1024;
+							$cache_info['available'] = $tmp2[3] * 1024;
+							$cache_info['used_percent'] = $tmp2[4];
+							$cache_info['mount_point'] = $tmp2[5];
+							
+							$this->debugLog("[INFO] Cache information:\n" . print_r($cache_info, true)); 
+							
+							if ( $this->debug_mode ) $this->debugLog("[INFO] Cache sizes (used/available): " . round($cache_info['used'] / 1024 / 1024 / 1024, 3) . " / " . round($cache_info['available'] / 1024 / 1024 / 1024, 3) . " GB.");
+							
+							if ( $cache_info['available'] <= 10000000 ) $this->debugLog("[WARN] Cache size seems small: " . $cache_info['available'] / 1024 / 1024 / 1024 . "GB.");
+							
+							if ( $cache_info['used_percent'] > 95 ) $this->debugLog("[WARN] Cache usage is " . $cache_info['used_percent'] . "%.");
+							
+							// Get cache mount information
+							$command = "cat /proc/mounts | grep nginx";
+							$return = $ssh->exec($command);
+							$tmp = preg_split('/[\s]+/', trim($return));
+							if ( stripos($tmp[3], "rw") === false ) {
+								$this->debugLog("[ERROR] Cache is NOT writeable. Mount parameters: " . $tmp[3]);
+							}
+
+							// SSH disconnect
+							$ssh->disconnect();
+															
+						} catch ( \Videosquare\Model\Exception $err) {
+							
+							$this->debugLog( '[EXCEPTION] SSH: ' . $err->getMessage(), false );
+							
+						} // End of SSH try
+
+					} // End of type == "nginx" block
+						
+				} // End of ping block
+
+				
 			}
 			
 			$server_num++;
 		}
 		
-		exit;
 	}
 	
 	private function pingAddress($ip) {
