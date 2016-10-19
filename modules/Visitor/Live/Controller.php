@@ -1021,6 +1021,9 @@ class Controller extends \Visitor\Controller {
     if ( !$feedModel->row )
       return $ret;
 
+    if ( !$token )
+      $token = null;
+
     $access = $feedModel->isAccessible( $user, $this->organization, null, $token );
 
     if ( $access === true )

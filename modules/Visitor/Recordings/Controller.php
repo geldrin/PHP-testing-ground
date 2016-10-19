@@ -1669,6 +1669,9 @@ class Controller extends \Visitor\Controller {
     if ( !$recordingsModel->row )
       return $ret;
 
+    if ( !$token )
+      $token = null;
+
     $access = $recordingsModel->userHasAccess(
       $user, null, $browserinfo['mobile'], $this->organization, $token
     );
