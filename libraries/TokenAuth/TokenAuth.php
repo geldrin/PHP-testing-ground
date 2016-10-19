@@ -20,7 +20,7 @@ class TokenAuth {
     $this->d->log(
       false,
       'tokendebug.txt',
-      $msg,
+      trim( $msg ),
       false,
       true,
       true
@@ -62,7 +62,10 @@ class TokenAuth {
     // nagyon egyszeruen csak megnezzuk hogy a token lathato karaktereket
     // tartalmazzon
     if ( !ctype_graph( $token ) ) {
-      $this->l("Token contained non-printable chars, refusing");
+      $this->l(
+        "Token contained non-printable chars, refusing: " .
+        $this->getTokenKey( $token, $recordingid, $livefeedid )
+      );
       return false;
     }
 
@@ -165,8 +168,10 @@ class TokenAuth {
       )
     );
 
+    $tokenKey = $this->getTokenKey( $token, $recordingid, $livefeedid );
+
     $this->l(
-      "Checking token: $token, httpcode: " . $curl->httpcode .
+      "Checking: $tokenKey, httpcode: " . $curl->httpcode .
       " error: " . $curl->curlerror .
       " result: " . \Springboard\Debug::varDump( $data ),
       $curl->httpcode != 200 // forceoljuk a logolast ha non-200 a statuscode
@@ -179,7 +184,6 @@ class TokenAuth {
     $ttlSeconds = intval( $verifyResult['ttlSeconds'] );
 
     $redis = $this->bootstrap->getRedis();
-    $tokenKey = $this->getTokenKey( $token, $recordingid, $livefeedid );
     $redis->setex( $tokenKey, $ttlSeconds, $this->getTokenValue() );
 
     return true;
