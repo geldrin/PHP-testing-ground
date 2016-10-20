@@ -265,9 +265,9 @@ while( !is_file( $app->config['datapath'] . 'jobs/job_upload_finalize.stop' ) an
             }
 
             // Recording: finalize
-            if ( $recording['masterstatus'] == $jconf['dbstatus_uploaded'] ) $err = moveMediaFileToStorage($recording, "recording");
+            if ($recording['masterstatus'] == $jconf['dbstatus_uploaded']) { $err = moveMediaFileToStorage($recording, "recording"); }
             // Content: finalize
-            if ( $recording['contentmasterstatus'] == $jconf['dbstatus_uploaded'] ) $err = moveMediaFileToStorage($recording, "content");
+            if ($recording['contentmasterstatus'] == $jconf['dbstatus_uploaded']) { $err = moveMediaFileToStorage($recording, "content"); }
             
             // Update recording and master data size
             $master_filesize = 0;
@@ -523,5 +523,3 @@ global $jconf, $debug, $app, $myjobid;
 
 	return $rs;
 }
-
-?>
