@@ -401,7 +401,7 @@ function Main() {
         
         updateRecordingStatus($recording['id'], $status, $type = 'ocr');
         if ($app->config['jobs'][$app->config['node_role']][$myjobid]['supresswarnings'] == false)
-          log_recording_conversion($recording['id'], $myjobid, $action, ($status === null ? 'NULL' : $status), $ox->getCommand(), $report, $OCRduration, true);
+          log_recording_conversion($recording['id'], $myjobid, $action, ($status === null ? 'NULL' : $status), $ox->getCommand(), $report, $OCRduration, false);
         $debug->log($logdir, $logfile, str_pad("[ CONVERSION END ]", 100, '-', STR_PAD_BOTH), false);
       }
     }
