@@ -4,17 +4,15 @@ namespace AuthTypes;
 class Kerberos extends \AuthTypes\Base {
   protected $source = 'kerberos';
 
+  protected function getRegexp( $row ) {
+    return '/^' . $row['domainregex'] . '$/i';
+  }
+
   public function handle( $type, $module, $action ) {
 
     // a tipus teljesen ignoralni akarjuk, mintha torolve lenne
     if ( $type['disabled'] < 0 )
       return false;
-
-    // az organization egyatalan var kerberos logint?
-    $domains = array();
-    $doms = explode(',', $type['domains'] );
-    foreach($doms as $value)
-      $domains[ trim($value) ] = true;
 
     $user = $this->bootstrap->getSession('user');
     $l = $this->bootstrap->getLocalization();
@@ -51,8 +49,9 @@ class Kerberos extends \AuthTypes\Base {
     // a domain nincs a vart domain-u loginok kozott
     // ez azzal jar hogy ha nincsen letrehozva megfelelo organizations.authtypes
     // akkor a site elerheto lesz
-    if ( !isset( $domains[ $domain ] ) ) {
-      $this->l("types/kerberos::handle error: az authtype domainjei kozott nem talaltuk meg a belepo domaint: $domain; az authtype: \n" .
+    $domainregex = $this->getRegexp( $type['domainregex'] );
+    if ( !preg_match( $domainregex, $domain ) ) {
+      $this->l("types/kerberos::handle error: az authtype domainregex: $domainregex nem illett a domainre: $domain; az authtype: \n" .
         var_export( $type, true )
       );
       return false;
@@ -111,9 +110,9 @@ class Kerberos extends \AuthTypes\Base {
 
     $found  = false;
     foreach( $this->organization['authdirectories'] as $directory ) {
-      $domains = explode(',', strtolower( $directory['domains'] ) );
+      $domainregex = $this->getRegexp( $directory['domainregex'] );
 
-      if ( !in_array( $domain, $domains ) )
+      if ( !preg_match( $domainregex, $domain ) )
         continue;
 
       $found = true;
