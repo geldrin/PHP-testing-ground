@@ -15,62 +15,52 @@ $application->loadConfig('config_local.php');
 
 $application->bootstrap();
 
-$db              = $application->bootstrap->getAdoDB();
-$rs              = $db->query("
-  SELECT *
-  FROM organizations_authtypes
-  WHERE
-    domainregex IS NOT NULL AND
-    domainregex <> ''
+$db = $application->bootstrap->getAdoDB();
+$shouldquit = $db->getOne("
+  SELECT value
+  FROM springboardconfiguration
+  WHERE name = 'migratedOrganizationsAuthTypes'
+  LIMIT 1
 ");
 
-echo "<pre>Migrating organizations_authtypes domains to domainregexes:\n";
-flush();
+if ( $shouldquit )
+  die('Already migrated, refusing');
 
-foreach( $rs as $row ) {
-  $domains = \Springboard\Tools::explodeAndTrim(',', $row['domainregex'] );
-  $parts = array();
-  foreach( $domains as $domain )
-    $parts[] = preg_quote( $domain );
+migrateDomains('organizations_authtypes');
+migrateDomains('organizations_directories');
 
-  $regex = '(' . implode('|', $parts ) . ')';
-  $db->execute("
-    UPDATE organizations_authtypes
-    SET domainregex = " . $db->qstr( $regex ) . "
-    WHERE id = " . $row['id']
-  );
-  echo $row['id'], "\t", $row['domainregex'], "\t=>\t", $regex, "\n";
-  flush();
-}
-
-unset( $rs );
-
-
-$rs = $db->query("
-  SELECT *
-  FROM organizations_directories
-  WHERE
-    domainregex IS NOT NULL AND
-    domainregex <> ''
+$db->execute("
+  INSERT INTO springboardconfiguration
+  (name, value, timestamp) VALUES
+  ('migratedOrganizationsAuthTypes', '1', NOW())
 ");
 
-echo "<pre>Migrating organizations_directories domains to domainregexes:\n";
-flush();
+function migrateDomains( $table ) {
+  global $db;
 
-foreach( $rs as $row ) {
-  $domains = \Springboard\Tools::explodeAndTrim(',', $row['domainregex'] );
-  $parts = array();
-  foreach( $domains as $domain )
-    $parts[] = preg_quote( $domain );
-
-  $regex = '(' . implode('|', $parts ) . ')';
-  $db->execute("
-    UPDATE organizations_directories
-    SET domainregex = " . $db->qstr( $regex ) . "
-    WHERE id = " . $row['id']
-  );
-  echo $row['id'], "\t", $row['domainregex'], "\t=>\t", $regex, "\n";
+  echo "<pre>Migrating ", $table, " domains to domainregexes:\n";
   flush();
-}
 
-unset( $rs );
+  $rs = $db->query("
+    SELECT *
+    FROM $table
+    WHERE
+      domainregex IS NOT NULL AND
+      domainregex <> ''
+  ");
+  foreach( $rs as $row ) {
+    $domains = \Springboard\Tools::explodeAndTrim(',', $row['domainregex'] );
+    $parts = array();
+    foreach( $domains as $domain )
+      $parts[] = preg_quote( $domain );
+
+    $regex = '(' . implode('|', $parts ) . ')';
+    $db->execute("
+      UPDATE $table
+      SET domainregex = " . $db->qstr( $regex ) . "
+      WHERE id = " . $row['id']
+    );
+    echo $row['id'], "\t", $row['domainregex'], "\t=>\t", $regex, "\n";
+    flush();
+  }
+}
