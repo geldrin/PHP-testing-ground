@@ -54,6 +54,10 @@ function migrateDomains( $table ) {
     foreach( $domains as $domain )
       $parts[] = preg_quote( $domain );
 
+    // igy jeleztuk regebben hekkelve hogy barmire matcheljen, helyette normalisan vegre
+    if ( strpos( $row['domainregex'], ',,' ) !== false )
+      $parts[] = '.*';
+
     $regex = '(' . implode('|', $parts ) . ')';
     $db->execute("
       UPDATE $table
