@@ -50,7 +50,7 @@ class Ldap extends \AuthTypes\Kerberos {
 
     $found  = false;
     foreach( $this->organization['authdirectories'] as $directory ) {
-      $domainregex = $this->getRegexp( $directory['domainregex'] );
+      $domainregex = $this->getRegexp( $directory );
 
       if ( !preg_match( $domainregex, $domain ) )
         continue;

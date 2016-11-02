@@ -49,7 +49,7 @@ class Kerberos extends \AuthTypes\Base {
     // a domain nincs a vart domain-u loginok kozott
     // ez azzal jar hogy ha nincsen letrehozva megfelelo organizations.authtypes
     // akkor a site elerheto lesz
-    $domainregex = $this->getRegexp( $type['domainregex'] );
+    $domainregex = $this->getRegexp( $type );
     if ( !preg_match( $domainregex, $domain ) ) {
       $this->l("types/kerberos::handle error: az authtype domainregex: $domainregex nem illett a domainre: $domain; az authtype: \n" .
         var_export( $type, true )
@@ -110,7 +110,7 @@ class Kerberos extends \AuthTypes\Base {
 
     $found  = false;
     foreach( $this->organization['authdirectories'] as $directory ) {
-      $domainregex = $this->getRegexp( $directory['domainregex'] );
+      $domainregex = $this->getRegexp( $directory );
 
       if ( !preg_match( $domainregex, $domain ) )
         continue;
