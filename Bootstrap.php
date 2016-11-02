@@ -361,7 +361,7 @@ class Bootstrap {
     }
 
     $db->debug = $this->debug;
-    $db->query("SET NAMES utf8mb4");
+    $db->query("SET NAMES " . str_replace( '-', '', $this->config['charset'] ) );
     $db->SetFetchMode( ADODB_FETCH_ASSOC );
 
     return $this->instances['adodb'][ $dbSettings ] = $db;
