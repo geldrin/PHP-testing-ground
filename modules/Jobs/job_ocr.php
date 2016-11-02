@@ -164,11 +164,9 @@ function Main() {
       if (!is_dir($convpath)) {
         restore_error_handler();
         $msg = "[INFO] Preparing working directory.\n";
-        
-        $createdir = mkdir($convpath, $mode = 0775, $recursive = true);
         $debug->log($logdir, $logfile, $msg, false);
         
-        if (!$createdir) {
+        if ( mkdir($convpath, $mode = 0775, $recursive = true) === false ) {
           $tmp = error_get_last();
           $msg .= "[WARNING] Failed to create directory - ". $tmp['message'] ."\n";
           throw new OCRException($msg, null, null, OCR_PREP_FAILED);
@@ -362,7 +360,7 @@ function Main() {
       $report .= "Duration: ". intval($OCRduration) ." s\n";
       echo $report . PHP_EOL;
       updateRecordingStatus($recording['id'], $jconf['dbstatus_copystorage_ok'], $type = 'ocr');
-      log_recording_conversion($recording['id'], $myjobid, 'COMPLETE', $jconf['dbstatus_copystorage_ok'], null, $report, $OCRduration, true);
+      log_recording_conversion($recording['id'], $myjobid, 'COMPLETE', $jconf['dbstatus_copystorage_ok'], null, $report, $OCRduration, false);
       
       $debug->log($logdir, $logfile, str_pad("[ CONVERSION END ]", 100, '-', STR_PAD_BOTH), false);
       
@@ -1139,7 +1137,7 @@ function getOCRtasks() {
     $recordset = $db->Prepare($query);
     $recordset = $db->execute($query, array(
       $jconf['dbstatus_copystorage_ok'],
-      '^('. $jconf['dbstatus_copystorage_ok'] ."|". $jconf['dbstatus_uploaded'] .')$',
+      '^('. $jconf['dbstatus_copystorage_ok'] /*."|". $jconf['dbstatus_uploaded']*/ .')$',
       '^('. $jconf['dbstatus_reconvert'] ."|". $jconf['dbstatus_convert'] ."|". $jconf['dbstatus_conv'] .')$')
     );
     if (isset($recordset) && isset($recordset->sql)) $result['query'] = $recordset->sql;
@@ -1159,5 +1157,3 @@ function getOCRtasks() {
   
   return $result;
 }
-
-?>

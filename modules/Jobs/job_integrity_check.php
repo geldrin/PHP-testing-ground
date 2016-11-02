@@ -52,11 +52,6 @@ clearstatcache();
 // Exit if any STOP file appears
 if ( is_file( $app->config['datapath'] . 'jobs/job_integrity_check.stop' ) or is_file( $app->config['datapath'] . 'jobs/all.stop' ) ) exit;
 
-// Establish database connection
-$db = null;
-$db = db_maintain();
-$db_close = TRUE;
-
 $log_summary  = "NODE: " . $app->config['node_sourceip'] . "\n";
 $log_summary .= "SITE: " . $app->config['baseuri'] . "\n";
 $log_summary .= "JOB: " . $jconf['jobid_integrity_check'] . "\n\n";
@@ -109,14 +104,14 @@ $query = "
   ORDER BY a.id";
 
 try {
-  $recordings = $db->Execute($query);
+  $recordings = $recordingsModel->safeExecute($query);
 } catch (exception $err) {
   $msg = "[ERROR] Data integrity check interrupted due to error. Manual restart is required.\nCheck log files.\n\n";
   $debug->log($logdir, $logpath, "[ERROR] No connection to DB (getAdoDB() failed). Error message:\n" . $err, $sendmail = TRUE);
-  exit (1);
+  exit(1);
 }
 
-$num_recordings = $recordings->RecordCount();
+$num_recordings = $recordings->recordCount();
 
 // MAIN CYCLE /////////////////////////////////////////////////////////////////////////////////////
 while ( !$recordings->EOF ) {
@@ -133,10 +128,10 @@ while ( !$recordings->EOF ) {
   // Check recording directory
   if ( !file_exists($recording_path) ) {
     $recording_summary .= "[ERROR] recording path does not exist (" . $recording_path . ")\n";
-    $recordings->MoveNext();
+    $recordings->moveNext();
     continue;
   } elseif  ($rec['status'] !== $jconf['dbstatus_copystorage_ok']) {
-    $recordings->MoveNext();
+    $recordings->moveNext();
     continue;
   }
   // Threshold variable
@@ -169,7 +164,7 @@ while ( !$recordings->EOF ) {
       $debug->log($logdir, $logpath, $recording_summary, $sendmail = false);
       // break(1);
       $num_errors++;
-      $recordings->MoveNext();
+      $recordings->moveNext();
       continue;
     }
     $mastervideolength = $tmp['length'];
@@ -180,7 +175,7 @@ while ( !$recordings->EOF ) {
       $recording_summary .= "[WARNING] invalid database value (". $master_record ." - ". $mastervideolength ."sec, db - ". $rec['masterlength'] ."s)\n";
     }
   }
-  
+
   // Check content master media file
   if ( $rec['contentmasterstatus'] == $jconf['dbstatus_copystorage_ok'] || $rec['contentmasterstatus'] == $jconf['dbstatus_uploaded']) {
     // masterstatus = "onstorage"|"uploaded"
@@ -212,7 +207,7 @@ while ( !$recordings->EOF ) {
         $debug->log($logdir, $logpath, $recording_summary, $sendmail = false);
         // break(1);
         $num_errors++;
-        $recordings->MoveNext();
+        $recordings->moveNext();
         continue;
       }
       $mastercontentlength = $tmp['length'];
@@ -293,9 +288,8 @@ while ( !$recordings->EOF ) {
 
   $num_checked_recs++;
 
-  if ( $rec['status'] == "onstorage" ) $num_onstorage_recs++;
-
-  $recordings->MoveNext();
+  if ( $rec['status'] == "onstorage" ) { $num_onstorage_recs++; }
+  $recordings->moveNext();
 }
 // MAIN CYCLE END ///////////////////////////////////////////////////////////////////////////////
 
@@ -312,7 +306,7 @@ $log_summary .= "Check duration: " . secs2hms($duration) . "\n";
 $debug->log($logdir, $logpath, "Data integrity check results:\n\n" . $log_summary, $sendmail = TRUE);
 
 // Close DB connection if open
-if ( is_resource($db->_connectionID) ) $db->close();
+if ( $recordingsModel->db->isConnected()) $recordingsModel->db->close();
 
 exit;
 //////////////////////////////////////////// FUNCTIONS ////////////////////////////////////////////
@@ -329,31 +323,31 @@ exit;
 //
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 function query($query) {
-  global $db;
+  global $recordingsModel;
+  
   $results = array(
-    'query' => $query,
-    'result' => false,
+    'query'   => $query,
+    'result'  => false,
     'message' => "Ok!",
-    'data' => null
+    'data'    => null,
   );
+  
   try {
-    $rs = $db->Execute($query);
-  } catch (exception $err) {
-    $results['message'] = "SQL query failed.\n". trim($err->getMessage()) ."\n";
-    return $results;
-  }
-  if (method_exists($rs, "GetRows")) {
-    if ( $rs->RecordCount() < 1 ) {
-      $results['data'] = $rs->GetRows();
-      $results['result'] = true;
-      $results['message'] = "Query returned an empty array.\n";
+    $rs = $recordingsModel->safeExecute($query);
+    
+    if (method_exists($rs, "getArray")) {
+      $results['data'] = $rs->getArray();
+
+      if ( $rs->recordCount() < 1 ) { $results['message'] = "Query returned an empty array.\n"; }
+      if ( method_exists($recordingsModel->db, "errorNo") && $recordingsModel->db->errorNo() == '00000' ) { $results['result'] = true; }
+      
     } else {
-      $results['result'] = true;
-      $results['data'] = $rs->GetRows();
+      $results['message'] = "Cannot get rows from recordset.\n";
     }
-  } else {
-  $results['message'] = "Cannot get rows from recordset.\n";
+  } catch (Exception $err) {
+    $results['message'] = "SQL query failed.\n". trim($err->getMessage()) ."\n";
   }
+  
   return $results;
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -396,9 +390,7 @@ function query($query) {
 ///////////////////////////////////////////////////////////////////////////////////////////////////
   function check_contributor_images() {
 ///////////////////////////////////////////////////////////////////////////////////////////////////
- global $db, $log_summary;
-
-  $db = db_maintain();
+ global $recordingsModel, $log_summary, $debug, $logdir, $logpath;
  
   $contributor_image_path = realpath("/srv/storage/videosquare.eu/contributors/");
 
@@ -413,14 +405,14 @@ function query($query) {
   ";
 
   try {
-    $images = $db->Execute($query);
+    $images = $recordingsModel->db->safeExecute($query);
   } catch (exception $err) {
     $debug->log($logdir, $logpath, "[ERROR] SQL query failed. Query: \n" .  trim($query) . "\n\nError message: \n" . $err, $sendmail = TRUE);
     return FALSE;
   }
   
   $num_checked_images = 0;
-  $num_images = $images->RecordCount();
+  $num_images = $images->recordCount();
 
   while ( !$images->EOF ) {
 
@@ -529,9 +521,7 @@ function query($query) {
 ///////////////////////////////////////////////////////////////////////////////////////////////////
   function check_attachments($rec_id) {
 ///////////////////////////////////////////////////////////////////////////////////////////////////
- global $db, $recording_summary, $app;
-
-  $db = db_maintain();
+  global $debug, $recordingsModel, $recording_summary, $app, $logdir, $logpath;
 
   $attachment_ids = array();
 
@@ -552,7 +542,7 @@ function query($query) {
   ";
 
   try {
-    $attachments = $db->Execute($query);
+    $attachments = $recordingsModel->db->Execute($query);
   } catch (exception $err) {
     $debug->log($logdir, $logpath, "[ERROR] SQL query failed. Query: \n" .  trim($query) . "\n\nError message: \n" . $err, $sendmail = TRUE);
     return FALSE;
@@ -576,7 +566,7 @@ function query($query) {
     $attachments->MoveNext();
   }
   
-  if ($num_attachments <> $attachments->RecordCount()) {
+  if ($num_attachments <> $attachments->recordCount()) {
     $recording_summary .= "Found attachments: ". $num_attachments ."/". count($attachment_ids) ." in ". $rec_id ."\n";
     return FALSE;
   }
@@ -599,5 +589,3 @@ function query($query) {
   else 
   return false;
 }
-
-?>

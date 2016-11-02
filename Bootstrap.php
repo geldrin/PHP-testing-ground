@@ -390,26 +390,15 @@ class Bootstrap {
 
     $smarty->assign('ssl', SSL );
 
-    if ( SSL ) {
-
-      $smarty->assign('BASE_URI',   'https://' . $this->config['baseuri'] );
-      $smarty->assign('STATIC_URI', 'https://' . $this->config['staticuri'] );
-      $smarty->assign('FULL_URI',   'https://' . $_SERVER['SERVER_NAME'] . $_SERVER['REQUEST_URI'] );
-
-    } else {
-
-      $smarty->assign('BASE_URI',   'http://' . $this->config['baseuri'] );
-      $smarty->assign('STATIC_URI', 'http://' . $this->config['staticuri'] );
-
-      if ( !ISCLI )
-        $smarty->assign('FULL_URI',   'http://' . $_SERVER['SERVER_NAME'] . $_SERVER['REQUEST_URI'] );
-
+    $smarty->assign('BASE_URI',   $this->baseuri );
+    $smarty->assign('STATIC_URI', $this->staticuri );
+    if ( isset( $_SERVER['REQUEST_URI'] ) ) {
+      $smarty->assign('FULL_URI',    $this->baseuri . $_SERVER['REQUEST_URI'] );
+      $smarty->assign('CURRENT_URI', $_SERVER['REQUEST_URI'] );
+      $smarty->assign('REQUEST_URI', $_SERVER['REQUEST_URI'] );
     }
 
-    $smarty->assign('CURRENT_URI',      @$_SERVER['REQUEST_URI'] );
     $smarty->assign('VERSION',          $this->config['version'] );
-    $smarty->assign('REQUEST_URI',      @$_SERVER['REQUEST_URI'] );
-
     $smarty->assign('language',         Springboard\Language::get() );
     if ( isset( $_REQUEST['module'] ) )
       $smarty->assign('module',         $_REQUEST['module'] );
