@@ -393,7 +393,11 @@ class Bootstrap {
     $smarty->assign('BASE_URI',   $this->baseuri );
     $smarty->assign('STATIC_URI', $this->staticuri );
     if ( isset( $_SERVER['REQUEST_URI'] ) ) {
-      $smarty->assign('FULL_URI',    $this->baseuri . $_SERVER['REQUEST_URI'] );
+      $baseurl = parse_url( $this->baseuri );
+      $baseurl['path'] = $_SERVER['REQUEST_URI'];
+      $fulluri = \Springboard\Tools::assembleURLFromComponents( $baseurl );
+
+      $smarty->assign('FULL_URI',    $fulluri );
       $smarty->assign('CURRENT_URI', $_SERVER['REQUEST_URI'] );
       $smarty->assign('REQUEST_URI', $_SERVER['REQUEST_URI'] );
     }
