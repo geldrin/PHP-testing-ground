@@ -512,7 +512,7 @@ global $myjobid, $debug, $jconf, $app;
             od.server,
             od.user,
             od.password,
-            od.domains,
+            od.domainregex,
             od.name,
             od.ldapusertreedn,
             od.ldapgroupaccess,
