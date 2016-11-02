@@ -1,9 +1,7 @@
 <?php
-include_once('modifier.uri.php');
-
-function smarty_modifier_changelanguage( $url, $language ) {
-
-  $baseuri = \Bootstrap::getInstance()->baseuri;
+function smarty_modifier_changelanguage( $url, $language, $baseuri = null ) {
+  if ( $baseuri === null )
+    $baseuri = \Bootstrap::getInstance()->baseuri;
 
   if ( strlen( $url ) < strlen( $baseuri ) )
     $newurl = $url . "/$language/";
@@ -22,7 +20,9 @@ function smarty_modifier_changelanguage( $url, $language ) {
 
   parse_str( substr( $newurl, $pos + 1 ), $params );
   if ( isset( $params['forward'] ) and $params['forward'] )
-    $params['forward'] = smarty_modifier_changelanguage( $params['forward'], $language );
+    $params['forward'] = smarty_modifier_changelanguage(
+      $params['forward'], $language, $baseuri
+    );
   else
     return $newurl;
 
@@ -30,5 +30,4 @@ function smarty_modifier_changelanguage( $url, $language ) {
   $newurl .= '?' . http_build_query( $params );
 
   return $newurl;
-
 }
