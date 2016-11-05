@@ -1528,7 +1528,7 @@ class Livefeeds extends \Springboard\Model {
         );
 
       if ( $this->row['livefeedrecordingid'] )
-        throw new \Exception("livefeedrecordingsid set for starting feed #" . $this->id );
+        throw new \Exception("livefeedrecordingid set for starting feed #" . $this->id );
 
       $row['livefeedid'] = $this->id;
       $row['userid'] = $userid;
