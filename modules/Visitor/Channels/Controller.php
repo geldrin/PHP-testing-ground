@@ -170,7 +170,7 @@ class Controller extends \Visitor\Controller {
       'fullscale' => $recordingembedfullwidth? 'yes': 'no',
     );
 
-    if ( !$recordingembedfullwidth )
+    if ( $recordingembedfullwidth )
       $width = '950';
     else
       $width = '480';
@@ -196,7 +196,6 @@ class Controller extends \Visitor\Controller {
       $recModel->row = $row;
       $recModel->id  = $row['id'];
 
-      // legyen mindig fullscale, valszeg kene ra parameter TODO
       $data[ $key ]['embed'] = strtr( $embed, array(
           '*HEIGHT*'      => $recModel->getPlayerHeight( $recordingembedfullwidth ),
           '*RECORDINGID*' => $row['id'],
