@@ -35,11 +35,11 @@ class Main {
     
   private function __construct() { /* Constructor disabled */ }
 
-	/**
-	 * Main function
-	 * 
-	 * @return int
-	 */
+  /**
+   * Main function
+   * 
+   * @return int
+   */
   public static function Main($argv, $argc) {
     self::init();
     
@@ -66,7 +66,7 @@ class Main {
       }
     }
     
-		// livefeeds //
+    // livefeeds //
     if (self::$dolivefeeds) {
       $live_dirs = self::getWorkDirectories('LIVE');
       
@@ -77,9 +77,9 @@ class Main {
     
     var_dump($live_dirs); //debug
     var_dump($vod_dirs); //debug
-	}
+  }
   
-	//-----------------------------------------------------------------------------------------------
+  //-----------------------------------------------------------------------------------------------
   
   /**
    * Get work directory structures and file lists on which we can work later on.
@@ -91,11 +91,11 @@ class Main {
     $workdirs = [];
     $pattern  = [];
     //$basepath = self::$app->config['storagepath'];
-		$basepath = '/srv/vsq/videosquare.eu/'; // for debuggin'
-		
-		if ($basepath === false) {
-			print_r("ERROR: path ". self::$path ." doesn't exists!\n");
-			return false;
+    $basepath = '/srv/vsq/videosquare.eu/'; // for debuggin'
+    
+    if ($basepath === false) {
+      print_r("ERROR: path ". self::$path ." doesn't exists!\n");
+      return false;
     }
     
     if ($type === 'VOD') {
@@ -184,130 +184,130 @@ class Main {
    * @param type $dstpath
    * @return type
    */
-	public static function doResize($srcpath, $filename, $dstpath = null) {
-		$ldir = self::$ldir;
-		$lfile = self::$lfile;
-		$cmdresize = null;
-		$cmdparts  = array();
-		
+  public static function doResize($srcpath, $filename, $dstpath = null) {
+    $ldir = self::$ldir;
+    $lfile = self::$lfile;
+    $cmdresize = null;
+    $cmdparts  = array();
+    
     if ($dstpath === null) { $dstpath = $srcpath; }
-		
-		$cmdparts[] = "convert \"{$srcpath}{$filename}\"";
-		
-		for ( $i = 0; $i < count(self::$sizes); $i++ ) {
-			$dim    = self::$sizes[$i];
-			$size   = $dim->w .'x'. $dim->h;
-			$output = $dstpath . $filename;
-			$cmdparts[] = "\( +clone -background black -resize {$size}^ -gravity center -extent {$size} -write \"{$output}\" +delete \)";
-		}
-		
-		$cmdparts[] = "null:";
+    
+    $cmdparts[] = "convert \"{$srcpath}{$filename}\"";
+    
+    for ( $i = 0; $i < count(self::$sizes); $i++ ) {
+      $dim    = self::$sizes[$i];
+      $size   = $dim->w .'x'. $dim->h;
+      $output = $dstpath . $filename;
+      $cmdparts[] = "\( +clone -background black -resize {$size}^ -gravity center -extent {$size} -write \"{$output}\" +delete \)";
+    }
+    
+    $cmdparts[] = "null:";
     $cmdresize = implode(' ', $cmdparts);
-		
-		if (self::$isdryrun) {
+    
+    if (self::$isdryrun) {
       if (self::$isverbose) { print_r("-> {$cmdresize}\n"); }
-			return;
-		}
-		
-		$runExt = new runExt();
-		if ($runExt->run($cmdresize) === false) {
-			// error
-			$msg = "ERROR: command failed! (". $runExt->command .") ". $runExt->getMessage() ."\nOutput: ". $runExt->getOutput();
-			self::log($msg);
-			
+      return;
+    }
+    
+    $runExt = new runExt();
+    if ($runExt->run($cmdresize) === false) {
+      // error
+      $msg = "ERROR: command failed! (". $runExt->command .") ". $runExt->getMessage() ."\nOutput: ". $runExt->getOutput();
+      self::log($msg);
+      
       if (self::$isverbose) { print_r($msg . PHP_EOL); }
-			
-		} else {
-			// OK
-		}
-	}
-	
+      
+    } else {
+      // OK
+    }
+  }
+  
   /**
    * Queries channels from databese.
    * 
    * @return boolean
    */
-	private static function getChannels() {
-		$channels = null;
-		$sql = "SELECT id, title, subtitle, indexphotofilename, isliveevent FROM channels AS c WHERE c.isdeleted = 0";
-		
-		try {
-			$channels = self::$db->Execute($sql);
-		} catch (Exception $ex) {
-			$msg = "ERROR: Failed to get channel list from DB!";
-			
+  private static function getChannels() {
+    $channels = null;
+    $sql = "SELECT id, title, subtitle, indexphotofilename, isliveevent FROM channels AS c WHERE c.isdeleted = 0";
+    
+    try {
+      $channels = self::$db->Execute($sql);
+    } catch (Exception $ex) {
+      $msg = "ERROR: Failed to get channel list from DB!";
+      
       if (self::$isverbose) { print_r($msg . PHP_EOL); }
-			
-			self::log($msg ."\n". $ex->getTraceAsString());
-			return false;
-		}
-		
-		return $channels;
-	}
-	
+      
+      self::log($msg ."\n". $ex->getTraceAsString());
+      return false;
+    }
+    
+    return $channels;
+  }
+  
   
   /**
    * Queries recordings from database.
    * 
    * @return boolean
    */
-	private static function getRecordings() {
-		$recordings = null;
-		$sql = "SELECT id, title, subtitle, status FROM recordings AS r WHERE (".
-		"r.status LIKE ". self::$jconf['dbstatus_copystorage_ok'] ." OR ".
-	  "r.status LIKE ". self::$jconf['dbstatus_markedfordeletion'] .")";
-		
-		try {
-			$recordings = self::$db->Execute($sql);
-		} catch (Exception $ex) {
-			$msg = "ERROR: Failed to get recordings from DB!";
-			
+  private static function getRecordings() {
+    $recordings = null;
+    $sql = "SELECT id, title, subtitle, status FROM recordings AS r WHERE (".
+    "r.status LIKE ". self::$jconf['dbstatus_copystorage_ok'] ." OR ".
+    "r.status LIKE ". self::$jconf['dbstatus_markedfordeletion'] .")";
+    
+    try {
+      $recordings = self::$db->Execute($sql);
+    } catch (Exception $ex) {
+      $msg = "ERROR: Failed to get recordings from DB!";
+      
       if (self::$isverbose) { print_r($msg . PHP_EOL); }
-			
-			self::log($msg ."\n". $ex->getTraceAsString());
-			return false;
-		}
-		
-		return $recordings;
-	}
-	
-	private static function updateChannel() {
-		
-	}
-	
-	private static function updateRecording() {
-		
-	}
-	
-	private static function printHelp() {
-		print_r(" -- usage info --");
-		print_r(PHP_EOL);
-	}
-	
-	private static function printInvalidOpt($opt) {
-		print_r("ERROR: option '{$opt}' cannot be recognized!\n");
-	}
-	
-	private static function printEmptyOpt() {
-		print_r("No options passed!\n");
-	}
-	
-	private static function printInvalidSize($param) {
-		print_r("WARN: '{$param}' cannot be parsed as size! Valid format is: <width>x<height>\n");
-	}
-	
-	/**
-	 * Wrapper for SpringBoard logger for easier use.
-	 * 
-	 * @param type $message
-	 * @param type $sendmail
-	 * @return type
-	 */
-	private static function log($message, $sendmail = false) {
-		$sendmail = (bool) $sendmail;
+      
+      self::log($msg ."\n". $ex->getTraceAsString());
+      return false;
+    }
+    
+    return $recordings;
+  }
+  
+  private static function updateChannel() {
+    
+  }
+  
+  private static function updateRecording() {
+    
+  }
+  
+  private static function printHelp() {
+    print_r(" -- usage info --");
+    print_r(PHP_EOL);
+  }
+  
+  private static function printInvalidOpt($opt) {
+    print_r("ERROR: option '{$opt}' cannot be recognized!\n");
+  }
+  
+  private static function printEmptyOpt() {
+    print_r("No options passed!\n");
+  }
+  
+  private static function printInvalidSize($param) {
+    print_r("WARN: '{$param}' cannot be parsed as size! Valid format is: <width>x<height>\n");
+  }
+  
+  /**
+   * Wrapper for SpringBoard logger for easier use.
+   * 
+   * @param type $message
+   * @param type $sendmail
+   * @return type
+   */
+  private static function log($message, $sendmail = false) {
+    $sendmail = (bool) $sendmail;
     if (!$message) { return; }
-		self::$debug->log(self::$ldir, self::$lfile, $message, $sendmail);
-	}
+    self::$debug->log(self::$ldir, self::$lfile, $message, $sendmail);
+  }
   
   /**
    * Searches for regular files in a given directory
@@ -339,92 +339,92 @@ class Main {
     $error = false;
     
     if ($argc > 1) {
-			
-			// option parser regex (unescaped)
-			// --?(?P<option>[\w\?]+)(?:\=(?:(?P<quote>[\"\']?)(?P<match>[\w\d\s\.\,]+)(?:\k<quote>)))?
+      
+      // option parser regex (unescaped)
+      // --?(?P<option>[\w\?]+)(?:\=(?:(?P<quote>[\"\']?)(?P<match>[\w\d\s\.\,]+)(?:\k<quote>)))?
       // 
       // examples:
-			// "--arg=asd"   --> option="arg", quote="", match="asd"
-			// "--opt"       --> option="opt", quote="", match=""
-			// "-value='123' --> option="value", quote="'", match=123
-			
-			$re = "/--?(?P<option>[\\w\\?]+)(?:\\=(?:(?P<quote>[\\\"\\']?)(?P<match>[\\w\\d\\s\\.\\,]+)(?:\\k<quote>)))?/";
-			
-			for ($i = 1; $i < $argc; $i++) {
-				$parse = $match = $option = $value = null;
-				
-				$arg = $argv[$i];
-				$parse = preg_match($re, $arg, $match);
-				
-				if ($parse > 0 && isset($match['option'])) {
-					$option = $match['option'];
-					$value = isset($match['match']) ? $match['match'] : null;
-				} elseif ($i == count($argv) - 1) {
-					self::$path = $arg;
-					break;
-				}
-				
-				switch ($option) {
+      // "--arg=asd"   --> option="arg", quote="", match="asd"
+      // "--opt"       --> option="opt", quote="", match=""
+      // "-value='123' --> option="value", quote="'", match=123
+      
+      $re = "/--?(?P<option>[\\w\\?]+)(?:\\=(?:(?P<quote>[\\\"\\']?)(?P<match>[\\w\\d\\s\\.\\,]+)(?:\\k<quote>)))?/";
+      
+      for ($i = 1; $i < $argc; $i++) {
+        $parse = $match = $option = $value = null;
+        
+        $arg = $argv[$i];
+        $parse = preg_match($re, $arg, $match);
+        
+        if ($parse > 0 && isset($match['option'])) {
+          $option = $match['option'];
+          $value = isset($match['match']) ? $match['match'] : null;
+        } elseif ($i == count($argv) - 1) {
+          self::$path = $arg;
+          break;
+        }
+        
+        switch ($option) {
 
-				case '?':
-				case 'help':
-					self::printHelp();
-					return 0;
-				
-				case 'v':
-				case 'verbose':
-					self::$isverbose = true; // if true, print some nerdy stuff on console
-					break;
+        case '?':
+        case 'help':
+          self::printHelp();
+          return 0;
+        
+        case 'v':
+        case 'verbose':
+          self::$isverbose = true; // if true, print some nerdy stuff on console
+          break;
 
-				case 'i':
-				case 'interactive':
-					self::$isinteractive = true;
-					break;
-				
-				case 'dry':
-				case 'dryrun':
-					self::$isdryrun = true; // don't actually create folders and new files
-					break;
-				
-				case 'channels':
-					self::$dochannels = true; // update channels table?
-					break;
+        case 'i':
+        case 'interactive':
+          self::$isinteractive = true;
+          break;
+        
+        case 'dry':
+        case 'dryrun':
+          self::$isdryrun = true; // don't actually create folders and new files
+          break;
+        
+        case 'channels':
+          self::$dochannels = true; // update channels table?
+          break;
         
         case 'live':
           self::$dolivefeeds = true;
           break;
-			
-				case 'vod':
-					self::$doVOD = true; // update recordings table?
-					break;
-				
-				case 'size': // size for new indexphotos (can be used multiple times)
-					$tmp = explode('x', strtolower($value));
+      
+        case 'vod':
+          self::$doVOD = true; // update recordings table?
+          break;
+        
+        case 'size': // size for new indexphotos (can be used multiple times)
+          $tmp = explode('x', strtolower($value));
 
-					if (!empty($tmp)) {
-						self::$sizes[] = new Size($tmp[0], $tmp[1]);
-					} else {
-						self::printInvalidSize($value);
-						$error = true;
-					}
-					break;
+          if (!empty($tmp)) {
+            self::$sizes[] = new Size($tmp[0], $tmp[1]);
+          } else {
+            self::printInvalidSize($value);
+            $error = true;
+          }
+          break;
 
-				default:
-					self::printInvalidOpt($option);
-					self::printHelp();
-					$error = true;
-					break;
-				}
-				
-				if ($error) break;
-			}
-		} else {
-			self::printEmptyOpt();
-			self::printHelp();
-			$error = true;
-		}
-		
-		return(!$error);
+        default:
+          self::printInvalidOpt($option);
+          self::printHelp();
+          $error = true;
+          break;
+        }
+        
+        if ($error) break;
+      }
+    } else {
+      self::printEmptyOpt();
+      self::printHelp();
+      $error = true;
+    }
+    
+    return(!$error);
   }
   
   /**
@@ -451,12 +451,12 @@ class Main {
  * Frame resolution object
  */
 class Size {
-	private $w;
-	private $h;
-	
-	function __construct($width = null, $height = null) {
-		$this->w = $width;
-		$this->h = $height;
+  private $w;
+  private $h;
+  
+  function __construct($width = null, $height = null) {
+    $this->w = $width;
+    $this->h = $height;
   }
   
   public function __get($prop) {
