@@ -1,0 +1,496 @@
+Kerberos
+
+Minden részletre kiterjedő leírás: http://www.grolmsnet.de/kerbtut/
+[szerkesztés] Hogyan működik?
+
+Kliens oldal:
+Client Web Browser does HTTP GET for resource.
+Web server returns HTTP 401 status and a header: WWW-Authenticate: Negotiate
+Client generates a NegTokenInit, base64 encodes it, and resubmits the GET with an Authorization header: Authorization: Negotiate <base64 encoding>.
+Server decodes the NegTokenInit, extracts the supported MechTypes (only Kerberos V5 in our case), ensures it is one of the expected ones, and then extracts the MechToken (Kerberos Token) and authenticates it.
+If more processing is required another HTTP 401 is returned to the client with more data in the the WWW-Authenticate header. Client takes the info and generates another token passing this back in the Authorization header until complete.
+When the client has been authenticated the Web server should return the HTTP 200 status, a final WWW-Authenticate header and the page content.
+[szerkesztés] Alapfogalmak
+
+What is a "Key Distribution Center" (KDC)? A network service that supplies tickets and temporary session keys; or an instance of that service or the host on which it runs. The KDC services both initial ticket and ticket-granting ticket requests. The initial ticket portion is sometimes referred to as the Authentication Server (or service). The ticket-granting ticket portion is sometimes referred to as the ticket-granting server (or service)")
+Principal: A principal is someone or something you authenticate or authenticate to.
+user-principals: Kerberos representation of people sitting at a machine. Example: fredegar@GROLMSNET.DE
+service-principals: e.g. Kerberos representation of a webserver. Example: HTTP/beren.grolmsnet.de@GROLMSNET.DE
+Keytab file: On a kerberized host it holds the keys of service-principals.
+[szerkesztés] Szerver konfiguráció
+
+[szerkesztés] Alap dolgok
+NTLM: NTLM is Microsoft's SSO built into IE, Active Directory and IIS. The original version of NTLM is very insecure so NTLMv2 was implemented to fix the security issues in NTLM. The original NTLM is disabled by default in Windows Vista and later.
+Kerberos: Kerberos is an open standard that is very secure and is designed to offer seamless (SSO) Authentication. Active Directory supports a version of Kerberos.
+As far as the modules that can be used to implement these protocols, you included a pretty good list of them.
+mod_ntlm: This is an Apache module that runs on Linux and supports the original NTLM (not NTLMv2).
+mod_auth_kerb: This is an Apache module that implements Kerberos.
+mod_auth_sspi: This is an Apache module for Windows that supports the original NTLM (not NTLMv2).
+Apache2:AuthenNTLM: This is a Perl module that handles NTLM. I don't know if it supports NTLM and NTLMv2.
+mod_auth_ntlm_winbind: This is an Apache module that interfaces with Samba's authentication.
+[szerkesztés] Windows oldali konfiguráció
+http://www.nickes.net/implementing-kerberos-ad-integration-for-single-sign-on-in-apache/
+Minden "kerberizált" hosztnak kell egy service principal a KDC-ben. Ehhez egy dummy accountot kell létrehozni a Windows Domainben (pl. "vsq").
+Hozzunk létre egy service accountot (preauth kikapcsolva, ezzel nem fog menni)
+A DC-n használjuk a parancssoros ktpass-t. Ezzel a "vsq" usert a service principalhoz mappeljük (HTTP/dev.kfki.corp@STREAMNET.HU).
+A host "canonical hostname"-ét kell használni a ktpass-ban, azaz:
+Ha ez egy CNAME, akkor az A recordot használjuk
+Ha ez egy A-record, akkor a hozzá tartozó PTR a hostra mutasson! (Azaz: a reverse DNS-nek működnie kell!)
+
+ktpass -princ HTTP/<fqdn-hostname-in-DNS>@<kerberos_realm> -mapuser <user>@<domain> -pass <pass> -crypto RC4-HMAC-NT -ptype KRB5_NT_PRINCIPAL -out c:\temp\vsqH4.keytab
+
+VIGYÁZAT: all crypto esetén a KDC és a Linux között előfordulhat, hogy nem lesz közös crypto. Ilyenkor az authentikáció sikerülhet, de a kvno ticket ellenőrzés már nem, ill. a KDC ellenőrzése sem fog menni belépéskor (Apache). Használjunk RC4-HMAC-et! Tipikus hibák:
+
+kinit és sikeres authentikáció után:
+$ kvno -k vsq.dev.corp.keytab HTTP/vsq.dev.corp@DEV.CORP
+HTTP/vsq.dev.corp@DEV.CORP: kvno = 6, keytab entry invalid
+kvno: Wrong principal in request while decrypting ticket for HTTP/vsq.dev.corp@DEV.CORP
+
+Apache debug log:
+
+[Wed Feb 25 15:06:18 2015] [debug] src/mod_auth_kerb.c(1430): [client 10.35.41.88] GSS-API token of length 9 bytes will be sent back
+[Wed Feb 25 15:06:18 2015] [debug] src/mod_auth_kerb.c(1110): [client 10.35.41.88] GSS-API major_status:000d0000, minor_status:000186a5
+[Wed Feb 25 15:06:18 2015] [error] [client 10.35.41.88] gss_accept_sec_context() failed: Unspecified GSS failure.  Minor code may provide more information (, )
+
+
+User (Streamnet):
+
+vsqdev: EFnkr2bhhq4648Mq
+host: stream2.streamnet.eu ill. dev.kfki.corp
+
+[szerkesztés] Linux: Kerberos telepítés
+Debian csomagok és PECL krb5 csomag telepítése:
+
+aptitude install libapache2-mod-auth-kerb krb5-user php5-ldap ldap-utils php-pear php5-dev libkrb5-dev
+
+pecl install krb5
+
+Kerberos utility-k és konfig:
+/etc/krb5.conf: configuration of Kerberos installation
+ktutil: maintains keytabfiles
+kinit: used to start authentication of a principal, to get a "Ticket granting Ticket" (TGT)
+klist: shows all tickets you got in your ticket cache since you run kinit.
+Ezzel az alapokat beállítjuk, megadjuk a domaint és rámutatunk a KDC-re.
+/etc/krb5.conf (TSM példa, több DC-vel):
+
+[libdefaults]
+    default_realm = DEV.CORP
+    default_tkt_enctypes = arcfour-hmac-md5 des-cbc-crc des-cbc-md5
+    default_tgs_enctypes = arcfour-hmac-md5 des-cbc-crc des-cbc-md5
+
+...
+
+[realms]
+    DEV.CORP = {
+        kdc = dc1dev.dev.corp
+        kdc = dc2dev.dev.corp
+        admin_server = dc1dev.dev.corp
+        admin_server = dc2dev.dev.corp
+        default_domain = dev.corp
+    }
+
+
+[domain_realm]
+    vsq.dev.corp = DEV.CORP
+    .vsq.dev.corp = DEV.CORP
+
+...
+
+[szerkesztés] Kerberos tesztelés
+Tesztelés saját accounttal. Ennek az alap Kerberos konfigot követően mennie kell. Belépés, majd a visszakapott Kerberos ticket listázása:
+
+$ kinit akovacs@STREAMNET.HU
+Password for akovacs@STREAMNET.HU: ...
+
+$ klist
+Ticket cache: FILE:/tmp/krb5cc_0
+Default principal: akovacs@STREAMNET.HU
+
+Valid starting    Expires           Service principal
+15/05/2014 18:15  16/05/2014 04:15  krbtgt/STREAMNET.HU@STREAMNET.HU
+        renew until 16/05/2014 18:15
+
+[szerkesztés] Keytab telepítése és tesztelése
+A kerberos_hostname.keytab fájlt másoljuk az /etc/apache/keys könyvtárba (hozzuk létre, ha kell). Jogosultságok:
+
+chown root.www-data *.keytab
+chmod 0640 *.keytab
+
+Keytab tesztelés (erősen javasolt!). Keytab tartalmának ellenőrzése:
+
+klist -ke dev.kfki.corp.keytab
+Keytab name: FILE:dev.kfki.corp.keytab
+KVNO Principal
+---- --------------------------------------------------------------------------
+   4 HTTP/dev.kfki.corp@STREAMNET.HU (arcfour-hmac)
+
+Ticket kérése:
+
+$ kinit -V -k -t /etc/apache2/keys/dev.kfki.corp.keytab HTTP/dev.kfki.corp
+Using default cache: /tmp/krb5cc_0
+Using principal: HTTP/dev.kfki.corp@STREAMNET.HU
+Using keytab: /etc/apache2/keys/dev.kfki.corp.keytab
+Authenticated to Kerberos v5
+
+Ticket ellenőrzése:
+
+$ klist
+Ticket cache: FILE:/tmp/krb5cc_0
+Default principal: HTTP/dev.kfki.corp@STREAMNET.HU
+
+Valid starting    Expires           Service principal
+05/12/2014 13:41  05/12/2014 23:41  krbtgt/STREAMNET.HU@STREAMNET.HU
+        renew until 06/12/2014 13:41
+KVNO ticket szám ellenőrzése:
+
+$kvno -k /etc/apache2/keys/dev.kfki.corp.keytab HTTP/dev.kfki.corp
+HTTP/dev.kfki.corp@STREAMNET.HU: kvno = 4, keytab entry valid
+
+[szerkesztés] PHP
+/etc/php5/mods-available könyvtárban hozzuk létre a krb5.ini fájlt:
+
+; krb5
+extension=krb5.so
+
+Majd linkeljük át a conf.d-be:
+
+ln -s /etc/php5/mods-available/krb5.ini /etc/php5/conf.d/40-krb5.ini
+
+Töltsük újra a PHP FPM-et:
+
+/etc/init.d/php5-fpm restart
+
+Ellenőrzés: phpinfo() futtatása.
+[szerkesztés] Apache konfig
+/etc/apache2/apache2.conf (a lehetséges hosszú HTTP headerek miatt, amit a Kerberos okozhat):
+
+LimitRequestFieldSize 16380
+
+Virtual host konfig:
+HTTPS kötelező kvázi, ha Kerberos van!
+A HSTS-el HTTPS-re dobjuk a böngészőt
+A HTTP konfiguráció ezért maradjon minimális! Ld. lent.
+
+<VirtualHost 10.35.23.1:80>
+ServerAdmin support@videosqr.com
+DocumentRoot /var/www/dev.videosquare.eu/httpdocs
+ServerName vsq.dev.corp
+Alias /php5-fcgi php5-fcgi
+
+# tag urls not needing authetication
+RewriteEngine On
+RewriteRule ^/[a-z]{2,4}/contents - [E=no_auth_required:1]
+RewriteRule ^/[a-z]{2,4}/combine - [E=no_auth_required:1]
+RewriteRule ^/([a-z]{2,4}/)?(recordings|live)/(secure)?checkstreamaccess - [E=no_auth_required:1]
+
+<Directory />
+    Options FollowSymLinks
+    AllowOverride None
+</Directory>
+
+<Directory /var/www/dev.videosquare.eu/httpdocs>
+    Options Indexes FollowSymLinks
+    AllowOverride All
+    Order allow,deny
+
+    # if no_auth_required = 1 then allow
+    Allow from env=no_auth_required
+    Satisfy any
+
+    # Kerberos SSO config
+    AuthType Kerberos
+    AuthName "T-Systems Videosquare SSO Login"
+    KrbAuthRealms DEV.CORP
+    Krb5Keytab /etc/apache2/keys/vsqH4.keytab
+#        KrbServiceName HTTP/vsq.dev.corp@DEV.CORP
+#        KrbServiceName HTTP/vsq.dev.corp
+    KrbServiceName Any
+### multidomain
+#		KrbAuthRealm DEV.CORP VSQTEST.HU
+#		Krb5Keytab /etc/apache2/keys/vsqH4.keytab
+#		KrbServiceName Any
+### multidomain
+    KrbMethodNegotiate On
+    KrbSaveCredentials Off
+    KrbMethodK5Passwd On
+    KrbVerifyKDC On
+    KrbAuthoritative Off
+    Require valid-user
+</Directory>
+
+LogLevel warn
+ErrorLog ${APACHE_LOG_DIR}/dev.videosquare-error.log
+CustomLog ${APACHE_LOG_DIR}/dev.videosquare-access.log combined
+</VirtualHost>
+
+TODO TSM-el cserélni ezt!!!
+Megjegyzés: adott esetben kétszer is feljöhet az authentikációs ablak, ha jelszó fallback van. Erről több infó itt: http://serverfault.com/questions/420661/apache-using-mod-auth-kerb-always-asks-for-the-password-twice
+[szerkesztés] Böngészők beállítása
+
+Mikor van rá szükség?
+Ha nem ismer fel bennünket a böngésző alapból intranet site-ként
+[szerkesztés] Firefox
+Trusted site megadása:
+
+about:config
+
+network.negotiate-auth.trusted-uris = vsq.streamnet.hu
+
+[szerkesztés] Internet Explorer
+Tools → Internet Options → click the Security tab → click on Trusted sites →and click Custom level. Scroll all the way to bottom under User Authentication and under Logon, select Automatic logon with current user name and password.
+Add to trusted zone: http://stream2.streamnet.hu
+[szerkesztés] Chrome
+Az IE beállításait használja!
+https://www.pingidentity.com/support/solutions/index.cfm/How-to-configure-supported-browsers-for-Kerberos-NTLM
+[szerkesztés] Kerberos multi realm/domain környezetben
+
+A dolog nagyon hasonló a fentiekhez. A domain2-ben is meg kell kreálni a megfelelő keytab fájlt, igazítani a DNS-t ha kell.
+[szerkesztés] Linux Kerberos konfig
+/etc/krb5.conf: egészítsük ki a második domain (VSQTEST.HU) infójával.
+...
+[realms]
+        STREAMNET.HU = {
+                admin_server = dc1.streamnet.hu
+                kdc = dc1.streamnet.hu
+        }
+        VSQTEST.HU = {
+                admin_server = WIN-OD479QR8J7J.vsqtest.hu
+                kdc = WIN-OD479QR8J7J.vsqtest.hu
+        }
+
+[domain_realm]
+        dev.kfki.corp = STREAMNET.HU
+        .dev.kfki.corp = STREAMNET.HU
+        dev.kfki.corp = VSQTEST.HU
+        .dev.kfki.corp = VSQTEST.HU
+...
+A domain1 és domain2 keytab fájlokat egybe kell másolni. Ehhez a ktutil programmal be kell olvastatni mindkét keytab fájlt, majd kimenteni őket:
+
+$ ktutil
+ktutil:  rkt dev.kfki.corp.keytab
+
+ktutil:  rkt devvsq.vsqtest.hu.keytab
+
+ktutil:  l
+slot KVNO Principal
+---- ---- ---------------------------------------------------------------------
+   1    4          HTTP/dev.kfki.corp@STREAMNET.HU
+   2    3            HTTP/dev.kfki.corp@vsqtest.HU
+
+ktutil:  write_kt dev.kfki.corp.multidomain.keytab
+ktutil:  quit
+
+Teszteljünk! Listázzuk ki az új keytab fájl tartalmát:
+
+$ klist -ke dev.kfki.corp.multidomain.keytab
+Keytab name: FILE:dev.kfki.corp.multidomain.keytab
+KVNO Principal
+---- --------------------------------------------------------------------------
+   4 HTTP/dev.kfki.corp@STREAMNET.HU (arcfour-hmac)
+   3 HTTP/dev.kfki.corp@vsqtest.HU (arcfour-hmac)
+
+A fentiekben bemutatott módon lépjünk be a másik domain egy felhasználójával:
+
+$ kinit vsqtest@VSQTEST.HU
+Password for vsqtest@VSQTEST.HU: ...
+
+$ klist -A
+Ticket cache: FILE:/tmp/krb5cc_0
+Default principal: vsqtest@VSQTEST.HU
+
+Valid starting    Expires           Service principal
+27/01/2015 17:23  28/01/2015 03:23  krbtgt/VSQTEST.HU@VSQTEST.HU
+        renew until 28/01/2015 17:23
+
+Tudunk egy ticketet is kérni a szolgáltatáshoz (bár nem világos, melyik domain usert használja a ticket kéréshez):
+
+$ kinit -V -k -t /etc/apache2/keys/dev.kfki.corp.multidomain.keytab HTTP/dev.kfki.corp
+Using default cache: /tmp/krb5cc_0
+Using principal: HTTP/dev.kfki.corp@STREAMNET.HU
+Using keytab: /etc/apache2/keys/dev.kfki.corp.multidomain.keytab
+Authenticated to Kerberos v5
+
+$ klist
+Ticket cache: FILE:/tmp/krb5cc_0
+Default principal: HTTP/dev.kfki.corp@STREAMNET.HU
+
+Valid starting    Expires           Service principal
+27/01/2015 17:25  28/01/2015 03:25  krbtgt/STREAMNET.HU@STREAMNET.HU
+        renew until 28/01/2015 17:25
+
+[szerkesztés] Apache
+Hozzá kell adni a plusz domaint, valamint a multidomain keytab fájlra kell hivatkozni, továbbá a KrbServiceName = Any.
+
+<Directory /var/www/dev.videosquare.eu/httpdocs>
+...
+  # Kerberos SSO config
+  AuthType Kerberos
+  AuthName "Videosquare SSO Login"
+  KrbAuthRealm STREAMNET.HU VSQTEST.HU
+  Krb5Keytab /etc/apache2/keys/dev.kfki.corp.multidomain.keytab
+  KrbServiceName Any
+  KrbMethodNegotiate On
+  KrbSaveCredentials Off
+  KrbMethodK5Passwd Off
+  KrbVerifyKDC On
+  Require valid-user
+</Directory>
+
+[szerkesztés] NTLM
+
+Az NTLM-et a Kerberos váltotta le, tkp. legacy technológia, ha nem szükséges, ne erőltessük. Az NTLMv1 a protokoll régi verziója, nem biztonságos. A Windows 7-től alapból ki van kapcsolva.
+[szerkesztés] Telepítés
+
+Az NTLMv2 authentikációt a PyAuthenNTLM2 python csomag csinálja. Telepítsük először az Apache Python modulját:
+
+aptitude install libapache2-mod-python
+
+[szerkesztés] NTLMv1
+NTLMv1 igény esetén:
+
+aptitude install libapache2-authenntlm-perl
+
+[szerkesztés] NTLMv2: PyAuthenNTLM2
+NTLMv2 (ez javasolt!):
+
+NTLMv2: https://github.com/Legrandin/PyAuthenNTLM2
+
+python setup.py install -f
+
+FONTOS:
+Apache 2.4 és libapache2-mod-python < 3.5 esetén az auth nem működik. Ld:
+https://github.com/Legrandin/PyAuthenNTLM2/issues/15
+
+pyntlm.py: I fixed it by replacing 
+
+rules = ''.join(req.requires()).strip()
+
+with
+
+rules = ''.join(req.get_options()['Require'])
+
+Also add this to Apache config (keep "require valid-user"):
+
+PythonOption Require valid-user
+
+FONTOS2: A HTTP POST-ok authjában is van hiba. Ehhez:
+Ld: https://github.com/Legrandin/PyAuthenNTLM2/issues/12
+
+line 405 of pyntlm.py change
+
+        if req.method!='POST' or req.clength>0:
+            return apache.OK   
+to
+return apache.OK #if req.method!='POST' or req.clength>0:
+
+[szerkesztés] Tesztelés
+NTLM auth command line teszt. Mind a domain, mind a HTTP/domain és HTTP/basic auth tesztelhető. A letöltött source repóban fogjuk megtalálni a teszteléshez szükséges programokat.
+
+python ntlm_client.py -u sys-vsqauth -p <snip> -d BONAFARM.GROUP -a gcbysvv28adc001.bonafarm.group
+
+Using Domain Controller to verify credentials.
+User sys-vsqauth\BONAFARM.GROUP was authenticated.
+
+Domain auth:
+
+$ python http_client.py -u sys-vsqauth -p <snip> -d BONAFARM.GROUP http://vsq2.bonafarm.hu
+OK
+
+Basic auth:
+
+$ python http_client.py -u sys-vsqauth -p <snip> http://vsq2.bonafarm.hu
+OK
+
+[szerkesztés] NTLMv1 bekapcsolása Windows 7-en
+
+VIGYÁZAT, csak a teszt kedvéért a "libapache2-authenntlm-perl" csomag használata esetén. Ilyenkor az Apache logban "Wrong password/user (rc=3/1/327681)" üzenetek lehetnek. Az AuthenNTLM Perl csomag csak a v1-t támogatja.
+
+Start > Run > secpol.msc
+Local Policies > Security Options > Network Security LAN Manager authentication level
+Select Send LM & NTLM - use NTLMv2 session security if negotiated
+
+[szerkesztés] LDAP/AD
+
+[szerkesztés] Telepítés
+
+
+apt-get install ldap-utils
+
+[szerkesztés] Filterek
+
+Egy jó összegző az AD attribútumokhoz: http://www.selfadsi.org/user-attributes-w2k8.htm
+LDAP filter példák: https://support.google.com/postini/answer/1384575?hl=en
+To look up all user objects that are designated as a "person & user": (&(objectclass=user)(objectcategory=person))
+To look up Distribution Lists only: (objectcategory=group)
+To search for users AND exclude disabled users: (&(&(objectclass=user)(objectcategory=person))(!(userAccountControl=514)))
+LDAP search operators:
+and = "&" used when you want all conditions in the series to be true
+or = "|" used when at least one of the conditions needs to be true
+not = "!" used to exclude objects that have a certain value
+any = "*" wildcard used to represent a value equal to anything
+[szerkesztés] LDAP kapcsolat tesztelése
+
+Teszteljük elérhető-e az AD szerver. Ehhez listázzuk ki egy user adatait:
+
+$ ldapsearch -x -H ldaps://k-dc1.kfki.corp:636 -b 'DC=KFKI,DC=CORP' -D 'vsq@KFKI.CORP' -w '<password>' '(sAMAccountName=vsq)'
+
+-x: simple auth
+-b: Base DN
+-D: AD user
+-w: jelszó
+
+Kérjük le a VSQAccess csoport összes tagját:
+
+$ ldapsearch -x -H ldaps://k-dc1.kfki.corp:636 -b 'DC=KFKI,DC=CORP' -D 'vsq@KFKI.CORP' -w '<password>' 'memberOf:1.2.840.113556.1.4.1941:=CN=VSQAccess,OU=VSQ,OU=Csoportok,OU=KFKI,DC=KFKI,DC=CORP' samaccountname
+
+$ ldapsearch -x -H ldaps://k-dc1.kfki.corp:636 -b 'DC=KFKI,DC=CORP' -D 'vsq@KFKI.CORP' -w '<password>' 'memberOf:1.2.840.113556.1.4.1941:=CN=Tsproj_rwe_impl,ou=csoportok,ou=kfki,DC=kfki,dc=corp' samaccountname
+
+[szerkesztés] TLS/SSL LDAP access
+Ha nem érnénk el TLS/SSL titkosítással az AD/LDAP szervert, például ezt látjuk:
+
+$ ldapsearch -x -H ldaps://dc1.streamnet.hu -b 'DC=streamnet,DC=hu' -D 'vsqad@streamnet.hu' -Z -w '<password>' '(sAMAccountName=akovacs)'
+ldap_start_tls: Can't contact LDAP server (-1)
+        additional info: (unknown error code)
+ldap_sasl_bind(SIMPLE): Can't contact LDAP server (-1)
+
+-Z: start TLS/SSL
+
+Várhatóan nem tudunk kapcsolódni. OpenSSL ellenőrzés:
+
+$ openssl s_client -connect dc1.streamnet.hu:636 -prexit
+
+Esetleg root CA certtel:
+
+$ openssl s_client -showcerts -CAfile ca-sha2.pem -connect dc2dev.dev.corp:636
+
+Töltsük le a domain contoroller root CA-ját: http://dc1/certsrv/certcarc.asp ("Download CA certificate", Base64 formátum). A tanúsítványt másoljuk be egy .cer fájlba.
+Konfiguráljuk az OpenLDAP-ot (/etc/ldap/ldap.conf), hogy az adott AD-re ellenőrizze a tanúsítványt a megadott .cer alapján:
+
+HOST dc1.streamnet.hu
+PORT 636
+TLS_CACERT /etc/apache2/certs/streamnet-ca.cer
+TLS_REQCERT demand
+
+Tipp: "TLS_REQCERT allow" (ha nem menne, ez kikapcsolja a cert ellenőrzést).
+
+FRISSÍTENI!!! ("allow")
+[szerkesztés] Videosquare oldal konfiguráció
+
+T-Systems példa alapján.
+Kerberos realm megadása:
+
+INSERT INTO `organizations_authtypes` (`id`, `organizationid`, `isuserinitiated`, `type`, `domainregex`, `name`, `description`, `disabled`) VALUES
+(1, 1, 0, 'kerberos', '(STREAMNET\\.HU)', 'StreamNet Kerberos SSO', NULL, 0);
+
+AD/LDAP directory megadása:
+
+INSERT INTO `organizations_directories` (`id`, `organizationid`, `type`, `server`, `user`, `password`, `domainregex`, `name`, `ldapusernametransformregexp`, `ldapuserquery`, `ldapusergroupquery`, `ldapusertreedn`, `ldapuserprecheckquery`, `ldapgroupaccessid`, `ldapgroupaccess`, `ldapgroupadminid`, `ldapgroupadmin`, `description`, `disabled`) VALUES
+(1, 1, 'ldap', 'ldaps://dc1.streamnet.hu:636', 'reader@streamnet.hu', '9598%Pekka', '(STREAMNET\\.HU)', 'Streamnet Active Directory', NULL, NULL, '(&(memberOf:1.2.840.113556.1.4.1941:=%GROUP_DN%)(objectClass=person)(objectClass=user))', 'DC=streamnet,DC=hu', NULL, 1, NULL, 2, NULL, 'Secure: ldaps://dc1.streamnet.hu:636\r\n\r\nUnsecure: ldap://dc1.streamnet.hu:389', 0);
+
+VSQAccess és VSQRoleAdmin csoportok beszúrása (figyelem, a fenti INSERT-ben lévő ldapgroupaccessid és ldapgroupadminid azonosítóknak stimmelnie kell!!!):
+
+INSERT INTO `groups` (`id`, `name`, `userid`, `organizationid`, `source`, `organizationdirectoryid`, `organizationdirectoryldapdn`, `organizationdirectoryldapwhenchanged`, `organizationdirectoryuserslastsynchronized`, `ispermanent`, `timestamp`) VALUES
+(1, 'VSQAccess KFKI.CORP', 1, 1, 'directory', 1, 'CN=VSQAccess,OU=VSQ,OU=Csoportok,OU=KFKI,DC=KFKI,DC=CORP', NULL, NULL, 1, NOW()),
+(2, 'VSQAdmin KFKI.CORP', 1, 1, 'directory', 1, 'CN=VSQRoleAdmin,OU=VSQ,OU=Csoportok,OU=KFKI,DC=KFKI,DC=CORP', NULL, NULL, 1, NOW());
+
+
