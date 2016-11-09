@@ -7,7 +7,7 @@ define('DEBUG', false );
 
 include_once('Job.php');
 include_once('../Modules/Filesystem.php');
-include_once('../Modules/runext.php');
+include_once('../Modules/RunExt.php');
 include_once( BASE_PATH . 'resources/apitest/httpapi.php');
 
 class RecordingsUploadJob extends Job {
@@ -264,7 +264,7 @@ class RecordingsUploadJob extends Job {
 		$command = "{$this->bootstrap->config['nice']} {$this->bootstrap->config['ffmpeg_alt']} -v {$this->bootstrap->config['ffmpeg_loglevel']} -y -i {$src} -c copy -copyts -start_at_zero {$dst}";
 
 		// Run command
-		$output = new runExt($command);
+		$output = new RunExt($command);
 		$output->run();
 
 		if ( $this->debug_mode ) $this->debugLog("[DEBUG] ffmpeg command executed:\n" . $command . ".\nResult: " . $output->getCode() . "\nOutput: " . $output->getOutput(), false);
