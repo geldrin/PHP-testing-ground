@@ -2406,22 +2406,18 @@ class Recordings extends \Springboard\Model {
 
   }
 
-  public function getFlashData( $info ) {
-
+  public function flashData( $info ) {
     $this->ensureObjectLoaded();
-    $this->bootstrap->includeTemplatePlugin('indexphoto');
 
-    if ( isset( $info['versions'] ) )
-      $versions = $info['versions'];
-    else
-      $versions       = $this->getVersions();
+    $recordingbaseuri =
+      $this->bootstrap->baseuri . \Springboard\Language::get() . '/recordings/'
+    ;
 
-    $recordingbaseuri = $info['BASE_URI'] . \Springboard\Language::get() . '/recordings/';
-
+    // TODO
     if ( $this->bootstrap->config['forcesecureapiurl'] )
       $apiurl = 'https://' . $info['organization']['domain'] . '/';
     else
-      $apiurl = $info['BASE_URI'];
+      $apiurl = $this->bootstrap->baseuri;
 
     $apiurl .=  'jsonapi';
     $data    = array(
@@ -2433,12 +2429,12 @@ class Recordings extends \Springboard\Model {
       'recording_title'       => $this->row['title'],
       'recording_subtitle'    => (string)$this->row['subtitle'],
       'recording_description' => (string)$this->row['description'],
-      'recording_duration'    => $this->getLength(),
-      'recording_image'       => \smarty_modifier_indexphoto( $this->row, 'player', $info['STATIC_URI'] ),
-      'user_checkWatching'    => (bool)@$info['member']['ispresencecheckforced'],
-      'user_checkWatchingTimeInterval' => $info['organization']['presencechecktimeinterval'],
-      'user_checkWatchingConfirmationTimeout' => $info['organization']['presencecheckconfirmationtime'],
-      'recording_timeout' => $info['organization']['viewsessiontimeoutminutes'] * 60, // masodpercbe
+      'recording_duration'    => $info['duration'],
+      'recording_image'       => $info['thumbnail'],
+      'user_checkWatching'    => $info['presenceCheck']['enabled'],
+      'user_checkWatchingTimeInterval' => $info['presenceCheck']['interval'],
+      'user_checkWatchingConfirmationTimeout' => $info['presenceCheck']['timeout'],
+      'recording_timeout' => $info['viewSession']['timeout'],
     );
 
     if ( $this->row['mastermediatype'] == 'audio' )
@@ -2464,8 +2460,7 @@ class Recordings extends \Springboard\Model {
     if ( isset( $info['startposition'] ) )
       $data['timeline_startPosition'] = $info['startposition'];
 
-    if ( isset( $info['autoplay'] ) and $info['autoplay'] )
-      $data['timeline_autoPlay'] = true;
+    $data['timeline_autoPlay'] = $info['autoplay'];
 
     $data = $data + $this->bootstrap->config['flashplayer_extraconfig'];
 
@@ -4760,8 +4755,51 @@ class Recordings extends \Springboard\Model {
   }
 
   public function getPlayerData( $info ) {
-    $type = ucfirst( $info['organization']['playertype'] );
-    $method = "get{$type}Data";
+    $this->bootstrap->includeTemplatePlugin('indexphoto');
+
+    $user = $this->bootstrap->getSession('user');
+
+    // minden ido intervallum masodpercbe
+    $data = array(
+      'organization' => $info['organization'],
+      'presenceCheck' => array(
+        'enabled'  => (bool)$user['ispresencecheckforced'],
+        'interval' => $info['organization']['presencechecktimeinterval'],
+        'timeout'  => $info['organization']['presencecheckconfirmationtime'],
+      ),
+      'viewSession' => array(
+        'timeout' => $info['organization']['viewsessiontimeoutminutes'] * 60,
+      ),
+      'extraParameters' => array(
+        'recordingid' => $this->id,
+      ),
+      'duration'          => $this->getLength(),
+      'thumbnail'         => \smarty_modifier_indexphoto(
+        $this->row, 'player', $info['STATIC_URI']
+      ),
+    );
+
+    if ( isset( $info['versions'] ) )
+      $data['versions'] = $info['versions'];
+    else
+      $data['versions']  = $this->getVersions();
+
+    if ( isset( $info['startposition'] ) )
+      $data['startposition'] = $info['startposition'];
+
+    if ( isset( $info['autoplay'] ) )
+      $data['autoplay'] = $info['autoplay'];
+    else
+      $data['autoplay'] = false;
+
+
+    if ( isset( $info['tokenauth'] ) and $info['tokenauth'] ) {
+      $data['tokenauth'] = true;
+      $data['token'] = $info['token'];
+    }
+
+    $type = $info['organization']['playertype'];
+    $method = $type . 'Data';
 
     if ( !method_exists( $this, $method ) )
       throw new \Exception("Playertype $type not implemented");
