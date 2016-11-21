@@ -1,0 +1,17 @@
+E_WARNING (#2)
+  ldap_search(): Partial search results returned: Sizelimit exceeded
+  in file /var/www/videosquare.eu/modules/Jobs/job_ldap_cache.php:157
+
+  0 ldap_search(resource(ldap link), "DC=hu,DC=kworld,DC=kpmg,DC=com", "(&(memberOf:1.2.840.113556.1.4.1941:=CN=HU-SG VideoSquare Access,OU=Marketing,OU=Infrastructure,OU=" (truncated), array(int(0) => "sAMAccountName", int(1) => "userPrincipalName")) --- /modules/Jobs/job_ldap_cache.php:157
+
+///////
+
+INSERT INTO `groups` (`id`, `name`, `userid`, `organizationid`, `source`, `organizationdirectoryid`, `organizationdirectoryldapdn`, `organizationdirectoryldapwhenchanged`, `organizationdirectoryuserslastsynchronized`, `ispermanent`, `timestamp`) VALUES
+(1, 'VSQAccess', 1, 1, 'directory', 1, 'CN=HU-SG VideoSquare Access,OU=Marketing,OU=Infrastructure,OU=Security Groups,DC=hu,DC=kworld,DC=kpmg,DC=com', NULL, '2016-11-09 15:56:35', 1, '2016-11-09 15:22:19'),
+(2, 'VSQAdmin', 1, 1, 'directory', 1, 'CN=HU-SG VideoSquare Admin,OU=Marketing,OU=Infrastructure,OU=Security Groups,DC=hu,DC=kworld,DC=kpmg,DC=com', NULL, '2016-11-09 15:40:29', 1, '2016-11-09 15:22:19');
+
+INSERT INTO `organizations_authtypes` (`id`, `organizationid`, `isuserinitiated`, `type`, `domainregex`, `name`, `description`, `disabled`) VALUES
+(1, 1, 0, 'kerberos', '(HU\\.KWORLD\\.KPMG\\.COM)', 'KPMG Kerberos SSO', NULL, 0);
+
+INSERT INTO `organizations_directories` (`id`, `organizationid`, `type`, `server`, `user`, `password`, `domainregex`, `name`, `ldapusernametransformregexp`, `ldapuserquery`, `ldapusergroupquery`, `ldapusertreedn`, `ldapuserprecheckquery`, `ldapgroupaccessid`, `ldapgroupaccess`, `ldapgroupadminid`, `ldapgroupadmin`, `description`, `disabled`) VALUES
+(1, 1, 'ldap', 'ldap://hubudgc02.hu.kworld.kpmg.com:389', 'hu-svcVideoSquare@hu.kworld.kpmg.com', 'ng8raYcQ5wdIVcbkFCXr', '(HU\\.KWORLD\\.KPMG\\.COM)', 'KPMG Active Directory', '/^(?<username>.+)@.*$/', '(&(objectClass=user)(objectCategory=person)(sAMAccountName=%USERNAME%))', '(&(memberOf:1.2.840.113556.1.4.1941:=%GROUP_DN%)(objectClass=person)(objectClass=user))', 'DC=hu,DC=kworld,DC=kpmg,DC=com', NULL, 1, NULL, 2, NULL, '', 0);
