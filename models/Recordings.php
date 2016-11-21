@@ -3893,6 +3893,7 @@ class Recordings extends \Springboard\Model {
   public function updateLastPosition( $organization, $userid, $lastposition, $sessionid ) {
 
     $this->ensureID();
+    $this->startTrans();
     $timeout   = $organization['viewsessiontimeoutminutes'];
     $updatesec = $this->bootstrap->config['recordingpositionupdateseconds'];
     $extrasec  = $organization['viewsessionallowedextraseconds'];
@@ -3900,7 +3901,7 @@ class Recordings extends \Springboard\Model {
       'success' => true,
     );
 
-    $row       = $this->db->getRow("
+    $row = $this->db->getRow("
       SELECT
         rvp.id,
         rvp.position,
@@ -3929,13 +3930,8 @@ class Recordings extends \Springboard\Model {
       'position'    => $lastposition,
     );
 
-    // ha a lastposition ennel nagyobb akkor nem csinalunk semmit
-    if ( $row and $lastposition > $row['position'] + $updatesec + $extrasec ) {
-      $ret['success'] = false;
-      $this->updateSession( $organization, $userid, $lastposition, $sessionid );
-      $this->endTrans();
-      return $ret;
-    } elseif ( !$row ) { // nincs meg progress report, insert
+    // nincs meg progress report, insert
+    if ( !$row ) {
 
       $progressModel->insert( $record );
       $ret['success'] = true;
@@ -3943,6 +3939,7 @@ class Recordings extends \Springboard\Model {
       // le kell kerdeznunk a recording hosszat
       $row = $this->db->getRow("
         SELECT
+          '" . $progressModel->id . "' AS id,
           '$lastposition' AS position,
           '0' AS expired,
           r.masterlength,
@@ -3951,17 +3948,34 @@ class Recordings extends \Springboard\Model {
         WHERE r.id = '" . $this->id . "'
         LIMIT 1
       ");
+    }
 
-    } elseif ( $row['position'] < $lastposition and !$row['expired'] ) {
-      // minden oke, update
+    // hogy menjen a progresModel->updateRow
+    $record['id'] = $row['id'];
 
-      $progressModel->id = $row['id'];
+    // ha a jelenteni kivant lastposition erteke nagyobb mint "lehetne" akkor
+    // nem csinalunk semmit
+    // az ertek ami alapjan eldontjuk hogy valid e a jelentes:
+    // a a legutoljara jelentett pozicio +
+    // a jelentesi intervallum (60sec kb) +
+    // a konkret jelentesi window veget jelzo masodpercek (10secnel nem kell tobb legyen)
+    if ( $lastposition > $row['position'] + $updatesec + $extrasec ) {
+      $ret['success'] = false;
+      $this->updateSession( $organization, $userid, $lastposition, $sessionid );
+      $this->endTrans();
+      return $ret;
+    }
+
+    // a jelentes nem megy visszafele es a jelentes nem tul regi
+    // a timestamp amihez hasonlitunk hogy nem regi azt sose updateljuk
+    if ( $row['position'] < $lastposition and !$row['expired'] ) {
+
       unset( $record['timestamp'] ); // nem updatelhetunk timestampet hogy kideruljon hogy kifutottunk az idobol
       $progressModel->updateRow( $record );
       $ret['success'] = true;
       $row['position'] = $lastposition;
 
-    } elseif ( $row['expired'] ) { // reset
+    } elseif ( $row['expired'] ) { // reset mert tul regi a jelentes
 
       // csak akkor resetelunk ha nem nezte vegig
       if ( !$this->isRecordingWatched( $organization, $row['position'], $row ) ) {
@@ -3969,17 +3983,21 @@ class Recordings extends \Springboard\Model {
         // ez updateli a timestamp-et is, ergo ujra kezdjuk a timeoutot is
         $ret['success'] = false;
         $row['position'] = $record['position'] = 0;
-        $progressModel->id  = $row['id'];
         $progressModel->updateRow( $record );
       }
 
-    } // ami maradt hogy a jelentett ertek <= mint a jelenlegi ertek
+    }
+    // ami maradt hogy a jelentett ertek <= mint a jelenlegi ertek,
+    // ezt lekezeli az updateSession
 
     $ret['watched'] = $this->isRecordingWatched(
       $organization, $row['position'], $row, $ret
     );
 
-    $success = $this->updateSession( $organization, $userid, $lastposition, $sessionid );
+    $success = $this->updateSession(
+      $organization, $userid, $lastposition, $sessionid
+    );
+
     if ( !$success and !$ret['watched'] ) {
       // lejart a view_session, mig a view_progress nem es nem nezte vegig a user
       // akkor tortenhet ha a browser megnyitva marad es ugyanaz marad a
@@ -3987,13 +4005,11 @@ class Recordings extends \Springboard\Model {
       // megintcsak tul sok kimaradas volt, reset nullara
       $ret['success'] = false;
       $row['position'] = $record['position'] = 0;
-      $progressModel->id  = $row['id'];
       $progressModel->updateRow( $record );
     }
 
     $this->endTrans();
     return $ret;
-
   }
 
   private function updateSession( $organization, $userid, $position, $sessionid ) {
@@ -4006,7 +4022,6 @@ class Recordings extends \Springboard\Model {
     $position    = $this->db->qstr( $position );
     $timeout     = $organization['viewsessiontimeoutminutes'];
 
-    $this->startTrans();
     $existing = $this->db->getRow("
       SELECT
         id,
