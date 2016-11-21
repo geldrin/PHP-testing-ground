@@ -275,6 +275,12 @@ $config = Array(
     'submit' => true,
   ),
 
+  'playertype' => array(
+    'displayname' => 'Lejátszó típusa',
+    'type'        => 'select',
+    'values'      => $l->getLov('organizations_playertype'),
+  ),
+
   'registrationtype' => array(
     'displayname' => 'Regisztráció típusa',
     'type'        => 'select',

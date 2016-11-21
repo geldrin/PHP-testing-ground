@@ -410,7 +410,7 @@ class Controller extends \Springboard\Controller\Visitor {
 
   }
 
-  public function getHashForFlash( $string ) {
+  public function getPlayerSignature( $string ) {
     // azert nem hmac (mert amugy message authenticity-t nezunk) mert a flash
     // a kliens oldalan generalja, igy mindenfele keppen meg tudja hamisitani
     // a user ha nagyon akarja, _NAGYON_ fontos hogy itt kulon seed legyen
@@ -418,18 +418,18 @@ class Controller extends \Springboard\Controller\Visitor {
     return md5( $string . $this->bootstrap->config['flashhashseed'] );
   }
 
-  public function checkHashFromFlash( $string, $hash ) {
-    $actualhash = $this->getHashForFlash( $string );
+  public function checkPlayerSignature( $string, $hash ) {
+    $actualhash = $this->getPlayerSignature( $string );
     return $hash == $actualhash;
   }
 
-  public function getFlashParameters( $parameters ) {
+  public function getSignedPlayerParameters( $parameters ) {
 
     $ret = array(
       'parameters' => json_encode( $parameters, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT ),
     );
 
-    $ret['hash'] = $this->getHashForFlash( $ret['parameters'] );
+    $ret['hash'] = $this->getPlayerSignature( $ret['parameters'] );
     return $ret;
 
   }

@@ -272,6 +272,11 @@ return array(
     '' => 'Alapértelmezett (csatorna rendezés szerint)',
     'recordtimestamp_desc' => 'Legfrissebb felvételtől a legrégebbiig',
   ),
+  // adminon
+  'organizations_playertype' => array(
+    'flash'      => 'Flash',
+    'flowplayer' => 'Flowplayer',
+  ),
 
   'istokenrequired' => array(
     '0' => $l('recordings', 'istokenrequired_no'),

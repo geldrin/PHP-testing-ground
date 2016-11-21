@@ -2461,6 +2461,12 @@ class Recordings extends \Springboard\Model {
       $data['recording_checkTimeout'] = true; // nezzuk hogy timeoutolt e a felvetel
     }
 
+    if ( isset( $info['startposition'] ) )
+      $data['timeline_startPosition'] = $info['startposition'];
+
+    if ( isset( $info['autoplay'] ) and $info['autoplay'] )
+      $data['timeline_autoPlay'] = true;
+
     $data = $data + $this->bootstrap->config['flashplayer_extraconfig'];
 
     $hds  = $this->isHDSEnabled( $info );
@@ -4753,4 +4759,13 @@ class Recordings extends \Springboard\Model {
     return $height;
   }
 
+  public function getPlayerData( $info ) {
+    $type = ucfirst( $info['organization']['playertype'] );
+    $method = "get{$type}Data";
+
+    if ( !method_exists( $this, $method ) )
+      throw new \Exception("Playertype $type not implemented");
+
+    return $this->$method( $info );
+  }
 }

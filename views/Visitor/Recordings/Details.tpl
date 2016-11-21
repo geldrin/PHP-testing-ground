@@ -1,9 +1,9 @@
-{if $recording.mediatype == 'audio' and isset( $flashdata.subtitle_files )}
-{assign var=flashheight value=140}
+{if $recording.mediatype == 'audio' and isset( $playerdata.subtitle_files )}
+{assign var=playerheight value=140}
 {elseif $recording.mediatype == 'audio'}
-{assign var=flashheight value=60}
+{assign var=playerheight value=60}
 {else}
-{assign var=flashheight value=550}
+{assign var=playerheight value=550}
 {/if}
 {include file="Visitor/_header.tpl" title=$recording.title}
 <div id="pagetitle">
@@ -13,7 +13,7 @@
 {if $recording.subtitle|stringempty}<h2>{$recording.subtitle|escape:html|mb_wordwrap:25}</h2>{else}<br/>{/if}
 <br/>
 
-<div id="player"{if !$browser.mobile} style="height: {$flashheight}px;"{/if}>
+<div id="player"{if !$browser.mobile} style="height: {$playerheight}px;"{/if}>
 
   {if $browser.mobile}
     {if $browser.mobiledevice == 'iphone'}
@@ -45,10 +45,8 @@
     {/if}
     <br/>
   {else}
-    <div id="playercontainer{if $recording.mediatype == 'audio'}audio{/if}">{#recordings__noflash#}</div>
-    <script type="text/javascript">
-      swfobject.embedSWF('flash/VSQPlayer.swf?v={$VERSION}', 'playercontainer{if $recording.mediatype == 'audio'}audio{if isset( $flashdata.subtitle_files )}subtitle{/if}{/if}', '980', '{$flashheight}', '11.1.0', 'flash/swfobject/expressInstall.swf', {$flashdata|@jsonescape:true}, flashdefaults.params, null, handleFlashLoad );
-    </script>
+    {capture assign=playercontainerid}playercontainer{if $recording.mediatype == 'audio'}audio{/if}{/capture}
+    {include file="Visitor/Players/"|cat:$organization.playertype|cat:".tpl"}
   {/if}
 </div>
 
@@ -111,7 +109,7 @@
     <iframe width="480" height="{$height}" src="{$BASE_URI}recordings/embed/{$recording.id}" frameborder="0" allowfullscreen="allowfullscreen"></iframe>
   {/capture}
   <label for="embedcode">{#recordings__embedcode#}:</label><br/>
-  <textarea id="embedcode" data-fullscaleheight="{$flashheight}" data-normalheight="{$height}">{$embed|trim|escape:html}</textarea>
+  <textarea id="embedcode" data-fullscaleheight="{$playerheight}" data-normalheight="{$height}">{$embed|trim|escape:html}</textarea>
   <div class="settings">{#recordings__embedsettings#}:</div>
   <div class="settingrow">
     <label for="embedautoplay">{#recordings__embedautoplay#}:</label>

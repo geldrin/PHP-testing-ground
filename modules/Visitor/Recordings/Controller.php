@@ -359,12 +359,12 @@ class Controller extends \Visitor\Controller {
       $user,
       $this->organization
     );
-
-    $flashdata = $recordingsModel->getFlashData( $this->toSmarty );
     if ( preg_match( '/^\d{1,2}h\d{1,2}m\d{1,2}s$|^\d+$/', $start ) )
-      $flashdata['timeline_startPosition'] = $start;
+      $this->toSmarty['startposition'] = $start;
 
-    $this->toSmarty['flashdata']     = $this->getFlashParameters( $flashdata );
+    $playerdata = $recordingsModel->getPlayerData( $this->toSmarty );
+
+    $this->toSmarty['playerdata']    = $this->getSignedPlayerParameters( $playerdata );
     $this->toSmarty['author']        = $recordingsModel->getAuthor();
     $this->toSmarty['canrate']       = (
       ( $user['id'] or $this->organization['isanonymousratingenabled'] ) and
@@ -471,7 +471,7 @@ class Controller extends \Visitor\Controller {
       $recordingsModel->id . ',' . \Springboard\Filesystem::filenameize( $recordingsModel->row['title'] )
     ;
 
-    $this->jsonOutput( $this->getFlashParameters( $flashdata ) );
+    $this->jsonOutput( $this->getSignedPlayerParameters( $flashdata ) );
 
   }
 
@@ -777,6 +777,9 @@ class Controller extends \Visitor\Controller {
     $this->toSmarty['member']        = $user;
     $this->toSmarty['sessionid']     = session_id();
     $this->toSmarty['attachments']   = $recordingsModel->getAttachments();
+    $this->toSmarty['autoplay']      = $autoplay;
+    if ( preg_match( '/^\d{1,2}h\d{1,2}m\d{1,2}s$|^\d+$/', $start ) )
+      $this->toSmarty['startposition'] = $start;
 
     if ( $skipcontent )
       $this->toSmarty['skipcontent'] = true;
@@ -828,12 +831,6 @@ class Controller extends \Visitor\Controller {
         \Springboard\Filesystem::filenameize( $recordingsModel->row['title'] )
       ;
 
-    if ( preg_match( '/^\d{1,2}h\d{1,2}m\d{1,2}s$|^\d+$/', $start ) )
-      $flashdata['timeline_startPosition'] = $start;
-
-    if ( $autoplay )
-      $flashdata['timeline_autoPlay'] = true;
-
     if ( $needauth ) {
       $flashdata['authorization_need']      = true;
       $flashdata['authorization_loginForm'] = true;
@@ -863,7 +860,7 @@ class Controller extends \Visitor\Controller {
     $this->toSmarty['height']      = $recordingsModel->getPlayerHeight( $fullscale );
     $this->toSmarty['containerid'] = 'vsq_' . rand();
     $this->toSmarty['recording']   = $recordingsModel->row;
-    $this->toSmarty['flashdata']   = $this->getFlashParameters( $flashdata );
+    $this->toSmarty['flashdata']   = $this->getSignedPlayerParameters( $flashdata );
 
     $this->smartyoutput('Visitor/Recordings/Embed.tpl');
 

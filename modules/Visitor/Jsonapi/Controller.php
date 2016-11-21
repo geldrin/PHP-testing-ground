@@ -13,7 +13,7 @@ class Controller extends \Visitor\Api\Controller {
     $parameters = $this->application->getParameter('parameters');
     $hash       = $this->application->getParameter('hash');
 
-    if ( $hash and $parameters and !$this->checkHashFromFlash( $parameters, $hash ) )
+    if ( $hash and $parameters and !$this->checkPlayerSignature( $parameters, $hash ) )
       $this->jsonOutput( array(
           'result' => 'ERR',
           'data'   => 'invalid hash specified',

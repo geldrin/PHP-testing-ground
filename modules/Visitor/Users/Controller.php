@@ -425,7 +425,7 @@ class Controller extends \Visitor\Controller {
     } else
       $output = array();
 
-    return $this->getFlashParameters( $output );
+    return $this->getSignedPlayerParameters( $output );
 
   }
 
