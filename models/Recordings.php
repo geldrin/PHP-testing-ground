@@ -2408,8 +2408,8 @@ class Recordings extends \Springboard\Model {
 
   public function flashData( $info ) {
     $this->ensureObjectLoaded();
-
-    $data    = array(
+    $l    = $this->bootstrap->getLocalization();
+    $data = array(
       'language'              => \Springboard\Language::get(),
       'api_url'               => $info['apiurl'],
       'user_needPing'         => false,
@@ -2434,20 +2434,42 @@ class Recordings extends \Springboard\Model {
       'recordingid' => $this->id,
     );
 
-    if ( isset( $info['tokenauth'] ) and $info['tokenauth'] ) {
+    if ( $info['logo'] ) {
+      $data['layout_logo'] = $info['logo']['url'];
+      $data['layout_logoOrientation'] = 'TR';
+      if ( $info['logo']['destination'] )
+        $data['layout_logoDestination'] = $info['logo']['destination'];
+    }
+
+    if ( $info['needauth'] ) {
+      $data['authorization_need']      = true;
+      $data['authorization_loginForm'] = true;
+    }
+    if ( $info['nopermission'] ) {
+      $data['authorization_need']      = true;
+      $data['authorization_loginForm'] = false;
+      $data['authorization_message']   = $l('recordings', 'nopermission');
+    }
+    if ( !$info['tokenvalid'] ) {
+      $flashdata['authorization_need']      = true;
+      $flashdata['authorization_loginForm'] = false;
+      $flashdata['authorization_message']   = $l('recordings', 'token_invalid');
+    }
+
+    if ( $info['tokenauth'] ) {
       $data['user_needPing'] = true;
       $data['user_pingParameters']['token'] = $info['token'];
       $data['user_token'] = $info['token'];
     }
 
-    if ( isset( $info['member'] ) and $info['member']['id'] ) {
+    if ( isset( $info['member']['id'] ) ) {
       $data['user_id']          = $info['member']['id'];
       $data['user_needPing']    = true;
       $data['user_pingSeconds'] = $this->bootstrap->config['sessionpingseconds'];
       $data['recording_checkTimeout'] = true; // nezzuk hogy timeoutolt e a felvetel
     }
 
-    if ( isset( $info['startposition'] ) )
+    if ( $info['startposition'] )
       $data['timeline_startPosition'] = $info['startposition'];
 
     $data += $this->bootstrap->config['flashplayer_extraconfig'];
@@ -4649,6 +4671,14 @@ class Recordings extends \Springboard\Model {
 
     // minden ido intervallum masodpercbe
     $data = array(
+      'startposition'   => 0,
+      'autoplay'        => false,
+      'skipcontent'     => false,
+      'tokenauth'       => false,
+      'needauth'        => false,
+      'nopermission'    => false,
+      'tokenvalid'      => true,
+      'logo'            => array(),
       'recommendations' => array(),
       'subtitles'       => array(),
       'organization'    => $info['organization'],
@@ -4669,13 +4699,6 @@ class Recordings extends \Springboard\Model {
       'thumbnail' => \smarty_modifier_indexphoto(
         $this->row, 'player', $this->bootstrap->staticuri
       ),
-      'streams' => array(
-        'hds'     => array(),
-        'desktop' => array(),
-        'content' => array(),
-        'intro'   => array(),
-        'outro'   => array(),
-      ),
     );
 
     if ( $this->bootstrap->config['forcesecureapiurl'] )
@@ -4685,25 +4708,28 @@ class Recordings extends \Springboard\Model {
 
     $data['apiurl'] = $apiurl . 'jsonapi';
 
-    if ( isset( $info['versions'] ) )
-      $versions = $info['versions'];
-    else
-      $versions = $this->getVersions();
+    $data['streams'] = $this->getPlayerStreams( $data, $info );
 
-    $data['streams'] = $this->getPlayerStreams( $versions, $data, $info );
+    if ( isset( $info['logo'] ) )
+      $data['logo'] = $info['logo'];
 
     if ( isset( $info['startposition'] ) )
       $data['startposition'] = $info['startposition'];
 
     if ( isset( $info['autoplay'] ) )
       $data['autoplay'] = $info['autoplay'];
-    else
-      $data['autoplay'] = false;
 
     if ( isset( $info['skipcontent'] ) )
       $data['skipcontent'] = $info['skipcontent'];
-    else
-      $data['skipcontent'] = false;
+
+    if ( isset( $info['needauth'] ) )
+      $data['needauth'] = $info['needauth'];
+
+    if ( isset( $info['nopermission'] ) )
+      $data['nopermission'] = $info['nopermission'];
+
+    if ( isset( $info['tokenvalid'] ) )
+      $data['tokenvalid'] = $info['tokenvalid'];
 
     if ( isset( $info['tokenauth'] ) and $info['tokenauth'] ) {
       $data['tokenauth'] = true;
@@ -4712,7 +4738,7 @@ class Recordings extends \Springboard\Model {
 
     $needrecommendation = !$info['organization']['isrecommendationdisabled'];
     // ha tokenauth akkor nincs ajanlo
-    if ( $needrecommendation and isset( $info['tokenauth'] ) and $info['tokenauth'] )
+    if ( $needrecommendation and $data['tokenauth'] )
       $needrecommendation = false;
 
     if ( $needrecommendation ) {
@@ -4783,7 +4809,9 @@ class Recordings extends \Springboard\Model {
     return $this->$method( $data );
   }
 
-  private function getPlayerStreams( $versions, $data, $info ) {
+  private function getPlayerStreams( $data, $info ) {
+    $this->ensureObjectLoaded();
+
     $ret = array(
       'hds'     => array(),
       'desktop' => array(),
@@ -4791,6 +4819,11 @@ class Recordings extends \Springboard\Model {
       'intro'   => array(),
       'outro'   => array(),
     );
+
+    if ( isset( $info['versions'] ) )
+      $versions = $info['versions'];
+    else
+      $versions = $this->getVersions();
 
     if ( $data['hds'] ) {
       $ret['hds']['master'] = $this->getMediaUrl(

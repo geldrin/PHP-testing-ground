@@ -127,7 +127,7 @@
   {rdelim};
 
   document.write('<div id="{$containerid}"></div>');
-  swfobject.embedSWF('flash/VSQEmbedPlayer.swf?v={$VERSION}', '{$containerid}', '{$width}', '{$height}', '11.1.0', 'flash/swfobject/expressInstall.swf', {$flashdata|@jsonescape:true}, params, null, handleFlashLoad );
+  swfobject.embedSWF('flash/VSQEmbedPlayer.swf?v={$VERSION}', '{$containerid}', '{$width}', '{$height}', '11.1.0', 'flash/swfobject/expressInstall.swf', {$playerdata|@jsonescape:true}, params, null, handleFlashLoad );
 
   {rdelim})();
   </script>

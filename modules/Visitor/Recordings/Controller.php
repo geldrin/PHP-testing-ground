@@ -773,6 +773,8 @@ class Controller extends \Visitor\Controller {
 
     $this->toSmarty['versions']      = $versions;
     $this->toSmarty['needauth']      = $needauth;
+    $this->toSmarty['tokenvalid']    = $tokenValid;
+    $this->toSmarty['nopermission']  = $nopermission;
     $this->toSmarty['ipaddress']     = $this->getIPAddress();
     $this->toSmarty['member']        = $user;
     $this->toSmarty['sessionid']     = session_id();
@@ -787,7 +789,22 @@ class Controller extends \Visitor\Controller {
     // kikapcsolni az ajanlot ha token auth van
     $this->toSmarty['tokenauth'] = $token and $tokenValid;
     $this->toSmarty['token'] = $token;
-    $flashdata = $recordingsModel->getFlashData( $this->toSmarty );
+    $this->toSmarty['logo'] = array(
+      'url' => $this->toSmarty['STATIC_URI'] . 'images/player_overlay_logo.png',
+      'destination' => '',
+    );
+
+    if ( $this->organization['isplayerlogolinkenabled'] )
+      $this->toSmarty['logo']['destination'] =
+        $this->toSmarty['BASE_URI'] . \Springboard\Language::get() .
+        '/recordings/details/' . $recordingsModel->id . ',' .
+        \Springboard\Filesystem::filenameize( $recordingsModel->row['title'] )
+      ;
+
+    $playerdata = $recordingsModel->getPlayerData( $this->toSmarty );
+    unset(
+      $this->toSmarty['logo']
+    );
 
     $quality        = $this->application->getParameter('quality');
     $mobileversion  = array_pop( $versions['master']['mobile'] );
@@ -821,37 +838,6 @@ class Controller extends \Visitor\Controller {
         $this->toSmarty
       );
 
-    $flashdata['layout_logo'] = $this->toSmarty['STATIC_URI'] . 'images/player_overlay_logo.png';
-    $flashdata['layout_logoOrientation'] = 'TR';
-
-    if ( $this->organization['isplayerlogolinkenabled'] )
-      $flashdata['layout_logoDestination'] =
-        $this->toSmarty['BASE_URI'] . \Springboard\Language::get() .
-        '/recordings/details/' . $recordingsModel->id . ',' .
-        \Springboard\Filesystem::filenameize( $recordingsModel->row['title'] )
-      ;
-
-    if ( $needauth ) {
-      $flashdata['authorization_need']      = true;
-      $flashdata['authorization_loginForm'] = true;
-    }
-
-    if ( $nopermission ) {
-
-      $flashdata['authorization_need']      = true;
-      $flashdata['authorization_loginForm'] = false;
-      $flashdata['authorization_message']   = $l('recordings', 'nopermission');
-
-    }
-
-    if ( !$tokenValid ) {
-
-      $flashdata['authorization_need']      = true;
-      $flashdata['authorization_loginForm'] = false;
-      $flashdata['authorization_message']   = $l('recordings', 'token_invalid');
-
-    }
-
     if ( $fullscale )
       $this->toSmarty['width']     = '950';
     else
@@ -860,7 +846,7 @@ class Controller extends \Visitor\Controller {
     $this->toSmarty['height']      = $recordingsModel->getPlayerHeight( $fullscale );
     $this->toSmarty['containerid'] = 'vsq_' . rand();
     $this->toSmarty['recording']   = $recordingsModel->row;
-    $this->toSmarty['flashdata']   = $this->getSignedPlayerParameters( $flashdata );
+    $this->toSmarty['playerdata']  = $this->getSignedPlayerParameters( $playerdata );
 
     $this->smartyoutput('Visitor/Recordings/Embed.tpl');
 
