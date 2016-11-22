@@ -2709,63 +2709,6 @@ class Recordings extends \Springboard\Model {
     return $ret;
   }
 
-  public function getIntroOutroFlashdata( $info, $hds = null ) {
-    $this->ensureObjectLoaded();
-
-    $ret = array(
-      'input' => array(),
-      'outro' => array(),
-    );
-
-    if ( !$this->row['introrecordingid'] and !$this->row['outrorecordingid'] )
-      return $ret;
-
-    if ( $hds === null )
-      $hds = $this->isHDSEnabled( $info );
-
-    $ids     = array();
-    $ret     = array();
-    $introid = 0;
-    $outroid = 0;
-
-    if ( $this->row['introrecordingid'] ) {
-
-      $ids[]   = $this->row['introrecordingid'];
-      $introid = $this->row['introrecordingid'];
-
-    }
-
-    if ( $this->row['outrorecordingid'] ) {
-
-      $ids[]   = $this->row['outrorecordingid'];
-      $outroid = $this->row['outrorecordingid'];
-
-    }
-
-    $versions = $this->getVersions( $ids );
-    if ( empty( $versions['master']['desktop'] ) )
-      throw new \Exception("The intro/outro does not have desktopcompatible non-content recordings!");
-
-    $type = $hds? 'smil': 'default';
-    foreach( $versions['master']['desktop'] as $version ) {
-
-      if ( $version['recordingid'] == $introid )
-        $key = 'intro';
-      else if ( $version['recordingid'] == $outroid )
-        $key = 'outro';
-      else // not possible
-        throw new \Exception("Invalid version in getIntroOutroFlashdata, neither intro nor outro!");
-
-      $ret[ $key ][] = array(
-        'url' => $this->getMediaUrl( $type, $version, $info )
-      );
-
-    }
-
-    return $ret;
-
-  }
-
   public function getStructuredFlashData( $info ) {
 
     $flashdata = $this->transformFlashData(
@@ -2802,7 +2745,6 @@ class Recordings extends \Springboard\Model {
     }
 
     return $flashdata;
-
   }
 
   public function getWowzaUrl( $type, $needextraparam = false, $info = null ) {
@@ -4748,36 +4690,7 @@ class Recordings extends \Springboard\Model {
     else
       $versions = $this->getVersions();
 
-    if ( $data['hds'] ) {
-      $data['streams']['hds']['master'] = $this->getMediaUrl(
-        'smil', null, $info
-      );
-      $data['streams']['hds']['content'] = $this->getMediaUrl(
-        'contentsmil', null, $info
-      );
-    }
-
-    foreach( $versions['master']['desktop'] as $version ) {
-      $data['streams']['desktop'][] = array(
-        'parameters' => array(
-          'id'            => $version['id'],
-          'viewsessionid' => $this->generateViewSessionid( $version['id'] ),
-        ),
-        'label'         => $version['qualitytag'],
-        'dimensions'    => $version['dimensions'],
-        'url'           => $this->getMediaUrl('default', $version, $info ),
-      );
-    }
-    foreach( $versions['content']['desktop'] as $version ) {
-      $data['streams']['content'][] = array(
-        'isadaptive'    => $version['isadaptive'],
-        'label'         => $version['qualitytag'],
-        'dimensions'    => $version['dimensions'],
-        'url'           => $this->getMediaUrl('content', $version, $info ),
-      );
-    }
-
-    $data['streams'] += $this->getIntroOutroFlashdata( $info, $data['hds'] );
+    $data['streams'] = $this->getPlayerStreams( $versions, $data, $info );
 
     if ( isset( $info['startposition'] ) )
       $data['startposition'] = $info['startposition'];
@@ -4868,5 +4781,87 @@ class Recordings extends \Springboard\Model {
       throw new \Exception("Playertype $type not implemented");
 
     return $this->$method( $data );
+  }
+
+  private function getPlayerStreams( $versions, $data, $info ) {
+    $ret = array(
+      'hds'     => array(),
+      'desktop' => array(),
+      'content' => array(),
+      'intro'   => array(),
+      'outro'   => array(),
+    );
+
+    if ( $data['hds'] ) {
+      $ret['hds']['master'] = $this->getMediaUrl(
+        'smil', null, $info
+      );
+      $ret['hds']['content'] = $this->getMediaUrl(
+        'contentsmil', null, $info
+      );
+    }
+
+    foreach( $versions['master']['desktop'] as $version ) {
+      $ret['desktop'][] = array(
+        'parameters' => array(
+          'id'            => $version['id'],
+          'viewsessionid' => $this->generateViewSessionid( $version['id'] ),
+        ),
+        'label'         => $version['qualitytag'],
+        'dimensions'    => $version['dimensions'],
+        'url'           => $this->getMediaUrl('default', $version, $info ),
+      );
+    }
+    foreach( $versions['content']['desktop'] as $version ) {
+      $ret['content'][] = array(
+        'isadaptive'    => $version['isadaptive'],
+        'label'         => $version['qualitytag'],
+        'dimensions'    => $version['dimensions'],
+        'url'           => $this->getMediaUrl('content', $version, $info ),
+      );
+    }
+
+    if ( !$this->row['introrecordingid'] and !$this->row['outrorecordingid'] )
+      return $ret;
+
+    $ids     = array();
+    $ret     = array();
+    $introid = 0;
+    $outroid = 0;
+
+    if ( $this->row['introrecordingid'] ) {
+
+      $ids[]   = $this->row['introrecordingid'];
+      $introid = $this->row['introrecordingid'];
+
+    }
+
+    if ( $this->row['outrorecordingid'] ) {
+
+      $ids[]   = $this->row['outrorecordingid'];
+      $outroid = $this->row['outrorecordingid'];
+
+    }
+
+    $versions = $this->getVersions( $ids );
+    if ( empty( $versions['master']['desktop'] ) )
+      throw new \Exception("The intro/outro does not have desktopcompatible non-content recordings!");
+
+    $type = $data['hds']? 'smil': 'default';
+    foreach( $versions['master']['desktop'] as $version ) {
+
+      if ( $version['recordingid'] == $introid )
+        $key = 'intro';
+      else if ( $version['recordingid'] == $outroid )
+        $key = 'outro';
+      else // not possible
+        throw new \Exception("Invalid version in getIntroOutroFlashdata, neither intro nor outro!");
+
+      $ret[ $key ][] = array(
+        'url' => $this->getMediaUrl( $type, $version, $info )
+      );
+    }
+
+    return $ret;
   }
 }
