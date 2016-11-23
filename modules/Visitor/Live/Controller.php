@@ -202,10 +202,11 @@ class Controller extends \Visitor\Controller {
       'member'       => $user,
       'checkwatchingtimeinterval' => $this->organization['presencechecktimeinterval'],
       'checkwatchingconfirmationtimeout' => $this->organization['presencecheckconfirmationtime'],
+      'needauth' => $needauth,
+      'nopermission' => $nopermission,
     );
     $info['tokenauth'] = $token and $tokenValid;
     $info['token'] = $token;
-    $flashdata     = $feedModel->getFlashData( $info );
 
     $this->toSmarty['playerwidth']  = 980;
     $this->toSmarty['playerheight'] = 550;
@@ -216,11 +217,13 @@ class Controller extends \Visitor\Controller {
 
     if ( $chromeless ) {
 
-      $flashdata['layout_logo'] = $this->toSmarty['STATIC_URI'] . 'images/player_overlay_logo.png';
-      $flashdata['layout_logoOrientation'] = 'TR';
+      $info['logo'] = array(
+        'url' => $this->toSmarty['STATIC_URI'] . 'images/player_overlay_logo.png',
+        'destination' => '',
+      );
 
       if ( $this->organization['isplayerlogolinkenabled'] )
-        $flashdata['layout_logoDestination'] =
+        $info['logo']['destination'] =
           $this->toSmarty['BASE_URI'] . \Springboard\Language::get() .
           '/live/view/' . $feedModel->id . ',' . $currentstream['id'] . ',' .
           \Springboard\Filesystem::filenameize( $feedModel->row['name'] )
@@ -248,38 +251,10 @@ class Controller extends \Visitor\Controller {
 
     }
 
-    if ( $flashdata['language'] != 'en' )
-      $flashdata['locale'] =
-        $this->toSmarty['STATIC_URI'] .
-        'js/flash_locale_' . $flashdata['language'] . '.json'
-      ;
+    $playerdata = $feedModel->getPlayerData( $info );
 
-    if ( $needauth ) {
-      $flashdata['authorization_need']      = true;
-      $flashdata['authorization_loginForm'] = true;
-    }
-
-    if ( $nopermission ) {
-
-      $flashdata['authorization_need']      = true;
-      $flashdata['authorization_loginForm'] = false;
-      $flashdata['authorization_message']   = $l('recordings', 'nopermission');
-
-    }
-
-    if ( !$tokenValid ) {
-
-      $flashdata['authorization_need']      = true;
-      $flashdata['authorization_loginForm'] = false;
-      $flashdata['authorization_message']   = $l('recordings', 'token_invalid');
-
-    }
-
-    if ( $chromeless and $displaychat )
-      $flashdata['authorization_callback'] = 'onLiveFlashLogin';
-
-    $this->toSmarty['flashdata']   =
-      $this->getFlashParameters( $flashdata )
+    $this->toSmarty['playerdata']   =
+      $this->getPlayerParameters( $playerdata )
     ;
     $this->toSmarty['livehttpurl'] = $feedModel->getMediaUrl(
       'livehttp',
