@@ -839,12 +839,12 @@ class Controller extends \Visitor\Controller {
       );
 
     if ( $fullscale )
-      $this->toSmarty['width']     = '950';
+      $this->toSmarty['playerwidth'] = '950';
     else
-      $this->toSmarty['width']     = '480';
+      $this->toSmarty['playerwidth'] = '480';
 
-    $this->toSmarty['height']      = $recordingsModel->getPlayerHeight( $fullscale );
-    $this->toSmarty['containerid'] = 'vsq_' . rand();
+    $this->toSmarty['playerheight'] = $recordingsModel->getPlayerHeight( $fullscale );
+    $this->toSmarty['playercontainerid'] = 'vsq_' . rand();
     $this->toSmarty['recording']   = $recordingsModel->row;
     $this->toSmarty['playerdata']  = $this->getSignedPlayerParameters( $playerdata );
 
