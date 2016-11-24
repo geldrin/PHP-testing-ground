@@ -210,7 +210,7 @@ foreach ($org_channels as $ch) {
   // Prepare channel log message
   $msg_ch = toUpper($ch['title']) . " (" . $ch['starttimestamp'] . ") [ID=" . $ch['id'] . "]:\n\n";
 
-  $durationcheck = $date_start ? ("users.sessionlastupdated >= '". date('Y-m-d H:i:s', $date_start) ."' AND\n") : ('');
+  $durationcheck = $date_start ? ("users.lastloggedin >= '". date('Y-m-d H:i:s', $date_start) ."' AND\n") : ('');
   foreach ($recs as $rec) {
     $query = array(
       'progress' => "SELECT
