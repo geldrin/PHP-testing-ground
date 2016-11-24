@@ -335,11 +335,26 @@ class Livefeeds extends \Springboard\Model {
       'user_checkWatchingTimeInterval' => $info['presenceCheck']['interval'],
       'user_checkWatchingConfirmationTimeout' => $info['presenceCheck']['timeout'],
       'media_streams'          => array(),
+      'media_servers'          => $info['servers']['master'],
       'media_streamLabels'     => array(),
       'media_streamParameters' => array(),
       'media_secondyStreams'   => array(),
+      'media_secondaryServers' => $info['servers']['content'],
       'content_streamLabels'   => array(),
     );
+
+    switch( $info['streamingserver']['type'] ) {
+      case 'wowza':
+        $flashdata['media_serverType'] = 0;
+        break;
+      case 'nginx':
+        $flashdata['media_serverType'] = 1;
+        break;
+      default:
+        throw new \Exception(
+          "Unhandled streaming server type: " . $info['streamingserver']['type']
+        );
+    }
 
     if ( $info['adaptive'] )
       $flashdata['recording_autoQuality'] = true;
@@ -354,7 +369,7 @@ class Livefeeds extends \Springboard\Model {
       $flashdata['authorization_loginForm'] = false;
       $flashdata['authorization_message']   = $l('recordings', 'nopermission');
     }
-    if ( !$info['tokenValid'] ) {
+    if ( !$info['tokenvalid'] ) {
       $flashdata['authorization_need']      = true;
       $flashdata['authorization_loginForm'] = false;
       $flashdata['authorization_message']   = $l('recordings', 'token_invalid');
@@ -373,12 +388,12 @@ class Livefeeds extends \Springboard\Model {
       $flashdata['content_streamLabels'][]   = $stream['label'];
     }
 
-    $data['user_pingParameters'] = $info['extraParameters'];
+    $flashdata['user_pingParameters'] = $info['extraParameters'];
 
     if ( isset( $info['tokenauth'] ) and $info['tokenauth'] ) {
-      $data['user_needPing'] = true;
-      $data['user_pingParameters']['token'] = $info['token'];
-      $data['user_token'] = $info['token'];
+      $flashdata['user_needPing'] = true;
+      $flashdata['user_pingParameters']['token'] = $info['token'];
+      $flashdata['user_token'] = $info['token'];
     }
 
     if ( $info['member'] and $info['member']['id'] ) {
@@ -388,7 +403,6 @@ class Livefeeds extends \Springboard\Model {
     }
 
     $flashdata = $flashdata + $this->bootstrap->config['flashplayer_extraconfig'];
-    $flashdata = $flashdata + $this->getMediaServers( $info );
 
     if ( !$this->row['slideonright'] )
       $flashdata['layout_videoOrientation'] = 'right';
@@ -418,7 +432,7 @@ class Livefeeds extends \Springboard\Model {
     ;
   }
 
-  public function getMediaServers( $info, $hds = null ) {
+  public function getMediaServers( $info ) {
     $this->ensureObjectLoaded();
 
     $ret = array(
@@ -428,24 +442,23 @@ class Livefeeds extends \Springboard\Model {
 
     $authorizecode = $this->getAuthorizeSessionid( $info );
     $prefix        = $this->row['issecurestreamingforced']? 'sec': '';
-    if ( $hds === null )
-      $hds = $this->isHDSEnabled( '', $info );
+    $hds           = $this->isHDSEnabled( '', $info );
 
     $prefix = $this->row['issecurestreamingforced']? 'sec': '';
     if ( $hds ) {
-      $data['media_servers'][] =
+      $ret['master'][] =
         $this->bootstrap->config['wowza'][ $prefix . 'livesmilurl' ]
       ;
     } else {
 
       if ( $this->row['issecurestreamingforced'] )
-        $data['media_servers'] = array(
+        $ret['master'] = array(
           rtrim( $this->bootstrap->config['wowza']['seclivertmpsurl'], '/' ) . $authorizecode,
           rtrim( $this->bootstrap->config['wowza']['seclivertmpeurl'], '/' ) . $authorizecode,
           rtrim( $this->bootstrap->config['wowza']['secliveurl'], '/' ) . $authorizecode,
         );
       else
-        $data['media_servers'] = array(
+        $ret['master'] = array(
           rtrim( $this->bootstrap->config['wowza']['livertmpurl'], '/' ) . $authorizecode,
           rtrim( $this->bootstrap->config['wowza']['liveurl'], '/' ) . $authorizecode,
         );
@@ -464,50 +477,39 @@ class Livefeeds extends \Springboard\Model {
     if ( empty( $streamingserver ) )
       throw new \Exception("No streaming server found, not even the default");
 
-    if ( $streamingserver['type'] == 'wowza' )
-      $data['media_serverType'] = 0;
-    else if ( $streamingserver['type'] == 'nginx' )
-      $data['media_serverType'] = 1;
-    else
-      throw new \Exception(
-        "Unhandled streaming server type: " .
-        var_export( $streamingserver['type'], true )
-      );
-
-    foreach( $data['media_servers'] as $key => $url )
-      $data['media_servers'][ $key ] = sprintf( $url, $streamingserver['server'] );
+    foreach( $ret['master'] as $key => $url )
+      $ret['master'][ $key ] = sprintf( $url, $streamingserver['server'] );
 
     $contenthds = $this->isHDSEnabled('content', $info );
     if ( $hds == $contenthds ) {
 
-      $data['media_secondaryServers'] = $data['media_servers'];
-      return $data;
+      $ret['content'] = $ret['master'];
+      return $ret;
 
     } elseif ( $contenthds )
-      $data['media_secondaryServers'][] =
+      $ret['content'][] =
         rtrim( $this->bootstrap->config['wowza'][ $prefix . 'livesmilurl' ], '/' ) . $authorizecode
       ;
     else {
 
       if ( $this->row['issecurestreamingforced'] )
-        $data['media_secondaryServers'] = array(
+        $ret['content'] = array(
           rtrim( $this->bootstrap->config['wowza']['seclivertmpsurl'], '/' ) . $authorizecode,
           rtrim( $this->bootstrap->config['wowza']['seclivertmpeurl'], '/' ) . $authorizecode,
           rtrim( $this->bootstrap->config['wowza']['secliveurl'], '/' ) . $authorizecode,
         );
       else
-        $data['media_secondaryServers'] = array(
+        $ret['content'] = array(
           rtrim( $this->bootstrap->config['wowza']['livertmpurl'], '/' ) . $authorizecode,
           rtrim( $this->bootstrap->config['wowza']['liveurl'], '/' ) . $authorizecode,
         );
 
     }
 
-    foreach( $data['media_secondaryServers'] as $key => $url )
-      $data['media_secondaryServers'][ $key ] = sprintf( $url, $streamingserver['server'] );
+    foreach( $ret['content'] as $key => $url )
+      $ret['content'][ $key ] = sprintf( $url, $streamingserver['server'] );
 
-    return $data;
-
+    return $ret;
   }
 
   public function getIntroData( $info ) {
@@ -1768,12 +1770,14 @@ class Livefeeds extends \Springboard\Model {
 
     // minden ido intervallum masodpercbe
     $data = array(
+      'member'        => $info['member'],
       'tokenauth'     => false,
       'needauth'      => false,
       'nopermission'  => false,
       'tokenvalid'    => true,
       'logo'          => array(),
       'adaptive'      => $this->isAdaptive( $info['organization'] ),
+      'streams'       => $this->getStreamInfo( $info ),
       'intro'         => $this->getIntroData( $info ),
       'presenceCheck' => array(
         'enabled'  => (bool)$user['ispresencecheckforced'],
@@ -1789,6 +1793,7 @@ class Livefeeds extends \Springboard\Model {
       'thumbnail' => \smarty_modifier_indexphoto(
         $this->row, 'player', $this->bootstrap->staticuri
       ),
+      'flashauthcallback' => '',
     );
 
     if ( $this->bootstrap->config['forcesecureapiurl'] )
@@ -1797,8 +1802,6 @@ class Livefeeds extends \Springboard\Model {
       $apiurl = $this->bootstrap->baseuri;
 
     $data['apiurl'] = $apiurl . 'jsonapi';
-
-    $data['streams'] = $this->getPlayerStreams( $data, $info );
 
     if ( isset( $info['logo'] ) )
       $data['logo'] = $info['logo'];
@@ -1817,7 +1820,7 @@ class Livefeeds extends \Springboard\Model {
       $data['token'] = $info['token'];
     }
 
-    $data['servers'] = $this->getMediaServers( $info, $data['hds'] );
+    $data['servers'] = $this->getMediaServers( $info );
     $data['streamingserver'] = $this->streamingserver;
 
     $type = $info['organization']['playertype'];

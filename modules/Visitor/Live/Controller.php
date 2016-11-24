@@ -254,7 +254,7 @@ class Controller extends \Visitor\Controller {
     $playerdata = $feedModel->getPlayerData( $info );
 
     $this->toSmarty['playerdata']   =
-      $this->getPlayerParameters( $playerdata )
+      $this->getSignedPlayerParameters( $playerdata )
     ;
     $this->toSmarty['livehttpurl'] = $feedModel->getMediaUrl(
       'livehttp',
