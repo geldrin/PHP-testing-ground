@@ -3,7 +3,7 @@ namespace Model;
 
 class Recording_view_progress extends \Springboard\Model {
   public function getAccreditedDataCursor( $organization, $filter ) {
-    $organizationid = $this->qstr( $organization['id'] );
+    $organizationid = $this->db->qstr( $organization['id'] );
     $where = $this->assembleAccreditedDataWhere( $organization, $filter );
     $needpercent = $organization['elearningcoursecriteria'];
 
