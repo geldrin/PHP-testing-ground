@@ -3,6 +3,7 @@ namespace Model;
 
 class Recording_view_progress extends \Springboard\Model {
   public function getAccreditedDataCursor( $organization, $filter ) {
+    $organizationid = $this->qstr( $organization['id'] );
     $where = $this->assembleAccreditedDataWhere( $organization, $filter );
     $needpercent = $organization['elearningcoursecriteria'];
 
@@ -48,7 +49,8 @@ class Recording_view_progress extends \Springboard\Model {
         u.id = rvs.userid AND
         r.id = rvp.recordingid AND
         r.id = rvs.recordingid AND
-        rvp.position > 0 -- resetelt a progress mert tul sok kimaradas volt, nem erdekes
+        rvp.position > 0 AND-- resetelt a progress mert tul sok kimaradas volt, nem erdekes
+        r.organizationid = $organizationid
         $where
       ORDER BY
         rvs.recordingid,
