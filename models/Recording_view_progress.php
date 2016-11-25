@@ -79,6 +79,12 @@ class Recording_view_progress extends \Springboard\Model {
       ";
     }
 
+    if ( isset( $filter['datefrom'] ) and $filter['datefrom'] )
+      $where[] = "rvp.timestamp >= " . $this->db->qstr( $filter['datefrom'] );
+
+    if ( isset( $filter['dateuntil'] ) and $filter['dateuntil'] )
+      $where[] = "rvp.timestamp <= " . $this->db->qstr( $filter['dateuntil'] );
+
     if ( empty( $where ) )
       return '';
 
