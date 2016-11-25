@@ -2406,39 +2406,25 @@ class Recordings extends \Springboard\Model {
 
   }
 
-  public function getFlashData( $info ) {
-
+  public function flashData( $info ) {
     $this->ensureObjectLoaded();
-    $this->bootstrap->includeTemplatePlugin('indexphoto');
-
-    if ( isset( $info['versions'] ) )
-      $versions = $info['versions'];
-    else
-      $versions       = $this->getVersions();
-
-    $recordingbaseuri = $info['BASE_URI'] . \Springboard\Language::get() . '/recordings/';
-
-    if ( $this->bootstrap->config['forcesecureapiurl'] )
-      $apiurl = 'https://' . $info['organization']['domain'] . '/';
-    else
-      $apiurl = $info['BASE_URI'];
-
-    $apiurl .=  'jsonapi';
-    $data    = array(
+    $l    = $this->bootstrap->getLocalization();
+    $data = array(
       'language'              => \Springboard\Language::get(),
-      'api_url'               => $apiurl,
+      'api_url'               => $info['apiurl'],
       'user_needPing'         => false,
       'track_firstPlay'       => true,
       'recording_id'          => $this->id,
       'recording_title'       => $this->row['title'],
       'recording_subtitle'    => (string)$this->row['subtitle'],
       'recording_description' => (string)$this->row['description'],
-      'recording_duration'    => $this->getLength(),
-      'recording_image'       => \smarty_modifier_indexphoto( $this->row, 'player', $info['STATIC_URI'] ),
-      'user_checkWatching'    => (bool)@$info['member']['ispresencecheckforced'],
-      'user_checkWatchingTimeInterval' => $info['organization']['presencechecktimeinterval'],
-      'user_checkWatchingConfirmationTimeout' => $info['organization']['presencecheckconfirmationtime'],
-      'recording_timeout' => $info['organization']['viewsessiontimeoutminutes'] * 60, // masodpercbe
+      'recording_duration'    => $info['duration'],
+      'recording_image'       => $info['thumbnail'],
+      'user_checkWatching'    => $info['presenceCheck']['enabled'],
+      'user_checkWatchingTimeInterval' => $info['presenceCheck']['interval'],
+      'user_checkWatchingConfirmationTimeout' => $info['presenceCheck']['timeout'],
+      'recording_timeout' => $info['viewSession']['timeout'],
+      'timeline_autoPlay' => $info['autoplay'],
     );
 
     if ( $this->row['mastermediatype'] == 'audio' )
@@ -2448,54 +2434,84 @@ class Recordings extends \Springboard\Model {
       'recordingid' => $this->id,
     );
 
-    if ( isset( $info['tokenauth'] ) and $info['tokenauth'] ) {
+    if ( $info['logo'] ) {
+      $data['layout_logo'] = $info['logo']['url'];
+      $data['layout_logoOrientation'] = 'TR';
+      if ( $info['logo']['destination'] )
+        $data['layout_logoDestination'] = $info['logo']['destination'];
+    }
+
+    if ( $info['needauth'] ) {
+      $data['authorization_need']      = true;
+      $data['authorization_loginForm'] = true;
+    }
+    if ( $info['nopermission'] ) {
+      $data['authorization_need']      = true;
+      $data['authorization_loginForm'] = false;
+      $data['authorization_message']   = $l('recordings', 'nopermission');
+    }
+    if ( !$info['tokenvalid'] ) {
+      $flashdata['authorization_need']      = true;
+      $flashdata['authorization_loginForm'] = false;
+      $flashdata['authorization_message']   = $l('recordings', 'token_invalid');
+    }
+
+    if ( $info['tokenauth'] ) {
       $data['user_needPing'] = true;
       $data['user_pingParameters']['token'] = $info['token'];
       $data['user_token'] = $info['token'];
     }
 
-    if ( isset( $info['member'] ) and $info['member']['id'] ) {
+    if ( isset( $info['member']['id'] ) ) {
       $data['user_id']          = $info['member']['id'];
       $data['user_needPing']    = true;
       $data['user_pingSeconds'] = $this->bootstrap->config['sessionpingseconds'];
       $data['recording_checkTimeout'] = true; // nezzuk hogy timeoutolt e a felvetel
     }
 
-    if ( isset( $info['startposition'] ) )
+    if ( $info['startposition'] )
       $data['timeline_startPosition'] = $info['startposition'];
 
-    if ( isset( $info['autoplay'] ) and $info['autoplay'] )
-      $data['timeline_autoPlay'] = true;
+    $data += $this->bootstrap->config['flashplayer_extraconfig'];
 
-    $data = $data + $this->bootstrap->config['flashplayer_extraconfig'];
-
-    $hds  = $this->isHDSEnabled( $info );
-    $data = $data + $this->getMediaServers( $info, $hds );
+    $data['media_servers'] = $info['servers'];
+    switch( $info['streamingserver']['type'] ) {
+      case 'wowza':
+        $data['media_serverType'] = 0;
+        break;
+      case 'nginx':
+        $data['media_serverType'] = 1;
+        break;
+      default:
+        throw new \Exception(
+          "Unhandled streaming server type: " .
+          $info['streamingserver']['type']
+        );
+        break;
+    }
 
     // default bal oldalon van a video, csak akkor allitsuk be ha kell
     if ( !$this->row['slideonright'] )
       $data['layout_videoOrientation'] = 'right';
 
     if ( $data['language'] != 'en' )
-      $data['locale'] = $info['STATIC_URI'] . 'js/flash_locale_' . $data['language'] . '.json';
+      $data['locale'] =
+        $this->bootstrap->staticuri .
+        'js/flash_locale_' . $data['language'] . '.json'
+      ;
 
-    if ( !empty( $versions['master']['desktop'] ) ) {
+    if ( !empty( $data['streams']['desktop'] ) ) {
       $data['media_streams']          = array();
       $data['media_streamLabels']     = array();
       $data['media_streamParameters'] = array();
       $data['media_streamDimensions'] = array();
 
-      if ( $hds )
-        $data['media_streams'][]      =
-          $this->getMediaUrl('smil', null, $info )
-        ;
+      if ( $info['hds'] )
+        $data['media_streams'][] = $data['streams']['hds']['master'];
 
-      foreach( $versions['master']['desktop'] as $version ) {
-        $data['media_streamLabels'][]     = $version['qualitytag'];
-        $data['media_streamParameters'][] = array(
-          'recordingversionid' => $version['id'],
-          'viewsessionid'      => $this->generateViewSessionid( $version['id'] ),
-        );
+      foreach( $data['streams']['desktop'] as $version ) {
+        $data['media_streamLabels'][]     = $version['label'];
+        $data['media_streamParameters'][] = $version['parameters'];
         if ( $version['dimensions'] )
           $data['media_streamDimensions'][] = $version['dimensions'];
         else
@@ -2507,17 +2523,15 @@ class Recordings extends \Springboard\Model {
            )
           $data['recording_autoQuality'] = true;
 
-        if ( !$hds )
-          $data['media_streams'][]        =
-            $this->getMediaUrl('default', $version, $info )
-          ;
+        if ( !$info['hds'] )
+          $data['media_streams'][] = $version['url'];
 
       }
     }
 
     if (
-         !isset( $info['skipcontent'] ) and
-         !empty( $versions['content']['desktop'] )
+         !$info['skipcontent'] and
+         !empty( $info['streams']['content'] )
        ) {
 
       if ( $this->row['contentoffsetstart'] )
@@ -2529,28 +2543,26 @@ class Recordings extends \Springboard\Model {
       $data['content_streams']      = array();
       $data['content_streamLabels'] = array();
       $data['content_streamDimensions'] = array();
-      if ( $hds )
-        $data['content_streams'][]    =
-          $this->getMediaUrl('contentsmil', null, $info )
-        ;
 
-      foreach( $versions['content']['desktop'] as $version ) {
-        $data['content_streamLabels'][] = $version['qualitytag'];
+      if ( $info['hds'] )
+        $data['content_streams'][] = $info['streams']['hds']['content'];
+
+      foreach( $info['streams']['content'] as $version ) {
+        $data['content_streamLabels'][] = $version['label'];
         if ( $version['dimensions'] )
           $data['content_streamDimensions'][] = $version['dimensions'];
         else
           $data['recording_autoQuality'] = false;
 
-        if ( !$hds )
-          $data['content_streams'][]      =
-            $this->getMediaUrl('content', $version, $info )
-          ;
-
+        if ( !$info['hds'] )
+          $data['content_streams'][] = $version['url'];
       }
-
     }
 
-    $data = $data + $this->getIntroOutroFlashdata( $info );
+    if ( $info['streams']['intro'] )
+      $data['intro_streams'] = array( reset( $info['streams']['intro'][0] ) );
+    if ( $info['streams']['outro'] )
+      $data['outro_streams'] = array( reset( $info['streams']['outro'][0] ) );
 
     if ( $this->row['offsetstart'] )
       $data['timeline_virtualStart'] = $this->row['offsetstart'];
@@ -2558,78 +2570,41 @@ class Recordings extends \Springboard\Model {
     if ( $this->row['offsetend'] )
       $data['timeline_virtualEnd'] = $this->row['offsetend'];
 
-    $subtitles = $this->getSubtitleLanguages();
-    if ( !empty( $subtitles ) ) {
-
-      $defaultsubtitle = $this->getDefaultSubtitleLanguage();
-      if ( $defaultsubtitle ) {
-
+    if ( $info['subtitles'] ) {
+      if ( $info['subtitles']['show'] )
         $data['subtitle_autoShow'] = true;
-        $data['subtitle_default']  = $defaultsubtitle;
 
-      }
+      if ( $info['subtitles']['default'] )
+        $data['subtitle_default'] = $info['subtitles']['default'];
 
-      $data['subtitle_files'] = array();
-      foreach( $subtitles as $subtitle ) {
-
-        $data['subtitle_files'][ $subtitle['languagecode'] ] =
-          $recordingbaseuri . 'getsubtitle/' . $subtitle['id']
-        ;
-
-      }
-
+      $data['subtitle_files'] = $info['subtitles']['files'];
     }
 
-    $needrecommendation = !$info['organization']['isrecommendationdisabled'];
-    // ha tokenauth akkor nincs ajanlo
-    if ( $needrecommendation and isset( $info['tokenauth'] ) and $info['tokenauth'] )
-      $needrecommendation = false;
-
-    if ( $needrecommendation ) {
-
-      if ( isset( $info['relatedvideos'] ) )
-        $relatedvideos = $info['relatedvideos'];
-      else
-        $relatedvideos = $this->getRelatedVideos(
-          $this->bootstrap->config['relatedrecordingcount'],
-          $info['member'],
-          $info['organization']
-        );
+    if ( $info['recommendations'] ) {
 
       $data['recommendatory_string'] = array();
-      foreach( $relatedvideos as $video ) {
+      foreach( $info['recommendations'] as $video ) {
 
         $data['recommendatory_string'][] = array(
-          'title'       => $video['title'],
-          'subtitle'    => $video['subtitle'],
-          'image'       => \smarty_modifier_indexphoto( $video, 'wide', $info['STATIC_URI'] ),
-          'url'         =>
-            $recordingbaseuri . 'details/' . $video['id'] . ',' .
-            \Springboard\Filesystem::filenameize( $video['title'] )
-          ,
+          'title'    => $video['title'],
+          'subtitle' => $video['subtitle'],
+          'image'    => $video['thumbnail'],
+          'url'      => $video['url'],
         );
 
       }
-
     }
 
-    if ( isset( $info['attachments'] ) and $info['attachments'] ) {
-      $this->bootstrap->includeTemplatePlugin('attachmenturl');
+    if ( $info['attachments'] )
+      $data['attachments_string'] = $info['attachments'];
 
-      $data['attachments_string'] = array();
-      foreach( $info['attachments'] as $attachment )
-        $data['attachments_string'][] = array(
-          'title'    => $attachment['title'],
-          'filename' => $attachment['masterfilename'],
-          'url'      => smarty_modifier_attachmenturl(
-            $attachment, $this->row, $info['STATIC_URI']
-          ),
-        );
-
+    if ( $info['seekbar'] ) {
+      $data['timeline_seekbarDisabled']          = !$info['seekbar']['enabled'];
+      $data['timeline_lastPlaybackPosition']     = $info['seekbar']['lastposition'];
+      $data['timeline_lastPositionTimeInterval'] = $info['seekbar']['interval'];
+      if ( $info['seekbar']['visible'] )
+        $data['timeline_seekbarVisible'] = true;
     }
-
-    if ( $this->row['isseekbardisabled'] and @$info['member'] and $info['member']['id'] )
-      $data = array_merge( $data, $this->getSeekbarOptions( $info ) );
 
     return $data;
 
@@ -2704,24 +2679,23 @@ class Recordings extends \Springboard\Model {
       $row = array('lastposition' => 0);
 
     $seekbardisabled = !$watched; // ha megnezte akkor nem kell seekbar
-    $options = array(
-      'timeline_seekbarDisabled'          => $seekbardisabled,
-      'timeline_lastPlaybackPosition'     => (int) $row['lastposition'],
-      'timeline_lastPositionTimeInterval' =>
+    $ret = array(
+      'enabled'      => (bool) $watched,
+      'lastposition' => (int) $row['lastposition'],
+      'interval'     =>
         $this->bootstrap->config['recordingpositionupdateseconds']
       ,
     );
 
-    if (
-         $seekbardisabled and
-         \Model\Userroles::userHasPrivilege(
-           $user,
-           'general_ignoreAccessRestrictions',
-           'or',
-           'isclientadmin', 'iseditor', 'isadmin'
-         )
-       )
-      $options['timeline_seekbarVisible'] = true;
+    $ret['visible'] = (
+      $seekbardisabled and
+      \Model\Userroles::userHasPrivilege(
+        $user,
+        'general_ignoreAccessRestrictions',
+        'or',
+        'isclientadmin', 'iseditor', 'isadmin'
+      )
+    );
 
     return $options;
 
@@ -2737,95 +2711,24 @@ class Recordings extends \Springboard\Model {
   public function getMediaServers( $info, $hds = null ) {
 
     $this->ensureObjectLoaded();
-    $data = array(
-      'media_servers' => array(),
-    );
+    $ret = array();
 
     $prefix = $this->row['issecurestreamingforced']? 'sec': '';
     if ( $hds === null )
       $hds = $this->isHDSEnabled( $info );
 
     if ( $hds ) {
-      $data['media_servers'][] = $this->getWowzaUrl( $prefix . 'smilurl', false, $info );
+      $ret[] = $this->getWowzaUrl( $prefix . 'smilurl', false, $info );
     } else {
 
       if ( $prefix )
-        $data['media_servers'][] = $this->getWowzaUrl( 'secrtmpsurl', true, $info );
+        $ret[] = $this->getWowzaUrl( 'secrtmpsurl', true, $info );
 
-      $data['media_servers'][] = $this->getWowzaUrl( $prefix . 'rtmpurl',  true, $info );
-      $data['media_servers'][] = $this->getWowzaUrl( $prefix . 'rtmpturl', true, $info );
-
+      $ret[] = $this->getWowzaUrl( $prefix . 'rtmpurl',  true, $info );
+      $ret[] = $this->getWowzaUrl( $prefix . 'rtmpturl', true, $info );
     }
 
-    // a getWowzaUrl beallitja, de azert menjunk biztosra
-    $streamingserver = $this->streamingserver;
-    if ( empty( $streamingserver ) )
-      throw new \Exception("No streaming server found, not even the default");
-
-    if ( $streamingserver['type'] == 'wowza' )
-      $data['media_serverType'] = 0;
-    else if ( $streamingserver['type'] == 'nginx' )
-      $data['media_serverType'] = 1;
-    else
-      throw new \Exception(
-        "Unhandled streaming server type: " .
-        var_export( $streamingserver['type'], true )
-      );
-
-    return $data;
-
-  }
-
-  public function getIntroOutroFlashdata( $info, $hds = null ) {
-
-    $this->ensureObjectLoaded();
-    if ( !$this->row['introrecordingid'] and !$this->row['outrorecordingid'] )
-      return array();
-
-    if ( $hds === null )
-      $hds   = $this->isHDSEnabled( $info );
-
-    $ids     = array();
-    $data    = array();
-    $introid = 0;
-    $outroid = 0;
-
-    if ( $this->row['introrecordingid'] ) {
-
-      $ids[]   = $this->row['introrecordingid'];
-      $introid = $this->row['introrecordingid'];
-
-    }
-
-    if ( $this->row['outrorecordingid'] ) {
-
-      $ids[]   = $this->row['outrorecordingid'];
-      $outroid = $this->row['outrorecordingid'];
-
-    }
-
-    $versions = $this->getVersions( $ids );
-    if ( empty( $versions['master']['desktop'] ) )
-      throw new \Exception("The intro/outro does not have desktopcompatible non-content recordings!");
-
-    $type = $hds? 'smil': 'default';
-    foreach( $versions['master']['desktop'] as $version ) {
-
-      if ( $version['recordingid'] == $introid )
-        $key = 'intro_streams';
-      else if ( $version['recordingid'] == $outroid )
-        $key = 'outro_streams';
-      else // not possible
-        throw new \Exception("Invalid version in getIntroOutroFlashdata, neither intro nor outro!");
-
-      $data[ $key ] = array(
-        $this->getMediaUrl( $type, $version, $info )
-      );
-
-    }
-
-    return $data;
-
+    return $ret;
   }
 
   public function getStructuredFlashData( $info ) {
@@ -2864,7 +2767,6 @@ class Recordings extends \Springboard\Model {
     }
 
     return $flashdata;
-
   }
 
   public function getWowzaUrl( $type, $needextraparam = false, $info = null ) {
@@ -4760,12 +4662,239 @@ class Recordings extends \Springboard\Model {
   }
 
   public function getPlayerData( $info ) {
-    $type = ucfirst( $info['organization']['playertype'] );
-    $method = "get{$type}Data";
+    $this->bootstrap->includeTemplatePlugin('indexphoto');
+
+    $user = $this->bootstrap->getSession('user');
+    $recordingbaseuri =
+      $this->bootstrap->baseuri . \Springboard\Language::get() . '/recordings/'
+    ;
+
+    // minden ido intervallum masodpercbe
+    $data = array(
+      'startposition'   => 0,
+      'autoplay'        => false,
+      'skipcontent'     => false,
+      'tokenauth'       => false,
+      'needauth'        => false,
+      'nopermission'    => false,
+      'tokenvalid'      => true,
+      'logo'            => array(),
+      'recommendations' => array(),
+      'subtitles'       => array(),
+      'organization'    => $info['organization'],
+      'hds'             => $this->isHDSEnabled( $info ),
+      'duration'        => $this->getLength(),
+      'seekbar'         => $this->getSeekbarOptions( $info ),
+      'presenceCheck'   => array(
+        'enabled'  => (bool)$user['ispresencecheckforced'],
+        'interval' => $info['organization']['presencechecktimeinterval'],
+        'timeout'  => $info['organization']['presencecheckconfirmationtime'],
+      ),
+      'viewSession' => array(
+        'timeout' => $info['organization']['viewsessiontimeoutminutes'] * 60,
+      ),
+      'extraParameters' => array(
+        'recordingid' => $this->id,
+      ),
+      'thumbnail' => \smarty_modifier_indexphoto(
+        $this->row, 'player', $this->bootstrap->staticuri
+      ),
+    );
+
+    if ( $this->bootstrap->config['forcesecureapiurl'] )
+      $apiurl = 'https://' . $info['organization']['domain'] . '/';
+    else
+      $apiurl = $this->bootstrap->baseuri;
+
+    $data['apiurl'] = $apiurl . 'jsonapi';
+
+    $data['streams'] = $this->getPlayerStreams( $data, $info );
+
+    if ( isset( $info['logo'] ) )
+      $data['logo'] = $info['logo'];
+
+    if ( isset( $info['startposition'] ) )
+      $data['startposition'] = $info['startposition'];
+
+    if ( isset( $info['autoplay'] ) )
+      $data['autoplay'] = $info['autoplay'];
+
+    if ( isset( $info['skipcontent'] ) )
+      $data['skipcontent'] = $info['skipcontent'];
+
+    if ( isset( $info['needauth'] ) )
+      $data['needauth'] = $info['needauth'];
+
+    if ( isset( $info['nopermission'] ) )
+      $data['nopermission'] = $info['nopermission'];
+
+    if ( isset( $info['tokenvalid'] ) )
+      $data['tokenvalid'] = $info['tokenvalid'];
+
+    if ( isset( $info['tokenauth'] ) and $info['tokenauth'] ) {
+      $data['tokenauth'] = true;
+      $data['token'] = $info['token'];
+    }
+
+    $needrecommendation = !$info['organization']['isrecommendationdisabled'];
+    // ha tokenauth akkor nincs ajanlo
+    if ( $needrecommendation and $data['tokenauth'] )
+      $needrecommendation = false;
+
+    if ( $needrecommendation ) {
+      if ( isset( $info['relatedvideos'] ) )
+        $recommendations = $info['relatedvideos'];
+      else
+        $recommendations = $this->getRelatedVideos(
+          $this->bootstrap->config['relatedrecordingcount'],
+          $info['member'],
+          $info['organization']
+        );
+
+      foreach( $recommendations as $video )
+        $data['recommendations'][] = array(
+          'title'       => $video['title'],
+          'subtitle'    => $video['subtitle'],
+          'thumbnail'   => \smarty_modifier_indexphoto(
+            $video, 'wide', $this->bootstrap->staticuri
+          ),
+          'url'         =>
+            $recordingbaseuri . 'details/' . $video['id'] . ',' .
+            \Springboard\Filesystem::filenameize( $video['title'] )
+          ,
+        );
+    }
+
+    $subtitles = $this->getSubtitleLanguages();
+    if ( !empty( $subtitles ) ) {
+      $defaultsubtitle = $this->getDefaultSubtitleLanguage();
+      $data['subtitles']['show'] = (bool)$defaultsubtitle;
+
+      if ( $defaultsubtitle )
+        $data['subtitles']['default'] = $defaultsubtitle;
+
+      $data['subtitles']['files'] = array();
+      foreach( $subtitles as $subtitle ) {
+
+        $data['subtitles']['files'][ $subtitle['languagecode'] ] =
+          $recordingbaseuri . 'getsubtitle/' . $subtitle['id']
+        ;
+
+      }
+    }
+
+    $data['attachments'] = array();
+    if ( isset( $info['attachments'] ) and $info['attachments'] ) {
+      $this->bootstrap->includeTemplatePlugin('attachmenturl');
+
+      foreach( $info['attachments'] as $attachment )
+        $data['attachments'][] = array(
+          'title'    => $attachment['title'],
+          'filename' => $attachment['masterfilename'],
+          'url'      => smarty_modifier_attachmenturl(
+            $attachment, $this->row, $this->bootstrap->staticuri
+          ),
+        );
+    }
+
+    $data['servers'] = $this->getMediaServers( $info, $data['hds'] );
+    $data['streamingserver'] = $this->streamingserver;
+
+    $type = $info['organization']['playertype'];
+    $method = $type . 'Data';
 
     if ( !method_exists( $this, $method ) )
       throw new \Exception("Playertype $type not implemented");
 
-    return $this->$method( $info );
+    return $this->$method( $data );
+  }
+
+  private function getPlayerStreams( $data, $info ) {
+    $this->ensureObjectLoaded();
+
+    $ret = array(
+      'hds'     => array(),
+      'desktop' => array(),
+      'content' => array(),
+      'intro'   => array(),
+      'outro'   => array(),
+    );
+
+    if ( isset( $info['versions'] ) )
+      $versions = $info['versions'];
+    else
+      $versions = $this->getVersions();
+
+    if ( $data['hds'] ) {
+      $ret['hds']['master'] = $this->getMediaUrl(
+        'smil', null, $info
+      );
+      $ret['hds']['content'] = $this->getMediaUrl(
+        'contentsmil', null, $info
+      );
+    }
+
+    foreach( $versions['master']['desktop'] as $version ) {
+      $ret['desktop'][] = array(
+        'parameters' => array(
+          'id'            => $version['id'],
+          'viewsessionid' => $this->generateViewSessionid( $version['id'] ),
+        ),
+        'label'         => $version['qualitytag'],
+        'dimensions'    => $version['dimensions'],
+        'url'           => $this->getMediaUrl('default', $version, $info ),
+      );
+    }
+    foreach( $versions['content']['desktop'] as $version ) {
+      $ret['content'][] = array(
+        'isadaptive'    => $version['isadaptive'],
+        'label'         => $version['qualitytag'],
+        'dimensions'    => $version['dimensions'],
+        'url'           => $this->getMediaUrl('content', $version, $info ),
+      );
+    }
+
+    if ( !$this->row['introrecordingid'] and !$this->row['outrorecordingid'] )
+      return $ret;
+
+    $ids     = array();
+    $ret     = array();
+    $introid = 0;
+    $outroid = 0;
+
+    if ( $this->row['introrecordingid'] ) {
+
+      $ids[]   = $this->row['introrecordingid'];
+      $introid = $this->row['introrecordingid'];
+
+    }
+
+    if ( $this->row['outrorecordingid'] ) {
+
+      $ids[]   = $this->row['outrorecordingid'];
+      $outroid = $this->row['outrorecordingid'];
+
+    }
+
+    $versions = $this->getVersions( $ids );
+    if ( empty( $versions['master']['desktop'] ) )
+      throw new \Exception("The intro/outro does not have desktopcompatible non-content recordings!");
+
+    $type = $data['hds']? 'smil': 'default';
+    foreach( $versions['master']['desktop'] as $version ) {
+
+      if ( $version['recordingid'] == $introid )
+        $key = 'intro';
+      else if ( $version['recordingid'] == $outroid )
+        $key = 'outro';
+      else // not possible
+        throw new \Exception("Invalid version in getIntroOutroFlashdata, neither intro nor outro!");
+
+      $ret[ $key ][] = array(
+        'url' => $this->getMediaUrl( $type, $version, $info )
+      );
+    }
+
+    return $ret;
   }
 }

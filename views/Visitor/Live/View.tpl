@@ -17,9 +17,7 @@
 {/if}
 <div id="player">
 {if $streamtype == 'desktop' and !$browser.mobile}
-  <script type="text/javascript">
-    swfobject.embedSWF('flash/VSQPlayer.swf?v={$VERSION}', 'playercontainer', '{$playerwidth}', '{$playerheight}', '11.1.0', 'flash/swfobject/expressInstall.swf', {$flashdata|@jsonescape:true}, flashdefaults.params, null, handleFlashLoad );
-  </script>
+  {include file="Visitor/Players/"|cat:$organization.playertype|cat:".tpl" skipcontainer=true playercontainerid="playercontainer"}
   <div id="playercontainer" style="width: {$playerwidth}px; height: {$playerheight}px">{#recordings__noflash#}</div>
 {elseif $needauth}
   {include file=Visitor/mobile_logintoview.tpl}

@@ -20,7 +20,7 @@
   
   #qualitychooser a {
     outline: 0;
-    width: {/literal}{$width-20}{literal}px;
+    width: {/literal}{$playerwidth-20}{literal}px;
     text-align: center;
     display: inline-block;
     color: #7F8890;
@@ -65,14 +65,14 @@
 {/if}
 <center>
 {if $browser.mobile and $needauth}
-  {include file=Visitor/mobile_logintoview.tpl indexphoto=$recording|@indexphoto width=$width height=$height}
+  {include file=Visitor/mobile_logintoview.tpl indexphoto=$recording|@indexphoto width=$playerwidth height=$playerheight}
 {elseif $browser.mobile}
   {if $recording.mobilevideoreshq}
-    {assign var=height value=$height-30}
+    {assign var=height value=$playerheight-30}
   {/if}
   {if $browser.mobiledevice == 'iphone'}
     <div id="mobileplayercontainer">
-      <video x-webkit-airplay="allow" controls="controls" alt="{$recording.title|escape:html}" width="{$width}" height="{$height}" poster="{$recording|@indexphoto}" src="{$mobilehttpurl}">
+      <video x-webkit-airplay="allow" controls="controls" alt="{$recording.title|escape:html}" width="{$playerwidth}" height="{$playerheight}" poster="{$recording|@indexphoto}" src="{$mobilehttpurl}">
         <a href="{$mobilehttpurl}"><img src="{$recording|@indexphoto}" width="280" height="190"/></a>
       </video>
     </div>
@@ -85,7 +85,7 @@
       {assign var=mobileurl value=$mobilertspurl}
     {/if}
     <div id="mobileplayercontainer">
-      <a href="{$mobileurl}"><img src="{$recording|@indexphoto}" width="{$width}" height="{$height}"/></a>
+      <a href="{$mobileurl}"><img src="{$recording|@indexphoto}" width="{$playerwidth}" height="{$playerheight}"/></a>
     </div>
   {/if}
   {if count( $mobileversions ) > 1}
@@ -116,7 +116,7 @@
     if (e.success)
       return;
 
-    var elem = document.getElementById('{$containerid}');
+    var elem = document.getElementById('{$playercontainerid}');
     if (!elem)
       return;
 
@@ -126,9 +126,8 @@
       elem.innerText = '{#contents__flashloaderror#}';
   {rdelim};
 
-  document.write('<div id="{$containerid}"></div>');
-  swfobject.embedSWF('flash/VSQEmbedPlayer.swf?v={$VERSION}', '{$containerid}', '{$width}', '{$height}', '11.1.0', 'flash/swfobject/expressInstall.swf', {$flashdata|@jsonescape:true}, params, null, handleFlashLoad );
-
+  document.write('<div id="{$playercontainerid}"></div>');
+  {include file="Visitor/Players/"|cat:$organization.playertype|cat:".tpl" skipcontainer=true flashplayertype="Embed" flashplayerparams="params"}
   {rdelim})();
   </script>
 

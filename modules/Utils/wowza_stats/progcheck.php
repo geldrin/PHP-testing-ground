@@ -20,6 +20,7 @@ $recordings   = array();
 $users        = array();
 $sessioncheck = false;
 $date_start   = false;
+$filter       = null;
 $options      = null;
 $org          = null;
 $org_id       = null;
@@ -38,14 +39,15 @@ try {
 
 // get organization id from user/argument
 $options = getopt(
-  's::d::h::?::',
-  array("sessions", "date-start::", "help")
+  's::d::f::h::?::',
+  array("sessions", "date-start::", "filter::", "help")
 );
 
 if ($argc > 1) {
   if (isset($options['s']) || isset($options['sessions'])) {
     $sessioncheck = true;
   }
+  
   if (isset($options['d']) || isset($options['date-start'])) {
     $tmp = null;
     if (array_key_exists('d', $options)) {
@@ -61,21 +63,33 @@ if ($argc > 1) {
       if ($date_start === false) {
         print_r("Parameter cannot be parsed as date(". $tmp ."). See strtotime() function for proper syntax.\n");
       }
+      print_r('Parsed date: "'. date('Y-m-d H:i:s', $date_start) .'"\n');
     }
   }
+  
+  if (isset($options['f']) || isset($options['filter'])) {
+    if (array_key_exists('f', $options)) {
+      $filter = $options['f'];
+    } elseif(array_key_exists('filter', $options)) {
+      $filter = $options['filter'];
+    }
+  }
+  
   if (isset($options['h']) || isset($options['help'])) {
     print_r(
       "\nSyntax:\n".
-      "php progcheck.php [-[h,s,d=<date>] [--help] [--sessions] [--date-start] <organization_id>]\n".
+      "php progcheck.php [-[h,s,f=<regex>,d=<date>] [--help] [--sessions] [--date-start] [--filter] <organization_id>]\n".
       "For interactive menu, omit all arguments.".
       "Options:\n".
       " -h, --help: print this help.\n".
       " -d, --date-start=<date>: get from this date. Check strtotime() for more info.\n".
+      " -f, --filter=<regex pattern>: filter users's emails by the supplied regex-pattern\n".
       " -s, --sessions: do session check too.\n\n".
       "E.g.:\n".
       " $ php progcheck.php - interactive mode.\n".
       " $ php progcheck.php 123 - check organization with id 123.\n".
-      " $ php progcheck.php --sessions -d=\"-2 months\" 123 - check the users deactivated in the last two months.\n\n"
+      " $ php progcheck.php --sessions -d=\"-2 months\" 123 - check the users deactivated in the last two months.\n".
+      " $ php progcheck.php --filter=\"[\d]{1,4}@.+\" 123 - filter users whose email contains one to four numbers before the '@' sign.\n\n"
     );
   }
   
@@ -109,10 +123,10 @@ if ($org_id === null) {
         print_r("Organization name = ". $org['name'] ." (". $org_id .")\n");
         break;
       } else {
-        print_r("Organization does not exist! Please type again.\n");
+        print_r("Organization does not exist!\n");
       }
     }
-    print_r('Invalid value! Please type again: ');
+    print_r('Invalid value! Please try again: ');
   }
   
   print_r("Date-start (optional):\n");
@@ -129,9 +143,15 @@ if ($org_id === null) {
     if ($date_start === false) {
       print_r('Invalid value! Please type again: ');
     } else {
+      print_r('Parsed date: "'. date('Y-m-d H:i:s', $date_start) ."\n");
       break;
     }
   }
+  
+  print_r("Email filter (optional):\n");
+  print_r(" > ");
+  $input = trim(fgets(STDIN));
+  if (!empty($input)) { $filter = $input; }
   
   print_r("Session check? [y/n]:\n");
   while (true) {
@@ -210,7 +230,9 @@ foreach ($org_channels as $ch) {
   // Prepare channel log message
   $msg_ch = toUpper($ch['title']) . " (" . $ch['starttimestamp'] . ") [ID=" . $ch['id'] . "]:\n\n";
 
-  $durationcheck = $date_start ? ("users.sessionlastupdated >= '". date('Y-m-d H:i:s', $date_start) ."' AND\n") : ('');
+  $durationcheck = $date_start ? ("users.lastloggedin >= '". date('Y-m-d H:i:s', $date_start) ."' AND\n") : ('');
+  $regex = $filter ? ("users.email REGEXP '{$filter}' AND\n") : (null);
+  
   foreach ($recs as $rec) {
     $query = array(
       'progress' => "SELECT
@@ -226,7 +248,7 @@ foreach ($org_channels as $ch) {
         WHERE
           prog.recordingid = " . $rec['id'] . " AND
           prog.userid = u.id AND
-          ". $durationcheck ."u.organizationid = $org_id",
+          ". $regex . $durationcheck ."u.organizationid = $org_id",
 
       'sessions' => "SELECT
           session.userid,
@@ -242,7 +264,7 @@ foreach ($org_channels as $ch) {
           recording_view_progress AS prog,
           users
         WHERE
-          (". $durationcheck ."users.id = session.userid AND
+          (". $regex . $durationcheck ."users.id = session.userid AND
           users.organizationid = $org_id AND
           session.recordingid = ". $rec['id'] .") AND (
           prog.userid = session.userid AND
@@ -339,7 +361,7 @@ exit;
 
 function toUpper($string) { 
   return (strtoupper(strtr($string, 'áéíóöőüű','ÁÉÍÓÖŐÜŰ'))); 
-};
+}
 
 function db_query($qry) {
   global $db;
@@ -383,5 +405,3 @@ function validateOrganization($aString = null) {
   }
   return false;
 }
-
-?>
