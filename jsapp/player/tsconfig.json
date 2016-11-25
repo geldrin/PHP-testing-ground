@@ -1,0 +1,14 @@
+{
+    "compilerOptions": {
+        "module": "system",
+        "target": "es3",
+        "noImplicitAny": false,
+        "outFile": "../../httpdocs/js/player/app.js",
+        "rootDir": "../",
+        "removeComments": true,
+        "sourceMap": true
+    },
+    "exclude": [
+        "node_modules"
+    ]
+}
