@@ -17,7 +17,7 @@ class Recordings extends \Springboard\Model {
 
   public $metadata = array();
   protected $searchadvancedwhere;
-  protected $streamingserver;
+  public $streamingserver;
   protected $commentcount = array();
 
   public function resetStats() {
@@ -4124,9 +4124,8 @@ class Recordings extends \Springboard\Model {
     return $ret;
   }
 
-  public function getPlayer( $info ) {
-    $this->ensureObjectLoaded();
-    $player = new \Player\Recordings( $this->bootstrap, $this, $info );
+  public function getPlayer() {
+    $player = new \Player\Recordings( $this->bootstrap, $this );
     return $player;
   }
 }

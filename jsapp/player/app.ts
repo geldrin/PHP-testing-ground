@@ -7,12 +7,12 @@ declare var playerconfig: Object;
 declare var l: Object;
 (function($) {
   // deep copy external dependencies to protect against modification until dom load
-  let playerconfig = $.extend(true, {}, playerconfig);
-  let l = $.extend(true, {}, l);
+  let pcCopy = $.extend(true, {}, playerconfig);
+  let lCopy = $.extend(true, {}, l);
 
   $(function() {
-    let cfg = new Config(playerconfig);
-    let loc = new Locale(l);
+    let cfg = new Config(pcCopy);
+    let loc = new Locale(lCopy);
     let player = new Player(cfg, loc);
     player.init();
   });

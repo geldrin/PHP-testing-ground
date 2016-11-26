@@ -737,4 +737,26 @@ class Bootstrap {
       $this->config['templatepath'] . 'Plugins/modifier.' . $name . '.php'
     );
   }
+
+  public function getPlayerSignature( $string ) {
+    // azert nem hmac (mert amugy message authenticity-t nezunk) mert a flash
+    // a kliens oldalan generalja, igy mindenfele keppen meg tudja hamisitani
+    // a user ha nagyon akarja, _NAGYON_ fontos hogy itt kulon seed legyen
+    // pont emiatt
+    return md5( $string . $this->config['flashhashseed'] );
+  }
+
+  public function checkPlayerSignature( $string, $hash ) {
+    $actualhash = $this->getPlayerSignature( $string );
+    return $hash == $actualhash;
+  }
+
+  public function getSignedPlayerParameters( $parameters ) {
+    $ret = array(
+      'parameters' => json_encode( $parameters, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT ),
+    );
+
+    $ret['hash'] = $this->getPlayerSignature( $ret['parameters'] );
+    return $ret;
+  }
 }

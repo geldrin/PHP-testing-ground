@@ -8,32 +8,34 @@ System.register("player/Config", [], function (exports_1, context_1) {
             Config = (function () {
                 function Config(data) {
                     this.flashConfig = data['flashplayer']['config'];
+                    this.config = data;
                 }
+                Config.prototype.getFlashConfig = function () {
+                    return this.flashConfig;
+                };
+                Config.prototype.getFromKey = function (config, keys) {
+                    var key = keys.shift();
+                    var ret = config[key];
+                    if (ret && keys.length > 0)
+                        return this.getFromKey(ret, keys);
+                    return ret;
+                };
+                Config.prototype.get = function (key, def) {
+                    var keys = key.split('.');
+                    var ret = this.getFromKey(this.config, keys);
+                    if (typeof ret !== "undefined")
+                        return ret;
+                    return def;
+                };
                 return Config;
             }());
             exports_1("default", Config);
         }
     };
 });
-System.register("player/Flash", [], function (exports_2, context_2) {
+System.register("Locale", [], function (exports_2, context_2) {
     "use strict";
     var __moduleName = context_2 && context_2.id;
-    var Flash;
-    return {
-        setters: [],
-        execute: function () {
-            Flash = (function () {
-                function Flash() {
-                }
-                return Flash;
-            }());
-            exports_2("default", Flash);
-        }
-    };
-});
-System.register("Locale", [], function (exports_3, context_3) {
-    "use strict";
-    var __moduleName = context_3 && context_3.id;
     var Locale;
     return {
         setters: [],
@@ -44,21 +46,65 @@ System.register("Locale", [], function (exports_3, context_3) {
                 }
                 Locale.prototype.get = function (key) {
                     if (this.data[key])
-                        return this.data[key];
+                        return String(this.data[key]);
                     return key;
                 };
                 return Locale;
             }());
-            exports_3("default", Locale);
+            exports_2("default", Locale);
         }
     };
 });
-System.register("player/Player", [], function (exports_4, context_4) {
+System.register("player/Flash", [], function (exports_3, context_3) {
     "use strict";
-    var __moduleName = context_4 && context_4.id;
-    var Player;
+    var __moduleName = context_3 && context_3.id;
+    var Flash;
     return {
         setters: [],
+        execute: function () {
+            Flash = (function () {
+                function Flash(cfg, l) {
+                    if (!cfg)
+                        throw "Invalid config passed";
+                    if (!l)
+                        throw "Invalid locale passed";
+                    this.cfg = cfg;
+                    this.l = l;
+                }
+                Flash.prototype.getFileName = function () {
+                    var subtype = this.cfg.get('flashplayer.subtype');
+                    var ver = this.cfg.get('version');
+                    return "flash/VSQ" + subtype + "Player.swf?v=" + ver;
+                };
+                Flash.prototype.getParamRef = function (container, keys) {
+                    var key = keys.shift();
+                    var ret = container[key];
+                    if (ret && keys.length > 0)
+                        return this.getParamRef(ret, keys);
+                    return ret;
+                };
+                Flash.prototype.embed = function () {
+                    var fileName = this.getFileName();
+                    var paramStr = String(this.cfg.get('flashplayer.params', 'flashdefaults.params'));
+                    var param = this.getParamRef(window, paramStr.split('.'));
+                    swfobject.embedSWF(fileName, this.cfg.get('containerid'), this.cfg.get('width'), this.cfg.get('height'), '11.1.0', 'flash/swfobject/expressInstall.swf', this.cfg.getFlashConfig(), param, null, handleFlashLoad);
+                };
+                return Flash;
+            }());
+            exports_3("default", Flash);
+        }
+    };
+});
+System.register("player/Player", ["player/Flash"], function (exports_4, context_4) {
+    "use strict";
+    var __moduleName = context_4 && context_4.id;
+    var Flash_1, Player;
+    return {
+        setters: [
+            function (Flash_1_1) {
+                Flash_1 = Flash_1_1;
+            }
+        ],
         execute: function () {
             Player = (function () {
                 function Player(cfg, l) {
@@ -69,6 +115,23 @@ System.register("player/Player", [], function (exports_4, context_4) {
                     this.cfg = cfg;
                     this.l = l;
                 }
+                Player.prototype.supportsVideo = function () {
+                    var elem = document.createElement('video');
+                    return !!elem.canPlayType;
+                };
+                Player.prototype.initFlash = function () {
+                    var flash = new Flash_1["default"](this.cfg, this.l);
+                    flash.embed();
+                };
+                Player.prototype.init = function () {
+                    var elem = jQuery('#' + this.cfg.get('containerid'));
+                    if (elem.length == 0)
+                        return;
+                    if (this.supportsVideo()) {
+                        this.initFlash();
+                        return;
+                    }
+                };
                 return Player;
             }());
             exports_4("default", Player);
@@ -92,11 +155,16 @@ System.register("player/app", ["Locale", "player/Config", "player/Player"], func
             }
         ],
         execute: function () {
-            $(function () {
-                var cfg = new Config_1["default"](playerconfig);
-                var loc = new Locale_1["default"](l);
-                var player = new Player_1["default"](cfg, loc);
-            });
+            (function ($) {
+                var pcCopy = $.extend(true, {}, playerconfig);
+                var lCopy = $.extend(true, {}, l);
+                $(function () {
+                    var cfg = new Config_1["default"](pcCopy);
+                    var loc = new Locale_1["default"](lCopy);
+                    var player = new Player_1["default"](cfg, loc);
+                    player.init();
+                });
+            })(jQuery);
         }
     };
 });

@@ -57,6 +57,8 @@
   <link rel="StyleSheet" type="text/css" href="{$BASE_URI}contents/layoutcss?{$VERSION}" media="screen"/>
 
   {jscombine}
+  <script type="text/javascript" src="{$STATIC_URI}js/bluebird.min.js"></script>
+  <script type="text/javascript" src="{$STATIC_URI}js/system.js"></script>
   <script type="text/javascript" src="{$STATIC_URI}js/jquery.min.js"></script>
   <script type="text/javascript" src="{$STATIC_URI}js/jquery-ui-1.9.2.custom.min.js"></script>
   <script type="text/javascript" src="{$STATIC_URI}js/swfobject.full.js"></script>
@@ -78,6 +80,7 @@
   {if $needprogressbar}
     <script type="text/javascript" src="{$STATIC_URI}js/progressbar.min.js"></script>
   {/if}
+  <script type="text/javascript" src="{$BASE_URI}js/player/app.js"></script>
   <script type="text/javascript" src="{$STATIC_URI}js/tools{$VERSION}.js"></script>
   {/jscombine}
   <script type="text/javascript">
@@ -96,6 +99,10 @@
     tablet: {if $browser.tablet}true{else}false{/if},
     obsolete: {if $browser.obsolete}true{else}false{/if}
   {rdelim};
+  {if $playerconfig}
+  var playerconfig = {$playerconfig|@jsonescape};
+  SystemJS.import('player/app');
+  {/if}
   </script>
   <link rel="alternate" type="application/rss+xml" title="{#rss_news#|sprintf:$organization.name|escape:html}" href="{$language}/organizations/newsrss" />
 </head>

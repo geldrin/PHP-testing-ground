@@ -340,13 +340,18 @@ class Controller extends \Visitor\Controller {
       );
     }
 
+    $player = $recordingsModel->getPlayer();
+    $this->toSmarty['playercontainerid'] = 'playercontainer';
+    if ( $recordingsModel->row['mediatype'] == 'audio' )
+      $this->toSmarty['playercontainerid'] .= 'audio';
+
     $this->toSmarty['versions']      = $versions;
     $this->toSmarty['ipaddress']     = $this->getIPAddress();
     $this->toSmarty['member']        = $user;
     $this->toSmarty['sessionid']     = session_id();
     $this->toSmarty['needping']      = true;
     $this->toSmarty['needhistory']   = true;
-    $this->toSmarty['height']        = $recordingsModel->getPlayerHeight();
+    $this->toSmarty['height']        = $player->getHeight( false );
     $this->toSmarty['recording']     = $recordingsModel->addPresenters( true, $this->organization['id'] );
     $this->toSmarty['attachments']   = $recordingsModel->getAttachments();
     $this->toSmarty['recordingdownloads'] = $recordingsModel->getDownloadInfo(
@@ -362,14 +367,11 @@ class Controller extends \Visitor\Controller {
     if ( preg_match( '/^\d{1,2}h\d{1,2}m\d{1,2}s$|^\d+$/', $start ) )
       $this->toSmarty['startposition'] = $start;
 
-    $playerdata = $recordingsModel->getPlayerData( $this->toSmarty );
+    $this->toSmarty['playerwidth'] = 980;
+    $this->toSmarty['flashplayersubtype'] = '';
+    $this->toSmarty['flashplayerparams'] = 'flashdefaults.params';
+    $this->toSmarty['playerconfig']  =  $player->getGlobalConfig( $this->toSmarty );
 
-    $this->toSmarty['playerdata']    = array(
-      'flashplayer' => array(
-        'config' => $recordingsModel->flashData( $playerdata ),
-      ),
-      'flowplayer' => $recordingsModel->flowplayerData( $playerdata ),
-    );
     $this->toSmarty['author']        = $recordingsModel->getAuthor();
     $this->toSmarty['canrate']       = (
       ( $user['id'] or $this->organization['isanonymousratingenabled'] ) and
@@ -413,19 +415,19 @@ class Controller extends \Visitor\Controller {
 
     $this->toSmarty['activemobileversion'] = $mobileversion;
     $this->toSmarty['mobileversions'] = $mobileversions;
-    $this->toSmarty['mobilehttpurl'] = $recordingsModel->getMediaUrl(
+    $this->toSmarty['mobilehttpurl'] = $player->getMediaUrl(
       'mobilehttp',
       $mobileversion,
       $this->toSmarty
     );
-    $this->toSmarty['mobilertspurl'] = $recordingsModel->getMediaUrl(
+    $this->toSmarty['mobilertspurl'] = $player->getMediaUrl(
       'mobilertsp',
       $mobileversion,
       $this->toSmarty
     );
 
     if ( !empty( $versions['audio'] ) )
-      $this->toSmarty['audiofileurl']  = $recordingsModel->getMediaUrl(
+      $this->toSmarty['audiofileurl']  = $player->getMediaUrl(
         'direct',
         current( $versions['audio'] ),
         $this->toSmarty
@@ -776,6 +778,7 @@ class Controller extends \Visitor\Controller {
         $this->organization
       );
 
+    $this->toSmarty['playercontainerid'] = 'vsq_' . rand();
     $this->toSmarty['versions']      = $versions;
     $this->toSmarty['needauth']      = $needauth;
     $this->toSmarty['tokenvalid']    = $tokenValid;
@@ -806,7 +809,8 @@ class Controller extends \Visitor\Controller {
         \Springboard\Filesystem::filenameize( $recordingsModel->row['title'] )
       ;
 
-    $playerdata = $recordingsModel->getPlayerData( $this->toSmarty );
+    $player = $recordingsModel->getPlayer();
+    $playerdata = $player->getGlobalConfig( $this->toSmarty, true );
     unset(
       $this->toSmarty['logo']
     );
@@ -825,19 +829,19 @@ class Controller extends \Visitor\Controller {
     }
 
     $this->toSmarty['mobileversions'] = $mobileversions;
-    $this->toSmarty['mobilehttpurl'] = $recordingsModel->getMediaUrl(
+    $this->toSmarty['mobilehttpurl'] = $player->getMediaUrl(
       'mobilehttp',
       $mobileversion,
       $this->toSmarty
     );
-    $this->toSmarty['mobilertspurl'] = $recordingsModel->getMediaUrl(
+    $this->toSmarty['mobilertspurl'] = $player->getMediaUrl(
       'mobilertsp',
       $mobileversion,
       $this->toSmarty
     );
 
     if ( !empty( $versions['audio'] ) )
-      $this->toSmarty['audiofileurl']  = $recordingsModel->getMediaUrl(
+      $this->toSmarty['audiofileurl']  = $player->getMediaUrl(
         'direct',
         current( $versions['audio'] ),
         $this->toSmarty
@@ -848,10 +852,9 @@ class Controller extends \Visitor\Controller {
     else
       $this->toSmarty['playerwidth'] = '480';
 
-    $this->toSmarty['playerheight'] = $recordingsModel->getPlayerHeight( $fullscale );
-    $this->toSmarty['playercontainerid'] = 'vsq_' . rand();
-    $this->toSmarty['recording']   = $recordingsModel->row;
-    $this->toSmarty['playerdata']  = $this->getSignedPlayerParameters( $playerdata );
+    $this->toSmarty['playerheight'] = $player->getHeight( $fullscale );
+    $this->toSmarty['recording']    = $recordingsModel->row;
+    $this->toSmarty['playerconfig'] = $playerdata;
 
     $this->smartyoutput('Visitor/Recordings/Embed.tpl');
 

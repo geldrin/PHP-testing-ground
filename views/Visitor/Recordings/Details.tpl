@@ -1,10 +1,3 @@
-{if $recording.mediatype == 'audio' and isset( $playerdata.subtitle_files )}
-{assign var=playerheight value=140}
-{elseif $recording.mediatype == 'audio'}
-{assign var=playerheight value=60}
-{else}
-{assign var=playerheight value=550}
-{/if}
 {include file="Visitor/_header.tpl" title=$recording.title}
 <div id="pagetitle">
   <h1>{$recording.title|escape:html|mb_wordwrap:25}</h1>
@@ -46,7 +39,7 @@
     <br/>
   {else}
     {capture assign=playercontainerid}playercontainer{if $recording.mediatype == 'audio'}audio{/if}{/capture}
-    {include file="Visitor/Players/"|cat:$organization.playertype|cat:".tpl"}
+    <div id="{$playercontainerid}">{#recordings__noflash#}</div>
   {/if}
 </div>
 
