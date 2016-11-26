@@ -5,9 +5,9 @@ export default class Locale {
     this.data = data;
   }
 
-  get(key: string) {
+  get(key: string): string {
     if (this.data[key])
-      return this.data[key];
+      return String(this.data[key]);
 
     return key;
   }

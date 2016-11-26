@@ -1823,12 +1823,6 @@ class Livefeeds extends \Springboard\Model {
     $data['servers'] = $this->getMediaServers( $info );
     $data['streamingserver'] = $this->streamingserver;
 
-    $type = $info['organization']['playertype'];
-    $method = $type . 'Data';
-
-    if ( !method_exists( $this, $method ) )
-      throw new \Exception("Playertype $type not implemented");
-
-    return $this->$method( $data );
+    return $data;
   }
 }

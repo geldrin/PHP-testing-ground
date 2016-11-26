@@ -364,7 +364,12 @@ class Controller extends \Visitor\Controller {
 
     $playerdata = $recordingsModel->getPlayerData( $this->toSmarty );
 
-    $this->toSmarty['playerdata']    = $this->getSignedPlayerParameters( $playerdata );
+    $this->toSmarty['playerdata']    = array(
+      'flashplayer' => array(
+        'config' => $recordingsModel->flashData( $playerdata ),
+      ),
+      'flowplayer' => $recordingsModel->flowplayerData( $playerdata ),
+    );
     $this->toSmarty['author']        = $recordingsModel->getAuthor();
     $this->toSmarty['canrate']       = (
       ( $user['id'] or $this->organization['isanonymousratingenabled'] ) and
