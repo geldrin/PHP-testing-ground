@@ -31,41 +31,6 @@ class Recordings extends Player {
     return $ret;
   }
 
-  public function getStructuredFlashData( $info ) {
-    $flashdata = $this->transformFlashData(
-      $this->getFlashData( $info )
-    );
-
-    $flashdata['recommendatory'] = $flashdata['recommendatory']['string'];
-    return $flashdata;
-  }
-
-  protected function transformFlashData( $data ) {
-
-    $flashdata = array();
-    foreach( $data as $key => $value ) {
-
-      $key = explode('_', $key );
-      if ( is_array( $value ) )
-        $value = $this->transformFlashData( $value );
-
-      if ( count( $key ) == 1 )
-        $flashdata[ $key[0] ] = $value;
-      elseif ( count( $key ) == 2 ) {
-
-        if ( !isset( $flashdata[ $key[0] ] ) )
-          $flashdata[ $key[0] ] = array();
-
-        $flashdata[ $key[0] ][ $key[1] ] = $value;
-
-      } else
-        throw new \Exception('key with more then two underscores!');
-
-    }
-
-    return $flashdata;
-  }
-
   public function getWowzaUrl( $type, $needextraparam = false, $info = null ) {
     $url = $this->bootstrap->config['wowza'][ $type ];
 
@@ -552,6 +517,17 @@ class Recordings extends Player {
   }
 
   protected function getFlashConfig( $cfg ) {
+    $parameters = $this->getFlashData( $cfg );
+    $this->bootstrap->includeTemplatePlugin('jsonescape');
+    $parameters = $this->bootstrap->getSignedPlayerParameters( $parameters );
+    $config = smarty_modifier_jsonescape( $parameters, true );
+
+    $ret = $cfg['flashplayer'];
+    $ret['config'] = $config;
+    return $ret;
+  }
+
+  protected function getFlashData( $cfg ) {
     $l   = $this->bootstrap->getLocalization();
     $ret = array(
       'language'              => \Springboard\Language::get(),
@@ -750,13 +726,41 @@ class Recordings extends Player {
         $ret['timeline_seekbarVisible'] = true;
     }
 
-    $this->bootstrap->includeTemplatePlugin('jsonescape');
-    $parameters = $this->bootstrap->getSignedPlayerParameters( $ret );
-    $config = smarty_modifier_jsonescape( $parameters, true );
-
-    $ret = $cfg['flashplayer'];
-    $ret['config'] = $config;
     return $ret;
+  }
+
+  public function getStructuredFlashData( $info ) {
+    $flashdata = $this->transformFlashData(
+      $this->getFlashData( $info )
+    );
+
+    $flashdata['recommendatory'] = $flashdata['recommendatory']['string'];
+    return $flashdata;
+  }
+
+  protected function transformFlashData( $data ) {
+    $flashdata = array();
+    foreach( $data as $key => $value ) {
+
+      $key = explode('_', $key );
+      if ( is_array( $value ) )
+        $value = $this->transformFlashData( $value );
+
+      if ( count( $key ) == 1 )
+        $flashdata[ $key[0] ] = $value;
+      elseif ( count( $key ) == 2 ) {
+
+        if ( !isset( $flashdata[ $key[0] ] ) )
+          $flashdata[ $key[0] ] = array();
+
+        $flashdata[ $key[0] ][ $key[1] ] = $value;
+
+      } else
+        throw new \Exception('key with more then two underscores!');
+
+    }
+
+    return $flashdata;
   }
 
   // TODO

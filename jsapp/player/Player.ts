@@ -18,6 +18,11 @@ export default class Player {
     this.l = l;
   }
 
+  public log(...params: Object[]): void {
+    params.unshift("[Player]");
+    console.log.apply(console, params);
+  }
+
   private supportsVideo(): boolean {
     let elem = document.createElement('video');
     return !!elem.canPlayType;
@@ -30,10 +35,13 @@ export default class Player {
 
   public init(): void {
     let elem = jQuery('#' + this.cfg.get('containerid'));
-    if (elem.length == 0)
+    if (elem.length == 0) {
+      this.log("container not found");
       return;
+    }
 
-    if (this.supportsVideo()) {
+    if (!this.supportsVideo()) {
+      this.log("falling back to flash");
       this.initFlash();
       return;
     }

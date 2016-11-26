@@ -87,7 +87,8 @@ System.register("player/Flash", [], function (exports_3, context_3) {
                     var fileName = this.getFileName();
                     var paramStr = String(this.cfg.get('flashplayer.params', 'flashdefaults.params'));
                     var param = this.getParamRef(window, paramStr.split('.'));
-                    swfobject.embedSWF(fileName, this.cfg.get('containerid'), this.cfg.get('width'), this.cfg.get('height'), '11.1.0', 'flash/swfobject/expressInstall.swf', this.cfg.getFlashConfig(), param, null, handleFlashLoad);
+                    var config = JSON.parse(String(this.cfg.getFlashConfig()));
+                    swfobject.embedSWF(fileName, this.cfg.get('containerid'), this.cfg.get('width'), this.cfg.get('height'), '11.1.0', 'flash/swfobject/expressInstall.swf', config, param, null, handleFlashLoad);
                 };
                 return Flash;
             }());
@@ -115,6 +116,14 @@ System.register("player/Player", ["player/Flash"], function (exports_4, context_
                     this.cfg = cfg;
                     this.l = l;
                 }
+                Player.prototype.log = function () {
+                    var params = [];
+                    for (var _i = 0; _i < arguments.length; _i++) {
+                        params[_i] = arguments[_i];
+                    }
+                    params.unshift("[Player]");
+                    console.log.apply(console, params);
+                };
                 Player.prototype.supportsVideo = function () {
                     var elem = document.createElement('video');
                     return !!elem.canPlayType;
@@ -125,9 +134,12 @@ System.register("player/Player", ["player/Flash"], function (exports_4, context_
                 };
                 Player.prototype.init = function () {
                     var elem = jQuery('#' + this.cfg.get('containerid'));
-                    if (elem.length == 0)
+                    if (elem.length == 0) {
+                        this.log("container not found");
                         return;
+                    }
                     if (this.supportsVideo()) {
+                        this.log("falling back to flash");
                         this.initFlash();
                         return;
                     }

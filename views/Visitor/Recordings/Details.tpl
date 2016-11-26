@@ -6,7 +6,7 @@
 {if $recording.subtitle|stringempty}<h2>{$recording.subtitle|escape:html|mb_wordwrap:25}</h2>{else}<br/>{/if}
 <br/>
 
-<div id="player"{if !$browser.mobile} style="height: {$playerheight}px;"{/if}>
+<div id="player"{if !$browser.mobile} style="height: {$playerconfig.height}px;"{/if}>
 
   {if $browser.mobile}
     {if $browser.mobiledevice == 'iphone'}
@@ -38,8 +38,7 @@
     {/if}
     <br/>
   {else}
-    {capture assign=playercontainerid}playercontainer{if $recording.mediatype == 'audio'}audio{/if}{/capture}
-    <div id="{$playercontainerid}">{#recordings__noflash#}</div>
+    <div id="{$playerconfig.containerid}">{#recordings__noflash#}</div>
   {/if}
 </div>
 
@@ -102,7 +101,7 @@
     <iframe width="480" height="{$height}" src="{$BASE_URI}recordings/embed/{$recording.id}" frameborder="0" allowfullscreen="allowfullscreen"></iframe>
   {/capture}
   <label for="embedcode">{#recordings__embedcode#}:</label><br/>
-  <textarea id="embedcode" data-fullscaleheight="{$playerheight}" data-normalheight="{$height}">{$embed|trim|escape:html}</textarea>
+  <textarea id="embedcode" data-fullscaleheight="{$playerconfig.height}" data-normalheight="{$height}">{$embed|trim|escape:html}</textarea>
   <div class="settings">{#recordings__embedsettings#}:</div>
   <div class="settingrow">
     <label for="embedautoplay">{#recordings__embedautoplay#}:</label>

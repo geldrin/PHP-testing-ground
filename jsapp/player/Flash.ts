@@ -39,6 +39,7 @@ export default class Flash {
     let fileName = this.getFileName();
     let paramStr = String(this.cfg.get('flashplayer.params', 'flashdefaults.params'));
     let param = this.getParamRef(window, paramStr.split('.'));
+    let config = JSON.parse(String(this.cfg.getFlashConfig()));
 
     swfobject.embedSWF(
       fileName,
@@ -47,7 +48,7 @@ export default class Flash {
       this.cfg.get('height'),
       '11.1.0',
       'flash/swfobject/expressInstall.swf',
-      this.cfg.getFlashConfig(),
+      config,
       param,
       null,
       handleFlashLoad
