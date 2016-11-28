@@ -133,7 +133,7 @@ System.register("player/Player", ["player/Flash"], function (exports_4, context_
                     flash.embed();
                 };
                 Player.prototype.init = function () {
-                    this.container = $('#' + this.cfg.get('containerid'));
+                    this.container = jQuery('#' + this.cfg.get('containerid'));
                     if (this.container.length == 0) {
                         this.log("container not found");
                         return;

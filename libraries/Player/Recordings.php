@@ -765,7 +765,7 @@ class Recordings extends Player {
 
   // TODO
   protected function getFlowConfig( $cfg ) {
-    if ( !$cfg['hls'] )
+    if ( !$cfg['hds'] )
       return array();
 
     $ret = array(

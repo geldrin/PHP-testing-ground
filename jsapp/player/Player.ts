@@ -37,7 +37,7 @@ export default class Player {
   }
 
   public init(): void {
-    this.container = $('#' + this.cfg.get('containerid'));
+    this.container = jQuery('#' + this.cfg.get('containerid'));
     if (this.container.length == 0) {
       this.log("container not found");
       return;
