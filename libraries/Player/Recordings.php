@@ -765,7 +765,60 @@ class Recordings extends Player {
 
   // TODO
   protected function getFlowConfig( $cfg ) {
-    return $cfg;
+    if ( !$cfg['hls'] )
+      return array();
+
+    $ret = array(
+      // the video is loaded on demand, i.e. when the user starts playback with a click
+      'splash' => true,
+      // By default the embed feature loads the embed script and Flowplayer assets from our CDN. This can be customized in the embed configuration object if you prefer to host the files yourself.
+      'embed' => false,
+      // minden video wide-screen
+      'ratio' => 9/16,
+      'clip'  => array(
+        // Set a title for this clip. Displayed in a top bar when hovering over the player.
+        'title'   => $this->row['title'],
+        'sources' => array(),
+        'hlsjs'   => array(
+          // Whether manual HLS quality switching should be smooth - level change with begin of next segment - or instant. Setting this to false can cause a playback pause on switch.
+          'smoothSwitching'     => false,
+          // Set to true if you want non fatal hls.js playback errors to trigger Flowplayer errors. Useful for debugging streams and live stream maintenance.
+          'strict'              => true,
+          // do not die on fatal errors
+          'recoverMediaError'   => true,
+          'recoverNetworkError' => true,
+        ),
+      ),
+    );
+
+    $server = $cfg['streams']['hds']['master'];
+    $ret['clip']['sources'][] = array(
+      'type' => 'application/x-mpegurl',
+      'src'  => $server,
+    );
+    /*
+    {
+      'splash': true,
+      'ratio': 9/16,
+      'clip': {
+        'title': "This is my title",
+        'hlsjs': {
+          smoothSwitching: false,
+          strict: true,
+          recoverMediaError: true,
+          recoverNetworkError: true
+        },
+        sources: [
+          {
+            type: "",
+            src:  "https://stream.videosquare.eu/devvsq/_definst_/smil:253/253/253.smil/playlist.m3u8"
+          }
+        ]
+      },
+      embed: false
+    }
+    */
+    return $ret;
   }
 
   public function getContainerID() {
@@ -781,5 +834,12 @@ class Recordings extends Player {
 
   public function getHeight( $isembed ) {
     return $this->getPlayerHeight( !$isembed );
+  }
+
+  public function needFlowPlayer( $info ) {
+    if ( $info['organization']['ondemandplayertype'] === 'flash' )
+      return false;
+
+    return $this->isHDSEnabled( $info );
   }
 }

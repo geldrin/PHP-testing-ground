@@ -1,4 +1,4 @@
-/// <reference path="../jquery/jquery.d.ts" />
+/// <reference path="../defs/jquery/jquery.d.ts" />
 "use strict";
 
 export default class Config {

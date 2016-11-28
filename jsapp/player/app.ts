@@ -1,4 +1,4 @@
-/// <reference path="../jquery/jquery.d.ts" />
+/// <reference path="../defs/jquery/jquery.d.ts" />
 import Locale from "../Locale";
 import Config from "./Config";
 import Player from "./Player";

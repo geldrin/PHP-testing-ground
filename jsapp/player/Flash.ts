@@ -1,4 +1,4 @@
-/// <reference path="../jquery/jquery.d.ts" />
+/// <reference path="../defs/jquery/jquery.d.ts" />
 "use strict";
 import Config from "./Config";
 import Locale from "../Locale";

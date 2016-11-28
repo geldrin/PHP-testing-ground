@@ -1,15 +1,14 @@
-/// <reference path="../jquery/jquery.d.ts" />
+/// <reference path="../defs/jquery/jquery.d.ts" />
+/// <reference path="../defs/flowplayer/flowplayer.d.ts" />
 "use strict";
 import Config from "./Config";
 import Flash from "./Flash";
 import Locale from "../Locale";
 
-declare var flowplayer: Object;
-
 export default class Player {
   private cfg: Config;
   private l: Locale;
-  private container: jQuery;
+  private container: JQuery;
   private flowInstance: Object;
 
   constructor(cfg: Config, l: Locale) {
@@ -38,8 +37,8 @@ export default class Player {
   }
 
   public init(): void {
-    this.container = jQuery('#' + this.cfg.get('containerid'));
-    if (this.container == 0) {
+    this.container = $('#' + this.cfg.get('containerid'));
+    if (this.container.length == 0) {
       this.log("container not found");
       return;
     }
@@ -59,26 +58,10 @@ export default class Player {
   }
 
   private initFlow(): void {
-    this.flowInstance = flowplayer(this.container, {
-      'splash': true,
-      'ratio': 9/16,
-      'clip': {
-        'title': "This is my title",
-        'hlsjs': {
-          smoothSwitching: false,
-          strict: true,
-          recoverMediaError: true,
-          recoverNetworkError: true
-        },
-        sources: [
-          {
-            type: "application/x-mpegurl",
-            src:  "https://stream.videosquare.eu/devvsq/_definst_/smil:253/253/253.smil/playlist.m3u8"
-          }
-        ]
-      },
-      embed: false
-    }).on("ready", (e, api, video) => {
+    this.flowInstance = flowplayer(
+      this.container.get(0),
+      this.cfg.get('flowplayer')
+    ).on("ready", (e, api, video) => {
       this.log(e, api, video)
     });
     this.log(this.flowInstance);

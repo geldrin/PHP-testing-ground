@@ -133,9 +133,13 @@ System.register("player/Player", ["player/Flash"], function (exports_4, context_
                     flash.embed();
                 };
                 Player.prototype.init = function () {
-                    this.container = jQuery('#' + this.cfg.get('containerid'));
-                    if (this.container == 0) {
+                    this.container = $('#' + this.cfg.get('containerid'));
+                    if (this.container.length == 0) {
                         this.log("container not found");
+                        return;
+                    }
+                    if (!this.cfg.get('flowplayer')) {
+                        this.initFlash();
                         return;
                     }
                     if (!this.supportsVideo()) {
@@ -147,26 +151,7 @@ System.register("player/Player", ["player/Flash"], function (exports_4, context_
                 };
                 Player.prototype.initFlow = function () {
                     var _this = this;
-                    this.flowInstance = flowplayer(this.container, {
-                        'splash': true,
-                        'ratio': 9 / 16,
-                        'clip': {
-                            'title': "This is my title",
-                            'hlsjs': {
-                                smoothSwitching: false,
-                                strict: true,
-                                recoverMediaError: true,
-                                recoverNetworkError: true
-                            },
-                            sources: [
-                                {
-                                    type: "application/x-mpegurl",
-                                    src: "https://stream.videosquare.eu/devvsq/_definst_/smil:253/253/253.smil/playlist.m3u8"
-                                }
-                            ]
-                        },
-                        embed: false
-                    }).on("ready", function (e, api, video) {
+                    this.flowInstance = flowplayer(this.container.get(0), this.cfg.get('flowplayer')).on("ready", function (e, api, video) {
                         _this.log(e, api, video);
                     });
                     this.log(this.flowInstance);
