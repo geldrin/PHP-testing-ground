@@ -275,8 +275,19 @@ $config = Array(
     'submit' => true,
   ),
 
-  'playertype' => array(
-    'displayname' => 'Lejátszó típus preferencia',
+  'ondemandplayertype' => array(
+    'displayname' => 'On-demand lejátszó típus preferencia',
+    'postfix'     => '
+      <div class="smallinfo">
+        A fallback mindig a flash, amit itt van beállítva az lesz az első amit megpróbálunk. Ha flash akkor kizárólag flasht próbálunk.
+      </div>
+    ',
+    'type'        => 'select',
+    'values'      => $l->getLov('organizations_playertype'),
+  ),
+
+  'liveplayertype' => array(
+    'displayname' => 'Live lejátszó típus preferencia',
     'postfix'     => '
       <div class="smallinfo">
         A fallback mindig a flash, amit itt van beállítva az lesz az első amit megpróbálunk. Ha flash akkor kizárólag flasht próbálunk.
