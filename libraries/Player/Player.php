@@ -23,6 +23,7 @@ abstract class Player {
     $ret = array(
       'version'     => $this->bootstrap->config['version'],
       'containerid' => $this->getContainerID(),
+      'thumbnail'   => $cfg['thumbnail'],
       'width'       => $this->getWidth( $isembed ),
       'height'      => $this->getHeight( $isembed ),
       'flashplayer' => $this->getFlashConfig( $cfg ),

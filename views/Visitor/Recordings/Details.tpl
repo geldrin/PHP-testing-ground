@@ -38,12 +38,13 @@
     {/if}
     <br/>
   {else}
-    <div id="{$playerconfig.containerid}">{#recordings__noflash#}</div>
+    <div id="{$playerconfig.containerid}">
+      <img src="{$playerconfig.thumbnail|escape:html}" width="{$playerconfig.width}" height="{$playerconfig.height}"/>
+    </div>
   {/if}
 </div>
 
 <div class="title recording">
-
   {if $recording.approvalstatus != 'approved'}
     <center><a href="{$language}/recordings/modifysharing/{$recording.id}">{#recordings__notpublished_warning#}</a></center>
     <br/>

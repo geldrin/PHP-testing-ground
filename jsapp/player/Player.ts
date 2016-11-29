@@ -9,7 +9,7 @@ export default class Player {
   private cfg: Config;
   private l: Locale;
   private container: JQuery;
-  private flowInstance: Object;
+  private flowInstance: Flowplayer;
 
   constructor(cfg: Config, l: Locale) {
     if (!cfg)
@@ -61,8 +61,9 @@ export default class Player {
     this.flowInstance = flowplayer(
       this.container.get(0),
       this.cfg.get('flowplayer')
-    ).on("ready", (e, api, video) => {
-      this.log(e, api, video)
+    );
+    this.flowInstance.on('ready', (e, api, video) => {
+      this.log('ready', e, api, video)
     });
     this.log(this.flowInstance);
   }

@@ -151,8 +151,9 @@ System.register("player/Player", ["player/Flash"], function (exports_4, context_
                 };
                 Player.prototype.initFlow = function () {
                     var _this = this;
-                    this.flowInstance = flowplayer(this.container.get(0), this.cfg.get('flowplayer')).on("ready", function (e, api, video) {
-                        _this.log(e, api, video);
+                    this.flowInstance = flowplayer(this.container.get(0), this.cfg.get('flowplayer'));
+                    this.flowInstance.on('ready', function (e, api, video) {
+                        _this.log('ready', e, api, video);
                     });
                     this.log(this.flowInstance);
                 };

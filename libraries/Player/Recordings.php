@@ -791,10 +791,11 @@ class Recordings extends Player {
       ),
     );
 
-    $server = $cfg['streams']['hds']['master'];
+    $server = reset( $cfg['servers'] );
+    $stream = $cfg['streams']['hds']['master'];
     $ret['clip']['sources'][] = array(
       'type' => 'application/x-mpegurl',
-      'src'  => $server,
+      'src'  => $server . $stream,
     );
     /*
     {

@@ -38,6 +38,9 @@
   {if $needselect2}
     <link rel="StyleSheet" type="text/css" href="{$STATIC_URI}js/select2/select2.min.css" media="screen"/>
   {/if}
+  {if $playerconfig}
+    <link rel="StyleSheet" type="text/css" href="{$BASE_URI}js/flowplayer/skin/minimalist.css" media="screen"/>
+  {/if}
   <link rel="StyleSheet" type="text/css" href="{$STATIC_URI}css/style.css?{$VERSION}" media="screen"/>
   {if $browser.mobile}
     <meta name="viewport" content="width=device-width, maximum-scale=1.0"/>
@@ -79,7 +82,6 @@
     <script type="text/javascript" src="{$STATIC_URI}js/progressbar.min.js"></script>
   {/if}
   {if $playerconfig}
-  {* TODO /*}
   <script type="text/javascript" src="{$STATIC_URI}js/bluebird.min.js"></script>
   <script type="text/javascript" src="{$STATIC_URI}js/system.js"></script>
   <script type="text/javascript" src="{$BASE_URI}js/flowplayer/flowplayer.min.js"></script>
