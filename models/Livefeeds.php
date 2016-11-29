@@ -2,31 +2,18 @@
 namespace Model;
 
 class Livefeeds extends \Springboard\Model {
-  protected $streamingserver;
   private $transcoderCache = array();
 
-  private static $hdsFeatures = array(
-    'features_live_hds',
-    'features_live_hdss',
-  );
-  private static $hlsFeatures = array(
-    'features_live_hlss',
-    'features_live_hls',
-  );
-
   public function delete( $id, $magic_quotes_gpc = 0 ) {
-
     $this->db->execute("
       DELETE FROM livefeed_streams
       WHERE livefeedid = " . $this->db->qstr( $id ) . "
     ");
 
     return parent::delete( $id, $magic_quotes_gpc );
-
   }
 
   public function getFeedsFromChannelTree( $channeltree ) {
-
     $channelids = $this->getIdsFromTree( $channeltree );
     $channelids = array_unique( $channelids );
     $ret        = array();
@@ -43,11 +30,9 @@ class Livefeeds extends \Springboard\Model {
       $ret[ $result['id'] ] = $result;
 
     return $ret;
-
   }
 
   protected function getIdsFromTree( $channeltree ) {
-
     $channelids = array();
     foreach( $channeltree as $channel ) {
 
@@ -58,11 +43,9 @@ class Livefeeds extends \Springboard\Model {
     }
 
     return $channelids;
-
   }
 
   public function getAssocLivefeeds() {
-
     return $this->db->getAssoc("
       SELECT
         lf.channelid,
@@ -87,11 +70,9 @@ class Livefeeds extends \Springboard\Model {
           c.endtimestamp   >= NOW()
         )
     ");
-
   }
 
   public function getAssocUserLivefeeds( $userid ) {
-
     return $this->db->getAssoc("
       SELECT
         channelid,
@@ -105,11 +86,9 @@ class Livefeeds extends \Springboard\Model {
         userid = " . $this->db->qstr( $userid ) . " AND
         (status IS NULL OR status <> 'markedfordeletion')
     ");
-
   }
 
   protected function getBrowserCompatibleWhere( $prefix = '', $browser ) {
-
     if ( !$browser or !$browser['mobile'] )
       return " AND {$prefix}isdesktopcompatible <> '0' ";
 
@@ -120,33 +99,12 @@ class Livefeeds extends \Springboard\Model {
       return " AND {$prefix}isandroidcompatible <> '0' ";
     elseif ( $browser['mobiledevice'] == 'iphone' )
       return " AND {$prefix}isioscompatible <> '0' ";
-
-  }
-
-  public function isAdaptive( $organization ) {
-    if ( $organization['isadaptivestreamingdisabled'] )
-      return false;
-
-    $this->ensureObjectLoaded();
-    if ( !$this->row['livestreamgroupid'] )
-      return false;
-
-    $groupid = $this->db->qstr( $this->row['livestreamgroupid'] );
-    return (bool)$this->db->getOne("
-      SELECT lg.isadaptive
-      FROM livestream_groups AS lg
-      WHERE lg.id = $groupid
-      LIMIT 1
-    ");
   }
 
   public function getStreams( $feedid = null ) {
-
     if ( !$feedid ) {
-
       $this->ensureID();
       $feedid = $this->id;
-
     }
 
     return $this->db->getAssoc("
@@ -169,382 +127,6 @@ class Livefeeds extends \Springboard\Model {
         (status IS NULL OR status <> 'markedfordeletion')
       ORDER BY weight, id
     ");
-
-  }
-
-  public function getStreamsForBrowser( $browser, $defaultKeycode = null ) {
-
-    $streams         = $this->getStreams();
-    $narrowedstreams = array();
-    $defaultstream   = null;
-
-    if ( empty( $streams ) )
-      return false;
-
-    if (
-         $browser['mobile'] and
-         $browser['mobiledevice'] != 'iphone' and
-         $browser['mobiledevice'] != 'android'
-       )
-      $unknown = true;
-    else
-      $unknown = false;
-
-    foreach( $streams as $stream ) {
-
-      if (
-           ( !$browser['mobile'] and $stream['isdesktopcompatible'] ) or
-           ( $browser['mobiledevice'] == 'iphone' and $stream['isioscompatible'] ) or
-           ( $browser['mobiledevice'] == 'android' and $stream['isandroidcompatible'] ) or
-           $unknown
-         )
-        $narrowedstreams[ $stream['id'] ] = $stream;
-
-    }
-
-    // nem talaltunk streamet ami raillik a browserre igy minden stream lehetseges, a default az elso lesz
-    if ( empty( $narrowedstreams ) ) {
-
-      foreach( $streams as $stream )
-        $narrowedstreams[ $stream['id'] ] = $stream;
-
-    }
-
-    if ( !$defaultKeycode ) {
-
-      $defaultstream = reset( $narrowedstreams );
-      if ( $browser['mobile'] and $browser['tablet'] ) {
-
-        foreach( $narrowedstreams as $stream ) {
-
-          if (
-               (
-                 ( $browser['mobiledevice'] == 'iphone' and $stream['isioscompatible'] ) or
-                 ( $browser['mobiledevice'] == 'android' and $stream['isandroidcompatible'] )
-               )
-             ) {
-
-            $defaultstream = $stream;
-            break;
-
-          }
-
-        }
-
-      }
-
-    } elseif ( $defaultKeycode and !isset( $narrowedstreams[ $defaultKeycode ] ) )
-      return false;
-    else
-      $defaultstream = $narrowedstreams[ $defaultKeycode ];
-
-    if ( // ha nem mobil vagy nem ismert mobil device, de a stream desktop kompat
-         ( !$browser['mobile'] and $defaultstream['isdesktopcompatible'] ) or
-         ( $defaultstream['isdesktopcompatible'] and $unknown )
-       )
-      $streamtype = 'desktop';
-    elseif ( // ha mobil es android, vagy mobil es ismeretlen de a stream android kompat
-            (
-              $browser['mobile'] and
-              $browser['mobiledevice'] == 'android' and
-              $defaultstream['isandroidcompatible']
-            ) or
-            ( $defaultstream['isandroidcompatible'] and $unknown )
-           )
-      $streamtype = 'android';
-    elseif ( // ha mobil es ios, vagy mobil es ismeretlen de a stream ios kompat
-            (
-              $browser['mobile'] and
-              $browser['mobiledevice'] == 'iphone' and
-              $defaultstream['isioscompatible']
-            ) or
-            ( $defaultstream['isioscompatible'] and $unknown )
-           )
-      $streamtype = 'ios';
-    elseif ( $defaultstream['isdesktopcompatible'] ) // peldaul ha ismert mobile device de nem kompatibilis a stream akkor ez a fallback sorrend
-      $streamtype = 'desktop';
-    elseif ( $defaultstream['isandroidcompatible'] )
-      $streamtype = 'android';
-    elseif ( $defaultstream['isioscompatible'] )
-      $streamtype = 'ios';
-    else
-      throw new \Exception(
-        "Unhandled stream type: mobile device: " . $browser['mobiledevice'] .
-        " defaultstream: " . var_export( $defaultstream, true )
-      );
-
-    return array(
-      'streams'       => $narrowedstreams,
-      'defaultstream' => $defaultstream,
-      'streamtype'    => $streamtype,
-    );
-
-  }
-
-  private function getStreamURL( $prefix, $stream, $info ) {
-    if ( $this->isHDSEnabled( $prefix, $info ) ) {
-      $authorizecode = $this->getAuthorizeSessionid( $info );
-      $smilurl       = 'smil:%s.smil/manifest.f4m%s';
-      $filename      = $this->id;
-
-      if ( $prefix )
-        $filename .= '_' . $prefix;
-
-      return sprintf( $smilurl, $filename, $authorizecode );
-    } else
-      return $stream[ $prefix . 'keycode'];
-  }
-
-  private function getStreamInfo( $info ) {
-    $ret = array(
-      'master'  => array(),
-      'content' => array(),
-    );
-
-    foreach( $info['streams']['streams'] as $stream ) {
-      $val = array(
-        'url'        => $this->getStreamURL('', $stream, $info ),
-        'label'      => $stream['qualitytag'],
-        'parameters' => array(
-          'livefeedstreamid' => $stream['id'],
-          'viewsessionid'    => $this->generateViewSessionid( $stream['id'] ),
-        ),
-      );
-      $ret['master'][] = $val;
-
-      unset( $val['parameters'] );
-      $val['url'] = $this->getStreamURL('content', $stream, $info );
-      $ret['content'][] = $val;
-    }
-
-    return $ret;
-  }
-
-  public function flashData( $info ) {
-    $l = $this->bootstrap->getLocalization();
-    $flashdata = array(
-      'language'               => \Springboard\Language::get(),
-      'api_url'                => $info['apiurl'],
-      'user_needPing'          => false,
-      'feed_id'                => $this->id,
-      'recording_title'        => $this->row['name'],
-      'recording_type'         => 'live',
-      'recording_autoQuality'  => false, // nincs stream resolution adat; off
-      'timeline_autoPlay'      => true,
-      'user_checkWatching'     => (bool)$info['presenceCheck']['enabled'],
-      'user_checkWatchingTimeInterval' => $info['presenceCheck']['interval'],
-      'user_checkWatchingConfirmationTimeout' => $info['presenceCheck']['timeout'],
-      'media_streams'          => array(),
-      'media_servers'          => $info['servers']['master'],
-      'media_streamLabels'     => array(),
-      'media_streamParameters' => array(),
-      'media_secondyStreams'   => array(),
-      'media_secondaryServers' => $info['servers']['content'],
-      'content_streamLabels'   => array(),
-    );
-
-    switch( $info['streamingserver']['type'] ) {
-      case 'wowza':
-        $flashdata['media_serverType'] = 0;
-        break;
-      case 'nginx':
-        $flashdata['media_serverType'] = 1;
-        break;
-      default:
-        throw new \Exception(
-          "Unhandled streaming server type: " . $info['streamingserver']['type']
-        );
-    }
-
-    if ( $info['adaptive'] )
-      $flashdata['recording_autoQuality'] = true;
-
-    if ( $info['needauth'] ) {
-      $flashdata['authorization_need']      = true;
-      $flashdata['authorization_loginForm'] = true;
-    }
-
-    if ( $info['nopermission'] ) {
-      $flashdata['authorization_need']      = true;
-      $flashdata['authorization_loginForm'] = false;
-      $flashdata['authorization_message']   = $l('recordings', 'nopermission');
-    }
-    if ( !$info['tokenvalid'] ) {
-      $flashdata['authorization_need']      = true;
-      $flashdata['authorization_loginForm'] = false;
-      $flashdata['authorization_message']   = $l('recordings', 'token_invalid');
-    }
-
-    if ( $info['flashauthcallback'] )
-      $flashdata['authorization_callback'] = $info['flashauthcallback'];
-
-    foreach( $info['streams']['master'] as $stream ) {
-      $flashdata['media_streams'][]          = $stream['url'];
-      $flashdata['media_streamLabels'][]     = $stream['label'];
-      $flashdata['media_streamParameters'][] = $stream['parameters'];
-    }
-    foreach( $info['streams']['content'] as $stream ) {
-      $flashdata['media_secondaryStreams'][] = $stream['url'];
-      $flashdata['content_streamLabels'][]   = $stream['label'];
-    }
-
-    $flashdata['user_pingParameters'] = $info['extraParameters'];
-
-    if ( isset( $info['tokenauth'] ) and $info['tokenauth'] ) {
-      $flashdata['user_needPing'] = true;
-      $flashdata['user_pingParameters']['token'] = $info['token'];
-      $flashdata['user_token'] = $info['token'];
-    }
-
-    if ( $info['member'] and $info['member']['id'] ) {
-      $flashdata['user_id']          = $info['member']['id'];
-      $flashdata['user_needPing']    = true;
-      $flashdata['user_pingSeconds'] = $this->bootstrap->config['sessionpingseconds'];
-    }
-
-    $flashdata = $flashdata + $this->bootstrap->config['flashplayer_extraconfig'];
-
-    if ( !$this->row['slideonright'] )
-      $flashdata['layout_videoOrientation'] = 'right';
-
-    if ( $this->row['introrecordingid'] ) {
-      $flashdata['livePlaceholder_servers']      = $info['intro']['servers'];
-      $flashdata['livePlaceholder_streams']      = array();
-      $flashdata['livePlaceholder_streamLabels'] = array();
-
-      foreach( $info['intro']['streams'] as $stream ) {
-        $flashdata['livePlaceholder_streamLabels'][] = $stream['label'];
-        $flashdata['livePlaceholder_streams'][] = $stream['url'];
-      }
-
-      $flashdata['intro_servers']      = $flashdata['livePlaceholder_servers'];
-      $flashdata['intro_streams']      = $flashdata['livePlaceholder_streams'];
-      $flashdata['intro_streamLabels'] = $flashdata['livePlaceholder_streamLabels'];
-    }
-
-    return $flashdata;
-  }
-
-  public function isHDSEnabled( $prefix = '', $info ) {
-    return
-      $info['organization']['livehdsenabled'] and
-      in_array( $this->row[ $prefix . 'smilstatus'], array('onstorage', 'regenerate') )
-    ;
-  }
-
-  public function getMediaServers( $info ) {
-    $this->ensureObjectLoaded();
-
-    $ret = array(
-      'master'  => array(),
-      'content' => array(),
-    );
-
-    $authorizecode = $this->getAuthorizeSessionid( $info );
-    $prefix        = $this->row['issecurestreamingforced']? 'sec': '';
-    $hds           = $this->isHDSEnabled( '', $info );
-
-    $prefix = $this->row['issecurestreamingforced']? 'sec': '';
-    if ( $hds ) {
-      $ret['master'][] =
-        $this->bootstrap->config['wowza'][ $prefix . 'livesmilurl' ]
-      ;
-    } else {
-
-      if ( $this->row['issecurestreamingforced'] )
-        $ret['master'] = array(
-          rtrim( $this->bootstrap->config['wowza']['seclivertmpsurl'], '/' ) . $authorizecode,
-          rtrim( $this->bootstrap->config['wowza']['seclivertmpeurl'], '/' ) . $authorizecode,
-          rtrim( $this->bootstrap->config['wowza']['secliveurl'], '/' ) . $authorizecode,
-        );
-      else
-        $ret['master'] = array(
-          rtrim( $this->bootstrap->config['wowza']['livertmpurl'], '/' ) . $authorizecode,
-          rtrim( $this->bootstrap->config['wowza']['liveurl'], '/' ) . $authorizecode,
-        );
-
-    }
-
-    if ( !$this->streamingserver ) {
-      $streamingserverModel  = $this->bootstrap->getModel('streamingservers');
-      $this->streamingserver = $streamingserverModel->getServerByClientIP(
-        $info['ipaddress'],
-        'live'
-      );
-    }
-
-    $streamingserver = $this->streamingserver;
-    if ( empty( $streamingserver ) )
-      throw new \Exception("No streaming server found, not even the default");
-
-    foreach( $ret['master'] as $key => $url )
-      $ret['master'][ $key ] = sprintf( $url, $streamingserver['server'] );
-
-    $contenthds = $this->isHDSEnabled('content', $info );
-    if ( $hds == $contenthds ) {
-
-      $ret['content'] = $ret['master'];
-      return $ret;
-
-    } elseif ( $contenthds )
-      $ret['content'][] =
-        rtrim( $this->bootstrap->config['wowza'][ $prefix . 'livesmilurl' ], '/' ) . $authorizecode
-      ;
-    else {
-
-      if ( $this->row['issecurestreamingforced'] )
-        $ret['content'] = array(
-          rtrim( $this->bootstrap->config['wowza']['seclivertmpsurl'], '/' ) . $authorizecode,
-          rtrim( $this->bootstrap->config['wowza']['seclivertmpeurl'], '/' ) . $authorizecode,
-          rtrim( $this->bootstrap->config['wowza']['secliveurl'], '/' ) . $authorizecode,
-        );
-      else
-        $ret['content'] = array(
-          rtrim( $this->bootstrap->config['wowza']['livertmpurl'], '/' ) . $authorizecode,
-          rtrim( $this->bootstrap->config['wowza']['liveurl'], '/' ) . $authorizecode,
-        );
-
-    }
-
-    foreach( $ret['content'] as $key => $url )
-      $ret['content'][ $key ] = sprintf( $url, $streamingserver['server'] );
-
-    return $ret;
-  }
-
-  public function getIntroData( $info ) {
-    $this->ensureObjectLoaded();
-
-    $ret = array(
-      'servers' => array(),
-      'streams' => array(),
-    );
-
-    if ( !$this->row['introrecordingid'] )
-      return $ret;
-
-    $recordingsModel = $this->bootstrap->getModel('recordings');
-    $recordingsModel->select( $this->row['introrecordingid'] );
-    $versions = $recordingsModel->getVersions();
-
-    if ( empty( $versions['master']['desktop'] ) )
-      throw new \Exception("The placeholder does not have desktopcompatible recordings!");
-
-    $recordingsModel->row['issecurestreamingforced'] = $this->row['issecurestreamingforced'];
-    $ret['servers'] = $recordingsModel->getMediaServers(
-      $info, $this->isHDSEnabled( '', $info )
-    );
-
-    foreach( $versions['master']['desktop'] as $version ) {
-      $ret['streams'][] = array(
-        'label' => $version['qualitytag'],
-        'url'   => $recordingsModel->getMediaUrl(
-          'default', $version, $info
-        ),
-      );
-    }
-
-    return $ret;
   }
 
   public function deleteStreams() {
@@ -558,7 +140,6 @@ class Livefeeds extends \Springboard\Model {
   }
 
   public function getVCRReclinkID() {
-
     $this->ensureObjectLoaded();
     if ( $this->row['status'] === 'markedfordeletion' )
       return null;
@@ -589,75 +170,7 @@ class Livefeeds extends \Springboard\Model {
     throw new \Exception("this functionality is now invalid");
   }
 
-  protected function getAuthorizeSessionid( &$info ) {
-
-    if (
-         !isset( $info['organization'] ) or
-         !isset( $info['sessionid'] ) or
-         !$info['sessionid']
-       )
-      return '';
-
-    $ret = sprintf('?sessionid=%s_%s_%s',
-      $info['organization']['id'],
-      $info['sessionid'],
-      $this->id
-    );
-
-    if ( isset( $info['tokenauth'] ) and $info['tokenauth'] )
-      $ret .= '_' . $info['token'];
-
-    if ( isset( $info['member'] ) and $info['member']['id'] )
-      $ret .= '&uid=' . $info['member']['id'];
-
-    return $ret;
-
-  }
-
-  public function getMediaUrl( $type, $streamcode, $info ) {
-
-    $url = $this->bootstrap->config['wowza'][ $type . 'url' ] . $streamcode;
-    $sessionid = $info['sessionid'];
-    if ( isset( $info['member'] ) )
-      $user = $info['member'];
-    else
-      $user = null;
-
-    switch( $type ) {
-
-      case 'livehttp':
-        //http://stream.videosquare.eu/devvsqlive/123456/playlist.m3u8
-        $url .=
-          '/playlist.m3u8' .
-          $this->getAuthorizeSessionid( $info )
-        ;
-
-        break;
-
-      case 'livertsp':
-        //rtsp://stream.videosquare.eu/devvsqlive/123456
-        $url .= $this->getAuthorizeSessionid( $info );
-
-        break;
-
-    }
-
-    if ( !$this->streamingserver ) {
-
-      $streamingserverModel  = $this->bootstrap->getModel('streamingservers');
-      $this->streamingserver = $streamingserverModel->getServerByClientIP(
-        $info['ipaddress'],
-        'live'
-      );
-
-    }
-
-    return sprintf( $url, $this->streamingserver['server'] );
-
-  }
-
   public function isAccessibleByInvitation( $user, $organization ) {
-
     if ( !$user['id'] )
       return false;
 
@@ -672,7 +185,6 @@ class Livefeeds extends \Springboard\Model {
         organizationid   = '" . $organization['id'] . "'
       LIMIT 1
     ");
-
   }
 
   public function isAccessible( $user, $organization, $secure = null, $token = null ) {
@@ -1107,15 +619,6 @@ class Livefeeds extends \Springboard\Model {
 
   }
 
-  public function generateViewSessionid( $extra ) {
-    $this->ensureObjectLoaded();
-    $ts        = microtime(true);
-    $user      = $this->bootstrap->getSession('user');
-    $sessionid = session_id();
-
-    return md5( $ts . $sessionid . $this->id . $extra );
-  }
-
   public function incrementViewCounters() {
     $this->ensureID();
 
@@ -1181,50 +684,6 @@ class Livefeeds extends \Springboard\Model {
       LIMIT 1
     ");
 
-  }
-
-  public function getStreamingServers( $info ) {
-    $where = array();
-    if ( $info['organization']['livehdsenabled'] ) {
-      $sql = array();
-      foreach( self::$hdsFeatures as $field )
-        $sql[] = "$field = '1'";
-
-      $where[] = "(" . implode(" OR ", $sql ) . ")";
-    }
-
-    if ( $info['organization']['livehlsenabledandroid'] ) {
-      $sql = array();
-      foreach( self::$hlsFeatures as $field )
-        $sql[] = "$field = '1'";
-
-      $where[] = "(" . implode(" OR ", $sql ) . ")";
-    }
-
-    if ( !empty( $where ) )
-      $where = " AND " . implode(" AND ", $where );
-    else
-      $where = "";
-
-    return $this->db->getArray("
-      SELECT *
-      FROM cdn_streaming_servers
-      WHERE
-        disabled     = '0' AND
-        serverstatus = 'ok' AND
-        servicetype IN('live', 'live|ondemand')
-        $where
-      ORDER BY location, shortname
-    ");
-  }
-
-  public function forceMediaServer( $id ) {
-    return $this->streamingserver = $this->db->getRow("
-      SELECT *
-      FROM cdn_streaming_servers
-      WHERE id = '$id'
-      LIMIT 1
-    ");
   }
 
   public function searchStatistics( $user, $term, $organizationid, $start, $limit ) {
@@ -1763,66 +1222,4 @@ class Livefeeds extends \Springboard\Model {
     return $emails;
   }
 
-  public function getPlayerData( $info ) {
-    $this->bootstrap->includeTemplatePlugin('indexphoto');
-
-    $user = $this->bootstrap->getSession('user');
-
-    // minden ido intervallum masodpercbe
-    $data = array(
-      'member'        => $info['member'],
-      'tokenauth'     => false,
-      'needauth'      => false,
-      'nopermission'  => false,
-      'tokenvalid'    => true,
-      'logo'          => array(),
-      'adaptive'      => $this->isAdaptive( $info['organization'] ),
-      'streams'       => $this->getStreamInfo( $info ),
-      'intro'         => $this->getIntroData( $info ),
-      'presenceCheck' => array(
-        'enabled'  => (bool)$user['ispresencecheckforced'],
-        'interval' => $info['organization']['presencechecktimeinterval'],
-        'timeout'  => $info['organization']['presencecheckconfirmationtime'],
-      ),
-      'viewSession' => array(
-        'timeout' => $info['organization']['viewsessiontimeoutminutes'] * 60,
-      ),
-      'extraParameters' => array(
-        'livefeedid' => $this->id,
-      ),
-      'thumbnail' => \smarty_modifier_indexphoto(
-        $this->row, 'player', $this->bootstrap->staticuri
-      ),
-      'flashauthcallback' => '',
-    );
-
-    if ( $this->bootstrap->config['forcesecureapiurl'] )
-      $apiurl = 'https://' . $info['organization']['domain'] . '/';
-    else
-      $apiurl = $this->bootstrap->baseuri;
-
-    $data['apiurl'] = $apiurl . 'jsonapi';
-
-    if ( isset( $info['logo'] ) )
-      $data['logo'] = $info['logo'];
-
-    if ( isset( $info['needauth'] ) )
-      $data['needauth'] = $info['needauth'];
-
-    if ( isset( $info['nopermission'] ) )
-      $data['nopermission'] = $info['nopermission'];
-
-    if ( isset( $info['tokenvalid'] ) )
-      $data['tokenvalid'] = $info['tokenvalid'];
-
-    if ( isset( $info['tokenauth'] ) and $info['tokenauth'] ) {
-      $data['tokenauth'] = true;
-      $data['token'] = $info['token'];
-    }
-
-    $data['servers'] = $this->getMediaServers( $info );
-    $data['streamingserver'] = $this->streamingserver;
-
-    return $data;
-  }
 }

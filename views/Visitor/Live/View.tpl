@@ -17,8 +17,11 @@
 {/if}
 <div id="player">
 {if $streamtype == 'desktop' and !$browser.mobile}
-  {include file="Visitor/Players/"|cat:$organization.playertype|cat:".tpl" skipcontainer=true playercontainerid="playercontainer"}
-  <div id="playercontainer" style="width: {$playerwidth}px; height: {$playerheight}px">{#recordings__noflash#}</div>
+  <div id="playercontainer" style="width: {$playerwidth}px; height: {$playerheight}px">
+  </div>
+  <div id="{$playerconfig.containerid}">
+      <img src="{$playerconfig.thumbnail|escape:html}" width="{$playerconfig.width}" height="{$playerconfig.height}"/>
+    </div>
 {elseif $needauth}
   {include file=Visitor/mobile_logintoview.tpl}
 {else}

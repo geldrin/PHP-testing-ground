@@ -180,7 +180,7 @@ class Recordings extends Player {
     elseif ( $fullscale and $this->row['mastermediatype'] == 'audio' )
       return '60';
     elseif ( $fullscale )
-      return '530';
+      return '550';
 
     if ( $this->row['mastermediatype'] == 'audio' and $this->model->hasSubtitle() )
       $height = '120';
