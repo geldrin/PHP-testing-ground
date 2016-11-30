@@ -123,6 +123,7 @@ class Controller extends \Visitor\Controller {
     );
     $streamingserverid = $this->application->getNumericParameter('streamingserverid');
 
+    $player    = $feedModel->getPlayer();
     $l         = $this->bootstrap->getLocalization();
     $user      = $this->bootstrap->getSession('user');
     $anonuser  = $this->bootstrap->getSession('anonuser');
@@ -183,16 +184,23 @@ class Controller extends \Visitor\Controller {
        )
       $feedModel->forceMediaServer( $streamingserverid );
 
-    $streams = $feedModel->getStreamsForBrowser( $browserinfo, $streamid );
+    $streams = $player->getStreamsForBrowser( $browserinfo, $streamid );
 
     if ( !$streams )
       $this->redirectToController('contents', 'http404');
+
+    $this->toSmarty['title'] = sprintf(
+      $l('live', 'view_title'),
+      $channelModel->row['title'],
+      $feedModel->row['name']
+    );
 
     $feedModel->incrementViewCounters();
 
     $currentstream = $streams['defaultstream'];
     $streamtype    = $streams['streamtype'];
     $info          = array(
+      'title'        => $this->toSmarty['title'],
       'organization' => $this->organization,
       'sessionid'    => session_id(),
       'ipaddress'    => $this->getIPAddress(),
@@ -200,21 +208,27 @@ class Controller extends \Visitor\Controller {
       'cookiedomain' => $this->organization['cookiedomain'],
       'streams'      => $streams,
       'member'       => $user,
-      'checkwatchingtimeinterval' => $this->organization['presencechecktimeinterval'],
-      'checkwatchingconfirmationtimeout' => $this->organization['presencecheckconfirmationtime'],
-      'needauth' => $needauth,
+      'needauth'     => $needauth,
       'nopermission' => $nopermission,
+      'playercontainerid' => 'playercontainer',
+      'checkwatchingtimeinterval' =>
+        $this->organization['presencechecktimeinterval']
+      ,
+      'checkwatchingconfirmationtimeout' =>
+        $this->organization['presencecheckconfirmationtime']
+      ,
+      'flashplayersubtype' => '',
+      'flashplayerparams'  => 'flashdefaults.params',
     );
     $info['tokenauth'] = $token and $tokenValid;
     $info['token'] = $token;
 
-    $this->toSmarty['playerwidth']  = 980;
-    $this->toSmarty['playerheight'] = 550;
     $this->toSmarty['anonuser']     = $anonuser;
 
     if ( $feedModel->row['moderationtype'] == 'nochat' )
       $displaychat = false;
 
+    $isembed = false;
     if ( $chromeless ) {
 
       $info['logo'] = array(
@@ -244,24 +258,18 @@ class Controller extends \Visitor\Controller {
 
         $urlparams['fullplayer'] = 'false';
         $fullplayer = false;
-        $this->toSmarty['playerwidth']  = 480;
-        $this->toSmarty['playerheight'] = 385;
+        $isembed = true;
 
       }
-
     }
 
-    $playerdata = $feedModel->getPlayerData( $info );
-
-    $this->toSmarty['playerdata']   =
-      $this->getSignedPlayerParameters( $playerdata )
-    ;
-    $this->toSmarty['livehttpurl'] = $feedModel->getMediaUrl(
+    $this->toSmarty['playerconfig'] = $player->getGlobalConfig( $info, $isembed );
+    $this->toSmarty['livehttpurl'] = $player->getMediaUrl(
       'livehttp',
       $currentstream['keycode'],
       $info
     );
-    $this->toSmarty['livertspurl'] = $feedModel->getMediaUrl(
+    $this->toSmarty['livertspurl'] = $player->getMediaUrl(
       'livertsp',
       $currentstream['keycode'],
       $info
@@ -310,12 +318,6 @@ class Controller extends \Visitor\Controller {
     $this->toSmarty['currentstream'] = $currentstream;
     $this->toSmarty['liveurl']       = $this->bootstrap->config['wowza']['liveurl'];
     $this->toSmarty['chatpolltime']  = $this->bootstrap->config['chatpolltimems'];
-
-    $this->toSmarty['title'] = sprintf(
-      $l('live', 'view_title'),
-      $channelModel->row['title'],
-      $feedModel->row['name']
-    );
 
     if ( !empty( $urlparams ) )
       $this->toSmarty['urlparams'] = '?' . http_build_query( $urlparams );

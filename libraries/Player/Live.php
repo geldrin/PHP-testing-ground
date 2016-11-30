@@ -19,8 +19,8 @@ class Live extends Player {
     if ( !$this->row['livestreamgroupid'] )
       return false;
 
-    $groupid = $this->db->qstr( $this->row['livestreamgroupid'] );
-    return (bool)$this->db->getOne("
+    $groupid = $this->model->db->qstr( $this->row['livestreamgroupid'] );
+    return (bool)$this->model->db->getOne("
       SELECT lg.isadaptive
       FROM livestream_groups AS lg
       WHERE lg.id = $groupid
@@ -29,7 +29,7 @@ class Live extends Player {
   }
 
   public function getStreamsForBrowser( $browser, $defaultKeycode = null ) {
-    $streams         = $this->getStreams();
+    $streams         = $this->model->getStreams();
     $narrowedstreams = array();
     $defaultstream   = null;
 
@@ -139,7 +139,7 @@ class Live extends Player {
     if ( $this->isHDSEnabled( $prefix, $info ) ) {
       $authorizecode = $this->getAuthorizeSessionid( $info );
       $smilurl       = 'smil:%s.smil/manifest.f4m%s';
-      $filename      = $this->id;
+      $filename      = $this->model->id;
 
       if ( $prefix )
         $filename .= '_' . $prefix;
@@ -264,7 +264,7 @@ class Live extends Player {
     $user      = $this->bootstrap->getSession('user');
     $sessionid = session_id();
 
-    return md5( $ts . $sessionid . $this->id . $extra );
+    return md5( $ts . $sessionid . $this->model->id . $extra );
   }
 
   private function getIntroData( $info ) {
@@ -311,7 +311,7 @@ class Live extends Player {
     $ret = sprintf('?sessionid=%s_%s_%s',
       $info['organization']['id'],
       $info['sessionid'],
-      $this->id
+      $this->model->id
     );
 
     if ( isset( $info['tokenauth'] ) and $info['tokenauth'] )
@@ -323,7 +323,7 @@ class Live extends Player {
     return $ret;
   }
 
-  private function getMediaUrl( $type, $streamcode, $info ) {
+  public function getMediaUrl( $type, $streamcode, $info ) {
     $url = $this->bootstrap->config['wowza'][ $type . 'url' ] . $streamcode;
     $sessionid = $info['sessionid'];
     if ( isset( $info['member'] ) )
@@ -412,21 +412,10 @@ class Live extends Player {
   }
 
   public function getPlayerHeight( $fullscale = false ) {
-    if ( $fullscale and $this->row['mastermediatype'] == 'audio' and $this->hasSubtitle() )
-      return '140';
-    elseif ( $fullscale and $this->row['mastermediatype'] == 'audio' )
-      return '60';
-    elseif ( $fullscale )
-      return '550';
+    if ( !$fullscale )
+      return 385;
 
-    if ( $this->row['mastermediatype'] == 'audio' and $this->model->hasSubtitle() )
-      $height = '120';
-    elseif ( $this->row['mastermediatype'] == 'audio' )
-      $height = '60';
-    else
-      $height = '385';
-
-    return $height;
+    return 550;
   }
 
   protected function getConfig( $info, $isembed ) {
@@ -454,12 +443,16 @@ class Live extends Player {
         'timeout' => $info['organization']['viewsessiontimeoutminutes'] * 60,
       ),
       'extraParameters' => array(
-        'livefeedid' => $this->id,
+        'livefeedid' => $this->model->id,
       ),
       'thumbnail' => \smarty_modifier_indexphoto(
         $this->row, 'player', $this->bootstrap->staticuri
       ),
-      'flashauthcallback' => '',
+      'flashplayer' => array(
+        'subtype'      => $info['flashplayersubtype'],
+        'params'       => $info['flashplayerparams'],
+        'authcallback' => '',
+      ),
     );
 
     if ( $this->bootstrap->config['forcesecureapiurl'] )
@@ -509,7 +502,7 @@ class Live extends Player {
       'language'               => \Springboard\Language::get(),
       'api_url'                => $cfg['apiurl'],
       'user_needPing'          => false,
-      'feed_id'                => $this->id,
+      'feed_id'                => $this->model->id,
       'recording_title'        => $this->row['name'],
       'recording_type'         => 'live',
       'recording_autoQuality'  => false, // nincs stream resolution adat; off
@@ -558,8 +551,8 @@ class Live extends Player {
       $ret['authorization_message']   = $l('recordings', 'token_invalid');
     }
 
-    if ( $cfg['flashauthcallback'] )
-      $ret['authorization_callback'] = $cfg['flashauthcallback'];
+    if ( $cfg['flashplayer']['authcallback'] )
+      $ret['authorization_callback'] = $cfg['flashplayer']['authcallback'];
 
     foreach( $cfg['streams']['master'] as $stream ) {
       $ret['media_streams'][]          = $stream['url'];
@@ -644,9 +637,6 @@ class Live extends Player {
 
   // TODO
   protected function getFlowConfig( $cfg ) {
-    if ( !$cfg['hds'] )
-      return array();
-
     $ret = array(
       // the video is loaded on demand, i.e. when the user starts playback with a click
       'splash' => true,
@@ -656,7 +646,7 @@ class Live extends Player {
       'ratio' => 9/16,
       'clip'  => array(
         // Set a title for this clip. Displayed in a top bar when hovering over the player.
-        'title'   => $this->row['title'],
+        'title'   => $this->info['title'],
         'sources' => array(),
         'hlsjs'   => array(
           // Whether manual HLS quality switching should be smooth - level change with begin of next segment - or instant. Setting this to false can cause a playback pause on switch.
@@ -670,34 +660,12 @@ class Live extends Player {
       ),
     );
 
-    $server = reset( $cfg['servers'] );
-    $stream = $cfg['streams']['hds']['master'];
+    $server = reset( $cfg['servers']['master'] );
+    $stream = reset( $cfg['streams']['master'] );
     $ret['clip']['sources'][] = array(
       'type' => 'application/x-mpegurl',
-      'src'  => $server . $stream,
+      'src'  => $server . $stream['url'],
     );
-    /*
-    {
-      'splash': true,
-      'ratio': 9/16,
-      'clip': {
-        'title': "This is my title",
-        'hlsjs': {
-          smoothSwitching: false,
-          strict: true,
-          recoverMediaError: true,
-          recoverNetworkError: true
-        },
-        sources: [
-          {
-            type: "",
-            src:  "https://stream.videosquare.eu/devvsq/_definst_/smil:253/253/253.smil/playlist.m3u8"
-          }
-        ]
-      },
-      embed: false
-    }
-    */
     return $ret;
   }
 
@@ -720,6 +688,6 @@ class Live extends Player {
     if ( $info['organization']['ondemandplayertype'] === 'flash' )
       return false;
 
-    return $this->isHDSEnabled( $info );
+    return $this->isHDSEnabled( '', $info );
   }
 }

@@ -1222,4 +1222,8 @@ class Livefeeds extends \Springboard\Model {
     return $emails;
   }
 
+  public function getPlayer() {
+    $player = new \Player\Live( $this->bootstrap, $this );
+    return $player;
+  }
 }

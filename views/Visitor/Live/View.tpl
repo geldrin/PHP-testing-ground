@@ -17,9 +17,7 @@
 {/if}
 <div id="player">
 {if $streamtype == 'desktop' and !$browser.mobile}
-  <div id="playercontainer" style="width: {$playerwidth}px; height: {$playerheight}px">
-  </div>
-  <div id="{$playerconfig.containerid}">
+  <div id="{$playerconfig.containerid}" style="width: {$playerconfig.width}px; height: {$playerconfig.height}px">
       <img src="{$playerconfig.thumbnail|escape:html}" width="{$playerconfig.width}" height="{$playerconfig.height}"/>
     </div>
 {elseif $needauth}
