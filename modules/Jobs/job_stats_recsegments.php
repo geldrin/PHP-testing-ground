@@ -35,6 +35,13 @@ if ( is_file( $app->config['datapath'] . 'jobs/' . $myjobid . '.stop' ) or is_fi
 // Runover check. Is this process already running? If yes, report and exit
 if ( !runOverControl($myjobid) ) exit;
 
+// ## CONFIG
+
+// # Debug mode
+$isdebug = false;
+// This will filter to specific recording
+//$debug_recording = 1252;
+
 $vsq_epoch = strtotime("2012-11-01 00:00:00");
 
 $stats_config = array(
@@ -44,7 +51,7 @@ $stats_config = array(
     'lastprocessedtime' => $vsq_epoch           // statistics records processed until
 );
 
-// --- END OF CONFIG ---
+// ## END OF CONFIG ---
 
 clearstatcache();
 
@@ -65,8 +72,8 @@ if ( file_exists($status_filename) ) {
     // Is readable?
     if ( !is_readable($status_filename) ) {
 
-        $debug->log($jconf['log_dir'], $myjobid . ".log", "[WARN] Stats status file: " . $status_filename . " does not exist. Restarting from VSQ EPOCH (" . date("Y-m-d H:i:s", $vsq_epoch) . ").", $sendmail = true);
-        $stats_config['lastprocessedtime'] = $vsq_epoch;
+        $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Stats status file: " . $status_filename . " not readable.", $sendmail = true);
+		exit;
 
     } else {
 
@@ -89,117 +96,150 @@ if ( file_exists($status_filename) ) {
             }
             $stats_config['lastprocessedtime'] = $timestamp;
             $debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Last processed timestamp from status file (" . $stats_config['label'] . "): " . $line_split[1], $sendmail = false);
+			if ( $isdebug ) $debug->log($jconf['log_dir'], $myjobid . ".log", "[DEBUG] Recording segment length (stats resolution): " . $stats_config['segmentlengthsecs'] . "sec", $sendmail = false);
+							
         }
 
         fclose($fh);
     }
 
+} else {
+	$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Status file not found: " . $status_filename . ". Exiting...", $sendmail = true);
+	exit;
 }
 
 // Processing intervals
 $interval_start = $stats_config['lastprocessedtime'] + 1;
+// !!!
+//$interval_start = strtotime("2016-12-01 00:00:00");
 $interval_end = time();
 
 $stats_config['lastprocessedtime'] = $interval_end;
+// !!!
+//$interval_end = strtotime("2016-12-02 23:59:59");
 
 $processing_started = time();
 
-$stats = queryViewStatsOnDemandForInterval($interval_start, $interval_end);
-if ( $stats === false ) exit;
+unset($stats);
+if ( isset($debug_mode) and isset($debug_recording) and ( $debug_recording > 0 ) ) {
+	$stats = queryViewStatsOnDemandForInterval($interval_start, $interval_end, $debug_recording);
+} else {
+	$stats = queryViewStatsOnDemandForInterval($interval_start, $interval_end);
+}
+if ( $isdebug ) $debug->log($jconf['log_dir'], $myjobid . ".log", "[DEBUG] Processing for interval " . date("Y-m-d H:i:s", $interval_start) . " - " . date("Y-m-d H:i:s", $interval_end), $sendmail = false);
+
 
 $records_processed = 0;
 $records_committed = 0;
+unset($stats_p);
 $stats_p = array();
+if ( $stats !== false ) {
 
-// Process interval
-while ( !$stats->EOF ) {
+	// Process interval
+	while ( !$stats->EOF ) {
 
-    $stat = $stats->fields;
+		$stat = $stats->fields;
 
-    $recid = $stat["recordingid"];
-    
-    // Calculate segment
-    if ( !isset($stats_p[$recid]) ) {
-        $stats_p[$recid] = array();
-    }
+		$recid = $stat["recordingid"];
+		
+		// Calculate segment
+		if ( !isset($stats_p[$recid]) ) {
+			$stats_p[$recid] = array();
+		}
 
-    // Index recording segments between positionfrom - positionuntil
-    $segment_from = floor($stat['positionfrom'] / $stats_config['segmentlengthsecs']);
-    $segment_to = floor(min($stat['positionuntil'], $stat['recordinglength']) / $stats_config['segmentlengthsecs']);
+		// Index recording segments between positionfrom - positionuntil
+		$segment_from = floor($stat['positionfrom'] / $stats_config['segmentlengthsecs']);
+		$segment_to = floor(min($stat['positionuntil'], $stat['recordinglength']) / $stats_config['segmentlengthsecs']);
+		
+		if ( $isdebug ) $debug->log($jconf['log_dir'], $myjobid . ".log", "[DEBUG] (" . $records_processed . ") Stats id# " . $stat['id'] . " record recid#" . $recid . ": " . $stat['positionfrom'] . "-" . $stat['positionuntil'] . "sec (segments: " . $segment_from . "-" . $segment_to . ")", false);
 
-    for ( $i = $segment_from; $i <= $segment_to; $i++) {
-        
-        if ( !isset($stats_p[$recid][$i]) ) {
-            $stats_p[$recid][$i] = 1;
-        } else {
-            $stats_p[$recid][$i] += 1;
-        }
+		for ( $i = $segment_from; $i <= $segment_to; $i++) {
+			
+			if ( !isset($stats_p[$recid][$i]) ) {
+				$stats_p[$recid][$i] = 1;
+			} else {
+				$stats_p[$recid][$i] += 1;
+			}
 
-    }
+		}
 
-    $records_processed++;
-    $stats->MoveNext();
-} // End of interval processing while
+		$records_processed++;
+		$stats->MoveNext();
+	} // End of interval processing while
 
-// Debug information for logging
-$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Player statistics records to be processed: " . $records_processed, false);
+	// Debug information for logging
+	$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Player statistics records to be processed: " . $records_processed, false);
 
-// Insert records to DB
-foreach ($stats_p as $recid => $recsegments) {
+	// Insert records to DB
+	foreach ($stats_p as $recid => $recsegments) {
 
-    // Get existing recsegment records from DB
-    unset($stats_db);
-    $stats_db = queryStatsRecordingsSegments($recid);
+		// Debug
+		if ( $isdebug ) $debug->log($jconf['log_dir'], $myjobid . ".log", "[DEBUG] Recording id#" . $recid . " is being processed.", false);
 
-    // SQL query insert data: assemble into an array
-    $rec_updated = 0;
-    $sql_insert = array();         
-    foreach ($recsegments as $recsegment => $viewcounter) {
-      
-        // Find this recording and user in existing DB records              
-        $insert_id = searchForStatsRecordInArray($stats_db, $recsegment);
-        array_push($sql_insert, "(" . (($insert_id === false)?"NULL":$insert_id) . "," . $recid . "," . $recsegment . "," . $viewcounter . ")");
-        
-        $rec_updated++;
-    }
+		// Get existing recsegment records from DB
+		unset($stats_db);
+		$stats_db = queryStatsRecordingsSegments($recid);
 
-    // INSERT/UPDATE recsegment DB record
-    if ( !empty($sql_insert) ) {
-        $sql_insert_string = implode(",", $sql_insert);
-        
-        $query = "
-            INSERT INTO
-                statistics_recordings_segments (id, recordingid, recordingsegment, viewcounter)
-            VALUES " . $sql_insert_string . "
-            ON DUPLICATE KEY UPDATE
-                viewcounter = viewcounter + VALUES(viewcounter)";
- 
-        try {
-            $rs = $db->Execute($query);
-        } catch (exception $err) {
-            $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] SQL query failed. Processing IS BROKEN! SQL error:\n" . trim($query), true);
-            exit;
-        }
-    
-        // Debug
-        $debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Recording id#" . $recid . " recsegments inserted or updated: " . $rec_updated, false);
-    
-        $records_committed += count($sql_insert);
-    }
-    
+		// SQL query insert data: assemble into an array
+		$rec_updated = 0;
+		$sql_insert = array();
+		$debug_tmp = "";
+		foreach ($recsegments as $recsegment => $viewcounter) {
+			
+			$debug_tmp .= $recsegment . ";" . $viewcounter . "\n";
+		  
+			// Find this recording and user in existing DB records              
+			$insert_id = searchForStatsRecordInArray($stats_db, $recsegment);
+			array_push($sql_insert, "(" . (($insert_id === false)?"NULL":$insert_id) . "," . $recid . "," . $recsegment . "," . $viewcounter . ")");
+			
+			$rec_updated++;
+		}
+
+		// Debug
+		if ( $isdebug ) $debug->log($jconf['log_dir'], $myjobid . ".log", "[DEBUG] Recording stats to be updated:\n" . $debug_tmp, false);
+		if ( $isdebug ) $debug->log($jconf['log_dir'], $myjobid . ".log", "[DEBUG] SQL insert array: id, recid, recsegment, viewcounter\n" . print_r($sql_insert, true), false);
+		
+		// INSERT/UPDATE recsegment DB record
+		if ( !empty($sql_insert) ) {
+			$sql_insert_string = implode(",", $sql_insert);
+			
+			$query = "
+				INSERT INTO
+					statistics_recordings_segments (id, recordingid, recordingsegment, viewcounter)
+				VALUES " . $sql_insert_string . "
+				ON DUPLICATE KEY UPDATE
+					viewcounter = viewcounter + VALUES(viewcounter)";
+	 
+			try {
+				$rs = $db->Execute($query);
+			} catch (exception $err) {
+				$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] SQL query failed. Processing IS BROKEN! SQL error:\n" . trim($query), true);
+				exit;
+			}
+		
+			// Debug
+			$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Recording id#" . $recid . " recsegments inserted or updated: " . $rec_updated, false);
+		
+			$records_committed += count($sql_insert);
+		}
+		
+	}
+
+	// Watchdog
+	$app->watchdog();
+	
+	// Time of processing
+	$processing_time = time() - $processing_started;
+
+	// Debug information for logging
+	$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Player statistics records processed: " . $records_processed, $sendmail = false);
+
+	// Log number of committed records to DB
+	$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] " . $stats_config['label'] . " processing finished in " . secs2hms($processing_time) . ".", $sendmail = false);
+
+} else {
+	if ( $isdebug) $debug->log($jconf['log_dir'], $myjobid . ".log", "[DEBUG] No stats records were found. Exiting.", $sendmail = false);
 }
-
-// Watchdog
-$app->watchdog();
-
-// Time of processing
-$processing_time = time() - $processing_started;
-
-// Debug information for logging
-$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Player statistics records processed: " . $records_processed, $sendmail = false);
-
-// Log number of committed records to DB
-$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] " . $stats_config['label'] . " processing finished in " . secs2hms($processing_time) . ".", $sendmail = false);
 
 // Write last processed record times to disk (for recovery)
 $content = "lastprocessedtime_" . $stats_config['label'] . "=" . date("Y-m-d H:i:s", $stats_config['lastprocessedtime']) . "\n";
@@ -218,11 +258,14 @@ $app->watchdog();
 
 exit;
 
-function queryViewStatsOnDemandForInterval($start_interval, $end_interval) {
+function queryViewStatsOnDemandForInterval($start_interval, $end_interval, $debug_recording = null) {
 global $db, $debug, $myjobid, $app, $jconf;
 
   $start_interval_datetime = date("Y-m-d H:i:s", $start_interval);
   $end_interval_datetime = date("Y-m-d H:i:s", $end_interval);
+  
+  $recording_sql = "";
+  if ( !empty($debug_recording) and ( $debug_recording > 0) ) $recording_sql = " AND vso.recordingid = " . $debug_recording;
 
   $query = "
     SELECT
@@ -244,7 +287,8 @@ global $db, $debug, $myjobid, $app, $jconf;
     WHERE
         vso.timestamp >= '" . $start_interval_datetime . "' AND
         vso.timestamp < '" . $end_interval_datetime . "' AND
-        ( vso.positionuntil - vso.positionfrom ) > 0";
+        ( vso.positionuntil - vso.positionfrom ) > 0" .
+		$recording_sql;
         
   try {
     $stats = $db->Execute($query);
