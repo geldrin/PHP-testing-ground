@@ -322,6 +322,8 @@ a.submitbutton:hover,
 }
 
 .smallinfo {
+  display: table-cell;
+  vertical-align: top;
   background-image: url(images/help.png);
   background-repeat: no-repeat;
   background-position: 0px 10px;
