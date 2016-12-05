@@ -15,18 +15,28 @@ class Details extends \Visitor\Paging {
 
   public function init() {
 
+    $id                 = $this->application->getNumericParameter('id');
     $l                  = $this->bootstrap->getLocalization();
     $user               = $this->bootstrap->getSession('user');
     $this->foreachelse  = '';
     $this->channelModel = $this->bootstrap->getModel('channels');
     $this->channelModel->selectEventWithType(
-      $this->application->getNumericParameter('id'),
+      $id,
       $user,
       $this->controller->organization['id']
     );
 
-    if ( !$this->channelModel->row )
-      $this->controller->redirect('');
+    if ( !$this->channelModel->row and $id ) {
+      $this->channelModel->select( $id );
+      $url = '';
+      if ( $this->channelModel->row )
+        $url =
+          'channels/details/' . $id . ',' .
+          \Springboard\Filesystem::filenameize( $this->channelModel->row['title'] )
+        ;
+
+      $this->controller->redirect( $url );
+    }
 
     $this->title = sprintf(
       $l('live','details_title'),
