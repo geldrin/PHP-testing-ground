@@ -121,41 +121,46 @@ for ( $statsidx = 0; $statsidx < count($stats_config); $statsidx++ ) {
   // Load last processed record time
   $status_filename = $jconf['temp_dir'] . $myjobid . "." . $stats_config[$statsidx]['label'] . ".status";
 
-  // Status file: read last processed record time
-  if ( is_readable($status_filename) ) {
-      
-      $fh = fopen($status_filename, "r");
+    // ## Status file: read last processed record time
+	// Does it exist?
+	if ( !file_exists($status_filename) ) {
+		$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Stats status file: " . $status_filename . " not found.", $sendmail = true);
+		exit;
+	}
 
-      while( !feof($fh) ) {
-
-        // Read one line from descriptor file
-        $line = fgets($fh);
-        $line = trim($line);
-
-        // Skip empty lines
-        if ( empty($line) ) continue;
-
-        $line_split = explode("=", $line);
-        $key = explode("_", $line_split[0]);
-
-        $idx = recursive_array_search($key[1], $stats_config);
-        $timestamp = strtotime($line_split[1]);
-        if ( $timestamp === false ) {
-          $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Stats status file: not a datetime value ('". $line . "')", $sendmail = true);
-          exit;
-        }
+	// Is it readable/writeable?
+    if ( ( !is_readable($status_filename) ) or ( !is_writeable($status_filename) ) ) {
+		$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Stats status file: " . $status_filename . " not readable/writeable.", $sendmail = true);
+		exit;
+	}
         
-        $stats_config[$idx]['lastprocessedtime'] = $timestamp;
-        $debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Last processed timestamp from status file (" . $stats_config[$idx]['label'] . "): " . $line_split[1], $sendmail = false);
-      }
+	$fh = fopen($status_filename, "r");
 
-      fclose($fh);
-      
-  } else {
-      $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Stats status file: " . $status_filename . ". Exiting...", $sendmail = true);
-      $stats_config[$statsidx]['lastprocessedtime'] = $vsq_epoch;
-      exit;
-  }
+	while( !feof($fh) ) {
+
+		// Read one line from descriptor file
+		$line = fgets($fh);
+		$line = trim($line);
+
+		// Skip empty lines
+		if ( empty($line) ) continue;
+
+		$line_split = explode("=", $line);
+		$key = explode("_", $line_split[0]);
+
+		$idx = recursive_array_search($key[1], $stats_config);
+		$timestamp = strtotime($line_split[1]);
+		if ( $timestamp === false ) {
+			$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Stats status file: not a datetime value ('". $line . "')", $sendmail = true);
+			exit;
+		}
+
+		$stats_config[$idx]['lastprocessedtime'] = $timestamp;
+		$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Last processed timestamp from status file (" . $stats_config[$idx]['label'] . "): " . $line_split[1], $sendmail = false);
+		
+	}
+
+	fclose($fh);
 
   // Get last processed record to determine last processing time
 /*  $ltime = getLastStatsRecordFrom($stats_config[$statsidx]['sqltablename']);
@@ -227,7 +232,7 @@ for ( $statsidx = 0; $statsidx < count($stats_config); $statsidx++ ) {
       $stats = queryStatsForInterval($start_interval, $end_interval, $wowza_app);
       if ( $stats === false ) {
 //        $debug->log($jconf['log_dir'], $myjobid . ".log", "[WARN] Unexpected. No record(s) to process. Interval: " . date("Y-m-d H:i:s", $start_interval) . " - " . date("Y-m-d H:i:s", $end_interval) . "\n\nDEBUG:\n\ngetFirstWowzaRecordFromInterval(): " . $kaka2 . "\n\nqueryStatsForInterval(): " . $kaka, $sendmail = false);
-        $debug->log($jconf['log_dir'], $myjobid . ".log", "[WARN] Unexpected. No record(s) to process. Interval: " . date("Y-m-d H:i:s", $start_interval) . " - " . date("Y-m-d H:i:s", $end_interval), $sendmail = false);
+        $debug->log($jconf['log_dir'], $myjobid . ".log", "[WARN] No record(s) to process. Interval: " . date("Y-m-d H:i:s", $start_interval) . " - " . date("Y-m-d H:i:s", $end_interval), $sendmail = false);
         // Update last processed interval. Next active record will be found in next round.
         $stats_config[$statsidx]['lastprocessedtime'] = $end_interval;
         $start_interval = $start_interval + $stats_config[$statsidx]['interval'];

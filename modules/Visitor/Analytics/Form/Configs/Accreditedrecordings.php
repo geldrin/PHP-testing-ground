@@ -28,8 +28,8 @@ $config = array(
     ),
   ),
 
-  'dateto' => array(
-    'displayname' => $l('analytics', 'dateto') . '<span class="required">*</span>',
+  'dateuntil' => array(
+    'displayname' => $l('analytics', 'dateuntil') . '<span class="required">*</span>',
     'type'        => 'inputText',
     'html'        => 'class="inputtext inputbackground clearonclick datetimepicker margin"',
     'value'       => date('Y-m-t 23:59'),

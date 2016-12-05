@@ -3,7 +3,7 @@ namespace Model;
 
 class Recording_view_progress extends \Springboard\Model {
   public function getAccreditedDataCursor( $organization, $filter ) {
-    $organizationid = $this->qstr( $organization['id'] );
+    $organizationid = $this->db->qstr( $organization['id'] );
     $where = $this->assembleAccreditedDataWhere( $organization, $filter );
     $needpercent = $organization['elearningcoursecriteria'];
 
@@ -78,6 +78,12 @@ class Recording_view_progress extends \Springboard\Model {
         ) $inequality $needpercent
       ";
     }
+
+    if ( isset( $filter['datefrom'] ) and $filter['datefrom'] )
+      $where[] = "rvp.timestamp >= " . $this->db->qstr( $filter['datefrom'] );
+
+    if ( isset( $filter['dateuntil'] ) and $filter['dateuntil'] )
+      $where[] = "rvp.timestamp <= " . $this->db->qstr( $filter['dateuntil'] );
 
     if ( empty( $where ) )
       return '';
