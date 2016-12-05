@@ -519,6 +519,11 @@ class Live extends Player {
       'content_streamLabels'   => array(),
     );
 
+    if ( $ret['language'] != 'en' )
+      $ret['locale'] =
+        $this->bootstrap->staticuri . 'js/flash_locale_' . $ret['language'] . '.json'
+      ;
+
     switch( $cfg['streamingserver']['type'] ) {
       case 'wowza':
         $ret['media_serverType'] = 0;
@@ -601,40 +606,6 @@ class Live extends Player {
     return $ret;
   }
 
-  public function getStructuredFlashData( $info ) {
-    $flashdata = $this->transformFlashData(
-      $this->getFlashData( $info )
-    );
-
-    $flashdata['recommendatory'] = $flashdata['recommendatory']['string'];
-    return $flashdata;
-  }
-
-  protected function transformFlashData( $data ) {
-    $flashdata = array();
-    foreach( $data as $key => $value ) {
-
-      $key = explode('_', $key );
-      if ( is_array( $value ) )
-        $value = $this->transformFlashData( $value );
-
-      if ( count( $key ) == 1 )
-        $flashdata[ $key[0] ] = $value;
-      elseif ( count( $key ) == 2 ) {
-
-        if ( !isset( $flashdata[ $key[0] ] ) )
-          $flashdata[ $key[0] ] = array();
-
-        $flashdata[ $key[0] ][ $key[1] ] = $value;
-
-      } else
-        throw new \Exception('key with more then two underscores!');
-
-    }
-
-    return $flashdata;
-  }
-
   // TODO
   protected function getFlowConfig( $cfg ) {
     $ret = array(
@@ -684,8 +655,8 @@ class Live extends Player {
     return $this->getPlayerHeight( !$isembed );
   }
 
-  public function needFlowPlayer( $info ) {
-    if ( $info['organization']['ondemandplayertype'] === 'flash' )
+  protected function needFlowPlayer( $info ) {
+    if ( $info['organization']['liveplayertype'] === 'flash' )
       return false;
 
     return $this->isHDSEnabled( '', $info );

@@ -547,6 +547,11 @@ class Recordings extends Player {
       'timeline_autoPlay' => $cfg['autoplay'],
     );
 
+    if ( $ret['language'] != 'en' )
+      $ret['locale'] =
+        $this->bootstrap->staticuri . 'js/flash_locale_' . $ret['language'] . '.json'
+      ;
+
     if ( $this->row['mastermediatype'] == 'audio' )
       $ret['recording_isAudio'] = true;
 
@@ -613,12 +618,6 @@ class Recordings extends Player {
     // default bal oldalon van a video, csak akkor allitsuk be ha kell
     if ( !$this->row['slideonright'] )
       $ret['layout_videoOrientation'] = 'right';
-
-    if ( $ret['language'] != 'en' )
-      $ret['locale'] =
-        $this->bootstrap->staticuri .
-        'js/flash_locale_' . $ret['language'] . '.json'
-      ;
 
     if ( !empty( $ret['streams']['desktop'] ) ) {
       $ret['media_streams']          = array();
@@ -729,40 +728,6 @@ class Recordings extends Player {
     return $ret;
   }
 
-  public function getStructuredFlashData( $info ) {
-    $flashdata = $this->transformFlashData(
-      $this->getFlashData( $info )
-    );
-
-    $flashdata['recommendatory'] = $flashdata['recommendatory']['string'];
-    return $flashdata;
-  }
-
-  protected function transformFlashData( $data ) {
-    $flashdata = array();
-    foreach( $data as $key => $value ) {
-
-      $key = explode('_', $key );
-      if ( is_array( $value ) )
-        $value = $this->transformFlashData( $value );
-
-      if ( count( $key ) == 1 )
-        $flashdata[ $key[0] ] = $value;
-      elseif ( count( $key ) == 2 ) {
-
-        if ( !isset( $flashdata[ $key[0] ] ) )
-          $flashdata[ $key[0] ] = array();
-
-        $flashdata[ $key[0] ][ $key[1] ] = $value;
-
-      } else
-        throw new \Exception('key with more then two underscores!');
-
-    }
-
-    return $flashdata;
-  }
-
   // TODO
   protected function getFlowConfig( $cfg ) {
     if ( !$cfg['hds'] )
@@ -797,28 +762,7 @@ class Recordings extends Player {
       'type' => 'application/x-mpegurl',
       'src'  => $server . $stream,
     );
-    /*
-    {
-      'splash': true,
-      'ratio': 9/16,
-      'clip': {
-        'title': "This is my title",
-        'hlsjs': {
-          smoothSwitching: false,
-          strict: true,
-          recoverMediaError: true,
-          recoverNetworkError: true
-        },
-        sources: [
-          {
-            type: "",
-            src:  "https://stream.videosquare.eu/devvsq/_definst_/smil:253/253/253.smil/playlist.m3u8"
-          }
-        ]
-      },
-      embed: false
-    }
-    */
+
     return $ret;
   }
 
@@ -837,7 +781,7 @@ class Recordings extends Player {
     return $this->getPlayerHeight( !$isembed );
   }
 
-  public function needFlowPlayer( $info ) {
+  protected function needFlowPlayer( $info ) {
     if ( $info['organization']['ondemandplayertype'] === 'flash' )
       return false;
 
