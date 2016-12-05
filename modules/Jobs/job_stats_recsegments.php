@@ -66,58 +66,53 @@ $db = db_maintain();
 // Load last processed record time
 $status_filename = $jconf['temp_dir'] . $myjobid . "." . $stats_config['label'] . ".status";
 
-// Status file: read last processed record time
-if ( file_exists($status_filename) ) {
+// ## Status file: read last processed record time
 
-    // Is readable?
-    if ( !is_readable($status_filename) ) {
-
-        $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Stats status file: " . $status_filename . " not readable.", $sendmail = true);
-		exit;
-
-    } else {
-
-        $fh = fopen($status_filename, "r");
-
-        while( !feof($fh) ) {
-
-            // Read one line from descriptor file
-            $line = fgets($fh);
-            $line = trim($line);
-
-            // Skip empty lines
-            if ( empty($line) ) continue;
-
-            $line_split = explode("=", $line);
-            $timestamp = strtotime($line_split[1]);
-            if ( $timestamp === false ) {
-              $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Stats status file: not a datetime value ('". $line . "')", $sendmail = true);
-              exit;
-            }
-            $stats_config['lastprocessedtime'] = $timestamp;
-            $debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Last processed timestamp from status file (" . $stats_config['label'] . "): " . $line_split[1], $sendmail = false);
-			if ( $isdebug ) $debug->log($jconf['log_dir'], $myjobid . ".log", "[DEBUG] Recording segment length (stats resolution): " . $stats_config['segmentlengthsecs'] . "sec", $sendmail = false);
-							
-        }
-
-        fclose($fh);
-    }
-
-} else {
+// Does it exist?
+if ( !file_exists($status_filename) ) {
 	$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Status file not found: " . $status_filename . ". Exiting...", $sendmail = true);
 	exit;
 }
 
+// Is it readable/writeable?
+if ( ( !is_readable($status_filename) ) or ( !is_writeable($status_filename) ) ) {
+
+	$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Stats status file: " . $status_filename . " not readable/writeable.", $sendmail = true);
+	exit;
+
+}
+
+// Read date and time value
+$fh = fopen($status_filename, "r");
+
+while( !feof($fh) ) {
+
+	// Read one line from descriptor file
+	$line = fgets($fh);
+	$line = trim($line);
+
+	// Skip empty lines
+	if ( empty($line) ) continue;
+
+	$line_split = explode("=", $line);
+	$timestamp = strtotime($line_split[1]);
+	if ( $timestamp === false ) {
+	  $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] Stats status file: not a datetime value ('". $line . "')", $sendmail = true);
+	  exit;
+	}
+	$stats_config['lastprocessedtime'] = $timestamp;
+	$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Last processed timestamp from status file (" . $stats_config['label'] . "): " . $line_split[1], $sendmail = false);
+	if ( $isdebug ) $debug->log($jconf['log_dir'], $myjobid . ".log", "[DEBUG] Recording segment length (stats resolution): " . $stats_config['segmentlengthsecs'] . "sec", $sendmail = false);
+					
+}
+
+fclose($fh);
+// End of reading status file
+
 // Processing intervals
 $interval_start = $stats_config['lastprocessedtime'] + 1;
-// !!!
-//$interval_start = strtotime("2016-12-01 00:00:00");
 $interval_end = time();
-
 $stats_config['lastprocessedtime'] = $interval_end;
-// !!!
-//$interval_end = strtotime("2016-12-02 23:59:59");
-
 $processing_started = time();
 
 unset($stats);
