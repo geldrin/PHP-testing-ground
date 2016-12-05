@@ -1357,7 +1357,28 @@ class Channels extends \Springboard\Model {
     return $relatedid;
   }
 
+  public static function getAccessibleWhere( $organizationid, $prefix = '' ) {
+    return "
+      (
+        {$prefix}organizationid = '$organizationid' AND
+        (
+          (
+            {$prefix}isliveevent = 1 AND
+            DATE_ADD(
+              IFNULL({$prefix}endtimestamp, NOW()),
+              INTERVAL 3 DAY
+            ) > NOW()
+          ) OR
+          (
+            {$prefix}isliveevent = 0
+          )
+        )
+      )
+    ";
+  }
+
   public function getFeatured( $organizationid, $language, $max ) {
+    $where = self::getAccessibleWhere( $organizationid, 'c.' );
     return $this->db->getArray("
       SELECT
         c.id,
@@ -1385,15 +1406,33 @@ class Channels extends \Springboard\Model {
       )
       WHERE
         c.isfeatured    <> '0' AND
-        c.organizationid = '$organizationid'
+        $where
       GROUP BY c.id
       ORDER BY c.isfeatured, c.id DESC
       LIMIT $max
     ");
   }
 
-  public function selectWithType( $id, $organizationid, $language ) {
-    $ret = $this->db->getRow("
+  public function selectEventWithType( $id, $user, $organizationid, $language = null ) {
+    if ( !$id )
+      return array();
+
+    if ( $language === null )
+      $language = \Springboard\Language::get();
+
+    if (
+         !\Model\Userroles::userHasPrivilege(
+           $user,
+           'live_ignoreeventend',
+           'or',
+           'isadmin', 'isliveadmin', 'isclientadmin'
+         )
+       )
+      $where = self::getAccessibleWhere( $organizationid, 'c.');
+    else
+      $where = "c.organizationid = '$organizationid'";
+
+    $sql = "
       SELECT
         c.*,
         s.value AS channeltype
@@ -1406,17 +1445,13 @@ class Channels extends \Springboard\Model {
         s.language = '$language'
       )
       WHERE
-        c.organizationid = '$organizationid' AND
-        c.id = '$id'
+        c.id = '$id' AND
+        c.isliveevent = 1 AND
+        $where
       LIMIT 1
-    ");
+    ";
 
-    if ( $ret ) {
-      $this->row = $ret;
-      $this->id = $ret['id'];
-    }
-
-    return $ret;
+    return $this->loadObject( $this->db->getRow( $sql ) );
   }
 
   public function getListCount( $organizationid ) {
