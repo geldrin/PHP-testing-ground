@@ -15,58 +15,31 @@ class Details extends \Visitor\Paging {
 
   public function init() {
 
-    $this->bootstrap->includeTemplatePlugin('indexphoto');
-
     $l                  = $this->bootstrap->getLocalization();
     $user               = $this->bootstrap->getSession('user');
     $this->foreachelse  = '';
     $this->channelModel = $this->bootstrap->getModel('channels');
-    $this->channelModel->selectWithType(
+    $this->channelModel->selectEventWithType(
       $this->application->getNumericParameter('id'),
-      $this->controller->organization['id'],
-      \Springboard\Language::get()
+      $user,
+      $this->controller->organization['id']
     );
 
     if ( !$this->channelModel->row )
       $this->controller->redirect('');
 
-    $this->title        = sprintf(
+    $this->title = sprintf(
       $l('live','details_title'),
       $this->channelModel->row['title']
     );
 
+    $this->bootstrap->includeTemplatePlugin('indexphoto');
     $this->controller->toSmarty['opengraph']     = array(
       'image'       => smarty_modifier_indexphoto( $this->channelModel->row, 'live' ),
       'description' => $this->channelModel->row['description'],
       'title'       => $this->channelModel->row['title'],
       'subtitle'    => $this->channelModel->row['subtitle'],
     );
-
-    if ( !$this->channelModel->row['isliveevent'] )
-      $this->controller->redirect(
-        'channels/details/' . $this->channelModel->id . ',' .
-        \Springboard\Filesystem::filenameize( $this->channelModel->row['title'] )
-      );
-
-    // admin mindig eleri
-    if (
-         !\Model\Userroles::userHasPrivilege(
-           $user,
-           'live_ignoreeventend',
-           'or',
-           'isadmin', 'isliveadmin', 'isclientadmin'
-         ) and
-         $this->channelModel->row['endtimestamp']
-       ) {
-
-      $endtime = strtotime( $this->channelModel->row['endtimestamp'] );
-      if ( strtotime('+3 days', $endtime ) < time() )
-        $this->controller->redirect(
-          'channels/details/' .$this->channelModel->id . ',' .
-          \Springboard\Filesystem::filenameize( $this->channelModel->row['title'] )
-        );
-
-    }
 
     $this->controller->toSmarty['listclass']   = 'recordinglist livelist';
     $this->controller->toSmarty['feeds']       = $this->channelModel->getFeeds();
@@ -82,7 +55,6 @@ class Details extends \Visitor\Paging {
     ;
 
     parent::init();
-
   }
 
   protected function setupCount() {
