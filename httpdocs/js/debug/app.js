@@ -15,9 +15,6 @@ System.register("debug/Debug", [], function (exports_1, context_1) {
                     var _this = this;
                     if (!this.stringify)
                         return;
-                    setTimeout(function () {
-                        throw new Error("asd");
-                    }, 5000);
                     TraceKit.report.subscribe(function (stack) {
                         _this.onError(stack);
                     });
