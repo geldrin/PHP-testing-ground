@@ -2,10 +2,13 @@
 namespace Player;
 
 abstract class Player {
+  protected $type;
+
   public $bootstrap;
   protected $row = array();
   protected $info = array();
   protected $model;
+  protected $streamingserver;
 
   public function __construct( $bootstrap, $model ) {
     $this->bootstrap = $bootstrap;
@@ -15,6 +18,25 @@ abstract class Player {
 
   public function setInfo( $info ) {
     $this->info = $info;
+  }
+
+  public function forceMediaServer( $id ) {
+    $streamModel = $this->bootstrap->getModel('streamingservers');
+    return $this->streamingserver = $streamModel->getByID( $id );
+  }
+
+  protected function setupStreamingServer() {
+    if ( $this->streamingserver )
+      return $this->streamingserver;
+
+    if ( !$this->type )
+      throw new \Exception('Unset player type!');
+
+    $streamModel = $this->bootstrap->getModel('streamingservers');
+    return $this->streamingserver = $streamModel->getServerByClientIP(
+      $this->info['ipaddress'],
+      $this->type
+    );
   }
 
   public function getGlobalConfig( $info, $isembed = false ) {
@@ -71,7 +93,7 @@ abstract class Player {
     return $flashdata;
   }
 
-  protected function getFlowUrl( $info, $type, $version, $extraparams = array() ) {
+  protected function getFlowUrl( $cfg, $type, $version, $extraparams = array() ) {
     /*
     - Minden média URL vége a playlist.m3u8, ami egy m3u8-as playlist, ami felsorolja a media segmenteket. Élő és vod ugyan az.
     - SMIL fájl: a SMIL fájl a Wowza szerveren generálódik, több minőségi változatot fog össze és mondja a Wowzának, hogy a playlistbe több minőséget is tegyen bele.
@@ -90,7 +112,7 @@ abstract class Player {
     if ( $this->bootstrap->ssl or $this->row['issecurestreamingforced'] )
       $prefix = 'sec';
 
-    $params = $this->getAuthorizeSessionid( $info );
+    $params = $this->getAuthorizeSessionid( null );
     if ( $extraparams )
       $params .= '&' . http_build_query( $extraparams );
 
@@ -110,7 +132,6 @@ abstract class Player {
 
     // TODO forced streaming server handling
     $base = sprintf( $base, $this->streamingserver['server'] );
-
     if ( isset( $version['recordingid'] ) ) {
       $path = \Springboard\Filesystem::getTreeDir( $version['recordingid'] ) . '/';
       $filename = $version['filename'];
@@ -133,6 +154,7 @@ abstract class Player {
 
   abstract public function getWidth( $isembed );
   abstract public function getHeight( $isembed );
+  abstract protected function getAuthorizeSessionid( $cfg );
 
   abstract protected function needFlowPlayer( $info );
   abstract protected function getFlashConfig( $cfg );

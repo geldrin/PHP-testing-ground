@@ -17,7 +17,6 @@ class Recordings extends \Springboard\Model {
 
   public $metadata = array();
   protected $searchadvancedwhere;
-  public $streamingserver;
   protected $commentcount = array();
 
   public function resetStats() {

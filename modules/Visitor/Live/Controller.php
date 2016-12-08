@@ -182,7 +182,7 @@ class Controller extends \Visitor\Controller {
            'isadmin', 'isclientadmin'
          )
        )
-      $feedModel->forceMediaServer( $streamingserverid );
+      $player->forceMediaServer( $streamingserverid );
 
     $streams = $player->getStreamsForBrowser( $browserinfo, $streamid );
 
@@ -343,7 +343,7 @@ class Controller extends \Visitor\Controller {
        )
       $this->toSmarty['streamingservers'] =
         $this->bootstrap->getModel('livefeeds')->getStreamingServers(
-          array('organization' => $this->organization )
+          $this->organization
         )
       ;
     else

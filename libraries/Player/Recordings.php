@@ -2,6 +2,7 @@
 namespace Player;
 
 class Recordings extends Player {
+  protected $type = 'ondemand';
 
   public function isHDSEnabled( $info ) {
     return
@@ -42,18 +43,12 @@ class Recordings extends Player {
       ;
     }
 
-    if ( !$this->model->streamingserver ) {
-      $streamingserverModel  = $this->bootstrap->getModel('streamingservers');
-      $this->streamingserver = $streamingserverModel->getServerByClientIP(
-        $info['ipaddress'],
-        'ondemand'
-      );
-    }
-
     return sprintf( $url, $this->streamingserver['server'] );
   }
 
-  protected function getAuthorizeSessionid( &$info ) {
+  protected function getAuthorizeSessionid( $info ) {
+    if ( !$info )
+      $info = $this->info;
 
     $ret = sprintf('?sessionid=%s_%s_%s',
       $info['organization']['id'],
@@ -80,6 +75,9 @@ class Recordings extends Player {
   }
 
   public function getMediaUrl( $type, $version, $info, $id = null ) {
+    if ( !$info )
+      $info = $this->info;
+
     $cookiedomain = $info['organization']['cookiedomain'];
     $sessionid    = $info['sessionid'];
     $host         = '';
@@ -135,7 +133,7 @@ class Recordings extends Player {
         break;
 
       case 'direct':
-        $host = $info['STATIC_URI'];
+        $host = $this->bootstrap->staticuri;
         $sprintfterm = 'files/recordings/%s/%s';
         break;
 
@@ -192,7 +190,7 @@ class Recordings extends Player {
     return $height;
   }
 
-  private function getPlayerStreams( $data, $info ) {
+  private function getFlashStreams( $data ) {
     $ret = array(
       'hds'     => array(),
       'desktop' => array(),
@@ -201,17 +199,17 @@ class Recordings extends Player {
       'outro'   => array(),
     );
 
-    if ( isset( $info['versions'] ) )
-      $versions = $info['versions'];
+    if ( isset( $data['versions'] ) )
+      $versions = $data['versions'];
     else
       $versions = $this->model->getVersions();
 
     if ( $data['hds'] ) {
       $ret['hds']['master'] = $this->getMediaUrl(
-        'smil', null, $info
+        'smil', null, null
       );
       $ret['hds']['content'] = $this->getMediaUrl(
-        'contentsmil', null, $info
+        'contentsmil', null, null
       );
     }
 
@@ -221,9 +219,10 @@ class Recordings extends Player {
           'id'            => $version['id'],
           'viewsessionid' => $this->generateViewSessionid( $version['id'] ),
         ),
+        'isadaptive'    => $version['isadaptive'],
         'label'         => $version['qualitytag'],
         'dimensions'    => $version['dimensions'],
-        'url'           => $this->getMediaUrl('default', $version, $info ),
+        'url'           => $this->getMediaUrl('default', $version, null ),
       );
     }
     foreach( $versions['content']['desktop'] as $version ) {
@@ -231,7 +230,7 @@ class Recordings extends Player {
         'isadaptive'    => $version['isadaptive'],
         'label'         => $version['qualitytag'],
         'dimensions'    => $version['dimensions'],
-        'url'           => $this->getMediaUrl('content', $version, $info ),
+        'url'           => $this->getMediaUrl('content', $version, null ),
       );
     }
 
@@ -272,7 +271,7 @@ class Recordings extends Player {
         throw new \Exception("Invalid version in getIntroOutroFlashdata, neither intro nor outro!");
 
       $ret[ $key ][] = array(
-        'url' => $this->getMediaUrl( $type, $version, $info )
+        'url' => $this->getMediaUrl( $type, $version, null )
       );
     }
 
@@ -377,8 +376,13 @@ class Recordings extends Player {
       $this->bootstrap->baseuri . \Springboard\Language::get() . '/recordings/'
     ;
 
+    $member = array();
+    if ( isset( $info['member'] ) )
+      $member = $info['member'];
+
     // minden ido intervallum masodpercbe
     $data = array(
+      'member'          => $member,
       'version'         => $this->bootstrap->config['version'],
       'startposition'   => 0,
       'autoplay'        => false,
@@ -419,9 +423,8 @@ class Recordings extends Player {
     else
       $apiurl = $this->bootstrap->baseuri;
 
+    $this->setupStreamingServer();
     $data['apiurl'] = $apiurl . 'jsonapi';
-
-    $data['streams'] = $this->getPlayerStreams( $data, $info );
 
     if ( isset( $info['logo'] ) )
       $data['logo'] = $info['logo'];
@@ -511,7 +514,6 @@ class Recordings extends Player {
     }
 
     $data['servers'] = $this->getMediaServers( $info, $data['hds'] );
-    $data['streamingserver'] = $this->streamingserver;
 
     return $data;
   }
@@ -546,6 +548,8 @@ class Recordings extends Player {
       'recording_timeout' => $cfg['viewSession']['timeout'],
       'timeline_autoPlay' => $cfg['autoplay'],
     );
+
+    $streams = $this->getFlashStreams( $cfg );
 
     if ( $ret['language'] != 'en' )
       $ret['locale'] =
@@ -600,7 +604,7 @@ class Recordings extends Player {
     $ret += $this->bootstrap->config['flashplayer_extraconfig'];
 
     $ret['media_servers'] = $cfg['servers'];
-    switch( $cfg['streamingserver']['type'] ) {
+    switch( $this->streamingserver['type'] ) {
       case 'wowza':
         $ret['media_serverType'] = 0;
         break;
@@ -619,16 +623,16 @@ class Recordings extends Player {
     if ( !$this->row['slideonright'] )
       $ret['layout_videoOrientation'] = 'right';
 
-    if ( !empty( $ret['streams']['desktop'] ) ) {
+    if ( !empty( $streams['desktop'] ) ) {
       $ret['media_streams']          = array();
       $ret['media_streamLabels']     = array();
       $ret['media_streamParameters'] = array();
       $ret['media_streamDimensions'] = array();
 
       if ( $cfg['hds'] )
-        $ret['media_streams'][] = $ret['streams']['hds']['master'];
+        $ret['media_streams'][] = $streams['hds']['master'];
 
-      foreach( $ret['streams']['desktop'] as $version ) {
+      foreach( $streams['desktop'] as $version ) {
         $ret['media_streamLabels'][]     = $version['label'];
         $ret['media_streamParameters'][] = $version['parameters'];
         if ( $version['dimensions'] )
@@ -650,7 +654,7 @@ class Recordings extends Player {
 
     if (
          !$cfg['skipcontent'] and
-         !empty( $cfg['streams']['content'] )
+         !empty( $streams['content'] )
        ) {
 
       if ( $this->row['contentoffsetstart'] )
@@ -664,9 +668,9 @@ class Recordings extends Player {
       $ret['content_streamDimensions'] = array();
 
       if ( $cfg['hds'] )
-        $ret['content_streams'][] = $cfg['streams']['hds']['content'];
+        $ret['content_streams'][] = $streams['hds']['content'];
 
-      foreach( $cfg['streams']['content'] as $version ) {
+      foreach( $streams['content'] as $version ) {
         $ret['content_streamLabels'][] = $version['label'];
         if ( $version['dimensions'] )
           $ret['content_streamDimensions'][] = $version['dimensions'];
@@ -678,10 +682,10 @@ class Recordings extends Player {
       }
     }
 
-    if ( $cfg['streams']['intro'] )
-      $ret['intro_streams'] = array( reset( $cfg['streams']['intro'][0] ) );
-    if ( $cfg['streams']['outro'] )
-      $ret['outro_streams'] = array( reset( $cfg['streams']['outro'][0] ) );
+    if ( $streams['intro'] )
+      $ret['intro_streams'] = array( reset( $streams['intro'][0] ) );
+    if ( $streams['outro'] )
+      $ret['outro_streams'] = array( reset( $streams['outro'][0] ) );
 
     if ( $this->row['offsetstart'] )
       $ret['timeline_virtualStart'] = $this->row['offsetstart'];
@@ -728,7 +732,28 @@ class Recordings extends Player {
     return $ret;
   }
 
-  // TODO
+  private function getFlowStreams( $cfg ) {
+    if ( isset( $cfg['versions'] ) )
+      $versions = $cfg['versions'];
+    else
+      $versions = $this->model->getVersions();
+
+    $ret = array(
+      'master'  => array(),
+      'content' => array(),
+      'intro'   => array(),
+      'outro'   => array(),
+    );
+
+    foreach( $versions['master']['desktop'] as $version )
+      $ret['master'][] = array(
+        'type' => 'application/x-mpegurl',
+        'url'  => $this->getFlowUrl( $cfg, 'vodabr', $version ),
+      );
+
+    return $ret;
+  }
+
   protected function getFlowConfig( $cfg ) {
     if ( !$cfg['hds'] )
       return array();
@@ -756,12 +781,12 @@ class Recordings extends Player {
       ),
     );
 
-    $server = reset( $cfg['servers'] );
-    $stream = $cfg['streams']['hds']['master'];
-    $ret['clip']['sources'][] = array(
-      'type' => 'application/x-mpegurl',
-      'src'  => $server . $stream,
-    );
+    $streams = $this->getFlowStreams( $cfg );
+    foreach( $streams['master'] as $stream )
+      $ret['clip']['sources'][] = array(
+        'type' => $stream['type'],
+        'src'  => $stream['url'],
+      );
 
     return $ret;
   }

@@ -2,7 +2,8 @@
 namespace Player;
 
 class Live extends Player {
-  protected $streamingserver;
+  protected $type = 'live';
+
   private static $hdsFeatures = array(
     'features_live_hds',
     'features_live_hdss',
@@ -212,14 +213,6 @@ class Live extends Player {
 
     }
 
-    if ( !$this->streamingserver ) {
-      $streamingserverModel  = $this->bootstrap->getModel('streamingservers');
-      $this->streamingserver = $streamingserverModel->getServerByClientIP(
-        $info['ipaddress'],
-        'live'
-      );
-    }
-
     $streamingserver = $this->streamingserver;
     if ( empty( $streamingserver ) )
       throw new \Exception("No streaming server found, not even the default");
@@ -300,7 +293,10 @@ class Live extends Player {
     return $ret;
   }
 
-  private function getAuthorizeSessionid( &$info ) {
+  protected function getAuthorizeSessionid( $info ) {
+    if ( !$info )
+      $info = $this->info;
+
     if (
          !isset( $info['organization'] ) or
          !isset( $info['sessionid'] ) or
@@ -350,61 +346,8 @@ class Live extends Player {
 
     }
 
-    if ( !$this->streamingserver ) {
-      $streamingserverModel  = $this->bootstrap->getModel('streamingservers');
-      $this->streamingserver = $streamingserverModel->getServerByClientIP(
-        $info['ipaddress'],
-        'live'
-      );
-    }
-
+    $this->setupStreamingServer();
     return sprintf( $url, $this->streamingserver['server'] );
-  }
-
-  // TODO vissza a modellbe az sql-t
-  public function getStreamingServers( $info ) {
-    $where = array();
-    if ( $info['organization']['livehdsenabled'] ) {
-      $sql = array();
-      foreach( self::$hdsFeatures as $field )
-        $sql[] = "$field = '1'";
-
-      $where[] = "(" . implode(" OR ", $sql ) . ")";
-    }
-
-    if ( $info['organization']['livehlsenabledandroid'] ) {
-      $sql = array();
-      foreach( self::$hlsFeatures as $field )
-        $sql[] = "$field = '1'";
-
-      $where[] = "(" . implode(" OR ", $sql ) . ")";
-    }
-
-    if ( !empty( $where ) )
-      $where = " AND " . implode(" AND ", $where );
-    else
-      $where = "";
-
-    return $this->model->db->getArray("
-      SELECT *
-      FROM cdn_streaming_servers
-      WHERE
-        disabled     = '0' AND
-        serverstatus = 'ok' AND
-        servicetype IN('live', 'live|ondemand')
-        $where
-      ORDER BY location, shortname
-    ");
-  }
-
-  // TODO vissza a modellbe az sql-t
-  public function forceMediaServer( $id ) {
-    return $this->streamingserver = $this->model->db->getRow("
-      SELECT *
-      FROM cdn_streaming_servers
-      WHERE id = '$id'
-      LIMIT 1
-    ");
   }
 
   public function getLength() {
@@ -425,7 +368,7 @@ class Live extends Player {
 
     // minden ido intervallum masodpercbe
     $data = array(
-      'member'        => $info['member'],
+      'member'        => $user,
       'tokenauth'     => false,
       'needauth'      => false,
       'nopermission'  => false,
@@ -460,6 +403,8 @@ class Live extends Player {
     else
       $apiurl = $this->bootstrap->baseuri;
 
+    $this->setupStreamingServer();
+
     $data['apiurl'] = $apiurl . 'jsonapi';
 
     if ( isset( $info['logo'] ) )
@@ -480,7 +425,6 @@ class Live extends Player {
     }
 
     $data['servers'] = $this->getMediaServers( $info );
-    $data['streamingserver'] = $this->streamingserver;
 
     return $data;
   }
@@ -524,7 +468,7 @@ class Live extends Player {
         $this->bootstrap->staticuri . 'js/flash_locale_' . $ret['language'] . '.json'
       ;
 
-    switch( $cfg['streamingserver']['type'] ) {
+    switch( $this->streamingserver['type'] ) {
       case 'wowza':
         $ret['media_serverType'] = 0;
         break;

@@ -4,6 +4,41 @@ namespace Model;
 class Livefeeds extends \Springboard\Model {
   private $transcoderCache = array();
 
+  public function getStreamingServers( $organization ) {
+    $where = array();
+    if ( $organization['livehdsenabled'] ) {
+      $sql = array();
+      foreach( self::$hdsFeatures as $field )
+        $sql[] = "$field = '1'";
+
+      $where[] = "(" . implode(" OR ", $sql ) . ")";
+    }
+
+    if ( $organization['livehlsenabledandroid'] ) {
+      $sql = array();
+      foreach( self::$hlsFeatures as $field )
+        $sql[] = "$field = '1'";
+
+      $where[] = "(" . implode(" OR ", $sql ) . ")";
+    }
+
+    if ( !empty( $where ) )
+      $where = " AND " . implode(" AND ", $where );
+    else
+      $where = "";
+
+    return $this->db->getArray("
+      SELECT *
+      FROM cdn_streaming_servers
+      WHERE
+        disabled     = '0' AND
+        serverstatus = 'ok' AND
+        servicetype IN('live', 'live|ondemand')
+        $where
+      ORDER BY location, shortname
+    ");
+  }
+
   public function delete( $id, $magic_quotes_gpc = 0 ) {
     $this->db->execute("
       DELETE FROM livefeed_streams

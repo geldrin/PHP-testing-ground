@@ -147,4 +147,13 @@ class Streamingservers extends \Springboard\Model {
 
     return $ret;
   }
+
+  public function getByID( $id ) {
+    return $this->db->getRow("
+      SELECT *
+      FROM cdn_streaming_servers
+      WHERE id = '$id'
+      LIMIT 1
+    ");
+  }
 }
