@@ -60,7 +60,15 @@
   <link rel="StyleSheet" type="text/css" href="{$BASE_URI}contents/layoutcss?{$VERSION}" media="screen"/>
 
   {jscombine}
+  {* stacktrace generalo minimal lib *}
+  <script type="text/javascript" src="{$BASE_URI}js/TraceKit/tracekit.js"></script>
+  {* systemjs dependency, promise-ok miatt *}
+  <script type="text/javascript" src="{$STATIC_URI}js/bluebird.min.js"></script>
+  {* egy dependency manager a typescript appoknak, nem typescript specifikus *}
+  <script type="text/javascript" src="{$STATIC_URI}js/system.js"></script>
   <script type="text/javascript" src="{$STATIC_URI}js/jquery.min.js"></script>
+  {* debug *}
+  <script type="text/javascript" src="{$BASE_URI}js/debug/app.js"></script>
   <script type="text/javascript" src="{$STATIC_URI}js/jquery-ui-1.9.2.custom.min.js"></script>
   <script type="text/javascript" src="{$STATIC_URI}js/swfobject.full.js"></script>
   <script type="text/javascript" src="{$STATIC_URI}js/moment-with-langs.min.js"></script>
@@ -82,8 +90,6 @@
     <script type="text/javascript" src="{$STATIC_URI}js/progressbar.min.js"></script>
   {/if}
   {if $playerconfig}
-  <script type="text/javascript" src="{$STATIC_URI}js/bluebird.min.js"></script>
-  <script type="text/javascript" src="{$STATIC_URI}js/system.js"></script>
   <script type="text/javascript" src="{$BASE_URI}js/flowplayer/flowplayer.min.js"></script>
   <script type="text/javascript" src="{$BASE_URI}js/flowplayer/flowplayer.hlsjs.min.js"></script>
   <script type="text/javascript" src="{$BASE_URI}js/player/app.js"></script>
@@ -106,6 +112,7 @@
     tablet: {if $browser.tablet}true{else}false{/if},
     obsolete: {if $browser.obsolete}true{else}false{/if}
   {rdelim};
+  SystemJS.import('debug/app'); {* debug init *}
   {if $playerconfig}
   var playerconfig = {$playerconfig|@jsonescape};
   SystemJS.import('player/app');

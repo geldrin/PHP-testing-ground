@@ -4,9 +4,10 @@
         "target": "es3",
         "strictNullChecks": true,
         "noImplicitAny": false,
-        "outFile": "../../httpdocs/js/player/app.js",
+        "outFile": "../../httpdocs/js/debug/app.js",
         "rootDir": "../",
         "removeComments": true,
+        //"allowJs": true,
         "sourceMap": true
     },
     "exclude": [

@@ -27,7 +27,11 @@ class Controller extends \Springboard\Controller\Visitor {
       ;
 
     // az api ->authenticate mindig kezeli
-    if ( $this->module === 'api' or $this->module === 'jsonapi' )
+    if (
+         $this->module === 'api' or
+         $this->module === 'jsonapi' or
+         $this->module === 'telemetry'
+       )
       return parent::init();
 
     $skipsinglelogincheck = array(
