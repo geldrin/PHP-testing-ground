@@ -56,17 +56,12 @@ export default class Player {
       return;
     }
 
-    this.initFlowPlugin();
     this.initFlow();
   }
 
-
-  private initFlowPlugin() {
-    let flow = new Flow();
-    flow.init();
-  }
-
   private initFlow(): void {
+    this.initFlowPlugin();
+
     this.flowInstance = flowplayer(
       this.container.get(0),
       this.cfg.get('flowplayer')
@@ -75,5 +70,10 @@ export default class Player {
     this.flowInstance.on('load', (e, api, video): void => {
       this.log('ready', e, api, video)
     });
+  }
+
+  private initFlowPlugin() {
+    let flow = new Flow();
+    flow.init();
   }
 }

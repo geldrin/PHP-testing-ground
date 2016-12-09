@@ -16,20 +16,23 @@ System.register("player/Config", [], function (exports_1, context_1) {
                 Config.prototype.getFromKey = function (config, keys) {
                     var key = keys.shift();
                     if (key == null)
-                        return {};
+                        return "";
                     var ret = config[key];
-                    if (ret && keys.length > 0)
-                        return this.getFromKey(ret, keys);
-                    return ret;
+                    if (ret) {
+                        if (keys.length > 0)
+                            return this.getFromKey(ret, keys);
+                        return ret;
+                    }
+                    return "";
                 };
                 Config.prototype.get = function (key, def) {
                     var keys = key.split('.');
                     var ret = this.getFromKey(this.config, keys);
-                    if (typeof ret !== "undefined")
+                    if (ret != null)
                         return ret;
                     if (def)
                         return def;
-                    return {};
+                    return "";
                 };
                 return Config;
             }());
@@ -196,19 +199,19 @@ System.register("player/Player", ["player/Flash", "player/Flow"], function (expo
                         this.initFlash();
                         return;
                     }
-                    this.initFlowPlugin();
                     this.initFlow();
-                };
-                Player.prototype.initFlowPlugin = function () {
-                    var flow = new Flow_1["default"]();
-                    flow.init();
                 };
                 Player.prototype.initFlow = function () {
                     var _this = this;
+                    this.initFlowPlugin();
                     this.flowInstance = flowplayer(this.container.get(0), this.cfg.get('flowplayer'));
                     this.flowInstance.on('load', function (e, api, video) {
                         _this.log('ready', e, api, video);
                     });
+                };
+                Player.prototype.initFlowPlugin = function () {
+                    var flow = new Flow_1["default"]();
+                    flow.init();
                 };
                 return Player;
             }());
