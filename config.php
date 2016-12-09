@@ -282,7 +282,11 @@ $config = array(
       ),
       array(
         'dir'   => $this->basepath . 'libraries/Videosquare',
-        'user' => 'conv',
+        'user'  => 'conv',
+      ),
+      array(
+        'dir'   => $this->basepath . 'jsapp',
+        'user'  => 'dam',
       ),
     ),
   ),

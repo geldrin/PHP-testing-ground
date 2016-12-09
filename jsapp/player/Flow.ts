@@ -28,7 +28,7 @@ export default class Flow {
   public init(): void {
     flowplayer((api: Flowplayer, root: Element): void => {
       this.api = api;
-      this.root = $(root);
+      this.root = jQuery(root);
 
       let conf = api.conf || {};
       if (conf['vsq'] == null)
@@ -42,5 +42,6 @@ export default class Flow {
   }
 
   private setupSources(): void {
+    this.root.addClass('vsq-dualstream');
   }
 }

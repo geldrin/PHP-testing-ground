@@ -124,7 +124,7 @@ System.register("player/Flow", [], function (exports_4, context_4) {
                     var _this = this;
                     flowplayer(function (api, root) {
                         _this.api = api;
-                        _this.root = $(root);
+                        _this.root = jQuery(root);
                         var conf = api.conf || {};
                         if (conf['vsq'] == null)
                             return;
@@ -134,6 +134,7 @@ System.register("player/Flow", [], function (exports_4, context_4) {
                     });
                 };
                 Flow.prototype.setupSources = function () {
+                    this.root.addClass('vsq-dualstream');
                 };
                 return Flow;
             }());
