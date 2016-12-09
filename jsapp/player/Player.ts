@@ -3,8 +3,10 @@
 "use strict";
 import Config from "./Config";
 import Flash from "./Flash";
+import Flow from "./Flow";
 import Locale from "../Locale";
 
+/** A Player class az UI-ert felel */
 export default class Player {
   private cfg: Config;
   private l: Locale;
@@ -54,7 +56,14 @@ export default class Player {
       return;
     }
 
+    this.initFlowPlugin();
     this.initFlow();
+  }
+
+
+  private initFlowPlugin() {
+    let flow = new Flow();
+    flow.init();
   }
 
   private initFlow(): void {
@@ -62,9 +71,9 @@ export default class Player {
       this.container.get(0),
       this.cfg.get('flowplayer')
     );
-    this.flowInstance.on('ready', (e, api, video) => {
+
+    this.flowInstance.on('load', (e, api, video): void => {
       this.log('ready', e, api, video)
     });
-    this.log(this.flowInstance);
   }
 }

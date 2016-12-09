@@ -16,6 +16,9 @@ export default class Config {
 
   private getFromKey(config: Object, keys: string[]): Object {
     let key = keys.shift();
+    if (key == null)
+      return {};
+
     let ret = config[key];
     if (ret && keys.length > 0)
       return this.getFromKey(ret, keys);
@@ -29,6 +32,9 @@ export default class Config {
     if (typeof ret !== "undefined")
       return ret;
 
-    return def;
+    if (def)
+      return def;
+
+    return {};
   }
 }

@@ -28,6 +28,9 @@ export default class Flash {
 
   private getParamRef(container: Object, keys: string[]): Object {
     let key = keys.shift();
+    if (key == null)
+      throw new Error("Invalid key");
+
     let ret = container[key];
     if (ret && keys.length > 0)
       return this.getParamRef(ret, keys);

@@ -36,7 +36,6 @@ class Recordings extends Player {
     $url = $this->bootstrap->config['wowza'][ $type ];
 
     if ( $needextraparam ) {
-      $this->ensureID();
       $url =
         rtrim( $url, '/' ) .
         $this->getAuthorizeSessionid( $info )

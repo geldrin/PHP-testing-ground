@@ -15,6 +15,8 @@ System.register("player/Config", [], function (exports_1, context_1) {
                 };
                 Config.prototype.getFromKey = function (config, keys) {
                     var key = keys.shift();
+                    if (key == null)
+                        return {};
                     var ret = config[key];
                     if (ret && keys.length > 0)
                         return this.getFromKey(ret, keys);
@@ -25,7 +27,9 @@ System.register("player/Config", [], function (exports_1, context_1) {
                     var ret = this.getFromKey(this.config, keys);
                     if (typeof ret !== "undefined")
                         return ret;
-                    return def;
+                    if (def)
+                        return def;
+                    return {};
                 };
                 return Config;
             }());
@@ -78,6 +82,8 @@ System.register("player/Flash", [], function (exports_3, context_3) {
                 };
                 Flash.prototype.getParamRef = function (container, keys) {
                     var key = keys.shift();
+                    if (key == null)
+                        throw new Error("Invalid key");
                     var ret = container[key];
                     if (ret && keys.length > 0)
                         return this.getParamRef(ret, keys);
@@ -96,14 +102,56 @@ System.register("player/Flash", [], function (exports_3, context_3) {
         }
     };
 });
-System.register("player/Player", ["player/Flash"], function (exports_4, context_4) {
+System.register("player/Flow", [], function (exports_4, context_4) {
     "use strict";
     var __moduleName = context_4 && context_4.id;
-    var Flash_1, Player;
+    var Flow;
+    return {
+        setters: [],
+        execute: function () {
+            Flow = (function () {
+                function Flow() {
+                }
+                Flow.prototype.log = function () {
+                    var params = [];
+                    for (var _i = 0; _i < arguments.length; _i++) {
+                        params[_i] = arguments[_i];
+                    }
+                    params.unshift("[Flow]");
+                    console.log.apply(console, params);
+                };
+                Flow.prototype.init = function () {
+                    var _this = this;
+                    flowplayer(function (api, root) {
+                        _this.api = api;
+                        _this.root = $(root);
+                        var conf = api.conf || {};
+                        if (conf['vsq'] == null)
+                            return;
+                        _this.cfg = conf['vsq'];
+                        if (_this.cfg['secondarySources'])
+                            _this.setupSources();
+                    });
+                };
+                Flow.prototype.setupSources = function () {
+                };
+                return Flow;
+            }());
+            exports_4("default", Flow);
+        }
+    };
+});
+System.register("player/Player", ["player/Flash", "player/Flow"], function (exports_5, context_5) {
+    "use strict";
+    var __moduleName = context_5 && context_5.id;
+    var Flash_1, Flow_1, Player;
     return {
         setters: [
             function (Flash_1_1) {
                 Flash_1 = Flash_1_1;
+            },
+            function (Flow_1_1) {
+                Flow_1 = Flow_1_1;
             }
         ],
         execute: function () {
@@ -147,25 +195,29 @@ System.register("player/Player", ["player/Flash"], function (exports_4, context_
                         this.initFlash();
                         return;
                     }
+                    this.initFlowPlugin();
                     this.initFlow();
+                };
+                Player.prototype.initFlowPlugin = function () {
+                    var flow = new Flow_1["default"]();
+                    flow.init();
                 };
                 Player.prototype.initFlow = function () {
                     var _this = this;
                     this.flowInstance = flowplayer(this.container.get(0), this.cfg.get('flowplayer'));
-                    this.flowInstance.on('ready', function (e, api, video) {
+                    this.flowInstance.on('load', function (e, api, video) {
                         _this.log('ready', e, api, video);
                     });
-                    this.log(this.flowInstance);
                 };
                 return Player;
             }());
-            exports_4("default", Player);
+            exports_5("default", Player);
         }
     };
 });
-System.register("player/app", ["Locale", "player/Config", "player/Player"], function (exports_5, context_5) {
+System.register("player/app", ["Locale", "player/Config", "player/Player"], function (exports_6, context_6) {
     "use strict";
-    var __moduleName = context_5 && context_5.id;
+    var __moduleName = context_6 && context_6.id;
     var Locale_1, Config_1, Player_1;
     return {
         setters: [
