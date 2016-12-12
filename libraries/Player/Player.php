@@ -134,7 +134,8 @@ abstract class Player {
     $base = sprintf( $base, $this->streamingserver['server'] );
     if ( isset( $version['recordingid'] ) ) {
       $path = \Springboard\Filesystem::getTreeDir( $version['recordingid'] ) . '/';
-      $filename = $version['filename'];
+      // TODO honnan tudjuk hogy _content vagy _mobil postfix kell e
+      $filename = $version['recordingid'] . '.smil';
     } else {
       $path = '';
       $filename = $version['streamcode'];

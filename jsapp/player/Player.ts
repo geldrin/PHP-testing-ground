@@ -73,7 +73,6 @@ export default class Player {
   }
 
   private initFlowPlugin() {
-    let flow = new Flow();
-    flow.init();
+    Flow.setup();
   }
 }

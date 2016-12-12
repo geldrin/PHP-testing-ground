@@ -4073,3 +4073,23 @@ table.paging .pin {
 table.paging tr.even {
   background-color: #f4f4f4;
 }
+
+.flowplayer.vsq-dualstream .fp-player {
+  width: 50%;
+  height: 50%;
+}
+.flowplayer.vsq-dualstream .secondary .fp-ui,
+.flowplayer.vsq-dualstream .secondary .fp-help,
+.flowplayer.vsq-dualstream .secondary .fp-context-menu {
+  display: none !important;
+}
+.flowplayer.vsq-dualstream .secondary .fp-engine {
+
+}
+.flowplayer.vsq-dualstream .secondary-wrap {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 500px;
+  height: 300px;
+}

@@ -113,9 +113,13 @@ System.register("player/Flow", [], function (exports_4, context_4) {
         setters: [],
         execute: function () {
             Flow = (function () {
-                function Flow() {
+                function Flow(player, root) {
+                    Flow.log(arguments);
+                    this.player = player;
+                    this.root = jQuery(root);
+                    this.id = this.root.attr('data-flowplayer-instance-id');
                 }
-                Flow.prototype.log = function () {
+                Flow.log = function () {
                     var params = [];
                     for (var _i = 0; _i < arguments.length; _i++) {
                         params[_i] = arguments[_i];
@@ -123,24 +127,74 @@ System.register("player/Flow", [], function (exports_4, context_4) {
                     params.unshift("[Flow]");
                     console.log.apply(console, params);
                 };
-                Flow.prototype.init = function () {
-                    var _this = this;
-                    flowplayer(function (api, root) {
-                        _this.api = api;
-                        _this.root = jQuery(root);
-                        var conf = api.conf || {};
-                        if (conf['vsq'] == null)
-                            return;
-                        _this.cfg = conf['vsq'];
-                        if (_this.cfg['secondarySources'])
-                            _this.setupSources();
-                    });
+                Flow.prototype.log = function () {
+                    var params = [];
+                    for (var _i = 0; _i < arguments.length; _i++) {
+                        params[_i] = arguments[_i];
+                    }
+                    Flow.log(params);
                 };
-                Flow.prototype.setupSources = function () {
-                    this.root.addClass('vsq-dualstream');
+                Flow.prototype.multiCall = function (funcName, args) {
+                    var ret = [];
+                    for (var i = this.engines.length - 1; i >= 0; i--) {
+                        var engine = this.engines[i];
+                        ret[i] = engine[funcName].apply(engine, args);
+                    }
+                    return ret;
+                };
+                Flow.prototype.multiSet = function (property, value) {
+                    for (var i = this.engines.length - 1; i >= 0; i--) {
+                        var engine = this.engines[i];
+                        engine[property] = value;
+                    }
+                };
+                Flow.canPlay = function (type, conf) {
+                    Flow.log(arguments);
+                    return true;
+                };
+                Flow.prototype.load = function (video) {
+                };
+                Flow.prototype.pause = function () {
+                    this.multiCall('pause');
+                };
+                Flow.prototype.resume = function () {
+                    this.multiCall('play');
+                };
+                Flow.prototype.speed = function (speed) {
+                    this.multiSet('playbackRate', speed);
+                };
+                Flow.prototype.volume = function (volume) {
+                    this.multiSet('volume', volume);
+                };
+                Flow.prototype.unload = function () {
+                };
+                Flow.prototype.seek = function (to) {
+                    try {
+                        var pausedState = this.player.paused;
+                        this.multiSet('currentTime', to);
+                        if (pausedState)
+                            this.pause();
+                    }
+                    catch (ignored) { }
+                };
+                Flow.prototype.pick = function (sources) {
+                    return sources[0];
+                };
+                Flow.setup = function () {
+                    if (Flow.initDone)
+                        return;
+                    var dummy = function (player, root) {
+                        return new Flow(player, root);
+                    };
+                    dummy.engineName = Flow.engineName;
+                    dummy.canPlay = Flow.canPlay;
+                    flowplayer.engines.unshift(dummy);
+                    Flow.initDone = true;
                 };
                 return Flow;
             }());
+            Flow.engineName = "vsq";
+            Flow.initDone = false;
             exports_4("default", Flow);
         }
     };
@@ -210,8 +264,7 @@ System.register("player/Player", ["player/Flash", "player/Flow"], function (expo
                     });
                 };
                 Player.prototype.initFlowPlugin = function () {
-                    var flow = new Flow_1["default"]();
-                    flow.init();
+                    Flow_1["default"].setup();
                 };
                 return Player;
             }());

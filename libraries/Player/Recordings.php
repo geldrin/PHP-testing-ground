@@ -215,8 +215,8 @@ class Recordings extends Player {
     foreach( $versions['master']['desktop'] as $version ) {
       $ret['desktop'][] = array(
         'parameters' => array(
-          'id'            => $version['id'],
-          'viewsessionid' => $this->generateViewSessionid( $version['id'] ),
+          'recordingversionid' => $version['id'],
+          'viewsessionid'      => $this->generateViewSessionid( $version['id'] ),
         ),
         'isadaptive'    => $version['isadaptive'],
         'label'         => $version['qualitytag'],
@@ -744,6 +744,17 @@ class Recordings extends Player {
       'outro'   => array(),
     );
 
+    // TODO
+    $ret['master'][] = array(
+      'type' => 'application/x-mpegurl',
+      'url' => 'https://stream.videosquare.eu/devvsq/_definst_/smil:253/253/253.smil/playlist.m3u8',
+    );
+    $ret['content'][] = array(
+      'type' => 'application/x-mpegurl',
+      'url' => 'https://stream.videosquare.eu/devvsq/_definst_/smil:156/156/156.smil/playlist.m3u8',
+    );
+    return $ret;
+
     foreach( $versions['master']['desktop'] as $version )
       $ret['master'][] = array(
         'type' => 'application/x-mpegurl',
@@ -778,11 +789,25 @@ class Recordings extends Player {
           'recoverNetworkError' => true,
         ),
       ),
+      'vsq' => array(
+        'secondarySources' => array(),
+      ),
     );
 
     $streams = $this->getFlowStreams( $cfg );
     foreach( $streams['master'] as $stream )
       $ret['clip']['sources'][] = array(
+        'type' => $stream['type'],
+        'src'  => $stream['url'],
+      );
+
+    if ( empty( $streams['content'] ) ) {
+      unset( $ret['vsq'] );
+      return $ret;
+    }
+
+    foreach( $streams['content'] as $stream )
+      $ret['vsq']['secondarySources'][] = array(
         'type' => $stream['type'],
         'src'  => $stream['url'],
       );

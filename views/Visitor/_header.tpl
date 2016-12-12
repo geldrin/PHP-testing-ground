@@ -112,7 +112,8 @@
     tablet: {if $browser.tablet}true{else}false{/if},
     obsolete: {if $browser.obsolete}true{else}false{/if}
   {rdelim};
-  SystemJS.import('debug/app'); {* debug init *}
+  {* debug init *}
+  SystemJS.import('debug/app');
   {if $playerconfig}
   var playerconfig = {$playerconfig|@jsonescape};
   SystemJS.import('player/app');
