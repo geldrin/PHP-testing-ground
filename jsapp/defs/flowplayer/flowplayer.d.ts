@@ -1,6 +1,8 @@
 // TODO typed conf object
 interface Flowplayer {
 	conf: Object;
+	paused: boolean;
+	engines: ((player: Flowplayer, root: Element) => any)[];
 
 	(callback: (api: Flowplayer, root: Element) => any): Flowplayer;
 	(element: Element, config: Object): Flowplayer;

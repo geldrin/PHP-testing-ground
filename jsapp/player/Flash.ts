@@ -3,8 +3,8 @@
 import Config from "./Config";
 import Locale from "../Locale";
 
-declare var handleFlashLoad;
-declare var swfobject;
+declare var handleFlashLoad: any;
+declare var swfobject: any;
 
 export default class Flash {
   private cfg: Config;
@@ -26,7 +26,7 @@ export default class Flash {
     return `flash/VSQ${subtype}Player.swf?v=${ver}`;
   }
 
-  private getParamRef(container: Object, keys: string[]): Object {
+  private getParamRef(container: any, keys: string[]): Object {
     let key = keys.shift();
     if (key == null)
       throw new Error("Invalid key");

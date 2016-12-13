@@ -1,7 +1,10 @@
 "use strict";
 export default class Locale {
-  private data: Object;
-  constructor(data: Object) {
+  private data: any;
+  constructor(data: any) {
+    if(typeof data != 'object')
+      throw new Error('Invalid locale passed');
+
     this.data = data;
   }
 

@@ -2,10 +2,13 @@
 "use strict";
 
 export default class Config {
-  private flashConfig: Object;
-  private config: Object;
+  private flashConfig: any;
+  private config: any;
 
-  constructor(data: Object) {
+  constructor(data: any) {
+    if (!data || !data['flashplayer'] || !data['flashplayer']['config'])
+      throw new Error('Invalid configuration passed');
+
     this.flashConfig = data['flashplayer']['config'];
     this.config = data;
   }
@@ -15,7 +18,7 @@ export default class Config {
   }
 
   /** non-null false-y erteket vissza nincs kulcs */
-  private getFromKey(config: Object, keys: string[]): Object {
+  private getFromKey(config: any, keys: string[]): Object {
     let key = keys.shift();
     if (key == null)
       return "";

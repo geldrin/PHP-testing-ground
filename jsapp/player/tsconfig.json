@@ -1,13 +1,19 @@
 {
     "compilerOptions": {
         "module": "system",
-        "target": "es3",
+        "target": "es5",
         "strictNullChecks": true,
-        "noImplicitAny": false,
+        "noImplicitAny": true,
+        "suppressImplicitAnyIndexErrors": true,
         "outFile": "../../httpdocs/js/player/app.js",
         "rootDir": "../",
         "removeComments": true,
-        "sourceMap": true
+        "sourceMap": true,
+        "lib": [
+            "dom",
+            "es5",
+            "es2015.promise"
+        ]
     },
     "exclude": [
         "node_modules"
