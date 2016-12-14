@@ -76,10 +76,17 @@ class Groups extends \Springboard\Model {
   public function getUserCount() {
 
     $this->ensureID();
+    // mivel lehetseges hogy a groups_members-be van rekord de nem tartozik hozza
+    // user mert mondjuk non-lokalis (ActiveDirectory) userekbol all a csoport
     return $this->db->getOne("
       SELECT COUNT(*)
-      FROM groups_members AS gm
-      WHERE gm.groupid = '" . $this->id . "'
+      FROM
+        groups_members AS gm,
+        users AS u
+      WHERE
+        gm.groupid = '" . $this->id . "' AND
+        gm.userid  = u.id AND
+        u.disabled = '0'
       GROUP BY gm.userid
     ");
 
