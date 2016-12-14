@@ -87,7 +87,7 @@ class Groups extends \Springboard\Model {
         gm.groupid = '" . $this->id . "' AND
         gm.userid  = u.id AND
         u.disabled = '0'
-      GROUP BY gm.userid
+      LIMIT 1
     ");
 
   }
