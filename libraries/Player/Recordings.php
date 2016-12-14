@@ -770,7 +770,7 @@ class Recordings extends Player {
 
     $ret = array(
       // the video is loaded on demand, i.e. when the user starts playback with a click
-      'splash' => true,
+      'splash' => false,
       // By default the embed feature loads the embed script and Flowplayer assets from our CDN. This can be customized in the embed configuration object if you prefer to host the files yourself.
       'embed' => false,
       // minden video wide-screen

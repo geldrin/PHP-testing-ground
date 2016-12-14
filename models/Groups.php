@@ -76,6 +76,7 @@ class Groups extends \Springboard\Model {
   public function getUserCount() {
 
     $this->ensureID();
+    // a join oka:
     // mivel lehetseges hogy a groups_members-be van rekord de nem tartozik hozza
     // user mert mondjuk non-lokalis (ActiveDirectory) userekbol all a csoport
     return $this->db->getOne("
