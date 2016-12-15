@@ -20,6 +20,11 @@ export default class Flash {
     this.l = l;
   }
 
+  private log(...params: Object[]): void {
+    params.unshift("[Flash]");
+    console.log.apply(console, params);
+  }
+
   private getFileName(): string {
     let subtype = this.cfg.get('flashplayer.subtype');
     let ver = this.cfg.get('version');
@@ -42,7 +47,7 @@ export default class Flash {
     let fileName = this.getFileName();
     let paramStr = String(this.cfg.get('flashplayer.params', 'flashdefaults.params'));
     let param = this.getParamRef(window, paramStr.split('.'));
-    let config = JSON.parse(String(this.cfg.getFlashConfig()));
+    let config = JSON.parse(flashconfig);
 
     swfobject.embedSWF(
       fileName,

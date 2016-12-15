@@ -82,6 +82,14 @@ System.register("player/Flash", [], function (exports_3, context_3) {
                     this.cfg = cfg;
                     this.l = l;
                 }
+                Flash.prototype.log = function () {
+                    var params = [];
+                    for (var _i = 0; _i < arguments.length; _i++) {
+                        params[_i] = arguments[_i];
+                    }
+                    params.unshift("[Flash]");
+                    console.log.apply(console, params);
+                };
                 Flash.prototype.getFileName = function () {
                     var subtype = this.cfg.get('flashplayer.subtype');
                     var ver = this.cfg.get('version');
@@ -100,7 +108,7 @@ System.register("player/Flash", [], function (exports_3, context_3) {
                     var fileName = this.getFileName();
                     var paramStr = String(this.cfg.get('flashplayer.params', 'flashdefaults.params'));
                     var param = this.getParamRef(window, paramStr.split('.'));
-                    var config = JSON.parse(String(this.cfg.getFlashConfig()));
+                    var config = JSON.parse(flashconfig);
                     swfobject.embedSWF(fileName, this.cfg.get('containerid'), this.cfg.get('width'), this.cfg.get('height'), '11.1.0', 'flash/swfobject/expressInstall.swf', config, param, null, handleFlashLoad);
                 };
                 return Flash;
