@@ -1,0 +1,77 @@
+2016-12-16 15:51:15.121370 | -----------------------------[ Starting ocr process on recording #19 ]------------------------------
+2016-12-16 15:51:15.141523 | [INFO] Temporary directories have been created.
+2016-12-16 15:51:15.163503 | [INFO] Selected language code is: 'eng'.
+2016-12-16 15:51:15.163658 | Extracting frames from video. Command line:
+nice -n 15 /home/conv/ffmpeg/ffmpeg-customVSQ-git20160628-static/ffmpeg -v 32 -i /srv/vsq_temp/videosquare.eu/converter/master/19/19_content.mp4 -filter_complex 'scale=w=320:h=180:force_original_aspect_ratio=decrease' -r 1 -q:v 1 -f image2 /srv/vsq_temp/videosquare.eu/converter/ocr/19/cmp/%06d.png -r 1 -q:v 1 -f image2 /srv/vsq_temp/videosquare.eu/converter/ocr/19/wdir/%06d.jpg
+
+
+2016-12-16 15:58:03.642223 | Frame extraction finished. Total number of frames: 909
+2016-12-16 15:58:03.642644 | Discarding redundant frames...
+2016-12-16 15:58:18.325046 | Detecting motion scenes.
+2016-12-16 15:58:18.325192 |  > 0 motion sections have been detected.
+2016-12-16 15:58:18.325325 | Preparing frames for OCR.
+2016-12-16 15:58:27.494373 | [WARN] Ocr conversion failed! Message:
+Cuneiform for Linux 1.1.0
+PUMA_XFinalrecognition failed.
+ at frame#53
+[WARN] Ocr conversion failed! Message:
+Cuneiform for Linux 1.1.0
+PUMA_XFinalrecognition failed.
+ at frame#270
+[WARN] Ocr conversion failed! Message:
+Cuneiform for Linux 1.1.0
+PUMA_XFinalrecognition failed.
+ at frame#284
+[WARN] Ocr conversion failed! Message:
+Cuneiform for Linux 1.1.0
+PUMA_XFinalrecognition failed.
+ at frame#390
+[WARN] Ocr conversion failed! Message:
+Cuneiform for Linux 1.1.0
+PUMA_XFinalrecognition failed.
+ at frame#634
+[WARN] Ocr conversion failed! Message:
+Cuneiform for Linux 1.1.0
+PUMA_XFinalrecognition failed.
+ at frame#687
+[WARN] Ocr conversion failed! Message:
+Cuneiform for Linux 1.1.0
+
+PUMA_XFinalrecognition failed.
+ at frame#733
+[WARN] Ocr conversion failed! Message:
+Cuneiform for Linux 1.1.0
+
+PUMA_XFinalrecognition failed.
+ at frame#892
+[WARN] Ocr conversion failed! Message:
+Cuneiform for Linux 1.1.0
+
+PUMA_XFinalrecognition failed.
+ at frame#907
+[WARN] Ocr conversion failed! Message:
+Cuneiform for Linux 1.1.0
+
+PUMA_XFinalrecognition failed.
+ at frame#908
+[WARN] Ocr conversion failed! Message:
+Cuneiform for Linux 1.1.0
+
+PUMA_XFinalrecognition failed.
+ at frame#909
+0 frames has been processed out of 11.
+Total number of warnings: 11.
+2016-12-16 15:58:27.500778 | [INFO] Recording id = 19 ocr status has been changed to 'failedconverting'.
+2016-12-16 15:58:27.502425 | NODE: vsq-conv.kpmg.hu
+SITE: video.kpmg.hu/
+JOB: job_ocr
+RECORDING: 19
+ACTION: CONVERTING
+STATUS MESSAGE: failedconverting
+
+DATA: CONVERTING FAILED.
+ > Phase:Extracting text
+ > Message: [ERROR] OCR processing failed at the following phase: 'Extracting text'
+
+Message:
+[ERROR] Failed to extract data from any frames!
