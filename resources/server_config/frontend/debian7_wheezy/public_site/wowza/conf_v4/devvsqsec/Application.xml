@@ -29,7 +29,7 @@
 		-->
 		<Streams>
 			<StreamType>default</StreamType>
-			<StorageDir>/srv/vsq/dev.videosquare.eu/recordings</StorageDir>
+			<StorageDir>/srv/vsqdev/dev.videosquare.eu/recordings/</StorageDir>
 			<KeyDir>${com.wowza.wms.context.VHostConfigHome}/keys</KeyDir>
 			<!-- LiveStreamPacketizers (separate with commas): cupertinostreamingpacketizer, smoothstreamingpacketizer, sanjosestreamingpacketizer, mpegdashstreamingpacketizer, cupertinostreamingrepeater, smoothstreamingrepeater, sanjosestreamingrepeater, mpegdashstreamingrepeater, dvrstreamingpacketizer, dvrstreamingrepeater -->
 			<LiveStreamPacketizers></LiveStreamPacketizers>
@@ -85,7 +85,7 @@
 		<Client>
 			<IdleFrequency>-1</IdleFrequency>
 			<Access>
-				<StreamReadAccess>*</StreamReadAccess>
+				<StreamReadAccess></StreamReadAccess>
 				<StreamWriteAccess></StreamWriteAccess>
 				<StreamAudioSampleAccess></StreamAudioSampleAccess>
 				<StreamVideoSampleAccess></StreamVideoSampleAccess>
@@ -97,7 +97,7 @@
 			<!-- RTP/Authentication/[type]Methods defined in Authentication.xml. Default setup includes; none, basic, digest -->
 			<Authentication>
 				<PublishMethod>block</PublishMethod>
-				<PlayMethod>none</PlayMethod>
+				<PlayMethod>block</PlayMethod>
 			</Authentication>
 			<!-- RTP/AVSyncMethod. Valid values are: senderreport, systemclock, rtptimecode -->
 			<AVSyncMethod>senderreport</AVSyncMethod>
