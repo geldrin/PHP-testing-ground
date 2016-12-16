@@ -3787,6 +3787,10 @@ class Recordings extends \Springboard\Model {
   }
 
   public function searchAddSlidesToArray( $searchterm, &$arr ) {
+    $this->ensureObjectLoaded();
+    if ( $this->row['ocrstatus'] !== 'onstorage' )
+      return $arr;
+
     // a $searchterm-et mar escapelve varjuk!!!
     $recordingids = array();
     $recidToIndex = array();
