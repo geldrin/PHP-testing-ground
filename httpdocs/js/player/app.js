@@ -6,10 +6,10 @@ System.register("player/Config", [], function (exports_1, context_1) {
         setters: [],
         execute: function () {
             Config = (function () {
-                function Config(data) {
-                    if (!data || !data['flashplayer'] || !data['flashplayer']['config'])
+                function Config(data, flashConfig) {
+                    if (!data || !flashConfig)
                         throw new Error('Invalid configuration passed');
-                    this.flashConfig = data['flashplayer']['config'];
+                    this.flashConfig = flashConfig;
                     this.config = data;
                 }
                 Config.prototype.getFlashConfig = function () {
@@ -108,8 +108,7 @@ System.register("player/Flash", [], function (exports_3, context_3) {
                     var fileName = this.getFileName();
                     var paramStr = String(this.cfg.get('flashplayer.params', 'flashdefaults.params'));
                     var param = this.getParamRef(window, paramStr.split('.'));
-                    var config = JSON.parse(flashconfig);
-                    swfobject.embedSWF(fileName, this.cfg.get('containerid'), this.cfg.get('width'), this.cfg.get('height'), '11.1.0', 'flash/swfobject/expressInstall.swf', config, param, null, handleFlashLoad);
+                    swfobject.embedSWF(fileName, this.cfg.get('containerid'), this.cfg.get('width'), this.cfg.get('height'), '11.1.0', 'flash/swfobject/expressInstall.swf', this.cfg.getFlashConfig(), param, null, handleFlashLoad);
                 };
                 return Flash;
             }());
@@ -722,9 +721,10 @@ System.register("player/app", ["Locale", "player/Config", "player/Player"], func
         execute: function () {
             (function ($) {
                 var pcCopy = $.extend(true, {}, playerconfig);
+                var fcCopy = $.extend(true, {}, flashconfig);
                 var lCopy = $.extend(true, {}, l);
                 $(function () {
-                    var cfg = new Config_1.default(pcCopy);
+                    var cfg = new Config_1.default(pcCopy, fcCopy);
                     var loc = new Locale_1.default(lCopy);
                     var player = new Player_1.default(cfg, loc);
                     player.init();

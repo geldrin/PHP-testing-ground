@@ -5,11 +5,11 @@ export default class Config {
   private flashConfig: any;
   private config: any;
 
-  constructor(data: any) {
-    if (!data || !data['flashplayer'] || !data['flashplayer']['config'])
+  constructor(data: any, flashConfig: any) {
+    if (!data || !flashConfig)
       throw new Error('Invalid configuration passed');
 
-    this.flashConfig = data['flashplayer']['config'];
+    this.flashConfig = flashConfig;
     this.config = data;
   }
 
