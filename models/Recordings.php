@@ -237,16 +237,19 @@ class Recordings extends \Springboard\Model {
 
   public function assembleAdditionalFulltextCache() {
 
-    $this->ensureID();
-    $slides = $this->db->getCol("
-      SELECT ocrtext
-      FROM ocr_frames
-      WHERE
-        status      = 'onstorage' AND
-        recordingid = '" . $this->id . "' AND
-        ocrtext IS NOT NULL AND
-        LENGTH(ocrtext) > 0
-    ");
+    $this->ensureObjectLoaded();
+    if ( $this->row['ocrstatus'] !== 'onstorage' )
+      $slides = $this->db->getCol("
+        SELECT ocrtext
+        FROM ocr_frames
+        WHERE
+          status      = 'onstorage' AND
+          recordingid = '" . $this->id . "' AND
+          ocrtext IS NOT NULL AND
+          LENGTH(ocrtext) > 0
+      ");
+    else
+      $slides = array();
 
     $cache = implode( ' ', $slides );
     $documents = $this->db->getCol("
@@ -3787,10 +3790,6 @@ class Recordings extends \Springboard\Model {
   }
 
   public function searchAddSlidesToArray( $searchterm, &$arr ) {
-    $this->ensureObjectLoaded();
-    if ( $this->row['ocrstatus'] !== 'onstorage' )
-      return $arr;
-
     // a $searchterm-et mar escapelve varjuk!!!
     $recordingids = array();
     $recidToIndex = array();
@@ -3809,16 +3808,20 @@ class Recordings extends \Springboard\Model {
     // egyet kivonunk a positionsec-bol hogy biztosan lassuk a slidot
     $slides = $this->db->query("
       SELECT
-        *,
-        IF(positionsec = 0, 0, positionsec -1) AS positionsec
-      FROM ocr_frames
+        of.*,
+        IF(of.positionsec = 0, 0, positionsec -1) AS positionsec
+      FROM
+        ocr_frames AS of,
+        recordings AS r
       WHERE
-        status = 'onstorage' AND
-        recordingid IN('" . implode("', '", $recordingids ) . "') AND
-        ocrtext IS NOT NULL AND
-        LENGTH(ocrtext) > 0 AND
-        ocrtext LIKE $searchterm
-      ORDER BY recordingid, positionsec
+        r.id = of.recordingid AND
+        r.ocrstatus = 'onstorage' AND
+        of.status = 'onstorage' AND
+        of.recordingid IN('" . implode("', '", $recordingids ) . "') AND
+        of.ocrtext IS NOT NULL AND
+        LENGTH(of.ocrtext) > 0 AND
+        of.ocrtext LIKE $searchterm
+      ORDER BY of.recordingid, of.positionsec
     ");
     foreach( $slides as $row ) {
       $key = $recidToIndex[ $row['recordingid'] ];
