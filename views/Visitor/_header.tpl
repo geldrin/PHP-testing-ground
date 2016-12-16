@@ -116,7 +116,7 @@
   SystemJS.import('debug/app');
   {if $playerconfig}
 
-  var flashconfig = {$playerconfig.flashplayer.config};
+  var flashconfig = {$playerconfig.flashplayer.config|@jsonescape};
   var playerconfig = {$playerconfig|@unset:"flashplayer.config"|@jsonescape};
   SystemJS.import('player/app');
   {/if}
