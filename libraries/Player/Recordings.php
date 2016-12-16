@@ -518,12 +518,10 @@ class Recordings extends Player {
   }
 
   protected function getFlashConfig( $cfg ) {
-    $parameters = $this->getFlashData( $cfg );
-    $this->bootstrap->includeTemplatePlugin('jsonescape');
-    $config = smarty_modifier_jsonescape( $parameters, true );
-
     $ret = $cfg['flashplayer'];
-    $ret['config'] = $this->bootstrap->getSignedPlayerParameters( $config );
+    $ret['config'] = $this->bootstrap->getSignedPlayerParameters(
+      $this->getFlashData( $cfg )
+    );
     return $ret;
   }
 
