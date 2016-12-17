@@ -128,8 +128,10 @@ System.register("player/Flow", [], function (exports_4, context_4) {
                     this.videoTags = [];
                     this.hlsEngines = [];
                     this.eventsInitialized = false;
+                    this.activeQualityClass = "active";
+                    this.mse = window.MediaSource || window.WebKitMediaSource;
                     this.maxLevel = 0;
-                    Flow.log(arguments);
+                    Flow.log("constructor", arguments);
                     this.player = player;
                     this.cfg = player.conf.vsq;
                     this.hlsConf = jQuery.extend({
@@ -287,7 +289,7 @@ System.register("player/Flow", [], function (exports_4, context_4) {
                         videoEvent = _this.eventName(videoEvent);
                         master.on(videoEvent, function (e) {
                             if (flowEvent.indexOf("progress") < 0)
-                                _this.log(videoEvent, flowEvent, e);
+                                _this.log("event", videoEvent, flowEvent, e);
                             var video = _this.player.video;
                             switch (flowEvent) {
                                 case "ready":
@@ -365,7 +367,7 @@ System.register("player/Flow", [], function (exports_4, context_4) {
                                                 endOffset: video.duration
                                             }
                                         ]);
-                                        _this.log(_this.maxLevel);
+                                        _this.log("maxLevel", _this.maxLevel);
                                         _this.hlsSet('nextLoadLevel', _this.maxLevel);
                                         _this.hlsCall('startLoad', [masterHLS.config.startPosition]);
                                         _this.maxLevel = 0;
@@ -425,19 +427,26 @@ System.register("player/Flow", [], function (exports_4, context_4) {
                     this.hlsEngines[Flow.MASTER].VSQType = Flow.MASTER;
                     this.hlsEngines[Flow.CONTENT] = new Hls(conf);
                     this.hlsEngines[Flow.CONTENT].VSQType = Flow.CONTENT;
+                    var errorTypes = Hls.ErrorTypes;
+                    var errorDetails = Hls.ErrorDetails;
+                    var hlsQualitiesConf = video.hlsQualities || this.player.conf.hlsQualities;
+                    if (video.hlsQualities === false)
+                        hlsQualitiesConf = false;
                     var hlsEvents = Hls.Events;
                     jQuery.each(hlsEvents, function (eventName, hlsEvent) {
                         var shouldTrigger = _this.hlsConf.listeners && _this.hlsConf.listeners.indexOf(hlsEvent) > -1;
                         jQuery.each(_this.hlsEngines, function (hlsType, hls) {
                             hls.on(hlsEvent, function (e, data) {
-                                var errorTypes = Hls.ErrorTypes;
-                                var errorDetails = Hls.ErrorDetails;
                                 switch (eventName) {
                                     case "MEDIA_ATTACHED":
                                         hls.loadSource(video.src);
                                         break;
                                     case "MANIFEST_PARSED":
                                         delete _this.player.quality;
+                                        if (hlsQualitiesConf)
+                                            _this.initQualitySelection(hlsQualitiesConf, conf, data);
+                                        else
+                                            _this.qualityClean();
                                         hls.startLoad(hls.config.startPosition);
                                         break;
                                     case "FRAG_LOADED":
@@ -556,17 +565,17 @@ System.register("player/Flow", [], function (exports_4, context_4) {
                     this.setupVideoEvents(video);
                 };
                 Flow.prototype.pause = function () {
-                    this.multiCall('pause');
+                    this.tagCall('pause');
                 };
                 Flow.prototype.resume = function () {
-                    this.multiCall('play');
+                    this.tagCall('play');
                 };
                 Flow.prototype.speed = function (speed) {
-                    this.multiSet('playbackRate', speed);
+                    this.tagSet('playbackRate', speed);
                     this.player.trigger('speed', [this.player, speed]);
                 };
                 Flow.prototype.volume = function (volume) {
-                    this.multiSet('volume', volume);
+                    this.tagSet('volume', volume);
                 };
                 Flow.prototype.eventName = function (event) {
                     var postfix = '.' + Flow.engineName;
@@ -588,7 +597,7 @@ System.register("player/Flow", [], function (exports_4, context_4) {
                         this.videoTags.pop();
                 };
                 Flow.prototype.seek = function (to) {
-                    this.multiSet('currentTime', to);
+                    this.tagSet('currentTime', to);
                 };
                 Flow.prototype.pick = function (sources) {
                     if (sources.length == 0)
@@ -601,6 +610,169 @@ System.register("player/Flow", [], function (exports_4, context_4) {
                         return source;
                     }
                     return null;
+                };
+                Flow.prototype.dataQuality = function (quality) {
+                    if (!quality)
+                        quality = this.player.quality;
+                    return (quality || "").toLowerCase().replace(/\ /g, "");
+                };
+                Flow.prototype.removeAllQualityClasses = function () {
+                    var qualities = this.player.qualities;
+                    if (!qualities || qualities.length == 0)
+                        return;
+                    this.root.removeClass("quality-abr");
+                    for (var i = qualities.length - 1; i >= 0; i--) {
+                        var quality = qualities[i];
+                        this.root.removeClass("quality-" + this.dataQuality(quality));
+                    }
+                };
+                Flow.prototype.qualityClean = function () {
+                    delete this.player.hlsQualities;
+                    this.removeAllQualityClasses();
+                    this.root.find(".fp-quality-selector").remove();
+                };
+                Flow.prototype.getDriveQualities = function (levels) {
+                    var ret = [];
+                    switch (levels.length) {
+                        case 4:
+                            ret = [1, 2, 3];
+                            break;
+                        case 5:
+                            ret = [1, 2, 3, 4];
+                            break;
+                        case 6:
+                            ret = [1, 3, 4, 5];
+                            break;
+                        case 7:
+                            ret = [1, 3, 5, 6];
+                            break;
+                        case 8:
+                            ret = [1, 3, 6, 7];
+                            break;
+                        default:
+                            if (levels.length < 3 ||
+                                (levels[0].height && levels[2].height && levels[0].height === levels[2].height))
+                                return ret;
+                            ret = [1, 2];
+                            break;
+                    }
+                    return ret;
+                };
+                Flow.prototype.qualityIndex = function () {
+                    var qualityIx = this.player.qualities.indexOf(this.player.quality) + 1;
+                    return this.player.hlsQualities[qualityIx];
+                };
+                Flow.prototype.initQuality = function (hlsQualitiesConf, conf, data) {
+                    var _this = this;
+                    var levels = data.levels;
+                    var hlsQualities = [];
+                    var indices = [];
+                    var levelIndex = 0;
+                    var selectorElem;
+                    this.qualityClean();
+                    if (hlsQualitiesConf === "drive") {
+                        hlsQualities = this.getDriveQualities(data.levels);
+                        if (!hlsQualities)
+                            return;
+                    }
+                    else {
+                        if (typeof hlsQualitiesConf === "string") {
+                            hlsQualitiesConf.split(/\s*,\s*/).forEach(function (q) {
+                                indices.push(parseInt(q, 10));
+                            });
+                        }
+                        else if (typeof hlsQualitiesConf !== "boolean") {
+                            hlsQualitiesConf.forEach(function (q) {
+                                var val;
+                                if (isNaN(Number(q)))
+                                    val = q.level;
+                                else
+                                    val = q;
+                                indices.push(val);
+                            });
+                        }
+                        levels.forEach(function (level) {
+                            if ((hlsQualitiesConf === true || indices.indexOf(levelIndex) > -1) &&
+                                (!level.videoCodec ||
+                                    (level.videoCodec &&
+                                        _this.mse.isTypeSupported('video/mp4;codecs=' + level.videoCodec)))) {
+                                hlsQualities.push(levelIndex);
+                            }
+                            levelIndex += 1;
+                        });
+                        if (hlsQualities.length < 2) {
+                            return;
+                        }
+                    }
+                    this.player.qualities = [];
+                    hlsQualities.forEach(function (idx) {
+                        var level = levels[idx];
+                        var q = indices.length ? hlsQualitiesConf[indices.indexOf(idx)] : idx;
+                        var label = "Level " + (idx + 1);
+                        if (idx < 0)
+                            label = q.label || "Auto";
+                        else if (q.label)
+                            label = q.label;
+                        else {
+                            if (level.width && level.height)
+                                label = Math.min(level.width, level.height) + 'p';
+                        }
+                        _this.player.qualities.push(label);
+                    });
+                    selectorElem = flowplayer.common.createElement("ul", {
+                        "class": "fp-quality-selector"
+                    });
+                    ;
+                    this.root.find(".fp-ui").get(0).appendChild(selectorElem);
+                    hlsQualities.unshift(-1);
+                    this.player.hlsQualities = hlsQualities;
+                    if (!this.player.quality || this.player.qualities.indexOf(this.player.quality) < 0)
+                        this.player.quality = "abr";
+                    else {
+                        var startLevel = this.qualityIndex();
+                        this.hlsSet('startLevel', [startLevel]);
+                        this.hlsSet('loadLevel', [startLevel]);
+                    }
+                    selectorElem.appendChild(flowplayer.common.createElement("li", {
+                        "data-quality": "abr"
+                    }, "Auto"));
+                    this.player.qualities.forEach(function (q) {
+                        selectorElem.appendChild(flowplayer.common.createElement("li", {
+                            "data-quality": _this.dataQuality(q)
+                        }, q));
+                    });
+                    this.root.addClass("quality-" + this.dataQuality());
+                    this.root.on(this.eventName("click"), ".fp-quality-selector li", function (e) {
+                        var choice = jQuery(e.currentTarget);
+                        var selectors = _this.root.find('.fp-quality-selector li');
+                        var smooth = _this.player.conf.smoothSwitching;
+                        var paused = _this.videoTags[Flow.MASTER].paused;
+                        if (choice.hasClass(_this.activeQualityClass))
+                            return;
+                        if (!paused && !smooth)
+                            jQuery(_this.videoTags[Flow.MASTER]).one(_this.eventName("pause"), function () {
+                                _this.root.removeClass("is-paused");
+                            });
+                        for (var i = 0; i < selectors.length; i += 1) {
+                            var selector = selectors.eq(i);
+                            var active = selector.is(choice);
+                            if (active) {
+                                _this.player.quality = i > 0
+                                    ? _this.player.qualities[i - 1]
+                                    : "abr";
+                                if (smooth && !_this.player.poster)
+                                    _this.hlsSet('nextLevel', _this.qualityIndex());
+                                else
+                                    _this.hlsSet('currentLevel', _this.qualityIndex());
+                                choice.addClass(_this.activeQualityClass);
+                                if (paused)
+                                    _this.tagCall('play');
+                            }
+                            selector.toggleClass(_this.activeQualityClass, active);
+                        }
+                        _this.removeAllQualityClasses();
+                        _this.root.addClass("quality-" + _this.dataQuality());
+                    });
                 };
                 Flow.setup = function () {
                     if (Flow.initDone)

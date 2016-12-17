@@ -28,12 +28,14 @@ export default class Flow {
   private eventsInitialized = false;
   private timer: number;
 
+  private activeQualityClass = "active";
+  private mse = window.MediaSource || window.WebKitMediaSource;
   private maxLevel: number = 0; // hls specific
   private recoverMediaErrorDate: number;
   private swapAudioCodecDate: number;
 
   constructor(player: Flowplayer, root: Element) {
-    Flow.log(arguments);
+    Flow.log("constructor", arguments);
     this.player = player;
     this.cfg = player.conf.vsq as VSQConfig;
     this.hlsConf = jQuery.extend({
@@ -224,7 +226,7 @@ export default class Flow {
 
       master.on(videoEvent, (e: Event) => {
         if (flowEvent.indexOf("progress") < 0)
-          this.log(videoEvent, flowEvent, e);
+          this.log("event", videoEvent, flowEvent, e);
 
         let video = this.player.video;
         switch(flowEvent) {
@@ -317,7 +319,7 @@ export default class Flow {
                 }
               ]);
 
-              this.log(this.maxLevel);
+              this.log("maxLevel", this.maxLevel);
               this.hlsSet('nextLoadLevel', this.maxLevel);
               this.hlsCall('startLoad', [masterHLS.config.startPosition]);
               this.maxLevel = 0;
@@ -394,15 +396,19 @@ export default class Flow {
     this.hlsEngines[Flow.CONTENT] = new Hls(conf);
     this.hlsEngines[Flow.CONTENT].VSQType = Flow.CONTENT;
 
+    let errorTypes = Hls.ErrorTypes;
+    let errorDetails = Hls.ErrorDetails;
+    let hlsQualitiesConf = video.hlsQualities || this.player.conf.hlsQualities;
+    if (video.hlsQualities === false)
+      hlsQualitiesConf = false;
+
     let hlsEvents = Hls.Events;
     jQuery.each(hlsEvents, (eventName: string, hlsEvent: string): void => {
       let shouldTrigger = this.hlsConf.listeners && this.hlsConf.listeners.indexOf(hlsEvent) > -1;
+
       jQuery.each(this.hlsEngines, (hlsType: number, hls: any): void => {
 
         hls.on(hlsEvent, (e: Event, data: any): void => {
-          let errorTypes = Hls.ErrorTypes;
-          let errorDetails = Hls.ErrorDetails;
-
           switch(eventName) {
             case "MEDIA_ATTACHED":
               hls.loadSource(video.src);
@@ -410,6 +416,11 @@ export default class Flow {
 
             case "MANIFEST_PARSED":
               delete this.player.quality;
+              if (hlsQualitiesConf)
+                this.initQualitySelection(hlsQualitiesConf, conf, data);
+              else
+                this.qualityClean();
+
               hls.startLoad(hls.config.startPosition);
               break;
 
@@ -519,8 +530,7 @@ export default class Flow {
     elem.find('source').removeAttr('src');
     elem.removeAttr('src');
 
-    // warning squelch
-    (tagElem as any).load();
+    tagElem.load();
     elem.remove();
   }
 
@@ -566,20 +576,20 @@ export default class Flow {
   }
 
   public pause(): void {
-    this.multiCall('pause');
+    this.tagCall('pause');
   }
 
   public resume(): void {
-    this.multiCall('play');
+    this.tagCall('play');
   }
 
   public speed(speed: Number): void {
-    this.multiSet('playbackRate', speed);
+    this.tagSet('playbackRate', speed);
     this.player.trigger('speed', [this.player, speed]);
   }
 
   public volume(volume: Number): void {
-    this.multiSet('volume', volume);
+    this.tagSet('volume', volume);
   }
 
   private eventName(event?: string): string {
@@ -609,7 +619,7 @@ export default class Flow {
   }
 
   public seek(to: Number): void {
-    this.multiSet('currentTime', to);
+    this.tagSet('currentTime', to);
   }
 
   public pick(sources: FlowSource[]): FlowSource | null {
@@ -626,6 +636,198 @@ export default class Flow {
     }
 
     return null;
+  }
+
+  private dataQuality(quality?: string): string {
+    if (!quality)
+      quality = this.player.quality;
+
+    return (quality || "").toLowerCase().replace(/\ /g, "");
+  }
+
+  private removeAllQualityClasses(): void {
+    let qualities = this.player.qualities;
+
+    if (!qualities || qualities.length == 0)
+      return;
+
+    this.root.removeClass("quality-abr");
+    for (var i = qualities.length - 1; i >= 0; i--) {
+      let quality = qualities[i];
+      this.root.removeClass("quality-" + this.dataQuality(quality));
+    }
+  }
+
+  private qualityClean() {
+    delete this.player.hlsQualities;
+    this.removeAllQualityClasses();
+    this.root.find(".fp-quality-selector").remove();
+  }
+
+  private getDriveQualities(levels: any[]): number[] {
+    let ret: number[] = [];
+    switch(levels.length) {
+      case 4:
+        ret = [1, 2, 3];
+        break;
+      case 5:
+        ret = [1, 2, 3, 4];
+        break;
+      case 6:
+        ret = [1, 3, 4, 5];
+        break;
+      case 7:
+        ret = [1, 3, 5, 6];
+        break;
+      case 8:
+        ret = [1, 3, 6, 7];
+        break;
+      default:
+        if (
+             levels.length < 3 ||
+             (levels[0].height && levels[2].height && levels[0].height === levels[2].height)
+           )
+          return ret;
+
+        ret = [1, 2];
+        break;
+    }
+
+    return ret;
+  }
+
+  private qualityIndex(): string {
+    let qualityIx = this.player.qualities.indexOf(this.player.quality) + 1;
+    return this.player.hlsQualities[qualityIx];
+  }
+
+  private initQuality(hlsQualitiesConf: any, conf: any, data: any): void {
+    let levels = data.levels as string[];
+    let hlsQualities: number[] = [];
+    let indices: number[] = [];
+    let levelIndex = 0;
+    let selectorElem: Element;
+
+    this.qualityClean();
+    if (hlsQualitiesConf === "drive") {
+      hlsQualities = this.getDriveQualities(data.levels);
+      if (!hlsQualities)
+        return;
+    } else {
+      if (typeof hlsQualitiesConf === "string") {
+        hlsQualitiesConf.split(/\s*,\s*/).forEach((q) => {
+            indices.push(parseInt(q, 10));
+        });
+      } else if (typeof hlsQualitiesConf !== "boolean") {
+        hlsQualitiesConf.forEach((q: any) => {
+          let val: number;
+          if (isNaN(Number(q)))
+            val = q.level;
+          else
+            val = q;
+
+          indices.push(val);
+        });
+      }
+      levels.forEach((level) => {
+        // do not check audioCodec,
+        // as e.g. HE_AAC is decoded as LC_AAC by hls.js on Android
+        if ((hlsQualitiesConf === true || indices.indexOf(levelIndex) > -1) &&
+            (!level.videoCodec ||
+            (level.videoCodec &&
+            this.mse.isTypeSupported('video/mp4;codecs=' + level.videoCodec)))) {
+          hlsQualities.push(levelIndex);
+        }
+        levelIndex += 1;
+      });
+
+      if (hlsQualities.length < 2) {
+        return;
+      }
+    }
+
+    this.player.qualities = [];
+    hlsQualities.forEach((idx) => {
+      let level = levels[idx];
+      let q = indices.length? hlsQualitiesConf[indices.indexOf(idx)]: idx;
+      let label = "Level " + (idx + 1);
+
+      if (idx < 0)
+        label = q.label || "Auto";
+      else if (q.label)
+        label = q.label;
+      else {
+        if (level.width && level.height)
+          label = Math.min(level.width, level.height) + 'p';
+      }
+
+      this.player.qualities.push(label);
+    });
+
+    selectorElem = flowplayer.common.createElement("ul", {
+        "class": "fp-quality-selector"
+    });;
+    this.root.find(".fp-ui").get(0).appendChild(selectorElem);
+
+    hlsQualities.unshift(-1);
+    this.player.hlsQualities = hlsQualities;
+
+    if (!this.player.quality || this.player.qualities.indexOf(this.player.quality) < 0)
+      this.player.quality = "abr";
+    else {
+      let startLevel = this.qualityIndex();
+      this.hlsSet('startLevel', [startLevel]);
+      this.hlsSet('loadLevel', [startLevel]);
+    }
+
+    selectorElem.appendChild(flowplayer.common.createElement("li", {
+      "data-quality": "abr"
+    }, "Auto"));
+    this.player.qualities.forEach((q: string) => {
+      selectorElem.appendChild(flowplayer.common.createElement("li", {
+        "data-quality": this.dataQuality(q)
+      }, q));
+    });
+
+    this.root.addClass("quality-" + this.dataQuality());
+    this.root.on(this.eventName("click"), ".fp-quality-selector li", (e: Event) => {
+      let choice = jQuery(e.currentTarget);
+      let selectors = this.root.find('.fp-quality-selector li');
+      let smooth = this.player.conf.smoothSwitching;
+      let paused = this.videoTags[Flow.MASTER].paused;
+
+      if (choice.hasClass(this.activeQualityClass))
+        return;
+
+      if (!paused && !smooth)
+        jQuery(this.videoTags[Flow.MASTER]).one(this.eventName("pause"), () => {
+          this.root.removeClass("is-paused");
+        });
+
+      for (let i = 0; i < selectors.length; i += 1) {
+        let selector = selectors.eq(i);
+        let active = selector.is(choice);
+        if (active) {
+          this.player.quality = i > 0
+            ? this.player.qualities[i - 1]
+            : "abr";
+
+          if (smooth && !this.player.poster)
+            this.hlsSet('nextLevel', this.qualityIndex());
+          else
+            this.hlsSet('currentLevel', this.qualityIndex());
+
+          choice.addClass(this.activeQualityClass);
+          if (paused)
+            this.tagCall('play');
+        }
+
+        selector.toggleClass(this.activeQualityClass, active);
+      }
+
+      this.removeAllQualityClasses();
+      this.root.addClass("quality-" + this.dataQuality());
+    });
   }
 
   public static setup(): void {
