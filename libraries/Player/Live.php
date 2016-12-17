@@ -430,13 +430,10 @@ class Live extends Player {
   }
 
   protected function getFlashConfig( $cfg ) {
-    $parameters = $this->getFlashData( $cfg );
-    $this->bootstrap->includeTemplatePlugin('jsonescape');
-    $parameters = $this->bootstrap->getSignedPlayerParameters( $parameters );
-    $config = smarty_modifier_jsonescape( $parameters, true );
-
     $ret = $cfg['flashplayer'];
-    $ret['config'] = $config;
+    $ret['config'] = $this->bootstrap->getSignedPlayerParameters(
+      $this->getFlashData( $cfg )
+    );
     return $ret;
   }
 
