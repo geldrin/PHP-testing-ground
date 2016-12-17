@@ -4073,3 +4073,16 @@ table.paging .pin {
 table.paging tr.even {
   background-color: #f4f4f4;
 }
+
+#player .vsq-engine {
+  width: 50%;
+  height: auto;
+}
+#player .vsq-engine.vsq-master {
+  left: 0;
+  right: auto;
+}
+#player .vsq-engine.vsq-content {
+  left: auto;
+  right: 0;
+}

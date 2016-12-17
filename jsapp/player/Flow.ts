@@ -68,7 +68,7 @@ export default class Flow {
       if (elem == null)
         continue;
 
-      ret[i] = data[funcName].apply(elem, args);
+      ret[i] = elem[funcName].apply(elem, args);
     }
 
     return ret;
@@ -217,7 +217,6 @@ export default class Flow {
       volumechange: "volume",
       error       : "error"
     };
-    let hlsEvents = Hls.Events;
 
     let currentTime: number = masterTag.currentTime;
     let arg: any = {};
@@ -312,7 +311,7 @@ export default class Flow {
 
             if (flush) {
               this.hlsCall('trigger', [
-                hlsEvents.BUFFER_FLUSHING,
+                Hls.Events.BUFFER_FLUSHING,
                 {
                   startOffset: 0,
                   endOffset: video.duration
@@ -387,127 +386,12 @@ export default class Flow {
     });
   }
 
-  private setupHLSEvents(video: FlowVideo): void {
-    let conf = jQuery.extend({}, this.hlsConf);
-    conf.autoStartLoad = false;
+  private eventName(event?: string): string {
+    let postfix = '.' + Flow.engineName;
+    if (!event)
+      return postfix;
 
-    this.hlsEngines[Flow.MASTER] = new Hls(conf);
-    this.hlsEngines[Flow.MASTER].VSQType = Flow.MASTER;
-    this.hlsEngines[Flow.CONTENT] = new Hls(conf);
-    this.hlsEngines[Flow.CONTENT].VSQType = Flow.CONTENT;
-
-    let errorTypes = Hls.ErrorTypes;
-    let errorDetails = Hls.ErrorDetails;
-    let hlsQualitiesConf = video.hlsQualities || this.player.conf.hlsQualities;
-    if (video.hlsQualities === false)
-      hlsQualitiesConf = false;
-
-    let hlsEvents = Hls.Events;
-    jQuery.each(hlsEvents, (eventName: string, hlsEvent: string): void => {
-      let shouldTrigger = this.hlsConf.listeners && this.hlsConf.listeners.indexOf(hlsEvent) > -1;
-
-      jQuery.each(this.hlsEngines, (hlsType: number, hls: any): void => {
-
-        hls.on(hlsEvent, (e: Event, data: any): void => {
-          switch(eventName) {
-            case "MEDIA_ATTACHED":
-              hls.loadSource(video.src);
-              break;
-
-            case "MANIFEST_PARSED":
-              delete this.player.quality;
-              if (hlsQualitiesConf)
-                this.initQualitySelection(hlsQualitiesConf, conf, data);
-              else
-                this.qualityClean();
-
-              hls.startLoad(hls.config.startPosition);
-              break;
-
-            case "FRAG_LOADED":
-              if (
-                  this.hlsConf.bufferWhilePaused && !this.player.live &&
-                  hls.autoLevelEnabled && hls.nextLoadLevel > this.maxLevel
-                )
-                this.maxLevel = hls.nextLoadLevel;
-              break;
-
-            case "FRAG_PARSING_METADATA":
-              break;
-
-            case "ERROR":
-              let flowError: number | undefined = undefined;
-              let errorObj: any = {};
-              if (data.fatal || this.hlsConf.strict) {
-                switch(data.type) {
-                  case errorTypes.NETWORK_ERROR:
-                    if (this.hlsConf.recoverNetworkError)
-                      this.doRecover(this.player.conf, data.type, true);
-                    else if (data.frag && data.frag.url) {
-                      errorObj.url = data.frag.url;
-                      flowError = 2;
-                    } else
-                      flowError = 4;
-                    break;
-
-                  case errorTypes.MEDIA_ERROR:
-                    if (this.hlsConf.recoverMediaError)
-                      flowError = this.doRecover(this.player.conf, data.type, false);
-                    else
-                      flowError = 3;
-                    break;
-
-                  default:
-                    hls.destroy();
-                    flowError = 5;
-                    break;
-                }
-
-                if (flowError !== undefined) {
-                  errorObj.code = flowError;
-                  if (flowError > 2) {
-                    errorObj.video = jQuery.extend(video, {
-                      url: data.url || video.src
-                    });
-                  }
-
-                  this.player.trigger("error", [this.player, errorObj]);
-                }
-              } else {
-                switch(data.details) {
-                  case errorDetails.BUFFER_STALLED_ERROR:
-                  case errorDetails.FRAG_LOOP_LOADING_ERROR: // !!!FALLTHROUGH!!!
-                    this.root.addClass('is-seeking'); // a recoveryClass
-                    jQuery(this.videoTags).one(this.eventName("timeupdate"), () => {
-                      this.root.removeClass('is-seeking');
-                    });
-                    break;
-                }
-              }
-              break;
-
-            default:
-              throw new Error("unhandled hls eventname: " + eventName);
-          }
-
-          if (shouldTrigger && hlsType === Flow.MASTER)
-            this.player.trigger(e, [this.player, data]);
-        });
-
-      });
-    });
-
-    jQuery.each(this.hlsEngines, (hlsType: number, hls: any): void => {
-      let tag = this.videoTags[hls.VSQType];
-      if (this.hlsConf.adaptOnStartOnly) {
-        jQuery(tag).one(this.eventName("timeupdate"), () => {
-          hls.loadLevel = hls.loadLevel;
-        });
-      }
-
-      hls.attachMedia(tag);
-      // TODO autoplay
-    });
+    return event + postfix;
   }
 
   private createVideoTag(video: FlowVideo): Element {
@@ -534,9 +418,27 @@ export default class Flow {
     elem.remove();
   }
 
+  private setupHLS(type: number, conf: FlowVideo): void {
+    let hls = new Hls();
+
+    hls.on(Hls.Events.MEDIA_ATTACHED, () => {
+      hls.loadSource(conf.src);
+    });
+    hls.on(Hls.Events.MANIFEST_PARSED, () => {
+      hls.startLoad(hls.config.startPosition);
+    });
+
+    // TODO error recovery
+
+    hls.attachMedia(this.videoTags[type]);
+    this.hlsEngines[type] = hls;
+  }
+
   public load(video: FlowVideo): void {
     // mihez fogjuk prependelni a videokat
     let root = this.root.find('.fp-player');
+    root.find('img').remove();
+
     this.hlsConf = jQuery.extend(
       this.hlsConf,
       this.player.conf.hlsjs,
@@ -561,6 +463,7 @@ export default class Flow {
       let engine = jQuery(this.videoTags[Flow.CONTENT]);
       engine.addClass('vsq-content');
       root.prepend(engine);
+      this.setupHLS(Flow.CONTENT, secondVideo);
     }
 
     if (this.videoTags[Flow.MASTER])
@@ -571,6 +474,7 @@ export default class Flow {
     let engine = jQuery(this.videoTags[Flow.MASTER]);
     engine.addClass('vsq-master');
     root.prepend(engine);
+    this.setupHLS(Flow.MASTER, video);
 
     this.setupVideoEvents(video);
   }
@@ -590,14 +494,6 @@ export default class Flow {
 
   public volume(volume: Number): void {
     this.tagSet('volume', volume);
-  }
-
-  private eventName(event?: string): string {
-    let postfix = '.' + Flow.engineName;
-    if (!event)
-      return postfix;
-
-    return event + postfix;
   }
 
   public unload(): void {

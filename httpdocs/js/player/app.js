@@ -163,7 +163,7 @@ System.register("player/Flow", [], function (exports_4, context_4) {
                         var elem = data[i];
                         if (elem == null)
                             continue;
-                        ret[i] = data[funcName].apply(elem, args);
+                        ret[i] = elem[funcName].apply(elem, args);
                     }
                     return ret;
                 };
@@ -282,7 +282,6 @@ System.register("player/Flow", [], function (exports_4, context_4) {
                         volumechange: "volume",
                         error: "error"
                     };
-                    var hlsEvents = Hls.Events;
                     var currentTime = masterTag.currentTime;
                     var arg = {};
                     jQuery.each(events, function (videoEvent, flowEvent) {
@@ -361,7 +360,7 @@ System.register("player/Flow", [], function (exports_4, context_4) {
                                     }
                                     if (flush_1) {
                                         _this.hlsCall('trigger', [
-                                            hlsEvents.BUFFER_FLUSHING,
+                                            Hls.Events.BUFFER_FLUSHING,
                                             {
                                                 startOffset: 0,
                                                 endOffset: video.duration
@@ -419,108 +418,11 @@ System.register("player/Flow", [], function (exports_4, context_4) {
                         _this.hlsCall('destroy');
                     });
                 };
-                Flow.prototype.setupHLSEvents = function (video) {
-                    var _this = this;
-                    var conf = jQuery.extend({}, this.hlsConf);
-                    conf.autoStartLoad = false;
-                    this.hlsEngines[Flow.MASTER] = new Hls(conf);
-                    this.hlsEngines[Flow.MASTER].VSQType = Flow.MASTER;
-                    this.hlsEngines[Flow.CONTENT] = new Hls(conf);
-                    this.hlsEngines[Flow.CONTENT].VSQType = Flow.CONTENT;
-                    var errorTypes = Hls.ErrorTypes;
-                    var errorDetails = Hls.ErrorDetails;
-                    var hlsQualitiesConf = video.hlsQualities || this.player.conf.hlsQualities;
-                    if (video.hlsQualities === false)
-                        hlsQualitiesConf = false;
-                    var hlsEvents = Hls.Events;
-                    jQuery.each(hlsEvents, function (eventName, hlsEvent) {
-                        var shouldTrigger = _this.hlsConf.listeners && _this.hlsConf.listeners.indexOf(hlsEvent) > -1;
-                        jQuery.each(_this.hlsEngines, function (hlsType, hls) {
-                            hls.on(hlsEvent, function (e, data) {
-                                switch (eventName) {
-                                    case "MEDIA_ATTACHED":
-                                        hls.loadSource(video.src);
-                                        break;
-                                    case "MANIFEST_PARSED":
-                                        delete _this.player.quality;
-                                        if (hlsQualitiesConf)
-                                            _this.initQualitySelection(hlsQualitiesConf, conf, data);
-                                        else
-                                            _this.qualityClean();
-                                        hls.startLoad(hls.config.startPosition);
-                                        break;
-                                    case "FRAG_LOADED":
-                                        if (_this.hlsConf.bufferWhilePaused && !_this.player.live &&
-                                            hls.autoLevelEnabled && hls.nextLoadLevel > _this.maxLevel)
-                                            _this.maxLevel = hls.nextLoadLevel;
-                                        break;
-                                    case "FRAG_PARSING_METADATA":
-                                        break;
-                                    case "ERROR":
-                                        var flowError = undefined;
-                                        var errorObj = {};
-                                        if (data.fatal || _this.hlsConf.strict) {
-                                            switch (data.type) {
-                                                case errorTypes.NETWORK_ERROR:
-                                                    if (_this.hlsConf.recoverNetworkError)
-                                                        _this.doRecover(_this.player.conf, data.type, true);
-                                                    else if (data.frag && data.frag.url) {
-                                                        errorObj.url = data.frag.url;
-                                                        flowError = 2;
-                                                    }
-                                                    else
-                                                        flowError = 4;
-                                                    break;
-                                                case errorTypes.MEDIA_ERROR:
-                                                    if (_this.hlsConf.recoverMediaError)
-                                                        flowError = _this.doRecover(_this.player.conf, data.type, false);
-                                                    else
-                                                        flowError = 3;
-                                                    break;
-                                                default:
-                                                    hls.destroy();
-                                                    flowError = 5;
-                                                    break;
-                                            }
-                                            if (flowError !== undefined) {
-                                                errorObj.code = flowError;
-                                                if (flowError > 2) {
-                                                    errorObj.video = jQuery.extend(video, {
-                                                        url: data.url || video.src
-                                                    });
-                                                }
-                                                _this.player.trigger("error", [_this.player, errorObj]);
-                                            }
-                                        }
-                                        else {
-                                            switch (data.details) {
-                                                case errorDetails.BUFFER_STALLED_ERROR:
-                                                case errorDetails.FRAG_LOOP_LOADING_ERROR:
-                                                    _this.root.addClass('is-seeking');
-                                                    jQuery(_this.videoTags).one(_this.eventName("timeupdate"), function () {
-                                                        _this.root.removeClass('is-seeking');
-                                                    });
-                                                    break;
-                                            }
-                                        }
-                                        break;
-                                    default:
-                                        throw new Error("unhandled hls eventname: " + eventName);
-                                }
-                                if (shouldTrigger && hlsType === Flow.MASTER)
-                                    _this.player.trigger(e, [_this.player, data]);
-                            });
-                        });
-                    });
-                    jQuery.each(this.hlsEngines, function (hlsType, hls) {
-                        var tag = _this.videoTags[hls.VSQType];
-                        if (_this.hlsConf.adaptOnStartOnly) {
-                            jQuery(tag).one(_this.eventName("timeupdate"), function () {
-                                hls.loadLevel = hls.loadLevel;
-                            });
-                        }
-                        hls.attachMedia(tag);
-                    });
+                Flow.prototype.eventName = function (event) {
+                    var postfix = '.' + Flow.engineName;
+                    if (!event)
+                        return postfix;
+                    return event + postfix;
                 };
                 Flow.prototype.createVideoTag = function (video) {
                     var autoplay = false;
@@ -540,8 +442,20 @@ System.register("player/Flow", [], function (exports_4, context_4) {
                     tagElem.load();
                     elem.remove();
                 };
+                Flow.prototype.setupHLS = function (type, conf) {
+                    var hls = new Hls();
+                    hls.on(Hls.Events.MEDIA_ATTACHED, function () {
+                        hls.loadSource(conf.src);
+                    });
+                    hls.on(Hls.Events.MANIFEST_PARSED, function () {
+                        hls.startLoad(hls.config.startPosition);
+                    });
+                    hls.attachMedia(this.videoTags[type]);
+                    this.hlsEngines[type] = hls;
+                };
                 Flow.prototype.load = function (video) {
                     var root = this.root.find('.fp-player');
+                    root.find('img').remove();
                     this.hlsConf = jQuery.extend(this.hlsConf, this.player.conf.hlsjs, this.player.conf.clip.hlsjs, video.hlsjs);
                     if (this.cfg.secondarySources) {
                         if (this.videoTags[Flow.CONTENT])
@@ -554,6 +468,7 @@ System.register("player/Flow", [], function (exports_4, context_4) {
                         var engine_1 = jQuery(this.videoTags[Flow.CONTENT]);
                         engine_1.addClass('vsq-content');
                         root.prepend(engine_1);
+                        this.setupHLS(Flow.CONTENT, secondVideo);
                     }
                     if (this.videoTags[Flow.MASTER])
                         this.destroyVideoTag(Flow.MASTER);
@@ -562,6 +477,7 @@ System.register("player/Flow", [], function (exports_4, context_4) {
                     var engine = jQuery(this.videoTags[Flow.MASTER]);
                     engine.addClass('vsq-master');
                     root.prepend(engine);
+                    this.setupHLS(Flow.MASTER, video);
                     this.setupVideoEvents(video);
                 };
                 Flow.prototype.pause = function () {
@@ -576,12 +492,6 @@ System.register("player/Flow", [], function (exports_4, context_4) {
                 };
                 Flow.prototype.volume = function (volume) {
                     this.tagSet('volume', volume);
-                };
-                Flow.prototype.eventName = function (event) {
-                    var postfix = '.' + Flow.engineName;
-                    if (!event)
-                        return postfix;
-                    return event + postfix;
                 };
                 Flow.prototype.unload = function () {
                     var videoTags = jQuery(this.videoTags);
