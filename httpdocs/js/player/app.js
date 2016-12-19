@@ -393,7 +393,7 @@ System.register("player/Flow", [], function (exports_4, context_4) {
                                     break;
                             }
                             if (arg === false)
-                                return arg;
+                                return;
                             _this.player.trigger(flowEvent, [_this.player, arg]);
                             if (flowEvent === "ready" && _this.player.quality) {
                                 var selectorIndex = void 0;

@@ -132,10 +132,13 @@ abstract class Player {
 
     // TODO forced streaming server handling
     $base = sprintf( $base, $this->streamingserver['server'] );
+    $postfix = '';
+    if ( $version['iscontent'] )
+      $postfix = '_content';
+
     if ( isset( $version['recordingid'] ) ) {
       $path = \Springboard\Filesystem::getTreeDir( $version['recordingid'] ) . '/';
-      // TODO honnan tudjuk hogy _content vagy _mobil postfix kell e
-      $filename = $version['recordingid'] . '.smil';
+      $filename = $version['recordingid'] . $postfix . '.smil';
     } else {
       $path = '';
       $filename = $version['streamcode'];

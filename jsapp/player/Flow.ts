@@ -223,7 +223,7 @@ export default class Flow {
     jQuery.each(events, (videoEvent: string, flowEvent: string): void => {
       videoEvent = this.eventName(videoEvent);
 
-      master.on(videoEvent, (e: Event) => {
+      master.on(videoEvent, (e: Event): void => {
         if (flowEvent.indexOf("progress") < 0)
           this.log("event", videoEvent, flowEvent, e);
 
@@ -352,7 +352,7 @@ export default class Flow {
         }
 
         if (arg === false)
-          return arg;
+          return;
 
         this.player.trigger(flowEvent, [this.player, arg]);
 

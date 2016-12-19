@@ -741,22 +741,20 @@ class Recordings extends Player {
       'outro'   => array(),
     );
 
-    // TODO
+    $master = reset( $versions['master']['desktop'] );
     $ret['master'][] = array(
       'type' => 'application/x-mpegurl',
-      'url' => 'https://stream.videosquare.eu/devvsq/_definst_/smil:253/253/253.smil/playlist.m3u8',
+      'url'  => $this->getFlowUrl( $cfg, 'vodabr', $master ),
     );
+
+    $content = reset( $versions['content']['desktop'] );
+    if ( !$content )
+      return $ret;
+
     $ret['content'][] = array(
       'type' => 'application/x-mpegurl',
-      'url' => 'https://stream.videosquare.eu/devvsq/_definst_/smil:156/156/156.smil/playlist.m3u8',
+      'url'  => $this->getFlowUrl( $cfg, 'vodabr', $content ),
     );
-    return $ret;
-
-    foreach( $versions['master']['desktop'] as $version )
-      $ret['master'][] = array(
-        'type' => 'application/x-mpegurl',
-        'url'  => $this->getFlowUrl( $cfg, 'vodabr', $version ),
-      );
 
     return $ret;
   }
