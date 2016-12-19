@@ -742,48 +742,38 @@ global $app, $debug, $jconf;
 	if ( $recordings->RecordCount() < 1 ) return false;
 
 	/*
-	SMIL example:
+	SMIL example: how about audio tag?
+	
 		<?xml version="1.0" encoding="UTF-8"?>
 		<smil>
 			<head>
 			</head>
 			<body>
 				<switch>
-					<video src="mp4:20_320p_aligned.mp4" system-bitrate="264000"/>
-					<video src="mp4:20_360p_aligned.mp4" system-bitrate="700000"/>
-					<video src="mp4:20_480p_aligned.mp4" system-bitrate="1170000"/>
-					<video src="mp4:20_720p_aligned.mp4" system-bitrate="2500000"/>
+					<video src="mp4:253_1473_video_270p.mp4" system-bitrate="245558" width="480" height="270">
+						<param name="audioCodecId" value="mp4a.40.2" valuetype="data"/>
+						<param name="videoCodecId" value="avc1.66.19" valuetype="data"/>
+					</video>
+					<video src="mp4:253_1471_video_360p.mp4" system-bitrate="323631" width="640" height="360">
+						<param name="audioCodecId" value="mp4a.40.2" valuetype="data"/>
+						<param name="videoCodecId" value="avc1.66.14" valuetype="data"/>
+					</video>
+					<video src="mp4:253_1472_video_480p.mp4" system-bitrate="490050" width="856" height="480">
+						<param name="audioCodecId" value="mp4a.40.2" valuetype="data"/>
+						<param name="videoCodecId" value="avc1.66.12" valuetype="data"/>
+					</video>
+					<video src="mp4:253_1474_video_720p.mp4" system-bitrate="891466" width="1280" height="720">
+						<param name="audioCodecId" value="mp4a.40.2" valuetype="data"/>
+						<param name="videoCodecId" value="avc1.66.10" valuetype="data"/>
+					</video>
 				</switch>
 			</body>
 		</smil>
 
-	SMIL live example with audio stream (audio tag is for Smooth Streaming only?):
-		<?xml version="1.0" encoding="UTF-8"?>
-		<smil title="">
-			<body>
-				<switch>
-					<video height="240" src="bigbuckbunny_450.mp4" systemLanguage="eng" width="424">
-						<param name="videoBitrate" value="450000" valuetype="data"></param>
-						<param name="audioBitrate" value="44100" valuetype="data"></param>
-					</video>
-					<video height="360" src="bigbuckbunny_750.mp4" systemLanguage="eng" width="640">
-						<param name="videoBitrate" value="750000" valuetype="data"></param>
-						<param name="audioBitrate" value="44100" valuetype="data"></param>
-					</video>
-					<video height="720" src="bigbuckbunny_1100.mp4" systemLanguage="eng" width="1272">
-						<param name="videoBitrate" value="1100000" valuetype="data"></param>
-						<param name="audioBitrate" value="44100" valuetype="data"></param>
-					</video>
-					<video height="900" src="bigbuckbunny_1500.mp4" systemLanguage="eng" width="1590">
-						<param name="videoBitrate" value="1500000" valuetype="data"></param>
-						<param name="audioBitrate" value="44100" valuetype="data"></param>
-					</video>
-					<audio>
-						<param name="audioBitrate" value="44100" valuetype="data"></param>
-					</audio>
-				</switch>
-			</body>
-		</smil>
+		HLS: audio only can be selected in player???
+		<audio>
+			<param name="audioBitrate" value="44100" valuetype="data"></param>
+		</audio>
 
 	HDS: audio only SMIL
 		<smil>
@@ -801,6 +791,11 @@ global $app, $debug, $jconf;
 	// SMIL header and footer tags
 	$smil_header = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<smil>\n\t<head>\n\t</head>\n\t<body>\n\t\t<switch>\n";
 	$smil_footer = "\t\t</switch>\n\t</body>\n</smil>\n";
+	
+	$smil_video_template  = "\t\t\t<video src=\"%s:%s\" system-bitrate=\"%d\" width=\"%d\" height=\"%d\">\n";
+	$smil_video_template .= "\t\t\t\t<param name=\"audioCodecId\" value=\"%s\" valuetype=\"data\"/>\n";
+	$smil_video_template .= "\t\t\t\t<param name=\"videoCodecId\" value=\"%s\" valuetype=\"data\"/>\n";
+	$smil_video_template .= "\t\t\t</video>\n";
 
 	while ( !$recordings->EOF ) {
 
@@ -831,14 +826,43 @@ global $app, $debug, $jconf;
 		while ( !$recording_versions->EOF ) {
 
 			$recording_version = $recording_versions->fields;
-
-			$smil .= sprintf("\t\t\t<video src=\"%s:%s\" system-bitrate=\"%d\"/>\n", $media_type, $recording_version['filename'], $recording_version['bandwidth']);
+/*
+			// !!! We Képesnek kellene lennünk frankón mobil SMIL-t generálni ezekből (vagy ha nincsen content, akkor a normál verzióból)
+			ep.audiocodec,
+			ep.pipenabled,
+			ep.pipcodecprofile
+*/
+			
+			if ( !$isaudio ) {
+				
+				// Calculate width and height
+				$tmp = explode("x", $recording_version['resolution'], 2);
+				$width = $tmp[0];
+				$height = $tmp[1];
+			
+				// Video codec identifier
+				// !!! Level from DB?
+				$video_codec = "avc1.";
+				if ( $recording_version['ffmpegh264profile'] == "baseline" ) $video_codec .= "66.30";
+				if ( $recording_version['ffmpegh264profile'] == "main" ) $video_codec .= "77.30";
+				if ( $recording_version['ffmpegh264profile'] == "high" ) $video_codec .= "100.30";
+				
+				// Audio codec identifier
+				$audio_codec = "mp4a.40.";
+				if ( stripos($recording_version['audiocodec'], "aac") !== false ) $audio_codec .= "2";
+				if ( stripos($recording_version['audiocodec'], "mp3") !== false ) $audio_codec .= "34";
+				
+				$smil .= sprintf($smil_video_template, $recording_version['filecontainerformat'], $recording_version['filename'], $recording_version['bandwidth'], $width, $height, $audio_codec, $video_codec);
+			}
+			
+			//$smil .= sprintf("\t\t\t<video src=\"%s:%s\" system-bitrate=\"%d\"/>\n", $media_type, $recording_version['filename'], $recording_version['bandwidth']);
 
 			$recording_versions->MoveNext();
 		}
         
         // SMIL: add footer
 		$smil .= $smil_footer;
+echo $smil . "\n";
 
 		$smil_filename_suffix = "";
 		if ( $idx == "content" ) $smil_filename_suffix = "_content";
@@ -1042,7 +1066,15 @@ global $app, $jconf, $debug;
 			rv.iscontent,
 			rv.bandwidth,
 			rv.isdesktopcompatible,
-            rv.ismobilecompatible
+            rv.ismobilecompatible,
+			rv.resolution,
+			rv.encodingprofileid,
+			ep.filecontainerformat,
+			ep.videocodec,
+			ep.ffmpegh264profile,
+			ep.audiocodec,
+			ep.pipenabled,
+			ep.pipcodecprofile
 		FROM
 			recordings_versions AS rv,
 			encoding_profiles AS ep
