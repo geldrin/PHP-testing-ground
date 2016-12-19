@@ -133,7 +133,7 @@ System.register("player/Flow", [], function (exports_4, context_4) {
                     this.maxLevel = 0;
                     Flow.log("constructor", arguments);
                     this.player = player;
-                    this.cfg = player.conf.vsq;
+                    this.cfg = player.conf.vsq || {};
                     this.hlsConf = jQuery.extend({
                         bufferWhilePaused: true,
                         smoothSwitching: true,

@@ -37,7 +37,7 @@ export default class Flow {
   constructor(player: Flowplayer, root: Element) {
     Flow.log("constructor", arguments);
     this.player = player;
-    this.cfg = player.conf.vsq as VSQConfig;
+    this.cfg = player.conf.vsq as VSQConfig || {};
     this.hlsConf = jQuery.extend({
         bufferWhilePaused: true,
         smoothSwitching: true,
