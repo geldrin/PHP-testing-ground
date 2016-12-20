@@ -116,12 +116,166 @@ System.register("player/Flash", [], function (exports_3, context_3) {
         }
     };
 });
-System.register("player/Flow", [], function (exports_4, context_4) {
+System.register("Tools", [], function (exports_4, context_4) {
     "use strict";
     var __moduleName = context_4 && context_4.id;
-    var Flow;
+    var Tools;
     return {
         setters: [],
+        execute: function () {
+            Tools = (function () {
+                function Tools() {
+                }
+                Tools.parseParamsFromUrl = function () {
+                    if (!location.search)
+                        return {};
+                    var query = location.search.substr(1);
+                    var result = {};
+                    query.split("&").forEach(function (part) {
+                        var item = part.split("=");
+                        if (item.length == 1)
+                            return;
+                        var name = decodeURIComponent(item[0]);
+                        var value = decodeURIComponent(item[1]);
+                        result[name] = value;
+                    });
+                    return result;
+                };
+                Tools.parseURLFromCSS = function (css) {
+                    var match = css.match(/url\(["']?([^)]+?)['"]?\)/);
+                    if (match)
+                        return match[1];
+                    return null;
+                };
+                Tools.getImageDimensions = function (url, cb) {
+                    $('<img/>', {
+                        load: function () {
+                            cb(this.width, this.height);
+                        },
+                        src: url
+                    });
+                };
+                Tools.setToStorage = function (key, value) {
+                    var raw = JSON.stringify(value);
+                    localStorage.setItem(key, raw);
+                };
+                Tools.getFromStorage = function (key, def) {
+                    var raw = localStorage.getItem(key);
+                    if (raw == null)
+                        return def;
+                    var data;
+                    try {
+                        data = JSON.parse(raw);
+                    }
+                    catch (_) {
+                        return def;
+                    }
+                    return data;
+                };
+                return Tools;
+            }());
+            exports_4("default", Tools);
+        }
+    };
+});
+System.register("Escape", [], function (exports_5, context_5) {
+    "use strict";
+    var __moduleName = context_5 && context_5.id;
+    var Escape;
+    return {
+        setters: [],
+        execute: function () {
+            Escape = (function () {
+                function Escape() {
+                }
+                Escape.RE = function (text) {
+                    return text.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, "\\$&");
+                };
+                Escape.HTML = function (text) {
+                    return text.
+                        replace(/&/g, '&amp;').
+                        replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, function (text) {
+                        var hi = text.charCodeAt(0);
+                        var low = text.charCodeAt(1);
+                        return '&#' + (((hi - 0xD800) * 0x400) + (low - 0xDC00) + 0x10000) + ';';
+                    }).
+                        replace(/([^\#-~| |!])/g, function (text) {
+                        return '&#' + text.charCodeAt(0) + ';';
+                    }).
+                        replace(/</g, '&lt;').
+                        replace(/>/g, '&gt;');
+                };
+                Escape.unescapeHTML = function (text) {
+                    if (!text)
+                        return '';
+                    Escape.elem.innerHTML = text.replace(/</g, "&lt;");
+                    return Escape.elem.textContent;
+                };
+                Escape.URL = function (text) {
+                    return encodeURI(text);
+                };
+                Escape.unescapeURL = function (text) {
+                    return decodeURI(text);
+                };
+                Escape.fileName = function (text, maxLength, allowedExtensions) {
+                    text = $.trim(text);
+                    text = text.replace(/[^a-zA-Z0-9_\-\.]/g, function (match) {
+                        var ret = Escape.fileReplace[match];
+                        if (!ret)
+                            return '_';
+                        return ret;
+                    });
+                    if (maxLength && text.length > maxLength)
+                        return '';
+                    if (allowedExtensions) {
+                        var dotPos = text.lastIndexOf('.');
+                        if (allowedExtensions.length != 0 && dotPos < 0)
+                            return '';
+                        var ext = text.substring(dotPos + 1);
+                        var found = false;
+                        for (var i = allowedExtensions.length - 1; i >= 0; i--) {
+                            var okExt = allowedExtensions[i];
+                            if (ext === okExt) {
+                                found = true;
+                                break;
+                            }
+                        }
+                        if (!found)
+                            return '';
+                    }
+                    return text;
+                };
+                return Escape;
+            }());
+            Escape.elem = document.createElement('pre');
+            Escape.fileReplace = {
+                'á': 'a', 'Á': 'A',
+                'é': 'e', 'É': 'E',
+                'í': 'i', 'Í': 'I',
+                'ó': 'o', 'Ó': 'O',
+                'ö': 'o', 'Ö': 'O',
+                'ő': 'o', 'Ő': 'O',
+                'ú': 'u', 'Ú': 'U',
+                'ü': 'u', 'Ü': 'U',
+                'ű': 'u', 'Ű': 'U'
+            };
+            exports_5("default", Escape);
+        }
+    };
+});
+System.register("player/Flow", ["Tools", "Escape"], function (exports_6, context_6) {
+    "use strict";
+    var __moduleName = context_6 && context_6.id;
+    var Tools_1, Escape_1, Flow;
+    return {
+        setters: [
+            function (Tools_1_1) {
+                Tools_1 = Tools_1_1;
+            },
+            function (Escape_1_1) {
+                Escape_1 = Escape_1_1;
+            }
+        ],
         execute: function () {
             Flow = (function () {
                 function Flow(player, root) {
@@ -140,8 +294,20 @@ System.register("player/Flow", [], function (exports_4, context_4) {
                         recoverMediaError: true
                     }, flowplayer.conf['hlsjs'], this.player.conf['hlsjs'], this.player.conf['clip']['hlsjs']);
                     this.root = jQuery(root);
+                    this.selectedQuality = Tools_1.default.getFromStorage(this.configKey("quality"), "auto");
                     this.id = this.root.attr('data-flowplayer-instance-id');
                 }
+                Flow.prototype.getQualityIndex = function (quality) {
+                    for (var i = this.cfg.labels.master.length - 1; i >= 0; i--) {
+                        var label = this.cfg.labels.master[i];
+                        if (label === quality)
+                            return i;
+                    }
+                    return -1;
+                };
+                Flow.prototype.configKey = function (key) {
+                    return 'vsq-player-' + key;
+                };
                 Flow.log = function () {
                     var params = [];
                     for (var _i = 0; _i < arguments.length; _i++) {
@@ -279,8 +445,7 @@ System.register("player/Flow", [], function (exports_4, context_4) {
                         ratechange: "speed",
                         seeked: "seek",
                         timeupdate: "progress",
-                        volumechange: "volume",
-                        error: "error"
+                        volumechange: "volume"
                     };
                     var currentTime = masterTag.currentTime;
                     var arg = {};
@@ -378,22 +543,9 @@ System.register("player/Flow", [], function (exports_4, context_4) {
                                         }
                                     }
                                     break;
-                                case "error":
-                                    var code = masterTag.error.code;
-                                    if ((_this.hlsConf.recoverMediaError && code === 3) ||
-                                        (_this.hlsConf.recoverNetworkError && code === 2) ||
-                                        (_this.hlsConf.recover && (code === 2 || code === 3)))
-                                        code = _this.doRecover(_this.player.conf, flowEvent, code === 2);
-                                    arg = false;
-                                    if (code !== undefined) {
-                                        arg = { code: code };
-                                        if (code > 2)
-                                            arg.video = jQuery.extend(video, { url: video.src });
-                                    }
-                                    break;
                             }
                             if (arg === false)
-                                return;
+                                return false;
                             _this.player.trigger(flowEvent, [_this.player, arg]);
                             if (flowEvent === "ready" && _this.player.quality) {
                                 var selectorIndex = void 0;
@@ -417,6 +569,23 @@ System.register("player/Flow", [], function (exports_4, context_4) {
                     this.player.on(this.eventName("error"), function () {
                         _this.hlsCall('destroy');
                     });
+                };
+                Flow.prototype.handleError = function (type, video) {
+                    var tag = this.videoTags[type];
+                    var code = tag.error.code;
+                    if ((this.hlsConf.recoverMediaError && code === 3) ||
+                        (this.hlsConf.recoverNetworkError && code === 2) ||
+                        (this.hlsConf.recover && (code === 2 || code === 3)))
+                        code = this.doRecover(this.player.conf, "error", code === 2);
+                    var arg;
+                    if (code !== undefined) {
+                        arg = { code: code };
+                        if (code > 2)
+                            arg.video = jQuery.extend(video, { url: video.src });
+                    }
+                    else
+                        return;
+                    this.player.trigger("error", [this.player, arg]);
                 };
                 Flow.prototype.eventName = function (event) {
                     var postfix = '.' + Flow.engineName;
@@ -443,32 +612,40 @@ System.register("player/Flow", [], function (exports_4, context_4) {
                     elem.remove();
                 };
                 Flow.prototype.setupHLS = function (type, conf) {
+                    var _this = this;
                     var hls = new Hls();
-                    hls.on(Hls.Events.MEDIA_ATTACHED, function () {
+                    hls.on(Hls.Events.MEDIA_ATTACHED, function (event, data) {
                         hls.loadSource(conf.src);
                     });
-                    hls.on(Hls.Events.MANIFEST_PARSED, function () {
+                    hls.on(Hls.Events.MANIFEST_PARSED, function (event, data) {
                         hls.startLoad(hls.config.startPosition);
+                        var startLevel = _this.getQualityIndex(_this.selectedQuality);
+                        hls.startLevel = startLevel;
+                        hls.loadLevel = startLevel;
                     });
                     hls.attachMedia(this.videoTags[type]);
                     this.hlsEngines[type] = hls;
                 };
                 Flow.prototype.load = function (video) {
+                    var _this = this;
                     var root = this.root.find('.fp-player');
                     root.find('img').remove();
                     this.hlsConf = jQuery.extend(this.hlsConf, this.player.conf.hlsjs, this.player.conf.clip.hlsjs, video.hlsjs);
                     if (this.cfg.secondarySources) {
                         if (this.videoTags[Flow.CONTENT])
                             this.destroyVideoTag(Flow.CONTENT);
-                        var secondVideo = jQuery.extend(true, {}, video);
-                        secondVideo.src = this.cfg.secondarySources[0].src;
-                        secondVideo.sources = this.cfg.secondarySources;
-                        this.videoTags[Flow.CONTENT] = this.createVideoTag(secondVideo);
+                        var secondVideo_1 = jQuery.extend(true, {}, video);
+                        secondVideo_1.src = this.cfg.secondarySources[0].src;
+                        secondVideo_1.sources = this.cfg.secondarySources;
+                        this.videoTags[Flow.CONTENT] = this.createVideoTag(secondVideo_1);
                         this.videoTags[Flow.CONTENT].load();
                         var engine_1 = jQuery(this.videoTags[Flow.CONTENT]);
                         engine_1.addClass('vsq-content');
+                        engine_1.on(this.eventName("error"), function (e) {
+                            _this.handleError(Flow.CONTENT, secondVideo_1);
+                        });
                         root.prepend(engine_1);
-                        this.setupHLS(Flow.CONTENT, secondVideo);
+                        this.setupHLS(Flow.CONTENT, secondVideo_1);
                     }
                     if (this.videoTags[Flow.MASTER])
                         this.destroyVideoTag(Flow.MASTER);
@@ -476,9 +653,13 @@ System.register("player/Flow", [], function (exports_4, context_4) {
                     this.videoTags[Flow.MASTER].load();
                     var engine = jQuery(this.videoTags[Flow.MASTER]);
                     engine.addClass('vsq-master');
+                    engine.on(this.eventName("error"), function (e) {
+                        _this.handleError(Flow.MASTER, video);
+                    });
                     root.prepend(engine);
                     this.setupHLS(Flow.MASTER, video);
                     this.setupVideoEvents(video);
+                    this.initQuality();
                 };
                 Flow.prototype.pause = function () {
                     this.tagCall('pause');
@@ -494,6 +675,7 @@ System.register("player/Flow", [], function (exports_4, context_4) {
                     this.tagSet('volume', volume);
                 };
                 Flow.prototype.unload = function () {
+                    this.root.find(".vsq-quality-selector").remove();
                     var videoTags = jQuery(this.videoTags);
                     videoTags.remove();
                     this.hlsCall('destroy');
@@ -521,167 +703,45 @@ System.register("player/Flow", [], function (exports_4, context_4) {
                     }
                     return null;
                 };
-                Flow.prototype.dataQuality = function (quality) {
-                    if (!quality)
-                        quality = this.player.quality;
-                    return (quality || "").toLowerCase().replace(/\ /g, "");
-                };
-                Flow.prototype.removeAllQualityClasses = function () {
-                    var qualities = this.player.qualities;
-                    if (!qualities || qualities.length == 0)
-                        return;
-                    this.root.removeClass("quality-abr");
-                    for (var i = qualities.length - 1; i >= 0; i--) {
-                        var quality = qualities[i];
-                        this.root.removeClass("quality-" + this.dataQuality(quality));
-                    }
-                };
-                Flow.prototype.qualityClean = function () {
-                    delete this.player.hlsQualities;
-                    this.removeAllQualityClasses();
-                    this.root.find(".fp-quality-selector").remove();
-                };
-                Flow.prototype.getDriveQualities = function (levels) {
-                    var ret = [];
-                    switch (levels.length) {
-                        case 4:
-                            ret = [1, 2, 3];
-                            break;
-                        case 5:
-                            ret = [1, 2, 3, 4];
-                            break;
-                        case 6:
-                            ret = [1, 3, 4, 5];
-                            break;
-                        case 7:
-                            ret = [1, 3, 5, 6];
-                            break;
-                        case 8:
-                            ret = [1, 3, 6, 7];
-                            break;
-                        default:
-                            if (levels.length < 3 ||
-                                (levels[0].height && levels[2].height && levels[0].height === levels[2].height))
-                                return ret;
-                            ret = [1, 2];
-                            break;
-                    }
-                    return ret;
-                };
-                Flow.prototype.qualityIndex = function () {
-                    var qualityIx = this.player.qualities.indexOf(this.player.quality) + 1;
-                    return this.player.hlsQualities[qualityIx];
-                };
-                Flow.prototype.initQuality = function (hlsQualitiesConf, conf, data) {
+                Flow.prototype.initQuality = function () {
                     var _this = this;
-                    var levels = data.levels;
-                    var hlsQualities = [];
-                    var indices = [];
-                    var levelIndex = 0;
-                    var selectorElem;
-                    this.qualityClean();
-                    if (hlsQualitiesConf === "drive") {
-                        hlsQualities = this.getDriveQualities(data.levels);
-                        if (!hlsQualities)
-                            return;
+                    if (this.cfg.labels.master.length === 0)
+                        return;
+                    var levels = this.cfg.labels.master.slice(0);
+                    levels.unshift("Auto");
+                    var html = "<ul class=\"vsq-quality-selector\">";
+                    for (var i = 0; i < levels.length; ++i) {
+                        var label = levels[i];
+                        var active = "";
+                        if ((i === 0 && this.selectedQuality === "auto") ||
+                            label === this.selectedQuality)
+                            active = ' class="active"';
+                        html += "<li" + active + " data-quality=\"" + label.toLowerCase() + "\">" + Escape_1.default.HTML(label) + "</li>";
                     }
-                    else {
-                        if (typeof hlsQualitiesConf === "string") {
-                            hlsQualitiesConf.split(/\s*,\s*/).forEach(function (q) {
-                                indices.push(parseInt(q, 10));
-                            });
-                        }
-                        else if (typeof hlsQualitiesConf !== "boolean") {
-                            hlsQualitiesConf.forEach(function (q) {
-                                var val;
-                                if (isNaN(Number(q)))
-                                    val = q.level;
-                                else
-                                    val = q;
-                                indices.push(val);
-                            });
-                        }
-                        levels.forEach(function (level) {
-                            if ((hlsQualitiesConf === true || indices.indexOf(levelIndex) > -1) &&
-                                (!level.videoCodec ||
-                                    (level.videoCodec &&
-                                        _this.mse.isTypeSupported('video/mp4;codecs=' + level.videoCodec)))) {
-                                hlsQualities.push(levelIndex);
-                            }
-                            levelIndex += 1;
-                        });
-                        if (hlsQualities.length < 2) {
-                            return;
-                        }
-                    }
-                    this.player.qualities = [];
-                    hlsQualities.forEach(function (idx) {
-                        var level = levels[idx];
-                        var q = indices.length ? hlsQualitiesConf[indices.indexOf(idx)] : idx;
-                        var label = "Level " + (idx + 1);
-                        if (idx < 0)
-                            label = q.label || "Auto";
-                        else if (q.label)
-                            label = q.label;
-                        else {
-                            if (level.width && level.height)
-                                label = Math.min(level.width, level.height) + 'p';
-                        }
-                        _this.player.qualities.push(label);
-                    });
-                    selectorElem = flowplayer.common.createElement("ul", {
-                        "class": "fp-quality-selector"
-                    });
-                    ;
-                    this.root.find(".fp-ui").get(0).appendChild(selectorElem);
-                    hlsQualities.unshift(-1);
-                    this.player.hlsQualities = hlsQualities;
-                    if (!this.player.quality || this.player.qualities.indexOf(this.player.quality) < 0)
-                        this.player.quality = "abr";
-                    else {
-                        var startLevel = this.qualityIndex();
-                        this.hlsSet('startLevel', [startLevel]);
-                        this.hlsSet('loadLevel', [startLevel]);
-                    }
-                    selectorElem.appendChild(flowplayer.common.createElement("li", {
-                        "data-quality": "abr"
-                    }, "Auto"));
-                    this.player.qualities.forEach(function (q) {
-                        selectorElem.appendChild(flowplayer.common.createElement("li", {
-                            "data-quality": _this.dataQuality(q)
-                        }, q));
-                    });
-                    this.root.addClass("quality-" + this.dataQuality());
-                    this.root.on(this.eventName("click"), ".fp-quality-selector li", function (e) {
+                    html += "</ul>";
+                    this.root.find(".fp-ui").append(html);
+                    this.root.on(this.eventName("click"), ".vsq-quality-selector li", function (e) {
+                        e.preventDefault();
                         var choice = jQuery(e.currentTarget);
-                        var selectors = _this.root.find('.fp-quality-selector li');
+                        if (choice.hasClass("active"))
+                            return;
+                        _this.root.find('.vsq-quality-selector li').removeClass("active");
+                        choice.addClass("active");
+                        var quality = choice.attr('data-quality');
+                        Tools_1.default.setToStorage(_this.configKey("quality"), quality);
+                        var level = _this.getQualityIndex(quality);
                         var smooth = _this.player.conf.smoothSwitching;
                         var paused = _this.videoTags[Flow.MASTER].paused;
-                        if (choice.hasClass(_this.activeQualityClass))
-                            return;
                         if (!paused && !smooth)
                             jQuery(_this.videoTags[Flow.MASTER]).one(_this.eventName("pause"), function () {
                                 _this.root.removeClass("is-paused");
                             });
-                        for (var i = 0; i < selectors.length; i += 1) {
-                            var selector = selectors.eq(i);
-                            var active = selector.is(choice);
-                            if (active) {
-                                _this.player.quality = i > 0
-                                    ? _this.player.qualities[i - 1]
-                                    : "abr";
-                                if (smooth && !_this.player.poster)
-                                    _this.hlsSet('nextLevel', _this.qualityIndex());
-                                else
-                                    _this.hlsSet('currentLevel', _this.qualityIndex());
-                                choice.addClass(_this.activeQualityClass);
-                                if (paused)
-                                    _this.tagCall('play');
-                            }
-                            selector.toggleClass(_this.activeQualityClass, active);
-                        }
-                        _this.removeAllQualityClasses();
-                        _this.root.addClass("quality-" + _this.dataQuality());
+                        if (smooth && !_this.player.poster)
+                            _this.hlsSet('nextLevel', level);
+                        else
+                            _this.hlsSet('currentLevel', level);
+                        if (paused)
+                            _this.tagCall('play');
                     });
                 };
                 Flow.setup = function () {
@@ -707,13 +767,13 @@ System.register("player/Flow", [], function (exports_4, context_4) {
             Flow.initDone = false;
             Flow.MASTER = 0;
             Flow.CONTENT = 1;
-            exports_4("default", Flow);
+            exports_6("default", Flow);
         }
     };
 });
-System.register("player/Player", ["player/Flash", "player/Flow"], function (exports_5, context_5) {
+System.register("player/Player", ["player/Flash", "player/Flow"], function (exports_7, context_7) {
     "use strict";
-    var __moduleName = context_5 && context_5.id;
+    var __moduleName = context_7 && context_7.id;
     var Flash_1, Flow_1, Player;
     return {
         setters: [
@@ -780,13 +840,13 @@ System.register("player/Player", ["player/Flash", "player/Flow"], function (expo
                 };
                 return Player;
             }());
-            exports_5("default", Player);
+            exports_7("default", Player);
         }
     };
 });
-System.register("player/app", ["Locale", "player/Config", "player/Player"], function (exports_6, context_6) {
+System.register("player/app", ["Locale", "player/Config", "player/Player"], function (exports_8, context_8) {
     "use strict";
-    var __moduleName = context_6 && context_6.id;
+    var __moduleName = context_8 && context_8.id;
     var Locale_1, Config_1, Player_1;
     return {
         setters: [

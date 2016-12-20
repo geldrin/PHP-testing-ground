@@ -742,20 +742,28 @@ class Recordings extends Player {
     );
 
     $master = reset( $versions['master']['desktop'] );
-    $ret['master'][] = array(
+    $ret['master'] = array(
       'type' => 'application/x-mpegurl',
       'url'  => $this->getFlowUrl( $cfg, 'vodabr', $master ),
+      'labels' => array(),
     );
+    foreach( $versions['master']['desktop'] as $version )
+      $ret['master']['labels'][] = $version['qualitytag'];
+
 
     $content = reset( $versions['content']['desktop'] );
     if ( !$content )
       return $ret;
 
-    $ret['content'][] = array(
+    $ret['content'] = array(
       'type' => 'application/x-mpegurl',
       'url'  => $this->getFlowUrl( $cfg, 'vodabr', $content ),
+      'labels' => array(),
     );
+    foreach( $versions['content']['desktop'] as $version )
+      $ret['content']['labels'][] = $version['qualitytag'];
 
+    // TODO intro outro
     return $ret;
   }
 
@@ -785,27 +793,30 @@ class Recordings extends Player {
         ),
       ),
       'vsq' => array(
+        // a minosegi valtozatok labeljei, kulon a master es contentnek
+        'labels' => array(
+          'master'  => array(),
+          'content' => array(),
+        ),
         'secondarySources' => array(),
       ),
     );
 
     $streams = $this->getFlowStreams( $cfg );
-    foreach( $streams['master'] as $stream )
-      $ret['clip']['sources'][] = array(
-        'type' => $stream['type'],
-        'src'  => $stream['url'],
-      );
+    $ret['clip']['sources'][] = array(
+      'type' => $streams['master']['type'],
+      'src'  => $streams['master']['url'],
+    );
+    $ret['vsq']['labels']['master'] = $streams['master']['labels'];
 
-    if ( empty( $streams['content'] ) ) {
-      unset( $ret['vsq'] );
+    if ( empty( $streams['content'] ) )
       return $ret;
-    }
 
-    foreach( $streams['content'] as $stream )
-      $ret['vsq']['secondarySources'][] = array(
-        'type' => $stream['type'],
-        'src'  => $stream['url'],
-      );
+    $ret['vsq']['secondarySources'][] = array(
+      'type' => $streams['content']['type'],
+      'src'  => $streams['content']['url'],
+    );
+    $ret['vsq']['labels']['content'] = $streams['content']['labels'];
 
     return $ret;
   }

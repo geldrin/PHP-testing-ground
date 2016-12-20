@@ -4086,3 +4086,26 @@ table.paging tr.even {
   left: auto;
   right: 0;
 }
+#player .vsq-quality-selector {
+  margin: 5px;
+  transition: 0.2s ease-in;
+  -moz-box-sizing: border-box;
+  box-sizing: border-box;
+  position: absolute;
+  right: 10px;
+  bottom: 40px;
+  width: 0;
+  overflow: hidden;
+  font-weight: bold;
+  z-index: 13;
+}
+#player .is-mouseover .vsq-quality-selector {
+  width: 4rem;
+}
+#player .vsq-quality-selector li {
+  cursor: pointer;
+  background: #fff;
+}
+#player .vsq-quality-selector li.active {
+  background: #ccc;
+}

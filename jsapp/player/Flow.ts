@@ -2,6 +2,8 @@
 /// <reference path="../defs/flowplayer/flowplayer.d.ts" />
 "use strict";
 //import "es6-promise"; // majd ha kell
+import Tools from "../Tools";
+import Escape from "../Escape";
 
 declare var Hls: any;
 
@@ -27,6 +29,8 @@ export default class Flow {
   private volumeLevel: number;
   private eventsInitialized = false;
   private timer: number;
+  // a kivalasztott quality label, default 'auto';
+  private selectedQuality: string;
 
   private activeQualityClass = "active";
   private mse = window.MediaSource || window.WebKitMediaSource;
@@ -49,7 +53,26 @@ export default class Flow {
     );
 
     this.root = jQuery(root);
+    this.selectedQuality = Tools.getFromStorage(this.configKey("quality"), "auto");
     this.id = this.root.attr('data-flowplayer-instance-id');
+  }
+
+  private getQualityIndex(quality: string): number {
+    // az alap otlet hogy a playernek a konfiguracioban atadott sorrend
+    // korrelal a quality verziok sorrendjevel, igy kozvetlenul beallithato
+    // ez az index a hls-nek
+    for (var i = this.cfg.labels.master.length - 1; i >= 0; i--) {
+      let label = this.cfg.labels.master[i];
+      if (label === quality)
+        return i;
+    }
+
+    // default auto, -1 for automatic level selection
+    return -1;
+  }
+
+  private configKey(key: string): string {
+    return 'vsq-player-' + key;
   }
 
   private static log(...params: Object[]): void {
@@ -214,16 +237,16 @@ export default class Flow {
       ratechange  : "speed",
       seeked      : "seek",
       timeupdate  : "progress",
-      volumechange: "volume",
-      error       : "error"
+      volumechange: "volume"
     };
 
     let currentTime: number = masterTag.currentTime;
     let arg: any = {};
+
     jQuery.each(events, (videoEvent: string, flowEvent: string): void => {
       videoEvent = this.eventName(videoEvent);
 
-      master.on(videoEvent, (e: Event): void => {
+      master.on(videoEvent, (e: Event): boolean | undefined => {
         if (flowEvent.indexOf("progress") < 0)
           this.log("event", videoEvent, flowEvent, e);
 
@@ -332,27 +355,10 @@ export default class Flow {
               }
             }
             break;
-
-          case "error":
-            let code = masterTag.error.code;
-            if (
-                 (this.hlsConf.recoverMediaError && code === 3) ||
-                 (this.hlsConf.recoverNetworkError && code === 2) ||
-                 (this.hlsConf.recover && (code === 2 || code === 3))
-               )
-              code = this.doRecover(this.player.conf, flowEvent, code === 2);
-
-            arg = false;
-            if (code !== undefined) {
-              arg = {code: code};
-              if (code > 2)
-                arg.video = jQuery.extend(video, {url: video.src});
-            }
-            break;
         }
 
         if (arg === false)
-          return;
+          return false;
 
         this.player.trigger(flowEvent, [this.player, arg]);
 
@@ -384,6 +390,27 @@ export default class Flow {
     this.player.on(this.eventName("error"), () => {
       this.hlsCall('destroy');
     });
+  }
+
+  private handleError(type: number, video: FlowSource): void {
+    let tag = this.videoTags[type];
+    let code = tag.error.code;
+    if (
+         (this.hlsConf.recoverMediaError && code === 3) ||
+         (this.hlsConf.recoverNetworkError && code === 2) ||
+         (this.hlsConf.recover && (code === 2 || code === 3))
+       )
+      code = this.doRecover(this.player.conf, "error", code === 2);
+
+    let arg: any;
+    if (code !== undefined) {
+      arg = {code: code};
+      if (code > 2)
+        arg.video = jQuery.extend(video, {url: video.src});
+    } else
+      return;
+
+    this.player.trigger("error", [this.player, arg]);
   }
 
   private eventName(event?: string): string {
@@ -421,11 +448,17 @@ export default class Flow {
   private setupHLS(type: number, conf: FlowVideo): void {
     let hls = new Hls();
 
-    hls.on(Hls.Events.MEDIA_ATTACHED, () => {
+    hls.on(Hls.Events.MEDIA_ATTACHED, (event: string, data: any): void => {
       hls.loadSource(conf.src);
     });
-    hls.on(Hls.Events.MANIFEST_PARSED, () => {
+    hls.on(Hls.Events.MANIFEST_PARSED, (event: string, data: any): void => {
       hls.startLoad(hls.config.startPosition);
+
+      // azt varja hogy a contentnek is ugyanazok a qualityjai lesznek,
+      // nem biztos hogy igaz, TODO
+      let startLevel = this.getQualityIndex(this.selectedQuality);
+      hls.startLevel = startLevel;
+      hls.loadLevel = startLevel;
     });
 
     // TODO error recovery
@@ -462,6 +495,9 @@ export default class Flow {
       this.videoTags[Flow.CONTENT].load();
       let engine = jQuery(this.videoTags[Flow.CONTENT]);
       engine.addClass('vsq-content');
+      engine.on(this.eventName("error"), (e: Event): void => {
+        this.handleError(Flow.CONTENT, secondVideo);
+      });
       root.prepend(engine);
       this.setupHLS(Flow.CONTENT, secondVideo);
     }
@@ -473,10 +509,14 @@ export default class Flow {
     this.videoTags[Flow.MASTER].load();
     let engine = jQuery(this.videoTags[Flow.MASTER]);
     engine.addClass('vsq-master');
+    engine.on(this.eventName("error"), (e: Event): void => {
+      this.handleError(Flow.MASTER, video);
+    });
     root.prepend(engine);
     this.setupHLS(Flow.MASTER, video);
 
     this.setupVideoEvents(video);
+    this.initQuality();
   }
 
   public pause(): void {
@@ -497,6 +537,7 @@ export default class Flow {
   }
 
   public unload(): void {
+    this.root.find(".vsq-quality-selector").remove();
     let videoTags = jQuery(this.videoTags);
     videoTags.remove();
 
@@ -534,195 +575,58 @@ export default class Flow {
     return null;
   }
 
-  private dataQuality(quality?: string): string {
-    if (!quality)
-      quality = this.player.quality;
-
-    return (quality || "").toLowerCase().replace(/\ /g, "");
-  }
-
-  private removeAllQualityClasses(): void {
-    let qualities = this.player.qualities;
-
-    if (!qualities || qualities.length == 0)
+  private initQuality(): void {
+    if (this.cfg.labels.master.length === 0)
       return;
 
-    this.root.removeClass("quality-abr");
-    for (var i = qualities.length - 1; i >= 0; i--) {
-      let quality = qualities[i];
-      this.root.removeClass("quality-" + this.dataQuality(quality));
+    // copy quality array, assemble HTML
+    let levels = this.cfg.labels.master.slice(0);
+    levels.unshift("Auto");
+
+    let html = `<ul class="vsq-quality-selector">`;
+    for (var i = 0; i < levels.length; ++i) {
+      let label = levels[i];
+      let active = "";
+      if (
+           (i === 0 && this.selectedQuality === "auto") ||
+           label === this.selectedQuality
+         )
+        active = ' class="active"';
+
+      html += `<li${active} data-quality="${label.toLowerCase()}">${Escape.HTML(label)}</li>`;
     }
-  }
+    html += `</ul>`;
+    this.root.find(".fp-ui").append(html);
 
-  private qualityClean() {
-    delete this.player.hlsQualities;
-    this.removeAllQualityClasses();
-    this.root.find(".fp-quality-selector").remove();
-  }
+    this.root.on(this.eventName("click"), ".vsq-quality-selector li", (e: Event): void => {
+      e.preventDefault();
 
-  private getDriveQualities(levels: any[]): number[] {
-    let ret: number[] = [];
-    switch(levels.length) {
-      case 4:
-        ret = [1, 2, 3];
-        break;
-      case 5:
-        ret = [1, 2, 3, 4];
-        break;
-      case 6:
-        ret = [1, 3, 4, 5];
-        break;
-      case 7:
-        ret = [1, 3, 5, 6];
-        break;
-      case 8:
-        ret = [1, 3, 6, 7];
-        break;
-      default:
-        if (
-             levels.length < 3 ||
-             (levels[0].height && levels[2].height && levels[0].height === levels[2].height)
-           )
-          return ret;
-
-        ret = [1, 2];
-        break;
-    }
-
-    return ret;
-  }
-
-  private qualityIndex(): string {
-    let qualityIx = this.player.qualities.indexOf(this.player.quality) + 1;
-    return this.player.hlsQualities[qualityIx];
-  }
-
-  private initQuality(hlsQualitiesConf: any, conf: any, data: any): void {
-    let levels = data.levels as string[];
-    let hlsQualities: number[] = [];
-    let indices: number[] = [];
-    let levelIndex = 0;
-    let selectorElem: Element;
-
-    this.qualityClean();
-    if (hlsQualitiesConf === "drive") {
-      hlsQualities = this.getDriveQualities(data.levels);
-      if (!hlsQualities)
-        return;
-    } else {
-      if (typeof hlsQualitiesConf === "string") {
-        hlsQualitiesConf.split(/\s*,\s*/).forEach((q) => {
-            indices.push(parseInt(q, 10));
-        });
-      } else if (typeof hlsQualitiesConf !== "boolean") {
-        hlsQualitiesConf.forEach((q: any) => {
-          let val: number;
-          if (isNaN(Number(q)))
-            val = q.level;
-          else
-            val = q;
-
-          indices.push(val);
-        });
-      }
-      levels.forEach((level) => {
-        // do not check audioCodec,
-        // as e.g. HE_AAC is decoded as LC_AAC by hls.js on Android
-        if ((hlsQualitiesConf === true || indices.indexOf(levelIndex) > -1) &&
-            (!level.videoCodec ||
-            (level.videoCodec &&
-            this.mse.isTypeSupported('video/mp4;codecs=' + level.videoCodec)))) {
-          hlsQualities.push(levelIndex);
-        }
-        levelIndex += 1;
-      });
-
-      if (hlsQualities.length < 2) {
-        return;
-      }
-    }
-
-    this.player.qualities = [];
-    hlsQualities.forEach((idx) => {
-      let level = levels[idx];
-      let q = indices.length? hlsQualitiesConf[indices.indexOf(idx)]: idx;
-      let label = "Level " + (idx + 1);
-
-      if (idx < 0)
-        label = q.label || "Auto";
-      else if (q.label)
-        label = q.label;
-      else {
-        if (level.width && level.height)
-          label = Math.min(level.width, level.height) + 'p';
-      }
-
-      this.player.qualities.push(label);
-    });
-
-    selectorElem = flowplayer.common.createElement("ul", {
-        "class": "fp-quality-selector"
-    });;
-    this.root.find(".fp-ui").get(0).appendChild(selectorElem);
-
-    hlsQualities.unshift(-1);
-    this.player.hlsQualities = hlsQualities;
-
-    if (!this.player.quality || this.player.qualities.indexOf(this.player.quality) < 0)
-      this.player.quality = "abr";
-    else {
-      let startLevel = this.qualityIndex();
-      this.hlsSet('startLevel', [startLevel]);
-      this.hlsSet('loadLevel', [startLevel]);
-    }
-
-    selectorElem.appendChild(flowplayer.common.createElement("li", {
-      "data-quality": "abr"
-    }, "Auto"));
-    this.player.qualities.forEach((q: string) => {
-      selectorElem.appendChild(flowplayer.common.createElement("li", {
-        "data-quality": this.dataQuality(q)
-      }, q));
-    });
-
-    this.root.addClass("quality-" + this.dataQuality());
-    this.root.on(this.eventName("click"), ".fp-quality-selector li", (e: Event) => {
       let choice = jQuery(e.currentTarget);
-      let selectors = this.root.find('.fp-quality-selector li');
+      if (choice.hasClass("active"))
+        return;
+
+      this.root.find('.vsq-quality-selector li').removeClass("active");
+      choice.addClass("active");
+
+      let quality = choice.attr('data-quality');
+      Tools.setToStorage(this.configKey("quality"), quality);
+
+      let level  = this.getQualityIndex(quality);
       let smooth = this.player.conf.smoothSwitching;
       let paused = this.videoTags[Flow.MASTER].paused;
-
-      if (choice.hasClass(this.activeQualityClass))
-        return;
 
       if (!paused && !smooth)
         jQuery(this.videoTags[Flow.MASTER]).one(this.eventName("pause"), () => {
           this.root.removeClass("is-paused");
         });
 
-      for (let i = 0; i < selectors.length; i += 1) {
-        let selector = selectors.eq(i);
-        let active = selector.is(choice);
-        if (active) {
-          this.player.quality = i > 0
-            ? this.player.qualities[i - 1]
-            : "abr";
+      if (smooth && !this.player.poster)
+        this.hlsSet('nextLevel', level);
+      else
+        this.hlsSet('currentLevel', level);
 
-          if (smooth && !this.player.poster)
-            this.hlsSet('nextLevel', this.qualityIndex());
-          else
-            this.hlsSet('currentLevel', this.qualityIndex());
-
-          choice.addClass(this.activeQualityClass);
-          if (paused)
-            this.tagCall('play');
-        }
-
-        selector.toggleClass(this.activeQualityClass, active);
-      }
-
-      this.removeAllQualityClasses();
-      this.root.addClass("quality-" + this.dataQuality());
+      if (paused)
+        this.tagCall('play');
     });
   }
 
@@ -763,7 +667,7 @@ interface FlowHLSConfig {
 }
 interface FlowSource {
   readonly type: string;
-  readonly src: string;
+  src: string;
 }
 interface FlowVideo {
   hlsjs: FlowHLSConfig;
@@ -773,6 +677,11 @@ interface FlowVideo {
   src: string;
   autoplay: boolean;
 }
+interface VSQLabels {
+  master: string[];
+  content: string[];
+}
 interface VSQConfig {
-  secondarySources?: FlowSource[];
+  secondarySources: FlowSource[];
+  labels: VSQLabels;
 }

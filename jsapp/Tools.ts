@@ -26,12 +26,32 @@ export default class Tools {
     return null;
   }
 
-  static getImageDimensions(url: string, cb) {
+  static getImageDimensions(url: string, cb): void {
     $('<img/>', {
       load : function() {
         cb(this.width, this.height)
       },
       src: url
     });
+  }
+
+  static setToStorage(key: string, value: any): void {
+    let raw = JSON.stringify(value);
+    localStorage.setItem(key, raw);
+  }
+
+  static getFromStorage(key: string, def?: any): any {
+    let raw = localStorage.getItem(key);
+    if (raw == null)
+      return def;
+
+    let data: any;
+    try {
+      data = JSON.parse(raw);
+    } catch(_) {
+      return def;
+    }
+
+    return data;
   }
 }
