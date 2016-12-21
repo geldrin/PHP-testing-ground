@@ -23,10 +23,10 @@ export default class Tools {
     if (match)
       return match[1];
 
-    return null;
+    return "";
   }
 
-  static getImageDimensions(url: string, cb): void {
+  static getImageDimensions(url: string, cb: (width: number, height: number) => void): void {
     $('<img/>', {
       load : function() {
         cb(this.width, this.height)

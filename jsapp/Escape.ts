@@ -29,7 +29,7 @@ export default class Escape {
       return '';
 
     Escape.elem.innerHTML = text.replace(/</g, "&lt;");
-    return Escape.elem.textContent;
+    return Escape.elem.textContent || "";
   }
 
   static URL(text: string): string {

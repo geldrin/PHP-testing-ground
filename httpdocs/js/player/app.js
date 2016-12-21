@@ -145,7 +145,7 @@ System.register("Tools", [], function (exports_4, context_4) {
                     var match = css.match(/url\(["']?([^)]+?)['"]?\)/);
                     if (match)
                         return match[1];
-                    return null;
+                    return "";
                 };
                 Tools.getImageDimensions = function (url, cb) {
                     $('<img/>', {
@@ -209,7 +209,7 @@ System.register("Escape", [], function (exports_5, context_5) {
                     if (!text)
                         return '';
                     Escape.elem.innerHTML = text.replace(/</g, "&lt;");
-                    return Escape.elem.textContent;
+                    return Escape.elem.textContent || "";
                 };
                 Escape.URL = function (text) {
                     return encodeURI(text);
@@ -280,6 +280,7 @@ System.register("player/Flow", ["Tools", "Escape"], function (exports_6, context
             Flow = (function () {
                 function Flow(player, root) {
                     this.videoTags = [];
+                    this.videoInfo = [];
                     this.hlsEngines = [];
                     this.eventsInitialized = false;
                     this.activeQualityClass = "active";
@@ -428,6 +429,166 @@ System.register("player/Flow", ["Tools", "Escape"], function (exports_6, context
                         _this.player.poster = false;
                     });
                 };
+                Flow.prototype.handleLoadedData = function (e) {
+                    var type = this.getTypeFromEvent(e);
+                    if (type === Flow.CONTENT) {
+                        e.preventDefault();
+                        return false;
+                    }
+                    var tag = this.videoTags[type];
+                    var data = jQuery.extend(this.player.video, {
+                        duration: this.conf.duration,
+                        seekable: tag.seekable.end(null),
+                        width: tag.videoWidth,
+                        height: tag.videoHeight,
+                        url: this.player.video.src
+                    });
+                    this.triggerPlayer("ready", data);
+                    return false;
+                };
+                Flow.prototype.handlePlay = function (e) {
+                    var type = this.getTypeFromEvent(e);
+                    if (type === Flow.CONTENT) {
+                        e.preventDefault();
+                        return false;
+                    }
+                    var tag = e.currentTarget;
+                    this.removePoster();
+                    if (!this.hlsConf.bufferWhilePaused)
+                        this.hlsCall('startLoad', [tag.currentTime]);
+                    this.triggerPlayer("resume", undefined);
+                    return false;
+                };
+                Flow.prototype.handlePause = function (e) {
+                    var type = this.getTypeFromEvent(e);
+                    if (type === Flow.CONTENT) {
+                        e.preventDefault();
+                        return false;
+                    }
+                    this.removePoster();
+                    if (!this.hlsConf.bufferWhilePaused)
+                        this.hlsCall('stopLoad');
+                    this.triggerPlayer("pause", undefined);
+                };
+                Flow.prototype.handleEnded = function (e) {
+                    var type = this.getTypeFromEvent(e);
+                    if (type === Flow.CONTENT) {
+                        e.preventDefault();
+                        return false;
+                    }
+                    var video = this.player.video;
+                    var tag = e.currentTarget;
+                    var masterHLS = this.hlsEngines[Flow.MASTER];
+                    var flush = false;
+                    if (this.hlsConf.bufferWhilePaused && masterHLS.autoLevelEnabled &&
+                        (video.loop ||
+                            this.player.conf.playlist.length < 2 ||
+                            this.player.conf.advance == false)) {
+                        flush = !masterHLS.levels[this.maxLevel].details;
+                        if (!flush)
+                            masterHLS[this.maxLevel].details.fragments.forEach(function (frag) {
+                                flush = !!flush || !frag.loadCounter;
+                            });
+                    }
+                    if (flush) {
+                        this.hlsCall('trigger', [
+                            Hls.Events.BUFFER_FLUSHING,
+                            {
+                                startOffset: 0,
+                                endOffset: video.duration
+                            }
+                        ]);
+                        this.log("maxLevel", this.maxLevel);
+                        this.hlsSet('nextLoadLevel', this.maxLevel);
+                        this.hlsCall('startLoad', [masterHLS.config.startPosition]);
+                        this.maxLevel = 0;
+                        if (!video.loop) {
+                            jQuery(tag).one(this.eventName("play"), function () {
+                                if (tag.currentTime >= tag.duration)
+                                    tag.currentTime = 0;
+                            });
+                        }
+                    }
+                    this.triggerPlayer("finish", undefined);
+                };
+                Flow.prototype.handleProgress = function (e) {
+                    var type = this.getTypeFromEvent(e);
+                    if (type === Flow.CONTENT) {
+                        e.preventDefault();
+                        return false;
+                    }
+                    var tag = e.currentTarget;
+                    var buffered;
+                    var buffer = 0;
+                    try {
+                        buffered = tag.buffered;
+                        buffer = buffered.end(null);
+                        if (tag.currentTime) {
+                            for (var i = buffered.length - 1; i >= 0; i--) {
+                                var buffend = buffered.end(i);
+                                if (buffend >= tag.currentTime)
+                                    buffer = buffend;
+                            }
+                        }
+                    }
+                    catch (_) { }
+                    ;
+                    this.player.video.buffer = buffer;
+                    this.triggerPlayer("buffer", buffer);
+                };
+                Flow.prototype.handleRateChange = function (e) {
+                    var type = this.getTypeFromEvent(e);
+                    if (type === Flow.CONTENT) {
+                        e.preventDefault();
+                        return false;
+                    }
+                    var tag = e.currentTarget;
+                    this.triggerPlayer("speed", tag.playbackRate);
+                };
+                Flow.prototype.handleSeeked = function (e) {
+                    var type = this.getTypeFromEvent(e);
+                    if (type === Flow.CONTENT) {
+                        e.preventDefault();
+                        return false;
+                    }
+                    var tag = e.currentTarget;
+                    this.removePoster();
+                    if (!this.hlsConf.bufferWhilePaused && tag.paused) {
+                        this.hlsCall('stopLoad');
+                        this.tagCall('pause');
+                    }
+                    this.triggerPlayer("seek", tag.currentTime);
+                    return false;
+                };
+                Flow.prototype.handleTimeUpdate = function (e) {
+                    var type = this.getTypeFromEvent(e);
+                    if (type === Flow.CONTENT) {
+                        e.preventDefault();
+                        return false;
+                    }
+                    var tag = e.currentTarget;
+                    this.triggerPlayer("progress", tag.currentTime);
+                };
+                Flow.prototype.handleVolumeChange = function (e) {
+                    var type = this.getTypeFromEvent(e);
+                    if (type === Flow.CONTENT) {
+                        e.preventDefault();
+                        return false;
+                    }
+                    var tag = e.currentTarget;
+                    this.triggerPlayer("volume", e.volume);
+                };
+                Flow.prototype.triggerPlayer = function (event, data) {
+                    this.player.trigger(event, [this.player, data]);
+                };
+                Flow.prototype.getTypeFromEvent = function (e) {
+                    var t = jQuery(e.currentTarget);
+                    if (!t.is('.vsq-master, .vsq-content'))
+                        throw new Error("Unknown event target");
+                    if (t.is('vsq-master'))
+                        return Flow.MASTER;
+                    return Flow.CONTENT;
+                };
                 Flow.prototype.setupVideoEvents = function (video) {
                     var _this = this;
                     if (this.eventsInitialized)
@@ -451,109 +612,29 @@ System.register("player/Flow", ["Tools", "Escape"], function (exports_6, context
                     var arg = {};
                     jQuery.each(events, function (videoEvent, flowEvent) {
                         videoEvent = _this.eventName(videoEvent);
-                        master.on(videoEvent, function (e) {
-                            if (flowEvent.indexOf("progress") < 0)
-                                _this.log("event", videoEvent, flowEvent, e);
-                            var video = _this.player.video;
-                            switch (flowEvent) {
-                                case "ready":
-                                    arg = jQuery.extend(arg, video, {
-                                        duration: masterTag.duration,
-                                        seekable: masterTag.seekable.end(null),
-                                        width: masterTag.videoWidth,
-                                        height: masterTag.videoHeight,
-                                        url: video.src
-                                    });
-                                    break;
-                                case "resume":
-                                    _this.removePoster();
-                                    if (!_this.hlsConf.bufferWhilePaused)
-                                        _this.hlsCall('startLoad', [currentTime]);
-                                    break;
-                                case "seek":
-                                    _this.removePoster();
-                                    if (!_this.hlsConf.bufferWhilePaused && masterTag.paused) {
-                                        _this.hlsCall('stopLoad');
-                                        _this.tagCall('pause');
-                                    }
-                                    arg = currentTime;
-                                    break;
-                                case "pause":
-                                    _this.removePoster();
-                                    if (!_this.hlsConf.bufferWhilePaused)
-                                        _this.hlsCall('stopLoad');
-                                    break;
-                                case "progress":
-                                    arg = currentTime;
-                                    break;
-                                case "speed":
-                                    arg = masterTag.playbackRate;
-                                    break;
-                                case "volume":
-                                    arg = masterTag.volume;
-                                    break;
-                                case "buffer":
-                                    var buffered = void 0;
-                                    var buffer = 0;
-                                    try {
-                                        buffered = masterTag.buffered;
-                                        buffer = buffered.end(null);
-                                        if (currentTime) {
-                                            for (var i = buffered.length - 1; i >= 0; i--) {
-                                                var buffend = buffered.end(i);
-                                                if (buffend >= currentTime)
-                                                    buffer = buffend;
-                                            }
-                                        }
-                                    }
-                                    catch (_) { }
-                                    ;
-                                    video.buffer = buffer;
-                                    arg = buffer;
-                                    break;
-                                case "finish":
-                                    var flush_1 = false;
-                                    if (_this.hlsConf.bufferWhilePaused && masterHLS.autoLevelEnabled &&
-                                        (video.loop ||
-                                            _this.player.conf.playlist.length < 2 ||
-                                            _this.player.conf.advance == false)) {
-                                        flush_1 = !masterHLS.levels[_this.maxLevel].details;
-                                        if (!flush_1)
-                                            masterHLS[_this.maxLevel].details.fragments.forEach(function (frag) {
-                                                flush_1 = !!flush_1 || !frag.loadCounter;
-                                            });
-                                    }
-                                    if (flush_1) {
-                                        _this.hlsCall('trigger', [
-                                            Hls.Events.BUFFER_FLUSHING,
-                                            {
-                                                startOffset: 0,
-                                                endOffset: video.duration
-                                            }
-                                        ]);
-                                        _this.log("maxLevel", _this.maxLevel);
-                                        _this.hlsSet('nextLoadLevel', _this.maxLevel);
-                                        _this.hlsCall('startLoad', [masterHLS.config.startPosition]);
-                                        _this.maxLevel = 0;
-                                        if (!video.loop) {
-                                            master.one(_this.eventName("play"), function () {
-                                                if (masterTag.currentTime >= masterTag.duration)
-                                                    masterTag.currentTime = 0;
-                                            });
-                                        }
-                                    }
-                                    break;
-                            }
-                            if (arg === false)
-                                return false;
-                            _this.player.trigger(flowEvent, [_this.player, arg]);
-                            if (flowEvent === "ready" && _this.player.quality) {
-                                var selectorIndex = void 0;
-                                if (_this.player.quality === "abr")
-                                    selectorIndex = 0;
-                                else
-                                    selectorIndex = _this.player.qualities.indexOf(_this.player.quality) + 1;
-                                _this.root.find(".fp-quality-selector li").eq(selectorIndex).addClass(_this.activeQuality);
+                        sources.on(videoEvent, function (e) {
+                            _this.log("event", videoEvent, flowEvent, e);
+                            switch (videoEvent) {
+                                case "loadeddata.vsq":
+                                    return _this.handleLoadedData(e);
+                                case "play.vsq":
+                                    return _this.handlePlay(e);
+                                case "pause.vsq":
+                                    return _this.handlePause(e);
+                                case "ended.vsq":
+                                    return _this.handleEnded(e);
+                                case "progress.vsq":
+                                    return _this.handleProgress(e);
+                                case "ratechange.vsq":
+                                    return _this.handleRateChange(e);
+                                case "seeked.vsq":
+                                    return _this.handleSeeked(e);
+                                case "timeupdate.vsq":
+                                    return _this.handleTimeUpdate(e);
+                                case "volumechange.vsq":
+                                    return _this.handleVolumeChange(e);
+                                default:
+                                    throw new Error("unhandled event: " + videoEvent);
                             }
                         });
                     });
@@ -637,6 +718,7 @@ System.register("player/Flow", ["Tools", "Escape"], function (exports_6, context
                         var secondVideo_1 = jQuery.extend(true, {}, video);
                         secondVideo_1.src = this.cfg.secondarySources[0].src;
                         secondVideo_1.sources = this.cfg.secondarySources;
+                        this.videoInfo[Flow.CONTENT] = secondVideo_1;
                         this.videoTags[Flow.CONTENT] = this.createVideoTag(secondVideo_1);
                         this.videoTags[Flow.CONTENT].load();
                         var engine_1 = jQuery(this.videoTags[Flow.CONTENT]);
@@ -649,6 +731,7 @@ System.register("player/Flow", ["Tools", "Escape"], function (exports_6, context
                     }
                     if (this.videoTags[Flow.MASTER])
                         this.destroyVideoTag(Flow.MASTER);
+                    this.videoInfo[Flow.MASTER] = video;
                     this.videoTags[Flow.MASTER] = this.createVideoTag(video);
                     this.videoTags[Flow.MASTER].load();
                     var engine = jQuery(this.videoTags[Flow.MASTER]);

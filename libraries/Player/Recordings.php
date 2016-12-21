@@ -793,6 +793,7 @@ class Recordings extends Player {
         ),
       ),
       'vsq' => array(
+        'duration' => $cfg['duration'],
         // a minosegi valtozatok labeljei, kulon a master es contentnek
         'labels' => array(
           'master'  => array(),

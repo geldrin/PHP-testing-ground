@@ -20,6 +20,7 @@ export default class Flow {
 
   private id: string;
   private videoTags: Element[] = [];
+  private videoInfo: FlowVideo[] = [];
   private hlsEngines: any[] = [];
   private hlsConf: any;
 
@@ -218,6 +219,199 @@ export default class Flow {
     });
   }
 
+  private handleLoadedData(e: Event): boolean | undefined {
+    let type = this.getTypeFromEvent(e);
+    if (type === Flow.CONTENT) {
+      e.preventDefault();
+      return false;
+    }
+
+    let tag = this.videoTags[type];
+    let data = jQuery.extend(this.player.video, {
+      duration: this.conf.duration,
+      seekable: tag.seekable.end(null),
+      width: tag.videoWidth,
+      height: tag.videoHeight,
+      url: this.player.video.src
+    });
+    this.triggerPlayer("ready", data);
+    // TODO beallitani a megfelelo quality selectorban a valtozatot active-nak
+    return false;
+  }
+
+  private handlePlay(e: Event): boolean | undefined {
+    let type = this.getTypeFromEvent(e);
+    if (type === Flow.CONTENT) {
+      e.preventDefault();
+      return false;
+    }
+
+    let tag = e.currentTarget;
+    this.removePoster();
+    if (!this.hlsConf.bufferWhilePaused)
+      this.hlsCall('startLoad', [tag.currentTime]);
+
+    this.triggerPlayer("resume", undefined);
+    return false;
+  }
+
+  private handlePause(e: Event): boolean | undefined {
+    let type = this.getTypeFromEvent(e);
+    if (type === Flow.CONTENT) {
+      e.preventDefault();
+      return false;
+    }
+
+    this.removePoster();
+    if (!this.hlsConf.bufferWhilePaused)
+      this.hlsCall('stopLoad');
+    this.triggerPlayer("pause", undefined);
+  }
+
+  private handleEnded(e: Event): boolean | undefined {
+    let type = this.getTypeFromEvent(e);
+    if (type === Flow.CONTENT) {
+      e.preventDefault();
+      return false;
+    }
+    // TODO a hoszabbik playernel jelenteni csak
+    let video = this.player.video;
+    let tag = e.currentTarget;
+    let masterHLS = this.hlsEngines[Flow.MASTER];
+    let flush = false;
+
+    if (
+         this.hlsConf.bufferWhilePaused && masterHLS.autoLevelEnabled &&
+         (
+           video.loop ||
+           this.player.conf.playlist.length < 2 ||
+           this.player.conf.advance == false
+         )
+       ) {
+      flush = !masterHLS.levels[this.maxLevel].details;
+      if (!flush)
+        masterHLS[this.maxLevel].details.fragments.forEach((frag: any) => {
+          flush = !!flush || !frag.loadCounter;
+        });
+      }
+
+    if (flush) {
+      this.hlsCall('trigger', [
+        Hls.Events.BUFFER_FLUSHING,
+        {
+          startOffset: 0,
+          endOffset: video.duration
+        }
+      ]);
+
+      this.log("maxLevel", this.maxLevel);
+      this.hlsSet('nextLoadLevel', this.maxLevel);
+      this.hlsCall('startLoad', [masterHLS.config.startPosition]);
+      this.maxLevel = 0;
+
+      if (!video.loop) {
+        // hack to prevent Chrome engine from hanging
+        jQuery(tag).one(this.eventName("play"), () => {
+          if (tag.currentTime >= tag.duration)
+            tag.currentTime = 0;
+        });
+      }
+    }
+
+    this.triggerPlayer("finish", undefined);
+  }
+
+  private handleProgress(e: Event): boolean | undefined {
+    let type = this.getTypeFromEvent(e);
+    if (type === Flow.CONTENT) {
+      e.preventDefault();
+      return false;
+    }
+    let tag = e.currentTarget;
+    let buffered: any;
+    let buffer: number = 0;
+    try {
+      buffered = tag.buffered;
+      buffer = buffered.end(null);
+      if (tag.currentTime) {
+        for (var i = buffered.length - 1; i >= 0; i--) {
+          let buffend = buffered.end(i);
+          if (buffend >= tag.currentTime)
+            buffer = buffend;
+        }
+      }
+    } catch(_) {};
+
+    this.player.video.buffer = buffer;
+    this.triggerPlayer("buffer", buffer);
+  }
+
+  private handleRateChange(e: Event): boolean | undefined {
+    let type = this.getTypeFromEvent(e);
+    if (type === Flow.CONTENT) {
+      e.preventDefault();
+      return false;
+    }
+
+    let tag = e.currentTarget;
+    this.triggerPlayer("speed", tag.playbackRate);
+  }
+
+  private handleSeeked(e: Event): boolean | undefined {
+    let type = this.getTypeFromEvent(e);
+    if (type === Flow.CONTENT) {
+      e.preventDefault();
+      return false;
+    }
+    let tag = e.currentTarget;
+    this.removePoster();
+    if (!this.hlsConf.bufferWhilePaused && tag.paused) {
+      this.hlsCall('stopLoad');
+      this.tagCall('pause');
+    }
+
+    this.triggerPlayer("seek", tag.currentTime);
+    return false;
+  }
+
+  private handleTimeUpdate(e: Event): boolean | undefined {
+    let type = this.getTypeFromEvent(e);
+    if (type === Flow.CONTENT) {
+      e.preventDefault();
+      return false;
+    }
+
+    // TODO kivalasztani a hoszabbik videot es annak jelenteni csak
+    let tag = e.currentTarget;
+    this.triggerPlayer("progress", tag.currentTime);
+  }
+
+  private handleVolumeChange(e: Event): boolean | undefined {
+    let type = this.getTypeFromEvent(e);
+    if (type === Flow.CONTENT) {
+      e.preventDefault();
+      return false;
+    }
+
+    let tag = e.currentTarget;
+    this.triggerPlayer("volume", e.volume);
+  }
+
+  private triggerPlayer(event: string, data: any): void {
+    this.player.trigger(event, [this.player, data]);
+  }
+
+  private getTypeFromEvent(e: Event): number {
+    let t = jQuery(e.currentTarget);
+    if (!t.is('.vsq-master, .vsq-content'))
+      throw new Error("Unknown event target");
+
+    if (t.is('vsq-master'))
+      return Flow.MASTER;
+
+    return Flow.CONTENT;
+  }
+
   private setupVideoEvents(video: FlowVideo): void {
     if (this.eventsInitialized)
       return;
@@ -245,131 +439,29 @@ export default class Flow {
 
     jQuery.each(events, (videoEvent: string, flowEvent: string): void => {
       videoEvent = this.eventName(videoEvent);
-
-      master.on(videoEvent, (e: Event): boolean | undefined => {
-        if (flowEvent.indexOf("progress") < 0)
-          this.log("event", videoEvent, flowEvent, e);
-
-        let video = this.player.video;
-        switch(flowEvent) {
-          case "ready":
-            arg = jQuery.extend(arg, video, {
-              duration: masterTag.duration,
-              seekable: masterTag.seekable.end(null),
-              width: masterTag.videoWidth,
-              height: masterTag.videoHeight,
-              url: video.src
-            });
-            break;
-
-          case "resume":
-            this.removePoster();
-            if (!this.hlsConf.bufferWhilePaused)
-              this.hlsCall('startLoad', [currentTime]);
-            break;
-
-          case "seek":
-            this.removePoster();
-            if (!this.hlsConf.bufferWhilePaused && masterTag.paused) {
-              this.hlsCall('stopLoad');
-              this.tagCall('pause');
-            }
-            arg = currentTime;
-            break;
-
-          case "pause":
-            this.removePoster();
-            if (!this.hlsConf.bufferWhilePaused)
-              this.hlsCall('stopLoad');
-            break;
-
-          case "progress":
-            arg = currentTime;
-            break;
-
-          case "speed":
-            arg = masterTag.playbackRate;
-            break;
-
-          case "volume":
-            arg = masterTag.volume;
-            break;
-
-          case "buffer":
-            let buffered: any;
-            let buffer: number = 0;
-            try {
-              buffered = masterTag.buffered;
-              buffer = buffered.end(null);
-              if (currentTime) {
-                for (var i = buffered.length - 1; i >= 0; i--) {
-                  let buffend = buffered.end(i);
-                  if (buffend >= currentTime)
-                    buffer = buffend;
-                }
-              }
-            } catch(_) {};
-
-            video.buffer = buffer;
-            arg = buffer;
-            break;
-
-          case "finish":
-            let flush = false;
-
-            if (
-                 this.hlsConf.bufferWhilePaused && masterHLS.autoLevelEnabled &&
-                 (
-                   video.loop ||
-                   this.player.conf.playlist.length < 2 ||
-                   this.player.conf.advance == false
-                 )
-               ) {
-              flush = !masterHLS.levels[this.maxLevel].details;
-              if (!flush)
-                masterHLS[this.maxLevel].details.fragments.forEach((frag: any) => {
-                  flush = !!flush || !frag.loadCounter;
-                });
-              }
-
-            if (flush) {
-              this.hlsCall('trigger', [
-                Hls.Events.BUFFER_FLUSHING,
-                {
-                  startOffset: 0,
-                  endOffset: video.duration
-                }
-              ]);
-
-              this.log("maxLevel", this.maxLevel);
-              this.hlsSet('nextLoadLevel', this.maxLevel);
-              this.hlsCall('startLoad', [masterHLS.config.startPosition]);
-              this.maxLevel = 0;
-
-              if (!video.loop) {
-                // hack to prevent Chrome engine from hanging
-                master.one(this.eventName("play"), () => {
-                  if (masterTag.currentTime >= masterTag.duration)
-                    masterTag.currentTime = 0;
-                });
-              }
-            }
-            break;
-        }
-
-        if (arg === false)
-          return false;
-
-        this.player.trigger(flowEvent, [this.player, arg]);
-
-        if (flowEvent === "ready" && this.player.quality) {
-          let selectorIndex: number;
-          if (this.player.quality === "abr")
-            selectorIndex = 0;
-          else
-            selectorIndex = this.player.qualities.indexOf(this.player.quality) + 1;
-
-          this.root.find(".fp-quality-selector li").eq(selectorIndex).addClass(this.activeQuality);
+      sources.on(videoEvent, (e: Event): boolean | undefined => {
+        this.log("event", videoEvent, flowEvent, e);
+        switch(videoEvent) {
+          case "loadeddata.vsq":
+            return this.handleLoadedData(e);
+          case "play.vsq":
+            return this.handlePlay(e);
+          case "pause.vsq":
+            return this.handlePause(e);
+          case "ended.vsq":
+            return this.handleEnded(e);
+          case "progress.vsq":
+            return this.handleProgress(e);
+          case "ratechange.vsq":
+            return this.handleRateChange(e);
+          case "seeked.vsq":
+            return this.handleSeeked(e);
+          case "timeupdate.vsq":
+            return this.handleTimeUpdate(e);
+          case "volumechange.vsq":
+            return this.handleVolumeChange(e);
+          default:
+            throw new Error("unhandled event: " + videoEvent);
         }
       });
     });
@@ -489,6 +581,7 @@ export default class Flow {
       let secondVideo = jQuery.extend(true, {}, video);
       secondVideo.src = this.cfg.secondarySources[0].src;
       secondVideo.sources = this.cfg.secondarySources;
+      this.videoInfo[Flow.CONTENT] = secondVideo;
 
       // and insert it into the DOM
       this.videoTags[Flow.CONTENT] = this.createVideoTag(secondVideo);
@@ -499,12 +592,14 @@ export default class Flow {
         this.handleError(Flow.CONTENT, secondVideo);
       });
       root.prepend(engine);
+
       this.setupHLS(Flow.CONTENT, secondVideo);
     }
 
     if (this.videoTags[Flow.MASTER])
       this.destroyVideoTag(Flow.MASTER);
 
+    this.videoInfo[Flow.MASTER] = video;
     this.videoTags[Flow.MASTER] = this.createVideoTag(video);
     this.videoTags[Flow.MASTER].load();
     let engine = jQuery(this.videoTags[Flow.MASTER]);
