@@ -32,7 +32,7 @@
 			<StorageDir>/srv/vsqdev/dev.videosquare.eu/livestreams</StorageDir>
 			<KeyDir>${com.wowza.wms.context.VHostConfigHome}/keys</KeyDir>
 			<!-- LiveStreamPacketizers (separate with commas): cupertinostreamingpacketizer, smoothstreamingpacketizer, sanjosestreamingpacketizer, mpegdashstreamingpacketizer, cupertinostreamingrepeater, smoothstreamingrepeater, sanjosestreamingrepeater, mpegdashstreamingrepeater, dvrstreamingpacketizer, dvrstreamingrepeater -->
-			<LiveStreamPacketizers>cupertinostreamingpacketizer, sanjosestreamingpacketizer</LiveStreamPacketizers>
+			<LiveStreamPacketizers>cupertinostreamingpacketizer, mpegdashstreamingpacketizer, sanjosestreamingpacketizer</LiveStreamPacketizers>
 			<!-- Properties defined here will override any properties defined in conf/Streams.xml for any streams types loaded by this application -->
 			<Properties>
 				<Property>
@@ -85,7 +85,7 @@
 			</Properties>
 		</TimedText>
 		<!-- HTTPStreamers (separate with commas): cupertinostreaming, smoothstreaming, sanjosestreaming, mpegdashstreaming, dvrchunkstreaming -->
-		<HTTPStreamers>cupertinostreaming, sanjosestreaming</HTTPStreamers>
+		<HTTPStreamers>cupertinostreaming, sanjosestreaming, mpegdashstreaming</HTTPStreamers>
 		<MediaCache>
 			<MediaCacheSourceList></MediaCacheSourceList>
 		</MediaCache>
@@ -95,7 +95,7 @@
 		<Client>
 			<IdleFrequency>-1</IdleFrequency>
 			<Access>
-				<StreamReadAccess>*</StreamReadAccess>
+				<StreamReadAccess></StreamReadAccess>
 				<StreamWriteAccess>*</StreamWriteAccess>
 				<StreamAudioSampleAccess></StreamAudioSampleAccess>
 				<StreamVideoSampleAccess></StreamVideoSampleAccess>
@@ -106,8 +106,8 @@
 		<RTP>
 			<!-- RTP/Authentication/[type]Methods defined in Authentication.xml. Default setup includes; none, basic, digest -->
 			<Authentication>
-				<PublishMethod>none</PublishMethod>
-				<PlayMethod>none</PlayMethod>
+				<PublishMethod>digest</PublishMethod>
+				<PlayMethod>block</PlayMethod>
 			</Authentication>
 			<!-- RTP/AVSyncMethod. Valid values are: senderreport, systemclock, rtptimecode -->
 			<AVSyncMethod>senderreport</AVSyncMethod>
@@ -321,10 +321,10 @@
 				<Value>12345hello.doPublish</Value>
 			</Property>
 			<!-- CONNECT HANDLER CONFIG -->
-			<!--			<Property>
+			<Property>
 				<Name>URLPlayHandler</Name>
 				<Value>http://dev.videosquare.eu/hu/live/checkstreamaccess</Value>
-			</Property> -->
+			</Property>
 			<Property>
 				<Name>PlayIP</Name>
 				<Value>On</Value>

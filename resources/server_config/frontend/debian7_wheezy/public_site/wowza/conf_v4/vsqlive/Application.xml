@@ -270,6 +270,11 @@
 				<Description>WowzaStats</Description>
 				<Class>hu.videosquare.wowza.module.WowzaStats</Class>
 			</Module>
+			<Module>
+				<Name>ModuleSecureURLParams</Name>
+				<Description>ModuleSecureURLParams</Description>
+				<Class>com.wowza.wms.security.ModuleSecureURLParams</Class>
+			</Module>
 		</Modules>
 		<!-- Properties defined here will be added to the IApplication.getProperties() and IApplicationInstance.getProperties() collections -->
 		<Properties>
@@ -278,6 +283,12 @@
 				<Value>true</Value>
 				<Type>Boolean</Type>
 			</Property>
+			<!-- doPublish password START -->
+			<Property>
+				<Name>secureurlparams.publish</Name>
+				<Value>12345hello.doPublish</Value>
+			</Property>
+			<!-- doPublish password END -->
 			<!-- CONNECT HANDLER CONFIG -->
 			<Property>
 				<Name>URLPlayHandler</Name>
@@ -303,11 +314,6 @@
 			<Property>
 				<Name>WowzaStatsMySQLStatsTable</Name>
 				<Value>cdn_streaming_stats</Value>
-			</Property>
-			<Property>
-				<Name>securityPublishRequirePassword</Name>
-				<Value>true</Value>
-				<Type>Boolean</Type>
 			</Property>
 		</Properties>
 	</Application>
