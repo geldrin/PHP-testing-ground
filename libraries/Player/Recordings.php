@@ -542,7 +542,6 @@ class Recordings extends Player {
       'user_checkWatchingTimeInterval' => $cfg['presenceCheck']['interval'],
       'user_checkWatchingConfirmationTimeout' => $cfg['presenceCheck']['timeout'],
       'recording_timeout' => $cfg['viewSession']['timeout'],
-      'timeline_autoPlay' => $cfg['autoplay'],
     );
 
     $streams = $this->getFlashStreams( $cfg );
