@@ -542,6 +542,7 @@ class Recordings extends Player {
       'user_checkWatchingTimeInterval' => $cfg['presenceCheck']['interval'],
       'user_checkWatchingConfirmationTimeout' => $cfg['presenceCheck']['timeout'],
       'recording_timeout' => $cfg['viewSession']['timeout'],
+      // 'timeline_autoPlay' beallitas nem lehet false sose mert a flash player nem indul el
     );
 
     $streams = $this->getFlashStreams( $cfg );
@@ -785,7 +786,7 @@ class Recordings extends Player {
           // Whether manual HLS quality switching should be smooth - level change with begin of next segment - or instant. Setting this to false can cause a playback pause on switch.
           'smoothSwitching'     => false,
           // Set to true if you want non fatal hls.js playback errors to trigger Flowplayer errors. Useful for debugging streams and live stream maintenance.
-          'strict'              => true,
+          'strict'              => false,
           // do not die on fatal errors
           'recoverMediaError'   => true,
           'recoverNetworkError' => true,

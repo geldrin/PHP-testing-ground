@@ -564,7 +564,7 @@ class Live extends Player {
           // Whether manual HLS quality switching should be smooth - level change with begin of next segment - or instant. Setting this to false can cause a playback pause on switch.
           'smoothSwitching'     => false,
           // Set to true if you want non fatal hls.js playback errors to trigger Flowplayer errors. Useful for debugging streams and live stream maintenance.
-          'strict'              => true,
+          'strict'              => false,
           // do not die on fatal errors
           'recoverMediaError'   => true,
           'recoverNetworkError' => true,
