@@ -194,6 +194,27 @@ export default class Flow {
     });
   }
 
+  private syncVideos(): void {
+    if (this.cfg.secondarySources.length === 0)
+      return;
+
+    let master = this.videoTags[Flow.MASTER];
+    let content = this.videoTags[Flow.CONTENT];
+
+    // ha az egyik felvetelt mar befejeztuk
+    if (master.currentTime == 0 || master.currentTime >= master.duration)
+      return;
+    if (content.currentTime == 0 || content.currentTime >= content.duration)
+      return;
+
+    // ha az elteres a ketto kozott tobb mint X masodperc
+    // akkor mindig a master felvetelhez igazodunk
+    if (Math.abs(master.currentTime - content.currentTime) > 0.5) {
+      this.log("syncing videos to master");
+      content.currentTime = master.currentTime;
+    }
+  }
+
   private handleLoadedData(e: Event): boolean | undefined {
     this.loadedCount++;
     // master mindig van, content nem biztos
@@ -254,54 +275,24 @@ export default class Flow {
 
   private handleEnded(e: Event): boolean | undefined {
     let type = this.getTypeFromEvent(e);
-    if (type === Flow.CONTENT) {
+    if (type !== this.longerType) {
       e.stopImmediatePropagation();
       return false;
     }
-    // TODO a hoszabbik playernel jelenteni csak
+
     let video = this.player.video;
-    let tag = e.currentTarget as HTMLVideoElement;
-    let masterHLS = this.hlsEngines[Flow.MASTER];
-    let flush = false;
+    let tag = this.videoTags[this.longerType];
 
-    if (
-         this.hlsConf.bufferWhilePaused && masterHLS.autoLevelEnabled &&
-         (
-           video.loop ||
-           this.player.conf.playlist.length < 2 ||
-           this.player.conf.advance == false
-         )
-       ) {
-      flush = !masterHLS.levels[this.maxLevel].details;
-      if (!flush)
-        masterHLS[this.maxLevel].details.fragments.forEach((frag: any) => {
-          flush = !!flush || !frag.loadCounter;
-        });
+    this.hlsCall('trigger', [
+      Hls.Events.BUFFER_FLUSHING,
+      {
+        startOffset: 0,
+        endOffset: this.cfg.duration
       }
+    ]);
 
-    if (flush) {
-      this.hlsCall('trigger', [
-        Hls.Events.BUFFER_FLUSHING,
-        {
-          startOffset: 0,
-          endOffset: video.duration
-        }
-      ]);
-
-      this.log("maxLevel", this.maxLevel);
-      this.hlsSet('nextLoadLevel', this.maxLevel);
-      this.hlsCall('startLoad', [masterHLS.config.startPosition]);
-      this.maxLevel = 0;
-
-      if (!video.loop) {
-        // hack to prevent Chrome engine from hanging
-        jQuery(tag).one(this.eventName("play"), () => {
-          if (tag.currentTime >= tag.duration)
-            tag.currentTime = 0;
-        });
-      }
-    }
-
+    //this.hlsCall('startLoad', [0]);
+    this.tagCall('pause');
     this.triggerPlayer("finish", undefined);
   }
 
@@ -368,6 +359,8 @@ export default class Flow {
 
     let tag = this.videoTags[this.longerType];
     this.triggerPlayer("progress", tag.currentTime);
+
+    this.syncVideos();
   }
 
   private handleVolumeChange(e: Event): boolean | undefined {
@@ -624,6 +617,7 @@ export default class Flow {
 
     this.setupVideoEvents(video);
     this.initQuality();
+    this.initReplayButton();
 
     if (this.cfg.autoplay)
       this.tagCall("play");
@@ -683,6 +677,21 @@ export default class Flow {
     }
 
     return null;
+  }
+
+  private initReplayButton(): void {
+    // TODO kell ez? a flow alapbol ujrakezdi ha a playre kattint a user
+    if (this.root.find('.vsq-replay').length > 0)
+      throw new Error("replay button already initialized");
+
+    let button = jQuery(`<a class="vsq-replay"></a>`);
+    this.root.find(".fp-ui").append(button);
+    button.on("click", (e: Event): void => {
+      e.preventDefault();
+      this.tagSet("currentTime", 0);
+      this.tagCall("play");
+      return false;
+    });
   }
 
   private initQuality(): void {
