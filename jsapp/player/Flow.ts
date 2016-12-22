@@ -19,7 +19,9 @@ export default class Flow {
   private static readonly CONTENT = 1;
 
   private id: string;
-  private videoTags: Element[] = [];
+  private loadedCount = 0;
+  private longerType: 0 | 1 = 0; // alapbol Flow.MASTER
+  private videoTags: HTMLVideoElement[] = [];
   private videoInfo: FlowVideo[] = [];
   private hlsEngines: any[] = [];
   private hlsConf: any;
@@ -173,33 +175,6 @@ export default class Flow {
     return false;
   }
 
-  // TODO de-magicnumber
-  private doRecover(conf: any, flowEvent: string, isNetworkError: boolean): number | undefined {
-    if (conf.debug)
-      this.log('recovery.vsq', flowEvent);
-
-    this.root.removeClass('is-paused');
-    this.root.addClass('is-seeking');
-    if (isNetworkError)
-      this.hlsCall('startLoad');
-    else {
-      let now = performance.now();
-      if (!this.recoverMediaErrorDate || now - this.recoverMediaErrorDate > 3000) {
-        this.recoverMediaErrorDate = performance.now();
-        this.hlsCall('recoverMediaError');
-      } else {
-        if (!this.swapAudioCodecDate || now - this.swapAudioCodecDate > 3000) {
-          this.swapAudioCodecDate = performance.now();
-          this.hlsCall('swapAudioCodec');
-          this.hlsCall('recoverMediaError');
-        } else
-          return 3;
-      }
-    }
-
-    return undefined;
-  }
-
   private addPoster(): void {
     let master = jQuery(this.videoTags[Flow.MASTER]);
     master.one(this.eventName("timeupdate"), () => {
@@ -220,20 +195,29 @@ export default class Flow {
   }
 
   private handleLoadedData(e: Event): boolean | undefined {
-    let type = this.getTypeFromEvent(e);
-    if (type === Flow.CONTENT) {
-      e.preventDefault();
+    this.loadedCount++;
+    // master mindig van, content nem biztos
+    let vidCount = 1 + this.cfg.secondarySources.length;
+
+    if (this.loadedCount != vidCount) {
+      e.stopImmediatePropagation();
       return false;
     }
 
-    let tag = this.videoTags[type];
+    // mivel a default longerType ertek a Flow.MASTER igy csak egy esetet kell nezni
+    if (this.videoTags[Flow.CONTENT].duration > this.videoTags[Flow.MASTER].duration)
+      this.longerType = Flow.CONTENT;
+
+    let tag = this.videoTags[this.longerType];
     let data = jQuery.extend(this.player.video, {
-      duration: this.conf.duration,
-      seekable: tag.seekable.end(null),
-      width: tag.videoWidth,
+      duration: this.cfg.duration,
+      seekable: tag.seekable.end(0),
+      width: tag.videoWidth, // TODO ezeket mire hasznalja a flowplayer
       height: tag.videoHeight,
-      url: this.player.video.src
+      // az src mindig ugyanaz lesz, hiaba master vagy content
+      url: this.videoInfo[Flow.MASTER].src
     });
+
     this.triggerPlayer("ready", data);
     // TODO beallitani a megfelelo quality selectorban a valtozatot active-nak
     return false;
@@ -241,24 +225,24 @@ export default class Flow {
 
   private handlePlay(e: Event): boolean | undefined {
     let type = this.getTypeFromEvent(e);
+    // a lenyeg csak az hogy egyszer fusson le
     if (type === Flow.CONTENT) {
-      e.preventDefault();
+      e.stopImmediatePropagation();
       return false;
     }
 
-    let tag = e.currentTarget;
+    let tag = e.currentTarget as HTMLVideoElement;
     this.removePoster();
     if (!this.hlsConf.bufferWhilePaused)
       this.hlsCall('startLoad', [tag.currentTime]);
 
     this.triggerPlayer("resume", undefined);
-    return false;
   }
 
   private handlePause(e: Event): boolean | undefined {
     let type = this.getTypeFromEvent(e);
     if (type === Flow.CONTENT) {
-      e.preventDefault();
+      e.stopImmediatePropagation();
       return false;
     }
 
@@ -271,12 +255,12 @@ export default class Flow {
   private handleEnded(e: Event): boolean | undefined {
     let type = this.getTypeFromEvent(e);
     if (type === Flow.CONTENT) {
-      e.preventDefault();
+      e.stopImmediatePropagation();
       return false;
     }
     // TODO a hoszabbik playernel jelenteni csak
     let video = this.player.video;
-    let tag = e.currentTarget;
+    let tag = e.currentTarget as HTMLVideoElement;
     let masterHLS = this.hlsEngines[Flow.MASTER];
     let flush = false;
 
@@ -323,16 +307,16 @@ export default class Flow {
 
   private handleProgress(e: Event): boolean | undefined {
     let type = this.getTypeFromEvent(e);
-    if (type === Flow.CONTENT) {
-      e.preventDefault();
+    if (type !== this.longerType) {
+      e.stopImmediatePropagation();
       return false;
     }
-    let tag = e.currentTarget;
-    let buffered: any;
+
+    let tag = this.videoTags[this.longerType];
     let buffer: number = 0;
     try {
-      buffered = tag.buffered;
-      buffer = buffered.end(null);
+      let buffered = tag.buffered;
+      buffer = buffered.end(0);
       if (tag.currentTime) {
         for (var i = buffered.length - 1; i >= 0; i--) {
           let buffend = buffered.end(i);
@@ -349,21 +333,22 @@ export default class Flow {
   private handleRateChange(e: Event): boolean | undefined {
     let type = this.getTypeFromEvent(e);
     if (type === Flow.CONTENT) {
-      e.preventDefault();
+      e.stopImmediatePropagation();
       return false;
     }
 
-    let tag = e.currentTarget;
+    let tag = e.currentTarget as HTMLVideoElement;
     this.triggerPlayer("speed", tag.playbackRate);
   }
 
   private handleSeeked(e: Event): boolean | undefined {
     let type = this.getTypeFromEvent(e);
     if (type === Flow.CONTENT) {
-      e.preventDefault();
+      e.stopImmediatePropagation();
       return false;
     }
-    let tag = e.currentTarget;
+
+    let tag = e.currentTarget as HTMLVideoElement;
     this.removePoster();
     if (!this.hlsConf.bufferWhilePaused && tag.paused) {
       this.hlsCall('stopLoad');
@@ -376,28 +361,74 @@ export default class Flow {
 
   private handleTimeUpdate(e: Event): boolean | undefined {
     let type = this.getTypeFromEvent(e);
-    if (type === Flow.CONTENT) {
-      e.preventDefault();
+    if (type !== this.longerType) {
+      e.stopImmediatePropagation();
       return false;
     }
 
-    // TODO kivalasztani a hoszabbik videot es annak jelenteni csak
-    let tag = e.currentTarget;
+    let tag = this.videoTags[this.longerType];
     this.triggerPlayer("progress", tag.currentTime);
   }
 
   private handleVolumeChange(e: Event): boolean | undefined {
     let type = this.getTypeFromEvent(e);
     if (type === Flow.CONTENT) {
-      e.preventDefault();
+      e.stopImmediatePropagation();
       return false;
     }
 
-    let tag = e.currentTarget;
-    this.triggerPlayer("volume", e.volume);
+    let tag = e.currentTarget as HTMLVideoElement;
+    this.triggerPlayer("volume", tag.volume);
+  }
+
+  private handleError(e: Event): boolean | undefined {
+    e.stopImmediatePropagation();
+    const MEDIA_ERR_NETWORK = 2;
+    const MEDIA_ERR_DECODE = 3;
+
+    let type = this.getTypeFromEvent(e);
+    let err = this.videoTags[type].error.code;
+
+    // egyatalan olyan hiba amivel tudunk kezdeni valamit?
+    if (
+         (this.hlsConf.recoverMediaError && err === MEDIA_ERR_DECODE) ||
+         (this.hlsConf.recoverNetworkError && err === MEDIA_ERR_NETWORK) ||
+         (this.hlsConf.recover && (err === MEDIA_ERR_NETWORK || err === MEDIA_ERR_DECODE))
+       ) {
+      this.root.removeClass('is-paused');
+      this.root.addClass('is-seeking');
+
+      let hls = this.hlsEngines[type];
+      if (err === MEDIA_ERR_NETWORK) {
+        hls.startLoad();
+        return false;
+      }
+
+      let now = performance.now();
+      if (!this.recoverMediaErrorDate || now - this.recoverMediaErrorDate > 3000) {
+        this.recoverMediaErrorDate = performance.now();
+        hls.recoverMediaError();
+        return false;
+      } else {
+        if (!this.swapAudioCodecDate || now - this.swapAudioCodecDate > 3000) {
+          this.swapAudioCodecDate = performance.now();
+          hls.swapAudioCodec();
+          hls.recoverMediaError();
+          return false;
+        } else
+          err = MEDIA_ERR_DECODE;
+      }
+    }
+
+    let arg: any = {code: err};
+    if (err > MEDIA_ERR_NETWORK)
+      arg.video = jQuery.extend(this.videoInfo[type], {url: this.videoInfo[type].src});
+
+    this.player.trigger("error", [this.player, arg]);
   }
 
   private triggerPlayer(event: string, data: any): void {
+    this.log("[flow event]", event, data);
     this.player.trigger(event, [this.player, data]);
   }
 
@@ -406,7 +437,7 @@ export default class Flow {
     if (!t.is('.vsq-master, .vsq-content'))
       throw new Error("Unknown event target");
 
-    if (t.is('vsq-master'))
+    if (t.is('.vsq-master'))
       return Flow.MASTER;
 
     return Flow.CONTENT;
@@ -460,6 +491,8 @@ export default class Flow {
             return this.handleTimeUpdate(e);
           case "volumechange.vsq":
             return this.handleVolumeChange(e);
+          case "error.vsq":
+            return this.handleError(e);
           default:
             throw new Error("unhandled event: " + videoEvent);
         }
@@ -479,30 +512,6 @@ export default class Flow {
         });
     }
 
-    this.player.on(this.eventName("error"), () => {
-      this.hlsCall('destroy');
-    });
-  }
-
-  private handleError(type: number, video: FlowSource): void {
-    let tag = this.videoTags[type];
-    let code = tag.error.code;
-    if (
-         (this.hlsConf.recoverMediaError && code === 3) ||
-         (this.hlsConf.recoverNetworkError && code === 2) ||
-         (this.hlsConf.recover && (code === 2 || code === 3))
-       )
-      code = this.doRecover(this.player.conf, "error", code === 2);
-
-    let arg: any;
-    if (code !== undefined) {
-      arg = {code: code};
-      if (code > 2)
-        arg.video = jQuery.extend(video, {url: video.src});
-    } else
-      return;
-
-    this.player.trigger("error", [this.player, arg]);
   }
 
   private eventName(event?: string): string {
@@ -513,14 +522,20 @@ export default class Flow {
     return event + postfix;
   }
 
-  private createVideoTag(video: FlowVideo): Element {
-    let autoplay = false;
+  private createVideoTag(video: FlowVideo): HTMLVideoElement {
 
-    let ret: any = document.createElement('video');
+    let ret: HTMLVideoElement = document.createElement('video');
     ret.src = video.src;
-    ret.type = this.getType(video.type);
     ret.className = 'fp-engine vsq-engine';
-    ret.autoplay = autoplay? 'autoplay': false;
+
+    ret.setAttribute('type', this.getType(video.type));
+
+    if (this.cfg.autoplay) {
+      ret.autoplay = true;
+      ret.setAttribute('autoplay', 'autoplay');
+    } else
+      ret.autoplay = false;
+
     ret.setAttribute('x-webkit-airplay', 'allow');
 
     return ret;
@@ -537,11 +552,12 @@ export default class Flow {
     elem.remove();
   }
 
-  private setupHLS(type: number, conf: FlowVideo): void {
+  private setupHLS(type: number): void {
+    let video = this.videoInfo[type];
     let hls = new Hls();
 
     hls.on(Hls.Events.MEDIA_ATTACHED, (event: string, data: any): void => {
-      hls.loadSource(conf.src);
+      hls.loadSource(video.src);
     });
     hls.on(Hls.Events.MANIFEST_PARSED, (event: string, data: any): void => {
       hls.startLoad(hls.config.startPosition);
@@ -552,8 +568,6 @@ export default class Flow {
       hls.startLevel = startLevel;
       hls.loadLevel = startLevel;
     });
-
-    // TODO error recovery
 
     hls.attachMedia(this.videoTags[type]);
     this.hlsEngines[type] = hls;
@@ -588,12 +602,9 @@ export default class Flow {
       this.videoTags[Flow.CONTENT].load();
       let engine = jQuery(this.videoTags[Flow.CONTENT]);
       engine.addClass('vsq-content');
-      engine.on(this.eventName("error"), (e: Event): void => {
-        this.handleError(Flow.CONTENT, secondVideo);
-      });
       root.prepend(engine);
 
-      this.setupHLS(Flow.CONTENT, secondVideo);
+      this.setupHLS(Flow.CONTENT);
     }
 
     if (this.videoTags[Flow.MASTER])
@@ -604,14 +615,18 @@ export default class Flow {
     this.videoTags[Flow.MASTER].load();
     let engine = jQuery(this.videoTags[Flow.MASTER]);
     engine.addClass('vsq-master');
-    engine.on(this.eventName("error"), (e: Event): void => {
-      this.handleError(Flow.MASTER, video);
-    });
     root.prepend(engine);
-    this.setupHLS(Flow.MASTER, video);
+    this.setupHLS(Flow.MASTER);
+
+    this.player.on(this.eventName("error"), () => {
+      this.unload();
+    });
 
     this.setupVideoEvents(video);
     this.initQuality();
+
+    if (this.cfg.autoplay)
+      this.tagCall("play");
   }
 
   public pause(): void {
@@ -777,6 +792,8 @@ interface VSQLabels {
   content: string[];
 }
 interface VSQConfig {
+  duration: number;
+  autoplay: boolean;
   secondarySources: FlowSource[];
   labels: VSQLabels;
 }
