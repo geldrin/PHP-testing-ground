@@ -195,7 +195,12 @@ export default class Flow {
   }
 
   private syncVideos(): void {
+    // ha csak egy video van, nincs mihez syncelni
     if (this.cfg.secondarySources.length === 0)
+      return;
+
+    // live videonal nem fog a currentTime sose pontosan megegyezni, hagyjuk
+    if (this.player.live)
       return;
 
     let master = this.videoTags[Flow.MASTER];

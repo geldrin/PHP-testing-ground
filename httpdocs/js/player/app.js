@@ -409,6 +409,8 @@ System.register("player/Flow", ["Tools", "Escape"], function (exports_6, context
                 Flow.prototype.syncVideos = function () {
                     if (this.cfg.secondarySources.length === 0)
                         return;
+                    if (this.player.live)
+                        return;
                     var master = this.videoTags[Flow.MASTER];
                     var content = this.videoTags[Flow.CONTENT];
                     if (master.currentTime == 0 || master.currentTime >= master.duration)
