@@ -4078,6 +4078,9 @@ table.paging tr.even {
   width: 50%;
   height: auto;
 }
+#player .vsq-singlevideo .vsq-engine {
+  width: 100%;
+}
 #player .vsq-engine.vsq-master {
   left: 0;
   right: auto;
@@ -4097,7 +4100,7 @@ table.paging tr.even {
   width: 0;
   overflow: hidden;
   font-weight: bold;
-  z-index: 13;
+  z-index: 14;
 }
 #player .is-mouseover .vsq-quality-selector {
   width: 4rem;
@@ -4108,4 +4111,30 @@ table.paging tr.even {
 }
 #player .vsq-quality-selector li.active {
   background: #ccc;
+}
+#player .is-finished .fp-ui {
+  background: url(images/icons/player_replay.png) center no-repeat;
+}
+#player .vsq-layoutchooser {
+  display: none;
+  position: absolute;
+  width: 100%;
+  bottom: 30px;
+  z-index: 13;
+}
+#player .is-mouseover .vsq-layoutchooser {
+  display: block;
+}
+#player .vsq-layoutchooser input {
+  width: 100%;
+}
+#player .vsq-layoutchooser ul {
+  margin: 0;
+  padding: 0;
+}
+#player .vsq-layoutchooser li {
+  margin: 0;
+  padding: 0;
+  background: #1f1f1f;
+  color: #ccc;
 }

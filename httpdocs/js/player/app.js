@@ -324,7 +324,7 @@ System.register("player/Flow", ["Tools", "Escape"], function (exports_6, context
                     for (var _i = 0; _i < arguments.length; _i++) {
                         params[_i] = arguments[_i];
                     }
-                    Flow.log(params);
+                    Flow.log.apply(Flow, params);
                 };
                 Flow.prototype.callOnArray = function (data, funcName, args) {
                     var ret = [];
@@ -427,7 +427,8 @@ System.register("player/Flow", ["Tools", "Escape"], function (exports_6, context
                         e.stopImmediatePropagation();
                         return false;
                     }
-                    if (this.videoTags[Flow.CONTENT].duration > this.videoTags[Flow.MASTER].duration)
+                    if (vidCount > 1 &&
+                        this.videoTags[Flow.CONTENT].duration > this.videoTags[Flow.MASTER].duration)
                         this.longerType = Flow.CONTENT;
                     var tag = this.videoTags[this.longerType];
                     var data = jQuery.extend(this.player.video, {
@@ -441,12 +442,14 @@ System.register("player/Flow", ["Tools", "Escape"], function (exports_6, context
                     return false;
                 };
                 Flow.prototype.handlePlay = function (e) {
+                    var tag = e.currentTarget;
+                    if (tag.currentTime >= tag.duration)
+                        tag.currentTime = 0;
                     var type = this.getTypeFromEvent(e);
                     if (type === Flow.CONTENT) {
                         e.stopImmediatePropagation();
                         return false;
                     }
-                    var tag = e.currentTarget;
                     this.removePoster();
                     if (!this.hlsConf.bufferWhilePaused)
                         this.hlsCall('startLoad', [tag.currentTime]);
@@ -708,7 +711,7 @@ System.register("player/Flow", ["Tools", "Escape"], function (exports_6, context
                     var root = this.root.find('.fp-player');
                     root.find('img').remove();
                     this.hlsConf = jQuery.extend(this.hlsConf, this.player.conf.hlsjs, this.player.conf.clip.hlsjs, video.hlsjs);
-                    if (this.cfg.secondarySources) {
+                    if (this.cfg.secondarySources.length !== 0) {
                         if (this.videoTags[Flow.CONTENT])
                             this.destroyVideoTag(Flow.CONTENT);
                         var secondVideo = jQuery.extend(true, {}, video);
@@ -736,7 +739,7 @@ System.register("player/Flow", ["Tools", "Escape"], function (exports_6, context
                     });
                     this.setupVideoEvents(video);
                     this.initQuality();
-                    this.initReplayButton();
+                    this.initLayoutChooser();
                     if (this.cfg.autoplay)
                         this.tagCall("play");
                 };
@@ -782,19 +785,6 @@ System.register("player/Flow", ["Tools", "Escape"], function (exports_6, context
                     }
                     return null;
                 };
-                Flow.prototype.initReplayButton = function () {
-                    var _this = this;
-                    if (this.root.find('.vsq-replay').length > 0)
-                        throw new Error("replay button already initialized");
-                    var button = jQuery("<a class=\"vsq-replay\"></a>");
-                    this.root.find(".fp-ui").append(button);
-                    button.on("click", function (e) {
-                        e.preventDefault();
-                        _this.tagSet("currentTime", 0);
-                        _this.tagCall("play");
-                        return false;
-                    });
-                };
                 Flow.prototype.initQuality = function () {
                     var _this = this;
                     if (this.cfg.labels.master.length === 0)
@@ -835,6 +825,115 @@ System.register("player/Flow", ["Tools", "Escape"], function (exports_6, context
                         if (paused)
                             _this.tagCall('play');
                     });
+                };
+                Flow.prototype.initLayoutChooser = function () {
+                    var _this = this;
+                    if (this.cfg.secondarySources.length === 0) {
+                        this.root.addClass('vsq-singlevideo');
+                        return;
+                    }
+                    if (this.root.find('.vsq-layoutchooser').length > 0)
+                        return;
+                    var trigger = function (newVal) {
+                        var ratio = _this.root.find('.vsq-layoutchooser input[name="ratio"]');
+                        if (newVal != null)
+                            ratio.val(newVal);
+                        ratio.change();
+                    };
+                    var maxHeight = this.root.height();
+                    var ratio = 0 + Tools_1.default.getFromStorage(this.configKey("layoutRatio"), 150);
+                    var html = "\n      <div class=\"vsq-layoutchooser\">\n        <input name=\"ratio\" type=\"range\" min=\"0\" max=\"300\" step=\"1\" value=\"" + ratio + "\"/>\n        <ul>\n          <li class=\"pip-content\">PiP content</li>\n          <li class=\"master-only\">Master only</li>\n          <li class=\"split\">Split</li>\n          <li class=\"content-only\">Content only</li>\n          <li class=\"pip-master\">PiP master</li>\n        </ul>\n      </div>\n    ";
+                    this.root.find(".fp-ui").append(html);
+                    this.root.on("click", ".vsq-layoutchooser .pip-content", function (e) {
+                        e.preventDefault();
+                        trigger('40');
+                    });
+                    this.root.on("click", ".vsq-layoutchooser .master-only", function (e) {
+                        e.preventDefault();
+                        trigger('80');
+                    });
+                    this.root.on("click", ".vsq-layoutchooser .split", function (e) {
+                        e.preventDefault();
+                        trigger('150');
+                    });
+                    this.root.on("click", ".vsq-layoutchooser .content-only", function (e) {
+                        e.preventDefault();
+                        trigger('190');
+                    });
+                    this.root.on("click", ".vsq-layoutchooser .pip-master", function (e) {
+                        e.preventDefault();
+                        trigger('260');
+                    });
+                    this.root.on("input change", '.vsq-layoutchooser input[name="ratio"]', function (e) {
+                        var elem = jQuery(e.currentTarget);
+                        var val = parseInt(elem.val(), 10);
+                        var masterWidth = 50;
+                        var contentWidth = 50;
+                        var masterOnTop = true;
+                        Tools_1.default.setToStorage(_this.configKey("layoutRatio"), val);
+                        if (val < 0 || val > 300)
+                            throw new Error("Invalid value for layoutchooser");
+                        if (val >= 0 && val < 80) {
+                            masterWidth = 100;
+                            contentWidth = (val / 80) * 100;
+                            masterOnTop = false;
+                        }
+                        if (val >= 80 && val < 110) {
+                            masterWidth = 100;
+                            contentWidth = 0;
+                            masterOnTop = true;
+                        }
+                        if (val >= 110 && val < 190) {
+                            var n = val - 110;
+                            masterWidth = (n / 80) * 100;
+                            contentWidth = 100 - masterWidth;
+                            masterOnTop = null;
+                        }
+                        if (val >= 190 && val < 220) {
+                            masterWidth = 0;
+                            contentWidth = 100;
+                            masterOnTop = false;
+                        }
+                        if (val >= 220 && val < 300) {
+                            var n = val - 220;
+                            masterWidth = (n / 80) * 100;
+                            contentWidth = 100;
+                            masterOnTop = true;
+                        }
+                        var masterLeft = 0;
+                        var masterRight = "auto";
+                        var contentLeft = "auto";
+                        var contentRight = 0;
+                        var masterZ = 10;
+                        var contentZ = 9;
+                        if (masterOnTop === false) {
+                            masterLeft = "auto";
+                            masterRight = 0;
+                            masterZ = 9;
+                            contentZ = 10;
+                        }
+                        if (masterOnTop === true) {
+                            masterLeft = 0;
+                            masterRight = "auto";
+                        }
+                        var master = jQuery(_this.videoTags[Flow.MASTER]);
+                        var content = jQuery(_this.videoTags[Flow.CONTENT]);
+                        master.css({
+                            width: masterWidth + '%',
+                            maxHeight: maxHeight + 'px',
+                            zIndex: masterZ,
+                            left: masterLeft,
+                            right: masterRight
+                        });
+                        content.css({
+                            width: contentWidth + '%',
+                            maxHeight: maxHeight + 'px',
+                            zIndex: contentZ,
+                            left: contentLeft,
+                            right: contentRight
+                        });
+                    });
+                    trigger();
                 };
                 Flow.setup = function () {
                     if (Flow.initDone)

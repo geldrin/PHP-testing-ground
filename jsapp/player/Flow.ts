@@ -84,7 +84,7 @@ export default class Flow {
   }
 
   private log(...params: Object[]): void {
-    Flow.log(params);
+    Flow.log(...params);
   }
 
   private callOnArray(data: any[], funcName: string, args?: any): any {
@@ -226,7 +226,10 @@ export default class Flow {
     }
 
     // mivel a default longerType ertek a Flow.MASTER igy csak egy esetet kell nezni
-    if (this.videoTags[Flow.CONTENT].duration > this.videoTags[Flow.MASTER].duration)
+    if (
+        vidCount > 1 &&
+        this.videoTags[Flow.CONTENT].duration > this.videoTags[Flow.MASTER].duration
+       )
       this.longerType = Flow.CONTENT;
 
     let tag = this.videoTags[this.longerType];
@@ -245,6 +248,12 @@ export default class Flow {
   }
 
   private handlePlay(e: Event): boolean | undefined {
+    let tag = e.currentTarget as HTMLVideoElement;
+    // ismeretlen bug, de kezeljuk le
+    // hack to prevent Chrome engine from hanging
+    if (tag.currentTime >= tag.duration)
+      tag.currentTime = 0;
+
     let type = this.getTypeFromEvent(e);
     // a lenyeg csak az hogy egyszer fusson le
     if (type === Flow.CONTENT) {
@@ -252,7 +261,6 @@ export default class Flow {
       return false;
     }
 
-    let tag = e.currentTarget as HTMLVideoElement;
     this.removePoster();
     if (!this.hlsConf.bufferWhilePaused)
       this.hlsCall('startLoad', [tag.currentTime]);
@@ -580,7 +588,7 @@ export default class Flow {
 
     // eloszor a content videot, mert mindig csak prependelunk
     // es igy lesz jo a sorrend
-    if (this.cfg.secondarySources) {
+    if (this.cfg.secondarySources.length !== 0) {
       if (this.videoTags[Flow.CONTENT])
         this.destroyVideoTag(Flow.CONTENT);
 
@@ -617,7 +625,7 @@ export default class Flow {
 
     this.setupVideoEvents(video);
     this.initQuality();
-    this.initReplayButton();
+    this.initLayoutChooser();
 
     if (this.cfg.autoplay)
       this.tagCall("play");
@@ -679,21 +687,6 @@ export default class Flow {
     return null;
   }
 
-  private initReplayButton(): void {
-    // TODO kell ez? a flow alapbol ujrakezdi ha a playre kattint a user
-    if (this.root.find('.vsq-replay').length > 0)
-      throw new Error("replay button already initialized");
-
-    let button = jQuery(`<a class="vsq-replay"></a>`);
-    this.root.find(".fp-ui").append(button);
-    button.on("click", (e: Event): void => {
-      e.preventDefault();
-      this.tagSet("currentTime", 0);
-      this.tagCall("play");
-      return false;
-    });
-  }
-
   private initQuality(): void {
     if (this.cfg.labels.master.length === 0)
       return;
@@ -747,6 +740,159 @@ export default class Flow {
       if (paused)
         this.tagCall('play');
     });
+  }
+
+  private initLayoutChooser(): void {
+    // nincs masik video, csak a full 100% szamit
+    if (this.cfg.secondarySources.length === 0) {
+      this.root.addClass('vsq-singlevideo');
+      return;
+    }
+
+    if (this.root.find('.vsq-layoutchooser').length > 0)
+      return;
+
+    let trigger = (newVal?: string) => {
+      let ratio = this.root.find('.vsq-layoutchooser input[name="ratio"]');
+      if (newVal != null)
+        ratio.val(newVal);
+
+      ratio.change();
+    };
+
+    let maxHeight = this.root.height();
+    // szamra "castolva" hogy ne kelljen html escapelni
+    let ratio = 0 + Tools.getFromStorage(this.configKey("layoutRatio"), 150);
+
+    // a 0-300 rangeben igy alakulnak a rangek:
+    // 0-80 - pip content
+    // 80-110 - master only
+    // 110-190 - split
+    // 190-220 - content only
+    // 220-300 - pip master
+    let html = `
+      <div class="vsq-layoutchooser">
+        <input name="ratio" type="range" min="0" max="300" step="1" value="${ratio}"/>
+        <ul>
+          <li class="pip-content">PiP content</li>
+          <li class="master-only">Master only</li>
+          <li class="split">Split</li>
+          <li class="content-only">Content only</li>
+          <li class="pip-master">PiP master</li>
+        </ul>
+      </div>
+    `;
+    this.root.find(".fp-ui").append(html);
+    this.root.on("click", ".vsq-layoutchooser .pip-content", (e: Event): void => {
+      e.preventDefault();
+      trigger('40');
+    });
+    this.root.on("click", ".vsq-layoutchooser .master-only", (e: Event): void => {
+      e.preventDefault();
+      trigger('80');
+    });
+    this.root.on("click", ".vsq-layoutchooser .split", (e: Event): void => {
+      e.preventDefault();
+      trigger('150');
+    });
+    this.root.on("click", ".vsq-layoutchooser .content-only", (e: Event): void => {
+      e.preventDefault();
+      trigger('190');
+    });
+    this.root.on("click", ".vsq-layoutchooser .pip-master", (e: Event): void => {
+      e.preventDefault();
+      trigger('260');
+    });
+
+    this.root.on("input change", '.vsq-layoutchooser input[name="ratio"]', (e: Event): void => {
+      let elem = jQuery(e.currentTarget);
+      let val = parseInt(elem.val(), 10);
+      let masterWidth: number = 50;
+      let contentWidth: number = 50;
+      let masterOnTop: null | boolean = true;
+
+      // elmentjuk a beallitott erteket hogy refreshnel ugyanaz legyen
+      Tools.setToStorage(this.configKey("layoutRatio"), val);
+
+      if (val < 0 || val > 300)
+        throw new Error("Invalid value for layoutchooser");
+
+      // pip content
+      if (val >= 0 && val < 80) {
+        masterWidth = 100;
+        contentWidth = (val / 80) * 100;
+        masterOnTop = false;
+      }
+
+      // master only
+      if (val >= 80 && val < 110) {
+        masterWidth = 100;
+        contentWidth = 0;
+        masterOnTop = true;
+      }
+
+      // split
+      if (val >= 110 && val < 190) {
+        let n = val - 110;
+        masterWidth = (n / 80) * 100;
+        contentWidth = 100 - masterWidth;
+        masterOnTop = null;
+      }
+
+      // content only
+      if (val >= 190 && val < 220) {
+        masterWidth = 0;
+        contentWidth = 100;
+        masterOnTop = false;
+      }
+
+      // pip master
+      if (val >= 220 && val < 300) {
+        let n = val - 220;
+        masterWidth = (n / 80) * 100;
+        contentWidth = 100;
+        masterOnTop = true;
+      }
+
+      let masterLeft: 0 | "auto" = 0;
+      let masterRight: 0 | "auto" = "auto";
+      let contentLeft: 0 | "auto" = "auto";
+      let contentRight: 0 | "auto" = 0;
+      let masterZ = 10;
+      let contentZ = 9;
+      if (masterOnTop === false) {
+        masterLeft = "auto";
+        masterRight = 0;
+
+        masterZ = 9;
+        contentZ = 10;
+      }
+      if ( masterOnTop === true) {
+        masterLeft = 0;
+        masterRight = "auto";
+        // a default z-index ertekek jok nekunk
+      }
+
+      let master = jQuery(this.videoTags[Flow.MASTER]);
+      let content = jQuery(this.videoTags[Flow.CONTENT]);
+      master.css({
+        width: masterWidth + '%',
+        maxHeight: maxHeight + 'px',
+        zIndex: masterZ,
+        left: masterLeft,
+        right: masterRight
+      });
+      content.css({
+        width: contentWidth + '%',
+        maxHeight: maxHeight + 'px',
+        zIndex: contentZ,
+        left: contentLeft,
+        right: contentRight
+      });
+    });
+
+    // az init utani elso trigger, mert a default ertek meg nem lett hasznalva
+    trigger();
   }
 
   public static setup(): void {
