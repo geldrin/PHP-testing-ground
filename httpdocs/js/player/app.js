@@ -840,7 +840,14 @@ System.register("player/Flow", ["Tools", "Escape"], function (exports_6, context
                             ratio.val(newVal);
                         ratio.change();
                     };
-                    var maxHeight = this.root.height();
+                    this.player.on("fullscreen fullscreen-exit", function () {
+                        var maxHeight;
+                        if (_this.root.hasClass('is-fullscreen'))
+                            maxHeight = jQuery(window).height();
+                        else
+                            maxHeight = _this.root.height();
+                        jQuery(_this.videoTags).css("maxHeight", maxHeight + 'px');
+                    }).trigger('fullscreen-exit');
                     var ratio = 0 + Tools_1.default.getFromStorage(this.configKey("layoutRatio"), 150);
                     var html = "\n      <div class=\"vsq-layoutchooser\">\n        <input name=\"ratio\" type=\"range\" min=\"0\" max=\"300\" step=\"1\" value=\"" + ratio + "\"/>\n        <ul>\n          <li class=\"pip-content\">PiP content</li>\n          <li class=\"master-only\">Master only</li>\n          <li class=\"split\">Split</li>\n          <li class=\"content-only\">Content only</li>\n          <li class=\"pip-master\">PiP master</li>\n        </ul>\n      </div>\n    ";
                     this.root.find(".fp-ui").append(html);
@@ -920,14 +927,12 @@ System.register("player/Flow", ["Tools", "Escape"], function (exports_6, context
                         var content = jQuery(_this.videoTags[Flow.CONTENT]);
                         master.css({
                             width: masterWidth + '%',
-                            maxHeight: maxHeight + 'px',
                             zIndex: masterZ,
                             left: masterLeft,
                             right: masterRight
                         });
                         content.css({
                             width: contentWidth + '%',
-                            maxHeight: maxHeight + 'px',
                             zIndex: contentZ,
                             left: contentLeft,
                             right: contentRight

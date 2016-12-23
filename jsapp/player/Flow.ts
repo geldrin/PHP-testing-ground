@@ -760,7 +760,17 @@ export default class Flow {
       ratio.change();
     };
 
-    let maxHeight = this.root.height();
+    // a maximalis magassagot mindig allitani kell ha valtozik a szelesseg
+    this.player.on("fullscreen fullscreen-exit", () => {
+      let maxHeight: number;
+      if (this.root.hasClass('is-fullscreen'))
+        maxHeight = jQuery(window).height();
+      else
+        maxHeight = this.root.height();
+
+      jQuery(this.videoTags).css("maxHeight", maxHeight + 'px');
+    }).trigger('fullscreen-exit');
+
     // szamra "castolva" hogy ne kelljen html escapelni
     let ratio = 0 + Tools.getFromStorage(this.configKey("layoutRatio"), 150);
 
@@ -877,14 +887,12 @@ export default class Flow {
       let content = jQuery(this.videoTags[Flow.CONTENT]);
       master.css({
         width: masterWidth + '%',
-        maxHeight: maxHeight + 'px',
         zIndex: masterZ,
         left: masterLeft,
         right: masterRight
       });
       content.css({
         width: contentWidth + '%',
-        maxHeight: maxHeight + 'px',
         zIndex: contentZ,
         left: contentLeft,
         right: contentRight
