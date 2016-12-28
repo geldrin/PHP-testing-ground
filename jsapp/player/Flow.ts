@@ -2,6 +2,8 @@
 /// <reference path="../defs/flowplayer/flowplayer.d.ts" />
 "use strict";
 //import "es6-promise"; // majd ha kell
+import {BasePlugin} from "./Flow/BasePlugin";
+import LayoutChooser from "./Flow/LayoutChooser";
 import Tools from "../Tools";
 import Escape from "../Escape";
 
@@ -12,11 +14,12 @@ declare var Hls: any;
  * Typescript rewrite of:
  * https://github.com/flowplayer/flowplayer-hlsjs/tree/06687f55ea4ad83a83515a9d9daf591def4377df
  */
-export default class Flow {
+export class Flow {
   public static engineName = "vsq";
+  private static debug = false;
   private static initDone = false;
-  private static readonly MASTER = 0;
-  private static readonly CONTENT = 1;
+  public static readonly MASTER = 0;
+  public static readonly CONTENT = 1;
 
   private id: string;
   private loadedCount = 0;
@@ -41,6 +44,8 @@ export default class Flow {
   private recoverMediaErrorDate: number;
   private swapAudioCodecDate: number;
 
+  private plugins: BasePlugin[] = [];
+
   constructor(player: Flowplayer, root: Element) {
     Flow.log("constructor", arguments);
     this.player = player;
@@ -54,10 +59,30 @@ export default class Flow {
       this.player.conf['hlsjs'],
       this.player.conf['clip']['hlsjs'],
     );
+    Flow.debug = !!this.cfg.debug;
 
     this.root = jQuery(root);
     this.selectedQuality = Tools.getFromStorage(this.configKey("quality"), "auto");
     this.id = this.root.attr('data-flowplayer-instance-id');
+
+    this.plugins.push(new LayoutChooser(this));
+  }
+
+  public getRoot(): JQuery {
+    return this.root;
+  }
+  public getConfig(): VSQConfig {
+    return this.cfg;
+  }
+  public getPlayer(): Flowplayer {
+    return this.player;
+  }
+  public getVideoTags(): Element[] {
+    return this.videoTags;
+  }
+
+  private hideFlowLogo(): void {
+    this.root.children('a[href*="flowplayer.org"]').hide();
   }
 
   private getQualityIndex(quality: string): number {
@@ -79,6 +104,9 @@ export default class Flow {
   }
 
   private static log(...params: Object[]): void {
+    if (!Flow.debug)
+      return;
+
     params.unshift("[Flow]");
     console.log.apply(console, params);
   }
@@ -111,19 +139,19 @@ export default class Flow {
     }
   }
 
-  private hlsCall(funcName: string, args?: any): any {
+  public hlsCall(funcName: string, args?: any): any {
     return this.callOnArray(this.hlsEngines, funcName, args);
   }
 
-  private hlsSet(property: string, value: any): void {
+  public hlsSet(property: string, value: any): void {
     this.setOnArray(this.hlsEngines, property, value);
   }
 
-  private tagCall(funcName: string, args?: any): any {
+  public tagCall(funcName: string, args?: any): any {
     return this.callOnArray(this.videoTags, funcName, args);
   }
 
-  private tagSet(property: string, value: any): void {
+  public tagSet(property: string, value: any): void {
     this.setOnArray(this.videoTags, property, value);
   }
 
@@ -436,6 +464,7 @@ export default class Flow {
   private triggerPlayer(event: string, data: any): void {
     this.log("[flow event]", event, data);
     this.player.trigger(event, [this.player, data]);
+    this.hideFlowLogo();
   }
 
   private getTypeFromEvent(e: Event): number {
@@ -517,7 +546,6 @@ export default class Flow {
           this.addPoster();
         });
     }
-
   }
 
   private eventName(event?: string): string {
@@ -630,7 +658,9 @@ export default class Flow {
 
     this.setupVideoEvents(video);
     this.initQuality();
-    this.initLayoutChooser();
+
+    for (let i = this.plugins.length - 1; i >= 0; i--)
+      this.plugins[i].init();
 
     if (this.cfg.autoplay)
       this.tagCall("play");
@@ -655,6 +685,10 @@ export default class Flow {
 
   public unload(): void {
     this.root.find(".vsq-quality-selector").remove();
+
+    for (let i = this.plugins.length - 1; i >= 0; i--)
+      this.plugins[i].destroy();
+
     let videoTags = jQuery(this.videoTags);
     videoTags.remove();
 
@@ -747,167 +781,6 @@ export default class Flow {
     });
   }
 
-  private initLayoutChooser(): void {
-    // nincs masik video, csak a full 100% szamit
-    if (this.cfg.secondarySources.length === 0) {
-      this.root.addClass('vsq-singlevideo');
-      return;
-    }
-
-    if (this.root.find('.vsq-layoutchooser').length > 0)
-      return;
-
-    let trigger = (newVal?: string) => {
-      let ratio = this.root.find('.vsq-layoutchooser input[name="ratio"]');
-      if (newVal != null)
-        ratio.val(newVal);
-
-      ratio.change();
-    };
-
-    // a maximalis magassagot mindig allitani kell ha valtozik a szelesseg
-    this.player.on("fullscreen fullscreen-exit", () => {
-      let maxHeight: number;
-      if (this.root.hasClass('is-fullscreen'))
-        maxHeight = jQuery(window).height();
-      else
-        maxHeight = this.root.height();
-
-      jQuery(this.videoTags).css("maxHeight", maxHeight + 'px');
-    }).trigger('fullscreen-exit');
-
-    // szamra "castolva" hogy ne kelljen html escapelni
-    let ratio = 0 + Tools.getFromStorage(this.configKey("layoutRatio"), 150);
-
-    // a 0-300 rangeben igy alakulnak a rangek:
-    // 0-80 - pip content
-    // 80-110 - master only
-    // 110-190 - split
-    // 190-220 - content only
-    // 220-300 - pip master
-    let html = `
-      <div class="vsq-layoutchooser">
-        <input name="ratio" type="range" min="0" max="300" step="1" value="${ratio}"/>
-        <ul>
-          <li class="pip-content">PiP content</li>
-          <li class="master-only">Master only</li>
-          <li class="split">Split</li>
-          <li class="content-only">Content only</li>
-          <li class="pip-master">PiP master</li>
-        </ul>
-      </div>
-    `;
-    this.root.find(".fp-ui").append(html);
-    this.root.on("click", ".vsq-layoutchooser .pip-content", (e: Event): void => {
-      e.preventDefault();
-      trigger('40');
-    });
-    this.root.on("click", ".vsq-layoutchooser .master-only", (e: Event): void => {
-      e.preventDefault();
-      trigger('80');
-    });
-    this.root.on("click", ".vsq-layoutchooser .split", (e: Event): void => {
-      e.preventDefault();
-      trigger('150');
-    });
-    this.root.on("click", ".vsq-layoutchooser .content-only", (e: Event): void => {
-      e.preventDefault();
-      trigger('190');
-    });
-    this.root.on("click", ".vsq-layoutchooser .pip-master", (e: Event): void => {
-      e.preventDefault();
-      trigger('260');
-    });
-
-    this.root.on("input change", '.vsq-layoutchooser input[name="ratio"]', (e: Event): void => {
-      let elem = jQuery(e.currentTarget);
-      let val = parseInt(elem.val(), 10);
-      let masterWidth: number = 50;
-      let contentWidth: number = 50;
-      let masterOnTop: null | boolean = true;
-
-      // elmentjuk a beallitott erteket hogy refreshnel ugyanaz legyen
-      Tools.setToStorage(this.configKey("layoutRatio"), val);
-
-      if (val < 0 || val > 300)
-        throw new Error("Invalid value for layoutchooser");
-
-      // pip content
-      if (val >= 0 && val < 80) {
-        masterWidth = 100;
-        contentWidth = (val / 80) * 100;
-        masterOnTop = false;
-      }
-
-      // master only
-      if (val >= 80 && val < 110) {
-        masterWidth = 100;
-        contentWidth = 0;
-        masterOnTop = true;
-      }
-
-      // split
-      if (val >= 110 && val < 190) {
-        let n = val - 110;
-        masterWidth = (n / 80) * 100;
-        contentWidth = 100 - masterWidth;
-        masterOnTop = null;
-      }
-
-      // content only
-      if (val >= 190 && val < 220) {
-        masterWidth = 0;
-        contentWidth = 100;
-        masterOnTop = false;
-      }
-
-      // pip master
-      if (val >= 220 && val < 300) {
-        let n = val - 220;
-        masterWidth = (n / 80) * 100;
-        contentWidth = 100;
-        masterOnTop = true;
-      }
-
-      let masterLeft: 0 | "auto" = 0;
-      let masterRight: 0 | "auto" = "auto";
-      let contentLeft: 0 | "auto" = "auto";
-      let contentRight: 0 | "auto" = 0;
-      let masterZ = 10;
-      let contentZ = 9;
-      if (masterOnTop === false) {
-        masterLeft = "auto";
-        masterRight = 0;
-
-        masterZ = 9;
-        contentZ = 10;
-      }
-      if ( masterOnTop === true) {
-        masterLeft = 0;
-        masterRight = "auto";
-        // a default z-index ertekek jok nekunk
-      }
-
-      let master = jQuery(this.videoTags[Flow.MASTER]);
-      let content = jQuery(this.videoTags[Flow.CONTENT]);
-      master.css({
-        width: masterWidth + '%',
-        zIndex: masterZ,
-        left: masterLeft,
-        right: masterRight
-      });
-      content.css({
-        width: contentWidth + '%',
-        zIndex: contentZ,
-        left: contentLeft,
-        right: contentRight
-      });
-    });
-
-    // az init utani elso trigger, mert a default ertek meg nem lett hasznalva
-    trigger();
-  }
-
   public static setup(): void {
     if (Flow.initDone)
       return;
@@ -930,10 +803,6 @@ export default class Flow {
 
     Flow.initDone = true;
   }
-}
-
-interface Listeners {
-  [index: string]: ((e: Event) => void);
 }
 
 /* definialni hogy kell a vsq flowplayer confignak kineznie */
@@ -959,7 +828,8 @@ interface VSQLabels {
   master: string[];
   content: string[];
 }
-interface VSQConfig {
+export interface VSQConfig {
+  debug: boolean;
   duration: number;
   autoplay: boolean;
   secondarySources: FlowSource[];

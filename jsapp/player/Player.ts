@@ -3,7 +3,7 @@
 "use strict";
 import Config from "./Config";
 import Flash from "./Flash";
-import Flow from "./Flow";
+import {Flow} from "./Flow";
 import Locale from "../Locale";
 
 /** A Player class az UI-ert felel */

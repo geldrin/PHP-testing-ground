@@ -1,3 +1,8 @@
+var __extends = (this && this.__extends) || function (d, b) {
+    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+    function __() { this.constructor = d; }
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+};
 System.register("player/Config", [], function (exports_1, context_1) {
     "use strict";
     var __moduleName = context_1 && context_1.id;
@@ -263,14 +268,263 @@ System.register("Escape", [], function (exports_5, context_5) {
         }
     };
 });
-System.register("player/Flow", ["Tools", "Escape"], function (exports_6, context_6) {
+System.register("player/Flow/BasePlugin", [], function (exports_6, context_6) {
     "use strict";
     var __moduleName = context_6 && context_6.id;
-    var Tools_1, Escape_1, Flow;
+    var BasePlugin;
+    return {
+        setters: [],
+        execute: function () {
+            BasePlugin = (function () {
+                function BasePlugin(flow) {
+                    this.flow = flow;
+                    this.root = flow.getRoot();
+                    this.cfg = flow.getConfig();
+                    this.player = flow.getPlayer();
+                    this.videoTags = flow.getVideoTags();
+                }
+                BasePlugin.prototype.configKey = function (key) {
+                    throw new Error("Override configKey");
+                };
+                return BasePlugin;
+            }());
+            exports_6("BasePlugin", BasePlugin);
+        }
+    };
+});
+System.register("player/Flow/LayoutChooser", ["player/Flow", "player/Flow/BasePlugin", "Tools"], function (exports_7, context_7) {
+    "use strict";
+    var __moduleName = context_7 && context_7.id;
+    var Flow_1, BasePlugin_1, Tools_1, LayoutChooser;
     return {
         setters: [
+            function (Flow_1_1) {
+                Flow_1 = Flow_1_1;
+            },
+            function (BasePlugin_1_1) {
+                BasePlugin_1 = BasePlugin_1_1;
+            },
             function (Tools_1_1) {
                 Tools_1 = Tools_1_1;
+            }
+        ],
+        execute: function () {
+            LayoutChooser = (function (_super) {
+                __extends(LayoutChooser, _super);
+                function LayoutChooser() {
+                    var _this = _super.apply(this, arguments) || this;
+                    _this.PIPCONTENT = 0;
+                    _this.MASTERONLY = 1;
+                    _this.SPLIT = 2;
+                    _this.CONTENTONLY = 3;
+                    _this.PIPMASTER = 4;
+                    return _this;
+                }
+                LayoutChooser.prototype.init = function () {
+                    var _this = this;
+                    if (this.cfg.secondarySources.length === 0) {
+                        this.root.addClass('vsq-singlevideo');
+                        return;
+                    }
+                    if (this.root.find('.vsq-layoutchooser').length > 0)
+                        return;
+                    this.fixHeight();
+                    this.player.on("fullscreen fullscreen-exit", function () { _this.fixHeight(); });
+                    this.setupRatios();
+                    this.setupHTML();
+                    this.trigger();
+                };
+                LayoutChooser.prototype.destroy = function () {
+                    this.root.find(".vsq-layoutchooser").remove();
+                };
+                LayoutChooser.prototype.configKey = function (key) {
+                    return 'vsq-player-layout-' + key;
+                };
+                LayoutChooser.prototype.trigger = function (newVal) {
+                    var ratio = this.root.find('.vsq-layoutchooser input[name="ratio"]');
+                    if (newVal != null)
+                        ratio.val(newVal);
+                    ratio.change();
+                };
+                LayoutChooser.prototype.fixHeight = function () {
+                    var maxHeight;
+                    if (this.root.hasClass('is-fullscreen'))
+                        maxHeight = jQuery(window).height();
+                    else
+                        maxHeight = this.root.height();
+                    jQuery(this.videoTags).css("maxHeight", maxHeight + 'px');
+                };
+                LayoutChooser.prototype.setupRatios = function () {
+                    var maxRatio = 300;
+                    var singleRatio = Math.floor(maxRatio * 0.034);
+                    var pipRatio = Math.floor((maxRatio - singleRatio * 2) * 0.25);
+                    var splitRatio = Math.floor(maxRatio - singleRatio * 2 - pipRatio * 2);
+                    this.ranges = [
+                        {
+                            'from': 0,
+                            'to': pipRatio,
+                            'type': 'pipContent'
+                        },
+                        {
+                            'from': pipRatio,
+                            'to': pipRatio + singleRatio,
+                            'type': 'masterOnly'
+                        },
+                        {
+                            'from': pipRatio + singleRatio,
+                            'to': pipRatio + singleRatio + splitRatio,
+                            'type': 'split'
+                        },
+                        {
+                            'from': pipRatio + singleRatio + splitRatio,
+                            'to': pipRatio + singleRatio + splitRatio + singleRatio,
+                            'type': 'contentOnly'
+                        },
+                        {
+                            'from': pipRatio + singleRatio + splitRatio + singleRatio,
+                            'to': pipRatio + singleRatio + splitRatio + singleRatio + pipRatio,
+                            'type': 'pipMaster'
+                        }
+                    ];
+                };
+                LayoutChooser.prototype.getDefaultRatio = function () {
+                    return Math.floor(this.ranges[this.ranges.length - 1].to / 2);
+                };
+                LayoutChooser.prototype.getMaxRatio = function () {
+                    return this.ranges[this.ranges.length - 1].to - 1;
+                };
+                LayoutChooser.prototype.getMiddleRange = function (ix) {
+                    var prevTo = 0;
+                    if (ix !== 0)
+                        prevTo = this.ranges[ix - 1].to;
+                    var range = this.ranges[ix];
+                    return '' + (prevTo + Math.floor((range.to - range.from) / 2));
+                };
+                LayoutChooser.prototype.setupHTML = function () {
+                    var _this = this;
+                    var ratio = 0 + Tools_1.default.getFromStorage(this.configKey("layoutRatio"), this.getDefaultRatio());
+                    var max = this.getMaxRatio();
+                    var html = "\n      <div class=\"vsq-layoutchooser\">\n        <input name=\"ratio\" type=\"range\" min=\"0\" max=\"" + max + "\" step=\"1\" value=\"" + ratio + "\"/>\n        <ul>\n          <li class=\"pip-content\">PiP content</li>\n          <li class=\"master-only\">Master only</li>\n          <li class=\"split\">Split</li>\n          <li class=\"content-only\">Content only</li>\n          <li class=\"pip-master\">PiP master</li>\n        </ul>\n      </div>\n    ";
+                    this.root.find(".fp-ui").append(html);
+                    this.root.on("click", ".vsq-layoutchooser .pip-content", function (e) {
+                        e.preventDefault();
+                        _this.trigger(_this.getMiddleRange(_this.PIPCONTENT));
+                    });
+                    this.root.on("click", ".vsq-layoutchooser .master-only", function (e) {
+                        e.preventDefault();
+                        _this.trigger('' + _this.ranges[_this.MASTERONLY].from);
+                    });
+                    this.root.on("click", ".vsq-layoutchooser .split", function (e) {
+                        e.preventDefault();
+                        _this.trigger(_this.getMiddleRange(_this.SPLIT));
+                    });
+                    this.root.on("click", ".vsq-layoutchooser .content-only", function (e) {
+                        e.preventDefault();
+                        _this.trigger('' + _this.ranges[_this.CONTENTONLY].from);
+                    });
+                    this.root.on("click", ".vsq-layoutchooser .pip-master", function (e) {
+                        e.preventDefault();
+                        _this.trigger(_this.getMiddleRange(_this.PIPMASTER));
+                    });
+                    this.root.on("input change", '.vsq-layoutchooser input[name="ratio"]', function (e) {
+                        _this.onChange(e);
+                    });
+                };
+                LayoutChooser.prototype.getRangeForValue = function (val) {
+                    for (var i = this.ranges.length - 1; i >= 0; i--) {
+                        var range = this.ranges[i];
+                        if (val < range.from || val >= range.to)
+                            continue;
+                        var normalVal = val - range.to;
+                        var magnitude = range.from - range.to;
+                        return {
+                            'percent': (normalVal / magnitude) * 100,
+                            'type': range.type
+                        };
+                    }
+                    throw new Error("Impossible");
+                };
+                LayoutChooser.prototype.onChange = function (e) {
+                    var elem = jQuery(e.currentTarget);
+                    var val = parseInt(elem.val(), 10);
+                    var masterWidth = 50;
+                    var contentWidth = 50;
+                    var masterOnTop = true;
+                    Tools_1.default.setToStorage(this.configKey("layoutRatio"), val);
+                    if (val < 0 || val > this.getMaxRatio())
+                        throw new Error("Invalid value for layoutchooser");
+                    var info = this.getRangeForValue(val);
+                    switch (info.type) {
+                        case "pipContent":
+                            masterWidth = 100;
+                            contentWidth = info.percent;
+                            masterOnTop = false;
+                            break;
+                        case "masterOnly":
+                            masterWidth = 100;
+                            contentWidth = 0;
+                            masterOnTop = true;
+                            break;
+                        case "split":
+                            masterWidth = info.percent;
+                            contentWidth = 100 - masterWidth;
+                            masterOnTop = null;
+                            break;
+                        case "contentOnly":
+                            masterWidth = 0;
+                            contentWidth = 100;
+                            masterOnTop = false;
+                            break;
+                        case "pipMaster":
+                            masterWidth = 100 - info.percent;
+                            contentWidth = 100;
+                            masterOnTop = true;
+                            break;
+                    }
+                    var masterLeft = 0;
+                    var masterRight = "auto";
+                    var masterZ = 10;
+                    var contentZ = 9;
+                    if (masterOnTop === false) {
+                        masterLeft = "auto";
+                        masterRight = 0;
+                        masterZ = 9;
+                        contentZ = 10;
+                    }
+                    if (masterOnTop === true) {
+                        masterLeft = 0;
+                        masterRight = "auto";
+                    }
+                    var master = jQuery(this.videoTags[Flow_1.Flow.MASTER]);
+                    var content = jQuery(this.videoTags[Flow_1.Flow.CONTENT]);
+                    master.css({
+                        width: masterWidth + '%',
+                        zIndex: masterZ,
+                        left: masterLeft,
+                        right: masterRight
+                    });
+                    content.css({
+                        width: contentWidth + '%',
+                        zIndex: contentZ
+                    });
+                };
+                return LayoutChooser;
+            }(BasePlugin_1.BasePlugin));
+            exports_7("default", LayoutChooser);
+        }
+    };
+});
+System.register("player/Flow", ["player/Flow/LayoutChooser", "Tools", "Escape"], function (exports_8, context_8) {
+    "use strict";
+    var __moduleName = context_8 && context_8.id;
+    var LayoutChooser_1, Tools_2, Escape_1, Flow;
+    return {
+        setters: [
+            function (LayoutChooser_1_1) {
+                LayoutChooser_1 = LayoutChooser_1_1;
+            },
+            function (Tools_2_1) {
+                Tools_2 = Tools_2_1;
             },
             function (Escape_1_1) {
                 Escape_1 = Escape_1_1;
@@ -288,6 +542,7 @@ System.register("player/Flow", ["Tools", "Escape"], function (exports_6, context
                     this.activeQualityClass = "active";
                     this.mse = window.MediaSource || window.WebKitMediaSource;
                     this.maxLevel = 0;
+                    this.plugins = [];
                     Flow.log("constructor", arguments);
                     this.player = player;
                     this.cfg = player.conf.vsq || {};
@@ -296,10 +551,27 @@ System.register("player/Flow", ["Tools", "Escape"], function (exports_6, context
                         smoothSwitching: true,
                         recoverMediaError: true
                     }, flowplayer.conf['hlsjs'], this.player.conf['hlsjs'], this.player.conf['clip']['hlsjs']);
+                    Flow.debug = !!this.cfg.debug;
                     this.root = jQuery(root);
-                    this.selectedQuality = Tools_1.default.getFromStorage(this.configKey("quality"), "auto");
+                    this.selectedQuality = Tools_2.default.getFromStorage(this.configKey("quality"), "auto");
                     this.id = this.root.attr('data-flowplayer-instance-id');
+                    this.plugins.push(new LayoutChooser_1.default(this));
                 }
+                Flow.prototype.getRoot = function () {
+                    return this.root;
+                };
+                Flow.prototype.getConfig = function () {
+                    return this.cfg;
+                };
+                Flow.prototype.getPlayer = function () {
+                    return this.player;
+                };
+                Flow.prototype.getVideoTags = function () {
+                    return this.videoTags;
+                };
+                Flow.prototype.hideFlowLogo = function () {
+                    this.root.children('a[href*="flowplayer.org"]').hide();
+                };
                 Flow.prototype.getQualityIndex = function (quality) {
                     for (var i = this.cfg.labels.master.length - 1; i >= 0; i--) {
                         var label = this.cfg.labels.master[i];
@@ -316,6 +588,8 @@ System.register("player/Flow", ["Tools", "Escape"], function (exports_6, context
                     for (var _i = 0; _i < arguments.length; _i++) {
                         params[_i] = arguments[_i];
                     }
+                    if (!Flow.debug)
+                        return;
                     params.unshift("[Flow]");
                     console.log.apply(console, params);
                 };
@@ -594,6 +868,7 @@ System.register("player/Flow", ["Tools", "Escape"], function (exports_6, context
                 Flow.prototype.triggerPlayer = function (event, data) {
                     this.log("[flow event]", event, data);
                     this.player.trigger(event, [this.player, data]);
+                    this.hideFlowLogo();
                 };
                 Flow.prototype.getTypeFromEvent = function (e) {
                     var t = jQuery(e.currentTarget);
@@ -741,7 +1016,8 @@ System.register("player/Flow", ["Tools", "Escape"], function (exports_6, context
                     });
                     this.setupVideoEvents(video);
                     this.initQuality();
-                    this.initLayoutChooser();
+                    for (var i = this.plugins.length - 1; i >= 0; i--)
+                        this.plugins[i].init();
                     if (this.cfg.autoplay)
                         this.tagCall("play");
                 };
@@ -760,6 +1036,8 @@ System.register("player/Flow", ["Tools", "Escape"], function (exports_6, context
                 };
                 Flow.prototype.unload = function () {
                     this.root.find(".vsq-quality-selector").remove();
+                    for (var i = this.plugins.length - 1; i >= 0; i--)
+                        this.plugins[i].destroy();
                     var videoTags = jQuery(this.videoTags);
                     videoTags.remove();
                     this.hlsCall('destroy');
@@ -812,7 +1090,7 @@ System.register("player/Flow", ["Tools", "Escape"], function (exports_6, context
                         _this.root.find('.vsq-quality-selector li').removeClass("active");
                         choice.addClass("active");
                         var quality = choice.attr('data-quality');
-                        Tools_1.default.setToStorage(_this.configKey("quality"), quality);
+                        Tools_2.default.setToStorage(_this.configKey("quality"), quality);
                         var level = _this.getQualityIndex(quality);
                         var smooth = _this.player.conf.smoothSwitching;
                         var paused = _this.videoTags[Flow.MASTER].paused;
@@ -827,120 +1105,6 @@ System.register("player/Flow", ["Tools", "Escape"], function (exports_6, context
                         if (paused)
                             _this.tagCall('play');
                     });
-                };
-                Flow.prototype.initLayoutChooser = function () {
-                    var _this = this;
-                    if (this.cfg.secondarySources.length === 0) {
-                        this.root.addClass('vsq-singlevideo');
-                        return;
-                    }
-                    if (this.root.find('.vsq-layoutchooser').length > 0)
-                        return;
-                    var trigger = function (newVal) {
-                        var ratio = _this.root.find('.vsq-layoutchooser input[name="ratio"]');
-                        if (newVal != null)
-                            ratio.val(newVal);
-                        ratio.change();
-                    };
-                    this.player.on("fullscreen fullscreen-exit", function () {
-                        var maxHeight;
-                        if (_this.root.hasClass('is-fullscreen'))
-                            maxHeight = jQuery(window).height();
-                        else
-                            maxHeight = _this.root.height();
-                        jQuery(_this.videoTags).css("maxHeight", maxHeight + 'px');
-                    }).trigger('fullscreen-exit');
-                    var ratio = 0 + Tools_1.default.getFromStorage(this.configKey("layoutRatio"), 150);
-                    var html = "\n      <div class=\"vsq-layoutchooser\">\n        <input name=\"ratio\" type=\"range\" min=\"0\" max=\"300\" step=\"1\" value=\"" + ratio + "\"/>\n        <ul>\n          <li class=\"pip-content\">PiP content</li>\n          <li class=\"master-only\">Master only</li>\n          <li class=\"split\">Split</li>\n          <li class=\"content-only\">Content only</li>\n          <li class=\"pip-master\">PiP master</li>\n        </ul>\n      </div>\n    ";
-                    this.root.find(".fp-ui").append(html);
-                    this.root.on("click", ".vsq-layoutchooser .pip-content", function (e) {
-                        e.preventDefault();
-                        trigger('40');
-                    });
-                    this.root.on("click", ".vsq-layoutchooser .master-only", function (e) {
-                        e.preventDefault();
-                        trigger('80');
-                    });
-                    this.root.on("click", ".vsq-layoutchooser .split", function (e) {
-                        e.preventDefault();
-                        trigger('150');
-                    });
-                    this.root.on("click", ".vsq-layoutchooser .content-only", function (e) {
-                        e.preventDefault();
-                        trigger('190');
-                    });
-                    this.root.on("click", ".vsq-layoutchooser .pip-master", function (e) {
-                        e.preventDefault();
-                        trigger('260');
-                    });
-                    this.root.on("input change", '.vsq-layoutchooser input[name="ratio"]', function (e) {
-                        var elem = jQuery(e.currentTarget);
-                        var val = parseInt(elem.val(), 10);
-                        var masterWidth = 50;
-                        var contentWidth = 50;
-                        var masterOnTop = true;
-                        Tools_1.default.setToStorage(_this.configKey("layoutRatio"), val);
-                        if (val < 0 || val > 300)
-                            throw new Error("Invalid value for layoutchooser");
-                        if (val >= 0 && val < 80) {
-                            masterWidth = 100;
-                            contentWidth = (val / 80) * 100;
-                            masterOnTop = false;
-                        }
-                        if (val >= 80 && val < 110) {
-                            masterWidth = 100;
-                            contentWidth = 0;
-                            masterOnTop = true;
-                        }
-                        if (val >= 110 && val < 190) {
-                            var n = val - 110;
-                            masterWidth = (n / 80) * 100;
-                            contentWidth = 100 - masterWidth;
-                            masterOnTop = null;
-                        }
-                        if (val >= 190 && val < 220) {
-                            masterWidth = 0;
-                            contentWidth = 100;
-                            masterOnTop = false;
-                        }
-                        if (val >= 220 && val < 300) {
-                            var n = val - 220;
-                            masterWidth = (n / 80) * 100;
-                            contentWidth = 100;
-                            masterOnTop = true;
-                        }
-                        var masterLeft = 0;
-                        var masterRight = "auto";
-                        var contentLeft = "auto";
-                        var contentRight = 0;
-                        var masterZ = 10;
-                        var contentZ = 9;
-                        if (masterOnTop === false) {
-                            masterLeft = "auto";
-                            masterRight = 0;
-                            masterZ = 9;
-                            contentZ = 10;
-                        }
-                        if (masterOnTop === true) {
-                            masterLeft = 0;
-                            masterRight = "auto";
-                        }
-                        var master = jQuery(_this.videoTags[Flow.MASTER]);
-                        var content = jQuery(_this.videoTags[Flow.CONTENT]);
-                        master.css({
-                            width: masterWidth + '%',
-                            zIndex: masterZ,
-                            left: masterLeft,
-                            right: masterRight
-                        });
-                        content.css({
-                            width: contentWidth + '%',
-                            zIndex: contentZ,
-                            left: contentLeft,
-                            right: contentRight
-                        });
-                    });
-                    trigger();
                 };
                 Flow.setup = function () {
                     if (Flow.initDone)
@@ -962,24 +1126,25 @@ System.register("player/Flow", ["Tools", "Escape"], function (exports_6, context
                 return Flow;
             }());
             Flow.engineName = "vsq";
+            Flow.debug = false;
             Flow.initDone = false;
             Flow.MASTER = 0;
             Flow.CONTENT = 1;
-            exports_6("default", Flow);
+            exports_8("Flow", Flow);
         }
     };
 });
-System.register("player/Player", ["player/Flash", "player/Flow"], function (exports_7, context_7) {
+System.register("player/Player", ["player/Flash", "player/Flow"], function (exports_9, context_9) {
     "use strict";
-    var __moduleName = context_7 && context_7.id;
-    var Flash_1, Flow_1, Player;
+    var __moduleName = context_9 && context_9.id;
+    var Flash_1, Flow_2, Player;
     return {
         setters: [
             function (Flash_1_1) {
                 Flash_1 = Flash_1_1;
             },
-            function (Flow_1_1) {
-                Flow_1 = Flow_1_1;
+            function (Flow_2_1) {
+                Flow_2 = Flow_2_1;
             }
         ],
         execute: function () {
@@ -1034,17 +1199,17 @@ System.register("player/Player", ["player/Flash", "player/Flow"], function (expo
                     });
                 };
                 Player.prototype.initFlowPlugin = function () {
-                    Flow_1.default.setup();
+                    Flow_2.Flow.setup();
                 };
                 return Player;
             }());
-            exports_7("default", Player);
+            exports_9("default", Player);
         }
     };
 });
-System.register("player/app", ["Locale", "player/Config", "player/Player"], function (exports_8, context_8) {
+System.register("player/app", ["Locale", "player/Config", "player/Player"], function (exports_10, context_10) {
     "use strict";
-    var __moduleName = context_8 && context_8.id;
+    var __moduleName = context_10 && context_10.id;
     var Locale_1, Config_1, Player_1;
     return {
         setters: [
