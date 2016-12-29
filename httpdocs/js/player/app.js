@@ -268,12 +268,16 @@ System.register("Escape", [], function (exports_5, context_5) {
         }
     };
 });
-System.register("player/Flow/BasePlugin", [], function (exports_6, context_6) {
+System.register("player/Flow/BasePlugin", ["player/Flow"], function (exports_6, context_6) {
     "use strict";
     var __moduleName = context_6 && context_6.id;
-    var BasePlugin;
+    var Flow_1, BasePlugin;
     return {
-        setters: [],
+        setters: [
+            function (Flow_1_1) {
+                Flow_1 = Flow_1_1;
+            }
+        ],
         execute: function () {
             BasePlugin = (function () {
                 function BasePlugin(flow) {
@@ -286,6 +290,14 @@ System.register("player/Flow/BasePlugin", [], function (exports_6, context_6) {
                 BasePlugin.prototype.configKey = function (key) {
                     throw new Error("Override configKey");
                 };
+                BasePlugin.prototype.eventName = function (event) {
+                    var postfix = '.' + Flow_1.Flow.engineName;
+                    if (!event)
+                        return postfix;
+                    return event + postfix;
+                };
+                BasePlugin.prototype.setupHLS = function (hls) {
+                };
                 return BasePlugin;
             }());
             exports_6("BasePlugin", BasePlugin);
@@ -295,11 +307,11 @@ System.register("player/Flow/BasePlugin", [], function (exports_6, context_6) {
 System.register("player/Flow/LayoutChooser", ["player/Flow", "player/Flow/BasePlugin", "Tools"], function (exports_7, context_7) {
     "use strict";
     var __moduleName = context_7 && context_7.id;
-    var Flow_1, BasePlugin_1, Tools_1, LayoutChooser;
+    var Flow_2, BasePlugin_1, Tools_1, LayoutChooser;
     return {
         setters: [
-            function (Flow_1_1) {
-                Flow_1 = Flow_1_1;
+            function (Flow_2_1) {
+                Flow_2 = Flow_2_1;
             },
             function (BasePlugin_1_1) {
                 BasePlugin_1 = BasePlugin_1_1;
@@ -495,8 +507,8 @@ System.register("player/Flow/LayoutChooser", ["player/Flow", "player/Flow/BasePl
                         masterLeft = 0;
                         masterRight = "auto";
                     }
-                    var master = jQuery(this.videoTags[Flow_1.Flow.MASTER]);
-                    var content = jQuery(this.videoTags[Flow_1.Flow.CONTENT]);
+                    var master = jQuery(this.videoTags[Flow_2.Flow.MASTER]);
+                    var content = jQuery(this.videoTags[Flow_2.Flow.CONTENT]);
                     master.css({
                         width: masterWidth + '%',
                         zIndex: masterZ,
@@ -514,20 +526,117 @@ System.register("player/Flow/LayoutChooser", ["player/Flow", "player/Flow/BasePl
         }
     };
 });
-System.register("player/Flow", ["player/Flow/LayoutChooser", "Tools", "Escape"], function (exports_8, context_8) {
+System.register("player/Flow/QualityChooser", ["player/Flow", "player/Flow/BasePlugin", "Tools", "Escape"], function (exports_8, context_8) {
     "use strict";
     var __moduleName = context_8 && context_8.id;
-    var LayoutChooser_1, Tools_2, Escape_1, Flow;
+    var Flow_3, BasePlugin_2, Tools_2, Escape_1, QualityChooser;
     return {
         setters: [
-            function (LayoutChooser_1_1) {
-                LayoutChooser_1 = LayoutChooser_1_1;
+            function (Flow_3_1) {
+                Flow_3 = Flow_3_1;
+            },
+            function (BasePlugin_2_1) {
+                BasePlugin_2 = BasePlugin_2_1;
             },
             function (Tools_2_1) {
                 Tools_2 = Tools_2_1;
             },
             function (Escape_1_1) {
                 Escape_1 = Escape_1_1;
+            }
+        ],
+        execute: function () {
+            QualityChooser = (function (_super) {
+                __extends(QualityChooser, _super);
+                function QualityChooser(flow) {
+                    var _this = _super.call(this, flow) || this;
+                    _this.selectedQuality = _this.getDefaultQuality();
+                    return _this;
+                }
+                QualityChooser.prototype.init = function () {
+                    var _this = this;
+                    if (this.cfg.labels.master.length === 0)
+                        return;
+                    var levels = this.cfg.labels.master.slice(0);
+                    levels.unshift("Auto");
+                    var html = "<ul class=\"vsq-quality-selector\">";
+                    for (var i = 0; i < levels.length; ++i) {
+                        var label = levels[i];
+                        var active = "";
+                        if ((i === 0 && this.selectedQuality === "auto") ||
+                            label === this.selectedQuality)
+                            active = ' class="active"';
+                        html += "<li" + active + " data-quality=\"" + label.toLowerCase() + "\">" + Escape_1.default.HTML(label) + "</li>";
+                    }
+                    html += "</ul>";
+                    this.root.find(".fp-ui").append(html);
+                    this.root.on(this.eventName("click"), ".vsq-quality-selector li", function (e) {
+                        e.preventDefault();
+                        var choice = jQuery(e.currentTarget);
+                        if (choice.hasClass("active"))
+                            return;
+                        _this.root.find('.vsq-quality-selector li').removeClass("active");
+                        choice.addClass("active");
+                        var quality = choice.attr('data-quality');
+                        Tools_2.default.setToStorage(_this.configKey("quality"), quality);
+                        var level = _this.getQualityIndex(quality);
+                        var smooth = _this.player.conf.smoothSwitching;
+                        var paused = _this.videoTags[Flow_3.Flow.MASTER].paused;
+                        if (!paused && !smooth)
+                            jQuery(_this.videoTags[Flow_3.Flow.MASTER]).one(_this.eventName("pause"), function () {
+                                _this.root.removeClass("is-paused");
+                            });
+                        if (smooth && !_this.player.poster)
+                            _this.flow.hlsSet('nextLevel', level);
+                        else
+                            _this.flow.hlsSet('currentLevel', level);
+                        if (paused)
+                            _this.flow.tagCall('play');
+                    });
+                };
+                QualityChooser.prototype.destroy = function () {
+                    this.root.find(".vsq-quality-selector").remove();
+                };
+                QualityChooser.prototype.setupHLS = function (hls) {
+                    var _this = this;
+                    hls.on(Hls.Events.MANIFEST_PARSED, function (event, data) {
+                        hls.startLoad(hls.config.startPosition);
+                        var startLevel = _this.getQualityIndex(_this.selectedQuality);
+                        hls.startLevel = startLevel;
+                        hls.loadLevel = startLevel;
+                    });
+                };
+                QualityChooser.prototype.getQualityIndex = function (quality) {
+                    for (var i = this.cfg.labels.master.length - 1; i >= 0; i--) {
+                        var label = this.cfg.labels.master[i];
+                        if (label === quality)
+                            return i;
+                    }
+                    return -1;
+                };
+                QualityChooser.prototype.getDefaultQuality = function () {
+                    return Tools_2.default.getFromStorage(this.configKey("quality"), "auto");
+                };
+                QualityChooser.prototype.configKey = function (key) {
+                    return 'vsq-player-qualitychooser-' + key;
+                };
+                return QualityChooser;
+            }(BasePlugin_2.BasePlugin));
+            exports_8("default", QualityChooser);
+        }
+    };
+});
+System.register("player/Flow", ["player/Flow/LayoutChooser", "player/Flow/QualityChooser"], function (exports_9, context_9) {
+    "use strict";
+    var __moduleName = context_9 && context_9.id;
+    var LayoutChooser_1, QualityChooser_1, Flow;
+    return {
+        setters: [
+            function (LayoutChooser_1_1) {
+                LayoutChooser_1 = LayoutChooser_1_1;
+            },
+            function (QualityChooser_1_1) {
+                QualityChooser_1 = QualityChooser_1_1;
             }
         ],
         execute: function () {
@@ -553,9 +662,9 @@ System.register("player/Flow", ["player/Flow/LayoutChooser", "Tools", "Escape"],
                     }, flowplayer.conf['hlsjs'], this.player.conf['hlsjs'], this.player.conf['clip']['hlsjs']);
                     Flow.debug = !!this.cfg.debug;
                     this.root = jQuery(root);
-                    this.selectedQuality = Tools_2.default.getFromStorage(this.configKey("quality"), "auto");
                     this.id = this.root.attr('data-flowplayer-instance-id');
                     this.plugins.push(new LayoutChooser_1.default(this));
+                    this.plugins.push(new QualityChooser_1.default(this));
                 }
                 Flow.prototype.getRoot = function () {
                     return this.root;
@@ -571,14 +680,6 @@ System.register("player/Flow", ["player/Flow/LayoutChooser", "Tools", "Escape"],
                 };
                 Flow.prototype.hideFlowLogo = function () {
                     this.root.children('a[href*="flowplayer.org"]').hide();
-                };
-                Flow.prototype.getQualityIndex = function (quality) {
-                    for (var i = this.cfg.labels.master.length - 1; i >= 0; i--) {
-                        var label = this.cfg.labels.master[i];
-                        if (label === quality)
-                            return i;
-                    }
-                    return -1;
                 };
                 Flow.prototype.configKey = function (key) {
                     return 'vsq-player-' + key;
@@ -968,20 +1069,15 @@ System.register("player/Flow", ["player/Flow/LayoutChooser", "Tools", "Escape"],
                     elem.remove();
                 };
                 Flow.prototype.setupHLS = function (type) {
-                    var _this = this;
                     var video = this.videoInfo[type];
                     var hls = new Hls();
                     hls.on(Hls.Events.MEDIA_ATTACHED, function (event, data) {
                         hls.loadSource(video.src);
                     });
-                    hls.on(Hls.Events.MANIFEST_PARSED, function (event, data) {
-                        hls.startLoad(hls.config.startPosition);
-                        var startLevel = _this.getQualityIndex(_this.selectedQuality);
-                        hls.startLevel = startLevel;
-                        hls.loadLevel = startLevel;
-                    });
                     hls.attachMedia(this.videoTags[type]);
                     this.hlsEngines[type] = hls;
+                    for (var i = this.plugins.length - 1; i >= 0; i--)
+                        this.plugins[i].setupHLS(hls);
                 };
                 Flow.prototype.load = function (video) {
                     var _this = this;
@@ -1015,7 +1111,6 @@ System.register("player/Flow", ["player/Flow/LayoutChooser", "Tools", "Escape"],
                         _this.unload();
                     });
                     this.setupVideoEvents(video);
-                    this.initQuality();
                     for (var i = this.plugins.length - 1; i >= 0; i--)
                         this.plugins[i].init();
                     if (this.cfg.autoplay)
@@ -1035,7 +1130,6 @@ System.register("player/Flow", ["player/Flow/LayoutChooser", "Tools", "Escape"],
                     this.tagSet('volume', volume);
                 };
                 Flow.prototype.unload = function () {
-                    this.root.find(".vsq-quality-selector").remove();
                     for (var i = this.plugins.length - 1; i >= 0; i--)
                         this.plugins[i].destroy();
                     var videoTags = jQuery(this.videoTags);
@@ -1065,47 +1159,6 @@ System.register("player/Flow", ["player/Flow/LayoutChooser", "Tools", "Escape"],
                     }
                     return null;
                 };
-                Flow.prototype.initQuality = function () {
-                    var _this = this;
-                    if (this.cfg.labels.master.length === 0)
-                        return;
-                    var levels = this.cfg.labels.master.slice(0);
-                    levels.unshift("Auto");
-                    var html = "<ul class=\"vsq-quality-selector\">";
-                    for (var i = 0; i < levels.length; ++i) {
-                        var label = levels[i];
-                        var active = "";
-                        if ((i === 0 && this.selectedQuality === "auto") ||
-                            label === this.selectedQuality)
-                            active = ' class="active"';
-                        html += "<li" + active + " data-quality=\"" + label.toLowerCase() + "\">" + Escape_1.default.HTML(label) + "</li>";
-                    }
-                    html += "</ul>";
-                    this.root.find(".fp-ui").append(html);
-                    this.root.on(this.eventName("click"), ".vsq-quality-selector li", function (e) {
-                        e.preventDefault();
-                        var choice = jQuery(e.currentTarget);
-                        if (choice.hasClass("active"))
-                            return;
-                        _this.root.find('.vsq-quality-selector li').removeClass("active");
-                        choice.addClass("active");
-                        var quality = choice.attr('data-quality');
-                        Tools_2.default.setToStorage(_this.configKey("quality"), quality);
-                        var level = _this.getQualityIndex(quality);
-                        var smooth = _this.player.conf.smoothSwitching;
-                        var paused = _this.videoTags[Flow.MASTER].paused;
-                        if (!paused && !smooth)
-                            jQuery(_this.videoTags[Flow.MASTER]).one(_this.eventName("pause"), function () {
-                                _this.root.removeClass("is-paused");
-                            });
-                        if (smooth && !_this.player.poster)
-                            _this.hlsSet('nextLevel', level);
-                        else
-                            _this.hlsSet('currentLevel', level);
-                        if (paused)
-                            _this.tagCall('play');
-                    });
-                };
                 Flow.setup = function () {
                     if (Flow.initDone)
                         return;
@@ -1130,21 +1183,21 @@ System.register("player/Flow", ["player/Flow/LayoutChooser", "Tools", "Escape"],
             Flow.initDone = false;
             Flow.MASTER = 0;
             Flow.CONTENT = 1;
-            exports_8("Flow", Flow);
+            exports_9("Flow", Flow);
         }
     };
 });
-System.register("player/Player", ["player/Flash", "player/Flow"], function (exports_9, context_9) {
+System.register("player/Player", ["player/Flash", "player/Flow"], function (exports_10, context_10) {
     "use strict";
-    var __moduleName = context_9 && context_9.id;
-    var Flash_1, Flow_2, Player;
+    var __moduleName = context_10 && context_10.id;
+    var Flash_1, Flow_4, Player;
     return {
         setters: [
             function (Flash_1_1) {
                 Flash_1 = Flash_1_1;
             },
-            function (Flow_2_1) {
-                Flow_2 = Flow_2_1;
+            function (Flow_4_1) {
+                Flow_4 = Flow_4_1;
             }
         ],
         execute: function () {
@@ -1199,17 +1252,17 @@ System.register("player/Player", ["player/Flash", "player/Flow"], function (expo
                     });
                 };
                 Player.prototype.initFlowPlugin = function () {
-                    Flow_2.Flow.setup();
+                    Flow_4.Flow.setup();
                 };
                 return Player;
             }());
-            exports_9("default", Player);
+            exports_10("default", Player);
         }
     };
 });
-System.register("player/app", ["Locale", "player/Config", "player/Player"], function (exports_10, context_10) {
+System.register("player/app", ["Locale", "player/Config", "player/Player"], function (exports_11, context_11) {
     "use strict";
-    var __moduleName = context_10 && context_10.id;
+    var __moduleName = context_11 && context_11.id;
     var Locale_1, Config_1, Player_1;
     return {
         setters: [

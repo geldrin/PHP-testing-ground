@@ -27,6 +27,18 @@ export abstract class BasePlugin {
     throw new Error("Override configKey");
   }
 
+  protected eventName(event?: string): string {
+    let postfix = '.' + Flow.engineName;
+    if (!event)
+      return postfix;
+
+    return event + postfix;
+  }
+
+  public setupHLS(hls: any): void {
+    // direkt nem csinal semmit
+  }
+
   public abstract init(): void;
   public abstract destroy(): void;
 }
