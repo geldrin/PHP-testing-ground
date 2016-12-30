@@ -12,7 +12,7 @@ export abstract class BasePlugin {
   protected root: JQuery;
   protected cfg: VSQConfig;
   protected player: Flowplayer;
-  protected videoTags: Element[];
+  protected videoTags: HTMLVideoElement[] = [];
 
   constructor(flow: Flow) {
     this.flow = flow;

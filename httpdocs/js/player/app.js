@@ -281,6 +281,7 @@ System.register("player/Flow/BasePlugin", ["player/Flow"], function (exports_6, 
         execute: function () {
             BasePlugin = (function () {
                 function BasePlugin(flow) {
+                    this.videoTags = [];
                     this.flow = flow;
                     this.root = flow.getRoot();
                     this.cfg = flow.getConfig();
@@ -649,7 +650,7 @@ System.register("player/Flow", ["player/Flow/LayoutChooser", "player/Flow/Qualit
                     this.hlsEngines = [];
                     this.eventsInitialized = false;
                     this.activeQualityClass = "active";
-                    this.mse = window.MediaSource || window.WebKitMediaSource;
+                    this.mse = MediaSource || WebKitMediaSource;
                     this.maxLevel = 0;
                     this.plugins = [];
                     Flow.log("constructor", arguments);
@@ -1168,12 +1169,6 @@ System.register("player/Flow", ["player/Flow/LayoutChooser", "player/Flow/Qualit
                     proxy.engineName = Flow.engineName;
                     proxy.canPlay = Flow.canPlay;
                     flowplayer.engines.unshift(proxy);
-                    flowplayer(function (api) {
-                        if (Flow.HLSQualitiesSupport(api.conf) && Flow.canPlay("application/x-mpegurl", api.conf))
-                            api.pluginQualitySelectorEnabled = true;
-                        else
-                            api.pluginQualitySelectorEnabled = false;
-                    });
                     Flow.initDone = true;
                 };
                 return Flow;

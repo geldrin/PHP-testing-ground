@@ -9,6 +9,7 @@ import Tools from "../Tools";
 import Escape from "../Escape";
 
 declare var Hls: any;
+declare var WebKitMediaSource: any;
 
 /**
  * A flowplayer plugin implementacioert felel (dual-stream, reconnect stb)
@@ -38,7 +39,7 @@ export class Flow {
   private timer: number;
 
   private activeQualityClass = "active";
-  private mse = window.MediaSource || window.WebKitMediaSource;
+  private mse = MediaSource || WebKitMediaSource;
   private maxLevel: number = 0; // hls specific
   private recoverMediaErrorDate: number;
   private swapAudioCodecDate: number;
@@ -76,7 +77,7 @@ export class Flow {
   public getPlayer(): Flowplayer {
     return this.player;
   }
-  public getVideoTags(): Element[] {
+  public getVideoTags(): HTMLVideoElement[] {
     return this.videoTags;
   }
 
@@ -159,7 +160,7 @@ export class Flow {
     ;
   }
 
-  public static canPlay(type: string, conf: Object): boolean {
+  public static canPlay(type: string, conf: FlowConfig): boolean {
     let b = flowplayer.support.browser;
     let wn = window.navigator;
     let isIE11 = wn.userAgent.indexOf("Trident/7") > -1;
@@ -712,38 +713,11 @@ export class Flow {
     proxy.canPlay = Flow.canPlay;
 
     flowplayer.engines.unshift(proxy);
-
-    flowplayer((api: Flowplayer): void => {
-      // to take precedence over VOD quality selector
-      if (Flow.HLSQualitiesSupport(api.conf) && Flow.canPlay("application/x-mpegurl", api.conf))
-        api.pluginQualitySelectorEnabled = true;
-      else
-        api.pluginQualitySelectorEnabled = false;
-    });
-
     Flow.initDone = true;
   }
 }
 
 /* definialni hogy kell a vsq flowplayer confignak kineznie */
-interface FlowHLSConfig {
-  recoverMediaError: boolean;
-  recoverNetworkError: boolean;
-  smoothSwitching: boolean;
-  strict: boolean;
-}
-interface FlowSource {
-  readonly type: string;
-  src: string;
-}
-interface FlowVideo {
-  hlsjs: FlowHLSConfig;
-  sources: FlowSource[];
-  title: string;
-  type: string;
-  src: string;
-  autoplay: boolean;
-}
 interface VSQLabels {
   master: string[];
   content: string[];
