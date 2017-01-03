@@ -4,6 +4,15 @@ namespace Model;
 class Livefeeds extends \Springboard\Model {
   private $transcoderCache = array();
 
+  private static $hdsFeatures = array(
+    'features_live_hds',
+    'features_live_hdss',
+  );
+  private static $hlsFeatures = array(
+    'features_live_hlss',
+    'features_live_hls',
+  );
+
   public function getStreamingServers( $organization ) {
     $where = array();
     if ( $organization['livehdsenabled'] ) {

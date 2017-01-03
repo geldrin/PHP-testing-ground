@@ -4,15 +4,6 @@ namespace Player;
 class Live extends Player {
   protected $type = 'live';
 
-  private static $hdsFeatures = array(
-    'features_live_hds',
-    'features_live_hdss',
-  );
-  private static $hlsFeatures = array(
-    'features_live_hlss',
-    'features_live_hls',
-  );
-
   private function isAdaptive( $organization ) {
     if ( $organization['isadaptivestreamingdisabled'] )
       return false;
@@ -569,6 +560,15 @@ class Live extends Player {
           'recoverMediaError'   => true,
           'recoverNetworkError' => true,
         ),
+      ),
+      'vsq' => array(
+        'autoplay' => false,
+        // a minosegi valtozatok labeljei, kulon a master es contentnek
+        'labels' => array(
+          'master'  => array(),
+          'content' => array(),
+        ),
+        'secondarySources' => array(),
       ),
     );
 

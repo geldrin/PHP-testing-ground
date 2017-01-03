@@ -16,39 +16,12 @@
 <center>
 {/if}
 <div id="player">
-{if $streamtype == 'desktop' and !$browser.mobile}
-  <div id="{$playerconfig.containerid}" style="width: {$playerconfig.width}px; height: {$playerconfig.height}px">
-      <img src="{$playerconfig.thumbnail|escape:html}" width="{$playerconfig.width}" height="{$playerconfig.height}"/>
-    </div>
-{elseif $needauth}
+{if $needauth}
   {include file=Visitor/mobile_logintoview.tpl}
 {else}
-  <center>
-    {if $streamtype == 'ios'}
-      <div id="mobileplayercontainer">
-        <video x-webkit-airplay="allow" controls="controls" alt="{$channel.title|escape:html}" width="192" height="144" poster="{$STATIC_URI}images/live_player_placeholder_small.png" src="{$livehttpurl}">
-          <a href="{$livehttpurl}"><img src="{$STATIC_URI}images/live_player_placeholder_small.png" width="220" height="130"/></a>
-        </video>
-      </div>
-    {elseif $streamtype == 'android'}
-      <div id="mobileplayercontainer">
-        <a href="{if $organization.livehlsenabledandroid}{$livehttpurl}{else}{$livertspurl}{/if}"><img src="{$STATIC_URI}images/live_player_placeholder_small.png" width="220" height="130"/></a>
-      </div>
-    {else}
-      <span class="warning">{#live__no_compatible_stream#}</span>
-    {/if}
-
-    {if count( $streams ) > 1}
-      <div id="qualitychooser">
-        <ul>
-          {foreach from=$streams item=stream}
-            <li{if $currentstream.id == $stream.id} class="active"{/if}><a href="{$language}/live/view/{$feed.id},{$stream.id},{$feed.name|filenameize}{$urlparams}">{$stream.qualitytag|escape:html}</a></li>
-          {/foreach}
-        </ul>
-      </div>
-    {/if}
-
-  </center>
+  <div id="{$playerconfig.containerid}">
+    <img src="{$playerconfig.thumbnail|escape:html}"/>
+  </div>
 {/if}
 </div>
 {if $chromeless}
