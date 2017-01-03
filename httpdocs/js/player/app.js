@@ -1070,10 +1070,19 @@ System.register("player/Flow", ["player/Flow/LayoutChooser", "player/Flow/Qualit
                     elem.remove();
                 };
                 Flow.prototype.setupHLS = function (type) {
+                    var _this = this;
                     var video = this.videoInfo[type];
                     var hls = new Hls();
                     hls.on(Hls.Events.MEDIA_ATTACHED, function (event, data) {
                         hls.loadSource(video.src);
+                    });
+                    hls.on(Hls.Events.ERROR, function (event, err) {
+                        if (err.type !== Hls.ErrorTypes.NETWORK_ERROR)
+                            return;
+                        if (err.response == null || err.response.code !== 403)
+                            return;
+                        var arg = { code: 2 };
+                        _this.player.trigger("error", [_this.player, arg]);
                     });
                     hls.attachMedia(this.videoTags[type]);
                     this.hlsEngines[type] = hls;

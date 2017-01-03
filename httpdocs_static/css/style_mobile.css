@@ -92,7 +92,7 @@ input[type=submit] {
     float: none;
     margin: 0 0 0 10px;
   }
-  
+
   /* index contaner */
   .featuredcontainer {
     float: none;
@@ -364,7 +364,7 @@ input[type=submit] {
   .livelist.recordinglist .recordingcontent {
     width: 70%;
   }
-  
+
   .leftdoublebox {
     width: 65.78947368421053%;
   }
@@ -375,14 +375,14 @@ input[type=submit] {
   .halfbox {
     width: 48.42105263157895%;
   }
-  
+
   #headersearch.rightbox {
     width: 305px;
   }
   #myrecordingsquicksearch .selectwrap .elem, #myrecordingsquicksearch .textwrap {
     float: none;
   }
-  
+
   /* form */
   .formtable td.labelcolumn {
     min-width: 0px;
@@ -406,7 +406,7 @@ input[type=submit] {
     margin-top: 2px;
     margin-bottom: 2px;
   }
-  
+
   .form.search {
     margin-bottom: 10px;
   }
@@ -417,7 +417,7 @@ input[type=submit] {
     vertical-align: top;
     margin-top: 1px;
   }
-  
+
   /* systemmesage */
   #systemmessage {
     width: auto;
@@ -596,6 +596,15 @@ input[type=submit] {
   .recordinglist .recordingcontent,
   .livelist.recordinglist .recordingcontent {
     width: 63%;
+  }
+
+  #player .is-mouseover .vsq-layoutchooser {
+    display: none;
+  }
+  #player .vsq-engine {
+    position: static;
+    height: 50% !important;
+    width: 100% !important;
   }
 }
 @media all and (max-width: 460px) {

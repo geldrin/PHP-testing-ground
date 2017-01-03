@@ -6,42 +6,10 @@
 {if $recording.subtitle|stringempty}<h2>{$recording.subtitle|escape:html|mb_wordwrap:25}</h2>{else}<br/>{/if}
 <br/>
 
-<div id="player"{if !$browser.mobile} style="height: {$playerconfig.height}px;"{/if}>
-
-  {if $browser.mobile}
-    {if $browser.mobiledevice == 'iphone'}
-      <div id="mobileplayercontainer">
-        <video x-webkit-airplay="allow" controls="controls" alt="{$recording.title|escape:html}" width="280" height="165" poster="{$recording|@indexphoto}" src="{$mobilehttpurl}">
-          <a href="{$mobilehttpurl}"><img src="{$recording|@indexphoto}" width="280" height="190"/></a>
-        </video>
-      </div>
-    {else}
-      {if $recording.mediatype == 'audio'}
-        {assign var=mobileurl value=$audiofileurl}
-      {elseif $bootstrap->config.ondemandhlsenabledandroid}
-        {assign var=mobileurl value=$mobilehttpurl}
-      {else}
-        {assign var=mobileurl value=$mobilertspurl}
-      {/if}
-      <div id="mobileplayercontainer">
-        <a href="{$mobileurl}"><img src="{$recording|@indexphoto}" width="280" height="165"/></a>
-      </div>
-    {/if}
-    {if count( $mobileversions ) > 1}
-      <div id="qualitychooser">
-        <ul>
-          {foreach from=$mobileversions item=version}
-            <li{if $activemobileversion.qualitytag == $version} class="active"{/if}><a href="{$language}/recordings/details/{$recording.id},{$recording.title|filenameize}?quality={$version|escape:url}">{$version|escape:html}</a></li>
-          {/foreach}
-        </ul>
-      </div>
-    {/if}
-    <br/>
-  {else}
-    <div id="{$playerconfig.containerid}">
-      <img src="{$playerconfig.thumbnail|escape:html}" width="{$playerconfig.width}" height="{$playerconfig.height}"/>
-    </div>
-  {/if}
+<div id="player">
+  <div id="{$playerconfig.containerid}">
+    <img src="{$playerconfig.thumbnail|escape:html}" width="{$playerconfig.width}" height="{$playerconfig.height}"/>
+  </div>
 </div>
 
 <div class="title recording">

@@ -579,6 +579,22 @@ export class Flow {
     hls.on(Hls.Events.MEDIA_ATTACHED, (event: string, data: any): void => {
       hls.loadSource(video.src);
     });
+    hls.on(Hls.Events.ERROR, (event: string, err: any): void => {
+      if (err.type !== Hls.ErrorTypes.NETWORK_ERROR)
+        return;
+
+      if (err.response == null || err.response.code !== 403)
+        return;
+
+      // TODO visza lettunk utasitva a checkstreamaccess altal, valami UIt mutassunk
+      /*
+      const ACCESS_DENIED = 31874;
+      this.player.errors[ACCESS_DENIED] = "Access denied";
+      let arg: any = {code: ACCESS_DENIED};
+      */
+      let arg: any = {code: 2};
+      this.player.trigger("error", [this.player, arg]);
+    });
     hls.attachMedia(this.videoTags[type]);
     this.hlsEngines[type] = hls;
 

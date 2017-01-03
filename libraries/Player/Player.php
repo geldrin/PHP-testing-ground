@@ -104,11 +104,12 @@ abstract class Player {
     2. VoD single minőség lejátszása: https://<server>/<wowza_app>/_definst_/mp4:<mp4 URL>/playlist.m3u8
     3. Live ABR lejátszása: https://<server>/<wowza live app>/_definst_/smil:<live smil URL>/playlist.m3u8
 
+    TODO
     Ja: a mobilok számára fogunk genrálni egy 123_mobile.smil fájlt is, azoknak azt kell kiajánlani.
     */
 
     $prefix = '';
-    // TODO ha ssl-en vagyunk kotelezo hogy ssl-en keresztul menjen ez?
+    // ha ssl-en vagyunk kotelezo hogy ssl-en keresztul menjen
     if ( $this->bootstrap->ssl or $this->row['issecurestreamingforced'] )
       $prefix = 'sec';
 
