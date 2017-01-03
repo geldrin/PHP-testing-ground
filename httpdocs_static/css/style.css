@@ -4079,6 +4079,10 @@ table.paging tr.even {
   width: 50%;
   height: auto;
 }
+#player img {
+  width: 100%;
+  height: 100%;
+}
 #player .vsq-singlevideo .vsq-engine {
   width: 100%;
 }

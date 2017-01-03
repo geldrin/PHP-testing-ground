@@ -8,7 +8,7 @@
 
 <div id="player">
   <div id="{$playerconfig.containerid}">
-    <img src="{$playerconfig.thumbnail|escape:html}" width="{$playerconfig.width}" height="{$playerconfig.height}"/>
+    <img src="{$playerconfig.thumbnail|escape:html}"/>
   </div>
 </div>
 
