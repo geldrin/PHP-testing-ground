@@ -362,7 +362,7 @@ class Recordings extends Player {
       )
     );
 
-    return $options;
+    return $ret;
   }
 
   protected function getConfig( $info, $isembed ) {
