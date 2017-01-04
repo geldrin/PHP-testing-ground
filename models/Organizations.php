@@ -201,13 +201,16 @@ class Organizations extends \Springboard\Model\Multilingual {
 
   }
 
-  public function getOrganizationByID( $id ) {
+  public function getOrganizationByID( $id, $skipSubscriberCheck = false ) {
 
     $cache = $this->bootstrap->getCache('organizationsbyid-' . $id, null );
     if ( $cache->expired() ) {
 
       $this->select( $id );
       if ( !$this->row )
+        return false;
+
+      if ( !$skipSubscriberCheck and !$this->row['issubscriber'] )
         return false;
 
       $organization = $this->addExtraData();
