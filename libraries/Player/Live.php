@@ -593,8 +593,8 @@ class Live extends Player {
 
       // "mock" version
       $ver = array(
-        'recordingid' => $this->row['id'],
-        'iscontent' => false,
+        'livefeedid' => $this->row['id'],
+        'iscontent'  => false,
       );
 
       $ret['master']['url'] = $this->getFlowUrl( $cfg, 'liveabr', $ver, $extraparams );

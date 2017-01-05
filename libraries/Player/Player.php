@@ -140,6 +140,9 @@ abstract class Player {
     if ( isset( $version['recordingid'] ) ) {
       $path = \Springboard\Filesystem::getTreeDir( $version['recordingid'] ) . '/';
       $filename = $version['recordingid'] . $postfix . '.smil';
+    } else if ( isset( $version['livefeedid'] ) ) {
+      $path = '';
+      $filename = $version['livefeedid'] . $postfix . '.smil';
     } else {
       $path = '';
       $filename = $version['streamcode'];
