@@ -179,6 +179,7 @@ abstract class Player {
       'embed' => false,
       // minden video wide-screen
       'ratio' => 9/16,
+      'live'  => $this->type === 'live',
       'clip'  => array(
         // Set a title for this clip. Displayed in a top bar when hovering over the player.
         'title'   => isset( $cfg['title'] )? $cfg['title']: $this->row['title'],
