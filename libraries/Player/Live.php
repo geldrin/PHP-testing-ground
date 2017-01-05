@@ -365,9 +365,12 @@ class Live extends Player {
       'nopermission'  => false,
       'tokenvalid'    => true,
       'logo'          => array(),
+      'hds'           => $this->isHDSEnabled( '', $info ),
       'adaptive'      => $this->isAdaptive( $info['organization'] ),
-      'streams'       => $this->getStreamInfo( $info ),
+      'streams'       => $info['streams'],
+      'streaminfo'    => $this->getStreamInfo( $info ),
       'intro'         => $this->getIntroData( $info ),
+      'title'         => $info['title'],
       'presenceCheck' => array(
         'enabled'  => (bool)$user['ispresencecheckforced'],
         'interval' => $info['organization']['presencechecktimeinterval'],
@@ -491,12 +494,12 @@ class Live extends Player {
     if ( $cfg['flashplayer']['authcallback'] )
       $ret['authorization_callback'] = $cfg['flashplayer']['authcallback'];
 
-    foreach( $cfg['streams']['master'] as $stream ) {
+    foreach( $cfg['streaminfo']['master'] as $stream ) {
       $ret['media_streams'][]          = $stream['url'];
       $ret['media_streamLabels'][]     = $stream['label'];
       $ret['media_streamParameters'][] = $stream['parameters'];
     }
-    foreach( $cfg['streams']['content'] as $stream ) {
+    foreach( $cfg['streaminfo']['content'] as $stream ) {
       $ret['media_secondaryStreams'][] = $stream['url'];
       $ret['content_streamLabels'][]   = $stream['label'];
     }
@@ -538,49 +541,6 @@ class Live extends Player {
     return $ret;
   }
 
-  // TODO
-  protected function getFlowConfig( $cfg ) {
-    $ret = array(
-      // the video is loaded on demand, i.e. when the user starts playback with a click
-      'splash' => true,
-      // By default the embed feature loads the embed script and Flowplayer assets from our CDN. This can be customized in the embed configuration object if you prefer to host the files yourself.
-      'embed' => false,
-      // minden video wide-screen
-      'ratio' => 9/16,
-      'clip'  => array(
-        // Set a title for this clip. Displayed in a top bar when hovering over the player.
-        'title'   => $this->info['title'],
-        'sources' => array(),
-        'hlsjs'   => array(
-          // Whether manual HLS quality switching should be smooth - level change with begin of next segment - or instant. Setting this to false can cause a playback pause on switch.
-          'smoothSwitching'     => false,
-          // Set to true if you want non fatal hls.js playback errors to trigger Flowplayer errors. Useful for debugging streams and live stream maintenance.
-          'strict'              => false,
-          // do not die on fatal errors
-          'recoverMediaError'   => true,
-          'recoverNetworkError' => true,
-        ),
-      ),
-      'vsq' => array(
-        'autoplay' => false,
-        // a minosegi valtozatok labeljei, kulon a master es contentnek
-        'labels' => array(
-          'master'  => array(),
-          'content' => array(),
-        ),
-        'secondarySources' => array(),
-      ),
-    );
-
-    $server = reset( $cfg['servers']['master'] );
-    $stream = reset( $cfg['streams']['master'] );
-    $ret['clip']['sources'][] = array(
-      'type' => 'application/x-mpegurl',
-      'src'  => $server . $stream['url'],
-    );
-    return $ret;
-  }
-
   public function getContainerID() {
     return $this->info['playercontainerid'];
   }
@@ -601,5 +561,54 @@ class Live extends Player {
       return false;
 
     return $this->isHDSEnabled( '', $info );
+  }
+
+  protected function getFlowStreams( $cfg ) {
+    $ret = array(
+      'master'  => array(),
+      'content' => array(),
+      'intro'   => array(),
+      'outro'   => array(),
+    );
+
+    $ret['master'] = array(
+      'type' => 'application/x-mpegurl',
+      'url'  => '',
+      'labels' => array(),
+    );
+
+    $hascontent = $this->model->row['hascontent'];
+    if ( $hascontent )
+      $ret['content'] = array(
+        'type' => 'application/x-mpegurl',
+        'url'  => '',
+        'labels' => array(),
+      );
+
+    foreach( $cfg['streams']['streams'] as $stream ) {
+      $extraparams = array(
+        'livefeedstreamid' => $stream['id'],
+        'viewsessionid'    => $this->generateViewSessionid( $stream['id'] ),
+      );
+
+      // "mock" version
+      $ver = array(
+        'recordingid' => $this->row['id'],
+        'iscontent' => false,
+      );
+
+      $ret['master']['url'] = $this->getFlowUrl( $cfg, 'liveabr', $ver, $extraparams );
+      $ret['master']['labels'][] = $stream['qualitytag'];
+
+      if ( !$hascontent )
+        continue;
+
+      $ver['iscontent'] = true;
+      $ret['content']['url'] = $this->getFlowUrl( $cfg, 'liveabr', $ver, $extraparams );
+      $ret['content']['labels'][] = $stream['qualitytag'];
+    }
+
+    // TODO intro outro
+    return $ret;
   }
 }

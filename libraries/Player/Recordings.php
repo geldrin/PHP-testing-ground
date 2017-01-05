@@ -728,7 +728,7 @@ class Recordings extends Player {
     return $ret;
   }
 
-  private function getFlowStreams( $cfg ) {
+  protected function getFlowStreams( $cfg ) {
     if ( isset( $cfg['versions'] ) )
       $versions = $cfg['versions'];
     else
@@ -764,62 +764,6 @@ class Recordings extends Player {
       $ret['content']['labels'][] = $version['qualitytag'];
 
     // TODO intro outro
-    return $ret;
-  }
-
-  protected function getFlowConfig( $cfg ) {
-    if ( !$cfg['hds'] )
-      return array();
-
-    $ret = array(
-      // the video is loaded on demand, i.e. when the user starts playback with a click
-      'splash' => false,
-      // By default the embed feature loads the embed script and Flowplayer assets from our CDN. This can be customized in the embed configuration object if you prefer to host the files yourself.
-      'embed' => false,
-      // minden video wide-screen
-      'ratio' => 9/16,
-      'clip'  => array(
-        // Set a title for this clip. Displayed in a top bar when hovering over the player.
-        'title'   => $this->row['title'],
-        'sources' => array(),
-        'hlsjs'   => array(
-          // Whether manual HLS quality switching should be smooth - level change with begin of next segment - or instant. Setting this to false can cause a playback pause on switch.
-          'smoothSwitching'     => false,
-          // Set to true if you want non fatal hls.js playback errors to trigger Flowplayer errors. Useful for debugging streams and live stream maintenance.
-          'strict'              => false,
-          // do not die on fatal errors
-          'recoverMediaError'   => true,
-          'recoverNetworkError' => true,
-        ),
-      ),
-      'vsq' => array(
-        'autoplay' => false,
-        'duration' => $cfg['duration'],
-        // a minosegi valtozatok labeljei, kulon a master es contentnek
-        'labels' => array(
-          'master'  => array(),
-          'content' => array(),
-        ),
-        'secondarySources' => array(),
-      ),
-    );
-
-    $streams = $this->getFlowStreams( $cfg );
-    $ret['clip']['sources'][] = array(
-      'type' => $streams['master']['type'],
-      'src'  => $streams['master']['url'],
-    );
-    $ret['vsq']['labels']['master'] = $streams['master']['labels'];
-
-    if ( empty( $streams['content'] ) )
-      return $ret;
-
-    $ret['vsq']['secondarySources'][] = array(
-      'type' => $streams['content']['type'],
-      'src'  => $streams['content']['url'],
-    );
-    $ret['vsq']['labels']['content'] = $streams['content']['labels'];
-
     return $ret;
   }
 
