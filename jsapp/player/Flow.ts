@@ -574,7 +574,61 @@ export class Flow {
 
   private setupHLS(type: number): void {
     let video = this.videoInfo[type];
-    let hls = new Hls();
+    let hls = new Hls({
+      /*
+        autoStartLoad: true,
+        startPosition : -1,
+        capLevelToPlayerSize: false,
+        debug: false,
+        defaultAudioCodec: undefined,
+        initialLiveManifestSize: 1,
+        maxBufferLength: 30,
+        maxMaxBufferLength: 600,
+        maxBufferSize: 60*1000*1000,
+        maxBufferHole: 0.5,
+        maxSeekHole: 2,
+        seekHoleNudgeDuration: 0.01,
+        maxFragLookUpTolerance: 0.2,
+        liveSyncDurationCount: 3,
+        liveMaxLatencyDurationCount: 10,
+        enableWorker: true,
+        enableSoftwareAES: true,
+        manifestLoadingTimeOut: 10000,
+        manifestLoadingMaxRetry: 6,
+        manifestLoadingRetryDelay: 500,
+        manifestLoadingMaxRetryTimeout : 64000,
+        startLevel: undefined,
+        levelLoadingTimeOut: 10000,
+        levelLoadingMaxRetry: 6,
+        levelLoadingRetryDelay: 500,
+        levelLoadingMaxRetryTimeout: 64000,
+        fragLoadingTimeOut: 20000,
+        fragLoadingMaxRetry: 6,
+        fragLoadingRetryDelay: 500,
+        fragLoadingMaxRetryTimeout: 64000,
+        startFragPrefech: false,
+        appendErrorMaxRetry: 3,
+        loader: customLoader,
+        fLoader: customFragmentLoader,
+        pLoader: customPlaylistLoader,
+        xhrSetup: XMLHttpRequestSetupCallback,
+        fetchSetup: FetchSetupCallback,
+        abrController: customAbrController,
+        timelineController: TimelineController,
+        enableCEA708Captions: true,
+        stretchShortVideoTrack: false,
+        forceKeyFrameOnDiscontinuity: true,
+        abrEwmaFastLive: 5.0,
+        abrEwmaSlowLive: 9.0,
+        abrEwmaFastVoD: 4.0,
+        abrEwmaSlowVoD: 15.0,
+        abrEwmaDefaultEstimate: 500000,
+        abrBandWidthFactor: 0.8,
+        abrBandWidthUpFactor: 0.7,
+        minAutoBitrate: 0
+      */
+      initialLiveManifestSize: 2 // min 2 fragment mert sokat akad kulonben
+    });
 
     hls.on(Hls.Events.MEDIA_ATTACHED, (event: string, data: any): void => {
       hls.loadSource(video.src);

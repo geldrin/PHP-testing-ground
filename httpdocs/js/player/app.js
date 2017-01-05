@@ -1072,7 +1072,9 @@ System.register("player/Flow", ["player/Flow/LayoutChooser", "player/Flow/Qualit
                 Flow.prototype.setupHLS = function (type) {
                     var _this = this;
                     var video = this.videoInfo[type];
-                    var hls = new Hls();
+                    var hls = new Hls({
+                        initialLiveManifestSize: 2
+                    });
                     hls.on(Hls.Events.MEDIA_ATTACHED, function (event, data) {
                         hls.loadSource(video.src);
                     });
