@@ -4094,6 +4094,14 @@ table.paging tr.even {
   left: auto;
   right: 0;
 }
+#player .vsq-contentleft .vsq-engine.vsq-master {
+  left: auto;
+  right: 0;
+}
+#player .vsq-contentleft .vsq-engine.vsq-content {
+  left: 0;
+  right: auto;
+}
 #player .vsq-quality-selector {
   margin: 5px;
   transition: 0.2s ease-in;

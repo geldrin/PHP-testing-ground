@@ -496,6 +496,10 @@ System.register("player/Flow/LayoutChooser", ["player/Flow", "player/Flow/BasePl
                     }
                     var masterLeft = 0;
                     var masterRight = "auto";
+                    if (!this.cfg.contentOnRight) {
+                        masterLeft = "auto";
+                        masterRight = 0;
+                    }
                     var masterZ = 10;
                     var contentZ = 9;
                     if (masterOnTop === false) {
@@ -664,6 +668,8 @@ System.register("player/Flow", ["player/Flow/LayoutChooser", "player/Flow/Qualit
                     Flow.debug = !!this.cfg.debug;
                     this.root = jQuery(root);
                     this.id = this.root.attr('data-flowplayer-instance-id');
+                    if (!this.cfg.contentOnRight)
+                        this.root.addClass('vsq-contentleft');
                     this.plugins.push(new LayoutChooser_1.default(this));
                     this.plugins.push(new QualityChooser_1.default(this));
                 }

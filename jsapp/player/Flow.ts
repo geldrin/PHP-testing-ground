@@ -64,6 +64,9 @@ export class Flow {
     this.root = jQuery(root);
     this.id = this.root.attr('data-flowplayer-instance-id');
 
+    if (!this.cfg.contentOnRight)
+      this.root.addClass('vsq-contentleft');
+
     this.plugins.push(new LayoutChooser(this));
     this.plugins.push(new QualityChooser(this));
   }
@@ -468,6 +471,8 @@ export class Flow {
     if (this.eventsInitialized)
       return;
 
+    // TODO live sync-hez nezni a buffer eventeket es ha a master bufferel
+    // akkor a content addig pausolni, es vica versa?
     let masterHLS = this.hlsEngines[Flow.MASTER];
     let masterTag = this.videoTags[Flow.MASTER];
     let master = jQuery(masterTag);
@@ -793,9 +798,11 @@ interface VSQLabels {
   content: string[];
 }
 export interface VSQConfig {
+  type: string;
   debug: boolean;
   duration: number;
   autoplay: boolean;
   secondarySources: FlowSource[];
   labels: VSQLabels;
+  contentOnRight: boolean;
 }

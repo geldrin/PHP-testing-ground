@@ -577,7 +577,9 @@ class Live extends Player {
       'labels' => array(),
     );
 
-    $hascontent = $this->model->row['hascontent'];
+    //$hascontent = $this->model->row['hascontent'];
+    $stream = reset( $cfg['streams']['streams'] );
+    $hascontent = (bool) $stream['contentkeycode'];
     if ( $hascontent )
       $ret['content'] = array(
         'type' => 'application/x-mpegurl',

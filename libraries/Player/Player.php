@@ -204,6 +204,7 @@ abstract class Player {
           'content' => array(),
         ),
         'secondarySources' => array(),
+        'contentOnRight' => (bool) $this->row['slideonright'],
       ),
     );
 

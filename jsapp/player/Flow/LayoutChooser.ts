@@ -236,6 +236,11 @@ export default class LayoutChooser extends BasePlugin {
 
     let masterLeft: 0 | "auto" = 0;
     let masterRight: 0 | "auto" = "auto";
+    if (!this.cfg.contentOnRight) {
+      masterLeft = "auto";
+      masterRight = 0;
+    }
+
     let masterZ = 10;
     let contentZ = 9;
     if (masterOnTop === false) {
