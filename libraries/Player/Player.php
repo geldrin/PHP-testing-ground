@@ -212,11 +212,23 @@ abstract class Player {
       $ret['vsq']['duration'] = $cfg['duration'];
 
     $streams = $this->getFlowStreams( $cfg );
+    if ( $streams['intro'] )
+      $ret['clip']['sources'][] = array(
+        'type' => $streams['intro']['type'],
+        'src'  => $streams['intro']['url'],
+      );
+
     $ret['clip']['sources'][] = array(
       'type' => $streams['master']['type'],
       'src'  => $streams['master']['url'],
     );
     $ret['vsq']['labels']['master'] = $streams['master']['labels'];
+
+    if ( $streams['outro'] )
+      $ret['clip']['sources'][] = array(
+        'type' => $streams['outro']['type'],
+        'src'  => $streams['outro']['url'],
+      );
 
     if ( empty( $streams['content'] ) )
       return $ret;

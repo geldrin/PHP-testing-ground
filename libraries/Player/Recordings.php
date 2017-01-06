@@ -198,10 +198,7 @@ class Recordings extends Player {
       'outro'   => array(),
     );
 
-    if ( isset( $data['versions'] ) )
-      $versions = $data['versions'];
-    else
-      $versions = $this->model->getVersions();
+    $versions = $data['versions'];
 
     if ( $data['hds'] ) {
       $ret['hds']['master'] = $this->getMediaUrl(
@@ -236,42 +233,14 @@ class Recordings extends Player {
     if ( !$this->row['introrecordingid'] and !$this->row['outrorecordingid'] )
       return $ret;
 
-    $ids     = array();
-    $ret     = array();
-    $introid = 0;
-    $outroid = 0;
-
-    if ( $this->row['introrecordingid'] ) {
-
-      $ids[]   = $this->row['introrecordingid'];
-      $introid = $this->row['introrecordingid'];
-
-    }
-
-    if ( $this->row['outrorecordingid'] ) {
-
-      $ids[]   = $this->row['outrorecordingid'];
-      $outroid = $this->row['outrorecordingid'];
-
-    }
-
-    $versions = $this->model->getVersions( $ids );
-    if ( empty( $versions['master']['desktop'] ) )
-      throw new \Exception("The intro/outro does not have desktopcompatible non-content recordings!");
-
     $type = $data['hds']? 'smil': 'default';
-    foreach( $versions['master']['desktop'] as $version ) {
-
-      if ( $version['recordingid'] == $introid )
-        $key = 'intro';
-      else if ( $version['recordingid'] == $outroid )
-        $key = 'outro';
-      else // not possible
-        throw new \Exception("Invalid version in getIntroOutroFlashdata, neither intro nor outro!");
-
-      $ret[ $key ][] = array(
-        'url' => $this->getMediaUrl( $type, $version, null )
-      );
+    foreach( array('introversions', 'outroversions') as $key ) {
+      $flashkey = str_replace('versions', '', $key );
+      foreach( $data[ $key ] as $version ) {
+        $ret[ $flashkey ][] = array(
+          'url' => $this->getMediaUrl( $type, $version, null )
+        );
+      }
     }
 
     return $ret;
@@ -365,6 +334,38 @@ class Recordings extends Player {
     return $ret;
   }
 
+  private function assignIntroOutroVersions( &$cfg ) {
+    $ids     = array();
+    $introid = 0;
+    $outroid = 0;
+
+    if ( $this->row['introrecordingid'] ) {
+      $ids[]   = $this->row['introrecordingid'];
+      $introid = $this->row['introrecordingid'];
+    }
+    if ( $this->row['outrorecordingid'] ) {
+      $ids[]   = $this->row['outrorecordingid'];
+      $outroid = $this->row['outrorecordingid'];
+    }
+
+    if ( empty( $ids ) )
+      return $cfg;
+
+    $versions = $this->model->getVersions( $ids );
+    foreach( $versions['master']['desktop'] as $version ) {
+      if ( $version['recordingid'] == $introid )
+        $key = 'intro';
+      else if ( $version['recordingid'] == $outroid )
+        $key = 'outro';
+      else
+        throw new \Exception("Invalid version in getIntroOutroFlashdata, neither intro nor outro!");
+
+      $cfg[ $key . 'versions' ][] = $version;
+    }
+
+    return $cfg;
+  }
+
   protected function getConfig( $info, $isembed ) {
     $this->bootstrap->includeTemplatePlugin('indexphoto');
 
@@ -415,6 +416,8 @@ class Recordings extends Player {
         'subtype' => $info['flashplayersubtype'],
         'params'  => $info['flashplayerparams'],
       ),
+      'introversions' => array(),
+      'outroversions' => array(),
     );
 
     if ( $this->bootstrap->config['forcesecureapiurl'] )
@@ -450,6 +453,13 @@ class Recordings extends Player {
       $data['tokenauth'] = true;
       $data['token'] = $info['token'];
     }
+
+    if ( isset( $info['versions'] ) )
+      $data['versions'] = $info['versions'];
+    else
+      $data['versions'] = $this->model->getVersions();
+
+    $this->assignIntroOutroVersions( $data );
 
     $needrecommendation = !$info['organization']['isrecommendationdisabled'];
     // ha tokenauth akkor nincs ajanlo
@@ -729,10 +739,7 @@ class Recordings extends Player {
   }
 
   protected function getFlowStreams( $cfg ) {
-    if ( isset( $cfg['versions'] ) )
-      $versions = $cfg['versions'];
-    else
-      $versions = $this->model->getVersions();
+    $versions = $cfg['versions'];
 
     $ret = array(
       'master'  => array(),
@@ -763,7 +770,28 @@ class Recordings extends Player {
     foreach( $versions['content']['desktop'] as $version )
       $ret['content']['labels'][] = $version['qualitytag'];
 
-    // TODO intro outro
+    if ( $cfg['introversions'] ) {
+      $introversion = reset( $cfg['introversions'] );
+      $ret['intro'] = array(
+        'type' => 'application/x-mpegurl',
+        'url'  => $this->getFlowUrl( $cfg, 'vodabr', $introversion ),
+        'labels' => array(),
+      );
+      foreach( $cfg['introversions'] as $version )
+        $ret['intro']['labels'][] = $version['qualitytag'];
+    }
+
+    if ( $cfg['outroversions'] ) {
+      $outroversion = reset( $cfg['outroversions'] );
+      $ret['outro'] = array(
+        'type' => 'application/x-mpegurl',
+        'url'  => $this->getFlowUrl( $cfg, 'vodabr', $outroversion ),
+        'labels' => array(),
+      );
+      foreach( $cfg['outroversions'] as $version )
+        $ret['outro']['labels'][] = $version['qualitytag'];
+    }
+
     return $ret;
   }
 
