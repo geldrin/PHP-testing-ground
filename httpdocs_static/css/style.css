@@ -4125,6 +4125,10 @@ table.paging tr.even {
 #player .vsq-quality-selector li.active {
   background: #ccc;
 }
+#player .vsq-quality-selector li.current {
+  background: #999;
+}
+
 #player .is-finished .fp-ui {
   background: url(images/icons/player_replay.png) center no-repeat;
 }

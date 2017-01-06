@@ -658,7 +658,7 @@ export class Flow {
     this.hlsEngines[type] = hls;
 
     for (let i = this.plugins.length - 1; i >= 0; i--)
-      this.plugins[i].setupHLS(hls);
+      this.plugins[i].setupHLS(hls, type);
   }
 
   public load(video: FlowVideo): void {

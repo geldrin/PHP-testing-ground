@@ -36,7 +36,7 @@ export default class QualityChooser extends BasePlugin {
          )
         active = ' class="active"';
 
-      html += `<li${active} data-quality="${label.toLowerCase()}">${Escape.HTML(label)}</li>`;
+      html += `<li${active} data-level="${i - 1}" data-quality="${label.toLowerCase()}">${Escape.HTML(label)}</li>`;
     }
     html += `</ul>`;
     this.root.find(".fp-ui").append(html);
@@ -77,7 +77,7 @@ export default class QualityChooser extends BasePlugin {
     this.root.find(".vsq-quality-selector").remove();
   }
 
-  public setupHLS(hls: any): void {
+  public setupHLS(hls: any, type: number): void {
     hls.on(Hls.Events.MANIFEST_PARSED, (event: string, data: any): void => {
       hls.startLoad(hls.config.startPosition);
 
@@ -87,6 +87,26 @@ export default class QualityChooser extends BasePlugin {
       hls.startLevel = startLevel;
       hls.loadLevel = startLevel;
     });
+
+    if (type !== Flow.MASTER)
+      return;
+
+    hls.on(Hls.Events.LEVEL_SWITCH, (event: string, data: any): void => {
+      this.root.find('.vsq-quality-selector li').removeClass("current");
+      let elem = this.findQualityElem(data.level);
+      elem.addClass("current");
+    });
+  }
+
+  private findQualityElem(level: number): JQuery {
+    if (this.cfg.labels.master[level] == null)
+      throw new Error("The video just switched to an unexpected quality level: " + level);
+
+    let ret = this.root.find('.vsq-quality-selector li[data-level="' + level + '"]');
+    if (ret.length === 0)
+      throw new Error("No element found with the given level: " + level);
+
+    return ret;
   }
 
   private getQualityIndex(quality: string): number {

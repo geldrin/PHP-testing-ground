@@ -35,7 +35,7 @@ export abstract class BasePlugin {
     return event + postfix;
   }
 
-  public setupHLS(hls: any): void {
+  public setupHLS(hls: any, type: number): void {
     // direkt nem csinal semmit
   }
 

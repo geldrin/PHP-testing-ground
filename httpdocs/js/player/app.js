@@ -297,7 +297,7 @@ System.register("player/Flow/BasePlugin", ["player/Flow"], function (exports_6, 
                         return postfix;
                     return event + postfix;
                 };
-                BasePlugin.prototype.setupHLS = function (hls) {
+                BasePlugin.prototype.setupHLS = function (hls, type) {
                 };
                 return BasePlugin;
             }());
@@ -571,7 +571,7 @@ System.register("player/Flow/QualityChooser", ["player/Flow", "player/Flow/BaseP
                         if ((i === 0 && this.selectedQuality === "auto") ||
                             label === this.selectedQuality)
                             active = ' class="active"';
-                        html += "<li" + active + " data-quality=\"" + label.toLowerCase() + "\">" + Escape_1.default.HTML(label) + "</li>";
+                        html += "<li" + active + " data-level=\"" + (i - 1) + "\" data-quality=\"" + label.toLowerCase() + "\">" + Escape_1.default.HTML(label) + "</li>";
                     }
                     html += "</ul>";
                     this.root.find(".fp-ui").append(html);
@@ -602,7 +602,7 @@ System.register("player/Flow/QualityChooser", ["player/Flow", "player/Flow/BaseP
                 QualityChooser.prototype.destroy = function () {
                     this.root.find(".vsq-quality-selector").remove();
                 };
-                QualityChooser.prototype.setupHLS = function (hls) {
+                QualityChooser.prototype.setupHLS = function (hls, type) {
                     var _this = this;
                     hls.on(Hls.Events.MANIFEST_PARSED, function (event, data) {
                         hls.startLoad(hls.config.startPosition);
@@ -610,6 +610,21 @@ System.register("player/Flow/QualityChooser", ["player/Flow", "player/Flow/BaseP
                         hls.startLevel = startLevel;
                         hls.loadLevel = startLevel;
                     });
+                    if (type !== Flow_3.Flow.MASTER)
+                        return;
+                    hls.on(Hls.Events.LEVEL_SWITCH, function (event, data) {
+                        _this.root.find('.vsq-quality-selector li').removeClass("current");
+                        var elem = _this.findQualityElem(data.level);
+                        elem.addClass("current");
+                    });
+                };
+                QualityChooser.prototype.findQualityElem = function (level) {
+                    if (this.cfg.labels.master[level] == null)
+                        throw new Error("The video just switched to an unexpected quality level: " + level);
+                    var ret = this.root.find('.vsq-quality-selector li[data-level="' + level + '"]');
+                    if (ret.length === 0)
+                        throw new Error("No element found with the given level: " + level);
+                    return ret;
                 };
                 QualityChooser.prototype.getQualityIndex = function (quality) {
                     for (var i = this.cfg.labels.master.length - 1; i >= 0; i--) {
@@ -1095,7 +1110,7 @@ System.register("player/Flow", ["player/Flow/LayoutChooser", "player/Flow/Qualit
                     hls.attachMedia(this.videoTags[type]);
                     this.hlsEngines[type] = hls;
                     for (var i = this.plugins.length - 1; i >= 0; i--)
-                        this.plugins[i].setupHLS(hls);
+                        this.plugins[i].setupHLS(hls, type);
                 };
                 Flow.prototype.load = function (video) {
                     var _this = this;
