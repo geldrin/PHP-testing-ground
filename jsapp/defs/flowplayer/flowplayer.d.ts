@@ -43,6 +43,8 @@ interface FlowVideo {
   type: string;
   src: string;
   autoplay: boolean;
+  index: number;
+  is_last: boolean;
 }
 
 interface FlowSupport {

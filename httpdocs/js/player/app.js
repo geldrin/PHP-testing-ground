@@ -560,9 +560,9 @@ System.register("player/Flow/QualityChooser", ["player/Flow", "player/Flow/BaseP
                 }
                 QualityChooser.prototype.init = function () {
                     var _this = this;
-                    if (this.cfg.labels.master.length === 0)
+                    if (this.cfg.labels.length === 0)
                         return;
-                    var levels = this.cfg.labels.master.slice(0);
+                    var levels = this.cfg.labels.slice(0);
                     levels.unshift("Auto");
                     var html = "<ul class=\"vsq-quality-selector\">";
                     for (var i = 0; i < levels.length; ++i) {
@@ -619,7 +619,7 @@ System.register("player/Flow/QualityChooser", ["player/Flow", "player/Flow/BaseP
                     });
                 };
                 QualityChooser.prototype.findQualityElem = function (level) {
-                    if (this.cfg.labels.master[level] == null)
+                    if (this.cfg.labels[level] == null)
                         throw new Error("The video just switched to an unexpected quality level: " + level);
                     var ret = this.root.find('.vsq-quality-selector li[data-level="' + level + '"]');
                     if (ret.length === 0)
@@ -627,8 +627,8 @@ System.register("player/Flow/QualityChooser", ["player/Flow", "player/Flow/BaseP
                     return ret;
                 };
                 QualityChooser.prototype.getQualityIndex = function (quality) {
-                    for (var i = this.cfg.labels.master.length - 1; i >= 0; i--) {
-                        var label = this.cfg.labels.master[i];
+                    for (var i = this.cfg.labels.length - 1; i >= 0; i--) {
+                        var label = this.cfg.labels[i];
                         if (label === quality)
                             return i;
                     }
@@ -668,6 +668,7 @@ System.register("player/Flow", ["player/Flow/LayoutChooser", "player/Flow/Qualit
                     this.videoInfo = [];
                     this.hlsEngines = [];
                     this.eventsInitialized = false;
+                    this.doNotStartContent = false;
                     this.activeQualityClass = "active";
                     this.mse = MediaSource || WebKitMediaSource;
                     this.maxLevel = 0;
@@ -820,24 +821,32 @@ System.register("player/Flow", ["player/Flow/LayoutChooser", "player/Flow/Qualit
                     }
                 };
                 Flow.prototype.handleLoadedData = function (e) {
-                    this.loadedCount++;
-                    var vidCount = 1 + this.cfg.secondarySources.length;
-                    if (this.loadedCount != vidCount) {
-                        e.stopImmediatePropagation();
-                        return false;
+                    if (this.player.video.index === this.cfg.masterIndex) {
+                        this.loadedCount++;
+                        var vidCount = 1 + this.cfg.secondarySources.length;
+                        if (this.loadedCount != vidCount) {
+                            e.stopImmediatePropagation();
+                            return false;
+                        }
                     }
                     if (vidCount > 1 &&
-                        this.videoTags[Flow.CONTENT].duration > this.videoTags[Flow.MASTER].duration)
+                        this.videoTags[Flow.CONTENT].duration > (this.cfg.duration - 1))
                         this.longerType = Flow.CONTENT;
-                    var tag = this.videoTags[this.longerType];
+                    var tag;
+                    if (this.doNotStartContent)
+                        tag = this.videoTags[Flow.MASTER];
+                    else
+                        tag = this.videoTags[this.longerType];
                     var data = jQuery.extend(this.player.video, {
-                        duration: this.cfg.duration,
+                        duration: tag.duration,
                         seekable: tag.seekable.end(0),
                         width: tag.videoWidth,
                         height: tag.videoHeight,
                         url: this.videoInfo[Flow.MASTER].src
                     });
                     this.triggerPlayer("ready", data);
+                    if (this.player.video.index === this.cfg.masterIndex && this.cfg.masterIndex > 0)
+                        this.tagCall('play');
                     return false;
                 };
                 Flow.prototype.handlePlay = function (e) {
@@ -850,8 +859,12 @@ System.register("player/Flow", ["player/Flow/LayoutChooser", "player/Flow/Qualit
                         return false;
                     }
                     this.removePoster();
-                    if (!this.hlsConf.bufferWhilePaused)
-                        this.hlsCall('startLoad', [tag.currentTime]);
+                    if (!this.hlsConf.bufferWhilePaused) {
+                        if (this.doNotStartContent)
+                            this.hlsEngines[Flow.MASTER].startLoad(tag.currentTime);
+                        else
+                            this.hlsCall('startLoad', [tag.currentTime]);
+                    }
                     this.triggerPlayer("resume", undefined);
                 };
                 Flow.prototype.handlePause = function (e) {
@@ -867,12 +880,12 @@ System.register("player/Flow", ["player/Flow/LayoutChooser", "player/Flow/Qualit
                 };
                 Flow.prototype.handleEnded = function (e) {
                     var type = this.getTypeFromEvent(e);
-                    if (type !== this.longerType) {
+                    if ((this.doNotStartContent && type !== Flow.MASTER) ||
+                        (!this.doNotStartContent && type !== this.longerType)) {
                         e.stopImmediatePropagation();
                         return false;
                     }
                     var video = this.player.video;
-                    var tag = this.videoTags[this.longerType];
                     this.hlsCall('trigger', [
                         Hls.Events.BUFFER_FLUSHING,
                         {
@@ -881,7 +894,15 @@ System.register("player/Flow", ["player/Flow/LayoutChooser", "player/Flow/Qualit
                         }
                     ]);
                     this.tagCall('pause');
-                    this.triggerPlayer("finish", undefined);
+                    if (this.doNotStartContent && !this.player.video.is_last) {
+                        this.player.next();
+                        if (this.player.video.index === 0 && this.cfg.masterIndex !== 0) {
+                            this.player.removePlaylistItem(0);
+                            this.cfg.masterIndex--;
+                        }
+                    }
+                    if (this.player.video.is_last)
+                        this.triggerPlayer("finish", undefined);
                 };
                 Flow.prototype.handleProgress = function (e) {
                     var type = this.getTypeFromEvent(e);
@@ -889,7 +910,11 @@ System.register("player/Flow", ["player/Flow/LayoutChooser", "player/Flow/Qualit
                         e.stopImmediatePropagation();
                         return false;
                     }
-                    var tag = this.videoTags[this.longerType];
+                    var tag;
+                    if (this.doNotStartContent)
+                        tag = this.videoTags[Flow.MASTER];
+                    else
+                        tag = this.videoTags[this.longerType];
                     var buffer = 0;
                     try {
                         var buffered = tag.buffered;
@@ -933,9 +958,13 @@ System.register("player/Flow", ["player/Flow/LayoutChooser", "player/Flow/Qualit
                 };
                 Flow.prototype.handleTimeUpdate = function (e) {
                     var type = this.getTypeFromEvent(e);
-                    if (type !== this.longerType) {
+                    if ((this.doNotStartContent && type !== Flow.MASTER) || type !== this.longerType) {
                         e.stopImmediatePropagation();
                         return false;
+                    }
+                    if (this.doNotStartContent) {
+                        this.triggerPlayer("progress", this.videoTags[Flow.MASTER].currentTime);
+                        return;
                     }
                     var tag = this.videoTags[this.longerType];
                     this.triggerPlayer("progress", tag.currentTime);
@@ -989,7 +1018,8 @@ System.register("player/Flow", ["player/Flow/LayoutChooser", "player/Flow/Qualit
                     this.player.trigger("error", [this.player, arg]);
                 };
                 Flow.prototype.triggerPlayer = function (event, data) {
-                    this.log("[flow event]", event, data);
+                    if (event !== "buffer")
+                        this.log("[flow event]", event, data);
                     this.player.trigger(event, [this.player, data]);
                     this.hideFlowLogo();
                 };
@@ -1025,7 +1055,8 @@ System.register("player/Flow", ["player/Flow/LayoutChooser", "player/Flow/Qualit
                     jQuery.each(events, function (videoEvent, flowEvent) {
                         videoEvent = _this.eventName(videoEvent);
                         sources.on(videoEvent, function (e) {
-                            _this.log("event", videoEvent, flowEvent, e);
+                            if (e.type !== "progress")
+                                _this.log("event", videoEvent, flowEvent, e);
                             switch (videoEvent) {
                                 case "loadeddata.vsq":
                                     return _this.handleLoadedData(e);
@@ -1114,10 +1145,20 @@ System.register("player/Flow", ["player/Flow/LayoutChooser", "player/Flow/Qualit
                 };
                 Flow.prototype.load = function (video) {
                     var _this = this;
+                    this.doNotStartContent = true;
+                    if ((video.index === 0 && video.is_last) || video.index === this.cfg.masterIndex)
+                        this.doNotStartContent = false;
+                    if (video.index === this.cfg.masterIndex && this.cfg.masterIndex > 0)
+                        video.autoplay = true;
                     var root = this.root.find('.fp-player');
                     root.find('img').remove();
                     this.hlsConf = jQuery.extend(this.hlsConf, this.player.conf.hlsjs, this.player.conf.clip.hlsjs, video.hlsjs);
-                    if (this.cfg.secondarySources.length !== 0) {
+                    if (video.index > this.cfg.masterIndex && this.videoTags[Flow.CONTENT]) {
+                        this.destroyVideoTag(Flow.CONTENT);
+                        this.videoTags[Flow.CONTENT] = null;
+                    }
+                    if (video.index === this.cfg.masterIndex &&
+                        this.cfg.secondarySources.length !== 0) {
                         if (this.videoTags[Flow.CONTENT])
                             this.destroyVideoTag(Flow.CONTENT);
                         var secondVideo = jQuery.extend(true, {}, video);
@@ -1138,6 +1179,9 @@ System.register("player/Flow", ["player/Flow/LayoutChooser", "player/Flow/Qualit
                     this.videoTags[Flow.MASTER].load();
                     var engine = jQuery(this.videoTags[Flow.MASTER]);
                     engine.addClass('vsq-master');
+                    if (video.index !== this.cfg.masterIndex ||
+                        this.cfg.secondarySources.length === 0)
+                        engine.addClass("vsq-fullscale");
                     root.prepend(engine);
                     this.setupHLS(Flow.MASTER);
                     this.player.on(this.eventName("error"), function () {
@@ -1153,6 +1197,10 @@ System.register("player/Flow", ["player/Flow/LayoutChooser", "player/Flow/Qualit
                     this.tagCall('pause');
                 };
                 Flow.prototype.resume = function () {
+                    if (this.doNotStartContent) {
+                        this.videoTags[Flow.MASTER].play();
+                        return;
+                    }
                     this.tagCall('play');
                 };
                 Flow.prototype.speed = function (speed) {
@@ -1178,6 +1226,10 @@ System.register("player/Flow", ["player/Flow/LayoutChooser", "player/Flow/Qualit
                         this.videoTags.pop();
                 };
                 Flow.prototype.seek = function (to) {
+                    if (this.doNotStartContent) {
+                        this.videoTags[Flow.MASTER].currentTime = to;
+                        return;
+                    }
                     this.tagSet('currentTime', to);
                 };
                 Flow.prototype.pick = function (sources) {
@@ -1242,6 +1294,8 @@ System.register("player/Player", ["player/Flash", "player/Flow"], function (expo
                     for (var _i = 0; _i < arguments.length; _i++) {
                         params[_i] = arguments[_i];
                     }
+                    if (!this.cfg.debug)
+                        return;
                     params.unshift("[Player]");
                     console.log.apply(console, params);
                 };

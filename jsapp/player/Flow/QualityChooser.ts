@@ -19,11 +19,11 @@ export default class QualityChooser extends BasePlugin {
   }
 
   public init(): void {
-    if (this.cfg.labels.master.length === 0)
+    if (this.cfg.labels.length === 0)
       return;
 
     // copy quality array, assemble HTML
-    let levels = this.cfg.labels.master.slice(0);
+    let levels = this.cfg.labels.slice(0);
     levels.unshift("Auto");
 
     let html = `<ul class="vsq-quality-selector">`;
@@ -99,7 +99,7 @@ export default class QualityChooser extends BasePlugin {
   }
 
   private findQualityElem(level: number): JQuery {
-    if (this.cfg.labels.master[level] == null)
+    if (this.cfg.labels[level] == null)
       throw new Error("The video just switched to an unexpected quality level: " + level);
 
     let ret = this.root.find('.vsq-quality-selector li[data-level="' + level + '"]');
@@ -113,8 +113,8 @@ export default class QualityChooser extends BasePlugin {
     // az alap otlet hogy a playernek a konfiguracioban atadott sorrend
     // korrelal a quality verziok sorrendjevel, igy kozvetlenul beallithato
     // ez az index a hls-nek
-    for (var i = this.cfg.labels.master.length - 1; i >= 0; i--) {
-      let label = this.cfg.labels.master[i];
+    for (var i = this.cfg.labels.length - 1; i >= 0; i--) {
+      let label = this.cfg.labels[i];
       if (label === quality)
         return i;
     }

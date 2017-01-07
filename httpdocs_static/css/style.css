@@ -4083,7 +4083,7 @@ table.paging tr.even {
   width: 100%;
   height: 100%;
 }
-#player .vsq-singlevideo .vsq-engine {
+#player .vsq-engine.vsq-fullscale {
   width: 100%;
 }
 #player .vsq-engine.vsq-master {

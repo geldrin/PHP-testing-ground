@@ -170,41 +170,46 @@ abstract class Player {
 
   protected function getFlowConfig( $cfg ) {
     if ( !$cfg['hds'] )
-      return array();
+      throw new \Exception("Flowplayer only supported with HDS streams");
 
     $ret = array(
+
       // the video is loaded on demand, i.e. when the user starts playback with a click
       'splash' => false,
       // By default the embed feature loads the embed script and Flowplayer assets from our CDN. This can be customized in the embed configuration object if you prefer to host the files yourself.
       'embed' => false,
+      // playlistbe egymas utan tovabb
+      'advance' => true,
       // minden video wide-screen
       'ratio' => 9/16,
       'live'  => $this->type === 'live',
-      'clip'  => array(
-        // Set a title for this clip. Displayed in a top bar when hovering over the player.
-        'title'   => isset( $cfg['title'] )? $cfg['title']: $this->row['title'],
-        'sources' => array(),
-        'hlsjs'   => array(
-          // Whether manual HLS quality switching should be smooth - level change with begin of next segment - or instant. Setting this to false can cause a playback pause on switch.
-          'smoothSwitching'     => false,
-          // Set to true if you want non fatal hls.js playback errors to trigger Flowplayer errors. Useful for debugging streams and live stream maintenance.
-          'strict'              => false,
-          // do not die on fatal errors
-          'recoverMediaError'   => true,
-          'recoverNetworkError' => true,
-        ),
-      ),
+      'playlist' => array(),
       'vsq' => array(
+        'debug'    => true,
         'type'     => $this->type,
         'duration' => -1,
+        // a master video hanyadik a sorban amit jatszani kell
+        'masterIndex' => 0,
         'autoplay' => false,
         // a minosegi valtozatok labeljei, kulon a master es contentnek
-        'labels' => array(
-          'master'  => array(),
-          'content' => array(),
-        ),
+        'labels' => array(),
         'secondarySources' => array(),
         'contentOnRight' => (bool) $this->row['slideonright'],
+      ),
+    );
+
+    $newclip = array(
+      // Set a title for this clip. Displayed in a top bar when hovering over the player.
+      'title'   => isset( $cfg['title'] )? $cfg['title']: $this->row['title'],
+      'sources' => array(),
+      'hlsjs'   => array(
+        // Whether manual HLS quality switching should be smooth - level change with begin of next segment - or instant. Setting this to false can cause a playback pause on switch.
+        'smoothSwitching'     => false,
+        // Set to true if you want non fatal hls.js playback errors to trigger Flowplayer errors. Useful for debugging streams and live stream maintenance.
+        'strict'              => false,
+        // do not die on fatal errors
+        'recoverMediaError'   => true,
+        'recoverNetworkError' => true,
       ),
     );
 
@@ -212,23 +217,33 @@ abstract class Player {
       $ret['vsq']['duration'] = $cfg['duration'];
 
     $streams = $this->getFlowStreams( $cfg );
-    if ( $streams['intro'] )
-      $ret['clip']['sources'][] = array(
+    if ( $streams['intro'] ) {
+      $ret['vsq']['masterIndex']++;
+      $clip = $newclip;
+      $clip['sources'][] = array(
         'type' => $streams['intro']['type'],
         'src'  => $streams['intro']['url'],
       );
+      $ret['playlist'][] = $clip;
+    }
 
-    $ret['clip']['sources'][] = array(
+    // master
+    $clip = $newclip;
+    $clip['sources'][] = array(
       'type' => $streams['master']['type'],
       'src'  => $streams['master']['url'],
     );
-    $ret['vsq']['labels']['master'] = $streams['master']['labels'];
+    $ret['playlist'][] = $clip;
+    $ret['vsq']['labels'] = $streams['master']['labels'];
 
-    if ( $streams['outro'] )
-      $ret['clip']['sources'][] = array(
+    if ( $streams['outro'] ) {
+      $clip = $newclip;
+      $clip['sources'][] = array(
         'type' => $streams['outro']['type'],
         'src'  => $streams['outro']['url'],
       );
+      $ret['playlist'][] = $clip;
+    }
 
     if ( empty( $streams['content'] ) )
       return $ret;
@@ -237,7 +252,6 @@ abstract class Player {
       'type' => $streams['content']['type'],
       'src'  => $streams['content']['url'],
     );
-    $ret['vsq']['labels']['content'] = $streams['content']['labels'];
 
     return $ret;
   }

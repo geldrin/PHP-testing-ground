@@ -24,6 +24,9 @@ export default class Player {
   }
 
   public log(...params: Object[]): void {
+    if (!this.cfg.debug)
+      return;
+
     params.unshift("[Player]");
     console.log.apply(console, params);
   }
