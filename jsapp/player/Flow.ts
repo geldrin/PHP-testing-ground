@@ -250,21 +250,17 @@ export class Flow {
         e.stopImmediatePropagation();
         return false;
       }
-    }
 
-    // mivel a default longerType ertek a Flow.MASTER igy csak egy esetet kell nezni
-    if (
-        vidCount > 1 &&
-        this.videoTags[Flow.CONTENT].duration > (this.cfg.duration - 1)
-       )
-      this.longerType = Flow.CONTENT;
+      // mivel a default longerType ertek a Flow.MASTER igy csak egy esetet kell nezni
+      if (
+          vidCount > 1 &&
+          this.videoTags[Flow.CONTENT].duration > (this.cfg.duration - 1)
+         )
+        this.longerType = Flow.CONTENT;
+    } else // hogy a longerType mindig ertelmes legyen akkor is ha outro kovetkezik
+      this.longerType = Flow.MASTER;
 
-    let tag: HTMLVideoElement;
-    if (this.doNotStartContent)
-      tag = this.videoTags[Flow.MASTER];
-    else
-      tag = this.videoTags[this.longerType];
-
+    let tag = this.videoTags[this.longerType];
     let data = jQuery.extend(this.player.video, {
       duration: tag.duration,
       seekable: tag.seekable.end(0),
@@ -371,12 +367,7 @@ export class Flow {
       return false;
     }
 
-    let tag: HTMLVideoElement;
-    if (this.doNotStartContent)
-      tag = this.videoTags[Flow.MASTER];
-    else
-      tag = this.videoTags[this.longerType];
-
+    let tag = this.videoTags[this.longerType];
     let buffer: number = 0;
     try {
       let buffered = tag.buffered;
@@ -428,14 +419,12 @@ export class Flow {
 
     // ha a contenthez nem szabad nyulni mert eppen nem a konkret master video megy
     // vagy ha nem a hoszabbik tipus vagyunk
-    if ((this.doNotStartContent && type !== Flow.MASTER) || type !== this.longerType) {
+    if (
+        (this.doNotStartContent && type !== Flow.MASTER) ||
+        (!this.doNotStartContent && type !== this.longerType)
+       ) {
       e.stopImmediatePropagation();
       return false;
-    }
-
-    if (this.doNotStartContent) {
-      this.triggerPlayer("progress", this.videoTags[Flow.MASTER].currentTime);
-      return;
     }
 
     let tag = this.videoTags[this.longerType];

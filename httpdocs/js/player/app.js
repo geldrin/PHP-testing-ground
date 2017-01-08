@@ -828,15 +828,13 @@ System.register("player/Flow", ["player/Flow/LayoutChooser", "player/Flow/Qualit
                             e.stopImmediatePropagation();
                             return false;
                         }
+                        if (vidCount > 1 &&
+                            this.videoTags[Flow.CONTENT].duration > (this.cfg.duration - 1))
+                            this.longerType = Flow.CONTENT;
                     }
-                    if (vidCount > 1 &&
-                        this.videoTags[Flow.CONTENT].duration > (this.cfg.duration - 1))
-                        this.longerType = Flow.CONTENT;
-                    var tag;
-                    if (this.doNotStartContent)
-                        tag = this.videoTags[Flow.MASTER];
                     else
-                        tag = this.videoTags[this.longerType];
+                        this.longerType = Flow.MASTER;
+                    var tag = this.videoTags[this.longerType];
                     var data = jQuery.extend(this.player.video, {
                         duration: tag.duration,
                         seekable: tag.seekable.end(0),
@@ -910,11 +908,7 @@ System.register("player/Flow", ["player/Flow/LayoutChooser", "player/Flow/Qualit
                         e.stopImmediatePropagation();
                         return false;
                     }
-                    var tag;
-                    if (this.doNotStartContent)
-                        tag = this.videoTags[Flow.MASTER];
-                    else
-                        tag = this.videoTags[this.longerType];
+                    var tag = this.videoTags[this.longerType];
                     var buffer = 0;
                     try {
                         var buffered = tag.buffered;
@@ -958,13 +952,10 @@ System.register("player/Flow", ["player/Flow/LayoutChooser", "player/Flow/Qualit
                 };
                 Flow.prototype.handleTimeUpdate = function (e) {
                     var type = this.getTypeFromEvent(e);
-                    if ((this.doNotStartContent && type !== Flow.MASTER) || type !== this.longerType) {
+                    if ((this.doNotStartContent && type !== Flow.MASTER) ||
+                        (!this.doNotStartContent && type !== this.longerType)) {
                         e.stopImmediatePropagation();
                         return false;
-                    }
-                    if (this.doNotStartContent) {
-                        this.triggerPlayer("progress", this.videoTags[Flow.MASTER].currentTime);
-                        return;
                     }
                     var tag = this.videoTags[this.longerType];
                     this.triggerPlayer("progress", tag.currentTime);
