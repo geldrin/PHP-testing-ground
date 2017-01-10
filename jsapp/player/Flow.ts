@@ -308,6 +308,19 @@ export class Flow {
 
   private handlePause(e: Event): boolean | undefined {
     let type = this.getTypeFromEvent(e);
+    let tag = e.currentTarget as HTMLVideoElement;
+    // jon egy pause event akkor ha vege az adott videonak
+    // ezt a pause eventet el kell nyelnunk ha nem introOrOutro es
+    // a tipus nem a hoszabbik felvetel
+    if (
+         !this.introOrOutro && type !== this.longerType &&
+         tag.currentTime >= tag.duration
+       ) {
+      e.stopImmediatePropagation();
+      return false;
+    }
+
+    // amugy a content pause nem erdekel minket abszolut
     if (type === Flow.CONTENT) {
       e.stopImmediatePropagation();
       return false;
@@ -330,7 +343,6 @@ export class Flow {
         (!this.introOrOutro && type !== this.longerType)
        ) {
       e.stopImmediatePropagation();
-      console.log("cancelling ended event for event:", e);
       return false;
     }
 
@@ -540,7 +552,7 @@ export class Flow {
     jQuery.each(events, (videoEvent: string, flowEvent: string): void => {
       videoEvent = this.eventName(videoEvent);
       sources.on(videoEvent, (e: Event): boolean | undefined => {
-        if (e.type !== "progress")
+        if (e.type !== "timeupdate")
           this.log("event", videoEvent, flowEvent, e);
 
         switch(videoEvent) {

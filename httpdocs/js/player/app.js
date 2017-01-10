@@ -867,6 +867,12 @@ System.register("player/Flow", ["player/Flow/LayoutChooser", "player/Flow/Qualit
                 };
                 Flow.prototype.handlePause = function (e) {
                     var type = this.getTypeFromEvent(e);
+                    var tag = e.currentTarget;
+                    if (!this.introOrOutro && type !== this.longerType &&
+                        tag.currentTime >= tag.duration) {
+                        e.stopImmediatePropagation();
+                        return false;
+                    }
                     if (type === Flow.CONTENT) {
                         e.stopImmediatePropagation();
                         return false;
@@ -881,7 +887,6 @@ System.register("player/Flow", ["player/Flow/LayoutChooser", "player/Flow/Qualit
                     if ((this.introOrOutro && type !== Flow.MASTER) ||
                         (!this.introOrOutro && type !== this.longerType)) {
                         e.stopImmediatePropagation();
-                        console.log("cancelling ended event for event:", e);
                         return false;
                     }
                     var video = this.player.video;
@@ -1047,7 +1052,7 @@ System.register("player/Flow", ["player/Flow/LayoutChooser", "player/Flow/Qualit
                     jQuery.each(events, function (videoEvent, flowEvent) {
                         videoEvent = _this.eventName(videoEvent);
                         sources.on(videoEvent, function (e) {
-                            if (e.type !== "progress")
+                            if (e.type !== "timeupdate")
                                 _this.log("event", videoEvent, flowEvent, e);
                             switch (videoEvent) {
                                 case "loadeddata.vsq":
