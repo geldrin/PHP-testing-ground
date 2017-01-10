@@ -1227,24 +1227,21 @@ System.register("player/Flow", ["player/Flow/LayoutChooser", "player/Flow/Qualit
                         this.videoTags[Flow.MASTER].currentTime = to;
                         return;
                     }
-                    var playing = !this.videoTags[Flow.MASTER].paused;
-                    var contentEnded = false;
-                    if (this.cfg.secondarySources.length !== 0) {
-                        var content = this.videoTags[Flow.CONTENT];
-                        playing = playing || !content.paused;
-                        contentEnded =
-                            content.currentTime == content.duration &&
-                                content.duration < to;
+                    var tags = [];
+                    var playing = false;
+                    for (var i = this.videoTags.length - 1; i >= 0; i--) {
+                        var tag = this.videoTags[i];
+                        playing = playing || !tag.paused;
+                        if (tag.duration < to)
+                            tags.push(tag);
+                        else {
+                            tag.currentTime = tag.duration;
+                            tag.pause();
+                        }
                     }
-                    this.tagSet('currentTime', to);
-                    if (playing) {
-                        var master = this.videoTags[Flow.MASTER];
-                        var masterEnded = master.currentTime == master.duration && master.duration < to;
-                        if (contentEnded && !masterEnded)
-                            this.videoTags[Flow.MASTER].play();
-                        if (masterEnded && !contentEnded)
-                            this.videoTags[Flow.CONTENT].play();
-                    }
+                    this.setOnArray(tags, 'currentTime', to);
+                    if (playing)
+                        this.callOnArray(tags, 'play', []);
                 };
                 Flow.prototype.pick = function (sources) {
                     if (sources.length == 0)

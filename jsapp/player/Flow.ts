@@ -854,40 +854,27 @@ export class Flow {
       return;
     }
 
-    // lehetseges hogy az egyik video mar leallt mert veget ert, de a masik meg
-    // jatszodik, ezt akarjuk lekezelni
-    // ha barmelyik video eppen playing akkor elinditjuk a videokat a biztonsag
-    // kedveert
-    let playing = !this.videoTags[Flow.MASTER].paused;
-    let contentEnded = false;
-    if (this.cfg.secondarySources.length !== 0) {
-      let content = this.videoTags[Flow.CONTENT];
-      playing = playing || !content.paused;
+    // kigyujtjuk azokat a videokat amikben lehet oda seekelni ahova szeretnenk
+    // es megnezzuk hogy epp megy e valamelyik video (playing)
+    let tags: HTMLVideoElement = [];
+    let playing = false;
+    for (let i = this.videoTags.length - 1; i >= 0; i--) {
+      let tag = this.videoTags[i];
+      playing = playing || !tag.paused;
 
-      contentEnded =
-        content.currentTime == content.duration &&
-        content.duration < to
-      ;
+      if (tag.duration < to)
+        tags.push(tag);
+      else {
+        // ha nem lehet a videoban seekelni mert rovidebb akkor a vegere es pause
+        tag.currentTime = tag.duration;
+        tag.pause();
+      }
     }
 
-    // tobb video lehet, nem szamit hogy tag.duration < to
-    this.tagSet('currentTime', to);
-
-    // de csak azt a videot szabad inditani aminek nincs vege
-    if (playing) {
-      let master = this.videoTags[Flow.MASTER];
-      let masterEnded = master.currentTime == master.duration && master.duration < to;
-
-      if (contentEnded && !masterEnded)
-        this.videoTags[Flow.MASTER].play();
-      if (masterEnded && !contentEnded)
-        this.videoTags[Flow.CONTENT].play();
-
-      // ez lehetseges meg, csak ilyenkor nincs mit csinalni:
-      // (!contentEnded && !masterEnded) -> amugyis jatszodik minden
-      // ez nem lehetseges, de nem is lenne mit csinalni:
-      // (contentEnded && masterEnded) -> lehetetlen hogy a playing true legyen
-    }
+    // a maradek videokban ugrunk es ha elozoleg jatszodtak akkor inditjuk oket
+    this.setOnArray(tags, 'currentTime', to);
+    if (playing)
+      this.callOnArray(tags, 'play', []);
   }
 
   public pick(sources: FlowSource[]): FlowSource | null {
