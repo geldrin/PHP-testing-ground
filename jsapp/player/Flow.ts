@@ -254,13 +254,11 @@ export class Flow {
       // mivel a default longerType ertek a Flow.MASTER igy csak egy esetet kell nezni
       if (
           vidCount > 1 &&
-          this.videoTags[Flow.CONTENT].duration > (this.cfg.duration - 1)
+          this.videoTags[Flow.CONTENT].duration > this.videoTags[Flow.MASTER].duration
          )
         this.longerType = Flow.CONTENT;
     } else // hogy a longerType mindig ertelmes legyen akkor is ha outro kovetkezik
       this.longerType = Flow.MASTER;
-
-    console.log('longerType:', this.longerType, this.videoTags[Flow.CONTENT].duration, this.cfg.duration);
 
     let tag = this.videoTags[this.longerType];
     let data = jQuery.extend(this.player.video, {
@@ -332,6 +330,7 @@ export class Flow {
         (!this.introOrOutro && type !== this.longerType)
        ) {
       e.stopImmediatePropagation();
+      console.log("cancelling ended event for event:", e);
       return false;
     }
 

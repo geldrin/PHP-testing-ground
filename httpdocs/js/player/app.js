@@ -829,12 +829,11 @@ System.register("player/Flow", ["player/Flow/LayoutChooser", "player/Flow/Qualit
                             return false;
                         }
                         if (vidCount > 1 &&
-                            this.videoTags[Flow.CONTENT].duration > (this.cfg.duration - 1))
+                            this.videoTags[Flow.CONTENT].duration > this.videoTags[Flow.MASTER].duration)
                             this.longerType = Flow.CONTENT;
                     }
                     else
                         this.longerType = Flow.MASTER;
-                    console.log('longerType:', this.longerType, this.videoTags[Flow.CONTENT].duration, this.cfg.duration);
                     var tag = this.videoTags[this.longerType];
                     var data = jQuery.extend(this.player.video, {
                         duration: tag.duration,
@@ -882,6 +881,7 @@ System.register("player/Flow", ["player/Flow/LayoutChooser", "player/Flow/Qualit
                     if ((this.introOrOutro && type !== Flow.MASTER) ||
                         (!this.introOrOutro && type !== this.longerType)) {
                         e.stopImmediatePropagation();
+                        console.log("cancelling ended event for event:", e);
                         return false;
                     }
                     var video = this.player.video;
