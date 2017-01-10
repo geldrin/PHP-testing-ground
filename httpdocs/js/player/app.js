@@ -1052,7 +1052,7 @@ System.register("player/Flow", ["player/Flow/LayoutChooser", "player/Flow/Qualit
                     jQuery.each(events, function (videoEvent, flowEvent) {
                         videoEvent = _this.eventName(videoEvent);
                         sources.on(videoEvent, function (e) {
-                            if (e.type !== "timeupdate")
+                            if (e.type !== "progress" && e.type !== "timeupdate")
                                 _this.log("event", videoEvent, flowEvent, e);
                             switch (videoEvent) {
                                 case "loadeddata.vsq":
@@ -1227,7 +1227,12 @@ System.register("player/Flow", ["player/Flow/LayoutChooser", "player/Flow/Qualit
                         this.videoTags[Flow.MASTER].currentTime = to;
                         return;
                     }
+                    var playing = !this.videoTags[Flow.MASTER].paused;
+                    if (this.cfg.secondarySources.length !== 0)
+                        playing = playing || !this.videoTags[Flow.CONTENT].paused;
                     this.tagSet('currentTime', to);
+                    if (playing)
+                        this.tagCall('play');
                 };
                 Flow.prototype.pick = function (sources) {
                     if (sources.length == 0)

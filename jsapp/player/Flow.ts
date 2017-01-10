@@ -552,7 +552,7 @@ export class Flow {
     jQuery.each(events, (videoEvent: string, flowEvent: string): void => {
       videoEvent = this.eventName(videoEvent);
       sources.on(videoEvent, (e: Event): boolean | undefined => {
-        if (e.type !== "timeupdate")
+        if (e.type !== "progress" && e.type !== "timeupdate")
           this.log("event", videoEvent, flowEvent, e);
 
         switch(videoEvent) {
@@ -848,13 +848,25 @@ export class Flow {
   }
 
   public seek(to: number): void {
+    // tuti csak egy video van, egyszeru
     if (this.introOrOutro) {
       this.videoTags[Flow.MASTER].currentTime = to;
       return;
     }
 
-    // amugy minden videonak
+    // lehetseges hogy az egyik video mar leallt mert veget ert, de a masik meg
+    // jatszodik, ezt akarjuk lekezelni
+    // ha barmelyik video eppen playing akkor elinditjuk a videokat a biztonsag
+    // kedveert
+    let playing = !this.videoTags[Flow.MASTER].paused
+    if (this.cfg.secondarySources.length !== 0)
+      playing = playing || !this.videoTags[Flow.CONTENT].paused;
+
+    // tobb video lehet
     this.tagSet('currentTime', to);
+
+    if (playing)
+      this.tagCall('play');
   }
 
   public pick(sources: FlowSource[]): FlowSource | null {
