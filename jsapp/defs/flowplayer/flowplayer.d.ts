@@ -160,6 +160,9 @@ interface Flowplayer {
   unload(): Flowplayer;
   shutdown(): void;
   disable(flag?: string | boolean): Flowplayer;
+
+  next(index?: number): Flowplayer;
+  removePlaylistItem(index: number): Flowplayer;
 }
 
 declare module "flowplayer" {

@@ -17,7 +17,7 @@ export default class Config {
     return this.flashConfig;
   }
 
-  /** non-null false-y erteket vissza nincs kulcs */
+  /** non-null false-y erteket vissza ha nincs kulcs */
   private getFromKey(config: any, keys: string[]): Object {
     let key = keys.shift();
     if (key == null)
@@ -34,7 +34,7 @@ export default class Config {
     return "";
   }
 
-  /** non-null false-y erteket vissza nincs kulcs */
+  /** non-null false-y erteket vissza ha nincs kulcs */
   public get(key: string, def?: Object): Object {
     let keys = key.split('.');
     let ret = this.getFromKey(this.config, keys);

@@ -408,6 +408,9 @@ $config = array(
     'recording_synchronizationTimeMax' => 30.0,   // Max. skew (sec, float)
   ),
 
+  // a html5 playerhez ugyanaz mint fentebb, kliens oldalra logol!
+  'vsqplayer_debug' => false,
+
   // a minimum szabad hely gigabyte-ban ami folott engedjuk a feltoltest
   'upload_minimum_free_gigabytes' => 15,
 

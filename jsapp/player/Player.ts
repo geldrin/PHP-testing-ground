@@ -24,7 +24,7 @@ export default class Player {
   }
 
   public log(...params: Object[]): void {
-    if (!this.cfg.debug)
+    if (!this.cfg.get("flowplayer.vsq.debug"))
       return;
 
     params.unshift("[Player]");

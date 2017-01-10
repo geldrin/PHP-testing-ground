@@ -668,7 +668,7 @@ System.register("player/Flow", ["player/Flow/LayoutChooser", "player/Flow/Qualit
                     this.videoInfo = [];
                     this.hlsEngines = [];
                     this.eventsInitialized = false;
-                    this.doNotStartContent = false;
+                    this.introOrOutro = false;
                     this.activeQualityClass = "active";
                     this.mse = MediaSource || WebKitMediaSource;
                     this.maxLevel = 0;
@@ -858,7 +858,7 @@ System.register("player/Flow", ["player/Flow/LayoutChooser", "player/Flow/Qualit
                     }
                     this.removePoster();
                     if (!this.hlsConf.bufferWhilePaused) {
-                        if (this.doNotStartContent)
+                        if (this.introOrOutro)
                             this.hlsEngines[Flow.MASTER].startLoad(tag.currentTime);
                         else
                             this.hlsCall('startLoad', [tag.currentTime]);
@@ -878,8 +878,8 @@ System.register("player/Flow", ["player/Flow/LayoutChooser", "player/Flow/Qualit
                 };
                 Flow.prototype.handleEnded = function (e) {
                     var type = this.getTypeFromEvent(e);
-                    if ((this.doNotStartContent && type !== Flow.MASTER) ||
-                        (!this.doNotStartContent && type !== this.longerType)) {
+                    if ((this.introOrOutro && type !== Flow.MASTER) ||
+                        (!this.introOrOutro && type !== this.longerType)) {
                         e.stopImmediatePropagation();
                         return false;
                     }
@@ -892,7 +892,7 @@ System.register("player/Flow", ["player/Flow/LayoutChooser", "player/Flow/Qualit
                         }
                     ]);
                     this.tagCall('pause');
-                    if (this.doNotStartContent && !this.player.video.is_last) {
+                    if (this.introOrOutro && !this.player.video.is_last) {
                         this.player.next();
                         if (this.player.video.index === 0 && this.cfg.masterIndex !== 0) {
                             this.player.removePlaylistItem(0);
@@ -952,8 +952,8 @@ System.register("player/Flow", ["player/Flow/LayoutChooser", "player/Flow/Qualit
                 };
                 Flow.prototype.handleTimeUpdate = function (e) {
                     var type = this.getTypeFromEvent(e);
-                    if ((this.doNotStartContent && type !== Flow.MASTER) ||
-                        (!this.doNotStartContent && type !== this.longerType)) {
+                    if ((this.introOrOutro && type !== Flow.MASTER) ||
+                        (!this.introOrOutro && type !== this.longerType)) {
                         e.stopImmediatePropagation();
                         return false;
                     }
@@ -1136,9 +1136,9 @@ System.register("player/Flow", ["player/Flow/LayoutChooser", "player/Flow/Qualit
                 };
                 Flow.prototype.load = function (video) {
                     var _this = this;
-                    this.doNotStartContent = true;
+                    this.introOrOutro = true;
                     if ((video.index === 0 && video.is_last) || video.index === this.cfg.masterIndex)
-                        this.doNotStartContent = false;
+                        this.introOrOutro = false;
                     if (video.index === this.cfg.masterIndex && this.cfg.masterIndex > 0)
                         video.autoplay = true;
                     var root = this.root.find('.fp-player');
@@ -1146,7 +1146,7 @@ System.register("player/Flow", ["player/Flow/LayoutChooser", "player/Flow/Qualit
                     this.hlsConf = jQuery.extend(this.hlsConf, this.player.conf.hlsjs, this.player.conf.clip.hlsjs, video.hlsjs);
                     if (video.index > this.cfg.masterIndex && this.videoTags[Flow.CONTENT]) {
                         this.destroyVideoTag(Flow.CONTENT);
-                        this.videoTags[Flow.CONTENT] = null;
+                        delete (this.videoTags[Flow.CONTENT]);
                     }
                     if (video.index === this.cfg.masterIndex &&
                         this.cfg.secondarySources.length !== 0) {
@@ -1188,7 +1188,7 @@ System.register("player/Flow", ["player/Flow/LayoutChooser", "player/Flow/Qualit
                     this.tagCall('pause');
                 };
                 Flow.prototype.resume = function () {
-                    if (this.doNotStartContent) {
+                    if (this.introOrOutro) {
                         this.videoTags[Flow.MASTER].play();
                         return;
                     }
@@ -1217,7 +1217,7 @@ System.register("player/Flow", ["player/Flow/LayoutChooser", "player/Flow/Qualit
                         this.videoTags.pop();
                 };
                 Flow.prototype.seek = function (to) {
-                    if (this.doNotStartContent) {
+                    if (this.introOrOutro) {
                         this.videoTags[Flow.MASTER].currentTime = to;
                         return;
                     }
@@ -1285,7 +1285,7 @@ System.register("player/Player", ["player/Flash", "player/Flow"], function (expo
                     for (var _i = 0; _i < arguments.length; _i++) {
                         params[_i] = arguments[_i];
                     }
-                    if (!this.cfg.debug)
+                    if (!this.cfg.get("flowplayer.vsq.debug"))
                         return;
                     params.unshift("[Player]");
                     console.log.apply(console, params);

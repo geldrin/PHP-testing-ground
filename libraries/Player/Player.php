@@ -173,7 +173,6 @@ abstract class Player {
       throw new \Exception("Flowplayer only supported with HDS streams");
 
     $ret = array(
-
       // the video is loaded on demand, i.e. when the user starts playback with a click
       'splash' => false,
       // By default the embed feature loads the embed script and Flowplayer assets from our CDN. This can be customized in the embed configuration object if you prefer to host the files yourself.
@@ -185,7 +184,7 @@ abstract class Player {
       'live'  => $this->type === 'live',
       'playlist' => array(),
       'vsq' => array(
-        'debug'    => true,
+        'debug'    => $this->bootstrap->config['vsqplayer_debug'],
         'type'     => $this->type,
         'duration' => -1,
         // a master video hanyadik a sorban amit jatszani kell
@@ -223,6 +222,7 @@ abstract class Player {
       $clip['sources'][] = array(
         'type' => $streams['intro']['type'],
         'src'  => $streams['intro']['url'],
+        'vsq-labels' => $streams['intro']['labels'],
       );
       $ret['playlist'][] = $clip;
     }
@@ -232,15 +232,19 @@ abstract class Player {
     $clip['sources'][] = array(
       'type' => $streams['master']['type'],
       'src'  => $streams['master']['url'],
+      'vsq-labels' => $streams['master']['labels'],
     );
-    $ret['playlist'][] = $clip;
+    // TODO ezt akarjuk lecserelni majd dinamikusan a source labelekkel
+    // ugyhogy majd torolni kell
     $ret['vsq']['labels'] = $streams['master']['labels'];
+    $ret['playlist'][] = $clip;
 
     if ( $streams['outro'] ) {
       $clip = $newclip;
       $clip['sources'][] = array(
         'type' => $streams['outro']['type'],
         'src'  => $streams['outro']['url'],
+        'vsq-labels' => $streams['outro']['labels'],
       );
       $ret['playlist'][] = $clip;
     }
@@ -251,6 +255,7 @@ abstract class Player {
     $ret['vsq']['secondarySources'][] = array(
       'type' => $streams['content']['type'],
       'src'  => $streams['content']['url'],
+      'vsq-labels' => $streams['content']['labels'],
     );
 
     return $ret;

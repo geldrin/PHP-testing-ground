@@ -37,7 +37,7 @@ export class Flow {
   private volumeLevel: number;
   private eventsInitialized = false;
   private timer: number;
-  private doNotStartContent = false;
+  private introOrOutro = false;
 
   private activeQualityClass = "active";
   private mse = MediaSource || WebKitMediaSource;
@@ -297,7 +297,7 @@ export class Flow {
 
     this.removePoster();
     if (!this.hlsConf.bufferWhilePaused) {
-      if (this.doNotStartContent)
+      if (this.introOrOutro)
         this.hlsEngines[Flow.MASTER].startLoad(tag.currentTime);
       else
         this.hlsCall('startLoad', [tag.currentTime]);
@@ -326,8 +326,8 @@ export class Flow {
     // vagy kelett inditani contentet, es mostmar figyelni kell hogy a megfelelo
     //   tag befejezodeset nezzuk
     if (
-        (this.doNotStartContent && type !== Flow.MASTER) ||
-        (!this.doNotStartContent && type !== this.longerType)
+        (this.introOrOutro && type !== Flow.MASTER) ||
+        (!this.introOrOutro && type !== this.longerType)
        ) {
       e.stopImmediatePropagation();
       return false;
@@ -344,7 +344,7 @@ export class Flow {
 
     this.tagCall('pause');
 
-    if (this.doNotStartContent && !this.player.video.is_last) {
+    if (this.introOrOutro && !this.player.video.is_last) {
       this.player.next();
 
       // az intro csak egyszer jatszodik le, utana soha tobbet
@@ -420,8 +420,8 @@ export class Flow {
     // ha a contenthez nem szabad nyulni mert eppen nem a konkret master video megy
     // vagy ha nem a hoszabbik tipus vagyunk
     if (
-        (this.doNotStartContent && type !== Flow.MASTER) ||
-        (!this.doNotStartContent && type !== this.longerType)
+        (this.introOrOutro && type !== Flow.MASTER) ||
+        (!this.introOrOutro && type !== this.longerType)
        ) {
       e.stopImmediatePropagation();
       return false;
@@ -706,11 +706,11 @@ export class Flow {
   }
 
   public load(video: FlowVideo): void {
-    this.doNotStartContent = true;
+    this.introOrOutro = true;
 
     // vagy csak egy video van, vagy ez nem a master
     if ((video.index === 0 && video.is_last) || video.index === this.cfg.masterIndex)
-      this.doNotStartContent = false;
+      this.introOrOutro = false;
 
     // volt elottunk intro, autoplay
     if (video.index === this.cfg.masterIndex && this.cfg.masterIndex > 0)
@@ -730,7 +730,7 @@ export class Flow {
     // outro video kovetkezik, destroy a contentet ha volt
     if (video.index > this.cfg.masterIndex && this.videoTags[Flow.CONTENT]) {
       this.destroyVideoTag(Flow.CONTENT);
-      this.videoTags[Flow.CONTENT] = null;
+      delete( this.videoTags[Flow.CONTENT] );
     }
 
     // eloszor a content videot, mert mindig csak prependelunk
@@ -795,7 +795,7 @@ export class Flow {
   }
 
   public resume(): void {
-    if (this.doNotStartContent) {
+    if (this.introOrOutro) {
       this.videoTags[Flow.MASTER].play();
       return;
     }
@@ -835,7 +835,7 @@ export class Flow {
   }
 
   public seek(to: number): void {
-    if (this.doNotStartContent) {
+    if (this.introOrOutro) {
       this.videoTags[Flow.MASTER].currentTime = to;
       return;
     }
@@ -884,4 +884,5 @@ export interface VSQConfig {
   secondarySources: FlowSource[];
   labels: string[];
   contentOnRight: boolean;
+  masterIndex: number;
 }
