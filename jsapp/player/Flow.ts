@@ -260,6 +260,8 @@ export class Flow {
     } else // hogy a longerType mindig ertelmes legyen akkor is ha outro kovetkezik
       this.longerType = Flow.MASTER;
 
+    console.log('longerType:', this.longerType, this.videoTags[Flow.CONTENT].duration, this.cfg.duration);
+
     let tag = this.videoTags[this.longerType];
     let data = jQuery.extend(this.player.video, {
       duration: tag.duration,

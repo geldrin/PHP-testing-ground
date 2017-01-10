@@ -834,6 +834,7 @@ System.register("player/Flow", ["player/Flow/LayoutChooser", "player/Flow/Qualit
                     }
                     else
                         this.longerType = Flow.MASTER;
+                    console.log('longerType:', this.longerType, this.videoTags[Flow.CONTENT].duration, this.cfg.duration);
                     var tag = this.videoTags[this.longerType];
                     var data = jQuery.extend(this.player.video, {
                         duration: tag.duration,
