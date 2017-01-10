@@ -1015,7 +1015,7 @@ System.register("player/Flow", ["player/Flow/LayoutChooser", "player/Flow/Qualit
                     this.player.trigger("error", [this.player, arg]);
                 };
                 Flow.prototype.triggerPlayer = function (event, data) {
-                    if (event !== "buffer")
+                    if (event !== "buffer" && event !== "progress")
                         this.log("[flow event]", event, data);
                     this.player.trigger(event, [this.player, data]);
                     this.hideFlowLogo();
@@ -1228,11 +1228,23 @@ System.register("player/Flow", ["player/Flow/LayoutChooser", "player/Flow/Qualit
                         return;
                     }
                     var playing = !this.videoTags[Flow.MASTER].paused;
-                    if (this.cfg.secondarySources.length !== 0)
-                        playing = playing || !this.videoTags[Flow.CONTENT].paused;
+                    var contentEnded = false;
+                    if (this.cfg.secondarySources.length !== 0) {
+                        var content = this.videoTags[Flow.CONTENT];
+                        playing = playing || !content.paused;
+                        contentEnded =
+                            content.currentTime == content.duration &&
+                                content.duration < to;
+                    }
                     this.tagSet('currentTime', to);
-                    if (playing)
-                        this.tagCall('play');
+                    if (playing) {
+                        var master = this.videoTags[Flow.MASTER];
+                        var masterEnded = master.currentTime == master.duration && master.duration < to;
+                        if (contentEnded && !masterEnded)
+                            this.videoTags[Flow.MASTER].play();
+                        if (masterEnded && !contentEnded)
+                            this.videoTags[Flow.CONTENT].play();
+                    }
                 };
                 Flow.prototype.pick = function (sources) {
                     if (sources.length == 0)

@@ -504,7 +504,7 @@ export class Flow {
   }
 
   private triggerPlayer(event: string, data: any): void {
-    if (event !== "buffer")
+    if (event !== "buffer" && event !== "progress")
       this.log("[flow event]", event, data);
 
     this.player.trigger(event, [this.player, data]);
@@ -858,15 +858,36 @@ export class Flow {
     // jatszodik, ezt akarjuk lekezelni
     // ha barmelyik video eppen playing akkor elinditjuk a videokat a biztonsag
     // kedveert
-    let playing = !this.videoTags[Flow.MASTER].paused
-    if (this.cfg.secondarySources.length !== 0)
-      playing = playing || !this.videoTags[Flow.CONTENT].paused;
+    let playing = !this.videoTags[Flow.MASTER].paused;
+    let contentEnded = false;
+    if (this.cfg.secondarySources.length !== 0) {
+      let content = this.videoTags[Flow.CONTENT];
+      playing = playing || !content.paused;
 
-    // tobb video lehet
+      contentEnded =
+        content.currentTime == content.duration &&
+        content.duration < to
+      ;
+    }
+
+    // tobb video lehet, nem szamit hogy tag.duration < to
     this.tagSet('currentTime', to);
 
-    if (playing)
-      this.tagCall('play');
+    // de csak azt a videot szabad inditani aminek nincs vege
+    if (playing) {
+      let master = this.videoTags[Flow.MASTER];
+      let masterEnded = master.currentTime == master.duration && master.duration < to;
+
+      if (contentEnded && !masterEnded)
+        this.videoTags[Flow.MASTER].play();
+      if (masterEnded && !contentEnded)
+        this.videoTags[Flow.CONTENT].play();
+
+      // ez lehetseges meg, csak ilyenkor nincs mit csinalni:
+      // (!contentEnded && !masterEnded) -> amugyis jatszodik minden
+      // ez nem lehetseges, de nem is lenne mit csinalni:
+      // (contentEnded && masterEnded) -> lehetetlen hogy a playing true legyen
+    }
   }
 
   public pick(sources: FlowSource[]): FlowSource | null {
