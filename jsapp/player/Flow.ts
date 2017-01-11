@@ -871,14 +871,13 @@ export class Flow {
       let tag = this.videoTags[i];
       playing = playing || !tag.paused;
 
-      if (tag.duration < to)
+      if (tag.duration > to)
         tags.push(tag);
       else {
         // ha nem lehet a videoban seekelni mert rovidebb akkor a vegere es pause
         tag.currentTime = tag.duration;
       }
     }
-    console.log("seekdebug", playing, tags);
 
     // a maradek videokban ugrunk es ha elozoleg jatszodtak akkor inditjuk oket
     this.setOnArray(tags, 'currentTime', to);

@@ -1232,13 +1232,12 @@ System.register("player/Flow", ["player/Flow/LayoutChooser", "player/Flow/Qualit
                     for (var i = this.videoTags.length - 1; i >= 0; i--) {
                         var tag = this.videoTags[i];
                         playing = playing || !tag.paused;
-                        if (tag.duration < to)
+                        if (tag.duration > to)
                             tags.push(tag);
                         else {
                             tag.currentTime = tag.duration;
                         }
                     }
-                    console.log("seekdebug", playing, tags);
                     this.setOnArray(tags, 'currentTime', to);
                     if (playing)
                         this.callOnArray(tags, 'play', []);
