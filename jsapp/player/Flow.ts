@@ -219,6 +219,14 @@ export class Flow {
     return this.cfg.secondarySources.length !== 0;
   }
 
+  private isLongerVideo(e: Event): boolean {
+    let type = this.getTypeFromEvent(e);
+    if (this.introOrOutro)
+      return type === Flow.MASTER;
+
+    return type === this.longerType;
+  }
+
   private syncVideos(): void {
     // ha csak egy video van, nincs mihez syncelni
     if (!this.hasMultipleVideos())
@@ -316,19 +324,18 @@ export class Flow {
   private handlePause(e: Event): boolean | undefined {
     let type = this.getTypeFromEvent(e);
     let tag = e.currentTarget as HTMLVideoElement;
-    // jon egy pause event akkor ha vege az adott videonak
-    // ezt a pause eventet el kell nyelnunk ha nem introOrOutro es
-    // a tipus nem a hoszabbik felvetel
+    // ha tobb video van csak akkor nem erdekel minket ha a rovidebb felvetelnek
+    // lett vege (mert ha vege egy videonak, akkor jon egy pause is)
     if (
-         !this.introOrOutro && type !== this.longerType &&
+         this.hasMultipleVideos() && type !== this.longerType &&
          tag.currentTime >= tag.duration
        ) {
       e.stopImmediatePropagation();
       return false;
     }
 
-    // amugy a content pause nem erdekel minket abszolut
-    if (type === Flow.CONTENT) {
+    // amugy a rovidebb video pause nem erdekel minket abszolut
+    if (type !== this.longerType) {
       e.stopImmediatePropagation();
       return false;
     }
@@ -340,15 +347,11 @@ export class Flow {
   }
 
   private handleEnded(e: Event): boolean | undefined {
-    let type = this.getTypeFromEvent(e);
     // vagy nem szabad inditani content tehat intro/outro jatszodik epp
     //   ergo csak a mastert kell figyelembe venni,
     // vagy kelett inditani contentet, es mostmar figyelni kell hogy a megfelelo
     //   tag befejezodeset nezzuk
-    if (
-        (this.introOrOutro && type !== Flow.MASTER) ||
-        (!this.introOrOutro && type !== this.longerType)
-       ) {
+    if (!this.isLongerVideo(e)) {
       e.stopImmediatePropagation();
       return false;
     }
@@ -364,25 +367,24 @@ export class Flow {
 
     this.tagCall('pause');
 
-    if (this.introOrOutro && !this.player.video.is_last) {
+    if (this.introOrOutro && !video.is_last) {
       this.player.next();
 
       // az intro csak egyszer jatszodik le, utana soha tobbet
       // onnan tudjuk hogy intro hogy a masterIndex nem nulla
       // ergo a master elott csak intro lehet
-      if (this.player.video.index === 0 && this.cfg.masterIndex !== 0) {
+      if (video.index === 0 && this.cfg.masterIndex !== 0) {
         this.player.removePlaylistItem(0);
         this.cfg.masterIndex--; // mivel kitoroltuk az introt, az index is csokkent
       }
     }
 
-    if (this.player.video.is_last)
+    if (video.is_last)
       this.triggerPlayer("finish", undefined);
   }
 
   private handleProgress(e: Event): boolean | undefined {
-    let type = this.getTypeFromEvent(e);
-    if (type !== this.longerType) {
+    if (!this.isLongerVideo(e)) {
       e.stopImmediatePropagation();
       return false;
     }
@@ -406,8 +408,7 @@ export class Flow {
   }
 
   private handleRateChange(e: Event): boolean | undefined {
-    let type = this.getTypeFromEvent(e);
-    if (type === Flow.CONTENT) {
+    if (!this.isLongerVideo(e)) {
       e.stopImmediatePropagation();
       return false;
     }
@@ -417,8 +418,7 @@ export class Flow {
   }
 
   private handleSeeked(e: Event): boolean | undefined {
-    let type = this.getTypeFromEvent(e);
-    if (type === Flow.CONTENT) {
+    if (!this.isLongerVideo(e)) {
       e.stopImmediatePropagation();
       return false;
     }
@@ -535,9 +535,6 @@ export class Flow {
 
     // TODO live sync-hez nezni a buffer eventeket es ha a master bufferel
     // akkor a content addig pausolni, es vica versa?
-    let masterHLS = this.hlsEngines[Flow.MASTER];
-    let masterTag = this.videoTags[Flow.MASTER];
-    let master = jQuery(masterTag);
     let sources = jQuery(this.videoTags);
 
     // video event -> flowplayer event
@@ -552,9 +549,6 @@ export class Flow {
       timeupdate  : "progress",
       volumechange: "volume"
     };
-
-    let currentTime: number = masterTag.currentTime;
-    let arg: any = {};
 
     jQuery.each(events, (videoEvent: string, flowEvent: string): void => {
       videoEvent = this.eventName(videoEvent);
@@ -597,7 +591,7 @@ export class Flow {
       // ha live akkor postert vissza
       // amit varunk: az autoplay mindig false, ergo a postert kirakhatjuk
       if (this.player.live)
-        master.one(this.eventName("seeked"), () => {
+        jQuery(this.videoTags[Flow.MASTER]).one(this.eventName("seeked"), () => {
           this.addPoster();
         });
     }
@@ -612,7 +606,6 @@ export class Flow {
   }
 
   private createVideoTag(video: FlowVideo): HTMLVideoElement {
-
     let ret: HTMLVideoElement = document.createElement('video');
     ret.src = video.src;
     ret.className = 'fp-engine vsq-engine';
@@ -639,6 +632,7 @@ export class Flow {
 
     tagElem.load();
     elem.remove();
+    delete(this.videoTags[index]);
   }
 
   private setupHLS(type: number): void {
@@ -748,10 +742,8 @@ export class Flow {
     );
 
     // outro video kovetkezik, destroy a contentet ha volt
-    if (video.index > this.cfg.masterIndex && this.videoTags[Flow.CONTENT]) {
+    if (video.index > this.cfg.masterIndex && this.videoTags[Flow.CONTENT])
       this.destroyVideoTag(Flow.CONTENT);
-      delete( this.videoTags[Flow.CONTENT] );
-    }
 
     // eloszor a content videot, mert mindig csak prependelunk
     // es igy lesz jo a sorrend
@@ -873,7 +865,7 @@ export class Flow {
 
     // kigyujtjuk azokat a videokat amikben lehet oda seekelni ahova szeretnenk
     // es megnezzuk hogy epp megy e valamelyik video (playing)
-    let tags: HTMLVideoElement = [];
+    let tags: HTMLVideoElement[] = [];
     let playing = false;
     for (let i = this.videoTags.length - 1; i >= 0; i--) {
       let tag = this.videoTags[i];

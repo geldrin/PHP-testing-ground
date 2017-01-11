@@ -809,6 +809,12 @@ System.register("player/Flow", ["player/Flow/LayoutChooser", "player/Flow/Qualit
                         return false;
                     return this.cfg.secondarySources.length !== 0;
                 };
+                Flow.prototype.isLongerVideo = function (e) {
+                    var type = this.getTypeFromEvent(e);
+                    if (this.introOrOutro)
+                        return type === Flow.MASTER;
+                    return type === this.longerType;
+                };
                 Flow.prototype.syncVideos = function () {
                     if (!this.hasMultipleVideos())
                         return;
@@ -873,12 +879,12 @@ System.register("player/Flow", ["player/Flow/LayoutChooser", "player/Flow/Qualit
                 Flow.prototype.handlePause = function (e) {
                     var type = this.getTypeFromEvent(e);
                     var tag = e.currentTarget;
-                    if (!this.introOrOutro && type !== this.longerType &&
+                    if (this.hasMultipleVideos() && type !== this.longerType &&
                         tag.currentTime >= tag.duration) {
                         e.stopImmediatePropagation();
                         return false;
                     }
-                    if (type === Flow.CONTENT) {
+                    if (type !== this.longerType) {
                         e.stopImmediatePropagation();
                         return false;
                     }
@@ -888,9 +894,7 @@ System.register("player/Flow", ["player/Flow/LayoutChooser", "player/Flow/Qualit
                     this.triggerPlayer("pause", undefined);
                 };
                 Flow.prototype.handleEnded = function (e) {
-                    var type = this.getTypeFromEvent(e);
-                    if ((this.introOrOutro && type !== Flow.MASTER) ||
-                        (!this.introOrOutro && type !== this.longerType)) {
+                    if (!this.isLongerVideo(e)) {
                         e.stopImmediatePropagation();
                         return false;
                     }
@@ -903,19 +907,18 @@ System.register("player/Flow", ["player/Flow/LayoutChooser", "player/Flow/Qualit
                         }
                     ]);
                     this.tagCall('pause');
-                    if (this.introOrOutro && !this.player.video.is_last) {
+                    if (this.introOrOutro && !video.is_last) {
                         this.player.next();
-                        if (this.player.video.index === 0 && this.cfg.masterIndex !== 0) {
+                        if (video.index === 0 && this.cfg.masterIndex !== 0) {
                             this.player.removePlaylistItem(0);
                             this.cfg.masterIndex--;
                         }
                     }
-                    if (this.player.video.is_last)
+                    if (video.is_last)
                         this.triggerPlayer("finish", undefined);
                 };
                 Flow.prototype.handleProgress = function (e) {
-                    var type = this.getTypeFromEvent(e);
-                    if (type !== this.longerType) {
+                    if (!this.isLongerVideo(e)) {
                         e.stopImmediatePropagation();
                         return false;
                     }
@@ -938,8 +941,7 @@ System.register("player/Flow", ["player/Flow/LayoutChooser", "player/Flow/Qualit
                     this.triggerPlayer("buffer", buffer);
                 };
                 Flow.prototype.handleRateChange = function (e) {
-                    var type = this.getTypeFromEvent(e);
-                    if (type === Flow.CONTENT) {
+                    if (!this.isLongerVideo(e)) {
                         e.stopImmediatePropagation();
                         return false;
                     }
@@ -947,8 +949,7 @@ System.register("player/Flow", ["player/Flow/LayoutChooser", "player/Flow/Qualit
                     this.triggerPlayer("speed", tag.playbackRate);
                 };
                 Flow.prototype.handleSeeked = function (e) {
-                    var type = this.getTypeFromEvent(e);
-                    if (type === Flow.CONTENT) {
+                    if (!this.isLongerVideo(e)) {
                         e.stopImmediatePropagation();
                         return false;
                     }
@@ -1037,9 +1038,6 @@ System.register("player/Flow", ["player/Flow/LayoutChooser", "player/Flow/Qualit
                     var _this = this;
                     if (this.eventsInitialized)
                         return;
-                    var masterHLS = this.hlsEngines[Flow.MASTER];
-                    var masterTag = this.videoTags[Flow.MASTER];
-                    var master = jQuery(masterTag);
                     var sources = jQuery(this.videoTags);
                     var events = {
                         ended: "finish",
@@ -1052,8 +1050,6 @@ System.register("player/Flow", ["player/Flow/LayoutChooser", "player/Flow/Qualit
                         timeupdate: "progress",
                         volumechange: "volume"
                     };
-                    var currentTime = masterTag.currentTime;
-                    var arg = {};
                     jQuery.each(events, function (videoEvent, flowEvent) {
                         videoEvent = _this.eventName(videoEvent);
                         sources.on(videoEvent, function (e) {
@@ -1090,7 +1086,7 @@ System.register("player/Flow", ["player/Flow/LayoutChooser", "player/Flow/Qualit
                             _this.addPoster();
                         });
                         if (this.player.live)
-                            master.one(this.eventName("seeked"), function () {
+                            jQuery(this.videoTags[Flow.MASTER]).one(this.eventName("seeked"), function () {
                                 _this.addPoster();
                             });
                     }
@@ -1122,6 +1118,7 @@ System.register("player/Flow", ["player/Flow/LayoutChooser", "player/Flow/Qualit
                     elem.removeAttr('src');
                     tagElem.load();
                     elem.remove();
+                    delete (this.videoTags[index]);
                 };
                 Flow.prototype.setupHLS = function (type) {
                     var _this = this;
@@ -1155,10 +1152,8 @@ System.register("player/Flow", ["player/Flow/LayoutChooser", "player/Flow/Qualit
                     var root = this.root.find('.fp-player');
                     root.find('img').remove();
                     this.hlsConf = jQuery.extend(this.hlsConf, this.player.conf.hlsjs, this.player.conf.clip.hlsjs, video.hlsjs);
-                    if (video.index > this.cfg.masterIndex && this.videoTags[Flow.CONTENT]) {
+                    if (video.index > this.cfg.masterIndex && this.videoTags[Flow.CONTENT])
                         this.destroyVideoTag(Flow.CONTENT);
-                        delete (this.videoTags[Flow.CONTENT]);
-                    }
                     if (video.index === this.cfg.masterIndex &&
                         this.hasMultipleVideos()) {
                         if (this.videoTags[Flow.CONTENT])
