@@ -27,7 +27,7 @@ export default class QualityChooser extends BasePlugin {
     levels.unshift("Auto");
 
     let html = `<ul class="vsq-quality-selector">`;
-    for (var i = 0; i < levels.length; ++i) {
+    for (let i = 0; i < levels.length; ++i) {
       let label = levels[i];
       let active = "";
       if (

@@ -451,11 +451,14 @@ System.register("player/Flow/LayoutChooser", ["player/Flow", "player/Flow/BasePl
                         var normalVal = val - range.to;
                         var magnitude = range.from - range.to;
                         return {
-                            'percent': (normalVal / magnitude) * 100,
+                            'percent': normalVal / magnitude,
                             'type': range.type
                         };
                     }
                     throw new Error("Impossible");
+                };
+                LayoutChooser.prototype.applyPercentToValue = function (percent, value, base) {
+                    return base + (percent * value);
                 };
                 LayoutChooser.prototype.onChange = function (e) {
                     var elem = jQuery(e.currentTarget);
@@ -470,7 +473,7 @@ System.register("player/Flow/LayoutChooser", ["player/Flow", "player/Flow/BasePl
                     switch (info.type) {
                         case "pipContent":
                             masterWidth = 100;
-                            contentWidth = info.percent;
+                            contentWidth = this.applyPercentToValue(info.percent, 100 - 25, 25);
                             masterOnTop = false;
                             break;
                         case "masterOnly":
@@ -479,7 +482,7 @@ System.register("player/Flow/LayoutChooser", ["player/Flow", "player/Flow/BasePl
                             masterOnTop = true;
                             break;
                         case "split":
-                            masterWidth = info.percent;
+                            masterWidth = this.applyPercentToValue(info.percent, 100 - 25, 25);
                             contentWidth = 100 - masterWidth;
                             masterOnTop = null;
                             break;
@@ -489,7 +492,7 @@ System.register("player/Flow/LayoutChooser", ["player/Flow", "player/Flow/BasePl
                             masterOnTop = false;
                             break;
                         case "pipMaster":
-                            masterWidth = 100 - info.percent;
+                            masterWidth = 100 - this.applyPercentToValue(info.percent, 100 - 25, 0);
                             contentWidth = 100;
                             masterOnTop = true;
                             break;

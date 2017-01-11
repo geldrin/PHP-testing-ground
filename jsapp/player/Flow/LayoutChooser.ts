@@ -184,12 +184,16 @@ export default class LayoutChooser extends BasePlugin {
       let normalVal = val - range.to;
       let magnitude = range.from - range.to;
       return {
-        'percent': (normalVal / magnitude) * 100,
+        'percent': normalVal / magnitude,
         'type': range.type
       };
     }
 
     throw new Error("Impossible");
+  }
+
+  private applyPercentToValue(percent: number, value: number, base: number): number {
+    return base + (percent * value);
   }
 
   private onChange(e: Event): void {
@@ -206,10 +210,11 @@ export default class LayoutChooser extends BasePlugin {
       throw new Error("Invalid value for layoutchooser");
 
     let info = this.getRangeForValue(val);
+    // pip es split modban a minimalis nagysag 25%, annal sose legyunk kisebbek
     switch(info.type) {
       case "pipContent":
         masterWidth = 100;
-        contentWidth = info.percent;
+        contentWidth = this.applyPercentToValue(info.percent, 100-25, 25);
         masterOnTop = false;
         break;
       case "masterOnly":
@@ -218,7 +223,7 @@ export default class LayoutChooser extends BasePlugin {
         masterOnTop = true;
         break;
       case "split":
-        masterWidth = info.percent;
+        masterWidth = this.applyPercentToValue(info.percent, 100-25, 25);
         contentWidth = 100 - masterWidth;
         masterOnTop = null;
         break;
@@ -228,7 +233,7 @@ export default class LayoutChooser extends BasePlugin {
         masterOnTop = false;
         break;
       case "pipMaster":
-        masterWidth = 100 - info.percent;
+        masterWidth = 100 - this.applyPercentToValue(info.percent, 100-25, 0);
         contentWidth = 100;
         masterOnTop = true;
         break;
