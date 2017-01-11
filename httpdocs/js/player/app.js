@@ -457,9 +457,6 @@ System.register("player/Flow/LayoutChooser", ["player/Flow", "player/Flow/BasePl
                     }
                     throw new Error("Impossible");
                 };
-                LayoutChooser.prototype.applyPercentToValue = function (percent, value, base) {
-                    return base + (percent * value);
-                };
                 LayoutChooser.prototype.onChange = function (e) {
                     var elem = jQuery(e.currentTarget);
                     var val = parseInt(elem.val(), 10);
@@ -473,7 +470,7 @@ System.register("player/Flow/LayoutChooser", ["player/Flow", "player/Flow/BasePl
                     switch (info.type) {
                         case "pipContent":
                             masterWidth = 100;
-                            contentWidth = this.applyPercentToValue(info.percent, 100 - 25, 25);
+                            contentWidth = info.percent * 25;
                             masterOnTop = false;
                             break;
                         case "masterOnly":
@@ -482,7 +479,7 @@ System.register("player/Flow/LayoutChooser", ["player/Flow", "player/Flow/BasePl
                             masterOnTop = true;
                             break;
                         case "split":
-                            masterWidth = this.applyPercentToValue(info.percent, 100 - 25, 25);
+                            masterWidth = info.percent * 100;
                             contentWidth = 100 - masterWidth;
                             masterOnTop = null;
                             break;
@@ -492,7 +489,7 @@ System.register("player/Flow/LayoutChooser", ["player/Flow", "player/Flow/BasePl
                             masterOnTop = false;
                             break;
                         case "pipMaster":
-                            masterWidth = 100 - this.applyPercentToValue(info.percent, 100 - 25, 0);
+                            masterWidth = 100 - (info.percent * 25);
                             contentWidth = 100;
                             masterOnTop = true;
                             break;

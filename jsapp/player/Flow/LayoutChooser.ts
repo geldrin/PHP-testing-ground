@@ -192,10 +192,6 @@ export default class LayoutChooser extends BasePlugin {
     throw new Error("Impossible");
   }
 
-  private applyPercentToValue(percent: number, value: number, base: number): number {
-    return base + (percent * value);
-  }
-
   private onChange(e: Event): void {
     let elem = jQuery(e.currentTarget);
     let val = parseInt(elem.val(), 10);
@@ -214,7 +210,7 @@ export default class LayoutChooser extends BasePlugin {
     switch(info.type) {
       case "pipContent":
         masterWidth = 100;
-        contentWidth = this.applyPercentToValue(info.percent, 100-25, 25);
+        contentWidth = info.percent * 25;
         masterOnTop = false;
         break;
       case "masterOnly":
@@ -223,7 +219,7 @@ export default class LayoutChooser extends BasePlugin {
         masterOnTop = true;
         break;
       case "split":
-        masterWidth = this.applyPercentToValue(info.percent, 100-25, 25);
+        masterWidth = info.percent * 100;
         contentWidth = 100 - masterWidth;
         masterOnTop = null;
         break;
@@ -233,7 +229,7 @@ export default class LayoutChooser extends BasePlugin {
         masterOnTop = false;
         break;
       case "pipMaster":
-        masterWidth = 100 - this.applyPercentToValue(info.percent, 100-25, 0);
+        masterWidth = 100 - (info.percent * 25);
         contentWidth = 100;
         masterOnTop = true;
         break;
