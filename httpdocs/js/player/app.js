@@ -804,8 +804,13 @@ System.register("player/Flow", ["player/Flow/LayoutChooser", "player/Flow/Qualit
                         _this.player.poster = false;
                     });
                 };
+                Flow.prototype.hasMultipleVideos = function () {
+                    if (this.introOrOutro)
+                        return false;
+                    return this.cfg.secondarySources.length !== 0;
+                };
                 Flow.prototype.syncVideos = function () {
-                    if (this.cfg.secondarySources.length === 0)
+                    if (!this.hasMultipleVideos())
                         return;
                     if (this.player.live)
                         return;
@@ -1155,7 +1160,7 @@ System.register("player/Flow", ["player/Flow/LayoutChooser", "player/Flow/Qualit
                         delete (this.videoTags[Flow.CONTENT]);
                     }
                     if (video.index === this.cfg.masterIndex &&
-                        this.cfg.secondarySources.length !== 0) {
+                        this.hasMultipleVideos()) {
                         if (this.videoTags[Flow.CONTENT])
                             this.destroyVideoTag(Flow.CONTENT);
                         var secondVideo = jQuery.extend(true, {}, video);
@@ -1177,7 +1182,7 @@ System.register("player/Flow", ["player/Flow/LayoutChooser", "player/Flow/Qualit
                     var engine = jQuery(this.videoTags[Flow.MASTER]);
                     engine.addClass('vsq-master');
                     if (video.index !== this.cfg.masterIndex ||
-                        this.cfg.secondarySources.length === 0)
+                        !this.hasMultipleVideos())
                         engine.addClass("vsq-fullscale");
                     root.prepend(engine);
                     this.setupHLS(Flow.MASTER);
@@ -1223,7 +1228,7 @@ System.register("player/Flow", ["player/Flow/LayoutChooser", "player/Flow/Qualit
                         this.videoTags.pop();
                 };
                 Flow.prototype.seek = function (to) {
-                    if (this.introOrOutro) {
+                    if (!this.hasMultipleVideos()) {
                         this.videoTags[Flow.MASTER].currentTime = to;
                         return;
                     }
@@ -1236,9 +1241,9 @@ System.register("player/Flow", ["player/Flow/LayoutChooser", "player/Flow/Qualit
                             tags.push(tag);
                         else {
                             tag.currentTime = tag.duration;
-                            tag.pause();
                         }
                     }
+                    console.log("seekdebug", playing, tags);
                     this.setOnArray(tags, 'currentTime', to);
                     if (playing)
                         this.callOnArray(tags, 'play', []);

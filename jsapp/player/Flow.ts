@@ -212,9 +212,16 @@ export class Flow {
     });
   }
 
+  private hasMultipleVideos(): boolean {
+    if (this.introOrOutro)
+      return false;
+
+    return this.cfg.secondarySources.length !== 0;
+  }
+
   private syncVideos(): void {
     // ha csak egy video van, nincs mihez syncelni
-    if (this.cfg.secondarySources.length === 0)
+    if (!this.hasMultipleVideos())
       return;
 
     // live videonal nem fog a currentTime sose pontosan megegyezni, hagyjuk
@@ -751,7 +758,7 @@ export class Flow {
     // de csak akkor rakjuk ki ha a master videot akarjuk loadolni
     if (
          video.index === this.cfg.masterIndex &&
-         this.cfg.secondarySources.length !== 0
+         this.hasMultipleVideos()
        ) {
       if (this.videoTags[Flow.CONTENT])
         this.destroyVideoTag(Flow.CONTENT);
@@ -783,7 +790,7 @@ export class Flow {
     // vagy intro/outro es nincs content
     if (
         video.index !== this.cfg.masterIndex ||
-        this.cfg.secondarySources.length === 0
+        !this.hasMultipleVideos()
        )
       engine.addClass("vsq-fullscale");
 
@@ -849,10 +856,20 @@ export class Flow {
 
   public seek(to: number): void {
     // tuti csak egy video van, egyszeru
-    if (this.introOrOutro) {
+    if (!this.hasMultipleVideos()) {
       this.videoTags[Flow.MASTER].currentTime = to;
       return;
     }
+
+    /*
+      Ha tobb video van:
+        - lehet hogy seekelni akarunk, de az adott video nem eleg hosszu
+          ilyenkor a rovid videot a vegere seekeltetjuk es leallitjuk
+        - ha visszafele seekelunk, es tudunk mind a kettoben, lehet hogy az egyik
+          video pausolva van
+          ha barmelyik video nem volt pausolva, akkor a videokat el kell inditani
+          miutan meg volt a seek
+    */
 
     // kigyujtjuk azokat a videokat amikben lehet oda seekelni ahova szeretnenk
     // es megnezzuk hogy epp megy e valamelyik video (playing)
@@ -867,9 +884,9 @@ export class Flow {
       else {
         // ha nem lehet a videoban seekelni mert rovidebb akkor a vegere es pause
         tag.currentTime = tag.duration;
-        tag.pause();
       }
     }
+    console.log("seekdebug", playing, tags);
 
     // a maradek videokban ugrunk es ha elozoleg jatszodtak akkor inditjuk oket
     this.setOnArray(tags, 'currentTime', to);
