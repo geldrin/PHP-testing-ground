@@ -210,7 +210,7 @@ export default class LayoutChooser extends BasePlugin {
     switch(info.type) {
       case "pipContent":
         masterWidth = 100;
-        contentWidth = info.percent * 25;
+        contentWidth = info.percent * 50;
         masterOnTop = false;
         break;
       case "masterOnly":
@@ -229,7 +229,7 @@ export default class LayoutChooser extends BasePlugin {
         masterOnTop = false;
         break;
       case "pipMaster":
-        masterWidth = 100 - (info.percent * 25);
+        masterWidth = 50 - (info.percent * 50);
         contentWidth = 100;
         masterOnTop = true;
         break;
