@@ -41,9 +41,27 @@ class Main {
    * @return int
    */
   public static function Main($argv, $argc) {
+//    var_dump(self::translateFileName('livestreams/69/220x130/69_20151008144502.jpg', '800x600'));
+//    var_dump(self::translateFileName('69/220x130/69_20151008144502.jpg', '800x600'));
+//    var_dump(self::translateFileName('220x130/69_20151008144502.jpg', '800x600'));
+//    var_dump(self::translateFileName('69_20151008144502.jpg', '800x600')); exit;
+    
     self::init();
     
+    $a = self::getChannels();
+    foreach($a as $item) {
+    
+      var_dump($item);
+    }
+    die();
+    
     if (self::parseOptions($argc, $argv) == false) { return(1); }
+    
+    self::log(sprintf("Indexphoto resize tool started with the following arguments:\n- process VOD = %s\n- process LIVE = %s\n- is dry-run = %s\n- is verbose = %s\n",
+      self::$doVOD ? 'true' : 'false',
+      self::$dolivefeeds ? 'true' : 'false',
+      self::$isdryrun ? 'true' : 'false',
+      self::$isverbose ? 'true' : 'false'));
     
     self::doProcess();
   }
@@ -54,8 +72,13 @@ class Main {
    * @return int Return value, serves as an exitcode (0 if no problems occured).
    */
   private static function doProcess() {
-    $vod_dirs  = [];
+    $vod_dirs   = [];
+    $recordings = [];
+    
     $live_dirs = [];
+    $livefeeds = [];
+    
+    $numvoderr = $numliveerr = 0;
     
     // on demand videos //
     if (self::$doVOD) {
@@ -63,7 +86,16 @@ class Main {
       
       foreach ($vod_dirs as $vod) {
         // do vod resize
+        
+        self::prepareDirectories(array_column($vod['dest'], 'path'));
+        foreach ($vod['files'] as $indexphoto) {
+          if (self::$isverbose) { print_r("Resizing: \"{$indexphoto}\"\n"); }
+          if (self::doResize($indexphoto, $vod['dest']) === false) { $numvoderr++; }
+        }
       }
+    }
+    
+    if (self::$dochannels) {
     }
     
     // livefeeds //
@@ -72,11 +104,16 @@ class Main {
       
       foreach ($live_dirs as $live) {
         // do live snapshot resize
+        
+        self::prepareDirectories(array_column($live['dest'], 'path'));
+        //var_dump($live);
+        foreach ($live['files'] as $indexphoto) {
+          //var_dump($indexphoto);
+          if (self::$isverbose) { print_r("Resizing: \"{$indexphoto}\"\n"); }
+          if (self::doResize($indexphoto, $live['dest']) === false) { $numliveerr++; }
+        }
       }
     }
-    
-    var_dump($live_dirs); //debug
-    var_dump($vod_dirs); //debug
   }
   
   //-----------------------------------------------------------------------------------------------
@@ -90,8 +127,8 @@ class Main {
   private static function getWorkDirectories($type = 'VOD') {
     $workdirs = [];
     $pattern  = [];
-    //$basepath = self::$app->config['storagepath'];
-    $basepath = '/srv/vsq/videosquare.eu/'; // for debuggin'
+    $basepath = self::$app->config['storagepath'];
+    //$basepath = '/srv/vsq/videosquare.eu/'; // for debuggin'
     
     if ($basepath === false) {
       print_r("ERROR: path ". self::$path ." doesn't exists!\n");
@@ -107,7 +144,7 @@ class Main {
       $pattern['masterpath' ] = "%s";
       $pattern['destpath'   ] = "%s/%s/";
     }
-    
+
     // Lambda function _fill() - returns directory struct array with masterpath, file list, etc.
     $_fill = function($current, $pattern) {
       if ($current->isDir()) {
@@ -131,24 +168,39 @@ class Main {
 
         $tmp = [];
         foreach ($subdir_iterator as $f) {
-          if ($f->isDir()) {
+          //if ($f->isDir() && !is_dir_empty($f->getPathname())) {
+          if ($f->isDir() && array_search(pathinfo($f->getPathname(), PATHINFO_BASENAME), self::$sizes) === false) { // omit new directories
             $tmp[] = $f->getPathname();
           }
         }
         sort($tmp);
         
-        $directory_struct['files' ] = self::getFilesFrom(end($tmp));
-        $directory_struct['dest'  ] = [];
+        $directory_struct['files'] = self::getFilesFrom(end($tmp));
+        $directory_struct['dest' ] = [];
         
         foreach (self::$sizes as $s) {
-          $directory_struct['dest']["$s"] = sprintf($pattern['destpath'], $current->getPathname(), $s);
+          //$directory_struct['dest']["$s"] = sprintf($pattern['destpath'], $current->getPathname(), $s);
+          $directory_struct['dest'][] = [
+            'size' => $s,
+            'path' => sprintf($pattern['destpath'], $current->getPathname(), $s)
+          ];
         }
         
         return [$current->getBasename() => $directory_struct];
       }
     };
     
-    $rdi = new FilesystemIterator(sprintf($pattern['storagepath'], $basepath), FilesystemIterator::SKIP_DOTS);
+    try {
+      $rdi = new FilesystemIterator(sprintf($pattern['storagepath'], $basepath), FilesystemIterator::SKIP_DOTS);
+    } catch (Exception $e) {
+      if ($e instanceof UnexpectedValueException) {
+        print_r("Storage path cannot be found at: '". sprintf($pattern['storagepath'], $basepath) ."'!\n");
+        return false;
+      } else {
+        throw new $e;
+      }
+    }
+    
     while ($rdi->valid()) {
       $current = $rdi->current();
       if ($type === 'VOD') {
@@ -175,38 +227,55 @@ class Main {
     return $workdirs;
   }
   
-
+  private static function translateFileName($filename, $newsize) {
+    // livestreams/69/220x130/69_20151008144502.jpg
+    $parts = null;    
+    $parts = explode(DIRECTORY_SEPARATOR, $filename);
+    
+    if (!empty($parts)) {
+      return implode(
+        DIRECTORY_SEPARATOR,
+        array_merge(
+          array_slice($parts, 0, count($parts) - 1),
+          [$newsize],
+          (array) end($parts)
+         )
+      );
+    }
+  }
+  
   /**
-   * Resize file.
+   * Resize imagefile
    * 
-   * @param type $srcpath
-   * @param type $filename
-   * @param type $dstpath
+   * @param type $file path of the input file
+   * @param type $resize_data
    * @return type
    */
-  public static function doResize($srcpath, $filename, $dstpath = null) {
-    $ldir = self::$ldir;
-    $lfile = self::$lfile;
+  public static function doResize($file, $resize_data = null) {
     $cmdresize = null;
     $cmdparts  = array();
     
-    if ($dstpath === null) { $dstpath = $srcpath; }
+    if ($resize_data === null) { return false; }
+    
+    $srcpath  = pathinfo($file, PATHINFO_DIRNAME) . DIRECTORY_SEPARATOR;
+    $filename = pathinfo($file, PATHINFO_BASENAME);
     
     $cmdparts[] = "convert \"{$srcpath}{$filename}\"";
     
-    for ( $i = 0; $i < count(self::$sizes); $i++ ) {
-      $dim    = self::$sizes[$i];
-      $size   = $dim->w .'x'. $dim->h;
-      $output = $dstpath . $filename;
+    for ( $i = 0; $i < count($resize_data); $i++ ) {
+      $dim    = $resize_data[$i]['size'];
+      $size   = "{$dim->w}x{$dim->h}";
+      $output = $resize_data[$i]['path'] . $filename;
       $cmdparts[] = "\( +clone -background black -resize {$size}^ -gravity center -extent {$size} -write \"{$output}\" +delete \)";
     }
     
     $cmdparts[] = "null:";
     $cmdresize = implode(' ', $cmdparts);
     
+    if (self::$isverbose) { print_r("CMD -> {$cmdresize}"); }
     if (self::$isdryrun) {
-      if (self::$isverbose) { print_r("-> {$cmdresize}\n"); }
-      return;
+      print_r(" - dry run, no execution.\n");
+      return true;
     }
     
     $runExt = new runExt();
@@ -217,9 +286,36 @@ class Main {
       
       if (self::$isverbose) { print_r($msg . PHP_EOL); }
       
+      return false;
     } else {
       // OK
+      if (self::$isverbose) { print_r(" - OK.\n"); }
+      
+      return true;
     }
+  }
+  
+  /**
+   * Creates directories if not existing.
+   * 
+   * @param type $directory_list
+   * @return boolean
+   */
+  private static function prepareDirectories($directory_list) {
+    if (empty($directory_list)) { return false; }
+    if (!is_array($directory_list)) { $directory_list = [$directory_list]; }
+    
+    $result = true;
+    foreach ($directory_list as $dir) {
+      if (!file_exists($dir) && !is_dir($dir)) {
+        $result = mkdir($dir, 0755, true);
+        if (self::$isverbose) {
+          if ($result === true) { print_r("Directory created: '{$dir}'\n"); }
+          else { print_r("Failed to create Directory: '{$dir}'\n"); }
+        }
+      }
+    }
+    return $result;
   }
   
   /**
@@ -245,7 +341,6 @@ class Main {
     return $channels;
   }
   
-  
   /**
    * Queries recordings from database.
    * 
@@ -254,8 +349,8 @@ class Main {
   private static function getRecordings() {
     $recordings = null;
     $sql = "SELECT id, title, subtitle, status FROM recordings AS r WHERE (".
-    "r.status LIKE ". self::$jconf['dbstatus_copystorage_ok'] ." OR ".
-    "r.status LIKE ". self::$jconf['dbstatus_markedfordeletion'] .")";
+      "r.status LIKE '". self::$jconf['dbstatus_copystorage_ok'] ."' OR ".
+      "r.status NOT LIKE '". self::$jconf['dbstatus_markedfordeletion'] ."')";
     
     try {
       $recordings = self::$db->Execute($sql);
@@ -271,11 +366,33 @@ class Main {
     return $recordings;
   }
   
+  private static function getLivefeeds() {
+    $livefeeds = null;
+    $sql = "SELECT id, channelid, name, indexphotofilename, recordinglinkid WHERE (".
+      "status NOT LIKE '". self::$jconf['dbstatus_markedfordeletion'] ."' OR ".
+      "status NOT LIKE '". self::$jconf['dbstatus_deleted'] ."')";
+    
+    try {
+      $livefeeds = self::$db->Execute($sql);
+    } catch (Exception $ex) {
+      $msg = "ERROR: Failed to get channel list from DB!";
+      
+      if (self::$isverbose) { print_r($msg . PHP_EOL); }
+      
+      self::log($msg ."\n". $ex->getTraceAsString());
+      return false;
+    }
+  }
+  
   private static function updateChannel() {
     
   }
   
   private static function updateRecording() {
+    
+  }
+  
+  private static function updateLivefeed() {
     
   }
   
@@ -299,9 +416,9 @@ class Main {
   /**
    * Wrapper for SpringBoard logger for easier use.
    * 
-   * @param type $message
-   * @param type $sendmail
-   * @return type
+   * @param string $message The message string to logged.
+   * @param bool $sendmail TRUE to send a notification in email (default is FALSE)
+   * @return NULL
    */
   private static function log($message, $sendmail = false) {
     $sendmail = (bool) $sendmail;
@@ -314,14 +431,17 @@ class Main {
    * 
    * @param string $directory directory path
    * @return boolean|\ArrayObject file list
+   * @return boolean|Array list of files
    */
   private static function getFilesFrom($directory = '.') {
     if (!file_exists($directory)) { return false; }
     
-    $filelist = new ArrayObject();
+    //$filelist = new ArrayObject();
+    $filelist = [];
     foreach (new DirectoryIterator($directory) as $item) {
       if (!$item->isDot() && !$item->isDir()) {
-        $filelist->append($item->getPathname());
+        $filelist[] = $item->getPathname();
+        //$filelist->append($item->getPathname());
       }
     }
     
@@ -390,12 +510,12 @@ class Main {
           self::$dochannels = true; // update channels table?
           break;
         
-        case 'live':
+        case 'live':  // update livefeeds table ('indexphotofilename')
           self::$dolivefeeds = true;
           break;
       
         case 'vod':
-          self::$doVOD = true; // update recordings table?
+          self::$doVOD = true; // update recordings table? ('indexphotofilename')
           break;
         
         case 'size': // size for new indexphotos (can be used multiple times)
@@ -432,8 +552,26 @@ class Main {
    * 
    * @return NULL
    */
-  private function init() {
-    if (self::$initialized === false) { return; }
+  private static function init() {
+    if (!function_exists("array_column")) {
+      function array_column($array,$column_name) {
+        return array_map( function($element) use($column_name) { return $element[$column_name]; }, $array);
+      }
+    }
+    
+    if (!function_exists('is_dir_empty')) {
+      function is_dir_empty($dir) {
+        if (!is_readable($dir)) { return null; }
+        
+        $handle = opendir($dir);
+        while (false != ($item = readdir($handle))) {
+          if ($item != '.' && $item != '..') { return false; }
+        }
+        return true;
+      }
+    }
+    
+    if (self::$initialized === true) { return; }
     
     self::$app = new Springboard\Application\Cli(BASE_PATH, DEBUG);
     
