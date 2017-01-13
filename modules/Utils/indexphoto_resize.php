@@ -41,19 +41,6 @@ class Main {
    * @return int
    */
   public static function Main($argv, $argc) {
-//    var_dump(self::translateFileName('livestreams/69/220x130/69_20151008144502.jpg', '800x600'));
-//    var_dump(self::translateFileName('69/220x130/69_20151008144502.jpg', '800x600'));
-//    var_dump(self::translateFileName('220x130/69_20151008144502.jpg', '800x600'));
-//    var_dump(self::translateFileName('69_20151008144502.jpg', '800x600')); exit;
-    
-    self::init();
-    
-    $a = self::getChannels();
-    foreach($a as $item) {
-    
-      var_dump($item);
-    }
-    die();
     
     if (self::parseOptions($argc, $argv) == false) { return(1); }
     
