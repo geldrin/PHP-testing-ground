@@ -605,10 +605,10 @@ System.register("player/Flow/QualityChooser", ["player/Flow", "player/Flow/BaseP
                 QualityChooser.prototype.setupHLS = function (hls, type) {
                     var _this = this;
                     hls.on(Hls.Events.MANIFEST_PARSED, function (event, data) {
-                        hls.startLoad(hls.config.startPosition);
                         var startLevel = _this.getQualityIndex(_this.selectedQuality);
                         hls.startLevel = startLevel;
                         hls.loadLevel = startLevel;
+                        hls.startLoad(hls.config.startPosition);
                     });
                     if (type !== Flow_3.Flow.MASTER)
                         return;
@@ -903,7 +903,7 @@ System.register("player/Flow", ["player/Flow/LayoutChooser", "player/Flow/Qualit
                         Hls.Events.BUFFER_FLUSHING,
                         {
                             startOffset: 0,
-                            endOffset: this.cfg.duration
+                            endOffset: this.cfg.duration * 0.9
                         }
                     ]);
                     this.tagCall('pause');
@@ -987,7 +987,7 @@ System.register("player/Flow", ["player/Flow/LayoutChooser", "player/Flow/Qualit
                     var MEDIA_ERR_NETWORK = 2;
                     var MEDIA_ERR_DECODE = 3;
                     var type = this.getTypeFromEvent(e);
-                    var err = this.videoTags[type].error.code;
+                    var err = this.videoTags[type].error.code || MEDIA_ERR_DECODE;
                     if ((this.hlsConf.recoverMediaError && err === MEDIA_ERR_DECODE) ||
                         (this.hlsConf.recoverNetworkError && err === MEDIA_ERR_NETWORK) ||
                         (this.hlsConf.recover && (err === MEDIA_ERR_NETWORK || err === MEDIA_ERR_DECODE))) {
@@ -1004,15 +1004,11 @@ System.register("player/Flow", ["player/Flow/LayoutChooser", "player/Flow/Qualit
                             hls.recoverMediaError();
                             return false;
                         }
-                        else {
-                            if (!this.swapAudioCodecDate || now - this.swapAudioCodecDate > 3000) {
-                                this.swapAudioCodecDate = performance.now();
-                                hls.swapAudioCodec();
-                                hls.recoverMediaError();
-                                return false;
-                            }
-                            else
-                                err = MEDIA_ERR_DECODE;
+                        else if (!this.swapAudioCodecDate || now - this.swapAudioCodecDate > 3000) {
+                            this.swapAudioCodecDate = performance.now();
+                            hls.swapAudioCodec();
+                            hls.recoverMediaError();
+                            return false;
                         }
                     }
                     var arg = { code: err };

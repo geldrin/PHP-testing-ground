@@ -361,7 +361,7 @@ export class Flow {
       Hls.Events.BUFFER_FLUSHING,
       {
         startOffset: 0,
-        endOffset: this.cfg.duration
+        endOffset: this.cfg.duration * 0.9
       }
     ]);
 
@@ -470,7 +470,7 @@ export class Flow {
     const MEDIA_ERR_DECODE = 3;
 
     let type = this.getTypeFromEvent(e);
-    let err = this.videoTags[type].error.code;
+    let err = this.videoTags[type].error.code || MEDIA_ERR_DECODE;
 
     // egyatalan olyan hiba amivel tudunk kezdeni valamit?
     if (
@@ -492,14 +492,11 @@ export class Flow {
         this.recoverMediaErrorDate = performance.now();
         hls.recoverMediaError();
         return false;
-      } else {
-        if (!this.swapAudioCodecDate || now - this.swapAudioCodecDate > 3000) {
-          this.swapAudioCodecDate = performance.now();
-          hls.swapAudioCodec();
-          hls.recoverMediaError();
-          return false;
-        } else
-          err = MEDIA_ERR_DECODE;
+      } else if (!this.swapAudioCodecDate || now - this.swapAudioCodecDate > 3000) {
+        this.swapAudioCodecDate = performance.now();
+        hls.swapAudioCodec();
+        hls.recoverMediaError();
+        return false;
       }
     }
 

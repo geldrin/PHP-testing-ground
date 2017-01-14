@@ -79,13 +79,13 @@ export default class QualityChooser extends BasePlugin {
 
   public setupHLS(hls: any, type: number): void {
     hls.on(Hls.Events.MANIFEST_PARSED, (event: string, data: any): void => {
-      hls.startLoad(hls.config.startPosition);
-
       // azt varja hogy a contentnek is ugyanazok a qualityjai lesznek,
       // nem biztos hogy igaz, TODO
       let startLevel = this.getQualityIndex(this.selectedQuality);
       hls.startLevel = startLevel;
       hls.loadLevel = startLevel;
+
+      hls.startLoad(hls.config.startPosition);
     });
 
     if (type !== Flow.MASTER)

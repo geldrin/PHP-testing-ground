@@ -91,7 +91,7 @@
   {/if}
   {if $playerconfig}
   <script type="text/javascript" src="{$BASE_URI}js/flowplayer/flowplayer.min.js"></script>
-  <script type="text/javascript" src="{$BASE_URI}js/flowplayer/flowplayer.hlsjs.min.js"></script>
+  <script type="text/javascript" src="{$BASE_URI}js/flowplayer/hls.min.js"></script>
   <script type="text/javascript" src="{$BASE_URI}js/player/app.js"></script>
   {/if}
   <script type="text/javascript" src="{$STATIC_URI}js/tools{$VERSION}.js"></script>
