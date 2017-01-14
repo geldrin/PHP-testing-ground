@@ -194,6 +194,7 @@ abstract class Player {
         'labels' => array(),
         'secondarySources' => array(),
         'contentOnRight' => (bool) $this->row['slideonright'],
+        // TODO mobile es a mobil tipusa
       ),
     );
 
@@ -211,6 +212,11 @@ abstract class Player {
         'recoverNetworkError' => true,
       ),
     );
+
+    // hogy lehessen seekelni a live streamekbe, megkonnyiti a ket video
+    // synceleset live esetben
+    if ( $ret['live'] )
+      $ret['dvr'] = true;
 
     if ( isset( $cfg['duration'] ) )
       $ret['vsq']['duration'] = $cfg['duration'];

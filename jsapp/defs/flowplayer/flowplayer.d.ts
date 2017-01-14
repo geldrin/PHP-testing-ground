@@ -117,6 +117,7 @@ interface Flowplayer {
   rtmp: number;
   proxy: string;
   live: boolean;
+  dvr: boolean;
   swf: string;
   swfHls: string;
   speeds: number[];
