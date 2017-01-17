@@ -1,7 +1,7 @@
 <?php
 // Videosquare live thumbnail job
 
-define('BASE_PATH',	realpath( __DIR__ . '/../..' ) . '/' );
+define('BASE_PATH', realpath( __DIR__ . '/../..' ) . '/' );
 define('PRODUCTION', false );
 define('DEBUG', false );
 
@@ -58,38 +58,38 @@ die($myexitcode);
  * @return boolean
  */
 function Main() {
-	global $app, $debug, $debug_mode, $jconf, $logdir, $logfile;
+  global $app, $debug, $debug_mode, $jconf, $logdir, $logfile;
 
-	if ( !is_writable($jconf['livestreams_dir']) ) {
-		$debug->log($logdir, $logfile, "[ERROR] Temp directory " . $jconf['livestreams_dir'] . " is not writeable.", $sendmail = false);
-		return (1);
-	}
+  if ( !is_writable($jconf['livestreams_dir']) ) {
+    $debug->log($logdir, $logfile, "[ERROR] Temp directory " . $jconf['livestreams_dir'] . " is not writeable.", $sendmail = false);
+    return (1);
+  }
 
-	clearstatcache();
+  clearstatcache();
 
-	// Watchdog
-	$app->watchdog();
+  // Watchdog
+  $app->watchdog();
 
-	// Query active channels
-	$channels = getActiveChannels();
+  // Query active channels
+  $channels = getActiveChannels();
   if ( $channels === false ) { return false; }
 
-	for ( $i = 0; $i < count($channels); $i++ ) {
+  for ( $i = 0; $i < count($channels); $i++ ) {
 
-		$filename = $streamURL = $ffmpeg_output = $ffmpeg_filter = $ffmpeg_globals = $ffmpeg_load = null;
+    $filename = $streamURL = $ffmpeg_output = $ffmpeg_filter = $ffmpeg_globals = $ffmpeg_load = null;
 
-		// Temp directory
-		$temp_dir = $jconf['livestreams_dir'] . $channels[$i]['livefeedstreamid'] . "/";
+    // Temp directory
+    $temp_dir = $jconf['livestreams_dir'] . $channels[$i]['livefeedstreamid'] . "/";
 
-		// RTMP URL - Use fallback server always
-		$rtmp_server = $app->config['fallbackstreamingserver']['server'];
+    // RTMP URL - Use fallback server always
+    $rtmp_server = $app->config['fallbackstreamingserver']['server'];
 
-		$wowza_app = "vsqlive";
+    $wowza_app = "vsqlive";
     if ( isset($app->config['production']) && $app->config['production'] === false ) { $wowza_app = "dev". $wowza_app; }
 
     $streamURL      = sprintf("rtmp://%s/{$wowza_app}/", $rtmp_server) . $channels[$i]['streamid'];
-		$filename       = "{$channels[$i]['livefeedstreamid']}_" . date("YmdHis") . ".jpg";
-		$ffmpeg_globals = $app->config['ffmpeg_alt'] . ($debug_mode ? null : " -hide_banner") ." -y";
+    $filename       = "{$channels[$i]['livefeedstreamid']}_" . date("YmdHis") . ".jpg";
+    $ffmpeg_globals = $app->config['ffmpeg_alt'] . ($debug_mode ? null : " -hide_banner") ." -y";
     $ffmpeg_load    = " -i {$streamURL}";
 
     if (isFFprobeAvailable($app)) {
@@ -144,22 +144,22 @@ function Main() {
     $wrkr = new runExt();
 
     try {
-			$cmd = $code = null;
+      $cmd = $code = null;
 
-			// Prepare working directories
+      // Prepare working directories
       $directories = array();
       $directories = array_merge(array($temp_dir), $thumbnail_obj['local']);
 
-			foreach($directories as $d) {
-				$err = create_remove_directory($d);
-				if ( !$err['code'] ) {
-					$cmd  = $err['command'];
-					$code = $err['result'] ? 1 : 0;
-					throw new Exception($err['message']);
-				}
-			}
+      foreach($directories as $d) {
+        $err = create_remove_directory($d);
+        if ( !$err['code'] ) {
+          $cmd  = $err['command'];
+          $code = $err['result'] ? 1 : 0;
+          throw new Exception($err['message']);
+        }
+      }
 
-			// Chmod local directory recursively
+      // Chmod local directory recursively
       $iterator = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($temp_dir));
       foreach($iterator as $item) {
         chmod($item, octdec($jconf['directory_access']));
@@ -167,55 +167,55 @@ function Main() {
       unset($iterator);
 
       // Run ffmpeg
-			if (!$wrkr->run($ffmpeg_command)) {
-				if (strpos($wrkr->getOutput(), 'NetStream.Play.StreamNotFound') !== false) {
-					// there's no live stream available, don't complain about it unless we're debugging
+      if (!$wrkr->run($ffmpeg_command)) {
+        if (strpos($wrkr->getOutput(), 'NetStream.Play.StreamNotFound') !== false) {
+          // there's no live stream available, don't complain about it unless we're debugging
           if ($debug_mode) { throw new Exception("Stream not found!"); }
-					continue;
-				} elseif(strpos($wrkr->getOutput(), 'NetStream.Play.Failed') !== false) {
+          continue;
+        } elseif(strpos($wrkr->getOutput(), 'NetStream.Play.Failed') !== false) {
           // rtmp playback has been disabled
           throw new Exception('Read access has been disabled!');
         } else {
           // ffmpeg error
           throw new Exception("FFmpeg cannot get live thumbnail. (". $wrkr->getOutput() .")");
-				}
-			} elseif (!is_readable(reset($thumbnail_obj['local']) . $filename) || !(reset($thumbnail_obj['local']) . $filename) > 0) {
-				throw new Exception("File is not readable.");
-			}
+        }
+      } elseif (!is_readable(reset($thumbnail_obj['local']) . $filename) || !(reset($thumbnail_obj['local']) . $filename) > 0) {
+        throw new Exception("File is not readable.");
+      }
 
-			$msg  = "[INFO] FFmpeg live thumbnail attempt for feed#". $channels[$i]['locationid'];
+      $msg  = "[INFO] FFmpeg live thumbnail attempt for feed#". $channels[$i]['locationid'];
       $msg .= " / stream#{$channels[$i]['livefeedstreamid']} - SUCCESS! / ";
       $msg .= "return code: ". $wrkr->getCode() ."\n". ($debug_mode ? "command: '{$wrkr->command}'\n" : null);
-			$debug->log($logdir, $logfile, $msg, false);
-			unset($cmd, $code, $err, $msg, $wrkr);
+      $debug->log($logdir, $logfile, $msg, false);
+      unset($cmd, $code, $err, $msg, $wrkr);
 
-		} catch (Exception $e) {
-			if ($wrkr->getCode() !== 0) {
-				$cmd  = $wrkr->command;
-				$code = $wrkr->getCode();
-			}
+    } catch (Exception $e) {
+      if ($wrkr->getCode() !== 0) {
+        $cmd  = $wrkr->command;
+        $code = $wrkr->getCode();
+      }
       $msg  = "[ERROR] FFmpeg live thumbnail attempt for feed#{$channels[$i]['locationid']} / ";
       $msg .= "stream#{$channels[$i]['livefeedstreamid']} - Failed!(". $e->getMessage() .")\n";
       $msg .= "command: '{$cmd}'\nreturn code: {$code}\n";
-			$debug->log($logdir, $logfile, $msg, false);
-			unset($cmd, $err, $msg, $wrkr);
+      $debug->log($logdir, $logfile, $msg, false);
+      unset($cmd, $err, $msg, $wrkr);
 
-			continue;
-		}
+      continue;
+    }
 
-		try {
-			// Copy images to server
-			$remote_path = $app->config['livestreampath'];
-			$err = ssh_filecopy2($app->config['fallbackstreamingserver']['server'], $temp_dir, $remote_path, false);
+    try {
+      // Copy images to server
+      $remote_path = $app->config['livestreampath'];
+      $err = ssh_filecopy2($app->config['fallbackstreamingserver']['server'], $temp_dir, $remote_path, false);
 
-			if ($debug_mode) $debug->log($logdir, $logfile, "[INFO] Copying folder '". $temp_dir ."' > '". $remote_path ."'", false);
-			if ($err['code'] === false)	throw new Exception($err['message'] ."\nCommand: ". $err['command'] ."\nResult: ". $err['result']);
+      if ($debug_mode) { $debug->log($logdir, $logfile, "[INFO] Copying folder '". $temp_dir ."' > '". $remote_path ."'", false); }
+      if ($err['code'] === false) { throw new Exception($err['message'] ."\nCommand: ". $err['command'] ."\nResult: ". $err['result']); }
 
-			// Chmod remote files
+      // Chmod remote files
       foreach ($thumbnail_obj['remote'] as $r) {
         if ($debug_mode) {
           $msg = "[INFO] Setting file permission (". $jconf['file_owner'] ."/". $jconf['file_access'] .") on '". $r ."'";
-					$debug->log($logdir, $logfile, $msg, false);
+          $debug->log($logdir, $logfile, $msg, false);
         }
 
         $err = sshMakeChmodChown($app->config['fallbackstreamingserver']['server'], $r, false);
@@ -224,23 +224,23 @@ function Main() {
           throw new Exception("[ERROR] Failed to set permissions on: '{$r}'\nMSG: {$err['message']}");
       }
 
-		} catch (Exception $e) {
-			$debug->log($logdir, $logfile, $e->getMessage(), false);
-			continue;
-		}
+    } catch (Exception $e) {
+      $debug->log($logdir, $logfile, $e->getMessage(), false);
+      continue;
+    }
 
-		// Update index photo filename
-		$tmp = explode("/", $app->config['livestreampath']);
-		$indexphotofilename = $tmp[count($tmp) - 2] ."/". $channels[$i]['livefeedstreamid'] ."/". $app->config['videothumbnailresolutions']['4:3'] ."/". $filename;
-		$err = @updateLiveFeedStreamIndexPhoto($channels[$i]['livefeedstreamid'], $indexphotofilename);
+    // Update index photo filename
+    $tmp = explode("/", $app->config['livestreampath']);
+    $indexphotofilename = $tmp[count($tmp) - 2] ."/". $channels[$i]['livefeedstreamid'] ."/". $app->config['videothumbnailresolutions']['4:3'] ."/". $filename;
+    $err = @updateLiveFeedStreamIndexPhoto($channels[$i]['livefeedstreamid'], $indexphotofilename);
 
-		if ($debug_mode) {
-			$msg  = "[OK] Updated live thumbs published for livefeed_stream.id = ". $channels[$i]['livefeedstreamid'] ." at ". $app->config['fallbackstreamingserver']['server'] .":". $indexphotofilename ."\n";
-			$debug->log($logdir, $logfile, $msg, $sendmail = false);
-		}
+    if ($debug_mode) {
+      $msg  = "[OK] Updated live thumbs published for livefeed_stream.id = ". $channels[$i]['livefeedstreamid'] ." at ". $app->config['fallbackstreamingserver']['server'] .":". $indexphotofilename ."\n";
+      $debug->log($logdir, $logfile, $msg, $sendmail = false);
+    }
 
-		$app->watchdog();
-	} // END OF MAIN LOOP //
+    $app->watchdog();
+  } // END OF MAIN LOOP //
 }
 
 /**
@@ -258,8 +258,6 @@ function isStreamLive($URL) {
 
   if (empty($URL)) { return false; }
 
-  //$cmd = "{$app->config['ffprobe_alt']} -hide_banner -v quiet -print_format json -show_streams {$URL}";
-  //$cmd = "{$app->config['ffprobe_alt']} -hide_banner -print_format json -show_streams {$URL}";
   $cmd = "{$app->config['ffprobe_alt']} -hide_banner {$URL}";
 
   $job = new runExt($cmd);
@@ -295,46 +293,46 @@ function getActiveChannels() {
  global $debug, $logdir, $logfile, $app;
 
   $channels = null;
-	$model = $app->bootstrap->getModel('channels');
+  $model = $app->bootstrap->getModel('channels');
 
-	$now = date("Y-m-d H:i:s");
-	$query = "SELECT"
-		." ch.id,"
-		." ch.starttimestamp,"
-		." ch.endtimestamp,"
-		." ch.title,"
-		." ch.isliveevent,"
-		." lf.id AS locationid,"
-		." lf.name AS locationname,"
-		." lf.issecurestreamingforced,"
-		." lf.indexphotofilename,"
-		." lfs.id AS livefeedstreamid,"
-		." lfs.qualitytag AS streamname,"
-		." lfs.keycode AS streamid,"
-		." lfs.contentkeycode AS contentstreamid"
-		." FROM"
-		." channels AS ch,"
-		." livefeeds AS lf,"
-		." livefeed_streams AS lfs"
-		." WHERE"
-		." ch.starttimestamp <= '" . $now . "' AND"
-		." ch.endtimestamp >= '" . $now . "' AND"
-		." ch.id = lf.channelid AND"
-		." lf.id = lfs.livefeedid AND"
-		." lf.issecurestreamingforced = 0"
-		." ORDER BY"
-		." ch.id";
+  $now = date("Y-m-d H:i:s");
+  $query = "SELECT"
+    ." ch.id,"
+    ." ch.starttimestamp,"
+    ." ch.endtimestamp,"
+    ." ch.title,"
+    ." ch.isliveevent,"
+    ." lf.id AS locationid,"
+    ." lf.name AS locationname,"
+    ." lf.issecurestreamingforced,"
+    ." lf.indexphotofilename,"
+    ." lfs.id AS livefeedstreamid,"
+    ." lfs.qualitytag AS streamname,"
+    ." lfs.keycode AS streamid,"
+    ." lfs.contentkeycode AS contentstreamid"
+    ." FROM"
+    ." channels AS ch,"
+    ." livefeeds AS lf,"
+    ." livefeed_streams AS lfs"
+    ." WHERE"
+    ." ch.starttimestamp <= '" . $now . "' AND"
+    ." ch.endtimestamp >= '" . $now . "' AND"
+    ." ch.id = lf.channelid AND"
+    ." lf.id = lfs.livefeedid AND"
+    ." lf.issecurestreamingforced = 0"
+    ." ORDER BY"
+    ." ch.id";
 
-	try {
-		$rs_channels = $model->safeExecute($query);
+  try {
+    $rs_channels = $model->safeExecute($query);
     $channels = $rs_channels->GetArray();
-	} catch (Exception $err) {
-		$debug->log($logdir, $logfile, "[ERROR] SQL query failed (". $err->getTraceAsString() .")\nSQL QUERY:\n'". trim($query) ."'", false);
-		return false;
-	}
+  } catch (Exception $err) {
+    $debug->log($logdir, $logfile, "[ERROR] SQL query failed (". $err->getTraceAsString() .")\nSQL QUERY:\n'". trim($query) ."'", false);
+    return false;
+  }
 
-	// Check if any record returned
+  // Check if any record returned
   if (count($channels) < 1) { return false; }
 
-	return $channels;
+  return $channels;
 }
