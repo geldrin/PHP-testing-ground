@@ -104,7 +104,8 @@ $config = array(
   // Converter related settings
   'mediainfo_identify'     => 'mediainfo --full --output=XML %s 2>&1',
   // FFmpeg
-  'ffmpeg_alt'             => '/home/conv/ffmpeg/ffmpeg-git-20140623-64bit-static/ffmpeg', // current FFMpeg static build'
+  'ffmpeg_alt'             => '/usr/bin/ffmpeg',  // path to ffmpeg executable
+  'ffprobe_alt'            => '/usr/bin/ffprobe', // path to ffprobe executable
   'ffmpeg_loglevel'        => 25,          // Loglevel
   'ffmpeg_threads'         => 0,           // Threads to use (0 - automatic)
   'max_duration_error'     => 20,          // margin of error when comparing master and converted video lengths
