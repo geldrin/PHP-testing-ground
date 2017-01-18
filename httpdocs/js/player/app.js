@@ -676,6 +676,9 @@ System.register("player/Flow", ["player/Flow/LayoutChooser", "player/Flow/Qualit
                     Flow.log("constructor", arguments);
                     this.player = player;
                     this.cfg = player.conf.vsq || {};
+                    this.l = this.cfg.locale;
+                    this.player.conf.errors.push(this.l.get('access_denied'));
+                    this.accessDeniedError = player.conf.errors.length - 1;
                     this.hlsConf = jQuery.extend({
                         bufferWhilePaused: true,
                         smoothSwitching: true,
@@ -762,12 +765,6 @@ System.register("player/Flow", ["player/Flow/LayoutChooser", "player/Flow/Qualit
                 };
                 Flow.isHLSType = function (type) {
                     return type.toLowerCase().indexOf("mpegurl") > -1;
-                };
-                Flow.HLSQualitiesSupport = function (conf) {
-                    var hlsQualities = (conf.clip && conf.clip.hlsQualities) || conf.hlsQualities;
-                    return flowplayer.support.inlineVideo &&
-                        (hlsQualities === true ||
-                            (hlsQualities && hlsQualities.length));
                 };
                 Flow.canPlay = function (type, conf) {
                     var b = flowplayer.support.browser;
@@ -988,33 +985,12 @@ System.register("player/Flow", ["player/Flow/LayoutChooser", "player/Flow/Qualit
                     var MEDIA_ERR_DECODE = 3;
                     var type = this.getTypeFromEvent(e);
                     var err = this.videoTags[type].error.code || MEDIA_ERR_DECODE;
-                    if ((this.hlsConf.recoverMediaError && err === MEDIA_ERR_DECODE) ||
-                        (this.hlsConf.recoverNetworkError && err === MEDIA_ERR_NETWORK) ||
-                        (this.hlsConf.recover && (err === MEDIA_ERR_NETWORK || err === MEDIA_ERR_DECODE))) {
-                        this.root.removeClass('is-paused');
-                        this.root.addClass('is-seeking');
-                        var hls = this.hlsEngines[type];
-                        if (err === MEDIA_ERR_NETWORK) {
-                            hls.startLoad();
-                            return false;
-                        }
-                        var now = performance.now();
-                        if (!this.recoverMediaErrorDate || now - this.recoverMediaErrorDate > 3000) {
-                            this.recoverMediaErrorDate = performance.now();
-                            hls.recoverMediaError();
-                            return false;
-                        }
-                        else if (!this.swapAudioCodecDate || now - this.swapAudioCodecDate > 3000) {
-                            this.swapAudioCodecDate = performance.now();
-                            hls.swapAudioCodec();
-                            hls.recoverMediaError();
-                            return false;
-                        }
-                    }
+                    this.log(this.videoTags[type].error, e);
                     var arg = { code: err };
                     if (err > MEDIA_ERR_NETWORK)
                         arg.video = jQuery.extend(this.videoInfo[type], { url: this.videoInfo[type].src });
                     this.player.trigger("error", [this.player, arg]);
+                    return false;
                 };
                 Flow.prototype.triggerPlayer = function (event, data) {
                     if (event !== "buffer" && event !== "progress")
@@ -1126,10 +1102,27 @@ System.register("player/Flow", ["player/Flow/LayoutChooser", "player/Flow/Qualit
                         hls.loadSource(video.src);
                     });
                     hls.on(Hls.Events.ERROR, function (event, err) {
-                        if (err.type !== Hls.ErrorTypes.NETWORK_ERROR)
+                        if (!err.fatal)
                             return;
-                        if (err.response == null || err.response.code !== 403)
-                            return;
+                        _this.root.removeClass('is-paused');
+                        _this.root.addClass('is-seeking');
+                        var now = performance.now();
+                        switch (err.type) {
+                            case Hls.ErrorTypes.NETWORK_ERROR:
+                                if (err.response && err.response.code === 403) {
+                                    _this.player.trigger("error", [_this.player, { code: _this.accessDeniedError }]);
+                                    return;
+                                }
+                                hls.startLoad();
+                                return;
+                            case Hls.ErrorTypes.MEDIA_ERROR:
+                                if (!_this.swapAudioCodecDate || now - _this.swapAudioCodecDate > 3000) {
+                                    _this.swapAudioCodecDate = performance.now();
+                                    hls.swapAudioCodec();
+                                }
+                                hls.recoverMediaError();
+                                return;
+                        }
                         var arg = { code: 2 };
                         _this.player.trigger("error", [_this.player, arg]);
                     });
@@ -1369,8 +1362,9 @@ System.register("player/app", ["Locale", "player/Config", "player/Player"], func
                 var fcCopy = $.extend(true, {}, flashconfig);
                 var lCopy = $.extend(true, {}, l);
                 $(function () {
-                    var cfg = new Config_1.default(pcCopy, fcCopy);
                     var loc = new Locale_1.default(lCopy);
+                    pcCopy.flowplayer.vsq.locale = loc;
+                    var cfg = new Config_1.default(pcCopy, fcCopy);
                     var player = new Player_1.default(cfg, loc);
                     player.init();
                 });

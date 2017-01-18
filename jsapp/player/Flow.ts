@@ -7,6 +7,7 @@ import LayoutChooser from "./Flow/LayoutChooser";
 import QualityChooser from "./Flow/QualityChooser";
 import Tools from "../Tools";
 import Escape from "../Escape";
+import Locale from "../Locale";
 
 declare var Hls: any;
 declare var WebKitMediaSource: any;
@@ -23,6 +24,7 @@ export class Flow {
   public static readonly MASTER = 0;
   public static readonly CONTENT = 1;
 
+  private l: Locale;
   private id: string;
   private loadedCount = 0;
   private longerType: 0 | 1 = 0; // alapbol Flow.MASTER
@@ -42,15 +44,21 @@ export class Flow {
   private activeQualityClass = "active";
   private mse = MediaSource || WebKitMediaSource;
   private maxLevel: number = 0; // hls specific
-  private recoverMediaErrorDate: number;
+  private accessDeniedError: number;
   private swapAudioCodecDate: number;
 
   private plugins: BasePlugin[] = [];
 
   constructor(player: Flowplayer, root: Element) {
     Flow.log("constructor", arguments);
+
     this.player = player;
     this.cfg = player.conf.vsq as VSQConfig || {};
+    this.l = this.cfg.locale;
+
+    this.player.conf.errors.push(this.l.get('access_denied'));
+    this.accessDeniedError = player.conf.errors.length - 1;
+
     this.hlsConf = jQuery.extend({
         bufferWhilePaused: true,
         smoothSwitching: true,
@@ -154,14 +162,6 @@ export class Flow {
 
   private static isHLSType(type: string): boolean {
     return type.toLowerCase().indexOf("mpegurl") > -1;
-  }
-  private static HLSQualitiesSupport(conf: any): boolean {
-    let hlsQualities = (conf.clip && conf.clip.hlsQualities) || conf.hlsQualities;
-
-    return flowplayer.support.inlineVideo &&
-      (hlsQualities === true ||
-      (hlsQualities && hlsQualities.length))
-    ;
   }
 
   public static canPlay(type: string, conf: FlowConfig): boolean {
@@ -471,40 +471,14 @@ export class Flow {
 
     let type = this.getTypeFromEvent(e);
     let err = this.videoTags[type].error.code || MEDIA_ERR_DECODE;
-
-    // egyatalan olyan hiba amivel tudunk kezdeni valamit?
-    if (
-         (this.hlsConf.recoverMediaError && err === MEDIA_ERR_DECODE) ||
-         (this.hlsConf.recoverNetworkError && err === MEDIA_ERR_NETWORK) ||
-         (this.hlsConf.recover && (err === MEDIA_ERR_NETWORK || err === MEDIA_ERR_DECODE))
-       ) {
-      this.root.removeClass('is-paused');
-      this.root.addClass('is-seeking');
-
-      let hls = this.hlsEngines[type];
-      if (err === MEDIA_ERR_NETWORK) {
-        hls.startLoad();
-        return false;
-      }
-
-      let now = performance.now();
-      if (!this.recoverMediaErrorDate || now - this.recoverMediaErrorDate > 3000) {
-        this.recoverMediaErrorDate = performance.now();
-        hls.recoverMediaError();
-        return false;
-      } else if (!this.swapAudioCodecDate || now - this.swapAudioCodecDate > 3000) {
-        this.swapAudioCodecDate = performance.now();
-        hls.swapAudioCodec();
-        hls.recoverMediaError();
-        return false;
-      }
-    }
+    this.log(this.videoTags[type].error, e)
 
     let arg: any = {code: err};
     if (err > MEDIA_ERR_NETWORK)
       arg.video = jQuery.extend(this.videoInfo[type], {url: this.videoInfo[type].src});
 
     this.player.trigger("error", [this.player, arg]);
+    return false;
   }
 
   private triggerPlayer(event: string, data: any): void {
@@ -694,18 +668,33 @@ export class Flow {
       hls.loadSource(video.src);
     });
     hls.on(Hls.Events.ERROR, (event: string, err: any): void => {
-      if (err.type !== Hls.ErrorTypes.NETWORK_ERROR)
+      if (!err.fatal)
         return;
 
-      if (err.response == null || err.response.code !== 403)
-        return;
+      this.root.removeClass('is-paused');
+      this.root.addClass('is-seeking');
+      let now = performance.now();
+      switch(err.type) {
+        case Hls.ErrorTypes.NETWORK_ERROR:
+          // 403 -> checkstreamaccess visszautasitott
+          if (err.response && err.response.code === 403) {
+            this.player.trigger("error", [this.player, {code: this.accessDeniedError}]);
+            return;
+          }
 
-      // TODO visza lettunk utasitva a checkstreamaccess altal, valami UIt mutassunk
-      /*
-      const ACCESS_DENIED = 31874;
-      this.player.errors[ACCESS_DENIED] = "Access denied";
-      let arg: any = {code: ACCESS_DENIED};
-      */
+          hls.startLoad();
+          return;
+        case Hls.ErrorTypes.MEDIA_ERROR:
+          if (!this.swapAudioCodecDate || now - this.swapAudioCodecDate > 3000) {
+            this.swapAudioCodecDate = performance.now();
+            hls.swapAudioCodec();
+          }
+
+          hls.recoverMediaError();
+          return;
+      }
+
+      // nem tudtuk lekezelni a hibat, mutassunk valamit, 2 = NETWORK_ERROR
       let arg: any = {code: 2};
       this.player.trigger("error", [this.player, arg]);
     });
@@ -923,4 +912,5 @@ export interface VSQConfig {
   labels: string[];
   contentOnRight: boolean;
   masterIndex: number;
+  locale: Locale;
 }

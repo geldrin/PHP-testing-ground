@@ -18,8 +18,11 @@ declare var l: Object;
   let lCopy = $.extend(true, {}, l);
 
   $(function() {
-    let cfg = new Config(pcCopy, fcCopy);
     let loc = new Locale(lCopy);
+    pcCopy.flowplayer.vsq.locale = loc;
+
+    let cfg = new Config(pcCopy, fcCopy);
+
     let player = new Player(cfg, loc);
     player.init();
   });
