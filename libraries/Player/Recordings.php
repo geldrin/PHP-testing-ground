@@ -171,6 +171,10 @@ class Recordings extends Player {
     return max( $this->row['masterlength'], $this->row['contentmasterlength'] );
   }
 
+  private function hasSubtitle() {
+    return $this->model->hasSubtitle();
+  }
+
   public function getPlayerHeight( $fullscale = false ) {
     if ( $fullscale and $this->row['mastermediatype'] == 'audio' and $this->hasSubtitle() )
       return '140';
