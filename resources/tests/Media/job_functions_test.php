@@ -74,7 +74,10 @@ if ( $app->config['node_role'] == "converter" ) {
 		$jconf['doc_dir'],
 		$jconf['vcr_dir'],
 		$jconf['job_dir'],
-		$jconf['log_dir']
+		$jconf['log_dir'],
+		// Temp storage
+		$app->config['convpath'],
+		$app->config['recpath']
 	);
 	$err = checkDirectories($dirs2check);
 	if ( !$err ) {
@@ -93,21 +96,10 @@ if ( $app->config['node_role'] == "converter" ) {
 	);
 	$err = checkDirectories($dirs2check);
 	if ( !$err ) {
-		echo "[ERROR] One or more directory check failed. PLEASE CHECK!";
+		$msg = "[ERROR] One or more directory check failed. PLEASE CHECK!";
+		$debug->log($jconf['log_dir'], $myjobid . ".log", $msg, $sendmail = false);
+		echo $msg . "\n";
 		$summary_result = false;
-	}
-}
-
-// SSH testing
-if ( $app->config['node_role'] == "converter" ) {
-	$ssh_command = "ssh -i " . $app->config['ssh_key'] . " " . $app->config['ssh_user'] . "@" . $app->config['fallbackstreamingserver']['server'] . " date";
-	exec($ssh_command, $output, $result);
-	$output_string = implode("\n", $output);
-	if ( $result != 0 ) {
-		$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] SSH command not successful.\nCommand: " . $ssh_command . "\nOutput: " . $output_string, $sendmail = false);
-		$summary_result = false;
-	} else {
-		$debug->log($jconf['log_dir'], $myjobid . ".log", "[OK] SSH command successful.\nCommand: " . $ssh_command . "\nOutput: " . $output_string, $sendmail = false);
 	}
 }
 
@@ -115,11 +107,41 @@ if ( $app->config['node_role'] == "converter" ) {
 if ( $isdb ) {
     $err = getSomethingFromDB();
     if ( $err === false ) {
-        $debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] DB query was not successful.", $sendmail = false);
+		$msg = "[ERROR] DB query was not successful.";
+        $debug->log($jconf['log_dir'], $myjobid . ".log", $msg, $sendmail = false);
+		echo $msg . "\n";
         $summary_result = false;
     } else {
         $debug->log($jconf['log_dir'], $myjobid . ".log", "[OK] DB query result:\n" . print_r($err, true), $sendmail = false);
     }
+}
+
+// SSH testing
+if ( $app->config['node_role'] == "converter" ) {
+	
+	$frontends = getFrontEndsFromDB();
+	if ( $frontends === false ) {
+		$msg = "[ERROR] Cannot query any front end from database. PLEASE CHECK!";
+		$debug->log($jconf['log_dir'], $myjobid . ".log", $msg, $sendmail = false);
+		echo $msg . "\n";
+		$summary_result = false;
+	}
+	
+	for ( $i = 0; $i < count($frontends); $i++ ) {
+
+		$debug->log($jconf['log_dir'], $myjobid . ".log", "[INFO] Connecting (SSH) to front-end: " . $frontends[$i]['server'], $sendmail = false);
+	
+		$ssh_command = "ssh -i " . $app->config['ssh_key'] . " " . $app->config['ssh_user'] . "@" . $frontends[$i]['server'] . " date";
+		exec($ssh_command, $output, $result);
+		$output_string = implode("\n", $output);
+		if ( $result != 0 ) {
+			$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] SSH command not successful.\nCommand: " . $ssh_command . "\nOutput: " . $output_string, $sendmail = false);
+			$summary_result = false;
+		} else {
+			$debug->log($jconf['log_dir'], $myjobid . ".log", "[OK] SSH command successful.\nCommand: " . $ssh_command . "\nOutput: " . $output_string, $sendmail = false);
+		}
+
+	}
 }
     
 // Send test mail
@@ -267,6 +289,34 @@ if ( !$summary_result ) {
 echo "Please check log for details: " . $logfile . "\n";
 
 exit;
+
+function getFrontEndsFromDB() {
+global $jconf, $debug, $db, $myjobid;
+
+	$query = "
+		SELECT
+			ins.id,
+			ins.server,
+			ins.serverip,
+			ins.shortname,
+			ins.type,
+			ins.default,
+			ins.disabled
+		FROM
+			infrastructure_nodes AS ins
+		WHERE
+			ins.disabled = 0 AND
+			ins.type = \"frontend\"";
+	
+	try {
+		$rs = $db->getArray($query);
+	} catch (exception $err) {
+		$debug->log($jconf['log_dir'], $myjobid . ".log", "[ERROR] SQL query failed." . trim($query), $sendmail = false);
+		return false;
+	}
+
+	return $rs;
+}
 
 function getSomethingFromDB() {
 global $jconf, $debug, $db, $myjobid;
