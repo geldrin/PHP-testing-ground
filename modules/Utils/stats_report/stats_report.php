@@ -245,7 +245,7 @@ global $db, $jobid, $debug, $jconf;
             vso.timestamp <= '" . $end_date . "' AND
             (vso.positionuntil - vso.positionfrom) > 0 AND
             vso.recordingid = r.id AND
-            r.organizationid = " . $organizationid . " AND
+            r.organizationid = " . $organizationid . "
 		GROUP BY
 			vso.viewsessionid";
 
@@ -258,10 +258,19 @@ global $db, $jobid, $debug, $jconf;
 
     // Check if any record returned
 	if ( count($rs) < 1 ) return false;
+	
+	// Summarize data
+	$retval = array(
+		'numviewsessions'	=> 0,
+		'duration'			=> 0
+	);
+	
+	for ($i = 0; $i < count($rs); $i++ ) {
+		$retval['numviewsessions']++;
+		if ( is_numeric($rs[$i]['duration']) ) $retval['duration'] += $rs[$i]['duration'];
+	}
     
-    if ( empty($rs[0]['duration']) ) $rs[0]['duration'] = 0;
-    
-    return $rs[0];
+    return $retval;
 }
 
 function getLiveAllPlaybacksByDate($organizationid, $start_date, $end_date) {
@@ -279,7 +288,7 @@ global $db, $jobid, $debug, $jconf;
             vsl.timestampuntil <= '" . $end_date . "' AND
             TIMESTAMPDIFF(SECOND, vsl.timestampfrom, vsl.timestampuntil) > 0 AND
             vsl.livefeedid = lf.id AND
-            lf.organizationid = " . $organizationid . " AND
+            lf.organizationid = " . $organizationid . "
 		GROUP BY
 			vsl.viewsessionid";
 
@@ -292,10 +301,19 @@ global $db, $jobid, $debug, $jconf;
     
     // Check if any record returned
 	if ( count($rs) < 1 ) return false;
+	
+	// Summarize data
+	$retval = array(
+		'numviewsessions'	=> 0,
+		'duration'			=> 0
+	);
+	
+	for ($i = 0; $i < count($rs); $i++ ) {
+		$retval['numviewsessions']++;
+		if ( is_numeric($rs[$i]['duration']) ) $retval['duration'] += $rs[$i]['duration'];
+	}
     
-    if ( empty($rs[0]['duration']) ) $rs[0]['duration'] = 0;
-    
-    return $rs[0];
+    return $retval;
 }
 
 function getLiveFeedPlaybacksByID($livefeedid) {
