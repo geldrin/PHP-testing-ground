@@ -245,7 +245,9 @@ global $db, $jobid, $debug, $jconf;
             vso.timestamp <= '" . $end_date . "' AND
             (vso.positionuntil - vso.positionfrom) > 0 AND
             vso.recordingid = r.id AND
-            r.organizationid = " . $organizationid;
+            r.organizationid = " . $organizationid . " AND
+		GROUP BY
+			vso.viewsessionid";
 
 	try {
 		$rs = $db->getArray($query);
@@ -277,7 +279,9 @@ global $db, $jobid, $debug, $jconf;
             vsl.timestampuntil <= '" . $end_date . "' AND
             TIMESTAMPDIFF(SECOND, vsl.timestampfrom, vsl.timestampuntil) > 0 AND
             vsl.livefeedid = lf.id AND
-            lf.organizationid = " . $organizationid;
+            lf.organizationid = " . $organizationid . " AND
+		GROUP BY
+			vsl.viewsessionid";
 
 	try {
 		$rs = $db->getArray($query);
