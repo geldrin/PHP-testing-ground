@@ -79,7 +79,7 @@ export default class QualityChooser extends BasePlugin {
   public load(): void {
     // copy quality array, assemble HTML
     let levels = this.getLevels();
-    this.log('quality levels: ', levels);
+    this.log('qualities: ', levels);
     levels.unshift("Auto");
 
     // ha masik videohoz lett betoltve elotte
@@ -108,6 +108,7 @@ export default class QualityChooser extends BasePlugin {
   public setupHLS(hls: any, type: number): void {
     hls.on(Hls.Events.MANIFEST_PARSED, (event: string, data: any): void => {
       let startLevel = this.getQualityIndex(type, this.selectedQuality);
+      this.log('manifest parsed for type: ', type, ' startLevel: ', startLevel);
       hls.startLevel = startLevel;
       hls.loadLevel = startLevel;
 
@@ -136,14 +137,14 @@ export default class QualityChooser extends BasePlugin {
     let engines = this.flow.getHLSEngines();
     let masterLevel = this.getQualityIndex(Flow.MASTER, quality);
     this.log('setting master video level to', masterLevel, quality);
-    engines[Flow.MASTER][method](masterLevel);
+    engines[Flow.MASTER][method] = masterLevel;
 
     if (!this.shouldLookAtSecondary())
       return;
 
     let secondaryLevel = this.getQualityIndex(Flow.CONTENT, quality);
     this.log('setting content video level to', secondaryLevel, quality);
-    engines[Flow.CONTENT][method](secondaryLevel);
+    engines[Flow.CONTENT][method] = secondaryLevel;
   }
 
   private getQualityIndex(type: number, quality: string): number {

@@ -612,7 +612,7 @@ System.register("player/Flow/QualityChooser", ["player/Flow", "player/Flow/BaseP
                 };
                 QualityChooser.prototype.load = function () {
                     var levels = this.getLevels();
-                    this.log('quality levels: ', levels);
+                    this.log('qualities: ', levels);
                     levels.unshift("Auto");
                     this.root.find('.vsq-quality-selector').remove();
                     var html = "<ul class=\"vsq-quality-selector\">";
@@ -634,6 +634,7 @@ System.register("player/Flow/QualityChooser", ["player/Flow", "player/Flow/BaseP
                     var _this = this;
                     hls.on(Hls.Events.MANIFEST_PARSED, function (event, data) {
                         var startLevel = _this.getQualityIndex(type, _this.selectedQuality);
+                        _this.log('manifest parsed for type: ', type, ' startLevel: ', startLevel);
                         hls.startLevel = startLevel;
                         hls.loadLevel = startLevel;
                         hls.startLoad(hls.config.startPosition);
@@ -656,12 +657,12 @@ System.register("player/Flow/QualityChooser", ["player/Flow", "player/Flow/BaseP
                     var engines = this.flow.getHLSEngines();
                     var masterLevel = this.getQualityIndex(Flow_3.Flow.MASTER, quality);
                     this.log('setting master video level to', masterLevel, quality);
-                    engines[Flow_3.Flow.MASTER][method](masterLevel);
+                    engines[Flow_3.Flow.MASTER][method] = masterLevel;
                     if (!this.shouldLookAtSecondary())
                         return;
                     var secondaryLevel = this.getQualityIndex(Flow_3.Flow.CONTENT, quality);
                     this.log('setting content video level to', secondaryLevel, quality);
-                    engines[Flow_3.Flow.CONTENT][method](secondaryLevel);
+                    engines[Flow_3.Flow.CONTENT][method] = secondaryLevel;
                 };
                 QualityChooser.prototype.getQualityIndex = function (type, quality) {
                     if (type === Flow_3.Flow.MASTER)
