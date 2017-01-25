@@ -190,8 +190,6 @@ abstract class Player {
         // a master video hanyadik a sorban amit jatszani kell
         'masterIndex' => 0,
         'autoplay' => false,
-        // a minosegi valtozatok labeljei, kulon a master es contentnek
-        'labels' => array(),
         'secondarySources' => array(),
         'contentOnRight' => (bool) $this->row['slideonright'],
         // TODO mobile es a mobil tipusa
@@ -240,9 +238,6 @@ abstract class Player {
       'src'  => $streams['master']['url'],
       'vsq-labels' => $streams['master']['labels'],
     );
-    // TODO ezt akarjuk lecserelni majd dinamikusan a source labelekkel
-    // ugyhogy majd torolni kell
-    $ret['vsq']['labels'] = $streams['master']['labels'];
     $ret['playlist'][] = $clip;
 
     if ( $streams['outro'] ) {

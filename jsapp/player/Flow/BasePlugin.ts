@@ -8,18 +8,25 @@ import Escape from "../../Escape";
 declare var Hls: any;
 
 export abstract class BasePlugin {
+  protected pluginName: string;
   protected flow: Flow;
   protected root: JQuery;
   protected cfg: VSQConfig;
   protected player: Flowplayer;
-  protected videoTags: HTMLVideoElement[] = [];
 
   constructor(flow: Flow) {
     this.flow = flow;
     this.root = flow.getRoot();
     this.cfg = flow.getConfig();
     this.player = flow.getPlayer();
-    this.videoTags = flow.getVideoTags();
+  }
+
+  protected log(...params: Object[]): void {
+    if (!Flow.debug)
+      return;
+
+    params.unshift(`[${this.pluginName}]`);
+    console.log.apply(console, params);
   }
 
   // non-abstract mert nem kell hogy mindenki implementalja
@@ -39,6 +46,7 @@ export abstract class BasePlugin {
     // direkt nem csinal semmit
   }
 
-  public abstract init(): void;
+  // akarhanyszor meghivodhat!
+  public abstract load(): void;
   public abstract destroy(): void;
 }

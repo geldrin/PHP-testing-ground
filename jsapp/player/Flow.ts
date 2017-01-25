@@ -19,7 +19,7 @@ declare var WebKitMediaSource: any;
  */
 export class Flow {
   public static engineName = "vsq";
-  private static debug = false;
+  public static debug = false;
   private static initDone = false;
   public static readonly MASTER = 0;
   public static readonly CONTENT = 1;
@@ -27,7 +27,7 @@ export class Flow {
   private l: Locale;
   private id: string;
   private loadedCount = 0;
-  private longerType: 0 | 1 = 0; // alapbol Flow.MASTER
+  public longerType: 0 | 1 = 0; // alapbol Flow.MASTER
   private videoTags: HTMLVideoElement[] = [];
   private videoInfo: FlowVideo[] = [];
   private hlsEngines: any[] = [];
@@ -36,14 +36,9 @@ export class Flow {
   private player: Flowplayer;
   private root: JQuery;
   private cfg: VSQConfig;
-  private volumeLevel: number;
   private eventsInitialized = false;
-  private timer: number;
-  private introOrOutro = false;
+  public introOrOutro = false;
 
-  private activeQualityClass = "active";
-  private mse = MediaSource || WebKitMediaSource;
-  private maxLevel: number = 0; // hls specific
   private accessDeniedError: number;
   private swapAudioCodecDate: number;
 
@@ -91,6 +86,12 @@ export class Flow {
   }
   public getVideoTags(): HTMLVideoElement[] {
     return this.videoTags;
+  }
+  public getVideoInfo(type: number): FlowVideo {
+    return this.videoInfo[type];
+  }
+  public getHLSEngines(): any[] {
+    return this.hlsEngines;
   }
 
   private hideFlowLogo(): void {
@@ -212,7 +213,7 @@ export class Flow {
     });
   }
 
-  private hasMultipleVideos(): boolean {
+  public hasMultipleVideos(): boolean {
     if (this.introOrOutro)
       return false;
 
@@ -782,7 +783,7 @@ export class Flow {
     this.setupVideoEvents(video);
 
     for (let i = this.plugins.length - 1; i >= 0; i--)
-      this.plugins[i].init();
+      this.plugins[i].load();
 
     if (this.cfg.autoplay)
       this.tagCall("play");
@@ -909,7 +910,6 @@ export interface VSQConfig {
   duration: number;
   autoplay: boolean;
   secondarySources: FlowSource[];
-  labels: string[];
   contentOnRight: boolean;
   masterIndex: number;
   locale: Locale;

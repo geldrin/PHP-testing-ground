@@ -18,6 +18,7 @@ interface LayoutChooserInfo {
 }
 
 export default class LayoutChooser extends BasePlugin {
+  protected pluginName = "LayoutChooser";
   private ranges: LayoutChooserRange[];
   private readonly PIPCONTENT  = 0;
   private readonly MASTERONLY  = 1;
@@ -25,9 +26,9 @@ export default class LayoutChooser extends BasePlugin {
   private readonly CONTENTONLY = 3;
   private readonly PIPMASTER   = 4;
 
-  public init(): void {
+  public load(): void {
     // nincs masik video, csak a full 100% szamit
-    if (this.cfg.secondarySources.length === 0) {
+    if (!this.flow.hasMultipleVideos()) {
       this.root.addClass('vsq-singlevideo');
       return;
     }
@@ -69,7 +70,7 @@ export default class LayoutChooser extends BasePlugin {
     else
       maxHeight = this.root.height();
 
-    jQuery(this.videoTags).css("maxHeight", maxHeight + 'px');
+    jQuery(this.flow.getVideoTags()).css("maxHeight", maxHeight + 'px');
   }
 
   private setupRatios() {
@@ -257,8 +258,9 @@ export default class LayoutChooser extends BasePlugin {
       // a default z-index ertekek jok nekunk
     }
 
-    let master = jQuery(this.videoTags[Flow.MASTER]);
-    let content = jQuery(this.videoTags[Flow.CONTENT]);
+    let tags = this.flow.getVideoTags();
+    let master = jQuery(tags[Flow.MASTER]);
+    let content = jQuery(tags[Flow.CONTENT]);
     master.css({
       width: masterWidth + '%',
       zIndex: masterZ,
