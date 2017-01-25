@@ -681,6 +681,7 @@ System.register("player/Flow/QualityChooser", ["player/Flow", "player/Flow/BaseP
                 };
                 QualityChooser.prototype.getLevelForSecondary = function (masterLevel) {
                     var labels = this.flow.getVideoInfo(Flow_3.Flow.CONTENT)['vsq-labels'];
+                    this.log(labels, masterLevel);
                     if (labels.length <= masterLevel)
                         return labels.length - 1;
                     return masterLevel;

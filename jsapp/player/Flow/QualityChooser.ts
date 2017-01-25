@@ -177,6 +177,7 @@ export default class QualityChooser extends BasePlugin {
   // olvashatosag miatt kiemelt functionje
   private getLevelForSecondary(masterLevel: number): number {
     let labels = this.flow.getVideoInfo(Flow.CONTENT)['vsq-labels'];
+    this.log(labels, masterLevel);
     if (labels.length <= masterLevel)
       return labels.length - 1;
 
