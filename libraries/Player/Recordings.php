@@ -707,7 +707,7 @@ class Recordings extends Player {
       if ( $cfg['subtitles']['show'] )
         $ret['subtitle_autoShow'] = true;
 
-      if ( $cfg['subtitles']['default'] )
+      if ( isset( $cfg['subtitles']['default'] ) )
         $ret['subtitle_default'] = $cfg['subtitles']['default'];
 
       $ret['subtitle_files'] = $cfg['subtitles']['files'];
