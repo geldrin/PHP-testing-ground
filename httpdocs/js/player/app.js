@@ -681,7 +681,6 @@ System.register("player/Flow/QualityChooser", ["player/Flow", "player/Flow/BaseP
                 };
                 QualityChooser.prototype.getLevelForSecondary = function (masterLevel) {
                     var labels = this.flow.getVideoInfo(Flow_3.Flow.CONTENT)['vsq-labels'];
-                    this.log(labels, masterLevel);
                     if (labels.length <= masterLevel)
                         return labels.length - 1;
                     return masterLevel;
@@ -1204,6 +1203,7 @@ System.register("player/Flow", ["player/Flow/LayoutChooser", "player/Flow/Qualit
                             this.destroyVideoTag(Flow.CONTENT);
                         var secondVideo = jQuery.extend(true, {}, video);
                         secondVideo.src = this.cfg.secondarySources[0].src;
+                        secondVideo['vsq-labels'] = this.cfg.secondarySources[0]['vsq-labels'];
                         secondVideo.sources = this.cfg.secondarySources;
                         this.videoInfo[Flow.CONTENT] = secondVideo;
                         this.videoTags[Flow.CONTENT] = this.createVideoTag(secondVideo);

@@ -745,6 +745,7 @@ export class Flow {
       // deep copy the video, and set its properties
       let secondVideo = jQuery.extend(true, {}, video);
       secondVideo.src = this.cfg.secondarySources[0].src;
+      secondVideo['vsq-labels'] = this.cfg.secondarySources[0]['vsq-labels'];
       secondVideo.sources = this.cfg.secondarySources;
       this.videoInfo[Flow.CONTENT] = secondVideo;
 
