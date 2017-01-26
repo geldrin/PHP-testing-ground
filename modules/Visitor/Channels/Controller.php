@@ -196,8 +196,9 @@ class Controller extends \Visitor\Controller {
       $recModel->row = $row;
       $recModel->id  = $row['id'];
 
+      $player = $recModel->getPlayer();
       $data[ $key ]['embed'] = strtr( $embed, array(
-          '*HEIGHT*'      => $recModel->getPlayerHeight( $recordingembedfullwidth ),
+          '*HEIGHT*'      => $player->getPlayerHeight( $recordingembedfullwidth ),
           '*RECORDINGID*' => $row['id'],
         )
       );
