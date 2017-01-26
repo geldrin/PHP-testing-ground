@@ -62,7 +62,6 @@ foreach ($recs as $rec) {
 }
 fclose($fp);
 
-
 // Recordings playback per month
 $now = time();
 $year = date("Y", $vsq_epoch);
@@ -117,7 +116,7 @@ while ( $year <= date("Y") ) {
 }
 fclose($fp);
 
-// Livefeed concurrent users
+// Viewers and concurrent users per livefeed
 $fp = fopen('livefeed_views.csv', 'w');
 fputcsv($fp, array('Channel title', 'Channel ID', 'Date', 'Livefeed' , 'Livefeed ID', 'Number of views', 'Number of all views', 'All playback duration [sec]', 'All playback duration', 'Max. concurrent viewers'));
 
@@ -190,7 +189,7 @@ global $db, $jobid, $debug, $jconf;
 		$rs = $db->getArray($query);
 	} catch (exception $err) {
 		$debug->log($jconf['log_dir'], $jobid . ".log", "[ERROR] SQL query failed." . trim($query), $sendmail = true);
-		return false;
+		exit;
 	}
 
     // Check if any record returned
@@ -207,7 +206,7 @@ global $db, $jobid, $debug, $jconf;
             COUNT(r.id) AS numberofrecordings,
             SUM(r.numberofviews) AS numberofviews,
             SUM(r.masterdatasize) AS masterdatasize,
-            SUM(recordingdatasize) AS recordingdatasize,
+            SUM(r.recordingdatasize) AS recordingdatasize,
             SUM(r.masterlength) AS masterlength,
             SUM(r.contentmasterlength) AS contentmasterlength,
             ( SUM(r.masterlength) + SUM(r.contentmasterlength) ) AS allmasterlength
@@ -221,7 +220,7 @@ global $db, $jobid, $debug, $jconf;
 		$rs = $db->getArray($query);
 	} catch (exception $err) {
 		$debug->log($jconf['log_dir'], $jobid . ".log", "[ERROR] SQL query failed." . trim($query), $sendmail = true);
-		return false;
+		exit;
 	}
 
     // Check if any record returned
@@ -245,21 +244,32 @@ global $db, $jobid, $debug, $jconf;
             vso.timestamp <= '" . $end_date . "' AND
             (vso.positionuntil - vso.positionfrom) > 0 AND
             vso.recordingid = r.id AND
-            r.organizationid = " . $organizationid;
+            r.organizationid = " . $organizationid . "
+		GROUP BY
+			vso.viewsessionid";
 
 	try {
 		$rs = $db->getArray($query);
 	} catch (exception $err) {
 		$debug->log($jconf['log_dir'], $jobid . ".log", "[ERROR] SQL query failed." . trim($query), $sendmail = true);
-		return false;
+		exit;
 	}
 
     // Check if any record returned
 	if ( count($rs) < 1 ) return false;
+	
+	// Summarize data
+	$retval = array(
+		'numviewsessions'	=> 0,
+		'duration'			=> 0
+	);
+	
+	for ($i = 0; $i < count($rs); $i++ ) {
+		$retval['numviewsessions']++;
+		if ( is_numeric($rs[$i]['duration']) ) $retval['duration'] += $rs[$i]['duration'];
+	}
     
-    if ( empty($rs[0]['duration']) ) $rs[0]['duration'] = 0;
-    
-    return $rs[0];
+    return $retval;
 }
 
 function getLiveAllPlaybacksByDate($organizationid, $start_date, $end_date) {
@@ -277,21 +287,32 @@ global $db, $jobid, $debug, $jconf;
             vsl.timestampuntil <= '" . $end_date . "' AND
             TIMESTAMPDIFF(SECOND, vsl.timestampfrom, vsl.timestampuntil) > 0 AND
             vsl.livefeedid = lf.id AND
-            lf.organizationid = " . $organizationid;
+            lf.organizationid = " . $organizationid . "
+		GROUP BY
+			vsl.viewsessionid";
 
 	try {
 		$rs = $db->getArray($query);
 	} catch (exception $err) {
 		$debug->log($jconf['log_dir'], $jobid . ".log", "[ERROR] SQL query failed." . trim($query), $sendmail = true);
-		return false;
+		exit;
 	}
     
     // Check if any record returned
 	if ( count($rs) < 1 ) return false;
+	
+	// Summarize data
+	$retval = array(
+		'numviewsessions'	=> 0,
+		'duration'			=> 0
+	);
+	
+	for ($i = 0; $i < count($rs); $i++ ) {
+		$retval['numviewsessions']++;
+		if ( is_numeric($rs[$i]['duration']) ) $retval['duration'] += $rs[$i]['duration'];
+	}
     
-    if ( empty($rs[0]['duration']) ) $rs[0]['duration'] = 0;
-    
-    return $rs[0];
+    return $retval;
 }
 
 function getLiveFeedPlaybacksByID($livefeedid) {
@@ -305,21 +326,32 @@ global $db, $jobid, $debug, $jconf;
             view_statistics_live AS vsl
         WHERE
             vsl.livefeedid = " . $livefeedid . " AND
-            TIMESTAMPDIFF(SECOND, vsl.timestampfrom, vsl.timestampuntil) > 0";
+            TIMESTAMPDIFF(SECOND, vsl.timestampfrom, vsl.timestampuntil) > 0
+		GROUP BY
+			vsl.viewsessionid";
 
 	try {
 		$rs = $db->getArray($query);
 	} catch (exception $err) {
 		$debug->log($jconf['log_dir'], $jobid . ".log", "[ERROR] SQL query failed." . trim($query), $sendmail = true);
-		return false;
+		exit;
 	}
     
     // Check if any record returned
 	if ( count($rs) < 1 ) return false;
+	
+	// Summarize data
+	$retval = array(
+		'numberofallviewers'	=> 0,
+		'allviewsduration'		=> 0
+	);
+	
+	for ($i = 0; $i < count($rs); $i++ ) {
+		$retval['numberofallviewers']++;
+		if ( is_numeric($rs[$i]['allviewsduration']) ) $retval['allviewsduration'] += $rs[$i]['allviewsduration'];
+	}
     
-    if ( empty($rs[0]['allviewsduration']) ) $rs[0]['allviewsduration'] = 0;
-    
-    return $rs[0];
+    return $retval;	
 }
 
 function getLiveFeeds($organizationid) {
@@ -347,7 +379,7 @@ global $db, $jobid, $debug, $jconf;
 		$rs = $db->Execute($query);
 	} catch (exception $err) {
 		$debug->log($jconf['log_dir'], $jobid . ".log", "[ERROR] SQL query failed." . trim($query), $sendmail = true);
-		return false;
+		exit;
 	}
     
     // Check if any record returned
@@ -378,7 +410,7 @@ global $db, $jobid, $debug, $jconf;
 		$rs = $db->getArray($query);
 	} catch (exception $err) {
 		$debug->log($jconf['log_dir'], $jobid . ".log", "[ERROR] SQL query failed." . trim($query), $sendmail = true);
-		return false;
+		exit;
 	}
     
     // Check if any record returned
