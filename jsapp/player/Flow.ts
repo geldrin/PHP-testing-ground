@@ -8,6 +8,7 @@ import QualityChooser from "./Flow/QualityChooser";
 import Tools from "../Tools";
 import Escape from "../Escape";
 import Locale from "../Locale";
+import RateLimiter from "../RateLimiter";
 
 declare var Hls: any;
 declare var WebKitMediaSource: any;
@@ -40,7 +41,7 @@ export class Flow {
   public introOrOutro = false;
 
   private accessDeniedError: number;
-  private swapAudioCodecDate: number;
+  private rateLimits: RateLimiter[] = [];
   private recoverMediaDate: number;
 
   private plugins: BasePlugin[] = [];
@@ -669,13 +670,23 @@ export class Flow {
     hls.on(Hls.Events.MEDIA_ATTACHED, (event: string, data: any): void => {
       hls.loadSource(video.src);
     });
+
+    let limiter = new RateLimiter();
+    limiter.add("onNetworkError", 3*RateLimiter.SECOND, () => {
+      hls.startLoad();
+    });
+    limiter.add("onSwapAudioCodec", 3*RateLimiter.SECOND, () => {
+      hls.swapAudioCodec();
+    });
+    limiter.add("onRecoverMedia", 3*RateLimiter.SECOND, () => {
+      hls.recoverMediaError();
+    });
     hls.on(Hls.Events.ERROR, (event: string, err: any): void => {
       if (!err.fatal)
         return;
 
       this.root.removeClass('is-paused');
       this.root.addClass('is-seeking');
-      let now = performance.now();
       switch(err.type) {
         case Hls.ErrorTypes.NETWORK_ERROR:
           // 403 -> checkstreamaccess visszautasitott
@@ -684,22 +695,11 @@ export class Flow {
             return;
           }
 
-          // muszaj ratelimitelni
-          if (!this.recoverMediaDate || now - this.recoverMediaDate > 3000) {
-            this.recoverMediaDate = performance.now();
-            hls.startLoad();
-          }
+          limiter.trigger("onNetworkError");
           return;
         case Hls.ErrorTypes.MEDIA_ERROR:
-          if (!this.swapAudioCodecDate || now - this.swapAudioCodecDate > 3000) {
-            this.swapAudioCodecDate = performance.now();
-            hls.swapAudioCodec();
-          }
-
-          if (!this.recoverMediaDate || now - this.recoverMediaDate > 3000) {
-            this.recoverMediaDate = performance.now();
-            hls.recoverMediaError();
-          }
+          limiter.trigger("onSwapAudioCodec");
+          limiter.trigger("onRecoverMedia");
           return;
       }
 

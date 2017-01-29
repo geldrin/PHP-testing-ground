@@ -697,10 +697,71 @@ System.register("player/Flow/QualityChooser", ["player/Flow", "player/Flow/BaseP
         }
     };
 });
-System.register("player/Flow", ["player/Flow/LayoutChooser", "player/Flow/QualityChooser"], function (exports_9, context_9) {
+System.register("RateLimiter", [], function (exports_9, context_9) {
     "use strict";
     var __moduleName = context_9 && context_9.id;
-    var LayoutChooser_1, QualityChooser_1, Flow;
+    var Limit, Limits, RateLimiter;
+    return {
+        setters: [],
+        execute: function () {
+            Limit = (function () {
+                function Limit(name, duration, callback) {
+                    this.name = name;
+                    this.duration = duration;
+                    this.callback = callback;
+                }
+                Limit.prototype.call = function () {
+                    this.timer = null;
+                    this.lastTriggerDate = performance.now();
+                    if (this.callback instanceof Function)
+                        this.callback();
+                };
+                Limit.prototype.enqueue = function () {
+                    var _this = this;
+                    if (this.timer !== null)
+                        return;
+                    this.timer = setTimeout(function () { return _this.call(); }, this.duration);
+                };
+                Limit.prototype.trigger = function () {
+                    var now = performance.now();
+                    if (now - this.lastTriggerDate < this.duration) {
+                        this.enqueue();
+                        return false;
+                    }
+                    this.call();
+                    return true;
+                };
+                return Limit;
+            }());
+            Limits = (function () {
+                function Limits() {
+                }
+                return Limits;
+            }());
+            RateLimiter = (function () {
+                function RateLimiter() {
+                    this.limits = new Limits();
+                }
+                RateLimiter.prototype.add = function (name, duration, callback) {
+                    this.limits[name] = new Limit(name, duration, callback);
+                };
+                RateLimiter.prototype.trigger = function (name) {
+                    var limit = this.limits[name];
+                    if (limit == null)
+                        throw new Error("Limiter for " + name + " not found!");
+                    return limit.trigger();
+                };
+                return RateLimiter;
+            }());
+            RateLimiter.SECOND = 1000;
+            exports_9("default", RateLimiter);
+        }
+    };
+});
+System.register("player/Flow", ["player/Flow/LayoutChooser", "player/Flow/QualityChooser", "RateLimiter"], function (exports_10, context_10) {
+    "use strict";
+    var __moduleName = context_10 && context_10.id;
+    var LayoutChooser_1, QualityChooser_1, RateLimiter_1, Flow;
     return {
         setters: [
             function (LayoutChooser_1_1) {
@@ -708,6 +769,9 @@ System.register("player/Flow", ["player/Flow/LayoutChooser", "player/Flow/Qualit
             },
             function (QualityChooser_1_1) {
                 QualityChooser_1 = QualityChooser_1_1;
+            },
+            function (RateLimiter_1_1) {
+                RateLimiter_1 = RateLimiter_1_1;
             }
         ],
         execute: function () {
@@ -720,6 +784,7 @@ System.register("player/Flow", ["player/Flow/LayoutChooser", "player/Flow/Qualit
                     this.hlsEngines = [];
                     this.eventsInitialized = false;
                     this.introOrOutro = false;
+                    this.rateLimits = [];
                     this.plugins = [];
                     Flow.log("constructor", arguments);
                     this.player = player;
@@ -1155,32 +1220,32 @@ System.register("player/Flow", ["player/Flow/LayoutChooser", "player/Flow/Qualit
                     hls.on(Hls.Events.MEDIA_ATTACHED, function (event, data) {
                         hls.loadSource(video.src);
                     });
+                    var limiter = new RateLimiter_1.default();
+                    limiter.add("onNetworkError", 3 * RateLimiter_1.default.SECOND, function () {
+                        hls.startLoad();
+                    });
+                    limiter.add("onSwapAudioCodec", 3 * RateLimiter_1.default.SECOND, function () {
+                        hls.swapAudioCodec();
+                    });
+                    limiter.add("onRecoverMedia", 3 * RateLimiter_1.default.SECOND, function () {
+                        hls.recoverMediaError();
+                    });
                     hls.on(Hls.Events.ERROR, function (event, err) {
                         if (!err.fatal)
                             return;
                         _this.root.removeClass('is-paused');
                         _this.root.addClass('is-seeking');
-                        var now = performance.now();
                         switch (err.type) {
                             case Hls.ErrorTypes.NETWORK_ERROR:
                                 if (err.response && err.response.code === 403) {
                                     _this.player.trigger("error", [_this.player, { code: _this.accessDeniedError }]);
                                     return;
                                 }
-                                if (!_this.recoverMediaDate || now - _this.recoverMediaDate > 3000) {
-                                    _this.recoverMediaDate = performance.now();
-                                    hls.startLoad();
-                                }
+                                limiter.trigger("onNetworkError");
                                 return;
                             case Hls.ErrorTypes.MEDIA_ERROR:
-                                if (!_this.swapAudioCodecDate || now - _this.swapAudioCodecDate > 3000) {
-                                    _this.swapAudioCodecDate = performance.now();
-                                    hls.swapAudioCodec();
-                                }
-                                if (!_this.recoverMediaDate || now - _this.recoverMediaDate > 3000) {
-                                    _this.recoverMediaDate = performance.now();
-                                    hls.recoverMediaError();
-                                }
+                                limiter.trigger("onSwapAudioCodec");
+                                limiter.trigger("onRecoverMedia");
                                 return;
                         }
                         var arg = { code: 2 };
@@ -1322,13 +1387,13 @@ System.register("player/Flow", ["player/Flow/LayoutChooser", "player/Flow/Qualit
             Flow.initDone = false;
             Flow.MASTER = 0;
             Flow.CONTENT = 1;
-            exports_9("Flow", Flow);
+            exports_10("Flow", Flow);
         }
     };
 });
-System.register("player/Player", ["player/Flash", "player/Flow"], function (exports_10, context_10) {
+System.register("player/Player", ["player/Flash", "player/Flow"], function (exports_11, context_11) {
     "use strict";
-    var __moduleName = context_10 && context_10.id;
+    var __moduleName = context_11 && context_11.id;
     var Flash_1, Flow_4, Player;
     return {
         setters: [
@@ -1397,13 +1462,13 @@ System.register("player/Player", ["player/Flash", "player/Flow"], function (expo
                 };
                 return Player;
             }());
-            exports_10("default", Player);
+            exports_11("default", Player);
         }
     };
 });
-System.register("player/app", ["Locale", "player/Config", "player/Player"], function (exports_11, context_11) {
+System.register("player/app", ["Locale", "player/Config", "player/Player"], function (exports_12, context_12) {
     "use strict";
-    var __moduleName = context_11 && context_11.id;
+    var __moduleName = context_12 && context_12.id;
     var Locale_1, Config_1, Player_1;
     return {
         setters: [
