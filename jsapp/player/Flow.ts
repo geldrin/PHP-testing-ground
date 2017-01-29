@@ -684,7 +684,11 @@ export class Flow {
             return;
           }
 
-          hls.startLoad();
+          // muszaj ratelimitelni
+          if (!this.recoverMediaDate || now - this.recoverMediaDate > 3000) {
+            this.recoverMediaDate = performance.now();
+            hls.startLoad();
+          }
           return;
         case Hls.ErrorTypes.MEDIA_ERROR:
           if (!this.swapAudioCodecDate || now - this.swapAudioCodecDate > 3000) {

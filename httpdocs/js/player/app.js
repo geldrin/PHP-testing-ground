@@ -1167,7 +1167,10 @@ System.register("player/Flow", ["player/Flow/LayoutChooser", "player/Flow/Qualit
                                     _this.player.trigger("error", [_this.player, { code: _this.accessDeniedError }]);
                                     return;
                                 }
-                                hls.startLoad();
+                                if (!_this.recoverMediaDate || now - _this.recoverMediaDate > 3000) {
+                                    _this.recoverMediaDate = performance.now();
+                                    hls.startLoad();
+                                }
                                 return;
                             case Hls.ErrorTypes.MEDIA_ERROR:
                                 if (!_this.swapAudioCodecDate || now - _this.swapAudioCodecDate > 3000) {
