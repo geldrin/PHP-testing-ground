@@ -41,6 +41,7 @@ export class Flow {
 
   private accessDeniedError: number;
   private swapAudioCodecDate: number;
+  private recoverMediaDate: number;
 
   private plugins: BasePlugin[] = [];
 
@@ -691,7 +692,10 @@ export class Flow {
             hls.swapAudioCodec();
           }
 
-          hls.recoverMediaError();
+          if (!this.recoverMediaDate || now - this.recoverMediaDate > 3000) {
+            this.recoverMediaDate = performance.now();
+            hls.recoverMediaError();
+          }
           return;
       }
 

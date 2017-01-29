@@ -1174,7 +1174,10 @@ System.register("player/Flow", ["player/Flow/LayoutChooser", "player/Flow/Qualit
                                     _this.swapAudioCodecDate = performance.now();
                                     hls.swapAudioCodec();
                                 }
-                                hls.recoverMediaError();
+                                if (!_this.recoverMediaDate || now - _this.recoverMediaDate > 3000) {
+                                    _this.recoverMediaDate = performance.now();
+                                    hls.recoverMediaError();
+                                }
                                 return;
                         }
                         var arg = { code: 2 };
