@@ -37,6 +37,13 @@ if ( iswindows() ) {
 while( !is_file( $app->config['datapath'] . 'jobs/job_media_convert.stop' ) and !is_file( $app->config['datapath'] . 'jobs/all.stop' ) ) {
 
 	clearstatcache();
+	
+	// Convpath check
+	if ( !is_writeable($app->config['convpath']) ) {
+		$attachedDoc->debugLog("[ERROR] Converter temp path " . $app->config['convpath'] . " is not writeable.", false);
+		$converter_sleep_length = 15 * 60;
+		break;
+	}
 
     while ( 1 ) {
 

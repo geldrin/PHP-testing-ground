@@ -42,6 +42,13 @@ while( !is_file( $attachedDoc->config['datapath'] . 'jobs/' . $attachedDoc->jobi
 
 	clearstatcache();
 	
+	// Convpath check
+	if ( !is_writeable($app->config['convpath']) ) {
+		$attachedDoc->debugLog("[ERROR] Converter temp path " . $app->config['convpath'] . " is not writeable.", false);
+		$converter_sleep_length = 15 * 60;
+		break;
+	}
+	
 	// Check if OpenOffice listener is running
 	if ( !soffice_isrunning() ) {
 		$attachedDoc->debugLog("[ERROR] OpenOffice is not running. Indexing postponed.", true);
@@ -64,7 +71,7 @@ while( !is_file( $attachedDoc->config['datapath'] . 'jobs/' . $attachedDoc->jobi
 		// Temporary directory cleanup and log result
 		$err = tempdir_cleanup($attachedDoc->config_jobs['doc_dir']);
 		if ( !$err['code'] ) {
-            $attachedDoc->debugLog("[ERROR] Temporary directory cleanup error.\nERROR MSG: " . $err['message'] . "\nCOMMAND: " . $err['command'] . "\nRESUlT: " . $err['result'], true);
+            $attachedDoc->debugLog("[ERROR] Temporary directory cleanup error.\nERROR MSG: " . $err['message'] . "\nCOMMAND: " . $err['command'] . "\nRESULT: " . $err['result'], true);
 			$converter_sleep_length = 15 * 60;
 			break;
 		}
