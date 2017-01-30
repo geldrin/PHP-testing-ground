@@ -1252,12 +1252,16 @@ System.register("player/Flow", ["player/Flow/LayoutChooser", "player/Flow/Qualit
                     limiter.add("onRecoverMedia", 3 * RateLimiter_1.default.SECOND, function () {
                         hls.recoverMediaError();
                     });
+                    hls.on(Hls.Events.MANIFEST_PARSED, function () {
+                        _this.log("canceling ratelimits");
+                        limiter.cancel();
+                    });
                     hls.on(Hls.Events.ERROR, function (event, err) {
                         _this.log('hls error', event, err);
-                        if (!err.fatal)
-                            return;
-                        _this.root.removeClass('is-paused');
-                        _this.root.addClass('is-seeking');
+                        if (err.fatal) {
+                            _this.root.removeClass('is-paused');
+                            _this.root.addClass('is-seeking');
+                        }
                         switch (err.type) {
                             case Hls.ErrorTypes.NETWORK_ERROR:
                                 if (err.response && err.response.code === 403) {
@@ -1267,9 +1271,22 @@ System.register("player/Flow", ["player/Flow/LayoutChooser", "player/Flow/Qualit
                                 limiter.trigger("onNetworkError");
                                 return;
                             case Hls.ErrorTypes.MEDIA_ERROR:
-                                limiter.trigger("onSwapAudioCodec");
-                                limiter.trigger("onRecoverMedia");
+                                if (err.fatal) {
+                                    limiter.trigger("onSwapAudioCodec");
+                                    limiter.trigger("onRecoverMedia");
+                                }
+                                if (_this.hasMultipleVideos() &&
+                                    err.type === Hls.ErrorTypes.MEDIA_ERROR &&
+                                    err.details === Hls.ErrorDetails.BUFFER_STALLED_ERROR) {
+                                    var otherType = type === Flow.MASTER ? Flow.CONTENT : Flow.MASTER;
+                                    var otherVid = _this.videoTags[otherType];
+                                    otherVid.pause();
+                                }
                                 return;
+                            default:
+                                if (!err.fatal)
+                                    return;
+                                break;
                         }
                         var arg = { code: 2 };
                         _this.player.trigger("error", [_this.player, arg]);
