@@ -956,15 +956,13 @@ System.register("player/Flow", ["player/Flow/LayoutChooser", "player/Flow/Qualit
                 Flow.prototype.syncVideos = function () {
                     if (!this.hasMultipleVideos())
                         return;
-                    if (this.player.live)
-                        return;
                     var master = this.videoTags[Flow.MASTER];
                     var content = this.videoTags[Flow.CONTENT];
                     if (master.currentTime == 0 || master.currentTime >= master.duration)
                         return;
                     if (content.currentTime == 0 || content.currentTime >= content.duration)
                         return;
-                    if (Math.abs(master.currentTime - content.currentTime) > 0.5) {
+                    if (Math.abs(master.currentTime - content.currentTime) > 0.2) {
                         this.log("syncing videos to master");
                         content.currentTime = master.currentTime;
                     }
@@ -1274,13 +1272,6 @@ System.register("player/Flow", ["player/Flow/LayoutChooser", "player/Flow/Qualit
                                 if (err.fatal) {
                                     limiter.trigger("onSwapAudioCodec");
                                     limiter.trigger("onRecoverMedia");
-                                }
-                                if (_this.hasMultipleVideos() &&
-                                    err.type === Hls.ErrorTypes.MEDIA_ERROR &&
-                                    err.details === Hls.ErrorDetails.BUFFER_STALLED_ERROR) {
-                                    var otherType = type === Flow.MASTER ? Flow.CONTENT : Flow.MASTER;
-                                    var otherVid = _this.videoTags[otherType];
-                                    otherVid.pause();
                                 }
                                 return;
                             default:

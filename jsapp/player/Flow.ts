@@ -235,10 +235,6 @@ export class Flow {
     if (!this.hasMultipleVideos())
       return;
 
-    // live videonal nem fog a currentTime sose pontosan megegyezni, hagyjuk
-    if (this.player.live)
-      return;
-
     let master = this.videoTags[Flow.MASTER];
     let content = this.videoTags[Flow.CONTENT];
 
@@ -250,7 +246,7 @@ export class Flow {
 
     // ha az elteres a ketto kozott tobb mint X masodperc
     // akkor mindig a master felvetelhez igazodunk
-    if (Math.abs(master.currentTime - content.currentTime) > 0.5) {
+    if (Math.abs(master.currentTime - content.currentTime) > 0.2) {
       this.log("syncing videos to master");
       content.currentTime = master.currentTime;
     }
@@ -710,16 +706,6 @@ export class Flow {
             limiter.trigger("onRecoverMedia");
           }
 
-          // ha epp megalt az egyik videoban a lejatszas, addig pausoljuk a masikat is
-          if (
-              this.hasMultipleVideos() &&
-              err.type === Hls.ErrorTypes.MEDIA_ERROR &&
-              err.details === Hls.ErrorDetails.BUFFER_STALLED_ERROR
-             ) {
-            let otherType = type === Flow.MASTER? Flow.CONTENT: Flow.MASTER;
-            let otherVid = this.videoTags[otherType];
-            otherVid.pause();
-          }
           return;
         default:
           if(!err.fatal)
