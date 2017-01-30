@@ -16,14 +16,15 @@ die( Watcher::process() );
 //-----------------------------------------------
 
 /**
- * Description of Watcher
+ * Watcher class.
  *
  * @author glukacsy
  */
 class Watcher {
-  private static $app, $db, $ldir, $lfile, $jconf, $debug,  $debug_mode;
+  private static $app, $ldir, $lfile, $jconf, $debug,  $debug_mode;
   private static $initialized = false;
   private static $panicfile  = null;
+  private static $needsSleep = false;
   private static $currentSleepSeconds = 60;
   private static $lookupdirs = []; // folder list in which the actual job files can be found.
   private static $jobpaths   = []; // list of job files
@@ -42,20 +43,20 @@ class Watcher {
   private function __clone() { /* Cloning disabled */ }
   
   /**
+   * Main function.
+   * Checks running, stopped or duplicated jobs, and reports them via e-mail / logging.
+   * 
+   * It also attempts to (re)start stopped jobs.
    * 
    * @throws \Exception
    */
   public static function process() {
     self::init();
     
-    if (array_key_exists('watcherdebug', self::$app->config)) {
-      self::$debug_mode = (bool) self::$app->config['watcherdebug'];
-    }
-    
     if (self::$debug_mode) { self::log(str_pad(' STARTING WATCHER ', 50, '-', STR_PAD_BOTH)); }
     // do stuff
     try {
-      self::$mailbody = "--- Watcher report ---";
+      self::$mailbody = "--- Watcher report ---" . PHP_EOL;
 
       self::watchTower();
 
@@ -67,44 +68,50 @@ class Watcher {
 
       // process start queue
       if (!empty(self::$jobs_start_queue)) {
-        $msg = sprintf("\nSome job(s) needs restart: %s", implode(', ', self::$jobs_start_queue));
+        $msg = sprintf("Some job(s) needs restart: %s", implode(', ', array_column(self::$jobs_start_queue, 'name')));
         self::$mailbody .= $msg . PHP_EOL;
 
-        if (self::$debug_mode) { self::debugLog($msg); }
+        if (self::$debug_mode) { self::log($msg); }
 
         foreach (self::$jobs_start_queue as $job2start) {
-          self::$mailbody .= "\n > Starting job '$job2start'";
           $result = self::startJob($job2start);
-
+          
+          self::$mailbody .= $job2start['message'] . PHP_EOL;
+          
           if ($result === false) {
-            self::log(self::$msg);
-            self::$mailbody .= self::$msg . PHP_EOL . PHP_EOL;
+            self::log($job2start['message']);
           } elseif (self::$debug_mode) {
-            self::log(self::$msg);
+            self::log($job2start['message']);
           }
-
-          self::$msg = null;
         }
+        self::$mailbody .= PHP_EOL;
       }
 
       // process stop queue
       if (!empty(self::$jobs_stop_queue)) {
         $msg = sprintf("The following jobs are marked to stop: %s", implode(', ', self::$jobs_stop_queue));
         self::$mailbody .= $msg . PHP_EOL . PHP_EOL;
-
+        
         if (self::$debug_mode) { self::log($msg); }
       }
 
       // process duplicates
       if (!empty(self::$jobs_duplicated)) {
-        $msg = sprintf("[WARNING] Duplicate job(s) found: %s", implode(', ', self::$jobs_duplicated));
+        $msg = "[WARNING] Duplicated job(s) detected!\n";
+        
+        foreach (self::$jobs_duplicated as $name => $dupe) {
+          $msg .= sprintf(" > Job: %s | running instances:\n", $name);
+          foreach ($dupe as $d) {
+            $msg .= sprintf(" - PID: %d | user: %s | %s\n", $d['pid'], $d['user'], $d['cmd']);
+          }
+        }
         self::$mailbody .= $msg . PHP_EOL . PHP_EOL;
         self::log($msg);
       }
 
       // process jobs with timeout
       if (!empty(self::$jobs_timeout)) {
-        $msg  = sprintf("[WARNING] Watchdog timeout detected: %s", implode(', ', array_column(self::$jobs_timeout, 'job')));
+        $msg = sprintf("[WARNING] Watchdog timeout detected: %s", implode(', ', array_column(self::$jobs_timeout, 'job')));
 
         foreach (self::$jobs_timeout as $dead) {
           $msg .= sprintf("\nJob: %s| Lastmod: %s | timeout: %.1f mins", $dead['job'], date('Y-m-d H:i:s', $dead['lastmod']), ($dead['timeout'] / 60));
@@ -125,23 +132,21 @@ class Watcher {
         self::log("[EXCEPTION] Fatal Error (100) is detected. Stop processing.", false);
         throw $err;
       } else {
-        self::log("[EXCEPTION] " . $err->getMessage(), false);
+        self::log("[EXCEPTION] ". $err->getMessage(), false);
       }
     }
     
     if (self::$debug_mode) { self::log("Processing finished."); }
     
     // We did not do anything, sleep longer and longer. Reset sleep seconds only if $needSleep = false;
-//    self::$needsSleep = true;
-//    if ( !self::$needsSleep ) { self::$currentSleepSeconds = 1; }
-    if ( self::$debug_mode ) { self::log("[INFO] Will sleep: " . self::$currentSleepSeconds); }
-    
-//    $this->updateLock();
-//    $this->handlePanic();s
+    if ( !self::$needsSleep ) {
+      if ( self::$debug_mode ) { self::log("[INFO] Will sleep: ". self::$currentSleepSeconds); }
+      sleep(self::$currentSleepSeconds);
+    }
   }
   
   /**
-   * 
+   * Performs a scan across configured jobs and 
    */
   private static function watchTower() {
     self::$jobs_duplicated  = [];
@@ -151,20 +156,18 @@ class Watcher {
     self::$msg = '';
 
     $msg  = null;
-    $jobs = self::$app->config['jobs'][self::$app->config['node_role']];
-
+    
+    $jobs = self::getJobConfig();
     $jobs_running = [];
     $jobs_running = self::getRunningJobs();
     
     if (count($jobs_running) >= 1) {
-      $msg .= sprintf("Currently running job(s): %s\n", implode('\n', $jobs_running));
+      $msg .= sprintf("Currently running process(es):\n%s", implode("\n", array_map(function($j) { return(" > CMD: {$j['cmd']} / PID={$j['pid']}"); }, $jobs_running)));
     } else {
       $msg .= "There are no running jobs currently.\n";
     }
     
-    if (self::$debug_mode) { self::log($msg); }
-    
-    self::$msg = $msg;
+    self::$msg = $msg . PHP_EOL;
     unset($msg);
     
     foreach ($jobs as $job_name => $job_data) {
@@ -173,28 +176,30 @@ class Watcher {
       $last_mod     = null;
 
       $running_instances = self::getRunnningProcessCount($job_name, $jobs_running);
-      $stop = file_exists(self::$panicfile);
-
+      
       if ($running_instances < 1) {
         // job not running
-        if ($job_data['enabled']) { self::$jobs_start_queue[] = "{$job_name}.php"; }
-
+        if ($job_data['enabled'] && !self::hasStopFile($job_name, BASE_PATH .'data/jobs/')) {
+          self::$jobs_start_queue[] = [
+            'name' => $job_name,
+            'path' => $job_data['path'],
+          ];
+        }
       } elseif ($running_instances == 1) {
         // job running
-        // check watchdog state
-        $dog = BASE_PATH ."data/watchdog/{$job_name}.php.watchdog";
+        $dog = BASE_PATH ."data/watchdog/{$job_name}.php.watchdog"; // check watchdog state
 
         if (file_exists($dog)) {
           $last_mod = filemtime($dog);
           $timeout_diff = time() - $last_mod;
-
+          
           if ($timeout_diff >= $job_data['watchdogtimeoutsecs']) { $timeout = true; }
-
+          
         } else {
-          self::$msg .= "Can't locate watchdog file for {$job_name} ('{$dog}').\n";
+          self::log("[WARNING] Can't locate watchdog file for {$job_name} ('{$dog}').\n");
         }
-
-        if (!$job_data['enabled'] || $stop) {
+        
+        if (!$job_data['enabled'] || !self::hasStopFile($job_name, BASE_PATH .'data/jobs/')) {
           self::$jobs_stop_queue[] = "{$job_name}.php";
         } elseif ($timeout) {
           self::$jobs_timeout[] = [
@@ -208,118 +213,237 @@ class Watcher {
 
       } elseif ($running_instances > 1) {
         // job is duplicated
-        self::$jobs_duplicated[] = "{$job_name}.php";
-
+        $dupes = self::getDuplicates($job_name, $jobs_running);
+        if (!empty($dupes)) {
+          self::$jobs_duplicated[$job_name] = $dupes;
+        } else {
+          // err msg
+        }
       }
     }
   }
   
   /**
+   * Starts a given job.
+   * It writes back a small log message in the supplied input array with the results.
    * 
-   * @param type $job
+   * @param array $job Job config array
    * @return boolean
    */
-  private static function startJob($job) {
+  private static function startJob(&$job) {
     $msg = null;
     
-    $command = "nohup /usr/bin/php -f ". self::$app->config['libpath'] ."Videosquare/Job/{$job}";
+    $command = "/usr/bin/php -f {$job['path']}";
     if (self::$debug_mode === false) { $command .= " &>/dev/null"; }
     $command .= " &";
+    $msg = "Starting {$job['name']}... ";
     
-    $job = new RunExt($command);
-    if ($job->run() === false) {
-      $msg .= "> FAILED!\n";
-      $msg .= "return code: {$job->getCode()}\n";
-      $msg .= "command: {$job->command}\n";
-      $msg .= "outout: {$job->getOutput()}\n";
+    $j = new RunExt($command);
+    $success = $j->run();
+    if ($success) {
+      $msg .= "> DONE!";
     } else {
-      $msg .= "> done.\n";
+      $msg .= "> FAILED!";
     }
     
-    $msg .= sprintf("duration: %.02fs\n", $job->getDuration());
-    self::$msg = $msg;
+    if (!$success || self::$debug_mode) {
+      $msg .= sprintf(
+        "\n - return code: %d\n - command: '%s'". (!empty($j->getOutput()) ? "\n - output: '%s'" : null),
+        $j->getCode(),
+        $j->command,
+        $j->getOutput()
+      );
+    }
+    
+    $job['message'] = $msg;
     unset($msg);
-    var_dump($job); //debug
-    if ($job->getCode() != 0) { return false; }
+    
+    //
+    // RETURN CODE IS INACCURATE!!! NEEDS TO BE FURTHER REFINED!
+    // (If a job stops after start it's still reported as a successful launch.)
+    //
+    
+    if ($j->getCode() != 0) { return false; }
     return true;
-    
-//    $time = microtime(1);
-//    exec($command, $output, $result);
-//    $time = microtime(1) - $time;
-//    $output = implode(PHP_EOL, $output);
-//
-//    $msg  = "Restarting job: '". $job ."'\n";
-//    if ($result != 0) {
-//      $msg .= "> FAILED!\n";
-//      $msg .= "return code: ". $result ."\n";
-//      $msg .= "command: '". $command ."'\n";
-//      $msg .= "output: ". $output ."\n";
-//    } else {
-//      $msg .= "> done.\n";
-//    }
-//
-//    $msg .= sprintf("duration: %.02fs", $time);
-//    $this->msg = $msg;
-//    unset($msg, $time, $command, $output);
-//
-//    if ($result != 0) return false;
-
   }
   
   /**
-   * SHITTY LEGACY CODE
    * 
-   *   --- !REPLACE! ---
    * 
-   * @return array/bool
-   */
-  private function _getRunningJobs() {
-    $wrkr = new RunExt('ps uax | egrep "Job*|Watcher" | grep -v "grep"');
-    
-    if ($wrkr->getCode() == 0) { return $wrkr->getOutput(); }
-
-    return null;
-  }
-  
-  /**
-   * New code
+   * @return boolean|array
    */
   private static function getRunningJobs() {
     $pattern   = '';
     $job_paths = [];
+    $jobs      = [];
     
     $job_paths = self::getJobPaths();
-    array_walk($job_paths, function(&$path) { $path .= '[jJ]ob*'; });
-    $job_paths[] = __FILE__;
+    
+    array_walk($job_paths, function(&$path) {
+      $path = preg_quote($path, DIRECTORY_SEPARATOR);
+      $path .= '[jJ]ob';
+    });
+    
+    $job_paths[] = preg_quote(__FILE__, DIRECTORY_SEPARATOR);
     $pattern = implode('|', $job_paths);
+    $pattern = "/{$pattern}/";
     
     $shell = new RunExt();
-    $shell->command = "ps uax | egrep \"{$pattern}\"|grep -v \"grep\"";
+    $shell->command = 'ps uax | grep -v "grep"';
     
-    if ($shell->run() === true) { return $shell->getOutputArr(); }
+    if ($shell->run() === true) {
+      $data = self::parseUnixProcessList(implode(null, $shell->getOutputArr()));
+      
+      if ($data === false) { return false; }
+
+      $col = preg_grep($pattern, array_column($data, 'cmd'));
+      array_walk($col, function ($item, $key) use($data, &$jobs) { $jobs[] = $data[$key]; });
+      
+      return $jobs;
+    }
     
     return false;
   }
   
   /**
+   * Merges legacy and new job config array ($app->config), and also inserts paths for the jobs.
+   * Only jobs conforming to the server's node role are returned this way.
+   * 
+   * @return array The merged config array.
+   */
+  private static function getJobConfig() {
+    $jobs = null;
+    
+    $jobpaths    = self::getJobPaths();
+    $job_config = [
+      'default' => self::$app->config['library_jobs'][self::$app->config['node_role']],
+      'legacy'  => self::$app->config['jobs'][self::$app->config['node_role']],
+    ];
+    
+    foreach ($job_config as $type => $config) {
+      // insert paths into legacy and default jobs
+      if (!empty($config)) {
+        array_walk(
+          $job_config[$type],
+          function(&$j) use($jobpaths, $type) {
+            $j['path'] = $jobpaths[$type];
+          }
+        );
+      }
+    }
+    
+    $jobs = array_merge($job_config['default'], $job_config['legacy']);
+    return $jobs;
+  }
+  
+  /**
+   * Check if there's any stop-files present for the given job.
+   * 
+   * @param string $job the name of the job
+   * @param string $path the folder in which the the check should be performed
+   * @return boolean TRUE if stopped, FALSE otherwise
+   */
+  private static function hasStopFile($job, $path) {
+    $path = pathinfo($path, PATHINFO_DIRNAME) . DIRECTORY_SEPARATOR;
+    if (file_exists("{$path}all.stop") || file_exists("{$path}{$job}.stop")) { return true; }
+    
+    return false;
+  }
+  
+  /**
+   * Parses the output of a 'ps aux' command into an associative array.
+   * Retured elements contain username, PID and command.
+   * 
+   * @param array|string $data array or string containing the complete, uncut console output of 'ps uax' command line
+   * @return array|boolean
+   */
+  private static function parseUnixProcessList($data) {
+    $parsed = [];
+    
+    if (empty($data)) { return false; }
+    if (is_string($data)) { $data = explode("\n", trim($data)); }
+    
+    $re = '/[\S]+/';
+    $columns = null;
+    $header  = reset($data);
+    $data = array_slice($data, 1);
+    
+    preg_match_all($re, $header, $columns);
+    
+    $column_no_command = array_search('COMMAND', $columns[0]);
+    $column_no_user    = array_search('USER',    $columns[0]);
+    $column_no_pid     = array_search('PID',     $columns[0]);
+    
+    foreach($data as $row) {
+      $parts = [];
+      
+      if (preg_match_all($re, $row, $parts) == false) { continue; }
+      
+      $parsed[] = [
+        'user' => $parts[0][$column_no_user],
+        'pid'  => $parts[0][$column_no_pid],
+        'cmd'  => implode(' ', array_slice($parts[0], $column_no_command)),
+        //'name' => pathinfo(end($parts[0], PATHINFO_FILENAME)), // unreliable, a single command line argument can make it fail
+      ];
+    }
+    
+    return $parsed;
+  }
+  
+  /**
+   * Counts how many processes are running with the same name.
    * 
    * @param string $processname Name of the process
    * @param array $runningjobs String array with the running process list
-   * @return boolean
+   * @return int number of instances or -1 on error
    */
   private static function getRunnningProcessCount($processname, $runningjobs) {
-//    exec("ps uax | grep -i '$processname' | grep -v grep", $pids);
-//    return count($pids);
     $cnt = 0;
     if (is_array($runningjobs) && !empty($runningjobs)) {
       foreach ($runningjobs as $rj) {
-        if (strpos($rj, $processname)) { $cnt++; }
+        if (strpos($rj['cmd'], $processname)) { $cnt++; }
       }
       return $cnt;
     }
     return -1;
   }
   
+  /**
+   * Provides a list of processids with the same process name.
+   * 
+   * @param string $processname Name of the process
+   * @param array $runningjobs An array returned by getRunningJobs()
+   * @return array
+   */
+  private static function getDuplicatedPIDs($processname, $runningjobs) {
+    $pids = [];
+    if (is_array($runningjobs) && !empty($processname)) {
+      foreach ($runningjobs as $id => $rj) {
+        if (strrpos($rj['cmd'], $processname)) { $pids[$id] = $rj['pid']; }
+      }
+    }
+    
+    return $pids;
+  }
+  
+  /**
+   * Provides a list of duplicated processes.
+   * 
+   * @param string $processname
+   * @param array $runningjobs
+   * @return array
+   */
+  private static function getDuplicates($processname, $runningjobs) {
+    $duplicates = [];
+    if (is_array($runningjobs) && !empty($processname)) {
+      foreach ($runningjobs as $id => $rj) {
+        if (strrpos($rj['cmd'], $processname)) { $duplicates[$id] = $rj; }
+      }
+    }
+    
+    return $duplicates;
+  }
+
   /**
    * Returns a list of directories where job files are stored.
    * 
@@ -328,15 +452,13 @@ class Watcher {
   private static function getJobPaths() {
     // currently hardcoded values only (Were do we get the exact list from??)
     $jobpaths = [
-//      BASE_PATH .'modules/Jobs/',
-//      self::$app->config['jobpath'],
-      '/home/conv/dev.videosquare.eu/modules/Jobs/', //debug
-      '/home/conv/dev.videosquare.eu/libraries/Videosquare/Job/', //debug
+      'default' => self::$app->config['jobpath'],
+      'legacy'  => self::$app->config['modulepath'] .'Jobs/',
     ];
     
     return $jobpaths;
   }
-  
+
   /**
    * Wrapper for SpringBoard logger for easier use.
    * 
@@ -351,12 +473,14 @@ class Watcher {
   }
   
   /**
-   * Initializes
+   * Initializes Springboard components, such as app and debug objects.
+   * 
    * @return NULL
    */
   private static function init() {
     if (self::$initialized) { return; }
     
+    self::$needsSleep = true; //debug
     self::$app = new \Springboard\Application\Cli(BASE_PATH, DEBUG);
     self::$app->loadConfig('/modules/Jobs/config_jobs.php');
     self::$debug = \SpringBoard\Debug::getInstance();
@@ -364,14 +488,15 @@ class Watcher {
     self::$ldir  = self::$jconf['log_dir'];
     self::$lfile = substr(__CLASS__, strrpos(__CLASS__ , '\\') + 1) .'.log';
     
-    self::$db    = self::$app->bootstrap->getAdoDB();
-    
-    self::$panicfile = BASE_PATH ."data/". __FILE__ .".stop";
+    self::$panicfile = BASE_PATH ."data/". pathinfo(__FILE__, PATHINFO_FILENAME) .".stop";
+    if (array_key_exists('watcherdebug', self::$app->config)) {
+      self::$debug_mode = (bool) self::$app->config['watcherdebug'];
+    }
     
     if(!function_exists("array_column")) {
       // PHP 5.4 compatibility
       function array_column($array,$column_name) {
-        return array_map(function($element) use($column_name){ return $element[$column_name]; }, $array);
+        return array_map(function($element) use($column_name) { return $element[$column_name]; }, $array);
       }
     }
   }
