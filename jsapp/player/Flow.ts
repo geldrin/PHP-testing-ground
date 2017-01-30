@@ -672,6 +672,7 @@ export class Flow {
     });
 
     let limiter = new RateLimiter();
+    // TODO cancel limiters ha sikeresen csatlakoztunk
     limiter.add("onNetworkError", 3*RateLimiter.SECOND, () => {
       hls.startLoad();
     });
@@ -682,6 +683,7 @@ export class Flow {
       hls.recoverMediaError();
     });
     hls.on(Hls.Events.ERROR, (event: string, err: any): void => {
+      this.log('hls error', event, err);
       if (!err.fatal)
         return;
 

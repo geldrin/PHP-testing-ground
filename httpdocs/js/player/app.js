@@ -731,6 +731,12 @@ System.register("RateLimiter", [], function (exports_9, context_9) {
                     this.call();
                     return true;
                 };
+                Limit.prototype.cancel = function () {
+                    if (this.timer === null)
+                        return;
+                    clearTimeout(this.timer);
+                    this.timer = null;
+                };
                 return Limit;
             }());
             Limits = (function () {
@@ -742,14 +748,30 @@ System.register("RateLimiter", [], function (exports_9, context_9) {
                 function RateLimiter() {
                     this.limits = new Limits();
                 }
+                RateLimiter.prototype.getByName = function (name) {
+                    var limit = this.limits[name];
+                    if (limit == null)
+                        throw new Error("Limiter for " + name + " not found!");
+                    return limit;
+                };
                 RateLimiter.prototype.add = function (name, duration, callback) {
                     this.limits[name] = new Limit(name, duration, callback);
                 };
                 RateLimiter.prototype.trigger = function (name) {
-                    var limit = this.limits[name];
-                    if (limit == null)
-                        throw new Error("Limiter for " + name + " not found!");
+                    var limit = this.getByName(name);
                     return limit.trigger();
+                };
+                RateLimiter.prototype.cancel = function (name) {
+                    if (name != null) {
+                        this.getByName(name).cancel();
+                        return;
+                    }
+                    for (var k in this.limits) {
+                        if (!this.limits.hasOwnProperty(k))
+                            continue;
+                        var limit = this.limits[k];
+                        limit.cancel();
+                    }
                 };
                 return RateLimiter;
             }());
@@ -1231,6 +1253,7 @@ System.register("player/Flow", ["player/Flow/LayoutChooser", "player/Flow/Qualit
                         hls.recoverMediaError();
                     });
                     hls.on(Hls.Events.ERROR, function (event, err) {
+                        _this.log('hls error', event, err);
                         if (!err.fatal)
                             return;
                         _this.root.removeClass('is-paused');

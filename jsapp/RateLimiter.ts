@@ -37,6 +37,14 @@ class Limit {
     this.call();
     return true;
   }
+
+  public cancel(): void {
+    if (this.timer === null)
+      return;
+
+    clearTimeout(this.timer);
+    this.timer = null;
+  }
 }
 
 class Limits {
@@ -51,15 +59,36 @@ export default class RateLimiter {
     this.limits = new Limits();
   }
 
+  private getByName(name: string): Limit {
+    let limit = this.limits[name];
+    if (limit == null)
+      throw new Error("Limiter for " + name + " not found!");
+
+    return limit;
+  }
+
   public add(name: string, duration: number, callback: any) {
     this.limits[name] = new Limit(name, duration, callback);
   }
 
   public trigger(name: string): boolean {
-    let limit = this.limits[name];
-    if (limit == null)
-      throw new Error("Limiter for " + name + " not found!");
+    let limit = this.getByName(name);
 
     return limit.trigger();
+  }
+
+  public cancel(name?: string): void {
+    if (name != null) {
+      this.getByName(name).cancel();
+      return;
+    }
+
+    for (let k in this.limits) {
+      if (!this.limits.hasOwnProperty(k))
+        continue;
+
+      let limit = this.limits[k];
+      limit.cancel();
+    }
   }
 }
