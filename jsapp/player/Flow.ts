@@ -682,13 +682,18 @@ export class Flow {
     limiter.add("onRecoverMedia", 3*RateLimiter.SECOND, () => {
       hls.recoverMediaError();
     });
+    hls.on(Hls.Events.MANIFEST_PARSED, () => {
+      this.log("canceling ratelimits");
+      limiter.cancel();
+    });
     hls.on(Hls.Events.ERROR, (event: string, err: any): void => {
       this.log('hls error', event, err);
-      if (!err.fatal)
-        return;
 
-      this.root.removeClass('is-paused');
-      this.root.addClass('is-seeking');
+      if (err.fatal) {
+        this.root.removeClass('is-paused');
+        this.root.addClass('is-seeking');
+      }
+
       switch(err.type) {
         case Hls.ErrorTypes.NETWORK_ERROR:
           // 403 -> checkstreamaccess visszautasitott
@@ -700,9 +705,26 @@ export class Flow {
           limiter.trigger("onNetworkError");
           return;
         case Hls.ErrorTypes.MEDIA_ERROR:
-          limiter.trigger("onSwapAudioCodec");
-          limiter.trigger("onRecoverMedia");
+          if (err.fatal) {
+            limiter.trigger("onSwapAudioCodec");
+            limiter.trigger("onRecoverMedia");
+          }
+
+          // ha epp megalt az egyik videoban a lejatszas, addig pausoljuk a masikat is
+          if (
+              this.hasMultipleVideos() &&
+              err.type === Hls.ErrorTypes.MEDIA_ERROR &&
+              err.details === Hls.ErrorDetails.BUFFER_STALLED_ERROR
+             ) {
+            let otherType = type === Flow.MASTER? Flow.CONTENT: Flow.MASTER;
+            let otherVid = this.videoTags[otherType];
+            otherVid.pause();
+          }
           return;
+        default:
+          if(!err.fatal)
+            return;
+          break;
       }
 
       // nem tudtuk lekezelni a hibat, mutassunk valamit, 2 = NETWORK_ERROR
