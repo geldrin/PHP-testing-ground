@@ -248,6 +248,8 @@ export class Flow {
     // de tudunk seekelni a bufferben amit letoltottunk de nagyon szigoru
     // keretek kozott csak (aprokat lehet csak ugrani es csak visszafele)
     if (this.player.live) {
+      this.log("master", master.currentTime);
+      this.log("content", content.currentTime);
       if (Math.abs(master.currentTime - content.currentTime) > 2) {
         this.log("live video desync bigger than 2 seconds, giving up");
         return;

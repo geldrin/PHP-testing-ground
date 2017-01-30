@@ -963,6 +963,8 @@ System.register("player/Flow", ["player/Flow/LayoutChooser", "player/Flow/Qualit
                     if (content.currentTime == 0 || content.currentTime >= content.duration)
                         return;
                     if (this.player.live) {
+                        this.log("master", master.currentTime);
+                        this.log("content", content.currentTime);
                         if (Math.abs(master.currentTime - content.currentTime) > 2) {
                             this.log("live video desync bigger than 2 seconds, giving up");
                             return;
