@@ -1,6 +1,6 @@
 <?php
 $config = array(
-  'version'      => '_v20170125',
+  'version'      => '_v20160916',
   'charset'      => 'UTF-8',
   'cacheseconds' => 3600,
   'errormessage' => 'An unexpected error has occured, our staff has been notified. Sorry for the inconvenience and thanks for your understanding!',
@@ -43,6 +43,7 @@ $config = array(
     'hiba@videosqr.com',
   ),
   'logtoconsole' => false,
+//  'watcherdebug' => false,
   //-----
   'smtp'         => array(
     'auth'     => false,
@@ -311,7 +312,7 @@ $config = array(
   'jobs' => array(
     'frontend'  => array(
       'job_system_health' => array(
-        'enabled'             => true,    // watcher to check or skip this job
+        'enabled'             => false,    // watcher to check or skip this job
         'watchdogtimeoutsecs' => 5 * 60,  // watchdog timeout (stuck processes)
         'supresswarnings'     => false,   // do not send warnings (e.g. stop files)
         'config'              => array(   // All are optional, see job $config array
@@ -326,29 +327,66 @@ $config = array(
         ),
       ),
       'job_upload_finalize' => array(
-        'enabled'             => true,
+        'enabled'             => false,
         'watchdogtimeoutsecs' => 60,
         'supresswarnings'     => false
       ),
     ),
     'converter' => array(
       'job_system_health' => array(
-        'enabled'             => true,     // watcher to check or skip this job
-        'watchdogtimeoutsecs' => 15 * 60,  // watchdog timeout (stuck processes)
+        'enabled'             => false,    // watcher to check or skip this job
+        'watchdogtimeoutsecs' => 15 * 60, // watchdog timeout (stuck processes)
         'supresswarnings'     => false    // do not send warnings (e.g. stop files)
       ),
       'job_media_convert2' => array(
-        'enabled'             => true,
+        'enabled'             => false,
         'watchdogtimeoutsecs' => 15 * 60,
         'supresswarnings'     => false
       ),
       'job_document_index' => array(
-        'enabled'             => true,
+        'enabled'             => false,
         'watchdogtimeoutsecs' => 15 * 60,
         'supresswarnings'     => false
       ),
     ),
   ),
+  // NEW jobs under 'libraries/VideoSquare/Job/' folder are kept under this configuration block
+  'library_jobs' => [
+    'frontend' => [
+      'JobRecordingsUpload' => [
+        'enabled'             => false,
+        'watchdogtimeoutsecs' => 15 * 60,
+        'suppresswarnings'    => false,
+        'debug_mode'          => false,
+      ],
+      'JobLiveUpdateCounters' => [
+        'enabled'             => false,
+        'watchdogtimeoutsecs' => 15 * 60,
+        'suppresswarnings'    => false,
+        'debug_mode'          => false,
+      ],
+      'JobCheckStreamingServers' => [
+        'enabled'             => false,
+        'watchdogtimeoutsecs' => 15 * 60,
+        'suppresswarnings'    => false,
+        'debug_mode'          => false,
+      ],
+      'JobAttachedDocumentsIndex' => [
+        'enabled'             => false,
+        'watchdogtimeoutsecs' => 15 * 60,
+        'suppresswarnings'    => false,
+        'debug_mode'          => false,
+      ],
+    ],
+    'converter' => [
+      'JobPexipVCR' => [
+        'enabled'             => false,
+        'watchdogtimeoutsecs' => 15 * 60,
+        'suppresswarnings'    => false,
+        'debug_mode'          => false,
+      ],
+    ],
+  ],
   // Job priorities
   'nice'            => 'nice -n 19',  // General: lowest
   'nice_high'       => 'nice -n 10',  // High
