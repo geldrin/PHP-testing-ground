@@ -371,15 +371,15 @@ $config = array(
         'suppresswarnings'    => false,
         'debug_mode'          => false,
       ],
-      'JobAttachedDocumentsIndex' => [
+    ],
+    'converter' => [
+      'JobPexipVCR' => [
         'enabled'             => false,
         'watchdogtimeoutsecs' => 15 * 60,
         'suppresswarnings'    => false,
         'debug_mode'          => false,
       ],
-    ],
-    'converter' => [
-      'JobPexipVCR' => [
+      'JobAttachedDocumentsIndex' => [
         'enabled'             => false,
         'watchdogtimeoutsecs' => 15 * 60,
         'suppresswarnings'    => false,
