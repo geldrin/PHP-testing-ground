@@ -213,8 +213,10 @@ abstract class Player {
 
     // hogy lehessen seekelni a live streamekbe, megkonnyiti a ket video
     // synceleset live esetben
-    if ( $ret['live'] )
+    if ( $ret['live'] ) {
       $ret['dvr'] = true;
+      $ret['vsq']['autoplay'] = true;
+    }
 
     if ( isset( $cfg['duration'] ) )
       $ret['vsq']['duration'] = $cfg['duration'];
