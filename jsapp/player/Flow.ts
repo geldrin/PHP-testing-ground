@@ -250,17 +250,24 @@ export class Flow {
     if (this.player.live) {
       this.log("master", master.currentTime);
       this.log("content", content.currentTime);
-      if (Math.abs(master.currentTime - content.currentTime) > 2) {
-        this.log("live video desync bigger than 2 seconds, giving up");
+      let diff = Math.abs(master.currentTime - content.currentTime);
+      if (diff > 10) {
+        this.log("live video desync bigger than 10 seconds, giving up");
+        return;
+      }
+      if (diff < 1) {
+        this.log("live video desync less than 1 seconds, skipping");
         return;
       }
 
       if (master.currentTime < content.currentTime) {
         this.log("live content ahead of master, jumping it back");
-        content.currentTime = master.currentTime;
+        content.currentTime = parseInt(master.currentTime, 10) - 2;
+        master.currentTime = content.currentTime;
       } else if (content.currentTime < master.currentTime) {
         this.log("live master ahead of content, jumping it back");
-        master.currentTime = content.currentTime;
+        master.currentTime = parseInt(content.currentTime, 10) - 2;
+        content.currentTime = master.currentTime;
       }
       return;
     }
