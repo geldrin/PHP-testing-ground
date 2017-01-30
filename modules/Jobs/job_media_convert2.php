@@ -42,6 +42,13 @@ $log_buffer = array();
 while( !is_file( $app->config['datapath'] . 'jobs/' . $myjobid . '.stop' ) and !is_file( $app->config['datapath'] . 'jobs/all.stop' ) ) {
 
 	clearstatcache();
+	
+	// Convpath check
+	if ( !is_writeable($app->config['convpath']) ) {
+		$attachedDoc->debugLog("[ERROR] Converter temp path " . $app->config['convpath'] . " is not writeable.", false);
+		$converter_sleep_length = 15 * 60;
+		break;
+	}
     
     // Check job file modification - if more fresh version is available, then restart
     if ( ( filemtime($myjobpath) > $thisjobstarted ) or ( filemtime(BASE_PATH . "config.php" ) > $thisjobstarted ) or ( filemtime(BASE_PATH . "config_local.php" ) > $thisjobstarted ) ) {
