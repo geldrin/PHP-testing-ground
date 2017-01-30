@@ -304,7 +304,7 @@ class RunExt {
 
   function getMessage()     { return implode(PHP_EOL, $this->msg); }
 
-  function getOutput()      { return implode(PHP_EOL, $this->output); }
+  function getOutput()      { return implode(null, $this->output); }
 
   function getOutputArr()   { return $this->output; }
 
