@@ -9,11 +9,14 @@
 function updateRecordingStatus($recordingid, $status, $type = "recording") {
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 global $app, $debug, $jconf, $myjobid;
-	$allowed_types = array('recording', 'content', 'mobile', 'ocr', 'smil', 'contentsmil');
-
+	
+	// Check allowed status field types
+	$allowed_types = array('recording', 'content', 'mobile', 'ocr', 'smil', 'contentsmil', 'mobilesmil');
 	if (!in_array($type, $allowed_types, $strict = true)) return false;
+    
 	if ( empty($status) ) return false;
-  if ( $status == 'NULL' ) $status = null;
+	
+	if ( $status == 'NULL' ) $status = null;
 
 	$idx = null;
 	if ( $type === 'recording' ) $idx = '';
@@ -28,7 +31,7 @@ global $app, $debug, $jconf, $myjobid;
 			$idx . 'status' => null
 		);
 	}
-
+	
 	$recordingVersionObj = $app->bootstrap->getModel('recordings');
 	$recordingVersionObj->select($recordingid);
     $recordingVersionObj->updateRow($values);

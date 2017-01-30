@@ -238,6 +238,7 @@ if ( $failedRecordings !== false ) {
 // SMIL: generate new SMIL files
 $err = generateRecordingSMILs("recording");
 $err = generateRecordingSMILs("content");
+$err = generateRecordingSMILs("recording", "mobile");
 
 // SMIL: generate SMILs for live
 $err = generateLiveSMILs("video");
@@ -704,14 +705,24 @@ global $debug, $jconf, $app;
 	return $node_info['id'];
 }
 
-function generateRecordingSMILs($type = "recording", $filtercompatibility = "desktop") {
+function generateRecordingSMILs($type = "recording", $platformcompatibility = "desktop") {
 global $app, $debug, $jconf;
 
 	if ( ( $type != "recording" ) and ( $type != "content" ) ) return false;
 
+	// Recording or content SMIL?
 	$idx = "";
 	if ( $type == "content" ) $idx = "content";
-
+	
+	// SMIL file platform
+	$smil_filename_suffix = "";
+	if ( $platformcompatibility == "mobile" ) $smil_filename_suffix .= "_mobile";
+	if ( $type == "content" )				  $smil_filename_suffix .= "_content";
+	
+	// SMIL status filter
+	$sql_smilfilter = " AND ( r." . $idx . "smilstatus IS NULL OR r." . $idx . "smilstatus = '" . $jconf['dbstatus_regenerate'] . "' )";
+	if ( ( $type == "recording" ) and ( $platformcompatibility == "mobile" ) ) $sql_smilfilter = " AND ( r.mobilesmilstatus IS NULL OR r.mobilesmilstatus = '" . $jconf['dbstatus_regenerate'] . "' )";
+	// Deal with uploads on this front-end
     $node = $app->config['node_sourceip'];
       
 	// SMILs to update
@@ -725,8 +736,8 @@ global $app, $debug, $jconf;
 			recordings AS r
 		WHERE
 			r." . $idx . "status = '" . $jconf['dbstatus_copystorage_ok'] . "' AND
-			( r." . $idx . "smilstatus IS NULL OR r." . $idx . "smilstatus = '" . $jconf['dbstatus_regenerate'] . "' ) AND
-            r." . $idx . "mastersourceip = '" . $node . "'
+			r." . $idx . "mastersourceip = '" . $node . "'" .
+			$sql_smilfilter . "            
 		ORDER BY
 			r.id";
 
@@ -792,6 +803,10 @@ global $app, $debug, $jconf;
 	$smil_header = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<smil>\n\t<head>\n\t</head>\n\t<body>\n\t\t<switch>\n";
 	$smil_footer = "\t\t</switch>\n\t</body>\n</smil>\n";
 	
+	// ## SMIL templates
+	// Audio
+	$smil_audio_template  = "\t\t\t<video src=\"%s:%s\" system-bitrate=\"%d\">\n";
+	// Video
 	$smil_video_template  = "\t\t\t<video src=\"%s:%s\" system-bitrate=\"%d\" width=\"%d\" height=\"%d\">\n";
 	$smil_video_template .= "\t\t\t\t<param name=\"audioCodecId\" value=\"%s\" valuetype=\"data\"/>\n";
 	$smil_video_template .= "\t\t\t\t<param name=\"videoCodecId\" value=\"%s\" valuetype=\"data\"/>\n";
@@ -810,7 +825,7 @@ global $app, $debug, $jconf;
 		}
 
 		// Get all recording versions for this recording (or content)
-		$recording_versions = getRecordingVersionsForRecording($recording['id'], $type, $isaudio, $filtercompatibility);
+		$recording_versions = getRecordingVersionsForRecording($recording['id'], $type, $isaudio, $platformcompatibility);
 		if ( $recording_versions === false ) {
 			$debug->log($jconf['log_dir'], $jconf['jobid_conv_control'] . ".log", "[WARNING] No recording versions for SMIL found for " . $type . " id = " . $recording['id'], $sendmail = false);
 			// recording.(content)smilstatus = null
@@ -823,17 +838,29 @@ global $app, $debug, $jconf;
 		$smil = $smil_header;
 
         // SMIL: add video source lines
+		$ispipversion = false;
 		while ( !$recording_versions->EOF ) {
 
 			$recording_version = $recording_versions->fields;
-/*
-			// !!! We Képesnek kellene lennünk frankón mobil SMIL-t generálni ezekből (vagy ha nincsen content, akkor a normál verzióból)
-			ep.audiocodec,
-			ep.pipenabled,
-			ep.pipcodecprofile
-*/
+			
+			// If we are in PiP mode then skip all non-PiP version
+			if ( $ispipversion and ( $recording_version['pipenabled'] == 0 ) ) {
+				$recording_versions->MoveNext();
+				continue;
+			}
+			
+			// !!! TODO: Audió only SMIL kezelése???? ep.audiocodec
 			
 			if ( !$isaudio ) {
+				
+				$profile = $recording_version['ffmpegh264profile'];
+				// Is it a PiP version? - for mobile SMIL we prefer this one
+				if ( $recording_version['pipenabled'] == 1 ) {
+					$profile = $recording_version['pipcodecprofile'];
+					// Restart SMIL when first PiP version shows up
+					if ( !$ispipversion ) $smil = $smil_header;
+					$ispipversion = true;
+				}
 				
 				// Calculate width and height
 				$tmp = explode("x", $recording_version['resolution'], 2);
@@ -843,30 +870,30 @@ global $app, $debug, $jconf;
 				// Video codec identifier
 				// !!! Level from DB?
 				$video_codec = "avc1.";
-				if ( $recording_version['ffmpegh264profile'] == "baseline" ) $video_codec .= "66.30";
-				if ( $recording_version['ffmpegh264profile'] == "main" ) $video_codec .= "77.30";
-				if ( $recording_version['ffmpegh264profile'] == "high" ) $video_codec .= "100.30";
+				if ( $profile == "baseline" ) $video_codec .= "66.30";
+				if ( $profile == "main" ) 	  $video_codec .= "77.30";
+				if ( $profile == "high" )     $video_codec .= "100.30";
 				
 				// Audio codec identifier
 				$audio_codec = "mp4a.40.";
 				if ( stripos($recording_version['audiocodec'], "aac") !== false ) $audio_codec .= "2";
 				if ( stripos($recording_version['audiocodec'], "mp3") !== false ) $audio_codec .= "34";
-				
+
+				// Generate SMIL line
 				$smil .= sprintf($smil_video_template, $recording_version['filecontainerformat'], $recording_version['filename'], $recording_version['bandwidth'], $width, $height, $audio_codec, $video_codec);
+			} else {
+				
+				// <video src="mp3:music.mp3" system-bitrate="128000"/>
+				$smil .= sprintf($smil_audio_template, $recording_version['filecontainerformat'], $recording_version['filename'],$recording_version['bandwidth']);
+				
 			}
-			
-			//$smil .= sprintf("\t\t\t<video src=\"%s:%s\" system-bitrate=\"%d\"/>\n", $media_type, $recording_version['filename'], $recording_version['bandwidth']);
 
 			$recording_versions->MoveNext();
 		}
         
         // SMIL: add footer
 		$smil .= $smil_footer;
-echo $smil . "\n";
-
-		$smil_filename_suffix = "";
-		if ( $idx == "content" ) $smil_filename_suffix = "_content";
-
+		
 		// Write SMIL content to a temporary file
 		$smil_filename = "/tmp/" . $recording['id'] . $smil_filename_suffix . ".smil";
 		$err = file_put_contents($smil_filename, $smil);
@@ -917,7 +944,9 @@ echo $smil . "\n";
             unset($msg, $err_fsize, $err_stat, $update, $recDoc);
         }
         
-		updateRecordingStatus($recording['id'], $jconf['dbstatus_copystorage_ok'], $idx . "smil");
+		$smil_status = $idx . "smil";
+		if ( ( $type =="recording" ) and ( $platformcompatibility == "mobile" ) ) $smil_status = "mobilesmil";
+		updateRecordingStatus($recording['id'], $jconf['dbstatus_copystorage_ok'], $smil_status);
 
 		$recordings->MoveNext();
 	}
@@ -925,7 +954,7 @@ echo $smil . "\n";
 	return true;
 }
 
-function generateLiveSMILs($type = "video", $filtercompatibility = "desktop") {
+function generateLiveSMILs($type = "video", $platformcompatibility = "desktop") {
 global $app, $debug, $jconf;
 
 	if ( ( $type != "video" ) and ( $type != "content" ) ) return false;
@@ -935,8 +964,8 @@ global $app, $debug, $jconf;
 	if ( $type == "content" ) $idx = "content";
     
     // Filter for compatibility
-    if ( $filtercompatibility == "desktop" ) $filter_compat = " AND lfs.isdesktopcompatible = 1 ";
-    if ( $filtercompatibility == "mobile" )  $filter_compat = " AND lfs.isioscompatible = 1 AND lfs.isandroidcompatible = 1 ";
+    if ( $platformcompatibility == "desktop" ) $filter_compat = " AND lfs.isdesktopcompatible = 1 ";
+    if ( $platformcompatibility == "mobile" )  $filter_compat = " AND lfs.isioscompatible = 1 AND lfs.isandroidcompatible = 1 ";
 
 	// SMILs to update
 	$query = "
@@ -1042,20 +1071,24 @@ global $app, $debug, $jconf;
 	return true;
 }
 
-function getRecordingVersionsForRecording($recordingid, $type = "recording", $filteraudioonly = false, $filtercompatibility = "desktop") {
+function getRecordingVersionsForRecording($recordingid, $type = "recording", $filteraudioonly = false, $platformcompatibility = "desktop") {
 global $app, $jconf, $debug;
 
 	if ( ( $type != "recording" ) and ( $type != "content" ) ) return false;
     
+	// Media type
 	$mediatype = "video";
 	if ( $filteraudioonly ) $mediatype = "audio";
-    
     $iscontent = 0;
 	if ( $type == "content" ) $iscontent = 1;
-
-    // Filter for compatibility    
-    if ( $filtercompatibility == "desktop" ) $filter_compat = " AND rv.isdesktopcompatible = 1 ";
-    if ( $filtercompatibility == "mobile" )  $filter_compat = " AND rv.ismobilecompatible = 1 ";
+	
+    // Filter for platform compatibility
+	$filter_scheme = " AND ep.type = '" . $type . "'";
+    if ( $platformcompatibility == "desktop" ) $filter_compat = " AND rv.isdesktopcompatible = 1 ";
+    if ( $platformcompatibility == "mobile" )  {
+		if ( $type == 'recording' ) $filter_scheme = " AND ( ep.type = '" . $type . "' OR ep.type = 'pip' )";
+		$filter_compat = " AND rv.ismobilecompatible = 1 ";
+	}
 
 	$query = "
 		SELECT
@@ -1081,11 +1114,11 @@ global $app, $jconf, $debug;
 		WHERE
 			rv.recordingid = " . $recordingid . " AND
 			rv.iscontent = " . $iscontent . " AND
-			rv.status = '" . $jconf['dbstatus_copystorage_ok'] . "' AND
+			rv.status = '" . $jconf['dbstatus_copystorage_ok'] . "'" .
+			$filter_scheme . " AND
 			rv.encodingprofileid = ep.id AND
-			ep.type = '" . $type . "' AND
-			ep.mediatype = '" . $mediatype . "'
-            " . $filter_compat . "
+			ep.mediatype = '" . $mediatype . "'" .
+			$filter_compat . "
 		ORDER BY
 			rv.bandwidth";
 
