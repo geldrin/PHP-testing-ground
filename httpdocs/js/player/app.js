@@ -962,8 +962,23 @@ System.register("player/Flow", ["player/Flow/LayoutChooser", "player/Flow/Qualit
                         return;
                     if (content.currentTime == 0 || content.currentTime >= content.duration)
                         return;
+                    if (this.player.live) {
+                        if (Math.abs(master.currentTime - content.currentTime) > 2) {
+                            this.log("live video desync bigger than 2 seconds, giving up");
+                            return;
+                        }
+                        if (master.currentTime < content.currentTime) {
+                            this.log("live content ahead of master, jumping it back");
+                            content.currentTime = master.currentTime;
+                        }
+                        else if (content.currentTime < master.currentTime) {
+                            this.log("live master ahead of content, jumping it back");
+                            master.currentTime = content.currentTime;
+                        }
+                        return;
+                    }
                     if (Math.abs(master.currentTime - content.currentTime) > 0.2) {
-                        this.log("syncing videos to master");
+                        this.log("syncing content to master");
                         content.currentTime = master.currentTime;
                     }
                 };
