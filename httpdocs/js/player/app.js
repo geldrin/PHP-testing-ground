@@ -976,12 +976,12 @@ System.register("player/Flow", ["player/Flow/LayoutChooser", "player/Flow/Qualit
                         }
                         if (master.currentTime < content.currentTime) {
                             this.log("live content ahead of master, jumping it back");
-                            content.currentTime = parseInt(master.currentTime, 10) - 2;
+                            content.currentTime = parseInt('' + master.currentTime, 10) - 2;
                             master.currentTime = content.currentTime;
                         }
                         else if (content.currentTime < master.currentTime) {
                             this.log("live master ahead of content, jumping it back");
-                            master.currentTime = parseInt(content.currentTime, 10) - 2;
+                            master.currentTime = parseInt('' + content.currentTime, 10) - 2;
                             content.currentTime = master.currentTime;
                         }
                         return;
@@ -1544,7 +1544,8 @@ System.register("player/app", ["Locale", "player/Config", "player/Player"], func
                 var lCopy = $.extend(true, {}, l);
                 $(function () {
                     var loc = new Locale_1.default(lCopy);
-                    pcCopy.flowplayer.vsq.locale = loc;
+                    if (pcCopy.flowplayer)
+                        pcCopy.flowplayer.vsq.locale = loc;
                     var cfg = new Config_1.default(pcCopy, fcCopy);
                     var player = new Player_1.default(cfg, loc);
                     player.init();

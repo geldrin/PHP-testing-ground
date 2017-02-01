@@ -19,7 +19,8 @@ declare var l: Object;
 
   $(function() {
     let loc = new Locale(lCopy);
-    pcCopy.flowplayer.vsq.locale = loc;
+    if (pcCopy.flowplayer)
+      pcCopy.flowplayer.vsq.locale = loc;
 
     let cfg = new Config(pcCopy, fcCopy);
 

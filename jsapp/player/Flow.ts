@@ -262,11 +262,11 @@ export class Flow {
 
       if (master.currentTime < content.currentTime) {
         this.log("live content ahead of master, jumping it back");
-        content.currentTime = parseInt(master.currentTime, 10) - 2;
+        content.currentTime = parseInt('' + master.currentTime, 10) - 2;
         master.currentTime = content.currentTime;
       } else if (content.currentTime < master.currentTime) {
         this.log("live master ahead of content, jumping it back");
-        master.currentTime = parseInt(content.currentTime, 10) - 2;
+        master.currentTime = parseInt('' + content.currentTime, 10) - 2;
         content.currentTime = master.currentTime;
       }
       return;
