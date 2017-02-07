@@ -17,6 +17,13 @@ class Bootstrap {
   public $overridedisablegzip = null;
   public $validatesession = null;
 
+  // convenience properties
+  public $ssl;
+  public $scheme;
+  public $baseuri;
+  public $staticuri;
+  public $adminuri;
+
   public function __construct( $application ) {
 
     self::$instance    = $this;
