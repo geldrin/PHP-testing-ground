@@ -1,7 +1,7 @@
 /// <reference path="../../defs/jquery/jquery.d.ts" />
 /// <reference path="../../defs/flowplayer/flowplayer.d.ts" />
 "use strict";
-import {VSQ, VSQConfig} from "../VSQ";
+import {VSQ, VSQConfig, VSQType} from "../VSQ";
 import {BasePlugin} from "./BasePlugin";
 import Tools from "../../Tools";
 import Escape from "../../Escape";
@@ -10,21 +10,24 @@ declare var Hls: any;
 interface LayoutChooserRange {
   from: number;
   to: number;
-  type: string;
+  type: LayoutType;
 }
 interface LayoutChooserInfo {
   percent: number;
-  type: string;
+  type: LayoutType;
+}
+
+enum LayoutType {
+  PIPCONTENT,
+  MASTERONLY,
+  SPLIT,
+  CONTENTONLY,
+  PIPMASTER
 }
 
 export default class LayoutChooser extends BasePlugin {
   protected pluginName = "LayoutChooser";
   private ranges: LayoutChooserRange[];
-  private readonly PIPCONTENT  = 0;
-  private readonly MASTERONLY  = 1;
-  private readonly SPLIT       = 2;
-  private readonly CONTENTONLY = 3;
-  private readonly PIPMASTER   = 4;
 
   public load(): void {
     // nincs masik video, csak a full 100% szamit
@@ -86,27 +89,27 @@ export default class LayoutChooser extends BasePlugin {
       {
         'from': 0,
         'to': pipRatio,
-        'type': 'pipContent'
+        'type': LayoutType.PIPCONTENT
       },
       {
         'from': pipRatio,
         'to': pipRatio + singleRatio,
-        'type': 'masterOnly'
+        'type': LayoutType.MASTERONLY
       },
       {
         'from': pipRatio + singleRatio,
         'to': pipRatio + singleRatio + splitRatio,
-        'type': 'split'
+        'type': LayoutType.SPLIT
       },
       {
         'from': pipRatio + singleRatio + splitRatio,
         'to': pipRatio + singleRatio + splitRatio + singleRatio,
-        'type': 'contentOnly'
+        'type': LayoutType.CONTENTONLY
       },
       {
         'from': pipRatio + singleRatio + splitRatio + singleRatio,
         'to': pipRatio + singleRatio + splitRatio + singleRatio + pipRatio,
-        'type': 'pipMaster'
+        'type': LayoutType.PIPMASTER
       }
     ];
   }
@@ -152,23 +155,23 @@ export default class LayoutChooser extends BasePlugin {
 
     this.root.on("click", ".vsq-layoutchooser .pip-content", (e: Event): void => {
       e.preventDefault();
-      this.trigger(this.getMiddleRange(this.PIPCONTENT));
+      this.trigger(this.getMiddleRange(LayoutType.PIPCONTENT));
     });
     this.root.on("click", ".vsq-layoutchooser .master-only", (e: Event): void => {
       e.preventDefault();
-      this.trigger('' + this.ranges[this.MASTERONLY].from);
+      this.trigger('' + this.ranges[LayoutType.MASTERONLY].from);
     });
     this.root.on("click", ".vsq-layoutchooser .split", (e: Event): void => {
       e.preventDefault();
-      this.trigger(this.getMiddleRange(this.SPLIT));
+      this.trigger(this.getMiddleRange(LayoutType.SPLIT));
     });
     this.root.on("click", ".vsq-layoutchooser .content-only", (e: Event): void => {
       e.preventDefault();
-      this.trigger('' + this.ranges[this.CONTENTONLY].from);
+      this.trigger('' + this.ranges[LayoutType.CONTENTONLY].from);
     });
     this.root.on("click", ".vsq-layoutchooser .pip-master", (e: Event): void => {
       e.preventDefault();
-      this.trigger(this.getMiddleRange(this.PIPMASTER));
+      this.trigger(this.getMiddleRange(LayoutType.PIPMASTER));
     });
 
     this.root.on("input change", '.vsq-layoutchooser input[name="ratio"]', (e: Event): void => {
@@ -209,27 +212,27 @@ export default class LayoutChooser extends BasePlugin {
     let info = this.getRangeForValue(val);
     // pip es split modban a minimalis nagysag 25%, annal sose legyunk kisebbek
     switch(info.type) {
-      case "pipContent":
+      case LayoutType.PIPCONTENT:
         masterWidth = 100;
         contentWidth = info.percent * 50;
         masterOnTop = false;
         break;
-      case "masterOnly":
+      case LayoutType.MASTERONLY:
         masterWidth = 100;
         contentWidth = 0;
         masterOnTop = true;
         break;
-      case "split":
+      case LayoutType.SPLIT:
         masterWidth = info.percent * 100;
         contentWidth = 100 - masterWidth;
         masterOnTop = null;
         break;
-      case "contentOnly":
+      case LayoutType.CONTENTONLY:
         masterWidth = 0;
         contentWidth = 100;
         masterOnTop = false;
         break;
-      case "pipMaster":
+      case LayoutType.PIPMASTER:
         masterWidth = 50 - (info.percent * 50);
         contentWidth = 100;
         masterOnTop = true;
@@ -259,8 +262,8 @@ export default class LayoutChooser extends BasePlugin {
     }
 
     let tags = this.vsq.getVideoTags();
-    let master = jQuery(tags[VSQ.MASTER]);
-    let content = jQuery(tags[VSQ.CONTENT]);
+    let master = jQuery(tags[VSQType.MASTER]);
+    let content = jQuery(tags[VSQType.CONTENT]);
     master.css({
       width: masterWidth + '%',
       zIndex: masterZ,

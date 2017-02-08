@@ -23,13 +23,11 @@ export class VSQ {
   public static engineName = "vsq";
   public static debug = false;
   private static initDone = false;
-  public static readonly MASTER = 0;
-  public static readonly CONTENT = 1;
 
   private l: Locale;
   private id: string;
   private loadedCount = 0;
-  public longerType: 0 | 1 = 0; // alapbol VSQ.MASTER
+  public longerType: VSQType = VSQType.MASTER;
   private videoTags: HTMLVideoElement[] = [];
   private videoInfo: FlowVideo[] = [];
   private hlsEngines: any[] = [];
@@ -198,7 +196,7 @@ export class VSQ {
   }
 
   private addPoster(): void {
-    let master = jQuery(this.videoTags[VSQ.MASTER]);
+    let master = jQuery(this.videoTags[VSQType.MASTER]);
     master.one(this.eventName("timeupdate"), () => {
       this.root.addClass("is-poster");
       this.flow.poster = true;
@@ -209,7 +207,7 @@ export class VSQ {
     if (!this.flow.poster)
       return;
 
-    let master = jQuery(this.videoTags[VSQ.MASTER]);
+    let master = jQuery(this.videoTags[VSQType.MASTER]);
     master.one(this.eventName("timeupdate"), () => {
       this.root.removeClass("is-poster");
       this.flow.poster = false;
@@ -226,7 +224,7 @@ export class VSQ {
   private isLongerVideo(e: Event): boolean {
     let type = this.getTypeFromEvent(e);
     if (this.introOrOutro)
-      return type === VSQ.MASTER;
+      return type === VSQType.MASTER;
 
     return type === this.longerType;
   }
@@ -236,8 +234,8 @@ export class VSQ {
     if (!this.hasMultipleVideos())
       return;
 
-    let master = this.videoTags[VSQ.MASTER];
-    let content = this.videoTags[VSQ.CONTENT];
+    let master = this.videoTags[VSQType.MASTER];
+    let content = this.videoTags[VSQType.CONTENT];
 
     // ha az egyik felvetelt mar befejeztuk
     if (master.currentTime == 0 || master.currentTime >= master.duration)
@@ -293,14 +291,14 @@ export class VSQ {
         return false;
       }
 
-      // mivel a default longerType ertek a VSQ.MASTER igy csak egy esetet kell nezni
+      // mivel a default longerType ertek a VSQType.MASTER igy csak egy esetet kell nezni
       if (
           vidCount > 1 &&
-          this.videoTags[VSQ.CONTENT].duration > this.videoTags[VSQ.MASTER].duration
+          this.videoTags[VSQType.CONTENT].duration > this.videoTags[VSQType.MASTER].duration
          )
-        this.longerType = VSQ.CONTENT;
+        this.longerType = VSQType.CONTENT;
     } else // hogy a longerType mindig ertelmes legyen akkor is ha outro kovetkezik
-      this.longerType = VSQ.MASTER;
+      this.longerType = VSQType.MASTER;
 
     let tag = this.videoTags[this.longerType];
     let data = jQuery.extend(this.flow.video, {
@@ -309,7 +307,7 @@ export class VSQ {
       width: tag.videoWidth, // TODO ezeket mire hasznalja a flowplayer
       height: tag.videoHeight,
       // az src mindig ugyanaz lesz, hiaba master vagy content
-      url: this.videoInfo[VSQ.MASTER].src
+      url: this.videoInfo[VSQType.MASTER].src
     });
 
     this.triggerPlayer("ready", data);
@@ -332,7 +330,7 @@ export class VSQ {
 
     let type = this.getTypeFromEvent(e);
     // a lenyeg csak az hogy egyszer fusson le
-    if (type === VSQ.CONTENT) {
+    if (type === VSQType.CONTENT) {
       e.stopImmediatePropagation();
       return false;
     }
@@ -340,7 +338,7 @@ export class VSQ {
     this.removePoster();
     if (!this.hlsConf.bufferWhilePaused) {
       if (this.introOrOutro)
-        this.hlsEngines[VSQ.MASTER].startLoad(tag.currentTime);
+        this.hlsEngines[VSQType.MASTER].startLoad(tag.currentTime);
       else
         this.hlsCall('startLoad', [tag.currentTime]);
     }
@@ -467,7 +465,7 @@ export class VSQ {
     // ha a contenthez nem szabad nyulni mert eppen nem a konkret master video megy
     // vagy ha nem a hoszabbik tipus vagyunk
     if (
-        (this.introOrOutro && type !== VSQ.MASTER) ||
+        (this.introOrOutro && type !== VSQType.MASTER) ||
         (!this.introOrOutro && type !== this.longerType)
        ) {
       e.stopImmediatePropagation();
@@ -482,7 +480,7 @@ export class VSQ {
 
   private handleVolumeChange(e: Event): boolean | undefined {
     let type = this.getTypeFromEvent(e);
-    if (type === VSQ.CONTENT) {
+    if (type === VSQType.CONTENT) {
       e.stopImmediatePropagation();
       return false;
     }
@@ -522,9 +520,9 @@ export class VSQ {
       throw new Error("Unknown event target");
 
     if (t.is('.vsq-master'))
-      return VSQ.MASTER;
+      return VSQType.MASTER;
 
-    return VSQ.CONTENT;
+    return VSQType.CONTENT;
   }
 
   private setupVideoEvents(video: FlowVideo): void {
@@ -589,7 +587,7 @@ export class VSQ {
       // ha live akkor postert vissza
       // amit varunk: az autoplay mindig false, ergo a postert kirakhatjuk
       if (this.flow.live)
-        jQuery(this.videoTags[VSQ.MASTER]).one(this.eventName("seeked"), () => {
+        jQuery(this.videoTags[VSQType.MASTER]).one(this.eventName("seeked"), () => {
           this.addPoster();
         });
     }
@@ -781,8 +779,8 @@ export class VSQ {
     );
 
     // outro video kovetkezik, destroy a contentet ha volt
-    if (video.index > this.cfg.masterIndex && this.videoTags[VSQ.CONTENT])
-      this.destroyVideoTag(VSQ.CONTENT);
+    if (video.index > this.cfg.masterIndex && this.videoTags[VSQType.CONTENT])
+      this.destroyVideoTag(VSQType.CONTENT);
 
     // eloszor a content videot, mert mindig csak prependelunk
     // es igy lesz jo a sorrend
@@ -791,33 +789,33 @@ export class VSQ {
          video.index === this.cfg.masterIndex &&
          this.hasMultipleVideos()
        ) {
-      if (this.videoTags[VSQ.CONTENT])
-        this.destroyVideoTag(VSQ.CONTENT);
+      if (this.videoTags[VSQType.CONTENT])
+        this.destroyVideoTag(VSQType.CONTENT);
 
       // deep copy the video, and set its properties
       let secondVideo = jQuery.extend(true, {}, video);
       secondVideo.src = this.cfg.secondarySources[0].src;
       secondVideo['vsq-labels'] = this.cfg.secondarySources[0]['vsq-labels'];
       secondVideo.sources = this.cfg.secondarySources;
-      this.videoInfo[VSQ.CONTENT] = secondVideo;
+      this.videoInfo[VSQType.CONTENT] = secondVideo;
 
       // and insert it into the DOM
-      this.videoTags[VSQ.CONTENT] = this.createVideoTag(secondVideo);
-      this.videoTags[VSQ.CONTENT].load();
-      let engine = jQuery(this.videoTags[VSQ.CONTENT]);
+      this.videoTags[VSQType.CONTENT] = this.createVideoTag(secondVideo);
+      this.videoTags[VSQType.CONTENT].load();
+      let engine = jQuery(this.videoTags[VSQType.CONTENT]);
       engine.addClass('vsq-content');
       root.prepend(engine);
 
-      this.setupHLS(VSQ.CONTENT);
+      this.setupHLS(VSQType.CONTENT);
     }
 
-    if (this.videoTags[VSQ.MASTER])
-      this.destroyVideoTag(VSQ.MASTER);
+    if (this.videoTags[VSQType.MASTER])
+      this.destroyVideoTag(VSQType.MASTER);
 
-    this.videoInfo[VSQ.MASTER] = video;
-    this.videoTags[VSQ.MASTER] = this.createVideoTag(video);
-    this.videoTags[VSQ.MASTER].load();
-    let engine = jQuery(this.videoTags[VSQ.MASTER]);
+    this.videoInfo[VSQType.MASTER] = video;
+    this.videoTags[VSQType.MASTER] = this.createVideoTag(video);
+    this.videoTags[VSQType.MASTER].load();
+    let engine = jQuery(this.videoTags[VSQType.MASTER]);
     engine.addClass('vsq-master');
     // vagy intro/outro es nincs content
     if (
@@ -827,7 +825,7 @@ export class VSQ {
       engine.addClass("vsq-fullscale");
 
     root.prepend(engine);
-    this.setupHLS(VSQ.MASTER);
+    this.setupHLS(VSQType.MASTER);
 
     this.flow.on(this.eventName("error"), () => {
       this.unload();
@@ -848,7 +846,7 @@ export class VSQ {
 
   public resume(): void {
     if (this.introOrOutro) {
-      this.videoTags[VSQ.MASTER].play();
+      this.videoTags[VSQType.MASTER].play();
       return;
     }
 
@@ -889,7 +887,7 @@ export class VSQ {
   public seek(to: number): void {
     // tuti csak egy video van, egyszeru
     if (!this.hasMultipleVideos()) {
-      this.videoTags[VSQ.MASTER].currentTime = to;
+      this.videoTags[VSQType.MASTER].currentTime = to;
       return;
     }
 
@@ -954,6 +952,11 @@ export class VSQ {
     flowplayer.engines.unshift(proxy);
     VSQ.initDone = true;
   }
+}
+
+export enum VSQType {
+  MASTER = 0,
+  CONTENT = 1
 }
 
 /* definialni hogy kell a vsq flowplayer confignak kineznie */

@@ -316,7 +316,7 @@ System.register("player/VSQ/BasePlugin", ["player/VSQ"], function (exports_6, co
 System.register("player/VSQ/LayoutChooser", ["player/VSQ", "player/VSQ/BasePlugin", "Tools"], function (exports_7, context_7) {
     "use strict";
     var __moduleName = context_7 && context_7.id;
-    var VSQ_2, BasePlugin_1, Tools_1, LayoutChooser;
+    var VSQ_2, BasePlugin_1, Tools_1, LayoutType, LayoutChooser;
     return {
         setters: [
             function (VSQ_2_1) {
@@ -330,16 +330,18 @@ System.register("player/VSQ/LayoutChooser", ["player/VSQ", "player/VSQ/BasePlugi
             }
         ],
         execute: function () {
+            (function (LayoutType) {
+                LayoutType[LayoutType["PIPCONTENT"] = 0] = "PIPCONTENT";
+                LayoutType[LayoutType["MASTERONLY"] = 1] = "MASTERONLY";
+                LayoutType[LayoutType["SPLIT"] = 2] = "SPLIT";
+                LayoutType[LayoutType["CONTENTONLY"] = 3] = "CONTENTONLY";
+                LayoutType[LayoutType["PIPMASTER"] = 4] = "PIPMASTER";
+            })(LayoutType || (LayoutType = {}));
             LayoutChooser = (function (_super) {
                 __extends(LayoutChooser, _super);
                 function LayoutChooser() {
                     var _this = _super.apply(this, arguments) || this;
                     _this.pluginName = "LayoutChooser";
-                    _this.PIPCONTENT = 0;
-                    _this.MASTERONLY = 1;
-                    _this.SPLIT = 2;
-                    _this.CONTENTONLY = 3;
-                    _this.PIPMASTER = 4;
                     return _this;
                 }
                 LayoutChooser.prototype.load = function () {
@@ -385,27 +387,27 @@ System.register("player/VSQ/LayoutChooser", ["player/VSQ", "player/VSQ/BasePlugi
                         {
                             'from': 0,
                             'to': pipRatio,
-                            'type': 'pipContent'
+                            'type': LayoutType.PIPCONTENT
                         },
                         {
                             'from': pipRatio,
                             'to': pipRatio + singleRatio,
-                            'type': 'masterOnly'
+                            'type': LayoutType.MASTERONLY
                         },
                         {
                             'from': pipRatio + singleRatio,
                             'to': pipRatio + singleRatio + splitRatio,
-                            'type': 'split'
+                            'type': LayoutType.SPLIT
                         },
                         {
                             'from': pipRatio + singleRatio + splitRatio,
                             'to': pipRatio + singleRatio + splitRatio + singleRatio,
-                            'type': 'contentOnly'
+                            'type': LayoutType.CONTENTONLY
                         },
                         {
                             'from': pipRatio + singleRatio + splitRatio + singleRatio,
                             'to': pipRatio + singleRatio + splitRatio + singleRatio + pipRatio,
-                            'type': 'pipMaster'
+                            'type': LayoutType.PIPMASTER
                         }
                     ];
                 };
@@ -430,23 +432,23 @@ System.register("player/VSQ/LayoutChooser", ["player/VSQ", "player/VSQ/BasePlugi
                     this.root.find(".fp-ui").append(html);
                     this.root.on("click", ".vsq-layoutchooser .pip-content", function (e) {
                         e.preventDefault();
-                        _this.trigger(_this.getMiddleRange(_this.PIPCONTENT));
+                        _this.trigger(_this.getMiddleRange(LayoutType.PIPCONTENT));
                     });
                     this.root.on("click", ".vsq-layoutchooser .master-only", function (e) {
                         e.preventDefault();
-                        _this.trigger('' + _this.ranges[_this.MASTERONLY].from);
+                        _this.trigger('' + _this.ranges[LayoutType.MASTERONLY].from);
                     });
                     this.root.on("click", ".vsq-layoutchooser .split", function (e) {
                         e.preventDefault();
-                        _this.trigger(_this.getMiddleRange(_this.SPLIT));
+                        _this.trigger(_this.getMiddleRange(LayoutType.SPLIT));
                     });
                     this.root.on("click", ".vsq-layoutchooser .content-only", function (e) {
                         e.preventDefault();
-                        _this.trigger('' + _this.ranges[_this.CONTENTONLY].from);
+                        _this.trigger('' + _this.ranges[LayoutType.CONTENTONLY].from);
                     });
                     this.root.on("click", ".vsq-layoutchooser .pip-master", function (e) {
                         e.preventDefault();
-                        _this.trigger(_this.getMiddleRange(_this.PIPMASTER));
+                        _this.trigger(_this.getMiddleRange(LayoutType.PIPMASTER));
                     });
                     this.root.on("input change", '.vsq-layoutchooser input[name="ratio"]', function (e) {
                         _this.onChange(e);
@@ -477,27 +479,27 @@ System.register("player/VSQ/LayoutChooser", ["player/VSQ", "player/VSQ/BasePlugi
                         throw new Error("Invalid value for layoutchooser");
                     var info = this.getRangeForValue(val);
                     switch (info.type) {
-                        case "pipContent":
+                        case LayoutType.PIPCONTENT:
                             masterWidth = 100;
                             contentWidth = info.percent * 50;
                             masterOnTop = false;
                             break;
-                        case "masterOnly":
+                        case LayoutType.MASTERONLY:
                             masterWidth = 100;
                             contentWidth = 0;
                             masterOnTop = true;
                             break;
-                        case "split":
+                        case LayoutType.SPLIT:
                             masterWidth = info.percent * 100;
                             contentWidth = 100 - masterWidth;
                             masterOnTop = null;
                             break;
-                        case "contentOnly":
+                        case LayoutType.CONTENTONLY:
                             masterWidth = 0;
                             contentWidth = 100;
                             masterOnTop = false;
                             break;
-                        case "pipMaster":
+                        case LayoutType.PIPMASTER:
                             masterWidth = 50 - (info.percent * 50);
                             contentWidth = 100;
                             masterOnTop = true;
@@ -522,8 +524,8 @@ System.register("player/VSQ/LayoutChooser", ["player/VSQ", "player/VSQ/BasePlugi
                         masterRight = "auto";
                     }
                     var tags = this.vsq.getVideoTags();
-                    var master = jQuery(tags[VSQ_2.VSQ.MASTER]);
-                    var content = jQuery(tags[VSQ_2.VSQ.CONTENT]);
+                    var master = jQuery(tags[VSQ_2.VSQType.MASTER]);
+                    var content = jQuery(tags[VSQ_2.VSQType.CONTENT]);
                     master.css({
                         width: masterWidth + '%',
                         zIndex: masterZ,
@@ -580,10 +582,10 @@ System.register("player/VSQ/QualityChooser", ["player/VSQ", "player/VSQ/BasePlug
                 };
                 QualityChooser.prototype.getLevels = function () {
                     if (!this.shouldLookAtSecondary())
-                        return this.vsq.getVideoInfo(VSQ_3.VSQ.MASTER)['vsq-labels'].slice(0);
-                    if (this.vsq.longerType === VSQ_3.VSQ.CONTENT)
-                        return this.vsq.getVideoInfo(VSQ_3.VSQ.CONTENT)['vsq-labels'].slice(0);
-                    return this.vsq.getVideoInfo(VSQ_3.VSQ.MASTER)['vsq-labels'].slice(0);
+                        return this.vsq.getVideoInfo(VSQ_3.VSQType.MASTER)['vsq-labels'].slice(0);
+                    if (this.vsq.longerType === VSQ_3.VSQType.CONTENT)
+                        return this.vsq.getVideoInfo(VSQ_3.VSQType.CONTENT)['vsq-labels'].slice(0);
+                    return this.vsq.getVideoInfo(VSQ_3.VSQType.MASTER)['vsq-labels'].slice(0);
                 };
                 QualityChooser.prototype.onClick = function (e) {
                     var _this = this;
@@ -595,12 +597,12 @@ System.register("player/VSQ/QualityChooser", ["player/VSQ", "player/VSQ/BasePlug
                     choice.addClass("active");
                     var quality = choice.attr('data-quality');
                     Tools_2.default.setToStorage(this.configKey("quality"), quality);
-                    var masterLevel = this.getQualityIndex(VSQ_3.VSQ.MASTER, quality);
+                    var masterLevel = this.getQualityIndex(VSQ_3.VSQType.MASTER, quality);
                     var smooth = this.flow.conf.smoothSwitching;
                     var tags = this.vsq.getVideoTags();
-                    var paused = tags[VSQ_3.VSQ.MASTER].paused;
+                    var paused = tags[VSQ_3.VSQType.MASTER].paused;
                     if (!paused && !smooth)
-                        jQuery(tags[VSQ_3.VSQ.MASTER]).one(this.eventName("pause"), function () {
+                        jQuery(tags[VSQ_3.VSQType.MASTER]).one(this.eventName("pause"), function () {
                             _this.root.removeClass("is-paused");
                         });
                     var hlsMethod = 'currentLevel';
@@ -639,7 +641,7 @@ System.register("player/VSQ/QualityChooser", ["player/VSQ", "player/VSQ/BasePlug
                         hls.loadLevel = startLevel;
                         hls.startLoad(hls.config.startPosition);
                     });
-                    if (type !== VSQ_3.VSQ.MASTER)
+                    if (type !== VSQ_3.VSQType.MASTER)
                         return;
                     hls.on(Hls.Events.LEVEL_SWITCH, function (event, data) {
                         _this.root.find('.vsq-quality-selector li').removeClass("current");
@@ -655,23 +657,23 @@ System.register("player/VSQ/QualityChooser", ["player/VSQ", "player/VSQ/BasePlug
                 };
                 QualityChooser.prototype.setLevelsForQuality = function (quality, method) {
                     var engines = this.vsq.getHLSEngines();
-                    var masterLevel = this.getQualityIndex(VSQ_3.VSQ.MASTER, quality);
+                    var masterLevel = this.getQualityIndex(VSQ_3.VSQType.MASTER, quality);
                     this.log('setting master video level to', masterLevel, quality);
-                    engines[VSQ_3.VSQ.MASTER][method] = masterLevel;
+                    engines[VSQ_3.VSQType.MASTER][method] = masterLevel;
                     if (!this.shouldLookAtSecondary())
                         return;
-                    var secondaryLevel = this.getQualityIndex(VSQ_3.VSQ.CONTENT, quality);
+                    var secondaryLevel = this.getQualityIndex(VSQ_3.VSQType.CONTENT, quality);
                     this.log('setting content video level to', secondaryLevel, quality);
-                    engines[VSQ_3.VSQ.CONTENT][method] = secondaryLevel;
+                    engines[VSQ_3.VSQType.CONTENT][method] = secondaryLevel;
                 };
                 QualityChooser.prototype.getQualityIndex = function (type, quality) {
-                    if (type === VSQ_3.VSQ.MASTER)
+                    if (type === VSQ_3.VSQType.MASTER)
                         return this.getMasterQualityIndex(quality);
                     var masterLevel = this.getMasterQualityIndex(quality);
                     return this.getLevelForSecondary(masterLevel);
                 };
                 QualityChooser.prototype.getMasterQualityIndex = function (quality) {
-                    var labels = this.vsq.getVideoInfo(VSQ_3.VSQ.MASTER)['vsq-labels'];
+                    var labels = this.vsq.getVideoInfo(VSQ_3.VSQType.MASTER)['vsq-labels'];
                     for (var i = labels.length - 1; i >= 0; i--) {
                         var label = labels[i];
                         if (label === quality)
@@ -680,7 +682,7 @@ System.register("player/VSQ/QualityChooser", ["player/VSQ", "player/VSQ/BasePlug
                     return -1;
                 };
                 QualityChooser.prototype.getLevelForSecondary = function (masterLevel) {
-                    var labels = this.vsq.getVideoInfo(VSQ_3.VSQ.CONTENT)['vsq-labels'];
+                    var labels = this.vsq.getVideoInfo(VSQ_3.VSQType.CONTENT)['vsq-labels'];
                     if (labels.length <= masterLevel)
                         return labels.length - 1;
                     return masterLevel;
@@ -792,7 +794,7 @@ System.register("player/VSQHLS", ["RateLimiter"], function (exports_10, context_
         ],
         execute: function () {
             VSQHLS = (function () {
-                function VSQHLS(vsq, video) {
+                function VSQHLS(vsq, video, type) {
                     var _this = this;
                     this.pluginName = "VSQHLS";
                     this.vsq = vsq;
@@ -811,10 +813,6 @@ System.register("player/VSQHLS", ["RateLimiter"], function (exports_10, context_
                         _this.hls.recoverMediaError();
                     });
                 }
-                VSQHLS.prototype.load = function () {
-                };
-                VSQHLS.prototype.destroy = function () {
-                };
                 VSQHLS.prototype.setupHLS = function (type) {
                     var _this = this;
                     var hls = new Hls({
@@ -875,7 +873,7 @@ System.register("player/VSQHLS", ["RateLimiter"], function (exports_10, context_
 System.register("player/VSQ", ["player/VSQ/LayoutChooser", "player/VSQ/QualityChooser", "RateLimiter"], function (exports_11, context_11) {
     "use strict";
     var __moduleName = context_11 && context_11.id;
-    var LayoutChooser_1, QualityChooser_1, RateLimiter_2, VSQ;
+    var LayoutChooser_1, QualityChooser_1, RateLimiter_2, VSQ, VSQType;
     return {
         setters: [
             function (LayoutChooser_1_1) {
@@ -892,7 +890,7 @@ System.register("player/VSQ", ["player/VSQ/LayoutChooser", "player/VSQ/QualityCh
             VSQ = (function () {
                 function VSQ(flow, root) {
                     this.loadedCount = 0;
-                    this.longerType = 0;
+                    this.longerType = VSQType.MASTER;
                     this.videoTags = [];
                     this.videoInfo = [];
                     this.hlsEngines = [];
@@ -1018,7 +1016,7 @@ System.register("player/VSQ", ["player/VSQ/LayoutChooser", "player/VSQ/QualityCh
                 };
                 VSQ.prototype.addPoster = function () {
                     var _this = this;
-                    var master = jQuery(this.videoTags[VSQ.MASTER]);
+                    var master = jQuery(this.videoTags[VSQType.MASTER]);
                     master.one(this.eventName("timeupdate"), function () {
                         _this.root.addClass("is-poster");
                         _this.flow.poster = true;
@@ -1028,7 +1026,7 @@ System.register("player/VSQ", ["player/VSQ/LayoutChooser", "player/VSQ/QualityCh
                     var _this = this;
                     if (!this.flow.poster)
                         return;
-                    var master = jQuery(this.videoTags[VSQ.MASTER]);
+                    var master = jQuery(this.videoTags[VSQType.MASTER]);
                     master.one(this.eventName("timeupdate"), function () {
                         _this.root.removeClass("is-poster");
                         _this.flow.poster = false;
@@ -1042,14 +1040,14 @@ System.register("player/VSQ", ["player/VSQ/LayoutChooser", "player/VSQ/QualityCh
                 VSQ.prototype.isLongerVideo = function (e) {
                     var type = this.getTypeFromEvent(e);
                     if (this.introOrOutro)
-                        return type === VSQ.MASTER;
+                        return type === VSQType.MASTER;
                     return type === this.longerType;
                 };
                 VSQ.prototype.syncVideos = function () {
                     if (!this.hasMultipleVideos())
                         return;
-                    var master = this.videoTags[VSQ.MASTER];
-                    var content = this.videoTags[VSQ.CONTENT];
+                    var master = this.videoTags[VSQType.MASTER];
+                    var content = this.videoTags[VSQType.CONTENT];
                     if (master.currentTime == 0 || master.currentTime >= master.duration)
                         return;
                     if (content.currentTime == 0 || content.currentTime >= content.duration)
@@ -1071,18 +1069,18 @@ System.register("player/VSQ", ["player/VSQ/LayoutChooser", "player/VSQ/QualityCh
                             return false;
                         }
                         if (vidCount > 1 &&
-                            this.videoTags[VSQ.CONTENT].duration > this.videoTags[VSQ.MASTER].duration)
-                            this.longerType = VSQ.CONTENT;
+                            this.videoTags[VSQType.CONTENT].duration > this.videoTags[VSQType.MASTER].duration)
+                            this.longerType = VSQType.CONTENT;
                     }
                     else
-                        this.longerType = VSQ.MASTER;
+                        this.longerType = VSQType.MASTER;
                     var tag = this.videoTags[this.longerType];
                     var data = jQuery.extend(this.flow.video, {
                         duration: tag.duration,
                         seekable: tag.seekable.end(0),
                         width: tag.videoWidth,
                         height: tag.videoHeight,
-                        url: this.videoInfo[VSQ.MASTER].src
+                        url: this.videoInfo[VSQType.MASTER].src
                     });
                     this.triggerPlayer("ready", data);
                     if (this.flow.video.index === this.cfg.masterIndex && this.cfg.masterIndex > 0)
@@ -1094,14 +1092,14 @@ System.register("player/VSQ", ["player/VSQ/LayoutChooser", "player/VSQ/QualityCh
                     if (tag.currentTime >= tag.duration)
                         tag.currentTime = 0;
                     var type = this.getTypeFromEvent(e);
-                    if (type === VSQ.CONTENT) {
+                    if (type === VSQType.CONTENT) {
                         e.stopImmediatePropagation();
                         return false;
                     }
                     this.removePoster();
                     if (!this.hlsConf.bufferWhilePaused) {
                         if (this.introOrOutro)
-                            this.hlsEngines[VSQ.MASTER].startLoad(tag.currentTime);
+                            this.hlsEngines[VSQType.MASTER].startLoad(tag.currentTime);
                         else
                             this.hlsCall('startLoad', [tag.currentTime]);
                     }
@@ -1195,7 +1193,7 @@ System.register("player/VSQ", ["player/VSQ/LayoutChooser", "player/VSQ/QualityCh
                 };
                 VSQ.prototype.handleTimeUpdate = function (e) {
                     var type = this.getTypeFromEvent(e);
-                    if ((this.introOrOutro && type !== VSQ.MASTER) ||
+                    if ((this.introOrOutro && type !== VSQType.MASTER) ||
                         (!this.introOrOutro && type !== this.longerType)) {
                         e.stopImmediatePropagation();
                         return false;
@@ -1206,7 +1204,7 @@ System.register("player/VSQ", ["player/VSQ/LayoutChooser", "player/VSQ/QualityCh
                 };
                 VSQ.prototype.handleVolumeChange = function (e) {
                     var type = this.getTypeFromEvent(e);
-                    if (type === VSQ.CONTENT) {
+                    if (type === VSQType.CONTENT) {
                         e.stopImmediatePropagation();
                         return false;
                     }
@@ -1237,8 +1235,8 @@ System.register("player/VSQ", ["player/VSQ/LayoutChooser", "player/VSQ/QualityCh
                     if (!t.is('.vsq-master, .vsq-content'))
                         throw new Error("Unknown event target");
                     if (t.is('.vsq-master'))
-                        return VSQ.MASTER;
-                    return VSQ.CONTENT;
+                        return VSQType.MASTER;
+                    return VSQType.CONTENT;
                 };
                 VSQ.prototype.setupVideoEvents = function (video) {
                     var _this = this;
@@ -1292,7 +1290,7 @@ System.register("player/VSQ", ["player/VSQ/LayoutChooser", "player/VSQ/QualityCh
                             _this.addPoster();
                         });
                         if (this.flow.live)
-                            jQuery(this.videoTags[VSQ.MASTER]).one(this.eventName("seeked"), function () {
+                            jQuery(this.videoTags[VSQType.MASTER]).one(this.eventName("seeked"), function () {
                                 _this.addPoster();
                             });
                     }
@@ -1395,36 +1393,36 @@ System.register("player/VSQ", ["player/VSQ/LayoutChooser", "player/VSQ/QualityCh
                     var root = this.root.find('.fp-player');
                     root.find('img').remove();
                     this.hlsConf = jQuery.extend(this.hlsConf, this.flow.conf.hlsjs, this.flow.conf.clip.hlsjs, video.hlsjs);
-                    if (video.index > this.cfg.masterIndex && this.videoTags[VSQ.CONTENT])
-                        this.destroyVideoTag(VSQ.CONTENT);
+                    if (video.index > this.cfg.masterIndex && this.videoTags[VSQType.CONTENT])
+                        this.destroyVideoTag(VSQType.CONTENT);
                     if (video.index === this.cfg.masterIndex &&
                         this.hasMultipleVideos()) {
-                        if (this.videoTags[VSQ.CONTENT])
-                            this.destroyVideoTag(VSQ.CONTENT);
+                        if (this.videoTags[VSQType.CONTENT])
+                            this.destroyVideoTag(VSQType.CONTENT);
                         var secondVideo = jQuery.extend(true, {}, video);
                         secondVideo.src = this.cfg.secondarySources[0].src;
                         secondVideo['vsq-labels'] = this.cfg.secondarySources[0]['vsq-labels'];
                         secondVideo.sources = this.cfg.secondarySources;
-                        this.videoInfo[VSQ.CONTENT] = secondVideo;
-                        this.videoTags[VSQ.CONTENT] = this.createVideoTag(secondVideo);
-                        this.videoTags[VSQ.CONTENT].load();
-                        var engine_1 = jQuery(this.videoTags[VSQ.CONTENT]);
+                        this.videoInfo[VSQType.CONTENT] = secondVideo;
+                        this.videoTags[VSQType.CONTENT] = this.createVideoTag(secondVideo);
+                        this.videoTags[VSQType.CONTENT].load();
+                        var engine_1 = jQuery(this.videoTags[VSQType.CONTENT]);
                         engine_1.addClass('vsq-content');
                         root.prepend(engine_1);
-                        this.setupHLS(VSQ.CONTENT);
+                        this.setupHLS(VSQType.CONTENT);
                     }
-                    if (this.videoTags[VSQ.MASTER])
-                        this.destroyVideoTag(VSQ.MASTER);
-                    this.videoInfo[VSQ.MASTER] = video;
-                    this.videoTags[VSQ.MASTER] = this.createVideoTag(video);
-                    this.videoTags[VSQ.MASTER].load();
-                    var engine = jQuery(this.videoTags[VSQ.MASTER]);
+                    if (this.videoTags[VSQType.MASTER])
+                        this.destroyVideoTag(VSQType.MASTER);
+                    this.videoInfo[VSQType.MASTER] = video;
+                    this.videoTags[VSQType.MASTER] = this.createVideoTag(video);
+                    this.videoTags[VSQType.MASTER].load();
+                    var engine = jQuery(this.videoTags[VSQType.MASTER]);
                     engine.addClass('vsq-master');
                     if (video.index !== this.cfg.masterIndex ||
                         !this.hasMultipleVideos())
                         engine.addClass("vsq-fullscale");
                     root.prepend(engine);
-                    this.setupHLS(VSQ.MASTER);
+                    this.setupHLS(VSQType.MASTER);
                     this.flow.on(this.eventName("error"), function () {
                         _this.unload();
                     });
@@ -1439,7 +1437,7 @@ System.register("player/VSQ", ["player/VSQ/LayoutChooser", "player/VSQ/QualityCh
                 };
                 VSQ.prototype.resume = function () {
                     if (this.introOrOutro) {
-                        this.videoTags[VSQ.MASTER].play();
+                        this.videoTags[VSQType.MASTER].play();
                         return;
                     }
                     this.tagCall('play');
@@ -1468,7 +1466,7 @@ System.register("player/VSQ", ["player/VSQ/LayoutChooser", "player/VSQ/QualityCh
                 };
                 VSQ.prototype.seek = function (to) {
                     if (!this.hasMultipleVideos()) {
-                        this.videoTags[VSQ.MASTER].currentTime = to;
+                        this.videoTags[VSQType.MASTER].currentTime = to;
                         return;
                     }
                     var tags = [];
@@ -1514,9 +1512,12 @@ System.register("player/VSQ", ["player/VSQ/LayoutChooser", "player/VSQ/QualityCh
             VSQ.engineName = "vsq";
             VSQ.debug = false;
             VSQ.initDone = false;
-            VSQ.MASTER = 0;
-            VSQ.CONTENT = 1;
             exports_11("VSQ", VSQ);
+            (function (VSQType) {
+                VSQType[VSQType["MASTER"] = 0] = "MASTER";
+                VSQType[VSQType["CONTENT"] = 1] = "CONTENT";
+            })(VSQType || (VSQType = {}));
+            exports_11("VSQType", VSQType);
         }
     };
 });

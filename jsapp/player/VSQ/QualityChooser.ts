@@ -1,7 +1,7 @@
 /// <reference path="../../defs/jquery/jquery.d.ts" />
 /// <reference path="../../defs/flowplayer/flowplayer.d.ts" />
 "use strict";
-import {VSQ, VSQConfig} from "../VSQ";
+import {VSQ, VSQConfig, VSQType} from "../VSQ";
 import {BasePlugin} from "./BasePlugin";
 import Tools from "../../Tools";
 import Escape from "../../Escape";
@@ -33,13 +33,13 @@ export default class QualityChooser extends BasePlugin {
   // a megjelenitendo minosegi szintek
   private getLevels(): string[] {
     if (!this.shouldLookAtSecondary())
-      return this.vsq.getVideoInfo(VSQ.MASTER)['vsq-labels'].slice(0);
+      return this.vsq.getVideoInfo(VSQType.MASTER)['vsq-labels'].slice(0);
 
-    if (this.vsq.longerType === VSQ.CONTENT)
-      return this.vsq.getVideoInfo(VSQ.CONTENT)['vsq-labels'].slice(0);
+    if (this.vsq.longerType === VSQType.CONTENT)
+      return this.vsq.getVideoInfo(VSQType.CONTENT)['vsq-labels'].slice(0);
 
     // mindig master
-    return this.vsq.getVideoInfo(VSQ.MASTER)['vsq-labels'].slice(0);
+    return this.vsq.getVideoInfo(VSQType.MASTER)['vsq-labels'].slice(0);
   }
 
   private onClick(e: Event): void {
@@ -55,14 +55,14 @@ export default class QualityChooser extends BasePlugin {
     let quality = choice.attr('data-quality');
     Tools.setToStorage(this.configKey("quality"), quality);
 
-    let masterLevel = this.getQualityIndex(VSQ.MASTER, quality);
+    let masterLevel = this.getQualityIndex(VSQType.MASTER, quality);
 
     let smooth = this.flow.conf.smoothSwitching;
     let tags = this.vsq.getVideoTags();
-    let paused = tags[VSQ.MASTER].paused;
+    let paused = tags[VSQType.MASTER].paused;
 
     if (!paused && !smooth)
-      jQuery(tags[VSQ.MASTER]).one(this.eventName("pause"), () => {
+      jQuery(tags[VSQType.MASTER]).one(this.eventName("pause"), () => {
         this.root.removeClass("is-paused");
       });
 
@@ -115,7 +115,7 @@ export default class QualityChooser extends BasePlugin {
       hls.startLoad(hls.config.startPosition);
     });
 
-    if (type !== VSQ.MASTER)
+    if (type !== VSQType.MASTER)
       return;
 
     hls.on(Hls.Events.LEVEL_SWITCH, (event: string, data: any): void => {
@@ -135,20 +135,20 @@ export default class QualityChooser extends BasePlugin {
 
   private setLevelsForQuality(quality: string, method: string): void {
     let engines = this.vsq.getHLSEngines();
-    let masterLevel = this.getQualityIndex(VSQ.MASTER, quality);
+    let masterLevel = this.getQualityIndex(VSQType.MASTER, quality);
     this.log('setting master video level to', masterLevel, quality);
-    engines[VSQ.MASTER][method] = masterLevel;
+    engines[VSQType.MASTER][method] = masterLevel;
 
     if (!this.shouldLookAtSecondary())
       return;
 
-    let secondaryLevel = this.getQualityIndex(VSQ.CONTENT, quality);
+    let secondaryLevel = this.getQualityIndex(VSQType.CONTENT, quality);
     this.log('setting content video level to', secondaryLevel, quality);
-    engines[VSQ.CONTENT][method] = secondaryLevel;
+    engines[VSQType.CONTENT][method] = secondaryLevel;
   }
 
   private getQualityIndex(type: number, quality: string): number {
-    if (type === VSQ.MASTER)
+    if (type === VSQType.MASTER)
       return this.getMasterQualityIndex(quality);
 
     let masterLevel = this.getMasterQualityIndex(quality);
@@ -158,7 +158,7 @@ export default class QualityChooser extends BasePlugin {
   // csak a getQualityIndexnek kellene hasznalnia mert annak csak egy
   // olvashatosag miatt kiemelt functionje
   private getMasterQualityIndex(quality: string): number {
-    let labels = this.vsq.getVideoInfo(VSQ.MASTER)['vsq-labels'];
+    let labels = this.vsq.getVideoInfo(VSQType.MASTER)['vsq-labels'];
 
     // az alap otlet hogy a playernek a konfiguracioban atadott sorrend
     // korrelal a quality verziok sorrendjevel, igy kozvetlenul beallithato
@@ -176,7 +176,7 @@ export default class QualityChooser extends BasePlugin {
   // csak a getQualityIndexnek kellene hasznalnia mert annak csak egy
   // olvashatosag miatt kiemelt functionje
   private getLevelForSecondary(masterLevel: number): number {
-    let labels = this.vsq.getVideoInfo(VSQ.CONTENT)['vsq-labels'];
+    let labels = this.vsq.getVideoInfo(VSQType.CONTENT)['vsq-labels'];
     if (labels.length <= masterLevel)
       return labels.length - 1;
 
