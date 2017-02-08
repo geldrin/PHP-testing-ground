@@ -1,7 +1,7 @@
 /// <reference path="../../defs/jquery/jquery.d.ts" />
 /// <reference path="../../defs/flowplayer/flowplayer.d.ts" />
 "use strict";
-import {Flow, VSQConfig} from "../Flow";
+import {VSQ, VSQConfig} from "../VSQ";
 import {BasePlugin} from "./BasePlugin";
 import Tools from "../../Tools";
 import Escape from "../../Escape";
@@ -28,7 +28,7 @@ export default class LayoutChooser extends BasePlugin {
 
   public load(): void {
     // nincs masik video, csak a full 100% szamit
-    if (!this.flow.hasMultipleVideos()) {
+    if (!this.vsq.hasMultipleVideos()) {
       this.root.addClass('vsq-singlevideo');
       return;
     }
@@ -38,7 +38,7 @@ export default class LayoutChooser extends BasePlugin {
 
     // a maximalis magassagot mindig allitani kell ha valtozik a szelesseg
     this.fixHeight();
-    this.player.on("fullscreen fullscreen-exit", () => { this.fixHeight() });
+    this.flow.on("fullscreen fullscreen-exit", () => { this.fixHeight() });
 
     this.setupRatios();
     this.setupHTML();
@@ -70,7 +70,7 @@ export default class LayoutChooser extends BasePlugin {
     else
       maxHeight = this.root.height();
 
-    jQuery(this.flow.getVideoTags()).css("maxHeight", maxHeight + 'px');
+    jQuery(this.vsq.getVideoTags()).css("maxHeight", maxHeight + 'px');
   }
 
   private setupRatios() {
@@ -258,9 +258,9 @@ export default class LayoutChooser extends BasePlugin {
       // a default z-index ertekek jok nekunk
     }
 
-    let tags = this.flow.getVideoTags();
-    let master = jQuery(tags[Flow.MASTER]);
-    let content = jQuery(tags[Flow.CONTENT]);
+    let tags = this.vsq.getVideoTags();
+    let master = jQuery(tags[VSQ.MASTER]);
+    let content = jQuery(tags[VSQ.CONTENT]);
     master.css({
       width: masterWidth + '%',
       zIndex: masterZ,

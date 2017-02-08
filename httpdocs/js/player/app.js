@@ -268,30 +268,30 @@ System.register("Escape", [], function (exports_5, context_5) {
         }
     };
 });
-System.register("player/Flow/BasePlugin", ["player/Flow"], function (exports_6, context_6) {
+System.register("player/VSQ/BasePlugin", ["player/VSQ"], function (exports_6, context_6) {
     "use strict";
     var __moduleName = context_6 && context_6.id;
-    var Flow_1, BasePlugin;
+    var VSQ_1, BasePlugin;
     return {
         setters: [
-            function (Flow_1_1) {
-                Flow_1 = Flow_1_1;
+            function (VSQ_1_1) {
+                VSQ_1 = VSQ_1_1;
             }
         ],
         execute: function () {
             BasePlugin = (function () {
-                function BasePlugin(flow) {
-                    this.flow = flow;
-                    this.root = flow.getRoot();
-                    this.cfg = flow.getConfig();
-                    this.player = flow.getPlayer();
+                function BasePlugin(vsq) {
+                    this.vsq = vsq;
+                    this.root = vsq.getRoot();
+                    this.cfg = vsq.getConfig();
+                    this.flow = vsq.getPlayer();
                 }
                 BasePlugin.prototype.log = function () {
                     var params = [];
                     for (var _i = 0; _i < arguments.length; _i++) {
                         params[_i] = arguments[_i];
                     }
-                    if (!Flow_1.Flow.debug)
+                    if (!VSQ_1.VSQ.debug)
                         return;
                     params.unshift("[" + this.pluginName + "]");
                     console.log.apply(console, params);
@@ -300,7 +300,7 @@ System.register("player/Flow/BasePlugin", ["player/Flow"], function (exports_6, 
                     throw new Error("Override configKey");
                 };
                 BasePlugin.prototype.eventName = function (event) {
-                    var postfix = '.' + Flow_1.Flow.engineName;
+                    var postfix = '.' + VSQ_1.VSQ.engineName;
                     if (!event)
                         return postfix;
                     return event + postfix;
@@ -313,14 +313,14 @@ System.register("player/Flow/BasePlugin", ["player/Flow"], function (exports_6, 
         }
     };
 });
-System.register("player/Flow/LayoutChooser", ["player/Flow", "player/Flow/BasePlugin", "Tools"], function (exports_7, context_7) {
+System.register("player/VSQ/LayoutChooser", ["player/VSQ", "player/VSQ/BasePlugin", "Tools"], function (exports_7, context_7) {
     "use strict";
     var __moduleName = context_7 && context_7.id;
-    var Flow_2, BasePlugin_1, Tools_1, LayoutChooser;
+    var VSQ_2, BasePlugin_1, Tools_1, LayoutChooser;
     return {
         setters: [
-            function (Flow_2_1) {
-                Flow_2 = Flow_2_1;
+            function (VSQ_2_1) {
+                VSQ_2 = VSQ_2_1;
             },
             function (BasePlugin_1_1) {
                 BasePlugin_1 = BasePlugin_1_1;
@@ -344,14 +344,14 @@ System.register("player/Flow/LayoutChooser", ["player/Flow", "player/Flow/BasePl
                 }
                 LayoutChooser.prototype.load = function () {
                     var _this = this;
-                    if (!this.flow.hasMultipleVideos()) {
+                    if (!this.vsq.hasMultipleVideos()) {
                         this.root.addClass('vsq-singlevideo');
                         return;
                     }
                     if (this.root.find('.vsq-layoutchooser').length > 0)
                         return;
                     this.fixHeight();
-                    this.player.on("fullscreen fullscreen-exit", function () { _this.fixHeight(); });
+                    this.flow.on("fullscreen fullscreen-exit", function () { _this.fixHeight(); });
                     this.setupRatios();
                     this.setupHTML();
                     this.trigger();
@@ -374,7 +374,7 @@ System.register("player/Flow/LayoutChooser", ["player/Flow", "player/Flow/BasePl
                         maxHeight = jQuery(window).height();
                     else
                         maxHeight = this.root.height();
-                    jQuery(this.flow.getVideoTags()).css("maxHeight", maxHeight + 'px');
+                    jQuery(this.vsq.getVideoTags()).css("maxHeight", maxHeight + 'px');
                 };
                 LayoutChooser.prototype.setupRatios = function () {
                     var maxRatio = 300;
@@ -521,9 +521,9 @@ System.register("player/Flow/LayoutChooser", ["player/Flow", "player/Flow/BasePl
                         masterLeft = 0;
                         masterRight = "auto";
                     }
-                    var tags = this.flow.getVideoTags();
-                    var master = jQuery(tags[Flow_2.Flow.MASTER]);
-                    var content = jQuery(tags[Flow_2.Flow.CONTENT]);
+                    var tags = this.vsq.getVideoTags();
+                    var master = jQuery(tags[VSQ_2.VSQ.MASTER]);
+                    var content = jQuery(tags[VSQ_2.VSQ.CONTENT]);
                     master.css({
                         width: masterWidth + '%',
                         zIndex: masterZ,
@@ -541,14 +541,14 @@ System.register("player/Flow/LayoutChooser", ["player/Flow", "player/Flow/BasePl
         }
     };
 });
-System.register("player/Flow/QualityChooser", ["player/Flow", "player/Flow/BasePlugin", "Tools", "Escape"], function (exports_8, context_8) {
+System.register("player/VSQ/QualityChooser", ["player/VSQ", "player/VSQ/BasePlugin", "Tools", "Escape"], function (exports_8, context_8) {
     "use strict";
     var __moduleName = context_8 && context_8.id;
-    var Flow_3, BasePlugin_2, Tools_2, Escape_1, QualityChooser;
+    var VSQ_3, BasePlugin_2, Tools_2, Escape_1, QualityChooser;
     return {
         setters: [
-            function (Flow_3_1) {
-                Flow_3 = Flow_3_1;
+            function (VSQ_3_1) {
+                VSQ_3 = VSQ_3_1;
             },
             function (BasePlugin_2_1) {
                 BasePlugin_2 = BasePlugin_2_1;
@@ -563,8 +563,8 @@ System.register("player/Flow/QualityChooser", ["player/Flow", "player/Flow/BaseP
         execute: function () {
             QualityChooser = (function (_super) {
                 __extends(QualityChooser, _super);
-                function QualityChooser(flow) {
-                    var _this = _super.call(this, flow) || this;
+                function QualityChooser(vsq) {
+                    var _this = _super.call(this, vsq) || this;
                     _this.pluginName = "QualityChooser";
                     _this.selectedQuality = _this.getDefaultQuality();
                     _this.root.on(_this.eventName("click"), ".vsq-quality-selector li", function (e) {
@@ -574,16 +574,16 @@ System.register("player/Flow/QualityChooser", ["player/Flow", "player/Flow/BaseP
                 }
                 QualityChooser.prototype.shouldLookAtSecondary = function () {
                     var shouldLookAtSecondary = false;
-                    if (!this.flow.introOrOutro && this.flow.hasMultipleVideos())
+                    if (!this.vsq.introOrOutro && this.vsq.hasMultipleVideos())
                         shouldLookAtSecondary = true;
                     return shouldLookAtSecondary;
                 };
                 QualityChooser.prototype.getLevels = function () {
                     if (!this.shouldLookAtSecondary())
-                        return this.flow.getVideoInfo(Flow_3.Flow.MASTER)['vsq-labels'].slice(0);
-                    if (this.flow.longerType === Flow_3.Flow.CONTENT)
-                        return this.flow.getVideoInfo(Flow_3.Flow.CONTENT)['vsq-labels'].slice(0);
-                    return this.flow.getVideoInfo(Flow_3.Flow.MASTER)['vsq-labels'].slice(0);
+                        return this.vsq.getVideoInfo(VSQ_3.VSQ.MASTER)['vsq-labels'].slice(0);
+                    if (this.vsq.longerType === VSQ_3.VSQ.CONTENT)
+                        return this.vsq.getVideoInfo(VSQ_3.VSQ.CONTENT)['vsq-labels'].slice(0);
+                    return this.vsq.getVideoInfo(VSQ_3.VSQ.MASTER)['vsq-labels'].slice(0);
                 };
                 QualityChooser.prototype.onClick = function (e) {
                     var _this = this;
@@ -595,20 +595,20 @@ System.register("player/Flow/QualityChooser", ["player/Flow", "player/Flow/BaseP
                     choice.addClass("active");
                     var quality = choice.attr('data-quality');
                     Tools_2.default.setToStorage(this.configKey("quality"), quality);
-                    var masterLevel = this.getQualityIndex(Flow_3.Flow.MASTER, quality);
-                    var smooth = this.player.conf.smoothSwitching;
-                    var tags = this.flow.getVideoTags();
-                    var paused = tags[Flow_3.Flow.MASTER].paused;
+                    var masterLevel = this.getQualityIndex(VSQ_3.VSQ.MASTER, quality);
+                    var smooth = this.flow.conf.smoothSwitching;
+                    var tags = this.vsq.getVideoTags();
+                    var paused = tags[VSQ_3.VSQ.MASTER].paused;
                     if (!paused && !smooth)
-                        jQuery(tags[Flow_3.Flow.MASTER]).one(this.eventName("pause"), function () {
+                        jQuery(tags[VSQ_3.VSQ.MASTER]).one(this.eventName("pause"), function () {
                             _this.root.removeClass("is-paused");
                         });
                     var hlsMethod = 'currentLevel';
-                    if (smooth && !this.player.poster)
+                    if (smooth && !this.flow.poster)
                         hlsMethod = 'nextLevel';
                     this.setLevelsForQuality(quality, hlsMethod);
                     if (paused)
-                        this.flow.tagCall('play');
+                        this.vsq.tagCall('play');
                 };
                 QualityChooser.prototype.load = function () {
                     var levels = this.getLevels();
@@ -639,7 +639,7 @@ System.register("player/Flow/QualityChooser", ["player/Flow", "player/Flow/BaseP
                         hls.loadLevel = startLevel;
                         hls.startLoad(hls.config.startPosition);
                     });
-                    if (type !== Flow_3.Flow.MASTER)
+                    if (type !== VSQ_3.VSQ.MASTER)
                         return;
                     hls.on(Hls.Events.LEVEL_SWITCH, function (event, data) {
                         _this.root.find('.vsq-quality-selector li').removeClass("current");
@@ -654,24 +654,24 @@ System.register("player/Flow/QualityChooser", ["player/Flow", "player/Flow/BaseP
                     return ret;
                 };
                 QualityChooser.prototype.setLevelsForQuality = function (quality, method) {
-                    var engines = this.flow.getHLSEngines();
-                    var masterLevel = this.getQualityIndex(Flow_3.Flow.MASTER, quality);
+                    var engines = this.vsq.getHLSEngines();
+                    var masterLevel = this.getQualityIndex(VSQ_3.VSQ.MASTER, quality);
                     this.log('setting master video level to', masterLevel, quality);
-                    engines[Flow_3.Flow.MASTER][method] = masterLevel;
+                    engines[VSQ_3.VSQ.MASTER][method] = masterLevel;
                     if (!this.shouldLookAtSecondary())
                         return;
-                    var secondaryLevel = this.getQualityIndex(Flow_3.Flow.CONTENT, quality);
+                    var secondaryLevel = this.getQualityIndex(VSQ_3.VSQ.CONTENT, quality);
                     this.log('setting content video level to', secondaryLevel, quality);
-                    engines[Flow_3.Flow.CONTENT][method] = secondaryLevel;
+                    engines[VSQ_3.VSQ.CONTENT][method] = secondaryLevel;
                 };
                 QualityChooser.prototype.getQualityIndex = function (type, quality) {
-                    if (type === Flow_3.Flow.MASTER)
+                    if (type === VSQ_3.VSQ.MASTER)
                         return this.getMasterQualityIndex(quality);
                     var masterLevel = this.getMasterQualityIndex(quality);
                     return this.getLevelForSecondary(masterLevel);
                 };
                 QualityChooser.prototype.getMasterQualityIndex = function (quality) {
-                    var labels = this.flow.getVideoInfo(Flow_3.Flow.MASTER)['vsq-labels'];
+                    var labels = this.vsq.getVideoInfo(VSQ_3.VSQ.MASTER)['vsq-labels'];
                     for (var i = labels.length - 1; i >= 0; i--) {
                         var label = labels[i];
                         if (label === quality)
@@ -680,7 +680,7 @@ System.register("player/Flow/QualityChooser", ["player/Flow", "player/Flow/BaseP
                     return -1;
                 };
                 QualityChooser.prototype.getLevelForSecondary = function (masterLevel) {
-                    var labels = this.flow.getVideoInfo(Flow_3.Flow.CONTENT)['vsq-labels'];
+                    var labels = this.vsq.getVideoInfo(VSQ_3.VSQ.CONTENT)['vsq-labels'];
                     if (labels.length <= masterLevel)
                         return labels.length - 1;
                     return masterLevel;
@@ -780,10 +780,102 @@ System.register("RateLimiter", [], function (exports_9, context_9) {
         }
     };
 });
-System.register("player/Flow", ["player/Flow/LayoutChooser", "player/Flow/QualityChooser", "RateLimiter"], function (exports_10, context_10) {
+System.register("player/VSQHLS", ["RateLimiter"], function (exports_10, context_10) {
     "use strict";
     var __moduleName = context_10 && context_10.id;
-    var LayoutChooser_1, QualityChooser_1, RateLimiter_1, Flow;
+    var RateLimiter_1, VSQHLS;
+    return {
+        setters: [
+            function (RateLimiter_1_1) {
+                RateLimiter_1 = RateLimiter_1_1;
+            }
+        ],
+        execute: function () {
+            VSQHLS = (function () {
+                function VSQHLS(vsq, video) {
+                    var _this = this;
+                    this.pluginName = "VSQHLS";
+                    this.vsq = vsq;
+                    this.root = vsq.getRoot();
+                    this.cfg = vsq.getConfig();
+                    this.flow = vsq.getPlayer();
+                    this.video = video;
+                    this.limiter = new RateLimiter_1.default();
+                    this.limiter.add("onNetworkError", 3 * RateLimiter_1.default.SECOND, function () {
+                        _this.hls.startLoad();
+                    });
+                    this.limiter.add("onSwapAudioCodec", 3 * RateLimiter_1.default.SECOND, function () {
+                        _this.hls.swapAudioCodec();
+                    });
+                    this.limiter.add("onRecoverMedia", 3 * RateLimiter_1.default.SECOND, function () {
+                        _this.hls.recoverMediaError();
+                    });
+                }
+                VSQHLS.prototype.load = function () {
+                };
+                VSQHLS.prototype.destroy = function () {
+                };
+                VSQHLS.prototype.setupHLS = function (type) {
+                    var _this = this;
+                    var hls = new Hls({
+                        initialLiveManifestSize: 2
+                    });
+                    hls.on(Hls.Events.MEDIA_ATTACHED, function (event, data) {
+                        hls.loadSource(video.src);
+                    });
+                    hls.on(Hls.Events.MANIFEST_PARSED, function () {
+                        limiter.cancel();
+                    });
+                    hls.on(Hls.Events.ERROR, function (event, err) {
+                        _this.log('hls error', event, err);
+                        var shouldShowSeeking = err.fatal;
+                        switch (err.type) {
+                            case Hls.ErrorTypes.NETWORK_ERROR:
+                                if (err.response && err.response.code === 403) {
+                                    _this.player.trigger("error", [_this.player, { code: _this.accessDeniedError }]);
+                                    return;
+                                }
+                                if (err.details === Hls.ErrorDetails.LEVEL_LOAD_ERROR) {
+                                }
+                                limiter.trigger("onNetworkError");
+                                return;
+                            case Hls.ErrorTypes.MEDIA_ERROR:
+                                if (err.fatal) {
+                                    limiter.trigger("onSwapAudioCodec");
+                                    limiter.trigger("onRecoverMedia");
+                                }
+                                return;
+                            default:
+                                if (!err.fatal)
+                                    return;
+                                break;
+                        }
+                        if (shouldShowSeeking) {
+                            _this.root.removeClass('is-paused');
+                            _this.root.addClass('is-seeking');
+                        }
+                        var arg = { code: 2 };
+                        _this.player.trigger("error", [_this.player, arg]);
+                    });
+                    hls.attachMedia(this.videoTags[type]);
+                };
+                VSQHLS.prototype.onMediaAttached = function (event, data) {
+                    this.hls.loadSource(this.video.src);
+                };
+                VSQHLS.prototype.onManifestParsed = function (event, data) {
+                    this.log("canceling ratelimits");
+                    this.limiter.cancel();
+                };
+                return VSQHLS;
+            }());
+            exports_10("default", VSQHLS);
+        }
+    };
+});
+System.register("player/VSQ", ["player/VSQ/LayoutChooser", "player/VSQ/QualityChooser", "RateLimiter"], function (exports_11, context_11) {
+    "use strict";
+    var __moduleName = context_11 && context_11.id;
+    var LayoutChooser_1, QualityChooser_1, RateLimiter_2, VSQ;
     return {
         setters: [
             function (LayoutChooser_1_1) {
@@ -792,13 +884,13 @@ System.register("player/Flow", ["player/Flow/LayoutChooser", "player/Flow/Qualit
             function (QualityChooser_1_1) {
                 QualityChooser_1 = QualityChooser_1_1;
             },
-            function (RateLimiter_1_1) {
-                RateLimiter_1 = RateLimiter_1_1;
+            function (RateLimiter_2_1) {
+                RateLimiter_2 = RateLimiter_2_1;
             }
         ],
         execute: function () {
-            Flow = (function () {
-                function Flow(player, root) {
+            VSQ = (function () {
+                function VSQ(flow, root) {
                     this.loadedCount = 0;
                     this.longerType = 0;
                     this.videoTags = [];
@@ -808,18 +900,18 @@ System.register("player/Flow", ["player/Flow/LayoutChooser", "player/Flow/Qualit
                     this.introOrOutro = false;
                     this.rateLimits = [];
                     this.plugins = [];
-                    Flow.log("constructor", arguments);
-                    this.player = player;
-                    this.cfg = player.conf.vsq || {};
+                    VSQ.log("constructor", arguments);
+                    this.flow = flow;
+                    this.cfg = flow.conf.vsq || {};
                     this.l = this.cfg.locale;
-                    this.player.conf.errors.push(this.l.get('access_denied'));
-                    this.accessDeniedError = player.conf.errors.length - 1;
+                    this.flow.conf.errors.push(this.l.get('access_denied'));
+                    this.accessDeniedError = flow.conf.errors.length - 1;
                     this.hlsConf = jQuery.extend({
                         bufferWhilePaused: true,
                         smoothSwitching: true,
                         recoverMediaError: true
-                    }, flowplayer.conf['hlsjs'], this.player.conf['hlsjs'], this.player.conf['clip']['hlsjs']);
-                    Flow.debug = !!this.cfg.debug;
+                    }, flowplayer.conf['hlsjs'], this.flow.conf['hlsjs'], this.flow.conf['clip']['hlsjs']);
+                    VSQ.debug = !!this.cfg.debug;
                     this.root = jQuery(root);
                     this.id = this.root.attr('data-flowplayer-instance-id');
                     if (!this.cfg.contentOnRight)
@@ -827,48 +919,48 @@ System.register("player/Flow", ["player/Flow/LayoutChooser", "player/Flow/Qualit
                     this.plugins.push(new LayoutChooser_1.default(this));
                     this.plugins.push(new QualityChooser_1.default(this));
                 }
-                Flow.prototype.getRoot = function () {
+                VSQ.prototype.getRoot = function () {
                     return this.root;
                 };
-                Flow.prototype.getConfig = function () {
+                VSQ.prototype.getConfig = function () {
                     return this.cfg;
                 };
-                Flow.prototype.getPlayer = function () {
-                    return this.player;
+                VSQ.prototype.getPlayer = function () {
+                    return this.flow;
                 };
-                Flow.prototype.getVideoTags = function () {
+                VSQ.prototype.getVideoTags = function () {
                     return this.videoTags;
                 };
-                Flow.prototype.getVideoInfo = function (type) {
+                VSQ.prototype.getVideoInfo = function (type) {
                     return this.videoInfo[type];
                 };
-                Flow.prototype.getHLSEngines = function () {
+                VSQ.prototype.getHLSEngines = function () {
                     return this.hlsEngines;
                 };
-                Flow.prototype.hideFlowLogo = function () {
+                VSQ.prototype.hideFlowLogo = function () {
                     this.root.children('a[href*="flowplayer.org"]').hide();
                 };
-                Flow.prototype.configKey = function (key) {
+                VSQ.prototype.configKey = function (key) {
                     return 'vsq-player-' + key;
                 };
-                Flow.log = function () {
+                VSQ.log = function () {
                     var params = [];
                     for (var _i = 0; _i < arguments.length; _i++) {
                         params[_i] = arguments[_i];
                     }
-                    if (!Flow.debug)
+                    if (!VSQ.debug)
                         return;
-                    params.unshift("[Flow]");
+                    params.unshift("[VSQ]");
                     console.log.apply(console, params);
                 };
-                Flow.prototype.log = function () {
+                VSQ.prototype.log = function () {
                     var params = [];
                     for (var _i = 0; _i < arguments.length; _i++) {
                         params[_i] = arguments[_i];
                     }
-                    Flow.log.apply(Flow, params);
+                    VSQ.log.apply(VSQ, params);
                 };
-                Flow.prototype.callOnArray = function (data, funcName, args) {
+                VSQ.prototype.callOnArray = function (data, funcName, args) {
                     var ret = [];
                     for (var i = data.length - 1; i >= 0; i--) {
                         var elem = data[i];
@@ -878,7 +970,7 @@ System.register("player/Flow", ["player/Flow/LayoutChooser", "player/Flow/Qualit
                     }
                     return ret;
                 };
-                Flow.prototype.setOnArray = function (data, property, value) {
+                VSQ.prototype.setOnArray = function (data, property, value) {
                     var ret = [];
                     for (var i = data.length - 1; i >= 0; i--) {
                         var elem = data[i];
@@ -887,34 +979,34 @@ System.register("player/Flow", ["player/Flow/LayoutChooser", "player/Flow/Qualit
                         elem[property] = value;
                     }
                 };
-                Flow.prototype.hlsCall = function (funcName, args) {
+                VSQ.prototype.hlsCall = function (funcName, args) {
                     return this.callOnArray(this.hlsEngines, funcName, args);
                 };
-                Flow.prototype.hlsSet = function (property, value) {
+                VSQ.prototype.hlsSet = function (property, value) {
                     this.setOnArray(this.hlsEngines, property, value);
                 };
-                Flow.prototype.tagCall = function (funcName, args) {
+                VSQ.prototype.tagCall = function (funcName, args) {
                     return this.callOnArray(this.videoTags, funcName, args);
                 };
-                Flow.prototype.tagSet = function (property, value) {
+                VSQ.prototype.tagSet = function (property, value) {
                     this.setOnArray(this.videoTags, property, value);
                 };
-                Flow.prototype.getType = function (type) {
-                    if (Flow.isHLSType(type))
+                VSQ.prototype.getType = function (type) {
+                    if (VSQ.isHLSType(type))
                         return "application/x-mpegurl";
                     return type;
                 };
-                Flow.isHLSType = function (type) {
+                VSQ.isHLSType = function (type) {
                     return type.toLowerCase().indexOf("mpegurl") > -1;
                 };
-                Flow.canPlay = function (type, conf) {
+                VSQ.canPlay = function (type, conf) {
                     var b = flowplayer.support.browser;
                     var wn = window.navigator;
                     var isIE11 = wn.userAgent.indexOf("Trident/7") > -1;
                     if (conf['vsq'] === false || conf.clip['vsq'] === false ||
                         conf['hlsjs'] === false || conf.clip['hlsjs'] === false)
                         return false;
-                    if (Flow.isHLSType(type)) {
+                    if (VSQ.isHLSType(type)) {
                         if (conf.hlsjs &&
                             conf.hlsjs.anamorphic &&
                             wn.platform.indexOf("Win") === 0 &&
@@ -924,66 +1016,45 @@ System.register("player/Flow", ["player/Flow/LayoutChooser", "player/Flow/Qualit
                     }
                     return false;
                 };
-                Flow.prototype.addPoster = function () {
+                VSQ.prototype.addPoster = function () {
                     var _this = this;
-                    var master = jQuery(this.videoTags[Flow.MASTER]);
+                    var master = jQuery(this.videoTags[VSQ.MASTER]);
                     master.one(this.eventName("timeupdate"), function () {
                         _this.root.addClass("is-poster");
-                        _this.player.poster = true;
+                        _this.flow.poster = true;
                     });
                 };
-                Flow.prototype.removePoster = function () {
+                VSQ.prototype.removePoster = function () {
                     var _this = this;
-                    if (!this.player.poster)
+                    if (!this.flow.poster)
                         return;
-                    var master = jQuery(this.videoTags[Flow.MASTER]);
+                    var master = jQuery(this.videoTags[VSQ.MASTER]);
                     master.one(this.eventName("timeupdate"), function () {
                         _this.root.removeClass("is-poster");
-                        _this.player.poster = false;
+                        _this.flow.poster = false;
                     });
                 };
-                Flow.prototype.hasMultipleVideos = function () {
+                VSQ.prototype.hasMultipleVideos = function () {
                     if (this.introOrOutro)
                         return false;
                     return this.cfg.secondarySources.length !== 0;
                 };
-                Flow.prototype.isLongerVideo = function (e) {
+                VSQ.prototype.isLongerVideo = function (e) {
                     var type = this.getTypeFromEvent(e);
                     if (this.introOrOutro)
-                        return type === Flow.MASTER;
+                        return type === VSQ.MASTER;
                     return type === this.longerType;
                 };
-                Flow.prototype.syncVideos = function () {
+                VSQ.prototype.syncVideos = function () {
                     if (!this.hasMultipleVideos())
                         return;
-                    var master = this.videoTags[Flow.MASTER];
-                    var content = this.videoTags[Flow.CONTENT];
+                    var master = this.videoTags[VSQ.MASTER];
+                    var content = this.videoTags[VSQ.CONTENT];
                     if (master.currentTime == 0 || master.currentTime >= master.duration)
                         return;
                     if (content.currentTime == 0 || content.currentTime >= content.duration)
                         return;
-                    if (this.player.live) {
-                        this.log("master", master.currentTime);
-                        this.log("content", content.currentTime);
-                        var diff = Math.abs(master.currentTime - content.currentTime);
-                        if (diff > 10) {
-                            this.log("live video desync bigger than 10 seconds, giving up");
-                            return;
-                        }
-                        if (diff < 1) {
-                            this.log("live video desync less than 1 seconds, skipping");
-                            return;
-                        }
-                        if (master.currentTime < content.currentTime) {
-                            this.log("live content ahead of master, jumping it back");
-                            content.currentTime = parseInt('' + master.currentTime, 10) - 2;
-                            master.currentTime = content.currentTime;
-                        }
-                        else if (content.currentTime < master.currentTime) {
-                            this.log("live master ahead of content, jumping it back");
-                            master.currentTime = parseInt('' + content.currentTime, 10) - 2;
-                            content.currentTime = master.currentTime;
-                        }
+                    if (this.flow.live) {
                         return;
                     }
                     if (Math.abs(master.currentTime - content.currentTime) > 0.2) {
@@ -991,8 +1062,8 @@ System.register("player/Flow", ["player/Flow/LayoutChooser", "player/Flow/Qualit
                         content.currentTime = master.currentTime;
                     }
                 };
-                Flow.prototype.handleLoadedData = function (e) {
-                    if (this.player.video.index === this.cfg.masterIndex) {
+                VSQ.prototype.handleLoadedData = function (e) {
+                    if (this.flow.video.index === this.cfg.masterIndex) {
                         this.loadedCount++;
                         var vidCount = 1 + this.cfg.secondarySources.length;
                         if (this.loadedCount != vidCount) {
@@ -1000,43 +1071,43 @@ System.register("player/Flow", ["player/Flow/LayoutChooser", "player/Flow/Qualit
                             return false;
                         }
                         if (vidCount > 1 &&
-                            this.videoTags[Flow.CONTENT].duration > this.videoTags[Flow.MASTER].duration)
-                            this.longerType = Flow.CONTENT;
+                            this.videoTags[VSQ.CONTENT].duration > this.videoTags[VSQ.MASTER].duration)
+                            this.longerType = VSQ.CONTENT;
                     }
                     else
-                        this.longerType = Flow.MASTER;
+                        this.longerType = VSQ.MASTER;
                     var tag = this.videoTags[this.longerType];
-                    var data = jQuery.extend(this.player.video, {
+                    var data = jQuery.extend(this.flow.video, {
                         duration: tag.duration,
                         seekable: tag.seekable.end(0),
                         width: tag.videoWidth,
                         height: tag.videoHeight,
-                        url: this.videoInfo[Flow.MASTER].src
+                        url: this.videoInfo[VSQ.MASTER].src
                     });
                     this.triggerPlayer("ready", data);
-                    if (this.player.video.index === this.cfg.masterIndex && this.cfg.masterIndex > 0)
+                    if (this.flow.video.index === this.cfg.masterIndex && this.cfg.masterIndex > 0)
                         this.tagCall('play');
                     return false;
                 };
-                Flow.prototype.handlePlay = function (e) {
+                VSQ.prototype.handlePlay = function (e) {
                     var tag = e.currentTarget;
                     if (tag.currentTime >= tag.duration)
                         tag.currentTime = 0;
                     var type = this.getTypeFromEvent(e);
-                    if (type === Flow.CONTENT) {
+                    if (type === VSQ.CONTENT) {
                         e.stopImmediatePropagation();
                         return false;
                     }
                     this.removePoster();
                     if (!this.hlsConf.bufferWhilePaused) {
                         if (this.introOrOutro)
-                            this.hlsEngines[Flow.MASTER].startLoad(tag.currentTime);
+                            this.hlsEngines[VSQ.MASTER].startLoad(tag.currentTime);
                         else
                             this.hlsCall('startLoad', [tag.currentTime]);
                     }
                     this.triggerPlayer("resume", undefined);
                 };
-                Flow.prototype.handlePause = function (e) {
+                VSQ.prototype.handlePause = function (e) {
                     var type = this.getTypeFromEvent(e);
                     var tag = e.currentTarget;
                     if (this.hasMultipleVideos() && type !== this.longerType &&
@@ -1053,12 +1124,12 @@ System.register("player/Flow", ["player/Flow/LayoutChooser", "player/Flow/Qualit
                         this.hlsCall('stopLoad');
                     this.triggerPlayer("pause", undefined);
                 };
-                Flow.prototype.handleEnded = function (e) {
+                VSQ.prototype.handleEnded = function (e) {
                     if (!this.isLongerVideo(e)) {
                         e.stopImmediatePropagation();
                         return false;
                     }
-                    var video = this.player.video;
+                    var video = this.flow.video;
                     this.hlsCall('trigger', [
                         Hls.Events.BUFFER_FLUSHING,
                         {
@@ -1068,16 +1139,16 @@ System.register("player/Flow", ["player/Flow/LayoutChooser", "player/Flow/Qualit
                     ]);
                     this.tagCall('pause');
                     if (this.introOrOutro && !video.is_last) {
-                        this.player.next();
+                        this.flow.next();
                         if (video.index === 0 && this.cfg.masterIndex !== 0) {
-                            this.player.removePlaylistItem(0);
+                            this.flow.removePlaylistItem(0);
                             this.cfg.masterIndex--;
                         }
                     }
                     if (video.is_last)
                         this.triggerPlayer("finish", undefined);
                 };
-                Flow.prototype.handleProgress = function (e) {
+                VSQ.prototype.handleProgress = function (e) {
                     if (!this.isLongerVideo(e)) {
                         e.stopImmediatePropagation();
                         return false;
@@ -1097,10 +1168,10 @@ System.register("player/Flow", ["player/Flow/LayoutChooser", "player/Flow/Qualit
                     }
                     catch (_) { }
                     ;
-                    this.player.video.buffer = buffer;
+                    this.flow.video.buffer = buffer;
                     this.triggerPlayer("buffer", buffer);
                 };
-                Flow.prototype.handleRateChange = function (e) {
+                VSQ.prototype.handleRateChange = function (e) {
                     if (!this.isLongerVideo(e)) {
                         e.stopImmediatePropagation();
                         return false;
@@ -1108,7 +1179,7 @@ System.register("player/Flow", ["player/Flow/LayoutChooser", "player/Flow/Qualit
                     var tag = e.currentTarget;
                     this.triggerPlayer("speed", tag.playbackRate);
                 };
-                Flow.prototype.handleSeeked = function (e) {
+                VSQ.prototype.handleSeeked = function (e) {
                     if (!this.isLongerVideo(e)) {
                         e.stopImmediatePropagation();
                         return false;
@@ -1122,9 +1193,9 @@ System.register("player/Flow", ["player/Flow/LayoutChooser", "player/Flow/Qualit
                     this.triggerPlayer("seek", tag.currentTime);
                     return false;
                 };
-                Flow.prototype.handleTimeUpdate = function (e) {
+                VSQ.prototype.handleTimeUpdate = function (e) {
                     var type = this.getTypeFromEvent(e);
-                    if ((this.introOrOutro && type !== Flow.MASTER) ||
+                    if ((this.introOrOutro && type !== VSQ.MASTER) ||
                         (!this.introOrOutro && type !== this.longerType)) {
                         e.stopImmediatePropagation();
                         return false;
@@ -1133,16 +1204,16 @@ System.register("player/Flow", ["player/Flow/LayoutChooser", "player/Flow/Qualit
                     this.triggerPlayer("progress", tag.currentTime);
                     this.syncVideos();
                 };
-                Flow.prototype.handleVolumeChange = function (e) {
+                VSQ.prototype.handleVolumeChange = function (e) {
                     var type = this.getTypeFromEvent(e);
-                    if (type === Flow.CONTENT) {
+                    if (type === VSQ.CONTENT) {
                         e.stopImmediatePropagation();
                         return false;
                     }
                     var tag = e.currentTarget;
                     this.triggerPlayer("volume", tag.volume);
                 };
-                Flow.prototype.handleError = function (e) {
+                VSQ.prototype.handleError = function (e) {
                     e.stopImmediatePropagation();
                     var MEDIA_ERR_NETWORK = 2;
                     var MEDIA_ERR_DECODE = 3;
@@ -1152,24 +1223,24 @@ System.register("player/Flow", ["player/Flow/LayoutChooser", "player/Flow/Qualit
                     var arg = { code: err };
                     if (err > MEDIA_ERR_NETWORK)
                         arg.video = jQuery.extend(this.videoInfo[type], { url: this.videoInfo[type].src });
-                    this.player.trigger("error", [this.player, arg]);
+                    this.flow.trigger("error", [this.flow, arg]);
                     return false;
                 };
-                Flow.prototype.triggerPlayer = function (event, data) {
+                VSQ.prototype.triggerPlayer = function (event, data) {
                     if (event !== "buffer" && event !== "progress")
                         this.log("[flow event]", event, data);
-                    this.player.trigger(event, [this.player, data]);
+                    this.flow.trigger(event, [this.flow, data]);
                     this.hideFlowLogo();
                 };
-                Flow.prototype.getTypeFromEvent = function (e) {
+                VSQ.prototype.getTypeFromEvent = function (e) {
                     var t = jQuery(e.currentTarget);
                     if (!t.is('.vsq-master, .vsq-content'))
                         throw new Error("Unknown event target");
                     if (t.is('.vsq-master'))
-                        return Flow.MASTER;
-                    return Flow.CONTENT;
+                        return VSQ.MASTER;
+                    return VSQ.CONTENT;
                 };
-                Flow.prototype.setupVideoEvents = function (video) {
+                VSQ.prototype.setupVideoEvents = function (video) {
                     var _this = this;
                     if (this.eventsInitialized)
                         return;
@@ -1216,23 +1287,23 @@ System.register("player/Flow", ["player/Flow/LayoutChooser", "player/Flow/Qualit
                             }
                         });
                     });
-                    if (this.player.conf.poster) {
-                        this.player.on(this.eventName("stop"), function () {
+                    if (this.flow.conf.poster) {
+                        this.flow.on(this.eventName("stop"), function () {
                             _this.addPoster();
                         });
-                        if (this.player.live)
-                            jQuery(this.videoTags[Flow.MASTER]).one(this.eventName("seeked"), function () {
+                        if (this.flow.live)
+                            jQuery(this.videoTags[VSQ.MASTER]).one(this.eventName("seeked"), function () {
                                 _this.addPoster();
                             });
                     }
                 };
-                Flow.prototype.eventName = function (event) {
-                    var postfix = '.' + Flow.engineName;
+                VSQ.prototype.eventName = function (event) {
+                    var postfix = '.' + VSQ.engineName;
                     if (!event)
                         return postfix;
                     return event + postfix;
                 };
-                Flow.prototype.createVideoTag = function (video) {
+                VSQ.prototype.createVideoTag = function (video) {
                     var ret = document.createElement('video');
                     ret.src = video.src;
                     ret.className = 'fp-engine vsq-engine';
@@ -1246,7 +1317,7 @@ System.register("player/Flow", ["player/Flow/LayoutChooser", "player/Flow/Qualit
                     ret.setAttribute('x-webkit-airplay', 'allow');
                     return ret;
                 };
-                Flow.prototype.destroyVideoTag = function (index) {
+                VSQ.prototype.destroyVideoTag = function (index) {
                     var tagElem = this.videoTags[index];
                     var elem = jQuery(tagElem);
                     elem.find('source').removeAttr('src');
@@ -1255,7 +1326,7 @@ System.register("player/Flow", ["player/Flow/LayoutChooser", "player/Flow/Qualit
                     elem.remove();
                     delete (this.videoTags[index]);
                 };
-                Flow.prototype.setupHLS = function (type) {
+                VSQ.prototype.setupHLS = function (type) {
                     var _this = this;
                     var video = this.videoInfo[type];
                     var hls = new Hls({
@@ -1264,14 +1335,14 @@ System.register("player/Flow", ["player/Flow/LayoutChooser", "player/Flow/Qualit
                     hls.on(Hls.Events.MEDIA_ATTACHED, function (event, data) {
                         hls.loadSource(video.src);
                     });
-                    var limiter = new RateLimiter_1.default();
-                    limiter.add("onNetworkError", 3 * RateLimiter_1.default.SECOND, function () {
+                    var limiter = new RateLimiter_2.default();
+                    limiter.add("onNetworkError", 3 * RateLimiter_2.default.SECOND, function () {
                         hls.startLoad();
                     });
-                    limiter.add("onSwapAudioCodec", 3 * RateLimiter_1.default.SECOND, function () {
+                    limiter.add("onSwapAudioCodec", 3 * RateLimiter_2.default.SECOND, function () {
                         hls.swapAudioCodec();
                     });
-                    limiter.add("onRecoverMedia", 3 * RateLimiter_1.default.SECOND, function () {
+                    limiter.add("onRecoverMedia", 3 * RateLimiter_2.default.SECOND, function () {
                         hls.recoverMediaError();
                     });
                     hls.on(Hls.Events.MANIFEST_PARSED, function () {
@@ -1280,15 +1351,14 @@ System.register("player/Flow", ["player/Flow/LayoutChooser", "player/Flow/Qualit
                     });
                     hls.on(Hls.Events.ERROR, function (event, err) {
                         _this.log('hls error', event, err);
-                        if (err.fatal) {
-                            _this.root.removeClass('is-paused');
-                            _this.root.addClass('is-seeking');
-                        }
+                        var shouldShowSeeking = err.fatal;
                         switch (err.type) {
                             case Hls.ErrorTypes.NETWORK_ERROR:
                                 if (err.response && err.response.code === 403) {
-                                    _this.player.trigger("error", [_this.player, { code: _this.accessDeniedError }]);
+                                    _this.flow.trigger("error", [_this.flow, { code: _this.accessDeniedError }]);
                                     return;
+                                }
+                                if (err.details === Hls.ErrorDetails.LEVEL_LOAD_ERROR) {
                                 }
                                 limiter.trigger("onNetworkError");
                                 return;
@@ -1303,15 +1373,19 @@ System.register("player/Flow", ["player/Flow/LayoutChooser", "player/Flow/Qualit
                                     return;
                                 break;
                         }
+                        if (shouldShowSeeking) {
+                            _this.root.removeClass('is-paused');
+                            _this.root.addClass('is-seeking');
+                        }
                         var arg = { code: 2 };
-                        _this.player.trigger("error", [_this.player, arg]);
+                        _this.flow.trigger("error", [_this.flow, arg]);
                     });
                     hls.attachMedia(this.videoTags[type]);
                     this.hlsEngines[type] = hls;
                     for (var i = this.plugins.length - 1; i >= 0; i--)
                         this.plugins[i].setupHLS(hls, type);
                 };
-                Flow.prototype.load = function (video) {
+                VSQ.prototype.load = function (video) {
                     var _this = this;
                     this.introOrOutro = true;
                     if ((video.index === 0 && video.is_last) || video.index === this.cfg.masterIndex)
@@ -1320,38 +1394,38 @@ System.register("player/Flow", ["player/Flow/LayoutChooser", "player/Flow/Qualit
                         video.autoplay = true;
                     var root = this.root.find('.fp-player');
                     root.find('img').remove();
-                    this.hlsConf = jQuery.extend(this.hlsConf, this.player.conf.hlsjs, this.player.conf.clip.hlsjs, video.hlsjs);
-                    if (video.index > this.cfg.masterIndex && this.videoTags[Flow.CONTENT])
-                        this.destroyVideoTag(Flow.CONTENT);
+                    this.hlsConf = jQuery.extend(this.hlsConf, this.flow.conf.hlsjs, this.flow.conf.clip.hlsjs, video.hlsjs);
+                    if (video.index > this.cfg.masterIndex && this.videoTags[VSQ.CONTENT])
+                        this.destroyVideoTag(VSQ.CONTENT);
                     if (video.index === this.cfg.masterIndex &&
                         this.hasMultipleVideos()) {
-                        if (this.videoTags[Flow.CONTENT])
-                            this.destroyVideoTag(Flow.CONTENT);
+                        if (this.videoTags[VSQ.CONTENT])
+                            this.destroyVideoTag(VSQ.CONTENT);
                         var secondVideo = jQuery.extend(true, {}, video);
                         secondVideo.src = this.cfg.secondarySources[0].src;
                         secondVideo['vsq-labels'] = this.cfg.secondarySources[0]['vsq-labels'];
                         secondVideo.sources = this.cfg.secondarySources;
-                        this.videoInfo[Flow.CONTENT] = secondVideo;
-                        this.videoTags[Flow.CONTENT] = this.createVideoTag(secondVideo);
-                        this.videoTags[Flow.CONTENT].load();
-                        var engine_1 = jQuery(this.videoTags[Flow.CONTENT]);
+                        this.videoInfo[VSQ.CONTENT] = secondVideo;
+                        this.videoTags[VSQ.CONTENT] = this.createVideoTag(secondVideo);
+                        this.videoTags[VSQ.CONTENT].load();
+                        var engine_1 = jQuery(this.videoTags[VSQ.CONTENT]);
                         engine_1.addClass('vsq-content');
                         root.prepend(engine_1);
-                        this.setupHLS(Flow.CONTENT);
+                        this.setupHLS(VSQ.CONTENT);
                     }
-                    if (this.videoTags[Flow.MASTER])
-                        this.destroyVideoTag(Flow.MASTER);
-                    this.videoInfo[Flow.MASTER] = video;
-                    this.videoTags[Flow.MASTER] = this.createVideoTag(video);
-                    this.videoTags[Flow.MASTER].load();
-                    var engine = jQuery(this.videoTags[Flow.MASTER]);
+                    if (this.videoTags[VSQ.MASTER])
+                        this.destroyVideoTag(VSQ.MASTER);
+                    this.videoInfo[VSQ.MASTER] = video;
+                    this.videoTags[VSQ.MASTER] = this.createVideoTag(video);
+                    this.videoTags[VSQ.MASTER].load();
+                    var engine = jQuery(this.videoTags[VSQ.MASTER]);
                     engine.addClass('vsq-master');
                     if (video.index !== this.cfg.masterIndex ||
                         !this.hasMultipleVideos())
                         engine.addClass("vsq-fullscale");
                     root.prepend(engine);
-                    this.setupHLS(Flow.MASTER);
-                    this.player.on(this.eventName("error"), function () {
+                    this.setupHLS(VSQ.MASTER);
+                    this.flow.on(this.eventName("error"), function () {
                         _this.unload();
                     });
                     this.setupVideoEvents(video);
@@ -1360,31 +1434,31 @@ System.register("player/Flow", ["player/Flow/LayoutChooser", "player/Flow/Qualit
                     if (this.cfg.autoplay)
                         this.tagCall("play");
                 };
-                Flow.prototype.pause = function () {
+                VSQ.prototype.pause = function () {
                     this.tagCall('pause');
                 };
-                Flow.prototype.resume = function () {
+                VSQ.prototype.resume = function () {
                     if (this.introOrOutro) {
-                        this.videoTags[Flow.MASTER].play();
+                        this.videoTags[VSQ.MASTER].play();
                         return;
                     }
                     this.tagCall('play');
                 };
-                Flow.prototype.speed = function (speed) {
+                VSQ.prototype.speed = function (speed) {
                     this.tagSet('playbackRate', speed);
-                    this.player.trigger('speed', [this.player, speed]);
+                    this.flow.trigger('speed', [this.flow, speed]);
                 };
-                Flow.prototype.volume = function (volume) {
+                VSQ.prototype.volume = function (volume) {
                     this.tagSet('volume', volume);
                 };
-                Flow.prototype.unload = function () {
+                VSQ.prototype.unload = function () {
                     for (var i = this.plugins.length - 1; i >= 0; i--)
                         this.plugins[i].destroy();
                     var videoTags = jQuery(this.videoTags);
                     videoTags.remove();
                     this.hlsCall('destroy');
                     var listeners = this.eventName();
-                    this.player.off(listeners);
+                    this.flow.off(listeners);
                     this.root.off(listeners);
                     videoTags.off(listeners);
                     for (var i = this.hlsEngines.length - 1; i >= 0; i--)
@@ -1392,9 +1466,9 @@ System.register("player/Flow", ["player/Flow/LayoutChooser", "player/Flow/Qualit
                     for (var i = this.videoTags.length - 1; i >= 0; i--)
                         this.videoTags.pop();
                 };
-                Flow.prototype.seek = function (to) {
+                VSQ.prototype.seek = function (to) {
                     if (!this.hasMultipleVideos()) {
-                        this.videoTags[Flow.MASTER].currentTime = to;
+                        this.videoTags[VSQ.MASTER].currentTime = to;
                         return;
                     }
                     var tags = [];
@@ -1412,56 +1486,56 @@ System.register("player/Flow", ["player/Flow/LayoutChooser", "player/Flow/Qualit
                     if (playing)
                         this.callOnArray(tags, 'play', []);
                 };
-                Flow.prototype.pick = function (sources) {
+                VSQ.prototype.pick = function (sources) {
                     if (sources.length == 0)
                         throw new Error("Zero length FlowSources passed");
                     for (var i = 0; i < sources.length; ++i) {
                         var source = sources[i];
-                        if (!Flow.isHLSType(source.type))
+                        if (!VSQ.isHLSType(source.type))
                             continue;
                         source.src = flowplayer.common.createAbsoluteUrl(source.src);
                         return source;
                     }
                     return null;
                 };
-                Flow.setup = function () {
-                    if (Flow.initDone)
+                VSQ.setup = function () {
+                    if (VSQ.initDone)
                         return;
-                    var proxy = function (player, root) {
-                        return new Flow(player, root);
+                    var proxy = function (flow, root) {
+                        return new VSQ(flow, root);
                     };
-                    proxy.engineName = Flow.engineName;
-                    proxy.canPlay = Flow.canPlay;
+                    proxy.engineName = VSQ.engineName;
+                    proxy.canPlay = VSQ.canPlay;
                     flowplayer.engines.unshift(proxy);
-                    Flow.initDone = true;
+                    VSQ.initDone = true;
                 };
-                return Flow;
+                return VSQ;
             }());
-            Flow.engineName = "vsq";
-            Flow.debug = false;
-            Flow.initDone = false;
-            Flow.MASTER = 0;
-            Flow.CONTENT = 1;
-            exports_10("Flow", Flow);
+            VSQ.engineName = "vsq";
+            VSQ.debug = false;
+            VSQ.initDone = false;
+            VSQ.MASTER = 0;
+            VSQ.CONTENT = 1;
+            exports_11("VSQ", VSQ);
         }
     };
 });
-System.register("player/Player", ["player/Flash", "player/Flow"], function (exports_11, context_11) {
+System.register("player/PlayerSetup", ["player/Flash", "player/VSQ"], function (exports_12, context_12) {
     "use strict";
-    var __moduleName = context_11 && context_11.id;
-    var Flash_1, Flow_4, Player;
+    var __moduleName = context_12 && context_12.id;
+    var Flash_1, VSQ_4, PlayerSetup;
     return {
         setters: [
             function (Flash_1_1) {
                 Flash_1 = Flash_1_1;
             },
-            function (Flow_4_1) {
-                Flow_4 = Flow_4_1;
+            function (VSQ_4_1) {
+                VSQ_4 = VSQ_4_1;
             }
         ],
         execute: function () {
-            Player = (function () {
-                function Player(cfg, l) {
+            PlayerSetup = (function () {
+                function PlayerSetup(cfg, l) {
                     if (!cfg)
                         throw "Invalid config passed";
                     if (!l)
@@ -1469,25 +1543,25 @@ System.register("player/Player", ["player/Flash", "player/Flow"], function (expo
                     this.cfg = cfg;
                     this.l = l;
                 }
-                Player.prototype.log = function () {
+                PlayerSetup.prototype.log = function () {
                     var params = [];
                     for (var _i = 0; _i < arguments.length; _i++) {
                         params[_i] = arguments[_i];
                     }
                     if (!this.cfg.get("flowplayer.vsq.debug"))
                         return;
-                    params.unshift("[Player]");
+                    params.unshift("[PlayerSetup]");
                     console.log.apply(console, params);
                 };
-                Player.prototype.supportsVideo = function () {
+                PlayerSetup.prototype.supportsVideo = function () {
                     var elem = document.createElement('video');
                     return !!elem.canPlayType;
                 };
-                Player.prototype.initFlash = function () {
+                PlayerSetup.prototype.initFlash = function () {
                     var flash = new Flash_1.default(this.cfg, this.l);
                     flash.embed();
                 };
-                Player.prototype.init = function () {
+                PlayerSetup.prototype.init = function () {
                     this.container = jQuery('#' + this.cfg.get('containerid'));
                     if (this.container.length == 0) {
                         this.log("container not found");
@@ -1502,29 +1576,29 @@ System.register("player/Player", ["player/Flash", "player/Flow"], function (expo
                         this.initFlash();
                         return;
                     }
-                    this.initFlow();
+                    this.initVSQ();
                 };
-                Player.prototype.initFlow = function () {
+                PlayerSetup.prototype.initVSQ = function () {
                     var _this = this;
-                    this.initFlowPlugin();
+                    this.initVSQPlugin();
                     this.flowInstance = flowplayer(this.container.get(0), this.cfg.get('flowplayer'));
                     this.flowInstance.on('load', function (e, api, video) {
                         _this.log('ready', e, api, video);
                     });
                 };
-                Player.prototype.initFlowPlugin = function () {
-                    Flow_4.Flow.setup();
+                PlayerSetup.prototype.initVSQPlugin = function () {
+                    VSQ_4.VSQ.setup();
                 };
-                return Player;
+                return PlayerSetup;
             }());
-            exports_11("default", Player);
+            exports_12("default", PlayerSetup);
         }
     };
 });
-System.register("player/app", ["Locale", "player/Config", "player/Player"], function (exports_12, context_12) {
+System.register("player/app", ["Locale", "player/Config", "player/PlayerSetup"], function (exports_13, context_13) {
     "use strict";
-    var __moduleName = context_12 && context_12.id;
-    var Locale_1, Config_1, Player_1;
+    var __moduleName = context_13 && context_13.id;
+    var Locale_1, Config_1, PlayerSetup_1;
     return {
         setters: [
             function (Locale_1_1) {
@@ -1533,8 +1607,8 @@ System.register("player/app", ["Locale", "player/Config", "player/Player"], func
             function (Config_1_1) {
                 Config_1 = Config_1_1;
             },
-            function (Player_1_1) {
-                Player_1 = Player_1_1;
+            function (PlayerSetup_1_1) {
+                PlayerSetup_1 = PlayerSetup_1_1;
             }
         ],
         execute: function () {
@@ -1547,7 +1621,7 @@ System.register("player/app", ["Locale", "player/Config", "player/Player"], func
                     if (pcCopy.flowplayer)
                         pcCopy.flowplayer.vsq.locale = loc;
                     var cfg = new Config_1.default(pcCopy, fcCopy);
-                    var player = new Player_1.default(cfg, loc);
+                    var player = new PlayerSetup_1.default(cfg, loc);
                     player.init();
                 });
             })(jQuery);

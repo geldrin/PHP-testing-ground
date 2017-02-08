@@ -3,11 +3,10 @@
 "use strict";
 import Config from "./Config";
 import Flash from "./Flash";
-import {Flow} from "./Flow";
+import {VSQ} from "./VSQ";
 import Locale from "../Locale";
 
-/** A Player class az UI-ert felel */
-export default class Player {
+export default class PlayerSetup {
   private cfg: Config;
   private l: Locale;
   private container: JQuery;
@@ -27,7 +26,7 @@ export default class Player {
     if (!this.cfg.get("flowplayer.vsq.debug"))
       return;
 
-    params.unshift("[Player]");
+    params.unshift("[PlayerSetup]");
     console.log.apply(console, params);
   }
 
@@ -59,11 +58,11 @@ export default class Player {
       return;
     }
 
-    this.initFlow();
+    this.initVSQ();
   }
 
-  private initFlow(): void {
-    this.initFlowPlugin();
+  private initVSQ(): void {
+    this.initVSQPlugin();
 
     this.flowInstance = flowplayer(
       this.container.get(0),
@@ -75,7 +74,7 @@ export default class Player {
     });
   }
 
-  private initFlowPlugin() {
-    Flow.setup();
+  private initVSQPlugin() {
+    VSQ.setup();
   }
 }

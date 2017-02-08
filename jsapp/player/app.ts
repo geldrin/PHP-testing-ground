@@ -1,7 +1,7 @@
 /// <reference path="../defs/jquery/jquery.d.ts" />
 import Locale from "../Locale";
 import Config from "./Config";
-import Player from "./Player";
+import PlayerSetup from "./PlayerSetup";
 
 interface FlashConfig {
   parameters: string;
@@ -24,7 +24,7 @@ declare var l: Object;
 
     let cfg = new Config(pcCopy, fcCopy);
 
-    let player = new Player(cfg, loc);
+    let player = new PlayerSetup(cfg, loc);
     player.init();
   });
 })(jQuery);
