@@ -11,9 +11,6 @@ import Escape from "../Escape";
 import Locale from "../Locale";
 import RateLimiter from "../RateLimiter";
 
-declare var Hls: any;
-declare var WebKitMediaSource: any;
-
 /**
  * A flowplayer plugin implementacioert felel (dual-stream, reconnect stb)
  * Typescript rewrite of:
@@ -22,6 +19,7 @@ declare var WebKitMediaSource: any;
 export class VSQ {
   public static engineName = "vsq";
   public static debug = false;
+  public static accessDeniedError: number;
   private static initDone = false;
 
   private l: Locale;
@@ -30,7 +28,7 @@ export class VSQ {
   public longerType: VSQType = VSQType.MASTER;
   private videoTags: HTMLVideoElement[] = [];
   private videoInfo: FlowVideo[] = [];
-  private hlsEngines: any[] = [];
+  private hlsEngines: VSQHLS[] = [];
   private hlsConf: any;
 
   private flow: Flowplayer;
@@ -38,10 +36,6 @@ export class VSQ {
   private cfg: VSQConfig;
   private eventsInitialized = false;
   public introOrOutro = false;
-
-  private accessDeniedError: number;
-  private rateLimits: RateLimiter[] = [];
-  private recoverMediaDate: number;
 
   private plugins: BasePlugin[] = [];
 
@@ -53,7 +47,7 @@ export class VSQ {
     this.l = this.cfg.locale;
 
     this.flow.conf.errors.push(this.l.get('access_denied'));
-    this.accessDeniedError = flow.conf.errors.length - 1;
+    VSQ.accessDeniedError = flow.conf.errors.length - 1;
 
     this.hlsConf = jQuery.extend({
         bufferWhilePaused: true,
@@ -382,13 +376,7 @@ export class VSQ {
     }
 
     let video = this.flow.video;
-    this.hlsCall('trigger', [
-      Hls.Events.BUFFER_FLUSHING,
-      {
-        startOffset: 0,
-        endOffset: this.cfg.duration * 0.9
-      }
-    ]);
+    this.hlsCall('flushBuffer');
 
     this.tagCall('pause');
 
@@ -631,129 +619,11 @@ export class VSQ {
     delete(this.videoTags[index]);
   }
 
-  private setupHLS(type: number): void {
-    let video = this.videoInfo[type];
-    let hls = new Hls({
-      /*
-        autoStartLoad: true,
-        startPosition : -1,
-        capLevelToPlayerSize: false,
-        debug: false,
-        defaultAudioCodec: undefined,
-        initialLiveManifestSize: 1,
-        maxBufferLength: 30,
-        maxMaxBufferLength: 600,
-        maxBufferSize: 60*1000*1000,
-        maxBufferHole: 0.5,
-        maxSeekHole: 2,
-        seekHoleNudgeDuration: 0.01,
-        maxFragLookUpTolerance: 0.2,
-        liveSyncDurationCount: 3,
-        liveMaxLatencyDurationCount: 10,
-        enableWorker: true,
-        enableSoftwareAES: true,
-        manifestLoadingTimeOut: 10000,
-        manifestLoadingMaxRetry: 6,
-        manifestLoadingRetryDelay: 500,
-        manifestLoadingMaxRetryTimeout : 64000,
-        startLevel: undefined,
-        levelLoadingTimeOut: 10000,
-        levelLoadingMaxRetry: 6,
-        levelLoadingRetryDelay: 500,
-        levelLoadingMaxRetryTimeout: 64000,
-        fragLoadingTimeOut: 20000,
-        fragLoadingMaxRetry: 6,
-        fragLoadingRetryDelay: 500,
-        fragLoadingMaxRetryTimeout: 64000,
-        startFragPrefech: false,
-        appendErrorMaxRetry: 3,
-        loader: customLoader,
-        fLoader: customFragmentLoader,
-        pLoader: customPlaylistLoader,
-        xhrSetup: XMLHttpRequestSetupCallback,
-        fetchSetup: FetchSetupCallback,
-        abrController: customAbrController,
-        timelineController: TimelineController,
-        enableCEA708Captions: true,
-        stretchShortVideoTrack: false,
-        forceKeyFrameOnDiscontinuity: true,
-        abrEwmaFastLive: 5.0,
-        abrEwmaSlowLive: 9.0,
-        abrEwmaFastVoD: 4.0,
-        abrEwmaSlowVoD: 15.0,
-        abrEwmaDefaultEstimate: 500000,
-        abrBandWidthFactor: 0.8,
-        abrBandWidthUpFactor: 0.7,
-        minAutoBitrate: 0
-      */
-      initialLiveManifestSize: 2 // min 2 fragment mert sokat akad kulonben
-    });
-
-    hls.on(Hls.Events.MEDIA_ATTACHED, (event: string, data: any): void => {
-      hls.loadSource(video.src);
-    });
-
-    let limiter = new RateLimiter();
-    // TODO cancel limiters ha sikeresen csatlakoztunk
-    limiter.add("onNetworkError", 3*RateLimiter.SECOND, () => {
-      hls.startLoad();
-    });
-    limiter.add("onSwapAudioCodec", 3*RateLimiter.SECOND, () => {
-      hls.swapAudioCodec();
-    });
-    limiter.add("onRecoverMedia", 3*RateLimiter.SECOND, () => {
-      hls.recoverMediaError();
-    });
-    hls.on(Hls.Events.MANIFEST_PARSED, () => {
-      this.log("canceling ratelimits");
-      limiter.cancel();
-    });
-    hls.on(Hls.Events.ERROR, (event: string, err: any): void => {
-      this.log('hls error', event, err);
-
-      let shouldShowSeeking: boolean = err.fatal;
-      switch(err.type) {
-        case Hls.ErrorTypes.NETWORK_ERROR:
-          // 403 -> checkstreamaccess visszautasitott
-          if (err.response && err.response.code === 403) {
-            this.flow.trigger("error", [this.flow, {code: this.accessDeniedError}]);
-            return;
-          }
-
-          if (err.details === Hls.ErrorDetails.LEVEL_LOAD_ERROR) {
-            // TODO vissza kell lepni egy masik minosegi valtozatra
-            // ha az sincs akkor szimplan ujra probalkozni neha, de nem fatal
-          }
-
-          limiter.trigger("onNetworkError");
-          return;
-        case Hls.ErrorTypes.MEDIA_ERROR:
-          if (err.fatal) {
-            limiter.trigger("onSwapAudioCodec");
-            limiter.trigger("onRecoverMedia");
-          }
-
-          return;
-        default:
-          if(!err.fatal)
-            return;
-          break;
-      }
-
-      if (shouldShowSeeking) {
-        this.root.removeClass('is-paused');
-        this.root.addClass('is-seeking');
-      }
-
-      // nem tudtuk lekezelni a hibat, mutassunk valamit, 2 = NETWORK_ERROR
-      let arg: any = {code: 2};
-      this.flow.trigger("error", [this.flow, arg]);
-    });
-    hls.attachMedia(this.videoTags[type]);
-    this.hlsEngines[type] = hls;
+  private setupHLS(type: VSQType): void {
+    this.hlsEngines[type] = new VSQHLS(this, type);
 
     for (let i = this.plugins.length - 1; i >= 0; i--)
-      this.plugins[i].setupHLS(hls, type);
+      this.plugins[i].setupHLS(this.hlsEngines[type], type);
   }
 
   public load(video: FlowVideo): void {

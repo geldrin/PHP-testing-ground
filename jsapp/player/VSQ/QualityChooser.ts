@@ -133,18 +133,18 @@ export default class QualityChooser extends BasePlugin {
     return ret;
   }
 
-  private setLevelsForQuality(quality: string, method: string): void {
+  private setLevelsForQuality(quality: string, prop: string): void {
     let engines = this.vsq.getHLSEngines();
     let masterLevel = this.getQualityIndex(VSQType.MASTER, quality);
     this.log('setting master video level to', masterLevel, quality);
-    engines[VSQType.MASTER][method] = masterLevel;
+    engines[VSQType.MASTER][prop] = masterLevel;
 
     if (!this.shouldLookAtSecondary())
       return;
 
     let secondaryLevel = this.getQualityIndex(VSQType.CONTENT, quality);
     this.log('setting content video level to', secondaryLevel, quality);
-    engines[VSQType.CONTENT][method] = secondaryLevel;
+    engines[VSQType.CONTENT][prop] = secondaryLevel;
   }
 
   private getQualityIndex(type: number, quality: string): number {

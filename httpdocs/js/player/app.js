@@ -655,16 +655,16 @@ System.register("player/VSQ/QualityChooser", ["player/VSQ", "player/VSQ/BasePlug
                         throw new Error("No element found with the given level: " + level);
                     return ret;
                 };
-                QualityChooser.prototype.setLevelsForQuality = function (quality, method) {
+                QualityChooser.prototype.setLevelsForQuality = function (quality, prop) {
                     var engines = this.vsq.getHLSEngines();
                     var masterLevel = this.getQualityIndex(VSQ_3.VSQType.MASTER, quality);
                     this.log('setting master video level to', masterLevel, quality);
-                    engines[VSQ_3.VSQType.MASTER][method] = masterLevel;
+                    engines[VSQ_3.VSQType.MASTER][prop] = masterLevel;
                     if (!this.shouldLookAtSecondary())
                         return;
                     var secondaryLevel = this.getQualityIndex(VSQ_3.VSQType.CONTENT, quality);
                     this.log('setting content video level to', secondaryLevel, quality);
-                    engines[VSQ_3.VSQType.CONTENT][method] = secondaryLevel;
+                    engines[VSQ_3.VSQType.CONTENT][prop] = secondaryLevel;
                 };
                 QualityChooser.prototype.getQualityIndex = function (type, quality) {
                     if (type === VSQ_3.VSQType.MASTER)
@@ -782,26 +782,28 @@ System.register("RateLimiter", [], function (exports_9, context_9) {
         }
     };
 });
-System.register("player/VSQHLS", ["RateLimiter"], function (exports_10, context_10) {
+System.register("player/VSQHLS", ["player/VSQ", "RateLimiter"], function (exports_10, context_10) {
     "use strict";
     var __moduleName = context_10 && context_10.id;
-    var RateLimiter_1, VSQHLS;
+    var VSQ_4, RateLimiter_1, VSQHLS;
     return {
         setters: [
+            function (VSQ_4_1) {
+                VSQ_4 = VSQ_4_1;
+            },
             function (RateLimiter_1_1) {
                 RateLimiter_1 = RateLimiter_1_1;
             }
         ],
         execute: function () {
             VSQHLS = (function () {
-                function VSQHLS(vsq, video, type) {
+                function VSQHLS(vsq, type) {
                     var _this = this;
-                    this.pluginName = "VSQHLS";
                     this.vsq = vsq;
                     this.root = vsq.getRoot();
                     this.cfg = vsq.getConfig();
                     this.flow = vsq.getPlayer();
-                    this.video = video;
+                    this.video = jQuery.extend(true, {}, vsq.getVideoInfo(type));
                     this.limiter = new RateLimiter_1.default();
                     this.limiter.add("onNetworkError", 3 * RateLimiter_1.default.SECOND, function () {
                         _this.hls.startLoad();
@@ -813,56 +815,123 @@ System.register("player/VSQHLS", ["RateLimiter"], function (exports_10, context_
                         _this.hls.recoverMediaError();
                     });
                 }
+                VSQHLS.prototype.log = function () {
+                    var params = [];
+                    for (var _i = 0; _i < arguments.length; _i++) {
+                        params[_i] = arguments[_i];
+                    }
+                    if (!VSQ_4.VSQ.debug)
+                        return;
+                    params.unshift("[VSQHLS]");
+                    console.log.apply(console, params);
+                };
+                VSQHLS.prototype.startLoad = function (at) {
+                    this.hls.startLoad(at);
+                };
+                VSQHLS.prototype.stopLoad = function () {
+                    this.hls.stopLoad();
+                    this.flushBuffer();
+                };
+                VSQHLS.prototype.destroy = function () {
+                    this.hls.destroy();
+                };
+                VSQHLS.prototype.flushBuffer = function () {
+                    this.hls.trigger(Hls.Events.BUFFER_FLUSHING, {
+                        startOffset: 0,
+                        endOffset: Number.POSITIVE_INFINITY
+                    });
+                };
+                VSQHLS.prototype.on = function (evt, cb) {
+                    this.hls.on(evt, cb);
+                };
+                Object.defineProperty(VSQHLS.prototype, "startLevel", {
+                    get: function () {
+                        return this.hls.startLevel;
+                    },
+                    set: function (level) {
+                        this.hls.startLevel = level;
+                    },
+                    enumerable: true,
+                    configurable: true
+                });
+                Object.defineProperty(VSQHLS.prototype, "currentLevel", {
+                    get: function () {
+                        return this.hls.currentLevel;
+                    },
+                    set: function (level) {
+                        this.hls.currentLevel = level;
+                    },
+                    enumerable: true,
+                    configurable: true
+                });
                 VSQHLS.prototype.setupHLS = function (type) {
                     var _this = this;
-                    var hls = new Hls({
+                    this.hls = new Hls({
                         initialLiveManifestSize: 2
                     });
-                    hls.on(Hls.Events.MEDIA_ATTACHED, function (event, data) {
-                        hls.loadSource(video.src);
+                    this.hls.on(Hls.Events.MEDIA_ATTACHED, function (evt, data) {
+                        _this.onMediaAttached(evt, data);
                     });
-                    hls.on(Hls.Events.MANIFEST_PARSED, function () {
-                        limiter.cancel();
+                    this.hls.on(Hls.Events.MANIFEST_PARSED, function (evt, data) {
+                        _this.onManifestParsed(evt, data);
                     });
-                    hls.on(Hls.Events.ERROR, function (event, err) {
-                        _this.log('hls error', event, err);
-                        var shouldShowSeeking = err.fatal;
-                        switch (err.type) {
-                            case Hls.ErrorTypes.NETWORK_ERROR:
-                                if (err.response && err.response.code === 403) {
-                                    _this.player.trigger("error", [_this.player, { code: _this.accessDeniedError }]);
-                                    return;
-                                }
-                                if (err.details === Hls.ErrorDetails.LEVEL_LOAD_ERROR) {
-                                }
-                                limiter.trigger("onNetworkError");
-                                return;
-                            case Hls.ErrorTypes.MEDIA_ERROR:
-                                if (err.fatal) {
-                                    limiter.trigger("onSwapAudioCodec");
-                                    limiter.trigger("onRecoverMedia");
-                                }
-                                return;
-                            default:
-                                if (!err.fatal)
-                                    return;
-                                break;
-                        }
-                        if (shouldShowSeeking) {
-                            _this.root.removeClass('is-paused');
-                            _this.root.addClass('is-seeking');
-                        }
-                        var arg = { code: 2 };
-                        _this.player.trigger("error", [_this.player, arg]);
+                    this.hls.on(Hls.Events.ERROR, function (evt, data) {
+                        _this.onError(evt, data);
                     });
-                    hls.attachMedia(this.videoTags[type]);
+                    this.hls.attachMedia(this.vsq.getVideoTags()[type]);
                 };
-                VSQHLS.prototype.onMediaAttached = function (event, data) {
+                VSQHLS.prototype.onMediaAttached = function (evt, data) {
                     this.hls.loadSource(this.video.src);
                 };
-                VSQHLS.prototype.onManifestParsed = function (event, data) {
+                VSQHLS.prototype.onManifestParsed = function (evt, data) {
                     this.log("canceling ratelimits");
                     this.limiter.cancel();
+                };
+                VSQHLS.prototype.showSeeking = function () {
+                    this.root.removeClass('is-paused');
+                    this.root.addClass('is-seeking');
+                };
+                VSQHLS.prototype.onError = function (evt, data) {
+                    this.log("error", evt, data);
+                    switch (data.type) {
+                        case Hls.ErrorTypes.NETWORK_ERROR:
+                            switch (data.details) {
+                                case Hls.ErrorDetails.MANIFEST_LOAD_ERROR:
+                                    if (data.response && data.response.code === 403) {
+                                        this.onAccessError(evt, data);
+                                        return;
+                                    }
+                                    break;
+                                case Hls.ErrorDetails.LEVEL_LOAD_ERROR:
+                                    if (data.response && data.response.code === 404) {
+                                        this.onLevelLoadError(evt, data);
+                                        return;
+                                    }
+                                    break;
+                            }
+                            this.limiter.trigger("onNetworkError");
+                            break;
+                        case Hls.ErrorTypes.MEDIA_ERROR:
+                            break;
+                    }
+                    this.onUnhandledError(evt, data);
+                };
+                VSQHLS.prototype.onAccessError = function (evt, data) {
+                    this.flow.trigger("error", [this.flow, { code: VSQ_4.VSQ.accessDeniedError }]);
+                };
+                VSQHLS.prototype.onLevelLoadError = function (evt, data) {
+                };
+                VSQHLS.prototype.onMediaError = function (evt, data) {
+                    if (!data.fatal)
+                        return;
+                    this.limiter.trigger("onSwapAudioCodec");
+                    this.limiter.trigger("onRecoverMedia");
+                };
+                VSQHLS.prototype.onUnhandledError = function (evt, data) {
+                    if (!data.fatal)
+                        return;
+                    this.showSeeking();
+                    this.flow.trigger("error", [this.flow, { code: 2 }]);
                 };
                 return VSQHLS;
             }());
@@ -870,10 +939,10 @@ System.register("player/VSQHLS", ["RateLimiter"], function (exports_10, context_
         }
     };
 });
-System.register("player/VSQ", ["player/VSQ/LayoutChooser", "player/VSQ/QualityChooser", "RateLimiter"], function (exports_11, context_11) {
+System.register("player/VSQ", ["player/VSQ/LayoutChooser", "player/VSQ/QualityChooser", "player/VSQHLS"], function (exports_11, context_11) {
     "use strict";
     var __moduleName = context_11 && context_11.id;
-    var LayoutChooser_1, QualityChooser_1, RateLimiter_2, VSQ, VSQType;
+    var LayoutChooser_1, QualityChooser_1, VSQHLS_1, VSQ, VSQType;
     return {
         setters: [
             function (LayoutChooser_1_1) {
@@ -882,8 +951,8 @@ System.register("player/VSQ", ["player/VSQ/LayoutChooser", "player/VSQ/QualityCh
             function (QualityChooser_1_1) {
                 QualityChooser_1 = QualityChooser_1_1;
             },
-            function (RateLimiter_2_1) {
-                RateLimiter_2 = RateLimiter_2_1;
+            function (VSQHLS_1_1) {
+                VSQHLS_1 = VSQHLS_1_1;
             }
         ],
         execute: function () {
@@ -896,14 +965,13 @@ System.register("player/VSQ", ["player/VSQ/LayoutChooser", "player/VSQ/QualityCh
                     this.hlsEngines = [];
                     this.eventsInitialized = false;
                     this.introOrOutro = false;
-                    this.rateLimits = [];
                     this.plugins = [];
                     VSQ.log("constructor", arguments);
                     this.flow = flow;
                     this.cfg = flow.conf.vsq || {};
                     this.l = this.cfg.locale;
                     this.flow.conf.errors.push(this.l.get('access_denied'));
-                    this.accessDeniedError = flow.conf.errors.length - 1;
+                    VSQ.accessDeniedError = flow.conf.errors.length - 1;
                     this.hlsConf = jQuery.extend({
                         bufferWhilePaused: true,
                         smoothSwitching: true,
@@ -1128,13 +1196,7 @@ System.register("player/VSQ", ["player/VSQ/LayoutChooser", "player/VSQ/QualityCh
                         return false;
                     }
                     var video = this.flow.video;
-                    this.hlsCall('trigger', [
-                        Hls.Events.BUFFER_FLUSHING,
-                        {
-                            startOffset: 0,
-                            endOffset: this.cfg.duration * 0.9
-                        }
-                    ]);
+                    this.hlsCall('flushBuffer');
                     this.tagCall('pause');
                     if (this.introOrOutro && !video.is_last) {
                         this.flow.next();
@@ -1325,63 +1387,9 @@ System.register("player/VSQ", ["player/VSQ/LayoutChooser", "player/VSQ/QualityCh
                     delete (this.videoTags[index]);
                 };
                 VSQ.prototype.setupHLS = function (type) {
-                    var _this = this;
-                    var video = this.videoInfo[type];
-                    var hls = new Hls({
-                        initialLiveManifestSize: 2
-                    });
-                    hls.on(Hls.Events.MEDIA_ATTACHED, function (event, data) {
-                        hls.loadSource(video.src);
-                    });
-                    var limiter = new RateLimiter_2.default();
-                    limiter.add("onNetworkError", 3 * RateLimiter_2.default.SECOND, function () {
-                        hls.startLoad();
-                    });
-                    limiter.add("onSwapAudioCodec", 3 * RateLimiter_2.default.SECOND, function () {
-                        hls.swapAudioCodec();
-                    });
-                    limiter.add("onRecoverMedia", 3 * RateLimiter_2.default.SECOND, function () {
-                        hls.recoverMediaError();
-                    });
-                    hls.on(Hls.Events.MANIFEST_PARSED, function () {
-                        _this.log("canceling ratelimits");
-                        limiter.cancel();
-                    });
-                    hls.on(Hls.Events.ERROR, function (event, err) {
-                        _this.log('hls error', event, err);
-                        var shouldShowSeeking = err.fatal;
-                        switch (err.type) {
-                            case Hls.ErrorTypes.NETWORK_ERROR:
-                                if (err.response && err.response.code === 403) {
-                                    _this.flow.trigger("error", [_this.flow, { code: _this.accessDeniedError }]);
-                                    return;
-                                }
-                                if (err.details === Hls.ErrorDetails.LEVEL_LOAD_ERROR) {
-                                }
-                                limiter.trigger("onNetworkError");
-                                return;
-                            case Hls.ErrorTypes.MEDIA_ERROR:
-                                if (err.fatal) {
-                                    limiter.trigger("onSwapAudioCodec");
-                                    limiter.trigger("onRecoverMedia");
-                                }
-                                return;
-                            default:
-                                if (!err.fatal)
-                                    return;
-                                break;
-                        }
-                        if (shouldShowSeeking) {
-                            _this.root.removeClass('is-paused');
-                            _this.root.addClass('is-seeking');
-                        }
-                        var arg = { code: 2 };
-                        _this.flow.trigger("error", [_this.flow, arg]);
-                    });
-                    hls.attachMedia(this.videoTags[type]);
-                    this.hlsEngines[type] = hls;
+                    this.hlsEngines[type] = new VSQHLS_1.default(this, type);
                     for (var i = this.plugins.length - 1; i >= 0; i--)
-                        this.plugins[i].setupHLS(hls, type);
+                        this.plugins[i].setupHLS(this.hlsEngines[type], type);
                 };
                 VSQ.prototype.load = function (video) {
                     var _this = this;
@@ -1524,14 +1532,14 @@ System.register("player/VSQ", ["player/VSQ/LayoutChooser", "player/VSQ/QualityCh
 System.register("player/PlayerSetup", ["player/Flash", "player/VSQ"], function (exports_12, context_12) {
     "use strict";
     var __moduleName = context_12 && context_12.id;
-    var Flash_1, VSQ_4, PlayerSetup;
+    var Flash_1, VSQ_5, PlayerSetup;
     return {
         setters: [
             function (Flash_1_1) {
                 Flash_1 = Flash_1_1;
             },
-            function (VSQ_4_1) {
-                VSQ_4 = VSQ_4_1;
+            function (VSQ_5_1) {
+                VSQ_5 = VSQ_5_1;
             }
         ],
         execute: function () {
@@ -1588,7 +1596,7 @@ System.register("player/PlayerSetup", ["player/Flash", "player/VSQ"], function (
                     });
                 };
                 PlayerSetup.prototype.initVSQPlugin = function () {
-                    VSQ_4.VSQ.setup();
+                    VSQ_5.VSQ.setup();
                 };
                 return PlayerSetup;
             }());
