@@ -26,11 +26,11 @@ export default class VSQHLS {
     this.flow = vsq.getPlayer();
     this.video = jQuery.extend(true, {}, vsq.getVideoInfo(type));
 
-    this.initHls();
     this.initLimiter();
+    this.initHls(type);
   }
 
-  private initHls(): void {
+  private initHls(type: VSQType): void {
     this.hls = new Hls({
       /*
         autoStartLoad: true,
@@ -96,6 +96,8 @@ export default class VSQHLS {
     this.hls.on(Hls.Events.ERROR, (evt: string, data: any): void => {
       this.onError(evt, data);
     });
+
+    this.hls.attachMedia(this.vsq.getVideoTags()[ type ]);
   }
 
   private initLimiter(): void {
@@ -151,10 +153,6 @@ export default class VSQHLS {
   }
   set currentLevel(level: number) {
     this.hls.currentLevel = level;
-  }
-
-  public setupHLS(type: number): any {
-    this.hls.attachMedia(this.vsq.getVideoTags()[ type ]);
   }
 
   private onMediaAttached(evt: string, data: any): void {

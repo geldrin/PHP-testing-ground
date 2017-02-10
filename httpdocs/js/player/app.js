@@ -803,10 +803,10 @@ System.register("player/VSQHLS", ["player/VSQ", "RateLimiter"], function (export
                     this.cfg = vsq.getConfig();
                     this.flow = vsq.getPlayer();
                     this.video = jQuery.extend(true, {}, vsq.getVideoInfo(type));
-                    this.initHls();
                     this.initLimiter();
+                    this.initHls(type);
                 }
-                VSQHLS.prototype.initHls = function () {
+                VSQHLS.prototype.initHls = function (type) {
                     var _this = this;
                     this.hls = new Hls({
                         initialLiveManifestSize: 2
@@ -820,6 +820,7 @@ System.register("player/VSQHLS", ["player/VSQ", "RateLimiter"], function (export
                     this.hls.on(Hls.Events.ERROR, function (evt, data) {
                         _this.onError(evt, data);
                     });
+                    this.hls.attachMedia(this.vsq.getVideoTags()[type]);
                 };
                 VSQHLS.prototype.initLimiter = function () {
                     var _this = this;
@@ -883,9 +884,6 @@ System.register("player/VSQHLS", ["player/VSQ", "RateLimiter"], function (export
                     enumerable: true,
                     configurable: true
                 });
-                VSQHLS.prototype.setupHLS = function (type) {
-                    this.hls.attachMedia(this.vsq.getVideoTags()[type]);
-                };
                 VSQHLS.prototype.onMediaAttached = function (evt, data) {
                     this.hls.loadSource(this.video.src);
                 };
