@@ -7,7 +7,7 @@ define('PRODUCTION', false);
 define('DEBUG', false);
 
 include_once(BASE_PATH . 'libraries/Springboard/Application/Cli.php');
-include_once('../Modules/RunExt.php');
+include_once(BASE_PATH . 'libraries/Videosquare/Modules/RunExt.php');
 
 //-----------------------------------------------
 
@@ -26,8 +26,6 @@ class Watcher {
   private static $panicfile  = null;
   private static $needsSleep = false;
   private static $currentSleepSeconds = 60;
-  private static $lookupdirs = []; // folder list in which the actual job files can be found.
-  private static $jobpaths   = []; // list of job files
   // Job specific variables
   private static $msg              = null;
   private static $mailbody         = null;
@@ -38,9 +36,9 @@ class Watcher {
   
   //---------------------------------------------
   
-  private function __construct() { /* Constructor disabled */ }
-  
-  private function __clone() { /* Cloning disabled */ }
+  private function __construct() { /* Constructor disabled   */ }
+  private function __clone()     { /* Cloning disabled       */ }
+  private function __wakeup()    { /* Serialization disabled */ }
   
   /**
    * Main function.
@@ -259,8 +257,8 @@ class Watcher {
     unset($msg);
     
     //
-    // RETURN CODE IS INACCURATE!!! NEEDS TO BE FURTHER REFINED!
-    // (If a job stops after start it's still reported as a successful launch.)
+    // NEEDS TO BE FURTHER REFINED!
+    // (If a job stops immediately after start it's still reported as a successful launch.)
     //
     
     if ($j->getCode() != 0) { return false; }
@@ -288,7 +286,7 @@ class Watcher {
     $pattern = implode('|', $job_paths);
     $pattern = "/{$pattern}/";
     
-    $shell = new RunExt();
+    $shell = new \Videosquare\Modules\RunExt();
     $shell->command = 'ps uax | grep -v "grep"';
     
     if ($shell->run() === true) {
