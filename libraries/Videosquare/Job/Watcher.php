@@ -286,7 +286,7 @@ class Watcher {
     $pattern = implode('|', $job_paths);
     $pattern = "/{$pattern}/";
     
-    $shell = new \Videosquare\Modules\RunExt();
+    $shell = new RunExt();
     $shell->command = 'ps uax | grep -v "grep"';
     
     if ($shell->run() === true) {
