@@ -251,6 +251,7 @@ export class VSQ {
       }
 
       // TODO ratelimit
+      https://github.com/dailymotion/hls.js/blob/170d49e34a3a00b7ee36cb14343a3757c4967776/src/controller/stream-controller.js#L637
       if (diff < 0) {
         this.log("live content ahead of master, jumping it back");
         content.currentTime = parseInt('' + master.currentTime, 10) - 2;

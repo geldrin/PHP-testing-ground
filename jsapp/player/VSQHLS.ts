@@ -26,61 +26,11 @@ export default class VSQHLS {
     this.flow = vsq.getPlayer();
     this.video = jQuery.extend(true, {}, vsq.getVideoInfo(type));
 
-    this.limiter = new RateLimiter();
-    this.limiter.add("onNetworkError", 3*RateLimiter.SECOND, () => {
-      this.hls.startLoad();
-    });
-    this.limiter.add("onSwapAudioCodec", 3*RateLimiter.SECOND, () => {
-      this.hls.swapAudioCodec();
-    });
-    this.limiter.add("onRecoverMedia", 3*RateLimiter.SECOND, () => {
-      this.hls.recoverMediaError();
-    });
+    this.initHls();
+    this.initLimiter();
   }
 
-  protected log(...params: Object[]): void {
-    if (!VSQ.debug)
-      return;
-
-    params.unshift(`[VSQHLS]`);
-    console.log.apply(console, params);
-  }
-
-  public startLoad(at: number): void {
-    this.hls.startLoad(at);
-  }
-  public stopLoad(): void {
-    this.hls.stopLoad();
-    this.flushBuffer();
-  }
-  public destroy(): void {
-    this.hls.destroy();
-  }
-  public flushBuffer(): void {
-    this.hls.trigger(Hls.Events.BUFFER_FLUSHING, {
-        startOffset: 0,
-        endOffset: Number.POSITIVE_INFINITY
-      }
-    );
-  }
-  public on(evt: string, cb: any): void {
-    this.hls.on(evt, cb);
-  }
-
-  get startLevel(): number {
-    return this.hls.startLevel;
-  }
-  set startLevel(level: number) {
-    this.hls.startLevel = level;
-  }
-  get currentLevel(): number {
-    return this.hls.currentLevel;
-  }
-  set currentLevel(level: number) {
-    this.hls.currentLevel = level;
-  }
-
-  public setupHLS(type: number): any {
+  private initHls(): void {
     this.hls = new Hls({
       /*
         autoStartLoad: true,
@@ -136,7 +86,6 @@ export default class VSQHLS {
       */
       initialLiveManifestSize: 2 // min 2 fragment mert sokat akad kulonben
     });
-
     this.hls.on(Hls.Events.MEDIA_ATTACHED, (evt: string, data: any): void => {
       this.onMediaAttached(evt, data);
     });
@@ -147,7 +96,64 @@ export default class VSQHLS {
     this.hls.on(Hls.Events.ERROR, (evt: string, data: any): void => {
       this.onError(evt, data);
     });
+  }
 
+  private initLimiter(): void {
+    this.limiter = new RateLimiter();
+    this.limiter.add("onNetworkError", 3*RateLimiter.SECOND, () => {
+      this.hls.startLoad();
+    });
+    this.limiter.add("onSwapAudioCodec", 3*RateLimiter.SECOND, () => {
+      this.hls.swapAudioCodec();
+    });
+    this.limiter.add("onRecoverMedia", 3*RateLimiter.SECOND, () => {
+      this.hls.recoverMediaError();
+    });
+  }
+
+  private log(...params: Object[]): void {
+    if (!VSQ.debug)
+      return;
+
+    params.unshift(`[VSQHLS]`);
+    console.log.apply(console, params);
+  }
+
+  public startLoad(at: number): void {
+    this.hls.startLoad(at);
+  }
+  public stopLoad(): void {
+    this.hls.stopLoad();
+    this.flushBuffer();
+  }
+  public destroy(): void {
+    this.hls.destroy();
+  }
+  public flushBuffer(): void {
+    this.hls.trigger(Hls.Events.BUFFER_FLUSHING, {
+        startOffset: 0,
+        endOffset: Number.POSITIVE_INFINITY
+      }
+    );
+  }
+  public on(evt: string, cb: any): void {
+    this.hls.on(evt, cb);
+  }
+
+  get startLevel(): number {
+    return this.hls.startLevel;
+  }
+  set startLevel(level: number) {
+    this.hls.startLevel = level;
+  }
+  get currentLevel(): number {
+    return this.hls.currentLevel;
+  }
+  set currentLevel(level: number) {
+    this.hls.currentLevel = level;
+  }
+
+  public setupHLS(type: number): any {
     this.hls.attachMedia(this.vsq.getVideoTags()[ type ]);
   }
 
