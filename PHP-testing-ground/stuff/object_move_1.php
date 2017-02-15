@@ -3,7 +3,7 @@
 // Object moving test
 
 /**
- * Sample object with one property with additional getter/setter methods
+ * Sample object with one property and additional getter/setter methods
  */
 class A {
   protected $name = null;
