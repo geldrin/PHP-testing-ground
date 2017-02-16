@@ -321,3 +321,80 @@ class RunExt {
   function clearCallbacks() { $this->callback = null; }
 
 } // end of RunExtV class
+
+final class FD {
+  private $descriptors = [];
+  
+  public function addPipe($pipenumber, $mode) {
+    $this->insertDescriptor($pipenumber, new FDpipe($mode));
+    return $this;
+  }
+  
+  public function addFile($pipenumber, $mode, $file) {
+    $this->insertDescriptor($pipenumber, new FDfile($mode, $file));
+    return $this;
+  }
+  
+  public function addStream($pipenumber, $streamresource) {
+    $this->insertDescriptor($pipenumber, new FDstream($streamresource));
+    return $this;
+  }
+  
+  public function getFileDescriptorArray() {
+    $descriptorspec = [];
+    
+    foreach ($this->descriptors as $n => $d) {
+      if ($d instanceof FDobject) { $descriptorspec[$n] = $d->getData(); }
+    }
+    
+    return $descriptorspec;
+  }
+  
+  protected function insertDescriptor($pipenumber, $desc) {
+    if ($desc instanceof FDobject) {
+      $this->descriptors[$pipenumber] = $desc;
+    }
+  }
+}
+
+abstract class FDobject {
+  protected $mode;
+  protected $fdobject;
+  
+  const READ   = 'r';
+  const WRITE  = 'w';
+  const APPEND = 'a';
+  
+  abstract function getData();
+}
+
+final class FDpipe extends FDobject {
+  function __construct($mode) {
+    if (array_search($mode, ['r', 'w']) === false) { echo "FAIL\n"; return null; }
+    $this->mode = $mode;
+    return $this;
+  }
+  
+  function getData() { return ['pipe', $this->mode]; }
+}
+
+final class FDstream extends FDobject {
+  function __construct($streamresource) {
+    if (!is_resource($streamresource)) { return null; }
+    $this->fdobject = $streamresource;
+    return $this;
+  }
+  
+  function getData() { return $this->fdobject; }
+}
+
+final class FDfile extends FDobject {
+  function __construct($mode, $file) {
+    if (array_search($mode, ['r', 'w', 'a']) === false || !file_exists($file)) { return null; }
+    $this->mode = $mode;
+    $this->fdobject = $file;
+    return $this;
+  }
+  
+  function getData() { return ['file', $this->fdobject, $this->mode]; }
+}
