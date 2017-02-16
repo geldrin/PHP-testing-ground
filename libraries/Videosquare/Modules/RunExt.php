@@ -16,6 +16,7 @@ class RunExt {
   var $envvars     = null; // not implemented yet!!
   var $timeoutsec  = null;
   var $close_stdin = false;
+  var $filedescriptors = null;
 
   private $start        = 0;
   private $duration     = 0;
@@ -30,7 +31,7 @@ class RunExt {
   private $polling_usec = 50000;
   private $process      = null;
   private $pipes        = array();
-  private $detached     = false;
+  private $descriptors  = null;
 
   /**
    * Constructor of the RunExt class.
@@ -69,6 +70,41 @@ class RunExt {
         $this->polling_sec  = (int) $pollrate_sec;
         $this->polling_usec = ($pollrate_sec - $this->polling_sec) * 1000000;
       }
+    }
+  }
+  
+  /**
+   * Set user-defined descriptor object.
+   * Using a custom filedescriptor structure, it is possible to redirect the inputs and outputs
+   * of the invoked process. This includes standard pipes, files, or even stream handlers.
+   * 
+   * @param type \Videosquare\Job\FD
+   * @return boolean
+   */
+  function setFileDescriptors($descriptorobject) {
+    if ($this->filedescriptors instanceof FD) {
+      $this->filedescriptors = $descriptorobject;
+      return true;
+    }
+    
+    return false;
+  }
+  
+  /**
+   * Method to set filedescriptors.
+   * If invalid data was passed, it creates the default stdio structure.
+   * 
+   * @param \Videosquare\Job\FD $FDobject
+   */
+  protected function buildFileDescriptors($FDobject = null) {
+    if (!($FDobject instanceof FD)) { // use default FDobject
+       $this->descriptors = (new FD())
+         ->addPipe(0, FDobject::READ)
+         ->addPipe(1, FDobject::WRITE)
+         ->addPipe(2, FDobject::WRITE)
+         ->getFileDescriptorArray();
+    } else {
+      $this->descriptors = $FDobject->getFileDescriptorArray();
     }
   }
   
@@ -116,7 +152,6 @@ class RunExt {
     $this->pipes   = array();
     $this->process = null;
     
-    if ($this->detached) { $detachedrun = true; }
     if ($command !== null) { $this->command = $command; }
     if ($timeoutsec !== null && is_numeric($timeoutsec)) { $this->timeoutsec = floatval($timeoutsec); }
     
@@ -125,15 +160,11 @@ class RunExt {
       return false;
     }
     
-    $desc = array(
-      0 => array('pipe', 'r'),
-      1 => array('pipe', 'w'),
-      2 => array('pipe', 'w'),
-    );
+    if ($this->descriptors === null) { $this->buildFileDescriptors(); }
     
     $this->start = microtime(true);
     $lastactive = $this->start;
-    $this->process = proc_open($this->command, $desc, $this->pipes, $this->envvars);
+    $this->process = proc_open($this->command, $this->descriptors, $this->pipes, $this->envvars);
     
     if ($this->process === false || !is_resource($this->process)) {
       $this->msg[] = "[ERROR] Failed to open process!";
@@ -173,7 +204,7 @@ class RunExt {
       } elseif ($ready > 0) {
         foreach($read as $r) {
           $tmp .= stream_get_contents($r);
-          if (feof($r)) $EOF = true;
+          if (feof($r)) { $EOF = true; }
         }
         
         if (!empty($tmp)) {
@@ -230,8 +261,13 @@ class RunExt {
   }
   
   function runDetached($command = null, $timeoutsec = null) {
-    $this->detached = true;
     $this->msg[] = "[NOTICE] Starting detached process. Exit code cannot be retrieved.";
+    
+    if ($this->filedescriptors === null) {
+      $this->buildFileDescriptors((new FD())
+        ->addFile(1, FDobject::WRITE, "/dev/null")
+        ->addFile(2, FDobject::WRITE, "/dev/null"));
+    }
     
     return $this->run($command, $timeoutsec);
   }
@@ -310,23 +346,25 @@ class RunExt {
     clearstatcache();
   }
 
-  function getCode()        { return (int) $this->code; }
+  function getCode()            { return (int) $this->code; }
 
-  function getDuration()    { return (double) $this->duration; }
+  function getDuration()        { return (double) $this->duration; }
 
-  function getMessage()     { return implode(PHP_EOL, $this->msg); }
+  function getMessage()         { return implode(PHP_EOL, $this->msg); }
 
-  function getOutput()      { return implode(null, $this->output); }
+  function getOutput()          { return implode(null, $this->output); }
 
-  function getOutputArr()   { return $this->output; }
+  function getOutputArr()       { return $this->output; }
 
-  function getPID()         { return $this->pid; }
+  function getPID()             { return $this->pid; }
 
-  function getGroupID()     { return $this->groupid; }
+  function getGroupID()         { return $this->groupid; }
 
-  function getMasterPID()   { return $this->masterpid; }
+  function getMasterPID()       { return $this->masterpid; }
   
-  function clearCallbacks() { $this->callback = null; }
+  function getFileDescriptors() { return $this->filedescriptors; }
+  
+  function clearCallbacks()     { $this->callback = null; }
 
 } // end of RunExtV class
 
