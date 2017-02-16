@@ -18,7 +18,7 @@ $b = Appul::getInstance()->set("Howdy, partner!")->greet(); // PHP 5.6+ (needs a
 ($b = new Appul())->set("Howdy, partner!")->greet();        // PHP 7.0+
 
 // hard mode #2
-// FATAL ERROR (Cannot use temporary expression in write context)
+// FATAL ERROR (Cannot use temporary expression in write context) at least one setter method needed.w
 //($c = new Appul())->$boop = "Bye!";
 //$c->greet();
 
