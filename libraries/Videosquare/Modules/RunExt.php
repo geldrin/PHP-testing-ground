@@ -30,6 +30,7 @@ class RunExt {
   private $polling_usec = 50000;
   private $process      = null;
   private $pipes        = array();
+  private $detached     = false;
 
   /**
    * Constructor of the RunExt class.
@@ -226,6 +227,13 @@ class RunExt {
     }
     
     return true;
+  }
+  
+  function runDetached($command = null, $timeoutsec = null) {
+    $this->detached = true;
+    $this->msg[] = "[NOTICE] Starting detached process. Exit code cannot be retrieved.";
+    
+    return $this->run($command, $timeoutsec);
   }
   
   /**
