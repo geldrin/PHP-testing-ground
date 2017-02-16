@@ -115,6 +115,7 @@ class RunExt {
     $this->pipes   = array();
     $this->process = null;
     
+    if ($this->detached) { $detachedrun = true; }
     if ($command !== null) { $this->command = $command; }
     if ($timeoutsec !== null && is_numeric($timeoutsec)) { $this->timeoutsec = floatval($timeoutsec); }
     
@@ -131,14 +132,14 @@ class RunExt {
     
     $this->start = microtime(true);
     $lastactive = $this->start;
-    $this->process = proc_open($this->command, $desc, $this->pipes);
+    $this->process = proc_open($this->command, $desc, $this->pipes, $this->envvars);
     
     if ($this->process === false || !is_resource($this->process)) {
       $this->msg[] = "[ERROR] Failed to open process!";
       return false;
     }
     
-    if ($this->close_stdin) {
+    if ($this->close_stdin && isset($this->pipes[0])) {
       fclose($this->pipes[0]);
       unset($this->pipes[0]);
     }
@@ -154,13 +155,16 @@ class RunExt {
       $tmp   = null;
       $ready = 0;
       
-      $ready = stream_select($read, $write, $excl, $this->polling_sec, $this->polling_usec);
+      if ($read && $write && $excl) {
+        // If there's no streams to read, don't poll them.
+        $ready = stream_select($read, $write, $excl, $this->polling_sec, $this->polling_usec);
+      }
       
       if ($proc_status['running']) { $proc_status = proc_get_status($this->process); }
       
       $this->code = $proc_status['exitcode'];
       
-      if ($ready === false ) { // error
+      if ($ready === false) { // error
         $err = error_get_last();
         $this->msg[] = "Stream_select() error: {$err['message']}";
         restore_error_handler();
