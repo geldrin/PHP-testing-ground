@@ -159,7 +159,7 @@ class Watcher {
     $jobs_running = [];
     $jobs_running = self::getRunningJobs();
     
-    if (count($jobs_running) >= 1) {
+    if ($jobs_running !== false && count($jobs_running) >= 1) {
       $msg .= sprintf("Currently running process(es):\n%s", implode("\n", array_map(function($j) { return(" > CMD: {$j['cmd']} / PID={$j['pid']}"); }, $jobs_running)));
     } else {
       $msg .= "There are no running jobs currently.\n";
@@ -231,13 +231,11 @@ class Watcher {
   private static function startJob(&$job) {
     $msg = null;
     
-    $command = "/usr/bin/php -f {$job['path']}";
-    if (self::$debug_mode === false) { $command .= " &>/dev/null"; }
-    $command .= " &";
+    $command = "/usr/bin/php -f {$job['path']} &";
     $msg = "Starting {$job['name']}... ";
     
     $j = new RunExt($command);
-    $success = $j->run();
+    $success = $j->runDetached();
     if ($success) {
       $msg .= "> DONE!";
     } else {
@@ -323,8 +321,8 @@ class Watcher {
       if (!empty($config)) {
         array_walk(
           $job_config[$type],
-          function(&$j) use($jobpaths, $type) {
-            $j['path'] = $jobpaths[$type];
+          function(&$j, $name) use($jobpaths, $type) {
+            $j['path'] = "{$jobpaths[$type]}{$name}.php";
           }
         );
       }
