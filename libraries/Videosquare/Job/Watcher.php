@@ -3,7 +3,6 @@
 namespace Videosquare\Job;
 
 define('BASE_PATH',	realpath(__DIR__ .'/../../..') . '/');
-define('PRODUCTION', false);
 define('DEBUG', false);
 
 include_once(BASE_PATH . 'libraries/Springboard/Application/Cli.php');
@@ -296,9 +295,11 @@ class Watcher {
       array_walk($col, function ($item, $key) use($data, &$jobs) { $jobs[] = $data[$key]; });
       
       return $jobs;
+    } else {
+      self::log($msg = "Failed to query process list!");
+      trigger_error($msg, E_NOTICE);
+      return false;
     }
-    
-    return false;
   }
   
   /**
@@ -477,8 +478,8 @@ class Watcher {
     if (self::$initialized) { return; }
     
     self::$needsSleep = true; //debug
-    self::$app = new \Springboard\Application\Cli(BASE_PATH, DEBUG);
-    self::$app->loadConfig('/modules/Jobs/config_jobs.php');
+    self::$app = new \Springboard\Application\Cli(BASE_PATH, false);
+    self::$app->loadConfig('modules/Jobs/config_jobs.php');
     self::$debug = \SpringBoard\Debug::getInstance();
     self::$jconf = self::$app->config['config_jobs'];
     self::$ldir  = self::$jconf['log_dir'];
