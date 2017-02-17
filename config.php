@@ -1,6 +1,6 @@
 <?php
 $config = array(
-  'version'      => '_v20170130',
+  'version'      => '_v20170217',
   'charset'      => 'UTF-8',
   'cacheseconds' => 3600,
   'errormessage' => 'An unexpected error has occured, our staff has been notified. Sorry for the inconvenience and thanks for your understanding!',
@@ -43,7 +43,7 @@ $config = array(
     'hiba@videosqr.com',
   ),
   'logtoconsole' => false,
-//  'watcherdebug' => false,
+  'watcherdebug' => false,
   //-----
   'smtp'         => array(
     'auth'     => false,
