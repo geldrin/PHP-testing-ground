@@ -239,7 +239,10 @@ class Watcher {
     
     $j = new RunExt($command);
     $success = $j->runDetached();
-    if ($success) {
+    usleep(500000);
+
+    if ($success && self::isStringOccursInUnixProcessList($command)) {
+      // A little bit more sophisticated method would be great than the currently used "grepping ps output"
       $msg .= "> DONE!";
     } else {
       $msg .= "> FAILED!";
@@ -256,14 +259,26 @@ class Watcher {
     
     $job['message'] = $msg;
     unset($msg);
-    
-    //
-    // NEEDS TO BE FURTHER REFINED!
-    // (If a job stops immediately after start it's still reported as a successful launch.)
-    //
-    
+
     if ($j->getCode() != 0) { return false; }
     return true;
+  }
+  
+  /**
+   * Check if given string occurs in the output of "ps uax" listing.
+   * 
+   * @param string $str
+   * @return boolean
+   */
+  private static function isStringOccursInUnixProcessList($str) {
+//    $str = preg_quote($str);
+//    $str = escapeshellcmd($str);
+    $chk = new RunExt('ps uax | grep "'. $str .'"');
+    var_dump($chk);
+    
+    if ($chk->run()) { return count(explode("\n", $chk->getOutput())) > 1; }
+    die();
+    return false;
   }
   
   /**
