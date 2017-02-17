@@ -271,13 +271,10 @@ class Watcher {
    * @return boolean
    */
   private static function isStringOccursInUnixProcessList($str) {
-//    $str = preg_quote($str);
-//    $str = escapeshellcmd($str);
     $chk = new RunExt('ps uax | grep "'. $str .'"');
-    var_dump($chk);
     
     if ($chk->run()) { return count(explode("\n", $chk->getOutput())) > 1; }
-    die();
+    
     return false;
   }
   
