@@ -10,6 +10,7 @@ namespace Videosquare\Job;
  * - kills running process and it's subprocesses on timeout
  * - callbacks can be defined and executed parallel
  * - support for retrieving regular bash command's return values
+ * - custom file descriptors can be created via the FD class.
  */
 class RunExt {
   var $command     = null;
@@ -368,24 +369,66 @@ class RunExt {
 
 } // end of RunExtV class
 
+/**
+ * Filedescriptor datastructure object for defining custom IO redirects.
+ */
 final class FD {
   private $descriptors = [];
   
+  /**
+   * Adds a new pipe object to the filedescriptor structure with a given access mode.
+   * 
+   * @param integer $pipenumber This number is used for the process' file descriptor number (0 - stdin, 1 - stdout, etc.)
+   * @param string $mode Access mode ('r'|'w')
+   * @return \Videosquare\Job\FD
+   */
   public function addPipe($pipenumber, $mode) {
     $this->insertDescriptor($pipenumber, new FDpipe($mode));
     return $this;
   }
   
+  /**
+   * Adds a new file object to the filedescriptor structure with a given access mode.
+   * 
+   * @param integer $pipenumber This number is used for the process' file descriptor number (0 - stdin, 1 - stdout, etc.)
+   * @param string $mode Access mode ('r'|'w'|'a')
+   * @param string $file Path to file
+   * @return \Videosquare\Job\FD
+   */
   public function addFile($pipenumber, $mode, $file) {
     $this->insertDescriptor($pipenumber, new FDfile($mode, $file));
     return $this;
   }
   
+  /**
+   * Adds a new stream object to the filedescriptor structure with a given access mode.
+   * 
+   * @param integer $pipenumber This number is used for the process' file descriptor number (0 - stdin, 1 - stdout, etc.)
+   * @param resource $streamresource A valid resource (this can be a socket, an open file handler, or a stream).
+   * @return \Videosquare\Job\FD
+   */
   public function addStream($pipenumber, $streamresource) {
     $this->insertDescriptor($pipenumber, new FDstream($streamresource));
     return $this;
   }
   
+  /**
+   * Removes descriptor.
+   * 
+   * @param integer $pipenumber
+   * @return \Videosquare\Job\FD
+   */
+  public function remove($pipenumber) {
+    if (array_key_exists($pipenumber, $this->descriptors)) { unset($this->descriptors[$pipenumber]); }
+    
+    return $this;
+  }
+  
+  /**
+   * Returns an array representation of the filedescriptor structure.
+   * 
+   * @return array
+   */
   public function getFileDescriptorArray() {
     $descriptorspec = [];
     
@@ -396,13 +439,24 @@ final class FD {
     return $descriptorspec;
   }
   
+  /**
+   * Inserts descriptor if it's an instance of FDobject.
+   */
   protected function insertDescriptor($pipenumber, $desc) {
+    if (!is_int($pipenumber)) {
+      trigger_error(__FUNCTION__ ." - pipenumber must be an integer!");
+      return;
+    }
+    
     if ($desc instanceof FDobject) {
       $this->descriptors[$pipenumber] = $desc;
     }
   }
 }
 
+/**
+ * Filedescriptor Object
+ */
 abstract class FDobject {
   protected $mode;
   protected $fdobject;
@@ -414,6 +468,10 @@ abstract class FDobject {
   abstract function getData();
 }
 
+/**
+ * Unix pipe descriptor object.
+ * Acces mode can be read ('r') or write ('w')
+ */
 final class FDpipe extends FDobject {
   function __construct($mode) {
     if (array_search($mode, ['r', 'w']) === false) { echo "FAIL\n"; return null; }
@@ -424,6 +482,10 @@ final class FDpipe extends FDobject {
   function getData() { return ['pipe', $this->mode]; }
 }
 
+/**
+ * Stream descriptor object.
+ * (Any valid resource can be used.)
+ */
 final class FDstream extends FDobject {
   function __construct($streamresource) {
     if (!is_resource($streamresource)) { return null; }
@@ -434,6 +496,10 @@ final class FDstream extends FDobject {
   function getData() { return $this->fdobject; }
 }
 
+/**
+ * File descriptor object.
+ * Any accessible file path can be provided. 
+ */
 final class FDfile extends FDobject {
   function __construct($mode, $file) {
     if (array_search($mode, ['r', 'w', 'a']) === false || !file_exists($file)) { return null; }
