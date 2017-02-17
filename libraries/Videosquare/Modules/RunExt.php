@@ -187,7 +187,7 @@ class RunExt {
       $tmp   = null;
       $ready = 0;
       
-      if ($read && $write && $excl) {
+      if ($read || $write || $excl) {
         // If there's no streams to read, don't poll them.
         $ready = stream_select($read, $write, $excl, $this->polling_sec, $this->polling_usec);
       }
