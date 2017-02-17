@@ -153,9 +153,10 @@ class Watcher {
     self::$msg = '';
 
     $msg  = null;
+    $jobs = [];
+    $jobs_running = [];
     
     $jobs = self::getJobConfig();
-    $jobs_running = [];
     $jobs_running = self::getRunningJobs();
     
     if ($jobs_running !== false && count($jobs_running) >= 1) {
@@ -173,6 +174,9 @@ class Watcher {
       $last_mod     = null;
 
       $running_instances = self::getRunnningProcessCount($job_name, $jobs_running);
+      
+      //echo "Running instances of $job_name: $running_instances\n";
+      //echo "Job data: ". var_export($job_data, 1) ."\n";
       
       if ($running_instances < 1) {
         // job not running
@@ -196,7 +200,7 @@ class Watcher {
           self::log("[WARNING] Can't locate watchdog file for {$job_name} ('{$dog}').\n");
         }
         
-        if (!$job_data['enabled'] || !self::hasStopFile($job_name, BASE_PATH .'data/jobs/')) {
+        if (!$job_data['enabled'] || self::hasStopFile($job_name, BASE_PATH .'data/jobs/')) {
           self::$jobs_stop_queue[] = "{$job_name}.php";
         } elseif ($timeout) {
           self::$jobs_timeout[] = [
