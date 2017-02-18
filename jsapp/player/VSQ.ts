@@ -35,6 +35,7 @@ export class VSQ {
   private root: JQuery;
   private cfg: VSQConfig;
   private eventsInitialized = false;
+  private readySent = false;
   public introOrOutro = false;
 
   private plugins: BasePlugin[] = [];
@@ -274,10 +275,13 @@ export class VSQ {
   }
 
   private handleLoadedData(e: Event): boolean | undefined {
-    // csak akkor kell kivarni mind az esetlegesen ketto videot
-    // ha ez eppen a master, amugy csak egy lesz mindig
-    if (this.flow.video.index === this.cfg.masterIndex) {
+    if (this.readySent)
+      return;
 
+    // ha elo, akkor barmelyik streamet elfogadjuk ami beindult
+    if (this.flow.video.index === this.cfg.masterIndex && !this.flow.live) {
+      // csak akkor kell kivarni mind az esetlegesen ketto videot
+      // ha ez eppen a master, amugy csak egy lesz mindig
       // master mindig van, content nem biztos
       this.loadedCount++;
       let vidCount = 1 + this.cfg.secondarySources.length;
@@ -295,6 +299,7 @@ export class VSQ {
     } else // hogy a longerType mindig ertelmes legyen akkor is ha outro kovetkezik
       this.longerType = VSQType.MASTER;
 
+    this.readySent = true;
     let tag = this.videoTags[this.longerType];
     let data = jQuery.extend(this.flow.video, {
       duration: tag.duration,

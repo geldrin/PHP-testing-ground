@@ -980,6 +980,7 @@ System.register("player/VSQ", ["player/VSQ/LayoutChooser", "player/VSQ/QualityCh
                     this.videoInfo = [];
                     this.hlsEngines = [];
                     this.eventsInitialized = false;
+                    this.readySent = false;
                     this.introOrOutro = false;
                     this.plugins = [];
                     VSQ.log("constructor", arguments);
@@ -1145,7 +1146,9 @@ System.register("player/VSQ", ["player/VSQ/LayoutChooser", "player/VSQ/QualityCh
                     }
                 };
                 VSQ.prototype.handleLoadedData = function (e) {
-                    if (this.flow.video.index === this.cfg.masterIndex) {
+                    if (this.readySent)
+                        return;
+                    if (this.flow.video.index === this.cfg.masterIndex && !this.flow.live) {
                         this.loadedCount++;
                         var vidCount = 1 + this.cfg.secondarySources.length;
                         if (this.loadedCount != vidCount) {
@@ -1158,6 +1161,7 @@ System.register("player/VSQ", ["player/VSQ/LayoutChooser", "player/VSQ/QualityCh
                     }
                     else
                         this.longerType = VSQType.MASTER;
+                    this.readySent = true;
                     var tag = this.videoTags[this.longerType];
                     var data = jQuery.extend(this.flow.video, {
                         duration: tag.duration,
