@@ -803,6 +803,7 @@ System.register("player/VSQHLS", ["player/VSQ", "RateLimiter"], function (export
                     this.cfg = vsq.getConfig();
                     this.flow = vsq.getPlayer();
                     this.video = jQuery.extend(true, {}, vsq.getVideoInfo(type));
+                    this.type = type;
                     this.initLimiter();
                     this.initHls(type);
                 }
@@ -816,6 +817,12 @@ System.register("player/VSQHLS", ["player/VSQ", "RateLimiter"], function (export
                     });
                     this.hls.on(Hls.Events.MANIFEST_PARSED, function (evt, data) {
                         _this.onManifestParsed(evt, data);
+                    });
+                    this.hls.on(Hls.Events.LEVEL_LOADED, function (evt, data) {
+                        _this.log(evt, data);
+                        _this.level = data.levelId;
+                        _this.log("level loaded, canceling ratelimits");
+                        _this.limiter.cancel();
                     });
                     this.hls.on(Hls.Events.ERROR, function (evt, data) {
                         _this.onError(evt, data);
@@ -842,7 +849,7 @@ System.register("player/VSQHLS", ["player/VSQ", "RateLimiter"], function (export
                     }
                     if (!VSQ_4.VSQ.debug)
                         return;
-                    params.unshift("[VSQHLS]");
+                    params.unshift("[VSQHLS-" + this.type + "]");
                     console.log.apply(console, params);
                 };
                 VSQHLS.prototype.startLoad = function (at) {
@@ -924,6 +931,11 @@ System.register("player/VSQHLS", ["player/VSQ", "RateLimiter"], function (export
                     this.flow.trigger("error", [this.flow, { code: VSQ_4.VSQ.accessDeniedError }]);
                 };
                 VSQHLS.prototype.onLevelLoadError = function (evt, data) {
+                    var level = data.context.level;
+                    if (level != 0 && level <= this.video['vsq-labels'].length - 1)
+                        this.hls.currentLevel = level - 1;
+                    else
+                        this.limiter.trigger("onNetworkError");
                 };
                 VSQHLS.prototype.onMediaError = function (evt, data) {
                     if (!data.fatal)

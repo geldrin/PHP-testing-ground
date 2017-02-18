@@ -18,6 +18,8 @@ export default class VSQHLS {
   /* a Hls instance */
   private hls: any;
   private limiter: RateLimiter;
+  private level: number;
+  private type: VSQType;
 
   constructor(vsq: VSQ, type: VSQType) {
     this.vsq = vsq;
@@ -25,6 +27,7 @@ export default class VSQHLS {
     this.cfg = vsq.getConfig();
     this.flow = vsq.getPlayer();
     this.video = jQuery.extend(true, {}, vsq.getVideoInfo(type));
+    this.type = type;
 
     this.initLimiter();
     this.initHls(type);
@@ -93,6 +96,12 @@ export default class VSQHLS {
     this.hls.on(Hls.Events.MANIFEST_PARSED, (evt: string, data: any): void => {
       this.onManifestParsed(evt, data);
     });
+    this.hls.on(Hls.Events.LEVEL_LOADED, (evt: string, data: any): void => {
+      this.log(evt, data);
+      this.level = data.levelId;
+      this.log("level loaded, canceling ratelimits");
+      this.limiter.cancel();
+    });
     this.hls.on(Hls.Events.ERROR, (evt: string, data: any): void => {
       this.onError(evt, data);
     });
@@ -117,7 +126,7 @@ export default class VSQHLS {
     if (!VSQ.debug)
       return;
 
-    params.unshift(`[VSQHLS]`);
+    params.unshift(`[VSQHLS-${this.type}]`);
     console.log.apply(console, params);
   }
 
@@ -207,8 +216,14 @@ export default class VSQHLS {
   }
 
   private onLevelLoadError(evt: string, data: any): void {
-    // TODO vissza kell lepni egy masik minosegi valtozatra
-    // ha az sincs akkor szimplan ujra probalkozni neha, de nem fatal
+    let level = data.context.level;
+
+    // vissza lepunk egy minosegi szintet es imadkozunk hogy az mukodni fog
+    if (level != 0 && level <= this.video['vsq-labels'].length - 1)
+      this.hls.currentLevel = level - 1;
+    else // nincs mire vissza lepni, ujra probalkozni vegtelensegig
+      this.limiter.trigger("onNetworkError");
+
   }
 
   private onMediaError(evt: string, data: any): void {

@@ -518,8 +518,6 @@ export class VSQ {
     if (this.eventsInitialized)
       return;
 
-    // TODO live sync-hez nezni a buffer eventeket es ha a master bufferel
-    // akkor a content addig pausolni, es vica versa?
     let sources = jQuery(this.videoTags);
 
     // video event -> flowplayer event
