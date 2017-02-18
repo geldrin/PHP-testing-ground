@@ -1146,21 +1146,23 @@ System.register("player/VSQ", ["player/VSQ/LayoutChooser", "player/VSQ/QualityCh
                     }
                 };
                 VSQ.prototype.handleLoadedData = function (e) {
-                    if (this.readySent)
-                        return;
-                    if (this.flow.video.index === this.cfg.masterIndex && !this.flow.live) {
+                    if (this.flow.video.index === this.cfg.masterIndex) {
                         this.loadedCount++;
                         var vidCount = 1 + this.cfg.secondarySources.length;
-                        if (this.loadedCount != vidCount) {
+                        if (this.loadedCount != vidCount && !this.flow.live) {
                             e.stopImmediatePropagation();
                             return false;
                         }
+                        if (this.flow.live && this.loadedCount == 2)
+                            this.hlsCall('startLoad');
                         if (vidCount > 1 &&
                             this.videoTags[VSQType.CONTENT].duration > this.videoTags[VSQType.MASTER].duration)
                             this.longerType = VSQType.CONTENT;
                     }
                     else
                         this.longerType = VSQType.MASTER;
+                    if (this.readySent)
+                        return;
                     this.readySent = true;
                     var tag = this.videoTags[this.longerType];
                     var data = jQuery.extend(this.flow.video, {

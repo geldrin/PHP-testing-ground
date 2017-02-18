@@ -275,20 +275,25 @@ export class VSQ {
   }
 
   private handleLoadedData(e: Event): boolean | undefined {
-    if (this.readySent)
-      return;
-
     // ha elo, akkor barmelyik streamet elfogadjuk ami beindult
-    if (this.flow.video.index === this.cfg.masterIndex && !this.flow.live) {
+    // de ha betoltodott a masodik stream, akkor ahhoz hogy syncelve fussanak
+    // kell egy "reconnect"
+    // nem elo felvetelnel megvarjuk mind a ketto videot mert tudni kell
+    // melyik a hoszabbik
+    if (this.flow.video.index === this.cfg.masterIndex) {
       // csak akkor kell kivarni mind az esetlegesen ketto videot
       // ha ez eppen a master, amugy csak egy lesz mindig
       // master mindig van, content nem biztos
       this.loadedCount++;
       let vidCount = 1 + this.cfg.secondarySources.length;
-      if (this.loadedCount != vidCount) {
+      if (this.loadedCount != vidCount && !this.flow.live) {
         e.stopImmediatePropagation();
         return false;
       }
+
+      // betoltodott mind a ketto, reconnect hogy syncelve legyenek
+      if (this.flow.live && this.loadedCount == 2)
+        this.hlsCall('startLoad');
 
       // mivel a default longerType ertek a VSQType.MASTER igy csak egy esetet kell nezni
       if (
@@ -298,6 +303,9 @@ export class VSQ {
         this.longerType = VSQType.CONTENT;
     } else // hogy a longerType mindig ertelmes legyen akkor is ha outro kovetkezik
       this.longerType = VSQType.MASTER;
+
+    if (this.readySent)
+      return;
 
     this.readySent = true;
     let tag = this.videoTags[this.longerType];
