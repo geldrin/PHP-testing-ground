@@ -819,8 +819,6 @@ System.register("player/VSQHLS", ["player/VSQ", "RateLimiter"], function (export
                         _this.onManifestParsed(evt, data);
                     });
                     this.hls.on(Hls.Events.LEVEL_LOADED, function (evt, data) {
-                        _this.log(evt, data);
-                        _this.level = data.levelId;
                         _this.log("level loaded, canceling ratelimits");
                         _this.limiter.cancel();
                     });
@@ -931,6 +929,7 @@ System.register("player/VSQHLS", ["player/VSQ", "RateLimiter"], function (export
                     this.flow.trigger("error", [this.flow, { code: VSQ_4.VSQ.accessDeniedError }]);
                 };
                 VSQHLS.prototype.onLevelLoadError = function (evt, data) {
+                    this.flushBuffer();
                     var level = data.context.level;
                     if (level != 0 && level <= this.video['vsq-labels'].length - 1)
                         this.hls.currentLevel = level - 1;
@@ -940,12 +939,14 @@ System.register("player/VSQHLS", ["player/VSQ", "RateLimiter"], function (export
                 VSQHLS.prototype.onMediaError = function (evt, data) {
                     if (!data.fatal)
                         return;
+                    this.flushBuffer();
                     this.limiter.trigger("onSwapAudioCodec");
                     this.limiter.trigger("onRecoverMedia");
                 };
                 VSQHLS.prototype.onUnhandledError = function (evt, data) {
                     if (!data.fatal)
                         return;
+                    this.flushBuffer();
                     this.showSeeking();
                     this.flow.trigger("error", [this.flow, { code: 2 }]);
                 };

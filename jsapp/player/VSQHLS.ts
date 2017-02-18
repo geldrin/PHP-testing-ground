@@ -18,7 +18,6 @@ export default class VSQHLS {
   /* a Hls instance */
   private hls: any;
   private limiter: RateLimiter;
-  private level: number;
   private type: VSQType;
 
   constructor(vsq: VSQ, type: VSQType) {
@@ -97,8 +96,6 @@ export default class VSQHLS {
       this.onManifestParsed(evt, data);
     });
     this.hls.on(Hls.Events.LEVEL_LOADED, (evt: string, data: any): void => {
-      this.log(evt, data);
-      this.level = data.levelId;
       this.log("level loaded, canceling ratelimits");
       this.limiter.cancel();
     });
@@ -216,6 +213,7 @@ export default class VSQHLS {
   }
 
   private onLevelLoadError(evt: string, data: any): void {
+    this.flushBuffer();
     let level = data.context.level;
 
     // vissza lepunk egy minosegi szintet es imadkozunk hogy az mukodni fog
@@ -223,13 +221,13 @@ export default class VSQHLS {
       this.hls.currentLevel = level - 1;
     else // nincs mire vissza lepni, ujra probalkozni vegtelensegig
       this.limiter.trigger("onNetworkError");
-
   }
 
   private onMediaError(evt: string, data: any): void {
     if (!data.fatal)
       return;
 
+    this.flushBuffer();
     this.limiter.trigger("onSwapAudioCodec");
     this.limiter.trigger("onRecoverMedia");
   }
@@ -238,6 +236,7 @@ export default class VSQHLS {
     if (!data.fatal)
       return;
 
+    this.flushBuffer();
     this.showSeeking();
     // nem tudtuk lekezelni a hibat, mutassunk valamit, 2 = NETWORK_ERROR
     this.flow.trigger("error", [this.flow, {code: 2}]);
