@@ -180,7 +180,7 @@ class Watcher {
       
       if ($running_instances < 1) {
         // job not running
-        if ($job_data['enabled'] && !self::hasStopFile($job_name, BASE_PATH .'data/jobs/')) {
+        if (!self::isCronJob($job_data) && $job_data['enabled'] && !self::hasStopFile($job_name, BASE_PATH .'data/jobs/')) {
           self::$jobs_start_queue[] = [
             'name' => $job_name,
             'path' => $job_data['path'],
@@ -200,7 +200,7 @@ class Watcher {
           self::log("[WARNING] Can't locate watchdog file for {$job_name} ('{$dog}').\n");
         }
         
-        if (!$job_data['enabled'] || self::hasStopFile($job_name, BASE_PATH .'data/jobs/')) {
+        if (!self::isCronJob($job_data) && (!$job_data['enabled'] || self::hasStopFile($job_name, BASE_PATH .'data/jobs/'))) {
           self::$jobs_stop_queue[] = "{$job_name}.php";
         } elseif ($timeout) {
           self::$jobs_timeout[] = [
@@ -267,19 +267,24 @@ class Watcher {
   /**
    * Check if given string occurs in the output of "ps uax" listing.
    * 
-   * @param string $str
+   * @param string $str String to be searched.
+   * @param array $result If result param is supplemented, the function will put the RunExt object into it.
    * @return boolean
    */
-  private static function isStringOccursInUnixProcessList($str) {
+  private static function isStringOccursInUnixProcessList($str, &$result = null) {
     $chk = new RunExt('ps uax | grep "'. $str .'"');
+    $run = $chk->run();
     
-    if ($chk->run()) { return count(explode("\n", $chk->getOutput())) > 1; }
+    if (is_array($result)) { $result = $chk; }
+    if ($run) { return count(explode("\n", $chk->getOutput())) > 1; }
     
     return false;
   }
   
   /**
-   * 
+   * Returns an array with currently running jobs.
+   * The function identifies processes by their absolute path and it cannot differenciate other jobs
+   * started with relative path!
    * 
    * @return boolean|array
    */
@@ -359,6 +364,21 @@ class Watcher {
   private static function hasStopFile($job, $path) {
     $path = pathinfo($path, PATHINFO_DIRNAME) . DIRECTORY_SEPARATOR;
     if (file_exists("{$path}all.stop") || file_exists("{$path}{$job}.stop")) { return true; }
+    
+    return false;
+  }
+  
+  /**
+   * Checks 'iscronjob' parameter in config data.
+   * 
+   * @param array $jobdata sub-element of the array returned by Watcher::getJobConfig()
+   * @param string $jobname Name of the job (matching with the array keys of (jobs/library_jobs sub-array in config.php)
+   * @return boolean
+   */
+  private static function isCronJob($jobdata) {
+    if (array_key_exists('iscronjob', $jobdata)) {
+      if ($jobdata['iscronjob'] == true ) { return true; }
+    }
     
     return false;
   }
