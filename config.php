@@ -1,6 +1,6 @@
 <?php
 $config = array(
-  'version'      => '_v20170218',
+  'version'      => '_v20170220',
   'charset'      => 'UTF-8',
   'cacheseconds' => 3600,
   'errormessage' => 'An unexpected error has occured, our staff has been notified. Sorry for the inconvenience and thanks for your understanding!',
@@ -325,28 +325,33 @@ $config = array(
           'ssh_check_mins'         => 10,    // SSH front-end ping every N minutes [mins]
           'sleep_time'             => 60   // [mins]
         ),
+        'cronjob'             => false,
       ),
       'job_upload_finalize' => array(
         'enabled'             => false,
         'watchdogtimeoutsecs' => 60,
-        'supresswarnings'     => false
+        'supresswarnings'     => false,
+        'cronjob'             => false,
       ),
     ),
     'converter' => array(
       'job_system_health' => array(
         'enabled'             => false,    // watcher to check or skip this job
         'watchdogtimeoutsecs' => 15 * 60, // watchdog timeout (stuck processes)
-        'supresswarnings'     => false    // do not send warnings (e.g. stop files)
+        'supresswarnings'     => false,   // do not send warnings (e.g. stop files)
+        'cronjob'             => false,
       ),
       'job_media_convert2' => array(
         'enabled'             => false,
         'watchdogtimeoutsecs' => 15 * 60,
-        'supresswarnings'     => false
+        'supresswarnings'     => false,
+        'cronjob'             => false,
       ),
       'job_document_index' => array(
         'enabled'             => false,
         'watchdogtimeoutsecs' => 15 * 60,
-        'supresswarnings'     => false
+        'supresswarnings'     => false,
+        'cronjob'             => false,
       ),
     ),
   ),
@@ -358,18 +363,21 @@ $config = array(
         'watchdogtimeoutsecs' => 15 * 60,
         'suppresswarnings'    => false,
         'debug_mode'          => false,
+        'cronjob'             => false,
       ],
       'JobLiveUpdateCounters' => [
         'enabled'             => false,
         'watchdogtimeoutsecs' => 15 * 60,
         'suppresswarnings'    => false,
         'debug_mode'          => false,
+        'cronjob'             => false,
       ],
       'JobCheckStreamingServers' => [
         'enabled'             => false,
         'watchdogtimeoutsecs' => 15 * 60,
         'suppresswarnings'    => false,
         'debug_mode'          => false,
+        'cronjob'             => false,
       ],
     ],
     'converter' => [
@@ -378,12 +386,14 @@ $config = array(
         'watchdogtimeoutsecs' => 15 * 60,
         'suppresswarnings'    => false,
         'debug_mode'          => false,
+        'cronjob'             => false,
       ],
       'JobAttachedDocumentsIndex' => [
         'enabled'             => false,
         'watchdogtimeoutsecs' => 15 * 60,
         'suppresswarnings'    => false,
         'debug_mode'          => false,
+        'cronjob'             => false,
       ],
     ],
   ],
