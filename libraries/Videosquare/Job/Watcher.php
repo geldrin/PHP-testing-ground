@@ -190,7 +190,7 @@ class Watcher {
         // job running
         $dog = BASE_PATH ."data/watchdog/{$job_name}.php.watchdog"; // check watchdog state
 
-        if (file_exists($dog)) {
+        if (!self::isCronJob($job_data) && file_exists($dog)) {
           $last_mod = filemtime($dog);
           $timeout_diff = time() - $last_mod;
           
