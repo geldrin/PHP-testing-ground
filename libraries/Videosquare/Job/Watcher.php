@@ -376,8 +376,8 @@ class Watcher {
    * @return boolean
    */
   private static function isCronJob($jobdata) {
-    if (array_key_exists('iscronjob', $jobdata)) {
-      if ($jobdata['iscronjob'] == true ) { return true; }
+    if (array_key_exists('cronjob', $jobdata)) {
+      if ($jobdata['cronjob'] == true ) { return true; }
     }
     
     return false;
