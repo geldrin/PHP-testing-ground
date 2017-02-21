@@ -19,7 +19,7 @@
         <div class="recordingpic">
           <a href="{$language}/recordings/details/{$item.id},{$item.title|filenameize}"><img src="{$item|@indexphoto}"/><span class="playprogress" title="{#recordings__progress#}: {$item.positionpercent}% ({$item.viewedminutes} {#recordings__embedmin#})">{$item.positionpercent}%</span></a>
         </div>
-        
+
         <div class="recordingcontent">
           <div class="recordinginfo">
             <div class="timestamp">{$item.recordedtimestamp|date_format:#smarty_dateformat_long#}</div>
@@ -62,7 +62,7 @@
             </ul>
           </div>
           {/if}
-          
+
           <div class="clear"></div>
         </div>
       </li>
@@ -78,7 +78,7 @@
         <div class="recordingpic">
           <a href="{$language}/channels/details/{$item.id},{$item.title|filenameize}"><img src="{$item|@indexphoto}"/></a>
         </div>
-        
+
         <div class="recordingcontent">
           <div class="title">
             <h3><a href="{$language}/channels/details/{$item.id},{$item.title|filenameize}">{$item.title|escape:html|mb_wordwrap:25}</a></h3>
@@ -110,16 +110,16 @@
                       <div{if $item.rating > 4.5} class="full"{/if}><span></span>5</div>
                     </div>
                   </div>
-                  
+
                   <div class="title">
-                    {if $item.currentlyfeatured and $item|@userHasAccess}
-                      <a class="featured right" href="{$language}/recordings/modifysharing/{$item.id}?forward={$FULL_URI|escape:url}">{#recordings__currentlyfeatured#}</a>
+                    {if $recording.currentlyfeatured and $recording|@userHasAccess}
+                      <a class="featured right" href="{$language}/recordings/modifysharing/{$recording.id}?forward={$FULL_URI|escape:url}">{#recordings__currentlyfeatured#}</a>
                     {/if}
-                    <h3><a href="{$recordingurl}">{$item.title|escape:html|mb_wordwrap:25}</a></h3>
-                    {if $item.subtitle|stringempty}<h4>{$item.subtitle|escape:html|mb_wordwrap:25}</h4>{/if}
+                    <h3><a href="{$recordingurl}">{$recording.title|escape:html|mb_wordwrap:25}</a></h3>
+                    {if $recording.subtitle|stringempty}<h4>{$recording.subtitle|escape:html|mb_wordwrap:25}</h4>{/if}
                   </div>
-                  {if $item.approvalstatus != 'approved' and $item.status == 'onstorage' and $member.id}
-                    <span class="notpublished"><a href="{$language}/recordings/modifysharing/{$item.id}?forward={$FULL_URI|escape:url}">{#recordings__notpublished_warning#}</a></span>
+                  {if $recording.approvalstatus != 'approved' and $recording.status == 'onstorage' and $member.id}
+                    <span class="notpublished"><a href="{$language}/recordings/modifysharing/{$recording.id}?forward={$FULL_URI|escape:url}">{#recordings__notpublished_warning#}</a></span>
                   {/if}
                 </div>
               </li>
