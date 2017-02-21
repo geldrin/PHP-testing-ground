@@ -92,7 +92,7 @@
   </ul>
   <ul class="right">
     <li id="infolink" class="active"><a href="#"><span></span>{#recordings__info#}</a></li>
-    {if $member.id}
+    {if $member|@userHasPrivilege:'recordings_addtochannel':'or':'iseditor':'isclientadmin'}
       <li id="channelslink"><a href="#" title="{#recordings__addtochannel_verbose#}"><span></span>{#recordings__addtochannel#}</a></li>
     {/if}
     {if $recording.commentsenabled}
@@ -212,7 +212,7 @@
   <a id="detaillink" href="#" data-show="{#recordings__showdetails#|escape:html}" data-hide="{#recordings__hidedetails#|escape:html}">{#recordings__showdetails#}</a>
 </div>
 
-{if $member.id}
+{if $member|@userHasPrivilege:'recordings_addtochannel':'or':'iseditor':'isclientadmin'}
 <div id="channels">
   <h3>{#recordings__addtochannel_title#}</h3>
   <ul id="channelslist">
