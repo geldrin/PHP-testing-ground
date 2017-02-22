@@ -193,6 +193,7 @@ abstract class Player {
         'secondarySources' => array(),
         'contentOnRight' => (bool) $this->row['slideonright'],
         'isAudioOnly' => false,
+        'pingSeconds' => (int)$this->bootstrap->config['sessionpingseconds'],
         // TODO mobile es a mobil tipusa
       ),
     );

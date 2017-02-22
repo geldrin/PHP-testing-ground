@@ -854,4 +854,5 @@ export interface VSQConfig {
   masterIndex: number;
   locale: Locale;
   isAudioOnly: boolean;
+  pingSeconds: number;
 }

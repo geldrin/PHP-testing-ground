@@ -3,6 +3,41 @@ var __extends = (this && this.__extends) || function (d, b) {
     function __() { this.constructor = d; }
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : new P(function (resolve) { resolve(result.value); }).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments)).next());
+    });
+};
+var __generator = (this && this.__generator) || function (thisArg, body) {
+    var _ = { label: 0, sent: function() { if (t[0] & 1) throw t[1]; return t[1]; }, trys: [], ops: [] }, f, y, t;
+    return { next: verb(0), "throw": verb(1), "return": verb(2) };
+    function verb(n) { return function (v) { return step([n, v]); }; }
+    function step(op) {
+        if (f) throw new TypeError("Generator is already executing.");
+        while (_) try {
+            if (f = 1, y && (t = y[op[0] & 2 ? "return" : op[0] ? "throw" : "next"]) && !(t = t.call(y, op[1])).done) return t;
+            if (y = 0, t) op = [0, t.value];
+            switch (op[0]) {
+                case 0: case 1: t = op; break;
+                case 4: _.label++; return { value: op[1], done: false };
+                case 5: _.label++; y = op[1]; op = [0]; continue;
+                case 7: op = _.ops.pop(); _.trys.pop(); continue;
+                default:
+                    if (!(t = _.trys, t = t.length > 0 && t[t.length - 1]) && (op[0] === 6 || op[0] === 2)) { _ = 0; continue; }
+                    if (op[0] === 3 && (!t || (op[1] > t[0] && op[1] < t[3]))) { _.label = op[1]; break; }
+                    if (op[0] === 6 && _.label < t[1]) { _.label = t[1]; t = op; break; }
+                    if (t && _.label < t[2]) { _.label = t[2]; _.ops.push(op); break; }
+                    if (t[2]) _.ops.pop();
+                    _.trys.pop(); continue;
+            }
+            op = body.call(thisArg, _);
+        } catch (e) { op = [6, e]; y = 0; } finally { f = t = 0; }
+        if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
+    }
+};
 System.register("player/Config", [], function (exports_1, context_1) {
     "use strict";
     var __moduleName = context_1 && context_1.id;
@@ -1629,9 +1664,98 @@ System.register("player/PlayerSetup", ["player/Flash", "player/VSQ"], function (
         }
     };
 });
-System.register("player/app", ["Locale", "player/Config", "player/PlayerSetup"], function (exports_13, context_13) {
+System.register("player/VSQAPI", [], function (exports_13, context_13) {
     "use strict";
     var __moduleName = context_13 && context_13.id;
+    var VSQAPI;
+    return {
+        setters: [],
+        execute: function () {
+            VSQAPI = (function () {
+                function VSQAPI() {
+                }
+                VSQAPI.setBaseURL = function (url) {
+                    VSQAPI.baseURL = url;
+                };
+                VSQAPI.call = function (method, parameters) {
+                    return new Promise(function (resolve, reject) {
+                        var req = jQuery.ajax({
+                            url: VSQAPI.baseURL,
+                            method: method,
+                            data: {
+                                parameters: parameters
+                            },
+                            cache: false
+                        });
+                        req.done(function (data) { return resolve(data); });
+                        req.fail(function (err) { return reject(err); });
+                    });
+                };
+                VSQAPI.GET = function (module, method, args) {
+                    var parameters = jQuery.extend({
+                        layer: "controller",
+                        module: module,
+                        method: method
+                    }, args || {});
+                    return VSQAPI.call("GET", parameters);
+                };
+                return VSQAPI;
+            }());
+            exports_13("default", VSQAPI);
+        }
+    };
+});
+System.register("player/VSQ/Pinger", ["player/VSQAPI", "player/VSQ/BasePlugin"], function (exports_14, context_14) {
+    "use strict";
+    var __moduleName = context_14 && context_14.id;
+    var VSQAPI_1, BasePlugin_3, Pinger;
+    return {
+        setters: [
+            function (VSQAPI_1_1) {
+                VSQAPI_1 = VSQAPI_1_1;
+            },
+            function (BasePlugin_3_1) {
+                BasePlugin_3 = BasePlugin_3_1;
+            }
+        ],
+        execute: function () {
+            Pinger = (function (_super) {
+                __extends(Pinger, _super);
+                function Pinger(vsq) {
+                    var _this = _super.call(this, vsq) || this;
+                    _this.pluginName = "Pinger";
+                    return _this;
+                }
+                Pinger.prototype.ping = function () {
+                    return __awaiter(this, void 0, void 0, function () {
+                        var _this = this;
+                        var data;
+                        return __generator(this, function (_a) {
+                            switch (_a.label) {
+                                case 0: return [4 /*yield*/, VSQAPI_1.default.GET("users", "ping")];
+                                case 1:
+                                    data = _a.sent();
+                                    this.timer = setTimeout(function () {
+                                        _this.ping();
+                                    }, this.cfg.pingSeconds * 1000);
+                                    return [2 /*return*/];
+                            }
+                        });
+                    });
+                };
+                Pinger.prototype.load = function () {
+                };
+                Pinger.prototype.destroy = function () {
+                };
+                return Pinger;
+            }(BasePlugin_3.BasePlugin));
+            exports_14("default", Pinger);
+        }
+    };
+});
+System.register("player/app", ["Locale", "player/Config", "player/PlayerSetup"], function (exports_15, context_15) {
+    "use strict";
+    var __moduleName = context_15 && context_15.id;
     var Locale_1, Config_1, PlayerSetup_1;
     return {
         setters: [
