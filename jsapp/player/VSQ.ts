@@ -67,8 +67,10 @@ export class VSQ {
     if (!this.cfg.contentOnRight)
       this.root.addClass('vsq-contentleft');
 
-    this.plugins.push(new LayoutChooser(this));
-    this.plugins.push(new QualityChooser(this));
+    if (!this.cfg.isAudioOnly) {
+      this.plugins.push(new LayoutChooser(this));
+      this.plugins.push(new QualityChooser(this));
+    }
   }
 
   public getRoot(): JQuery {
@@ -851,4 +853,5 @@ export interface VSQConfig {
   contentOnRight: boolean;
   masterIndex: number;
   locale: Locale;
+  isAudioOnly: boolean;
 }

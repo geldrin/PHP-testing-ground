@@ -820,4 +820,10 @@ class Recordings extends Player {
 
     return $this->isHDSEnabled( $info );
   }
+
+  protected function getFlowConfig( $cfg ) {
+    $ret = parent::getFlowConfig( $cfg );
+    $ret['vsq']['isAudioOnly'] = $this->row['mastermediatype'] == "audio";
+    return $ret;
+  }
 }

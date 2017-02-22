@@ -1000,8 +1000,10 @@ System.register("player/VSQ", ["player/VSQ/LayoutChooser", "player/VSQ/QualityCh
                     this.id = this.root.attr('data-flowplayer-instance-id');
                     if (!this.cfg.contentOnRight)
                         this.root.addClass('vsq-contentleft');
-                    this.plugins.push(new LayoutChooser_1.default(this));
-                    this.plugins.push(new QualityChooser_1.default(this));
+                    if (!this.cfg.isAudioOnly) {
+                        this.plugins.push(new LayoutChooser_1.default(this));
+                        this.plugins.push(new QualityChooser_1.default(this));
+                    }
                 }
                 VSQ.prototype.getRoot = function () {
                     return this.root;

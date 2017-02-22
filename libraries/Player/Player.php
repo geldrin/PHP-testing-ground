@@ -192,6 +192,7 @@ abstract class Player {
         'autoplay' => false,
         'secondarySources' => array(),
         'contentOnRight' => (bool) $this->row['slideonright'],
+        'isAudioOnly' => false,
         // TODO mobile es a mobil tipusa
       ),
     );
