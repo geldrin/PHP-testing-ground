@@ -188,9 +188,11 @@ class Watcher {
         }
       } elseif ($running_instances == 1) {
         // job running
+        if (self::isCronJob($job_data)) { continue; }
+        
         $dog = BASE_PATH ."data/watchdog/{$job_name}.php.watchdog"; // check watchdog state
-
-        if (!self::isCronJob($job_data) && file_exists($dog)) {
+        
+        if (file_exists($dog)) {
           $last_mod = filemtime($dog);
           $timeout_diff = time() - $last_mod;
           
@@ -200,7 +202,7 @@ class Watcher {
           self::log("[WARNING] Can't locate watchdog file for {$job_name} ('{$dog}').\n");
         }
         
-        if (!self::isCronJob($job_data) && (!$job_data['enabled'] || self::hasStopFile($job_name, BASE_PATH .'data/jobs/'))) {
+        if (!$job_data['enabled'] || self::hasStopFile($job_name, BASE_PATH .'data/jobs/')) {
           self::$jobs_stop_queue[] = "{$job_name}.php";
         } elseif ($timeout) {
           self::$jobs_timeout[] = [
