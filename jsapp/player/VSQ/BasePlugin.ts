@@ -2,6 +2,7 @@
 /// <reference path="../../defs/flowplayer/flowplayer.d.ts" />
 "use strict";
 import {VSQ, VSQConfig} from "../VSQ";
+import Locale from "../../Locale";
 import Tools from "../../Tools";
 import Escape from "../../Escape";
 
@@ -13,11 +14,13 @@ export abstract class BasePlugin {
   protected root: JQuery;
   protected cfg: VSQConfig;
   protected flow: Flowplayer;
+  protected l: Locale;
 
   constructor(vsq: VSQ) {
     this.vsq = vsq;
     this.root = vsq.getRoot();
     this.cfg = vsq.getConfig();
+    this.l = this.cfg.locale;
     this.flow = vsq.getPlayer();
   }
 

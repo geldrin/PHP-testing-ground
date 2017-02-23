@@ -319,6 +319,7 @@ System.register("player/VSQ/BasePlugin", ["player/VSQ"], function (exports_6, co
                     this.vsq = vsq;
                     this.root = vsq.getRoot();
                     this.cfg = vsq.getConfig();
+                    this.l = this.cfg.locale;
                     this.flow = vsq.getPlayer();
                 }
                 BasePlugin.prototype.log = function () {
@@ -817,9 +818,189 @@ System.register("RateLimiter", [], function (exports_9, context_9) {
         }
     };
 });
-System.register("player/VSQHLS", ["player/VSQ", "RateLimiter"], function (exports_10, context_10) {
+System.register("player/VSQAPI", [], function (exports_10, context_10) {
     "use strict";
     var __moduleName = context_10 && context_10.id;
+    var VSQAPI;
+    return {
+        setters: [],
+        execute: function () {
+            VSQAPI = (function () {
+                function VSQAPI() {
+                }
+                VSQAPI.init = function (cfg) {
+                    VSQAPI.baseURL = cfg.apiurl;
+                };
+                VSQAPI.call = function (method, parameters) {
+                    return new Promise(function (resolve, reject) {
+                        var req = jQuery.ajax({
+                            url: VSQAPI.baseURL,
+                            type: method,
+                            data: {
+                                parameters: JSON.stringify(parameters)
+                            },
+                            dataType: 'json',
+                            cache: false
+                        });
+                        req.done(function (data) { return resolve(data); });
+                        req.fail(function (err) { return reject(err); });
+                    });
+                };
+                VSQAPI.prepareParams = function (module, method, args) {
+                    var parameters = jQuery.extend({
+                        layer: "controller",
+                        module: module,
+                        method: method,
+                        format: 'json'
+                    }, args || {});
+                    return parameters;
+                };
+                VSQAPI.GET = function (module, method, args) {
+                    var parameters = this.prepareParams(module, method, args);
+                    return VSQAPI.call("GET", parameters);
+                };
+                VSQAPI.POST = function (module, method, args) {
+                    var parameters = this.prepareParams(module, method, args);
+                    return VSQAPI.call("POST", parameters);
+                };
+                return VSQAPI;
+            }());
+            exports_10("default", VSQAPI);
+        }
+    };
+});
+System.register("player/VSQ/Modal", ["player/VSQ/BasePlugin", "Escape"], function (exports_11, context_11) {
+    "use strict";
+    var __moduleName = context_11 && context_11.id;
+    var BasePlugin_3, Escape_2, Modal;
+    return {
+        setters: [
+            function (BasePlugin_3_1) {
+                BasePlugin_3 = BasePlugin_3_1;
+            },
+            function (Escape_2_1) {
+                Escape_2 = Escape_2_1;
+            }
+        ],
+        execute: function () {
+            Modal = (function (_super) {
+                __extends(Modal, _super);
+                function Modal(vsq) {
+                    var _this = _super.call(this, vsq) || this;
+                    _this.pluginName = "Modal";
+                    Modal.instance = _this;
+                    return _this;
+                }
+                Modal.prototype.load = function () {
+                };
+                Modal.prototype.destroy = function () {
+                    this.root.find(".vsq-layoutchooser").remove();
+                };
+                Modal.prototype.setupHTML = function () {
+                    var html = "\n      <div class=\"vsq-modal\">\n        <div class=\"vsq-error\"></div>\n        <form class=\"vsq-login\">\n          <input name=\"email\" type=\"text\"/>\n          <input name=\"password\" type=\"password\"/>\n          <input type=\"submit\" value=\"" + Escape_2.default.HTML(this.l.get('submit')) + "/>\n        </form>\n      </div>\n    ";
+                    this.root.find(".fp-ui").append(html);
+                };
+                Modal.showError = function (html) {
+                };
+                Modal.showLogin = function (messageHTML) {
+                };
+                return Modal;
+            }(BasePlugin_3.BasePlugin));
+            exports_11("default", Modal);
+        }
+    };
+});
+System.register("player/VSQ/Pinger", ["player/VSQAPI", "player/VSQ/BasePlugin", "player/VSQ/Modal"], function (exports_12, context_12) {
+    "use strict";
+    var __moduleName = context_12 && context_12.id;
+    var VSQAPI_1, BasePlugin_4, Modal_1, Pinger;
+    return {
+        setters: [
+            function (VSQAPI_1_1) {
+                VSQAPI_1 = VSQAPI_1_1;
+            },
+            function (BasePlugin_4_1) {
+                BasePlugin_4 = BasePlugin_4_1;
+            },
+            function (Modal_1_1) {
+                Modal_1 = Modal_1_1;
+            }
+        ],
+        execute: function () {
+            Pinger = (function (_super) {
+                __extends(Pinger, _super);
+                function Pinger(vsq) {
+                    var _this = _super.call(this, vsq) || this;
+                    _this.pluginName = "Pinger";
+                    _this.log("scheduling request");
+                    _this.schedule();
+                    _this.ping();
+                    return _this;
+                }
+                Pinger.prototype.schedule = function () {
+                    var _this = this;
+                    if (this.timer !== null)
+                        clearTimeout(this.timer);
+                    this.timer = setTimeout(function () {
+                        _this.ping();
+                        _this.timer = null;
+                        _this.schedule();
+                    }, this.cfg.pingSeconds * 1000);
+                };
+                Pinger.prototype.handleError = function (message, errData) {
+                    if (errData['invalidtoken'] || errData['sessionexpired']) {
+                        Modal_1.default.showError(message);
+                        return;
+                    }
+                    if (!errData['loggedin']) {
+                        Modal_1.default.showLogin(message);
+                        return;
+                    }
+                };
+                Pinger.prototype.ping = function () {
+                    return __awaiter(this, void 0, void 0, function () {
+                        var data, errMessage, errData, err_1;
+                        return __generator(this, function (_a) {
+                            switch (_a.label) {
+                                case 0:
+                                    _a.trys.push([0, 2, , 3]);
+                                    return [4 /*yield*/, VSQAPI_1.default.POST("users", "ping", this.cfg.parameters)];
+                                case 1:
+                                    data = _a.sent();
+                                    switch (data.result) {
+                                        case "OK":
+                                            if (data.data !== true)
+                                                throw new Error("unexpected");
+                                            break;
+                                        default:
+                                            errMessage = data.data;
+                                            errData = data.extradata;
+                                            console.log(errMessage, errData);
+                                            this.handleError(errMessage, errData);
+                                            break;
+                                    }
+                                    return [3 /*break*/, 3];
+                                case 2:
+                                    err_1 = _a.sent();
+                                    return [3 /*break*/, 3];
+                                case 3: return [2 /*return*/];
+                            }
+                        });
+                    });
+                };
+                Pinger.prototype.load = function () {
+                };
+                Pinger.prototype.destroy = function () {
+                };
+                return Pinger;
+            }(BasePlugin_4.BasePlugin));
+            exports_12("default", Pinger);
+        }
+    };
+});
+System.register("player/VSQHLS", ["player/VSQ", "RateLimiter"], function (exports_13, context_13) {
+    "use strict";
+    var __moduleName = context_13 && context_13.id;
     var VSQ_4, RateLimiter_1, VSQHLS;
     return {
         setters: [
@@ -987,14 +1168,14 @@ System.register("player/VSQHLS", ["player/VSQ", "RateLimiter"], function (export
                 };
                 return VSQHLS;
             }());
-            exports_10("default", VSQHLS);
+            exports_13("default", VSQHLS);
         }
     };
 });
-System.register("player/VSQ", ["player/VSQ/LayoutChooser", "player/VSQ/QualityChooser", "player/VSQHLS"], function (exports_11, context_11) {
+System.register("player/VSQ", ["player/VSQ/LayoutChooser", "player/VSQ/QualityChooser", "player/VSQ/Pinger", "player/VSQHLS", "player/VSQAPI"], function (exports_14, context_14) {
     "use strict";
-    var __moduleName = context_11 && context_11.id;
-    var LayoutChooser_1, QualityChooser_1, VSQHLS_1, VSQ, VSQType;
+    var __moduleName = context_14 && context_14.id;
+    var LayoutChooser_1, QualityChooser_1, Pinger_1, VSQHLS_1, VSQAPI_2, VSQ, VSQType;
     return {
         setters: [
             function (LayoutChooser_1_1) {
@@ -1003,8 +1184,14 @@ System.register("player/VSQ", ["player/VSQ/LayoutChooser", "player/VSQ/QualityCh
             function (QualityChooser_1_1) {
                 QualityChooser_1 = QualityChooser_1_1;
             },
+            function (Pinger_1_1) {
+                Pinger_1 = Pinger_1_1;
+            },
             function (VSQHLS_1_1) {
                 VSQHLS_1 = VSQHLS_1_1;
+            },
+            function (VSQAPI_2_1) {
+                VSQAPI_2 = VSQAPI_2_1;
             }
         ],
         execute: function () {
@@ -1023,6 +1210,7 @@ System.register("player/VSQ", ["player/VSQ/LayoutChooser", "player/VSQ/QualityCh
                     this.flow = flow;
                     this.cfg = flow.conf.vsq || {};
                     this.l = this.cfg.locale;
+                    VSQAPI_2.default.init(this.cfg);
                     this.flow.conf.errors.push(this.l.get('access_denied'));
                     VSQ.accessDeniedError = flow.conf.errors.length - 1;
                     this.hlsConf = jQuery.extend({
@@ -1035,6 +1223,8 @@ System.register("player/VSQ", ["player/VSQ/LayoutChooser", "player/VSQ/QualityCh
                     this.id = this.root.attr('data-flowplayer-instance-id');
                     if (!this.cfg.contentOnRight)
                         this.root.addClass('vsq-contentleft');
+                    if (this.cfg.needPing)
+                        this.plugins.push(new Pinger_1.default(this));
                     if (!this.cfg.isAudioOnly) {
                         this.plugins.push(new LayoutChooser_1.default(this));
                         this.plugins.push(new QualityChooser_1.default(this));
@@ -1580,18 +1770,18 @@ System.register("player/VSQ", ["player/VSQ/LayoutChooser", "player/VSQ/QualityCh
             VSQ.engineName = "vsq";
             VSQ.debug = false;
             VSQ.initDone = false;
-            exports_11("VSQ", VSQ);
+            exports_14("VSQ", VSQ);
             (function (VSQType) {
                 VSQType[VSQType["MASTER"] = 0] = "MASTER";
                 VSQType[VSQType["CONTENT"] = 1] = "CONTENT";
             })(VSQType || (VSQType = {}));
-            exports_11("VSQType", VSQType);
+            exports_14("VSQType", VSQType);
         }
     };
 });
-System.register("player/PlayerSetup", ["player/Flash", "player/VSQ"], function (exports_12, context_12) {
+System.register("player/PlayerSetup", ["player/Flash", "player/VSQ"], function (exports_15, context_15) {
     "use strict";
-    var __moduleName = context_12 && context_12.id;
+    var __moduleName = context_15 && context_15.id;
     var Flash_1, VSQ_5, PlayerSetup;
     return {
         setters: [
@@ -1660,102 +1850,13 @@ System.register("player/PlayerSetup", ["player/Flash", "player/VSQ"], function (
                 };
                 return PlayerSetup;
             }());
-            exports_12("default", PlayerSetup);
+            exports_15("default", PlayerSetup);
         }
     };
 });
-System.register("player/VSQAPI", [], function (exports_13, context_13) {
+System.register("player/app", ["Locale", "player/Config", "player/PlayerSetup"], function (exports_16, context_16) {
     "use strict";
-    var __moduleName = context_13 && context_13.id;
-    var VSQAPI;
-    return {
-        setters: [],
-        execute: function () {
-            VSQAPI = (function () {
-                function VSQAPI() {
-                }
-                VSQAPI.setBaseURL = function (url) {
-                    VSQAPI.baseURL = url;
-                };
-                VSQAPI.call = function (method, parameters) {
-                    return new Promise(function (resolve, reject) {
-                        var req = jQuery.ajax({
-                            url: VSQAPI.baseURL,
-                            method: method,
-                            data: {
-                                parameters: parameters
-                            },
-                            cache: false
-                        });
-                        req.done(function (data) { return resolve(data); });
-                        req.fail(function (err) { return reject(err); });
-                    });
-                };
-                VSQAPI.GET = function (module, method, args) {
-                    var parameters = jQuery.extend({
-                        layer: "controller",
-                        module: module,
-                        method: method
-                    }, args || {});
-                    return VSQAPI.call("GET", parameters);
-                };
-                return VSQAPI;
-            }());
-            exports_13("default", VSQAPI);
-        }
-    };
-});
-System.register("player/VSQ/Pinger", ["player/VSQAPI", "player/VSQ/BasePlugin"], function (exports_14, context_14) {
-    "use strict";
-    var __moduleName = context_14 && context_14.id;
-    var VSQAPI_1, BasePlugin_3, Pinger;
-    return {
-        setters: [
-            function (VSQAPI_1_1) {
-                VSQAPI_1 = VSQAPI_1_1;
-            },
-            function (BasePlugin_3_1) {
-                BasePlugin_3 = BasePlugin_3_1;
-            }
-        ],
-        execute: function () {
-            Pinger = (function (_super) {
-                __extends(Pinger, _super);
-                function Pinger(vsq) {
-                    var _this = _super.call(this, vsq) || this;
-                    _this.pluginName = "Pinger";
-                    return _this;
-                }
-                Pinger.prototype.ping = function () {
-                    return __awaiter(this, void 0, void 0, function () {
-                        var _this = this;
-                        var data;
-                        return __generator(this, function (_a) {
-                            switch (_a.label) {
-                                case 0: return [4 /*yield*/, VSQAPI_1.default.GET("users", "ping")];
-                                case 1:
-                                    data = _a.sent();
-                                    this.timer = setTimeout(function () {
-                                        _this.ping();
-                                    }, this.cfg.pingSeconds * 1000);
-                                    return [2 /*return*/];
-                            }
-                        });
-                    });
-                };
-                Pinger.prototype.load = function () {
-                };
-                Pinger.prototype.destroy = function () {
-                };
-                return Pinger;
-            }(BasePlugin_3.BasePlugin));
-            exports_14("default", Pinger);
-        }
-    };
-});
-System.register("player/app", ["Locale", "player/Config", "player/PlayerSetup"], function (exports_15, context_15) {
-    "use strict";
-    var __moduleName = context_15 && context_15.id;
+    var __moduleName = context_16 && context_16.id;
     var Locale_1, Config_1, PlayerSetup_1;
     return {
         setters: [

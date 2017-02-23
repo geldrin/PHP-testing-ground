@@ -613,4 +613,10 @@ class Live extends Player {
     // TODO intro outro
     return $ret;
   }
+
+  protected function getFlowConfig( $cfg ) {
+    $ret = parent::getFlowConfig( $cfg );
+    $ret['vsq']['parameters']['feedid'] = $this->row['id'];
+    return $ret;
+  }
 }

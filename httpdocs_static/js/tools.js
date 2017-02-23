@@ -102,9 +102,6 @@ $j(document).ready(function() {
   runIfExists('#myrecordingsquicksearch', setupMyRecordings );
   runIfExists('#live_inviteteachers', setupInviteTeachers )
 
-  if ( needping )
-    setTimeout( setupPing, 1000 * pingsecs );
-
   $j('#scriptingcontainer').show();
 
   $j('.clearonclick').on('focusin', function() {
@@ -1845,31 +1842,6 @@ function setupContributorEdit( elements ) {
       url: $j(this).attr('action')
     });
 
-  });
-
-}
-
-function setupPing() {
-
-  $j.ajax({
-    url     : language + '/jsonapi',
-    cache   : false,
-    type    : 'POST',
-    dataType: 'json',
-    data    : {
-      parameters: '{"format":"json","layer":"controller","module":"users","method":"ping"}'
-    },
-    success : function( data, status, xhr ) {
-
-      if ( typeof( data ) == 'object' && data.result == 'OK' && data.data ) {
-
-        setTimeout( setupPing, 1000 * pingsecs );
-        return;
-
-      } else
-        location.href = language + '/users/login';
-
-    }
   });
 
 }

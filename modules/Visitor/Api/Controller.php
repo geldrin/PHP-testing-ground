@@ -3,11 +3,13 @@ namespace Visitor\Api;
 class ApiException extends \Exception {
   public $shouldlog   = true;
   public $shouldemail = true;
+  public $extradata;
 
-  public function __construct( $message, $shouldlog = true, $shouldemail = true ) {
+  public function __construct( $message, $shouldlog = true, $shouldemail = true, $extradata = null ) {
 
     $this->shouldlog   = $shouldlog;
     $this->shouldemail = $shouldemail;
+    $this->extradata   = $extradata;
     parent::__construct( $message );
 
   }
@@ -55,6 +57,9 @@ class Controller extends \Visitor\Controller {
 
       $result['result'] = 'ERR';
       $result['data']   = $e->getMessage();
+
+      if ( $e->extradata )
+        $result['extradata'] = $e->extradata;
 
       $shouldlog        = true;
       if ( property_exists( $e, 'shouldlog' ) )

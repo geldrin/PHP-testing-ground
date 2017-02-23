@@ -349,7 +349,6 @@ class Controller extends \Visitor\Controller {
     $this->toSmarty['ipaddress']     = $this->getIPAddress();
     $this->toSmarty['member']        = $user;
     $this->toSmarty['sessionid']     = session_id();
-    $this->toSmarty['needping']      = true;
     $this->toSmarty['needhistory']   = true;
     $this->toSmarty['height']        = $player->getHeight( true );
     $this->toSmarty['recording']     = $recordingsModel->addPresenters( true, $this->organization['id'] );

@@ -193,10 +193,20 @@ abstract class Player {
         'secondarySources' => array(),
         'contentOnRight' => (bool) $this->row['slideonright'],
         'isAudioOnly' => false,
+        'needPing' => false,
         'pingSeconds' => (int)$this->bootstrap->config['sessionpingseconds'],
+        'parameters'  => array(),
+        'apiurl' => '',
         // TODO mobile es a mobil tipusa
       ),
     );
+
+    if ( $this->bootstrap->config['forcesecureapiurl'] )
+      $apiurl = 'https://' . $cfg['organization']['domain'] . '/';
+    else
+      $apiurl = $this->bootstrap->baseuri;
+
+    $ret['vsq']['apiurl'] .= 'jsonapi';
 
     $newclip = array(
       // Set a title for this clip. Displayed in a top bar when hovering over the player.
@@ -222,6 +232,12 @@ abstract class Player {
 
     if ( isset( $cfg['duration'] ) )
       $ret['vsq']['duration'] = $cfg['duration'];
+
+    if ( isset( $cfg['tokenauth'] ) and $cfg['tokenauth'] )
+      $ret['vsq']['parameters']['token'] = $cfg['token'];
+
+    if ( isset( $cfg['member'] ) and $cfg['member']['id'] )
+      $ret['vsq']['needPing'] = true;
 
     $streams = $this->getFlowStreams( $cfg );
     if ( $streams['intro'] ) {

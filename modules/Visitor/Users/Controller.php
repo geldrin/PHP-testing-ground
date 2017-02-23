@@ -429,24 +429,34 @@ class Controller extends \Visitor\Controller {
 
   }
 
+  private function failAPI( $msg, $shouldlog = false, $shouldemail = false ) {
+    throw new \Visitor\Api\ApiException( $msg, $shouldlog, $shouldemail, $extradata );
+  }
+
   private function checkAndUpdateUserSession() {
     $user = $this->bootstrap->getSession('user');
     $l = $this->bootstrap->getLocalization();
+    $extradata = array(
+      'loggedin'       => false,
+      'sessionexpired' => false,
+      'invalidtoken'   => false,
+    );
+
     if ( !$user['id'] )
-      throw new \Visitor\Api\ApiException( $l('users', 'loginfailed'), false, false );
+      $this->failAPI( $l('users', 'loginfailed'), $extradata );
 
     $userModel = $this->bootstrap->getModel('users');
     $userModel->select( $user['id'] );
 
     if ( !$userModel->row )
-      throw new \Visitor\Api\ApiException( $l('users', 'loginfailed'), false, false );
+      throw new \Exception("User from session not found in the database, id#" . $user['id']);
 
     if ( !$userModel->checkSingleLoginUsers() ) {
-
       $user->clear();
       $this->addMessage( $l('users', 'loggedout_sessionexpired') );
-      throw new \Visitor\Api\ApiException( $l('users', 'loggedout_sessionexpired'), false, false );
 
+      $extradata['sessionexpired'] = true;
+      $this->failAPI( $l('users', 'loggedout_sessionexpired'), $extradata );
     }
 
     $userModel->updateSessionInformation();
@@ -459,9 +469,15 @@ class Controller extends \Visitor\Controller {
     if ( !$token )
       return $this->checkAndUpdateUserSession();
 
+    $extradata = array(
+      'loggedin'       => false,
+      'sessionexpired' => false,
+      'invalidtoken'   => false,
+    );
+
     // nem szabadna ilyen tortenjen normalis operacioban sose
     if ( !$recordingid and !$livefeedid )
-      throw new \Visitor\Api\ApiException("Got token, but no recordingid or livefeedid", true, false );
+      $this->failAPI("Got token, but no recordingid or livefeedid", $extradata, true );
 
     // nem akarunk adatbazis lekerest, ha volt token akkor biztos hogy
     // tokenautholni kell, igy szimplan megnezzuk hogy valid e a token
@@ -471,7 +487,8 @@ class Controller extends \Visitor\Controller {
       return true;
 
     $l = $this->bootstrap->getLocalization();
-    throw new \Visitor\Api\ApiException( $l('users', 'tokeninvalid'), false, false );
+    $extradata['invalidtoken'] = true;
+    $this->failAPI( $l('users', 'tokeninvalid'), $extradata );
   }
 
   public function setuserfieldAction( $userid, $field, $value ) {

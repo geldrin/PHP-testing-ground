@@ -824,6 +824,8 @@ class Recordings extends Player {
   protected function getFlowConfig( $cfg ) {
     $ret = parent::getFlowConfig( $cfg );
     $ret['vsq']['isAudioOnly'] = $this->row['mastermediatype'] == "audio";
+    $ret['vsq']['parameters']['recordingid'] = $this->row['id'];
+
     return $ret;
   }
 }

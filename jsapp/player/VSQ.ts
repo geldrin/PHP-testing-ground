@@ -5,7 +5,9 @@
 import {BasePlugin} from "./VSQ/BasePlugin";
 import LayoutChooser from "./VSQ/LayoutChooser";
 import QualityChooser from "./VSQ/QualityChooser";
+import Pinger from "./VSQ/Pinger";
 import VSQHLS from "./VSQHLS";
+import VSQAPI from "./VSQAPI";
 import Tools from "../Tools";
 import Escape from "../Escape";
 import Locale from "../Locale";
@@ -46,6 +48,7 @@ export class VSQ {
     this.flow = flow;
     this.cfg = flow.conf.vsq as VSQConfig || {};
     this.l = this.cfg.locale;
+    VSQAPI.init(this.cfg);
 
     this.flow.conf.errors.push(this.l.get('access_denied'));
     VSQ.accessDeniedError = flow.conf.errors.length - 1;
@@ -66,6 +69,9 @@ export class VSQ {
 
     if (!this.cfg.contentOnRight)
       this.root.addClass('vsq-contentleft');
+
+    if (this.cfg.needPing)
+      this.plugins.push(new Pinger(this));
 
     if (!this.cfg.isAudioOnly) {
       this.plugins.push(new LayoutChooser(this));
@@ -854,5 +860,8 @@ export interface VSQConfig {
   masterIndex: number;
   locale: Locale;
   isAudioOnly: boolean;
+  needPing: boolean;
   pingSeconds: number;
+  parameters: Object;
+  apiurl: string;
 }
