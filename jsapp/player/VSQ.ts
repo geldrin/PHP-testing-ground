@@ -5,7 +5,9 @@
 import {BasePlugin} from "./VSQ/BasePlugin";
 import LayoutChooser from "./VSQ/LayoutChooser";
 import QualityChooser from "./VSQ/QualityChooser";
+import {Modal} from "./VSQ/Modal";
 import Pinger from "./VSQ/Pinger";
+import Login from "./VSQ/Login";
 import VSQHLS from "./VSQHLS";
 import VSQAPI from "./VSQAPI";
 import Tools from "../Tools";
@@ -35,6 +37,7 @@ export class VSQ {
 
   private flow: Flowplayer;
   private root: JQuery;
+  private flowroot: JQuery;
   private cfg: VSQConfig;
   private eventsInitialized = false;
   private readySent = false;
@@ -64,14 +67,20 @@ export class VSQ {
     );
     VSQ.debug = !!this.cfg.debug;
 
-    this.root = jQuery(root);
-    this.id = this.root.attr('data-flowplayer-instance-id');
+    this.root = jQuery("#player");
+    this.flowroot = this.root.find('.flowplayer');
+    this.id = this.flowroot.attr('data-flowplayer-instance-id');
 
     if (!this.cfg.contentOnRight)
-      this.root.addClass('vsq-contentleft');
+      this.flowroot.addClass('vsq-contentleft');
+
+    this.plugins.push(new Modal(this));
 
     if (this.cfg.needPing)
       this.plugins.push(new Pinger(this));
+
+    if (this.cfg.needLogin)
+      this.plugins.push(new Login(this));
 
     if (!this.cfg.isAudioOnly) {
       this.plugins.push(new LayoutChooser(this));
@@ -81,6 +90,9 @@ export class VSQ {
 
   public getRoot(): JQuery {
     return this.root;
+  }
+  public getFlowRoot(): JQuery {
+    return this.flowroot;
   }
   public getConfig(): VSQConfig {
     return this.cfg;
@@ -99,7 +111,7 @@ export class VSQ {
   }
 
   private hideFlowLogo(): void {
-    this.root.children('a[href*="flowplayer.org"]').hide();
+    this.flowroot.children('a[href*="flowplayer.org"]').hide();
   }
 
   private configKey(key: string): string {
@@ -201,7 +213,7 @@ export class VSQ {
   private addPoster(): void {
     let master = jQuery(this.videoTags[VSQType.MASTER]);
     master.one(this.eventName("timeupdate"), () => {
-      this.root.addClass("is-poster");
+      this.flowroot.addClass("is-poster");
       this.flow.poster = true;
     });
   }
@@ -212,7 +224,7 @@ export class VSQ {
 
     let master = jQuery(this.videoTags[VSQType.MASTER]);
     master.one(this.eventName("timeupdate"), () => {
-      this.root.removeClass("is-poster");
+      this.flowroot.removeClass("is-poster");
       this.flow.poster = false;
     });
   }
@@ -658,7 +670,7 @@ export class VSQ {
       video.autoplay = true;
 
     // mihez fogjuk prependelni a videokat
-    let root = this.root.find('.fp-player');
+    let root = this.flowroot.find('.fp-player');
     root.find('img').remove();
 
     this.hlsConf = jQuery.extend(
@@ -764,7 +776,7 @@ export class VSQ {
 
     let listeners = this.eventName();
     this.flow.off(listeners);
-    this.root.off(listeners);
+    this.flowroot.off(listeners);
     videoTags.off(listeners);
 
     for (let i = this.hlsEngines.length - 1; i >= 0; i--)
@@ -861,6 +873,7 @@ export interface VSQConfig {
   locale: Locale;
   isAudioOnly: boolean;
   needPing: boolean;
+  needLogin: boolean;
   pingSeconds: number;
   parameters: Object;
   apiurl: string;

@@ -194,6 +194,7 @@ abstract class Player {
         'contentOnRight' => (bool) $this->row['slideonright'],
         'isAudioOnly' => false,
         'needPing' => false,
+        'needLogin' => false,
         'pingSeconds' => (int)$this->bootstrap->config['sessionpingseconds'],
         'parameters'  => array(),
         'apiurl' => '',
@@ -238,6 +239,8 @@ abstract class Player {
 
     if ( isset( $cfg['member'] ) and $cfg['member']['id'] )
       $ret['vsq']['needPing'] = true;
+    else if ( isset( $cfg['needauth'] ) )
+      $ret['vsq']['needLogin'] = true;
 
     $streams = $this->getFlowStreams( $cfg );
     if ( $streams['intro'] ) {

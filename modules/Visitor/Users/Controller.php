@@ -344,7 +344,7 @@ class Controller extends \Visitor\Controller {
         );
       }
 
-      throw new \Visitor\Api\ApiException( $message, true, false );
+      $this->failAPI( $message, true );
 
     }
 
@@ -355,7 +355,7 @@ class Controller extends \Visitor\Controller {
         \Springboard\Language::get() . '/users/resetsession?email=' . rawurlencode( $email )
       );
 
-      throw new \Visitor\Api\ApiException( $message, true, false );
+      $this->failAPI( $message, true );
 
     }
 
@@ -378,7 +378,7 @@ class Controller extends \Visitor\Controller {
       $recordingsModel = $this->modelIDCheck( 'recordings', $recordingid, false );
 
       if ( !$recordingsModel )
-        throw new \Visitor\Api\ApiException( $l('recordings', 'norecording'), true, false );
+        $this->failAPI( $l('recordings', 'norecording'), true );
 
       $browserinfo     = $this->bootstrap->getBrowserInfo();
       $user            = $this->bootstrap->getSession('user');
@@ -401,7 +401,7 @@ class Controller extends \Visitor\Controller {
       $feedModel = $this->modelIDCheck( 'livefeeds', $feedid, false );
 
       if ( !$feedModel )
-        throw new \Visitor\Api\ApiException( $l('live', 'nofeed'), true, false );
+        $this->failAPI( $l('live', 'nofeed'), true );
 
       $user      = $this->bootstrap->getSession('user');
       $access    = $this->bootstrap->getSession('liveaccess');

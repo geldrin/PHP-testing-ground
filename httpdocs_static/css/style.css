@@ -4075,6 +4075,9 @@ table.paging tr.even {
 }
 
 /* vsq-player */
+#player {
+  position: relative;
+}
 #player .vsq-engine {
   width: 50%;
   height: auto;
@@ -4154,4 +4157,16 @@ table.paging tr.even {
   padding: 0;
   background: #1f1f1f;
   color: #ccc;
+}
+#player .vsq-modal {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  cursor: pointer;
+  z-index: 1;
+}
+#player.vsq-is-login .vsq-modal {
+  display: block;
 }

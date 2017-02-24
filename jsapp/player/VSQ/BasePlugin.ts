@@ -12,6 +12,7 @@ export abstract class BasePlugin {
   protected pluginName: string;
   protected vsq: VSQ;
   protected root: JQuery;
+  protected flowroot: JQuery;
   protected cfg: VSQConfig;
   protected flow: Flowplayer;
   protected l: Locale;
@@ -19,6 +20,7 @@ export abstract class BasePlugin {
   constructor(vsq: VSQ) {
     this.vsq = vsq;
     this.root = vsq.getRoot();
+    this.flowroot = vsq.getFlowRoot();
     this.cfg = vsq.getConfig();
     this.l = this.cfg.locale;
     this.flow = vsq.getPlayer();

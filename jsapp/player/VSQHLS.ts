@@ -9,7 +9,7 @@ import RateLimiter from "../RateLimiter";
 declare var Hls: any;
 export default class VSQHLS {
   private vsq: VSQ;
-  private root: JQuery;
+  private flowroot: JQuery;
   private cfg: VSQConfig;
   private flow: Flowplayer;
 
@@ -22,7 +22,7 @@ export default class VSQHLS {
 
   constructor(vsq: VSQ, type: VSQType) {
     this.vsq = vsq;
-    this.root = vsq.getRoot();
+    this.flowroot = vsq.getFlowRoot();
     this.cfg = vsq.getConfig();
     this.flow = vsq.getPlayer();
     this.video = jQuery.extend(true, {}, vsq.getVideoInfo(type));
@@ -171,8 +171,8 @@ export default class VSQHLS {
   }
 
   private showSeeking() {
-    this.root.removeClass('is-paused');
-    this.root.addClass('is-seeking');
+    this.flowroot.removeClass('is-paused');
+    this.flowroot.addClass('is-seeking');
   }
 
   private onError(evt: string, data: any): void {

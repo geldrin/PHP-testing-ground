@@ -32,11 +32,11 @@ export default class LayoutChooser extends BasePlugin {
   public load(): void {
     // nincs masik video, csak a full 100% szamit
     if (!this.vsq.hasMultipleVideos()) {
-      this.root.addClass('vsq-singlevideo');
+      this.flowroot.addClass('vsq-singlevideo');
       return;
     }
 
-    if (this.root.find('.vsq-layoutchooser').length > 0)
+    if (this.flowroot.find('.vsq-layoutchooser').length > 0)
       return;
 
     // a maximalis magassagot mindig allitani kell ha valtozik a szelesseg
@@ -51,7 +51,7 @@ export default class LayoutChooser extends BasePlugin {
   }
 
   public destroy(): void {
-    this.root.find(".vsq-layoutchooser").remove();
+    this.flowroot.find(".vsq-layoutchooser").remove();
   }
 
   protected configKey(key: string): string {
@@ -59,7 +59,7 @@ export default class LayoutChooser extends BasePlugin {
   }
 
   private trigger(newVal?: string): void {
-    let ratio = this.root.find('.vsq-layoutchooser input[name="ratio"]');
+    let ratio = this.flowroot.find('.vsq-layoutchooser input[name="ratio"]');
     if (newVal != null)
       ratio.val(newVal);
 
@@ -68,10 +68,10 @@ export default class LayoutChooser extends BasePlugin {
 
   private fixHeight(): void {
     let maxHeight: number;
-    if (this.root.hasClass('is-fullscreen'))
+    if (this.flowroot.hasClass('is-fullscreen'))
       maxHeight = jQuery(window).height();
     else
-      maxHeight = this.root.height();
+      maxHeight = this.flowroot.height();
 
     jQuery(this.vsq.getVideoTags()).css("maxHeight", maxHeight + 'px');
   }
@@ -151,30 +151,30 @@ export default class LayoutChooser extends BasePlugin {
         </ul>
       </div>
     `;
-    this.root.find(".fp-ui").append(html);
+    this.flowroot.find(".fp-ui").append(html);
 
-    this.root.on("click", ".vsq-layoutchooser .pip-content", (e: Event): void => {
+    this.flowroot.on("click", ".vsq-layoutchooser .pip-content", (e: Event): void => {
       e.preventDefault();
       this.trigger(this.getMiddleRange(LayoutType.PIPCONTENT));
     });
-    this.root.on("click", ".vsq-layoutchooser .master-only", (e: Event): void => {
+    this.flowroot.on("click", ".vsq-layoutchooser .master-only", (e: Event): void => {
       e.preventDefault();
       this.trigger('' + this.ranges[LayoutType.MASTERONLY].from);
     });
-    this.root.on("click", ".vsq-layoutchooser .split", (e: Event): void => {
+    this.flowroot.on("click", ".vsq-layoutchooser .split", (e: Event): void => {
       e.preventDefault();
       this.trigger(this.getMiddleRange(LayoutType.SPLIT));
     });
-    this.root.on("click", ".vsq-layoutchooser .content-only", (e: Event): void => {
+    this.flowroot.on("click", ".vsq-layoutchooser .content-only", (e: Event): void => {
       e.preventDefault();
       this.trigger('' + this.ranges[LayoutType.CONTENTONLY].from);
     });
-    this.root.on("click", ".vsq-layoutchooser .pip-master", (e: Event): void => {
+    this.flowroot.on("click", ".vsq-layoutchooser .pip-master", (e: Event): void => {
       e.preventDefault();
       this.trigger(this.getMiddleRange(LayoutType.PIPMASTER));
     });
 
-    this.root.on("input change", '.vsq-layoutchooser input[name="ratio"]', (e: Event): void => {
+    this.flowroot.on("input change", '.vsq-layoutchooser input[name="ratio"]', (e: Event): void => {
       this.onChange(e);
     });
   }

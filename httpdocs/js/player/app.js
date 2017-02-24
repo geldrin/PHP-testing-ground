@@ -318,6 +318,7 @@ System.register("player/VSQ/BasePlugin", ["player/VSQ"], function (exports_6, co
                 function BasePlugin(vsq) {
                     this.vsq = vsq;
                     this.root = vsq.getRoot();
+                    this.flowroot = vsq.getFlowRoot();
                     this.cfg = vsq.getConfig();
                     this.l = this.cfg.locale;
                     this.flow = vsq.getPlayer();
@@ -383,10 +384,10 @@ System.register("player/VSQ/LayoutChooser", ["player/VSQ", "player/VSQ/BasePlugi
                 LayoutChooser.prototype.load = function () {
                     var _this = this;
                     if (!this.vsq.hasMultipleVideos()) {
-                        this.root.addClass('vsq-singlevideo');
+                        this.flowroot.addClass('vsq-singlevideo');
                         return;
                     }
-                    if (this.root.find('.vsq-layoutchooser').length > 0)
+                    if (this.flowroot.find('.vsq-layoutchooser').length > 0)
                         return;
                     this.fixHeight();
                     this.flow.on("fullscreen fullscreen-exit", function () { _this.fixHeight(); });
@@ -395,23 +396,23 @@ System.register("player/VSQ/LayoutChooser", ["player/VSQ", "player/VSQ/BasePlugi
                     this.trigger();
                 };
                 LayoutChooser.prototype.destroy = function () {
-                    this.root.find(".vsq-layoutchooser").remove();
+                    this.flowroot.find(".vsq-layoutchooser").remove();
                 };
                 LayoutChooser.prototype.configKey = function (key) {
                     return 'vsq-player-layout-' + key;
                 };
                 LayoutChooser.prototype.trigger = function (newVal) {
-                    var ratio = this.root.find('.vsq-layoutchooser input[name="ratio"]');
+                    var ratio = this.flowroot.find('.vsq-layoutchooser input[name="ratio"]');
                     if (newVal != null)
                         ratio.val(newVal);
                     ratio.change();
                 };
                 LayoutChooser.prototype.fixHeight = function () {
                     var maxHeight;
-                    if (this.root.hasClass('is-fullscreen'))
+                    if (this.flowroot.hasClass('is-fullscreen'))
                         maxHeight = jQuery(window).height();
                     else
-                        maxHeight = this.root.height();
+                        maxHeight = this.flowroot.height();
                     jQuery(this.vsq.getVideoTags()).css("maxHeight", maxHeight + 'px');
                 };
                 LayoutChooser.prototype.setupRatios = function () {
@@ -465,28 +466,28 @@ System.register("player/VSQ/LayoutChooser", ["player/VSQ", "player/VSQ/BasePlugi
                     var ratio = 0 + Tools_1.default.getFromStorage(this.configKey("layoutRatio"), this.getDefaultRatio());
                     var max = this.getMaxRatio();
                     var html = "\n      <div class=\"vsq-layoutchooser\">\n        <input name=\"ratio\" type=\"range\" min=\"0\" max=\"" + max + "\" step=\"1\" value=\"" + ratio + "\"/>\n        <ul>\n          <li class=\"pip-content\">PiP content</li>\n          <li class=\"master-only\">Master only</li>\n          <li class=\"split\">Split</li>\n          <li class=\"content-only\">Content only</li>\n          <li class=\"pip-master\">PiP master</li>\n        </ul>\n      </div>\n    ";
-                    this.root.find(".fp-ui").append(html);
-                    this.root.on("click", ".vsq-layoutchooser .pip-content", function (e) {
+                    this.flowroot.find(".fp-ui").append(html);
+                    this.flowroot.on("click", ".vsq-layoutchooser .pip-content", function (e) {
                         e.preventDefault();
                         _this.trigger(_this.getMiddleRange(LayoutType.PIPCONTENT));
                     });
-                    this.root.on("click", ".vsq-layoutchooser .master-only", function (e) {
+                    this.flowroot.on("click", ".vsq-layoutchooser .master-only", function (e) {
                         e.preventDefault();
                         _this.trigger('' + _this.ranges[LayoutType.MASTERONLY].from);
                     });
-                    this.root.on("click", ".vsq-layoutchooser .split", function (e) {
+                    this.flowroot.on("click", ".vsq-layoutchooser .split", function (e) {
                         e.preventDefault();
                         _this.trigger(_this.getMiddleRange(LayoutType.SPLIT));
                     });
-                    this.root.on("click", ".vsq-layoutchooser .content-only", function (e) {
+                    this.flowroot.on("click", ".vsq-layoutchooser .content-only", function (e) {
                         e.preventDefault();
                         _this.trigger('' + _this.ranges[LayoutType.CONTENTONLY].from);
                     });
-                    this.root.on("click", ".vsq-layoutchooser .pip-master", function (e) {
+                    this.flowroot.on("click", ".vsq-layoutchooser .pip-master", function (e) {
                         e.preventDefault();
                         _this.trigger(_this.getMiddleRange(LayoutType.PIPMASTER));
                     });
-                    this.root.on("input change", '.vsq-layoutchooser input[name="ratio"]', function (e) {
+                    this.flowroot.on("input change", '.vsq-layoutchooser input[name="ratio"]', function (e) {
                         _this.onChange(e);
                     });
                 };
@@ -605,7 +606,7 @@ System.register("player/VSQ/QualityChooser", ["player/VSQ", "player/VSQ/BasePlug
                     var _this = _super.call(this, vsq) || this;
                     _this.pluginName = "QualityChooser";
                     _this.selectedQuality = _this.getDefaultQuality();
-                    _this.root.on(_this.eventName("click"), ".vsq-quality-selector li", function (e) {
+                    _this.flowroot.on(_this.eventName("click"), ".vsq-quality-selector li", function (e) {
                         _this.onClick(e);
                     });
                     return _this;
@@ -629,7 +630,7 @@ System.register("player/VSQ/QualityChooser", ["player/VSQ", "player/VSQ/BasePlug
                     var choice = jQuery(e.currentTarget);
                     if (choice.hasClass("active"))
                         return;
-                    this.root.find('.vsq-quality-selector li').removeClass("active");
+                    this.flowroot.find('.vsq-quality-selector li').removeClass("active");
                     choice.addClass("active");
                     var quality = choice.attr('data-quality');
                     Tools_2.default.setToStorage(this.configKey("quality"), quality);
@@ -639,7 +640,7 @@ System.register("player/VSQ/QualityChooser", ["player/VSQ", "player/VSQ/BasePlug
                     var paused = tags[VSQ_3.VSQType.MASTER].paused;
                     if (!paused && !smooth)
                         jQuery(tags[VSQ_3.VSQType.MASTER]).one(this.eventName("pause"), function () {
-                            _this.root.removeClass("is-paused");
+                            _this.flowroot.removeClass("is-paused");
                         });
                     var hlsMethod = 'currentLevel';
                     if (smooth && !this.flow.poster)
@@ -652,7 +653,7 @@ System.register("player/VSQ/QualityChooser", ["player/VSQ", "player/VSQ/BasePlug
                     var levels = this.getLevels();
                     this.log('qualities: ', levels);
                     levels.unshift("Auto");
-                    this.root.find('.vsq-quality-selector').remove();
+                    this.flowroot.find('.vsq-quality-selector').remove();
                     var html = "<ul class=\"vsq-quality-selector\">";
                     for (var i = 0; i < levels.length; ++i) {
                         var label = levels[i];
@@ -663,10 +664,10 @@ System.register("player/VSQ/QualityChooser", ["player/VSQ", "player/VSQ/BasePlug
                         html += "<li" + active + " data-level=\"" + (i - 1) + "\" data-quality=\"" + label.toLowerCase() + "\">" + Escape_1.default.HTML(label) + "</li>";
                     }
                     html += "</ul>";
-                    this.root.find(".fp-ui").append(html);
+                    this.flowroot.find(".fp-ui").append(html);
                 };
                 QualityChooser.prototype.destroy = function () {
-                    this.root.find(".vsq-quality-selector").remove();
+                    this.flowroot.find(".vsq-quality-selector").remove();
                 };
                 QualityChooser.prototype.setupHLS = function (hls, type) {
                     var _this = this;
@@ -680,13 +681,13 @@ System.register("player/VSQ/QualityChooser", ["player/VSQ", "player/VSQ/BasePlug
                     if (type !== VSQ_3.VSQType.MASTER)
                         return;
                     hls.on(Hls.Events.LEVEL_SWITCH, function (event, data) {
-                        _this.root.find('.vsq-quality-selector li').removeClass("current");
+                        _this.flowroot.find('.vsq-quality-selector li').removeClass("current");
                         var elem = _this.findQualityElem(data.level);
                         elem.addClass("current");
                     });
                 };
                 QualityChooser.prototype.findQualityElem = function (level) {
-                    var ret = this.root.find('.vsq-quality-selector li[data-level="' + level + '"]');
+                    var ret = this.flowroot.find('.vsq-quality-selector li[data-level="' + level + '"]');
                     if (ret.length === 0)
                         throw new Error("No element found with the given level: " + level);
                     return ret;
@@ -735,9 +736,85 @@ System.register("player/VSQ/QualityChooser", ["player/VSQ", "player/VSQ/BasePlug
         }
     };
 });
-System.register("RateLimiter", [], function (exports_9, context_9) {
+System.register("player/VSQ/Modal", ["player/VSQ/BasePlugin", "Escape"], function (exports_9, context_9) {
     "use strict";
     var __moduleName = context_9 && context_9.id;
+    var BasePlugin_3, Escape_2, Modal;
+    return {
+        setters: [
+            function (BasePlugin_3_1) {
+                BasePlugin_3 = BasePlugin_3_1;
+            },
+            function (Escape_2_1) {
+                Escape_2 = Escape_2_1;
+            }
+        ],
+        execute: function () {
+            Modal = (function (_super) {
+                __extends(Modal, _super);
+                function Modal(vsq) {
+                    var _this = _super.call(this, vsq) || this;
+                    _this.pluginName = "Modal";
+                    if (Modal.instance != null)
+                        throw new Error("Modal.instance already present");
+                    Modal.instance = _this;
+                    _this.setupHTML();
+                    return _this;
+                }
+                Modal.prototype.load = function () {
+                };
+                Modal.prototype.destroy = function () {
+                    this.root.find(".vsq-modal").remove();
+                };
+                Modal.prototype.setupHTML = function () {
+                    var html = "\n      <div class=\"vsq-modal\">\n        <form class=\"vsq-login\">\n          <div class=\"row vsq-message\">\n          </div>\n          <div class=\"row vsq-email\">\n            <div class=\"label\">\n              <label for=\"email\">" + Escape_2.default.HTML(this.l.get('playeremail')) + "</label>\n            </div>\n            <div class=\"elem\">\n              <input name=\"email\" id=\"email\" type=\"text\"/>\n            </div>\n          </div>\n          <div class=\"row vsq-password\">\n            <div class=\"label\">\n              <label for=\"password\">" + Escape_2.default.HTML(this.l.get('playerpassword')) + "</label>\n            </div>\n            <div class=\"elem\">\n              <input name=\"password\" id=\"password\" type=\"password\"/>\n            </div>\n          </div>\n          <div class=\"row submit\">\n            <div class=\"elem\">\n              <input type=\"submit\" value=\"" + Escape_2.default.HTML(this.l.get('submitlogin')) + "\"/>\n            </div>\n          </div>\n        </form>\n      </div>\n    ";
+                    this.root.append(html);
+                };
+                Modal.installLoginHandler = function (plugin) {
+                    Modal.instance.installLoginHandler(plugin);
+                };
+                Modal.prototype.installLoginHandler = function (plugin) {
+                    var form = this.root.find(".vsq-modal .vsq-login");
+                    form.submit(function (e) {
+                        e.preventDefault();
+                        var email = form.find('input[name=email]').val();
+                        var password = form.find('input[name=password]').val();
+                        plugin.onSubmit(email, password);
+                    });
+                };
+                Modal.showError = function (html) {
+                    Modal.instance.showError(html);
+                };
+                Modal.prototype.showError = function (html) {
+                    var msg = this.root.find(".fp-message");
+                    msg.find("h2").text('');
+                    msg.find("p").html(html);
+                    this.vsq.pause();
+                    this.hideLogin();
+                    this.root.addClass("is-error");
+                };
+                Modal.showLogin = function (messageHTML) {
+                    Modal.instance.showLogin(messageHTML);
+                };
+                Modal.prototype.showLogin = function (messageHTML) {
+                    this.root.find(".vsq-modal .vsq-message").html(messageHTML);
+                    this.root.addClass("vsq-is-login");
+                };
+                Modal.hideLogin = function () {
+                    Modal.instance.hideLogin();
+                };
+                Modal.prototype.hideLogin = function () {
+                    this.root.removeClass("vsq-is-login");
+                };
+                return Modal;
+            }(BasePlugin_3.BasePlugin));
+            exports_9("Modal", Modal);
+        }
+    };
+});
+System.register("RateLimiter", [], function (exports_10, context_10) {
+    "use strict";
+    var __moduleName = context_10 && context_10.id;
     var Limit, Limits, RateLimiter;
     return {
         setters: [],
@@ -814,13 +891,13 @@ System.register("RateLimiter", [], function (exports_9, context_9) {
                 return RateLimiter;
             }());
             RateLimiter.SECOND = 1000;
-            exports_9("default", RateLimiter);
+            exports_10("default", RateLimiter);
         }
     };
 });
-System.register("player/VSQAPI", [], function (exports_10, context_10) {
+System.register("player/VSQAPI", [], function (exports_11, context_11) {
     "use strict";
-    var __moduleName = context_10 && context_10.id;
+    var __moduleName = context_11 && context_11.id;
     var VSQAPI;
     return {
         setters: [],
@@ -865,55 +942,7 @@ System.register("player/VSQAPI", [], function (exports_10, context_10) {
                 };
                 return VSQAPI;
             }());
-            exports_10("default", VSQAPI);
-        }
-    };
-});
-System.register("player/VSQ/Modal", ["player/VSQ/BasePlugin", "Escape"], function (exports_11, context_11) {
-    "use strict";
-    var __moduleName = context_11 && context_11.id;
-    var BasePlugin_3, Escape_2, Modal;
-    return {
-        setters: [
-            function (BasePlugin_3_1) {
-                BasePlugin_3 = BasePlugin_3_1;
-            },
-            function (Escape_2_1) {
-                Escape_2 = Escape_2_1;
-            }
-        ],
-        execute: function () {
-            Modal = (function (_super) {
-                __extends(Modal, _super);
-                function Modal(vsq) {
-                    var _this = _super.call(this, vsq) || this;
-                    _this.pluginName = "Modal";
-                    if (Modal.instance != null)
-                        throw new Error("Modal.instance already present");
-                    Modal.instance = _this;
-                    return _this;
-                }
-                Modal.prototype.load = function () {
-                };
-                Modal.prototype.destroy = function () {
-                    this.root.find(".vsq-modal").remove();
-                };
-                Modal.prototype.setupHTML = function () {
-                    var html = "\n      <div class=\"vsq-modal\">\n        <form class=\"vsq-login\">\n          <input name=\"email\" type=\"text\"/>\n          <input name=\"password\" type=\"password\"/>\n          <input type=\"submit\" value=\"" + Escape_2.default.HTML(this.l.get('submitlogin')) + "/>\n        </form>\n      </div>\n    ";
-                    this.root.find(".fp-ui").append(html);
-                };
-                Modal.showError = function (html) {
-                    var msg = this.root.find(".fp-message");
-                    msg.find("h2").text('');
-                    msg.find("p").html(html);
-                    this.player.pause();
-                    this.root.addClass("is-error");
-                };
-                Modal.showLogin = function (messageHTML) {
-                };
-                return Modal;
-            }(BasePlugin_3.BasePlugin));
-            exports_11("default", Modal);
+            exports_11("default", VSQAPI);
         }
     };
 });
@@ -941,7 +970,6 @@ System.register("player/VSQ/Pinger", ["player/VSQAPI", "player/VSQ/BasePlugin", 
                     _this.pluginName = "Pinger";
                     _this.log("scheduling request");
                     _this.schedule();
-                    _this.ping();
                     return _this;
                 }
                 Pinger.prototype.schedule = function () {
@@ -956,11 +984,11 @@ System.register("player/VSQ/Pinger", ["player/VSQAPI", "player/VSQ/BasePlugin", 
                 };
                 Pinger.prototype.handleError = function (message, errData) {
                     if (errData.invalidtoken || errData.sessionexpired) {
-                        Modal_1.default.showError(message);
+                        Modal_1.Modal.showError(message);
                         return;
                     }
                     if (!errData.loggedin) {
-                        Modal_1.default.showLogin(message);
+                        Modal_1.Modal.showLogin(message);
                         return;
                     }
                 };
@@ -988,7 +1016,7 @@ System.register("player/VSQ/Pinger", ["player/VSQAPI", "player/VSQ/BasePlugin", 
                                     return [3 /*break*/, 3];
                                 case 2:
                                     err_1 = _a.sent();
-                                    Modal_1.default.showError(this.l.get('networkerror'));
+                                    Modal_1.Modal.showError(this.l.get('networkerror'));
                                     return [3 /*break*/, 3];
                                 case 3: return [2 /*return*/];
                             }
@@ -1005,9 +1033,83 @@ System.register("player/VSQ/Pinger", ["player/VSQAPI", "player/VSQ/BasePlugin", 
         }
     };
 });
-System.register("player/VSQHLS", ["player/VSQ", "RateLimiter"], function (exports_13, context_13) {
+System.register("player/VSQ/Login", ["player/VSQAPI", "player/VSQ/BasePlugin", "player/VSQ/Modal"], function (exports_13, context_13) {
     "use strict";
     var __moduleName = context_13 && context_13.id;
+    var VSQAPI_2, BasePlugin_5, Modal_2, Login;
+    return {
+        setters: [
+            function (VSQAPI_2_1) {
+                VSQAPI_2 = VSQAPI_2_1;
+            },
+            function (BasePlugin_5_1) {
+                BasePlugin_5 = BasePlugin_5_1;
+            },
+            function (Modal_2_1) {
+                Modal_2 = Modal_2_1;
+            }
+        ],
+        execute: function () {
+            Login = (function (_super) {
+                __extends(Login, _super);
+                function Login(vsq) {
+                    var _this = _super.call(this, vsq) || this;
+                    _this.pluginName = "Login";
+                    Modal_2.Modal.installLoginHandler(_this);
+                    return _this;
+                }
+                Login.prototype.login = function (params) {
+                    return __awaiter(this, void 0, void 0, function () {
+                        var data, errMessage, err_2;
+                        return __generator(this, function (_a) {
+                            switch (_a.label) {
+                                case 0:
+                                    _a.trys.push([0, 2, , 3]);
+                                    return [4 /*yield*/, VSQAPI_2.default.POST("users", "authenticate", params)];
+                                case 1:
+                                    data = _a.sent();
+                                    switch (data.result) {
+                                        case "OK":
+                                            if (data.data)
+                                                Modal_2.Modal.hideLogin();
+                                            else
+                                                Modal_2.Modal.showLogin(this.l.get('loginfailed'));
+                                            break;
+                                        default:
+                                            errMessage = data.data;
+                                            Modal_2.Modal.showLogin(errMessage);
+                                            break;
+                                    }
+                                    return [3 /*break*/, 3];
+                                case 2:
+                                    err_2 = _a.sent();
+                                    Modal_2.Modal.showError(this.l.get('networkerror'));
+                                    return [3 /*break*/, 3];
+                                case 3: return [2 /*return*/];
+                            }
+                        });
+                    });
+                };
+                Login.prototype.onSubmit = function (email, password) {
+                    var params = jQuery.extend({
+                        email: email,
+                        password: password
+                    }, this.cfg.parameters);
+                    this.login(params);
+                };
+                Login.prototype.load = function () {
+                };
+                Login.prototype.destroy = function () {
+                };
+                return Login;
+            }(BasePlugin_5.BasePlugin));
+            exports_13("default", Login);
+        }
+    };
+});
+System.register("player/VSQHLS", ["player/VSQ", "RateLimiter"], function (exports_14, context_14) {
+    "use strict";
+    var __moduleName = context_14 && context_14.id;
     var VSQ_4, RateLimiter_1, VSQHLS;
     return {
         setters: [
@@ -1022,7 +1124,7 @@ System.register("player/VSQHLS", ["player/VSQ", "RateLimiter"], function (export
             VSQHLS = (function () {
                 function VSQHLS(vsq, type) {
                     this.vsq = vsq;
-                    this.root = vsq.getRoot();
+                    this.flowroot = vsq.getFlowRoot();
                     this.cfg = vsq.getConfig();
                     this.flow = vsq.getPlayer();
                     this.video = jQuery.extend(true, {}, vsq.getVideoInfo(type));
@@ -1120,8 +1222,8 @@ System.register("player/VSQHLS", ["player/VSQ", "RateLimiter"], function (export
                     this.limiter.cancel();
                 };
                 VSQHLS.prototype.showSeeking = function () {
-                    this.root.removeClass('is-paused');
-                    this.root.addClass('is-seeking');
+                    this.flowroot.removeClass('is-paused');
+                    this.flowroot.addClass('is-seeking');
                 };
                 VSQHLS.prototype.onError = function (evt, data) {
                     this.log("error", evt, data);
@@ -1175,14 +1277,14 @@ System.register("player/VSQHLS", ["player/VSQ", "RateLimiter"], function (export
                 };
                 return VSQHLS;
             }());
-            exports_13("default", VSQHLS);
+            exports_14("default", VSQHLS);
         }
     };
 });
-System.register("player/VSQ", ["player/VSQ/LayoutChooser", "player/VSQ/QualityChooser", "player/VSQ/Pinger", "player/VSQHLS", "player/VSQAPI"], function (exports_14, context_14) {
+System.register("player/VSQ", ["player/VSQ/LayoutChooser", "player/VSQ/QualityChooser", "player/VSQ/Modal", "player/VSQ/Pinger", "player/VSQ/Login", "player/VSQHLS", "player/VSQAPI"], function (exports_15, context_15) {
     "use strict";
-    var __moduleName = context_14 && context_14.id;
-    var LayoutChooser_1, QualityChooser_1, Pinger_1, VSQHLS_1, VSQAPI_2, VSQ, VSQType;
+    var __moduleName = context_15 && context_15.id;
+    var LayoutChooser_1, QualityChooser_1, Modal_3, Pinger_1, Login_1, VSQHLS_1, VSQAPI_3, VSQ, VSQType;
     return {
         setters: [
             function (LayoutChooser_1_1) {
@@ -1191,14 +1293,20 @@ System.register("player/VSQ", ["player/VSQ/LayoutChooser", "player/VSQ/QualityCh
             function (QualityChooser_1_1) {
                 QualityChooser_1 = QualityChooser_1_1;
             },
+            function (Modal_3_1) {
+                Modal_3 = Modal_3_1;
+            },
             function (Pinger_1_1) {
                 Pinger_1 = Pinger_1_1;
+            },
+            function (Login_1_1) {
+                Login_1 = Login_1_1;
             },
             function (VSQHLS_1_1) {
                 VSQHLS_1 = VSQHLS_1_1;
             },
-            function (VSQAPI_2_1) {
-                VSQAPI_2 = VSQAPI_2_1;
+            function (VSQAPI_3_1) {
+                VSQAPI_3 = VSQAPI_3_1;
             }
         ],
         execute: function () {
@@ -1217,7 +1325,7 @@ System.register("player/VSQ", ["player/VSQ/LayoutChooser", "player/VSQ/QualityCh
                     this.flow = flow;
                     this.cfg = flow.conf.vsq || {};
                     this.l = this.cfg.locale;
-                    VSQAPI_2.default.init(this.cfg);
+                    VSQAPI_3.default.init(this.cfg);
                     this.flow.conf.errors.push(this.l.get('access_denied'));
                     VSQ.accessDeniedError = flow.conf.errors.length - 1;
                     this.hlsConf = jQuery.extend({
@@ -1226,12 +1334,16 @@ System.register("player/VSQ", ["player/VSQ/LayoutChooser", "player/VSQ/QualityCh
                         recoverMediaError: true
                     }, flowplayer.conf['hlsjs'], this.flow.conf['hlsjs'], this.flow.conf['clip']['hlsjs']);
                     VSQ.debug = !!this.cfg.debug;
-                    this.root = jQuery(root);
-                    this.id = this.root.attr('data-flowplayer-instance-id');
+                    this.root = jQuery("#player");
+                    this.flowroot = this.root.find('.flowplayer');
+                    this.id = this.flowroot.attr('data-flowplayer-instance-id');
                     if (!this.cfg.contentOnRight)
-                        this.root.addClass('vsq-contentleft');
+                        this.flowroot.addClass('vsq-contentleft');
+                    this.plugins.push(new Modal_3.Modal(this));
                     if (this.cfg.needPing)
                         this.plugins.push(new Pinger_1.default(this));
+                    if (this.cfg.needLogin)
+                        this.plugins.push(new Login_1.default(this));
                     if (!this.cfg.isAudioOnly) {
                         this.plugins.push(new LayoutChooser_1.default(this));
                         this.plugins.push(new QualityChooser_1.default(this));
@@ -1239,6 +1351,9 @@ System.register("player/VSQ", ["player/VSQ/LayoutChooser", "player/VSQ/QualityCh
                 }
                 VSQ.prototype.getRoot = function () {
                     return this.root;
+                };
+                VSQ.prototype.getFlowRoot = function () {
+                    return this.flowroot;
                 };
                 VSQ.prototype.getConfig = function () {
                     return this.cfg;
@@ -1256,7 +1371,7 @@ System.register("player/VSQ", ["player/VSQ/LayoutChooser", "player/VSQ/QualityCh
                     return this.hlsEngines;
                 };
                 VSQ.prototype.hideFlowLogo = function () {
-                    this.root.children('a[href*="flowplayer.org"]').hide();
+                    this.flowroot.children('a[href*="flowplayer.org"]').hide();
                 };
                 VSQ.prototype.configKey = function (key) {
                     return 'vsq-player-' + key;
@@ -1338,7 +1453,7 @@ System.register("player/VSQ", ["player/VSQ/LayoutChooser", "player/VSQ/QualityCh
                     var _this = this;
                     var master = jQuery(this.videoTags[VSQType.MASTER]);
                     master.one(this.eventName("timeupdate"), function () {
-                        _this.root.addClass("is-poster");
+                        _this.flowroot.addClass("is-poster");
                         _this.flow.poster = true;
                     });
                 };
@@ -1348,7 +1463,7 @@ System.register("player/VSQ", ["player/VSQ/LayoutChooser", "player/VSQ/QualityCh
                         return;
                     var master = jQuery(this.videoTags[VSQType.MASTER]);
                     master.one(this.eventName("timeupdate"), function () {
-                        _this.root.removeClass("is-poster");
+                        _this.flowroot.removeClass("is-poster");
                         _this.flow.poster = false;
                     });
                 };
@@ -1655,7 +1770,7 @@ System.register("player/VSQ", ["player/VSQ/LayoutChooser", "player/VSQ/QualityCh
                         this.introOrOutro = false;
                     if (video.index === this.cfg.masterIndex && this.cfg.masterIndex > 0)
                         video.autoplay = true;
-                    var root = this.root.find('.fp-player');
+                    var root = this.flowroot.find('.fp-player');
                     root.find('img').remove();
                     this.hlsConf = jQuery.extend(this.hlsConf, this.flow.conf.hlsjs, this.flow.conf.clip.hlsjs, video.hlsjs);
                     if (video.index > this.cfg.masterIndex && this.videoTags[VSQType.CONTENT])
@@ -1722,7 +1837,7 @@ System.register("player/VSQ", ["player/VSQ/LayoutChooser", "player/VSQ/QualityCh
                     this.hlsCall('destroy');
                     var listeners = this.eventName();
                     this.flow.off(listeners);
-                    this.root.off(listeners);
+                    this.flowroot.off(listeners);
                     videoTags.off(listeners);
                     for (var i = this.hlsEngines.length - 1; i >= 0; i--)
                         this.hlsEngines.pop();
@@ -1777,18 +1892,18 @@ System.register("player/VSQ", ["player/VSQ/LayoutChooser", "player/VSQ/QualityCh
             VSQ.engineName = "vsq";
             VSQ.debug = false;
             VSQ.initDone = false;
-            exports_14("VSQ", VSQ);
+            exports_15("VSQ", VSQ);
             (function (VSQType) {
                 VSQType[VSQType["MASTER"] = 0] = "MASTER";
                 VSQType[VSQType["CONTENT"] = 1] = "CONTENT";
             })(VSQType || (VSQType = {}));
-            exports_14("VSQType", VSQType);
+            exports_15("VSQType", VSQType);
         }
     };
 });
-System.register("player/PlayerSetup", ["player/Flash", "player/VSQ"], function (exports_15, context_15) {
+System.register("player/PlayerSetup", ["player/Flash", "player/VSQ"], function (exports_16, context_16) {
     "use strict";
-    var __moduleName = context_15 && context_15.id;
+    var __moduleName = context_16 && context_16.id;
     var Flash_1, VSQ_5, PlayerSetup;
     return {
         setters: [
@@ -1857,13 +1972,13 @@ System.register("player/PlayerSetup", ["player/Flash", "player/VSQ"], function (
                 };
                 return PlayerSetup;
             }());
-            exports_15("default", PlayerSetup);
+            exports_16("default", PlayerSetup);
         }
     };
 });
-System.register("player/app", ["Locale", "player/Config", "player/PlayerSetup"], function (exports_16, context_16) {
+System.register("player/app", ["Locale", "player/Config", "player/PlayerSetup"], function (exports_17, context_17) {
     "use strict";
-    var __moduleName = context_16 && context_16.id;
+    var __moduleName = context_17 && context_17.id;
     var Locale_1, Config_1, PlayerSetup_1;
     return {
         setters: [

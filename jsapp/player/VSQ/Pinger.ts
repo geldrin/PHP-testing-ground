@@ -4,7 +4,7 @@
 import {VSQ, VSQConfig, VSQType} from "../VSQ";
 import VSQAPI from "../VSQAPI";
 import {BasePlugin} from "./BasePlugin";
-import Modal from "./Modal";
+import {Modal} from "./Modal";
 import Tools from "../../Tools";
 import Escape from "../../Escape";
 
@@ -22,7 +22,6 @@ export default class Pinger extends BasePlugin {
     super(vsq);
     this.log("scheduling request");
     this.schedule();
-    this.ping();
   }
 
   private schedule(): void {
