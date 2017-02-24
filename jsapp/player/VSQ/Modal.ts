@@ -12,6 +12,9 @@ export default class Modal extends BasePlugin {
 
   constructor(vsq: VSQ) {
     super(vsq);
+    if (Modal.instance != null)
+      throw new Error("Modal.instance already present");
+
     Modal.instance = this;
   }
 
@@ -19,17 +22,16 @@ export default class Modal extends BasePlugin {
   }
 
   public destroy(): void {
-    this.root.find(".vsq-layoutchooser").remove();
+    this.root.find(".vsq-modal").remove();
   }
 
   private setupHTML(): void {
     let html = `
       <div class="vsq-modal">
-        <div class="vsq-error"></div>
         <form class="vsq-login">
           <input name="email" type="text"/>
           <input name="password" type="password"/>
-          <input type="submit" value="${Escape.HTML(this.l.get('submit'))}/>
+          <input type="submit" value="${Escape.HTML(this.l.get('submitlogin'))}/>
         </form>
       </div>
     `;
@@ -37,7 +39,12 @@ export default class Modal extends BasePlugin {
   }
 
   public static showError(html: string): void {
-    // TODO
+    let msg = this.root.find(".fp-message");
+    msg.find("h2").text('');
+    msg.find("p").html(html);
+
+    this.player.pause();
+    this.root.addClass("is-error");
   }
 
   public static showLogin(messageHTML: string): void {

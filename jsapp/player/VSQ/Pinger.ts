@@ -8,6 +8,12 @@ import Modal from "./Modal";
 import Tools from "../../Tools";
 import Escape from "../../Escape";
 
+interface PingErr {
+  invalidtoken: boolean;
+  sessionexpired: boolean;
+  loggedin: boolean;
+}
+
 export default class Pinger extends BasePlugin {
   protected pluginName = "Pinger";
   protected timer: number | null;
@@ -30,13 +36,13 @@ export default class Pinger extends BasePlugin {
     }, this.cfg.pingSeconds * 1000);
   }
 
-  private handleError(message: string, errData: Object) {
-    if ( errData['invalidtoken'] || errData['sessionexpired'] ) {
+  private handleError(message: string, errData: PingErr) {
+    if ( errData.invalidtoken || errData.sessionexpired ) {
       Modal.showError(message);
       return;
     }
 
-    if ( !errData['loggedin'] ) {
+    if ( !errData.loggedin ) {
       Modal.showLogin(message);
       return;
     }
@@ -53,14 +59,14 @@ export default class Pinger extends BasePlugin {
           break;
         default:
           let errMessage = data.data as string;
-          let errData = data.extradata as Object;
-          console.log(errMessage, errData);
+          let errData = data.extradata as PingErr;
+
           this.handleError(errMessage, errData);
           break;
       }
 
     } catch(err) {
-      // TODO hiba, de mit csinaljunk?
+      Modal.showError(this.l.get('networkerror'));
     }
   }
 

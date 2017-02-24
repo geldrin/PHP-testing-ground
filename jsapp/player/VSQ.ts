@@ -326,7 +326,7 @@ export class VSQ {
       url: this.videoInfo[VSQType.MASTER].src
     });
 
-    this.triggerPlayer("ready", data);
+    this.triggerFlow("ready", data);
 
     // ha volt intro, akkor egyertelmi az autoplay miutan betoltottuk
     // mert az intro lejatszasanak a befejezese jelentette azt hogy betoltodott
@@ -359,7 +359,7 @@ export class VSQ {
         this.hlsCall('startLoad', [tag.currentTime]);
     }
 
-    this.triggerPlayer("resume", undefined);
+    this.triggerFlow("resume", undefined);
   }
 
   private handlePause(e: Event): boolean | undefined {
@@ -384,7 +384,7 @@ export class VSQ {
     this.removePoster();
     if (!this.hlsConf.bufferWhilePaused)
       this.hlsCall('stopLoad');
-    this.triggerPlayer("pause", undefined);
+    this.triggerFlow("pause", undefined);
   }
 
   private handleEnded(e: Event): boolean | undefined {
@@ -415,7 +415,7 @@ export class VSQ {
     }
 
     if (video.is_last)
-      this.triggerPlayer("finish", undefined);
+      this.triggerFlow("finish", undefined);
   }
 
   private handleProgress(e: Event): boolean | undefined {
@@ -439,7 +439,7 @@ export class VSQ {
     } catch(_) {};
 
     this.flow.video.buffer = buffer;
-    this.triggerPlayer("buffer", buffer);
+    this.triggerFlow("buffer", buffer);
   }
 
   private handleRateChange(e: Event): boolean | undefined {
@@ -449,7 +449,7 @@ export class VSQ {
     }
 
     let tag = e.currentTarget as HTMLVideoElement;
-    this.triggerPlayer("speed", tag.playbackRate);
+    this.triggerFlow("speed", tag.playbackRate);
   }
 
   private handleSeeked(e: Event): boolean | undefined {
@@ -465,7 +465,7 @@ export class VSQ {
       this.tagCall('pause');
     }
 
-    this.triggerPlayer("seek", tag.currentTime);
+    this.triggerFlow("seek", tag.currentTime);
     return false;
   }
 
@@ -483,7 +483,7 @@ export class VSQ {
     }
 
     let tag = this.videoTags[this.longerType];
-    this.triggerPlayer("progress", tag.currentTime);
+    this.triggerFlow("progress", tag.currentTime);
 
     this.syncVideos();
   }
@@ -496,7 +496,7 @@ export class VSQ {
     }
 
     let tag = e.currentTarget as HTMLVideoElement;
-    this.triggerPlayer("volume", tag.volume);
+    this.triggerFlow("volume", tag.volume);
   }
 
   private handleError(e: Event): boolean | undefined {
@@ -516,7 +516,7 @@ export class VSQ {
     return false;
   }
 
-  private triggerPlayer(event: string, data: any): void {
+  private triggerFlow(event: string, data: any): void {
     if (event !== "buffer" && event !== "progress")
       this.log("[flow event]", event, data);
 

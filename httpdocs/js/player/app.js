@@ -888,19 +888,26 @@ System.register("player/VSQ/Modal", ["player/VSQ/BasePlugin", "Escape"], functio
                 function Modal(vsq) {
                     var _this = _super.call(this, vsq) || this;
                     _this.pluginName = "Modal";
+                    if (Modal.instance != null)
+                        throw new Error("Modal.instance already present");
                     Modal.instance = _this;
                     return _this;
                 }
                 Modal.prototype.load = function () {
                 };
                 Modal.prototype.destroy = function () {
-                    this.root.find(".vsq-layoutchooser").remove();
+                    this.root.find(".vsq-modal").remove();
                 };
                 Modal.prototype.setupHTML = function () {
-                    var html = "\n      <div class=\"vsq-modal\">\n        <div class=\"vsq-error\"></div>\n        <form class=\"vsq-login\">\n          <input name=\"email\" type=\"text\"/>\n          <input name=\"password\" type=\"password\"/>\n          <input type=\"submit\" value=\"" + Escape_2.default.HTML(this.l.get('submit')) + "/>\n        </form>\n      </div>\n    ";
+                    var html = "\n      <div class=\"vsq-modal\">\n        <form class=\"vsq-login\">\n          <input name=\"email\" type=\"text\"/>\n          <input name=\"password\" type=\"password\"/>\n          <input type=\"submit\" value=\"" + Escape_2.default.HTML(this.l.get('submitlogin')) + "/>\n        </form>\n      </div>\n    ";
                     this.root.find(".fp-ui").append(html);
                 };
                 Modal.showError = function (html) {
+                    var msg = this.root.find(".fp-message");
+                    msg.find("h2").text('');
+                    msg.find("p").html(html);
+                    this.player.pause();
+                    this.root.addClass("is-error");
                 };
                 Modal.showLogin = function (messageHTML) {
                 };
@@ -948,11 +955,11 @@ System.register("player/VSQ/Pinger", ["player/VSQAPI", "player/VSQ/BasePlugin", 
                     }, this.cfg.pingSeconds * 1000);
                 };
                 Pinger.prototype.handleError = function (message, errData) {
-                    if (errData['invalidtoken'] || errData['sessionexpired']) {
+                    if (errData.invalidtoken || errData.sessionexpired) {
                         Modal_1.default.showError(message);
                         return;
                     }
-                    if (!errData['loggedin']) {
+                    if (!errData.loggedin) {
                         Modal_1.default.showLogin(message);
                         return;
                     }
@@ -975,13 +982,13 @@ System.register("player/VSQ/Pinger", ["player/VSQAPI", "player/VSQ/BasePlugin", 
                                         default:
                                             errMessage = data.data;
                                             errData = data.extradata;
-                                            console.log(errMessage, errData);
                                             this.handleError(errMessage, errData);
                                             break;
                                     }
                                     return [3 /*break*/, 3];
                                 case 2:
                                     err_1 = _a.sent();
+                                    Modal_1.default.showError(this.l.get('networkerror'));
                                     return [3 /*break*/, 3];
                                 case 3: return [2 /*return*/];
                             }
@@ -1400,7 +1407,7 @@ System.register("player/VSQ", ["player/VSQ/LayoutChooser", "player/VSQ/QualityCh
                         height: tag.videoHeight,
                         url: this.videoInfo[VSQType.MASTER].src
                     });
-                    this.triggerPlayer("ready", data);
+                    this.triggerFlow("ready", data);
                     if (this.flow.video.index === this.cfg.masterIndex && this.cfg.masterIndex > 0)
                         this.tagCall('play');
                     return false;
@@ -1421,7 +1428,7 @@ System.register("player/VSQ", ["player/VSQ/LayoutChooser", "player/VSQ/QualityCh
                         else
                             this.hlsCall('startLoad', [tag.currentTime]);
                     }
-                    this.triggerPlayer("resume", undefined);
+                    this.triggerFlow("resume", undefined);
                 };
                 VSQ.prototype.handlePause = function (e) {
                     var type = this.getTypeFromEvent(e);
@@ -1438,7 +1445,7 @@ System.register("player/VSQ", ["player/VSQ/LayoutChooser", "player/VSQ/QualityCh
                     this.removePoster();
                     if (!this.hlsConf.bufferWhilePaused)
                         this.hlsCall('stopLoad');
-                    this.triggerPlayer("pause", undefined);
+                    this.triggerFlow("pause", undefined);
                 };
                 VSQ.prototype.handleEnded = function (e) {
                     if (!this.isLongerVideo(e)) {
@@ -1456,7 +1463,7 @@ System.register("player/VSQ", ["player/VSQ/LayoutChooser", "player/VSQ/QualityCh
                         }
                     }
                     if (video.is_last)
-                        this.triggerPlayer("finish", undefined);
+                        this.triggerFlow("finish", undefined);
                 };
                 VSQ.prototype.handleProgress = function (e) {
                     if (!this.isLongerVideo(e)) {
@@ -1479,7 +1486,7 @@ System.register("player/VSQ", ["player/VSQ/LayoutChooser", "player/VSQ/QualityCh
                     catch (_) { }
                     ;
                     this.flow.video.buffer = buffer;
-                    this.triggerPlayer("buffer", buffer);
+                    this.triggerFlow("buffer", buffer);
                 };
                 VSQ.prototype.handleRateChange = function (e) {
                     if (!this.isLongerVideo(e)) {
@@ -1487,7 +1494,7 @@ System.register("player/VSQ", ["player/VSQ/LayoutChooser", "player/VSQ/QualityCh
                         return false;
                     }
                     var tag = e.currentTarget;
-                    this.triggerPlayer("speed", tag.playbackRate);
+                    this.triggerFlow("speed", tag.playbackRate);
                 };
                 VSQ.prototype.handleSeeked = function (e) {
                     if (!this.isLongerVideo(e)) {
@@ -1500,7 +1507,7 @@ System.register("player/VSQ", ["player/VSQ/LayoutChooser", "player/VSQ/QualityCh
                         this.hlsCall('stopLoad');
                         this.tagCall('pause');
                     }
-                    this.triggerPlayer("seek", tag.currentTime);
+                    this.triggerFlow("seek", tag.currentTime);
                     return false;
                 };
                 VSQ.prototype.handleTimeUpdate = function (e) {
@@ -1511,7 +1518,7 @@ System.register("player/VSQ", ["player/VSQ/LayoutChooser", "player/VSQ/QualityCh
                         return false;
                     }
                     var tag = this.videoTags[this.longerType];
-                    this.triggerPlayer("progress", tag.currentTime);
+                    this.triggerFlow("progress", tag.currentTime);
                     this.syncVideos();
                 };
                 VSQ.prototype.handleVolumeChange = function (e) {
@@ -1521,7 +1528,7 @@ System.register("player/VSQ", ["player/VSQ/LayoutChooser", "player/VSQ/QualityCh
                         return false;
                     }
                     var tag = e.currentTarget;
-                    this.triggerPlayer("volume", tag.volume);
+                    this.triggerFlow("volume", tag.volume);
                 };
                 VSQ.prototype.handleError = function (e) {
                     e.stopImmediatePropagation();
@@ -1536,7 +1543,7 @@ System.register("player/VSQ", ["player/VSQ/LayoutChooser", "player/VSQ/QualityCh
                     this.flow.trigger("error", [this.flow, arg]);
                     return false;
                 };
-                VSQ.prototype.triggerPlayer = function (event, data) {
+                VSQ.prototype.triggerFlow = function (event, data) {
                     if (event !== "buffer" && event !== "progress")
                         this.log("[flow event]", event, data);
                     this.flow.trigger(event, [this.flow, data]);
