@@ -10,11 +10,15 @@ import Escape from "../../Escape";
 
 export default class Login extends BasePlugin implements LoginHandler {
   protected pluginName = "Login";
+  private shown = false;
 
   constructor(vsq: VSQ) {
     super(vsq);
 
     Modal.installLoginHandler(this);
+    // mivel csak akkor letezik ez a class ha kell a login kepernyo
+    // ezert kerdes nelkul megjelenitjuk
+    Modal.showLogin("");
   }
 
   private async login(params: Object) {

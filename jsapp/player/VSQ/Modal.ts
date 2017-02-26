@@ -27,7 +27,8 @@ export class Modal extends BasePlugin {
   }
 
   public destroy(): void {
-    this.root.find(".vsq-modal").remove();
+    // nem akarjuk az insertalt html-t feltakaritani mert a mi html-unk
+    // nem kotott a video eletehez
   }
 
   private setupHTML(): void {
@@ -67,10 +68,10 @@ export class Modal extends BasePlugin {
     Modal.instance.installLoginHandler(plugin);
   }
   private installLoginHandler(plugin: LoginHandler): void {
-    let form = this.root.find(".vsq-modal .vsq-login");
-    form.submit(function(e) {
+    this.root.on("submit", ".vsq-modal .vsq-login", (e) => {
       e.preventDefault();
 
+      let form = this.root.find(".vsq-modal .vsq-login");
       let email = form.find('input[name=email]').val();
       let password = form.find('input[name=password]').val();
 
@@ -88,6 +89,7 @@ export class Modal extends BasePlugin {
     msg.find("p").html(html);
 
     this.vsq.pause();
+
     this.hideLogin();
     this.root.addClass("is-error");
   }

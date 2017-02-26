@@ -764,7 +764,6 @@ System.register("player/VSQ/Modal", ["player/VSQ/BasePlugin", "Escape"], functio
                 Modal.prototype.load = function () {
                 };
                 Modal.prototype.destroy = function () {
-                    this.root.find(".vsq-modal").remove();
                 };
                 Modal.prototype.setupHTML = function () {
                     var html = "\n      <div class=\"vsq-modal\">\n        <form class=\"vsq-login\">\n          <div class=\"row vsq-message\">\n          </div>\n          <div class=\"row vsq-email\">\n            <div class=\"label\">\n              <label for=\"email\">" + Escape_2.default.HTML(this.l.get('playeremail')) + "</label>\n            </div>\n            <div class=\"elem\">\n              <input name=\"email\" id=\"email\" type=\"text\"/>\n            </div>\n          </div>\n          <div class=\"row vsq-password\">\n            <div class=\"label\">\n              <label for=\"password\">" + Escape_2.default.HTML(this.l.get('playerpassword')) + "</label>\n            </div>\n            <div class=\"elem\">\n              <input name=\"password\" id=\"password\" type=\"password\"/>\n            </div>\n          </div>\n          <div class=\"row submit\">\n            <div class=\"elem\">\n              <input type=\"submit\" value=\"" + Escape_2.default.HTML(this.l.get('submitlogin')) + "\"/>\n            </div>\n          </div>\n        </form>\n      </div>\n    ";
@@ -774,9 +773,10 @@ System.register("player/VSQ/Modal", ["player/VSQ/BasePlugin", "Escape"], functio
                     Modal.instance.installLoginHandler(plugin);
                 };
                 Modal.prototype.installLoginHandler = function (plugin) {
-                    var form = this.root.find(".vsq-modal .vsq-login");
-                    form.submit(function (e) {
+                    var _this = this;
+                    this.root.on("submit", ".vsq-modal .vsq-login", function (e) {
                         e.preventDefault();
+                        var form = _this.root.find(".vsq-modal .vsq-login");
                         var email = form.find('input[name=email]').val();
                         var password = form.find('input[name=password]').val();
                         plugin.onSubmit(email, password);
@@ -1055,7 +1055,9 @@ System.register("player/VSQ/Login", ["player/VSQAPI", "player/VSQ/BasePlugin", "
                 function Login(vsq) {
                     var _this = _super.call(this, vsq) || this;
                     _this.pluginName = "Login";
+                    _this.shown = false;
                     Modal_2.Modal.installLoginHandler(_this);
+                    Modal_2.Modal.showLogin("");
                     return _this;
                 }
                 Login.prototype.login = function (params) {

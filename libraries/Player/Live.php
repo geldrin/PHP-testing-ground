@@ -360,6 +360,7 @@ class Live extends Player {
     // minden ido intervallum masodpercbe
     $data = array(
       'member'        => $user,
+      'organization'  => $info['organization'],
       'tokenauth'     => false,
       'needauth'      => false,
       'nopermission'  => false,
