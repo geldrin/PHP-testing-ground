@@ -353,7 +353,7 @@ a.submitbutton:hover,
 .help.fullwidth {
   margin: 0;
   width: 980px;
-  
+
 }
 
 .form .checkboxwrap,
@@ -1866,7 +1866,7 @@ li#languageselectorlink span {
 }
 .recordinglist .recordingevents ul li {
   width: 100%;
-  
+
 }
 .recordinglist .recordingactions a {
   color: #333;
@@ -2711,7 +2711,7 @@ li#languageselectorlink span {
 }
 /* recommendatory */
 #recommendatory {
-  
+
 }
 #recommendatory h2 {
   margin: 15px 0 15px 0;
@@ -3095,7 +3095,7 @@ li#languageselectorlink span {
   -moz-border-radius: 3px;
   border-radius: 3px;
   cursor: pointer;
-} 
+}
 
 .categoryiconitem img:hover {
   border: 1px solid #d0d0d0;
@@ -3114,7 +3114,7 @@ li#languageselectorlink span {
 }
 
 .categoryiconitem img.selected {
-  background-color: white; 
+  background-color: white;
   border: 1px solid #a0a0a0;
 }
 
@@ -4170,4 +4170,10 @@ table.paging tr.even {
 }
 #player.vsq-is-login .vsq-modal {
   display: block;
+}
+#player .vsq-hidden-master .vsq-master {
+  display: none;
+}
+#player .vsq-hidden-content .vsq-content {
+  display: none;
 }

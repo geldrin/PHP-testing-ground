@@ -329,10 +329,16 @@ export class VSQ {
 
     this.readySent = true;
     let tag = this.videoTags[this.longerType];
+    let seekable: boolean;
+    if (seekable.length > 0)
+      seekable = !!tag.seekable.end(0);
+    else
+      seekable = false;
+
     let data = jQuery.extend(this.flow.video, {
       duration: tag.duration,
-      seekable: tag.seekable.end(0),
-      width: tag.videoWidth, // TODO ezeket mire hasznalja a flowplayer
+      seekable: seekable,
+      width: tag.videoWidth,
       height: tag.videoHeight,
       // az src mindig ugyanaz lesz, hiaba master vagy content
       url: this.videoInfo[VSQType.MASTER].src
@@ -839,6 +845,17 @@ export class VSQ {
     }
 
     return null;
+  }
+
+  public hideTag(type: VSQType): void {
+    // TODO ha mind a ketto videot elrejtettuk akkor jelezni kell a problemat
+    let typ = type == VSQType.MASTER? 'master': 'content';
+    this.flowroot.addClass("vsq-hidden-" + type);
+  }
+  public showTag(type: VSQType): void {
+    // TODO esetlegesen mutatott hiba uzenetet el kell tavolitani
+    let typ = type == VSQType.MASTER? 'master': 'content';
+    this.flowroot.removeClass("vsq-hidden-" + type);
   }
 
   public static setup(): void {

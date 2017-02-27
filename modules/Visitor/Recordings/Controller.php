@@ -780,6 +780,8 @@ class Controller extends \Visitor\Controller {
       );
 
     $this->toSmarty['playercontainerid'] = 'vsq_' . rand();
+    $this->toSmarty['flashplayersubtype'] = '';
+    $this->toSmarty['flashplayerparams'] = 'flashdefaults.params';
     $this->toSmarty['browser']       = $this->bootstrap->getBrowserInfo();
     $this->toSmarty['versions']      = $versions;
     $this->toSmarty['needauth']      = $needauth;

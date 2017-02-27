@@ -86,6 +86,9 @@ export default class VSQHLS {
         abrBandWidthUpFactor: 0.7,
         minAutoBitrate: 0
       */
+      fragLoadingMaxRetry: 0,
+      manifestLoadingMaxRetry: 0,
+      levelLoadingMaxRetry: 0,
       initialLiveManifestSize: 2 // min 2 fragment mert sokat akad kulonben
     });
     this.hls.on(Hls.Events.MEDIA_ATTACHED, (evt: string, data: any): void => {
@@ -94,10 +97,12 @@ export default class VSQHLS {
 
     this.hls.on(Hls.Events.MANIFEST_PARSED, (evt: string, data: any): void => {
       this.onManifestParsed(evt, data);
+      this.vsq.showTag(this.type);
     });
     this.hls.on(Hls.Events.LEVEL_LOADED, (evt: string, data: any): void => {
       this.log("level loaded, canceling ratelimits");
       this.limiter.cancel();
+      this.vsq.showTag(this.type);
     });
     this.hls.on(Hls.Events.ERROR, (evt: string, data: any): void => {
       this.onError(evt, data);
@@ -189,16 +194,20 @@ export default class VSQHLS {
 
           case Hls.ErrorDetails.LEVEL_LOAD_ERROR:
             if (data.response && data.response.code === 404) {
+              this.vsq.hideTag(this.type);
               this.onLevelLoadError(evt, data);
               return;
             }
             break;
         }
 
+        this.vsq.hideTag(this.type);
         // a default hogy ujraprobalkozunk
         this.limiter.trigger("onNetworkError");
         break;
       case Hls.ErrorTypes.MEDIA_ERROR:
+        this.onMediaError(evt, data);
+        return;
         break;
     }
 

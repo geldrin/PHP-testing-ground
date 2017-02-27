@@ -1137,6 +1137,9 @@ System.register("player/VSQHLS", ["player/VSQ", "RateLimiter"], function (export
                 VSQHLS.prototype.initHls = function (type) {
                     var _this = this;
                     this.hls = new Hls({
+                        fragLoadingMaxRetry: 0,
+                        manifestLoadingMaxRetry: 0,
+                        levelLoadingMaxRetry: 0,
                         initialLiveManifestSize: 2
                     });
                     this.hls.on(Hls.Events.MEDIA_ATTACHED, function (evt, data) {
@@ -1144,10 +1147,12 @@ System.register("player/VSQHLS", ["player/VSQ", "RateLimiter"], function (export
                     });
                     this.hls.on(Hls.Events.MANIFEST_PARSED, function (evt, data) {
                         _this.onManifestParsed(evt, data);
+                        _this.vsq.showTag(_this.type);
                     });
                     this.hls.on(Hls.Events.LEVEL_LOADED, function (evt, data) {
                         _this.log("level loaded, canceling ratelimits");
                         _this.limiter.cancel();
+                        _this.vsq.showTag(_this.type);
                     });
                     this.hls.on(Hls.Events.ERROR, function (evt, data) {
                         _this.onError(evt, data);
@@ -1240,14 +1245,18 @@ System.register("player/VSQHLS", ["player/VSQ", "RateLimiter"], function (export
                                     break;
                                 case Hls.ErrorDetails.LEVEL_LOAD_ERROR:
                                     if (data.response && data.response.code === 404) {
+                                        this.vsq.hideTag(this.type);
                                         this.onLevelLoadError(evt, data);
                                         return;
                                     }
                                     break;
                             }
+                            this.vsq.hideTag(this.type);
                             this.limiter.trigger("onNetworkError");
                             break;
                         case Hls.ErrorTypes.MEDIA_ERROR:
+                            this.onMediaError(evt, data);
+                            return;
                             break;
                     }
                     this.onUnhandledError(evt, data);
@@ -1517,9 +1526,14 @@ System.register("player/VSQ", ["player/VSQ/LayoutChooser", "player/VSQ/QualityCh
                         return;
                     this.readySent = true;
                     var tag = this.videoTags[this.longerType];
+                    var seekable;
+                    if (seekable.length > 0)
+                        seekable = !!tag.seekable.end(0);
+                    else
+                        seekable = false;
                     var data = jQuery.extend(this.flow.video, {
                         duration: tag.duration,
-                        seekable: tag.seekable.end(0),
+                        seekable: seekable,
                         width: tag.videoWidth,
                         height: tag.videoHeight,
                         url: this.videoInfo[VSQType.MASTER].src
@@ -1877,6 +1891,14 @@ System.register("player/VSQ", ["player/VSQ/LayoutChooser", "player/VSQ/QualityCh
                         return source;
                     }
                     return null;
+                };
+                VSQ.prototype.hideTag = function (type) {
+                    var typ = type == VSQType.MASTER ? 'master' : 'content';
+                    this.flowroot.addClass("vsq-hidden-" + type);
+                };
+                VSQ.prototype.showTag = function (type) {
+                    var typ = type == VSQType.MASTER ? 'master' : 'content';
+                    this.flowroot.removeClass("vsq-hidden-" + type);
                 };
                 VSQ.setup = function () {
                     if (VSQ.initDone)
