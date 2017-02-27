@@ -766,7 +766,7 @@ System.register("player/VSQ/Modal", ["player/VSQ/BasePlugin", "Escape"], functio
                 Modal.prototype.destroy = function () {
                 };
                 Modal.prototype.setupHTML = function () {
-                    var html = "\n      <div class=\"vsq-modal\">\n        <form class=\"vsq-login\">\n          <div class=\"row vsq-message\">\n          </div>\n          <div class=\"row vsq-email\">\n            <div class=\"label\">\n              <label for=\"email\">" + Escape_2.default.HTML(this.l.get('playeremail')) + "</label>\n            </div>\n            <div class=\"elem\">\n              <input name=\"email\" id=\"email\" type=\"text\"/>\n            </div>\n          </div>\n          <div class=\"row vsq-password\">\n            <div class=\"label\">\n              <label for=\"password\">" + Escape_2.default.HTML(this.l.get('playerpassword')) + "</label>\n            </div>\n            <div class=\"elem\">\n              <input name=\"password\" id=\"password\" type=\"password\"/>\n            </div>\n          </div>\n          <div class=\"row submit\">\n            <div class=\"elem\">\n              <input type=\"submit\" value=\"" + Escape_2.default.HTML(this.l.get('submitlogin')) + "\"/>\n            </div>\n          </div>\n        </form>\n      </div>\n    ";
+                    var html = "\n      <div class=\"vsq-modal\">\n        <div class=\"vsq-transient\">\n        </div>\n        <form class=\"vsq-login\">\n          <div class=\"row vsq-message\">\n          </div>\n          <div class=\"row vsq-email\">\n            <div class=\"label\">\n              <label for=\"email\">" + Escape_2.default.HTML(this.l.get('playeremail')) + "</label>\n            </div>\n            <div class=\"elem\">\n              <input name=\"email\" id=\"email\" type=\"text\"/>\n            </div>\n          </div>\n          <div class=\"row vsq-password\">\n            <div class=\"label\">\n              <label for=\"password\">" + Escape_2.default.HTML(this.l.get('playerpassword')) + "</label>\n            </div>\n            <div class=\"elem\">\n              <input name=\"password\" id=\"password\" type=\"password\"/>\n            </div>\n          </div>\n          <div class=\"row submit\">\n            <div class=\"elem\">\n              <input type=\"submit\" value=\"" + Escape_2.default.HTML(this.l.get('submitlogin')) + "\"/>\n            </div>\n          </div>\n        </form>\n      </div>\n    ";
                     this.root.append(html);
                 };
                 Modal.installLoginHandler = function (plugin) {
@@ -805,6 +805,19 @@ System.register("player/VSQ/Modal", ["player/VSQ/BasePlugin", "Escape"], functio
                 };
                 Modal.prototype.hideLogin = function () {
                     this.root.removeClass("vsq-is-login");
+                };
+                Modal.showTransientMessage = function (html) {
+                    Modal.instance.showTransientMessage(html);
+                };
+                Modal.prototype.showTransientMessage = function (msg) {
+                    this.root.find(".vsq-modal .vsq-transient").text(msg);
+                    this.root.addClass("vsq-transient-error");
+                };
+                Modal.hideTransientMessage = function () {
+                    Modal.instance.hideLogin();
+                };
+                Modal.prototype.hideTransientMessage = function () {
+                    this.root.removeClass("vsq-transient-error");
                 };
                 return Modal;
             }(BasePlugin_3.BasePlugin));
@@ -1257,7 +1270,6 @@ System.register("player/VSQHLS", ["player/VSQ", "RateLimiter"], function (export
                         case Hls.ErrorTypes.MEDIA_ERROR:
                             this.onMediaError(evt, data);
                             return;
-                            break;
                     }
                     this.onUnhandledError(evt, data);
                 };
@@ -1527,7 +1539,7 @@ System.register("player/VSQ", ["player/VSQ/LayoutChooser", "player/VSQ/QualityCh
                     this.readySent = true;
                     var tag = this.videoTags[this.longerType];
                     var seekable;
-                    if (seekable.length > 0)
+                    if (tag.seekable.length > 0)
                         seekable = !!tag.seekable.end(0);
                     else
                         seekable = false;
@@ -1895,10 +1907,19 @@ System.register("player/VSQ", ["player/VSQ/LayoutChooser", "player/VSQ/QualityCh
                 VSQ.prototype.hideTag = function (type) {
                     var typ = type == VSQType.MASTER ? 'master' : 'content';
                     this.flowroot.addClass("vsq-hidden-" + type);
+                    if (this.flowroot.hasClass("vsq-hidden-master vsq-hidden-content")) {
+                        var msg = void 0;
+                        if (this.flow.live)
+                            msg = this.l.get('networkerror_live');
+                        else
+                            msg = this.l.get('networkerror_recordings');
+                        Modal_3.Modal.showTransientMessage(msg);
+                    }
                 };
                 VSQ.prototype.showTag = function (type) {
                     var typ = type == VSQType.MASTER ? 'master' : 'content';
                     this.flowroot.removeClass("vsq-hidden-" + type);
+                    Modal_3.Modal.hideTransientMessage();
                 };
                 VSQ.setup = function () {
                     if (VSQ.initDone)

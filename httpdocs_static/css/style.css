@@ -4086,6 +4086,14 @@ table.paging tr.even {
   width: 100%;
   height: 100%;
 }
+#player .vsq-hidden-master .vsq-master,
+#player .vsq-hidden-content .vsq-content {
+  display: none;
+}
+#player .vsq-hidden-master .vsq-content,
+#player .vsq-hidden-content .vsq-master {
+  width: 100%;
+}
 #player .vsq-engine.vsq-fullscale {
   width: 100%;
 }
@@ -4168,12 +4176,15 @@ table.paging tr.even {
   cursor: pointer;
   z-index: 20;
 }
-#player.vsq-is-login .vsq-modal {
+#player .vsq-modal .vsq-login,
+#player .vsq-modal .vsq-transient {
+  display: none;
+}
+#player.vsq-is-login .vsq-modal,
+#player.vsq-is-login .vsq-modal .vsq-login {
   display: block;
 }
-#player .vsq-hidden-master .vsq-master {
-  display: none;
-}
-#player .vsq-hidden-content .vsq-content {
-  display: none;
+#player.vsq-transient-error .vsq-modal,
+#player.vsq-transient-error .vsq-modal .vsq-transient {
+  display: block;
 }

@@ -34,6 +34,8 @@ export class Modal extends BasePlugin {
   private setupHTML(): void {
     let html = `
       <div class="vsq-modal">
+        <div class="vsq-transient">
+        </div>
         <form class="vsq-login">
           <div class="row vsq-message">
           </div>
@@ -108,5 +110,21 @@ export class Modal extends BasePlugin {
   }
   private hideLogin(): void {
     this.root.removeClass("vsq-is-login");
+  }
+
+  public static showTransientMessage(html: string): void {
+    Modal.instance.showTransientMessage(html);
+  }
+  private showTransientMessage(msg: string): void {
+    // ha egyszer hibat mutatunk, nem varjuk hogy bezarhato/eltuntetheto legyen
+    this.root.find(".vsq-modal .vsq-transient").text(msg);
+    this.root.addClass("vsq-transient-error");
+  }
+
+  public static hideTransientMessage(): void {
+    Modal.instance.hideLogin();
+  }
+  private hideTransientMessage(): void {
+    this.root.removeClass("vsq-transient-error");
   }
 }

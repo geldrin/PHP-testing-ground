@@ -208,7 +208,6 @@ export default class VSQHLS {
       case Hls.ErrorTypes.MEDIA_ERROR:
         this.onMediaError(evt, data);
         return;
-        break;
     }
 
     this.onUnhandledError(evt, data);

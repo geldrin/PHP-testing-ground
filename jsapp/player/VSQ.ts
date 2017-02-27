@@ -330,7 +330,7 @@ export class VSQ {
     this.readySent = true;
     let tag = this.videoTags[this.longerType];
     let seekable: boolean;
-    if (seekable.length > 0)
+    if (tag.seekable.length > 0)
       seekable = !!tag.seekable.end(0);
     else
       seekable = false;
@@ -848,14 +848,23 @@ export class VSQ {
   }
 
   public hideTag(type: VSQType): void {
-    // TODO ha mind a ketto videot elrejtettuk akkor jelezni kell a problemat
     let typ = type == VSQType.MASTER? 'master': 'content';
     this.flowroot.addClass("vsq-hidden-" + type);
+
+    if (this.flowroot.hasClass("vsq-hidden-master vsq-hidden-content")) {
+      let msg: string;
+      if (this.flow.live)
+        msg = this.l.get('networkerror_live');
+      else
+        msg = this.l.get('networkerror_recordings');
+
+      Modal.showTransientMessage(msg)
+    }
   }
   public showTag(type: VSQType): void {
-    // TODO esetlegesen mutatott hiba uzenetet el kell tavolitani
     let typ = type == VSQType.MASTER? 'master': 'content';
     this.flowroot.removeClass("vsq-hidden-" + type);
+    Modal.hideTransientMessage();
   }
 
   public static setup(): void {
