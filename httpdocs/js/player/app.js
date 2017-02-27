@@ -506,6 +506,8 @@ System.register("player/VSQ/LayoutChooser", ["player/VSQ", "player/VSQ/BasePlugi
                     throw new Error("Impossible");
                 };
                 LayoutChooser.prototype.onChange = function (e) {
+                    if (this.flowroot.hasClass('vsq-hidden-master') || this.flowroot.hasClass('vsq-hidden-content'))
+                        return;
                     var elem = jQuery(e.currentTarget);
                     var val = parseInt(elem.val(), 10);
                     var masterWidth = 50;
@@ -573,6 +575,10 @@ System.register("player/VSQ/LayoutChooser", ["player/VSQ", "player/VSQ/BasePlugi
                         width: contentWidth + '%',
                         zIndex: contentZ
                     });
+                };
+                LayoutChooser.resetSize = function () {
+                    var tags = this.vsq.getVideoTags();
+                    jQuery(tags).removeAttr('style');
                 };
                 return LayoutChooser;
             }(BasePlugin_1.BasePlugin));
@@ -1915,11 +1921,13 @@ System.register("player/VSQ", ["player/VSQ/LayoutChooser", "player/VSQ/QualityCh
                             msg = this.l.get('networkerror_recordings');
                         Modal_3.Modal.showTransientMessage(msg);
                     }
+                    LayoutChooser_1.default.resetSize();
                 };
                 VSQ.prototype.showTag = function (type) {
                     var typ = type == VSQType.MASTER ? 'master' : 'content';
                     this.flowroot.removeClass("vsq-hidden-" + type);
                     Modal_3.Modal.hideTransientMessage();
+                    this.flowroot.find('.vsq-layoutchooser input[name="ratio"]').change();
                 };
                 VSQ.setup = function () {
                     if (VSQ.initDone)

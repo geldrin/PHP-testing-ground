@@ -860,11 +860,16 @@ export class VSQ {
 
       Modal.showTransientMessage(msg)
     }
+
+    LayoutChooser.resetSize();
   }
   public showTag(type: VSQType): void {
     let typ = type == VSQType.MASTER? 'master': 'content';
     this.flowroot.removeClass("vsq-hidden-" + type);
     Modal.hideTransientMessage();
+
+    // jelezzuk a layoutchoosernek (ha van) hogy valami valtozott
+    this.flowroot.find('.vsq-layoutchooser input[name="ratio"]').change();
   }
 
   public static setup(): void {

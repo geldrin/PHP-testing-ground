@@ -6,7 +6,6 @@ import {BasePlugin} from "./BasePlugin";
 import Tools from "../../Tools";
 import Escape from "../../Escape";
 
-declare var Hls: any;
 interface LayoutChooserRange {
   from: number;
   to: number;
@@ -197,6 +196,11 @@ export default class LayoutChooser extends BasePlugin {
   }
 
   private onChange(e: Event): void {
+    // ha epp el van rejtve az egyik video valamilyen problema miatt
+    // akkor ne meretezzunk at
+    if (this.flowroot.hasClass('vsq-hidden-master') || this.flowroot.hasClass('vsq-hidden-content'))
+      return;
+
     let elem = jQuery(e.currentTarget);
     let val = parseInt(elem.val(), 10);
     let masterWidth: number = 50;
@@ -276,4 +280,8 @@ export default class LayoutChooser extends BasePlugin {
     });
   }
 
+  public static resetSize(): void {
+    let tags = this.vsq.getVideoTags();
+    jQuery(tags).removeAttr('style');
+  }
 }
