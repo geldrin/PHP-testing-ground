@@ -399,6 +399,7 @@ class Recordings extends Player {
       'recommendations' => array(),
       'subtitles'       => array(),
       'organization'    => $info['organization'],
+      'browser'         => $info['browser'],
       'hds'             => $this->isHDSEnabled( $info ),
       'duration'        => $this->getLength(),
       'seekbar'         => $this->getSeekbarOptions( $info ),
@@ -742,9 +743,15 @@ class Recordings extends Player {
     return $ret;
   }
 
-  protected function getFlowStreams( $cfg ) {
+  private function getStreamsForType( $type, $subtype, $cfg ) {
     $versions = $cfg['versions'];
+    if ( $subtype === 'audio' )
+      return $versions['audio'];
 
+    return $versions[ $type ][ $subtype ];
+  }
+
+  protected function getFlowStreams( $cfg ) {
     $ret = array(
       'master'  => array(),
       'content' => array(),
@@ -752,27 +759,39 @@ class Recordings extends Player {
       'outro'   => array(),
     );
 
-    $master = reset( $versions['master']['desktop'] );
+    if ( $cfg['browser']['mobile'] )
+      $subtype = 'mobile';
+    else if ( $this->row['mastermediatype'] == "audio" )
+      $subtype = 'audio';
+    else
+      $subtype = 'desktop';
+
+    $masterversions = $this->getStreamsForType('master', $subtype, $cfg );
+    $master = reset( $masterversions );
     $ret['master'] = array(
       'type' => 'application/x-mpegurl',
       'url'  => $this->getFlowUrl( $cfg, 'vodabr', $master ),
       'labels' => array(),
     );
-    foreach( $versions['master']['desktop'] as $version )
+    foreach( $masterversions as $version )
       $ret['master']['labels'][] = $version['qualitytag'];
 
+    $contentstreams = $this->getStreamsForType('content', $subtype, $cfg );
+    $content = reset( $contentstreams );
+    if ( $content ) {
+      $ret['content'] = array(
+        'type' => 'application/x-mpegurl',
+        'url'  => $this->getFlowUrl( $cfg, 'vodabr', $content ),
+        'labels' => array(),
+      );
+      foreach( $contentstreams as $version )
+        $ret['content']['labels'][] = $version['qualitytag'];
+    }
 
-    $content = reset( $versions['content']['desktop'] );
-    if ( !$content )
+    // audio playernel unsupported az intro/outro
+    // https://dam.codebasehq.com/projects/teleconnect/tickets/2076
+    if ( $subtype === 'audio' )
       return $ret;
-
-    $ret['content'] = array(
-      'type' => 'application/x-mpegurl',
-      'url'  => $this->getFlowUrl( $cfg, 'vodabr', $content ),
-      'labels' => array(),
-    );
-    foreach( $versions['content']['desktop'] as $version )
-      $ret['content']['labels'][] = $version['qualitytag'];
 
     if ( $cfg['introversions'] ) {
       $introversion = reset( $cfg['introversions'] );

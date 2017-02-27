@@ -345,6 +345,7 @@ class Controller extends \Visitor\Controller {
     if ( $recordingsModel->row['mediatype'] == 'audio' )
       $this->toSmarty['playercontainerid'] .= 'audio';
 
+    $this->toSmarty['browser']       = $this->bootstrap->getBrowserInfo();
     $this->toSmarty['versions']      = $versions;
     $this->toSmarty['ipaddress']     = $this->getIPAddress();
     $this->toSmarty['member']        = $user;
@@ -453,6 +454,7 @@ class Controller extends \Visitor\Controller {
     if ( $access[ $accesskey ] === 'registrationrestricted' )
       $needauth = true;
 
+    $this->toSmarty['browser']   = $this->bootstrap->getBrowserInfo();
     $this->toSmarty['member']    = $user;
     $this->toSmarty['ipaddress'] = $this->getIPAddress();
     $this->toSmarty['sessionid'] = session_id();
@@ -778,6 +780,7 @@ class Controller extends \Visitor\Controller {
       );
 
     $this->toSmarty['playercontainerid'] = 'vsq_' . rand();
+    $this->toSmarty['browser']       = $this->bootstrap->getBrowserInfo();
     $this->toSmarty['versions']      = $versions;
     $this->toSmarty['needauth']      = $needauth;
     $this->toSmarty['tokenvalid']    = $tokenValid;

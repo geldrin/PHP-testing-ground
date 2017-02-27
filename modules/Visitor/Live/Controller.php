@@ -200,6 +200,7 @@ class Controller extends \Visitor\Controller {
     $currentstream = $streams['defaultstream'];
     $streamtype    = $streams['streamtype'];
     $info          = array(
+      'browser'      => $this->bootstrap->getBrowserInfo(),
       'title'        => $this->toSmarty['title'],
       'organization' => $this->organization,
       'sessionid'    => session_id(),

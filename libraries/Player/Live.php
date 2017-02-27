@@ -356,11 +356,14 @@ class Live extends Player {
     $this->bootstrap->includeTemplatePlugin('indexphoto');
 
     $user = $this->bootstrap->getSession('user');
+    if ( empty( $info['streams'] ) )
+      $info['streams'] = $this->getStreamsForBrowser( $info['browser'] );
 
     // minden ido intervallum masodpercbe
     $data = array(
       'member'        => $user,
       'organization'  => $info['organization'],
+      'browser'       => $info['browser'],
       'tokenauth'     => false,
       'needauth'      => false,
       'nopermission'  => false,

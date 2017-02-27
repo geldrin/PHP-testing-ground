@@ -419,7 +419,7 @@ class Bootstrap {
 
     if ( !ISCLI ) {
 
-      $info = $this->getBrowserInfo();;
+      $info = $this->getBrowserInfo();
 
       if ( $info['mobile'] and $info['mobiledevice'] == 'android' )
         $this->overridedisablegzip = true;
