@@ -8,6 +8,7 @@ import QualityChooser from "./VSQ/QualityChooser";
 import {Modal} from "./VSQ/Modal";
 import Pinger from "./VSQ/Pinger";
 import Login from "./VSQ/Login";
+import ProgressReport from "./VSQ/ProgressReport";
 import VSQHLS from "./VSQHLS";
 import VSQAPI from "./VSQAPI";
 import Tools from "../Tools";
@@ -86,6 +87,9 @@ export class VSQ {
       this.plugins.push(new LayoutChooser(this));
       this.plugins.push(new QualityChooser(this));
     }
+
+    //if (this.cfg.needProgressReport)
+    this.plugins.push(new ProgressReport(this));
   }
 
   public getRoot(): JQuery {
