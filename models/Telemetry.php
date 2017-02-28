@@ -5,7 +5,10 @@ class Telemetry extends \Springboard\Model {
   public function getHashFromTrace( $stacktrace, $raw = false ) {
     $hash = hash_init('sha256');
     hash_update( $hash, $stacktrace['message'] );
-    hash_update( $hash, $stacktrace['name'] );
+
+    // nev nem mindig van bizonyos browsereken (IE, mi mas)
+    if ( isset( $stacktrace['name'] ) )
+      hash_update( $hash, $stacktrace['name'] );
 
     hash_update( $hash, $stacktrace['stack'][0]['line'] );
     hash_update( $hash, $stacktrace['stack'][0]['url'] );
@@ -19,7 +22,7 @@ class Telemetry extends \Springboard\Model {
     $d = \Springboard\Debug::getInstance();
 
     $line =
-      'JS Exception: ' . $stacktrace['name'] . '("' . $stacktrace['message'] . "\")\n" .
+      'JS Exception: ' . @$stacktrace['name'] . '("' . $stacktrace['message'] . "\")\n" .
       $stacktrace['url'] . "\nStack:\n" . trim( $d::varDump( $stacktrace['stack'] ) )
     ;
 
