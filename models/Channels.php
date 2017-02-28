@@ -1392,7 +1392,10 @@ class Channels extends \Springboard\Model {
         c.endtimestamp,
         s.value AS channeltype,
         lf.id AS livefeedid,
-        lf.name AS feedname
+        lf.userid AS livefeeduserid,
+        lf.name AS feedname,
+        lf.accesstype,
+        lf.istokenrequired
       FROM channels AS c
       LEFT JOIN livefeeds AS lf ON(
         c.id = lf.channelid
@@ -1405,8 +1408,7 @@ class Channels extends \Springboard\Model {
         s.language = '$language'
       )
       WHERE
-        c.isfeatured  <> '0' AND
-        c.isliveevent  = '1' AND
+        c.isfeatured    <> '0' AND
         $where
       GROUP BY c.id
       ORDER BY c.isfeatured, c.id DESC
