@@ -91,11 +91,32 @@ class Controller extends \Visitor\Controller {
 
   private function getBlockEloadas( $user ) {
     $channelModel = $this->bootstrap->getModel('channels');
-    return $channelModel->getFeatured(
+    $channels = $channelModel->getFeatured(
       $this->organization['id'],
       \Springboard\Language::get(),
       4
     );
+
+    $feedModel = $this->bootstrap->getModel('livefeeds');
+    $user      = $this->bootstrap->getSession('user');
+    foreach( $channels as $key => $channel ) {
+      $feed = array(
+        'id'              => $channel['livefeedid'],
+        'accesstype'      => $channel['accesstype'],
+        'istokenrequired' => $channel['istokenrequired'],
+      );
+
+      $feedModel->row = $feed['id'];
+      $feedModel->row = $feed;
+
+      // van hozzaferese a usernek (vagy publikus)
+      if ( $feedModel->isAccessible( $user, $this->organization, null, null ) )
+        continue;
+
+      unset( $channels[ $key ] );
+    }
+
+    return $channels;
   }
 
   private function getBlockUjranezes( $user ) {

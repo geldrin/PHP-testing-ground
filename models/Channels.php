@@ -1392,7 +1392,9 @@ class Channels extends \Springboard\Model {
         c.endtimestamp,
         s.value AS channeltype,
         lf.id AS livefeedid,
-        lf.name AS feedname
+        lf.name AS feedname,
+        lf.accesstype,
+        lf.istokenrequired
       FROM channels AS c
       LEFT JOIN livefeeds AS lf ON(
         c.id = lf.channelid
