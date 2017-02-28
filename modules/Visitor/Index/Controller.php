@@ -102,6 +102,7 @@ class Controller extends \Visitor\Controller {
     foreach( $channels as $key => $channel ) {
       $feed = array(
         'id'              => $channel['livefeedid'],
+        'userid'          => $channel['livefeeduserid'],
         'accesstype'      => $channel['accesstype'],
         'istokenrequired' => $channel['istokenrequired'],
       );

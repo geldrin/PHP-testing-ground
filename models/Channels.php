@@ -1392,6 +1392,7 @@ class Channels extends \Springboard\Model {
         c.endtimestamp,
         s.value AS channeltype,
         lf.id AS livefeedid,
+        lf.userid AS livefeeduserid,
         lf.name AS feedname,
         lf.accesstype,
         lf.istokenrequired
