@@ -27,6 +27,15 @@ enum LayoutType {
 export default class LayoutChooser extends BasePlugin {
   protected pluginName = "LayoutChooser";
   private ranges: LayoutChooserRange[];
+  private static instance: LayoutChooser;
+
+  constructor(vsq: VSQ) {
+    super(vsq);
+    if (LayoutChooser.instance != null)
+      throw new Error("LayoutChooser.instance already present");
+
+    LayoutChooser.instance = this;
+  }
 
   public load(): void {
     // nincs masik video, csak a full 100% szamit
@@ -281,6 +290,10 @@ export default class LayoutChooser extends BasePlugin {
   }
 
   public static resetSize(): void {
+    LayoutChooser.instance.resetSize();
+  }
+
+  private resetSize(): void {
     let tags = this.vsq.getVideoTags();
     jQuery(tags).removeAttr('style');
   }

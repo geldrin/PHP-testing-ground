@@ -6,8 +6,6 @@ import Locale from "../../Locale";
 import Tools from "../../Tools";
 import Escape from "../../Escape";
 
-declare var Hls: any;
-
 export abstract class BasePlugin {
   protected pluginName: string;
   protected vsq: VSQ;

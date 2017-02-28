@@ -376,9 +376,12 @@ System.register("player/VSQ/LayoutChooser", ["player/VSQ", "player/VSQ/BasePlugi
             })(LayoutType || (LayoutType = {}));
             LayoutChooser = (function (_super) {
                 __extends(LayoutChooser, _super);
-                function LayoutChooser() {
-                    var _this = _super.apply(this, arguments) || this;
+                function LayoutChooser(vsq) {
+                    var _this = _super.call(this, vsq) || this;
                     _this.pluginName = "LayoutChooser";
+                    if (LayoutChooser.instance != null)
+                        throw new Error("LayoutChooser.instance already present");
+                    LayoutChooser.instance = _this;
                     return _this;
                 }
                 LayoutChooser.prototype.load = function () {
@@ -577,6 +580,9 @@ System.register("player/VSQ/LayoutChooser", ["player/VSQ", "player/VSQ/BasePlugi
                     });
                 };
                 LayoutChooser.resetSize = function () {
+                    LayoutChooser.instance.resetSize();
+                };
+                LayoutChooser.prototype.resetSize = function () {
                     var tags = this.vsq.getVideoTags();
                     jQuery(tags).removeAttr('style');
                 };
