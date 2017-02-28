@@ -106,7 +106,7 @@ class Controller extends \Visitor\Controller {
         'istokenrequired' => $channel['istokenrequired'],
       );
 
-      $feedModel->row = $feed['id'];
+      $feedModel->id = $feed['id'];
       $feedModel->row = $feed;
 
       // van hozzaferese a usernek (vagy publikus)
