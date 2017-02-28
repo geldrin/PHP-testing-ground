@@ -1167,9 +1167,42 @@ System.register("player/VSQ/ProgressReport", ["player/VSQ/BasePlugin"], function
         }
     };
 });
-System.register("player/VSQHLS", ["player/VSQ", "RateLimiter"], function (exports_15, context_15) {
+System.register("player/VSQ/Timeline", ["player/VSQ/BasePlugin"], function (exports_15, context_15) {
     "use strict";
     var __moduleName = context_15 && context_15.id;
+    var BasePlugin_7, Timeline;
+    return {
+        setters: [
+            function (BasePlugin_7_1) {
+                BasePlugin_7 = BasePlugin_7_1;
+            }
+        ],
+        execute: function () {
+            Timeline = (function (_super) {
+                __extends(Timeline, _super);
+                function Timeline(vsq) {
+                    var _this = _super.call(this, vsq) || this;
+                    _this.pluginName = "Timeline";
+                    return _this;
+                }
+                Timeline.prototype.load = function () {
+                    this.flowroot.on("click.vsq-tl", ".fp-timeline", function (e) {
+                        var x = e.pageX || e.clientX;
+                        console.log(x);
+                    });
+                };
+                Timeline.prototype.destroy = function () {
+                    this.flowroot.off(".vsq-tl");
+                };
+                return Timeline;
+            }(BasePlugin_7.BasePlugin));
+            exports_15("default", Timeline);
+        }
+    };
+});
+System.register("player/VSQHLS", ["player/VSQ", "RateLimiter"], function (exports_16, context_16) {
+    "use strict";
+    var __moduleName = context_16 && context_16.id;
     var VSQ_4, RateLimiter_1, VSQHLS;
     return {
         setters: [
@@ -1345,14 +1378,14 @@ System.register("player/VSQHLS", ["player/VSQ", "RateLimiter"], function (export
                 };
                 return VSQHLS;
             }());
-            exports_15("default", VSQHLS);
+            exports_16("default", VSQHLS);
         }
     };
 });
-System.register("player/VSQ", ["player/VSQ/LayoutChooser", "player/VSQ/QualityChooser", "player/VSQ/Modal", "player/VSQ/Pinger", "player/VSQ/Login", "player/VSQ/ProgressReport", "player/VSQHLS", "player/VSQAPI"], function (exports_16, context_16) {
+System.register("player/VSQ", ["player/VSQ/LayoutChooser", "player/VSQ/QualityChooser", "player/VSQ/Modal", "player/VSQ/Pinger", "player/VSQ/Login", "player/VSQ/ProgressReport", "player/VSQ/Timeline", "player/VSQHLS", "player/VSQAPI"], function (exports_17, context_17) {
     "use strict";
-    var __moduleName = context_16 && context_16.id;
-    var LayoutChooser_1, QualityChooser_1, Modal_3, Pinger_1, Login_1, ProgressReport_1, VSQHLS_1, VSQAPI_3, VSQ, VSQType;
+    var __moduleName = context_17 && context_17.id;
+    var LayoutChooser_1, QualityChooser_1, Modal_3, Pinger_1, Login_1, ProgressReport_1, Timeline_1, VSQHLS_1, VSQAPI_3, VSQ, VSQType;
     return {
         setters: [
             function (LayoutChooser_1_1) {
@@ -1372,6 +1405,9 @@ System.register("player/VSQ", ["player/VSQ/LayoutChooser", "player/VSQ/QualityCh
             },
             function (ProgressReport_1_1) {
                 ProgressReport_1 = ProgressReport_1_1;
+            },
+            function (Timeline_1_1) {
+                Timeline_1 = Timeline_1_1;
             },
             function (VSQHLS_1_1) {
                 VSQHLS_1 = VSQHLS_1_1;
@@ -1420,6 +1456,7 @@ System.register("player/VSQ", ["player/VSQ/LayoutChooser", "player/VSQ/QualityCh
                         this.plugins.push(new QualityChooser_1.default(this));
                     }
                     this.plugins.push(new ProgressReport_1.default(this));
+                    this.plugins.push(new Timeline_1.default(this));
                 }
                 VSQ.prototype.getRoot = function () {
                     return this.root;
@@ -1988,18 +2025,18 @@ System.register("player/VSQ", ["player/VSQ/LayoutChooser", "player/VSQ/QualityCh
             VSQ.engineName = "vsq";
             VSQ.debug = false;
             VSQ.initDone = false;
-            exports_16("VSQ", VSQ);
+            exports_17("VSQ", VSQ);
             (function (VSQType) {
                 VSQType[VSQType["MASTER"] = 0] = "MASTER";
                 VSQType[VSQType["CONTENT"] = 1] = "CONTENT";
             })(VSQType || (VSQType = {}));
-            exports_16("VSQType", VSQType);
+            exports_17("VSQType", VSQType);
         }
     };
 });
-System.register("player/PlayerSetup", ["player/Flash", "player/VSQ"], function (exports_17, context_17) {
+System.register("player/PlayerSetup", ["player/Flash", "player/VSQ"], function (exports_18, context_18) {
     "use strict";
-    var __moduleName = context_17 && context_17.id;
+    var __moduleName = context_18 && context_18.id;
     var Flash_1, VSQ_5, PlayerSetup;
     return {
         setters: [
@@ -2068,13 +2105,13 @@ System.register("player/PlayerSetup", ["player/Flash", "player/VSQ"], function (
                 };
                 return PlayerSetup;
             }());
-            exports_17("default", PlayerSetup);
+            exports_18("default", PlayerSetup);
         }
     };
 });
-System.register("player/app", ["Locale", "player/Config", "player/PlayerSetup"], function (exports_18, context_18) {
+System.register("player/app", ["Locale", "player/Config", "player/PlayerSetup"], function (exports_19, context_19) {
     "use strict";
-    var __moduleName = context_18 && context_18.id;
+    var __moduleName = context_19 && context_19.id;
     var Locale_1, Config_1, PlayerSetup_1;
     return {
         setters: [

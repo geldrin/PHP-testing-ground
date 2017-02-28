@@ -9,6 +9,7 @@ import {Modal} from "./VSQ/Modal";
 import Pinger from "./VSQ/Pinger";
 import Login from "./VSQ/Login";
 import ProgressReport from "./VSQ/ProgressReport";
+import Timeline from "./VSQ/Timeline";
 import VSQHLS from "./VSQHLS";
 import VSQAPI from "./VSQAPI";
 import Tools from "../Tools";
@@ -90,6 +91,8 @@ export class VSQ {
 
     //if (this.cfg.needProgressReport)
     this.plugins.push(new ProgressReport(this));
+    //if (this.cfg.needTimelineLock)
+    this.plugins.push(new Timeline(this));
   }
 
   public getRoot(): JQuery {

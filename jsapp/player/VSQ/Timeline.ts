@@ -6,7 +6,7 @@ import {BasePlugin} from "./BasePlugin";
 import Tools from "../../Tools";
 import Escape from "../../Escape";
 
-export class Timeline extends BasePlugin {
+export default class Timeline extends BasePlugin {
   protected pluginName = "Timeline";
 
   constructor(vsq: VSQ) {
@@ -14,18 +14,18 @@ export class Timeline extends BasePlugin {
   }
 
   public load(): void {
-    this.flowroot.on("mousemove", ".fp-timeline", (e) => {
+    this.flowroot.on("click.vsq-tl", ".fp-timeline", (e) => {
       let x = e.pageX || e.clientX;
-      console.log(x)
+      console.log(x);
+      // e.stopPropagation()
       //let delta = x - common.offset(timeline).left
       //let percentage = delta / common.width(timeline)
       //let seconds = percentage * api.video.duration;
-      // TODO disable, css cursor, eat events
+      // TODO disable, css cursor, eat events, keep max viewed duration, param?
     });
   }
 
   public destroy(): void {
-    // nem akarjuk az insertalt html-t feltakaritani mert a mi html-unk
-    // nem kotott a video eletehez
+    this.flowroot.off(".vsq-tl");
   }
 }
