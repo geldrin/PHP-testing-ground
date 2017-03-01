@@ -29,8 +29,8 @@ export default class Pinger extends BasePlugin {
       clearTimeout(this.timer);
 
     this.timer = setTimeout(() => {
-      this.ping();
       this.timer = null;
+      this.ping();
       this.schedule();
     }, this.cfg.pingSeconds * 1000);
   }

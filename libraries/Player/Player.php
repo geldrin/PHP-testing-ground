@@ -184,21 +184,33 @@ abstract class Player {
       'live'  => $this->type === 'live',
       'playlist' => array(),
       'vsq' => array(
-        'debug'    => $this->bootstrap->config['vsqplayer_debug'],
-        'type'     => $this->type,
-        'duration' => -1,
+        'debug'            => $this->bootstrap->config['vsqplayer_debug'],
+        'type'             => $this->type,
+        'duration'         => -1,
         // a master video hanyadik a sorban amit jatszani kell
-        'masterIndex' => 0,
-        'autoplay' => false,
+        'masterIndex'      => 0,
+        'autoplay'         => false,
         'secondarySources' => array(),
-        'contentOnRight' => (bool) $this->row['slideonright'],
-        'isAudioOnly' => false,
-        'needPing' => false,
-        'needLogin' => false,
-        'pingSeconds' => (int)$this->bootstrap->config['sessionpingseconds'],
-        'parameters'  => array(),
-        'apiurl' => '',
+        'contentOnRight'   => (bool) $this->row['slideonright'],
+        'isAudioOnly'      => false,
+        'needPing'         => false,
+        'needLogin'        => false,
+        'pingSeconds'      =>
+          (int)$this->bootstrap->config['sessionpingseconds']
+        ,
+        'parameters'       => array(
+          'format' => 'json',
+        ),
+        'apiurl'           => '',
         // TODO mobile es a mobil tipusa
+        'position'         => array(
+          'report'          => false,
+          'seek'            => false,
+          'lastposition'    => 0,
+          'intervalSeconds' =>
+            $this->bootstrap->config['recordingpositionupdateseconds']
+          ,
+        ),
       ),
     );
 
@@ -207,7 +219,7 @@ abstract class Player {
     else
       $apiurl = $this->bootstrap->baseuri;
 
-    $ret['vsq']['apiurl'] .= 'jsonapi';
+    $ret['vsq']['apiurl'] .= 'playerapi';
 
     $newclip = array(
       // Set a title for this clip. Displayed in a top bar when hovering over the player.

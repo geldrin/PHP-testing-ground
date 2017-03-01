@@ -54,4 +54,8 @@ export default class Tools {
 
     return data;
   }
+
+  static now(): number {
+    return (new Date()).getTime();
+  }
 }

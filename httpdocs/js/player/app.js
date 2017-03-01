@@ -212,6 +212,9 @@ System.register("Tools", [], function (exports_4, context_4) {
                     }
                     return data;
                 };
+                Tools.now = function () {
+                    return (new Date()).getTime();
+                };
                 return Tools;
             }());
             exports_4("default", Tools);
@@ -1002,8 +1005,8 @@ System.register("player/VSQ/Pinger", ["player/VSQAPI", "player/VSQ/BasePlugin", 
                     if (this.timer !== null)
                         clearTimeout(this.timer);
                     this.timer = setTimeout(function () {
-                        _this.ping();
                         _this.timer = null;
+                        _this.ping();
                         _this.schedule();
                     }, this.cfg.pingSeconds * 1000);
                 };
@@ -1134,14 +1137,23 @@ System.register("player/VSQ/Login", ["player/VSQAPI", "player/VSQ/BasePlugin", "
         }
     };
 });
-System.register("player/VSQ/ProgressReport", ["player/VSQ/BasePlugin"], function (exports_14, context_14) {
+System.register("player/VSQ/ProgressReport", ["player/VSQAPI", "player/VSQ/BasePlugin", "player/VSQ/Modal", "Tools"], function (exports_14, context_14) {
     "use strict";
     var __moduleName = context_14 && context_14.id;
-    var BasePlugin_6, ProgressReport;
+    var VSQAPI_3, BasePlugin_6, Modal_3, Tools_3, ProgressReport;
     return {
         setters: [
+            function (VSQAPI_3_1) {
+                VSQAPI_3 = VSQAPI_3_1;
+            },
             function (BasePlugin_6_1) {
                 BasePlugin_6 = BasePlugin_6_1;
+            },
+            function (Modal_3_1) {
+                Modal_3 = Modal_3_1;
+            },
+            function (Tools_3_1) {
+                Tools_3 = Tools_3_1;
             }
         ],
         execute: function () {
@@ -1150,12 +1162,71 @@ System.register("player/VSQ/ProgressReport", ["player/VSQ/BasePlugin"], function
                 function ProgressReport(vsq) {
                     var _this = _super.call(this, vsq) || this;
                     _this.pluginName = "ProgressReport";
+                    _this.lastPosition = 0;
+                    if (!_this.cfg.position.report)
+                        throw new Error("Reporting disabled yet reporting requested");
+                    _this.interval = _this.cfg.position.intervalSeconds * 1000;
                     return _this;
                 }
-                ProgressReport.prototype.load = function () {
-                    this.flow.on("progress.vsq-pgr", function (e, flow, time) {
+                ProgressReport.prototype.report = function () {
+                    return __awaiter(this, void 0, void 0, function () {
+                        var params, data, result, err_3;
+                        return __generator(this, function (_a) {
+                            switch (_a.label) {
+                                case 0:
+                                    this.lastReportTime = Tools_3.default.now();
+                                    _a.label = 1;
+                                case 1:
+                                    _a.trys.push([1, 3, , 4]);
+                                    params = jQuery.extend({}, this.cfg.parameters);
+                                    params['lastposition'] = this.lastPosition;
+                                    this.log("reporting", params);
+                                    return [4 /*yield*/, VSQAPI_3.default.POST("recordings", "updateposition", params)];
+                                case 2:
+                                    data = _a.sent();
+                                    this.log("report result", data);
+                                    if (data.result == null)
+                                        throw new Error("Unexpected result from api call");
+                                    result = data.result;
+                                    if (result.success === false) {
+                                        if (result.position === 0) {
+                                            Modal_3.Modal.showError("progressreport-resetposition");
+                                            return [2 /*return*/];
+                                        }
+                                        Modal_3.Modal.showError("progressreport-failed");
+                                        return [2 /*return*/];
+                                    }
+                                    return [3 /*break*/, 4];
+                                case 3:
+                                    err_3 = _a.sent();
+                                    this.log("report error", err_3);
+                                    Modal_3.Modal.showError(this.l.get('networkerror'));
+                                    return [3 /*break*/, 4];
+                                case 4: return [2 /*return*/];
+                            }
+                        });
                     });
-                    this.flow.on("seek.vsq-pgr", function (e, flow, time) {
+                };
+                ProgressReport.prototype.reportIfNeeded = function (force) {
+                    if (force || this.lastReportTime == null)
+                        this.report();
+                    var now = Tools_3.default.now();
+                    if (now - this.lastReportTime > this.interval)
+                        this.report();
+                };
+                ProgressReport.prototype.load = function () {
+                    var _this = this;
+                    if (!this.vsq.isMainMasterVideo()) {
+                        this.log("Intro our outro playing, not reporting progress");
+                        return;
+                    }
+                    this.flow.on("progress.vsq-pgr", function (e, flow, time) {
+                        if (_this.lastPosition < time)
+                            _this.lastPosition = time;
+                        _this.reportIfNeeded();
+                    });
+                    this.flow.on("finish.vsq-pgr", function (e, flow) {
+                        _this.reportIfNeeded(true);
                     });
                 };
                 ProgressReport.prototype.destroy = function () {
@@ -1385,7 +1456,7 @@ System.register("player/VSQHLS", ["player/VSQ", "RateLimiter"], function (export
 System.register("player/VSQ", ["player/VSQ/LayoutChooser", "player/VSQ/QualityChooser", "player/VSQ/Modal", "player/VSQ/Pinger", "player/VSQ/Login", "player/VSQ/ProgressReport", "player/VSQ/Timeline", "player/VSQHLS", "player/VSQAPI"], function (exports_17, context_17) {
     "use strict";
     var __moduleName = context_17 && context_17.id;
-    var LayoutChooser_1, QualityChooser_1, Modal_3, Pinger_1, Login_1, ProgressReport_1, Timeline_1, VSQHLS_1, VSQAPI_3, VSQ, VSQType;
+    var LayoutChooser_1, QualityChooser_1, Modal_4, Pinger_1, Login_1, ProgressReport_1, Timeline_1, VSQHLS_1, VSQAPI_4, VSQ, VSQType;
     return {
         setters: [
             function (LayoutChooser_1_1) {
@@ -1394,8 +1465,8 @@ System.register("player/VSQ", ["player/VSQ/LayoutChooser", "player/VSQ/QualityCh
             function (QualityChooser_1_1) {
                 QualityChooser_1 = QualityChooser_1_1;
             },
-            function (Modal_3_1) {
-                Modal_3 = Modal_3_1;
+            function (Modal_4_1) {
+                Modal_4 = Modal_4_1;
             },
             function (Pinger_1_1) {
                 Pinger_1 = Pinger_1_1;
@@ -1412,8 +1483,8 @@ System.register("player/VSQ", ["player/VSQ/LayoutChooser", "player/VSQ/QualityCh
             function (VSQHLS_1_1) {
                 VSQHLS_1 = VSQHLS_1_1;
             },
-            function (VSQAPI_3_1) {
-                VSQAPI_3 = VSQAPI_3_1;
+            function (VSQAPI_4_1) {
+                VSQAPI_4 = VSQAPI_4_1;
             }
         ],
         execute: function () {
@@ -1432,7 +1503,7 @@ System.register("player/VSQ", ["player/VSQ/LayoutChooser", "player/VSQ/QualityCh
                     this.flow = flow;
                     this.cfg = flow.conf.vsq || {};
                     this.l = this.cfg.locale;
-                    VSQAPI_3.default.init(this.cfg);
+                    VSQAPI_4.default.init(this.cfg);
                     this.flow.conf.errors.push(this.l.get('access_denied'));
                     VSQ.accessDeniedError = flow.conf.errors.length - 1;
                     this.hlsConf = jQuery.extend({
@@ -1446,7 +1517,7 @@ System.register("player/VSQ", ["player/VSQ/LayoutChooser", "player/VSQ/QualityCh
                     this.id = this.flowroot.attr('data-flowplayer-instance-id');
                     if (!this.cfg.contentOnRight)
                         this.flowroot.addClass('vsq-contentleft');
-                    this.plugins.push(new Modal_3.Modal(this));
+                    this.plugins.push(new Modal_4.Modal(this));
                     if (this.cfg.needPing)
                         this.plugins.push(new Pinger_1.default(this));
                     if (this.cfg.needLogin)
@@ -1455,8 +1526,10 @@ System.register("player/VSQ", ["player/VSQ/LayoutChooser", "player/VSQ/QualityCh
                         this.plugins.push(new LayoutChooser_1.default(this));
                         this.plugins.push(new QualityChooser_1.default(this));
                     }
-                    this.plugins.push(new ProgressReport_1.default(this));
-                    this.plugins.push(new Timeline_1.default(this));
+                    if (this.cfg.position.report)
+                        this.plugins.push(new ProgressReport_1.default(this));
+                    if (!this.cfg.position.seek)
+                        this.plugins.push(new Timeline_1.default(this));
                 }
                 VSQ.prototype.getRoot = function () {
                     return this.root;
@@ -1926,6 +1999,9 @@ System.register("player/VSQ", ["player/VSQ/LayoutChooser", "player/VSQ/QualityCh
                     if (this.cfg.autoplay)
                         this.tagCall("play");
                 };
+                VSQ.prototype.isMainMasterVideo = function () {
+                    return this.introOrOutro === false;
+                };
                 VSQ.prototype.pause = function () {
                     this.tagCall('pause');
                 };
@@ -1999,14 +2075,14 @@ System.register("player/VSQ", ["player/VSQ/LayoutChooser", "player/VSQ/QualityCh
                             msg = this.l.get('networkerror_live');
                         else
                             msg = this.l.get('networkerror_recordings');
-                        Modal_3.Modal.showTransientMessage(msg);
+                        Modal_4.Modal.showTransientMessage(msg);
                     }
                     LayoutChooser_1.default.resetSize();
                 };
                 VSQ.prototype.showTag = function (type) {
                     var typ = type == VSQType.MASTER ? 'master' : 'content';
                     this.flowroot.removeClass("vsq-hidden-" + type);
-                    Modal_3.Modal.hideTransientMessage();
+                    Modal_4.Modal.hideTransientMessage();
                     this.flowroot.find('.vsq-layoutchooser input[name="ratio"]').change();
                 };
                 VSQ.setup = function () {

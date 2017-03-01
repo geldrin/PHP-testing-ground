@@ -89,10 +89,11 @@ export class VSQ {
       this.plugins.push(new QualityChooser(this));
     }
 
-    //if (this.cfg.needProgressReport)
-    this.plugins.push(new ProgressReport(this));
-    //if (this.cfg.needTimelineLock)
-    this.plugins.push(new Timeline(this));
+    if (this.cfg.position.report)
+      this.plugins.push(new ProgressReport(this));
+
+    if (!this.cfg.position.seek)
+      this.plugins.push(new Timeline(this));
   }
 
   public getRoot(): JQuery {
@@ -755,6 +756,10 @@ export class VSQ {
       this.tagCall("play");
   }
 
+  public isMainMasterVideo(): boolean {
+    return this.introOrOutro === false;
+  }
+
   public pause(): void {
     this.tagCall('pause');
   }
@@ -900,6 +905,12 @@ export enum VSQType {
 }
 
 /* definialni hogy kell a vsq flowplayer confignak kineznie */
+export interface VSQConfigPosition {
+  report: boolean;
+  seek: boolean;
+  lastposition: number;
+  intervalSeconds: number;
+}
 export interface VSQConfig {
   type: string;
   debug: boolean;
@@ -915,4 +926,5 @@ export interface VSQConfig {
   pingSeconds: number;
   parameters: Object;
   apiurl: string;
+  position: VSQConfigPosition;
 }

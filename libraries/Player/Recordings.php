@@ -845,6 +845,13 @@ class Recordings extends Player {
     $ret['vsq']['isAudioOnly'] = $this->row['mastermediatype'] == "audio";
     $ret['vsq']['parameters']['recordingid'] = $this->row['id'];
 
+    if ( !empty( $cfg['seekbar'] ) ) {
+      $bar = $cfg['seekbar'];
+      $ret['vsq']['position']['report']       = true;
+      $ret['vsq']['position']['seek']         = $bar['visible'];
+      $ret['vsq']['position']['lastposition'] = $bar['lastposition'];
+    }
+
     return $ret;
   }
 }
