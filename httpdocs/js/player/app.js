@@ -1238,12 +1238,15 @@ System.register("player/VSQ/ProgressReport", ["player/VSQAPI", "player/VSQ/BaseP
         }
     };
 });
-System.register("player/VSQ/Timeline", ["player/VSQ/BasePlugin"], function (exports_15, context_15) {
+System.register("player/VSQ/Timeline", ["player/VSQ", "player/VSQ/BasePlugin"], function (exports_15, context_15) {
     "use strict";
     var __moduleName = context_15 && context_15.id;
-    var BasePlugin_7, Timeline;
+    var VSQ_4, BasePlugin_7, Timeline;
     return {
         setters: [
+            function (VSQ_4_1) {
+                VSQ_4 = VSQ_4_1;
+            },
             function (BasePlugin_7_1) {
                 BasePlugin_7 = BasePlugin_7_1;
             }
@@ -1254,12 +1257,68 @@ System.register("player/VSQ/Timeline", ["player/VSQ/BasePlugin"], function (expo
                 function Timeline(vsq) {
                     var _this = _super.call(this, vsq) || this;
                     _this.pluginName = "Timeline";
+                    _this.dragging = false;
+                    if (_this.cfg.position.seek)
+                        throw new Error("Timeline enabled yet disabling requested");
+                    _this.watched = _this.cfg.position.lastposition || 0;
+                    _this.markProgress(_this.watched);
                     return _this;
                 }
+                Timeline.prototype.markProgress = function (watched) {
+                };
+                Timeline.prototype.getWatchedPercent = function () {
+                    var maxDur = this.vsq.getVideoTags()[VSQ_4.VSQType.MASTER].duration;
+                    return this.watched / maxDur;
+                };
+                Timeline.prototype.handleEvent = function (e) {
+                    var pageX = e.pageX || e.clientX;
+                    if (!pageX && e.originalEvent && e.originalEvent.touches && e.originalEvent.touches.length) {
+                        pageX = e.originalEvent.touches[0].pageX;
+                    }
+                    var delta = pageX - this.offset.left;
+                    delta = Math.max(0, Math.min(this.size, delta));
+                    var percentage = delta / this.size;
+                    console.log(percentage);
+                    if (percentage > this.getWatchedPercent()) {
+                        e.preventDefault();
+                        e.stopImmediatePropagation();
+                    }
+                };
+                Timeline.prototype.handleAfterAnimation = function () {
+                    var _this = this;
+                    var locked = false;
+                    return function (e) {
+                        _this.handleEvent(e);
+                        locked = true;
+                        setTimeout(function () {
+                            locked = false;
+                        }, 100);
+                    };
+                };
                 Timeline.prototype.load = function () {
-                    this.flowroot.on("click.vsq-tl", ".fp-timeline", function (e) {
-                        var x = e.pageX || e.clientX;
-                        console.log(x);
+                    var _this = this;
+                    if (!this.vsq.isMainMasterVideo()) {
+                        this.log("Intro our outro playing, not handling timeline");
+                        return;
+                    }
+                    this.flow.on("progress.vsq-pgr", function (e, flow, time) {
+                        if (_this.watched < time)
+                            _this.watched = time;
+                    });
+                    var timeline = this.flowroot.find('.fp-timeline');
+                    var handle = this.handleAfterAnimation();
+                    this.flowroot.on("mousedown.vsq-tl touchstart.vsq-tl", ".fp-timeline", function (e) {
+                        _this.dragging = true;
+                        _this.offset = timeline.offset();
+                        _this.size = timeline.width();
+                        handle(e);
+                        jQuery(document).on("mousemove.vsq-tl touchmove.vsq-tl", function (e) {
+                            handle(e);
+                        });
+                    });
+                    jQuery(document).on("mouseup.vsq-tl touchend.vsq-tl", function (e) {
+                        _this.dragging = false;
+                        jQuery(document).off("mousemove.vsq-tl touchmove.vsq-tl");
                     });
                 };
                 Timeline.prototype.destroy = function () {
@@ -1274,11 +1333,11 @@ System.register("player/VSQ/Timeline", ["player/VSQ/BasePlugin"], function (expo
 System.register("player/VSQHLS", ["player/VSQ", "RateLimiter"], function (exports_16, context_16) {
     "use strict";
     var __moduleName = context_16 && context_16.id;
-    var VSQ_4, RateLimiter_1, VSQHLS;
+    var VSQ_5, RateLimiter_1, VSQHLS;
     return {
         setters: [
-            function (VSQ_4_1) {
-                VSQ_4 = VSQ_4_1;
+            function (VSQ_5_1) {
+                VSQ_5 = VSQ_5_1;
             },
             function (RateLimiter_1_1) {
                 RateLimiter_1 = RateLimiter_1_1;
@@ -1339,7 +1398,7 @@ System.register("player/VSQHLS", ["player/VSQ", "RateLimiter"], function (export
                     for (var _i = 0; _i < arguments.length; _i++) {
                         params[_i] = arguments[_i];
                     }
-                    if (!VSQ_4.VSQ.debug)
+                    if (!VSQ_5.VSQ.debug)
                         return;
                     params.unshift("[VSQHLS-" + this.type + "]");
                     console.log.apply(console, params);
@@ -1423,7 +1482,7 @@ System.register("player/VSQHLS", ["player/VSQ", "RateLimiter"], function (export
                     this.onUnhandledError(evt, data);
                 };
                 VSQHLS.prototype.onAccessError = function (evt, data) {
-                    this.flow.trigger("error", [this.flow, { code: VSQ_4.VSQ.accessDeniedError }]);
+                    this.flow.trigger("error", [this.flow, { code: VSQ_5.VSQ.accessDeniedError }]);
                 };
                 VSQHLS.prototype.onLevelLoadError = function (evt, data) {
                     this.flushBuffer();
@@ -1528,8 +1587,7 @@ System.register("player/VSQ", ["player/VSQ/LayoutChooser", "player/VSQ/QualityCh
                     }
                     if (this.cfg.position.report)
                         this.plugins.push(new ProgressReport_1.default(this));
-                    if (!this.cfg.position.seek)
-                        this.plugins.push(new Timeline_1.default(this));
+                    this.plugins.push(new Timeline_1.default(this));
                 }
                 VSQ.prototype.getRoot = function () {
                     return this.root;
@@ -2113,14 +2171,14 @@ System.register("player/VSQ", ["player/VSQ/LayoutChooser", "player/VSQ/QualityCh
 System.register("player/PlayerSetup", ["player/Flash", "player/VSQ"], function (exports_18, context_18) {
     "use strict";
     var __moduleName = context_18 && context_18.id;
-    var Flash_1, VSQ_5, PlayerSetup;
+    var Flash_1, VSQ_6, PlayerSetup;
     return {
         setters: [
             function (Flash_1_1) {
                 Flash_1 = Flash_1_1;
             },
-            function (VSQ_5_1) {
-                VSQ_5 = VSQ_5_1;
+            function (VSQ_6_1) {
+                VSQ_6 = VSQ_6_1;
             }
         ],
         execute: function () {
@@ -2177,7 +2235,7 @@ System.register("player/PlayerSetup", ["player/Flash", "player/VSQ"], function (
                     });
                 };
                 PlayerSetup.prototype.initVSQPlugin = function () {
-                    VSQ_5.VSQ.setup();
+                    VSQ_6.VSQ.setup();
                 };
                 return PlayerSetup;
             }());
