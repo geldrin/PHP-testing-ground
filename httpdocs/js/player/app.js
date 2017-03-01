@@ -1283,8 +1283,11 @@ System.register("player/VSQ/Timeline", ["player/VSQ", "player/VSQ/BasePlugin"], 
                     delta = Math.max(0, Math.min(this.size, delta));
                     var percentage = delta / this.size;
                     if (percentage <= this.getWatchedPercent()) {
-                        this.log("sliding", percentage);
+                        this.log("seeking to: ", percentage);
                         this.slider.slide(percentage, 1, true);
+                    }
+                    else {
+                        this.log("out of bounds: ", percentage);
                     }
                 };
                 Timeline.prototype.load = function () {

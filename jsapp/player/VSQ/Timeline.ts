@@ -11,7 +11,7 @@ export default class Timeline extends BasePlugin {
   private watched: number;
   private offset: JQueryCoordinates;
   private size: number;
-  private slider: any;
+  private slider: FlowTimeline;
 
   constructor(vsq: VSQ) {
     super(vsq);
@@ -28,7 +28,7 @@ export default class Timeline extends BasePlugin {
       // manualisan lekezeljuk hogy hova mehet a timeline
       this.slider.disable(true);
       this.slider.disableAnimation(true);
-    })
+    });
   }
 
   private markProgress(watched: number): void {
@@ -50,8 +50,10 @@ export default class Timeline extends BasePlugin {
 
     let percentage = delta / this.size;
     if (percentage <= this.getWatchedPercent()) {
-      this.log("sliding", percentage)
+      this.log("seeking to: ", percentage);
       this.slider.slide(percentage, 1, true);
+    } else {
+      this.log("out of bounds: ", percentage);
     }
   }
 

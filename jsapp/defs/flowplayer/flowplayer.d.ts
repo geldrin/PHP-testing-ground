@@ -102,6 +102,17 @@ interface FlowCommon {
   width(e: any, t: any): any;
   xhrGet(e: any, t: any, n: any): any;
 }
+interface FlowTimeline {
+  max(value: number): void;
+  disable(flag: boolean): void;
+  slide(value: number, speed?: number, fireEvent?: boolean): void;
+  disableAnimation(value?: boolean, alsoCssAnimations?: boolean): void;
+}
+
+interface FlowSliders {
+  timeline: FlowTimeline;
+  volume: any;
+}
 
 interface Flowplayer {
   common: FlowCommon;
@@ -126,6 +137,7 @@ interface Flowplayer {
   errors: string[];
   errorUrls: string[];
   playlist: any[];
+  sliders: FlowSliders;
 
   // state
   disabled: boolean;
