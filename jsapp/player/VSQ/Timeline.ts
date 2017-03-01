@@ -9,9 +9,9 @@ import Escape from "../../Escape";
 export default class Timeline extends BasePlugin {
   protected pluginName = "Timeline";
   private watched: number;
-  private dragging = false;
   private offset: JQueryCoordinates;
   private size: number;
+  private slider: any;
 
   constructor(vsq: VSQ) {
     super(vsq);
@@ -22,6 +22,13 @@ export default class Timeline extends BasePlugin {
     // engedjuk rogton addig beletekerni ameddig megnezte
     this.watched = this.cfg.position.lastposition || 0;
     this.markProgress(this.watched);
+
+    this.slider = this.flow.sliders.timeline;
+    this.flow.on("ready", () => {
+      // manualisan lekezeljuk hogy hova mehet a timeline
+      this.slider.disable(true);
+      this.slider.disableAnimation(true);
+    })
   }
 
   private markProgress(watched: number): void {
@@ -42,24 +49,10 @@ export default class Timeline extends BasePlugin {
     delta = Math.max(0, Math.min(this.size, delta));
 
     let percentage = delta / this.size;
-    console.log(percentage);
-    if (percentage > this.getWatchedPercent()) {
-      e.preventDefault();
-      e.stopImmediatePropagation();
-      // TODO nem cancelelodik a seek
+    if (percentage <= this.getWatchedPercent()) {
+      this.log("sliding", percentage)
+      this.slider.slide(percentage, 1, true);
     }
-  }
-
-  private handleAfterAnimation() {
-    let locked = false;
-    return (e: Event) => {
-      this.handleEvent(e);
-      locked = true;
-
-      setTimeout(() => {
-        locked = false;
-      }, 100);
-    };
   }
 
   public load(): void {
@@ -75,28 +68,25 @@ export default class Timeline extends BasePlugin {
     });
 
     let timeline = this.flowroot.find('.fp-timeline');
-    let handle = this.handleAfterAnimation();
     this.flowroot.on("mousedown.vsq-tl touchstart.vsq-tl", ".fp-timeline", (e) => {
-      this.dragging = true;
-
       // fullscreen miatt mindig ujra szamolni
       this.offset = timeline.offset();
       this.size = timeline.width();
-      handle(e);
+      this.handleEvent(e);
 
       jQuery(document).on("mousemove.vsq-tl touchmove.vsq-tl", (e) => {
-        handle(e);
+        this.handleEvent(e);
       });
 
       // TODO css cursor?
     });
     jQuery(document).on("mouseup.vsq-tl touchend.vsq-tl", (e) => {
-      this.dragging = false;
       jQuery(document).off("mousemove.vsq-tl touchmove.vsq-tl");
     });
   }
 
   public destroy(): void {
     this.flowroot.off(".vsq-tl");
+    this.slider.disable(false);
   }
 }

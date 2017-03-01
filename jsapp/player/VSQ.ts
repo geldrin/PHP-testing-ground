@@ -92,7 +92,7 @@ export class VSQ {
     if (this.cfg.position.report)
       this.plugins.push(new ProgressReport(this));
 
-    //if (!this.cfg.position.seek)
+    if (!this.cfg.position.seek)
       this.plugins.push(new Timeline(this));
   }
 

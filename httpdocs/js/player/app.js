@@ -1257,11 +1257,15 @@ System.register("player/VSQ/Timeline", ["player/VSQ", "player/VSQ/BasePlugin"], 
                 function Timeline(vsq) {
                     var _this = _super.call(this, vsq) || this;
                     _this.pluginName = "Timeline";
-                    _this.dragging = false;
                     if (_this.cfg.position.seek)
                         throw new Error("Timeline enabled yet disabling requested");
                     _this.watched = _this.cfg.position.lastposition || 0;
                     _this.markProgress(_this.watched);
+                    _this.slider = _this.flow.sliders.timeline;
+                    _this.flow.on("ready", function () {
+                        _this.slider.disable(true);
+                        _this.slider.disableAnimation(true);
+                    });
                     return _this;
                 }
                 Timeline.prototype.markProgress = function (watched) {
@@ -1278,22 +1282,10 @@ System.register("player/VSQ/Timeline", ["player/VSQ", "player/VSQ/BasePlugin"], 
                     var delta = pageX - this.offset.left;
                     delta = Math.max(0, Math.min(this.size, delta));
                     var percentage = delta / this.size;
-                    console.log(percentage);
-                    if (percentage > this.getWatchedPercent()) {
-                        e.preventDefault();
-                        e.stopImmediatePropagation();
+                    if (percentage <= this.getWatchedPercent()) {
+                        this.log("sliding", percentage);
+                        this.slider.slide(percentage, 1, true);
                     }
-                };
-                Timeline.prototype.handleAfterAnimation = function () {
-                    var _this = this;
-                    var locked = false;
-                    return function (e) {
-                        _this.handleEvent(e);
-                        locked = true;
-                        setTimeout(function () {
-                            locked = false;
-                        }, 100);
-                    };
                 };
                 Timeline.prototype.load = function () {
                     var _this = this;
@@ -1306,23 +1298,21 @@ System.register("player/VSQ/Timeline", ["player/VSQ", "player/VSQ/BasePlugin"], 
                             _this.watched = time;
                     });
                     var timeline = this.flowroot.find('.fp-timeline');
-                    var handle = this.handleAfterAnimation();
                     this.flowroot.on("mousedown.vsq-tl touchstart.vsq-tl", ".fp-timeline", function (e) {
-                        _this.dragging = true;
                         _this.offset = timeline.offset();
                         _this.size = timeline.width();
-                        handle(e);
+                        _this.handleEvent(e);
                         jQuery(document).on("mousemove.vsq-tl touchmove.vsq-tl", function (e) {
-                            handle(e);
+                            _this.handleEvent(e);
                         });
                     });
                     jQuery(document).on("mouseup.vsq-tl touchend.vsq-tl", function (e) {
-                        _this.dragging = false;
                         jQuery(document).off("mousemove.vsq-tl touchmove.vsq-tl");
                     });
                 };
                 Timeline.prototype.destroy = function () {
                     this.flowroot.off(".vsq-tl");
+                    this.slider.disable(false);
                 };
                 return Timeline;
             }(BasePlugin_7.BasePlugin));
@@ -1587,7 +1577,8 @@ System.register("player/VSQ", ["player/VSQ/LayoutChooser", "player/VSQ/QualityCh
                     }
                     if (this.cfg.position.report)
                         this.plugins.push(new ProgressReport_1.default(this));
-                    this.plugins.push(new Timeline_1.default(this));
+                    if (!this.cfg.position.seek)
+                        this.plugins.push(new Timeline_1.default(this));
                 }
                 VSQ.prototype.getRoot = function () {
                     return this.root;
