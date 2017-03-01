@@ -1185,9 +1185,9 @@ System.register("player/VSQ/ProgressReport", ["player/VSQAPI", "player/VSQ/BaseP
                                 case 2:
                                     data = _a.sent();
                                     this.log("report result", data);
-                                    if (data.result == null)
+                                    if (data.result !== "OK" || data.data == null)
                                         throw new Error("Unexpected result from api call");
-                                    result = data.result;
+                                    result = data.data;
                                     if (result.success === false) {
                                         if (result.position === 0) {
                                             Modal_3.Modal.showError("progressreport-resetposition");

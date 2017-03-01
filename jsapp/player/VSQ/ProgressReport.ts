@@ -40,10 +40,10 @@ export default class ProgressReport extends BasePlugin {
       this.log("reporting", params);
       let data = await VSQAPI.POST("recordings", "updateposition", params);
       this.log("report result", data);
-      if (data.result == null)
+      if (data.result !== "OK" || data.data == null)
         throw new Error("Unexpected result from api call");
 
-      let result = data.result as Result;
+      let result = data.data as Result;
 
       if (result.success === false) {
         if (result.position === 0) {
