@@ -405,8 +405,8 @@ class Recordings extends Player {
       'seekbar'         => $this->getSeekbarOptions( $info ),
       'presenceCheck'   => array(
         'enabled'  => (bool)$user['ispresencecheckforced'],
-        'interval' => $info['organization']['presencechecktimeinterval'],
-        'timeout'  => $info['organization']['presencecheckconfirmationtime'],
+        'interval' => (int) $info['organization']['presencechecktimeinterval'],
+        'timeout'  => (int) $info['organization']['presencecheckconfirmationtime'],
       ),
       'viewSession' => array(
         'timeout' => $info['organization']['viewsessiontimeoutminutes'] * 60,

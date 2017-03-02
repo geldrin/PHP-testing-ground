@@ -10,6 +10,7 @@ import Pinger from "./VSQ/Pinger";
 import Login from "./VSQ/Login";
 import ProgressReport from "./VSQ/ProgressReport";
 import Timeline from "./VSQ/Timeline";
+import PresenceCheck from "./VSQ/PresenceCheck";
 import VSQHLS from "./VSQHLS";
 import VSQAPI from "./VSQAPI";
 import Tools from "../Tools";
@@ -94,6 +95,9 @@ export class VSQ {
 
     if (!this.cfg.position.seek)
       this.plugins.push(new Timeline(this));
+
+    if (this.cfg.presenceCheck.enabled)
+      this.plugins.push(new PresenceCheck(this));
   }
 
   public getRoot(): JQuery {
@@ -901,7 +905,7 @@ export class VSQ {
 
 export enum VSQType {
   MASTER = 0,
-  CONTENT = 1
+  CONTENT = 1,
 }
 
 /* definialni hogy kell a vsq flowplayer confignak kineznie */
@@ -910,6 +914,11 @@ export interface VSQConfigPosition {
   seek: boolean;
   lastposition: number;
   intervalSeconds: number;
+}
+export interface VSQConfigPresenceCheck {
+  enabled: boolean;
+  checkSeconds: number;
+  timeoutSeconds: number;
 }
 export interface VSQConfig {
   type: string;
@@ -927,4 +936,5 @@ export interface VSQConfig {
   parameters: Object;
   apiurl: string;
   position: VSQConfigPosition;
+  presenceCheck: VSQConfigPresenceCheck;
 }

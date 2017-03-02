@@ -56,7 +56,7 @@ export default class Tools {
   }
 
   public static now(): number {
-    return (new Date()).getTime();
+    return Date.now();
   }
 
   public static zeroPad(num: number): string {

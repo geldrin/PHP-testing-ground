@@ -140,7 +140,6 @@ export class Modal extends BasePlugin {
   public static askQuestion(msg: string, yes: string, no: string, yesfirst: boolean): Promise<boolean> {
     return Modal.instance.askQuestion(msg, yes, no, yesfirst);
   }
-
   private askQuestion(msg: string, yes: string, no: string, yesfirst: boolean): Promise<boolean> {
     return new Promise((resolve, reject) => {
       // show question
@@ -188,6 +187,15 @@ export class Modal extends BasePlugin {
 
       // show
       this.root.addClass("vsq-is-question");
+    });
+  }
+
+  public static presenceCheck(timeoutSeconds: number): Promise<string> {
+    return Modal.instance.presenceCheck(timeoutSeconds);
+  }
+  private presenceCheck(timeoutSeconds: number): Promise<string> {
+    return new Promise((resolve, reject) => {
+      // TODO
     });
   }
 }

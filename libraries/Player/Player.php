@@ -211,6 +211,11 @@ abstract class Player {
             $this->bootstrap->config['recordingpositionupdateseconds']
           ,
         ),
+        'presenceCheck' => array(
+          'enabled'        => $cfg['presenceCheck']['enabled'],
+          'checkSeconds'   => $cfg['presenceCheck']['interval'],
+          'timeoutSeconds' => $cfg['presenceCheck']['timeout'],
+        ),
       ),
     );
 
