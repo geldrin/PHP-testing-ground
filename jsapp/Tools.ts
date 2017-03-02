@@ -1,6 +1,6 @@
 "use strict";
 export default class Tools {
-  static parseParamsFromUrl(): Object {
+  public static parseParamsFromUrl(): Object {
     if (!location.search)
       return {};
 
@@ -18,7 +18,7 @@ export default class Tools {
     return result;
   }
 
-  static parseURLFromCSS(css: string): string {
+  public static parseURLFromCSS(css: string): string {
     let match = css.match(/url\(["']?([^)]+?)['"]?\)/);
     if (match)
       return match[1];
@@ -26,7 +26,7 @@ export default class Tools {
     return "";
   }
 
-  static getImageDimensions(url: string, cb: (width: number, height: number) => void): void {
+  public static getImageDimensions(url: string, cb: (width: number, height: number) => void): void {
     $('<img/>', {
       load : function() {
         cb(this.width, this.height)
@@ -35,12 +35,12 @@ export default class Tools {
     });
   }
 
-  static setToStorage(key: string, value: any): void {
+  public static setToStorage(key: string, value: any): void {
     let raw = JSON.stringify(value);
     localStorage.setItem(key, raw);
   }
 
-  static getFromStorage(key: string, def?: any): any {
+  public static getFromStorage(key: string, def?: any): any {
     let raw = localStorage.getItem(key);
     if (raw == null)
       return def;
@@ -55,7 +55,27 @@ export default class Tools {
     return data;
   }
 
-  static now(): number {
+  public static now(): number {
     return (new Date()).getTime();
+  }
+
+  public static zeroPad(num: number): string {
+    return num >= 10? "" + num: "0" + num;
+  }
+
+  public static formatDuration(seconds: number): string {
+    let s = Math.max(seconds, 0);
+    s = Math.floor(s);
+
+    let h = Math.floor(seconds / 3600);
+    let m = Math.floor(seconds / 60);
+
+    s -= m * 60;
+    if (h >= 1) {
+      m -= h * 60;
+      return h + ":" + Tools.zeroPad(m) + ":" + Tools.zeroPad(s);
+    }
+
+    return Tools.zeroPad(m) + ":" + Tools.zeroPad(s);
   }
 }

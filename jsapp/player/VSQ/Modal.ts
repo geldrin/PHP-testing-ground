@@ -13,6 +13,8 @@ export interface LoginHandler {
 export class Modal extends BasePlugin {
   protected pluginName = "Modal";
   private static instance: Modal;
+  public static QUESTION_TRUE_FIRST = true;
+  public static QUESTION_FALSE_FIRST = false;
 
   constructor(vsq: VSQ) {
     super(vsq);
@@ -34,6 +36,13 @@ export class Modal extends BasePlugin {
   private setupHTML(): void {
     let html = `
       <div class="vsq-modal">
+        <div class="vsq-question">
+          <div class="row vsq-message"></div>
+          <div class="row vsq-buttons">
+            <input type="button" class="vsq-button-first"/>
+            <input type="button" class="vsq-button-second"/>
+          </div>
+        </div>
         <div class="vsq-transient">
         </div>
         <form class="vsq-login">
@@ -126,5 +135,59 @@ export class Modal extends BasePlugin {
   }
   private hideTransientMessage(): void {
     this.root.removeClass("vsq-transient-error");
+  }
+
+  public static askQuestion(msg: string, yes: string, no: string, yesfirst: boolean): Promise<boolean> {
+    return Modal.instance.askQuestion(msg, yes, no, yesfirst);
+  }
+
+  private askQuestion(msg: string, yes: string, no: string, yesfirst: boolean): Promise<boolean> {
+    return new Promise((resolve, reject) => {
+      // show question
+      let q = this.root.find('.vsq-modal .vsq-question');
+      q.find('.vsq-message').text(msg);
+
+      let first: string;
+      let second: string;
+      if (yesfirst) {
+        first = yes;
+        second = no;
+      } else {
+        first = no;
+        second = yes;
+      }
+
+      q.find('.vsq-button-first').val(first);
+      q.find('.vsq-button-second').val(second);
+
+      // register click handler
+      let buttons = q.find('input');
+
+      let onClick = (e: Event) => {
+        // hide
+        this.root.removeClass("vsq-is-question");
+        // cleanup
+        buttons.off("click", onClick);
+
+        e.preventDefault();
+        let elem = jQuery(e.target);
+
+        let ret: boolean;
+        if (
+             (yesfirst && elem.hasClass('vsq-button-first')) ||
+             (!yesfirst && elem.hasClass('vsq-button-second'))
+           )
+          ret = true;
+        else
+          ret = false;
+
+
+        resolve(ret);
+      };
+      buttons.on("click", onClick);
+
+      // show
+      this.root.addClass("vsq-is-question");
+    });
   }
 }

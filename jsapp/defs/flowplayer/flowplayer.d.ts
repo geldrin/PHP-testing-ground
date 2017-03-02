@@ -45,6 +45,7 @@ interface FlowVideo {
   autoplay: boolean;
   index: number;
   is_last: boolean;
+  duration?: number;
 }
 
 interface FlowSupport {

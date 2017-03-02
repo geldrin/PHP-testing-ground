@@ -542,7 +542,7 @@ export class VSQ {
     return false;
   }
 
-  private triggerFlow(event: string, data: any): void {
+  public triggerFlow(event: string, data: any): void {
     if (event !== "buffer" && event !== "progress")
       this.log("[flow event]", event, data);
 

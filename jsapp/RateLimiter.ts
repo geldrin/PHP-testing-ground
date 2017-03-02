@@ -3,39 +3,35 @@
 class Limit {
   private name: string;
   private duration: number;
-  private lastTriggerDate: number;
   private callback: any;
   private timer: number | null;
+  private fireImmediately: boolean;
 
-  constructor(name: string, duration: number, callback: any) {
+  constructor(name: string,  callback: any, duration: number, fireImmediately: boolean) {
     this.name = name;
-    this.duration = duration;
     this.callback = callback;
+    this.duration = duration;
+    this.fireImmediately = fireImmediately;
   }
 
-  private call(): void {
+  private callLater(args: any[]): void {
     this.timer = null;
-    this.lastTriggerDate = performance.now();
-    if (this.callback instanceof Function)
-      this.callback();
+    if (!this.fireImmediately && this.callback instanceof Function)
+      this.callback.apply(this, args);
   }
 
-  private enqueue(): void {
+  public trigger(...args: any[]): void {
+    let shouldCall = this.fireImmediately && this.timer === null;
+
     if (this.timer !== null)
-      return;
+      clearTimeout(this.timer);
 
-    this.timer = setTimeout(() => this.call(), this.duration);
-  }
+    this.timer = setTimeout(() => {
+      this.callLater(args);
+    }, this.duration);
 
-  public trigger(): boolean {
-    let now = performance.now();
-    if (now - this.lastTriggerDate < this.duration) {
-      this.enqueue();
-      return false;
-    }
-
-    this.call();
-    return true;
+    if (shouldCall && this.callback instanceof Function)
+      this.callback.apply(this, args);
   }
 
   public cancel(): void {
@@ -67,14 +63,14 @@ export default class RateLimiter {
     return limit;
   }
 
-  public add(name: string, duration: number, callback: any) {
-    this.limits[name] = new Limit(name, duration, callback);
+  public add(name: string, callback: any, duration: number, fireImmediately: boolean) {
+    this.limits[name] = new Limit(name, callback, duration, fireImmediately);
   }
 
-  public trigger(name: string): boolean {
+  public trigger(name: string, ...args: any[]): boolean {
     let limit = this.getByName(name);
 
-    return limit.trigger();
+    return limit.trigger.apply(limit, args);
   }
 
   public cancel(name?: string): void {
