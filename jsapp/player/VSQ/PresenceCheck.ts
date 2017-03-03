@@ -86,17 +86,19 @@ export default class PresenceCheck extends BasePlugin {
       return;
     }
 
+    this.notCheckedFor = 0;
+
     this.flow.on("resume.vsq-pc", () => {
       this.playing = true;
       this.resetInactivity();
     });
-    this.flow.on("pause.vsq-pc", () => {
+    this.flow.on("pause.vsq-pc error.vsq-pc finish.vsq-pc", () => {
       this.playing = false;
       this.resetInactivity();
     });
 
     let reset = () => this.resetInactivity();
-    this.flow.on("seek.vsq-pc volume.vsq-pc speed.vsq-pc", reset);
+    this.flow.on("seek.vsq-pc volume.vsq-pc mute.vsq-pc quality.vsq-pc speed.vsq-pc fullscreen.vsq-pc fullscreen-exit.vsq-pc", reset);
   }
 
   public destroy(): void {

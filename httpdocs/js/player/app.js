@@ -1565,16 +1565,17 @@ System.register("player/VSQ/PresenceCheck", ["player/VSQ/BasePlugin", "player/VS
                         this.log("Intro our outro playing, not handling presenceCheck");
                         return;
                     }
+                    this.notCheckedFor = 0;
                     this.flow.on("resume.vsq-pc", function () {
                         _this.playing = true;
                         _this.resetInactivity();
                     });
-                    this.flow.on("pause.vsq-pc", function () {
+                    this.flow.on("pause.vsq-pc error.vsq-pc finish.vsq-pc", function () {
                         _this.playing = false;
                         _this.resetInactivity();
                     });
                     var reset = function () { return _this.resetInactivity(); };
-                    this.flow.on("seek.vsq-pc volume.vsq-pc speed.vsq-pc", reset);
+                    this.flow.on("seek.vsq-pc volume.vsq-pc mute.vsq-pc quality.vsq-pc speed.vsq-pc fullscreen.vsq-pc fullscreen-exit.vsq-pc", reset);
                 };
                 PresenceCheck.prototype.destroy = function () {
                     this.flow.off(".vsq-pc");
@@ -2505,9 +2506,141 @@ System.register("player/PlayerSetup", ["player/Flash", "player/VSQ"], function (
         }
     };
 });
-System.register("player/app", ["Locale", "player/Config", "player/PlayerSetup"], function (exports_20, context_20) {
+System.register("player/VSQ/Statistics", ["player/VSQAPI", "player/VSQ/BasePlugin", "Tools"], function (exports_20, context_20) {
     "use strict";
     var __moduleName = context_20 && context_20.id;
+    var VSQAPI_5, BasePlugin_9, Tools_7, Statistics;
+    return {
+        setters: [
+            function (VSQAPI_5_1) {
+                VSQAPI_5 = VSQAPI_5_1;
+            },
+            function (BasePlugin_9_1) {
+                BasePlugin_9 = BasePlugin_9_1;
+            },
+            function (Tools_7_1) {
+                Tools_7 = Tools_7_1;
+            }
+        ],
+        execute: function () {
+            Statistics = (function (_super) {
+                __extends(Statistics, _super);
+                function Statistics(vsq) {
+                    var _this = _super.call(this, vsq) || this;
+                    _this.pluginName = "Statistics";
+                    _this.reportSeconds = 60;
+                    _this.reports = [];
+                    _this.consuming = false;
+                    if (_this.flow.live)
+                        _this.apiModule = "live";
+                    else
+                        _this.apiModule = "recordings";
+                    return _this;
+                }
+                Statistics.prototype.enqueueReport = function (report) {
+                    this.reports.push(report);
+                };
+                Statistics.prototype.consumeReports = function () {
+                    return __awaiter(this, void 0, void 0, function () {
+                        var report, data, err_4;
+                        return __generator(this, function (_a) {
+                            switch (_a.label) {
+                                case 0:
+                                    if (this.consuming)
+                                        return [2 /*return*/];
+                                    this.consuming = true;
+                                    _a.label = 1;
+                                case 1:
+                                    if (!(this.reports.length !== 0))
+                                        return [3 /*break*/, 6];
+                                    report = this.reports.shift();
+                                    if (report == null)
+                                        throw new Error("managed to dequeue nothing, cannot happen");
+                                    _a.label = 2;
+                                case 2:
+                                    _a.trys.push([2, 4, , 5]);
+                                    this.log("logging", report);
+                                    return [4 /*yield*/, VSQAPI_5.default.POST(this.apiModule, "logview", report)];
+                                case 3:
+                                    data = _a.sent();
+                                    this.log("logging result", data);
+                                    if (data.result !== "OK")
+                                        throw new Error("Unexpected result from api call");
+                                    return [3 /*break*/, 5];
+                                case 4:
+                                    err_4 = _a.sent();
+                                    this.log("logging error", err_4);
+                                    return [3 /*break*/, 5];
+                                case 5: return [3 /*break*/, 1];
+                                case 6:
+                                    this.consuming = false;
+                                    return [2 /*return*/];
+                            }
+                        });
+                    });
+                };
+                Statistics.prototype.reportIfNeeded = function () {
+                    var now = Tools_7.default.now();
+                    switch (this.action) {
+                        case "PLAY":
+                            this.lastPlayingReport = now;
+                            break;
+                        case "PLAYING":
+                            if (this.lastPlayingReport === null)
+                                throw new Error("lastPlayingReport was null");
+                            if (now - this.lastPlayingReport >= this.reportSeconds * 1000) {
+                                this.lastPlayingReport = now;
+                            }
+                            break;
+                        case "STOP":
+                            break;
+                    }
+                    this.consumeReports();
+                };
+                Statistics.prototype.load = function () {
+                    var _this = this;
+                    if (!this.vsq.isMainMasterVideo()) {
+                        this.log("Intro our outro playing, not reporting progress");
+                        return;
+                    }
+                    this.flow.on("progress.vsq-sts", function (e, flow, time) {
+                        _this.action = "PLAYING";
+                        _this.toPosition = time;
+                        _this.reportIfNeeded();
+                    });
+                    this.flow.on("resume.vsq-sts", function (e, flow, time) {
+                        _this.action = "PLAY";
+                        _this.fromPosition = _this.flow.video.time;
+                        _this.toPosition = null;
+                        _this.reportIfNeeded();
+                    });
+                    this.flow.on("pause.vsq-sts stop.vsq-sts finish.vsq-sts", function (e, flow) {
+                        _this.action = "STOP";
+                        _this.toPosition = _this.flow.video.time;
+                        _this.reportIfNeeded();
+                    });
+                    this.flow.on("quality.vsq-sts", function (e, flow) {
+                        _this.action = "STOP";
+                        _this.toPosition = _this.flow.video.time;
+                        _this.reportIfNeeded();
+                        _this.action = "PLAY";
+                        _this.fromPosition = _this.flow.video.time;
+                        _this.toPosition = null;
+                        _this.reportIfNeeded();
+                    });
+                };
+                Statistics.prototype.destroy = function () {
+                    this.flow.off(".vsq-sts");
+                };
+                return Statistics;
+            }(BasePlugin_9.BasePlugin));
+            exports_20("default", Statistics);
+        }
+    };
+});
+System.register("player/app", ["Locale", "player/Config", "player/PlayerSetup"], function (exports_21, context_21) {
+    "use strict";
+    var __moduleName = context_21 && context_21.id;
     var Locale_1, Config_1, PlayerSetup_1;
     return {
         setters: [

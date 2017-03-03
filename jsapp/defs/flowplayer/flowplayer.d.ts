@@ -46,6 +46,7 @@ interface FlowVideo {
   index: number;
   is_last: boolean;
   duration?: number;
+  time?: number;
 }
 
 interface FlowSupport {

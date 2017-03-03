@@ -224,7 +224,7 @@ abstract class Player {
     else
       $apiurl = $this->bootstrap->baseuri;
 
-    $ret['vsq']['apiurl'] .= 'playerapi';
+    $ret['vsq']['apiurl'] = $apiurl . 'playerapi';
 
     $newclip = array(
       // Set a title for this clip. Displayed in a top bar when hovering over the player.
