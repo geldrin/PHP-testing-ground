@@ -36,6 +36,14 @@ export class Modal extends BasePlugin {
   private setupHTML(): void {
     let html = `
       <div class="vsq-modal">
+        <div class="vsq-presence">
+          <div class="row vsq-message"> value="${Escape.HTML(this.l.get('player_presencecheck'))}"</div>
+          <div class="row vsq-remainingtime"></div>
+          <div class="row vsq-buttons">
+            <input type="button" class="vsq-button-present" value="${Escape.HTML(this.l.get('player_presencecheck_confirm'))}"/>
+            <input type="button" class="vsq-button-continue" value="${Escape.HTML(this.l.get('player_presencecheck_continue'))}"/>
+          </div>
+        </div>
         <div class="vsq-question">
           <div class="row vsq-message"></div>
           <div class="row vsq-buttons">
@@ -194,8 +202,69 @@ export class Modal extends BasePlugin {
     return Modal.instance.presenceCheck(timeoutSeconds);
   }
   private presenceCheck(timeoutSeconds: number): Promise<string> {
+    let elem = this.root.find('.vsq-modal .vsq-presence');
+    let countdown = elem.find('.vsq-remainingtime');
+    countdown.text(Tools.formatDuration(timeoutSeconds));
+
     return new Promise((resolve, reject) => {
-      // TODO
+      let failed = false; // csak egy sentinel hogy tudjuk jol mukodik minden
+      let remaining = timeoutSeconds * 1000;
+      let lastInterval = Tools.now();
+      let interval: number | null = setInterval(() => {
+        let now = Tools.now();
+        let diff = now - lastInterval;
+        lastInterval = now;
+        remaining -= diff;
+
+        if (remaining <= 0) {
+          if (interval !== null) {
+            clearInterval(interval);
+            interval = null;
+          }
+
+          elem.addClass('vsq-checkfailed');
+          failed = true;
+          return;
+        }
+
+        let seconds = Math.floor(remaining / 1000);
+        countdown.text(Tools.formatDuration(seconds));
+      }, 500);
+
+      let cleanup = (skipClear?: boolean) => {
+        elem.removeClass('vsq-checkfailed');
+        this.root.removeClass("vsq-presencecheck");
+        elem.off('.vsq-pc');
+
+        if (!skipClear && interval !== null) {
+          clearInterval(interval);
+          interval = null;
+        }
+      };
+
+      // ismert allapotba az UI-t
+      cleanup(true);
+
+      elem.on('click.vsq-pc', 'input.vsq-button-present', (e) => {
+        e.preventDefault();
+        if (failed)
+          throw new Error("present button clicked after timeout");
+
+        cleanup();
+        resolve('ok');
+      });
+
+      elem.on('click.vsq-pc', 'input.vsq-button-continue', (e) => {
+        e.preventDefault();
+        if (!failed)
+          throw new Error("continue button clicked before timeout");
+
+        cleanup();
+        resolve('continue');
+      });
+
+      // show
+      this.root.addClass("vsq-presencecheck");
     });
   }
 }

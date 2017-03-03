@@ -60,13 +60,24 @@ export default class PresenceCheck extends BasePlugin {
     this.resetInactivity();
 
     this.checking = true;
+    this.flow.pause();
     let action = await Modal.presenceCheck(
       this.cfg.presenceCheck.timeoutSeconds
     );
     this.checking = false;
 
-    // TODO action - utolso X masodpercel elobbre, elejetol kezdeni, ...?
-    //this.vsq.triggerFlow("seek", jumpTo);
+    switch(action) {
+      case "ok":
+        this.log("check ok");
+        this.flow.resume();
+        break;
+      case "continue":
+        this.log("check failed");
+        // TODO action - utolso X masodpercel elobbre, elejetol kezdeni, ...?
+        //this.vsq.triggerFlow("seek", jumpTo);
+        this.flow.resume();
+        break;
+    }
   }
 
   public load(): void {
@@ -75,19 +86,21 @@ export default class PresenceCheck extends BasePlugin {
       return;
     }
 
-    this.flowroot.on("resume.vsq-pc", () => {
+    this.flow.on("resume.vsq-pc", () => {
       this.playing = true;
+      this.resetInactivity();
     });
-    this.flowroot.on("pause.vsq-pc", () => {
+    this.flow.on("pause.vsq-pc", () => {
       this.playing = false;
+      this.resetInactivity();
     });
 
     let reset = () => this.resetInactivity();
-    this.flowroot.on("seek.vsq-pc volume.vsq-pc speed.vsq-pc", reset);
+    this.flow.on("seek.vsq-pc volume.vsq-pc speed.vsq-pc", reset);
   }
 
   public destroy(): void {
-    this.flowroot.off(".vsq-pc");
+    this.flow.off(".vsq-pc");
     clearInterval(this.interval);
   }
 }

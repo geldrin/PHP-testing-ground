@@ -4178,7 +4178,8 @@ table.paging tr.even {
 }
 #player .vsq-modal .vsq-login,
 #player .vsq-modal .vsq-transient,
-#player .vsq-modal .vsq-question {
+#player .vsq-modal .vsq-question,
+#player .vsq-modal .vsq-presence {
   display: none;
 }
 #player.vsq-is-login .vsq-modal,
@@ -4192,7 +4193,7 @@ table.paging tr.even {
 #player.vsq-is-question .vsq-modal,
 #player.vsq-is-question .vsq-modal .vsq-question {
   display: block;
-}7
+}
 #player .vsq-limitedseek .fp-timeline,
 #player .vsq-limitedseek .fp-buffer {
   cursor: default;
@@ -4203,4 +4204,20 @@ table.paging tr.even {
   left: auto;
   height: 100%;
   cursor: col-resize;
+}
+#player.vsq-presencecheck .vsq-modal,
+#player.vsq-presencecheck .vsq-modal .vsq-presence {
+  display: block;
+}
+#player .vsq-modal .vsq-presence {
+  background: #fff;
+}
+#player .vsq-modal .vsq-presence .vsq-button-continue {
+  display: none;
+}
+#player .vsq-modal .vsq-presence.vsq-checkfailed .vsq-button-present {
+  display: none;
+}
+#player .vsq-modal .vsq-presence.vsq-checkfailed .vsq-button-continue {
+  display: block;
 }

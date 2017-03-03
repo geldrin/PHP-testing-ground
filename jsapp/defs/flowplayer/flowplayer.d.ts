@@ -162,7 +162,7 @@ interface Flowplayer {
 
   trigger(event: string, args: any): void;
   load(video: any, args: any): Flowplayer;
-  pause(cb: (api: Flowplayer, root: Element) => any): Flowplayer;
+  pause(cb?: (api: Flowplayer, root: Element) => any): Flowplayer;
   resume(): Flowplayer;
   toggle(): Flowplayer;
   seek(time: number, cb: (api: Flowplayer, root: Element) => any): Flowplayer;
