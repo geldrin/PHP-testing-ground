@@ -274,9 +274,10 @@ abstract class Player {
     // master
     $clip = $newclip;
     $clip['sources'][] = array(
-      'type' => $streams['master']['type'],
-      'src'  => $streams['master']['url'],
-      'vsq-labels' => $streams['master']['labels'],
+      'type'           => $streams['master']['type'],
+      'src'            => $streams['master']['url'],
+      'vsq-labels'     => $streams['master']['labels'],
+      'vsq-parameters' => $streams['master']['parameters'],
     );
     $ret['playlist'][] = $clip;
 

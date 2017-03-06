@@ -99,6 +99,20 @@ export default class VSQHLS {
       this.onManifestParsed(evt, data);
       this.vsq.showTag(this.type);
     });
+    this.hls.on(Hls.Events.LEVEL_SWITCHING, (evt: string, data: any): void => {
+      this.hls.switchingLevels = true;
+
+      if (this.type == VSQType.MASTER) {
+        // kizarolag a main video erdekel minket, igy varja a statisztika reporting!
+        this.hls.prevLevel = this.hls.currentLevel;
+      }
+    });
+    this.hls.on(Hls.Events.LEVEL_SWITCHED, (evt: string, data: any): void => {
+      this.hls.switchingLevels = false;
+      if (this.type == VSQType.MASTER) {
+        this.vsq.triggerFlow("quality", data.level);
+      }
+    });
     this.hls.on(Hls.Events.LEVEL_LOADED, (evt: string, data: any): void => {
       this.log("level loaded, canceling ratelimits");
       this.limiter.cancel();

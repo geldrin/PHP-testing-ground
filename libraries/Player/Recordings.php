@@ -769,12 +769,20 @@ class Recordings extends Player {
     $masterversions = $this->getStreamsForType('master', $subtype, $cfg );
     $master = reset( $masterversions );
     $ret['master'] = array(
-      'type' => 'application/x-mpegurl',
-      'url'  => $this->getFlowUrl( $cfg, 'vodabr', $master ),
-      'labels' => array(),
+      'type'       => 'application/x-mpegurl',
+      'url'        => $this->getFlowUrl( $cfg, 'vodabr', $master ),
+      'labels'     => array(),
+      'parameters' => array(),
     );
-    foreach( $masterversions as $version )
-      $ret['master']['labels'][] = $version['qualitytag'];
+    foreach( $masterversions as $version ) {
+      $sid = $this->generateViewSessionid( $version['id'] );
+
+      $ret['master']['labels'][]     = $version['qualitytag'];
+      $ret['master']['parameters'][] = array(
+        'recordingversionid' => $version['id'],
+        'viewsessionid'      => $sid,
+      );
+    }
 
     $contentstreams = $this->getStreamsForType('content', $subtype, $cfg );
     $content = reset( $contentstreams );

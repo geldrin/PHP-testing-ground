@@ -11,6 +11,7 @@ import Login from "./VSQ/Login";
 import ProgressReport from "./VSQ/ProgressReport";
 import Timeline from "./VSQ/Timeline";
 import PresenceCheck from "./VSQ/PresenceCheck";
+import Statistics from "./VSQ/Statistics";
 import VSQHLS from "./VSQHLS";
 import VSQAPI from "./VSQAPI";
 import Tools from "../Tools";
@@ -98,6 +99,8 @@ export class VSQ {
 
     if (this.cfg.presenceCheck.enabled)
       this.plugins.push(new PresenceCheck(this));
+
+    this.plugins.push(new Statistics(this));
   }
 
   public getRoot(): JQuery {

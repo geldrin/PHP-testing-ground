@@ -118,7 +118,7 @@ export default class QualityChooser extends BasePlugin {
     if (type !== VSQType.MASTER)
       return;
 
-    hls.on(Hls.Events.LEVEL_SWITCH, (event: string, data: any): void => {
+    hls.on(Hls.Events.LEVEL_SWITCHED, (event: string, data: any): void => {
       this.flowroot.find('.vsq-quality-selector li').removeClass("current");
       let elem = this.findQualityElem(data.level);
       elem.addClass("current");
