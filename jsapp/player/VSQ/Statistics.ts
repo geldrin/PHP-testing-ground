@@ -87,6 +87,7 @@ export default class Statistics extends BasePlugin {
       return;
 
     this.consuming = true;
+    this.log(`trying to consume ${this.reports.length} reports`);
     while(this.reports.length !== 0) {
 
       let report = this.reports.shift();
@@ -94,18 +95,21 @@ export default class Statistics extends BasePlugin {
         throw new Error("managed to dequeue nothing, cannot happen");
 
       try {
-        let data = await VSQAPI.POST(this.apiModule, "logview", report);
+        let data = await VSQAPI.POST(this.apiModule, "logview", report, true);
         this.log("logging result", data);
+
+        // a backend nem kuld vissza mast mint OK-t
         if (data.result !== "OK")
           throw new Error("Unexpected result from api call");
 
-        // TODO
       } catch(err) {
-        this.log("logging error", err);
-        // TODO?
+        this.log("logging error, retrying", err);
+        // ujra a sor elejere rakjuk a reportot mert muszaj ujraprobalnunk
+        // itt csak akkor hivodunk meg ha a request abszolut nem sikerult
+        // network error vagy non-2xx status
+        this.reports.unshift(report);
       }
     }
-
     this.consuming = false;
   }
 

@@ -1054,19 +1054,39 @@ System.register("player/VSQAPI", [], function (exports_11, context_11) {
                 VSQAPI.init = function (cfg) {
                     VSQAPI.baseURL = cfg.apiurl;
                 };
-                VSQAPI.call = function (method, parameters) {
+                VSQAPI.randomTimeout = function (retry) {
+                    var ret = Math.pow(2, retry) * 1000;
+                    ret += Math.random() * 500;
+                    return Math.round(ret);
+                };
+                VSQAPI.call = function (method, parameters, failFast) {
+                    var retries = 0;
                     return new Promise(function (resolve, reject) {
-                        var req = jQuery.ajax({
+                        jQuery.ajax({
                             url: VSQAPI.baseURL,
                             type: method,
                             data: {
                                 parameters: JSON.stringify(parameters)
                             },
                             dataType: 'json',
-                            cache: false
+                            cache: false,
+                            success: function (data) {
+                                resolve(data);
+                            },
+                            error: function (err) {
+                                if (failFast || err.readyState != 0 || retries >= 3) {
+                                    reject(err);
+                                    return;
+                                }
+                                var self = this;
+                                var sleepFor = VSQAPI.randomTimeout(retries);
+                                setTimeout(function () {
+                                    retries++;
+                                    jQuery.ajax(self);
+                                }, sleepFor);
+                            },
+                            timeout: 10000
                         });
-                        req.done(function (data) { return resolve(data); });
-                        req.fail(function (err) { return reject(err); });
                     });
                 };
                 VSQAPI.prepareParams = function (module, method, args) {
@@ -1078,13 +1098,13 @@ System.register("player/VSQAPI", [], function (exports_11, context_11) {
                     }, args || {});
                     return parameters;
                 };
-                VSQAPI.GET = function (module, method, args) {
+                VSQAPI.GET = function (module, method, args, failFast) {
                     var parameters = this.prepareParams(module, method, args);
-                    return VSQAPI.call("GET", parameters);
+                    return VSQAPI.call("GET", parameters, failFast);
                 };
-                VSQAPI.POST = function (module, method, args) {
+                VSQAPI.POST = function (module, method, args, failFast) {
                     var parameters = this.prepareParams(module, method, args);
-                    return VSQAPI.call("POST", parameters);
+                    return VSQAPI.call("POST", parameters, failFast);
                 };
                 return VSQAPI;
             }());
@@ -1659,6 +1679,7 @@ System.register("player/VSQ/Statistics", ["player/VSQ", "player/VSQAPI", "player
                                     if (this.consuming)
                                         return [2 /*return*/];
                                     this.consuming = true;
+                                    this.log("trying to consume " + this.reports.length + " reports");
                                     _a.label = 1;
                                 case 1:
                                     if (!(this.reports.length !== 0))
@@ -1669,7 +1690,7 @@ System.register("player/VSQ/Statistics", ["player/VSQ", "player/VSQAPI", "player
                                     _a.label = 2;
                                 case 2:
                                     _a.trys.push([2, 4, , 5]);
-                                    return [4 /*yield*/, VSQAPI_4.default.POST(this.apiModule, "logview", report)];
+                                    return [4 /*yield*/, VSQAPI_4.default.POST(this.apiModule, "logview", report, true)];
                                 case 3:
                                     data = _a.sent();
                                     this.log("logging result", data);
@@ -1678,7 +1699,8 @@ System.register("player/VSQ/Statistics", ["player/VSQ", "player/VSQAPI", "player
                                     return [3 /*break*/, 5];
                                 case 4:
                                     err_4 = _a.sent();
-                                    this.log("logging error", err_4);
+                                    this.log("logging error, retrying", err_4);
+                                    this.reports.unshift(report);
                                     return [3 /*break*/, 5];
                                 case 5: return [3 /*break*/, 1];
                                 case 6:
