@@ -151,6 +151,7 @@ interface Flowplayer {
   ready: boolean;
   splash: boolean;
   rtl: boolean;
+  seeking: boolean;
 
   poster: any;
   engines: ((player: Flowplayer, root: Element) => any)[];

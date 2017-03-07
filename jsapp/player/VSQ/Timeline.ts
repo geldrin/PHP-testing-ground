@@ -16,6 +16,7 @@ export default class Timeline extends BasePlugin {
   private slider: FlowTimeline;
   private progress: JQuery;
   private limiter: RateLimiter;
+  private tooltip: JQuery;
 
   constructor(vsq: VSQ) {
     super(vsq);
@@ -29,6 +30,7 @@ export default class Timeline extends BasePlugin {
     `;
     this.progress = jQuery(html);
     this.flowroot.find('.fp-timeline .fp-buffer').after(this.progress);
+    this.tooltip = this.flowroot.find(".fp-timeline-tooltip");
 
     // engedjuk rogton addig beletekerni ameddig megnezte
     this.watched = this.cfg.position.lastposition || 0;
@@ -57,15 +59,33 @@ export default class Timeline extends BasePlugin {
     return this.watched / maxDur;
   }
 
-  private handleEvent(e: any): void {
+  private getDeltaFromEvent(e: any, offset?: JQueryCoordinates): number {
     let pageX = e.pageX || e.clientX;
     if (!pageX && e.originalEvent && e.originalEvent.touches && e.originalEvent.touches.length) {
       pageX = e.originalEvent.touches[0].pageX;
     }
-    let delta = pageX - this.offset.left;
-    delta = Math.max(0, Math.min(this.size, delta));
 
-    let percentage = delta / this.size;
+    if (offset == null)
+      offset = this.offset;
+
+    let delta = pageX - offset.left;
+    return delta;
+  }
+
+  private getPercentageFromEvent(e: any, offset?: JQueryCoordinates, size?: number): number {
+    if (size == null)
+      size = this.size;
+
+    let delta = this.getDeltaFromEvent(e, offset);
+    delta = Math.max(0, Math.min(size, delta));
+
+    let percentage = delta / size;
+    return percentage;
+  }
+
+  private handleEvent(e: any): void {
+    let percentage = this.getPercentageFromEvent(e);
+
     if (percentage <= this.getWatchedPercent()) {
       this.log("seeking to: ", percentage);
       this.slider.disable(false);
@@ -125,11 +145,46 @@ export default class Timeline extends BasePlugin {
       jQuery(document).off("mousemove.vsq-tl touchmove.vsq-tl");
     });
 
+    this.flowroot.on("mousemove.vsq-tl-tlt", ".fp-timeline", (e) => {
+      let offset = timeline.offset();
+      let size = timeline.width();
+
+      let percentage = this.getPercentageFromEvent(e, offset, size);
+      if (percentage == 0)
+        return;
+
+      let str: string;
+      if (percentage <= this.getWatchedPercent()) {
+        let seconds = percentage * this.flow.video.duration;
+        str = Tools.formatDuration(seconds);
+      } else
+        str = this.l.get("player_seekbardisabled");
+
+      this.tooltip.text(str);
+      let width = this.tooltip.outerWidth(true);
+
+      let left = this.getDeltaFromEvent(e, offset) - width / 2;
+      console.log(width, left);
+      if (left < 0)
+        left = 0;
+
+      if (left > size - width)
+        this.tooltip.css({
+          left: "auto",
+          right: "0px"
+        });
+      else
+        this.tooltip.css({
+          left: left + "px",
+          right: "auto"
+        });
+    });
+
     this.handleResume()
   }
 
   public destroy(): void {
-    this.flowroot.off(".vsq-tl");
+    this.flowroot.off(".vsq-tl .vsq-tl-tlt");
     this.slider.disable(false);
   }
 }

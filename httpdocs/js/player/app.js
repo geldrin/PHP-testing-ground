@@ -1413,6 +1413,7 @@ System.register("player/VSQ/Timeline", ["player/VSQ/BasePlugin", "player/VSQ/Mod
                     var html = "\n      <div class=\"vsq-progress\"></div>\n    ";
                     _this.progress = jQuery(html);
                     _this.flowroot.find('.fp-timeline .fp-buffer').after(_this.progress);
+                    _this.tooltip = _this.flowroot.find(".fp-timeline-tooltip");
                     _this.watched = _this.cfg.position.lastposition || 0;
                     _this.markProgress();
                     _this.slider = _this.flow.sliders.timeline;
@@ -1434,14 +1435,26 @@ System.register("player/VSQ/Timeline", ["player/VSQ/BasePlugin", "player/VSQ/Mod
                     var maxDur = this.flow.video.duration;
                     return this.watched / maxDur;
                 };
-                Timeline.prototype.handleEvent = function (e) {
+                Timeline.prototype.getDeltaFromEvent = function (e, offset) {
                     var pageX = e.pageX || e.clientX;
                     if (!pageX && e.originalEvent && e.originalEvent.touches && e.originalEvent.touches.length) {
                         pageX = e.originalEvent.touches[0].pageX;
                     }
-                    var delta = pageX - this.offset.left;
-                    delta = Math.max(0, Math.min(this.size, delta));
-                    var percentage = delta / this.size;
+                    if (offset == null)
+                        offset = this.offset;
+                    var delta = pageX - offset.left;
+                    return delta;
+                };
+                Timeline.prototype.getPercentageFromEvent = function (e, offset, size) {
+                    if (size == null)
+                        size = this.size;
+                    var delta = this.getDeltaFromEvent(e, offset);
+                    delta = Math.max(0, Math.min(size, delta));
+                    var percentage = delta / size;
+                    return percentage;
+                };
+                Timeline.prototype.handleEvent = function (e) {
+                    var percentage = this.getPercentageFromEvent(e);
                     if (percentage <= this.getWatchedPercent()) {
                         this.log("seeking to: ", percentage);
                         this.slider.disable(false);
@@ -1497,10 +1510,40 @@ System.register("player/VSQ/Timeline", ["player/VSQ/BasePlugin", "player/VSQ/Mod
                     jQuery(document).on("mouseup.vsq-tl touchend.vsq-tl", function (e) {
                         jQuery(document).off("mousemove.vsq-tl touchmove.vsq-tl");
                     });
+                    this.flowroot.on("mousemove.vsq-tl-tlt", ".fp-timeline", function (e) {
+                        var offset = timeline.offset();
+                        var size = timeline.width();
+                        var percentage = _this.getPercentageFromEvent(e, offset, size);
+                        if (percentage == 0)
+                            return;
+                        var str;
+                        if (percentage <= _this.getWatchedPercent()) {
+                            var seconds = percentage * _this.flow.video.duration;
+                            str = Tools_5.default.formatDuration(seconds);
+                        }
+                        else
+                            str = _this.l.get("player_seekbardisabled");
+                        _this.tooltip.text(str);
+                        var width = _this.tooltip.outerWidth(true);
+                        var left = _this.getDeltaFromEvent(e, offset) - width / 2;
+                        console.log(width, left);
+                        if (left < 0)
+                            left = 0;
+                        if (left > size - width)
+                            _this.tooltip.css({
+                                left: "auto",
+                                right: "0px"
+                            });
+                        else
+                            _this.tooltip.css({
+                                left: left + "px",
+                                right: "auto"
+                            });
+                    });
                     this.handleResume();
                 };
                 Timeline.prototype.destroy = function () {
-                    this.flowroot.off(".vsq-tl");
+                    this.flowroot.off(".vsq-tl .vsq-tl-tlt");
                     this.slider.disable(false);
                 };
                 return Timeline;
@@ -2180,7 +2223,6 @@ System.register("player/VSQ", ["player/VSQ/LayoutChooser", "player/VSQ/QualityCh
                     }
                     if (this.cfg.position.report)
                         this.plugins.push(new ProgressReport_1.default(this));
-                    console.log("seekbar enabled: ", this.cfg.position.seek);
                     if (!this.cfg.position.seek)
                         this.plugins.push(new Timeline_1.default(this));
                     if (this.cfg.presenceCheck.enabled)
