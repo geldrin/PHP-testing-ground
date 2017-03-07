@@ -46,11 +46,10 @@ export default class QualityChooser extends BasePlugin {
     e.preventDefault();
 
     let choice = jQuery(e.currentTarget);
-    if (choice.hasClass("active"))
+    if (choice.hasClass("vsq-active"))
       return;
 
-    this.flowroot.find('.vsq-quality-selector li').removeClass("active");
-    choice.addClass("active");
+    choice.addClass("vsq-active");
 
     let quality = choice.attr('data-quality');
     Tools.setToStorage(this.configKey("quality"), quality);
@@ -93,7 +92,7 @@ export default class QualityChooser extends BasePlugin {
            (i === 0 && this.selectedQuality === "auto") ||
            label === this.selectedQuality
          )
-        active = ' class="active"';
+        active = ' class="vsq-active"';
 
       html += `<li${active} data-level="${i - 1}" data-quality="${label.toLowerCase()}">${Escape.HTML(label)}</li>`;
     }
@@ -105,12 +104,25 @@ export default class QualityChooser extends BasePlugin {
     this.flowroot.find(".vsq-quality-selector").remove();
   }
 
+  private markQuality(hls: any, level: number): void {
+    this.flowroot.find('.vsq-quality-selector li').removeClass("vsq-current vsq-active");
+    let elem = this.findQualityElem(level);
+    elem.addClass("vsq-current");
+
+    // -1 = auto
+    let auto = this.findQualityElem(-1);
+    auto.toggleClass('vsq-active', hls.autoLevelEnabled);
+  }
+
   public setupHLS(hls: any, type: number): void {
     hls.on(Hls.Events.MANIFEST_PARSED, (event: string, data: any): void => {
       let startLevel = this.getQualityIndex(type, this.selectedQuality);
       this.log('manifest parsed for type: ', type, ' startLevel: ', startLevel);
       hls.startLevel = startLevel;
       hls.loadLevel = startLevel;
+
+      if (type === VSQType.MASTER)
+        this.markQuality(hls, startLevel);
 
       hls.startLoad(hls.config.startPosition);
     });
@@ -119,15 +131,13 @@ export default class QualityChooser extends BasePlugin {
       return;
 
     hls.on(Hls.Events.LEVEL_SWITCHED, (event: string, data: any): void => {
-      this.flowroot.find('.vsq-quality-selector li').removeClass("current");
-      let elem = this.findQualityElem(data.level);
-      elem.addClass("current");
+      this.markQuality(hls, data.level);
     });
   }
 
   private findQualityElem(level: number): JQuery {
     let ret = this.flowroot.find('.vsq-quality-selector li[data-level="' + level + '"]');
-    if (ret.length === 0)
+    if (ret.length == 0)
       throw new Error("No element found with the given level: " + level);
 
     return ret;

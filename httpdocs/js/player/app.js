@@ -658,10 +658,9 @@ System.register("player/VSQ/QualityChooser", ["player/VSQ", "player/VSQ/BasePlug
                     var _this = this;
                     e.preventDefault();
                     var choice = jQuery(e.currentTarget);
-                    if (choice.hasClass("active"))
+                    if (choice.hasClass("vsq-active"))
                         return;
-                    this.flowroot.find('.vsq-quality-selector li').removeClass("active");
-                    choice.addClass("active");
+                    choice.addClass("vsq-active");
                     var quality = choice.attr('data-quality');
                     Tools_2.default.setToStorage(this.configKey("quality"), quality);
                     var masterLevel = this.getQualityIndex(VSQ_3.VSQType.MASTER, quality);
@@ -690,7 +689,7 @@ System.register("player/VSQ/QualityChooser", ["player/VSQ", "player/VSQ/BasePlug
                         var active = "";
                         if ((i === 0 && this.selectedQuality === "auto") ||
                             label === this.selectedQuality)
-                            active = ' class="active"';
+                            active = ' class="vsq-active"';
                         html += "<li" + active + " data-level=\"" + (i - 1) + "\" data-quality=\"" + label.toLowerCase() + "\">" + Escape_1.default.HTML(label) + "</li>";
                     }
                     html += "</ul>";
@@ -699,6 +698,13 @@ System.register("player/VSQ/QualityChooser", ["player/VSQ", "player/VSQ/BasePlug
                 QualityChooser.prototype.destroy = function () {
                     this.flowroot.find(".vsq-quality-selector").remove();
                 };
+                QualityChooser.prototype.markQuality = function (hls, level) {
+                    this.flowroot.find('.vsq-quality-selector li').removeClass("vsq-current vsq-active");
+                    var elem = this.findQualityElem(level);
+                    elem.addClass("vsq-current");
+                    var auto = this.findQualityElem(-1);
+                    auto.toggleClass('vsq-active', hls.autoLevelEnabled);
+                };
                 QualityChooser.prototype.setupHLS = function (hls, type) {
                     var _this = this;
                     hls.on(Hls.Events.MANIFEST_PARSED, function (event, data) {
@@ -706,19 +712,19 @@ System.register("player/VSQ/QualityChooser", ["player/VSQ", "player/VSQ/BasePlug
                         _this.log('manifest parsed for type: ', type, ' startLevel: ', startLevel);
                         hls.startLevel = startLevel;
                         hls.loadLevel = startLevel;
+                        if (type === VSQ_3.VSQType.MASTER)
+                            _this.markQuality(hls, startLevel);
                         hls.startLoad(hls.config.startPosition);
                     });
                     if (type !== VSQ_3.VSQType.MASTER)
                         return;
                     hls.on(Hls.Events.LEVEL_SWITCHED, function (event, data) {
-                        _this.flowroot.find('.vsq-quality-selector li').removeClass("current");
-                        var elem = _this.findQualityElem(data.level);
-                        elem.addClass("current");
+                        _this.markQuality(hls, data.level);
                     });
                 };
                 QualityChooser.prototype.findQualityElem = function (level) {
                     var ret = this.flowroot.find('.vsq-quality-selector li[data-level="' + level + '"]');
-                    if (ret.length === 0)
+                    if (ret.length == 0)
                         throw new Error("No element found with the given level: " + level);
                     return ret;
                 };
@@ -1628,12 +1634,10 @@ System.register("player/VSQ/Statistics", ["player/VSQ", "player/VSQAPI", "player
         ],
         execute: function () {
             Report = (function () {
-                function Report(action, fromPosition, toPosition) {
-                    if (fromPosition === void 0) { fromPosition = null; }
-                    if (toPosition === void 0) { toPosition = null; }
+                function Report(action) {
+                    this.fromposition = null;
+                    this.toposition = null;
                     this.action = action;
-                    this.fromposition = fromPosition;
-                    this.toposition = toPosition;
                 }
                 return Report;
             }());
@@ -1745,79 +1749,94 @@ System.register("player/VSQ/Statistics", ["player/VSQ", "player/VSQAPI", "player
                         return;
                     }
                     this.flow.on("progress.vsq-sts", function (e, flow, time) {
-                        if (_this.prevAction === "") {
-                            _this.log("progress update before playing, ignoring");
-                            return;
-                        }
-                        _this.action = "PLAYING";
-                        _this.toPosition = time;
-                        _this.reportIfNeeded();
+                        _this.onProgress(time);
                     });
                     this.flow.on("resume.vsq-sts", function (e, flow, time) {
-                        if (_this.flow.video.time == null)
-                            throw new Error("flow.video.time was null");
-                        if (_this.switchingLevels()) {
-                            _this.log("switching levels, ignoring PLAY");
-                            return;
-                        }
-                        _this.log("Reporting PLAY");
-                        _this.action = "PLAY";
-                        _this.fromPosition = _this.flow.video.time;
-                        _this.toPosition = null;
-                        _this.reportIfNeeded();
+                        _this.onPlay(time);
                     });
                     this.flow.on("pause.vsq-sts stop.vsq-sts finish.vsq-sts", function (e, flow) {
-                        if (_this.flow.video.time == null)
-                            throw new Error("flow.video.time was null");
-                        if (_this.switchingLevels()) {
-                            _this.log("switching levels, ignoring STOP");
-                            return;
-                        }
-                        _this.log("Reporting STOP");
-                        _this.action = "STOP";
-                        _this.toPosition = _this.flow.video.time;
-                        _this.reportIfNeeded();
+                        _this.onPause();
                     });
                     this.flow.on("quality.vsq-sts", function (e, flow, level) {
-                        if (_this.flow.video.time == null)
-                            throw new Error("flow.video.time was null");
-                        if (_this.prevAction === "") {
-                            _this.log("quality switch before playing, ignoring", level);
-                            _this.currentLevel = level;
-                            return;
-                        }
-                        _this.log("Reporting quality switch (STOP+START)", level);
-                        _this.currentLevel = _this.vsq.getHLSEngines()[VSQ_4.VSQType.MASTER].prevLevel;
-                        _this.action = "STOP";
-                        _this.toPosition = _this.flow.video.time;
-                        _this.reportIfNeeded();
-                        _this.currentLevel = level;
-                        _this.action = "PLAY";
-                        _this.fromPosition = _this.flow.video.time;
-                        _this.toPosition = null;
-                        _this.reportIfNeeded();
+                        _this.onQualityChange(level);
                     });
                     this.flow.on("seek.vsq-sts", function (e, flow, time) {
-                        if (_this.prevAction === "") {
-                            _this.log("seek before playing, ignoring");
-                            return;
-                        }
-                        if (_this.switchingLevels()) {
-                            _this.log("switching levels, ignoring SEEK");
-                            return;
-                        }
-                        _this.log("reporting seek, stop to: ", _this.toPosition, "play from", time);
-                        _this.action = "STOP";
-                        if (_this.toPosition == null)
-                            throw new Error("toPosition was null-like");
-                        _this.reportIfNeeded();
-                        _this.action = "PLAY";
-                        _this.fromPosition = time;
-                        _this.reportIfNeeded();
+                        _this.onSeek(time);
                     });
                 };
                 Statistics.prototype.destroy = function () {
                     this.flow.off(".vsq-sts");
+                };
+                Statistics.prototype.onPlay = function (time) {
+                    if (this.flow.video.time == null)
+                        throw new Error("flow.video.time was null");
+                    this.log("Reporting PLAY");
+                    this.action = "PLAY";
+                    this.fromPosition = this.flow.video.time;
+                    this.toPosition = null;
+                    this.reportIfNeeded();
+                };
+                Statistics.prototype.onPause = function () {
+                    if (this.flow.video.time == null)
+                        throw new Error("flow.video.time was null");
+                    if (this.switchingLevels()) {
+                        this.log("switching levels, ignoring STOP");
+                        return;
+                    }
+                    this.log("Reporting STOP");
+                    this.action = "STOP";
+                    this.toPosition = this.flow.video.time;
+                    this.reportIfNeeded();
+                };
+                Statistics.prototype.onProgress = function (time) {
+                    var currentLevel = this.vsq.getHLSEngines()[VSQ_4.VSQType.MASTER].currentLevel;
+                    if (this.prevAction !== "" && currentLevel != -1 && currentLevel != this.prevLevel)
+                        this.onQualityChange(currentLevel);
+                    this.prevLevel = currentLevel < 0 ? 0 : currentLevel;
+                    if (this.prevAction === "") {
+                        this.log("progress update before playing, ignoring");
+                        return;
+                    }
+                    this.action = "PLAYING";
+                    this.toPosition = time;
+                    this.reportIfNeeded();
+                };
+                Statistics.prototype.onSeek = function (time) {
+                    if (this.prevAction === "") {
+                        this.log("seek before playing, ignoring");
+                        return;
+                    }
+                    if (this.switchingLevels()) {
+                        this.log("switching levels, ignoring SEEK");
+                        return;
+                    }
+                    this.log("reporting seek, stop to: ", this.toPosition, "play from", time);
+                    this.action = "STOP";
+                    if (this.toPosition == null)
+                        throw new Error("toPosition was null-like");
+                    this.reportIfNeeded();
+                    this.action = "PLAY";
+                    this.fromPosition = time;
+                    this.reportIfNeeded();
+                };
+                Statistics.prototype.onQualityChange = function (level) {
+                    if (this.flow.video.time == null)
+                        throw new Error("flow.video.time was null");
+                    if (this.prevAction === "") {
+                        this.log("quality switch before playing, ignoring", level);
+                        this.currentLevel = level;
+                        return;
+                    }
+                    this.log("Reporting quality switch (STOP+START)", level);
+                    this.currentLevel = this.prevLevel;
+                    this.action = "STOP";
+                    this.toPosition = this.flow.video.time;
+                    this.reportIfNeeded();
+                    this.currentLevel = level;
+                    this.action = "PLAY";
+                    this.fromPosition = this.flow.video.time;
+                    this.toPosition = null;
+                    this.reportIfNeeded();
                 };
                 return Statistics;
             }(BasePlugin_9.BasePlugin));
@@ -1867,15 +1886,12 @@ System.register("player/VSQHLS", ["player/VSQ", "RateLimiter"], function (export
                     });
                     this.hls.on(Hls.Events.LEVEL_SWITCHING, function (evt, data) {
                         _this.hls.switchingLevels = true;
-                        if (_this.type == VSQ_5.VSQType.MASTER) {
-                            _this.hls.prevLevel = _this.hls.currentLevel;
-                        }
                     });
                     this.hls.on(Hls.Events.LEVEL_SWITCHED, function (evt, data) {
                         _this.hls.switchingLevels = false;
-                        if (_this.type == VSQ_5.VSQType.MASTER) {
-                            _this.vsq.triggerFlow("quality", data.level);
-                        }
+                    });
+                    this.hls.on(Hls.Events.LEVEL_LOADING, function (evt, data) {
+                        _this.hls.switchingLevels = true;
                     });
                     this.hls.on(Hls.Events.LEVEL_LOADED, function (evt, data) {
                         _this.log("level loaded, canceling ratelimits");
@@ -1939,12 +1955,29 @@ System.register("player/VSQHLS", ["player/VSQ", "RateLimiter"], function (export
                     enumerable: true,
                     configurable: true
                 });
+                Object.defineProperty(VSQHLS.prototype, "loadLevel", {
+                    get: function () {
+                        return this.hls.loadLevel;
+                    },
+                    set: function (level) {
+                        this.hls.loadLevel = level;
+                    },
+                    enumerable: true,
+                    configurable: true
+                });
                 Object.defineProperty(VSQHLS.prototype, "currentLevel", {
                     get: function () {
                         return this.hls.currentLevel;
                     },
                     set: function (level) {
                         this.hls.currentLevel = level;
+                    },
+                    enumerable: true,
+                    configurable: true
+                });
+                Object.defineProperty(VSQHLS.prototype, "autoLevelEnabled", {
+                    get: function () {
+                        return this.hls.autoLevelEnabled;
                     },
                     enumerable: true,
                     configurable: true

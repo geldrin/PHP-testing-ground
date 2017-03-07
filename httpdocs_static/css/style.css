@@ -4133,10 +4133,10 @@ table.paging tr.even {
   cursor: pointer;
   background: #fff;
 }
-#player .vsq-quality-selector li.active {
+#player .vsq-quality-selector li.vsq-active {
   background: #ccc;
 }
-#player .vsq-quality-selector li.current {
+#player .vsq-quality-selector li.vsq-current {
   background: #999;
 }
 

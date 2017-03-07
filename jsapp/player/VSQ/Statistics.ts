@@ -8,20 +8,13 @@ import {Modal} from "./Modal";
 import Tools from "../../Tools";
 import Escape from "../../Escape";
 
-interface IReport {
-  action: string;
-  fromposition: number | null;
-  toposition: number | null;
-}
-class Report implements IReport {
+class Report {
   public action: string;
-  public fromposition: number | null;
-  public toposition: number | null;
+  public fromposition: number | null = null;
+  public toposition: number | null = null;
 
-  constructor(action: string, fromPosition: number | null = null, toPosition: number | null = null) {
+  constructor(action: string) {
     this.action = action;
-    this.fromposition = fromPosition;
-    this.toposition = toPosition;
   }
 }
 
@@ -38,7 +31,6 @@ export default class Statistics extends BasePlugin {
   private apiModule: string;
   private consuming = false;
   private lastPlayingReport: number | null;
-  private prevLevel: number;
 
   // ha az enqueueReport egy quality valtas miatt hivodik meg,
   // a this.vsq.getHLSEngines()[VSQType.MASTER].currentLevel
@@ -46,6 +38,7 @@ export default class Statistics extends BasePlugin {
   // igy megoldjuk hogy kontrollalhato pontosan melyik qualityt akarjuk
   // jelenteni eppen
   private currentLevel: number;
+  private prevLevel: number;
 
   constructor(vsq: VSQ) {
     super(vsq);
@@ -159,102 +152,124 @@ export default class Statistics extends BasePlugin {
     }
 
     this.flow.on("progress.vsq-sts", (e: Event, flow: Flowplayer, time: number) => {
-      if (this.prevAction === "") {
-        this.log("progress update before playing, ignoring");
-        return;
-      }
-
-      this.action = "PLAYING";
-      this.toPosition = time;
-      this.reportIfNeeded();
+      this.onProgress(time);
     });
 
     this.flow.on("resume.vsq-sts", (e: Event, flow: Flowplayer, time: number) => {
-      if (this.flow.video.time == null)
-        throw new Error("flow.video.time was null");
-
-      if (this.switchingLevels()) {
-        this.log("switching levels, ignoring PLAY");
-        return;
-      }
-
-      this.log("Reporting PLAY");
-      this.action = "PLAY";
-      this.fromPosition = this.flow.video.time;
-      this.toPosition = null;
-      this.reportIfNeeded();
+      this.onPlay(time);
     });
 
     this.flow.on("pause.vsq-sts stop.vsq-sts finish.vsq-sts", (e: Event, flow: Flowplayer) => {
-      if (this.flow.video.time == null)
-        throw new Error("flow.video.time was null");
-
-      if (this.switchingLevels()) {
-        this.log("switching levels, ignoring STOP");
-        return;
-      }
-
-      this.log("Reporting STOP");
-      this.action = "STOP";
-      this.toPosition = this.flow.video.time;
-      this.reportIfNeeded();
+      this.onPause();
     });
 
     this.flow.on("quality.vsq-sts", (e: Event, flow: Flowplayer, level: number) => {
-      if (this.flow.video.time == null)
-        throw new Error("flow.video.time was null");
-
-      if (this.prevAction === "") {
-        this.log("quality switch before playing, ignoring", level);
-
-        // valamire muszaj allitani, mert ha elindul a lejatszas akkor
-        // a megfelelo parameterekkel szeretnenk jelenteni
-        this.currentLevel = level;
-        return;
-      }
-
-      this.log("Reporting quality switch (STOP+START)", level);
-
-      // a regi quality szintet allitjuk be, mert arrol valtunk le
-      // TODO
-      this.currentLevel = this.vsq.getHLSEngines()[VSQType.MASTER].prevLevel;
-      this.action = "STOP";
-      this.toPosition = this.flow.video.time;
-      this.reportIfNeeded();
-
-      // az uj quality szintet allitjuk be
-      this.currentLevel = level;
-      this.action = "PLAY";
-      this.fromPosition = this.flow.video.time;
-      this.toPosition = null;
-      this.reportIfNeeded();
+      this.onQualityChange(level);
     });
 
     this.flow.on("seek.vsq-sts", (e: Event, flow: Flowplayer, time: number) => {
-      if (this.prevAction === "") {
-        this.log("seek before playing, ignoring");
-        return;
-      }
-
-      if (this.switchingLevels()) {
-        this.log("switching levels, ignoring SEEK");
-        return;
-      }
-
-      this.log("reporting seek, stop to: ", this.toPosition, "play from", time);
-      this.action = "STOP";
-      // a this.toPosition az marad amit jelentett a progress elozoleg
-      if (this.toPosition == null)
-        throw new Error("toPosition was null-like");
-      this.reportIfNeeded();
-
-      this.action = "PLAY";
-      this.fromPosition = time;
-      this.reportIfNeeded();
+      this.onSeek(time);
     });
   }
 
   public destroy(): void {
     this.flow.off(".vsq-sts");
+  }
+
+  private onPlay(time: number): void {
+    if (this.flow.video.time == null)
+      throw new Error("flow.video.time was null");
+
+    this.log("Reporting PLAY");
+    this.action = "PLAY";
+    this.fromPosition = this.flow.video.time;
+    this.toPosition = null;
+    this.reportIfNeeded();
+  }
+
+  private onPause(): void {
+    if (this.flow.video.time == null)
+      throw new Error("flow.video.time was null");
+
+    if (this.switchingLevels()) {
+      this.log("switching levels, ignoring STOP");
+      return;
+    }
+
+    this.log("Reporting STOP");
+    this.action = "STOP";
+    this.toPosition = this.flow.video.time;
+    this.reportIfNeeded();
+  }
+
+  private onProgress(time: number): void {
+    // mivel a hls.js auto-level funkcioja nem dob eventeket,
+    // igy vagyunk kenytelenek detektalni, az egesz elejen
+    let currentLevel = this.vsq.getHLSEngines()[VSQType.MASTER].currentLevel;
+    if (this.prevAction !== "" && currentLevel != -1 && currentLevel != this.prevLevel)
+      this.onQualityChange(currentLevel);
+
+    // ha -1 akkor auto-level, es automatan az elso qualityt valasztjuk eloszor
+    this.prevLevel = currentLevel < 0? 0: currentLevel;
+    if (this.prevAction === "") {
+      this.log("progress update before playing, ignoring");
+      return;
+    }
+
+    this.action = "PLAYING";
+    this.toPosition = time;
+    this.reportIfNeeded();
+  }
+
+  private onSeek(time: number): void {
+    if (this.prevAction === "") {
+      this.log("seek before playing, ignoring");
+      return;
+    }
+
+    if (this.switchingLevels()) {
+      this.log("switching levels, ignoring SEEK");
+      return;
+    }
+
+    this.log("reporting seek, stop to: ", this.toPosition, "play from", time);
+    this.action = "STOP";
+    // a this.toPosition az marad amit jelentett a progress elozoleg
+    if (this.toPosition == null)
+      throw new Error("toPosition was null-like");
+    this.reportIfNeeded();
+
+    this.action = "PLAY";
+    this.fromPosition = time;
+    this.reportIfNeeded();
+  }
+
+  private onQualityChange(level: number): void {
+    if (this.flow.video.time == null)
+      throw new Error("flow.video.time was null");
+
+    if (this.prevAction === "") {
+      this.log("quality switch before playing, ignoring", level);
+
+      // valamire muszaj allitani, mert ha elindul a lejatszas akkor
+      // a megfelelo parameterekkel szeretnenk jelenteni
+      this.currentLevel = level;
+      return;
+    }
+
+    this.log("Reporting quality switch (STOP+START)", level);
+
+    // a regi quality szintet allitjuk be, mert arrol valtunk le
+    this.currentLevel = this.prevLevel;
+    this.action = "STOP";
+    this.toPosition = this.flow.video.time;
+    this.reportIfNeeded();
+
+    // az uj quality szintet allitjuk be
+    this.currentLevel = level;
+    this.action = "PLAY";
+    this.fromPosition = this.flow.video.time;
+    this.toPosition = null;
+    this.reportIfNeeded();
   }
 }
