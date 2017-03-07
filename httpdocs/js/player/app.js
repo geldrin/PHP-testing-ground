@@ -1748,6 +1748,11 @@ System.register("player/VSQ/Statistics", ["player/VSQ", "player/VSQAPI", "player
                         this.log("Intro our outro playing, not reporting progress");
                         return;
                     }
+                    this.flow.on("ready.vsq-sts", function (e, flow, time) {
+                        _this.currentLevel = _this.vsq.getHLSEngines()[VSQ_4.VSQType.MASTER].currentLevel;
+                        _this.prevLevel = _this.currentLevel;
+                        _this.log("ready, currentLevel", _this.currentLevel);
+                    });
                     this.flow.on("progress.vsq-sts", function (e, flow, time) {
                         _this.onProgress(time);
                     });
@@ -1770,6 +1775,10 @@ System.register("player/VSQ/Statistics", ["player/VSQ", "player/VSQAPI", "player
                 Statistics.prototype.onPlay = function (time) {
                     if (this.flow.video.time == null)
                         throw new Error("flow.video.time was null");
+                    if (this.prevAction !== "STOP" && this.prevAction !== "") {
+                        this.log("previous action was not STOP/nothing, ignoring (level switch)");
+                        return;
+                    }
                     this.log("Reporting PLAY");
                     this.action = "PLAY";
                     this.fromPosition = this.flow.video.time;
@@ -1778,9 +1787,13 @@ System.register("player/VSQ/Statistics", ["player/VSQ", "player/VSQAPI", "player
                 };
                 Statistics.prototype.onPause = function () {
                     if (this.flow.video.time == null)
-                        throw new Error("flow.video.time was null");
+                        throw new Error("STOP - flow.video.time was null");
                     if (this.switchingLevels()) {
-                        this.log("switching levels, ignoring STOP");
+                        this.log("STOP - switching levels, ignoring");
+                        return;
+                    }
+                    if (this.prevAction !== "PLAY" && this.prevAction !== "PLAYING") {
+                        this.log("STOP - previous action was not PLAY/PLAYING, ignoring");
                         return;
                     }
                     this.log("Reporting STOP");
@@ -1797,6 +1810,10 @@ System.register("player/VSQ/Statistics", ["player/VSQ", "player/VSQAPI", "player
                         this.log("progress update before playing, ignoring");
                         return;
                     }
+                    if (this.prevAction !== "PLAY" && this.prevAction !== "PLAYING") {
+                        this.log("PLAYING - previous action was not PLAY/PLAYING, ignoring");
+                        return;
+                    }
                     this.action = "PLAYING";
                     this.toPosition = time;
                     this.reportIfNeeded();
@@ -1807,7 +1824,7 @@ System.register("player/VSQ/Statistics", ["player/VSQ", "player/VSQAPI", "player
                         return;
                     }
                     if (this.switchingLevels()) {
-                        this.log("switching levels, ignoring SEEK");
+                        this.log("SEEK - switching levels, ignoring");
                         return;
                     }
                     this.log("reporting seek, stop to: ", this.toPosition, "play from", time);
@@ -1821,7 +1838,7 @@ System.register("player/VSQ/Statistics", ["player/VSQ", "player/VSQAPI", "player
                 };
                 Statistics.prototype.onQualityChange = function (level) {
                     if (this.flow.video.time == null)
-                        throw new Error("flow.video.time was null");
+                        throw new Error("QUALITY - flow.video.time was null");
                     if (this.prevAction === "") {
                         this.log("quality switch before playing, ignoring", level);
                         this.currentLevel = level;
@@ -1965,11 +1982,25 @@ System.register("player/VSQHLS", ["player/VSQ", "RateLimiter"], function (export
                     enumerable: true,
                     configurable: true
                 });
+                Object.defineProperty(VSQHLS.prototype, "nextLevel", {
+                    get: function () {
+                        return this.hls.nextLevel;
+                    },
+                    set: function (level) {
+                        if (this.hls.nextLevel != level)
+                            this.hls.switchingLevels = true;
+                        this.hls.nextLevel = level;
+                    },
+                    enumerable: true,
+                    configurable: true
+                });
                 Object.defineProperty(VSQHLS.prototype, "currentLevel", {
                     get: function () {
                         return this.hls.currentLevel;
                     },
                     set: function (level) {
+                        if (this.hls.currentLevel != level)
+                            this.hls.switchingLevels = true;
                         this.hls.currentLevel = level;
                     },
                     enumerable: true,
@@ -1978,6 +2009,16 @@ System.register("player/VSQHLS", ["player/VSQ", "RateLimiter"], function (export
                 Object.defineProperty(VSQHLS.prototype, "autoLevelEnabled", {
                     get: function () {
                         return this.hls.autoLevelEnabled;
+                    },
+                    enumerable: true,
+                    configurable: true
+                });
+                Object.defineProperty(VSQHLS.prototype, "switchingLevels", {
+                    get: function () {
+                        return this.hls.switchingLevels;
+                    },
+                    set: function (switching) {
+                        this.hls.switchingLevels = switching;
                     },
                     enumerable: true,
                     configurable: true

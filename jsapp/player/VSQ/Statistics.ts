@@ -151,6 +151,12 @@ export default class Statistics extends BasePlugin {
       return;
     }
 
+    this.flow.on("ready.vsq-sts", (e: Event, flow: Flowplayer, time: number) => {
+      this.currentLevel = this.vsq.getHLSEngines()[VSQType.MASTER].currentLevel;
+      this.prevLevel = this.currentLevel;
+      this.log("ready, currentLevel", this.currentLevel);
+    });
+
     this.flow.on("progress.vsq-sts", (e: Event, flow: Flowplayer, time: number) => {
       this.onProgress(time);
     });
@@ -180,6 +186,11 @@ export default class Statistics extends BasePlugin {
     if (this.flow.video.time == null)
       throw new Error("flow.video.time was null");
 
+    if (this.prevAction !== "STOP" && this.prevAction !== "") {
+      this.log("previous action was not STOP/nothing, ignoring (level switch)");
+      return;
+    }
+
     this.log("Reporting PLAY");
     this.action = "PLAY";
     this.fromPosition = this.flow.video.time;
@@ -189,10 +200,15 @@ export default class Statistics extends BasePlugin {
 
   private onPause(): void {
     if (this.flow.video.time == null)
-      throw new Error("flow.video.time was null");
+      throw new Error("STOP - flow.video.time was null");
 
     if (this.switchingLevels()) {
-      this.log("switching levels, ignoring STOP");
+      this.log("STOP - switching levels, ignoring");
+      return;
+    }
+
+    if (this.prevAction !== "PLAY" && this.prevAction !== "PLAYING") {
+      this.log("STOP - previous action was not PLAY/PLAYING, ignoring");
       return;
     }
 
@@ -216,6 +232,11 @@ export default class Statistics extends BasePlugin {
       return;
     }
 
+    if (this.prevAction !== "PLAY" && this.prevAction !== "PLAYING") {
+      this.log("PLAYING - previous action was not PLAY/PLAYING, ignoring");
+      return;
+    }
+
     this.action = "PLAYING";
     this.toPosition = time;
     this.reportIfNeeded();
@@ -228,7 +249,7 @@ export default class Statistics extends BasePlugin {
     }
 
     if (this.switchingLevels()) {
-      this.log("switching levels, ignoring SEEK");
+      this.log("SEEK - switching levels, ignoring");
       return;
     }
 
@@ -246,7 +267,7 @@ export default class Statistics extends BasePlugin {
 
   private onQualityChange(level: number): void {
     if (this.flow.video.time == null)
-      throw new Error("flow.video.time was null");
+      throw new Error("QUALITY - flow.video.time was null");
 
     if (this.prevAction === "") {
       this.log("quality switch before playing, ignoring", level);

@@ -176,14 +176,32 @@ export default class VSQHLS {
   set loadLevel(level: number) {
     this.hls.loadLevel = level;
   }
+  get nextLevel(): number {
+    return this.hls.nextLevel;
+  }
+  set nextLevel(level: number) {
+    if (this.hls.nextLevel != level)
+      this.hls.switchingLevels = true;
+
+    this.hls.nextLevel = level;
+  }
   get currentLevel(): number {
     return this.hls.currentLevel;
   }
   set currentLevel(level: number) {
+    if (this.hls.currentLevel != level)
+      this.hls.switchingLevels = true;
+
     this.hls.currentLevel = level;
   }
   get autoLevelEnabled(): boolean {
     return this.hls.autoLevelEnabled;
+  }
+  get switchingLevels(): boolean {
+    return this.hls.switchingLevels;
+  }
+  set switchingLevels(switching: boolean) {
+    this.hls.switchingLevels = switching;
   }
 
   private onMediaAttached(evt: string, data: any): void {
