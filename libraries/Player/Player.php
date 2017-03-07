@@ -205,7 +205,7 @@ abstract class Player {
         // TODO mobile es a mobil tipusa
         'position'         => array(
           'report'          => false,
-          'seek'            => false,
+          'seek'            => true,
           'lastposition'    => 0,
           'intervalSeconds' =>
             $this->bootstrap->config['recordingpositionupdateseconds']

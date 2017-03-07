@@ -94,6 +94,7 @@ export class VSQ {
     if (this.cfg.position.report)
       this.plugins.push(new ProgressReport(this));
 
+console.log("seekbar enabled: ", this.cfg.position.seek)
     if (!this.cfg.position.seek)
       this.plugins.push(new Timeline(this));
 

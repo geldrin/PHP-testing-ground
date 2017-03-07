@@ -232,8 +232,13 @@ export default class Statistics extends BasePlugin {
       return;
     }
 
+    if (this.flow.seeking) {
+      this.log("PROGRESS - currently seeking, ignoring");
+      return;
+    }
+
     if (this.prevAction !== "PLAY" && this.prevAction !== "PLAYING") {
-      this.log("PLAYING - previous action was not PLAY/PLAYING, ignoring");
+      this.log("PROGRESS - previous action was not PLAY/PLAYING, ignoring");
       return;
     }
 

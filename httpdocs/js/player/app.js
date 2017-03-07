@@ -1444,7 +1444,9 @@ System.register("player/VSQ/Timeline", ["player/VSQ/BasePlugin", "player/VSQ/Mod
                     var percentage = delta / this.size;
                     if (percentage <= this.getWatchedPercent()) {
                         this.log("seeking to: ", percentage);
+                        this.slider.disable(false);
                         this.slider.slide(percentage, 1, true);
+                        this.slider.disable(true);
                     }
                     else {
                         this.log("out of bounds: ", percentage);
@@ -1810,8 +1812,12 @@ System.register("player/VSQ/Statistics", ["player/VSQ", "player/VSQAPI", "player
                         this.log("progress update before playing, ignoring");
                         return;
                     }
+                    if (this.flow.seeking) {
+                        this.log("PROGRESS - currently seeking, ignoring");
+                        return;
+                    }
                     if (this.prevAction !== "PLAY" && this.prevAction !== "PLAYING") {
-                        this.log("PLAYING - previous action was not PLAY/PLAYING, ignoring");
+                        this.log("PROGRESS - previous action was not PLAY/PLAYING, ignoring");
                         return;
                     }
                     this.action = "PLAYING";
@@ -2174,6 +2180,7 @@ System.register("player/VSQ", ["player/VSQ/LayoutChooser", "player/VSQ/QualityCh
                     }
                     if (this.cfg.position.report)
                         this.plugins.push(new ProgressReport_1.default(this));
+                    console.log("seekbar enabled: ", this.cfg.position.seek);
                     if (!this.cfg.position.seek)
                         this.plugins.push(new Timeline_1.default(this));
                     if (this.cfg.presenceCheck.enabled)

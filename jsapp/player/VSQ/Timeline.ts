@@ -68,7 +68,9 @@ export default class Timeline extends BasePlugin {
     let percentage = delta / this.size;
     if (percentage <= this.getWatchedPercent()) {
       this.log("seeking to: ", percentage);
+      this.slider.disable(false);
       this.slider.slide(percentage, 1, true);
+      this.slider.disable(true);
     } else {
       this.log("out of bounds: ", percentage);
     }

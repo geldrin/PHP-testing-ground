@@ -856,7 +856,7 @@ class Recordings extends Player {
     if ( !empty( $cfg['seekbar'] ) ) {
       $bar = $cfg['seekbar'];
       $ret['vsq']['position']['report']       = true;
-      $ret['vsq']['position']['seek']         = $bar['visible'];
+      $ret['vsq']['position']['seek']         = $bar['enabled'];
       $ret['vsq']['position']['lastposition'] = $bar['lastposition'];
     }
 
