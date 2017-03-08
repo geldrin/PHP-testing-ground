@@ -40,6 +40,7 @@
   {/if}
   {if $playerconfig}
     <link rel="StyleSheet" type="text/css" href="{$BASE_URI}js/flowplayer/skin/minimalist.css" media="screen"/>
+    <link rel="StyleSheet" type="text/css" href="{$BASE_URI}js/player/app.css" media="screen"/>
   {/if}
   <link rel="StyleSheet" type="text/css" href="{$STATIC_URI}css/style.css?{$VERSION}" media="screen"/>
   {if $browser.mobile}

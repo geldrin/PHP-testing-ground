@@ -860,8 +860,12 @@ class Controller extends \Visitor\Controller {
     $this->toSmarty['recording']    = $recordingsModel->row;
     $this->toSmarty['playerconfig'] = $playerdata;
 
-    $this->smartyoutput('Visitor/Recordings/Embed.tpl');
-
+    if ($this->organization['ondemandplayertype'] == "flash" )
+      $this->smartyoutput('Visitor/Recordings/EmbedFlash.tpl');
+    else if ($this->organization['ondemandplayertype'] == "flowplayer" )
+      $this->smartyoutput('Visitor/Recordings/EmbedFlow.tpl');
+    else
+      throw new \Exception("Unknown ondemandplayertype ${$this->organization['ondemandplayertype']}");
   }
 
   public function addtochannelAction( $recordingid = null, $channelid = null ) {
