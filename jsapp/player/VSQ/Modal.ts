@@ -1,36 +1,52 @@
 /// <reference path="../../defs/jquery/jquery.d.ts" />
 /// <reference path="../../defs/flowplayer/flowplayer.d.ts" />
 "use strict";
+// TODO mar nem plugin, at kene helyezni
 import {VSQ, VSQConfig, VSQType} from "../VSQ";
-import {BasePlugin} from "./BasePlugin";
+import VSQAPI from "../VSQAPI";
+import Locale from "../../Locale";
 import Tools from "../../Tools";
 import Escape from "../../Escape";
 
-export interface LoginHandler {
-  onSubmit(email: string, password: string): void;
-}
+export class Modal {
+  private pluginName = "Modal";
+  private vsq: VSQ;
+  private root: JQuery;
+  private flowroot: JQuery;
+  private cfg: VSQConfig;
+  private flow: Flowplayer;
+  private l: Locale;
 
-export class Modal extends BasePlugin {
-  protected pluginName = "Modal";
   private static instance: Modal;
   public static QUESTION_TRUE_FIRST = true;
   public static QUESTION_FALSE_FIRST = false;
 
-  constructor(vsq: VSQ) {
-    super(vsq);
+  private constructor(cfg: VSQConfig, root: JQuery) {
     if (Modal.instance != null)
       throw new Error("Modal.instance already present");
 
-    Modal.instance = this;
+    this.root = root;
+    this.cfg = cfg;
+    this.l = cfg.locale;
+
     this.setupHTML();
   }
 
-  public load(): void {
+  public static init(cfg: VSQConfig, root: JQuery): void {
+    Modal.instance = new Modal(cfg, root);
+  }
+  public static setVSQ(vsq: VSQ): void {
+    Modal.instance.vsq = vsq;
+    Modal.instance.flow = vsq.getPlayer();
+    Modal.instance.flowroot = vsq.getFlowRoot();
   }
 
-  public destroy(): void {
-    // nem akarjuk az insertalt html-t feltakaritani mert a mi html-unk
-    // nem kotott a video eletehez
+  private log(...params: any[]): void {
+    if (!VSQ.debug)
+      return;
+
+    params.unshift(`[${this.pluginName}]`);
+    console.log.apply(console, params);
   }
 
   private setupHTML(): void {
@@ -83,21 +99,6 @@ export class Modal extends BasePlugin {
     this.root.append(html);
   }
 
-  public static installLoginHandler(plugin: LoginHandler): void {
-    Modal.instance.installLoginHandler(plugin);
-  }
-  private installLoginHandler(plugin: LoginHandler): void {
-    this.root.on("submit", ".vsq-modal .vsq-login", (e) => {
-      e.preventDefault();
-
-      let form = this.root.find(".vsq-modal .vsq-login");
-      let email = form.find('input[name=email]').val();
-      let password = form.find('input[name=password]').val();
-
-      plugin.onSubmit(email, password);
-    });
-  }
-
   public static showError(html: string): void {
     Modal.instance.showError(html);
   }
@@ -127,6 +128,53 @@ export class Modal extends BasePlugin {
   }
   private hideLogin(): void {
     this.root.removeClass("vsq-is-login");
+  }
+
+  private async login(params: Object, resolve: any, reject: any) {
+    try {
+      let data = await VSQAPI.POST("users", "authenticate", params);
+      switch(data.result) {
+        case "OK":
+          if (data.data) {
+            Modal.hideLogin();
+            resolve(true);
+          } else
+            Modal.showLogin(this.l.get('loginfailed'));
+          break;
+        default:
+          let errMessage = data.data as string;
+
+          Modal.showLogin(errMessage);
+          break;
+      }
+
+    } catch(err) {
+      Modal.showError(this.l.get('networkerror'));
+    }
+  }
+
+  public static tryLogin(): Promise<boolean> {
+    return Modal.instance.tryLogin();
+  }
+  private tryLogin(): Promise<boolean> {
+    Modal.showLogin("");
+    return new Promise((resolve, reject) => {
+
+      this.root.on("submit", ".vsq-modal .vsq-login", (e: Event) => {
+        e.preventDefault();
+
+        let form = this.root.find(".vsq-modal .vsq-login");
+        let email = form.find('input[name=email]').val();
+        let password = form.find('input[name=password]').val();
+
+        let params = jQuery.extend({
+          email: email,
+          password: password
+        }, this.cfg.parameters);
+
+        this.login(params, resolve, reject);
+      });
+    });
   }
 
   public static showTransientMessage(html: string): void {

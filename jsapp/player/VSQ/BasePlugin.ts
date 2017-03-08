@@ -24,7 +24,7 @@ export abstract class BasePlugin {
     this.flow = vsq.getPlayer();
   }
 
-  protected log(...params: Object[]): void {
+  protected log(...params: any[]): void {
     if (!VSQ.debug)
       return;
 

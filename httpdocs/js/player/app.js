@@ -772,14 +772,175 @@ System.register("player/VSQ/QualityChooser", ["player/VSQ", "player/VSQ/BasePlug
         }
     };
 });
-System.register("player/VSQ/Modal", ["player/VSQ/BasePlugin", "Tools", "Escape"], function (exports_9, context_9) {
+System.register("RateLimiter", [], function (exports_9, context_9) {
     "use strict";
     var __moduleName = context_9 && context_9.id;
-    var BasePlugin_3, Tools_3, Escape_2, Modal;
+    var Limit, Limits, RateLimiter;
+    return {
+        setters: [],
+        execute: function () {
+            Limit = (function () {
+                function Limit(name, callback, duration, fireImmediately) {
+                    this.name = name;
+                    this.callback = callback;
+                    this.duration = duration;
+                    this.fireImmediately = fireImmediately;
+                }
+                Limit.prototype.callLater = function (args) {
+                    this.timer = null;
+                    if (!this.fireImmediately && this.callback instanceof Function)
+                        this.callback.apply(this, args);
+                };
+                Limit.prototype.trigger = function () {
+                    var _this = this;
+                    var args = [];
+                    for (var _i = 0; _i < arguments.length; _i++) {
+                        args[_i] = arguments[_i];
+                    }
+                    var shouldCall = this.fireImmediately && this.timer === null;
+                    if (this.timer !== null)
+                        clearTimeout(this.timer);
+                    this.timer = setTimeout(function () {
+                        _this.callLater(args);
+                    }, this.duration);
+                    if (shouldCall && this.callback instanceof Function)
+                        this.callback.apply(this, args);
+                };
+                Limit.prototype.cancel = function () {
+                    if (this.timer === null)
+                        return;
+                    clearTimeout(this.timer);
+                    this.timer = null;
+                };
+                return Limit;
+            }());
+            Limits = (function () {
+                function Limits() {
+                }
+                return Limits;
+            }());
+            RateLimiter = (function () {
+                function RateLimiter() {
+                    this.limits = new Limits();
+                }
+                RateLimiter.prototype.getByName = function (name) {
+                    var limit = this.limits[name];
+                    if (limit == null)
+                        throw new Error("Limiter for " + name + " not found!");
+                    return limit;
+                };
+                RateLimiter.prototype.add = function (name, callback, duration, fireImmediately) {
+                    this.limits[name] = new Limit(name, callback, duration, fireImmediately);
+                };
+                RateLimiter.prototype.trigger = function (name) {
+                    var args = [];
+                    for (var _i = 1; _i < arguments.length; _i++) {
+                        args[_i - 1] = arguments[_i];
+                    }
+                    var limit = this.getByName(name);
+                    return limit.trigger.apply(limit, args);
+                };
+                RateLimiter.prototype.cancel = function (name) {
+                    if (name != null) {
+                        this.getByName(name).cancel();
+                        return;
+                    }
+                    for (var k in this.limits) {
+                        if (!this.limits.hasOwnProperty(k))
+                            continue;
+                        var limit = this.limits[k];
+                        limit.cancel();
+                    }
+                };
+                return RateLimiter;
+            }());
+            RateLimiter.SECOND = 1000;
+            exports_9("default", RateLimiter);
+        }
+    };
+});
+System.register("player/VSQAPI", [], function (exports_10, context_10) {
+    "use strict";
+    var __moduleName = context_10 && context_10.id;
+    var VSQAPI;
+    return {
+        setters: [],
+        execute: function () {
+            VSQAPI = (function () {
+                function VSQAPI() {
+                }
+                VSQAPI.init = function (cfg) {
+                    VSQAPI.baseURL = cfg.apiurl;
+                };
+                VSQAPI.randomTimeout = function (retry) {
+                    var ret = Math.pow(2, retry) * 1000;
+                    ret += Math.random() * 500;
+                    return Math.round(ret);
+                };
+                VSQAPI.call = function (method, parameters, failFast) {
+                    var retries = 0;
+                    return new Promise(function (resolve, reject) {
+                        jQuery.ajax({
+                            url: VSQAPI.baseURL,
+                            type: method,
+                            data: {
+                                parameters: JSON.stringify(parameters)
+                            },
+                            dataType: 'json',
+                            cache: false,
+                            success: function (data) {
+                                resolve(data);
+                            },
+                            error: function (err) {
+                                if (failFast || err.readyState != 0 || retries >= 3) {
+                                    reject(err);
+                                    return;
+                                }
+                                var self = this;
+                                var sleepFor = VSQAPI.randomTimeout(retries);
+                                setTimeout(function () {
+                                    retries++;
+                                    jQuery.ajax(self);
+                                }, sleepFor);
+                            },
+                            timeout: 10000
+                        });
+                    });
+                };
+                VSQAPI.prepareParams = function (module, method, args) {
+                    var parameters = jQuery.extend({
+                        layer: "controller",
+                        module: module,
+                        method: method,
+                        format: 'json'
+                    }, args || {});
+                    return parameters;
+                };
+                VSQAPI.GET = function (module, method, args, failFast) {
+                    var parameters = this.prepareParams(module, method, args);
+                    return VSQAPI.call("GET", parameters, failFast);
+                };
+                VSQAPI.POST = function (module, method, args, failFast) {
+                    var parameters = this.prepareParams(module, method, args);
+                    return VSQAPI.call("POST", parameters, failFast);
+                };
+                return VSQAPI;
+            }());
+            exports_10("default", VSQAPI);
+        }
+    };
+});
+System.register("player/VSQ/Modal", ["player/VSQ", "player/VSQAPI", "Tools", "Escape"], function (exports_11, context_11) {
+    "use strict";
+    var __moduleName = context_11 && context_11.id;
+    var VSQ_4, VSQAPI_1, Tools_3, Escape_2, Modal;
     return {
         setters: [
-            function (BasePlugin_3_1) {
-                BasePlugin_3 = BasePlugin_3_1;
+            function (VSQ_4_1) {
+                VSQ_4 = VSQ_4_1;
+            },
+            function (VSQAPI_1_1) {
+                VSQAPI_1 = VSQAPI_1_1;
             },
             function (Tools_3_1) {
                 Tools_3 = Tools_3_1;
@@ -789,37 +950,37 @@ System.register("player/VSQ/Modal", ["player/VSQ/BasePlugin", "Tools", "Escape"]
             }
         ],
         execute: function () {
-            Modal = (function (_super) {
-                __extends(Modal, _super);
-                function Modal(vsq) {
-                    var _this = _super.call(this, vsq) || this;
-                    _this.pluginName = "Modal";
+            Modal = (function () {
+                function Modal(cfg, root) {
+                    this.pluginName = "Modal";
                     if (Modal.instance != null)
                         throw new Error("Modal.instance already present");
-                    Modal.instance = _this;
-                    _this.setupHTML();
-                    return _this;
+                    this.root = root;
+                    this.cfg = cfg;
+                    this.l = cfg.locale;
+                    this.setupHTML();
                 }
-                Modal.prototype.load = function () {
+                Modal.init = function (cfg, root) {
+                    Modal.instance = new Modal(cfg, root);
                 };
-                Modal.prototype.destroy = function () {
+                Modal.setVSQ = function (vsq) {
+                    Modal.instance.vsq = vsq;
+                    Modal.instance.flow = vsq.getPlayer();
+                    Modal.instance.flowroot = vsq.getFlowRoot();
+                };
+                Modal.prototype.log = function () {
+                    var params = [];
+                    for (var _i = 0; _i < arguments.length; _i++) {
+                        params[_i] = arguments[_i];
+                    }
+                    if (!VSQ_4.VSQ.debug)
+                        return;
+                    params.unshift("[" + this.pluginName + "]");
+                    console.log.apply(console, params);
                 };
                 Modal.prototype.setupHTML = function () {
                     var html = "\n      <div class=\"vsq-modal\">\n        <div class=\"vsq-presence\">\n          <div class=\"row vsq-message\"> value=\"" + Escape_2.default.HTML(this.l.get('player_presencecheck')) + "\"</div>\n          <div class=\"row vsq-remainingtime\"></div>\n          <div class=\"row vsq-buttons\">\n            <input type=\"button\" class=\"vsq-button-present\" value=\"" + Escape_2.default.HTML(this.l.get('player_presencecheck_confirm')) + "\"/>\n            <input type=\"button\" class=\"vsq-button-continue\" value=\"" + Escape_2.default.HTML(this.l.get('player_presencecheck_continue')) + "\"/>\n          </div>\n        </div>\n        <div class=\"vsq-question\">\n          <div class=\"row vsq-message\"></div>\n          <div class=\"row vsq-buttons\">\n            <input type=\"button\" class=\"vsq-button-first\"/>\n            <input type=\"button\" class=\"vsq-button-second\"/>\n          </div>\n        </div>\n        <div class=\"vsq-transient\">\n        </div>\n        <form class=\"vsq-login\">\n          <div class=\"row vsq-message\">\n          </div>\n          <div class=\"row vsq-email\">\n            <div class=\"label\">\n              <label for=\"email\">" + Escape_2.default.HTML(this.l.get('playeremail')) + "</label>\n            </div>\n            <div class=\"elem\">\n              <input name=\"email\" id=\"email\" type=\"text\"/>\n            </div>\n          </div>\n          <div class=\"row vsq-password\">\n            <div class=\"label\">\n              <label for=\"password\">" + Escape_2.default.HTML(this.l.get('playerpassword')) + "</label>\n            </div>\n            <div class=\"elem\">\n              <input name=\"password\" id=\"password\" type=\"password\"/>\n            </div>\n          </div>\n          <div class=\"row submit\">\n            <div class=\"elem\">\n              <input type=\"submit\" value=\"" + Escape_2.default.HTML(this.l.get('submitlogin')) + "\"/>\n            </div>\n          </div>\n        </form>\n      </div>\n    ";
                     this.root.append(html);
-                };
-                Modal.installLoginHandler = function (plugin) {
-                    Modal.instance.installLoginHandler(plugin);
-                };
-                Modal.prototype.installLoginHandler = function (plugin) {
-                    var _this = this;
-                    this.root.on("submit", ".vsq-modal .vsq-login", function (e) {
-                        e.preventDefault();
-                        var form = _this.root.find(".vsq-modal .vsq-login");
-                        var email = form.find('input[name=email]').val();
-                        var password = form.find('input[name=password]').val();
-                        plugin.onSubmit(email, password);
-                    });
                 };
                 Modal.showError = function (html) {
                     Modal.instance.showError(html);
@@ -844,6 +1005,60 @@ System.register("player/VSQ/Modal", ["player/VSQ/BasePlugin", "Tools", "Escape"]
                 };
                 Modal.prototype.hideLogin = function () {
                     this.root.removeClass("vsq-is-login");
+                };
+                Modal.prototype.login = function (params, resolve, reject) {
+                    return __awaiter(this, void 0, void 0, function () {
+                        var data, errMessage, err_1;
+                        return __generator(this, function (_a) {
+                            switch (_a.label) {
+                                case 0:
+                                    _a.trys.push([0, 2, , 3]);
+                                    return [4 /*yield*/, VSQAPI_1.default.POST("users", "authenticate", params)];
+                                case 1:
+                                    data = _a.sent();
+                                    switch (data.result) {
+                                        case "OK":
+                                            if (data.data) {
+                                                Modal.hideLogin();
+                                                resolve(true);
+                                            }
+                                            else
+                                                Modal.showLogin(this.l.get('loginfailed'));
+                                            break;
+                                        default:
+                                            errMessage = data.data;
+                                            Modal.showLogin(errMessage);
+                                            break;
+                                    }
+                                    return [3 /*break*/, 3];
+                                case 2:
+                                    err_1 = _a.sent();
+                                    Modal.showError(this.l.get('networkerror'));
+                                    return [3 /*break*/, 3];
+                                case 3: return [2 /*return*/];
+                            }
+                        });
+                    });
+                };
+                Modal.tryLogin = function () {
+                    return Modal.instance.tryLogin();
+                };
+                Modal.prototype.tryLogin = function () {
+                    var _this = this;
+                    Modal.showLogin("");
+                    return new Promise(function (resolve, reject) {
+                        _this.root.on("submit", ".vsq-modal .vsq-login", function (e) {
+                            e.preventDefault();
+                            var form = _this.root.find(".vsq-modal .vsq-login");
+                            var email = form.find('input[name=email]').val();
+                            var password = form.find('input[name=password]').val();
+                            var params = jQuery.extend({
+                                email: email,
+                                password: password
+                            }, _this.cfg.parameters);
+                            _this.login(params, resolve, reject);
+                        });
+                    });
                 };
                 Modal.showTransientMessage = function (html) {
                     Modal.instance.showTransientMessage(html);
@@ -953,182 +1168,24 @@ System.register("player/VSQ/Modal", ["player/VSQ/BasePlugin", "Tools", "Escape"]
                     });
                 };
                 return Modal;
-            }(BasePlugin_3.BasePlugin));
+            }());
             Modal.QUESTION_TRUE_FIRST = true;
             Modal.QUESTION_FALSE_FIRST = false;
-            exports_9("Modal", Modal);
-        }
-    };
-});
-System.register("RateLimiter", [], function (exports_10, context_10) {
-    "use strict";
-    var __moduleName = context_10 && context_10.id;
-    var Limit, Limits, RateLimiter;
-    return {
-        setters: [],
-        execute: function () {
-            Limit = (function () {
-                function Limit(name, callback, duration, fireImmediately) {
-                    this.name = name;
-                    this.callback = callback;
-                    this.duration = duration;
-                    this.fireImmediately = fireImmediately;
-                }
-                Limit.prototype.callLater = function (args) {
-                    this.timer = null;
-                    if (!this.fireImmediately && this.callback instanceof Function)
-                        this.callback.apply(this, args);
-                };
-                Limit.prototype.trigger = function () {
-                    var _this = this;
-                    var args = [];
-                    for (var _i = 0; _i < arguments.length; _i++) {
-                        args[_i] = arguments[_i];
-                    }
-                    var shouldCall = this.fireImmediately && this.timer === null;
-                    if (this.timer !== null)
-                        clearTimeout(this.timer);
-                    this.timer = setTimeout(function () {
-                        _this.callLater(args);
-                    }, this.duration);
-                    if (shouldCall && this.callback instanceof Function)
-                        this.callback.apply(this, args);
-                };
-                Limit.prototype.cancel = function () {
-                    if (this.timer === null)
-                        return;
-                    clearTimeout(this.timer);
-                    this.timer = null;
-                };
-                return Limit;
-            }());
-            Limits = (function () {
-                function Limits() {
-                }
-                return Limits;
-            }());
-            RateLimiter = (function () {
-                function RateLimiter() {
-                    this.limits = new Limits();
-                }
-                RateLimiter.prototype.getByName = function (name) {
-                    var limit = this.limits[name];
-                    if (limit == null)
-                        throw new Error("Limiter for " + name + " not found!");
-                    return limit;
-                };
-                RateLimiter.prototype.add = function (name, callback, duration, fireImmediately) {
-                    this.limits[name] = new Limit(name, callback, duration, fireImmediately);
-                };
-                RateLimiter.prototype.trigger = function (name) {
-                    var args = [];
-                    for (var _i = 1; _i < arguments.length; _i++) {
-                        args[_i - 1] = arguments[_i];
-                    }
-                    var limit = this.getByName(name);
-                    return limit.trigger.apply(limit, args);
-                };
-                RateLimiter.prototype.cancel = function (name) {
-                    if (name != null) {
-                        this.getByName(name).cancel();
-                        return;
-                    }
-                    for (var k in this.limits) {
-                        if (!this.limits.hasOwnProperty(k))
-                            continue;
-                        var limit = this.limits[k];
-                        limit.cancel();
-                    }
-                };
-                return RateLimiter;
-            }());
-            RateLimiter.SECOND = 1000;
-            exports_10("default", RateLimiter);
-        }
-    };
-});
-System.register("player/VSQAPI", [], function (exports_11, context_11) {
-    "use strict";
-    var __moduleName = context_11 && context_11.id;
-    var VSQAPI;
-    return {
-        setters: [],
-        execute: function () {
-            VSQAPI = (function () {
-                function VSQAPI() {
-                }
-                VSQAPI.init = function (cfg) {
-                    VSQAPI.baseURL = cfg.apiurl;
-                };
-                VSQAPI.randomTimeout = function (retry) {
-                    var ret = Math.pow(2, retry) * 1000;
-                    ret += Math.random() * 500;
-                    return Math.round(ret);
-                };
-                VSQAPI.call = function (method, parameters, failFast) {
-                    var retries = 0;
-                    return new Promise(function (resolve, reject) {
-                        jQuery.ajax({
-                            url: VSQAPI.baseURL,
-                            type: method,
-                            data: {
-                                parameters: JSON.stringify(parameters)
-                            },
-                            dataType: 'json',
-                            cache: false,
-                            success: function (data) {
-                                resolve(data);
-                            },
-                            error: function (err) {
-                                if (failFast || err.readyState != 0 || retries >= 3) {
-                                    reject(err);
-                                    return;
-                                }
-                                var self = this;
-                                var sleepFor = VSQAPI.randomTimeout(retries);
-                                setTimeout(function () {
-                                    retries++;
-                                    jQuery.ajax(self);
-                                }, sleepFor);
-                            },
-                            timeout: 10000
-                        });
-                    });
-                };
-                VSQAPI.prepareParams = function (module, method, args) {
-                    var parameters = jQuery.extend({
-                        layer: "controller",
-                        module: module,
-                        method: method,
-                        format: 'json'
-                    }, args || {});
-                    return parameters;
-                };
-                VSQAPI.GET = function (module, method, args, failFast) {
-                    var parameters = this.prepareParams(module, method, args);
-                    return VSQAPI.call("GET", parameters, failFast);
-                };
-                VSQAPI.POST = function (module, method, args, failFast) {
-                    var parameters = this.prepareParams(module, method, args);
-                    return VSQAPI.call("POST", parameters, failFast);
-                };
-                return VSQAPI;
-            }());
-            exports_11("default", VSQAPI);
+            exports_11("Modal", Modal);
         }
     };
 });
 System.register("player/VSQ/Pinger", ["player/VSQAPI", "player/VSQ/BasePlugin", "player/VSQ/Modal"], function (exports_12, context_12) {
     "use strict";
     var __moduleName = context_12 && context_12.id;
-    var VSQAPI_1, BasePlugin_4, Modal_1, Pinger;
+    var VSQAPI_2, BasePlugin_3, Modal_1, Pinger;
     return {
         setters: [
-            function (VSQAPI_1_1) {
-                VSQAPI_1 = VSQAPI_1_1;
+            function (VSQAPI_2_1) {
+                VSQAPI_2 = VSQAPI_2_1;
             },
-            function (BasePlugin_4_1) {
-                BasePlugin_4 = BasePlugin_4_1;
+            function (BasePlugin_3_1) {
+                BasePlugin_3 = BasePlugin_3_1;
             },
             function (Modal_1_1) {
                 Modal_1 = Modal_1_1;
@@ -1166,12 +1223,12 @@ System.register("player/VSQ/Pinger", ["player/VSQAPI", "player/VSQ/BasePlugin", 
                 };
                 Pinger.prototype.ping = function () {
                     return __awaiter(this, void 0, void 0, function () {
-                        var data, errMessage, errData, err_1;
+                        var data, errMessage, errData, err_2;
                         return __generator(this, function (_a) {
                             switch (_a.label) {
                                 case 0:
                                     _a.trys.push([0, 2, , 3]);
-                                    return [4 /*yield*/, VSQAPI_1.default.POST("users", "ping", this.cfg.parameters)];
+                                    return [4 /*yield*/, VSQAPI_2.default.POST("users", "ping", this.cfg.parameters)];
                                 case 1:
                                     data = _a.sent();
                                     switch (data.result) {
@@ -1187,7 +1244,7 @@ System.register("player/VSQ/Pinger", ["player/VSQAPI", "player/VSQ/BasePlugin", 
                                     }
                                     return [3 /*break*/, 3];
                                 case 2:
-                                    err_1 = _a.sent();
+                                    err_2 = _a.sent();
                                     Modal_1.Modal.showError(this.l.get('networkerror'));
                                     return [3 /*break*/, 3];
                                 case 3: return [2 /*return*/];
@@ -1200,101 +1257,25 @@ System.register("player/VSQ/Pinger", ["player/VSQAPI", "player/VSQ/BasePlugin", 
                 Pinger.prototype.destroy = function () {
                 };
                 return Pinger;
-            }(BasePlugin_4.BasePlugin));
+            }(BasePlugin_3.BasePlugin));
             exports_12("default", Pinger);
         }
     };
 });
-System.register("player/VSQ/Login", ["player/VSQAPI", "player/VSQ/BasePlugin", "player/VSQ/Modal"], function (exports_13, context_13) {
+System.register("player/VSQ/ProgressReport", ["player/VSQAPI", "player/VSQ/BasePlugin", "player/VSQ/Modal", "Tools"], function (exports_13, context_13) {
     "use strict";
     var __moduleName = context_13 && context_13.id;
-    var VSQAPI_2, BasePlugin_5, Modal_2, Login;
-    return {
-        setters: [
-            function (VSQAPI_2_1) {
-                VSQAPI_2 = VSQAPI_2_1;
-            },
-            function (BasePlugin_5_1) {
-                BasePlugin_5 = BasePlugin_5_1;
-            },
-            function (Modal_2_1) {
-                Modal_2 = Modal_2_1;
-            }
-        ],
-        execute: function () {
-            Login = (function (_super) {
-                __extends(Login, _super);
-                function Login(vsq) {
-                    var _this = _super.call(this, vsq) || this;
-                    _this.pluginName = "Login";
-                    _this.shown = false;
-                    Modal_2.Modal.installLoginHandler(_this);
-                    Modal_2.Modal.showLogin("");
-                    return _this;
-                }
-                Login.prototype.login = function (params) {
-                    return __awaiter(this, void 0, void 0, function () {
-                        var data, errMessage, err_2;
-                        return __generator(this, function (_a) {
-                            switch (_a.label) {
-                                case 0:
-                                    _a.trys.push([0, 2, , 3]);
-                                    return [4 /*yield*/, VSQAPI_2.default.POST("users", "authenticate", params)];
-                                case 1:
-                                    data = _a.sent();
-                                    switch (data.result) {
-                                        case "OK":
-                                            if (data.data)
-                                                Modal_2.Modal.hideLogin();
-                                            else
-                                                Modal_2.Modal.showLogin(this.l.get('loginfailed'));
-                                            break;
-                                        default:
-                                            errMessage = data.data;
-                                            Modal_2.Modal.showLogin(errMessage);
-                                            break;
-                                    }
-                                    return [3 /*break*/, 3];
-                                case 2:
-                                    err_2 = _a.sent();
-                                    Modal_2.Modal.showError(this.l.get('networkerror'));
-                                    return [3 /*break*/, 3];
-                                case 3: return [2 /*return*/];
-                            }
-                        });
-                    });
-                };
-                Login.prototype.onSubmit = function (email, password) {
-                    var params = jQuery.extend({
-                        email: email,
-                        password: password
-                    }, this.cfg.parameters);
-                    this.login(params);
-                };
-                Login.prototype.load = function () {
-                };
-                Login.prototype.destroy = function () {
-                };
-                return Login;
-            }(BasePlugin_5.BasePlugin));
-            exports_13("default", Login);
-        }
-    };
-});
-System.register("player/VSQ/ProgressReport", ["player/VSQAPI", "player/VSQ/BasePlugin", "player/VSQ/Modal", "Tools"], function (exports_14, context_14) {
-    "use strict";
-    var __moduleName = context_14 && context_14.id;
-    var VSQAPI_3, BasePlugin_6, Modal_3, Tools_4, ProgressReport;
+    var VSQAPI_3, BasePlugin_4, Modal_2, Tools_4, ProgressReport;
     return {
         setters: [
             function (VSQAPI_3_1) {
                 VSQAPI_3 = VSQAPI_3_1;
             },
-            function (BasePlugin_6_1) {
-                BasePlugin_6 = BasePlugin_6_1;
+            function (BasePlugin_4_1) {
+                BasePlugin_4 = BasePlugin_4_1;
             },
-            function (Modal_3_1) {
-                Modal_3 = Modal_3_1;
+            function (Modal_2_1) {
+                Modal_2 = Modal_2_1;
             },
             function (Tools_4_1) {
                 Tools_4 = Tools_4_1;
@@ -1334,17 +1315,17 @@ System.register("player/VSQ/ProgressReport", ["player/VSQAPI", "player/VSQ/BaseP
                                     result = data.data;
                                     if (result.success === false) {
                                         if (result.position === 0) {
-                                            Modal_3.Modal.showError("progressreport-resetposition");
+                                            Modal_2.Modal.showError("progressreport-resetposition");
                                             return [2 /*return*/];
                                         }
-                                        Modal_3.Modal.showError("progressreport-failed");
+                                        Modal_2.Modal.showError("progressreport-failed");
                                         return [2 /*return*/];
                                     }
                                     return [3 /*break*/, 4];
                                 case 3:
                                     err_3 = _a.sent();
                                     this.log("report error", err_3);
-                                    Modal_3.Modal.showError(this.l.get('networkerror'));
+                                    Modal_2.Modal.showError(this.l.get('networkerror'));
                                     return [3 /*break*/, 4];
                                 case 4: return [2 /*return*/];
                             }
@@ -1377,22 +1358,22 @@ System.register("player/VSQ/ProgressReport", ["player/VSQAPI", "player/VSQ/BaseP
                     this.flow.off(".vsq-pgr");
                 };
                 return ProgressReport;
-            }(BasePlugin_6.BasePlugin));
-            exports_14("default", ProgressReport);
+            }(BasePlugin_4.BasePlugin));
+            exports_13("default", ProgressReport);
         }
     };
 });
-System.register("player/VSQ/Timeline", ["player/VSQ/BasePlugin", "player/VSQ/Modal", "Tools", "RateLimiter"], function (exports_15, context_15) {
+System.register("player/VSQ/Timeline", ["player/VSQ/BasePlugin", "player/VSQ/Modal", "Tools", "RateLimiter"], function (exports_14, context_14) {
     "use strict";
-    var __moduleName = context_15 && context_15.id;
-    var BasePlugin_7, Modal_4, Tools_5, RateLimiter_1, Timeline;
+    var __moduleName = context_14 && context_14.id;
+    var BasePlugin_5, Modal_3, Tools_5, RateLimiter_1, Timeline;
     return {
         setters: [
-            function (BasePlugin_7_1) {
-                BasePlugin_7 = BasePlugin_7_1;
+            function (BasePlugin_5_1) {
+                BasePlugin_5 = BasePlugin_5_1;
             },
-            function (Modal_4_1) {
-                Modal_4 = Modal_4_1;
+            function (Modal_3_1) {
+                Modal_3 = Modal_3_1;
             },
             function (Tools_5_1) {
                 Tools_5 = Tools_5_1;
@@ -1476,7 +1457,7 @@ System.register("player/VSQ/Timeline", ["player/VSQ/BasePlugin", "player/VSQ/Mod
                                     from = Tools_5.default.formatDuration(this.watched);
                                     question = this.l.get("player_shouldresume");
                                     question = question.replace(/%from%/gi, from);
-                                    return [4 /*yield*/, Modal_4.Modal.askQuestion(question, this.l.get('yes'), this.l.get('no'), Modal_4.Modal.QUESTION_TRUE_FIRST)];
+                                    return [4 /*yield*/, Modal_3.Modal.askQuestion(question, this.l.get('yes'), this.l.get('no'), Modal_3.Modal.QUESTION_TRUE_FIRST)];
                                 case 1:
                                     shouldResume = _a.sent();
                                     if (shouldResume)
@@ -1547,22 +1528,22 @@ System.register("player/VSQ/Timeline", ["player/VSQ/BasePlugin", "player/VSQ/Mod
                     this.slider.disable(false);
                 };
                 return Timeline;
-            }(BasePlugin_7.BasePlugin));
-            exports_15("default", Timeline);
+            }(BasePlugin_5.BasePlugin));
+            exports_14("default", Timeline);
         }
     };
 });
-System.register("player/VSQ/PresenceCheck", ["player/VSQ/BasePlugin", "player/VSQ/Modal", "Tools"], function (exports_16, context_16) {
+System.register("player/VSQ/PresenceCheck", ["player/VSQ/BasePlugin", "player/VSQ/Modal", "Tools"], function (exports_15, context_15) {
     "use strict";
-    var __moduleName = context_16 && context_16.id;
-    var BasePlugin_8, Modal_5, Tools_6, PresenceCheck;
+    var __moduleName = context_15 && context_15.id;
+    var BasePlugin_6, Modal_4, Tools_6, PresenceCheck;
     return {
         setters: [
-            function (BasePlugin_8_1) {
-                BasePlugin_8 = BasePlugin_8_1;
+            function (BasePlugin_6_1) {
+                BasePlugin_6 = BasePlugin_6_1;
             },
-            function (Modal_5_1) {
-                Modal_5 = Modal_5_1;
+            function (Modal_4_1) {
+                Modal_4 = Modal_4_1;
             },
             function (Tools_6_1) {
                 Tools_6 = Tools_6_1;
@@ -1611,7 +1592,7 @@ System.register("player/VSQ/PresenceCheck", ["player/VSQ/BasePlugin", "player/VS
                                     this.resetInactivity();
                                     this.checking = true;
                                     this.flow.pause();
-                                    return [4 /*yield*/, Modal_5.Modal.presenceCheck(this.cfg.presenceCheck.timeoutSeconds)];
+                                    return [4 /*yield*/, Modal_4.Modal.presenceCheck(this.cfg.presenceCheck.timeoutSeconds)];
                                 case 1:
                                     action = _a.sent();
                                     this.checking = false;
@@ -1653,25 +1634,25 @@ System.register("player/VSQ/PresenceCheck", ["player/VSQ/BasePlugin", "player/VS
                     clearInterval(this.interval);
                 };
                 return PresenceCheck;
-            }(BasePlugin_8.BasePlugin));
-            exports_16("default", PresenceCheck);
+            }(BasePlugin_6.BasePlugin));
+            exports_15("default", PresenceCheck);
         }
     };
 });
-System.register("player/VSQ/Statistics", ["player/VSQ", "player/VSQAPI", "player/VSQ/BasePlugin", "Tools"], function (exports_17, context_17) {
+System.register("player/VSQ/Statistics", ["player/VSQ", "player/VSQAPI", "player/VSQ/BasePlugin", "Tools"], function (exports_16, context_16) {
     "use strict";
-    var __moduleName = context_17 && context_17.id;
-    var VSQ_4, VSQAPI_4, BasePlugin_9, Tools_7, Report, Statistics;
+    var __moduleName = context_16 && context_16.id;
+    var VSQ_5, VSQAPI_4, BasePlugin_7, Tools_7, Report, Statistics;
     return {
         setters: [
-            function (VSQ_4_1) {
-                VSQ_4 = VSQ_4_1;
+            function (VSQ_5_1) {
+                VSQ_5 = VSQ_5_1;
             },
             function (VSQAPI_4_1) {
                 VSQAPI_4 = VSQAPI_4_1;
             },
-            function (BasePlugin_9_1) {
-                BasePlugin_9 = BasePlugin_9_1;
+            function (BasePlugin_7_1) {
+                BasePlugin_7 = BasePlugin_7_1;
             },
             function (Tools_7_1) {
                 Tools_7 = Tools_7_1;
@@ -1705,7 +1686,7 @@ System.register("player/VSQ/Statistics", ["player/VSQ", "player/VSQAPI", "player
                 Statistics.prototype.enqueueReport = function (report) {
                     if (this.currentLevel == null)
                         throw new Error("Quality level not yet set, cannot ascertain parameters");
-                    var info = this.vsq.getVideoInfo(VSQ_4.VSQType.MASTER);
+                    var info = this.vsq.getVideoInfo(VSQ_5.VSQType.MASTER);
                     var quality = this.currentLevel;
                     if (quality < 0)
                         quality = 0;
@@ -1785,7 +1766,7 @@ System.register("player/VSQ/Statistics", ["player/VSQ", "player/VSQAPI", "player
                     this.consumeReports();
                 };
                 Statistics.prototype.switchingLevels = function () {
-                    return this.vsq.getHLSEngines()[VSQ_4.VSQType.MASTER].switchingLevels;
+                    return this.vsq.getHLSEngines()[VSQ_5.VSQType.MASTER].switchingLevels;
                 };
                 Statistics.prototype.load = function () {
                     var _this = this;
@@ -1794,7 +1775,7 @@ System.register("player/VSQ/Statistics", ["player/VSQ", "player/VSQAPI", "player
                         return;
                     }
                     this.flow.on("ready.vsq-sts", function (e, flow, time) {
-                        _this.currentLevel = _this.vsq.getHLSEngines()[VSQ_4.VSQType.MASTER].currentLevel;
+                        _this.currentLevel = _this.vsq.getHLSEngines()[VSQ_5.VSQType.MASTER].currentLevel;
                         _this.prevLevel = _this.currentLevel;
                         _this.log("ready, currentLevel", _this.currentLevel);
                     });
@@ -1847,7 +1828,7 @@ System.register("player/VSQ/Statistics", ["player/VSQ", "player/VSQAPI", "player
                     this.reportIfNeeded();
                 };
                 Statistics.prototype.onProgress = function (time) {
-                    var currentLevel = this.vsq.getHLSEngines()[VSQ_4.VSQType.MASTER].currentLevel;
+                    var currentLevel = this.vsq.getHLSEngines()[VSQ_5.VSQType.MASTER].currentLevel;
                     if (this.prevAction !== "" && currentLevel != -1 && currentLevel != this.prevLevel)
                         this.onQualityChange(currentLevel);
                     this.prevLevel = currentLevel < 0 ? 0 : currentLevel;
@@ -1905,19 +1886,19 @@ System.register("player/VSQ/Statistics", ["player/VSQ", "player/VSQAPI", "player
                     this.reportIfNeeded();
                 };
                 return Statistics;
-            }(BasePlugin_9.BasePlugin));
-            exports_17("default", Statistics);
+            }(BasePlugin_7.BasePlugin));
+            exports_16("default", Statistics);
         }
     };
 });
-System.register("player/VSQHLS", ["player/VSQ", "RateLimiter"], function (exports_18, context_18) {
+System.register("player/VSQHLS", ["player/VSQ", "RateLimiter"], function (exports_17, context_17) {
     "use strict";
-    var __moduleName = context_18 && context_18.id;
-    var VSQ_5, RateLimiter_2, VSQHLS;
+    var __moduleName = context_17 && context_17.id;
+    var VSQ_6, RateLimiter_2, VSQHLS;
     return {
         setters: [
-            function (VSQ_5_1) {
-                VSQ_5 = VSQ_5_1;
+            function (VSQ_6_1) {
+                VSQ_6 = VSQ_6_1;
             },
             function (RateLimiter_2_1) {
                 RateLimiter_2 = RateLimiter_2_1;
@@ -1987,7 +1968,7 @@ System.register("player/VSQHLS", ["player/VSQ", "RateLimiter"], function (export
                     for (var _i = 0; _i < arguments.length; _i++) {
                         params[_i] = arguments[_i];
                     }
-                    if (!VSQ_5.VSQ.debug)
+                    if (!VSQ_6.VSQ.debug)
                         return;
                     params.unshift("[VSQHLS-" + this.type + "]");
                     console.log.apply(console, params);
@@ -2112,7 +2093,7 @@ System.register("player/VSQHLS", ["player/VSQ", "RateLimiter"], function (export
                     this.onUnhandledError(evt, data);
                 };
                 VSQHLS.prototype.onAccessError = function (evt, data) {
-                    this.flow.trigger("error", [this.flow, { code: VSQ_5.VSQ.accessDeniedError }]);
+                    this.flow.trigger("error", [this.flow, { code: VSQ_6.VSQ.accessDeniedError }]);
                 };
                 VSQHLS.prototype.onLevelLoadError = function (evt, data) {
                     this.flushBuffer();
@@ -2138,14 +2119,14 @@ System.register("player/VSQHLS", ["player/VSQ", "RateLimiter"], function (export
                 };
                 return VSQHLS;
             }());
-            exports_18("default", VSQHLS);
+            exports_17("default", VSQHLS);
         }
     };
 });
-System.register("player/VSQ", ["player/VSQ/LayoutChooser", "player/VSQ/QualityChooser", "player/VSQ/Modal", "player/VSQ/Pinger", "player/VSQ/Login", "player/VSQ/ProgressReport", "player/VSQ/Timeline", "player/VSQ/PresenceCheck", "player/VSQ/Statistics", "player/VSQHLS", "player/VSQAPI"], function (exports_19, context_19) {
+System.register("player/VSQ", ["player/VSQ/LayoutChooser", "player/VSQ/QualityChooser", "player/VSQ/Modal", "player/VSQ/Pinger", "player/VSQ/ProgressReport", "player/VSQ/Timeline", "player/VSQ/PresenceCheck", "player/VSQ/Statistics", "player/VSQHLS"], function (exports_18, context_18) {
     "use strict";
-    var __moduleName = context_19 && context_19.id;
-    var LayoutChooser_1, QualityChooser_1, Modal_6, Pinger_1, Login_1, ProgressReport_1, Timeline_1, PresenceCheck_1, Statistics_1, VSQHLS_1, VSQAPI_5, VSQ, VSQType;
+    var __moduleName = context_18 && context_18.id;
+    var LayoutChooser_1, QualityChooser_1, Modal_5, Pinger_1, ProgressReport_1, Timeline_1, PresenceCheck_1, Statistics_1, VSQHLS_1, VSQ, VSQType;
     return {
         setters: [
             function (LayoutChooser_1_1) {
@@ -2154,14 +2135,11 @@ System.register("player/VSQ", ["player/VSQ/LayoutChooser", "player/VSQ/QualityCh
             function (QualityChooser_1_1) {
                 QualityChooser_1 = QualityChooser_1_1;
             },
-            function (Modal_6_1) {
-                Modal_6 = Modal_6_1;
+            function (Modal_5_1) {
+                Modal_5 = Modal_5_1;
             },
             function (Pinger_1_1) {
                 Pinger_1 = Pinger_1_1;
-            },
-            function (Login_1_1) {
-                Login_1 = Login_1_1;
             },
             function (ProgressReport_1_1) {
                 ProgressReport_1 = ProgressReport_1_1;
@@ -2177,9 +2155,6 @@ System.register("player/VSQ", ["player/VSQ/LayoutChooser", "player/VSQ/QualityCh
             },
             function (VSQHLS_1_1) {
                 VSQHLS_1 = VSQHLS_1_1;
-            },
-            function (VSQAPI_5_1) {
-                VSQAPI_5 = VSQAPI_5_1;
             }
         ],
         execute: function () {
@@ -2198,7 +2173,6 @@ System.register("player/VSQ", ["player/VSQ/LayoutChooser", "player/VSQ/QualityCh
                     this.flow = flow;
                     this.cfg = flow.conf.vsq || {};
                     this.l = this.cfg.locale;
-                    VSQAPI_5.default.init(this.cfg);
                     this.flow.conf.errors.push(this.l.get('access_denied'));
                     VSQ.accessDeniedError = flow.conf.errors.length - 1;
                     this.hlsConf = jQuery.extend({
@@ -2210,13 +2184,11 @@ System.register("player/VSQ", ["player/VSQ/LayoutChooser", "player/VSQ/QualityCh
                     this.root = jQuery("#player");
                     this.flowroot = this.root.find('.flowplayer');
                     this.id = this.flowroot.attr('data-flowplayer-instance-id');
+                    Modal_5.Modal.setVSQ(this);
                     if (!this.cfg.contentOnRight)
                         this.flowroot.addClass('vsq-contentleft');
-                    this.plugins.push(new Modal_6.Modal(this));
                     if (this.cfg.needPing)
                         this.plugins.push(new Pinger_1.default(this));
-                    if (this.cfg.needLogin)
-                        this.plugins.push(new Login_1.default(this));
                     if (!this.cfg.isAudioOnly) {
                         this.plugins.push(new LayoutChooser_1.default(this));
                         this.plugins.push(new QualityChooser_1.default(this));
@@ -2773,14 +2745,14 @@ System.register("player/VSQ", ["player/VSQ/LayoutChooser", "player/VSQ/QualityCh
                             msg = this.l.get('networkerror_live');
                         else
                             msg = this.l.get('networkerror_recordings');
-                        Modal_6.Modal.showTransientMessage(msg);
+                        Modal_5.Modal.showTransientMessage(msg);
                     }
                     LayoutChooser_1.default.resetSize();
                 };
                 VSQ.prototype.showTag = function (type) {
                     var typ = type == VSQType.MASTER ? 'master' : 'content';
                     this.flowroot.removeClass("vsq-hidden-" + type);
-                    Modal_6.Modal.hideTransientMessage();
+                    Modal_5.Modal.hideTransientMessage();
                     this.flowroot.find('.vsq-layoutchooser input[name="ratio"]').change();
                 };
                 VSQ.setup = function () {
@@ -2799,26 +2771,32 @@ System.register("player/VSQ", ["player/VSQ/LayoutChooser", "player/VSQ/QualityCh
             VSQ.engineName = "vsq";
             VSQ.debug = false;
             VSQ.initDone = false;
-            exports_19("VSQ", VSQ);
+            exports_18("VSQ", VSQ);
             (function (VSQType) {
                 VSQType[VSQType["MASTER"] = 0] = "MASTER";
                 VSQType[VSQType["CONTENT"] = 1] = "CONTENT";
             })(VSQType || (VSQType = {}));
-            exports_19("VSQType", VSQType);
+            exports_18("VSQType", VSQType);
         }
     };
 });
-System.register("player/PlayerSetup", ["player/Flash", "player/VSQ"], function (exports_20, context_20) {
+System.register("player/PlayerSetup", ["player/Flash", "player/VSQ", "player/VSQ/Modal", "player/VSQAPI"], function (exports_19, context_19) {
     "use strict";
-    var __moduleName = context_20 && context_20.id;
-    var Flash_1, VSQ_6, PlayerSetup;
+    var __moduleName = context_19 && context_19.id;
+    var Flash_1, VSQ_7, Modal_6, VSQAPI_5, PlayerSetup;
     return {
         setters: [
             function (Flash_1_1) {
                 Flash_1 = Flash_1_1;
             },
-            function (VSQ_6_1) {
-                VSQ_6 = VSQ_6_1;
+            function (VSQ_7_1) {
+                VSQ_7 = VSQ_7_1;
+            },
+            function (Modal_6_1) {
+                Modal_6 = Modal_6_1;
+            },
+            function (VSQAPI_5_1) {
+                VSQAPI_5 = VSQAPI_5_1;
             }
         ],
         execute: function () {
@@ -2868,6 +2846,8 @@ System.register("player/PlayerSetup", ["player/Flash", "player/VSQ"], function (
                 };
                 PlayerSetup.prototype.initVSQ = function () {
                     var _this = this;
+                    this.initVSQAPI();
+                    this.initModal();
                     this.initVSQPlugin();
                     this.flowInstance = flowplayer(this.container.get(0), this.cfg.get('flowplayer'));
                     this.flowInstance.on('load', function (e, api, video) {
@@ -2875,17 +2855,40 @@ System.register("player/PlayerSetup", ["player/Flash", "player/VSQ"], function (
                     });
                 };
                 PlayerSetup.prototype.initVSQPlugin = function () {
-                    VSQ_6.VSQ.setup();
+                    VSQ_7.VSQ.setup();
+                };
+                PlayerSetup.prototype.initVSQAPI = function () {
+                    var cfg = this.cfg.get("flowplayer.vsq");
+                    VSQAPI_5.default.init(cfg);
+                };
+                PlayerSetup.prototype.initModal = function () {
+                    return __awaiter(this, void 0, void 0, function () {
+                        var cfg;
+                        return __generator(this, function (_a) {
+                            switch (_a.label) {
+                                case 0:
+                                    cfg = this.cfg.get("flowplayer.vsq");
+                                    Modal_6.Modal.init(cfg, this.container);
+                                    if (!cfg.needLogin)
+                                        return [3 /*break*/, 2];
+                                    return [4 /*yield*/, Modal_6.Modal.tryLogin()];
+                                case 1:
+                                    _a.sent();
+                                    _a.label = 2;
+                                case 2: return [2 /*return*/];
+                            }
+                        });
+                    });
                 };
                 return PlayerSetup;
             }());
-            exports_20("default", PlayerSetup);
+            exports_19("default", PlayerSetup);
         }
     };
 });
-System.register("player/app", ["Locale", "player/Config", "player/PlayerSetup"], function (exports_21, context_21) {
+System.register("player/app", ["Locale", "player/Config", "player/PlayerSetup"], function (exports_20, context_20) {
     "use strict";
-    var __moduleName = context_21 && context_21.id;
+    var __moduleName = context_20 && context_20.id;
     var Locale_1, Config_1, PlayerSetup_1;
     return {
         setters: [

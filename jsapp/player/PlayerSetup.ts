@@ -3,7 +3,9 @@
 "use strict";
 import Config from "./Config";
 import Flash from "./Flash";
-import {VSQ} from "./VSQ";
+import {VSQ, VSQConfig} from "./VSQ";
+import {Modal} from "./VSQ/Modal";
+import VSQAPI from "./VSQAPI";
 import Locale from "../Locale";
 
 export default class PlayerSetup {
@@ -62,6 +64,10 @@ export default class PlayerSetup {
   }
 
   private initVSQ(): void {
+    // fontos a sorrend, a modal init vegzi a logint
+    this.initVSQAPI();
+    this.initModal();
+
     this.initVSQPlugin();
 
     this.flowInstance = flowplayer(
@@ -74,7 +80,20 @@ export default class PlayerSetup {
     });
   }
 
-  private initVSQPlugin() {
+  private initVSQPlugin(): void {
     VSQ.setup();
+  }
+
+  private initVSQAPI(): void {
+    let cfg = this.cfg.get("flowplayer.vsq") as VSQConfig;
+    VSQAPI.init(cfg);
+  }
+
+  private async initModal() {
+    let cfg = this.cfg.get("flowplayer.vsq") as VSQConfig;
+    Modal.init(cfg, this.container);
+
+    if (cfg.needLogin)
+      await Modal.tryLogin();
   }
 }

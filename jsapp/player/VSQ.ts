@@ -7,7 +7,6 @@ import LayoutChooser from "./VSQ/LayoutChooser";
 import QualityChooser from "./VSQ/QualityChooser";
 import {Modal} from "./VSQ/Modal";
 import Pinger from "./VSQ/Pinger";
-import Login from "./VSQ/Login";
 import ProgressReport from "./VSQ/ProgressReport";
 import Timeline from "./VSQ/Timeline";
 import PresenceCheck from "./VSQ/PresenceCheck";
@@ -55,7 +54,6 @@ export class VSQ {
     this.flow = flow;
     this.cfg = flow.conf.vsq as VSQConfig || {};
     this.l = this.cfg.locale;
-    VSQAPI.init(this.cfg);
 
     this.flow.conf.errors.push(this.l.get('access_denied'));
     VSQ.accessDeniedError = flow.conf.errors.length - 1;
@@ -75,16 +73,13 @@ export class VSQ {
     this.flowroot = this.root.find('.flowplayer');
     this.id = this.flowroot.attr('data-flowplayer-instance-id');
 
+    Modal.setVSQ(this);
+
     if (!this.cfg.contentOnRight)
       this.flowroot.addClass('vsq-contentleft');
 
-    this.plugins.push(new Modal(this));
-
     if (this.cfg.needPing)
       this.plugins.push(new Pinger(this));
-
-    if (this.cfg.needLogin)
-      this.plugins.push(new Login(this));
 
     if (!this.cfg.isAudioOnly) {
       this.plugins.push(new LayoutChooser(this));
