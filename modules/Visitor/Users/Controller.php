@@ -429,7 +429,7 @@ class Controller extends \Visitor\Controller {
 
   }
 
-  private function failAPI( $msg, $shouldlog = false, $shouldemail = false ) {
+  private function failAPI( $msg, $shouldlog = false, $shouldemail = false, $extradata = null ) {
     throw new \Visitor\Api\ApiException( $msg, $shouldlog, $shouldemail, $extradata );
   }
 
@@ -443,7 +443,7 @@ class Controller extends \Visitor\Controller {
     );
 
     if ( !$user['id'] )
-      $this->failAPI( $l('users', 'loginfailed'), $extradata );
+      $this->failAPI( $l('users', 'loginfailed'), false, false, $extradata );
 
     $userModel = $this->bootstrap->getModel('users');
     $userModel->select( $user['id'] );
