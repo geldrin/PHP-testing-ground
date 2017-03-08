@@ -17,7 +17,7 @@
     line-height: 18px;
     font-size: 13px;
   }
-  
+
   #qualitychooser a {
     outline: 0;
     width: {/literal}{$playerwidth-20}{literal}px;
@@ -127,7 +127,8 @@
   {rdelim};
 
   document.write('<div id="{$playercontainerid}"></div>');
-  {include file="Visitor/Players/"|cat:$organization.playertype|cat:".tpl" skipcontainer=true flashplayertype="Embed" flashplayerparams="params"}
+  swfobject.embedSWF('flash/VSQ{$flashplayertype}Player.swf?v={$VERSION}', '{$playercontainerid}', '980', '{$playerheight}', '11.1.0', 'flash/swfobject/expressInstall.swf', {$playerconfig.flashplayer.config|@jsonescape:true}, params, null, handleFlashLoad );
+
   {rdelim})();
   </script>
 
