@@ -394,7 +394,13 @@ class Controller extends \Visitor\Controller {
       $this->toSmarty['member']    = $user;
       $this->toSmarty['ipaddress'] = $this->getIPAddress();
       $this->toSmarty['sessionid'] = session_id();
-      $output = $recordingsModel->getFlashData( $this->toSmarty );
+      $this->toSmarty['browser']   = $this->bootstrap->getBrowserInfo();
+      $this->toSmarty['flashplayersubtype'] = '';
+      $this->toSmarty['flashplayerparams'] = 'flashdefaults.params';
+      $this->toSmarty['playercontainerid'] = '';
+      $player = $recordingsModel->getPlayer();
+      $config = $player->getGlobalConfig( $this->toSmarty, true);
+      $output = $config['flashplayer'];
 
     } elseif ( $feedid ) {
 
@@ -417,10 +423,16 @@ class Controller extends \Visitor\Controller {
         'cookiedomain' => $this->organization['cookiedomain'],
         'streams'      => $feedModel->getStreamsForBrowser( $this->bootstrap->getBrowserInfo() ),
         'member'       => $user,
+        'browser' => $this->bootstrap->getBrowserInfo(),
+        'flashplayersubtype' => '',
+        'flashplayerparams' => 'flashdefaults.params',
+        'playercontainerid' => '',
         'checkwatchingtimeinterval' => $this->organization['presencechecktimeinterval'],
         'checkwatchingconfirmationtimeout' => $this->organization['presencecheckconfirmationtime'],
       );
-      $output = $feedModel->getFlashData( $info );
+      $player = $recordingsModel->getPlayer();
+      $config = $player->getGlobalConfig( $info, true);
+      $output = $config['flashplayer'];
 
     } else
       $output = array();

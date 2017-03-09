@@ -39,6 +39,10 @@ abstract class Player {
     );
   }
 
+  public function getContainerID() {
+    return $this->info['playercontainerid'];
+  }
+
   public function getGlobalConfig( $info, $isembed = false ) {
     $this->info = $info;
     $cfg = $this->getConfig( $info, $isembed );

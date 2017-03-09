@@ -545,10 +545,6 @@ class Live extends Player {
     return $ret;
   }
 
-  public function getContainerID() {
-    return $this->info['playercontainerid'];
-  }
-
   public function getWidth( $isembed ) {
     if ( !$isembed )
       return 980;

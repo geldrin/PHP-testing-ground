@@ -108,7 +108,8 @@ export class Modal {
     msg.find("h2").text('');
     msg.find("p").html(html);
 
-    this.vsq.pause();
+    if (this.vsq != null)
+      this.vsq.pause();
 
     this.hideLogin();
     this.root.addClass("is-error");

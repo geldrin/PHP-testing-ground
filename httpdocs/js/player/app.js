@@ -989,7 +989,8 @@ System.register("player/VSQ/Modal", ["player/VSQ", "player/VSQAPI", "Tools", "Es
                     var msg = this.root.find(".fp-message");
                     msg.find("h2").text('');
                     msg.find("p").html(html);
-                    this.vsq.pause();
+                    if (this.vsq != null)
+                        this.vsq.pause();
                     this.hideLogin();
                     this.root.addClass("is-error");
                 };
@@ -2845,28 +2846,13 @@ System.register("player/PlayerSetup", ["player/Flash", "player/VSQ", "player/VSQ
                     this.initVSQ();
                 };
                 PlayerSetup.prototype.initVSQ = function () {
-                    var _this = this;
-                    this.initVSQAPI();
-                    this.initModal();
-                    this.initVSQPlugin();
-                    this.flowInstance = flowplayer(this.container.get(0), this.cfg.get('flowplayer'));
-                    this.flowInstance.on('load', function (e, api, video) {
-                        _this.log('ready', e, api, video);
-                    });
-                };
-                PlayerSetup.prototype.initVSQPlugin = function () {
-                    VSQ_7.VSQ.setup();
-                };
-                PlayerSetup.prototype.initVSQAPI = function () {
-                    var cfg = this.cfg.get("flowplayer.vsq");
-                    VSQAPI_5.default.init(cfg);
-                };
-                PlayerSetup.prototype.initModal = function () {
                     return __awaiter(this, void 0, void 0, function () {
+                        var _this = this;
                         var cfg;
                         return __generator(this, function (_a) {
                             switch (_a.label) {
                                 case 0:
+                                    this.initVSQAPI();
                                     cfg = this.cfg.get("flowplayer.vsq");
                                     Modal_6.Modal.init(cfg, this.container);
                                     if (!cfg.needLogin)
@@ -2875,10 +2861,23 @@ System.register("player/PlayerSetup", ["player/Flash", "player/VSQ", "player/VSQ
                                 case 1:
                                     _a.sent();
                                     _a.label = 2;
-                                case 2: return [2 /*return*/];
+                                case 2:
+                                    this.initVSQPlugin();
+                                    this.flowInstance = flowplayer(this.container.get(0), this.cfg.get('flowplayer'));
+                                    this.flowInstance.on('load', function (e, api, video) {
+                                        _this.log('ready', e, api, video);
+                                    });
+                                    return [2 /*return*/];
                             }
                         });
                     });
+                };
+                PlayerSetup.prototype.initVSQPlugin = function () {
+                    VSQ_7.VSQ.setup();
+                };
+                PlayerSetup.prototype.initVSQAPI = function () {
+                    var cfg = this.cfg.get("flowplayer.vsq");
+                    VSQAPI_5.default.init(cfg);
                 };
                 return PlayerSetup;
             }());

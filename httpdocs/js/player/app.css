@@ -107,16 +107,16 @@
 #player .vsq-modal .vsq-presence {
   display: none;
 }
-#player.vsq-is-login .vsq-modal,
-#player.vsq-is-login .vsq-modal .vsq-login {
+#player .vsq-is-login .vsq-modal,
+#player .vsq-is-login .vsq-modal .vsq-login {
   display: block;
 }
-#player.vsq-transient-error .vsq-modal,
-#player.vsq-transient-error .vsq-modal .vsq-transient {
+#player .vsq-transient-error .vsq-modal,
+#player .vsq-transient-error .vsq-modal .vsq-transient {
   display: block;
 }
-#player.vsq-is-question .vsq-modal,
-#player.vsq-is-question .vsq-modal .vsq-question {
+#player .vsq-is-question .vsq-modal,
+#player .vsq-is-question .vsq-modal .vsq-question {
   display: block;
 }
 #player .vsq-limitedseek .fp-timeline,
@@ -137,7 +137,8 @@
 #player.vsq-presencecheck .vsq-modal .vsq-presence {
   display: block;
 }
-#player .vsq-modal .vsq-presence {
+#player .vsq-modal .vsq-presence,
+#player .vsq-modal .vsq-login {
   background: #fff;
 }
 #player .vsq-modal .vsq-presence .vsq-button-continue {

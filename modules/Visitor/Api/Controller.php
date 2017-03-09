@@ -58,7 +58,7 @@ class Controller extends \Visitor\Controller {
       $result['result'] = 'ERR';
       $result['data']   = $e->getMessage();
 
-      if ( $e->extradata )
+      if ( $e instanceof ApiException and $e->extradata )
         $result['extradata'] = $e->extradata;
 
       $shouldlog        = true;

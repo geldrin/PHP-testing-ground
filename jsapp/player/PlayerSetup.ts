@@ -63,10 +63,15 @@ export default class PlayerSetup {
     this.initVSQ();
   }
 
-  private initVSQ(): void {
+  private async initVSQ() {
     // fontos a sorrend, a modal init vegzi a logint
     this.initVSQAPI();
-    this.initModal();
+
+    let cfg = this.cfg.get("flowplayer.vsq") as VSQConfig;
+    Modal.init(cfg, this.container);
+
+    if (cfg.needLogin)
+      await Modal.tryLogin();
 
     this.initVSQPlugin();
 
@@ -87,13 +92,5 @@ export default class PlayerSetup {
   private initVSQAPI(): void {
     let cfg = this.cfg.get("flowplayer.vsq") as VSQConfig;
     VSQAPI.init(cfg);
-  }
-
-  private async initModal() {
-    let cfg = this.cfg.get("flowplayer.vsq") as VSQConfig;
-    Modal.init(cfg, this.container);
-
-    if (cfg.needLogin)
-      await Modal.tryLogin();
   }
 }
