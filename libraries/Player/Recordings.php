@@ -503,14 +503,7 @@ class Recordings extends Player {
       if ( $defaultsubtitle )
         $data['subtitles']['default'] = $defaultsubtitle;
 
-      $data['subtitles']['files'] = array();
-      foreach( $subtitles as $subtitle ) {
-
-        $data['subtitles']['files'][ $subtitle['languagecode'] ] =
-          $recordingbaseuri . 'getsubtitle/' . $subtitle['id']
-        ;
-
-      }
+      $data['subtitles']['files'] = $subtitles;
     }
 
     $data['attachments'] = array();
@@ -559,6 +552,9 @@ class Recordings extends Player {
       'recording_timeout' => $cfg['viewSession']['timeout'],
       // 'timeline_autoPlay' beallitas nem lehet false sose mert a flash player nem indul el
     );
+    $recordingbaseuri =
+      $this->bootstrap->baseuri . \Springboard\Language::get() . '/recordings/'
+    ;
 
     $streams = $this->getFlashStreams( $cfg );
 
@@ -711,7 +707,14 @@ class Recordings extends Player {
       if ( isset( $cfg['subtitles']['default'] ) )
         $ret['subtitle_default'] = $cfg['subtitles']['default'];
 
-      $ret['subtitle_files'] = $cfg['subtitles']['files'];
+      $ret['subtitle_files'] = array();
+      foreach( $cfg['subtitles']['files'] as $subtitle ) {
+
+        $ret['subtitle_files'][ $subtitle['languagecode'] ] =
+          $recordingbaseuri . 'getsubtitle/' . $subtitle['id']
+        ;
+
+      }
     }
 
     if ( $cfg['recommendations'] ) {
@@ -854,6 +857,33 @@ class Recordings extends Player {
       $ret['vsq']['position']['report']       = true;
       $ret['vsq']['position']['seek']         = $bar['enabled'];
       $ret['vsq']['position']['lastposition'] = $bar['lastposition'];
+    }
+
+    if ( $cfg['subtitles'] ) {
+      $recordingbaseuri =
+        $this->bootstrap->baseuri . \Springboard\Language::get() . '/recordings/'
+      ;
+      $ret['subtitles'] = array();
+      // TODO $cfg['subtitles']['show']
+      $def = '';
+      if ( isset( $cfg['subtitles']['default'] ) )
+        $def = $cfg['subtitles']['default'];
+
+      $subtitles = array();
+      foreach( $cfg['subtitles']['files'] as $subtitle ) {
+        $subtitles[] = array(
+          'default' => $subtitle['languagecode'] === $def,
+          'kind'    => 'subtitle',
+          'label'   => $subtitle['language'],
+          'src'     =>
+            $recordingbaseuri . 'getsubtitle/' . $subtitle['id']
+          , // TODO
+          'srclang' => substr( $subtitle['languagecode'], 0, 2 ),
+        );
+      }
+
+      $ix = $ret['vsq']['masterIndex'];
+      $ret['playlist'][ $ix ]['subtitles'] = $subtitles;
     }
 
     return $ret;

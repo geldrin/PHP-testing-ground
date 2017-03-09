@@ -187,6 +187,7 @@ abstract class Player {
       'ratio' => 9/16,
       'live'  => $this->type === 'live',
       'playlist' => array(),
+      'customPlaylist' => true,
       'vsq' => array(
         'debug'            => $this->bootstrap->config['vsqplayer_debug'],
         'type'             => $this->type,
