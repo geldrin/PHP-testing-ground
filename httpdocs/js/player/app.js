@@ -979,7 +979,7 @@ System.register("player/VSQ/Modal", ["player/VSQ", "player/VSQAPI", "Tools", "Es
                     console.log.apply(console, params);
                 };
                 Modal.prototype.setupHTML = function () {
-                    var html = "\n      <div class=\"vsq-modal\">\n        <div class=\"vsq-presence\">\n          <div class=\"row vsq-message\"> value=\"" + Escape_2.default.HTML(this.l.get('player_presencecheck')) + "\"</div>\n          <div class=\"row vsq-remainingtime\"></div>\n          <div class=\"row vsq-buttons\">\n            <input type=\"button\" class=\"vsq-button-present\" value=\"" + Escape_2.default.HTML(this.l.get('player_presencecheck_confirm')) + "\"/>\n            <input type=\"button\" class=\"vsq-button-continue\" value=\"" + Escape_2.default.HTML(this.l.get('player_presencecheck_continue')) + "\"/>\n          </div>\n        </div>\n        <div class=\"vsq-question\">\n          <div class=\"row vsq-message\"></div>\n          <div class=\"row vsq-buttons\">\n            <input type=\"button\" class=\"vsq-button-first\"/>\n            <input type=\"button\" class=\"vsq-button-second\"/>\n          </div>\n        </div>\n        <div class=\"vsq-transient\">\n        </div>\n        <form class=\"vsq-login\">\n          <div class=\"row vsq-message\">\n          </div>\n          <div class=\"row vsq-email\">\n            <div class=\"label\">\n              <label for=\"email\">" + Escape_2.default.HTML(this.l.get('playeremail')) + "</label>\n            </div>\n            <div class=\"elem\">\n              <input name=\"email\" id=\"email\" type=\"text\"/>\n            </div>\n          </div>\n          <div class=\"row vsq-password\">\n            <div class=\"label\">\n              <label for=\"password\">" + Escape_2.default.HTML(this.l.get('playerpassword')) + "</label>\n            </div>\n            <div class=\"elem\">\n              <input name=\"password\" id=\"password\" type=\"password\"/>\n            </div>\n          </div>\n          <div class=\"row submit\">\n            <div class=\"elem\">\n              <input type=\"submit\" value=\"" + Escape_2.default.HTML(this.l.get('submitlogin')) + "\"/>\n            </div>\n          </div>\n        </form>\n      </div>\n    ";
+                    var html = "\n      <div class=\"vsq-modal\">\n        <div class=\"vsq-presence\">\n          <div class=\"row vsq-message\"> value=\"" + Escape_2.default.HTML(this.l.get('player_presencecheck')) + "\"</div>\n          <div class=\"row vsq-remainingtime\"></div>\n          <div class=\"row vsq-buttons\">\n            <input type=\"button\" class=\"vsq-button-present\" value=\"" + Escape_2.default.HTML(this.l.get('player_presencecheck_confirm')) + "\"/>\n            <input type=\"button\" class=\"vsq-button-continue\" value=\"" + Escape_2.default.HTML(this.l.get('player_presencecheck_continue')) + "\"/>\n          </div>\n        </div>\n        <div class=\"vsq-question\">\n          <div class=\"row vsq-message\"></div>\n          <div class=\"row vsq-buttons\">\n            <input type=\"button\" class=\"vsq-button-first\"/>\n            <input type=\"button\" class=\"vsq-button-second\"/>\n          </div>\n        </div>\n        <div class=\"vsq-transient\">\n          <div class=\"row vsq-message\"></div>\n          <input type=\"button\" class=\"vsq-button-dismiss\" value=\"" + Escape_2.default.HTML(this.l.get('player_ok')) + "\"/>\n        </div>\n        <div class=\"vsq-toast\">\n          <div class=\"row vsq-message\"></div>\n        </div>\n        <form class=\"vsq-login\">\n          <div class=\"row vsq-message\">\n          </div>\n          <div class=\"row vsq-email\">\n            <div class=\"label\">\n              <label for=\"email\">" + Escape_2.default.HTML(this.l.get('playeremail')) + "</label>\n            </div>\n            <div class=\"elem\">\n              <input name=\"email\" id=\"email\" type=\"text\"/>\n            </div>\n          </div>\n          <div class=\"row vsq-password\">\n            <div class=\"label\">\n              <label for=\"password\">" + Escape_2.default.HTML(this.l.get('playerpassword')) + "</label>\n            </div>\n            <div class=\"elem\">\n              <input name=\"password\" id=\"password\" type=\"password\"/>\n            </div>\n          </div>\n          <div class=\"row submit\">\n            <div class=\"elem\">\n              <input type=\"submit\" value=\"" + Escape_2.default.HTML(this.l.get('submitlogin')) + "\"/>\n            </div>\n          </div>\n        </form>\n      </div>\n    ";
                     this.root.append(html);
                 };
                 Modal.showError = function (html) {
@@ -1062,11 +1062,19 @@ System.register("player/VSQ/Modal", ["player/VSQ", "player/VSQAPI", "Tools", "Es
                     });
                 };
                 Modal.showTransientMessage = function (html) {
-                    Modal.instance.showTransientMessage(html);
+                    return Modal.instance.showTransientMessage(html);
                 };
                 Modal.prototype.showTransientMessage = function (msg) {
-                    this.root.find(".vsq-modal .vsq-transient").text(msg);
+                    var _this = this;
+                    this.root.find(".vsq-modal .vsq-transient .vsq-message").text(msg);
                     this.root.addClass("vsq-transient-error");
+                    return new Promise(function (resolve, reject) {
+                        _this.root.one("click", ".vsq-modal .vsq-transient .vsq-button-dismiss", function (e) {
+                            e.preventDefault();
+                            resolve(true);
+                            _this.root.removeClass("vsq-transient-error");
+                        });
+                    });
                 };
                 Modal.hideTransientMessage = function () {
                     Modal.instance.hideLogin();
@@ -1166,6 +1174,34 @@ System.register("player/VSQ/Modal", ["player/VSQ", "player/VSQAPI", "Tools", "Es
                             resolve('continue');
                         });
                         _this.root.addClass("vsq-presencecheck");
+                    });
+                };
+                Modal.showToast = function (msg, timeoutSeconds) {
+                    return Modal.instance.showToast(msg, timeoutSeconds);
+                };
+                Modal.prototype.showToast = function (msg, timeoutSeconds) {
+                    var _this = this;
+                    if (timeoutSeconds == null)
+                        timeoutSeconds = 5;
+                    var elem = this.root.find('.vsq-modal .vsq-toast');
+                    elem.find('.vsq-message').text(msg);
+                    this.root.addClass("vsq-is-toast");
+                    var cancelled = false;
+                    return new Promise(function (resolve, reject) {
+                        var done = function () {
+                            _this.root.removeClass("vsq-is-toast");
+                            resolve(true);
+                        };
+                        elem.one("click", function (e) {
+                            if (cancelled)
+                                return;
+                            done();
+                        });
+                        setTimeout(function () {
+                            if (cancelled)
+                                return;
+                            done();
+                        }, timeoutSeconds * 1000);
                     });
                 };
                 return Modal;
@@ -1289,6 +1325,7 @@ System.register("player/VSQ/ProgressReport", ["player/VSQAPI", "player/VSQ/BaseP
                     var _this = _super.call(this, vsq) || this;
                     _this.pluginName = "ProgressReport";
                     _this.lastPosition = 0;
+                    _this.watched = false;
                     if (!_this.cfg.position.report)
                         throw new Error("Reporting disabled yet reporting requested");
                     _this.interval = _this.cfg.position.intervalSeconds * 1000;
@@ -1303,7 +1340,7 @@ System.register("player/VSQ/ProgressReport", ["player/VSQAPI", "player/VSQ/BaseP
                                     this.lastReportTime = Tools_4.default.now();
                                     _a.label = 1;
                                 case 1:
-                                    _a.trys.push([1, 3, , 4]);
+                                    _a.trys.push([1, 6, , 7]);
                                     params = jQuery.extend({}, this.cfg.parameters);
                                     params['lastposition'] = this.lastPosition;
                                     this.log("reporting", params);
@@ -1314,21 +1351,31 @@ System.register("player/VSQ/ProgressReport", ["player/VSQAPI", "player/VSQ/BaseP
                                     if (data.result !== "OK" || data.data == null)
                                         throw new Error("Unexpected result from api call");
                                     result = data.data;
-                                    if (result.success === false) {
-                                        if (result.position === 0) {
-                                            Modal_2.Modal.showError("progressreport-resetposition");
-                                            return [2 /*return*/];
-                                        }
-                                        Modal_2.Modal.showError("progressreport-failed");
-                                        return [2 /*return*/];
-                                    }
-                                    return [3 /*break*/, 4];
+                                    if (!(result.success === false))
+                                        return [3 /*break*/, 5];
+                                    if (!(result.position === 0))
+                                        return [3 /*break*/, 4];
+                                    this.vsq.pause();
+                                    return [4 /*yield*/, Modal_2.Modal.showTransientMessage(this.l.get("player_progress_reset"))];
                                 case 3:
+                                    _a.sent();
+                                    this.vsq.seek(0);
+                                    return [2 /*return*/];
+                                case 4:
+                                    Modal_2.Modal.showError(this.l.get("player_progress_failed"));
+                                    return [2 /*return*/];
+                                case 5:
+                                    if (!this.watched && result.watched) {
+                                        this.watched = true;
+                                        Modal_2.Modal.showToast(this.l.get("player_progress_watched"));
+                                    }
+                                    return [3 /*break*/, 7];
+                                case 6:
                                     err_3 = _a.sent();
-                                    this.log("report error", err_3);
+                                    this.log("error", err_3);
                                     Modal_2.Modal.showError(this.l.get('networkerror'));
-                                    return [3 /*break*/, 4];
-                                case 4: return [2 /*return*/];
+                                    return [3 /*break*/, 7];
+                                case 7: return [2 /*return*/];
                             }
                         });
                     });

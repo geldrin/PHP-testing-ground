@@ -104,6 +104,7 @@
 #player .vsq-modal .vsq-login,
 #player .vsq-modal .vsq-transient,
 #player .vsq-modal .vsq-question,
+#player .vsq-modal .vsq-toast,
 #player .vsq-modal .vsq-presence {
   display: none;
 }
@@ -118,6 +119,18 @@
 #player .vsq-is-question .vsq-modal,
 #player .vsq-is-question .vsq-modal .vsq-question {
   display: block;
+}
+#player .vsq-is-toast .vsq-modal,
+#player .vsq-is-toast .vsq-modal .vsq-toast {
+  display: block;
+}
+#player .vsq-modal .vsq-toast {
+  display: inline-block;
+  width: 150px;
+  background: #fff;
+  float: right;
+  padding: 10px;
+  font-weight: bold;
 }
 #player .vsq-limitedseek .fp-timeline,
 #player .vsq-limitedseek .fp-buffer {

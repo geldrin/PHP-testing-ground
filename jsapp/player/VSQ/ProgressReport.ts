@@ -21,6 +21,7 @@ export default class ProgressReport extends BasePlugin {
   private interval: number;
   private lastReportTime: number | null;
   private lastPosition: number = 0;
+  private watched = false;
 
   constructor(vsq: VSQ) {
     super(vsq);
@@ -47,18 +48,22 @@ export default class ProgressReport extends BasePlugin {
 
       if (result.success === false) {
         if (result.position === 0) {
-          // TODO tul sok kimaradas volt, kezdje elorol a nezest
-          Modal.showError("progressreport-resetposition");
+          this.vsq.pause();
+          await Modal.showTransientMessage(this.l.get("player_progress_reset"));
+          this.vsq.seek(0);
           return;
         }
 
-        Modal.showError("progressreport-failed");
+        Modal.showError(this.l.get("player_progress_failed"));
         return;
       }
 
-      // TODO kezdeni valamit a result.watched-al?
+      if (!this.watched && result.watched) {
+        this.watched = true;
+        Modal.showToast(this.l.get("player_progress_watched"));
+      }
     } catch(err) {
-      this.log("report error", err);
+      this.log("error", err);
       Modal.showError(this.l.get('networkerror'));
     }
   }

@@ -175,7 +175,7 @@ interface Flowplayer {
   resume(): Flowplayer;
   toggle(): Flowplayer;
   seek(time: number, cb: (api: Flowplayer, root: Element) => any): Flowplayer;
-  seekTo(position: number, cb: (api: Flowplayer, root: Element) => any): Flowplayer;
+  seekTo(position: number, cb?: (api: Flowplayer, root: Element) => any): Flowplayer;
   mute(flag?: string | boolean, skipStore?: boolean): Flowplayer;
   volume(level: number, skipStore?: boolean): Flowplayer;
   speed(val: number, cb: (api: Flowplayer, root: Element) => any): Flowplayer;

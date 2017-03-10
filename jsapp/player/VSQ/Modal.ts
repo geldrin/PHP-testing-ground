@@ -68,6 +68,11 @@ export class Modal {
           </div>
         </div>
         <div class="vsq-transient">
+          <div class="row vsq-message"></div>
+          <input type="button" class="vsq-button-dismiss" value="${Escape.HTML(this.l.get('player_ok'))}"/>
+        </div>
+        <div class="vsq-toast">
+          <div class="row vsq-message"></div>
         </div>
         <form class="vsq-login">
           <div class="row vsq-message">
@@ -178,13 +183,23 @@ export class Modal {
     });
   }
 
-  public static showTransientMessage(html: string): void {
-    Modal.instance.showTransientMessage(html);
+  public static showTransientMessage(html: string): Promise<boolean> {
+    return Modal.instance.showTransientMessage(html);
   }
-  private showTransientMessage(msg: string): void {
-    // ha egyszer hibat mutatunk, nem varjuk hogy bezarhato/eltuntetheto legyen
-    this.root.find(".vsq-modal .vsq-transient").text(msg);
+  private showTransientMessage(msg: string): Promise<boolean> {
+    // ez eltuntetheto versus a hiba jelzessel
+    this.root.find(".vsq-modal .vsq-transient .vsq-message").text(msg);
     this.root.addClass("vsq-transient-error");
+
+    return new Promise((resolve, reject) => {
+      // NOTE: jQuery.one
+      this.root.one("click", ".vsq-modal .vsq-transient .vsq-button-dismiss", (e: Event) => {
+        e.preventDefault();
+
+        resolve(true);
+        this.root.removeClass("vsq-transient-error");
+      });
+    });
   }
 
   public static hideTransientMessage(): void {
@@ -314,6 +329,42 @@ export class Modal {
 
       // show
       this.root.addClass("vsq-presencecheck");
+    });
+  }
+
+  public static showToast(msg: string, timeoutSeconds: number): Promise<boolean> {
+    return Modal.instance.showToast(msg, timeoutSeconds);
+  }
+  private showToast(msg: string, timeoutSeconds?: number): Promise<boolean> {
+    if (timeoutSeconds == null)
+      timeoutSeconds = 5;
+
+    let elem = this.root.find('.vsq-modal .vsq-toast');
+    elem.find('.vsq-message').text(msg);
+
+    this.root.addClass("vsq-is-toast");
+    let cancelled = false;
+
+    return new Promise((resolve, reject) => {
+      let done = () => {
+        this.root.removeClass("vsq-is-toast");
+        resolve(true);
+      };
+
+      elem.one("click", (e) => {
+        // lehetseges hogy lejar az ido kattintas nelkul, ne jelezzunk ujra
+        if (cancelled)
+          return;
+
+        done();
+      });
+
+      setTimeout(() => {
+        if (cancelled)
+          return;
+
+        done();
+      }, timeoutSeconds * 1000);
     });
   }
 }
