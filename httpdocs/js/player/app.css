@@ -150,3 +150,7 @@
 #player .vsq-modal .vsq-presence.vsq-checkfailed .vsq-button-continue {
   display: block;
 }
+
+.flowplayer .fp-menu {
+  z-index: 30;
+}

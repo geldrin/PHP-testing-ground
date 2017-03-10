@@ -751,6 +751,9 @@ export class VSQ {
 
     this.setupVideoEvents(video);
 
+    // otletem sincs miert muszaj ez de mukodik
+    this.flow.video.subtitles = video.subtitles || [];
+
     for (let i = this.plugins.length - 1; i >= 0; i--)
       this.plugins[i].load();
 

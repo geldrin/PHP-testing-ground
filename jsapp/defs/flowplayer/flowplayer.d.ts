@@ -34,11 +34,18 @@ interface FlowSource {
   type: string;
   src: string;
 }
-
+interface FlowSubtitle {
+  "default": boolean;
+  kind: string;
+  label: string;
+  src: string;
+  srclang: string;
+}
 interface FlowVideo {
   buffer: number;
   hlsjs: FlowHLSConfig;
   sources: FlowSource[];
+  subtitles?: FlowSubtitle[];
   title: string;
   type: string;
   src: string;

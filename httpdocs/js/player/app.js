@@ -1698,7 +1698,6 @@ System.register("player/VSQ/Statistics", ["player/VSQ", "player/VSQAPI", "player
                         streamurl: info.src,
                         useragent: navigator.userAgent
                     }, report, this.cfg.parameters, params);
-                    this.log("queuing report", rep);
                     this.reports.push(rep);
                 };
                 Statistics.prototype.consumeReports = function () {
@@ -1710,7 +1709,6 @@ System.register("player/VSQ/Statistics", ["player/VSQ", "player/VSQAPI", "player
                                     if (this.consuming)
                                         return [2 /*return*/];
                                     this.consuming = true;
-                                    this.log("trying to consume " + this.reports.length + " reports");
                                     _a.label = 1;
                                 case 1:
                                     if (!(this.reports.length !== 0))
@@ -1721,6 +1719,7 @@ System.register("player/VSQ/Statistics", ["player/VSQ", "player/VSQAPI", "player
                                     _a.label = 2;
                                 case 2:
                                     _a.trys.push([2, 4, , 5]);
+                                    this.log("logging report", report);
                                     return [4 /*yield*/, VSQAPI_4.default.POST(this.apiModule, "logview", report, true)];
                                 case 3:
                                     data = _a.sent();
@@ -1778,7 +1777,6 @@ System.register("player/VSQ/Statistics", ["player/VSQ", "player/VSQAPI", "player
                     this.flow.on("ready.vsq-sts", function (e, flow, time) {
                         _this.currentLevel = _this.vsq.getHLSEngines()[VSQ_5.VSQType.MASTER].currentLevel;
                         _this.prevLevel = _this.currentLevel;
-                        _this.log("ready, currentLevel", _this.currentLevel);
                     });
                     this.flow.on("progress.vsq-sts", function (e, flow, time) {
                         _this.onProgress(time);
@@ -1806,7 +1804,6 @@ System.register("player/VSQ/Statistics", ["player/VSQ", "player/VSQAPI", "player
                         this.log("previous action was not STOP/nothing, ignoring (level switch)");
                         return;
                     }
-                    this.log("Reporting PLAY");
                     this.action = "PLAY";
                     this.fromPosition = this.flow.video.time;
                     this.toPosition = null;
@@ -1823,7 +1820,6 @@ System.register("player/VSQ/Statistics", ["player/VSQ", "player/VSQAPI", "player
                         this.log("STOP - previous action was not PLAY/PLAYING, ignoring");
                         return;
                     }
-                    this.log("Reporting STOP");
                     this.action = "STOP";
                     this.toPosition = this.flow.video.time;
                     this.reportIfNeeded();
@@ -2665,6 +2661,7 @@ System.register("player/VSQ", ["player/VSQ/LayoutChooser", "player/VSQ/QualityCh
                         _this.unload();
                     });
                     this.setupVideoEvents(video);
+                    this.flow.video.subtitles = video.subtitles || [];
                     for (var i = this.plugins.length - 1; i >= 0; i--)
                         this.plugins[i].load();
                     if (this.cfg.autoplay)

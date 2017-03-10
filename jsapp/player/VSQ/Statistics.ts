@@ -71,7 +71,6 @@ export default class Statistics extends BasePlugin {
       report, this.cfg.parameters, params
     );
 
-    this.log("queuing report", rep);
     this.reports.push(rep);
   }
 
@@ -80,7 +79,6 @@ export default class Statistics extends BasePlugin {
       return;
 
     this.consuming = true;
-    this.log(`trying to consume ${this.reports.length} reports`);
     while(this.reports.length !== 0) {
 
       let report = this.reports.shift();
@@ -88,6 +86,7 @@ export default class Statistics extends BasePlugin {
         throw new Error("managed to dequeue nothing, cannot happen");
 
       try {
+        this.log("logging report", report);
         let data = await VSQAPI.POST(this.apiModule, "logview", report, true);
         this.log("logging result", data);
 
@@ -154,7 +153,6 @@ export default class Statistics extends BasePlugin {
     this.flow.on("ready.vsq-sts", (e: Event, flow: Flowplayer, time: number) => {
       this.currentLevel = this.vsq.getHLSEngines()[VSQType.MASTER].currentLevel;
       this.prevLevel = this.currentLevel;
-      this.log("ready, currentLevel", this.currentLevel);
     });
 
     this.flow.on("progress.vsq-sts", (e: Event, flow: Flowplayer, time: number) => {
@@ -191,7 +189,6 @@ export default class Statistics extends BasePlugin {
       return;
     }
 
-    this.log("Reporting PLAY");
     this.action = "PLAY";
     this.fromPosition = this.flow.video.time;
     this.toPosition = null;
@@ -212,7 +209,6 @@ export default class Statistics extends BasePlugin {
       return;
     }
 
-    this.log("Reporting STOP");
     this.action = "STOP";
     this.toPosition = this.flow.video.time;
     this.reportIfNeeded();
