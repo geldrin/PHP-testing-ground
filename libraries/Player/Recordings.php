@@ -848,9 +848,10 @@ class Recordings extends Player {
   }
 
   protected function getFlowConfig( $cfg ) {
+    $id = $this->row['id'];
     $ret = parent::getFlowConfig( $cfg );
     $ret['vsq']['isAudioOnly'] = $this->row['mastermediatype'] == "audio";
-    $ret['vsq']['parameters']['recordingid'] = $this->row['id'];
+    $ret['vsq']['parameters']['recordingid'] = $id;
 
     if ( !empty( $cfg['seekbar'] ) ) {
       $bar = $cfg['seekbar'];
@@ -860,24 +861,25 @@ class Recordings extends Player {
     }
 
     if ( $cfg['subtitles'] ) {
-      $recordingbaseuri =
-        $this->bootstrap->baseuri . \Springboard\Language::get() . '/recordings/'
-      ;
       $ret['subtitles'] = array();
-      // TODO $cfg['subtitles']['show']
+      // Ha nincs default akkor nem is mutatunk semmit alapbol
+      // mivel a  $cfg['subtitles']['show'] pontosan igy van inicializalva
+      // igy lekezeltuk azt is
       $def = '';
       if ( isset( $cfg['subtitles']['default'] ) )
         $def = $cfg['subtitles']['default'];
 
       $subtitles = array();
       foreach( $cfg['subtitles']['files'] as $subtitle ) {
+        $subid = $subtitle['id'];
         $subtitles[] = array(
           'default' => $subtitle['languagecode'] === $def,
           'kind'    => 'subtitle',
           'label'   => $subtitle['language'],
           'src'     =>
-            $recordingbaseuri . 'getsubtitle/' . $subtitle['id']
-          , // TODO
+            $this->bootstrap->staticuri . 'files/recordings/' .
+            \Springboard\Filesystem::getTreeDir( $id ) . "/subtitles/${id}_${subid}.vtt"
+          ,
           'srclang' => substr( $subtitle['languagecode'], 0, 2 ),
         );
       }
