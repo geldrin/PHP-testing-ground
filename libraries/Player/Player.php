@@ -261,7 +261,7 @@ abstract class Player {
 
     if ( isset( $cfg['member'] ) and $cfg['member']['id'] )
       $ret['vsq']['needPing'] = true;
-    else if ( isset( $cfg['needauth'] ) )
+    else if ( isset( $cfg['needauth'] ) and $cfg['needauth'] )
       $ret['vsq']['needLogin'] = true;
 
     $streams = $this->getFlowStreams( $cfg );
