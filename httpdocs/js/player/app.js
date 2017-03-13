@@ -953,6 +953,7 @@ System.register("player/VSQ/Modal", ["player/VSQ", "player/VSQAPI", "Tools", "Es
             Modal = (function () {
                 function Modal(cfg, root) {
                     this.pluginName = "Modal";
+                    this.showingModal = false;
                     if (Modal.instance != null)
                         throw new Error("Modal.instance already present");
                     this.root = root;
@@ -993,18 +994,23 @@ System.register("player/VSQ/Modal", ["player/VSQ", "player/VSQAPI", "Tools", "Es
                         this.vsq.pause();
                     this.hideLogin();
                     this.root.addClass("is-error");
+                    this.showingModal = true;
                 };
                 Modal.showLogin = function (messageHTML) {
                     Modal.instance.showLogin(messageHTML);
                 };
                 Modal.prototype.showLogin = function (messageHTML) {
+                    if (this.showingModal)
+                        return;
                     this.root.find(".vsq-modal .vsq-message").html(messageHTML);
                     this.root.addClass("vsq-is-login");
+                    this.showingModal = true;
                 };
                 Modal.hideLogin = function () {
                     Modal.instance.hideLogin();
                 };
                 Modal.prototype.hideLogin = function () {
+                    this.showingModal = false;
                     this.root.removeClass("vsq-is-login");
                 };
                 Modal.prototype.login = function (params, resolve, reject) {
@@ -1041,14 +1047,16 @@ System.register("player/VSQ/Modal", ["player/VSQ", "player/VSQAPI", "Tools", "Es
                         });
                     });
                 };
-                Modal.tryLogin = function () {
-                    return Modal.instance.tryLogin();
+                Modal.tryLogin = function (messageHTML) {
+                    return Modal.instance.tryLogin(messageHTML);
                 };
-                Modal.prototype.tryLogin = function () {
+                Modal.prototype.tryLogin = function (messageHTML) {
                     var _this = this;
-                    Modal.showLogin("");
+                    if (messageHTML == null)
+                        messageHTML = "";
+                    Modal.showLogin(messageHTML);
                     return new Promise(function (resolve, reject) {
-                        _this.root.on("submit", ".vsq-modal .vsq-login", function (e) {
+                        _this.root.one("submit", ".vsq-modal .vsq-login", function (e) {
                             e.preventDefault();
                             var form = _this.root.find(".vsq-modal .vsq-login");
                             var email = form.find('input[name=email]').val();
@@ -1088,6 +1096,11 @@ System.register("player/VSQ/Modal", ["player/VSQ", "player/VSQAPI", "Tools", "Es
                 Modal.prototype.askQuestion = function (msg, yes, no, yesfirst) {
                     var _this = this;
                     return new Promise(function (resolve, reject) {
+                        if (_this.showingModal) {
+                            reject("Already showing a modal");
+                            return;
+                        }
+                        _this.showingModal = true;
                         var q = _this.root.find('.vsq-modal .vsq-question');
                         q.find('.vsq-message').text(msg);
                         var first;
@@ -1105,6 +1118,7 @@ System.register("player/VSQ/Modal", ["player/VSQ", "player/VSQAPI", "Tools", "Es
                         var buttons = q.find('input');
                         var onClick = function (e) {
                             _this.root.removeClass("vsq-is-question");
+                            _this.showingModal = false;
                             buttons.off("click", onClick);
                             e.preventDefault();
                             var elem = jQuery(e.target);
@@ -1254,7 +1268,7 @@ System.register("player/VSQ/Pinger", ["player/VSQAPI", "player/VSQ/BasePlugin", 
                         return;
                     }
                     if (!errData.loggedin) {
-                        Modal_1.Modal.showLogin(message);
+                        Modal_1.Modal.tryLogin(message);
                         return;
                     }
                 };

@@ -42,7 +42,7 @@ export default class Pinger extends BasePlugin {
     }
 
     if ( !errData.loggedin ) {
-      Modal.showLogin(message);
+      Modal.tryLogin(message);
       return;
     }
   }

@@ -16,6 +16,7 @@ export class Modal {
   private cfg: VSQConfig;
   private flow: Flowplayer;
   private l: Locale;
+  private showingModal = false;
 
   private static instance: Modal;
   public static QUESTION_TRUE_FIRST = true;
@@ -118,21 +119,27 @@ export class Modal {
 
     this.hideLogin();
     this.root.addClass("is-error");
+    this.showingModal = true;
   }
 
-  public static showLogin(messageHTML: string): void {
+  private static showLogin(messageHTML: string): void {
     Modal.instance.showLogin(messageHTML);
   }
   private showLogin(messageHTML: string): void {
+    if (this.showingModal)
+      return;
+
     // TODO messageHTML biztos html-kent akarjuk insertelni? security risk
     this.root.find(".vsq-modal .vsq-message").html(messageHTML);
     this.root.addClass("vsq-is-login");
+    this.showingModal = true;
   }
 
   public static hideLogin(): void {
     Modal.instance.hideLogin();
   }
   private hideLogin(): void {
+    this.showingModal = false;
     this.root.removeClass("vsq-is-login");
   }
 
@@ -159,14 +166,17 @@ export class Modal {
     }
   }
 
-  public static tryLogin(): Promise<boolean> {
-    return Modal.instance.tryLogin();
+  public static tryLogin(messageHTML?: string): Promise<boolean> {
+    return Modal.instance.tryLogin(messageHTML);
   }
-  private tryLogin(): Promise<boolean> {
-    Modal.showLogin("");
+  private tryLogin(messageHTML?: string): Promise<boolean> {
+    if (messageHTML == null)
+      messageHTML = "";
+
+    Modal.showLogin(messageHTML);
     return new Promise((resolve, reject) => {
 
-      this.root.on("submit", ".vsq-modal .vsq-login", (e: Event) => {
+      this.root.one("submit", ".vsq-modal .vsq-login", (e: Event) => {
         e.preventDefault();
 
         let form = this.root.find(".vsq-modal .vsq-login");
@@ -214,7 +224,13 @@ export class Modal {
   }
   private askQuestion(msg: string, yes: string, no: string, yesfirst: boolean): Promise<boolean> {
     return new Promise((resolve, reject) => {
+      if (this.showingModal) {
+        reject("Already showing a modal");
+        return;
+      }
+
       // show question
+      this.showingModal = true;
       let q = this.root.find('.vsq-modal .vsq-question');
       q.find('.vsq-message').text(msg);
 
@@ -237,6 +253,7 @@ export class Modal {
       let onClick = (e: Event) => {
         // hide
         this.root.removeClass("vsq-is-question");
+        this.showingModal = false;
         // cleanup
         buttons.off("click", onClick);
 
