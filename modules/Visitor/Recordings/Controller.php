@@ -471,8 +471,7 @@ class Controller extends \Visitor\Controller {
       $recordingsModel->id . ',' . \Springboard\Filesystem::filenameize( $recordingsModel->row['title'] )
     ;
 
-    $this->jsonOutput( $this->getFlashParameters( $flashdata ) );
-
+    $this->jsonOutput( $flashdata );
   }
 
   public function deleteattachmentAction() {
