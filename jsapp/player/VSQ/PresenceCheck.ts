@@ -8,6 +8,7 @@ import Tools from "../../Tools";
 import Escape from "../../Escape";
 import RateLimiter from "../../RateLimiter";
 
+// https://dam.codebasehq.com/projects/teleconnect/tickets/2114
 export default class PresenceCheck extends BasePlugin {
   protected pluginName = "PresenceCheck";
   private interval: number; // setInterval
@@ -18,6 +19,7 @@ export default class PresenceCheck extends BasePlugin {
 
   private notCheckedFor: number;
   private lastCheckTime: number;
+  private lastPosition: number | undefined;
 
   constructor(vsq: VSQ) {
     super(vsq);
@@ -45,7 +47,7 @@ export default class PresenceCheck extends BasePlugin {
   private handleCheckTime(): void {
     // ha epp pausolva van a felvetel vagy epp a usert kerdezzuk akkor
     // nem akarunk mukodni kozben
-    if (!this.playing || this.checking)
+    if (!this.playing)
       return;
 
     this.updateUncheckedTime();
@@ -60,7 +62,10 @@ export default class PresenceCheck extends BasePlugin {
     this.resetInactivity();
 
     this.checking = true;
-    this.flow.pause();
+    this.lastPosition = this.flow.video.duration;
+
+    // nem kell pause, menjen csak tovább a videó szépen,
+    // ha nyugtázási timeout letelik, akkor bontsuk.
     let action = await Modal.presenceCheck(
       this.cfg.presenceCheck.timeoutSeconds
     );
@@ -69,13 +74,11 @@ export default class PresenceCheck extends BasePlugin {
     switch(action) {
       case "ok":
         this.log("check ok");
-        this.flow.resume();
         break;
       case "continue":
         this.log("check failed");
-        // TODO action - utolso X masodpercel elobbre, elejetol kezdeni, ...?
-        //this.vsq.triggerFlow("seek", jumpTo);
-        this.flow.resume();
+        if (this.lastPosition != null)
+          this.vsq.seek(this.lastPosition);
         break;
     }
   }
@@ -87,17 +90,16 @@ export default class PresenceCheck extends BasePlugin {
     }
 
     this.notCheckedFor = 0;
+    let reset = () => this.resetInactivity();
 
     this.flow.on("resume.vsq-pc", () => {
       this.playing = true;
-      this.resetInactivity();
+      reset();
     });
     this.flow.on("pause.vsq-pc error.vsq-pc finish.vsq-pc", () => {
       this.playing = false;
-      this.resetInactivity();
+      reset();
     });
-
-    let reset = () => this.resetInactivity();
     this.flow.on("seek.vsq-pc volume.vsq-pc mute.vsq-pc quality.vsq-pc speed.vsq-pc fullscreen.vsq-pc fullscreen-exit.vsq-pc", reset);
   }
 

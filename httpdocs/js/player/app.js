@@ -1158,6 +1158,7 @@ System.register("player/VSQ/Modal", ["player/VSQ", "player/VSQAPI", "Tools", "Es
                                 }
                                 elem.addClass('vsq-checkfailed');
                                 failed = true;
+                                _this.vsq.pause();
                                 return;
                             }
                             var seconds = Math.floor(remaining / 1000);
@@ -1637,7 +1638,7 @@ System.register("player/VSQ/PresenceCheck", ["player/VSQ/BasePlugin", "player/VS
                     this.lastCheckTime = Tools_6.default.now();
                 };
                 PresenceCheck.prototype.handleCheckTime = function () {
-                    if (!this.playing || this.checking)
+                    if (!this.playing)
                         return;
                     this.updateUncheckedTime();
                     if (this.notCheckedFor < this.checkEvery)
@@ -1653,7 +1654,7 @@ System.register("player/VSQ/PresenceCheck", ["player/VSQ/BasePlugin", "player/VS
                                 case 0:
                                     this.resetInactivity();
                                     this.checking = true;
-                                    this.flow.pause();
+                                    this.lastPosition = this.flow.video.duration;
                                     return [4 /*yield*/, Modal_4.Modal.presenceCheck(this.cfg.presenceCheck.timeoutSeconds)];
                                 case 1:
                                     action = _a.sent();
@@ -1661,11 +1662,11 @@ System.register("player/VSQ/PresenceCheck", ["player/VSQ/BasePlugin", "player/VS
                                     switch (action) {
                                         case "ok":
                                             this.log("check ok");
-                                            this.flow.resume();
                                             break;
                                         case "continue":
                                             this.log("check failed");
-                                            this.flow.resume();
+                                            if (this.lastPosition != null)
+                                                this.vsq.seek(this.lastPosition);
                                             break;
                                     }
                                     return [2 /*return*/];
@@ -1680,15 +1681,15 @@ System.register("player/VSQ/PresenceCheck", ["player/VSQ/BasePlugin", "player/VS
                         return;
                     }
                     this.notCheckedFor = 0;
+                    var reset = function () { return _this.resetInactivity(); };
                     this.flow.on("resume.vsq-pc", function () {
                         _this.playing = true;
-                        _this.resetInactivity();
+                        reset();
                     });
                     this.flow.on("pause.vsq-pc error.vsq-pc finish.vsq-pc", function () {
                         _this.playing = false;
-                        _this.resetInactivity();
+                        reset();
                     });
-                    var reset = function () { return _this.resetInactivity(); };
                     this.flow.on("seek.vsq-pc volume.vsq-pc mute.vsq-pc quality.vsq-pc speed.vsq-pc fullscreen.vsq-pc fullscreen-exit.vsq-pc", reset);
                 };
                 PresenceCheck.prototype.destroy = function () {

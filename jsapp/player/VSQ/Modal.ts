@@ -305,6 +305,7 @@ export class Modal {
 
           elem.addClass('vsq-checkfailed');
           failed = true;
+          this.vsq.pause();
           return;
         }
 
@@ -349,7 +350,7 @@ export class Modal {
     });
   }
 
-  public static showToast(msg: string, timeoutSeconds: number): Promise<boolean> {
+  public static showToast(msg: string, timeoutSeconds?: number): Promise<boolean> {
     return Modal.instance.showToast(msg, timeoutSeconds);
   }
   private showToast(msg: string, timeoutSeconds?: number): Promise<boolean> {
